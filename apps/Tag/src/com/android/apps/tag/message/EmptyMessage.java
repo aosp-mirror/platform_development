@@ -14,22 +14,24 @@
  * limitations under the License.
  */
 
-package com.android.apps.tag;
+package com.android.apps.tag.message;
 
-import android.nfc.NdefMessage;
-import android.test.AndroidTestCase;
-
-import com.android.apps.tag.record.SmartPoster;
+import java.util.Locale;
 
 /**
- * Tests for {@link SmartPoster}.
+ * A parsed message containing no elements.
  */
-public class SmartPosterTest extends AndroidTestCase {
-    public void testSmartPoster() throws Exception {
-        NdefMessage msg = new NdefMessage(MockNdefMessages.REAL_NFC_MSG);
+class EmptyMessage implements ParsedNdefMessage {
 
-        SmartPoster poster = SmartPoster.parse(msg.getRecords()[0]);
-        assertEquals("NFC Forum Type 4 Tag", poster.getTitle().getText());
-        assertEquals("http://www.nxp.com/nfc", poster.getUriRecord().getUri().toString());
+    /* package private */ EmptyMessage() { }
+
+    @Override
+    public String getSnippet(Locale locale) {
+        return "Empty Tag";  // TODO: localize
+    }
+
+    @Override
+    public boolean isStarred() {
+        return false;
     }
 }

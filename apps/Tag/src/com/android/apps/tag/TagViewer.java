@@ -30,10 +30,11 @@ import android.view.LayoutInflater;
 import android.view.WindowManager;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import com.android.apps.tag.record.ParsedNdefRecord;
-import com.android.apps.tag.record.SmartPoster;
-import com.android.apps.tag.record.TextRecord;
-import com.android.apps.tag.record.UriRecord;
+
+import com.android.apps.tag.message.NdefMessageParser;
+import com.android.apps.tag.message.ParsedNdefMessage;
+
+import java.util.Locale;
 
 /**
  * An {@link Activity} which handles a broadcast of a new tag that the device just discovered.
@@ -93,35 +94,11 @@ public class TagViewer extends Activity {
         // The body of the dialog should use the light theme
 
         // Build the views from the logical records in the messages
-        boolean first = true;
         for (NdefMessage msg : msgs) {
-            Iterable<ParsedNdefRecord> objects = NdefUtil.getObjects(msg);
-            for (ParsedNdefRecord object : objects) {
-                if (!first) {
-                    list.addView(inflater.inflate(R.layout.tag_divider, list, false));
-                    first = false;
-                }
-
-                if (object instanceof TextRecord) {
-                    TextRecord textRecord = (TextRecord) object;
-                    TextView text = (TextView) inflater.inflate(R.layout.tag_text, list, false);
-                    text.setText(textRecord.getText());
-                    list.addView(text);
-                } else if (object instanceof UriRecord) {
-                    UriRecord uriRecord = (UriRecord) object;
-                    TextView text = (TextView) inflater.inflate(R.layout.tag_text, list, false);
-                    text.setText(uriRecord.getUri().toString());
-                    list.addView(text);
-                } else if (object instanceof SmartPoster) {
-                    TextView text = (TextView) inflater.inflate(R.layout.tag_text, list, false);
-                    SmartPoster poster = (SmartPoster) object;
-                    TextRecord title = poster.getTitle();
-                    if (title != null) {
-                        text.setText(title.getText());
-                    }
-                    list.addView(text);
-                }
-            }
+            ParsedNdefMessage parsedMsg = NdefMessageParser.parse(msg);
+            TextView text = (TextView) inflater.inflate(R.layout.tag_text, list, false);
+            text.setText(parsedMsg.getSnippet(Locale.getDefault()));
+            list.addView(text);
         }
     }
     

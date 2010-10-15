@@ -16,20 +16,12 @@
 
 package com.android.apps.tag;
 
-import com.android.apps.tag.record.ParsedNdefRecord;
-import com.android.apps.tag.record.SmartPoster;
-import com.android.apps.tag.record.TextRecord;
-import com.android.apps.tag.record.UriRecord;
-import com.google.common.collect.Iterables;
-import com.google.common.primitives.Bytes;
-
 import android.net.Uri;
-import android.nfc.NdefMessage;
 import android.nfc.NdefRecord;
 
+import com.google.common.primitives.Bytes;
+
 import java.nio.charset.Charsets;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Utilities for dealing with conversions to and from NdefRecords.
@@ -59,35 +51,5 @@ public class NdefUtil {
 
         return new NdefRecord(NdefRecord.TNF_WELL_KNOWN,
                 NdefRecord.RTD_URI, EMPTY, payload);
-    }
-
-    public static Iterable<TextRecord> getTextFields(NdefMessage message) {
-        return Iterables.filter(getObjects(message), TextRecord.class);
-    }
-
-    public static Iterable<UriRecord> getUris(NdefMessage message) {
-        return Iterables.filter(getObjects(message), UriRecord.class);
-    }
-
-    /**
-     * Parse the provided {@code NdefMessage}, extracting all known
-     * objects from the message.  Typically this list will consist of
-     * {@link String}s corresponding to NDEF text records, or {@link Uri}s
-     * corresponding to NDEF URI records.
-     * <p>
-     * TODO: Is this API too generic?  Should we keep it?
-     */
-    public static Iterable<ParsedNdefRecord> getObjects(NdefMessage message) {
-        List<ParsedNdefRecord> retval = new ArrayList<ParsedNdefRecord>();
-        for (NdefRecord record : message.getRecords()) {
-            if (UriRecord.isUri(record)) {
-                retval.add(UriRecord.parse(record));
-            } else if (TextRecord.isText(record)) {
-                retval.add(TextRecord.parse(record));
-            } else if (SmartPoster.isPoster(record)) {
-                retval.add(SmartPoster.parse(record));
-            }
-        }
-        return retval;
     }
 }

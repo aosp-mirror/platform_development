@@ -17,6 +17,7 @@
 package com.android.apps.tag.record;
 
 import android.nfc.NdefRecord;
+
 import com.google.common.base.Preconditions;
 
 import java.io.UnsupportedEncodingException;
@@ -27,6 +28,7 @@ import java.util.Arrays;
  */
 public class TextRecord implements ParsedNdefRecord {
 
+    /** ISO/IANA language code */
     private final String mLanguageCode;
     private final String mText;
 
@@ -44,6 +46,11 @@ public class TextRecord implements ParsedNdefRecord {
         return mText;
     }
 
+    /**
+     * Returns the ISO/IANA language code associated with this text element.
+     *
+     * TODO: this should return a {@link java.util.Locale}
+     */
     public String getLanguageCode() {
         return mLanguageCode;
     }

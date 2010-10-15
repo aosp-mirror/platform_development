@@ -16,14 +16,10 @@
 
 package com.android.apps.tag;
 
-import com.android.apps.tag.TagDBHelper.NdefMessagesTable;
-
 import android.content.Context;
 import android.database.Cursor;
-import android.net.Uri;
 import android.nfc.FormatException;
 import android.nfc.NdefMessage;
-import android.nfc.NdefRecord;
 import android.text.format.DateUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -32,9 +28,12 @@ import android.view.ViewGroup;
 import android.widget.Adapter;
 import android.widget.CursorAdapter;
 import android.widget.TextView;
-import com.android.apps.tag.record.SmartPoster;
-import com.android.apps.tag.record.TextRecord;
-import com.android.apps.tag.record.UriRecord;
+
+import com.android.apps.tag.TagDBHelper.NdefMessagesTable;
+import com.android.apps.tag.message.NdefMessageParser;
+import com.android.apps.tag.message.ParsedNdefMessage;
+
+import java.util.Locale;
 
 /**
  * A custom {@link Adapter} that renders tag entries for a list.
@@ -63,23 +62,8 @@ public class TagAdapter extends CursorAdapter {
         if (msg == null) {
             mainLine.setText("Invalid tag");
         } else {
-            try {
-                SmartPoster poster = SmartPoster.parse(msg.getRecords()[0]);
-                TextRecord title = poster.getTitle();
-                if (title != null) {
-                    mainLine.setText(title.getText());
-                }
-            } catch (IllegalArgumentException e) {
-                // Not a smart poster
-                NdefRecord record = msg.getRecords()[0];
-                Uri uri = null;
-                try {
-                    uri = UriRecord.parse(record).getUri();
-                    mainLine.setText(uri.toString());
-                } catch (IllegalArgumentException e2) {
-                    mainLine.setText("Not a smart poster or URL");
-                }
-            }
+            ParsedNdefMessage parsedMsg = NdefMessageParser.parse(msg);
+            mainLine.setText(parsedMsg.getSnippet(Locale.getDefault()));
         }
         dateLine.setText(DateUtils.getRelativeTimeSpanString(
                 context, cursor.getLong(cursor.getColumnIndex(NdefMessagesTable.DATE))));
