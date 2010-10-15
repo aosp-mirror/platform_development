@@ -55,7 +55,12 @@ cp $V ${TOPDIR}sdk/files/find_java.bat                          $LIB/
 cp $V ${TOPDIR}sdk/apkbuilder/etc/apkbuilder.bat                $TOOLS/
 cp $V ${TOPDIR}sdk/ddms/app/etc/ddms.bat                        $TOOLS/
 cp $V ${TOPDIR}sdk/traceview/etc/traceview.bat                  $TOOLS/
-cp $V ${TOPDIR}sdk/hierarchyviewer2/app/etc/hierarchyviewer.bat $TOOLS/
+if [ -f ${TOPDIR}sdk/hierarchyviewer2/app/etc/hierarchyviewer.bat ]; then
+  cp $V ${TOPDIR}sdk/hierarchyviewer2/app/etc/hierarchyviewer.bat $TOOLS/
+else
+  # That's ok because currently GB uses Tools_r7 but we'll ship Tools_r8 from master-open.
+  echo "WARNING: Ignoring ${TOPDIR}sdk/hierarchyviewer2/app/etc/hierarchyviewer.bat [ok for GB+Tools r8]"
+fi
 cp $V ${TOPDIR}sdk/layoutopt/app/etc/layoutopt.bat              $TOOLS/
 cp $V ${TOPDIR}sdk/draw9patch/etc/draw9patch.bat                $TOOLS/
 cp $V ${TOPDIR}sdk/sdkmanager/app/etc/android.bat               $TOOLS/
