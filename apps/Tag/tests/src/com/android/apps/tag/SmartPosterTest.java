@@ -17,7 +17,7 @@
 package com.android.apps.tag;
 
 import android.test.AndroidTestCase;
-import com.trustedlogic.trustednfc.android.NdefMessage;
+import android.nfc.NdefMessage;
 
 /**
  * Tests for {@link SmartPoster}.
