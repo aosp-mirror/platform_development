@@ -43,19 +43,15 @@ public class TagList extends ListActivity implements DialogInterface.OnClickList
         boolean showSavedOnly = getIntent().getBooleanExtra(SHOW_SAVED_ONLY, false);
         db = new TagDBHelper(getBaseContext()).getReadableDatabase();
         String selection = showSavedOnly ? "saved=1" : null;
+
+        // TODO: Use an AsyncQueryHandler so that DB queries are not done on UI thread.
         cursor = db.query(
                 "NdefMessage",
                 new String[] { "_id", "bytes", "date" },
                 selection,
                 null, null, null, null);
-        SimpleCursorAdapter sca =
-                new SimpleCursorAdapter(this,
-                        android.R.layout.two_line_list_item,
-                        cursor,
-                        new String[] { "bytes", "date" },
-                        new int[] { android.R.id.text1, android.R.id.text2 });
 
-        setListAdapter(sca);
+        setListAdapter(new TagCursorAdapter(this, cursor));
         registerForContextMenu(getListView());
     }
 
