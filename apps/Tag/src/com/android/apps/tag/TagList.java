@@ -16,8 +16,6 @@
 
 package com.android.apps.tag;
 
-import com.android.apps.tag.TagDBHelper.NdefMessagesTable;
-
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -34,6 +32,8 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.View;
 import android.widget.ListView;
+
+import com.android.apps.tag.TagDBHelper.NdefMessagesTable;
 
 /**
  * An {@link Activity} that displays a flat list of tags that can be "opened".

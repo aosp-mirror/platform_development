@@ -16,16 +16,16 @@
 
 package com.android.apps.tag.record;
 
-import com.android.apps.tag.NdefUtil;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Iterables;
-
 import android.nfc.FormatException;
 import android.nfc.NdefMessage;
 import android.nfc.NdefRecord;
 
-import java.util.Arrays;
+import com.android.apps.tag.message.NdefMessageParser;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Iterables;
 
+import java.util.Arrays;
+import java.util.NoSuchElementException;
 import javax.annotation.Nullable;
 
 /**
@@ -73,8 +73,12 @@ public class SmartPoster implements ParsedNdefRecord {
         Preconditions.checkArgument(Arrays.equals(record.getType(), NdefRecord.RTD_SMART_POSTER));
         try {
             NdefMessage subRecords = new NdefMessage(record.getPayload());
-            UriRecord uri = Iterables.getOnlyElement(NdefUtil.getUris(subRecords));
-            Iterable<TextRecord> textFields = NdefUtil.getTextFields(subRecords);
+
+            Iterable<ParsedNdefRecord> records = NdefMessageParser.getRecords(subRecords);
+
+            UriRecord uri = Iterables.getOnlyElement(Iterables.filter(records, UriRecord.class));
+            Iterable<TextRecord> textFields = Iterables.filter(records, TextRecord.class);
+
             TextRecord title = null;
             if (!Iterables.isEmpty(textFields)) {
                 title = Iterables.get(textFields, 0);
@@ -82,6 +86,8 @@ public class SmartPoster implements ParsedNdefRecord {
 
             return new SmartPoster(uri, title);
         } catch (FormatException e) {
+            throw new IllegalArgumentException(e);
+        } catch (NoSuchElementException e) {
             throw new IllegalArgumentException(e);
         }
     }
