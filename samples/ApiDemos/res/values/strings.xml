@@ -479,6 +479,7 @@
     <string name="max_failed_pw_hint">Password Attempts Wipe Data</string>
     <string name="force_lock">Force Lock</string>
     <string name="wipe_data">Wipe Data</string>
+    <string name="wipe_all_data">Wipe All Data</string>
     <string name="timeout_hint">Max screen timeout</string>
     <string name="set_timeout_label">Set Timeout</string>
 

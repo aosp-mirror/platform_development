@@ -99,19 +99,25 @@
 
     </LinearLayout>
 
+    <Button android:id="@+id/force_lock"
+        android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:layout_weight="0"
+        android:text="@string/force_lock">
+    </Button>
+
     <LinearLayout android:orientation="horizontal" android:gravity="center"
         android:layout_width="match_parent" android:layout_height="wrap_content">
-
-        <Button android:id="@+id/force_lock"
-            android:layout_width="wrap_content" android:layout_height="wrap_content"
-            android:layout_weight="0"
-            android:text="@string/force_lock">
-        </Button>
 
         <Button android:id="@+id/wipe_data"
             android:layout_width="wrap_content" android:layout_height="wrap_content"
             android:layout_weight="0"
             android:text="@string/wipe_data">
+        </Button>
+
+        <Button android:id="@+id/wipe_all_data"
+            android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:layout_weight="0"
+            android:text="@string/wipe_all_data">
         </Button>
 
     </LinearLayout>
