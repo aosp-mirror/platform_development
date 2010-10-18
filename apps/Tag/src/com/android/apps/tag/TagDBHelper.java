@@ -16,8 +16,6 @@
 
 package com.android.apps.tag;
 
-import com.google.common.annotations.VisibleForTesting;
-
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
@@ -26,6 +24,8 @@ import android.net.Uri;
 import android.nfc.FormatException;
 import android.nfc.NdefMessage;
 import android.nfc.NdefRecord;
+
+import com.google.common.annotations.VisibleForTesting;
 
 /**
  * Database utilities for the saved tags.

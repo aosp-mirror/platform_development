@@ -16,10 +16,11 @@
 
 package com.android.apps.tag;
 
+import android.nfc.NdefRecord;
 import android.test.AndroidTestCase;
+
 import com.android.apps.tag.record.TextRecord;
 import com.google.common.primitives.Bytes;
-import android.nfc.NdefRecord;
 
 import java.io.UnsupportedEncodingException;
 
