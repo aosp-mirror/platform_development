@@ -23,8 +23,7 @@
     package="com.android.apps.tag"
 >
 
-    <uses-permission android:name="com.trustedlogic.trustednfc.permission.NFC_NOTIFY" />
-    <uses-permission android:name="com.trustedlogic.trustednfc.permission.NFC_RAW" />
+    <uses-permission android:name="android.permission.NFC" />
 
     <application android:label="Tags">
         <activity android:name="TagBrowserActivity"
