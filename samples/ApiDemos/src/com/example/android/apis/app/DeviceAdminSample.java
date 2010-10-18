@@ -148,6 +148,7 @@ public class DeviceAdminSample extends DeviceAdminReceiver {
 
         Button mForceLockButton;
         Button mWipeDataButton;
+        Button mWipeAllDataButton;
 
         private Button mTimeoutButton;
 
@@ -323,6 +324,8 @@ public class DeviceAdminSample extends DeviceAdminReceiver {
             mForceLockButton.setOnClickListener(mForceLockListener);
             mWipeDataButton = (Button)findViewById(R.id.wipe_data);
             mWipeDataButton.setOnClickListener(mWipeDataListener);
+            mWipeAllDataButton = (Button)findViewById(R.id.wipe_all_data);
+            mWipeAllDataButton.setOnClickListener(mWipeDataListener);
 
             mTimeout = (EditText) findViewById(R.id.timeout);
             mTimeoutButton = (Button) findViewById(R.id.set_timeout);
@@ -353,6 +356,7 @@ public class DeviceAdminSample extends DeviceAdminReceiver {
                 mResetPasswordButton.setEnabled(true);
                 mForceLockButton.setEnabled(true);
                 mWipeDataButton.setEnabled(true);
+                mWipeAllDataButton.setEnabled(true);
             } else {
                 mEnableButton.setEnabled(true);
                 mDisableButton.setEnabled(false);
@@ -370,6 +374,7 @@ public class DeviceAdminSample extends DeviceAdminReceiver {
                 mResetPasswordButton.setEnabled(false);
                 mForceLockButton.setEnabled(false);
                 mWipeDataButton.setEnabled(false);
+                mWipeAllDataButton.setEnabled(false);
             }
         }
 
@@ -576,7 +581,7 @@ public class DeviceAdminSample extends DeviceAdminReceiver {
         };
 
         private OnClickListener mWipeDataListener = new OnClickListener() {
-            public void onClick(View v) {
+            public void onClick(final View v) {
                 if (mAM.isUserAMonkey()) {
                     // Don't trust monkeys to do the right thing!
                     AlertDialog.Builder builder = new AlertDialog.Builder(Controller.this);
@@ -590,14 +595,22 @@ public class DeviceAdminSample extends DeviceAdminReceiver {
                 builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int which) {
                         AlertDialog.Builder builder = new AlertDialog.Builder(Controller.this);
-                        builder.setMessage("This is not a test.  "
-                                + "This WILL erase all of your data!  "
-                                + "Are you really absolutely sure?");
+                        if (v == mWipeAllDataButton) {
+                            builder.setMessage("This is not a test.  "
+                                    + "This WILL erase all of your data, "
+                                    + "including external storage!  "
+                                    + "Are you really absolutely sure?");
+                        } else {
+                            builder.setMessage("This is not a test.  "
+                                    + "This WILL erase all of your data!  "
+                                    + "Are you really absolutely sure?");
+                        }
                         builder.setPositiveButton("BOOM!", new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int which) {
                                 boolean active = mDPM.isAdminActive(mDeviceAdminSample);
                                 if (active) {
-                                    mDPM.wipeData(0);
+                                    mDPM.wipeData(v == mWipeAllDataButton
+                                            ? DevicePolicyManager.WIPE_EXTERNAL_STORAGE : 0);
                                 }
                             }
                         });
