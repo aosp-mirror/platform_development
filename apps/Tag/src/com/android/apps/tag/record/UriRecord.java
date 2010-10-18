@@ -16,23 +16,49 @@
 
 package com.android.apps.tag.record;
 
-import android.net.Uri;
-import android.nfc.NdefRecord;
-
+import com.android.apps.tag.R;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.primitives.Bytes;
 
+import android.app.Activity;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
+import android.content.pm.ActivityInfo;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
+import android.net.Uri;
+import android.nfc.NdefRecord;
+import android.telephony.PhoneNumberUtils;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.view.ViewGroup;
+import android.view.ViewGroup.LayoutParams;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+
 import java.nio.charset.Charsets;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * A parsed record containing a Uri.
  */
-public class UriRecord implements ParsedNdefRecord {
-    private static final byte[] EMPTY = new byte[0];
-
+public class UriRecord implements ParsedNdefRecord, OnClickListener {
+    private static final class ClickInfo {
+        public Activity activity;
+        public Intent intent;
+        
+        public ClickInfo(Activity activity, Intent intent) {
+            this.activity = activity;
+            this.intent = intent;
+        }
+    }
+    
     /**
      * NFC Forum "URI Record Type Definition"
      *
@@ -87,6 +113,96 @@ public class UriRecord implements ParsedNdefRecord {
     @Override
     public String getRecordType() {
         return "Uri";
+    }
+
+    public Intent getIntentForUri() {
+        String scheme = mUri.getScheme();
+        if ("tel".equals(scheme)) {
+            return new Intent(Intent.ACTION_CALL, mUri);
+        } else if ("sms".equals(scheme) || "smsto".equals(scheme)) {
+            return new Intent(Intent.ACTION_SENDTO, mUri);
+        } else {
+            return new Intent(Intent.ACTION_VIEW, mUri);
+        }
+    }
+
+    public String getPrettyUriString(Context context) {
+        String scheme = mUri.getScheme();
+        boolean tel = "tel".equals(scheme);
+        boolean sms = "sms".equals(scheme) || "smsto".equals(scheme); 
+        if (tel || sms) {
+            String ssp = mUri.getSchemeSpecificPart();
+            int offset = ssp.indexOf('?');
+            if (offset >= 0) {
+                ssp = ssp.substring(0, offset);
+            }
+            if (tel) {
+                return context.getString(R.string.action_call, PhoneNumberUtils.formatNumber(ssp));
+            } else {
+                return context.getString(R.string.action_text, PhoneNumberUtils.formatNumber(ssp));
+            }
+        } else {
+            return mUri.toString();
+        }
+    }
+
+    @Override
+    public View getView(Activity activity, LayoutInflater inflater, ViewGroup parent) {
+        Intent intent = getIntentForUri();
+        PackageManager pm = activity.getPackageManager();
+        List<ResolveInfo> activities = pm.queryIntentActivities(intent, 0);
+        int numActivities = activities.size();
+        if (numActivities == 0) {
+            TextView text = (TextView) inflater.inflate(R.layout.tag_text, parent, false);
+            text.setText(mUri.toString());
+            return text;
+        } else if (numActivities == 1) {
+            return buildActivityView(activity, activities.get(0), pm, inflater, parent);
+        } else {
+            // Build a container to hold the multiple entries
+            LinearLayout container = new LinearLayout(activity);
+            container.setOrientation(LinearLayout.VERTICAL);
+            container.setLayoutParams(new LayoutParams(
+                    LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
+
+            // Create an entry for each activity that can handle the URI
+            for (ResolveInfo resolveInfo : activities) {
+                if (container.getChildCount() > 0) {
+                    inflater.inflate(R.layout.tag_divider, container);
+                }
+                container.addView(buildActivityView(activity, resolveInfo, pm, inflater, container));
+            }
+            return container;
+        }
+    }
+
+    private View buildActivityView(Activity activity, ResolveInfo resolveInfo, PackageManager pm,
+            LayoutInflater inflater, ViewGroup parent) {
+        Intent intent = getIntentForUri();
+        ActivityInfo activityInfo = resolveInfo.activityInfo;
+        intent.setComponent(new ComponentName(activityInfo.packageName, activityInfo.name));
+
+        View item = inflater.inflate(R.layout.tag_uri, parent, false);
+        item.setOnClickListener(this);
+        item.setTag(new ClickInfo(activity, intent));
+
+        ImageView icon = (ImageView) item.findViewById(R.id.icon);
+        icon.setImageDrawable(resolveInfo.loadIcon(pm));
+
+        TextView text = (TextView) item.findViewById(R.id.secondary);
+        text.setText(resolveInfo.loadLabel(pm));
+
+        text = (TextView) item.findViewById(R.id.primary);
+        text.setText(getPrettyUriString(activity));
+
+        return item;
+    }
+
+    @Override
+    public void onClick(View view) {
+        ClickInfo info = (ClickInfo) view.getTag();
+        info.activity.startActivity(info.intent);
+        info.activity.finish();
     }
 
     public Uri getUri() {

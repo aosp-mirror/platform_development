@@ -16,23 +16,28 @@
 
 package com.android.apps.tag.message;
 
+import com.android.apps.tag.record.ParsedNdefRecord;
 import com.android.apps.tag.record.TextRecord;
 import com.google.common.base.Preconditions;
 
+import android.content.Context;
+
+import java.util.List;
 import java.util.Locale;
 
 /**
  * A message containing one text element
  */
-class TextMessage implements ParsedNdefMessage {
+class TextMessage extends ParsedNdefMessage {
     private final TextRecord mRecord;
 
-    TextMessage(TextRecord record) {
+    TextMessage(TextRecord record, List<ParsedNdefRecord> records) {
+        super(Preconditions.checkNotNull(records));
         mRecord = Preconditions.checkNotNull(record);
     }
 
     @Override
-    public String getSnippet(Locale locale) {
+    public String getSnippet(Context context, Locale locale) {
         return mRecord.getText();
     }
 

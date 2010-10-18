@@ -16,9 +16,15 @@
 
 package com.android.apps.tag.record;
 
-import android.nfc.NdefRecord;
-
+import com.android.apps.tag.R;
 import com.google.common.base.Preconditions;
+
+import android.app.Activity;
+import android.nfc.NdefRecord;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.TextView;
 
 import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
@@ -40,6 +46,13 @@ public class TextRecord implements ParsedNdefRecord {
     @Override
     public String getRecordType() {
         return "Text";
+    }
+
+    @Override
+    public View getView(Activity activity, LayoutInflater inflater, ViewGroup parent) {
+        TextView text = (TextView) inflater.inflate(R.layout.tag_text, parent, false);
+        text.setText(mText);
+        return text;
     }
 
     public String getText() {

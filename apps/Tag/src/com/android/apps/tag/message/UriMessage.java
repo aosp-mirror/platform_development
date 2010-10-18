@@ -16,26 +16,31 @@
 
 package com.android.apps.tag.message;
 
+import com.android.apps.tag.record.ParsedNdefRecord;
 import com.android.apps.tag.record.UriRecord;
 import com.google.common.base.Preconditions;
 
+import android.content.Context;
+
+import java.util.List;
 import java.util.Locale;
 
 /**
  * A {@link ParsedNdefMessage} consisting of one {@link UriRecord}.
  */
-class UriMessage implements ParsedNdefMessage {
+class UriMessage extends ParsedNdefMessage {
 
     private final UriRecord mRecord;
 
-    UriMessage(UriRecord record) {
+    UriMessage(UriRecord record, List<ParsedNdefRecord> records) {
+        super(Preconditions.checkNotNull(records));
         mRecord = Preconditions.checkNotNull(record);
     }
 
     @Override
-    public String getSnippet(Locale locale) {
+    public String getSnippet(Context context, Locale locale) {
         // URIs cannot be localized
-        return mRecord.getUri().toString();
+        return mRecord.getPrettyUriString(context);
     }
 
     @Override

@@ -16,26 +16,27 @@
 
 package com.android.apps.tag.message;
 
+import com.android.apps.tag.R;
 import com.android.apps.tag.record.ParsedNdefRecord;
-import com.google.common.collect.ImmutableList;
+import com.google.common.base.Preconditions;
 
+import android.content.Context;
+
+import java.util.List;
 import java.util.Locale;
 
 /**
  * The catchall parsed message format for when nothing else better applies.
  */
-class UnknownMessage implements ParsedNdefMessage {
+class UnknownMessage extends ParsedNdefMessage {
 
-    private final ImmutableList<ParsedNdefRecord> mRecords;
-
-    UnknownMessage(Iterable<ParsedNdefRecord> records) {
-        mRecords = ImmutableList.copyOf(records);
+    UnknownMessage(List<ParsedNdefRecord> records) {
+        super(Preconditions.checkNotNull(records));
     }
 
     @Override
-    public String getSnippet(Locale locale) {
-        // TODO: localize
-        return "Unknown record type with " + mRecords.size() + " elements.";
+    public String getSnippet(Context context, Locale locale) {
+        return context.getString(R.string.tag_unknown);
     }
 
     @Override
