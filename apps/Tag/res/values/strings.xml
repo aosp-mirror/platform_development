@@ -14,16 +14,29 @@
      limitations under the License.
 -->
 
-<resources>
-
-    <string name="hello_activity_text_text">Hello, World!</string>
-    <string name="help_and_info">help and info</string>
-    <string name="saved">Saved</string>
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
 
     <!-- The title of the tab that displays all recently scanned NFC tags -->
-    <string name="tab_recent">Recent</string>
+    <string name="tab_tags">Tags</string>
 
-    <!-- The title of the tab that displays all saved NFC tags -->
-    <string name="tab_saved">Saved</string>
+    <!-- The title of the tab that displays all starred NFC tags -->
+    <string name="tab_starred">Starred</string>
 
+    <!-- The title displayed for unknown tag types -->
+    <string name="tag_unknown">Unknown tag type</string>
+
+    <!-- The title displayed for an empty tag -->
+    <string name="tag_empty">Empty tag</string>
+
+    <!-- Button label indicating that the user wants to delete a tag -->
+    <string name="button_delete">Delete</string>
+
+    <!-- String describing that if the user doesn't want to save a tag they should touch the button labeled Cancel. The text for the cancel button comes from the system string android.R.string.cancel. -->
+    <string name="cancel_help_text">To skip adding this tag to your collection, press Cancel</string>
+
+    <!-- String displayed for an action to send a text message to a phone number -->
+    <string name="action_text">Text <xliff:g id="phone_number">%s</xliff:g></string>
+
+    <!-- String displayed for an action to call a phone number -->
+    <string name="action_call">Call <xliff:g id="phone_number">%s</xliff:g></string>
 </resources>

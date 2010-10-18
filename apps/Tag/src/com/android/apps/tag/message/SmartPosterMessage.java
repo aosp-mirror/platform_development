@@ -16,27 +16,32 @@
 
 package com.android.apps.tag.message;
 
+import com.android.apps.tag.record.ParsedNdefRecord;
 import com.android.apps.tag.record.SmartPoster;
 import com.android.apps.tag.record.TextRecord;
 import com.google.common.base.Preconditions;
 
+import android.content.Context;
+
+import java.util.List;
 import java.util.Locale;
 
 /**
  * A message consisting of one {@link SmartPoster} object.
  */
-class SmartPosterMessage implements ParsedNdefMessage {
+class SmartPosterMessage extends ParsedNdefMessage {
     private final SmartPoster mPoster;
 
-    SmartPosterMessage(SmartPoster poster) {
+    SmartPosterMessage(SmartPoster poster, List<ParsedNdefRecord> records) {
+        super(Preconditions.checkNotNull(records));
         mPoster = Preconditions.checkNotNull(poster);
     }
 
     @Override
-    public String getSnippet(Locale locale) {
+    public String getSnippet(Context context, Locale locale) {
         TextRecord title = mPoster.getTitle();
         if (title == null) {
-            return mPoster.getUriRecord().getUri().toString();
+            return mPoster.getUriRecord().getPrettyUriString(context);
         }
         return title.getText();
     }

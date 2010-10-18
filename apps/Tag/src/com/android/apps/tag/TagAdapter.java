@@ -16,24 +16,17 @@
 
 package com.android.apps.tag;
 
+import com.android.apps.tag.TagDBHelper.NdefMessagesTable;
+
 import android.content.Context;
 import android.database.Cursor;
-import android.nfc.FormatException;
-import android.nfc.NdefMessage;
 import android.text.format.DateUtils;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Adapter;
 import android.widget.CursorAdapter;
 import android.widget.TextView;
-
-import com.android.apps.tag.TagDBHelper.NdefMessagesTable;
-import com.android.apps.tag.message.NdefMessageParser;
-import com.android.apps.tag.message.ParsedNdefMessage;
-
-import java.util.Locale;
 
 /**
  * A custom {@link Adapter} that renders tag entries for a list.
@@ -52,19 +45,7 @@ public class TagAdapter extends CursorAdapter {
         TextView mainLine = (TextView) view.findViewById(R.id.title);
         TextView dateLine = (TextView) view.findViewById(R.id.date);
 
-        NdefMessage msg = null;
-        try {
-            msg = new NdefMessage(cursor.getBlob(cursor.getColumnIndex(NdefMessagesTable.BYTES)));
-        } catch (FormatException e) {
-            Log.e("foo", "poorly formatted message", e);
-        }
-
-        if (msg == null) {
-            mainLine.setText("Invalid tag");
-        } else {
-            ParsedNdefMessage parsedMsg = NdefMessageParser.parse(msg);
-            mainLine.setText(parsedMsg.getSnippet(Locale.getDefault()));
-        }
+        mainLine.setText(cursor.getString(cursor.getColumnIndex(NdefMessagesTable.TITLE)));
         dateLine.setText(DateUtils.getRelativeTimeSpanString(
                 context, cursor.getLong(cursor.getColumnIndex(NdefMessagesTable.DATE))));
     }

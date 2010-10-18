@@ -18,7 +18,9 @@ package com.android.apps.tag;
 
 import android.app.Activity;
 import android.app.TabActivity;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.os.Bundle;
 import android.widget.TabHost;
@@ -36,16 +38,34 @@ public class TagBrowserActivity extends TabActivity {
         Resources res = getResources();
         TabHost tabHost = getTabHost();
 
-        TabHost.TabSpec spec1 = tabHost.newTabSpec("saved")
-                .setIndicator(getText(R.string.tab_saved), res.getDrawable(R.drawable.ic_menu_tag))
-                .setContent(new Intent().setClass(this, TagList.class)
-                        .putExtra(TagList.EXTRA_SHOW_SAVED_ONLY, true));
-        tabHost.addTab(spec1);
+        tabHost.addTab(tabHost.newTabSpec("tags")
+                .setIndicator(getText(R.string.tab_tags),
+                        res.getDrawable(R.drawable.ic_menu_tag))
+                .setContent(new Intent().setClass(this, TagList.class)));
 
-        TabHost.TabSpec spec2 = tabHost.newTabSpec("recent")
-                .setIndicator(getText(R.string.tab_recent), res.getDrawable(R.drawable.ic_menu_desk_clock))
-                .setContent(new Intent().setClass(this, TagList.class));
-        tabHost.addTab(spec2);
+        tabHost.addTab(tabHost.newTabSpec("starred")
+                .setIndicator(getText(R.string.tab_starred),
+                        res.getDrawable(R.drawable.ic_tab_starred))
+                .setContent(new Intent().setClass(this, TagList.class)
+                        .putExtra(TagList.EXTRA_SHOW_STARRED_ONLY, true)));
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+
+        // Restore the last active tab
+        SharedPreferences prefs = getSharedPreferences("prefs", Context.MODE_PRIVATE);
+        getTabHost().setCurrentTabByTag(prefs.getString("tab", "tags"));
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+
+        // Save the active tab
+        SharedPreferences.Editor edit = getSharedPreferences("prefs", Context.MODE_PRIVATE).edit();
+        edit.putString("tab", getTabHost().getCurrentTabTag());
+        edit.apply();
     }
 }
-

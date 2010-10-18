@@ -25,6 +25,10 @@ import android.nfc.FormatException;
 import android.nfc.NdefMessage;
 import android.nfc.NdefRecord;
 
+import java.util.Locale;
+
+import com.android.apps.tag.message.NdefMessageParser;
+import com.android.apps.tag.message.ParsedNdefMessage;
 import com.google.common.annotations.VisibleForTesting;
 
 /**
@@ -33,7 +37,7 @@ import com.google.common.annotations.VisibleForTesting;
 public class TagDBHelper extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "tags.db";
-    private static final int DATABASE_VERSION = 3;
+    private static final int DATABASE_VERSION = 5;
 
     public interface NdefMessagesTable {
         public static final String TABLE_NAME = "nedf_msg";
@@ -42,10 +46,12 @@ public class TagDBHelper extends SQLiteOpenHelper {
         public static final String TITLE = "title";
         public static final String BYTES = "bytes";
         public static final String DATE = "date";
-        public static final String SAVED = "saved";
+        public static final String STARRED = "starred";
     }
 
     private static TagDBHelper sInstance;
+
+    private Context mContext;
 
     public static synchronized TagDBHelper getInstance(Context context) {
         if (sInstance == null) {
@@ -56,11 +62,13 @@ public class TagDBHelper extends SQLiteOpenHelper {
 
     private TagDBHelper(Context context) {
         this(context, DATABASE_NAME);
+        mContext = context;
     }
 
     @VisibleForTesting
     TagDBHelper(Context context, String dbFile) {
         super(context, dbFile, null, DATABASE_VERSION);
+        mContext = context;
     }
 
     @Override
@@ -70,12 +78,12 @@ public class TagDBHelper extends SQLiteOpenHelper {
                 NdefMessagesTable.TITLE + " TEXT NOT NULL DEFAULT ''," +
                 NdefMessagesTable.BYTES + " BLOB NOT NULL, " +
                 NdefMessagesTable.DATE + " INTEGER NOT NULL, " +
-                NdefMessagesTable.SAVED + " INTEGER NOT NULL DEFAULT 0" +  // boolean
+                NdefMessagesTable.STARRED + " INTEGER NOT NULL DEFAULT 0" +  // boolean
                 ");");
 
         db.execSQL("CREATE INDEX msgIndex ON " + NdefMessagesTable.TABLE_NAME + " (" +
                 NdefMessagesTable.DATE + " DESC, " +
-                NdefMessagesTable.SAVED + " ASC" +
+                NdefMessagesTable.STARRED + " ASC" +
                 ")");
 
         addTestData(db);
@@ -114,15 +122,18 @@ public class TagDBHelper extends SQLiteOpenHelper {
         }
     }
 
-    public void insertNdefMessage(SQLiteDatabase db, NdefMessage msg, boolean isSaved) {
+    public void insertNdefMessage(SQLiteDatabase db, NdefMessage msg, boolean isStarred) {
+        ParsedNdefMessage parsedMsg = NdefMessageParser.parse(msg);
         SQLiteStatement stmt = null;
         try {
             stmt = db.compileStatement("INSERT INTO " + NdefMessagesTable.TABLE_NAME +
                     "(" + NdefMessagesTable.BYTES + ", " + NdefMessagesTable.DATE + ", " +
-                    NdefMessagesTable.SAVED + ") values (?, ?, ?)");
+                    NdefMessagesTable.STARRED + "," + NdefMessagesTable.TITLE + ") " +
+                    "values (?, ?, ?, ?)");
             stmt.bindBlob(1, msg.toByteArray());
             stmt.bindLong(2, System.currentTimeMillis());
-            stmt.bindLong(3, isSaved ? 1 : 0);
+            stmt.bindLong(3, isStarred ? 1 : 0);
+            stmt.bindString(4, parsedMsg.getSnippet(mContext, Locale.getDefault()));
             stmt.executeInsert();
         } finally {
             if (stmt != null) stmt.close();

@@ -16,20 +16,39 @@
 
 package com.android.apps.tag.message;
 
+import com.android.apps.tag.record.ParsedNdefRecord;
+import com.google.common.collect.ImmutableList;
+
+import android.content.Context;
+
+import java.util.List;
 import java.util.Locale;
 
 /**
  * A parsed version of an {@link android.nfc.NdefMessage}
  */
-public interface ParsedNdefMessage {
+public abstract class ParsedNdefMessage {
+
+    private List<ParsedNdefRecord> mRecords;
+
+    public ParsedNdefMessage(List<ParsedNdefRecord> records) {
+        mRecords = ImmutableList.copyOf(records);
+    }
+
+    /**
+     * Returns the list of parsed records on this message.
+     */
+    public List<ParsedNdefRecord> getRecords() {
+        return mRecords;
+    }
 
     /**
      * Returns the snippet information associated with the NdefMessage
      * most appropriate for the given {@code locale}.
      */
-    public String getSnippet(Locale locale);
+    public abstract String getSnippet(Context context, Locale locale);
 
     // TODO: Determine if this is the best place for holding whether
     // the user has starred this parsed message.
-    public boolean isStarred();
+    public abstract boolean isStarred();
 }

@@ -23,6 +23,7 @@
     package="com.android.apps.tag"
 >
 
+    <uses-permission android:name="android.permission.CALL_PHONE" />
     <uses-permission android:name="android.permission.NFC" />
 
     <application android:label="Tags">
@@ -39,13 +40,15 @@
         <activity android:name="TagList" />
 
         <activity android:name="TagViewer"
-            android:theme="@android:style/Theme.Dialog"
+            android:theme="@android:style/Theme.NoTitleBar"
         >
             <intent-filter>
                 <action android:name="android.nfc.action.NDEF_TAG_DISCOVERED"/>
                 <category android:name="android.intent.category.DEFAULT"/>
             </intent-filter>
         </activity>
+
+        <service android:name="TagService" />
 
     </application>
 </manifest>
