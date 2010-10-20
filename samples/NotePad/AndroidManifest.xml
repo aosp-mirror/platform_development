@@ -20,16 +20,15 @@
      own application, the package name must be changed from "com.example.*"
      to come from a domain that you own or have control over. -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.android.notepad"
->
-    <application android:icon="@drawable/app_notes"
-        android:label="@string/app_name"
-    >
-        <provider android:name="NotePadProvider"
-            android:authorities="com.google.provider.NotePad"
-        />
+    package="com.example.android.notepad" >
 
-        <activity android:name="NotesList" android:label="@string/title_notes_list">
+    <application android:icon="@drawable/app_notes"
+        android:label="@string/app_name" >
+        <provider android:name="NotePadProvider"
+            android:authorities="com.example.notepad.provider.NotePad" />
+
+        <activity android:name="NotesList"
+            android:label="@string/title_notes_list">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -50,16 +49,13 @@
 
         <activity android:name="NoteEditor"
             android:theme="@android:style/Theme.Light"
-            android:label="@string/title_note"
-            android:screenOrientation="sensor"
-            android:configChanges="keyboardHidden|orientation"
-        >
+            android:configChanges="keyboardHidden|orientation">
             <!-- This filter says that we can view or edit the data of
                  a single note -->
             <intent-filter android:label="@string/resolve_edit">
                 <action android:name="android.intent.action.VIEW" />
                 <action android:name="android.intent.action.EDIT" />
-                <action android:name="com.android.notepad.action.EDIT_NOTE" />
+                <action android:name="com.android.notes.action.EDIT_NOTE" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:mimeType="vnd.android.cursor.item/vnd.google.note" />
             </intent-filter>
@@ -77,6 +73,7 @@
         <activity android:name="TitleEditor"
             android:label="@string/title_edit_title"
             android:theme="@android:style/Theme.Dialog"
+            android:icon="@drawable/ic_menu_edit"
             android:windowSoftInputMode="stateVisible">
             <!-- This activity implements an alternative action that can be
                  performed on notes: editing their title.  It can be used as
@@ -110,6 +107,6 @@
 
     </application>
 
-    <uses-sdk android:targetSdkVersion="4" android:minSdkVersion="3"/>
+    <uses-sdk android:minSdkVersion="3" android:targetSdkVersion="4"/>
 </manifest>
 
