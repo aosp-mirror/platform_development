@@ -125,6 +125,21 @@ public class Monkey {
     private boolean mRequestDumpsysMemInfo = false;
 
     /**
+     * This is set by the ActivityController thread to request a
+     * bugreport after ANR
+     */
+    private boolean mRequestAnrBugreport = false;
+
+    /**
+     * This is set by the ActivityController thread to request a
+     * bugreport after java application crash
+     */
+    private boolean mRequestAppCrashBugreport = false;
+
+    /** Failure process name */
+    private String mReportProcessName;
+
+    /**
      * This is set by the ActivityController thread to request a "procrank"
      */
     private boolean mRequestProcRank = false;
@@ -186,6 +201,9 @@ public class Monkey {
     boolean mRandomizeScript = false;
 
     boolean mScriptLog = false;
+
+    /** Capture bugreprot whenever there is a crash. **/
+    private boolean mRequestBugreport = false;
 
     /** a filename to the setup script (if any) */
     private String mSetupFileName = null;
@@ -281,11 +299,16 @@ public class Monkey {
             System.err.println("// " + stackTrace.replace("\n", "\n// "));
             StrictMode.setThreadPolicy(savedPolicy);
 
-            if (!mIgnoreCrashes) {
+            if (!mIgnoreCrashes || mRequestBugreport) {
                 synchronized (Monkey.this) {
-                    mAbort = true;
+                    if (!mIgnoreCrashes) {
+                        mAbort = true;
+                    }
+                    if (mRequestBugreport){
+                        mRequestAppCrashBugreport = true;
+                        mReportProcessName = processName;
+                    }
                 }
-
                 return !mKillProcessAfterError;
             }
             return false;
@@ -300,10 +323,15 @@ public class Monkey {
             System.err.println("// NOT RESPONDING: " + processName + " (pid " + pid + ")");
             System.err.println(processStats);
             StrictMode.setThreadPolicy(savedPolicy);
+
             synchronized (Monkey.this) {
                 mRequestAnrTraces = true;
                 mRequestDumpsysMemInfo = true;
                 mRequestProcRank = true;
+                if (mRequestBugreport){
+                  mRequestAnrBugreport = true;
+                  mReportProcessName = processName;
+                }
             }
             if (!mIgnoreTimeouts) {
                 synchronized (Monkey.this) {
@@ -359,22 +387,38 @@ public class Monkey {
     private void commandLineReport(String reportName, String command) {
         System.err.println(reportName + ":");
         Runtime rt = Runtime.getRuntime();
+        Writer logOutput = null;
+
         try {
             // Process must be fully qualified here because android.os.Process
             // is used elsewhere
             java.lang.Process p = Runtime.getRuntime().exec(command);
 
+            if (mRequestBugreport) {
+                logOutput =
+                        new BufferedWriter(new FileWriter(new File(Environment
+                                .getExternalStorageDirectory(), reportName), true));
+            }
             // pipe everything from process stdout -> System.err
             InputStream inStream = p.getInputStream();
             InputStreamReader inReader = new InputStreamReader(inStream);
             BufferedReader inBuffer = new BufferedReader(inReader);
             String s;
             while ((s = inBuffer.readLine()) != null) {
-                System.err.println(s);
+                if (mRequestBugreport) {
+                    logOutput.write(s);
+                    logOutput.write("\n");
+                } else {
+                    System.err.println(s);
+                }
             }
 
             int status = p.waitFor();
             System.err.println("// " + reportName + " status was " + status);
+
+            if (logOutput != null) {
+                logOutput.close();
+            }
         } catch (Exception e) {
             System.err.println("// Exception from " + reportName + ":");
             System.err.println(e.toString());
@@ -393,6 +437,13 @@ public class Monkey {
         } catch (IOException e) {
             System.err.println(e.toString());
         }
+    }
+
+    // Write the bugreport to the sdcard.
+    private void getBugreport(String reportName) {
+        reportName += MonkeyUtils.toCalendarTime(System.currentTimeMillis());
+        String bugreportName = reportName.replaceAll("[ ,:]", "_");
+        commandLineReport(bugreportName + ".txt", "bugreport");
     }
 
     /**
@@ -557,6 +608,15 @@ public class Monkey {
                 reportAnrTraces();
                 mRequestAnrTraces = false;
             }
+            if (mRequestAnrBugreport){
+                System.out.println("Print the anr report");
+                getBugreport("anr_" + mReportProcessName + "_");
+                mRequestAnrBugreport = false;
+            }
+            if (mRequestAppCrashBugreport){
+                getBugreport("app_crash" + mReportProcessName + "_");
+                mRequestAnrBugreport = false;
+            }
             if (mRequestDumpsysMemInfo) {
                 reportDumpsysMemInfo();
                 mRequestDumpsysMemInfo = false;
@@ -697,9 +757,11 @@ public class Monkey {
                     mDeviceSleepTime = nextOptionLong("Device sleep time" +
                                                       "(in milliseconds)");
                 } else if (opt.equals("--randomize-script")) {
-                     mRandomizeScript = true;
+                    mRandomizeScript = true;
                 } else if (opt.equals("--script-log")) {
                     mScriptLog = true;
+                } else if (opt.equals("--bugreport")) {
+                    mRequestBugreport = true;
                 } else if (opt.equals("-h")) {
                     showUsage();
                     return false;
@@ -935,6 +997,14 @@ public class Monkey {
                     mRequestAnrTraces = false;
                     shouldReportAnrTraces = true;
                 }
+                if (mRequestAnrBugreport){
+                    getBugreport("anr_" + mReportProcessName + "_");
+                    mRequestAnrBugreport = false;
+                }
+                if (mRequestAppCrashBugreport){
+                    getBugreport("app_crash" + mReportProcessName + "_");
+                    mRequestAnrBugreport = false;
+                }
                 if (mRequestDumpsysMemInfo) {
                     mRequestDumpsysMemInfo = false;
                     shouldReportDumpsysMemInfo = true;
@@ -944,6 +1014,9 @@ public class Monkey {
                     // the watcher (ignore the error)
                     if (checkNativeCrashes() && (eventCounter > 0)) {
                         System.out.println("** New native crash detected.");
+                        if (mRequestBugreport) {
+                            getBugreport("native_crash_");
+                        }
                         mAbort = mAbort || !mIgnoreNativeCrashes || mKillProcessAfterError;
                     }
                 }
@@ -1197,6 +1270,7 @@ public class Monkey {
         usage.append("              [--device-sleep-time MILLISEC]\n");
         usage.append("              [--randomize-script]\n");
         usage.append("              [--script-log]\n");
+        usage.append("              [--bugreport]\n");
         usage.append("              COUNT\n");
         System.err.println(usage.toString());
     }
