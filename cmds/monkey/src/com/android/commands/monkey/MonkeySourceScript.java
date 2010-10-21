@@ -110,6 +110,8 @@ public class MonkeySourceScript implements MonkeyEventSource {
 
     private static final String EVENT_KEYWORD_DEVICE_WAKEUP = "DeviceWakeUp";
 
+    private static final String EVENT_KEYWORD_INPUT_STRING = "DispatchString";
+
     // a line at the end of the header
     private static final String STARTING_DATA_LINE = "start data >>";
 
@@ -439,6 +441,16 @@ public class MonkeySourceScript implements MonkeyEventSource {
             MonkeyCommandEvent e = new MonkeyCommandEvent(cmd);
             mQ.addLast(e);
         }
+
+        //Input the string through the shell command
+        if (s.indexOf(EVENT_KEYWORD_INPUT_STRING) >= 0 && args.length == 1) {
+            String input = args[0];
+            String cmd = "input text " + input;
+            MonkeyCommandEvent e = new MonkeyCommandEvent(cmd);
+            mQ.addLast(e);
+            return;
+        }
+
     }
 
     /**
