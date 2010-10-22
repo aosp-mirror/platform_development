@@ -21,9 +21,13 @@ import android.content.Context;
 import android.hardware.Camera;
 import android.hardware.Camera.Size;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.view.View;
+import android.view.ViewGroup;
 import android.view.Window;
+import android.view.WindowManager;
 
 import java.io.IOException;
 import java.util.List;
@@ -32,62 +36,145 @@ import java.util.List;
 
 public class CameraPreview extends Activity {
     private Preview mPreview;
+    Camera mCamera;
 
     @Override
-	protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         // Hide the window title.
         requestWindowFeature(Window.FEATURE_NO_TITLE);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
-        // Create our Preview view and set it as the content of our activity.
+        // Create a RelativeLayout container that will hold a SurfaceView,
+        // and set it as the content of our activity.
         mPreview = new Preview(this);
         setContentView(mPreview);
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        mCamera = Camera.open();
+        mPreview.setCamera(mCamera);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+
+        // Because the Camera object is a shared resource, it's very
+        // important to release it when the activity is paused.
+        if (mCamera != null) {
+            mPreview.setCamera(null);
+            mCamera.release();
+            mCamera = null;
+        }
+    }
 }
 
 // ----------------------------------------------------------------------
 
-class Preview extends SurfaceView implements SurfaceHolder.Callback {
+/**
+ * A simple wrapper around a Camera and a SurfaceView that renders a centered preview of the Camera
+ * to the surface. We need to center the SurfaceView because not all devices have cameras that
+ * support preview sizes at the same aspect ratio as the device's display.
+ */
+class Preview extends ViewGroup implements SurfaceHolder.Callback {
+    private final String TAG = "Preview";
+
+    SurfaceView mSurfaceView;
     SurfaceHolder mHolder;
+    Size mPreviewSize;
+    List<Size> mSupportedPreviewSizes;
     Camera mCamera;
 
     Preview(Context context) {
         super(context);
 
+        mSurfaceView = new SurfaceView(context);
+        addView(mSurfaceView);
+
         // Install a SurfaceHolder.Callback so we get notified when the
         // underlying surface is created and destroyed.
-        mHolder = getHolder();
+        mHolder = mSurfaceView.getHolder();
         mHolder.addCallback(this);
         mHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
+    }
+
+    public void setCamera(Camera camera) {
+        mCamera = camera;
+        if (mCamera != null) {
+            mSupportedPreviewSizes = mCamera.getParameters().getSupportedPreviewSizes();
+            requestLayout();
+        }
+    }
+
+    @Override
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        // We purposely disregard child measurements because act as a
+        // wrapper to a SurfaceView that centers the camera preview instead
+        // of stretching it.
+        final int width = resolveSize(getSuggestedMinimumWidth(), widthMeasureSpec);
+        final int height = resolveSize(getSuggestedMinimumHeight(), heightMeasureSpec);
+        setMeasuredDimension(width, height);
+
+        if (mSupportedPreviewSizes != null) {
+            mPreviewSize = getOptimalPreviewSize(mSupportedPreviewSizes, width, height);
+        }
+    }
+
+    @Override
+    protected void onLayout(boolean changed, int l, int t, int r, int b) {
+        if (changed && getChildCount() > 0) {
+            final View child = getChildAt(0);
+
+            final int width = r - l;
+            final int height = b - t;
+
+            int previewWidth = width;
+            int previewHeight = height;
+            if (mPreviewSize != null) {
+                previewWidth = mPreviewSize.width;
+                previewHeight = mPreviewSize.height;
+            }
+
+            // Center the child SurfaceView within the parent.
+            if (width * previewHeight > height * previewWidth) {
+                final int scaledChildWidth = previewWidth * height / previewHeight;
+                child.layout((width - scaledChildWidth) / 2, 0,
+                        (width + scaledChildWidth) / 2, height);
+            } else {
+                final int scaledChildHeight = previewHeight * width / previewWidth;
+                child.layout(0, (height - scaledChildHeight) / 2,
+                        width, (height + scaledChildHeight) / 2);
+            }
+        }
     }
 
     public void surfaceCreated(SurfaceHolder holder) {
         // The Surface has been created, acquire the camera and tell it where
         // to draw.
-        mCamera = Camera.open();
         try {
-           mCamera.setPreviewDisplay(holder);
+            if (mCamera != null) {
+                mCamera.setPreviewDisplay(holder);
+            }
         } catch (IOException exception) {
-            mCamera.release();
-            mCamera = null;
-            // TODO: add more exception handling logic here
+            Log.e(TAG, "IOException caused by setPreviewDisplay()", exception);
         }
     }
 
     public void surfaceDestroyed(SurfaceHolder holder) {
         // Surface will be destroyed when we return, so stop the preview.
-        // Because the CameraDevice object is not a shared resource, it's very
-        // important to release it when the activity is paused.
-        mCamera.stopPreview();
-        mCamera.release();
-        mCamera = null;
+        if (mCamera != null) {
+            mCamera.stopPreview();
+        }
     }
 
 
     private Size getOptimalPreviewSize(List<Size> sizes, int w, int h) {
-        final double ASPECT_TOLERANCE = 0.05;
+        final double ASPECT_TOLERANCE = 0.1;
         double targetRatio = (double) w / h;
         if (sizes == null) return null;
 
@@ -123,10 +210,8 @@ class Preview extends SurfaceView implements SurfaceHolder.Callback {
         // Now that the size is known, set up the camera parameters and begin
         // the preview.
         Camera.Parameters parameters = mCamera.getParameters();
-
-        List<Size> sizes = parameters.getSupportedPreviewSizes();
-        Size optimalSize = getOptimalPreviewSize(sizes, w, h);
-        parameters.setPreviewSize(optimalSize.width, optimalSize.height);
+        parameters.setPreviewSize(mPreviewSize.width, mPreviewSize.height);
+        requestLayout();
 
         mCamera.setParameters(parameters);
         mCamera.startPreview();
