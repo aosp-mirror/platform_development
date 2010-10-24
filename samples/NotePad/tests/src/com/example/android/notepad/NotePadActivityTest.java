@@ -17,7 +17,6 @@
 package com.example.android.notepad;
 
 import android.test.ActivityInstrumentationTestCase2;
-
 import com.example.android.notepad.NotesList;
 
 /**
@@ -30,7 +29,7 @@ public class NotePadActivityTest extends ActivityInstrumentationTestCase2<NotesL
      * Creates an {@link ActivityInstrumentationTestCase2} for the {@link NotesList} activity.
      */
     public NotePadActivityTest() {
-        super("com.example.android.notepad.test",NotesList.class);
+        super(NotesList.class);
     }
 
     /**

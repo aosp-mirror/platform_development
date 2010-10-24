@@ -1,32 +1,49 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Copyright (C) 2008 The Android Open Source Project
+<!--
+    Copyright (C) 2007 The Android Open Source Project
 
-     Licensed under the Apache License, Version 2.0 (the "License");
-     you may not use this file except in compliance with the License.
-     You may obtain a copy of the License at
-  
-          http://www.apache.org/licenses/LICENSE-2.0
-  
-     Unless required by applicable law or agreed to in writing, software
-     distributed under the License is distributed on an "AS IS" BASIS,
-     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-     See the License for the specific language governing permissions and
-     limitations under the License.
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
 -->
-
-<manifest xmlns:android="http://schemas.android.com/apk/res/android" 
-      package="com.example.android.notepad.tests">
-    
-    <!-- We add an application tag here just so that we can indicate that
-         this package needs to link against the android.test library,
-         which is needed when building test cases. -->    
+<!--
+    To run this test package, install it and the NotesList application to a device or emulator and
+    then run
+    adb shell am instrument -w com.example.android.notepad.tests/android.test.InstrumentationTestRunner
+-->
+<!--
+    The Android package name differs from the package ID of the code. The code package ID
+    'com.example.android.notepad' allows the test code to use declarations from the application
+    under test, while the Android package name identifies this as a separate test package.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.android.notepad.tests"
+    android:versionCode="1"
+    android:versionName="1.0">
+    <!--
+        The application element indicates that this package must be linked against the library
+        android.test.runner, which is not part of the normal link path. The library contains
+        code for test cases.
+    -->
     <application>
         <uses-library android:name="android.test.runner" />
     </application>
-
-  <instrumentation android:name="android.test.InstrumentationTestRunner"
-      android:targetPackage="com.example.android.notepad"
-      android:label="NotePad sample tests">
-  </instrumentation>  
-  
+    <!--
+        The instrumentation element tells Android to use instrumentation to run this package.
+        The target Android package 'com.example.android.notepad' is loaded along with the
+        test package 'com.example.android.notepad.tests'. Android then starts the class
+        'android.test.InstrumentationTestRunner', which loads the test case classes in the package.
+    -->
+    <instrumentation android:name="android.test.InstrumentationTestRunner"
+                     android:targetPackage="com.example.android.notepad"
+                     android:label="Tests for com.example.android.notepad"/>
+    <uses-sdk android:minSdkVersion="10"></uses-sdk>
 </manifest>
