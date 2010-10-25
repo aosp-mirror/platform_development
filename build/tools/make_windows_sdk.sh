@@ -161,6 +161,7 @@ function package() {
     LIB="$TEMP_SDK_DIR/tools/lib"
     rm -v "$TOOLS"/{adb,android,apkbuilder,ddms,dmtracedump,draw9patch,emulator,etc1tool}
     rm -v "$TOOLS"/{hierarchyviewer,hprof-conv,layoutopt,mksdcard,sqlite3,traceview,zipalign,monkeyrunner}
+    rm -v "$TOOLS"/proguard/bin/*.sh
     rm -v "$LIB"/*/swt.jar
     rm -v "$PLATFORM_TOOLS"/{aapt,aidl,dx,dexdump}
 
@@ -171,6 +172,7 @@ function package() {
     cp -v prebuilt/windows/swt/swt.jar         "$LIB"/x86/
     mkdir -pv "$LIB"/x86_64
     cp -v prebuilt/windows-x86_64/swt/swt.jar  "$LIB"/x86_64/
+    cp -v external/proguard/bin/*.bat          "$TOOLS"/proguard/bin/
 
     # Copy the SDK Manager (aka sdklauncher) to the root of the SDK (it was copied in tools above)
     # and move it also in SDK/tools/lib (so that tools updates can update the root one too)
