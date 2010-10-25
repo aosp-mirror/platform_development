@@ -27,6 +27,7 @@ PLATFORM_TOOLS=$TEMP_SDK_DIR/platform-tools
 LIB=$TEMP_SDK_DIR/tools/lib
 rm $V $TOOLS/{android,apkbuilder,ddms,dmtracedump,draw9patch,emulator,etc1tool}
 rm $V $TOOLS/{hierarchyviewer,hprof-conv,layoutopt,mksdcard,sqlite3,traceview,zipalign,monkeyrunner}
+rm $V $TOOLS/proguard/bin/*.sh
 rm $V $LIB/*/swt.jar
 rm $V $PLATFORM_TOOLS/{adb,aapt,aidl,dx,dexdump}
 
@@ -37,6 +38,7 @@ mkdir -pv $LIB/x86
 cp $V ${TOPDIR}prebuilt/windows/swt/swt.jar         $LIB/x86/
 mkdir -pv $LIB/x86_64
 cp $V ${TOPDIR}prebuilt/windows-x86_64/swt/swt.jar  $LIB/x86_64/
+cp $V ${TOPDIR}external/proguard/bin/*.bat          $TOOLS/proguard/bin/
 
 # Copy the SDK Manager (aka sdklauncher) to the root of the SDK (it was copied in tools above)
 # and move it also in SDK/tools/lib (so that tools updates can update the root one too)
