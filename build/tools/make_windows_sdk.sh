@@ -172,7 +172,6 @@ function package() {
     cp -v prebuilt/windows/swt/swt.jar         "$LIB"/x86/
     mkdir -pv "$LIB"/x86_64
     cp -v prebuilt/windows-x86_64/swt/swt.jar  "$LIB"/x86_64/
-    cp -v external/proguard/bin/*.bat          "$TOOLS"/proguard/bin/
 
     # Copy the SDK Manager (aka sdklauncher) to the root of the SDK (it was copied in tools above)
     # and move it also in SDK/tools/lib (so that tools updates can update the root one too)
@@ -196,6 +195,7 @@ function package() {
     cp -v sdk/draw9patch/etc/draw9patch.bat                "$TOOLS"/
     cp -v sdk/sdkmanager/app/etc/android.bat               "$TOOLS"/
     cp -v sdk/monkeyrunner/etc/monkeyrunner.bat            "$TOOLS"/
+    cp -v sdk/files/proguard/bin/*.bat                     "$TOOLS"/proguard/bin/
 
     # Put the JetCreator tools, content and docs (not available in the linux SDK)
     JET="$TOOLS/Jet"

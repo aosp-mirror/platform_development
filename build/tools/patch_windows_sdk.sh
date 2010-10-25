@@ -38,7 +38,6 @@ mkdir -pv $LIB/x86
 cp $V ${TOPDIR}prebuilt/windows/swt/swt.jar         $LIB/x86/
 mkdir -pv $LIB/x86_64
 cp $V ${TOPDIR}prebuilt/windows-x86_64/swt/swt.jar  $LIB/x86_64/
-cp $V ${TOPDIR}external/proguard/bin/*.bat          $TOOLS/proguard/bin/
 
 # Copy the SDK Manager (aka sdklauncher) to the root of the SDK (it was copied in tools above)
 # and move it also in SDK/tools/lib (so that tools updates can update the root one too)
@@ -62,6 +61,7 @@ cp $V ${TOPDIR}sdk/layoutopt/app/etc/layoutopt.bat              $TOOLS/
 cp $V ${TOPDIR}sdk/draw9patch/etc/draw9patch.bat                $TOOLS/
 cp $V ${TOPDIR}sdk/sdkmanager/app/etc/android.bat               $TOOLS/
 cp $V ${TOPDIR}sdk/monkeyrunner/etc/monkeyrunner.bat            $TOOLS/
+cp $V ${TOPDIR}sdk/files/proguard/bin/*.bat                     $TOOLS/proguard/bin/
 
 # Put the JetCreator tools, content and docs (not available in the linux SDK)
 JET=$TOOLS/Jet
