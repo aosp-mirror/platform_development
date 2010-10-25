@@ -16,8 +16,6 @@
 
 package com.example.android.notepad;
 
-import com.example.android.notepad.NotePad.Notes;
-
 import android.app.Activity;
 import android.content.ContentValues;
 import android.database.Cursor;
@@ -26,6 +24,8 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+
+import com.example.android.notepad.NotePad.NoteColumns;
 
 /**
  * An activity that will edit the title of a note. Displays a floating
@@ -42,8 +42,8 @@ public class TitleEditor extends Activity implements View.OnClickListener {
      * An array of the columns we are interested in.
      */
     private static final String[] PROJECTION = new String[] {
-            NotePad.Notes._ID, // 0
-            NotePad.Notes.TITLE, // 1
+        NoteColumns._ID, // 0
+        NoteColumns.TITLE, // 1
     };
     /** Index of the title column */
     private static final int COLUMN_INDEX_TITLE = 1;
@@ -102,7 +102,7 @@ public class TitleEditor extends Activity implements View.OnClickListener {
         if (mCursor != null) {
             // Write the title back to the note 
             ContentValues values = new ContentValues();
-            values.put(Notes.TITLE, mText.getText().toString());
+            values.put(NoteColumns.TITLE, mText.getText().toString());
             getContentResolver().update(mUri, values, null, null);
         }
     }

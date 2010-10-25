@@ -23,7 +23,7 @@ import android.provider.BaseColumns;
  * Convenience definitions for NotePadProvider
  */
 public final class NotePad {
-    public static final String AUTHORITY = "com.google.provider.NotePad";
+    public static final String AUTHORITY = "com.example.notepad.provider.NotePad";
 
     // This class cannot be instantiated
     private NotePad() {}
@@ -31,9 +31,9 @@ public final class NotePad {
     /**
      * Notes table
      */
-    public static final class Notes implements BaseColumns {
+    public static final class NoteColumns implements BaseColumns {
         // This class cannot be instantiated
-        private Notes() {}
+        private NoteColumns() {}
 
         /**
          * The content:// style URL for this table
