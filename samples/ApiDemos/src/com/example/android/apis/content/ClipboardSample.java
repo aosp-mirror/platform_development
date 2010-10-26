@@ -118,7 +118,7 @@ public class ClipboardSample extends Activity {
 
     void updateClipData() {
         ClipData clip = mClipboard.getPrimaryClip();
-        String[] mimeTypes = clip != null ? clip.filterMimeTypes("*/*") : null;
+        String[] mimeTypes = clip != null ? clip.getDescription().filterMimeTypes("*/*") : null;
         mMimeTypes.setText("");
         if (mimeTypes != null) {
             for (int i=0; i<mimeTypes.length; i++) {
