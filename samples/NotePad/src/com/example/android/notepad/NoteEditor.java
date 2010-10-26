@@ -16,13 +16,12 @@
 
 package com.example.android.notepad;
 
-import com.example.android.notepad.NotePad.Notes;
-
 import android.app.Activity;
 import android.content.ComponentName;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.Resources;
 import android.database.Cursor;
 import android.graphics.Canvas;
 import android.graphics.Paint;
@@ -32,8 +31,12 @@ import android.os.Bundle;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.EditText;
+import android.widget.Toast;
+
+import com.example.android.notepad.NotePad.NoteColumns;
 
 /**
  * A generic activity for editing a note in a database.  This can be used
@@ -41,32 +44,29 @@ import android.widget.EditText;
  * {@link Intent#ACTION_EDIT}, or create a new note {@link Intent#ACTION_INSERT}.  
  */
 public class NoteEditor extends Activity {
-    private static final String TAG = "Notes";
+    private static final String TAG = "NoteEditor";
 
     /**
      * Standard projection for the interesting columns of a normal note.
      */
     private static final String[] PROJECTION = new String[] {
-            Notes._ID, // 0
-            Notes.NOTE, // 1
+        NoteColumns._ID, // 0
+        NoteColumns.NOTE, // 1
+        NoteColumns.TITLE, // 2
     };
     /** The index of the note column */
     private static final int COLUMN_INDEX_NOTE = 1;
+    /** The index of the title column */
+    private static final int COLUMN_INDEX_TITLE = 2;
     
     // This is our state data that is stored when freezing.
     private static final String ORIGINAL_CONTENT = "origContent";
-
-    // Identifiers for our menu items.
-    private static final int REVERT_ID = Menu.FIRST;
-    private static final int DISCARD_ID = Menu.FIRST + 1;
-    private static final int DELETE_ID = Menu.FIRST + 2;
 
     // The different distinct states the activity can be run in.
     private static final int STATE_EDIT = 0;
     private static final int STATE_INSERT = 1;
 
     private int mState;
-    private boolean mNoteOnly = false;
     private Uri mUri;
     private Cursor mCursor;
     private EditText mText;
@@ -112,7 +112,6 @@ public class NoteEditor extends Activity {
         final Intent intent = getIntent();
 
         // Do some setup based on the action being performed.
-
         final String action = intent.getAction();
         if (Intent.ACTION_EDIT.equals(action)) {
             // Requested to edit: set that state, and the data being edited.
@@ -163,16 +162,21 @@ public class NoteEditor extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
-
         // If we didn't have any trouble retrieving the data, it is now
         // time to get at the stuff.
         if (mCursor != null) {
+            // Requery in case something changed while paused (such as the title)
+            mCursor.requery();
             // Make sure we are at the one and only row in the cursor.
             mCursor.moveToFirst();
 
             // Modify our overall title depending on the mode we are running in.
             if (mState == STATE_EDIT) {
-                setTitle(getText(R.string.title_edit));
+                // Set the title of the Activity to include the note title
+                String title = mCursor.getString(COLUMN_INDEX_TITLE);
+                Resources res = getResources();
+                String text = String.format(res.getString(R.string.title_edit), title);
+                setTitle(text);
             } else if (mState == STATE_INSERT) {
                 setTitle(getText(R.string.title_create));
             }
@@ -206,109 +210,129 @@ public class NoteEditor extends Activity {
     @Override
     protected void onPause() {
         super.onPause();
+        // The user is going somewhere, so make sure changes are saved
 
-        // The user is going somewhere else, so make sure their current
-        // changes are safely saved away in the provider.  We don't need
-        // to do this if only editing.
-        if (mCursor != null) {
-            String text = mText.getText().toString();
-            int length = text.length();
+        String text = mText.getText().toString();
+        int length = text.length();
 
-            // If this activity is finished, and there is no text, then we
-            // do something a little special: simply delete the note entry.
-            // Note that we do this both for editing and inserting...  it
-            // would be reasonable to only do it when inserting.
-            if (isFinishing() && (length == 0) && !mNoteOnly) {
-                setResult(RESULT_CANCELED);
-                deleteNote();
-
-            // Get out updates into the provider.
-            } else {
-                ContentValues values = new ContentValues();
-
-                // This stuff is only done when working with a full-fledged note.
-                if (!mNoteOnly) {
-                    // Bump the modification time to now.
-                    values.put(Notes.MODIFIED_DATE, System.currentTimeMillis());
-
-                    // If we are creating a new note, then we want to also create
-                    // an initial title for it.
-                    if (mState == STATE_INSERT) {
-                        String title = text.substring(0, Math.min(30, length));
-                        if (length > 30) {
-                            int lastSpace = title.lastIndexOf(' ');
-                            if (lastSpace > 0) {
-                                title = title.substring(0, lastSpace);
-                            }
-                        }
-                        values.put(Notes.TITLE, title);
-                    }
-                }
-
-                // Write our text back into the provider.
-                values.put(Notes.NOTE, text);
-
-                // Commit all of our changes to persistent storage. When the update completes
-                // the content provider will notify the cursor of the change, which will
-                // cause the UI to be updated.
-                getContentResolver().update(mUri, values, null, null);
-            }
+        // If this activity is finished, and there is no text, then we
+        // simply delete the note entry.
+        // Note that we do this both for editing and inserting...  it
+        // would be reasonable to only do it when inserting.
+        if (isFinishing() && (length == 0) && mCursor != null) {
+            setResult(RESULT_CANCELED);
+            deleteNote();
+        } else {
+            saveNote();
         }
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        super.onCreateOptionsMenu(menu);
+        // Inflate menu from XML resource
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.editor_options_menu, menu);
 
-        // Build the menus that are shown when editing.
-        if (mState == STATE_EDIT) {
-            menu.add(0, REVERT_ID, 0, R.string.menu_revert)
-                    .setShortcut('0', 'r')
-                    .setIcon(android.R.drawable.ic_menu_revert);
-            if (!mNoteOnly) {
-                menu.add(0, DELETE_ID, 0, R.string.menu_delete)
-                        .setShortcut('1', 'd')
-                        .setIcon(android.R.drawable.ic_menu_delete);
-            }
-
-        // Build the menus that are shown when inserting.
-        } else {
-            menu.add(0, DISCARD_ID, 0, R.string.menu_discard)
-                    .setShortcut('0', 'd')
-                    .setIcon(android.R.drawable.ic_menu_delete);
-        }
-
-        // If we are working on a full note, then append to the
+        // Append to the
         // menu items for any other activities that can do stuff with it
         // as well.  This does a query on the system for any activities that
         // implement the ALTERNATIVE_ACTION for our data, adding a menu item
         // for each one that is found.
-        if (!mNoteOnly) {
-            Intent intent = new Intent(null, getIntent().getData());
-            intent.addCategory(Intent.CATEGORY_ALTERNATIVE);
-            menu.addIntentOptions(Menu.CATEGORY_ALTERNATIVE, 0, 0,
-                    new ComponentName(this, NoteEditor.class), null, intent, 0, null);
-        }
+        Intent intent = new Intent(null, getIntent().getData());
+        intent.addCategory(Intent.CATEGORY_ALTERNATIVE);
+        menu.addIntentOptions(Menu.CATEGORY_ALTERNATIVE, 0, 0,
+                new ComponentName(this, NoteEditor.class), null, intent, 0, null);
 
-        return true;
+        return super.onCreateOptionsMenu(menu);
+    }
+    
+    
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        if (mState == STATE_EDIT) {
+            menu.setGroupVisible(R.id.menu_group_edit, true);
+            menu.setGroupVisible(R.id.menu_group_insert, false);
+            
+            // Check if note has changed and enable/disable the revert option
+            String savedNote = mCursor.getString(COLUMN_INDEX_NOTE);
+            String currentNote = mText.getText().toString();
+            if (savedNote.equals(currentNote)) {
+                menu.findItem(R.id.menu_revert).setEnabled(false);
+            } else {
+                menu.findItem(R.id.menu_revert).setEnabled(true);
+            }
+        } else {
+            menu.setGroupVisible(R.id.menu_group_edit, false);
+            menu.setGroupVisible(R.id.menu_group_insert, true);
+        }
+        return super.onPrepareOptionsMenu(menu);
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle all of the possible menu actions.
         switch (item.getItemId()) {
-        case DELETE_ID:
+        case R.id.menu_save:
+            saveNote();
+            finish();
+            break;
+        case R.id.menu_delete:
             deleteNote();
             finish();
             break;
-        case DISCARD_ID:
-            cancelNote();
-            break;
-        case REVERT_ID:
+        case R.id.menu_revert:
+        case R.id.menu_discard:
             cancelNote();
             break;
         }
         return super.onOptionsItemSelected(item);
+        
+    }
+    
+    private final void saveNote() {
+        // Make sure their current
+        // changes are safely saved away in the provider.  We don't need
+        // to do this if only editing.
+        if (mCursor != null) {
+            // Get out updates into the provider.
+            ContentValues values = new ContentValues();
+
+            // Bump the modification time to now.
+            values.put(NoteColumns.MODIFIED_DATE, System.currentTimeMillis());
+
+            String text = mText.getText().toString();
+            int length = text.length();
+            // If we are creating a new note, then we want to also create
+            // an initial title for it.
+            if (mState == STATE_INSERT) {
+                if (length == 0) {
+                    Toast.makeText(this, R.string.nothing_to_save, Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                String title = text.substring(0, Math.min(30, length));
+                if (length > 30) {
+                    int lastSpace = title.lastIndexOf(' ');
+                    if (lastSpace > 0) {
+                        title = title.substring(0, lastSpace);
+                    }
+                }
+                values.put(NoteColumns.TITLE, title);
+            }
+
+            // Write our text back into the provider.
+            values.put(NoteColumns.NOTE, text);
+
+            // Commit all of our changes to persistent storage. When the update completes
+            // the content provider will notify the cursor of the change, which will
+            // cause the UI to be updated.
+            try {
+                getContentResolver().update(mUri, values, null, null);
+            } catch (NullPointerException e) {
+                Log.e(TAG, e.getMessage());
+            }
+            
+        }
     }
 
     /**
@@ -322,7 +346,7 @@ public class NoteEditor extends Activity {
                 mCursor.close();
                 mCursor = null;
                 ContentValues values = new ContentValues();
-                values.put(Notes.NOTE, mOriginalContent);
+                values.put(NoteColumns.NOTE, mOriginalContent);
                 getContentResolver().update(mUri, values, null, null);
             } else if (mState == STATE_INSERT) {
                 // We inserted an empty note, make sure to delete it

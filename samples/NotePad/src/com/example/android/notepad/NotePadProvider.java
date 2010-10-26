@@ -16,7 +16,7 @@
 
 package com.example.android.notepad;
 
-import com.example.android.notepad.NotePad.Notes;
+import com.example.android.notepad.NotePad.NoteColumns;
 
 import android.content.ContentProvider;
 import android.content.ContentUris;
@@ -44,7 +44,7 @@ public class NotePadProvider extends ContentProvider {
 
     private static final String TAG = "NotePadProvider";
 
-    private static final String DATABASE_NAME = "note_pad.db";
+    private static final String DATABASE_NAME = "notepad.db";
     private static final int DATABASE_VERSION = 2;
     private static final String NOTES_TABLE_NAME = "notes";
 
@@ -69,11 +69,11 @@ public class NotePadProvider extends ContentProvider {
         @Override
         public void onCreate(SQLiteDatabase db) {
             db.execSQL("CREATE TABLE " + NOTES_TABLE_NAME + " ("
-                    + Notes._ID + " INTEGER PRIMARY KEY,"
-                    + Notes.TITLE + " TEXT,"
-                    + Notes.NOTE + " TEXT,"
-                    + Notes.CREATED_DATE + " INTEGER,"
-                    + Notes.MODIFIED_DATE + " INTEGER"
+                    + NoteColumns._ID + " INTEGER PRIMARY KEY,"
+                    + NoteColumns.TITLE + " TEXT,"
+                    + NoteColumns.NOTE + " TEXT,"
+                    + NoteColumns.CREATED_DATE + " INTEGER,"
+                    + NoteColumns.MODIFIED_DATE + " INTEGER"
                     + ");");
         }
 
@@ -107,7 +107,7 @@ public class NotePadProvider extends ContentProvider {
 
         case NOTE_ID:
             qb.setProjectionMap(sNotesProjectionMap);
-            qb.appendWhere(Notes._ID + "=" + uri.getPathSegments().get(1));
+            qb.appendWhere(NoteColumns._ID + "=" + uri.getPathSegments().get(1));
             break;
 
         case LIVE_FOLDER_NOTES:
@@ -121,7 +121,7 @@ public class NotePadProvider extends ContentProvider {
         // If no sort order is specified use the default
         String orderBy;
         if (TextUtils.isEmpty(sortOrder)) {
-            orderBy = NotePad.Notes.DEFAULT_SORT_ORDER;
+            orderBy = NoteColumns.DEFAULT_SORT_ORDER;
         } else {
             orderBy = sortOrder;
         }
@@ -140,10 +140,10 @@ public class NotePadProvider extends ContentProvider {
         switch (sUriMatcher.match(uri)) {
         case NOTES:
         case LIVE_FOLDER_NOTES:
-            return Notes.CONTENT_TYPE;
+            return NoteColumns.CONTENT_TYPE;
 
         case NOTE_ID:
-            return Notes.CONTENT_ITEM_TYPE;
+            return NoteColumns.CONTENT_ITEM_TYPE;
 
         default:
             throw new IllegalArgumentException("Unknown URI " + uri);
@@ -167,27 +167,27 @@ public class NotePadProvider extends ContentProvider {
         Long now = Long.valueOf(System.currentTimeMillis());
 
         // Make sure that the fields are all set
-        if (values.containsKey(NotePad.Notes.CREATED_DATE) == false) {
-            values.put(NotePad.Notes.CREATED_DATE, now);
+        if (values.containsKey(NoteColumns.CREATED_DATE) == false) {
+            values.put(NoteColumns.CREATED_DATE, now);
         }
 
-        if (values.containsKey(NotePad.Notes.MODIFIED_DATE) == false) {
-            values.put(NotePad.Notes.MODIFIED_DATE, now);
+        if (values.containsKey(NoteColumns.MODIFIED_DATE) == false) {
+            values.put(NoteColumns.MODIFIED_DATE, now);
         }
 
-        if (values.containsKey(NotePad.Notes.TITLE) == false) {
+        if (values.containsKey(NoteColumns.TITLE) == false) {
             Resources r = Resources.getSystem();
-            values.put(NotePad.Notes.TITLE, r.getString(android.R.string.untitled));
+            values.put(NoteColumns.TITLE, r.getString(android.R.string.untitled));
         }
 
-        if (values.containsKey(NotePad.Notes.NOTE) == false) {
-            values.put(NotePad.Notes.NOTE, "");
+        if (values.containsKey(NoteColumns.NOTE) == false) {
+            values.put(NoteColumns.NOTE, "");
         }
 
         SQLiteDatabase db = mOpenHelper.getWritableDatabase();
-        long rowId = db.insert(NOTES_TABLE_NAME, Notes.NOTE, values);
+        long rowId = db.insert(NOTES_TABLE_NAME, NoteColumns.NOTE, values);
         if (rowId > 0) {
-            Uri noteUri = ContentUris.withAppendedId(NotePad.Notes.CONTENT_URI, rowId);
+            Uri noteUri = ContentUris.withAppendedId(NoteColumns.CONTENT_URI, rowId);
             getContext().getContentResolver().notifyChange(noteUri, null);
             return noteUri;
         }
@@ -206,7 +206,7 @@ public class NotePadProvider extends ContentProvider {
 
         case NOTE_ID:
             String noteId = uri.getPathSegments().get(1);
-            count = db.delete(NOTES_TABLE_NAME, Notes._ID + "=" + noteId
+            count = db.delete(NOTES_TABLE_NAME, NoteColumns._ID + "=" + noteId
                     + (!TextUtils.isEmpty(where) ? " AND (" + where + ')' : ""), whereArgs);
             break;
 
@@ -229,7 +229,7 @@ public class NotePadProvider extends ContentProvider {
 
         case NOTE_ID:
             String noteId = uri.getPathSegments().get(1);
-            count = db.update(NOTES_TABLE_NAME, values, Notes._ID + "=" + noteId
+            count = db.update(NOTES_TABLE_NAME, values, NoteColumns._ID + "=" + noteId
                     + (!TextUtils.isEmpty(where) ? " AND (" + where + ')' : ""), whereArgs);
             break;
 
@@ -248,17 +248,17 @@ public class NotePadProvider extends ContentProvider {
         sUriMatcher.addURI(NotePad.AUTHORITY, "live_folders/notes", LIVE_FOLDER_NOTES);
 
         sNotesProjectionMap = new HashMap<String, String>();
-        sNotesProjectionMap.put(Notes._ID, Notes._ID);
-        sNotesProjectionMap.put(Notes.TITLE, Notes.TITLE);
-        sNotesProjectionMap.put(Notes.NOTE, Notes.NOTE);
-        sNotesProjectionMap.put(Notes.CREATED_DATE, Notes.CREATED_DATE);
-        sNotesProjectionMap.put(Notes.MODIFIED_DATE, Notes.MODIFIED_DATE);
+        sNotesProjectionMap.put(NoteColumns._ID, NoteColumns._ID);
+        sNotesProjectionMap.put(NoteColumns.TITLE, NoteColumns.TITLE);
+        sNotesProjectionMap.put(NoteColumns.NOTE, NoteColumns.NOTE);
+        sNotesProjectionMap.put(NoteColumns.CREATED_DATE, NoteColumns.CREATED_DATE);
+        sNotesProjectionMap.put(NoteColumns.MODIFIED_DATE, NoteColumns.MODIFIED_DATE);
 
         // Support for Live Folders.
         sLiveFolderProjectionMap = new HashMap<String, String>();
-        sLiveFolderProjectionMap.put(LiveFolders._ID, Notes._ID + " AS " +
+        sLiveFolderProjectionMap.put(LiveFolders._ID, NoteColumns._ID + " AS " +
                 LiveFolders._ID);
-        sLiveFolderProjectionMap.put(LiveFolders.NAME, Notes.TITLE + " AS " +
+        sLiveFolderProjectionMap.put(LiveFolders.NAME, NoteColumns.TITLE + " AS " +
                 LiveFolders.NAME);
         // Add more columns here for more robust Live Folders.
     }
