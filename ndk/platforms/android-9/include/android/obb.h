@@ -18,11 +18,10 @@
 #ifndef ANDROID_OBB_H
 #define ANDROID_OBB_H
 
+#include <sys/cdefs.h>
 #include <sys/types.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+__BEGIN_DECLS
 
 struct AObbInfo;
 typedef struct AObbInfo AObbInfo;
@@ -56,8 +55,6 @@ int32_t AObbInfo_getVersion(AObbInfo* obbInfo);
  */
 int32_t AObbInfo_getFlags(AObbInfo* obbInfo);
 
-#ifdef __cplusplus
-};
-#endif
+__END_DECLS
 
-#endif      // ANDROID_OBB_H
+#endif      /* ANDROID_OBB_H */

@@ -18,9 +18,9 @@
 #ifndef ANDROID_RECT_H
 #define ANDROID_RECT_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include <sys/cdefs.h>
+
+__BEGIN_DECLS
 
 typedef struct ARect {
     int32_t left;
@@ -29,8 +29,6 @@ typedef struct ARect {
     int32_t bottom;
 } ARect;
 
-#ifdef __cplusplus
-};
-#endif
+__END_DECLS
 
-#endif // ANDROID_RECT_H
+#endif /* ANDROID_RECT_H */
