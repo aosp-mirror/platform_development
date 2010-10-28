@@ -18,6 +18,7 @@ package com.example.android.apis.animation;
 
 // Need the following import to get access to the app resources, since this
 // class is in a sub-package.
+import android.graphics.drawable.ColorDrawable;
 import com.example.android.apis.R;
 
 import android.animation.*;
@@ -65,13 +66,11 @@ public class BouncingBalls extends Activity {
             super(context);
 
             // Create a colored background
-            ShapeDrawable background = new ShapeDrawable(new RectShape());
+            ColorDrawable background = new ColorDrawable(RED);
             setBackgroundDrawable(background);
-            Paint paint = background.getPaint();
-            paint.setColor(RED);
 
             // Animate background color
-            ValueAnimator colorAnim = ObjectAnimator.ofInt(paint, "color", BLUE);
+            ValueAnimator colorAnim = ObjectAnimator.ofInt(background, "color", BLUE);
             colorAnim.setDuration(3000);
             colorAnim.setEvaluator(new RGBEvaluator());
             colorAnim.setRepeatCount(ValueAnimator.INFINITE);
