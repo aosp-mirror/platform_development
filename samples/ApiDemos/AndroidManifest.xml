@@ -42,7 +42,8 @@
 
     <application android:name="ApiDemosApplication"
             android:label="@string/activity_sample_code"
-            android:icon="@drawable/app_sample_code">
+            android:icon="@drawable/app_sample_code"
+            android:hardwareAccelerated="true">
 
         <!-- This is how we can request a library but still allow the app
              to be installed if it doesn't exist. -->
@@ -180,9 +181,12 @@
         <activity android:name=".app.RedirectGetter">
         </activity>
 
+        <!-- This sample doesn't work with the new action bar, so use
+             the old style theme. -->
         <activity android:name=".app.CustomTitle"
                 android:label="@string/activity_custom_title"
-                android:windowSoftInputMode="stateVisible|adjustPan">
+                android:windowSoftInputMode="stateVisible|adjustPan"
+                android:theme="@android:style/Theme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
