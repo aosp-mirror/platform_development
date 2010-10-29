@@ -686,6 +686,15 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".app.ActionBarDisplayOptions"
+                  android:label="@string/action_bar_display_options"
+                  android:logo="@drawable/apidemo_androidlogo">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
         <!-- ************************************* -->
         <!--       PREFERENCE PACKAGE SAMPLES      -->
         <!-- ************************************* -->

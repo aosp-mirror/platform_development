@@ -566,6 +566,18 @@
     <string name="action_bar_zoom">Zoom</string>
     <string name="action_bar_save">Save</string>
 
+    <string name="action_bar_display_options">App/Action Bar/Display Options</string>
+    <string name="toggle_home_as_up">DISPLAY_HOME_AS_UP</string>
+    <string name="toggle_show_home">DISPLAY_SHOW_HOME</string>
+    <string name="toggle_use_logo">DISPLAY_USE_LOGO</string>
+    <string name="toggle_show_title">DISPLAY_SHOW_TITLE</string>
+    <string name="toggle_show_custom">DISPLAY_SHOW_CUSTOM</string>
+    <string name="toggle_navigation">Navigation</string>
+    <string name="cycle_custom_gravity">Cycle Custom View Gravity</string>
+
+    <string name="display_options_custom_button">Custom View!</string>
+    <string name="display_options_menu_item">Menu Item</string>
+
     <!-- ============================ -->
     <!--  graphics examples strings  -->
     <!-- ============================ -->
