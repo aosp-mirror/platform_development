@@ -68,6 +68,15 @@
     <string name="no_saves_state">This text field does not save its state:</string>
     <string name="initial_text">Initial text.</string>
 
+    <string name="soft_input_modes">App/Activity/Soft Input Modes</string>
+    <string name="soft_input_modes_summary">Shows how different soft input modes impact
+        application resizing due to an input method.</string>
+    <string name="soft_input_modes_label">Resize mode: </string>
+    <string name="soft_input_modes_content">This is a part of the application\'s UI that
+        can resize to adjust for the IME.</string>
+    <string name="soft_input_modes_initial_text">Text editor.\n\nTap to show the IME,
+        which will cause this window to resize as requested.</string>
+    
     <string name="activity_persistent">App/Activity/Persistent State</string>
     <string name="persistent_msg">Demonstration of persistent activity state with getPreferences(0).edit() and getPreferences(0).</string>
 
