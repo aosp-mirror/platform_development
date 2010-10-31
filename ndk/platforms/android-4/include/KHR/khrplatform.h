@@ -26,7 +26,7 @@
 
 /* Platform-specific types and definitions.
  * $Revision: 7244 $ on $Date: 2009-01-20 17:06:59 -0800 (Tue, 20 Jan 2009) $
- * 
+ *
  * Adopters may modify this file to suit their platform. Adopters are
  * encouraged to submit platform specific modifications to the Khronos
  * group so that they can be included in future versions of this file.
@@ -37,13 +37,13 @@
  * A predefined template which fills in some of the bug fields can be
  * reached using http://tinyurl.com/khrplatform-h-bugreport, but you
  * must create a Bugzilla login first.
- * 
+ *
  *
  * See the Implementer's Guidelines for information about where this file
  * should be located on your system.
  *    http://www.khronos.org/registry/implementers_guide.pdf
  *
- * 
+ *
  * This file should be included as
  *        #include <KHR/khrplatform.h>
  * by the Khronos API header file that uses its types and defines.
@@ -70,7 +70,7 @@
  *
  * KHRONOS_SUPPORT_INT64 is 1 if 64 bit integers are supported; otherwise 0.
  * KHRONOS_SUPPORT_FLOAT is 1 if floats are supported; otherwise 0.
- * 
+ *
  *
  * Macros defined in this file:
  *    KHRONOS_APICALL
@@ -91,7 +91,7 @@
 #   define KHRONOS_APICALL __declspec(dllimport)
 #elif defined (__SYMBIAN32__)
 #   define KHRONOS_APICALL IMPORT_C
-#elif defined(ANDROID)
+#elif defined(__ANDROID__)
 #   define KHRONOS_APICALL __attribute__((visibility("default")))
 #else
 #   define KHRONOS_APICALL
@@ -228,11 +228,11 @@ typedef          float         khronos_float_t;
 #if KHRONOS_SUPPORT_INT64
 /* Time types
  *
- * These types can be used to represent a time interval in nanoseconds or 
- * an absolute Unadjusted System Time.  Unadjusted System Time is the number 
- * of nanoseconds since some arbitrary system event (e.g. since the last 
- * time the system booted).  The Unadjusted System Time is an unsigned 
- * 64 bit value that wraps back to 0 every 584 years.  Time intervals 
+ * These types can be used to represent a time interval in nanoseconds or
+ * an absolute Unadjusted System Time.  Unadjusted System Time is the number
+ * of nanoseconds since some arbitrary system event (e.g. since the last
+ * time the system booted).  The Unadjusted System Time is an unsigned
+ * 64 bit value that wraps back to 0 every 584 years.  Time intervals
  * may be either signed or unsigned.
  */
 typedef khronos_uint64_t       khronos_utime_nanoseconds_t;

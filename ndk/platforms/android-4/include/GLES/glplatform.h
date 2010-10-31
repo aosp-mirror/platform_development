@@ -24,7 +24,7 @@
 #define GL_API      KHRONOS_APICALL
 #endif
 
-#if defined(ANDROID)
+#if defined(__ANDROID__)
 
 #define GL_APIENTRY KHRONOS_APIENTRY
 
