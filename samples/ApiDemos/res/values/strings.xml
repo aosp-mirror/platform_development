@@ -567,6 +567,7 @@
 
     <string name="action_bar_mechanics">App/Action Bar/Action Bar Mechanics</string>
     <string name="action_bar_usage">App/Action Bar/Action Bar Usage</string>
+    <string name="action_bar_tabs">App/Action Bar/Action Bar Tabs</string>
 
     <string name="action_bar_search">Search</string>
     <string name="action_bar_add">Add</string>
@@ -586,6 +587,11 @@
 
     <string name="display_options_custom_button">Custom View!</string>
     <string name="display_options_menu_item">Menu Item</string>
+
+    <string name="btn_add_tab">Add new tab</string>
+    <string name="btn_remove_tab">Remove last tab</string>
+    <string name="btn_toggle_tabs">Toggle tab mode</string>
+    <string name="btn_remove_all_tabs">Remove all tabs</string>
 
     <!-- ============================ -->
     <!--  graphics examples strings  -->
