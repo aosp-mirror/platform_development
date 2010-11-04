@@ -109,7 +109,7 @@ public class MultiPropertyAnimation extends Activity {
                         ball.getHeight() * 2);
                 PropertyValuesHolder pvTX = PropertyValuesHolder.ofFloat("x", ball.getX(),
                         ball.getX() - BALL_SIZE/2f);
-                PropertyValuesHolder pvTY = PropertyValuesHolder.ofFloat("y", 0f, ball.getY(),
+                PropertyValuesHolder pvTY = PropertyValuesHolder.ofFloat("y", ball.getY(),
                         ball.getY() - BALL_SIZE/2f);
                 ObjectAnimator whxyBouncer = ObjectAnimator.ofPropertyValuesHolder(ball, pvhW, pvhH,
                         pvTX, pvTY).setDuration(DURATION/2);
@@ -119,9 +119,9 @@ public class MultiPropertyAnimation extends Activity {
                 ball = balls.get(3);
                 pvhY = PropertyValuesHolder.ofFloat("y", ball.getY(), getHeight() - BALL_SIZE);
                 float ballX = ball.getX();
-                Keyframe kf0 = new Keyframe(0f, ballX);
-                Keyframe kf1 = new Keyframe(.5f, ballX + 100f);
-                Keyframe kf2 = new Keyframe(1f, ballX + 50f);
+                Keyframe kf0 = Keyframe.ofFloat(0f, ballX);
+                Keyframe kf1 = Keyframe.ofFloat(.5f, ballX + 100f);
+                Keyframe kf2 = Keyframe.ofFloat(1f, ballX + 50f);
                 PropertyValuesHolder pvhX = PropertyValuesHolder.ofKeyframe("x", kf0, kf1, kf2);
                 ObjectAnimator yxBouncer = ObjectAnimator.ofPropertyValuesHolder(ball, pvhY,
                         pvhX).setDuration(DURATION/2);
@@ -130,7 +130,8 @@ public class MultiPropertyAnimation extends Activity {
 
 
                 bounceAnim = new AnimatorSet();
-                ((AnimatorSet)bounceAnim).playTogether(yBouncer, yAlphaBouncer, whxyBouncer, yxBouncer);
+                ((AnimatorSet)bounceAnim).playTogether(yBouncer, yAlphaBouncer, whxyBouncer,
+                        yxBouncer);
             }
         }
 

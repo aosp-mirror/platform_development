@@ -136,9 +136,9 @@ public class LayoutAnimationsHideShow extends Activity {
         });
 
         // Changing while Removing
-        Keyframe kf0 = new Keyframe(0f, 0f);
-        Keyframe kf1 = new Keyframe(.9999f, 360f);
-        Keyframe kf2 = new Keyframe(1f, 0f);
+        Keyframe kf0 = Keyframe.ofFloat(0f, 0f);
+        Keyframe kf1 = Keyframe.ofFloat(.9999f, 360f);
+        Keyframe kf2 = Keyframe.ofFloat(1f, 0f);
         PropertyValuesHolder pvhRotation =
                 PropertyValuesHolder.ofKeyframe("rotation", kf0, kf1, kf2);
         final ObjectAnimator changeOut = ObjectAnimator.ofPropertyValuesHolder(

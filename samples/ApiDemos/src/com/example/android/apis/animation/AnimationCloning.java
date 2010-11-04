@@ -73,8 +73,6 @@ public class AnimationCloning extends Activity {
             ShapeHolder ball1 = addBall(150f, 25f);
             ShapeHolder ball2 = addBall(250f, 25f);
             ShapeHolder ball3 = addBall(350f, 25f);
-
-
         }
 
         private void createAnimation() {
@@ -91,7 +89,7 @@ public class AnimationCloning extends Activity {
                 animDown.setInterpolator(new AccelerateInterpolator());
                 ObjectAnimator animUp = ObjectAnimator.ofFloat(ball2, "y",
                         getHeight() - ball2.getHeight(), 0f).setDuration(500);
-                animDown.setInterpolator(new DecelerateInterpolator());
+                animUp.setInterpolator(new DecelerateInterpolator());
                 AnimatorSet s1 = new AnimatorSet();
                 s1.playSequentially(animDown, animUp);
                 animDown.addUpdateListener(this);
