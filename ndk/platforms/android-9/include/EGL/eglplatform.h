@@ -78,7 +78,7 @@ typedef int   EGLNativeDisplayType;
 typedef void *EGLNativeWindowType;
 typedef void *EGLNativePixmapType;
 
-#elif defined(__unix__) && !defined(ANDROID)
+#elif defined(__unix__) && !defined(__ANDROID__)
 
 /* X11 (tentative)  */
 #include <X11/Xlib.h>
@@ -89,7 +89,7 @@ typedef Pixmap   EGLNativePixmapType;
 typedef Window   EGLNativeWindowType;
 
 
-#elif defined(ANDROID)
+#elif defined(__ANDROID__)
 
 #include <android/native_window.h>
 
