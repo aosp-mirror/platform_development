@@ -21,9 +21,7 @@
 #include <android/asset_manager.h>
 #include <jni.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+__BEGIN_DECLS
 
 /**
  * Given a Dalvik AssetManager object, obtain the corresponding native AAssetManager
@@ -33,8 +31,6 @@ extern "C" {
  */
 AAssetManager* AAssetManager_fromJava(JNIEnv* env, jobject assetManager);
 
-#ifdef __cplusplus
-};
-#endif
+__END_DECLS
 
-#endif      // ANDROID_ASSET_MANAGER_JNI_H
+#endif      /* ANDROID_ASSET_MANAGER_JNI_H */

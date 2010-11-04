@@ -56,9 +56,9 @@ struct group {
 
 __BEGIN_DECLS
 struct group	*getgrgid(gid_t);
+struct group	*getgrnam(const char *);
 
 #if 0 /* MISSING FROM BIONIC */
-struct group	*getgrnam(const char *);
 #if __BSD_VISIBLE || __POSIX_VISIBLE >= 200112 || __XPG_VISIBLE
 struct group	*getgrent(void);
 void		 setgrent(void);
