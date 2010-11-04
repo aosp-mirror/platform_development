@@ -163,7 +163,9 @@ int pthread_mutex_destroy(pthread_mutex_t *mutex);
 int pthread_mutex_lock(pthread_mutex_t *mutex);
 int pthread_mutex_unlock(pthread_mutex_t *mutex);
 int pthread_mutex_trylock(pthread_mutex_t *mutex);
+#if 0 /* MISSING FROM BIONIC */
 int pthread_mutex_timedlock(pthread_mutex_t *mutex, struct timespec*  ts);
+#endif /* MISSING */
 
 int pthread_condattr_init(pthread_condattr_t *attr);
 int pthread_condattr_getpshared(pthread_condattr_t *attr, int *pshared);
