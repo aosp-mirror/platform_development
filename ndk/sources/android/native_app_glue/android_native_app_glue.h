@@ -27,7 +27,7 @@
 #include <android/native_activity.h>
 
 #ifdef __cplusplus
-extern "C"
+extern "C" {
 #endif
 
 /**

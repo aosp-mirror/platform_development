@@ -33,11 +33,10 @@
  *   - DO NOT CHANGE THE LAYOUT OR SIZE OF STRUCTURES
  */
 
+#include <sys/cdefs.h>
 #include <sys/types.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+__BEGIN_DECLS
 
 /*
  * Key codes.
@@ -159,8 +158,6 @@ enum {
     //       Refer to frameworks/base/core/java/android/view/KeyEvent.java for the full list.
 };
 
-#ifdef __cplusplus
-}
-#endif
+__END_DECLS
 
-#endif // _ANDROID_KEYCODES_H
+#endif /* _ANDROID_KEYCODES_H */

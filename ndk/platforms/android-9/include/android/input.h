@@ -45,9 +45,7 @@
 #include <android/keycodes.h>
 #include <android/looper.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+__BEGIN_DECLS
 
 /*
  * Key states (may be returned by queries about the current state of a
@@ -677,8 +675,6 @@ int32_t AInputQueue_preDispatchEvent(AInputQueue* queue, AInputEvent* event);
  */
 void AInputQueue_finishEvent(AInputQueue* queue, AInputEvent* event, int handled);
 
-#ifdef __cplusplus
-}
-#endif
+__END_DECLS
 
-#endif // _ANDROID_INPUT_H
+#endif /* _ANDROID_INPUT_H */

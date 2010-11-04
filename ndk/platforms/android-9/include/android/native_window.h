@@ -17,11 +17,10 @@
 #ifndef ANDROID_NATIVE_WINDOW_H
 #define ANDROID_NATIVE_WINDOW_H
 
+#include <sys/cdefs.h>
 #include <android/rect.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+__BEGIN_DECLS
 
 /*
  * Pixel formats that a window can use.
@@ -51,7 +50,7 @@ typedef struct ANativeWindow_Buffer {
 
     // The actual bits.
     void* bits;
-    
+
     // Do not touch.
     uint32_t reserved[6];
 } ANativeWindow_Buffer;
@@ -110,8 +109,6 @@ int32_t ANativeWindow_lock(ANativeWindow* window, ANativeWindow_Buffer* outBuffe
  */
 int32_t ANativeWindow_unlockAndPost(ANativeWindow* window);
 
-#ifdef __cplusplus
-};
-#endif
+__END_DECLS
 
-#endif // ANDROID_NATIVE_WINDOW_H
+#endif /* ANDROID_NATIVE_WINDOW_H */
