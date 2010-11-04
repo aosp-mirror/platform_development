@@ -30,7 +30,6 @@ import android.graphics.RadialGradient;
 import android.graphics.Shader;
 import android.graphics.drawable.ShapeDrawable;
 import android.graphics.drawable.shapes.OvalShape;
-import android.graphics.drawable.shapes.RectShape;
 import android.os.Bundle;
 import android.view.MotionEvent;
 import android.view.View;
@@ -51,8 +50,7 @@ public class BouncingBalls extends Activity {
         container.addView(new MyAnimationView(this));
     }
 
-    public class MyAnimationView extends View implements ValueAnimator.AnimatorUpdateListener,
-            Animator.AnimatorListener {
+    public class MyAnimationView extends View {
 
         private static final int RED = 0xffFF8080;
         private static final int BLUE = 0xff8080FF;
@@ -65,17 +63,15 @@ public class BouncingBalls extends Activity {
         public MyAnimationView(Context context) {
             super(context);
 
-            // Create a colored background
-            ColorDrawable background = new ColorDrawable(RED);
-            setBackgroundDrawable(background);
-
             // Animate background color
-            ValueAnimator colorAnim = ObjectAnimator.ofInt(background, "color", BLUE);
+            // Note that setting the background color will automatically invalidate the
+            // view, so that the animated color, and the bouncing balls, get redisplayed on
+            // every frame of the animation.
+            ValueAnimator colorAnim = ObjectAnimator.ofInt(this, "backgroundColor", RED, BLUE);
             colorAnim.setDuration(3000);
             colorAnim.setEvaluator(new RGBEvaluator());
             colorAnim.setRepeatCount(ValueAnimator.INFINITE);
             colorAnim.setRepeatMode(ValueAnimator.REVERSE);
-            colorAnim.addUpdateListener(this); // forces invalidation to get the redraw
             colorAnim.start();
         }
 
@@ -135,7 +131,13 @@ public class BouncingBalls extends Activity {
             // Fading animation - remove the ball when the animation is done
             ValueAnimator fadeAnim = ObjectAnimator.ofFloat(newBall, "alpha", 1f, 0f);
             fadeAnim.setDuration(250);
-            fadeAnim.addListener(this);
+            fadeAnim.addListener(new AnimatorListenerAdapter() {
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    balls.remove(((ObjectAnimator)animation).getTarget());
+
+                }
+            });
 
             // Sequence the two animations to play one after the other
             AnimatorSet animatorSet = new AnimatorSet();
@@ -177,24 +179,6 @@ public class BouncingBalls extends Activity {
                 shapeHolder.getShape().draw(canvas);
                 canvas.restore();
             }
-        }
-
-        public void onAnimationUpdate(ValueAnimator animation) {
-            invalidate();
-        }
-
-        public void onAnimationCancel(Animator animation) {
-        }
-
-        public void onAnimationEnd(Animator animation) {
-            balls.remove(((ObjectAnimator)animation).getTarget());
-
-        }
-
-        public void onAnimationRepeat(Animator animation) {
-        }
-
-        public void onAnimationStart(Animator animation) {
         }
     }
 }
