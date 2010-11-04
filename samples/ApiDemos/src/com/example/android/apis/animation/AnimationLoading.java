@@ -58,13 +58,10 @@ public class AnimationLoading extends Activity {
 
         Button starter = (Button) findViewById(R.id.startButton);
         starter.setOnClickListener(new View.OnClickListener() {
-
-            @Override
             public void onClick(View v) {
                 animView.startAnimation();
             }
         });
-
     }
 
     public class MyAnimationView extends View implements ValueAnimator.AnimatorUpdateListener {

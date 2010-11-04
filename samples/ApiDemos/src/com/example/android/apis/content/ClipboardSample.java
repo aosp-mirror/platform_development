@@ -46,7 +46,6 @@ public class ClipboardSample extends Activity {
 
     ClipboardManager.OnPrimaryClipChangedListener mPrimaryChangeListener
             = new ClipboardManager.OnPrimaryClipChangedListener() {
-        @Override
         public void onPrimaryClipChanged() {
             updateClipData();
         }

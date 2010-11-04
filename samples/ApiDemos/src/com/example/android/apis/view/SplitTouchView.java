@@ -20,7 +20,6 @@ import com.example.android.apis.R;
 
 import android.app.Activity;
 import android.os.Bundle;
-import android.view.Gravity;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -53,7 +52,6 @@ public class SplitTouchView extends Activity {
     private int responseIndex = 0;
 
     private final OnItemClickListener itemClickListener = new OnItemClickListener() {
-        @Override
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
             String[] responses = getResources().getStringArray(R.array.cheese_responses);
             String response = responses[responseIndex++ % responses.length];

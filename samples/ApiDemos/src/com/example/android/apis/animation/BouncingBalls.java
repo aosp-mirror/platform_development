@@ -183,21 +183,17 @@ public class BouncingBalls extends Activity {
             invalidate();
         }
 
-        @Override
         public void onAnimationCancel(Animator animation) {
         }
 
-        @Override
         public void onAnimationEnd(Animator animation) {
             balls.remove(((ObjectAnimator)animation).getTarget());
 
         }
 
-        @Override
         public void onAnimationRepeat(Animator animation) {
         }
 
-        @Override
         public void onAnimationStart(Animator animation) {
         }
     }

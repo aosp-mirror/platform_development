@@ -62,8 +62,6 @@ public class AnimationSeeking extends Activity {
 
         Button starter = (Button) findViewById(R.id.startButton);
         starter.setOnClickListener(new View.OnClickListener() {
-
-            @Override
             public void onClick(View v) {
                 animView.startAnimation();
             }
@@ -72,16 +70,12 @@ public class AnimationSeeking extends Activity {
         mSeekBar = (SeekBar) findViewById(R.id.seekBar);
         mSeekBar.setMax(DURATION);
         mSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-
-            @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
             }
 
-            @Override
             public void onStartTrackingTouch(SeekBar seekBar) {
             }
 
-            @Override
             public void onProgressChanged(SeekBar seekBar, int progress,
                     boolean fromUser) {
                 // prevent seeking on app creation
@@ -162,21 +156,17 @@ public class AnimationSeeking extends Activity {
             //mSeekBar.setProgress((int)playtime);
         }
 
-        @Override
         public void onAnimationCancel(Animator animation) {
         }
 
-        @Override
         public void onAnimationEnd(Animator animation) {
             balls.remove(((ObjectAnimator)animation).getTarget());
 
         }
 
-        @Override
         public void onAnimationRepeat(Animator animation) {
         }
 
-        @Override
         public void onAnimationStart(Animator animation) {
         }
     }

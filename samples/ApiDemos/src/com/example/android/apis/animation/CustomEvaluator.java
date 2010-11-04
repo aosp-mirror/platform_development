@@ -50,13 +50,10 @@ public class CustomEvaluator extends Activity {
 
         Button starter = (Button) findViewById(R.id.startButton);
         starter.setOnClickListener(new View.OnClickListener() {
-
-            @Override
             public void onClick(View v) {
                 animView.startAnimation();
             }
         });
-
     }
 
     public class XYHolder {
@@ -86,7 +83,6 @@ public class CustomEvaluator extends Activity {
     }
 
     public class XYEvaluator implements TypeEvaluator {
-        @Override
         public Object evaluate(float fraction, Object startValue, Object endValue) {
             XYHolder startXY = (XYHolder) startValue;
             XYHolder endXY = (XYHolder) endValue;

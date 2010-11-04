@@ -46,7 +46,7 @@ public class FragmentListCursorLoader extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        
+
         // Create the list fragment and add it as our sole content.
         if (findFragmentById(android.R.id.content) == null) {
             CursorLoaderListFragment list = new CursorLoaderListFragment();
@@ -57,18 +57,18 @@ public class FragmentListCursorLoader extends Activity {
     public static class CursorLoaderListFragment extends ListFragment
             implements LoaderManager.LoaderCallbacks<Cursor> {
         MenuItem mSearchMenu;
-        
+
         @Override
         public void onActivityCreated(Bundle savedInstanceState) {
             super.onActivityCreated(savedInstanceState);
-            
+
             // Give some text to display if there is no data.  In a real
             // application this would come from a resource.
             setEmptyText("No phone numbers");
-            
+
             // We have a menu item to show in action bar.
             setHasOptionsMenu(true);
-            
+
             // Prepare the loader.  Either re-connect with an existing one,
             // or start a new one.
             getLoaderManager().initLoader(0, null, this);
@@ -107,7 +107,6 @@ public class FragmentListCursorLoader extends Activity {
             Contacts.LOOKUP_KEY,
         };
 
-        @Override
         public Loader<Cursor> onCreateLoader(int id, Bundle args) {
             String select = "((" + Contacts.DISPLAY_NAME + " NOTNULL) AND ("
                     + Contacts.HAS_PHONE_NUMBER + "=1) AND ("
@@ -117,11 +116,10 @@ public class FragmentListCursorLoader extends Activity {
                     Contacts.DISPLAY_NAME + " COLLATE LOCALIZED ASC");
         }
 
-        @Override
         public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
             ListAdapter adapter = new SimpleCursorAdapter(getActivity(),
-                    android.R.layout.simple_list_item_2, data, 
-                            new String[] { Contacts.DISPLAY_NAME, Contacts.CONTACT_STATUS }, 
+                    android.R.layout.simple_list_item_2, data,
+                            new String[] { Contacts.DISPLAY_NAME, Contacts.CONTACT_STATUS },
                             new int[] { android.R.id.text1, android.R.id.text2 });
             setListAdapter(adapter);
         }
