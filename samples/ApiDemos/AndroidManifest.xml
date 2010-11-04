@@ -32,6 +32,9 @@
     <uses-permission android:name="android.permission.SEND_SMS" />
     <uses-permission android:name="android.permission.RECEIVE_SMS" />
 
+    <!-- For android.media.audiofx.Visualizer -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+
     <!-- We will request access to the camera, saying we require a camera
          of some sort but not one with autofocus capability. -->
     <uses-permission android:name="android.permission.CAMERA" />
@@ -1878,6 +1881,13 @@
         </activity>
 
         <activity android:name=".media.VideoViewDemo" android:label="Media/VideoView">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".media.AudioFxDemo" android:label="Media/AudioFx">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />

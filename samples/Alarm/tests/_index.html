@@ -1,0 +1,50 @@
+<p>
+    This sample is the test application for the <a href="../Alarm/index.html">Alarm</a>
+    sample application. It tests the application's <code>AlarmService</code> service.
+</p>
+<p>
+    The test application uses the
+    <a href="../../../reference/android/test/ServiceTestCase.html">
+    <code>ServiceTestCase</code></a>  test case class,
+    which extends the JUnit <a href="../../../reference/junit/framework/TestCase.html">
+    <code>TestCase</code></a> class. The test runner is
+    <a href="../../../reference/android/test/InstrumentationTestRunner.html">
+    <code>InstrumentationTestRunner</code></a>.
+</p>
+<p>
+    The application shows how to set up a test application project,
+    how to create the <a href="AndroidManifest.html"><code>AndroidManifest.xml</code></a>
+    file for a test application, and how to set up a test case class for a service. The
+    test case class, <a href="src/com/android/example/newalarm/ServiceAlarmTest.html">
+    <code>AlarmServiceTest</code></a>, contains tests that demonstrate the following
+    Android test patterns:
+</p>
+    <ul>
+        <li>
+            Test setup: The <code>setUp()</code> method re-initializes the state of the
+            service under test before each test is run.
+        </li>
+        <li>
+            Service start: The <code>Service.testServiceCreate()</code> test confirms that the
+            service starts correctly and initializes the variables it needs to provide its
+            services.
+        </li>
+    </ul>
+<p>
+    The <a href="AndroidManifest.html">manifest</a> declares an <code>&lt;instrumentation&gt;</code>
+    element that links the test application with the application under test. Specifically, the
+    element's <code>android:name</code> attribute specifies <code>InstrumentationTestRunner</code>
+    as the instrumentation to use. The <code>android:targetPackage</code> attribute specifies
+    <code>com.android.example.newalarm</code> as the name of the Android package that contains the
+    service under test.
+</p>
+<p class="note">
+    <strong>Note:</strong> <code>AlarmServiceTest.java</code> uses the Java package name
+    <code>com.example.android.newalarm</code>, which is the same package used by service under
+    test, <code>AlarmService.java</code>. This allows the test class to access members in the
+    service under test that are defined with package visibility. To prevent conflicts, though,
+    the generated java file <code>R.java</code> for <code>AlarmServiceTest</code> uses the
+    Java package name <code>com.example.android.newalarm.test</code>. For the same reason, the
+    Android package name for the test application (specified in the manifest file), is
+    <code>com.example.android.newalarm.test</code>.
+</p>
