@@ -64,7 +64,6 @@ public class ActionBarDisplayOptions extends Activity
         return true;
     }
 
-    @Override
     public void onClick(View v) {
         final ActionBar bar = getActionBar();
         int flags = 0;
@@ -114,15 +113,12 @@ public class ActionBarDisplayOptions extends Activity
         bar.setDisplayOptions(change, flags);
     }
 
-    @Override
     public void onTabSelected(Tab tab, FragmentTransaction ft) {
     }
 
-    @Override
     public void onTabUnselected(Tab tab, FragmentTransaction ft) {
     }
 
-    @Override
     public void onTabReselected(Tab tab, FragmentTransaction ft) {
     }
 }

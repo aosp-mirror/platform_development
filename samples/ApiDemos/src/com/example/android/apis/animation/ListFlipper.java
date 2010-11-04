@@ -86,8 +86,6 @@ public class ListFlipper extends Activity {
 
         Button starter = (Button) findViewById(R.id.button);
         starter.setOnClickListener(new View.OnClickListener() {
-
-            @Override
             public void onClick(View v) {
                 flipit();
             }
