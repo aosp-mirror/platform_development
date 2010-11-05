@@ -53,6 +53,7 @@ public class List15 extends ListActivity {
             MenuInflater inflater = getMenuInflater();
             inflater.inflate(R.menu.list_select_menu, menu);
             mode.setTitle("Select Items");
+            setSubtitle(mode);
             return true;
         }
 
@@ -80,6 +81,10 @@ public class List15 extends ListActivity {
 
         public void onItemCheckedStateChanged(ActionMode mode,
                 int position, long id, boolean checked) {
+            setSubtitle(mode);
+        }
+
+        private void setSubtitle(ActionMode mode) {
             final int checkedCount = getListView().getCheckedItemCount();
             switch (checkedCount) {
                 case 0:
@@ -93,7 +98,6 @@ public class List15 extends ListActivity {
                     break;
             }
         }
-        
     }
 
     private String[] mStrings = Cheeses.sCheeseStrings;
