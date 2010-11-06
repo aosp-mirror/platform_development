@@ -18,9 +18,9 @@
 #ifndef ANDROID_WINDOW_H
 #define ANDROID_WINDOW_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include <sys/cdefs.h>
+
+__BEGIN_DECLS
 
 /**
  * Window flags, as per the Java API at android.view.WindowManager.LayoutParams.
@@ -51,8 +51,6 @@ enum {
     AWINDOW_FLAG_DISMISS_KEYGUARD           = 0x00400000,
 };
 
-#ifdef __cplusplus
-};
-#endif
+__END_DECLS
 
-#endif // ANDROID_WINDOW_H
+#endif /* ANDROID_WINDOW_H */
