@@ -102,6 +102,9 @@ HKR,,Icon,,-1
 ; Samsung SHW-M110S
 %SingleAdbInterface%        = USB_Install, USB\VID_04E8&PID_681D
 %CompositeAdbInterface%     = USB_Install, USB\VID_04E8&PID_681D&MI_01
+=======
+%CompositeAdbInterface%     = USB_Install, USB\VID_413C&PID_B007&MI_01
+>>>>>>> 4e75b80a
 
 [USB_Install]
 Include = winusb.inf
