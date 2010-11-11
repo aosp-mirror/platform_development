@@ -25,27 +25,24 @@ import android.widget.TabHost;
 import android.widget.TextView;
 
 /**
- * Example of using a tab content factory for the content via {@link TabHost.TabSpec#setContent(android.widget.TabHost.TabContentFactory)}
- *
- * It also demonstrates using an icon on one of the tabs via {@link TabHost.TabSpec#setIndicator(CharSequence, android.graphics.drawable.Drawable)}
- *
+ * Demonstrates the Tab scrolling when too many tabs are displayed to fit in the screen.
  */
-public class Tabs2 extends TabActivity implements TabHost.TabContentFactory {
+public class Tabs5 extends TabActivity implements TabHost.TabContentFactory {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        setContentView(R.layout.tabs_scroll);
+
         final TabHost tabHost = getTabHost();
-        tabHost.addTab(tabHost.newTabSpec("tab1")
-                .setIndicator("tab1", getResources().getDrawable(R.drawable.star_big_on))
-                .setContent(this));
-        tabHost.addTab(tabHost.newTabSpec("tab2")
-                .setIndicator("tab2")
-                .setContent(this));
-        tabHost.addTab(tabHost.newTabSpec("tab3")
-                .setIndicator("tab3")
-                .setContent(this));
+
+        for (int i=1; i <= 30; i++) {
+            String name = "Tab " + i;
+            tabHost.addTab(tabHost.newTabSpec(name)
+                    .setIndicator(name)
+                    .setContent(this));
+        }
     }
 
     /** {@inheritDoc} */
