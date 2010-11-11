@@ -15,14 +15,14 @@
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
     android:id="@+id/container"
     android:splitMotionEvents="true"
     >
     <LinearLayout
         android:orientation="horizontal"
-        android:layout_width="fill_parent"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="20dip"
         android:splitMotionEvents="true"
@@ -38,7 +38,7 @@
         <SeekBar
             android:orientation="horizontal"
             android:layout_weight="1"
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:id="@+id/translationX"
         />
@@ -53,14 +53,14 @@
         <SeekBar
             android:orientation="horizontal"
             android:layout_weight="1"
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:id="@+id/translationY"
         />
     </LinearLayout>
     <LinearLayout
         android:orientation="horizontal"
-        android:layout_width="fill_parent"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="20dip"
         android:splitMotionEvents="true"
@@ -98,7 +98,7 @@
     </LinearLayout>
     <LinearLayout
         android:orientation="horizontal"
-        android:layout_width="fill_parent"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="20dip"
         android:splitMotionEvents="true"
@@ -114,7 +114,7 @@
         <SeekBar
             android:orientation="horizontal"
             android:layout_weight="1"
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:id="@+id/rotationX"
         />
@@ -129,7 +129,7 @@
         <SeekBar
             android:orientation="horizontal"
             android:layout_weight="1"
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:id="@+id/rotationY"
         />
@@ -144,7 +144,7 @@
         <SeekBar
             android:orientation="horizontal"
             android:layout_weight="1"
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:id="@+id/rotationZ"
         />
