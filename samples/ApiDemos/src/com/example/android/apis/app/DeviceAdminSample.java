@@ -18,6 +18,7 @@ package com.example.android.apis.app;
 
 import com.example.android.apis.R;
 
+import android.R.menu;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.AlertDialog;
@@ -44,7 +45,9 @@ import android.widget.AdapterView.OnItemSelectedListener;
 
 import java.net.InetSocketAddress;
 import java.net.Proxy;
+import java.text.DateFormat;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -52,6 +55,11 @@ import java.util.List;
  * some of its policy and reports when there is interesting activity.
  */
 public class DeviceAdminSample extends DeviceAdminReceiver {
+
+    private static final String TAG = "DeviceAdminSample";
+    private static final long MS_PER_DAY = 86400 * 1000;
+    private static final long MS_PER_HOUR = 3600 * 1000;
+    private static final long MS_PER_MINUTE = 60 * 1000;
 
     static SharedPreferences getSamplePreferences(Context context) {
         return context.getSharedPreferences(DeviceAdminReceiver.class.getName(), 0);
@@ -66,15 +74,16 @@ public class DeviceAdminSample extends DeviceAdminReceiver {
     static String PREF_PASSWORD_MINIMUM_SYMBOLS = "password_minimum_symbols";
     static String PREF_PASSWORD_MINIMUM_NONLETTER = "password_minimum_nonletter";
     static String PREF_PASSWORD_HISTORY_LENGTH = "password_history_length";
+    static String PREF_PASSWORD_EXPIRATION_TIMEOUT = "password_expiration_timeout";
     static String PREF_MAX_FAILED_PW = "max_failed_pw";
 
     void showToast(Context context, CharSequence msg) {
-        Toast.makeText(context, msg, Toast.LENGTH_SHORT).show();
+        Toast.makeText(context, "Sample Device Admin: " + msg, Toast.LENGTH_SHORT).show();
     }
 
     @Override
     public void onEnabled(Context context, Intent intent) {
-        showToast(context, "Sample Device Admin: enabled");
+        showToast(context, "enabled");
     }
 
     @Override
@@ -84,22 +93,43 @@ public class DeviceAdminSample extends DeviceAdminReceiver {
 
     @Override
     public void onDisabled(Context context, Intent intent) {
-        showToast(context, "Sample Device Admin: disabled");
+        showToast(context, "disabled");
     }
 
     @Override
     public void onPasswordChanged(Context context, Intent intent) {
-        showToast(context, "Sample Device Admin: pw changed");
+        showToast(context, "pw changed");
     }
 
     @Override
     public void onPasswordFailed(Context context, Intent intent) {
-        showToast(context, "Sample Device Admin: pw failed");
+        showToast(context, "pw failed");
     }
 
     @Override
     public void onPasswordSucceeded(Context context, Intent intent) {
-        showToast(context, "Sample Device Admin: pw succeeded");
+        showToast(context, "pw succeeded");
+    }
+
+    static String countdownString(long time) {
+        long days = time / MS_PER_DAY;
+        long hours = (time / MS_PER_HOUR) % 24;
+        long minutes = (time / MS_PER_MINUTE) % 60;
+        return days + "d" + hours + "h" + minutes + "m";
+    }
+
+    @Override
+    public void onPasswordExpiring(Context context, Intent intent) {
+        DevicePolicyManager dpm = (DevicePolicyManager) context.getSystemService(
+                Context.DEVICE_POLICY_SERVICE);
+        long expr = dpm.getPasswordExpiration(new ComponentName(context, DeviceAdminSample.class));
+        long delta = expr - System.currentTimeMillis();
+        boolean expired = delta < 0L;
+        String msg = expired ? "Password expired " : "Password will expire "
+                + countdownString(Math.abs(delta))
+                + (expired ? " ago" : " from now");
+        showToast(context, msg);
+        Log.v(TAG, msg);
     }
 
     /**
@@ -112,6 +142,7 @@ public class DeviceAdminSample extends DeviceAdminReceiver {
      */
     public static class Controller extends Activity {
         static final int RESULT_ENABLE = 1;
+        private static final long MS_PER_MINUTE = 60*1000;
 
         DevicePolicyManager mDPM;
         ActivityManager mAM;
@@ -130,6 +161,7 @@ public class DeviceAdminSample extends DeviceAdminReceiver {
             DevicePolicyManager.PASSWORD_QUALITY_ALPHANUMERIC,
             DevicePolicyManager.PASSWORD_QUALITY_COMPLEX
         };
+
         Spinner mPasswordQuality;
         EditText mPasswordLength;
         EditText mPasswordMinimumLetters;
@@ -139,6 +171,7 @@ public class DeviceAdminSample extends DeviceAdminReceiver {
         EditText mPasswordMinimumSymbols;
         EditText mPasswordMinimumNonLetter;
         EditText mPasswordHistoryLength;
+        EditText mPasswordExpirationTimeout;
         Button mSetPasswordButton;
 
         EditText mPassword;
@@ -157,6 +190,8 @@ public class DeviceAdminSample extends DeviceAdminReceiver {
         EditText mProxyHost;
         EditText mProxyList;
         Button mProxyButton;
+
+        private Button mPasswordExpirationButton;
 
         @Override
         protected void onCreate(Bundle savedInstanceState) {
@@ -294,6 +329,16 @@ public class DeviceAdminSample extends DeviceAdminReceiver {
                     }
                 }
             });
+
+            mPasswordExpirationTimeout = (EditText)findViewById(R.id.password_expiration);
+            mPasswordExpirationButton = (Button) findViewById(R.id.update_expiration_button);
+            mPasswordExpirationButton.setOnClickListener(new OnClickListener() {
+                public void onClick(View v) {
+                    setPasswordExpiration(
+                            Long.parseLong(mPasswordExpirationTimeout.getText().toString()));
+                }
+            });
+
             mSetPasswordButton = (Button)findViewById(R.id.set_password);
             mSetPasswordButton.setOnClickListener(mSetPasswordListener);
 
@@ -390,6 +435,7 @@ public class DeviceAdminSample extends DeviceAdminReceiver {
             final int pwMinSymbols = prefs.getInt(PREF_PASSWORD_MINIMUM_SYMBOLS, 0);
             final int pwMinNonLetter = prefs.getInt(PREF_PASSWORD_MINIMUM_NONLETTER, 0);
             final int pwHistoryLength = prefs.getInt(PREF_PASSWORD_HISTORY_LENGTH, 0);
+            final long pwExpirationTimeout = prefs.getLong(PREF_PASSWORD_EXPIRATION_TIMEOUT, 0L);
             final int maxFailedPw = prefs.getInt(PREF_MAX_FAILED_PW, 0);
 
             for (int i=0; i<mPasswordQualityValues.length; i++) {
@@ -405,6 +451,7 @@ public class DeviceAdminSample extends DeviceAdminReceiver {
             mPasswordMinimumNumeric.setText(Integer.toString(pwMinNumeric));
             mPasswordMinimumNonLetter.setText(Integer.toString(pwMinNonLetter));
             mPasswordHistoryLength.setText(Integer.toString(pwHistoryLength));
+            mPasswordExpirationTimeout.setText(Long.toString(pwExpirationTimeout/MS_PER_MINUTE));
             mMaxFailedPw.setText(Integer.toString(maxFailedPw));
         }
 
@@ -420,6 +467,7 @@ public class DeviceAdminSample extends DeviceAdminReceiver {
             final int pwMinSymbols = prefs.getInt(PREF_PASSWORD_MINIMUM_SYMBOLS, 0);
             final int pwMinNonLetter = prefs.getInt(PREF_PASSWORD_MINIMUM_NONLETTER, 0);
             final int pwHistoryLength = prefs.getInt(PREF_PASSWORD_HISTORY_LENGTH, 0);
+            final long pwExpiration = prefs.getLong(PREF_PASSWORD_EXPIRATION_TIMEOUT, 0L);
             final int maxFailedPw = prefs.getInt(PREF_MAX_FAILED_PW, 0);
 
             boolean active = mDPM.isAdminActive(mDeviceAdminSample);
@@ -434,6 +482,7 @@ public class DeviceAdminSample extends DeviceAdminReceiver {
                 mDPM.setPasswordMinimumNonLetter(mDeviceAdminSample, pwMinNonLetter);
                 mDPM.setPasswordHistoryLength(mDeviceAdminSample, pwHistoryLength);
                 mDPM.setMaximumFailedPasswordsForWipe(mDeviceAdminSample, maxFailedPw);
+                mDPM.setPasswordExpirationTimeout(mDeviceAdminSample, pwExpiration);
             }
         }
 
@@ -491,6 +540,22 @@ public class DeviceAdminSample extends DeviceAdminReceiver {
             updatePolicies();
         }
 
+        void setPasswordExpiration(long expiration) {
+            SharedPreferences prefs = getSamplePreferences(this);
+            long exp = expiration * MS_PER_MINUTE; // convert from UI units to ms
+            prefs.edit().putLong(PREF_PASSWORD_EXPIRATION_TIMEOUT, exp).commit();
+            updatePolicies();
+            // Show confirmation dialog
+            long confirm = mDPM.getPasswordExpiration(mDeviceAdminSample);
+            String date = DateFormat.getDateTimeInstance(DateFormat.DEFAULT, DateFormat.DEFAULT)
+                    .format(new Date(confirm));
+            new AlertDialog.Builder(this)
+                    .setMessage("Password will expire on " + date)
+                    .setPositiveButton("OK", null)
+                    .create()
+                    .show();
+        }
+
         void setMaxFailedPw(int length) {
             SharedPreferences prefs = getSamplePreferences(this);
             prefs.edit().putInt(PREF_MAX_FAILED_PW, length).commit();
@@ -508,9 +573,9 @@ public class DeviceAdminSample extends DeviceAdminReceiver {
             switch (requestCode) {
                 case RESULT_ENABLE:
                     if (resultCode == Activity.RESULT_OK) {
-                        Log.i("DeviceAdminSample", "Admin enabled!");
+                        Log.i(TAG, "Admin enabled!");
                     } else {
-                        Log.i("DeviceAdminSample", "Admin enable FAILED!");
+                        Log.i(TAG, "Admin enable FAILED!");
                     }
                     return;
             }

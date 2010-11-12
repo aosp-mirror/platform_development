@@ -49,7 +49,7 @@
         orientation modes.  Often you want to set the desired mode in your manifest
         instead of programmatically.</string>
     <string name="screen_orientation">Screen Orientation</string>
-    
+
     <string name="activity_translucent">App/Activity/Translucent</string>
     <string name="translucent_background">Example of how you can make an
             activity have a translucent background, compositing over
@@ -76,7 +76,7 @@
         can resize to adjust for the IME.</string>
     <string name="soft_input_modes_initial_text">Text editor.\n\nTap to show the IME,
         which will cause this window to resize as requested.</string>
-    
+
     <string name="activity_persistent">App/Activity/Persistent State</string>
     <string name="persistent_msg">Demonstration of persistent activity state with getPreferences(0).edit() and getPreferences(0).</string>
 
@@ -540,6 +540,8 @@
     <string name="password_minimum_numeric_hint">Minimum Numeric</string>
     <string name="password_minimum_nonletter_hint">Minimum Non-Letter</string>
     <string name="password_history_length_hint">Password History Length</string>
+    <string name="password_expiration_hint">Password Expiration Timeout (minutes) </string>
+    <string name="update_expiration_label">Update</string>
     <string name="set_password">Set Password</string>
     <string name="password_hint">Password</string>
     <string name="reset_password">Reset Password</string>
