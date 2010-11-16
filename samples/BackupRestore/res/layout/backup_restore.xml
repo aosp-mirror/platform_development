@@ -16,58 +16,72 @@
 
 <!-- Layout description of the BackupRestore sample's main activity -->
 
-
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent">
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
 
-    <LinearLayout
+    <ScrollView
         android:orientation="vertical"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_weight="1">
 
-        <TextView android:text="@string/filling_text"
-            android:textSize="20dp"
-            android:layout_marginTop="20dp"
-            android:layout_marginBottom="10dp"
+        <LinearLayout
+            android:orientation="vertical"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
+            android:layout_height="wrap_content">
 
-        <RadioGroup android:id="@+id/filling_group"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="20dp"
-            android:orientation="vertical">
+            <TextView android:text="@string/filling_text"
+                android:textSize="20dp"
+                android:layout_marginTop="20dp"
+                android:layout_marginBottom="10dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"/>
 
-            <RadioButton android:id="@+id/bacon"
-                android:text="@string/bacon_label"/>
-            <RadioButton android:id="@+id/pastrami"
-                android:text="@string/pastrami_label"/>
-            <RadioButton android:id="@+id/hummus"
-                android:text="@string/hummus_label"/>
+            <RadioGroup android:id="@+id/filling_group"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="20dp"
+                android:orientation="vertical">
 
-        </RadioGroup>
+                <RadioButton android:id="@+id/bacon"
+                    android:text="@string/bacon_label"/>
+                <RadioButton android:id="@+id/pastrami"
+                    android:text="@string/pastrami_label"/>
+                <RadioButton android:id="@+id/hummus"
+                    android:text="@string/hummus_label"/>
 
-        <TextView android:text="@string/extras_text"
-            android:textSize="20dp"
-            android:layout_marginTop="20dp"
-            android:layout_marginBottom="10dp"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
+            </RadioGroup>
 
-        <CheckBox android:id="@+id/mayo"
-            android:text="@string/mayo_text"
-            android:layout_marginLeft="20dp"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
+            <TextView android:text="@string/extras_text"
+                android:textSize="20dp"
+                android:layout_marginTop="20dp"
+                android:layout_marginBottom="10dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"/>
 
-        <CheckBox android:id="@+id/tomato"
-            android:text="@string/tomato_text"
-            android:layout_marginLeft="20dp"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
+            <CheckBox android:id="@+id/mayo"
+                android:text="@string/mayo_text"
+                android:layout_marginLeft="20dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"/>
 
-    </LinearLayout>
+            <CheckBox android:id="@+id/tomato"
+                android:text="@string/tomato_text"
+                android:layout_marginLeft="20dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"/>
 
-</ScrollView>
+        </LinearLayout>
+
+    </ScrollView>
+
+    <Button android:id="@+id/restore_button"
+        android:text="@string/restore_text"
+        android:onClick="onRestoreButtonClick"
+        android:layout_height="wrap_content"
+        android:layout_width="wrap_content"
+        android:layout_weight="0" />
+
+</LinearLayout>

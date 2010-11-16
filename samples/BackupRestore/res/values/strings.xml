@@ -23,4 +23,6 @@
   <string name="extras_text">Extras:</string>
   <string name="mayo_text">Mayonnaise\?</string>
   <string name="tomato_text">Tomato\?</string>
+
+  <string name="restore_text">Restore last data</string>
 </resources>
