@@ -18,8 +18,10 @@ package com.example.android.backuprestore;
 
 import android.app.Activity;
 import android.app.backup.BackupManager;
+import android.app.backup.RestoreObserver;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.RadioGroup;
@@ -248,5 +250,22 @@ public class BackupRestoreActivity extends Activity {
         }
 
         mBackupManager.dataChanged();
+    }
+
+    /**
+     * Click handler, designated in the layout, that runs a restore of the app's
+     * most recent data when the button is pressed.
+     */
+    public void onRestoreButtonClick(View v) {
+        Log.v(TAG, "Requesting restore of our most recent data");
+        mBackupManager.requestRestore(
+                new RestoreObserver() {
+                    public void restoreFinished(int error) {
+                        /** Done with the restore!  Now draw the new state of our data */
+                        Log.v(TAG, "Restore finished, error = " + error);
+                        populateUI();
+                    }
+                }
+        );
     }
 }
