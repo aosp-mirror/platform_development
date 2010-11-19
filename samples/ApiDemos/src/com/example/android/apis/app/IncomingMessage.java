@@ -78,6 +78,7 @@ public class IncomingMessage extends Activity {
         // Set the info for the views that show in the notification panel.
         notif.setLatestEventInfo(this, from, message, contentIntent);
 
+        /*
         // On tablets, the ticker shows the sender, the first line of the message,
         // the photo of the person and the app icon.  For our sample, we just show
         // the same icon twice.  If there is no sender, just pass an array of 1 Bitmap.
@@ -86,6 +87,7 @@ public class IncomingMessage extends Activity {
         notif.tickerIcons = new Bitmap[2];
         notif.tickerIcons[0] = getIconBitmap();;
         notif.tickerIcons[1] = getIconBitmap();;
+        */
 
         // after a 0ms delay, vibrate for 250ms, pause for 100 ms and
         // then vibrate for 500ms.
