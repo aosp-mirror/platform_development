@@ -40,6 +40,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.net.InetSocketAddress;
@@ -170,7 +171,6 @@ public class DeviceAdminSample extends DeviceAdminReceiver {
         EditText mPasswordMinimumSymbols;
         EditText mPasswordMinimumNonLetter;
         EditText mPasswordHistoryLength;
-        EditText mPasswordExpirationTimeout;
         Button mSetPasswordButton;
 
         EditText mPassword;
@@ -190,7 +190,10 @@ public class DeviceAdminSample extends DeviceAdminReceiver {
         EditText mProxyList;
         Button mProxyButton;
 
+        private EditText mPasswordExpirationTimeout;
         private Button mPasswordExpirationButton;
+        private TextView mPasswordExpirationStatus;
+        private Button mPasswordExpirationStatusButton;
 
         @Override
         protected void onCreate(Bundle savedInstanceState) {
@@ -333,12 +336,21 @@ public class DeviceAdminSample extends DeviceAdminReceiver {
             mPasswordExpirationButton = (Button) findViewById(R.id.update_expiration_button);
             mPasswordExpirationButton.setOnClickListener(new OnClickListener() {
                 public void onClick(View v) {
-                    long expiration;
                     try {
                         setPasswordExpiration(
                                 Long.parseLong(mPasswordExpirationTimeout.getText().toString()));
                     } catch (NumberFormatException nfe) {
                     }
+                    updatePasswordExpirationStatus();
+                }
+            });
+
+            mPasswordExpirationStatus = (TextView) findViewById(R.id.password_expiration_status);
+            mPasswordExpirationStatusButton =
+                    (Button) findViewById(R.id.update_expiration_status_button);
+            mPasswordExpirationStatusButton.setOnClickListener(new OnClickListener() {
+                public void onClick(View v) {
+                    updatePasswordExpirationStatus();
                 }
             });
 
@@ -458,6 +470,41 @@ public class DeviceAdminSample extends DeviceAdminReceiver {
             mMaxFailedPw.setText(Integer.toString(maxFailedPw));
         }
 
+        void updatePasswordExpirationStatus() {
+            boolean active = mDPM.isAdminActive(mDeviceAdminSample);
+            String statusText;
+            if (active) {
+                long now = System.currentTimeMillis();
+                // We'll query the DevicePolicyManager twice - first for the expiration values
+                // set by the sample app, and later, for the system values (which may be different
+                // if there is another administrator active.)
+                long expirationDate = mDPM.getPasswordExpiration(mDeviceAdminSample);
+                long mSecUntilExpiration = expirationDate - now;
+                if (mSecUntilExpiration >= 0) {
+                    statusText = "Expiration in " + countdownString(mSecUntilExpiration);
+                } else {
+                    statusText = "Expired " + countdownString(-mSecUntilExpiration) + " ago";
+                }
+
+                // expirationTimeout is the cycle time between required password refresh
+                long expirationTimeout = mDPM.getPasswordExpirationTimeout(mDeviceAdminSample);
+                statusText += " / timeout period " + countdownString(expirationTimeout);
+
+                // Now report the aggregate (global) expiration time
+                statusText += " / Aggregate ";
+                expirationDate = mDPM.getPasswordExpiration(null);
+                mSecUntilExpiration = expirationDate - now;
+                if (mSecUntilExpiration >= 0) {
+                    statusText += "expiration in " + countdownString(mSecUntilExpiration);
+                } else {
+                    statusText += "expired " + countdownString(-mSecUntilExpiration) + " ago";
+                }
+            } else {
+                statusText = "<inactive>";
+            }
+            mPasswordExpirationStatus.setText(statusText);
+        }
+
         void updatePolicies() {
             SharedPreferences prefs = getSamplePreferences(this);
             final int pwQuality = prefs.getInt(PREF_PASSWORD_QUALITY,
@@ -569,6 +616,7 @@ public class DeviceAdminSample extends DeviceAdminReceiver {
         protected void onResume() {
             super.onResume();
             updateButtonStates();
+            updatePasswordExpirationStatus();
         }
 
         @Override
@@ -615,7 +663,7 @@ public class DeviceAdminSample extends DeviceAdminReceiver {
 
         private OnClickListener mResetPasswordListener = new OnClickListener() {
             public void onClick(View v) {
-                if (mAM.isUserAMonkey()) {
+                if (ActivityManager.isUserAMonkey()) {
                     // Don't trust monkeys to do the right thing!
                     AlertDialog.Builder builder = new AlertDialog.Builder(Controller.this);
                     builder.setMessage("You can't reset my password because you are a monkey!");
@@ -633,7 +681,7 @@ public class DeviceAdminSample extends DeviceAdminReceiver {
 
         private OnClickListener mForceLockListener = new OnClickListener() {
             public void onClick(View v) {
-                if (mAM.isUserAMonkey()) {
+                if (ActivityManager.isUserAMonkey()) {
                     // Don't trust monkeys to do the right thing!
                     AlertDialog.Builder builder = new AlertDialog.Builder(Controller.this);
                     builder.setMessage("You can't lock my screen because you are a monkey!");
@@ -650,7 +698,7 @@ public class DeviceAdminSample extends DeviceAdminReceiver {
 
         private OnClickListener mWipeDataListener = new OnClickListener() {
             public void onClick(final View v) {
-                if (mAM.isUserAMonkey()) {
+                if (ActivityManager.isUserAMonkey()) {
                     // Don't trust monkeys to do the right thing!
                     AlertDialog.Builder builder = new AlertDialog.Builder(Controller.this);
                     builder.setMessage("You can't wipe my data because you are a monkey!");
@@ -694,7 +742,7 @@ public class DeviceAdminSample extends DeviceAdminReceiver {
         private OnClickListener mSetTimeoutListener = new OnClickListener() {
 
             public void onClick(View v) {
-                if (mAM.isUserAMonkey()) {
+                if (ActivityManager.isUserAMonkey()) {
                     // Don't trust monkeys to do the right thing!
                     AlertDialog.Builder builder = new AlertDialog.Builder(Controller.this);
                     builder.setMessage("You can't lock my screen because you are a monkey!");
