@@ -18,20 +18,22 @@ endif
 ifeq ($(strip $(shell which i586-mingw32msvc-gcc 2>/dev/null)),)
 $(error MinGW is required to build a Windows SDK. Please 'apt-get install mingw32')
 endif
-ifeq ($(strip $(shell which unix2dos 2>/dev/null)),)
+ifeq ($(strip $(shell which unix2dos todos 2>/dev/null)),)
 $(error Need a unix2dos command. Please 'apt-get install tofrodos')
 endif
 
+include $(TOPDIR)sdk/build/windows_sdk_tools.mk
+
 WIN_TARGETS := \
 	aapt adb aidl \
-	emulator etc1tool \
+	etc1tool \
 	dexdump dmtracedump \
 	fastboot \
 	hprof-conv \
-	mksdcard \
 	prebuilt \
-	sdklauncher sqlite3 \
-	zipalign
+	sqlite3 \
+	zipalign \
+	$(WIN_SDK_TARGETS)
 
 # LINUX_SDK_NAME/DIR is set in build/core/Makefile
 WIN_SDK_NAME  := $(subst $(HOST_OS)-$(HOST_ARCH),windows,$(LINUX_SDK_NAME))
@@ -73,6 +75,10 @@ $(WIN_SDK_ZIP): winsdk-tools sdk
 	$(hide) cp -rf $(LINUX_SDK_DIR)/$(LINUX_SDK_NAME) $(WIN_SDK_DIR)/$(WIN_SDK_NAME)
 	$(hide) USB_DRIVER_HOOK=$(USB_DRIVER_HOOK) \
 		$(TOPDIR)development/build/tools/patch_windows_sdk.sh \
+		$(subst @,-q,$(hide)) \
+		$(WIN_SDK_DIR)/$(WIN_SDK_NAME) $(OUT_DIR) $(TOPDIR)
+	$(hide) \
+		$(TOPDIR)sdk/build/patch_windows_sdk.sh \
 		$(subst @,-q,$(hide)) \
 		$(WIN_SDK_DIR)/$(WIN_SDK_NAME) $(OUT_DIR) $(TOPDIR)
 	$(hide) ( \
