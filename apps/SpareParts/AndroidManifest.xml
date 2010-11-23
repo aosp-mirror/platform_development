@@ -21,7 +21,7 @@
     <uses-permission android:name="android.permission.WRITE_SETTINGS" />
     
     <application android:label="@string/app_label"
-            android:icon="@drawable/app_icon">
+            android:icon="@mipmap/app_icon">
 
         <activity android:name="SpareParts">
             <intent-filter>
