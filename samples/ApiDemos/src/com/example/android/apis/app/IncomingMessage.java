@@ -65,8 +65,10 @@ public class IncomingMessage extends Activity {
         CharSequence message = "kthx. meet u for dinner. cul8r";
 
         // The PendingIntent to launch our activity if the user selects this notification
+//BEGIN_INCLUDE(pending_intent)
         PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
                 new Intent(this, IncomingMessageView.class), 0);
+//END_INCLUDE(pending_intent)
 
         // The ticker text, this uses a formatted string so our message could be localized
         String tickerText = getString(R.string.imcoming_message_ticker_text, message);

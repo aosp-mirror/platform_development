@@ -341,6 +341,14 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".app.IntentActivityFlags"
+                android:label="@string/activity_intent_activity_flags">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
         <!-- Service Samples -->
 
         <service android:name=".app.LocalService" />
@@ -474,12 +482,16 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".app.IncomingMessage" android:label="App/Notification/IncomingMessage">
+<!-- BEGIN_INCLUDE(no_task_affinity) -->
+        <activity android:name=".app.IncomingMessage"
+                android:label="App/Notification/IncomingMessage"
+                android:taskAffinity="">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
             </intent-filter>
         </activity>
+<!-- END_INCLUDE(no_task_affinity) -->
 
         <activity android:name=".app.IncomingMessageView" android:label="App/Notification/IncomingMessageView">
             <intent-filter>

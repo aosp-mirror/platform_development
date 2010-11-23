@@ -320,9 +320,18 @@
     <!--  app/intents examples strings     -->
     <!-- ============================== -->
 
-    <string name="activity_intents">App/Intents</string>
+    <string name="activity_intents">App/Activity/Intents</string>
     <string name="intents">Example of launching various Intents.</string>
     <string name="get_music">Get Music</string>
+
+    <!-- ============================== -->
+    <!--  app/intents activity flags examples strings     -->
+    <!-- ============================== -->
+
+    <string name="activity_intent_activity_flags">App/Activity/Intent Activity Flags</string>
+    <string name="intent_activity_flags">Example of the use of various intent activity flags.</string>
+    <string name="flag_activity_clear_task">FLAG_ACTIVITY_CLEAR_TASK</string>
+    <string name="flag_activity_clear_task_pi">FLAG_ACTIVITY_CLEAR_TASK (PI)</string>
 
     <!-- =================================== -->
     <!--  app/notification examples strings  -->
