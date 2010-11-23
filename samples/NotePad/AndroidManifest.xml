@@ -20,8 +20,10 @@
      own application, the package name must be changed from "com.example.*"
      to come from a domain that you own or have control over. -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.android.notepad"
->
+    package="com.example.android.notepad" >
+
+    <uses-sdk android:targetSdkVersion="4" android:minSdkVersion="3"/>
+
     <application android:icon="@drawable/app_notes"
         android:label="@string/app_name"
     >
@@ -115,6 +117,4 @@
 
     </application>
 
-    <uses-sdk android:minSdkVersion="Froyo"/>
 </manifest>
-
