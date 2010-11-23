@@ -18,6 +18,12 @@
     package="com.example.android.wiktionary"
     android:versionCode="1"
     android:versionName="1.0">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-sdk android:minSdkVersion="3" android:targetSdkVersion="4" />
+
+    <meta-data android:name="android.app.default_searchable" android:value=".LookupActivity" />
+
     <application android:icon="@drawable/app_icon" android:label="@string/app_name"
         android:description="@string/app_descrip">
 
@@ -61,10 +67,5 @@
         <service android:name=".WordWidget$UpdateService" />
 
     </application>
-
-    <meta-data android:name="android.app.default_searchable" android:value=".LookupActivity" />
-
-    <uses-permission android:name="android.permission.INTERNET" />
-    <uses-sdk android:minSdkVersion="3" android:targetSdkVersion="4" />
 
 </manifest>
