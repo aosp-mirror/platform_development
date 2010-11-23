@@ -45,7 +45,9 @@
         android:name="android.permission.READ_SYNC_SETTINGS" />
     <uses-permission
         android:name="android.permission.WRITE_SYNC_SETTINGS" />
-    
+
+    <uses-sdk android:minSdkVersion="5" />
+        
     <application
         android:icon="@drawable/icon"
         android:label="@string/label">
@@ -87,6 +89,4 @@
             -->
         </activity>
     </application>
-    <uses-sdk
-        android:minSdkVersion="5" />
 </manifest>

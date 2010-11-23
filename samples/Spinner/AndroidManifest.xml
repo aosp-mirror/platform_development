@@ -26,6 +26,12 @@
       package="com.android.example.spinner"
       android:versionCode="1"
       android:versionName="1.0">
+
+    <!--
+        Requires a minimum platform version of Android-3 (SDK 1.5) to run
+    -->
+    <uses-sdk android:minSdkVersion="3"/>
+
     <!--
         Sets the application's user-readable label
      -->
@@ -45,9 +51,5 @@
         </activity>
 
     </application>
-    <!--
-        Requires a minimum platform version of Android-3 (SDK 1.5) to run
-    -->
-    <uses-sdk android:minSdkVersion="3"/>
 
 </manifest>
