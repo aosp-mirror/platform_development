@@ -74,10 +74,16 @@
             android:layout_alignParentLeft="true"
             android:text="@string/development_settings_show_updates_text" />
 
+        <Spinner android:id="@+id/strictmode_visual"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/show_updates"
+            android:layout_alignParentLeft="true" />
+
         <CheckBox android:id="@+id/compatibility_mode"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@id/show_updates"
+            android:layout_below="@id/strictmode_visual"
             android:layout_alignParentLeft="true"
             android:text="@string/development_settings_compatibility_mode_text" />
 
