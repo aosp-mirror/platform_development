@@ -23,23 +23,26 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager.NameNotFoundException;
-import android.os.RemoteException;
+import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Parcel;
+import android.os.RemoteException;
 import android.os.ServiceManager;
 import android.os.ServiceManagerNative;
+import android.os.StrictMode;
+import android.os.SystemProperties;
 import android.provider.Settings;
-import android.os.Bundle;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.IWindowManager;
 import android.view.View;
+import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.Spinner;
 import android.widget.Toast;
-import android.widget.AdapterView.OnItemSelectedListener;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -53,6 +56,7 @@ public class DevelopmentSettings extends Activity {
     private CheckBox mWaitForDebuggerCB;
     private CheckBox mAlwaysFinishCB;
     private Spinner mPointerLocationSpinner;
+    private Spinner mStrictModeVisualSpinner;
     private CheckBox mShowLoadCB;
     private CheckBox mShowCpuCB;
     private CheckBox mEnableGLCB;
@@ -106,6 +110,17 @@ public class DevelopmentSettings extends Activity {
                         "Pointer Location" });
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         mPointerLocationSpinner.setAdapter(adapter);
+        mStrictModeVisualSpinner = (Spinner)findViewById(R.id.strictmode_visual);
+        adapter = new ArrayAdapter<String>(
+                this,
+                android.R.layout.simple_spinner_item,
+                new String[] {
+                        "StrictMode visual indicator: build variant default",
+                        "StrictMode visual indicator: on",
+                        "StrictMode visual indicator: off" });
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        mStrictModeVisualSpinner.setAdapter(adapter);
+        mStrictModeVisualSpinner.setOnItemSelectedListener(mStrictModeVisualChanged);
         mShowLoadCB = (CheckBox)findViewById(R.id.show_load);
         mShowLoadCB.setOnClickListener(mShowLoadClicked);
         mShowCpuCB = (CheckBox)findViewById(R.id.show_cpu);
@@ -182,6 +197,7 @@ public class DevelopmentSettings extends Activity {
         updateDebugOptions();
         updateFinishOptions();
         updatePointerLocationOptions();
+        updateStrictModeVisualOptions();
         updateProcessLimitOptions();
         updateSharedOptions();
         updateFlingerOptions();
@@ -243,6 +259,24 @@ public class DevelopmentSettings extends Activity {
         mPointerLocation = Settings.System.getInt(getContentResolver(),
                 Settings.System.POINTER_LOCATION, 0);
         mPointerLocationSpinner.setSelection(mPointerLocation);
+    }
+
+    // Returns the current state of the system property that controls
+    // strictmode flashes.  One of:
+    //    0: not explicitly set one way or another
+    //    1: on
+    //    2: off
+    // These are the indices in the Spinner's ArrayAdapter.
+    private int currentStrictModeActiveIndex() {
+        if (TextUtils.isEmpty(SystemProperties.get(StrictMode.VISUAL_PROPERTY))) {
+            return 0;
+        }
+        boolean enabled = SystemProperties.getBoolean(StrictMode.VISUAL_PROPERTY, false);
+        return enabled ? 1 : 2;
+    }
+
+    private void updateStrictModeVisualOptions() {
+        mStrictModeVisualSpinner.setSelection(currentStrictModeActiveIndex());
     }
 
     private void writeProcessLimitOptions() {
@@ -450,6 +484,41 @@ public class DevelopmentSettings extends Activity {
                                     int position, long id) {
             mPointerLocation = position;
             writePointerLocationOptions();
+        }
+
+        public void onNothingSelected(android.widget.AdapterView av) {
+        }
+    };
+
+    private Spinner.OnItemSelectedListener mStrictModeVisualChanged
+                                    = new Spinner.OnItemSelectedListener() {
+        public void onItemSelected(android.widget.AdapterView av, View v,
+                                    int position, long id) {
+            if (position == currentStrictModeActiveIndex()) {
+                // at the existing position, so don't show a Toast.
+                return;
+            }
+
+            try {
+                switch (position) {
+                    case 0:  // default
+                        mWindowManager.setStrictModeVisualIndicatorPreference("");
+                        break;
+                    case 1:  // on
+                        mWindowManager.setStrictModeVisualIndicatorPreference("1");
+                        break;
+                    case 2:  // off
+                        mWindowManager.setStrictModeVisualIndicatorPreference("0");
+                        break;
+                }
+            } catch (RemoteException e) {
+                Log.w(TAG, "Error calling setStrictModeVisualIndicatorPreference", e);
+            }
+
+            Toast.makeText(
+                    DevelopmentSettings.this,
+                    "Setting changed; will take effect per-app next launch, or on reboot",
+                    Toast.LENGTH_LONG).show();
         }
 
         public void onNothingSelected(android.widget.AdapterView av) {
