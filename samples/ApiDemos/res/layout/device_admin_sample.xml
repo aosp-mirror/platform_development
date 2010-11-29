@@ -161,6 +161,20 @@
         <LinearLayout android:orientation="horizontal" android:gravity="center"
             android:layout_width="match_parent" android:layout_height="wrap_content">
 
+            <TextView android:id="@+id/password_expiration_status"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+            <Button android:id="@+id/update_expiration_status_button"
+                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android_layout_gravity="east|center_vertical"
+                android:text="@string/update_expiration_status_label" />
+
+        </LinearLayout>
+
+        <LinearLayout android:orientation="horizontal" android:gravity="center"
+            android:layout_width="match_parent" android:layout_height="wrap_content">
+
             <EditText android:id="@+id/password"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"

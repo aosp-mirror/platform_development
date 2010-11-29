@@ -551,6 +551,7 @@
     <string name="password_history_length_hint">Password History Length</string>
     <string name="password_expiration_hint">Password Expiration Timeout (minutes) </string>
     <string name="update_expiration_label">Update</string>
+    <string name="update_expiration_status_label">Update Status</string>
     <string name="set_password">Set Password</string>
     <string name="password_hint">Password</string>
     <string name="reset_password">Reset Password</string>
