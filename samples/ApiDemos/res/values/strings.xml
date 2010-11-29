@@ -498,6 +498,8 @@
     <string name="hide_me">Hide Me!</string>
 
     <string name="density_title">Density: Unknown Screen</string>
+    <string name="camera_alert">Device has only one camera!</string>
+    <string name="switch_cam">Switch Camera</string>
 
     <!-- ============================ -->
     <!--  media examples strings  -->
