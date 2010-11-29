@@ -624,8 +624,9 @@
     <string name="action_bar_add">Add</string>
     <string name="action_bar_edit">Edit</string>
     <string name="action_bar_share">Share</string>
-    <string name="action_bar_zoom">Zoom</string>
-    <string name="action_bar_save">Save</string>
+    <string name="action_bar_sort">Sort</string>
+    <string name="action_bar_sort_alpha">Alphabetically</string>
+    <string name="action_bar_sort_size">By size</string>
 
     <string name="action_bar_display_options">App/Action Bar/Display Options</string>
     <string name="toggle_home_as_up">DISPLAY_HOME_AS_UP</string>

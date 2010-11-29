@@ -18,7 +18,7 @@
           android:icon="@android:drawable/ic_menu_search"
           android:title="@string/action_bar_search"
           android:showAsAction="ifRoom"
-          android:onClick="onSearch" />
+          android:actionViewClass="android.widget.SearchView" />
     <item android:id="@+id/action_add"
           android:icon="@android:drawable/ic_menu_add"
           android:title="@string/action_bar_add" />
@@ -30,15 +30,19 @@
           android:icon="@android:drawable/ic_menu_share"
           android:title="@string/action_bar_share"
           android:showAsAction="ifRoom" />
-    <item android:id="@+id/action_zoom"
-          android:icon="@android:drawable/ic_menu_zoom"
-          android:title="@string/action_bar_zoom"
+    <item android:id="@+id/action_sort"
+          android:icon="@android:drawable/ic_menu_sort_by_size"
+          android:title="@string/action_bar_sort"
           android:showAsAction="ifRoom">
         <menu>
-            <item android:id="@+id/action_save"
-                  android:icon="@android:drawable/ic_menu_save"
-                  android:title="@string/action_bar_save"
-                  android:showAsAction="ifRoom" />
+            <item android:id="@+id/action_sort_size"
+                  android:icon="@android:drawable/ic_menu_sort_by_size"
+                  android:title="@string/action_bar_sort_size"
+                  android:onClick="onSort" />
+            <item android:id="@+id/action_sort_alpha"
+                  android:icon="@android:drawable/ic_menu_sort_alphabetically"
+                  android:title="@string/action_bar_sort_alpha"
+                  android:onClick="onSort" />
         </menu>
     </item>
 </menu>
