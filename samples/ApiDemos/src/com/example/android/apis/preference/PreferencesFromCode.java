@@ -16,6 +16,8 @@
 
 package com.example.android.apis.preference;
 
+import com.example.android.apis.R;
+
 import android.content.Intent;
 import android.content.res.TypedArray;
 import android.net.Uri;
@@ -26,8 +28,7 @@ import android.preference.ListPreference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceCategory;
 import android.preference.PreferenceScreen;
-
-import com.example.android.apis.R;
+import android.preference.SwitchPreference;
 
 public class PreferencesFromCode extends PreferenceActivity {
 
@@ -47,12 +48,19 @@ public class PreferencesFromCode extends PreferenceActivity {
         inlinePrefCat.setTitle(R.string.inline_preferences);
         root.addPreference(inlinePrefCat);
 
-        // Toggle preference
-        CheckBoxPreference togglePref = new CheckBoxPreference(this);
-        togglePref.setKey("toggle_preference");
-        togglePref.setTitle(R.string.title_toggle_preference);
-        togglePref.setSummary(R.string.summary_toggle_preference);
-        inlinePrefCat.addPreference(togglePref);
+        // Checkbox preference
+        CheckBoxPreference checkboxPref = new CheckBoxPreference(this);
+        checkboxPref.setKey("checkbox_preference");
+        checkboxPref.setTitle(R.string.title_checkbox_preference);
+        checkboxPref.setSummary(R.string.summary_checkbox_preference);
+        inlinePrefCat.addPreference(checkboxPref);
+
+        // Switch preference
+        SwitchPreference switchPref = new SwitchPreference(this);
+        switchPref.setKey("switch_preference");
+        switchPref.setTitle(R.string.title_switch_preference);
+        switchPref.setSummary(R.string.summary_switch_preference);
+        inlinePrefCat.addPreference(switchPref);
 
         // Dialog based preferences
         PreferenceCategory dialogBasedPrefCat = new PreferenceCategory(this);

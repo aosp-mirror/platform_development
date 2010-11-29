@@ -518,11 +518,12 @@
     <string name="launch_preferences">Launch preferences</string>
     <string name="preference_attributes">Preference attributes</string>
 
-    <string name="title_toggle_preference">Toggle preference</string>
-    <string name="summary_toggle_preference">This is a toggle button</string>
-
     <string name="title_checkbox_preference">Checkbox preference</string>
     <string name="summary_checkbox_preference">This is a checkbox</string>
+
+    <string name="title_switch_preference">Switch preference</string>
+    <string name="summary_switch_preference">This is a switch</string>
+    <string name="summary_switch_preference_yes_no">This is a switch with custom text</string>
 
     <string name="title_yesno_preference">Yes or no preference</string>
     <string name="summary_yesno_preference">An example that uses a yes/no dialog</string>
@@ -555,9 +556,9 @@
     <string name="summary_on_advanced_toggle_preference">I\'m on! :)</string>
     <string name="summary_off_advanced_toggle_preference">I\'m off! :(</string>
 
-    <string name="title_parent_preference">Parent toggle</string>
+    <string name="title_parent_preference">Parent checkbox preference</string>
     <string name="summary_parent_preference">This is visually a parent</string>
-    <string name="title_child_preference">Child toggle</string>
+    <string name="title_child_preference">Child checkbox preference</string>
     <string name="summary_child_preference">This is visually a child</string>
 
     <string name="example_preference_dependency">Example preference dependency</string>
