@@ -86,17 +86,14 @@ public class ActionBarTabs extends Activity {
             mFragment = fragment;
         }
 
-        @Override
         public void onTabSelected(Tab tab, FragmentTransaction ft) {
             ft.add(R.id.fragment_content, mFragment, mFragment.getText());
         }
 
-        @Override
         public void onTabUnselected(Tab tab, FragmentTransaction ft) {
             ft.remove(mFragment);
         }
 
-        @Override
         public void onTabReselected(Tab tab, FragmentTransaction ft) {
             Toast.makeText(ActionBarTabs.this, "Reselected!", Toast.LENGTH_SHORT).show();
         }
