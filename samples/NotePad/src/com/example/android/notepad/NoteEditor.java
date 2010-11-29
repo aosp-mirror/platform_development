@@ -16,16 +16,15 @@
 
 package com.example.android.notepad;
 
-import com.example.android.notepad.NotePad;
-
 import android.app.Activity;
-import android.content.ClipboardManager;
 import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.Resources;
 import android.database.Cursor;
 import android.graphics.Canvas;
 import android.graphics.Paint;
@@ -35,6 +34,7 @@ import android.os.Bundle;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.EditText;
 
@@ -51,7 +51,7 @@ import android.widget.EditText;
  */
 public class NoteEditor extends Activity {
     // For logging and debugging purposes
-    private static final String TAG = "Notes";
+    private static final String TAG = "NoteEditor";
 
     /*
      * Creates a projection that returns the note ID and the note contents.
@@ -62,29 +62,17 @@ public class NoteEditor extends Activity {
             NotePad.Notes.COLUMN_NAME_TITLE,
             NotePad.Notes.COLUMN_NAME_NOTE
     };
-    // The index of the note column
-    private static final int COLUMN_INDEX_NOTE = 1;
-
-    // The index of the title column
-    private static final int COLUMN_INDEX_TITLE = 2;
 
     // A label for the saved state of the activity
     private static final String ORIGINAL_CONTENT = "origContent";
-
-    // Menu item identifiers
-    private static final int REVERT_ID = Menu.FIRST;
-    private static final int DISCARD_ID = Menu.FIRST + 1;
-    private static final int DELETE_ID = Menu.FIRST + 2;
 
     // This Activity can be started by more than one action. Each action is represented
     // as a "state" constant
     private static final int STATE_EDIT = 0;
     private static final int STATE_INSERT = 1;
-    private static final int STATE_PASTE = 2;
 
     // Global mutable variables
     private int mState;
-    private boolean mNoteOnly = false;
     private Uri mUri;
     private Cursor mCursor;
     private EditText mText;
@@ -199,15 +187,6 @@ public class NoteEditor extends Activity {
             // set the result to be returned.
             setResult(RESULT_OK, (new Intent()).setAction(mUri.toString()));
 
-            // For a paste, initializes the data from clipboard.
-            if (Intent.ACTION_PASTE.equals(action)) {
-
-                // Does the paste
-                performPaste();
-                // Switches the state to PASTE. The title can not be modified.
-                mState = STATE_PASTE;
-            }
-
         // If the action was other than EDIT or INSERT:
         } else {
 
@@ -217,12 +196,6 @@ public class NoteEditor extends Activity {
             finish();
             return;
         }
-
-        // Sets the layout for this Activity. See res/layout/note_editor.xml
-        setContentView(R.layout.note_editor);
-
-        // Gets a handle to the EditText in the the layout.
-        mText = (EditText) findViewById(R.id.note);
 
         /*
          * Using the URI passed in with the triggering Intent, gets the note or notes in
@@ -239,6 +212,21 @@ public class NoteEditor extends Activity {
             null,         // No "where" clause selection values.
             null          // Use the default sort order (modification date, descending)
         );
+
+        // For a paste, initializes the data from clipboard.
+        // (Must be done after mCursor is initialized.)
+        if (Intent.ACTION_PASTE.equals(action)) {
+            // Does the paste
+            performPaste();
+            // Switches the state to EDIT so the title can be modified.
+            mState = STATE_EDIT;
+        }
+
+        // Sets the layout for this Activity. See res/layout/note_editor.xml
+        setContentView(R.layout.note_editor);
+
+        // Gets a handle to the EditText in the the layout.
+        mText = (EditText) findViewById(R.id.note);
 
         /*
          * If this Activity had stopped previously, its state was written the ORIGINAL_CONTENT
@@ -266,6 +254,8 @@ public class NoteEditor extends Activity {
          * process. This tests that it's not null, since it should always contain data.
          */
         if (mCursor != null) {
+            // Requery in case something changed while paused (such as the title)
+            mCursor.requery();
 
             /* Moves to the first record. Always call moveToFirst() before accessing data in
              * a Cursor for the first time. The semantics of using a Cursor are that when it is
@@ -276,12 +266,14 @@ public class NoteEditor extends Activity {
 
             // Modifies the window title for the Activity according to the current Activity state.
             if (mState == STATE_EDIT) {
-
-                // Sets the title to Edit for edits
-                setTitle(getText(R.string.title_edit));
-
-            // Sets the title to "create" for inserts and pastes
-            } else if (mState == STATE_INSERT || mState == STATE_PASTE) {
+                // Set the title of the Activity to include the note title
+                int colTitleIndex = mCursor.getColumnIndex(NotePad.Notes.COLUMN_NAME_TITLE);
+                String title = mCursor.getString(colTitleIndex);
+                Resources res = getResources();
+                String text = String.format(res.getString(R.string.title_edit), title);
+                setTitle(text);
+            // Sets the title to "create" for inserts
+            } else if (mState == STATE_INSERT) {
                 setTitle(getText(R.string.title_create));
             }
 
@@ -294,7 +286,8 @@ public class NoteEditor extends Activity {
 
             // Gets the note text from the Cursor and puts it in the TextView, but doesn't change
             // the text cursor's position.
-            String note = mCursor.getString(COLUMN_INDEX_NOTE);
+            int colNoteIndex = mCursor.getColumnIndex(NotePad.Notes.COLUMN_NAME_NOTE);
+            String note = mCursor.getString(colNoteIndex);
             mText.setTextKeepState(note);
 
             // Stores the original note text, to allow the user to revert changes.
@@ -361,7 +354,7 @@ public class NoteEditor extends Activity {
              * even if the note was being edited, the assumption being that the user wanted to
              * "clear out" (delete) the note.
              */
-            if (isFinishing() && (length == 0) && !mNoteOnly) {
+            if (isFinishing() && (length == 0)) {
                 setResult(RESULT_CANCELED);
                 deleteNote();
 
@@ -371,11 +364,13 @@ public class NoteEditor extends Activity {
                  * onCreate() inserted a new empty note into the provider, and it is this new note
                  * that is being edited.
                  */
-            } else {
-
+            } else if (mState == STATE_EDIT) {
                 // Creates a map to contain the new values for the columns
-                updateNote(text, null, !mNoteOnly);
-            }
+                updateNote(text, null);
+            } else if (mState == STATE_INSERT) {
+                updateNote(text, text);
+                mState = STATE_EDIT;
+          }
         }
     }
 
@@ -391,72 +386,38 @@ public class NoteEditor extends Activity {
      */
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        super.onCreateOptionsMenu(menu);
+        // Inflate menu from XML resource
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.editor_options_menu, menu);
 
-        // Builds the menus that are shown when editing. These are 'revert' to undo changes, and
-        // 'delete' to delete the note.
+        // Only add extra menu items for a saved note 
         if (mState == STATE_EDIT) {
-
-            // Adds the 'revert' menu item, and sets its shortcut to numeric 0, letter 'r' and its
-            // icon to the Android standard revert icon.
-            menu.add(0, REVERT_ID, 0, R.string.menu_revert)
-                    .setShortcut('0', 'r')
-                    .setIcon(android.R.drawable.ic_menu_revert);
-            if (!mNoteOnly) {
-
-                // Adds the 'delete' menu item, and sets its shortcut to numeric 1, letter 'd'
-                // and its icon to the Android standard delete icon
-                menu.add(0, DELETE_ID, 0, R.string.menu_delete)
-                        .setShortcut('1', 'd')
-                        .setIcon(android.R.drawable.ic_menu_delete);
-            }
-
-        // Builds the menus that are shown when inserting. The only option is 'Discard' to throw
-        // away the new note.
-        } else {
-            menu.add(0, DISCARD_ID, 0, R.string.menu_discard)
-                    .setShortcut('0', 'd')
-                    .setIcon(android.R.drawable.ic_menu_delete);
-        }
-
-        /*
-         * Appends menu items for any Activity declarations that implement an alternative action
-         * for this Activity's MIME type, one menu item for each Activity.
-         */
-        if (!mNoteOnly) {
-
-            // Makes a new Intent with the URI data passed to this Activity
-            Intent intent = new Intent(null, getIntent().getData());
-
-            // Adds the ALTERNATIVE category to the Intent.
+            // Append to the
+            // menu items for any other activities that can do stuff with it
+            // as well.  This does a query on the system for any activities that
+            // implement the ALTERNATIVE_ACTION for our data, adding a menu item
+            // for each one that is found.
+            Intent intent = new Intent(null, mUri);
             intent.addCategory(Intent.CATEGORY_ALTERNATIVE);
-
-            /*
-             * Constructs a new ComponentName object that represents the current Activity.
-             */
-            ComponentName component = new ComponentName(
-                this,
-                NoteEditor.class);
-
-            /*
-             * In the ALTERNATIVE menu group, adds an option for each Activity that is registered to
-             * handle this Activity's MIME type. The Intent describes what type of items should be
-             * added to the menu; in this case, Activity declarations with category ALTERNATIVE.
-             */
-            menu.addIntentOptions(
-                Menu.CATEGORY_ALTERNATIVE,  // The menu group to add the items to.
-                Menu.NONE,                  // No unique ID is needed.
-                Menu.NONE,                  // No ordering is needed.
-                component,                  // The current Activity object's component name
-                null,                       // No specific items need to be placed first.
-                intent,                     // The intent containing the type of items to add.
-                Menu.NONE,                  // No flags are necessary.
-                null                        // No need to generate an array of menu items.
-            );
+            menu.addIntentOptions(Menu.CATEGORY_ALTERNATIVE, 0, 0,
+                    new ComponentName(this, NoteEditor.class), null, intent, 0, null);
         }
 
-        // The method returns TRUE, so that further menu processing is not done.
-        return true;
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        // Check if note has changed and enable/disable the revert option
+        int colNoteIndex = mCursor.getColumnIndex(NotePad.Notes.COLUMN_NAME_NOTE);
+        String savedNote = mCursor.getString(colNoteIndex);
+        String currentNote = mText.getText().toString();
+        if (savedNote.equals(currentNote)) {
+            menu.findItem(R.id.menu_revert).setVisible(false);
+        } else {
+            menu.findItem(R.id.menu_revert).setVisible(true);
+        }
+        return super.onPrepareOptionsMenu(menu);
     }
 
     /**
@@ -470,29 +431,21 @@ public class NoteEditor extends Activity {
      */
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-
-        // Chooses the action to perform
+        // Handle all of the possible menu actions.
         switch (item.getItemId()) {
-
-        // Deletes the note and close the Activity.
-        case DELETE_ID:
-        deleteNote();
-        finish();
-        break;
-
-        // Discards the new note.
-        case DISCARD_ID:
-        cancelNote();
-        break;
-
-        // Discards any changes to an edited note.
-        case REVERT_ID:
-        cancelNote();
-        break;
+        case R.id.menu_save:
+            String text = mText.getText().toString();
+            updateNote(text, null);
+            finish();
+            break;
+        case R.id.menu_delete:
+            deleteNote();
+            finish();
+            break;
+        case R.id.menu_revert:
+            cancelNote();
+            break;
         }
-
-        // Continues with processing the menu item. In effect, if the item was an alternative
-        // action, this invokes the Activity for that action.
         return super.onOptionsItemSelected(item);
     }
 
@@ -540,8 +493,10 @@ public class NoteEditor extends Activity {
                 // (moveToFirst() returns true), then this gets the note data from it.
                 if (orig != null) {
                     if (orig.moveToFirst()) {
-                        text = orig.getString(COLUMN_INDEX_NOTE);
-                        title = orig.getString(COLUMN_INDEX_TITLE);
+                        int colNoteIndex = mCursor.getColumnIndex(NotePad.Notes.COLUMN_NAME_NOTE);
+                        int colTitleIndex = mCursor.getColumnIndex(NotePad.Notes.COLUMN_NAME_TITLE);
+                        text = orig.getString(colNoteIndex);
+                        title = orig.getString(colTitleIndex);
                     }
 
                     // Closes the cursor.
@@ -556,7 +511,7 @@ public class NoteEditor extends Activity {
             }
 
             // Updates the current note with the retrieved title and text.
-            updateNote(text, title, true);
+            updateNote(text, title);
         }
     }
 //END_INCLUDE(paste)
@@ -565,44 +520,40 @@ public class NoteEditor extends Activity {
      * Replaces the current note contents with the text and title provided as arguments.
      * @param text The new note contents to use.
      * @param title The new note title to use
-     * @param updateTitle <em>true</em> if the title should be updated. This also updates the
-     * modification timestamp to the current time.
      */
-    private final void updateNote(String text, String title, boolean updateTitle) {
+    private final void updateNote(String text, String title) {
 
         // Sets up a map to contain values to be updated in the provider.
         ContentValues values = new ContentValues();
+        values.put(NotePad.Notes.COLUMN_NAME_MODIFICATION_DATE, System.currentTimeMillis());
 
-        // If updateTitle is true, sets the modification date/time stamp to now.
-        if (updateTitle) {
-            values.put(NotePad.Notes.COLUMN_NAME_MODIFICATION_DATE, System.currentTimeMillis());
+        // If the action is to insert a new note, this creates an initial title for it.
+        if (mState == STATE_INSERT) {
 
-            // If the action is to insert a new note, this creates an initial title for it.
-            if (mState == STATE_INSERT) {
+            // If no title was provided as an argument, create one from the note text.
+            if (title == null) {
+  
+                // Get the note's length
+                int length = text.length();
 
-                // If no title was provided as an argument, create one from the note text.
-                if (title == null) {
-
-                    // Get the note's length
-                    int length = text.length();
-
-                    // Sets the title by getting a substring of the text that is 31 characters long
-                    // or the number of characters in the note plus one, whichever is smaller.
-                    title = text.substring(0, Math.min(30, length));
-
-                    // If the resulting length is more than 30 characters, chops off any
-                    // trailing spaces
-                    if (length > 30) {
-                        int lastSpace = title.lastIndexOf(' ');
-                        if (lastSpace > 0) {
-                            title = title.substring(0, lastSpace);
-                        }
+                // Sets the title by getting a substring of the text that is 31 characters long
+                // or the number of characters in the note plus one, whichever is smaller.
+                title = text.substring(0, Math.min(30, length));
+  
+                // If the resulting length is more than 30 characters, chops off any
+                // trailing spaces
+                if (length > 30) {
+                    int lastSpace = title.lastIndexOf(' ');
+                    if (lastSpace > 0) {
+                        title = title.substring(0, lastSpace);
                     }
                 }
-
-                // In the values map, sets the value of the title
-                values.put(NotePad.Notes.COLUMN_NAME_TITLE, title);
             }
+            // In the values map, sets the value of the title
+            values.put(NotePad.Notes.COLUMN_NAME_TITLE, title);
+        } else if (title != null) {
+            // In the values map, sets the value of the title
+            values.put(NotePad.Notes.COLUMN_NAME_TITLE, title);
         }
 
         // This puts the desired notes text into the map.
@@ -634,8 +585,6 @@ public class NoteEditor extends Activity {
      * newly created, or reverts to the original text of the note i
      */
     private final void cancelNote() {
-
-        // If
         if (mCursor != null) {
             if (mState == STATE_EDIT) {
                 // Put the original note text back into the database

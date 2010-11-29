@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <!--  This is our one standard application action (creating a new note). -->
+    <item android:id="@+id/menu_add"
+          android:icon="@drawable/ic_menu_compose"
+          android:title="@string/menu_add"
+          android:alphabeticShortcut='a'
+          android:showAsAction="always" />
+    <!--  If there is currently data in the clipboard, this adds a PASTE menu item to the menu
+          so that the user can paste in the data.. -->
+    <item android:id="@+id/menu_paste"
+          android:icon="@drawable/ic_menu_compose"
+          android:title="@string/menu_paste"
+          android:alphabeticShortcut='p' />
+</menu>
