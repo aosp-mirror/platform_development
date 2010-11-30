@@ -21,7 +21,9 @@
 
 #include <jni.h>
 
-__BEGIN_DECLS
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * Return the ANativeWindow associated with a Java Surface object,
@@ -31,6 +33,8 @@ __BEGIN_DECLS
  */
 ANativeWindow* ANativeWindow_fromSurface(JNIEnv* env, jobject surface);
 
-__END_DECLS
+#ifdef __cplusplus
+};
+#endif
 
-#endif /* ANDROID_NATIVE_WINDOW_H */
+#endif // ANDROID_NATIVE_WINDOW_H
