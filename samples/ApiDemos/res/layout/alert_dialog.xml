@@ -29,6 +29,9 @@
         <Button android:id="@+id/two_buttons2"
             android:layout_width="match_parent" android:layout_height="wrap_content"
             android:text="@string/alert_dialog_two_buttons2"/>
+        <Button android:id="@+id/two_buttons2ultra"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:text="@string/alert_dialog_two_buttons2ultra"/>
         <Button android:id="@+id/select_button"
             android:layout_width="match_parent" android:layout_height="wrap_content"
             android:text="@string/alert_dialog_select_button"/>

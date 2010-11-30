@@ -370,6 +370,7 @@
     <string name="activity_alert_dialog">App/Dialog</string>
     <string name="alert_dialog_two_buttons">OK Cancel dialog with a message</string>
     <string name="alert_dialog_two_buttons2">OK Cancel dialog with a long message</string>
+    <string name="alert_dialog_two_buttons2ultra">OK Cancel dialog with ultra long message</string>
     <string name="alert_dialog_select_button">List dialog</string>
     <string name="alert_dialog_single_choice">Single choice list</string>
     <string name="alert_dialog_multi_choice">Repeat alarm</string>
@@ -390,6 +391,44 @@
         Plasa maku noga wipont trenzsa schengos ent kaap zux comy.\n\nWipont trenz
         kipg naar mixent phona. Cak pwico siructiun
         ruous nust apoply tyu cak Uhex sisulutiun munityuw uw dseg
+    </string>
+    <string name="alert_dialog_two_buttons2ultra_msg">
+        Plloaso mako nuto siwuf cakso dodtos anr koop a
+        cupy uf cak vux noaw yerw phuno. Whag schengos, uf efed, quiel
+        ba mada su otrenzr.\n\nSwipontgwook proudgs hus yag su ba dagarmidad.
+        Plasa maku noga wipont trenzsa schengos ent kaap zux comy.\n\nWipont trenz
+        kipg naar mixent phona. Cak pwico siructiun
+        ruous nust apoply tyu cak Uhex sisulutiun munityuw uw dseg\n\n
+        Plloaso mako nuto siwuf cakso dodtos anr koop a
+        cupy uf cak vux noaw yerw phuno. Whag schengos, uf efed, quiel
+        ba mada su otrenzr.\n\nSwipontgwook proudgs hus yag su ba dagarmidad.
+        Plasa maku noga wipont trenzsa schengos ent kaap zux comy.\n\nWipont trenz
+        kipg naar mixent phona. Cak pwico siructiun
+        ruous nust apoply tyu cak Uhex sisulutiun munityuw uw dseg\n\n
+        Plloaso mako nuto siwuf cakso dodtos anr koop a
+        cupy uf cak vux noaw yerw phuno. Whag schengos, uf efed, quiel
+        ba mada su otrenzr.\n\nSwipontgwook proudgs hus yag su ba dagarmidad.
+        Plasa maku noga wipont trenzsa schengos ent kaap zux comy.\n\nWipont trenz
+        kipg naar mixent phona. Cak pwico siructiun
+        ruous nust apoply tyu cak Uhex sisulutiun munityuw uw dseg\n\n
+        Plloaso mako nuto siwuf cakso dodtos anr koop a
+        cupy uf cak vux noaw yerw phuno. Whag schengos, uf efed, quiel
+        ba mada su otrenzr.\n\nSwipontgwook proudgs hus yag su ba dagarmidad.
+        Plasa maku noga wipont trenzsa schengos ent kaap zux comy.\n\nWipont trenz
+        kipg naar mixent phona. Cak pwico siructiun
+        ruous nust apoply tyu cak Uhex sisulutiun munityuw uw dseg\n\n
+        Plloaso mako nuto siwuf cakso dodtos anr koop a
+        cupy uf cak vux noaw yerw phuno. Whag schengos, uf efed, quiel
+        ba mada su otrenzr.\n\nSwipontgwook proudgs hus yag su ba dagarmidad.
+        Plasa maku noga wipont trenzsa schengos ent kaap zux comy.\n\nWipont trenz
+        kipg naar mixent phona. Cak pwico siructiun
+        ruous nust apoply tyu cak Uhex sisulutiun munityuw uw dseg\n\n
+        Plloaso mako nuto siwuf cakso dodtos anr koop a
+        cupy uf cak vux noaw yerw phuno. Whag schengos, uf efed, quiel
+        ba mada su otrenzr.\n\nSwipontgwook proudgs hus yag su ba dagarmidad.
+        Plasa maku noga wipont trenzsa schengos ent kaap zux comy.\n\nWipont trenz
+        kipg naar mixent phona. Cak pwico siructiun
+        ruous nust apoply tyu cak Uhex sisulutiun munityuw uw dseg\n\n
     </string>
     <string name="alert_dialog_ok">OK</string>
     <string name="alert_dialog_hide">Hide</string>
@@ -551,6 +590,7 @@
     <string name="password_history_length_hint">Password History Length</string>
     <string name="password_expiration_hint">Password Expiration Timeout (minutes) </string>
     <string name="update_expiration_label">Update</string>
+    <string name="update_expiration_status_label">Update Status</string>
     <string name="set_password">Set Password</string>
     <string name="password_hint">Password</string>
     <string name="reset_password">Reset Password</string>
@@ -584,8 +624,9 @@
     <string name="action_bar_add">Add</string>
     <string name="action_bar_edit">Edit</string>
     <string name="action_bar_share">Share</string>
-    <string name="action_bar_zoom">Zoom</string>
-    <string name="action_bar_save">Save</string>
+    <string name="action_bar_sort">Sort</string>
+    <string name="action_bar_sort_alpha">Alphabetically</string>
+    <string name="action_bar_sort_size">By size</string>
 
     <string name="action_bar_display_options">App/Action Bar/Display Options</string>
     <string name="toggle_home_as_up">DISPLAY_HOME_AS_UP</string>
@@ -611,6 +652,8 @@
     <string name="hide_me">Hide Me!</string>
 
     <string name="density_title">Density: Unknown Screen</string>
+    <string name="camera_alert">Device has only one camera!</string>
+    <string name="switch_cam">Switch Camera</string>
 
     <!-- ============================ -->
     <!--  media examples strings  -->

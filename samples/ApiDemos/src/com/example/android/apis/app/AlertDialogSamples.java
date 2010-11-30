@@ -64,6 +64,7 @@ public class AlertDialogSamples extends Activity {
     private static final int DIALOG_MULTIPLE_CHOICE = 6;
     private static final int DIALOG_TEXT_ENTRY = 7;
     private static final int DIALOG_MULTIPLE_CHOICE_CURSOR = 8;
+    private static final int DIALOG_YES_NO_ULTRA_LONG_MESSAGE = 9;
 
     private static final int MAX_PROGRESS = 100;
     
@@ -99,6 +100,30 @@ public class AlertDialogSamples extends Activity {
                 .setPositiveButton(R.string.alert_dialog_ok, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int whichButton) {
     
+                        /* User clicked OK so do some stuff */
+                    }
+                })
+                .setNeutralButton(R.string.alert_dialog_something, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int whichButton) {
+
+                        /* User clicked Something so do some stuff */
+                    }
+                })
+                .setNegativeButton(R.string.alert_dialog_cancel, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int whichButton) {
+
+                        /* User clicked Cancel so do some stuff */
+                    }
+                })
+                .create();
+        case DIALOG_YES_NO_ULTRA_LONG_MESSAGE:
+            return new AlertDialog.Builder(AlertDialogSamples.this)
+                .setIcon(R.drawable.alert_dialog_icon)
+                .setTitle(R.string.alert_dialog_two_buttons_msg)
+                .setMessage(R.string.alert_dialog_two_buttons2ultra_msg)
+                .setPositiveButton(R.string.alert_dialog_ok, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int whichButton) {
+
                         /* User clicked OK so do some stuff */
                     }
                 })
@@ -277,6 +302,15 @@ public class AlertDialogSamples extends Activity {
         });
         
         
+        /* Display an ultra long text message with yes/no buttons and handle each message as well as the cancel action */
+        Button twoButtons2UltraTitle = (Button) findViewById(R.id.two_buttons2ultra);
+        twoButtons2UltraTitle.setOnClickListener(new OnClickListener() {
+            public void onClick(View v) {
+                showDialog(DIALOG_YES_NO_ULTRA_LONG_MESSAGE);
+            }
+        });
+
+
         /* Display a list of items */
         Button selectButton = (Button) findViewById(R.id.select_button);
         selectButton.setOnClickListener(new OnClickListener() {
