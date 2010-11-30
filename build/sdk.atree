@@ -146,6 +146,7 @@ development/samples/source.properties        samples/${PLATFORM_NAME}/source.pro
 # PLEASE KEEP THE SAMPLES IN ALPHABETICAL ORDER.
 #
 development/samples/AccessibilityService     samples/${PLATFORM_NAME}/AccessibilityService
+development/samples/AccelerometerPlay        samples/${PLATFORM_NAME}/AccelerometerPlay
 development/samples/ApiDemos                 samples/${PLATFORM_NAME}/ApiDemos
 development/samples/BackupRestore            samples/${PLATFORM_NAME}/BackupRestore
 development/samples/BluetoothChat            samples/${PLATFORM_NAME}/BluetoothChat
