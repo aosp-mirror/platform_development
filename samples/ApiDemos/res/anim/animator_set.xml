@@ -24,7 +24,6 @@
         android:repeatMode="reverse"/>
     <objectAnimator xmlns:android="http://schemas.android.com/apk/res/android"
         android:duration="1000"
-        android:valueFrom="0"
         android:valueTo="400"
         android:valueType="floatType"
         android:propertyName="y"

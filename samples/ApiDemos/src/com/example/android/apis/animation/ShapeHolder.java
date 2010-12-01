@@ -63,6 +63,7 @@ public class ShapeHolder {
         return color;
     }
     public void setColor(int value) {
+        shape.getPaint().setColor(value);
         color = value;
     }
     public void setGradient(RadialGradient value) {
