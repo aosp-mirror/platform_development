@@ -294,7 +294,7 @@ public class MonkeySourceNetwork implements MonkeyEventSource {
                 // Convert the string to an array of KeyEvent's for
                 // the built in keymap.
                 KeyCharacterMap keyCharacterMap = KeyCharacterMap.
-                        load(KeyCharacterMap.BUILT_IN_KEYBOARD);
+                        load(KeyCharacterMap.VIRTUAL_KEYBOARD);
                 KeyEvent[] events = keyCharacterMap.getEvents(chars);
 
                 // enqueue all the events we just got.
