@@ -32,4 +32,17 @@
         <attr name="textColor" format="color" />
         <attr name="textSize" format="dimension" />
     </declare-styleable>
+
+    <!-- These are attributes used with 'DraggableDot' drawables in
+         view/DragAndDropActivity.java and view/DraggableDot.java -->
+    <declare-styleable name="DraggableDot">
+        <attr name="radius" format="dimension" />
+        <attr name="legend" format="string" />
+        <attr name="localOnly" format="boolean" />
+        <attr name="anr">
+            <enum name="none" value="0" />
+            <enum name="thumbnail" value="1" />
+            <enum name="drop" value="2" />
+        </attr>
+    </declare-styleable>
 </resources>

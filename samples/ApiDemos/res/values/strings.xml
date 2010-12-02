@@ -758,6 +758,12 @@
     <string name="cheese_hunt_hint">Cheese hunt</string>
     <string name="open_search">Expand</string>
     <string name="close_search">Iconify</string>
+
+    <string name="drag_explanation">
+        Longpress on a dot to start a drag, then drop over another dot. The destination
+        dot will append the drag\'s textual conversion to the EditText.
+    </string>
+
     <!-- ============================== -->
     <!--  GoogleLogin examples strings  -->
     <!-- ============================== -->
