@@ -80,6 +80,11 @@
     <string name="activity_persistent">App/Activity/Persistent State</string>
     <string name="persistent_msg">Demonstration of persistent activity state with getPreferences(0).edit() and getPreferences(0).</string>
 
+    <string name="activity_recreate">App/Activity/Recreate</string>
+    <string name="activity_recreate_msg">Demonstration recreating an activity, to have
+        it reconstructed with significant new changes.  In this case the theme is changed.</string>
+    <string name="recreate">Recreate</string>
+
     <string name="activity_receive_result">App/Activity/Receive Result</string>
     <string name="pick_result">Pick a result to send, or BACK to cancel.</string>
     <string name="corky">Corky</string>
