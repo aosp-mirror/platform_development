@@ -21,6 +21,7 @@ package com.example.android.apis.animation;
 import android.animation.AnimatorInflater;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
+import android.graphics.Color;
 import com.example.android.apis.R;
 
 import java.util.ArrayList;
@@ -73,22 +74,21 @@ public class AnimationLoading extends Activity {
 
         public MyAnimationView(Context context) {
             super(context);
-            addBall(100, 0);
-            addBall(250, 0);
-            addBall(400, 0);
+            addBall(50, 50);
+            addBall(200, 50);
+            addBall(350, 50);
+            addBall(500, 50, Color.GREEN);
         }
 
         private void createAnimation() {
             if (animation == null) {
-                ObjectAnimator anim =
-                        (ObjectAnimator) AnimatorInflater.
-                                loadAnimator(getApplicationContext(), R.anim.object_animator);
+                ObjectAnimator anim = (ObjectAnimator) AnimatorInflater.
+                        loadAnimator(getApplicationContext(), R.anim.object_animator);
                 anim.addUpdateListener(this);
                 anim.setTarget(balls.get(0));
 
-                ValueAnimator fader =
-                        (ValueAnimator) AnimatorInflater.loadAnimator(getApplicationContext(),
-                        R.anim.animator);
+                ValueAnimator fader = (ValueAnimator) AnimatorInflater.
+                        loadAnimator(getApplicationContext(), R.anim.animator);
                 fader.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
                     public void onAnimationUpdate(ValueAnimator animation) {
                         balls.get(1).setAlpha((Float) animation.getAnimatedValue());
@@ -100,8 +100,12 @@ public class AnimationLoading extends Activity {
                         R.anim.animator_set);
                 seq.setTarget(balls.get(2));
 
+                ObjectAnimator colorizer = (ObjectAnimator) AnimatorInflater.
+                        loadAnimator(getApplicationContext(), R.anim.color_animator);
+                colorizer.setTarget(balls.get(3));
+
                 animation = new AnimatorSet();
-                ((AnimatorSet) animation).playTogether(anim, fader, seq);
+                ((AnimatorSet) animation).playTogether(anim, fader, seq, colorizer);
             }
         }
 
@@ -110,25 +114,34 @@ public class AnimationLoading extends Activity {
             animation.start();
         }
 
-        private ShapeHolder addBall(float x, float y) {
+        private ShapeHolder createBall(float x, float y) {
             OvalShape circle = new OvalShape();
             circle.resize(BALL_SIZE, BALL_SIZE);
             ShapeDrawable drawable = new ShapeDrawable(circle);
             ShapeHolder shapeHolder = new ShapeHolder(drawable);
             shapeHolder.setX(x);
             shapeHolder.setY(y);
+            return shapeHolder;
+        }
+
+        private void addBall(float x, float y, int color) {
+            ShapeHolder shapeHolder = createBall(x, y);
+            shapeHolder.setColor(color);
+            balls.add(shapeHolder);
+        }
+
+        private void addBall(float x, float y) {
+            ShapeHolder shapeHolder = createBall(x, y);
             int red = (int)(100 + Math.random() * 155);
             int green = (int)(100 + Math.random() * 155);
             int blue = (int)(100 + Math.random() * 155);
             int color = 0xff000000 | red << 16 | green << 8 | blue;
-            Paint paint = drawable.getPaint();
+            Paint paint = shapeHolder.getShape().getPaint();
             int darkColor = 0xff000000 | red/4 << 16 | green/4 << 8 | blue/4;
             RadialGradient gradient = new RadialGradient(37.5f, 12.5f,
                     50f, color, darkColor, Shader.TileMode.CLAMP);
             paint.setShader(gradient);
-            shapeHolder.setPaint(paint);
             balls.add(shapeHolder);
-            return shapeHolder;
         }
 
         @Override
