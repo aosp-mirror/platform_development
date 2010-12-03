@@ -31,7 +31,10 @@
     <string name="activity_dialog">App/Activity/Dialog</string>
     <string name="dialog_activity_text">Example of how you can use the
             Theme.Dialog theme to make an activity that looks like a
-            dialog.</string>
+            dialog.  It also has lots of text to show how text wrapping (and
+            corresponding window size adjustment) can happen in a dialog.</string>
+    <string name="dialog_activity_add">Add content</string>
+    <string name="dialog_activity_remove">Remove content</string>
     <string name="activity_custom_dialog">App/Activity/Custom Dialog</string>
     <string name="custom_dialog_activity_text">Example of how you can use a
             custom Theme.Dialog theme to make an activity that looks like a
@@ -372,7 +375,7 @@
     <!--  app/dialog examples strings  -->
     <!-- ============================== -->
 
-    <string name="activity_alert_dialog">App/Dialog</string>
+    <string name="activity_alert_dialog">App/Alert Dialogs</string>
     <string name="alert_dialog_two_buttons">OK Cancel dialog with a message</string>
     <string name="alert_dialog_two_buttons2">OK Cancel dialog with a long message</string>
     <string name="alert_dialog_two_buttons2ultra">OK Cancel dialog with ultra long message</string>

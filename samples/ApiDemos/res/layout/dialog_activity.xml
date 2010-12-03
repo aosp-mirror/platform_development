@@ -17,8 +17,28 @@
 <!-- Demonstrates an activity with a dialog theme.
      See corresponding Java code com.android.sdk.app.DialogActivity.java. -->
 
-<!-- This screen consists of a single text field that displays some text. -->
-<TextView xmlns:android="http://schemas.android.com/apk/res/android" android:id="@+id/text"
-    android:layout_width="match_parent" android:layout_height="match_parent"
-    android:gravity="center_vertical|center_horizontal"
-    android:text="@string/dialog_activity_text"/>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="match_parent" android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:padding="4dip" android:gravity="center_horizontal">
+    <TextView android:id="@+id/text"
+        android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:gravity="center_vertical|center_horizontal"
+        android:text="@string/dialog_activity_text"/>
+    <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:orientation="horizontal" android:paddingTop="4dip">
+        <Button android:id="@+id/add"
+            android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="@string/dialog_activity_add">
+            <requestFocus />
+        </Button>
+        <Button android:id="@+id/remove"
+            android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="@string/dialog_activity_remove">
+        </Button>
+    </LinearLayout>
+    <LinearLayout android:id="@+id/inner_content"
+            android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:orientation="horizontal" android:paddingTop="4dip">
+    </LinearLayout>
+</LinearLayout>
