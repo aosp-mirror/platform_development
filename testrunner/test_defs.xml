@@ -218,6 +218,13 @@ See test_defs.xsd for more information.
     coverage_target="framework"
     suite="cts" />
 
+<test name="cts-accounts"
+    build_path="cts/tests/tests/accounts"
+    package="android.accounts.cts"
+    runner="android.test.InstrumentationTestRunner"
+    coverage_target="framework"
+    suite="cts" />
+
 <test name="cts-api-signature"
     build_path="cts/tests/SignatureTest"
     package="android.tests.sigtest"
