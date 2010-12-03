@@ -1668,7 +1668,7 @@
 
         <activity android:name=".view.Controls3"
                   android:label="Views/Controls/3. Holo Light Theme"
-                  android:theme="@android:style/Theme.Light.Holo">
+                  android:theme="@android:style/Theme.Holo.Light">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
