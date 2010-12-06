@@ -408,7 +408,8 @@ See test_defs.xsd for more information.
 <test name="calculator"
     build_path="packages/apps/Calculator"
     package="com.android.calculator2.tests"
-    coverage_target="Calculator" />
+    coverage_target="Calculator"
+    continuous="true" />
 
 <test name="calendar"
     build_path="packages/apps/Calendar"
