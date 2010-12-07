@@ -16,15 +16,12 @@
 
 package com.example.android.notepad;
 
-import com.example.android.notepad.NotePad;
-
 import android.app.Activity;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
 
 /**
@@ -36,7 +33,7 @@ import android.widget.EditText;
  * application should use the {@link android.content.AsyncQueryHandler}
  * or {@link android.os.AsyncTask} object to perform operations asynchronously on a separate thread.
  */
-public class TitleEditor extends Activity implements View.OnClickListener {
+public class TitleEditor extends Activity {
 
     /**
      * This is a special intent action that means "edit the title of a note".
@@ -95,11 +92,6 @@ public class TitleEditor extends Activity implements View.OnClickListener {
 
         // Gets the View ID for the EditText box
         mText = (EditText) this.findViewById(R.id.title);
-
-        // Sets up a listener for the OK button. Gets the Button by its ID, then sets its
-        // onClickListener to this Activity.
-        Button b = (Button) findViewById(R.id.ok);
-        b.setOnClickListener(this);
     }
 
     /**
@@ -169,16 +161,7 @@ public class TitleEditor extends Activity implements View.OnClickListener {
         }
     }
 
-    /**
-     * This method is called when the user clicks anywhere in the title text box.
-     *
-     * It calls finish(), which immediately triggers the onPause() method in this Activity. In
-     * turn, onPause() saves the text currently in the title text box to the note.
-     */
-    public void onClick(View v) {
-
-        // Calls finish to force the Activity to shut down. In the lifecycle, this forces a call to
-        // onPause(), which saves the work the user has done.
+    public void onClickOk(View v) {
         finish();
     }
 }
