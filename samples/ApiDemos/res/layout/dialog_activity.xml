@@ -26,7 +26,7 @@
     <TextView android:id="@+id/text"
         android:layout_width="wrap_content" android:layout_height="wrap_content"
         android:gravity="center_vertical|center_horizontal"
-        android:textStyle="?android:attr/textAppearanceMedium"
+        android:textAppearance="?android:attr/textAppearanceMedium"
         android:text="@string/dialog_activity_text"/>
         
     <!-- Container in which we are going to add and remove views, to demonstrate
@@ -38,14 +38,14 @@
     </LinearLayout>
     
     <!-- Alert dialog style buttons along the bottom. -->
-    <LinearLayout style="?android:attr/alertDialogButtonGroupStyle"
+    <LinearLayout style="?android:attr/buttonBarStyle"
         android:layout_width="match_parent" android:layout_height="wrap_content"
         android:measureWithLargestChild="true">
-        <Button style="?android:attr/borderlessButtonStyle" android:id="@+id/add"
+        <Button style="?android:attr/buttonBarButtonStyle" android:id="@+id/add"
             android:layout_width="wrap_content" android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="@string/dialog_activity_add" />
-        <Button style="?android:attr/borderlessButtonStyle" android:id="@+id/remove"
+        <Button style="?android:attr/buttonBarButtonStyle" android:id="@+id/remove"
             android:layout_width="wrap_content" android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="@string/dialog_activity_remove" />
