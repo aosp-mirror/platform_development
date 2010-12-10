@@ -597,41 +597,19 @@ public class MonkeySourceScript implements MonkeyEventSource {
     }
 
     /**
-     * Adjust motion downtime and eventtime according to both recorded values
-     * and current system time.
+     * Adjust motion downtime and eventtime according to current system time.
      *
      * @param e A KeyEvent
      */
     private void adjustMotionEventTime(MonkeyMotionEvent e) {
+        long updatedDownTime = 0;
+
         if (e.getEventTime() < 0) {
             return;
-        }
-        long thisDownTime = 0;
-        long thisEventTime = 0;
-        long expectedDelay = 0;
-
-        if (mLastRecordedEventTime <= 0) {
-            // first time event
-            thisDownTime = SystemClock.uptimeMillis();
-            thisEventTime = thisDownTime;
-        } else {
-            if (e.getDownTime() != mLastRecordedDownTimeMotion) {
-                thisDownTime = e.getDownTime();
-            } else {
-                thisDownTime = mLastExportDownTimeMotion;
-            }
-            expectedDelay = (long) ((e.getEventTime() - mLastRecordedEventTime) * mSpeed);
-            thisEventTime = mLastExportEventTime + expectedDelay;
-            // add sleep to simulate everything in recording
-            needSleep(expectedDelay - SLEEP_COMPENSATE_DIFF);
-        }
-
-        mLastRecordedDownTimeMotion = e.getDownTime();
-        mLastRecordedEventTime = e.getEventTime();
-        e.setDownTime(thisDownTime);
-        e.setEventTime(thisEventTime);
-        mLastExportDownTimeMotion = thisDownTime;
-        mLastExportEventTime = thisEventTime;
+        }      
+        updatedDownTime = SystemClock.uptimeMillis();
+        e.setDownTime(updatedDownTime);
+        e.setEventTime(updatedDownTime);
     }
 
     /**
