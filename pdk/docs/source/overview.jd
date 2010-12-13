@@ -7,11 +7,11 @@ includes feature overviews of the various Android platform versions.
 The links below will take you to developer.android.com where you can view this
 information.</p>
 <p>The links below will navigate you away from this site.</p>
-<p><i>Note: this page will be updated to cover Android 2.2 when the
-formal compatibility program for Android 2.2 is launched, which will occur in
-the near future.</i></p>
-<h3><a href="http://developer.android.com/sdk/android-2.0-highlights.html">Android
-2.1</a></h3>
+<h3><a href="http://developer.android.com/sdk/android-2.3-highlights.html">Android 2.3</a></h3>
+<p>Android 2.3 corresponded to the "Gingerbread" milestone branch, and has an API level of 9.</p>
+<h3><a href="http://developer.android.com/sdk/android-2.2-highlights.html">Android 2.2</a></h3>
+<p>Android 2.2 corresponded to the "FroYo" milestone branch, and has an API level of 8.</p>
+<h3><a href="http://developer.android.com/sdk/android-2.0-highlights.html">Android 2.1</a></h3>
 <p>Android 2.1 corresponded to the "Eclair" milestone branch, and has an API level of
 7.</p>
 <p>The Eclair branch was also used for 2.0 and 2.0.1; however, both of those
