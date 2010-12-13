@@ -5,6 +5,7 @@ import com.example.android.apis.R;
 import android.app.Activity;
 import android.app.PendingIntent;
 import android.app.PendingIntent.CanceledException;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -36,24 +37,19 @@ public class IntentActivityFlags extends Activity {
      */
 //BEGIN_INCLUDE(intent_array)
     private Intent[] buildIntentsToViewsLists() {
-        // We will use FLAG_ACTIVITY_CLEAR_TASK to complete replace our
-        // current task with a new Intent.
+        // We are going to rebuild our task with a new back stack.  This will
+        // be done by launching an array of Intents, representing the new
+        // back stack to be created, with the first entry holding the root
+        // and requesting to reset the back stack.
         Intent[] intents = new Intent[3];
 
-        // The main activity started from launcher is action MAIN and
-        // category LAUNCHER; we want to match that.
+        // First: root activity of ApiDemos.
+        // This is a convenient way to make the proper Intent to launch and
+        // reset an application's task.
+        intents[0] = Intent.makeRestartActivityTask(new ComponentName(this,
+                com.example.android.apis.ApiDemos.class));
+
         Intent intent = new Intent(Intent.ACTION_MAIN);
-        intent.addCategory(Intent.CATEGORY_LAUNCHER);
-        // We will use FLAG_ACTIVITY_CLEAR_TASK to completely replace our
-        // current task with a new Intent.
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK
-                | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-
-        // Set the actual activity to launch.
-        intent.setClass(IntentActivityFlags.this, com.example.android.apis.ApiDemos.class);
-        intents[0] = intent;
-
-        intent = new Intent(Intent.ACTION_MAIN);
         intent.setClass(IntentActivityFlags.this, com.example.android.apis.ApiDemos.class);
         intent.putExtra("com.example.android.apis.Path", "Views");
         intents[1] = intent;
