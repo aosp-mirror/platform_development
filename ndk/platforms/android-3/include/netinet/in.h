@@ -38,6 +38,8 @@ __BEGIN_DECLS
 
 #define IPPORT_RESERVED  1024
 
+#define INET_ADDRSTRLEN 16
+
 extern int bindresvport (int sd, struct sockaddr_in *sin);
 
 static const struct in6_addr in6addr_any = IN6ADDR_ANY_INIT;
