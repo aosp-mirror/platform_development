@@ -22,6 +22,7 @@ import android.app.Activity;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.content.ComponentName;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
@@ -164,15 +165,10 @@ public class StatusBarNotifications extends Activity {
         Intent[] intents = new Intent[4];
 
         // First: root activity of ApiDemos.
-        // The main activity started from launcher is action MAIN and
-        // category LAUNCHER; we want to match that.
-        intents[0] = new Intent(Intent.ACTION_MAIN);
-        intents[0].addCategory(Intent.CATEGORY_LAUNCHER);
-        // We will use FLAG_ACTIVITY_CLEAR_TASK to completely replace our
-        // current task with a new Intent.
-        intents[0].addFlags(Intent.FLAG_ACTIVITY_NEW_TASK
-                | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        intents[0].setClass(this, com.example.android.apis.ApiDemos.class);
+        // This is a convenient way to make the proper Intent to launch and
+        // reset an application's task.
+        intents[0] = Intent.makeRestartActivityTask(new ComponentName(this,
+                com.example.android.apis.ApiDemos.class));
 
         // "App"
         intents[1] = new Intent(this, com.example.android.apis.ApiDemos.class);
