@@ -74,6 +74,9 @@
 #define IPV6_ADDR_MC_SCOPE(a)	\
 	((a)->s6_addr[1] & 0x0f)
 
+#define IN6_IS_ADDR_MC_NODELOCAL(a)     \
+        (IN6_IS_ADDR_MULTICAST(a) &&  \
+         (IPV6_ADDR_MC_SCOPE(a) == IPV6_ADDR_SCOPE_NODELOCAL))
 #define IN6_IS_ADDR_MC_LINKLOCAL(a)	\
 	(IN6_IS_ADDR_MULTICAST(a) &&  \
 	 (IPV6_ADDR_MC_SCOPE(a) == IPV6_ADDR_SCOPE_LINKLOCAL))
@@ -83,7 +86,9 @@
 #define IN6_IS_ADDR_MC_ORGLOCAL(a)     \
 	(IN6_IS_ADDR_MULTICAST(a) &&  \
 	 (IPV6_ADDR_MC_SCOPE(a) == IPV6_ADDR_SCOPE_ORGLOCAL))
-
+#define IN6_IS_ADDR_MC_GLOBAL(a)       \
+        (IN6_IS_ADDR_MULTICAST(a) &&  \
+         (IPV6_ADDR_MC_SCOPE(a) == IPV6_ADDR_SCOPE_GLOBAL))
 
 #define IN6_ARE_ADDR_EQUAL(a, b)			\
     (memcmp(&(a)->s6_addr[0], &(b)->s6_addr[0], sizeof(struct in6_addr)) == 0)
