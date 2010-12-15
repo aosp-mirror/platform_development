@@ -82,7 +82,7 @@ public class ForegroundService extends Service {
         }
         
         // Fall back on the old API.
-        setForeground(true);
+        //setForeground(true);
         mNM.notify(id, notification);
     }
     
@@ -109,7 +109,7 @@ public class ForegroundService extends Service {
         // Fall back on the old API.  Note to cancel BEFORE changing the
         // foreground state, since we could be killed at that point.
         mNM.cancel(id);
-        setForeground(false);
+        //setForeground(false);
     }
     
     @Override
