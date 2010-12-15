@@ -18,9 +18,9 @@
 #ifndef ANDROID_ASSET_MANAGER_H
 #define ANDROID_ASSET_MANAGER_H
 
-#include <sys/cdefs.h>
-
-__BEGIN_DECLS
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 struct AAssetManager;
 typedef struct AAssetManager AAssetManager;
@@ -130,6 +130,9 @@ int AAsset_openFileDescriptor(AAsset* asset, off_t* outStart, off_t* outLength);
 int AAsset_isAllocated(AAsset* asset);
 
 
-__END_DECLS
 
-#endif      /* ANDROID_ASSET_MANAGER_H */
+#ifdef __cplusplus
+};
+#endif
+
+#endif      // ANDROID_ASSET_MANAGER_H

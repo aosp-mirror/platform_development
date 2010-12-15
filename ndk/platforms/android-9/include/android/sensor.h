@@ -39,12 +39,14 @@
  * native code.
  *
  */
-#include <sys/cdefs.h>
+
 #include <sys/types.h>
 
 #include <android/looper.h>
 
-__BEGIN_DECLS
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 
 /*
@@ -247,6 +249,8 @@ float ASensor_getResolution(ASensor const* sensor);
 int ASensor_getMinDelay(ASensor const* sensor);
 
 
-__END_DECLS
+#ifdef __cplusplus
+};
+#endif
 
-#endif /* ANDROID_SENSOR_H */
+#endif // ANDROID_SENSOR_H

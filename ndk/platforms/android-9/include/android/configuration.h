@@ -19,7 +19,9 @@
 
 #include <android/asset_manager.h>
 
-__BEGIN_DECLS
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 struct AConfiguration;
 typedef struct AConfiguration AConfiguration;
@@ -310,6 +312,8 @@ int32_t AConfiguration_match(AConfiguration* base, AConfiguration* requested);
 int32_t AConfiguration_isBetterThan(AConfiguration* base, AConfiguration* test,
         AConfiguration* requested);
 
-__END_DECLS
+#ifdef __cplusplus
+};
+#endif
 
-#endif /* ANDROID_CONFIGURATION_H */
+#endif // ANDROID_CONFIGURATION_H
