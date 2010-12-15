@@ -1,3 +1,6 @@
+slCreateEngine
+slQueryNumSupportedEngineInterfaces
+slQuerySupportedEngineInterfaces
 SL_IID_3DCOMMIT
 SL_IID_3DDOPPLER
 SL_IID_3DGROUPING
@@ -47,6 +50,3 @@ SL_IID_VIBRA
 SL_IID_VIRTUALIZER
 SL_IID_VISUALIZATION
 SL_IID_VOLUME
-slCreateEngine
-slQueryNumSupportedEngineInterfaces
-slQuerySupportedEngineInterfaces

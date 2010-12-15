@@ -18,9 +18,9 @@
 #ifndef ANDROID_LOOPER_H
 #define ANDROID_LOOPER_H
 
-#include <sys/cdefs.h>
-
-__BEGIN_DECLS
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * ALooper
@@ -248,6 +248,8 @@ int ALooper_addFd(ALooper* looper, int fd, int ident, int events,
  */
 int ALooper_removeFd(ALooper* looper, int fd);
 
-__END_DECLS
+#ifdef __cplusplus
+};
+#endif
 
-#endif /* ANDROID_NATIVE_WINDOW_H */
+#endif // ANDROID_NATIVE_WINDOW_H

@@ -18,10 +18,11 @@
 #ifndef ANDROID_STORAGE_MANAGER_H
 #define ANDROID_STORAGE_MANAGER_H
 
-#include <sys/cdefs.h>
 #include <stdint.h>
 
-__BEGIN_DECLS
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 struct AStorageManager;
 typedef struct AStorageManager AStorageManager;
@@ -119,6 +120,8 @@ int AStorageManager_isObbMounted(AStorageManager* mgr, const char* filename);
 const char* AStorageManager_getMountedObbPath(AStorageManager* mgr, const char* filename);
 
 
-__END_DECLS
+#ifdef __cplusplus
+};
+#endif
 
-#endif      /* ANDROID_STORAGE_MANAGER_H */
+#endif      // ANDROID_STORAGE_MANAGER_H

@@ -19,7 +19,6 @@
 #define ANDROID_NATIVE_ACTIVITY_H
 
 #include <stdint.h>
-#include <sys/cdefs.h>
 #include <sys/types.h>
 
 #include <jni.h>
@@ -28,7 +27,9 @@
 #include <android/input.h>
 #include <android/native_window.h>
 
-__BEGIN_DECLS
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 struct ANativeActivityCallbacks;
 
@@ -67,17 +68,17 @@ typedef struct ANativeActivity {
      * Path to this application's internal data directory.
      */
     const char* internalDataPath;
-
+    
     /**
      * Path to this application's external (removable/mountable) data directory.
      */
     const char* externalDataPath;
-
+    
     /**
      * The platform's SDK version code.
      */
     int32_t sdkVersion;
-
+    
     /**
      * This is the native instance of the application.  It is not used by
      * the framework, but can be set by the application to its own instance
@@ -104,13 +105,13 @@ typedef struct ANativeActivityCallbacks {
      * for more information.
      */
     void (*onStart)(ANativeActivity* activity);
-
+    
     /**
      * NativeActivity has resumed.  See Java documentation for Activity.onResume()
      * for more information.
      */
     void (*onResume)(ANativeActivity* activity);
-
+    
     /**
      * Framework is asking NativeActivity to save its current instance state.
      * See Java documentation for Activity.onSaveInstanceState() for more
@@ -121,19 +122,19 @@ typedef struct ANativeActivityCallbacks {
      * entities (pointers to memory, file descriptors, etc).
      */
     void* (*onSaveInstanceState)(ANativeActivity* activity, size_t* outSize);
-
+    
     /**
      * NativeActivity has paused.  See Java documentation for Activity.onPause()
      * for more information.
      */
     void (*onPause)(ANativeActivity* activity);
-
+    
     /**
      * NativeActivity has stopped.  See Java documentation for Activity.onStop()
      * for more information.
      */
     void (*onStop)(ANativeActivity* activity);
-
+    
     /**
      * NativeActivity is being destroyed.  See Java documentation for Activity.onDestroy()
      * for more information.
@@ -145,7 +146,7 @@ typedef struct ANativeActivityCallbacks {
      * for example, to pause a game when it loses input focus.
      */
     void (*onWindowFocusChanged)(ANativeActivity* activity, int hasFocus);
-
+    
     /**
      * The drawing window for this native activity has been created.  You
      * can use the given native window object to start drawing.
@@ -176,13 +177,13 @@ typedef struct ANativeActivityCallbacks {
      * returning from here.
      */
     void (*onNativeWindowDestroyed)(ANativeActivity* activity, ANativeWindow* window);
-
+    
     /**
      * The input queue for this native activity's window has been created.
      * You can use the given input queue to start retrieving input events.
      */
     void (*onInputQueueCreated)(ANativeActivity* activity, AInputQueue* queue);
-
+    
     /**
      * The input queue for this native activity's window is being destroyed.
      * You should no longer try to reference this object upon returning from this
@@ -287,6 +288,9 @@ enum {
  */
 void ANativeActivity_hideSoftInput(ANativeActivity* activity, uint32_t flags);
 
-__END_DECLS
+#ifdef __cplusplus
+};
+#endif
 
-#endif /* ANDROID_NATIVE_ACTIVITY_H */
+#endif // ANDROID_NATIVE_ACTIVITY_H
+
