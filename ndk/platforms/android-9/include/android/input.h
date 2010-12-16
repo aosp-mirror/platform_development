@@ -45,7 +45,9 @@
 #include <android/keycodes.h>
 #include <android/looper.h>
 
-__BEGIN_DECLS
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*
  * Key states (may be returned by queries about the current state of a
@@ -304,6 +306,8 @@ enum {
     AINPUT_SOURCE_MOUSE = 0x00002000 | AINPUT_SOURCE_CLASS_POINTER,
     AINPUT_SOURCE_TRACKBALL = 0x00010000 | AINPUT_SOURCE_CLASS_NAVIGATION,
     AINPUT_SOURCE_TOUCHPAD = 0x00100000 | AINPUT_SOURCE_CLASS_POSITION,
+
+    AINPUT_SOURCE_ANY = 0xffffff00,
 };
 
 /*
@@ -675,6 +679,8 @@ int32_t AInputQueue_preDispatchEvent(AInputQueue* queue, AInputEvent* event);
  */
 void AInputQueue_finishEvent(AInputQueue* queue, AInputEvent* event, int handled);
 
-__END_DECLS
+#ifdef __cplusplus
+}
+#endif
 
-#endif /* _ANDROID_INPUT_H */
+#endif // _ANDROID_INPUT_H
