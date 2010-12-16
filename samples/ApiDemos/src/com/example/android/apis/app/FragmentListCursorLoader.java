@@ -33,9 +33,10 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.ListAdapter;
 import android.widget.ListView;
+import android.widget.SearchView;
 import android.widget.SimpleCursorAdapter;
+import android.widget.SearchView.OnQueryChangeListener;
 
 /**
  * Demonstration of more complex use if a ListFragment, including showing
@@ -54,8 +55,10 @@ public class FragmentListCursorLoader extends Activity {
         }
     }
 
+//BEGIN_INCLUDE(fragment_cursor)
     public static class CursorLoaderListFragment extends ListFragment
-            implements LoaderManager.LoaderCallbacks<Cursor> {
+            implements OnQueryChangeListener, LoaderManager.LoaderCallbacks<Cursor> {
+        SimpleCursorAdapter mAdapter;
         MenuItem mSearchMenu;
 
         @Override
@@ -77,10 +80,24 @@ public class FragmentListCursorLoader extends Activity {
         @Override
         public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
             mSearchMenu = menu.add("Search");
-            mSearchMenu.setIcon(R.drawable.magnifying_glass);
-            mSearchMenu.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
+            mSearchMenu.setTitle("Search");
+            mSearchMenu.setIcon(android.R.drawable.ic_menu_search);
+            mSearchMenu.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
+            SearchView sv = new SearchView(getActivity());
+            sv.setOnQueryChangeListener(this);
+            mSearchMenu.setActionView(sv);
         }
 
+        @Override
+        public boolean onQueryTextChanged(String newText) {
+            return true;
+        }
+
+        @Override
+        public boolean onSubmitQuery(String query) {
+            return true;
+        }
+        
         @Override
         public boolean onOptionsItemSelected(MenuItem item) {
             if (item == mSearchMenu) {
@@ -117,11 +134,20 @@ public class FragmentListCursorLoader extends Activity {
         }
 
         public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-            ListAdapter adapter = new SimpleCursorAdapter(getActivity(),
-                    android.R.layout.simple_list_item_2, data,
-                            new String[] { Contacts.DISPLAY_NAME, Contacts.CONTACT_STATUS },
-                            new int[] { android.R.id.text1, android.R.id.text2 });
-            setListAdapter(adapter);
+            if (mAdapter == null) {
+                mAdapter = new SimpleCursorAdapter(getActivity(),
+                        android.R.layout.simple_list_item_2, data,
+                        new String[] { Contacts.DISPLAY_NAME, Contacts.CONTACT_STATUS },
+                        new int[] { android.R.id.text1, android.R.id.text2 });
+                setListAdapter(mAdapter);
+            } else {
+                mAdapter.changeCursor(data);
+            }
+        }
+
+        public void onLoaderReset(Loader<Cursor> loader) {
+            mAdapter.changeCursor(null);
         }
     }
+//END_INCLUDE(fragment_cursor)
 }
