@@ -845,6 +845,11 @@
     <string name="focus_3_right">right</string>
     <string name="focus_3_top">top</string>
     <string name="focus_3_bottom">bottom</string>
+    <string name="focus_5_button1">1</string>
+    <string name="focus_5_button2">2</string>
+    <string name="focus_5_button3">3</string>
+    <string name="focus_5_button4">4</string>
+    <string name="focus_5_button5">5</string>
     <string name="gallery_2_text">Testing</string>
     <string name="googlelogin_login">Login</string>
     <string name="googlelogin_bad_login">Bad Login</string>
