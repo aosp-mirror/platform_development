@@ -20,7 +20,7 @@ project:</p>
 
 <pre>
 cd /path/to/android/root
-./cts/development/ide/eclipse/genclasspath.sh > .classpath
+./cts/development/ide/eclipse/genclasspath.sh &gt; .classpath
 chmod u+w .classpath
 </pre>
 
