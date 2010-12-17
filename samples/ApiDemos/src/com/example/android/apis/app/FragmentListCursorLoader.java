@@ -25,8 +25,10 @@ import android.content.Context;
 import android.content.CursorLoader;
 import android.content.Loader;
 import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.provider.ContactsContract.Contacts;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -58,11 +60,14 @@ public class FragmentListCursorLoader extends Activity {
 //BEGIN_INCLUDE(fragment_cursor)
     public static class CursorLoaderListFragment extends ListFragment
             implements OnQueryChangeListener, LoaderManager.LoaderCallbacks<Cursor> {
-        SimpleCursorAdapter mAdapter;
-        MenuItem mSearchMenu;
 
-        @Override
-        public void onActivityCreated(Bundle savedInstanceState) {
+        // This is the Adapter being used to display the list's data.
+        SimpleCursorAdapter mAdapter;
+
+        // If non-null, this is the current filter the user has provided.
+        String mCurFilter;
+
+        @Override public void onActivityCreated(Bundle savedInstanceState) {
             super.onActivityCreated(savedInstanceState);
 
             // Give some text to display if there is no data.  In a real
@@ -77,44 +82,40 @@ public class FragmentListCursorLoader extends Activity {
             getLoaderManager().initLoader(0, null, this);
         }
 
-        @Override
-        public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-            mSearchMenu = menu.add("Search");
-            mSearchMenu.setTitle("Search");
-            mSearchMenu.setIcon(android.R.drawable.ic_menu_search);
-            mSearchMenu.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
+        @Override public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+            // Place an action bar item for searching.
+            MenuItem item = menu.add("Search");
+            item.setIcon(android.R.drawable.ic_menu_search);
+            item.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
             SearchView sv = new SearchView(getActivity());
             sv.setOnQueryChangeListener(this);
-            mSearchMenu.setActionView(sv);
+            item.setActionView(sv);
         }
 
         @Override
         public boolean onQueryTextChanged(String newText) {
+            // Called when the action bar search text has changed.  Update
+            // the search filter, and restart the loader to do a new query
+            // with this filter.
+            Log.i("foo", "onQueryTextChanged: " + newText);
+            mCurFilter = !TextUtils.isEmpty(newText) ? newText : null;
+            getLoaderManager().restartLoader(0, null, this);
             return true;
         }
 
         @Override
         public boolean onSubmitQuery(String query) {
+            // Don't care about this.
             return true;
         }
         
         @Override
-        public boolean onOptionsItemSelected(MenuItem item) {
-            if (item == mSearchMenu) {
-                InputMethodManager imm = (InputMethodManager)getActivity()
-                        .getSystemService(Context.INPUT_METHOD_SERVICE);
-                imm.showSoftInput(getActivity().getCurrentFocus(), 0);
-                return true;
-            } else {
-                return super.onOptionsItemSelected(item);
-            }
-        }
-
-        @Override
         public void onListItemClick(ListView l, View v, int position, long id) {
+            // Insert desired behavior here.
             Log.i("FragmentComplexList", "Item clicked: " + id);
         }
 
+        // These are the Contacts rows that we will retrieve.
         static final String[] CONTACTS_SUMMARY_PROJECTION = new String[] {
             Contacts._ID,
             Contacts.DISPLAY_NAME,
@@ -125,28 +126,53 @@ public class FragmentListCursorLoader extends Activity {
         };
 
         public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+            // This is called when a new Loader needs to be created.  This
+            // sample only has one Loader, so we don't care about the ID.
+            // First, pick the base URI to use depending on whether we are
+            // currently filtering.
+            Uri baseUri;
+            if (mCurFilter != null) {
+                baseUri = Uri.withAppendedPath(Contacts.CONTENT_FILTER_URI,
+                        Uri.encode(mCurFilter));
+            } else {
+                baseUri = Contacts.CONTENT_URI;
+            }
+
+            // Now create and return a CursorLoader that will take care of
+            // creating a Cursor for the data being displayed.
             String select = "((" + Contacts.DISPLAY_NAME + " NOTNULL) AND ("
                     + Contacts.HAS_PHONE_NUMBER + "=1) AND ("
                     + Contacts.DISPLAY_NAME + " != '' ))";
-            return new CursorLoader(getActivity(), Contacts.CONTENT_URI,
+            return new CursorLoader(getActivity(), baseUri,
                     CONTACTS_SUMMARY_PROJECTION, select, null,
                     Contacts.DISPLAY_NAME + " COLLATE LOCALIZED ASC");
         }
 
         public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+            // This is called when the last created Loader has its data
+            // available to be displayed.
             if (mAdapter == null) {
+                // If this is the first time through, create a new Adapter
+                // in which to display the data with the Cursor being given
+                // here as the initial data source.
                 mAdapter = new SimpleCursorAdapter(getActivity(),
                         android.R.layout.simple_list_item_2, data,
                         new String[] { Contacts.DISPLAY_NAME, Contacts.CONTACT_STATUS },
-                        new int[] { android.R.id.text1, android.R.id.text2 });
+                        new int[] { android.R.id.text1, android.R.id.text2 }, 0);
                 setListAdapter(mAdapter);
             } else {
-                mAdapter.changeCursor(data);
+                // If we have already created the adapter, just swap in the
+                // new Cursor.  (The framework will take care of closing the
+                // old cursor once we return.)
+                mAdapter.swapCursor(data);
             }
         }
 
         public void onLoaderReset(Loader<Cursor> loader) {
-            mAdapter.changeCursor(null);
+            // This is called when the last Cursor provided to onLoadFinished()
+            // above is about to be closed.  We need to make sure we are no
+            // longer using it.
+            mAdapter.swapCursor(null);
         }
     }
 //END_INCLUDE(fragment_cursor)
