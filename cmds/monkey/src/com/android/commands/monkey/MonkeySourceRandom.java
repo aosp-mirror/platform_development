@@ -17,6 +17,7 @@
 package com.android.commands.monkey;
 
 import android.content.ComponentName;
+import android.graphics.PointF;
 import android.os.SystemClock;
 import android.view.Display;
 import android.view.KeyCharacterMap;
@@ -65,15 +66,19 @@ public class MonkeySourceRandom implements MonkeyEventSource {
 
     public static final int FACTOR_TOUCH        = 0;
     public static final int FACTOR_MOTION       = 1;
-    public static final int FACTOR_TRACKBALL    = 2;
-    public static final int FACTOR_NAV          = 3;
-    public static final int FACTOR_MAJORNAV     = 4;
-    public static final int FACTOR_SYSOPS       = 5;
-    public static final int FACTOR_APPSWITCH    = 6;
-    public static final int FACTOR_FLIP         = 7;
-    public static final int FACTOR_ANYTHING     = 8;
-    public static final int FACTORZ_COUNT       = 9;    // should be last+1
+    public static final int FACTOR_PINCHZOOM    = 2;
+    public static final int FACTOR_TRACKBALL    = 3;
+    public static final int FACTOR_NAV          = 4;
+    public static final int FACTOR_MAJORNAV     = 5;
+    public static final int FACTOR_SYSOPS       = 6;
+    public static final int FACTOR_APPSWITCH    = 7;
+    public static final int FACTOR_FLIP         = 8;
+    public static final int FACTOR_ANYTHING     = 9;
+    public static final int FACTORZ_COUNT       = 10;    // should be last+1
 
+    private static final int GESTURE_TAP = 0;
+    private static final int GESTURE_DRAG = 1;
+    private static final int GESTURE_PINCH_OR_ZOOM = 2;
 
     /** percentages for each type of event.  These will be remapped to working
      * values after we read any optional values.
@@ -116,7 +121,8 @@ public class MonkeySourceRandom implements MonkeyEventSource {
         mFactors[FACTOR_SYSOPS] = 2.0f;
         mFactors[FACTOR_APPSWITCH] = 2.0f;
         mFactors[FACTOR_FLIP] = 1.0f;
-        mFactors[FACTOR_ANYTHING] = 15.0f;
+        mFactors[FACTOR_ANYTHING] = 13.0f;
+        mFactors[FACTOR_PINCHZOOM] = 2.0f;
 
         mRandom = random;
         mMainApps = MainApps;
@@ -238,46 +244,84 @@ public class MonkeySourceRandom implements MonkeyEventSource {
      * generate fling gestures, which are important).
      *
      * @param random Random number source for positioning
-     * @param motionEvent If false, touch/release.  If true, touch/move/release.
+     * @param gesture The gesture to perform.
      *
      */
-    private void generateMotionEvent(Random random, boolean motionEvent){
-
+    private void generatePointerEvent(Random random, int gesture){
         Display display = WindowManagerImpl.getDefault().getDefaultDisplay();
 
-        float x = Math.abs(random.nextInt() % display.getWidth());
-        float y = Math.abs(random.nextInt() % display.getHeight());
-        long downAt = SystemClock.uptimeMillis();
-        long eventTime = SystemClock.uptimeMillis();
-        if (downAt == -1) {
-            downAt = eventTime;
-        }
+        PointF p1 = randomPoint(random, display);
+        PointF v1 = randomVector(random);
 
-        MonkeyMotionEvent e = new MonkeyMotionEvent(MonkeyEvent.EVENT_TYPE_POINTER,
-                downAt, MotionEvent.ACTION_DOWN, x, y, 0);
-        e.setIntermediateNote(false);
-        mQ.addLast(e);
+        long downAt = SystemClock.uptimeMillis();
+
+        mQ.addLast(new MonkeyTouchEvent(MotionEvent.ACTION_DOWN)
+                .setDownTime(downAt)
+                .addPointer(0, p1.x, p1.y)
+                .setIntermediateNote(false));
 
         // sometimes we'll move during the touch
-        if (motionEvent) {
+        if (gesture == GESTURE_DRAG) {
             int count = random.nextInt(10);
             for (int i = 0; i < count; i++) {
-                // generate some slop in the up event
-                x = (x + (random.nextInt() % 10)) % display.getWidth();
-                y = (y + (random.nextInt() % 10)) % display.getHeight();
+                randomWalk(random, display, p1, v1);
 
-                e = new MonkeyMotionEvent(MonkeyEvent.EVENT_TYPE_POINTER,
-                        downAt, MotionEvent.ACTION_MOVE, x, y, 0);
-                e.setIntermediateNote(true);
-                mQ.addLast(e);
+                mQ.addLast(new MonkeyTouchEvent(MotionEvent.ACTION_MOVE)
+                        .setDownTime(downAt)
+                        .addPointer(0, p1.x, p1.y)
+                        .setIntermediateNote(true));
             }
+        } else if (gesture == GESTURE_PINCH_OR_ZOOM) {
+            PointF p2 = randomPoint(random, display);
+            PointF v2 = randomVector(random);
+
+            randomWalk(random, display, p1, v1);
+            mQ.addLast(new MonkeyTouchEvent(MotionEvent.ACTION_POINTER_DOWN
+                            | (1 << MotionEvent.ACTION_POINTER_INDEX_SHIFT))
+                    .setDownTime(downAt)
+                    .addPointer(0, p1.x, p1.y).addPointer(1, p2.x, p2.y)
+                    .setIntermediateNote(true));
+
+            int count = random.nextInt(10);
+            for (int i = 0; i < count; i++) {
+                randomWalk(random, display, p1, v1);
+                randomWalk(random, display, p2, v2);
+
+                mQ.addLast(new MonkeyTouchEvent(MotionEvent.ACTION_MOVE)
+                        .setDownTime(downAt)
+                        .addPointer(0, p1.x, p1.y).addPointer(1, p2.x, p2.y)
+                        .setIntermediateNote(true));
+            }
+
+            randomWalk(random, display, p1, v1);
+            randomWalk(random, display, p2, v2);
+            mQ.addLast(new MonkeyTouchEvent(MotionEvent.ACTION_POINTER_UP
+                            | (1 << MotionEvent.ACTION_POINTER_INDEX_SHIFT))
+                    .setDownTime(downAt)
+                    .addPointer(0, p1.x, p1.y).addPointer(1, p2.x, p2.y)
+                    .setIntermediateNote(true));
         }
 
-        // TODO generate some slop in the up event
-        e = new MonkeyMotionEvent(MonkeyEvent.EVENT_TYPE_POINTER,
-                downAt, MotionEvent.ACTION_UP, x, y, 0);
-        e.setIntermediateNote(false);
-        mQ.addLast(e);
+        randomWalk(random, display, p1, v1);
+        mQ.addLast(new MonkeyTouchEvent(MotionEvent.ACTION_UP)
+                .setDownTime(downAt)
+                .addPointer(0, p1.x, p1.y)
+                .setIntermediateNote(false));
+    }
+
+    private PointF randomPoint(Random random, Display display) {
+        return new PointF(random.nextInt(display.getWidth()), random.nextInt(display.getHeight()));
+    }
+
+    private PointF randomVector(Random random) {
+        return new PointF((random.nextFloat() - 0.5f) * 50, (random.nextFloat() - 0.5f) * 50);
+    }
+
+    private void randomWalk(Random random, Display display, PointF point, PointF vector) {
+        point.x = (float) Math.max(Math.min(point.x + random.nextFloat() * vector.x,
+                display.getWidth()), 0);
+        point.y = (float) Math.max(Math.min(point.y + random.nextFloat() * vector.y,
+                display.getHeight()), 0);
     }
 
     /**
@@ -299,34 +343,29 @@ public class MonkeySourceRandom implements MonkeyEventSource {
 
         boolean drop = false;
         int count = random.nextInt(10);
-        MonkeyMotionEvent e;
         for (int i = 0; i < 10; ++i) {
             // generate a small random step
             int dX = random.nextInt(10) - 5;
             int dY = random.nextInt(10) - 5;
 
-
-            e = new MonkeyMotionEvent(MonkeyEvent.EVENT_TYPE_TRACKBALL, -1,
-                    MotionEvent.ACTION_MOVE, dX, dY, 0);
-            e.setIntermediateNote(i > 0);
-            mQ.addLast(e);
+            mQ.addLast(new MonkeyTrackballEvent(MotionEvent.ACTION_MOVE)
+                    .addPointer(0, dX, dY)
+                    .setIntermediateNote(i > 0));
         }
 
         // 10% of trackball moves end with a click
         if (0 == random.nextInt(10)) {
             long downAt = SystemClock.uptimeMillis();
 
+            mQ.addLast(new MonkeyTrackballEvent(MotionEvent.ACTION_DOWN)
+                    .setDownTime(downAt)
+                    .addPointer(0, 0, 0)
+                    .setIntermediateNote(true));
 
-            e = new MonkeyMotionEvent(MonkeyEvent.EVENT_TYPE_TRACKBALL, downAt,
-                    MotionEvent.ACTION_DOWN, 0, 0, 0);
-            e.setIntermediateNote(true);
-            mQ.addLast(e);
-
-
-            e = new MonkeyMotionEvent(MonkeyEvent.EVENT_TYPE_TRACKBALL, downAt,
-                    MotionEvent.ACTION_UP, 0, 0, 0);
-            e.setIntermediateNote(false);
-            mQ.addLast(e);
+            mQ.addLast(new MonkeyTrackballEvent(MotionEvent.ACTION_UP)
+                    .setDownTime(downAt)
+                    .addPointer(0, 0, 0)
+                    .setIntermediateNote(false));
         }
     }
 
@@ -337,14 +376,16 @@ public class MonkeySourceRandom implements MonkeyEventSource {
         float cls = mRandom.nextFloat();
         int lastKey = 0;
 
-        boolean touchEvent = cls < mFactors[FACTOR_TOUCH];
-        boolean motionEvent = !touchEvent && (cls < mFactors[FACTOR_MOTION]);
-        if (touchEvent || motionEvent) {
-            generateMotionEvent(mRandom, motionEvent);
+        if (cls < mFactors[FACTOR_TOUCH]) {
+            generatePointerEvent(mRandom, GESTURE_TAP);
             return;
-        }
-
-        if (cls < mFactors[FACTOR_TRACKBALL]) {
+        } else if (cls < mFactors[FACTOR_MOTION]) {
+            generatePointerEvent(mRandom, GESTURE_DRAG);
+            return;
+        } else if (cls < mFactors[FACTOR_PINCHZOOM]) {
+            generatePointerEvent(mRandom, GESTURE_PINCH_OR_ZOOM);
+            return;
+        } else if (cls < mFactors[FACTOR_TRACKBALL]) {
             generateTrackballEvent(mRandom);
             return;
         }

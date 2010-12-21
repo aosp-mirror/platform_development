@@ -732,6 +732,9 @@ public class Monkey {
                 } else if (opt.equals("--pct-anyevent")) {
                     int i = MonkeySourceRandom.FACTOR_ANYTHING;
                     mFactors[i] = -nextOptionLong("any events percentage");
+                } else if (opt.equals("--pct-pinchzoom")) {
+                    int i = MonkeySourceRandom.FACTOR_PINCHZOOM;
+                    mFactors[i] = -nextOptionLong("pinch zoom events percentage");
                 } else if (opt.equals("--pkg-blacklist-file")) {
                     mPkgBlacklistFile = nextOptionData();
                 } else if (opt.equals("--pkg-whitelist-file")) {
@@ -1246,7 +1249,7 @@ public class Monkey {
         usage.append("              [--pct-trackball PERCENT] [--pct-syskeys PERCENT]\n");
         usage.append("              [--pct-nav PERCENT] [--pct-majornav PERCENT]\n");
         usage.append("              [--pct-appswitch PERCENT] [--pct-flip PERCENT]\n");
-        usage.append("              [--pct-anyevent PERCENT]\n");
+        usage.append("              [--pct-anyevent PERCENT] [--pct-pinchzoom PERCENT]\n");
         usage.append("              [--pkg-blacklist-file PACKAGE_BLACKLIST_FILE]\n");
         usage.append("              [--pkg-whitelist-file PACKAGE_WHITELIST_FILE]\n");
         usage.append("              [--wait-dbg] [--dbg-no-events]\n");

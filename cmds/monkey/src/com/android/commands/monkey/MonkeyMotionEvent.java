@@ -19,144 +19,184 @@ package com.android.commands.monkey;
 import android.app.IActivityManager;
 import android.os.RemoteException;
 import android.os.SystemClock;
+import android.util.SparseArray;
 import android.view.IWindowManager;
-import android.view.KeyEvent;
 import android.view.MotionEvent;
 
 
 /**
  * monkey motion event
  */
-public class MonkeyMotionEvent extends MonkeyEvent {
-    private long mDownTime = -1;
-    private long mEventTime = -1;    
-    private int mAction = -1;
-    private float mX = -1;
-    private float mY = -1;
-    private float mPressure = -1;
-    private float mSize = -1;
-    private int mMetaState = -1;
-    private float mXPrecision = -1;
-    private float mYPrecision = -1;
-    private int mDeviceId = -1;
-    private int mEdgeFlags = -1;
-    
+public abstract class MonkeyMotionEvent extends MonkeyEvent {
+    private long mDownTime;
+    private long mEventTime;
+    private int mAction;
+    private SparseArray<MotionEvent.PointerCoords> mPointers;
+    private int mMetaState;
+    private float mXPrecision;
+    private float mYPrecision;
+    private int mDeviceId;
+    private int mSource;
+    private int mFlags;
+    private int mEdgeFlags;
+
     //If true, this is an intermediate step (more verbose logging, only)
-    private boolean mIntermediateNote;  
-        
-    public MonkeyMotionEvent(int type, long downAt, int action, 
-            float x, float y, int metaState) {
+    private boolean mIntermediateNote;
+
+    protected MonkeyMotionEvent(int type, int source, int action) {
         super(type);
-        mDownTime = downAt;
+        mSource = source;
+        mDownTime = -1;
+        mEventTime = -1;
         mAction = action;
-        mX = x;
-        mY = y;
-        mMetaState = metaState;
+        mPointers = new SparseArray<MotionEvent.PointerCoords>();
+        mXPrecision = 1;
+        mYPrecision = 1;
     }
-    
-    public MonkeyMotionEvent(int type, long downTime, long eventTime, int action,
-            float x, float y, float pressure, float size, int metaState,
-            float xPrecision, float yPrecision, int deviceId, int edgeFlags) {
-        super(type);
-        mDownTime = downTime;
-        mEventTime = eventTime;
-        mAction = action;
-        mX = x;
-        mY = y;
-        mPressure = pressure;
-        mSize = size;
-        mMetaState = metaState;
-        mXPrecision = xPrecision;
-        mYPrecision = yPrecision;
-        mDeviceId = deviceId;
-        mEdgeFlags = edgeFlags;
-    }    
-    
-    public void setIntermediateNote(boolean b) {
+
+    public MonkeyMotionEvent addPointer(int id, float x, float y) {
+        return addPointer(id, x, y, 0, 0);
+    }
+
+    public MonkeyMotionEvent addPointer(int id, float x, float y,
+            float pressure, float size) {
+        MotionEvent.PointerCoords c = new MotionEvent.PointerCoords();
+        c.x = x;
+        c.y = y;
+        c.pressure = pressure;
+        c.size = size;
+        mPointers.append(id, c);
+        return this;
+    }
+
+    public MonkeyMotionEvent setIntermediateNote(boolean b) {
         mIntermediateNote = b;
+        return this;
     }
-    
+
     public boolean getIntermediateNote() {
         return mIntermediateNote;
     }
-    
-    public float getX() {
-        return mX;
-    }
-    
-    public float getY() {
-        return mY;
-    }
-    
+
     public int getAction() {
         return mAction;
     }
-    
+
     public long getDownTime() {
         return mDownTime;
     }
-    
+
     public long getEventTime() {
         return mEventTime;
     }
-    
-    public void setDownTime(long downTime) {
+
+    public MonkeyMotionEvent setDownTime(long downTime) {
         mDownTime = downTime;
+        return this;
     }
-    
-    public void setEventTime(long eventTime) {
+
+    public MonkeyMotionEvent setEventTime(long eventTime) {
         mEventTime = eventTime;
+        return this;
     }
-    
+
+    public MonkeyMotionEvent setMetaState(int metaState) {
+        mMetaState = metaState;
+        return this;
+    }
+
+    public MonkeyMotionEvent setPrecision(float xPrecision, float yPrecision) {
+        mXPrecision = xPrecision;
+        mYPrecision = yPrecision;
+        return this;
+    }
+
+    public MonkeyMotionEvent setDeviceId(int deviceId) {
+        mDeviceId = deviceId;
+        return this;
+    }
+
+    public MonkeyMotionEvent setEdgeFlags(int edgeFlags) {
+        mEdgeFlags = edgeFlags;
+        return this;
+    }
+
     /**
      * 
      * @return instance of a motion event
      */
     private MotionEvent getEvent() {
-        if (mDeviceId < 0) {
-            return MotionEvent.obtain(mDownTime, SystemClock.uptimeMillis(), 
-                mAction, mX, mY, mMetaState);
+        int pointerCount = mPointers.size();
+        int[] pointerIds = new int[pointerCount];
+        MotionEvent.PointerCoords[] pointerCoords = new MotionEvent.PointerCoords[pointerCount];
+        for (int i = 0; i < pointerCount; i++) {
+            pointerIds[i] = mPointers.keyAt(i);
+            pointerCoords[i] = mPointers.valueAt(i);
         }
-        
-        // for scripts
-        return MotionEvent.obtain(mDownTime, mEventTime, 
-                mAction, mX, mY, mPressure, mSize, mMetaState,
-                mXPrecision, mYPrecision, mDeviceId, mEdgeFlags);
+
+        MotionEvent ev = MotionEvent.obtain(mDownTime,
+                mEventTime < 0 ? SystemClock.uptimeMillis() : mEventTime,
+                mAction, pointerCount, pointerIds, pointerCoords,
+                mMetaState, mXPrecision, mYPrecision, mDeviceId, mEdgeFlags, mSource, mFlags);
+        return ev;
     }
 
     @Override
     public boolean isThrottlable() {
-        return (getAction() == KeyEvent.ACTION_UP);
+        return (getAction() == MotionEvent.ACTION_UP);
     }
-    
+
     @Override
     public int injectEvent(IWindowManager iwm, IActivityManager iam, int verbose) {
-        
-        String note;
+        MotionEvent me = getEvent();
         if ((verbose > 0 && !mIntermediateNote) || verbose > 1) {
-            if (mAction == MotionEvent.ACTION_DOWN) {
-                note = "DOWN";
-            } else if (mAction == MotionEvent.ACTION_UP) {
-                note = "UP";
-            } else {
-                note = "MOVE";
+            StringBuilder msg = new StringBuilder(":Sending ");
+            msg.append(getTypeLabel()).append(" (");
+            switch (me.getActionMasked()) {
+                case MotionEvent.ACTION_DOWN:
+                    msg.append("ACTION_DOWN");
+                    break;
+                case MotionEvent.ACTION_MOVE:
+                    msg.append("ACTION_MOVE");
+                    break;
+                case MotionEvent.ACTION_UP:
+                    msg.append("ACTION_UP");
+                    break;
+                case MotionEvent.ACTION_CANCEL:
+                    msg.append("ACTION_CANCEL");
+                    break;
+                case MotionEvent.ACTION_POINTER_DOWN:
+                    msg.append("ACTION_POINTER_DOWN ").append(me.getPointerId(me.getActionIndex()));
+                    break;
+                case MotionEvent.ACTION_POINTER_UP:
+                    msg.append("ACTION_POINTER_UP ").append(me.getPointerId(me.getActionIndex()));
+                    break;
+                default:
+                    msg.append(me.getAction());
+                    break;
             }
-            System.out.println(":Sending Pointer ACTION_" + note + 
-                    " x=" + mX + " y=" + mY);
+            msg.append("):");
+
+            int pointerCount = me.getPointerCount();
+            for (int i = 0; i < pointerCount; i++) {
+                msg.append(" ").append(me.getPointerId(i));
+                msg.append(":(").append(me.getX(i)).append(",").append(me.getY(i)).append(")");
+            }
+            System.out.println(msg.toString());
         }
         try {
-            int type = this.getEventType();
-            MotionEvent me = getEvent();
-            
-            if ((type == MonkeyEvent.EVENT_TYPE_POINTER && 
-                    !iwm.injectPointerEvent(me, false))
-                    || (type == MonkeyEvent.EVENT_TYPE_TRACKBALL && 
-                            !iwm.injectTrackballEvent(me, false))) {
+            if (!injectMotionEvent(iwm, me)) {
                 return MonkeyEvent.INJECT_FAIL;
             }
         } catch (RemoteException ex) {
             return MonkeyEvent.INJECT_ERROR_REMOTE_EXCEPTION;
+        } finally {
+            me.recycle();
         }
         return MonkeyEvent.INJECT_SUCCESS;
     }
+
+    protected abstract String getTypeLabel();
+    protected abstract boolean injectMotionEvent(IWindowManager iwm, MotionEvent me)
+            throws RemoteException;
 }
