@@ -77,6 +77,13 @@ public class FragmentListCursorLoader extends Activity {
             // We have a menu item to show in action bar.
             setHasOptionsMenu(true);
 
+            // Create an empty adapter we will use to display the loaded data.
+            mAdapter = new SimpleCursorAdapter(getActivity(),
+                    android.R.layout.simple_list_item_2, null,
+                    new String[] { Contacts.DISPLAY_NAME, Contacts.CONTACT_STATUS },
+                    new int[] { android.R.id.text1, android.R.id.text2 }, 0);
+            setListAdapter(mAdapter);
+            
             // Prepare the loader.  Either re-connect with an existing one,
             // or start a new one.
             getLoaderManager().initLoader(0, null, this);
@@ -92,25 +99,21 @@ public class FragmentListCursorLoader extends Activity {
             item.setActionView(sv);
         }
 
-        @Override
-        public boolean onQueryTextChanged(String newText) {
+        @Override public boolean onQueryTextChanged(String newText) {
             // Called when the action bar search text has changed.  Update
             // the search filter, and restart the loader to do a new query
             // with this filter.
-            Log.i("foo", "onQueryTextChanged: " + newText);
             mCurFilter = !TextUtils.isEmpty(newText) ? newText : null;
             getLoaderManager().restartLoader(0, null, this);
             return true;
         }
 
-        @Override
-        public boolean onSubmitQuery(String query) {
+        @Override public boolean onSubmitQuery(String query) {
             // Don't care about this.
             return true;
         }
         
-        @Override
-        public void onListItemClick(ListView l, View v, int position, long id) {
+        @Override public void onListItemClick(ListView l, View v, int position, long id) {
             // Insert desired behavior here.
             Log.i("FragmentComplexList", "Item clicked: " + id);
         }
@@ -125,7 +128,7 @@ public class FragmentListCursorLoader extends Activity {
             Contacts.LOOKUP_KEY,
         };
 
-        public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+        @Override public Loader<Cursor> onCreateLoader(int id, Bundle args) {
             // This is called when a new Loader needs to be created.  This
             // sample only has one Loader, so we don't care about the ID.
             // First, pick the base URI to use depending on whether we are
@@ -148,27 +151,13 @@ public class FragmentListCursorLoader extends Activity {
                     Contacts.DISPLAY_NAME + " COLLATE LOCALIZED ASC");
         }
 
-        public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-            // This is called when the last created Loader has its data
-            // available to be displayed.
-            if (mAdapter == null) {
-                // If this is the first time through, create a new Adapter
-                // in which to display the data with the Cursor being given
-                // here as the initial data source.
-                mAdapter = new SimpleCursorAdapter(getActivity(),
-                        android.R.layout.simple_list_item_2, data,
-                        new String[] { Contacts.DISPLAY_NAME, Contacts.CONTACT_STATUS },
-                        new int[] { android.R.id.text1, android.R.id.text2 }, 0);
-                setListAdapter(mAdapter);
-            } else {
-                // If we have already created the adapter, just swap in the
-                // new Cursor.  (The framework will take care of closing the
-                // old cursor once we return.)
-                mAdapter.swapCursor(data);
-            }
+        @Override public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+            // Swap the new cursor in.  (The framework will take care of closing the
+            // old cursor once we return.)
+            mAdapter.swapCursor(data);
         }
 
-        public void onLoaderReset(Loader<Cursor> loader) {
+        @Override public void onLoaderReset(Loader<Cursor> loader) {
             // This is called when the last Cursor provided to onLoadFinished()
             // above is about to be closed.  We need to make sure we are no
             // longer using it.
