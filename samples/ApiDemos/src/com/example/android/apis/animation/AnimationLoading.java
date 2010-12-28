@@ -81,14 +81,16 @@ public class AnimationLoading extends Activity {
         }
 
         private void createAnimation() {
+            Context appContext = AnimationLoading.this;
+
             if (animation == null) {
                 ObjectAnimator anim = (ObjectAnimator) AnimatorInflater.
-                        loadAnimator(getApplicationContext(), R.anim.object_animator);
+                        loadAnimator(appContext, R.anim.object_animator);
                 anim.addUpdateListener(this);
                 anim.setTarget(balls.get(0));
 
                 ValueAnimator fader = (ValueAnimator) AnimatorInflater.
-                        loadAnimator(getApplicationContext(), R.anim.animator);
+                        loadAnimator(appContext, R.anim.animator);
                 fader.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
                     public void onAnimationUpdate(ValueAnimator animation) {
                         balls.get(1).setAlpha((Float) animation.getAnimatedValue());
@@ -96,12 +98,12 @@ public class AnimationLoading extends Activity {
                 });
 
                 AnimatorSet seq =
-                        (AnimatorSet) AnimatorInflater.loadAnimator(getApplicationContext(),
+                        (AnimatorSet) AnimatorInflater.loadAnimator(appContext,
                         R.anim.animator_set);
                 seq.setTarget(balls.get(2));
 
                 ObjectAnimator colorizer = (ObjectAnimator) AnimatorInflater.
-                        loadAnimator(getApplicationContext(), R.anim.color_animator);
+                        loadAnimator(appContext, R.anim.color_animator);
                 colorizer.setTarget(balls.get(3));
 
                 animation = new AnimatorSet();

@@ -48,7 +48,7 @@ public class LayoutAnimationsByDefault extends Activity {
         Button addButton = (Button) findViewById(R.id.addNewButton);
         addButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                Button newButton = new Button(getApplicationContext());
+                Button newButton = new Button(LayoutAnimationsByDefault.this);
                 newButton.setText("Click To Remove " + (numButtons++));
                 newButton.setOnClickListener(new View.OnClickListener() {
                     public void onClick(View v) {
@@ -57,7 +57,7 @@ public class LayoutAnimationsByDefault extends Activity {
                 });
                 horizontalContainer.addView(newButton, Math.min(1, horizontalContainer.getChildCount()));
 
-                newButton = new Button(getApplicationContext());
+                newButton = new Button(LayoutAnimationsByDefault.this);
                 newButton.setText("Click To Remove " + (numButtons++));
                 newButton.setOnClickListener(new View.OnClickListener() {
                     public void onClick(View v) {
