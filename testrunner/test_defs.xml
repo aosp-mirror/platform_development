@@ -125,6 +125,10 @@ See test_defs.xsd for more information.
     build_path="frameworks/base/libs/utils/tests"
     description="Framework libutils unit tests." />
 
+<test-native name="libinput"
+    build_path="frameworks/base/services/input/tests"
+    description="Framework libinput unit tests." />
+
 <!--  end of framework tests -->
 
 <!-- media framework tests -->
