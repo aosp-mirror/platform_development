@@ -21,11 +21,11 @@ import com.example.android.apis.Shakespeare;
 
 import android.app.Activity;
 import android.app.Fragment;
+import android.app.FragmentTransaction;
 import android.app.ListFragment;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.Bundle;
-import android.util.Log;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -73,17 +73,23 @@ public class FragmentLayout extends Activity {
             if (savedInstanceState == null) {
                 // During initial setup, plug in the details fragment.
                 DetailsFragment details = new DetailsFragment();
+                details.setArguments(getIntent().getExtras());
                 getFragmentManager().openTransaction().add(android.R.id.content, details).commit();
-                details.setText(getIntent().getIntExtra("text", -1));
             }
         }
     }
 //END_INCLUDE(details_activity)
 
+    /**
+     * This is the "top-level" fragment, showing a list of items that the
+     * user can pick.  Upon picking an item, it takes care of displaying the
+     * data to the user as appropriate based on the currrent UI layout.
+     */
 //BEGIN_INCLUDE(titles)
     public static class TitlesFragment extends ListFragment {
-        DetailsFragment mDetails;
+        boolean mDualPane;
         int mCurCheckPosition = 0;
+        int mShownCheckPosition = -1;
 
         @Override
         public void onActivityCreated(Bundle savedInstanceState) {
@@ -93,17 +99,22 @@ public class FragmentLayout extends Activity {
             setListAdapter(new ArrayAdapter<String>(getActivity(),
                     android.R.layout.simple_list_item_activated_1, Shakespeare.TITLES));
 
-            // Restore last state for checked position.
+            // Check to see if we have a frame in which to embed the details
+            // fragment directly in the containing UI.
+            View detailsFrame = getActivity().findViewById(R.id.details);
+            mDualPane = detailsFrame != null && detailsFrame.getVisibility() == View.VISIBLE;
+
             if (savedInstanceState != null) {
+                // Restore last state for checked position.
                 mCurCheckPosition = savedInstanceState.getInt("curChoice", 0);
+                mShownCheckPosition = savedInstanceState.getInt("shownChoice", -1);
             }
 
-            // If we are showing details in the screen, set up the list to highlight.
-            mDetails = (DetailsFragment)getFragmentManager().findFragmentById(R.id.details);
-            if (mDetails != null && mDetails.isInLayout()) {
+            if (mDualPane) {
+                // In dual-pane mode, the list view highlights the selected item.
                 getListView().setChoiceMode(ListView.CHOICE_MODE_SINGLE);
-                getListView().setItemChecked(mCurCheckPosition, true);
-                mDetails.setText(mCurCheckPosition);
+                // Make sure our UI is in the correct state.
+                showDetails(mCurCheckPosition);
             }
         }
 
@@ -111,67 +122,97 @@ public class FragmentLayout extends Activity {
         public void onSaveInstanceState(Bundle outState) {
             super.onSaveInstanceState(outState);
             outState.putInt("curChoice", mCurCheckPosition);
+            outState.putInt("shownChoice", mShownCheckPosition);
         }
 
         @Override
         public void onListItemClick(ListView l, View v, int position, long id) {
-            mCurCheckPosition = position;
+            showDetails(position);
+        }
 
-            if (mDetails != null && mDetails.isVisible()) {
-                // If the activity has a fragment to display the dialog,
-                // point it to what the user has selected.
-                mDetails.setText(position);
-                getListView().setItemChecked(position, true);
+        /**
+         * Helper function to show the details of a selected item, either by
+         * displaying a fragment in-place in the current UI, or starting a
+         * whole new activity in which it is displayed.
+         */
+        void showDetails(int index) {
+            mCurCheckPosition = index;
+
+            if (mDualPane) {
+                // We can display everything in-place with fragments, so update
+                // the list to highlight the selected item and show the data.
+                getListView().setItemChecked(index, true);
+
+                if (mShownCheckPosition != mCurCheckPosition) {
+                    // If we are not currently showing a fragment for the new
+                    // position, we need to create and install a new one.
+                    DetailsFragment df = DetailsFragment.newInstance(index);
+
+                    // Execute a transaction, replacing any existing fragment
+                    // with this one inside the frame.
+                    FragmentTransaction ft = getFragmentManager().openTransaction();
+                    ft.replace(R.id.details, df);
+                    ft.setTransition(index > mCurCheckPosition
+                            ? FragmentTransaction.TRANSIT_FRAGMENT_NEXT
+                            : FragmentTransaction.TRANSIT_FRAGMENT_PREV);
+                    ft.commit();
+                    mShownCheckPosition = index;
+                }
+
             } else {
                 // Otherwise we need to launch a new activity to display
                 // the dialog fragment with selected text.
                 Intent intent = new Intent();
                 intent.setClass(getActivity(), DetailsActivity.class);
-                intent.putExtra("text", position);
+                intent.putExtra("index", index);
                 startActivity(intent);
             }
         }
     }
 //END_INCLUDE(titles)
 
+    /**
+     * This is the secondary fragment, displaying the details of a particular
+     * item.
+     */
 //BEGIN_INCLUDE(details)
     public static class DetailsFragment extends Fragment {
-        int mDisplayedText = -1;
-        TextView mText;
+        /**
+         * Create a new instance of DetailsFragment, initialized to
+         * show the text at 'index'.
+         */
+        public static DetailsFragment newInstance(int index) {
+            DetailsFragment f = new DetailsFragment();
 
-        public void setText(int id) {
-            mDisplayedText = id;
-            if (mText != null && id >= 0) {
-                mText.setText(Shakespeare.DIALOGUE[id]);
-            }
-        }
+            // Supply index input as an argument.
+            Bundle args = new Bundle();
+            args.putInt("index", index);
+            f.setArguments(args);
 
-        @Override
-        public void onCreate(Bundle savedInstanceState) {
-            super.onCreate(savedInstanceState);
-            if (savedInstanceState != null) {
-                mDisplayedText = savedInstanceState.getInt("text", -1);
-            }
-        }
-
-        @Override
-        public void onSaveInstanceState(Bundle outState) {
-            super.onSaveInstanceState(outState);
-            outState.putInt("text", mDisplayedText);
+            return f;
         }
 
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                 Bundle savedInstanceState) {
+            if (container == null) {
+                // We have different layouts, and in one of them this
+                // fragment's containing frame doesn't exist.  The fragment
+                // may still be created from its saved state, but there is
+                // no reason to try to create its view hierarchy because it
+                // won't be displayed.  Note this is not needed -- we could
+                // just run the code below, where we would create and return
+                // the view hierarchy; it would just never be used.
+                return null;
+            }
+
             ScrollView scroller = new ScrollView(getActivity());
-            mText = new TextView(getActivity());
+            TextView text = new TextView(getActivity());
             int padding = (int)TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
                     4, getActivity().getResources().getDisplayMetrics());
-            mText.setPadding(padding, padding, padding, padding);
-            scroller.addView(mText);
-            if (mDisplayedText >= 0) {
-                mText.setText(Shakespeare.DIALOGUE[mDisplayedText]);
-            }
+            text.setPadding(padding, padding, padding, padding);
+            scroller.addView(text);
+            text.setText(Shakespeare.DIALOGUE[getArguments().getInt("index", 0)]);
             return scroller;
         }
     }

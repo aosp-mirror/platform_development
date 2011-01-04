@@ -174,7 +174,8 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".app.SendResult">
+        <activity android:name=".app.SendResult"
+                android:theme="@android:style/Theme.Holo.DialogWhenLarge">
         </activity>
 
         <activity android:name=".app.Forwarding" android:label="@string/activity_forwarding">
@@ -250,8 +251,9 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".app.FragmentAnim"
-                android:label="@string/fragment_anim">
+        <activity android:name=".app.FragmentHideShow"
+                android:label="@string/fragment_hide_show"
+                android:windowSoftInputMode="stateUnchanged">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />

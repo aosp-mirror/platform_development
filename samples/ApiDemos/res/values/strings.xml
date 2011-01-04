@@ -108,7 +108,7 @@
 
     <string name="fragment_alert_dialog">App/Fragment/Alert Dialog</string>
 
-    <string name="fragment_anim">App/Fragment/Anim</string>
+    <string name="fragment_hide_show">App/Fragment/Hide and Show</string>
 
     <string name="fragment_context_menu">App/Fragment/Context Menu</string>
     <string name="fragment_context_menu_msg">Fragment populating a context

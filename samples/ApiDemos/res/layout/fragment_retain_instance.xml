@@ -24,6 +24,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
+        android:textAppearance="?android:attr/textAppearanceMedium"
         android:text="@string/fragment_retain_instance_msg" />
 
     <ProgressBar android:id="@+id/progress_horizontal"

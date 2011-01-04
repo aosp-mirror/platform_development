@@ -27,12 +27,15 @@
         android:layout_width="match_parent" android:layout_height="wrap_content"
         android:layout_weight="0"
         android:paddingBottom="4dip"
+        android:textAppearance="?android:attr/textAppearanceMedium"
         android:text="@string/receive_result_instructions"/>
 
     <TextView android:id="@+id/results"
         android:layout_width="match_parent" android:layout_height="10dip"
         android:layout_weight="1"
         android:paddingBottom="4dip"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:textColor="#000"
         android:background="@drawable/green">
     </TextView>
 

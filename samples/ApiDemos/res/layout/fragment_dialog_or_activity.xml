@@ -28,6 +28,7 @@
             android:layout_weight="0"
             android:layout_gravity="center_vertical|center_horizontal"
             android:gravity="top|center_horizontal"
+            android:textAppearance="?android:attr/textAppearanceMedium"
             android:text="@string/fragment_dialog_or_activity_msg" />
 
     <Button android:id="@+id/show_dialog"
@@ -47,6 +48,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="0"
             android:layout_gravity="center_vertical|center_horizontal"
+            android:textAppearance="?android:attr/textAppearanceMedium"
             android:text="@string/fragment_dialog_or_activity_inline" />
 
     <FrameLayout

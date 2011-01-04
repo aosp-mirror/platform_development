@@ -20,45 +20,46 @@ import com.example.android.apis.R;
 
 import android.app.Activity;
 import android.app.Fragment;
+import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.View.OnClickListener;
-import android.view.animation.AnimationUtils;
 import android.widget.Button;
 import android.widget.TextView;
 
 /**
- * Demonstration of animations when changing fragment states.
+ * Demonstration of hiding and showing fragments.
  */
-public class FragmentAnim extends Activity {
+public class FragmentHideShow extends Activity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.fragment_anim);
+        setContentView(R.layout.fragment_hide_show);
 
-        addShowHideListener(R.id.frag1hide, findFragmentById(R.id.fragment1));
-        addShowHideListener(R.id.frag2hide, findFragmentById(R.id.fragment2));
+        // The content view embeds two fragments; now retrieve them and attach
+        // their "hide" button.
+        FragmentManager fm = getFragmentManager();
+        addShowHideListener(R.id.frag1hide, fm.findFragmentById(R.id.fragment1));
+        addShowHideListener(R.id.frag2hide, fm.findFragmentById(R.id.fragment2));
     }
 
     void addShowHideListener(int buttonId, final Fragment fragment) {
         final Button button = (Button)findViewById(buttonId);
         button.setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
-                FragmentTransaction ft = openFragmentTransaction();
+                FragmentTransaction ft = getFragmentManager().openTransaction();
                 ft.setCustomAnimations(android.R.anim.animator_fade_in,
                         android.R.anim.animator_fade_out);
                 if (fragment.isHidden()) {
-                    button.setAnimation(AnimationUtils.loadAnimation(
-                            FragmentAnim.this, android.R.anim.slide_in_left));
                     ft.show(fragment);
+                    button.setText("Hide");
                 } else {
-                    button.setAnimation(AnimationUtils.loadAnimation(
-                            FragmentAnim.this, android.R.anim.slide_out_right));
                     ft.hide(fragment);
+                    button.setText("Show");
                 }
                 ft.commit();
             }
