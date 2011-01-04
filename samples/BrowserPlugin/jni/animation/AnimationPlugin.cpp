@@ -33,6 +33,7 @@ extern ANPLogInterfaceV0       gLogI;
 extern ANPCanvasInterfaceV0    gCanvasI;
 extern ANPPaintInterfaceV0     gPaintI;
 extern ANPPathInterfaceV0      gPathI;
+extern ANPSystemInterfaceV0    gSystemI;
 extern ANPWindowInterfaceV0    gWindowI;
 
 static uint16_t rnd16(float x, int inset) {
@@ -43,118 +44,74 @@ static uint16_t rnd16(float x, int inset) {
     return static_cast<uint16_t>(ix);
 }
 
-static void inval(NPP instance, const ANPRectF& r, bool doAA) {
-    const int inset = doAA ? -1 : 0;
-
-    NPRect inval;
-    inval.left = rnd16(r.left, inset);
-    inval.top = rnd16(r.top, inset);
-    inval.right = rnd16(r.right, -inset);
-    inval.bottom = rnd16(r.bottom, -inset);
-    browser->invalidaterect(instance, &inval);
-}
-
-static void bounce(float* x, float* dx, const float max) {
-    *x += *dx;
-    if (*x < 0) {
-        *x = 0;
-        if (*dx < 0) {
-            *dx = -*dx;
-        }
-    } else if (*x > max) {
-        *x = max;
-        if (*dx > 0) {
-            *dx = -*dx;
-        }
-    }
-}
 ///////////////////////////////////////////////////////////////////////////////
 
-BallAnimation::BallAnimation(NPP inst) : SubPlugin(inst) {
-    m_x = m_y = 0;
-    m_dx = 7 * SCALE;
-    m_dy = 5 * SCALE;
-
-    memset(&m_oval, 0, sizeof(m_oval));
-
-    m_paint = gPaintI.newPaint();
-    gPaintI.setFlags(m_paint, gPaintI.getFlags(m_paint) | kAntiAlias_ANPPaintFlag);
-    gPaintI.setColor(m_paint, 0xFFFF0000);
-
+BallAnimation::BallAnimation(NPP inst) : SurfaceSubPlugin(inst) {
     //register for touch events
     ANPEventFlags flags = kTouch_ANPEventFlag;
     NPError err = browser->setvalue(inst, kAcceptEvents_ANPSetValue, &flags);
     if (err != NPERR_NO_ERROR) {
         gLogI.log(kError_ANPLogType, "Error selecting input events.");
     }
+
+    gLogI.log(kError_ANPLogType, "Starting Rendering Thread");
+
+    //start a thread and do your drawing there
+    m_renderingThread = new AnimationThread(inst);
+    m_renderingThread->incStrong(inst);
+    m_renderingThread->run("AnimationThread");
 }
 
 BallAnimation::~BallAnimation() {
-    gPaintI.deletePaint(m_paint);
+    m_renderingThread->requestExitAndWait();
+    destroySurface();
 }
 
 bool BallAnimation::supportsDrawingModel(ANPDrawingModel model) {
-    return (model == kBitmap_ANPDrawingModel);
+    return (model == kOpenGL_ANPDrawingModel);
 }
 
-void BallAnimation::drawPlugin(const ANPBitmap& bitmap, const ANPRectI& clip) {
+jobject BallAnimation::getSurface() {
 
-    // create a canvas
-    ANPCanvas* canvas = gCanvasI.newCanvas(&bitmap);
-
-    // clip the canvas
-    ANPRectF clipR;
-    clipR.left = clip.left;
-    clipR.top = clip.top;
-    clipR.right = clip.right;
-    clipR.bottom = clip.bottom;
-    gCanvasI.clipRect(canvas, &clipR);
-
-    // setup variables
-    PluginObject *obj = (PluginObject*) inst()->pdata;
-    const float OW = 20;
-    const float OH = 20;
-    const int W = obj->window->width;
-    const int H = obj->window->height;
-
-    // paint the canvas (using the path API)
-    gCanvasI.drawColor(canvas, 0xFFFFFFFF);
-    {
-        ANPPath* path = gPathI.newPath();
-
-        float cx = W * 0.5f;
-        float cy = H * 0.5f;
-        gPathI.moveTo(path, 0, 0);
-        gPathI.quadTo(path, cx, cy, W, 0);
-        gPathI.quadTo(path, cx, cy, W, H);
-        gPathI.quadTo(path, cx, cy, 0, H);
-        gPathI.quadTo(path, cx, cy, 0, 0);
-
-        gPaintI.setColor(m_paint, 0xFF0000FF);
-        gCanvasI.drawPath(canvas, path, m_paint);
-
-        ANPRectF bounds;
-        memset(&bounds, 0, sizeof(bounds));
-        gPathI.getBounds(path, &bounds);
-        gPathI.deletePath(path);
+    if (m_surface) {
+        return m_surface;
     }
 
-    // draw the oval
-    inval(inst(), m_oval, true);  // inval the old
-    m_oval.left = m_x;
-    m_oval.top = m_y;
-    m_oval.right = m_x + OW;
-    m_oval.bottom = m_y + OH;
-    inval(inst(), m_oval, true);  // inval the new
-    gPaintI.setColor(m_paint, 0xFFFF0000);
-    gCanvasI.drawOval(canvas, &m_oval, m_paint);
+    // load the appropriate java class and instantiate it
+    JNIEnv* env = NULL;
+    if (gVM->GetEnv((void**) &env, JNI_VERSION_1_4) != JNI_OK) {
+        gLogI.log(kError_ANPLogType, " ---- getSurface: failed to get env");
+        return NULL;
+    }
 
-    // update the coordinates of the oval
-    bounce(&m_x, &m_dx, obj->window->width - OW);
-    bounce(&m_y, &m_dy, obj->window->height - OH);
+    const char* className = "com.android.sampleplugin.AnimationSurface";
+    jclass fullScreenClass = gSystemI.loadJavaClass(inst(), className);
 
-    // delete the canvas
-    gCanvasI.deleteCanvas(canvas);
+    if(!fullScreenClass) {
+        gLogI.log(kError_ANPLogType, " ---- getSurface: failed to load class");
+        return NULL;
+    }
+
+    jmethodID constructor = env->GetMethodID(fullScreenClass, "<init>", "(Landroid/content/Context;)V");
+    jobject fullScreenSurface = env->NewObject(fullScreenClass, constructor, m_context);
+
+    if(!fullScreenSurface) {
+        gLogI.log(kError_ANPLogType, " ---- getSurface: failed to construct object");
+        return NULL;
+    }
+
+    gLogI.log(kError_ANPLogType, " ---- object %p", fullScreenSurface);
+
+    m_surface = env->NewGlobalRef(fullScreenSurface);
+    return m_surface;
+}
+
+void BallAnimation::destroySurface() {
+    JNIEnv* env = NULL;
+    if (m_surface && gVM->GetEnv((void**) &env, JNI_VERSION_1_4) == JNI_OK) {
+        env->DeleteGlobalRef(m_surface);
+        m_surface = NULL;
+    }
 }
 
 void BallAnimation::showEntirePluginOnScreen() {
@@ -179,17 +136,26 @@ int16_t BallAnimation::handleEvent(const ANPEvent* evt) {
     switch (evt->eventType) {
         case kDraw_ANPEventType:
             switch (evt->data.draw.model) {
-                case kBitmap_ANPDrawingModel:
-                    drawPlugin(evt->data.draw.data.bitmap, evt->data.draw.clip);
+                case kOpenGL_ANPDrawingModel: {
+                    //send the width and height to the rendering thread
+                    int width = evt->data.draw.data.surface.width;
+                    int height = evt->data.draw.data.surface.height;
+                    gLogI.log(kError_ANPLogType, "New Dimensions (%d,%d)", width, height);
+                    m_renderingThread->setDimensions(width, height);
                     return 1;
+                }
                 default:
-                    break;   // unknown drawing model
+                    return 0;   // unknown drawing model
             }
         case kTouch_ANPEventType:
              if (kDown_ANPTouchAction == evt->data.touch.action) {
                  showEntirePluginOnScreen();
              }
-             return 1;
+            else if (kDoubleTap_ANPTouchAction == evt->data.touch.action) {
+                browser->geturl(inst(), "javascript:alert('Detected double tap event.')", 0);
+                gWindowI.requestFullScreen(inst());
+            }
+            return 1;
         default:
             break;
     }

@@ -45,6 +45,10 @@ int SubPlugin::getPluginHeight() {
     return obj->window->height;
 }
 
+SurfaceSubPlugin::~SurfaceSubPlugin() {
+    setContext(NULL);
+}
+
 bool SurfaceSubPlugin::supportsDrawingModel(ANPDrawingModel model) {
     return (model == kSurface_ANPDrawingModel);
 }

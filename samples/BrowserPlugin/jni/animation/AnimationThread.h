@@ -22,27 +22,47 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+#include "RenderingThread.h"
+#include "SkCanvas.h"
+#include "SkBitmap.h"
+#include "SkRect.h"
+#include "SkPaint.h"
 
-#include "PluginObject.h"
-#include "AnimationThread.h"
+#ifndef AnimationThread__DEFINED
+#define AnimationThread__DEFINED
 
-#ifndef pluginGraphics__DEFINED
-#define pluginGraphics__DEFINED
-
-class BallAnimation : public SurfaceSubPlugin {
+class AnimationThread : public RenderingThread {
 public:
-    BallAnimation(NPP inst);
-    virtual ~BallAnimation();
-    virtual bool supportsDrawingModel(ANPDrawingModel);
-    virtual int16_t handleEvent(const ANPEvent* evt);
+    AnimationThread(NPP npp);
+    virtual ~AnimationThread();
 
-    virtual jobject getSurface();
 private:
-    void showEntirePluginOnScreen();
-    void destroySurface();
+    virtual bool threadLoop();
+    SkBitmap* constructBitmap(int width, int height);
 
-    jobject          m_surface;
-    AnimationThread* m_renderingThread;
+    float m_counter;
+
+    int64_t m_lastPrintTime;
+    int64_t m_executionTime;
+    int64_t m_idleTime;
+    int64_t m_startTime;
+    int64_t m_startExecutionTime;
+    int64_t m_startIdleTime;
+
+    float m_x;
+    float m_y;
+    float m_dx;
+    float m_dy;
+
+    SkRect m_oval;
+    SkPaint* m_paint;
+    SkBitmap* m_bitmap;
+    SkCanvas* m_canvas;
+
+    static const unsigned int DEFAULT_WIDTH = 400;
+    static const unsigned int DEFAULT_HEIGHT = 400;
 };
 
-#endif // pluginGraphics__DEFINED
+
+
+#endif // AnimationThread__DEFINED
