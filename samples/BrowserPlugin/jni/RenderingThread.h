@@ -22,27 +22,45 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+#include "android_npapi.h"
+#include "SkCanvas.h"
+#include "SkBitmap.h"
 
-#include "PluginObject.h"
-#include "AnimationThread.h"
+#include <EGL/egl.h>
+#include <GLES2/gl2.h>
 
-#ifndef pluginGraphics__DEFINED
-#define pluginGraphics__DEFINED
+#ifndef RenderingThread__DEFINED
+#define RenderingThread__DEFINED
 
-class BallAnimation : public SurfaceSubPlugin {
+
+class RenderingThread : public android::Thread {
 public:
-    BallAnimation(NPP inst);
-    virtual ~BallAnimation();
-    virtual bool supportsDrawingModel(ANPDrawingModel);
-    virtual int16_t handleEvent(const ANPEvent* evt);
+    RenderingThread(NPP npp);
+    virtual ~RenderingThread() {};
+    virtual android::status_t readyToRun();
 
-    virtual jobject getSurface();
+    void setDimensions(int width, int height);
+    void getDimensions(int& width, int& height);
+
+protected:
+    NPP m_npp;
+
+    static void printGLString(const char *name, GLenum s);
+    static void checkGlError(const char* op);
+    static GLenum getInternalFormat(SkBitmap::Config config);
+    static GLenum getType(SkBitmap::Config config);
+    static void createTextureWithBitmap(GLuint texture, SkBitmap& bitmap);
+    static void updateTextureWithBitmap(GLuint texture, SkBitmap& bitmap);
+
 private:
-    void showEntirePluginOnScreen();
-    void destroySurface();
+    virtual bool threadLoop() = 0;
 
-    jobject          m_surface;
-    AnimationThread* m_renderingThread;
+    android::Mutex m_sync;
+    int m_width;
+    int m_height;
 };
 
-#endif // pluginGraphics__DEFINED
+
+
+
+#endif // RenderingThread__DEFINED

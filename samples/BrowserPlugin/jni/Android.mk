@@ -30,7 +30,9 @@ include $(CLEAR_VARS)
 LOCAL_SRC_FILES := \
 	main.cpp \
 	PluginObject.cpp \
+	RenderingThread.cpp \
 	animation/AnimationPlugin.cpp \
+	animation/AnimationThread.cpp \
 	audio/AudioPlugin.cpp \
 	background/BackgroundPlugin.cpp \
 	form/FormPlugin.cpp \
@@ -52,10 +54,16 @@ LOCAL_C_INCLUDES += \
 	external/webkit/WebCore/bridge \
 	external/webkit/WebCore/plugins \
 	external/webkit/WebCore/platform/android/JavaVM \
-	external/webkit/WebKit/android/plugins
+	external/webkit/WebKit/android/plugins \
+	external/skia/include/core
 
 LOCAL_SHARED_LIBRARIES := \
-	libnativehelper
+	libnativehelper \
+	libutils \
+	libcutils \
+	libEGL \
+	libGLESv2 \
+	libskia
 
 LOCAL_CFLAGS += -fvisibility=hidden 
 LOCAL_PRELINK_MODULE:=false

@@ -77,6 +77,7 @@ ANPSurfaceInterfaceV0       gSurfaceI;
 ANPSystemInterfaceV0        gSystemI;
 ANPTypefaceInterfaceV0      gTypefaceI;
 ANPWindowInterfaceV0        gWindowI;
+ANPOpenGLInterfaceV0        gOpenGLI;
 
 #define ARRAY_COUNT(array)      (sizeof(array) / sizeof(array[0]))
 #define DEBUG_PLUGIN_EVENTS     0
@@ -125,6 +126,7 @@ NPError NP_Initialize(NPNetscapeFuncs* browserFuncs, NPPluginFuncs* pluginFuncs,
         { kSystemInterfaceV0_ANPGetValue,       sizeof(gSystemI),   &gSystemI },
         { kTypefaceInterfaceV0_ANPGetValue,     sizeof(gTypefaceI), &gTypefaceI },
         { kWindowInterfaceV0_ANPGetValue,       sizeof(gWindowI),   &gWindowI },
+        { kOpenGLInterfaceV0_ANPGetValue,       sizeof(gOpenGLI),   &gOpenGLI },
     };
     for (size_t i = 0; i < ARRAY_COUNT(gPairs); i++) {
         gPairs[i].i->inSize = gPairs[i].size;
@@ -162,6 +164,7 @@ NPError NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc
     if (browser->version >= 14) {
         instance->pdata = browser->createobject (instance, getPluginClass());
         obj = static_cast<PluginObject*>(instance->pdata);
+        obj->pluginType = 0;
     }
     /* END: STANDARD PLUGIN FRAMEWORK */
 
@@ -175,6 +178,9 @@ NPError NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc
             }
             else if (!strcmp(argv[i], "Surface")) {
                model = kSurface_ANPDrawingModel;
+            }
+            else if (!strcmp(argv[i], "OpenGL")) {
+               model = kOpenGL_ANPDrawingModel;
             }
             gLogI.log(kDebug_ANPLogType, "------ %p DrawingModel is %d", instance, model);
             break;
@@ -228,7 +234,6 @@ NPError NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc
                 obj->pluginType = kVideo_PluginType;
                 obj->activePlugin = new VideoPlugin(instance);
             }
-            gLogI.log(kDebug_ANPLogType, "------ %p PluginType is %d", instance, obj->pluginType);
             break;
         }
     }
@@ -240,6 +245,8 @@ NPError NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc
         obj->activePlugin = new BallAnimation(instance);
     }
 
+    gLogI.log(kDebug_ANPLogType, "------ %p PluginType is %d", instance, obj->pluginType);
+
     // check to ensure the pluginType supports the model
     if (!obj->activePlugin->supportsDrawingModel(model)) {
         gLogI.log(kError_ANPLogType, "------ %p Unsupported DrawingModel (%d)", instance, model);
@@ -247,7 +254,7 @@ NPError NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc
     }
 
     // if the plugin uses the surface drawing model then set the java context
-    if (model == kSurface_ANPDrawingModel) {
+    if (model == kSurface_ANPDrawingModel || model == kOpenGL_ANPDrawingModel) {
         SurfaceSubPlugin* surfacePlugin = static_cast<SurfaceSubPlugin*>(obj->activePlugin);
 
         jobject context;
@@ -434,7 +441,8 @@ NPError NPP_GetValue(NPP instance, NPPVariable variable, void* value)
         PluginObject* obj = static_cast<PluginObject*>(instance->pdata);
         if (obj && obj->activePlugin) {
 
-            if(obj->activePlugin->supportsDrawingModel(kSurface_ANPDrawingModel)) {
+            if(obj->activePlugin->supportsDrawingModel(kSurface_ANPDrawingModel)
+                    || obj->activePlugin->supportsDrawingModel(kOpenGL_ANPDrawingModel)) {
                 SurfaceSubPlugin* plugin = static_cast<SurfaceSubPlugin*>(obj->activePlugin);
                 jobject* surface = static_cast<jobject*>(value);
                 *surface = plugin->getSurface();

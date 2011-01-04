@@ -63,7 +63,7 @@ private:
 class SurfaceSubPlugin : public SubPlugin {
 public:
     SurfaceSubPlugin(NPP inst) : SubPlugin(inst) { m_context = NULL; }
-    virtual ~SurfaceSubPlugin() {}
+    virtual ~SurfaceSubPlugin();
     virtual jobject getSurface() = 0;
     virtual bool supportsDrawingModel(ANPDrawingModel);
 
