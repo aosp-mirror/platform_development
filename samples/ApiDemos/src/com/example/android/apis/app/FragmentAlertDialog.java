@@ -30,6 +30,9 @@ import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.TextView;
 
+/**
+ * Demonstrates how to show an AlertDialog that is managed by a Fragment.
+ */
 public class FragmentAlertDialog extends Activity {
 
     @Override

@@ -37,47 +37,131 @@
   <dt><a href="TranslucentBlurActivity.html">TranslucentBlur</a></dt>
   <dd>Demonstrates how to make an activity with a transparent background with
   a special effect (blur). </dd>
+
+  <dt><a href="DialogActivity.html">Dialog Activity</a></dt>
+  <dd>An Activity that sets its theme to android:style/Theme.Dialog so that
+  it looks like a Dialog.</dd>
+
+  <dt><a href="CustomTitle.html">Custom Title</a></dt>
+  <dd>An Activity that places a custom UI in its title.</dd>
+
+  <dt><a href="Animation.html">Animation</a></dt>
+  <dd>Demonstrates how to use custom animations when moving between activities. </dd>
+
+  <dt><a href="ActivityRecreate.html">Activity Recreate</a></dt>
+  <dd>Demonstrates how an Activity can cause itself to be recreated.</dd>
+
+  <dt><a href="ScreenOrientation.html">Screen Orientation</a></dt>
+  <dd>Demonstrates the different screen orientations an Activity can request.</dd>
+
+  <dt><a href="SoftInputModes.html">Soft Input Modes</a></dt>
+  <dd>Demonstrates how different soft input modes set in an Activity's
+  window impacts how it adjusts to accommodate an IME.</dd>
+
+  <dt><a href="IntentActivityFlags.html">Intent Activity Flags</a></dt>
+  <dd>Demonstrates various uses of Intent flags to modify an application
+  task's activity stack in common ways.</dd>
+
+  <dt><a href="ReorderOnLaunch.html">Reorder on Launch</a></dt>
+  <dd>Demonstrates how the activities in a task can be reordered.  UI flow
+  goes through the activities <a href="ReorderOnLaunch.html">ReorderOnLaunch</a>,
+  <a href="ReorderTwo.html">ReorderTwo</a>, <a href="ReorderThree.html">ReorderThree</a>,
+  and <a href="ReorderFour.html">ReorderFour</a>.</dd>
+
+  <dt><a href="WallpaperActivity.html">Wallpaper Activity</a></dt>
+  <dd>An Activity that uses android:style/Theme.Wallpaper to be displayed
+  on top of the system wallpaper.</dd>
+</dl>
+
+<h3>Fragment</h3>
+<dl>
+  <dt><a href="FragmentAlertDialog.html">Fragment Alert Dialog</a></dt>
+  <dd>Demonstrates how to use a DialogFragment to show and manage an
+  AlertDialog.</dd>
+  
+  <dt><a href="FragmentContextMenu.html">Fragment Context Menu</a></dt>
+  <dd>Demonstrates how to display and respond to a context menu that is
+  display from a fragment's view hierarchy.</dd>
+  
+  <dt><a href="FragmentDialog.html">Fragment Dialog</a></dt>
+  <dd>Demonstrates use of DialogFragment to show various types of dialogs.</dd>
+  
+  <dt><a href="FragmentDialogOrActivity.html">Fragment Dialog or Activity</a></dt>
+  <dd>Demonstrates how the same Fragment implementation can be used to provide the UI
+  for either an Activity or Dialog.</dd>
+  
+  <dt><a href="FragmentHideShow.html">Fragment Hide Show</a></dt>
+  <dd>Demonstrates hiding and showing fragments.</dd>
+  
+  <dt><a href="FragmentLayout.html">Fragment Layout</a></dt>
+  <dd>Demonstrates use of the &lt;fragment&gt; tag to embed a Fragment in
+  an Activity's content view layout, and making the layout change based on
+  configuration to achieve different UI flows.</dd>
+  
+  <dt><a href="FragmentListArray.html">Fragment List Array</a></dt>
+  <dd>Demonstrates use of ListFragment to show the contents of a simple ArrayAdapter.</dd>
+  
+  <dt><a href="FragmentCursorLoader.html">Fragment List Cursor Loader</a></dt>
+  <dd>Demonstrates use of LoaderManager to perform a query for a Cursor that
+  populates a ListFragment.</dd>
+  
+  <dt><a href="FragmentMenu.html">Fragment Menu</a></dt>
+  <dd>Demonstrates populating custom menu items from a Fragment.</dd>
+  
+  <dt><a href="FragmentReceiveResult.html">Fragment Receive Result</a></dt>
+  <dd>Demonstrates starting a new Activity from a Fragment, and receiving
+  a result back from it.</dd>
+  
+  <dt><a href="FragmentRetainInstance.html">Fragment Retain Instance</a></dt>
+  <dd>Demonstrates a Fragment can be used to easily retain active state across
+  an Activity's configuration change.</dd>
+  
+  <dt><a href="FragmentStack.html">Fragment Stack</a></dt>
+  <dd>Demonstrates creating a stack of Fragment instances similar to the
+  traditional stack of activities.</dd>
+  
 </dl>
 
 <h3>Service</h3>
 <dl>
-  <dt><a href="LocalService.html">Local Service Controller and
-        Local Service Binding</a></dt>
+  <dt><a href="LocalService.html">Local Service</a></dt>
   <dd>Demonstrate the implementation of a service that runs in the same
   process as its client(s).  Shows how those clients can either start/stop it
-  with {@link android.content.Context#startService
-  Context.startService} and {@link android.content.Context#stopService
-  Context.stopService}, or bind and call it with
-  {@link android.content.Context#bindService Context.bindService} and
-  {@link android.content.Context#unbindService Context.unindService}.
+  with Context.startService and Context.stopService, or bind and call it with
+  Context.bindService and Context.unindService.
   This also shows how you can simplify working
-  with a service when you know it will only run in your own process.</dd>
+  with a service when you know it will only run in your own process.  The client
+  code for interacting with the service is in
+  <a href="LocalServiceActivities.html">Local Service Activities</a>.</dd>
+  
+  <dt><a href="MessengerService.html">Messenger Service</a></dt>
+  <dd>Demonstrates binding to a Service whose interface is implemented with
+  the Messenger class.  This is often an easier way to do remote communication
+  with a Service than using a raw AIDL interface.  The client
+  code for interacting with the service is in
+  <a href="MessengerServiceActivities.html">Messenger Service Activities</a>.</dd>
   
   <dt><a href="RemoteService.html">Remote Service Controller and
         Remove Service Binding</a></dt>
   <dd>Demonstrates starting a service in a separate process, by assigning
   <code>android:process=&quot;:remote&quot;</code> to the service in the
   AndroidManifest.xml file.  Shows how those clients can either start/stop it
-  with {@link android.content.Context#startService
-  Context.startService} and {@link android.content.Context#stopService
-  Context.stopService}, or bind and call it with
-  {@link android.content.Context#bindService Context.bindService} and
-  {@link android.content.Context#unbindService Context.unindService}.
+  with Context.startService and Context.stopService, or bind and call it with
+  Context.bindService and Context.unindService.
   Binding is similar to the local service sample,
   but illustrates the additional work (defining aidl
   interfaces) needed to interact with a service in another process.  Also
   shows how a service can publish multiple interfaces and implement
   callbacks to its clients.</dd>
 
-  <dt><a href="ServiceStartArguments.html">Service Start Arguments Controller</a></dt>
+  <dt><a href="ServiceStartArguments.html">Service Start Arguments</a></dt>
   <dd>Demonstrates how you can use a Service as a job queue, where you 
-  submit jobs to it with {@link android.content.Context#startService
-  Context.startService} instead of binding to the service.  Such a service
+  submit jobs to it with Context.startService instead of binding to the service.  Such a service
   automatically stops itself once all jobs have been processed.  This can be
   a very convenient way to interact with a service when you do not need
   a result back from it.</dd>
   
-  <dt><a href="ForegroundService.html">Foreground Service Controller</a></dt>
+  <dt><a href="ForegroundService.html">Foreground Service</a></dt>
   <dd>Shows how you
   can write a Service that runs in the foreground and works on both pre-2.0
   and post-2.0 versions of the platform.  This example will selectively use
@@ -126,6 +210,10 @@
 
   <dt><a href="IncomingMessage.html">IncomingMessage</a></dt>
   <dd> Demonstrates sending persistent and transient notifications, with a View object in the notification. It also demonstrated inflating a View object from an XML layout resource. </dd>
+
+  <dt><a href="StatusBarNotifications.html">Status Bar Notifications</a></dt>
+  <dd> Demonstrates a variety of different notifications that can be posted in
+  the status bar, and a standard way for handling them.</dd>
 </dl>
 
 <h3>Search</h3>
@@ -141,3 +229,12 @@
 </dl>
 
 
+<h3>Misc</h3>
+<dl>
+  <dt><a href="AlertDialogSamples.html">Alert Dialog Samples</a></dt>
+  <dd>Demonstrates various styles of alert dialogs.</dd>
+  
+  <dt><a href="DeviceAdminSample.html">Device Admin Sample</a></dt>
+  <dd>Demonstration of the implementation of a simple device administrator
+  and its use of the DevicePolicyManager.</dd>
+</dl>
