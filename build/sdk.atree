@@ -60,7 +60,7 @@ development/sdk/platform_source.properties platforms/${PLATFORM_NAME}/source.pro
 sdk/sdk-build.prop platforms/${PLATFORM_NAME}/build.prop
 
 # the uper-jar file that apps link against. This is the public API
-out/target/common/obj/PACKAGING/android_jar_intermediates/android.jar platforms/${PLATFORM_NAME}/android.jar
+${OUT_DIR}/target/common/obj/PACKAGING/android_jar_intermediates/android.jar platforms/${PLATFORM_NAME}/android.jar
 
 # the aidl precompiled include
 obj/framework.aidl platforms/${PLATFORM_NAME}/framework.aidl
