@@ -10,7 +10,8 @@ LOCAL_PACKAGE_NAME := XmlAdaptersSample
 
 LOCAL_PROGUARD_ENABLED := disabled
 
-include $(BUILD_PACKAGE)
+# XXX These APIs are not yet available in the platform.
+#include $(BUILD_PACKAGE)
 
 # Use the following include to make our test apk.
-include $(call all-makefiles-under,$(LOCAL_PATH))
+#include $(call all-makefiles-under,$(LOCAL_PATH))
