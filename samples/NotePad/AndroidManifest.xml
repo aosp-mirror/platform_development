@@ -22,7 +22,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.android.notepad" >
 
-    <uses-sdk android:minSdkVersion="Froyo" />
+    <uses-sdk android:minSdkVersion="Gingerbread" />
     <application android:icon="@drawable/app_notes"
         android:label="@string/app_name"
     >
