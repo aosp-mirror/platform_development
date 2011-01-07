@@ -76,7 +76,7 @@ ANPPathInterfaceV0          gPathI;
 ANPSurfaceInterfaceV0       gSurfaceI;
 ANPSystemInterfaceV0        gSystemI;
 ANPTypefaceInterfaceV0      gTypefaceI;
-ANPWindowInterfaceV0        gWindowI;
+ANPWindowInterfaceV1        gWindowI;
 ANPOpenGLInterfaceV0        gOpenGLI;
 
 #define ARRAY_COUNT(array)      (sizeof(array) / sizeof(array[0]))
@@ -125,7 +125,7 @@ NPError NP_Initialize(NPNetscapeFuncs* browserFuncs, NPPluginFuncs* pluginFuncs,
         { kSurfaceInterfaceV0_ANPGetValue,      sizeof(gSurfaceI),  &gSurfaceI },
         { kSystemInterfaceV0_ANPGetValue,       sizeof(gSystemI),   &gSystemI },
         { kTypefaceInterfaceV0_ANPGetValue,     sizeof(gTypefaceI), &gTypefaceI },
-        { kWindowInterfaceV0_ANPGetValue,       sizeof(gWindowI),   &gWindowI },
+        { kWindowInterfaceV1_ANPGetValue,       sizeof(gWindowI),   &gWindowI },
         { kOpenGLInterfaceV0_ANPGetValue,       sizeof(gOpenGLI),   &gOpenGLI },
     };
     for (size_t i = 0; i < ARRAY_COUNT(gPairs); i++) {
