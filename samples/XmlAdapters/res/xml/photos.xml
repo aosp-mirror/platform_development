@@ -15,11 +15,12 @@
 -->
 
 <cursor-adapter xmlns:android="http://schemas.android.com/apk/res/android"
-    android:selection="/feed/entry"
-    android:layout="@layout/photo_item">
+    xmlns:app="http://schemas.android.com/apk/res/com.example.android.xmladapters"
+    app:selection="/feed/entry"
+    app:layout="@layout/photo_item">
 
-    <bind android:from="/summary" android:to="@id/title" android:as="string" />
-    <bind android:from="/media:group/media:thumbnail\@url" android:to="@id/photo"
-      android:as="com.example.android.xmladapters.UrlImageBinder" />
+    <bind app:from="/summary" app:to="@id/title" app:as="string" />
+    <bind app:from="/media:group/media:thumbnail\@url" app:to="@id/photo"
+      app:as="com.example.android.xmladapters.UrlImageBinder" />
 
 </cursor-adapter>

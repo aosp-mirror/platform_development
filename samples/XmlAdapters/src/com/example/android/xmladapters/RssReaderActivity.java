@@ -20,7 +20,6 @@ import android.app.ListActivity;
 import android.content.XmlDocumentProvider;
 import android.net.Uri;
 import android.os.Bundle;
-import android.widget.Adapters;
 import android.widget.AdapterView.OnItemClickListener;
 
 /**
@@ -39,6 +38,7 @@ public class RssReaderActivity extends ListActivity {
         setContentView(R.layout.rss_feeds_list);
         setListAdapter(Adapters.loadCursorAdapter(this, R.xml.rss_feed,
                 "content://xmldocument/?url=" + Uri.encode(FEED_URI)));
+
         getListView().setOnItemClickListener(new UrlIntentListener());
     }
 }

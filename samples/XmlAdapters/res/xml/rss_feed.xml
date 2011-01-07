@@ -15,16 +15,16 @@
 -->
 
 <cursor-adapter xmlns:android="http://schemas.android.com/apk/res/android"
-    android:selection="/rss/channel/item"
-    android:layout="@layout/rss_feed_item">
+    xmlns:app="http://schemas.android.com/apk/res/com.example.android.xmladapters"
+    app:selection="/rss/channel/item"
+    app:layout="@layout/rss_feed_item">
 
-    <bind android:from="/title" android:to="@id/title" android:as="string" />
-    <bind android:from="/media:content@url" android:to="@id/image"
-      android:as="com.example.android.xmladapters.UrlImageBinder"/>
-    <bind android:from="/media:description" android:to="@id/description" android:as="string" />
-    <bind android:from="/guid" android:to="@id/item_layout" android:as="tag" />
-    <bind android:from="/pubDate" android:to="@id/date" android:as="string">
-       <transform android:withExpression="Published on {/pubDate}." />
+    <bind app:from="/title" app:to="@id/title" app:as="string" />
+    <bind app:from="/media:content@url" app:to="@id/image" app:as="com.example.android.xmladapters.UrlImageBinder"/>
+    <bind app:from="/media:description" app:to="@id/description" app:as="string" />
+    <bind app:from="/guid" app:to="@id/item_layout" app:as="tag" />
+    <bind app:from="/pubDate" app:to="@id/date" app:as="string">
+       <transform app:withExpression="Published on {/pubDate}." />
     </bind>
 
 </cursor-adapter>

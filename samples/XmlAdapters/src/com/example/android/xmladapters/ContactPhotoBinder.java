@@ -27,7 +27,6 @@ import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.provider.ContactsContract;
 import android.view.View;
-import android.widget.Adapters;
 import android.widget.TextView;
 
 import java.io.InputStream;

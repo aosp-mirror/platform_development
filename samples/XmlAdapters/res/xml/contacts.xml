@@ -15,16 +15,16 @@
 -->
 
 <cursor-adapter xmlns:android="http://schemas.android.com/apk/res/android"
-  android:uri="content://com.android.contacts/contacts"
-  android:selection="has_phone_number=1"
-  android:layout="@layout/contact_item">
+  xmlns:app="http://schemas.android.com/apk/res/com.example.android.xmladapters"
+  app:uri="content://com.android.contacts/contacts"
+  app:selection="has_phone_number=1"
+  app:layout="@layout/contact_item">
 
-  <bind android:from="display_name" android:to="@id/name" android:as="string" />
-    <bind android:from="starred" android:to="@id/star" android:as="drawable">
-        <map android:fromValue="0" android:toValue="@android:drawable/star_big_off" />
-        <map android:fromValue="1" android:toValue="@android:drawable/star_big_on" />
-    </bind>
-    <bind android:from="_id" android:to="@id/name"
-          android:as="com.example.android.xmladapters.ContactPhotoBinder" />
+  <bind app:from="display_name" app:to="@id/name" app:as="string" />
+  <bind app:from="starred" app:to="@id/star" app:as="drawable">
+        <map app:fromValue="0" app:toValue="@android:drawable/star_big_off" />
+        <map app:fromValue="1" app:toValue="@android:drawable/star_big_on" />
+  </bind>
+  <bind app:from="_id" app:to="@id/name" app:as="com.example.android.xmladapters.ContactPhotoBinder" />
 
 </cursor-adapter>

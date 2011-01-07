@@ -19,7 +19,6 @@ package com.example.android.xmladapters;
 import android.content.Context;
 import android.database.Cursor;
 import android.view.View;
-import android.widget.Adapters;
 import android.widget.ImageView;
 
 /**
