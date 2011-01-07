@@ -19,7 +19,6 @@ package com.example.android.xmladapters;
 import android.app.ListActivity;
 import android.net.Uri;
 import android.os.Bundle;
-import android.widget.Adapters;
 
 /**
  * This activity uses a custom cursor adapter which fetches a XML photo feed and parses the XML to
