@@ -30,6 +30,8 @@ public class ContactsListActivity extends ListActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.contacts_list);
+        setListAdapter(Adapters.loadAdapter(this, R.xml.contacts));
     }
 }
