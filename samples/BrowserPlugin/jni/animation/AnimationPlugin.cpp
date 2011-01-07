@@ -34,7 +34,7 @@ extern ANPCanvasInterfaceV0    gCanvasI;
 extern ANPPaintInterfaceV0     gPaintI;
 extern ANPPathInterfaceV0      gPathI;
 extern ANPSystemInterfaceV0    gSystemI;
-extern ANPWindowInterfaceV0    gWindowI;
+extern ANPWindowInterfaceV1    gWindowI;
 
 static uint16_t rnd16(float x, int inset) {
     int ix = (int)roundf(x) + inset;
@@ -118,6 +118,11 @@ void BallAnimation::showEntirePluginOnScreen() {
     NPP instance = this->inst();
     PluginObject *obj = (PluginObject*) instance->pdata;
     NPWindow *window = obj->window;
+
+    // log the current visible rect
+    ANPRectI visibleRect = gWindowI.visibleRect(instance);
+    gLogI.log(kDebug_ANPLogType, "Current VisibleRect: (%d,%d,%d,%d)",
+            visibleRect.left, visibleRect.top, visibleRect.right, visibleRect.bottom);
 
     ANPRectI visibleRects[1];
 
