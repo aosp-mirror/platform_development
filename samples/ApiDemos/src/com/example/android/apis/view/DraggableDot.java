@@ -52,7 +52,7 @@ public class DraggableDot extends View {
     CharSequence mLegend;
 
     static final int ANR_NONE = 0;
-    static final int ANR_THUMBNAIL = 1;
+    static final int ANR_SHADOW = 1;
     static final int ANR_DROP = 2;
 
     void sleepSixSeconds() {
@@ -63,21 +63,21 @@ public class DraggableDot extends View {
         } while (SystemClock.uptimeMillis() < start + 6000);
     }
 
-    // Thumbnail builder that can ANR if desired
-    class ANRThumbBuilder extends DragThumbnailBuilder {
+    // Shadow builder that can ANR if desired
+    class ANRShadowBuilder extends DragShadowBuilder {
         boolean mDoAnr;
 
-        public ANRThumbBuilder(View view, boolean doAnr) {
+        public ANRShadowBuilder(View view, boolean doAnr) {
             super(view);
             mDoAnr = doAnr;
         }
 
         @Override
-        public void onDrawThumbnail(Canvas canvas) {
+        public void onDrawShadow(Canvas canvas) {
             if (mDoAnr) {
                 sleepSixSeconds();
             }
-            super.onDrawThumbnail(canvas);
+            super.onDrawShadow(canvas);
         }
     }
 
@@ -136,7 +136,7 @@ public class DraggableDot extends View {
         setOnLongClickListener(new View.OnLongClickListener() {
             public boolean onLongClick(View v) {
                 ClipData data = ClipData.newPlainText("dot", null, "Dot : " + v.toString());
-                v.startDrag(data, new ANRThumbBuilder(v, mAnrType == ANR_THUMBNAIL),
+                v.startDrag(data, new ANRShadowBuilder(v, mAnrType == ANR_SHADOW),
                         mLocalOnly, (Object)v);
                 return true;
             }
