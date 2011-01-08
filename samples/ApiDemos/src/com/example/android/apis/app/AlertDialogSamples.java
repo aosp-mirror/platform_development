@@ -77,7 +77,7 @@ public class AlertDialogSamples extends Activity {
         switch (id) {
         case DIALOG_YES_NO_MESSAGE:
             return new AlertDialog.Builder(AlertDialogSamples.this)
-                .setIcon(R.drawable.alert_dialog_icon)
+                .setIconAttribute(android.R.attr.alertDialogIcon)
                 .setTitle(R.string.alert_dialog_two_buttons_title)
                 .setPositiveButton(R.string.alert_dialog_ok, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int whichButton) {
@@ -94,7 +94,7 @@ public class AlertDialogSamples extends Activity {
                 .create();
         case DIALOG_YES_NO_LONG_MESSAGE:
             return new AlertDialog.Builder(AlertDialogSamples.this)
-                .setIcon(R.drawable.alert_dialog_icon)
+                .setIconAttribute(android.R.attr.alertDialogIcon)
                 .setTitle(R.string.alert_dialog_two_buttons_msg)
                 .setMessage(R.string.alert_dialog_two_buttons2_msg)
                 .setPositiveButton(R.string.alert_dialog_ok, new DialogInterface.OnClickListener() {
@@ -118,7 +118,7 @@ public class AlertDialogSamples extends Activity {
                 .create();
         case DIALOG_YES_NO_ULTRA_LONG_MESSAGE:
             return new AlertDialog.Builder(AlertDialogSamples.this)
-                .setIcon(R.drawable.alert_dialog_icon)
+                .setIconAttribute(android.R.attr.alertDialogIcon)
                 .setTitle(R.string.alert_dialog_two_buttons_msg)
                 .setMessage(R.string.alert_dialog_two_buttons2ultra_msg)
                 .setPositiveButton(R.string.alert_dialog_ok, new DialogInterface.OnClickListener() {
@@ -156,7 +156,7 @@ public class AlertDialogSamples extends Activity {
                 .create();
         case DIALOG_PROGRESS:
             mProgressDialog = new ProgressDialog(AlertDialogSamples.this);
-            mProgressDialog.setIcon(R.drawable.alert_dialog_icon);
+            mProgressDialog.setIconAttribute(android.R.attr.alertDialogIcon);
             mProgressDialog.setTitle(R.string.select_dialog);
             mProgressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
             mProgressDialog.setMax(MAX_PROGRESS);
@@ -177,7 +177,7 @@ public class AlertDialogSamples extends Activity {
             return mProgressDialog;
         case DIALOG_SINGLE_CHOICE:
             return new AlertDialog.Builder(AlertDialogSamples.this)
-                .setIcon(R.drawable.alert_dialog_icon)
+                .setIconAttribute(android.R.attr.alertDialogIcon)
                 .setTitle(R.string.alert_dialog_single_choice)
                 .setSingleChoiceItems(R.array.select_dialog_items2, 0, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int whichButton) {
@@ -254,7 +254,7 @@ public class AlertDialogSamples extends Activity {
             LayoutInflater factory = LayoutInflater.from(this);
             final View textEntryView = factory.inflate(R.layout.alert_dialog_text_entry, null);
             return new AlertDialog.Builder(AlertDialogSamples.this)
-                .setIcon(R.drawable.alert_dialog_icon)
+                .setIconAttribute(android.R.attr.alertDialogIcon)
                 .setTitle(R.string.alert_dialog_text_entry)
                 .setView(textEntryView)
                 .setPositiveButton(R.string.alert_dialog_ok, new DialogInterface.OnClickListener() {
