@@ -146,6 +146,8 @@
     <string name="fragment_stack">App/Fragment/Stack</string>
     <string name="new_fragment">New fragment</string>
 
+    <string name="loader_throttle">App/Loader/Throttle</string>
+    
     <string name="activity_menu">App/Activity/Menu</string>
     <string name="open_menu">Open menu</string>
     <string name="close_menu">Close menu</string>
