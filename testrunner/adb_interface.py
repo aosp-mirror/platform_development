@@ -465,7 +465,7 @@ class AdbInterface:
     output = ""
     error = None
     if runtime_restart:
-      self.SendShellCommand("setprop ro.monkey 1", retry_count=retry_count)
+      self.SendShellCommand("setprop ro.test_harness 1", retry_count=retry_count)
       # manual rest bootcomplete flag
       self.SendShellCommand("setprop dev.bootcomplete 0",
                             retry_count=retry_count)
