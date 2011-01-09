@@ -16,12 +16,10 @@
 
 package com.example.android.apis.app;
 
-import com.example.android.apis.R;
-
 import android.app.Activity;
+import android.app.FragmentManager;
 import android.app.ListFragment;
 import android.app.LoaderManager;
-import android.content.Context;
 import android.content.CursorLoader;
 import android.content.Loader;
 import android.database.Cursor;
@@ -34,7 +32,6 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.ListView;
 import android.widget.SearchView;
 import android.widget.SimpleCursorAdapter;
@@ -50,10 +47,12 @@ public class FragmentListCursorLoader extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        FragmentManager fm = getFragmentManager();
+        
         // Create the list fragment and add it as our sole content.
-        if (findFragmentById(android.R.id.content) == null) {
+        if (fm.findFragmentById(android.R.id.content) == null) {
             CursorLoaderListFragment list = new CursorLoaderListFragment();
-            openFragmentTransaction().add(android.R.id.content, list).commit();
+            fm.openTransaction().add(android.R.id.content, list).commit();
         }
     }
 

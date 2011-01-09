@@ -342,6 +342,18 @@
             </intent-filter>
         </activity>
 
+        <!-- Loader Samples -->
+        
+        <activity android:name=".app.LoaderThrottle"
+                android:label="@string/loader_throttle">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+        <provider android:name=".app.LoaderThrottle$SimpleProvider"
+                  android:authorities="com.example.android.apis.app.LoaderThrottle" />
+
         <!-- Intent Samples -->
 
         <activity android:name=".app.Intents" android:label="@string/activity_intents">
