@@ -16,6 +16,7 @@
 
 package com.example.android.apis.app;
 
+//BEGIN_INCLUDE(complete)
 import android.app.Activity;
 import android.app.FragmentManager;
 import android.app.ListFragment;
@@ -29,6 +30,7 @@ import android.content.CursorLoader;
 import android.content.Loader;
 import android.content.UriMatcher;
 import android.database.Cursor;
+import android.database.DatabaseUtils;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
@@ -56,12 +58,12 @@ import java.util.HashMap;
 public class LoaderThrottle extends Activity {
     // Debugging.
     static final String TAG = "LoaderThrottle";
-    
+
     /**
      * The authority we use to get to our sample provider.
      */
     public static final String AUTHORITY = "com.example.android.apis.app.LoaderThrottle";
-    
+
     /**
      * Definition of the contract for the main table of our provider.
      */
@@ -86,12 +88,7 @@ public class LoaderThrottle extends Activity {
          */
         public static final Uri CONTENT_ID_URI_BASE
                 = Uri.parse("content://" + AUTHORITY + "/main/");
-        
-        /**
-         * 0-relative position of a main ID segment in the path part of a main ID URI
-         */
-        public static final int MAIN_ID_PATH_POSITION = 1;
-        
+
         /**
          * The MIME type of {@link #CONTENT_URI}.
          */
@@ -107,14 +104,14 @@ public class LoaderThrottle extends Activity {
          * The default sort order for this table
          */
         public static final String DEFAULT_SORT_ORDER = "data COLLATE LOCALIZED ASC";
-        
+
         /**
          * Column name for the single column holding our data.
          * <P>Type: TEXT</P>
          */
         public static final String COLUMN_NAME_DATA = "data";
     }
-    
+
     /**
      * This class helps open, create, and upgrade the database file.
      */
@@ -189,7 +186,7 @@ public class LoaderThrottle extends Activity {
             mUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
             mUriMatcher.addURI(AUTHORITY, MainTable.TABLE_NAME, MAIN);
             mUriMatcher.addURI(AUTHORITY, MainTable.TABLE_NAME + "/#", MAIN_ID);
-            
+
             // Create and initialize projection map for all columns.  This is
             // simply an identity mapping.
             mNotesProjectionMap = new HashMap<String, String>();
@@ -227,8 +224,9 @@ public class LoaderThrottle extends Activity {
                 case MAIN_ID:
                     // The incoming URI is for a single row.
                     qb.setProjectionMap(mNotesProjectionMap);
-                    qb.appendWhere(MainTable._ID + "=" + uri.getPathSegments().get(
-                            MainTable.MAIN_ID_PATH_POSITION));
+                    qb.appendWhere(MainTable._ID + "=?");
+                    selectionArgs = DatabaseUtils.appendSelectionArgs(selectionArgs,
+                            new String[] { uri.getLastPathSegment() });
                     break;
 
                 default:
@@ -299,7 +297,7 @@ public class LoaderThrottle extends Activity {
 
             throw new SQLException("Failed to insert row into " + uri);
         }
-        
+
         /**
          * Handle deleting data.
          */
@@ -322,14 +320,8 @@ public class LoaderThrottle extends Activity {
                 case MAIN_ID:
                     // If URI is for a particular row ID, delete is based on incoming
                     // data but modified to restrict to the given ID.
-                    finalWhere = MainTable._ID + " = " + uri.getPathSegments().get(
-                            MainTable.MAIN_ID_PATH_POSITION);
-
-                    if (where != null) {
-                        // Combine with incoming where, if specified.
-                        finalWhere = finalWhere + " AND " + where;
-                    }
-
+                    finalWhere = DatabaseUtils.concatenateWhere(
+                            MainTable._ID + " = " + ContentUris.parseId(uri), where);
                     count = db.delete(MainTable.TABLE_NAME, finalWhere, whereArgs);
                     break;
 
@@ -360,17 +352,11 @@ public class LoaderThrottle extends Activity {
                 case MAIN_ID:
                     // If URI is for a particular row ID, update is based on incoming
                     // data but modified to restrict to the given ID.
-                    finalWhere = MainTable._ID + " = " + uri.getPathSegments().get(
-                            MainTable.MAIN_ID_PATH_POSITION);
-
-                    if (where != null) {
-                        // Combine with incoming where, if specified.
-                        finalWhere = finalWhere + " AND " + where;
-                    }
-
+                    finalWhere = DatabaseUtils.concatenateWhere(
+                            MainTable._ID + " = " + ContentUris.parseId(uri), where);
                     count = db.update(MainTable.TABLE_NAME, values, finalWhere, whereArgs);
                     break;
-                    
+
                 default:
                     throw new IllegalArgumentException("Unknown URI " + uri);
             }
@@ -380,13 +366,13 @@ public class LoaderThrottle extends Activity {
             return count;
         }
     }
-    
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         FragmentManager fm = getFragmentManager();
-        
+
         // Create the list fragment and add it as our sole content.
         if (fm.findFragmentById(android.R.id.content) == null) {
             ThrottledLoaderListFragment list = new ThrottledLoaderListFragment();
@@ -400,7 +386,7 @@ public class LoaderThrottle extends Activity {
         // Menu identifiers
         static final int POPULATE_ID = Menu.FIRST;
         static final int CLEAR_ID = Menu.FIRST+1;
-        
+
         // This is the Adapter being used to display the list's data.
         SimpleCursorAdapter mAdapter;
 
@@ -409,11 +395,11 @@ public class LoaderThrottle extends Activity {
 
         // Task we have running to populate the database.
         AsyncTask<Void, Void, Void> mPopulatingTask;
-        
+
         @Override public void onActivityCreated(Bundle savedInstanceState) {
             super.onActivityCreated(savedInstanceState);
 
-            setEmptyText("No data");
+            setEmptyText("No data.  Select 'Populate' to fill with data from Z to A at a rate of 4 per second.");
             setHasOptionsMenu(true);
 
             // Create an empty adapter we will use to display the loaded data.
@@ -422,7 +408,7 @@ public class LoaderThrottle extends Activity {
                     new String[] { MainTable.COLUMN_NAME_DATA },
                     new int[] { android.R.id.text1 }, 0);
             setListAdapter(mAdapter);
-            
+
             // Prepare the loader.  Either re-connect with an existing one,
             // or start a new one.
             getLoaderManager().initLoader(0, null, this);
@@ -437,7 +423,7 @@ public class LoaderThrottle extends Activity {
 
         @Override public boolean onOptionsItemSelected(MenuItem item) {
             final ContentResolver cr = getActivity().getContentResolver();
-            
+
             switch (item.getItemId()) {
                 case POPULATE_ID:
                     if (mPopulatingTask != null) {
@@ -465,7 +451,7 @@ public class LoaderThrottle extends Activity {
                     };
                     mPopulatingTask.execute((Void[])null);
                     return true;
-                    
+
                 case CLEAR_ID:
                     if (mPopulatingTask != null) {
                         mPopulatingTask.cancel(false);
@@ -479,7 +465,7 @@ public class LoaderThrottle extends Activity {
                     };
                     task.execute((Void[])null);
                     return true;
-                    
+
                 default:
                     return super.onOptionsItemSelected(item);
             }
@@ -499,7 +485,7 @@ public class LoaderThrottle extends Activity {
         @Override public Loader<Cursor> onCreateLoader(int id, Bundle args) {
             CursorLoader cl = new CursorLoader(getActivity(), MainTable.CONTENT_URI,
                     PROJECTION, null, null, null);
-            //cl.setUpdateThrottle(2000); // update at most every 2 seconds.
+            cl.setUpdateThrottle(2000); // update at most every 2 seconds.
             return cl;
         }
 
@@ -512,3 +498,4 @@ public class LoaderThrottle extends Activity {
         }
     }
 }
+//END_INCLUDE(complete)
