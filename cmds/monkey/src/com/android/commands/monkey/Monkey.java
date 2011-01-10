@@ -452,9 +452,6 @@ public class Monkey {
      * @param args The command-line arguments
      */
     public static void main(String[] args) {
-        // Set ro.monkey if it's not set yet.
-        SystemProperties.set("ro.monkey", "true");
-
         // Set the process name showing in "ps" or "top"
         Process.setArgV0("com.android.commands.monkey");
 
@@ -551,13 +548,13 @@ public class Monkey {
             mCountEvents = false;
         } else if (mScriptFileNames != null && mScriptFileNames.size() > 1) {
             if (mSetupFileName != null) {
-                mEventSource = new MonkeySourceRandomScript(mSetupFileName, 
+                mEventSource = new MonkeySourceRandomScript(mSetupFileName,
                         mScriptFileNames, mThrottle, mRandomizeThrottle, mRandom,
                         mProfileWaitTime, mDeviceSleepTime, mRandomizeScript);
                 mCount++;
             } else {
                 mEventSource = new MonkeySourceRandomScript(mScriptFileNames,
-                        mThrottle, mRandomizeThrottle, mRandom, 
+                        mThrottle, mRandomizeThrottle, mRandom,
                         mProfileWaitTime, mDeviceSleepTime, mRandomizeScript);
             }
             mEventSource.setVerbose(mVerbose);
