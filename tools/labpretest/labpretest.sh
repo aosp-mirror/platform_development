@@ -531,8 +531,8 @@ for ((loop=1 ; loop <= $COUNT ; loop++ )) ; do
   #preping device for monkey run
   log_print "setting adb root"
   adb_command root
-  log_print "setting ro.monkey property"
-  adb_command shell setprop ro.monkey 1
+  log_print "setting ro.test_harness property"
+  adb_command shell setprop ro.test_harness 1
 
   log_print "waiting for device to finish booting"
   result=$($ADB -s $device shell getprop dev.bootcomplete)
