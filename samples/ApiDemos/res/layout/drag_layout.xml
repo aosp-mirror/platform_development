@@ -62,18 +62,6 @@
         dot:anr="drop"
         />
 
-    <com.example.android.apis.view.DraggableDot
-        android:id="@+id/drag_dot_4"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        dot:radius="64dp"
-        android:padding="15dp"
-        android:layout_below="@id/drag_dot_1"
-        android:layout_toRightOf="@id/drag_dot_3"
-        dot:legend="Local"
-        dot:localOnly="true"
-        />
-
     <TextView android:id="@+id/drag_result_text"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"

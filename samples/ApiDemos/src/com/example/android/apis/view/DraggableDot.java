@@ -48,7 +48,6 @@ public class DraggableDot extends View {
 
     int mRadius;
     int mAnrType;
-    boolean mLocalOnly;
     CharSequence mLegend;
 
     static final int ANR_NONE = 0;
@@ -123,21 +122,17 @@ public class DraggableDot extends View {
             case R.styleable.DraggableDot_anr: {
                 mAnrType = a.getInt(attr, 0);
             } break;
-
-            case R.styleable.DraggableDot_localOnly: {
-                mLocalOnly = a.getBoolean(attr, false);
-            } break;
             }
         }
 
         Log.i(TAG, "DraggableDot @ " + this + " : radius=" + mRadius + " legend='" + mLegend
-                + "' anr=" + mAnrType + " local=" + mLocalOnly);
+                + "' anr=" + mAnrType);
 
         setOnLongClickListener(new View.OnLongClickListener() {
             public boolean onLongClick(View v) {
                 ClipData data = ClipData.newPlainText("dot", null, "Dot : " + v.toString());
                 v.startDrag(data, new ANRShadowBuilder(v, mAnrType == ANR_SHADOW),
-                        mLocalOnly, (Object)v);
+                        (Object)v, 0);
                 return true;
             }
         });

@@ -38,7 +38,6 @@
     <declare-styleable name="DraggableDot">
         <attr name="radius" format="dimension" />
         <attr name="legend" format="string" />
-        <attr name="localOnly" format="boolean" />
         <attr name="anr">
             <enum name="none" value="0" />
             <enum name="thumbnail" value="1" />

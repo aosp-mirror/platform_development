@@ -39,8 +39,6 @@ public class DragAndDropDemo extends Activity {
         dot.setReportView(text);
         dot = (DraggableDot) findViewById(R.id.drag_dot_3);
         dot.setReportView(text);
-        dot = (DraggableDot) findViewById(R.id.drag_dot_4);
-        dot.setReportView(text);
 
         mResultText = (TextView) findViewById(R.id.drag_result_text);
         mResultText.setOnDragListener(new View.OnDragListener() {
