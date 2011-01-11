@@ -52,8 +52,8 @@ public class FragmentHideShow extends Activity {
         button.setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
                 FragmentTransaction ft = getFragmentManager().openTransaction();
-                ft.setCustomAnimations(android.R.anim.animator_fade_in,
-                        android.R.anim.animator_fade_out);
+                ft.setCustomAnimations(android.R.animator.fade_in,
+                        android.R.animator.fade_out);
                 if (fragment.isHidden()) {
                     ft.show(fragment);
                     button.setText("Hide");
