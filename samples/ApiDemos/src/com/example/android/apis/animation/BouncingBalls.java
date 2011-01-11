@@ -69,7 +69,7 @@ public class BouncingBalls extends Activity {
             // every frame of the animation.
             ValueAnimator colorAnim = ObjectAnimator.ofInt(this, "backgroundColor", RED, BLUE);
             colorAnim.setDuration(3000);
-            colorAnim.setEvaluator(new RGBEvaluator());
+            colorAnim.setEvaluator(new ArgbEvaluator());
             colorAnim.setRepeatCount(ValueAnimator.INFINITE);
             colorAnim.setRepeatMode(ValueAnimator.REVERSE);
             colorAnim.start();
