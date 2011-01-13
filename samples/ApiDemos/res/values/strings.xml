@@ -614,6 +614,11 @@
     <string name="proxylist_hint">No proxy for domain1,domain2</string>
     <string name="set_proxy_label">Set Global Proxy</string>
 
+    <string name="encryption_enable_label">Enable Encryption</string>
+    <string name="encryption_disable_label">Disable Encryption</string>
+    <string name="encryption_activate_label">Activate Encryption</string>
+    <string name="update_encryption_status_label">Update Status</string>
+
     <!-- ============================== -->
     <!--  app/voice recognition examples strings  -->
     <!-- ============================== -->

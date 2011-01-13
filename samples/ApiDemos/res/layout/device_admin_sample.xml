@@ -272,6 +272,48 @@
 
         </LinearLayout>
 
+        <!-- Encryption Status Controls -->
+        <LinearLayout
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" >
+
+            <Button android:id="@+id/encryption_enable_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/encryption_enable_label" />
+
+            <Button android:id="@+id/encryption_disable_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/encryption_disable_label" />
+
+            <Button android:id="@+id/encryption_activate_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/encryption_activate_label" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" >
+
+            <TextView android:id="@+id/encryption_status"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+            <Button android:id="@+id/encryption_update_status_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android_layout_gravity="east|center_vertical"
+                android:text="@string/update_encryption_status_label" />
+
+        </LinearLayout>
+
     </LinearLayout>
 
 </ScrollView>

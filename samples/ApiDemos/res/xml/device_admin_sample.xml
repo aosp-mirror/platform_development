@@ -24,6 +24,7 @@
         <wipe-data />
         <set-global-proxy />
         <expire-password />
+        <encrypted-storage />
     </uses-policies>
 </device-admin>
 <!-- END_INCLUDE(meta_data) -->

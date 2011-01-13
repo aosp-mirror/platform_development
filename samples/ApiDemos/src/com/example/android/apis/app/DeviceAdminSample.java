@@ -141,7 +141,10 @@ public class DeviceAdminSample extends DeviceAdminReceiver {
      * all together; typically this code would appear in some separate class.
      */
     public static class Controller extends Activity {
-        static final int RESULT_ENABLE = 1;
+
+        static final int REQUEST_CODE_ENABLE_ADMIN = 1;
+        static final int REQUEST_CODE_START_ENCRYPTION = 2;
+
         private static final long MS_PER_MINUTE = 60*1000;
 
         DevicePolicyManager mDPM;
@@ -194,6 +197,12 @@ public class DeviceAdminSample extends DeviceAdminReceiver {
         private Button mPasswordExpirationButton;
         private TextView mPasswordExpirationStatus;
         private Button mPasswordExpirationStatusButton;
+
+        private Button mEnableEncryptionButton;
+        private Button mDisableEncryptionButton;
+        private Button mActivateEncryptionButton;
+        private Button mEncryptionStatusButton;
+        private TextView mEncryptionStatus;
 
         @Override
         protected void onCreate(Bundle savedInstanceState) {
@@ -395,6 +404,16 @@ public class DeviceAdminSample extends DeviceAdminReceiver {
             mProxyList = (EditText) findViewById(R.id.proxylist);
             mProxyButton = (Button) findViewById(R.id.set_proxy);
             mProxyButton.setOnClickListener(mSetProxyListener);
+
+            mEnableEncryptionButton = (Button) findViewById(R.id.encryption_enable_button);
+            mEnableEncryptionButton.setOnClickListener(mEncryptionButtonListener);
+            mDisableEncryptionButton = (Button) findViewById(R.id.encryption_disable_button);
+            mDisableEncryptionButton.setOnClickListener(mEncryptionButtonListener);
+            mActivateEncryptionButton = (Button) findViewById(R.id.encryption_activate_button);
+            mActivateEncryptionButton.setOnClickListener(mEncryptionButtonListener);
+            mEncryptionStatusButton = (Button) findViewById(R.id.encryption_update_status_button);
+            mEncryptionStatusButton.setOnClickListener(mEncryptionButtonListener);
+            mEncryptionStatus = (TextView) findViewById(R.id.encryption_status);
         }
 
         void updateButtonStates() {
@@ -417,6 +436,10 @@ public class DeviceAdminSample extends DeviceAdminReceiver {
                 mForceLockButton.setEnabled(true);
                 mWipeDataButton.setEnabled(true);
                 mWipeAllDataButton.setEnabled(true);
+                mEnableEncryptionButton.setEnabled(true);
+                mDisableEncryptionButton.setEnabled(true);
+                mActivateEncryptionButton.setEnabled(true);
+                mEncryptionStatusButton.setEnabled(true);
             } else {
                 mEnableButton.setEnabled(true);
                 mDisableButton.setEnabled(false);
@@ -435,6 +458,10 @@ public class DeviceAdminSample extends DeviceAdminReceiver {
                 mForceLockButton.setEnabled(false);
                 mWipeDataButton.setEnabled(false);
                 mWipeAllDataButton.setEnabled(false);
+                mEnableEncryptionButton.setEnabled(false);
+                mDisableEncryptionButton.setEnabled(false);
+                mActivateEncryptionButton.setEnabled(false);
+                mEncryptionStatusButton.setEnabled(false);
             }
         }
 
@@ -622,12 +649,15 @@ public class DeviceAdminSample extends DeviceAdminReceiver {
         @Override
         protected void onActivityResult(int requestCode, int resultCode, Intent data) {
             switch (requestCode) {
-                case RESULT_ENABLE:
+                case REQUEST_CODE_ENABLE_ADMIN:
                     if (resultCode == Activity.RESULT_OK) {
                         Log.i(TAG, "Admin enabled!");
                     } else {
                         Log.i(TAG, "Admin enable FAILED!");
                     }
+                    return;
+                case REQUEST_CODE_START_ENCRYPTION:
+                    updateEncryptionStatus();
                     return;
             }
 
@@ -642,7 +672,7 @@ public class DeviceAdminSample extends DeviceAdminReceiver {
                         mDeviceAdminSample);
                 intent.putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION,
                         "Additional text explaining why this needs to be added.");
-                startActivityForResult(intent, RESULT_ENABLE);
+                startActivityForResult(intent, REQUEST_CODE_ENABLE_ADMIN);
             }
         };
 
@@ -801,5 +831,62 @@ public class DeviceAdminSample extends DeviceAdminReceiver {
             }
         };
 
+        private OnClickListener mEncryptionButtonListener = new OnClickListener() {
+            public void onClick(View v) {
+                int buttonId = v.getId();
+                if (buttonId == R.id.encryption_enable_button) {
+                    mDPM.setStorageEncryption(mDeviceAdminSample, true);
+                } else if (buttonId == R.id.encryption_disable_button) {
+                    mDPM.setStorageEncryption(mDeviceAdminSample, false);
+                } else if (buttonId == R.id.encryption_activate_button) {
+                    if (ActivityManager.isUserAMonkey()) {
+                        // Don't trust monkeys to do the right thing!
+                        AlertDialog.Builder builder = new AlertDialog.Builder(Controller.this);
+                        builder.setMessage("You can't activate encryption, you're a monkey!");
+                        builder.setPositiveButton("I admit defeat", null);
+                        builder.show();
+                        return;
+                    }
+                    if (mDPM.getStorageEncryption(mDeviceAdminSample) ==
+                            DevicePolicyManager.ENCRYPTION_STATUS_UNSUPPORTED) {
+                        AlertDialog.Builder builder = new AlertDialog.Builder(Controller.this);
+                        builder.setMessage("Encryption is unsupported on this device.");
+                        builder.setPositiveButton("OK", null);
+                        builder.show();
+                        return;
+                    }
+                    // Launch the activity to activate encryption.  May or may not return!
+                    Intent intent = new Intent(DevicePolicyManager.ACTION_START_ENCRYPTION);
+                    startActivityForResult(intent, REQUEST_CODE_START_ENCRYPTION);
+                }
+
+                // In all cases, fall through to update status
+                updateEncryptionStatus();
+            }
+        };
+
+        private void updateEncryptionStatus() {
+            String newStatus = "unknown";
+            int newStatusCode = mDPM.getStorageEncryption(mDeviceAdminSample);
+            switch (newStatusCode) {
+                case DevicePolicyManager.ENCRYPTION_STATUS_UNSUPPORTED:
+                    newStatus = "unsupported";
+                    break;
+                case DevicePolicyManager.ENCRYPTION_STATUS_INACTIVE:
+                    newStatus = "inactive";
+                    break;
+                case DevicePolicyManager.ENCRYPTION_STATUS_REQUESTED:
+                    newStatus = "requested";
+                    break;
+                case DevicePolicyManager.ENCRYPTION_STATUS_ACTIVATING:
+                    newStatus = "activating";
+                    break;
+                case DevicePolicyManager.ENCRYPTION_STATUS_ACTIVE:
+                    newStatus = "active";
+                    break;
+            }
+            mEncryptionStatus.setText(newStatus);
+        }
     }
 }
+
