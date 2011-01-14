@@ -16,8 +16,10 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:id="@+id/scan"
           android:icon="@android:drawable/ic_menu_search"
-          android:title="@string/connect" />
+          android:title="@string/connect"
+          android:showAsAction="ifRoom" />
     <item android:id="@+id/discoverable"
           android:icon="@android:drawable/ic_menu_mylocation"
-          android:title="@string/discoverable" />
+          android:title="@string/discoverable"
+          android:showAsAction="ifRoom" />
 </menu>
