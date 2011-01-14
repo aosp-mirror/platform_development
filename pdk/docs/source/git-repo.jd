@@ -34,7 +34,7 @@ Installing Repo <br></h3>
 $ curl http://android.git.kernel.org/repo &gt; ~/bin/repo <div>$ chmod a+x ~/bin/repo</div>
 $ mkdir <i>working-directory-name</i>
 <br>$ cd <i>working-directory-name <br></i>
-$ repo init-u git://android.git.kernel.org/platform/manifest.git <br><br><h3>
+$ repo init -u git://android.git.kernel.org/platform/manifest.git <br><br><h3>
 Synchronizing your client
 </h3>
 To synchronize the files for all available projects:<br>$ repo sync <br><br>To
@@ -115,7 +115,7 @@ init
 </h3>
 repo init -u <i>url</i>
 [<i>options</i>
-]<br><br><div>Installs Repo in the current directory. This creates a .repo/ directory that contains Git repositories for the Repo source code and the standard Android manifest files. The .repo/ directory also containsmanifest.xml, which is a symlink to the selected manifest in the .repo/manifests/ directory.<br><br>The -u argument specifies a URL from which to retrieve a manifest repository. For example:<br>$ repo init -u git://android.git.kernel.org/platform/manifest.git <br><br>To select a manifest file within the repository, use the -m option. (If no manifest name is selected, the default is default.xml.)For example:<br>$ repo init -ugit://android.git.kernel.org/platform/manifest.git-m dalkvik-plus.xml <br><br>To specify a revision, that is, a particular manifest-branch, use the -b option. For example:<br>$ repo init -ugit://android.git.kernel.org/platform/manifest.git-b release-1.0<br><br>To see other repo init options, run <br>$ repo help init <br><br><b>Note:</b>
+]<br><br><div>Installs Repo in the current directory. This creates a .repo/ directory that contains Git repositories for the Repo source code and the standard Android manifest files. The .repo/ directory also containsmanifest.xml, which is a symlink to the selected manifest in the .repo/manifests/ directory.<br><br>The -u argument specifies a URL from which to retrieve a manifest repository. For example:<br>$ repo init -u git://android.git.kernel.org/platform/manifest.git <br><br>To select a manifest file within the repository, use the -m option. (If no manifest name is selected, the default is default.xml.)For example:<br>$ repo init -u git://android.git.kernel.org/platform/manifest.git-m dalkvik-plus.xml <br><br>To specify a revision, that is, a particular manifest-branch, use the -b option. For example:<br>$ repo init -u git://android.git.kernel.org/platform/manifest.git-b release-1.0<br><br>To see other repo init options, run <br>$ repo help init <br><br><b>Note:</b>
 For all remaining Repo commands, the current working directory must either be the parent directory of .repo/ or a subdirectory of the parent directory.<br><br></div>
 <h3>
 sync
