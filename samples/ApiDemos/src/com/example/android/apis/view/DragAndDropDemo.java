@@ -26,6 +26,7 @@ import android.widget.TextView;
 
 public class DragAndDropDemo extends Activity {
     TextView mResultText;
+    DraggableDot mHiddenDot;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,14 +41,30 @@ public class DragAndDropDemo extends Activity {
         dot = (DraggableDot) findViewById(R.id.drag_dot_3);
         dot.setReportView(text);
 
+        mHiddenDot = (DraggableDot) findViewById(R.id.drag_dot_hidden);
+        mHiddenDot.setReportView(text);
+
         mResultText = (TextView) findViewById(R.id.drag_result_text);
         mResultText.setOnDragListener(new View.OnDragListener() {
             @Override
             public boolean onDrag(View v, DragEvent event) {
                 final int action = event.getAction();
-                if (action == DragEvent.ACTION_DRAG_ENDED) {
-                    final boolean dropped = event.getResult();
-                    mResultText.setText(dropped ? "Dropped!" : "No drop");
+                switch (action) {
+                    case DragEvent.ACTION_DRAG_STARTED: {
+                        // Bring up a fourth draggable dot on the fly. Note that it
+                        // is properly notified about the ongoing drag, and lights up
+                        // to indicate that it can handle the current content.
+                        mHiddenDot.setVisibility(View.VISIBLE);
+                    } break;
+
+                    case DragEvent.ACTION_DRAG_ENDED: {
+                        // Hide the surprise again
+                        mHiddenDot.setVisibility(View.INVISIBLE);
+
+                        // Report the drop/no-drop result to the user
+                        final boolean dropped = event.getResult();
+                        mResultText.setText(dropped ? "Dropped!" : "No drop");
+                    } break;
                 }
                 return false;
             }
