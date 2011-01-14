@@ -24,16 +24,27 @@ endif
 
 include $(TOPDIR)sdk/build/windows_sdk_tools.mk
 
+# This is the list of target that we want to generate as
+# Windows executables.
 WIN_TARGETS := \
 	aapt adb aidl \
 	etc1tool \
 	dexdump dmtracedump \
 	fastboot \
 	hprof-conv \
+	llvm-rs-cc \
 	prebuilt \
 	sqlite3 \
 	zipalign \
 	$(WIN_SDK_TARGETS)
+
+# This is the list of *Linux* build tools that we need
+# in order to be able to make the WIN_TARGETS. They are
+# build prerequisites.
+WIN_BUILD_PREREQ := \
+	acp \
+	llvm-rs-cc
+
 
 # LINUX_SDK_NAME/DIR is set in build/core/Makefile
 WIN_SDK_NAME  := $(subst $(HOST_OS)-$(HOST_ARCH),windows,$(LINUX_SDK_NAME))
@@ -63,7 +74,7 @@ endef
 win_sdk: $(WIN_SDK_ZIP)
 	$(call winsdk-banner,Done)
 
-winsdk-tools: acp
+winsdk-tools: $(WIN_BUILD_PREREQ)
 	$(call winsdk-banner,Build Windows Tools)
 	$(hide) USE_MINGW=1 $(MAKE) PRODUCT-$(TARGET_PRODUCT)-$(strip $(WIN_TARGETS))
 

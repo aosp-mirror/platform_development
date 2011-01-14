@@ -56,11 +56,13 @@ LIB=$TEMP_SDK_DIR/tools/lib
 rm $V $TOOLS/{dmtracedump,etc1tool,hprof-conv,sqlite3,zipalign}
 rm $V $TOOLS/proguard/bin/*.sh
 rm $V $LIB/*/swt.jar
-rm $V $PLATFORM_TOOLS/{adb,aapt,aidl,dx,dexdump}
+rm $V $PLATFORM_TOOLS/{adb,aapt,aidl,dx,dexdump,llvm-rs-cc}
 
 # Copy all the new stuff in tools
 # Note: some tools are first copied here and then moved in platforms/<name>/tools/
 cp $V $WIN_OUT_DIR/host/windows-x86/bin/*.{exe,dll} $TOOLS/
+# Remove some tools we don't want to take in the SDK
+rm $V -f $TOOLS/{fastboot.exe,rs-spec-gen.exe,tblgen.exe}
 mkdir -pv $LIB/x86
 cp $V ${TOPDIR}prebuilt/windows/swt/swt.jar         $LIB/x86/
 mkdir -pv $LIB/x86_64
@@ -94,7 +96,9 @@ cp -r $V ${TOPDIR}external/sonivox/docs/JET_Creator_User_Manual_files  $JETDOC/
 
 # Copy or move platform specific tools to the default platform.
 cp $V ${TOPDIR}dalvik/dx/etc/dx.bat $PLATFORM_TOOLS/
-mv $V $TOOLS/{adb.exe,aapt.exe,aidl.exe,dexdump.exe} $TOOLS/Adb*.dll $PLATFORM_TOOLS/
+mv $V $TOOLS/{adb.exe,aapt.exe,aidl.exe,dexdump.exe} $PLATFORM_TOOLS/
+mv $V $TOOLS/llvm-rs-cc.exe $PLATFORM_TOOLS/
+mv $V $TOOLS/Adb*.dll $PLATFORM_TOOLS/
 
 # Fix EOL chars to make window users happy - fix all files at the top level
 # as well as all batch files including those in platforms/<name>/tools/
