@@ -62,6 +62,18 @@
         dot:anr="drop"
         />
 
+    <com.example.android.apis.view.DraggableDot
+        android:id="@+id/drag_dot_hidden"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        dot:radius="64dp"
+        android:padding="15dp"
+        android:layout_toRightOf="@id/drag_dot_3"
+        android:layout_alignTop="@id/drag_dot_3"
+        android:visibility="invisible"
+        dot:legend="Surprise!"
+        />
+
     <TextView android:id="@+id/drag_result_text"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
