@@ -1,305 +1,202 @@
 page.title=Get Android Source Code
 doc.type=source
 @jd:body
-<div><br>This document describes how to set up your local work environment, how to use Repo to get the Android files, and how to build the files on your machine.<br><br>Related reading:<br></div>
-<ul><li>For an overview of the entire code-review and code-update process, see
-<a href="{@docRoot}source/life-of-a-patch.html">Life of a Patch</a>
-.</li>
-<li>For reference details about Repo, see <a href="{@docRoot}source/git-repo.html">Using Repo and Git</a>
-.<br></li>
-</ul>
-<h2>
-What's in the source?</h2>
-<div>To see snapshots and histories of the files available in the public Android repositories, visit the <a href="http://android.git.kernel.org/">GitWeb</a>
-web interface.</div>
-<div></div>
-<div>The source is approximately 2.1GB in size. You will need 6GB free to complete the build.<br><br></div>
-<h2>
-Setting up your machine</h2>
-<div>To build the Android source files, you will need to use Linux or Mac OS. Building under Windows is not currently supported.</div>
-<div><br></div>
-<h3>
-Linux</h3>
-The Android build is routinely tested on recent versions of Ubuntu (6.06 and later), but reports of successes or failures on other distributions are welcome.<br><h4>
-Ubuntu Linux (32-bit x86)</h4>
-<div>To set up your Linux development environment, make sure you have the following:</div>
-<div><div><div><ul><li>Required Packages:</li>
-<ul><li>Git 1.5.4 or newer <span>and the GNU Privacy Guard.<br></span>
-</li>
-</ul>
-</ul>
+
+<div>
+  <p>This document describes how to set up your local work environment, how to use Repo to get the Android files, and how to build the files on your machine.</p>
+  <p>Related reading:
+    <ul>
+      <li>For an overview of the entire code-review and code-update process, see
+<a href="{@docRoot}source/life-of-a-patch.html">Life of a Patch</a>.</li>
+      <li>For reference details about Repo, see <a href="{@docRoot}source/git-repo.html">Using Repo and Git</a>.</li>
+    </ul>
+  </p>
 </div>
+
+<div>
+  <h2>What's in the source?</h2>
+  <p>To see snapshots and histories of the files available in the public Android repositories, visit the <a href="http://android.git.kernel.org/">GitWeb</a> web interface.</p>
+  <p>The source is approximately 2.6GB in size. You will need 6GB free to complete the build.</p>
 </div>
+
+<div>
+  <h2>Setting up your machine</h2>
+  <p>To build the Android source files, you will need to use Linux or Mac OS. Building under Windows is not currently supported.</p>
+
+  <h3>Linux</h3>
+  <p>The Android build is routinely tested in house on recent versions of Ubuntu (10.04 and later), but most distributions should have the required build tools available.  Reports of successes or failures on other distributions are welcome.</p>
+  <p>In general you will need:
+      <ul>
+        <li>Python 2.4, which you can download from <a href="http://www.python.org/download/">python.org</a>.</li>
+        <li>JDK 6 if you wish to build Gingerbread or newer; JDK 5 for Froyo or older.  You can download either from <a href="http://java.sun.com/javase/downloads/">java.sun.com</a>.</li>
+        <li>Git 1.5.4 or newer. You can find it at <a href="http://git.or.cz/">http://git.or.cz/</a>.</li>
+      </ul>
+  </p>
+
+  <h4>Ubuntu Linux (64-bit)</h4>
+  <p>The Sun JDK is no longer in Ubuntu's main package repository.  In order to download it, you need to add the appropriate repository and indicate to the system which JDK should be used.
+    <p>Java 6: for Gingerbread and newer
+      <div class=code>sudo add-apt-repository "deb http://archive.canonical.com/ lucid partner"<br/>
+                      sudo add-apt-repository "deb-src http://archive.canonical.com/ubuntu lucid partner"<br/>
+                      sudo apt-get update<br/>
+                      sudo apt-get install sun-java6-jdk<br/>
+                      sudo update-java-alternatives -s java-6-sun
+      </div>
+    </p>
+    <p>Java 5: for Froyo and older
+      <div class=code>sudo add-apt-repository "deb http://archive.ubuntu.com/ubuntu dapper main multiverse"<br/>
+                      sudo add-apt-repository "deb http://archive.ubuntu.com/ubuntu dapper-updates main multiverse"<br/>
+                      sudo apt-get update<br/>
+                      sudo apt-get install sun-java5-jdk<br/>
+                      sudo update-java-alternatives -s java-1.5.0-sun
+      </div>
+    </p>
+  </p>
+  <p>To set up your development environment, install the following required packages:
+    <div class=code>$ sudo apt-get install git-core gnupg flex bison gperf build-essential zip curl zlib1g-dev gcc-multilib g++-multilib libc6-dev-i386 lib32ncurses5-dev ia32-libs x11proto-core-dev libx11-dev lib32readline5-dev lib32z-dev</div>
+  </p>
+  <p>You might also want Valgrind, a tool that will help you find memory leaks, stack corruption, array bounds overflows, etc.</p>
+
+  <h4>Running Linux in a virtual machine</h4>
+If you are running Linux in a virtual machine, you will need at least 1.5GB of RAM and 10GB or more of disk space in order to build the Android tree.<br>
+</div> 
+
+<div>
+  <h3>Mac OS X</h3>
+  <p>To build the Android files in a Mac OS environment, you need an Intel/x86 machine running MacOS 10.4 (Tiger), 10.5 (Leopard), or 10.6 (Snow Leopard). The Android build system and tools do not support the obsolete PowerPC architecture.</p>
+  <p>Android must be built on a case-sensitive file system because the sources contain files that differ only in case. We recommend that you build Android on a partition that has been formatted with the journaled file system HFS+.  HFS+ is required to successfully build Mac OS applications such as the Android Emulator for OS X.</p>
+  <div>
+    <h4>Creating a case sensitive disk image</h4>
+    <p>If you want to avoid partitioning/formatting your hard drive, you can use a case-sensitive disk image instead. To create the image, launch Disk Utility and select "New Image".  A size of 8 GB is sufficient, or more if you prefer.  Be sure to select "case sensitive, journaled" as the volume format.</p>
+    <p>This will create a .dmg file which, once mounted, acts as a drive with the required formatting for Android development. For a disk image named "android.dmg" stored in your home directory, you can add the following to your <tt>~/.bash_profile</tt> to mount the image when you execute "mountAndroid": 
+    <div class=code># mount the android file image<br/>
+                    function mountAndroid{ hdiutil attach ~/android.dmg-mountpoint /Volumes/android; }</div>
+    Once mounted, you'll do all your work in the "android" volume. You can eject it (unmount it) just like you would with an external drive.</p>
+  </div>
+
+  <p>To set up your Mac OS development environment, follow these steps:
+    <ol>
+      <li>Install XCode from <a href="http://developer.apple.com/">http://developer.apple.com</a>. We recommend version 3.0 or newer.  If you are not already registered as an Apple developer, you will have to create an Apple ID in order to download.</li>
+      <li>Install MacPorts from <a href="http://www.macports.org/install.php">http://www.macports.org/</a>.</li>
+      <li>Make sure that /opt/local/bin appears in your path BEFORE /usr/bin.  If not, add 
+        <div class=code>export PATH=/opt/local/bin:$PATH</div>
+          to your <tt>~/.bash_profile</tt>.</li>
+      <li>Get make, git, and GPG packages from port: 
+          <div class=code>$ POSIXLY_CORRECT=1 sudo port install gmake libsdl git-core gnupg</div>
+          If using Mac OS 10.4, also install bison:
+          <div class=code>$ POSIXLY_CORRECT=1 sudo port install bison</div>
+      </li>
+      <li>Temporary step: There is a bug in gmake 3.82 that prevents android from building.  You can install version 3.81 using MacPorts by taking the following steps:
+        <p>Edit <tt>/opt/local/etc/macports/sources.conf</tt> and a line that says <div class=code>file:///Users/Shared/dports</div> above the rsync line.  Then create this directory: <div class=code>$ mkdir /Users/Shared/dports</div>
+          In the new <tt>dports</tt> directory, run <div class=code>$ svn co --revision 50980 http://svn.macports.org/repository/macports/trunk/dports/devel/gmake/ devel/gmake/</div>
+          Create a port index for your new local repository: <div class=code>$ portindex /Users/Shared/dports</div>
+          Finally, install the old version of gmake with <div class=code>$ sudo port install gmake @3.81</div>
+        </p>
+      </li>
+      <li>Set an appropriate per-process file descriptor limit. To do this, add the following lines to your <tt>~/.bash_profile</tt>: <div class=code># set the number of open files to be 1024<br/>
+                      ulimit -S -n 1024</div>
+      </li>
+    </ol>
+  </p>
 </div>
+
+
+<div>
+  <h2>Installing Repo</h2>
+  <p>Repo is a tool that makes it easier to work with Git in the context of Android. For more information about Repo, see <a href="{@docRoot}source/git-repo.html">Using Repo and Git</a>.</p>
+  <p>To install, initialize, and configure Repo, follow these steps:
+    <ol>
+      <li>Make sure you have a bin/ directory in your home directory, and that it is included in your path:
+        <div class=code>$ mkdir ~/bin<br/>
+                        $ PATH=~/bin:$PATH</div>
+      </li>
+      <li>Download the Repo script and ensure it is executable:
+        <div class=code>$ curl http://android.git.kernel.org/repo &gt; ~/bin/repo<br/>
+                        $ chmod a+x ~/bin/repo</div>
+      </li>
+    </ol>
 </div>
-<div><div><div><div><ul><ul><li>JDK 5.0, update 12 or higher.Java 6 is not supported, because of incompatibilities with @Override.<br></li>
-</ul>
-</ul>
+
+<div>
+  <h2>Initializing a Repo client</h2>
+  <p>After installing Repo, set up your client to access the android source repository:
+    <ol>
+      <li>Create an empty directory to hold your working files:
+        <div class=code>$ mkdir <i>directory</i><br/>
+                        $ cd <i>directory</i></div>
+      </li>
+      <li>Run <tt>repo init</tt> to bring down the latest version of Repo with all its most recent bug fixes.  You must specify a URL for the manifest, which specifies where the various repositories included in the Android source will be placed within your working directory.
+        <div class=code>$ repo init -u git://android.git.kernel.org/platform/manifest.git</div>
+        To check out a branch other than "master", specify it with -b:
+        <div class=code>$ repo init -u git://android.git.kernel.org/platform/manifest.git -b cupcake</div>
+      </li>
+      <li>When prompted, please configure Repo with your real name and email address.  To use the Gerrit code-review tool, you will need an email address that is connected with a <a href="http://www.google.com/accounts">registered Google account</a>.  Make sure this is a live address at which you can receive messages.  The name that you provide here will show up in attributions for your code submissions.
+      </li>
+    </ol>
+    A successful initialization will end with a message stating that Repo is initialized in your working directory.  Your client directory should now contain a <tt>.repo</tt> directory where files such as the manifest will be kept.</p>
 </div>
+
+<div>
+  <h2>Getting the files</h2>
+  <p>To pull down files to your working directory from the repositories as specified in the default manifest, run
+    <div class=code>$ repo sync</div>
+    For more about <tt>repo sync</tt> and other Repo commands, see <a href="{@docRoot}source/git-repo.html">Using Repo and Git</a>.</span>
+  <p>The Android source files will be located in your working directory under their project names.</p>
 </div>
+
+<div>
+  <h2>Verifying Git Tags</h2>
+  <p>Load the following public key into your GnuPG key database. The key is used to sign annotated tags that represent releases.
+    <div class=code>$ gpg --import</div>
+    Copy and paste the key(s) below, then enter EOF (Ctrl-D) to end the input and process the keys.
+    <div class=code>-----BEGIN PGP PUBLIC KEY BLOCK-----<br>
+      Version: GnuPG v1.4.2.2 (GNU/Linux)<br><br>
+      mQGiBEnnWD4RBACt9/h4v9xnnGDou13y3dvOx6/t43LPPIxeJ8eX9WB+8LLuROSV <br>
+      lFhpHawsVAcFlmi7f7jdSRF+OvtZL9ShPKdLfwBJMNkU66/TZmPewS4m782ndtw7<br>
+      8tR1cXb197Ob8kOfQB3A9yk2XZ4ei4ZC3i6wVdqHLRxABdncwu5hOF9KXwCgkxMD <br>
+      u4PVgChaAJzTYJ1EG+UYBIUEAJmfearb0qRAN7dEoff0FeXsEaUA6U90sEoVks0Z <br>
+      wNj96SA8BL+a1OoEUUfpMhiHyLuQSftxisJxTh+2QclzDviDyaTrkANjdYY7p2cq <br>
+      /HMdOY7LJlHaqtXmZxXjjtw5Uc2QG8UY8aziU3IE9nTjSwCXeJnuyvoizl9/I1S5<br>
+      jU5SA/9WwIps4SC84ielIXiGWEqq6i6/sk4I9q1YemZF2XVVKnmI1F4iCMtNKsR4<br>
+      MGSa1gA8s4iQbsKNWPgp7M3a51JCVCu6l/8zTpA+uUGapw4tWCp4o0dpIvDPBEa9<br>
+      b/aF/ygcR8mh5hgUfpF9IpXdknOsbKCvM9lSSfRciETykZc4wrRCVGhlIEFuZHJv <br>
+      aWQgT3BlbiBTb3VyY2UgUHJvamVjdCA8aW5pdGlhbC1jb250cmlidXRpb25AYW5k <br>
+      cm9pZC5jb20+iGAEExECACAFAknnWD4CGwMGCwkIBwMCBBUCCAMEFgIDAQIeAQIX <br>
+      gAAKCRDorT+BmrEOeNr+AJ42Xy6tEW7r3KzrJxnRX8mij9z8tgCdFfQYiHpYngkI <br>
+      2t09Ed+9Bm4gmEO5Ag0ESedYRBAIAKVW1JcMBWvV/0Bo9WiByJ9WJ5swMN36/vAl <br>
+      QN4mWRhfzDOk/Rosdb0csAO/l8Kz0gKQPOfObtyYjvI8JMC3rmi+LIvSUT9806Up <br>
+      hisyEmmHv6U8gUb/xHLIanXGxwhYzjgeuAXVCsv+EvoPIHbY4L/KvP5x+oCJIDbk <br>
+      C2b1TvVk9PryzmE4BPIQL/NtgR1oLWm/uWR9zRUFtBnE411aMAN3qnAHBBMZzKMX <br>
+      LWBGWE0znfRrnczI5p49i2YZJAjyX1P2WzmScK49CV82dzLo71MnrF6fj+Udtb5+<br>
+      OgTg7Cow+8PRaTkJEW5Y2JIZpnRUq0CYxAmHYX79EMKHDSThf/8AAwUIAJPWsB/M <br>
+      pK+KMs/s3r6nJrnYLTfdZhtmQXimpoDMJg1zxmL8UfNUKiQZ6esoAWtDgpqt7Y7s <br>
+      KZ8laHRARonte394hidZzM5nb6hQvpPjt2OlPRsyqVxw4c/KsjADtAuKW9/d8phb <br>
+      N8bTyOJo856qg4oOEzKG9eeF7oaZTYBy33BTL0408sEBxiMior6b8LrZrAhkqDjA <br>
+      vUXRwm/fFKgpsOysxC6xi553CxBUCH2omNV6Ka1LNMwzSp9ILz8jEGqmUtkBszwo <br>
+      G1S8fXgE0Lq3cdDM/GJ4QXP/p6LiwNF99faDMTV3+2SAOGvytOX6KjKVzKOSsfJQ <br>
+      hN0DlsIw8hqJc0WISQQYEQIACQUCSedYRAIbDAAKCRDorT+BmrEOeCUOAJ9qmR0l <br>
+      EXzeoxcdoafxqf6gZlJZlACgkWF7wi2YLW3Oa+jv2QSTlrx4KLM=<br>
+      =Wi5D <br>
+      -----END PGP PUBLIC KEY BLOCK-----
+    </div>
+    After importing the keys, you can verify any tag with <div class=code>$ git tag -v <i>tagname</i></div>
+  </p>
 </div>
+
+<div>
+  <h2>Building the code</h2>
+  <p>To build the files, run envsetup, lunch, and make from within your working directory:
+    <div class=code>$ cd ~/<i>directory</i><br/>
+                    $ source build/envsetup.sh<br/>
+                    $ lunch<br/>
+                    $ make<br/>
+    </div>
+    If your build fails because of a missing <tt>run-java-tool</tt>, try setting the <tt>ANDROID_JAVA_HOME</tt> environment variable before making. 
+    <div class=code>$ export ANDROID_JAVA_HOME=$JAVA_HOME</div>
+  </p>
 </div>
-<div><div><div><div><ul><ul><li><span>flex, bison, gperf, libsdl-dev, libesd0-dev, libwxgtk2.6-dev (optional), build-essential, zip, curl.</span>
-</li>
-</ul>
-</ul>
-</div>
-</div>
-</div>
-</div>
-<blockquote><span>$ sudo apt-get install</span>
-<span>git-core gnupg</span>
-<span>sun-java5-jdk</span>
-<span>flex bison gperf <span>libsdl-dev libesd0-dev</span>
-libwxgtk2.6-dev build-essential zip <span>curl libncurses5-dev zlib1g-dev <br></span>
-</span>
-</blockquote>
-<div><div><div><div><ul><li><span><span>You might also want Valgrind, a tool that will help you find memory leaks, stack corruption, array bounds overflows, etc.</span>
-</span>
-</li>
-</ul>
-</div>
-</div>
-</div>
-</div>
-<blockquote><div><span>$ sudo apt-get install valgrind <br></span>
-</div>
-</blockquote>
-<ul><li><span><span>Intrepid (</span>
-</span>
-8.10) users may need a newer version of libreadline:</li>
-</ul>
-<div>$ sudo apt-get install lib32readline5-dev <br></div>
-</div>
-<div><div><div><div><div><div><h4>
-Ubuntu Linux (64-bit x86)</h4>
-This has not been as well tested. Please send success or failure reports to <a href="mailto:android-porting@googlegroups.com">android-porting@googlegroups.com</a>
-.</div>
-<div><br></div>
-<div>The Android build requires a 32-bit build environment as well as some other tools:<br></div>
-<div><ul><li>Required Packages:</li>
-<ul><li>Git, JDK, flex, and the other packages as listed above in the i386 instructions:<span><br></span>
-</li>
-<li>JDK 5.0, update 12 or higher.Java 6 is not supported, because of incompatibilities with @Override.</li>
-<li>Pieces from the 32-bit cross-building environment</li>
-<li>X11 development <br></li>
-</ul>
-</ul>
-</div>
-</div>
-</div>
-</div>
-<blockquote><span><span>$</span>
-sudo apt-get install git-core gnupg flex bison gperf build-essential zip curl</span>
-sun-java5-jdk <span><span>zlib1g-dev</span>
-</span>
-gcc-multilib g++-multilib libc6-dev-i386 lib32ncurses5-dev ia32-libs x11proto-core-dev libx11-dev lib32readline5-dev lib32z-dev</blockquote>
-<ul><li>Set the system to use the right version of java by default:<br><br>$sudo update-java-alternatives -sjava-1.5.0-sun <br></li>
-</ul>
-<ul><li>X11: Ubuntu doesn't have packages for the X11 libraries, but that can be worked around with the following command:<br><br>$ sudo ln -s /usr/lib32/libX11.so.6 /usr/lib32/libX11.so <br><br></li>
-</ul>
-<div><div><div><div><div><h4>
-Running Linux in a virtual machine</h4>
-If you are running Linux in a virtual machine, you will need at least 1.5GB of RAM and 10GB or more of disk space in order to build the Android tree.<br><h4>
-Other Linux</h4>
-<p>There's no reason why Android cannot be built on non-Ubuntu systems. Please send any success or failure reports to <a href="mailto:android-porting@googlegroups.com">android-porting@googlegroups.com</a>
-<span>. In general you will need:</span>
-</p>
-<ul><li>Python 2.4, which you can <a href="http://www.python.org/download/">download from python.org</a>.</li>
-<li>JDK 5.0, update 12 or higher, which you can <a href="http://java.sun.com/javase/downloads/">download from java.sun.com</a>. Java 6 is not supported, because of incompatibilities with @Override.</li>
-<li>Git 1.5.4 or newer. You can find it at <a href="http://git.or.cz/">http://git.or.cz/</a>.</li>
-</ul>
-<p>Anything missing from this list? Please let us know!</p>
-<h4>
-<span><br></span>
-</h4>
-</div>
-<div><h3>
-Mac OS <br></h3>
-</div>
-<div><p><span>Requirements:</span>
-</p>
-<ul><li><span>To build the Android files in a Mac OS environment, you need an Intel/x86 machine running MacOS 10.4 ("Tiger") or 10.5 ("Leopard"). At the moment MacOS 10.6 ("Snow Leopard") is not supported. The Android build system and tools do not support the obsolete PowerPC architecture.</span>
-</li>
-<li><span>Android must be built on a case-sensitive file system.<br></span>
-</li>
-<ul><li>We recommend that you build Android on a partition that has been formatted with the "Case-sensitive Journaled HFS+" file system:</li>
-<ul><li>A case-sensitive file system is required because the sources contain files that differ only in case.</li>
-<li>Journaled systems are more robust. (This is optional, but recommended.)</li>
-<li>HFS+ is required to successfully build Mac OS applications such as the Android Emulator for OS X.</li>
-</ul>
-<li>If you want to avoid partitioning/formatting your hard drive, you can use a case-sensitive disk image instead.</li>
-<ul><li>To create the image:<br><ul><li>launch /Applications/Utilities/Disk Utility</li>
-<li>select "New Image"</li>
-<li>size: 8 GB (this will work, but you can choose more if you want to)</li>
-<li>volume format: case sensitive, journaled</li>
-</ul>
-</li>
-<li>This will create a .dmg file which, once mounted, acts as a drive with the required formatting for Android development. For a disk image named "android.dmg" stored in your home directory, you can add the following to your ~/.bash_profile to mount the image when you execute "mountAndroid":<br><br><div># command to mount the android file image <br>function mountAndroid{ hdiutil attach ~/android.dmg-mountpoint /Volumes/android; }<br></div>
-<br>Once mounted, you'll do all your work in the "android" volume. You can eject it (unmount it) just like you would with an external drive.</li>
-</ul>
-</ul>
-</ul>
-<ul></ul>
-To set up your Mac OS development environment, follow these steps:<br><ol><li>Install the XCode version 2.4 or later from <a href="http://developer.apple.com/">http://developer.apple.com</a>. We recommend version 3.0 or newer.<br></li>
-<li>Install MacPorts. To do this:</li>
-<ol><li>Download the tar file from <a href="http://www.macports.org/">http://www.macports.org/</a> and untar the files.</li>
-<li>Run the following:<span><br>$ ./configure <br></span>
-<span>$</span>
-<span>make <br></span>
-<span>$</span>
-<span>sudo make install</span>
-</li>
-<li>Make sure that /opt/local/bin is in your path before /usr/bin. by running <br>$ echo $PATH <br>If you don't see /opt/local/bin, edit $HOME/.bash_profile and add the line <br>export PATH=/opt/local/bin:$PATH <br>(or the equivalent for other shells) after any other PATH-related lines.<span>To verify that your path is now correct, o</span>
-pen a new terminal and <span>run</span>
-echo $PATH <span>again</span>
-.</li>
-<li>Ask MacPorts to update itself:<br><span></span>
-<span>$</span>
-<span>sudo port selfupdate</span>
-<br></li>
-</ol>
-<li>Get the following packages from port:<br>$<span>POSIXLY_CORRECT=1</span>
-sudo port install gmake libsdl git-core gnupg <br><span>If using Mac OS 10.4, also install:<br>$<span>POSIXLY_CORRECT=1</span>
-sudo port install bison <br></span>
-</li>
-<li>Upgrade GNU make to 3.81 or later by running.Mac OS doesn't come with a recent enough version.<br>$ sudo ln -s gmake /opt/local/bin/make <br></li>
-<li>Set an appropriate per-process file descriptor limit. To do this, add the following lines to your <i><span>.bash_profile</span>
-</i>
-file:<br># set the number of open files to be 1024<br>ulimit -S -n 1024</li>
-</ol>
-</div>
-</div>
-</div>
-<div><br></div>
-<h2>
-Installing Repo <br></h2>
-<div><p>Repo is a tool that makes it easier to work with Git in the context of
-Android. For more information about Repo, see <a
-href="{@docRoot}source/git-repo.html">Using Repo and Git</a>
-.<br></p>
-To install, initialize, and configure Repo, follow these steps:<br><br></div>
-<ol><li><span>Make sure you have a~/bindirectory in your home directory, and check to be sure that this bin directory is in your path:</span>
-<br>$ cd~<br><span><span>$ mkdir bin <br>$ echo $PATH <br></span>
-</span>
-</li>
-<li><span>Download thereposcript and make sure it is executable:</span>
-<br>$ curl http://android.git.kernel.org/repo~/bin/repo <div>$ chmod a+x ~/bin/repo</div>
-</li>
-</ol>
-</div>
-<div><p><br></p>
-<h2>
-Initializing a Repo client <br></h2>
-</div>
-<div><ol><li><span>Create an empty directory to hold your working files:</span>
-<span><br></span>
-<span>$ mkdir mydroid</span>
-<br><span>$ cd mydroid</span>
-<br></li>
-<li><span>Runrepo initto bring down the latest version of Repo with all its most recent bug fixes. You must specify a URL for the manifest:</span>
-<br><span>$ repo init</span>
--u git://android.git.kernel.org/platform/manifest.git</li>
-<ul><li><span>If you would like to check out a branch other than "master", specify it with -b, like:</span>
-<br><span>$ repo init</span>
--u git://android.git.kernel.org/platform/manifest.git -b cupcake <br></li>
-</ul>
-<li><span>When prompted, configure Repo with your real name and email address. If you plan to submit code, use an email address that is associated with a <a href="https://www.google.com/accounts">Google account</a>
-.</span>
-<br></li>
-</ol>
-<span><span>A successful initialization will end with a message such as</span>
-<br><span>repo</span>
-initialized in /mydroid</span>
-<br><span><span><br>Your client directory should now contain a.repodirectory where files such as the manifest will be kept.</span>
-<br><br></span>
-<span><span><b>What will my name and email be used for?</b>
-<br></span>
-<span><br>To use the Gerrit code-review tool,</span>
-<span>you will need an email address that is connected with a <a href="http://www.google.com/accounts">registered Google account</a>
-(which does not have to be a Gmail address). Make sure this is</span>
-<span>a live address</span>
-<span>at which you can receive messages</span>
-<span>.</span>
-<span>The real name that you provide here will show up in attributions for your code submissions.</span>
-</span>
-<br></div>
-<span><p><b>What is a manifest file?</b>
-</p>
-<p><span>The Android source files are divided among a number of different repositories.</span>
-<span>A manifest</span>
-<span>file contains a mapping of where the files from these repositories will be placed within your working directory w</span>
-<span>hen you synchronize your files.<br></span>
-</p>
-<p><span><br></span>
-</p>
-</span>
-<h2>
-Getting the files</h2>
-<div><span><span>To pull down files to your working directory from the repositories as specified in the default manifest, run</span>
-<br><br>$ repo sync <i><br></i>
-<br><span>For more aboutrepo syncand other Repo commands, see</span>
-<a href="{@docRoot}source/git-repo.html">Using Repo and Git</a>
-<span>.</span>
-<br><br><span>The Android source files will be located in your working
-directory under their project names.</span>
-</span>
-<br></div>
-<span><h2>
-<br></h2>
-<h2>
-Verifying Git Tags</h2>
-<span>Load the following public key into your GnuPG key database.The key is used to sign annotated tags that represent releases.</span>
-<br><br></span>
-<span>$ gpg --import <br><br></span>
-<span><span>then paste the key(s) below, and press Control-D to end the input and process the keys.</span>
-After importing the keys, you can verify any tag with <br><br></span>
-<span>$ git tag -v <i>tagname</i>
-</span>
-<span><br><br><b><u>key 9AB10E78: "The Android Open Source Projectinitial-contribution@android.com"</u>
-</b>
-<br></span>
-<pre>-----BEGIN PGP PUBLIC KEY BLOCK-----<br>Version: GnuPG v1.4.2.2 (GNU/Linux)<br><br>mQGiBEnnWD4RBACt9/h4v9xnnGDou13y3dvOx6/t43LPPIxeJ8eX9WB+8LLuROSV <br>lFhpHawsVAcFlmi7f7jdSRF+OvtZL9ShPKdLfwBJMNkU66/TZmPewS4m782ndtw7<br>8tR1cXb197Ob8kOfQB3A9yk2XZ4ei4ZC3i6wVdqHLRxABdncwu5hOF9KXwCgkxMD <br>u4PVgChaAJzTYJ1EG+UYBIUEAJmfearb0qRAN7dEoff0FeXsEaUA6U90sEoVks0Z <br>wNj96SA8BL+a1OoEUUfpMhiHyLuQSftxisJxTh+2QclzDviDyaTrkANjdYY7p2cq <br>/HMdOY7LJlHaqtXmZxXjjtw5Uc2QG8UY8aziU3IE9nTjSwCXeJnuyvoizl9/I1S5<br>jU5SA/9WwIps4SC84ielIXiGWEqq6i6/sk4I9q1YemZF2XVVKnmI1F4iCMtNKsR4<br>MGSa1gA8s4iQbsKNWPgp7M3a51JCVCu6l/8zTpA+uUGapw4tWCp4o0dpIvDPBEa9<br>b/aF/ygcR8mh5hgUfpF9IpXdknOsbKCvM9lSSfRciETykZc4wrRCVGhlIEFuZHJv <br>aWQgT3BlbiBTb3VyY2UgUHJvamVjdCA8aW5pdGlhbC1jb250cmlidXRpb25AYW5k <br>cm9pZC5jb20+iGAEExECACAFAknnWD4CGwMGCwkIBwMCBBUCCAMEFgIDAQIeAQIX <br>gAAKCRDorT+BmrEOeNr+AJ42Xy6tEW7r3KzrJxnRX8mij9z8tgCdFfQYiHpYngkI <br>2t09Ed+9Bm4gmEO5Ag0ESedYRBAIAKVW1JcMBWvV/0Bo9WiByJ9WJ5swMN36/vAl <br>QN4mWRhfzDOk/Rosdb0csAO/l8Kz0gKQPOfObtyYjvI8JMC3rmi+LIvSUT9806Up <br>hisyEmmHv6U8gUb/xHLIanXGxwhYzjgeuAXVCsv+EvoPIHbY4L/KvP5x+oCJIDbk <br>C2b1TvVk9PryzmE4BPIQL/NtgR1oLWm/uWR9zRUFtBnE411aMAN3qnAHBBMZzKMX <br>LWBGWE0znfRrnczI5p49i2YZJAjyX1P2WzmScK49CV82dzLo71MnrF6fj+Udtb5+<br>OgTg7Cow+8PRaTkJEW5Y2JIZpnRUq0CYxAmHYX79EMKHDSThf/8AAwUIAJPWsB/M <br>pK+KMs/s3r6nJrnYLTfdZhtmQXimpoDMJg1zxmL8UfNUKiQZ6esoAWtDgpqt7Y7s <br>KZ8laHRARonte394hidZzM5nb6hQvpPjt2OlPRsyqVxw4c/KsjADtAuKW9/d8phb <br>N8bTyOJo856qg4oOEzKG9eeF7oaZTYBy33BTL0408sEBxiMior6b8LrZrAhkqDjA <br>vUXRwm/fFKgpsOysxC6xi553CxBUCH2omNV6Ka1LNMwzSp9ILz8jEGqmUtkBszwo <br>G1S8fXgE0Lq3cdDM/GJ4QXP/p6LiwNF99faDMTV3+2SAOGvytOX6KjKVzKOSsfJQ <br>hN0DlsIw8hqJc0WISQQYEQIACQUCSedYRAIbDAAKCRDorT+BmrEOeCUOAJ9qmR0l <br>EXzeoxcdoafxqf6gZlJZlACgkWF7wi2YLW3Oa+jv2QSTlrx4KLM=<br>=Wi5D <br>-----END PGP PUBLIC KEY BLOCK-----<br></pre>
-<span><br><h2>
-Building the code</h2>
-<span>To build the files, run make from within your working directory:</span>
-<br><span>$ cd ~/mydroid</span>
-<span><br>$ source build/envsetup.sh</span>
-<span><br>$ lunch</span>
-<span><br>$ make</span>
-<br></span>
-<p>If your build fails, complaining about a missing "run-java-tool", try setting the ANDROID_JAVA_HOME env var to $JAVA_HOME before making. E.g.,</p>
-<p>$ export ANDROID_JAVA_HOME=$JAVA_HOME</p>
-<h2>
-Using an IDE</h2>
-<ul><li><a href="{@docRoot}source/using-eclipse.html">Using Eclipse</a>
-for Android platform development <br></li>
-</ul>
-<h2>
-Troubleshooting</h2>
-<p><span><b>ImportError: No module na</b>
-<span><b>med</b>
-</span>
-<span><b>readline</b>
-</span>
-<b><br></b>
-</span>
-</p>
-<p><span>Mac users getting this should install Python 2.5.2.</span>
-</p>
-<p><span>Linux users that installed Python from source, make sure the dependencies for libreadline are installed, and rebuild Python.</span>
-</p>
-<span><h2>
-What's next?</h2>
-</span>
-<span>To learn about reporting an issue and searching previously reported issues,</span>
-<span>see</span>
-<a href="{@docRoot}source/report-bugs.html">Report bugs</a>
-<span>.</span>
-<span>For information about editing the files and uploading changes to the
-code-review server, see <a href="{@docRoot}source/submit-patches.html">Contribute</a>
-.</span>
-</div>
-</div>
-</div>
+
+<div>
+  <h2>What's next?</h2>
+  <p>See <a href="{@docRoot}source/using-eclipse.html">Using Eclipse</a> for instructions on how to use an IDE for Android platform development.  To learn about reporting an issue and searching previously reported issues, see <a href="{@docRoot}source/report-bugs.html">Report bugs</a>.  For information about editing the files and uploading changes to the code-review server, see <a href="{@docRoot}source/submit-patches.html">Contribute</a>.
 </div>
