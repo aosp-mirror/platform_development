@@ -14,9 +14,12 @@
      limitations under the License.
 -->
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:id="@+id/scan"
+    <item android:id="@+id/secure_connect_scan"
           android:icon="@android:drawable/ic_menu_search"
-          android:title="@string/connect" />
+          android:title="@string/secure_connect" />
+    <item android:id="@+id/insecure_connect_scan"
+          android:icon="@android:drawable/ic_menu_search"
+          android:title="@string/insecure_connect" />
     <item android:id="@+id/discoverable"
           android:icon="@android:drawable/ic_menu_mylocation"
           android:title="@string/discoverable" />
