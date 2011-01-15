@@ -59,8 +59,9 @@ public class BluetoothChat extends Activity {
     public static final String TOAST = "toast";
 
     // Intent request codes
-    private static final int REQUEST_CONNECT_DEVICE = 1;
-    private static final int REQUEST_ENABLE_BT = 2;
+    private static final int REQUEST_CONNECT_DEVICE_SECURE = 1;
+    private static final int REQUEST_CONNECT_DEVICE_INSECURE = 2;
+    private static final int REQUEST_ENABLE_BT = 3;
 
     // Layout Views
     private TextView mTitle;
@@ -287,16 +288,16 @@ public class BluetoothChat extends Activity {
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if(D) Log.d(TAG, "onActivityResult " + resultCode);
         switch (requestCode) {
-        case REQUEST_CONNECT_DEVICE:
+        case REQUEST_CONNECT_DEVICE_SECURE:
             // When DeviceListActivity returns with a device to connect
             if (resultCode == Activity.RESULT_OK) {
-                // Get the device MAC address
-                String address = data.getExtras()
-                                     .getString(DeviceListActivity.EXTRA_DEVICE_ADDRESS);
-                // Get the BLuetoothDevice object
-                BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(address);
-                // Attempt to connect to the device
-                mChatService.connect(device);
+                connectDevice(data, true);
+            }
+            break;
+        case REQUEST_CONNECT_DEVICE_INSECURE:
+            // When DeviceListActivity returns with a device to connect
+            if (resultCode == Activity.RESULT_OK) {
+                connectDevice(data, false);
             }
             break;
         case REQUEST_ENABLE_BT:
@@ -313,6 +314,16 @@ public class BluetoothChat extends Activity {
         }
     }
 
+    private void connectDevice(Intent data, boolean secure) {
+        // Get the device MAC address
+        String address = data.getExtras()
+            .getString(DeviceListActivity.EXTRA_DEVICE_ADDRESS);
+        // Get the BLuetoothDevice object
+        BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(address);
+        // Attempt to connect to the device
+        mChatService.connect(device, secure);
+    }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
@@ -322,11 +333,17 @@ public class BluetoothChat extends Activity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+        Intent serverIntent = null;
         switch (item.getItemId()) {
-        case R.id.scan:
+        case R.id.secure_connect_scan:
             // Launch the DeviceListActivity to see devices and do scan
-            Intent serverIntent = new Intent(this, DeviceListActivity.class);
-            startActivityForResult(serverIntent, REQUEST_CONNECT_DEVICE);
+            serverIntent = new Intent(this, DeviceListActivity.class);
+            startActivityForResult(serverIntent, REQUEST_CONNECT_DEVICE_SECURE);
+            return true;
+        case R.id.insecure_connect_scan:
+            // Launch the DeviceListActivity to see devices and do scan
+            serverIntent = new Intent(this, DeviceListActivity.class);
+            startActivityForResult(serverIntent, REQUEST_CONNECT_DEVICE_INSECURE);
             return true;
         case R.id.discoverable:
             // Ensure this device is discoverable by others
