@@ -15,6 +15,21 @@
 -->
 
 <resources>
+    <!-- A custom theme that is a variation on the light them with a different
+         background color. -->
+    <color name="custom_theme_color">#b0b0ff</color>
+    <style name="CustomTheme" parent="android:Theme.Light">
+        <item name="android:windowBackground">@color/custom_theme_color</item>
+        <item name="android:colorBackground">@color/custom_theme_color</item>
+    </style>
+
+    <!-- This is a theme that will adjust itself depending on the API version.
+         The default definition is the safe one, using a theme that has always
+         been defined.  Look at values-11/styles.xml for a variation that is
+         selected when the holographic theme is available. -->
+    <style name="ThemeHolo" parent="android:Theme">
+    </style>
+
     <!-- Base application theme is the default theme. -->
     <style name="Theme" parent="android:Theme">
     </style>
