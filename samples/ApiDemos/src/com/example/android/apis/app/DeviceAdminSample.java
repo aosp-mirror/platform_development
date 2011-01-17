@@ -847,7 +847,7 @@ public class DeviceAdminSample extends DeviceAdminReceiver {
                         builder.show();
                         return;
                     }
-                    if (mDPM.getStorageEncryption(mDeviceAdminSample) ==
+                    if (mDPM.getStorageEncryptionStatus() ==
                             DevicePolicyManager.ENCRYPTION_STATUS_UNSUPPORTED) {
                         AlertDialog.Builder builder = new AlertDialog.Builder(Controller.this);
                         builder.setMessage("Encryption is unsupported on this device.");
@@ -866,17 +866,24 @@ public class DeviceAdminSample extends DeviceAdminReceiver {
         };
 
         private void updateEncryptionStatus() {
+            boolean sampleAdminStatusValue = mDPM.getStorageEncryption(mDeviceAdminSample);
+            String sampleAdminStatus = Boolean.toString(sampleAdminStatusValue);
+            boolean adminStatusValue = mDPM.getStorageEncryption(null);
+            String adminStatus = Boolean.toString(adminStatusValue);
+            int deviceStatusCode = mDPM.getStorageEncryptionStatus();
+            String deviceStatus = statusCodeToString(deviceStatusCode);
+            mEncryptionStatus.setText("sample:" + sampleAdminStatus + " admins:" + adminStatus
+                    + " device:" + deviceStatus);
+        }
+
+        private String statusCodeToString(int newStatusCode) {
             String newStatus = "unknown";
-            int newStatusCode = mDPM.getStorageEncryption(mDeviceAdminSample);
             switch (newStatusCode) {
                 case DevicePolicyManager.ENCRYPTION_STATUS_UNSUPPORTED:
                     newStatus = "unsupported";
                     break;
                 case DevicePolicyManager.ENCRYPTION_STATUS_INACTIVE:
                     newStatus = "inactive";
-                    break;
-                case DevicePolicyManager.ENCRYPTION_STATUS_REQUESTED:
-                    newStatus = "requested";
                     break;
                 case DevicePolicyManager.ENCRYPTION_STATUS_ACTIVATING:
                     newStatus = "activating";
@@ -885,7 +892,7 @@ public class DeviceAdminSample extends DeviceAdminReceiver {
                     newStatus = "active";
                     break;
             }
-            mEncryptionStatus.setText(newStatus);
+            return newStatus;
         }
     }
 }
