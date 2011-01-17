@@ -36,6 +36,8 @@
     <!-- For android.media.audiofx.Visualizer -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
+    <uses-sdk android:minSdkVersion="4" />
+
     <!-- We will request access to the camera, saying we require a camera
          of some sort but not one with autofocus capability. -->
     <!--
@@ -153,7 +155,8 @@
         </activity>
 
         <activity android:name=".app.ActivityRecreate"
-                android:label="@string/activity_recreate">
+                android:label="@string/activity_recreate"
+                android:enabled="@bool/atLeastHoneycomb">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -245,7 +248,8 @@
         <!-- Fragment Samples -->
 
         <activity android:name=".app.FragmentAlertDialog"
-                android:label="@string/fragment_alert_dialog">
+                android:label="@string/fragment_alert_dialog"
+                android:enabled="@bool/atLeastHoneycomb">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -254,7 +258,8 @@
 
         <activity android:name=".app.FragmentHideShow"
                 android:label="@string/fragment_hide_show"
-                android:windowSoftInputMode="stateUnchanged">
+                android:windowSoftInputMode="stateUnchanged"
+                android:enabled="@bool/atLeastHoneycomb">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -262,7 +267,8 @@
         </activity>
 
         <activity android:name=".app.FragmentContextMenu"
-                android:label="@string/fragment_context_menu">
+                android:label="@string/fragment_context_menu"
+                android:enabled="@bool/atLeastHoneycomb">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -270,7 +276,8 @@
         </activity>
 
         <activity android:name=".app.FragmentDialog"
-                android:label="@string/fragment_dialog">
+                android:label="@string/fragment_dialog"
+                android:enabled="@bool/atLeastHoneycomb">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -278,7 +285,8 @@
         </activity>
 
         <activity android:name=".app.FragmentDialogOrActivity"
-                android:label="@string/fragment_dialog_or_activity">
+                android:label="@string/fragment_dialog_or_activity"
+                android:enabled="@bool/atLeastHoneycomb">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -286,17 +294,20 @@
         </activity>
 
         <activity android:name=".app.FragmentLayout"
-                android:label="@string/fragment_layout">
+                android:label="@string/fragment_layout"
+                android:enabled="@bool/atLeastHoneycomb">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
             </intent-filter>
         </activity>
 
-        <activity android:name=".app.FragmentLayout$DetailsActivity" />
+        <activity android:name=".app.FragmentLayout$DetailsActivity"
+                android:enabled="@bool/atLeastHoneycomb" />
 
         <activity android:name=".app.FragmentListCursorLoader"
-                android:label="@string/fragment_list_cursor_loader">
+                android:label="@string/fragment_list_cursor_loader"
+                android:enabled="@bool/atLeastHoneycomb">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -304,7 +315,8 @@
         </activity>
 
         <activity android:name=".app.FragmentListArray"
-                android:label="@string/fragment_list_array">
+                android:label="@string/fragment_list_array"
+                android:enabled="@bool/atLeastHoneycomb">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -312,7 +324,8 @@
         </activity>
 
         <activity android:name=".app.FragmentMenu"
-                android:label="@string/fragment_menu">
+                android:label="@string/fragment_menu"
+                android:enabled="@bool/atLeastHoneycomb">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -320,7 +333,8 @@
         </activity>
 
         <activity android:name=".app.FragmentRetainInstance"
-                android:label="@string/fragment_retain_instance">
+                android:label="@string/fragment_retain_instance"
+                android:enabled="@bool/atLeastHoneycomb">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -328,7 +342,8 @@
         </activity>
 
         <activity android:name=".app.FragmentReceiveResult"
-                android:label="@string/fragment_receive_result">
+                android:label="@string/fragment_receive_result"
+                android:enabled="@bool/atLeastHoneycomb">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -336,7 +351,8 @@
         </activity>
 
         <activity android:name=".app.FragmentStack"
-                android:label="@string/fragment_stack">
+                android:label="@string/fragment_stack"
+                android:enabled="@bool/atLeastHoneycomb">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -347,7 +363,8 @@
 
 <!-- BEGIN_INCLUDE(loader_throttle) -->
         <activity android:name=".app.LoaderThrottle"
-                android:label="@string/loader_throttle">
+                android:label="@string/loader_throttle"
+                android:enabled="@bool/atLeastHoneycomb">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -720,14 +737,17 @@
 
         <!-- Action Bar Samples -->
         <activity android:name=".app.ActionBarMechanics"
-                  android:label="@string/action_bar_mechanics">
+                android:label="@string/action_bar_mechanics"
+                android:enabled="@bool/atLeastHoneycomb">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
             </intent-filter>
         </activity>
 
-        <activity android:name=".app.ActionBarUsage" android:label="@string/action_bar_usage">
+        <activity android:name=".app.ActionBarUsage"
+                android:label="@string/action_bar_usage"
+                android:enabled="@bool/atLeastHoneycomb">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -735,8 +755,9 @@
         </activity>
 
         <activity android:name=".app.ActionBarDisplayOptions"
-                  android:label="@string/action_bar_display_options"
-                  android:logo="@drawable/apidemo_androidlogo">
+                android:label="@string/action_bar_display_options"
+                android:logo="@drawable/apidemo_androidlogo"
+                android:enabled="@bool/atLeastHoneycomb">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -744,7 +765,8 @@
         </activity>
 
         <activity android:name=".app.ActionBarTabs"
-                  android:label="@string/action_bar_tabs">
+                android:label="@string/action_bar_tabs"
+                android:enabled="@bool/atLeastHoneycomb">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -756,7 +778,8 @@
         <!-- ************************************* -->
 
         <activity android:name=".preference.FragmentPreferences"
-                android:label="@string/fragment_preferences">
+                android:label="@string/fragment_preferences"
+                android:enabled="@bool/atLeastHoneycomb">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -764,7 +787,8 @@
         </activity>
 
         <activity android:name=".preference.PreferenceWithHeaders"
-                android:label="@string/preference_with_headers">
+                android:label="@string/preference_with_headers"
+                android:enabled="@bool/atLeastHoneycomb">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -822,7 +846,9 @@
         <!--        CONTENT PACKAGE SAMPLES        -->
         <!-- ************************************* -->
 
-        <activity android:name=".content.ClipboardSample" android:label="@string/activity_clipboard">
+        <activity android:name=".content.ClipboardSample"
+                android:label="@string/activity_clipboard"
+                android:enabled="@bool/atLeastHoneycomb">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -913,8 +939,10 @@
         <!--     ANDROID.ANIMATION PACKAGE SAMPLES         -->
         <!-- ************************************* -->
 
-        <activity android:name=".animation.AnimationLoading" android:label="Animation/Loading"
-                  android:hardwareAccelerated="false">
+        <activity android:name=".animation.AnimationLoading"
+                android:label="Animation/Loading"
+                android:hardwareAccelerated="false"
+                android:enabled="@bool/atLeastHoneycomb">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -922,24 +950,29 @@
         </activity>
 
         <activity android:name=".animation.AnimationCloning"
-                  android:label="Animation/Cloning"
-                  android:hardwareAccelerated="false">
+                android:label="Animation/Cloning"
+                android:hardwareAccelerated="false"
+                android:enabled="@bool/atLeastHoneycomb">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
             </intent-filter>
         </activity>
 
-        <activity android:name=".animation.AnimationSeeking" android:label="Animation/Seeking"
-                  android:hardwareAccelerated="false">
+        <activity android:name=".animation.AnimationSeeking"
+                android:label="Animation/Seeking"
+                android:hardwareAccelerated="false"
+                android:enabled="@bool/atLeastHoneycomb">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
             </intent-filter>
         </activity>
 
-        <activity android:name=".animation.AnimatorEvents" android:label="Animation/Events"
-                  android:hardwareAccelerated="false">
+        <activity android:name=".animation.AnimatorEvents"
+                android:label="Animation/Events"
+                android:hardwareAccelerated="false"
+                android:enabled="@bool/atLeastHoneycomb">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -947,8 +980,9 @@
         </activity>
 
         <activity android:name=".animation.BouncingBalls"
-                  android:label="Animation/Bouncing Balls"
-                  android:hardwareAccelerated="false">
+                android:label="Animation/Bouncing Balls"
+                android:hardwareAccelerated="false"
+                android:enabled="@bool/atLeastHoneycomb">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -956,23 +990,28 @@
         </activity>
 
         <activity android:name=".animation.CustomEvaluator"
-                  android:label="Animation/Custom Evaluator"
-                  android:hardwareAccelerated="false">
+                android:label="Animation/Custom Evaluator"
+                android:hardwareAccelerated="false"
+                android:enabled="@bool/atLeastHoneycomb">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
             </intent-filter>
         </activity>
 
-        <activity android:name=".animation.ListFlipper" android:label="Animation/View Flip">
+        <activity android:name=".animation.ListFlipper"
+                android:label="Animation/View Flip"
+                android:enabled="@bool/atLeastHoneycomb">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
             </intent-filter>
         </activity>
 
-        <activity android:name=".animation.ReversingAnimation" android:label="Animation/Reversing"
-                  android:hardwareAccelerated="false">
+        <activity android:name=".animation.ReversingAnimation"
+                android:label="Animation/Reversing"
+                android:hardwareAccelerated="false"
+                android:enabled="@bool/atLeastHoneycomb">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -980,8 +1019,9 @@
         </activity>
 
         <activity android:name=".animation.MultiPropertyAnimation"
-                  android:label="Animation/Multiple Properties"
-                  android:hardwareAccelerated="false">
+                android:label="Animation/Multiple Properties"
+                android:hardwareAccelerated="false"
+                android:enabled="@bool/atLeastHoneycomb">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -989,7 +1029,8 @@
         </activity>
 
         <activity android:name=".animation.LayoutAnimations"
-                  android:label="Animation/Layout Animations">
+                android:label="Animation/Layout Animations"
+                android:enabled="@bool/atLeastHoneycomb">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -997,7 +1038,8 @@
         </activity>
 
         <activity android:name=".animation.LayoutAnimationsHideShow"
-                  android:label="Animation/Hide-Show Animations">
+                android:label="Animation/Hide-Show Animations"
+                android:enabled="@bool/atLeastHoneycomb">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -1005,7 +1047,8 @@
         </activity>
 
         <activity android:name=".animation.LayoutAnimationsByDefault"
-                  android:label="Animation/Default Layout Animations">
+                android:label="Animation/Default Layout Animations"
+                android:enabled="@bool/atLeastHoneycomb">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -1685,7 +1728,8 @@
 
         <activity android:name=".view.Controls3"
                   android:label="Views/Controls/3. Holo Light Theme"
-                  android:theme="@android:style/Theme.Holo.Light">
+                  android:theme="@android:style/Theme.Holo.Light"
+                  android:enabled="@bool/atLeastHoneycomb">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -1694,7 +1738,26 @@
 
         <activity android:name=".view.Controls4"
                   android:label="Views/Controls/4. Holo Dark Theme"
-                  android:theme="@android:style/Theme.Holo">
+                  android:theme="@android:style/Theme.Holo"
+                  android:enabled="@bool/atLeastHoneycomb">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".view.Controls5"
+                  android:label="Views/Controls/5. Custom Theme"
+                  android:theme="@style/CustomTheme">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".view.Controls6"
+                  android:label="Views/Controls/6. Holo or Old Theme"
+                  android:theme="@style/ThemeHolo">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -1890,7 +1953,8 @@
 
         <activity android:name=".view.DragAndDropDemo"
                 android:label="Views/Drag and Drop"
-                android:hardwareAccelerated="false">
+                android:hardwareAccelerated="false"
+                android:enabled="@bool/atLeastHoneycomb">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
