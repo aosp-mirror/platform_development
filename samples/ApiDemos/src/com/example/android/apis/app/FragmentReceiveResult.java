@@ -31,7 +31,7 @@ public class FragmentReceiveResult extends Activity {
         if (savedInstanceState == null) {
             // Do first time initialization -- add fragment. 
             Fragment newFragment = new ReceiveResultFragment();
-            FragmentTransaction ft = getFragmentManager().openTransaction();
+            FragmentTransaction ft = getFragmentManager().beginTransaction();
             ft.add(R.id.simple_fragment, newFragment).commit();
         }
     }

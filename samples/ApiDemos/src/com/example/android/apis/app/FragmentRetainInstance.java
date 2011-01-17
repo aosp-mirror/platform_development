@@ -42,7 +42,7 @@ public class FragmentRetainInstance extends Activity {
         
         // First time init, create the UI.
         if (savedInstanceState == null) {
-            getFragmentManager().openTransaction().add(android.R.id.content,
+            getFragmentManager().beginTransaction().add(android.R.id.content,
                     new UiFragment()).commit();
         }
     }
@@ -84,7 +84,7 @@ public class FragmentRetainInstance extends Activity {
                 mWorkFragment = new RetainedFragment();
                 // Tell it who it is working with.
                 mWorkFragment.setTargetFragment(this, 0);
-                fm.openTransaction().add(mWorkFragment, "work").commit();
+                fm.beginTransaction().add(mWorkFragment, "work").commit();
             }
         }
 

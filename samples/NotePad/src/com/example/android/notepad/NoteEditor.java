@@ -470,7 +470,7 @@ public class NoteEditor extends Activity {
             String title=null;
 
             // Gets the first item from the clipboard data
-            ClipData.Item item = clip.getItem(0);
+            ClipData.Item item = clip.getItemAt(0);
 
             // Tries to get the item's contents as a URI pointing to a note
             Uri uri = item.getUri();
