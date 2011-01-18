@@ -80,14 +80,12 @@ public class ActionBarUsage extends Activity implements OnQueryChangeListener {
 
     // The following callbacks are called for the SearchView.OnQueryChangeListener
     // For more about using SearchView, see src/.../view/SearchView1.java and SearchView2.java
-    @Override
     public boolean onQueryTextChanged(String newText) {
         newText = newText.isEmpty() ? "" : "Query so far: " + newText;
         mSearchText.setText(newText);
         return true;
     }
 
-    @Override
     public boolean onSubmitQuery(String query) {
         Toast.makeText(this, "Searching for: " + query + "...", Toast.LENGTH_SHORT).show();
         return true;

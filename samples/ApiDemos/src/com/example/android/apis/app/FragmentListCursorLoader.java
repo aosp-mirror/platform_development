@@ -98,7 +98,7 @@ public class FragmentListCursorLoader extends Activity {
             item.setActionView(sv);
         }
 
-        @Override public boolean onQueryTextChanged(String newText) {
+        public boolean onQueryTextChanged(String newText) {
             // Called when the action bar search text has changed.  Update
             // the search filter, and restart the loader to do a new query
             // with this filter.
@@ -127,7 +127,7 @@ public class FragmentListCursorLoader extends Activity {
             Contacts.LOOKUP_KEY,
         };
 
-        @Override public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+        public Loader<Cursor> onCreateLoader(int id, Bundle args) {
             // This is called when a new Loader needs to be created.  This
             // sample only has one Loader, so we don't care about the ID.
             // First, pick the base URI to use depending on whether we are
@@ -150,13 +150,13 @@ public class FragmentListCursorLoader extends Activity {
                     Contacts.DISPLAY_NAME + " COLLATE LOCALIZED ASC");
         }
 
-        @Override public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
             // Swap the new cursor in.  (The framework will take care of closing the
             // old cursor once we return.)
             mAdapter.swapCursor(data);
         }
 
-        @Override public void onLoaderReset(Loader<Cursor> loader) {
+        public void onLoaderReset(Loader<Cursor> loader) {
             // This is called when the last Cursor provided to onLoadFinished()
             // above is about to be closed.  We need to make sure we are no
             // longer using it.
