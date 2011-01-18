@@ -37,7 +37,7 @@ public class FragmentMenu extends Activity {
         
         // Make sure the two menu fragments are created.
         FragmentManager fm = getFragmentManager();
-        FragmentTransaction ft = fm.openTransaction();
+        FragmentTransaction ft = fm.beginTransaction();
         mFragment1 = fm.findFragmentByTag("f1");
         if (mFragment1 == null) {
             mFragment1 = new MenuFragment();
@@ -69,7 +69,7 @@ public class FragmentMenu extends Activity {
 
     // Update fragment visibility based on current check box state.
     void updateFragmentVisibility() {
-        FragmentTransaction ft = getFragmentManager().openTransaction();
+        FragmentTransaction ft = getFragmentManager().beginTransaction();
         if (mCheckBox1.isChecked()) ft.show(mFragment1);
         else ft.hide(mFragment1);
         if (mCheckBox2.isChecked()) ft.show(mFragment2);

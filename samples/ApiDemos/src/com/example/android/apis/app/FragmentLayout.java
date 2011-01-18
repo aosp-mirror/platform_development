@@ -74,7 +74,7 @@ public class FragmentLayout extends Activity {
                 // During initial setup, plug in the details fragment.
                 DetailsFragment details = new DetailsFragment();
                 details.setArguments(getIntent().getExtras());
-                getFragmentManager().openTransaction().add(android.R.id.content, details).commit();
+                getFragmentManager().beginTransaction().add(android.R.id.content, details).commit();
             }
         }
     }
@@ -150,11 +150,9 @@ public class FragmentLayout extends Activity {
 
                     // Execute a transaction, replacing any existing fragment
                     // with this one inside the frame.
-                    FragmentTransaction ft = getFragmentManager().openTransaction();
+                    FragmentTransaction ft = getFragmentManager().beginTransaction();
                     ft.replace(R.id.details, df);
-                    ft.setTransition(index > mCurCheckPosition
-                            ? FragmentTransaction.TRANSIT_FRAGMENT_NEXT
-                            : FragmentTransaction.TRANSIT_FRAGMENT_PREV);
+                    ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
                     ft.commit();
                     mShownCheckPosition = index;
                 }

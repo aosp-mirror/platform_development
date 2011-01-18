@@ -406,7 +406,6 @@ public class NotesList extends ListActivity {
             clipboard.setPrimaryClip(ClipData.newUri(   // new clipboard item holding a URI
                     getContentResolver(),               // resolver to retrieve URI info
                     "Note",                             // label for the clip
-                    null,                               // icon for the clip
                     noteUri)                            // the URI
             );
   

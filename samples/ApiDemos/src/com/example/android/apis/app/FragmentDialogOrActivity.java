@@ -39,7 +39,7 @@ public class FragmentDialogOrActivity extends Activity {
         if (savedInstanceState == null) {
             // First-time init; create fragment to embed in activity.
 //BEGIN_INCLUDE(embed)
-            FragmentTransaction ft = getFragmentManager().openTransaction();
+            FragmentTransaction ft = getFragmentManager().beginTransaction();
             DialogFragment newFragment = MyDialogFragment.newInstance();
             ft.add(R.id.embedded, newFragment);
             ft.commit();

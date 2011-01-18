@@ -130,7 +130,7 @@ public class DraggableDot extends View {
 
         setOnLongClickListener(new View.OnLongClickListener() {
             public boolean onLongClick(View v) {
-                ClipData data = ClipData.newPlainText("dot", null, "Dot : " + v.toString());
+                ClipData data = ClipData.newPlainText("dot", "Dot : " + v.toString());
                 v.startDrag(data, new ANRShadowBuilder(v, mAnrType == ANR_SHADOW),
                         (Object)v, 0);
                 return true;
@@ -247,7 +247,7 @@ public class DraggableDot extends View {
         final ClipData data = event.getClipData();
         final int N = data.getItemCount();
         for (int i = 0; i < N; i++) {
-            ClipData.Item item = data.getItem(i);
+            ClipData.Item item = data.getItemAt(i);
             Log.i(TAG, "Dropped item " + i + " : " + item);
             if (mReportView != null) {
                 String text = item.coerceToText(getContext()).toString();

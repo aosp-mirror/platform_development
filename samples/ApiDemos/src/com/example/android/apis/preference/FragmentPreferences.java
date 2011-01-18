@@ -33,7 +33,7 @@ public class FragmentPreferences extends Activity {
         super.onCreate(savedInstanceState);
 
         // Display the fragment as the main content.
-        getFragmentManager().openTransaction().replace(android.R.id.content,
+        getFragmentManager().beginTransaction().replace(android.R.id.content,
                 new PrefsFragment()).commit();
     }
 

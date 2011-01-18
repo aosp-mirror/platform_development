@@ -98,21 +98,20 @@ public class ClipboardSample extends Activity {
     }
 
     public void pasteStyledText(View button) {
-        mClipboard.setPrimaryClip(ClipData.newPlainText("Styled Text", null, mStyledText));
+        mClipboard.setPrimaryClip(ClipData.newPlainText("Styled Text", mStyledText));
     }
 
     public void pastePlainText(View button) {
-        mClipboard.setPrimaryClip(ClipData.newPlainText("Styled Text", null, mPlainText));
+        mClipboard.setPrimaryClip(ClipData.newPlainText("Styled Text", mPlainText));
     }
 
     public void pasteIntent(View button) {
         Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.android.com/"));
-        mClipboard.setPrimaryClip(ClipData.newIntent("VIEW intent", null, intent));
+        mClipboard.setPrimaryClip(ClipData.newIntent("VIEW intent", intent));
     }
 
     public void pasteUri(View button) {
-        mClipboard.setPrimaryClip(ClipData.newRawUri("URI", null,
-                Uri.parse("http://www.android.com/")));
+        mClipboard.setPrimaryClip(ClipData.newRawUri("URI", Uri.parse("http://www.android.com/")));
     }
 
     void updateClipData() {
@@ -128,15 +127,15 @@ public class ClipboardSample extends Activity {
         if (clip == null) {
             mSpinner.setSelection(0);
             mEditText.setText("");
-        } else if (clip.getItem(0).getText() != null) {
+        } else if (clip.getItemAt(0).getText() != null) {
             mSpinner.setSelection(1);
-            mEditText.setText(clip.getItem(0).getText());
-        } else if (clip.getItem(0).getIntent() != null) {
+            mEditText.setText(clip.getItemAt(0).getText());
+        } else if (clip.getItemAt(0).getIntent() != null) {
             mSpinner.setSelection(2);
-            mEditText.setText(clip.getItem(0).getIntent().toUri(0));
-        } else if (clip.getItem(0).getUri() != null) {
+            mEditText.setText(clip.getItemAt(0).getIntent().toUri(0));
+        } else if (clip.getItemAt(0).getUri() != null) {
             mSpinner.setSelection(3);
-            mEditText.setText(clip.getItem(0).getUri().toString());
+            mEditText.setText(clip.getItemAt(0).getUri().toString());
         } else {
             mSpinner.setSelection(0);
             mEditText.setText("Clip containing no data");
