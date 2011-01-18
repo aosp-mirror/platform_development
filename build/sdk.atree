@@ -82,10 +82,10 @@ prebuilt/android-arm/kernel/kernel-qemu platforms/${PLATFORM_NAME}/images/kernel
 #development/tools/emulator/skins/HVGA      platforms/${PLATFORM_NAME}/skins/HVGA
 #development/tools/emulator/skins/WVGA800   platforms/${PLATFORM_NAME}/skins/WVGA800
 #development/tools/emulator/skins/WVGA854   platforms/${PLATFORM_NAME}/skins/WVGA854
-development/tools/emulator/skins/WXGA      platforms/${PLATFORM_NAME}/skins/WXGA
+development/tools/emulator/skins/WXGA       platforms/${PLATFORM_NAME}/skins/WXGA
 
 # Platform SDK properties
-sdk/files/sdk.properties     platforms/${PLATFORM_NAME}/sdk.properties
+development/sdk/sdk.properties               platforms/${PLATFORM_NAME}/sdk.properties
 
 # sdk.git Ant templates for project files
 sdk/templates/AndroidManifest.template        platforms/${PLATFORM_NAME}/templates/AndroidManifest.template
