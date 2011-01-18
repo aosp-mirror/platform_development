@@ -46,7 +46,6 @@ public class DragAndDropDemo extends Activity {
 
         mResultText = (TextView) findViewById(R.id.drag_result_text);
         mResultText.setOnDragListener(new View.OnDragListener() {
-            @Override
             public boolean onDrag(View v, DragEvent event) {
                 final int action = event.getAction();
                 switch (action) {
