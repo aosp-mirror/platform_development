@@ -482,18 +482,18 @@ public class LoaderThrottle extends Activity {
             MainTable.COLUMN_NAME_DATA,
         };
 
-        @Override public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+        public Loader<Cursor> onCreateLoader(int id, Bundle args) {
             CursorLoader cl = new CursorLoader(getActivity(), MainTable.CONTENT_URI,
                     PROJECTION, null, null, null);
             cl.setUpdateThrottle(2000); // update at most every 2 seconds.
             return cl;
         }
 
-        @Override public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
             mAdapter.swapCursor(data);
         }
 
-        @Override public void onLoaderReset(Loader<Cursor> loader) {
+        public void onLoaderReset(Loader<Cursor> loader) {
             mAdapter.swapCursor(null);
         }
     }
