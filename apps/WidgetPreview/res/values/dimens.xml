@@ -15,5 +15,5 @@
 -->
 
 <resources>
-    <dimen name="preview_cell_size">196dip</dimen>
+    <dimen name="preview_cell_size">96dip</dimen>
 </resources>
