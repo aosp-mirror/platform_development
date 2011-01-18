@@ -376,7 +376,7 @@ public class LoaderThrottle extends Activity {
         // Create the list fragment and add it as our sole content.
         if (fm.findFragmentById(android.R.id.content) == null) {
             ThrottledLoaderListFragment list = new ThrottledLoaderListFragment();
-            fm.openTransaction().add(android.R.id.content, list).commit();
+            fm.beginTransaction().add(android.R.id.content, list).commit();
         }
     }
 
