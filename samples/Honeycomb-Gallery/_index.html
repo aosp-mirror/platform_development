@@ -1,0 +1,37 @@
+<p>This is a demo application highlighting how to use some of the new APIs in
+Honeycomb, including Fragments, the Action Bar, drag'n drop, transition
+animations, and a stack widget.  The image gallery shows how all these pieces
+can work together in one application.</p>
+
+<p>The application includes the following classes:<p>
+<ul>
+  <li><a href="src/com/example/android/hcgallery/ContentFragment.html">ContentFragment</a>
+    A fragment responsible for containing the "content" of the application.
+    Displays images, receives drag/drop events from other fragments.</li>
+  <li><a href="src/com/example/android/hcgallery/TitlesFragment.html">TitlesFragment</a>
+      Shows a ListView of photos to display in the ContentFragment. Photos can
+      be chosen either by tapping on the listview, or dragging them from the
+      list to the content area. The list of photos displayed depends on the
+      category selected in the ActionBar.</li>
+  <li><a href="src/com/example/android/hcgallery/MainActivity.html">MainActivity</a>
+      This is the main entry point of the application. MainActivity is
+      responsible for initialization of the ActionBar, TitlesFragment, and
+      ContentFragment. MainActivity is also responsible for keeping track of
+      the currently selected theme and currently selected photo when the
+      activity is recreated, such as when the screen is rotated or an intent to
+      a seperate activity is fired (such as the included Camera sample).
+      MainActivity also contains code demonstrating how to animate
+      showing/hiding fragments (in this case, the TitlesFragment) and the
+      ActionBar, demonstrating how to smoothly transition between states
+      in your application.</li>
+  <li><a href="src/com/example/android/hcgallery/widget/WidgetProvider.html">WidgetProvider</a>
+      The WidgetProvider class is an implementation of the AppWidgetProvider
+      class, which is a view that can be embedded in other applications.
+      This class is responsible for handling when the instance of this widget
+      is enabled, disabled, created, deleted, or updated.</li>
+  <li><a href="src/com/example/android/hcgallery/widget/WidgetService.html">WidgetService</a>
+      The WidgetService is an implementation of the RemoteViewsService class,
+      which is used to populate the collection view (in this case, a stack
+      widget)</li> </ul>
+
+<img alt="Screenshot" src="../images/hcgallery.png" />
