@@ -160,6 +160,7 @@ development/samples/ContactManager           samples/${PLATFORM_NAME}/ContactMan
 development/samples/CrossCompatibility       samples/${PLATFORM_NAME}/CrossCompatibility
 development/samples/CubeLiveWallpaper        samples/${PLATFORM_NAME}/CubeLiveWallpaper
 development/samples/Home                     samples/${PLATFORM_NAME}/Home
+development/samples/Honeycomb-Gallery        samples/${PLATFORM_NAME}/Honeycomb-Gallery
 development/samples/JetBoy                   samples/${PLATFORM_NAME}/JetBoy
 development/samples/LunarLander              samples/${PLATFORM_NAME}/LunarLander
 development/samples/MultiResolution          samples/${PLATFORM_NAME}/MultiResolution
