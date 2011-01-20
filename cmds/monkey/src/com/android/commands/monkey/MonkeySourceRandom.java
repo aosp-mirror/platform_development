@@ -411,6 +411,11 @@ public class MonkeySourceRandom implements MonkeyEventSource {
             } else {
                 lastKey = 1 + mRandom.nextInt(KeyEvent.getMaxKeyCode() - 1);
             }
+
+            if (lastKey == KeyEvent.KEYCODE_POWER || lastKey == KeyEvent.KEYCODE_ENDCALL) {
+                // Make sure we don't inadvertently turn off the device.
+                continue;
+            }
         } while (!PHYSICAL_KEY_EXISTS[lastKey]);
 
         MonkeyKeyEvent e = new MonkeyKeyEvent(KeyEvent.ACTION_DOWN, lastKey);
