@@ -30,7 +30,7 @@ import android.widget.SearchView;
 /**
  * Shows a list that can be filtered in-place with a SearchView in non-iconified mode.
  */
-public class SearchViewFilterMode extends Activity implements SearchView.OnQueryChangeListener {
+public class SearchViewFilterMode extends Activity implements SearchView.OnQueryTextListener {
 
     private static final String TAG = "SearchViewFilterMode";
 
@@ -58,12 +58,12 @@ public class SearchViewFilterMode extends Activity implements SearchView.OnQuery
 
     private void setupSearchView() {
         mSearchView.setIconifiedByDefault(false);
-        mSearchView.setOnQueryChangeListener(this);
+        mSearchView.setOnQueryTextListener(this);
         mSearchView.setSubmitButtonEnabled(false);
         mSearchView.setQueryHint(getString(R.string.cheese_hunt_hint));
     }
 
-    public boolean onQueryTextChanged(String newText) {
+    public boolean onQueryTextChange(String newText) {
         if (TextUtils.isEmpty(newText)) {
             mListView.clearTextFilter();
         } else {
@@ -72,7 +72,7 @@ public class SearchViewFilterMode extends Activity implements SearchView.OnQuery
         return true;
     }
 
-    public boolean onSubmitQuery(String query) {
+    public boolean onQueryTextSubmit(String query) {
         return false;
     }
 }
