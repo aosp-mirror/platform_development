@@ -22,7 +22,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.SearchView;
-import android.widget.SearchView.OnQueryChangeListener;
+import android.widget.SearchView.OnQueryTextListener;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -34,7 +34,7 @@ import com.example.android.apis.R;
  * menu data itself. If you'd like to see how these things work under the hood, see
  * ActionBarMechanics.
  */
-public class ActionBarUsage extends Activity implements OnQueryChangeListener {
+public class ActionBarUsage extends Activity implements OnQueryTextListener {
     TextView mSearchText;
     int mSortMode = -1;
 
@@ -50,7 +50,7 @@ public class ActionBarUsage extends Activity implements OnQueryChangeListener {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.actions, menu);
         SearchView searchView = (SearchView) menu.findItem(R.id.action_search).getActionView();
-        searchView.setOnQueryChangeListener(this);
+        searchView.setOnQueryTextListener(this);
         return true;
     }
 
@@ -80,13 +80,13 @@ public class ActionBarUsage extends Activity implements OnQueryChangeListener {
 
     // The following callbacks are called for the SearchView.OnQueryChangeListener
     // For more about using SearchView, see src/.../view/SearchView1.java and SearchView2.java
-    public boolean onQueryTextChanged(String newText) {
+    public boolean onQueryTextChange(String newText) {
         newText = newText.isEmpty() ? "" : "Query so far: " + newText;
         mSearchText.setText(newText);
         return true;
     }
 
-    public boolean onSubmitQuery(String query) {
+    public boolean onQueryTextSubmit(String query) {
         Toast.makeText(this, "Searching for: " + query + "...", Toast.LENGTH_SHORT).show();
         return true;
     }

@@ -35,7 +35,7 @@ import android.view.View;
 import android.widget.ListView;
 import android.widget.SearchView;
 import android.widget.SimpleCursorAdapter;
-import android.widget.SearchView.OnQueryChangeListener;
+import android.widget.SearchView.OnQueryTextListener;
 
 /**
  * Demonstration of more complex use if a ListFragment, including showing
@@ -58,7 +58,7 @@ public class FragmentListCursorLoader extends Activity {
 
 //BEGIN_INCLUDE(fragment_cursor)
     public static class CursorLoaderListFragment extends ListFragment
-            implements OnQueryChangeListener, LoaderManager.LoaderCallbacks<Cursor> {
+            implements OnQueryTextListener, LoaderManager.LoaderCallbacks<Cursor> {
 
         // This is the Adapter being used to display the list's data.
         SimpleCursorAdapter mAdapter;
@@ -94,11 +94,11 @@ public class FragmentListCursorLoader extends Activity {
             item.setIcon(android.R.drawable.ic_menu_search);
             item.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
             SearchView sv = new SearchView(getActivity());
-            sv.setOnQueryChangeListener(this);
+            sv.setOnQueryTextListener(this);
             item.setActionView(sv);
         }
 
-        public boolean onQueryTextChanged(String newText) {
+        public boolean onQueryTextChange(String newText) {
             // Called when the action bar search text has changed.  Update
             // the search filter, and restart the loader to do a new query
             // with this filter.
@@ -107,7 +107,7 @@ public class FragmentListCursorLoader extends Activity {
             return true;
         }
 
-        @Override public boolean onSubmitQuery(String query) {
+        @Override public boolean onQueryTextSubmit(String query) {
             // Don't care about this.
             return true;
         }
