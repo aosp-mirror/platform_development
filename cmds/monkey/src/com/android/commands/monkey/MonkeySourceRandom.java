@@ -479,7 +479,7 @@ public class MonkeySourceRandom implements MonkeyEventSource {
         }
 
         // The remaining event categories are injected as key events
-        do {
+        for (;;) {
             if (cls < mFactors[FACTOR_NAV]) {
                 lastKey = NAV_KEYS[mRandom.nextInt(NAV_KEYS.length)];
             } else if (cls < mFactors[FACTOR_MAJORNAV]) {
@@ -499,7 +499,13 @@ public class MonkeySourceRandom implements MonkeyEventSource {
             } else {
                 lastKey = 1 + mRandom.nextInt(KeyEvent.getMaxKeyCode() - 1);
             }
-        } while (!PHYSICAL_KEY_EXISTS[lastKey]);
+
+            if (lastKey != KeyEvent.KEYCODE_POWER
+                    && lastKey != KeyEvent.KEYCODE_ENDCALL
+                    && PHYSICAL_KEY_EXISTS[lastKey]) {
+                break;
+            }
+        }
 
         MonkeyKeyEvent e = new MonkeyKeyEvent(KeyEvent.ACTION_DOWN, lastKey);
         mQ.addLast(e);
