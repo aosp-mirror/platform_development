@@ -337,9 +337,8 @@ public class Monkey {
                 synchronized (Monkey.this) {
                     mAbort = true;
                 }
-                return (mKillProcessAfterError) ? -1 : 1;
             }
-            return 1;
+            return (mKillProcessAfterError) ? -1 : 1;
         }
     }
 
