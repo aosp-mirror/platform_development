@@ -52,7 +52,7 @@
         </activity>
 
         <activity android:name="NoteEditor"
-            android:theme="@android:style/Theme.Light.Holo"
+            android:theme="@android:style/Theme.Holo.Light"
             android:screenOrientation="sensor"
             android:configChanges="keyboardHidden|orientation"
         >
