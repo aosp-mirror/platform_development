@@ -113,6 +113,7 @@
     <string name="development_settings_debug_app_label_text">Debug App:</string>
     <string name="development_settings_show_sleep_text">Show sleep state on LED</string>
     <string name="development_settings_keep_screen_on_text">Keep screen on while plugged in</string>
+    <string name="development_settings_window_orientation_listener_log">Enable window orientation listener log</string>
 
     <string name="monkey_screen_initialActivity_text"></string>
     <string name="monkey_screen_number_of_events_label">Number of Events: </string>
