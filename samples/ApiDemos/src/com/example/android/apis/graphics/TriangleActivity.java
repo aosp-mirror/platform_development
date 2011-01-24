@@ -26,8 +26,10 @@ public class TriangleActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mGLView = new GLSurfaceView(this);
-        mGLView.setEGLConfigChooser(false);
         mGLView.setRenderer(new StaticTriangleRenderer(this));
+        /*ImageView imageView = new ImageView(this);
+        imageView.setImageResource(R.raw.robot);
+        setContentView(imageView);*/
         setContentView(mGLView);
     }
 

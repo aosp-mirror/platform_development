@@ -2057,9 +2057,19 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".graphics.HiddenActivity"
+                android:label="Graphics/OpenGL ES/Hidden Activity"
+                android:theme="@android:style/Theme.Translucent"
+                android:configChanges="orientation|keyboardHidden">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+        
         <activity android:name=".graphics.TriangleActivity"
                 android:label="Graphics/OpenGL ES/Textured Triangle"
-                android:theme="@android:style/Theme.NoTitleBar"
+                android:theme="@android:style/Theme.Holo.Dialog"
                 android:configChanges="orientation|keyboardHidden">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
