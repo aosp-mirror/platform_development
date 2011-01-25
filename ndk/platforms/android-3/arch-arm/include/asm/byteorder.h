@@ -22,7 +22,7 @@ static inline __attribute_const__ __u32 ___arch__swab32(__u32 x)
 #ifndef __thumb__
  if (!__builtin_constant_p(x)) {
 
- asm ("eor\t%0, %1, %1, ror #16" : "=r" (t) : "r" (x));
+ __asm__ ("eor\t%0, %1, %1, ror #16" : "=r" (t) : "r" (x));
  } else
 #endif
  t = x ^ ((x << 16) | (x >> 16));
