@@ -449,7 +449,8 @@ public class LoaderThrottle extends Activity {
                             return null;
                         }
                     };
-                    mPopulatingTask.execute((Void[])null);
+                    mPopulatingTask.executeOnExecutor(
+                            AsyncTask.THREAD_POOL_EXECUTOR, (Void[])null);
                     return true;
 
                 case CLEAR_ID:
