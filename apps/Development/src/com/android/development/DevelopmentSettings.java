@@ -64,6 +64,7 @@ public class DevelopmentSettings extends Activity {
     private CheckBox mShowBackgroundCB;
     private CheckBox mShowSleepCB;
     private CheckBox mShowXmppCB;
+    private CheckBox mWindowOrientationListenerLogCB;
     private CheckBox mCompatibilityModeCB;
     private Spinner mMaxProcsSpinner;
     private Spinner mWindowAnimationScaleSpinner;
@@ -74,6 +75,7 @@ public class DevelopmentSettings extends Activity {
     private boolean mWaitForDebugger;
     private boolean mAlwaysFinish;
     private int mPointerLocation;
+    private int mWindowOrientationListenerLog;
     private int mProcessLimit;
     private boolean mShowSleep;
     private boolean mShowXmpp;
@@ -136,6 +138,8 @@ public class DevelopmentSettings extends Activity {
         mShowSleepCB.setOnClickListener(mShowSleepClicked);
         mShowXmppCB = (CheckBox)findViewById(R.id.show_xmpp);
         mShowXmppCB.setOnClickListener(mShowXmppClicked);
+        mWindowOrientationListenerLogCB = (CheckBox)findViewById(R.id.window_orientation_listener_log);
+        mWindowOrientationListenerLogCB.setOnClickListener(mWindowOrientationListenerLogClicked);
         mCompatibilityModeCB = (CheckBox)findViewById(R.id.compatibility_mode);
         mCompatibilityModeCB.setOnClickListener(mCompatibilityModeClicked);
         mMaxProcsSpinner = (Spinner)findViewById(R.id.max_procs);
@@ -203,6 +207,7 @@ public class DevelopmentSettings extends Activity {
         updateFlingerOptions();
         updateSleepOptions();
         updateXmppOptions();
+        updateWindowOrientationListenerLogOptions();
         updateCompatibilityOptions();
 
         try {
@@ -259,6 +264,17 @@ public class DevelopmentSettings extends Activity {
         mPointerLocation = Settings.System.getInt(getContentResolver(),
                 Settings.System.POINTER_LOCATION, 0);
         mPointerLocationSpinner.setSelection(mPointerLocation);
+    }
+
+    private void writeWindowOrientationListenerLogOptions() {
+        Settings.System.putInt(getContentResolver(),
+                Settings.System.WINDOW_ORIENTATION_LISTENER_LOG, mWindowOrientationListenerLog);
+    }
+
+    private void updateWindowOrientationListenerLogOptions() {
+        mWindowOrientationListenerLog = Settings.System.getInt(getContentResolver(),
+                Settings.System.WINDOW_ORIENTATION_LISTENER_LOG, 0);
+        mWindowOrientationListenerLogCB.setChecked(mWindowOrientationListenerLog != 0);
     }
 
     // Returns the current state of the system property that controls
@@ -475,6 +491,13 @@ public class DevelopmentSettings extends Activity {
             // other development settings code.
             writeXmppOptions();
             updateXmppOptions();
+        }
+    };
+
+    private View.OnClickListener mWindowOrientationListenerLogClicked = new View.OnClickListener() {
+        public void onClick(View v) {
+            mWindowOrientationListenerLog = ((CheckBox)v).isChecked() ? 1 : 0;
+            writeWindowOrientationListenerLogOptions();
         }
     };
 
