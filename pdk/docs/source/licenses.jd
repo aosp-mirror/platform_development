@@ -4,18 +4,15 @@ doc.type=source
 <div>
 <p>The Android Open Source Project uses a few <a
 href="http://www.opensource.org/">open source initiative</a> approved open
-source licenses to enable availability of source code and to accept
-contributions from individuals and corporations.</p>
+source licenses for our software.</p>
 <h2>Android Open Source Project license</h2>
-<p>The preferred license for the Android Open Source Project is <a
-href="http://www.apache.org/licenses/LICENSE-2.0">Apache 2.0</a>. Apache 2.0
-is a commercial and open source friendly open source license. The majority of
-the Android platform is licensed under the <a
-href="http://www.apache.org/licenses/">Apache 2.0 license</a>. While the
-project will strive to adhere to the preferred license, there may be
-exceptions which will be handled on a case-by-case basis. For example, the
-Linux kernel patches are under the GPLv2 license with system exceptions, which
-can be found on <a
+<p>The preferred license for the Android Open Source Project is the <a
+href="http://www.apache.org/licenses/LICENSE-2.0">Apache Software License,
+2.0</a> ("Apache 2.0"), and the majority of the Android software is licensed
+with Apache 2.0. While the project will strive to adhere to the preferred
+license, there may be exceptions which will be handled on a case-by-case
+basis. For example, the Linux kernel patches are under the GPLv2 license with
+system exceptions, which can be found on <a
 href="http://www.kernel.org/pub/linux/kernel/COPYING">kernel.org</a>.
 </p>
 <h2>Contributor License Grants</h2>
@@ -25,15 +22,15 @@ Source Project will be required to complete, sign, and submit an <a
 href="{@docRoot}source/cla-individual.html">Individual
 Contributor License Grant</a>. The grant can be executed online through the <a
 href="https://review.source.android.com/#settings,agreements">code review
-tool</a>. The agreement clearly defines the terms under which intellectual
-property has been contributed to the Android Open Source Project.This license
+tool</a>. The grant clearly defines the terms under which intellectual
+property has been contributed to the Android Open Source Project. This license
 is for your protection as a contributor as well as the protection of the
 project; it does not change your rights to use your own contributions for any
 other purpose.</p>
 <p>For a <b>corporation</b> (or other entity) that has assigned employees to
 work on the Android Open Source Project, a <a
 href="{@docRoot}source/cla-corporate.html">Corporate
-Contributor License Grant</a> is available. This version of the Grant allows a
+Contributor License Grant</a> is available. This version of the grant allows a
 corporation to authorize contributions submitted by its designated employees
 and to grant copyright and patent licenses. Note that a Corporate Contributor
 License Grant does not remove the need for any developer to sign their own
