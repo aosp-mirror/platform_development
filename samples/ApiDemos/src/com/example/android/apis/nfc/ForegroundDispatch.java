@@ -24,17 +24,20 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.IntentFilter.MalformedMimeTypeException;
 import android.nfc.NfcAdapter;
+import android.nfc.tech.NfcF;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.TextView;
 
 /**
- * An example of how to use the NFC foreground dispatch APIs.
+ * An example of how to use the NFC foreground dispatch APIs. This will intercept any MIME data
+ * based NDEF dispatch as well as all dispatched for NfcF tags.
  */
 public class ForegroundDispatch extends Activity {
     private NfcAdapter mAdapter;
     private PendingIntent mPendingIntent;
     private IntentFilter[] mFilters;
+    private String[][] mTechLists;
     private TextView mText;
     private int mCount = 0;
 
@@ -54,27 +57,25 @@ public class ForegroundDispatch extends Activity {
         mPendingIntent = PendingIntent.getActivity(this, 0,
                 new Intent(this, getClass()).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP), 0);
 
-        // Setup intent filters for all types of NFC dispatches to intercept all discovered tags
+        // Setup an intent filter for all MIME based dispatches
         IntentFilter ndef = new IntentFilter(NfcAdapter.ACTION_NDEF_DISCOVERED);
         try {
             ndef.addDataType("*/*");
         } catch (MalformedMimeTypeException e) {
             throw new RuntimeException("fail", e);
         }
-        IntentFilter tech = new IntentFilter(NfcAdapter.ACTION_TECHNOLOGY_DISCOVERED);
-        tech.addDataScheme("vnd.android.nfc"); 
         mFilters = new IntentFilter[] {
                 ndef,
-                tech,
-                new IntentFilter(NfcAdapter.ACTION_TAG_DISCOVERED),
         };
+
+        // Setup a tech list for all NfcF tags
+        mTechLists = new String[][] { new String[] { NfcF.class.getName() } };
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        //mAdapter.enableForegroundDispatch(this, mPendingIntent, mFilters);
-        throw new RuntimeException("onResume not implemented to fix build");
+        mAdapter.enableForegroundDispatch(this, mPendingIntent, mFilters, mTechLists);
     }
 
     @Override
