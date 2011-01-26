@@ -77,7 +77,7 @@ import android.util.Log;
 
 public class TestObjectNull extends Activity {
     /** Called when the activity is first created. */
-    @Override
+    &#64;Override
     public void onCreate(Bundle icicle) {
         super.onCreate(icicle);
         setContentView(R.layout.main);

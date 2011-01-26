@@ -17,7 +17,8 @@ doc.type=porting
 </div>
 </div>
 
-<p>Android's Bluetooth stack uses BlueZ version 3.36 for GAP, SDP, and RFCOMM profiles, and is a SIG-qualified Bluetooth 2.0 + EDR host stack.</p>
+<p>Android's Bluetooth stack uses BlueZ for GAP, SDP, and RFCOMM profiles, and
+is a SIG-qualified Bluetooth stack. </p>
 
 <p>Bluez is GPL licensed, so the Android framework interacts with userspace bluez code through D-BUS IPC to avoid proprietary code.</p>
 
@@ -33,7 +34,7 @@ Solid elements represent Android blocks and dashed elements represent partner-sp
 
 <a name="androidBluetoothPorting"></a><h3>Porting</h3>
 
-<p>BlueZ is Bluetooth 2.0 compatible and should work with any 2.0 chipset. There are two integration points:</p>
+<p>BlueZ is Bluetooth 2.1 compatible and should work with any 2.1 chipset and is backward compatibile with older Bluetooth versions. There are two integration points:</p>
 <p><ul>
 <li>UART driver</li>
 <li>Bluetooth Power On / Off</li>
@@ -67,7 +68,7 @@ BOARD_HAVE_BLUETOOTH := true
 
 <a name="androidBluetoothTroubleshooting"></a><h3>Troubleshooting</h3>
 <p><strong>Debugging</strong></p>
-<p>To debug your bluetooth implementation, start by reading the logs (<code>adb logcat</code>) and look for ERRROR and WARNING messages regarding Bluetooth. 
+<p>To debug your bluetooth implementation, start by reading the logs (<code>adb logcat</code>) and look for ERRROR and WARNING messages regarding Bluetooth.
   Andoird uses Bluez, which comes with some useful debugging tools. The snippet below provides examples in a suggested order:</p>
 <pre>
 hciconfig -a  			# print BT chipset address and features. Useful to check if you can communicate with your BT chipset.
@@ -158,14 +159,79 @@ sdptool records ADDRESS # request the SDP records of another BT device.
   <li>QDID B015261: Host stack (SDP, L2CAP, GAP, RFCOMM, SPP, AVCTP, AVRCP, GAVDP, AVDTP, A2DP)</li>
   <li>QDID B015262: EPL for HTC Sapphire (HSP, HFP)</li>
 </ul>
+<h4>Android 2.0/2.1 release (eclair)</h4>
+<h4>Platform features</h4>
+<ul>
+  <li>Based on Bluez 4.47 with Linux Kernel 2.6.29</li>
+  <li>Bluetooth 2.1+EDR host stack</li>
+  <ul>
+    <li>Support for auto-pairing with '0000' devices</li>
+    <li>Support for Simple Secure Pairing</li>
+  </ul>
+  <li>Headset Profile 1.1 in Audio Gateway role</li>
+  <li>Handsfree Profile 1.5 in Audio Gateway role</li>
+  <ul>
+    <li>Three-way calling    </li>
+    <li>Phonebook over AT commands    </li>
+    <li>Volume synchronization</li>
+    <li>eSCO</li>
+    <li>Extensive bug fixes and compatibility improvements</li>
+  </ul>
+  <li>Stereo Bluetooth (A2DP 1.2) in Source role</li>
+  <ul>
+    <li>AVDTP 1.2 in Acceptor and Initiator roles</li>
+    <li>GAVDTP 1.0 in Acceptor and Initiator roles</li>
+    <li>44.1 khz, stereo, software SBC codec</li>
+  </ul>
+  <li>Remote Control (AVRCP 1.0) in Target role</li>
+  <ul>
+    <li>AVCTP 1.3 in Target role</li>
+    <li>play/pause/stop/prev/next</li>
+  </ul>
+  <li> Object Push Profile version 1.1 </li>
+  <ul>
+     <li>Adds ability to transfer pictures, videos</li>
+     <li>Transfer of contacts using vCard is not supported in this release.</li>
+  </ul>
+  <li>Phone Book Address Profile version 1.0</li>
+  <ul>
+    <li>Phone Book Server Equipment (PSE) role supported</li>
+  </ul>
+  <li>Using Java Bluetooth APIs, an Android application can peform the
+  following:</li>
+  <ul>
+   <li>Scan for other Bluetooth devices </li>
+   <li>Query the local Bluetooth adapter for paired Bluetooth devices </li>
+   <li>Establish RFCOMM channels </li>
+   <li>Connect to other devices through service discovery </li>
+   <li>Transfer data to and from other devices </li>
+   <li>Manage multiple connections </li>
+  </ul>
+  <li>Support for Bluetooth enabled car and desk docks</li>
+  <ul>
+   <li>Framework support for routing Phone Call Audio and A2DP streaming using
+   car and desk docks. </li>
+  </ul>
+</ul>
+
+<h4>Android 2.2  release (Froyo)</h4>
+<h4>Platform features</h4>
+<ul>
+  <li>Based on Bluez 4.47 with Linux Kernel 2.6.32</li>
+  <li>No new profiles added.</li>
+  <li>Added ability to share contacts using vCard</li>
+  <li>Added ability to export all contacts - useful to transfer contacts to car kits </li>
+  <li>Improved compatibility with headsets and car kits. </li>
+</ul>
+
 <h5>&nbsp;</h5>
 <h4>Future releases</h4>
 <p>This section offers a rough guide of which features the team is developing for the next release. This feature list may change without notice. It isn't possible to post scheduling advice to the mailing lists.</p>
 <ul>
-  <li>Java Bluetooth API</li>
-  <li>Bluez 4.x with Linux Kernel 2.6.29</li>
   <li>More profiles...</li>
-  <li>Bluetooth 2.1+EDR</li>
+  <li>Improved compatibility with headsets and car kits</li>
+  <li>Bluetooth emulator support</li>
+  <li>Bluetooth Low Energy </li>
 </ul>
 
 <p><strong>Development Notes</strong></p>
@@ -184,10 +250,4 @@ BNEP</code> support is compiled into the kernel with cupcake. <br />
 While not officially supported, you should be able to run <code>dund</code> or <code>pand</code> daemons and, using <code>pppd</code> or <code>iptables</code>, test tethering support. Next steps include plubming the DBUS APIs to these daemons up into the Android Java framework and adding code to setup the network paths via <code>pppd</code> and / or <code>iptables</code>.<br />
   <br />
   </li>
-  <li><strong>Emulator Support</strong><br />
-  The Android emulator does not support Bluetooth at this time and there currently aren't any plans for its support.<br />
-    <br />
-  </li>
-  <li><strong>Bluetooth 2.1 and Simple Pairing Support</strong><br />
-  In order to support these features, Android needs to move to a Bluez 4.x version. This change is not scheduled at this time.</li>
 </ul>

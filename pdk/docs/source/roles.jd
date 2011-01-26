@@ -15,22 +15,22 @@ href="{@docRoot}source/index.html">Get Involved</a>.</p>
 
 <h2>Contributor</h2>
 <p>A "Contributor" is anyone making contributions to the AOSP source code,
-including both employees of Google or other companies, as well as
-external developers who are contributing to Android on their own behalf.
-There is no distinction between Contributors who are employed by 
-Google, and those who are not: all engineers use the same git/gerrit tools, 
-follow the same code review process, and are subject to the same requirements
-on code style and so on.</p>
+including both employees of Google or other companies, as well as external
+developers who are contributing to Android on their own behalf.  There is no
+distinction between Contributors who are employed by Google, and those who are
+not: all engineers use the same tools (<code>git</code>, <code>repo</code>,
+and <code>gerrit</code>), follow the same code review process, and are subject
+to the same requirements on code style and so on.</p>
 <p/>
 
 <h2>Developer</h2>
 <p>A "Developer" is an engineer writing applications that run on Android
 devices. There is, of course, no difference in skillset between a "Developer"
-and a "Contributor"; AOSP simply uses "Developer" to help identify our audience.
-Since the key purpose of Android is to cultivate an open development platform,
-"Developers" are one of the key customers of the Android platform. As such, we
-talk about them a lot, though this isn't technically a separate role in the
-AOSP <i>per se.</i></p>
+and a "Contributor", but AOSP uses "Developer" to distinguish between
+engineers using the platform and those contributing to it. Developers are
+(along with end users) the "customers" of the platform that the Contributors
+create. As such, we talk about Developers a lot, though this isn't technically
+a separate role in the AOSP <i>per se.</i></p>
 <p/>
 
 <h2>Verifier</h2>
@@ -62,12 +62,12 @@ responsible for the following:</p>
   releases.</li>
   <li>Designate Verifiers and Approvers for submitted patches.</li>
   <li>Be fair and unbiased while reviewing changes. Accept or reject patches
-  based on technical merit and alignment with the Android platform.</li>
+  based on technical merit and alignment with the Android strategy.</li>
   <li>Review changes in a timely manner and make best efforts to communicate
   when changes are not accepted.</li>
   <li>Optionally maintain a web site for the project for information and
   documents specific to the project.</li>
   <li>Act as a facilitator in resolving technical conflicts.</li>
-  <li>Be the public face for the project and the go-to person for questions
+  <li>Be a public face for the project and the go-to person for questions
   related to the project.</li>
 </ul>

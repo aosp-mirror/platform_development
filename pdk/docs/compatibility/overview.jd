@@ -35,11 +35,13 @@ manufacturers the flexibility to create unique devices that are nonetheless
 compatible.</p></li>
 <li><b>Minimize costs and overhead associated with
 compatibility.</b><p>Ensuring compatibility should be easy and inexpensive to
-device manufacturers. The testing tool (CTS) is free and will soon be available
-in open source. CTS is designed to be used for continuous self-testing during
-the device development process to eliminate the cost of changing your workflow
-or sending your device to a third party for testing. Meanwhile, there are no
-required certifications, and thus no corresponding costs and fees.</p></li>
+device manufacturers. The testing tool (CTS) is free, open source, and
+available for <a href="{@docRoot}compatibility/downloads.html">download</a>. 
+CTS is designed to be used for continuous self-testing
+during the device development process to eliminate the cost of changing your
+workflow or sending your device to a third party for testing. Meanwhile, there
+are no required certifications, and thus no corresponding costs and
+fees.</p></li>
 </ul>
 <p>The Android compatibility program consists of three key components:</p>
 <ul>
@@ -76,8 +78,9 @@ corresponding CDD and stay within its guidelines. For additional details,
 simply examine <a href="">the latest CDD</a>.</p>
 
 <h3>Compatibility Test Suite (CTS)</h3>
-<p>The CTS is a free, commercial-grade test suite, available along with the
-Android source code. The CTS represents the "mechanism" of compatibility.</p>
+<p>The CTS is a free, commercial-grade test suite, available for
+<a href="{@docRoot}compatibility/downloads.html">download</a>.
+The CTS represents the "mechanism" of compatibility.</p>
 <p>The CTS runs on a desktop machine and executes test cases directly on
 attached devices or an emulator. The CTS is a set of unit tests designed to be
 integrated into the daily workflow (such as via a continuous build system) of

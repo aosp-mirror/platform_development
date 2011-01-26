@@ -57,7 +57,7 @@ might have been reported via an internal bug-tracking system,
 which is considered the "master" copy. (For instance, Google maintains one
 such private issue tracker, intended primarily for bugs which contain
 sensitive information which can't be revealed publicly.)</p></li>
-<li><b>Assigned</b><li>Like <code>Unassigned</code>, but the bug has been
+<li><b>Assigned</b><p>Like <code>Unassigned</code>, but the bug has been
 actually assigned to a specific contributor to fix.</p></li>
 </ul>
 <p>Typically, a given bug will start in <code>Unassigned</code>, where it
@@ -77,8 +77,8 @@ determined to not require any action.</p>
 <li><b>Spam</b><p>A kind soul sent us some delicious pork products, that we,
 regrettably, do not want.</p></li>
 <li><b>Question</b><p>Someone mistook the issue tracker for a help forum.
-(This is not as uncommon as one might assume: many users whose native language
-isn't English can make this mistake.)</p></li>
+(This is not as uncommon as you might think: many users whose native language
+isn't English misunderstand the site and make this mistake.)</p></li>
 <li><b>Unreproducible</b><p>An AOSP contributor attempted to reproduce the
 behavior described, and was unable to do so. This sometimes means that the bug
 is legitimate but simply rare or difficult to reproduce, and sometimes means
