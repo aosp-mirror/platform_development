@@ -335,7 +335,7 @@ $ adb shell am instrument -w \
 <pre class="prettify">
 public class FrameworkInstrumentationTestRunner extends InstrumentationTestRunner {
 
-    @Override
+    &#64;Override
     public TestSuite getAllTests() {
         InstrumentationTestSuite suite = new InstrumentationTestSuite(this);
 
@@ -345,7 +345,7 @@ public class FrameworkInstrumentationTestRunner extends InstrumentationTestRunne
         return suite;
     }
 
-    @Override
+    &#64;Override
     public ClassLoader getLoader() {
         return FrameworkInstrumentationTestRunner.class.getClassLoader();
     }
@@ -373,7 +373,7 @@ public class ButtonPressTest extends ActivityTestCase&lt;MyActivity&gt; {
         super("com.example", MyActivity.class);
     }
 
-    @Override
+    &#64;Override
     public void setUp() throws Exception {
       super.setUp();
       mLeftButton = (Button) getActivity().findViewById(R.id.leftButton);

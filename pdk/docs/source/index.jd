@@ -3,7 +3,7 @@ doc.type=source
 @jd:body
 <div>
 <p>Thanks for your interest in Android! Here are some ways you can get involved
-and help Google improve Android. For background on the Android project and our
+and help us improve Android. For background on the Android project and our
 goals, check out the <a href="{@docRoot}about/philosophy.html">Project
 Philosophy page</a>.</p>
 
@@ -11,7 +11,7 @@ Philosophy page</a>.</p>
 <p>One of the easiest and most effective ways you can help improve Android is
 to file bugs. For more information, visit the <a
 href="{@docRoot}source/report-bugs.html">Reporting Bugs</a> page.</p>
-<p>Please note that we can't guarantee that any particular bug can be fixed in
+<p>Please note that we can't guarantee that any particular bug will be fixed in
 any particular release. To see what happens to your bug once you report it,
 read <a href="{@docRoot}source/life-of-a-bug.html">Life of a Bug</a>.</p>
 
@@ -26,8 +26,10 @@ compatible Android devices, using the SDK.</p>
 
 <h2>Contribute to the Code</h2>
 <p>Code is King. We'd love to review any changes you submit, so please check
-out the source, pick a bug or feature, and get coding.</p>
-<p>You can get started with  by learning about the <a
+out the source, pick a bug or feature, and get coding. Note that the smaller
+and more targetted your patch submissions, the easier it will be for us to
+review them.</p>
+<p>You can get started with Android by learning about the <a
 href="{@docRoot}source/life-of-a-patch.html">Life of a Patch</a>, and by
 learning about <code>git</code>, <code>repo</code>, and other tools using the
 links to the left. If you need help along the way, you can join our <a

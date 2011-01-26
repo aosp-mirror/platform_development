@@ -2,7 +2,7 @@ page.title=Philosophy and Goals
 doc.type=about
 doc.hidenav=true
 @jd:body
-<p>Android is an open-source software stack for mobile phones and similar
+<p>Android is an open-source software stack for mobile phones and other
 devices.</p>
 <h2>Origin and Goal</h2>
 <p>Android was originated by a group of companies known as the Open Handset
@@ -16,12 +16,11 @@ available for carriers, OEMs, and developers to use to make their innovative
 ideas a reality. We wanted to make sure that there was no central point of
 failure, where one industry player could restrict or control the innovations
 of any other. The solution we chose was an open and open-source platform.</p>
-<p>But the ultimate goal, of course, is to improve the mobile experience for
-real users by facilitating innovation. Accordingly, the primary goal of the
-AOSP is to make sure Android is a success as an end user product.</p>
+<p>The goal of the Android Open Source Project is to create a successful
+real-world product that improves the mobile experience for end users.</p>
 <h2>Governance Philosophy</h2>
 <p>The companies that have invested in Android have done so on its merits,
-because we collectively believe that an open platform is necessary. Android is
+because we believe that an open platform is necessary. Android is
 intentionally and explicitly an open-source -- as opposed to free software --
 effort: a group of organizations with shared needs has pooled
 resources to collaborate on a single implementation of a shared product. 
@@ -34,20 +33,19 @@ compatible", and what is required of device builders to achieve that status.
 Anyone can (and will!) use the Android source code for any purpose, and we
 welcome all such uses. However, in order to take part in the shared
 ecosystem of applications that we are building around Android, device builders
-can take advantage of the Compatibility Program.</p>
+must participate in the Compatibility Program.</p>
 <p>Though Android consists of multiple sub-projects, this is strictly a
 project-management technique. We view and manage Android as a single,
 holistic software product, not a "distribution", specification, or collection
-of replaceable parts. Conceptually, our notion is that device builders port
+of replaceable parts. Our intent is that device builders port
 Android to a device; they don't implement a specification or curate a
 distribution.</p>
 <h2>How We Work</h2>
 <p>We know that quality does not come without hard work. Along with many
 partners, Google has contributed full-time engineers, product managers, UI
 designers, Quality Assurance, and all the other roles required to bring
-modern devices to market.  We integrate the open source administration and
+modern devices to market.  We roll the open source administration and
 maintenance into the larger product development cycle.</p>
-<p>In a nutshell:</p>
 <ul>
 <li>At any given moment, there is a current latest release of the Android
 platform. This typically takes the form of a branch in the tree.</li>
@@ -56,18 +54,9 @@ latest release, fixing bugs, launching new devices, experimenting with new
 features, and so on.</li>
 <li>In parallel, Google works internally on the next version of the
 Android platform and framework, working according to the product's needs and
-goals. Some of the work from the current latest tree will promoted into these
-releases.</li>
-<li>When the "n+1"th version is determined to be nearing completion, it will
-be published to the public source tree, and become the new latest
-release.</li>
-<li>Since Android is open source, nothing prevents device implementers from
-shipping devices on older (obsolete) Android builds. However, active work will
-be focused on the current platform release.</li>
+goals. We develop the next version of Android by working with a device partner
+on a flagship device whose specifications are chosen to push Android
+in the direction we believe it should go.</li>
+<li>When the "n+1"th version is ready, it will be published to the public
+source tree, and become the new latest release.</li>
 </ul>
-<p>To meet our goals, Android needs to achieve widespread, compatible
-adoption. We believe that the best way to accomplish that is to make sure that
-we ship high-quality, flagship devices with an intense product and end-user
-focus. The "next release" of Android is driven by the product needs for the next
-generation of mobile devices; the resulting excellent product is then released
-to open source and becomes the new current version of the platform.</p>
