@@ -4,12 +4,12 @@
           android:icon="@drawable/ic_menu_save"
           android:alphabeticShortcut='s'
           android:title="@string/menu_save"
-          android:showAsAction="always" />
+          android:showAsAction="ifRoom|withText" />
     <item android:id="@+id/menu_revert"
           android:icon="@drawable/ic_menu_revert"
           android:title="@string/menu_revert" />
     <item android:id="@+id/menu_delete"
           android:icon="@drawable/ic_menu_delete"
           android:title="@string/menu_delete"
-          android:showAsAction="always" />
+          android:showAsAction="ifRoom|withText" />
 </menu>
