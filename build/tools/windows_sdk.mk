@@ -18,7 +18,7 @@ endif
 ifeq ($(strip $(shell which i586-mingw32msvc-gcc 2>/dev/null)),)
 $(error MinGW is required to build a Windows SDK. Please 'apt-get install mingw32')
 endif
-ifeq ($(strip $(shell which unix2dos 2>/dev/null)),)
+ifeq ($(strip $(shell which unix2dos todos 2>/dev/null)),)
 $(error Need a unix2dos command. Please 'apt-get install tofrodos')
 endif
 
