@@ -89,8 +89,11 @@ public class FragmentDialog extends Activity {
             case 2: return "STYLE_NO_FRAME";
             case 3: return "STYLE_NO_INPUT (this window can't receive input, so "
                     + "you will need to press the bottom show button)";
-            case 4: return "STYLE_NORMAL with light fullscreen theme";
-            case 5: return "STYLE_NORMAL with dark fullscreen theme";
+            case 4: return "STYLE_NORMAL with dark fullscreen theme";
+            case 5: return "STYLE_NORMAL with light theme";
+            case 6: return "STYLE_NO_TITLE with light theme";
+            case 7: return "STYLE_NO_FRAME with light theme";
+            case 8: return "STYLE_NORMAL with light fullscreen theme";
         }
         return "STYLE_NORMAL";
     }
@@ -127,10 +130,16 @@ public class FragmentDialog extends Activity {
                 case 3: style = DialogFragment.STYLE_NO_INPUT; break;
                 case 4: style = DialogFragment.STYLE_NORMAL; break;
                 case 5: style = DialogFragment.STYLE_NORMAL; break;
+                case 6: style = DialogFragment.STYLE_NO_TITLE; break;
+                case 7: style = DialogFragment.STYLE_NO_FRAME; break;
+                case 8: style = DialogFragment.STYLE_NORMAL; break;
             }
             switch ((mNum-1)%6) {
-                case 4: theme = android.R.style.Theme_Light; break;
-                case 5: theme = android.R.style.Theme; break;
+                case 4: theme = android.R.style.Theme_Holo; break;
+                case 5: theme = android.R.style.Theme_Holo_Light_Dialog; break;
+                case 6: theme = android.R.style.Theme_Holo_Light; break;
+                case 7: theme = android.R.style.Theme_Holo_Light_Panel; break;
+                case 8: theme = android.R.style.Theme_Holo_Light; break;
             }
             setStyle(style, theme);
         }
