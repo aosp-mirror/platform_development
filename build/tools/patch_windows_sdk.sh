@@ -30,7 +30,7 @@ WIN_OUT_DIR=$2
 TOPDIR=${TOPDIR:-$3}
 
 # The unix2dos is provided by the APT package "tofrodos". However
-# as for ubuntu lucid, the package renamed the command to "todos".
+# as of ubuntu lucid, the package renamed the command to "todos".
 UNIX2DOS=`which unix2dos`
 if [[ ! -x $UNIX2DOS ]]; then
   UNIX2DOS=`which todos`
@@ -111,3 +111,4 @@ ${TOPDIR}sdk/build/patch_windows_sdk.sh $Q ${TEMP_SDK_DIR} ${WIN_OUT_DIR} ${TOPD
 for i in fastboot.exe adb.exe AdbWinApi.dll AdbWinUsbApi.dll; do
     cp -f $V $WIN_OUT_DIR/host/windows-x86/bin/$i $TEMP_SDK_DIR/../$i
 done
+
