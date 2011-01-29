@@ -132,7 +132,7 @@ public class DraggableDot extends View {
             public boolean onLongClick(View v) {
                 ClipData data = ClipData.newPlainText("dot", "Dot : " + v.toString());
                 v.startDrag(data, new ANRShadowBuilder(v, mAnrType == ANR_SHADOW),
-                        (Object)v, 0);
+                        (Object)v, View.DRAG_FLAG_GLOBAL);
                 return true;
             }
         });
