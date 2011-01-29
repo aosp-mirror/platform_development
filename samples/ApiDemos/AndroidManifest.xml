@@ -2470,6 +2470,13 @@
             />
         </activity>
 
+        <activity android:name=".nfc.ForegroundNdefPush" android:label="NFC/ForegroundNdefPush">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
     </application>
 
     <instrumentation android:name=".app.LocalSampleInstrumentation"
