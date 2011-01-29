@@ -17,13 +17,13 @@
 package com.example.android.hcgallery;
 
 public class Directory {
-    private static DirectoryCategory[] categories;
+    private static DirectoryCategory[] mCategories;
 
     public static void initializeDirectory() {
-        categories = new DirectoryCategory[] {
+      mCategories = new DirectoryCategory[] {
                 new DirectoryCategory("Balloons", new DirectoryEntry[] {
-                        new DirectoryEntry("Green Balloon", R.drawable.green_balloon),
                         new DirectoryEntry("Red Balloon", R.drawable.red_balloon),
+                        new DirectoryEntry("Green Balloon", R.drawable.green_balloon),
                         new DirectoryEntry("Blue Balloon", R.drawable.blue_balloon)}),
                 new DirectoryCategory("Bikes", new DirectoryEntry[] {
                         new DirectoryEntry("Old school huffy", R.drawable.blue_bike),
@@ -42,10 +42,10 @@ public class Directory {
     }
 
     public static int getCategoryCount() {
-        return categories.length;
+        return mCategories.length;
     }
 
     public static DirectoryCategory getCategory(int i) {
-        return categories[i];
+        return mCategories[i];
     }
 }

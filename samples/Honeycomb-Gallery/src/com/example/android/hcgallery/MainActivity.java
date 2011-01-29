@@ -23,16 +23,22 @@ import android.animation.PropertyValuesHolder;
 import android.animation.ValueAnimator;
 import android.app.ActionBar;
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.app.DialogFragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.Configuration;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
 
 public class MainActivity extends Activity implements ActionBar.TabListener {
 
@@ -49,16 +55,27 @@ public class MainActivity extends Activity implements ActionBar.TabListener {
             mThemeId = savedInstanceState.getInt("theme");
             this.setTheme(mThemeId);
         }
+
+        requestWindowFeature(Window.FEATURE_ACTION_BAR_OVERLAY);
         setContentView(R.layout.main);
 
         Directory.initializeDirectory();
 
         ActionBar bar = getActionBar();
 
+        if (mThemeId == android.R.style.Theme_Holo_Light || mThemeId == -1) {
+            bar.setBackgroundDrawable(
+                    new ColorDrawable(getResources().getColor(R.color.actionbar_background_light)));
+        } else {
+            bar.setBackgroundDrawable(
+                    new ColorDrawable(getResources().getColor(R.color.actionbar_background_dark)));
+        }
+
         int i;
-        for (i = 0; i < Directory.getCategoryCount(); i++)
+        for (i = 0; i < Directory.getCategoryCount(); i++) {
             bar.addTab(bar.newTab().setText(Directory.getCategory(i).getName())
                     .setTabListener(this));
+        }
 
         mActionBarView = getLayoutInflater().inflate(
                 R.layout.action_bar_custom, null);
@@ -108,6 +125,7 @@ public class MainActivity extends Activity implements ActionBar.TabListener {
         case R.id.toggleTitles:
             toggleVisibleTitles();
             return true;
+
         case R.id.toggleTheme:
             if (mThemeId == android.R.style.Theme_Holo) {
                 mThemeId = android.R.style.Theme_Holo_Light;
@@ -115,6 +133,12 @@ public class MainActivity extends Activity implements ActionBar.TabListener {
                 mThemeId = android.R.style.Theme_Holo;
             }
             this.recreate();
+            return true;
+
+        case R.id.showDialog:
+            showDialog();
+            return true;
+
         default:
             return super.onOptionsItemSelected(item);
         }
@@ -203,6 +227,19 @@ public class MainActivity extends Activity implements ActionBar.TabListener {
         invalidateOptionsMenu();
     }
 
+    void showDialog() {
+
+        // DialogFragment.show() will take care of adding the fragment
+        // in a transaction.  We also want to remove any currently showing
+        // dialog, so make our own transaction and take care of that here.
+        FragmentTransaction ft = getFragmentManager().beginTransaction();
+
+        DialogFragment newFragment = MyDialogFragment.newInstance("The Dialog Of Awesome");
+
+        // Create and show the dialog.
+        newFragment.show(ft, "dialog");
+    }
+
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
         menu.getItem(1).setTitle(mToggleLabels[mLabelIndex]);
@@ -216,5 +253,38 @@ public class MainActivity extends Activity implements ActionBar.TabListener {
         int category = bar.getSelectedTab().getPosition();
         outState.putInt("category", category);
         outState.putInt("theme", mThemeId);
+    }
+
+
+    public static class MyDialogFragment extends DialogFragment {
+
+        public static MyDialogFragment newInstance(String title) {
+            MyDialogFragment frag = new MyDialogFragment();
+            Bundle args = new Bundle();
+            args.putString("title", title);
+            frag.setArguments(args);
+            return frag;
+        }
+
+        @Override
+        public Dialog onCreateDialog(Bundle savedInstanceState) {
+            String title = getArguments().getString("title");
+
+            return new AlertDialog.Builder(getActivity())
+                    .setTitle(title)
+                    .setPositiveButton("OK",
+                            new DialogInterface.OnClickListener() {
+                                public void onClick(DialogInterface dialog, int whichButton) {
+                                }
+                            }
+                    )
+                    .setNegativeButton("Cancel",
+                            new DialogInterface.OnClickListener() {
+                                public void onClick(DialogInterface dialog, int whichButton) {
+                                }
+                            }
+                    )
+                    .create();
+        }
     }
 }
