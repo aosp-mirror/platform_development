@@ -137,13 +137,7 @@ spinlock because no other thread can release it.
 (gdb) set scheduler-locking on
 </pre>
 
-<p>
-Ignore SIGUSR1 if you're using JamVM.  Shouldn't hurt if you're not.
-</p>
-
 <pre class="prettify">
-(gdb) handle SIGUSR1 noprint
-
 (gdb) where
 #0  __futex_wait () at system/klibc/android/atomics_arm.S:88
 #1  0x53010eb8 in pthread_cond_timedwait (cond=0x12081c, mutex=0x120818, abstime=0xffffffff)
@@ -239,7 +233,7 @@ Previous frame identical to this frame (corrupt stack?)
 </pre>
 
 <a name="Crash_in_C_C_code"></a><h4>Crash in C / C++ code</h4>
-<p>If it crashes, connect with <code>aproto</code> and run <code>logcat</code> on the device. You should see output like this:</p>
+<p>If it crashes, connect with <code>adb</code> and run <code>logcat</code> on the device. You should see output like this:</p>
 
 <pre class="prettify">
 I/ActivityManager(  188): Starting activity: Intent { component=com.android.calendar.MonthScreen }
