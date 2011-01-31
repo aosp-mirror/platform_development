@@ -15,12 +15,37 @@
 -->
 <resources>
     <string name="app_name">Custom Locale</string>
-    <string name="locale_default">ex_EX</string>
-    <string name="add_new_locale_button">Add New Locale</string>
-    <string name="new_locale_label">New locale code:</string>
-    <string name="add_button">Add</string>
-    <string name="no_data_label">No data</string>
+
+    <!-- Top labels in CustomLocaleActivity -->
+
     <string name="header_current_locale">Current Locale</string>
     <string name="header_locale_list">Locale List</string>
+    <string name="no_data_label">No data</string>
+
+    <!-- Buttons in CustomLocaleActivity -->
+
+    <string name="select_locale_button">Select</string>
+    <string name="select_locale_1s_button">Select \'%1$s\'</string>
+    <string name="add_new_locale_button">Add New\u2026</string>
+    <string name="remove_locale_button">Remove\u2026</string>
+
+    <!-- Toast status in CustomLocaleActivity -->
+
+    <string name="removed_custom_locale_1s">Removed custom locale: %1$s</string>
+    <string name="select_locale_1s">Select locale: %1$s</string>
+    <string name="added_custom_locale_1s">Added custom locale: %1$s</string>
+
+    <!-- NewLocaleDialog -->
+
+    <string name="new_locale_label">New locale code:</string>
+    <string name="add_button">Add</string>
     <string name="add_select_button">Add and Select</string>
+
+    <string name="confirm_remove_locale_1s">Do you want to remove the custom locale \'%1$s\'?</string>
+    <string name="confirm_remove_locale_yes">Yes</string>
+    <string name="confirm_remove_locale_no">No</string>
+
+    <!-- Locale hint in textfield. Not translated -->
+    <string name="locale_default">ex_EX</string>
+
 </resources>

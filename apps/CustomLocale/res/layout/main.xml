@@ -17,7 +17,8 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    >
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -25,13 +26,15 @@
         android:text="@string/header_current_locale"
         android:textAppearance="@style/TextAppearance.header"
         android:gravity="center_horizontal"
-        android:background="@color/header_background" />
+        android:background="@color/header_background"
+        />
     <TextView
         android:id="@+id/current_locale"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_weight="0"
-        android:padding="5dip" />
+        android:padding="5dip"
+        />
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -39,24 +42,61 @@
         android:text="@string/header_locale_list"
         android:textAppearance="@style/TextAppearance.header"
         android:gravity="center_horizontal"
-        android:background="@color/header_background" />
-    <ListView
-        android:id="@id/android:list"
+        android:background="@color/header_background"
+        />
+
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_weight="1"
-        android:padding="8dip" />
-    <TextView
-        android:id="@id/android:empty"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="@string/no_data_label" />
-    <Button
-        android:id="@+id/new_locale"
+        >
+        <ListView
+            android:id="@id/android:list"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:fastScrollEnabled="true"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:padding="8dip"
+            />
+        <TextView
+            android:id="@id/android:empty"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:text="@string/no_data_label"
+            android:gravity="center"
+            />
+    </FrameLayout>
+
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_weight="0"
-        android:paddingLeft="8dip"
-        android:paddingRight="8dip"
-        android:text="@string/add_new_locale_button" />
+        >
+        <Button
+            android:id="@+id/select_locale_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.9"
+            android:layout_gravity="center_vertical"
+            android:text="@string/select_locale_button"
+            />
+        <Button
+            android:id="@+id/add_new_locale_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_gravity="center_vertical"
+            android:text="@string/add_new_locale_button"
+            />
+        <Button
+            android:id="@+id/remove_locale_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginLeft="5dip"
+            android:layout_gravity="center_vertical"
+            android:text="@string/remove_locale_button"
+            />
+    </LinearLayout>
 </LinearLayout>
