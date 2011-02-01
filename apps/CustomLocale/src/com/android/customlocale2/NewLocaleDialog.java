@@ -14,14 +14,12 @@
  * limitations under the License.
  */
 
-package com.android.customlocale;
+package com.android.customlocale2;
 
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
-import android.text.TextUtils;
 import android.util.Log;
-import android.view.KeyEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -41,7 +39,6 @@ public class NewLocaleDialog extends Activity implements View.OnClickListener {
     private Button mButtonAdd;
     private Button mButtonAddSelect;
     private EditText mEditText;
-    private boolean mWasEmpty;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,7 +47,6 @@ public class NewLocaleDialog extends Activity implements View.OnClickListener {
         setContentView(R.layout.new_locale);
 
         mEditText = (EditText) findViewById(R.id.value);
-        mWasEmpty = true;
 
         mButtonAdd = (Button) findViewById(R.id.add);
         mButtonAdd.setOnClickListener(this);
@@ -62,7 +58,7 @@ public class NewLocaleDialog extends Activity implements View.OnClickListener {
     public void onClick(View v) {
         String locale = mEditText.getText().toString();
         boolean select = v == mButtonAddSelect;
-        
+
         if (DEBUG) {
             Log.d(TAG, "New Locale: " + locale + (select ? " + select" : ""));
         }
