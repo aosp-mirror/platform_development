@@ -37,7 +37,7 @@ public class TechFilter extends Activity {
 
         Intent intent = getIntent();
         String action = intent.getAction();
-        if (NfcAdapter.ACTION_TECHNOLOGY_DISCOVERED.equals(action)) {
+        if (NfcAdapter.ACTION_TECH_DISCOVERED.equals(action)) {
             mText.setText("Discovered tag " + ++mCount + " with intent: " + intent);
         } else {
             mText.setText("Scan a tag");
