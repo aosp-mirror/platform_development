@@ -15,11 +15,34 @@
 -->
 <resources>
     <string name="app_name">Locales Personalisées</string>
-    <string name="add_new_locale_button">Ajouter une nouvelle locale</string>
-    <string name="new_locale_label">Code de la nouvelle locale:</string>
-    <string name="add_button">Ajouter</string>
-    <string name="no_data_label">Aucune locale</string>
+
+    <!-- Top labels in CustomLocaleActivity -->
+
     <string name="header_current_locale">Locale courrante</string>
     <string name="header_locale_list">Liste des locales</string>
-    <string name="add_select_button">Ajouter et sélectionner</string>
+    <string name="no_data_label">Aucune locale</string>
+
+    <!-- Buttons in CustomLocaleActivity -->
+
+    <string name="select_locale_button">Choisir</string>
+    <string name="select_locale_1s_button">Choisir \'%1$s\'</string>
+    <string name="add_new_locale_button">Ajouter\u2026</string>
+    <string name="remove_locale_button">Retirer\u2026</string>
+
+    <!-- Toast status in CustomLocaleActivity -->
+
+    <string name="removed_custom_locale_1s">Locale supprimée: %1$s</string>
+    <string name="select_locale_1s">Locale choisie: %1$s</string>
+    <string name="added_custom_locale_1s">Locale ajoutée: %1$s</string>
+
+    <!-- NewLocaleDialog -->
+
+    <string name="new_locale_label">Code de la nouvelle locale:</string>
+    <string name="add_button">Ajouter</string>
+    <string name="add_select_button">Ajouter et choisir</string>
+
+    <string name="confirm_remove_locale_1s">Voulez-vous supprimer la locale personalisée \'%1$s\' ?</string>
+    <string name="confirm_remove_locale_yes">Oui</string>
+    <string name="confirm_remove_locale_no">Non</string>
+
 </resources>
