@@ -76,7 +76,7 @@ win_sdk: $(WIN_SDK_ZIP)
 
 winsdk-tools: $(WIN_BUILD_PREREQ)
 	$(call winsdk-banner,Build Windows Tools)
-	$(hide) USE_MINGW=1 $(MAKE) PRODUCT-$(TARGET_PRODUCT)-$(strip $(WIN_TARGETS))
+	$(hide) USE_MINGW=1 $(MAKE) PRODUCT-$(TARGET_PRODUCT)-$(strip $(WIN_TARGETS)) $(if $(hide),,showcommands)
 
 $(WIN_SDK_ZIP): winsdk-tools sdk
 	$(call winsdk-banner,Build $(WIN_SDK_NAME))
