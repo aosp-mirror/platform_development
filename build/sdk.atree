@@ -1,4 +1,4 @@
-#
+ #
 # Copyright (C) 2007 The Android Open Source Project
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -68,6 +68,8 @@ obj/framework.aidl platforms/${PLATFORM_NAME}/framework.aidl
 
 # Framework include for Renderscript
 frameworks/base/libs/rs/scriptc  platforms/${PLATFORM_NAME}/renderscript/include
+external/clang/lib/Headers       platforms/${PLATFORM_NAME}/renderscript/clang-include
+external/clang/LICENSE.TXT       platforms/${PLATFORM_NAME}/renderscript/clang-include/LICENSE.TXT
 
 # System images + Kernel
 system.img                              platforms/${PLATFORM_NAME}/images/system.img
