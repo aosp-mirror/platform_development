@@ -10,6 +10,8 @@ LOCAL_SRC_FILES += \
         src/com/example/android/apis/app/IRemoteServiceCallback.aidl \
         src/com/example/android/apis/app/ISecondary.aidl \
 
+LOCAL_STATIC_JAVA_LIBRARIES += android-support-v4
+
 LOCAL_PACKAGE_NAME := ApiDemos
 
 LOCAL_SDK_VERSION := current

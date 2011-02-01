@@ -19,10 +19,11 @@ package com.example.android.apis.app;
 import com.example.android.apis.R;
 import com.example.android.apis.Shakespeare;
 
-import android.app.Activity;
-import android.app.Fragment;
-import android.app.FragmentTransaction;
-import android.app.ListFragment;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentTransaction;
+import android.support.v4.app.ListFragment;
+
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.Bundle;
@@ -40,14 +41,14 @@ import android.widget.TextView;
  * This sample provides a different layout (and activity flow) when run in
  * landscape.
  */
-public class FragmentLayout extends Activity {
+public class FragmentLayoutSupport extends FragmentActivity {
 
 //BEGIN_INCLUDE(main)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        
-        setContentView(R.layout.fragment_layout);
+
+        setContentView(R.layout.fragment_layout_support);
     }
 //END_INCLUDE(main)
 
@@ -56,7 +57,7 @@ public class FragmentLayout extends Activity {
      * when the screen is not large enough to show it all in one activity.
      */
 //BEGIN_INCLUDE(details_activity)
-    public static class DetailsActivity extends Activity {
+    public static class DetailsActivity extends FragmentActivity {
 
         @Override
         protected void onCreate(Bundle savedInstanceState) {
@@ -74,7 +75,8 @@ public class FragmentLayout extends Activity {
                 // During initial setup, plug in the details fragment.
                 DetailsFragment details = new DetailsFragment();
                 details.setArguments(getIntent().getExtras());
-                getFragmentManager().beginTransaction().add(android.R.id.content, details).commit();
+                getSupportFragmentManager().beginTransaction().add(
+                        android.R.id.content, details).commit();
             }
         }
     }
@@ -96,7 +98,8 @@ public class FragmentLayout extends Activity {
 
             // Populate list with our static array of titles.
             setListAdapter(new ArrayAdapter<String>(getActivity(),
-                    android.R.layout.simple_list_item_activated_1, Shakespeare.TITLES));
+                    R.layout.simple_list_item_checkable_1,
+                    android.R.id.text1, Shakespeare.TITLES));
 
             // Check to see if we have a frame in which to embed the details
             // fragment directly in the containing UI.

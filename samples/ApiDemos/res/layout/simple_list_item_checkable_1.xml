@@ -14,12 +14,16 @@
      limitations under the License.
 -->
 
-<resources>
-    <!-- For API level 11 or later, the Holo theme is available and we prefer that. -->
-    <style name="ThemeHolo" parent="android:Theme.Holo">
-    </style>
-
-    <!-- For API level 11 or later, we can use the magical DialogWhenLarge theme. -->
-    <style name="ThemeDialogWhenLarge" parent="android:style/Theme.Holo.DialogWhenLarge">
-    </style>
-</resources>
+<com.example.android.apis.view.CheckableFrameLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+    <TextView
+            android:id="@android:id/text1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:minHeight="?android:attr/listPreferredItemHeight"
+            android:gravity="center_vertical"
+    />
+</com.example.android.apis.view.CheckableFrameLayout>

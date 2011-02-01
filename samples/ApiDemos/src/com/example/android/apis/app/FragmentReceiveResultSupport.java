@@ -18,9 +18,10 @@ package com.example.android.apis.app;
 
 import com.example.android.apis.R;
 
-import android.app.Activity;
-import android.app.Fragment;
-import android.app.FragmentTransaction;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentTransaction;
+
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
@@ -32,7 +33,7 @@ import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.TextView;
 
-public class FragmentReceiveResult extends Activity {
+public class FragmentReceiveResultSupport extends FragmentActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,11 +44,11 @@ public class FragmentReceiveResult extends Activity {
         FrameLayout frame = new FrameLayout(this);
         frame.setId(R.id.simple_fragment);
         setContentView(frame, lp);
-        
+
         if (savedInstanceState == null) {
-            // Do first time initialization -- add fragment. 
+            // Do first time initialization -- add fragment.
             Fragment newFragment = new ReceiveResultFragment();
-            FragmentTransaction ft = getFragmentManager().beginTransaction();
+            FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
             ft.add(R.id.simple_fragment, newFragment).commit();
         }
     }
@@ -81,7 +82,7 @@ public class FragmentReceiveResult extends Activity {
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                 Bundle savedInstanceState) {
             View v = inflater.inflate(R.layout.receive_result, container, false);
-            
+
             // Retrieve the TextView widget that will display results.
             mResults = (TextView)v.findViewById(R.id.results);
 
@@ -91,7 +92,7 @@ public class FragmentReceiveResult extends Activity {
             // Watch for button clicks.
             Button getButton = (Button)v.findViewById(R.id.get);
             getButton.setOnClickListener(mGetListener);
-            
+
             return v;
         }
 

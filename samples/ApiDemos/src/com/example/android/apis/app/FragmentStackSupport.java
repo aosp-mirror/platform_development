@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010 The Android Open Source Project
+ * Copyright (C) 2011 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,9 +18,10 @@ package com.example.android.apis.app;
 
 import com.example.android.apis.R;
 
-import android.app.Activity;
-import android.app.Fragment;
-import android.app.FragmentTransaction;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentTransaction;
+
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -29,14 +30,14 @@ import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.TextView;
 
-public class FragmentStack extends Activity {
+public class FragmentStackSupport extends FragmentActivity {
     int mStackLevel = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.fragment_stack);
-        
+
         // Watch for button clicks.
         Button button = (Button)findViewById(R.id.new_fragment);
         button.setOnClickListener(new OnClickListener() {
@@ -48,7 +49,7 @@ public class FragmentStack extends Activity {
         if (savedInstanceState == null) {
             // Do first time initialization -- add initial fragment.
             Fragment newFragment = CountingFragment.newInstance(mStackLevel);
-            FragmentTransaction ft = getFragmentManager().beginTransaction();
+            FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
             ft.add(R.id.simple_fragment, newFragment).commit();
         } else {
             mStackLevel = savedInstanceState.getInt("level");
@@ -70,7 +71,7 @@ public class FragmentStack extends Activity {
 
         // Add the fragment to the activity, pushing this transaction
         // on to the back stack.
-        FragmentTransaction ft = getFragmentManager().beginTransaction();
+        FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
         ft.replace(R.id.simple_fragment, newFragment);
         ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
         ft.addToBackStack(null);

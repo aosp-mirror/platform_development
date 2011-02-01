@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010 The Android Open Source Project
+ * Copyright (C) 2011 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,10 +18,12 @@ package com.example.android.apis.app;
 
 import com.example.android.apis.R;
 
-import android.app.Activity;
-import android.app.Fragment;
-import android.app.FragmentManager;
-import android.app.FragmentTransaction;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
+import android.support.v4.view.MenuCompat;
+
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -33,7 +35,7 @@ import android.widget.CheckBox;
 /**
  * Demonstrates how fragments can participate in the options menu.
  */
-public class FragmentMenu extends Activity {
+public class FragmentMenuSupport extends FragmentActivity {
     Fragment mFragment1;
     Fragment mFragment2;
     CheckBox mCheckBox1;
@@ -50,9 +52,9 @@ public class FragmentMenu extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.fragment_menu);
-        
+
         // Make sure the two menu fragments are created.
-        FragmentManager fm = getFragmentManager();
+        FragmentManager fm = getSupportFragmentManager();
         FragmentTransaction ft = fm.beginTransaction();
         mFragment1 = fm.findFragmentByTag("f1");
         if (mFragment1 == null) {
@@ -65,13 +67,13 @@ public class FragmentMenu extends Activity {
             ft.add(mFragment2, "f2");
         }
         ft.commit();
-        
+
         // Watch check box clicks.
         mCheckBox1 = (CheckBox)findViewById(R.id.menu1);
         mCheckBox1.setOnClickListener(mClickListener);
         mCheckBox2 = (CheckBox)findViewById(R.id.menu2);
         mCheckBox2.setOnClickListener(mClickListener);
-        
+
         // Make sure fragments start out with correct visibility.
         updateFragmentVisibility();
     }
@@ -85,7 +87,7 @@ public class FragmentMenu extends Activity {
 
     // Update fragment visibility based on current check box state.
     void updateFragmentVisibility() {
-        FragmentTransaction ft = getFragmentManager().beginTransaction();
+        FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
         if (mCheckBox1.isChecked()) ft.show(mFragment1);
         else ft.hide(mFragment1);
         if (mCheckBox2.isChecked()) ft.show(mFragment2);
@@ -108,8 +110,11 @@ public class FragmentMenu extends Activity {
 
         @Override
         public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-            menu.add("Menu 1a").setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
-            menu.add("Menu 1b").setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
+            MenuItem item;
+            item = menu.add("Menu 1a");
+            MenuCompat.setShowAsAction(item, MenuItem.SHOW_AS_ACTION_IF_ROOM);
+            item = menu.add("Menu 1b");
+            MenuCompat.setShowAsAction(item, MenuItem.SHOW_AS_ACTION_IF_ROOM);
         }
     }
 
@@ -126,7 +131,9 @@ public class FragmentMenu extends Activity {
 
         @Override
         public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-            menu.add("Menu 2").setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
+            MenuItem item;
+            item = menu.add("Menu 2");
+            MenuCompat.setShowAsAction(item, MenuItem.SHOW_AS_ACTION_IF_ROOM);
         }
     }
 }

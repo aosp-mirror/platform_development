@@ -179,7 +179,7 @@
         </activity>
 
         <activity android:name=".app.SendResult"
-                android:theme="@android:style/Theme.Holo.DialogWhenLarge">
+                android:theme="@style/ThemeDialogWhenLarge">
         </activity>
 
         <activity android:name=".app.Forwarding" android:label="@string/activity_forwarding">
@@ -359,6 +359,107 @@
             </intent-filter>
         </activity>
 
+        <!-- Fragment Support Samples -->
+
+        <activity android:name=".app.FragmentAlertDialogSupport"
+                android:label="@string/fragment_alert_dialog_support">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".app.FragmentHideShowSupport"
+                android:label="@string/fragment_hide_show_support"
+                android:windowSoftInputMode="stateUnchanged">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".app.FragmentContextMenuSupport"
+                android:label="@string/fragment_context_menu_support">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".app.FragmentDialogSupport"
+                android:label="@string/fragment_dialog_support">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".app.FragmentDialogOrActivitySupport"
+                android:label="@string/fragment_dialog_or_activity_support">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".app.FragmentLayoutSupport"
+                android:label="@string/fragment_layout_support">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".app.FragmentListCursorLoaderSupport"
+                android:label="@string/fragment_list_cursor_loader_support">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".app.FragmentListArraySupport"
+                android:label="@string/fragment_list_array_support">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".app.FragmentLayoutSupport$DetailsActivity" />
+
+        <activity android:name=".app.FragmentMenuSupport"
+                android:label="@string/fragment_menu_support">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".app.FragmentRetainInstanceSupport"
+                android:label="@string/fragment_retain_instance_support">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".app.FragmentReceiveResultSupport"
+                android:label="@string/fragment_receive_result_support">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".app.FragmentStackSupport"
+                android:label="@string/fragment_stack_support">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
         <!-- Loader Samples -->
 
 <!-- BEGIN_INCLUDE(loader_throttle) -->
@@ -371,7 +472,8 @@
             </intent-filter>
         </activity>
         <provider android:name=".app.LoaderThrottle$SimpleProvider"
-                  android:authorities="com.example.android.apis.app.LoaderThrottle" />
+                  android:authorities="com.example.android.apis.app.LoaderThrottle"
+                  android:enabled="@bool/atLeastHoneycomb" />
 <!-- END_INCLUDE(loader_throttle) -->
 
         <!-- Intent Samples -->
