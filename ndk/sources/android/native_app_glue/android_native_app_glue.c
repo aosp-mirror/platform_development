@@ -106,10 +106,7 @@ void android_app_pre_exec_cmd(struct android_app* android_app, int8_t cmd) {
 
         case APP_CMD_TERM_WINDOW:
             LOGI("APP_CMD_TERM_WINDOW\n");
-            pthread_mutex_lock(&android_app->mutex);
-            android_app->window = NULL;
             pthread_cond_broadcast(&android_app->cond);
-            pthread_mutex_unlock(&android_app->mutex);
             break;
 
         case APP_CMD_RESUME:
