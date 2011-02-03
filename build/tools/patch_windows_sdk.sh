@@ -5,7 +5,8 @@
 # - development/tools/build/path_windows_sdk.sh to process the
 #   platform-dependent folders and files.
 # - sdk/build/patch_windows_sdk.sh to process folder and files which
-#   depend on the sdk.git repo. This file will be invoked by this one.
+#   depend on the sdk.git repo. This file is invoked by the makefile
+#   at development/tools/build/windows_sdk.mk.
 #
 # Input arguments:
 # -q = Optional arg to make this silent. Must be given first.
@@ -16,13 +17,17 @@
 # $3 = An optional replacement for $TOPDIR (inherited from the Android
 #      build system), which is the top directory where Android is located.
 
+set -e # any error stops the build
+
 # Verbose by default. Use -q to make more silent.
-V="-v"
+V=""
 Q=""
 if [[ "$1" == "-q" ]]; then
     Q="$1"
-    V=""
     shift
+else
+  echo "Win SDK: $0 $*"
+  set -x # show bash commands; no need for V=-v
 fi
 
 TEMP_SDK_DIR=$1
@@ -30,17 +35,16 @@ WIN_OUT_DIR=$2
 TOPDIR=${TOPDIR:-$3}
 
 # The unix2dos is provided by the APT package "tofrodos". However
-# as of ubuntu lucid, the package renamed the command to "todos".
-UNIX2DOS=`which unix2dos`
+# as for ubuntu lucid, the package renamed the command to "todos".
+UNIX2DOS=$(which unix2dos || true)
 if [[ ! -x $UNIX2DOS ]]; then
-  UNIX2DOS=`which todos`
+  UNIX2DOS=$(which todos || true)
 fi
 
 PLATFORMS=( $TEMP_SDK_DIR/platforms/* )
 if [[ ${#PLATFORMS[@]} != 1 ]]; then
     echo "Error: Too many platforms found in $TEMP_SDK_DIR"
-    echo "Only one was expected."
-    echo "Instead, found: ${PLATFORMS[@]}"
+    echo "Expected one. Instead, found: ${PLATFORMS[@]}"
     exit 1
 fi
 
@@ -54,7 +58,6 @@ TOOLS=$TEMP_SDK_DIR/tools
 PLATFORM_TOOLS=$TEMP_SDK_DIR/platform-tools
 LIB=$TEMP_SDK_DIR/tools/lib
 rm $V $TOOLS/{dmtracedump,etc1tool,hprof-conv,sqlite3,zipalign}
-rm $V $TOOLS/proguard/bin/*.sh
 rm $V $LIB/*/swt.jar
 rm $V $PLATFORM_TOOLS/{adb,aapt,aidl,dx,dexdump}
 
@@ -103,11 +106,8 @@ if [[ -x $UNIX2DOS ]]; then
   find $TEMP_SDK_DIR -maxdepth 3 -name "*.bat"   -type f -print0 | xargs -0 $UNIX2DOS
 fi
 
-# Execute the packaging script in the sdk directory
-${TOPDIR}sdk/build/patch_windows_sdk.sh $Q ${TEMP_SDK_DIR} ${WIN_OUT_DIR} ${TOPDIR}
-
-# Just to make it easier on the build servers, we want fastboot and adb (and its DLLs)
-# next to the new SDK, so up one dir.
+# Just to make it easier on the build servers, we want fastboot and adb
+# (and its DLLs) next to the new SDK.
 for i in fastboot.exe adb.exe AdbWinApi.dll AdbWinUsbApi.dll; do
     cp -f $V $WIN_OUT_DIR/host/windows-x86/bin/$i $TEMP_SDK_DIR/../$i
 done
