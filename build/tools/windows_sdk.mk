@@ -85,12 +85,13 @@ $(WIN_SDK_ZIP): winsdk-tools sdk
 	$(hide) mkdir -p $(WIN_SDK_DIR)
 	$(hide) cp -rf $(LINUX_SDK_DIR)/$(LINUX_SDK_NAME) $(WIN_SDK_DIR)/$(WIN_SDK_NAME)
 	$(hide) USB_DRIVER_HOOK=$(USB_DRIVER_HOOK) \
-		$(TOPDIR)development/build/tools/patch_windows_sdk.sh \
-		$(subst @,-q,$(hide)) \
+		$(TOPDIR)development/build/tools/patch_windows_sdk.sh $(subst @,-q,$(hide)) \
 		$(WIN_SDK_DIR)/$(WIN_SDK_NAME) $(OUT_DIR) $(TOPDIR)
-	$(hide) \
-		$(TOPDIR)sdk/build/patch_windows_sdk.sh \
-		$(subst @,-q,$(hide)) \
+	# TODO remove test once llvm-rs-cc is merged
+	$(hide) if [ -f $(WIN_SDK_DIR)/$(WIN_SDK_NAME)/platform-tools/llvm-rs-cc.exe ]; then \
+			strip --strip-all $(WIN_SDK_DIR)/$(WIN_SDK_NAME)/platform-tools/llvm-rs-cc.exe; \
+		fi
+	$(hide) $(TOPDIR)sdk/build/patch_windows_sdk.sh $(subst @,-q,$(hide)) \
 		$(WIN_SDK_DIR)/$(WIN_SDK_NAME) $(OUT_DIR) $(TOPDIR)
 	$(hide) ( \
 		cd $(WIN_SDK_DIR) && \
