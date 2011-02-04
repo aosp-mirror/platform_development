@@ -16,6 +16,8 @@
 
 package com.android.mkstubs;
 
+import com.android.mkstubs.Main.Logger;
+
 import org.objectweb.asm.ClassReader;
 
 import java.io.IOException;
@@ -53,7 +55,7 @@ class AsmAnalyzer {
                 classes.put(className, cr);
             }
         }
-        
+
         return classes;
     }
 
@@ -72,25 +74,26 @@ class AsmAnalyzer {
     /**
      * Filters the set of classes. Removes all classes that should not be included in the
      * filter or that should be excluded. This modifies the map in-place.
-     * 
+     *
      * @param classes The in-out map of classes to examine and filter. The map is filtered
      *                in-place.
      * @param filter  A filter describing which classes to include and which ones to exclude.
+     * @param log
      */
-    void filter(Map<String, ClassReader> classes, Filter filter) {
+    void filter(Map<String, ClassReader> classes, Filter filter, Logger log) {
 
         Set<String> keys = classes.keySet();
         for(Iterator<String> it = keys.iterator(); it.hasNext(); ) {
             String key = it.next();
 
             // TODO: We *could* filter out all private classes here: classes.get(key).getAccess().
-            
+
             // remove if we don't keep it
             if (!filter.accept(key)) {
-                System.out.println("- Remove class " + key);
+                log.debug("- Remove class " + key);
                 it.remove();
             }
         }
     }
-    
+
 }

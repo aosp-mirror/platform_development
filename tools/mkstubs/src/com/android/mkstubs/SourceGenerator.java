@@ -16,6 +16,7 @@
 
 package com.android.mkstubs;
 
+import com.android.mkstubs.Main.Logger;
 import com.android.mkstubs.sourcer.ClassSourcer;
 import com.android.mkstubs.sourcer.Output;
 
@@ -38,17 +39,23 @@ import java.util.Map.Entry;
  */
 class SourceGenerator {
 
+    private Logger mLog;
+
+    public SourceGenerator(Logger log) {
+        mLog = log;
+    }
+
     /**
      * Generate source for the stubbed classes, mostly for debug purposes.
-     * @throws IOException 
+     * @throws IOException
      */
     public void generateSource(File baseDir,
             Map<String, ClassReader> classes,
             Filter filter) throws IOException {
-        
+
         for (Entry<String, ClassReader> entry : classes.entrySet()) {
             ClassReader cr = entry.getValue();
-            
+
             String name = classNameToJavaPath(cr.getClassName());
 
             FileWriter fw = null;
@@ -64,9 +71,9 @@ class SourceGenerator {
     FileWriter createWriter(File baseDir, String name) throws IOException {
         File f = new File(baseDir, name);
         f.getParentFile().mkdirs();
-        
-        System.out.println("Writing " + f.getPath());
-        
+
+        mLog.debug("Writing " + f.getPath());
+
         return new FileWriter(f);
     }
 
@@ -83,10 +90,10 @@ class SourceGenerator {
      * minus all exclusions
      */
     void visitClassSource(Writer fw, ClassReader cr, Filter filter) {
-        System.out.println("Dump " + cr.getClassName());
-        
+        mLog.debug("Dump " + cr.getClassName());
+
         ClassVisitor javaWriter = new ClassSourcer(new Output(fw));
-        ClassVisitor classFilter = new FilterClassAdapter(javaWriter, filter);
+        ClassVisitor classFilter = new FilterClassAdapter(javaWriter, filter, mLog);
         cr.accept(classFilter, 0 /*flags*/);
     }
 
