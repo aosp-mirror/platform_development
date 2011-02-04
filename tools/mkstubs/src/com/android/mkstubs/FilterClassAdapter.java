@@ -16,6 +16,8 @@
 
 package com.android.mkstubs;
 
+import com.android.mkstubs.Main.Logger;
+
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.Attribute;
 import org.objectweb.asm.ClassAdapter;
@@ -30,12 +32,14 @@ import org.objectweb.asm.Opcodes;
  */
 class FilterClassAdapter extends ClassAdapter {
 
+    private final Logger mLog;
     private final Filter mFilter;
     private String mClassName;
 
-    public FilterClassAdapter(ClassVisitor writer, Filter filter) {
+    public FilterClassAdapter(ClassVisitor writer, Filter filter, Logger log) {
         super(writer);
         mFilter = filter;
+        mLog = log;
     }
 
     @Override
@@ -73,7 +77,7 @@ class FilterClassAdapter extends ClassAdapter {
         String filterName = String.format("%s#%s", mClassName, name);
 
         if (!mFilter.accept(filterName)) {
-            System.out.println("- Remove field " + filterName);
+            mLog.debug("- Remove field " + filterName);
             return null;
         }
 
@@ -105,7 +109,7 @@ class FilterClassAdapter extends ClassAdapter {
         String filterName = String.format("%s#%s%s", mClassName, name, desc);
 
         if (!mFilter.accept(filterName)) {
-            System.out.println("- Remove method " + filterName);
+            mLog.debug("- Remove method " + filterName);
             return null;
         }
 
@@ -114,7 +118,7 @@ class FilterClassAdapter extends ClassAdapter {
             filterName = String.format("%s#%s%s", mClassName, name, signature);
 
             if (!mFilter.accept(filterName)) {
-                System.out.println("- Remove method " + filterName);
+                mLog.debug("- Remove method " + filterName);
                 return null;
             }
         }
