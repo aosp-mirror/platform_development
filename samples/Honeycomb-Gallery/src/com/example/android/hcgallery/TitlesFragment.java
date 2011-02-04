@@ -20,6 +20,8 @@ import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.ListFragment;
 import android.content.ClipData;
+import android.content.res.Resources;
+import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
@@ -28,6 +30,7 @@ import android.graphics.Paint;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.text.TextPaint;
+import android.util.TypedValue;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -53,47 +56,40 @@ public class TitlesFragment extends ListFragment {
         populateTitles(mCategory);
         ListView lv = getListView();
         lv.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
-        selectPosition(mCurPosition);
-        lv.setCacheColorHint(Color.WHITE);
+        lv.setCacheColorHint(Color.TRANSPARENT);
         lv.setOnItemLongClickListener(new OnItemLongClickListener() {
-
-            public boolean onItemLongClick(AdapterView<?> av, View v, int pos,
-                    long id) {
+            public boolean onItemLongClick(AdapterView<?> av, View v, int pos, long id) {
                 final String title = (String) ((TextView) v).getText();
 
                 // Set up clip data with the category||entry_id format.
                 final String textData = String.format("%d||%d", mCategory, pos);
                 ClipData data = ClipData.newPlainText(title, textData);
-
-                v.startDrag(data, new MyDragShadowBuilder(v, title), null, 0);
+                v.startDrag(data, new MyDragShadowBuilder(v), null, 0);
                 return true;
             }
         });
+
+        selectPosition(mCurPosition);
     }
 
-    private static class MyDragShadowBuilder extends View.DragShadowBuilder {
-        private static Drawable mShadow;
-        private static String mLabel;
-        private static int mViewHeight;
-        
-        public MyDragShadowBuilder(View v, String label) {
+    private class MyDragShadowBuilder extends View.DragShadowBuilder {
+        private Drawable mShadow;
+
+        public MyDragShadowBuilder(View v) {
             super(v);
-            mShadow = new ColorDrawable(Color.BLUE);
+
+            final TypedArray a = v.getContext().obtainStyledAttributes(R.styleable.AppTheme);
+            mShadow = a.getDrawable(R.styleable.AppTheme_listDragShadowBackground);
+            mShadow.setCallback(v);
             mShadow.setBounds(0, 0, v.getWidth(), v.getHeight());
-            mLabel = label;
-            mViewHeight = v.getHeight();
+            a.recycle();
         }
 
         @Override
         public void onDrawShadow(Canvas canvas) {
             super.onDrawShadow(canvas);
             mShadow.draw(canvas);
-            Paint paint = new TextPaint();
-            paint.setTextSize(20);
-            paint.setColor(Color.LTGRAY);
-            paint.setTypeface(Typeface.DEFAULT_BOLD);
-            paint.setAntiAlias(true);
-            canvas.drawText(mLabel, 20, (float) (mViewHeight * .6), paint);
+            getView().draw(canvas);
         }
     }
 
@@ -116,13 +112,13 @@ public class TitlesFragment extends ListFragment {
         ContentFragment frag = (ContentFragment) getFragmentManager()
                 .findFragmentById(R.id.frag_content);
         frag.updateContentAndRecycleBitmap(mCategory, position);
+        mCurPosition = position;
     }
 
     public void selectPosition(int position) {
         ListView lv = getListView();
         lv.setItemChecked(position, true);
         updateImage(position);
-
     }
 
     @Override

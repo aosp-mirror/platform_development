@@ -28,10 +28,15 @@ import android.app.Dialog;
 import android.app.DialogFragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.Configuration;
-import android.graphics.drawable.ColorDrawable;
+import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -39,8 +44,12 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
+import android.widget.RemoteViews;
 
 public class MainActivity extends Activity implements ActionBar.TabListener {
+
+    private static final int NOTIFICATION_DEFAULT = 1;
+    private static final String ACTION_DIALOG = "com.example.android.hcgallery.action.DIALOG";
 
     private View mActionBarView;
     private Animator mCurrentTitlesAnimator;
@@ -51,25 +60,17 @@ public class MainActivity extends Activity implements ActionBar.TabListener {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         if(savedInstanceState != null && savedInstanceState.getInt("theme", -1) != -1) {
             mThemeId = savedInstanceState.getInt("theme");
             this.setTheme(mThemeId);
         }
 
-        requestWindowFeature(Window.FEATURE_ACTION_BAR_OVERLAY);
         setContentView(R.layout.main);
 
         Directory.initializeDirectory();
 
         ActionBar bar = getActionBar();
-
-        if (mThemeId == android.R.style.Theme_Holo_Light || mThemeId == -1) {
-            bar.setBackgroundDrawable(
-                    new ColorDrawable(getResources().getColor(R.color.actionbar_background_light)));
-        } else {
-            bar.setBackgroundDrawable(
-                    new ColorDrawable(getResources().getColor(R.color.actionbar_background_dark)));
-        }
 
         int i;
         for (i = 0; i < Directory.getCategoryCount(); i++) {
@@ -122,21 +123,30 @@ public class MainActivity extends Activity implements ActionBar.TabListener {
             intent.putExtra("theme", mThemeId);
             startActivity(intent);
             return true;
+
         case R.id.toggleTitles:
             toggleVisibleTitles();
             return true;
 
         case R.id.toggleTheme:
-            if (mThemeId == android.R.style.Theme_Holo) {
-                mThemeId = android.R.style.Theme_Holo_Light;
+            if (mThemeId == R.style.AppTheme_Dark) {
+                mThemeId = R.style.AppTheme_Light;
             } else {
-                mThemeId = android.R.style.Theme_Holo;
+                mThemeId = R.style.AppTheme_Dark;
             }
             this.recreate();
             return true;
 
         case R.id.showDialog:
-            showDialog();
+            showDialog("This is indeed an awesome dialog.");
+            return true;
+
+        case R.id.showStandardNotification:
+            showNotification(false);
+            return true;
+
+        case R.id.showCustomNotification:
+            showNotification(true);
             return true;
 
         default:
@@ -225,19 +235,82 @@ public class MainActivity extends Activity implements ActionBar.TabListener {
         mCurrentTitlesAnimator = objectAnimator;
 
         invalidateOptionsMenu();
+
+        // Manually trigger onNewIntent to check for ACTION_DIALOG.
+        onNewIntent(getIntent());
     }
 
-    void showDialog() {
+    @Override
+    protected void onNewIntent(Intent intent) {
+        if (ACTION_DIALOG.equals(intent.getAction())) {
+            showDialog(intent.getStringExtra(Intent.EXTRA_TEXT));
+        }
+    }
 
+    void showDialog(String text) {
         // DialogFragment.show() will take care of adding the fragment
         // in a transaction.  We also want to remove any currently showing
         // dialog, so make our own transaction and take care of that here.
         FragmentTransaction ft = getFragmentManager().beginTransaction();
 
-        DialogFragment newFragment = MyDialogFragment.newInstance("The Dialog Of Awesome");
+        DialogFragment newFragment = MyDialogFragment.newInstance(text);
 
-        // Create and show the dialog.
+        // Show the dialog.
         newFragment.show(ft, "dialog");
+    }
+
+    void showNotification(boolean custom) {
+        final Resources res = getResources();
+        final NotificationManager notificationManager = (NotificationManager) getSystemService(
+                NOTIFICATION_SERVICE);
+
+        Notification.Builder builder = new Notification.Builder(this)
+                .setSmallIcon(R.drawable.ic_stat_notify_example)
+                .setAutoCancel(true)
+                .setTicker(getString(R.string.notification_text))
+                .setContentIntent(getDialogPendingIntent("Tapped the notification entry."));
+
+        if (custom) {
+            // Sets a custom content view for the notification, including an image button.
+            RemoteViews layout = new RemoteViews(getPackageName(), R.layout.notification);
+            layout.setTextViewText(R.id.notification_title, getString(R.string.app_name));
+            layout.setOnClickPendingIntent(R.id.notification_button,
+                    getDialogPendingIntent("Tapped the 'dialog' button in the notification."));
+            builder.setContent(layout);
+
+            // Notifications in Android 3.0 now have a standard mechanism for displaying large
+            // bitmaps such as contact avatars. Here, we load an example image and resize it to the
+            // appropriate size for large bitmaps in notifications.
+            Bitmap largeIconTemp = BitmapFactory.decodeResource(res,
+                    R.drawable.notification_default_largeicon);
+            Bitmap largeIcon = Bitmap.createScaledBitmap(
+                    largeIconTemp,
+                    res.getDimensionPixelSize(android.R.dimen.notification_large_icon_width),
+                    res.getDimensionPixelSize(android.R.dimen.notification_large_icon_height),
+                    false);
+            largeIconTemp.recycle();
+
+            builder.setLargeIcon(largeIcon);
+
+        } else {
+            builder
+                    .setNumber(7) // An example number.
+                    .setContentTitle(getString(R.string.app_name))
+                    .setContentText(getString(R.string.notification_text));
+        }
+
+        notificationManager.notify(NOTIFICATION_DEFAULT, builder.getNotification());
+    }
+
+    PendingIntent getDialogPendingIntent(String dialogText) {
+        return PendingIntent.getActivity(
+                this,
+                dialogText.hashCode(), // Otherwise previous PendingIntents with the same
+                                       // requestCode may be overwritten.
+                new Intent(ACTION_DIALOG)
+                        .putExtra(Intent.EXTRA_TEXT, dialogText)
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+                0);
     }
 
     @Override
@@ -261,24 +334,19 @@ public class MainActivity extends Activity implements ActionBar.TabListener {
         public static MyDialogFragment newInstance(String title) {
             MyDialogFragment frag = new MyDialogFragment();
             Bundle args = new Bundle();
-            args.putString("title", title);
+            args.putString("text", title);
             frag.setArguments(args);
             return frag;
         }
 
         @Override
         public Dialog onCreateDialog(Bundle savedInstanceState) {
-            String title = getArguments().getString("title");
+            String text = getArguments().getString("text");
 
             return new AlertDialog.Builder(getActivity())
-                    .setTitle(title)
-                    .setPositiveButton("OK",
-                            new DialogInterface.OnClickListener() {
-                                public void onClick(DialogInterface dialog, int whichButton) {
-                                }
-                            }
-                    )
-                    .setNegativeButton("Cancel",
+                    .setTitle("A Dialog of Awesome")
+                    .setMessage(text)
+                    .setPositiveButton(android.R.string.ok,
                             new DialogInterface.OnClickListener() {
                                 public void onClick(DialogInterface dialog, int whichButton) {
                                 }

@@ -15,10 +15,14 @@
   limitations under the License.
  -->
 <resources>
-    <string name="app_name">Honeycomb Example</string>
+    <string name="app_name">Honeycomb Gallery</string>
     <string name="camera_sample">Camera Example</string>
     <string name="clip_label">Clip Label</string>
 
     <string name="app_widget_name">Honeycomb Example Widget</string>
     <string name="widget_empty_view_text">Touch to show data</string>
+
+    <string name="notification_text">Example notification text</string>
+
+    <string name="photo_selection_cab_title">Photo selection</string>
 </resources>

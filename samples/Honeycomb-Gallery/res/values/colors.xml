@@ -17,4 +17,5 @@
 <resources>
     <color name="actionbar_background_light">#ccffffff</color>
     <color name="actionbar_background_dark">#cc000000</color>
+    <color name="drag_active_color">#80cccccc</color>
 </resources>
