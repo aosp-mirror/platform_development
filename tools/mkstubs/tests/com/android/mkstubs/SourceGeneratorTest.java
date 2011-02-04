@@ -17,6 +17,8 @@
 package com.android.mkstubs;
 
 
+import com.android.mkstubs.Main.Logger;
+
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -26,7 +28,7 @@ import org.objectweb.asm.ClassReader;
 import java.io.StringWriter;
 
 /**
- * 
+ *
  */
 public class SourceGeneratorTest {
 
@@ -34,21 +36,21 @@ public class SourceGeneratorTest {
 
     @Before
     public void setUp() throws Exception {
-        mGen = new SourceGenerator();
+        mGen = new SourceGenerator(new Logger(false));
     }
 
     @After
     public void tearDown() throws Exception {
     }
 
-    
+
     @Test
     public void testDumpClass() throws Exception {
         StringWriter sw = new StringWriter();
         ClassReader cr = new ClassReader("data/TestBaseClass");
-        
+
         mGen.visitClassSource(sw, cr, new Filter());
-        
+
         String s = sw.toString();
         Assert.assertNotNull(s);
     }
