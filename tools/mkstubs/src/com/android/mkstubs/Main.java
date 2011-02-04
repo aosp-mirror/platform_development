@@ -16,6 +16,8 @@
 
 package com.android.mkstubs;
 
+import com.android.mkstubs.Main.Params;
+
 import org.objectweb.asm.ClassReader;
 
 import java.io.BufferedReader;
@@ -31,7 +33,7 @@ import java.util.Map;
  * For workflow details, see {@link #process(Params)}.
  */
 public class Main {
-    
+
     /**
      * A struct-like class to hold the various input values (e.g. command-line args)
      */
@@ -39,11 +41,21 @@ public class Main {
         private String mInputJarPath;
         private String mOutputJarPath;
         private Filter mFilter;
-        
-        public Params(String inputJarPath, String outputJarPath) {
-            mInputJarPath = inputJarPath;
-            mOutputJarPath = outputJarPath;
+        private boolean mVerbose;
+        private boolean mDumpSource;
+
+        public Params() {
             mFilter = new Filter();
+        }
+
+        /** Sets the name of the input jar, where to read classes from. Must not be null. */
+        public void setInputJarPath(String inputJarPath) {
+            mInputJarPath = inputJarPath;
+        }
+
+        /** Sets the name of the output jar, where to write classes to. Must not be null. */
+        public void setOutputJarPath(String outputJarPath) {
+            mOutputJarPath = outputJarPath;
         }
 
         /** Returns the name of the input jar, where to read classes from. */
@@ -60,13 +72,53 @@ public class Main {
         public Filter getFilter() {
             return mFilter;
         }
+
+        /** Sets verbose mode on. Default is off. */
+        public void setVerbose() {
+            mVerbose = true;
+        }
+
+        /** Returns true if verbose mode is on. */
+        public boolean isVerbose() {
+            return mVerbose;
+        }
+
+        /** Sets dump source mode on. Default is off. */
+        public void setDumpSource() {
+            mDumpSource = true;
+        }
+
+        /** Returns true if source should be dumped. */
+        public boolean isDumpSource() {
+            return mDumpSource;
+        }
     }
-    
+
+    /** Logger that writes on stdout depending a conditional verbose mode. */
+    static class Logger {
+        private final boolean mVerbose;
+
+        public Logger(boolean verbose) {
+            mVerbose = verbose;
+        }
+
+        /** Writes to stdout only in verbose mode. */
+        public void debug(String msg, Object...params) {
+            if (mVerbose) {
+                System.out.println(String.format(msg, params));
+            }
+        }
+
+        /** Writes to stdout all the time. */
+        public void info(String msg, Object...params) {
+            System.out.println(String.format(msg, params));
+        }
+    }
+
     /**
      * Main entry point. Processes arguments then performs the "real" work.
      */
     public static void main(String[] args) {
-
         Main m = new Main();
         try {
             Params p = m.processArgs(args);
@@ -88,17 +140,32 @@ public class Main {
      * @throws IOException on failure to read a pattern file.
      */
     private Params processArgs(String[] args) throws IOException {
-        
-        if (args.length < 2) {
-            usage();
+        Params p = new Params();
+
+        for (String arg : args) {
+            if (arg.startsWith("--")) {
+                if (arg.startsWith("--v")) {
+                    p.setVerbose();
+                } else if (arg.startsWith("--s")) {
+                    p.setDumpSource();
+                } else if (arg.startsWith("--h")) {
+                    usage(null);
+                } else {
+                    usage("Unknown argument: " + arg);
+                }
+            } else if (p.getInputJarPath() == null) {
+                p.setInputJarPath(arg);
+            } else if (p.getOutputJarPath() == null) {
+                p.setOutputJarPath(arg);
+            } else {
+                addString(p, arg);
+            }
         }
 
-        Params p = new Params(args[0], args[1]);
-        
-        for (int i = 2; i < args.length; i++) {
-            addString(p, args[i]);
+        if (p.getInputJarPath() == null && p.getOutputJarPath() == null) {
+            usage("Missing input or output JAR.");
         }
-        
+
         return p;
     }
 
@@ -112,7 +179,7 @@ public class Main {
      * </ul>
      * The input string is trimmed so any space around the first letter (-/+/@) or
      * at the end is removed. Empty strings are ignored.
-     * 
+     *
      * @param p The params which filters to edit.
      * @param s The string to examine.
      * @throws IOException
@@ -127,13 +194,13 @@ public class Main {
         if (s.length() < 2) {
             return;
         }
-        
+
         char mode = s.charAt(0);
         s = s.substring(1).trim();
 
         if (mode == '@') {
             addStringsFromFile(p, s);
-            
+
         } else if (mode == '-') {
             s = s.replace('.', '/');  // transform FQCN into ASM internal name
             if (s.endsWith("*")) {
@@ -154,11 +221,11 @@ public class Main {
 
     /**
      * Adds all the filter strings from the given file.
-     * 
+     *
      * @param p The params which filter to edit.
      * @param osFilePath The OS path to the file containing the patterns.
      * @throws IOException
-     * 
+     *
      * @see #addString(Params, String)
      */
     private void addStringsFromFile(Params p, String osFilePath)
@@ -179,9 +246,19 @@ public class Main {
 
     /**
      * Prints some help to stdout.
+     * @param error The error that generated the usage, if any. Can be null.
      */
-    private void usage() {
-        System.out.println("Usage: mkstub input.jar output.jar [excluded-class @excluded-classes-file ...]");
+    private void usage(String error) {
+        if (error != null) {
+            System.out.println("ERROR: " + error);
+        }
+
+        System.out.println("Usage: mkstub [--h|--s|--v] input.jar output.jar [excluded-class @excluded-classes-file ...]");
+
+        System.out.println("Options:\n" +
+                " --h | --help    : print this usage.\n" +
+                " --v | --verbose : verbose mode.\n" +
+                " --s | --source  : dump source equivalent to modified byte code.\n\n");
 
         System.out.println("Include syntax:\n" +
                 "+com.package.* : whole package, with glob\n" +
@@ -193,6 +270,7 @@ public class Main {
         		"-com.package.Class[$Inner] or ...Class*: whole classes with optional glob\n" +
         		"-com.package.Class#method: whole method or field\n" +
                 "-com.package.Class#method(IILjava/lang/String;)V: specific method with signature.\n\n");
+
         System.exit(1);
     }
 
@@ -211,20 +289,22 @@ public class Main {
         AsmAnalyzer aa = new AsmAnalyzer();
         Map<String, ClassReader> classes = aa.parseInputJar(p.getInputJarPath());
 
-        System.out.println(String.format("Classes loaded: %d", classes.size()));
-        
-        aa.filter(classes, p.getFilter());
+        Logger log = new Logger(p.isVerbose());
+        log.info("Classes loaded: %d", classes.size());
 
-        System.out.println(String.format("Classes filtered: %d", classes.size()));
+        aa.filter(classes, p.getFilter(), log);
+        log.info("Classes filtered: %d", classes.size());
 
         // dump as Java source files, mostly for debugging
-        SourceGenerator src_gen = new SourceGenerator();
-        File dst_src_dir = new File(p.getOutputJarPath() + "_sources");
-        dst_src_dir.mkdir();
-        src_gen.generateSource(dst_src_dir, classes, p.getFilter());
-        
+        if (p.isDumpSource()) {
+            SourceGenerator src_gen = new SourceGenerator(log);
+            File dst_src_dir = new File(p.getOutputJarPath() + "_sources");
+            dst_src_dir.mkdir();
+            src_gen.generateSource(dst_src_dir, classes, p.getFilter());
+        }
+
         // dump the stubbed jar
-        StubGenerator stub_gen = new StubGenerator();
+        StubGenerator stub_gen = new StubGenerator(log);
         File dst_jar = new File(p.getOutputJarPath());
         stub_gen.generateStubbedJar(dst_jar, classes, p.getFilter());
     }
