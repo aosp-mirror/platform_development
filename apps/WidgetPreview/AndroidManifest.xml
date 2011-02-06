@@ -19,7 +19,9 @@
 
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.BIND_APPWIDGET" />
-
+        
+    <uses-sdk android:targetSdkVersion="11"/>
+    
     <application android:label="@string/application_label">
 
         <activity
