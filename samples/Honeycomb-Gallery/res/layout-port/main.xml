@@ -23,6 +23,7 @@
     <fragment class="com.example.android.hcgallery.TitlesFragment"
             android:id="@+id/frag_title"
             android:visibility="gone"
+            android:layout_marginTop="?android:attr/actionBarSize"
             android:layout_width="match_parent"
             android:layout_height="@dimen/titles_size"/>
 

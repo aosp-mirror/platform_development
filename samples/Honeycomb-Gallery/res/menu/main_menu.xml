@@ -27,4 +27,7 @@
     <item android:id="@+id/toggleTheme"
         android:title="Day/Night"
         android:showAsAction="ifRoom|withText" />
+    <item android:id="@+id/showDialog"
+          android:title="Show a dialog"
+          android:showAsAction="ifRoom|withText" />
 </menu>

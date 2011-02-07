@@ -23,6 +23,8 @@ import android.app.Fragment;
 import android.content.ClipData;
 import android.content.ClipDescription;
 import android.content.ClipData.Item;
+import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.view.DragEvent;
 import android.view.LayoutInflater;
@@ -30,8 +32,12 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.View.OnClickListener;
 import android.widget.ImageView;
+import android.view.Window;
+import android.view.WindowManager;
 
 public class ContentFragment extends Fragment {
+    // The bitmap currently used by ImageView
+    private Bitmap mBitmap = null;
 
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
@@ -48,9 +54,16 @@ public class ContentFragment extends Fragment {
         view.setOnDragListener(new View.OnDragListener() {
             public boolean onDrag(View v, DragEvent event) {
                 switch (event.getAction()) {
+                case DragEvent.ACTION_DRAG_ENTERED:
+                    view.setBackgroundColor(Color.LTGRAY);
+                    break;
+                case DragEvent.ACTION_DRAG_EXITED:
+                    view.setBackgroundColor(Color.TRANSPARENT);
+                    break;
                 case DragEvent.ACTION_DRAG_STARTED:
                     return processDragStarted(event);
                 case DragEvent.ACTION_DROP:
+                    view.setBackgroundColor(Color.TRANSPARENT);
                     return processDrop(event, imageView);
                 }
                 return false;
@@ -59,10 +72,9 @@ public class ContentFragment extends Fragment {
 
         view.setOnClickListener(new OnClickListener() {
 
-            @Override
+
             public void onClick(View v) {
-                ActionBar bar = ContentFragment.this.getActivity()
-                        .getActionBar();
+                ActionBar bar = getActivity().getActionBar();
                 if (bar != null) {
                     if (bar.isShowing()) {
                         bar.hide();
@@ -85,7 +97,7 @@ public class ContentFragment extends Fragment {
         return false;
     }
 
-   boolean processDrop(DragEvent event, ImageView imageView) {
+    private boolean processDrop(DragEvent event, ImageView imageView) {
         // Attempt to parse clip data with expected format: category||entry_id.
         // Ignore event if data does not conform to this format.
         ClipData data = event.getClipData();
@@ -106,14 +118,28 @@ public class ContentFragment extends Fragment {
                     } catch (NumberFormatException exception) {
                         return false;
                     }
-                    imageView.setImageBitmap(
-                        Directory.getCategory(category)
-                                 .getEntry(entryId)
-                                 .getBitmap(getResources()));
+                    updateContentAndRecycleBitmap(category, entryId);
+                    // Update list fragment with selected entry.
+                    TitlesFragment titlesFrag = (TitlesFragment)
+                            getFragmentManager().findFragmentById(R.id.frag_title);
+                    titlesFrag.selectPosition(entryId);
                     return true;
                 }
             }
         }
         return false;
+    }
+
+    public void updateContentAndRecycleBitmap(int category, int position) {
+        // Get the bitmap that needs to be drawn and update the ImageView
+        Bitmap next = Directory.getCategory(category).getEntry(position)
+                .getBitmap(getResources());
+        ((ImageView) getView().findViewById(R.id.image)).setImageBitmap(next);
+        if (mBitmap != null) {
+            // This is an advanced call and should be used if you
+            // are working with a lot of bitmaps. The bitmap is dead
+            // after this call.
+            mBitmap.recycle();
+        }
     }
 }
