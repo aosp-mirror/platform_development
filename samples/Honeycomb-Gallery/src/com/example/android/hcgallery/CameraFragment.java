@@ -43,20 +43,15 @@ public class CameraFragment extends Fragment {
     private Preview mPreview;
     Camera mCamera;
     int mNumberOfCameras;
-    int cameraCurrentlyLocked;
+    int mCameraCurrentlyLocked;
 
     // The first rear facing camera
-    int defaultCameraId;
+    int mDefaultCameraId;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Add an up arrow to the "home" button, indicating that the button will go "up"
-        // one activity in the app's Activity heirarchy.
-        Activity activity = this.getActivity();
-        ActionBar actionBar = activity.getActionBar();
-        actionBar.setDisplayHomeAsUpEnabled(true);
 
         // Create a RelativeLayout container that will hold a SurfaceView,
         // and set it as the content of our activity.
@@ -70,10 +65,24 @@ public class CameraFragment extends Fragment {
         for (int i = 0; i < mNumberOfCameras; i++) {
             Camera.getCameraInfo(i, cameraInfo);
             if (cameraInfo.facing == CameraInfo.CAMERA_FACING_BACK) {
-                defaultCameraId = i;
+                mDefaultCameraId = i;
             }
         }
         setHasOptionsMenu(mNumberOfCameras > 1);
+    }
+
+    @Override
+    public void onActivityCreated(Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        // Add an up arrow to the "home" button, indicating that the button will go "up"
+        // one activity in the app's Activity heirarchy.
+        // Calls to getActionBar() aren't guaranteed to return the ActionBar when called
+        // from within the Fragment's onCreate method, because the Window's decor hasn't been
+        // initialized yet.  Either call for the ActionBar reference in Activity.onCreate()
+        // (after the setContentView(...) call), or in the Fragment's onActivityCreated method.
+        Activity activity = this.getActivity();
+        ActionBar actionBar = activity.getActionBar();
+        actionBar.setDisplayHomeAsUpEnabled(true);
     }
 
     @Override
@@ -87,8 +96,8 @@ public class CameraFragment extends Fragment {
         super.onResume();
 
         // Open the default i.e. the first rear facing camera.
-        mCamera = Camera.open(defaultCameraId);
-        cameraCurrentlyLocked = defaultCameraId;
+        mCamera = Camera.open(mDefaultCameraId);
+        mCameraCurrentlyLocked = mDefaultCameraId;
         mPreview.setCamera(mCamera);
     }
 
@@ -120,7 +129,7 @@ public class CameraFragment extends Fragment {
         // Handle item selection
         switch (item.getItemId()) {
         case R.id.switch_cam:
-            // Release this camera -> cameraCurrentlyLocked
+            // Release this camera -> mCameraCurrentlyLocked
             if (mCamera != null) {
                 mCamera.stopPreview();
                 mPreview.setCamera(null);
@@ -131,8 +140,8 @@ public class CameraFragment extends Fragment {
             // Acquire the next camera and request Preview to reconfigure
             // parameters.
             mCamera = Camera
-                    .open((cameraCurrentlyLocked + 1) % mNumberOfCameras);
-            cameraCurrentlyLocked = (cameraCurrentlyLocked + 1)
+                    .open((mCameraCurrentlyLocked + 1) % mNumberOfCameras);
+            mCameraCurrentlyLocked = (mCameraCurrentlyLocked + 1)
                     % mNumberOfCameras;
             mPreview.switchCamera(mCamera);
 
