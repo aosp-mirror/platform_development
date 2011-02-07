@@ -16,6 +16,7 @@
 
 package com.android.mkstubs;
 
+import com.android.mkstubs.Main.Logger;
 import com.android.mkstubs.stubber.ClassStubber;
 
 import org.objectweb.asm.ClassReader;
@@ -26,8 +27,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Map;
-import java.util.TreeMap;
 import java.util.Map.Entry;
+import java.util.TreeMap;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 
@@ -40,9 +41,15 @@ import java.util.jar.JarOutputStream;
  */
 class StubGenerator {
 
+    private Logger mLog;
+
+    public StubGenerator(Logger log) {
+        mLog = log;
+    }
+
     /**
      * Generate source for the stubbed classes, mostly for debug purposes.
-     * @throws IOException 
+     * @throws IOException
      */
     public void generateStubbedJar(File destJar,
             Map<String, ClassReader> classes,
@@ -52,7 +59,7 @@ class StubGenerator {
 
         for (Entry<String, ClassReader> entry : classes.entrySet()) {
             ClassReader cr = entry.getValue();
-            
+
             byte[] b = visitClassStubber(cr, filter);
             String name = classNameToEntryPath(cr.getClassName());
             all.put(name, b);
@@ -60,7 +67,7 @@ class StubGenerator {
 
         createJar(new FileOutputStream(destJar), all);
 
-        System.out.println(String.format("Wrote %s", destJar.getPath()));
+        mLog.debug("Wrote %s", destJar.getPath());
     }
 
     /**
@@ -73,8 +80,8 @@ class StubGenerator {
 
     /**
      * Writes the JAR file.
-     * 
-     * @param outStream The file output stream were to write the JAR. 
+     *
+     * @param outStream The file output stream were to write the JAR.
      * @param all The map of all classes to output.
      * @throws IOException if an I/O error has occurred
      */
@@ -90,16 +97,16 @@ class StubGenerator {
         jar.flush();
         jar.close();
     }
-    
+
     byte[] visitClassStubber(ClassReader cr, Filter filter) {
-        System.out.println("Stub " + cr.getClassName());
+        mLog.debug("Stub " + cr.getClassName());
 
         // Rewrite the new class from scratch, without reusing the constant pool from the
         // original class reader.
         ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
 
         ClassVisitor stubWriter = new ClassStubber(cw);
-        ClassVisitor classFilter = new FilterClassAdapter(stubWriter, filter);
+        ClassVisitor classFilter = new FilterClassAdapter(stubWriter, filter, mLog);
         cr.accept(classFilter, 0 /*flags*/);
         return cw.toByteArray();
     }
