@@ -17,6 +17,8 @@
 package com.example.android.searchabledict;
 
 import android.app.Activity;
+import android.app.ActionBar;
+import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
@@ -34,6 +36,9 @@ public class WordActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.word);
+
+        ActionBar actionBar = getActionBar();
+        actionBar.setDisplayHomeAsUpEnabled(true);
 
         Uri uri = getIntent().getData();
         Cursor cursor = managedQuery(uri, null, null, null, null);
@@ -66,6 +71,11 @@ public class WordActivity extends Activity {
         switch (item.getItemId()) {
             case R.id.search:
                 onSearchRequested();
+                return true;
+            case android.R.id.home:
+                Intent intent = new Intent(this, SearchableDictionary.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                startActivity(intent);
                 return true;
             default:
                 return false;
