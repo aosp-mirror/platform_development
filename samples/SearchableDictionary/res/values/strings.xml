@@ -34,7 +34,7 @@
     <string name="settings_description">Definitions of words</string>
 
     <!-- General instructions in the main activity. -->
-    <string name="search_instructions">Press the search key to look up a word</string>
+    <string name="search_instructions">Use the search box in the Action Bar to look up a word</string>
 
     <!-- Shown above search results when we receive a search request. -->
     <plurals name="search_results">
