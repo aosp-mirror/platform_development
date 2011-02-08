@@ -1,13 +1,27 @@
 <p>This is a demo application highlighting how to use some of the new APIs in
-Honeycomb, including Fragments, the Action Bar, drag'n drop, transition
-animations, and a stack widget.  The image gallery shows how all these pieces
-can work together in one application.</p>
+Honeycomb, including:</p>
 
-<p>The application includes the following classes:<p>
+<ul>
+  <li><a href="../../../guide/topics/fundamentals/fragments.html">Fragments</a></li>
+  <li>The <a href="../../../guide/topics/ui/actionbar.html">action bar</a>
+      and contextual action bar</li>
+  <li>Drag and drop</li>
+  <li>The new <a href="../../../reference/android/animation/package-summary.html"><code>android.animation</code></a>
+      framework</li>
+  <li>Custom notifications</li>
+  <li><a href="../../../reference/android/widget/StackView.html"><code>StackView</code></a>
+      and other adapter-based app widgets</li>
+</ul>
+
+<p>The image gallery shows how all these pieces can work together in one application.</p>
+
+<p>The application includes the following key classes:<p>
 <ul>
   <li><a href="src/com/example/android/hcgallery/ContentFragment.html">ContentFragment</a>
-    A fragment responsible for containing the "content" of the application.
-    Displays images, receives drag/drop events from other fragments.</li>
+      A fragment responsible for containing the "content" of the application.
+      Displays images, receives drag/drop events from other fragments, and can
+      invoke the contextual action bar using
+      <a href="../../../reference/android/view/ActionMode.html">action modes</a>.</li>
   <li><a href="src/com/example/android/hcgallery/TitlesFragment.html">TitlesFragment</a>
       Shows a ListView of photos to display in the ContentFragment. Photos can
       be chosen either by tapping on the listview, or dragging them from the
@@ -19,7 +33,7 @@ can work together in one application.</p>
       ContentFragment. MainActivity is also responsible for keeping track of
       the currently selected theme and currently selected photo when the
       activity is recreated, such as when the screen is rotated or an intent to
-      a seperate activity is fired (such as the included Camera sample).
+      a separate activity is fired (such as the included Camera sample).
       MainActivity also contains code demonstrating how to animate
       showing/hiding fragments (in this case, the TitlesFragment) and the
       ActionBar, demonstrating how to smoothly transition between states
