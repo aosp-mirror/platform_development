@@ -136,6 +136,17 @@ public class Monkey {
      */
     private boolean mRequestAppCrashBugreport = false;
 
+    /**Request the bugreport based on the mBugreportFrequency. */
+    private boolean mGetPeriodicBugreport = true;
+
+    /**
+     * Request the bugreport based on the mBugreportFrequency.
+     */
+    private boolean mRequestPeriodicBugreport = false;
+
+    /** Bugreport frequency. */
+    private long mBugreportFrequency = 10;
+
     /** Failure process name */
     private String mReportProcessName;
 
@@ -337,9 +348,8 @@ public class Monkey {
                 synchronized (Monkey.this) {
                     mAbort = true;
                 }
-                return (mKillProcessAfterError) ? -1 : 0;
             }
-            return 0;
+            return (mKillProcessAfterError) ? -1 : 1;
         }
     }
 
@@ -618,6 +628,10 @@ public class Monkey {
                 reportDumpsysMemInfo();
                 mRequestDumpsysMemInfo = false;
             }
+            if (mRequestPeriodicBugreport){
+                getBugreport("Bugreport_");
+                mRequestPeriodicBugreport = false;
+            }
         }
 
         if (mGenerateHprof) {
@@ -762,6 +776,9 @@ public class Monkey {
                     mScriptLog = true;
                 } else if (opt.equals("--bugreport")) {
                     mRequestBugreport = true;
+                } else if (opt.equals("--periodic-bugreport")){
+                    mGetPeriodicBugreport = true;
+                    mBugreportFrequency = nextOptionLong("Number of iterations");
                 } else if (opt.equals("-h")) {
                     showUsage();
                     return false;
@@ -993,6 +1010,10 @@ public class Monkey {
                     getBugreport("app_crash" + mReportProcessName + "_");
                     mRequestAppCrashBugreport = false;
                 }
+                if (mRequestPeriodicBugreport){
+                    getBugreport("Bugreport_");
+                    mRequestPeriodicBugreport = false;
+                }
                 if (mRequestDumpsysMemInfo) {
                     mRequestDumpsysMemInfo = false;
                     shouldReportDumpsysMemInfo = true;
@@ -1082,6 +1103,12 @@ public class Monkey {
                 if (!mCountEvents) {
                     cycleCounter++;
                     writeScriptLog(cycleCounter);
+                    //Capture the bugreport after n iteration
+                    if (mGetPeriodicBugreport) {
+                        if ((cycleCounter % mBugreportFrequency) == 0) {
+                            mRequestPeriodicBugreport = true;
+                        }
+                    }
                 } else {
                     // Event Source has signaled that we have no more events to process
                     break;
@@ -1259,6 +1286,7 @@ public class Monkey {
         usage.append("              [--randomize-script]\n");
         usage.append("              [--script-log]\n");
         usage.append("              [--bugreport]\n");
+        usage.append("              [--periodic-bugreport]\n");
         usage.append("              COUNT\n");
         System.err.println(usage.toString());
     }
