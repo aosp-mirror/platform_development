@@ -115,6 +115,8 @@ public class MonkeySourceScript implements MonkeyEventSource {
 
     private static final String EVENT_KEYWORD_PRESSANDHOLD = "PressAndHold";
 
+    private static final String EVENT_KEYWORD_DRAG = "Drag";
+
     // a line at the end of the header
     private static final String STARTING_DATA_LINE = "start data >>";
 
@@ -343,6 +345,44 @@ public class MonkeySourceScript implements MonkeyEventSource {
                 System.err.println("// " + e.toString());
             }
             return;
+        }
+
+        // Handle drag event
+        if ((s.indexOf(EVENT_KEYWORD_DRAG) >= 0) && args.length == 5) {
+            float xStart = Float.parseFloat(args[0]);
+            float yStart = Float.parseFloat(args[1]);
+            float xEnd = Float.parseFloat(args[2]);
+            float yEnd = Float.parseFloat(args[3]);
+            int stepCount = Integer.parseInt(args[4]);
+
+            float x = xStart;
+            float y = yStart;
+            long downTime = SystemClock.uptimeMillis();
+            long eventTime = SystemClock.uptimeMillis();
+
+            if (stepCount > 0) {
+                float xStep = (xEnd - xStart) / stepCount;
+                float yStep = (yEnd - yStart) / stepCount;
+
+                MonkeyMotionEvent e =
+                        new MonkeyTouchEvent(MotionEvent.ACTION_DOWN).setDownTime(downTime)
+                                .setEventTime(eventTime).addPointer(0, x, y, 1, 5);
+                mQ.addLast(e);
+
+                for (int i = 0; i < stepCount; ++i) {
+                    x += xStep;
+                    y += yStep;
+                    eventTime = SystemClock.uptimeMillis();
+                    e = new MonkeyTouchEvent(MotionEvent.ACTION_MOVE).setDownTime(downTime)
+                        .setEventTime(eventTime).addPointer(0, x, y, 1, 5);
+                    mQ.addLast(e);
+                }
+
+                eventTime = SystemClock.uptimeMillis();
+                e = new MonkeyTouchEvent(MotionEvent.ACTION_UP).setDownTime(downTime)
+                    .setEventTime(eventTime).addPointer(0, x, y, 1, 5);
+                mQ.addLast(e);
+            }
         }
 
         // Handle flip events
