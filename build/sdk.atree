@@ -184,6 +184,8 @@ development/samples/WiktionarySimple         samples/${PLATFORM_NAME}/Wiktionary
 development/samples/XmlAdapters              samples/${PLATFORM_NAME}/XmlAdapters
 frameworks/base/libs/rs/java/Balls           samples/${PLATFORM_NAME}/RenderScript/Balls
 frameworks/base/libs/rs/java/Fountain        samples/${PLATFORM_NAME}/RenderScript/Fountain
+frameworks/base/libs/rs/java/HelloCompute    samples/${PLATFORM_NAME}/RenderScript/HelloCompute
+frameworks/base/libs/rs/java/HelloWorld      samples/${PLATFORM_NAME}/RenderScript/HelloWorld
 frameworks/base/libs/rs/java/Samples         samples/${PLATFORM_NAME}/RenderScript/MiscSamples
 
 # NOTICE files are copied by build/core/Makefile from sdk.git
