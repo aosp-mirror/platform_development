@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.example.android.hcgallery.widget;
+package com.example.android.stackwidget;
 
 public class WidgetItem {
     public String text;

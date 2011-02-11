@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007 The Android Open Source Project
+ * Copyright (C) 2011 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,9 +14,7 @@
  * limitations under the License.
  */
 
-package com.example.android.hcgallery.widget;
-
-import com.example.android.hcgallery.R;
+package com.example.android.stackwidget;
 
 import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
@@ -27,8 +25,9 @@ import android.net.Uri;
 import android.widget.RemoteViews;
 import android.widget.Toast;
 
-public class WidgetProvider extends AppWidgetProvider {
-    public static String TOAST_ACTION = "com.example.android.widget.action.TOAST";
+public class StackWidgetProvider extends AppWidgetProvider {
+    public static final String TOAST_ACTION = "com.example.android.stackwidget.TOAST_ACTION";
+    public static final String EXTRA_ITEM = "com.example.android.stackwidget.EXTRA_ITEM";
 
     @Override
     public void onDeleted(Context context, int[] appWidgetIds) {
@@ -47,12 +46,11 @@ public class WidgetProvider extends AppWidgetProvider {
 
     @Override
     public void onReceive(Context context, Intent intent) {
-
         AppWidgetManager mgr = AppWidgetManager.getInstance(context);
         if (intent.getAction().equals(TOAST_ACTION)) {
             int appWidgetId = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID,
                     AppWidgetManager.INVALID_APPWIDGET_ID);
-            int viewIndex = intent.getIntExtra("numberToToast", 0);
+            int viewIndex = intent.getIntExtra(EXTRA_ITEM, 0);
             Toast.makeText(context, "Touched view " + viewIndex, Toast.LENGTH_SHORT).show();
         }
         super.onReceive(context, intent);
@@ -65,7 +63,7 @@ public class WidgetProvider extends AppWidgetProvider {
 
             // Here we setup the intent which points to the StackViewService which will
             // provide the views for this collection.
-            Intent intent = new Intent(context, WidgetService.class);
+            Intent intent = new Intent(context, StackWidgetService.class);
             intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetIds[i]);
             // When intents are compared, the extras are ignored, so we need to embed the extras
             // into the data so that the extras will not be ignored.
@@ -81,10 +79,10 @@ public class WidgetProvider extends AppWidgetProvider {
             // cannot setup their own pending intents, instead, the collection as a whole can
             // setup a pending intent template, and the individual items can set a fillInIntent
             // to create unique before on an item to item basis.
-            Intent toastIntent = new Intent(context, WidgetProvider.class);
-            toastIntent.setAction(WidgetProvider.TOAST_ACTION);
+            Intent toastIntent = new Intent(context, StackWidgetProvider.class);
+            toastIntent.setAction(StackWidgetProvider.TOAST_ACTION);
             toastIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetIds[i]);
-            toastIntent.setData(Uri.parse("widgetid" + appWidgetIds[i]));
+            intent.setData(Uri.parse(intent.toUri(Intent.URI_INTENT_SCHEME)));
             PendingIntent toastPendingIntent = PendingIntent.getBroadcast(context, 0, toastIntent,
                     PendingIntent.FLAG_UPDATE_CURRENT);
             rv.setPendingIntentTemplate(R.id.stack_view, toastPendingIntent);
