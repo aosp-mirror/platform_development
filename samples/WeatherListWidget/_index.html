@@ -1,0 +1,43 @@
+<p>This sample demonstrates how to create a list-based widget specifically backed by a content provider.<br/>
+<em>Please make sure that you understand the earlier stack widget sample code before delving into this example
+ (see <a href="../StackWidget/index.html">StackWidget</a>).</em></p>
+
+<p>As in the StackWidget example, we will be using a collection view (the ListView in this case) to
+present some mock weather data in a widget.  In particular, we will be using a content provider to
+demonstrate how the widget can retrieve data and update itself when you are using more complex data
+sources.  When working with external data, or data which must be fetched over high latency, it is
+important to keep the data cached in a persistent location so that the widget feels responsive.</p>
+
+<p>This sample uses the following classes:
+	<ul>
+		<li><a href="src/com/example/android/weatherlistwidget/WeatherDataProvider.html"><code>WeatherDataProvider</code></a> &mdash;
+			Our ContentProvider which stores the weather data for this sample.  Note that for simplicity,
+			it currently stores the data in memory as opposed to an external and persistent storage such
+			as a file, network location, database, or shared preference.
+		</li>
+		<li><a href="src/com/example/android/weatherlistwidget/WeatherWidgetProvider.html"><code>WeatherWidgetProvider</code></a> &mdash;
+			Our AppWidgetProvider which handles specific intent actions (such as when an item is clicked,
+			or the refresh button is pressed).  It also sets up the RemoteViews for the widget and binds
+			the service to the collection view in the widget.
+		</li>
+		<li><a href="src/com/example/android/weatherlistwidget/WeatherWidgetService.html"><code>WeatherWidgetService</code></a> &mdash;
+			Our RemoteViewsService which manages the creation of new factories, which return the RemoteViews
+			for each item in the ListView.
+		</li>
+	</ul>
+</p>
+
+<p>If you are writing collection-based widgets, remember that the feature is
+supported only on Android 3.0 (API level 11) and higher versions of the platform.
+Remember to add the following to the application's manifest publishing to Android Market:</p>
+
+<ul>
+<li><code>&lt;uses-sdk android:minSdkVersion="11" /&gt;</code>, which indicates
+to Android Market and the platform that your application requires Android 3.0 or
+higher. For more information, see the <a href="../../../guide/appendix/api-levels.html">API Levels</a>
+and the documentation for the
+<a href="../../../guide/topics/manifest/uses-sdk-element.html"><code>&lt;uses-sdk&gt;</code></a>
+element.</li>
+</ul>
+
+<img alt="Screenshot" src="../images/WeatherListWidget.png" />
