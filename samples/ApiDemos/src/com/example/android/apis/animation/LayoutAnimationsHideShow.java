@@ -53,10 +53,9 @@ public class LayoutAnimationsHideShow extends Activity {
 
         final CheckBox hideGoneCB = (CheckBox) findViewById(R.id.hideGoneCB);
 
-        container = new FixedGridLayout(this);
-        ((FixedGridLayout)container).setCellHeight(50);
-        ((FixedGridLayout)container).setCellWidth(100);
         container = new LinearLayout(this);
+        container.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT));
 
         // Add a slew of buttons to the container. We won't add any more buttons at runtime, but
         // will just show/hide the buttons we've already created
