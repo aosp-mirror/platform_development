@@ -22,7 +22,6 @@
         <reset-password />
         <force-lock />
         <wipe-data />
-        <set-global-proxy />
         <expire-password />
         <encrypted-storage />
     </uses-policies>

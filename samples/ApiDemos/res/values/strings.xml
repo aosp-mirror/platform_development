@@ -612,9 +612,6 @@
     <string name="wipe_all_data">Wipe All Data</string>
     <string name="timeout_hint">Max screen timeout</string>
     <string name="set_timeout_label">Set Timeout</string>
-    <string name="proxyhost_hint">Global proxyhost:port</string>
-    <string name="proxylist_hint">No proxy for domain1,domain2</string>
-    <string name="set_proxy_label">Set Global Proxy</string>
 
     <string name="encryption_enable_label">Enable Encryption</string>
     <string name="encryption_disable_label">Disable Encryption</string>
