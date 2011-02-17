@@ -471,6 +471,12 @@ See test_defs.xsd for more information.
     class="com.android.email.SmallTests"
     coverage_target="Email" />
 
+<test name="exchange"
+    build_path="packages/apps/Exchange"
+    package="com.android.exchange.tests"
+    coverage_target="Exchange"
+    continuous="true" />
+
 <test name="musicplayer"
     build_path="packages/apps/Music"
     package="com.android.music.tests"
