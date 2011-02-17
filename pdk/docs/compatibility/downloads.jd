@@ -7,12 +7,10 @@ you to access the key documents and information.</p>
 <h2>Android 2.3</h2>
 <p>Android 2.3 is the release of the development milestone code-named
 Gingerbread. Android 2.3 is the current version of Android. Source code for
-Android 2.3 is found in the 'gingerbread' branch in the open-source tree. A
-CTS release for Android 2.3 has not yet been prepared, but one will be
-available soon.
+Android 2.3 is found in the 'gingerbread' branch in the open-source tree.
 </p>
 <ul>
-  <li><a href="{@docRoot}compatibility/android-2.3-cdd.pdf">Android 2.3 Compatibility Definition Document (CDD)</a></li>
+  <li><a href="{@docRoot}compatibility/android-2.3.3-cdd.pdf">Android 2.3.3 Compatibility Definition Document (CDD)</a></li>
   <li><a href="http://dl.google.com/dl/android/cts/android-cts-2.3_r1-x86.zip">Android 2.3 R1 Compatibility Test Suite (CTS)</a></li>
 </ul>
 
