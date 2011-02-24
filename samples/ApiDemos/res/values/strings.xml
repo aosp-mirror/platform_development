@@ -773,6 +773,20 @@
         dot will append the drag\'s textual conversion to the EditText.
     </string>
 
+    <string name="game_controller_input_description">
+        This activity demonstrates how to process input events received from
+        game controllers.  Please connect your game controller now and try
+        moving the joysticks or pressing buttons.  If it helps, try to imagine
+        that you are a lone space cowboy in hot pursuit of the aliens who kidnapped
+        your favorite llama on their way back to Andromeda...
+    </string>
+    <string name="game_controller_input_heading_device">Input Device</string>
+    <string name="game_controller_input_heading_axes">Axes</string>
+    <string name="game_controller_input_heading_keys">Keys and Buttons</string>
+    <string name="game_controller_input_label_device_name">Name</string>
+    <string name="game_controller_input_key_pressed">Pressed</string>
+    <string name="game_controller_input_key_released">Released</string>
+
     <!-- ============================== -->
     <!--  GoogleLogin examples strings  -->
     <!-- ============================== -->
