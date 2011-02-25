@@ -317,6 +317,8 @@
     <string name="text_to_speech">App/Text-To-Speech</string>
     <string name="again">Again</string>
 
+    <string name="app_update_received">ApiDemos has been updated!</string>
+    
     <!-- ============================== -->
     <!--  app/content examples strings  -->
     <!-- ============================== -->
