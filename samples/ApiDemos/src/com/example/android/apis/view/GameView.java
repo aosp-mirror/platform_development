@@ -71,7 +71,7 @@ public class GameView extends View {
 
     private final Runnable mAnimationRunnable = new Runnable() {
         public void run() {
-            animate();
+            animateFrame();
         }
     };
 
@@ -322,7 +322,7 @@ public class GameView extends View {
         mObstacles.clear();
     }
 
-    void animate() {
+    void animateFrame() {
         long currentStepTime = SystemClock.uptimeMillis();
         step(currentStepTime);
 
