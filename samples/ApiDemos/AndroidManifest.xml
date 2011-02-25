@@ -1291,6 +1291,13 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".view.HorizontalScrollView1" android:label="Views/Layouts/HorizontalScrollView">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
         <activity android:name=".view.Tabs1" android:label="Views/Tabs/1. Content By Id">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
