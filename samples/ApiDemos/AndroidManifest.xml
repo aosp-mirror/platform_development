@@ -875,6 +875,16 @@
             </intent-filter>
         </activity>
 
+        <!-- Application Updating Samples -->
+
+<!-- BEGIN_INCLUDE(app_update_declaration) -->
+        <receiver android:name=".app.AppUpdateReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
+<!-- END_INCLUDE(app_update_declaration) -->
+
         <!-- ************************************* -->
         <!--       PREFERENCE PACKAGE SAMPLES      -->
         <!-- ************************************* -->
