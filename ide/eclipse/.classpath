@@ -9,6 +9,7 @@
 	<classpathentry kind="src" path="packages/apps/Contacts/src"/>
 	<classpathentry kind="src" path="packages/apps/DeskClock/src"/>
 	<classpathentry kind="src" path="packages/apps/Email/src"/>
+	<classpathentry kind="src" path="packages/apps/Exchange/src"/>
 	<classpathentry kind="src" path="packages/apps/Gallery3D/src"/>
 	<classpathentry kind="src" path="packages/apps/HTMLViewer/src"/>
 	<classpathentry kind="src" path="packages/apps/Launcher2/src"/>
