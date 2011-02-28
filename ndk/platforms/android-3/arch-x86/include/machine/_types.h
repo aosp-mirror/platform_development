@@ -36,8 +36,8 @@
 #define _I386__TYPES_H_
 
 /* the kernel defines size_t as unsigned int, but g++ wants it to be unsigned long */
-#ifndef _SIZE_T
-#  define _SIZE_T
+#ifndef _SIZE_T_DEFINED_
+#  define _SIZE_T_DEFINED_
 #  ifdef ANDROID
      typedef unsigned int  size_t;
 #  else
@@ -53,9 +53,6 @@ typedef long int       ssize_t;
 #define _PTRDIFF_T
 typedef long           ptrdiff_t;
 #endif
-
-#define _OFF_T_DEFINED_
-#define _SIZE_T_DEFINED_
 
 #include <linux/types.h>
 
