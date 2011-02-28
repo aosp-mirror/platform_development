@@ -193,8 +193,18 @@ development/samples/RenderScript/MiscSamples   samples/${PLATFORM_NAME}/RenderSc
 sdk/files/sdk_files_NOTICE.txt samples/${PLATFORM_NAME}/NOTICE.txt
 
 ##############################################################################
-# Samples Component
+# Add-on Folder
 ##############################################################################
 
 # empty add-on folder with just a readme copied from sdk.git
 sdk/files/README_add-ons.txt add-ons/README.txt
+
+##############################################################################
+# Extra Component: Compatibility
+##############################################################################
+
+development/sdk/compatibility_source.properties extras/android/compatibility/source.properties
+development/sdk/compatibility_README.txt extras/android/compatibility/README.txt
+out/dist/android-support-v4.jar   extras/android/compatibility/v4/android-support-v4.jar
+frameworks/support/v4             extras/android/compatibility/v4/src
+development/samples/ApiDemos      extras/android/compatibility/v4/samples/ApiDemos
