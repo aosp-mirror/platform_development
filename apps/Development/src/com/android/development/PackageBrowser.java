@@ -24,6 +24,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.BroadcastReceiver;
 import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.RemoteException;
@@ -143,8 +144,9 @@ public class PackageBrowser extends ListActivity {
             if (packageInfo != null) {
                 getPackageManager().deletePackage(packageInfo.info.packageName,
                                                   new IPackageDeleteObserver.Stub() {
-                    public void packageDeleted(boolean succeeded) throws RemoteException {
-                        if (succeeded) {
+                    public void packageDeleted(String packageName, int returnCode)
+                            throws RemoteException {
+                        if (returnCode == PackageManager.DELETE_SUCCEEDED) {
                             mPackageInfoList.remove(curSelection);
                             mHandler.post(new Runnable() {
                                     public void run() {
