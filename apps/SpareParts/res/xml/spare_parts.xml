@@ -26,7 +26,7 @@
                 android:summary="@string/summary_battery_history">
             <intent android:action="android.intent.action.MAIN"
                     android:targetPackage="com.android.settings"
-                    android:targetClass="com.android.settings.battery_history.BatteryHistory" />
+                    android:targetClass="com.android.settings.fuelgauge.PowerUsageSummary" />
         </PreferenceScreen>
         
         <PreferenceScreen android:key="battery_information_settings"
