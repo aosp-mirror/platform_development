@@ -205,6 +205,6 @@ sdk/files/README_add-ons.txt add-ons/README.txt
 
 development/sdk/compatibility_source.properties extras/android/compatibility/source.properties
 development/sdk/compatibility_README.txt        extras/android/compatibility/README.txt
-# ${DIST_DIR}/android-support-v4.jar              extras/android/compatibility/v4/android-support-v4.jar
+${DIST_DIR}/android-support-v4.jar              extras/android/compatibility/v4/android-support-v4.jar
 frameworks/support/v4                           extras/android/compatibility/v4/src
 development/samples/ApiDemos                    extras/android/compatibility/v4/samples/ApiDemos
