@@ -5,7 +5,7 @@
     <application 
         android:label="RsBalls"
         android:icon="@drawable/test_pattern">
-        <activity android:name="RsBalls"
+        <activity android:name="Balls"
                   android:screenOrientation="landscape">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

@@ -2,10 +2,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.android.rs.fountain">
     <uses-sdk android:minSdkVersion="11" />
-    <application 
+    <application
         android:label="RsFountain"
         android:icon="@drawable/test_pattern">
-        <activity android:name="RsFountain">
+        <activity android:name="Fountain">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

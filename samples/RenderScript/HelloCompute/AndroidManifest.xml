@@ -20,7 +20,7 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />    
     <uses-sdk android:minSdkVersion="11" />
     <application android:label="RsHelloCompute">
-        <activity android:name="RsHelloCompute">
+        <activity android:name="HelloCompute">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
