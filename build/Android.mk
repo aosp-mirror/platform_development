@@ -64,3 +64,14 @@ $(android_jar_full_target): $(full_target)
 	$(hide)$(ACP) $< $@
 
 ALL_SDK_FILES += $(android_jar_full_target)
+
+
+android-support-v4_build_module := $(TARGET_OUT_COMMON_INTERMEDIATES)/JAVA_LIBRARIES/android-support-v4_intermediates/javalib.jar
+android-support-v4_intermediates := $(TARGET_OUT_COMMON_INTERMEDIATES)/PACKAGING/android-support-v4_intermediates
+android-support-v4_full_target := $(android-support-v4_intermediates)/android-support-v4.jar
+$(android-support-v4_full_target): $(android-support-v4_build_module)
+	@echo Package android-support-v4.jar: $@
+	$(hide)mkdir -p $(dir $@)
+	$(hide)$(ACP) $< $@
+
+ALL_SDK_FILES += $(android-support-v4_full_target)
