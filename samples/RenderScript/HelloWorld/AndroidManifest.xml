@@ -19,7 +19,7 @@
     <uses-sdk android:minSdkVersion="11" />
     <application android:label="RsHelloWorld"
     android:icon="@drawable/test_pattern">
-        <activity android:name="RsHelloWorld"
+        <activity android:name="HelloWorld"
                   android:label="RsHelloWorld"
                   android:theme="@android:style/Theme.Black.NoTitleBar">
             <intent-filter>
