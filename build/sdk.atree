@@ -145,7 +145,7 @@ frameworks/base/docs/docs-samples-redirect.html docs/samples/index.html
 
 # samples to include in the sdk samples package
 #
-# the list here should match the list of samples that we generate docs for, 
+# the list here should match the list of samples that we generate docs for,
 # (see web_docs_sample_code_flags in frameworks/base/Android.mk)
 development/apps/GestureBuilder              samples/${PLATFORM_NAME}/GestureBuilder
 development/samples/source.properties        samples/${PLATFORM_NAME}/source.properties
@@ -203,8 +203,8 @@ sdk/files/README_add-ons.txt add-ons/README.txt
 # Extra Component: Compatibility
 ##############################################################################
 
-development/sdk/compatibility_source.properties extras/android/compatibility/source.properties
-development/sdk/compatibility_README.txt        extras/android/compatibility/README.txt
-#${DIST_DIR}/android-support-v4.jar              extras/android/compatibility/v4/android-support-v4.jar
-frameworks/support/v4                           extras/android/compatibility/v4/src
-development/samples/ApiDemos                    extras/android/compatibility/v4/samples/ApiDemos
+development/sdk/compatibility_source.properties                                                   extras/android/compatibility/source.properties
+development/sdk/compatibility_README.txt                                                          extras/android/compatibility/README.txt
+${OUT_DIR}/target/common/obj/PACKAGING/android-support-v4_intermediates/android-support-v4.jar    extras/android/compatibility/v4/android-support-v4.jar
+frameworks/support/v4                                                                             extras/android/compatibility/v4/src
+development/samples/ApiDemos                                                                      extras/android/compatibility/v4/samples/ApiDemos
