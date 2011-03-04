@@ -256,6 +256,15 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".app.FragmentArguments"
+                android:label="@string/fragment_arguments"
+                android:enabled="@bool/atLeastHoneycomb">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
         <activity android:name=".app.FragmentHideShow"
                 android:label="@string/fragment_hide_show"
                 android:windowSoftInputMode="stateUnchanged"
