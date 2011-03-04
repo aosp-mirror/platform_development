@@ -108,6 +108,12 @@
 
     <string name="fragment_alert_dialog">App/Fragment/Alert Dialog</string>
 
+    <string name="fragment_arguments">App/Fragment/Arguments</string>
+    <string name="fragment_arguments_msg">Demonstrates a fragment that takes arguments
+        as a Bundle at runtime (on the right) or from attributes in a layout (on the left).</string>
+    <string name="fragment_arguments_embedded">From Attributes</string>
+    <string name="fragment_arguments_embedded_land">Landscape Only</string>
+
     <string name="fragment_hide_show">App/Fragment/Hide and Show</string>
 
     <string name="fragment_context_menu">App/Fragment/Context Menu</string>
