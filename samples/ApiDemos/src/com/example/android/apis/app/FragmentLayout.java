@@ -89,7 +89,6 @@ public class FragmentLayout extends Activity {
     public static class TitlesFragment extends ListFragment {
         boolean mDualPane;
         int mCurCheckPosition = 0;
-        int mShownCheckPosition = -1;
 
         @Override
         public void onActivityCreated(Bundle savedInstanceState) {
@@ -107,7 +106,6 @@ public class FragmentLayout extends Activity {
             if (savedInstanceState != null) {
                 // Restore last state for checked position.
                 mCurCheckPosition = savedInstanceState.getInt("curChoice", 0);
-                mShownCheckPosition = savedInstanceState.getInt("shownChoice", -1);
             }
 
             if (mDualPane) {
@@ -122,7 +120,6 @@ public class FragmentLayout extends Activity {
         public void onSaveInstanceState(Bundle outState) {
             super.onSaveInstanceState(outState);
             outState.putInt("curChoice", mCurCheckPosition);
-            outState.putInt("shownChoice", mShownCheckPosition);
         }
 
         @Override
@@ -143,18 +140,19 @@ public class FragmentLayout extends Activity {
                 // the list to highlight the selected item and show the data.
                 getListView().setItemChecked(index, true);
 
-                if (mShownCheckPosition != mCurCheckPosition) {
-                    // If we are not currently showing a fragment for the new
-                    // position, we need to create and install a new one.
-                    DetailsFragment df = DetailsFragment.newInstance(index);
+                // Check what fragment is currently shown, replace if needed.
+                DetailsFragment details = (DetailsFragment)
+                        getFragmentManager().findFragmentById(R.id.details);
+                if (details == null || details.getShownIndex() != index) {
+                    // Make new fragment to show this selection.
+                    details = DetailsFragment.newInstance(index);
 
                     // Execute a transaction, replacing any existing fragment
                     // with this one inside the frame.
                     FragmentTransaction ft = getFragmentManager().beginTransaction();
-                    ft.replace(R.id.details, df);
+                    ft.replace(R.id.details, details);
                     ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
                     ft.commit();
-                    mShownCheckPosition = index;
                 }
 
             } else {
@@ -190,6 +188,10 @@ public class FragmentLayout extends Activity {
             return f;
         }
 
+        public int getShownIndex() {
+            return getArguments().getInt("index", 0);
+        }
+
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                 Bundle savedInstanceState) {
@@ -210,7 +212,7 @@ public class FragmentLayout extends Activity {
                     4, getActivity().getResources().getDisplayMetrics());
             text.setPadding(padding, padding, padding, padding);
             scroller.addView(text);
-            text.setText(Shakespeare.DIALOGUE[getArguments().getInt("index", 0)]);
+            text.setText(Shakespeare.DIALOGUE[getShownIndex()]);
             return scroller;
         }
     }

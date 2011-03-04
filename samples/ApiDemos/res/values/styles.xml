@@ -81,6 +81,14 @@
         <item name="android:colorForeground">#fff</item>
     </style>
     
+    <!-- Older platforms don't have Theme.Holo.DialogWhenLarge; we will define
+         our own wrapper theme that uses it only when running on the appropriate
+         platform version.  On older platforms, we always use the generic
+         fullscreen theme, because they don't support some feature that help
+         in correctly laying out an activity as a dialog. -->
+    <style name="ThemeDialogWhenLarge" parent="android:style/Theme">
+    </style>
+
     <style name="TextAppearance.Theme.PlainText" parent="android:TextAppearance.Theme">
         <item name="android:textStyle">normal</item>
     </style>

@@ -71,6 +71,8 @@
         type="APPS" />
     <coverage_target name="Email" build_path="packages/apps/Email"
         type="APPS" />
+    <coverage_target name="Exchange" build_path="packages/apps/Exchange"
+        type="APPS" />
     <coverage_target name="Settings" build_path="packages/apps/Settings"
         type="APPS" />
     <coverage_target name="Phone" build_path="packages/apps/Phone"
@@ -86,6 +88,8 @@
         type="APPS" />
 
    <!-- content providers -->
+    <coverage_target name="ApplicationsProvider"
+        build_path="packages/providers/ApplicationsProvider" type="APPS" />
     <coverage_target name="CalendarProvider"
         build_path="packages/providers/CalendarProvider" type="APPS" />
     <coverage_target name="ContactsProvider"

@@ -103,7 +103,7 @@ public class FragmentStack extends Activity {
         @Override
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
-            mNum = getArguments().getInt("num");
+            mNum = getArguments() != null ? getArguments().getInt("num") : 1;
         }
 
         /**

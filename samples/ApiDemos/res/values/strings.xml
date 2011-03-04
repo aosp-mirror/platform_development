@@ -146,6 +146,30 @@
     <string name="fragment_stack">App/Fragment/Stack</string>
     <string name="new_fragment">New fragment</string>
 
+    <string name="fragment_alert_dialog_support">App/Fragment Support/Alert Dialog</string>
+
+    <string name="fragment_hide_show_support">App/Fragment Support/Hide and Show</string>
+
+    <string name="fragment_context_menu_support">App/Fragment Support/Context Menu</string>
+
+    <string name="fragment_dialog_support">App/Fragment Support/Dialog</string>
+
+    <string name="fragment_dialog_or_activity_support">App/Fragment Support/Dialog or Activity</string>
+
+    <string name="fragment_layout_support">App/Fragment Support/Layout</string>
+
+    <string name="fragment_list_array_support">App/Fragment Support/List Array</string>
+
+    <string name="fragment_list_cursor_loader_support">App/Fragment Support/List Cursor Loader</string>
+
+    <string name="fragment_menu_support">App/Fragment Support/Menu</string>
+
+    <string name="fragment_retain_instance_support">App/Fragment Support/Retain Instance</string>
+
+    <string name="fragment_receive_result_support">App/Fragment Support/Receive Result</string>
+
+    <string name="fragment_stack_support">App/Fragment Support/Stack</string>
+
     <string name="loader_throttle">App/Loader/Throttle</string>
     
     <string name="activity_menu">App/Activity/Menu</string>
@@ -293,6 +317,8 @@
     <string name="text_to_speech">App/Text-To-Speech</string>
     <string name="again">Again</string>
 
+    <string name="app_update_received">ApiDemos has been updated!</string>
+    
     <!-- ============================== -->
     <!--  app/content examples strings  -->
     <!-- ============================== -->
@@ -772,6 +798,20 @@
         Longpress on a dot to start a drag, then drop over another dot. The destination
         dot will append the drag\'s textual conversion to the EditText.
     </string>
+
+    <string name="game_controller_input_description">
+        This activity demonstrates how to process input events received from
+        game controllers.  Please connect your game controller now and try
+        moving the joysticks or pressing buttons.  If it helps, try to imagine
+        that you are a lone space cowboy in hot pursuit of the aliens who kidnapped
+        your favorite llama on their way back to Andromeda...
+    </string>
+    <string name="game_controller_input_heading_device">Input Device</string>
+    <string name="game_controller_input_heading_axes">Axes</string>
+    <string name="game_controller_input_heading_keys">Keys and Buttons</string>
+    <string name="game_controller_input_label_device_name">Name</string>
+    <string name="game_controller_input_key_pressed">Pressed</string>
+    <string name="game_controller_input_key_released">Released</string>
 
     <!-- ============================== -->
     <!--  GoogleLogin examples strings  -->

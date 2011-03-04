@@ -58,6 +58,7 @@ public class LayoutAnimations extends Activity {
         setContentView(R.layout.layout_animations);
 
         container = new FixedGridLayout(this);
+        container.setClipChildren(false);
         ((FixedGridLayout)container).setCellHeight(50);
         ((FixedGridLayout)container).setCellWidth(200);
         final LayoutTransition transitioner = new LayoutTransition();
@@ -77,6 +78,7 @@ public class LayoutAnimations extends Activity {
 
         ViewGroup parent = (ViewGroup) findViewById(R.id.parent);
         parent.addView(container);
+        parent.setClipChildren(false);
         Button addButton = (Button) findViewById(R.id.addNewButton);
         addButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {

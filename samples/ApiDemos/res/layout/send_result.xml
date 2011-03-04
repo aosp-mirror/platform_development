@@ -17,25 +17,28 @@
 <!-- Demonstrates receiving activity results.
      See corresponding Java code com.android.sdk.app.ReceiveResult.java. -->
 
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:orientation="vertical" android:padding="4dip"
-    android:gravity="center_horizontal"
-    android:layout_width="match_parent" android:layout_height="match_parent">
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="match_parent" android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:padding="4dip"
+        android:gravity="center_horizontal">
 
     <TextView
-        android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:layout_weight="0"
-        android:paddingBottom="8dip"
-        android:text="@string/pick_result"/>
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_weight="0"
+            android:paddingBottom="8dip"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:text="@string/pick_result"/>
 
     <Button android:id="@+id/corky"
-        android:layout_width="wrap_content" android:layout_height="wrap_content" 
-        android:text="@string/corky">
-        <requestFocus />
+            android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="@string/corky">
+            <requestFocus />
     </Button>
 
     <Button android:id="@+id/violet"
-        android:layout_width="wrap_content" android:layout_height="wrap_content" 
-        android:text="@string/violet">
+            android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="@string/violet">
     </Button>
 
 </LinearLayout>

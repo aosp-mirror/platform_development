@@ -64,9 +64,11 @@ public class FixedGridLayout extends ViewGroup {
             final View child = getChildAt(index);
             child.measure(cellWidthSpec, cellHeightSpec);
         }
-        // Use the size our parents gave us
-        setMeasuredDimension(resolveSize(mCellWidth*count, widthMeasureSpec),
-                resolveSize(mCellHeight*count, heightMeasureSpec));
+        // Use the size our parents gave us, but default to a minimum size to avoid
+        // clipping transitioning children
+        int minCount =  count > 3 ? count : 3;
+        setMeasuredDimension(resolveSize(mCellWidth * minCount, widthMeasureSpec),
+                resolveSize(mCellHeight * minCount, heightMeasureSpec));
     }
 
     @Override

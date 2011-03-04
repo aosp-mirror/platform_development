@@ -15,6 +15,5 @@ allowable by an Android 2.2-based system.</p>
 <p>The value of <code>android.os.Build.VERSION.RELEASE</code> for Android 2.3
 MUST be one of the following strings:</p>
 <ul>
-<li>2.3</li>
-<li>2.3.1</li>
+<li>2.3.3</li>
 </ul>

@@ -65,11 +65,13 @@ public class ApiDemos extends ListActivity {
             return myData;
 
         String[] prefixPath;
+        String prefixWithSlash = prefix;
         
         if (prefix.equals("")) {
             prefixPath = null;
         } else {
             prefixPath = prefix.split("/");
+            prefixWithSlash = prefix + "/";
         }
         
         int len = list.size();
@@ -83,7 +85,7 @@ public class ApiDemos extends ListActivity {
                     ? labelSeq.toString()
                     : info.activityInfo.name;
             
-            if (prefix.length() == 0 || label.startsWith(prefix)) {
+            if (prefixWithSlash.length() == 0 || label.startsWith(prefixWithSlash)) {
                 
                 String[] labelPath = label.split("/");
 
