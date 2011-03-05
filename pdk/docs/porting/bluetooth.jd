@@ -17,12 +17,15 @@ doc.type=porting
 </div>
 </div>
 
-<p>Android's Bluetooth stack uses BlueZ for GAP, SDP, and RFCOMM profiles, and
-is a SIG-qualified Bluetooth stack. </p>
+<p>Android's Bluetooth stack uses BlueZ as the host stack.</p>
 
 <p>Bluez is GPL licensed, so the Android framework interacts with userspace bluez code through D-BUS IPC to avoid proprietary code.</p>
 
-<p>Headset and Handsfree (v1.5) profiles are implemented in the Android framework and are both tightly coupled with the Phone App. These profiles are also SIG qualified.</p>
+<p>The qualification notes mentioned below are example qualifications of the particular device in question. Each company has to re-qualify their product with Bluetooth SIG even if no changes are made to the Bluetooth stack.</p>
+
+<p>Headset and Handsfree (v1.5) profiles are implemented in the Android framework and are both tightly coupled with the Phone App. Profiles like OPP and PBAP are based on java obex. These profiles open a rfcomm socket connection into Bluez kernel bypassing the Bluez userspace stack.</p>
+
+<p> Profiles like A2DP, AVRCP, HID, PAN and other bluetooth functionality like pairing and scanning use the Bluez userspace stack.</p>
 
 <p>The diagram below offers a library-oriented view of the Bluetooth stack. Click <a href="bluetooth/bluetooth_process.html">Bluetooth Process Diagram</a> for a process-oriented view.</p>
 
@@ -112,7 +115,7 @@ sdptool records ADDRESS # request the SDP records of another BT device.
     </li>
   </ul>
 </ul>
-<h5>Qualifications</h5>
+<h5>Qualifications for HTC G1 product. Each company reusing this software version has to re-qualify with Bluetooth SIG</h5>
 <ul>
   <li>QDID B014524: Host stack (SDP, L2CAP, GAP, RFCOMM, SPP)</li>
   <li>QDID B014624: EPL for HTC Dream (HSP, HFP)</li>
@@ -154,7 +157,7 @@ sdptool records ADDRESS # request the SDP records of another BT device.
     <li>play/pause/stop/prev/next</li>
   </ul>
 </ul>
-<h4>Qualifications</h4>
+<h5>Qualifications for HTC Sapphire product. Each company reusing this software version has to re-qualify with Bluetooth SIG</h5>
 <ul>
   <li>QDID B015261: Host stack (SDP, L2CAP, GAP, RFCOMM, SPP, AVCTP, AVRCP, GAVDP, AVDTP, A2DP)</li>
   <li>QDID B015262: EPL for HTC Sapphire (HSP, HFP)</li>
@@ -221,6 +224,22 @@ sdptool records ADDRESS # request the SDP records of another BT device.
   <li>No new profiles added.</li>
   <li>Added ability to share contacts using vCard</li>
   <li>Added ability to export all contacts - useful to transfer contacts to car kits </li>
+  <li>Improved compatibility with headsets and car kits. </li>
+</ul>
+
+<h4>Android 2.3  release (Gingerbread)</h4>
+<h4>Platform features</h4>
+<ul>
+  <li>Based on Bluez 4.69 with Linux Kernel 2.6.35</li>
+  <li>No new profiles added.</li>
+  <li>Improved compatibility with headsets and car kits. </li>
+</ul>
+
+<h4>Android 3.0 release (Honeycomb)</h4>
+<h4>Platform features</h4>
+<ul>
+  <li>Based on Bluez 4.69 with Linux Kernel 2.6.36</li>
+  <li>HID and PAN (NAP and PANU role) are the new profiles added.
   <li>Improved compatibility with headsets and car kits. </li>
 </ul>
 
