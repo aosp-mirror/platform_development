@@ -33,6 +33,7 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.InputDevice.MotionRange;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.ListView;
@@ -152,8 +153,24 @@ public class GameControllerInput extends Activity {
 
         public InputDeviceState(InputDevice device) {
             mDevice = device;
-            mAxes = device.getMotionAxes();
-            mAxisValues = new float[mAxes.length];
+
+            int numAxes = 0;
+            for (MotionRange range : device.getMotionRanges()) {
+                if ((range.getSource() & InputDevice.SOURCE_CLASS_JOYSTICK) != 0) {
+                    numAxes += 1;
+                }
+            }
+
+            mAxes = new int[numAxes];
+            mAxisValues = new float[numAxes];
+            int i = 0;
+            for (MotionRange range : device.getMotionRanges()) {
+                if ((range.getSource() & InputDevice.SOURCE_CLASS_JOYSTICK) != 0) {
+                    numAxes += 1;
+                }
+                mAxes[i++] = range.getAxis();
+            }
+
             mKeys = new SparseIntArray();
         }
 
