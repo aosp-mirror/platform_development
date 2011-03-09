@@ -368,7 +368,7 @@
 
         <!-- Fragment Support Samples -->
 
-        <activity android:name=".app.FragmentAlertDialogSupport"
+        <activity android:name=".support.app.FragmentAlertDialogSupport"
                 android:label="@string/fragment_alert_dialog_support">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -376,7 +376,15 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".app.FragmentHideShowSupport"
+        <activity android:name=".support.app.FragmentArgumentsSupport"
+                android:label="@string/fragment_arguments_support">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".support.app.FragmentHideShowSupport"
                 android:label="@string/fragment_hide_show_support"
                 android:windowSoftInputMode="stateUnchanged">
             <intent-filter>
@@ -385,7 +393,7 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".app.FragmentContextMenuSupport"
+        <activity android:name=".support.app.FragmentContextMenuSupport"
                 android:label="@string/fragment_context_menu_support">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -393,7 +401,7 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".app.FragmentDialogSupport"
+        <activity android:name=".support.app.FragmentDialogSupport"
                 android:label="@string/fragment_dialog_support">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -401,7 +409,7 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".app.FragmentDialogOrActivitySupport"
+        <activity android:name=".support.app.FragmentDialogOrActivitySupport"
                 android:label="@string/fragment_dialog_or_activity_support">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -409,7 +417,7 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".app.FragmentLayoutSupport"
+        <activity android:name=".support.app.FragmentLayoutSupport"
                 android:label="@string/fragment_layout_support">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -417,7 +425,7 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".app.FragmentListCursorLoaderSupport"
+        <activity android:name=".support.app.FragmentListCursorLoaderSupport"
                 android:label="@string/fragment_list_cursor_loader_support">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -425,7 +433,7 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".app.FragmentListArraySupport"
+        <activity android:name=".support.app.FragmentListArraySupport"
                 android:label="@string/fragment_list_array_support">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -433,9 +441,9 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".app.FragmentLayoutSupport$DetailsActivity" />
+        <activity android:name=".support.app.FragmentLayoutSupport$DetailsActivity" />
 
-        <activity android:name=".app.FragmentMenuSupport"
+        <activity android:name=".support.app.FragmentMenuSupport"
                 android:label="@string/fragment_menu_support">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -443,7 +451,7 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".app.FragmentRetainInstanceSupport"
+        <activity android:name=".support.app.FragmentRetainInstanceSupport"
                 android:label="@string/fragment_retain_instance_support">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -451,7 +459,7 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".app.FragmentReceiveResultSupport"
+        <activity android:name=".support.app.FragmentReceiveResultSupport"
                 android:label="@string/fragment_receive_result_support">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -459,7 +467,7 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".app.FragmentStackSupport"
+        <activity android:name=".support.app.FragmentStackSupport"
                 android:label="@string/fragment_stack_support">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -482,6 +490,18 @@
                   android:authorities="com.example.android.apis.app.LoaderThrottle"
                   android:enabled="@bool/atLeastHoneycomb" />
 <!-- END_INCLUDE(loader_throttle) -->
+
+        <!-- Fragment Support Samples -->
+
+        <activity android:name=".support.app.LoaderThrottleSupport"
+                android:label="@string/loader_throttle_support">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+        <provider android:name=".support.app.LoaderThrottleSupport$SimpleProvider"
+                  android:authorities="com.example.android.apis.support.app.LoaderThrottle" />
 
         <!-- Intent Samples -->
 
