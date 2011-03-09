@@ -16,13 +16,12 @@
 
 package com.android.glesv2debugger;
 
-import com.android.glesv2debugger.DebuggerMessage.Message.Function;
 import com.android.glesv2debugger.DebuggerMessage.Message.Type;
 
-import java.io.EOFException;
-import java.io.IOException;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.EOFException;
+import java.io.IOException;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -34,6 +33,8 @@ public class MessageQueue implements Runnable {
     ArrayList<DebuggerMessage.Message> complete = new ArrayList<DebuggerMessage.Message>();
     ArrayList<DebuggerMessage.Message> commands = new ArrayList<DebuggerMessage.Message>();
     SampleView sampleView;
+
+    HashMap<Integer, GLServerVertex> serversVertex = new HashMap<Integer, GLServerVertex>();
 
     public MessageQueue(SampleView sampleView) {
         this.sampleView = sampleView;
@@ -95,19 +96,20 @@ public class MessageQueue implements Runnable {
             Error(e);
         }
 
-        try {
-            while (running) {
-                DebuggerMessage.Message msg = null;
-                if (incoming.size() > 0) { // find queued incoming
-                    for (ArrayList<DebuggerMessage.Message> messages : incoming
+        // try {
+        while (running) {
+            DebuggerMessage.Message msg = null;
+            if (incoming.size() > 0) { // find queued incoming
+                for (ArrayList<DebuggerMessage.Message> messages : incoming
                             .values())
-                        if (messages.size() > 0) {
-                            msg = messages.get(0);
-                            messages.remove(0);
-                            break;
-                        }
-                }
-                if (null == msg) { // get incoming from network
+                    if (messages.size() > 0) {
+                        msg = messages.get(0);
+                        messages.remove(0);
+                        break;
+                    }
+            }
+            if (null == msg) { // get incoming from network
+                try {
                     msg = ReadMessage(dis);
                     if (msg.getExpectResponse()) {
                         if (msg.getType() == Type.BeforeCall)
@@ -119,28 +121,34 @@ public class MessageQueue implements Runnable {
                         // SendResponse(dos, msg.getContextId(),
                         // DebuggerMessage.Message.Function.SKIP);
                         else if (msg.getType() == Type.Response)
-                            ;
+                            assert true;
                         else
                             assert false;
                     }
+                } catch (IOException e) {
+                    Error(e);
+                    running = false;
+                    break;
                 }
+            }
 
-                int contextId = msg.getContextId();
-                if (!incoming.containsKey(contextId))
-                    incoming.put(contextId,
+            int contextId = msg.getContextId();
+            if (!incoming.containsKey(contextId))
+                incoming.put(contextId,
                             new ArrayList<DebuggerMessage.Message>());
 
-                // FIXME: the expected sequence will change for interactive mode
-                while (msg.getType() == Type.BeforeCall) {
-                    DebuggerMessage.Message next = null;
-                    // get existing message part for this context
-                    ArrayList<DebuggerMessage.Message> messages = incoming
+            // FIXME: the expected sequence will change for interactive mode
+            while (msg.getType() == Type.BeforeCall) {
+                DebuggerMessage.Message next = null;
+                // get existing message part for this context
+                ArrayList<DebuggerMessage.Message> messages = incoming
                             .get(contextId);
-                    if (messages.size() > 0) {
-                        next = messages.get(0);
-                        messages.remove(0);
-                    }
-                    if (null == next) { // read new part for message
+                if (messages.size() > 0) {
+                    next = messages.get(0);
+                    messages.remove(0);
+                }
+                if (null == next) { // read new part for message
+                    try {
                         next = ReadMessage(dis);
 
                         if (next.getExpectResponse()) {
@@ -150,45 +158,123 @@ public class MessageQueue implements Runnable {
                                         next.getContextId(),
                                         DebuggerMessage.Message.Function.CONTINUE);
                             else if (next.getType() == Type.AfterCall)
-                                SendCommands(dos, 0); // FIXME: proper context id
+                                SendCommands(dos, 0); // FIXME: proper context
+                                                      // id
                             else if (msg.getType() == Type.Response)
-                                ;
+                                assert true;
                             else
                                 assert false;
                         }
-
-                        if (next.getContextId() != contextId) {
-                            // message part not for this context
-                            if (!incoming.containsKey(next.getContextId()))
-                                incoming.put(
-                                        next.getContextId(),
-                                        new ArrayList<DebuggerMessage.Message>());
-                            incoming.get(next.getContextId()).add(next);
-                            continue;
-                        }
+                    } catch (IOException e) {
+                        Error(e);
+                        running = false;
+                        break;
                     }
 
-                    DebuggerMessage.Message.Builder builder = msg.toBuilder();
-                    // builder.mergeFrom(next); seems to merge incorrectly
-                    if (next.hasRet())
-                        builder.setRet(next.getRet());
-                    if (next.hasTime())
-                        builder.setTime(next.getTime());
-                    if (next.hasData())
-                        builder.setData(next.getData());
-                    builder.setType(next.getType());
-                    msg = builder.build();
+                    if (next.getContextId() != contextId) {
+                        // message part not for this context
+                        if (!incoming.containsKey(next.getContextId()))
+                            incoming.put(
+                                        next.getContextId(),
+                                        new ArrayList<DebuggerMessage.Message>());
+                        incoming.get(next.getContextId()).add(next);
+                        continue;
+                    }
                 }
 
-                synchronized (complete) {
-                    complete.add(msg);
-                }
+                DebuggerMessage.Message.Builder builder = msg.toBuilder();
+                // builder.mergeFrom(next); seems to merge incorrectly
+                if (next.hasRet())
+                    builder.setRet(next.getRet());
+                if (next.hasTime())
+                    builder.setTime(next.getTime());
+                if (next.hasData())
+                    builder.setData(next.getData());
+                builder.setType(next.getType());
+                msg = builder.build();
             }
+
+            GLServerVertex serverVertex = serversVertex.get(msg.getContextId());
+            if (null == serverVertex) {
+                serverVertex = new GLServerVertex();
+                serversVertex.put(msg.getContextId(), serverVertex);
+            }
+
+            // forward message to synchronize state
+            switch (msg.getFunction()) {
+                case glBindBuffer:
+                    serverVertex.glBindBuffer(msg);
+                    break;
+                case glBufferData:
+                    serverVertex.glBufferData(msg);
+                    break;
+                case glBufferSubData:
+                    serverVertex.glBufferSubData(msg);
+                    break;
+                case glDeleteBuffers:
+                    serverVertex.glDeleteBuffers(msg);
+                    break;
+                case glDrawArrays:
+                    if (msg.hasArg7())
+                        msg = serverVertex.glDrawArrays(msg);
+                    break;
+                case glDrawElements:
+                    if (msg.hasArg7())
+                        msg = serverVertex.glDrawElements(msg);
+                    break;
+                case glDisableVertexAttribArray:
+                    serverVertex.glDisableVertexAttribArray(msg);
+                    break;
+                case glEnableVertexAttribArray:
+                    serverVertex.glEnableVertexAttribArray(msg);
+                    break;
+                case glGenBuffers:
+                    serverVertex.glGenBuffers(msg);
+                    break;
+                case glVertexAttribPointer:
+                    serverVertex.glVertexAttribPointer(msg);
+                    break;
+                case glVertexAttrib1f:
+                    serverVertex.glVertexAttrib1f(msg);
+                    break;
+                case glVertexAttrib1fv:
+                    serverVertex.glVertexAttrib1fv(msg);
+                    break;
+                case glVertexAttrib2f:
+                    serverVertex.glVertexAttrib2f(msg);
+                    break;
+                case glVertexAttrib2fv:
+                    serverVertex.glVertexAttrib2fv(msg);
+                    break;
+                case glVertexAttrib3f:
+                    serverVertex.glVertexAttrib3f(msg);
+                    break;
+                case glVertexAttrib3fv:
+                    serverVertex.glVertexAttrib3fv(msg);
+                    break;
+                case glVertexAttrib4f:
+                    serverVertex.glVertexAttrib4f(msg);
+                    break;
+                case glVertexAttrib4fv:
+                    serverVertex.glVertexAttrib4fv(msg);
+                    break;
+            }
+
+            synchronized (complete) {
+                complete.add(msg);
+            }
+        }
+
+        try {
             socket.close();
-        } catch (Exception e) {
+        } catch (IOException e) {
             Error(e);
             running = false;
         }
+        // } catch (Exception e) {
+        // Error(e);
+        // running = false;
+        // }
     }
 
     public DebuggerMessage.Message RemoveMessage(int contextId) {

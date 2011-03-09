@@ -126,23 +126,25 @@ public class MessageProcessor {
         return new ImageData(width, height, bpp, palette, 1, data);
     }
 
-    static public float[] ReceiveData(int target, final ByteString data) {
-        ByteBuffer buffer = data.asReadOnlyByteBuffer();
-        GLEnum type = GLEnum.valueOf(target);
-        if (type == GLEnum.GL_ARRAY_BUFFER) {
+    static public float[] ReceiveData(final GLEnum type, final ByteString data) {
+        final ByteBuffer buffer = data.asReadOnlyByteBuffer();
+        if (type == GLEnum.GL_FLOAT) {
             float[] elements = new float[buffer.remaining() / 4];
-            buffer.asFloatBuffer().get(elements);
+            for (int i = 0; i < elements.length; i++)
+                elements[i] = buffer.getFloat();
             return elements;
-        } else if (type == GLEnum.GL_ELEMENT_ARRAY_BUFFER) {
-            // usually unsigned short
+        } else if (type == GLEnum.GL_UNSIGNED_SHORT) {
             float[] elements = new float[buffer.remaining() / 2];
-            for (int i = 0; i < elements.length; i++) {
-                int bits = Short.reverseBytes(buffer.getShort()) & 0xffff;
-                elements[i] = bits;
-            }
+            for (int i = 0; i < elements.length; i++)
+                elements[i] = buffer.getShort() & 0xffff;
+            return elements;
+        } else if (type == GLEnum.GL_UNSIGNED_BYTE) {
+            float[] elements = new float[buffer.remaining() / 4];
+            for (int i = 0; i < elements.length; i++)
+                elements[i] = buffer.get() & 0xff;
             return elements;
         } else
-            return null;
-
+            assert false;
+        return null;
     }
 }

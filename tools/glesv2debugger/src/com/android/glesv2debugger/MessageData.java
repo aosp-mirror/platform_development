@@ -25,8 +25,10 @@ public class MessageData {
     public Image image; // texture
     public String shader; // shader source
     public String[] columns;
-    public float[] data; // vertex attributes
-
+    public float[] data;
+    public int maxAttrib; // used for formatting data
+    public GLEnum dataType; // could be float, int; mainly for formatting use
+    
     public MessageData(final Device device, final DebuggerMessage.Message msg) {
         image = null;
         shader = null;
@@ -46,11 +48,13 @@ public class MessageData {
         columns[2] = Integer.toHexString(msg.getContextId());
         columns[3] = MessageFormatter.Format(msg);
         switch (function) {
-            case glBufferData:
-                data = MessageProcessor.ReceiveData(msg.getArg0(), msg.getData());
-                break;
-            case glBufferSubData:
-                data = MessageProcessor.ReceiveData(msg.getArg0(), msg.getData());
+            case glDrawArrays: // msg was modified by GLServerVertex
+            case glDrawElements:
+                if (!msg.hasArg8() || !msg.hasData())
+                    break;
+                dataType = GLEnum.valueOf(msg.getArg8());
+                maxAttrib = msg.getArg7();
+                data = MessageProcessor.ReceiveData(dataType, msg.getData());
                 break;
             case glShaderSource:
                 shader = msg.getData().toStringUtf8();
@@ -74,6 +78,14 @@ public class MessageData {
                         .toByteArray());
                 if (null == imageData)
                     break;
+                image = new Image(device, imageData);
+                break;
+            case glCopyTexImage2D:
+                imageData = MessageProcessor.ReceiveImage(msg.getArg5(), msg.getArg6(), GLEnum.GL_RGBA.value, GLEnum.GL_UNSIGNED_BYTE.value, msg.getData().toByteArray());
+                image = new Image(device, imageData);
+                break;
+            case glCopyTexSubImage2D:
+                imageData = MessageProcessor.ReceiveImage(msg.getArg6(), msg.getArg7(), GLEnum.GL_RGBA.value, GLEnum.GL_UNSIGNED_BYTE.value, msg.getData().toByteArray());
                 image = new Image(device, imageData);
                 break;
             case glReadPixels:

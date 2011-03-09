@@ -42,13 +42,16 @@ import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.jface.viewers.ViewerSorter;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
+import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Menu;
@@ -56,6 +59,7 @@ import org.eclipse.swt.widgets.ScrollBar;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
+import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.ISharedImages;
 import org.eclipse.ui.IWorkbenchActionConstants;
@@ -92,6 +96,7 @@ public class SampleView extends ViewPart implements Runnable {
 
     TableViewer viewer;
     org.eclipse.swt.widgets.Canvas canvas;
+    Text text;
     Action actionConnect; // connect / disconnect
     Action doubleClickAction;
     Action actionAutoScroll;
@@ -131,7 +136,6 @@ public class SampleView extends ViewPart implements Runnable {
 
         @Override
         public void inputChanged(Viewer v, Object oldInput, Object newInput) {
-            // showMessage("ViewContentProvider::inputChanged");
         }
 
         @Override
@@ -251,8 +255,35 @@ public class SampleView extends ViewPart implements Runnable {
         hookSelectionChanged();
         contributeToActionBars();
 
-        canvas = new Canvas(parent, SWT.NO_BACKGROUND | SWT.NO_REDRAW_RESIZE
+        class LayoutComposite extends Composite {
+            public LayoutComposite(Composite parent, int style) {
+                super(parent, style);
+            }
+
+            @Override
+            public Control[] getChildren() {
+                Control[] children = super.getChildren();
+                ArrayList<Control> controls = new ArrayList<Control>();
+                for (int i = 0; i < children.length; i++)
+                    if (children[i].isVisible())
+                        controls.add(children[i]);
+                children = new Control[controls.size()];
+                return controls.toArray(children);
+            }
+
+        }
+
+        LayoutComposite layoutComposite = new LayoutComposite(parent, 0);
+        layoutComposite.setLayout(new FillLayout());
+
+        text = new Text(layoutComposite, SWT.NO_BACKGROUND | SWT.READ_ONLY
                 | SWT.V_SCROLL | SWT.H_SCROLL);
+        text.setVisible(false);
+
+        canvas = new Canvas(layoutComposite, SWT.NO_BACKGROUND | SWT.NO_REDRAW_RESIZE
+                | SWT.V_SCROLL | SWT.H_SCROLL);
+        canvas.setVisible(false);
+
         final ScrollBar hBar = canvas.getHorizontalBar();
         hBar.addListener(SWT.Selection, new Listener() {
             @Override
@@ -383,7 +414,7 @@ public class SampleView extends ViewPart implements Runnable {
                         shell, "Contains Filter",
                         "case sensitive substring or *",
                         actionFilter.getText(), null);
-                if (dialog.OK == dialog.open()) {
+                if (Window.OK == dialog.open()) {
                     actionFilter.setText(dialog.getValue());
                     manager.update(true);
                     filters = dialog.getValue().split("\\|");
@@ -485,9 +516,13 @@ public class SampleView extends ViewPart implements Runnable {
                     String str = "";
                     for (int i = 0; i < msgData.data.length; i++)
                     {
-                        str += str.format("%.2f", msgData.data[i]);
+                        str += String.format("%f", msgData.data[i]);
+                        if (i % (4 * msgData.maxAttrib) == (4 * msgData.maxAttrib - 1))
+                            str += '\n';
+                        else if (i % 4 == 3)
+                            str += " -";
                         if (i < msgData.data.length - 1)
-                            str += ", ";
+                            str += ' ';
                     }
                     showMessage(str);
                 }
@@ -515,12 +550,57 @@ public class SampleView extends ViewPart implements Runnable {
                 if (null == selection)
                     return;
                 if (1 != selection.size())
+                {
+                    Object[] objects = selection.toArray();
+                    float totalTime = 0;
+                    for (int i = 0; i < objects.length; i++)
+                    {
+                        MessageData msgData = (MessageData) objects[i];
+                        if (null == msgData)
+                            continue;
+                        totalTime += Float.parseFloat(msgData.columns[1]);
+                    }
+                    viewer.getTable().getColumn(1).setText(Float.toString(totalTime));
                     return;
+                }
+                else
+                    viewer.getTable().getColumn(1).setText("Elapsed (ms)");
                 MessageData msgData = (MessageData) selection.getFirstElement();
                 if (null == msgData)
                     return;
                 if (null != msgData.image)
+                {
+                    text.setVisible(false);
+                    canvas.setVisible(true);
                     canvas.setBackgroundImage(msgData.image);
+                    canvas.getParent().layout();
+                }
+                else if (null != msgData.shader)
+                {
+                    text.setText(msgData.shader);
+                    text.setVisible(true);
+                    canvas.setVisible(false);
+                    text.getParent().layout();
+                }
+                else if (null != msgData.data)
+                {
+                    String str = "";
+                    for (int i = 0; i < msgData.data.length; i++)
+                    {
+                        str += String.format("%.3g", msgData.data[i]);
+                        if (i % (4 * msgData.maxAttrib) == (4 * msgData.maxAttrib - 1))
+                            str += '\n';
+                        else if (i % 4 == 3)
+                            str += " -";
+                        if (i < msgData.data.length - 1)
+                            str += ' ';
+                    }
+
+                    text.setText(str);
+                    text.setVisible(true);
+                    canvas.setVisible(false);
+                    text.getParent().layout();
+                }
             }
 
         });
