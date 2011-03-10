@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.example.android.apis.app;
+package com.example.android.apis.support.app;
 
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
