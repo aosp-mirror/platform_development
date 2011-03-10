@@ -264,7 +264,7 @@ public class GameView extends View {
 
     private static float getCenteredAxis(MotionEvent event, InputDevice device,
             int axis, int historyPos) {
-        final InputDevice.MotionRange range = device.getMotionRange(axis);
+        final InputDevice.MotionRange range = device.getMotionRange(axis, event.getSource());
         if (range != null) {
             final float flat = range.getFlat();
             final float value = historyPos < 0 ? event.getAxisValue(axis)
