@@ -16,6 +16,8 @@
 
 package com.android.glesv2debugger;
 
+import com.android.glesv2debugger.DebuggerMessage.Message;
+import com.android.glesv2debugger.DebuggerMessage.Message.Function;
 import com.android.glesv2debugger.DebuggerMessage.Message.Type;
 
 import java.io.DataInputStream;
@@ -30,8 +32,8 @@ public class MessageQueue implements Runnable {
 
     boolean running = false;
     Thread thread = null;
-    ArrayList<DebuggerMessage.Message> complete = new ArrayList<DebuggerMessage.Message>();
-    ArrayList<DebuggerMessage.Message> commands = new ArrayList<DebuggerMessage.Message>();
+    ArrayList<Message> complete = new ArrayList<Message>();
+    ArrayList<Message> commands = new ArrayList<Message>();
     SampleView sampleView;
 
     HashMap<Integer, GLServerVertex> serversVertex = new HashMap<Integer, GLServerVertex>();
@@ -58,24 +60,24 @@ public class MessageQueue implements Runnable {
         return running;
     }
 
-    void SendCommands(final DataOutputStream dos, final int contextId) throws IOException {
+    boolean SendCommands(final DataOutputStream dos, final int contextId) throws IOException {
+        boolean sent = false;
         synchronized (commands) {
             for (int i = 0; i < commands.size(); i++) {
-                DebuggerMessage.Message command = commands.get(i);
-                if (command.getContextId() == contextId || contextId == 0) { // FIXME:
-                                                                             // proper
-                                                                             // context
-                                                                             // id
+                Message command = commands.get(i);
+                // FIXME: proper context id
+                if (command.getContextId() == contextId || contextId == 0) {
                     SendMessage(dos, command);
                     commands.remove(i);
                     i--;
+                    sent = true;
                 }
             }
         }
-        SendResponse(dos, contextId, DebuggerMessage.Message.Function.SKIP);
+        return sent;
     }
 
-    public void AddCommand(DebuggerMessage.Message command) {
+    public void AddCommand(Message command) {
         synchronized (commands) {
             commands.add(command);
         }
@@ -86,7 +88,7 @@ public class MessageQueue implements Runnable {
         Socket socket = new Socket();
         DataInputStream dis = null;
         DataOutputStream dos = null;
-        HashMap<Integer, ArrayList<DebuggerMessage.Message>> incoming = new HashMap<Integer, ArrayList<DebuggerMessage.Message>>();
+        HashMap<Integer, ArrayList<Message>> incoming = new HashMap<Integer, ArrayList<Message>>();
         try {
             socket.connect(new java.net.InetSocketAddress("127.0.0.1", 5039));
             dis = new DataInputStream(socket.getInputStream());
@@ -98,9 +100,9 @@ public class MessageQueue implements Runnable {
 
         // try {
         while (running) {
-            DebuggerMessage.Message msg = null;
+            Message msg = null;
             if (incoming.size() > 0) { // find queued incoming
-                for (ArrayList<DebuggerMessage.Message> messages : incoming
+                for (ArrayList<Message> messages : incoming
                             .values())
                     if (messages.size() > 0) {
                         msg = messages.get(0);
@@ -111,20 +113,7 @@ public class MessageQueue implements Runnable {
             if (null == msg) { // get incoming from network
                 try {
                     msg = ReadMessage(dis);
-                    if (msg.getExpectResponse()) {
-                        if (msg.getType() == Type.BeforeCall)
-                            SendResponse(dos, msg.getContextId(),
-                                    DebuggerMessage.Message.Function.CONTINUE);
-                        else if (msg.getType() == Type.AfterCall)
-                            // after GL function call
-                            SendCommands(dos, 0); // FIXME: proper context id
-                        // SendResponse(dos, msg.getContextId(),
-                        // DebuggerMessage.Message.Function.SKIP);
-                        else if (msg.getType() == Type.Response)
-                            assert true;
-                        else
-                            assert false;
-                    }
+                    SendResponse(dos, msg);
                 } catch (IOException e) {
                     Error(e);
                     running = false;
@@ -135,13 +124,13 @@ public class MessageQueue implements Runnable {
             int contextId = msg.getContextId();
             if (!incoming.containsKey(contextId))
                 incoming.put(contextId,
-                            new ArrayList<DebuggerMessage.Message>());
+                            new ArrayList<Message>());
 
             // FIXME: the expected sequence will change for interactive mode
             while (msg.getType() == Type.BeforeCall) {
-                DebuggerMessage.Message next = null;
+                Message next = null;
                 // get existing message part for this context
-                ArrayList<DebuggerMessage.Message> messages = incoming
+                ArrayList<Message> messages = incoming
                             .get(contextId);
                 if (messages.size() > 0) {
                     next = messages.get(0);
@@ -150,21 +139,7 @@ public class MessageQueue implements Runnable {
                 if (null == next) { // read new part for message
                     try {
                         next = ReadMessage(dis);
-
-                        if (next.getExpectResponse()) {
-                            if (next.getType() == Type.BeforeCall)
-                                SendResponse(
-                                        dos,
-                                        next.getContextId(),
-                                        DebuggerMessage.Message.Function.CONTINUE);
-                            else if (next.getType() == Type.AfterCall)
-                                SendCommands(dos, 0); // FIXME: proper context
-                                                      // id
-                            else if (msg.getType() == Type.Response)
-                                assert true;
-                            else
-                                assert false;
-                        }
+                        SendResponse(dos, next);
                     } catch (IOException e) {
                         Error(e);
                         running = false;
@@ -176,13 +151,13 @@ public class MessageQueue implements Runnable {
                         if (!incoming.containsKey(next.getContextId()))
                             incoming.put(
                                         next.getContextId(),
-                                        new ArrayList<DebuggerMessage.Message>());
+                                        new ArrayList<Message>());
                         incoming.get(next.getContextId()).add(next);
                         continue;
                     }
                 }
 
-                DebuggerMessage.Message.Builder builder = msg.toBuilder();
+                Message.Builder builder = msg.toBuilder();
                 // builder.mergeFrom(next); seems to merge incorrectly
                 if (next.hasRet())
                     builder.setRet(next.getRet());
@@ -277,18 +252,18 @@ public class MessageQueue implements Runnable {
         // }
     }
 
-    public DebuggerMessage.Message RemoveMessage(int contextId) {
+    public Message RemoveMessage(int contextId) {
         synchronized (complete) {
             if (complete.size() == 0)
                 return null;
-            if (0 == contextId) // get a message of any
+            if (0 == contextId) // get a message for any context
             {
-                DebuggerMessage.Message msg = complete.get(0);
+                Message msg = complete.get(0);
                 complete.remove(0);
                 return msg;
             }
             for (int i = 0; i < complete.size(); i++) {
-                DebuggerMessage.Message msg = complete.get(i);
+                Message msg = complete.get(i);
                 if (msg.getContextId() == contextId) {
                     complete.remove(i);
                     return msg;
@@ -298,7 +273,7 @@ public class MessageQueue implements Runnable {
         return null;
     }
 
-    DebuggerMessage.Message ReadMessage(final DataInputStream dis)
+    Message ReadMessage(final DataInputStream dis)
             throws IOException {
         int len = 0;
         try {
@@ -321,26 +296,30 @@ public class MessageQueue implements Runnable {
             } else
                 readLen += read;
         }
-        DebuggerMessage.Message msg = DebuggerMessage.Message.parseFrom(buffer);
+        Message msg = Message.parseFrom(buffer);
         return msg;
     }
 
-    void SendMessage(final DataOutputStream dos, final DebuggerMessage.Message message)
+    void SendMessage(final DataOutputStream dos, final Message message)
             throws IOException {
         final byte[] data = message.toByteArray();
         dos.writeInt(data.length);
         dos.write(data);
     }
 
-    void SendResponse(final DataOutputStream dos, final int contextId,
-            final DebuggerMessage.Message.Function function) throws IOException {
-        DebuggerMessage.Message.Builder builder = DebuggerMessage.Message
-                .newBuilder();
-        builder.setContextId(contextId);
-        builder.setFunction(function);
+    void SendResponse(final DataOutputStream dos, final Message msg) throws IOException {
+        Message.Builder builder = Message.newBuilder();
+        builder.setContextId(msg.getContextId());
+        if (msg.getType() == Type.BeforeCall)
+            builder.setFunction(Function.CONTINUE);
+        else if (msg.getType() == Type.AfterCall)
+            builder.setFunction(Function.SKIP);
         builder.setType(Type.Response);
         builder.setExpectResponse(false);
-        SendMessage(dos, builder.build());
+        // FIXME: consider using proper context id
+        if (SendCommands(dos, 0) || msg.getExpectResponse())
+            if (builder.hasFunction())
+                SendMessage(dos, builder.build());
     }
 
     void Error(Exception e) {
