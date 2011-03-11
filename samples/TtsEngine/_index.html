@@ -1,0 +1,30 @@
+<p>This sample demonstrates how to create a text to speech engine
+that users can install on their devices.</p>
+
+<p>The application includes a service and two activities:</p>
+<ul>
+  <li><a
+    href="src/com/example/android/ttsengine/RobotSpeakEngine.html"><code>RobotSpeakEngine</code></a>,
+    a simple text to speech engine that converts sentences into audio by
+    generating a square wave of a given frequency for each alphabet of a
+    given language. Though this doesn't qualify as speech (except for robots)
+    it exercises all aspects of the new text to speech API
+    by subclassing the
+    <a href="../../../reference/android/speech/tts/TextToSpeechService.html"><code>TextToSpeechService</code></a>
+    framework class.
+  </li>
+  <li><a
+    href="src/com/example/android/ttsengine/CheckVoiceData.html"><code>CheckVoiceData</code></a>,
+  an activity that checks that all voice related data is installed and
+  available.</li>
+  <li><a
+    href="src/com/example/android/ttsengine/RobotSpeakSettings.html"><code>RobotSpeakSettings</code></a>,
+    a settings screen for users to set various engine parameters. This is
+    usually accessed by users from the system wide settings app. This must be
+    declared in the <code>AndroidManifest.xml</code> file as a
+    <code>meta-data</code> element.</li>
+
+<!-- TODO: Fix this when the API level for ICS is finalized -->
+<p>Note that this API is supported only on Android 4.0 (API level 13)
+and higher versions of the platform.</p>
+
