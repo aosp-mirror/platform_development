@@ -66,7 +66,7 @@ LOCAL_SHARED_LIBRARIES := \
 	libskia
 
 LOCAL_CFLAGS += -fvisibility=hidden 
-LOCAL_PRELINK_MODULE:=false
+
 
 LOCAL_MODULE:= libsampleplugin
 
