@@ -41,11 +41,6 @@
 #  define  __STDINT_MACROS
 #endif
 
-/* the definitions of STDINT_LIMITS depend on those of STDINT_MACROS */
-#if defined __STDINT_LIMITS && !defined __STDINT_MACROS
-#  define  __STDINT_MACROS
-#endif
-
 #if !defined __STRICT_ANSI__ || __STDC_VERSION__ >= 199901L
 #  define __STDC_INT64__
 #endif
@@ -185,13 +180,14 @@ typedef uint64_t      uint_fast64_t;
 #  define UINT_FAST64_MAX UINT64_MAX
 #endif
 
+#define __INT64_C(c)     c ## LL
+#define __UINT64_C(c)     c ## ULL
+
 #ifdef __STDINT_MACROS
-#  define __INT64_C(c)     c ## LL
 #  define INT64_C(c)       __INT64_C(c)
 #  define INT_LEAST64_C(c) INT64_C(c)
 #  define INT_FAST64_C(c)  INT64_C(c)
 
-#  define __UINT64_C(c)     c ## ULL
 #  define UINT64_C(c)       __UINT64_C(c)
 #  define UINT_LEAST64_C(c) UINT64_C(c)
 #  define UINT_FAST64_C(c)  UINT64_C(c)
@@ -211,14 +207,20 @@ typedef uint64_t      uint_fast64_t;
 typedef int           intptr_t;
 typedef unsigned int  uintptr_t;
 
+#ifdef __STDINT_LIMITS
 #  define INTPTR_MIN    INT32_MIN
 #  define INTPTR_MAX    INT32_MAX
 #  define UINTPTR_MAX   UINT32_MAX
+#  define PTRDIFF_MIN   INT32_MIN
+#  define PTRDIFF_MAX   INT32_MAX
+#endif
+
+#ifdef __STDINT_MACROS
 #  define INTPTR_C(c)   INT32_C(c)
 #  define UINTPTR_C(c)  UINT32_C(c)
 #  define PTRDIFF_C(c)  INT32_C(c)
-#  define PTRDIFF_MIN   INT32_MIN
-#  define PTRDIFF_MAX   INT32_MAX
+#endif
+
 
 
 /*
@@ -230,24 +232,32 @@ typedef unsigned int  uintptr_t;
 typedef uint64_t uintmax_t;
 typedef int64_t  intmax_t;
 
-#define INTMAX_MIN	INT64_MIN
-#define INTMAX_MAX	INT64_MAX
-#define UINTMAX_MAX	UINT64_MAX
+#ifdef __STDINT_LIMITS
+#  define INTMAX_MIN	INT64_MIN
+#  define INTMAX_MAX	INT64_MAX
+#  define UINTMAX_MAX	UINT64_MAX
+#endif
 
-#define INTMAX_C(c)	INT64_C(c)
-#define UINTMAX_C(c)	UINT64_C(c)
+#ifdef __STDINT_MACROS
+#  define INTMAX_C(c)	INT64_C(c)
+#  define UINTMAX_C(c)	UINT64_C(c)
+#endif
 
 #else /* !__STDC_INT64__ */
 
 typedef uint32_t  uintmax_t;
 typedef int32_t   intmax_t;
 
-#define  INTMAX_MIN    INT32_MIN
-#define  INTMAX_MAX    INT32_MAX
-#define  UINTMAX_MAX   UINT32_MAX
+#ifdef __STDINT_LIMITS
+#  define  INTMAX_MIN    INT32_MIN
+#  define  INTMAX_MAX    INT32_MAX
+#  define  UINTMAX_MAX   UINT32_MAX
+#endif
 
-#define INTMAX_C(c)	INT32_C(c)
-#define UINTMAX_C(c)	UINT32_C(c)
+#ifdef __STDINT_MACROS
+#  define INTMAX_C(c)	INT32_C(c)
+#  define UINTMAX_C(c)	UINT32_C(c)
+#endif
 
 #endif /* !__STDC_INT64__ */
 
