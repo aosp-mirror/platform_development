@@ -47,7 +47,6 @@ bin/dx                                        platform-tools/dx
 bin/dexdump                                   platform-tools/dexdump
 framework/dx.jar                              platform-tools/lib/dx.jar
 
-sdk/files/sdk_files_NOTICE.txt                platform-tools/NOTICE.txt
 development/sdk/plat_tools_source.properties  platform-tools/source.properties
 
 ##############################################################################
@@ -55,10 +54,10 @@ development/sdk/plat_tools_source.properties  platform-tools/source.properties
 ##############################################################################
 
 # version files for the SDK updater, from sdk.git
-development/sdk/platform_source.properties platforms/${PLATFORM_NAME}/source.properties
+development/sdk/platform_source.properties    platforms/${PLATFORM_NAME}/source.properties
 
 # copy build prop from out/.../sdk/
-sdk/sdk-build.prop platforms/${PLATFORM_NAME}/build.prop
+sdk/sdk-build.prop                            platforms/${PLATFORM_NAME}/build.prop
 
 # the uper-jar file that apps link against. This is the public API
 ${OUT_DIR}/target/common/obj/PACKAGING/android_jar_intermediates/android.jar platforms/${PLATFORM_NAME}/android.jar
@@ -205,6 +204,7 @@ sdk/files/README_add-ons.txt add-ons/README.txt
 
 development/sdk/compatibility_source.properties                                                   extras/android/compatibility/source.properties
 development/sdk/compatibility_README.txt                                                          extras/android/compatibility/README.txt
+sdk/files/sdk_files_NOTICE.txt                                                                    extras/android/compatibility/NOTICE.txt
 ${OUT_DIR}/target/common/obj/PACKAGING/android-support-v4_intermediates/android-support-v4.jar    extras/android/compatibility/v4/android-support-v4.jar
 frameworks/support/v4                                                                             extras/android/compatibility/v4/src
 development/samples/ApiDemos                                                                      extras/android/compatibility/v4/samples/ApiDemos
