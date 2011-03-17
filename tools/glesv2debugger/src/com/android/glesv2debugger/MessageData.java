@@ -16,12 +16,14 @@
 
 package com.android.glesv2debugger;
 
+import com.android.glesv2debugger.DebuggerMessage.Message;
+
 import org.eclipse.swt.graphics.Device;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
 
 public class MessageData {
-    public DebuggerMessage.Message.Function function;
+    public Message.Function function;
     public Image image; // texture
     public String shader; // shader source
     public String[] columns;
@@ -29,14 +31,14 @@ public class MessageData {
     public int maxAttrib; // used for formatting data
     public GLEnum dataType; // could be float, int; mainly for formatting use
     
-    public MessageData(final Device device, final DebuggerMessage.Message msg) {
+    public MessageData(final Device device, final Message msg) {
         image = null;
         shader = null;
         data = null;
         StringBuilder builder = new StringBuilder();
         function = msg.getFunction();
         ImageData imageData = null;
-        if (function != DebuggerMessage.Message.Function.ACK)
+        if (function != Message.Function.ACK)
             assert msg.hasTime();
         columns = new String [4];
         columns[0] = function.toString();

@@ -218,7 +218,6 @@ public final class DebuggerMessage {
       CONTINUE(188, 188),
       SKIP(189, 189),
       SETPROP(190, 190),
-      CAPTURE(191, 191),
       ;
       
       
@@ -417,7 +416,6 @@ public final class DebuggerMessage {
           case 188: return CONTINUE;
           case 189: return SKIP;
           case 190: return SETPROP;
-          case 191: return CAPTURE;
           default: return null;
         }
       }

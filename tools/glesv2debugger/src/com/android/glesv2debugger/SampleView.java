@@ -16,6 +16,7 @@
 
 package com.android.glesv2debugger;
 
+import com.android.glesv2debugger.DebuggerMessage.Message;
 import com.android.glesv2debugger.DebuggerMessage.Message.Function;
 import com.android.glesv2debugger.DebuggerMessage.Message.Prop;
 import com.android.glesv2debugger.DebuggerMessage.Message.Type;
@@ -66,7 +67,12 @@ import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
 
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 
 /**
  * This sample class demonstrates how to plug-in a new workbench view. The view
@@ -115,7 +121,7 @@ public class SampleView extends ViewPart implements Runnable {
      */
 
     class ViewContentProvider implements IStructuredContentProvider {
-        ArrayList<com.android.glesv2debugger.MessageData> entries = new ArrayList<com.android.glesv2debugger.MessageData>();
+        ArrayList<MessageData> entries = new ArrayList<MessageData>();
 
         public void add(final ArrayList<MessageData> msgs) {
             entries.addAll(msgs);
@@ -152,7 +158,7 @@ public class SampleView extends ViewPart implements Runnable {
             ITableLabelProvider {
         @Override
         public String getColumnText(Object obj, int index) {
-            com.android.glesv2debugger.MessageData msgData = (com.android.glesv2debugger.MessageData) obj;
+            MessageData msgData = (MessageData) obj;
             if (null == msgData)
                 return getText(obj);
             if (index >= msgData.columns.length)
@@ -164,7 +170,7 @@ public class SampleView extends ViewPart implements Runnable {
         public Image getColumnImage(Object obj, int index) {
             if (index > 0)
                 return null;
-            com.android.glesv2debugger.MessageData msgData = (com.android.glesv2debugger.MessageData) obj;
+            MessageData msgData = (MessageData) obj;
             if (null == msgData)
                 return getImage(obj);
             if (null == msgData.image)
@@ -186,7 +192,7 @@ public class SampleView extends ViewPart implements Runnable {
         @Override
         public boolean select(Viewer viewer, Object parentElement,
                 Object element) {
-            com.android.glesv2debugger.MessageData msgData = (com.android.glesv2debugger.MessageData) element;
+            MessageData msgData = (MessageData) element;
             if (null == filters)
                 return true;
             for (int i = 0; i < filters.length; i++)
@@ -430,7 +436,7 @@ public class SampleView extends ViewPart implements Runnable {
         actionCapture = new Action("Capture", Action.AS_CHECK_BOX) {
             @Override
             public void run() {
-                DebuggerMessage.Message.Builder builder = DebuggerMessage.Message.newBuilder();
+                Message.Builder builder = Message.newBuilder();
                 builder.setContextId(0); // FIXME: proper context id
                 builder.setType(Type.Response);
                 builder.setExpectResponse(false);
@@ -455,11 +461,11 @@ public class SampleView extends ViewPart implements Runnable {
                 };
                 int i = java.util.Arrays.asList(timeModes).indexOf(this.getText());
                 i = (i + 1) % timeModes.length;
-                DebuggerMessage.Message.Builder builder = DebuggerMessage.Message.newBuilder();
+                Message.Builder builder = Message.newBuilder();
                 builder.setContextId(0); // FIXME: proper context id
                 builder.setType(Type.Response);
                 builder.setExpectResponse(false);
-                builder.setFunction(DebuggerMessage.Message.Function.SETPROP);
+                builder.setFunction(Message.Function.SETPROP);
                 builder.setProp(Prop.TimeMode);
                 builder.setArg0(i);
                 messageQueue.AddCommand(builder.build());
@@ -638,14 +644,24 @@ public class SampleView extends ViewPart implements Runnable {
 
     @Override
     public void run() {
-        boolean refresh = false;
+        FileWriter file = null;
+        PrintWriter writer = null;
+        try {
+            file = new FileWriter("GLES2Debugger.log", true);
+            writer = new PrintWriter(file);
+            writer.write("\n\n");
+            writer.write(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Calendar.getInstance()
+                    .getTime()));
+        } catch (IOException e1) {
+            showError(e1);
+        }
         ArrayList<MessageData> msgs = new ArrayList<MessageData>();
         while (running) {
             if (!messageQueue.IsRunning())
                 break;
 
-            DebuggerMessage.Message msg = messageQueue.RemoveMessage(0);
-            if (msgs.size() > 20) {
+            Message msg = messageQueue.RemoveMessage(0);
+            if (msgs.size() > 40) {
                 viewContentProvider.add(msgs);
                 msgs.clear();
             }
@@ -659,9 +675,26 @@ public class SampleView extends ViewPart implements Runnable {
             }
             final MessageData msgData = new MessageData(this.getViewSite()
                     .getShell().getDisplay(), msg);
+            if (null != writer) {
+                writer.write(msgData.columns[0]);
+                for (int i = 0; i < 30 - msgData.columns[0].length(); i++)
+                    writer.write(" ");
+                writer.write("\t");
+                writer.write(msgData.columns[1] + " \t ");
+                writer.write(msgData.columns[2] + " \t ");
+                writer.write(msgData.columns[3] + " \n");
+                if (msgData.columns[0] == "eglSwapBuffers") {
+                    writer.write("\n-------\n");
+                    writer.flush();
+                }
+            }
             msgs.add(msgData);
         }
         if (running)
             ConnectDisconnect(); // error occurred, disconnect
+        if (null != writer) {
+            writer.flush();
+            writer.close();
+        }
     }
 }
