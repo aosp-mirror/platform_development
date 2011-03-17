@@ -154,6 +154,7 @@ development/samples/source.properties        samples/${PLATFORM_NAME}/source.pro
 development/samples/AccessibilityService       samples/${PLATFORM_NAME}/AccessibilityService
 development/samples/AccelerometerPlay          samples/${PLATFORM_NAME}/AccelerometerPlay
 development/samples/ApiDemos                   samples/${PLATFORM_NAME}/ApiDemos
+${OUT_DIR}/target/common/obj/PACKAGING/android-support-v4_intermediates/android-support-v4.jar    samples/${PLATFORM_NAME}/ApiDemos/libs/android-support-v4.jar
 development/samples/BackupRestore              samples/${PLATFORM_NAME}/BackupRestore
 development/samples/BasicGLSurfaceView         samples/${PLATFORM_NAME}/BasicGLSurfaceView
 development/samples/BluetoothChat              samples/${PLATFORM_NAME}/BluetoothChat
