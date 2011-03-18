@@ -2294,7 +2294,8 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".graphics.TextAlign" android:label="Graphics/Text Align">
+        <activity android:hardwareAccelerated="false"
+                  android:name=".graphics.TextAlign" android:label="Graphics/Text Align">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -2315,7 +2316,8 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".graphics.Clipping" android:label="Graphics/Clipping">
+        <activity android:hardwareAccelerated="false"
+                  android:name=".graphics.Clipping" android:label="Graphics/Clipping">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -2329,7 +2331,8 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".graphics.UnicodeChart" android:label="Graphics/UnicodeChart">
+        <activity android:hardwareAccelerated="false"
+                  android:name=".graphics.UnicodeChart" android:label="Graphics/UnicodeChart">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -2343,14 +2346,16 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".graphics.Pictures" android:label="Graphics/Pictures">
+        <activity android:hardwareAccelerated="false"
+                  android:name=".graphics.Pictures" android:label="Graphics/Pictures">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
             </intent-filter>
         </activity>
 
-        <activity android:name=".graphics.Vertices" android:label="Graphics/Vertices">
+        <activity android:hardwareAccelerated="false"
+                  android:name=".graphics.Vertices" android:label="Graphics/Vertices">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -2427,7 +2432,8 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".graphics.BitmapDecode" android:label="Graphics/BitmapDecode">
+        <activity android:hardwareAccelerated="false"
+                  android:name=".graphics.BitmapDecode" android:label="Graphics/BitmapDecode">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -2448,7 +2454,8 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".graphics.DrawPoints" android:label="Graphics/Points">
+        <activity android:hardwareAccelerated="false"
+                  android:name=".graphics.DrawPoints" android:label="Graphics/Points">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
