@@ -485,7 +485,7 @@ float AMotionEvent_getY(const AInputEvent* motion_event, size_t pointer_index);
 
 /* Get the current pressure of this event for the given pointer index.
  * The pressure generally ranges from 0 (no pressure at all) to 1 (normal pressure),
- * however values higher than 1 may be generated depending on the calibration of
+ * although values higher than 1 may be generated depending on the calibration of
  * the input device. */
 float AMotionEvent_getPressure(const AInputEvent* motion_event, size_t pointer_index);
 
@@ -545,7 +545,8 @@ int64_t AMotionEvent_getHistoricalEventTime(AInputEvent* motion_event,
  * and views.
  * Whole numbers are pixels; the value may have a fraction for input devices
  * that are sub-pixel precise. */
-float AMotionEvent_getHistoricalRawX(const AInputEvent* motion_event, size_t pointer_index);
+float AMotionEvent_getHistoricalRawX(const AInputEvent* motion_event, size_t pointer_index,
+        size_t history_index);
 
 /* Get the historical raw Y coordinate of this event for the given pointer index that
  * occurred between this event and the previous motion event.
@@ -554,7 +555,8 @@ float AMotionEvent_getHistoricalRawX(const AInputEvent* motion_event, size_t poi
  * and views.
  * Whole numbers are pixels; the value may have a fraction for input devices
  * that are sub-pixel precise. */
-float AMotionEvent_getHistoricalRawY(const AInputEvent* motion_event, size_t pointer_index);
+float AMotionEvent_getHistoricalRawY(const AInputEvent* motion_event, size_t pointer_index,
+        size_t history_index);
 
 /* Get the historical X coordinate of this event for the given pointer index that
  * occurred between this event and the previous motion event.
@@ -573,7 +575,7 @@ float AMotionEvent_getHistoricalY(AInputEvent* motion_event, size_t pointer_inde
 /* Get the historical pressure of this event for the given pointer index that
  * occurred between this event and the previous motion event.
  * The pressure generally ranges from 0 (no pressure at all) to 1 (normal pressure),
- * however values higher than 1 may be generated depending on the calibration of
+ * although values higher than 1 may be generated depending on the calibration of
  * the input device. */
 float AMotionEvent_getHistoricalPressure(AInputEvent* motion_event, size_t pointer_index,
         size_t history_index);
