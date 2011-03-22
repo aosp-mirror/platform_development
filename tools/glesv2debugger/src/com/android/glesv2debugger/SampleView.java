@@ -28,23 +28,22 @@ import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.jface.viewers.ColumnWeightData;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
+import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredContentProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
-import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
+import org.eclipse.jface.viewers.ListViewer;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
-import org.eclipse.jface.viewers.TableLayout;
-import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.jface.viewers.ViewerSorter;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
@@ -58,8 +57,6 @@ import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.ScrollBar;
 import org.eclipse.swt.widgets.Shell;
-import org.eclipse.swt.widgets.Table;
-import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.ISharedImages;
@@ -101,7 +98,7 @@ public class SampleView extends ViewPart implements Runnable {
      */
     public static final String ID = "glesv2debuggerclient.views.SampleView";
 
-    TableViewer viewer;
+    ListViewer viewer;
     org.eclipse.swt.widgets.Canvas canvas;
     Text text;
     Action actionConnect; // connect / disconnect
@@ -128,15 +125,15 @@ public class SampleView extends ViewPart implements Runnable {
 
         public void add(final ArrayList<MessageData> msgs) {
             entries.addAll(msgs);
-            viewer.getTable().getDisplay().syncExec(new Runnable() {
+            viewer.getList().getDisplay().syncExec(new Runnable() {
                 @Override
                 public void run() {
                     viewer.add(msgs.toArray());
                     org.eclipse.swt.widgets.ScrollBar bar = viewer
-                            .getTable().getVerticalBar();
+                            .getList().getVerticalBar();
                     if (null != bar && actionAutoScroll.isChecked()) {
                         bar.setSelection(bar.getMaximum());
-                        viewer.getTable().setSelection(
+                        viewer.getList().setSelection(
                                 entries.size() - 1);
                     }
                 }
@@ -158,37 +155,32 @@ public class SampleView extends ViewPart implements Runnable {
     }
 
     class ViewLabelProvider extends LabelProvider implements
-            ITableLabelProvider {
+            ILabelProvider {
         @Override
-        public String getColumnText(Object obj, int index) {
+        public String getText(Object obj) {
             MessageData msgData = (MessageData) obj;
             if (null == msgData)
-                return getText(obj);
-            if (index >= msgData.columns.length)
-                return null;
-            return msgData.columns[index];
-        }
-
-        @Override
-        public Image getColumnImage(Object obj, int index) {
-            if (index > 0)
-                return null;
-            MessageData msgData = (MessageData) obj;
-            if (null == msgData)
-                return getImage(obj);
-            if (null == msgData.image)
-                return getImage(obj);
-            return msgData.image;
+                return obj.toString();
+            return msgData.text;
         }
 
         @Override
         public Image getImage(Object obj) {
-            return PlatformUI.getWorkbench().getSharedImages()
-                    .getImage(ISharedImages.IMG_OBJ_ELEMENT);
+            MessageData msgData = (MessageData) obj;
+            if (null == msgData.image)
+                return PlatformUI.getWorkbench().getSharedImages()
+                        .getImage(ISharedImages.IMG_OBJ_ELEMENT);
+            return msgData.image;
         }
     }
 
     class NameSorter extends ViewerSorter {
+        @Override
+        public int compare(Viewer viewer, Object e1, Object e2) {
+            MessageData m1 = (MessageData) e1;
+            MessageData m2 = (MessageData) e2;
+            return (int) ((m1.msg.getTime() - m2.msg.getTime()) * 100);
+        }
     }
 
     class Filter extends ViewerFilter {
@@ -199,7 +191,7 @@ public class SampleView extends ViewPart implements Runnable {
             if (null == filters)
                 return true;
             for (int i = 0; i < filters.length; i++)
-                if (msgData.columns[0].contains(filters[i]))
+                if (msgData.text.contains(filters[i]))
                     return true;
             return false;
         }
@@ -212,31 +204,9 @@ public class SampleView extends ViewPart implements Runnable {
         messageQueue = new MessageQueue(this);
     }
 
-    public void CreateTable(Composite parent) {
-        Table table = new Table(parent, SWT.H_SCROLL | SWT.V_SCROLL | SWT.MULTI
-                | SWT.FULL_SELECTION);
-        TableLayout layout = new TableLayout();
-        table.setLayout(layout);
-        table.setLinesVisible(true);
-        table.setHeaderVisible(true);
-
-        String[] headings = {
-                "Name", "Elapsed (ms)", "Context", "Detail"
-        };
-        int[] weights = {
-                35, 16, 16, 60
-        };
-        int[] widths = {
-                120, 90, 90, 100
-        };
-        for (int i = 0; i < headings.length; i++) {
-            layout.addColumnData(new ColumnWeightData(weights[i], widths[i],
-                    true));
-            TableColumn nameCol = new TableColumn(table, SWT.NONE, i);
-            nameCol.setText(headings[i]);
-        }
-
-        viewer = new TableViewer(table);
+    public void CreateView(Composite parent) {
+        viewer = new ListViewer(parent);
+        viewer.getList().setFont(new Font(viewer.getList().getDisplay(), "Courier", 10, SWT.BOLD));
         viewContentProvider = new ViewContentProvider();
         viewer.setContentProvider(viewContentProvider);
         viewer.setLabelProvider(new ViewLabelProvider());
@@ -253,7 +223,7 @@ public class SampleView extends ViewPart implements Runnable {
      */
     @Override
     public void createPartControl(Composite parent) {
-        CreateTable(parent);
+        CreateView(parent);
 
         // Create the help context id for the viewer's control
         PlatformUI.getWorkbench().getHelpSystem()
@@ -525,8 +495,6 @@ public class SampleView extends ViewPart implements Runnable {
         };
         actionConnect.setText("Connect");
         actionConnect.setToolTipText("Connect to debuggee");
-        // action1.setImageDescriptor(PlatformUI.getWorkbench().getSharedImages()
-        // .getImageDescriptor(ISharedImages.IMG_OBJS_INFO_TSK));
 
         doubleClickAction = new Action() {
             @Override
@@ -534,25 +502,6 @@ public class SampleView extends ViewPart implements Runnable {
                 IStructuredSelection selection = (IStructuredSelection) viewer
                         .getSelection();
                 MessageData msgData = (MessageData) selection.getFirstElement();
-                if (null != msgData.shader)
-                    showMessage(msgData.shader);
-                else if (null != msgData.data)
-                {
-                    String str = "";
-                    for (int i = 0; i < msgData.data.length; i++)
-                    {
-                        str += String.format("%f", msgData.data[i]);
-                        if (i % (4 * msgData.maxAttrib) == (4 * msgData.maxAttrib - 1))
-                            str += '\n';
-                        else if (i % 4 == 3)
-                            str += " -";
-                        if (i < msgData.data.length - 1)
-                            str += ' ';
-                    }
-                    showMessage(str);
-                }
-                else
-                    showMessage(msgData.columns[3].toString());
             }
         };
     }
@@ -574,22 +523,6 @@ public class SampleView extends ViewPart implements Runnable {
                         .getSelection();
                 if (null == selection)
                     return;
-                if (1 != selection.size())
-                {
-                    Object[] objects = selection.toArray();
-                    float totalTime = 0;
-                    for (int i = 0; i < objects.length; i++)
-                    {
-                        MessageData msgData = (MessageData) objects[i];
-                        if (null == msgData)
-                            continue;
-                        totalTime += msgData.msg.getTime();
-                    }
-                    viewer.getTable().getColumn(1).setText(Float.toString(totalTime));
-                    return;
-                }
-                else
-                    viewer.getTable().getColumn(1).setText("Elapsed (ms)");
                 MessageData msgData = (MessageData) selection.getFirstElement();
                 if (null == msgData)
                     return;
@@ -609,19 +542,19 @@ public class SampleView extends ViewPart implements Runnable {
                 }
                 else if (null != msgData.data)
                 {
-                    String str = "";
+                    StringBuilder builder = new StringBuilder();
                     for (int i = 0; i < msgData.data.length; i++)
                     {
-                        str += String.format("%.3g", msgData.data[i]);
+                        builder.append(String.format("%.3g", msgData.data[i]));
                         if (i % (4 * msgData.maxAttrib) == (4 * msgData.maxAttrib - 1))
-                            str += '\n';
+                            builder.append('\n');
                         else if (i % 4 == 3)
-                            str += " -";
+                            builder.append(" -");
                         if (i < msgData.data.length - 1)
-                            str += ' ';
+                            builder.append(' ');
                     }
 
-                    text.setText(str);
+                    text.setText(builder.toString());
                     text.setVisible(true);
                     canvas.setVisible(false);
                     text.getParent().layout();
@@ -629,17 +562,6 @@ public class SampleView extends ViewPart implements Runnable {
             }
 
         });
-    }
-
-    private void showMessage(final String message) {
-        viewer.getControl().getDisplay().syncExec(new Runnable() {
-            @Override
-            public void run() {
-                MessageDialog.openInformation(viewer.getControl().getShell(),
-                        "GL ES 2.0 Debugger Client", message);
-            }
-        });
-
     }
 
     public void showError(final Exception e) {
@@ -671,6 +593,7 @@ public class SampleView extends ViewPart implements Runnable {
             writer.write("\n\n");
             writer.write(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Calendar.getInstance()
                     .getTime()));
+            writer.write("\n\n");
         } catch (IOException e1) {
             showError(e1);
         }
@@ -680,7 +603,7 @@ public class SampleView extends ViewPart implements Runnable {
                 break;
 
             Message msg = messageQueue.RemoveMessage(0);
-            if (msgs.size() > 60 || null == msg) {
+            if (msgs.size() > 60 || (msgs.size() > 0 && null == msg)) {
                 viewContentProvider.add(msgs);
                 msgs.clear();
             }
@@ -703,14 +626,8 @@ public class SampleView extends ViewPart implements Runnable {
             final MessageData msgData = new MessageData(this.getViewSite()
                     .getShell().getDisplay(), msg, context);
             if (null != writer) {
-                writer.write(msgData.columns[0]);
-                for (int i = 0; i < 30 - msgData.columns[0].length(); i++)
-                    writer.write(" ");
-                writer.write("\t");
-                writer.write(msgData.columns[1] + " \t ");
-                writer.write(msgData.columns[2] + " \t ");
-                writer.write(msgData.columns[3] + " \n");
-                if (msgData.columns[0] == "eglSwapBuffers") {
+                writer.write(msgData.text + "\n");
+                if (msgData.msg.getFunction() == Function.eglSwapBuffers) {
                     writer.write("\n-------\n");
                     writer.flush();
                 }
