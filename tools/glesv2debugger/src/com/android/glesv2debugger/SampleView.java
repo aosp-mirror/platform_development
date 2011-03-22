@@ -98,6 +98,7 @@ public class SampleView extends ViewPart implements Runnable {
      */
     public static final String ID = "glesv2debuggerclient.views.SampleView";
 
+    LayoutComposite layoutComposite;
     ListViewer viewer;
     BreakpointOption breakpointOption;
     org.eclipse.swt.widgets.Canvas canvas;
@@ -203,6 +204,11 @@ public class SampleView extends ViewPart implements Runnable {
      */
     public SampleView() {
         messageQueue = new MessageQueue(this);
+
+        MessageParserEx messageParserEx = new MessageParserEx();
+        Message.Builder builder = Message.newBuilder();
+        messageParserEx.Parse(builder, "glUniform4fv(1,2,[0,1,2,3,4,5,6,7])");
+        messageParserEx.Parse(builder, "void glShaderSource(shader=4, count=1, string=\"dksjafhskjahourehghskjg\", length=0x0)");
     }
 
     public void CreateView(Composite parent) {
@@ -235,25 +241,7 @@ public class SampleView extends ViewPart implements Runnable {
         hookSelectionChanged();
         contributeToActionBars();
 
-        class LayoutComposite extends Composite {
-            public LayoutComposite(Composite parent, int style) {
-                super(parent, style);
-            }
-
-            @Override
-            public Control[] getChildren() {
-                Control[] children = super.getChildren();
-                ArrayList<Control> controls = new ArrayList<Control>();
-                for (int i = 0; i < children.length; i++)
-                    if (children[i].isVisible())
-                        controls.add(children[i]);
-                children = new Control[controls.size()];
-                return controls.toArray(children);
-            }
-
-        }
-
-        LayoutComposite layoutComposite = new LayoutComposite(parent, 0);
+        layoutComposite = new LayoutComposite(parent, 0);
         layoutComposite.setLayout(new FillLayout());
 
         text = new Text(layoutComposite, SWT.NO_BACKGROUND | SWT.READ_ONLY
@@ -472,6 +460,7 @@ public class SampleView extends ViewPart implements Runnable {
             public void run()
             {
                 breakpointOption.setVisible(!breakpointOption.isVisible());
+                layoutComposite.layout(true);
                 manager.update(true);
             }
         };
@@ -655,5 +644,22 @@ public class SampleView extends ViewPart implements Runnable {
             writer.flush();
             writer.close();
         }
+    }
+}
+
+class LayoutComposite extends Composite {
+    public LayoutComposite(Composite parent, int style) {
+        super(parent, style);
+    }
+
+    @Override
+    public Control[] getChildren() {
+        Control[] children = super.getChildren();
+        ArrayList<Control> controls = new ArrayList<Control>();
+        for (int i = 0; i < children.length; i++)
+            if (children[i].isVisible())
+                controls.add(children[i]);
+        children = new Control[controls.size()];
+        return controls.toArray(children);
     }
 }

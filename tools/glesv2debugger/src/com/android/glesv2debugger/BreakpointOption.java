@@ -20,8 +20,9 @@ import com.android.glesv2debugger.DebuggerMessage.Message;
 import com.android.glesv2debugger.DebuggerMessage.Message.Function;
 import com.android.glesv2debugger.DebuggerMessage.Message.Prop;
 import com.android.glesv2debugger.DebuggerMessage.Message.Type;
-
+import org.eclipse.jface.dialogs.InputDialog;
 import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.events.SelectionEvent;
@@ -40,7 +41,8 @@ import java.util.HashMap;
 public class BreakpointOption extends ScrolledComposite implements SelectionListener {
 
     SampleView sampleView;
-    HashMap<Function, Button> buttons = new HashMap<Function, Button>();
+    HashMap<Function, Button> buttonsBreak = new HashMap<Function, Button>();
+    MessageParserEx messageParserEx = new MessageParserEx();
 
     BreakpointOption(SampleView sampleView, Composite parent) {
         super(parent, SWT.NO_BACKGROUND | SWT.V_SCROLL | SWT.H_SCROLL);
@@ -60,7 +62,7 @@ public class BreakpointOption extends ScrolledComposite implements SelectionList
             btn.addSelectionListener(this);
             btn.setText("Break");
             btn.setSelection(false);
-            buttons.put(Function.values()[i], btn);
+            buttonsBreak.put(Function.values()[i], btn);
         }
 
         Point size = composite.computeSize(SWT.DEFAULT, SWT.DEFAULT);
@@ -101,34 +103,46 @@ public class BreakpointOption extends ScrolledComposite implements SelectionList
         shell.getDisplay().syncExec(new Runnable() {
             @Override
             public void run() {
-                String[] btns = {
-                        "&Continue", "&Skip", "&Remove"
-                };
-                int defaultBtn = 0;
-                if (msg.getType() == Type.AfterCall)
-                    defaultBtn = 1;
-                String message = msg.getFunction().toString();
-                if (msg.hasTime())
-                    message += String.format("\n%.3fms", msg.getTime());
-                message += "\n" + MessageFormatter.Format(msg);
-                MessageDialog dialog = new MessageDialog(shell, "Breakpoint " + msg.getType(),
-                        null, message, MessageDialog.QUESTION, btns, defaultBtn);
-                int rc = dialog.open();
-                if (rc == SWT.DEFAULT || rc == 0)
-                    builder.setFunction(Function.CONTINUE);
-                else if (rc == 1)
-                    builder.setFunction(Function.SKIP);
-                else if (rc == 2)
+                String call = MessageFormatter.Format(msg);
+                call = call.substring(0, call.indexOf("(")) + msg.getFunction().toString()
+                        + call.substring(call.indexOf("("));
+                if (msg.hasData() && msg.getFunction() == Function.glShaderSource)
                 {
-                    Button btn = buttons.get(msg.getFunction());
-                    btn.setSelection(false);
-                    SetBreakpoint(msg.getFunction(), false);
+                    int index = call.indexOf("string=") + 7;
+                    String ptr = call.substring(index, call.indexOf(',', index));
+                    call = call.replace(ptr, '"' + msg.getData().toStringUtf8() + '"');
                 }
-                else
-                    assert false;
-
+                if (msg.getType() == Type.AfterCall)
+                {
+                    call = "s";
+                    builder.setFunction(Function.SKIP);
+                }
+                else if (msg.getType() == Type.BeforeCall)
+                {
+                    call = "continue " + call;
+                    builder.setFunction(Function.CONTINUE);
+                }
+                InputDialog inputDialog = new InputDialog(shell,
+                            msg.getFunction().toString() + " " + msg.getType().toString(),
+                        "(s)kip, (c)continue, (r)emove bp or glFunction(...)",
+                            call, null);
+                if (Window.OK == inputDialog.open())
+                {
+                    String s = inputDialog.getValue().substring(0, 1).toLowerCase();
+                    if (s.startsWith("s"))
+                        builder.setFunction(Function.SKIP);
+                    else if (s.startsWith("c"))
+                        builder.setFunction(Function.CONTINUE);
+                    else if (s.startsWith("r"))
+                    {
+                        Button btn = buttonsBreak.get(msg.getFunction());
+                        btn.setSelection(false);
+                        SetBreakpoint(msg.getFunction(), false);
+                    }
+                    else
+                        messageParserEx.Parse(builder, inputDialog.getValue());
+                }
             }
         });
-
     }
 }
