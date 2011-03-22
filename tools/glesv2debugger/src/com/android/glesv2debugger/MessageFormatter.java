@@ -23,6 +23,8 @@ import java.nio.ByteBuffer;
 public class MessageFormatter {
 
     static String FormatFloats(int count, final ByteBuffer data) {
+        if (data.remaining() == 0)
+            return "[null]";
         String ret = "[";
         for (int i = 0; i < count; i++)
         {
@@ -34,6 +36,8 @@ public class MessageFormatter {
     }
     
     static String FormatInts(int count, final ByteBuffer data) {
+        if (data.remaining() == 0)
+            return "[null]";
         String ret = "[";
         for (int i = 0; i < count; i++)
         {
@@ -45,6 +49,8 @@ public class MessageFormatter {
     }
     
     static String FormatUints(int count, final ByteBuffer data) {
+        if (data.remaining() == 0)
+            return "[null]";
         String ret = "[";
         for (int i = 0; i < count; i++)
         {
@@ -57,12 +63,14 @@ public class MessageFormatter {
     }
     
     static String FormatMatrix(int columns, int count, final ByteBuffer data) {
+        if (data.remaining() == 0)
+            return "[null]";
         String ret = "[";
         for (int i = 0; i < count; i++)
         {
             ret += Float.intBitsToFloat(Integer.reverseBytes(data.getInt()));
             if (i % columns == columns - 1)
-                ret += '\n';
+                ret += "\n                                             ";
             else if (i < count - 1)
                 ret += ", ";
         }

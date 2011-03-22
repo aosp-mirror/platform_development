@@ -526,6 +526,7 @@ public final class DebuggerMessage {
         implements com.google.protobuf.Internal.EnumLite {
       Capture(0, 0),
       TimeMode(1, 1),
+      ExpectResponse(2, 2),
       ;
       
       
@@ -535,6 +536,7 @@ public final class DebuggerMessage {
         switch (value) {
           case 0: return Capture;
           case 1: return TimeMode;
+          case 2: return ExpectResponse;
           default: return null;
         }
       }

@@ -99,6 +99,7 @@ public class SampleView extends ViewPart implements Runnable {
     public static final String ID = "glesv2debuggerclient.views.SampleView";
 
     ListViewer viewer;
+    BreakpointOption breakpointOption;
     org.eclipse.swt.widgets.Canvas canvas;
     Text text;
     Action actionConnect; // connect / disconnect
@@ -262,6 +263,8 @@ public class SampleView extends ViewPart implements Runnable {
         canvas = new Canvas(layoutComposite, SWT.NO_BACKGROUND | SWT.NO_REDRAW_RESIZE
                 | SWT.V_SCROLL | SWT.H_SCROLL);
         canvas.setVisible(false);
+
+        breakpointOption = new BreakpointOption(this, layoutComposite);
 
         final ScrollBar hBar = canvas.getHorizontalBar();
         hBar.addListener(SWT.Selection, new Listener() {
@@ -462,6 +465,18 @@ public class SampleView extends ViewPart implements Runnable {
             }
         };
         manager.add(actionPort);
+
+        Action action = new Action("Breakpoints", Action.AS_CHECK_BOX)
+        {
+            @Override
+            public void run()
+            {
+                breakpointOption.setVisible(!breakpointOption.isVisible());
+                manager.update(true);
+            }
+        };
+        action.setChecked(true);
+        manager.add(action);
     }
 
     private void ConnectDisconnect() {

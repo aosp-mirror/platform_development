@@ -55,6 +55,7 @@ public class MessageData {
         switch (function) {
             case glDrawArrays: // msg was modified by GLServerVertex
             case glDrawElements:
+                assert msg.hasData();
                 if (!msg.hasArg8() || !msg.hasData())
                     break;
                 dataType = GLEnum.valueOf(msg.getArg8());
@@ -84,15 +85,23 @@ public class MessageData {
                 image = new Image(device, imageData);
                 break;
             case glCopyTexImage2D:
+                assert msg.getDataType() == DataType.ReferencedImage;
+                MessageProcessor.ref = context.readPixelRef;
                 imageData = MessageProcessor.ReceiveImage(msg.getArg5(), msg.getArg6(),
-                        GLEnum.GL_RGBA.value, GLEnum.GL_UNSIGNED_BYTE.value, msg.getData()
+                        msg.getPixelFormat(), msg.getPixelType(), msg.getData()
                                 .toByteArray());
+                MessageProcessor.ref = null;
                 image = new Image(device, imageData);
+                imageData = imageData.scaledTo(imageData.width, -imageData.height);
                 break;
             case glCopyTexSubImage2D:
+                assert msg.getDataType() == DataType.ReferencedImage;
+                MessageProcessor.ref = context.readPixelRef;
                 imageData = MessageProcessor.ReceiveImage(msg.getArg6(), msg.getArg7(),
-                        GLEnum.GL_RGBA.value, GLEnum.GL_UNSIGNED_BYTE.value, msg.getData()
+                        msg.getPixelFormat(), msg.getPixelType(), msg.getData()
                                 .toByteArray());
+                MessageProcessor.ref = null;
+                imageData = imageData.scaledTo(imageData.width, -imageData.height);
                 image = new Image(device, imageData);
                 break;
             case glReadPixels:
