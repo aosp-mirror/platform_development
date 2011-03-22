@@ -66,10 +66,10 @@ ${OUT_DIR}/target/common/obj/PACKAGING/android_jar_intermediates/android.jar pla
 obj/framework.aidl platforms/${PLATFORM_NAME}/framework.aidl
 
 # System images + Kernel
-system.img                              platforms/${PLATFORM_NAME}/images/system.img
-ramdisk.img                             platforms/${PLATFORM_NAME}/images/ramdisk.img
-userdata.img                            platforms/${PLATFORM_NAME}/images/userdata.img
-prebuilt/android-arm/kernel/kernel-qemu platforms/${PLATFORM_NAME}/images/kernel-qemu
+system.img                              platforms/${PLATFORM_NAME}/images/${TARGET_CPU_ABI}/system.img
+ramdisk.img                             platforms/${PLATFORM_NAME}/images/${TARGET_CPU_ABI}/ramdisk.img
+userdata.img                            platforms/${PLATFORM_NAME}/images/${TARGET_CPU_ABI}/userdata.img
+prebuilt/android-${TARGET_ARCH}/kernel/kernel-qemu platforms/${PLATFORM_NAME}/images/${TARGET_CPU_ABI}/kernel-qemu
 
 # emulator skins from sdk.git
 development/tools/emulator/skins/QVGA      platforms/${PLATFORM_NAME}/skins/QVGA
