@@ -69,8 +69,7 @@ public class MessageData {
                 if (!msg.hasData())
                     break;
                 imageData = MessageProcessor.ReceiveImage(msg.getArg3(), msg
-                        .getArg4(), msg.getArg6(), msg.getArg7(), msg.getData()
-                        .toByteArray());
+                        .getArg4(), msg.getArg6(), msg.getArg7(), msg.getData());
                 if (null == imageData)
                     break;
                 image = new Image(device, imageData);
@@ -78,8 +77,7 @@ public class MessageData {
             case glTexSubImage2D:
                 assert msg.hasData();
                 imageData = MessageProcessor.ReceiveImage(msg.getArg4(), msg
-                        .getArg5(), msg.getArg6(), msg.getArg7(), msg.getData()
-                        .toByteArray());
+                        .getArg5(), msg.getArg6(), msg.getArg7(), msg.getData());
                 if (null == imageData)
                     break;
                 image = new Image(device, imageData);
@@ -88,8 +86,7 @@ public class MessageData {
                 assert msg.getDataType() == DataType.ReferencedImage;
                 MessageProcessor.ref = context.readPixelRef;
                 imageData = MessageProcessor.ReceiveImage(msg.getArg5(), msg.getArg6(),
-                        msg.getPixelFormat(), msg.getPixelType(), msg.getData()
-                                .toByteArray());
+                        msg.getPixelFormat(), msg.getPixelType(), msg.getData());
                 MessageProcessor.ref = null;
                 image = new Image(device, imageData);
                 imageData = imageData.scaledTo(imageData.width, -imageData.height);
@@ -98,8 +95,7 @@ public class MessageData {
                 assert msg.getDataType() == DataType.ReferencedImage;
                 MessageProcessor.ref = context.readPixelRef;
                 imageData = MessageProcessor.ReceiveImage(msg.getArg6(), msg.getArg7(),
-                        msg.getPixelFormat(), msg.getPixelType(), msg.getData()
-                                .toByteArray());
+                        msg.getPixelFormat(), msg.getPixelType(), msg.getData());
                 MessageProcessor.ref = null;
                 imageData = imageData.scaledTo(imageData.width, -imageData.height);
                 image = new Image(device, imageData);
@@ -110,7 +106,7 @@ public class MessageData {
                 if (msg.getDataType() == DataType.ReferencedImage)
                     MessageProcessor.ref = context.readPixelRef;
                 imageData = MessageProcessor.ReceiveImage(msg.getArg2(), msg.getArg3(),
-                        msg.getArg4(), msg.getArg5(), msg.getData().toByteArray());
+                        msg.getArg4(), msg.getArg5(), msg.getData());
                 context.readPixelRef = MessageProcessor.ref;
                 MessageProcessor.ref = null;
                 imageData = imageData.scaledTo(imageData.width, -imageData.height);

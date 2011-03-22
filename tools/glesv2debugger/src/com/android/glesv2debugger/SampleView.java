@@ -67,6 +67,7 @@ import org.eclipse.ui.part.ViewPart;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.ByteOrder;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -88,6 +89,7 @@ import java.util.HashMap;
  */
 
 public class SampleView extends ViewPart implements Runnable {
+    public static final ByteOrder targetByteOrder = ByteOrder.LITTLE_ENDIAN;
 
     boolean running = false;
     Thread thread;
@@ -208,7 +210,9 @@ public class SampleView extends ViewPart implements Runnable {
         MessageParserEx messageParserEx = new MessageParserEx();
         Message.Builder builder = Message.newBuilder();
         messageParserEx.Parse(builder, "glUniform4fv(1,2,[0,1,2,3,4,5,6,7])");
-        messageParserEx.Parse(builder, "void glShaderSource(shader=4, count=1, string=\"dksjafhskjahourehghskjg\", length=0x0)");
+        messageParserEx
+                .Parse(builder,
+                        "void glShaderSource(shader=4, count=1, string=\"dksjafhskjahourehghskjg\", length=0x0)");
     }
 
     public void CreateView(Composite parent) {

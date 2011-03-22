@@ -32,8 +32,36 @@ public class MessageProcessor {
 
     public static byte[] ref; // inout; used for glReadPixels
 
+    public static byte[] LZFDecompressChunks(final ByteString data) {
+        ByteBuffer in = data.asReadOnlyByteBuffer();
+        in.order(SampleView.targetByteOrder);
+        ByteBuffer out = ByteBuffer.allocate(in.getInt());
+        byte[] inChunk = new byte[0];
+        byte[] outChunk = new byte[0];
+        while (in.remaining() > 0) {
+            int decompressed = in.getInt();
+            int compressed = in.getInt();
+            if (decompressed > outChunk.length)
+                outChunk = new byte[decompressed];
+            if (compressed == 0) {
+                in.get(outChunk, 0, decompressed);
+                out.put(outChunk, 0, decompressed);
+            } else {
+                if (compressed > inChunk.length)
+                    inChunk = new byte[compressed];
+                in.get(inChunk, 0, compressed);
+                int size = org.liblzf.CLZF
+                        .lzf_decompress(inChunk, compressed, outChunk, outChunk.length);
+                assert size == decompressed;
+                out.put(outChunk, 0, size);
+            }
+        }
+        assert !out.hasRemaining();
+        return out.array();
+    }
+
     public static ImageData ReceiveImage(int width, int height, int format,
-            int type, byte[] data) {
+            int type, final ByteString data) {
         assert width > 0 && height > 0;
         int bpp = 0;
         int redMask = 0, blueMask = 0, greenMask = 0;
@@ -95,17 +123,16 @@ public class MessageProcessor {
                 return null;
         }
 
-        byte[] pixels = new byte[width * height * (bpp / 8)];
-        int decompressed = org.liblzf.CLZF.lzf_decompress(data, data.length, pixels, pixels.length);
-        assert decompressed == width * height * (bpp / 8);
+        byte[] pixels = LZFDecompressChunks(data);
+        assert pixels.length == width * height * (bpp / 8);
 
         PaletteData palette = new PaletteData(redMask, greenMask, blueMask);
         if (null != ref) {
-            if (ref.length < decompressed)
+            if (ref.length < pixels.length)
                 ref = new byte[width * height * (bpp / 8)];
-            for (int i = 0; i < decompressed; i++)
+            for (int i = 0; i < pixels.length; i++)
                 ref[i] ^= pixels[i];
-            for (int i = decompressed; i < ref.length; i++)
+            for (int i = pixels.length; i < ref.length; i++)
                 ref[i] = 0; // clear unused ref to maintain consistency
             return new ImageData(width, height, bpp, palette, 1, ref);
         } else
