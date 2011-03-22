@@ -73,6 +73,7 @@ import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashMap;
 
 /**
  * This sample class demonstrates how to plug-in a new workbench view. The view
@@ -112,6 +113,7 @@ public class SampleView extends ViewPart implements Runnable {
 
     Point origin = new Point(0, 0); // for smooth scrolling canvas
     String[] filters = null;
+    public HashMap<Integer, Context> contexts = new HashMap<Integer, Context>();
 
     /*
      * The content provider class is responsible for providing objects to the
@@ -678,7 +680,7 @@ public class SampleView extends ViewPart implements Runnable {
                 break;
 
             Message msg = messageQueue.RemoveMessage(0);
-            if (msgs.size() > 40) {
+            if (msgs.size() > 60 || null == msg) {
                 viewContentProvider.add(msgs);
                 msgs.clear();
             }
@@ -690,8 +692,16 @@ public class SampleView extends ViewPart implements Runnable {
                     showError(e);
                 }
             }
+
+            Context context = contexts.get(msg.getContextId());
+            if (null == context) {
+                context = new Context();
+                contexts.put(msg.getContextId(), context);
+            }
+            msg = context.ProcessMessage(msg);
+
             final MessageData msgData = new MessageData(this.getViewSite()
-                    .getShell().getDisplay(), msg);
+                    .getShell().getDisplay(), msg, context);
             if (null != writer) {
                 writer.write(msgData.columns[0]);
                 for (int i = 0; i < 30 - msgData.columns[0].length(); i++)

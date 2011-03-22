@@ -36,8 +36,6 @@ public class MessageQueue implements Runnable {
     ArrayList<Message> commands = new ArrayList<Message>();
     SampleView sampleView;
 
-    HashMap<Integer, GLServerVertex> serversVertex = new HashMap<Integer, GLServerVertex>();
-
     public MessageQueue(SampleView sampleView) {
         this.sampleView = sampleView;
     }
@@ -159,81 +157,8 @@ public class MessageQueue implements Runnable {
                 }
 
                 Message.Builder builder = msg.toBuilder();
-                // builder.mergeFrom(next); seems to merge incorrectly
-                if (next.hasRet())
-                    builder.setRet(next.getRet());
-                if (next.hasTime())
-                    builder.setTime(next.getTime());
-                if (next.hasData())
-                    builder.setData(next.getData());
-                builder.setType(next.getType());
+                builder.mergeFrom(next);
                 msg = builder.build();
-            }
-
-            GLServerVertex serverVertex = serversVertex.get(msg.getContextId());
-            if (null == serverVertex) {
-                serverVertex = new GLServerVertex();
-                serversVertex.put(msg.getContextId(), serverVertex);
-            }
-
-            // forward message to synchronize state
-            switch (msg.getFunction()) {
-                case glBindBuffer:
-                    serverVertex.glBindBuffer(msg);
-                    break;
-                case glBufferData:
-                    serverVertex.glBufferData(msg);
-                    break;
-                case glBufferSubData:
-                    serverVertex.glBufferSubData(msg);
-                    break;
-                case glDeleteBuffers:
-                    serverVertex.glDeleteBuffers(msg);
-                    break;
-                case glDrawArrays:
-                    if (msg.hasArg7())
-                        msg = serverVertex.glDrawArrays(msg);
-                    break;
-                case glDrawElements:
-                    if (msg.hasArg7())
-                        msg = serverVertex.glDrawElements(msg);
-                    break;
-                case glDisableVertexAttribArray:
-                    serverVertex.glDisableVertexAttribArray(msg);
-                    break;
-                case glEnableVertexAttribArray:
-                    serverVertex.glEnableVertexAttribArray(msg);
-                    break;
-                case glGenBuffers:
-                    serverVertex.glGenBuffers(msg);
-                    break;
-                case glVertexAttribPointer:
-                    serverVertex.glVertexAttribPointer(msg);
-                    break;
-                case glVertexAttrib1f:
-                    serverVertex.glVertexAttrib1f(msg);
-                    break;
-                case glVertexAttrib1fv:
-                    serverVertex.glVertexAttrib1fv(msg);
-                    break;
-                case glVertexAttrib2f:
-                    serverVertex.glVertexAttrib2f(msg);
-                    break;
-                case glVertexAttrib2fv:
-                    serverVertex.glVertexAttrib2fv(msg);
-                    break;
-                case glVertexAttrib3f:
-                    serverVertex.glVertexAttrib3f(msg);
-                    break;
-                case glVertexAttrib3fv:
-                    serverVertex.glVertexAttrib3fv(msg);
-                    break;
-                case glVertexAttrib4f:
-                    serverVertex.glVertexAttrib4f(msg);
-                    break;
-                case glVertexAttrib4fv:
-                    serverVertex.glVertexAttrib4fv(msg);
-                    break;
             }
 
             synchronized (complete) {
