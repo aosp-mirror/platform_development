@@ -82,7 +82,7 @@ sdptool records ADDRESS # request the SDP records of another BT device.
 </pre>
 
 <p><strong>Deamon Logs</strong></p>
-<p>Deamon logs for <code>hcid</code> (<code>STDOUT</code>) and <code>hciattach</code> (<code>STDERR</code>) are sent to <code>/dev/null</code> by default. Edit <code>init.rc</code></span> and <code>init.PLATFORM.rc</code></span> to run these daemons under <code>logwrapper</code>, which redirects output to <code>logcat</code>.</p>
+<p>Deamon logs for <code>bluetoothd</code> (<code>STDOUT</code>) and <code>hciattach</code> (<code>STDERR</code>) are sent to <code>/dev/null</code> by default. Edit <code>init.rc</code></span> and <code>init.PLATFORM.rc</code></span> to run these daemons under <code>logwrapper</code>, which redirects output to <code>logcat</code>.</p>
 <p><strong>hciconfig -a and hcitool</strong></p>
 <p>If you compile your own system.img for Android, and <code>hciconfig -a</code> works but <code>hcitool</code> scan doesn't, try installing the firmware for the Bluetooth chipset. This firmware isn't yet available in the open source codebase, but you can <code>adb pull</code> and then <code>adb push</code>it from a stock T-Mobile G1 (located in <code>/etc/firmware/brf6300.bin</code>).<br />
   <a name="androidBluetoothTools"></a></p>
@@ -253,20 +253,3 @@ sdptool records ADDRESS # request the SDP records of another BT device.
   <li>Bluetooth Low Energy </li>
 </ul>
 
-<p><strong>Development Notes</strong></p>
-<ul>
-  <li><strong>HID Support <br />
-  </strong>Cupcake features some early work&#151;Bluez has an HID plugin, <code>external/bluez/utils/input/Android.mk</code>, which gets compiled. <br />
-    <br />
-You can interact directly with this plugin using <code>dbus-send</code></span> and <code>dbus-monitor</code>. While not officially supported, you should be able to connect and use a HID keyboard and mouse using the Bluez HID plugin API. Next steps include plumbing the plugin API in the Android Java framework and offering better support for HID input methods (new keymaps and mouse support).<br />
-  <br />
-  </li>
-  <li>  <strong>Tethering - DUN and PAN Support</strong><br />
-    Cupcake features some early work&#151;Bluez has has DUN and PAN daemons which get compiled and <code>external/bluez/utils/dun/Android.mk
-  external/bluez/utils/pan/Android.mk
-BNEP</code> support is compiled into the kernel with cupcake. <br />
-<br />
-While not officially supported, you should be able to run <code>dund</code> or <code>pand</code> daemons and, using <code>pppd</code> or <code>iptables</code>, test tethering support. Next steps include plubming the DBUS APIs to these daemons up into the Android Java framework and adding code to setup the network paths via <code>pppd</code> and / or <code>iptables</code>.<br />
-  <br />
-  </li>
-</ul>
