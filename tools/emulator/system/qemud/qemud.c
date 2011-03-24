@@ -81,7 +81,7 @@
 /* name of the single control socket used by the daemon */
 #define CONTROL_SOCKET_NAME  "qemud"
 
-#define  DEBUG     1
+#define  DEBUG     0
 #define  T_ACTIVE  0  /* set to 1 to dump traffic */
 
 #if DEBUG
