@@ -45,7 +45,7 @@ SCHEMA="$1"
 shift
 
 # Get XML:NS for SDK from the schema
-XMLNS=$(sed -n '/xmlns:sdk="/s/.*"\(.*\)".*/\1/p' "$SCHEMA")
+XMLNS=$(sed -n '/xmlns:.*schemas.android.com\/sdk\/android\//s/.*"\(.*\)".*/\1/p' "$SCHEMA")
 [[ -z "$XMLNS" ]] && error "Failed to find xmlns:sdk in $SCHEMA."
 echo "## Using xmlns:sdk=$XMLNS"
 
