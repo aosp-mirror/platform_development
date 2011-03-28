@@ -35,6 +35,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Shell;
 
+import java.io.IOException;
 import java.util.HashMap;
 
 public class BreakpointOption extends ScrolledComposite implements SelectionListener {
@@ -76,7 +77,7 @@ public class BreakpointOption extends ScrolledComposite implements SelectionList
         Message.Builder builder = Message.newBuilder();
         builder.setContextId(0); // FIXME: proper context id
         builder.setType(Type.Response);
-        builder.setExpectResponse(false);
+        builder.setExpectResponse(true);
         builder.setFunction(Function.SETPROP);
         builder.setProp(Prop.ExpectResponse);
         builder.setArg0(function.getNumber());
@@ -95,7 +96,13 @@ public class BreakpointOption extends ScrolledComposite implements SelectionList
     public void widgetDefaultSelected(SelectionEvent e) {
     }
 
-    public void BreakpointReached(final Message.Builder builder, final Message msg) {
+    private Function lastFunction = Function.NEG;
+
+    public boolean ProcessMessage(final MessageQueue queue, final Message msg) throws IOException {
+        final Message.Builder builder = Message.newBuilder();
+        builder.setContextId(msg.getContextId());
+        builder.setType(Type.Response);
+        builder.setExpectResponse(true);
         final Shell shell = sampleView.getViewSite().getShell();
         shell.getDisplay().syncExec(new Runnable() {
             @Override
@@ -119,6 +126,11 @@ public class BreakpointOption extends ScrolledComposite implements SelectionList
                     call = "continue " + call;
                     builder.setFunction(Function.CONTINUE);
                 }
+                else
+                {
+                    assert msg.getType() == Type.AfterGeneratedCall;
+                    assert msg.getFunction() == lastFunction;
+                }
                 InputDialog inputDialog = new InputDialog(shell,
                             msg.getFunction().toString() + " " + msg.getType().toString(),
                         "(s)kip, (c)continue, (r)emove bp or glFunction(...)",
@@ -137,10 +149,17 @@ public class BreakpointOption extends ScrolledComposite implements SelectionList
                         SetBreakpoint(msg.getFunction(), false);
                     }
                     else
+                    {
                         MessageParserEx.instance.Parse(builder, inputDialog.getValue());
-                    builder.setExpectResponse(true);
+                        lastFunction = builder.getFunction();
+                    }
                 }
+                else
+                    assert false; // TODO: cancel behaviour
+                // TODO: add/modify/remove completed messages in queue
             }
         });
+        queue.SendMessage(builder.build());
+        return true;
     }
 }

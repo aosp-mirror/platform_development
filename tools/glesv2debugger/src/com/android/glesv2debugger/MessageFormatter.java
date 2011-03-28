@@ -25,10 +25,10 @@ public class MessageFormatter {
     static String FormatFloats(int count, final ByteBuffer data) {
         if (data.remaining() == 0)
             return "[null]";
+        data.order(SampleView.targetByteOrder);
         String ret = "[";
-        for (int i = 0; i < count; i++)
-        {
-            ret += Float.intBitsToFloat(Integer.reverseBytes(data.getInt()));
+        for (int i = 0; i < count; i++) {
+            ret += Float.intBitsToFloat(data.getInt());
             if (i < count - 1)
                 ret += ", ";
         }
@@ -38,10 +38,10 @@ public class MessageFormatter {
     static String FormatInts(int count, final ByteBuffer data) {
         if (data.remaining() == 0)
             return "[null]";
+        data.order(SampleView.targetByteOrder);
         String ret = "[";
-        for (int i = 0; i < count; i++)
-        {
-            ret += Integer.reverseBytes(data.getInt());
+        for (int i = 0; i < count; i++) {
+            ret += data.getInt();
             if (i < count - 1)
                 ret += ", ";
         }
@@ -51,10 +51,10 @@ public class MessageFormatter {
     static String FormatUints(int count, final ByteBuffer data) {
         if (data.remaining() == 0)
             return "[null]";
+        data.order(SampleView.targetByteOrder);
         String ret = "[";
-        for (int i = 0; i < count; i++)
-        {
-            long bits = Integer.reverseBytes(data.getInt()) & 0xffffffff;
+        for (int i = 0; i < count; i++) {
+            long bits = data.getInt() & 0xffffffff;
             ret += bits;
             if (i < count - 1)
                 ret += ", ";
@@ -65,10 +65,10 @@ public class MessageFormatter {
     static String FormatMatrix(int columns, int count, final ByteBuffer data) {
         if (data.remaining() == 0)
             return "[null]";
+        data.order(SampleView.targetByteOrder);
         String ret = "[";
-        for (int i = 0; i < count; i++)
-        {
-            ret += Float.intBitsToFloat(Integer.reverseBytes(data.getInt()));
+        for (int i = 0; i < count; i++) {
+            ret += Float.intBitsToFloat(data.getInt());
             if (i % columns == columns - 1)
                 ret += "\n                                             ";
             else if (i < count - 1)

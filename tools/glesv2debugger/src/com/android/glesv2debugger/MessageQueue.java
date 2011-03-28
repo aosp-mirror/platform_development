@@ -32,8 +32,8 @@ public class MessageQueue implements Runnable {
 
     boolean running = false;
     Thread thread = null;
-    ArrayList<Message> complete = new ArrayList<Message>();
-    ArrayList<Message> commands = new ArrayList<Message>();
+    ArrayList<Message> complete = new ArrayList<Message>(); // need synchronized
+    ArrayList<Message> commands = new ArrayList<Message>(); // need synchronized
     SampleView sampleView;
 
     public MessageQueue(SampleView sampleView) {
@@ -58,21 +58,16 @@ public class MessageQueue implements Runnable {
         return running;
     }
 
-    boolean SendCommands(final DataOutputStream dos, final int contextId) throws IOException {
-        boolean sent = false;
+    void SendCommands(final int contextId) throws IOException {
         synchronized (commands) {
             for (int i = 0; i < commands.size(); i++) {
                 Message command = commands.get(i);
-                // FIXME: proper context id
-                if (command.getContextId() == contextId || contextId == 0) {
-                    SendMessage(dos, command);
-                    commands.remove(i);
+                if (command.getContextId() == contextId || command.getContextId() == 0) {
+                    SendMessage(commands.remove(i));
                     i--;
-                    sent = true;
                 }
             }
         }
-        return sent;
     }
 
     public void AddCommand(Message command) {
@@ -81,18 +76,15 @@ public class MessageQueue implements Runnable {
         }
     }
 
-    public void AddCommands(ArrayList<Message> cmds) {
-        synchronized (commands) {
-            commands.addAll(cmds);
-        }
-    }
+    // these should only be accessed from the network thread;
+    // access call chain starts with run()
+    private DataInputStream dis = null;
+    private DataOutputStream dos = null;
+    private HashMap<Integer, ArrayList<Message>> incoming = new HashMap<Integer, ArrayList<Message>>();
 
     @Override
     public void run() {
         Socket socket = new Socket();
-        DataInputStream dis = null;
-        DataOutputStream dos = null;
-        HashMap<Integer, ArrayList<Message>> incoming = new HashMap<Integer, ArrayList<Message>>();
         try {
             socket.connect(new java.net.InetSocketAddress("127.0.0.1", Integer
                     .parseInt(sampleView.actionPort.getText())));
@@ -106,73 +98,20 @@ public class MessageQueue implements Runnable {
         while (running) {
             Message msg = null;
             if (incoming.size() > 0) { // find queued incoming
-                for (ArrayList<Message> messages : incoming
-                            .values())
+                for (ArrayList<Message> messages : incoming.values())
                     if (messages.size() > 0) {
-                        msg = messages.get(0);
-                        messages.remove(0);
+                        msg = messages.remove(0);
                         break;
                     }
             }
-            if (null == msg) { // get incoming from network
-                try {
-                    msg = ReadMessage(dis);
-                    SendResponse(dos, msg);
-                } catch (IOException e) {
-                    Error(e);
-                    running = false;
-                    break;
-                }
-            }
-
-            int contextId = msg.getContextId();
-            if (!incoming.containsKey(contextId))
-                incoming.put(contextId, new ArrayList<Message>());
-
-            if (msg.getType() == Type.AfterGeneratedCall)
-                continue; // TODO: for now, don't care
-
-            // FIXME: the expected sequence will change for interactive mode
-            while (msg.getType() == Type.BeforeCall) {
-                Message next = null;
-                // get existing message part for this context
-                ArrayList<Message> messages = incoming
-                            .get(contextId);
-                if (messages.size() > 0) {
-                    next = messages.get(0);
-                    messages.remove(0);
-                }
-                if (null == next) { // read new part for message
-                    try {
-                        next = ReadMessage(dis);
-                        SendResponse(dos, next);
-                    } catch (IOException e) {
-                        Error(e);
-                        running = false;
-                        break;
-                    }
-
-                    if (next.getType() == Type.AfterGeneratedCall)
-                        continue; // TODO: for now, don't care
-
-                    if (next.getContextId() != contextId) {
-                        // message part not for this context
-                        if (!incoming.containsKey(next.getContextId()))
-                            incoming.put(
-                                        next.getContextId(),
-                                        new ArrayList<Message>());
-                        incoming.get(next.getContextId()).add(next);
-                        continue;
-                    }
-                }
-
-                Message.Builder builder = msg.toBuilder();
-                builder.mergeFrom(next);
-                msg = builder.build();
-            }
-
-            synchronized (complete) {
-                complete.add(msg);
+            try {
+                if (null == msg) // get incoming from network
+                    msg = ReceiveMessage(dis);
+                ProcessMessage(dos, msg);
+            } catch (IOException e) {
+                Error(e);
+                running = false;
+                break;
             }
         }
 
@@ -184,9 +123,64 @@ public class MessageQueue implements Runnable {
         }
     }
 
-    Message GetMessage(int contextId) {
-        // ReadMessage and filter by contextId
-        return null;
+    private void PutMessage(final Message msg) {
+        ArrayList<Message> existing = incoming.get(msg.getContextId());
+        if (existing == null)
+            incoming.put(msg.getContextId(), existing = new ArrayList<Message>());
+        existing.add(msg);
+    }
+
+    Message ReceiveMessage(final int contextId) throws IOException {
+        Message msg = ReceiveMessage(dis);
+        while (msg.getContextId() != contextId) {
+            PutMessage(msg);
+            msg = ReceiveMessage(dis);
+        }
+        return msg;
+    }
+
+    void SendMessage(final Message msg) throws IOException {
+        SendMessage(dos, msg);
+    }
+
+    // should only used by DefaultProcessMessage
+    private HashMap<Integer, Message> partials = new HashMap<Integer, Message>();
+
+    Message GetPartialMessage(final int contextId) {
+        return partials.get(contextId);
+    }
+
+    // can be used by other message processor as default processor
+    void DefaultProcessMessage(final Message msg, boolean expectResponse,
+            boolean sendResponse)
+            throws IOException {
+        assert !msg.getExpectResponse();
+        final int contextId = msg.getContextId();
+        final Message.Builder builder = Message.newBuilder();
+        builder.setContextId(contextId);
+        builder.setType(Type.Response);
+        builder.setExpectResponse(expectResponse);
+        if (msg.getType() == Type.BeforeCall) {
+            if (sendResponse) {
+                builder.setFunction(Function.CONTINUE);
+                SendMessage(dos, builder.build());
+            }
+            assert !partials.containsKey(contextId);
+            partials.put(contextId, msg);
+        } else if (msg.getType() == Type.AfterCall) {
+            if (sendResponse) {
+                builder.setFunction(Function.CONTINUE);
+                SendMessage(dos, builder.build());
+            }
+            assert partials.containsKey(contextId);
+            final Message before = partials.remove(contextId);
+            assert before.getFunction() == msg.getFunction();
+            final Message completed = before.toBuilder().mergeFrom(msg).build();
+            synchronized (complete) {
+                complete.add(completed);
+            }
+        } else
+            assert false;
     }
 
     public Message RemoveCompleteMessage(int contextId) {
@@ -194,11 +188,7 @@ public class MessageQueue implements Runnable {
             if (complete.size() == 0)
                 return null;
             if (0 == contextId) // get a message for any context
-            {
-                Message msg = complete.get(0);
-                complete.remove(0);
-                return msg;
-            }
+                return complete.remove(0);
             for (int i = 0; i < complete.size(); i++) {
                 Message msg = complete.get(i);
                 if (msg.getContextId() == contextId) {
@@ -210,7 +200,7 @@ public class MessageQueue implements Runnable {
         return null;
     }
 
-    Message ReadMessage(final DataInputStream dis)
+    private Message ReceiveMessage(final DataInputStream dis)
             throws IOException {
         int len = 0;
         try {
@@ -234,33 +224,27 @@ public class MessageQueue implements Runnable {
                 readLen += read;
         }
         Message msg = Message.parseFrom(buffer);
+        SendCommands(msg.getContextId());
         return msg;
     }
 
-    void SendMessage(final DataOutputStream dos, final Message message)
+    private void SendMessage(final DataOutputStream dos, final Message message)
             throws IOException {
         final byte[] data = message.toByteArray();
         dos.writeInt(data.length);
         dos.write(data);
     }
 
-    void SendResponse(final DataOutputStream dos, final Message msg) throws IOException {
-        final Message.Builder builder = Message.newBuilder();
-        builder.setContextId(msg.getContextId());
-        if (msg.getType() == Type.BeforeCall)
-            builder.setFunction(Function.CONTINUE);
-        else if (msg.getType() == Type.AfterCall)
-            builder.setFunction(Function.SKIP);
-        else if (msg.getType() == Type.AfterGeneratedCall)
-            builder.setFunction(Function.SKIP);
-        else
-            assert false;
-        builder.setType(Type.Response);
-        builder.setExpectResponse(msg.getExpectResponse());
-        if (msg.getExpectResponse())
-            sampleView.breakpointOption.BreakpointReached(builder, msg);
-        if (SendCommands(dos, 0) || msg.getExpectResponse())
-            SendMessage(dos, builder.build());
+    private void ProcessMessage(final DataOutputStream dos, final Message msg) throws IOException {
+        if (msg.getExpectResponse()) {
+            if (sampleView.shaderEditor.ProcessMessage(this, msg))
+                return;
+            else if (sampleView.breakpointOption.ProcessMessage(this, msg))
+                return;
+            else
+                DefaultProcessMessage(msg, msg.getExpectResponse(), msg.getExpectResponse());
+        } else
+            DefaultProcessMessage(msg, msg.getExpectResponse(), msg.getExpectResponse());
     }
 
     void Error(Exception e) {
