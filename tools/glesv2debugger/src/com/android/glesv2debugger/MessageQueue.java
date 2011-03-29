@@ -20,10 +20,6 @@ import com.android.glesv2debugger.DebuggerMessage.Message;
 import com.android.glesv2debugger.DebuggerMessage.Message.Function;
 import com.android.glesv2debugger.DebuggerMessage.Message.Type;
 
-import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.widgets.Shell;
-
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.EOFException;
@@ -85,6 +81,12 @@ public class MessageQueue implements Runnable {
         }
     }
 
+    public void AddCommands(ArrayList<Message> cmds) {
+        synchronized (commands) {
+            commands.addAll(cmds);
+        }
+    }
+
     @Override
     public void run() {
         Socket socket = new Socket();
@@ -101,7 +103,6 @@ public class MessageQueue implements Runnable {
             Error(e);
         }
 
-        // try {
         while (running) {
             Message msg = null;
             if (incoming.size() > 0) { // find queued incoming
@@ -126,8 +127,10 @@ public class MessageQueue implements Runnable {
 
             int contextId = msg.getContextId();
             if (!incoming.containsKey(contextId))
-                incoming.put(contextId,
-                            new ArrayList<Message>());
+                incoming.put(contextId, new ArrayList<Message>());
+
+            if (msg.getType() == Type.AfterGeneratedCall)
+                continue; // TODO: for now, don't care
 
             // FIXME: the expected sequence will change for interactive mode
             while (msg.getType() == Type.BeforeCall) {
@@ -148,6 +151,9 @@ public class MessageQueue implements Runnable {
                         running = false;
                         break;
                     }
+
+                    if (next.getType() == Type.AfterGeneratedCall)
+                        continue; // TODO: for now, don't care
 
                     if (next.getContextId() != contextId) {
                         // message part not for this context
@@ -176,13 +182,14 @@ public class MessageQueue implements Runnable {
             Error(e);
             running = false;
         }
-        // } catch (Exception e) {
-        // Error(e);
-        // running = false;
-        // }
     }
 
-    public Message RemoveMessage(int contextId) {
+    Message GetMessage(int contextId) {
+        // ReadMessage and filter by contextId
+        return null;
+    }
+
+    public Message RemoveCompleteMessage(int contextId) {
         synchronized (complete) {
             if (complete.size() == 0)
                 return null;
@@ -244,10 +251,12 @@ public class MessageQueue implements Runnable {
             builder.setFunction(Function.CONTINUE);
         else if (msg.getType() == Type.AfterCall)
             builder.setFunction(Function.SKIP);
+        else if (msg.getType() == Type.AfterGeneratedCall)
+            builder.setFunction(Function.SKIP);
         else
             assert false;
         builder.setType(Type.Response);
-        builder.setExpectResponse(false);
+        builder.setExpectResponse(msg.getExpectResponse());
         if (msg.getExpectResponse())
             sampleView.breakpointOption.BreakpointReached(builder, msg);
         if (SendCommands(dos, 0) || msg.getExpectResponse())

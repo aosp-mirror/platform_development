@@ -446,7 +446,8 @@ public final class DebuggerMessage {
         implements com.google.protobuf.Internal.EnumLite {
       BeforeCall(0, 0),
       AfterCall(1, 1),
-      Response(2, 2),
+      AfterGeneratedCall(2, 2),
+      Response(3, 3),
       ;
       
       
@@ -456,7 +457,8 @@ public final class DebuggerMessage {
         switch (value) {
           case 0: return BeforeCall;
           case 1: return AfterCall;
-          case 2: return Response;
+          case 2: return AfterGeneratedCall;
+          case 3: return Response;
           default: return null;
         }
       }

@@ -21,7 +21,6 @@ import com.android.glesv2debugger.DebuggerMessage.Message.Function;
 import com.android.glesv2debugger.DebuggerMessage.Message.Prop;
 import com.android.glesv2debugger.DebuggerMessage.Message.Type;
 import org.eclipse.jface.dialogs.InputDialog;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.ScrolledComposite;
@@ -42,7 +41,6 @@ public class BreakpointOption extends ScrolledComposite implements SelectionList
 
     SampleView sampleView;
     HashMap<Function, Button> buttonsBreak = new HashMap<Function, Button>();
-    MessageParserEx messageParserEx = new MessageParserEx();
 
     BreakpointOption(SampleView sampleView, Composite parent) {
         super(parent, SWT.NO_BACKGROUND | SWT.V_SCROLL | SWT.H_SCROLL);
@@ -72,7 +70,6 @@ public class BreakpointOption extends ScrolledComposite implements SelectionList
         this.setExpandVertical(true);
         this.setMinSize(size);
         this.layout();
-        // this.pack(true);
     }
 
     void SetBreakpoint(Function function, boolean enabled) {
@@ -140,7 +137,8 @@ public class BreakpointOption extends ScrolledComposite implements SelectionList
                         SetBreakpoint(msg.getFunction(), false);
                     }
                     else
-                        messageParserEx.Parse(builder, inputDialog.getValue());
+                        MessageParserEx.instance.Parse(builder, inputDialog.getValue());
+                    builder.setExpectResponse(true);
                 }
             }
         });

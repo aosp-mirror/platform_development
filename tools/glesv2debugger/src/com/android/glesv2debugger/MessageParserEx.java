@@ -301,4 +301,5 @@ public class MessageParserEx extends MessageParser {
         // TODO: GLvoid* ptr
     }
 
+    public final static MessageParserEx instance = new MessageParserEx();
 }
