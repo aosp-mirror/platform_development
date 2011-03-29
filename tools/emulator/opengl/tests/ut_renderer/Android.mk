@@ -1,3 +1,9 @@
+# Building this module breaks the Linux build because
+# libxcb.so is not installed in the i686-linux-glibc2.7-4.4.3
+# prebuilt sysroot. Since rebuilding it will take some time, here's a
+# quick fix to unbreak it.
+#
+ifneq (,$(BUILD_EMULATOR_OPENGL))
 
 LOCAL_PATH:=$(call my-dir)
 
@@ -50,3 +56,5 @@ LOCAL_LDLIBS := -lpthread -lX11 -lrt
 include $(BUILD_HOST_EXECUTABLE)
 
 endif # HOST_OS == linux
+
+endif # BUILD_EMULATOR_OPENGL
