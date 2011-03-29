@@ -66,7 +66,7 @@ public class ForegroundService extends Service {
     
     void invokeMethod(Method method, Object[] args) {
         try {
-            mStartForeground.invoke(this, mStartForegroundArgs);
+            method.invoke(this, args);
         } catch (InvocationTargetException e) {
             // Should not happen.
             Log.w("ApiDemos", "Unable to invoke method", e);
@@ -103,15 +103,7 @@ public class ForegroundService extends Service {
         // If we have the new stopForeground API, then use it.
         if (mStopForeground != null) {
             mStopForegroundArgs[0] = Boolean.TRUE;
-            try {
-                mStopForeground.invoke(this, mStopForegroundArgs);
-            } catch (InvocationTargetException e) {
-                // Should not happen.
-                Log.w("ApiDemos", "Unable to invoke stopForeground", e);
-            } catch (IllegalAccessException e) {
-                // Should not happen.
-                Log.w("ApiDemos", "Unable to invoke stopForeground", e);
-            }
+            invokeMethod(mStopForeground, mStopForegroundArgs);
             return;
         }
         
@@ -130,10 +122,10 @@ public class ForegroundService extends Service {
                     mStartForegroundSignature);
             mStopForeground = getClass().getMethod("stopForeground",
                     mStopForegroundSignature);
+            return;
         } catch (NoSuchMethodException e) {
             // Running on an older platform.
             mStartForeground = mStopForeground = null;
-            return;
         }
         try {
             mSetForeground = getClass().getMethod("setForeground",
