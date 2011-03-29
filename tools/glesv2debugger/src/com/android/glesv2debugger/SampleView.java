@@ -48,15 +48,15 @@ import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
-import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.ScrollBar;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.widgets.TabFolder;
+import org.eclipse.swt.widgets.TabItem;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.ISharedImages;
@@ -100,11 +100,12 @@ public class SampleView extends ViewPart implements Runnable {
      */
     public static final String ID = "glesv2debuggerclient.views.SampleView";
 
-    LayoutComposite layoutComposite;
+    TabFolder tabFolder;
+    TabItem tabItemText, tabItemImage, tabItemBreakpointOption, tabItemShaderEditor;
     ListViewer viewer;
     BreakpointOption breakpointOption;
     ShaderEditor shaderEditor;
-    org.eclipse.swt.widgets.Canvas canvas;
+    Canvas canvas;
     Text text;
     Action actionConnect; // connect / disconnect
     Action doubleClickAction;
@@ -241,19 +242,33 @@ public class SampleView extends ViewPart implements Runnable {
         PlatformUI.getWorkbench().getHelpSystem()
                 .setHelp(viewer.getControl(), "GLESv2DebuggerClient.viewer");
 
-        layoutComposite = new LayoutComposite(parent, 0);
-        layoutComposite.setLayout(new FillLayout());
+        // layoutComposite = new LayoutComposite(parent, 0);
+        // layoutComposite.setLayout(new FillLayout());
 
-        text = new Text(layoutComposite, SWT.NO_BACKGROUND | SWT.READ_ONLY
+        tabFolder = new TabFolder(parent, SWT.BORDER);
+
+        text = new Text(tabFolder, SWT.NO_BACKGROUND | SWT.READ_ONLY
                 | SWT.V_SCROLL | SWT.H_SCROLL);
-        text.setVisible(false);
 
-        canvas = new Canvas(layoutComposite, SWT.NO_BACKGROUND | SWT.NO_REDRAW_RESIZE
+        tabItemText = new TabItem(tabFolder, SWT.NONE);
+        tabItemText.setText("Text");
+        tabItemText.setControl(text);
+
+        canvas = new Canvas(tabFolder, SWT.NO_BACKGROUND | SWT.NO_REDRAW_RESIZE
                 | SWT.V_SCROLL | SWT.H_SCROLL);
-        canvas.setVisible(false);
+        tabItemImage = new TabItem(tabFolder, SWT.NONE);
+        tabItemImage.setText("Image");
+        tabItemImage.setControl(canvas);
 
-        breakpointOption = new BreakpointOption(this, layoutComposite);
-        shaderEditor = new ShaderEditor(this, layoutComposite);
+        breakpointOption = new BreakpointOption(this, tabFolder);
+        tabItemBreakpointOption = new TabItem(tabFolder, SWT.NONE);
+        tabItemBreakpointOption.setText("Breakpoint Option");
+        tabItemBreakpointOption.setControl(breakpointOption);
+
+        shaderEditor = new ShaderEditor(this, tabFolder);
+        tabItemShaderEditor = new TabItem(tabFolder, SWT.NONE);
+        tabItemShaderEditor.setText("Shader Editor");
+        tabItemShaderEditor.setControl(shaderEditor);
 
         final ScrollBar hBar = canvas.getHorizontalBar();
         hBar.addListener(SWT.Selection, new Listener() {
@@ -460,30 +475,6 @@ public class SampleView extends ViewPart implements Runnable {
             }
         };
         manager.add(actionPort);
-
-        Action action = new Action("Breakpoints", Action.AS_CHECK_BOX)
-        {
-            @Override
-            public void run()
-            {
-                breakpointOption.setVisible(!breakpointOption.isVisible());
-                layoutComposite.layout(true);
-            }
-        };
-        action.setChecked(true);
-        manager.add(action);
-
-        action = new Action("Shaders", Action.AS_CHECK_BOX)
-        {
-            @Override
-            public void run()
-            {
-                shaderEditor.setVisible(!shaderEditor.isVisible());
-                layoutComposite.layout(true);
-            }
-        };
-        action.setChecked(true);
-        manager.add(action);
     }
 
     private void ConnectDisconnect() {
@@ -550,10 +541,8 @@ public class SampleView extends ViewPart implements Runnable {
                     return;
                 if (null != msgData.image)
                 {
-                    text.setVisible(false);
-                    canvas.setVisible(true);
                     canvas.setBackgroundImage(msgData.image);
-                    canvas.getParent().layout();
+                    tabFolder.setSelection(tabItemImage);
                 }
                 else if (null != msgData.shader)
                 {
@@ -577,9 +566,7 @@ public class SampleView extends ViewPart implements Runnable {
                     }
 
                     text.setText(builder.toString());
-                    text.setVisible(true);
-                    canvas.setVisible(false);
-                    text.getParent().layout();
+                    tabFolder.setSelection(tabItemText);
                 }
             }
 
@@ -673,22 +660,5 @@ public class SampleView extends ViewPart implements Runnable {
             writer.flush();
             writer.close();
         }
-    }
-}
-
-class LayoutComposite extends Composite {
-    public LayoutComposite(Composite parent, int style) {
-        super(parent, style);
-    }
-
-    @Override
-    public Control[] getChildren() {
-        Control[] children = super.getChildren();
-        ArrayList<Control> controls = new ArrayList<Control>();
-        for (int i = 0; i < children.length; i++)
-            if (children[i].isVisible())
-                controls.add(children[i]);
-        children = new Control[controls.size()];
-        return controls.toArray(children);
     }
 }
