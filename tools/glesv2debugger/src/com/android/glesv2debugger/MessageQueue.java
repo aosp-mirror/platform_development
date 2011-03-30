@@ -90,7 +90,8 @@ public class MessageQueue implements Runnable {
         DataOutputStream dos = null;
         HashMap<Integer, ArrayList<Message>> incoming = new HashMap<Integer, ArrayList<Message>>();
         try {
-            socket.connect(new java.net.InetSocketAddress("127.0.0.1", 5039));
+            socket.connect(new java.net.InetSocketAddress("127.0.0.1", Integer
+                    .parseInt(sampleView.actionPort.getText())));
             dis = new DataInputStream(socket.getInputStream());
             dos = new DataOutputStream(socket.getOutputStream());
         } catch (Exception e) {
