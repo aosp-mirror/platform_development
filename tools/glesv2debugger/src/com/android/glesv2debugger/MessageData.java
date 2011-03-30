@@ -33,9 +33,11 @@ public class MessageData {
     public float[] data;
     public int maxAttrib; // used for formatting data
     public GLEnum dataType; // could be float, int; mainly for formatting use
+    Context context; // the context before this call
 
     public MessageData(final Device device, final Message msg, final Context context) {
         this.msg = msg;
+        this.context = context;
         image = null;
         shader = null;
         data = null;

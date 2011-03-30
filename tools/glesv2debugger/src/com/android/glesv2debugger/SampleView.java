@@ -38,6 +38,7 @@ import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.ListViewer;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
+import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.jface.viewers.ViewerSorter;
@@ -101,8 +102,10 @@ public class SampleView extends ViewPart implements Runnable {
     public static final String ID = "glesv2debuggerclient.views.SampleView";
 
     TabFolder tabFolder;
-    TabItem tabItemText, tabItemImage, tabItemBreakpointOption, tabItemShaderEditor;
+    TabItem tabItemText, tabItemImage, tabItemBreakpointOption;
+    TabItem tabItemShaderEditor, tabContextViewer;
     ListViewer viewer;
+    TreeViewer contextViewer;
     BreakpointOption breakpointOption;
     ShaderEditor shaderEditor;
     Canvas canvas;
@@ -141,6 +144,7 @@ public class SampleView extends ViewPart implements Runnable {
                         bar.setSelection(bar.getMaximum());
                         viewer.getList().setSelection(
                                 entries.size() - 1);
+                        // MessageDataSelected(entries.get(entries.size() - 1));
                     }
                 }
             });
@@ -228,6 +232,7 @@ public class SampleView extends ViewPart implements Runnable {
         viewer.setFilters(new ViewerFilter[] {
                 new Filter()
         });
+
     }
 
     /**
@@ -269,6 +274,14 @@ public class SampleView extends ViewPart implements Runnable {
         tabItemShaderEditor = new TabItem(tabFolder, SWT.NONE);
         tabItemShaderEditor.setText("Shader Editor");
         tabItemShaderEditor.setControl(shaderEditor);
+
+        contextViewer = new TreeViewer(tabFolder);
+        ContextViewProvider contextViewProvider = new ContextViewProvider();
+        contextViewer.setContentProvider(contextViewProvider);
+        contextViewer.setLabelProvider(contextViewProvider);
+        tabContextViewer = new TabItem(tabFolder, SWT.NONE);
+        tabContextViewer.setText("Context Viewer");
+        tabContextViewer.setControl(contextViewer.getTree());
 
         final ScrollBar hBar = canvas.getHorizontalBar();
         hBar.addListener(SWT.Selection, new Listener() {
@@ -528,6 +541,33 @@ public class SampleView extends ViewPart implements Runnable {
         });
     }
 
+    void MessageDataSelected(final MessageData msgData) {
+        if (null == msgData)
+            return;
+        contextViewer.setInput(msgData.context);
+        if (null != msgData.image) {
+            canvas.setBackgroundImage(msgData.image);
+            tabFolder.setSelection(tabItemImage);
+            canvas.redraw();
+        } else if (null != msgData.shader) {
+            text.setText(msgData.shader);
+            tabFolder.setSelection(tabItemText);
+        } else if (null != msgData.data) {
+            StringBuilder builder = new StringBuilder();
+            for (int i = 0; i < msgData.data.length; i++) {
+                builder.append(String.format("%.3g", msgData.data[i]));
+                if (i % (4 * msgData.maxAttrib) == (4 * msgData.maxAttrib - 1))
+                    builder.append('\n');
+                else if (i % 4 == 3)
+                    builder.append(" -");
+                if (i < msgData.data.length - 1)
+                    builder.append(' ');
+            }
+            text.setText(builder.toString());
+            tabFolder.setSelection(tabItemText);
+        }
+    }
+
     private void hookSelectionChanged() {
         viewer.addSelectionChangedListener(new ISelectionChangedListener() {
             @Override
@@ -537,39 +577,8 @@ public class SampleView extends ViewPart implements Runnable {
                 if (null == selection)
                     return;
                 MessageData msgData = (MessageData) selection.getFirstElement();
-                if (null == msgData)
-                    return;
-                if (null != msgData.image)
-                {
-                    canvas.setBackgroundImage(msgData.image);
-                    tabFolder.setSelection(tabItemImage);
-                }
-                else if (null != msgData.shader)
-                {
-                    text.setText(msgData.shader);
-                    text.setVisible(true);
-                    canvas.setVisible(false);
-                    text.getParent().layout();
-                }
-                else if (null != msgData.data)
-                {
-                    StringBuilder builder = new StringBuilder();
-                    for (int i = 0; i < msgData.data.length; i++)
-                    {
-                        builder.append(String.format("%.3g", msgData.data[i]));
-                        if (i % (4 * msgData.maxAttrib) == (4 * msgData.maxAttrib - 1))
-                            builder.append('\n');
-                        else if (i % 4 == 3)
-                            builder.append(" -");
-                        if (i < msgData.data.length - 1)
-                            builder.append(' ');
-                    }
-
-                    text.setText(builder.toString());
-                    tabFolder.setSelection(tabItemText);
-                }
+                MessageDataSelected(msgData);
             }
-
         });
     }
 
@@ -640,8 +649,13 @@ public class SampleView extends ViewPart implements Runnable {
                 context = new Context(msg.getContextId());
                 contexts.put(msg.getContextId(), context);
             }
-            msg = context.ProcessMessage(msg);
-            shaderEditorUpdate |= context.serverShader.uiUpdate;
+            Context newContext = context.ProcessMessage(msg);
+            // TODO: full cloning on change not implemented yet
+            if (newContext.processed != null)
+                msg = newContext.processed;
+            contexts.put(msg.getContextId(), newContext);
+            shaderEditorUpdate |= newContext.serverShader.uiUpdate;
+            newContext.serverShader.uiUpdate = false;
 
             final MessageData msgData = new MessageData(this.getViewSite()
                     .getShell().getDisplay(), msg, context);

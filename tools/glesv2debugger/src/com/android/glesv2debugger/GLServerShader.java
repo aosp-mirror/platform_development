@@ -17,79 +17,130 @@
 package com.android.glesv2debugger;
 
 import com.android.glesv2debugger.DebuggerMessage.Message;
+import com.android.sdklib.util.SparseArray;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
-class GLShader {
-    final int name;
+class GLShader implements Cloneable {
+    public final int name;
     final GLServerShader context; // the context this was created in
-    final GLEnum type;
-    boolean delete;
-    ArrayList<GLProgram> programs = new ArrayList<GLProgram>();
-    String source, originalSource;
+    public final GLEnum type;
+    public boolean delete;
+    public ArrayList<Integer> programs = new ArrayList<Integer>();
+    public String source, originalSource;
 
     GLShader(final int name, final GLServerShader context, final GLEnum type) {
         this.name = name;
         this.context = context;
         this.type = type;
     }
+
+    @Override
+    // deep copy except for context, which is set afterwards
+    public Object clone() {
+        try {
+            GLShader shader = (GLShader) super.clone();
+            shader.programs = (ArrayList<Integer>) programs.clone();
+            return shader;
+        } catch (CloneNotSupportedException e) {
+            e.printStackTrace();
+            assert false;
+            return null;
+        }
+    }
 }
 
-class GLProgram {
-    final int name;
+class GLProgram implements Cloneable {
+    public final int name;
     final GLServerShader context; // the context this was created in
-    boolean delete;
-    GLShader vert, frag;
+    public boolean delete;
+    public int vert, frag;
 
     GLProgram(final int name, final GLServerShader context) {
         this.name = name;
         this.context = context;
     }
+
+    @Override
+    // deep copy except for context, which is set afterwards
+    public Object clone() {
+        try {
+            return super.clone();
+        } catch (CloneNotSupportedException e) {
+            e.printStackTrace();
+            assert false;
+            return null;
+        }
+    }
 }
 
-public class GLServerShader {
-    final Context context;
-    HashMap<Integer, GLShader> privateShaders = new HashMap<Integer, GLShader>();
-    HashMap<Integer, GLProgram> privatePrograms = new HashMap<Integer, GLProgram>();
-    GLProgram current = null;
-    public boolean uiUpdate = false;
+public class GLServerShader implements Cloneable {
+    Context context;
+    public SparseArray<GLShader> shaders = new SparseArray<GLShader>();
+    public SparseArray<GLProgram> programs = new SparseArray<GLProgram>();
+    public GLProgram current = null;
+    boolean uiUpdate = false;
 
-    GLServerShader(final Context context) {
+    GLServerShader(Context context) {
         this.context = context;
     }
 
-    public void ProcessMessage(final Message msg) {
+    @Override
+    // deep copy except for context, which is set afterwards
+    public Object clone() {
+        try {
+            GLServerShader copy = (GLServerShader) super.clone();
+
+            copy.shaders = new SparseArray<GLShader>(shaders.size());
+            for (int i = 0; i < shaders.size(); i++)
+                copy.shaders.append(shaders.keyAt(i), (GLShader) shaders.valueAt(i).clone());
+
+            copy.programs = new SparseArray<GLProgram>(programs.size());
+            for (int i = 0; i < programs.size(); i++)
+                copy.programs.append(programs.keyAt(i), (GLProgram) programs.valueAt(i).clone());
+
+            if (current != null)
+                copy.current = (GLProgram) current.clone();
+            return copy;
+        } catch (CloneNotSupportedException e) {
+            e.printStackTrace();
+            assert false;
+            return null;
+        }
+    }
+
+    // returns instance if processed
+    public GLServerShader ProcessMessage(final Message msg) {
         boolean oldUiUpdate = uiUpdate;
         uiUpdate = true;
         switch (msg.getFunction()) {
             case glAttachShader:
                 glAttachShader(msg);
-                break;
+                return this;
             case glCreateProgram:
                 glCreateProgram(msg);
-                break;
+                return this;
             case glCreateShader:
                 glCreateShader(msg);
-                break;
+                return this;
             case glDeleteProgram:
                 glDeleteProgram(msg);
-                break;
+                return this;
             case glDeleteShader:
                 glDeleteShader(msg);
-                break;
+                return this;
             case glDetachShader:
                 glDetachShader(msg);
-                break;
+                return this;
             case glShaderSource:
                 glShaderSource(msg);
-                break;
+                return this;
             case glUseProgram:
                 glUseProgram(msg);
-                break;
+                return this;
             default:
                 uiUpdate = oldUiUpdate;
-                break;
+                return null;
         }
     }
 
@@ -97,7 +148,7 @@ public class GLServerShader {
         if (name == 0)
             return null;
         for (Context ctx : context.shares) {
-            GLShader shader = ctx.serverShader.privateShaders.get(name);
+            GLShader shader = ctx.serverShader.shaders.get(name);
             if (shader != null)
                 return shader;
         }
@@ -109,7 +160,7 @@ public class GLServerShader {
         if (name == 0)
             return null;
         for (Context ctx : context.shares) {
-            GLProgram program = ctx.serverShader.privatePrograms.get(name);
+            GLProgram program = ctx.serverShader.programs.get(name);
             if (program != null)
                 return program;
         }
@@ -122,20 +173,20 @@ public class GLServerShader {
         GLProgram program = GetProgram(msg.getArg0());
         GLShader shader = GetShader(msg.getArg1());
         if (GLEnum.GL_VERTEX_SHADER == shader.type)
-            program.vert = shader;
+            program.vert = shader.name;
         else
-            program.frag = shader;
-        shader.programs.add(program);
+            program.frag = shader.name;
+        shader.programs.add(program.name);
     }
 
     // GLuint API_ENTRY(glCreateProgram)(void)
     void glCreateProgram(final Message msg) {
-        privatePrograms.put(msg.getRet(), new GLProgram(msg.getRet(), this));
+        programs.put(msg.getRet(), new GLProgram(msg.getRet(), this));
     }
 
     // GLuint API_ENTRY(glCreateShader)(GLenum type)
     void glCreateShader(final Message msg) {
-        privateShaders.put(msg.getRet(),
+        shaders.put(msg.getRet(),
                 new GLShader(msg.getRet(), this, GLEnum.valueOf(msg.getArg0())));
     }
 
@@ -148,9 +199,9 @@ public class GLServerShader {
         for (Context ctx : context.shares)
             if (ctx.serverShader.current == program)
                 return;
-        glDetachShader(program, program.vert);
-        glDetachShader(program, program.frag);
-        privatePrograms.remove(program.name);
+        glDetachShader(program, GetShader(program.vert));
+        glDetachShader(program, GetShader(program.frag));
+        programs.remove(program.name);
     }
 
     // void API_ENTRY(glDeleteShader)(GLuint shader)
@@ -160,7 +211,7 @@ public class GLServerShader {
         GLShader shader = GetShader(msg.getArg0());
         shader.delete = true;
         if (shader.programs.size() == 0)
-            privateShaders.remove(shader.name);
+            shaders.remove(shader.name);
     }
 
     // void API_ENTRY(glDetachShader)(GLuint program, GLuint shader)
@@ -171,15 +222,15 @@ public class GLServerShader {
     void glDetachShader(final GLProgram program, final GLShader shader) {
         if (program == null)
             return;
-        if (program.vert == shader)
-            program.vert = null;
-        else if (program.frag == shader)
-            program.frag = null;
+        if (program.vert == shader.name)
+            program.vert = 0;
+        else if (program.frag == shader.name)
+            program.frag = 0;
         else
             return;
-        shader.programs.remove(program);
+        shader.programs.remove(program.name);
         if (shader.delete && shader.programs.size() == 0)
-            shader.context.privateShaders.remove(shader.name);
+            shaders.remove(shader.name);
     }
 
     // void API_ENTRY(glShaderSource)(GLuint shader, GLsizei count, const
@@ -195,12 +246,11 @@ public class GLServerShader {
     void glUseProgram(final Message msg) {
         GLProgram oldCurrent = current;
         current = GetProgram(msg.getArg0());
-        if (null != oldCurrent && oldCurrent.delete && oldCurrent != current)
-        {
+        if (null != oldCurrent && oldCurrent.delete && oldCurrent != current) {
             for (Context ctx : context.shares)
                 if (ctx.serverShader.current == oldCurrent)
                     return;
-            oldCurrent.context.privatePrograms.remove(oldCurrent.name);
+            oldCurrent.context.programs.remove(oldCurrent.name);
         }
     }
 }

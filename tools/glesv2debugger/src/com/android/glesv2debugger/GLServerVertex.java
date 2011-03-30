@@ -22,27 +22,27 @@ import java.nio.ByteBuffer;
 import java.util.HashMap;
 
 class GLBuffer {
-    GLEnum usage;
-    GLEnum target;
-    ByteBuffer data;
+    public GLEnum usage;
+    public GLEnum target;
+    public ByteBuffer data;
 }
 
 class GLAttribPointer {
-    int size; // number of values per vertex
-    GLEnum type; // data type
-    int stride; // bytes
-    int ptr; // pointer in debugger server or byte offset into buffer
-    GLBuffer buffer;
-    boolean normalized;
-    boolean enabled;
+    public int size; // number of values per vertex
+    public GLEnum type; // data type
+    public int stride; // bytes
+    public int ptr; // pointer in debugger server or byte offset into buffer
+    public GLBuffer buffer;
+    public boolean normalized;
+    public boolean enabled;
 }
 
 public class GLServerVertex {
 
-    HashMap<Integer, GLBuffer> buffers;
-    GLBuffer attribBuffer, indexBuffer; // current binding
-    GLAttribPointer attribPointers[];
-    float defaultAttribs[][];
+    public  HashMap<Integer, GLBuffer> buffers;
+    public GLBuffer attribBuffer, indexBuffer; // current binding
+    public GLAttribPointer attribPointers[];
+    public float defaultAttribs[][];
     int maxAttrib;
 
     public GLServerVertex() {
@@ -57,6 +57,73 @@ public class GLServerVertex {
             defaultAttribs[i][1] = 0;
             defaultAttribs[i][2] = 0;
             defaultAttribs[i][3] = 1;
+        }
+    }
+
+    Message processed = null; // return; glDrawArrays/Elements with fetched data
+
+    // returns instance if processed TODO: return new instance if changed
+    public GLServerVertex Process(final Message msg) {
+        processed = null;
+        switch (msg.getFunction()) {
+            case glBindBuffer:
+                glBindBuffer(msg);
+                return this;
+            case glBufferData:
+                glBufferData(msg);
+                return this;
+            case glBufferSubData:
+                glBufferSubData(msg);
+                return this;
+            case glDeleteBuffers:
+                glDeleteBuffers(msg);
+                return this;
+            case glDrawArrays:
+                if (msg.hasArg7())
+                    processed = glDrawArrays(msg);
+                return this;
+            case glDrawElements:
+                if (msg.hasArg7())
+                    processed = glDrawElements(msg);
+                return this;
+            case glDisableVertexAttribArray:
+                glDisableVertexAttribArray(msg);
+                return this;
+            case glEnableVertexAttribArray:
+                glEnableVertexAttribArray(msg);
+                return this;
+            case glGenBuffers:
+                glGenBuffers(msg);
+                return this;
+            case glVertexAttribPointer:
+                glVertexAttribPointer(msg);
+                return this;
+            case glVertexAttrib1f:
+                glVertexAttrib1f(msg);
+                return this;
+            case glVertexAttrib1fv:
+                glVertexAttrib1fv(msg);
+                return this;
+            case glVertexAttrib2f:
+                glVertexAttrib2f(msg);
+                return this;
+            case glVertexAttrib2fv:
+                glVertexAttrib2fv(msg);
+                return this;
+            case glVertexAttrib3f:
+                glVertexAttrib3f(msg);
+                return this;
+            case glVertexAttrib3fv:
+                glVertexAttrib3fv(msg);
+                return this;
+            case glVertexAttrib4f:
+                glVertexAttrib4f(msg);
+                return this;
+            case glVertexAttrib4fv:
+                glVertexAttrib4fv(msg);
+                return this;
+            default:
+                return null;
         }
     }
 
@@ -141,32 +208,32 @@ public class GLServerVertex {
         else if (GLEnum.GL_UNSIGNED_INT == type)
             if (normalized)
                 return (Integer.reverseBytes(src.getInt()) & 0xffffffffL) / (2e32f - 1);
-            else 
+            else
                 return Integer.reverseBytes(src.getInt()) & 0xffffffffL;
         else if (GLEnum.GL_INT == type)
             if (normalized)
                 return (Integer.reverseBytes(src.getInt()) * 2 + 1) / (2e32f - 1);
-            else 
+            else
                 return Integer.reverseBytes(src.getInt());
         else if (GLEnum.GL_UNSIGNED_SHORT == type)
             if (normalized)
                 return (Short.reverseBytes(src.getShort()) & 0xffff) / (2e16f - 1);
-            else 
+            else
                 return Short.reverseBytes(src.getShort()) & 0xffff;
         else if (GLEnum.GL_SHORT == type)
             if (normalized)
                 return (Short.reverseBytes(src.getShort()) * 2 + 1) / (2e16f - 1);
-            else 
+            else
                 return Short.reverseBytes(src.getShort());
         else if (GLEnum.GL_UNSIGNED_BYTE == type)
             if (normalized)
                 return (src.get() & 0xff) / (2e8f - 1);
-            else 
+            else
                 return src.get() & 0xff;
         else if (GLEnum.GL_BYTE == type)
             if (normalized)
                 return (src.get() * 2 + 1) / (2e8f - 1);
-            else 
+            else
                 return src.get();
         else if (GLEnum.GL_FIXED == type)
             if (normalized)
