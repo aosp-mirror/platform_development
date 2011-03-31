@@ -35,10 +35,10 @@ WIN_TARGETS := \
 	zipalign \
 	$(WIN_SDK_TARGETS)
 
-# LINUX_SDK_NAME/DIR is set in build/core/Makefile
-WIN_SDK_NAME  := $(subst $(HOST_OS)-$(HOST_ARCH),windows,$(LINUX_SDK_NAME))
-WIN_SDK_DIR   := $(subst $(HOST_OS)-$(HOST_ARCH),windows,$(LINUX_SDK_DIR))
-WIN_SDK_ZIP   := $(WIN_SDK_DIR)/$(WIN_SDK_NAME).zip
+# MAIN_SDK_NAME/DIR is set in build/core/Makefile
+WIN_SDK_NAME := $(subst $(HOST_OS)-$(HOST_ARCH),windows,$(MAIN_SDK_NAME))
+WIN_SDK_DIR  := $(subst $(HOST_OS)-$(HOST_ARCH),windows,$(MAIN_SDK_DIR))
+WIN_SDK_ZIP  := $(WIN_SDK_DIR)/$(WIN_SDK_NAME).zip
 
 $(call dist-for-goals, win_sdk, $(WIN_SDK_ZIP))
 
@@ -51,10 +51,10 @@ $(info )
 endef
 
 define winsdk-info
-$(info LINUX_SDK_NAME: $(LINUX_SDK_NAME))
-$(info WIN_SDK_NAME  : $(WIN_SDK_NAME))
-$(info WIN_SDK_DIR   : $(WIN_SDK_DIR))
-$(info WIN_SDK_ZIP   : $(WIN_SDK_ZIP))
+$(info MAIN_SDK_NAME: $(MAIN_SDK_NAME))
+$(info WIN_SDK_NAME : $(WIN_SDK_NAME))
+$(info WIN_SDK_DIR  : $(WIN_SDK_DIR))
+$(info WIN_SDK_ZIP  : $(WIN_SDK_ZIP))
 endef
 
 win_sdk: $(WIN_SDK_ZIP)
@@ -69,7 +69,7 @@ $(WIN_SDK_ZIP): winsdk-tools sdk
 	$(call winsdk-info)
 	$(hide) rm -rf $(WIN_SDK_DIR)
 	$(hide) mkdir -p $(WIN_SDK_DIR)
-	$(hide) cp -rf $(LINUX_SDK_DIR)/$(LINUX_SDK_NAME) $(WIN_SDK_DIR)/$(WIN_SDK_NAME)
+	$(hide) cp -rf $(MAIN_SDK_DIR)/$(MAIN_SDK_NAME) $(WIN_SDK_DIR)/$(WIN_SDK_NAME)
 	$(hide) USB_DRIVER_HOOK=$(USB_DRIVER_HOOK) \
 		$(TOPDIR)development/build/tools/patch_windows_sdk.sh $(subst @,-q,$(hide)) \
 		$(WIN_SDK_DIR)/$(WIN_SDK_NAME) $(OUT_DIR) $(TOPDIR)
