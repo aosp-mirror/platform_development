@@ -40,6 +40,12 @@ LOCAL_STATIC_LIBRARIES := libOpenglCodecCommon
 include $(BUILD_SHARED_LIBRARY)
 
 #### egl.cfg ####
+
+# Ensure that this file is only copied to emulator-specific builds.
+# Other builds are device-specific and will provide their own
+# version of this file to point to the appropriate HW EGL libraries.
+#
+ifneq (,$(filter full full_x86 sdk sdk_x86,$(TARGET_PRODUCT)))
 include $(CLEAR_VARS)
 
 LOCAL_MODULE := egl.cfg
@@ -50,6 +56,7 @@ LOCAL_MODULE_TAGS := debug
 LOCAL_MODULE_CLASS := ETC
 
 include $(BUILD_PREBUILT)
+endif # TARGET_PRODUCT in 'full sdk full_x86 sdk_x86'
 
 #### gles_emul.cfg ####
 include $(CLEAR_VARS)
