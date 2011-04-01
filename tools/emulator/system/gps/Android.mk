@@ -31,7 +31,11 @@ LOCAL_MODULE_PATH := $(TARGET_OUT_SHARED_LIBRARIES)/hw
 LOCAL_CFLAGS += -DQEMU_HARDWARE
 LOCAL_SHARED_LIBRARIES := liblog libcutils libhardware
 LOCAL_SRC_FILES := gps_qemu.c
+ifeq ($(TARGET_PRODUCT),vbox_x86)
+LOCAL_MODULE := gps.vbox_x86
+else
 LOCAL_MODULE := gps.goldfish
+endif
 LOCAL_MODULE_TAGS := debug
 include $(BUILD_SHARED_LIBRARY)
 endif
