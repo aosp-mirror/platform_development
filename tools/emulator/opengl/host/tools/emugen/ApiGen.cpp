@@ -549,7 +549,6 @@ int ApiGen::genDecoderImpl(const std::string &filename)
         std::string retvalType;
         if (!e->retval().isVoid()) {
             retvalType = e->retval().type()->name();
-            if (e->retval().isPointer()) retvalType += "*";
         }
 
         for (int pass = PASS_TmpBuffAlloc; pass < PASS_LAST; pass++) {
@@ -593,15 +592,15 @@ int ApiGen::genDecoderImpl(const std::string &filename)
                                         (uint) j, varoffset.c_str());
                             }
                             if (pass == PASS_FunctionCall) {
-                                fprintf(fp, "(%s *)(ptr + %s + 4)",
+                                fprintf(fp, "(%s)(ptr + %s + 4)",
                                         v->type()->name().c_str(), varoffset.c_str());
                             } else if (pass == PASS_DebugPrint) {
-                                fprintf(fp, "(%s *)(ptr + %s + 4), *(unsigned int *)(ptr + %s)",
+                                fprintf(fp, "(%s)(ptr + %s + 4), *(unsigned int *)(ptr + %s)",
                                         v->type()->name().c_str(), varoffset.c_str(),
                                         varoffset.c_str());
                             }
                             varoffset += " + 4 + *(size_t *)(ptr +" + varoffset + ")";
-                        } else { // in pointer;
+                        } else { // out pointer;
                             if (pass == PASS_TmpBuffAlloc) {
                                 fprintf(fp, "\t\t\tsize_t tmpPtr%uSize = (size_t)*(unsigned int *)(ptr + %s);\n",
                                         (uint) j, varoffset.c_str());
@@ -611,16 +610,16 @@ int ApiGen::genDecoderImpl(const std::string &filename)
                                     fprintf(fp, "\t\t\ttotalTmpSize += tmpPtr%uSize;\n", (uint)j);
                                 tmpBufOffset[j] = totalTmpBuffOffset;
                                 char tmpPtrName[16];
-                                sprintf(tmpPtrName,"tmpPtr%u", (uint)j);
+                                sprintf(tmpPtrName," + tmpPtr%uSize", (uint)j);
                                 totalTmpBuffOffset += std::string(tmpPtrName);
                                 totalTmpBuffExist = true;
                             } else if (pass == PASS_MemAlloc) {
                                 fprintf(fp, "\t\t\tunsigned char *tmpPtr%u = &tmpBuf[%s];\n",
                                         (uint)j, tmpBufOffset[j].c_str());
                             } else if (pass == PASS_FunctionCall) {
-                                fprintf(fp, "(%s *)(tmpPtr%u)", v->type()->name().c_str(), (uint) j);
+                                fprintf(fp, "(%s)(tmpPtr%u)", v->type()->name().c_str(), (uint) j);
                             } else if (pass == PASS_DebugPrint) {
-                                fprintf(fp, "(%s *)(tmpPtr%u), *(unsigned int *)(ptr + %s)",
+                                fprintf(fp, "(%s)(tmpPtr%u), *(unsigned int *)(ptr + %s)",
                                         v->type()->name().c_str(), (uint) j,
                                         varoffset.c_str());
                             }
