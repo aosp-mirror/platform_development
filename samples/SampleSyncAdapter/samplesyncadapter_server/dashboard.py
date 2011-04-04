@@ -1,21 +1,23 @@
 #!/usr/bin/python2.5
 
 # Copyright (C) 2010 The Android Open Source Project
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not
 # use this file except in compliance with the License. You may obtain a copy of
 # the License at
-# 
+#
 # http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations under
 # the License.
 
-"""Defines Django forms for inserting/updating/viewing data
-   to/from SampleSyncAdapter datastore."""
+"""
+Defines Django forms for inserting/updating/viewing contact data
+to/from SampleSyncAdapter datastore.
+"""
 
 import cgi
 import datetime
@@ -26,248 +28,181 @@ from google.appengine.ext import webapp
 from google.appengine.ext.webapp import template
 from google.appengine.ext.db import djangoforms
 from model import datastore
+from google.appengine.api import images
 
 import wsgiref.handlers
 
+class BaseRequestHandler(webapp.RequestHandler):
+    """
+    Base class for our page-based request handlers that contains
+    some helper functions we use in most pages.
+    """
 
-class UserForm(djangoforms.ModelForm):
-  """Represents django form for entering user info."""
+    """
+    Return a form (potentially partially filled-in) to
+    the user.
+    """
+    def send_form(self, title, action, contactId, handle, content_obj):
+        if (contactId >= 0):
+            idInfo = '<input type="hidden" name="_id" value="%s">'
+        else:
+            idInfo = ''
 
-  class Meta:
-    model = datastore.User
+        template_values = {
+                'title': title,
+                'header': title,
+                'action': action,
+                'contactId': contactId,
+                'handle': handle,
+                'has_contactId': (contactId >= 0),
+                'has_handle': (handle != None),
+                'form_data_rows': str(content_obj)
+                }
 
+        path = os.path.join(os.path.dirname(__file__), 'templates', 'simple_form.html')
+        self.response.out.write(template.render(path, template_values))
 
-class UserInsertPage(webapp.RequestHandler):
-  """Inserts new users. GET presents a blank form. POST processes it."""
+class ContactForm(djangoforms.ModelForm):
+    """Represents django form for entering contact info."""
 
-  def get(self):
-    self.response.out.write('<html><body>'
-                            '<form method="POST" '
-                            'action="/add_user">'
-                            '<table>')
-    # This generates our shopping list form and writes it in the response
-    self.response.out.write(UserForm())
-    self.response.out.write('</table>'
-                            '<input type="submit">'
-                            '</form></body></html>')
-
-  def post(self):
-    data = UserForm(data=self.request.POST)
-    if data.is_valid():
-      # Save the data, and redirect to the view page
-      entity = data.save(commit=False)
-      entity.put()
-      self.redirect('/users')
-    else:
-      # Reprint the form
-      self.response.out.write('<html><body>'
-                              '<form method="POST" '
-                              'action="/">'
-                              '<table>')
-      self.response.out.write(data)
-      self.response.out.write('</table>'
-                              '<input type="submit">'
-                              '</form></body></html>')
+    class Meta:
+        model = datastore.Contact
 
 
-class UserEditPage(webapp.RequestHandler):
-  """Edits users. GET presents a form prefilled with user info
-     from datastore. POST processes it."""
+class ContactInsertPage(BaseRequestHandler):
+    """
+    Processes requests to add a new contact. GET presents an empty
+    contact form for the user to fill in.  POST saves the new contact
+    with the POSTed information.
+    """
 
-  def get(self):
-    id = int(self.request.get('user'))
-    user = datastore.User.get(db.Key.from_path('User', id))
-    self.response.out.write('<html><body>'
-                            '<form method="POST" '
-                            'action="/edit_user">'
-                            '<table>')
-    # This generates our shopping list form and writes it in the response
-    self.response.out.write(UserForm(instance=user))
-    self.response.out.write('</table>'
-                            '<input type="hidden" name="_id" value="%s">'
-                            '<input type="submit">'
-                            '</form></body></html>' % id)
+    def get(self):
+        self.send_form('Add Contact', '/add_contact', -1, None, ContactForm())
 
-  def post(self):
-    id = int(self.request.get('_id'))
-    user = datastore.User.get(db.Key.from_path('User', id))
-    data = UserForm(data=self.request.POST, instance=user)
-    if data.is_valid():
-      # Save the data, and redirect to the view page
-      entity = data.save(commit=False)
-      entity.updated = datetime.datetime.utcnow()
-      entity.put()
-      self.redirect('/users')
-    else:
-      # Reprint the form
-      self.response.out.write('<html><body>'
-                              '<form method="POST" '
-                              'action="/edit_user">'
-                              '<table>')
-      self.response.out.write(data)
-      self.response.out.write('</table>'
-                              '<input type="hidden" name="_id" value="%s">'
-                              '<input type="submit">'
-                              '</form></body></html>' % id)
+    def post(self):
+        data = ContactForm(data=self.request.POST)
+        if data.is_valid():
+            # Save the data, and redirect to the view page
+            entity = data.save(commit=False)
+            entity.put()
+            self.redirect('/')
+        else:
+            # Reprint the form
+            self.send_form('Add Contact', '/add_contact', -1, None, data)
 
 
-class UsersListPage(webapp.RequestHandler):
-  """Lists all Users. In addition displays links for editing user info,
-     viewing user's friends and adding new users."""
+class ContactEditPage(BaseRequestHandler):
+    """
+    Process requests to edit a contact's information.  GET presents a form
+    with the current contact information filled in. POST saves new information
+    into the contact record.
+    """
 
-  def get(self):
-    users = datastore.User.all()
-    template_values = {
-        'users': users
-        }
+    def get(self):
+        id = int(self.request.get('id'))
+        contact = datastore.Contact.get(db.Key.from_path('Contact', id))
+        self.send_form('Edit Contact', '/edit_contact', id, contact.handle, 
+                       ContactForm(instance=contact))
 
-    path = os.path.join(os.path.dirname(__file__), 'templates', 'users.html')
-    self.response.out.write(template.render(path, template_values))
+    def post(self):
+        id = int(self.request.get('id'))
+        contact = datastore.Contact.get(db.Key.from_path('Contact', id))
+        data = ContactForm(data=self.request.POST, instance=contact)
+        if data.is_valid():
+            # Save the data, and redirect to the view page
+            entity = data.save(commit=False)
+            entity.updated = datetime.datetime.utcnow()
+            entity.put()
+            self.redirect('/')
+        else:
+            # Reprint the form
+            self.send_form('Edit Contact', '/edit_contact', id, contact.handle, data)
 
+class ContactDeletePage(BaseRequestHandler):
+    """Processes delete contact request."""
 
-class UserCredentialsForm(djangoforms.ModelForm):
-  """Represents django form for entering user's credentials."""
+    def get(self):
+        id = int(self.request.get('id'))
+        contact = datastore.Contact.get(db.Key.from_path('Contact', id))
+        contact.deleted = True
+        contact.updated = datetime.datetime.utcnow()
+        contact.put()
 
-  class Meta:
-    model = datastore.UserCredentials
+        self.redirect('/')
 
+class AvatarEditPage(webapp.RequestHandler):
+    """
+    Processes requests to edit contact's avatar. GET is used to fetch
+    a page that displays the contact's current avatar and allows the user 
+    to specify a file containing a new avatar image.  POST is used to
+    submit the form which will change the contact's avatar.
+    """
 
-class UserCredentialsInsertPage(webapp.RequestHandler):
-  """Inserts user credentials. GET shows a blank form, POST processes it."""
+    def get(self):
+        id = int(self.request.get('id'))
+        contact = datastore.Contact.get(db.Key.from_path('Contact', id))
+        template_values = {
+                'avatar': contact.avatar,
+                'contactId': id
+                }
+        
+        path = os.path.join(os.path.dirname(__file__), 'templates', 'edit_avatar.html')
+        self.response.out.write(template.render(path, template_values))
 
-  def get(self):
-    self.response.out.write('<html><body>'
-                            '<form method="POST" '
-                            'action="/add_credentials">'
-                            '<table>')
-    # This generates our shopping list form and writes it in the response
-    self.response.out.write(UserCredentialsForm())
-    self.response.out.write('</table>'
-                            '<input type="submit">'
-                            '</form></body></html>')
+    def post(self):
+        id = int(self.request.get('id'))
+        contact = datastore.Contact.get(db.Key.from_path('Contact', id))
+        #avatar = images.resize(self.request.get("avatar"), 128, 128)
+        avatar = self.request.get("avatar")
+        contact.avatar = db.Blob(avatar)
+        contact.updated = datetime.datetime.utcnow()
+        contact.put()
+        self.redirect('/')
 
-  def post(self):
-    data = UserCredentialsForm(data=self.request.POST)
-    if data.is_valid():
-      # Save the data, and redirect to the view page
-      entity = data.save(commit=False)
-      entity.put()
-      self.redirect('/users')
-    else:
-      # Reprint the form
-      self.response.out.write('<html><body>'
-                              '<form method="POST" '
-                              'action="/add_credentials">'
-                              '<table>')
-      self.response.out.write(data)
-      self.response.out.write('</table>'
-                              '<input type="submit">'
-                              '</form></body></html>')
+class AvatarViewPage(BaseRequestHandler):
+    """
+    Processes request to view contact's avatar. This is different from
+    the GET AvatarEditPage request in that this doesn't return a page -
+    it just returns the raw image itself.
+    """
 
+    def get(self):
+        id = int(self.request.get('id'))
+        contact = datastore.Contact.get(db.Key.from_path('Contact', id))
+        if (contact.avatar):
+            self.response.headers['Content-Type'] = "image/png"
+            self.response.out.write(contact.avatar)
+        else:
+            self.redirect(self.request.host_url + '/static/img/default_avatar.gif')
 
-class UserFriendsForm(djangoforms.ModelForm):
-  """Represents django form for entering user's friends."""
+class ContactsListPage(webapp.RequestHandler):
+    """
+    Display a page that lists all the contacts associated with
+    the specifies user account.
+    """
 
-  class Meta:
-    model = datastore.UserFriends
-    exclude = ['deleted', 'username']
+    def get(self):
+        contacts = datastore.Contact.all()
+        template_values = {
+                'contacts': contacts,
+                'username': 'user'
+                }
 
-
-class UserFriendsInsertPage(webapp.RequestHandler):
-  """Inserts user's new friends. GET shows a blank form, POST processes it."""
-
-  def get(self):
-    user = self.request.get('user')
-    self.response.out.write('<html><body>'
-                            '<form method="POST" '
-                            'action="/add_friend">'
-                            '<table>')
-    # This generates our shopping list form and writes it in the response
-    self.response.out.write(UserFriendsForm())
-    self.response.out.write('</table>'
-                            '<input type = hidden name = "user" value = "%s">'
-                            '<input type="submit">'
-                            '</form></body></html>' % user)
-
-  def post(self):
-    data = UserFriendsForm(data=self.request.POST)
-    if data.is_valid():
-      user = self.request.get('user')
-      # Save the data, and redirect to the view page
-      entity = data.save(commit=False)
-      entity.username = user
-      query = datastore.UserFriends.all()
-      query.filter('username = ', user)
-      query.filter('friend_handle = ', entity.friend_handle)
-      result = query.get()
-      if result:
-	result.deleted = False
-	result.updated = datetime.datetime.utcnow()
-	result.put()
-      else:
-        entity.deleted = False
-        entity.put()
-      self.redirect('/user_friends?user=' + user)
-    else:
-      # Reprint the form
-      self.response.out.write('<html><body>'
-                              '<form method="POST" '
-                              'action="/add_friend">'
-                              '<table>')
-      self.response.out.write(data)
-      self.response.out.write('</table>'
-                              '<input type="submit">'
-                              '</form></body></html>')
-
-
-class UserFriendsListPage(webapp.RequestHandler):
-  """Lists all friends for a user. In addition displays links for removing
-     friends and adding new friends."""
-
-  def get(self):
-    user = self.request.get('user')
-    query = datastore.UserFriends.all()
-    query.filter('deleted = ', False)
-    query.filter('username = ', user)
-    friends = query.fetch(50)
-    template_values = {
-        'friends': friends,
-        'user': user
-        }
-    path = os.path.join(os.path.dirname(__file__),
-                        'templates', 'view_friends.html')
-    self.response.out.write(template.render(path, template_values))
-
-
-class DeleteFriendPage(webapp.RequestHandler):
-  """Processes delete friend request."""
-
-  def get(self):
-    user = self.request.get('user')
-    friend = self.request.get('friend')
-    query = datastore.UserFriends.all()
-    query.filter('username =', user)
-    query.filter('friend_handle =', friend)
-    result = query.get()
-    result.deleted = True
-    result.updated = datetime.datetime.utcnow()
-    result.put()
-
-    self.redirect('/user_friends?user=' + user)
+        path = os.path.join(os.path.dirname(__file__), 'templates', 'contacts.html')
+        self.response.out.write(template.render(path, template_values))
 
 
 def main():
-  application = webapp.WSGIApplication(
-      [('/add_user', UserInsertPage),
-       ('/users', UsersListPage),
-       ('/add_credentials', UserCredentialsInsertPage),
-       ('/add_friend', UserFriendsInsertPage),
-       ('/user_friends', UserFriendsListPage),
-       ('/delete_friend', DeleteFriendPage),
-       ('/edit_user', UserEditPage)
-      ],
-      debug=True)
-  wsgiref.handlers.CGIHandler().run(application)
+    application = webapp.WSGIApplication(
+        [('/', ContactsListPage),
+         ('/add_contact', ContactInsertPage),
+         ('/edit_contact', ContactEditPage),
+         ('/delete_contact', ContactDeletePage),
+         ('/avatar', AvatarViewPage),
+         ('/edit_avatar', AvatarEditPage)
+        ],
+        debug=True)
+    wsgiref.handlers.CGIHandler().run(application)
 
 if __name__ == '__main__':
   main()

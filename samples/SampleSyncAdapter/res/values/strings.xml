@@ -20,7 +20,7 @@
     xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <!-- Label for this package -->
     <string
-        name="label">SamplesyncAdapter</string>
+        name="label">Sample SyncAdapter</string>
 
     <!-- Permission label -->
     <string
@@ -90,4 +90,16 @@
         name="profile_action">Sample profile</string>
     <string
         name="view_profile">View Profile</string>
+
+    <string name="header_account_type">SampleSync contact</string>
+
+    <string name="label_name">Name</string>
+    <string name="label_phone_home">Home Phone</string>
+    <string name="label_phone_mobile">Mobile Phone</string>
+    <string name="label_phone_work">Work Phone</string>
+    <string name="label_email">Email</string>
+    <string
+        name="menu_done">Done</string>
+    <string
+        name="menu_cancel">Cancel</string>
 </resources>

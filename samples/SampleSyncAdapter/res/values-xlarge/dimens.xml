@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
 /**
- * Copyright (c) 2010, The Android Open Source Project
+ * Copyright (c) 2011, The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,18 +16,9 @@
  * limitations under the License.
  */
 -->
+<resources>
 
-<ContactsSource
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    editContactActivity="com.example.android.samplesync.editor.ContactEditorActivity"
-    createContactActivity="com.example.android.samplesync.editor.ContactEditorActivity"
->
+    <!-- Font size used for the contact name in the editor -->
+    <dimen name="contact_name_text_size">26sp</dimen>
 
-    <ContactsDataKind
-        android:mimeType="vnd.android.cursor.item/vnd.samplesyncadapter.profile"
-        android:icon="@drawable/icon"
-        android:summaryColumn="data2"
-        android:detailColumn="data3"
-        android:detailSocialSummary="true" />
-
-</ContactsSource>
+</resources>
