@@ -27,7 +27,6 @@ public:
     Var() :
         m_name(""),
         m_type(NULL),
-        m_pointer(false),
         m_lenExpression(""),
         m_pointerDir(POINTER_IN),
         m_nullAllowed(false),
@@ -38,13 +37,11 @@ public:
 
     Var(const std::string & name,
         const VarType * vartype,
-        bool isPointer,
         const std::string & lenExpression,
         PointerDir dir,
         const std::string &packExpression) :
         m_name(name),
         m_type(const_cast<VarType *>(vartype)),
-        m_pointer(isPointer),
         m_lenExpression(lenExpression),
         m_pointerDir(dir),
         m_nullAllowed(false),
@@ -53,11 +50,10 @@ public:
     }
 
     void init(const std::string name, const VarType * vartype,
-              bool isPointer, std::string lenExpression,
+              std::string lenExpression,
               PointerDir dir, std::string packExpression) {
         m_name = name;
         m_type = vartype;
-        m_pointer = isPointer;
         m_lenExpression = lenExpression;
         m_packExpression = packExpression;
         m_pointerDir = dir;
@@ -67,8 +63,8 @@ public:
 
     const std::string & name() const { return m_name; }
     const VarType * type() const { return m_type; }
-    bool isPointer() const { return m_pointer; }
-    bool isVoid() const { return ((m_type->bytes() == 0) && (m_pointer == false)); }
+    bool isPointer() const { return m_type->isPointer(); }
+    bool isVoid() const { return ((m_type->bytes() == 0) && (!m_type->isPointer())); }
     const std::string & lenExpression() const { return m_lenExpression; }
     const std::string & packExpression() const { return(m_packExpression); }
     void setLenExpression(const std::string & lenExpression) { m_lenExpression = lenExpression; }
@@ -77,7 +73,7 @@ public:
     PointerDir pointerDir() { return m_pointerDir; }
     void setNullAllowed(bool state) { m_nullAllowed = state; }
     bool nullAllowed() const { return m_nullAllowed; }
-    void printType(FILE *fp) { fprintf(fp, "%s%s", m_type->name().c_str(), m_pointer ? "*" : ""); }
+    void printType(FILE *fp) { fprintf(fp, "%s", m_type->name().c_str()); }
     void printTypeName(FILE *fp) { printType(fp); fprintf(fp, " %s", m_name.c_str()); }
 
 private:

@@ -50,12 +50,12 @@ public:
 class VarType {
 public:
     VarType() :
-        m_id(0), m_name("default_constructed"), m_converter(NULL), m_printFomrat("0x%x")
+        m_id(0), m_name("default_constructed"), m_converter(NULL), m_printFomrat("0x%x"), m_isPointer(false)
     {
     }
 
-    VarType(size_t id, const std::string & name, const VarConverter * converter, const std::string & printFormat ) :
-        m_id(id), m_name(name), m_converter(const_cast<VarConverter *>(converter)), m_printFomrat(printFormat)
+    VarType(size_t id, const std::string & name, const VarConverter * converter, const std::string & printFormat , const bool isPointer) :
+        m_id(id), m_name(name), m_converter(const_cast<VarConverter *>(converter)), m_printFomrat(printFormat), m_isPointer(isPointer)
     {
     }
 
@@ -65,12 +65,14 @@ public:
     const std::string & name() const { return m_name; }
     const std::string & printFormat() const { return m_printFomrat; }
     size_t bytes() const { return m_converter->bytes(); }
+    bool isPointer() const { return m_isPointer; }
     size_t id() const { return m_id; }
 private:
     size_t m_id;
     std::string m_name;
     VarConverter * m_converter;
     std::string m_printFomrat;
+    bool m_isPointer;
 };
 
 #endif
