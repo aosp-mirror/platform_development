@@ -14,14 +14,16 @@
  * limitations under the License.
  */
 
-package com.example.android.apis.app;
+package com.example.android.apis.support.app;
 
-import android.app.Activity;
-import android.app.FragmentManager;
-import android.app.ListFragment;
-import android.app.LoaderManager;
-import android.content.CursorLoader;
-import android.content.Loader;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.ListFragment;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
+import android.support.v4.widget.SimpleCursorAdapter;
+
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
@@ -33,22 +35,19 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ListView;
-import android.widget.SearchView;
-import android.widget.SimpleCursorAdapter;
-import android.widget.SearchView.OnQueryTextListener;
 
 /**
- * Demonstration of more complex use if a ListFragment, including showing
- * an empty view and loading progress.
+ * Demonstration of the use of a CursorLoader to load and display contacts
+ * data in a fragment.
  */
-public class FragmentListCursorLoader extends Activity {
+public class LoaderCursorSupport extends FragmentActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        FragmentManager fm = getFragmentManager();
-        
+        FragmentManager fm = getSupportFragmentManager();
+
         // Create the list fragment and add it as our sole content.
         if (fm.findFragmentById(android.R.id.content) == null) {
             CursorLoaderListFragment list = new CursorLoaderListFragment();
@@ -58,7 +57,7 @@ public class FragmentListCursorLoader extends Activity {
 
 //BEGIN_INCLUDE(fragment_cursor)
     public static class CursorLoaderListFragment extends ListFragment
-            implements OnQueryTextListener, LoaderManager.LoaderCallbacks<Cursor> {
+            implements LoaderManager.LoaderCallbacks<Cursor> {
 
         // This is the Adapter being used to display the list's data.
         SimpleCursorAdapter mAdapter;
@@ -82,7 +81,7 @@ public class FragmentListCursorLoader extends Activity {
                     new String[] { Contacts.DISPLAY_NAME, Contacts.CONTACT_STATUS },
                     new int[] { android.R.id.text1, android.R.id.text2 }, 0);
             setListAdapter(mAdapter);
-            
+
             // Prepare the loader.  Either re-connect with an existing one,
             // or start a new one.
             getLoaderManager().initLoader(0, null, this);
@@ -90,12 +89,12 @@ public class FragmentListCursorLoader extends Activity {
 
         @Override public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
             // Place an action bar item for searching.
-            MenuItem item = menu.add("Search");
-            item.setIcon(android.R.drawable.ic_menu_search);
-            item.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
-            SearchView sv = new SearchView(getActivity());
-            sv.setOnQueryTextListener(this);
-            item.setActionView(sv);
+            //MenuItem item = menu.add("Search");
+            //item.setIcon(android.R.drawable.ic_menu_search);
+            //item.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
+            //SearchView sv = new SearchView(getActivity());
+            //sv.setOnQueryTextListener(this);
+            //item.setActionView(sv);
         }
 
         public boolean onQueryTextChange(String newText) {
@@ -107,11 +106,6 @@ public class FragmentListCursorLoader extends Activity {
             return true;
         }
 
-        @Override public boolean onQueryTextSubmit(String query) {
-            // Don't care about this.
-            return true;
-        }
-        
         @Override public void onListItemClick(ListView l, View v, int position, long id) {
             // Insert desired behavior here.
             Log.i("FragmentComplexList", "Item clicked: " + id);

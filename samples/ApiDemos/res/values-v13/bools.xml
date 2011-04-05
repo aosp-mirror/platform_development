@@ -15,12 +15,6 @@
 -->
 
 <resources>
-    <!-- This resource is true if running under at least Honeycomb's
-         API level.  The default value is false; an alternative value
-         for Honeycomb is true. -->
-    <bool name="atLeastHoneycomb">false</bool>
-    <!-- This resource is true if running under at least Ice Cream Sandwich's
-         API level.  The default value is false; an alternative value
-         for Ice Cream Sandwich is true. -->
-    <bool name="atLeastIceCreamSandwich">false</bool>
+    <!-- True if running under Ice Cream Sandwich or later. -->
+    <bool name="atLeastIceCreamSandwich">true</bool>
 </resources>
