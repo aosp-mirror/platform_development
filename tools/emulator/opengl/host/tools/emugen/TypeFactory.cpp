@@ -48,18 +48,18 @@ static VarConverter * getVarConverter(int size)
     return v;
 }
 
-#define ADD_TYPE(name, size, printformat)                                           \
-    g_varMap.insert(std::pair<std::string, VarType>(name, VarType(g_typeId++, name, &g_var##size,printformat)));
+#define ADD_TYPE(name, size, printformat,ispointer)                                           \
+    g_varMap.insert(std::pair<std::string, VarType>(name, VarType(g_typeId++, name, &g_var##size , printformat , ispointer)));
 
 void TypeFactory::initBaseTypes()
 {
     g_initialized = true;
-    ADD_TYPE("UNKNOWN", 0, "0x%x");
-    ADD_TYPE("void", 0, "0x%x");
-    ADD_TYPE("char", 8, "%c");
-    ADD_TYPE("int", 32, "%d");
-    ADD_TYPE("float", 32, "%d");
-    ADD_TYPE("short", 16, "%d");
+    ADD_TYPE("UNKNOWN", 0, "0x%x", false);
+    ADD_TYPE("void", 0, "0x%x", false);
+    ADD_TYPE("char", 8, "%c", false);
+    ADD_TYPE("int", 32, "%d", false);
+    ADD_TYPE("float", 32, "%d", false);
+    ADD_TYPE("short", 16, "%d", false);
 }
 
 int TypeFactory::initFromFile(const std::string &filename)
@@ -103,6 +103,25 @@ int TypeFactory::initFromFile(const std::string &filename)
             return -2;
         }
 
+        pos = last + 1;
+        std::string pointerDef;
+        pointerDef = getNextToken(str, pos, &last, WHITESPACE);
+        if (pointerDef.size() == 0) {
+            fprintf(stderr, "Error: %d : missing ispointer definition\n", lc);
+            return -2;
+        }
+
+        bool isPointer=false;
+        if (std::string("true")==pointerDef)
+          isPointer = true;
+        else if (std::string("false")==pointerDef)
+          isPointer = false;
+        else
+        {
+          fprintf(stderr, "Error: %d : invalid isPointer definition, must be either \"true\" or \"false\"\n", lc);
+          return -2;
+        }
+
         VarConverter *v = getVarConverter(atoi(size.c_str()));
         if (v == NULL) {
             fprintf(stderr, "Error: %d : unknown var width: %d\n", lc, atoi(size.c_str()));
@@ -114,7 +133,7 @@ int TypeFactory::initFromFile(const std::string &filename)
                     "Warining: %d : type %s is already known, definition in line %d is taken\n",
                     lc, name.c_str(), lc);
         }
-        g_varMap.insert(std::pair<std::string, VarType>(name, VarType(g_typeId++, name, v ,printString)));
+        g_varMap.insert(std::pair<std::string, VarType>(name, VarType(g_typeId++, name, v ,printString,isPointer)));
     }
     g_initialized = true;
     return 0;
