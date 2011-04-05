@@ -178,6 +178,8 @@
 
     <string name="fragment_stack_support">Support/App/Fragment/Stack</string>
 
+    <string name="fragment_pager_support">Support/App/Fragment/Pager</string>
+
     <string name="loader_throttle">App/Loader/Throttle</string>
     
     <string name="loader_throttle_support">Support/Loader/Throttle</string>

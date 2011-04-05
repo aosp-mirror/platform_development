@@ -475,6 +475,14 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".support.app.FragmentPagerSupport"
+                android:label="@string/fragment_pager_support">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
         <!-- Loader Samples -->
 
 <!-- BEGIN_INCLUDE(loader_throttle) -->
