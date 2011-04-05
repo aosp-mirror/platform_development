@@ -4,6 +4,7 @@ GLOBAL
 	
 #void glClipPlanef(GLenum plane, GLfloat *equation)
 glClipPlanef
+  dir equation in
 	len equation (4 * sizeof(float))
 
 #void glFogfv(GLenum pname, GLfloat *params)
@@ -73,11 +74,13 @@ glBufferData
 
 #void glBufferSubData(GLenum target, GLintptr offset, GLsizeiptr size, GLvoid *data)
 glBufferSubData
+	dir data in
 	len data size
 
-#void glClipPlanex(GLenum plane, GLfixed *equation)
+#void glClipPlanex(GLenum plane, GLfixed *eqn)
 glClipPlanex
-	len equation (4 * sizeof(GLfixed))
+	dir eqn in
+	len eqn (4 * sizeof(GLfixed))
 
 #void glColorPointer(GLint size, GLenum type, GLsizei stride, GLvoid *pointer)
 #we treat the pointer as offset to a VBO
@@ -120,6 +123,7 @@ glGetBooleanv
 #void glGetBufferParameteriv(GLenum target, GLenum pname, GLint *params)
 glGetBufferParameteriv
 	len params (sizeof(GLint))
+	dir params out
 
 #void glGenBuffers(GLsizei n, GLuint *buffers)
 glGenBuffers
@@ -133,6 +137,7 @@ glGenTextures
 
 #void glGetFixedv(GLenum pname, GLfixed *params)
 glGetFixedv
+	dir params out
 	len params (glUtilsParamSize(pname) * sizeof(GLfixed))
 
 #void glGetIntegerv(GLenum pname, GLint *params)
@@ -156,16 +161,17 @@ glGetPointerv
 
 #GLubyte* glGetString(GLenum name)
 glGetString
+  flag unsupported
 
 #void glGetTexEnviv(GLenum env, GLenum pname, GLint *params)
 glGetTexEnviv
-#FIXME
-	len params (4)
+	dir params out
+	len params (glUtilsParamSize(pname) * sizeof(GLint))
 
 #void glGetTexEnvxv(GLenum env, GLenum pname, GLfixed *params)
 glGetTexEnvxv
-#FIXME
-	len params (4)
+	dir params out
+	len params (glUtilsParamSize(pname) * sizeof(GLfixed))
 
 #void glGetTexParameteriv(GLenum target, GLenum pname, GLint *params)
 glGetTexParameteriv
@@ -227,7 +233,8 @@ glTexEnvxv
 
 #void glTexImage2D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, GLvoid *pixels)
 glTexImage2D
-	len pixels pixelDataSize(self, width, height, format, type, 1)
+	dir pixels in
+	len pixels (pixels == NULL ? 0 : pixelDataSize(self, width, height, format, type, 1))
 
 #void glTexParameteriv(GLenum target, GLenum pname, GLint *params)
 glTexParameteriv
@@ -239,13 +246,11 @@ glTexParameterxv
 
 #void glTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid *pixels)
 glTexSubImage2D
-#FIXME: this is bad
 	len pixels pixelDataSize(self, width, height, format, type, 1)
 
 #void glVertexPointer(GLint size, GLenum type, GLsizei stride, GLvoid *pointer)
 # we treat the pointer as an offset to a VBO
 glVertexPointer
-	len pointer (sizeof(unsigned int))
 	flag unsupported
 
 #void glPointSizePointerOES(GLenum type, GLsizei stride, GLvoid *pointer)
@@ -253,12 +258,10 @@ glPointSizePointerOES
 	len pointer (sizeof(unsigned int))
 	flag unsupported
 
-#void glGetClipPlanef(...)
+#void glGetClipPlanef(GLenum pname, GLfloat * eqn)
 glGetClipPlanef
-	flag unsupported
-#void glGetClipPlanex(...)
-glGetClipPlanex
-	flag unsupported
+	dir eqn out
+	len eqn (4 * sizeof(GLfloat))
 
 #void glVertexPointerData(GLint size, GLenum type, GLsizei stride, void *data, GLuint datalen)
 glVertexPointerData

@@ -37,7 +37,7 @@ void EntryPoint::reset()
     m_vars.empty();
 }
 
-bool parseTypeField(const std::string & f, std::string *vartype, bool *pointer_type, std::string *varname)
+bool parseTypeField(const std::string & f, std::string *vartype, std::string *varname)
 {
     size_t pos = 0, last;
     bool done = false;
@@ -45,7 +45,6 @@ bool parseTypeField(const std::string & f, std::string *vartype, bool *pointer_t
 
     *vartype = "";
     if (varname != NULL) *varname = "";
-    *pointer_type = false;
 
     enum { ST_TYPE, ST_NAME, ST_END } state = ST_TYPE;
 
@@ -61,13 +60,6 @@ bool parseTypeField(const std::string & f, std::string *vartype, bool *pointer_t
             } else {
                 // must be a type name;
                 *vartype = str;
-                // do we have an astriks at the end of the name?
-                if (vartype->at(vartype->size() - 1) == '*') {
-                    *pointer_type = true;
-                    // remove the astriks
-                    (*vartype)[vartype->size() - 1] = ' ';
-                    *vartype = trim(*vartype);
-                }
                 state = ST_NAME;
                 pos = last;
             }
@@ -76,14 +68,13 @@ bool parseTypeField(const std::string & f, std::string *vartype, bool *pointer_t
             if (str.size() == 0) {
                 done = true;
             } else if (str == "*") {
-                *pointer_type = true;
-                // remove the leading astriks;
+                (*vartype) += "*";
                 pos = last;
             } else if (varname == NULL) {
                 done = true;
             } else {
-                if (str[0] == '*') {
-                    *pointer_type = true;
+                while (str[0] == '*') {
+                    (*vartype) += "*";
                     str[0] = ' ';
                     str = trim(str);
                 }
@@ -116,8 +107,7 @@ bool EntryPoint::parse(unsigned int lc, const std::string & str)
     // return type
     field = getNextToken(linestr, pos, &last, ",)");
     std::string retTypeName;
-    bool pointer_type;
-    if (!parseTypeField(field, &retTypeName, &pointer_type, NULL)) {
+    if (!parseTypeField(field, &retTypeName, NULL)) {
         fprintf(stderr, "line: %d: Parsing error in field <%s>\n", lc, field.c_str());
         return false;
     }
@@ -127,7 +117,7 @@ bool EntryPoint::parse(unsigned int lc, const std::string & str)
         fprintf(stderr, "UNKNOWN retval: %s\n", linestr.c_str());
     }
 
-    m_retval.init(std::string(""), theType, pointer_type, std::string(""), Var::POINTER_OUT, std::string(""));
+    m_retval.init(std::string(""), theType, std::string(""), Var::POINTER_OUT, std::string(""));
 
     // function name
     m_name = getNextToken(linestr, pos, &last, ",)");
@@ -138,7 +128,7 @@ bool EntryPoint::parse(unsigned int lc, const std::string & str)
     while (pos < linestr.size() - 1) {
         field = getNextToken(linestr, pos, &last, ",)");
         std::string vartype, varname;
-        if (!parseTypeField(field, &vartype, &pointer_type, &varname)) {
+        if (!parseTypeField(field, &vartype, &varname)) {
             fprintf(stderr, "line: %d: Parsing error in field <%s>\n", lc, field.c_str());
             return false;
         }
@@ -148,13 +138,13 @@ bool EntryPoint::parse(unsigned int lc, const std::string & str)
             fprintf(stderr, "%d: Unknown type: %s\n", lc, vartype.c_str());
         } else {
             if (varname == "" &&
-                !(v->name() == "void" && !pointer_type)) {
+                !(v->name() == "void" && !v->isPointer())) {
                 std::ostringstream oss;
                 oss << "var" << nvars;
                 varname = oss.str();
             }
 
-            m_vars.push_back(Var(varname, v, pointer_type, std::string(""), Var::POINTER_IN, ""));
+            m_vars.push_back(Var(varname, v, std::string(""), Var::POINTER_IN, ""));
         }
         pos = last + 1;
     }
@@ -166,9 +156,8 @@ void EntryPoint::print(FILE *fp, bool newline,
                        const std::string & name_prefix,
                        const std::string & ctx_param ) const
 {
-    fprintf(fp, "%s%s %s%s%s(",
+    fprintf(fp, "%s %s%s%s(",
             m_retval.type()->name().c_str(),
-            m_retval.isPointer() ? "*" : "",
             name_prefix.c_str(),
             m_name.c_str(),
             name_suffix.c_str());
@@ -178,8 +167,7 @@ void EntryPoint::print(FILE *fp, bool newline,
     for (size_t i = 0; i < m_vars.size(); i++) {
         if (m_vars[i].isVoid()) continue;
         if (i != 0 || ctx_param != "") fprintf(fp, ", ");
-        fprintf(fp, "%s %s%s", m_vars[i].type()->name().c_str(),
-                m_vars[i].isPointer() ? "*" : "",
+        fprintf(fp, "%s %s", m_vars[i].type()->name().c_str(),
                 m_vars[i].name().c_str());
     }
     fprintf(fp, ")%s", newline? "\n" : "");
