@@ -18,7 +18,7 @@ LOCAL_SRC_FILES := \
         GLDecoder.cpp
 
 LOCAL_C_INCLUDES += \
-    $(emulatorOpengl)/system/OpenglCodecCommon \
+    $(emulatorOpengl)/shared/OpenglCodecCommon \
     $(emulatorOpengl)/system/GLESv1_enc
 
 LOCAL_STATIC_LIBRARIES := \
