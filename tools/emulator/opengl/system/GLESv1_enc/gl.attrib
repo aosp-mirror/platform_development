@@ -293,6 +293,18 @@ glTexCoordPointerData
 	flag custom_decoder
 	custom_pack data glUtilsPackPointerData((unsigned char *)ptr, (unsigned char *)data, size, type, stride, datalen)
 
+#void glWeightPointerData(GLint size, GLenum type, GLsizei stride,  void * data, GLuint datalen)
+glWeightPointerData
+  len data datalen
+  custom_pack data glUtilsPackPointerData((unsigned char *)ptr, (unsigned char*)data, size, type, stride, datalen)
+  flag custom_decoder
+
+#void glMatrixIndexPointerData(GLint size, GLenum type, GLsizei stride,  void * data, GLuint datalen)
+glMatrixIndexPointerData
+  len data datalen
+  custom_pack data glUtilsPackPointerData((unsigned char *)ptr, (unsigned char*)data, size, type, stride, datalen)
+  flag custom_decoder
+
 glVertexPointerOffset
 	flag custom_decoder
 glNormalPointerOffset
@@ -303,6 +315,10 @@ glPointSizePointerOffset
 	flag custom_decoder
 glColorPointerOffset
 	flag custom_decoder
+glWeightPointerOffset
+  flag custom_decoder
+glMatrixIndexPointerOffset
+  flag custom_decoder
 
 glDrawElementsData
 	len data datalen
@@ -311,7 +327,14 @@ glDrawElementsData
 glDrawElementsOffset
 	flag custom_decoder
 
-	
+glGetCompressedTextureFormats
+	dir formats out
+	len formats (count * sizeof(GLint))
+	flag custom_decoder
+
+
+#gles1 extensions
+
 #void glDrawTexsvOES(GLshort *coords)
 glDrawTexsvOES
 	len coords (5 * sizeof(GLshort))
@@ -328,13 +351,30 @@ glDrawTexxvOES
 glDrawTexfvOES
 	len coords (5 * sizeof(GLfloat))
 
-#void glClipPlanexOES(GLenum plane, GLfixed *equation)
+#glClipPlanexOES(GLenum plane, const GLfixed * equation)
 glClipPlanexOES
+	dir equation in
+	len equation (4 * sizeof(GLfixed))
+
+#glClipPlanexIMG(GLenum plane, const GLfixed * equation)
+glClipPlanexIMG
+	dir equation in
 	len equation (4 * sizeof(GLfixed))
 
 #void glFogxvOES(GLenum pname, GLfixed *params)
 glFogxvOES
+	dir params in
 	len params (glUtilsParamSize(pname) * sizeof(GLfixed))
+
+#void glGetClipPlanexOES(GLenum pname,  GLfixed * eqn)
+glGetClipPlanexOES
+	dir eqn out
+	len eqn (4 * sizeof(GLfixed))
+
+#void glGetClipPlanex(GLenum pname,  GLfixed * eqn)
+glGetClipPlanex
+	dir eqn out
+	len eqn (4 * sizeof(GLfixed))
 
 #void glGetFixedvOES(GLenum pname, GLfixed *params)
 glGetFixedvOES
@@ -363,42 +403,52 @@ glGetTexParameterxvOES
 
 #void glLightModelxvOES(GLenum pname, GLfixed *params)
 glLightModelxvOES
+	dir params in
 	len params (glUtilsParamSize(pname) * sizeof(GLfixed))
 
 #void glLightxvOES(GLenum light, GLenum pname, GLfixed *params)
 glLightxvOES
+	dir params in
 	len params (glUtilsParamSize(pname) * sizeof(GLfixed))
 
 #void glLoadMatrixxOES(GLfixed *m)
 glLoadMatrixxOES
+	dir m in
 	len m (16 * sizeof(GLfixed))
 
 #void glMaterialxvOES(GLenum face, GLenum pname, GLfixed *params)
 glMaterialxvOES
+	dir params in
 	len params (glUtilsParamSize(pname) * sizeof(GLfixed))
 
 #void glMultMatrixxOES(GLfixed *m)
 glMultMatrixxOES
+	dir m in
 	len m (16 * sizeof(GLfixed))
 
 #void glPointParameterxvOES(GLenum pname, GLfixed *params)
 glPointParameterxvOES
+	dir params in
 	len params (glUtilsParamSize(pname) * sizeof(GLfixed))
 
 #void glTexEnvxvOES(GLenum target, GLenum pname, GLfixed *params)
 glTexEnvxvOES
+	dir params in
 	len params (glUtilsParamSize(pname) * sizeof(GLfixed))
 
 #void glTexParameterxvOES(GLenum target, GLenum pname, GLfixed *params)
 glTexParameterxvOES
+	dir params in
 	len params (glUtilsParamSize(pname) * sizeof(GLfixed))
 
 #void glDeleteRenderbuffersOES(GLsizei n, GLuint *renderbuffers)
 glDeleteRenderbuffersOES
+	dir renderbuffers in
 	len renderbuffers (n * sizeof(GLuint))
 
 #void glGenRenderbuffersOES(GLsizei n, GLuint *renderbuffers)
 glGenRenderbuffersOES
+	dir renderbuffers in
 	len renderbuffers (n * sizeof(GLuint))
 
 #void glGetRenderbufferParameterivOES(GLenum target, GLenum pname, GLint *params)
@@ -408,10 +458,12 @@ glGetRenderbufferParameterivOES
 
 #void glDeleteFramebuffersOES(GLsizei n, GLuint *framebuffers)
 glDeleteFramebuffersOES
+	dir framebuffers in
 	len framebuffers (n * sizeof(GLuint))
 
 #void glGenFramebuffersOES(GLsizei n, GLuint *framebuffers)
 glGenFramebuffersOES
+	dir framebuffers out
 	len framebuffers (n * sizeof(GLuint))
 
 #void glGetFramebufferAttachmentParameterivOES(GLenum target, GLenum attachment, GLenum pname, GLint *params)
@@ -423,28 +475,55 @@ glGetFramebufferAttachmentParameterivOES
 glMapBufferOES
 	flag unsupported
 
+#void glGetBufferPointervOES(GLenum target, GLenum pname, GLvoid ** params)
+glGetBufferPointervOES
+	flag unsupported
+
 #void glMatrixIndexPointerOES(GLint size, GLenum type, GLsizei stride, GLvoid *pointer)
 glMatrixIndexPointerOES
+	len pointer (sizeof(unsigned int))
 	flag unsupported
 
 #void glWeightPointerOES(GLint size, GLenum type, GLsizei stride, GLvoid *pointer)
 glWeightPointerOES
+	len pointer (sizeof(unsigned int))
 	flag unsupported
+
+#glQueryMatrixxOES(GLfixed * mantissa, GLint * exponent)
+glQueryMatrixxOES
+	dir mantissa out
+	len mantissa (16 * sizeof(GLfixed))
+	dir exponent out
+	len exponent (16 * sizeof(GLfixed))
 
 #void glClipPlanefOES(GLenum plane, GLfloat *equation)
 glClipPlanefOES
+	dir equation in
 	len equation (4 * sizeof(GLfloat))
+
+#void glClipPlanefIMG(GLenum plane, GLfloat *equation)
+glClipPlanefIMG
+	dir equation in
+	len equation (4 * sizeof(GLfloat))
+
+#void glGetClipPlanefOES(GLenum pname, GLfloat * eqn)
+glGetClipPlanefOES
+	dir eqn out
+	len eqn (4 * sizeof(GLfloat))
 
 #void glTexGenfvOES(GLenum coord, GLenum pname, GLfloat *params)
 glTexGenfvOES
+	dir params out
 	len params (glUtilsParamSize(pname) * sizeof(GLfloat))
 
 #void glTexGenivOES(GLenum coord, GLenum pname, GLint *params)
 glTexGenivOES
+	dir params out
 	len params (glUtilsParamSize(pname) * sizeof(GLint))
 
 #void glTexGenxvOES(GLenum coord, GLenum pname, GLfixed *params)
 glTexGenxvOES
+	dir params out
 	len params (glUtilsParamSize(pname) * sizeof(GLfixed))
 
 #void glGetTexGenfvOES(GLenum coord, GLenum pname, GLfloat *params)
@@ -462,18 +541,123 @@ glGetTexGenxvOES
 	dir params out
 	len params (glUtilsParamSize(pname) * sizeof(GLfixed))
 
-#glGetClipPlanexOES(...)
-glGetClipPlanexOES
+#void glDeleteVertexArraysOES(GLsizei n, const GLuint *arrays)
+glDeleteVertexArraysOES
+	dir arrays in
+	len arrays (n * sizeof(GLuint))
+
+#void glGenVertexArraysOES(GLsizei n, GLuint *arrays)
+glGenVertexArraysOES
+	dir arrays out
+	len arrays (n * sizeof(GLuint))
+
+#void glDiscardFramebufferEXT(GLenum target, GLsizei numAttachments, const GLenum *attachments)
+glDiscardFramebufferEXT
+	dir attachments in
+	len attachments (numAttachments * sizeof(const GLenum))
+
+#void glMultiDrawArraysEXT(GLenum mode, GLint *first, GLsizei *count, GLsizei primcount)
+glMultiDrawArraysEXT
 	flag unsupported
-#glGetClipPlanefOES(...)
-glGetClipPlanefOES
+	
+#void glMultiDrawElementsEXT(GLenum mode, const GLsizei *count, GLenum type, const GLvoid* *indices, GLsizei primcount)
+glMultiDrawElementsEXT
 	flag unsupported
 
-#glQueryMatrixxOES
-glQueryMatrixxOES
+#void glMultiDrawArraysSUN(GLenum mode, GLint *first, GLsizei *count, GLsizei primcount)
+glMultiDrawArraysSUN
+	flag unsupported
+	
+#void glMultiDrawElementsSUN(GLenum mode, const GLsizei *count, GLenum type, const GLvoid* *indices, GLsizei primcount)
+glMultiDrawElementsSUN
 	flag unsupported
 
-glGetCompressedTextureFormats
-	dir formats out
-	len formats (count * sizeof(GLint))
-	flag custom_decoder
+#void glDeleteFencesNV(GLsizei n, const GLuint *fences)
+glDeleteFencesNV
+	dir fences in
+	len fences (n * sizeof(GLuint))
+
+#void glGenFencesNV(GLsizei n, GLuint *fences)
+glGenFencesNV
+	dir fences in
+	len fences (n * sizeof(GLuint))
+
+#void glGetFenceivNV(GLuint fence, GLenum pname, GLint *params)
+glGetFenceivNV
+	dir params out
+	len params (glUtilsParamSize(pname) * sizeof(GLint))
+
+#void glGetDriverControlsQCOM(GLint *num, GLsizei size, GLuint *driverControls)
+glGetDriverControlsQCOM
+	dir num out
+	len num (1 * sizeof(GLint))
+	dir driverControls out
+	len driverControls (size * sizeof(GLuint))
+
+#void glGetDriverControlStringQCOM(GLuint driverControl, GLsizei bufSize, GLsizei *length, GLchar *driverControlString)
+glGetDriverControlStringQCOM
+	dir length out
+	len length (1 * sizeof(GLsizei))
+	dir driverControlString out
+	len driverControlString (1 * sizeof(GLchar))
+
+#void glExtGetTexturesQCOM(GLuint *textures, GLint maxTextures, GLint *numTextures)
+glExtGetTexturesQCOM
+	dir textures out
+	len textures (maxTextures * sizeof(GLuint))
+	dir numTextures out
+	len numTextures (1 * sizeof(GLint))
+
+#void glExtGetBuffersQCOM(GLuint *buffers, GLint maxBuffers, GLint *numBuffers)
+glExtGetBuffersQCOM
+	dir buffers out
+	len buffers (maxBuffers * sizeof(GLuint))
+	dir numBuffers out
+	len numBuffers (1 * sizeof(GLint))
+
+#void glExtGetRenderbuffersQCOM(GLuint *renderbuffers, GLint maxRenderbuffers, GLint *numRenderbuffers)
+glExtGetRenderbuffersQCOM
+	dir renderbuffers out
+	len renderbuffers (maxRenderbuffers * sizeof(GLuint))
+	dir numRenderbuffers out
+	len numRenderbuffers (1 * sizeof(GLint))
+
+#void glExtGetFramebuffersQCOM(GLuint *framebuffers, GLint maxFramebuffers, GLint *numFramebuffers)
+glExtGetFramebuffersQCOM
+	dir framebuffers out
+	len framebuffers (maxFramebuffers * sizeof(GLuint))
+	dir numFramebuffers out
+	len numFramebuffers (1 * sizeof(GLint))
+
+#void glExtGetTexLevelParameterivQCOM(GLuint texture, GLenum face, GLint level, GLenum pname, GLint *params)
+glExtGetTexLevelParameterivQCOM
+	dir params out
+	len params (glUtilsParamSize(pname) * sizeof(GLint))
+
+#void glExtGetTexSubImageQCOM(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type, GLvoid *texels)
+glExtGetTexSubImageQCOM
+	dir texels out
+	len texels (depth * pixelDataSize(self, width, height, format, type, 0))
+
+#void glExtGetBufferPointervQCOM(GLenum target, GLvoid **params)
+glExtGetBufferPointervQCOM
+	flag unsupported
+
+#void glExtGetShadersQCOM(GLuint *shaders, GLint maxShaders, GLint *numShaders)
+glExtGetShadersQCOM
+	dir shaders out
+	len shaders (maxShaders * sizeof(GLuint))
+	dir numShaders out
+	len numShaders (1 * sizeof(GLint))
+
+#void glExtGetProgramsQCOM(GLuint *programs, GLint maxPrograms, GLint *numPrograms)
+glExtGetProgramsQCOM
+	dir programs out
+	len programs (maxPrograms * sizeof(GLuint))
+	dir numPrograms out
+	len numPrograms (1 * sizeof(GLint))
+
+#void glExtGetProgramBinarySourceQCOM(GLuint program, GLenum shadertype, GLchar *source, GLint *length)
+glExtGetProgramBinarySourceQCOM
+	flag unsupported
+
