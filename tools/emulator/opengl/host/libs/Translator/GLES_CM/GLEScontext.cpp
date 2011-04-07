@@ -65,7 +65,7 @@ void GLEScontext::init() {
     m_initialized = true;
 }
 
-GLEScontext::GLEScontext():m_glError(GL_NO_ERROR),m_activeTexture(0),m_arrayBuffer(0),m_elementBuffer(0),m_minAvailableBuffer(1),m_pointsIndex(-1),m_initialized(false) {
+GLEScontext::GLEScontext():m_glError(GL_NO_ERROR),m_activeTexture(0),m_arrayBuffer(0),m_elementBuffer(0),m_pointsIndex(-1),m_initialized(false) {
 
     s_glDispatch.dispatchFuncs();
 
@@ -96,8 +96,9 @@ const GLvoid* GLEScontext::setPointer(GLenum arrType,GLint size,GLenum type,GLsi
     GLuint bufferName = m_arrayBuffer;
     if(bufferName) {
         unsigned int offset = reinterpret_cast<unsigned int>(data);
-        m_map[arrType]->setBuffer(size,type,stride,m_vbos[bufferName],offset);
-        return  static_cast<const unsigned char*>(m_vbos[bufferName]->getData()) +  offset;
+        GLESbuffer* vbo = static_cast<GLESbuffer*>(m_shareGroup->getObjectData(VERTEXBUFFER,bufferName).Ptr());
+        m_map[arrType]->setBuffer(size,type,stride,vbo,offset);
+        return  static_cast<const unsigned char*>(vbo->getData()) +  offset;
     }
     m_map[arrType]->setArray(size,type,stride,data);
     return data;
@@ -444,45 +445,12 @@ void GLEScontext::drawPointsElems(GLESFloatArrays& arrs,GLsizei count,GLenum typ
     drawPointsData(arrs,0,count,type,indices_in,true);
 }
 
-void GLEScontext:: genBuffers(GLsizei n,GLuint* buffers)
-{
-    int i = 0;
-    while(i < n) {
-        if(m_vbos.find(m_minAvailableBuffer) == m_vbos.end()) {
-           buffers[i++] = m_minAvailableBuffer;;
-           m_vbos[m_minAvailableBuffer] = new GLESbuffer();
-        }
-        m_minAvailableBuffer++;
-    }
-}
-
-void GLEScontext::deleteBuffers(GLsizei n,const GLuint* buffers) {
-    for(int i = 0; i < n ;i++) {
-       if(m_vbos.find(buffers[i]) != m_vbos.end()) {
-           if(m_vbos[buffers[i]]) delete m_vbos[buffers[i]];
-           if(buffers[i] < m_minAvailableBuffer) m_minAvailableBuffer = buffers[i];
-           m_vbos.erase(buffers[i]);
-       }
-    }
-}
-
 void GLEScontext::bindBuffer(GLenum target,GLuint buffer) {
     if(target == GL_ARRAY_BUFFER) {
         m_arrayBuffer = buffer;
     } else {
        m_elementBuffer = buffer;
     }
-    if(m_vbos.find(buffer) == m_vbos.end()) { // buffer name wasn't generated before
-        m_vbos[buffer] = new GLESbuffer();
-    }
-}
-
-//checks if there is buffer named "buffer" and if this buffer is binded
-bool GLEScontext::isBuffer(GLuint buffer) {
-    if(m_vbos.find(buffer) != m_vbos.end()) {
-       if(m_elementBuffer == buffer || m_arrayBuffer == buffer) return true;
-    }
-    return false;
 }
 
 //checks if any buffer is binded to target
@@ -501,28 +469,34 @@ GLuint GLEScontext::getBuffer(GLenum target) {
 GLvoid* GLEScontext::getBindedBuffer(GLenum target) {
     GLuint bufferName = getBuffer(target);
     if(!bufferName) return NULL;
-    return m_vbos[bufferName]->getData();
+    
+    GLESbuffer* vbo = static_cast<GLESbuffer*>(m_shareGroup->getObjectData(VERTEXBUFFER,bufferName).Ptr());
+    return vbo->getData();
 }
 
 void GLEScontext::getBufferSize(GLenum target,GLint* param) {
     GLuint bufferName = getBuffer(target);
-    *param = m_vbos[bufferName]->getSize();
+    GLESbuffer* vbo = static_cast<GLESbuffer*>(m_shareGroup->getObjectData(VERTEXBUFFER,bufferName).Ptr());
+    *param = vbo->getSize();
 }
 
 void GLEScontext::getBufferUsage(GLenum target,GLint* param) {
     GLuint bufferName = getBuffer(target);
-    *param = m_vbos[bufferName]->getUsage();
+    GLESbuffer* vbo = static_cast<GLESbuffer*>(m_shareGroup->getObjectData(VERTEXBUFFER,bufferName).Ptr());
+    *param = vbo->getUsage();
 }
 
 bool GLEScontext::setBufferData(GLenum target,GLsizeiptr size,const GLvoid* data,GLenum usage) {
     GLuint bufferName = getBuffer(target);
     if(!bufferName) return false;
-    return m_vbos[bufferName]->setBuffer(size,usage,data);
+    GLESbuffer* vbo = static_cast<GLESbuffer*>(m_shareGroup->getObjectData(VERTEXBUFFER,bufferName).Ptr());
+    return vbo->setBuffer(size,usage,data);
 }
 
 bool GLEScontext::setBufferSubData(GLenum target,GLintptr offset,GLsizeiptr size,const GLvoid* data) {
 
     GLuint bufferName = getBuffer(target);
     if(!bufferName) return false;
-    return m_vbos[bufferName]->setSubBuffer(offset,size,data);
+    GLESbuffer* vbo = static_cast<GLESbuffer*>(m_shareGroup->getObjectData(VERTEXBUFFER,bufferName).Ptr());
+    return vbo->setSubBuffer(offset,size,data);
 }

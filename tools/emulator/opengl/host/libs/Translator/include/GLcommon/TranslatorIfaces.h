@@ -27,6 +27,7 @@ typedef struct {
     void         (*deleteGLESContext)(GLEScontext*);
     void         (*flush)();
     void         (*finish)();
+    void         (*setShareGroup)(GLEScontext*,ShareGroupPtr);
 }GLESiface;
 
 

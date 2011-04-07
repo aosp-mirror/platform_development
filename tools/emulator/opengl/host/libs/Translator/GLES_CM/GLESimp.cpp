@@ -33,6 +33,7 @@ extern "C" {
 static void initContext(GLEScontext* ctx);
 static GLEScontext* createGLESContext();
 static void deleteGLESContext(GLEScontext* ctx);
+static void setShareGroup(GLEScontext* ctx,ShareGroupPtr grp);
 
 }
 
@@ -42,7 +43,8 @@ static GLESiface  s_glesIface = {
     initContext      :initContext,
     deleteGLESContext:deleteGLESContext,
     flush            :glFlush,
-    finish           :glFinish
+    finish           :glFinish,
+    setShareGroup    :setShareGroup
 };
 
 extern "C" {
@@ -59,6 +61,12 @@ static void deleteGLESContext(GLEScontext* ctx) {
     if(ctx) delete ctx;
 }
 
+static void setShareGroup(GLEScontext* ctx,ShareGroupPtr grp) {
+    if(ctx) {
+        ctx->setShareGroup(grp);
+    }
+}
+
 GLESiface* __translator_getIfaces(EGLiface* eglIface){
     s_eglIface = eglIface;
     return & s_glesIface;
@@ -73,7 +81,7 @@ GLESiface* __translator_getIfaces(EGLiface* eglIface){
             } else {                                                         \
                 fprintf(stderr,"Context wasn't initialized yet \n");         \
             }
- 
+
 
 #define GET_CTX()                                                            \
             GET_THREAD();                                                    \
@@ -100,7 +108,11 @@ GLESiface* __translator_getIfaces(EGLiface* eglIface){
 
 GL_API GLboolean GL_APIENTRY glIsBuffer(GLuint buffer) {
     GET_CTX_RET(GL_FALSE)
-    return ctx->isBuffer(buffer);
+    if(buffer && thrd->shareGroup.Ptr()) {
+       ObjectDataPtr objData = thrd->shareGroup->getObjectData(VERTEXBUFFER,buffer);
+       return objData.Ptr() ? ((GLESbuffer*)objData.Ptr())->wasBinded():GL_FALSE;
+    }
+    return GL_FALSE;
 }
 
 GL_API GLboolean GL_APIENTRY  glIsEnabled( GLenum cap) {
@@ -113,6 +125,9 @@ GL_API GLboolean GL_APIENTRY  glIsEnabled( GLenum cap) {
 
 GL_API GLboolean GL_APIENTRY  glIsTexture( GLuint texture) {
     GET_CTX_RET(GL_FALSE)
+    if(texture && thrd->shareGroup.Ptr()){
+        return thrd->shareGroup->isObject(TEXTURE,texture) ? GL_TRUE :GL_FALSE;
+    }
     return ctx->dispatcher().glIsTexture(texture);
 }
 
@@ -172,13 +187,32 @@ GL_API void GL_APIENTRY  glAlphaFuncx( GLenum func, GLclampx ref) {
 GL_API void GL_APIENTRY  glBindBuffer( GLenum target, GLuint buffer) {
     GET_CTX()
     SET_ERROR_IF(!GLESvalidate::bufferTarget(target),GL_INVALID_ENUM);
+
+    //if buffer wasn't generated before,generate one
+    if(thrd->shareGroup.Ptr() && !thrd->shareGroup->isObject(VERTEXBUFFER,buffer)){
+        thrd->shareGroup->genName(VERTEXBUFFER,buffer);
+        thrd->shareGroup->setObjectData(VERTEXBUFFER,buffer,ObjectDataPtr(new GLESbuffer()));
+    }
     ctx->bindBuffer(target,buffer);
+    GLESbuffer* vbo = (GLESbuffer*)thrd->shareGroup->getObjectData(VERTEXBUFFER,buffer).Ptr();
+    vbo->wasBinded();
 }
+
 
 GL_API void GL_APIENTRY  glBindTexture( GLenum target, GLuint texture) {
     GET_CTX()
     SET_ERROR_IF(!GLESvalidate::textureTarget(target),GL_INVALID_ENUM)
-    ctx->dispatcher().glBindTexture(target,texture);
+
+    GLuint globalTextureName = texture;
+    if(texture && thrd->shareGroup.Ptr()){
+        globalTextureName = thrd->shareGroup->getGlobalName(TEXTURE,texture);
+        //if texture wasn't generated before,generate one
+        if(!globalTextureName){
+            thrd->shareGroup->genName(TEXTURE,texture);
+            globalTextureName = thrd->shareGroup->getGlobalName(TEXTURE,texture);
+        }
+    }
+    ctx->dispatcher().glBindTexture(target,globalTextureName);
 }
 
 GL_API void GL_APIENTRY  glBlendFunc( GLenum sfactor, GLenum dfactor) {
@@ -340,12 +374,22 @@ GL_API void GL_APIENTRY  glCullFace( GLenum mode) {
 GL_API void GL_APIENTRY  glDeleteBuffers( GLsizei n, const GLuint *buffers) {
     GET_CTX()
     SET_ERROR_IF(n<0,GL_INVALID_VALUE);
-    ctx->deleteBuffers(n,buffers);
+    if(thrd->shareGroup.Ptr()) {
+        for(int i=0; i < n; i++){
+           thrd->shareGroup->deleteName(VERTEXBUFFER,buffers[i]);
+        }
+    }
 }
 
 GL_API void GL_APIENTRY  glDeleteTextures( GLsizei n, const GLuint *textures) {
     GET_CTX()
-    ctx->dispatcher().glDeleteTextures(n,textures);
+    if(thrd->shareGroup.Ptr()) {
+        for(int i=0; i < n; i++){
+           thrd->shareGroup->deleteName(TEXTURE,textures[i]);
+           const GLuint globalTextureName = thrd->shareGroup->getGlobalName(TEXTURE,textures[i]);
+           ctx->dispatcher().glDeleteTextures(1,&globalTextureName);
+        }
+    }
 }
 
 GL_API void GL_APIENTRY  glDepthFunc( GLenum func) {
@@ -490,12 +534,22 @@ GL_API void GL_APIENTRY  glFrustumx( GLfixed left, GLfixed right, GLfixed bottom
 GL_API void GL_APIENTRY  glGenBuffers( GLsizei n, GLuint *buffers) {
     GET_CTX()
     SET_ERROR_IF(n<0,GL_INVALID_VALUE);
-    ctx->genBuffers(n,buffers);
+    if(thrd->shareGroup.Ptr()) {
+        for(int i=0; i<n ;i++) {
+            buffers[i] = thrd->shareGroup->genName(VERTEXBUFFER);
+            //generating vbo object related to this buffer name
+            thrd->shareGroup->setObjectData(VERTEXBUFFER,buffers[i],ObjectDataPtr(new GLESbuffer()));
+        }
+    }
 }
 
 GL_API void GL_APIENTRY  glGenTextures( GLsizei n, GLuint *textures) {
-    GET_CTX()
-    ctx->dispatcher().glGenTextures(n,textures);
+    GET_CTX();
+    if(thrd->shareGroup.Ptr()) {
+        for(int i=0; i<n ;i++) {
+            textures[i] = thrd->shareGroup->genName(TEXTURE);
+        }
+    }
 }
 
 GL_API void GL_APIENTRY  glGetBooleanv( GLenum pname, GLboolean *params) {
