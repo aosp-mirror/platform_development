@@ -30,59 +30,188 @@ import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
 class Frame {
-    final Context startContext;
-    ArrayList<MessageData> calls = new ArrayList<MessageData>();
+    public final long filePosition;
+    private int callsCount;
 
-    Frame(final Context context) {
+    final Context startContext;
+    private ArrayList<MessageData> calls = new ArrayList<MessageData>();
+
+    Frame(final Context context, final long filePosition) {
         this.startContext = context.clone();
+        this.filePosition = filePosition;
+    }
+
+    void Add(final MessageData msgData) {
+        calls.add(msgData);
+    }
+
+    void IncreaseCallsCount() {
+        callsCount++;
+    }
+
+    Context ComputeContext(final MessageData call) {
+        Context ctx = startContext.clone();
+        for (int i = 0; i < calls.size(); i++)
+            if (call == calls.get(i))
+                return ctx;
+            else
+                ctx.ProcessMessage(calls.get(i).oriMsg);
+        assert false;
+        return ctx;
+    }
+
+    int Size() {
+        return callsCount;
+    }
+
+    MessageData Get(final int i) {
+        return calls.get(i);
+    }
+
+    ArrayList<MessageData> Get() {
+        return calls;
+    }
+
+    void Unload() {
+        if (calls == null)
+            return;
+        calls.clear();
+        calls = null;
+    }
+
+    void Load(final RandomAccessFile file) {
+        if (calls != null && calls.size() == callsCount)
+            return;
+        try {
+            Context ctx = startContext.clone();
+            calls = new ArrayList<MessageData>(callsCount);
+            final long oriPosition = file.getFilePointer();
+            file.seek(filePosition);
+            for (int i = 0; i < callsCount; i++) {
+                int len = file.readInt();
+                if (SampleView.targetByteOrder == ByteOrder.LITTLE_ENDIAN)
+                    len = Integer.reverseBytes(len);
+                final byte[] data = new byte[len];
+                file.read(data);
+                final Message oriMsg = Message.parseFrom(data);
+                final Message msg = ctx.ProcessMessage(oriMsg);
+                final MessageData msgData = new MessageData(Display.getCurrent(), msg, oriMsg, ctx);
+                msgData.attribs = ctx.serverVertex.fetchedAttribs;
+                calls.add(msgData);
+            }
+            file.seek(oriPosition);
+        } catch (IOException e) {
+            e.printStackTrace();
+            assert false;
+        }
     }
 }
 
 class DebugContext {
+    boolean uiUpdate = false;
     final int contextId;
     Context currentContext;
-    ArrayList<Frame> frames = new ArrayList<Frame>(128);
-    private Frame currentFrame;
+    private ArrayList<Frame> frames = new ArrayList<Frame>(128);
+    private Frame lastFrame;
+    private Frame loadedFrame;
+    private RandomAccessFile file;
 
     DebugContext(final int contextId) {
         this.contextId = contextId;
         currentContext = new Context(contextId);
-        frames.add(new Frame(currentContext));
-        currentFrame = frames.get(0);
+        try {
+            file = new RandomAccessFile(Integer.toHexString(contextId) + ".gles2dbg",
+                    "rw");
+            frames.add(new Frame(currentContext, file.getFilePointer()));
+
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            assert false;
+        } catch (IOException e) {
+            e.printStackTrace();
+            assert false;
+        }
+        lastFrame = frames.get(0);
+        loadedFrame = lastFrame;
     }
 
-    MessageData ProcessMessage(final Message oriMsg) {
-        currentContext.ProcessMessage(oriMsg);
-        Message msg = oriMsg;
-        if (currentContext.processed != null)
-            msg = currentContext.processed;
-        currentContext.processed = null;
-        MessageData msgData = new MessageData(Display.getCurrent(), msg, oriMsg, currentContext);
-        msgData.attribs = currentContext.serverVertex.fetchedAttribs;
-        currentFrame.calls.add(msgData);
+    /** Writes oriMsg to file, and formats into MessageData for current frame */
+    void ProcessMessage(final Message oriMsg) {
+        synchronized (file) {
+            final byte[] data = oriMsg.toByteArray();
+            final ByteBuffer len = ByteBuffer.allocate(4);
+            len.order(SampleView.targetByteOrder);
+            len.putInt(data.length);
+            try {
+                if (SampleView.targetByteOrder == ByteOrder.BIG_ENDIAN)
+                    file.writeInt(data.length);
+                else
+                    file.writeInt(Integer.reverseBytes(data.length));
+                file.write(data);
+            } catch (IOException e) {
+                e.printStackTrace();
+                assert false;
+            }
+        }
+
+        lastFrame.IncreaseCallsCount();
+        final Message msg = currentContext.ProcessMessage(oriMsg);
+        if (loadedFrame == lastFrame) {
+            final MessageData msgData = new MessageData(Display.getCurrent(), msg, oriMsg,
+                     currentContext);
+            msgData.attribs = currentContext.serverVertex.fetchedAttribs;
+            lastFrame.Add(msgData);
+            uiUpdate = true;
+        }
         if (msg.getFunction() != Function.eglSwapBuffers)
-            return msgData;
-        frames.add(currentFrame = new Frame(currentContext));
-        return msgData;
+            return;
+        synchronized (frames) {
+            if (loadedFrame != lastFrame)
+                lastFrame.Unload();
+            try {
+                frames.add(lastFrame = new Frame(currentContext, file.getFilePointer()));
+                // file.getChannel().force(false);
+                uiUpdate = true;
+            } catch (IOException e) {
+                e.printStackTrace();
+                assert false;
+            }
+        }
+        return;
     }
 
-    Context ComputeContext(final Frame frame, final MessageData call) {
-        Context ctx = frame.startContext.clone();
-        for (int i = 0; i < frame.calls.size(); i++)
-            if (call == frame.calls.get(i))
-                return ctx;
-            else
-                ctx.ProcessMessage(frame.calls.get(i).oriMsg);
-        assert false;
-        return ctx;
+    Frame GetFrame(int index) {
+        synchronized (frames) {
+            Frame newFrame = frames.get(index);
+            if (loadedFrame != null && loadedFrame != lastFrame && newFrame != loadedFrame) {
+                loadedFrame.Unload();
+                uiUpdate = true;
+            }
+            loadedFrame = newFrame;
+            synchronized (file) {
+                loadedFrame.Load(file);
+            }
+            return loadedFrame;
+        }
+    }
+
+    int FrameCount() {
+        synchronized (frames) {
+            return frames.size();
+        }
     }
 }
 
@@ -96,8 +225,6 @@ public class Context implements Cloneable {
     public GLServerTexture serverTexture = new GLServerTexture(this);
 
     byte[] readPixelRef = new byte[0];
-
-    Message processed = null; // return; processed Message
 
     public Context(int contextId) {
         this.contextId = contextId;
@@ -115,6 +242,7 @@ public class Context implements Cloneable {
             copy.serverShader = serverShader.clone(copy);
             copy.serverState = serverState.clone();
             copy.serverTexture = serverTexture.clone(copy);
+            copy.readPixelRef = readPixelRef.clone();
             return copy;
         } catch (CloneNotSupportedException e) {
             e.printStackTrace();
@@ -123,17 +251,21 @@ public class Context implements Cloneable {
         }
     }
 
-    public void ProcessMessage(Message msg) {
+    /** returns processed Message, which could be a new Message */
+    public Message ProcessMessage(Message msg) {
         if (serverVertex.Process(msg)) {
-            processed = serverVertex.processed;
-            return;
+            if (serverVertex.processed != null)
+                return serverVertex.processed;
+            else
+                return msg;
         }
         if (serverShader.ProcessMessage(msg))
-            return;
+            return msg;
         if (serverState.ProcessMessage(msg))
-            return;
+            return msg;
         if (serverTexture.ProcessMessage(msg))
-            return;
+            return msg;
+        return msg;
     }
 }
 
@@ -175,15 +307,16 @@ class ContextViewProvider extends LabelProvider implements ITreeContentProvider,
         if (!(entry.obj instanceof Message))
             return null;
         final Message msg = (Message) entry.obj;
-        for (int i = 0; i <= sampleView.frameNum.getSelection(); i++) {
-            if (i == sampleView.current.frames.size())
+        switch (msg.getFunction()) {
+            case glTexImage2D:
+            case glTexSubImage2D:
+                return entry.image = new MessageData(Display.getCurrent(), msg, msg, null).image;
+            case glCopyTexImage2D:
+            case glCopyTexSubImage2D:
+                return null; // TODO: compute context for reference frame
+            default:
                 return null;
-            final Frame frame = sampleView.current.frames.get(i);
-            for (final MessageData msgData : frame.calls)
-                if (msgData.oriMsg == msg)
-                    return entry.image = msgData.image;
         }
-        return null;
     }
 
     @Override

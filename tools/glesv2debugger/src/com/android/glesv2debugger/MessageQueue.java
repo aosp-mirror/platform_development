@@ -19,6 +19,7 @@ package com.android.glesv2debugger;
 import com.android.glesv2debugger.DebuggerMessage.Message;
 import com.android.glesv2debugger.DebuggerMessage.Message.Function;
 import com.android.glesv2debugger.DebuggerMessage.Message.Type;
+import com.android.sdklib.util.SparseArray;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -28,17 +29,16 @@ import java.io.IOException;
 import java.net.Socket;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
-import java.util.HashMap;
 
 public class MessageQueue implements Runnable {
 
-    boolean running = false;
+    private boolean running = false;
     private ByteOrder byteOrder;
     private FileInputStream file; // if null, create and use socket
-    Thread thread = null;
-    ArrayList<Message> complete = new ArrayList<Message>(); // need synchronized
-    ArrayList<Message> commands = new ArrayList<Message>(); // need synchronized
-    SampleView sampleView;
+    private Thread thread = null;
+    private ArrayList<Message> complete = new ArrayList<Message>(); // synchronized
+    private ArrayList<Message> commands = new ArrayList<Message>(); // synchronized
+    private SampleView sampleView;
 
     public MessageQueue(SampleView sampleView) {
         this.sampleView = sampleView;
@@ -64,7 +64,7 @@ public class MessageQueue implements Runnable {
         return running;
     }
 
-    void SendCommands(final int contextId) throws IOException {
+    private void SendCommands(final int contextId) throws IOException {
         synchronized (commands) {
             for (int i = 0; i < commands.size(); i++) {
                 Message command = commands.get(i);
@@ -86,7 +86,7 @@ public class MessageQueue implements Runnable {
     // access call chain starts with run()
     private DataInputStream dis = null;
     private DataOutputStream dos = null;
-    private HashMap<Integer, ArrayList<Message>> incoming = new HashMap<Integer, ArrayList<Message>>();
+    private SparseArray<ArrayList<Message>> incoming = new SparseArray<ArrayList<Message>>();
 
     @Override
     public void run() {
@@ -118,11 +118,13 @@ public class MessageQueue implements Runnable {
 
             Message msg = null;
             if (incoming.size() > 0) { // find queued incoming
-                for (ArrayList<Message> messages : incoming.values())
+                for (int i = 0; i < incoming.size(); i++) {
+                    final ArrayList<Message> messages = incoming.valueAt(i);
                     if (messages.size() > 0) {
                         msg = messages.remove(0);
                         break;
                     }
+                }
             }
             try {
                 if (null == msg) // get incoming from network
@@ -167,8 +169,8 @@ public class MessageQueue implements Runnable {
         SendMessage(dos, msg);
     }
 
-    // should only used by DefaultProcessMessage
-    private HashMap<Integer, Message> partials = new HashMap<Integer, Message>();
+    // should only be used by DefaultProcessMessage
+    private SparseArray<Message> partials = new SparseArray<Message>();
 
     Message GetPartialMessage(final int contextId) {
         return partials.get(contextId);
@@ -176,7 +178,8 @@ public class MessageQueue implements Runnable {
 
     // used to add BeforeCall to complete if it was skipped
     void CompletePartialMessage(final int contextId) {
-        final Message msg = partials.remove(contextId);
+        final Message msg = partials.get(contextId);
+        partials.remove(contextId);
         assert msg != null;
         assert msg.getType() == Type.BeforeCall;
         synchronized (complete) {
@@ -189,28 +192,43 @@ public class MessageQueue implements Runnable {
             boolean sendResponse)
             throws IOException {
         final int contextId = msg.getContextId();
-        final Message.Builder builder = Message.newBuilder();
-        builder.setContextId(contextId);
-        builder.setType(Type.Response);
-        builder.setExpectResponse(expectResponse);
         if (msg.getType() == Type.BeforeCall) {
             if (sendResponse) {
+                final Message.Builder builder = Message.newBuilder();
+                builder.setContextId(contextId);
+                builder.setType(Type.Response);
+                builder.setExpectResponse(expectResponse);
                 builder.setFunction(Function.CONTINUE);
                 SendMessage(dos, builder.build());
             }
-            assert !partials.containsKey(contextId);
+            assert partials.indexOfKey(contextId) < 0;
             partials.put(contextId, msg);
         } else if (msg.getType() == Type.AfterCall) {
             if (sendResponse) {
-                builder.setFunction(Function.CONTINUE);
+                final Message.Builder builder = Message.newBuilder();
+                builder.setContextId(contextId);
+                builder.setType(Type.Response);
+                builder.setExpectResponse(expectResponse);
+                builder.setFunction(Function.SKIP);
                 SendMessage(dos, builder.build());
             }
-            assert partials.containsKey(contextId);
-            final Message before = partials.remove(contextId);
+            assert partials.indexOfKey(contextId) >= 0;
+            final Message before = partials.get(contextId);
+            partials.remove(contextId);
             assert before.getFunction() == msg.getFunction();
-            final Message completed = before.toBuilder().mergeFrom(msg).build();
+            final Message completed = before.toBuilder().mergeFrom(msg)
+                    .setType(Type.CompleteCall).build();
             synchronized (complete) {
                 complete.add(completed);
+            }
+        } else if (msg.getType() == Type.CompleteCall) {
+            // this type should only be encountered on client after processing
+            assert file != null;
+            assert !msg.getExpectResponse();
+            assert !sendResponse;
+            assert partials.indexOfKey(contextId) < 0;
+            synchronized (complete) {
+                complete.add(msg);
             }
         } else
             assert false;
@@ -265,6 +283,8 @@ public class MessageQueue implements Runnable {
 
     private void SendMessage(final DataOutputStream dos, final Message message)
             throws IOException {
+        if (dos == null)
+            return;
         assert message.getFunction() != Function.NEG;
         final byte[] data = message.toByteArray();
         if (byteOrder == ByteOrder.BIG_ENDIAN)

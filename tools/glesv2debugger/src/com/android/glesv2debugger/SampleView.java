@@ -75,12 +75,7 @@ import org.eclipse.ui.part.ViewPart;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
 import java.nio.ByteOrder;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
 
 /**
  * This sample class demonstrates how to plug-in a new workbench view. The view
@@ -148,7 +143,7 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
 
         @Override
         public Object[] getElements(Object parent) {
-            return frame.calls.toArray();
+            return frame.Get().toArray();
         }
 
         @Override
@@ -562,7 +557,11 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
             public void run()
             {
                 if (current != null)
+                {
                     new CodeGen().CodeGenFrame((Frame) viewer.getInput());
+                    // need to reload current frame
+                    viewer.setInput(current.GetFrame(frameNum.getSelection()));
+                }
             }
         });
 
@@ -572,7 +571,12 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
             public void run()
             {
                 if (current != null)
-                    new CodeGen().CodeGenFrames(current, frameNum.getSelection() + 1);
+                {
+                    new CodeGen().CodeGenFrames(current, frameNum.getSelection() + 1,
+                            getSite().getShell());
+                    // need to reload current frame
+                    viewer.setInput(current.GetFrame(frameNum.getSelection()));
+                }
             }
         });
     }
@@ -626,8 +630,8 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
             return;
         if (frameNum.getSelection() == frameNum.getMaximum())
             return; // scale max cannot overlap min, so max is array size
-        final Frame frame = current.frames.get(frameNum.getSelection());
-        final Context context = current.ComputeContext(frame, msgData);
+        final Frame frame = current.GetFrame(frameNum.getSelection());
+        final Context context = frame.ComputeContext(msgData);
         contextViewer.setInput(context);
         if (null != msgData.image) {
             canvas.setBackgroundImage(msgData.image);
@@ -686,46 +690,32 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
 
     @Override
     public void run() {
-        FileWriter file = null;
-        PrintWriter writer = null;
-        try {
-            file = new FileWriter("GLES2Debugger.log", true);
-            writer = new PrintWriter(file);
-            writer.write("\n\n");
-            writer.write(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Calendar.getInstance()
-                    .getTime()));
-            writer.write("\n\n");
-        } catch (IOException e1) {
-            showError(e1);
-        }
-
         int newMessages = 0;
 
-        boolean shaderEditorUpdate = false, currentUpdate = false;
+        boolean shaderEditorUpdate = false;
         while (running) {
             final Message oriMsg = messageQueue.RemoveCompleteMessage(0);
             if (oriMsg == null && !messageQueue.IsRunning())
                 break;
             if (newMessages > 60 || (newMessages > 0 && null == oriMsg)) {
                 newMessages = 0;
-
-                if (currentUpdate || current == null)
+                if (current == null || current.uiUpdate)
                     getSite().getShell().getDisplay().syncExec(new Runnable() {
                         @Override
                         public void run() {
                             if (current == null)
                                 ChangeContext(debugContexts.valueAt(0));
-                            else if (frameNum.getSelection() == current.frames.size() - 1)
+                            else if (frameNum.getSelection() == current.FrameCount() - 1)
                             {
                                 viewer.refresh(false);
                                 if (actionAutoScroll.isChecked())
                                     viewer.getList().setSelection(
                                             viewer.getList().getItemCount() - 1);
                             }
-                            frameNum.setMaximum(current.frames.size());
+                            frameNum.setMaximum(current.FrameCount());
                         }
                     });
-                currentUpdate = false;
+                current.uiUpdate = false;
 
                 if (shaderEditorUpdate)
                     this.getSite().getShell().getDisplay().syncExec(new Runnable() {
@@ -751,29 +741,15 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
                 debugContexts.put(oriMsg.getContextId(), debugContext);
             }
 
-            final MessageData msgData = debugContext.ProcessMessage(oriMsg);
-            if (current == debugContext) {
-                currentUpdate = true;
-            }
+            debugContext.ProcessMessage(oriMsg);
 
             shaderEditorUpdate |= debugContext.currentContext.serverShader.uiUpdate;
             debugContext.currentContext.serverShader.uiUpdate = false;
 
-            if (null != writer) {
-                writer.write(msgData.text + "\n");
-                if (msgData.msg.getFunction() == Function.eglSwapBuffers) {
-                    writer.write("\n-------\n");
-                    writer.flush();
-                }
-            }
             newMessages++;
         }
         if (running)
             ConnectDisconnect(); // error occurred, disconnect
-        if (null != writer) {
-            writer.flush();
-            writer.close();
-        }
     }
 
     /** can be called from non-UI thread */
@@ -782,9 +758,9 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
             @Override
             public void run() {
                 current = newContext;
-                frameNum.setMaximum(current.frames.size());
+                frameNum.setMaximum(current.FrameCount());
                 frameNum.setSelection(0);
-                viewer.setInput(current.frames.get(frameNum.getSelection()));
+                viewer.setInput(current.GetFrame(frameNum.getSelection()));
                 shaderEditor.Update();
                 actContext.setText("Context: 0x" + Integer.toHexString(current.contextId));
                 getViewSite().getActionBars().getToolBarManager().update(true);
@@ -798,9 +774,9 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
             assert false;
         if (current == null)
             return;
-        if (frameNum.getSelection() == current.frames.size())
+        if (frameNum.getSelection() == current.FrameCount())
             return; // scale maximum cannot overlap minimum
-        Frame frame = current.frames.get(frameNum.getSelection());
+        Frame frame = current.GetFrame(frameNum.getSelection());
         viewer.setInput(frame);
     }
 

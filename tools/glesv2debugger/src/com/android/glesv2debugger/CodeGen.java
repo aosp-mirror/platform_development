@@ -20,13 +20,19 @@ import com.android.glesv2debugger.DebuggerMessage.Message;
 import com.android.glesv2debugger.DebuggerMessage.Message.Function;
 import com.android.sdklib.util.SparseIntArray;
 
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jface.dialogs.ProgressMonitorDialog;
+import org.eclipse.jface.operation.IRunnableWithProgress;
+import org.eclipse.swt.widgets.Shell;
+
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.lang.reflect.InvocationTargetException;
 import java.nio.ByteBuffer;
 
-public class CodeGen {
+public class CodeGen implements IRunnableWithProgress {
     private FileWriter codeFile, makeFile, namesHeaderFile, namesSourceFile;
     private PrintWriter code, make, namesHeader, namesSource;
     private FileOutputStream dataOut;
@@ -65,7 +71,7 @@ public class CodeGen {
                     code.write(";CHKERR;\n");
                     return true;
                 }
-                assert msg.getArg2() == msg.getPixelFormat(); // TODO
+                // FIXME: check the texture format & type, and convert
                 s = "//" + MessageFormatter.Format(msg, true) + "\n";
                 s += String.format(
                         "glTexSubImage2D(%s, %d, %d, %d, %d, %d, %s, %s, texData);CHKERR;",
@@ -710,7 +716,7 @@ public class CodeGen {
         namesHeader.write("#include <assert.h>\n");
         namesHeader.write("#include <GLES2/gl2.h>\n");
         namesHeader.write("#include <GLES2/gl2ext.h>\n");
-        namesHeader.write("#define CHKERR assert(GL_NO_ERROR == glGetError());/**/\n");
+        namesHeader.write("#define CHKERR /*assert(GL_NO_ERROR == glGetError());/**/\n");
         namesHeader.write("void FrameSetup();\n");
         namesHeader.write("extern const unsigned int FrameCount;\n");
         namesHeader.write("extern const GLuint program_0;\n");
@@ -767,9 +773,16 @@ public class CodeGen {
         renderbufferNames = null;
     }
 
-    void CodeGenFrames(final DebugContext dbgCtx, int count) {
-        Context ctx = dbgCtx.frames.get(0).startContext.clone();
+    private DebugContext dbgCtx;
+    private int count;
+    private IProgressMonitor progress;
+    @Override
+    public void run(IProgressMonitor monitor) throws InvocationTargetException,
+            InterruptedException {
+        progress.beginTask("CodeGenFrames", count + 2);
+        Context ctx = dbgCtx.GetFrame(0).startContext.clone();
         CodeGenSetup(ctx);
+        progress.worked(1);
         for (int i = 0; i < count; i++) {
             try {
                 codeFile = new FileWriter("frame" + i + ".cpp", false);
@@ -782,9 +795,9 @@ public class CodeGen {
 
             code.write("#include \"frame_names.h\"\n");
             code.format("void Frame%d(){\n", i);
-            final Frame frame = dbgCtx.frames.get(i);
-            for (int j = 0; j < frame.calls.size(); j++) {
-                final MessageData msgData = frame.calls.get(j);
+            final Frame frame = dbgCtx.GetFrame(i);
+            for (int j = 0; j < frame.Size(); j++) {
+                final MessageData msgData = frame.Get(j);
                 code.format("/* frame function %d: %s %s*/\n", j, msgData.msg.getFunction(),
                         MessageFormatter.Format(msgData.msg, false));
                 ctx.ProcessMessage(msgData.oriMsg);
@@ -802,6 +815,7 @@ public class CodeGen {
                 e.printStackTrace();
                 assert false;
             }
+            progress.worked(1);
         }
         for (int i = 0; i < count; i++)
             namesHeader.format("void Frame%d();\n", i);
@@ -813,6 +827,25 @@ public class CodeGen {
         namesSource.write("};\n");
         namesSource.format("const unsigned int FrameCount = %d;\n", count);
         CodeGenCleanup();
+        progress.worked(1);
+    }
+
+    void CodeGenFrames(final DebugContext dbgCtx, int count, final Shell shell) {
+        this.dbgCtx = dbgCtx;
+        this.count = count;
+        ProgressMonitorDialog dialog = new ProgressMonitorDialog(shell);
+        this.progress = dialog.getProgressMonitor();
+        try {
+            dialog.run(false, true, this);
+        } catch (InvocationTargetException e) {
+            e.printStackTrace();
+            assert false;
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        this.dbgCtx = null;
+        this.count = 0;
+        progress = null;
     }
 
     void CodeGenFrame(final Frame frame) {
@@ -828,8 +861,8 @@ public class CodeGen {
         make.format("    frame0.cpp \\\n");
         code.write("#include \"frame_names.h\"\n");
         code.format("void Frame0(){\n");
-        for (int i = 0; i < frame.calls.size(); i++) {
-            final MessageData msgData = frame.calls.get(i);
+        for (int i = 0; i < frame.Size(); i++) {
+            final MessageData msgData = frame.Get(i);
             code.format("/* frame function %d: %s %s*/\n", i, msgData.msg.getFunction(),
                     MessageFormatter.Format(msgData.msg, false));
             ctx.ProcessMessage(msgData.oriMsg);

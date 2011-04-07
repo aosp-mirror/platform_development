@@ -95,6 +95,7 @@ public class ShaderEditor extends Composite implements SelectionListener, Extend
         gridData.grabExcessHorizontalSpace = true;
         gridData.verticalAlignment = SWT.FILL;
         gridData.grabExcessVerticalSpace = true;
+        gridData.verticalSpan = 2;
         styledText.setLayoutData(gridData);
         styledText.addExtendedModifyListener(this);
     }

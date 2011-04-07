@@ -448,6 +448,7 @@ public final class DebuggerMessage {
       AfterCall(1, 1),
       AfterGeneratedCall(2, 2),
       Response(3, 3),
+      CompleteCall(4, 4),
       ;
       
       
@@ -459,6 +460,7 @@ public final class DebuggerMessage {
           case 1: return AfterCall;
           case 2: return AfterGeneratedCall;
           case 3: return Response;
+          case 4: return CompleteCall;
           default: return null;
         }
       }
@@ -490,10 +492,10 @@ public final class DebuggerMessage {
       ReferencedImage(0, 0),
       NonreferencedImage(1, 1),
       ;
-
-
+      
+      
       public final int getNumber() { return value; }
-
+      
       public static DataType valueOf(int value) {
         switch (value) {
           case 0: return ReferencedImage;
@@ -501,7 +503,7 @@ public final class DebuggerMessage {
           default: return null;
         }
       }
-
+      
       public static com.google.protobuf.Internal.EnumLiteMap<DataType>
           internalGetValueMap() {
         return internalValueMap;
@@ -513,17 +515,17 @@ public final class DebuggerMessage {
                 return DataType.valueOf(number)
       ;        }
             };
-
+      
       private final int index;
       private final int value;
       private DataType(int index, int value) {
         this.index = index;
         this.value = value;
       }
-
+      
       // @@protoc_insertion_point(enum_scope:com.android.glesv2debugger.Message.DataType)
     }
-
+    
     public enum Prop
         implements com.google.protobuf.Internal.EnumLite {
       Capture(0, 0),
@@ -676,21 +678,21 @@ public final class DebuggerMessage {
     private com.android.glesv2debugger.DebuggerMessage.Message.DataType dataType_;
     public boolean hasDataType() { return hasDataType; }
     public com.android.glesv2debugger.DebuggerMessage.Message.DataType getDataType() { return dataType_; }
-
+    
     // optional int32 pixel_format = 24;
     public static final int PIXEL_FORMAT_FIELD_NUMBER = 24;
     private boolean hasPixelFormat;
     private int pixelFormat_ = 0;
     public boolean hasPixelFormat() { return hasPixelFormat; }
     public int getPixelFormat() { return pixelFormat_; }
-
+    
     // optional int32 pixel_type = 25;
     public static final int PIXEL_TYPE_FIELD_NUMBER = 25;
     private boolean hasPixelType;
     private int pixelType_ = 0;
     public boolean hasPixelType() { return hasPixelType; }
     public int getPixelType() { return pixelType_; }
-
+    
     // optional float time = 11;
     public static final int TIME_FIELD_NUMBER = 11;
     private boolean hasTime;
@@ -1513,7 +1515,7 @@ public final class DebuggerMessage {
         result.dataType_ = com.android.glesv2debugger.DebuggerMessage.Message.DataType.ReferencedImage;
         return this;
       }
-
+      
       // optional int32 pixel_format = 24;
       public boolean hasPixelFormat() {
         return result.hasPixelFormat();
@@ -1531,7 +1533,7 @@ public final class DebuggerMessage {
         result.pixelFormat_ = 0;
         return this;
       }
-
+      
       // optional int32 pixel_type = 25;
       public boolean hasPixelType() {
         return result.hasPixelType();
@@ -1549,7 +1551,7 @@ public final class DebuggerMessage {
         result.pixelType_ = 0;
         return this;
       }
-
+      
       // optional float time = 11;
       public boolean hasTime() {
         return result.hasTime();

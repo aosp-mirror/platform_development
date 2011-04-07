@@ -29,14 +29,13 @@ import java.nio.ByteBuffer;
 
 public class MessageData {
     public final Message msg, oriMsg;
-    public Image image; // texture
-    public String shader; // shader source
+    public Image image = null; // texture
+    public String shader = null; // shader source
     public String text;
     public String[] columns = new String[3];
-    public float[] data;
+    public float[] data = null;
     public int maxAttrib; // used for formatting data
     public GLEnum dataType; // could be float, int; mainly for formatting use
-    Context context; // the context before this call
 
     ByteBuffer[] attribs = null;
 
@@ -44,14 +43,10 @@ public class MessageData {
             final Context context) {
         this.msg = msg;
         this.oriMsg = oriMsg;
-        this.context = context;
-        image = null;
-        shader = null;
-        data = null;
         StringBuilder builder = new StringBuilder();
         final Function function = msg.getFunction();
         ImageData imageData = null;
-        if (function != Message.Function.ACK)
+        if (function != Message.Function.ACK && msg.getType() != Type.BeforeCall)
             assert msg.hasTime();
         builder.append(columns[0] = function.name());
         while (builder.length() < 30)
@@ -70,7 +65,7 @@ public class MessageData {
         else if (msg.getType() == Type.AfterGeneratedCall)
             columns[2] = "[AfterGeneratedCall] ";
         else
-            assert msg.getType() == Type.AfterCall;
+            assert msg.getType() == Type.CompleteCall;
         columns[2] += MessageFormatter.Format(msg, false);
         builder.append(columns[2]);
         switch (function) {
