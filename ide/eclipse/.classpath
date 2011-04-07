@@ -11,7 +11,7 @@
 	<classpathentry kind="src" path="packages/apps/Email/src"/>
 	<classpathentry kind="src" path="packages/apps/Email/emailcommon/src"/>
 	<classpathentry kind="src" path="packages/apps/Exchange/src"/>
-	<classpathentry kind="src" path="packages/apps/Gallery3D/src"/>
+	<classpathentry kind="src" path="packages/apps/Gallery3D/new3d/src"/>
 	<classpathentry kind="src" path="packages/apps/HTMLViewer/src"/>
 	<classpathentry kind="src" path="packages/apps/Launcher2/src"/>
 	<classpathentry kind="src" path="packages/apps/Mms/src"/>
