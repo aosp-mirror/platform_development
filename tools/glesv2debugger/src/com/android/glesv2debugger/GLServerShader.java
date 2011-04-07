@@ -23,7 +23,7 @@ import java.util.ArrayList;
 
 class GLShader implements Cloneable {
     public final int name;
-    final GLServerShader context; // the context this was created in
+    GLServerShader context; // the context this was created in
     public final GLEnum type;
     public boolean delete;
     public ArrayList<Integer> programs = new ArrayList<Integer>();
@@ -35,12 +35,12 @@ class GLShader implements Cloneable {
         this.type = type;
     }
 
-    @Override
-    // deep copy except for context, which is set afterwards
-    public Object clone() {
+    /** deep copy */
+    public GLShader clone(final GLServerShader copyContext) {
         try {
             GLShader shader = (GLShader) super.clone();
             shader.programs = (ArrayList<Integer>) programs.clone();
+            shader.context = copyContext;
             return shader;
         } catch (CloneNotSupportedException e) {
             e.printStackTrace();
@@ -52,7 +52,7 @@ class GLShader implements Cloneable {
 
 class GLProgram implements Cloneable {
     public final int name;
-    final GLServerShader context; // the context this was created in
+    GLServerShader context; // the context this was created in
     public boolean delete;
     public int vert, frag;
 
@@ -61,11 +61,12 @@ class GLProgram implements Cloneable {
         this.context = context;
     }
 
-    @Override
-    // deep copy except for context, which is set afterwards
-    public Object clone() {
+    /** deep copy */
+    public GLProgram clone(final GLServerShader copyContext) {
         try {
-            return super.clone();
+            GLProgram copy = (GLProgram) super.clone();
+            copy.context = copyContext;
+            return copy;
         } catch (CloneNotSupportedException e) {
             e.printStackTrace();
             assert false;
@@ -85,22 +86,22 @@ public class GLServerShader implements Cloneable {
         this.context = context;
     }
 
-    @Override
-    // deep copy except for context, which is set afterwards
-    public Object clone() {
+    /** deep copy */
+    public GLServerShader clone(final Context copyContext) {
         try {
             GLServerShader copy = (GLServerShader) super.clone();
+            copy.context = copyContext;
 
             copy.shaders = new SparseArray<GLShader>(shaders.size());
             for (int i = 0; i < shaders.size(); i++)
-                copy.shaders.append(shaders.keyAt(i), (GLShader) shaders.valueAt(i).clone());
+                copy.shaders.append(shaders.keyAt(i), shaders.valueAt(i).clone(copy));
 
             copy.programs = new SparseArray<GLProgram>(programs.size());
             for (int i = 0; i < programs.size(); i++)
-                copy.programs.append(programs.keyAt(i), (GLProgram) programs.valueAt(i).clone());
+                copy.programs.append(programs.keyAt(i), programs.valueAt(i).clone(copy));
 
             if (current != null)
-                copy.current = (GLProgram) current.clone();
+                copy.current = copy.programs.get(current.name);
             return copy;
         } catch (CloneNotSupportedException e) {
             e.printStackTrace();
@@ -109,38 +110,38 @@ public class GLServerShader implements Cloneable {
         }
     }
 
-    // returns instance if processed
-    public GLServerShader ProcessMessage(final Message msg) {
+    /** returns true if processed */
+    public boolean ProcessMessage(final Message msg) {
         boolean oldUiUpdate = uiUpdate;
         uiUpdate = true;
         switch (msg.getFunction()) {
             case glAttachShader:
                 glAttachShader(msg);
-                return this;
+                return true;
             case glCreateProgram:
                 glCreateProgram(msg);
-                return this;
+                return true;
             case glCreateShader:
                 glCreateShader(msg);
-                return this;
+                return true;
             case glDeleteProgram:
                 glDeleteProgram(msg);
-                return this;
+                return true;
             case glDeleteShader:
                 glDeleteShader(msg);
-                return this;
+                return true;
             case glDetachShader:
                 glDetachShader(msg);
-                return this;
+                return true;
             case glShaderSource:
                 glShaderSource(msg);
-                return this;
+                return true;
             case glUseProgram:
                 glUseProgram(msg);
-                return this;
+                return true;
             default:
                 uiUpdate = oldUiUpdate;
-                return null;
+                return false;
         }
     }
 

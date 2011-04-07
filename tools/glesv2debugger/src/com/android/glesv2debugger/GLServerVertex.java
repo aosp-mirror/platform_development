@@ -17,17 +17,40 @@
 package com.android.glesv2debugger;
 
 import com.android.glesv2debugger.DebuggerMessage.Message;
+import com.android.sdklib.util.SparseArray;
 
 import java.nio.ByteBuffer;
-import java.util.HashMap;
 
-class GLBuffer {
+class GLBuffer implements Cloneable {
+    public final int name;
     public GLEnum usage;
     public GLEnum target;
     public ByteBuffer data;
+
+    public GLBuffer(final int name) {
+        this.name = name;
+    }
+
+    /** deep copy */
+    @Override
+    public GLBuffer clone() {
+        try {
+            GLBuffer copy = (GLBuffer) super.clone();
+            if (data != null) {
+                copy.data = ByteBuffer.allocate(data.capacity());
+                data.position(0);
+                copy.data.put(data);
+            }
+            return copy;
+        } catch (CloneNotSupportedException e) {
+            e.printStackTrace();
+            assert false;
+            return null;
+        }
+    }
 }
 
-class GLAttribPointer {
+class GLAttribPointer implements Cloneable {
     public int size; // number of values per vertex
     public GLEnum type; // data type
     public int stride; // bytes
@@ -35,19 +58,32 @@ class GLAttribPointer {
     public GLBuffer buffer;
     public boolean normalized;
     public boolean enabled;
+
+    /** deep copy, re-maps buffer into copyBuffers */
+    public GLAttribPointer clone(SparseArray<GLBuffer> copyBuffers) {
+        try {
+            GLAttribPointer copy = (GLAttribPointer) super.clone();
+            if (buffer != null)
+                copy.buffer = copyBuffers.get(buffer.name);
+            return copy;
+        } catch (CloneNotSupportedException e) {
+            e.printStackTrace();
+            assert false;
+            return null;
+        }
+    }
 }
 
-public class GLServerVertex {
-
-    public  HashMap<Integer, GLBuffer> buffers;
+public class GLServerVertex implements Cloneable {
+    public SparseArray<GLBuffer> buffers = new SparseArray<GLBuffer>();
     public GLBuffer attribBuffer, indexBuffer; // current binding
     public GLAttribPointer attribPointers[];
     public float defaultAttribs[][];
     int maxAttrib;
 
     public GLServerVertex() {
-        buffers = new HashMap<Integer, GLBuffer>();
-        buffers.put(0, null);
+        buffers.append(0, null);
+        // TODO: get MAX_VERTEX_ATTRIBS from server
         attribPointers = new GLAttribPointer[16];
         for (int i = 0; i < attribPointers.length; i++)
             attribPointers[i] = new GLAttribPointer();
@@ -60,70 +96,102 @@ public class GLServerVertex {
         }
     }
 
+    /** deep copy */
+    @Override
+    public GLServerVertex clone() {
+        try {
+            GLServerVertex copy = (GLServerVertex) super.clone();
+
+            copy.buffers = new SparseArray<GLBuffer>(buffers.size());
+            for (int i = 0; i < buffers.size(); i++)
+                if (buffers.valueAt(i) != null)
+                    copy.buffers.append(buffers.keyAt(i), buffers.valueAt(i).clone());
+                else
+                    copy.buffers.append(buffers.keyAt(i), null);
+
+            if (attribBuffer != null)
+                copy.attribBuffer = copy.buffers.get(attribBuffer.name);
+            if (indexBuffer != null)
+                copy.indexBuffer = copy.buffers.get(indexBuffer.name);
+
+            copy.attribPointers = new GLAttribPointer[attribPointers.length];
+            for (int i = 0; i < attribPointers.length; i++)
+                copy.attribPointers[i] = attribPointers[i].clone(copy.buffers);
+
+            copy.defaultAttribs = defaultAttribs.clone();
+
+            return copy;
+        } catch (CloneNotSupportedException e) {
+            e.printStackTrace();
+            assert false;
+            return null;
+        }
+    }
+
     Message processed = null; // return; glDrawArrays/Elements with fetched data
 
-    // returns instance if processed TODO: return new instance if changed
-    public GLServerVertex Process(final Message msg) {
+    /** returns true if processed */
+    public boolean Process(final Message msg) {
         processed = null;
         switch (msg.getFunction()) {
             case glBindBuffer:
                 glBindBuffer(msg);
-                return this;
+                return true;
             case glBufferData:
                 glBufferData(msg);
-                return this;
+                return true;
             case glBufferSubData:
                 glBufferSubData(msg);
-                return this;
+                return true;
             case glDeleteBuffers:
                 glDeleteBuffers(msg);
-                return this;
+                return true;
             case glDrawArrays:
                 if (msg.hasArg7())
                     processed = glDrawArrays(msg);
-                return this;
+                return true;
             case glDrawElements:
                 if (msg.hasArg7())
                     processed = glDrawElements(msg);
-                return this;
+                return true;
             case glDisableVertexAttribArray:
                 glDisableVertexAttribArray(msg);
-                return this;
+                return true;
             case glEnableVertexAttribArray:
                 glEnableVertexAttribArray(msg);
-                return this;
+                return true;
             case glGenBuffers:
                 glGenBuffers(msg);
-                return this;
+                return true;
             case glVertexAttribPointer:
                 glVertexAttribPointer(msg);
-                return this;
+                return true;
             case glVertexAttrib1f:
                 glVertexAttrib1f(msg);
-                return this;
+                return true;
             case glVertexAttrib1fv:
                 glVertexAttrib1fv(msg);
-                return this;
+                return true;
             case glVertexAttrib2f:
                 glVertexAttrib2f(msg);
-                return this;
+                return true;
             case glVertexAttrib2fv:
                 glVertexAttrib2fv(msg);
-                return this;
+                return true;
             case glVertexAttrib3f:
                 glVertexAttrib3f(msg);
-                return this;
+                return true;
             case glVertexAttrib3fv:
                 glVertexAttrib3fv(msg);
-                return this;
+                return true;
             case glVertexAttrib4f:
                 glVertexAttrib4f(msg);
-                return this;
+                return true;
             case glVertexAttrib4fv:
                 glVertexAttrib4fv(msg);
-                return this;
+                return true;
             default:
-                return null;
+                return false;
         }
     }
 
@@ -181,9 +249,10 @@ public class GLServerVertex {
     public void glDeleteBuffers(Message msg) {
         final int n = msg.getArg0();
         final ByteBuffer names = msg.getData().asReadOnlyByteBuffer();
+        names.order(SampleView.targetByteOrder);
         for (int i = 0; i < n; i++) {
-            int name = Integer.reverseBytes(names.getInt());
-            GLBuffer buffer = buffers.get(name);
+            final int name = names.getInt();
+            final GLBuffer buffer = buffers.get(name);
             for (int j = 0; j < attribPointers.length; j++)
                 if (attribPointers[j].buffer == buffer) {
                     attribPointers[j].buffer = null;
@@ -204,27 +273,27 @@ public class GLServerVertex {
 
     float FetchConvert(final ByteBuffer src, final GLEnum type, final boolean normalized) {
         if (GLEnum.GL_FLOAT == type)
-            return Float.intBitsToFloat(Integer.reverseBytes(src.getInt()));
+            return Float.intBitsToFloat(src.getInt());
         else if (GLEnum.GL_UNSIGNED_INT == type)
             if (normalized)
-                return (Integer.reverseBytes(src.getInt()) & 0xffffffffL) / (2e32f - 1);
+                return (src.getInt() & 0xffffffffL) / (2e32f - 1);
             else
-                return Integer.reverseBytes(src.getInt()) & 0xffffffffL;
+                return src.getInt() & 0xffffffffL;
         else if (GLEnum.GL_INT == type)
             if (normalized)
-                return (Integer.reverseBytes(src.getInt()) * 2 + 1) / (2e32f - 1);
+                return (src.getInt() * 2 + 1) / (2e32f - 1);
             else
-                return Integer.reverseBytes(src.getInt());
+                return src.getInt();
         else if (GLEnum.GL_UNSIGNED_SHORT == type)
             if (normalized)
-                return (Short.reverseBytes(src.getShort()) & 0xffff) / (2e16f - 1);
+                return (src.getShort() & 0xffff) / (2e16f - 1);
             else
-                return Short.reverseBytes(src.getShort()) & 0xffff;
+                return src.getShort() & 0xffff;
         else if (GLEnum.GL_SHORT == type)
             if (normalized)
-                return (Short.reverseBytes(src.getShort()) * 2 + 1) / (2e16f - 1);
+                return (src.getShort() * 2 + 1) / (2e16f - 1);
             else
-                return Short.reverseBytes(src.getShort());
+                return src.getShort();
         else if (GLEnum.GL_UNSIGNED_BYTE == type)
             if (normalized)
                 return (src.get() & 0xff) / (2e8f - 1);
@@ -237,9 +306,9 @@ public class GLServerVertex {
                 return src.get();
         else if (GLEnum.GL_FIXED == type)
             if (normalized)
-                return (Integer.reverseBytes(src.getInt()) * 2 + 1) / (2e32f - 1);
+                return (src.getInt() * 2 + 1) / (2e32f - 1);
             else
-                return Integer.reverseBytes(src.getInt()) / (2e16f);
+                return src.getInt() / (2e16f);
         else
             assert false;
         return 0;
@@ -276,7 +345,10 @@ public class GLServerVertex {
         final ByteBuffer buffer = ByteBuffer.allocate(4 * 4 * maxAttrib * count);
         ByteBuffer arrays = null;
         if (msg.hasData()) // server sends user pointer attribs
+        {
             arrays = msg.getData().asReadOnlyByteBuffer();
+            arrays.order(SampleView.targetByteOrder);
+        }
         for (int i = first; i < first + count; i++)
             Fetch(i, arrays, buffer);
         assert null == arrays || arrays.remaining() == 0;
@@ -294,16 +366,20 @@ public class GLServerVertex {
         final ByteBuffer buffer = ByteBuffer.allocate(4 * 4 * maxAttrib * count);
         ByteBuffer arrays = null, index = null;
         if (msg.hasData()) // server sends user pointer attribs
+        {
             arrays = msg.getData().asReadOnlyByteBuffer();
+            arrays.order(SampleView.targetByteOrder);
+        }
         if (null == indexBuffer)
             index = arrays; // server also interleaves user pointer indices
         else {
             index = indexBuffer.data;
+            index.order(SampleView.targetByteOrder);
             index.position(msg.getArg3());
         }
         if (GLEnum.GL_UNSIGNED_SHORT == type)
             for (int i = 0; i < count; i++)
-                Fetch(Short.reverseBytes(index.getShort()) & 0xffff, arrays, buffer);
+                Fetch(index.getShort() & 0xffff, arrays, buffer);
         else if (GLEnum.GL_UNSIGNED_BYTE == type)
             for (int i = 0; i < count; i++)
                 Fetch(index.get() & 0xff, arrays, buffer);
@@ -324,10 +400,12 @@ public class GLServerVertex {
     public void glGenBuffers(Message msg) {
         final int n = msg.getArg0();
         final ByteBuffer buffer = msg.getData().asReadOnlyByteBuffer();
+        buffer.order(SampleView.targetByteOrder);
         for (int i = 0; i < n; i++) {
-            int name = Integer.reverseBytes(buffer.getInt());
-            if (!buffers.containsKey(name))
-                buffers.put(name, new GLBuffer());
+            final int name = buffer.getInt();
+            final int index = buffers.indexOfKey(name);
+            if (index < 0)
+                buffers.append(name, new GLBuffer(name));
         }
     }
 
@@ -347,53 +425,56 @@ public class GLServerVertex {
 
     // void glVertexAttrib1f(GLuint indx, GLfloat x)
     public void glVertexAttrib1f(Message msg) {
-        glVertexAttrib4f(msg.getArg0(), Float.intBitsToFloat(Integer.reverseBytes(msg.getArg1())),
+        glVertexAttrib4f(msg.getArg0(), Float.intBitsToFloat(msg.getArg1()),
                 0, 0, 1);
     }
 
     // void glVertexAttrib1fv(GLuint indx, const GLfloat* values)
     public void glVertexAttrib1fv(Message msg) {
         final ByteBuffer values = msg.getData().asReadOnlyByteBuffer();
+        values.order(SampleView.targetByteOrder);
         glVertexAttrib4f(msg.getArg0(),
-                Float.intBitsToFloat(Integer.reverseBytes(values.getInt())),
+                Float.intBitsToFloat(values.getInt()),
                 0, 0, 1);
     }
 
     // void glVertexAttrib2f(GLuint indx, GLfloat x, GLfloat y)
     public void glVertexAttrib2f(Message msg) {
-        glVertexAttrib4f(msg.getArg0(), Float.intBitsToFloat(Integer.reverseBytes(msg.getArg1())),
-                Float.intBitsToFloat(Integer.reverseBytes(msg.getArg2())), 0, 1);
+        glVertexAttrib4f(msg.getArg0(), Float.intBitsToFloat(msg.getArg1()),
+                Float.intBitsToFloat(msg.getArg2()), 0, 1);
     }
 
     // void glVertexAttrib2fv(GLuint indx, const GLfloat* values)
     public void glVertexAttrib2fv(Message msg) {
         final ByteBuffer values = msg.getData().asReadOnlyByteBuffer();
+        values.order(SampleView.targetByteOrder);
         glVertexAttrib4f(msg.getArg0(),
-                Float.intBitsToFloat(Integer.reverseBytes(values.getInt())),
-                Float.intBitsToFloat(Integer.reverseBytes(values.getInt())), 0, 1);
+                Float.intBitsToFloat(values.getInt()),
+                Float.intBitsToFloat(values.getInt()), 0, 1);
     }
 
     // void glVertexAttrib3f(GLuint indx, GLfloat x, GLfloat y, GLfloat z)
     public void glVertexAttrib3f(Message msg) {
-        glVertexAttrib4f(msg.getArg0(), Float.intBitsToFloat(Integer.reverseBytes(msg.getArg1())),
-                Float.intBitsToFloat(Integer.reverseBytes(msg.getArg2())),
-                Float.intBitsToFloat(Integer.reverseBytes(msg.getArg3())), 1);
+        glVertexAttrib4f(msg.getArg0(), Float.intBitsToFloat(msg.getArg1()),
+                Float.intBitsToFloat(msg.getArg2()),
+                Float.intBitsToFloat(msg.getArg3()), 1);
     }
 
     // void glVertexAttrib3fv(GLuint indx, const GLfloat* values)
     public void glVertexAttrib3fv(Message msg) {
         final ByteBuffer values = msg.getData().asReadOnlyByteBuffer();
+        values.order(SampleView.targetByteOrder);
         glVertexAttrib4f(msg.getArg0(),
-                Float.intBitsToFloat(Integer.reverseBytes(values.getInt())),
-                Float.intBitsToFloat(Integer.reverseBytes(values.getInt())),
-                Float.intBitsToFloat(Integer.reverseBytes(values.getInt())), 1);
+                Float.intBitsToFloat(values.getInt()),
+                Float.intBitsToFloat(values.getInt()),
+                Float.intBitsToFloat(values.getInt()), 1);
     }
 
     public void glVertexAttrib4f(Message msg) {
-        glVertexAttrib4f(msg.getArg0(), Float.intBitsToFloat(Integer.reverseBytes(msg.getArg1())),
-                Float.intBitsToFloat(Integer.reverseBytes(msg.getArg2())),
-                Float.intBitsToFloat(Integer.reverseBytes(msg.getArg3())),
-                Float.intBitsToFloat(Integer.reverseBytes(msg.getArg4())));
+        glVertexAttrib4f(msg.getArg0(), Float.intBitsToFloat(msg.getArg1()),
+                Float.intBitsToFloat(msg.getArg2()),
+                Float.intBitsToFloat(msg.getArg3()),
+                Float.intBitsToFloat(msg.getArg4()));
     }
 
     void glVertexAttrib4f(int indx, float x, float y, float z, float w) {
@@ -406,10 +487,11 @@ public class GLServerVertex {
     // void glVertexAttrib4fv(GLuint indx, const GLfloat* values)
     public void glVertexAttrib4fv(Message msg) {
         final ByteBuffer values = msg.getData().asReadOnlyByteBuffer();
+        values.order(SampleView.targetByteOrder);
         glVertexAttrib4f(msg.getArg0(),
-                Float.intBitsToFloat(Integer.reverseBytes(values.getInt())),
-                Float.intBitsToFloat(Integer.reverseBytes(values.getInt())),
-                Float.intBitsToFloat(Integer.reverseBytes(values.getInt())),
-                Float.intBitsToFloat(Integer.reverseBytes(values.getInt())));
+                Float.intBitsToFloat(values.getInt()),
+                Float.intBitsToFloat(values.getInt()),
+                Float.intBitsToFloat(values.getInt()),
+                Float.intBitsToFloat(values.getInt()));
     }
 }
