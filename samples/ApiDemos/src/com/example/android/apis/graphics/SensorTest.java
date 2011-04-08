@@ -23,7 +23,6 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
-import android.util.Config;
 import android.util.Log;
 import android.view.View;
 
@@ -142,21 +141,21 @@ public class SensorTest extends GraphicsActivity {
         mSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         mView = new SampleView(this);
         setContentView(mView);
-        if (Config.DEBUG) Log.d(TAG, "create " + mSensorManager);
+        if (false) Log.d(TAG, "create " + mSensorManager);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         mSensorManager.registerListener(mListener, mSensor, SensorManager.SENSOR_DELAY_FASTEST);
-        if (Config.DEBUG) Log.d(TAG, "resume " + mSensorManager);
+        if (false) Log.d(TAG, "resume " + mSensorManager);
     }
 
     @Override
     protected void onStop() {
         mSensorManager.unregisterListener(mListener);
         super.onStop();
-        if (Config.DEBUG) Log.d(TAG, "stop " + mSensorManager);
+        if (false) Log.d(TAG, "stop " + mSensorManager);
     }
 
     private class SampleView extends View {
@@ -200,14 +199,14 @@ public class SensorTest extends GraphicsActivity {
         @Override
         protected void onAttachedToWindow() {
             mAnimate = true;
-            if (Config.DEBUG) Log.d(TAG, "onAttachedToWindow. mAnimate="+mAnimate);
+            if (false) Log.d(TAG, "onAttachedToWindow. mAnimate="+mAnimate);
             super.onAttachedToWindow();
         }
 
         @Override
         protected void onDetachedFromWindow() {
             mAnimate = false;
-            if (Config.DEBUG) Log.d(TAG, "onAttachedToWindow. mAnimate="+mAnimate);
+            if (false) Log.d(TAG, "onAttachedToWindow. mAnimate="+mAnimate);
             super.onDetachedFromWindow();
         }
     }
