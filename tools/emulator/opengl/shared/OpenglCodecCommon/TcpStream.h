@@ -26,13 +26,14 @@ public:
 
     explicit TcpStream(size_t bufsize = 10000);
     ~TcpStream();
-    int listen(unsigned short port, bool localhost_only = true, bool reuse_address = true);
+    int listen(unsigned short port, bool localhost_only = true);
     TcpStream *accept();
     int connect(const char *hostname, unsigned short port);
 
     virtual void *allocBuffer(size_t minSize);
     virtual int commitBuffer(size_t size);
     virtual const unsigned char *readFully( void *buf, size_t len);
+    virtual const unsigned char *read( void *buf, size_t *inout_len);
 
     bool valid() { return m_sock >= 0; }
     int recv(void *buf, size_t len);
