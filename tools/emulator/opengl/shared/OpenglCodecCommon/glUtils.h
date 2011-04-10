@@ -49,6 +49,7 @@ extern "C" {
     void   glUtilsPackPointerData(unsigned char *dst, unsigned char *str,
                            int size, GLenum type, unsigned int stride,
                            unsigned int datalen);
+    int glUtilsPixelBitSize(GLenum format, GLenum type);
 #ifdef __cplusplus
 };
 #endif
