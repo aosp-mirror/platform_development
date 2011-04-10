@@ -13,10 +13,17 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-#ifndef _TIME_UTILS_H
-#define _TIME_UTILS_H
+#ifndef _GLES2_DISPATCH_H
+#define _GLES2_DISPATCH_H
 
-long long GetCurrentTimeMS();
-void TimeSleepMS(int p_mili);
+#ifdef WITH_GLES2
 
+#include "gl2_dec.h"
+
+bool init_gl2_dispatch();
+void *gl2_dispatch_get_proc_func(const char *name, void *userData);
+
+extern gl2_decoder_context_t s_gl;
+
+#endif
 #endif

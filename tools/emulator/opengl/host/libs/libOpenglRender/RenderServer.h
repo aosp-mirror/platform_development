@@ -13,10 +13,26 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-#ifndef _TIME_UTILS_H
-#define _TIME_UTILS_H
+#ifndef _LIB_OPENGL_RENDER_RENDER_SERVER_H
+#define _LIB_OPENGL_RENDER_RENDER_SERVER_H
 
-long long GetCurrentTimeMS();
-void TimeSleepMS(int p_mili);
+#include "TcpStream.h"
+#include "osThread.h"
+
+class RenderServer : public osUtils::Thread
+{
+public:
+    static RenderServer *create(int port);
+    virtual int Main();
+
+    void flagNeedExit() { m_exit = true; }
+
+private:
+    RenderServer();
+
+private:
+    TcpStream *m_listenSock;
+    bool m_exit;
+};
 
 #endif

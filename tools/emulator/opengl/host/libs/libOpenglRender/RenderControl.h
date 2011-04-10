@@ -13,10 +13,9 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-#ifndef _TIME_UTILS_H
-#define _TIME_UTILS_H
+#ifndef _RENDER_CONTROL_H
+#define _RENDER_CONTROL_H
 
-long long GetCurrentTimeMS();
-void TimeSleepMS(int p_mili);
+void initRenderControlContext(renderControl_decoder_context_t *dec);
 
 #endif
