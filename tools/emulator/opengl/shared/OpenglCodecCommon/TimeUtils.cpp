@@ -24,7 +24,7 @@
 #include <sys/time.h>
 #include <time.h>
 #else
-#include <time.h>
+#include <sys/time.h>
 #endif
 
 long long GetCurrentTimeMS()
