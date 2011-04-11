@@ -30,8 +30,7 @@ LOCAL_SRC_FILES := ut_renderer.cpp \
 	Renderer.cpp \
 	RendererContext.cpp \
 	RendererSurface.cpp \
-	X11Windowing.cpp \
-    TimeUtils.cpp
+	X11Windowing.cpp 
 
 # define PVR_WAR to support imgtec PVR opengl-ES implementation
 #
@@ -43,7 +42,7 @@ LOCAL_SRC_FILES := ut_renderer.cpp \
 LOCAL_CFLAGS := -DPVR_WAR 
 #LOCAL_CFLAGS += -g -O0
 
-LOCAL_C_INCLUDES := $(emulatorOpengl)/system/OpenglCodecCommon \
+LOCAL_C_INCLUDES := $(emulatorOpengl)/shared/OpenglCodecCommon \
 		$(call intermediates-dir-for, SHARED_LIBRARIES, libut_rendercontrol_dec, HOST) \
 		$(call intermediates-dir-for, SHARED_LIBRARIES, libGLESv1_dec, HOST) \
         $(emulatorOpengl)/host/libs/GLESv1_dec \
