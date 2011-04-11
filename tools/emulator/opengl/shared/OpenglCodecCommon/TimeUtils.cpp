@@ -24,7 +24,7 @@
 #include <sys/time.h>
 #include <time.h>
 #else
-#error "Unsupported platform"
+#include <time.h>
 #endif
 
 long long GetCurrentTimeMS()
@@ -47,9 +47,12 @@ long long GetCurrentTimeMS()
     long long iDiff = (now.tv_sec * 1000LL) + now.tv_nsec/1000000LL;
     return iDiff;
 
-#else
+#else /* Others, e.g. OS X */
 
-#error "Unsupported platform"
+    struct timeval now;
+    gettimeofday(&now, NULL);
+    long long iDiff = (now.tv_sec * 1000LL) + now.tv_usec/1000LL;
+    return iDiff;
 
 #endif
 }
