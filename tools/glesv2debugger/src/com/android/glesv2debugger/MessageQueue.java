@@ -23,14 +23,18 @@ import com.android.glesv2debugger.DebuggerMessage.Message.Type;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.EOFException;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.HashMap;
 
 public class MessageQueue implements Runnable {
 
     boolean running = false;
+    private ByteOrder byteOrder;
+    private FileInputStream file; // if null, create and use socket
     Thread thread = null;
     ArrayList<Message> complete = new ArrayList<Message>(); // need synchronized
     ArrayList<Message> commands = new ArrayList<Message>(); // need synchronized
@@ -40,10 +44,12 @@ public class MessageQueue implements Runnable {
         this.sampleView = sampleView;
     }
 
-    public void Start() {
+    public void Start(final ByteOrder byteOrder, final FileInputStream file) {
         if (running)
             return;
         running = true;
+        this.byteOrder = byteOrder;
+        this.file = file;
         thread = new Thread(this);
         thread.start();
     }
@@ -84,18 +90,32 @@ public class MessageQueue implements Runnable {
 
     @Override
     public void run() {
-        Socket socket = new Socket();
-        try {
-            socket.connect(new java.net.InetSocketAddress("127.0.0.1", Integer
-                    .parseInt(sampleView.actionPort.getText())));
-            dis = new DataInputStream(socket.getInputStream());
-            dos = new DataOutputStream(socket.getOutputStream());
-        } catch (Exception e) {
-            running = false;
-            Error(e);
-        }
+        Socket socket = null;
+        if (file == null)
+            try {
+                socket = new Socket();
+                socket.connect(new java.net.InetSocketAddress("127.0.0.1", Integer
+                        .parseInt(sampleView.actionPort.getText())));
+                dis = new DataInputStream(socket.getInputStream());
+                dos = new DataOutputStream(socket.getOutputStream());
+            } catch (Exception e) {
+                running = false;
+                Error(e);
+            }
+        else
+            dis = new DataInputStream(file);
 
         while (running) {
+            try {
+                if (file != null && file.available() == 0) {
+                    running = false;
+                    break;
+                }
+            } catch (IOException e1) {
+                e1.printStackTrace();
+                assert false;
+            }
+
             Message msg = null;
             if (incoming.size() > 0) { // find queued incoming
                 for (ArrayList<Message> messages : incoming.values())
@@ -116,11 +136,15 @@ public class MessageQueue implements Runnable {
         }
 
         try {
-            socket.close();
+            if (socket != null)
+                socket.close();
+            else
+                file.close();
         } catch (IOException e) {
             Error(e);
             running = false;
         }
+
     }
 
     private void PutMessage(final Message msg) {
@@ -214,6 +238,8 @@ public class MessageQueue implements Runnable {
         int len = 0;
         try {
             len = dis.readInt();
+            if (byteOrder == ByteOrder.LITTLE_ENDIAN)
+                len = Integer.reverseBytes(len); // readInt reads BIT_ENDIAN
         } catch (EOFException e) {
             Error(new Exception("EOF"));
         }
@@ -241,12 +267,16 @@ public class MessageQueue implements Runnable {
             throws IOException {
         assert message.getFunction() != Function.NEG;
         final byte[] data = message.toByteArray();
-        dos.writeInt(data.length);
+        if (byteOrder == ByteOrder.BIG_ENDIAN)
+            dos.writeInt(data.length);
+        else
+            dos.writeInt(Integer.reverseBytes(data.length));
         dos.write(data);
     }
 
     private void ProcessMessage(final DataOutputStream dos, final Message msg) throws IOException {
         if (msg.getExpectResponse()) {
+            assert file == null; // file cannot be interactive mode
             if (sampleView.shaderEditor.ProcessMessage(this, msg))
                 return;
             else if (sampleView.breakpointOption.ProcessMessage(this, msg))

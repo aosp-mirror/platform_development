@@ -60,103 +60,109 @@ public class MessageFormatter {
 
     static String FormatFloats(int count, final ByteBuffer data) {
         if (data.remaining() == 0)
-            return "[null]";
+            return "{}";
         data.order(SampleView.targetByteOrder);
-        String ret = "[";
+        String ret = "{";
         for (int i = 0; i < count; i++) {
             ret += Float.intBitsToFloat(data.getInt());
             if (i < count - 1)
                 ret += ", ";
         }
-        return ret + "]";
+        return ret + "}";
     }
-    
+
     static String FormatInts(int count, final ByteBuffer data) {
         if (data.remaining() == 0)
-            return "[null]";
+            return "{}";
         data.order(SampleView.targetByteOrder);
-        String ret = "[";
+        String ret = "{";
         for (int i = 0; i < count; i++) {
             ret += data.getInt();
             if (i < count - 1)
                 ret += ", ";
         }
-        return ret + "]";
+        return ret + "}";
     }
-    
+
     static String FormatUints(int count, final ByteBuffer data) {
         if (data.remaining() == 0)
-            return "[null]";
+            return "{}";
         data.order(SampleView.targetByteOrder);
-        String ret = "[";
+        String ret = "{";
         for (int i = 0; i < count; i++) {
             long bits = data.getInt() & 0xffffffff;
             ret += bits;
             if (i < count - 1)
                 ret += ", ";
         }
-        return ret + "]";
-    }
-    
-    static String FormatMatrix(int columns, int count, final ByteBuffer data) {
-        if (data.remaining() == 0)
-            return "[null]";
-        data.order(SampleView.targetByteOrder);
-        String ret = "[";
-        for (int i = 0; i < count; i++) {
-            ret += Float.intBitsToFloat(data.getInt());
-            if (i % columns == columns - 1)
-                ret += "\\n                                             ";
-            else if (i < count - 1)
-                ret += ", ";
-        }
-        return ret + "]";
+        return ret + "}";
     }
 
-    public static String Format(final DebuggerMessage.Message msg) {
+    static String FormatMatrix(int columns, int count, final ByteBuffer data) {
+        if (data.remaining() == 0)
+            return "{}";
+        data.order(SampleView.targetByteOrder);
+        String ret = "{";
+        for (int i = 0; i < count; i++) {
+            ret += Float.intBitsToFloat(data.getInt());
+            if (i < count - 1)
+                ret += ", ";
+            if (i % columns == columns - 1)
+                ret += "\\n                                             ";
+        }
+        return ret + "}";
+    }
+
+    public static String Format(final DebuggerMessage.Message msg,
+                                final boolean code) {
         String str;
         switch (msg.getFunction()) {
 """)
-            
+    #in source code these turn into program_%d etc.
+    nameReplaces = ["program", "shader", "texture", "buffer", "framebuffer", "renderbuffer"]
     for line in lines:
         if line.find("API_ENTRY(") >= 0: # a function prototype
             returnType = line[0: line.find(" API_ENTRY(")].replace("const ", "")
             functionName = line[line.find("(") + 1: line.find(")")] #extract GL function name
             parameterList = line[line.find(")(") + 2: line.find(") {")]
-                        
+
             parameters = parameterList.split(',')
             paramIndex = 0
-            
-            formatString = "%s "
+
+            formatString = "%s"
             formatArgs = ""
             if returnType != "void":
                 if returnType == "GLenum":
-                    formatArgs += "GLEnum.valueOf(msg.getRet())"
+                    formatArgs += '\
+                    (code ? "%s" : GLEnum.valueOf(msg.getRet()))\n' % (functionName)
                 elif returnType.find("*") >= 0:
-                    formatArgs += '"0x" + Integer.toHexString(msg.getRet())'
+                    formatArgs += '\
+                    (code ? "%s" : "0x" + Integer.toHexString(msg.getRet()))\n' % (functionName)
                 else:
-                    formatArgs += "msg.getRet()"
+                    formatArgs += '\
+                    (code ? "%s" : msg.getRet())\n' % (functionName)
             else:
-                formatArgs += '"void"'
-            
-            #formatString += "%s(" % (functionName)
+                formatArgs += '\
+                    (code ? "%s" : "void")\n' % (functionName)
+
             formatString += "("
-            
+
             if parameterList == "void":
                 parameters = []
             inout = ""
-            
+
             paramNames = []
-            
+
             for parameter in parameters:
                 parameter = parameter.replace("const","")
                 parameter = parameter.strip()
                 paramType = parameter.split(' ')[0]
                 paramName = parameter.split(' ')[1]
                 annotation = ""
-                
-                formatString += paramName + "=%s"
-                    
+
+                formatString += "%s%s"
+                formatArgs += '\
+                    , (code ? "/*%s*/ " : "%s=")\n' % (paramName, paramName)
                 if parameter.find(":") >= 0:
                     assert inout == "" # only one parameter should be annotated
                     inout = paramType.split(":")[2]
@@ -193,26 +199,42 @@ public class MessageFormatter {
                         assert columns * columns == count
                         assert countArg != ""
                         assert paramType == "GLfloat"
-                        formatArgs += ", FormatMatrix(%d, %d * msg.getArg%d(), msg.getData().asReadOnlyByteBuffer())" % (columns, count, paramNames.index(countArg))
+                        formatArgs += '\
+                    , (code ? "(GLfloat [])" : "") + FormatMatrix(%d, %d * msg.getArg%d(), msg.getData().asReadOnlyByteBuffer())' % (
+                        columns, count, paramNames.index(countArg))
                     elif annotation == "GLstring":
-                        formatArgs += ", msg.getData().toStringUtf8()"
+                        formatArgs += '\
+                    , (code ? "\\"" : "") + msg.getData().toStringUtf8() + (code ? "\\"" : "")'
                     elif paramType.find("void") >= 0:
-                        formatArgs += ', "0x" + Integer.toHexString(msg.getArg%d())' % (paramIndex)
+                        formatArgs += '\
+                    , (code ? "arg%d" : "0x" + Integer.toHexString(msg.getArg%d()))' % (paramIndex, paramIndex)
                     elif countArg == "":
-                        formatArgs += ", %s(%d, msg.getData().asReadOnlyByteBuffer())" % (dataFormatter, count)
+                        formatArgs += '\
+                    , (code ? "(%s [])" : "") + %s(%d, msg.getData().asReadOnlyByteBuffer())' % (
+                        paramType, dataFormatter, count)
                     else:
-                        formatArgs += ", %s(%d * msg.getArg%d(), msg.getData().asReadOnlyByteBuffer())" % (dataFormatter, count, paramNames.index(countArg))
+                        formatArgs += '\
+                    , (code ? "(%s [])" : "") +  %s(%d * msg.getArg%d(), msg.getData().asReadOnlyByteBuffer())' % (
+                        paramType, dataFormatter, count, paramNames.index(countArg))
                 else:
                     if paramType == "GLfloat" or paramType == "GLclampf":
-                        formatArgs += ", Float.intBitsToFloat(msg.getArg%d())" % (paramIndex)
+                        formatArgs += "\
+                    , Float.intBitsToFloat(msg.getArg%d())" % (paramIndex)
                     elif paramType == "GLenum": 
-                        formatArgs += ", GLEnum.valueOf(msg.getArg%d())" % (paramIndex)
+                        formatArgs += "\
+                    , GLEnum.valueOf(msg.getArg%d())" % (paramIndex)
                     elif paramType.find("*") >= 0:
-                        formatArgs += ', "0x" + Integer.toHexString(msg.getArg%d())' % (paramIndex)
+                        formatArgs += '\
+                    , (code ? "arg%d" : "0x" + Integer.toHexString(msg.getArg%d()))' % (paramIndex, paramIndex)
+                    elif paramName in nameReplaces:
+                        formatArgs += '\
+                    , (code ? "%s_" : "") + msg.getArg%d()' % (paramName, paramIndex)
                     else:
-                        formatArgs += ", msg.getArg%d()" % (paramIndex)
+                        formatArgs += "\
+                    , msg.getArg%d()" % (paramIndex)
                 if paramIndex < len(parameters) - 1:
                     formatString += ", "
+                    formatArgs += '\n'
                 paramNames.append(paramName)
                 paramIndex += 1  
 
@@ -223,8 +245,10 @@ public class MessageFormatter {
             if line.find("*") >= 0 and (line.find("*") < line.find(":") or line.find("*") > line.rfind(":")):
                 sys.stderr.write(line)
                 output.write("                // FIXME: this function uses pointers, debugger may send data in msg.data\n")
-            output.write('                str = String.format("%s", %s); break;\n' % (formatString, formatArgs))
-            
+            output.write('\
+                str = String.format("%s",\n%s);\n\
+                break;\n' % (formatString, formatArgs))
+
 
     output.write("""            default:
                 str = msg.toString();

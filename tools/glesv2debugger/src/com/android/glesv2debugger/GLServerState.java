@@ -50,7 +50,7 @@ public class GLServerState implements Cloneable {
 
     GLServerState(final Context context) {
         this.context = context;
-        enableDisables = new SparseIntArray(9);
+        enableDisables = new SparseIntArray();
         enableDisables.put(GLEnum.GL_BLEND.value, 0);
         enableDisables.put(GLEnum.GL_DITHER.value, 1);
         enableDisables.put(GLEnum.GL_DEPTH_TEST.value, 0);
@@ -60,6 +60,7 @@ public class GLServerState implements Cloneable {
         enableDisables.put(GLEnum.GL_SAMPLE_ALPHA_TO_COVERAGE.value, 0);
         enableDisables.put(GLEnum.GL_POLYGON_OFFSET_FILL.value, 0);
         enableDisables.put(GLEnum.GL_CULL_FACE.value, 0);
+        // enableDisables.put(GLEnum.GL_TEXTURE_2D.value, 1);
 
         lastSetter = new SparseArray<Message>();
         lastSetter.put(Function.glBlendColor.getNumber(), null);
@@ -173,7 +174,11 @@ public class GLServerState implements Cloneable {
 
     boolean EnableDisable(boolean enable, final Message msg) {
         int index = enableDisables.indexOfKey(msg.getArg0());
-        assert index >= 0;
+        if (index < 0) {
+            System.out.print("invalid glDisable/Enable: ");
+            System.out.println(MessageFormatter.Format(msg, false));
+            return true;
+        }
         if ((enableDisables.valueAt(index) != 0) == enable)
             return true; // TODO: redundant
         enableDisables.put(msg.getArg0(), enable ? 1 : 0);

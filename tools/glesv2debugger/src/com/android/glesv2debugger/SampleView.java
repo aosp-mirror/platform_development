@@ -28,6 +28,7 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.dialogs.InputDialog;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ColumnWeightData;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
@@ -56,6 +57,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.ScrollBar;
@@ -71,6 +73,8 @@ import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -204,7 +208,7 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
     public SampleView() {
         MessageParserEx messageParserEx = new MessageParserEx();
         Message.Builder builder = Message.newBuilder();
-        messageParserEx.Parse(builder, "glUniform4fv(1,2,[0,1,2,3,4,5,6,7])");
+        messageParserEx.Parse(builder, "glUniform4fv(1,2,{0,1,2,3,4,5,6,7})");
         messageParserEx
                 .Parse(builder,
                         "void glShaderSource(shader=4, count=1, string=\"dksjafhskjahourehghskjg\", length=0x0)");
@@ -394,7 +398,6 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
             }
         });
 
-        makeActions();
         hookContextMenu();
         hookSelectionChanged();
         contributeToActionBars();
@@ -434,7 +437,24 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
     }
 
     private void fillLocalToolBar(final IToolBarManager manager) {
+        actionConnect = new Action("Connect", Action.AS_PUSH_BUTTON) {
+            @Override
+            public void run() {
+                ConnectDisconnect();
+            }
+        };
         manager.add(actionConnect);
+
+        manager.add(new Action("Open File", Action.AS_PUSH_BUTTON)
+        {
+            @Override
+            public void run()
+            {
+                if (!running)
+                    OpenFile();
+            }
+        });
+
         final Shell shell = this.getViewSite().getShell();
         actionAutoScroll = new Action("Auto Scroll", Action.AS_CHECK_BOX) {
             @Override
@@ -507,19 +527,18 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
 
         actContext = new Action("Context: 0x", Action.AS_DROP_DOWN_MENU) {
             @Override
-            public void run()
-                              {
-                                  if (debugContexts.size() < 2)
-                                      return;
-                                  final String idStr = this.getText().substring(
+            public void run() {
+                if (debugContexts.size() < 2)
+                    return;
+                final String idStr = this.getText().substring(
                                           "Context: 0x".length());
-                                  if (idStr.length() == 0)
-                                      return;
-                                  final int contextId = Integer.parseInt(idStr, 16);
-                                  int index = debugContexts.indexOfKey(contextId);
-                                  index = (index + 1) % debugContexts.size();
-                                  ChangeContext(debugContexts.valueAt(index));
-                              }
+                if (idStr.length() == 0)
+                    return;
+                final int contextId = Integer.parseInt(idStr, 16);
+                int index = debugContexts.indexOfKey(contextId);
+                index = (index + 1) % debugContexts.size();
+                ChangeContext(debugContexts.valueAt(index));
+            }
         };
         manager.add(actContext);
 
@@ -527,9 +546,7 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
         {
             @Override
             public void run() {
-                org.eclipse.jface.dialogs.InputDialog dialog = new org.eclipse.jface.dialogs.InputDialog(
-                        shell, "Port",
-                        "Debugger port",
+                InputDialog dialog = new InputDialog(shell, "Port", "Debugger port",
                         actionPort.getText(), null);
                 if (Window.OK == dialog.open()) {
                     actionPort.setText(dialog.getValue());
@@ -538,21 +555,63 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
             }
         };
         manager.add(actionPort);
+
+        manager.add(new Action("CodeGen Frame", Action.AS_PUSH_BUTTON)
+        {
+            @Override
+            public void run()
+            {
+                if (current != null)
+                    new CodeGen().CodeGenFrame((Frame) viewer.getInput());
+            }
+        });
+
+        manager.add(new Action("CodeGen Frames", Action.AS_PUSH_BUTTON)
+        {
+            @Override
+            public void run()
+            {
+                if (current != null)
+                    new CodeGen().CodeGenFrames(current, frameNum.getSelection() + 1);
+            }
+        });
+    }
+
+    private void OpenFile() {
+        FileDialog dialog = new FileDialog(getSite().getShell(), SWT.OPEN);
+        dialog.setText("Open");
+        dialog.setFilterExtensions(new String[] {
+                "*.gles2dbg"
+        });
+        String filePath = dialog.open();
+        if (filePath == null)
+            return;
+        FileInputStream file = null;
+        try {
+            file = new FileInputStream(filePath);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            return;
+        }
+        running = true;
+        messageQueue.Start(targetByteOrder, file);
+        thread = new Thread(this);
+        thread.start();
+        actionConnect.setText("Disconnect");
+        getViewSite().getActionBars().getToolBarManager().update(true);
     }
 
     private void ConnectDisconnect() {
         if (!running) {
             running = true;
-            messageQueue.Start();
+            messageQueue.Start(targetByteOrder, null);
             thread = new Thread(this);
             thread.start();
             actionConnect.setText("Disconnect");
-            actionConnect.setToolTipText("Disconnect from debuggee");
         } else {
             running = false;
             messageQueue.Stop();
             actionConnect.setText("Connect");
-            actionConnect.setToolTipText("Connect to debuggee");
         }
         this.getSite().getShell().getDisplay().syncExec(new Runnable() {
             @Override
@@ -560,17 +619,6 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
                 getViewSite().getActionBars().getToolBarManager().update(true);
             }
         });
-    }
-
-    private void makeActions() {
-        actionConnect = new Action() {
-            @Override
-            public void run() {
-                ConnectDisconnect();
-            }
-        };
-        actionConnect.setText("Connect");
-        actionConnect.setToolTipText("Connect to debuggee");
     }
 
     void MessageDataSelected(final MessageData msgData) {
@@ -626,7 +674,6 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
                         "GL ES 2.0 Debugger Client", e.getMessage());
             }
         });
-
     }
 
     /**
@@ -656,10 +703,9 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
 
         boolean shaderEditorUpdate = false, currentUpdate = false;
         while (running) {
-            if (!messageQueue.IsRunning())
-                break;
-
             final Message oriMsg = messageQueue.RemoveCompleteMessage(0);
+            if (oriMsg == null && !messageQueue.IsRunning())
+                break;
             if (newMessages > 60 || (newMessages > 0 && null == oriMsg)) {
                 newMessages = 0;
 
@@ -669,11 +715,14 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
                         public void run() {
                             if (current == null)
                                 ChangeContext(debugContexts.valueAt(0));
-                            else
+                            else if (frameNum.getSelection() == current.frames.size() - 1)
+                            {
                                 viewer.refresh(false);
+                                if (actionAutoScroll.isChecked())
+                                    viewer.getList().setSelection(
+                                            viewer.getList().getItemCount() - 1);
+                            }
                             frameNum.setMaximum(current.frames.size());
-                            if (actionAutoScroll.isChecked())
-                                viewer.getList().setSelection(viewer.getList().getItemCount() - 1);
                         }
                     });
                 currentUpdate = false;

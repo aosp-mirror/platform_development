@@ -66,6 +66,7 @@ class DebugContext {
             msg = currentContext.processed;
         currentContext.processed = null;
         MessageData msgData = new MessageData(Display.getCurrent(), msg, oriMsg, currentContext);
+        msgData.attribs = currentContext.serverVertex.fetchedAttribs;
         currentFrame.calls.add(msgData);
         if (msg.getFunction() != Function.eglSwapBuffers)
             return msgData;
@@ -107,6 +108,9 @@ public class Context implements Cloneable {
     public Context clone() {
         try {
             Context copy = (Context) super.clone();
+            // FIXME: context sharing list clone
+            copy.shares = new ArrayList<Context>(1);
+            copy.shares.add(copy);
             copy.serverVertex = serverVertex.clone();
             copy.serverShader = serverShader.clone(copy);
             copy.serverState = serverState.clone();
@@ -156,7 +160,7 @@ class ContextViewProvider extends LabelProvider implements ITreeContentProvider,
             if (entry.obj != null) {
                 objStr = entry.obj.toString();
                 if (entry.obj instanceof Message)
-                    objStr = MessageFormatter.Format((Message) entry.obj);
+                    objStr = MessageFormatter.Format((Message) entry.obj, false);
             }
             return entry.name + " = " + objStr;
         }
@@ -240,7 +244,7 @@ class ContextViewProvider extends LabelProvider implements ITreeContentProvider,
                 final Message val = context.serverState.integers.valueAt(i);
                 if (val != null)
                     children.add(GLEnum.valueOf(key).name() + " : " +
-                            MessageFormatter.Format(val));
+                            MessageFormatter.Format(val, false));
                 else
                     children.add(GLEnum.valueOf(key).name() + " : default");
             }
@@ -252,7 +256,7 @@ class ContextViewProvider extends LabelProvider implements ITreeContentProvider,
                     children.add(Function.valueOf(key).name() + " : default");
                 else
                     children.add(Function.valueOf(key).name() + " : "
-                            + MessageFormatter.Format(msg));
+                            + MessageFormatter.Format(msg, false));
             }
         } else if (entry.obj instanceof SparseArray) {
             SparseArray<?> sa = (SparseArray<?>) entry.obj;
