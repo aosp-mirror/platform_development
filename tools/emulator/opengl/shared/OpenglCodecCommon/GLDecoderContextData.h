@@ -51,13 +51,13 @@ public:
         delete m_pointerData;
     }
 
-    void storePointerData(PointerDataLocation loc, void *data, size_t len) {
+    void storePointerData(unsigned int loc, void *data, size_t len) {
 
         assert(loc < m_nLocations);
         m_pointerData[loc].alloc(len);
         memcpy(m_pointerData[loc].ptr(), data, len);
     }
-    void *pointerData(PointerDataLocation loc) {
+    void *pointerData(unsigned int loc) {
         assert(loc < m_nLocations);
         return m_pointerData[loc].ptr();
     }
