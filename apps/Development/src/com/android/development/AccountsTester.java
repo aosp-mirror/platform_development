@@ -21,6 +21,7 @@ import android.app.Dialog;
 import android.app.AlertDialog;
 import android.content.*;
 import android.content.pm.PackageManager;
+import android.content.res.Resources;
 import android.accounts.*;
 import android.os.Bundle;
 import android.os.Parcelable;
@@ -32,6 +33,8 @@ import android.util.Log;
 import android.text.TextUtils;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class AccountsTester extends Activity implements OnAccountsUpdateListener {
     private static final String TAG = "AccountsTester";
@@ -142,7 +145,7 @@ public class AccountsTester extends Activity implements OnAccountsUpdateListener
 
     private void initializeAuthenticatorsSpinner() {
         mAuthenticatorDescs = mAccountManager.getAuthenticatorTypes();
-        String[] names = new String[mAuthenticatorDescs.length];
+        List<String> names = new ArrayList(mAuthenticatorDescs.length);
         for (int i = 0; i < mAuthenticatorDescs.length; i++) {
             Context authContext;
             try {
@@ -150,12 +153,17 @@ public class AccountsTester extends Activity implements OnAccountsUpdateListener
             } catch (PackageManager.NameNotFoundException e) {
                 continue;
             }
-            names[i] = authContext.getString(mAuthenticatorDescs[i].labelId);
+            try  {
+                names.add(authContext.getString(mAuthenticatorDescs[i].labelId));
+            } catch (Resources.NotFoundException e) {
+                continue;
+            }
         }
 
+        String[] namesArray = names.toArray(new String[names.size()]);
         ArrayAdapter<String> adapter =
                 new ArrayAdapter<String>(AccountsTester.this,
-                android.R.layout.simple_spinner_item, names);
+                android.R.layout.simple_spinner_item, namesArray);
         mAccountTypesSpinner.setAdapter(adapter);
     }
 
