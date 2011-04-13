@@ -102,13 +102,15 @@ public class BreakpointOption extends ScrolledComposite implements SelectionList
     public boolean ProcessMessage(final MessageQueue queue, final Message msg) throws IOException {
         // use DefaultProcessMessage just to register the GL call
         // but do not send response
+        final int contextId = msg.getContextId();
         if (msg.getType() == Type.BeforeCall || msg.getType() == Type.AfterCall)
             queue.DefaultProcessMessage(msg, true, false);
         final Message.Builder builder = Message.newBuilder();
-        builder.setContextId(msg.getContextId());
+        builder.setContextId(contextId);
         builder.setType(Type.Response);
         builder.setExpectResponse(true);
         final Shell shell = sampleView.getViewSite().getShell();
+        final boolean send[] = new boolean[1];
         shell.getDisplay().syncExec(new Runnable() {
             @Override
             public void run() {
@@ -149,8 +151,8 @@ public class BreakpointOption extends ScrolledComposite implements SelectionList
                     {
                         builder.setFunction(Function.SKIP);
                         // AfterCall is skipped, so push BeforeCall to complete
-                        if (msg.getType() == Type.BeforeCall)
-                            queue.CompletePartialMessage(msg.getContextId());
+                        if (queue.GetPartialMessage(contextId) != null)
+                            queue.CompletePartialMessage(contextId);
                     }
                     else if (s.startsWith("c"))
                         builder.setFunction(Function.CONTINUE);
@@ -165,9 +167,10 @@ public class BreakpointOption extends ScrolledComposite implements SelectionList
                     {
                         MessageParserEx.instance.Parse(builder, inputDialog.getValue());
                         lastFunction = builder.getFunction();
+                        builder.setExpectResponse(true);
                         // AfterCall is skipped, so push BeforeCall to complete
-                        if (msg.getType() == Type.BeforeCall)
-                            queue.CompletePartialMessage(msg.getContextId());
+                        if (queue.GetPartialMessage(contextId) != null)
+                            queue.CompletePartialMessage(contextId);
                     }
                 }
                 // else defaults to continue BeforeCall and skip AfterCall

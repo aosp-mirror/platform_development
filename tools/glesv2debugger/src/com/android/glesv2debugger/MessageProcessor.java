@@ -23,6 +23,7 @@ import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.PaletteData;
 
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 
 public class MessageProcessor {
     static void showError(final String message) {
@@ -30,8 +31,11 @@ public class MessageProcessor {
         MessageDialog.openError(null, "MessageProcessor", message);
     }
 
-    public static byte[] ref; // inout; used for glReadPixels
-
+    /**
+     * data layout: uint32 total decompressed length, (chunks: uint32 chunk
+     * decompressed size, uint32 chunk compressed size, chunk data)+. 0 chunk
+     * compressed size means chunk is not compressed
+     */
     public static byte[] LZFDecompressChunks(final ByteString data) {
         ByteBuffer in = data.asReadOnlyByteBuffer();
         in.order(SampleView.targetByteOrder);
@@ -60,6 +64,44 @@ public class MessageProcessor {
         return out.array();
     }
 
+    /** same data layout as LZFDecompressChunks */
+    public static byte[] LZFCompressChunks(final byte[] in, final int inSize) {
+        byte[] chunk = new byte[256 * 1024]; // chunk size is arbitrary
+        final ByteBuffer out = ByteBuffer.allocate(4 + (inSize + chunk.length - 1)
+                / chunk.length * (chunk.length + 4 * 2));
+        out.order(SampleView.targetByteOrder);
+        out.putInt(inSize);
+        for (int i = 0; i < inSize; i += chunk.length) {
+            int chunkIn = chunk.length;
+            if (i + chunkIn > inSize)
+                chunkIn = inSize - i;
+            final byte[] inChunk = java.util.Arrays.copyOfRange(in, i, i + chunkIn);
+            final int chunkOut = org.liblzf.CLZF
+                    .lzf_compress(inChunk, chunkIn, chunk, chunk.length);
+            out.putInt(chunkIn);
+            out.putInt(chunkOut);
+            if (chunkOut == 0) // compressed bigger than chunk (uncompressed)
+                out.put(inChunk);
+            else
+                out.put(chunk, 0, chunkOut);
+        }
+        return Arrays.copyOf(out.array(), out.position());
+    }
+
+    /**
+     * returns new ref, which is also the decoded image; ref could be bigger
+     * than pixels, in which case the first pixels.length bytes form the image
+     */
+    public static byte[] DecodeReferencedImage(byte[] ref, byte[] pixels) {
+        if (ref.length < pixels.length)
+            ref = new byte[pixels.length];
+        for (int i = 0; i < pixels.length; i++)
+            ref[i] ^= pixels[i];
+        for (int i = pixels.length; i < ref.length; i++)
+            ref[i] = 0; // clear unused ref to maintain consistency
+        return ref;
+    }
+
     public static ImageData ReceiveImage(int width, int height, int format,
             int type, final ByteString data) {
         assert width > 0 && height > 0;
@@ -75,6 +117,7 @@ public class MessageProcessor {
                 break;
             default:
                 showError("unsupported texture type " + type);
+                return null;
         }
 
         switch (GLEnum.valueOf(format)) {
@@ -122,42 +165,9 @@ public class MessageProcessor {
                 showError("unsupported texture format: " + format);
                 return null;
         }
-
         byte[] pixels = LZFDecompressChunks(data);
         assert pixels.length == width * height * (bpp / 8);
-
         PaletteData palette = new PaletteData(redMask, greenMask, blueMask);
-        if (null != ref) {
-            if (ref.length < pixels.length)
-                ref = new byte[width * height * (bpp / 8)];
-            for (int i = 0; i < pixels.length; i++)
-                ref[i] ^= pixels[i];
-            for (int i = pixels.length; i < ref.length; i++)
-                ref[i] = 0; // clear unused ref to maintain consistency
-            return new ImageData(width, height, bpp, palette, 1, ref);
-        } else
-            return new ImageData(width, height, bpp, palette, 1, pixels);
-    }
-
-    static public float[] ReceiveData(final GLEnum type, final ByteString data) {
-        final ByteBuffer buffer = data.asReadOnlyByteBuffer();
-        if (type == GLEnum.GL_FLOAT) {
-            float[] elements = new float[buffer.remaining() / 4];
-            for (int i = 0; i < elements.length; i++)
-                elements[i] = buffer.getFloat();
-            return elements;
-        } else if (type == GLEnum.GL_UNSIGNED_SHORT) {
-            float[] elements = new float[buffer.remaining() / 2];
-            for (int i = 0; i < elements.length; i++)
-                elements[i] = buffer.getShort() & 0xffff;
-            return elements;
-        } else if (type == GLEnum.GL_UNSIGNED_BYTE) {
-            float[] elements = new float[buffer.remaining() / 4];
-            for (int i = 0; i < elements.length; i++)
-                elements[i] = buffer.get() & 0xff;
-            return elements;
-        } else
-            assert false;
-        return null;
+        return new ImageData(width, height, bpp, palette, 1, pixels);
     }
 }

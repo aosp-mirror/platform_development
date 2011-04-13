@@ -39,6 +39,7 @@ class GLBuffer implements Cloneable {
             GLBuffer copy = (GLBuffer) super.clone();
             if (data != null) {
                 copy.data = ByteBuffer.allocate(data.capacity());
+                copy.data.order(SampleView.targetByteOrder);
                 data.position(0);
                 copy.data.put(data);
             }
@@ -55,6 +56,13 @@ class GLAttribPointer implements Cloneable {
     public int size; // number of values per vertex
     public GLEnum type; // data type
     public int stride; // bytes
+    /**
+     * element stride in bytes, used when fetching from buffer; not for fetching
+     * from user pointer since server already packed elements
+     */
+    int elemStride; // in bytes
+    /** element size in bytes */
+    int elemSize;
     public int ptr; // pointer in debugger server or byte offset into buffer
     public GLBuffer buffer;
     public boolean normalized;
@@ -80,9 +88,6 @@ public class GLServerVertex implements Cloneable {
     public GLBuffer attribBuffer, indexBuffer; // current binding
     public GLAttribPointer attribPointers[];
     public float defaultAttribs[][];
-    int maxAttrib;
-
-    ByteBuffer[] fetchedAttribs;
 
     public GLServerVertex() {
         buffers.append(0, null);
@@ -131,11 +136,8 @@ public class GLServerVertex implements Cloneable {
         }
     }
 
-    Message processed = null; // return; glDrawArrays/Elements with fetched data
-
     /** returns true if processed */
     public boolean Process(final Message msg) {
-        processed = null;
         switch (msg.getFunction()) {
             case glBindBuffer:
                 glBindBuffer(msg);
@@ -150,12 +152,7 @@ public class GLServerVertex implements Cloneable {
                 glDeleteBuffers(msg);
                 return true;
             case glDrawArrays:
-                if (msg.hasArg7())
-                    processed = glDrawArrays(msg);
-                return true;
             case glDrawElements:
-                if (msg.hasArg7())
-                    processed = glDrawElements(msg);
                 return true;
             case glDisableVertexAttribArray:
                 glDisableVertexAttribArray(msg);
@@ -341,86 +338,72 @@ public class GLServerVertex implements Cloneable {
         }
     }
 
-    void Fetch(int index, final ByteBuffer nonVBO, final ByteBuffer dst) {
+    void Fetch(final int maxAttrib, final int index, final int dstIdx, final ByteBuffer nonVBO,
+            final float[][] fetchedAttribs) {
         for (int i = 0; i < maxAttrib; i++) {
             final GLAttribPointer attrib = attribPointers[i];
             int size = 0;
             if (attrib.enabled) {
                 size = attrib.size;
-                final ByteBuffer fetched = fetchedAttribs[i];
-                final byte[] element = new byte[TypeSize(attrib.type) * size];
                 if (null != attrib.buffer) {
                     final ByteBuffer src = attrib.buffer.data;
-                    src.position(attrib.ptr + index * attrib.stride);
-                    src.get(element);
-                    src.position(attrib.ptr + index * attrib.stride);
+                    src.position(attrib.ptr + index * attrib.elemStride);
                     for (int j = 0; j < size; j++)
-                        dst.putFloat(FetchConvert(src, attrib.type, attrib.normalized));
-                } else {
-                    final int position = nonVBO.position();
-                    nonVBO.get(element);
-                    nonVBO.position(position);
+                        fetchedAttribs[i][dstIdx * 4 + j] = FetchConvert(src, attrib.type,
+                                attrib.normalized);
+                } else
                     for (int j = 0; j < size; j++)
-                        dst.putFloat(FetchConvert(nonVBO, attrib.type, attrib.normalized));
-                }
-                fetched.put(element);
+                        fetchedAttribs[i][dstIdx * 4 + j] = FetchConvert(nonVBO, attrib.type,
+                                attrib.normalized);
             }
             if (size < 1)
-                dst.putFloat(defaultAttribs[i][0]);
+                fetchedAttribs[i][dstIdx * 4 + 0] = defaultAttribs[i][0];
             if (size < 2)
-                dst.putFloat(defaultAttribs[i][1]);
+                fetchedAttribs[i][dstIdx * 4 + 1] = defaultAttribs[i][1];
             if (size < 3)
-                dst.putFloat(defaultAttribs[i][2]);
+                fetchedAttribs[i][dstIdx * 4 + 2] = defaultAttribs[i][2];
             if (size < 4)
-                dst.putFloat(defaultAttribs[i][3]);
+                fetchedAttribs[i][dstIdx * 4 + 3] = defaultAttribs[i][3];
         }
     }
 
-    // void glDrawArrays(GLenum mode, GLint first, GLsizei count)
-    public Message glDrawArrays(Message msg) {
-        maxAttrib = msg.getArg7();
-        fetchedAttribs = new ByteBuffer[maxAttrib];
-        for (int i = 0; i < maxAttrib; i++) {
-            if (!attribPointers[i].enabled)
-                continue;
-            fetchedAttribs[i] = ByteBuffer.allocate(TypeSize(attribPointers[i].type)
-                    * attribPointers[i].size * msg.getArg2());
-        }
+    /**
+     * fetches and converts vertex data from buffers, defaults and user pointers
+     * into MessageData; mainly for display use
+     */
+    public void glDrawArrays(MessageData msgData) {
+        final Message msg = msgData.msg;
+        if (!msg.hasArg7())
+            return;
+        final int maxAttrib = msg.getArg7();
         final int first = msg.getArg1(), count = msg.getArg2();
-        final ByteBuffer buffer = ByteBuffer.allocate(4 * 4 * maxAttrib * count);
+        msgData.attribs = new float[maxAttrib][count * 4];
         ByteBuffer arrays = null;
         if (msg.hasData()) // server sends user pointer attribs
         {
             arrays = msg.getData().asReadOnlyByteBuffer();
             arrays.order(SampleView.targetByteOrder);
         }
-        for (int i = first; i < first + count; i++)
-            Fetch(i, arrays, buffer);
+        for (int i = 0; i < count; i++)
+            Fetch(maxAttrib, first + i, i, arrays, msgData.attribs);
         assert null == arrays || arrays.remaining() == 0;
-        for (int i = 0; i < maxAttrib; i++) {
-            if (!attribPointers[i].enabled)
-                continue;
-            assert fetchedAttribs[i].remaining() == 0;
-        }
-        buffer.rewind();
-        return msg.toBuilder().setData(com.google.protobuf.ByteString.copyFrom(buffer))
-                .setArg8(GLEnum.GL_FLOAT.value).build();
     }
 
     // void glDrawElements(GLenum mode, GLsizei count, GLenum type, const
     // GLvoid* indices)
-    public Message glDrawElements(Message msg) {
-        maxAttrib = msg.getArg7();
-        fetchedAttribs = new ByteBuffer[maxAttrib];
-        for (int i = 0; i < maxAttrib; i++) {
-            if (!attribPointers[i].enabled)
-                continue;
-            fetchedAttribs[i] = ByteBuffer.allocate(TypeSize(attribPointers[i].type)
-                    * attribPointers[i].size * msg.getArg1());
-        }
+    /**
+     * fetches and converts vertex data from buffers, defaults and user pointers
+     * and indices from buffer/pointer into MessageData; mainly for display use
+     */
+    public void glDrawElements(MessageData msgData) {
+        final Message msg = msgData.msg;
+        if (!msg.hasArg7())
+            return;
+        final int maxAttrib = msg.getArg7();
         final int count = msg.getArg1();
         final GLEnum type = GLEnum.valueOf(msg.getArg2());
-        final ByteBuffer buffer = ByteBuffer.allocate(4 * 4 * maxAttrib * count);
+        msgData.attribs = new float[maxAttrib][count * 4];
+        msgData.indices = new short[count];
         ByteBuffer arrays = null, index = null;
         if (msg.hasData()) // server sends user pointer attribs
         {
@@ -431,26 +414,21 @@ public class GLServerVertex implements Cloneable {
             index = arrays; // server also interleaves user pointer indices
         else {
             index = indexBuffer.data;
-            index.order(SampleView.targetByteOrder);
             index.position(msg.getArg3());
         }
-        if (GLEnum.GL_UNSIGNED_SHORT == type)
-            for (int i = 0; i < count; i++)
-                Fetch(index.getShort() & 0xffff, arrays, buffer);
-        else if (GLEnum.GL_UNSIGNED_BYTE == type)
-            for (int i = 0; i < count; i++)
-                Fetch(index.get() & 0xff, arrays, buffer);
-        else
+        if (GLEnum.GL_UNSIGNED_SHORT == type) {
+            for (int i = 0; i < count; i++) {
+                msgData.indices[i] = index.getShort();
+                Fetch(maxAttrib, msgData.indices[i] & 0xffff, i, arrays, msgData.attribs);
+            }
+        } else if (GLEnum.GL_UNSIGNED_BYTE == type) {
+            for (int i = 0; i < count; i++) {
+                msgData.indices[i] = (short) (index.get() & 0xff);
+                Fetch(maxAttrib, msgData.indices[i], i, arrays, msgData.attribs);
+            }
+        } else
             assert false;
         assert null == arrays || arrays.remaining() == 0;
-        for (int i = 0; i < maxAttrib; i++) {
-            if (!attribPointers[i].enabled)
-                continue;
-            assert fetchedAttribs[i].remaining() == 0;
-        }
-        buffer.rewind();
-        return msg.toBuilder().setData(com.google.protobuf.ByteString.copyFrom(buffer))
-                .setArg8(GLEnum.GL_FLOAT.value).build();
     }
 
     // void glEnableVertexAttribArray(GLuint index)
@@ -480,8 +458,11 @@ public class GLServerVertex implements Cloneable {
         attrib.type = GLEnum.valueOf(msg.getArg2());
         attrib.normalized = msg.getArg3() != 0;
         attrib.stride = msg.getArg4();
-        if (0 == attrib.stride)
-            attrib.stride = attrib.size * TypeSize(attrib.type);
+        attrib.elemSize = attrib.size * TypeSize(attrib.type);
+        if (attrib.stride == 0)
+            attrib.elemStride = attrib.elemSize;
+        else
+            attrib.elemStride = attrib.stride;
         attrib.ptr = msg.getArg5();
         attrib.buffer = attribBuffer;
     }

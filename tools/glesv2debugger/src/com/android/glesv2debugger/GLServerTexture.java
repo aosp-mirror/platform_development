@@ -83,8 +83,8 @@ public class GLServerTexture implements Cloneable {
     Context context;
 
     public GLEnum activeTexture = GLEnum.GL_TEXTURE0;
-    public int[] tmu2D = new int[32];
-    public int[] tmuCube = new int[32];
+    public int[] tmu2D = new int[16]; // TODO: MAX_COMBINED_TEXTURE_IMAGE_UNITS
+    public int[] tmuCube = new int[16];
     public SparseArray<GLTexture> textures = new SparseArray<GLTexture>();
     public GLTexture tex2D = null, texCube = null;
 

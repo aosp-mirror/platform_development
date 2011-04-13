@@ -528,9 +528,10 @@ public final class DebuggerMessage {
     
     public enum Prop
         implements com.google.protobuf.Internal.EnumLite {
-      Capture(0, 0),
+      CaptureDraw(0, 0),
       TimeMode(1, 1),
       ExpectResponse(2, 2),
+      CaptureSwap(3, 3),
       ;
       
       
@@ -538,9 +539,10 @@ public final class DebuggerMessage {
       
       public static Prop valueOf(int value) {
         switch (value) {
-          case 0: return Capture;
+          case 0: return CaptureDraw;
           case 1: return TimeMode;
           case 2: return ExpectResponse;
+          case 3: return CaptureSwap;
           default: return null;
         }
       }
@@ -693,6 +695,20 @@ public final class DebuggerMessage {
     public boolean hasPixelType() { return hasPixelType; }
     public int getPixelType() { return pixelType_; }
     
+    // optional int32 image_width = 26;
+    public static final int IMAGE_WIDTH_FIELD_NUMBER = 26;
+    private boolean hasImageWidth;
+    private int imageWidth_ = 0;
+    public boolean hasImageWidth() { return hasImageWidth; }
+    public int getImageWidth() { return imageWidth_; }
+    
+    // optional int32 image_height = 27;
+    public static final int IMAGE_HEIGHT_FIELD_NUMBER = 27;
+    private boolean hasImageHeight;
+    private int imageHeight_ = 0;
+    public boolean hasImageHeight() { return hasImageHeight; }
+    public int getImageHeight() { return imageHeight_; }
+    
     // optional float time = 11;
     public static final int TIME_FIELD_NUMBER = 11;
     private boolean hasTime;
@@ -718,7 +734,7 @@ public final class DebuggerMessage {
       function_ = com.android.glesv2debugger.DebuggerMessage.Message.Function.NEG;
       type_ = com.android.glesv2debugger.DebuggerMessage.Message.Type.BeforeCall;
       dataType_ = com.android.glesv2debugger.DebuggerMessage.Message.DataType.ReferencedImage;
-      prop_ = com.android.glesv2debugger.DebuggerMessage.Message.Prop.Capture;
+      prop_ = com.android.glesv2debugger.DebuggerMessage.Message.Prop.CaptureDraw;
     }
     public final boolean isInitialized() {
       if (!hasContextId) return false;
@@ -793,6 +809,12 @@ public final class DebuggerMessage {
       }
       if (hasPixelType()) {
         output.writeInt32(25, getPixelType());
+      }
+      if (hasImageWidth()) {
+        output.writeInt32(26, getImageWidth());
+      }
+      if (hasImageHeight()) {
+        output.writeInt32(27, getImageHeight());
       }
     }
     
@@ -885,6 +907,14 @@ public final class DebuggerMessage {
       if (hasPixelType()) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(25, getPixelType());
+      }
+      if (hasImageWidth()) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(26, getImageWidth());
+      }
+      if (hasImageHeight()) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(27, getImageHeight());
       }
       memoizedSerializedSize = size;
       return size;
@@ -1084,6 +1114,12 @@ public final class DebuggerMessage {
         if (other.hasPixelType()) {
           setPixelType(other.getPixelType());
         }
+        if (other.hasImageWidth()) {
+          setImageWidth(other.getImageWidth());
+        }
+        if (other.hasImageHeight()) {
+          setImageHeight(other.getImageHeight());
+        }
         if (other.hasTime()) {
           setTime(other.getTime());
         }
@@ -1209,6 +1245,14 @@ public final class DebuggerMessage {
             }
             case 200: {
               setPixelType(input.readInt32());
+              break;
+            }
+            case 208: {
+              setImageWidth(input.readInt32());
+              break;
+            }
+            case 216: {
+              setImageHeight(input.readInt32());
               break;
             }
           }
@@ -1552,6 +1596,42 @@ public final class DebuggerMessage {
         return this;
       }
       
+      // optional int32 image_width = 26;
+      public boolean hasImageWidth() {
+        return result.hasImageWidth();
+      }
+      public int getImageWidth() {
+        return result.getImageWidth();
+      }
+      public Builder setImageWidth(int value) {
+        result.hasImageWidth = true;
+        result.imageWidth_ = value;
+        return this;
+      }
+      public Builder clearImageWidth() {
+        result.hasImageWidth = false;
+        result.imageWidth_ = 0;
+        return this;
+      }
+      
+      // optional int32 image_height = 27;
+      public boolean hasImageHeight() {
+        return result.hasImageHeight();
+      }
+      public int getImageHeight() {
+        return result.getImageHeight();
+      }
+      public Builder setImageHeight(int value) {
+        result.hasImageHeight = true;
+        result.imageHeight_ = value;
+        return this;
+      }
+      public Builder clearImageHeight() {
+        result.hasImageHeight = false;
+        result.imageHeight_ = 0;
+        return this;
+      }
+      
       // optional float time = 11;
       public boolean hasTime() {
         return result.hasTime();
@@ -1587,7 +1667,7 @@ public final class DebuggerMessage {
       }
       public Builder clearProp() {
         result.hasProp = false;
-        result.prop_ = com.android.glesv2debugger.DebuggerMessage.Message.Prop.Capture;
+        result.prop_ = com.android.glesv2debugger.DebuggerMessage.Message.Prop.CaptureDraw;
         return this;
       }
       

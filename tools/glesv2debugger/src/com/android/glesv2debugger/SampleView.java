@@ -30,7 +30,6 @@ import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.dialogs.InputDialog;
 import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.jface.viewers.ColumnWeightData;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredContentProvider;
 import org.eclipse.jface.viewers.ITableLabelProvider;
@@ -38,7 +37,6 @@ import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.ListViewer;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
-import org.eclipse.jface.viewers.TableLayout;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
@@ -65,8 +63,6 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Slider;
 import org.eclipse.swt.widgets.TabFolder;
 import org.eclipse.swt.widgets.TabItem;
-import org.eclipse.swt.widgets.Table;
-import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IWorkbenchActionConstants;
@@ -108,7 +104,7 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
     TabFolder tabFolder;
     TabItem tabItemText, tabItemImage, tabItemBreakpointOption;
     TabItem tabItemShaderEditor, tabContextViewer;
-    ListViewer viewer; // or TableViewer
+    ListViewer viewer; // ListViewer / TableViewer
     Slider frameNum; // scale max cannot overlap min, so max is array size
     TreeViewer contextViewer;
     BreakpointOption breakpointOption;
@@ -119,7 +115,6 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
 
     Action actionAutoScroll;
     Action actionFilter;
-    Action actionCapture;
     Action actionPort;
 
     Action actContext; // for toggling contexts
@@ -155,7 +150,7 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
         @Override
         public Image getImage(Object obj) {
             MessageData msgData = (MessageData) obj;
-            return msgData.image;
+            return msgData.GetImage();
         }
 
         @Override
@@ -171,9 +166,7 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
             if (index > -1)
                 return null;
             MessageData msgData = (MessageData) obj;
-            if (msgData.image == null)
-                return null;
-            return msgData.image;
+            return msgData.GetImage();
         }
     }
 
@@ -228,31 +221,33 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
         gridData.verticalAlignment = SWT.FILL;
         frameNum.setLayoutData(gridData);
 
-        Table table = new Table(composite, SWT.H_SCROLL | SWT.V_SCROLL | SWT.MULTI
-                | SWT.FULL_SELECTION);
-        TableLayout layout = new TableLayout();
-        table.setLayout(layout);
-        table.setLinesVisible(true);
-        table.setHeaderVisible(true);
-        String[] headings = {
-                "Name", "Elapsed (ms)", "Detail"
-        };
-        int[] weights = {
-                50, 16, 60
-        };
-        int[] widths = {
-                180, 90, 200
-        };
-        for (int i = 0; i < headings.length; i++) {
-            layout.addColumnData(new ColumnWeightData(weights[i], widths[i],
-                    true));
-            TableColumn nameCol = new TableColumn(table, SWT.NONE, i);
-            nameCol.setText(headings[i]);
-        }
+        // Table table = new Table(composite, SWT.H_SCROLL | SWT.V_SCROLL |
+        // SWT.MULTI
+        // | SWT.FULL_SELECTION);
+        // TableLayout layout = new TableLayout();
+        // table.setLayout(layout);
+        // table.setLinesVisible(true);
+        // table.setHeaderVisible(true);
+        // String[] headings = {
+        // "Name", "Elapsed (ms)", "Detail"
+        // };
+        // int[] weights = {
+        // 50, 16, 60
+        // };
+        // int[] widths = {
+        // 180, 90, 200
+        // };
+        // for (int i = 0; i < headings.length; i++) {
+        // layout.addColumnData(new ColumnWeightData(weights[i], widths[i],
+        // true));
+        // TableColumn nameCol = new TableColumn(table, SWT.NONE, i);
+        // nameCol.setText(headings[i]);
+        // }
 
         // viewer = new TableViewer(table);
         viewer = new ListViewer(composite, SWT.DEFAULT);
-        viewer.getList().setFont(new Font(viewer.getList().getDisplay(), "Courier", 10, SWT.BOLD));
+        viewer.getList().setFont(new Font(viewer.getList().getDisplay(),
+                "Courier", 10, SWT.BOLD));
         ViewContentProvider contentProvider = new ViewContentProvider();
         viewer.setContentProvider(contentProvider);
         viewer.setLabelProvider(contentProvider);
@@ -435,6 +430,8 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
         actionConnect = new Action("Connect", Action.AS_PUSH_BUTTON) {
             @Override
             public void run() {
+                if (!running)
+                    ChangeContext(null); // viewer will switch to newest context
                 ConnectDisconnect();
             }
         };
@@ -446,7 +443,10 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
             public void run()
             {
                 if (!running)
+                {
+                    ChangeContext(null); // viewer will switch to newest context
                     OpenFile();
+                }
             }
         });
 
@@ -479,22 +479,57 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
         };
         manager.add(actionFilter);
 
-        actionCapture = new Action("Capture", Action.AS_CHECK_BOX) {
+        manager.add(new Action("CaptureDraw", Action.AS_DROP_DOWN_MENU)
+        {
             @Override
-            public void run() {
+            public void run()
+            {
+                int contextId = 0;
+                if (current != null)
+                    contextId = current.contextId;
+                InputDialog inputDialog = new InputDialog(shell,
+                        "Capture glDrawArrays/Elements",
+                        "Enter number of glDrawArrays/Elements to glReadPixels for "
+                                + "context 0x" + Integer.toHexString(contextId) +
+                                "\n(0x0 is any context)", "9001", null);
+                if (inputDialog.open() != Window.OK)
+                    return;
                 Message.Builder builder = Message.newBuilder();
-                builder.setContextId(0); // FIXME: proper context id
+                builder.setContextId(contextId);
                 builder.setType(Type.Response);
                 builder.setExpectResponse(false);
                 builder.setFunction(Function.SETPROP);
-                builder.setProp(Prop.Capture);
-                builder.setArg0(isChecked() ? 1 : 0);
+                builder.setProp(Prop.CaptureDraw);
+                builder.setArg0(Integer.parseInt(inputDialog.getValue()));
                 messageQueue.AddCommand(builder.build());
-                manager.update(true);
             }
-        };
-        actionCapture.setChecked(false);
-        manager.add(actionCapture);
+        });
+
+        manager.add(new Action("CaptureSwap", Action.AS_DROP_DOWN_MENU)
+        {
+            @Override
+            public void run()
+            {
+                int contextId = 0;
+                if (current != null)
+                    contextId = current.contextId;
+                InputDialog inputDialog = new InputDialog(shell,
+                        "Capture eglSwapBuffers",
+                        "Enter number of eglSwapBuffers to glReadPixels for "
+                                + "context 0x" + Integer.toHexString(contextId) +
+                                "\n(0x0 is any context)", "9001", null);
+                if (inputDialog.open() != Window.OK)
+                    return;
+                Message.Builder builder = Message.newBuilder();
+                builder.setContextId(contextId);
+                builder.setType(Type.Response);
+                builder.setExpectResponse(false);
+                builder.setFunction(Function.SETPROP);
+                builder.setProp(Prop.CaptureSwap);
+                builder.setArg0(Integer.parseInt(inputDialog.getValue()));
+                messageQueue.AddCommand(builder.build());
+            }
+        });
 
         manager.add(new Action("SYSTEM_TIME_THREAD", Action.AS_DROP_DOWN_MENU)
         {
@@ -633,23 +668,28 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
         final Frame frame = current.GetFrame(frameNum.getSelection());
         final Context context = frame.ComputeContext(msgData);
         contextViewer.setInput(context);
-        if (null != msgData.image) {
-            canvas.setBackgroundImage(msgData.image);
+        if (msgData.GetImage() != null) {
+            canvas.setBackgroundImage(msgData.GetImage());
             tabFolder.setSelection(tabItemImage);
             canvas.redraw();
         } else if (null != msgData.shader) {
             text.setText(msgData.shader);
             tabFolder.setSelection(tabItemText);
-        } else if (null != msgData.data) {
+        } else if (null != msgData.attribs) {
             StringBuilder builder = new StringBuilder();
-            for (int i = 0; i < msgData.data.length; i++) {
-                builder.append(String.format("%.3g", msgData.data[i]));
-                if (i % (4 * msgData.maxAttrib) == (4 * msgData.maxAttrib - 1))
-                    builder.append('\n');
-                else if (i % 4 == 3)
-                    builder.append(" -");
-                if (i < msgData.data.length - 1)
-                    builder.append(' ');
+            final int maxAttrib = msgData.msg.getArg7();
+            for (int i = 0; i < msgData.attribs[0].length / 4; i++) {
+                if (msgData.indices != null) {
+                    builder.append(msgData.indices[i] & 0xffff);
+                    builder.append(": ");
+                }
+                for (int j = 0; j < maxAttrib; j++) {
+                    for (int k = 0; k < 4; k++)
+                        builder.append(String.format("%.3g ", msgData.attribs[j][i * 4 + k]));
+                    if (j < maxAttrib - 1)
+                        builder.append("|| ");
+                }
+                builder.append('\n');
             }
             text.setText(builder.toString());
             tabFolder.setSelection(tabItemText);
@@ -703,9 +743,8 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
                     getSite().getShell().getDisplay().syncExec(new Runnable() {
                         @Override
                         public void run() {
-                            if (current == null)
-                                ChangeContext(debugContexts.valueAt(0));
-                            else if (frameNum.getSelection() == current.FrameCount() - 1)
+                            if (frameNum.getSelection() == current.FrameCount() - 1 ||
+                                    frameNum.getSelection() == current.FrameCount() - 2)
                             {
                                 viewer.refresh(false);
                                 if (actionAutoScroll.isChecked())
@@ -734,18 +773,16 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
                     showError(e);
                 }
             }
-
             DebugContext debugContext = debugContexts.get(oriMsg.getContextId());
             if (debugContext == null) {
                 debugContext = new DebugContext(oriMsg.getContextId());
                 debugContexts.put(oriMsg.getContextId(), debugContext);
             }
-
             debugContext.ProcessMessage(oriMsg);
-
             shaderEditorUpdate |= debugContext.currentContext.serverShader.uiUpdate;
             debugContext.currentContext.serverShader.uiUpdate = false;
-
+            if (current == null)
+                ChangeContext(debugContext);
             newMessages++;
         }
         if (running)
@@ -758,11 +795,25 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
             @Override
             public void run() {
                 current = newContext;
-                frameNum.setMaximum(current.FrameCount());
-                frameNum.setSelection(0);
-                viewer.setInput(current.GetFrame(frameNum.getSelection()));
+                if (current != null)
+                {
+                    frameNum.setMaximum(current.FrameCount());
+                    if (frameNum.getSelection() >= current.FrameCount())
+                        if (current.FrameCount() > 0)
+                            frameNum.setSelection(current.FrameCount() - 1);
+                        else
+                            frameNum.setSelection(0);
+                    viewer.setInput(current.GetFrame(frameNum.getSelection()));
+                    actContext.setText("Context: 0x" + Integer.toHexString(current.contextId));
+                }
+                else
+                {
+                    frameNum.setMaximum(1); // cannot overlap min
+                    frameNum.setSelection(0);
+                    viewer.setInput(null);
+                    actContext.setText("Context: 0x");
+                }
                 shaderEditor.Update();
-                actContext.setText("Context: 0x" + Integer.toHexString(current.contextId));
                 getViewSite().getActionBars().getToolBarManager().update(true);
             }
         });

@@ -212,13 +212,13 @@ public class CodeGen implements IRunnableWithProgress {
             code.format("glTexParameteriv(%s, GL_TEXTURE_MAG_FILTER, (GLint[]){%s});CHKERR;\n",
                     tex.target, tex.mag);
         }
-        for (int i = 0; i < serverTexture.tmu2D.length && i < 16; i++) {
+        for (int i = 0; i < serverTexture.tmu2D.length; i++) {
             code.format("glActiveTexture(%s);CHKERR;\n",
                     GLEnum.valueOf(GLEnum.GL_TEXTURE0.value + i));
             code.format("glBindTexture(GL_TEXTURE_2D, texture_%d);CHKERR;\n",
                     serverTexture.tmu2D[i]);
         }
-        for (int i = 0; i < serverTexture.tmuCube.length && i < 16; i++) {
+        for (int i = 0; i < serverTexture.tmuCube.length; i++) {
             code.format("glActiveTexture(%s);CHKERR;\n",
                     GLEnum.valueOf(GLEnum.GL_TEXTURE0.value + i));
             code.format("glBindTexture(GL_TEXTURE_CUBE_MAP, texture_%d);CHKERR;\n",
@@ -414,54 +414,233 @@ public class CodeGen implements IRunnableWithProgress {
         if (namesArray.indexOfKey(name) < 0) {
             namesHeader.format("extern GLuint %s;\n", id);
             namesSource.format("GLuint %s = 0;\n", id);
-        }
-        code.format("%s = %d;\n", id, name);
+        } else if (namesArray.get(name) != name)
+            code.format("%s = %d;\n", id, name); // name was deleted
         namesArray.put(name, name);
         code.write(MessageFormatter.Format(msg, true));
         code.write(";CHKERR;\n");
     }
 
-    private void CodeGenDrawArrays(final GLServerVertex v, final ByteBuffer[] attribs,
-            final int mode, final int count) throws IOException {
-        code.write("{\n");
-        code.format("    FILE * attribFile = fopen(\"/sdcard/frame_data.bin\", \"rb\");CHKERR;\n");
-        code.format("    assert(attribFile);CHKERR;\n");
-        code.format("    fseek(attribFile, %d, SEEK_SET);CHKERR;\n", dataOut.getChannel()
-                .position());
-        code.format("    glBindBuffer(GL_ARRAY_BUFFER, 0);CHKERR;\n");
-        for (int i = 0; i < attribs.length; i++) {
+    private void CodeGenDrawArrays(final GLServerVertex v, final MessageData msgData)
+            throws IOException {
+        final int maxAttrib = msgData.msg.getArg7();
+        if (maxAttrib < 1) {
+            code.write("// no vertex data\n");
+            return;
+        }
+        final byte[] data = msgData.msg.getData().toByteArray();
+        final GLEnum mode = GLEnum.valueOf(msgData.msg.getArg0());
+        final int first = msgData.msg.getArg1(), count = msgData.msg.getArg2();
+        int attribDataStride = 0;
+        for (int i = 0; i < maxAttrib; i++) {
             final GLAttribPointer att = v.attribPointers[i];
             if (!att.enabled)
                 continue;
-            final byte[] data = attribs[i].array();
-            final String typeName = "GL" + att.type.name().substring(3).toLowerCase();
-            code.format("    %s * attrib%d = (%s *)malloc(%d);CHKERR;\n", typeName, i, typeName,
-                    data.length);
-            dataOut.write(data);
-            code.format("    fread(attrib%d, %d, 1, attribFile);CHKERR;\n", i, data.length);
-            // code.format("    for (unsigned int i = 0; i < %d; i++)\n", count
-            // * att.size);
-            // code.format("        printf(\"%%f \\n\", attrib%d[i]);CHKERR;\n",
-            // i);
-            code.format("    glVertexAttribPointer(%d, %d, %s, %b, %d, attrib%d);CHKERR;\n",
-                    i, att.size, att.type, att.normalized,
-                    att.size * GLServerVertex.TypeSize(att.type), i);
+            if (att.buffer != null)
+                continue;
+            attribDataStride += att.elemSize;
         }
-        code.format("    fclose(attribFile);CHKERR;\n");
-        code.format("    glDrawArrays(%s, 0, %d);CHKERR;\n", GLEnum.valueOf(mode), count);
-        for (int i = 0; i < attribs.length; i++)
-            if (v.attribPointers[i].enabled)
-                code.format("    free(attrib%d);CHKERR;\n", i);
-
-        if (v.attribBuffer != null)
-            code.format("    glBindBuffer(GL_ARRAY_BUFFER, %d);CHKERR;\n",
-                    v.attribBuffer.name);
+        assert attribDataStride * count == data.length;
+        code.write("{\n");
+        if (attribDataStride > 0) {
+            code.format("    FILE * attribFile = fopen(\"/sdcard/frame_data.bin\", \"rb\");CHKERR;\n");
+            code.format("    assert(attribFile);CHKERR;\n");
+            code.format("    fseek(attribFile, %d, SEEK_SET);CHKERR;\n", dataOut.getChannel()
+                    .position());
+            dataOut.write(data);
+            code.format("    char * const attribData = (char *)malloc(%d);\n", first
+                    * attribDataStride + data.length);
+            code.format("    assert(attribData);\n");
+            code.format("    fread(attribData + %d, %d, 1, attribFile);\n",
+                    first * attribDataStride, data.length);
+            code.format("    fclose(attribFile);\n");
+            code.format("    glBindBuffer(GL_ARRAY_BUFFER, 0);CHKERR;\n");
+            int attribDataOffset = 0;
+            for (int i = 0; i < maxAttrib; i++) {
+                final GLAttribPointer att = v.attribPointers[i];
+                if (!att.enabled)
+                    continue;
+                if (att.buffer != null)
+                    continue;
+                code.format(
+                        "    glVertexAttribPointer(%d, %d, %s, %b, %d, attribData + %d);CHKERR;\n",
+                        i, att.size, att.type, att.normalized,
+                        attribDataStride, attribDataOffset);
+                attribDataOffset += att.elemSize;
+            }
+            if (v.attribBuffer != null)
+                code.format("    glBindBuffer(GL_ARRAY_BUFFER, %d);CHKERR;\n",
+                        v.attribBuffer.name);
+        }
+        code.format("    glDrawArrays(%s, %d, %d);CHKERR;\n", mode, first, count);
+        if (attribDataStride > 0)
+            code.format("    free(attribData);CHKERR;\n");
         code.write("};\n");
     }
 
-    private void CodeGenFunction(final Context ctx, final MessageData msgData) throws IOException {
+    private void CodeGenDrawElements(final GLServerVertex v, final MessageData msgData)
+            throws IOException {
+        final int maxAttrib = msgData.msg.getArg7();
+        if (maxAttrib < 1) {
+            code.write("// no vertex data\n");
+            return;
+        }
+        final GLEnum mode = GLEnum.valueOf(msgData.msg.getArg0());
+        final int count = msgData.msg.getArg1();
+        final GLEnum type = GLEnum.valueOf(msgData.msg.getArg2());
+        String typeName = "GLubyte";
+        if (type == GLEnum.GL_UNSIGNED_SHORT)
+            typeName = "GLushort";
+        int attribDataStride = 0;
+        for (int i = 0; i < maxAttrib; i++) {
+            final GLAttribPointer att = v.attribPointers[i];
+            if (!att.enabled)
+                continue;
+            if (att.buffer != null)
+                continue;
+            attribDataStride += att.elemSize;
+        }
+        code.write("{\n");
+        if (v.indexBuffer == null || attribDataStride > 0) {
+            // need to load user pointer indices and/or attributes
+            final byte[] element = new byte[attribDataStride];
+            final ByteBuffer data = msgData.msg.getData().asReadOnlyByteBuffer();
+            data.order(SampleView.targetByteOrder);
+            final ByteBuffer indexData = ByteBuffer.allocate(count * GLServerVertex.TypeSize(type));
+            indexData.order(SampleView.targetByteOrder);
+            final ByteBuffer attribData = ByteBuffer.allocate(count * attribDataStride);
+            attribData.order(SampleView.targetByteOrder);
+            int maxIndex = -1;
+            ByteBuffer indexSrc = data;
+            if (v.indexBuffer != null) {
+                indexSrc = v.indexBuffer.data;
+                indexSrc.position(msgData.msg.getArg3());
+            }
+            indexSrc.order(SampleView.targetByteOrder);
+            for (int i = 0; i < count; i++) {
+                int index = -1;
+                if (type == GLEnum.GL_UNSIGNED_BYTE) {
+                    byte idx = indexSrc.get();
+                    index = idx & 0xff;
+                    indexData.put(idx);
+                } else if (type == GLEnum.GL_UNSIGNED_SHORT) {
+                    short idx = indexSrc.getShort();
+                    index = idx & 0xffff;
+                    indexData.putShort(idx);
+                } else
+                    assert false;
+                data.get(element);
+                attribData.put(element);
+                if (index > maxIndex)
+                    maxIndex = index;
+            }
+            code.format("    FILE * attribFile = fopen(\"/sdcard/frame_data.bin\", \"rb\");CHKERR;\n");
+            code.format("    assert(attribFile);CHKERR;\n");
+            code.format("    fseek(attribFile, 0x%X, SEEK_SET);CHKERR;\n",
+                    dataOut.getChannel().position());
+            dataOut.write(indexData.array());
+            code.format("    %s * const indexData = (%s *)malloc(%d);\n", typeName, typeName,
+                    indexData.capacity());
+            code.format("    assert(indexData);\n");
+            code.format("    fread(indexData, %d, 1, attribFile);\n", indexData.capacity());
+            if (attribDataStride > 0) {
+                code.format("    glBindBuffer(GL_ARRAY_BUFFER, 0);CHKERR;\n");
+                for (int i = 0; i < maxAttrib; i++) {
+                    final GLAttribPointer att = v.attribPointers[i];
+                    if (!att.enabled)
+                        continue;
+                    if (att.buffer != null)
+                        continue;
+                    code.format("    char * const attrib%d = (char *)malloc(%d);\n",
+                            i, att.elemSize * (maxIndex + 1));
+                    code.format("    assert(attrib%d);\n", i);
+                    code.format(
+                            "    glVertexAttribPointer(%d, %d, %s, %b, %d, attrib%d);CHKERR;\n",
+                            i, att.size, att.type, att.normalized, att.elemSize, i);
+                }
+                dataOut.write(attribData.array());
+                code.format("    for (%s i = 0; i < %d; i++) {\n", typeName, count);
+                for (int i = 0; i < maxAttrib; i++) {
+                    final GLAttribPointer att = v.attribPointers[i];
+                    if (!att.enabled)
+                        continue;
+                    if (att.buffer != null)
+                        continue;
+                    code.format(
+                            "        fread(attrib%d + indexData[i] * %d, %d, 1, attribFile);\n",
+                            i, att.elemSize, att.elemSize);
+                }
+                code.format("    }\n");
+                if (v.attribBuffer != null)
+                    code.format("    glBindBuffer(GL_ARRAY_BUFFER, %d);CHKERR;\n",
+                            v.attribBuffer.name);
+            }
+            code.format("    fclose(attribFile);\n");
+        }
+        if (v.indexBuffer != null)
+            code.format("    glDrawElements(%s, %d, %s, (const void *)%d);CHKERR;\n",
+                    mode, count, type, msgData.msg.getArg3());
+        else {
+            code.format("    glDrawElements(%s, %d, %s, indexData);CHKERR;\n",
+                    mode, count, type);
+            code.format("    free(indexData);\n");
+        }
+        for (int i = 0; i < maxAttrib; i++) {
+            final GLAttribPointer att = v.attribPointers[i];
+            if (!att.enabled)
+                continue;
+            if (att.buffer != null)
+                continue;
+            code.format("    free(attrib%d);\n", i);
+        }
+        code.write("};\n");
+    }
+
+    private void CodeGenDraw(final GLServerVertex v, final MessageData msgData)
+            throws IOException {
+        final int maxAttrib = msgData.msg.getArg7();
+        if (maxAttrib < 1) {
+            code.write("// no vertex data\n");
+            return;
+        }
+        final int count = msgData.attribs[0].length / 4;
+        final GLEnum mode = GLEnum.valueOf(msgData.msg.getArg0());
+        final ByteBuffer attribData = ByteBuffer.allocate(maxAttrib * count * 16);
+        attribData.order(SampleView.targetByteOrder);
+        for (int i = 0; i < count; i++)
+            for (int j = 0; j < maxAttrib; j++)
+                for (int k = 0; k < 4; k++)
+                    attribData.putFloat(msgData.attribs[j][i * 4 + k]);
+        assert attribData.remaining() == 0;
+        code.write("{\n");
+        code.format("    FILE * attribFile = fopen(\"/sdcard/frame_data.bin\", \"rb\");CHKERR;\n");
+        code.format("    assert(attribFile);CHKERR;\n");
+        code.format("    fseek(attribFile, 0x%X, SEEK_SET);CHKERR;\n",
+                dataOut.getChannel().position());
+        dataOut.write(attribData.array());
+        code.format("    char * const attribData = (char *)malloc(%d);\n", attribData.capacity());
+        code.format("    assert(attribData);\n");
+        code.format("    fread(attribData, %d, 1, attribFile);\n", attribData.capacity());
+        code.format("    fclose(attribFile);\n");
+        code.format("    glBindBuffer(GL_ARRAY_BUFFER, 0);CHKERR;\n");
+        for (int i = 0; i < maxAttrib; i++) {
+            final GLAttribPointer att = v.attribPointers[i];
+            assert msgData.attribs[i].length == count * 4;
+            code.format(
+                    "    glVertexAttribPointer(%d, %d, GL_FLOAT, GL_FALSE, %d, attribData + %d);CHKERR;\n",
+                        i, att.size, maxAttrib * 16, i * 16);
+        }
+        code.format("    glDrawArrays(%s, 0, %d);CHKERR;\n", mode, count);
+        code.format("    free(attribData);\n");
+        if (v.attribBuffer != null)
+            code.format("    glBindBuffer(GL_ARRAY_BUFFER, %d);CHKERR;\n",
+                        v.attribBuffer.name);
+        code.write("};\n");
+    }
+
+    private void CodeGenFunction(final Context ctx, final MessageData msgData)
+            throws IOException {
         final Message msg = msgData.msg;
-        final Message oriMsg = msgData.oriMsg;
         String call = MessageFormatter.Format(msg, true);
         switch (msg.getFunction()) {
             case glActiveTexture:
@@ -536,10 +715,12 @@ public class CodeGen implements IRunnableWithProgress {
             case glDisableVertexAttribArray:
                 break;
             case glDrawArrays:
-                CodeGenDrawArrays(ctx.serverVertex, msgData.attribs, msg.getArg0(), msg.getArg2());
+                // CodeGenDraw(ctx.serverVertex, msgData);
+                CodeGenDrawArrays(ctx.serverVertex, msgData);
                 return;
             case glDrawElements:
-                CodeGenDrawArrays(ctx.serverVertex, msgData.attribs, msg.getArg0(), msg.getArg1());
+                // CodeGenDraw(ctx.serverVertex, msgData);
+                CodeGenDrawElements(ctx.serverVertex, msgData);
                 return;
             case glEnable:
             case glEnableVertexAttribArray:
@@ -677,8 +858,10 @@ public class CodeGen implements IRunnableWithProgress {
             case glVertexAttrib4fv:
                 break;
             case glVertexAttribPointer:
-                // pointer set during glDrawArrays/Elements from captured data
-                call = call.replace("arg5", "NULL");
+                // if it's user pointer, then CodeGenDrawArrays/Elements will
+                // replace it with loaded data just before the draw
+                call = call.replace("arg5", "(const void *)0x" +
+                        Integer.toHexString(msg.getArg5()));
                 break;
             case glViewport:
                 break;
@@ -688,6 +871,12 @@ public class CodeGen implements IRunnableWithProgress {
                 assert false;
                 return;
         }
+        if (call.indexOf("glEnable(/*cap*/ GL_TEXTURE_2D)") >= 0)
+            return;
+        else if (call.indexOf("glDisable(/*cap*/ GL_TEXTURE_2D)") >= 0)
+            return;
+        else if (call.indexOf("glActiveTexture(/*texture*/ GL_TEXTURE_2D)") >= 0)
+            return;
         code.write(call + ";CHKERR;\n");
     }
 
@@ -716,7 +905,7 @@ public class CodeGen implements IRunnableWithProgress {
         namesHeader.write("#include <assert.h>\n");
         namesHeader.write("#include <GLES2/gl2.h>\n");
         namesHeader.write("#include <GLES2/gl2ext.h>\n");
-        namesHeader.write("#define CHKERR /*assert(GL_NO_ERROR == glGetError());/**/\n");
+        namesHeader.write("#define CHKERR assert(GL_NO_ERROR == glGetError());/**/\n");
         namesHeader.write("void FrameSetup();\n");
         namesHeader.write("extern const unsigned int FrameCount;\n");
         namesHeader.write("extern const GLuint program_0;\n");
@@ -776,6 +965,7 @@ public class CodeGen implements IRunnableWithProgress {
     private DebugContext dbgCtx;
     private int count;
     private IProgressMonitor progress;
+
     @Override
     public void run(IProgressMonitor monitor) throws InvocationTargetException,
             InterruptedException {
@@ -800,7 +990,7 @@ public class CodeGen implements IRunnableWithProgress {
                 final MessageData msgData = frame.Get(j);
                 code.format("/* frame function %d: %s %s*/\n", j, msgData.msg.getFunction(),
                         MessageFormatter.Format(msgData.msg, false));
-                ctx.ProcessMessage(msgData.oriMsg);
+                ctx.ProcessMessage(msgData.msg);
                 try {
                     CodeGenFunction(ctx, msgData);
                 } catch (IOException e) {
@@ -865,7 +1055,7 @@ public class CodeGen implements IRunnableWithProgress {
             final MessageData msgData = frame.Get(i);
             code.format("/* frame function %d: %s %s*/\n", i, msgData.msg.getFunction(),
                     MessageFormatter.Format(msgData.msg, false));
-            ctx.ProcessMessage(msgData.oriMsg);
+            ctx.ProcessMessage(msgData.msg);
             try {
                 CodeGenFunction(ctx, msgData);
             } catch (IOException e) {

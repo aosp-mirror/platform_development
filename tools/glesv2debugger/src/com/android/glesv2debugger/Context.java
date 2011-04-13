@@ -17,9 +17,11 @@
 package com.android.glesv2debugger;
 
 import com.android.glesv2debugger.DebuggerMessage.Message;
+import com.android.glesv2debugger.DebuggerMessage.Message.DataType;
 import com.android.glesv2debugger.DebuggerMessage.Message.Function;
 import com.android.sdklib.util.SparseArray;
 import com.android.sdklib.util.SparseIntArray;
+import com.google.protobuf.ByteString;
 
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.ITreeContentProvider;
@@ -68,7 +70,7 @@ class Frame {
             if (call == calls.get(i))
                 return ctx;
             else
-                ctx.ProcessMessage(calls.get(i).oriMsg);
+                ctx.ProcessMessage(calls.get(i).msg);
         assert false;
         return ctx;
     }
@@ -106,10 +108,9 @@ class Frame {
                     len = Integer.reverseBytes(len);
                 final byte[] data = new byte[len];
                 file.read(data);
-                final Message oriMsg = Message.parseFrom(data);
-                final Message msg = ctx.ProcessMessage(oriMsg);
-                final MessageData msgData = new MessageData(Display.getCurrent(), msg, oriMsg, ctx);
-                msgData.attribs = ctx.serverVertex.fetchedAttribs;
+                Message msg = Message.parseFrom(data);
+                ctx.ProcessMessage(msg);
+                final MessageData msgData = new MessageData(Display.getCurrent(), msg, ctx);
                 calls.add(msgData);
             }
             file.seek(oriPosition);
@@ -133,8 +134,8 @@ class DebugContext {
         this.contextId = contextId;
         currentContext = new Context(contextId);
         try {
-            file = new RandomAccessFile(Integer.toHexString(contextId) + ".gles2dbg",
-                    "rw");
+            file = new RandomAccessFile("0x" + Integer.toHexString(contextId) +
+                    ".gles2dbg", "rw");
             frames.add(new Frame(currentContext, file.getFilePointer()));
 
         } catch (FileNotFoundException e) {
@@ -148,10 +149,25 @@ class DebugContext {
         loadedFrame = lastFrame;
     }
 
-    /** Writes oriMsg to file, and formats into MessageData for current frame */
-    void ProcessMessage(final Message oriMsg) {
+    /**
+     * Caches new Message, and formats into MessageData for current frame; this
+     * function is called exactly once for each new Message
+     */
+    void ProcessMessage(final Message newMsg) {
+        Message msg = newMsg;
+        currentContext.ProcessMessage(newMsg);
+        if (msg.hasDataType() && msg.getDataType() == DataType.ReferencedImage) {
+            final byte[] referenced = MessageProcessor.LZFDecompressChunks(msg.getData());
+            currentContext.readPixelRef = MessageProcessor.DecodeReferencedImage(
+                    currentContext.readPixelRef, referenced);
+            final byte[] decoded = MessageProcessor.LZFCompressChunks(
+                    currentContext.readPixelRef, referenced.length);
+            msg = newMsg.toBuilder().setDataType(DataType.NonreferencedImage)
+                    .setData(ByteString.copyFrom(decoded)).build();
+        }
         synchronized (file) {
-            final byte[] data = oriMsg.toByteArray();
+            lastFrame.IncreaseCallsCount();
+            final byte[] data = msg.toByteArray();
             final ByteBuffer len = ByteBuffer.allocate(4);
             len.order(SampleView.targetByteOrder);
             len.putInt(data.length);
@@ -166,13 +182,8 @@ class DebugContext {
                 assert false;
             }
         }
-
-        lastFrame.IncreaseCallsCount();
-        final Message msg = currentContext.ProcessMessage(oriMsg);
         if (loadedFrame == lastFrame) {
-            final MessageData msgData = new MessageData(Display.getCurrent(), msg, oriMsg,
-                     currentContext);
-            msgData.attribs = currentContext.serverVertex.fetchedAttribs;
+            final MessageData msgData = new MessageData(Display.getCurrent(), msg, currentContext);
             lastFrame.Add(msgData);
             uiUpdate = true;
         }
@@ -242,7 +253,8 @@ public class Context implements Cloneable {
             copy.serverShader = serverShader.clone(copy);
             copy.serverState = serverState.clone();
             copy.serverTexture = serverTexture.clone(copy);
-            copy.readPixelRef = readPixelRef.clone();
+            // don't need to clone readPixelsRef, since referenced images
+            // are decoded when they are encountered
             return copy;
         } catch (CloneNotSupportedException e) {
             e.printStackTrace();
@@ -251,21 +263,16 @@ public class Context implements Cloneable {
         }
     }
 
-    /** returns processed Message, which could be a new Message */
-    public Message ProcessMessage(Message msg) {
-        if (serverVertex.Process(msg)) {
-            if (serverVertex.processed != null)
-                return serverVertex.processed;
-            else
-                return msg;
-        }
+    /** mainly updating states */
+    public void ProcessMessage(Message msg) {
+        if (serverVertex.Process(msg))
+            return;
         if (serverShader.ProcessMessage(msg))
-            return msg;
+            return;
         if (serverState.ProcessMessage(msg))
-            return msg;
+            return;
         if (serverTexture.ProcessMessage(msg))
-            return msg;
-        return msg;
+            return;
     }
 }
 
@@ -310,10 +317,10 @@ class ContextViewProvider extends LabelProvider implements ITreeContentProvider,
         switch (msg.getFunction()) {
             case glTexImage2D:
             case glTexSubImage2D:
-                return entry.image = new MessageData(Display.getCurrent(), msg, msg, null).image;
             case glCopyTexImage2D:
             case glCopyTexSubImage2D:
-                return null; // TODO: compute context for reference frame
+                return entry.image = new MessageData(Display.getCurrent(), msg, null)
+                        .GetImage();
             default:
                 return null;
         }

@@ -17,35 +17,28 @@
 package com.android.glesv2debugger;
 
 import com.android.glesv2debugger.DebuggerMessage.Message;
-import com.android.glesv2debugger.DebuggerMessage.Message.DataType;
 import com.android.glesv2debugger.DebuggerMessage.Message.Function;
 import com.android.glesv2debugger.DebuggerMessage.Message.Type;
 
 import org.eclipse.swt.graphics.Device;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
-
-import java.nio.ByteBuffer;
+import org.eclipse.swt.widgets.Display;
 
 public class MessageData {
-    public final Message msg, oriMsg;
-    public Image image = null; // texture
+    public final Message msg;
+    private Image image = null; // texture
     public String shader = null; // shader source
     public String text;
     public String[] columns = new String[3];
-    public float[] data = null;
-    public int maxAttrib; // used for formatting data
-    public GLEnum dataType; // could be float, int; mainly for formatting use
 
-    ByteBuffer[] attribs = null;
+    float[][] attribs = null;
+    short[] indices;
 
-    public MessageData(final Device device, final Message msg, final Message oriMsg,
-            final Context context) {
+    public MessageData(final Device device, final Message msg, final Context context) {
         this.msg = msg;
-        this.oriMsg = oriMsg;
         StringBuilder builder = new StringBuilder();
         final Function function = msg.getFunction();
-        ImageData imageData = null;
         if (function != Message.Function.ACK && msg.getType() != Type.BeforeCall)
             assert msg.hasTime();
         builder.append(columns[0] = function.name());
@@ -69,65 +62,67 @@ public class MessageData {
         columns[2] += MessageFormatter.Format(msg, false);
         builder.append(columns[2]);
         switch (function) {
-            case glDrawArrays: // msg was modified by GLServerVertex
-            case glDrawElements:
-                if (!msg.hasArg8() || !msg.hasData())
+            case glDrawArrays:
+                if (!msg.hasArg7())
                     break;
-                dataType = GLEnum.valueOf(msg.getArg8());
-                maxAttrib = msg.getArg7();
-                data = MessageProcessor.ReceiveData(dataType, msg.getData());
+                context.serverVertex.glDrawArrays(this);
+                break;
+            case glDrawElements:
+                if (!msg.hasArg7())
+                    break;
+                context.serverVertex.glDrawElements(this);
                 break;
             case glShaderSource:
                 shader = msg.getData().toStringUtf8();
                 break;
+
+        }
+        text = builder.toString();
+    }
+
+    public Image GetImage() {
+        if (image != null)
+            return image;
+        ImageData imageData = null;
+        switch (msg.getFunction()) {
             case glTexImage2D:
                 if (!msg.hasData())
-                    break;
+                    return null;
                 imageData = MessageProcessor.ReceiveImage(msg.getArg3(), msg
                         .getArg4(), msg.getArg6(), msg.getArg7(), msg.getData());
-                if (null == imageData)
-                    break;
-                image = new Image(device, imageData);
-                break;
+                return image = new Image(Display.getCurrent(), imageData);
             case glTexSubImage2D:
                 assert msg.hasData();
                 imageData = MessageProcessor.ReceiveImage(msg.getArg4(), msg
                         .getArg5(), msg.getArg6(), msg.getArg7(), msg.getData());
-                if (null == imageData)
-                    break;
-                image = new Image(device, imageData);
-                break;
+                return image = new Image(Display.getCurrent(), imageData);
             case glCopyTexImage2D:
-                assert msg.getDataType() == DataType.ReferencedImage;
-                MessageProcessor.ref = context.readPixelRef;
                 imageData = MessageProcessor.ReceiveImage(msg.getArg5(), msg.getArg6(),
                         msg.getPixelFormat(), msg.getPixelType(), msg.getData());
-                MessageProcessor.ref = null;
-                image = new Image(device, imageData);
                 imageData = imageData.scaledTo(imageData.width, -imageData.height);
-                break;
+                return image = new Image(Display.getCurrent(), imageData);
             case glCopyTexSubImage2D:
-                assert msg.getDataType() == DataType.ReferencedImage;
-                MessageProcessor.ref = context.readPixelRef;
                 imageData = MessageProcessor.ReceiveImage(msg.getArg6(), msg.getArg7(),
                         msg.getPixelFormat(), msg.getPixelType(), msg.getData());
-                MessageProcessor.ref = null;
                 imageData = imageData.scaledTo(imageData.width, -imageData.height);
-                image = new Image(device, imageData);
-                break;
+                return image = new Image(Display.getCurrent(), imageData);
             case glReadPixels:
                 if (!msg.hasData())
-                    break;
-                if (msg.getDataType() == DataType.ReferencedImage)
-                    MessageProcessor.ref = context.readPixelRef;
+                    return null;
                 imageData = MessageProcessor.ReceiveImage(msg.getArg2(), msg.getArg3(),
                         msg.getArg4(), msg.getArg5(), msg.getData());
-                context.readPixelRef = MessageProcessor.ref;
-                MessageProcessor.ref = null;
                 imageData = imageData.scaledTo(imageData.width, -imageData.height);
-                image = new Image(device, imageData);
-                break;
+                return image = new Image(Display.getCurrent(), imageData);
+            case eglSwapBuffers:
+                if (!msg.hasData())
+                    return null;
+                imageData = MessageProcessor.ReceiveImage(msg.getImageWidth(),
+                        msg.getImageHeight(), msg.getPixelFormat(), msg.getPixelType(),
+                        msg.getData());
+                imageData = imageData.scaledTo(imageData.width, -imageData.height);
+                return image = new Image(Display.getCurrent(), imageData);
+            default:
+                return null;
         }
-        text = builder.toString();
     }
 }

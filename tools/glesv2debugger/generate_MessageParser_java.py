@@ -81,25 +81,31 @@ public abstract class MessageParser {
 
     ByteString ParseFloats(int count) {
         ByteBuffer buffer = ByteBuffer.allocate(count * 4);
+        buffer.order(SampleView.targetByteOrder);
         String [] arg = GetList();
         for (int i = 0; i < count; i++)
             buffer.putFloat(Float.parseFloat(arg[i].trim()));
+        buffer.rewind();
         return ByteString.copyFrom(buffer);
     }
 
     ByteString ParseInts(int count) {
         ByteBuffer buffer = ByteBuffer.allocate(count * 4);
+        buffer.order(SampleView.targetByteOrder);
         String [] arg = GetList();
         for (int i = 0; i < count; i++)
             buffer.putInt(Integer.parseInt(arg[i].trim()));
+        buffer.rewind();
         return ByteString.copyFrom(buffer);
     }
 
     ByteString ParseUInts(int count) {
         ByteBuffer buffer = ByteBuffer.allocate(count * 4);
+        buffer.order(SampleView.targetByteOrder);
         String [] arg = GetList();
         for (int i = 0; i < count; i++)
             buffer.putInt((int)(Long.parseLong(arg[i].trim()) & 0xffffffff));
+        buffer.rewind();
         return ByteString.copyFrom(buffer);
     }
 
