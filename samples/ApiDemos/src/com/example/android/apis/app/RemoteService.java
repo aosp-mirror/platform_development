@@ -135,8 +135,13 @@ public class RemoteService extends Service {
     };
 // END_INCLUDE(exposing_a_service)
     
-    private static final int REPORT_MSG = 1;
+    @Override
+    public void onTaskRemoved(Intent rootIntent) {
+        Toast.makeText(this, "Task removed: " + rootIntent, Toast.LENGTH_LONG).show();
+    }
     
+    private static final int REPORT_MSG = 1;
+
     /**
      * Our Handler used to execute operations on the main thread.  This is used
      * to schedule increments of our value.

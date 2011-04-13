@@ -530,7 +530,7 @@
 
         <!-- Service Samples -->
 
-        <service android:name=".app.LocalService" />
+        <service android:name=".app.LocalService" android:stopWithTask="true" />
 
         <activity android:name=".app.LocalServiceActivities$Controller"
                 android:label="@string/activity_local_service_controller"
