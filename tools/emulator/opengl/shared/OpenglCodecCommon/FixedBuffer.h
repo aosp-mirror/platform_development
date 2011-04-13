@@ -25,10 +25,8 @@ public:
     }
 
     ~FixedBuffer() {
-        if (m_buffer != NULL) {
-            delete m_buffer;
-            m_bufferLen = 0;
-        }
+        delete m_buffer;
+        m_bufferLen = 0;
     }
 
     void * alloc(size_t size) {
