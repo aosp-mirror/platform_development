@@ -910,8 +910,152 @@ public class CodeGen implements IRunnableWithProgress {
         namesHeader.write("extern const unsigned int FrameCount;\n");
         namesHeader.write("extern const GLuint program_0;\n");
 
-        namesSource.write("#include \"frame_names.h\"\n");
-        namesSource.write("const GLuint program_0 = 0;\n");
+        namesSource.write("/*\n" + 
+        " * Copyright (C) 2011 The Android Open Source Project\n" + 
+        " *\n" + 
+        " * Licensed under the Apache License, Version 2.0 (the \"License\");\n" + 
+        " * you may not use this file except in compliance with the License.\n" + 
+        " * You may obtain a copy of the License at\n" + 
+        " *\n" + 
+        " *      http://www.apache.org/licenses/LICENSE-2.0\n" + 
+        " *\n" + 
+        " * Unless required by applicable law or agreed to in writing, software\n" + 
+        " * distributed under the License is distributed on an \"AS IS\" BASIS,\n" + 
+        " * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n" + 
+        " * See the License for the specific language governing permissions and\n" + 
+        " * limitations under the License.\n" + 
+        " */\n" + 
+        "\n" + 
+        "#include <stdlib.h>\n" + 
+        "#include <stdio.h>\n" + 
+        "\n" + 
+        "#include <EGL/egl.h>\n" + 
+        "#include <GLES2/gl2.h>\n" + 
+        "#include <GLES2/gl2ext.h>\n" + 
+        "\n" + 
+        "#include <ui/FramebufferNativeWindow.h>\n" + 
+        "#include <ui/EGLUtils.h>\n" + 
+        "\n" + 
+        "#include <private/ui/android_natives_priv.h>\n" + 
+        "\n" + 
+        "#include <surfaceflinger/Surface.h>\n" + 
+        "#include <surfaceflinger/ISurface.h>\n" + 
+        "#include <surfaceflinger/SurfaceComposerClient.h>\n" + 
+        "\n" + 
+        "using namespace android;\n" + 
+        "\n" + 
+        "static void checkEglError(const char* op, EGLBoolean returnVal = EGL_TRUE)\n" + 
+        "{\n" + 
+        "    if (returnVal != EGL_TRUE) {\n" + 
+        "        fprintf(stderr, \"%s() returned %d\\n\", op, returnVal);\n" + 
+        "    }\n" + 
+        "\n" + 
+        "    for (EGLint error = eglGetError(); error != EGL_SUCCESS; error\n" + 
+        "            = eglGetError()) {\n" + 
+        "        fprintf(stderr, \"after %s() eglError %s (0x%x)\\n\", op, EGLUtils::strerror(error),\n" + 
+        "                error);\n" + 
+        "    }\n" + 
+        "}\n" + 
+        "\n" + 
+        "static EGLDisplay dpy;\n" + 
+        "static EGLSurface surface;\n" + 
+        "\n" + 
+        "#include \"frame_names.h\"\n" + 
+        "const GLuint program_0 = 0;\n" + 
+        "int main(int argc, char** argv)\n" + 
+        "{\n" + 
+        "    EGLBoolean returnValue;\n" + 
+        "    EGLConfig myConfig = {0};\n" + 
+        "\n" + 
+        "    EGLint context_attribs[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };\n" + 
+        "    EGLint majorVersion;\n" + 
+        "    EGLint minorVersion;\n" + 
+        "    EGLContext context;\n" + 
+        "    EGLint w, h;\n" + 
+        "\n" + 
+        "\n" + 
+        "    checkEglError(\"<init>\");\n" + 
+        "    dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);\n" + 
+        "    checkEglError(\"eglGetDisplay\");\n" + 
+        "    if (dpy == EGL_NO_DISPLAY) {\n" + 
+        "        printf(\"eglGetDisplay returned EGL_NO_DISPLAY.\\n\");\n" + 
+        "        return 0;\n" + 
+        "    }\n" + 
+        "\n" + 
+        "    returnValue = eglInitialize(dpy, &majorVersion, &minorVersion);\n" + 
+        "    checkEglError(\"eglInitialize\", returnValue);\n" + 
+        "    if (returnValue != EGL_TRUE) {\n" + 
+        "        printf(\"eglInitialize failed\\n\");\n" + 
+        "        return 0;\n" + 
+        "    }\n" + 
+        "\n" + 
+        "    sp<SurfaceComposerClient> spClient;\n" + 
+        "    sp<SurfaceControl> spControl;\n" + 
+        "    sp<Surface> spSurface;\n" + 
+        "\n" + 
+        "    // create a client to surfaceflinger\n" + 
+        "    spClient = new SurfaceComposerClient();\n" + 
+        "\n" + 
+        "    spControl = spClient->createSurface(getpid(), 0, 1280, 752, PIXEL_FORMAT_RGBX_8888);\n" + 
+        "    spClient->openTransaction();\n" + 
+        "    spControl->setLayer(350000);\n" + 
+        "    spControl->show();\n" + 
+        "    spClient->closeTransaction();\n" + 
+        "\n" + 
+        "    spSurface = spControl->getSurface();\n" + 
+        "    EGLNativeWindowType window = spSurface.get();\n" + 
+        "\n" + 
+        "    printf(\"window=%p\\n\", window);\n" + 
+        "    EGLint attrib_list[] = {\n" + 
+        "        EGL_SURFACE_TYPE, EGL_WINDOW_BIT,\n" + 
+        "        EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,\n" + 
+        "        EGL_BUFFER_SIZE, 32,\n" + 
+        "        EGL_RED_SIZE, 8,\n" + 
+        "        EGL_GREEN_SIZE, 8,\n" + 
+        "        EGL_BLUE_SIZE, 8,\n" + 
+        "        EGL_NONE\n" + 
+        "    };\n" + 
+        "\n" + 
+        "    EGLConfig configs[12] = {0};\n" + 
+        "    int num_config = -1;\n" + 
+        "    eglChooseConfig(dpy, attrib_list, configs, sizeof(configs) / sizeof(*configs), &num_config);\n" + 
+        "    printf(\"eglChooseConfig %d \\n\", num_config);\n" + 
+        "\n" + 
+        "    surface = eglCreateWindowSurface(dpy, configs[0], window, NULL);\n" + 
+        "    checkEglError(\"eglCreateWindowSurface\");\n" + 
+        "    if (surface == EGL_NO_SURFACE) {\n" + 
+        "        printf(\"gelCreateWindowSurface failed.\\n\");\n" + 
+        "        return 0;\n" + 
+        "    }\n" + 
+        "\n" + 
+        "    context = eglCreateContext(dpy, configs[0], EGL_NO_CONTEXT, context_attribs);\n" + 
+        "    checkEglError(\"eglCreateContext\");\n" + 
+        "    if (context == EGL_NO_CONTEXT) {\n" + 
+        "        printf(\"eglCreateContext failed\\n\");\n" + 
+        "        return 0;\n" + 
+        "    }\n" + 
+        "    printf(\"context=%p \\n\", context);\n" + 
+        "\n" + 
+        "    returnValue = eglMakeCurrent(dpy, surface, surface, context);\n" + 
+        "    checkEglError(\"eglMakeCurrent\", returnValue);\n" + 
+        "    if (returnValue != EGL_TRUE) {\n" + 
+        "        return 0;\n" + 
+        "    }\n" + 
+        "\n" + 
+        "    glClearColor(1,1,1,1);\n" + 
+        "    glClear(GL_COLOR_BUFFER_BIT);\n" + 
+        "\n" + 
+        "    FrameSetup();\n" + 
+        "    while (true)\n" + 
+        "        for (unsigned int i = 0; i < FrameCount; i++) {\n" + 
+        "            Frames[i]();\n" + 
+        "            eglSwapBuffers(dpy, surface);\n" + 
+        "            printf(\"press ENTER after Frame%d \\n\", i);\n" + 
+        "            getchar();\n" + 
+        "        }\n" + 
+        "\n" + 
+        "    return 0;\n" + 
+        "}");
 
         code.write("#include \"frame_names.h\"\n");
         code.write("void FrameSetup(){\n");
@@ -925,9 +1069,11 @@ public class CodeGen implements IRunnableWithProgress {
 
         try {
             codeFile.close();
-            makeFile = new FileWriter("frame_src.mk", false);
+            makeFile = new FileWriter("Android.mk", false);
             make = new PrintWriter(makeFile);
-            make.write("LOCAL_SRC_FILES := \\\n");
+            make.write("LOCAL_PATH:= $(call my-dir)\n" +
+                    "include $(CLEAR_VARS)\n" +
+                    "LOCAL_SRC_FILES := \\\n");
         } catch (IOException e) {
             e.printStackTrace();
             assert false;
@@ -936,7 +1082,25 @@ public class CodeGen implements IRunnableWithProgress {
 
     private void CodeGenCleanup() {
         make.write("    frame_setup.cpp \\\n");
-        make.write("    frame_names.cpp");
+        make.write("    frame_names.cpp \\\n");
+        make.write("#\n");
+        make.write(
+                "LOCAL_SHARED_LIBRARIES := \\\n" + 
+                "    libcutils \\\n" + 
+                "    libutils \\\n" + 
+                "    libEGL \\\n" + 
+                "    libGLESv2 \\\n" + 
+                "    libui \\\n" + 
+                "    libhardware \\\n" + 
+                "    libgui\n" + 
+                "\n" + 
+                "LOCAL_MODULE:= gles2dbg\n" + 
+                "\n" + 
+                "LOCAL_MODULE_TAGS := optional\n" + 
+                "\n" + 
+                "LOCAL_CFLAGS := -DGL_GLEXT_PROTOTYPES -O0 -g -DDEBUG -UNDEBUG\n" + 
+                "\n" + 
+                "include $(BUILD_EXECUTABLE)");
         try {
             dataOut.flush();
             dataOut.close();
