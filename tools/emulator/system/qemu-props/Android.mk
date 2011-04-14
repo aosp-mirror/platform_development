@@ -16,6 +16,13 @@
 # that should only run in the emulator.
 #
 
+# We're moving the emulator-specific platform libs to
+# development.git/tools/emulator/. The following test is to ensure
+# smooth builds even if the tree contains both versions.
+#
+ifndef BUILD_EMULATOR_QEMU_PROPS
+BUILD_EMULATOR_QEMU_PROPS := true
+
 LOCAL_PATH := $(call my-dir)
 
 ifneq ($(TARGET_PRODUCT),sim)
@@ -33,3 +40,5 @@ LOCAL_MODULE_TAGS := debug
 include $(BUILD_EXECUTABLE)
 
 endif # TARGET_PRODUCT != sim
+
+endif # BUILD_EMULATOR_QEMU_PROPS
