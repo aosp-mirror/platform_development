@@ -18,7 +18,11 @@ intermediates := $(local-intermediates-dir)
 LOCAL_STATIC_LIBRARIES := \
 	libOpenglCodecCommon \
     liblog
-LOCAL_C_INCLUDES += $(emulatorOpengl)/shared/OpenglCodecCommon $(emulatorOpengl)/tests/ut_rendercontrol_enc
+
+LOCAL_C_INCLUDES += \
+    $(emulatorOpengl)/shared/OpenglCodecCommon \
+    $(emulatorOpengl)/host/include/libOpenglRender \
+    $(emulatorOpengl)/tests/ut_rendercontrol_enc
 
 #we use only *_dec.h as a sentinel for the other generated headers
 GEN := $(intermediates)/ut_rendercontrol_dec.cpp $(intermediates)/ut_rendercontrol_dec.h

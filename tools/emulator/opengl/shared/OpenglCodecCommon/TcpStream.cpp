@@ -14,25 +14,23 @@
 * limitations under the License.
 */
 #include "TcpStream.h"
-
-#ifdef ANDROID
-#include <netinet/in.h>
-#endif
-
+#include <cutils/sockets.h>
 #include <errno.h>
-#include <netdb.h>
-#include <sys/types.h>
-#include <sys/socket.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
 
-TcpStream::TcpStream(size_t bufSize) :  IOStream(bufSize)
+#ifdef __linux__
+#include <netinet/in.h>
+#endif
+
+TcpStream::TcpStream(size_t bufSize) :
+    IOStream(bufSize),
+    m_sock(-1),
+    m_bufsize(bufSize),
+    m_buf(NULL)
 {
-    m_sock = socket(AF_INET, SOCK_STREAM, 0);
-    m_bufsize = bufSize;
-    m_buf = NULL;
 }
 
 TcpStream::TcpStream(int sock, size_t bufSize) :
@@ -41,7 +39,6 @@ TcpStream::TcpStream(int sock, size_t bufSize) :
     m_bufsize(bufSize),
     m_buf(NULL)
 {
-
 }
 
 TcpStream::~TcpStream()
@@ -55,39 +52,15 @@ TcpStream::~TcpStream()
 }
 
 
-int TcpStream::listen(unsigned short port, bool localhost_only, bool reuse_address)
+int TcpStream::listen(unsigned short port, bool localhost_only)
 {
+    if (localhost_only) {
+        m_sock = socket_loopback_server(port, SOCK_STREAM);
+    } else {
+        m_sock = socket_inaddr_any_server(port, SOCK_STREAM);
+    }
     if (!valid()) return int(ERR_INVALID_SOCKET);
 
-    // NOTE: This is a potential security issue. However, since we accept connection
-    // from local host only, this should be reasonably OK.
-
-    if (reuse_address) {
-        int one = 1;
-        if (setsockopt(m_sock, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(one)) < 0) {
-            perror("setsockopt resuseaddr");
-        }
-    }
-
-    struct sockaddr_in addr;
-    memset(&addr, 0, sizeof(addr));
-
-    addr.sin_family = AF_INET;
-    addr.sin_port = htons(port);
-    if (localhost_only) {
-        addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
-    } else {
-        addr.sin_addr.s_addr = INADDR_ANY;
-    }
-
-    if (::bind(m_sock, (const sockaddr *) &addr, sizeof(addr)) < 0) {
-        perror("bind");
-        return -1;
-    }
-    if (::listen(m_sock, 5) < 0) {
-        perror("listen");
-        return -1;
-    }
     return 0;
 }
 
@@ -117,29 +90,8 @@ TcpStream * TcpStream::accept()
 
 int TcpStream::connect(const char *hostname, unsigned short port)
 {
-    struct addrinfo *ai;
-    char portstr[10];
-    snprintf(portstr, sizeof(portstr), "%d", port);
-
-    if (getaddrinfo(hostname, portstr, NULL, &ai) != 0) {
-        return -1;
-    }
-
-    struct addrinfo *i;
-    i = ai;
-    while (i != NULL) {
-        if (::connect(m_sock, i->ai_addr, i->ai_addrlen) >= 0) {
-            break;
-        } else {
-            if (errno != EINTR) {
-                i = i->ai_next;
-            }
-        }
-    }
-
-    freeaddrinfo(ai);
-    if (i == NULL) return -1;
-
+    m_sock = socket_network_client(hostname, port, SOCK_STREAM);
+    if (!valid()) return -1;
     return 0;
 }
 
@@ -178,10 +130,11 @@ int TcpStream::writeFully(const void *buf, size_t len)
     int retval = 0;
 
     while (res > 0) {
-        ssize_t stat = ::send(m_sock, (unsigned char *)(buf) + (len - res), res, 0);
+        ssize_t stat = ::send(m_sock, (const char *)(buf) + (len - res), res, 0);
         if (stat < 0) {
             if (errno != EINTR) {
                 retval =  stat;
+                ERR("TcpStream::writeFully failed, errno = %d\n", errno);
                 break;
             }
         } else {
@@ -194,10 +147,13 @@ int TcpStream::writeFully(const void *buf, size_t len)
 const unsigned char *TcpStream::readFully(void *buf, size_t len)
 {
     if (!valid()) return NULL;
-    if (!buf) return NULL;  // do not allow NULL buf in that implementation
+    if (!buf) {
+      ERR("TcpStream::readFully failed, buf=NULL");
+      return NULL;  // do not allow NULL buf in that implementation
+    }
     size_t res = len;
     while (res > 0) {
-        ssize_t stat = ::recv(m_sock, (unsigned char *)(buf) + len - res, len, MSG_WAITALL);
+        ssize_t stat = ::recv(m_sock, (char *)(buf) + len - res, len, 0);
         if (stat == 0) {
             // client shutdown;
             return NULL;
@@ -205,6 +161,7 @@ const unsigned char *TcpStream::readFully(void *buf, size_t len)
             if (errno == EINTR) {
                 continue;
             } else {
+                ERR("TcpStream::readFully failed, errno = %d 0x%x \n", errno,buf);
                 return NULL;
             }
         } else {
@@ -214,12 +171,33 @@ const unsigned char *TcpStream::readFully(void *buf, size_t len)
     return (const unsigned char *)buf;
 }
 
+const unsigned char *TcpStream::read( void *buf, size_t *inout_len)
+{
+    if (!valid()) return NULL;
+    if (!buf) {
+      ERR("TcpStream::read failed, buf=NULL");
+      return NULL;  // do not allow NULL buf in that implementation
+    }
+
+    int n;
+    do {
+        n = recv(buf, *inout_len);
+    } while( n < 0 && errno == EINTR );
+
+    if (n > 0) {
+        *inout_len = n;
+        return (const unsigned char *)buf;
+    }
+
+    return NULL;
+}
+
 int TcpStream::recv(void *buf, size_t len)
 {
     if (!valid()) return int(ERR_INVALID_SOCKET);
     int res = 0;
     while(true) {
-        res = ::recv(m_sock, buf, len, 0);
+        res = ::recv(m_sock, (char *)buf, len, 0);
         if (res < 0) {
             if (errno == EINTR) {
                 continue;
