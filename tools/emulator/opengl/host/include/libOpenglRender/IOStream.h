@@ -33,6 +33,7 @@ public:
     virtual void *allocBuffer(size_t minSize) = 0;
     virtual int commitBuffer(size_t size) = 0;
     virtual const unsigned char *readFully( void *buf, size_t len) = 0;
+    virtual const unsigned char *read( void *buf, size_t *inout_len) = 0;
 
     virtual ~IOStream() {
 

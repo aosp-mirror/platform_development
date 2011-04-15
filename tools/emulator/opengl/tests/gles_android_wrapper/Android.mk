@@ -21,6 +21,7 @@ LOCAL_ADDITIONAL_DEPENDENCIES := \
 emulatorOpengl := $(LOCAL_PATH)/../..
 
 LOCAL_C_INCLUDES := $(emulatorOpengl)/shared/OpenglCodecCommon \
+        $(emulatorOpengl)/host/include/libOpenglRender \
 		$(call intermediates-dir-for, SHARED_LIBRARIES, libut_rendercontrol_enc) \
 		$(call intermediates-dir-for, SHARED_LIBRARIES, libGLESv1_enc) \
         $(emulatorOpengl)/system/GLESv1_enc \

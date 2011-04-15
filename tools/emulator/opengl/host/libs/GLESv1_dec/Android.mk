@@ -19,6 +19,7 @@ LOCAL_SRC_FILES := \
 
 LOCAL_C_INCLUDES += \
     $(emulatorOpengl)/shared/OpenglCodecCommon \
+    $(emulatorOpengl)/host/include/libOpenglRender \
     $(emulatorOpengl)/system/GLESv1_enc
 
 LOCAL_STATIC_LIBRARIES := \

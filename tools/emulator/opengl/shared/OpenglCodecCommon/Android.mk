@@ -14,7 +14,7 @@ OpenglCodecCommon := \
 
 LOCAL_SRC_FILES :=  $(OpenglCodecCommon)
 
-LOCAL_C_INCLUDES += $(emulatorOpengl)/host/include/libOpenGLRender 
+LOCAL_C_INCLUDES += $(emulatorOpengl)/host/include/libOpenglRender 
 
 LOCAL_CFLAGS += -DLOG_TAG=\"eglCodecCommon\"
 LOCAL_MODULE_TAGS := debug
@@ -27,7 +27,7 @@ include $(CLEAR_VARS)
 
 LOCAL_SRC_FILES :=  $(OpenglCodecCommon)
 
-LOCAL_C_INCLUDES += $(emulatorOpengl)/host/include/libOpenGLRender 
+LOCAL_C_INCLUDES += $(emulatorOpengl)/host/include/libOpenglRender 
 
 LOCAL_MODULE_TAGS := debug
 LOCAL_MODULE := libOpenglCodecCommon

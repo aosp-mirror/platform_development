@@ -12,7 +12,9 @@ LOCAL_MODULE_CLASS := SHARED_LIBRARIES
 
 ut_intermediates := $(local-intermediates-dir)
 
-LOCAL_C_INCLUDES += $(emulatorOpengl)/shared/OpenglCodecCommon 
+LOCAL_C_INCLUDES += \
+    $(emulatorOpengl)/shared/OpenglCodecCommon \
+    $(emulatorOpengl)/host/include/libOpenglRender
 
 LOCAL_STATIC_LIBRARIES := \
         libOpenglCodecCommon
