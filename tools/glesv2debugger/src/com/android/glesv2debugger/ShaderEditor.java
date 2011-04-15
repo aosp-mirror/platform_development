@@ -100,7 +100,7 @@ public class ShaderEditor extends Composite implements SelectionListener, Extend
         styledText.addExtendedModifyListener(this);
     }
 
-    public void Update() {
+    public void updateUI() {
         list.removeAll();
         String progs = "Current Programs: ";
         for (int j = 0; j < sampleView.debugContexts.size(); j++) {
@@ -142,7 +142,7 @@ public class ShaderEditor extends Composite implements SelectionListener, Extend
         toolbar.update();
     }
 
-    void UploadShader() {
+    void uploadShader() {
         current.source = styledText.getText();
 
         try {
@@ -195,14 +195,14 @@ public class ShaderEditor extends Composite implements SelectionListener, Extend
             }
             shadersToUpload.add(current);
             final int contextId = current.context.context.contextId;
-            Message.Builder builder = GetBuilder(contextId);
-            MessageParserEx.instance.Parse(builder,
+            Message.Builder builder = getBuilder(contextId);
+            MessageParserEx.instance.parse(builder,
                     String.format("glShaderSource(%d,1,\"%s\",0)", current.name, current.source));
-            sampleView.messageQueue.AddCommand(builder.build());
+            sampleView.messageQueue.addCommand(builder.build());
         }
     }
 
-    Message.Builder GetBuilder(int contextId) {
+    Message.Builder getBuilder(int contextId) {
         Message.Builder builder = Message.newBuilder();
         builder.setContextId(contextId);
         builder.setType(Type.Response);
@@ -210,13 +210,13 @@ public class ShaderEditor extends Composite implements SelectionListener, Extend
         return builder;
     }
 
-    Message ExchangeMessage(final int contextId, final MessageQueue queue,
+    Message exchangeMessage(final int contextId, final MessageQueue queue,
             String format, Object... args) throws IOException {
-        Message.Builder builder = GetBuilder(contextId);
-        MessageParserEx.instance.Parse(builder, String.format(format, args));
+        Message.Builder builder = getBuilder(contextId);
+        MessageParserEx.instance.parse(builder, String.format(format, args));
         final Function function = builder.getFunction();
-        queue.SendMessage(builder.build());
-        final Message msg = queue.ReceiveMessage(contextId);
+        queue.sendMessage(builder.build());
+        final Message msg = queue.receiveMessage(contextId);
         assert msg.getContextId() == contextId;
         assert msg.getType() == Type.AfterGeneratedCall;
         assert msg.getFunction() == function;
@@ -224,7 +224,7 @@ public class ShaderEditor extends Composite implements SelectionListener, Extend
     }
 
     // this is called from network thread
-    public boolean ProcessMessage(final MessageQueue queue, final Message msg)
+    public boolean processMessage(final MessageQueue queue, final Message msg)
             throws IOException {
         GLShader shader = null;
         final int contextId = msg.getContextId();
@@ -252,15 +252,15 @@ public class ShaderEditor extends Composite implements SelectionListener, Extend
         assert msg.getType() == Type.AfterGeneratedCall;
         assert msg.getFunction() == Function.glShaderSource;
 
-        ExchangeMessage(contextId, queue, "glCompileShader(%d)", shader.name);
+        exchangeMessage(contextId, queue, "glCompileShader(%d)", shader.name);
 
         // the 0, "" and {0} are dummies for the parser
-        Message rcv = ExchangeMessage(contextId, queue,
+        Message rcv = exchangeMessage(contextId, queue,
                 "glGetShaderiv(%d, GL_COMPILE_STATUS, {0})", shader.name);
         assert rcv.hasData();
         if (rcv.getData().asReadOnlyByteBuffer().getInt() == 0) {
             // compile failed
-            rcv = ExchangeMessage(contextId, queue,
+            rcv = exchangeMessage(contextId, queue,
                     "glGetShaderInfoLog(%d, 0, 0, \"\")", shader.name);
             final String title = String.format("Shader %d in 0x%s failed to compile",
                     shader.name, Integer.toHexString(shader.context.context.contextId));
@@ -274,15 +274,15 @@ public class ShaderEditor extends Composite implements SelectionListener, Extend
             });
         } else
             for (int programName : shader.programs) {
-                GLProgram program = shader.context.GetProgram(programName);
-                ExchangeMessage(contextId, queue, "glLinkProgram(%d)", program.name);
-                rcv = ExchangeMessage(contextId, queue,
+                GLProgram program = shader.context.getProgram(programName);
+                exchangeMessage(contextId, queue, "glLinkProgram(%d)", program.name);
+                rcv = exchangeMessage(contextId, queue,
                         "glGetProgramiv(%d, GL_LINK_STATUS, {0})", program.name);
                 assert rcv.hasData();
                 if (rcv.getData().asReadOnlyByteBuffer().getInt() != 0)
                     continue;
                 // link failed
-                rcv = ExchangeMessage(contextId, queue,
+                rcv = exchangeMessage(contextId, queue,
                             "glGetProgramInfoLog(%d, 0, 0, \"\")", program.name);
                 final String title = String.format("Program %d in 0x%s failed to link",
                         program.name, Integer.toHexString(program.context.context.contextId));
@@ -299,14 +299,14 @@ public class ShaderEditor extends Composite implements SelectionListener, Extend
 
         // TODO: add to upload results if failed
 
-        Message.Builder builder = GetBuilder(contextId);
+        Message.Builder builder = getBuilder(contextId);
         builder.setExpectResponse(false);
-        if (queue.GetPartialMessage(contextId) != null)
+        if (queue.getPartialMessage(contextId) != null)
             // the glShaderSource interrupted a BeforeCall, so continue
             builder.setFunction(Function.CONTINUE);
         else
             builder.setFunction(Function.SKIP);
-        queue.SendMessage(builder.build());
+        queue.sendMessage(builder.build());
 
         return true;
     }
@@ -314,7 +314,7 @@ public class ShaderEditor extends Composite implements SelectionListener, Extend
     @Override
     public void widgetSelected(SelectionEvent e) {
         if (e.getSource() == uploadShader && null != current) {
-            UploadShader();
+            uploadShader();
             return;
         } else if (e.getSource() == restoreShader && null != current) {
             current.source = styledText.getText();
@@ -332,7 +332,7 @@ public class ShaderEditor extends Composite implements SelectionListener, Extend
                     null, "Shader source has been edited", MessageDialog.QUESTION, btns, 0);
             int rc = dialog.open();
             if (rc == SWT.DEFAULT || rc == 0)
-                UploadShader();
+                uploadShader();
             else if (rc == 1)
                 current.source = styledText.getText();
             // else if (rc == 2) do nothing; selection is changing

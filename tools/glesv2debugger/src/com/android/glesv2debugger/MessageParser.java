@@ -29,7 +29,7 @@ public abstract class MessageParser {
 
     String args;
 
-    String[] GetList()
+    String[] getList()
     {
         assert args.charAt(0) == '{';
         String arg = args;
@@ -43,41 +43,41 @@ public abstract class MessageParser {
         return arg.split(",");
     }
 
-    ByteString ParseFloats(int count) {
+    ByteString parseFloats(int count) {
         ByteBuffer buffer = ByteBuffer.allocate(count * 4);
         buffer.order(SampleView.targetByteOrder);
-        String [] arg = GetList();
+        String [] arg = getList();
         for (int i = 0; i < count; i++)
             buffer.putFloat(Float.parseFloat(arg[i].trim()));
         buffer.rewind();
         return ByteString.copyFrom(buffer);
     }
 
-    ByteString ParseInts(int count) {
+    ByteString parseInts(int count) {
         ByteBuffer buffer = ByteBuffer.allocate(count * 4);
         buffer.order(SampleView.targetByteOrder);
-        String [] arg = GetList();
+        String [] arg = getList();
         for (int i = 0; i < count; i++)
             buffer.putInt(Integer.parseInt(arg[i].trim()));
         buffer.rewind();
         return ByteString.copyFrom(buffer);
     }
 
-    ByteString ParseUInts(int count) {
+    ByteString parseUInts(int count) {
         ByteBuffer buffer = ByteBuffer.allocate(count * 4);
         buffer.order(SampleView.targetByteOrder);
-        String [] arg = GetList();
+        String [] arg = getList();
         for (int i = 0; i < count; i++)
             buffer.putInt((int)(Long.parseLong(arg[i].trim()) & 0xffffffff));
         buffer.rewind();
         return ByteString.copyFrom(buffer);
     }
 
-    ByteString ParseMatrix(int columns, int count) {
-        return ParseFloats(columns * count);
+    ByteString parseMatrix(int columns, int count) {
+        return parseFloats(columns * count);
     }
 
-    ByteString ParseString() {
+    ByteString parseString() {
         // TODO: escape sequence and proper string literal
         String arg = args.substring(args.indexOf('"') + 1, args.lastIndexOf('"'));
         args = args.substring(args.lastIndexOf('"'));
@@ -89,7 +89,7 @@ public abstract class MessageParser {
         return ByteString.copyFromUtf8(arg);
     }
 
-    String GetArgument()
+    String getArgument()
     {
         int comma = args.indexOf(",");
         String arg = null;
@@ -108,9 +108,9 @@ public abstract class MessageParser {
         return arg;
     }
 
-    int ParseArgument()
+    int parseArgument()
     {
-        String arg = GetArgument();
+        String arg = getArgument();
         if (arg.startsWith("GL_"))
             return GLEnum.valueOf(arg).value;
         else if (arg.toLowerCase().startsWith("0x"))
@@ -119,13 +119,13 @@ public abstract class MessageParser {
             return Integer.parseInt(arg);
     }
 
-    int ParseFloat()
+    int parseFloat()
     {
-        String arg = GetArgument();
+        String arg = getArgument();
         return Float.floatToRawIntBits(Float.parseFloat(arg));
     }
 
-    public void Parse(final Message.Builder builder, String string) {
+    public void parse(final Message.Builder builder, String string) {
         int lparen = string.indexOf("("), rparen = string.lastIndexOf(")");
         String s = string.substring(0, lparen).trim();
         args = string.substring(lparen + 1, rparen);
@@ -134,608 +134,608 @@ public abstract class MessageParser {
         builder.setFunction(function);
         switch (function) {
             case glActiveTexture:
-                builder.setArg0(ParseArgument()); // GLenum texture
+                builder.setArg0(parseArgument()); // GLenum texture
                 break;
             case glAttachShader:
-                builder.setArg0(ParseArgument()); // GLuint program
-                builder.setArg1(ParseArgument()); // GLuint shader
+                builder.setArg0(parseArgument()); // GLuint program
+                builder.setArg1(parseArgument()); // GLuint shader
                 break;
             case glBindAttribLocation:
-                builder.setArg0(ParseArgument()); // GLuint program
-                builder.setArg1(ParseArgument()); // GLuint index
-                builder.setData(ParseString()); // GLchar name
+                builder.setArg0(parseArgument()); // GLuint program
+                builder.setArg1(parseArgument()); // GLuint index
+                builder.setData(parseString()); // GLchar name
                 break;
             case glBindBuffer:
-                builder.setArg0(ParseArgument()); // GLenum target
-                builder.setArg1(ParseArgument()); // GLuint buffer
+                builder.setArg0(parseArgument()); // GLenum target
+                builder.setArg1(parseArgument()); // GLuint buffer
                 break;
             case glBindFramebuffer:
-                builder.setArg0(ParseArgument()); // GLenum target
-                builder.setArg1(ParseArgument()); // GLuint framebuffer
+                builder.setArg0(parseArgument()); // GLenum target
+                builder.setArg1(parseArgument()); // GLuint framebuffer
                 break;
             case glBindRenderbuffer:
-                builder.setArg0(ParseArgument()); // GLenum target
-                builder.setArg1(ParseArgument()); // GLuint renderbuffer
+                builder.setArg0(parseArgument()); // GLenum target
+                builder.setArg1(parseArgument()); // GLuint renderbuffer
                 break;
             case glBindTexture:
-                builder.setArg0(ParseArgument()); // GLenum target
-                builder.setArg1(ParseArgument()); // GLuint texture
+                builder.setArg0(parseArgument()); // GLenum target
+                builder.setArg1(parseArgument()); // GLuint texture
                 break;
             case glBlendColor:
-                builder.setArg0(ParseFloat()); // GLclampf red
-                builder.setArg1(ParseFloat()); // GLclampf green
-                builder.setArg2(ParseFloat()); // GLclampf blue
-                builder.setArg3(ParseFloat()); // GLclampf alpha
+                builder.setArg0(parseFloat()); // GLclampf red
+                builder.setArg1(parseFloat()); // GLclampf green
+                builder.setArg2(parseFloat()); // GLclampf blue
+                builder.setArg3(parseFloat()); // GLclampf alpha
                 break;
             case glBlendEquation:
-                builder.setArg0(ParseArgument()); // GLenum mode
+                builder.setArg0(parseArgument()); // GLenum mode
                 break;
             case glBlendEquationSeparate:
-                builder.setArg0(ParseArgument()); // GLenum modeRGB
-                builder.setArg1(ParseArgument()); // GLenum modeAlpha
+                builder.setArg0(parseArgument()); // GLenum modeRGB
+                builder.setArg1(parseArgument()); // GLenum modeAlpha
                 break;
             case glBlendFunc:
-                builder.setArg0(ParseArgument()); // GLenum sfactor
-                builder.setArg1(ParseArgument()); // GLenum dfactor
+                builder.setArg0(parseArgument()); // GLenum sfactor
+                builder.setArg1(parseArgument()); // GLenum dfactor
                 break;
             case glBlendFuncSeparate:
-                builder.setArg0(ParseArgument()); // GLenum srcRGB
-                builder.setArg1(ParseArgument()); // GLenum dstRGB
-                builder.setArg2(ParseArgument()); // GLenum srcAlpha
-                builder.setArg3(ParseArgument()); // GLenum dstAlpha
+                builder.setArg0(parseArgument()); // GLenum srcRGB
+                builder.setArg1(parseArgument()); // GLenum dstRGB
+                builder.setArg2(parseArgument()); // GLenum srcAlpha
+                builder.setArg3(parseArgument()); // GLenum dstAlpha
                 break;
             case glBufferData:
-                Parse_glBufferData(builder);
+                parse_glBufferData(builder);
                 break;
             case glBufferSubData:
-                Parse_glBufferSubData(builder);
+                parse_glBufferSubData(builder);
                 break;
             case glCheckFramebufferStatus:
-                builder.setArg0(ParseArgument()); // GLenum target
+                builder.setArg0(parseArgument()); // GLenum target
                 break;
             case glClear:
-                builder.setArg0(ParseArgument()); // GLbitfield mask
+                builder.setArg0(parseArgument()); // GLbitfield mask
                 break;
             case glClearColor:
-                builder.setArg0(ParseFloat()); // GLclampf red
-                builder.setArg1(ParseFloat()); // GLclampf green
-                builder.setArg2(ParseFloat()); // GLclampf blue
-                builder.setArg3(ParseFloat()); // GLclampf alpha
+                builder.setArg0(parseFloat()); // GLclampf red
+                builder.setArg1(parseFloat()); // GLclampf green
+                builder.setArg2(parseFloat()); // GLclampf blue
+                builder.setArg3(parseFloat()); // GLclampf alpha
                 break;
             case glClearDepthf:
-                builder.setArg0(ParseFloat()); // GLclampf depth
+                builder.setArg0(parseFloat()); // GLclampf depth
                 break;
             case glClearStencil:
-                builder.setArg0(ParseArgument()); // GLint s
+                builder.setArg0(parseArgument()); // GLint s
                 break;
             case glColorMask:
-                builder.setArg0(ParseArgument()); // GLboolean red
-                builder.setArg1(ParseArgument()); // GLboolean green
-                builder.setArg2(ParseArgument()); // GLboolean blue
-                builder.setArg3(ParseArgument()); // GLboolean alpha
+                builder.setArg0(parseArgument()); // GLboolean red
+                builder.setArg1(parseArgument()); // GLboolean green
+                builder.setArg2(parseArgument()); // GLboolean blue
+                builder.setArg3(parseArgument()); // GLboolean alpha
                 break;
             case glCompileShader:
-                builder.setArg0(ParseArgument()); // GLuint shader
+                builder.setArg0(parseArgument()); // GLuint shader
                 break;
             case glCompressedTexImage2D:
-                Parse_glCompressedTexImage2D(builder);
+                parse_glCompressedTexImage2D(builder);
                 break;
             case glCompressedTexSubImage2D:
-                Parse_glCompressedTexSubImage2D(builder);
+                parse_glCompressedTexSubImage2D(builder);
                 break;
             case glCopyTexImage2D:
-                builder.setArg0(ParseArgument()); // GLenum target
-                builder.setArg1(ParseArgument()); // GLint level
-                builder.setArg2(ParseArgument()); // GLenum internalformat
-                builder.setArg3(ParseArgument()); // GLint x
-                builder.setArg4(ParseArgument()); // GLint y
-                builder.setArg5(ParseArgument()); // GLsizei width
-                builder.setArg6(ParseArgument()); // GLsizei height
-                builder.setArg7(ParseArgument()); // GLint border
+                builder.setArg0(parseArgument()); // GLenum target
+                builder.setArg1(parseArgument()); // GLint level
+                builder.setArg2(parseArgument()); // GLenum internalformat
+                builder.setArg3(parseArgument()); // GLint x
+                builder.setArg4(parseArgument()); // GLint y
+                builder.setArg5(parseArgument()); // GLsizei width
+                builder.setArg6(parseArgument()); // GLsizei height
+                builder.setArg7(parseArgument()); // GLint border
                 break;
             case glCopyTexSubImage2D:
-                builder.setArg0(ParseArgument()); // GLenum target
-                builder.setArg1(ParseArgument()); // GLint level
-                builder.setArg2(ParseArgument()); // GLint xoffset
-                builder.setArg3(ParseArgument()); // GLint yoffset
-                builder.setArg4(ParseArgument()); // GLint x
-                builder.setArg5(ParseArgument()); // GLint y
-                builder.setArg6(ParseArgument()); // GLsizei width
-                builder.setArg7(ParseArgument()); // GLsizei height
+                builder.setArg0(parseArgument()); // GLenum target
+                builder.setArg1(parseArgument()); // GLint level
+                builder.setArg2(parseArgument()); // GLint xoffset
+                builder.setArg3(parseArgument()); // GLint yoffset
+                builder.setArg4(parseArgument()); // GLint x
+                builder.setArg5(parseArgument()); // GLint y
+                builder.setArg6(parseArgument()); // GLsizei width
+                builder.setArg7(parseArgument()); // GLsizei height
                 break;
             case glCreateProgram:
                 break;
             case glCreateShader:
-                builder.setArg0(ParseArgument()); // GLenum type
+                builder.setArg0(parseArgument()); // GLenum type
                 break;
             case glCullFace:
-                builder.setArg0(ParseArgument()); // GLenum mode
+                builder.setArg0(parseArgument()); // GLenum mode
                 break;
             case glDeleteBuffers:
-                builder.setArg0(ParseArgument()); // GLsizei n
-                builder.setData(ParseUInts(1 * builder.getArg0())); // GLuint buffers
+                builder.setArg0(parseArgument()); // GLsizei n
+                builder.setData(parseUInts(1 * builder.getArg0())); // GLuint buffers
                 break;
             case glDeleteFramebuffers:
-                builder.setArg0(ParseArgument()); // GLsizei n
-                builder.setData(ParseUInts(1 * builder.getArg0())); // GLuint framebuffers
+                builder.setArg0(parseArgument()); // GLsizei n
+                builder.setData(parseUInts(1 * builder.getArg0())); // GLuint framebuffers
                 break;
             case glDeleteProgram:
-                builder.setArg0(ParseArgument()); // GLuint program
+                builder.setArg0(parseArgument()); // GLuint program
                 break;
             case glDeleteRenderbuffers:
-                builder.setArg0(ParseArgument()); // GLsizei n
-                builder.setData(ParseUInts(1 * builder.getArg0())); // GLuint renderbuffers
+                builder.setArg0(parseArgument()); // GLsizei n
+                builder.setData(parseUInts(1 * builder.getArg0())); // GLuint renderbuffers
                 break;
             case glDeleteShader:
-                builder.setArg0(ParseArgument()); // GLuint shader
+                builder.setArg0(parseArgument()); // GLuint shader
                 break;
             case glDeleteTextures:
-                builder.setArg0(ParseArgument()); // GLsizei n
-                builder.setData(ParseUInts(1 * builder.getArg0())); // GLuint textures
+                builder.setArg0(parseArgument()); // GLsizei n
+                builder.setData(parseUInts(1 * builder.getArg0())); // GLuint textures
                 break;
             case glDepthFunc:
-                builder.setArg0(ParseArgument()); // GLenum func
+                builder.setArg0(parseArgument()); // GLenum func
                 break;
             case glDepthMask:
-                builder.setArg0(ParseArgument()); // GLboolean flag
+                builder.setArg0(parseArgument()); // GLboolean flag
                 break;
             case glDepthRangef:
-                builder.setArg0(ParseFloat()); // GLclampf zNear
-                builder.setArg1(ParseFloat()); // GLclampf zFar
+                builder.setArg0(parseFloat()); // GLclampf zNear
+                builder.setArg1(parseFloat()); // GLclampf zFar
                 break;
             case glDetachShader:
-                builder.setArg0(ParseArgument()); // GLuint program
-                builder.setArg1(ParseArgument()); // GLuint shader
+                builder.setArg0(parseArgument()); // GLuint program
+                builder.setArg1(parseArgument()); // GLuint shader
                 break;
             case glDisable:
-                builder.setArg0(ParseArgument()); // GLenum cap
+                builder.setArg0(parseArgument()); // GLenum cap
                 break;
             case glDisableVertexAttribArray:
-                builder.setArg0(ParseArgument()); // GLuint index
+                builder.setArg0(parseArgument()); // GLuint index
                 break;
             case glDrawArrays:
-                builder.setArg0(ParseArgument()); // GLenum mode
-                builder.setArg1(ParseArgument()); // GLint first
-                builder.setArg2(ParseArgument()); // GLsizei count
+                builder.setArg0(parseArgument()); // GLenum mode
+                builder.setArg1(parseArgument()); // GLint first
+                builder.setArg2(parseArgument()); // GLsizei count
                 break;
             case glDrawElements:
-                Parse_glDrawElements(builder);
+                parse_glDrawElements(builder);
                 break;
             case glEnable:
-                builder.setArg0(ParseArgument()); // GLenum cap
+                builder.setArg0(parseArgument()); // GLenum cap
                 break;
             case glEnableVertexAttribArray:
-                builder.setArg0(ParseArgument()); // GLuint index
+                builder.setArg0(parseArgument()); // GLuint index
                 break;
             case glFinish:
                 break;
             case glFlush:
                 break;
             case glFramebufferRenderbuffer:
-                builder.setArg0(ParseArgument()); // GLenum target
-                builder.setArg1(ParseArgument()); // GLenum attachment
-                builder.setArg2(ParseArgument()); // GLenum renderbuffertarget
-                builder.setArg3(ParseArgument()); // GLuint renderbuffer
+                builder.setArg0(parseArgument()); // GLenum target
+                builder.setArg1(parseArgument()); // GLenum attachment
+                builder.setArg2(parseArgument()); // GLenum renderbuffertarget
+                builder.setArg3(parseArgument()); // GLuint renderbuffer
                 break;
             case glFramebufferTexture2D:
-                builder.setArg0(ParseArgument()); // GLenum target
-                builder.setArg1(ParseArgument()); // GLenum attachment
-                builder.setArg2(ParseArgument()); // GLenum textarget
-                builder.setArg3(ParseArgument()); // GLuint texture
-                builder.setArg4(ParseArgument()); // GLint level
+                builder.setArg0(parseArgument()); // GLenum target
+                builder.setArg1(parseArgument()); // GLenum attachment
+                builder.setArg2(parseArgument()); // GLenum textarget
+                builder.setArg3(parseArgument()); // GLuint texture
+                builder.setArg4(parseArgument()); // GLint level
                 break;
             case glFrontFace:
-                builder.setArg0(ParseArgument()); // GLenum mode
+                builder.setArg0(parseArgument()); // GLenum mode
                 break;
             case glGenBuffers:
-                builder.setArg0(ParseArgument()); // GLsizei n
-                builder.setData(ParseUInts(1 * builder.getArg0())); // GLuint buffers
+                builder.setArg0(parseArgument()); // GLsizei n
+                builder.setData(parseUInts(1 * builder.getArg0())); // GLuint buffers
                 break;
             case glGenerateMipmap:
-                builder.setArg0(ParseArgument()); // GLenum target
+                builder.setArg0(parseArgument()); // GLenum target
                 break;
             case glGenFramebuffers:
-                builder.setArg0(ParseArgument()); // GLsizei n
-                builder.setData(ParseUInts(1 * builder.getArg0())); // GLuint framebuffers
+                builder.setArg0(parseArgument()); // GLsizei n
+                builder.setData(parseUInts(1 * builder.getArg0())); // GLuint framebuffers
                 break;
             case glGenRenderbuffers:
-                builder.setArg0(ParseArgument()); // GLsizei n
-                builder.setData(ParseUInts(1 * builder.getArg0())); // GLuint renderbuffers
+                builder.setArg0(parseArgument()); // GLsizei n
+                builder.setData(parseUInts(1 * builder.getArg0())); // GLuint renderbuffers
                 break;
             case glGenTextures:
-                builder.setArg0(ParseArgument()); // GLsizei n
-                builder.setData(ParseUInts(1 * builder.getArg0())); // GLuint textures
+                builder.setArg0(parseArgument()); // GLsizei n
+                builder.setData(parseUInts(1 * builder.getArg0())); // GLuint textures
                 break;
             case glGetActiveAttrib:
-                Parse_glGetActiveAttrib(builder);
+                parse_glGetActiveAttrib(builder);
                 break;
             case glGetActiveUniform:
-                Parse_glGetActiveUniform(builder);
+                parse_glGetActiveUniform(builder);
                 break;
             case glGetAttachedShaders:
-                Parse_glGetAttachedShaders(builder);
+                parse_glGetAttachedShaders(builder);
                 break;
             case glGetAttribLocation:
-                builder.setArg0(ParseArgument()); // GLuint program
-                builder.setData(ParseString()); // GLchar name
+                builder.setArg0(parseArgument()); // GLuint program
+                builder.setData(parseString()); // GLchar name
                 break;
             case glGetBooleanv:
-                Parse_glGetBooleanv(builder);
+                parse_glGetBooleanv(builder);
                 break;
             case glGetBufferParameteriv:
-                Parse_glGetBufferParameteriv(builder);
+                parse_glGetBufferParameteriv(builder);
                 break;
             case glGetError:
                 break;
             case glGetFloatv:
-                Parse_glGetFloatv(builder);
+                parse_glGetFloatv(builder);
                 break;
             case glGetFramebufferAttachmentParameteriv:
-                Parse_glGetFramebufferAttachmentParameteriv(builder);
+                parse_glGetFramebufferAttachmentParameteriv(builder);
                 break;
             case glGetIntegerv:
-                Parse_glGetIntegerv(builder);
+                parse_glGetIntegerv(builder);
                 break;
             case glGetProgramiv:
-                builder.setArg0(ParseArgument()); // GLuint program
-                builder.setArg1(ParseArgument()); // GLenum pname
-                builder.setData(ParseInts(1)); // GLint params
+                builder.setArg0(parseArgument()); // GLuint program
+                builder.setArg1(parseArgument()); // GLenum pname
+                builder.setData(parseInts(1)); // GLint params
                 break;
             case glGetProgramInfoLog:
-                Parse_glGetProgramInfoLog(builder);
+                parse_glGetProgramInfoLog(builder);
                 break;
             case glGetRenderbufferParameteriv:
-                Parse_glGetRenderbufferParameteriv(builder);
+                parse_glGetRenderbufferParameteriv(builder);
                 break;
             case glGetShaderiv:
-                builder.setArg0(ParseArgument()); // GLuint shader
-                builder.setArg1(ParseArgument()); // GLenum pname
-                builder.setData(ParseInts(1)); // GLint params
+                builder.setArg0(parseArgument()); // GLuint shader
+                builder.setArg1(parseArgument()); // GLenum pname
+                builder.setData(parseInts(1)); // GLint params
                 break;
             case glGetShaderInfoLog:
-                Parse_glGetShaderInfoLog(builder);
+                parse_glGetShaderInfoLog(builder);
                 break;
             case glGetShaderPrecisionFormat:
-                Parse_glGetShaderPrecisionFormat(builder);
+                parse_glGetShaderPrecisionFormat(builder);
                 break;
             case glGetShaderSource:
-                Parse_glGetShaderSource(builder);
+                parse_glGetShaderSource(builder);
                 break;
             case glGetString:
-                builder.setArg0(ParseArgument()); // GLenum name
+                builder.setArg0(parseArgument()); // GLenum name
                 break;
             case glGetTexParameterfv:
-                Parse_glGetTexParameterfv(builder);
+                parse_glGetTexParameterfv(builder);
                 break;
             case glGetTexParameteriv:
-                Parse_glGetTexParameteriv(builder);
+                parse_glGetTexParameteriv(builder);
                 break;
             case glGetUniformfv:
-                Parse_glGetUniformfv(builder);
+                parse_glGetUniformfv(builder);
                 break;
             case glGetUniformiv:
-                Parse_glGetUniformiv(builder);
+                parse_glGetUniformiv(builder);
                 break;
             case glGetUniformLocation:
-                builder.setArg0(ParseArgument()); // GLuint program
-                builder.setData(ParseString()); // GLchar name
+                builder.setArg0(parseArgument()); // GLuint program
+                builder.setData(parseString()); // GLchar name
                 break;
             case glGetVertexAttribfv:
-                Parse_glGetVertexAttribfv(builder);
+                parse_glGetVertexAttribfv(builder);
                 break;
             case glGetVertexAttribiv:
-                Parse_glGetVertexAttribiv(builder);
+                parse_glGetVertexAttribiv(builder);
                 break;
             case glGetVertexAttribPointerv:
-                Parse_glGetVertexAttribPointerv(builder);
+                parse_glGetVertexAttribPointerv(builder);
                 break;
             case glHint:
-                builder.setArg0(ParseArgument()); // GLenum target
-                builder.setArg1(ParseArgument()); // GLenum mode
+                builder.setArg0(parseArgument()); // GLenum target
+                builder.setArg1(parseArgument()); // GLenum mode
                 break;
             case glIsBuffer:
-                builder.setArg0(ParseArgument()); // GLuint buffer
+                builder.setArg0(parseArgument()); // GLuint buffer
                 break;
             case glIsEnabled:
-                builder.setArg0(ParseArgument()); // GLenum cap
+                builder.setArg0(parseArgument()); // GLenum cap
                 break;
             case glIsFramebuffer:
-                builder.setArg0(ParseArgument()); // GLuint framebuffer
+                builder.setArg0(parseArgument()); // GLuint framebuffer
                 break;
             case glIsProgram:
-                builder.setArg0(ParseArgument()); // GLuint program
+                builder.setArg0(parseArgument()); // GLuint program
                 break;
             case glIsRenderbuffer:
-                builder.setArg0(ParseArgument()); // GLuint renderbuffer
+                builder.setArg0(parseArgument()); // GLuint renderbuffer
                 break;
             case glIsShader:
-                builder.setArg0(ParseArgument()); // GLuint shader
+                builder.setArg0(parseArgument()); // GLuint shader
                 break;
             case glIsTexture:
-                builder.setArg0(ParseArgument()); // GLuint texture
+                builder.setArg0(parseArgument()); // GLuint texture
                 break;
             case glLineWidth:
-                builder.setArg0(ParseFloat()); // GLfloat width
+                builder.setArg0(parseFloat()); // GLfloat width
                 break;
             case glLinkProgram:
-                builder.setArg0(ParseArgument()); // GLuint program
+                builder.setArg0(parseArgument()); // GLuint program
                 break;
             case glPixelStorei:
-                builder.setArg0(ParseArgument()); // GLenum pname
-                builder.setArg1(ParseArgument()); // GLint param
+                builder.setArg0(parseArgument()); // GLenum pname
+                builder.setArg1(parseArgument()); // GLint param
                 break;
             case glPolygonOffset:
-                builder.setArg0(ParseFloat()); // GLfloat factor
-                builder.setArg1(ParseFloat()); // GLfloat units
+                builder.setArg0(parseFloat()); // GLfloat factor
+                builder.setArg1(parseFloat()); // GLfloat units
                 break;
             case glReadPixels:
-                Parse_glReadPixels(builder);
+                parse_glReadPixels(builder);
                 break;
             case glReleaseShaderCompiler:
                 break;
             case glRenderbufferStorage:
-                builder.setArg0(ParseArgument()); // GLenum target
-                builder.setArg1(ParseArgument()); // GLenum internalformat
-                builder.setArg2(ParseArgument()); // GLsizei width
-                builder.setArg3(ParseArgument()); // GLsizei height
+                builder.setArg0(parseArgument()); // GLenum target
+                builder.setArg1(parseArgument()); // GLenum internalformat
+                builder.setArg2(parseArgument()); // GLsizei width
+                builder.setArg3(parseArgument()); // GLsizei height
                 break;
             case glSampleCoverage:
-                builder.setArg0(ParseFloat()); // GLclampf value
-                builder.setArg1(ParseArgument()); // GLboolean invert
+                builder.setArg0(parseFloat()); // GLclampf value
+                builder.setArg1(parseArgument()); // GLboolean invert
                 break;
             case glScissor:
-                builder.setArg0(ParseArgument()); // GLint x
-                builder.setArg1(ParseArgument()); // GLint y
-                builder.setArg2(ParseArgument()); // GLsizei width
-                builder.setArg3(ParseArgument()); // GLsizei height
+                builder.setArg0(parseArgument()); // GLint x
+                builder.setArg1(parseArgument()); // GLint y
+                builder.setArg2(parseArgument()); // GLsizei width
+                builder.setArg3(parseArgument()); // GLsizei height
                 break;
             case glShaderBinary:
-                Parse_glShaderBinary(builder);
+                parse_glShaderBinary(builder);
                 break;
             case glShaderSource:
-                Parse_glShaderSource(builder);
+                parse_glShaderSource(builder);
                 break;
             case glStencilFunc:
-                builder.setArg0(ParseArgument()); // GLenum func
-                builder.setArg1(ParseArgument()); // GLint ref
-                builder.setArg2(ParseArgument()); // GLuint mask
+                builder.setArg0(parseArgument()); // GLenum func
+                builder.setArg1(parseArgument()); // GLint ref
+                builder.setArg2(parseArgument()); // GLuint mask
                 break;
             case glStencilFuncSeparate:
-                builder.setArg0(ParseArgument()); // GLenum face
-                builder.setArg1(ParseArgument()); // GLenum func
-                builder.setArg2(ParseArgument()); // GLint ref
-                builder.setArg3(ParseArgument()); // GLuint mask
+                builder.setArg0(parseArgument()); // GLenum face
+                builder.setArg1(parseArgument()); // GLenum func
+                builder.setArg2(parseArgument()); // GLint ref
+                builder.setArg3(parseArgument()); // GLuint mask
                 break;
             case glStencilMask:
-                builder.setArg0(ParseArgument()); // GLuint mask
+                builder.setArg0(parseArgument()); // GLuint mask
                 break;
             case glStencilMaskSeparate:
-                builder.setArg0(ParseArgument()); // GLenum face
-                builder.setArg1(ParseArgument()); // GLuint mask
+                builder.setArg0(parseArgument()); // GLenum face
+                builder.setArg1(parseArgument()); // GLuint mask
                 break;
             case glStencilOp:
-                builder.setArg0(ParseArgument()); // GLenum fail
-                builder.setArg1(ParseArgument()); // GLenum zfail
-                builder.setArg2(ParseArgument()); // GLenum zpass
+                builder.setArg0(parseArgument()); // GLenum fail
+                builder.setArg1(parseArgument()); // GLenum zfail
+                builder.setArg2(parseArgument()); // GLenum zpass
                 break;
             case glStencilOpSeparate:
-                builder.setArg0(ParseArgument()); // GLenum face
-                builder.setArg1(ParseArgument()); // GLenum fail
-                builder.setArg2(ParseArgument()); // GLenum zfail
-                builder.setArg3(ParseArgument()); // GLenum zpass
+                builder.setArg0(parseArgument()); // GLenum face
+                builder.setArg1(parseArgument()); // GLenum fail
+                builder.setArg2(parseArgument()); // GLenum zfail
+                builder.setArg3(parseArgument()); // GLenum zpass
                 break;
             case glTexImage2D:
-                Parse_glTexImage2D(builder);
+                parse_glTexImage2D(builder);
                 break;
             case glTexParameterf:
-                builder.setArg0(ParseArgument()); // GLenum target
-                builder.setArg1(ParseArgument()); // GLenum pname
-                builder.setArg2(ParseFloat()); // GLfloat param
+                builder.setArg0(parseArgument()); // GLenum target
+                builder.setArg1(parseArgument()); // GLenum pname
+                builder.setArg2(parseFloat()); // GLfloat param
                 break;
             case glTexParameterfv:
-                Parse_glTexParameterfv(builder);
+                parse_glTexParameterfv(builder);
                 break;
             case glTexParameteri:
-                builder.setArg0(ParseArgument()); // GLenum target
-                builder.setArg1(ParseArgument()); // GLenum pname
-                builder.setArg2(ParseArgument()); // GLint param
+                builder.setArg0(parseArgument()); // GLenum target
+                builder.setArg1(parseArgument()); // GLenum pname
+                builder.setArg2(parseArgument()); // GLint param
                 break;
             case glTexParameteriv:
-                Parse_glTexParameteriv(builder);
+                parse_glTexParameteriv(builder);
                 break;
             case glTexSubImage2D:
-                Parse_glTexSubImage2D(builder);
+                parse_glTexSubImage2D(builder);
                 break;
             case glUniform1f:
-                builder.setArg0(ParseArgument()); // GLint location
-                builder.setArg1(ParseFloat()); // GLfloat x
+                builder.setArg0(parseArgument()); // GLint location
+                builder.setArg1(parseFloat()); // GLfloat x
                 break;
             case glUniform1fv:
-                builder.setArg0(ParseArgument()); // GLint location
-                builder.setArg1(ParseArgument()); // GLsizei count
-                builder.setData(ParseFloats(1 * builder.getArg1())); // GLfloat v
+                builder.setArg0(parseArgument()); // GLint location
+                builder.setArg1(parseArgument()); // GLsizei count
+                builder.setData(parseFloats(1 * builder.getArg1())); // GLfloat v
                 break;
             case glUniform1i:
-                builder.setArg0(ParseArgument()); // GLint location
-                builder.setArg1(ParseArgument()); // GLint x
+                builder.setArg0(parseArgument()); // GLint location
+                builder.setArg1(parseArgument()); // GLint x
                 break;
             case glUniform1iv:
-                builder.setArg0(ParseArgument()); // GLint location
-                builder.setArg1(ParseArgument()); // GLsizei count
-                builder.setData(ParseInts(1 * builder.getArg1())); // GLint v
+                builder.setArg0(parseArgument()); // GLint location
+                builder.setArg1(parseArgument()); // GLsizei count
+                builder.setData(parseInts(1 * builder.getArg1())); // GLint v
                 break;
             case glUniform2f:
-                builder.setArg0(ParseArgument()); // GLint location
-                builder.setArg1(ParseFloat()); // GLfloat x
-                builder.setArg2(ParseFloat()); // GLfloat y
+                builder.setArg0(parseArgument()); // GLint location
+                builder.setArg1(parseFloat()); // GLfloat x
+                builder.setArg2(parseFloat()); // GLfloat y
                 break;
             case glUniform2fv:
-                builder.setArg0(ParseArgument()); // GLint location
-                builder.setArg1(ParseArgument()); // GLsizei count
-                builder.setData(ParseFloats(2 * builder.getArg1())); // GLfloat v
+                builder.setArg0(parseArgument()); // GLint location
+                builder.setArg1(parseArgument()); // GLsizei count
+                builder.setData(parseFloats(2 * builder.getArg1())); // GLfloat v
                 break;
             case glUniform2i:
-                builder.setArg0(ParseArgument()); // GLint location
-                builder.setArg1(ParseArgument()); // GLint x
-                builder.setArg2(ParseArgument()); // GLint y
+                builder.setArg0(parseArgument()); // GLint location
+                builder.setArg1(parseArgument()); // GLint x
+                builder.setArg2(parseArgument()); // GLint y
                 break;
             case glUniform2iv:
-                builder.setArg0(ParseArgument()); // GLint location
-                builder.setArg1(ParseArgument()); // GLsizei count
-                builder.setData(ParseInts(2 * builder.getArg1())); // GLint v
+                builder.setArg0(parseArgument()); // GLint location
+                builder.setArg1(parseArgument()); // GLsizei count
+                builder.setData(parseInts(2 * builder.getArg1())); // GLint v
                 break;
             case glUniform3f:
-                builder.setArg0(ParseArgument()); // GLint location
-                builder.setArg1(ParseFloat()); // GLfloat x
-                builder.setArg2(ParseFloat()); // GLfloat y
-                builder.setArg3(ParseFloat()); // GLfloat z
+                builder.setArg0(parseArgument()); // GLint location
+                builder.setArg1(parseFloat()); // GLfloat x
+                builder.setArg2(parseFloat()); // GLfloat y
+                builder.setArg3(parseFloat()); // GLfloat z
                 break;
             case glUniform3fv:
-                builder.setArg0(ParseArgument()); // GLint location
-                builder.setArg1(ParseArgument()); // GLsizei count
-                builder.setData(ParseFloats(3 * builder.getArg1())); // GLfloat v
+                builder.setArg0(parseArgument()); // GLint location
+                builder.setArg1(parseArgument()); // GLsizei count
+                builder.setData(parseFloats(3 * builder.getArg1())); // GLfloat v
                 break;
             case glUniform3i:
-                builder.setArg0(ParseArgument()); // GLint location
-                builder.setArg1(ParseArgument()); // GLint x
-                builder.setArg2(ParseArgument()); // GLint y
-                builder.setArg3(ParseArgument()); // GLint z
+                builder.setArg0(parseArgument()); // GLint location
+                builder.setArg1(parseArgument()); // GLint x
+                builder.setArg2(parseArgument()); // GLint y
+                builder.setArg3(parseArgument()); // GLint z
                 break;
             case glUniform3iv:
-                builder.setArg0(ParseArgument()); // GLint location
-                builder.setArg1(ParseArgument()); // GLsizei count
-                builder.setData(ParseInts(3 * builder.getArg1())); // GLint v
+                builder.setArg0(parseArgument()); // GLint location
+                builder.setArg1(parseArgument()); // GLsizei count
+                builder.setData(parseInts(3 * builder.getArg1())); // GLint v
                 break;
             case glUniform4f:
-                builder.setArg0(ParseArgument()); // GLint location
-                builder.setArg1(ParseFloat()); // GLfloat x
-                builder.setArg2(ParseFloat()); // GLfloat y
-                builder.setArg3(ParseFloat()); // GLfloat z
-                builder.setArg4(ParseFloat()); // GLfloat w
+                builder.setArg0(parseArgument()); // GLint location
+                builder.setArg1(parseFloat()); // GLfloat x
+                builder.setArg2(parseFloat()); // GLfloat y
+                builder.setArg3(parseFloat()); // GLfloat z
+                builder.setArg4(parseFloat()); // GLfloat w
                 break;
             case glUniform4fv:
-                builder.setArg0(ParseArgument()); // GLint location
-                builder.setArg1(ParseArgument()); // GLsizei count
-                builder.setData(ParseFloats(4 * builder.getArg1())); // GLfloat v
+                builder.setArg0(parseArgument()); // GLint location
+                builder.setArg1(parseArgument()); // GLsizei count
+                builder.setData(parseFloats(4 * builder.getArg1())); // GLfloat v
                 break;
             case glUniform4i:
-                builder.setArg0(ParseArgument()); // GLint location
-                builder.setArg1(ParseArgument()); // GLint x
-                builder.setArg2(ParseArgument()); // GLint y
-                builder.setArg3(ParseArgument()); // GLint z
-                builder.setArg4(ParseArgument()); // GLint w
+                builder.setArg0(parseArgument()); // GLint location
+                builder.setArg1(parseArgument()); // GLint x
+                builder.setArg2(parseArgument()); // GLint y
+                builder.setArg3(parseArgument()); // GLint z
+                builder.setArg4(parseArgument()); // GLint w
                 break;
             case glUniform4iv:
-                builder.setArg0(ParseArgument()); // GLint location
-                builder.setArg1(ParseArgument()); // GLsizei count
-                builder.setData(ParseInts(4 * builder.getArg1())); // GLint v
+                builder.setArg0(parseArgument()); // GLint location
+                builder.setArg1(parseArgument()); // GLsizei count
+                builder.setData(parseInts(4 * builder.getArg1())); // GLint v
                 break;
             case glUniformMatrix2fv:
-                builder.setArg0(ParseArgument()); // GLint location
-                builder.setArg1(ParseArgument()); // GLsizei count
-                builder.setArg2(ParseArgument()); // GLboolean transpose
-                builder.setData(ParseMatrix(2, 4 * builder.getArg1())); // GLfloat value
+                builder.setArg0(parseArgument()); // GLint location
+                builder.setArg1(parseArgument()); // GLsizei count
+                builder.setArg2(parseArgument()); // GLboolean transpose
+                builder.setData(parseMatrix(2, 4 * builder.getArg1())); // GLfloat value
                 break;
             case glUniformMatrix3fv:
-                builder.setArg0(ParseArgument()); // GLint location
-                builder.setArg1(ParseArgument()); // GLsizei count
-                builder.setArg2(ParseArgument()); // GLboolean transpose
-                builder.setData(ParseMatrix(3, 9 * builder.getArg1())); // GLfloat value
+                builder.setArg0(parseArgument()); // GLint location
+                builder.setArg1(parseArgument()); // GLsizei count
+                builder.setArg2(parseArgument()); // GLboolean transpose
+                builder.setData(parseMatrix(3, 9 * builder.getArg1())); // GLfloat value
                 break;
             case glUniformMatrix4fv:
-                builder.setArg0(ParseArgument()); // GLint location
-                builder.setArg1(ParseArgument()); // GLsizei count
-                builder.setArg2(ParseArgument()); // GLboolean transpose
-                builder.setData(ParseMatrix(4, 16 * builder.getArg1())); // GLfloat value
+                builder.setArg0(parseArgument()); // GLint location
+                builder.setArg1(parseArgument()); // GLsizei count
+                builder.setArg2(parseArgument()); // GLboolean transpose
+                builder.setData(parseMatrix(4, 16 * builder.getArg1())); // GLfloat value
                 break;
             case glUseProgram:
-                builder.setArg0(ParseArgument()); // GLuint program
+                builder.setArg0(parseArgument()); // GLuint program
                 break;
             case glValidateProgram:
-                builder.setArg0(ParseArgument()); // GLuint program
+                builder.setArg0(parseArgument()); // GLuint program
                 break;
             case glVertexAttrib1f:
-                builder.setArg0(ParseArgument()); // GLuint indx
-                builder.setArg1(ParseFloat()); // GLfloat x
+                builder.setArg0(parseArgument()); // GLuint indx
+                builder.setArg1(parseFloat()); // GLfloat x
                 break;
             case glVertexAttrib1fv:
-                builder.setArg0(ParseArgument()); // GLuint indx
-                builder.setData(ParseFloats(1)); // GLfloat values
+                builder.setArg0(parseArgument()); // GLuint indx
+                builder.setData(parseFloats(1)); // GLfloat values
                 break;
             case glVertexAttrib2f:
-                builder.setArg0(ParseArgument()); // GLuint indx
-                builder.setArg1(ParseFloat()); // GLfloat x
-                builder.setArg2(ParseFloat()); // GLfloat y
+                builder.setArg0(parseArgument()); // GLuint indx
+                builder.setArg1(parseFloat()); // GLfloat x
+                builder.setArg2(parseFloat()); // GLfloat y
                 break;
             case glVertexAttrib2fv:
-                builder.setArg0(ParseArgument()); // GLuint indx
-                builder.setData(ParseFloats(2)); // GLfloat values
+                builder.setArg0(parseArgument()); // GLuint indx
+                builder.setData(parseFloats(2)); // GLfloat values
                 break;
             case glVertexAttrib3f:
-                builder.setArg0(ParseArgument()); // GLuint indx
-                builder.setArg1(ParseFloat()); // GLfloat x
-                builder.setArg2(ParseFloat()); // GLfloat y
-                builder.setArg3(ParseFloat()); // GLfloat z
+                builder.setArg0(parseArgument()); // GLuint indx
+                builder.setArg1(parseFloat()); // GLfloat x
+                builder.setArg2(parseFloat()); // GLfloat y
+                builder.setArg3(parseFloat()); // GLfloat z
                 break;
             case glVertexAttrib3fv:
-                builder.setArg0(ParseArgument()); // GLuint indx
-                builder.setData(ParseFloats(3)); // GLfloat values
+                builder.setArg0(parseArgument()); // GLuint indx
+                builder.setData(parseFloats(3)); // GLfloat values
                 break;
             case glVertexAttrib4f:
-                builder.setArg0(ParseArgument()); // GLuint indx
-                builder.setArg1(ParseFloat()); // GLfloat x
-                builder.setArg2(ParseFloat()); // GLfloat y
-                builder.setArg3(ParseFloat()); // GLfloat z
-                builder.setArg4(ParseFloat()); // GLfloat w
+                builder.setArg0(parseArgument()); // GLuint indx
+                builder.setArg1(parseFloat()); // GLfloat x
+                builder.setArg2(parseFloat()); // GLfloat y
+                builder.setArg3(parseFloat()); // GLfloat z
+                builder.setArg4(parseFloat()); // GLfloat w
                 break;
             case glVertexAttrib4fv:
-                builder.setArg0(ParseArgument()); // GLuint indx
-                builder.setData(ParseFloats(4)); // GLfloat values
+                builder.setArg0(parseArgument()); // GLuint indx
+                builder.setData(parseFloats(4)); // GLfloat values
                 break;
             case glVertexAttribPointer:
-                Parse_glVertexAttribPointer(builder);
+                parse_glVertexAttribPointer(builder);
                 break;
             case glViewport:
-                builder.setArg0(ParseArgument()); // GLint x
-                builder.setArg1(ParseArgument()); // GLint y
-                builder.setArg2(ParseArgument()); // GLsizei width
-                builder.setArg3(ParseArgument()); // GLsizei height
+                builder.setArg0(parseArgument()); // GLint x
+                builder.setArg1(parseArgument()); // GLint y
+                builder.setArg2(parseArgument()); // GLsizei width
+                builder.setArg3(parseArgument()); // GLsizei height
                 break;
             default:
                 assert false;
         }
     }
-    abstract void Parse_glBufferData(Message.Builder builder);
-    abstract void Parse_glBufferSubData(Message.Builder builder);
-    abstract void Parse_glCompressedTexImage2D(Message.Builder builder);
-    abstract void Parse_glCompressedTexSubImage2D(Message.Builder builder);
-    abstract void Parse_glDrawElements(Message.Builder builder);
-    abstract void Parse_glGetActiveAttrib(Message.Builder builder);
-    abstract void Parse_glGetActiveUniform(Message.Builder builder);
-    abstract void Parse_glGetAttachedShaders(Message.Builder builder);
-    abstract void Parse_glGetBooleanv(Message.Builder builder);
-    abstract void Parse_glGetBufferParameteriv(Message.Builder builder);
-    abstract void Parse_glGetFloatv(Message.Builder builder);
-    abstract void Parse_glGetFramebufferAttachmentParameteriv(Message.Builder builder);
-    abstract void Parse_glGetIntegerv(Message.Builder builder);
-    abstract void Parse_glGetProgramInfoLog(Message.Builder builder);
-    abstract void Parse_glGetRenderbufferParameteriv(Message.Builder builder);
-    abstract void Parse_glGetShaderInfoLog(Message.Builder builder);
-    abstract void Parse_glGetShaderPrecisionFormat(Message.Builder builder);
-    abstract void Parse_glGetShaderSource(Message.Builder builder);
-    abstract void Parse_glGetTexParameterfv(Message.Builder builder);
-    abstract void Parse_glGetTexParameteriv(Message.Builder builder);
-    abstract void Parse_glGetUniformfv(Message.Builder builder);
-    abstract void Parse_glGetUniformiv(Message.Builder builder);
-    abstract void Parse_glGetVertexAttribfv(Message.Builder builder);
-    abstract void Parse_glGetVertexAttribiv(Message.Builder builder);
-    abstract void Parse_glGetVertexAttribPointerv(Message.Builder builder);
-    abstract void Parse_glReadPixels(Message.Builder builder);
-    abstract void Parse_glShaderBinary(Message.Builder builder);
-    abstract void Parse_glShaderSource(Message.Builder builder);
-    abstract void Parse_glTexImage2D(Message.Builder builder);
-    abstract void Parse_glTexParameterfv(Message.Builder builder);
-    abstract void Parse_glTexParameteriv(Message.Builder builder);
-    abstract void Parse_glTexSubImage2D(Message.Builder builder);
-    abstract void Parse_glVertexAttribPointer(Message.Builder builder);
+    abstract void parse_glBufferData(Message.Builder builder);
+    abstract void parse_glBufferSubData(Message.Builder builder);
+    abstract void parse_glCompressedTexImage2D(Message.Builder builder);
+    abstract void parse_glCompressedTexSubImage2D(Message.Builder builder);
+    abstract void parse_glDrawElements(Message.Builder builder);
+    abstract void parse_glGetActiveAttrib(Message.Builder builder);
+    abstract void parse_glGetActiveUniform(Message.Builder builder);
+    abstract void parse_glGetAttachedShaders(Message.Builder builder);
+    abstract void parse_glGetBooleanv(Message.Builder builder);
+    abstract void parse_glGetBufferParameteriv(Message.Builder builder);
+    abstract void parse_glGetFloatv(Message.Builder builder);
+    abstract void parse_glGetFramebufferAttachmentParameteriv(Message.Builder builder);
+    abstract void parse_glGetIntegerv(Message.Builder builder);
+    abstract void parse_glGetProgramInfoLog(Message.Builder builder);
+    abstract void parse_glGetRenderbufferParameteriv(Message.Builder builder);
+    abstract void parse_glGetShaderInfoLog(Message.Builder builder);
+    abstract void parse_glGetShaderPrecisionFormat(Message.Builder builder);
+    abstract void parse_glGetShaderSource(Message.Builder builder);
+    abstract void parse_glGetTexParameterfv(Message.Builder builder);
+    abstract void parse_glGetTexParameteriv(Message.Builder builder);
+    abstract void parse_glGetUniformfv(Message.Builder builder);
+    abstract void parse_glGetUniformiv(Message.Builder builder);
+    abstract void parse_glGetVertexAttribfv(Message.Builder builder);
+    abstract void parse_glGetVertexAttribiv(Message.Builder builder);
+    abstract void parse_glGetVertexAttribPointerv(Message.Builder builder);
+    abstract void parse_glReadPixels(Message.Builder builder);
+    abstract void parse_glShaderBinary(Message.Builder builder);
+    abstract void parse_glShaderSource(Message.Builder builder);
+    abstract void parse_glTexImage2D(Message.Builder builder);
+    abstract void parse_glTexParameterfv(Message.Builder builder);
+    abstract void parse_glTexParameteriv(Message.Builder builder);
+    abstract void parse_glTexSubImage2D(Message.Builder builder);
+    abstract void parse_glVertexAttribPointer(Message.Builder builder);
 }

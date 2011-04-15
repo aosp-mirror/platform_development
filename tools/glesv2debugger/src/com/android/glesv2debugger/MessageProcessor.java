@@ -36,7 +36,7 @@ public class MessageProcessor {
      * decompressed size, uint32 chunk compressed size, chunk data)+. 0 chunk
      * compressed size means chunk is not compressed
      */
-    public static byte[] LZFDecompressChunks(final ByteString data) {
+    public static byte[] lzfDecompressChunks(final ByteString data) {
         ByteBuffer in = data.asReadOnlyByteBuffer();
         in.order(SampleView.targetByteOrder);
         ByteBuffer out = ByteBuffer.allocate(in.getInt());
@@ -65,7 +65,7 @@ public class MessageProcessor {
     }
 
     /** same data layout as LZFDecompressChunks */
-    public static byte[] LZFCompressChunks(final byte[] in, final int inSize) {
+    public static byte[] lzfCompressChunks(final byte[] in, final int inSize) {
         byte[] chunk = new byte[256 * 1024]; // chunk size is arbitrary
         final ByteBuffer out = ByteBuffer.allocate(4 + (inSize + chunk.length - 1)
                 / chunk.length * (chunk.length + 4 * 2));
@@ -92,7 +92,7 @@ public class MessageProcessor {
      * returns new ref, which is also the decoded image; ref could be bigger
      * than pixels, in which case the first pixels.length bytes form the image
      */
-    public static byte[] DecodeReferencedImage(byte[] ref, byte[] pixels) {
+    public static byte[] decodeReferencedImage(byte[] ref, byte[] pixels) {
         if (ref.length < pixels.length)
             ref = new byte[pixels.length];
         for (int i = 0; i < pixels.length; i++)
@@ -102,7 +102,7 @@ public class MessageProcessor {
         return ref;
     }
 
-    public static ImageData ReceiveImage(int width, int height, int format,
+    public static ImageData receiveImage(int width, int height, int format,
             int type, final ByteString data) {
         assert width > 0 && height > 0;
         int bpp = 0;
@@ -165,7 +165,7 @@ public class MessageProcessor {
                 showError("unsupported texture format: " + format);
                 return null;
         }
-        byte[] pixels = LZFDecompressChunks(data);
+        byte[] pixels = lzfDecompressChunks(data);
         assert pixels.length == width * height * (bpp / 8);
         PaletteData palette = new PaletteData(redMask, greenMask, blueMask);
         return new ImageData(width, height, bpp, palette, 1, pixels);

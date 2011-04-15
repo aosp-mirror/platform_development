@@ -59,7 +59,7 @@ public class MessageData {
             columns[2] = "[AfterGeneratedCall] ";
         else
             assert msg.getType() == Type.CompleteCall;
-        columns[2] += MessageFormatter.Format(msg, false);
+        columns[2] += MessageFormatter.format(msg, false);
         builder.append(columns[2]);
         switch (function) {
             case glDrawArrays:
@@ -80,7 +80,7 @@ public class MessageData {
         text = builder.toString();
     }
 
-    public Image GetImage() {
+    public Image getImage() {
         if (image != null)
             return image;
         ImageData imageData = null;
@@ -88,35 +88,35 @@ public class MessageData {
             case glTexImage2D:
                 if (!msg.hasData())
                     return null;
-                imageData = MessageProcessor.ReceiveImage(msg.getArg3(), msg
+                imageData = MessageProcessor.receiveImage(msg.getArg3(), msg
                         .getArg4(), msg.getArg6(), msg.getArg7(), msg.getData());
                 return image = new Image(Display.getCurrent(), imageData);
             case glTexSubImage2D:
                 assert msg.hasData();
-                imageData = MessageProcessor.ReceiveImage(msg.getArg4(), msg
+                imageData = MessageProcessor.receiveImage(msg.getArg4(), msg
                         .getArg5(), msg.getArg6(), msg.getArg7(), msg.getData());
                 return image = new Image(Display.getCurrent(), imageData);
             case glCopyTexImage2D:
-                imageData = MessageProcessor.ReceiveImage(msg.getArg5(), msg.getArg6(),
+                imageData = MessageProcessor.receiveImage(msg.getArg5(), msg.getArg6(),
                         msg.getPixelFormat(), msg.getPixelType(), msg.getData());
                 imageData = imageData.scaledTo(imageData.width, -imageData.height);
                 return image = new Image(Display.getCurrent(), imageData);
             case glCopyTexSubImage2D:
-                imageData = MessageProcessor.ReceiveImage(msg.getArg6(), msg.getArg7(),
+                imageData = MessageProcessor.receiveImage(msg.getArg6(), msg.getArg7(),
                         msg.getPixelFormat(), msg.getPixelType(), msg.getData());
                 imageData = imageData.scaledTo(imageData.width, -imageData.height);
                 return image = new Image(Display.getCurrent(), imageData);
             case glReadPixels:
                 if (!msg.hasData())
                     return null;
-                imageData = MessageProcessor.ReceiveImage(msg.getArg2(), msg.getArg3(),
+                imageData = MessageProcessor.receiveImage(msg.getArg2(), msg.getArg3(),
                         msg.getArg4(), msg.getArg5(), msg.getData());
                 imageData = imageData.scaledTo(imageData.width, -imageData.height);
                 return image = new Image(Display.getCurrent(), imageData);
             case eglSwapBuffers:
                 if (!msg.hasData())
                     return null;
-                imageData = MessageProcessor.ReceiveImage(msg.getImageWidth(),
+                imageData = MessageProcessor.receiveImage(msg.getImageWidth(),
                         msg.getImageHeight(), msg.getPixelFormat(), msg.getPixelType(),
                         msg.getData());
                 imageData = imageData.scaledTo(imageData.width, -imageData.height);

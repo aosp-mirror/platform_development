@@ -58,7 +58,7 @@ import java.nio.ByteBuffer;
 
 public class MessageFormatter {
 
-    static String FormatFloats(int count, final ByteBuffer data) {
+    static String formatFloats(int count, final ByteBuffer data) {
         if (data.remaining() == 0)
             return "{}";
         data.order(SampleView.targetByteOrder);
@@ -71,7 +71,7 @@ public class MessageFormatter {
         return ret + "}";
     }
 
-    static String FormatInts(int count, final ByteBuffer data) {
+    static String formatInts(int count, final ByteBuffer data) {
         if (data.remaining() == 0)
             return "{}";
         data.order(SampleView.targetByteOrder);
@@ -84,7 +84,7 @@ public class MessageFormatter {
         return ret + "}";
     }
 
-    static String FormatUints(int count, final ByteBuffer data) {
+    static String formatUInts(int count, final ByteBuffer data) {
         if (data.remaining() == 0)
             return "{}";
         data.order(SampleView.targetByteOrder);
@@ -98,7 +98,7 @@ public class MessageFormatter {
         return ret + "}";
     }
 
-    static String FormatMatrix(int columns, int count, final ByteBuffer data) {
+    static String formatMatrix(int columns, int count, final ByteBuffer data) {
         if (data.remaining() == 0)
             return "{}";
         data.order(SampleView.targetByteOrder);
@@ -113,7 +113,7 @@ public class MessageFormatter {
         return ret + "}";
     }
 
-    public static String Format(final DebuggerMessage.Message msg,
+    public static String format(final DebuggerMessage.Message msg,
                                 final boolean code) {
         String str;
         switch (msg.getFunction()) {
@@ -183,11 +183,11 @@ public class MessageFormatter {
                         count = int(annotation)
                     dataFormatter = ""
                     if paramType == "GLfloat":
-                        dataFormatter = "FormatFloats"
+                        dataFormatter = "formatFloats"
                     elif paramType == "GLint":
-                        dataFormatter = "FormatInts"
+                        dataFormatter = "formatInts"
                     elif paramType == "GLuint":
-                        dataFormatter = "FormatUints"
+                        dataFormatter = "formatUInts"
                     elif annotation == "GLstring":
                         assert paramType == "GLchar"
                     elif paramType.find("void") >= 0:
@@ -200,7 +200,7 @@ public class MessageFormatter {
                         assert countArg != ""
                         assert paramType == "GLfloat"
                         formatArgs += '\
-                    , (code ? "(GLfloat [])" : "") + FormatMatrix(%d, %d * msg.getArg%d(), msg.getData().asReadOnlyByteBuffer())' % (
+                    , (code ? "(GLfloat [])" : "") + formatMatrix(%d, %d * msg.getArg%d(), msg.getData().asReadOnlyByteBuffer())' % (
                         columns, count, paramNames.index(countArg))
                     elif annotation == "GLstring":
                         formatArgs += '\
@@ -262,7 +262,7 @@ package GLESv2Debugger;
 
 public class MessageFormatterCustom {
 
-    public static String Format(final DebuggerMessage.Message msg) {
+    public static String format(final DebuggerMessage.Message msg) {
         String str;
         switch (msg.getFunction()) {"""
 

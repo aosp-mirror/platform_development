@@ -44,7 +44,7 @@ public class MessageQueue implements Runnable {
         this.sampleView = sampleView;
     }
 
-    public void Start(final ByteOrder byteOrder, final FileInputStream file) {
+    public void start(final ByteOrder byteOrder, final FileInputStream file) {
         if (running)
             return;
         running = true;
@@ -54,29 +54,29 @@ public class MessageQueue implements Runnable {
         thread.start();
     }
 
-    public void Stop() {
+    public void stop() {
         if (!running)
             return;
         running = false;
     }
 
-    public boolean IsRunning() {
+    public boolean isRunning() {
         return running;
     }
 
-    private void SendCommands(final int contextId) throws IOException {
+    private void sendCommands(final int contextId) throws IOException {
         synchronized (commands) {
             for (int i = 0; i < commands.size(); i++) {
                 Message command = commands.get(i);
                 if (command.getContextId() == contextId || command.getContextId() == 0) {
-                    SendMessage(commands.remove(i));
+                    sendMessage(commands.remove(i));
                     i--;
                 }
             }
         }
     }
 
-    public void AddCommand(Message command) {
+    public void addCommand(Message command) {
         synchronized (commands) {
             commands.add(command);
         }
@@ -128,8 +128,8 @@ public class MessageQueue implements Runnable {
             }
             try {
                 if (null == msg) // get incoming from network
-                    msg = ReceiveMessage(dis);
-                ProcessMessage(dos, msg);
+                    msg = receiveMessage(dis);
+                processMessage(dos, msg);
             } catch (IOException e) {
                 Error(e);
                 running = false;
@@ -149,35 +149,35 @@ public class MessageQueue implements Runnable {
 
     }
 
-    private void PutMessage(final Message msg) {
+    private void putMessage(final Message msg) {
         ArrayList<Message> existing = incoming.get(msg.getContextId());
         if (existing == null)
             incoming.put(msg.getContextId(), existing = new ArrayList<Message>());
         existing.add(msg);
     }
 
-    Message ReceiveMessage(final int contextId) throws IOException {
-        Message msg = ReceiveMessage(dis);
+    Message receiveMessage(final int contextId) throws IOException {
+        Message msg = receiveMessage(dis);
         while (msg.getContextId() != contextId) {
-            PutMessage(msg);
-            msg = ReceiveMessage(dis);
+            putMessage(msg);
+            msg = receiveMessage(dis);
         }
         return msg;
     }
 
-    void SendMessage(final Message msg) throws IOException {
-        SendMessage(dos, msg);
+    void sendMessage(final Message msg) throws IOException {
+        sendMessage(dos, msg);
     }
 
     // should only be used by DefaultProcessMessage
     private SparseArray<Message> partials = new SparseArray<Message>();
 
-    Message GetPartialMessage(final int contextId) {
+    Message getPartialMessage(final int contextId) {
         return partials.get(contextId);
     }
 
     // used to add BeforeCall to complete if it was skipped
-    void CompletePartialMessage(final int contextId) {
+    void completePartialMessage(final int contextId) {
         final Message msg = partials.get(contextId);
         partials.remove(contextId);
         assert msg != null;
@@ -188,7 +188,7 @@ public class MessageQueue implements Runnable {
     }
 
     // can be used by other message processor as default processor
-    void DefaultProcessMessage(final Message msg, boolean expectResponse,
+    void defaultProcessMessage(final Message msg, boolean expectResponse,
             boolean sendResponse)
             throws IOException {
         final int contextId = msg.getContextId();
@@ -199,7 +199,7 @@ public class MessageQueue implements Runnable {
                 builder.setType(Type.Response);
                 builder.setExpectResponse(expectResponse);
                 builder.setFunction(Function.CONTINUE);
-                SendMessage(dos, builder.build());
+                sendMessage(dos, builder.build());
             }
             assert partials.indexOfKey(contextId) < 0;
             partials.put(contextId, msg);
@@ -210,7 +210,7 @@ public class MessageQueue implements Runnable {
                 builder.setType(Type.Response);
                 builder.setExpectResponse(expectResponse);
                 builder.setFunction(Function.SKIP);
-                SendMessage(dos, builder.build());
+                sendMessage(dos, builder.build());
             }
             assert partials.indexOfKey(contextId) >= 0;
             final Message before = partials.get(contextId);
@@ -234,7 +234,7 @@ public class MessageQueue implements Runnable {
             assert false;
     }
 
-    public Message RemoveCompleteMessage(int contextId) {
+    public Message removeCompleteMessage(int contextId) {
         synchronized (complete) {
             if (complete.size() == 0)
                 return null;
@@ -251,7 +251,7 @@ public class MessageQueue implements Runnable {
         return null;
     }
 
-    private Message ReceiveMessage(final DataInputStream dis)
+    private Message receiveMessage(final DataInputStream dis)
             throws IOException {
         int len = 0;
         try {
@@ -277,11 +277,11 @@ public class MessageQueue implements Runnable {
                 readLen += read;
         }
         Message msg = Message.parseFrom(buffer);
-        SendCommands(msg.getContextId());
+        sendCommands(msg.getContextId());
         return msg;
     }
 
-    private void SendMessage(final DataOutputStream dos, final Message message)
+    private void sendMessage(final DataOutputStream dos, final Message message)
             throws IOException {
         if (dos == null)
             return;
@@ -294,17 +294,17 @@ public class MessageQueue implements Runnable {
         dos.write(data);
     }
 
-    private void ProcessMessage(final DataOutputStream dos, final Message msg) throws IOException {
+    private void processMessage(final DataOutputStream dos, final Message msg) throws IOException {
         if (msg.getExpectResponse()) {
             assert file == null; // file cannot be interactive mode
-            if (sampleView.shaderEditor.ProcessMessage(this, msg))
+            if (sampleView.shaderEditor.processMessage(this, msg))
                 return;
-            else if (sampleView.breakpointOption.ProcessMessage(this, msg))
+            else if (sampleView.breakpointOption.processMessage(this, msg))
                 return;
             else
-                DefaultProcessMessage(msg, msg.getExpectResponse(), msg.getExpectResponse());
+                defaultProcessMessage(msg, msg.getExpectResponse(), msg.getExpectResponse());
         } else
-            DefaultProcessMessage(msg, msg.getExpectResponse(), msg.getExpectResponse());
+            defaultProcessMessage(msg, msg.getExpectResponse(), msg.getExpectResponse());
     }
 
     void Error(Exception e) {

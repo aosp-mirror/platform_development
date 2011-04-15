@@ -40,25 +40,25 @@ public class CodeGen implements IRunnableWithProgress {
             framebufferNames, programNames, textureNames, shaderNames, renderbufferNames;
 
     /** return true if msg was a texture upload */
-    private boolean CodeGenTextureUpload(final Message msg, final boolean replaceCopy) {
+    private boolean codeGenTextureUpload(final Message msg, final boolean replaceCopy) {
         String s = null;
         switch (msg.getFunction()) {
             case glCompressedTexImage2D:
-                s = MessageFormatter.Format(msg, true).replace("arg7", "texData");
+                s = MessageFormatter.format(msg, true).replace("arg7", "texData");
                 break;
             case glCompressedTexSubImage2D:
             case glTexImage2D:
             case glTexSubImage2D:
-                s = MessageFormatter.Format(msg, true).replace("arg8", "texData");
+                s = MessageFormatter.format(msg, true).replace("arg8", "texData");
                 break;
             case glCopyTexImage2D:
                 if (!replaceCopy) {
-                    code.write(MessageFormatter.Format(msg, true));
+                    code.write(MessageFormatter.format(msg, true));
                     code.write(";CHKERR;\n");
                     return true;
                 }
                 assert msg.getArg2() == msg.getPixelFormat(); // TODO
-                s = "//" + MessageFormatter.Format(msg, true) + "\n";
+                s = "//" + MessageFormatter.format(msg, true) + "\n";
                 s += String.format("glTexImage2D(%s, %d, %s, %d, %d, %d, %s, %s, texData);CHKERR;",
                         GLEnum.valueOf(msg.getArg0()), msg.getArg1(),
                         GLEnum.valueOf(msg.getArg2()), msg.getArg5(), msg.getArg6(),
@@ -67,12 +67,12 @@ public class CodeGen implements IRunnableWithProgress {
                 break;
             case glCopyTexSubImage2D:
                 if (!replaceCopy) {
-                    code.write(MessageFormatter.Format(msg, true));
+                    code.write(MessageFormatter.format(msg, true));
                     code.write(";CHKERR;\n");
                     return true;
                 }
                 // FIXME: check the texture format & type, and convert
-                s = "//" + MessageFormatter.Format(msg, true) + "\n";
+                s = "//" + MessageFormatter.format(msg, true) + "\n";
                 s += String.format(
                         "glTexSubImage2D(%s, %d, %d, %d, %d, %d, %s, %s, texData);CHKERR;",
                         GLEnum.valueOf(msg.getArg0()), msg.getArg1(), msg.getArg2(),
@@ -84,7 +84,7 @@ public class CodeGen implements IRunnableWithProgress {
         }
 
         if (msg.hasData()) {
-            final byte[] data = MessageProcessor.LZFDecompressChunks(msg.getData());
+            final byte[] data = MessageProcessor.lzfDecompressChunks(msg.getData());
             try {
                 code.write("{\n");
                 code.format("    void * texData = malloc(%d);CHKERR;\n", data.length);
@@ -107,7 +107,7 @@ public class CodeGen implements IRunnableWithProgress {
         return true;
     }
 
-    private void CodeGenServerState(final GLServerState serverState) {
+    private void codeGenServerState(final GLServerState serverState) {
         code.write("// CodeGenServerState\n");
         for (int i = 0; i < serverState.enableDisables.size(); i++) {
             final GLEnum key = GLEnum.valueOf(serverState.enableDisables.keyAt(i));
@@ -123,14 +123,14 @@ public class CodeGen implements IRunnableWithProgress {
                 code.format("// %s is default\n", key);
                 continue;
             }
-            final String s = MessageFormatter.Format(msg, true);
+            final String s = MessageFormatter.format(msg, true);
             code.write(s);
             code.write(";\n");
         }
         // TODO: stencil and integers
     }
 
-    private void CodeGenServerShader(final GLServerShader serverShader) {
+    private void codeGenServerShader(final GLServerShader serverShader) {
         code.write("// CodeGenServerShader\n");
         for (int i = 0; i < serverShader.shaders.size(); i++) {
             final int name = serverShader.shaders.keyAt(i);
@@ -172,7 +172,7 @@ public class CodeGen implements IRunnableWithProgress {
         }
     }
 
-    private void CodeGenServerTexture(final GLServerTexture serverTexture, final boolean replaceCopy) {
+    private void codeGenServerTexture(final GLServerTexture serverTexture, final boolean replaceCopy) {
         code.write("// CodeGenServerTexture\n");
         for (int i = 0; i < serverTexture.textures.size(); i++) {
             final int name = serverTexture.textures.keyAt(i);
@@ -192,11 +192,11 @@ public class CodeGen implements IRunnableWithProgress {
                     tex.name);
             code.write(s);
             for (final Message msg : tex.contentChanges) {
-                if (CodeGenTextureUpload(msg, replaceCopy))
+                if (codeGenTextureUpload(msg, replaceCopy))
                     continue;
                 switch (msg.getFunction()) {
                     case glGenerateMipmap:
-                        s = MessageFormatter.Format(msg, true);
+                        s = MessageFormatter.format(msg, true);
                         break;
                     default:
                         assert false;
@@ -237,7 +237,7 @@ public class CodeGen implements IRunnableWithProgress {
                     serverTexture.texCube.name);
     }
 
-    private void CodeGenBufferData(final ByteBuffer buffer, final String call) {
+    private void codeGenBufferData(final ByteBuffer buffer, final String call) {
         ByteBuffer bfr = buffer;
         if (buffer.isReadOnly()) {
             bfr = ByteBuffer.allocate(buffer.capacity());
@@ -263,7 +263,7 @@ public class CodeGen implements IRunnableWithProgress {
         }
     }
 
-    private void CodeGenServerVertex(final GLServerVertex v) {
+    private void codeGenServerVertex(final GLServerVertex v) {
         code.write("// CodeGenServerVertex\n");
         for (int i = 0; i < v.buffers.size(); i++) {
             final int name = v.buffers.keyAt(i);
@@ -283,7 +283,7 @@ public class CodeGen implements IRunnableWithProgress {
                 if (buffer.data != null) {
                     String s = String.format("glBufferData(%s, %d, bufferData, %s)", buffer.target,
                             buffer.data.capacity(), buffer.usage);
-                    CodeGenBufferData(buffer.data, s);
+                    codeGenBufferData(buffer.data, s);
                 }
             }
         }
@@ -314,7 +314,7 @@ public class CodeGen implements IRunnableWithProgress {
             code.write("glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);CHKERR;\n");
     }
 
-    private void CodeGenGenNames(final Message msg) {
+    private void codeGenGenNames(final Message msg) {
         final ByteBuffer names = msg.getData().asReadOnlyByteBuffer();
         names.order(SampleView.targetByteOrder);
         SparseIntArray namesArray = null;
@@ -352,7 +352,7 @@ public class CodeGen implements IRunnableWithProgress {
         }
     }
 
-    private void CodeGenDeleteNames(final Message msg) {
+    private void codeGenDeleteNames(final Message msg) {
         final ByteBuffer names = msg.getData().asReadOnlyByteBuffer();
         names.order(SampleView.targetByteOrder);
         SparseIntArray namesArray = null;
@@ -386,7 +386,7 @@ public class CodeGen implements IRunnableWithProgress {
         }
     }
 
-    private void CodeGenBindNames(final Message msg) {
+    private void codeGenBindNames(final Message msg) {
         String id = null;
         SparseIntArray namesArray = null;
         final int name = msg.getArg1();
@@ -417,11 +417,11 @@ public class CodeGen implements IRunnableWithProgress {
         } else if (namesArray.get(name) != name)
             code.format("%s = %d;\n", id, name); // name was deleted
         namesArray.put(name, name);
-        code.write(MessageFormatter.Format(msg, true));
+        code.write(MessageFormatter.format(msg, true));
         code.write(";CHKERR;\n");
     }
 
-    private void CodeGenDrawArrays(final GLServerVertex v, final MessageData msgData)
+    private void codeGenDrawArrays(final GLServerVertex v, final MessageData msgData)
             throws IOException {
         final int maxAttrib = msgData.msg.getArg7();
         if (maxAttrib < 1) {
@@ -478,7 +478,7 @@ public class CodeGen implements IRunnableWithProgress {
         code.write("};\n");
     }
 
-    private void CodeGenDrawElements(final GLServerVertex v, final MessageData msgData)
+    private void codeGenDrawElements(final GLServerVertex v, final MessageData msgData)
             throws IOException {
         final int maxAttrib = msgData.msg.getArg7();
         if (maxAttrib < 1) {
@@ -506,7 +506,7 @@ public class CodeGen implements IRunnableWithProgress {
             final byte[] element = new byte[attribDataStride];
             final ByteBuffer data = msgData.msg.getData().asReadOnlyByteBuffer();
             data.order(SampleView.targetByteOrder);
-            final ByteBuffer indexData = ByteBuffer.allocate(count * GLServerVertex.TypeSize(type));
+            final ByteBuffer indexData = ByteBuffer.allocate(count * GLServerVertex.typeSize(type));
             indexData.order(SampleView.targetByteOrder);
             final ByteBuffer attribData = ByteBuffer.allocate(count * attribDataStride);
             attribData.order(SampleView.targetByteOrder);
@@ -596,7 +596,7 @@ public class CodeGen implements IRunnableWithProgress {
         code.write("};\n");
     }
 
-    private void CodeGenDraw(final GLServerVertex v, final MessageData msgData)
+    private void codeGenDraw(final GLServerVertex v, final MessageData msgData)
             throws IOException {
         final int maxAttrib = msgData.msg.getArg7();
         if (maxAttrib < 1) {
@@ -638,10 +638,10 @@ public class CodeGen implements IRunnableWithProgress {
         code.write("};\n");
     }
 
-    private void CodeGenFunction(final Context ctx, final MessageData msgData)
+    private void codeGenFunction(final Context ctx, final MessageData msgData)
             throws IOException {
         final Message msg = msgData.msg;
-        String call = MessageFormatter.Format(msg, true);
+        String call = MessageFormatter.format(msg, true);
         switch (msg.getFunction()) {
             case glActiveTexture:
             case glAttachShader:
@@ -651,7 +651,7 @@ public class CodeGen implements IRunnableWithProgress {
             case glBindFramebuffer:
             case glBindRenderbuffer:
             case glBindTexture:
-                CodeGenBindNames(msg);
+                codeGenBindNames(msg);
                 return;
             case glBlendColor:
             case glBlendEquation:
@@ -660,12 +660,12 @@ public class CodeGen implements IRunnableWithProgress {
             case glBlendFuncSeparate:
                 break;
             case glBufferData:
-                call = MessageFormatter.Format(msg, true).replace("arg2", "bufferData");
-                CodeGenBufferData(msg.getData().asReadOnlyByteBuffer(), call);
+                call = MessageFormatter.format(msg, true).replace("arg2", "bufferData");
+                codeGenBufferData(msg.getData().asReadOnlyByteBuffer(), call);
                 return;
             case glBufferSubData:
-                call = MessageFormatter.Format(msg, true).replace("arg3", "bufferData");
-                CodeGenBufferData(msg.getData().asReadOnlyByteBuffer(), call);
+                call = MessageFormatter.format(msg, true).replace("arg3", "bufferData");
+                codeGenBufferData(msg.getData().asReadOnlyByteBuffer(), call);
                 return;
             case glCheckFramebufferStatus:
             case glClear:
@@ -679,7 +679,7 @@ public class CodeGen implements IRunnableWithProgress {
             case glCompressedTexSubImage2D:
             case glCopyTexImage2D:
             case glCopyTexSubImage2D:
-                CodeGenTextureUpload(msg, false);
+                codeGenTextureUpload(msg, false);
                 return;
             case glCreateProgram:
                 namesHeader.format("extern GLuint program_%d;\n", msg.getRet());
@@ -699,13 +699,13 @@ public class CodeGen implements IRunnableWithProgress {
                 programNames.put(msg.getArg0(), 0);
                 break;
             case glDeleteRenderbuffers:
-                CodeGenDeleteNames(msg);
+                codeGenDeleteNames(msg);
                 return;
             case glDeleteShader:
                 shaderNames.put(msg.getArg0(), 0);
                 return;
             case glDeleteTextures:
-                CodeGenDeleteNames(msg);
+                codeGenDeleteNames(msg);
                 return;
             case glDepthFunc:
             case glDepthMask:
@@ -716,11 +716,11 @@ public class CodeGen implements IRunnableWithProgress {
                 break;
             case glDrawArrays:
                 // CodeGenDraw(ctx.serverVertex, msgData);
-                CodeGenDrawArrays(ctx.serverVertex, msgData);
+                codeGenDrawArrays(ctx.serverVertex, msgData);
                 return;
             case glDrawElements:
                 // CodeGenDraw(ctx.serverVertex, msgData);
-                CodeGenDrawElements(ctx.serverVertex, msgData);
+                codeGenDrawElements(ctx.serverVertex, msgData);
                 return;
             case glEnable:
             case glEnableVertexAttribArray:
@@ -731,14 +731,14 @@ public class CodeGen implements IRunnableWithProgress {
             case glFrontFace:
                 break;
             case glGenBuffers:
-                CodeGenGenNames(msg);
+                codeGenGenNames(msg);
                 return;
             case glGenerateMipmap:
                 break;
             case glGenFramebuffers:
             case glGenRenderbuffers:
             case glGenTextures:
-                CodeGenGenNames(msg);
+                codeGenGenNames(msg);
                 return;
             case glGetActiveAttrib:
             case glGetActiveUniform:
@@ -814,7 +814,7 @@ public class CodeGen implements IRunnableWithProgress {
             case glStencilOpSeparate:
                 break;
             case glTexImage2D:
-                CodeGenTextureUpload(msg, false);
+                codeGenTextureUpload(msg, false);
                 return;
             case glTexParameterf:
                 break;
@@ -825,7 +825,7 @@ public class CodeGen implements IRunnableWithProgress {
             case glTexParameteriv:
                 return; // TODO
             case glTexSubImage2D:
-                CodeGenTextureUpload(msg, false);
+                codeGenTextureUpload(msg, false);
                 return;
             case glUniform1f:
             case glUniform1fv:
@@ -880,7 +880,7 @@ public class CodeGen implements IRunnableWithProgress {
         code.write(call + ";CHKERR;\n");
     }
 
-    private void CodeGenSetup(final Context ctx) {
+    private void codeGenSetup(final Context ctx) {
         try {
             codeFile = new FileWriter("frame_setup.cpp", false);
             code = new PrintWriter(codeFile);
@@ -1060,10 +1060,10 @@ public class CodeGen implements IRunnableWithProgress {
         code.write("#include \"frame_names.h\"\n");
         code.write("void FrameSetup(){\n");
 
-        CodeGenServerState(ctx.serverState);
-        CodeGenServerShader(ctx.serverShader);
-        CodeGenServerTexture(ctx.serverTexture, true);
-        CodeGenServerVertex(ctx.serverVertex);
+        codeGenServerState(ctx.serverState);
+        codeGenServerShader(ctx.serverShader);
+        codeGenServerTexture(ctx.serverTexture, true);
+        codeGenServerVertex(ctx.serverVertex);
 
         code.write("}\n");
 
@@ -1080,7 +1080,7 @@ public class CodeGen implements IRunnableWithProgress {
         }
     }
 
-    private void CodeGenCleanup() {
+    private void codeGenCleanup() {
         make.write("    frame_setup.cpp \\\n");
         make.write("    frame_names.cpp \\\n");
         make.write("#\n");
@@ -1134,8 +1134,8 @@ public class CodeGen implements IRunnableWithProgress {
     public void run(IProgressMonitor monitor) throws InvocationTargetException,
             InterruptedException {
         progress.beginTask("CodeGenFrames", count + 2);
-        Context ctx = dbgCtx.GetFrame(0).startContext.clone();
-        CodeGenSetup(ctx);
+        Context ctx = dbgCtx.getFrame(0).startContext.clone();
+        codeGenSetup(ctx);
         progress.worked(1);
         for (int i = 0; i < count; i++) {
             try {
@@ -1149,14 +1149,14 @@ public class CodeGen implements IRunnableWithProgress {
 
             code.write("#include \"frame_names.h\"\n");
             code.format("void Frame%d(){\n", i);
-            final Frame frame = dbgCtx.GetFrame(i);
-            for (int j = 0; j < frame.Size(); j++) {
-                final MessageData msgData = frame.Get(j);
+            final Frame frame = dbgCtx.getFrame(i);
+            for (int j = 0; j < frame.size(); j++) {
+                final MessageData msgData = frame.get(j);
                 code.format("/* frame function %d: %s %s*/\n", j, msgData.msg.getFunction(),
-                        MessageFormatter.Format(msgData.msg, false));
-                ctx.ProcessMessage(msgData.msg);
+                        MessageFormatter.format(msgData.msg, false));
+                ctx.processMessage(msgData.msg);
                 try {
-                    CodeGenFunction(ctx, msgData);
+                    codeGenFunction(ctx, msgData);
                 } catch (IOException e) {
                     e.printStackTrace();
                     assert false;
@@ -1180,11 +1180,11 @@ public class CodeGen implements IRunnableWithProgress {
         }
         namesSource.write("};\n");
         namesSource.format("const unsigned int FrameCount = %d;\n", count);
-        CodeGenCleanup();
+        codeGenCleanup();
         progress.worked(1);
     }
 
-    void CodeGenFrames(final DebugContext dbgCtx, int count, final Shell shell) {
+    void codeGenFrames(final DebugContext dbgCtx, int count, final Shell shell) {
         this.dbgCtx = dbgCtx;
         this.count = count;
         ProgressMonitorDialog dialog = new ProgressMonitorDialog(shell);
@@ -1202,9 +1202,9 @@ public class CodeGen implements IRunnableWithProgress {
         progress = null;
     }
 
-    void CodeGenFrame(final Frame frame) {
+    void codeGenFrame(final Frame frame) {
         Context ctx = frame.startContext.clone();
-        CodeGenSetup(ctx);
+        codeGenSetup(ctx);
         try {
             codeFile = new FileWriter("frame0.cpp", false);
             code = new PrintWriter(codeFile);
@@ -1215,13 +1215,13 @@ public class CodeGen implements IRunnableWithProgress {
         make.format("    frame0.cpp \\\n");
         code.write("#include \"frame_names.h\"\n");
         code.format("void Frame0(){\n");
-        for (int i = 0; i < frame.Size(); i++) {
-            final MessageData msgData = frame.Get(i);
+        for (int i = 0; i < frame.size(); i++) {
+            final MessageData msgData = frame.get(i);
             code.format("/* frame function %d: %s %s*/\n", i, msgData.msg.getFunction(),
-                    MessageFormatter.Format(msgData.msg, false));
-            ctx.ProcessMessage(msgData.msg);
+                    MessageFormatter.format(msgData.msg, false));
+            ctx.processMessage(msgData.msg);
             try {
-                CodeGenFunction(ctx, msgData);
+                codeGenFunction(ctx, msgData);
             } catch (IOException e) {
                 e.printStackTrace();
                 assert false;
@@ -1232,6 +1232,6 @@ public class CodeGen implements IRunnableWithProgress {
         namesHeader.write("extern void (* Frames[1])();\n");
         namesSource.write("void (* Frames[1])() = {Frame0};\n");
         namesSource.write("const unsigned int FrameCount = 1;\n");
-        CodeGenCleanup();
+        codeGenCleanup();
     }
 }

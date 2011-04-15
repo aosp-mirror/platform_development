@@ -65,7 +65,7 @@ public abstract class MessageParser {
 
     String args;
 
-    String[] GetList()
+    String[] getList()
     {
         assert args.charAt(0) == '{';
         String arg = args;
@@ -79,41 +79,41 @@ public abstract class MessageParser {
         return arg.split(",");
     }
 
-    ByteString ParseFloats(int count) {
+    ByteString parseFloats(int count) {
         ByteBuffer buffer = ByteBuffer.allocate(count * 4);
         buffer.order(SampleView.targetByteOrder);
-        String [] arg = GetList();
+        String [] arg = getList();
         for (int i = 0; i < count; i++)
             buffer.putFloat(Float.parseFloat(arg[i].trim()));
         buffer.rewind();
         return ByteString.copyFrom(buffer);
     }
 
-    ByteString ParseInts(int count) {
+    ByteString parseInts(int count) {
         ByteBuffer buffer = ByteBuffer.allocate(count * 4);
         buffer.order(SampleView.targetByteOrder);
-        String [] arg = GetList();
+        String [] arg = getList();
         for (int i = 0; i < count; i++)
             buffer.putInt(Integer.parseInt(arg[i].trim()));
         buffer.rewind();
         return ByteString.copyFrom(buffer);
     }
 
-    ByteString ParseUInts(int count) {
+    ByteString parseUInts(int count) {
         ByteBuffer buffer = ByteBuffer.allocate(count * 4);
         buffer.order(SampleView.targetByteOrder);
-        String [] arg = GetList();
+        String [] arg = getList();
         for (int i = 0; i < count; i++)
             buffer.putInt((int)(Long.parseLong(arg[i].trim()) & 0xffffffff));
         buffer.rewind();
         return ByteString.copyFrom(buffer);
     }
 
-    ByteString ParseMatrix(int columns, int count) {
-        return ParseFloats(columns * count);
+    ByteString parseMatrix(int columns, int count) {
+        return parseFloats(columns * count);
     }
 
-    ByteString ParseString() {
+    ByteString parseString() {
         // TODO: escape sequence and proper string literal
         String arg = args.substring(args.indexOf('"') + 1, args.lastIndexOf('"'));
         args = args.substring(args.lastIndexOf('"'));
@@ -125,7 +125,7 @@ public abstract class MessageParser {
         return ByteString.copyFromUtf8(arg);
     }
 
-    String GetArgument()
+    String getArgument()
     {
         int comma = args.indexOf(",");
         String arg = null;
@@ -144,9 +144,9 @@ public abstract class MessageParser {
         return arg;
     }
 
-    int ParseArgument()
+    int parseArgument()
     {
-        String arg = GetArgument();
+        String arg = getArgument();
         if (arg.startsWith("GL_"))
             return GLEnum.valueOf(arg).value;
         else if (arg.toLowerCase().startsWith("0x"))
@@ -155,13 +155,13 @@ public abstract class MessageParser {
             return Integer.parseInt(arg);
     }
 
-    int ParseFloat()
+    int parseFloat()
     {
-        String arg = GetArgument();
+        String arg = getArgument();
         return Float.floatToRawIntBits(Float.parseFloat(arg));
     }
 
-    public void Parse(final Message.Builder builder, String string) {
+    public void parse(final Message.Builder builder, String string) {
         int lparen = string.indexOf("("), rparen = string.lastIndexOf(")");
         String s = string.substring(0, lparen).trim();
         args = string.substring(lparen + 1, rparen);
@@ -225,11 +225,11 @@ public abstract class MessageParser {
                         count = int(annotation)
 
                     if paramType == "GLfloat":
-                        argumentParser = "ParseFloats"
+                        argumentParser = "parseFloats"
                     elif paramType == "GLint":
-                        argumentParser = "ParseInts"
+                        argumentParser = "parseInts"
                     elif paramType == "GLuint":
-                        argumentParser = "ParseUInts"
+                        argumentParser = "parseUInts"
                     elif annotation == "GLstring":
                         assert paramType == 'GLchar'
                     elif paramType.find("void") >= 0:
@@ -242,10 +242,10 @@ public abstract class MessageParser {
                         assert columns * columns == count
                         assert countArg != ""
                         assert paramType == "GLfloat"
-                        dataSetter = "builder.setData(ParseMatrix(%d, %d * builder.getArg%d()));" % (
+                        dataSetter = "builder.setData(parseMatrix(%d, %d * builder.getArg%d()));" % (
                             columns, count, paramNames.index(countArg))
                     elif annotation == "GLstring":
-                        dataSetter = "builder.setData(ParseString());"
+                        dataSetter = "builder.setData(parseString());"
                     elif paramType.find("void") >= 0:
                         dataSetter = "// TODO"
                         abstract = True
@@ -259,7 +259,7 @@ public abstract class MessageParser {
                 else:
                     if paramType == "GLfloat" or paramType == "GLclampf":
                         argumentSetters += "\
-                builder.setArg%d(ParseFloat()); // %s %s\n" % (
+                builder.setArg%d(parseFloat()); // %s %s\n" % (
                     paramIndex, paramType, paramName)
                     elif paramType.find("*") >= 0:
                         argumentSetters += "\
@@ -267,7 +267,7 @@ public abstract class MessageParser {
                         abstract = True
                     else:
                         argumentSetters += "\
-                builder.setArg%d(ParseArgument()); // %s %s\n" % (
+                builder.setArg%d(parseArgument()); // %s %s\n" % (
                     paramIndex, paramType, paramName)
                 paramNames.append(paramName)
                 paramIndex += 1
@@ -276,14 +276,14 @@ public abstract class MessageParser {
                 output.write("%s" % argumentSetters)
             else:
                 output.write("\
-                Parse_%s(builder);\n" % functionName)
+                parse_%s(builder);\n" % functionName)
                 abstractParsers += "\
-    abstract void Parse_%s(Message.Builder builder);\n" % functionName
+    abstract void parse_%s(Message.Builder builder);\n" % functionName
                 print """\
     @Override
-    void Parse_%s(Message.Builder builder) {
+    void parse_%s(Message.Builder builder) {
 %s    }
-""" % (functionName, argumentSetters) # print skeleton code for MessageParserE
+""" % (functionName, argumentSetters) # print skeleton code for MessageParserEx
 
             output.write("\
                 break;\n")

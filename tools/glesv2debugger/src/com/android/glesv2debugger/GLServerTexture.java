@@ -50,7 +50,7 @@ class GLTexture implements Cloneable {
         }
     }
 
-    boolean ProcessMessage(final Message msg) {
+    boolean processMessage(final Message msg) {
         switch (msg.getFunction()) {
             case glCompressedTexImage2D:
             case glCopyTexImage2D:
@@ -121,13 +121,13 @@ public class GLServerTexture implements Cloneable {
         }
     }
 
-    public boolean ProcessMessage(final Message msg) {
+    public boolean processMessage(final Message msg) {
         switch (msg.getFunction()) {
             case glActiveTexture:
                 activeTexture = GLEnum.valueOf(msg.getArg0());
                 return true;
             case glBindTexture:
-                return BindTexture(msg.getArg0(), msg.getArg1());
+                return bindTexture(msg.getArg0(), msg.getArg1());
             case glCompressedTexImage2D:
             case glCompressedTexSubImage2D:
             case glCopyTexImage2D:
@@ -137,7 +137,7 @@ public class GLServerTexture implements Cloneable {
                 switch (GLEnum.valueOf(msg.getArg0())) {
                     case GL_TEXTURE_2D:
                         if (tex2D != null)
-                            return tex2D.ProcessMessage(msg);
+                            return tex2D.processMessage(msg);
                         return true;
                     case GL_TEXTURE_CUBE_MAP_POSITIVE_X:
                     case GL_TEXTURE_CUBE_MAP_NEGATIVE_X:
@@ -146,7 +146,7 @@ public class GLServerTexture implements Cloneable {
                     case GL_TEXTURE_CUBE_MAP_POSITIVE_Z:
                     case GL_TEXTURE_CUBE_MAP_NEGATIVE_Z:
                         if (texCube != null)
-                            return texCube.ProcessMessage(msg);
+                            return texCube.processMessage(msg);
                         return true;
                     default:
                         return true;
@@ -157,9 +157,9 @@ public class GLServerTexture implements Cloneable {
                 for (int i = 0; i < msg.getArg0(); i++) {
                     final int name = names.getInt();
                     if (tex2D != null && tex2D.name == name)
-                        BindTexture(GLEnum.GL_TEXTURE_2D.value, 0);
+                        bindTexture(GLEnum.GL_TEXTURE_2D.value, 0);
                     if (texCube != null && texCube.name == name)
-                        BindTexture(GLEnum.GL_TEXTURE_CUBE_MAP.value, 0);
+                        bindTexture(GLEnum.GL_TEXTURE_CUBE_MAP.value, 0);
                     if (name != 0)
                         textures.remove(name);
                 }
@@ -167,22 +167,22 @@ public class GLServerTexture implements Cloneable {
             }
             case glGenerateMipmap:
                 if (GLEnum.valueOf(msg.getArg0()) == GLEnum.GL_TEXTURE_2D && tex2D != null)
-                    return tex2D.ProcessMessage(msg);
+                    return tex2D.processMessage(msg);
                 else if (GLEnum.valueOf(msg.getArg0()) == GLEnum.GL_TEXTURE_CUBE_MAP
                         && texCube != null)
-                    return texCube.ProcessMessage(msg);
+                    return texCube.processMessage(msg);
                 return true;
             case glTexParameteri:
-                return TexParameter(msg.getArg0(), msg.getArg1(), msg.getArg2());
+                return texParameter(msg.getArg0(), msg.getArg1(), msg.getArg2());
             case glTexParameterf:
-                return TexParameter(msg.getArg0(), msg.getArg1(),
+                return texParameter(msg.getArg0(), msg.getArg1(),
                         (int) Float.intBitsToFloat(msg.getArg2()));
             default:
                 return false;
         }
     }
 
-    boolean BindTexture(final int target, final int name) {
+    boolean bindTexture(final int target, final int name) {
         final int index = activeTexture.value - GLEnum.GL_TEXTURE0.value;
         if (GLEnum.valueOf(target) == GLEnum.GL_TEXTURE_2D) {
             tex2D = textures.get(name);
@@ -203,7 +203,7 @@ public class GLServerTexture implements Cloneable {
         return true;
     }
 
-    boolean TexParameter(final int target, final int pname, final int param) {
+    boolean texParameter(final int target, final int pname, final int param) {
         GLTexture tex = null;
         if (GLEnum.valueOf(target) == GLEnum.GL_TEXTURE_2D)
             tex = tex2D;

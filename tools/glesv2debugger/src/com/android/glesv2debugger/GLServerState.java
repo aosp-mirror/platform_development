@@ -90,7 +90,7 @@ public class GLServerState implements Cloneable {
     }
 
     /** returns true if processed */
-    public boolean ProcessMessage(final Message msg) {
+    public boolean processMessage(final Message msg) {
         switch (msg.getFunction()) {
             case glBlendColor:
             case glBlendEquation:
@@ -105,14 +105,14 @@ public class GLServerState implements Cloneable {
             case glDepthMask:
             case glDepthFunc:
             case glDepthRangef:
-                return Setter(msg);
+                return setter(msg);
             case glDisable:
-                return EnableDisable(false, msg);
+                return enableDisable(false, msg);
             case glEnable:
-                return EnableDisable(true, msg);
+                return enableDisable(true, msg);
             case glFrontFace:
             case glLineWidth:
-                return Setter(msg);
+                return setter(msg);
             case glPixelStorei:
                 if (GLEnum.valueOf(msg.getArg0()) == GLEnum.GL_PACK_ALIGNMENT)
                     integers.put(msg.getArg0(), msg);
@@ -124,7 +124,7 @@ public class GLServerState implements Cloneable {
             case glPolygonOffset:
             case glSampleCoverage:
             case glScissor:
-                return Setter(msg);
+                return setter(msg);
             case glStencilFunc: {
                 Message.Builder builder = msg.toBuilder();
                 builder.setArg2(msg.getArg1());
@@ -136,7 +136,7 @@ public class GLServerState implements Cloneable {
                 return glStencilFuncSeparate(msg);
             case glStencilMask:
             case glStencilMaskSeparate:
-                return Setter(msg);
+                return setter(msg);
             case glStencilOp: {
                 Message.Builder builder = msg.toBuilder();
                 builder.setArg3(msg.getArg2());
@@ -148,13 +148,13 @@ public class GLServerState implements Cloneable {
             case glStencilOpSeparate:
                 return glStencilOpSeparate(msg);
             case glViewport:
-                return Setter(msg);
+                return setter(msg);
             default:
                 return false;
         }
     }
 
-    boolean Setter(final Message msg) {
+    boolean setter(final Message msg) {
         switch (msg.getFunction()) {
             case glBlendFunc:
                 lastSetter.put(Function.glBlendFuncSeparate.getNumber(), msg);
@@ -172,11 +172,11 @@ public class GLServerState implements Cloneable {
         return true;
     }
 
-    boolean EnableDisable(boolean enable, final Message msg) {
+    boolean enableDisable(boolean enable, final Message msg) {
         int index = enableDisables.indexOfKey(msg.getArg0());
         if (index < 0) {
             System.out.print("invalid glDisable/Enable: ");
-            System.out.println(MessageFormatter.Format(msg, false));
+            System.out.println(MessageFormatter.format(msg, false));
             return true;
         }
         if ((enableDisables.valueAt(index) != 0) == enable)

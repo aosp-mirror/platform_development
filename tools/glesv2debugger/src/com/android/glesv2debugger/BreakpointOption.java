@@ -74,7 +74,7 @@ public class BreakpointOption extends ScrolledComposite implements SelectionList
         this.layout();
     }
 
-    void SetBreakpoint(Function function, boolean enabled) {
+    void setBreakpoint(Function function, boolean enabled) {
         Message.Builder builder = Message.newBuilder();
         builder.setContextId(0); // FIXME: proper context id
         builder.setType(Type.Response);
@@ -83,14 +83,14 @@ public class BreakpointOption extends ScrolledComposite implements SelectionList
         builder.setProp(Prop.ExpectResponse);
         builder.setArg0(function.getNumber());
         builder.setArg1(enabled ? 1 : 0);
-        sampleView.messageQueue.AddCommand(builder.build());
+        sampleView.messageQueue.addCommand(builder.build());
     }
 
     @Override
     public void widgetSelected(SelectionEvent e) {
         Button btn = (Button) e.widget;
         Group group = (Group) btn.getParent();
-        SetBreakpoint(Function.valueOf(group.getText()), btn.getSelection());
+        setBreakpoint(Function.valueOf(group.getText()), btn.getSelection());
     }
 
     @Override
@@ -99,12 +99,12 @@ public class BreakpointOption extends ScrolledComposite implements SelectionList
 
     private Function lastFunction = Function.NEG;
 
-    public boolean ProcessMessage(final MessageQueue queue, final Message msg) throws IOException {
+    public boolean processMessage(final MessageQueue queue, final Message msg) throws IOException {
         // use DefaultProcessMessage just to register the GL call
         // but do not send response
         final int contextId = msg.getContextId();
         if (msg.getType() == Type.BeforeCall || msg.getType() == Type.AfterCall)
-            queue.DefaultProcessMessage(msg, true, false);
+            queue.defaultProcessMessage(msg, true, false);
         final Message.Builder builder = Message.newBuilder();
         builder.setContextId(contextId);
         builder.setType(Type.Response);
@@ -114,7 +114,7 @@ public class BreakpointOption extends ScrolledComposite implements SelectionList
         shell.getDisplay().syncExec(new Runnable() {
             @Override
             public void run() {
-                String call = MessageFormatter.Format(msg, false);
+                String call = MessageFormatter.format(msg, false);
                 call = call.substring(0, call.indexOf("(")) + ' ' +
                         msg.getFunction() + call.substring(call.indexOf("("));
                 if (msg.hasData() && msg.getFunction() == Function.glShaderSource)
@@ -151,8 +151,8 @@ public class BreakpointOption extends ScrolledComposite implements SelectionList
                     {
                         builder.setFunction(Function.SKIP);
                         // AfterCall is skipped, so push BeforeCall to complete
-                        if (queue.GetPartialMessage(contextId) != null)
-                            queue.CompletePartialMessage(contextId);
+                        if (queue.getPartialMessage(contextId) != null)
+                            queue.completePartialMessage(contextId);
                     }
                     else if (s.startsWith("c"))
                         builder.setFunction(Function.CONTINUE);
@@ -160,23 +160,23 @@ public class BreakpointOption extends ScrolledComposite implements SelectionList
                     {
                         Button btn = buttonsBreak.get(msg.getFunction());
                         btn.setSelection(false);
-                        SetBreakpoint(msg.getFunction(), false);
+                        setBreakpoint(msg.getFunction(), false);
                         builder.setExpectResponse(false);
                     }
                     else
                     {
-                        MessageParserEx.instance.Parse(builder, inputDialog.getValue());
+                        MessageParserEx.instance.parse(builder, inputDialog.getValue());
                         lastFunction = builder.getFunction();
                         builder.setExpectResponse(true);
                         // AfterCall is skipped, so push BeforeCall to complete
-                        if (queue.GetPartialMessage(contextId) != null)
-                            queue.CompletePartialMessage(contextId);
+                        if (queue.getPartialMessage(contextId) != null)
+                            queue.completePartialMessage(contextId);
                     }
                 }
                 // else defaults to continue BeforeCall and skip AfterCall
             }
         });
-        queue.SendMessage(builder.build());
+        queue.sendMessage(builder.build());
         return true;
     }
 }

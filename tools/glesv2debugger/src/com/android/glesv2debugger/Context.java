@@ -56,45 +56,45 @@ class Frame {
         this.filePosition = filePosition;
     }
 
-    void Add(final MessageData msgData) {
+    void add(final MessageData msgData) {
         calls.add(msgData);
     }
 
-    void IncreaseCallsCount() {
+    void increaseCallsCount() {
         callsCount++;
     }
 
-    Context ComputeContext(final MessageData call) {
+    Context computeContext(final MessageData call) {
         Context ctx = startContext.clone();
         for (int i = 0; i < calls.size(); i++)
             if (call == calls.get(i))
                 return ctx;
             else
-                ctx.ProcessMessage(calls.get(i).msg);
+                ctx.processMessage(calls.get(i).msg);
         assert false;
         return ctx;
     }
 
-    int Size() {
+    int size() {
         return callsCount;
     }
 
-    MessageData Get(final int i) {
+    MessageData get(final int i) {
         return calls.get(i);
     }
 
-    ArrayList<MessageData> Get() {
+    ArrayList<MessageData> get() {
         return calls;
     }
 
-    void Unload() {
+    void unload() {
         if (calls == null)
             return;
         calls.clear();
         calls = null;
     }
 
-    void Load(final RandomAccessFile file) {
+    void load(final RandomAccessFile file) {
         if (calls != null && calls.size() == callsCount)
             return;
         try {
@@ -109,7 +109,7 @@ class Frame {
                 final byte[] data = new byte[len];
                 file.read(data);
                 Message msg = Message.parseFrom(data);
-                ctx.ProcessMessage(msg);
+                ctx.processMessage(msg);
                 final MessageData msgData = new MessageData(Display.getCurrent(), msg, ctx);
                 calls.add(msgData);
             }
@@ -153,20 +153,20 @@ class DebugContext {
      * Caches new Message, and formats into MessageData for current frame; this
      * function is called exactly once for each new Message
      */
-    void ProcessMessage(final Message newMsg) {
+    void processMessage(final Message newMsg) {
         Message msg = newMsg;
-        currentContext.ProcessMessage(newMsg);
+        currentContext.processMessage(newMsg);
         if (msg.hasDataType() && msg.getDataType() == DataType.ReferencedImage) {
-            final byte[] referenced = MessageProcessor.LZFDecompressChunks(msg.getData());
-            currentContext.readPixelRef = MessageProcessor.DecodeReferencedImage(
+            final byte[] referenced = MessageProcessor.lzfDecompressChunks(msg.getData());
+            currentContext.readPixelRef = MessageProcessor.decodeReferencedImage(
                     currentContext.readPixelRef, referenced);
-            final byte[] decoded = MessageProcessor.LZFCompressChunks(
+            final byte[] decoded = MessageProcessor.lzfCompressChunks(
                     currentContext.readPixelRef, referenced.length);
             msg = newMsg.toBuilder().setDataType(DataType.NonreferencedImage)
                     .setData(ByteString.copyFrom(decoded)).build();
         }
         synchronized (file) {
-            lastFrame.IncreaseCallsCount();
+            lastFrame.increaseCallsCount();
             final byte[] data = msg.toByteArray();
             final ByteBuffer len = ByteBuffer.allocate(4);
             len.order(SampleView.targetByteOrder);
@@ -184,14 +184,14 @@ class DebugContext {
         }
         if (loadedFrame == lastFrame) {
             final MessageData msgData = new MessageData(Display.getCurrent(), msg, currentContext);
-            lastFrame.Add(msgData);
+            lastFrame.add(msgData);
             uiUpdate = true;
         }
         if (msg.getFunction() != Function.eglSwapBuffers)
             return;
         synchronized (frames) {
             if (loadedFrame != lastFrame)
-                lastFrame.Unload();
+                lastFrame.unload();
             try {
                 frames.add(lastFrame = new Frame(currentContext, file.getFilePointer()));
                 // file.getChannel().force(false);
@@ -204,22 +204,22 @@ class DebugContext {
         return;
     }
 
-    Frame GetFrame(int index) {
+    Frame getFrame(int index) {
         synchronized (frames) {
             Frame newFrame = frames.get(index);
             if (loadedFrame != null && loadedFrame != lastFrame && newFrame != loadedFrame) {
-                loadedFrame.Unload();
+                loadedFrame.unload();
                 uiUpdate = true;
             }
             loadedFrame = newFrame;
             synchronized (file) {
-                loadedFrame.Load(file);
+                loadedFrame.load(file);
             }
             return loadedFrame;
         }
     }
 
-    int FrameCount() {
+    int frameCount() {
         synchronized (frames) {
             return frames.size();
         }
@@ -264,14 +264,14 @@ public class Context implements Cloneable {
     }
 
     /** mainly updating states */
-    public void ProcessMessage(Message msg) {
-        if (serverVertex.Process(msg))
+    public void processMessage(Message msg) {
+        if (serverVertex.process(msg))
             return;
-        if (serverShader.ProcessMessage(msg))
+        if (serverShader.processMessage(msg))
             return;
-        if (serverState.ProcessMessage(msg))
+        if (serverState.processMessage(msg))
             return;
-        if (serverTexture.ProcessMessage(msg))
+        if (serverTexture.processMessage(msg))
             return;
     }
 }
@@ -299,7 +299,7 @@ class ContextViewProvider extends LabelProvider implements ITreeContentProvider,
             if (entry.obj != null) {
                 objStr = entry.obj.toString();
                 if (entry.obj instanceof Message)
-                    objStr = MessageFormatter.Format((Message) entry.obj, false);
+                    objStr = MessageFormatter.format((Message) entry.obj, false);
             }
             return entry.name + " = " + objStr;
         }
@@ -320,7 +320,7 @@ class ContextViewProvider extends LabelProvider implements ITreeContentProvider,
             case glCopyTexImage2D:
             case glCopyTexSubImage2D:
                 return entry.image = new MessageData(Display.getCurrent(), msg, null)
-                        .GetImage();
+                        .getImage();
             default:
                 return null;
         }
@@ -384,7 +384,7 @@ class ContextViewProvider extends LabelProvider implements ITreeContentProvider,
                 final Message val = context.serverState.integers.valueAt(i);
                 if (val != null)
                     children.add(GLEnum.valueOf(key).name() + " : " +
-                            MessageFormatter.Format(val, false));
+                            MessageFormatter.format(val, false));
                 else
                     children.add(GLEnum.valueOf(key).name() + " : default");
             }
@@ -396,7 +396,7 @@ class ContextViewProvider extends LabelProvider implements ITreeContentProvider,
                     children.add(Function.valueOf(key).name() + " : default");
                 else
                     children.add(Function.valueOf(key).name() + " : "
-                            + MessageFormatter.Format(msg, false));
+                            + MessageFormatter.format(msg, false));
             }
         } else if (entry.obj instanceof SparseArray) {
             SparseArray<?> sa = (SparseArray<?>) entry.obj;
@@ -460,7 +460,7 @@ class ContextViewProvider extends LabelProvider implements ITreeContentProvider,
             return Array.getLength(obj) > 0;
         else if (obj instanceof Message)
             return false;
-        else if (IsPrimitive(obj))
+        else if (isPrimitive(obj))
             return false;
         else if (obj.getClass().equals(String.class))
             return false;
@@ -471,7 +471,7 @@ class ContextViewProvider extends LabelProvider implements ITreeContentProvider,
         return obj.getClass().getFields().length > 0;
     }
 
-    static boolean IsPrimitive(final Object obj) {
+    static boolean isPrimitive(final Object obj) {
         final Class<? extends Object> c = obj.getClass();
         if (c.isPrimitive())
             return true;

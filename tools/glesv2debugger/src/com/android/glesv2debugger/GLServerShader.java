@@ -111,7 +111,7 @@ public class GLServerShader implements Cloneable {
     }
 
     /** returns true if processed */
-    public boolean ProcessMessage(final Message msg) {
+    public boolean processMessage(final Message msg) {
         boolean oldUiUpdate = uiUpdate;
         uiUpdate = true;
         switch (msg.getFunction()) {
@@ -145,7 +145,7 @@ public class GLServerShader implements Cloneable {
         }
     }
 
-    GLShader GetShader(int name) {
+    GLShader getShader(int name) {
         if (name == 0)
             return null;
         for (Context ctx : context.shares) {
@@ -157,7 +157,7 @@ public class GLServerShader implements Cloneable {
         return null;
     }
 
-    GLProgram GetProgram(int name) {
+    GLProgram getProgram(int name) {
         if (name == 0)
             return null;
         for (Context ctx : context.shares) {
@@ -171,9 +171,9 @@ public class GLServerShader implements Cloneable {
 
     // void API_ENTRY(glAttachShader)(GLuint program, GLuint shader)
     void glAttachShader(final Message msg) {
-        GLProgram program = GetProgram(msg.getArg0());
+        GLProgram program = getProgram(msg.getArg0());
         assert program != null;
-        GLShader shader = GetShader(msg.getArg1());
+        GLShader shader = getShader(msg.getArg1());
         assert program != null;
         if (GLEnum.GL_VERTEX_SHADER == shader.type)
             program.vert = shader.name;
@@ -197,13 +197,13 @@ public class GLServerShader implements Cloneable {
     void glDeleteProgram(final Message msg) {
         if (msg.getArg0() == 0)
             return;
-        GLProgram program = GetProgram(msg.getArg0());
+        GLProgram program = getProgram(msg.getArg0());
         program.delete = true;
         for (Context ctx : context.shares)
             if (ctx.serverShader.current == program)
                 return;
-        glDetachShader(program, GetShader(program.vert));
-        glDetachShader(program, GetShader(program.frag));
+        glDetachShader(program, getShader(program.vert));
+        glDetachShader(program, getShader(program.frag));
         programs.remove(program.name);
     }
 
@@ -211,7 +211,7 @@ public class GLServerShader implements Cloneable {
     void glDeleteShader(final Message msg) {
         if (msg.getArg0() == 0)
             return;
-        GLShader shader = GetShader(msg.getArg0());
+        GLShader shader = getShader(msg.getArg0());
         shader.delete = true;
         if (shader.programs.size() == 0)
             shaders.remove(shader.name);
@@ -219,7 +219,7 @@ public class GLServerShader implements Cloneable {
 
     // void API_ENTRY(glDetachShader)(GLuint program, GLuint shader)
     void glDetachShader(final Message msg) {
-        glDetachShader(GetProgram(msg.getArg0()), GetShader(msg.getArg1()));
+        glDetachShader(getProgram(msg.getArg0()), getShader(msg.getArg1()));
     }
 
     void glDetachShader(final GLProgram program, final GLShader shader) {
@@ -241,14 +241,14 @@ public class GLServerShader implements Cloneable {
     void glShaderSource(final Message msg) {
         if (!msg.hasData())
             return; // TODO: distinguish between generated calls
-        GLShader shader = GetShader(msg.getArg0());
+        GLShader shader = getShader(msg.getArg0());
         shader.source = shader.originalSource = msg.getData().toStringUtf8();
     }
 
     // void API_ENTRY(glUseProgram)(GLuint program)
     void glUseProgram(final Message msg) {
         GLProgram oldCurrent = current;
-        current = GetProgram(msg.getArg0());
+        current = getProgram(msg.getArg0());
         if (null != oldCurrent && oldCurrent.delete && oldCurrent != current) {
             for (Context ctx : context.shares)
                 if (ctx.serverShader.current == oldCurrent)

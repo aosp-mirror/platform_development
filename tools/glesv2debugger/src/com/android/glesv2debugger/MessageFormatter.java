@@ -22,7 +22,7 @@ import java.nio.ByteBuffer;
 
 public class MessageFormatter {
 
-    static String FormatFloats(int count, final ByteBuffer data) {
+    static String formatFloats(int count, final ByteBuffer data) {
         if (data.remaining() == 0)
             return "{}";
         data.order(SampleView.targetByteOrder);
@@ -35,7 +35,7 @@ public class MessageFormatter {
         return ret + "}";
     }
 
-    static String FormatInts(int count, final ByteBuffer data) {
+    static String formatInts(int count, final ByteBuffer data) {
         if (data.remaining() == 0)
             return "{}";
         data.order(SampleView.targetByteOrder);
@@ -48,7 +48,7 @@ public class MessageFormatter {
         return ret + "}";
     }
 
-    static String FormatUints(int count, final ByteBuffer data) {
+    static String formatUInts(int count, final ByteBuffer data) {
         if (data.remaining() == 0)
             return "{}";
         data.order(SampleView.targetByteOrder);
@@ -62,7 +62,7 @@ public class MessageFormatter {
         return ret + "}";
     }
 
-    static String FormatMatrix(int columns, int count, final ByteBuffer data) {
+    static String formatMatrix(int columns, int count, final ByteBuffer data) {
         if (data.remaining() == 0)
             return "{}";
         data.order(SampleView.targetByteOrder);
@@ -77,7 +77,7 @@ public class MessageFormatter {
         return ret + "}";
     }
 
-    public static String Format(final DebuggerMessage.Message msg,
+    public static String format(final DebuggerMessage.Message msg,
                                 final boolean code) {
         String str;
         switch (msg.getFunction()) {
@@ -368,7 +368,7 @@ public class MessageFormatter {
                     , (code ? "/*n*/ " : "n=")
                     , msg.getArg0()
                     , (code ? "/*buffers*/ " : "buffers=")
-                    , (code ? "(GLuint [])" : "") +  FormatUints(1 * msg.getArg0(), msg.getData().asReadOnlyByteBuffer()));
+                    , (code ? "(GLuint [])" : "") +  formatUInts(1 * msg.getArg0(), msg.getData().asReadOnlyByteBuffer()));
                 break;
             case glDeleteFramebuffers:
                 str = String.format("%s(%s%s, %s%s)",
@@ -376,7 +376,7 @@ public class MessageFormatter {
                     , (code ? "/*n*/ " : "n=")
                     , msg.getArg0()
                     , (code ? "/*framebuffers*/ " : "framebuffers=")
-                    , (code ? "(GLuint [])" : "") +  FormatUints(1 * msg.getArg0(), msg.getData().asReadOnlyByteBuffer()));
+                    , (code ? "(GLuint [])" : "") +  formatUInts(1 * msg.getArg0(), msg.getData().asReadOnlyByteBuffer()));
                 break;
             case glDeleteProgram:
                 str = String.format("%s(%s%s)",
@@ -390,7 +390,7 @@ public class MessageFormatter {
                     , (code ? "/*n*/ " : "n=")
                     , msg.getArg0()
                     , (code ? "/*renderbuffers*/ " : "renderbuffers=")
-                    , (code ? "(GLuint [])" : "") +  FormatUints(1 * msg.getArg0(), msg.getData().asReadOnlyByteBuffer()));
+                    , (code ? "(GLuint [])" : "") +  formatUInts(1 * msg.getArg0(), msg.getData().asReadOnlyByteBuffer()));
                 break;
             case glDeleteShader:
                 str = String.format("%s(%s%s)",
@@ -404,7 +404,7 @@ public class MessageFormatter {
                     , (code ? "/*n*/ " : "n=")
                     , msg.getArg0()
                     , (code ? "/*textures*/ " : "textures=")
-                    , (code ? "(GLuint [])" : "") +  FormatUints(1 * msg.getArg0(), msg.getData().asReadOnlyByteBuffer()));
+                    , (code ? "(GLuint [])" : "") +  formatUInts(1 * msg.getArg0(), msg.getData().asReadOnlyByteBuffer()));
                 break;
             case glDepthFunc:
                 str = String.format("%s(%s%s)",
@@ -529,7 +529,7 @@ public class MessageFormatter {
                     , (code ? "/*n*/ " : "n=")
                     , msg.getArg0()
                     , (code ? "/*buffers*/ " : "buffers=")
-                    , (code ? "(GLuint [])" : "") +  FormatUints(1 * msg.getArg0(), msg.getData().asReadOnlyByteBuffer()));
+                    , (code ? "(GLuint [])" : "") +  formatUInts(1 * msg.getArg0(), msg.getData().asReadOnlyByteBuffer()));
                 break;
             case glGenerateMipmap:
                 str = String.format("%s(%s%s)",
@@ -543,7 +543,7 @@ public class MessageFormatter {
                     , (code ? "/*n*/ " : "n=")
                     , msg.getArg0()
                     , (code ? "/*framebuffers*/ " : "framebuffers=")
-                    , (code ? "(GLuint [])" : "") +  FormatUints(1 * msg.getArg0(), msg.getData().asReadOnlyByteBuffer()));
+                    , (code ? "(GLuint [])" : "") +  formatUInts(1 * msg.getArg0(), msg.getData().asReadOnlyByteBuffer()));
                 break;
             case glGenRenderbuffers:
                 str = String.format("%s(%s%s, %s%s)",
@@ -551,7 +551,7 @@ public class MessageFormatter {
                     , (code ? "/*n*/ " : "n=")
                     , msg.getArg0()
                     , (code ? "/*renderbuffers*/ " : "renderbuffers=")
-                    , (code ? "(GLuint [])" : "") +  FormatUints(1 * msg.getArg0(), msg.getData().asReadOnlyByteBuffer()));
+                    , (code ? "(GLuint [])" : "") +  formatUInts(1 * msg.getArg0(), msg.getData().asReadOnlyByteBuffer()));
                 break;
             case glGenTextures:
                 str = String.format("%s(%s%s, %s%s)",
@@ -559,7 +559,7 @@ public class MessageFormatter {
                     , (code ? "/*n*/ " : "n=")
                     , msg.getArg0()
                     , (code ? "/*textures*/ " : "textures=")
-                    , (code ? "(GLuint [])" : "") +  FormatUints(1 * msg.getArg0(), msg.getData().asReadOnlyByteBuffer()));
+                    , (code ? "(GLuint [])" : "") +  formatUInts(1 * msg.getArg0(), msg.getData().asReadOnlyByteBuffer()));
                 break;
             case glGetActiveAttrib:
                 // FIXME: this function uses pointers, debugger may send data in msg.data
@@ -684,7 +684,7 @@ public class MessageFormatter {
                     , (code ? "/*pname*/ " : "pname=")
                     , GLEnum.valueOf(msg.getArg1())
                     , (code ? "/*params*/ " : "params=")
-                    , (code ? "(GLint [])" : "") + FormatInts(1, msg.getData().asReadOnlyByteBuffer()));
+                    , (code ? "(GLint [])" : "") + formatInts(1, msg.getData().asReadOnlyByteBuffer()));
                 break;
             case glGetProgramInfoLog:
                 // FIXME: this function uses pointers, debugger may send data in msg.data
@@ -718,7 +718,7 @@ public class MessageFormatter {
                     , (code ? "/*pname*/ " : "pname=")
                     , GLEnum.valueOf(msg.getArg1())
                     , (code ? "/*params*/ " : "params=")
-                    , (code ? "(GLint [])" : "") + FormatInts(1, msg.getData().asReadOnlyByteBuffer()));
+                    , (code ? "(GLint [])" : "") + formatInts(1, msg.getData().asReadOnlyByteBuffer()));
                 break;
             case glGetShaderInfoLog:
                 // FIXME: this function uses pointers, debugger may send data in msg.data
@@ -1175,7 +1175,7 @@ public class MessageFormatter {
                     , (code ? "/*count*/ " : "count=")
                     , msg.getArg1()
                     , (code ? "/*v*/ " : "v=")
-                    , (code ? "(GLfloat [])" : "") +  FormatFloats(1 * msg.getArg1(), msg.getData().asReadOnlyByteBuffer()));
+                    , (code ? "(GLfloat [])" : "") +  formatFloats(1 * msg.getArg1(), msg.getData().asReadOnlyByteBuffer()));
                 break;
             case glUniform1i:
                 str = String.format("%s(%s%s, %s%s)",
@@ -1193,7 +1193,7 @@ public class MessageFormatter {
                     , (code ? "/*count*/ " : "count=")
                     , msg.getArg1()
                     , (code ? "/*v*/ " : "v=")
-                    , (code ? "(GLint [])" : "") +  FormatInts(1 * msg.getArg1(), msg.getData().asReadOnlyByteBuffer()));
+                    , (code ? "(GLint [])" : "") +  formatInts(1 * msg.getArg1(), msg.getData().asReadOnlyByteBuffer()));
                 break;
             case glUniform2f:
                 str = String.format("%s(%s%s, %s%s, %s%s)",
@@ -1213,7 +1213,7 @@ public class MessageFormatter {
                     , (code ? "/*count*/ " : "count=")
                     , msg.getArg1()
                     , (code ? "/*v*/ " : "v=")
-                    , (code ? "(GLfloat [])" : "") +  FormatFloats(2 * msg.getArg1(), msg.getData().asReadOnlyByteBuffer()));
+                    , (code ? "(GLfloat [])" : "") +  formatFloats(2 * msg.getArg1(), msg.getData().asReadOnlyByteBuffer()));
                 break;
             case glUniform2i:
                 str = String.format("%s(%s%s, %s%s, %s%s)",
@@ -1233,7 +1233,7 @@ public class MessageFormatter {
                     , (code ? "/*count*/ " : "count=")
                     , msg.getArg1()
                     , (code ? "/*v*/ " : "v=")
-                    , (code ? "(GLint [])" : "") +  FormatInts(2 * msg.getArg1(), msg.getData().asReadOnlyByteBuffer()));
+                    , (code ? "(GLint [])" : "") +  formatInts(2 * msg.getArg1(), msg.getData().asReadOnlyByteBuffer()));
                 break;
             case glUniform3f:
                 str = String.format("%s(%s%s, %s%s, %s%s, %s%s)",
@@ -1255,7 +1255,7 @@ public class MessageFormatter {
                     , (code ? "/*count*/ " : "count=")
                     , msg.getArg1()
                     , (code ? "/*v*/ " : "v=")
-                    , (code ? "(GLfloat [])" : "") +  FormatFloats(3 * msg.getArg1(), msg.getData().asReadOnlyByteBuffer()));
+                    , (code ? "(GLfloat [])" : "") +  formatFloats(3 * msg.getArg1(), msg.getData().asReadOnlyByteBuffer()));
                 break;
             case glUniform3i:
                 str = String.format("%s(%s%s, %s%s, %s%s, %s%s)",
@@ -1277,7 +1277,7 @@ public class MessageFormatter {
                     , (code ? "/*count*/ " : "count=")
                     , msg.getArg1()
                     , (code ? "/*v*/ " : "v=")
-                    , (code ? "(GLint [])" : "") +  FormatInts(3 * msg.getArg1(), msg.getData().asReadOnlyByteBuffer()));
+                    , (code ? "(GLint [])" : "") +  formatInts(3 * msg.getArg1(), msg.getData().asReadOnlyByteBuffer()));
                 break;
             case glUniform4f:
                 str = String.format("%s(%s%s, %s%s, %s%s, %s%s, %s%s)",
@@ -1301,7 +1301,7 @@ public class MessageFormatter {
                     , (code ? "/*count*/ " : "count=")
                     , msg.getArg1()
                     , (code ? "/*v*/ " : "v=")
-                    , (code ? "(GLfloat [])" : "") +  FormatFloats(4 * msg.getArg1(), msg.getData().asReadOnlyByteBuffer()));
+                    , (code ? "(GLfloat [])" : "") +  formatFloats(4 * msg.getArg1(), msg.getData().asReadOnlyByteBuffer()));
                 break;
             case glUniform4i:
                 str = String.format("%s(%s%s, %s%s, %s%s, %s%s, %s%s)",
@@ -1325,7 +1325,7 @@ public class MessageFormatter {
                     , (code ? "/*count*/ " : "count=")
                     , msg.getArg1()
                     , (code ? "/*v*/ " : "v=")
-                    , (code ? "(GLint [])" : "") +  FormatInts(4 * msg.getArg1(), msg.getData().asReadOnlyByteBuffer()));
+                    , (code ? "(GLint [])" : "") +  formatInts(4 * msg.getArg1(), msg.getData().asReadOnlyByteBuffer()));
                 break;
             case glUniformMatrix2fv:
                 str = String.format("%s(%s%s, %s%s, %s%s, %s%s)",
@@ -1337,7 +1337,7 @@ public class MessageFormatter {
                     , (code ? "/*transpose*/ " : "transpose=")
                     , msg.getArg2()
                     , (code ? "/*value*/ " : "value=")
-                    , (code ? "(GLfloat [])" : "") + FormatMatrix(2, 4 * msg.getArg1(), msg.getData().asReadOnlyByteBuffer()));
+                    , (code ? "(GLfloat [])" : "") + formatMatrix(2, 4 * msg.getArg1(), msg.getData().asReadOnlyByteBuffer()));
                 break;
             case glUniformMatrix3fv:
                 str = String.format("%s(%s%s, %s%s, %s%s, %s%s)",
@@ -1349,7 +1349,7 @@ public class MessageFormatter {
                     , (code ? "/*transpose*/ " : "transpose=")
                     , msg.getArg2()
                     , (code ? "/*value*/ " : "value=")
-                    , (code ? "(GLfloat [])" : "") + FormatMatrix(3, 9 * msg.getArg1(), msg.getData().asReadOnlyByteBuffer()));
+                    , (code ? "(GLfloat [])" : "") + formatMatrix(3, 9 * msg.getArg1(), msg.getData().asReadOnlyByteBuffer()));
                 break;
             case glUniformMatrix4fv:
                 str = String.format("%s(%s%s, %s%s, %s%s, %s%s)",
@@ -1361,7 +1361,7 @@ public class MessageFormatter {
                     , (code ? "/*transpose*/ " : "transpose=")
                     , msg.getArg2()
                     , (code ? "/*value*/ " : "value=")
-                    , (code ? "(GLfloat [])" : "") + FormatMatrix(4, 16 * msg.getArg1(), msg.getData().asReadOnlyByteBuffer()));
+                    , (code ? "(GLfloat [])" : "") + formatMatrix(4, 16 * msg.getArg1(), msg.getData().asReadOnlyByteBuffer()));
                 break;
             case glUseProgram:
                 str = String.format("%s(%s%s)",
@@ -1389,7 +1389,7 @@ public class MessageFormatter {
                     , (code ? "/*indx*/ " : "indx=")
                     , msg.getArg0()
                     , (code ? "/*values*/ " : "values=")
-                    , (code ? "(GLfloat [])" : "") + FormatFloats(1, msg.getData().asReadOnlyByteBuffer()));
+                    , (code ? "(GLfloat [])" : "") + formatFloats(1, msg.getData().asReadOnlyByteBuffer()));
                 break;
             case glVertexAttrib2f:
                 str = String.format("%s(%s%s, %s%s, %s%s)",
@@ -1407,7 +1407,7 @@ public class MessageFormatter {
                     , (code ? "/*indx*/ " : "indx=")
                     , msg.getArg0()
                     , (code ? "/*values*/ " : "values=")
-                    , (code ? "(GLfloat [])" : "") + FormatFloats(2, msg.getData().asReadOnlyByteBuffer()));
+                    , (code ? "(GLfloat [])" : "") + formatFloats(2, msg.getData().asReadOnlyByteBuffer()));
                 break;
             case glVertexAttrib3f:
                 str = String.format("%s(%s%s, %s%s, %s%s, %s%s)",
@@ -1427,7 +1427,7 @@ public class MessageFormatter {
                     , (code ? "/*indx*/ " : "indx=")
                     , msg.getArg0()
                     , (code ? "/*values*/ " : "values=")
-                    , (code ? "(GLfloat [])" : "") + FormatFloats(3, msg.getData().asReadOnlyByteBuffer()));
+                    , (code ? "(GLfloat [])" : "") + formatFloats(3, msg.getData().asReadOnlyByteBuffer()));
                 break;
             case glVertexAttrib4f:
                 str = String.format("%s(%s%s, %s%s, %s%s, %s%s, %s%s)",
@@ -1449,7 +1449,7 @@ public class MessageFormatter {
                     , (code ? "/*indx*/ " : "indx=")
                     , msg.getArg0()
                     , (code ? "/*values*/ " : "values=")
-                    , (code ? "(GLfloat [])" : "") + FormatFloats(4, msg.getData().asReadOnlyByteBuffer()));
+                    , (code ? "(GLfloat [])" : "") + formatFloats(4, msg.getData().asReadOnlyByteBuffer()));
                 break;
             case glVertexAttribPointer:
                 // FIXME: this function uses pointers, debugger may send data in msg.data

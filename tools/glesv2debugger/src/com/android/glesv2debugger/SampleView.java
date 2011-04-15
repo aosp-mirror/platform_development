@@ -138,7 +138,7 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
 
         @Override
         public Object[] getElements(Object parent) {
-            return frame.Get().toArray();
+            return frame.get().toArray();
         }
 
         @Override
@@ -150,7 +150,7 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
         @Override
         public Image getImage(Object obj) {
             MessageData msgData = (MessageData) obj;
-            return msgData.GetImage();
+            return msgData.getImage();
         }
 
         @Override
@@ -166,7 +166,7 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
             if (index > -1)
                 return null;
             MessageData msgData = (MessageData) obj;
-            return msgData.GetImage();
+            return msgData.getImage();
         }
     }
 
@@ -196,13 +196,13 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
     public SampleView() {
         MessageParserEx messageParserEx = new MessageParserEx();
         Message.Builder builder = Message.newBuilder();
-        messageParserEx.Parse(builder, "glUniform4fv(1,2,{0,1,2,3,4,5,6,7})");
+        messageParserEx.parse(builder, "glUniform4fv(1,2,{0,1,2,3,4,5,6,7})");
         messageParserEx
-                .Parse(builder,
+                .parse(builder,
                         "void glShaderSource(shader=4, count=1, string=\"dksjafhskjahourehghskjg\", length=0x0)");
     }
 
-    public void CreateLeftPane(Composite parent) {
+    public void createLeftPane(Composite parent) {
         Composite composite = new Composite(parent, 0);
 
         GridLayout gridLayout = new GridLayout();
@@ -270,7 +270,7 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
      */
     @Override
     public void createPartControl(Composite parent) {
-        CreateLeftPane(parent);
+        createLeftPane(parent);
 
         // Create the help context id for the viewer's control
         PlatformUI.getWorkbench().getHelpSystem()
@@ -431,8 +431,8 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
             @Override
             public void run() {
                 if (!running)
-                    ChangeContext(null); // viewer will switch to newest context
-                ConnectDisconnect();
+                    changeContext(null); // viewer will switch to newest context
+                connectDisconnect();
             }
         };
         manager.add(actionConnect);
@@ -444,8 +444,8 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
             {
                 if (!running)
                 {
-                    ChangeContext(null); // viewer will switch to newest context
-                    OpenFile();
+                    changeContext(null); // viewer will switch to newest context
+                    openFile();
                 }
             }
         });
@@ -501,7 +501,7 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
                 builder.setFunction(Function.SETPROP);
                 builder.setProp(Prop.CaptureDraw);
                 builder.setArg0(Integer.parseInt(inputDialog.getValue()));
-                messageQueue.AddCommand(builder.build());
+                messageQueue.addCommand(builder.build());
             }
         });
 
@@ -527,7 +527,7 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
                 builder.setFunction(Function.SETPROP);
                 builder.setProp(Prop.CaptureSwap);
                 builder.setArg0(Integer.parseInt(inputDialog.getValue()));
-                messageQueue.AddCommand(builder.build());
+                messageQueue.addCommand(builder.build());
             }
         });
 
@@ -549,7 +549,7 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
                 builder.setFunction(Message.Function.SETPROP);
                 builder.setProp(Prop.TimeMode);
                 builder.setArg0(i);
-                messageQueue.AddCommand(builder.build());
+                messageQueue.addCommand(builder.build());
                 this.setText(timeModes[i]);
                 manager.update(true);
             }
@@ -567,7 +567,7 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
                 final int contextId = Integer.parseInt(idStr, 16);
                 int index = debugContexts.indexOfKey(contextId);
                 index = (index + 1) % debugContexts.size();
-                ChangeContext(debugContexts.valueAt(index));
+                changeContext(debugContexts.valueAt(index));
             }
         };
         manager.add(actContext);
@@ -593,9 +593,9 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
             {
                 if (current != null)
                 {
-                    new CodeGen().CodeGenFrame((Frame) viewer.getInput());
+                    new CodeGen().codeGenFrame((Frame) viewer.getInput());
                     // need to reload current frame
-                    viewer.setInput(current.GetFrame(frameNum.getSelection()));
+                    viewer.setInput(current.getFrame(frameNum.getSelection()));
                 }
             }
         });
@@ -607,16 +607,16 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
             {
                 if (current != null)
                 {
-                    new CodeGen().CodeGenFrames(current, frameNum.getSelection() + 1,
+                    new CodeGen().codeGenFrames(current, frameNum.getSelection() + 1,
                             getSite().getShell());
                     // need to reload current frame
-                    viewer.setInput(current.GetFrame(frameNum.getSelection()));
+                    viewer.setInput(current.getFrame(frameNum.getSelection()));
                 }
             }
         });
     }
 
-    private void OpenFile() {
+    private void openFile() {
         FileDialog dialog = new FileDialog(getSite().getShell(), SWT.OPEN);
         dialog.setText("Open");
         dialog.setFilterExtensions(new String[] {
@@ -633,23 +633,23 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
             return;
         }
         running = true;
-        messageQueue.Start(targetByteOrder, file);
+        messageQueue.start(targetByteOrder, file);
         thread = new Thread(this);
         thread.start();
         actionConnect.setText("Disconnect");
         getViewSite().getActionBars().getToolBarManager().update(true);
     }
 
-    private void ConnectDisconnect() {
+    private void connectDisconnect() {
         if (!running) {
             running = true;
-            messageQueue.Start(targetByteOrder, null);
+            messageQueue.start(targetByteOrder, null);
             thread = new Thread(this);
             thread.start();
             actionConnect.setText("Disconnect");
         } else {
             running = false;
-            messageQueue.Stop();
+            messageQueue.stop();
             actionConnect.setText("Connect");
         }
         this.getSite().getShell().getDisplay().syncExec(new Runnable() {
@@ -660,16 +660,16 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
         });
     }
 
-    void MessageDataSelected(final MessageData msgData) {
+    void messageDataSelected(final MessageData msgData) {
         if (null == msgData)
             return;
         if (frameNum.getSelection() == frameNum.getMaximum())
             return; // scale max cannot overlap min, so max is array size
-        final Frame frame = current.GetFrame(frameNum.getSelection());
-        final Context context = frame.ComputeContext(msgData);
+        final Frame frame = current.getFrame(frameNum.getSelection());
+        final Context context = frame.computeContext(msgData);
         contextViewer.setInput(context);
-        if (msgData.GetImage() != null) {
-            canvas.setBackgroundImage(msgData.GetImage());
+        if (msgData.getImage() != null) {
+            canvas.setBackgroundImage(msgData.getImage());
             tabFolder.setSelection(tabItemImage);
             canvas.redraw();
         } else if (null != msgData.shader) {
@@ -705,7 +705,7 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
                 if (null == selection)
                     return;
                 MessageData msgData = (MessageData) selection.getFirstElement();
-                MessageDataSelected(msgData);
+                messageDataSelected(msgData);
             }
         });
     }
@@ -734,8 +734,8 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
 
         boolean shaderEditorUpdate = false;
         while (running) {
-            final Message oriMsg = messageQueue.RemoveCompleteMessage(0);
-            if (oriMsg == null && !messageQueue.IsRunning())
+            final Message oriMsg = messageQueue.removeCompleteMessage(0);
+            if (oriMsg == null && !messageQueue.isRunning())
                 break;
             if (newMessages > 60 || (newMessages > 0 && null == oriMsg)) {
                 newMessages = 0;
@@ -743,15 +743,15 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
                     getSite().getShell().getDisplay().syncExec(new Runnable() {
                         @Override
                         public void run() {
-                            if (frameNum.getSelection() == current.FrameCount() - 1 ||
-                                    frameNum.getSelection() == current.FrameCount() - 2)
+                            if (frameNum.getSelection() == current.frameCount() - 1 ||
+                                    frameNum.getSelection() == current.frameCount() - 2)
                             {
                                 viewer.refresh(false);
                                 if (actionAutoScroll.isChecked())
                                     viewer.getList().setSelection(
                                             viewer.getList().getItemCount() - 1);
                             }
-                            frameNum.setMaximum(current.FrameCount());
+                            frameNum.setMaximum(current.frameCount());
                         }
                     });
                 current.uiUpdate = false;
@@ -760,7 +760,7 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
                     this.getSite().getShell().getDisplay().syncExec(new Runnable() {
                         @Override
                         public void run() {
-                            shaderEditor.Update();
+                            shaderEditor.updateUI();
                         }
                     });
                 shaderEditorUpdate = false;
@@ -778,32 +778,32 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
                 debugContext = new DebugContext(oriMsg.getContextId());
                 debugContexts.put(oriMsg.getContextId(), debugContext);
             }
-            debugContext.ProcessMessage(oriMsg);
+            debugContext.processMessage(oriMsg);
             shaderEditorUpdate |= debugContext.currentContext.serverShader.uiUpdate;
             debugContext.currentContext.serverShader.uiUpdate = false;
             if (current == null)
-                ChangeContext(debugContext);
+                changeContext(debugContext);
             newMessages++;
         }
         if (running)
-            ConnectDisconnect(); // error occurred, disconnect
+            connectDisconnect(); // error occurred, disconnect
     }
 
     /** can be called from non-UI thread */
-    void ChangeContext(final DebugContext newContext) {
+    void changeContext(final DebugContext newContext) {
         getSite().getShell().getDisplay().syncExec(new Runnable() {
             @Override
             public void run() {
                 current = newContext;
                 if (current != null)
                 {
-                    frameNum.setMaximum(current.FrameCount());
-                    if (frameNum.getSelection() >= current.FrameCount())
-                        if (current.FrameCount() > 0)
-                            frameNum.setSelection(current.FrameCount() - 1);
+                    frameNum.setMaximum(current.frameCount());
+                    if (frameNum.getSelection() >= current.frameCount())
+                        if (current.frameCount() > 0)
+                            frameNum.setSelection(current.frameCount() - 1);
                         else
                             frameNum.setSelection(0);
-                    viewer.setInput(current.GetFrame(frameNum.getSelection()));
+                    viewer.setInput(current.getFrame(frameNum.getSelection()));
                     actContext.setText("Context: 0x" + Integer.toHexString(current.contextId));
                 }
                 else
@@ -813,7 +813,7 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
                     viewer.setInput(null);
                     actContext.setText("Context: 0x");
                 }
-                shaderEditor.Update();
+                shaderEditor.updateUI();
                 getViewSite().getActionBars().getToolBarManager().update(true);
             }
         });
@@ -825,9 +825,9 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
             assert false;
         if (current == null)
             return;
-        if (frameNum.getSelection() == current.FrameCount())
+        if (frameNum.getSelection() == current.frameCount())
             return; // scale maximum cannot overlap minimum
-        Frame frame = current.GetFrame(frameNum.getSelection());
+        Frame frame = current.getFrame(frameNum.getSelection());
         viewer.setInput(frame);
     }
 
