@@ -145,3 +145,59 @@ void glUtilsPackPointerData(unsigned char *dst, unsigned char *src,
         }
     }
 }
+
+int glUtilsPixelBitSize(GLenum format, GLenum type)
+{
+    int components = 0;
+    int componentsize = 0;
+    int pixelsize = 0;
+    switch(type) {
+    case GL_UNSIGNED_BYTE:
+        componentsize = 8;
+        break;
+    case GL_UNSIGNED_SHORT_5_6_5:
+    case GL_UNSIGNED_SHORT_4_4_4_4:
+    case GL_UNSIGNED_SHORT_5_5_5_1:
+    case GL_RGB565_OES:
+    case GL_RGB5_A1_OES:
+    case GL_RGBA4_OES:
+        pixelsize = 16;
+        break;
+    default:
+        ERR("glUtilsPixelBitSize: unknown pixel type - assuming pixel data 0\n");
+        componentsize = 0;
+    }
+
+    if (pixelsize == 0) {
+        switch(format) {
+#if 0
+        case GL_RED:
+        case GL_GREEN:
+        case GL_BLUE:
+#endif
+        case GL_ALPHA:
+        case GL_LUMINANCE:
+            components = 1;
+            break;
+        case GL_LUMINANCE_ALPHA:
+            components = 2;
+            break;
+        case GL_RGB:
+#if 0
+        case GL_BGR:
+#endif
+            components = 3;
+            break;
+        case GL_RGBA:
+        case GL_BGRA_EXT:
+            components = 4;
+            break;
+        default:
+            ERR("glUtilsPixelBitSize: unknown pixel format...\n");
+            components = 0;
+        }
+        pixelsize = components * componentsize;
+    }
+
+    return pixelsize;
+}

@@ -164,56 +164,7 @@ int GLClientState::setPixelStore(GLenum param, GLint value)
 
 size_t GLClientState::pixelDataSize(GLsizei width, GLsizei height, GLenum format, GLenum type, int pack)
 {
-
-    int components = 0;
-    int componentsize = 0;
-    int pixelsize = 0;
-    switch(type) {
-    case GL_UNSIGNED_BYTE:
-        componentsize = 1;
-        break;
-    case GL_UNSIGNED_SHORT_5_6_5:
-    case GL_UNSIGNED_SHORT_4_4_4_4:
-    case GL_UNSIGNED_SHORT_5_5_5_1:
-        pixelsize = 2;
-        break;
-    default:
-        ERR("pixelDataSize: unknown pixel type - assuming pixel data 0\n");
-        componentsize = 0;
-    }
-
-    if (pixelsize == 0) {
-        switch(format) {
-#if 0
-        case GL_RED:
-        case GL_GREEN:
-        case GL_BLUE:
-#endif
-        case GL_ALPHA:
-        case GL_LUMINANCE:
-            components = 1;
-            break;
-        case GL_LUMINANCE_ALPHA:
-            components = 2;
-            break;
-        case GL_RGB:
-#if 0
-        case GL_BGR:
-#endif
-            components = 3;
-            break;
-        case GL_RGBA:
-#if 0
-        case GL_BGRA:
-#endif
-            components = 4;
-            break;
-        default:
-            ERR("pixelDataSize: unknown pixel format...\n");
-            components = 0;
-        }
-        pixelsize = components * componentsize;
-    }
+    int pixelsize = glUtilsPixelBitSize(format, type) >> 3;
 
     int alignment = pack ? m_pixelStore.pack_alignment : m_pixelStore.unpack_alignment;
 
