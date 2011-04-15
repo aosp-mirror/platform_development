@@ -43,6 +43,7 @@ LOCAL_CFLAGS := -DPVR_WAR
 #LOCAL_CFLAGS += -g -O0
 
 LOCAL_C_INCLUDES := $(emulatorOpengl)/shared/OpenglCodecCommon \
+        $(emulatorOpengl)/host/include/libOpenglRender \
 		$(call intermediates-dir-for, SHARED_LIBRARIES, libut_rendercontrol_dec, HOST) \
 		$(call intermediates-dir-for, SHARED_LIBRARIES, libGLESv1_dec, HOST) \
         $(emulatorOpengl)/host/libs/GLESv1_dec \
@@ -50,7 +51,10 @@ LOCAL_C_INCLUDES := $(emulatorOpengl)/shared/OpenglCodecCommon \
         $(emulatorOpengl)/tests/ut_rendercontrol_enc
 
 LOCAL_SHARED_LIBRARIES := libut_rendercontrol_dec libGLESv1_dec libEGL_host_wrapper
-LOCAL_STATIC_LIBRARIES := libOpenglCodecCommon
+LOCAL_STATIC_LIBRARIES := \
+    libOpenglCodecCommon \
+    libcutils
+
 LOCAL_LDLIBS := -lpthread -lX11 -lrt
 include $(BUILD_HOST_EXECUTABLE)
 
