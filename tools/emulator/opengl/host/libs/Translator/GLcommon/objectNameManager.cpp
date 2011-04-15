@@ -1,0 +1,376 @@
+/*
+* Copyright (C) 2011 The Android Open Source Project
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+* http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
+#include <map>
+#include <GLcommon/objectNameManager.h>
+
+class GlobalNameSpace
+{
+public:
+    GlobalNameSpace()
+    {
+        mutex_init(&m_lock);
+
+        for (int i=0; i<NUM_OBJECT_TYPES; i++) {
+            m_nameSpace[i] = new NameSpace((NamedObjectType)i);
+        }
+
+    }
+
+    ~GlobalNameSpace()
+    {
+        mutex_lock(&m_lock);
+        for (int i=0; i<NUM_OBJECT_TYPES; i++) {
+            delete m_nameSpace[i];
+        }
+        mutex_unlock(&m_lock);
+        mutex_destroy(&m_lock);
+    }
+
+    unsigned int genName(NamedObjectType p_type)
+    {
+        if ( p_type >= NUM_OBJECT_TYPES ) return 0;
+
+        mutex_lock(&m_lock);
+        unsigned int name = m_nameSpace[p_type]->genName(0, false);
+        mutex_unlock(&m_lock);
+        return name;
+    }
+
+    void deleteName(NamedObjectType p_type, unsigned int p_name)
+    {
+        if ( p_type >= NUM_OBJECT_TYPES ) return;
+
+        mutex_lock(&m_lock);
+        m_nameSpace[p_type]->deleteName(p_name);
+        mutex_unlock(&m_lock);
+    }
+
+private:
+    mutex_t m_lock;
+    NameSpace *m_nameSpace[NUM_OBJECT_TYPES];
+};
+
+static GlobalNameSpace *s_globalNameSpace = NULL;
+
+NameSpace::NameSpace(NamedObjectType p_type) :
+    m_nextName(0),
+    m_type(p_type)
+{
+}
+
+NameSpace::~NameSpace()
+{
+    for (NamesMap::iterator n = m_localToGlobalMap.begin();
+         n != m_localToGlobalMap.end();
+         n++) {
+        s_globalNameSpace->deleteName(m_type, (*n).second);
+    }
+}
+
+unsigned int
+NameSpace::genName(unsigned int p_localName, bool genGlobal)
+{
+
+    unsigned int localName = p_localName;
+    if (localName == 0) {
+        do {
+            localName = ++m_nextName;
+        } while( localName == 0 || m_localToGlobalMap.find(localName) != m_localToGlobalMap.end() );
+    }
+
+    if (genGlobal) {
+        unsigned int globalName = s_globalNameSpace->genName(m_type);
+        m_localToGlobalMap[localName] = globalName;
+    }
+
+    return localName;
+}
+
+unsigned int
+NameSpace::getGlobalName(unsigned int p_localName)
+{
+    NamesMap::iterator n( m_localToGlobalMap.find(p_localName) );
+    if (n != m_localToGlobalMap.end()) {
+        // object found - return its global name map
+        return (*n).second;
+    }
+
+    // object does not exist;
+    return 0;
+}
+
+void
+NameSpace::deleteName(unsigned int p_localName)
+{
+    NamesMap::iterator n( m_localToGlobalMap.find(p_localName) );
+    if (n != m_localToGlobalMap.end()) {
+        s_globalNameSpace->deleteName(m_type, (*n).second);
+        m_localToGlobalMap.erase(p_localName);
+    }
+}
+
+bool
+NameSpace::isObject(unsigned int p_localName)
+{
+    return (m_localToGlobalMap.find(p_localName) != m_localToGlobalMap.end() );
+}
+
+void
+NameSpace::replaceGlobalName(unsigned int p_localName, unsigned int p_globalName)
+{
+    NamesMap::iterator n( m_localToGlobalMap.find(p_localName) );
+    if (n != m_localToGlobalMap.end()) {
+        s_globalNameSpace->deleteName(m_type, (*n).second);
+        (*n).second = p_globalName;
+    }
+}
+
+typedef std::pair<NamedObjectType, unsigned int> ObjectIDPair;
+typedef std::map<ObjectIDPair, ObjectDataPtr> ObjectDataMap;
+
+ShareGroup::ShareGroup()
+{
+    mutex_init(&m_lock);
+
+    for (int i=0; i<NUM_OBJECT_TYPES; i++) {
+        m_nameSpace[i] = new NameSpace((NamedObjectType)i);
+    }
+
+    m_objectsData = NULL;
+}
+
+ShareGroup::~ShareGroup()
+{
+    mutex_lock(&m_lock);
+    for (int t = 0; t < NUM_OBJECT_TYPES; t++) {
+        delete m_nameSpace[t];
+    }
+
+    ObjectDataMap *map = (ObjectDataMap *)m_objectsData;
+    if (map) delete map;
+
+    mutex_unlock(&m_lock);
+    mutex_destroy(&m_lock);
+}
+
+unsigned int
+ShareGroup::genName(NamedObjectType p_type, unsigned int p_localName)
+{
+    if (p_type >= NUM_OBJECT_TYPES) return 0;
+
+    mutex_lock(&m_lock);
+    unsigned int localName = m_nameSpace[p_type]->genName(p_localName);
+    mutex_unlock(&m_lock);
+
+    return localName;
+}
+
+unsigned int
+ShareGroup::getGlobalName(NamedObjectType p_type, unsigned int p_localName)
+{
+    if (p_type >= NUM_OBJECT_TYPES) return 0;
+
+    mutex_lock(&m_lock);
+    unsigned int globalName = m_nameSpace[p_type]->getGlobalName(p_localName);
+    mutex_unlock(&m_lock);
+
+    return globalName;
+}
+
+void
+ShareGroup::deleteName(NamedObjectType p_type, unsigned int p_localName)
+{
+    if (p_type >= NUM_OBJECT_TYPES) return;
+
+    mutex_lock(&m_lock);
+    m_nameSpace[p_type]->deleteName(p_localName);
+    ObjectDataMap *map = (ObjectDataMap *)m_objectsData;
+    if (map) {
+        map->erase( ObjectIDPair(p_type, p_localName) );
+    }
+    mutex_unlock(&m_lock);
+}
+
+bool
+ShareGroup::isObject(NamedObjectType p_type, unsigned int p_localName)
+{
+    if (p_type >= NUM_OBJECT_TYPES) return 0;
+
+    mutex_lock(&m_lock);
+    bool exist = m_nameSpace[p_type]->isObject(p_localName);
+    mutex_unlock(&m_lock);
+
+    return exist;
+}
+
+void
+ShareGroup::replaceGlobalName(NamedObjectType p_type, unsigned int p_localName, unsigned int p_globalName)
+{
+    if (p_type >= NUM_OBJECT_TYPES) return;
+
+    mutex_lock(&m_lock);
+    m_nameSpace[p_type]->replaceGlobalName(p_localName, p_globalName);
+    mutex_unlock(&m_lock);
+}
+
+void
+ShareGroup::setObjectData(NamedObjectType p_type, unsigned int p_localName, ObjectDataPtr data)
+{
+    if (p_type >= NUM_OBJECT_TYPES) return;
+
+    mutex_lock(&m_lock);
+
+    ObjectDataMap *map = (ObjectDataMap *)m_objectsData;
+    if (!map) {
+        map = new ObjectDataMap();
+        m_objectsData = map;
+    }
+
+    ObjectIDPair id( p_type, p_localName );
+    map->insert( std::pair<ObjectIDPair, ObjectDataPtr>(id, data) );
+
+    mutex_unlock(&m_lock);
+}
+
+ObjectDataPtr
+ShareGroup::getObjectData(NamedObjectType p_type, unsigned int p_localName)
+{
+    ObjectDataPtr ret;
+
+    if (p_type >= NUM_OBJECT_TYPES) return ret;
+
+    mutex_lock(&m_lock);
+
+    ObjectDataMap *map = (ObjectDataMap *)m_objectsData;
+    if (map) {
+        ObjectDataMap::iterator i = map->find( ObjectIDPair(p_type, p_localName) );
+        if (i != map->end()) ret = (*i).second;
+    }
+
+    mutex_unlock(&m_lock);
+
+    return ret;
+}
+
+ObjectNameManager::ObjectNameManager()
+{
+    mutex_init(&m_lock);
+}
+
+ObjectNameManager::~ObjectNameManager()
+{
+    mutex_destroy(&m_lock);
+}
+
+ShareGroupPtr
+ObjectNameManager::createShareGroup(void *p_groupName)
+{
+    mutex_lock(&m_lock);
+
+    if (!s_globalNameSpace) s_globalNameSpace = new GlobalNameSpace();
+
+    ShareGroupPtr shareGroupReturn;
+
+    ShareGroupsMap::iterator s( m_groups.find(p_groupName) );
+    if (s != m_groups.end()) {
+        shareGroupReturn = (*s).second;
+    }
+    else {
+        //
+        // Group does not exist, create new group
+        //
+        shareGroupReturn = ShareGroupPtr( new ShareGroup() );
+        m_groups.insert( std::pair<void *, ShareGroupPtr>(p_groupName, shareGroupReturn) );
+    }
+
+    mutex_unlock(&m_lock);
+
+    return shareGroupReturn;
+}
+
+ShareGroupPtr
+ObjectNameManager::getShareGroup(void *p_groupName)
+{
+    mutex_lock(&m_lock);
+
+    if (!s_globalNameSpace) s_globalNameSpace = new GlobalNameSpace();
+
+    ShareGroupPtr shareGroupReturn(NULL);
+
+    ShareGroupsMap::iterator s( m_groups.find(p_groupName) );
+    if (s != m_groups.end()) {
+        shareGroupReturn = (*s).second;
+    }
+    mutex_unlock(&m_lock);
+
+    return shareGroupReturn;
+}
+
+ShareGroupPtr
+ObjectNameManager::attachShareGroup(void *p_groupName, void *p_existingGroupName)
+{
+    mutex_lock(&m_lock);
+
+    if (!s_globalNameSpace) s_globalNameSpace = new GlobalNameSpace();
+
+    ShareGroupPtr shareGroupReturn;
+
+    ShareGroupsMap::iterator s( m_groups.find(p_existingGroupName) );
+    if (s == m_groups.end()) {
+        // ShareGroup did not found !!!
+        mutex_unlock(&m_lock);
+        return ShareGroupPtr(NULL);
+    }
+
+    shareGroupReturn = (*s).second;
+
+    if (m_groups.find(p_groupName) == m_groups.end())
+    {
+        m_groups.insert( std::pair<void *, ShareGroupPtr>(p_groupName, shareGroupReturn) );
+    }
+
+    mutex_unlock(&m_lock);
+
+    return shareGroupReturn;
+}
+
+void
+ObjectNameManager::deleteShareGroup(void *p_groupName)
+{
+    mutex_lock(&m_lock);
+
+    ShareGroupsMap::iterator s( m_groups.find(p_groupName) );
+    if (s != m_groups.end()) {
+        m_groups.erase(s);
+    }
+
+    if (m_groups.size() == 0 && s_globalNameSpace) {
+        delete s_globalNameSpace;
+        s_globalNameSpace = NULL;
+    }
+    mutex_unlock(&m_lock);
+}
+
+void *ObjectNameManager::getGlobalContext()
+{
+    void *ret = NULL;
+
+    mutex_lock(&m_lock);
+    if (m_groups.size() > 0) ret = (*m_groups.begin()).first;
+    mutex_unlock(&m_lock);
+
+    return ret;
+}
