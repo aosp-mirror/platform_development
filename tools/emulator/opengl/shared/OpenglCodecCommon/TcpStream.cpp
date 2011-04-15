@@ -21,7 +21,7 @@
 #include <unistd.h>
 #include <string.h>
 
-#ifdef __linux__
+#ifndef _WIN32
 #include <netinet/in.h>
 #endif
 
