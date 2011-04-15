@@ -5,7 +5,8 @@ Bundle-SymbolicName: GLESv2DebuggerClient; singleton:=true
 Bundle-Version: 1.0.0.qualifier
 Bundle-Activator: com.android.glesv2debugger.Activator
 Require-Bundle: org.eclipse.ui,
- org.eclipse.core.runtime
+ org.eclipse.core.runtime,
+ org.junit
 Bundle-ActivationPolicy: lazy
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ClassPath: lib/host-libprotobuf-java-2.3.0-lite.jar,

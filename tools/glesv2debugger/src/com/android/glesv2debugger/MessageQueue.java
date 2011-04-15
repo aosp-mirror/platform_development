@@ -30,18 +30,25 @@ import java.net.Socket;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
 
+abstract interface ProcessMessage {
+    abstract boolean processMessage(final MessageQueue queue, final Message msg)
+            throws IOException;
+}
+
 public class MessageQueue implements Runnable {
 
     private boolean running = false;
     private ByteOrder byteOrder;
     private FileInputStream file; // if null, create and use socket
-    private Thread thread = null;
+    Thread thread = null;
+    private final ProcessMessage[] processes;
     private ArrayList<Message> complete = new ArrayList<Message>(); // synchronized
     private ArrayList<Message> commands = new ArrayList<Message>(); // synchronized
     private SampleView sampleView;
 
-    public MessageQueue(SampleView sampleView) {
+    public MessageQueue(SampleView sampleView, final ProcessMessage[] processes) {
         this.sampleView = sampleView;
+        this.processes = processes;
     }
 
     public void start(final ByteOrder byteOrder, final FileInputStream file) {
@@ -182,15 +189,15 @@ public class MessageQueue implements Runnable {
         partials.remove(contextId);
         assert msg != null;
         assert msg.getType() == Type.BeforeCall;
-        synchronized (complete) {
-            complete.add(msg);
-        }
+        if (msg != null)
+            synchronized (complete) {
+                complete.add(msg);
+            }
     }
 
     // can be used by other message processor as default processor
     void defaultProcessMessage(final Message msg, boolean expectResponse,
-            boolean sendResponse)
-            throws IOException {
+            boolean sendResponse) throws IOException {
         final int contextId = msg.getContextId();
         if (msg.getType() == Type.BeforeCall) {
             if (sendResponse) {
@@ -296,13 +303,11 @@ public class MessageQueue implements Runnable {
 
     private void processMessage(final DataOutputStream dos, final Message msg) throws IOException {
         if (msg.getExpectResponse()) {
-            assert file == null; // file cannot be interactive mode
-            if (sampleView.shaderEditor.processMessage(this, msg))
-                return;
-            else if (sampleView.breakpointOption.processMessage(this, msg))
-                return;
-            else
-                defaultProcessMessage(msg, msg.getExpectResponse(), msg.getExpectResponse());
+            assert dos != null; // readonly source cannot expectResponse
+            for (ProcessMessage process : processes)
+                if (process.processMessage(this, msg))
+                    return;
+            defaultProcessMessage(msg, msg.getExpectResponse(), msg.getExpectResponse());
         } else
             defaultProcessMessage(msg, msg.getExpectResponse(), msg.getExpectResponse());
     }

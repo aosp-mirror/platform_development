@@ -37,12 +37,14 @@ import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Shell;
 
 import java.io.IOException;
-import java.util.HashMap;
 
-public class BreakpointOption extends ScrolledComposite implements SelectionListener {
+public class BreakpointOption extends ScrolledComposite implements SelectionListener,
+        ProcessMessage {
 
     SampleView sampleView;
-    HashMap<Function, Button> buttonsBreak = new HashMap<Function, Button>();
+    Button[] buttonsBreak = new Button[Function.values().length];
+    /** cache of buttonsBreak[Function.getNumber()].getSelection */
+    boolean[] breakpoints = new boolean[Function.values().length];
 
     BreakpointOption(SampleView sampleView, Composite parent) {
         super(parent, SWT.NO_BACKGROUND | SWT.V_SCROLL | SWT.H_SCROLL);
@@ -62,7 +64,8 @@ public class BreakpointOption extends ScrolledComposite implements SelectionList
             btn.addSelectionListener(this);
             btn.setText("Break");
             btn.setSelection(false);
-            buttonsBreak.put(Function.values()[i], btn);
+            breakpoints[Function.values()[i].getNumber()] = btn.getSelection();
+            buttonsBreak[Function.values()[i].getNumber()] = btn;
         }
 
         Point size = composite.computeSize(SWT.DEFAULT, SWT.DEFAULT);
@@ -74,9 +77,9 @@ public class BreakpointOption extends ScrolledComposite implements SelectionList
         this.layout();
     }
 
-    void setBreakpoint(Function function, boolean enabled) {
+    void setBreakpoint(final int contextId, final Function function, final boolean enabled) {
         Message.Builder builder = Message.newBuilder();
-        builder.setContextId(0); // FIXME: proper context id
+        builder.setContextId(contextId);
         builder.setType(Type.Response);
         builder.setExpectResponse(false);
         builder.setFunction(Function.SETPROP);
@@ -84,13 +87,17 @@ public class BreakpointOption extends ScrolledComposite implements SelectionList
         builder.setArg0(function.getNumber());
         builder.setArg1(enabled ? 1 : 0);
         sampleView.messageQueue.addCommand(builder.build());
+        breakpoints[function.getNumber()] = enabled;
     }
 
     @Override
     public void widgetSelected(SelectionEvent e) {
         Button btn = (Button) e.widget;
         Group group = (Group) btn.getParent();
-        setBreakpoint(Function.valueOf(group.getText()), btn.getSelection());
+        int contextId = 0;
+        if (sampleView.current != null)
+            contextId = sampleView.current.contextId;
+        setBreakpoint(contextId, Function.valueOf(group.getText()), btn.getSelection());
     }
 
     @Override
@@ -100,6 +107,8 @@ public class BreakpointOption extends ScrolledComposite implements SelectionList
     private Function lastFunction = Function.NEG;
 
     public boolean processMessage(final MessageQueue queue, final Message msg) throws IOException {
+        if (!breakpoints[msg.getFunction().getNumber()])
+            return false;
         // use DefaultProcessMessage just to register the GL call
         // but do not send response
         final int contextId = msg.getContextId();
@@ -158,9 +167,9 @@ public class BreakpointOption extends ScrolledComposite implements SelectionList
                         builder.setFunction(Function.CONTINUE);
                     else if (s.startsWith("r"))
                     {
-                        Button btn = buttonsBreak.get(msg.getFunction());
+                        Button btn = buttonsBreak[msg.getFunction().getNumber()];
                         btn.setSelection(false);
-                        setBreakpoint(msg.getFunction(), false);
+                        setBreakpoint(msg.getContextId(), msg.getFunction(), false);
                         builder.setExpectResponse(false);
                     }
                     else

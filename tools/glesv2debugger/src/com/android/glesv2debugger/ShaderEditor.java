@@ -46,7 +46,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 
-public class ShaderEditor extends Composite implements SelectionListener, ExtendedModifyListener {
+public class ShaderEditor extends Composite implements SelectionListener, ExtendedModifyListener,
+        ProcessMessage {
     SampleView sampleView;
 
     ToolBar toolbar;
@@ -173,6 +174,7 @@ public class ShaderEditor extends Composite implements SelectionListener, Extend
                     styledText.setLineBackground(ln - 1, 1,
                             new Color(Display.getCurrent(), 255, 230, 230));
             }
+            file.delete();
             if (infolog.length() > 0) {
                 if (!MessageDialog.openConfirm(getShell(),
                         "Shader Syntax Error, Continue?", infolog))

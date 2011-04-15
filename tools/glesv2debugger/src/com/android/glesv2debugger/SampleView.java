@@ -93,12 +93,10 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
 
     boolean running = false;
     Thread thread;
-    MessageQueue messageQueue = new MessageQueue(this);
+    MessageQueue messageQueue;
     SparseArray<DebugContext> debugContexts = new SparseArray<DebugContext>();
 
-    /**
-     * The ID of the view as specified by the extension.
-     */
+    /** The ID of the view as specified by the extension. */
     public static final String ID = "glesv2debuggerclient.views.SampleView";
 
     TabFolder tabFolder;
@@ -391,6 +389,10 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
         hookContextMenu();
         hookSelectionChanged();
         contributeToActionBars();
+
+        messageQueue = new MessageQueue(this, new ProcessMessage[] {
+                breakpointOption, shaderEditor
+        });
     }
 
     private void hookContextMenu() {
