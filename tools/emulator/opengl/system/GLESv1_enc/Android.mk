@@ -19,6 +19,7 @@ LOCAL_PRELINK_MODULE := false
 LOCAL_CFLAGS += -DLOG_TAG=\"egl_GLESv1_enc\"
 LOCAL_C_INCLUDES +=  \
     $(emulatorOpengl)/shared/OpenglCodecCommon \
+    $(emulatorOpengl)/host/include/libOpenglRender \
     $(glesv1_intermediates)
 
 LOCAL_STATIC_LIBRARIES := \
