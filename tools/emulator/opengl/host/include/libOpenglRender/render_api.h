@@ -32,7 +32,7 @@ typedef HWND    FBNativeWindowType;
 typedef Window   FBNativeWindowType;
 
 #else
-#error "Unsupported platform"
+#warning "Unsupported platform"
 #endif
 
 

@@ -27,7 +27,7 @@
 
 #if defined(__linux__) || defined(_WIN32) || defined(__VC32__) && !defined(__CYGWIN__)
 #else
-#error "Unsupported Platform"
+#warning "Unsupported Platform"
 #endif
 
 typedef uint32_t HandleType;
