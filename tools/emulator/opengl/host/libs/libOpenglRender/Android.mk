@@ -1,5 +1,6 @@
 LOCAL_PATH := $(call my-dir)
 
+ifneq ($(HOST_OS),darwin)
 ### libOpenglRender #################################################
 include $(CLEAR_VARS)
 
@@ -63,3 +64,5 @@ endif
 #LOCAL_CFLAGS := -O0 -g
 
 include $(BUILD_HOST_SHARED_LIBRARY)
+endif # HOST_OS != darwin
+
