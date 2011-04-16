@@ -13,10 +13,27 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-#ifndef _TIME_UTILS_H
-#define _TIME_UTILS_H
+#ifndef _LIB_OPENGL_RENDER_RENDER_THREAD_H
+#define _LIB_OPENGL_RENDER_RENDER_THREAD_H
 
-long long GetCurrentTimeMS();
-void TimeSleepMS(int p_mili);
+#include "IOStream.h"
+#include "GLDecoder.h"
+#include "renderControl_dec.h"
+#include "osThread.h"
+
+class RenderThread : public osUtils::Thread
+{
+public:
+    static RenderThread *create(IOStream *p_stream);
+
+private:
+    RenderThread();
+    virtual int Main();
+
+private:
+    IOStream *m_stream;
+    GLDecoder   m_glDec;
+    renderControl_decoder_context_t m_rcDec;
+};
 
 #endif
