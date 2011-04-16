@@ -18,8 +18,6 @@
 
 #ifdef _WIN32
 #include <windows.h>
-#elif !defined(__linux__)
-#error "Unsupported platform"
 #endif
 
 namespace osUtils {
@@ -34,7 +32,7 @@ public:
     {
 #ifdef _WIN32
         return m_proc.dwProcessId;
-#elif defined(__linux__)
+#else
         return(m_pid);
 #endif
     }
@@ -48,7 +46,7 @@ private:
 private:
 #ifdef _WIN32
     PROCESS_INFORMATION m_proc;
-#elif defined(__linux__)
+#else
     int m_pid;
 #endif
 };
