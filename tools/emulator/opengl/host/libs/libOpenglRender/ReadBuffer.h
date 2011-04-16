@@ -13,10 +13,24 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-#ifndef _TIME_UTILS_H
-#define _TIME_UTILS_H
+#ifndef _READ_BUFFER_H
+#define _READ_BUFFER_H
 
-long long GetCurrentTimeMS();
-void TimeSleepMS(int p_mili);
+#include "IOStream.h"
 
+class ReadBuffer {
+public:
+    ReadBuffer(IOStream *stream, size_t bufSize);
+    ~ReadBuffer();
+    int getData(); // get fresh data from the stream
+    unsigned char *buf() { return m_readPtr; } // return the next read location
+    size_t validData() { return m_validData; } // return the amount of valid data in readptr
+    void consume(size_t amount); // notify that 'amount' data has been consumed;
+private:
+    unsigned char *m_buf;
+    unsigned char *m_readPtr;
+    size_t m_size;
+    size_t m_validData;
+    IOStream *m_stream;
+};
 #endif

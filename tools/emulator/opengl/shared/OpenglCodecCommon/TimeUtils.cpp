@@ -23,8 +23,10 @@
 #include <stdlib.h>
 #include <sys/time.h>
 #include <time.h>
+#include <unistd.h>
 #else
 #include <sys/time.h>
+#include <unistd.h>
 #endif
 
 long long GetCurrentTimeMS()
@@ -54,5 +56,14 @@ long long GetCurrentTimeMS()
     long long iDiff = (now.tv_sec * 1000LL) + now.tv_usec/1000LL;
     return iDiff;
 
+#endif
+}
+
+void TimeSleepMS(int p_mili)
+{
+#ifdef _WIN32
+    Sleep(p_mili);
+#else
+    usleep(p_mili * 1000);
 #endif
 }
