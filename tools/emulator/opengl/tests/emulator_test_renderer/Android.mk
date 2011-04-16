@@ -1,5 +1,7 @@
 LOCAL_PATH:=$(call my-dir)
 
+# For now, OS X is not supported
+ifneq ($(HOST_OS),darwin)
 # test opengl renderer driver ###########################
 include $(CLEAR_VARS)
 
@@ -31,3 +33,4 @@ LOCAL_SHARED_LIBRARIES := libOpenglRender \
 LOCAL_STATIC_LIBRARIES += libSDL libSDLmain
 
 include $(BUILD_HOST_EXECUTABLE)
+endif # HOST_OS != darwin

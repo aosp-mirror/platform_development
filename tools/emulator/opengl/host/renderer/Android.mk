@@ -1,5 +1,7 @@
 LOCAL_PATH:=$(call my-dir)
 
+# OS X not supported for now
+ifneq ($(HOST_OS),darwin)
 # host renderer process ###########################
 include $(CLEAR_VARS)
 
@@ -24,3 +26,4 @@ LOCAL_SHARED_LIBRARIES := libOpenglRender \
         lib_renderControl_dec
 
 include $(BUILD_HOST_EXECUTABLE)
+endif # HOST_OS != darwin
