@@ -13,10 +13,19 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-#ifndef _TIME_UTILS_H
-#define _TIME_UTILS_H
+#ifndef _LIB_OPENGL_RENDER_THREAD_INFO_H
+#define _LIB_OPENGL_RENDER_THREAD_INFO_H
 
-long long GetCurrentTimeMS();
-void TimeSleepMS(int p_mili);
+#include "RenderContext.h"
+#include "WindowSurface.h"
+
+struct RenderThreadInfo
+{
+    RenderContextPtr currContext;
+    WindowSurfacePtr currDrawSurf;
+    WindowSurfacePtr currReadSurf;
+};
+
+RenderThreadInfo *getRenderThreadInfo();
 
 #endif
