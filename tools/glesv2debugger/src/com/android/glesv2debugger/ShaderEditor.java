@@ -102,7 +102,9 @@ public class ShaderEditor extends Composite implements SelectionListener, Extend
     public void Update() {
         list.removeAll();
         String progs = "Current Programs: ";
-        for (Context context : sampleView.contexts.values()) {
+        for (int j = 0; j < sampleView.debugContexts.size(); j++) {
+            final Context context = sampleView.debugContexts.valueAt(j).currentContext;
+
             if (context.serverShader.current != null) {
                 progs += context.serverShader.current.name + "(0x";
                 progs += Integer.toHexString(context.contextId) + ") ";
@@ -130,6 +132,7 @@ public class ShaderEditor extends Composite implements SelectionListener, Extend
                 }
                 list.add(builder.toString());
             }
+
         }
 
         currentPrograms.setText(progs);
@@ -336,7 +339,8 @@ public class ShaderEditor extends Composite implements SelectionListener, Extend
         String[] details = list.getSelection()[0].split("\\s+");
         final int contextId = Integer.parseInt(details[0], 16);
         int name = Integer.parseInt(details[2]);
-        current = sampleView.contexts.get(contextId).serverShader.shaders.get(name);
+        current = sampleView.debugContexts.get(contextId).currentContext.serverShader.shaders
+                .get(name);
         styledText.setText(current.source);
     }
 

@@ -26,17 +26,20 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
 
 public class MessageData {
-    public final Message msg;
+    public final Message msg, oriMsg;
     public Image image; // texture
     public String shader; // shader source
     public String text;
+    public String[] columns = new String[3];
     public float[] data;
     public int maxAttrib; // used for formatting data
     public GLEnum dataType; // could be float, int; mainly for formatting use
     Context context; // the context before this call
 
-    public MessageData(final Device device, final Message msg, final Context context) {
+    public MessageData(final Device device, final Message msg, final Message oriMsg,
+            final Context context) {
         this.msg = msg;
+        this.oriMsg = oriMsg;
         this.context = context;
         image = null;
         shader = null;
@@ -46,21 +49,26 @@ public class MessageData {
         ImageData imageData = null;
         if (function != Message.Function.ACK)
             assert msg.hasTime();
-        builder.append(function);
+        builder.append(columns[0] = function.name());
         while (builder.length() < 30)
             builder.append(' ');
-        builder.append(String.format("%.3f", msg.getTime()));
+        columns[1] = String.format("%.3f", msg.getTime());
         if (msg.hasClock())
-            builder.append(String.format(":%.3f", msg.getClock()));
-        builder.append(String.format("  0x%08X", msg.getContextId()));
+            columns[1] += String.format(":%.3f", msg.getClock());
+        builder.append(columns[1]);
+
         builder.append("  ");
+        builder.append(String.format("0x%08X", msg.getContextId()));
+        builder.append("  ");
+        columns[2] = "";
         if (msg.getType() == Type.BeforeCall) // incomplete call, client SKIPPED
-            builder.append("[BeforeCall(AfterCall missing)] ");
+            columns[2] = "[BeforeCall(AfterCall missing)] ";
         else if (msg.getType() == Type.AfterGeneratedCall)
-            builder.append("[AfterGeneratedCall] ");
+            columns[2] = "[AfterGeneratedCall] ";
         else
             assert msg.getType() == Type.AfterCall;
-        builder.append(MessageFormatter.Format(msg));
+        columns[2] += MessageFormatter.Format(msg);
+        builder.append(columns[2]);
         switch (function) {
             case glDrawArrays: // msg was modified by GLServerVertex
             case glDrawElements:

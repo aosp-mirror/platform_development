@@ -20,6 +20,7 @@ import com.android.glesv2debugger.DebuggerMessage.Message;
 import com.android.glesv2debugger.DebuggerMessage.Message.Function;
 import com.android.glesv2debugger.DebuggerMessage.Message.Prop;
 import com.android.glesv2debugger.DebuggerMessage.Message.Type;
+import com.android.sdklib.util.SparseArray;
 
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
@@ -28,27 +29,30 @@ import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.jface.viewers.DoubleClickEvent;
-import org.eclipse.jface.viewers.IDoubleClickListener;
-import org.eclipse.jface.viewers.ILabelProvider;
+import org.eclipse.jface.viewers.ColumnWeightData;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredContentProvider;
-import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.ListViewer;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
+import org.eclipse.jface.viewers.TableLayout;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.jface.viewers.ViewerSorter;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Event;
@@ -56,11 +60,13 @@ import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.ScrollBar;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.widgets.Slider;
 import org.eclipse.swt.widgets.TabFolder;
 import org.eclipse.swt.widgets.TabItem;
+import org.eclipse.swt.widgets.Table;
+import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.IActionBars;
-import org.eclipse.ui.ISharedImages;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
@@ -70,9 +76,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.ByteOrder;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.HashMap;
 
 /**
  * This sample class demonstrates how to plug-in a new workbench view. The view
@@ -89,13 +93,14 @@ import java.util.HashMap;
  * <p>
  */
 
-public class SampleView extends ViewPart implements Runnable {
+public class SampleView extends ViewPart implements Runnable, SelectionListener {
     public static final ByteOrder targetByteOrder = ByteOrder.LITTLE_ENDIAN;
 
     boolean running = false;
     Thread thread;
-    MessageQueue messageQueue;
-    ViewContentProvider viewContentProvider;
+    MessageQueue messageQueue = new MessageQueue(this);
+    SparseArray<DebugContext> debugContexts = new SparseArray<DebugContext>();
+
     /**
      * The ID of the view as specified by the extension.
      */
@@ -104,54 +109,33 @@ public class SampleView extends ViewPart implements Runnable {
     TabFolder tabFolder;
     TabItem tabItemText, tabItemImage, tabItemBreakpointOption;
     TabItem tabItemShaderEditor, tabContextViewer;
-    ListViewer viewer;
+    ListViewer viewer; // or TableViewer
+    Slider frameNum; // scale max cannot overlap min, so max is array size
     TreeViewer contextViewer;
     BreakpointOption breakpointOption;
     ShaderEditor shaderEditor;
     Canvas canvas;
     Text text;
     Action actionConnect; // connect / disconnect
-    Action doubleClickAction;
+
     Action actionAutoScroll;
     Action actionFilter;
     Action actionCapture;
     Action actionPort;
 
+    Action actContext; // for toggling contexts
+    DebugContext current = null;
+
     Point origin = new Point(0, 0); // for smooth scrolling canvas
     String[] filters = null;
-    public HashMap<Integer, Context> contexts = new HashMap<Integer, Context>();
 
-    /*
-     * The content provider class is responsible for providing objects to the
-     * view. It can wrap existing objects in adapters or simply return objects
-     * as-is. These objects may be sensitive to the current input of the view,
-     * or ignore it and always show the same content (like Task List, for
-     * example).
-     */
-
-    class ViewContentProvider implements IStructuredContentProvider {
-        ArrayList<MessageData> entries = new ArrayList<MessageData>();
-
-        public void add(final ArrayList<MessageData> msgs) {
-            entries.addAll(msgs);
-            viewer.getList().getDisplay().syncExec(new Runnable() {
-                @Override
-                public void run() {
-                    viewer.add(msgs.toArray());
-                    org.eclipse.swt.widgets.ScrollBar bar = viewer
-                            .getList().getVerticalBar();
-                    if (null != bar && actionAutoScroll.isChecked()) {
-                        bar.setSelection(bar.getMaximum());
-                        viewer.getList().setSelection(
-                                entries.size() - 1);
-                        // MessageDataSelected(entries.get(entries.size() - 1));
-                    }
-                }
-            });
-        }
+    class ViewContentProvider extends LabelProvider implements IStructuredContentProvider,
+            ITableLabelProvider {
+        Frame frame = null;
 
         @Override
         public void inputChanged(Viewer v, Object oldInput, Object newInput) {
+            frame = (Frame) newInput;
         }
 
         @Override
@@ -160,26 +144,36 @@ public class SampleView extends ViewPart implements Runnable {
 
         @Override
         public Object[] getElements(Object parent) {
-            return entries.toArray();
+            return frame.calls.toArray();
         }
-    }
 
-    class ViewLabelProvider extends LabelProvider implements
-            ILabelProvider {
         @Override
         public String getText(Object obj) {
             MessageData msgData = (MessageData) obj;
-            if (null == msgData)
-                return obj.toString();
             return msgData.text;
         }
 
         @Override
         public Image getImage(Object obj) {
             MessageData msgData = (MessageData) obj;
-            if (null == msgData.image)
-                return PlatformUI.getWorkbench().getSharedImages()
-                        .getImage(ISharedImages.IMG_OBJ_ELEMENT);
+            return msgData.image;
+        }
+
+        @Override
+        public String getColumnText(Object obj, int index) {
+            MessageData msgData = (MessageData) obj;
+            if (index >= msgData.columns.length)
+                return null;
+            return msgData.columns[index];
+        }
+
+        @Override
+        public Image getColumnImage(Object obj, int index) {
+            if (index > -1)
+                return null;
+            MessageData msgData = (MessageData) obj;
+            if (msgData.image == null)
+                return null;
             return msgData.image;
         }
     }
@@ -207,12 +201,7 @@ public class SampleView extends ViewPart implements Runnable {
         }
     }
 
-    /**
-     * The constructor.
-     */
     public SampleView() {
-        messageQueue = new MessageQueue(this);
-
         MessageParserEx messageParserEx = new MessageParserEx();
         Message.Builder builder = Message.newBuilder();
         messageParserEx.Parse(builder, "glUniform4fv(1,2,[0,1,2,3,4,5,6,7])");
@@ -221,18 +210,64 @@ public class SampleView extends ViewPart implements Runnable {
                         "void glShaderSource(shader=4, count=1, string=\"dksjafhskjahourehghskjg\", length=0x0)");
     }
 
-    public void CreateView(Composite parent) {
-        viewer = new ListViewer(parent);
+    public void CreateLeftPane(Composite parent) {
+        Composite composite = new Composite(parent, 0);
+
+        GridLayout gridLayout = new GridLayout();
+        gridLayout.numColumns = 1;
+        composite.setLayout(gridLayout);
+
+        frameNum = new Slider(composite, SWT.BORDER | SWT.HORIZONTAL);
+        frameNum.setMinimum(0);
+        frameNum.setMaximum(1);
+        frameNum.setSelection(0);
+        frameNum.addSelectionListener(this);
+
+        GridData gridData = new GridData();
+        gridData.horizontalAlignment = SWT.FILL;
+        gridData.grabExcessHorizontalSpace = true;
+        gridData.verticalAlignment = SWT.FILL;
+        frameNum.setLayoutData(gridData);
+
+        Table table = new Table(composite, SWT.H_SCROLL | SWT.V_SCROLL | SWT.MULTI
+                | SWT.FULL_SELECTION);
+        TableLayout layout = new TableLayout();
+        table.setLayout(layout);
+        table.setLinesVisible(true);
+        table.setHeaderVisible(true);
+        String[] headings = {
+                "Name", "Elapsed (ms)", "Detail"
+        };
+        int[] weights = {
+                50, 16, 60
+        };
+        int[] widths = {
+                180, 90, 200
+        };
+        for (int i = 0; i < headings.length; i++) {
+            layout.addColumnData(new ColumnWeightData(weights[i], widths[i],
+                    true));
+            TableColumn nameCol = new TableColumn(table, SWT.NONE, i);
+            nameCol.setText(headings[i]);
+        }
+
+        // viewer = new TableViewer(table);
+        viewer = new ListViewer(composite, SWT.DEFAULT);
         viewer.getList().setFont(new Font(viewer.getList().getDisplay(), "Courier", 10, SWT.BOLD));
-        viewContentProvider = new ViewContentProvider();
-        viewer.setContentProvider(viewContentProvider);
-        viewer.setLabelProvider(new ViewLabelProvider());
+        ViewContentProvider contentProvider = new ViewContentProvider();
+        viewer.setContentProvider(contentProvider);
+        viewer.setLabelProvider(contentProvider);
         // viewer.setSorter(new NameSorter());
-        viewer.setInput(getViewSite());
         viewer.setFilters(new ViewerFilter[] {
                 new Filter()
         });
 
+        gridData = new GridData();
+        gridData.horizontalAlignment = SWT.FILL;
+        gridData.grabExcessHorizontalSpace = true;
+        gridData.verticalAlignment = SWT.FILL;
+        gridData.grabExcessVerticalSpace = true;
+        viewer.getControl().setLayoutData(gridData);
     }
 
     /**
@@ -241,14 +276,11 @@ public class SampleView extends ViewPart implements Runnable {
      */
     @Override
     public void createPartControl(Composite parent) {
-        CreateView(parent);
+        CreateLeftPane(parent);
 
         // Create the help context id for the viewer's control
         PlatformUI.getWorkbench().getHelpSystem()
                 .setHelp(viewer.getControl(), "GLESv2DebuggerClient.viewer");
-
-        // layoutComposite = new LayoutComposite(parent, 0);
-        // layoutComposite.setLayout(new FillLayout());
 
         tabFolder = new TabFolder(parent, SWT.BORDER);
 
@@ -276,7 +308,8 @@ public class SampleView extends ViewPart implements Runnable {
         tabItemShaderEditor.setControl(shaderEditor);
 
         contextViewer = new TreeViewer(tabFolder);
-        ContextViewProvider contextViewProvider = new ContextViewProvider();
+        ContextViewProvider contextViewProvider = new ContextViewProvider(this);
+        contextViewer.addSelectionChangedListener(contextViewProvider);
         contextViewer.setContentProvider(contextViewProvider);
         contextViewer.setLabelProvider(contextViewProvider);
         tabContextViewer = new TabItem(tabFolder, SWT.NONE);
@@ -363,7 +396,6 @@ public class SampleView extends ViewPart implements Runnable {
 
         makeActions();
         hookContextMenu();
-        hookDoubleClickAction();
         hookSelectionChanged();
         contributeToActionBars();
     }
@@ -473,6 +505,24 @@ public class SampleView extends ViewPart implements Runnable {
             }
         });
 
+        actContext = new Action("Context: 0x", Action.AS_DROP_DOWN_MENU) {
+            @Override
+            public void run()
+                              {
+                                  if (debugContexts.size() < 2)
+                                      return;
+                                  final String idStr = this.getText().substring(
+                                          "Context: 0x".length());
+                                  if (idStr.length() == 0)
+                                      return;
+                                  final int contextId = Integer.parseInt(idStr, 16);
+                                  int index = debugContexts.indexOfKey(contextId);
+                                  index = (index + 1) % debugContexts.size();
+                                  ChangeContext(debugContexts.valueAt(index));
+                              }
+        };
+        manager.add(actContext);
+
         actionPort = new Action("5039", Action.AS_DROP_DOWN_MENU)
         {
             @Override
@@ -521,30 +571,16 @@ public class SampleView extends ViewPart implements Runnable {
         };
         actionConnect.setText("Connect");
         actionConnect.setToolTipText("Connect to debuggee");
-
-        doubleClickAction = new Action() {
-            @Override
-            public void run() {
-                IStructuredSelection selection = (IStructuredSelection) viewer
-                        .getSelection();
-                MessageData msgData = (MessageData) selection.getFirstElement();
-            }
-        };
-    }
-
-    private void hookDoubleClickAction() {
-        viewer.addDoubleClickListener(new IDoubleClickListener() {
-            @Override
-            public void doubleClick(DoubleClickEvent event) {
-                doubleClickAction.run();
-            }
-        });
     }
 
     void MessageDataSelected(final MessageData msgData) {
         if (null == msgData)
             return;
-        contextViewer.setInput(msgData.context);
+        if (frameNum.getSelection() == frameNum.getMaximum())
+            return; // scale max cannot overlap min, so max is array size
+        final Frame frame = current.frames.get(frameNum.getSelection());
+        final Context context = current.ComputeContext(frame, msgData);
+        contextViewer.setInput(context);
         if (null != msgData.image) {
             canvas.setBackgroundImage(msgData.image);
             tabFolder.setSelection(tabItemImage);
@@ -615,16 +651,32 @@ public class SampleView extends ViewPart implements Runnable {
         } catch (IOException e1) {
             showError(e1);
         }
-        ArrayList<MessageData> msgs = new ArrayList<MessageData>();
-        boolean shaderEditorUpdate = false;
+
+        int newMessages = 0;
+
+        boolean shaderEditorUpdate = false, currentUpdate = false;
         while (running) {
             if (!messageQueue.IsRunning())
                 break;
 
-            Message msg = messageQueue.RemoveCompleteMessage(0);
-            if (msgs.size() > 60 || (msgs.size() > 0 && null == msg)) {
-                viewContentProvider.add(msgs);
-                msgs.clear();
+            final Message oriMsg = messageQueue.RemoveCompleteMessage(0);
+            if (newMessages > 60 || (newMessages > 0 && null == oriMsg)) {
+                newMessages = 0;
+
+                if (currentUpdate || current == null)
+                    getSite().getShell().getDisplay().syncExec(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (current == null)
+                                ChangeContext(debugContexts.valueAt(0));
+                            else
+                                viewer.refresh(false);
+                            frameNum.setMaximum(current.frames.size());
+                            if (actionAutoScroll.isChecked())
+                                viewer.getList().setSelection(viewer.getList().getItemCount() - 1);
+                        }
+                    });
+                currentUpdate = false;
 
                 if (shaderEditorUpdate)
                     this.getSite().getShell().getDisplay().syncExec(new Runnable() {
@@ -635,7 +687,7 @@ public class SampleView extends ViewPart implements Runnable {
                     });
                 shaderEditorUpdate = false;
             }
-            if (null == msg) {
+            if (null == oriMsg) {
                 try {
                     Thread.sleep(1);
                     continue;
@@ -644,21 +696,20 @@ public class SampleView extends ViewPart implements Runnable {
                 }
             }
 
-            Context context = contexts.get(msg.getContextId());
-            if (null == context) {
-                context = new Context(msg.getContextId());
-                contexts.put(msg.getContextId(), context);
+            DebugContext debugContext = debugContexts.get(oriMsg.getContextId());
+            if (debugContext == null) {
+                debugContext = new DebugContext(oriMsg.getContextId());
+                debugContexts.put(oriMsg.getContextId(), debugContext);
             }
-            Context newContext = context.ProcessMessage(msg);
-            // TODO: full cloning on change not implemented yet
-            if (newContext.processed != null)
-                msg = newContext.processed;
-            contexts.put(msg.getContextId(), newContext);
-            shaderEditorUpdate |= newContext.serverShader.uiUpdate;
-            newContext.serverShader.uiUpdate = false;
 
-            final MessageData msgData = new MessageData(this.getViewSite()
-                    .getShell().getDisplay(), msg, context);
+            final MessageData msgData = debugContext.ProcessMessage(oriMsg);
+            if (current == debugContext) {
+                currentUpdate = true;
+            }
+
+            shaderEditorUpdate |= debugContext.currentContext.serverShader.uiUpdate;
+            debugContext.currentContext.serverShader.uiUpdate = false;
+
             if (null != writer) {
                 writer.write(msgData.text + "\n");
                 if (msgData.msg.getFunction() == Function.eglSwapBuffers) {
@@ -666,7 +717,7 @@ public class SampleView extends ViewPart implements Runnable {
                     writer.flush();
                 }
             }
-            msgs.add(msgData);
+            newMessages++;
         }
         if (running)
             ConnectDisconnect(); // error occurred, disconnect
@@ -674,5 +725,38 @@ public class SampleView extends ViewPart implements Runnable {
             writer.flush();
             writer.close();
         }
+    }
+
+    /** can be called from non-UI thread */
+    void ChangeContext(final DebugContext newContext) {
+        getSite().getShell().getDisplay().syncExec(new Runnable() {
+            @Override
+            public void run() {
+                current = newContext;
+                frameNum.setMaximum(current.frames.size());
+                frameNum.setSelection(0);
+                viewer.setInput(current.frames.get(frameNum.getSelection()));
+                shaderEditor.Update();
+                actContext.setText("Context: 0x" + Integer.toHexString(current.contextId));
+                getViewSite().getActionBars().getToolBarManager().update(true);
+            }
+        });
+    }
+
+    @Override
+    public void widgetSelected(SelectionEvent e) {
+        if (e.widget != frameNum)
+            assert false;
+        if (current == null)
+            return;
+        if (frameNum.getSelection() == current.frames.size())
+            return; // scale maximum cannot overlap minimum
+        Frame frame = current.frames.get(frameNum.getSelection());
+        viewer.setInput(frame);
+    }
+
+    @Override
+    public void widgetDefaultSelected(SelectionEvent e) {
+        widgetSelected(e);
     }
 }

@@ -41,7 +41,12 @@ public class GLServerState implements Cloneable {
     final Context context;
     public GLStencilState front = new GLStencilState(), back = new GLStencilState();
     public SparseIntArray enableDisables;
-    public SparseArray<Message> lastSetter; // keyed by Function.getNumber()
+
+    /** integer states set via a GL function and GLEnum; keyed by GLEnum.value */
+    public SparseArray<Message> integers;
+
+    /** states set only via a GL function; keyed by Function.getNumber() */
+    public SparseArray<Message> lastSetter;
 
     GLServerState(final Context context) {
         this.context = context;
@@ -62,36 +67,61 @@ public class GLServerState implements Cloneable {
         lastSetter.put(Function.glBlendEquationSeparate.getNumber(), null);
         // glBlendFunc overwrites glBlendFuncSeparate
         lastSetter.put(Function.glBlendFuncSeparate.getNumber(), null);
+        lastSetter.put(Function.glClearColor.getNumber(), null);
+        lastSetter.put(Function.glClearDepthf.getNumber(), null);
+        lastSetter.put(Function.glClearStencil.getNumber(), null);
         lastSetter.put(Function.glColorMask.getNumber(), null);
+        lastSetter.put(Function.glCullFace.getNumber(), null);
         lastSetter.put(Function.glDepthMask.getNumber(), null);
         lastSetter.put(Function.glDepthFunc.getNumber(), null);
+        lastSetter.put(Function.glDepthRangef.getNumber(), null);
+        lastSetter.put(Function.glFrontFace.getNumber(), null);
+        lastSetter.put(Function.glLineWidth.getNumber(), null);
+        lastSetter.put(Function.glPolygonOffset.getNumber(), null);
+        lastSetter.put(Function.glSampleCoverage.getNumber(), null);
         lastSetter.put(Function.glScissor.getNumber(), null);
         lastSetter.put(Function.glStencilMaskSeparate.getNumber(), null);
+        lastSetter.put(Function.glViewport.getNumber(), null);
+
+        integers = new SparseArray<Message>();
+        integers.put(GLEnum.GL_PACK_ALIGNMENT.value, null);
+        integers.put(GLEnum.GL_UNPACK_ALIGNMENT.value, null);
     }
 
-    // returns instance if processed (returns new instance if changed)
-    public GLServerState ProcessMessage(final Message msg) {
+    /** returns true if processed */
+    public boolean ProcessMessage(final Message msg) {
         switch (msg.getFunction()) {
             case glBlendColor:
-                return Setter(msg);
             case glBlendEquation:
-                return Setter(msg);
             case glBlendEquationSeparate:
-                return Setter(msg);
             case glBlendFunc:
-                return Setter(msg);
             case glBlendFuncSeparate:
-                return Setter(msg);
+            case glClearColor:
+            case glClearDepthf:
+            case glClearStencil:
             case glColorMask:
-                return Setter(msg);
+            case glCullFace:
             case glDepthMask:
-                return Setter(msg);
             case glDepthFunc:
+            case glDepthRangef:
                 return Setter(msg);
             case glDisable:
                 return EnableDisable(false, msg);
             case glEnable:
                 return EnableDisable(true, msg);
+            case glFrontFace:
+            case glLineWidth:
+                return Setter(msg);
+            case glPixelStorei:
+                if (GLEnum.valueOf(msg.getArg0()) == GLEnum.GL_PACK_ALIGNMENT)
+                    integers.put(msg.getArg0(), msg);
+                else if (GLEnum.valueOf(msg.getArg0()) == GLEnum.GL_UNPACK_ALIGNMENT)
+                    integers.put(msg.getArg0(), msg);
+                else
+                    assert false;
+                return true;
+            case glPolygonOffset:
+            case glSampleCoverage:
             case glScissor:
                 return Setter(msg);
             case glStencilFunc: {
@@ -104,7 +134,6 @@ public class GLServerState implements Cloneable {
             case glStencilFuncSeparate:
                 return glStencilFuncSeparate(msg);
             case glStencilMask:
-                return Setter(msg);
             case glStencilMaskSeparate:
                 return Setter(msg);
             case glStencilOp: {
@@ -117,43 +146,42 @@ public class GLServerState implements Cloneable {
             }
             case glStencilOpSeparate:
                 return glStencilOpSeparate(msg);
+            case glViewport:
+                return Setter(msg);
             default:
-                return null;
+                return false;
         }
     }
 
-    GLServerState Setter(final Message msg) {
-        GLServerState newState = (GLServerState) this.clone();
-        // TODO: compare for change
+    boolean Setter(final Message msg) {
         switch (msg.getFunction()) {
             case glBlendFunc:
-                newState.lastSetter.put(Function.glBlendFuncSeparate.getNumber(), msg);
+                lastSetter.put(Function.glBlendFuncSeparate.getNumber(), msg);
                 break;
             case glBlendEquation:
-                newState.lastSetter.put(Function.glBlendEquationSeparate.getNumber(), msg);
+                lastSetter.put(Function.glBlendEquationSeparate.getNumber(), msg);
                 break;
             case glStencilMask:
-                newState.lastSetter.put(Function.glStencilMaskSeparate.getNumber(), msg);
+                lastSetter.put(Function.glStencilMaskSeparate.getNumber(), msg);
                 break;
             default:
-                newState.lastSetter.put(msg.getFunction().getNumber(), msg);
+                lastSetter.put(msg.getFunction().getNumber(), msg);
                 break;
         }
-        return newState;
+        return true;
     }
 
-    GLServerState EnableDisable(boolean enable, final Message msg) {
+    boolean EnableDisable(boolean enable, final Message msg) {
         int index = enableDisables.indexOfKey(msg.getArg0());
         assert index >= 0;
         if ((enableDisables.valueAt(index) != 0) == enable)
-            return this;
-        GLServerState newState0 = (GLServerState) this.clone();
-        newState0.enableDisables.put(msg.getArg0(), enable ? 1 : 0);
-        return newState0;
+            return true; // TODO: redundant
+        enableDisables.put(msg.getArg0(), enable ? 1 : 0);
+        return true;
     }
 
     // void StencilFuncSeparate( enum face, enum func, int ref, uint mask )
-    GLServerState glStencilFuncSeparate(final Message msg) {
+    boolean glStencilFuncSeparate(final Message msg) {
         GLEnum ff = front.func, bf = back.func;
         int fr = front.ref, br = back.ref;
         int fm = front.mask, bm = back.mask;
@@ -170,19 +198,18 @@ public class GLServerState implements Cloneable {
         }
         if (ff == front.func && fr == front.ref && fm == front.mask)
             if (bf == back.func && br == back.ref && bm == back.mask)
-                return this;
-        GLServerState newState = (GLServerState) this.clone();
-        newState.front.func = ff;
-        newState.front.ref = fr;
-        newState.front.mask = fm;
-        newState.back.func = bf;
-        newState.back.ref = br;
-        newState.back.mask = bm;
-        return newState;
+                return true; // TODO: redundant
+        front.func = ff;
+        front.ref = fr;
+        front.mask = fm;
+        back.func = bf;
+        back.ref = br;
+        back.mask = bm;
+        return true;
     }
 
     // void StencilOpSeparate( enum face, enum sfail, enum dpfail, enum dppass )
-    GLServerState glStencilOpSeparate(final Message msg) {
+    boolean glStencilOpSeparate(final Message msg) {
         GLEnum fsf = front.sf, fdf = front.df, fdp = front.dp;
         GLEnum bsf = back.sf, bdf = back.df, bdp = back.dp;
         final GLEnum face = GLEnum.valueOf(msg.getArg0());
@@ -198,39 +225,41 @@ public class GLServerState implements Cloneable {
         }
         if (fsf == front.sf && fdf == front.df && fdp == front.dp)
             if (bsf == back.sf && bdf == back.df && bdp == back.dp)
-                return this;
-        GLServerState newState = (GLServerState) this.clone();
-        newState.front.sf = fsf;
-        newState.front.df = fdf;
-        newState.front.dp = fdp;
-        newState.back.sf = bsf;
-        newState.back.df = bdf;
-        newState.back.dp = bdp;
-        return newState;
+                return true; // TODO: redundant
+        front.sf = fsf;
+        front.df = fdf;
+        front.dp = fdp;
+        back.sf = bsf;
+        back.df = bdf;
+        back.dp = bdp;
+        return true;
     }
 
+    /** deep copy */
     @Override
-    public Object clone() {
+    public GLServerState clone() {
         try {
             GLServerState newState = (GLServerState) super.clone();
             newState.front = (GLStencilState) front.clone();
             newState.back = (GLStencilState) back.clone();
 
             newState.enableDisables = new SparseIntArray(enableDisables.size());
-            for (int i = 0; i < enableDisables.size(); i++) {
-                final int key = enableDisables.keyAt(i);
-                newState.enableDisables.append(key, enableDisables.valueAt(i));
-            }
+            for (int i = 0; i < enableDisables.size(); i++)
+                newState.enableDisables.append(enableDisables.keyAt(i),
+                        enableDisables.valueAt(i));
+
+            newState.integers = new SparseArray<Message>(integers.size());
+            for (int i = 0; i < integers.size(); i++)
+                newState.integers.append(integers.keyAt(i), integers.valueAt(i));
 
             newState.lastSetter = new SparseArray<Message>(lastSetter.size());
-            for (int i = 0; i < lastSetter.size(); i++) {
-                final int key = lastSetter.keyAt(i);
-                newState.lastSetter.append(key, lastSetter.valueAt(i));
-            }
+            for (int i = 0; i < lastSetter.size(); i++)
+                newState.lastSetter.append(lastSetter.keyAt(i), lastSetter.valueAt(i));
 
             return newState;
         } catch (CloneNotSupportedException e) {
             e.printStackTrace();
+            assert false;
             return null;
         }
     }
