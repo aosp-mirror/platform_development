@@ -77,7 +77,7 @@ public class BreakpointOption extends ScrolledComposite implements SelectionList
         Message.Builder builder = Message.newBuilder();
         builder.setContextId(0); // FIXME: proper context id
         builder.setType(Type.Response);
-        builder.setExpectResponse(true);
+        builder.setExpectResponse(false);
         builder.setFunction(Function.SETPROP);
         builder.setProp(Prop.ExpectResponse);
         builder.setArg0(function.getNumber());
@@ -99,6 +99,10 @@ public class BreakpointOption extends ScrolledComposite implements SelectionList
     private Function lastFunction = Function.NEG;
 
     public boolean ProcessMessage(final MessageQueue queue, final Message msg) throws IOException {
+        // use DefaultProcessMessage just to register the GL call
+        // but do not send response
+        if (msg.getType() == Type.BeforeCall || msg.getType() == Type.AfterCall)
+            queue.DefaultProcessMessage(msg, true, false);
         final Message.Builder builder = Message.newBuilder();
         builder.setContextId(msg.getContextId());
         builder.setType(Type.Response);
@@ -118,7 +122,7 @@ public class BreakpointOption extends ScrolledComposite implements SelectionList
                 }
                 if (msg.getType() == Type.AfterCall)
                 {
-                    call = "s";
+                    call = "skip " + call;
                     builder.setFunction(Function.SKIP);
                 }
                 else if (msg.getType() == Type.BeforeCall)
@@ -130,6 +134,8 @@ public class BreakpointOption extends ScrolledComposite implements SelectionList
                 {
                     assert msg.getType() == Type.AfterGeneratedCall;
                     assert msg.getFunction() == lastFunction;
+                    call = "skip" + call;
+                    builder.setFunction(Function.SKIP);
                 }
                 InputDialog inputDialog = new InputDialog(shell,
                             msg.getFunction().toString() + " " + msg.getType().toString(),
@@ -139,7 +145,12 @@ public class BreakpointOption extends ScrolledComposite implements SelectionList
                 {
                     String s = inputDialog.getValue().substring(0, 1).toLowerCase();
                     if (s.startsWith("s"))
+                    {
                         builder.setFunction(Function.SKIP);
+                        // AfterCall is skipped, so push BeforeCall to complete
+                        if (msg.getType() == Type.BeforeCall)
+                            queue.CompletePartialMessage(msg.getContextId());
+                    }
                     else if (s.startsWith("c"))
                         builder.setFunction(Function.CONTINUE);
                     else if (s.startsWith("r"))
@@ -147,6 +158,7 @@ public class BreakpointOption extends ScrolledComposite implements SelectionList
                         Button btn = buttonsBreak.get(msg.getFunction());
                         btn.setSelection(false);
                         SetBreakpoint(msg.getFunction(), false);
+                        builder.setExpectResponse(false);
                     }
                     else
                     {
@@ -154,9 +166,7 @@ public class BreakpointOption extends ScrolledComposite implements SelectionList
                         lastFunction = builder.getFunction();
                     }
                 }
-                else
-                    assert false; // TODO: cancel behaviour
-                // TODO: add/modify/remove completed messages in queue
+                // else defaults to continue BeforeCall and skip AfterCall
             }
         });
         queue.SendMessage(builder.build());

@@ -28,30 +28,35 @@ import org.eclipse.swt.custom.StyleRange;
 import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.List;
 import org.eclipse.swt.widgets.ToolBar;
 import org.eclipse.swt.widgets.ToolItem;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 
 public class ShaderEditor extends Composite implements SelectionListener, ExtendedModifyListener {
     SampleView sampleView;
 
     ToolBar toolbar;
-    ToolItem uploadShader, restoreShader;
+    ToolItem uploadShader, restoreShader, currentPrograms;
     List list;
     StyledText styledText;
 
     GLShader current;
 
     ArrayList<GLShader> shadersToUpload = new ArrayList<GLShader>();
-
-    ArrayList<Message> cmds = new ArrayList<Message>();
 
     ShaderEditor(SampleView sampleView, Composite parent) {
         super(parent, 0);
@@ -70,6 +75,9 @@ public class ShaderEditor extends Composite implements SelectionListener, Extend
         restoreShader = new ToolItem(toolbar, SWT.PUSH);
         restoreShader.setText("Original Shader");
         restoreShader.addSelectionListener(this);
+
+        currentPrograms = new ToolItem(toolbar, SWT.PUSH);
+        currentPrograms.setText("Current Programs: ");
 
         list = new List(this, SWT.V_SCROLL);
         list.setFont(new Font(parent.getDisplay(), "Courier", 10, 0));
@@ -93,7 +101,12 @@ public class ShaderEditor extends Composite implements SelectionListener, Extend
 
     public void Update() {
         list.removeAll();
+        String progs = "Current Programs: ";
         for (Context context : sampleView.contexts.values()) {
+            if (context.serverShader.current != null) {
+                progs += context.serverShader.current.name + "(0x";
+                progs += Integer.toHexString(context.contextId) + ") ";
+            }
             for (GLShader shader : context.serverShader.privateShaders.values()) {
                 StringBuilder builder = new StringBuilder();
                 builder.append(String.format("%08X", context.contextId));
@@ -117,16 +130,62 @@ public class ShaderEditor extends Composite implements SelectionListener, Extend
                 list.add(builder.toString());
             }
         }
+        // if (!progs.equals(currentPrograms.getText())) {
+        currentPrograms.setText(progs);
+
+        // }
+        toolbar.update();
     }
 
     void UploadShader() {
         current.source = styledText.getText();
 
+        try {
+            File file = File.createTempFile("shader",
+                    current.type == GLEnum.GL_VERTEX_SHADER ? ".vert" : ".frag");
+            FileWriter fileWriter = new FileWriter(file, false);
+            fileWriter.write(current.source);
+            fileWriter.close();
+
+            ProcessBuilder processBuilder = new ProcessBuilder(
+                    "./glsl_compiler", "--glsl-es", file.getAbsolutePath());
+            final Process process = processBuilder.start();
+            InputStream is = process.getInputStream();
+            InputStreamReader isr = new InputStreamReader(is);
+            BufferedReader br = new BufferedReader(isr);
+            String line;
+            String infolog = "";
+
+            styledText.setLineBackground(0, styledText.getLineCount(), null);
+
+            while ((line = br.readLine()) != null) {
+                infolog += line;
+                if (!line.startsWith("0:"))
+                    continue;
+                String[] details = line.split(":|\\(|\\)");
+                final int ln = Integer.parseInt(details[1]);
+                if (ln > 0) // usually line 0 means errors other than syntax
+                    styledText.setLineBackground(ln - 1, 1,
+                            new Color(Display.getCurrent(), 255, 230, 230));
+            }
+            if (infolog.length() > 0) {
+                MessageDialog.openWarning(getShell(),
+                        "Shader Syntax Error, Upload Aborted", infolog);
+                return;
+            }
+
+        } catch (IOException e) {
+            sampleView.showError(e);
+        }
+
         // add the initial command, which when read by server will set
         // expectResponse for the message loop and go into message exchange
         synchronized (shadersToUpload) {
-            if (shadersToUpload.size() > 0) {
-                MessageDialog.openWarning(this.getShell(), "",
+            for (GLShader shader : shadersToUpload) {
+                if (shader.context.context.contextId != current.context.context.contextId)
+                    continue;
+                MessageDialog.openWarning(this.getShell(), "Context 0x" +
+                        Integer.toHexString(current.context.context.contextId),
                         "Previous shader upload not complete, try again");
                 return;
             }
@@ -168,16 +227,22 @@ public class ShaderEditor extends Composite implements SelectionListener, Extend
         synchronized (shadersToUpload) {
             if (shadersToUpload.size() == 0)
                 return false;
-            shader = shadersToUpload.get(0);
             boolean matchingContext = false;
-            for (Context ctx : shader.context.context.shares)
-                if (ctx.contextId == msg.getContextId()) {
-                    matchingContext = true;
+            for (int i = 0; i < shadersToUpload.size(); i++) {
+                shader = shadersToUpload.get(i);
+                for (Context ctx : shader.context.context.shares)
+                    if (ctx.contextId == contextId) {
+                        matchingContext = true;
+                        break;
+                    }
+                if (matchingContext)
+                {
+                    shadersToUpload.remove(i);
                     break;
                 }
+            }
             if (!matchingContext)
                 return false;
-            shadersToUpload.remove(0);
         }
 
         // glShaderSource was already sent to trigger set expectResponse

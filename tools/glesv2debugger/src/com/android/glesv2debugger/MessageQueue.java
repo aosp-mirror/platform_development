@@ -150,11 +150,20 @@ public class MessageQueue implements Runnable {
         return partials.get(contextId);
     }
 
+    // used to add BeforeCall to complete if it was skipped
+    void CompletePartialMessage(final int contextId) {
+        final Message msg = partials.remove(contextId);
+        assert msg != null;
+        assert msg.getType() == Type.BeforeCall;
+        synchronized (complete) {
+            complete.add(msg);
+        }
+    }
+
     // can be used by other message processor as default processor
     void DefaultProcessMessage(final Message msg, boolean expectResponse,
             boolean sendResponse)
             throws IOException {
-        assert !msg.getExpectResponse();
         final int contextId = msg.getContextId();
         final Message.Builder builder = Message.newBuilder();
         builder.setContextId(contextId);
@@ -230,6 +239,7 @@ public class MessageQueue implements Runnable {
 
     private void SendMessage(final DataOutputStream dos, final Message message)
             throws IOException {
+        assert message.getFunction() != Function.NEG;
         final byte[] data = message.toByteArray();
         dos.writeInt(data.length);
         dos.write(data);
