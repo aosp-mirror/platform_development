@@ -17,13 +17,14 @@
 package com.android.glesv2debugger;
 
 import com.android.glesv2debugger.DebuggerMessage.Message;
+import com.android.glesv2debugger.DebuggerMessage.Message.Function;
 
 import org.eclipse.swt.graphics.Device;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
 
 public class MessageData {
-    public Message.Function function;
+    public final Message msg;
     public Image image; // texture
     public String shader; // shader source
     public String[] columns;
@@ -32,11 +33,12 @@ public class MessageData {
     public GLEnum dataType; // could be float, int; mainly for formatting use
     
     public MessageData(final Device device, final Message msg) {
+        this.msg = msg;
         image = null;
         shader = null;
         data = null;
         StringBuilder builder = new StringBuilder();
-        function = msg.getFunction();
+        final Function function = msg.getFunction();
         ImageData imageData = null;
         if (function != Message.Function.ACK)
             assert msg.hasTime();

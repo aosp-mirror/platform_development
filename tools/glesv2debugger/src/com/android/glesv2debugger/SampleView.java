@@ -108,6 +108,7 @@ public class SampleView extends ViewPart implements Runnable {
     Action actionAutoScroll;
     Action actionFilter;
     Action actionCapture;
+    Action actionPort;
 
     Point origin = new Point(0, 0); // for smooth scrolling canvas
     String[] filters = null;
@@ -473,6 +474,22 @@ public class SampleView extends ViewPart implements Runnable {
                 manager.update(true);
             }
         });
+
+        actionPort = new Action("5039", Action.AS_DROP_DOWN_MENU)
+        {
+            @Override
+            public void run() {
+                org.eclipse.jface.dialogs.InputDialog dialog = new org.eclipse.jface.dialogs.InputDialog(
+                        shell, "Port",
+                        "Debugger port",
+                        actionPort.getText(), null);
+                if (Window.OK == dialog.open()) {
+                    actionPort.setText(dialog.getValue());
+                    manager.update(true);
+                }
+            }
+        };
+        manager.add(actionPort);
     }
 
     private void ConnectDisconnect() {
@@ -564,7 +581,7 @@ public class SampleView extends ViewPart implements Runnable {
                         MessageData msgData = (MessageData) objects[i];
                         if (null == msgData)
                             continue;
-                        totalTime += Float.parseFloat(msgData.columns[1]);
+                        totalTime += msgData.msg.getTime();
                     }
                     viewer.getTable().getColumn(1).setText(Float.toString(totalTime));
                     return;

@@ -30,35 +30,6 @@ public class MessageProcessor {
         MessageDialog.openError(null, "MessageProcessor", message);
     }
 
-    static byte[] RLEDecode(final byte[] data) {
-        byte dataSize = data[0];
-        int a = data[1] & 0xff, b = data[2] & 0xff, c = data[3] & 0xff, d = data[4] & 0xff;
-        int count = (d << 24) | (c << 16) | (b << 8) | a;
-        byte[] buffer = new byte[count * dataSize];
-        int write = 0;
-        int i = 5;
-        for (i = 5; i < data.length;) {
-            byte flag = data[i];
-            int repeat = (flag & 0x7f) + 1;
-            assert 0 < repeat && repeat < 129;
-            i++;
-            if (0x80 == (flag & 0x80)) {
-                for (int j = 0; j < repeat; j++)
-                    for (int k = 0; k < dataSize; k++)
-                        buffer[write++] = data[i + k];
-                i += dataSize;
-            } else // literal runs
-            {
-                for (int j = 0; j < repeat; j++)
-                    for (int k = 0; k < dataSize; k++)
-                        buffer[write++] = data[i++];
-            }
-        }
-        assert write == count * dataSize;
-        assert i == data.length;
-        return buffer;
-    }
-
     public static ImageData ReceiveImage(int width, int height, int format,
             int type, byte[] data) {
         assert width > 0 && height > 0;
@@ -121,9 +92,12 @@ public class MessageProcessor {
                 showError("unsupported texture format: " + format);
                 return null;
         }
-        // data = RLEDecode(data);
+        byte[] pixels = new byte[width * height * (bpp / 8)];
+        int decompressed = org.liblzf.CLZF.lzf_decompress(data, data.length, pixels, pixels.length);
+        assert decompressed == width * height * (bpp / 8);
+
         PaletteData palette = new PaletteData(redMask, greenMask, blueMask);
-        return new ImageData(width, height, bpp, palette, 1, data);
+        return new ImageData(width, height, bpp, palette, 1, pixels);
     }
 
     static public float[] ReceiveData(final GLEnum type, final ByteString data) {
