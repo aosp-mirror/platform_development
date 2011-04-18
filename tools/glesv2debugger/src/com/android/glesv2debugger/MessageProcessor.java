@@ -30,6 +30,8 @@ public class MessageProcessor {
         MessageDialog.openError(null, "MessageProcessor", message);
     }
 
+    public static byte [] ref; // inout; used for glReadPixels
+
     public static ImageData ReceiveImage(int width, int height, int format,
             int type, byte[] data) {
         assert width > 0 && height > 0;
@@ -92,12 +94,20 @@ public class MessageProcessor {
                 showError("unsupported texture format: " + format);
                 return null;
         }
+
         byte[] pixels = new byte[width * height * (bpp / 8)];
         int decompressed = org.liblzf.CLZF.lzf_decompress(data, data.length, pixels, pixels.length);
         assert decompressed == width * height * (bpp / 8);
 
         PaletteData palette = new PaletteData(redMask, greenMask, blueMask);
-        return new ImageData(width, height, bpp, palette, 1, pixels);
+        if (null != ref) {
+            if (ref.length < decompressed)
+                ref = new byte [width * height * (bpp / 8)];
+            for (int i = 0; i < ref.length; i++)
+                ref[i] ^= pixels[i];
+            return new ImageData(width, height, bpp, palette, 1, ref);
+        } else
+            return new ImageData(width, height, bpp, palette, 1, pixels);
     }
 
     static public float[] ReceiveData(final GLEnum type, final ByteString data) {

@@ -483,6 +483,45 @@ public final class DebuggerMessage {
       // @@protoc_insertion_point(enum_scope:com.android.glesv2debugger.Message.Type)
     }
     
+    public enum DataType
+        implements com.google.protobuf.Internal.EnumLite {
+      ReferencedImage(0, 0),
+      NonreferencedImage(1, 1),
+      ;
+
+
+      public final int getNumber() { return value; }
+
+      public static DataType valueOf(int value) {
+        switch (value) {
+          case 0: return ReferencedImage;
+          case 1: return NonreferencedImage;
+          default: return null;
+        }
+      }
+
+      public static com.google.protobuf.Internal.EnumLiteMap<DataType>
+          internalGetValueMap() {
+        return internalValueMap;
+      }
+      private static com.google.protobuf.Internal.EnumLiteMap<DataType>
+          internalValueMap =
+            new com.google.protobuf.Internal.EnumLiteMap<DataType>() {
+              public DataType findValueByNumber(int number) {
+                return DataType.valueOf(number)
+      ;        }
+            };
+
+      private final int index;
+      private final int value;
+      private DataType(int index, int value) {
+        this.index = index;
+        this.value = value;
+      }
+
+      // @@protoc_insertion_point(enum_scope:com.android.glesv2debugger.Message.DataType)
+    }
+
     public enum Prop
         implements com.google.protobuf.Internal.EnumLite {
       Capture(0, 0),
@@ -627,6 +666,27 @@ public final class DebuggerMessage {
     public boolean hasData() { return hasData; }
     public com.google.protobuf.ByteString getData() { return data_; }
     
+    // optional .com.android.glesv2debugger.Message.DataType data_type = 23;
+    public static final int DATA_TYPE_FIELD_NUMBER = 23;
+    private boolean hasDataType;
+    private com.android.glesv2debugger.DebuggerMessage.Message.DataType dataType_;
+    public boolean hasDataType() { return hasDataType; }
+    public com.android.glesv2debugger.DebuggerMessage.Message.DataType getDataType() { return dataType_; }
+
+    // optional int32 pixel_format = 24;
+    public static final int PIXEL_FORMAT_FIELD_NUMBER = 24;
+    private boolean hasPixelFormat;
+    private int pixelFormat_ = 0;
+    public boolean hasPixelFormat() { return hasPixelFormat; }
+    public int getPixelFormat() { return pixelFormat_; }
+
+    // optional int32 pixel_type = 25;
+    public static final int PIXEL_TYPE_FIELD_NUMBER = 25;
+    private boolean hasPixelType;
+    private int pixelType_ = 0;
+    public boolean hasPixelType() { return hasPixelType; }
+    public int getPixelType() { return pixelType_; }
+
     // optional float time = 11;
     public static final int TIME_FIELD_NUMBER = 11;
     private boolean hasTime;
@@ -651,6 +711,7 @@ public final class DebuggerMessage {
     private void initFields() {
       function_ = com.android.glesv2debugger.DebuggerMessage.Message.Function.NEG;
       type_ = com.android.glesv2debugger.DebuggerMessage.Message.Type.BeforeCall;
+      dataType_ = com.android.glesv2debugger.DebuggerMessage.Message.DataType.ReferencedImage;
       prop_ = com.android.glesv2debugger.DebuggerMessage.Message.Prop.Capture;
     }
     public final boolean isInitialized() {
@@ -717,6 +778,15 @@ public final class DebuggerMessage {
       }
       if (hasClock()) {
         output.writeFloat(22, getClock());
+      }
+      if (hasDataType()) {
+        output.writeEnum(23, getDataType().getNumber());
+      }
+      if (hasPixelFormat()) {
+        output.writeInt32(24, getPixelFormat());
+      }
+      if (hasPixelType()) {
+        output.writeInt32(25, getPixelType());
       }
     }
     
@@ -797,6 +867,18 @@ public final class DebuggerMessage {
       if (hasClock()) {
         size += com.google.protobuf.CodedOutputStream
           .computeFloatSize(22, getClock());
+      }
+      if (hasDataType()) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeEnumSize(23, getDataType().getNumber());
+      }
+      if (hasPixelFormat()) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(24, getPixelFormat());
+      }
+      if (hasPixelType()) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(25, getPixelType());
       }
       memoizedSerializedSize = size;
       return size;
@@ -987,6 +1069,15 @@ public final class DebuggerMessage {
         if (other.hasData()) {
           setData(other.getData());
         }
+        if (other.hasDataType()) {
+          setDataType(other.getDataType());
+        }
+        if (other.hasPixelFormat()) {
+          setPixelFormat(other.getPixelFormat());
+        }
+        if (other.hasPixelType()) {
+          setPixelType(other.getPixelType());
+        }
         if (other.hasTime()) {
           setTime(other.getTime());
         }
@@ -1096,6 +1187,22 @@ public final class DebuggerMessage {
             }
             case 181: {
               setClock(input.readFloat());
+              break;
+            }
+            case 184: {
+              int rawValue = input.readEnum();
+              com.android.glesv2debugger.DebuggerMessage.Message.DataType value = com.android.glesv2debugger.DebuggerMessage.Message.DataType.valueOf(rawValue);
+              if (value != null) {
+                setDataType(value);
+              }
+              break;
+            }
+            case 192: {
+              setPixelFormat(input.readInt32());
+              break;
+            }
+            case 200: {
+              setPixelType(input.readInt32());
               break;
             }
           }
@@ -1382,6 +1489,63 @@ public final class DebuggerMessage {
         return this;
       }
       
+      // optional .com.android.glesv2debugger.Message.DataType data_type = 23;
+      public boolean hasDataType() {
+        return result.hasDataType();
+      }
+      public com.android.glesv2debugger.DebuggerMessage.Message.DataType getDataType() {
+        return result.getDataType();
+      }
+      public Builder setDataType(com.android.glesv2debugger.DebuggerMessage.Message.DataType value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        result.hasDataType = true;
+        result.dataType_ = value;
+        return this;
+      }
+      public Builder clearDataType() {
+        result.hasDataType = false;
+        result.dataType_ = com.android.glesv2debugger.DebuggerMessage.Message.DataType.ReferencedImage;
+        return this;
+      }
+
+      // optional int32 pixel_format = 24;
+      public boolean hasPixelFormat() {
+        return result.hasPixelFormat();
+      }
+      public int getPixelFormat() {
+        return result.getPixelFormat();
+      }
+      public Builder setPixelFormat(int value) {
+        result.hasPixelFormat = true;
+        result.pixelFormat_ = value;
+        return this;
+      }
+      public Builder clearPixelFormat() {
+        result.hasPixelFormat = false;
+        result.pixelFormat_ = 0;
+        return this;
+      }
+
+      // optional int32 pixel_type = 25;
+      public boolean hasPixelType() {
+        return result.hasPixelType();
+      }
+      public int getPixelType() {
+        return result.getPixelType();
+      }
+      public Builder setPixelType(int value) {
+        result.hasPixelType = true;
+        result.pixelType_ = value;
+        return this;
+      }
+      public Builder clearPixelType() {
+        result.hasPixelType = false;
+        result.pixelType_ = 0;
+        return this;
+      }
+
       // optional float time = 11;
       public boolean hasTime() {
         return result.hasTime();

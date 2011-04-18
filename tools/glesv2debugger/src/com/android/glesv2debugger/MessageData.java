@@ -17,11 +17,15 @@
 package com.android.glesv2debugger;
 
 import com.android.glesv2debugger.DebuggerMessage.Message;
+import com.android.glesv2debugger.DebuggerMessage.Message.DataType;
 import com.android.glesv2debugger.DebuggerMessage.Message.Function;
 
 import org.eclipse.swt.graphics.Device;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
+import org.eclipse.swt.widgets.Display;
+
+import java.util.HashMap;
 
 public class MessageData {
     public final Message msg;
@@ -31,8 +35,8 @@ public class MessageData {
     public float[] data;
     public int maxAttrib; // used for formatting data
     public GLEnum dataType; // could be float, int; mainly for formatting use
-    
-    public MessageData(final Device device, final Message msg) {
+
+    public MessageData(final Device device, final Message msg, final Context context) {
         this.msg = msg;
         image = null;
         shader = null;
@@ -42,7 +46,7 @@ public class MessageData {
         ImageData imageData = null;
         if (function != Message.Function.ACK)
             assert msg.hasTime();
-        columns = new String [4];
+        columns = new String[4];
         columns[0] = function.toString();
         columns[1] = "";
         if (msg.hasTime())
@@ -63,7 +67,8 @@ public class MessageData {
             case glShaderSource:
                 shader = msg.getData().toStringUtf8();
                 int index = shader.indexOf('\n');
-                columns[3] += " source: " + shader.substring(0, index >= 0 ? index : shader.length()) + "...";
+                columns[3] += " source: "
+                        + shader.substring(0, index >= 0 ? index : shader.length()) + "...";
                 break;
             case glTexImage2D:
                 if (!msg.hasData())
@@ -85,18 +90,26 @@ public class MessageData {
                 image = new Image(device, imageData);
                 break;
             case glCopyTexImage2D:
-                imageData = MessageProcessor.ReceiveImage(msg.getArg5(), msg.getArg6(), GLEnum.GL_RGBA.value, GLEnum.GL_UNSIGNED_BYTE.value, msg.getData().toByteArray());
+                imageData = MessageProcessor.ReceiveImage(msg.getArg5(), msg.getArg6(),
+                        GLEnum.GL_RGBA.value, GLEnum.GL_UNSIGNED_BYTE.value, msg.getData()
+                                .toByteArray());
                 image = new Image(device, imageData);
                 break;
             case glCopyTexSubImage2D:
-                imageData = MessageProcessor.ReceiveImage(msg.getArg6(), msg.getArg7(), GLEnum.GL_RGBA.value, GLEnum.GL_UNSIGNED_BYTE.value, msg.getData().toByteArray());
+                imageData = MessageProcessor.ReceiveImage(msg.getArg6(), msg.getArg7(),
+                        GLEnum.GL_RGBA.value, GLEnum.GL_UNSIGNED_BYTE.value, msg.getData()
+                                .toByteArray());
                 image = new Image(device, imageData);
                 break;
             case glReadPixels:
                 if (!msg.hasData())
                     break;
+                if (msg.getDataType() == DataType.ReferencedImage)
+                    MessageProcessor.ref = context.readPixelRef;
                 imageData = MessageProcessor.ReceiveImage(msg.getArg2(), msg.getArg3(),
                         msg.getArg4(), msg.getArg5(), msg.getData().toByteArray());
+                context.readPixelRef = MessageProcessor.ref;
+                MessageProcessor.ref = null;
                 imageData = imageData.scaledTo(imageData.width, -imageData.height);
                 image = new Image(device, imageData);
                 break;
