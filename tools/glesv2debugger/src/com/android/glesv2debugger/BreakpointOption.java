@@ -20,6 +20,7 @@ import com.android.glesv2debugger.DebuggerMessage.Message;
 import com.android.glesv2debugger.DebuggerMessage.Message.Function;
 import com.android.glesv2debugger.DebuggerMessage.Message.Prop;
 import com.android.glesv2debugger.DebuggerMessage.Message.Type;
+
 import org.eclipse.jface.dialogs.InputDialog;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
@@ -111,9 +112,9 @@ public class BreakpointOption extends ScrolledComposite implements SelectionList
         shell.getDisplay().syncExec(new Runnable() {
             @Override
             public void run() {
-                String call = MessageFormatter.Format(msg);
-                call = call.substring(0, call.indexOf("(")) + msg.getFunction().toString()
-                        + call.substring(call.indexOf("("));
+                String call = MessageFormatter.Format(msg, false);
+                call = call.substring(0, call.indexOf("(")) + ' ' +
+                        msg.getFunction() + call.substring(call.indexOf("("));
                 if (msg.hasData() && msg.getFunction() == Function.glShaderSource)
                 {
                     int index = call.indexOf("string=") + 7;
@@ -134,7 +135,7 @@ public class BreakpointOption extends ScrolledComposite implements SelectionList
                 {
                     assert msg.getType() == Type.AfterGeneratedCall;
                     assert msg.getFunction() == lastFunction;
-                    call = "skip" + call;
+                    call = "skip " + call;
                     builder.setFunction(Function.SKIP);
                 }
                 InputDialog inputDialog = new InputDialog(shell,
@@ -164,6 +165,9 @@ public class BreakpointOption extends ScrolledComposite implements SelectionList
                     {
                         MessageParserEx.instance.Parse(builder, inputDialog.getValue());
                         lastFunction = builder.getFunction();
+                        // AfterCall is skipped, so push BeforeCall to complete
+                        if (msg.getType() == Type.BeforeCall)
+                            queue.CompletePartialMessage(msg.getContextId());
                     }
                 }
                 // else defaults to continue BeforeCall and skip AfterCall

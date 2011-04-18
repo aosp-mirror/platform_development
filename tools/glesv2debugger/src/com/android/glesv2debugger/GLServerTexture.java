@@ -139,12 +139,12 @@ public class GLServerTexture implements Cloneable {
                         if (tex2D != null)
                             return tex2D.ProcessMessage(msg);
                         return true;
-                    case GL_TEXTURE_CUBE_MAP_POSITIVE_X_OES:
-                    case GL_TEXTURE_CUBE_MAP_NEGATIVE_X_OES:
-                    case GL_TEXTURE_CUBE_MAP_POSITIVE_Y_OES:
-                    case GL_TEXTURE_CUBE_MAP_NEGATIVE_Y_OES:
-                    case GL_TEXTURE_CUBE_MAP_POSITIVE_Z_OES:
-                    case GL_TEXTURE_CUBE_MAP_NEGATIVE_Z_OES:
+                    case GL_TEXTURE_CUBE_MAP_POSITIVE_X:
+                    case GL_TEXTURE_CUBE_MAP_NEGATIVE_X:
+                    case GL_TEXTURE_CUBE_MAP_POSITIVE_Y:
+                    case GL_TEXTURE_CUBE_MAP_NEGATIVE_Y:
+                    case GL_TEXTURE_CUBE_MAP_POSITIVE_Z:
+                    case GL_TEXTURE_CUBE_MAP_NEGATIVE_Z:
                         if (texCube != null)
                             return texCube.ProcessMessage(msg);
                         return true;
@@ -159,7 +159,7 @@ public class GLServerTexture implements Cloneable {
                     if (tex2D != null && tex2D.name == name)
                         BindTexture(GLEnum.GL_TEXTURE_2D.value, 0);
                     if (texCube != null && texCube.name == name)
-                        BindTexture(GLEnum.GL_TEXTURE_CUBE_MAP_OES.value, 0);
+                        BindTexture(GLEnum.GL_TEXTURE_CUBE_MAP.value, 0);
                     if (name != 0)
                         textures.remove(name);
                 }
@@ -168,7 +168,7 @@ public class GLServerTexture implements Cloneable {
             case glGenerateMipmap:
                 if (GLEnum.valueOf(msg.getArg0()) == GLEnum.GL_TEXTURE_2D && tex2D != null)
                     return tex2D.ProcessMessage(msg);
-                else if (GLEnum.valueOf(msg.getArg0()) == GLEnum.GL_TEXTURE_CUBE_MAP_OES
+                else if (GLEnum.valueOf(msg.getArg0()) == GLEnum.GL_TEXTURE_CUBE_MAP
                         && texCube != null)
                     return texCube.ProcessMessage(msg);
                 return true;
@@ -191,11 +191,11 @@ public class GLServerTexture implements Cloneable {
                         GLEnum.GL_TEXTURE_2D));
             if (index >= 0 && index < tmu2D.length)
                 tmu2D[index] = name;
-        } else if (GLEnum.valueOf(target) == GLEnum.GL_TEXTURE_CUBE_MAP_OES) {
+        } else if (GLEnum.valueOf(target) == GLEnum.GL_TEXTURE_CUBE_MAP) {
             texCube = textures.get(name);
             if (name != 0 && texCube == null)
                 textures.put(name, texCube = new GLTexture(name,
-                        GLEnum.GL_TEXTURE_CUBE_MAP_OES));
+                        GLEnum.GL_TEXTURE_CUBE_MAP));
             if (index >= 0 && index < tmu2D.length)
                 tmu2D[index] = name;
         } else
@@ -207,7 +207,7 @@ public class GLServerTexture implements Cloneable {
         GLTexture tex = null;
         if (GLEnum.valueOf(target) == GLEnum.GL_TEXTURE_2D)
             tex = tex2D;
-        else if (GLEnum.valueOf(target) == GLEnum.GL_TEXTURE_CUBE_MAP_OES)
+        else if (GLEnum.valueOf(target) == GLEnum.GL_TEXTURE_CUBE_MAP)
             tex = texCube;
         if (tex == null)
             return true;

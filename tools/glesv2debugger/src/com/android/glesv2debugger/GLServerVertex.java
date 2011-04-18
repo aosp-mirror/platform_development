@@ -25,6 +25,7 @@ class GLBuffer implements Cloneable {
     public final int name;
     public GLEnum usage;
     public GLEnum target;
+    /** in SampleView.targetByteOrder */
     public ByteBuffer data;
 
     public GLBuffer(final int name) {
@@ -80,6 +81,8 @@ public class GLServerVertex implements Cloneable {
     public GLAttribPointer attribPointers[];
     public float defaultAttribs[][];
     int maxAttrib;
+
+    ByteBuffer[] fetchedAttribs;
 
     public GLServerVertex() {
         buffers.append(0, null);
@@ -215,9 +218,11 @@ public class GLServerVertex implements Cloneable {
         if (GLEnum.valueOf(msg.getArg0()) == GLEnum.GL_ARRAY_BUFFER) {
             attribBuffer.usage = GLEnum.valueOf(msg.getArg3());
             attribBuffer.data = msg.getData().asReadOnlyByteBuffer();
+            attribBuffer.data.order(SampleView.targetByteOrder);
         } else if (GLEnum.valueOf(msg.getArg0()) == GLEnum.GL_ELEMENT_ARRAY_BUFFER) {
             indexBuffer.usage = GLEnum.valueOf(msg.getArg3());
             indexBuffer.data = msg.getData().asReadOnlyByteBuffer();
+            indexBuffer.data.order(SampleView.targetByteOrder);
         } else
             assert false;
     }
@@ -228,6 +233,7 @@ public class GLServerVertex implements Cloneable {
         if (GLEnum.valueOf(msg.getArg0()) == GLEnum.GL_ARRAY_BUFFER) {
             if (attribBuffer.data.isReadOnly()) {
                 ByteBuffer buffer = ByteBuffer.allocate(attribBuffer.data.capacity());
+                buffer.order(SampleView.targetByteOrder);
                 buffer.put(attribBuffer.data);
                 attribBuffer.data = buffer;
             }
@@ -236,6 +242,7 @@ public class GLServerVertex implements Cloneable {
         } else if (GLEnum.valueOf(msg.getArg0()) == GLEnum.GL_ELEMENT_ARRAY_BUFFER) {
             if (indexBuffer.data.isReadOnly()) {
                 ByteBuffer buffer = ByteBuffer.allocate(indexBuffer.data.capacity());
+                buffer.order(SampleView.targetByteOrder);
                 buffer.put(indexBuffer.data);
                 indexBuffer.data = buffer;
             }
@@ -268,7 +275,8 @@ public class GLServerVertex implements Cloneable {
 
     // void glDisableVertexAttribArray(GLuint index)
     public void glDisableVertexAttribArray(Message msg) {
-        attribPointers[msg.getArg0()].enabled = false;
+        if (msg.getArg0() >= 0 && msg.getArg0() < attribPointers.length)
+            attribPointers[msg.getArg0()].enabled = false;
     }
 
     float FetchConvert(final ByteBuffer src, final GLEnum type, final boolean normalized) {
@@ -314,19 +322,49 @@ public class GLServerVertex implements Cloneable {
         return 0;
     }
 
+    static int TypeSize(final GLEnum type) {
+        switch (type) {
+            case GL_FLOAT:
+            case GL_UNSIGNED_INT:
+            case GL_INT:
+            case GL_FIXED:
+                return 4;
+            case GL_UNSIGNED_SHORT:
+            case GL_SHORT:
+                return 2;
+            case GL_UNSIGNED_BYTE:
+            case GL_BYTE:
+                return 1;
+            default:
+                assert false;
+                return 0;
+        }
+    }
+
     void Fetch(int index, final ByteBuffer nonVBO, final ByteBuffer dst) {
         for (int i = 0; i < maxAttrib; i++) {
             final GLAttribPointer attrib = attribPointers[i];
             int size = 0;
-            if (attrib.enabled)
+            if (attrib.enabled) {
                 size = attrib.size;
-            if (null != attrib.buffer) {
-                final ByteBuffer src = attrib.buffer.data;
-                src.position(attrib.ptr + i * attrib.stride);
-                dst.putFloat(FetchConvert(src, attrib.type, attrib.normalized));
-            } else
-                for (int j = 0; j < size; j++)
-                    dst.putFloat(FetchConvert(nonVBO, attrib.type, attrib.normalized));
+                final ByteBuffer fetched = fetchedAttribs[i];
+                final byte[] element = new byte[TypeSize(attrib.type) * size];
+                if (null != attrib.buffer) {
+                    final ByteBuffer src = attrib.buffer.data;
+                    src.position(attrib.ptr + index * attrib.stride);
+                    src.get(element);
+                    src.position(attrib.ptr + index * attrib.stride);
+                    for (int j = 0; j < size; j++)
+                        dst.putFloat(FetchConvert(src, attrib.type, attrib.normalized));
+                } else {
+                    final int position = nonVBO.position();
+                    nonVBO.get(element);
+                    nonVBO.position(position);
+                    for (int j = 0; j < size; j++)
+                        dst.putFloat(FetchConvert(nonVBO, attrib.type, attrib.normalized));
+                }
+                fetched.put(element);
+            }
             if (size < 1)
                 dst.putFloat(defaultAttribs[i][0]);
             if (size < 2)
@@ -341,6 +379,13 @@ public class GLServerVertex implements Cloneable {
     // void glDrawArrays(GLenum mode, GLint first, GLsizei count)
     public Message glDrawArrays(Message msg) {
         maxAttrib = msg.getArg7();
+        fetchedAttribs = new ByteBuffer[maxAttrib];
+        for (int i = 0; i < maxAttrib; i++) {
+            if (!attribPointers[i].enabled)
+                continue;
+            fetchedAttribs[i] = ByteBuffer.allocate(TypeSize(attribPointers[i].type)
+                    * attribPointers[i].size * msg.getArg2());
+        }
         final int first = msg.getArg1(), count = msg.getArg2();
         final ByteBuffer buffer = ByteBuffer.allocate(4 * 4 * maxAttrib * count);
         ByteBuffer arrays = null;
@@ -352,6 +397,11 @@ public class GLServerVertex implements Cloneable {
         for (int i = first; i < first + count; i++)
             Fetch(i, arrays, buffer);
         assert null == arrays || arrays.remaining() == 0;
+        for (int i = 0; i < maxAttrib; i++) {
+            if (!attribPointers[i].enabled)
+                continue;
+            assert fetchedAttribs[i].remaining() == 0;
+        }
         buffer.rewind();
         return msg.toBuilder().setData(com.google.protobuf.ByteString.copyFrom(buffer))
                 .setArg8(GLEnum.GL_FLOAT.value).build();
@@ -361,6 +411,13 @@ public class GLServerVertex implements Cloneable {
     // GLvoid* indices)
     public Message glDrawElements(Message msg) {
         maxAttrib = msg.getArg7();
+        fetchedAttribs = new ByteBuffer[maxAttrib];
+        for (int i = 0; i < maxAttrib; i++) {
+            if (!attribPointers[i].enabled)
+                continue;
+            fetchedAttribs[i] = ByteBuffer.allocate(TypeSize(attribPointers[i].type)
+                    * attribPointers[i].size * msg.getArg1());
+        }
         final int count = msg.getArg1();
         final GLEnum type = GLEnum.valueOf(msg.getArg2());
         final ByteBuffer buffer = ByteBuffer.allocate(4 * 4 * maxAttrib * count);
@@ -386,6 +443,11 @@ public class GLServerVertex implements Cloneable {
         else
             assert false;
         assert null == arrays || arrays.remaining() == 0;
+        for (int i = 0; i < maxAttrib; i++) {
+            if (!attribPointers[i].enabled)
+                continue;
+            assert fetchedAttribs[i].remaining() == 0;
+        }
         buffer.rewind();
         return msg.toBuilder().setData(com.google.protobuf.ByteString.copyFrom(buffer))
                 .setArg8(GLEnum.GL_FLOAT.value).build();
@@ -393,7 +455,8 @@ public class GLServerVertex implements Cloneable {
 
     // void glEnableVertexAttribArray(GLuint index)
     public void glEnableVertexAttribArray(Message msg) {
-        attribPointers[msg.getArg0()].enabled = true;
+        if (msg.getArg0() >= 0 && msg.getArg0() < attribPointers.length)
+            attribPointers[msg.getArg0()].enabled = true;
     }
 
     // void API_ENTRY(glGenBuffers)(GLsizei n, GLuint:n:out buffers)
@@ -418,7 +481,7 @@ public class GLServerVertex implements Cloneable {
         attrib.normalized = msg.getArg3() != 0;
         attrib.stride = msg.getArg4();
         if (0 == attrib.stride)
-            attrib.stride = attrib.size * 4;
+            attrib.stride = attrib.size * TypeSize(attrib.type);
         attrib.ptr = msg.getArg5();
         attrib.buffer = attribBuffer;
     }

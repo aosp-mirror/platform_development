@@ -25,6 +25,8 @@ import org.eclipse.swt.graphics.Device;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
 
+import java.nio.ByteBuffer;
+
 public class MessageData {
     public final Message msg, oriMsg;
     public Image image; // texture
@@ -35,6 +37,8 @@ public class MessageData {
     public int maxAttrib; // used for formatting data
     public GLEnum dataType; // could be float, int; mainly for formatting use
     Context context; // the context before this call
+
+    ByteBuffer[] attribs = null;
 
     public MessageData(final Device device, final Message msg, final Message oriMsg,
             final Context context) {
@@ -67,7 +71,7 @@ public class MessageData {
             columns[2] = "[AfterGeneratedCall] ";
         else
             assert msg.getType() == Type.AfterCall;
-        columns[2] += MessageFormatter.Format(msg);
+        columns[2] += MessageFormatter.Format(msg, false);
         builder.append(columns[2]);
         switch (function) {
             case glDrawArrays: // msg was modified by GLServerVertex

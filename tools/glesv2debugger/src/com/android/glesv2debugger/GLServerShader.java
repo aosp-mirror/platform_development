@@ -172,7 +172,9 @@ public class GLServerShader implements Cloneable {
     // void API_ENTRY(glAttachShader)(GLuint program, GLuint shader)
     void glAttachShader(final Message msg) {
         GLProgram program = GetProgram(msg.getArg0());
+        assert program != null;
         GLShader shader = GetShader(msg.getArg1());
+        assert program != null;
         if (GLEnum.GL_VERTEX_SHADER == shader.type)
             program.vert = shader.name;
         else
@@ -229,7 +231,7 @@ public class GLServerShader implements Cloneable {
             program.frag = 0;
         else
             return;
-        shader.programs.remove(program.name);
+        shader.programs.remove(new Integer(program.name));
         if (shader.delete && shader.programs.size() == 0)
             shaders.remove(shader.name);
     }
@@ -251,7 +253,7 @@ public class GLServerShader implements Cloneable {
             for (Context ctx : context.shares)
                 if (ctx.serverShader.current == oldCurrent)
                     return;
-            oldCurrent.context.programs.remove(oldCurrent.name);
+            oldCurrent.context.programs.remove(new Integer(oldCurrent.name));
         }
     }
 }

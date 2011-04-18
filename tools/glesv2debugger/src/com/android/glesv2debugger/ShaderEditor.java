@@ -253,9 +253,9 @@ public class ShaderEditor extends Composite implements SelectionListener, Extend
 
         ExchangeMessage(contextId, queue, "glCompileShader(%d)", shader.name);
 
-        // the 0, "" and [0] are dummies for the parser
+        // the 0, "" and {0} are dummies for the parser
         Message rcv = ExchangeMessage(contextId, queue,
-                "glGetShaderiv(%d, GL_COMPILE_STATUS, [0])", shader.name);
+                "glGetShaderiv(%d, GL_COMPILE_STATUS, {0})", shader.name);
         assert rcv.hasData();
         if (rcv.getData().asReadOnlyByteBuffer().getInt() == 0) {
             // compile failed
@@ -276,7 +276,7 @@ public class ShaderEditor extends Composite implements SelectionListener, Extend
                 GLProgram program = shader.context.GetProgram(programName);
                 ExchangeMessage(contextId, queue, "glLinkProgram(%d)", program.name);
                 rcv = ExchangeMessage(contextId, queue,
-                        "glGetProgramiv(%d, GL_LINK_STATUS, [0])", program.name);
+                        "glGetProgramiv(%d, GL_LINK_STATUS, {0})", program.name);
                 assert rcv.hasData();
                 if (rcv.getData().asReadOnlyByteBuffer().getInt() != 0)
                     continue;

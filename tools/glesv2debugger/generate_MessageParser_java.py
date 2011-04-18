@@ -67,15 +67,15 @@ public abstract class MessageParser {
 
     String[] GetList()
     {
-        assert args.charAt(0) == '[';
+        assert args.charAt(0) == '{';
         String arg = args;
-        args = args.substring(args.indexOf(']') + 1);
+        args = args.substring(args.lastIndexOf('}') + 1);
         int comma = args.indexOf(',');
         if (comma >= 0)
             args = args.substring(comma + 1).trim();
         else
             args = null;
-        arg = arg.substring(1, arg.indexOf(']')).trim();
+        arg = arg.substring(1, arg.lastIndexOf('}')).trim();
         return arg.split(",");
     }
 
