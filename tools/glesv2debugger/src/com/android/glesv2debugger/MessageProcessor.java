@@ -30,7 +30,7 @@ public class MessageProcessor {
         MessageDialog.openError(null, "MessageProcessor", message);
     }
 
-    public static byte [] ref; // inout; used for glReadPixels
+    public static byte[] ref; // inout; used for glReadPixels
 
     public static ImageData ReceiveImage(int width, int height, int format,
             int type, byte[] data) {
@@ -102,9 +102,11 @@ public class MessageProcessor {
         PaletteData palette = new PaletteData(redMask, greenMask, blueMask);
         if (null != ref) {
             if (ref.length < decompressed)
-                ref = new byte [width * height * (bpp / 8)];
-            for (int i = 0; i < ref.length; i++)
+                ref = new byte[width * height * (bpp / 8)];
+            for (int i = 0; i < decompressed; i++)
                 ref[i] ^= pixels[i];
+            for (int i = decompressed; i < ref.length; i++)
+                ref[i] = 0; // clear unused ref to maintain consistency
             return new ImageData(width, height, bpp, palette, 1, ref);
         } else
             return new ImageData(width, height, bpp, palette, 1, pixels);

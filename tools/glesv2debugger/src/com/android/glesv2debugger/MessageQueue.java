@@ -20,6 +20,10 @@ import com.android.glesv2debugger.DebuggerMessage.Message;
 import com.android.glesv2debugger.DebuggerMessage.Message.Function;
 import com.android.glesv2debugger.DebuggerMessage.Message.Type;
 
+import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.widgets.Shell;
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.EOFException;
@@ -234,18 +238,20 @@ public class MessageQueue implements Runnable {
     }
 
     void SendResponse(final DataOutputStream dos, final Message msg) throws IOException {
-        Message.Builder builder = Message.newBuilder();
+        final Message.Builder builder = Message.newBuilder();
         builder.setContextId(msg.getContextId());
         if (msg.getType() == Type.BeforeCall)
             builder.setFunction(Function.CONTINUE);
         else if (msg.getType() == Type.AfterCall)
             builder.setFunction(Function.SKIP);
+        else
+            assert false;
         builder.setType(Type.Response);
         builder.setExpectResponse(false);
-        // FIXME: consider using proper context id
+        if (msg.getExpectResponse())
+            sampleView.breakpointOption.BreakpointReached(builder, msg);
         if (SendCommands(dos, 0) || msg.getExpectResponse())
-            if (builder.hasFunction())
-                SendMessage(dos, builder.build());
+            SendMessage(dos, builder.build());
     }
 
     void Error(Exception e) {
