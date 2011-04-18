@@ -10,4 +10,5 @@ Bundle-ActivationPolicy: lazy
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ClassPath: lib/host-libprotobuf-java-2.3.0-lite.jar,
  lib/liblzf.jar,
+ lib/sdklib.jar,
  .

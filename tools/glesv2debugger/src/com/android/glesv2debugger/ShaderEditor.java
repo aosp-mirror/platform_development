@@ -107,7 +107,8 @@ public class ShaderEditor extends Composite implements SelectionListener, Extend
                 progs += context.serverShader.current.name + "(0x";
                 progs += Integer.toHexString(context.contextId) + ") ";
             }
-            for (GLShader shader : context.serverShader.privateShaders.values()) {
+            for (int i = 0; i < context.serverShader.shaders.size(); i++) {
+                GLShader shader = context.serverShader.shaders.valueAt(i);
                 StringBuilder builder = new StringBuilder();
                 builder.append(String.format("%08X", context.contextId));
                 builder.append(' ');
@@ -123,17 +124,17 @@ public class ShaderEditor extends Composite implements SelectionListener, Extend
                     builder.append(' ');
                 }
                 builder.append(": ");
-                for (GLProgram program : shader.programs) {
-                    builder.append(program.name);
+                for (int program : shader.programs) {
+                    builder.append(program);
                     builder.append(" ");
                 }
                 list.add(builder.toString());
             }
         }
-        // if (!progs.equals(currentPrograms.getText())) {
-        currentPrograms.setText(progs);
 
-        // }
+        currentPrograms.setText(progs);
+        toolbar.redraw();
+        toolbar.pack(true);
         toolbar.update();
     }
 
@@ -169,11 +170,10 @@ public class ShaderEditor extends Composite implements SelectionListener, Extend
                             new Color(Display.getCurrent(), 255, 230, 230));
             }
             if (infolog.length() > 0) {
-                MessageDialog.openWarning(getShell(),
-                        "Shader Syntax Error, Upload Aborted", infolog);
-                return;
+                if (!MessageDialog.openConfirm(getShell(),
+                        "Shader Syntax Error, Continue?", infolog))
+                    return;
             }
-
         } catch (IOException e) {
             sampleView.showError(e);
         }
@@ -235,8 +235,7 @@ public class ShaderEditor extends Composite implements SelectionListener, Extend
                         matchingContext = true;
                         break;
                     }
-                if (matchingContext)
-                {
+                if (matchingContext) {
                     shadersToUpload.remove(i);
                     break;
                 }
@@ -270,7 +269,8 @@ public class ShaderEditor extends Composite implements SelectionListener, Extend
                 }
             });
         } else
-            for (GLProgram program : shader.programs) {
+            for (int programName : shader.programs) {
+                GLProgram program = shader.context.GetProgram(programName);
                 ExchangeMessage(contextId, queue, "glLinkProgram(%d)", program.name);
                 rcv = ExchangeMessage(contextId, queue,
                         "glGetProgramiv(%d, GL_LINK_STATUS, [0])", program.name);
@@ -336,7 +336,7 @@ public class ShaderEditor extends Composite implements SelectionListener, Extend
         String[] details = list.getSelection()[0].split("\\s+");
         final int contextId = Integer.parseInt(details[0], 16);
         int name = Integer.parseInt(details[2]);
-        current = sampleView.contexts.get(contextId).serverShader.privateShaders.get(name);
+        current = sampleView.contexts.get(contextId).serverShader.shaders.get(name);
         styledText.setText(current.source);
     }
 
