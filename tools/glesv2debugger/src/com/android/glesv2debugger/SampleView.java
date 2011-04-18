@@ -103,6 +103,7 @@ public class SampleView extends ViewPart implements Runnable {
     LayoutComposite layoutComposite;
     ListViewer viewer;
     BreakpointOption breakpointOption;
+    ShaderEditor shaderEditor;
     org.eclipse.swt.widgets.Canvas canvas;
     Text text;
     Action actionConnect; // connect / disconnect
@@ -239,11 +240,6 @@ public class SampleView extends ViewPart implements Runnable {
         // Create the help context id for the viewer's control
         PlatformUI.getWorkbench().getHelpSystem()
                 .setHelp(viewer.getControl(), "GLESv2DebuggerClient.viewer");
-        makeActions();
-        hookContextMenu();
-        hookDoubleClickAction();
-        hookSelectionChanged();
-        contributeToActionBars();
 
         layoutComposite = new LayoutComposite(parent, 0);
         layoutComposite.setLayout(new FillLayout());
@@ -257,6 +253,7 @@ public class SampleView extends ViewPart implements Runnable {
         canvas.setVisible(false);
 
         breakpointOption = new BreakpointOption(this, layoutComposite);
+        shaderEditor = new ShaderEditor(this, layoutComposite);
 
         final ScrollBar hBar = canvas.getHorizontalBar();
         hBar.addListener(SWT.Selection, new Listener() {
@@ -335,6 +332,12 @@ public class SampleView extends ViewPart implements Runnable {
                 }
             }
         });
+
+        makeActions();
+        hookContextMenu();
+        hookDoubleClickAction();
+        hookSelectionChanged();
+        contributeToActionBars();
     }
 
     private void hookContextMenu() {
@@ -465,7 +468,18 @@ public class SampleView extends ViewPart implements Runnable {
             {
                 breakpointOption.setVisible(!breakpointOption.isVisible());
                 layoutComposite.layout(true);
-                manager.update(true);
+            }
+        };
+        action.setChecked(true);
+        manager.add(action);
+
+        action = new Action("Shaders", Action.AS_CHECK_BOX)
+        {
+            @Override
+            public void run()
+            {
+                shaderEditor.setVisible(!shaderEditor.isVisible());
+                layoutComposite.layout(true);
             }
         };
         action.setChecked(true);
@@ -606,14 +620,24 @@ public class SampleView extends ViewPart implements Runnable {
             showError(e1);
         }
         ArrayList<MessageData> msgs = new ArrayList<MessageData>();
+        boolean shaderEditorUpdate = false;
         while (running) {
             if (!messageQueue.IsRunning())
                 break;
 
-            Message msg = messageQueue.RemoveMessage(0);
+            Message msg = messageQueue.RemoveCompleteMessage(0);
             if (msgs.size() > 60 || (msgs.size() > 0 && null == msg)) {
                 viewContentProvider.add(msgs);
                 msgs.clear();
+
+                if (shaderEditorUpdate)
+                    this.getSite().getShell().getDisplay().syncExec(new Runnable() {
+                        @Override
+                        public void run() {
+                            shaderEditor.Update();
+                        }
+                    });
+                shaderEditorUpdate = false;
             }
             if (null == msg) {
                 try {
@@ -626,10 +650,11 @@ public class SampleView extends ViewPart implements Runnable {
 
             Context context = contexts.get(msg.getContextId());
             if (null == context) {
-                context = new Context();
+                context = new Context(msg.getContextId());
                 contexts.put(msg.getContextId(), context);
             }
             msg = context.ProcessMessage(msg);
+            shaderEditorUpdate |= context.serverShader.uiUpdate;
 
             final MessageData msgData = new MessageData(this.getViewSite()
                     .getShell().getDisplay(), msg, context);

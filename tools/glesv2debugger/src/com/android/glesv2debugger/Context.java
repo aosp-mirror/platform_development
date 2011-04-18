@@ -18,13 +18,21 @@ package com.android.glesv2debugger;
 
 import com.android.glesv2debugger.DebuggerMessage.Message;
 
-public class Context {
-    public int contextId;
-    public GLServerVertex serverVertex = new GLServerVertex();
-    public byte [] readPixelRef = new byte [0];
+import java.util.ArrayList;
 
-    public Message ProcessMessage(Message msg)
-    {
+public class Context {
+    public final int contextId;
+    ArrayList<Context> shares = new ArrayList<Context>(); // includes self
+    public GLServerVertex serverVertex = new GLServerVertex();
+    public GLServerShader serverShader = new GLServerShader(this);
+    public byte[] readPixelRef = new byte[0];
+
+    public Context(int contextId) {
+        this.contextId = contextId;
+        shares.add(this);
+    }
+
+    public Message ProcessMessage(Message msg) {
         switch (msg.getFunction()) {
             case glBindBuffer:
                 serverVertex.glBindBuffer(msg);
@@ -83,6 +91,7 @@ public class Context {
                 serverVertex.glVertexAttrib4fv(msg);
                 break;
         }
+        serverShader.ProcessMessage(msg);
         return msg;
     }
 }

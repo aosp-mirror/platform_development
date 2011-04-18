@@ -19,6 +19,7 @@ package com.android.glesv2debugger;
 import com.android.glesv2debugger.DebuggerMessage.Message;
 import com.android.glesv2debugger.DebuggerMessage.Message.DataType;
 import com.android.glesv2debugger.DebuggerMessage.Message.Function;
+import com.android.glesv2debugger.DebuggerMessage.Message.Type;
 
 import org.eclipse.swt.graphics.Device;
 import org.eclipse.swt.graphics.Image;
@@ -51,11 +52,16 @@ public class MessageData {
             builder.append(String.format(":%.3f", msg.getClock()));
         builder.append(String.format("  0x%08X", msg.getContextId()));
         builder.append("  ");
+        if (msg.getType() == Type.BeforeCall) // incomplete call, client SKIPPED
+            builder.append("[BeforeCall(AfterCall missing)] ");
+        else if (msg.getType() == Type.AfterGeneratedCall)
+            builder.append("[AfterGeneratedCall] ");
+        else
+            assert msg.getType() == Type.AfterCall;
         builder.append(MessageFormatter.Format(msg));
         switch (function) {
             case glDrawArrays: // msg was modified by GLServerVertex
             case glDrawElements:
-                assert msg.hasData();
                 if (!msg.hasArg8() || !msg.hasData())
                     break;
                 dataType = GLEnum.valueOf(msg.getArg8());
