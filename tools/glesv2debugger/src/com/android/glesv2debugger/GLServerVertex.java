@@ -89,13 +89,12 @@ public class GLServerVertex implements Cloneable {
     public GLAttribPointer attribPointers[];
     public float defaultAttribs[][];
 
-    public GLServerVertex() {
+    public GLServerVertex(final int MAX_VERTEX_ATTRIBS) {
         buffers.append(0, null);
-        // TODO: get MAX_VERTEX_ATTRIBS from server
-        attribPointers = new GLAttribPointer[16];
+        attribPointers = new GLAttribPointer[MAX_VERTEX_ATTRIBS];
         for (int i = 0; i < attribPointers.length; i++)
             attribPointers[i] = new GLAttribPointer();
-        defaultAttribs = new float[16][4];
+        defaultAttribs = new float[MAX_VERTEX_ATTRIBS][4];
         for (int i = 0; i < defaultAttribs.length; i++) {
             defaultAttribs[i][0] = 0;
             defaultAttribs[i][1] = 0;

@@ -237,6 +237,10 @@ public class MessageQueue implements Runnable {
             synchronized (complete) {
                 complete.add(msg);
             }
+        } else if (msg.getType() == Type.Response && msg.getFunction() == Function.SETPROP) {
+            synchronized (complete) {
+                complete.add(msg);
+            }
         } else
             assert false;
     }

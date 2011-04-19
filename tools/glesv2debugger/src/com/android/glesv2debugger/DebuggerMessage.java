@@ -532,6 +532,7 @@ public final class DebuggerMessage {
       TimeMode(1, 1),
       ExpectResponse(2, 2),
       CaptureSwap(3, 3),
+      GLConstant(4, 4),
       ;
       
       
@@ -543,6 +544,7 @@ public final class DebuggerMessage {
           case 1: return TimeMode;
           case 2: return ExpectResponse;
           case 3: return CaptureSwap;
+          case 4: return GLConstant;
           default: return null;
         }
       }

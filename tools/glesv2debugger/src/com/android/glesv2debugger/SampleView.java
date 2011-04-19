@@ -741,7 +741,7 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
                 break;
             if (newMessages > 60 || (newMessages > 0 && null == oriMsg)) {
                 newMessages = 0;
-                if (current == null || current.uiUpdate)
+                if (current != null && current.uiUpdate)
                     getSite().getShell().getDisplay().syncExec(new Runnable() {
                         @Override
                         public void run() {
@@ -783,7 +783,7 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
             debugContext.processMessage(oriMsg);
             shaderEditorUpdate |= debugContext.currentContext.serverShader.uiUpdate;
             debugContext.currentContext.serverShader.uiUpdate = false;
-            if (current == null)
+            if (current == null && debugContext.frameCount() > 0)
                 changeContext(debugContext);
             newMessages++;
         }

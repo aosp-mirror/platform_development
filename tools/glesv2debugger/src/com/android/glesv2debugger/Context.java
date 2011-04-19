@@ -19,6 +19,7 @@ package com.android.glesv2debugger;
 import com.android.glesv2debugger.DebuggerMessage.Message;
 import com.android.glesv2debugger.DebuggerMessage.Message.DataType;
 import com.android.glesv2debugger.DebuggerMessage.Message.Function;
+import com.android.glesv2debugger.DebuggerMessage.Message.Prop;
 import com.android.sdklib.util.SparseArray;
 import com.android.sdklib.util.SparseIntArray;
 import com.google.protobuf.ByteString;
@@ -136,37 +137,17 @@ class DebugContext {
         try {
             file = new RandomAccessFile("0x" + Integer.toHexString(contextId) +
                     ".gles2dbg", "rw");
-            frames.add(new Frame(currentContext, file.getFilePointer()));
-
         } catch (FileNotFoundException e) {
             e.printStackTrace();
             assert false;
-        } catch (IOException e) {
-            e.printStackTrace();
-            assert false;
         }
-        lastFrame = frames.get(0);
-        loadedFrame = lastFrame;
     }
 
-    /**
-     * Caches new Message, and formats into MessageData for current frame; this
-     * function is called exactly once for each new Message
-     */
-    void processMessage(final Message newMsg) {
-        Message msg = newMsg;
-        currentContext.processMessage(newMsg);
-        if (msg.hasDataType() && msg.getDataType() == DataType.ReferencedImage) {
-            final byte[] referenced = MessageProcessor.lzfDecompressChunks(msg.getData());
-            currentContext.readPixelRef = MessageProcessor.decodeReferencedImage(
-                    currentContext.readPixelRef, referenced);
-            final byte[] decoded = MessageProcessor.lzfCompressChunks(
-                    currentContext.readPixelRef, referenced.length);
-            msg = newMsg.toBuilder().setDataType(DataType.NonreferencedImage)
-                    .setData(ByteString.copyFrom(decoded)).build();
-        }
+    /** write message to file; if frame not null, then increase its call count */
+    void saveMessage(final Message msg, final RandomAccessFile file, Frame frame) {
         synchronized (file) {
-            lastFrame.increaseCallsCount();
+            if (frame != null)
+                frame.increaseCallsCount();
             final byte[] data = msg.toByteArray();
             final ByteBuffer len = ByteBuffer.allocate(4);
             len.order(SampleView.targetByteOrder);
@@ -182,7 +163,65 @@ class DebugContext {
                 assert false;
             }
         }
+    }
+
+    /**
+     * Caches new Message, and formats into MessageData for current frame; this
+     * function is called exactly once for each new Message
+     */
+    void processMessage(final Message newMsg) {
+        Message msg = newMsg;
+        if (msg.getFunction() == Function.SETPROP) {
+            // GL impl. consts should have been sent before any GL call messages
+            assert frames.size() == 0;
+            assert lastFrame == null;
+            assert msg.getProp() == Prop.GLConstant;
+            switch (GLEnum.valueOf(msg.getArg0())) {
+                case GL_MAX_VERTEX_ATTRIBS:
+                    currentContext.serverVertex = new GLServerVertex(msg.getArg1());
+                    break;
+                case GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS:
+                    currentContext.serverTexture = new GLServerTexture(currentContext,
+                            msg.getArg1());
+                    break;
+                default:
+                    assert false;
+                    return;
+            }
+            saveMessage(msg, file, null);
+            return;
+        }
+
+        if (lastFrame == null) {
+            // first real message after the GL impl. consts
+            synchronized (file) {
+                try {
+                    lastFrame = new Frame(currentContext, file.getFilePointer());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    assert false;
+                }
+            }
+            synchronized (frames) {
+                frames.add(lastFrame);
+            }
+            assert loadedFrame == null;
+            loadedFrame = lastFrame;
+        }
+        currentContext.processMessage(msg);
+        if (msg.hasDataType() && msg.getDataType() == DataType.ReferencedImage) {
+            // decode referenced image so it doesn't rely on context later on
+            final byte[] referenced = MessageProcessor.lzfDecompressChunks(msg.getData());
+            currentContext.readPixelRef = MessageProcessor.decodeReferencedImage(
+                        currentContext.readPixelRef, referenced);
+            final byte[] decoded = MessageProcessor.lzfCompressChunks(
+                        currentContext.readPixelRef, referenced.length);
+            msg = msg.toBuilder().setDataType(DataType.NonreferencedImage)
+                        .setData(ByteString.copyFrom(decoded)).build();
+        }
+        saveMessage(msg, file, lastFrame);
         if (loadedFrame == lastFrame) {
+            // frame selected for view, so format MessageData
             final MessageData msgData = new MessageData(Display.getCurrent(), msg, currentContext);
             lastFrame.add(msgData);
             uiUpdate = true;
@@ -230,10 +269,10 @@ class DebugContext {
 public class Context implements Cloneable {
     public final int contextId;
     public ArrayList<Context> shares = new ArrayList<Context>(); // self too
-    public GLServerVertex serverVertex = new GLServerVertex();
+    public GLServerVertex serverVertex;
     public GLServerShader serverShader = new GLServerShader(this);
     public GLServerState serverState = new GLServerState(this);
-    public GLServerTexture serverTexture = new GLServerTexture(this);
+    public GLServerTexture serverTexture;
 
     byte[] readPixelRef = new byte[0];
 
@@ -249,10 +288,12 @@ public class Context implements Cloneable {
             // FIXME: context sharing list clone
             copy.shares = new ArrayList<Context>(1);
             copy.shares.add(copy);
-            copy.serverVertex = serverVertex.clone();
+            if (serverVertex != null)
+                copy.serverVertex = serverVertex.clone();
             copy.serverShader = serverShader.clone(copy);
             copy.serverState = serverState.clone();
-            copy.serverTexture = serverTexture.clone(copy);
+            if (serverTexture != null)
+                copy.serverTexture = serverTexture.clone(copy);
             // don't need to clone readPixelsRef, since referenced images
             // are decoded when they are encountered
             return copy;
