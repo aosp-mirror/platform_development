@@ -312,15 +312,6 @@
         <activity android:name=".app.FragmentLayout$DetailsActivity"
                 android:enabled="@bool/atLeastHoneycomb" />
 
-        <activity android:name=".app.FragmentListCursorLoader"
-                android:label="@string/fragment_list_cursor_loader"
-                android:enabled="@bool/atLeastHoneycomb">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.SAMPLE_CODE" />
-            </intent-filter>
-        </activity>
-
         <activity android:name=".app.FragmentListArray"
                 android:label="@string/fragment_list_array"
                 android:enabled="@bool/atLeastHoneycomb">
@@ -425,14 +416,6 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".support.app.FragmentListCursorLoaderSupport"
-                android:label="@string/fragment_list_cursor_loader_support">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.SAMPLE_CODE" />
-            </intent-filter>
-        </activity>
-
         <activity android:name=".support.app.FragmentListArraySupport"
                 android:label="@string/fragment_list_array_support">
             <intent-filter>
@@ -485,6 +468,24 @@
 
         <!-- Loader Samples -->
 
+        <activity android:name=".app.LoaderCursor"
+                android:label="@string/loader_cursor"
+                android:enabled="@bool/atLeastHoneycomb">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".app.LoaderCustom"
+                android:label="@string/loader_custom"
+                android:enabled="@bool/atLeastHoneycomb">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
 <!-- BEGIN_INCLUDE(loader_throttle) -->
         <activity android:name=".app.LoaderThrottle"
                 android:label="@string/loader_throttle"
@@ -500,6 +501,14 @@
 <!-- END_INCLUDE(loader_throttle) -->
 
         <!-- Fragment Support Samples -->
+
+        <activity android:name=".support.app.LoaderCursorSupport"
+                android:label="@string/loader_cursor_support">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
 
         <activity android:name=".support.app.LoaderThrottleSupport"
                 android:label="@string/loader_throttle_support">

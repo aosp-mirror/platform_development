@@ -134,8 +134,6 @@
 
     <string name="fragment_list_array">App/Fragment/List Array</string>
 
-    <string name="fragment_list_cursor_loader">App/Fragment/List Cursor Loader</string>
-
     <string name="fragment_menu">App/Fragment/Menu</string>
     <string name="fragment_menu_msg">Build menus from two fragments, allowing
         you to hide them to remove them..</string>
@@ -168,8 +166,6 @@
 
     <string name="fragment_list_array_support">Support/App/Fragment/List Array</string>
 
-    <string name="fragment_list_cursor_loader_support">Support/App/Fragment/List Cursor Loader</string>
-
     <string name="fragment_menu_support">Support/App/Fragment/Menu</string>
 
     <string name="fragment_retain_instance_support">Support/App/Fragment/Retain Instance</string>
@@ -180,7 +176,13 @@
 
     <string name="fragment_pager_support">Support/App/Fragment/Pager</string>
 
+    <string name="loader_cursor">App/Loader/Cursor</string>
+
+    <string name="loader_custom">App/Loader/Custom</string>
+
     <string name="loader_throttle">App/Loader/Throttle</string>
+
+    <string name="loader_cursor_support">Support/App/Loader/Cursor</string>
     
     <string name="loader_throttle_support">Support/Loader/Throttle</string>
     
