@@ -62,7 +62,7 @@
     <!-- Sound & display settings screen, compatibility mode check box label -->
     <string name="compatibility_mode_title">Compatibility Mode</string>
     <!-- Sound & display settings screen, compatibility mode option summary text when check box is selected -->
-    <string name="compatibility_mode_summary_on">Run older apps in Compatibility mode. This require rebooting. </string>
+    <string name="compatibility_mode_summary_on">Run older apps in Compatibility mode. This requires rebooting. </string>
     <!-- Sound & display settings screen, compatibility mode option summary text when check box is clear -->
-    <string name="compatibility_mode_summary_off">Run older apps in Compatibility mode. This require rebooting. </string>
+    <string name="compatibility_mode_summary_off">Run older apps in Compatibility mode. This requires rebooting. </string>
 </resources>
