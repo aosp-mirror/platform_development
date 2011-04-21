@@ -1,11 +1,17 @@
 #include<GLcommon/GLESvalidate.h>
+#include<GLES/gl.h>
+#include<GLES/glext.h>
 
 
 bool  GLESvalidate::textureEnum(GLenum e,unsigned int maxTex) {
     return e >= GL_TEXTURE0 && e <= (GL_TEXTURE0 + maxTex);
 }
 
-bool GLESvalidate::pixelType(GLenum type) {
+bool GLESvalidate::pixelType(GLEScontext * ctx, GLenum type) {
+    if (ctx && ctx->getCaps()->GL_NV_PACKED_DEPTH_STENCIL) {
+        if (type == GL_UNSIGNED_INT_24_8_OES)
+            return true;
+    }
     switch(type) {
     case GL_UNSIGNED_BYTE:
     case GL_UNSIGNED_SHORT_5_6_5:
@@ -27,7 +33,11 @@ bool GLESvalidate::pixelOp(GLenum format,GLenum type) {
      return true;
 }
 
-bool GLESvalidate::pixelFrmt(GLenum format) {
+bool GLESvalidate::pixelFrmt(GLEScontext* ctx ,GLenum format) {
+    if (ctx && ctx->getCaps()->GL_EXT_TEXTURE_FORMAT_BGRA8888 && format == GL_BGRA_EXT)
+      return true;
+    if (ctx && ctx->getCaps()->GL_NV_PACKED_DEPTH_STENCIL && format == GL_DEPTH_STENCIL_OES)
+      return true;
     switch(format) {
     case GL_ALPHA:
     case GL_RGB:
@@ -62,5 +72,81 @@ bool GLESvalidate::drawMode(GLenum mode) {
 }
 
 bool GLESvalidate::drawType(GLenum mode) {
-    return mode == GL_UNSIGNED_BYTE || mode == GL_UNSIGNED_SHORT;
+    return  mode == GL_UNSIGNED_BYTE || 
+            mode == GL_UNSIGNED_SHORT || 
+            mode == GL_UNSIGNED_INT;
 }
+
+bool GLESvalidate::textureTarget(GLenum target) {
+    return target==GL_TEXTURE_2D || target==GL_TEXTURE_CUBE_MAP;
+}
+
+bool GLESvalidate::textureTargetLimited(GLenum target) {
+    return target==GL_TEXTURE_2D;
+}
+
+bool GLESvalidate::textureTargetEx(GLenum target) {
+    switch(target) {
+    case GL_TEXTURE_CUBE_MAP_POSITIVE_X_OES:
+    case GL_TEXTURE_CUBE_MAP_NEGATIVE_X_OES:
+    case GL_TEXTURE_CUBE_MAP_POSITIVE_Y_OES:
+    case GL_TEXTURE_CUBE_MAP_NEGATIVE_Y_OES:
+    case GL_TEXTURE_CUBE_MAP_POSITIVE_Z_OES:
+    case GL_TEXTURE_CUBE_MAP_NEGATIVE_Z_OES:
+    case GL_TEXTURE_2D:
+      return true;
+    } 
+    return false;
+}
+
+bool GLESvalidate::blendEquationMode(GLenum mode){
+    return mode == GL_FUNC_ADD             ||
+           mode == GL_FUNC_SUBTRACT        ||
+           mode == GL_FUNC_REVERSE_SUBTRACT;
+}
+
+bool GLESvalidate::framebufferTarget(GLenum target){
+    return target == GL_FRAMEBUFFER;
+}
+
+bool GLESvalidate::framebufferAttachment(GLenum attachment){
+    switch(attachment){
+    case GL_COLOR_ATTACHMENT0:
+    case GL_DEPTH_ATTACHMENT:
+    case GL_STENCIL_ATTACHMENT:
+        return true;
+    }
+    return false;
+}
+
+bool GLESvalidate::framebufferAttachmentParams(GLenum pname){
+    switch(pname){
+    case GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE:
+    case GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME:
+    case GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_LEVEL:
+    case GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_CUBE_MAP_FACE:
+        return true;
+    }
+    return false;
+}
+
+bool GLESvalidate::renderbufferTarget(GLenum target){
+    return target == GL_RENDERBUFFER;
+}
+
+bool GLESvalidate::renderbufferParams(GLenum pname){
+    switch(pname){
+    case GL_RENDERBUFFER_WIDTH:
+    case GL_RENDERBUFFER_HEIGHT:
+    case GL_RENDERBUFFER_INTERNAL_FORMAT:
+    case GL_RENDERBUFFER_RED_SIZE:
+    case GL_RENDERBUFFER_GREEN_SIZE:
+    case GL_RENDERBUFFER_BLUE_SIZE:
+    case GL_RENDERBUFFER_ALPHA_SIZE:
+    case GL_RENDERBUFFER_DEPTH_SIZE:
+    case GL_RENDERBUFFER_STENCIL_SIZE:
+        return true;
+    }
+    return false;
+}
+
