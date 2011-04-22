@@ -175,6 +175,8 @@
     <string name="fragment_stack_support">Support/App/Fragment/Stack</string>
 
     <string name="fragment_pager_support">Support/App/Fragment/Pager</string>
+    <string name="first">First</string>
+    <string name="last">Last</string>
 
     <string name="loader_cursor">App/Loader/Cursor</string>
 
