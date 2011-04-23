@@ -211,5 +211,6 @@ GL_ENTRY(void, glVertexAttribPointerOffset, GLuint indx, GLint size, GLenum type
 GL_ENTRY(void, glDrawElementsOffset, GLenum mode, GLsizei count, GLenum type, GLuint offset)
 GL_ENTRY(void, glDrawElementsData, GLenum mode, GLsizei count, GLenum type, void *data, GLuint datalen)
 GL_ENTRY(void, glGetCompressedTextureFormats, int count, GLint *formats)
+GL_ENTRY(void, glShaderString, GLuint shader, GLstr string, GLsizei len)
 
 

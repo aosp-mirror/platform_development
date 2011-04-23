@@ -57,7 +57,7 @@ int GL2Decoder::initGL(get_proc_func_t getProcFunc, void *getProcFuncData)
 
     set_glDrawElementsOffset(s_glDrawElementsOffset);
     set_glDrawElementsData(s_glDrawElementsData);
-
+    set_glShaderString(s_glShaderString);
     return 0;
 
 }
@@ -108,3 +108,8 @@ void GL2Decoder::s_glDrawElementsOffset(void *self, GLenum mode, GLsizei count, 
     ctx->glDrawElements(mode, count, type, (void *)offset);
 }
 
+void GL2Decoder::s_glShaderString(void *self, GLuint shader, GLstr string, GLsizei len)
+{
+    GL2Decoder *ctx = (GL2Decoder *)self;
+    ctx->glShaderSource(shader, 1, &string, NULL);
+}
