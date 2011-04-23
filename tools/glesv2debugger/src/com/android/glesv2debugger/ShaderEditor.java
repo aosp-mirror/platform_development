@@ -146,43 +146,45 @@ public class ShaderEditor extends Composite implements SelectionListener, Extend
     void uploadShader() {
         current.source = styledText.getText();
 
-        try {
-            File file = File.createTempFile("shader",
-                    current.type == GLEnum.GL_VERTEX_SHADER ? ".vert" : ".frag");
-            FileWriter fileWriter = new FileWriter(file, false);
-            fileWriter.write(current.source);
-            fileWriter.close();
+        // optional syntax check by glsl_compiler, built from external/mesa3d
+        if (new File("./glsl_compiler").exists())
+            try {
+                File file = File.createTempFile("shader",
+                        current.type == GLEnum.GL_VERTEX_SHADER ? ".vert" : ".frag");
+                FileWriter fileWriter = new FileWriter(file, false);
+                fileWriter.write(current.source);
+                fileWriter.close();
 
-            ProcessBuilder processBuilder = new ProcessBuilder(
-                    "./glsl_compiler", "--glsl-es", file.getAbsolutePath());
-            final Process process = processBuilder.start();
-            InputStream is = process.getInputStream();
-            InputStreamReader isr = new InputStreamReader(is);
-            BufferedReader br = new BufferedReader(isr);
-            String line;
-            String infolog = "";
+                ProcessBuilder processBuilder = new ProcessBuilder(
+                        "./glsl_compiler", "--glsl-es", file.getAbsolutePath());
+                final Process process = processBuilder.start();
+                InputStream is = process.getInputStream();
+                InputStreamReader isr = new InputStreamReader(is);
+                BufferedReader br = new BufferedReader(isr);
+                String line;
+                String infolog = "";
 
-            styledText.setLineBackground(0, styledText.getLineCount(), null);
+                styledText.setLineBackground(0, styledText.getLineCount(), null);
 
-            while ((line = br.readLine()) != null) {
-                infolog += line;
-                if (!line.startsWith("0:"))
-                    continue;
-                String[] details = line.split(":|\\(|\\)");
-                final int ln = Integer.parseInt(details[1]);
-                if (ln > 0) // usually line 0 means errors other than syntax
-                    styledText.setLineBackground(ln - 1, 1,
-                            new Color(Display.getCurrent(), 255, 230, 230));
+                while ((line = br.readLine()) != null) {
+                    infolog += line;
+                    if (!line.startsWith("0:"))
+                        continue;
+                    String[] details = line.split(":|\\(|\\)");
+                    final int ln = Integer.parseInt(details[1]);
+                    if (ln > 0) // usually line 0 means errors other than syntax
+                        styledText.setLineBackground(ln - 1, 1,
+                                new Color(Display.getCurrent(), 255, 230, 230));
+                }
+                file.delete();
+                if (infolog.length() > 0) {
+                    if (!MessageDialog.openConfirm(getShell(),
+                            "Shader Syntax Error, Continue?", infolog))
+                        return;
+                }
+            } catch (IOException e) {
+                sampleView.showError(e);
             }
-            file.delete();
-            if (infolog.length() > 0) {
-                if (!MessageDialog.openConfirm(getShell(),
-                        "Shader Syntax Error, Continue?", infolog))
-                    return;
-            }
-        } catch (IOException e) {
-            sampleView.showError(e);
-        }
 
         // add the initial command, which when read by server will set
         // expectResponse for the message loop and go into message exchange

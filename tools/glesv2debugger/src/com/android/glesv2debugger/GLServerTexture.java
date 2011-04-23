@@ -75,7 +75,8 @@ class GLTexture implements Cloneable {
 
     @Override
     public String toString() {
-        return target.name() + " " + contentChanges.size() + " content change(s)";
+        return String.format("%s %s %d*%d %d change(s)", target, format, width, height,
+                contentChanges.size());
     }
 }
 

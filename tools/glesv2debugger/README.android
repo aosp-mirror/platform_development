@@ -1,0 +1,20 @@
+The following is taken from slide 3 & 4 of https://docs.google.com/a/google.com/present/edit?id=0AcZLV3icFYi0ZGZxa3NqZndfMGRqa2tiOXB4&authkey=CMfb8ukI&hl=en
+The spec doc is at https://docs.google.com/a/google.com/document/d/1dsASXCF9Suq8KOGcxwB2mAwgdRlrFj4QhMxkfaRJlA0/edit?hl=en&authkey=CPj4tKkO#
+
+
+Building and Running
+
+Debugger server is linked into EGL, code is in framework/base/opengl/libs/GLES2_dbg and already included in latest master builds, no action needed.
+Use development/tools/glesv2debugger/setup.sh to build and copy the jars: libprotobuf-java-2.3.0-lite, liblzf, sdklib into development/tools/glesv2debugger/lib
+Install Eclipse SDK for Eclipse: Eclipse->Help->Install New Software. Select "All Available Sites" in the "Work with:" drop down, then find "Eclipse SDK". (If Eclipse reports dependency conflicts, try install updates first)
+Debugger client is an Eclipse plug-in, code is at development/tools/glesv2debugger, built in Eclipse
+Optional: build glsl_compiler and copy to plug-in working directory; this is used for shader syntax check
+
+
+"Attaching" to a Process
+
+adb shell setprop debug.egl.debug_proc <process name> before running process. ie: com.example.android.apis
+EGL checks /proc/<proc_id>/cmdline for match during init and sets debug functions in eglMakeCurrent
+EGL will bind to socket and wait for incoming connection, so need to adb forward tcp:5039 tcp:5039. Port can be overridden by adb shell setprop debug.egl.debug_port <port>
+If create socket failed, EGL will try to open /data/local/tmp/dump.gles2dbg for write, and exit when 8MB is written. The relevant properties are ...debug_forceUseFile, ...debug_maxFileSize, and ...debug_filePath
+Now manually start the process on device; on host, open development/tools/glesv2debugger/.project and run/debug as Eclipse application, then Window->Show View->Other->Debug->OpenGL ES 2.0 Debugger, then Connect or Open File

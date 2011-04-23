@@ -521,6 +521,8 @@ public class GLServerVertex implements Cloneable {
     }
 
     void glVertexAttrib4f(int indx, float x, float y, float z, float w) {
+        if (indx < 0 || indx >= defaultAttribs.length)
+            return;
         defaultAttribs[indx][0] = x;
         defaultAttribs[indx][1] = y;
         defaultAttribs[indx][2] = z;

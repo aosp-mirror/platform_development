@@ -31,16 +31,21 @@ public abstract class MessageParser {
 
     String[] getList()
     {
-        assert args.charAt(0) == '{';
         String arg = args;
         args = args.substring(args.lastIndexOf('}') + 1);
-        int comma = args.indexOf(',');
+        final int comma = args.indexOf(',');
         if (comma >= 0)
             args = args.substring(comma + 1).trim();
         else
             args = null;
+
+        final int comment = arg.indexOf('=');
+        if (comment >= 0)
+            arg = arg.substring(comment + 1);
+        arg = arg.trim();
+        assert arg.charAt(0) == '{';
         arg = arg.substring(1, arg.lastIndexOf('}')).trim();
-        return arg.split(",");
+        return arg.split("\\s*,\\s*");
     }
 
     ByteString parseFloats(int count) {
@@ -74,7 +79,7 @@ public abstract class MessageParser {
     }
 
     ByteString parseMatrix(int columns, int count) {
-        return parseFloats(columns * count);
+        return parseFloats(columns * columns * count);
     }
 
     ByteString parseString() {
@@ -91,21 +96,22 @@ public abstract class MessageParser {
 
     String getArgument()
     {
-        int comma = args.indexOf(",");
+        final int comma = args.indexOf(',');
         String arg = null;
         if (comma >= 0)
         {
-            arg = args.substring(0, comma).trim();
-            args = args.substring(comma + 1).trim();
+            arg = args.substring(0, comma);
+            args = args.substring(comma + 1);
         }
         else
         {
             arg = args;
             args = null;
         }
-        if (arg.indexOf("=") >= 0)
-            arg = arg.substring(arg.indexOf("=") + 1);
-        return arg;
+        final int comment = arg.indexOf('=');
+        if (comment >= 0)
+            arg = arg.substring(comment + 1);
+        return arg.trim();
     }
 
     int parseArgument()
@@ -634,19 +640,19 @@ public abstract class MessageParser {
                 builder.setArg0(parseArgument()); // GLint location
                 builder.setArg1(parseArgument()); // GLsizei count
                 builder.setArg2(parseArgument()); // GLboolean transpose
-                builder.setData(parseMatrix(2, 4 * builder.getArg1())); // GLfloat value
+                builder.setData(parseMatrix(2, builder.getArg1())); // GLfloat value
                 break;
             case glUniformMatrix3fv:
                 builder.setArg0(parseArgument()); // GLint location
                 builder.setArg1(parseArgument()); // GLsizei count
                 builder.setArg2(parseArgument()); // GLboolean transpose
-                builder.setData(parseMatrix(3, 9 * builder.getArg1())); // GLfloat value
+                builder.setData(parseMatrix(3, builder.getArg1())); // GLfloat value
                 break;
             case glUniformMatrix4fv:
                 builder.setArg0(parseArgument()); // GLint location
                 builder.setArg1(parseArgument()); // GLsizei count
                 builder.setArg2(parseArgument()); // GLboolean transpose
-                builder.setData(parseMatrix(4, 16 * builder.getArg1())); // GLfloat value
+                builder.setData(parseMatrix(4, builder.getArg1())); // GLfloat value
                 break;
             case glUseProgram:
                 builder.setArg0(parseArgument()); // GLuint program

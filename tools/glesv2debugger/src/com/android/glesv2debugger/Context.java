@@ -359,9 +359,12 @@ class ContextViewProvider extends LabelProvider implements ITreeContentProvider,
             case glTexImage2D:
             case glTexSubImage2D:
             case glCopyTexImage2D:
-            case glCopyTexSubImage2D:
-                return entry.image = new MessageData(Display.getCurrent(), msg, null)
-                        .getImage();
+            case glCopyTexSubImage2D: {
+                entry.image = new MessageData(Display.getCurrent(), msg, null).getImage();
+                if (entry.image == null)
+                    return null;
+                return new Image(Display.getCurrent(), entry.image.getImageData().scaledTo(96, 96));
+            }
             default:
                 return null;
         }

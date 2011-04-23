@@ -192,12 +192,7 @@ public class SampleView extends ViewPart implements Runnable, SelectionListener 
     }
 
     public SampleView() {
-        MessageParserEx messageParserEx = new MessageParserEx();
-        Message.Builder builder = Message.newBuilder();
-        messageParserEx.parse(builder, "glUniform4fv(1,2,{0,1,2,3,4,5,6,7})");
-        messageParserEx
-                .parse(builder,
-                        "void glShaderSource(shader=4, count=1, string=\"dksjafhskjahourehghskjg\", length=0x0)");
+
     }
 
     public void createLeftPane(Composite parent) {
