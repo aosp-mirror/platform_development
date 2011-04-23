@@ -62,7 +62,7 @@ private:
     static void * s_thread(void *data);
     static __thread RenderingThread *m_tls;
 
-    static int s_createContext(uint32_t pid, uint32_t handle, uint32_t shareCtx);
+    static int s_createContext(uint32_t pid, uint32_t handle, uint32_t shareCtx, int version);
     static int s_createSurface(uint32_t pid, uint32_t handle);
     static int s_destroySurface(uint32_t pid, uint32_t handle);
     static int s_destroyContext(uint32_t pid, uint32_t handle);

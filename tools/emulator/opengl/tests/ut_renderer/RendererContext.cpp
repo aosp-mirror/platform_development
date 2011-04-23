@@ -17,14 +17,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-RendererContext * RendererContext::create(EGLDisplay dpy, EGLConfig config, RendererContext *shareCtx)
+RendererContext * RendererContext::create(EGLDisplay dpy, EGLConfig config, RendererContext *shareCtx, int version)
 {
     EGLContext ctx;
     EGLContext shared = shareCtx == NULL ? EGL_NO_CONTEXT : shareCtx->eglContext();
-    ctx = eglCreateContext(dpy, config, shared, NULL);
+
+    EGLint context_attributes[] = { EGL_CONTEXT_CLIENT_VERSION, 1, EGL_NONE };
+    context_attributes[1] = version;
+
+    ctx = eglCreateContext(dpy, config, shared, context_attributes);
     if (eglGetError() != EGL_SUCCESS) return NULL;
 
-    return new RendererContext(dpy, ctx);
+    return new RendererContext(dpy, ctx, version);
 }
 
 int RendererContext::destroy()

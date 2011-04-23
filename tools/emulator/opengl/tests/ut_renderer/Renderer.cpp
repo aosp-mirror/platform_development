@@ -88,7 +88,7 @@ int Renderer::destroySurface(RenderingThread *thread, const ClientHandle &handle
     return 0;
 }
 
-int Renderer::createContext(RenderingThread *thread, const ClientHandle &handle, ClientHandle shareCtx)
+int Renderer::createContext(RenderingThread *thread, const ClientHandle &handle, ClientHandle shareCtx, int version)
 {
     android::Mutex::Autolock(this->m_mutex);
 
@@ -104,7 +104,7 @@ int Renderer::createContext(RenderingThread *thread, const ClientHandle &handle,
     RendererContext *ctx =
         RendererContext::create(m_dpy,
                                 RendererSurface::getEglConfig(m_dpy, RendererSurface::CONFIG_DEPTH),
-                                shared);
+                                shared, version);
     if (ctx == NULL) {
         fprintf(stderr, "failed to create context\n");
         return -1;

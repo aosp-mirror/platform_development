@@ -41,7 +41,7 @@ public:
     static Renderer *instance();
     int createSurface(RenderingThread *thread, const ClientHandle & handle);
     int destroySurface(RenderingThread *thread, const ClientHandle &handle);
-    int createContext(RenderingThread *thread, const ClientHandle & ctx, const ClientHandle shareCtx);
+    int createContext(RenderingThread *thread, const ClientHandle & ctx, const ClientHandle shareCtx, int version);
     int destroyContext(RenderingThread *thread,const ClientHandle & ctx);
     int makeCurrent(RenderingThread *thread,
                     const ClientHandle & drawSurface, const ClientHandle & readSurface, const ClientHandle & ctx);

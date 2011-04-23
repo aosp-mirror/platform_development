@@ -210,10 +210,11 @@ void RenderingThread::fixTextureEnable()
 #endif
 
 
-int RenderingThread::s_createContext(uint32_t pid, uint32_t handle, uint32_t shareCtx)
+int RenderingThread::s_createContext(uint32_t pid, uint32_t handle, uint32_t shareCtx, int version)
 {
     return Renderer::instance()->createContext(m_tls, Renderer::ClientHandle(pid, handle),
-                                               Renderer::ClientHandle(pid, shareCtx));
+                                               Renderer::ClientHandle(pid, shareCtx),
+                                               version);
 
 }
 

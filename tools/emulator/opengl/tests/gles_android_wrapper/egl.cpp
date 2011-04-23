@@ -404,14 +404,14 @@ EGLContext eglCreateContext(EGLDisplay dpy, EGLConfig config, EGLContext share_c
     if (share) share = ((EGLWrapperContext *)share_context)->aglContext;
 
     EGLContext ctx =  getDispatch()->eglCreateContext(dpy, config, share, attrib_list);
-    EGLWrapperContext *wctx = new EGLWrapperContext(ctx);
+    EGLWrapperContext *wctx = new EGLWrapperContext(ctx,1);
     if (ctx != EGL_NO_CONTEXT) {
         ServerConnection *server;
         if (s_needEncode && (server = ServerConnection::s_getServerConnection()) != NULL) {
             wctx->clientState = new GLClientState();
             server->utEnc()->createContext(server->utEnc(), getpid(),
                                            (uint32_t)wctx,
-                                           (uint32_t)(share_context == EGL_NO_CONTEXT ? 0 : share_context));
+                                           (uint32_t)(share_context == EGL_NO_CONTEXT ? 0 : share_context), wctx->version);
         }
     }
     return (EGLContext)wctx;
