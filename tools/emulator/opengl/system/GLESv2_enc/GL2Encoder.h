@@ -91,5 +91,6 @@ private:
     glGetVertexAttribPointerv_client_proc_t m_glGetVertexAttribPointerv;
     static void s_glGetVertexAttribPointerv(void *self, GLuint index, GLenum pname, GLvoid **pointer);
 
+    static void s_glShaderSource(void *self, GLuint shader, GLsizei count, GLstr *string, GLint *length);
 };
 #endif
