@@ -9,6 +9,7 @@ glBindAttribLocation
 #void glBufferData(GLenum target, GLsizeiptr size, GLvoid *data, GLenum usage)
 glBufferData
 	len data size
+	var_flag data nullAllowed
 
 #void glBufferSubData(GLenum target, GLintptr offset, GLsizeiptr size, GLvoid *data)
 glBufferSubData
@@ -220,6 +221,7 @@ glShaderBinary
 glTexImage2D
 	dir pixels in
 	len pixels pixelDataSize(self, width, height, format, type, 1)
+	var_flag pixels nullAllowed
 
 #void glTexParameterfv(GLenum target, GLenum pname, GLfloat *params)
 glTexParameterfv
@@ -310,6 +312,7 @@ glMapBufferOES
 #void glTexImage3DOES(GLenum target, GLint level, GLenum internalformat, GLsizei width, GLsizei height, GLsizei depth, GLint border, GLenum format, GLenum type, GLvoid *pixels)
 glTexImage3DOES
 	len pixels pixelDataSize3D(self, width, height, depth, format, type, 1)	
+	var_flag pixels nullAllowed
 
 #void glTexSubImage3DOES(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type, GLvoid *pixels)
 glTexSubImage3DOES
