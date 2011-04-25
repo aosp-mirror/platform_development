@@ -18,6 +18,7 @@
 
 #include "TcpStream.h"
 #include "GLDecoder.h"
+#include "GL2Decoder.h"
 #include "ut_rendercontrol_dec.h"
 #include <pthread.h>
 
@@ -43,12 +44,15 @@ public:
     RendererContext *currentContext() { return m_currentContext; }
     void setCurrentContext(RendererContext *ctx) { m_currentContext = ctx; }
     GLDecoder & glDecoder() { return m_glDec; }
+    GL2Decoder & gl2Decoder() { return m_gl2Dec; }
+
 private:
     void initBackendCaps();
 
 private:
     GLDecoder   m_glDec;
     ut_rendercontrol_decoder_context_t m_utDec;
+    GL2Decoder m_gl2Dec;
 
     TcpStream   *m_stream;
     pthread_t m_thread;

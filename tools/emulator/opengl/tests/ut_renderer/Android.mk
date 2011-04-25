@@ -22,7 +22,8 @@ LOCAL_MODULE_TAGS := debug
 # is generated
 LOCAL_ADDITIONAL_DEPENDENCIES := \
 	$(HOST_OUT_SHARED_LIBRARIES)/libut_rendercontrol_dec$(HOST_SHLIB_SUFFIX) \
-	$(HOST_OUT_SHARED_LIBRARIES)/libGLESv1_dec$(HOST_SHLIB_SUFFIX)
+	$(HOST_OUT_SHARED_LIBRARIES)/libGLESv1_dec$(HOST_SHLIB_SUFFIX) \
+	$(HOST_OUT_SHARED_LIBRARIES)/libGLESv2_dec$(HOST_SHLIB_SUFFIX)
 
 LOCAL_SRC_FILES := ut_renderer.cpp \
         RenderingThread.cpp \
@@ -43,14 +44,18 @@ LOCAL_CFLAGS := -DPVR_WAR
 #LOCAL_CFLAGS += -g -O0
 
 LOCAL_C_INCLUDES := $(emulatorOpengl)/shared/OpenglCodecCommon \
+	$(emulatorOpengl)/shared \
         $(emulatorOpengl)/host/include/libOpenglRender \
-		$(call intermediates-dir-for, SHARED_LIBRARIES, libut_rendercontrol_dec, HOST) \
-		$(call intermediates-dir-for, SHARED_LIBRARIES, libGLESv1_dec, HOST) \
+	$(call intermediates-dir-for, SHARED_LIBRARIES, libut_rendercontrol_dec, HOST) \
+	$(call intermediates-dir-for, SHARED_LIBRARIES, libGLESv1_dec, HOST) \
+	$(call intermediates-dir-for, SHARED_LIBRARIES, libGLESv2_dec, HOST) \
         $(emulatorOpengl)/host/libs/GLESv1_dec \
+        $(emulatorOpengl)/host/libs/GLESv2_dec \
         $(emulatorOpengl)/system/GLESv1_enc \
+        $(emulatorOpengl)/system/GLESv2_enc \
         $(emulatorOpengl)/tests/ut_rendercontrol_enc
 
-LOCAL_SHARED_LIBRARIES := libut_rendercontrol_dec libGLESv1_dec libEGL_host_wrapper
+LOCAL_SHARED_LIBRARIES := libut_rendercontrol_dec libGLESv1_dec libGLESv2_dec libEGL_host_wrapper
 LOCAL_STATIC_LIBRARIES := \
     libOpenglCodecCommon \
     libcutils

@@ -312,6 +312,8 @@ void *RenderingThread::thread()
     m_glDisableClientState = m_glDec.set_glDisableClientState(s_glDisableClientState);
 #endif
 
+    m_gl2Dec.initGL();
+
     m_utDec.set_swapBuffers(s_swapBuffers);
     m_utDec.set_createContext(s_createContext);
     m_utDec.set_destroyContext(s_destroyContext);
@@ -356,6 +358,14 @@ void *RenderingThread::thread()
                 if (last > 0) {
                     progress = true;
                     readBuf.consume(last);
+                }
+            }
+
+            if (readBuf.validData() >= 8) {
+                size_t last = m_gl2Dec.decode(readBuf.buf(), readBuf.validData(), m_stream);
+                if (last > 0) {
+                    readBuf.consume(last);
+                    progress = true;
                 }
             }
 

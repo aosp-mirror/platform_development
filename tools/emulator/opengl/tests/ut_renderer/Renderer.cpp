@@ -147,6 +147,7 @@ int Renderer::makeCurrent(RenderingThread *thread,
             eglContext = c->second->eglContext();
             thread->setCurrentContext(c->second);
             thread->glDecoder().setContextData(&c->second->decoderContextData());
+            thread->gl2Decoder().setContextData(&c->second->decoderContextData());
         } else {
             // same context is already set
             eglContext = c->second->eglContext();
@@ -156,6 +157,7 @@ int Renderer::makeCurrent(RenderingThread *thread,
         if (currentContext != NULL) currentContext->unref();
         thread->setCurrentContext(NULL);
         thread->glDecoder().setContextData(NULL);
+        thread->gl2Decoder().setContextData(NULL);
     }
 
     EGLSurface draw = EGL_NO_SURFACE;
