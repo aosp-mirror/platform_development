@@ -243,6 +243,7 @@ size_t glUtilsParamSize(GLenum param)
     case GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS:
     case GL_MAX_FRAGMENT_UNIFORM_VECTORS:
     case GL_MAX_RENDERBUFFER_SIZE:
+    case GL_MAX_TEXTURE_IMAGE_UNITS:
         s = 1;
         break;
     case GL_ALIASED_LINE_WIDTH_RANGE:
