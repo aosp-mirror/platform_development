@@ -406,7 +406,11 @@ EGLBoolean eglDestroySurface(EGLDisplay dpy, EGLSurface surface)
 
 EGLBoolean eglQuerySurface(EGLDisplay dpy, EGLSurface surface, EGLint attribute, EGLint *value)
 {
-    return getDispatch()->eglQuerySurface(dpy, surface, attribute, value);
+    EGLBoolean res = getDispatch()->eglQuerySurface(dpy, surface, attribute, value);
+    if (res && attribute == EGL_RENDERABLE_TYPE) {
+        *value |= EGL_OPENGL_ES2_BIT;
+    }
+    return res;
 }
 
 EGLBoolean eglBindAPI(EGLenum api)
@@ -508,8 +512,9 @@ EGLBoolean eglDestroyContext(EGLDisplay dpy, EGLContext ctx)
         res = getDispatch()->eglDestroyContext(dpy, wctx->aglContext);
         if (res) {
             EGLThreadInfo *ti = getEGLThreadInfo();
-            if (s_needEncode && ti->serverConn) {
-                ti->serverConn->utEnc()->destroyContext(ti->serverConn->utEnc(), getpid(), (uint32_t)ctx);
+            ServerConnection *server;
+            if (s_needEncode && (server = ServerConnection::s_getServerConnection())) {
+                server->utEnc()->destroyContext(ti->serverConn->utEnc(), getpid(), (uint32_t)ctx);
             }
             if (ti->currentContext == wctx) ti->currentContext = NULL;
             delete wctx;
@@ -526,14 +531,17 @@ EGLBoolean eglMakeCurrent(EGLDisplay dpy, EGLSurface draw, EGLSurface read, EGLC
     EGLThreadInfo *ti = getEGLThreadInfo();
     EGLBoolean res = getDispatch()->eglMakeCurrent(dpy, draw, read, aglContext);
     if (res ) {
+        // NOTE - we do get a pointer to the server connection, (rather then using ti->serverConn)
+        // for cases that this is the first egl call of the current thread.
+
         ServerConnection *server;
-        if (s_needEncode && ti->serverConn) {
-            ti->serverConn->utEnc()->makeCurrentContext(ti->serverConn->utEnc(), getpid(),
+        if (s_needEncode && (server = ServerConnection::s_getServerConnection())) {
+            server->utEnc()->makeCurrentContext(server->utEnc(), getpid(),
                                                 (uint32_t) (draw == EGL_NO_SURFACE ? 0 : draw),
                                                 (uint32_t) (read == EGL_NO_SURFACE ? 0 : read),
                                                 (uint32_t) (ctx == EGL_NO_CONTEXT ? 0 : ctx));
-            ti->serverConn->glEncoder()->setClientState( wctx ? wctx->clientState : NULL );
-            ti->serverConn->gl2Encoder()->setClientState( wctx ? wctx->clientState : NULL );
+            server->glEncoder()->setClientState( wctx ? wctx->clientState : NULL );
+            server->gl2Encoder()->setClientState( wctx ? wctx->clientState : NULL );
         }
 
         // set current context in our thread info
