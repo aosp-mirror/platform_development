@@ -31,7 +31,7 @@ void init() {
     gTouchY = 50.0f;
 }
 
-int root(int launchID) {
+int root(void) {
 
     // Clear the background color
     rsgClearColor(0.0f, 0.0f, 0.0f, 0.0f);

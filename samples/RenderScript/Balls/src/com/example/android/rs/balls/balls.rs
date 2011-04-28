@@ -56,12 +56,12 @@ int root() {
     Ball_t *bout;
 
     if (frame & 1) {
-        rsSetObject(&bc.ain, rsGetAllocation(balls2));
-        rsSetObject(&bc.aout, rsGetAllocation(balls1));
+        bc.ain = rsGetAllocation(balls2);
+        bc.aout = rsGetAllocation(balls1);
         bout = balls2;
     } else {
-        rsSetObject(&bc.ain, rsGetAllocation(balls1));
-        rsSetObject(&bc.aout, rsGetAllocation(balls2));
+        bc.ain = rsGetAllocation(balls1);
+        bc.aout = rsGetAllocation(balls2);
         bout = balls1;
     }
 
@@ -78,8 +78,6 @@ int root() {
     frame++;
     rsgBindProgramFragment(gPFPoints);
     rsgDrawMesh(partMesh);
-    rsClearObject(&bc.ain);
-    rsClearObject(&bc.aout);
     return 1;
 }
 

@@ -633,7 +633,7 @@ static void displayAnisoSample() {
     }
 }
 
-int root(int launchID) {
+int root(void) {
 
     gDt = rsGetDt();
 
