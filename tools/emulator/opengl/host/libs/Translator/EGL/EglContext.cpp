@@ -53,3 +53,16 @@ bool EglContext::getAttrib(EGLint attrib,EGLint* value) {
     }
     return true;
 }
+
+bool EglContext::attachImage(unsigned int imageId,ImagePtr img){
+   if(m_attachedImages.find(imageId) == m_attachedImages.end()){
+       m_attachedImages[imageId] = img;
+       return true;
+   }
+   return false;
+}
+
+void EglContext::detachImage(unsigned int imageId){
+    m_attachedImages.erase(imageId);
+}
+

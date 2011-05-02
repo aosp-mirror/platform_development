@@ -19,6 +19,7 @@
 #include <list>
 #include <map>
 #include <EGL/egl.h>
+#include <EGL/eglext.h>
 #include <utils/threads.h>
 #include <GLcommon/SmartPtr.h>
 
@@ -30,8 +31,8 @@
 
 
 typedef  std::list<EglConfig*>  ConfigsList;
-typedef  std::map< unsigned int,ContextPtr > ContextsHndlMap;
-typedef  std::map< unsigned int,SurfacePtr > SurfacesHndlMap;
+typedef  std::map< unsigned int, ContextPtr>     ContextsHndlMap;
+typedef  std::map< unsigned int, SurfacePtr>     SurfacesHndlMap;
 
 class EglDisplay {
 public:
@@ -60,6 +61,11 @@ public:
     void initialize();
     void terminate();
     bool isInitialize();
+
+    ImagePtr getImage(EGLImageKHR img);
+    EGLImageKHR addImageKHR(ImagePtr);
+    bool destroyImageKHR(EGLImageKHR img);
+
 private:
    void initConfigurations();
 
@@ -71,7 +77,9 @@ private:
    ContextsHndlMap        m_contexts;
    SurfacesHndlMap        m_surfaces;
    ObjectNameManager      m_manager[MAX_GLES_VERSION];
-   android::Mutex m_lock;
+   android::Mutex         m_lock;
+   ImagesHndlMap           m_eglImages;
+   unsigned int           m_nextEglImageId;
 };
 
 #endif

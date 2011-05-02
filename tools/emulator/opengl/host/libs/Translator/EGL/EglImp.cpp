@@ -34,12 +34,21 @@
 #define MINOR          1
 #define MAJOR          4
 
+//declerations
+EglImage *attachEGLImage(unsigned int imageId);
+void detachEGLImage(unsigned int imageId);
+
+
 EglGlobalInfo* g_eglInfo = EglGlobalInfo::getInstance();
 
 __thread EglThreadInfo*    tls_thread  = NULL;
 static EGLiface            s_eglIface = {
-    getThreadInfo: getThreadInfo      // implemented in ThreadInfo.cpp
+    getThreadInfo    : getThreadInfo,      // implemented in ThreadInfo.cpp
+    eglAttachEGLImage:attachEGLImage,
+    eglDetachEGLImage:detachEGLImage
 };
+
+/*****************************************  supported extentions  ***********************************************************************/
 
 //extentions
 typedef struct {
@@ -47,10 +56,19 @@ typedef struct {
   __eglMustCastToProperFunctionPointerType address;
 } EglExtentionDescriptor;
 
-#define EGL_EXTENTIONS 0
-//supported extentions;
-static EglExtentionDescriptor s_extentions[] = {};
+#define EGL_EXTENTIONS 2
 
+//decleration
+EGLImageKHR eglCreateImageKHR(EGLDisplay display, EGLContext context, EGLenum target, EGLClientBuffer buffer, const EGLint *attrib_list);
+EGLBoolean eglDestroyImageKHR(EGLDisplay display, EGLImageKHR image);
+
+// extentions descriptors
+static EglExtentionDescriptor s_extentions[] = {
+                                                   {"eglCreateImageKHR" ,(__eglMustCastToProperFunctionPointerType)eglCreateImageKHR},
+                                                   {"eglDestroyImageKHR",(__eglMustCastToProperFunctionPointerType)eglDestroyImageKHR}
+                                               };
+
+/****************************************************************************************************************************************/
 //macros for accessing global egl info & tls objects
 
 #define CURRENT_THREAD()                                     \
@@ -92,6 +110,7 @@ static EglExtentionDescriptor s_extentions[] = {};
             RETURN_ERROR(ret,EGL_BAD_CONTEXT);               \
         }
 
+
 #define VALIDATE_DISPLAY(EGLDisplay) \
         VALIDATE_DISPLAY_RETURN(EGLDisplay,EGL_FALSE)
 
@@ -103,6 +122,7 @@ static EglExtentionDescriptor s_extentions[] = {};
 
 #define VALIDATE_CONTEXT(EGLContext) \
         VALIDATE_CONTEXT_RETURN(EGLContext,EGL_FALSE)
+
 
 EGLAPI EGLint EGLAPIENTRY eglGetError(void) {
     CURRENT_THREAD();
@@ -168,7 +188,7 @@ EGLAPI const char * EGLAPIENTRY eglQueryString(EGLDisplay display, EGLint name) 
     VALIDATE_DISPLAY(display);
     static const char* vendor     = "Google";
     static const char* version    = "1.4";
-    static const char* extensions = "EGL_KHR_image_base EGL_KHR_gl_texture_2d_image";  //XXX: Not implemented yet
+    static const char* extensions = "EGL_KHR_image_base EGL_KHR_gl_texture_2d_image";
     if(!EglValidate::stringName(name)) {
         RETURN_ERROR(NULL,EGL_BAD_PARAMETER);
     }
@@ -593,7 +613,7 @@ EGLAPI EGLContext EGLAPIENTRY eglCreateContext(EGLDisplay display, EGLConfig con
     } else {
         iface->deleteGLESContext(glesCtx);
     }
- 
+
 
 return EGL_NO_CONTEXT;
 }
@@ -902,6 +922,7 @@ EGLAPI EGLBoolean EGLAPIENTRY eglCopyBuffers(EGLDisplay display, EGLSurface surf
 /***********************************************************************/
 
 
+
 //do last ( only if needed)
 /*********************************************************************************************************/
 EGLAPI EGLBoolean EGLAPIENTRY eglBindTexImage(EGLDisplay dpy, EGLSurface surface, EGLint buffer) {
@@ -916,3 +937,74 @@ return 0;
 /*********************************************************************************************************/
 
 
+/************************** KHR IMAGE *************************************************************/
+EglImage *attachEGLImage(unsigned int imageId)
+{
+    ThreadInfo* thread  = getThreadInfo();
+    EglDisplay* dpy     = static_cast<EglDisplay*>(thread->eglDisplay);
+    EglContext* ctx     = static_cast<EglContext*>(thread->eglContext);
+    if (ctx) {
+        ImagePtr img = dpy->getImage(reinterpret_cast<EGLImageKHR>(imageId));
+        if(img.Ptr()) {
+             ctx->attachImage(imageId,img);
+             return img.Ptr();
+        }
+    }
+    return NULL;
+}
+
+void detachEGLImage(unsigned int imageId)
+{
+    ThreadInfo* thread  = getThreadInfo();
+    EglDisplay* dpy     = static_cast<EglDisplay*>(thread->eglDisplay);
+    EglContext* ctx     = static_cast<EglContext*>(thread->eglContext);
+    if (ctx) {
+        ctx->detachImage(imageId);
+    }
+}
+
+
+EGLImageKHR eglCreateImageKHR(EGLDisplay display, EGLContext context, EGLenum target, EGLClientBuffer buffer, const EGLint *attrib_list)
+{
+    VALIDATE_DISPLAY(display);
+    VALIDATE_CONTEXT(context);
+
+    // We only support EGL_GL_TEXTURE_2D images
+    if (target != EGL_GL_TEXTURE_2D_KHR) {
+        RETURN_ERROR(EGL_NO_IMAGE_KHR,EGL_BAD_PARAMETER);
+    }
+
+    ThreadInfo* thread  = getThreadInfo();
+    ShareGroupPtr sg = thread->shareGroup;
+    if (sg.Ptr() != NULL) {
+        unsigned int globalTexName = sg->getGlobalName(TEXTURE, (unsigned int)buffer);
+        if (!globalTexName) return EGL_NO_IMAGE_KHR;
+
+        ImagePtr img( new EglImage() );
+        if (img.Ptr() != NULL) {
+
+            ObjectDataPtr objData = sg->getObjectData(TEXTURE, (unsigned int)buffer);
+            if (!objData.Ptr()) return EGL_NO_IMAGE_KHR;
+
+            TextureData *texData = (TextureData *)objData.Ptr();
+            if(!texData->width || !texData->height) return EGL_NO_IMAGE_KHR;
+            img->width = texData->width;
+            img->height = texData->height;
+            img->border = texData->border;
+            img->internalFormat = texData->internalFormat;
+            img->globalTexName = globalTexName;
+            return dpy->addImageKHR(img);
+        }
+    }
+
+    return EGL_NO_IMAGE_KHR;
+}
+
+
+EGLBoolean eglDestroyImageKHR(EGLDisplay display, EGLImageKHR image)
+{
+    VALIDATE_DISPLAY(display);
+    return dpy->destroyImageKHR(image) ? EGL_TRUE:EGL_FALSE;
+}
+
+/*********************************************************************************/

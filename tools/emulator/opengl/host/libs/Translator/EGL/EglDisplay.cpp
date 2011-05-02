@@ -18,7 +18,7 @@
 #include <GLcommon/GLutils.h>
 #include <utils/threads.h>
 
-EglDisplay::EglDisplay(EGLNativeDisplayType dpy,bool isDefault):m_dpy(dpy),m_initialized(false),m_configInitialized(false),m_isDefault(isDefault){};
+EglDisplay::EglDisplay(EGLNativeDisplayType dpy,bool isDefault):m_dpy(dpy),m_initialized(false),m_configInitialized(false),m_isDefault(isDefault),m_nextEglImageId(0){};
 
 EglDisplay::~EglDisplay() {
     android::Mutex::Autolock mutex(m_lock);
@@ -205,4 +205,30 @@ EGLContext EglDisplay::addContext(ContextPtr ctx ) {
 
    m_contexts[hndl] = ctx;
    return ret;
+}
+
+
+EGLImageKHR EglDisplay::addImageKHR(ImagePtr img) {
+    android::Mutex::Autolock mutex(m_lock);
+    do { ++m_nextEglImageId; } while(m_nextEglImageId == 0);
+    img->imageId = m_nextEglImageId;
+    m_eglImages[m_nextEglImageId] = img;
+    return reinterpret_cast<EGLImageKHR>(m_nextEglImageId);
+}
+
+ImagePtr EglDisplay::getImage(EGLImageKHR img) {
+    android::Mutex::Autolock mutex(m_lock);
+    ImagesHndlMap::iterator i( m_eglImages.find((unsigned int)img) );
+    return (i != m_eglImages.end()) ? (*i).second :ImagePtr(NULL);
+}
+
+bool EglDisplay:: destroyImageKHR(EGLImageKHR img) {
+    android::Mutex::Autolock mutex(m_lock);
+    ImagesHndlMap::iterator i( m_eglImages.find((unsigned int)img) );
+    if (i != m_eglImages.end())
+    {
+        m_eglImages.erase(i);
+        return true;
+    }
+    return false;
 }

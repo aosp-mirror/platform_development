@@ -54,6 +54,8 @@ public:
     GLEScontext* getGlesContext(){return m_glesContext;}
     void setSurfaces(SurfacePtr read,SurfacePtr draw);
     unsigned int getHndl(){return m_hndl;}
+    bool attachImage(unsigned int imageId,ImagePtr img);
+    void detachImage(unsigned int imageId);
 
 private:
     static unsigned int  s_nextContextHndl;
@@ -66,6 +68,7 @@ private:
     bool                 m_destroy;
     GLESVersion          m_version;
     unsigned int         m_hndl;
+    ImagesHndlMap        m_attachedImages;
 };
 
 #endif
