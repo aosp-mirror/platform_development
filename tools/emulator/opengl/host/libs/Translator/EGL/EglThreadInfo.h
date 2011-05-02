@@ -32,6 +32,8 @@ public:
     void       setApi(EGLenum api){m_api = api;}
     EGLenum    getApi(){return m_api;}
 
+    static EglThreadInfo*  get(void) __attribute__((const));
+
 private:
     EglDisplay*     m_currentDisplay;
     EGLint          m_err;
