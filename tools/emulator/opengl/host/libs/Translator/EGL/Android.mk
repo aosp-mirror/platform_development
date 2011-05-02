@@ -10,7 +10,7 @@ OS_SRCS:=
 
 ifeq ($(HOST_OS),linux)
     OS_SRCS = EglX11Api.cpp
-    LOCAL_LDLIBS := -lX11 -lGL -ldl
+    LOCAL_LDLIBS := -lX11 -lGL -ldl -lpthread
 endif
 
 ifeq ($(HOST_OS),darwin)

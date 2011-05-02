@@ -73,6 +73,16 @@ typedef HDC                   EGLNativeDisplayType;
 typedef HBITMAP               EGLNativePixmapType;
 typedef HWND                  EGLNativeWindowType;
 
+#elif defined(__APPLE__)
+
+typedef int  EGLNativePixelFormatType;
+
+typedef struct _EGLNativeContextType*      EGLNativeContextType;
+typedef struct _EGLNativePbufferType*      EGLNativePbufferType;
+typedef struct _EGLNativeDisplayType*      EGLNativeDisplayType;
+typedef int       EGLNativePixmapType;
+typedef int       EGLNativeWindowType;
+
 #elif defined(__unix__)
 
 /* X11 (tentative)  */

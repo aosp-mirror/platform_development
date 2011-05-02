@@ -17,3 +17,26 @@
 #include "EglOsApi.h"
 
 EglThreadInfo::EglThreadInfo():m_err(EGL_SUCCESS),m_api(EGL_OPENGL_ES_API) {}
+
+#include <cutils/threads.h>
+
+static thread_store_t s_tls = THREAD_STORE_INITIALIZER;
+
+static void tlsDestruct(void *ptr)
+{
+    if (ptr) {
+        EglThreadInfo *ti = (EglThreadInfo *)ptr;
+        delete ti;
+    }
+}
+
+EglThreadInfo* EglThreadInfo::get(void)
+{
+    EglThreadInfo *ti = (EglThreadInfo *)thread_store_get(&s_tls);
+    if (!ti) {
+        ti = new EglThreadInfo();
+        thread_store_set(&s_tls, ti, tlsDestruct);
+    }
+    return ti;
+}
+
