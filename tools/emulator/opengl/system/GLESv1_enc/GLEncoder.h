@@ -43,6 +43,7 @@ private:
     glGetFloatv_client_proc_t m_glGetFloatv_enc;
     glGetFixedv_client_proc_t m_glGetFixedv_enc;
     glGetBooleanv_client_proc_t m_glGetBooleanv_enc;
+    glGetPointerv_client_proc_t m_glGetPointerv_enc;
 
     glPixelStorei_client_proc_t m_glPixelStorei_enc;
     glVertexPointer_client_proc_t m_glVertexPointer_enc;
@@ -51,10 +52,13 @@ private:
     glPointSizePointerOES_client_proc_t m_glPointSizePointerOES_enc;
     glTexCoordPointer_client_proc_t m_glTexCoordPointer_enc;
     glClientActiveTexture_client_proc_t m_glClientActiveTexture_enc;
+    glMatrixIndexPointerOES_client_proc_t m_glMatrixIndexPointerOES_enc;
+    glWeightPointerOES_client_proc_t m_glWeightPointerOES_enc;
 
     glBindBuffer_client_proc_t m_glBindBuffer_enc;
     glEnableClientState_client_proc_t m_glEnableClientState_enc;
     glDisableClientState_client_proc_t m_glDisableClientState_enc;
+    glIsEnabled_client_proc_t m_glIsEnabled_enc;
     glDrawArrays_client_proc_t m_glDrawArrays_enc;
     glDrawElements_client_proc_t m_glDrawElements_enc;
     glFlush_client_proc_t m_glFlush_enc;
@@ -64,6 +68,7 @@ private:
     static void s_glGetBooleanv(void *self, GLenum pname, GLboolean *ptr);
     static void s_glGetFloatv(void *self, GLenum pname, GLfloat *ptr);
     static void s_glGetFixedv(void *self, GLenum pname, GLfixed *ptr);
+    static void s_glGetPointerv(void *self, GLenum pname, GLvoid **params);
 
     static void s_glFlush(void * self);
     static GLubyte * s_glGetString(void *self, GLenum name);
@@ -73,8 +78,11 @@ private:
     static void s_glPointsizePointer(void *self, GLenum type, GLsizei stride, void *data);
     static void s_glClientActiveTexture(void *self, GLenum texture);
     static void s_glTexcoordPointer(void *self, int size, GLenum type, GLsizei stride, void *data);
+    static void s_glMatrixIndexPointerOES(void *self, int size, GLenum type, GLsizei stride, void * data);
+    static void s_glWeightPointerOES(void *self, int size, GLenum type, GLsizei stride, void * data);
     static void s_glDisableClientState(void *self, GLenum state);
     static void s_glEnableClientState(void *self, GLenum state);
+    static GLboolean s_glIsEnabled(void *self, GLenum cap);
     static void s_glBindBuffer(void *self, GLenum target, GLuint id);
     static void s_glDrawArrays(void *self, GLenum mode, GLint first, GLsizei count);
     static void s_glDrawElements(void *self, GLenum mode, GLsizei count, GLenum type, void *indices);
@@ -109,6 +117,5 @@ private:
             src++;
         }
     }
-
 };
 #endif

@@ -40,16 +40,17 @@ GLint * GLEncoder::getCompressedTextureFormats()
     return m_compressedTextureFormats;
 }
 
-
 void GLEncoder::s_glGetIntegerv(void *self, GLenum param, GLint *ptr)
-{
+{ 
     GLEncoder *ctx = (GLEncoder *)self;
+    assert(ctx->m_state != NULL);
     if (param == GL_COMPRESSED_TEXTURE_FORMATS) {
         GLint * compressedTextureFormats = ctx->getCompressedTextureFormats();
         if (ctx->m_num_compressedTextureFormats > 0 && compressedTextureFormats != NULL) {
             memcpy(ptr, compressedTextureFormats, ctx->m_num_compressedTextureFormats * sizeof(GLint));
         }
-    } else {
+    } 
+    else if (!ctx->m_state->getClientStateParameter<GLint>(param,ptr)) {
         ctx->m_glGetIntegerv_enc(self, param, ptr);
     }
 }
@@ -57,6 +58,7 @@ void GLEncoder::s_glGetIntegerv(void *self, GLenum param, GLint *ptr)
 void GLEncoder::s_glGetFloatv(void *self, GLenum param, GLfloat *ptr)
 {
     GLEncoder *ctx = (GLEncoder *)self;
+    assert(ctx->m_state != NULL);
     if (param == GL_COMPRESSED_TEXTURE_FORMATS) {
         GLint * compressedTextureFormats = ctx->getCompressedTextureFormats();
         if (ctx->m_num_compressedTextureFormats > 0 && compressedTextureFormats != NULL) {
@@ -64,7 +66,8 @@ void GLEncoder::s_glGetFloatv(void *self, GLenum param, GLfloat *ptr)
                 ptr[i] = (GLfloat) compressedTextureFormats[i];
             }
         }
-    } else {
+    }
+    else if (!ctx->m_state->getClientStateParameter<GLfloat>(param,ptr)) {
         ctx->m_glGetFloatv_enc(self, param, ptr);
     }
 }
@@ -72,6 +75,7 @@ void GLEncoder::s_glGetFloatv(void *self, GLenum param, GLfloat *ptr)
 void GLEncoder::s_glGetFixedv(void *self, GLenum param, GLfixed *ptr)
 {
     GLEncoder *ctx = (GLEncoder *)self;
+    assert(ctx->m_state != NULL);
     if (param == GL_COMPRESSED_TEXTURE_FORMATS) {
         GLint * compressedTextureFormats = ctx->getCompressedTextureFormats();
         if (ctx->m_num_compressedTextureFormats > 0 && compressedTextureFormats != NULL) {
@@ -79,7 +83,8 @@ void GLEncoder::s_glGetFixedv(void *self, GLenum param, GLfixed *ptr)
                 ptr[i] =  compressedTextureFormats[i] << 16;
             }
         }
-    } else {
+    }
+    else if (!ctx->m_state->getClientStateParameter<GLfixed>(param,ptr)) {
         ctx->m_glGetFixedv_enc(self, param, ptr);
     }
 }
@@ -87,11 +92,20 @@ void GLEncoder::s_glGetFixedv(void *self, GLenum param, GLfixed *ptr)
 void GLEncoder::s_glGetBooleanv(void *self, GLenum param, GLboolean *ptr)
 {
     GLEncoder *ctx = (GLEncoder *)self;
+    assert(ctx->m_state != NULL);
     if (param == GL_COMPRESSED_TEXTURE_FORMATS) {
         // ignore the command, although we should have generated a GLerror;
-    } else {
+    }
+    else if (!ctx->m_state->getClientStateParameter<GLboolean>(param,ptr)) {
         ctx->m_glGetBooleanv_enc(self, param, ptr);
     }
+}
+
+void GLEncoder::s_glGetPointerv(void * self, GLenum param, GLvoid **params)
+{
+    GLEncoder * ctx = (GLEncoder *) self;
+    assert(ctx->m_state != NULL);
+    ctx->m_state->getClientStatePointer(param,params);
 }
 
 void GLEncoder::s_glFlush(void *self)
@@ -125,57 +139,73 @@ void GLEncoder::s_glPixelStorei(void *self, GLenum param, GLint value)
 {
     GLEncoder *ctx = (GLEncoder *)self;
     ctx->m_glPixelStorei_enc(ctx, param, value);
-    assert(m_state != NULL);
+    assert(ctx->m_state != NULL);
     ctx->m_state->setPixelStore(param, value);
 }
 
 void GLEncoder::s_glVertexPointer(void *self, int size, GLenum type, GLsizei stride, void *data)
 {
     GLEncoder *ctx = (GLEncoder *)self;
-    assert(m_state != NULL);
+    assert(ctx->m_state != NULL);
     ctx->m_state->setState(GLClientState::VERTEX_LOCATION, size, type, stride, data);
 }
 
 void GLEncoder::s_glNormalPointer(void *self, GLenum type, GLsizei stride, void *data)
 {
     GLEncoder *ctx = (GLEncoder *)self;
-    assert(m_state != NULL);
+    assert(ctx->m_state != NULL);
     ctx->m_state->setState(GLClientState::NORMAL_LOCATION, 3, type, stride, data);
 }
 
 void GLEncoder::s_glColorPointer(void *self, int size, GLenum type, GLsizei stride, void *data)
 {
     GLEncoder *ctx = (GLEncoder *)self;
-    assert(m_state != NULL);
+    assert(ctx->m_state != NULL);
     ctx->m_state->setState(GLClientState::COLOR_LOCATION, size, type, stride, data);
 }
 
 void GLEncoder::s_glPointsizePointer(void *self, GLenum type, GLsizei stride, void *data)
 {
     GLEncoder *ctx = (GLEncoder *)self;
-    assert(m_state != NULL);
+    assert(ctx->m_state != NULL);
     ctx->m_state->setState(GLClientState::POINTSIZE_LOCATION, 1, type, stride, data);
 }
 
 void GLEncoder::s_glClientActiveTexture(void *self, GLenum texture)
 {
     GLEncoder *ctx = (GLEncoder *)self;
-    assert(m_state != NULL);
+    assert(ctx->m_state != NULL);
     ctx->m_state->setActiveTexture(texture - GL_TEXTURE0);
 }
 
 void GLEncoder::s_glTexcoordPointer(void *self, int size, GLenum type, GLsizei stride, void *data)
 {
     GLEncoder *ctx = (GLEncoder *)self;
-    assert(m_state != NULL);
+    assert(ctx->m_state != NULL);
     int loc = ctx->m_state->getLocation(GL_TEXTURE_COORD_ARRAY);
+    ctx->m_state->setState(loc, size, type, stride, data);
+}
+
+void GLEncoder::s_glMatrixIndexPointerOES(void *self, int size, GLenum type, GLsizei stride, void * data)
+{
+    GLEncoder *ctx = (GLEncoder *)self;
+    assert(ctx->m_state != NULL);
+    int loc = ctx->m_state->getLocation(GL_MATRIX_INDEX_ARRAY_OES);
+    ctx->m_state->setState(loc, size, type, stride, data);
+}
+
+void GLEncoder::s_glWeightPointerOES(void * self, int size, GLenum type, GLsizei stride, void * data)
+{
+    GLEncoder *ctx = (GLEncoder *)self;
+    assert(ctx->m_state != NULL);
+    int loc = ctx->m_state->getLocation(GL_WEIGHT_ARRAY_OES);
     ctx->m_state->setState(loc, size, type, stride, data);
 }
 
 void GLEncoder::s_glEnableClientState(void *self, GLenum state)
 {
     GLEncoder *ctx = (GLEncoder *) self;
-    assert(m_state != NULL);
+    assert(ctx->m_state != NULL);
     int loc = ctx->m_state->getLocation(state);
     ctx->m_state->enable(loc, 1);
 }
@@ -183,15 +213,28 @@ void GLEncoder::s_glEnableClientState(void *self, GLenum state)
 void GLEncoder::s_glDisableClientState(void *self, GLenum state)
 {
     GLEncoder *ctx = (GLEncoder *) self;
-    assert(m_state != NULL);
+    assert(ctx->m_state != NULL);
     int loc = ctx->m_state->getLocation(state);
     ctx->m_state->enable(loc, 0);
+}
+
+GLboolean GLEncoder::s_glIsEnabled(void *self, GLenum cap)
+{
+    GLEncoder *ctx = (GLEncoder *) self;
+    assert(ctx->m_state != NULL);
+    int loc = ctx->m_state->getLocation(cap);
+    const GLClientState::VertexAttribState *state = ctx->m_state->getState(loc);
+
+    if (state!=NULL)
+      return state->enabled;
+
+    return ctx->m_glIsEnabled_enc(self,cap);
 }
 
 void GLEncoder::s_glBindBuffer(void *self, GLenum target, GLuint id)
 {
     GLEncoder *ctx = (GLEncoder *) self;
-    assert(m_state != NULL);
+    assert(ctx->m_state != NULL);
     ctx->m_state->bindBuffer(target, id);
     // TODO set error state if needed;
     ctx->m_glBindBuffer_enc(self, target, id);
@@ -255,6 +298,14 @@ void GLEncoder::sendVertexData(unsigned int first, unsigned int count)
                     this->glPointSizePointerData(this, state->type, state->stride,
                                                  (unsigned char *) state->data + firstIndex, datalen);
                     break;
+                case GLClientState::WEIGHT_LOCATION:
+                    this->glWeightPointerData(this, state->size, state->type, state->stride,
+                                              (unsigned char * ) state->data + firstIndex, datalen);
+                    break;
+                case GLClientState::MATRIXINDEX_LOCATION:
+                    this->glMatrixIndexPointerData(this, state->size, state->type, state->stride,
+                                                  (unsigned char *)state->data + firstIndex, datalen);
+                    break;
                 }
             } else {
                 this->glBindBuffer(this, GL_ARRAY_BUFFER, state->bufferObject);
@@ -287,6 +338,14 @@ void GLEncoder::sendVertexData(unsigned int first, unsigned int count)
                     this->glTexCoordPointerOffset(this, state->size, state->type, state->stride,
                                                   (GLuint) state->data + firstIndex);
                     break;
+                case GLClientState::WEIGHT_LOCATION:
+                    this->glWeightPointerOffset(this,state->size,state->type,state->stride,
+                                                (GLuint)state->data+firstIndex);
+                    break;
+                case GLClientState::MATRIXINDEX_LOCATION:
+                    this->glMatrixIndexPointerOffset(this,state->size,state->type,state->stride,
+                                              (GLuint)state->data+firstIndex);
+                    break;
                 }
             }
         } else {
@@ -307,7 +366,7 @@ void GLEncoder::s_glDrawElements(void *self, GLenum mode, GLsizei count, GLenum 
 {
 
     GLEncoder *ctx = (GLEncoder *)self;
-    assert(m_state != NULL);
+    assert(ctx->m_state != NULL);
 
     bool has_immediate_arrays = false;
     bool has_indirect_arrays = false;
@@ -392,15 +451,19 @@ GLEncoder::GLEncoder(IOStream *stream) : gl_encoder_context_t(stream)
     m_glPointSizePointerOES_enc = set_glPointSizePointerOES(s_glPointsizePointer);
     m_glClientActiveTexture_enc = set_glClientActiveTexture(s_glClientActiveTexture);
     m_glTexCoordPointer_enc = set_glTexCoordPointer(s_glTexcoordPointer);
+    m_glMatrixIndexPointerOES_enc = set_glMatrixIndexPointerOES(s_glMatrixIndexPointerOES);
+    m_glWeightPointerOES_enc = set_glWeightPointerOES(s_glWeightPointerOES);
 
     m_glGetIntegerv_enc = set_glGetIntegerv(s_glGetIntegerv);
     m_glGetFloatv_enc = set_glGetFloatv(s_glGetFloatv);
     m_glGetBooleanv_enc = set_glGetBooleanv(s_glGetBooleanv);
     m_glGetFixedv_enc = set_glGetFixedv(s_glGetFixedv);
+    m_glGetPointerv_enc = set_glGetPointerv(s_glGetPointerv);
 
     m_glBindBuffer_enc = set_glBindBuffer(s_glBindBuffer);
     m_glEnableClientState_enc = set_glEnableClientState(s_glEnableClientState);
     m_glDisableClientState_enc = set_glDisableClientState(s_glDisableClientState);
+    m_glIsEnabled_enc = set_glIsEnabled(s_glIsEnabled);
     m_glDrawArrays_enc = set_glDrawArrays(s_glDrawArrays);
     m_glDrawElements_enc = set_glDrawElements(s_glDrawElements);
     set_glGetString(s_glGetString);

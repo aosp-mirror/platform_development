@@ -42,7 +42,9 @@ public:
         TEXCOORD5_LOCATION = 9,
         TEXCOORD6_LOCATION = 10,
         TEXCOORD7_LOCATION = 11,
-        LAST_LOCATION = 12
+        MATRIXINDEX_LOCATION = 12,
+        WEIGHT_LOCATION = 13,
+        LAST_LOCATION = 14
     } StateLocation;
 
     typedef struct {
@@ -92,6 +94,21 @@ public:
         }
         return err;
     }
+    int getBuffer(GLenum target)
+    {
+      int ret=0;
+      switch (target) {
+      case GL_ARRAY_BUFFER:
+          ret = m_currentArrayVbo;
+          break;
+      case GL_ELEMENT_ARRAY_BUFFER:
+          ret = m_currentIndexVbo;
+          break;
+      default:
+          ret = -1;
+      }
+      return ret;
+    }
     size_t pixelDataSize(GLsizei width, GLsizei height, GLenum format, GLenum type, int pack);
 
 private:
@@ -104,6 +121,190 @@ private:
 
 
     bool validLocation(int location) { return (location >= 0 && location < m_nLocations); }
+public:
+    void getClientStatePointer(GLenum pname, GLvoid** params);
+    template <class T>
+    bool getClientStateParameter(GLenum param, T* ptr)
+    {
+        bool isClientStateParam = false;
+        switch (param) {
+        case GL_CLIENT_ACTIVE_TEXTURE: {
+            GLint tex = getActiveTexture() + GL_TEXTURE0;
+            *ptr = tex;
+            isClientStateParam = true;
+            break;
+            }
+        case GL_VERTEX_ARRAY_SIZE: {
+            const GLClientState::VertexAttribState *state = getState(GLClientState::VERTEX_LOCATION);
+            *ptr = state->size;
+            isClientStateParam = true;
+            break;
+            }
+        case GL_VERTEX_ARRAY_TYPE: {
+            const GLClientState::VertexAttribState *state = getState(GLClientState::VERTEX_LOCATION);
+            *ptr = state->type;
+            isClientStateParam = true;
+            break;
+            }
+        case GL_VERTEX_ARRAY_STRIDE: {
+            const GLClientState::VertexAttribState *state = getState(GLClientState::VERTEX_LOCATION);
+            *ptr = state->stride;
+            isClientStateParam = true;
+            break;
+            }
+        case GL_COLOR_ARRAY_SIZE: {
+            const GLClientState::VertexAttribState *state = getState(GLClientState::COLOR_LOCATION);
+            *ptr = state->size;
+            isClientStateParam = true;
+            break;
+            }
+        case GL_COLOR_ARRAY_TYPE: {
+            const GLClientState::VertexAttribState *state = getState(GLClientState::COLOR_LOCATION);
+            *ptr = state->type;
+            isClientStateParam = true;
+            break;
+            }
+        case GL_COLOR_ARRAY_STRIDE: {
+            const GLClientState::VertexAttribState *state = getState(GLClientState::COLOR_LOCATION);
+            *ptr = state->stride;
+            isClientStateParam = true;
+            break;
+            }
+        case GL_NORMAL_ARRAY_TYPE: {
+            const GLClientState::VertexAttribState *state = getState(GLClientState::NORMAL_LOCATION);
+            *ptr = state->type;
+            isClientStateParam = true;
+            break;
+            }
+        case GL_NORMAL_ARRAY_STRIDE: {
+            const GLClientState::VertexAttribState *state = getState(GLClientState::NORMAL_LOCATION);
+            *ptr = state->stride;
+            isClientStateParam = true;
+            break;
+            }
+        case GL_TEXTURE_COORD_ARRAY_SIZE: {
+            const GLClientState::VertexAttribState *state = getState(getActiveTexture() + GLClientState::TEXCOORD0_LOCATION);
+            *ptr = state->size;
+            isClientStateParam = true;
+            break;
+            }
+        case GL_TEXTURE_COORD_ARRAY_TYPE: {
+            const GLClientState::VertexAttribState *state = getState(getActiveTexture() + GLClientState::TEXCOORD0_LOCATION);
+            *ptr = state->type;
+            isClientStateParam = true;
+            break;
+            }
+        case GL_TEXTURE_COORD_ARRAY_STRIDE: {
+            const GLClientState::VertexAttribState *state = getState(getActiveTexture() + GLClientState::TEXCOORD0_LOCATION);
+            *ptr = state->stride;
+            isClientStateParam = true;
+            break;
+            }
+        case GL_POINT_SIZE_ARRAY_TYPE_OES: {
+            const GLClientState::VertexAttribState *state = getState(GLClientState::POINTSIZE_LOCATION);
+            *ptr = state->type;
+            isClientStateParam = true;
+            break;
+            }
+        case GL_POINT_SIZE_ARRAY_STRIDE_OES: {
+            const GLClientState::VertexAttribState *state = getState(GLClientState::POINTSIZE_LOCATION);
+            *ptr = state->stride;
+            isClientStateParam = true;
+            break;
+            }
+        case GL_MATRIX_INDEX_ARRAY_SIZE_OES: {
+            const GLClientState::VertexAttribState *state = getState(GLClientState::MATRIXINDEX_LOCATION);
+            *ptr = state->size;
+            isClientStateParam = true;
+            break;
+            }
+        case GL_MATRIX_INDEX_ARRAY_TYPE_OES: {
+            const GLClientState::VertexAttribState *state = getState(GLClientState::MATRIXINDEX_LOCATION);
+            *ptr = state->type;
+            isClientStateParam = true;
+            break;
+            }
+        case GL_MATRIX_INDEX_ARRAY_STRIDE_OES: {
+            const GLClientState::VertexAttribState *state = getState(GLClientState::MATRIXINDEX_LOCATION);
+            *ptr = state->stride;
+            isClientStateParam = true;
+            break;
+            }
+        case GL_WEIGHT_ARRAY_SIZE_OES: {
+            const GLClientState::VertexAttribState *state = getState(GLClientState::WEIGHT_LOCATION);
+            *ptr = state->size;
+            isClientStateParam = true;
+            break;
+            }
+        case GL_WEIGHT_ARRAY_TYPE_OES: {
+            const GLClientState::VertexAttribState *state = getState(GLClientState::WEIGHT_LOCATION);
+            *ptr = state->type;
+            isClientStateParam = true;
+            break;
+            }
+        case GL_WEIGHT_ARRAY_STRIDE_OES: {
+            const GLClientState::VertexAttribState *state = getState(GLClientState::WEIGHT_LOCATION);
+            *ptr = state->stride;
+            isClientStateParam = true;
+            break;
+            }
+        case GL_VERTEX_ARRAY_BUFFER_BINDING: {
+            const GLClientState::VertexAttribState *state = getState(GLClientState::VERTEX_LOCATION);
+            *ptr = state->bufferObject;
+            isClientStateParam = true;
+            break;
+            }
+        case GL_NORMAL_ARRAY_BUFFER_BINDING: {
+            const GLClientState::VertexAttribState *state = getState(GLClientState::NORMAL_LOCATION);
+            *ptr = state->bufferObject;
+            isClientStateParam = true;
+            break;
+            }
+        case GL_COLOR_ARRAY_BUFFER_BINDING: {
+            const GLClientState::VertexAttribState *state = getState(GLClientState::COLOR_LOCATION);
+            *ptr = state->bufferObject;
+            isClientStateParam = true;
+            break;
+            }
+        case GL_TEXTURE_COORD_ARRAY_BUFFER_BINDING: {
+            const GLClientState::VertexAttribState *state = getState(getActiveTexture()+GLClientState::TEXCOORD0_LOCATION);
+            *ptr = state->bufferObject;
+            isClientStateParam = true;
+            break;
+            }
+        case GL_POINT_SIZE_ARRAY_BUFFER_BINDING_OES: {
+            const GLClientState::VertexAttribState *state = getState(GLClientState::POINTSIZE_LOCATION);
+            *ptr = state->bufferObject;
+            isClientStateParam = true;
+            break;
+            }
+        case GL_MATRIX_INDEX_ARRAY_BUFFER_BINDING_OES: {
+            const GLClientState::VertexAttribState *state = getState(GLClientState::MATRIXINDEX_LOCATION);
+            *ptr = state->bufferObject;
+            isClientStateParam = true;
+            break;
+            }
+        case GL_WEIGHT_ARRAY_BUFFER_BINDING_OES: {
+            const GLClientState::VertexAttribState *state = getState(GLClientState::WEIGHT_LOCATION);
+            *ptr = state->bufferObject;
+            isClientStateParam = true;
+            break;
+            }
+        case GL_ARRAY_BUFFER_BINDING: {
+            int buffer = getBuffer(GL_ARRAY_BUFFER);
+            *ptr = buffer;
+            isClientStateParam = true;
+            break;
+            }
+        case GL_ELEMENT_ARRAY_BUFFER_BINDING: {
+            int buffer = getBuffer(GL_ELEMENT_ARRAY_BUFFER);
+            *ptr = buffer;
+            isClientStateParam = true;
+            break;
+            }
+        }
+        return isClientStateParam;
+    }
 
 };
 #endif

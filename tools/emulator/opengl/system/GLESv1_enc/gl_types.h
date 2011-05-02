@@ -16,25 +16,5 @@
 #ifndef __GL_TYPES__H
 #define __GL_TYPES__H
 
-#include <KHR/khrplatform.h>
-typedef void             GLvoid;
-typedef unsigned int     GLenum;
-typedef unsigned char    GLboolean;
-typedef unsigned int     GLbitfield;
-typedef khronos_int8_t   GLbyte;
-typedef short            GLshort;
-typedef int              GLint;
-typedef int              GLsizei;
-typedef khronos_uint8_t  GLubyte;
-typedef unsigned short   GLushort;
-typedef unsigned int     GLuint;
-typedef khronos_float_t  GLfloat;
-typedef khronos_float_t  GLclampf;
-typedef khronos_int32_t  GLfixed;
-typedef khronos_int32_t  GLclampx;
-typedef khronos_intptr_t GLintptr;
-typedef khronos_ssize_t  GLsizeiptr;
-/* JR XXX Treating this as an in handle - is this correct? */
-typedef void * GLeglImageOES;
-
+#include "gl_base_types.h"
 #endif

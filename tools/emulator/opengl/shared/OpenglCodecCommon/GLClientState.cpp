@@ -17,6 +17,7 @@
 #include "ErrorLog.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "glUtils.h"
 #include <cutils/log.h>
 
@@ -46,6 +47,8 @@ GLClientState::GLClientState(int nLocations)
     m_states[TEXCOORD5_LOCATION].glConst = GL_TEXTURE_COORD_ARRAY;
     m_states[TEXCOORD6_LOCATION].glConst = GL_TEXTURE_COORD_ARRAY;
     m_states[TEXCOORD7_LOCATION].glConst = GL_TEXTURE_COORD_ARRAY;
+    m_states[MATRIXINDEX_LOCATION].glConst = GL_MATRIX_INDEX_ARRAY_OES;
+    m_states[WEIGHT_LOCATION].glConst = GL_WEIGHT_ARRAY_OES;
     m_activeTexture = 0;
 
     m_pixelStore.unpack_alignment = 4;
@@ -131,10 +134,53 @@ int GLClientState::getLocation(GLenum loc)
     case GL_TEXTURE_COORD_ARRAY:
         retval = int (TEXCOORD0_LOCATION + m_activeTexture);
         break;
+    case GL_MATRIX_INDEX_ARRAY_OES:
+        retval = int (MATRIXINDEX_LOCATION);
+        break;
+    case GL_WEIGHT_ARRAY_OES:
+        retval = int (WEIGHT_LOCATION);
+        break;
     default:
         retval = loc;
     }
     return retval;
+}
+
+void GLClientState::getClientStatePointer(GLenum pname, GLvoid** params)
+{
+    const GLClientState::VertexAttribState *state = NULL;
+    switch (pname) {
+    case GL_VERTEX_ARRAY_POINTER: {
+        state = getState(GLClientState::VERTEX_LOCATION);
+        break;
+        }
+    case GL_NORMAL_ARRAY_POINTER: {
+        state = getState(GLClientState::NORMAL_LOCATION);
+        break;
+        }
+    case GL_COLOR_ARRAY_POINTER: {
+        state = getState(GLClientState::COLOR_LOCATION);
+        break;
+        }
+    case GL_TEXTURE_COORD_ARRAY_POINTER: {
+        state = getState(getActiveTexture() + GLClientState::TEXCOORD0_LOCATION);
+        break;
+        }
+    case GL_POINT_SIZE_ARRAY_POINTER_OES: {
+        state = getState(GLClientState::POINTSIZE_LOCATION);
+        break;
+        }
+    case GL_MATRIX_INDEX_ARRAY_POINTER_OES: {
+        state = getState(GLClientState::MATRIXINDEX_LOCATION);
+        break;
+        }
+    case GL_WEIGHT_ARRAY_POINTER_OES: {
+        state = getState(GLClientState::WEIGHT_LOCATION);
+        break;
+        }
+    }
+    if (state && params)
+        *params = state->data;
 }
 
 int GLClientState::setPixelStore(GLenum param, GLint value)
@@ -160,6 +206,8 @@ int GLClientState::setPixelStore(GLenum param, GLint value)
     }
     return retval;
 }
+
+
 
 
 size_t GLClientState::pixelDataSize(GLsizei width, GLsizei height, GLenum format, GLenum type, int pack)
