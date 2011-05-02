@@ -26,7 +26,6 @@
 #define MAX_TEX_UNITS 8
 
 typedef std::map<GLenum,GLESpointer*>  ArraysMap;
-typedef std::map<GLuint,GLESbuffer*>   BuffersMap;
 typedef std::map<GLfloat,std::vector<int> > PointSizeIndices;
 
 struct GLESFloatArrays
@@ -63,8 +62,6 @@ public:
     void drawPointsArrs(GLESFloatArrays& arrs,GLint first,GLsizei count);
     void drawPointsElems(GLESFloatArrays& arrs,GLsizei count,GLenum type,const GLvoid* indices);
 
-    void genBuffers(GLsizei n,GLuint* buffers);
-    void deleteBuffers(GLsizei n,const GLuint* buffers);
     void bindBuffer(GLenum target,GLuint buffer);
     bool isBuffer(GLuint buffer);
     bool isBindedBuffer(GLenum target);
@@ -73,6 +70,7 @@ public:
     void getBufferUsage(GLenum target,GLint* param);
     bool setBufferData(GLenum target,GLsizeiptr size,const GLvoid* data,GLenum usage);
     bool setBufferSubData(GLenum target,GLintptr offset,GLsizeiptr size,const GLvoid* data);
+    void setShareGroup(ShareGroupPtr grp){m_shareGroup = grp;};
 
     static GLDispatch& dispatcher();
     static int getMaxLights(){return s_glSupport.maxLights;}
@@ -104,12 +102,9 @@ private:
     unsigned int          m_activeTexture;
     unsigned int          m_arrayBuffer;
     unsigned int          m_elementBuffer;
-
-    unsigned int          m_minAvailableBuffer;
-    BuffersMap            m_vbos;
-
     int                   m_pointsIndex;
     bool                  m_initialized;
+    ShareGroupPtr         m_shareGroup;
 };
 
 #endif
