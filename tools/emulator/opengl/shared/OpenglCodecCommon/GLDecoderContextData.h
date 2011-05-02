@@ -35,7 +35,9 @@ public:
         TEXCOORD5_LOCATION = 9,
         TEXCOORD6_LOCATION = 10,
         TEXCOORD7_LOCATION = 11,
-        LAST_LOCATION = 12
+        MATRIXINDEX_LOCATION = 12,
+        WEIGHT_LOCATION = 13,
+        LAST_LOCATION = 14
     } PointerDataLocation;
 
     void storePointerData(PointerDataLocation loc, void *data, size_t len) {

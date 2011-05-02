@@ -100,7 +100,7 @@ void glFrustumf(GLfloat left, GLfloat right, GLfloat bottom, GLfloat top, GLfloa
 
 void glGetClipPlanef(GLenum pname, GLfloat eqn[4])
 {
-     getDispatch()->glGetClipPlanef(pname, eqn[4]);
+     getDispatch()->glGetClipPlanef(pname, eqn);
 }
 
 void glGetFloatv(GLenum pname, GLfloat *params)
@@ -450,7 +450,7 @@ void glGetBufferParameteriv(GLenum target, GLenum pname, GLint *params)
 
 void glGetClipPlanex(GLenum pname, GLfixed eqn[4])
 {
-     getDispatch()->glGetClipPlanex(pname, eqn[4]);
+     getDispatch()->glGetClipPlanex(pname, eqn);
 }
 
 void glGenBuffers(GLsizei n, GLuint *buffers)
@@ -490,7 +490,7 @@ void glGetMaterialxv(GLenum face, GLenum pname, GLfixed *params)
 
 void glGetPointerv(GLenum pname, GLvoid **params)
 {
-     getDispatch()->glGetPointerv(pname, *params);
+     getDispatch()->glGetPointerv(pname, params);
 }
 
 const GLubyte* glGetString(GLenum name)
@@ -890,7 +890,7 @@ void glFrustumxOES(GLfixed left, GLfixed right, GLfixed bottom, GLfixed top, GLf
 
 void glGetClipPlanexOES(GLenum pname, GLfixed eqn[4])
 {
-     getDispatch()->glGetClipPlanexOES(pname, eqn[4]);
+     getDispatch()->glGetClipPlanexOES(pname, eqn);
 }
 
 void glGetFixedvOES(GLenum pname, GLfixed *params)
@@ -1150,7 +1150,7 @@ void glWeightPointerOES(GLint size, GLenum type, GLsizei stride, const GLvoid *p
 
 GLbitfield glQueryMatrixxOES(GLfixed mantissa[16], GLint exponent[16])
 {
-     return getDispatch()->glQueryMatrixxOES(mantissa[16], exponent[16]);
+     return getDispatch()->glQueryMatrixxOES(mantissa, exponent);
 }
 
 void glDepthRangefOES(GLclampf zNear, GLclampf zFar)
@@ -1175,7 +1175,7 @@ void glClipPlanefOES(GLenum plane, const GLfloat *equation)
 
 void glGetClipPlanefOES(GLenum pname, GLfloat eqn[4])
 {
-     getDispatch()->glGetClipPlanefOES(pname, eqn[4]);
+     getDispatch()->glGetClipPlanefOES(pname, eqn);
 }
 
 void glClearDepthfOES(GLclampf depth)
@@ -1375,7 +1375,7 @@ void glExtGetTexSubImageQCOM(GLenum target, GLint level, GLint xoffset, GLint yo
 
 void glExtGetBufferPointervQCOM(GLenum target, GLvoid **params)
 {
-     getDispatch()->glExtGetBufferPointervQCOM(target, *params);
+     getDispatch()->glExtGetBufferPointervQCOM(target, params);
 }
 
 void glExtGetShadersQCOM(GLuint *shaders, GLint maxShaders, GLint *numShaders)
