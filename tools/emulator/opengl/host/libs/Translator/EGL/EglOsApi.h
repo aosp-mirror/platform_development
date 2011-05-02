@@ -17,7 +17,11 @@
 #define EGL_OS_API_H
 
 #include <EGL/egl.h>
+#ifdef __APPLE__
+#include <OpenGL/gl.h>
+#else
 #include <GL/gl.h>
+#endif
 #include "EglConfig.h"
 #include "EglDisplay.h"
 #include "EglPbufferSurface.h"

@@ -20,7 +20,7 @@
 //TODO: implementation for mac for all funcs
 namespace EglOS {
 
-EGLNativeDisplayType getDefaultDisplay() {return NULL}
+EGLNativeDisplayType getDefaultDisplay() {return NULL;}
 
 bool releaseDisplay(EGLNativeDisplayType dpy) {
     return false;
@@ -51,6 +51,10 @@ bool checkPixmapPixelFormatMatch(EGLNativeDisplayType dpy,EGLNativePixmapType pi
 
 EGLNativePbufferType createPbuffer(EGLNativeDisplayType dpy,EglConfig* cfg,EglPbufferSurface* srfc){
     return NULL;
+}
+
+bool releasePbuffer(EGLNativeDisplayType dis,EGLNativePbufferType pb) {
+    return true;
 }
 
 EGLNativeContextType createContext(EGLNativeDisplayType dpy,EglConfig* cfg,EGLNativeContextType sharedContext) {
