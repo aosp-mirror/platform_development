@@ -24,8 +24,12 @@
 
 #include <GLES/gl.h>
 #include <GLES/glext.h>
+#include <GLES2/gl2.h>
+#include <GLES2/gl2ext.h>
+
 #include <stdio.h>
 #include <stdlib.h>
+#include "ErrorLog.h"
 
 class GLClientState {
 public:
@@ -57,6 +61,7 @@ public:
         GLenum glConst;
         unsigned int elementSize;
         bool enableDirty;  // true if any enable state has changed since last draw
+        bool normalized;
     } VertexAttribState;
 
     typedef struct {
@@ -67,18 +72,20 @@ public:
 public:
     GLClientState(int nLocations = 32);
     ~GLClientState();
+    int nLocations() { return m_nLocations; }
     const PixelStoreState *pixelStoreState() { return &m_pixelStore; }
     int setPixelStore(GLenum param, GLint value);
     GLuint currentArrayVbo() { return m_currentArrayVbo; }
     GLuint currentIndexVbo() { return m_currentIndexVbo; }
     void enable(int location, int state);
-    void setState(int  location, int size, GLenum type, GLsizei stride, void *data);
+    void setState(int  location, int size, GLenum type, GLboolean normalized, GLsizei stride, void *data);
     void setBufferObject(int location, GLuint id);
     const VertexAttribState  *getState(int location);
     const VertexAttribState  *getStateAndEnableDirty(int location, bool *enableChanged);
     int getLocation(GLenum loc);
     void setActiveTexture(int texUnit) {m_activeTexture = texUnit; };
     int getActiveTexture() const { return m_activeTexture; }
+
     int bindBuffer(GLenum target, GLuint id)
     {
         int err = 0;
@@ -94,6 +101,7 @@ public:
         }
         return err;
     }
+
     int getBuffer(GLenum target)
     {
       int ret=0;
@@ -109,7 +117,7 @@ public:
       }
       return ret;
     }
-    size_t pixelDataSize(GLsizei width, GLsizei height, GLenum format, GLenum type, int pack);
+    size_t pixelDataSize(GLsizei width, GLsizei height, GLenum format, GLenum type, int pack) const;
 
 private:
     PixelStoreState m_pixelStore;
@@ -123,6 +131,46 @@ private:
     bool validLocation(int location) { return (location >= 0 && location < m_nLocations); }
 public:
     void getClientStatePointer(GLenum pname, GLvoid** params);
+
+    template <class T>
+    int getVertexAttribParameter(GLuint index, GLenum param, T *ptr)
+    {
+        bool handled = true;
+        const VertexAttribState *vertexAttrib = getState(index);
+        if (vertexAttrib == NULL) {
+            ERR("getVeterxAttriParameter for non existant index %d\n", index);
+            // set gl error;
+            return handled;
+        }
+
+        switch(param) {
+        case GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING:
+            *ptr = (T)(vertexAttrib->bufferObject);
+            break;
+        case GL_VERTEX_ATTRIB_ARRAY_ENABLED:
+            *ptr = (T)(vertexAttrib->enabled);
+            break;
+        case GL_VERTEX_ATTRIB_ARRAY_SIZE:
+            *ptr = (T)(vertexAttrib->size);
+            break;
+        case GL_VERTEX_ATTRIB_ARRAY_STRIDE:
+            *ptr = (T)(vertexAttrib->stride);
+            break;
+        case GL_VERTEX_ATTRIB_ARRAY_TYPE:
+            *ptr = (T)(vertexAttrib->type);
+            break;
+        case GL_VERTEX_ATTRIB_ARRAY_NORMALIZED:
+            *ptr = (T)(vertexAttrib->normalized);
+            break;
+        case GL_CURRENT_VERTEX_ATTRIB:
+            handled = false;
+            break;
+        default:
+            ERR("unknown vertex-attrib parameter param %d\n", param);
+        }
+        return handled;
+    }
+
     template <class T>
     bool getClientStateParameter(GLenum param, T* ptr)
     {
