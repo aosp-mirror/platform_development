@@ -56,6 +56,8 @@ public:
     void  setGLerror(GLenum err);
     void  setActiveTexture(GLenum tex);
     const GLvoid* setPointer(GLenum arrType,GLint size,GLenum type,GLsizei stride,const GLvoid* data);
+    unsigned int getBindedTexture(){return m_tex2DBind[m_activeTexture];};
+    void setBindedTexture(unsigned int tex){ m_tex2DBind[m_activeTexture] = tex;};
     const GLESpointer* getPointer(GLenum arrType);
 
     void convertArrs(GLESFloatArrays& fArrs,GLint first,GLsizei count,GLenum type,const GLvoid* indices,bool direct);
@@ -77,6 +79,7 @@ public:
     static int getMaxClipPlanes(){return s_glSupport.maxClipPlane;}
     static int getMaxTexUnits(){return s_glSupport.maxTexUnits;}
     static int getMaxTexSize(){return s_glSupport.maxTexSize;}
+
 
     ~GLEScontext();
 private:
@@ -100,6 +103,7 @@ private:
     GLESpointer*          m_texCoords;
     GLenum                m_glError;
     unsigned int          m_activeTexture;
+    unsigned int          m_tex2DBind[MAX_TEX_UNITS];
     unsigned int          m_arrayBuffer;
     unsigned int          m_elementBuffer;
     int                   m_pointsIndex;
