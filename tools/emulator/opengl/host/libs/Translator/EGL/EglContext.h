@@ -1,0 +1,71 @@
+/*
+* Copyright (C) 2011 The Android Open Source Project
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+* http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
+#ifndef EGL_CONTEXT_H
+#define EGL_CONTEXT_H
+
+#include <map>
+#include <EGL/egl.h>
+#include <GLcommon/SmartPtr.h>
+#include <GLcommon/TranslatorIfaces.h>
+#include <GLcommon/objectNameManager.h>
+
+
+#include "EglConfig.h"
+#include "EglSurface.h"
+
+
+typedef enum{
+             GLES_1_1 = 0,
+             GLES_2_0 = 1,
+             MAX_GLES_VERSION //Must be last
+            }GLESVersion;
+
+class EglContext;
+typedef  SmartPtr<EglContext> ContextPtr;
+
+class EglContext {
+
+public:
+
+    EglContext(EGLNativeContextType context,ContextPtr shared_context,EglConfig* config,GLEScontext* glesCtx,GLESVersion ver,ObjectNameManager* mngr);
+    bool usingSurface(SurfacePtr surface);
+    EGLNativeContextType nativeType(){return m_native;};
+    void markForDestruction(){m_destroy = true;}
+    bool destroy(){ return m_destroy;}
+    bool getAttrib(EGLint attrib,EGLint* value);
+    SurfacePtr read(){ return m_read;};
+    SurfacePtr draw(){ return m_draw;};
+    ShareGroupPtr getShareGroup(){return m_shareGroup;}
+    EglConfig* getConfig(){ return m_config;};
+    GLESVersion version(){return m_version;};
+    GLEScontext* getGlesContext(){return m_glesContext;}
+    void setSurfaces(SurfacePtr read,SurfacePtr draw);
+    unsigned int getHndl(){return m_hndl;}
+
+private:
+    static unsigned int  s_nextContextHndl;
+    EGLNativeContextType m_native;
+    EglConfig*           m_config;
+    GLEScontext*         m_glesContext;
+    ShareGroupPtr        m_shareGroup;
+    SurfacePtr           m_read;
+    SurfacePtr           m_draw;
+    bool                 m_destroy;
+    GLESVersion          m_version;
+    unsigned int         m_hndl;
+};
+
+#endif
