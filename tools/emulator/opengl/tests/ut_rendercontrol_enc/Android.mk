@@ -1,6 +1,7 @@
 LOCAL_PATH := $(call my-dir)
 
 emulatorOpengl := $(LOCAL_PATH)/../..
+EMUGEN := $(BUILD_OUT_EXECUTABLES)/emugen
 #### ut_rendercontrol  ####
 include $(CLEAR_VARS)
 

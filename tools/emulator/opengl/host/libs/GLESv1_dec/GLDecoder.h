@@ -53,6 +53,12 @@ private:
     static void s_glDrawElementsOffset(void *self, GLenum mode, GLsizei count, GLenum type, GLuint offset);
     static void s_glDrawElementsData(void *self, GLenum mode, GLsizei count, GLenum type, void * data, GLuint datalen);
 
+    static void s_glWeightPointerData(void * self, GLint size, GLenum type, GLsizei stride, void * data, GLuint datalen);
+    static void s_glWeightPointerOffset(void * self, GLint size, GLenum type, GLsizei stride, GLuint offset);
+
+    static void s_glMatrixIndexPointerData(void * self, GLint size, GLenum type, GLsizei stride, void * data, GLuint datalen);
+    static void s_glMatrixIndexPointerOffset(void * self, GLint size, GLenum type, GLsizei stride, GLuint offset);
+
     static void * s_getProc(const char *name, void *userData);
 
     GLDecoderContextData *m_contextData;
