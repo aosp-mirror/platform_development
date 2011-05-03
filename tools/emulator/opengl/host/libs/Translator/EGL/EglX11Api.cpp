@@ -15,8 +15,47 @@
 */
 #include "EglOsApi.h"
 #include <string.h>
+#include <X11/Xlib.h>
 #include <GL/glx.h>
+#include <utils/threads.h>
 
+
+class ErrorHandler{
+public:
+ErrorHandler(EGLNativeDisplayType dpy);
+~ErrorHandler();
+int getLastError(){ return s_lastErrorCode;};
+
+private:
+static int s_lastErrorCode;
+int (*m_oldErrorHandler) (Display *, XErrorEvent *);
+static android::Mutex s_lock;
+static int errorHandlerProc(EGLNativeDisplayType dpy,XErrorEvent* event);
+
+};
+
+
+int ErrorHandler::s_lastErrorCode = 0;
+android::Mutex ErrorHandler::s_lock;
+
+ErrorHandler::ErrorHandler(EGLNativeDisplayType dpy){
+   s_lock.lock();
+   XSync(dpy,False);
+   s_lastErrorCode = 0;
+   m_oldErrorHandler = XSetErrorHandler(errorHandlerProc);
+}
+
+ErrorHandler::~ErrorHandler(){
+   XSetErrorHandler(m_oldErrorHandler);
+   s_lastErrorCode = 0;
+   s_lock.unlock();
+}
+
+int ErrorHandler::errorHandlerProc(EGLNativeDisplayType dpy,XErrorEvent* event){
+    android::Mutex::Autolock mutex(s_lock);
+    s_lastErrorCode = event->error_code;
+    return 0;
+}
 
 #define IS_SUCCESS(a) \
         if(a != Success) return false;
@@ -109,14 +148,22 @@ void queryConfigs(EGLNativeDisplayType dpy,ConfigsList& listOut) {
     XFree(frmtList);
 }
 
-bool validNativeWin(EGLNativeWindowType win) {
-  //TODO: use XGetgeometry to check validity
-   return true;
+bool validNativeWin(EGLNativeDisplayType dpy,EGLNativeWindowType win) {
+   Window root;
+   int tmp;
+   unsigned int utmp;
+   ErrorHandler handler(dpy);
+   if(!XGetGeometry(dpy,win,&root,&tmp,&tmp,&utmp,&utmp,&utmp,&utmp)) return false;
+   return handler.getLastError() == 0;
 }
 
-bool validNativePixmap(EGLNativePixmapType pix) {
-  //TODO: use XGetgeometry to check validity
-   return true;
+bool validNativePixmap(EGLNativeDisplayType dpy,EGLNativePixmapType pix) {
+   Window root;
+   int tmp;
+   unsigned int utmp;
+   ErrorHandler handler(dpy);
+   if(!XGetGeometry(dpy,pix,&root,&tmp,&tmp,&utmp,&utmp,&utmp,&utmp)) return false;
+   return handler.getLastError() == 0;
 }
 
 bool checkWindowPixelFormatMatch(EGLNativeDisplayType dpy,EGLNativeWindowType win,EglConfig* cfg,unsigned int* width,unsigned int* height) {
@@ -164,7 +211,9 @@ bool releasePbuffer(EGLNativeDisplayType dis,EGLNativePbufferType pb) {
 }
 
 EGLNativeContextType createContext(EGLNativeDisplayType dpy,EglConfig* cfg,EGLNativeContextType sharedContext) {
- return glXCreateNewContext(dpy,cfg->nativeConfig(),GLX_RGBA_TYPE,sharedContext,true);
+ ErrorHandler handler(dpy);
+ EGLNativeContextType retVal = glXCreateNewContext(dpy,cfg->nativeConfig(),GLX_RGBA_TYPE,sharedContext,true);
+ return handler.getLastError() == 0 ? retVal : NULL;
 }
 
 bool destroyContext(EGLNativeDisplayType dpy,EGLNativeContextType ctx) {
@@ -188,8 +237,9 @@ GLXDrawable convertSurface(EglSurface* srfc) {
 
 bool makeCurrent(EGLNativeDisplayType dpy,EglSurface* read,EglSurface* draw,EGLNativeContextType ctx){
 
-
-return glXMakeContextCurrent(dpy,convertSurface(draw),convertSurface(read),ctx);
+    ErrorHandler handler(dpy);
+    bool retval = glXMakeContextCurrent(dpy,convertSurface(draw),convertSurface(read),ctx);
+    return (handler.getLastError() == 0) && retval;
 }
 
 void swapBuffers(EGLNativeDisplayType dpy,EGLNativeWindowType win) {

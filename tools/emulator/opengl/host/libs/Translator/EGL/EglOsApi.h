@@ -36,8 +36,8 @@ namespace EglOS{
     bool releasePbuffer(EGLNativeDisplayType dis,EGLNativePbufferType pb);
     bool destroyContext(EGLNativeDisplayType dpy,EGLNativeContextType ctx);
     bool releaseDisplay(EGLNativeDisplayType dpy);
-    bool validNativeWin(EGLNativeWindowType win);
-    bool validNativePixmap(EGLNativePixmapType pix);
+    bool validNativeWin(EGLNativeDisplayType dpy,EGLNativeWindowType win);
+    bool validNativePixmap(EGLNativeDisplayType dpy,EGLNativePixmapType pix);
     bool checkWindowPixelFormatMatch(EGLNativeDisplayType dpy,EGLNativeWindowType win,EglConfig* cfg,unsigned int* width,unsigned int* height);
     bool checkPixmapPixelFormatMatch(EGLNativeDisplayType dpy,EGLNativePixmapType pix,EglConfig* cfg,unsigned int* width,unsigned int* height);
     bool makeCurrent(EGLNativeDisplayType dpy,EglSurface* read,EglSurface* draw,EGLNativeContextType);
