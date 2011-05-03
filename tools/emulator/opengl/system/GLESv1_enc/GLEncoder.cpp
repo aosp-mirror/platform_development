@@ -41,7 +41,7 @@ GLint * GLEncoder::getCompressedTextureFormats()
 }
 
 void GLEncoder::s_glGetIntegerv(void *self, GLenum param, GLint *ptr)
-{ 
+{
     GLEncoder *ctx = (GLEncoder *)self;
     assert(ctx->m_state != NULL);
     if (param == GL_COMPRESSED_TEXTURE_FORMATS) {
@@ -49,7 +49,7 @@ void GLEncoder::s_glGetIntegerv(void *self, GLenum param, GLint *ptr)
         if (ctx->m_num_compressedTextureFormats > 0 && compressedTextureFormats != NULL) {
             memcpy(ptr, compressedTextureFormats, ctx->m_num_compressedTextureFormats * sizeof(GLint));
         }
-    } 
+    }
     else if (!ctx->m_state->getClientStateParameter<GLint>(param,ptr)) {
         ctx->m_glGetIntegerv_enc(self, param, ptr);
     }
@@ -401,20 +401,20 @@ void GLEncoder::s_glDrawElements(void *self, GLenum mode, GLsizei count, GLenum 
         switch(type) {
         case GL_BYTE:
         case GL_UNSIGNED_BYTE:
-            ctx->minmax<unsigned char>((unsigned char *)indices, count, &minIndex, &maxIndex);
+            GLUtils::minmax<unsigned char>((unsigned char *)indices, count, &minIndex, &maxIndex);
             if (minIndex != 0) {
                 adjustedIndices =  ctx->m_fixedBuffer.alloc(glSizeof(type) * count);
-                ctx->shiftIndices<unsigned char>((unsigned char *)indices,
+                GLUtils::shiftIndices<unsigned char>((unsigned char *)indices,
                                                  (unsigned char *)adjustedIndices,
                                                  count, -minIndex);
             }
             break;
         case GL_SHORT:
         case GL_UNSIGNED_SHORT:
-            ctx->minmax<unsigned short>((unsigned short *)indices, count, &minIndex, &maxIndex);
+            GLUtils::minmax<unsigned short>((unsigned short *)indices, count, &minIndex, &maxIndex);
             if (minIndex != 0) {
                 adjustedIndices = ctx->m_fixedBuffer.alloc(glSizeof(type) * count);
-                ctx->shiftIndices<unsigned short>((unsigned short *)indices,
+                GLUtils::shiftIndices<unsigned short>((unsigned short *)indices,
                                                  (unsigned short *)adjustedIndices,
                                                  count, -minIndex);
             }
