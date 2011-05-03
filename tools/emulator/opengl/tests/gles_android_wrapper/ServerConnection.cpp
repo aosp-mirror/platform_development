@@ -28,6 +28,15 @@ gl_client_context_t *ServerConnection::s_getGlContext()
     return NULL;
 }
 
+gl2_client_context_t *ServerConnection::s_getGl2Context()
+{
+    EGLThreadInfo *ti = getEGLThreadInfo();
+    if (ti->serverConn) {
+        return ti->serverConn->m_gl2Enc;
+    }
+    return NULL;
+}
+
 ServerConnection *ServerConnection::s_getServerConnection()
 {
     EGLThreadInfo *ti = getEGLThreadInfo();
@@ -84,6 +93,9 @@ int ServerConnection::create(size_t bufsize,
 
     m_glEnc = new GLEncoder(m_stream);
     m_glEnc->setContextAccessor(s_getGlContext);
+
+    m_gl2Enc = new GL2Encoder(m_stream);
+    m_gl2Enc->setContextAccessor(s_getGl2Context);
 
     m_ut_enc = new ut_rendercontrol_encoder_context_t(m_stream);
     return 0;
