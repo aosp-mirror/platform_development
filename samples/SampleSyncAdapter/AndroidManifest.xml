@@ -46,7 +46,7 @@
     <uses-permission
         android:name="android.permission.WRITE_SYNC_SETTINGS" />
 
-    <uses-sdk android:minSdkVersion="5" />
+    <uses-sdk android:minSdkVersion="8" android:targetSdkVersion="11"/>
         
     <application
         android:icon="@drawable/icon"
@@ -82,11 +82,36 @@
             android:label="@string/ui_activity_title"
             android:theme="@android:style/Theme.Dialog"
             android:excludeFromRecents="true"
+            android:configChanges="orientation"
             >
             <!--
                 No intent-filter here! This activity is only ever launched by
                 someone who explicitly knows the class name
             -->
+        </activity>
+
+        <activity
+            android:name=".editor.ContactEditorActivity"
+            android:theme="@style/ContactEditTheme"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action
+                    android:name="android.intent.action.INSERT" />
+                <data
+                    android:mimeType="vnd.android.cursor.item/contact" />
+            </intent-filter>
+
+            <!--
+                Note that the editor gets a raw contact URI, but is expected to call
+                setResult with the corresponding aggregate contact URI, not raw contact
+                URI.
+            -->
+            <intent-filter>
+                <action
+                    android:name="android.intent.action.EDIT" />
+                <data
+                    android:mimeType="vnd.android.cursor.item/raw_contact" />
+            </intent-filter>
         </activity>
     </application>
 </manifest>

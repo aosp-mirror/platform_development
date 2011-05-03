@@ -1,12 +1,12 @@
 /*
  * Copyright (C) 2010 The Android Open Source Project
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -16,9 +16,11 @@
 package com.example.android.samplesync.platform;
 
 import android.content.ContentProviderOperation;
+import android.content.ContentProviderResult;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.OperationApplicationException;
+import android.net.Uri;
 import android.os.RemoteException;
 import android.provider.ContactsContract;
 import android.util.Log;
@@ -50,19 +52,24 @@ final public class BatchOperation {
         mOperations.add(cpo);
     }
 
-    public void execute() {
+    public Uri execute() {
+        Uri result = null;
 
         if (mOperations.size() == 0) {
-            return;
+            return result;
         }
         // Apply the mOperations to the content provider
         try {
-            mResolver.applyBatch(ContactsContract.AUTHORITY, mOperations);
+            ContentProviderResult[] results = mResolver.applyBatch(ContactsContract.AUTHORITY,
+                    mOperations);
+            if ((results != null) && (results.length > 0))
+                result = results[0].uri;
         } catch (final OperationApplicationException e1) {
             Log.e(TAG, "storing contact data failed", e1);
         } catch (final RemoteException e2) {
             Log.e(TAG, "storing contact data failed", e2);
         }
         mOperations.clear();
+        return result;
     }
 }

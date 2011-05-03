@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
 /**
- * Copyright (c) 2010, The Android Open Source Project
+ * Copyright (c) 2011, The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,17 +21,13 @@
   The attributes in this XML file provide configuration information
   for the SampleSyncAdapter.
 
-  We have two versions of this file - one here, and one in the
-  xml-v11 directory (Honeycomb and beyond). This one specifies that
-  the syncadapter does not support uploading (and thus the contacts
-  associated with this syncadapter are not editable).  The SDK 11
-  version of the file specifies that the adapter DOES support
-  uploading, so the contacts on SDK 11 and greater are editable.
+  See xml/syncadapter.xml for greater details, but this version of
+  the file specifies that uploading (and thus editing) is supported.
 -->
 
 <sync-adapter xmlns:android="http://schemas.android.com/apk/res/android"
     android:contentAuthority="com.android.contacts"
     android:accountType="com.example.android.samplesync"
-    android:supportsUploading="false"
+    android:supportsUploading="true"
     android:userVisible="true"
 />

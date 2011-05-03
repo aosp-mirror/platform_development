@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en-US" lang="en-US">
+<!--
+ * Copyright (C) 2010 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+-->
+    <head>
+        <title>SampleSync: Contacts for '{{ username }}'</title>
+        <link type="text/css" rel="stylesheet" href="/static/css/main.css" media="screen" />
+    </head>
+    <body>
+        <h1>SampleSync: Contacts for '{{ username }}'</h1>
+        <table class="data" cellpadding="0" cellspacing="0">
+        <tr>
+            <th>&nbsp;</th>
+            <th>Id</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Home</th>
+            <th>Office</th>
+            <th>Mobile</th>
+            <th>Status</th>
+        </tr>
+        {% for contact in contacts %}
+        <tr {% if contact.deleted %} class="deleted" {% endif %}>
+            <td class="center">
+            <a href="/edit_avatar?id={{ contact.key.id }}"><img src="/avatar?id={{ contact.key.id }}" height="25" width="25" /></a>
+            </td>
+            <td><a href="/edit_contact?id={{ contact.key.id }}">{{ contact.key.id }}</a></td>
+            <td><a href="/edit_contact?id={{ contact.key.id }}">{{ contact.firstname }} {{ contact.lastname }}</a></td>
+            <td>{{ contact.email }}</td>
+            <td>{{ contact.phone_home }}</td>
+            <td>{{ contact.phone_office }}</td>
+            <td>{{ contact.phone_mobile }}</td>
+            <td><span style="whitespace: no-wrap;">{{ contact.status }}</span></td>
+        </tr>
+        {% endfor %}
+        </table>
+
+        <a href = "/add_contact">Add Contact</a>
+    </body>
+</html>
