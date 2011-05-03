@@ -70,7 +70,7 @@ void GLClientState::enable(int location, int state)
     m_states[location].enabled = state;
 }
 
-void GLClientState::setState(int location, int size, GLenum type, GLsizei stride, void *data)
+void GLClientState::setState(int location, int size, GLenum type, GLboolean normalized, GLsizei stride, void *data)
 {
     if (!validLocation(location)) {
         return;
@@ -81,6 +81,7 @@ void GLClientState::setState(int location, int size, GLenum type, GLsizei stride
     m_states[location].data = data;
     m_states[location].bufferObject = m_currentArrayVbo;
     m_states[location].elementSize = glSizeof(type) * size;
+    m_states[location].normalized = normalized;
 }
 
 void GLClientState::setBufferObject(int location, GLuint id)
@@ -210,7 +211,7 @@ int GLClientState::setPixelStore(GLenum param, GLint value)
 
 
 
-size_t GLClientState::pixelDataSize(GLsizei width, GLsizei height, GLenum format, GLenum type, int pack)
+size_t GLClientState::pixelDataSize(GLsizei width, GLsizei height, GLenum format, GLenum type, int pack) const
 {
     int pixelsize = glUtilsPixelBitSize(format, type) >> 3;
 

@@ -39,6 +39,8 @@
 
 #include <GLES/gl.h>
 #include <GLES/glext.h>
+#include <GLES2/gl2.h>
+#include <GLES2/gl2ext.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -50,6 +52,8 @@ extern "C" {
                            int size, GLenum type, unsigned int stride,
                            unsigned int datalen);
     int glUtilsPixelBitSize(GLenum format, GLenum type);
+    int    glUtilsSumArrayValues(GLint *array, GLsizei count);
+    void   glUtilsPackStrings(void *ptr, char **strings, GLint *length, GLsizei count);
 #ifdef __cplusplus
 };
 #endif

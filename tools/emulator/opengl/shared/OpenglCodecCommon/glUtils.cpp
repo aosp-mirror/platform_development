@@ -49,6 +49,7 @@ size_t glUtilsParamSize(GLenum param)
 
     switch(param)
     {
+    case GL_DEPTH_FUNC:
     case GL_DEPTH_BITS:
     case GL_MAX_CLIP_PLANES:
     case GL_GREEN_BITS:
@@ -158,9 +159,16 @@ size_t glUtilsParamSize(GLenum param)
     case GL_STENCIL_FUNC:
     case GL_STENCIL_TEST:
     case GL_STENCIL_VALUE_MASK:
-    case GL_SUBPIXEL_BITS:
+    case GL_STENCIL_BACK_FUNC:
+    case GL_STENCIL_BACK_VALUE_MASK:
+    case GL_STENCIL_BACK_REF:
+    case GL_STENCIL_BACK_FAIL:
+    case GL_STENCIL_BACK_PASS_DEPTH_FAIL:
+    case GL_STENCIL_BACK_PASS_DEPTH_PASS:
+    case GL_STENCIL_BACK_WRITEMASK:
     case GL_TEXTURE_2D:
     case GL_TEXTURE_BINDING_2D:
+    case GL_TEXTURE_BINDING_CUBE_MAP:
     case GL_TEXTURE_COORD_ARRAY:
     case GL_TEXTURE_COORD_ARRAY_BUFFER_BINDING:
     case GL_TEXTURE_COORD_ARRAY_SIZE:
@@ -178,6 +186,7 @@ size_t glUtilsParamSize(GLenum param)
     case GL_TEXTURE_WRAP_S:
     case GL_TEXTURE_WRAP_T:
     case GL_GENERATE_MIPMAP:
+    case GL_GENERATE_MIPMAP_HINT:
     case GL_RENDERBUFFER_WIDTH_OES:
     case GL_RENDERBUFFER_HEIGHT_OES:
     case GL_RENDERBUFFER_INTERNAL_FORMAT_OES:
@@ -187,6 +196,8 @@ size_t glUtilsParamSize(GLenum param)
     case GL_RENDERBUFFER_ALPHA_SIZE_OES:
     case GL_RENDERBUFFER_DEPTH_SIZE_OES:
     case GL_RENDERBUFFER_STENCIL_SIZE_OES:
+    case GL_RENDERBUFFER_BINDING:
+    case GL_FRAMEBUFFER_BINDING:
     case GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE_OES:
     case GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME_OES:
     case GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_LEVEL_OES:
@@ -210,6 +221,28 @@ size_t glUtilsParamSize(GLenum param)
     case GL_BLEND_DST_ALPHA_OES:
     case GL_BLEND_SRC_ALPHA_OES:
     case GL_MAX_LIGHTS:
+    case GL_SHADER_TYPE:
+    case GL_DELETE_STATUS:
+    case GL_COMPILE_STATUS:
+    case GL_INFO_LOG_LENGTH:
+    case GL_SHADER_SOURCE_LENGTH:
+    case GL_CURRENT_PROGRAM:
+    case GL_LINK_STATUS:
+    case GL_VALIDATE_STATUS:
+    case GL_ATTACHED_SHADERS:
+    case GL_ACTIVE_UNIFORMS:
+    case GL_ACTIVE_ATTRIBUTES:
+    case GL_SUBPIXEL_BITS:
+    case GL_MAX_CUBE_MAP_TEXTURE_SIZE:
+    case GL_NUM_SHADER_BINARY_FORMATS:
+    case GL_SHADER_COMPILER:
+    case GL_MAX_VERTEX_ATTRIBS:
+    case GL_MAX_VERTEX_UNIFORM_VECTORS:
+    case GL_MAX_VARYING_VECTORS:
+    case GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS:
+    case GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS:
+    case GL_MAX_FRAGMENT_UNIFORM_VECTORS:
+    case GL_MAX_RENDERBUFFER_SIZE:
         s = 1;
         break;
     case GL_ALIASED_LINE_WIDTH_RANGE:
@@ -225,6 +258,7 @@ size_t glUtilsParamSize(GLenum param)
     case GL_CURRENT_NORMAL:
         s =  3;
         break;
+    case GL_CURRENT_VERTEX_ATTRIB:
     case GL_CURRENT_TEXTURE_COORDS:
     case GL_CURRENT_COLOR:
     case GL_FOG_COLOR:
@@ -247,7 +281,7 @@ size_t glUtilsParamSize(GLenum param)
     case GL_PROJECTION_MATRIX:
     case GL_TEXTURE_MATRIX:
         s = 16;
-	break;
+    break;
     default:
         ERR("glUtilsParamSize: unknow param 0x%08x\n", param);
         s = 1; // assume 1
@@ -327,4 +361,26 @@ int glUtilsPixelBitSize(GLenum format, GLenum type)
     }
 
     return pixelsize;
+}
+
+
+int glUtilsSumArrayValues(GLint *array, GLsizei count)
+{
+    int sum = 0;
+    for (int i = 0; i < count; i++) {
+        sum += *array;
+        array++;
+    }
+    return sum;
+}
+
+void glUtilsPackStrings(void *ptr, char **strings, GLint *length, GLsizei count)
+{
+    unsigned char *p = (unsigned char *)ptr;
+    for (int i = 0; i < count; i++) {
+        memcpy(p, *strings, *length);
+        p += *length;
+        strings++;
+        length++;
+    }
 }
