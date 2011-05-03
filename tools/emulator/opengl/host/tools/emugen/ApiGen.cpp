@@ -121,7 +121,7 @@ int ApiGen::genContext(const std::string & filename, SideType side)
     if (side == CLIENT_SIDE || side == WRAPPER_SIDE) {
         fprintf(fp, "\n\ttypedef %s_%s_context_t *CONTEXT_ACCESSOR_TYPE(void);\n",
                 m_basename.c_str(), sideString(side));
-        fprintf(fp, "\tvoid setContextAccessor(CONTEXT_ACCESSOR_TYPE *f);\n");
+        fprintf(fp, "\tstatic void setContextAccessor(CONTEXT_ACCESSOR_TYPE *f);\n");
     }
 
     // init function
