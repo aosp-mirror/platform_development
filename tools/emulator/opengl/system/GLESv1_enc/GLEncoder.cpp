@@ -428,7 +428,7 @@ void GLEncoder::s_glDrawElements(void *self, GLenum mode, GLsizei count, GLenum 
                                       count * glSizeof(type));
             // XXX - OPTIMIZATION (see the other else branch) should be implemented
             if(!has_indirect_arrays) {
-                LOGD("unoptimized drawelements !!!\n");
+                //LOGD("unoptimized drawelements !!!\n");
             }
         } else {
             // we are all direct arrays and immidate mode index array -

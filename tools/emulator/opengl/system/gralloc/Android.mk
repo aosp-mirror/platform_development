@@ -32,7 +32,8 @@ LOCAL_MODULE := gralloc.goldfish
 
 LOCAL_STATIC_LIBRARIES := \
     libOpenglSystemCommon \
-    libOpenglCodecCommon
+    libOpenglCodecCommon \
+    libqemu
 
 LOCAL_SHARED_LIBRARIES := \
     libcutils \

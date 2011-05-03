@@ -36,7 +36,7 @@ $(GEN_GLESv1_emul) : PRIVATE_CUSTOM_TOOL := \
 $(GEN_GLESv1_emul) : $(EMUGEN) \
 	$(emulatorOpengl)/system/GLESv1_enc/gl.in \
 	$(emulatorOpengl)/system/GLESv1_enc/gl.attrib \
-	$(emulatorOpengl)/system/GLESv1_enc/gl.types 
+	$(emulatorOpengl)/system/GLESv1_enc/gl.types
 	$(transform-generated-source)
 
 LOCAL_GENERATED_SOURCES += $(GEN_GLESv1_emul)
@@ -72,7 +72,7 @@ $(GEN_GLESv2_emul) : PRIVATE_CUSTOM_TOOL := \
 $(GEN_GLESv2_emul) : $(EMUGEN) \
 	$(emulatorOpengl)/system/GLESv2_enc/gl2.in \
 	$(emulatorOpengl)/system/GLESv2_enc/gl2.attrib \
-	$(emulatorOpengl)/system/GLESv2_enc/gl2.types 
+	$(emulatorOpengl)/system/GLESv2_enc/gl2.types
 	$(transform-generated-source)
 
 LOCAL_GENERATED_SOURCES += $(GEN_GLESv2_emul)
@@ -102,6 +102,7 @@ LOCAL_ADDITIONAL_DEPENDENCIES := \
 
 LOCAL_C_INCLUDES := $(emulatorOpengl)/shared/OpenglCodecCommon \
         $(emulatorOpengl)/host/include/libOpenglRender \
+        $(emulatorOpengl)/system/OpenglSystemCommon \
 		$(call intermediates-dir-for, SHARED_LIBRARIES, libut_rendercontrol_enc) \
 		$(call intermediates-dir-for, SHARED_LIBRARIES, libGLESv1_enc) \
 		$(call intermediates-dir-for, SHARED_LIBRARIES, libGLESv2_enc) \
@@ -109,7 +110,7 @@ LOCAL_C_INCLUDES := $(emulatorOpengl)/shared/OpenglCodecCommon \
 		$(call intermediates-dir-for, SHARED_LIBRARIES, libGLESv2_emul) \
         $(emulatorOpengl)/system/GLESv1_enc \
         $(emulatorOpengl)/system/GLESv2_enc \
-        $(emulatorOpengl)/tests/ut_rendercontrol_enc 
+        $(emulatorOpengl)/tests/ut_rendercontrol_enc
 
 
 LOCAL_CFLAGS := $(logTag)
@@ -127,7 +128,7 @@ LOCAL_SHARED_LIBRARIES := libdl \
 	libGLESv1_enc \
 	libGLESv2_enc \
 	libut_rendercontrol_enc
-LOCAL_STATIC_LIBRARIES := libOpenglCodecCommon
+LOCAL_STATIC_LIBRARIES := libOpenglCodecCommon libOpenglSystemCommon libqemu
 
 include $(BUILD_SHARED_LIBRARY)
 
