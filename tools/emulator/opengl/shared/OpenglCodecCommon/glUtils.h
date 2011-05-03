@@ -54,4 +54,35 @@ extern "C" {
 };
 #endif
 
+namespace GLUtils {
+
+    template <class T> void minmax(T *indices, int count, int *min, int *max) {
+        *min = -1;
+        *max = -1;
+        T *ptr = indices;
+        for (int i = 0; i < count; i++) {
+            if (*min == -1 || *ptr < *min) *min = *ptr;
+            if (*max == -1 || *ptr > *max) *max = *ptr;
+            ptr++;
+        }
+    }
+
+    template <class T> void shiftIndices(T *indices, int count,  int offset) {
+        T *ptr = indices;
+        for (int i = 0; i < count; i++) {
+            *ptr += offset;
+            ptr++;
+        }
+    }
+
+
+    template <class T> void shiftIndices(T *src, T *dst, int count, int offset)
+    {
+        for (int i = 0; i < count; i++) {
+            *dst = *src + offset;
+            dst++;
+            src++;
+        }
+    }
+}; // namespace GLUtils
 #endif
