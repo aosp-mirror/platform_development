@@ -31,7 +31,7 @@ LOCAL_STATIC_LIBRARIES := \
 LOCAL_LDLIBS := -ldl
 
 
-GEN := $(intermediates)/gl_dec.cpp $(intermediates)/gl_dec.h
+GEN := $(intermediates)/gl_server_context.cpp $(intermediates)/gl_dec.cpp $(intermediates)/gl_dec.h
 
 $(GEN) : PRIVATE_PATH := $(LOCAL_PATH)
 $(GEN) : PRIVATE_CUSTOM_TOOL := $(EMUGEN) -D $(intermediates) -i $(emulatorOpengl)/system/GLESv1_enc gl

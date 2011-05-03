@@ -25,7 +25,7 @@ class ApiGen : public std::vector<EntryPoint> {
 
 public:
     typedef std::vector<std::string> StringVec;
-    typedef enum { CLIENT_SIDE, SERVER_SIDE } SideType;
+    typedef enum { CLIENT_SIDE, SERVER_SIDE, WRAPPER_SIDE } SideType;
 
     ApiGen(const std::string & basename) :
         m_basename(basename),
@@ -42,7 +42,21 @@ public:
     int baseOpcode() { return m_baseOpcode; }
     void setBaseOpcode(int base) { m_baseOpcode = base; }
 
-    const char *sideString(SideType side) { return (side == CLIENT_SIDE) ? "client" : "server"; }
+    const char *sideString(SideType side) {
+        const char *retval;
+        switch(side) {
+        case CLIENT_SIDE:
+            retval = "client";
+            break;
+        case SERVER_SIDE:
+            retval = "server";
+            break;
+        case WRAPPER_SIDE:
+            retval = "wrapper";
+            break;
+        }
+        return retval;
+    }
 
     StringVec & clientContextHeaders() { return m_clientContextHeaders; }
     StringVec & encoderHeaders() { return m_encoderHeaders; }
@@ -55,7 +69,9 @@ public:
     int genProcTypes(const std::string &filename, SideType side);
 
     int genContext(const std::string &filename, SideType side);
-    int genClientEntryPoints(const std::string &filename);
+    int genContextImpl(const std::string &filename, SideType side);
+
+    int genEntryPoints(const std::string &filename, SideType side);
 
     int genEncoderHeader(const std::string &filename);
     int genEncoderImpl(const std::string &filename);

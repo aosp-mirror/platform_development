@@ -34,18 +34,23 @@ void usage(const char *filename)
     fprintf(stderr, "\t-D <dir>: generate decoder into dir\n");
     fprintf(stderr, "\t-i: input dir, local directory by default\n");
     fprintf(stderr, "\t-T : generate attribute template into the input directory\n\t\tno other files are generated\n");
+    fprintf(stderr, "\t-W : generate wrapper into dir\n");
 }
 
 int main(int argc, char *argv[])
 {
     std::string encoderDir = "";
     std::string decoderDir = "";
+    std::string wrapperDir = "";
     std::string inDir = ".";
     bool generateAttributesTemplate = false;
 
     int c;
-    while((c = getopt(argc, argv, "TE:D:i:h")) != -1) {
+    while((c = getopt(argc, argv, "TE:D:i:hW:")) != -1) {
         switch(c) {
+        case 'W':
+            wrapperDir = std::string(optarg);
+            break;
         case 'T':
             generateAttributesTemplate = true;
             break;
@@ -76,7 +81,10 @@ int main(int argc, char *argv[])
         return BAD_USAGE;
     }
 
-    if (encoderDir.size() == 0 && decoderDir.size() == 0 && generateAttributesTemplate == false) {
+    if (encoderDir.size() == 0 &&
+        decoderDir.size() == 0 &&
+        generateAttributesTemplate == false &&
+        wrapperDir.size() == 0) {
         fprintf(stderr, "No output specified - aborting\n");
         return BAD_USAGE;
     }
@@ -114,23 +122,31 @@ int main(int argc, char *argv[])
 
         apiEntries.genOpcodes(encoderDir + "/" + baseName + "_opcodes.h");
         apiEntries.genContext(encoderDir + "/" + baseName + "_client_context.h", ApiGen::CLIENT_SIDE);
+        apiEntries.genContextImpl(encoderDir + "/" + baseName + "_client_context.cpp", ApiGen::CLIENT_SIDE);
+
         apiEntries.genProcTypes(encoderDir + "/" + baseName + "_client_proc.h", ApiGen::CLIENT_SIDE);
 
-        apiEntries.genClientEntryPoints(encoderDir + "/" + baseName + "_entry.cpp");
+        apiEntries.genEntryPoints(encoderDir + "/" + baseName + "_entry.cpp", ApiGen::CLIENT_SIDE);
         apiEntries.genEncoderHeader(encoderDir + "/" + baseName + "_enc.h");
         apiEntries.genEncoderImpl(encoderDir + "/" + baseName + "_enc.cpp");
     }
 
     if (decoderDir.size() != 0) {
-        //apiEntries.genEntryPoints(decoderDir + "/" + baseName + "_entry.cpp", baseName);
         apiEntries.genOpcodes(decoderDir + "/" + baseName + "_opcodes.h");
         apiEntries.genProcTypes(decoderDir + "/" + baseName + "_server_proc.h", ApiGen::SERVER_SIDE);
         apiEntries.genContext(decoderDir + "/" + baseName + "_server_context.h", ApiGen::SERVER_SIDE);
+        apiEntries.genContextImpl(decoderDir + "/" + baseName + "_server_context.cpp", ApiGen::SERVER_SIDE);
         apiEntries.genDecoderHeader(decoderDir + "/" + baseName + "_dec.h");
         apiEntries.genDecoderImpl(decoderDir + "/" + baseName + "_dec.cpp");
-        // generate the encoder type;
-
     }
+
+    if (wrapperDir.size() != 0) {
+        apiEntries.genProcTypes(wrapperDir + "/" + baseName + "_wrapper_proc.h", ApiGen::WRAPPER_SIDE);
+        apiEntries.genContext(wrapperDir + "/" + baseName + "_wrapper_context.h", ApiGen::WRAPPER_SIDE);
+        apiEntries.genContextImpl(wrapperDir + "/" + baseName + "_wrapper_context.cpp", ApiGen::WRAPPER_SIDE);
+        apiEntries.genEntryPoints(wrapperDir + "/" + baseName + "_wrapper_entry.cpp", ApiGen::WRAPPER_SIDE);
+    }
+
 #ifdef DEBUG_DUMP
     int withPointers = 0;
     printf("%d functions found\n", int(apiEntries.size()));
