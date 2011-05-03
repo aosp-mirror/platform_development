@@ -47,4 +47,4 @@
 # ************************************************
 # NEWER CLEAN STEPS MUST BE AT THE END OF THE LIST
 # ************************************************
-$(call add-clean-stepp, rm -rf $(OUT_DIR)/target/common/obj/SHARED_LIBRARIES/libGLES_emul_intermediates)
+$(call add-clean-step, rm -rf $(OUT_DIR)/target/common/obj/SHARED_LIBRARIES/libGLES_emul_intermediates)
