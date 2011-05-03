@@ -13,19 +13,15 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-#include "TcpStream.h"
-#include <cutils/sockets.h>
+#include "QemuPipeStream.h"
+#include <hardware/qemu_pipe.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
 
-#ifndef _WIN32
-#include <netinet/in.h>
-#endif
-
-TcpStream::TcpStream(size_t bufSize) :
+QemuPipeStream::QemuPipeStream(size_t bufSize) :
     IOStream(bufSize),
     m_sock(-1),
     m_bufsize(bufSize),
@@ -33,7 +29,7 @@ TcpStream::TcpStream(size_t bufSize) :
 {
 }
 
-TcpStream::TcpStream(int sock, size_t bufSize) :
+QemuPipeStream::QemuPipeStream(int sock, size_t bufSize) :
     IOStream(bufSize),
     m_sock(sock),
     m_bufsize(bufSize),
@@ -41,7 +37,7 @@ TcpStream::TcpStream(int sock, size_t bufSize) :
 {
 }
 
-TcpStream::~TcpStream()
+QemuPipeStream::~QemuPipeStream()
 {
     if (m_sock >= 0) {
         ::close(m_sock);
@@ -52,50 +48,14 @@ TcpStream::~TcpStream()
 }
 
 
-int TcpStream::listen(unsigned short port, bool localhost_only)
+int QemuPipeStream::connect(void)
 {
-    if (localhost_only) {
-        m_sock = socket_loopback_server(port, SOCK_STREAM);
-    } else {
-        m_sock = socket_inaddr_any_server(port, SOCK_STREAM);
-    }
-    if (!valid()) return int(ERR_INVALID_SOCKET);
-
-    return 0;
-}
-
-TcpStream * TcpStream::accept()
-{
-    int clientSock = -1;
-
-    while (true) {
-        struct sockaddr_in addr;
-        socklen_t len = sizeof(addr);
-        clientSock = ::accept(m_sock, (sockaddr *)&addr, &len);
-
-        if (clientSock < 0 && errno == EINTR) {
-            continue;
-        }
-        break;
-    }
-
-    TcpStream *clientStream = NULL;
-
-    if (clientSock >= 0) {
-        clientStream =  new TcpStream(clientSock, m_bufsize);
-    }
-    return clientStream;
-}
-
-
-int TcpStream::connect(const char *hostname, unsigned short port)
-{
-    m_sock = socket_network_client(hostname, port, SOCK_STREAM);
+    m_sock = qemu_pipe_open("opengles");
     if (!valid()) return -1;
     return 0;
 }
 
-void *TcpStream::allocBuffer(size_t minSize)
+void *QemuPipeStream::allocBuffer(size_t minSize)
 {
     size_t allocSize = (m_bufsize < minSize ? minSize : m_bufsize);
     if (!m_buf) {
@@ -117,12 +77,12 @@ void *TcpStream::allocBuffer(size_t minSize)
     return m_buf;
 };
 
-int TcpStream::commitBuffer(size_t size)
+int QemuPipeStream::commitBuffer(size_t size)
 {
     return writeFully(m_buf, size);
 }
 
-int TcpStream::writeFully(const void *buf, size_t len)
+int QemuPipeStream::writeFully(const void *buf, size_t len)
 {
     if (!valid()) return -1;
 
@@ -130,30 +90,36 @@ int TcpStream::writeFully(const void *buf, size_t len)
     int retval = 0;
 
     while (res > 0) {
-        ssize_t stat = ::send(m_sock, (const char *)(buf) + (len - res), res, 0);
-        if (stat < 0) {
-            if (errno != EINTR) {
-                retval =  stat;
-                ERR("TcpStream::writeFully failed: %s\n", strerror(errno));
-                break;
-            }
-        } else {
+        ssize_t stat = ::write(m_sock, (const char *)(buf) + (len - res), res);
+        if (stat > 0) {
             res -= stat;
+            continue;
         }
+        if (stat == 0) { /* EOF */
+            ERR("QemuPipeStream::writeFully failed: premature EOF\n");
+            retval = -1;
+            break;
+        }
+        if (errno == EINTR) {
+            continue;
+        }
+        retval =  stat;
+        ERR("QemuPipeStream::writeFully failed: %s\n", strerror(errno));
+        break;
     }
     return retval;
 }
 
-const unsigned char *TcpStream::readFully(void *buf, size_t len)
+const unsigned char *QemuPipeStream::readFully(void *buf, size_t len)
 {
     if (!valid()) return NULL;
     if (!buf) {
-      ERR("TcpStream::readFully failed, buf=NULL");
-      return NULL;  // do not allow NULL buf in that implementation
+        ERR("QemuPipeStream::readFully failed, buf=NULL");
+        return NULL;  // do not allow NULL buf in that implementation
     }
     size_t res = len;
     while (res > 0) {
-        ssize_t stat = ::recv(m_sock, (char *)(buf) + len - res, len, 0);
+        ssize_t stat = ::read(m_sock, (char *)(buf) + len - res, len);
         if (stat == 0) {
             // client shutdown;
             return NULL;
@@ -161,7 +127,8 @@ const unsigned char *TcpStream::readFully(void *buf, size_t len)
             if (errno == EINTR) {
                 continue;
             } else {
-                ERR("TcpStream::readFully failed (buf 0x%x): %s\n", buf, strerror(errno));
+                ERR("QemuPipeStream::readFully failed (buf %p): %s\n",
+                    buf, strerror(errno));
                 return NULL;
             }
         } else {
@@ -171,18 +138,15 @@ const unsigned char *TcpStream::readFully(void *buf, size_t len)
     return (const unsigned char *)buf;
 }
 
-const unsigned char *TcpStream::read( void *buf, size_t *inout_len)
+const unsigned char *QemuPipeStream::read( void *buf, size_t *inout_len)
 {
     if (!valid()) return NULL;
     if (!buf) {
-      ERR("TcpStream::read failed, buf=NULL");
+      ERR("QemuPipeStream::read failed, buf=NULL");
       return NULL;  // do not allow NULL buf in that implementation
     }
 
-    int n;
-    do {
-        n = recv(buf, *inout_len);
-    } while( n < 0 && errno == EINTR );
+    int n = recv(buf, *inout_len);
 
     if (n > 0) {
         *inout_len = n;
@@ -192,18 +156,29 @@ const unsigned char *TcpStream::read( void *buf, size_t *inout_len)
     return NULL;
 }
 
-int TcpStream::recv(void *buf, size_t len)
+int QemuPipeStream::recv(void *buf, size_t len)
 {
     if (!valid()) return int(ERR_INVALID_SOCKET);
-    int res = 0;
-    while(true) {
-        res = ::recv(m_sock, (char *)buf, len, 0);
-        if (res < 0) {
-            if (errno == EINTR) {
-                continue;
-            }
+    char* p = (char *)buf;
+    int ret = 0;
+    while(len > 0) {
+        int res = ::read(m_sock, p, len);
+        if (res > 0) {
+            p += res;
+            ret += res;
+            len -= res;
+            continue;
         }
+        if (res == 0) { /* EOF */
+             break;
+        }
+        if (errno == EINTR)
+            continue;
+
+        /* A real error */
+        if (ret == 0)
+            ret = -1;
         break;
     }
-    return res;
+    return ret;
 }

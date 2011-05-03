@@ -15,11 +15,15 @@
 */
 #include "HostConnection.h"
 #include "TcpStream.h"
+#include "QemuPipeStream.h"
 #include "ThreadInfo.h"
 #include <cutils/log.h>
 
 #define STREAM_BUFFER_SIZE  4*1024*1024
 #define STREAM_PORT_NUM     4141
+
+/* Set to 1 to use a QEMU pipe, or 0 for a TCP connection */
+#define  USE_QEMU_PIPE  1
 
 HostConnection::HostConnection() :
     m_stream(NULL),
@@ -37,36 +41,52 @@ HostConnection::~HostConnection()
 
 HostConnection *HostConnection::get()
 {
+    /* TODO: Make this configurable with a system property */
+    const int useQemuPipe = USE_QEMU_PIPE;
+
     // Get thread info
     EGLThreadInfo *tinfo = getEGLThreadInfo();
     if (!tinfo) {
         return NULL;
     }
 
-    //
-    // create new host connection for that thread if needed
-    //
     if (tinfo->hostConn == NULL) {
         HostConnection *con = new HostConnection();
         if (NULL == con) {
             return NULL;
         }
 
-        TcpStream *stream = new TcpStream(STREAM_BUFFER_SIZE);
-        if (!stream) {
-            LOGE("Failed to create TcpStream for host connection!!!\n");
-            delete con;
-            return NULL;
+        if (useQemuPipe) {
+            QemuPipeStream *stream = new QemuPipeStream(STREAM_BUFFER_SIZE);
+            if (!stream) {
+                LOGE("Failed to create QemuPipeStream for host connection!!!\n");
+                delete con;
+                return NULL;
+            }
+            if (stream->connect() < 0) {
+                LOGE("Failed to connect to host !!!\n");
+                delete con;
+                return NULL;
+            }
+            con->m_stream = stream;
         }
+        else /* !useQemuPipe */
+        {
+            TcpStream *stream = new TcpStream(STREAM_BUFFER_SIZE);
+            if (!stream) {
+                LOGE("Failed to create TcpStream for host connection!!!\n");
+                delete con;
+                return NULL;
+            }
 
-        if (stream->connect("10.0.2.2", STREAM_PORT_NUM) < 0) {
-            LOGE("Failed to connect to host !!!\n");
-            delete con;
-            return NULL;
+            if (stream->connect("10.0.2.2", STREAM_PORT_NUM) < 0) {
+                LOGE("Failed to connect to host !!!\n");
+                delete con;
+                return NULL;
+            }
+            con->m_stream = stream;
         }
         LOGD("Host Connection established \n");
-
-        con->m_stream = stream;
         tinfo->hostConn = con;
     }
 
