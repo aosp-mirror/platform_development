@@ -44,7 +44,7 @@ public:
     GLDecoderContextData(int nLocations = CODEC_MAX_VERTEX_ATTRIBUTES) :
         m_nLocations(nLocations)
     {
-        m_pointerData = new FixedBuffer(m_nLocations);
+        m_pointerData = new FixedBuffer[m_nLocations];
     }
 
     ~GLDecoderContextData() {
