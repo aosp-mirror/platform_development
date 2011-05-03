@@ -25,6 +25,7 @@ GL2Encoder::GL2Encoder(IOStream *stream) : gl2_encoder_context_t(stream)
     m_glGetVertexAttribiv_enc = set_glGetVertexAttribiv(s_glGetVertexAttribiv);
     m_glGetVertexAttribfv_enc = set_glGetVertexAttribfv(s_glGetVertexAttribfv);
     m_glGetVertexAttribPointerv = set_glGetVertexAttribPointerv(s_glGetVertexAttribPointerv);
+    set_glShaderSource(s_glShaderSource);
 }
 
 GL2Encoder::~GL2Encoder()
@@ -321,4 +322,16 @@ GLint * GL2Encoder::getCompressedTextureFormats()
         }
     }
     return m_compressedTextureFormats;
+}
+
+void GL2Encoder::s_glShaderSource(void *self, GLuint shader, GLsizei count, GLstr *string, GLint *length)
+{
+
+    int len = glUtilsCalcShaderSourceLen(string, length, count);
+    char *str = new char[len + 1];
+    glUtilsPackStrings(str, string, length, count);
+
+    GL2Encoder *ctx = (GL2Encoder *)self;
+    ctx->glShaderString(ctx, shader, str, len + 1);
+    delete str;
 }
