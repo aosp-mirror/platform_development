@@ -32,18 +32,71 @@
 #include "ServerConnection.h"
 #include "ThreadInfo.h"
 #include <pthread.h>
-
+#include "gl_wrapper_context.h"
+#include "gl2_wrapper_context.h"
 
 #define GLES_EMUL_TARGETS_FILE "/system/etc/gles_emul.cfg"
+// implementation libraries;
+#define GLESv1_enc_LIB "/system/lib/libGLESv1_enc.so"
+#define GLESv2_enc_LIB "/system/lib/libGLESv2_enc.so"
+#define GLES_android_LIB "/system/lib/egl/libGLES_android.so"
+// driver libraries;
+#define GLESv1_DRIVER "/system/lib/egl/libGLESv1_CM_emul.so"
+#define GLESv2_DRIVER "/system/lib/egl/libGLESv2_emul.so"
+
 
 static struct egl_dispatch *s_dispatch = NULL;
 pthread_once_t dispatchTablesInitialized = PTHREAD_ONCE_INIT;
 
 static bool s_needEncode = false;
 
-extern void init_gles(void *gles_android);
-extern __eglMustCastToProperFunctionPointerType gles_getProcAddress(const char *procname);
+static gl_wrapper_context_t *g_gl_dispatch = NULL;
+static gl2_wrapper_context_t *g_gl2_dispatch = NULL;
 
+template <class T>
+int initApi(const char *driverLibName, const char *implLibName, T **dispatchTable, T *(*accessor)())
+{
+    void *driverLib = dlopen(driverLibName, RTLD_NOW | RTLD_LOCAL);
+    if (driverLib == NULL) {
+        LOGE("failed to load %s : %s\n", driverLibName, dlerror());
+        return -1;
+    }
+
+    typedef T *(*createFcn_t)(void *, T *(*accessor)());
+    createFcn_t createFcn;
+    createFcn = (createFcn_t) dlsym(driverLib, "createFromLib");
+    if (createFcn == NULL) {
+        LOGE("failed to load createFromLib constructor function\n");
+        return -1;
+    }
+
+    void *implLib = dlopen(implLibName, RTLD_NOW | RTLD_LOCAL);
+    if (implLib == NULL) {
+        LOGE("couldn't open %s", implLibName);
+        return -2;
+    }
+    *dispatchTable = createFcn(implLib, accessor);
+    if (*dispatchTable == NULL) {
+        return -3;
+    }
+
+    // XXX - we do close the impl library since it doesn't have data, as far as we concern.
+    dlclose(implLib);
+
+    // XXX - we do not dlclose the driver library, so its not initialized when
+    // later loaded by android - is this required?
+    return 0;
+}
+
+static gl_wrapper_context_t *getGLContext()
+{
+    return g_gl_dispatch;
+}
+
+static gl2_wrapper_context_t *getGL2Context()
+{
+    return g_gl2_dispatch;
+}
 
 const char *getProcName()
 {
@@ -156,26 +209,31 @@ void initDispatchTables()
     s_needEncode = isNeedEncode();
     void *gles_encoder = NULL;
     if (s_needEncode) {
+        // initialize a connection to the server, and the GLESv1/v2 encoders;
         ServerConnection * connection = ServerConnection::s_getServerConnection();
         if (connection == NULL) {
             LOGE("couldn't create server connection\n");
             s_needEncode = false;
-        } else {
-            LOGD("Created server connection for %s\n", getProcName());
-            gles_encoder = dlopen("/system/lib/libGLESv1_enc.so", RTLD_NOW);
-            if (gles_encoder == NULL) {
-                LOGE("couldn't open libGLESv1_enc.so... aborting connection");
-                delete connection;
-                s_needEncode = false;
-            }
         }
     }
 
-    if (s_needEncode && gles_encoder) {
-        init_gles(gles_encoder);
-    } else {
+    // init dispatch tabels for GLESv1 & GLESv2
+    if (s_needEncode) {
+        // XXX - we do not check the retrun value because there isn't much we can do here on failure.
+
+        if (initApi<gl_wrapper_context_t>(GLESv1_DRIVER, GLESv1_enc_LIB, &g_gl_dispatch, getGLContext) < 0) {
+            // fallback to android on faluire
+            s_needEncode = false;
+        } else {
+            initApi<gl2_wrapper_context_t>(GLESv2_DRIVER, GLESv2_enc_LIB, &g_gl2_dispatch, getGL2Context);
+        }
+    }
+
+    if (!s_needEncode) {
         LOGD("Initializing native opengl for %s\n", getProcName());
-        init_gles(gles_android);
+        initApi<gl_wrapper_context_t>(GLESv1_DRIVER, GLES_android_LIB, &g_gl_dispatch, getGLContext);
+        // try to initialize gl2 from GLES, though its probably going to fail
+        initApi<gl2_wrapper_context_t>(GLESv2_DRIVER, GLES_android_LIB, &g_gl2_dispatch, getGL2Context);
     }
 }
 
@@ -195,14 +253,9 @@ __eglMustCastToProperFunctionPointerType eglGetProcAddress(const char *procname)
         }
     }
 
-    // search in GLES function table
-    __eglMustCastToProperFunctionPointerType f = gles_getProcAddress(procname);
-    if (f != NULL) {
-        return f;
-    }
-
-    // should probably fail - search in back-end anyway.
-    return getDispatch()->eglGetProcAddress(procname);
+    // we do not support eglGetProcAddress for GLESv1 & GLESv2. The loader
+    // should be able to find this function through dynamic loading.
+    return NULL;
 }
 
 ////////////////  Path through functions //////////

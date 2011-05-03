@@ -17,6 +17,7 @@
 #define _SERVER_CONNECTION_H
 
 #include "GLEncoder.h"
+#include "GL2Encoder.h"
 #include "TcpStream.h"
 #include "codec_defs.h"
 #include "ut_rendercontrol_enc.h"
@@ -31,6 +32,7 @@ public:
     int create(size_t buf_size = 4 * 1024 * 1024, const char *defaultServer = RGL_DEFAULT_SERVER);
     static gl_client_context_t *s_getGlContext();
     static ServerConnection *s_getServerConnection();
+    static gl2_client_context_t *s_getGl2Context();
     GLEncoder *glEncoder() { return m_glEnc; }
     ut_rendercontrol_encoder_context_t * utEnc() { return m_ut_enc; }
 
@@ -43,6 +45,7 @@ private:
     static void s_initKeys();
     TcpStream *m_stream;
     GLEncoder *m_glEnc;
+    GL2Encoder *m_gl2Enc;
     ut_rendercontrol_encoder_context_t *m_ut_enc;
 
 };
