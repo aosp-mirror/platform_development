@@ -114,11 +114,11 @@ void queryConfigs(EGLNativeDisplayType dpy,ConfigList& listOut) {
 }
 
 
-bool validNativeWin(EGLNativeWindowType win) {
+bool validNativeWin(EGLNativeDisplayType dpy, EGLNativeWindowType win) {
     return IsWindow(win);
 }
 
-bool validNativePixmap(EGLNativePixmapType pix) {
+bool validNativePixmap(EGLNativeDisplayType dpy, EGLNativePixmapType pix) {
     BITMAP bm;
     return GetObject(pix, sizeof(BITMAP), (LPSTR)&bm);
 }
