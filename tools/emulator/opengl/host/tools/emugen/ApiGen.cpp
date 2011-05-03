@@ -510,7 +510,7 @@ int ApiGen::genContextImpl(const std::string &filename, SideType side)
                 e->name().c_str(),
                 e->name().c_str(),
                 e->name().c_str(),
-                sideString(SERVER_SIDE));
+                sideString(side));
 
     }
     fprintf(fp, "\treturn 0;\n");
