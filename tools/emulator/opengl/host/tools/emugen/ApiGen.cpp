@@ -21,7 +21,6 @@
 #include <errno.h>
 #include <sys/types.h>
 
-
 EntryPoint * ApiGen::findEntryByName(const std::string & name)
 {
     EntryPoint * entry = NULL;
@@ -119,11 +118,14 @@ int ApiGen::genContext(const std::string & filename, SideType side)
     // virtual destructor
     fprintf(fp, "\t virtual ~%s_%s_context_t() {}\n", m_basename.c_str(), sideString(side));
     // accessor
-    if (side == CLIENT_SIDE) {
+    if (side == CLIENT_SIDE || side == WRAPPER_SIDE) {
         fprintf(fp, "\n\ttypedef %s_%s_context_t *CONTEXT_ACCESSOR_TYPE(void);\n",
                 m_basename.c_str(), sideString(side));
         fprintf(fp, "\tvoid setContextAccessor(CONTEXT_ACCESSOR_TYPE *f);\n");
     }
+
+    // init function
+    fprintf(fp, "\tint initDispatchByName( void *(*getProc)(const char *name, void *userData), void *userData);\n");
 
     fprintf(fp, "};\n");
 
@@ -132,8 +134,15 @@ int ApiGen::genContext(const std::string & filename, SideType side)
     return 0;
 }
 
-int ApiGen::genClientEntryPoints(const std::string & filename)
+int ApiGen::genEntryPoints(const std::string & filename, SideType side)
 {
+
+    if (side != CLIENT_SIDE && side != WRAPPER_SIDE) {
+        fprintf(stderr, "Entry points are only defined for Client and Wrapper components\n");
+        return -999;
+    }
+
+
     FILE *fp = fopen(filename.c_str(), "wt");
     if (fp == NULL) {
         perror(filename.c_str());
@@ -143,7 +152,7 @@ int ApiGen::genClientEntryPoints(const std::string & filename)
     printHeader(fp);
     fprintf(fp, "#include <stdio.h>\n");
     fprintf(fp, "#include <stdlib.h>\n");
-    fprintf(fp, "#include \"%s_%s_context.h\"\n", m_basename.c_str(), sideString(CLIENT_SIDE));
+    fprintf(fp, "#include \"%s_%s_context.h\"\n", m_basename.c_str(), sideString(side));
     fprintf(fp, "\n");
 
     fprintf(fp, "extern \"C\" {\n");
@@ -154,11 +163,11 @@ int ApiGen::genClientEntryPoints(const std::string & filename)
     fprintf(fp, "};\n\n");
 
     fprintf(fp, "static %s_%s_context_t::CONTEXT_ACCESSOR_TYPE *getCurrentContext = NULL;\n",
-            m_basename.c_str(), sideString(CLIENT_SIDE));
+            m_basename.c_str(), sideString(side));
 
     fprintf(fp,
             "void %s_%s_context_t::setContextAccessor(CONTEXT_ACCESSOR_TYPE *f) { getCurrentContext = f; }\n\n",
-            m_basename.c_str(), sideString(CLIENT_SIDE));
+            m_basename.c_str(), sideString(side));
 
 
     for (size_t i = 0; i < size(); i++) {
@@ -166,18 +175,21 @@ int ApiGen::genClientEntryPoints(const std::string & filename)
         e->print(fp);
         fprintf(fp, "{\n");
         fprintf(fp, "\t %s_%s_context_t * ctx = getCurrentContext(); \n",
-                m_basename.c_str(), sideString(CLIENT_SIDE));
+                m_basename.c_str(), sideString(side));
 
         bool shouldReturn = !e->retval().isVoid();
-
-        fprintf(fp, "\t %sctx->%s(ctx",
+        bool shouldCallWithContext = (side == CLIENT_SIDE);
+        fprintf(fp, "\t %sctx->%s(%s",
                 shouldReturn ? "return " : "",
-                e->name().c_str());
+                e->name().c_str(),
+                shouldCallWithContext ? "ctx" : "");
         size_t nvars = e->vars().size();
 
         for (size_t j = 0; j < nvars; j++) {
             if (!e->vars()[j].isVoid()) {
-                fprintf(fp, ", %s", e->vars()[j].name().c_str());
+                fprintf(fp, "%s %s",
+                        j != 0 || shouldCallWithContext ? "," : "",
+                        e->vars()[j].name().c_str());
             }
         }
         fprintf(fp, ");\n");
@@ -467,10 +479,42 @@ int ApiGen::genDecoderHeader(const std::string &filename)
     fprintf(fp, "struct %s : public %s_%s_context_t {\n\n",
             classname.c_str(), m_basename.c_str(), sideString(SERVER_SIDE));
     fprintf(fp, "\tsize_t decode(void *buf, size_t bufsize, IOStream *stream);\n");
-    fprintf(fp, "\tint initDispatchByName( void *(*getProc)(const char *name, void *userData), void *userData);\n");
     fprintf(fp, "\n};\n\n");
     fprintf(fp, "#endif");
 
+    fclose(fp);
+    return 0;
+}
+
+int ApiGen::genContextImpl(const std::string &filename, SideType side)
+{
+    FILE *fp = fopen(filename.c_str(), "wt");
+    if (fp == NULL) {
+        perror(filename.c_str());
+        return -1;
+    }
+    printHeader(fp);
+
+    std::string classname = m_basename + "_" + sideString(side) + "_context_t";
+    size_t n = size();
+    fprintf(fp, "\n\n#include <string.h>\n");
+    fprintf(fp, "#include \"%s_%s_context.h\"\n\n\n", m_basename.c_str(), sideString(side));
+    fprintf(fp, "#include <stdio.h>\n\n");
+
+    // init function;
+    fprintf(fp, "int %s::initDispatchByName(void *(*getProc)(const char *, void *userData), void *userData)\n{\n", classname.c_str());
+    fprintf(fp, "\tvoid *ptr;\n\n");
+    for (size_t i = 0; i < n; i++) {
+        EntryPoint *e = &at(i);
+        fprintf(fp, "\tptr = getProc(\"%s\", userData); set_%s((%s_%s_proc_t)ptr);\n",
+                e->name().c_str(),
+                e->name().c_str(),
+                e->name().c_str(),
+                sideString(SERVER_SIDE));
+
+    }
+    fprintf(fp, "\treturn 0;\n");
+    fprintf(fp, "}\n\n");
     fclose(fp);
     return 0;
 }
@@ -492,22 +536,7 @@ int ApiGen::genDecoderImpl(const std::string &filename)
     fprintf(fp, "\n\n#include <string.h>\n");
     fprintf(fp, "#include \"%s_opcodes.h\"\n\n", m_basename.c_str());
     fprintf(fp, "#include \"%s_dec.h\"\n\n\n", m_basename.c_str());
-    fprintf(fp, "#include <stdio.h>\n");
-
-    // init function;
-    fprintf(fp, "int %s::initDispatchByName(void *(*getProc)(const char *, void *userData), void *userData)\n{\n", classname.c_str());
-    fprintf(fp, "\tvoid *ptr;\n\n");
-    for (size_t i = 0; i < n; i++) {
-        EntryPoint *e = &at(i);
-        fprintf(fp, "\tptr = getProc(\"%s\", userData); set_%s((%s_%s_proc_t)ptr);\n",
-                e->name().c_str(),
-                e->name().c_str(),
-                e->name().c_str(),
-                sideString(SERVER_SIDE));
-
-    }
-    fprintf(fp, "\treturn 0;\n");
-    fprintf(fp, "}\n\n");
+    fprintf(fp, "#include <stdio.h>\n\n");
 
     // decoder switch;
     fprintf(fp, "size_t %s::decode(void *buf, size_t len, IOStream *stream)\n{\n", classname.c_str());
