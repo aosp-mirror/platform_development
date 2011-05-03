@@ -384,7 +384,11 @@ int ApiGen::genEncoderImpl(const std::string &filename)
                                 evars[j].lenExpression().c_str());
                     }
 
-                    fprintf(fp, "ptr += %s;\n", evars[j].lenExpression().c_str());
+                    if (evars[j].nullAllowed()) {
+                        fprintf(fp, "ptr += %s == NULL ? 0 : %s; \n", evars[j].name().c_str(), evars[j].lenExpression().c_str());
+                    } else {
+                        fprintf(fp, "ptr += %s;\n", evars[j].lenExpression().c_str());
+                    }
                 }
             } else {
                 // encode a non pointer variable
@@ -621,8 +625,13 @@ int ApiGen::genDecoderImpl(const std::string &filename)
                                         (uint) j, varoffset.c_str());
                             }
                             if (pass == PASS_FunctionCall) {
-                                fprintf(fp, "(%s)(ptr + %s + 4)",
-                                        v->type()->name().c_str(), varoffset.c_str());
+                                if (v->nullAllowed()) {
+                                    fprintf(fp, "*((unsigned int *)(ptr + %s)) == 0 ? NULL : (%s)(ptr + %s + 4)",
+                                            varoffset.c_str(), v->type()->name().c_str(), varoffset.c_str());
+                                } else {
+                                    fprintf(fp, "(%s)(ptr + %s + 4)",
+                                            v->type()->name().c_str(), varoffset.c_str());
+                                }
                             } else if (pass == PASS_DebugPrint) {
                                 fprintf(fp, "(%s)(ptr + %s + 4), *(unsigned int *)(ptr + %s)",
                                         v->type()->name().c_str(), varoffset.c_str(),
@@ -633,10 +642,11 @@ int ApiGen::genDecoderImpl(const std::string &filename)
                             if (pass == PASS_TmpBuffAlloc) {
                                 fprintf(fp, "\t\t\tsize_t tmpPtr%uSize = (size_t)*(unsigned int *)(ptr + %s);\n",
                                         (uint) j, varoffset.c_str());
-                                if (!totalTmpBuffExist)
+                                if (!totalTmpBuffExist) {
                                     fprintf(fp, "\t\t\tsize_t totalTmpSize = tmpPtr%uSize;\n", (uint)j);
-                                else
+                                } else {
                                     fprintf(fp, "\t\t\ttotalTmpSize += tmpPtr%uSize;\n", (uint)j);
+                                }
                                 tmpBufOffset[j] = totalTmpBuffOffset;
                                 char tmpPtrName[16];
                                 sprintf(tmpPtrName," + tmpPtr%uSize", (uint)j);
@@ -646,7 +656,12 @@ int ApiGen::genDecoderImpl(const std::string &filename)
                                 fprintf(fp, "\t\t\tunsigned char *tmpPtr%u = &tmpBuf[%s];\n",
                                         (uint)j, tmpBufOffset[j].c_str());
                             } else if (pass == PASS_FunctionCall) {
-                                fprintf(fp, "(%s)(tmpPtr%u)", v->type()->name().c_str(), (uint) j);
+                                if (v->nullAllowed()) {
+                                    fprintf(fp, "tmpPtr%uSize == 0 ? NULL : (%s)(tmpPtr%u)",
+                                            (uint) j, v->type()->name().c_str(), (uint) j);
+                                } else {
+                                    fprintf(fp, "(%s)(tmpPtr%u)", v->type()->name().c_str(), (uint) j);
+                                }
                             } else if (pass == PASS_DebugPrint) {
                                 fprintf(fp, "(%s)(tmpPtr%u), *(unsigned int *)(ptr + %s)",
                                         v->type()->name().c_str(), (uint) j,
