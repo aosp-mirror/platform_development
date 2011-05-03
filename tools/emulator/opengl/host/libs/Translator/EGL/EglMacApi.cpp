@@ -33,11 +33,11 @@ EglConfig* pixelFormatToConfig(EGLNativeDisplayType dpy,EGLNativePixelFormatType
 void queryConfigs(EGLNativeDisplayType dpy,ConfigsList& listOut) {
 }
 
-bool validNativeWin(EGLNativeWindowType win) {
+bool validNativeWin(EGLNativeDisplayType dpy, EGLNativeWindowType win) {
    return true;
 }
 
-bool validNativePixmap(EGLNativePixmapType pix) {
+bool validNativePixmap(EGLNativeDisplayType dpy, EGLNativePixmapType pix) {
    return true;
 }
 
