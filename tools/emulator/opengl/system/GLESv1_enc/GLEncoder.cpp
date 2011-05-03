@@ -147,28 +147,28 @@ void GLEncoder::s_glVertexPointer(void *self, int size, GLenum type, GLsizei str
 {
     GLEncoder *ctx = (GLEncoder *)self;
     assert(ctx->m_state != NULL);
-    ctx->m_state->setState(GLClientState::VERTEX_LOCATION, size, type, stride, data);
+    ctx->m_state->setState(GLClientState::VERTEX_LOCATION, size, type, false, stride, data);
 }
 
 void GLEncoder::s_glNormalPointer(void *self, GLenum type, GLsizei stride, void *data)
 {
     GLEncoder *ctx = (GLEncoder *)self;
     assert(ctx->m_state != NULL);
-    ctx->m_state->setState(GLClientState::NORMAL_LOCATION, 3, type, stride, data);
+    ctx->m_state->setState(GLClientState::NORMAL_LOCATION, 3, type, false, stride, data);
 }
 
 void GLEncoder::s_glColorPointer(void *self, int size, GLenum type, GLsizei stride, void *data)
 {
     GLEncoder *ctx = (GLEncoder *)self;
     assert(ctx->m_state != NULL);
-    ctx->m_state->setState(GLClientState::COLOR_LOCATION, size, type, stride, data);
+    ctx->m_state->setState(GLClientState::COLOR_LOCATION, size, type, false, stride, data);
 }
 
 void GLEncoder::s_glPointsizePointer(void *self, GLenum type, GLsizei stride, void *data)
 {
     GLEncoder *ctx = (GLEncoder *)self;
     assert(ctx->m_state != NULL);
-    ctx->m_state->setState(GLClientState::POINTSIZE_LOCATION, 1, type, stride, data);
+    ctx->m_state->setState(GLClientState::POINTSIZE_LOCATION, 1, type, false, stride, data);
 }
 
 void GLEncoder::s_glClientActiveTexture(void *self, GLenum texture)
@@ -183,7 +183,7 @@ void GLEncoder::s_glTexcoordPointer(void *self, int size, GLenum type, GLsizei s
     GLEncoder *ctx = (GLEncoder *)self;
     assert(ctx->m_state != NULL);
     int loc = ctx->m_state->getLocation(GL_TEXTURE_COORD_ARRAY);
-    ctx->m_state->setState(loc, size, type, stride, data);
+    ctx->m_state->setState(loc, size, type, false, stride, data);
 }
 
 void GLEncoder::s_glMatrixIndexPointerOES(void *self, int size, GLenum type, GLsizei stride, void * data)
@@ -191,7 +191,7 @@ void GLEncoder::s_glMatrixIndexPointerOES(void *self, int size, GLenum type, GLs
     GLEncoder *ctx = (GLEncoder *)self;
     assert(ctx->m_state != NULL);
     int loc = ctx->m_state->getLocation(GL_MATRIX_INDEX_ARRAY_OES);
-    ctx->m_state->setState(loc, size, type, stride, data);
+    ctx->m_state->setState(loc, size, type, false, stride, data);
 }
 
 void GLEncoder::s_glWeightPointerOES(void * self, int size, GLenum type, GLsizei stride, void * data)
@@ -199,7 +199,7 @@ void GLEncoder::s_glWeightPointerOES(void * self, int size, GLenum type, GLsizei
     GLEncoder *ctx = (GLEncoder *)self;
     assert(ctx->m_state != NULL);
     int loc = ctx->m_state->getLocation(GL_WEIGHT_ARRAY_OES);
-    ctx->m_state->setState(loc, size, type, stride, data);
+    ctx->m_state->setState(loc, size, type, false, stride, data);
 }
 
 void GLEncoder::s_glEnableClientState(void *self, GLenum state)
