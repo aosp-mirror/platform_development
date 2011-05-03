@@ -12,6 +12,7 @@ LOCAL_ADDITIONAL_DEPENDENCIES := \
 
 LOCAL_SRC_FILES := \
         HostConnection.cpp \
+        QemuPipeStream.cpp \
         ThreadInfo.cpp
 
 LOCAL_C_INCLUDES += \

@@ -16,6 +16,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "ServerConnection.h"
+#include "TcpStream.h"
+#include "QemuPipeStream.h"
 #include <cutils/log.h>
 #include "ThreadInfo.h"
 
@@ -72,24 +74,44 @@ ServerConnection::~ServerConnection()
 int ServerConnection::create(size_t bufsize,
                              const char *defaultServer)
 {
+    /* XXX: Make configurable through system property */
+    int useQemuPipe = 1;
+
     if (m_stream != NULL) delete(m_stream);
-    m_stream = new TcpStream(bufsize);
 
-    char *s = getenv(ENV_RGL_SERVER);
-    char *hostname;
-    if (s == NULL) {
-        hostname = strdup(defaultServer);
-    } else {
-        hostname = strdup(s);
+    if (useQemuPipe) {
+        QemuPipeStream*  pipeStream = new QemuPipeStream(bufsize);
+
+        if (pipeStream->connect() < 0) {
+            LOGE("couldn't connect to host server\n");
+            delete pipeStream;
+            return -1;
+        }
+        m_stream = pipeStream;
     }
+    else /* !useQemuPipe */
+    {
+        TcpStream*  tcpStream = new TcpStream(bufsize);
 
-    if (m_stream->connect(hostname, CODEC_SERVER_PORT) < 0) {
-        LOGE("couldn't connect to %s\n", hostname);
+        char *s = getenv(ENV_RGL_SERVER);
+        char *hostname;
+        if (s == NULL) {
+            hostname = strdup(defaultServer);
+        } else {
+            hostname = strdup(s);
+        }
+
+        if (tcpStream->connect(hostname, CODEC_SERVER_PORT) < 0) {
+            LOGE("couldn't connect to %s\n", hostname);
+            free(hostname);
+            delete tcpStream;
+            return -1;
+        }
+        LOGI("connecting to server %s\n", hostname);
         free(hostname);
-        return -1;
+
+        m_stream = tcpStream;
     }
-    LOGI("connecting to server %s\n", hostname);
-    free(hostname);
 
     m_glEnc = new GLEncoder(m_stream);
     m_glEnc->setContextAccessor(s_getGlContext);
