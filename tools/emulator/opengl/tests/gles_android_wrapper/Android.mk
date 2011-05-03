@@ -3,6 +3,8 @@ LOCAL_PATH := $(call my-dir)
 emulatorOpengl := $(LOCAL_PATH)/../..
 logTag := -DLOG_TAG=\"eglWrapper\"
 EMUGEN = $(BUILD_OUT_EXECUTABLES)/emugen
+## comment for no debug
+#debugFlags = -g -O0
 
 #### libGLESv1_CM_emul.so
 include $(CLEAR_VARS)
@@ -16,7 +18,8 @@ LOCAL_SRC_FILES := glesv1_emul_ifc.cpp
 
 LOCAL_PRELINK_MODULE := false
 LOCAL_MODULE_TAGS := debug
-LOCAL_SHARED_LIBRARIES := libdl
+LOCAL_SHARED_LIBRARIES := libdl libcutils
+LOCAL_CFLAGS += $(debugFlags)
 
 LOCAL_C_INCLUDES += \
 	$(emulatorOpengl)/system/GLESv1_enc \
@@ -50,7 +53,8 @@ LOCAL_SRC_FILES := glesv2_emul_ifc.cpp
 
 LOCAL_PRELINK_MODULE := false
 LOCAL_MODULE_TAGS := debug
-LOCAL_SHARED_LIBRARIES := libdl
+LOCAL_SHARED_LIBRARIES := libdl libcutils
+LOCAL_CFLAGS += $(debugFlags)
 
 LOCAL_C_INCLUDES += \
 	$(emulatorOpengl)/system/GLESv2_enc \
@@ -109,6 +113,9 @@ LOCAL_C_INCLUDES := $(emulatorOpengl)/shared/OpenglCodecCommon \
 
 
 LOCAL_CFLAGS := $(logTag)
+LOCAL_CFLAGS += $(debugFlags)
+
+
 LOCAL_MODULE_PATH := $(TARGET_OUT_SHARED_LIBRARIES)/egl
 LOCAL_MODULE := libEGL_emul
 LOCAL_MODULE_TAGS := debug
