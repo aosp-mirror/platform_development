@@ -52,11 +52,6 @@ static EGLiface            s_eglIface = {
 /*****************************************  supported extentions  ***********************************************************************/
 
 //extentions
-typedef struct {
-  const char*                              name;
-  __eglMustCastToProperFunctionPointerType address;
-} EglExtentionDescriptor;
-
 #define EGL_EXTENTIONS 2
 
 //decleration
@@ -64,7 +59,7 @@ EGLImageKHR eglCreateImageKHR(EGLDisplay display, EGLContext context, EGLenum ta
 EGLBoolean eglDestroyImageKHR(EGLDisplay display, EGLImageKHR image);
 
 // extentions descriptors
-static EglExtentionDescriptor s_extentions[] = {
+static ExtentionDescriptor s_eglExtentions[] = {
                                                    {"eglCreateImageKHR" ,(__eglMustCastToProperFunctionPointerType)eglCreateImageKHR},
                                                    {"eglDestroyImageKHR",(__eglMustCastToProperFunctionPointerType)eglDestroyImageKHR}
                                                };
@@ -883,16 +878,21 @@ EGLAPI EGLBoolean EGLAPIENTRY eglReleaseThread(void) {
 
 EGLAPI __eglMustCastToProperFunctionPointerType EGLAPIENTRY
        eglGetProcAddress(const char *procname){
+    __eglMustCastToProperFunctionPointerType retVal = NULL;
     if(!strncmp(procname,"egl",3)) { //EGL proc
         for(int i=0;i < EGL_EXTENSIONS;i++){
-            if(strcmp(procname,s_extentions[i].name) == 0){
-                return s_extentions[i].address;
+            if(strcmp(procname,s_eglExtentions[i].name) == 0){
+                retVal = s_eglExtentions[i].address;
+                break;
             }
         }
     } else if (!strncmp(procname,"gl",2)){ //GL proc
-        //TODO:call glGetProcAdress
+        retVal = g_eglInfo->getIface(GLES_1_1)->getProcAddress(procname); //try to get it from GLES 1.0
+        if(!retVal){ //try to get it from GLES 2.0
+            retVal = g_eglInfo->getIface(GLES_2_0)->getProcAddress(procname);
+        }
     }
-    return NULL;
+    return retVal;
 }
 //not supported for now
 /************************* NOT SUPPORTED FOR NOW ***********************/

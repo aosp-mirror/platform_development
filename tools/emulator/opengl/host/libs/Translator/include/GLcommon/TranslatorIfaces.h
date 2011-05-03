@@ -20,6 +20,16 @@
 
 extern "C" {
 
+/* This is a generic function pointer type, whose name indicates it must
+ * be cast to the proper type *and calling convention* before use.
+ */
+typedef void (*__translatorMustCastToProperFunctionPointerType)(void);
+
+typedef struct {
+  const char*                                     name;
+  __translatorMustCastToProperFunctionPointerType address;
+}ExtentionDescriptor;
+
 class TextureData : public ObjectData
 {
 public:
@@ -53,12 +63,13 @@ typedef  std::map< unsigned int, ImagePtr>       ImagesHndlMap;
 class GLEScontext;
 
 typedef struct {
-    GLEScontext* (*createGLESContext)();
-    void         (*initContext)(GLEScontext*);
-    void         (*deleteGLESContext)(GLEScontext*);
-    void         (*flush)();
-    void         (*finish)();
-    void         (*setShareGroup)(GLEScontext*,ShareGroupPtr);
+    GLEScontext*                                    (*createGLESContext)();
+    void                                            (*initContext)(GLEScontext*);
+    void                                            (*deleteGLESContext)(GLEScontext*);
+    void                                            (*flush)();
+    void                                            (*finish)();
+    void                                            (*setShareGroup)(GLEScontext*,ShareGroupPtr);
+    __translatorMustCastToProperFunctionPointerType (*getProcAddress)(const char*);
 }GLESiface;
 
 

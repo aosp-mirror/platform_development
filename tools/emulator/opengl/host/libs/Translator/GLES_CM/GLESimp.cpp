@@ -28,16 +28,33 @@
 #include <cmath>
 
 
+
+
+
+
+
+
 extern "C" {
 
 //decleration
 static void initContext(GLEScontext* ctx);
-static GLEScontext* createGLESContext();
 static void deleteGLESContext(GLEScontext* ctx);
 static void setShareGroup(GLEScontext* ctx,ShareGroupPtr grp);
+static GLEScontext* createGLESContext();
+static __translatorMustCastToProperFunctionPointerType getProcAddress(const char* procName);
 
 }
 
+/************************************** GLES EXTENSIONS *********************************************************/
+#define GLES_EXTENTIONS 1
+//extensions decleration
+void glEGLImageTargetTexture2DOES(GLenum target, GLeglImageOES image);
+
+//extentions descriptor
+static ExtentionDescriptor s_glesExtentions[] = {
+                                                    {"glEGLImageTargetTexture2DOES",(__translatorMustCastToProperFunctionPointerType)glEGLImageTargetTexture2DOES}
+                                                };
+/****************************************************************************************************************/
 static EGLiface*  s_eglIface = NULL;
 static GLESiface  s_glesIface = {
     createGLESContext:createGLESContext,
@@ -45,7 +62,8 @@ static GLESiface  s_glesIface = {
     deleteGLESContext:deleteGLESContext,
     flush            :glFlush,
     finish           :glFinish,
-    setShareGroup    :setShareGroup
+    setShareGroup    :setShareGroup,
+    getProcAddress   :getProcAddress
 };
 
 extern "C" {
@@ -68,6 +86,14 @@ static void setShareGroup(GLEScontext* ctx,ShareGroupPtr grp) {
     }
 }
 
+static __translatorMustCastToProperFunctionPointerType getProcAddress(const char* procName) {
+    for(int i=0;i<GLES_EXTENTIONS;i++){
+        if(strcmp(procName,s_glesExtentions[i].name) == 0){
+            return s_glesExtentions[i].address;
+        }
+    }
+    return NULL;
+}
 GLESiface* __translator_getIfaces(EGLiface* eglIface){
     s_eglIface = eglIface;
     return & s_glesIface;
@@ -1106,7 +1132,7 @@ static TextureData* getTextureData(){
     TextureData *texData = NULL;
     ObjectDataPtr objData = thrd->shareGroup->getObjectData(TEXTURE,tex);
     if(!objData.Ptr()){
-        TextureData *texData = new TextureData();
+        texData = new TextureData();
         thrd->shareGroup->setObjectData(TEXTURE, tex, ObjectDataPtr(texData));
     } else {
         texData = (TextureData*)objData.Ptr();
