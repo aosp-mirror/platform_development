@@ -538,3 +538,8 @@ glGetCompressedTextureFormats
 	dir formats out
 	len formats (count * sizeof(GLint))
 	flag custom_decoder
+
+#GL_ENTRY(void, glShaderString, GLuint shader, GLchar *string, GLsizei len)
+glShaderString
+	len string len
+	flag custom_decoder
