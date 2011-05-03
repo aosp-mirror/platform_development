@@ -1,0 +1,11 @@
+<p>MissileLauncher is a simple program that controls Dream Cheeky USB missile launchers.
+You control the left/right/up/down orientation of the launcher using the accelerometer.
+Tilt the tablet to change the direction of the launcher. Pressing the <strong>Fire</strong> button will fire one missile.</p>
+
+<p>This program serves as an example of the following USB host features:</p>
+<ul>
+<li>filtering for multiple devices based on vendor and product IDs (see <code>device_filter.xml</code>)</li>
+<li>Sending control requests on endpoint zero that contain data</li>
+<li>Receiving packets on an interrupt endpoint using a thread that calls
+  {@link android.hardware.usb.UsbRequest#queue queue()} and {@link android.hardware.usb.UsbDeviceConnection#requestWait requestWait()}.</li>
+</p>

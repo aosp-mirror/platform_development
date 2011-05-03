@@ -177,6 +177,8 @@ development/samples/Spinner                    samples/${PLATFORM_NAME}/Spinner
 development/samples/SpinnerTest                samples/${PLATFORM_NAME}/SpinnerTest
 development/samples/TicTacToeLib               samples/${PLATFORM_NAME}/TicTacToeLib
 development/samples/TicTacToeMain              samples/${PLATFORM_NAME}/TicTacToeMain
+development/samples/USB/MissileLauncher        samples/${PLATFORM_NAME}/USB/MissileLauncher
+development/samples/USB/AdbTest                samples/${PLATFORM_NAME}/USB/AdbTest
 development/samples/VoiceRecognitionService    samples/${PLATFORM_NAME}/VoiceRecognitionService
 development/samples/WeatherListWidget          samples/${PLATFORM_NAME}/WeatherListWidget
 development/apps/WidgetPreview                 samples/${PLATFORM_NAME}/WidgetPreview
