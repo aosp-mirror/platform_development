@@ -344,11 +344,12 @@ glMultiDrawArraysEXT
 glMultiDrawElementsEXT
 	flag unsupported
 
+
+# handled by encoder
 #void glShaderSource(GLuint shader, GLsizei count, GLstr *string, const GLint *length)
 glShaderSource
-   len length (count * sizeof(GLint))
-   len string (glUtilsSumArrayValues(length, count)) 
-   custom_pack string glUtilsPackStrings(ptr, string, length, count)
+	flag unsupported
+
 
 
 #void glGetPerfMonitorGroupsAMD(GLint *numGroups, GLsizei groupsSize, GLuint *groups)

@@ -52,8 +52,8 @@ extern "C" {
                            int size, GLenum type, unsigned int stride,
                            unsigned int datalen);
     int glUtilsPixelBitSize(GLenum format, GLenum type);
-    int    glUtilsSumArrayValues(GLint *array, GLsizei count);
-    void   glUtilsPackStrings(void *ptr, char **strings, GLint *length, GLsizei count);
+    void   glUtilsPackStrings(char *ptr, char **strings, GLint *length, GLsizei count);
+    int glUtilsCalcShaderSourceLen(char **strings, GLint *length, GLsizei count);
 #ifdef __cplusplus
 };
 #endif

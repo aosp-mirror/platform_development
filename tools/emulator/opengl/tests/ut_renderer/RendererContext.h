@@ -38,7 +38,7 @@ typedef std::set<PendingCropRect *> PendingCropRectSet;
 
 class RendererContext : public RendererObject {
 public:
-    static RendererContext *create(EGLDisplay dpy, EGLConfig config, RendererContext *shareCtx);
+    static RendererContext *create(EGLDisplay dpy, EGLConfig config, RendererContext *shareCtx, int version);
     EGLContext eglContext() { return m_ctx; }
     int destroy();
     GLDecoderContextData & decoderContextData() { return m_contextData; }
@@ -99,10 +99,12 @@ private:
     EGLDisplay m_dpy;
     EGLContext m_ctx;
     GLDecoderContextData m_contextData;
+    int m_version;
 
-    RendererContext(EGLDisplay dpy, EGLContext ctx) :
+    RendererContext(EGLDisplay dpy, EGLContext ctx, int version) :
         m_dpy(dpy),
-        m_ctx(ctx)
+        m_ctx(ctx),
+        m_version(version)
     {
 #ifdef PVR_WAR
         m_activeTexture = 0;

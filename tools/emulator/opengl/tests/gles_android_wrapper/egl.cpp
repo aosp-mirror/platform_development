@@ -85,7 +85,9 @@ int initApi(const char *driverLibName, const char *implLibName, T **dispatchTabl
 
     // XXX - we do not dlclose the driver library, so its not initialized when
     // later loaded by android - is this required?
+    LOGD("loading %s into %s complete\n", implLibName, driverLibName);
     return 0;
+
 }
 
 static gl_wrapper_context_t *getGLContext()
@@ -143,7 +145,6 @@ const char *getProcName()
             procname = strdup(p);
         }
     }
-    LOGD("getProcessName: %s\n", procname == NULL ? "NULL": procname);
 
     return procname;
 }
@@ -290,14 +291,69 @@ EGLBoolean eglGetConfigs(EGLDisplay dpy, EGLConfig *configs, EGLint config_size,
     return getDispatch()->eglGetConfigs(dpy, configs, config_size, num_config);
 }
 
+static EGLint * filter_es2_bit(const EGLint *attrib_list, bool *isES2)
+{
+    if (attrib_list == NULL) {
+        if (isES2 != NULL) *isES2 = false;
+        return NULL;
+    }
+
+    EGLint *attribs = NULL;
+    int nAttribs = 0;
+    while(attrib_list[nAttribs] != EGL_NONE) nAttribs++;
+    nAttribs++;
+
+    attribs = new EGLint[nAttribs];
+    memcpy(attribs, attrib_list, nAttribs * sizeof(EGLint));
+    if (isES2 != NULL) *isES2 = false;
+
+    // scan the attribute list for ES2 request and replace with ES1.
+    for (int i = 0; i < nAttribs; i++) {
+        if (attribs[i] == EGL_RENDERABLE_TYPE) {
+            if (attribs[i + 1] & EGL_OPENGL_ES2_BIT) {
+                attribs[i + 1] &= ~EGL_OPENGL_ES2_BIT;
+                attribs[i + 1] |= EGL_OPENGL_ES_BIT;
+                LOGD("removing ES2 bit 0x%x\n", attribs[i + 1]);
+                if (isES2 != NULL) *isES2 = true;
+            }
+        }
+    }
+    return attribs;
+}
+
 EGLBoolean eglChooseConfig(EGLDisplay dpy, const EGLint *attrib_list, EGLConfig *configs, EGLint config_size, EGLint *num_config)
 {
-    return getDispatch()->eglChooseConfig(dpy, attrib_list, configs, config_size, num_config);
+    EGLBoolean res;
+    if (s_needEncode) {
+        EGLint *attribs = filter_es2_bit(attrib_list, NULL);
+        res =  getDispatch()->eglChooseConfig(dpy,
+                                              attribs,
+                                              configs,
+                                              config_size,
+                                              num_config);
+        LOGD("eglChooseConfig: %d configs found\n", *num_config);
+        if (*num_config == 0 && attribs != NULL) {
+            LOGD("requested attributes:\n");
+            for (int i = 0; attribs[i] != EGL_NONE; i++) {
+                LOGD("%d: 0x%x\n", i, attribs[i]);
+            }
+        }
+
+        delete attribs;
+    } else {
+        res = getDispatch()->eglChooseConfig(dpy, attrib_list, configs, config_size, num_config);
+    }
+    return res;
 }
 
 EGLBoolean eglGetConfigAttrib(EGLDisplay dpy, EGLConfig config, EGLint attribute, EGLint *value)
 {
-    return getDispatch()->eglGetConfigAttrib(dpy, config, attribute, value);
+    if (s_needEncode && attribute == EGL_RENDERABLE_TYPE) {
+        *value = EGL_OPENGL_ES_BIT | EGL_OPENGL_ES2_BIT;
+        return EGL_TRUE;
+    } else {
+        return getDispatch()->eglGetConfigAttrib(dpy, config, attribute, value);
+    }
 }
 
 EGLSurface eglCreateWindowSurface(EGLDisplay dpy, EGLConfig config, EGLNativeWindowType win, const EGLint *attrib_list)
@@ -400,18 +456,44 @@ EGLBoolean eglSwapInterval(EGLDisplay dpy, EGLint interval)
 
 EGLContext eglCreateContext(EGLDisplay dpy, EGLConfig config, EGLContext share_context, const EGLint *attrib_list)
 {
+
     EGLContext share = share_context;
     if (share) share = ((EGLWrapperContext *)share_context)->aglContext;
 
-    EGLContext ctx =  getDispatch()->eglCreateContext(dpy, config, share, attrib_list);
-    EGLWrapperContext *wctx = new EGLWrapperContext(ctx);
+    // check if are ES2, and convert it to ES1.
+    int nAttribs = 0;
+    if (attrib_list != NULL) {
+        while(attrib_list[nAttribs] != EGL_NONE) {
+            nAttribs++;
+        }
+        nAttribs++;
+    }
+
+    EGLint *attrib = NULL;
+    if (nAttribs > 0) {
+        attrib = new EGLint[nAttribs];
+        memcpy(attrib, attrib_list, nAttribs * sizeof(EGLint));
+    }
+
+    int  version  = 1;
+    for (int i = 0; i < nAttribs; i++) {
+        if (attrib[i] == EGL_CONTEXT_CLIENT_VERSION &&
+            attrib[i + 1] == 2) {
+            version = 2;
+            attrib[i + 1] = 1; // replace to version 1
+        }
+    }
+
+    EGLContext ctx =  getDispatch()->eglCreateContext(dpy, config, share, attrib);
+    delete attrib;
+    EGLWrapperContext *wctx = new EGLWrapperContext(ctx, version);
     if (ctx != EGL_NO_CONTEXT) {
         ServerConnection *server;
         if (s_needEncode && (server = ServerConnection::s_getServerConnection()) != NULL) {
             wctx->clientState = new GLClientState();
             server->utEnc()->createContext(server->utEnc(), getpid(),
                                            (uint32_t)wctx,
-                                           (uint32_t)(share_context == EGL_NO_CONTEXT ? 0 : share_context));
+                                           (uint32_t)(share_context == EGL_NO_CONTEXT ? 0 : share_context), wctx->version);
         }
     }
     return (EGLContext)wctx;
@@ -451,6 +533,7 @@ EGLBoolean eglMakeCurrent(EGLDisplay dpy, EGLSurface draw, EGLSurface read, EGLC
                                                 (uint32_t) (read == EGL_NO_SURFACE ? 0 : read),
                                                 (uint32_t) (ctx == EGL_NO_CONTEXT ? 0 : ctx));
             ti->serverConn->glEncoder()->setClientState( wctx ? wctx->clientState : NULL );
+            ti->serverConn->gl2Encoder()->setClientState( wctx ? wctx->clientState : NULL );
         }
 
         // set current context in our thread info
@@ -480,7 +563,12 @@ EGLBoolean eglQueryContext(EGLDisplay dpy, EGLContext ctx, EGLint attribute, EGL
 {
     EGLWrapperContext *wctx = (EGLWrapperContext *)ctx;
     if (wctx) {
-        return getDispatch()->eglQueryContext(dpy, wctx->aglContext, attribute, value);
+        if (attribute == EGL_CONTEXT_CLIENT_VERSION) {
+            *value = wctx->version;
+            return EGL_TRUE;
+        } else {
+            return getDispatch()->eglQueryContext(dpy, wctx->aglContext, attribute, value);
+        }
     }
     else {
         return EGL_BAD_CONTEXT;
@@ -503,6 +591,7 @@ EGLBoolean eglSwapBuffers(EGLDisplay dpy, EGLSurface surface)
     if (s_needEncode && (server = ServerConnection::s_getServerConnection()) != NULL) {
         server->utEnc()->swapBuffers(server->utEnc(), getpid(), (uint32_t)surface);
         server->glEncoder()->flush();
+        server->gl2Encoder()->flush();
         return 1;
     }
     return getDispatch()->eglSwapBuffers(dpy, surface);

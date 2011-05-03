@@ -21,9 +21,10 @@
 
 struct EGLWrapperContext
 {
-    EGLWrapperContext(EGLContext p_aglContext) {
+    EGLWrapperContext(EGLContext p_aglContext, int _version) {
         aglContext = p_aglContext;
         clientState = NULL;
+        version = _version;
     }
 
     ~EGLWrapperContext() {
@@ -32,6 +33,7 @@ struct EGLWrapperContext
 
     EGLContext aglContext;
     GLClientState *clientState;
+    int version;
 };
 
 struct EGLThreadInfo

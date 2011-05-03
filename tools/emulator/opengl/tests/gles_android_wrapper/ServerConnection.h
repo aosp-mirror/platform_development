@@ -34,6 +34,7 @@ public:
     static ServerConnection *s_getServerConnection();
     static gl2_client_context_t *s_getGl2Context();
     GLEncoder *glEncoder() { return m_glEnc; }
+    GL2Encoder *gl2Encoder() { return m_gl2Enc; }
     ut_rendercontrol_encoder_context_t * utEnc() { return m_ut_enc; }
 
 private:

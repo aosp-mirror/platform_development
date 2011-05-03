@@ -363,24 +363,37 @@ int glUtilsPixelBitSize(GLenum format, GLenum type)
     return pixelsize;
 }
 
-
-int glUtilsSumArrayValues(GLint *array, GLsizei count)
+// pack a list of strings into one.
+void glUtilsPackStrings(char *ptr,  char **strings,  GLint *length, GLsizei count)
 {
-    int sum = 0;
+    char *p = ptr;
+    *p = '\0';
     for (int i = 0; i < count; i++) {
-        sum += *array;
-        array++;
+        int l;
+        if (length == NULL || length[i] < 0) {
+            l = strlen(strings[i]);
+            strcat(p, strings[i]);
+        } else {
+            l = length[i];
+            strncat(p, strings[i], l);
+        }
+        p += l;
     }
-    return sum;
 }
 
-void glUtilsPackStrings(void *ptr, char **strings, GLint *length, GLsizei count)
+// claculate the length of a list of strings
+int glUtilsCalcShaderSourceLen( char **strings,  GLint *length, GLsizei count)
 {
-    unsigned char *p = (unsigned char *)ptr;
+    int len = 0;
     for (int i = 0; i < count; i++) {
-        memcpy(p, *strings, *length);
-        p += *length;
-        strings++;
-        length++;
+        int l;
+        if (length == NULL || length[i] < 0) {
+            l = strlen(strings[i]);
+        } else {
+            l = length[i];
+        }
+        len += l;
     }
+    return len;
+
 }
