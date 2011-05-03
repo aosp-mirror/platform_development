@@ -18,4 +18,6 @@
 
 #define CODEC_SERVER_PORT 22468
 
+#define CODEC_MAX_VERTEX_ATTRIBUTES 64
+
 #endif

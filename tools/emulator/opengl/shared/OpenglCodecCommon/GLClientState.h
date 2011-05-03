@@ -30,6 +30,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "ErrorLog.h"
+#include "codec_defs.h"
 
 class GLClientState {
 public:
@@ -70,7 +71,7 @@ public:
     } PixelStoreState;
 
 public:
-    GLClientState(int nLocations = 32);
+    GLClientState(int nLocations = CODEC_MAX_VERTEX_ATTRIBUTES);
     ~GLClientState();
     int nLocations() { return m_nLocations; }
     const PixelStoreState *pixelStoreState() { return &m_pixelStore; }

@@ -19,6 +19,7 @@
 #include <assert.h>
 #include <string.h>
 #include "FixedBuffer.h"
+#include "codec_defs.h"
 
 class  GLDecoderContextData {
 public:
@@ -40,18 +41,29 @@ public:
         LAST_LOCATION = 14
     } PointerDataLocation;
 
-    void storePointerData(PointerDataLocation loc, void *data, size_t len) {
-        assert(loc < LAST_LOCATION);
+    GLDecoderContextData(int nLocations = CODEC_MAX_VERTEX_ATTRIBUTES) :
+        m_nLocations(nLocations)
+    {
+        m_pointerData = new FixedBuffer(m_nLocations);
+    }
 
+    ~GLDecoderContextData() {
+        delete m_pointerData;
+    }
+
+    void storePointerData(PointerDataLocation loc, void *data, size_t len) {
+
+        assert(loc < m_nLocations);
         m_pointerData[loc].alloc(len);
         memcpy(m_pointerData[loc].ptr(), data, len);
     }
     void *pointerData(PointerDataLocation loc) {
-        assert(loc < LAST_LOCATION);
+        assert(loc < m_nLocations);
         return m_pointerData[loc].ptr();
     }
 private:
-    FixedBuffer m_pointerData[LAST_LOCATION];
+    FixedBuffer *m_pointerData;
+    int m_nLocations;
 };
 
 #endif
