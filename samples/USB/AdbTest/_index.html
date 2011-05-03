@@ -1,0 +1,13 @@
+<p>AdbTest is a sample program that implements a subset of the <code>adb</code> USB protocol.
+Currently it only implements the <code>adb logcat</code> command and displays the log
+output in a text view and only allows connecting to one device at a time.
+However, the support classes are structured in a way that would allow
+connecting to multiple devices and running multiple <code>adb</code> commands simultaneously.</p>
+
+<p>This program serves as an example of the following USB host features:</p>
+
+<ul> 
+<li>Matching devices based on interface class, subclass and protocol (see <code>device_filter.xml</code>)</li>
+
+<li>Asynchronous IO on bulk endpoints</li>
+</ul>
