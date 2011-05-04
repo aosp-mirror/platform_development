@@ -461,43 +461,21 @@ EGLBoolean eglGetConfigs(EGLDisplay dpy, EGLConfig *configs, EGLint config_size,
 
 EGLBoolean eglChooseConfig(EGLDisplay dpy, const EGLint *attrib_list, EGLConfig *configs, EGLint config_size, EGLint *num_config)
 {
-#if 0
-    VALIDATE_DISPLAY_INIT(dpy, NULL);
+    VALIDATE_DISPLAY_INIT(dpy, EGL_FALSE);
 
-    //First construct a vector of all configs
-    Vector<EGLint> possibleConfigs;
-    for (int i=0; i<s_display.getNumConfigs(); i++)
-        possibleConfigs.push(i);
-
-    //Now go over the attrib_list and drop unmatching configs
-    while (attrib_list[0])
-    {
-        EGLInt paramAttrName = attrib_list[0];
-        EGLInt paramAttrVal = attrib_list[1];
-        attrib_list+=2;
-
-        int cIdx = 0;
-        while (cIdx < possibleConfigs.size()) {
-            EGLInt conf = possibleConfigs[cIdx];
-            EGLInt value;
-            if (s_display.getConfigAttrib((EGLConfig)conf, paramAttrName, &value) == EGL_FALSE) {
-                return setError(EGL_BAD_ATTRIBUTE, EGL_FALSE)
-            }
-            //if the attrib value doesn't match, the current config doesn't match
-            if (paramAttrValue != value)
-                possibleConfigs.removeAt(cIdx); //don't advance cIdx
-            else
-                cIdx++;
+    int attribs_size = 0;
+    if (attrib_list) {
+        const EGLint * attrib_p = attrib_list;
+        while (attrib_p[0] != EGL_NONE) {
+            attribs_size += 2;
+            attrib_p += 2;
         }
+        attribs_size++; //for the terminating EGL_NONE
     }
 
-    //at this point possibleConfigs holds (if any) the matching configs
-    cIdx=0;
-    for (cIdx=0 ; cIdx<possibleConfigs.size() && cIdx<config_size ; cIdx++) {
-        *configs++ = possibleConfigs[cIdx]
-    }
-    *num_config = cIdx;
-#endif
+    DEFINE_AND_VALIDATE_HOST_CONNECTION(EGL_FALSE);
+    *num_config = rcEnc->rcChooseConfig(rcEnc, (EGLint*)attrib_list, attribs_size, (uint32_t*)configs, config_size);
+
     return EGL_TRUE;
 }
 
