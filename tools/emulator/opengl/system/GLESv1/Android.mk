@@ -15,7 +15,7 @@ LOCAL_SRC_FILES := \
 
 
 LOCAL_PRELINK_MODULE := false
-LOCAL_CFLAGS += -DLOG_TAG=\"GLES_emulation\"
+LOCAL_CFLAGS += -DLOG_TAG=\"GLES_emulation\" -DGL_GLEXT_PROTOTYPES
 LOCAL_C_INCLUDES +=  \
         $(emulatorOpengl)/host/include/libOpenglRender \
         $(emulatorOpengl)/shared/OpenglCodecCommon \
