@@ -79,7 +79,7 @@ public:
     GLuint currentArrayVbo() { return m_currentArrayVbo; }
     GLuint currentIndexVbo() { return m_currentIndexVbo; }
     void enable(int location, int state);
-    void setState(int  location, int size, GLenum type, GLboolean normalized, GLsizei stride, void *data);
+    void setState(int  location, int size, GLenum type, GLboolean normalized, GLsizei stride, const void *data);
     void setBufferObject(int location, GLuint id);
     const VertexAttribState  *getState(int location);
     const VertexAttribState  *getStateAndEnableDirty(int location, bool *enableChanged);
