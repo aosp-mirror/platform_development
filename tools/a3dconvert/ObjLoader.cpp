@@ -228,24 +228,6 @@ bool ObjLoader::init(const char *fileName) {
     return true;
 }
 
-bool ObjLoader::convertToA3D(const char *a3dFile) {
-    if (!getNumMeshes()) {
-        return false;
-    }
-    // Now write all this stuff out
-    Context rsc;
-    FileA3D file(&rsc);
-
-    for (uint32_t i = 0; i < getNumMeshes(); i ++) {
-        Mesh *exportedMesh = getMesh(&rsc, i);
-        file.appendToFile(exportedMesh);
-        delete exportedMesh;
-    }
-
-    file.writeFile(a3dFile);
-    return true;
-}
-
 void ObjLoader::reIndexGeometry() {
     // We want to know where each vertex lands
     mVertexRemap.resize(mObjPositions.size() / mPositionsStride);

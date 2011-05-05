@@ -19,6 +19,26 @@
 
 #include "ColladaLoader.h"
 #include "ObjLoader.h"
+#include "rsContext.h"
+#include "rsFileA3D.h"
+
+bool convertToA3D(GeometryLoader *loader, const char *a3dFile) {
+    if (!loader->getNumMeshes()) {
+        return false;
+    }
+    // Now write all this stuff out
+    Context rsc;
+    FileA3D file(&rsc);
+
+    for (uint32_t i = 0; i < loader->getNumMeshes(); i ++) {
+        Mesh *exportedMesh = loader->getMesh(i)->getRsMesh(&rsc);
+        file.appendToFile(exportedMesh);
+        delete exportedMesh;
+    }
+
+    file.writeFile(a3dFile);
+    return true;
+}
 
 int main (int argc, char * const argv[]) {
     const char *objExt = ".obj";
@@ -42,23 +62,23 @@ int main (int argc, char * const argv[]) {
         return 1;
     }
 
+    GeometryLoader *loader = NULL;
     std::string ext = filename.substr(dotPos);
     if (ext == daeExt) {
-        ColladaLoader converter;
-        isSuccessful = converter.init(argv[1]);
-        if (isSuccessful) {
-            isSuccessful = converter.convertToA3D(argv[2]);
-        }
+        loader = new ColladaLoader();
     } else if (ext == objExt) {
-        ObjLoader objConv;
-        isSuccessful = objConv.init(argv[1]);
-        if (isSuccessful) {
-            isSuccessful = objConv.convertToA3D(argv[2]);
-        }
+        loader = new ObjLoader();
     } else {
         printf("Invalid input. Currently .obj and .dae (collada) input files are accepted\n");
         return 1;
     }
+
+    isSuccessful = loader->init(argv[1]);
+    if (isSuccessful) {
+        isSuccessful = convertToA3D(loader, argv[2]);
+    }
+
+    delete loader;
 
     if(isSuccessful) {
         printf("---All done---\n");

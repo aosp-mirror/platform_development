@@ -22,14 +22,20 @@
 class domLibrary_geometries;
 class domGeometry;
 class ColladaGeometry;
+class SimpleMesh;
 
-class ColladaLoader {
+#include "GeometryLoader.h"
+
+class ColladaLoader : public GeometryLoader {
 public:
     ColladaLoader();
-    ~ColladaLoader();
+    virtual ~ColladaLoader();
 
-    bool init(const char *colladaFile);
-    bool convertToA3D(const char *a3dFile);
+    virtual bool init(const char *colladaFile);
+    virtual SimpleMesh *getMesh(uint32_t meshIndex);
+    virtual uint32_t getNumMeshes() const {
+        return mGeometries.size();
+    }
 
 private:
     void clearGeometry();

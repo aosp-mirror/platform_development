@@ -19,6 +19,7 @@
 
 #include <rsContext.h>
 #include <rsMesh.h>
+#include <string>
 using namespace android;
 using namespace android::renderscript;
 
@@ -68,7 +69,7 @@ public:
     }
 
     // Generates a renderscript mesh that could be used for a3d serialization
-    Mesh *getMesh(Context *rsc) {
+    Mesh *getRsMesh(Context *rsc) {
         if (mChannels.size() == 0) {
             return NULL;
         }
@@ -113,19 +114,12 @@ public:
         // Now lets write index data
         const Element *indexElem = Element::create(rsc, RS_TYPE_UNSIGNED_16, RS_KIND_USER, false, 1);
 
-        Mesh *mesh = new Mesh(rsc);
+        Mesh *mesh = new Mesh(rsc, 1, mTriangleLists.size());
         mesh->setName(mName.c_str());
-        mesh->mVertexBufferCount = 1;
-        mesh->mVertexBuffers = new ObjectBaseRef<Allocation>[1];
-        mesh->mVertexBuffers[0].set(vertexAlloc);
-
-        mesh->mPrimitivesCount = mTriangleLists.size();
-        mesh->mPrimitives = new Mesh::Primitive_t *[mesh->mPrimitivesCount];
+        mesh->setVertexBuffer(vertexAlloc, 0);
 
         // load all primitives
-        for (uint32_t pCount = 0; pCount < mesh->mPrimitivesCount; pCount ++) {
-            Mesh::Primitive_t *prim = new Mesh::Primitive_t;
-            mesh->mPrimitives[pCount] = prim;
+        for (uint32_t pCount = 0; pCount < mTriangleLists.size(); pCount ++) {
 
             uint32_t numIndicies = mTriangleLists[pCount].size();
             Type *indexType = Type::getType(rsc, indexElem, numIndicies, 0, 0, false, false );
@@ -143,8 +137,7 @@ public:
                 indexPtr[i * 3 + 2] = (uint16_t)indexList[i * 3 + 2];
             }
             indexAlloc->setName(mTriangleListNames[pCount].c_str());
-            prim->mIndexBuffer.set(indexAlloc);
-            prim->mPrimitive = RS_PRIMITIVE_TRIANGLE;
+            mesh->setPrimitive(indexAlloc, RS_PRIMITIVE_TRIANGLE, pCount);
         }
 
         return mesh;

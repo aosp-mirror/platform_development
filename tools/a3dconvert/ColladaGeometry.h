@@ -27,8 +27,8 @@ public:
     ColladaGeometry();
     bool init(domGeometryRef geometry);
 
-    Mesh *getMesh(Context *rsc) {
-        return mConvertedMesh.getMesh(rsc);
+    SimpleMesh *getMesh() {
+        return &mConvertedMesh;
     }
 
 private:
