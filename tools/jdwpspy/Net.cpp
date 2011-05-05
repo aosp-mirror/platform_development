@@ -7,9 +7,9 @@
 #include "jdwp/JdwpConstants.h"
 
 #include <stdlib.h>
-#include <unistd.h>     
+#include <unistd.h>
 #include <stdio.h>
-#include <string.h>     
+#include <string.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -205,9 +205,7 @@ static const JdwpHandlerMap gHandlerMap[] = {
  */
 static const char* getCommandName(int cmdSet, int cmd)
 {
-    int i;
-
-    for (i = 0; i < (int) NELEM(gHandlerMap); i++) {
+    for (int i = 0; i < (int) NELEM(gHandlerMap); i++) {
         if (gHandlerMap[i].cmdSet == cmdSet &&
             gHandlerMap[i].cmd == cmd)
         {
@@ -229,10 +227,7 @@ void jdwpNetFree(NetState* netState);       /* fwd */
 NetState* jdwpNetStartup(unsigned short listenPort, const char* connectHost,
     unsigned short connectPort)
 {
-    NetState* netState;
-    int one = 1;
-
-    netState = (NetState*) malloc(sizeof(*netState));
+    NetState* netState = (NetState*) malloc(sizeof(*netState));
     memset(netState, 0, sizeof(*netState));
     netState->listenSock = -1;
     netState->dbg.sock = netState->vm.sock = -1;
@@ -251,12 +246,15 @@ NetState* jdwpNetStartup(unsigned short listenPort, const char* connectHost,
     }
 
     /* allow immediate re-use if we die */
-    if (setsockopt(netState->listenSock, SOL_SOCKET, SO_REUSEADDR, &one,
-            sizeof(one)) < 0)
     {
-        fprintf(stderr, "setsockopt(SO_REUSEADDR) failed: %s\n",
-            strerror(errno));
-        goto fail;
+        int one = 1;
+        if (setsockopt(netState->listenSock, SOL_SOCKET, SO_REUSEADDR, &one,
+                sizeof(one)) < 0)
+        {
+            fprintf(stderr, "setsockopt(SO_REUSEADDR) failed: %s\n",
+                strerror(errno));
+            goto fail;
+        }
     }
 
     struct sockaddr_in addr;
@@ -474,7 +472,7 @@ static void dumpPacket(const unsigned char* packetBuf, const char* srcName,
     char prefix[3];
     u4 length, id;
     u1 flags, cmdSet=0, cmd=0;
-    u2 error=0;
+    JdwpError error = ERR_NONE;
     bool reply;
     int dataLen;
 
@@ -483,7 +481,7 @@ static void dumpPacket(const unsigned char* packetBuf, const char* srcName,
     flags = get1(buf+8);
     if ((flags & kJDWPFlagReply) != 0) {
         reply = true;
-        error = get2BE(buf+9);
+        error = static_cast<JdwpError>(get2BE(buf+9));
     } else {
         reply = false;
         cmdSet = get1(buf+9);
@@ -748,4 +746,3 @@ int run(const char* connectHost, int connectPort, int listenPort)
 
     return 0;
 }
-

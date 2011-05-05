@@ -4,9 +4,9 @@ LOCAL_PATH:= $(call my-dir)
 include $(CLEAR_VARS)
 
 LOCAL_SRC_FILES:= \
-	Main.c \
-	Net.c \
-	find_JdwpConstants.c
+	Main.cpp \
+	Net.cpp \
+	find_JdwpConstants.cpp
 
 LOCAL_C_INCLUDES += \
 	dalvik/vm

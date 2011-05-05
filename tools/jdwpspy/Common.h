@@ -14,11 +14,6 @@ typedef unsigned short u2;
 typedef unsigned int u4;
 typedef unsigned long long u8;
 
-#ifndef __bool_true_false_are_defined
-typedef enum { false=0, true=!false } bool;
-#define __bool_true_false_are_defined 1
-#endif
-
 #define NELEM(x) (sizeof(x) / sizeof((x)[0]))
 
 #ifndef _JDWP_MISC_INLINE

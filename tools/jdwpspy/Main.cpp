@@ -33,7 +33,7 @@ void printHexDump2(const void* vaddr, size_t length, const char* prefix)
 void printHexDumpEx(FILE* fp, const void* vaddr, size_t length,
     HexDumpMode mode, const char* prefix)
 {
-    const unsigned char* addr = vaddr;
+    const unsigned char* addr = reinterpret_cast<const unsigned char*>(vaddr);
     char out[77];       /* exact fit */
     unsigned int offset;    /* offset to show while printing */
     char* hex;
@@ -53,19 +53,17 @@ void printHexDumpEx(FILE* fp, const void* vaddr, size_t length,
     gap = (int) offset & 0x0f;
     while (length) {
         unsigned int lineOffset = offset & ~0x0f;
-        int i, count;
-        
-        hex = out;
-        asc = out + 59;
+        char* hex = out;
+        char* asc = out + 59;
 
-        for (i = 0; i < 8; i++) {
+        for (int i = 0; i < 8; i++) {
             *hex++ = gHexDigit[lineOffset >> 28];
             lineOffset <<= 4;
         }
         hex++;
         hex++;
 
-        count = ((int)length > 16-gap) ? 16-gap : (int) length; /* cap length */
+        int count = ((int)length > 16-gap) ? 16-gap : (int) length; /* cap length */
         assert(count != 0);
         assert(count+gap <= 16);
 
@@ -75,6 +73,7 @@ void printHexDumpEx(FILE* fp, const void* vaddr, size_t length,
             asc += gap;
         }
 
+        int i;
         for (i = gap ; i < count+gap; i++) {
             *hex++ = gHexDigit[*addr >> 4];
             *hex++ = gHexDigit[*addr & 0x0f];
@@ -118,9 +117,6 @@ static void usage(const char* progName)
  */
 int main(int argc, char* argv[])
 {
-    int connectPort, listenPort;
-    int cc;
-
     if (argc < 2 || argc > 3) {
         usage("jdwpspy");
         return 2;
@@ -129,15 +125,15 @@ int main(int argc, char* argv[])
     setvbuf(stdout, NULL, _IONBF, 0);
 
     /* may want this to be host:port */
-    connectPort = atoi(argv[1]);
+    int connectPort = atoi(argv[1]);
 
+    int listenPort;
     if (argc > 2)
         listenPort = atoi(argv[2]);
     else
         listenPort = connectPort + 1;
 
-    cc = run("localhost", connectPort, listenPort);
+    int cc = run("localhost", connectPort, listenPort);
 
     return (cc != 0);
 }
-
