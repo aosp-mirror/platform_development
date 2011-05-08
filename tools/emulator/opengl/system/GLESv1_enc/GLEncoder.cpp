@@ -467,6 +467,7 @@ GLEncoder::GLEncoder(IOStream *stream) : gl_encoder_context_t(stream)
     m_glDrawArrays_enc = set_glDrawArrays(s_glDrawArrays);
     m_glDrawElements_enc = set_glDrawElements(s_glDrawElements);
     set_glGetString(s_glGetString);
+    set_glFinish(s_glFinish);
 
 }
 
@@ -479,4 +480,10 @@ size_t GLEncoder::pixelDataSize(GLsizei width, GLsizei height, GLenum format, GL
 {
     assert(m_state != NULL);
     return m_state->pixelDataSize(width, height, format, type, pack);
+}
+
+void GLEncoder::s_glFinish(void *self)
+{
+    GLEncoder *ctx = (GLEncoder *)self;
+    ctx->glFinishRoundTrip(self);
 }

@@ -349,6 +349,9 @@ glGetCompressedTextureFormats
 	flag custom_decoder
 	flag not_api
 
+glFinishRoundTrip
+	flag custom_decoder
+	flag not_api
 
 #gles1 extensions
 

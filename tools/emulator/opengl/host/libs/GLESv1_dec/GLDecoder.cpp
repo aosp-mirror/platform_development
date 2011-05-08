@@ -74,7 +74,15 @@ int GLDecoder::initGL(get_proc_func_t getProcFunc, void *getProcFuncData)
 
     set_glDrawElementsOffset(s_glDrawElementsOffset);
     set_glDrawElementsData(s_glDrawElementsData);
+    set_glFinishRoundTrip(s_glFinishRoundTrip);
 
+    return 0;
+}
+
+int GLDecoder::s_glFinishRoundTrip(void *self)
+{
+    GLDecoder *ctx = (GLDecoder *)self;
+    ctx->glFinish();
     return 0;
 }
 

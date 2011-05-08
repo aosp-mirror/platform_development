@@ -87,6 +87,8 @@ private:
     static void s_glDrawArrays(void *self, GLenum mode, GLint first, GLsizei count);
     static void s_glDrawElements(void *self, GLenum mode, GLsizei count, GLenum type, const void *indices);
     static void s_glPixelStorei(void *self, GLenum param, GLint value);
+
+    static void s_glFinish(void *self);
     void sendVertexData(unsigned first, unsigned count);
 };
 #endif
