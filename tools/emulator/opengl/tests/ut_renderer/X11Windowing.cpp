@@ -20,6 +20,64 @@
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 
+#define DEBUG 0
+#if DEBUG
+#  define D(...) printf(__VA_ARGS__), printf("\n")
+#else
+#  define D(...) ((void)0)
+#endif
+
+/* Try to remember the window position between creates/destroys */
+static int X11_wmXPos = 100;
+static int X11_wmYPos = 100;
+
+static int X11_wmXAdjust = 0;
+static int X11_wmYAdjust = 0;
+
+static void
+get_window_pos( Display *disp, Window win, int *px, int *py )
+{
+    Window  child;
+
+    XTranslateCoordinates( disp, win, DefaultRootWindow(disp),  0, 0, px, py, &child );
+}
+
+
+static void
+set_window_pos(Display *disp, Window win, int x, int y)
+{
+    int   xNew, yNew;
+    int   xAdjust = X11_wmXAdjust;
+    int   yAdjust = X11_wmYAdjust;
+
+    /* this code is tricky because some window managers, but not all,
+     * will translate the final window position by a given offset
+     * corresponding to the frame decoration.
+     *
+     * so we first try to move the window, get the position that the
+     * window manager has set, and if they are different, re-position the
+     * window again with an adjustment.
+     *
+     * this causes a slight flicker since the window 'jumps' very
+     * quickly from one position to the other.
+     */
+
+    D("%s: move to [%d,%d] adjusted to [%d,%d]", __FUNCTION__,
+      x, y, x+xAdjust, y+yAdjust);
+    XMoveWindow(disp, win, x + xAdjust, y + yAdjust);
+    XSync(disp, True);
+    get_window_pos(disp, win, &xNew, &yNew);
+    if (xNew != x || yNew != y) {
+        X11_wmXAdjust = xAdjust = x - xNew;
+        X11_wmYAdjust = yAdjust = y - yNew;
+        D("%s: read pos [%d,%d], recomputing adjust=[%d,%d] moving to [%d,%d]\n",
+          __FUNCTION__, xNew, yNew, xAdjust, yAdjust, x+xAdjust, y+yAdjust);
+        XMoveWindow(disp, win, x + xAdjust, y + yAdjust );
+    }
+    XSync(disp, False);
+}
+
+
 NativeDisplayType X11Windowing::getNativeDisplay()
 {
     Display *dpy = XOpenDisplay(NULL);
@@ -51,12 +109,13 @@ NativeWindowType X11Windowing::createNativeWindow(NativeDisplayType _dpy, int wi
 
     Window win = XCreateWindow( dpy,
                                 rootWindow,
-                               0, 0, width, height,
-                                 0, CopyFromParent, InputOutput,
-                               CopyFromParent, attributes_mask, &sWA);
+                                X11_wmXPos, X11_wmYPos, width, height,
+                                0, CopyFromParent, InputOutput,
+                                CopyFromParent, attributes_mask, &sWA);
 
     XMapWindow(dpy, win);
     XFlush(dpy);
+    set_window_pos(dpy, win, X11_wmXPos, X11_wmYPos);
     return NativeWindowType(win);
 }
 
@@ -64,6 +123,8 @@ int X11Windowing::destroyNativeWindow(NativeDisplayType _dpy, NativeWindowType _
 {
     Display *dpy = (Display *)_dpy;
     Window win = (Window)_win;
+    get_window_pos(dpy, win, &X11_wmXPos, &X11_wmYPos);
+    D("%s: Saved window position [%d, %d]\n", __FUNCTION__, X11_wmXPos, X11_wmYPos);
     XDestroyWindow(dpy, win);
     XFlush(dpy);
     return 0;
