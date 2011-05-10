@@ -22,28 +22,28 @@
 #include <iostream>
 #include <fstream>
 
-#include "SimpleMesh.h"
-#include <rsContext.h>
+#include "GeometryLoader.h"
 
 using namespace android;
 using namespace android::renderscript;
 
 #define MAX_INDEX 0xffffffff
 
-class ObjLoader {
+class ObjLoader : public GeometryLoader {
 public:
     ObjLoader();
-    bool init(const char *objFile);
-    bool convertToA3D(const char *a3dFile);
-private:
-
-    Mesh *getMesh(Context *rsc, uint32_t meshIndex) {
-        return mMeshes[meshIndex].getMesh(rsc);
+    virtual ~ObjLoader() {
     }
-    uint32_t getNumMeshes() const {
+    virtual bool init(const char *objFile);
+
+    virtual SimpleMesh *getMesh(uint32_t meshIndex) {
+        return &mMeshes[meshIndex];
+    }
+    virtual uint32_t getNumMeshes() const {
         return mMeshes.size();
     }
 
+private:
     // .obj has a global list of vertex data
     std::vector<float> mObjPositions;
     std::vector<float> mObjNormals;

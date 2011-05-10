@@ -17,8 +17,6 @@
 #include "ColladaLoader.h"
 #include "ColladaConditioner.h"
 #include "ColladaGeometry.h"
-#include "rsContext.h"
-#include "rsFileA3D.h"
 
 #include <dae.h>
 #include <dom/domCOLLADA.h>
@@ -64,22 +62,8 @@ bool ColladaLoader::init(const char *colladaFile) {
     return convertSuceeded;
 }
 
-bool ColladaLoader::convertToA3D(const char *a3dFile) {
-    if (mGeometries.size() == 0) {
-        return false;
-    }
-    // Now write all this stuff out
-    Context rsc;
-    FileA3D file(&rsc);
-
-    for (uint32_t i = 0; i < mGeometries.size(); i++) {
-        Mesh *exportedMesh = mGeometries[i]->getMesh(&rsc);
-        file.appendToFile(exportedMesh);
-        delete exportedMesh;
-    }
-
-    file.writeFile(a3dFile);
-    return true;
+SimpleMesh *ColladaLoader::getMesh(uint32_t meshIndex) {
+    return mGeometries[meshIndex]->getMesh();
 }
 
 bool ColladaLoader::convertAllGeometry(domLibrary_geometries *allGeometry) {
