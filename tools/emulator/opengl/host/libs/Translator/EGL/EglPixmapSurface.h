@@ -31,6 +31,6 @@ public:
     static bool alreadyAssociatedWithConfig(EGLNativePixmapType pix);
 private:
    EGLNativePixmapType m_pixmap;
-   static std::set<EGLNativeWindowType> s_associatedPixmaps;
+   static std::set<EGLNativePixmapType> s_associatedPixmaps;
 };
 #endif
