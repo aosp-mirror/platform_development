@@ -19,16 +19,28 @@ LOCAL_SRC_FILES :=    \
      RangeManip.cpp
 
 LOCAL_C_INCLUDES += \
-                 $(translator_path)/include
+                 $(translator_path)/include \
+                 $(translator_path)/../../../shared
 
 LOCAL_STATIC_LIBRARIES := \
-    libGLcommon           \
+    libOpenglOsUtils      \
+    libutils              \
     libcutils
+
+LOCAL_SHARED_LIBRARIES := \
+    libGLcommon
 
 LOCAL_CFLAGS := -g -O0
 LOCAL_MODULE_TAGS := debug
 LOCAL_MODULE := libGLES_CM_translator
-LOCAL_LDLIBS := -lGL
+
+ifeq ($(HOST_OS),linux)
+    LOCAL_LDLIBS := -lGL -ldl
+endif
+
+ifeq ($(HOST_OS),windows)
+    LOCAL_LDLIBS := -lopengl32 -lgdi32
+endif
 
 include $(BUILD_HOST_SHARED_LIBRARY)
 
