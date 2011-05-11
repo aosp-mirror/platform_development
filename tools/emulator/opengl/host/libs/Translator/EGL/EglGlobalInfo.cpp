@@ -23,6 +23,9 @@ EglGlobalInfo* EglGlobalInfo::m_singleton = NULL;
 
 EglGlobalInfo::EglGlobalInfo(){
     m_default = EglOS::getDefaultDisplay();
+#ifdef _WIN32
+    EglOS::initPtrToWglFunctions();
+#endif
     memset(m_gles_ifaces,0,sizeof(m_gles_ifaces));
 }
 
