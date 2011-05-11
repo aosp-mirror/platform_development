@@ -144,7 +144,6 @@ void queryConfigs(EGLNativeDisplayType dpy,ConfigsList& listOut) {
         EglConfig* conf = pixelFormatToConfig(dpy,&frmtList[i]);
         if(conf) listOut.push_back(conf);
     }
-    listOut.sort();
     XFree(frmtList);
 }
 
