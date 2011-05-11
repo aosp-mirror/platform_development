@@ -60,13 +60,30 @@ EGLConfig RendererSurface::getEglConfig(EGLDisplay eglDisplay, SurfaceConfig con
 
 RendererSurface * RendererSurface::create(EGLDisplay eglDisplay, SurfaceConfig config, NativeWindowing *nw)
 {
+    int width = 0, height = 0;
+    const char* env;
+
+    env = getenv("ANDROID_WINDOW_WIDTH");
+    if (env && *env) {
+        width = atoi(env);
+    }
+    env = getenv("ANDROID_WINDOW_HEIGHT");
+    if (env && *env) {
+        height = atoi(env);
+    }
+    if (width <= 160)
+        width = DEFAULT_WIDTH;
+    if (height <= 160)
+        height = DEFAULT_HEIGHT;
+
+    printf("%s: Using width=%d height=%d\n", __FUNCTION__, width, height);
 
     EGLConfig eglConfig = getEglConfig(eglDisplay, config);
     if (eglConfig == 0) {
         return NULL;
     }
 
-    NativeWindowType window = nw->createNativeWindow(nw->getNativeDisplay(), DEFAULT_WIDTH, DEFAULT_HEIGHT);
+    NativeWindowType window = nw->createNativeWindow(nw->getNativeDisplay(), width, height);
     if (window == 0) {
         return NULL;
     }
