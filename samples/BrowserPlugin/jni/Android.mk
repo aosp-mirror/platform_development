@@ -41,6 +41,8 @@ LOCAL_SRC_FILES := \
 	video/VideoPlugin.cpp \
 	jni-bridge.cpp \
 
+WEBCORE_PATH := external/webkit/Source/WebCore
+
 LOCAL_C_INCLUDES += \
 	$(JNI_H_INCLUDE) \
 	$(LOCAL_PATH) \
@@ -51,9 +53,9 @@ LOCAL_C_INCLUDES += \
 	$(LOCAL_PATH)/navigation \
 	$(LOCAL_PATH)/paint \
 	$(LOCAL_PATH)/video \
-	external/webkit/WebCore/bridge \
-	external/webkit/WebCore/plugins \
-	external/webkit/WebCore/platform/android/JavaVM \
+	$(WEBCORE_PATH)/bridge \
+	$(WEBCORE_PATH)/plugins \
+	$(WEBCORE_PATH)/platform/android/JavaVM \
 	external/webkit/WebKit/android/plugins \
 	external/skia/include/core
 
