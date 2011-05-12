@@ -19,7 +19,7 @@
 #include <stdio.h>
 #include <GLES/gl.h>
 #include <GLcommon/objectNameManager.h>
-#include "RangeManip.h"
+#include <GLcommon/RangeManip.h>
 
 class GLESbuffer: public ObjectData {
 public:

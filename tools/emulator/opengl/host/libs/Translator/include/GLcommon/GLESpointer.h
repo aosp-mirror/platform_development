@@ -32,9 +32,10 @@ public:
     unsigned int  getBufferOffset() const;
     void          getBufferConversions(const RangeList& rl,RangeList& rlOut);
     bool          bufferNeedConversion(){ return !m_buffer->fullyConverted();}
-    void          setArray (GLint size,GLenum type,GLsizei stride,const GLvoid* data);
-    void          setBuffer(GLint size,GLenum type,GLsizei stride,GLESbuffer* buf,int offset);
+    void          setArray (GLint size,GLenum type,GLsizei stride,const GLvoid* data,bool normalize = false);
+    void          setBuffer(GLint size,GLenum type,GLsizei stride,GLESbuffer* buf,int offset,bool normalize = false);
     bool          isEnable() const;
+    bool          isNormalize() const;
     void          enable(bool b);
 
 private:
@@ -42,6 +43,7 @@ private:
     GLenum        m_type;
     GLsizei       m_stride;
     bool          m_enabled;
+    bool          m_normalize;
     const GLvoid* m_data;
     GLESbuffer*   m_buffer;
     unsigned int  m_buffOffset;
