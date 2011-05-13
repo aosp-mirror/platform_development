@@ -222,6 +222,12 @@ See test_defs.xsd for more information.
     coverage_target="framework"
     suite="cts" />
 
+<test name="cts-security"
+    build_path="cts/tests/tests/security"
+    package="com.android.cts.security"
+    runner="android.test.InstrumentationCtsTestRunner"
+    suite="cts" />
+
 <test name="cts-accounts"
     build_path="cts/tests/tests/accounts"
     package="android.accounts.cts"
