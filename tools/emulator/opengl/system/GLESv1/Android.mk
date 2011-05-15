@@ -1,7 +1,7 @@
 LOCAL_PATH := $(call my-dir)
 emulatorOpengl := $(LOCAL_PATH)/../..
 
-### EGL implementation ###########################################
+### GLESv1 implementation ###########################################
 include $(CLEAR_VARS)
 
 # add additional depencies to ensure that the generated code that we depend on
