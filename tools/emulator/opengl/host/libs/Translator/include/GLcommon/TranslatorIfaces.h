@@ -17,6 +17,7 @@
 #define TRANSLATOR_IFACES_H
 #include <GLcommon/ThreadInfo.h>
 #include <GLES/gl.h>
+#include <string.h>
 
 extern "C" {
 
@@ -36,13 +37,16 @@ public:
     ~TextureData() {
         if (sourceEGLImage && eglImageDetach) (*eglImageDetach)(sourceEGLImage);
     }
-    TextureData():width(0),height(0),border(0),internalFormat(GL_RGBA),sourceEGLImage(0){};
+    TextureData():width(0),height(0),border(0),internalFormat(GL_RGBA),sourceEGLImage(0){ 
+        memset(crop_rect,0,4*sizeof(int)); 
+    };
 
     unsigned int width;
     unsigned int height;
     unsigned int border;
     unsigned int internalFormat;
     unsigned int sourceEGLImage;
+    int          crop_rect[4];
     void (*eglImageDetach)(unsigned int imageId);
 };
 
