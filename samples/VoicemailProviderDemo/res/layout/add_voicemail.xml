@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Copyright (C) 2011 The Android Open Source Project.
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+         http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+-->
+
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical">
+    <TextView
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/add_voicemail"/>
+
+    <EditText android:id = "@+id/sender_number"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:hint="@string/sender_number"
+        android:inputType="phone"/>
+    <EditText android:id = "@+id/time"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:hint="@string/time"/>
+    <EditText android:id = "@+id/duration"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:hint="@string/duration"
+        android:inputType="number"/>
+    <EditText android:id = "@+id/mime_type"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:hint="@string/mime_type"/>
+    <EditText android:id = "@+id/provider_package"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"/>
+
+    <!-- Recording button -->
+    <Button android:id = "@+id/start_recording_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/record_voice"/>
+
+    <!-- Save button -->
+    <Button android:id = "@+id/save_btn"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/send"/>
+</LinearLayout>

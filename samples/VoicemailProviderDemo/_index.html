@@ -1,0 +1,47 @@
+<p>
+This is a simple sample application that demonstrates how to use voicemail
+content provider APIs to insert new voicemail records.
+</p>
+<p>
+The application includes
+ <a href="src/com/example/android/voicemail/AddVoicemailActivity.html">
+    <code>AddVoicemailActivity</code>
+ </a>,
+an activity that lets the user enter voicemail details and record voicemail audio,
+which can then be stored with the voicemail content provider by tapping the "Send"
+button.
+<p>
+<img alt="Add voicemail" src="../images/VoicemailProviderDemo.png"
+ width=250px/>
+</p>
+
+<p>
+In the real world, a similar application could download voicemails from a
+remote voicemail server and store them locally with the voicemail content
+provider. The platform would then take care of notification and rendering of the
+voicemails.
+</p>
+<p>
+Following interfaces are of particular interest:
+<ul>
+   <li>
+     <a href="src/com/example/android/voicemail/common/core/VoicemailProviderHelper.html">
+      <code>VoicemailProviderHelper</code>
+     </a> and its implementation in
+     <a href="src/com/example/android/voicemail/common/core/VoicemailProviderHelpers.html">
+      <code>VoicemailProviderHelpers</code>
+     </a>.
+     This interface provides a good demonstration of various fields exposed by voicemail
+     content provider and their usage.
+   </li>
+   <li>
+     <a href="src/com/example/android/voicemail/common/core/Voicemail.html">
+       <code>Voicemail</code>
+     </a> and its implementation in
+    <a href="src/com/example/android/voicemail/common/core/VoicemailImpl.html">
+      <code>VoicemailImpl</code> </a>.
+      This interface provides a structured view of most the important fields in
+      voicemail content provider.
+   </li>
+ </ul>
+</p>
