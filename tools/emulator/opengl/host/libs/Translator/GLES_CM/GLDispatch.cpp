@@ -64,7 +64,7 @@ void GLDispatch::dispatchFuncs() {
     LOAD_GL_FUNC(glBufferSubData);
     LOAD_GL_FUNC(glClear);
     LOAD_GL_FUNC(glClearColor);
-    LOAD_GL_FUNC(glClearDepthf);
+    LOAD_GL_FUNC(glClearDepth);
     LOAD_GL_FUNC(glClearStencil);
     LOAD_GL_FUNC(glClientActiveTexture);
     LOAD_GL_FUNC(glClipPlane);
