@@ -53,6 +53,7 @@ void GLEScontext::init() {
     android::Mutex::Autolock mutex(s_lock);
     if(!m_initialized) {
         int maxTexUnits;
+        s_glDispatch.dispatchFuncs();
         s_glDispatch.glGetIntegerv(GL_MAX_CLIP_PLANES,&s_glSupport.maxClipPlane);
         s_glDispatch.glGetIntegerv(GL_MAX_LIGHTS,&s_glSupport.maxLights);
         s_glDispatch.glGetIntegerv(GL_MAX_TEXTURE_SIZE,&s_glSupport.maxTexSize);
@@ -67,7 +68,6 @@ void GLEScontext::init() {
 
 GLEScontext::GLEScontext():m_glError(GL_NO_ERROR),m_activeTexture(0),m_arrayBuffer(0),m_elementBuffer(0),m_pointsIndex(-1),m_initialized(false) {
 
-    s_glDispatch.dispatchFuncs();
 
     m_map[GL_COLOR_ARRAY]          = new GLESpointer();
     m_map[GL_NORMAL_ARRAY]         = new GLESpointer();
@@ -469,7 +469,7 @@ GLuint GLEScontext::getBuffer(GLenum target) {
 GLvoid* GLEScontext::getBindedBuffer(GLenum target) {
     GLuint bufferName = getBuffer(target);
     if(!bufferName) return NULL;
-    
+
     GLESbuffer* vbo = static_cast<GLESbuffer*>(m_shareGroup->getObjectData(VERTEXBUFFER,bufferName).Ptr());
     return vbo->getData();
 }

@@ -31,7 +31,7 @@ m_draw(NULL),
 m_destroy(false),
 m_version(ver)
 {
-    m_shareGroup = shared_context.Ptr()? 
+    m_shareGroup = shared_context.Ptr()?
                    mngr->attachShareGroup(context,shared_context.Ptr()->getShareGroup().Ptr()):
                    mngr->createShareGroup(context);
     m_hndl = ++s_nextContextHndl;
