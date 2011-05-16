@@ -19,6 +19,7 @@ endif
 
 ifeq ($(HOST_OS),windows)
     OS_SRCS = EglWindowsApi.cpp
+    LOCAL_LDLIBS := -lopengl32 -lgdi32
 endif
 
 LOCAL_SRC_FILES :=            \
@@ -38,11 +39,21 @@ LOCAL_SRC_FILES :=            \
 
 
 LOCAL_C_INCLUDES += \
-                 $(translator_path)/include
+                 $(translator_path)/include \
+                 $(translator_path)/../../../shared
 
 LOCAL_CFLAGS := -g -O0
 LOCAL_MODULE_TAGS := debug
 LOCAL_MODULE := libEGL_translator
-LOCAL_STATIC_LIBRARIES := libGLcommon libcutils
+
+LOCAL_STATIC_LIBRARIES :=    \
+                 libcutils   \
+                 libutils    \
+                 liblog      \
+                 libOpenglOsUtils
+
+LOCAL_SHARED_LIBRARIES := \
+    libGLcommon
+
 include $(BUILD_HOST_SHARED_LIBRARY)
 
