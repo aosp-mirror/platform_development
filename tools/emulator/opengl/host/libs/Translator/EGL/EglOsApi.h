@@ -32,7 +32,7 @@
 
 namespace EglOS{
 
-    void queryConfigs(EGLNativeDisplayType dpy,ConfigsList& listOut);
+    void queryConfigs(EGLNativeDisplayType dpy,int renderable_type,ConfigsList& listOut);
     bool releasePbuffer(EGLNativeDisplayType dis,EGLNativePbufferType pb);
     bool destroyContext(EGLNativeDisplayType dpy,EGLNativeContextType ctx);
     bool releaseDisplay(EGLNativeDisplayType dpy);

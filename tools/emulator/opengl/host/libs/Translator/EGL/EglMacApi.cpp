@@ -26,11 +26,11 @@ bool releaseDisplay(EGLNativeDisplayType dpy) {
     return false;
 }
 
-EglConfig* pixelFormatToConfig(EGLNativeDisplayType dpy,EGLNativePixelFormatType* frmt){
+EglConfig* pixelFormatToConfig(EGLNativeDisplayType dpy,int renderableType,EGLNativePixelFormatType* frmt){
     return NULL;
 }
 
-void queryConfigs(EGLNativeDisplayType dpy,ConfigsList& listOut) {
+void queryConfigs(EGLNativeDisplayType dpy,int renderableType,ConfigsList& listOut) {
 }
 
 bool validNativeWin(EGLNativeDisplayType dpy, EGLNativeWindowType win) {

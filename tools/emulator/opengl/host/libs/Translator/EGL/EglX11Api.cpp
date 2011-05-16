@@ -68,7 +68,7 @@ bool releaseDisplay(EGLNativeDisplayType dpy) {
     return XCloseDisplay(dpy);
 }
 
-EglConfig* pixelFormatToConfig(EGLNativeDisplayType dpy,EGLNativePixelFormatType* frmt){
+EglConfig* pixelFormatToConfig(EGLNativeDisplayType dpy,int renderableType,EGLNativePixelFormatType* frmt){
 
     int  bSize,red,green,blue,alpha,depth,stencil;
     int  supportedSurfaces,visualType,visualId;
@@ -133,15 +133,15 @@ EglConfig* pixelFormatToConfig(EGLNativeDisplayType dpy,EGLNativePixelFormatType
 
 
     return new EglConfig(red,green,blue,alpha,caveat,configId,depth,level,pMaxWidth,pMaxHeight,
-                              pMaxPixels,renderable,visualId,visualType,samples,stencil,
+                              pMaxPixels,renderable,renderableType,visualId,visualType,samples,stencil,
                               supportedSurfaces,transparentType,tRed,tGreen,tBlue,*frmt);
 }
 
-void queryConfigs(EGLNativeDisplayType dpy,ConfigsList& listOut) {
+void queryConfigs(EGLNativeDisplayType dpy,int renderableType,ConfigsList& listOut) {
     int n;
     EGLNativePixelFormatType*  frmtList =  glXGetFBConfigs(dpy,0,&n);
     for(int i =0 ;i < n ; i++) {
-        EglConfig* conf = pixelFormatToConfig(dpy,&frmtList[i]);
+        EglConfig* conf = pixelFormatToConfig(dpy,renderableType,&frmtList[i]);
         if(conf) listOut.push_back(conf);
     }
     XFree(frmtList);
