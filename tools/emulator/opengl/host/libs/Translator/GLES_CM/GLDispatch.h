@@ -41,7 +41,7 @@ public:
     void (GLAPIENTRY *glBufferSubData) (GLenum target, GLintptr offset, GLsizeiptr size, const GLvoid *data);
     void (GLAPIENTRY *glClear) (GLbitfield mask);
     void (GLAPIENTRY *glClearColor) (GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha);
-    void (GLAPIENTRY *glClearDepthf) (GLclampd depth);
+    void (GLAPIENTRY *glClearDepth) (GLclampd depth);
     void (GLAPIENTRY *glClearStencil) (GLint s);
     void (GLAPIENTRY *glClientActiveTexture) ( GLenum texture );
     void (GLAPIENTRY *glClipPlane) (GLenum plane, const GLdouble *equation);
