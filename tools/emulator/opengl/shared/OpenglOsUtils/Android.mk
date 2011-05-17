@@ -25,9 +25,7 @@ ifneq ($(HOST_OS),windows)
         osThreadUnix.cpp \
         osDynLibrary.cpp
 
-    LOCAL_LDLIBS := -ldl
-
-else # !linux
+else # windows
 
     LOCAL_SRC_FILES := \
         osProcessWin.cpp \
@@ -36,7 +34,11 @@ else # !linux
 
 endif # windows
 
+ifneq (,$(LOCAL_SRC_FILES))  # do not build if host platform not supported
+
 LOCAL_MODULE_TAGS := debug
 LOCAL_MODULE := libOpenglOsUtils
 
 include $(BUILD_HOST_STATIC_LIBRARY)
+
+endif
