@@ -284,12 +284,12 @@ GL_API void GL_APIENTRY  glClearColorx( GLclampx red, GLclampx green, GLclampx b
 
 GL_API void GL_APIENTRY  glClearDepthf( GLclampf depth) {
     GET_CTX()
-    ctx->dispatcher().glClearDepthf(depth);
+    ctx->dispatcher().glClearDepth(depth);
 }
 
 GL_API void GL_APIENTRY  glClearDepthx( GLclampx depth) {
     GET_CTX()
-    ctx->dispatcher().glClearDepthf(X2F(depth));
+    ctx->dispatcher().glClearDepth(X2F(depth));
 }
 
 GL_API void GL_APIENTRY  glClearStencil( GLint s) {
