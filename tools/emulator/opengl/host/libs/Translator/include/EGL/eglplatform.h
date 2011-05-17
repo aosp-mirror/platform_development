@@ -76,6 +76,7 @@ typedef HWND                  EGLNativeWindowType;
 #elif defined(__APPLE__)
 
 typedef int  EGLNativePixelFormatType;
+#define PIXEL_FORMAT_INITIALIZER 0
 
 typedef struct _EGLNativeContextType*      EGLNativeContextType;
 typedef struct _EGLNativePbufferType*      EGLNativePbufferType;
