@@ -13,6 +13,11 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
+
+#ifdef _WIN32
+#undef GL_API
+#define GL_API __declspec(dllexport)
+#endif
 #include <stdio.h>
 #include "GLDispatch.h"
 #include "GLEScontext.h"
@@ -26,13 +31,6 @@
 #include <GLES/gl.h>
 #include <GLES/glext.h>
 #include <cmath>
-
-
-
-
-
-
-
 
 extern "C" {
 
@@ -55,13 +53,15 @@ static ExtentionDescriptor s_glesExtentions[] = {
                                                     {"glEGLImageTargetTexture2DOES",(__translatorMustCastToProperFunctionPointerType)glEGLImageTargetTexture2DOES}
                                                 };
 /****************************************************************************************************************/
+typedef void(*FUNCPTR)();
+
 static EGLiface*  s_eglIface = NULL;
 static GLESiface  s_glesIface = {
     createGLESContext:createGLESContext,
     initContext      :initContext,
     deleteGLESContext:deleteGLESContext,
-    flush            :glFlush,
-    finish           :glFinish,
+    flush            :(FUNCPTR)glFlush,
+    finish           :(FUNCPTR)glFinish,
     setShareGroup    :setShareGroup,
     getProcAddress   :getProcAddress
 };
@@ -94,7 +94,7 @@ static __translatorMustCastToProperFunctionPointerType getProcAddress(const char
     }
     return NULL;
 }
-GLESiface* __translator_getIfaces(EGLiface* eglIface){
+GL_API GLESiface* __translator_getIfaces(EGLiface* eglIface){
     s_eglIface = eglIface;
     return & s_glesIface;
 }
@@ -113,12 +113,14 @@ GLESiface* __translator_getIfaces(EGLiface* eglIface){
 #define GET_CTX()                                                            \
             GET_THREAD();                                                    \
             if(!thrd) return;                                                \
-            GLEScontext *ctx = static_cast<GLEScontext*>(thrd->glesContext);
+            GLEScontext *ctx = static_cast<GLEScontext*>(thrd->glesContext); \
+            if(!ctx) return;
 
 #define GET_CTX_RET(failure_ret)                                             \
             GET_THREAD();                                                    \
             if(!thrd) return failure_ret;                                    \
-            GLEScontext *ctx = static_cast<GLEScontext*>(thrd->glesContext);
+            GLEScontext *ctx = static_cast<GLEScontext*>(thrd->glesContext); \
+            if(!ctx) return failure_ret;
 
 
 #define SET_ERROR_IF(condition,err) if((condition)) {                        \
