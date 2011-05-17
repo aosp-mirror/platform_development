@@ -54,10 +54,10 @@ public:
               EGLint trans_red_val,
               EGLint trans_green_val,
               EGLint trans_blue_val,
-              EGLNativePixelFormatType frmt = 0);
+              EGLNativePixelFormatType frmt);
 
     EglConfig(const EglConfig& conf);
-    
+
 
 private:
 

@@ -13,12 +13,18 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
+#ifdef _WIN32
+#undef EGLAPI
+#define EGLAPI __declspec(dllexport)
+#endif
+
 #include <EGL/egl.h>
-#include <dlfcn.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <stdio.h>
 #include <GLcommon/ThreadInfo.h>
 #include <GLcommon/TranslatorIfaces.h>
+#include <OpenglOsUtils/osDynLibrary.h>
 
 #include "EglWindowSurface.h"
 #include "EglPbufferSurface.h"
@@ -30,6 +36,7 @@
 #include "EglContext.h"
 #include "EglConfig.h"
 #include "EglOsApi.h"
+
 
 #define MINOR          1
 #define MAJOR          4
@@ -141,13 +148,26 @@ EGLAPI EGLDisplay EGLAPIENTRY eglGetDisplay(EGLNativeDisplayType display_id) {
 }
 
 
+#define TRANSLATOR_GETIFACE_NAME "__translator_getIfaces"
+
 static __translator_getGLESIfaceFunc loadIfaces(const char* libName){
-    void* libGLES = dlopen(libName, RTLD_NOW);
+    osUtils::dynLibrary* libGLES = osUtils::dynLibrary::open(libName);
+
     if(!libGLES) return NULL;
-    __translator_getGLESIfaceFunc func =  (__translator_getGLESIfaceFunc)dlsym(libGLES,"__translator_getIfaces");
+    __translator_getGLESIfaceFunc func =  (__translator_getGLESIfaceFunc)libGLES->findSymbol(TRANSLATOR_GETIFACE_NAME);
     if(!func) return NULL;
     return func;
 }
+
+
+
+#ifdef _WIN32
+#define LIB_GLES_NAME "libGLES_CM_translator"
+#elif __linux__
+#define LIB_GLES_NAME "libGLES_CM_translator.so"
+#else
+#define LIB_GLES_NAME "libGLES_CM_translator"
+#endif
 
 EGLAPI EGLBoolean EGLAPIENTRY eglInitialize(EGLDisplay display, EGLint *major, EGLint *minor) {
     EglDisplay* dpy = g_eglInfo->getDisplay(display);
@@ -157,12 +177,13 @@ EGLAPI EGLBoolean EGLAPIENTRY eglInitialize(EGLDisplay display, EGLint *major, E
 
     if(major) *major = MAJOR;
     if(minor) *minor = MINOR;
-
      if(!g_eglInfo->getIface(GLES_1_1)) {
-        __translator_getGLESIfaceFunc func  = loadIfaces("libGLES_CM_translator.so");
+        __translator_getGLESIfaceFunc func  = loadIfaces(LIB_GLES_NAME);
+
         if(func){
             g_eglInfo->setIface(func(&s_eglIface),GLES_1_1);
         } else {
+           fprintf(stderr,"could not find ifaces...\n");
            return EGL_FALSE;
         }
     }
@@ -170,7 +191,6 @@ EGLAPI EGLBoolean EGLAPIENTRY eglInitialize(EGLDisplay display, EGLint *major, E
     return EGL_TRUE;
 }
 
-//TODO check this func definitions later on
 EGLAPI EGLBoolean EGLAPIENTRY eglTerminate(EGLDisplay display) {
     VALIDATE_DISPLAY(display);
     dpy->terminate();
@@ -389,10 +409,12 @@ EGLAPI EGLBoolean EGLAPIENTRY eglChooseConfig(EGLDisplay display, const EGLint *
            }
         }
     }
+    EGLNativePixelFormatType tmpfrmt = PIXEL_FORMAT_INITIALIZER;
     EglConfig dummy(red_size,green_size,blue_size,alpha_size,caveat,config_id,depth_size,
                     frame_buffer_level,0,0,0,native_renderable,0,native_visual_type,
                     samples_per_pixel,stencil_size,surface_type,transparent_type,
-                    trans_red_val,trans_green_val,trans_blue_val);
+                    trans_red_val,trans_green_val,trans_blue_val,tmpfrmt);
+
     *num_config = dpy->chooseConfigs(dummy,configs,config_size);
 
 
@@ -606,7 +628,6 @@ EGLAPI EGLContext EGLAPIENTRY eglCreateContext(EGLDisplay display, EGLConfig con
     } else {
         iface->deleteGLESContext(glesCtx);
     }
-
 
 return EGL_NO_CONTEXT;
 }
