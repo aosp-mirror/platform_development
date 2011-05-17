@@ -15,7 +15,6 @@
 */
 #include "GLDispatch.h"
 #include <stdio.h>
-#include <OpenglOsUtils/osDynLibrary.h>
 
 #ifdef __linux__
 #include <GL/glx.h>
@@ -26,24 +25,17 @@
 typedef void (*GL_FUNC_PTR)();
 
 static GL_FUNC_PTR getGLFuncAddress(const char *funcName) {
-    GL_FUNC_PTR ret = NULL;
 #ifdef __linux__
-    static osUtils::dynLibrary* libGL = osUtils::dynLibrary::open("libGL.so");
-    ret = (GL_FUNC_PTR)glXGetProcAddress((const GLubyte*)funcName);
+    return  (GL_FUNC_PTR)glXGetProcAddress((const GLubyte*)funcName);
 #elif defined(WIN32)
-    static osUtils::dynLibrary* libGL = osUtils::dynLibrary::open("opengl32");
-    ret = (GL_FUNC_PTR)wglGetProcAddress(funcName);
+    return  (GL_FUNC_PTR)wglGetProcAddress(funcName);
 #endif
-    if(!ret && libGL){
-        ret = libGL->findSymbol(funcName);
-    }
-    return ret;
 }
 
 #define LOAD_GL_FUNC(name)  {   void * funcAddrs = NULL;              \
-                funcAddrs = (void *)getGLFuncAddress(#name);          \
-                if(funcAddrs)                                         \
-                    *(void**)(&name) = funcAddrs;                     \
+                funcAddrs = (void *)getGLFuncAddress(#name);      \
+                if(funcAddrs)                     \
+                    *(void**)(&name) = funcAddrs;         \
                 else                          \
                     fprintf(stderr,"could not load func %s\n",#name); }
 
@@ -54,6 +46,7 @@ void GLDispatch::dispatchFuncs() {
     android::Mutex::Autolock mutex(m_lock);
     if(m_isLoaded)
         return;
+
     LOAD_GL_FUNC(glActiveTexture);
     LOAD_GL_FUNC(glAlphaFunc);
     LOAD_GL_FUNC(glBegin);
