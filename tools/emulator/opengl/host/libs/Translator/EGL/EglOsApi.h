@@ -48,6 +48,9 @@ namespace EglOS{
     EGLNativeDisplayType getDefaultDisplay();
     EGLNativePbufferType createPbuffer(EGLNativeDisplayType dpy,EglConfig* cfg,EglPbufferSurface* pb);
     EGLNativeContextType createContext(EGLNativeDisplayType dpy,EglConfig* cfg,EGLNativeContextType sharedContext);
+#ifdef _WIN32
+    void initPtrToWglFunctions();
+#endif
 };
 
 #endif
