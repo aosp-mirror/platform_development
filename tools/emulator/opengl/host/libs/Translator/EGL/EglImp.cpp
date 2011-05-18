@@ -37,9 +37,8 @@
 #include "EglConfig.h"
 #include "EglOsApi.h"
 
-
-#define MINOR          1
-#define MAJOR          4
+#define MAJOR          1
+#define MINOR          4
 
 //declarations
 
