@@ -112,6 +112,20 @@ NameSpace::getGlobalName(unsigned int p_localName)
     return 0;
 }
 
+unsigned int
+NameSpace::getLocalName(unsigned int p_globalName)
+{
+    for(NamesMap::iterator it = m_localToGlobalMap.begin(); it != m_localToGlobalMap.end();it++){
+        if((*it).second == p_globalName){
+            // object found - return its local name
+            return (*it).first;
+        }
+    }
+
+    // object does not exist;
+    return 0;
+}
+
 void
 NameSpace::deleteName(unsigned int p_localName)
 {
@@ -188,6 +202,18 @@ ShareGroup::getGlobalName(NamedObjectType p_type, unsigned int p_localName)
     mutex_unlock(&m_lock);
 
     return globalName;
+}
+
+unsigned int
+ShareGroup::getLocalName(NamedObjectType p_type, unsigned int p_globalName)
+{
+    if (p_type >= NUM_OBJECT_TYPES) return 0;
+
+    mutex_lock(&m_lock);
+    unsigned int localName = m_nameSpace[p_type]->getLocalName(p_globalName);
+    mutex_unlock(&m_lock);
+
+    return localName;
 }
 
 void
