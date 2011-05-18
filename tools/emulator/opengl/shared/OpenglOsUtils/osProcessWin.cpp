@@ -52,7 +52,7 @@ childProcess::create(const char *p_cmdLine, const char *p_startdir)
     // close the thread handle we do not need it,
     // keep the process handle for wait/trywait operations, will
     // be closed on destruction
-    CloseHandle(m_proc.hThread);
+    CloseHandle(child->m_proc.hThread);
 
     return child;
 }
@@ -60,7 +60,7 @@ childProcess::create(const char *p_cmdLine, const char *p_startdir)
 childProcess::~childProcess()
 {
     if (m_proc.hProcess) {
-        CloseHandle(child->m_proc.hProcess);
+        CloseHandle(m_proc.hProcess);
     }
 }
 
