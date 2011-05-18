@@ -411,14 +411,16 @@ EGLAPI EGLBoolean EGLAPIENTRY eglChooseConfig(EGLDisplay display, const EGLint *
             i+=2;
         }
         if(hasConfigId) {
-           EglConfig* pConfig = dpy->getConfig(config_id);
-           if(pConfig) {
-               configs[0]  = static_cast<EGLConfig>(pConfig);
-               *num_config = 0;
-               return EGL_TRUE;
-           } else {
+            EglConfig* pConfig = dpy->getConfig(config_id);
+            if(pConfig) {
+                if(configs) {
+                    configs[0]  = static_cast<EGLConfig>(pConfig);
+                }
+                *num_config = 1;
+                return EGL_TRUE;
+            } else {
                 RETURN_ERROR(EGL_FALSE,EGL_BAD_ATTRIBUTE);
-           }
+            }
         }
     }
     EGLNativePixelFormatType tmpfrmt = PIXEL_FORMAT_INITIALIZER;
