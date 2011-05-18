@@ -29,11 +29,13 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.net.ConnectivityManager;
 import android.net.NetworkUtils;
+import android.net.RouteInfo;
 import android.net.wifi.WifiManager;
 import android.os.RemoteException;
 import android.os.Handler;
 import android.os.Message;
 import android.os.IBinder;
+import android.os.INetworkManagementService;
 import android.os.Parcel;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
@@ -99,6 +101,7 @@ public class Connectivity extends Activity {
     private WifiManager mWm;
     private PowerManager mPm;
     private ConnectivityManager mCm;
+    private INetworkManagementService mNetd;
 
     private WakeLock mWakeLock = null;
     private WakeLock mScreenonWakeLock = null;
@@ -191,6 +194,8 @@ public class Connectivity extends Activity {
         mWm = (WifiManager)getSystemService(Context.WIFI_SERVICE);
         mPm = (PowerManager)getSystemService(Context.POWER_SERVICE);
         mCm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        IBinder b = ServiceManager.getService(Context.NETWORKMANAGEMENT_SERVICE);
+        mNetd = INetworkManagementService.Stub.asInterface(b);
 
         findViewById(R.id.enableWifi).setOnClickListener(mClickListener);
         findViewById(R.id.disableWifi).setOnClickListener(mClickListener);
@@ -372,12 +377,20 @@ public class Connectivity extends Activity {
 
     private void onAddDefaultRoute() {
         try {
-            NetworkUtils.addRoute("eth0", "0.0.0.0", 0, "8.8.8.8");
-        } catch (Exception e) { }
+            mNetd.addRoute("eth0", new RouteInfo(null,
+                    NetworkUtils.numericToInetAddress("8.8.8.8")));
+        } catch (Exception e) {
+            Log.e(TAG, "onAddDefaultRoute got exception: " + e.toString());
+        }
     }
 
     private void onRemoveDefaultRoute() {
-        Log.e(TAG, "removeDefaultRoute returned "+NetworkUtils.removeDefaultRoute("eth0"));
+        try {
+            mNetd.removeRoute("eth0", new RouteInfo(null,
+                    NetworkUtils.numericToInetAddress("8.8.8.8")));
+        } catch (Exception e) {
+            Log.e(TAG, "onRemoveDefaultRoute got exception: " + e.toString());
+        }
     }
 
     private void onRoutedHttpRequest() {
