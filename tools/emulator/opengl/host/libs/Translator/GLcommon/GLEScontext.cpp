@@ -397,6 +397,15 @@ void GLEScontext::initCapsLocked(const GLubyte * extensionString)
     if (strstr(cstring,"GL_OES_read_format ")!=NULL)
         s_glSupport.GL_OES_READ_FORMAT = true;
 
+    if (strstr(cstring,"GL_ARB_half_float_pixel ")!=NULL)
+        s_glSupport.GL_ARB_HALF_FLOAT_PIXEL = true;
+
+    if (strstr(cstring,"GL_NV_half_float ")!=NULL)
+        s_glSupport.GL_NV_HALF_FLOAT = true;
+
+    if (strstr(cstring,"GL_ARB_half_float_vertex ")!=NULL)
+        s_glSupport.GL_ARB_HALF_FLOAT_VERTEX = true;
+
     //init extension string
     s_glExtensions = new std::string("");
 }

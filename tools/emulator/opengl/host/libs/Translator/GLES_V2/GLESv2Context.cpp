@@ -21,6 +21,7 @@ void GLESv2Context::init() {
     if(!m_initialized) {
         s_glDispatch.dispatchFuncs(GLES_2_0);
         initCapsLocked(s_glDispatch.glGetString(GL_EXTENSIONS));
+        initExtensionString();
 
         for(int i=0; i < s_glSupport.maxVertexAttribs;i++){
             m_map[i] = new GLESpointer();
@@ -47,4 +48,15 @@ void GLESv2Context::convertArrs(GLESFloatArrays& fArrs,GLint first,GLsizei count
 //sending data to server side
 void GLESv2Context::sendArr(GLvoid* arr,GLenum arrayType,GLint size,GLsizei stride,int index) {
      s_glDispatch.glVertexAttribPointer(arrayType,size,GL_FLOAT,GL_FALSE,stride,arr);
+}
+
+void GLESv2Context::initExtensionString() {
+    *s_glExtensions = "GL_OES_EGL_image GL_OES_depth24 GL_OES_depth32 GL_OES_element_index_uint "
+                      "GL_OES_standard_derivatives GL_OES_texture_float GL_OES_texture_float_linear ";
+    if (s_glSupport.GL_ARB_HALF_FLOAT_PIXEL || s_glSupport.GL_NV_HALF_FLOAT)       
+        *s_glExtensions+="GL_OES_texture_half_float GL_OES_texture_half_float_linear ";
+    if (s_glSupport.GL_NV_PACKED_DEPTH_STENCIL)
+        *s_glExtensions+="GL_OES_packed_depth_stencil ";
+    if (s_glSupport.GL_ARB_HALF_FLOAT_VERTEX)
+        *s_glExtensions+="GL_OES_vertex_half_float ";
 }

@@ -86,7 +86,7 @@ bool GLESv2Validate::hintTargetMode(GLenum target,GLenum mode){
        break;
    default: return false;
    }
-   return target == GL_GENERATE_MIPMAP_HINT;
+   return target == GL_GENERATE_MIPMAP_HINT || target == GL_FRAGMENT_SHADER_DERIVATIVE_HINT_OES;
 }
 
 bool GLESv2Validate::capability(GLenum cap){
