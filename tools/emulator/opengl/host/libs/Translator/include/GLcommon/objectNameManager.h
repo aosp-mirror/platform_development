@@ -74,6 +74,12 @@ private:
     unsigned int getGlobalName(unsigned int p_localName);
 
     //
+    // getLocaalName - returns the local name of an object or 0 if the object
+    //                 does not exist.
+    //
+    unsigned int getLocalName(unsigned int p_globalName);
+
+    //
     // deleteName - deletes and object from the namespace as well as its
     //              global name from the global name space.
     //
@@ -123,6 +129,12 @@ public:
     //                 object does not exist.
     //
     unsigned int getGlobalName(NamedObjectType p_type, unsigned int p_localName);
+
+    //
+    // getLocalName - retrieves the "local" name of an object or 0 if the
+    //                 object does not exist.
+    //
+    unsigned int getLocalName(NamedObjectType p_type, unsigned int p_globalName);
 
     //
     // deleteName - deletes and object from the namespace as well as its
