@@ -28,4 +28,13 @@
 
     </PreferenceCategory>
 
+    <PreferenceCategory
+        android:title="@string/device_capabilities_category" >
+
+        <CheckBoxPreference
+            android:key="key_disable_camera"
+            android:title="@string/disable_camera" />
+
+    </PreferenceCategory>
+
 </PreferenceScreen>

@@ -67,6 +67,7 @@ public class DeviceAdminSample extends PreferenceActivity {
 
     // The following keys are used to find each preference item
     private static final String KEY_ENABLE_ADMIN = "key_enable_admin";
+    private static final String KEY_DISABLE_CAMERA = "key_disable_camera";
 
     private static final String KEY_CATEGORY_QUALITY = "key_category_quality";
     private static final String KEY_SET_PASSWORD = "key_set_password";
@@ -243,6 +244,7 @@ public class DeviceAdminSample extends PreferenceActivity {
             implements OnPreferenceChangeListener {
         // UI elements
         private CheckBoxPreference mEnableCheckbox;
+        private CheckBoxPreference mDisableCameraCheckbox;
 
         @Override
         public void onCreate(Bundle savedInstanceState) {
@@ -250,6 +252,8 @@ public class DeviceAdminSample extends PreferenceActivity {
             addPreferencesFromResource(R.xml.device_admin_general);
             mEnableCheckbox = (CheckBoxPreference) findPreference(KEY_ENABLE_ADMIN);
             mEnableCheckbox.setOnPreferenceChangeListener(this);
+            mDisableCameraCheckbox = (CheckBoxPreference) findPreference(KEY_DISABLE_CAMERA);
+            mDisableCameraCheckbox.setOnPreferenceChangeListener(this);
         }
 
         // At onResume time, reload UI with current values as required
@@ -257,6 +261,12 @@ public class DeviceAdminSample extends PreferenceActivity {
         public void onResume() {
             super.onResume();
             mEnableCheckbox.setChecked(mAdminActive);
+            enableDeviceCapabilitiesArea(mAdminActive);
+
+            if (mAdminActive) {
+                mDPM.setCameraDisabled(mDeviceAdminSample, mDisableCameraCheckbox.isChecked());
+                reloadSummaries();
+            }
         }
 
         @Override
@@ -264,10 +274,10 @@ public class DeviceAdminSample extends PreferenceActivity {
             if (super.onPreferenceChange(preference, newValue)) {
                 return true;
             }
+            boolean value = (Boolean) newValue;
             if (preference == mEnableCheckbox) {
-                boolean newActive = (Boolean) newValue;
-                if (newActive != mAdminActive) {
-                    if (newActive) {
+                if (value != mAdminActive) {
+                    if (value) {
                         // Launch the activity to have the user enable our admin.
                         Intent intent = new Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN);
                         intent.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, mDeviceAdminSample);
@@ -278,11 +288,28 @@ public class DeviceAdminSample extends PreferenceActivity {
                         return false;
                     } else {
                         mDPM.removeActiveAdmin(mDeviceAdminSample);
+                        enableDeviceCapabilitiesArea(false);
                         mAdminActive = false;
                     }
                 }
+            } else if (preference == mDisableCameraCheckbox) {
+                mDPM.setCameraDisabled(mDeviceAdminSample, value);
+                reloadSummaries();
             }
             return true;
+        }
+
+        @Override
+        protected void reloadSummaries() {
+            super.reloadSummaries();
+            String cameraSummary = getString(mDPM.getCameraDisabled(mDeviceAdminSample)
+                    ? R.string.camera_disabled : R.string.camera_enabled);
+            mDisableCameraCheckbox.setSummary(cameraSummary);
+        }
+
+        /** Updates the device capabilities area (dis/enabling) as the admin is (de)activated */
+        private void enableDeviceCapabilitiesArea(boolean enabled) {
+            mDisableCameraCheckbox.setEnabled(enabled);
         }
     }
 

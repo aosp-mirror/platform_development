@@ -619,6 +619,10 @@
     <string name="header_encryption">Encryption</string>
 
     <string name="enable_admin">Enable admin</string>
+    <string name="device_capabilities_category">Device capabilities</string>
+    <string name="disable_camera">Disable all device cameras</string>
+    <string name="camera_disabled">Device cameras disabled</string>
+    <string name="camera_enabled">Device cameras enabled</string>
     <string name="password_controls_category">Password controls</string>
     <string name="set_password_user">Set password (user)</string>
     <string name="set_password_api">Set password (via API)</string>
