@@ -15,6 +15,6 @@
 -->
 
 <resources>
-    <!-- True if running under Ice Cream Sandwich or later. -->
-    <bool name="atLeastIceCreamSandwich">true</bool>
+    <!-- True if running under Honeycomb MR2 or later. -->
+    <bool name="atLeastHoneycombMR2">true</bool>
 </resources>
