@@ -21,13 +21,13 @@ import com.example.android.apis.R;
 import android.app.Activity;
 import android.os.Bundle;
 
-public class ResourcesWidthAndHeight extends Activity {
+public class ResourcesSmallestWidth extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         // This layout uses different configurations to adjust
-        // what is shown based on the current screen width and height.
-        setContentView(R.layout.resources_width_and_height);
+        // what is shown based on the smallest width that will occur.
+        setContentView(R.layout.resources_smallest_width);
     }
 }

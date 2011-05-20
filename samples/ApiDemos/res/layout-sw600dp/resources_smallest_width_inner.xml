@@ -22,22 +22,32 @@
         <FrameLayout android:layout_width="match_parent" android:layout_height="0px"
                 android:layout_weight="1" android:padding="4dp"
                 android:background="#8000ff00">
-            <include layout="@layout/resources_width" />
+            <include layout="@layout/resources_smallest_width_row" />
         </FrameLayout>
         <FrameLayout android:layout_width="match_parent" android:layout_height="0px"
                 android:layout_weight="1" android:padding="4dp"
                 android:background="#80ff0000">
-            <include layout="@layout/resources_width" />
+            <include layout="@layout/resources_smallest_width_row" />
         </FrameLayout>
         <FrameLayout android:layout_width="match_parent" android:layout_height="0px"
                 android:layout_weight="1" android:padding="4dp"
                 android:background="#8000ff00">
-            <include layout="@layout/resources_width" />
+            <include layout="@layout/resources_smallest_width_row" />
         </FrameLayout>
         <FrameLayout android:layout_width="match_parent" android:layout_height="0px"
                 android:layout_weight="1" android:padding="4dp"
                 android:background="#80ff0000">
-            <include layout="@layout/resources_width" />
+            <include layout="@layout/resources_smallest_width_row" />
+        </FrameLayout>
+        <FrameLayout android:layout_width="match_parent" android:layout_height="0px"
+                android:layout_weight="1" android:padding="4dp"
+                android:background="#8000ff00">
+            <include layout="@layout/resources_smallest_width_row" />
+        </FrameLayout>
+        <FrameLayout android:layout_width="match_parent" android:layout_height="0px"
+                android:layout_weight="1" android:padding="4dp"
+                android:background="#80ff0000">
+            <include layout="@layout/resources_smallest_width_row" />
         </FrameLayout>
     </LinearLayout>
 </merge>

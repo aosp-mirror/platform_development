@@ -358,6 +358,10 @@
     <string name="resources_width_and_height_description">The layouts below use -wNNNdp and
         -hNNNdp to select between different versions based on the size of the screen.</string>
 
+    <string name="activity_resources_smallest_width">Content/Resources/Smallest Width</string>
+    <string name="resources_smallest_width_description">The layouts below use -swNNNdp
+        to select between different versions based on the size of the screen.</string>
+
     <string name="activity_read_asset">Content/Assets/Read Asset</string>
 
     <string name="activity_themes">Content/Resources/Themes</string>
