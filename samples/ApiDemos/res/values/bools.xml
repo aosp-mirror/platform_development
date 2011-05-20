@@ -19,8 +19,8 @@
          API level.  The default value is false; an alternative value
          for Honeycomb is true. -->
     <bool name="atLeastHoneycomb">false</bool>
-    <!-- This resource is true if running under at least Ice Cream Sandwich's
+    <!-- This resource is true if running under at least Honeycomb MR2's
          API level.  The default value is false; an alternative value
-         for Ice Cream Sandwich is true. -->
-    <bool name="atLeastIceCreamSandwich">false</bool>
+         for Honeycomb MR2 is true. -->
+    <bool name="atLeastHoneycombMR2">false</bool>
 </resources>
