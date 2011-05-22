@@ -17,7 +17,12 @@
 #include <GLcommon/ThreadInfo.h>
 
 
-void ThreadInfo::updateInfo(void* eglCtx,void* dpy,void* glesCtx,ShareGroupPtr share,ObjectNameManager* manager) {
+void ThreadInfo::updateInfo(EglContext* eglCtx,
+                            EglDisplay* dpy,
+                            GLEScontext* glesCtx,
+                            ShareGroupPtr share,
+                            ObjectNameManager* manager) {
+
     eglContext  = eglCtx;
     eglDisplay  = dpy;
     glesContext = glesCtx;
