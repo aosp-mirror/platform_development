@@ -55,6 +55,7 @@ public:
     static void (GLAPIENTRY *glDeleteTextures) (GLsizei n, const GLuint *textures);
     static void (GLAPIENTRY *glDepthFunc) (GLenum func);
     static void (GLAPIENTRY *glDepthMask) (GLboolean flag);
+    static void (GLAPIENTRY *glDepthRange) (GLclampd zNear, GLclampd zFar);
     static void (GLAPIENTRY *glDisable) (GLenum cap);
     static void (GLAPIENTRY *glDrawArrays) (GLenum mode, GLint first, GLsizei count);
     static void (GLAPIENTRY *glDrawElements) (GLenum mode, GLsizei count, GLenum type, const GLvoid *indices);
@@ -107,7 +108,6 @@ public:
     static void (GLAPIENTRY *glColor4ub) (GLubyte red, GLubyte green, GLubyte blue, GLubyte alpha);
     static void (GLAPIENTRY *glColor4ubv) ( const GLubyte *v );
     static void (GLAPIENTRY *glColorPointer) (GLint size, GLenum type, GLsizei stride, const GLvoid *pointer);
-    static void (GLAPIENTRY *glDepthRange) (GLclampd zNear, GLclampd zFar);
     static void (GLAPIENTRY *glDisableClientState) (GLenum array);
     static void (GLAPIENTRY *glEnableClientState) (GLenum array);
     static void (GLAPIENTRY *glEnd) (void);
@@ -163,7 +163,7 @@ public:
     static void (GLAPIENTRY *glVertexPointer) (GLint size, GLenum type, GLsizei stride, const GLvoid *pointer);
 
     /* OpenGL functions which are needed ONLY for implementing GLES 1.1 EXTENSIONS*/
-	static GLboolean (GLAPIENTRY *glIsRenderbufferEXT) (GLuint renderbuffer);
+    static GLboolean (GLAPIENTRY *glIsRenderbufferEXT) (GLuint renderbuffer);
     static void (GLAPIENTRY *glBindRenderbufferEXT) (GLenum target, GLuint renderbuffer);
     static void (GLAPIENTRY *glDeleteRenderbuffersEXT) (GLsizei n, const GLuint *renderbuffers);
     static void (GLAPIENTRY *glGenRenderbuffersEXT) (GLsizei n, GLuint *renderbuffers);
@@ -200,6 +200,8 @@ public:
     static void (GL_APIENTRY *glBindRenderbuffer)(GLenum target, GLuint renderbuffer);
     static void (GL_APIENTRY *glDeleteFramebuffers)(GLsizei n, const GLuint* framebuffers);
     static void (GL_APIENTRY *glDeleteRenderbuffers)(GLsizei n, const GLuint* renderbuffers);
+    static GLboolean (GL_APIENTRY *glIsProgram)(GLuint program);
+    static GLboolean (GL_APIENTRY *glIsShader)(GLuint shader);
     static void (GL_APIENTRY *glVertexAttrib1f)(GLuint indx, GLfloat x);
     static void (GL_APIENTRY *glVertexAttrib1fv)(GLuint indx, const GLfloat* values);
     static void (GL_APIENTRY *glVertexAttrib2f)(GLuint indx, GLfloat x, GLfloat y);
