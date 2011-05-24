@@ -90,7 +90,7 @@ public:
         Type *vertexDataType = Type::getType(rsc, vertexDataElem, numVerts, 0, 0, false, false);
         vertexDataType->compute();
 
-        Allocation *vertexAlloc = new Allocation(rsc, vertexDataType, RS_ALLOCATION_USAGE_SCRIPT);
+        Allocation *vertexAlloc = Allocation::createAllocation(rsc, vertexDataType, RS_ALLOCATION_USAGE_SCRIPT);
 
         uint32_t vertexSize = vertexDataElem->getSizeBytes()/sizeof(float);
         // Fill this allocation with some data
@@ -126,7 +126,7 @@ public:
 
             indexType->compute();
 
-            Allocation *indexAlloc = new Allocation(rsc, indexType, RS_ALLOCATION_USAGE_SCRIPT);
+            Allocation *indexAlloc = Allocation::createAllocation(rsc, indexType, RS_ALLOCATION_USAGE_SCRIPT);
             uint16_t *indexPtr = (uint16_t*)indexAlloc->getPtr();
             const std::vector<uint32_t> &indexList = mTriangleLists[pCount];
             uint32_t numTries = numIndicies / 3;
