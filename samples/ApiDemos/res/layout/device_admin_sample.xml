@@ -138,6 +138,12 @@
                 android:text="@string/set_password">
             </Button>
 
+            <Button android:id="@+id/check_password_button"
+                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android_layout_gravity="east|center_vertical"
+                android:text="@string/check_password">
+            </Button>
+
         </LinearLayout>
 
         <LinearLayout android:orientation="horizontal" android:gravity="center"

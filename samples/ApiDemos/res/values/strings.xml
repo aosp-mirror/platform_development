@@ -654,6 +654,7 @@
     <string name="update_expiration_label">Update</string>
     <string name="update_expiration_status_label">Update Status</string>
     <string name="set_password">Set Password</string>
+    <string name="check_password">Check Password</string>
     <string name="password_hint">Password</string>
     <string name="reset_password">Reset Password</string>
     <string name="max_failed_pw_hint">Password Attempts Wipe Data</string>

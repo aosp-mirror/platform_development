@@ -162,6 +162,7 @@ public class DeviceAdminSample extends DeviceAdminReceiver {
         };
 
         Spinner mPasswordQuality;
+        int mPasswordQualityRecent = 0;
         EditText mPasswordLength;
         EditText mPasswordMinimumLetters;
         EditText mPasswordMinimumUppercase;
@@ -170,7 +171,6 @@ public class DeviceAdminSample extends DeviceAdminReceiver {
         EditText mPasswordMinimumSymbols;
         EditText mPasswordMinimumNonLetter;
         EditText mPasswordHistoryLength;
-        Button mSetPasswordButton;
 
         EditText mPassword;
         Button mResetPasswordButton;
@@ -221,7 +221,12 @@ public class DeviceAdminSample extends DeviceAdminReceiver {
                     new OnItemSelectedListener() {
                         public void onItemSelected(
                                 AdapterView<?> parent, View view, int position, long id) {
-                            setPasswordQuality(mPasswordQualityValues[position]);
+                            // Simple debounce, mainly to catch initialization case (we don't
+                            // want to change the DPM values if the user didn't click it).
+                            if (position != mPasswordQualityRecent) {
+                                setPasswordQuality(mPasswordQualityValues[position]);
+                                mPasswordQualityRecent = position;
+                            }
                         }
 
                         public void onNothingSelected(AdapterView<?> parent) {
@@ -355,8 +360,8 @@ public class DeviceAdminSample extends DeviceAdminReceiver {
                 }
             });
 
-            mSetPasswordButton = (Button)findViewById(R.id.set_password);
-            mSetPasswordButton.setOnClickListener(mSetPasswordListener);
+            findViewById(R.id.set_password).setOnClickListener(mSetPasswordListener);
+            findViewById(R.id.check_password_button).setOnClickListener(mCheckPasswordListener);
 
             mPassword = (EditText)findViewById(R.id.password);
             mResetPasswordButton = (Button)findViewById(R.id.reset_password);
@@ -417,7 +422,6 @@ public class DeviceAdminSample extends DeviceAdminReceiver {
                 mPasswordMinimumNumeric.setEnabled(true);
                 mPasswordMinimumNonLetter.setEnabled(true);
                 mPasswordHistoryLength.setEnabled(true);
-                mSetPasswordButton.setEnabled(true);
                 mPassword.setEnabled(true);
                 mResetPasswordButton.setEnabled(true);
                 mForceLockButton.setEnabled(true);
@@ -439,7 +443,6 @@ public class DeviceAdminSample extends DeviceAdminReceiver {
                 mPasswordMinimumNumeric.setEnabled(false);
                 mPasswordMinimumNonLetter.setEnabled(false);
                 mPasswordHistoryLength.setEnabled(false);
-                mSetPasswordButton.setEnabled(false);
                 mPassword.setEnabled(false);
                 mResetPasswordButton.setEnabled(false);
                 mForceLockButton.setEnabled(false);
@@ -675,6 +678,73 @@ public class DeviceAdminSample extends DeviceAdminReceiver {
                 // Launch the activity to have the user set a new password.
                 Intent intent = new Intent(DevicePolicyManager.ACTION_SET_NEW_PASSWORD);
                 startActivity(intent);
+            }
+        };
+
+        // Retrieve information about the current password requirements and status, and display
+        // to the user in a simple alert dialog.
+        private OnClickListener mCheckPasswordListener = new OnClickListener() {
+            public void onClick(View v) {
+                boolean active = mDPM.isAdminActive(mDeviceAdminSample);
+                if (!active) {
+                    Toast.makeText(Controller.this, "Cannot check password status unless active",
+                            Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                boolean sufficient = mDPM.isActivePasswordSufficient();
+                int quality = mDPM.getPasswordQuality(null);
+                int minimumLength = mDPM.getPasswordMinimumLength(null);
+                int minimumUpperCase = mDPM.getPasswordMinimumUpperCase(null);
+                int minimumLowerCase = mDPM.getPasswordMinimumLowerCase(null);
+                int minimumLetters = mDPM.getPasswordMinimumLetters(null);
+                int minimumNumeric = mDPM.getPasswordMinimumNumeric(null);
+                int minimumSymbols = mDPM.getPasswordMinimumSymbols(null);
+                int minimumNonLetter = mDPM.getPasswordMinimumNonLetter(null);
+                long timeToExpiration = mDPM.getPasswordExpiration(null);
+
+                // Quick string:  Do better than this.
+                String qualityText;
+                switch (quality) {
+                    case DevicePolicyManager.PASSWORD_QUALITY_UNSPECIFIED:
+                        qualityText = "unspecified";
+                        break;
+                    case DevicePolicyManager.PASSWORD_QUALITY_SOMETHING:
+                        qualityText = "something";
+                        break;
+                    case DevicePolicyManager.PASSWORD_QUALITY_NUMERIC:
+                        qualityText = "numeric";
+                        break;
+                    case DevicePolicyManager.PASSWORD_QUALITY_ALPHABETIC:
+                        qualityText = "alphabetic";
+                        break;
+                    case DevicePolicyManager.PASSWORD_QUALITY_ALPHANUMERIC:
+                        qualityText = "alphanumeric";
+                        break;
+                    case DevicePolicyManager.PASSWORD_QUALITY_COMPLEX:
+                        qualityText = "complex";
+                        break;
+                    default:
+                        qualityText = "0x" + Integer.toString(quality, 16);
+                        break;
+                }
+                StringBuilder sb = new StringBuilder("Password Status:\n");
+                sb.append("  isActivePasswordSufficient=").append(sufficient).append("\n");
+                sb.append("  getPasswordQuality=").append(qualityText).append("\n");
+                sb.append("  getPasswordMinimumLength=").append(minimumLength).append("\n");
+                sb.append("  getPasswordMinimumUpperCase=").append(minimumUpperCase).append("\n");
+                sb.append("  getPasswordMinimumLowerCase=").append(minimumLowerCase).append("\n");
+                sb.append("  getPasswordMinimumLetters=").append(minimumLetters).append("\n");
+                sb.append("  getPasswordMinimumNumeric=").append(minimumNumeric).append("\n");
+                sb.append("  getPasswordMinimumSymbols=").append(minimumSymbols).append("\n");
+                sb.append("  getPasswordMinimumNonLetter=").append(minimumNonLetter).append("\n");
+                sb.append("  getPasswordExpiration=").append(timeToExpiration/1000).append(" sec");
+                if (timeToExpiration < 0) {
+                    sb.append(" (expired)");
+                }
+                AlertDialog.Builder builder = new AlertDialog.Builder(Controller.this);
+                builder.setMessage(sb.toString());
+                builder.setPositiveButton("OK", null);
+                builder.show();
             }
         };
 
