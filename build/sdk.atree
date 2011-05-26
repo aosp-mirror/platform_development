@@ -180,6 +180,7 @@ development/samples/TicTacToeMain              samples/${PLATFORM_NAME}/TicTacTo
 development/samples/USB/MissileLauncher        samples/${PLATFORM_NAME}/USB/MissileLauncher
 development/samples/USB/AdbTest                samples/${PLATFORM_NAME}/USB/AdbTest
 development/samples/VoiceRecognitionService    samples/${PLATFORM_NAME}/VoiceRecognitionService
+development/samples/VoicemailProviderDemo      samples/${PLATFORM_NAME}/VoicemailProviderDemo
 development/samples/WeatherListWidget          samples/${PLATFORM_NAME}/WeatherListWidget
 development/apps/WidgetPreview                 samples/${PLATFORM_NAME}/WidgetPreview
 development/samples/Wiktionary                 samples/${PLATFORM_NAME}/Wiktionary
