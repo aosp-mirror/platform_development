@@ -85,6 +85,7 @@ $(WIN_SDK_ZIP): winsdk-tools sdk
 		$(TOPDIR)development/build/tools/patch_windows_sdk.sh $(subst @,-q,$(hide)) \
 		$(WIN_SDK_DIR)/$(WIN_SDK_NAME) $(OUT_DIR) $(TOPDIR)
 	$(hide) strip --strip-all $(WIN_SDK_DIR)/$(WIN_SDK_NAME)/platform-tools/llvm-rs-cc.exe
+	$(hide) strip --strip-all $(WIN_SDK_DIR)/$(WIN_SDK_NAME)/platform-tools/llvm-rs-cc-2.exe
 	$(hide) $(TOPDIR)sdk/build/patch_windows_sdk.sh $(subst @,-q,$(hide)) \
 		$(WIN_SDK_DIR)/$(WIN_SDK_NAME) $(OUT_DIR) $(TOPDIR)
 	$(hide) ( \
