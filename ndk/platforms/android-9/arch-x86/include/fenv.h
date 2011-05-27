@@ -102,7 +102,7 @@ extern const fenv_t	__fe_dfl_env;
 #define	__fnclex()		__asm __volatile("fnclex")
 #define	__fnstenv(__env)	__asm __volatile("fnstenv %0" : "=m" (*(__env)))
 #define	__fnstcw(__cw)		__asm __volatile("fnstcw %0" : "=m" (*(__cw)))
-#define	__fnstsw(__sw)		__asm __volatile("fnstsw %0" : "=am" (*(__sw)))
+#define	__fnstsw(__sw)		__asm __volatile("fnstsw %0" : "=a" (*(__sw)))
 #define	__fwait()		__asm __volatile("fwait")
 #define	__ldmxcsr(__csr)	__asm __volatile("ldmxcsr %0" : : "m" (__csr))
 #define	__stmxcsr(__csr)	__asm __volatile("stmxcsr %0" : "=m" (*(__csr)))
@@ -131,7 +131,8 @@ feclearexcept(int __excepts)
 static __inline int
 fegetexceptflag(fexcept_t *__flagp, int __excepts)
 {
-	int __mxcsr, __status;
+	int __mxcsr;
+	short __status;
 
 	__fnstsw(&__status);
 	if (__HAS_SSE())
@@ -148,7 +149,8 @@ int feraiseexcept(int __excepts);
 static __inline int
 fetestexcept(int __excepts)
 {
-	int __mxcsr, __status;
+	int __mxcsr;
+	short __status;
 
 	__fnstsw(&__status);
 	if (__HAS_SSE())
