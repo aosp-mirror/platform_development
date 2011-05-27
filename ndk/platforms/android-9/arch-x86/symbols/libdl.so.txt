@@ -1,0 +1,8 @@
+dl_iterate_phdr
+dladdr
+dlclose
+dlerror
+dlopen
+dlsym
+__FINI_ARRAY__
+__INIT_ARRAY__
