@@ -150,42 +150,12 @@
     <string name="fragment_stack">App/Fragment/Stack</string>
     <string name="new_fragment">New fragment</string>
 
-    <string name="fragment_alert_dialog_support">Support/App/Fragment/Alert Dialog</string>
-
-    <string name="fragment_arguments_support">Support/App/Fragment/Arguments</string>
-
-    <string name="fragment_hide_show_support">Support/App/Fragment/Hide and Show</string>
-
-    <string name="fragment_context_menu_support">Support/App/Fragment/Context Menu</string>
-
-    <string name="fragment_dialog_support">Support/App/Fragment/Dialog</string>
-
-    <string name="fragment_dialog_or_activity_support">Support/App/Fragment/Dialog or Activity</string>
-
-    <string name="fragment_layout_support">Support/App/Fragment/Layout</string>
-
-    <string name="fragment_list_array_support">Support/App/Fragment/List Array</string>
-
-    <string name="fragment_menu_support">Support/App/Fragment/Menu</string>
-
-    <string name="fragment_retain_instance_support">Support/App/Fragment/Retain Instance</string>
-
-    <string name="fragment_receive_result_support">Support/App/Fragment/Receive Result</string>
-
-    <string name="fragment_stack_support">Support/App/Fragment/Stack</string>
-
-    <string name="fragment_pager_support">Support/App/Fragment/Pager</string>
-
     <string name="loader_cursor">App/Loader/Cursor</string>
 
     <string name="loader_custom">App/Loader/Custom</string>
 
     <string name="loader_throttle">App/Loader/Throttle</string>
 
-    <string name="loader_cursor_support">Support/App/Loader/Cursor</string>
-    
-    <string name="loader_throttle_support">Support/Loader/Throttle</string>
-    
     <string name="activity_menu">App/Activity/Menu</string>
     <string name="open_menu">Open menu</string>
     <string name="close_menu">Close menu</string>
