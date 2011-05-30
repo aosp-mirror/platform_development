@@ -42,6 +42,7 @@ public:
   bool          destroy(){return m_destroy;};
   EglConfig*    getConfig(){return m_config;};
   unsigned int  getHndl(){return m_hndl;};
+  virtual       ~EglSurface(){};
 
 private:
     static unsigned int   s_nextSurfaceHndl;

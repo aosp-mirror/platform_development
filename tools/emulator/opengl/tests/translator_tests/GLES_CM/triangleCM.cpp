@@ -10,6 +10,10 @@
 #include <EGL/egl.h>
 #include <GLES/gl.h>
 
+#ifdef __APPLE__
+extern "C" void * createGLView(void *nsWindowPtr, int x, int y, int width, int height);
+#endif
+
 #undef HAVE_MALLOC_H
 #include <SDL.h>
 #include <SDL_syswm.h>
@@ -120,8 +124,10 @@ int main(int argc, char **argv)
 
     #ifdef _WIN32
         HWND   windowId = NULL;
-    #else
+    #elif __linux__
         Window windowId = NULL;
+    #elif __APPLE__
+        void* windowId = NULL;
     #endif
 
         //      // Inialize SDL window
@@ -142,8 +148,11 @@ int main(int argc, char **argv)
         SDL_GetWMInfo(&wminfo);
     #ifdef _WIN32
         windowId = wminfo.window;
-    #else
+    #elif __linux__
         windowId = wminfo.info.x11.window;
+    #elif __APPLE__
+        windowId = createGLView(wminfo.nsWindowPtr,0,0,WINDOW_WIDTH,WINDOW_HEIGHT);
+
     #endif
 
         int major,minor,num_config;
@@ -156,6 +165,7 @@ int main(int argc, char **argv)
         eglChooseConfig(d, attribute_list, configs, 150, &num_config);
         printf("config returned %d\n",num_config);
         egl_surface = eglCreateWindowSurface(d,configs[0],windowId,NULL);
+        printf("before creating context..\n");
         ctx = eglCreateContext(d,configs[0],EGL_NO_CONTEXT,NULL);
         printf("SURFACE == %p CONTEXT == %p\n",egl_surface,ctx);
         if(eglMakeCurrent(d,egl_surface,egl_surface,ctx)!= EGL_TRUE){
