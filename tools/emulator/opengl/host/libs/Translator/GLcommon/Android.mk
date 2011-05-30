@@ -13,6 +13,7 @@ LOCAL_SRC_FILES :=           \
      GLESvalidate.cpp        \
      GLESpointer.cpp         \
      GLESbuffer.cpp          \
+     DummyGLfuncs.cpp        \
      RangeManip.cpp          \
      objectNameManager.cpp
 
