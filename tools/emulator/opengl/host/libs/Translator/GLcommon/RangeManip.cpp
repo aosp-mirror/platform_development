@@ -13,7 +13,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-#include "RangeManip.h"
+#include <GLcommon/RangeManip.h>
 
 
 bool Range::rangeIntersection(const Range& r,Range& rOut) const {

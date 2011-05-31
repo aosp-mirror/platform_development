@@ -13,23 +13,21 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-#ifndef GL_UTILS_H
-#define GL_UTILS_H
+#ifndef GLES_VALIDATE_H
+#define GLES_VALIDATE_H
 
-typedef enum{
-             GLES_1_1 = 1,
-             GLES_2_0 = 2,
-             MAX_GLES_VERSION //Must be last
-            }GLESVersion;
+#include <GLES/gl.h>
 
-template <class T>
-void swap(T& x,T& y) {
-     T temp;
-     temp=x;
-     x=y;
-     y=temp;
-}
-
-bool isPowerOf2(int num);
+struct GLESvalidate
+{
+static bool textureEnum(GLenum e,unsigned int maxTex);
+static bool pixelType(GLenum type);
+static bool pixelOp(GLenum format,GLenum type); 
+static bool pixelFrmt(GLenum format);
+static bool bufferTarget(GLenum target);
+static bool bufferParam(GLenum param);
+static bool drawMode(GLenum mode);
+static bool drawType(GLenum mode);
+};
 
 #endif

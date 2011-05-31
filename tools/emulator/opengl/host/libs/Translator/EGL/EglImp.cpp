@@ -159,14 +159,15 @@ static __translator_getGLESIfaceFunc loadIfaces(const char* libName){
     return func;
 }
 
-
-
 #ifdef _WIN32
-#define LIB_GLES_NAME "libGLES_CM_translator"
+#define LIB_GLES_CM_NAME "libGLES_CM_translator"
+#define LIB_GLES_V2_NAME "libGLES_V2_translator"
 #elif __linux__
-#define LIB_GLES_NAME "libGLES_CM_translator.so"
+#define LIB_GLES_CM_NAME "libGLES_CM_translator.so"
+#define LIB_GLES_V2_NAME "libGLES_V2_translator.so"
 #else
-#define LIB_GLES_NAME "libGLES_CM_translator"
+#define LIB_GLES_CM_NAME "libGLES_CM_translator"
+#define LIB_GLES_V2_NAME "libGLES_V2_translator"
 #endif
 
 EGLAPI EGLBoolean EGLAPIENTRY eglInitialize(EGLDisplay display, EGLint *major, EGLint *minor) {
@@ -177,13 +178,24 @@ EGLAPI EGLBoolean EGLAPIENTRY eglInitialize(EGLDisplay display, EGLint *major, E
 
     if(major) *major = MAJOR;
     if(minor) *minor = MINOR;
-     if(!g_eglInfo->getIface(GLES_1_1)) {
-        __translator_getGLESIfaceFunc func  = loadIfaces(LIB_GLES_NAME);
 
+    __translator_getGLESIfaceFunc func  = NULL;
+
+    if(!g_eglInfo->getIface(GLES_1_1)) {
+        func  = loadIfaces(LIB_GLES_CM_NAME);
         if(func){
             g_eglInfo->setIface(func(&s_eglIface),GLES_1_1);
         } else {
-           fprintf(stderr,"could not find ifaces...\n");
+           fprintf(stderr,"could not find ifaces for GLES CM 1.1\n");
+           return EGL_FALSE;
+        }
+    }
+    if(!g_eglInfo->getIface(GLES_2_0)) {
+        func  = loadIfaces(LIB_GLES_V2_NAME);
+        if(func){
+            g_eglInfo->setIface(func(&s_eglIface),GLES_2_0);
+        } else {
+           fprintf(stderr,"could not find ifaces for GLES 2.0\n");
            return EGL_FALSE;
         }
     }
