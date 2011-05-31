@@ -18,7 +18,6 @@ package com.example.android.apis.app;
 
 import com.example.android.apis.R;
 
-import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.AlertDialog;
 import android.app.admin.DeviceAdminReceiver;
@@ -27,132 +26,275 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.text.Editable;
-import android.text.TextWatcher;
+import android.preference.CheckBoxPreference;
+import android.preference.EditTextPreference;
+import android.preference.ListPreference;
+import android.preference.Preference;
+import android.preference.Preference.OnPreferenceChangeListener;
+import android.preference.Preference.OnPreferenceClickListener;
+import android.preference.PreferenceActivity;
+import android.preference.PreferenceCategory;
+import android.preference.PreferenceFragment;
+import android.preference.PreferenceScreen;
+import android.text.TextUtils;
 import android.util.Log;
-import android.view.View;
-import android.view.View.OnClickListener;
-import android.widget.AdapterView;
-import android.widget.AdapterView.OnItemSelectedListener;
-import android.widget.ArrayAdapter;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.Spinner;
-import android.widget.TextView;
 import android.widget.Toast;
 
-import java.text.DateFormat;
-import java.util.Date;
+import java.util.List;
 
 /**
- * Example of a do-nothing admin class.  When enabled, it lets you control
- * some of its policy and reports when there is interesting activity.
+ * This activity provides a comprehensive UI for exploring and operating the DevicePolicyManager
+ * api.  It consists of two primary modules:
+ *
+ * 1:  A device policy controller, implemented here as a series of preference fragments.  Each
+ *     one contains code to monitor and control a particular subset of device policies.
+ *
+ * 2:  A DeviceAdminReceiver, to receive updates from the DevicePolicyManager when certain aspects
+ *     of the device security status have changed.
  */
-public class DeviceAdminSample extends DeviceAdminReceiver {
+public class DeviceAdminSample extends PreferenceActivity {
 
+    // Miscellaneous utilities and definitions
     private static final String TAG = "DeviceAdminSample";
-    private static final long MS_PER_DAY = 86400 * 1000;
-    private static final long MS_PER_HOUR = 3600 * 1000;
+
+    private static final int REQUEST_CODE_ENABLE_ADMIN = 1;
+    private static final int REQUEST_CODE_START_ENCRYPTION = 2;
+
     private static final long MS_PER_MINUTE = 60 * 1000;
+    private static final long MS_PER_HOUR = 60 * MS_PER_MINUTE;
+    private static final long MS_PER_DAY = 24 * MS_PER_HOUR;
 
-    static SharedPreferences getSamplePreferences(Context context) {
-        return context.getSharedPreferences(DeviceAdminReceiver.class.getName(), 0);
-    }
+    // The following keys are used to find each preference item
+    private static final String KEY_ENABLE_ADMIN = "key_enable_admin";
 
-    static String PREF_PASSWORD_QUALITY = "password_quality";
-    static String PREF_PASSWORD_LENGTH = "password_length";
-    static String PREF_PASSWORD_MINIMUM_LETTERS = "password_minimum_letters";
-    static String PREF_PASSWORD_MINIMUM_UPPERCASE = "password_minimum_uppercase";
-    static String PREF_PASSWORD_MINIMUM_LOWERCASE = "password_minimum_lowercase";
-    static String PREF_PASSWORD_MINIMUM_NUMERIC = "password_minimum_numeric";
-    static String PREF_PASSWORD_MINIMUM_SYMBOLS = "password_minimum_symbols";
-    static String PREF_PASSWORD_MINIMUM_NONLETTER = "password_minimum_nonletter";
-    static String PREF_PASSWORD_HISTORY_LENGTH = "password_history_length";
-    static String PREF_PASSWORD_EXPIRATION_TIMEOUT = "password_expiration_timeout";
-    static String PREF_MAX_FAILED_PW = "max_failed_pw";
+    private static final String KEY_CATEGORY_QUALITY = "key_category_quality";
+    private static final String KEY_SET_PASSWORD = "key_set_password";
+    private static final String KEY_RESET_PASSWORD = "key_reset_password";
+    private static final String KEY_QUALITY = "key_quality";
+    private static final String KEY_MIN_LENGTH = "key_minimum_length";
+    private static final String KEY_MIN_LETTERS = "key_minimum_letters";
+    private static final String KEY_MIN_NUMERIC = "key_minimum_numeric";
+    private static final String KEY_MIN_LOWER_CASE = "key_minimum_lower_case";
+    private static final String KEY_MIN_UPPER_CASE = "key_minimum_upper_case";
+    private static final String KEY_MIN_SYMBOLS = "key_minimum_symbols";
+    private static final String KEY_MIN_NON_LETTER = "key_minimum_non_letter";
 
-    void showToast(Context context, CharSequence msg) {
-        Toast.makeText(context, "Sample Device Admin: " + msg, Toast.LENGTH_SHORT).show();
-    }
+    private static final String KEY_CATEGORY_EXPIRATION = "key_category_expiration";
+    private static final String KEY_HISTORY = "key_history";
+    private static final String KEY_EXPIRATION_TIMEOUT = "key_expiration_timeout";
+    private static final String KEY_EXPIRATION_STATUS = "key_expiration_status";
 
-    @Override
-    public void onEnabled(Context context, Intent intent) {
-        showToast(context, "enabled");
-    }
+    private static final String KEY_CATEGORY_LOCK_WIPE = "key_category_lock_wipe";
+    private static final String KEY_MAX_TIME_SCREEN_LOCK = "key_max_time_screen_lock";
+    private static final String KEY_MAX_FAILS_BEFORE_WIPE = "key_max_fails_before_wipe";
+    private static final String KEY_LOCK_SCREEN = "key_lock_screen";
+    private static final String KEY_WIPE_DATA = "key_wipe_data";
+    private static final String KEY_WIP_DATA_ALL = "key_wipe_data_all";
 
-    @Override
-    public CharSequence onDisableRequested(Context context, Intent intent) {
-        return "This is an optional message to warn the user about disabling.";
-    }
+    private static final String KEY_CATEGORY_ENCRYPTION = "key_category_encryption";
+    private static final String KEY_REQUIRE_ENCRYPTION = "key_require_encryption";
+    private static final String KEY_ACTIVATE_ENCRYPTION = "key_activate_encryption";
 
-    @Override
-    public void onDisabled(Context context, Intent intent) {
-        showToast(context, "disabled");
-    }
-
-    @Override
-    public void onPasswordChanged(Context context, Intent intent) {
-        showToast(context, "pw changed");
-    }
+    // Interaction with the DevicePolicyManager
+    DevicePolicyManager mDPM;
+    ComponentName mDeviceAdminSample;
 
     @Override
-    public void onPasswordFailed(Context context, Intent intent) {
-        showToast(context, "pw failed");
-    }
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
 
-    @Override
-    public void onPasswordSucceeded(Context context, Intent intent) {
-        showToast(context, "pw succeeded");
-    }
-
-    static String countdownString(long time) {
-        long days = time / MS_PER_DAY;
-        long hours = (time / MS_PER_HOUR) % 24;
-        long minutes = (time / MS_PER_MINUTE) % 60;
-        return days + "d" + hours + "h" + minutes + "m";
-    }
-
-    @Override
-    public void onPasswordExpiring(Context context, Intent intent) {
-        DevicePolicyManager dpm = (DevicePolicyManager) context.getSystemService(
-                Context.DEVICE_POLICY_SERVICE);
-        long expr = dpm.getPasswordExpiration(new ComponentName(context, DeviceAdminSample.class));
-        long delta = expr - System.currentTimeMillis();
-        boolean expired = delta < 0L;
-        String msg = expired ? "Password expired " : "Password will expire "
-                + countdownString(Math.abs(delta))
-                + (expired ? " ago" : " from now");
-        showToast(context, msg);
-        Log.v(TAG, msg);
+        // Prepare to work with the DPM
+        mDPM = (DevicePolicyManager) getSystemService(Context.DEVICE_POLICY_SERVICE);
+        mDeviceAdminSample = new ComponentName(this, DeviceAdminSampleReceiver.class);
     }
 
     /**
-     * <p>UI control for the sample device admin.  This provides an interface
-     * to enable, disable, and perform other operations with it to see
-     * their effect.</p>
-     *
-     * <p>Note that this is implemented as an inner class only keep the sample
-     * all together; typically this code would appear in some separate class.
+     * We override this method to provide PreferenceActivity with the top-level preference headers.
      */
-    public static class Controller extends Activity {
+    @Override
+    public void onBuildHeaders(List<Header> target) {
+        loadHeadersFromResource(R.xml.device_admin_headers, target);
+    }
 
-        static final int REQUEST_CODE_ENABLE_ADMIN = 1;
-        static final int REQUEST_CODE_START_ENCRYPTION = 2;
+    /**
+     * Helper to determine if we are an active admin
+     */
+    private boolean isActiveAdmin() {
+        return mDPM.isAdminActive(mDeviceAdminSample);
+    }
 
-        private static final long MS_PER_MINUTE = 60*1000;
+    /**
+     * Common fragment code for DevicePolicyManager access.  Provides two shared elements:
+     *
+     *   1.  Provides instance variables to access activity/context, DevicePolicyManager, etc.
+     *   2.  Provides support for the "set password" button(s) shared by multiple fragments.
+     */
+    public static class AdminSampleFragment extends PreferenceFragment
+            implements OnPreferenceChangeListener, OnPreferenceClickListener{
 
-        DevicePolicyManager mDPM;
-        ActivityManager mAM;
-        ComponentName mDeviceAdminSample;
+        // Useful instance variables
+        protected DeviceAdminSample mActivity;
+        protected DevicePolicyManager mDPM;
+        protected ComponentName mDeviceAdminSample;
+        protected boolean mAdminActive;
 
-        Button mEnableButton;
-        Button mDisableButton;
+        // Optional shared UI
+        private PreferenceScreen mSetPassword;
+        private EditTextPreference mResetPassword;
 
-        // Password quality spinner choices
+        @Override
+        public void onActivityCreated(Bundle savedInstanceState) {
+            super.onActivityCreated(savedInstanceState);
+
+            // Retrieve the useful instance variables
+            mActivity = (DeviceAdminSample) getActivity();
+            mDPM = mActivity.mDPM;
+            mDeviceAdminSample = mActivity.mDeviceAdminSample;
+            mAdminActive = mActivity.isActiveAdmin();
+
+            // Configure the shared UI elements (if they exist)
+            mResetPassword = (EditTextPreference) findPreference(KEY_RESET_PASSWORD);
+            mSetPassword = (PreferenceScreen) findPreference(KEY_SET_PASSWORD);
+
+            if (mResetPassword != null) {
+                mResetPassword.setOnPreferenceChangeListener(this);
+            }
+            if (mSetPassword != null) {
+                mSetPassword.setOnPreferenceClickListener(this);
+            }
+        }
+
+        @Override
+        public void onResume() {
+            super.onResume();
+            mAdminActive = mActivity.isActiveAdmin();
+            reloadSummaries();
+            // Resetting the password via API is available only to active admins
+            if (mResetPassword != null) {
+                mResetPassword.setEnabled(mAdminActive);
+            }
+        }
+
+        /**
+         * Called automatically at every onResume.  Should also call explicitly any time a
+         * policy changes that may affect other policy values.
+         */
+        protected void reloadSummaries() {
+            if (mSetPassword != null) {
+                if (mAdminActive) {
+                    // Show password-sufficient status under Set Password button
+                    boolean sufficient = mDPM.isActivePasswordSufficient();
+                    mSetPassword.setSummary(sufficient ?
+                            R.string.password_sufficient : R.string.password_insufficient);
+                } else {
+                    mSetPassword.setSummary(null);
+                }
+            }
+        }
+
+        @Override
+        public boolean onPreferenceClick(Preference preference) {
+            if (mSetPassword != null && preference == mSetPassword) {
+                Intent intent = new Intent(DevicePolicyManager.ACTION_SET_NEW_PASSWORD);
+                startActivity(intent);
+                return true;
+            }
+            return false;
+        }
+
+        @Override
+        public boolean onPreferenceChange(Preference preference, Object newValue) {
+            if (mResetPassword != null && preference == mResetPassword) {
+                doResetPassword((String)newValue);
+                return true;
+            }
+            return false;
+        }
+
+        /**
+         * This is dangerous, so we prevent automated tests from doing it, and we
+         * remind the user after we do it.
+         */
+        private void doResetPassword(String newPassword) {
+            if (alertIfMonkey(mActivity, R.string.monkey_reset_password)) {
+                return;
+            }
+            mDPM.resetPassword(newPassword, DevicePolicyManager.RESET_PASSWORD_REQUIRE_ENTRY);
+            AlertDialog.Builder builder = new AlertDialog.Builder(mActivity);
+            String message = mActivity.getString(R.string.reset_password_warning, newPassword);
+            builder.setMessage(message);
+            builder.setPositiveButton(R.string.reset_password_ok, null);
+            builder.show();
+        }
+
+        /**
+         * Simple helper for summaries showing local & global (aggregate) policy settings
+         */
+        protected String localGlobalSummary(Object local, Object global) {
+            return getString(R.string.status_local_global, local, global);
+        }
+    }
+
+    /**
+     * PreferenceFragment for "general" preferences.
+     */
+    public static class GeneralFragment extends AdminSampleFragment
+            implements OnPreferenceChangeListener {
+        // UI elements
+        private CheckBoxPreference mEnableCheckbox;
+
+        @Override
+        public void onCreate(Bundle savedInstanceState) {
+            super.onCreate(savedInstanceState);
+            addPreferencesFromResource(R.xml.device_admin_general);
+            mEnableCheckbox = (CheckBoxPreference) findPreference(KEY_ENABLE_ADMIN);
+            mEnableCheckbox.setOnPreferenceChangeListener(this);
+        }
+
+        // At onResume time, reload UI with current values as required
+        @Override
+        public void onResume() {
+            super.onResume();
+            mEnableCheckbox.setChecked(mAdminActive);
+        }
+
+        @Override
+        public boolean onPreferenceChange(Preference preference, Object newValue) {
+            if (super.onPreferenceChange(preference, newValue)) {
+                return true;
+            }
+            if (preference == mEnableCheckbox) {
+                boolean newActive = (Boolean) newValue;
+                if (newActive != mAdminActive) {
+                    if (newActive) {
+                        // Launch the activity to have the user enable our admin.
+                        Intent intent = new Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN);
+                        intent.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, mDeviceAdminSample);
+                        intent.putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION,
+                                mActivity.getString(R.string.add_admin_extra_app_text));
+                        startActivityForResult(intent, REQUEST_CODE_ENABLE_ADMIN);
+                        // return false - don't update checkbox until we're really active
+                        return false;
+                    } else {
+                        mDPM.removeActiveAdmin(mDeviceAdminSample);
+                        mAdminActive = false;
+                    }
+                }
+            }
+            return true;
+        }
+    }
+
+    /**
+     * PreferenceFragment for "password quality" preferences.
+     */
+    public static class QualityFragment extends AdminSampleFragment
+            implements OnPreferenceChangeListener {
+
+        // Password quality values
         // This list must match the list found in samples/ApiDemos/res/values/arrays.xml
-        final static int mPasswordQualityValues[] = new int[] {
+        final static int[] mPasswordQualityValues = new int[] {
             DevicePolicyManager.PASSWORD_QUALITY_UNSPECIFIED,
             DevicePolicyManager.PASSWORD_QUALITY_SOMETHING,
             DevicePolicyManager.PASSWORD_QUALITY_NUMERIC,
@@ -161,753 +303,609 @@ public class DeviceAdminSample extends DeviceAdminReceiver {
             DevicePolicyManager.PASSWORD_QUALITY_COMPLEX
         };
 
-        Spinner mPasswordQuality;
-        int mPasswordQualityRecent = 0;
-        EditText mPasswordLength;
-        EditText mPasswordMinimumLetters;
-        EditText mPasswordMinimumUppercase;
-        EditText mPasswordMinimumLowercase;
-        EditText mPasswordMinimumNumeric;
-        EditText mPasswordMinimumSymbols;
-        EditText mPasswordMinimumNonLetter;
-        EditText mPasswordHistoryLength;
+        // Password quality values (as strings, for the ListPreference entryValues)
+        // This list must match the list found in samples/ApiDemos/res/values/arrays.xml
+        final static String[] mPasswordQualityValueStrings = new String[] {
+            String.valueOf(DevicePolicyManager.PASSWORD_QUALITY_UNSPECIFIED),
+            String.valueOf(DevicePolicyManager.PASSWORD_QUALITY_SOMETHING),
+            String.valueOf(DevicePolicyManager.PASSWORD_QUALITY_NUMERIC),
+            String.valueOf(DevicePolicyManager.PASSWORD_QUALITY_ALPHABETIC),
+            String.valueOf(DevicePolicyManager.PASSWORD_QUALITY_ALPHANUMERIC),
+            String.valueOf(DevicePolicyManager.PASSWORD_QUALITY_COMPLEX)
+        };
 
-        EditText mPassword;
-        Button mResetPasswordButton;
-
-        EditText mMaxFailedPw;
-
-        Button mForceLockButton;
-        Button mWipeDataButton;
-        Button mWipeAllDataButton;
-
-        private Button mTimeoutButton;
-
-        private EditText mTimeout;
-
-        private EditText mPasswordExpirationTimeout;
-        private Button mPasswordExpirationButton;
-        private TextView mPasswordExpirationStatus;
-        private Button mPasswordExpirationStatusButton;
-
-        private Button mEnableEncryptionButton;
-        private Button mDisableEncryptionButton;
-        private Button mActivateEncryptionButton;
-        private Button mEncryptionStatusButton;
-        private TextView mEncryptionStatus;
+        // UI elements
+        private PreferenceCategory mQualityCategory;
+        private ListPreference mPasswordQuality;
+        private EditTextPreference mMinLength;
+        private EditTextPreference mMinLetters;
+        private EditTextPreference mMinNumeric;
+        private EditTextPreference mMinLowerCase;
+        private EditTextPreference mMinUpperCase;
+        private EditTextPreference mMinSymbols;
+        private EditTextPreference mMinNonLetter;
 
         @Override
-        protected void onCreate(Bundle savedInstanceState) {
+        public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
+            addPreferencesFromResource(R.xml.device_admin_quality);
 
-            mDPM = (DevicePolicyManager)getSystemService(Context.DEVICE_POLICY_SERVICE);
-            mAM = (ActivityManager)getSystemService(Context.ACTIVITY_SERVICE);
-            mDeviceAdminSample = new ComponentName(Controller.this, DeviceAdminSample.class);
+            mQualityCategory = (PreferenceCategory) findPreference(KEY_CATEGORY_QUALITY);
+            mPasswordQuality = (ListPreference) findPreference(KEY_QUALITY);
+            mMinLength = (EditTextPreference) findPreference(KEY_MIN_LENGTH);
+            mMinLetters = (EditTextPreference) findPreference(KEY_MIN_LETTERS);
+            mMinNumeric = (EditTextPreference) findPreference(KEY_MIN_NUMERIC);
+            mMinLowerCase = (EditTextPreference) findPreference(KEY_MIN_LOWER_CASE);
+            mMinUpperCase = (EditTextPreference) findPreference(KEY_MIN_UPPER_CASE);
+            mMinSymbols = (EditTextPreference) findPreference(KEY_MIN_SYMBOLS);
+            mMinNonLetter = (EditTextPreference) findPreference(KEY_MIN_NON_LETTER);
 
-            setContentView(R.layout.device_admin_sample);
+            mPasswordQuality.setOnPreferenceChangeListener(this);
+            mMinLength.setOnPreferenceChangeListener(this);
+            mMinLetters.setOnPreferenceChangeListener(this);
+            mMinNumeric.setOnPreferenceChangeListener(this);
+            mMinLowerCase.setOnPreferenceChangeListener(this);
+            mMinUpperCase.setOnPreferenceChangeListener(this);
+            mMinSymbols.setOnPreferenceChangeListener(this);
+            mMinNonLetter.setOnPreferenceChangeListener(this);
 
-            // Watch for button clicks.
-            mEnableButton = (Button)findViewById(R.id.enable);
-            mEnableButton.setOnClickListener(mEnableListener);
-            mDisableButton = (Button)findViewById(R.id.disable);
-            mDisableButton.setOnClickListener(mDisableListener);
+            // Finish setup of the quality dropdown
+            mPasswordQuality.setEntryValues(mPasswordQualityValueStrings);
+        }
 
-            mPasswordQuality = (Spinner)findViewById(R.id.password_quality);
-            ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(
-                    this, R.array.password_qualities, android.R.layout.simple_spinner_item);
-            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-            mPasswordQuality.setAdapter(adapter);
-            mPasswordQuality.setOnItemSelectedListener(
-                    new OnItemSelectedListener() {
-                        public void onItemSelected(
-                                AdapterView<?> parent, View view, int position, long id) {
-                            // Simple debounce, mainly to catch initialization case (we don't
-                            // want to change the DPM values if the user didn't click it).
-                            if (position != mPasswordQualityRecent) {
-                                setPasswordQuality(mPasswordQualityValues[position]);
-                                mPasswordQualityRecent = position;
+        @Override
+        public void onResume() {
+            super.onResume();
+            mQualityCategory.setEnabled(mAdminActive);
+        }
+
+        /**
+         * Update the summaries of each item to show the local setting and the global setting.
+         */
+        @Override
+        protected void reloadSummaries() {
+            super.reloadSummaries();
+            // Show numeric settings for each policy API
+            int local, global;
+            local = mDPM.getPasswordQuality(mDeviceAdminSample);
+            global = mDPM.getPasswordQuality(null);
+            mPasswordQuality.setSummary(
+                    localGlobalSummary(qualityValueToString(local), qualityValueToString(global)));
+            local = mDPM.getPasswordMinimumLength(mDeviceAdminSample);
+            global = mDPM.getPasswordMinimumLength(null);
+            mMinLength.setSummary(localGlobalSummary(local, global));
+            local = mDPM.getPasswordMinimumLetters(mDeviceAdminSample);
+            global = mDPM.getPasswordMinimumLetters(null);
+            mMinLetters.setSummary(localGlobalSummary(local, global));
+            local = mDPM.getPasswordMinimumNumeric(mDeviceAdminSample);
+            global = mDPM.getPasswordMinimumNumeric(null);
+            mMinNumeric.setSummary(localGlobalSummary(local, global));
+            local = mDPM.getPasswordMinimumLowerCase(mDeviceAdminSample);
+            global = mDPM.getPasswordMinimumLowerCase(null);
+            mMinLowerCase.setSummary(localGlobalSummary(local, global));
+            local = mDPM.getPasswordMinimumUpperCase(mDeviceAdminSample);
+            global = mDPM.getPasswordMinimumUpperCase(null);
+            mMinUpperCase.setSummary(localGlobalSummary(local, global));
+            local = mDPM.getPasswordMinimumSymbols(mDeviceAdminSample);
+            global = mDPM.getPasswordMinimumSymbols(null);
+            mMinSymbols.setSummary(localGlobalSummary(local, global));
+            local = mDPM.getPasswordMinimumNonLetter(mDeviceAdminSample);
+            global = mDPM.getPasswordMinimumNonLetter(null);
+            mMinNonLetter.setSummary(localGlobalSummary(local, global));
+        }
+
+        @Override
+        public boolean onPreferenceChange(Preference preference, Object newValue) {
+            if (super.onPreferenceChange(preference, newValue)) {
+                return true;
+            }
+            String valueString = (String)newValue;
+            if (TextUtils.isEmpty(valueString)) {
+                return false;
+            }
+            int value = 0;
+            try {
+                value = Integer.parseInt(valueString);
+            } catch (NumberFormatException nfe) {
+                String warning = mActivity.getString(R.string.number_format_warning, valueString);
+                Toast.makeText(mActivity, warning, Toast.LENGTH_SHORT).show();
+            }
+            if (preference == mPasswordQuality) {
+                mDPM.setPasswordQuality(mDeviceAdminSample, value);
+            } else if (preference == mMinLength) {
+                mDPM.setPasswordMinimumLength(mDeviceAdminSample, value);
+            } else if (preference == mMinLetters) {
+                mDPM.setPasswordMinimumLetters(mDeviceAdminSample, value);
+            } else if (preference == mMinNumeric) {
+                mDPM.setPasswordMinimumNumeric(mDeviceAdminSample, value);
+            } else if (preference == mMinLowerCase) {
+                mDPM.setPasswordMinimumLowerCase(mDeviceAdminSample, value);
+            } else if (preference == mMinUpperCase) {
+                mDPM.setPasswordMinimumUpperCase(mDeviceAdminSample, value);
+            } else if (preference == mMinSymbols) {
+                mDPM.setPasswordMinimumSymbols(mDeviceAdminSample, value);
+            } else if (preference == mMinNonLetter) {
+                mDPM.setPasswordMinimumNonLetter(mDeviceAdminSample, value);
+            }
+            reloadSummaries();
+            return true;
+        }
+
+        private String qualityValueToString(int quality) {
+            for (int i=  0; i < mPasswordQualityValues.length; i++) {
+                if (mPasswordQualityValues[i] == quality) {
+                    String[] qualities =
+                        mActivity.getResources().getStringArray(R.array.password_qualities);
+                    return qualities[i];
+                }
+            }
+            return "(0x" + Integer.toString(quality, 16) + ")";
+        }
+    }
+
+    /**
+     * PreferenceFragment for "password expiration" preferences.
+     */
+    public static class ExpirationFragment extends AdminSampleFragment
+            implements OnPreferenceChangeListener, OnPreferenceClickListener {
+        private PreferenceCategory mExpirationCategory;
+        private EditTextPreference mHistory;
+        private EditTextPreference mExpirationTimeout;
+        private PreferenceScreen mExpirationStatus;
+
+        @Override
+        public void onCreate(Bundle savedInstanceState) {
+            super.onCreate(savedInstanceState);
+            addPreferencesFromResource(R.xml.device_admin_expiration);
+
+            mExpirationCategory = (PreferenceCategory) findPreference(KEY_CATEGORY_EXPIRATION);
+            mHistory = (EditTextPreference) findPreference(KEY_HISTORY);
+            mExpirationTimeout = (EditTextPreference) findPreference(KEY_EXPIRATION_TIMEOUT);
+            mExpirationStatus = (PreferenceScreen) findPreference(KEY_EXPIRATION_STATUS);
+
+            mHistory.setOnPreferenceChangeListener(this);
+            mExpirationTimeout.setOnPreferenceChangeListener(this);
+            mExpirationStatus.setOnPreferenceClickListener(this);
+        }
+
+        @Override
+        public void onResume() {
+            super.onResume();
+            mExpirationCategory.setEnabled(mAdminActive);
+        }
+
+        /**
+         * Update the summaries of each item to show the local setting and the global setting.
+         */
+        @Override
+        protected void reloadSummaries() {
+            super.reloadSummaries();
+
+            int local, global;
+            local = mDPM.getPasswordHistoryLength(mDeviceAdminSample);
+            global = mDPM.getPasswordHistoryLength(null);
+            mHistory.setSummary(localGlobalSummary(local, global));
+
+            long localLong, globalLong;
+            localLong = mDPM.getPasswordExpirationTimeout(mDeviceAdminSample);
+            globalLong = mDPM.getPasswordExpirationTimeout(null);
+            mExpirationTimeout.setSummary(localGlobalSummary(
+                    localLong / MS_PER_MINUTE, globalLong / MS_PER_MINUTE));
+
+            String expirationStatus = getExpirationStatus();
+            mExpirationStatus.setSummary(expirationStatus);
+        }
+
+        @Override
+        public boolean onPreferenceChange(Preference preference, Object newValue) {
+            if (super.onPreferenceChange(preference, newValue)) {
+                return true;
+            }
+            String valueString = (String)newValue;
+            if (TextUtils.isEmpty(valueString)) {
+                return false;
+            }
+            int value = 0;
+            try {
+                value = Integer.parseInt(valueString);
+            } catch (NumberFormatException nfe) {
+                String warning = mActivity.getString(R.string.number_format_warning, valueString);
+                Toast.makeText(mActivity, warning, Toast.LENGTH_SHORT).show();
+            }
+            if (preference == mHistory) {
+                mDPM.setPasswordHistoryLength(mDeviceAdminSample, value);
+            } else if (preference == mExpirationTimeout) {
+                mDPM.setPasswordExpirationTimeout(mDeviceAdminSample, value * MS_PER_MINUTE);
+            }
+            reloadSummaries();
+            return true;
+        }
+
+        @Override
+        public boolean onPreferenceClick(Preference preference) {
+            if (super.onPreferenceClick(preference)) {
+                return true;
+            }
+            if (preference == mExpirationStatus) {
+                String expirationStatus = getExpirationStatus();
+                mExpirationStatus.setSummary(expirationStatus);
+                return true;
+            }
+            return false;
+        }
+
+        /**
+         * Create a summary string describing the expiration status for the sample app,
+         * as well as the global (aggregate) status.
+         */
+        private String getExpirationStatus() {
+            // expirations are absolute;  convert to relative for display
+            long localExpiration = mDPM.getPasswordExpiration(mDeviceAdminSample);
+            long globalExpiration = mDPM.getPasswordExpiration(null);
+            long now = System.currentTimeMillis();
+
+            // local expiration
+            String local;
+            if (localExpiration == 0) {
+                local = mActivity.getString(R.string.expiration_status_none);
+            } else {
+                localExpiration -= now;
+                String dms = timeToDaysMinutesSeconds(mActivity, Math.abs(localExpiration));
+                if (localExpiration >= 0) {
+                    local = mActivity.getString(R.string.expiration_status_future, dms);
+                } else {
+                    local = mActivity.getString(R.string.expiration_status_past, dms);
+                }
+            }
+
+            // global expiration
+            String global;
+            if (globalExpiration == 0) {
+                global = mActivity.getString(R.string.expiration_status_none);
+            } else {
+                globalExpiration -= now;
+                String dms = timeToDaysMinutesSeconds(mActivity, Math.abs(globalExpiration));
+                if (globalExpiration >= 0) {
+                    global = mActivity.getString(R.string.expiration_status_future, dms);
+                } else {
+                    global = mActivity.getString(R.string.expiration_status_past, dms);
+                }
+            }
+            return mActivity.getString(R.string.status_local_global, local, global);
+        }
+    }
+
+    /**
+     * PreferenceFragment for "lock screen & wipe" preferences.
+     */
+    public static class LockWipeFragment extends AdminSampleFragment
+            implements OnPreferenceChangeListener, OnPreferenceClickListener {
+        private PreferenceCategory mLockWipeCategory;
+        private EditTextPreference mMaxTimeScreenLock;
+        private EditTextPreference mMaxFailures;
+        private PreferenceScreen mLockScreen;
+        private PreferenceScreen mWipeData;
+        private PreferenceScreen mWipeAppData;
+
+        @Override
+        public void onCreate(Bundle savedInstanceState) {
+            super.onCreate(savedInstanceState);
+            addPreferencesFromResource(R.xml.device_admin_lock_wipe);
+
+            mLockWipeCategory = (PreferenceCategory) findPreference(KEY_CATEGORY_LOCK_WIPE);
+            mMaxTimeScreenLock = (EditTextPreference) findPreference(KEY_MAX_TIME_SCREEN_LOCK);
+            mMaxFailures = (EditTextPreference) findPreference(KEY_MAX_FAILS_BEFORE_WIPE);
+            mLockScreen = (PreferenceScreen) findPreference(KEY_LOCK_SCREEN);
+            mWipeData = (PreferenceScreen) findPreference(KEY_WIPE_DATA);
+            mWipeAppData = (PreferenceScreen) findPreference(KEY_WIP_DATA_ALL);
+
+            mMaxTimeScreenLock.setOnPreferenceChangeListener(this);
+            mMaxFailures.setOnPreferenceChangeListener(this);
+            mLockScreen.setOnPreferenceClickListener(this);
+            mWipeData.setOnPreferenceClickListener(this);
+            mWipeAppData.setOnPreferenceClickListener(this);
+        }
+
+        @Override
+        public void onResume() {
+            super.onResume();
+            mLockWipeCategory.setEnabled(mAdminActive);
+        }
+
+        /**
+         * Update the summaries of each item to show the local setting and the global setting.
+         */
+        @Override
+        protected void reloadSummaries() {
+            super.reloadSummaries();
+
+            long localLong, globalLong;
+            localLong = mDPM.getMaximumTimeToLock(mDeviceAdminSample);
+            globalLong = mDPM.getMaximumTimeToLock(null);
+            mMaxTimeScreenLock.setSummary(localGlobalSummary(
+                    localLong / MS_PER_MINUTE, globalLong / MS_PER_MINUTE));
+
+            int local, global;
+            local = mDPM.getMaximumFailedPasswordsForWipe(mDeviceAdminSample);
+            global = mDPM.getMaximumFailedPasswordsForWipe(null);
+            mMaxFailures.setSummary(localGlobalSummary(local, global));
+        }
+
+        @Override
+        public boolean onPreferenceChange(Preference preference, Object newValue) {
+            if (super.onPreferenceChange(preference, newValue)) {
+                return true;
+            }
+            String valueString = (String)newValue;
+            if (TextUtils.isEmpty(valueString)) {
+                return false;
+            }
+            int value = 0;
+            try {
+                value = Integer.parseInt(valueString);
+            } catch (NumberFormatException nfe) {
+                String warning = mActivity.getString(R.string.number_format_warning, valueString);
+                Toast.makeText(mActivity, warning, Toast.LENGTH_SHORT).show();
+            }
+            if (preference == mMaxTimeScreenLock) {
+                mDPM.setMaximumTimeToLock(mDeviceAdminSample, value * MS_PER_MINUTE);
+            } else if (preference == mMaxFailures) {
+                if (alertIfMonkey(mActivity, R.string.monkey_wipe_data)) {
+                    return true;
+                }
+                mDPM.setMaximumFailedPasswordsForWipe(mDeviceAdminSample, value);
+            }
+            reloadSummaries();
+            return true;
+        }
+
+        @Override
+        public boolean onPreferenceClick(Preference preference) {
+            if (super.onPreferenceClick(preference)) {
+                return true;
+            }
+            if (preference == mLockScreen) {
+                if (alertIfMonkey(mActivity, R.string.monkey_lock_screen)) {
+                    return true;
+                }
+                mDPM.lockNow();
+                return true;
+            } else if (preference == mWipeData || preference == mWipeAppData) {
+                if (alertIfMonkey(mActivity, R.string.monkey_wipe_data)) {
+                    return true;
+                }
+                promptForRealDeviceWipe(preference == mWipeAppData);
+                return true;
+            }
+            return false;
+        }
+
+        /**
+         * Wiping data is real, so we don't want it to be easy.  Show two alerts before wiping.
+         */
+        private void promptForRealDeviceWipe(final boolean wipeAllData) {
+            final DeviceAdminSample activity = mActivity;
+
+            AlertDialog.Builder builder = new AlertDialog.Builder(activity);
+            builder.setMessage(R.string.wipe_warning_first);
+            builder.setPositiveButton(R.string.wipe_warning_first_ok,
+                    new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    AlertDialog.Builder builder = new AlertDialog.Builder(activity);
+                    if (wipeAllData) {
+                        builder.setMessage(R.string.wipe_warning_second_full);
+                    } else {
+                        builder.setMessage(R.string.wipe_warning_second);
+                    }
+                    builder.setPositiveButton(R.string.wipe_warning_second_ok,
+                            new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            boolean stillActive = mActivity.isActiveAdmin();
+                            if (stillActive) {
+                                mDPM.wipeData(wipeAllData
+                                        ? DevicePolicyManager.WIPE_EXTERNAL_STORAGE : 0);
                             }
-                        }
-
-                        public void onNothingSelected(AdapterView<?> parent) {
-                            setPasswordQuality(DevicePolicyManager.PASSWORD_QUALITY_UNSPECIFIED);
                         }
                     });
-            mPasswordLength = (EditText)findViewById(R.id.password_length);
-            mPasswordLength.addTextChangedListener(new TextWatcher() {
-                public void afterTextChanged(Editable s) {
-                }
-                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-                }
-                public void onTextChanged(CharSequence s, int start, int before, int count) {
-                    try {
-                        setPasswordLength(Integer.parseInt(s.toString()));
-                    } catch (NumberFormatException e) {
-                    }
+                    builder.setNegativeButton(R.string.wipe_warning_second_no, null);
+                    builder.show();
                 }
             });
-            mPasswordMinimumLetters = (EditText)findViewById(R.id.password_minimum_letters);
-            mPasswordMinimumLetters.addTextChangedListener(new TextWatcher() {
-                public void afterTextChanged(Editable s) {
-                }
-                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-                }
-                public void onTextChanged(CharSequence s, int start, int before, int count) {
-                    try {
-                        setPasswordMinimumLetters(Integer.parseInt(s.toString()));
-                    } catch (NumberFormatException e) {
-                    }
-                }
-            });
-            mPasswordMinimumUppercase = (EditText)findViewById(R.id.password_minimum_uppercase);
-            mPasswordMinimumUppercase.addTextChangedListener(new TextWatcher() {
-                public void afterTextChanged(Editable s) {
-                }
-                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-                }
-                public void onTextChanged(CharSequence s, int start, int before, int count) {
-                    try {
-                        setPasswordMinimumUppercase(Integer.parseInt(s.toString()));
-                    } catch (NumberFormatException e) {
-                    }
-                }
-            });
-            mPasswordMinimumLowercase = (EditText)findViewById(R.id.password_minimum_lowercase);
-            mPasswordMinimumLowercase.addTextChangedListener(new TextWatcher() {
-                public void afterTextChanged(Editable s) {
-                }
-                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-                }
-                public void onTextChanged(CharSequence s, int start, int before, int count) {
-                    try {
-                        setPasswordMinimumLowercase(Integer.parseInt(s.toString()));
-                    } catch (NumberFormatException e) {
-                    }
-                }
-            });
-            mPasswordMinimumNumeric = (EditText)findViewById(R.id.password_minimum_numeric);
-            mPasswordMinimumNumeric.addTextChangedListener(new TextWatcher() {
-                public void afterTextChanged(Editable s) {
-                }
-                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-                }
-                public void onTextChanged(CharSequence s, int start, int before, int count) {
-                    try {
-                        setPasswordMinimumNumeric(Integer.parseInt(s.toString()));
-                    } catch (NumberFormatException e) {
-                    }
-                }
-            });
-            mPasswordMinimumSymbols = (EditText)findViewById(R.id.password_minimum_symbols);
-            mPasswordMinimumSymbols.addTextChangedListener(new TextWatcher() {
-                public void afterTextChanged(Editable s) {
-                }
-                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-                }
-                public void onTextChanged(CharSequence s, int start, int before, int count) {
-                    try {
-                        setPasswordMinimumSymbols(Integer.parseInt(s.toString()));
-                    } catch (NumberFormatException e) {
-                    }
-                }
-            });
-            mPasswordMinimumNonLetter = (EditText)findViewById(R.id.password_minimum_nonletter);
-            mPasswordMinimumNonLetter.addTextChangedListener(new TextWatcher() {
-                public void afterTextChanged(Editable s) {
-                }
-                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-                }
-                public void onTextChanged(CharSequence s, int start, int before, int count) {
-                    try {
-                        setPasswordMinimumNonLetter(Integer.parseInt(s.toString()));
-                    } catch (NumberFormatException e) {
-                    }
-                }
-            });
-            mPasswordHistoryLength = (EditText)findViewById(R.id.password_history_length);
-            mPasswordHistoryLength.addTextChangedListener(new TextWatcher() {
-                public void afterTextChanged(Editable s) {
-                }
-                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-                }
-                public void onTextChanged(CharSequence s, int start, int before, int count) {
-                    try {
-                        setPasswordHistoryLength(Integer.parseInt(s.toString()));
-                    } catch (NumberFormatException e) {
-                    }
-                }
-            });
-
-            mPasswordExpirationTimeout = (EditText)findViewById(R.id.password_expiration);
-            mPasswordExpirationButton = (Button) findViewById(R.id.update_expiration_button);
-            mPasswordExpirationButton.setOnClickListener(new OnClickListener() {
-                public void onClick(View v) {
-                    try {
-                        setPasswordExpiration(
-                                Long.parseLong(mPasswordExpirationTimeout.getText().toString()));
-                    } catch (NumberFormatException nfe) {
-                    }
-                    updatePasswordExpirationStatus();
-                }
-            });
-
-            mPasswordExpirationStatus = (TextView) findViewById(R.id.password_expiration_status);
-            mPasswordExpirationStatusButton =
-                    (Button) findViewById(R.id.update_expiration_status_button);
-            mPasswordExpirationStatusButton.setOnClickListener(new OnClickListener() {
-                public void onClick(View v) {
-                    updatePasswordExpirationStatus();
-                }
-            });
-
-            findViewById(R.id.set_password).setOnClickListener(mSetPasswordListener);
-            findViewById(R.id.check_password_button).setOnClickListener(mCheckPasswordListener);
-
-            mPassword = (EditText)findViewById(R.id.password);
-            mResetPasswordButton = (Button)findViewById(R.id.reset_password);
-            mResetPasswordButton.setOnClickListener(mResetPasswordListener);
-
-            mMaxFailedPw = (EditText)findViewById(R.id.max_failed_pw);
-            mMaxFailedPw.addTextChangedListener(new TextWatcher() {
-                public void afterTextChanged(Editable s) {
-                }
-                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-                }
-                public void onTextChanged(CharSequence s, int start, int before, int count) {
-                    try {
-                        int maxFailCount = Integer.parseInt(s.toString());
-                        if (maxFailCount > 0) {
-                            Toast.makeText(Controller.this, "WARNING: Phone will wipe after " +
-                                    s + " incorrect passwords", Toast.LENGTH_SHORT).show();
-                        }
-                        setMaxFailedPw(maxFailCount);
-                    } catch (NumberFormatException e) {
-                    }
-                }
-            });
-
-            mForceLockButton = (Button)findViewById(R.id.force_lock);
-            mForceLockButton.setOnClickListener(mForceLockListener);
-            mWipeDataButton = (Button)findViewById(R.id.wipe_data);
-            mWipeDataButton.setOnClickListener(mWipeDataListener);
-            mWipeAllDataButton = (Button)findViewById(R.id.wipe_all_data);
-            mWipeAllDataButton.setOnClickListener(mWipeDataListener);
-
-            mTimeout = (EditText) findViewById(R.id.timeout);
-            mTimeoutButton = (Button) findViewById(R.id.set_timeout);
-            mTimeoutButton.setOnClickListener(mSetTimeoutListener);
-
-            mEnableEncryptionButton = (Button) findViewById(R.id.encryption_enable_button);
-            mEnableEncryptionButton.setOnClickListener(mEncryptionButtonListener);
-            mDisableEncryptionButton = (Button) findViewById(R.id.encryption_disable_button);
-            mDisableEncryptionButton.setOnClickListener(mEncryptionButtonListener);
-            mActivateEncryptionButton = (Button) findViewById(R.id.encryption_activate_button);
-            mActivateEncryptionButton.setOnClickListener(mEncryptionButtonListener);
-            mEncryptionStatusButton = (Button) findViewById(R.id.encryption_update_status_button);
-            mEncryptionStatusButton.setOnClickListener(mEncryptionButtonListener);
-            mEncryptionStatus = (TextView) findViewById(R.id.encryption_status);
+            builder.setNegativeButton(R.string.wipe_warning_first_no, null);
+            builder.show();
         }
+    }
 
-        void updateButtonStates() {
-            boolean active = mDPM.isAdminActive(mDeviceAdminSample);
-            if (active) {
-                mEnableButton.setEnabled(false);
-                mDisableButton.setEnabled(true);
-                mPasswordQuality.setEnabled(true);
-                mPasswordLength.setEnabled(true);
-                mPasswordMinimumLetters.setEnabled(true);
-                mPasswordMinimumUppercase.setEnabled(true);
-                mPasswordMinimumLowercase.setEnabled(true);
-                mPasswordMinimumSymbols.setEnabled(true);
-                mPasswordMinimumNumeric.setEnabled(true);
-                mPasswordMinimumNonLetter.setEnabled(true);
-                mPasswordHistoryLength.setEnabled(true);
-                mPassword.setEnabled(true);
-                mResetPasswordButton.setEnabled(true);
-                mForceLockButton.setEnabled(true);
-                mWipeDataButton.setEnabled(true);
-                mWipeAllDataButton.setEnabled(true);
-                mEnableEncryptionButton.setEnabled(true);
-                mDisableEncryptionButton.setEnabled(true);
-                mActivateEncryptionButton.setEnabled(true);
-                mEncryptionStatusButton.setEnabled(true);
-            } else {
-                mEnableButton.setEnabled(true);
-                mDisableButton.setEnabled(false);
-                mPasswordQuality.setEnabled(false);
-                mPasswordLength.setEnabled(false);
-                mPasswordMinimumLetters.setEnabled(false);
-                mPasswordMinimumUppercase.setEnabled(false);
-                mPasswordMinimumLowercase.setEnabled(false);
-                mPasswordMinimumSymbols.setEnabled(false);
-                mPasswordMinimumNumeric.setEnabled(false);
-                mPasswordMinimumNonLetter.setEnabled(false);
-                mPasswordHistoryLength.setEnabled(false);
-                mPassword.setEnabled(false);
-                mResetPasswordButton.setEnabled(false);
-                mForceLockButton.setEnabled(false);
-                mWipeDataButton.setEnabled(false);
-                mWipeAllDataButton.setEnabled(false);
-                mEnableEncryptionButton.setEnabled(false);
-                mDisableEncryptionButton.setEnabled(false);
-                mActivateEncryptionButton.setEnabled(false);
-                mEncryptionStatusButton.setEnabled(false);
-            }
-        }
+    /**
+     * PreferenceFragment for "encryption" preferences.
+     */
+    public static class EncryptionFragment extends AdminSampleFragment
+            implements OnPreferenceChangeListener, OnPreferenceClickListener {
+        private PreferenceCategory mEncryptionCategory;
+        private CheckBoxPreference mRequireEncryption;
+        private PreferenceScreen mActivateEncryption;
 
-        void updateControls() {
-            SharedPreferences prefs = getSamplePreferences(this);
-            final int pwQuality = prefs.getInt(PREF_PASSWORD_QUALITY,
-                    DevicePolicyManager.PASSWORD_QUALITY_UNSPECIFIED);
-            final int pwLength = prefs.getInt(PREF_PASSWORD_LENGTH, 0);
-            final int pwMinLetters = prefs.getInt(PREF_PASSWORD_MINIMUM_LETTERS, 0);
-            final int pwMinUppercase = prefs.getInt(PREF_PASSWORD_MINIMUM_UPPERCASE, 0);
-            final int pwMinLowercase = prefs.getInt(PREF_PASSWORD_MINIMUM_LOWERCASE, 0);
-            final int pwMinNumeric = prefs.getInt(PREF_PASSWORD_MINIMUM_NUMERIC, 0);
-            final int pwMinSymbols = prefs.getInt(PREF_PASSWORD_MINIMUM_SYMBOLS, 0);
-            final int pwMinNonLetter = prefs.getInt(PREF_PASSWORD_MINIMUM_NONLETTER, 0);
-            final int pwHistoryLength = prefs.getInt(PREF_PASSWORD_HISTORY_LENGTH, 0);
-            final long pwExpirationTimeout = prefs.getLong(PREF_PASSWORD_EXPIRATION_TIMEOUT, 0L);
-            final int maxFailedPw = prefs.getInt(PREF_MAX_FAILED_PW, 0);
+        @Override
+        public void onCreate(Bundle savedInstanceState) {
+            super.onCreate(savedInstanceState);
+            addPreferencesFromResource(R.xml.device_admin_encryption);
 
-            for (int i=0; i<mPasswordQualityValues.length; i++) {
-                if (mPasswordQualityValues[i] == pwQuality) {
-                    mPasswordQuality.setSelection(i);
-                }
-            }
-            mPasswordLength.setText(Integer.toString(pwLength));
-            mPasswordMinimumLetters.setText(Integer.toString(pwMinLetters));
-            mPasswordMinimumUppercase.setText(Integer.toString(pwMinUppercase));
-            mPasswordMinimumLowercase.setText(Integer.toString(pwMinLowercase));
-            mPasswordMinimumSymbols.setText(Integer.toString(pwMinSymbols));
-            mPasswordMinimumNumeric.setText(Integer.toString(pwMinNumeric));
-            mPasswordMinimumNonLetter.setText(Integer.toString(pwMinNonLetter));
-            mPasswordHistoryLength.setText(Integer.toString(pwHistoryLength));
-            mPasswordExpirationTimeout.setText(Long.toString(pwExpirationTimeout/MS_PER_MINUTE));
-            mMaxFailedPw.setText(Integer.toString(maxFailedPw));
-        }
+            mEncryptionCategory = (PreferenceCategory) findPreference(KEY_CATEGORY_ENCRYPTION);
+            mRequireEncryption = (CheckBoxPreference) findPreference(KEY_REQUIRE_ENCRYPTION);
+            mActivateEncryption = (PreferenceScreen) findPreference(KEY_ACTIVATE_ENCRYPTION);
 
-        void updatePasswordExpirationStatus() {
-            boolean active = mDPM.isAdminActive(mDeviceAdminSample);
-            String statusText;
-            if (active) {
-                long now = System.currentTimeMillis();
-                // We'll query the DevicePolicyManager twice - first for the expiration values
-                // set by the sample app, and later, for the system values (which may be different
-                // if there is another administrator active.)
-                long expirationDate = mDPM.getPasswordExpiration(mDeviceAdminSample);
-                long mSecUntilExpiration = expirationDate - now;
-                if (mSecUntilExpiration >= 0) {
-                    statusText = "Expiration in " + countdownString(mSecUntilExpiration);
-                } else {
-                    statusText = "Expired " + countdownString(-mSecUntilExpiration) + " ago";
-                }
-
-                // expirationTimeout is the cycle time between required password refresh
-                long expirationTimeout = mDPM.getPasswordExpirationTimeout(mDeviceAdminSample);
-                statusText += " / timeout period " + countdownString(expirationTimeout);
-
-                // Now report the aggregate (global) expiration time
-                statusText += " / Aggregate ";
-                expirationDate = mDPM.getPasswordExpiration(null);
-                mSecUntilExpiration = expirationDate - now;
-                if (mSecUntilExpiration >= 0) {
-                    statusText += "expiration in " + countdownString(mSecUntilExpiration);
-                } else {
-                    statusText += "expired " + countdownString(-mSecUntilExpiration) + " ago";
-                }
-            } else {
-                statusText = "<inactive>";
-            }
-            mPasswordExpirationStatus.setText(statusText);
-        }
-
-        void updatePolicies() {
-            SharedPreferences prefs = getSamplePreferences(this);
-            final int pwQuality = prefs.getInt(PREF_PASSWORD_QUALITY,
-                    DevicePolicyManager.PASSWORD_QUALITY_UNSPECIFIED);
-            final int pwLength = prefs.getInt(PREF_PASSWORD_LENGTH, 0);
-            final int pwMinLetters = prefs.getInt(PREF_PASSWORD_MINIMUM_LETTERS, 0);
-            final int pwMinUppercase = prefs.getInt(PREF_PASSWORD_MINIMUM_UPPERCASE, 0);
-            final int pwMinLowercase = prefs.getInt(PREF_PASSWORD_MINIMUM_LOWERCASE, 0);
-            final int pwMinNumeric = prefs.getInt(PREF_PASSWORD_MINIMUM_NUMERIC, 0);
-            final int pwMinSymbols = prefs.getInt(PREF_PASSWORD_MINIMUM_SYMBOLS, 0);
-            final int pwMinNonLetter = prefs.getInt(PREF_PASSWORD_MINIMUM_NONLETTER, 0);
-            final int pwHistoryLength = prefs.getInt(PREF_PASSWORD_HISTORY_LENGTH, 0);
-            final long pwExpiration = prefs.getLong(PREF_PASSWORD_EXPIRATION_TIMEOUT, 0L);
-            final int maxFailedPw = prefs.getInt(PREF_MAX_FAILED_PW, 0);
-
-            boolean active = mDPM.isAdminActive(mDeviceAdminSample);
-            if (active) {
-                mDPM.setPasswordQuality(mDeviceAdminSample, pwQuality);
-                mDPM.setPasswordMinimumLength(mDeviceAdminSample, pwLength);
-                mDPM.setPasswordMinimumLetters(mDeviceAdminSample, pwMinLetters);
-                mDPM.setPasswordMinimumUpperCase(mDeviceAdminSample, pwMinUppercase);
-                mDPM.setPasswordMinimumLowerCase(mDeviceAdminSample, pwMinLowercase);
-                mDPM.setPasswordMinimumNumeric(mDeviceAdminSample, pwMinNumeric);
-                mDPM.setPasswordMinimumSymbols(mDeviceAdminSample, pwMinSymbols);
-                mDPM.setPasswordMinimumNonLetter(mDeviceAdminSample, pwMinNonLetter);
-                mDPM.setPasswordHistoryLength(mDeviceAdminSample, pwHistoryLength);
-                mDPM.setMaximumFailedPasswordsForWipe(mDeviceAdminSample, maxFailedPw);
-                mDPM.setPasswordExpirationTimeout(mDeviceAdminSample, pwExpiration);
-            }
-        }
-
-        void setPasswordQuality(int quality) {
-            SharedPreferences prefs = getSamplePreferences(this);
-            prefs.edit().putInt(PREF_PASSWORD_QUALITY, quality).commit();
-            updatePolicies();
-        }
-
-        void setPasswordLength(int length) {
-            SharedPreferences prefs = getSamplePreferences(this);
-            prefs.edit().putInt(PREF_PASSWORD_LENGTH, length).commit();
-            updatePolicies();
-        }
-
-        void setPasswordMinimumLetters(int length) {
-            SharedPreferences prefs = getSamplePreferences(this);
-            prefs.edit().putInt(PREF_PASSWORD_MINIMUM_LETTERS, length).commit();
-            updatePolicies();
-        }
-
-        void setPasswordMinimumUppercase(int length) {
-            SharedPreferences prefs = getSamplePreferences(this);
-            prefs.edit().putInt(PREF_PASSWORD_MINIMUM_UPPERCASE, length).commit();
-            updatePolicies();
-        }
-
-        void setPasswordMinimumLowercase(int length) {
-            SharedPreferences prefs = getSamplePreferences(this);
-            prefs.edit().putInt(PREF_PASSWORD_MINIMUM_LOWERCASE, length).commit();
-            updatePolicies();
-        }
-
-        void setPasswordMinimumNumeric(int length) {
-            SharedPreferences prefs = getSamplePreferences(this);
-            prefs.edit().putInt(PREF_PASSWORD_MINIMUM_NUMERIC, length).commit();
-            updatePolicies();
-        }
-
-        void setPasswordMinimumSymbols(int length) {
-            SharedPreferences prefs = getSamplePreferences(this);
-            prefs.edit().putInt(PREF_PASSWORD_MINIMUM_SYMBOLS, length).commit();
-            updatePolicies();
-        }
-
-        void setPasswordMinimumNonLetter(int length) {
-            SharedPreferences prefs = getSamplePreferences(this);
-            prefs.edit().putInt(PREF_PASSWORD_MINIMUM_NONLETTER, length).commit();
-            updatePolicies();
-        }
-
-        void setPasswordHistoryLength(int length) {
-            SharedPreferences prefs = getSamplePreferences(this);
-            prefs.edit().putInt(PREF_PASSWORD_HISTORY_LENGTH, length).commit();
-            updatePolicies();
-        }
-
-        void setPasswordExpiration(long expiration) {
-            SharedPreferences prefs = getSamplePreferences(this);
-            long exp = expiration * MS_PER_MINUTE; // convert from UI units to ms
-            prefs.edit().putLong(PREF_PASSWORD_EXPIRATION_TIMEOUT, exp).commit();
-            updatePolicies();
-            // Show confirmation dialog
-            long confirm = mDPM.getPasswordExpiration(mDeviceAdminSample);
-            String date = DateFormat.getDateTimeInstance(DateFormat.DEFAULT, DateFormat.DEFAULT)
-                    .format(new Date(confirm));
-            new AlertDialog.Builder(this)
-                    .setMessage("Password will expire on " + date)
-                    .setPositiveButton("OK", null)
-                    .create()
-                    .show();
-        }
-
-        void setMaxFailedPw(int length) {
-            SharedPreferences prefs = getSamplePreferences(this);
-            prefs.edit().putInt(PREF_MAX_FAILED_PW, length).commit();
-            updatePolicies();
+            mRequireEncryption.setOnPreferenceChangeListener(this);
+            mActivateEncryption.setOnPreferenceClickListener(this);
         }
 
         @Override
-        protected void onResume() {
+        public void onResume() {
             super.onResume();
-            updateButtonStates();
-            updatePasswordExpirationStatus();
+            mEncryptionCategory.setEnabled(mAdminActive);
+            mRequireEncryption.setChecked(mDPM.getStorageEncryption(mDeviceAdminSample));
         }
 
+        /**
+         * Update the summaries of each item to show the local setting and the global setting.
+         */
         @Override
-        protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-            switch (requestCode) {
-                case REQUEST_CODE_ENABLE_ADMIN:
-                    if (resultCode == Activity.RESULT_OK) {
-                        Log.i(TAG, "Admin enabled!");
-                    } else {
-                        Log.i(TAG, "Admin enable FAILED!");
-                    }
-                    return;
-                case REQUEST_CODE_START_ENCRYPTION:
-                    updateEncryptionStatus();
-                    return;
-            }
+        protected void reloadSummaries() {
+            super.reloadSummaries();
 
-            super.onActivityResult(requestCode, resultCode, data);
-        }
+            boolean local, global;
+            local = mDPM.getStorageEncryption(mDeviceAdminSample);
+            global = mDPM.getStorageEncryption(null);
+            mRequireEncryption.setSummary(localGlobalSummary(local, global));
 
-        private OnClickListener mEnableListener = new OnClickListener() {
-            public void onClick(View v) {
-                // Launch the activity to have the user enable our admin.
-                Intent intent = new Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN);
-                intent.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN,
-                        mDeviceAdminSample);
-                intent.putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION,
-                        "Additional text explaining why this needs to be added.");
-                startActivityForResult(intent, REQUEST_CODE_ENABLE_ADMIN);
-            }
-        };
-
-        private OnClickListener mDisableListener = new OnClickListener() {
-            public void onClick(View v) {
-                mDPM.removeActiveAdmin(mDeviceAdminSample);
-                updateButtonStates();
-            }
-        };
-
-        private OnClickListener mSetPasswordListener = new OnClickListener() {
-            public void onClick(View v) {
-                // Launch the activity to have the user set a new password.
-                Intent intent = new Intent(DevicePolicyManager.ACTION_SET_NEW_PASSWORD);
-                startActivity(intent);
-            }
-        };
-
-        // Retrieve information about the current password requirements and status, and display
-        // to the user in a simple alert dialog.
-        private OnClickListener mCheckPasswordListener = new OnClickListener() {
-            public void onClick(View v) {
-                boolean active = mDPM.isAdminActive(mDeviceAdminSample);
-                if (!active) {
-                    Toast.makeText(Controller.this, "Cannot check password status unless active",
-                            Toast.LENGTH_SHORT).show();
-                    return;
-                }
-                boolean sufficient = mDPM.isActivePasswordSufficient();
-                int quality = mDPM.getPasswordQuality(null);
-                int minimumLength = mDPM.getPasswordMinimumLength(null);
-                int minimumUpperCase = mDPM.getPasswordMinimumUpperCase(null);
-                int minimumLowerCase = mDPM.getPasswordMinimumLowerCase(null);
-                int minimumLetters = mDPM.getPasswordMinimumLetters(null);
-                int minimumNumeric = mDPM.getPasswordMinimumNumeric(null);
-                int minimumSymbols = mDPM.getPasswordMinimumSymbols(null);
-                int minimumNonLetter = mDPM.getPasswordMinimumNonLetter(null);
-                long timeToExpiration = mDPM.getPasswordExpiration(null);
-
-                // Quick string:  Do better than this.
-                String qualityText;
-                switch (quality) {
-                    case DevicePolicyManager.PASSWORD_QUALITY_UNSPECIFIED:
-                        qualityText = "unspecified";
-                        break;
-                    case DevicePolicyManager.PASSWORD_QUALITY_SOMETHING:
-                        qualityText = "something";
-                        break;
-                    case DevicePolicyManager.PASSWORD_QUALITY_NUMERIC:
-                        qualityText = "numeric";
-                        break;
-                    case DevicePolicyManager.PASSWORD_QUALITY_ALPHABETIC:
-                        qualityText = "alphabetic";
-                        break;
-                    case DevicePolicyManager.PASSWORD_QUALITY_ALPHANUMERIC:
-                        qualityText = "alphanumeric";
-                        break;
-                    case DevicePolicyManager.PASSWORD_QUALITY_COMPLEX:
-                        qualityText = "complex";
-                        break;
-                    default:
-                        qualityText = "0x" + Integer.toString(quality, 16);
-                        break;
-                }
-                StringBuilder sb = new StringBuilder("Password Status:\n");
-                sb.append("  isActivePasswordSufficient=").append(sufficient).append("\n");
-                sb.append("  getPasswordQuality=").append(qualityText).append("\n");
-                sb.append("  getPasswordMinimumLength=").append(minimumLength).append("\n");
-                sb.append("  getPasswordMinimumUpperCase=").append(minimumUpperCase).append("\n");
-                sb.append("  getPasswordMinimumLowerCase=").append(minimumLowerCase).append("\n");
-                sb.append("  getPasswordMinimumLetters=").append(minimumLetters).append("\n");
-                sb.append("  getPasswordMinimumNumeric=").append(minimumNumeric).append("\n");
-                sb.append("  getPasswordMinimumSymbols=").append(minimumSymbols).append("\n");
-                sb.append("  getPasswordMinimumNonLetter=").append(minimumNonLetter).append("\n");
-                sb.append("  getPasswordExpiration=").append(timeToExpiration/1000).append(" sec");
-                if (timeToExpiration < 0) {
-                    sb.append(" (expired)");
-                }
-                AlertDialog.Builder builder = new AlertDialog.Builder(Controller.this);
-                builder.setMessage(sb.toString());
-                builder.setPositiveButton("OK", null);
-                builder.show();
-            }
-        };
-
-        private OnClickListener mResetPasswordListener = new OnClickListener() {
-            public void onClick(View v) {
-                if (ActivityManager.isUserAMonkey()) {
-                    // Don't trust monkeys to do the right thing!
-                    AlertDialog.Builder builder = new AlertDialog.Builder(Controller.this);
-                    builder.setMessage("You can't reset my password because you are a monkey!");
-                    builder.setPositiveButton("I admit defeat", null);
-                    builder.show();
-                    return;
-                }
-                boolean active = mDPM.isAdminActive(mDeviceAdminSample);
-                if (active) {
-                    mDPM.resetPassword(mPassword.getText().toString(),
-                            DevicePolicyManager.RESET_PASSWORD_REQUIRE_ENTRY);
-                }
-            }
-        };
-
-        private OnClickListener mForceLockListener = new OnClickListener() {
-            public void onClick(View v) {
-                if (ActivityManager.isUserAMonkey()) {
-                    // Don't trust monkeys to do the right thing!
-                    AlertDialog.Builder builder = new AlertDialog.Builder(Controller.this);
-                    builder.setMessage("You can't lock my screen because you are a monkey!");
-                    builder.setPositiveButton("I admit defeat", null);
-                    builder.show();
-                    return;
-                }
-                boolean active = mDPM.isAdminActive(mDeviceAdminSample);
-                if (active) {
-                    mDPM.lockNow();
-                }
-            }
-        };
-
-        private OnClickListener mWipeDataListener = new OnClickListener() {
-            public void onClick(final View v) {
-                if (ActivityManager.isUserAMonkey()) {
-                    // Don't trust monkeys to do the right thing!
-                    AlertDialog.Builder builder = new AlertDialog.Builder(Controller.this);
-                    builder.setMessage("You can't wipe my data because you are a monkey!");
-                    builder.setPositiveButton("I admit defeat", null);
-                    builder.show();
-                    return;
-                }
-                AlertDialog.Builder builder = new AlertDialog.Builder(Controller.this);
-                builder.setMessage("This will erase all of your data.  Are you sure?");
-                builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int which) {
-                        AlertDialog.Builder builder = new AlertDialog.Builder(Controller.this);
-                        if (v == mWipeAllDataButton) {
-                            builder.setMessage("This is not a test.  "
-                                    + "This WILL erase all of your data, "
-                                    + "including external storage!  "
-                                    + "Are you really absolutely sure?");
-                        } else {
-                            builder.setMessage("This is not a test.  "
-                                    + "This WILL erase all of your data!  "
-                                    + "Are you really absolutely sure?");
-                        }
-                        builder.setPositiveButton("BOOM!", new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int which) {
-                                boolean active = mDPM.isAdminActive(mDeviceAdminSample);
-                                if (active) {
-                                    mDPM.wipeData(v == mWipeAllDataButton
-                                            ? DevicePolicyManager.WIPE_EXTERNAL_STORAGE : 0);
-                                }
-                            }
-                        });
-                        builder.setNegativeButton("Oops, run away!", null);
-                        builder.show();
-                    }
-                });
-                builder.setNegativeButton("No way!", null);
-                builder.show();
-            }
-        };
-
-        private OnClickListener mSetTimeoutListener = new OnClickListener() {
-
-            public void onClick(View v) {
-                if (ActivityManager.isUserAMonkey()) {
-                    // Don't trust monkeys to do the right thing!
-                    AlertDialog.Builder builder = new AlertDialog.Builder(Controller.this);
-                    builder.setMessage("You can't lock my screen because you are a monkey!");
-                    builder.setPositiveButton("I admit defeat", null);
-                    builder.show();
-                    return;
-                }
-                boolean active = mDPM.isAdminActive(mDeviceAdminSample);
-                if (active) {
-                    long timeMs = 1000L*Long.parseLong(mTimeout.getText().toString());
-                    mDPM.setMaximumTimeToLock(mDeviceAdminSample, timeMs);
-                }
-            }
-        };
-
-        private OnClickListener mEncryptionButtonListener = new OnClickListener() {
-            public void onClick(View v) {
-                int buttonId = v.getId();
-                if (buttonId == R.id.encryption_enable_button) {
-                    mDPM.setStorageEncryption(mDeviceAdminSample, true);
-                } else if (buttonId == R.id.encryption_disable_button) {
-                    mDPM.setStorageEncryption(mDeviceAdminSample, false);
-                } else if (buttonId == R.id.encryption_activate_button) {
-                    if (ActivityManager.isUserAMonkey()) {
-                        // Don't trust monkeys to do the right thing!
-                        AlertDialog.Builder builder = new AlertDialog.Builder(Controller.this);
-                        builder.setMessage("You can't activate encryption, you're a monkey!");
-                        builder.setPositiveButton("I admit defeat", null);
-                        builder.show();
-                        return;
-                    }
-                    if (mDPM.getStorageEncryptionStatus() ==
-                            DevicePolicyManager.ENCRYPTION_STATUS_UNSUPPORTED) {
-                        AlertDialog.Builder builder = new AlertDialog.Builder(Controller.this);
-                        builder.setMessage("Encryption is unsupported on this device.");
-                        builder.setPositiveButton("OK", null);
-                        builder.show();
-                        return;
-                    }
-                    // Launch the activity to activate encryption.  May or may not return!
-                    Intent intent = new Intent(DevicePolicyManager.ACTION_START_ENCRYPTION);
-                    startActivityForResult(intent, REQUEST_CODE_START_ENCRYPTION);
-                }
-
-                // In all cases, fall through to update status
-                updateEncryptionStatus();
-            }
-        };
-
-        private void updateEncryptionStatus() {
-            boolean sampleAdminStatusValue = mDPM.getStorageEncryption(mDeviceAdminSample);
-            String sampleAdminStatus = Boolean.toString(sampleAdminStatusValue);
-            boolean adminStatusValue = mDPM.getStorageEncryption(null);
-            String adminStatus = Boolean.toString(adminStatusValue);
             int deviceStatusCode = mDPM.getStorageEncryptionStatus();
             String deviceStatus = statusCodeToString(deviceStatusCode);
-            mEncryptionStatus.setText("sample:" + sampleAdminStatus + " admins:" + adminStatus
-                    + " device:" + deviceStatus);
+            String status = mActivity.getString(R.string.status_device_encryption, deviceStatus);
+            mActivateEncryption.setSummary(status);
+        }
+
+        @Override
+        public boolean onPreferenceChange(Preference preference, Object newValue) {
+            if (super.onPreferenceChange(preference, newValue)) {
+                return true;
+            }
+            if (preference == mRequireEncryption) {
+                boolean newActive = (Boolean) newValue;
+                mDPM.setStorageEncryption(mDeviceAdminSample, newActive);
+                reloadSummaries();
+                return true;
+            }
+            return true;
+        }
+
+        @Override
+        public boolean onPreferenceClick(Preference preference) {
+            if (super.onPreferenceClick(preference)) {
+                return true;
+            }
+            if (preference == mActivateEncryption) {
+                if (alertIfMonkey(mActivity, R.string.monkey_encryption)) {
+                    return true;
+                }
+                // Check to see if encryption is even supported on this device (it's optional).
+                if (mDPM.getStorageEncryptionStatus() ==
+                        DevicePolicyManager.ENCRYPTION_STATUS_UNSUPPORTED) {
+                    AlertDialog.Builder builder = new AlertDialog.Builder(mActivity);
+                    builder.setMessage(R.string.encryption_not_supported);
+                    builder.setPositiveButton(R.string.encryption_not_supported_ok, null);
+                    builder.show();
+                    return true;
+                }
+                // Launch the activity to activate encryption.  May or may not return!
+                Intent intent = new Intent(DevicePolicyManager.ACTION_START_ENCRYPTION);
+                startActivityForResult(intent, REQUEST_CODE_START_ENCRYPTION);
+                return true;
+            }
+            return false;
         }
 
         private String statusCodeToString(int newStatusCode) {
-            String newStatus = "unknown";
+            int newStatus = R.string.encryption_status_unknown;
             switch (newStatusCode) {
                 case DevicePolicyManager.ENCRYPTION_STATUS_UNSUPPORTED:
-                    newStatus = "unsupported";
+                    newStatus = R.string.encryption_status_unsupported;
                     break;
                 case DevicePolicyManager.ENCRYPTION_STATUS_INACTIVE:
-                    newStatus = "inactive";
+                    newStatus = R.string.encryption_status_inactive;
                     break;
                 case DevicePolicyManager.ENCRYPTION_STATUS_ACTIVATING:
-                    newStatus = "activating";
+                    newStatus = R.string.encryption_status_activating;
                     break;
                 case DevicePolicyManager.ENCRYPTION_STATUS_ACTIVE:
-                    newStatus = "active";
+                    newStatus = R.string.encryption_status_active;
                     break;
             }
-            return newStatus;
+            return mActivity.getString(newStatus);
+        }
+    }
+
+    /**
+     * Simple converter used for long expiration times reported in mSec.
+     */
+    private static String timeToDaysMinutesSeconds(Context context, long time) {
+        long days = time / MS_PER_DAY;
+        long hours = (time / MS_PER_HOUR) % 24;
+        long minutes = (time / MS_PER_MINUTE) % 60;
+        return context.getString(R.string.status_days_hours_minutes, days, hours, minutes);
+    }
+
+    /**
+     * If the "user" is a monkey, post an alert and notify the caller.  This prevents automated
+     * test frameworks from stumbling into annoying or dangerous operations.
+     */
+    private static boolean alertIfMonkey(Context context, int stringId) {
+        if (ActivityManager.isUserAMonkey()) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(context);
+            builder.setMessage(stringId);
+            builder.setPositiveButton(R.string.monkey_ok, null);
+            builder.show();
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * Sample implementation of a DeviceAdminReceiver.  Your controller must provide one,
+     * although you may or may not implement all of the methods shown here.
+     *
+     * All callbacks are on the UI thread and your implementations should not engage in any
+     * blocking operations, including disk I/O.
+     */
+    public static class DeviceAdminSampleReceiver extends DeviceAdminReceiver {
+        void showToast(Context context, String msg) {
+            String status = context.getString(R.string.admin_receiver_status, msg);
+            Toast.makeText(context, status, Toast.LENGTH_SHORT).show();
+        }
+
+        @Override
+        public void onEnabled(Context context, Intent intent) {
+            showToast(context, context.getString(R.string.admin_receiver_status_enabled));
+        }
+
+        @Override
+        public CharSequence onDisableRequested(Context context, Intent intent) {
+            return context.getString(R.string.admin_receiver_status_disable_warning);
+        }
+
+        @Override
+        public void onDisabled(Context context, Intent intent) {
+            showToast(context, context.getString(R.string.admin_receiver_status_disabled));
+        }
+
+        @Override
+        public void onPasswordChanged(Context context, Intent intent) {
+            showToast(context, context.getString(R.string.admin_receiver_status_pw_changed));
+        }
+
+        @Override
+        public void onPasswordFailed(Context context, Intent intent) {
+            showToast(context, context.getString(R.string.admin_receiver_status_pw_failed));
+        }
+
+        @Override
+        public void onPasswordSucceeded(Context context, Intent intent) {
+            showToast(context, context.getString(R.string.admin_receiver_status_pw_succeeded));
+        }
+
+        @Override
+        public void onPasswordExpiring(Context context, Intent intent) {
+            DevicePolicyManager dpm = (DevicePolicyManager) context.getSystemService(
+                    Context.DEVICE_POLICY_SERVICE);
+            long expr = dpm.getPasswordExpiration(
+                    new ComponentName(context, DeviceAdminSampleReceiver.class));
+            long delta = expr - System.currentTimeMillis();
+            boolean expired = delta < 0L;
+            String message = context.getString(expired ?
+                    R.string.expiration_status_past : R.string.expiration_status_future);
+            showToast(context, message);
+            Log.v(TAG, message);
         }
     }
 }
-

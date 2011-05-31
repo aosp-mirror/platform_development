@@ -842,7 +842,7 @@
 
         <!-- Device Admin Samples -->
 
-        <activity android:name=".app.DeviceAdminSample$Controller"
+        <activity android:name=".app.DeviceAdminSample"
                 android:label="@string/activity_sample_device_admin">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -851,7 +851,7 @@
         </activity>
 
 <!-- BEGIN_INCLUDE(device_admin_declaration) -->
-        <receiver android:name=".app.DeviceAdminSample"
+        <receiver android:name=".app.DeviceAdminSample$DeviceAdminSampleReceiver"
                 android:label="@string/sample_device_admin"
                 android:description="@string/sample_device_admin_description"
                 android:permission="android.permission.BIND_DEVICE_ADMIN">
