@@ -62,10 +62,7 @@ public class HelloCompute extends Activity {
 
         mScript = new ScriptC_mono(mRS, getResources(), R.raw.mono);
 
-        mScript.set_gIn(mInAllocation);
-        mScript.set_gOut(mOutAllocation);
-        mScript.set_gScript(mScript);
-        mScript.invoke_filter();
+        mScript.forEach_root(mInAllocation, mOutAllocation);
         mOutAllocation.copyTo(mBitmapOut);
     }
 
