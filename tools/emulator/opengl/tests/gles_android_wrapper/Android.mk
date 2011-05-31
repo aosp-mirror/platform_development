@@ -127,8 +127,10 @@ LOCAL_SHARED_LIBRARIES := libdl \
 	libcutils \
 	libGLESv1_enc \
 	libGLESv2_enc \
-	libut_rendercontrol_enc
-LOCAL_STATIC_LIBRARIES := libOpenglCodecCommon libOpenglSystemCommon libqemu
+	libut_rendercontrol_enc \
+    libOpenglSystemCommon
+
+LOCAL_STATIC_LIBRARIES := libOpenglCodecCommon libqemu
 
 include $(BUILD_SHARED_LIBRARY)
 
@@ -139,6 +141,7 @@ include $(BUILD_SHARED_LIBRARY)
 # version of this file to point to the appropriate HW EGL libraries.
 #
 ifneq (,$(filter full full_x86 sdk sdk_x86,$(TARGET_PRODUCT)))
+ifeq (,$(BUILD_EMULATOR_OPENGL_DRIVER))
 include $(CLEAR_VARS)
 
 LOCAL_MODULE := egl.cfg
@@ -149,6 +152,7 @@ LOCAL_MODULE_TAGS := debug
 LOCAL_MODULE_CLASS := ETC
 
 include $(BUILD_PREBUILT)
+endif # building 'real' driver BUILD_EMULATOR_OPENGL_DRIVER
 endif # TARGET_PRODUCT in 'full sdk full_x86 sdk_x86'
 
 #### gles_emul.cfg ####
