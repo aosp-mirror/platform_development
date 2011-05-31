@@ -67,7 +67,10 @@ EglConfig::EglConfig(EGLint     red_size,
                      m_trans_red_val(trans_red_val),
                      m_trans_green_val(trans_green_val),
                      m_trans_blue_val(trans_blue_val),
-                     m_nativeFormat(frmt){};
+                     m_conformant(((red_size + green_size + blue_size + alpha_size > 0)  && 
+                                  (caveat!=EGL_NON_CONFORMANT_CONFIG)) ?
+                                    m_renderable_type : 0),
+                     m_nativeFormat(frmt) {};
 
 
     EglConfig::EglConfig(const EglConfig& conf):m_buffer_size(conf.m_buffer_size),
@@ -98,7 +101,8 @@ EglConfig::EglConfig(EGLint     red_size,
                                                 m_trans_red_val(conf.m_trans_red_val),
                                                 m_trans_green_val(conf.m_trans_green_val),
                                                 m_trans_blue_val(conf.m_trans_blue_val),
-                                                m_nativeFormat(conf.m_nativeFormat){};
+                                                m_conformant(conf.m_conformant),
+                                                m_nativeFormat(conf.m_nativeFormat) {};
 
 
 
@@ -186,6 +190,9 @@ bool EglConfig::getConfAttrib(EGLint attrib,EGLint* val) const {
         break;
     case EGL_TRANSPARENT_BLUE_VALUE:
         *val = m_trans_blue_val;
+        break;
+    case EGL_CONFORMANT:
+        *val = m_conformant;
         break;
     default:
         return false;
@@ -283,6 +290,9 @@ bool EglConfig::choosen(const EglConfig& dummy) {
    //mask
    if(dummy.m_surface_type != EGL_DONT_CARE &&
     ((dummy.m_surface_type & m_surface_type) != dummy.m_surface_type)) return false;
+   
+   if(dummy.m_conformant != EGL_DONT_CARE &&
+    ((dummy.m_conformant & m_conformant) != dummy.m_conformant)) return false;
 
    if(dummy.m_renderable_type != EGL_DONT_CARE &&
     ((dummy.m_renderable_type & m_renderable_type) != dummy.m_renderable_type)) return false;
