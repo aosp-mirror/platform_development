@@ -67,7 +67,11 @@ public:
 
     bool  bindContext(HandleType p_context, HandleType p_drawSurface, HandleType p_readSurface);
     bool  setWindowSurfaceColorBuffer(HandleType p_surface, HandleType p_colorbuffer);
+    bool  flushWindowSurfaceColorBuffer(HandleType p_surface);
     bool  bindColorBufferToTexture(HandleType p_colorbuffer);
+    bool updateColorBuffer(HandleType p_colorbuffer,
+                           int x, int y, int width, int height,
+                           GLenum format, GLenum type, void *pixels);
 
     bool post(HandleType p_colorbuffer);
 

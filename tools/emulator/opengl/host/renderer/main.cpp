@@ -19,6 +19,11 @@
 #include <stdlib.h>
 #include "FrameBuffer.h"
 
+#include <sys/types.h>
+#include <unistd.h>
+#include <codec_defs.h>
+
+
 static void printUsage(const char *progName)
 {
     fprintf(stderr, "Usage: %s -windowid <windowid> [options]\n", progName);
@@ -33,7 +38,7 @@ static void printUsage(const char *progName)
 
 int main(int argc, char *argv[])
 {
-    int portNum = 4141;
+    int portNum = CODEC_SERVER_PORT;
     int winX = 0;
     int winY = 0;
     int winWidth = 320;
@@ -84,6 +89,9 @@ int main(int argc, char *argv[])
         printUsage(argv[0]);
     }
 
+    printf("renderer pid %d , press any key to continue...\n", getpid());
+    getchar();
+
     //
     // initialize Framebuffer
     //
@@ -95,7 +103,7 @@ int main(int argc, char *argv[])
     }
 
     //
-    // Create and run a render server listening to the givven port number
+    // Create and run a render server listening to the given port number
     //
     RenderServer *server = RenderServer::create(portNum);
     if (!server) {

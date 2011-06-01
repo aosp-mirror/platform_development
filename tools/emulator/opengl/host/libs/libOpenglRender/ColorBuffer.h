@@ -33,6 +33,7 @@ public:
     GLuint getHeight() const { return m_height; }
 
     void update(GLenum p_format, GLenum p_type, void *pixels);
+    void subUpdate(int x, int y, int width, int height, GLenum p_format, GLenum p_type, void *pixels);
     bool blitFromPbuffer(EGLSurface p_pbufSurface);
     bool post();
     bool bindToTexture();

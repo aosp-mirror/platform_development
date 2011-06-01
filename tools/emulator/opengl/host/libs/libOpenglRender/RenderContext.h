@@ -18,6 +18,7 @@
 
 #include "SmartPtr.h"
 #include <EGL/egl.h>
+#include "GLDecoderContextData.h"
 
 class RenderContext;
 typedef SmartPtr<RenderContext> RenderContextPtr;
@@ -33,6 +34,8 @@ public:
     EGLContext getEGLContext() const { return m_ctx; }
     bool isGL2() const { return m_isGL2; }
 
+    GLDecoderContextData & decoderContextData() { return m_contextData; }
+
 private:
     RenderContext();
 
@@ -40,6 +43,7 @@ private:
     EGLContext m_ctx;
     int        m_config;
     bool       m_isGL2;
+    GLDecoderContextData    m_contextData;
 };
 
 #endif

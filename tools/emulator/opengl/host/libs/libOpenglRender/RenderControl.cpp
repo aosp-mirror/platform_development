@@ -189,6 +189,15 @@ static void rcDestroyColorBuffer(uint32_t colorbuffer)
     fb->DestroyColorBuffer( colorbuffer );
 }
 
+static void rcFlushWindowColorBuffer(uint32_t windowSurface)
+{
+    FrameBuffer *fb = FrameBuffer::getFB();
+    if (!fb) {
+        return;
+    }
+    fb->flushWindowSurfaceColorBuffer(windowSurface);
+}
+
 static void rcSetWindowColorBuffer(uint32_t windowSurface,
                                    uint32_t colorBuffer)
 {
@@ -257,7 +266,12 @@ static void rcUpdateColorBuffer(uint32_t colorBuffer,
                                 GLint width, GLint height,
                                 GLenum format, GLenum type, void* pixels)
 {
-   // XXX: TBD - should be implemented
+    FrameBuffer *fb = FrameBuffer::getFB();
+    if (!fb) {
+        return;
+    }
+
+    fb->updateColorBuffer(colorBuffer, x, y, width, height, format, type, pixels);
 }
 
 void initRenderControlContext(renderControl_decoder_context_t *dec)
@@ -276,6 +290,7 @@ void initRenderControlContext(renderControl_decoder_context_t *dec)
     dec->set_rcCreateColorBuffer(rcCreateColorBuffer);
     dec->set_rcDestroyColorBuffer(rcDestroyColorBuffer);
     dec->set_rcSetWindowColorBuffer(rcSetWindowColorBuffer);
+    dec->set_rcFlushWindowColorBuffer(rcFlushWindowColorBuffer);
     dec->set_rcMakeCurrent(rcMakeCurrent);
     dec->set_rcFBPost(rcFBPost);
     dec->set_rcFBSetSwapInterval(rcFBSetSwapInterval);
