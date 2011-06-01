@@ -56,6 +56,7 @@
 	<classpathentry kind="src" path="frameworks/ex/carousel/java"/>
 	<classpathentry kind="src" path="frameworks/ex/common/java"/>
 	<classpathentry kind="src" path="frameworks/opt/vcard/java"/>
+	<classpathentry kind="src" path="frameworks/support/v13/java"/>
 	<classpathentry kind="src" path="development/samples/ApiDemos/src"/>
 	<classpathentry kind="src" path="development/samples/ApiDemos/tests/src"/>
 	<classpathentry kind="src" path="development/samples/Compass/src"/>
