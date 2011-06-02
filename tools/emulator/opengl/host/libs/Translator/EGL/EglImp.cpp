@@ -676,6 +676,7 @@ EGLAPI EGLBoolean EGLAPIENTRY eglMakeCurrent(EGLDisplay display, EGLSurface draw
               EGLSurface read, EGLContext context) {
     VALIDATE_DISPLAY(display);
 
+
     bool releaseContext = EglValidate::releaseContext(context,read,draw);
     if(!releaseContext && EglValidate::badContextMatch(context,read,draw)) {
         RETURN_ERROR(EGL_FALSE,EGL_BAD_MATCH);
@@ -700,6 +701,20 @@ EGLAPI EGLBoolean EGLAPIENTRY eglMakeCurrent(EGLDisplay display, EGLSurface draw
         EglSurface* newDrawPtr = newDrawSrfc.Ptr();
         EglSurface* newReadPtr = newReadSrfc.Ptr();
         EglContext* newCtx     = ctx.Ptr();
+
+        if (newCtx && prevCtx) {
+            if (newCtx == prevCtx) {
+                if (newDrawPtr == prevCtx->draw().Ptr() &&
+                    newReadPtr == prevCtx->read().Ptr()) {
+                    // nothing to do
+                    return EGL_TRUE;
+                }
+            }
+            else {
+                // Make sure previous context is detached from surfaces
+                releaseContext = true;
+            }
+        }
 
         //surfaces compitability check
         if(!((*ctx->getConfig()).compitableWith((*newDrawPtr->getConfig()))) ||
@@ -743,7 +758,7 @@ EGLAPI EGLBoolean EGLAPIENTRY eglMakeCurrent(EGLDisplay display, EGLSurface draw
     SurfacePtr  prevRead;
     SurfacePtr  prevDraw;
     //removing terminated surfaces & context
-    if(prevCtx) {
+    if(prevCtx && releaseContext) {
         prevRead = prevCtx->read();
         if(prevRead->destroy()){
             if(destroySurfaceIfNotCurrent(dpy,prevRead)) { //removes surface from the list if not current
