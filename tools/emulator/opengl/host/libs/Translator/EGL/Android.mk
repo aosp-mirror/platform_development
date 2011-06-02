@@ -51,13 +51,11 @@ LOCAL_MODULE_TAGS := debug
 LOCAL_MODULE := libEGL_translator
 
 LOCAL_STATIC_LIBRARIES :=    \
+                 libGLcommon \
                  libcutils   \
                  libutils    \
                  liblog      \
                  libOpenglOsUtils
-
-LOCAL_SHARED_LIBRARIES := \
-    libGLcommon
 
 include $(BUILD_HOST_SHARED_LIBRARY)
 

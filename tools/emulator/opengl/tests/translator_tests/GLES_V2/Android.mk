@@ -13,7 +13,6 @@ LOCAL_SRC_FILES:= \
 
 
 LOCAL_SHARED_LIBRARIES := \
-    libGLcommon           \
     libEGL_translator     \
     libGLES_V2_translator
 
