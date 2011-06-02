@@ -167,6 +167,7 @@ bool EglConfig::getConfAttrib(EGLint attrib,EGLint* val) const {
         break;
     case EGL_RENDERABLE_TYPE:
         *val = m_renderable_type;
+        break;
     case EGL_SAMPLE_BUFFERS:
         *val = m_sample_buffers_num;
         break;
