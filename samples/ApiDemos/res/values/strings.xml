@@ -598,6 +598,7 @@
     <!--  app/device policies examples strings     -->
     <!-- ============================== -->
 
+    <!-- Manifest strings -->
     <string name="activity_sample_device_admin">App/Device Admin</string>
     <string name="sample_device_admin">Sample Device Admin</string>
     <string name="sample_device_admin_description">Sample code for writing
@@ -605,36 +606,89 @@
         for you to directly control what the DeviceAdmin does with the
         system.</string>
 
-    <string name="sample_device_admin_summary">Demonstration of a DeviceAdmin
-        class for administering the user\'s device.</string>
-    <string name="enable_admin">Enable Admin</string>
-    <string name="disable_admin">Disable Admin</string>
-    <string name="password_quality">Password Quality</string>
-    <string name="password_length_hint">Minimum Length</string>
-    <string name="password_minimum_letters_hint">Minimum Letters</string>
-    <string name="password_minimum_uppercase_hint">Minimum Uppercase</string>
-    <string name="password_minimum_lowercase_hint">Minimum Lowercase</string>
-    <string name="password_minimum_symbols_hint">Minimum Symbols</string>
-    <string name="password_minimum_numeric_hint">Minimum Numeric</string>
-    <string name="password_minimum_nonletter_hint">Minimum Non-Letter</string>
-    <string name="password_history_length_hint">Password History Length</string>
-    <string name="password_expiration_hint">Password Expiration Timeout (minutes) </string>
-    <string name="update_expiration_label">Update</string>
-    <string name="update_expiration_status_label">Update Status</string>
-    <string name="set_password">Set Password</string>
-    <string name="password_hint">Password</string>
-    <string name="reset_password">Reset Password</string>
-    <string name="max_failed_pw_hint">Password Attempts Wipe Data</string>
-    <string name="force_lock">Force Lock</string>
-    <string name="wipe_data">Wipe Data</string>
-    <string name="wipe_all_data">Wipe All Data</string>
-    <string name="timeout_hint">Max screen timeout</string>
-    <string name="set_timeout_label">Set Timeout</string>
+    <!-- Strings used in preference headers and preference definitions -->
+    <string name="header_general">General</string>
+    <string name="header_quality">Password quality</string>
+    <string name="header_expiration">Password expiration</string>
+    <string name="header_lock_wipe">Lock screen / Wipe</string>
+    <string name="header_encryption">Encryption</string>
 
-    <string name="encryption_enable_label">Enable Encryption</string>
-    <string name="encryption_disable_label">Disable Encryption</string>
-    <string name="encryption_activate_label">Activate Encryption</string>
-    <string name="update_encryption_status_label">Update Status</string>
+    <string name="enable_admin">Enable admin</string>
+    <string name="password_controls_category">Password controls</string>
+    <string name="set_password_user">Set password (user)</string>
+    <string name="set_password_api">Set password (via API)</string>
+    <string name="set_password_api_dialog">Set screen lock password to</string>
+    <string name="password_quality_category">Password quality</string>
+    <string name="password_quality">Password quality</string>
+    <string name="password_minimum_length">Minimum length </string>
+    <string name="password_minimum_letters">Minimum letters</string>
+    <string name="password_minimum_numeric">Minimum numeric</string>
+    <string name="password_minimum_lower_case">Minimum lower case</string>
+    <string name="password_minimum_upper_case">Minimum upper case</string>
+    <string name="password_minimum_symbols">Minimum symbols</string>
+    <string name="password_minimum_non_letter">Minimum non-letter</string>
+    <string name="password_expiration_category">Password history / Expiration</string>
+    <string name="password_history_depth">Password history depth</string>
+    <string name="password_expiration_timeout">Password expiration timeout (minutes)</string>
+    <string name="password_expiration_status">Password expiration status</string>
+    <string name="lock_wipe_category">Lock screen / Wipe</string>
+    <string name="maximum_lock_time">Max time to screen lock (minutes)</string>
+    <string name="maximum_password_fails">Max password failures for local wipe</string>
+    <string name="lock_screen">Lock screen now</string>
+    <string name="wipe_data">Wipe data</string>
+    <string name="wipe_data_summary">Wipe internal data, like a factory reset</string>
+    <string name="wipe_all_data">Wipe all data</string>
+    <string name="wipe_all_data_summary">Wipe internal data and external storage</string>
+    <string name="encryption_category">Encryption</string>
+    <string name="require_encryption">Require encryption</string>
+    <string name="activate_encryption">Activate encryption</string>
+
+    <!-- Strings used by DeviceAdminSample controller code -->
+    <string name="password_sufficient">Current password meets policy requirements</string>
+    <string name="password_insufficient">Current password does not meet policy requirements</string>
+    <string name="monkey_reset_password">You can\'t reset my password, you are a monkey!</string>
+    <string name="monkey_lock_screen">You can\'t lock my screen, you are a monkey!</string>
+    <string name="monkey_encryption">You can\'t start encryption, you are a monkey!</string>
+    <string name="monkey_wipe_data">You can\'t wipe my data, you are a monkey!</string>
+    <string name="monkey_ok">I admit defeat</string>
+    <string name="reset_password_warning">
+        You have just reset your screen lock password to \"%1$s\""</string>
+    <string name="reset_password_ok">Don\'t forget it</string>
+    <string name="add_admin_extra_app_text">
+        Additional text explaining why this needs to be added.</string>
+    <string name="status_local_global">Local=%1$s / Global=%2$s</string>
+    <string name="status_device_encryption">Device encryption status=%1$s</string>
+    <string name="status_days_hours_minutes">%1$sd %2$sh %3$sm</string>
+    <string name="number_format_warning">Bad value \"%1$s\""</string>
+    <string name="wipe_warning_first">This will erase all of your data.  Are you sure?</string>
+    <string name="wipe_warning_first_ok">Yes</string>
+    <string name="wipe_warning_first_no">No</string>
+    <string name="wipe_warning_second">This is not a test. This WILL erase all of your data!
+        Are you really absolutely sure?</string>
+    <string name="wipe_warning_second_full">This is not a test. This WILL erase all of your data,
+        including external storage! Are you really absolutely sure?</string>
+    <string name="wipe_warning_second_ok">BOOM!</string>
+    <string name="wipe_warning_second_no">Oops, run away!</string>
+    <string name="encryption_not_supported">Encryption is not supported on this device.</string>
+    <string name="encryption_not_supported_ok">OK</string>
+    <string name="encryption_status_unknown">unknown</string>
+    <string name="encryption_status_unsupported">unsupported</string>
+    <string name="encryption_status_inactive">inactive</string>
+    <string name="encryption_status_activating">activating</string>
+    <string name="encryption_status_active">active</string>
+    <string name="expiration_status_none">None</string>
+    <string name="expiration_status_past">Password expired %1$s ago</string>
+    <string name="expiration_status_future">Password will expire %1$s from now</string>
+
+    <!-- Strings used by the sample DeviceAdminReceiver -->
+    <string name="admin_receiver_status">Sample Device Admin: %1$s</string>
+    <string name="admin_receiver_status_enabled">enabled</string>
+    <string name="admin_receiver_status_disabled">disabled</string>
+    <string name="admin_receiver_status_pw_changed">pw changed</string>
+    <string name="admin_receiver_status_pw_failed">pw failed</string>
+    <string name="admin_receiver_status_pw_succeeded">pw succeeded</string>
+    <string name="admin_receiver_status_disable_warning">
+        This is an optional message to warn the user about disabling.</string>
 
     <!-- ============================== -->
     <!--  app/voice recognition examples strings  -->
