@@ -19,24 +19,67 @@
 
 #include "ColladaLoader.h"
 #include "ObjLoader.h"
-#include "rsContext.h"
-#include "rsFileA3D.h"
+#include <rsContext.h>
+#include <rsFileA3D.h>
+
+bool rsdAllocationInit(const Context *rsc, Allocation *alloc, bool forceZero) {
+    void * ptr = malloc(alloc->mHal.state.type->getSizeBytes());
+    if (!ptr) {
+        return false;
+    }
+
+    alloc->mHal.drvState.mallocPtr = ptr;
+    if (forceZero) {
+        memset(ptr, 0, alloc->mHal.state.type->getSizeBytes());
+    }
+    return true;
+}
+
+void rsdAllocationDestroy(const Context *rsc, Allocation *alloc) {
+    if (alloc->mHal.drvState.mallocPtr) {
+        free(alloc->mHal.drvState.mallocPtr);
+        alloc->mHal.drvState.mallocPtr = NULL;
+    }
+}
+
+// We only care to implement allocation memory initialization and destruction
+// because we need no other renderscript hal features for serialization
+static RsdHalFunctions FunctionTable = {
+    NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+    { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,NULL },
+    {
+        rsdAllocationInit,
+        rsdAllocationDestroy,
+        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
+    },
+    { NULL, NULL, NULL }, { NULL, NULL, NULL }, { NULL, NULL, NULL },
+    { NULL, NULL, NULL }, { NULL, NULL, NULL }, { NULL, NULL },
+    { NULL, NULL, NULL},
+};
+
+// No-op initizlizer for rs context hal since we only
+bool rsdHalInit(Context *rsc, uint32_t version_major, uint32_t version_minor) {
+    rsc->mHal.funcs = FunctionTable;
+    return true;
+}
 
 bool convertToA3D(GeometryLoader *loader, const char *a3dFile) {
     if (!loader->getNumMeshes()) {
         return false;
     }
     // Now write all this stuff out
-    Context rsc;
-    FileA3D file(&rsc);
+    Context *rsc = Context::createContextLite();
+    rsdHalInit(rsc, 0, 0);
+    FileA3D file(rsc);
 
     for (uint32_t i = 0; i < loader->getNumMeshes(); i ++) {
-        Mesh *exportedMesh = loader->getMesh(i)->getRsMesh(&rsc);
+        Mesh *exportedMesh = loader->getMesh(i)->getRsMesh(rsc);
         file.appendToFile(exportedMesh);
         delete exportedMesh;
     }
 
     file.writeFile(a3dFile);
+    delete rsc;
     return true;
 }
 
