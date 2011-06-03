@@ -34,6 +34,10 @@
     <style name="Theme" parent="android:Theme">
     </style>
 
+    <!-- Base application theme is the default theme. -->
+    <style name="BadTheme" parent="@android:style/Theme.Holo.Light.NoActionBar">
+    </style>
+
     <!-- Variation on our application theme that forces a plain
         text style. -->
     <style name="Theme.PlainText">
