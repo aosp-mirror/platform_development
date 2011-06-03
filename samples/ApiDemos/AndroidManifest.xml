@@ -36,7 +36,7 @@
     <!-- For android.media.audiofx.Visualizer -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
-    <uses-sdk android:minSdkVersion="4" />
+    <uses-sdk android:minSdkVersion="7" android:targetSdkVersion="11" />
 
     <!-- This app has not been optimized for large screens. -->
     <supports-screens android:requiresSmallestWidthDp="320"
