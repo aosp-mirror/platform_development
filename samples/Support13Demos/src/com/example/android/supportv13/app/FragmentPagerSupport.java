@@ -14,16 +14,19 @@
  * limitations under the License.
  */
 
-package com.example.android.supportv4.app;
+package com.example.android.supportv13.app;
 
-import com.example.android.supportv4.Cheeses;
-import com.example.android.supportv4.R;
+import com.example.android.supportv13.Cheeses;
+import com.example.android.supportv13.R;
+
+import android.support.v13.app.FragmentPagerAdapter;
+import android.support.v13.view.ViewPager;
 
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentActivity;
-import android.support.v4.app.FragmentPager;
-import android.support.v4.app.ListFragment;
+import android.app.Activity;
+import android.app.Fragment;
+import android.app.FragmentManager;
+import android.app.ListFragment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -34,11 +37,12 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 
-public class FragmentPagerSupport extends FragmentActivity
-        implements FragmentPager.Adapter {
+public class FragmentPagerSupport extends Activity {
     static final int NUM_ITEMS = 10;
 
-    FragmentPager mPager;
+    MyAdapter mAdapter;
+
+    ViewPager mPager;
     int mCurPos;
 
     @Override
@@ -46,8 +50,10 @@ public class FragmentPagerSupport extends FragmentActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.fragment_pager);
 
-        mPager = (FragmentPager)findViewById(R.id.pager);
-        mPager.setAdapter(this);
+        mAdapter = new MyAdapter(getFragmentManager());
+
+        mPager = (ViewPager)findViewById(R.id.pager);
+        mPager.setAdapter(mAdapter);
 
         // Watch for button clicks.
         Button button = (Button)findViewById(R.id.new_fragment);
@@ -63,14 +69,20 @@ public class FragmentPagerSupport extends FragmentActivity
         });
     }
 
-    @Override
-    public int getCount() {
-        return NUM_ITEMS;
-    }
+    public static class MyAdapter extends FragmentPagerAdapter {
+        public MyAdapter(FragmentManager fm) {
+            super(fm);
+        }
 
-    @Override
-    public Fragment getItem(int position) {
-        return ArrayListFragment.newInstance(position);
+        @Override
+        public int getCount() {
+            return NUM_ITEMS;
+        }
+
+        @Override
+        public Fragment getItem(int position) {
+            return ArrayListFragment.newInstance(position);
+        }
     }
 
     public static class ArrayListFragment extends ListFragment {
