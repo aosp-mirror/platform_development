@@ -676,13 +676,6 @@ EGLAPI EGLBoolean EGLAPIENTRY eglMakeCurrent(EGLDisplay display, EGLSurface draw
         RETURN_ERROR(EGL_FALSE,EGL_BAD_MATCH);
     }
 
-    VALIDATE_CONTEXT(context);
-    VALIDATE_SURFACE(draw,newDrawSrfc);
-    VALIDATE_SURFACE(read,newReadSrfc);
-
-    EglSurface* newDrawPtr = newDrawSrfc.Ptr();
-    EglSurface* newReadPtr = newReadSrfc.Ptr();
-    EglContext* newCtx     = ctx.Ptr();
     ThreadInfo* thread     = getThreadInfo();
     EglContext* prevCtx    = static_cast<EglContext*>(thread->eglContext);
 
@@ -692,11 +685,17 @@ EGLAPI EGLBoolean EGLAPIENTRY eglMakeCurrent(EGLDisplay display, EGLSurface draw
            if(!EglOS::makeCurrent(dpy->nativeType(),NULL,NULL,NULL)) {
                RETURN_ERROR(EGL_FALSE,EGL_BAD_ACCESS);
            }
-           thread->updateInfo(newCtx,dpy,NULL,newCtx->getShareGroup(),dpy->getManager(newCtx->version()));
-           g_eglInfo->getIface(prevCtx->version())->setShareGroup(newCtx->getGlesContext(),ShareGroupPtr(NULL));
-           ctx->setSurfaces(SurfacePtr(NULL),SurfacePtr(NULL));
+           thread->updateInfo(NULL,dpy,NULL,ShareGroupPtr(NULL),dpy->getManager(prevCtx->version()));
        }
     } else { //assining new context
+        VALIDATE_CONTEXT(context);
+        VALIDATE_SURFACE(draw,newDrawSrfc);
+        VALIDATE_SURFACE(read,newReadSrfc);
+
+        EglSurface* newDrawPtr = newDrawSrfc.Ptr();
+        EglSurface* newReadPtr = newReadSrfc.Ptr();
+        EglContext* newCtx     = ctx.Ptr();
+
         //surfaces compitability check
         if(!((*ctx->getConfig()).compitableWith((*newDrawPtr->getConfig()))) ||
            !((*ctx->getConfig()).compitableWith((*newReadPtr->getConfig())))) {
@@ -760,6 +759,8 @@ EGLAPI EGLBoolean EGLAPIENTRY eglMakeCurrent(EGLDisplay display, EGLSurface draw
                 dpy->removeContext(prevCtxPtr);
            }
         }
+
+        prevCtx->setSurfaces(SurfacePtr(NULL),SurfacePtr(NULL));
     }
     return EGL_TRUE;
 }
@@ -816,7 +817,13 @@ EGLAPI EGLContext EGLAPIENTRY eglGetCurrentContext(void) {
     EglDisplay* dpy    = static_cast<EglDisplay*>(thread->eglDisplay);
     EglContext* ctx    = static_cast<EglContext*>(thread->eglContext);
     if(dpy && ctx){
-        return dpy->getContext(ctx).Ptr();
+        // This double check is required because a context might still be current after it is destroyed - in which case
+        // its handle should be invalid, that is EGL_NO_CONTEXT should be returned even though the context is current
+        EGLContext c = (EGLContext)ctx->getHndl();
+        if(dpy->getContext(c).Ptr())
+        {
+            return c;
+        }
     }
     return EGL_NO_CONTEXT;
 }
@@ -836,9 +843,12 @@ EGLAPI EGLSurface EGLAPIENTRY eglGetCurrentSurface(EGLint readdraw) {
             // current after it is destroyed - in which case its handle should
             // be invalid, that is EGL_NO_SURFACE should be returned even
             // though the surface is current.
-            surface = dpy->getSurface(surface.Ptr());
+            EGLSurface s = (EGLSurface)surface->getHndl();
+            surface = dpy->getSurface(s);
             if(surface.Ptr())
-                return surface.Ptr();
+            {
+                return s;
+            }
         }
     }
     return EGL_NO_SURFACE;
