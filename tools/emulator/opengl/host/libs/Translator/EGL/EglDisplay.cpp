@@ -108,7 +108,7 @@ bool EglDisplay::removeSurface(SurfacePtr s) {
     SurfacesHndlMap::iterator it;
     for(it = m_surfaces.begin(); it!= m_surfaces.end();it++)
     {
-        if((*it).second == s.Ptr()) {
+        if((*it).second.Ptr() == s.Ptr()) {
             break;
         }
     }
@@ -135,7 +135,7 @@ bool EglDisplay::removeContext(ContextPtr ctx) {
 
     ContextsHndlMap::iterator it;
     for(it = m_contexts.begin(); it != m_contexts.end();it++) {
-        if((*it).second == ctx.Ptr()){
+        if((*it).second.Ptr() == ctx.Ptr()){
             break;
         }
     }
