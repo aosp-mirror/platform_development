@@ -69,6 +69,8 @@ static ExtentionDescriptor s_eglExtentions[] = {
                                                    {"eglCreateImageKHR" ,(__eglMustCastToProperFunctionPointerType)eglCreateImageKHR},
                                                    {"eglDestroyImageKHR",(__eglMustCastToProperFunctionPointerType)eglDestroyImageKHR}
                                                };
+static int s_eglExtentionsSize = sizeof(s_eglExtentions) /
+                                 sizeof(ExtentionDescriptor);
 
 /****************************************************************************************************************************************/
 //macros for accessing global egl info & tls objects
@@ -213,7 +215,7 @@ EGLAPI const char * EGLAPIENTRY eglQueryString(EGLDisplay display, EGLint name) 
     VALIDATE_DISPLAY(display);
     static const char* vendor     = "Google";
     static const char* version    = "1.4";
-    static const char* extensions = "EGL_KHR_image_base EGL_KHR_gl_texture_2d_image";
+    static const char* extensions = "EGL_KHR_image_base EGL_KHR_gl_texture_2D_image";
     if(!EglValidate::stringName(name)) {
         RETURN_ERROR(NULL,EGL_BAD_PARAMETER);
     }
@@ -958,7 +960,7 @@ EGLAPI __eglMustCastToProperFunctionPointerType EGLAPIENTRY
        eglGetProcAddress(const char *procname){
     __eglMustCastToProperFunctionPointerType retVal = NULL;
     if(!strncmp(procname,"egl",3)) { //EGL proc
-        for(int i=0;i < EGL_EXTENSIONS;i++){
+        for(int i=0;i < s_eglExtentionsSize;i++){
             if(strcmp(procname,s_eglExtentions[i].name) == 0){
                 retVal = s_eglExtentions[i].address;
                 break;
