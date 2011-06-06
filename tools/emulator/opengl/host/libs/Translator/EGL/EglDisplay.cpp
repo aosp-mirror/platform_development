@@ -35,10 +35,10 @@ EglDisplay::~EglDisplay() {
 
 EGLNativeDisplayType EglDisplay::nativeType(){return m_dpy;}
 
-void EglDisplay::initialize() {
+void EglDisplay::initialize(int renderableType) {
     android::Mutex::Autolock mutex(m_lock);
     m_initialized = true;
-    initConfigurations();
+    initConfigurations(renderableType);
     m_configInitialized = true;
 }
 
@@ -55,9 +55,9 @@ static bool compareEglConfigsPtrs(EglConfig* first,EglConfig* second) {
     return *first < *second ;
 }
 
-void EglDisplay::initConfigurations() {
+void EglDisplay::initConfigurations(int renderableType) {
     if(m_configInitialized) return;
-    EglOS::queryConfigs(m_dpy,m_configs);
+    EglOS::queryConfigs(m_dpy,renderableType,m_configs);
     m_configs.sort(compareEglConfigsPtrs);
 }
 

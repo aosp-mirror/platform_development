@@ -45,6 +45,7 @@ public:
               EGLint max_pbuffer_height,
               EGLint max_pbuffer_size,
               EGLBoolean native_renderable,
+              EGLint renderable_type,
               EGLint native_visual_id,
               EGLint native_visual_type,
               EGLint samples_per_pixel,
@@ -78,6 +79,7 @@ private:
     const EGLint                    m_max_swap_interval;
     const EGLint                    m_min_swap_interval;
     const EGLBoolean                m_native_renderable;
+    const EGLint                    m_renderable_type;
     const EGLint                    m_native_visual_id;
     const EGLint                    m_native_visual_type;
     const EGLint                    m_sample_buffers_num;
