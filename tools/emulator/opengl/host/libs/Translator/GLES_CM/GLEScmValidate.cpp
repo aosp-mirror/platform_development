@@ -110,6 +110,7 @@ bool GLEScmValidate::texParams(GLenum target,GLenum pname) {
     case GL_TEXTURE_MAG_FILTER:
     case GL_TEXTURE_WRAP_S:
     case GL_TEXTURE_WRAP_T:
+    case GL_TEXTURE_CROP_RECT_OES:
         break;
     default:
         return false;
