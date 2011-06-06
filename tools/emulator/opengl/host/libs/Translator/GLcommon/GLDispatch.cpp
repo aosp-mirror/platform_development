@@ -54,6 +54,14 @@ static GL_FUNC_PTR getGLFuncAddress(const char *funcName) {
                                 }                                                       \
                            }
 
+#define LOAD_GLEXT_FUNC(name)  {   void * funcAddrs = NULL;                                \
+                                if(name == NULL){                                       \
+                                funcAddrs = (void *)getGLFuncAddress(#name);            \
+                                if(funcAddrs)                                           \
+                                    *(void**)(&name) = funcAddrs;                       \
+                                }                                                       \
+                           }
+
 /* initializing static GLDispatch members*/
 
 android::Mutex GLDispatch::s_lock;
@@ -61,6 +69,9 @@ void (GLAPIENTRY *GLDispatch::glActiveTexture)(GLenum) = NULL;
 void (GLAPIENTRY *GLDispatch::glBindBuffer)(GLenum,GLuint) = NULL;
 void (GLAPIENTRY *GLDispatch::glBindTexture)(GLenum, GLuint) = NULL;
 void (GLAPIENTRY *GLDispatch::glBlendFunc)(GLenum,GLenum) = NULL;
+void (GLAPIENTRY *GLDispatch::glBlendEquation)(GLenum) = NULL;
+void (GLAPIENTRY *GLDispatch::glBlendEquationSeparate)(GLenum,GLenum) = NULL;
+void (GLAPIENTRY *GLDispatch::glBlendFuncSeparate)(GLenum,GLenum,GLenum,GLenum) = NULL;
 void (GLAPIENTRY *GLDispatch::glBufferData)(GLenum,GLsizeiptr,const GLvoid *,GLenum) = NULL;
 void (GLAPIENTRY *GLDispatch::glBufferSubData)(GLenum,GLintptr,GLsizeiptr,const GLvoid *) = NULL;
 void (GLAPIENTRY *GLDispatch::glClear)(GLbitfield) = NULL;
@@ -179,11 +190,37 @@ void (GLAPIENTRY *GLDispatch::glTexEnviv)(GLenum, GLenum, const GLint *) = NULL;
 void (GLAPIENTRY *GLDispatch::glTranslatef)(GLfloat,GLfloat, GLfloat) = NULL;
 void (GLAPIENTRY *GLDispatch::glVertexPointer)(GLint,GLenum,GLsizei, const GLvoid *) = NULL;
 
+/* GLES 1.1 EXTENSIONS*/
+GLboolean (GLAPIENTRY *GLDispatch::glIsRenderbufferEXT) (GLuint renderbuffer) = NULL;
+void (GLAPIENTRY *GLDispatch::glBindRenderbufferEXT) (GLenum target, GLuint renderbuffer) = NULL;
+void (GLAPIENTRY *GLDispatch::glDeleteRenderbuffersEXT) (GLsizei n, const GLuint *renderbuffers) = NULL;
+void (GLAPIENTRY *GLDispatch::glGenRenderbuffersEXT) (GLsizei n, GLuint *renderbuffers) = NULL;
+void (GLAPIENTRY *GLDispatch::glRenderbufferStorageEXT) (GLenum target, GLenum internalformat, GLsizei width, GLsizei height) = NULL;
+void (GLAPIENTRY *GLDispatch::glGetRenderbufferParameterivEXT) (GLenum target, GLenum pname, GLint *params) = NULL;
+GLboolean (GLAPIENTRY *GLDispatch::glIsFramebufferEXT) (GLuint framebuffer) = NULL;
+void (GLAPIENTRY *GLDispatch::glBindFramebufferEXT) (GLenum target, GLuint framebuffer) = NULL;
+void (GLAPIENTRY *GLDispatch::glDeleteFramebuffersEXT) (GLsizei n, const GLuint *framebuffers) = NULL;
+void (GLAPIENTRY *GLDispatch::glGenFramebuffersEXT) (GLsizei n, GLuint *framebuffers) = NULL;
+GLenum (GLAPIENTRY *GLDispatch::glCheckFramebufferStatusEXT) (GLenum target) = NULL;
+void (GLAPIENTRY *GLDispatch::glFramebufferTexture1DEXT) (GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level) = NULL;
+void (GLAPIENTRY *GLDispatch::glFramebufferTexture2DEXT) (GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level) = NULL;
+void (GLAPIENTRY *GLDispatch::glFramebufferTexture3DEXT) (GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level, GLint zoffset) = NULL;
+void (GLAPIENTRY *GLDispatch::glFramebufferRenderbufferEXT) (GLenum target, GLenum attachment, GLenum renderbuffertarget, GLuint renderbuffer) = NULL;
+void (GLAPIENTRY *GLDispatch::glGetFramebufferAttachmentParameterivEXT) (GLenum target, GLenum attachment, GLenum pname, GLint *params) = NULL;
+void (GLAPIENTRY *GLDispatch::glGenerateMipmapEXT) (GLenum target) = NULL;
+void (GLAPIENTRY *GLDispatch::glCurrentPaletteMatrixARB) (GLint index) = NULL;
+void (GLAPIENTRY *GLDispatch::glMatrixIndexuivARB) (GLint size, GLuint * indices) = NULL;
+void (GLAPIENTRY *GLDispatch::glMatrixIndexPointerARB) (GLint size, GLenum type, GLsizei stride, const GLvoid* pointer) = NULL;
+void (GLAPIENTRY *GLDispatch::glWeightPointerARB) (GLint size, GLenum type, GLsizei stride, const GLvoid* pointer) = NULL;
+void (GLAPIENTRY *GLDispatch::glTexGenf) (GLenum coord, GLenum pname, GLfloat param ) = NULL;
+void (GLAPIENTRY *GLDispatch::glTexGeni) (GLenum coord, GLenum pname, GLint param ) = NULL;
+void (GLAPIENTRY *GLDispatch::glTexGenfv) (GLenum coord, GLenum pname, const GLfloat *params ) = NULL;
+void (GLAPIENTRY *GLDispatch::glTexGeniv) (GLenum coord, GLenum pname, const GLint *params ) = NULL;
+void (GLAPIENTRY *GLDispatch::glGetTexGenfv) (GLenum coord, GLenum pname, GLfloat *params ) = NULL;
+void (GLAPIENTRY *GLDispatch::glGetTexGeniv) (GLenum coord, GLenum pname, GLint *params ) = NULL;
+
 /* GLES 2.0*/
 void (GL_APIENTRY *GLDispatch::glBlendColor)(GLclampf,GLclampf,GLclampf,GLclampf) = NULL;
-void (GL_APIENTRY *GLDispatch::glBlendEquation)(GLenum) = NULL;
-void (GL_APIENTRY *GLDispatch::glBlendEquationSeparate)(GLenum,GLenum) = NULL;
-void (GL_APIENTRY *GLDispatch::glBlendFuncSeparate)(GLenum,GLenum,GLenum,GLenum) = NULL;
 void (GL_APIENTRY *GLDispatch::glStencilFuncSeparate)(GLenum,GLenum,GLint,GLuint) = NULL;
 void (GL_APIENTRY *GLDispatch::glStencilMaskSeparate)(GLenum,GLuint) = NULL;
 void (GL_APIENTRY *GLDispatch::glGenerateMipmap)(GLenum) = NULL;
@@ -273,6 +310,9 @@ void GLDispatch::dispatchFuncs(GLESVersion version){
     LOAD_GL_FUNC(glBindBuffer);
     LOAD_GL_FUNC(glBindTexture);
     LOAD_GL_FUNC(glBlendFunc);
+    LOAD_GL_FUNC(glBlendEquation);
+    LOAD_GL_FUNC(glBlendEquationSeparate);
+    LOAD_GL_FUNC(glBlendFuncSeparate);
     LOAD_GL_FUNC(glBufferData);
     LOAD_GL_FUNC(glBufferSubData);
     LOAD_GL_FUNC(glClear);
@@ -391,14 +431,40 @@ void GLDispatch::dispatchFuncs(GLESVersion version){
         LOAD_GL_FUNC(glTexEnviv);
         LOAD_GL_FUNC(glTranslatef);
         LOAD_GL_FUNC(glVertexPointer);
+
+   	    LOAD_GLEXT_FUNC(glIsRenderbufferEXT);
+        LOAD_GLEXT_FUNC(glBindRenderbufferEXT);
+        LOAD_GLEXT_FUNC(glDeleteRenderbuffersEXT);
+        LOAD_GLEXT_FUNC(glGenRenderbuffersEXT);
+        LOAD_GLEXT_FUNC(glRenderbufferStorageEXT);
+        LOAD_GLEXT_FUNC(glGetRenderbufferParameterivEXT);
+        LOAD_GLEXT_FUNC(glIsFramebufferEXT);
+        LOAD_GLEXT_FUNC(glBindFramebufferEXT);
+        LOAD_GLEXT_FUNC(glDeleteFramebuffersEXT);
+        LOAD_GLEXT_FUNC(glGenFramebuffersEXT);
+        LOAD_GLEXT_FUNC(glCheckFramebufferStatusEXT);
+        LOAD_GLEXT_FUNC(glFramebufferTexture1DEXT);
+        LOAD_GLEXT_FUNC(glFramebufferTexture2DEXT);
+        LOAD_GLEXT_FUNC(glFramebufferTexture3DEXT);
+        LOAD_GLEXT_FUNC(glFramebufferRenderbufferEXT);
+        LOAD_GLEXT_FUNC(glGetFramebufferAttachmentParameterivEXT);
+        LOAD_GLEXT_FUNC(glGenerateMipmapEXT);
+        LOAD_GLEXT_FUNC(glCurrentPaletteMatrixARB);
+        LOAD_GLEXT_FUNC(glMatrixIndexuivARB);
+        LOAD_GLEXT_FUNC(glMatrixIndexPointerARB);
+        LOAD_GLEXT_FUNC(glWeightPointerARB);
+        LOAD_GLEXT_FUNC(glTexGenf);
+        LOAD_GLEXT_FUNC(glTexGeni);
+        LOAD_GLEXT_FUNC(glTexGenfv);
+        LOAD_GLEXT_FUNC(glTexGeniv);
+        LOAD_GLEXT_FUNC(glGetTexGenfv);
+        LOAD_GLEXT_FUNC(glGetTexGeniv);
+
     } else if (version == GLES_2_0){
 
     /* Loading OpenGL functions which are needed ONLY for implementing GLES 2.0*/
 
         LOAD_GL_FUNC(glBlendColor);
-        LOAD_GL_FUNC(glBlendEquation);
-        LOAD_GL_FUNC(glBlendEquationSeparate);
-        LOAD_GL_FUNC(glBlendFuncSeparate);
         LOAD_GL_FUNC(glBlendFuncSeparate);
         LOAD_GL_FUNC(glStencilFuncSeparate);
         LOAD_GL_FUNC(glGenerateMipmap);

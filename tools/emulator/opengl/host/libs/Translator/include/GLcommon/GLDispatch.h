@@ -19,15 +19,11 @@
 #include <GLES/gl.h>
 #include <GLES2/gl2.h>
 #include <utils/threads.h>
+#include "gldefs.h"
 #include "GLutils.h"
 
 #define GLAPIENTRY GL_APIENTRY
-
-typedef double      GLclampd;   /* double precision float in [0,1] */
-typedef double      GLdouble;   /* double precision float */
-
 typedef void(*FUNCPTR)();
-
 
 class GLDispatch
 {
@@ -41,6 +37,9 @@ public:
     static void (GLAPIENTRY *glBindBuffer) (GLenum target, GLuint buffer);
     static void (GLAPIENTRY *glBindTexture) (GLenum target, GLuint texture);
     static void (GLAPIENTRY *glBlendFunc) (GLenum sfactor, GLenum dfactor);
+    static void (GLAPIENTRY *glBlendEquation)( GLenum mode );
+    static void (GLAPIENTRY *glBlendEquationSeparate)(GLenum modeRGB, GLenum modeAlpha);
+    static void (GLAPIENTRY *glBlendFuncSeparate)(GLenum srcRGB, GLenum dstRGB, GLenum srcAlpha, GLenum dstAlpha);
     static void (GLAPIENTRY *glBufferData) (GLenum target, GLsizeiptr size, const GLvoid *data, GLenum usage);
     static void (GLAPIENTRY *glBufferSubData) (GLenum target, GLintptr offset, GLsizeiptr size, const GLvoid *data);
     static void (GLAPIENTRY *glClear) (GLbitfield mask);
@@ -91,6 +90,7 @@ public:
     static void (GLAPIENTRY *glTexParameteriv) (GLenum target, GLenum pname, const GLint *params);
     static void (GLAPIENTRY *glTexSubImage2D) (GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid *pixels);
     static void (GLAPIENTRY *glViewport) (GLint x, GLint y, GLsizei width, GLsizei height);
+
 
     /* OpenGL functions which are needed ONLY for implementing GLES 1.1*/
     static void (GLAPIENTRY *glAlphaFunc) (GLenum func, GLclampf ref);
@@ -159,11 +159,37 @@ public:
     static void (GLAPIENTRY *glTranslatef) (GLfloat x, GLfloat y, GLfloat z);
     static void (GLAPIENTRY *glVertexPointer) (GLint size, GLenum type, GLsizei stride, const GLvoid *pointer);
 
+    /* OpenGL functions which are needed ONLY for implementing GLES 1.1 EXTENSIONS*/
+	static GLboolean (GLAPIENTRY *glIsRenderbufferEXT) (GLuint renderbuffer);
+    static void (GLAPIENTRY *glBindRenderbufferEXT) (GLenum target, GLuint renderbuffer);
+    static void (GLAPIENTRY *glDeleteRenderbuffersEXT) (GLsizei n, const GLuint *renderbuffers);
+    static void (GLAPIENTRY *glGenRenderbuffersEXT) (GLsizei n, GLuint *renderbuffers);
+    static void (GLAPIENTRY *glRenderbufferStorageEXT) (GLenum target, GLenum internalformat, GLsizei width, GLsizei height);
+    static void (GLAPIENTRY *glGetRenderbufferParameterivEXT) (GLenum target, GLenum pname, GLint *params);
+    static GLboolean (GLAPIENTRY *glIsFramebufferEXT) (GLuint framebuffer);
+    static void (GLAPIENTRY *glBindFramebufferEXT) (GLenum target, GLuint framebuffer);
+    static void (GLAPIENTRY *glDeleteFramebuffersEXT) (GLsizei n, const GLuint *framebuffers);
+    static void (GLAPIENTRY *glGenFramebuffersEXT) (GLsizei n, GLuint *framebuffers);
+    static GLenum (GLAPIENTRY *glCheckFramebufferStatusEXT) (GLenum target);
+    static void (GLAPIENTRY *glFramebufferTexture1DEXT) (GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level);
+    static void (GLAPIENTRY *glFramebufferTexture2DEXT) (GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level);
+    static void (GLAPIENTRY *glFramebufferTexture3DEXT) (GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level, GLint zoffset);
+    static void (GLAPIENTRY *glFramebufferRenderbufferEXT) (GLenum target, GLenum attachment, GLenum renderbuffertarget, GLuint renderbuffer);
+    static void (GLAPIENTRY *glGetFramebufferAttachmentParameterivEXT) (GLenum target, GLenum attachment, GLenum pname, GLint *params);
+    static void (GLAPIENTRY *glGenerateMipmapEXT) (GLenum target);
+    static void (GLAPIENTRY *glCurrentPaletteMatrixARB) (GLint index);
+    static void (GLAPIENTRY *glMatrixIndexuivARB) (GLint size, GLuint * indices);
+    static void (GLAPIENTRY *glMatrixIndexPointerARB) (GLint size, GLenum type, GLsizei stride, const GLvoid* pointer);
+    static void (GLAPIENTRY *glWeightPointerARB) (GLint size, GLenum type, GLsizei stride, const GLvoid* pointer);
+    static void (GLAPIENTRY *glTexGenf) (GLenum coord, GLenum pname, GLfloat param );
+    static void (GLAPIENTRY *glTexGeni) (GLenum coord, GLenum pname, GLint param );
+    static void (GLAPIENTRY *glTexGenfv) (GLenum coord, GLenum pname, const GLfloat *params );
+    static void (GLAPIENTRY *glTexGeniv) (GLenum coord, GLenum pname, const GLint *params );
+    static void (GLAPIENTRY *glGetTexGenfv) (GLenum coord, GLenum pname, GLfloat *params );
+    static void (GLAPIENTRY *glGetTexGeniv) (GLenum coord, GLenum pname, GLint *params );
+
     /* Loading OpenGL functions which are needed ONLY for implementing GLES 2.0*/
     static void (GL_APIENTRY *glBlendColor) (GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha);
-    static void (GL_APIENTRY *glBlendEquation)( GLenum mode );
-    static void (GL_APIENTRY *glBlendEquationSeparate)(GLenum modeRGB, GLenum modeAlpha);
-    static void (GL_APIENTRY *glBlendFuncSeparate)(GLenum srcRGB, GLenum dstRGB, GLenum srcAlpha, GLenum dstAlpha);
     static void (GL_APIENTRY *glStencilFuncSeparate)(GLenum face, GLenum func, GLint ref, GLuint mask);
     static void (GL_APIENTRY *glStencilMaskSeparate)(GLenum face, GLuint mask);
     static void (GL_APIENTRY *glGenerateMipmap)(GLenum target);
