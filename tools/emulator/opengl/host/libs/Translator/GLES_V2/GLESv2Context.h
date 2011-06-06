@@ -23,22 +23,13 @@
 #include <utils/threads.h>
 
 
-struct GLv2Support {
-    GLv2Support():maxTexUnits(0),maxVertexAttribs(0){};
-    int  maxTexUnits;
-    int  maxVertexAttribs;
-};
-
 class GLESv2Context : public GLEScontext{
 public:
     void init();
     GLESv2Context();
     void convertArrs(GLESFloatArrays& fArrs,GLint first,GLsizei count,GLenum type,const GLvoid* indices,bool direct);
-    static unsigned int getMaxTexUnits(){return s_glSupport.maxTexUnits;};
 private:
     void sendArr(GLvoid* arr,GLenum arrayType,GLint size,GLsizei stride,int pointsIndex = -1);
-
-    static GLv2Support    s_glSupport;
 
 };
 

@@ -19,21 +19,15 @@
 #include <GLcommon/GLutils.h>
 #include <string.h>
 #include <GLES/gl.h>
-
-GLcmSupport      GLEScmContext::s_glSupport;
+#include <GLES/glext.h>
 
 void GLEScmContext::init() {
     android::Mutex::Autolock mutex(s_lock);
     if(!m_initialized) {
-        int maxTexUnits;
         s_glDispatch.dispatchFuncs(GLES_1_1);
-        s_glDispatch.glGetIntegerv(GL_MAX_CLIP_PLANES,&s_glSupport.maxClipPlane);
-        s_glDispatch.glGetIntegerv(GL_MAX_LIGHTS,&s_glSupport.maxLights);
-        s_glDispatch.glGetIntegerv(GL_MAX_TEXTURE_SIZE,&s_glSupport.maxTexSize);
-        s_glDispatch.glGetIntegerv(GL_MAX_TEXTURE_UNITS,&maxTexUnits);
-        s_glSupport.maxTexUnits = maxTexUnits < MAX_TEX_UNITS ? maxTexUnits:MAX_TEX_UNITS;
+        initCapsLocked(s_glDispatch.glGetString(GL_EXTENSIONS));
+        initExtensionString();
     }
-
     m_texCoords = new GLESpointer[s_glSupport.maxTexUnits];
     m_map[GL_TEXTURE_COORD_ARRAY]  = &m_texCoords[m_activeTexture];
     m_initialized = true;
@@ -182,3 +176,29 @@ void GLEScmContext::drawPointsElems(GLESFloatArrays& arrs,GLsizei count,GLenum t
     drawPointsData(arrs,0,count,type,indices_in,true);
 }
 
+void GLEScmContext::initExtensionString() {
+    *s_glExtensions = "GL_OES_blend_func_separate GL_OES_blend_equation_separate GL_OES_blend_subtract "
+                      "GL_OES_byte_coordinates GL_OES_compressed_paletted_texture GL_OES_point_size_array "
+                      "GL_OES_point_sprite GL_OES_single_precision GL_OES_stencil_wrap GL_OES_texture_env_crossbar "
+                      "GL_OES_texture_mirored_repeat GL_OES_EGL_image GL_OES_element_index_uint GL_OES_draw_texture "
+                      "GL_OES_texture_cube_map ";
+    if (s_glSupport.GL_OES_READ_FORMAT)
+        *s_glExtensions+="GL_OES_read_format ";
+    if (s_glSupport.GL_EXT_FRAMEBUFFER_OBJECT) {
+        *s_glExtensions+="GL_OES_framebuffer_object GL_OES_depth24 GL_OES_depth32 GL_OES_fbo_render_mipmap "
+                         "GL_OES_rgb8_rgba8 GL_OES_stencil1 GL_OES_stencil4 GL_OES_stencil8 ";
+    }
+    if (s_glSupport.GL_NV_PACKED_DEPTH_STENCIL)
+        *s_glExtensions+="GL_OES_packed_depth_stencil ";
+    if (s_glSupport.GL_EXT_TEXTURE_FORMAT_BGRA8888)
+        *s_glExtensions+="GL_EXT_texture_format_BGRA8888 GL_APPLE_texture_format_BGRA8888 ";
+    if (s_glSupport.GL_ARB_MATRIX_PALETTE && s_glSupport.GL_ARB_VERTEX_BLEND) {
+        *s_glExtensions+="GL_OES_matrix_palette ";
+        GLint max_palette_matrices=0;
+        GLint max_vertex_units=0;
+        dispatcher().glGetIntegerv(GL_MAX_PALETTE_MATRICES_OES,&max_palette_matrices);
+        dispatcher().glGetIntegerv(GL_MAX_VERTEX_UNITS_OES,&max_vertex_units);
+        if (max_palette_matrices>=32 && max_vertex_units>=4)
+            *s_glExtensions+="GL_OES_extended_matrix_palette ";
+    } 
+}

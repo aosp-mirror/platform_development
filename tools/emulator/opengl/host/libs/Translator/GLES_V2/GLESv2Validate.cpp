@@ -65,10 +65,6 @@ bool GLESv2Validate::blendDst(GLenum d) {
    return false;
 }
 
-bool GLESv2Validate::textureTarget(GLenum target){
-    return target == GL_TEXTURE_2D || target == GL_TEXTURE_CUBE_MAP;
-}
-
 bool GLESv2Validate::textureParams(GLenum param){
     switch(param) {
     case GL_TEXTURE_MIN_FILTER:
@@ -118,65 +114,6 @@ bool GLESv2Validate::readPixelFrmt(GLenum format){
     case GL_ALPHA:
     case GL_RGB:
     case GL_RGBA:
-        return true;
-    }
-    return false;
-}
-
-bool GLESv2Validate::textureTargetEx(GLenum target){
-    switch(target){
-    case GL_TEXTURE_2D:
-    case GL_TEXTURE_CUBE_MAP_POSITIVE_X:
-    case GL_TEXTURE_CUBE_MAP_NEGATIVE_X:
-    case GL_TEXTURE_CUBE_MAP_POSITIVE_Y:
-    case GL_TEXTURE_CUBE_MAP_NEGATIVE_Y:
-    case GL_TEXTURE_CUBE_MAP_POSITIVE_Z:
-    case GL_TEXTURE_CUBE_MAP_NEGATIVE_Z:
-        return true;
-    }
-    return false;
-}
-
-bool GLESv2Validate::framebufferTarget(GLenum target){
-    return target == GL_FRAMEBUFFER;
-}
-
-bool GLESv2Validate::framebufferAttachment(GLenum attachment){
-    switch(attachment){
-    case GL_COLOR_ATTACHMENT0:
-    case GL_DEPTH_ATTACHMENT:
-    case GL_STENCIL_ATTACHMENT:
-        return true;
-    }
-    return false;
-}
-
-bool GLESv2Validate::framebufferAttachmentParams(GLenum pname){
-    switch(pname){
-    case GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE:
-    case GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME:
-    case GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_LEVEL:
-    case GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_CUBE_MAP_FACE:
-        return true;
-    }
-    return false;
-}
-
-bool GLESv2Validate::renderbufferTarget(GLenum target){
-    return target == GL_RENDERBUFFER;
-}
-
-bool GLESv2Validate::renderbufferParams(GLenum pname){
-    switch(pname){
-    case GL_RENDERBUFFER_WIDTH:
-    case GL_RENDERBUFFER_HEIGHT:
-    case GL_RENDERBUFFER_INTERNAL_FORMAT:
-    case GL_RENDERBUFFER_RED_SIZE:
-    case GL_RENDERBUFFER_GREEN_SIZE:
-    case GL_RENDERBUFFER_BLUE_SIZE:
-    case GL_RENDERBUFFER_ALPHA_SIZE:
-    case GL_RENDERBUFFER_DEPTH_SIZE:
-    case GL_RENDERBUFFER_STENCIL_SIZE:
         return true;
     }
     return false;

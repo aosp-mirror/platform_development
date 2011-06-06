@@ -17,7 +17,8 @@ LOCAL_SRC_FILES:= \
 LOCAL_SHARED_LIBRARIES := \
     libGLcommon           \
     libEGL_translator     \
-    libGLES_CM_translator
+    libGLES_CM_translator \
+    libGLcommon
 
 LOCAL_CFLAGS += $(SDL_CFLAGS) -g -O0
 LOCAL_LDLIBS += $(SDL_LDLIBS)

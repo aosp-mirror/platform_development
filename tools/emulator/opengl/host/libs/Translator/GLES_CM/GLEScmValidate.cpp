@@ -15,6 +15,10 @@
 */
 #include "GLEScmValidate.h"
 #include <GLcommon/GLutils.h>
+#include <GLES/gl.h>
+#include <GLES/glext.h>
+#include <GLcommon/GLEScontext.h>
+#include "GLEScmValidate.h"
 
 
 bool GLEScmValidate::lightEnum(GLenum e,unsigned int maxLights) {
@@ -24,11 +28,6 @@ bool GLEScmValidate::lightEnum(GLenum e,unsigned int maxLights) {
 bool GLEScmValidate::clipPlaneEnum(GLenum e,unsigned int maxClipPlanes) {
     return  e >=GL_CLIP_PLANE0 && e <= (GL_CLIP_PLANE0+maxClipPlanes);
 }
-
-bool GLEScmValidate::textureTarget(GLenum target) {
-    return target == GL_TEXTURE_2D;
-}
-
 
 bool GLEScmValidate::alphaFunc(GLenum f) {
     switch(f) {
@@ -43,6 +42,22 @@ bool GLEScmValidate::alphaFunc(GLenum f) {
         return true;
     }
     return false;
+}
+
+bool GLEScmValidate::blendSrc(GLenum s) {
+   switch(s) {
+    case GL_ZERO:
+    case GL_ONE:
+    case GL_DST_COLOR:
+    case GL_ONE_MINUS_DST_COLOR:
+    case GL_SRC_ALPHA:
+    case GL_ONE_MINUS_SRC_ALPHA:
+    case GL_DST_ALPHA:
+    case GL_ONE_MINUS_DST_ALPHA:
+    case GL_SRC_ALPHA_SATURATE:
+        return true;
+  }
+  return false;
 }
 
 bool GLEScmValidate::vertexPointerParams(GLint size,GLsizei stride) {
@@ -68,7 +83,6 @@ bool GLEScmValidate::supportedArrays(GLenum arr) {
     }
     return false;
 }
-
 
 bool GLEScmValidate::hintTargetMode(GLenum target,GLenum mode) {
    switch(target) {
@@ -166,7 +180,6 @@ bool GLEScmValidate::capability(GLenum cap,int maxLights,int maxClipPlanes) {
 }
 
 
-
 bool GLEScmValidate::texCompImgFrmt(GLenum format) {
     switch(format) {
     case GL_PALETTE4_RGB8_OES:
@@ -193,23 +206,6 @@ bool GLEScmValidate::texImgDim(GLsizei width,GLsizei height,int maxTexSize) {
 }
 
 
-
-bool GLEScmValidate::blendSrc(GLenum s) {
-   switch(s) {
-    case GL_ZERO:
-    case GL_ONE:
-    case GL_DST_COLOR:
-    case GL_ONE_MINUS_DST_COLOR:
-    case GL_SRC_ALPHA:
-    case GL_ONE_MINUS_SRC_ALPHA:
-    case GL_DST_ALPHA:
-    case GL_ONE_MINUS_DST_ALPHA:
-    case GL_SRC_ALPHA_SATURATE:
-        return true;
-  }
-  return false;
-}
-
 bool GLEScmValidate::blendDst(GLenum d) {
    switch(d) {
     case GL_ZERO:
@@ -224,3 +220,45 @@ bool GLEScmValidate::blendDst(GLenum d) {
    }
    return false;
 }
+
+bool GLEScmValidate::renderbufferInternalFrmt(GLEScontext* ctx, GLenum internalformat)
+{
+    switch (internalformat) {
+    case GL_DEPTH_COMPONENT16_OES:
+    case GL_RGBA4_OES:
+    case GL_RGB5_A1_OES:
+    case GL_RGB565_OES:
+    case GL_STENCIL_INDEX1_OES:
+    case GL_STENCIL_INDEX4_OES:
+    case GL_STENCIL_INDEX8_OES:
+    case GL_RGB8_OES:
+    case GL_RGBA8_OES:
+    case GL_DEPTH_COMPONENT24_OES:
+    case GL_DEPTH_COMPONENT32_OES:
+        return true;
+    }
+    if (ctx->getCaps()->GL_NV_PACKED_DEPTH_STENCIL && internalformat==GL_DEPTH24_STENCIL8_OES)
+        return true;
+
+    return false;
+}
+
+bool GLEScmValidate::stencilOp(GLenum param) {
+    switch (param) {
+    case GL_KEEP:
+    case GL_ZERO:
+    case GL_REPLACE:
+    case GL_INCR:
+    case GL_DECR:
+    case GL_INVERT:
+    case GL_INCR_WRAP_OES:
+    case GL_DECR_WRAP_OES:
+      return true;
+    }
+    return false;
+}
+
+bool GLEScmValidate::texGen(GLenum coord, GLenum pname) {
+    return (coord == GL_TEXTURE_GEN_STR_OES && pname == GL_TEXTURE_GEN_MODE_OES);
+}
+
