@@ -68,7 +68,18 @@ bool GLEScontext::isArrEnabled(GLenum arr) {
 }
 
 const GLESpointer* GLEScontext::getPointer(GLenum arrType) {
-    if(m_map.find(arrType) != m_map.end()) return m_map[arrType];
+    GLenum type =
+        arrType == GL_VERTEX_ARRAY_POINTER          ? GL_VERTEX_ARRAY :
+        arrType == GL_NORMAL_ARRAY_POINTER          ? GL_NORMAL_ARRAY :
+        arrType == GL_TEXTURE_COORD_ARRAY_POINTER   ? GL_TEXTURE_COORD_ARRAY :
+        arrType == GL_COLOR_ARRAY_POINTER           ? GL_COLOR_ARRAY :
+        arrType == GL_POINT_SIZE_ARRAY_POINTER_OES  ? GL_POINT_SIZE_ARRAY_OES :
+        0;
+
+    if(type != 0 && m_map.find(type) != m_map.end())
+    {
+        return m_map[type];
+    }
     return NULL;
 }
 
@@ -265,6 +276,17 @@ void GLEScontext::bindBuffer(GLenum target,GLuint buffer) {
         m_arrayBuffer = buffer;
     } else {
        m_elementBuffer = buffer;
+    }
+}
+
+void GLEScontext::unbindBuffer(GLuint buffer) {
+    if(m_arrayBuffer == buffer)
+    {
+        m_arrayBuffer = 0;
+    }
+    if(m_elementBuffer == buffer)
+    {
+        m_elementBuffer = 0;
     }
 }
 

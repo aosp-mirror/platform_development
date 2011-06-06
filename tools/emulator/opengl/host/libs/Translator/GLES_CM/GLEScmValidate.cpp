@@ -45,7 +45,6 @@ bool GLEScmValidate::alphaFunc(GLenum f) {
     return false;
 }
 
-
 bool GLEScmValidate::vertexPointerParams(GLint size,GLsizei stride) {
     return ((size >=2) && (size <= 4)) && (stride >=0) ;
 }
@@ -55,7 +54,7 @@ bool GLEScmValidate::colorPointerParams(GLint size,GLsizei stride) {
 }
 
 bool GLEScmValidate::texCoordPointerParams(GLint size,GLsizei stride) {
-    return ((size >=1) && (size <= 4)) && (stride >=0) ;
+    return ((size >=2) && (size <= 4)) && (stride >=0) ;
 }
 
 bool GLEScmValidate::supportedArrays(GLenum arr) {
@@ -107,6 +106,7 @@ bool GLEScmValidate::texParams(GLenum target,GLenum pname) {
 bool GLEScmValidate::texEnv(GLenum target,GLenum pname) {
     switch(pname) {
     case GL_TEXTURE_ENV_MODE:
+    case GL_TEXTURE_ENV_COLOR:
     case GL_COMBINE_RGB:
     case GL_COMBINE_ALPHA:
     case GL_SRC0_RGB:
@@ -204,6 +204,7 @@ bool GLEScmValidate::blendSrc(GLenum s) {
     case GL_ONE_MINUS_SRC_ALPHA:
     case GL_DST_ALPHA:
     case GL_ONE_MINUS_DST_ALPHA:
+    case GL_SRC_ALPHA_SATURATE:
         return true;
   }
   return false;
