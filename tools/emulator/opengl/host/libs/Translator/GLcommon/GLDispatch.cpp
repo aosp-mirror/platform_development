@@ -29,15 +29,14 @@ typedef void (*GL_FUNC_PTR)();
 static GL_FUNC_PTR getGLFuncAddress(const char *funcName) {
     GL_FUNC_PTR ret = NULL;
 #ifdef __linux__
-    static osUtils::dynLibrary* libGL = osUtils::dynLibrary::open("GL");
+    static osUtils::dynLibrary* libGL = osUtils::dynLibrary::open("libGL.so");
     ret = (GL_FUNC_PTR)glXGetProcAddress((const GLubyte*)funcName);
 #elif defined(WIN32)
     static osUtils::dynLibrary* libGL = osUtils::dynLibrary::open("opengl32");
     ret = (GL_FUNC_PTR)wglGetProcAddress(funcName);
-#else //mac
-    static osUtils::dynLibrary* libGL = NULL;
+#elif defined(__APPLE__)
+    static osUtils::dynLibrary* libGL = osUtils::dynLibrary::open("libGL.dylib");
 #endif
-
     if(!ret && libGL){
         ret = libGL->findSymbol(funcName);
     }
