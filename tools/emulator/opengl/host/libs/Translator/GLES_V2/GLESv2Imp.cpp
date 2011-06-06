@@ -116,7 +116,7 @@ GL_APICALL void  GL_APIENTRY glActiveTexture(GLenum texture){
 GL_APICALL void  GL_APIENTRY glAttachShader(GLuint program, GLuint shader){
     GET_CTX();
     if(thrd->shareGroup.Ptr()) {
-        const GLuint globalProgramName = thrd->shareGroup->getGlobalName(PROGRAM,program);
+        const GLuint globalProgramName = thrd->shareGroup->getGlobalName(SHADER,program);
         const GLuint globalShaderName  = thrd->shareGroup->getGlobalName(SHADER,shader);
         ctx->dispatcher().glAttachShader(globalProgramName,globalShaderName);
     }
@@ -125,7 +125,7 @@ GL_APICALL void  GL_APIENTRY glAttachShader(GLuint program, GLuint shader){
 GL_APICALL void  GL_APIENTRY glBindAttribLocation(GLuint program, GLuint index, const GLchar* name){
     GET_CTX();
     if(thrd->shareGroup.Ptr()) {
-        const GLuint globalProgramName = thrd->shareGroup->getGlobalName(PROGRAM,program);
+        const GLuint globalProgramName = thrd->shareGroup->getGlobalName(SHADER,program);
         ctx->dispatcher().glBindAttribLocation(globalProgramName,index,name);
     }
 }
@@ -302,8 +302,8 @@ GL_APICALL GLuint GL_APIENTRY glCreateProgram(void){
     GET_CTX_RET(0);
     const GLuint globalProgramName = ctx->dispatcher().glCreateProgram();
     if(thrd->shareGroup.Ptr() && globalProgramName) {
-            const GLuint localProgramName = thrd->shareGroup->genName(PROGRAM);
-            thrd->shareGroup->replaceGlobalName(PROGRAM,localProgramName,globalProgramName);
+            const GLuint localProgramName = thrd->shareGroup->genName(SHADER);
+            thrd->shareGroup->replaceGlobalName(SHADER,localProgramName,globalProgramName);
             return localProgramName;
     }
     if(globalProgramName){
@@ -380,8 +380,8 @@ GL_APICALL void  GL_APIENTRY glDeleteTextures(GLsizei n, const GLuint* textures)
 GL_APICALL void  GL_APIENTRY glDeleteProgram(GLuint program){
     GET_CTX();
     if(thrd->shareGroup.Ptr()) {
-        const GLuint globalProgramName = thrd->shareGroup->getGlobalName(PROGRAM,program);
-        ctx->dispatcher().glDeleteProgram(program);
+        const GLuint globalProgramName = thrd->shareGroup->getGlobalName(SHADER,program);
+        ctx->dispatcher().glDeleteProgram(globalProgramName);
     }
 }
 
@@ -389,7 +389,7 @@ GL_APICALL void  GL_APIENTRY glDeleteShader(GLuint shader){
     GET_CTX();
     if(thrd->shareGroup.Ptr()) {
         const GLuint globalShaderName = thrd->shareGroup->getGlobalName(SHADER,shader);
-        ctx->dispatcher().glDeleteShader(shader);
+        ctx->dispatcher().glDeleteShader(globalShaderName);
     }
 }
 
@@ -409,7 +409,7 @@ GL_APICALL void  GL_APIENTRY glDepthRangef(GLclampf zNear, GLclampf zFar){
 GL_APICALL void  GL_APIENTRY glDetachShader(GLuint program, GLuint shader){
     GET_CTX();
     if(thrd->shareGroup.Ptr()) {
-        const GLuint globalProgramName = thrd->shareGroup->getGlobalName(PROGRAM,program);
+        const GLuint globalProgramName = thrd->shareGroup->getGlobalName(SHADER,program);
         const GLuint globalShaderName  = thrd->shareGroup->getGlobalName(SHADER,shader);
         ctx->dispatcher().glDetachShader(globalProgramName,globalShaderName);
     }
@@ -502,7 +502,7 @@ GL_APICALL void  GL_APIENTRY glFramebufferTexture2D(GLenum target, GLenum attach
 
     if(thrd->shareGroup.Ptr()) {
             GLuint globalTextureName = thrd->shareGroup->getGlobalName(TEXTURE,texture);
-            ctx->dispatcher().glFramebufferTexture2D(target,attachment,textarget,texture,level);
+            ctx->dispatcher().glFramebufferTexture2D(target,attachment,textarget,globalTextureName,level);
     }
 }
 
@@ -563,7 +563,7 @@ GL_APICALL void  GL_APIENTRY glGenTextures(GLsizei n, GLuint* textures){
 GL_APICALL void  GL_APIENTRY glGetActiveAttrib(GLuint program, GLuint index, GLsizei bufsize, GLsizei* length, GLint* size, GLenum* type, GLchar* name){
     GET_CTX();
     if(thrd->shareGroup.Ptr()) {
-        const GLuint globalProgramName = thrd->shareGroup->getGlobalName(PROGRAM,program);
+        const GLuint globalProgramName = thrd->shareGroup->getGlobalName(SHADER,program);
         ctx->dispatcher().glGetActiveAttrib(globalProgramName,index,bufsize,length,size,type,name);
     }
 }
@@ -571,7 +571,7 @@ GL_APICALL void  GL_APIENTRY glGetActiveAttrib(GLuint program, GLuint index, GLs
 GL_APICALL void  GL_APIENTRY glGetActiveUniform(GLuint program, GLuint index, GLsizei bufsize, GLsizei* length, GLint* size, GLenum* type, GLchar* name){
     GET_CTX();
     if(thrd->shareGroup.Ptr()) {
-        const GLuint globalProgramName = thrd->shareGroup->getGlobalName(PROGRAM,program);
+        const GLuint globalProgramName = thrd->shareGroup->getGlobalName(SHADER,program);
         ctx->dispatcher().glGetActiveUniform(globalProgramName,index,bufsize,length,size,type,name);
     }
 }
@@ -579,7 +579,7 @@ GL_APICALL void  GL_APIENTRY glGetActiveUniform(GLuint program, GLuint index, GL
 GL_APICALL void  GL_APIENTRY glGetAttachedShaders(GLuint program, GLsizei maxcount, GLsizei* count, GLuint* shaders){
     GET_CTX();
     if(thrd->shareGroup.Ptr()) {
-        const GLuint globalProgramName = thrd->shareGroup->getGlobalName(PROGRAM,program);
+        const GLuint globalProgramName = thrd->shareGroup->getGlobalName(SHADER,program);
         ctx->dispatcher().glGetAttachedShaders(globalProgramName,maxcount,count,shaders);
         for(int i=0 ; i < *count ;i++){
            shaders[i] = thrd->shareGroup->getLocalName(SHADER,shaders[i]);
@@ -590,7 +590,7 @@ GL_APICALL void  GL_APIENTRY glGetAttachedShaders(GLuint program, GLsizei maxcou
 GL_APICALL int GL_APIENTRY glGetAttribLocation(GLuint program, const GLchar* name){
      GET_CTX_RET(-1);
      if(thrd->shareGroup.Ptr()) {
-        const GLuint globalProgramName = thrd->shareGroup->getGlobalName(PROGRAM,program);
+        const GLuint globalProgramName = thrd->shareGroup->getGlobalName(SHADER,program);
         return ctx->dispatcher().glGetAttribLocation(globalProgramName,name);
      }
      return -1;
@@ -655,7 +655,7 @@ GL_APICALL void  GL_APIENTRY glGetRenderbufferParameteriv(GLenum target, GLenum 
 GL_APICALL void  GL_APIENTRY glGetProgramiv(GLuint program, GLenum pname, GLint* params){
     GET_CTX();
     if(thrd->shareGroup.Ptr()) {
-        const GLuint globalProgramName = thrd->shareGroup->getGlobalName(PROGRAM,program);
+        const GLuint globalProgramName = thrd->shareGroup->getGlobalName(SHADER,program);
         ctx->dispatcher().glGetProgramiv(globalProgramName,pname,params);
     }
 }
@@ -663,7 +663,7 @@ GL_APICALL void  GL_APIENTRY glGetProgramiv(GLuint program, GLenum pname, GLint*
 GL_APICALL void  GL_APIENTRY glGetProgramInfoLog(GLuint program, GLsizei bufsize, GLsizei* length, GLchar* infolog){
     GET_CTX();
     if(thrd->shareGroup.Ptr()) {
-        const GLuint globalProgramName = thrd->shareGroup->getGlobalName(PROGRAM,program);
+        const GLuint globalProgramName = thrd->shareGroup->getGlobalName(SHADER,program);
         ctx->dispatcher().glGetProgramInfoLog(globalProgramName,bufsize,length,infolog);
     }
 }
@@ -738,7 +738,7 @@ GL_APICALL void  GL_APIENTRY glGetTexParameteriv(GLenum target, GLenum pname, GL
 GL_APICALL void  GL_APIENTRY glGetUniformfv(GLuint program, GLint location, GLfloat* params){
     GET_CTX();
     if(thrd->shareGroup.Ptr()) {
-        const GLuint globalProgramName = thrd->shareGroup->getGlobalName(PROGRAM,program);
+        const GLuint globalProgramName = thrd->shareGroup->getGlobalName(SHADER,program);
         ctx->dispatcher().glGetUniformfv(globalProgramName,location,params);
     }
 }
@@ -746,7 +746,7 @@ GL_APICALL void  GL_APIENTRY glGetUniformfv(GLuint program, GLint location, GLfl
 GL_APICALL void  GL_APIENTRY glGetUniformiv(GLuint program, GLint location, GLint* params){
     GET_CTX();
     if(thrd->shareGroup.Ptr()) {
-        const GLuint globalProgramName = thrd->shareGroup->getGlobalName(PROGRAM,program);
+        const GLuint globalProgramName = thrd->shareGroup->getGlobalName(SHADER,program);
         ctx->dispatcher().glGetUniformiv(globalProgramName,location,params);
     }
 }
@@ -754,7 +754,7 @@ GL_APICALL void  GL_APIENTRY glGetUniformiv(GLuint program, GLint location, GLin
 GL_APICALL int GL_APIENTRY glGetUniformLocation(GLuint program, const GLchar* name){
     GET_CTX_RET(-1);
     if(thrd->shareGroup.Ptr()) {
-        const GLuint globalProgramName = thrd->shareGroup->getGlobalName(PROGRAM,program);
+        const GLuint globalProgramName = thrd->shareGroup->getGlobalName(SHADER,program);
         return ctx->dispatcher().glGetUniformLocation(globalProgramName,name);
     }
     return -1;
@@ -889,16 +889,20 @@ GL_APICALL GLboolean    GL_APIENTRY glIsTexture(GLuint texture){
 
 GL_APICALL GLboolean    GL_APIENTRY glIsProgram(GLuint program){
     GET_CTX_RET(GL_FALSE)
-    if(program && thrd->shareGroup.Ptr()){
-        return thrd->shareGroup->isObject(PROGRAM,program) ? GL_TRUE :GL_FALSE;
+    if(program && thrd->shareGroup.Ptr() &&
+       thrd->shareGroup->isObject(SHADER,program)) {
+        const GLuint globalProgramName = thrd->shareGroup->getGlobalName(SHADER,program);
+        return ctx->dispatcher().glIsProgram(globalProgramName);
     }
     return GL_FALSE;
 }
 
 GL_APICALL GLboolean    GL_APIENTRY glIsShader(GLuint shader){
     GET_CTX_RET(GL_FALSE)
-    if(shader && thrd->shareGroup.Ptr()){
-        return thrd->shareGroup->isObject(SHADER,shader) ? GL_TRUE :GL_FALSE;
+    if(shader && thrd->shareGroup.Ptr() &&
+       thrd->shareGroup->isObject(SHADER,shader)) {
+        const GLuint globalShaderName = thrd->shareGroup->getGlobalName(SHADER,shader);
+        return ctx->dispatcher().glIsShader(globalShaderName);
     }
     return GL_FALSE;
 }
@@ -911,7 +915,7 @@ GL_APICALL void  GL_APIENTRY glLineWidth(GLfloat width){
 GL_APICALL void  GL_APIENTRY glLinkProgram(GLuint program){
     GET_CTX();
     if(thrd->shareGroup.Ptr()) {
-        const GLuint globalProgramName = thrd->shareGroup->getGlobalName(PROGRAM,program);
+        const GLuint globalProgramName = thrd->shareGroup->getGlobalName(SHADER,program);
         ctx->dispatcher().glLinkProgram(globalProgramName);
     }
 }
@@ -960,7 +964,7 @@ GL_APICALL void  GL_APIENTRY glShaderBinary(GLsizei n, const GLuint* shaders, GL
     if(thrd->shareGroup.Ptr()){
         for(int i=0; i < n ; i++){
             const GLuint globalShaderName = thrd->shareGroup->getGlobalName(SHADER,shaders[i]);
-            ctx->dispatcher().glShaderBinary(1,&shaders[i],binaryformat,binary,length);
+            ctx->dispatcher().glShaderBinary(1,&globalShaderName,binaryformat,binary,length);
         }
     }
 }
@@ -970,7 +974,7 @@ GL_APICALL void  GL_APIENTRY glShaderSource(GLuint shader, GLsizei count, const 
     GET_CTX();
     if(thrd->shareGroup.Ptr()){
             const GLuint globalShaderName = thrd->shareGroup->getGlobalName(SHADER,shader);
-            ctx->dispatcher().glShaderSource(shader,count,string,length);
+            ctx->dispatcher().glShaderSource(globalShaderName,count,string,length);
     }
 }
 
@@ -1168,7 +1172,7 @@ GL_APICALL void  GL_APIENTRY glUniformMatrix4fv(GLint location, GLsizei count, G
 GL_APICALL void  GL_APIENTRY glUseProgram(GLuint program){
     GET_CTX();
     if(thrd->shareGroup.Ptr()) {
-        const GLuint globalProgramName = thrd->shareGroup->getGlobalName(PROGRAM,program);
+        const GLuint globalProgramName = thrd->shareGroup->getGlobalName(SHADER,program);
         ctx->dispatcher().glUseProgram(globalProgramName);
     }
 }
@@ -1176,7 +1180,7 @@ GL_APICALL void  GL_APIENTRY glUseProgram(GLuint program){
 GL_APICALL void  GL_APIENTRY glValidateProgram(GLuint program){
     GET_CTX();
     if(thrd->shareGroup.Ptr()) {
-        const GLuint globalProgramName = thrd->shareGroup->getGlobalName(PROGRAM,program);
+        const GLuint globalProgramName = thrd->shareGroup->getGlobalName(SHADER,program);
         ctx->dispatcher().glValidateProgram(globalProgramName);
     }
 }
