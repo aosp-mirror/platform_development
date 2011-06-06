@@ -87,6 +87,7 @@ void (GLAPIENTRY *GLDispatch::glDeleteBuffers)(GLsizei,const GLuint *) = NULL;
 void (GLAPIENTRY *GLDispatch::glDeleteTextures)(GLsizei,const GLuint *) = NULL;
 void (GLAPIENTRY *GLDispatch::glDepthFunc)(GLenum) = NULL;
 void (GLAPIENTRY *GLDispatch::glDepthMask)(GLboolean) = NULL;
+void (GLAPIENTRY *GLDispatch::glDepthRange)(GLclampd,GLclampd) = NULL;
 void (GLAPIENTRY *GLDispatch::glDisable)(GLenum) = NULL;
 void (GLAPIENTRY *GLDispatch::glDrawArrays)(GLenum,GLint,GLsizei) = NULL;
 void (GLAPIENTRY *GLDispatch::glDrawElements)(GLenum,GLsizei,GLenum,const GLvoid *) = NULL;
@@ -118,6 +119,8 @@ void (GLAPIENTRY *GLDispatch::glStencilFunc)(GLenum,GLint,GLuint) = NULL;
 void (GLAPIENTRY *GLDispatch::glStencilMask)(GLuint) = NULL;
 void (GLAPIENTRY *GLDispatch::glStencilOp)(GLenum, GLenum,GLenum);
 void (GLAPIENTRY *GLDispatch::glTexImage2D)(GLenum,GLint,GLint,GLsizei,GLsizei,GLint,GLenum,GLenum,const GLvoid *) = NULL;
+void (GLAPIENTRY *GLDispatch::glTexParameterf)(GLenum,GLenum, GLfloat) = NULL;
+void (GLAPIENTRY *GLDispatch::glTexParameterfv)(GLenum,GLenum,const GLfloat *) = NULL;
 void (GLAPIENTRY *GLDispatch::glTexParameteri)(GLenum,GLenum,GLint) = NULL;
 void (GLAPIENTRY *GLDispatch::glTexParameteriv)(GLenum,GLenum,const GLint *) = NULL;
 void (GLAPIENTRY *GLDispatch::glTexSubImage2D)(GLenum,GLint,GLint,GLint,GLsizei,GLsizei,GLenum,GLenum,const GLvoid *) = NULL;
@@ -139,7 +142,6 @@ void (GLAPIENTRY *GLDispatch::glColor4fv)(const GLfloat *) = NULL;
 void (GLAPIENTRY *GLDispatch::glColor4ub)(GLubyte,GLubyte,GLubyte,GLubyte) = NULL;
 void (GLAPIENTRY *GLDispatch::glColor4ubv)(const GLubyte *) = NULL;
 void (GLAPIENTRY *GLDispatch::glColorPointer)(GLint,GLenum,GLsizei,const GLvoid *) = NULL;
-void (GLAPIENTRY *GLDispatch::glDepthRange)(GLclampd,GLclampd) = NULL;
 void (GLAPIENTRY *GLDispatch::glDisableClientState)(GLenum) = NULL;
 void (GLAPIENTRY *GLDispatch::glEnableClientState)(GLenum) = NULL;
 void (GLAPIENTRY *GLDispatch::glEnd)() = NULL;
@@ -181,8 +183,6 @@ void (GLAPIENTRY *GLDispatch::glRotatef)(GLfloat,GLfloat,GLfloat,GLfloat) = NULL
 void (GLAPIENTRY *GLDispatch::glScalef)(GLfloat,GLfloat,GLfloat) = NULL;
 void (GLAPIENTRY *GLDispatch::glTexEnvf)(GLenum,GLenum,GLfloat) = NULL;
 void (GLAPIENTRY *GLDispatch::glTexEnvfv)(GLenum,GLenum,const GLfloat *) = NULL;
-void (GLAPIENTRY *GLDispatch::glTexParameterf)(GLenum,GLenum, GLfloat) = NULL;
-void (GLAPIENTRY *GLDispatch::glTexParameterfv)(GLenum,GLenum,const GLfloat *) = NULL;
 void (GLAPIENTRY *GLDispatch::glMatrixMode)(GLenum) = NULL;
 void (GLAPIENTRY *GLDispatch::glNormalPointer)(GLenum,GLsizei,const GLvoid *) = NULL;
 void (GLAPIENTRY *GLDispatch::glPopMatrix)() = NULL;
@@ -232,6 +232,8 @@ void (GL_APIENTRY *GLDispatch::glBindFramebuffer)(GLenum,GLuint) = NULL;
 void (GL_APIENTRY *GLDispatch::glBindRenderbuffer)(GLenum,GLuint) = NULL;
 void (GL_APIENTRY *GLDispatch::glDeleteFramebuffers)(GLsizei,const GLuint*) = NULL;
 void (GL_APIENTRY *GLDispatch::glDeleteRenderbuffers)(GLsizei,const GLuint*) = NULL;
+GLboolean (GL_APIENTRY *GLDispatch::glIsProgram)(GLuint program) = NULL;
+GLboolean (GL_APIENTRY *GLDispatch::glIsShader)(GLuint shader) = NULL;
 void (GL_APIENTRY *GLDispatch::glVertexAttrib1f)(GLuint,GLfloat) = NULL;
 void (GL_APIENTRY *GLDispatch::glVertexAttrib1fv)(GLuint,const GLfloat*) = NULL;
 void (GL_APIENTRY *GLDispatch::glVertexAttrib2f)(GLuint,GLfloat, GLfloat) = NULL;
@@ -321,6 +323,7 @@ void GLDispatch::dispatchFuncs(GLESVersion version){
     LOAD_GL_FUNC(glBufferSubData);
     LOAD_GL_FUNC(glClear);
     LOAD_GL_FUNC(glClearColor);
+    LOAD_GL_FUNC(glClearDepth);
     LOAD_GL_FUNC(glClearStencil);
     LOAD_GL_FUNC(glColorMask);
     LOAD_GL_FUNC(glCompressedTexImage2D);
@@ -332,6 +335,7 @@ void GLDispatch::dispatchFuncs(GLESVersion version){
     LOAD_GL_FUNC(glDeleteTextures);
     LOAD_GL_FUNC(glDepthFunc);
     LOAD_GL_FUNC(glDepthMask);
+    LOAD_GL_FUNC(glDepthRange);
     LOAD_GL_FUNC(glDisable);
     LOAD_GL_FUNC(glDrawArrays);
     LOAD_GL_FUNC(glDrawElements);
@@ -347,6 +351,8 @@ void GLDispatch::dispatchFuncs(GLESVersion version){
     LOAD_GL_FUNC(glGetFloatv);
     LOAD_GL_FUNC(glGetIntegerv);
     LOAD_GL_FUNC(glGetString);
+    LOAD_GL_FUNC(glTexParameterf);
+    LOAD_GL_FUNC(glTexParameterfv);
     LOAD_GL_FUNC(glGetTexParameterfv);
     LOAD_GL_FUNC(glGetTexParameteriv);
     LOAD_GL_FUNC(glHint);
@@ -376,7 +382,6 @@ void GLDispatch::dispatchFuncs(GLESVersion version){
     if(version == GLES_1_1){
         LOAD_GL_FUNC(glAlphaFunc);
         LOAD_GL_FUNC(glBegin);
-        LOAD_GL_FUNC(glClearDepth);
         LOAD_GL_FUNC(glClientActiveTexture);
         LOAD_GL_FUNC(glClipPlane);
         LOAD_GL_FUNC(glColor4d);
@@ -385,7 +390,6 @@ void GLDispatch::dispatchFuncs(GLESVersion version){
         LOAD_GL_FUNC(glColor4ub);
         LOAD_GL_FUNC(glColor4ubv);
         LOAD_GL_FUNC(glColorPointer);
-        LOAD_GL_FUNC(glDepthRange);
         LOAD_GL_FUNC(glDisableClientState);
         LOAD_GL_FUNC(glEnableClientState);
         LOAD_GL_FUNC(glEnd);
@@ -427,8 +431,6 @@ void GLDispatch::dispatchFuncs(GLESVersion version){
         LOAD_GL_FUNC(glScalef);
         LOAD_GL_FUNC(glTexEnvf);
         LOAD_GL_FUNC(glTexEnvfv);
-        LOAD_GL_FUNC(glTexParameterf);
-        LOAD_GL_FUNC(glTexParameterfv);
         LOAD_GL_FUNC(glMatrixMode);
         LOAD_GL_FUNC(glNormalPointer);
         LOAD_GL_FUNC(glPopMatrix);
@@ -480,6 +482,8 @@ void GLDispatch::dispatchFuncs(GLESVersion version){
         LOAD_GL_FUNC(glBindRenderbuffer);
         LOAD_GL_FUNC(glDeleteFramebuffers);
         LOAD_GL_FUNC(glDeleteRenderbuffers);
+        LOAD_GL_FUNC(glIsProgram);
+        LOAD_GL_FUNC(glIsShader);
         LOAD_GL_FUNC(glVertexAttrib1f);
         LOAD_GL_FUNC(glVertexAttrib1fv);
         LOAD_GL_FUNC(glVertexAttrib2f);
@@ -546,6 +550,7 @@ void GLDispatch::dispatchFuncs(GLESVersion version){
         LOAD_GL_FUNC(glRenderbufferStorage);
         LOAD_GL_FUNC(glShaderBinary);
         LOAD_GL_FUNC(glShaderSource);
+        LOAD_GL_FUNC(glStencilMaskSeparate);
         LOAD_GL_FUNC(glFramebufferRenderbuffer);
         LOAD_GL_FUNC(glFramebufferTexture2D);
     }
