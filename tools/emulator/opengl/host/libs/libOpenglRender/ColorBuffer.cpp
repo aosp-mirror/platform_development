@@ -231,10 +231,10 @@ void ColorBuffer::drawTexQuad()
                          +1.0f, -1.0f, 0.0f,
                          +1.0f, +1.0f, 0.0f };
 
-    GLfloat tcoords[] = { 0.0f, 0.0f,
-                           0.0f, 1.0f,
-                           1.0f, 0.0f,
-                           1.0f, 1.0f };
+    GLfloat tcoords[] = { 0.0f, 1.0f,
+                           0.0f, 0.0f,
+                           1.0f, 1.0f,
+                           1.0f, 0.0f };
 
     s_gl.glClientActiveTexture(GL_TEXTURE0);
     s_gl.glEnableClientState(GL_TEXTURE_COORD_ARRAY);
