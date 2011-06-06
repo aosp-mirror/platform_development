@@ -179,6 +179,7 @@ EGLAPI EGLBoolean EGLAPIENTRY eglInitialize(EGLDisplay display, EGLint *major, E
     if(minor) *minor = MINOR;
 
     __translator_getGLESIfaceFunc func  = NULL;
+    int renderableType = EGL_OPENGL_ES_BIT;
 
     if(!g_eglInfo->getIface(GLES_1_1)) {
         func  = loadIfaces(LIB_GLES_CM_NAME);
@@ -192,13 +193,13 @@ EGLAPI EGLBoolean EGLAPIENTRY eglInitialize(EGLDisplay display, EGLint *major, E
     if(!g_eglInfo->getIface(GLES_2_0)) {
         func  = loadIfaces(LIB_GLES_V2_NAME);
         if(func){
+            renderableType |= EGL_OPENGL_ES2_BIT;
             g_eglInfo->setIface(func(&s_eglIface),GLES_2_0);
         } else {
            fprintf(stderr,"could not find ifaces for GLES 2.0\n");
-           return EGL_FALSE;
         }
     }
-    dpy->initialize();
+    dpy->initialize(renderableType);
     return EGL_TRUE;
 }
 
@@ -253,6 +254,7 @@ EGLAPI EGLBoolean EGLAPIENTRY eglChooseConfig(EGLDisplay display, const EGLint *
 
         //selection defaults
         EGLint      surface_type       = EGL_WINDOW_BIT;
+        EGLint      renderable_type    = EGL_OPENGL_ES_BIT;
         EGLBoolean  bind_to_tex_rgb    = EGL_DONT_CARE;
         EGLBoolean  bind_to_tex_rgba   = EGL_DONT_CARE;
         EGLenum     caveat             = EGL_DONT_CARE;
@@ -362,6 +364,9 @@ EGLAPI EGLBoolean EGLAPIENTRY eglChooseConfig(EGLDisplay display, const EGLint *
             case EGL_NATIVE_RENDERABLE:
                 native_renderable = attrib_list[i+1];
                 break;
+            case EGL_RENDERABLE_TYPE:
+                renderable_type = attrib_list[i+1];
+                break;
             case EGL_NATIVE_VISUAL_TYPE:
                 native_visual_type = attrib_list[i+1];
                 break;
@@ -424,7 +429,7 @@ EGLAPI EGLBoolean EGLAPIENTRY eglChooseConfig(EGLDisplay display, const EGLint *
     }
     EGLNativePixelFormatType tmpfrmt = PIXEL_FORMAT_INITIALIZER;
     EglConfig dummy(red_size,green_size,blue_size,alpha_size,caveat,config_id,depth_size,
-                    frame_buffer_level,0,0,0,native_renderable,0,native_visual_type,
+                    frame_buffer_level,0,0,0,native_renderable,renderable_type,0,native_visual_type,
                     samples_per_pixel,stencil_size,surface_type,transparent_type,
                     trans_red_val,trans_green_val,trans_blue_val,tmpfrmt);
 

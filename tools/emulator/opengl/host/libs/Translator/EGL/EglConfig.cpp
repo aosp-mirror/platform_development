@@ -27,6 +27,7 @@ EglConfig::EglConfig(EGLint     red_size,
                      EGLint     max_pbuffer_height,
                      EGLint     max_pbuffer_size,
                      EGLBoolean native_renderable,
+                     EGLint     renderable_type,
                      EGLint     native_visual_id,
                      EGLint     native_visual_type,
                      EGLint     samples_per_pixel,
@@ -55,6 +56,7 @@ EglConfig::EglConfig(EGLint     red_size,
                      m_max_swap_interval(MAX_SWAP_INTERVAL),
                      m_min_swap_interval(MIN_SWAP_INTERVAL),
                      m_native_renderable(native_renderable),
+                     m_renderable_type(renderable_type),
                      m_native_visual_id(native_visual_id),
                      m_native_visual_type(native_visual_type),
                      m_sample_buffers_num(samples_per_pixel > 0 ?1:0),
@@ -85,6 +87,7 @@ EglConfig::EglConfig(EGLint     red_size,
                                                 m_max_swap_interval(conf.m_max_swap_interval),
                                                 m_min_swap_interval(conf.m_min_swap_interval),
                                                 m_native_renderable(conf.m_native_renderable),
+                                                m_renderable_type(conf.m_renderable_type),
                                                 m_native_visual_id(conf.m_native_visual_id),
                                                 m_native_visual_type(conf.m_native_visual_type),
                                                 m_sample_buffers_num(conf.m_sample_buffers_num),
@@ -158,6 +161,8 @@ bool EglConfig::getConfAttrib(EGLint attrib,EGLint* val) const {
     case EGL_NATIVE_VISUAL_TYPE:
         *val = m_native_visual_type;
         break;
+    case EGL_RENDERABLE_TYPE:
+        *val = m_renderable_type;
     case EGL_SAMPLE_BUFFERS:
         *val = m_sample_buffers_num;
         break;
@@ -278,6 +283,9 @@ bool EglConfig::choosen(const EglConfig& dummy) {
    //mask
    if(dummy.m_surface_type != EGL_DONT_CARE &&
     ((dummy.m_surface_type & m_surface_type) != dummy.m_surface_type)) return false;
+
+   if(dummy.m_renderable_type != EGL_DONT_CARE &&
+    ((dummy.m_renderable_type & m_renderable_type) != dummy.m_renderable_type)) return false;
 
    //passed all checks
    return true;
