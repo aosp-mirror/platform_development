@@ -34,6 +34,7 @@ bool EglValidate::confAttrib(EGLint attrib) {
     case EGL_MAX_PBUFFER_PIXELS:
     case EGL_MAX_SWAP_INTERVAL:
     case EGL_MIN_SWAP_INTERVAL:
+    case EGL_RENDERABLE_TYPE:
     case EGL_NATIVE_RENDERABLE:
     case EGL_NATIVE_VISUAL_ID:
     case EGL_NATIVE_VISUAL_TYPE:
