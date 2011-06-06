@@ -337,7 +337,6 @@ GL_API void GL_APIENTRY  glCompressedTexImage2D( GLenum target, GLint level, GLe
        tmpHeight/=2;
        delete uncompressed;
     }
-    ctx->dispatcher().glCompressedTexImage2D(target,level,internalformat,width,height,border,imageSize,data);
 }
 
 GL_API void GL_APIENTRY  glCompressedTexSubImage2D( GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLsizei imageSize, const GLvoid *data) {
@@ -375,6 +374,7 @@ GL_API void GL_APIENTRY  glDeleteBuffers( GLsizei n, const GLuint *buffers) {
     if(thrd->shareGroup.Ptr()) {
         for(int i=0; i < n; i++){
            thrd->shareGroup->deleteName(VERTEXBUFFER,buffers[i]);
+           ctx->unbindBuffer(buffers[i]);
         }
     }
 }
@@ -555,7 +555,18 @@ GL_API void GL_APIENTRY  glGenTextures( GLsizei n, GLuint *textures) {
 
 GL_API void GL_APIENTRY  glGetBooleanv( GLenum pname, GLboolean *params) {
     GET_CTX()
-    ctx->dispatcher().glGetBooleanv(pname,params);
+    switch(pname)
+    {
+    case GL_IMPLEMENTATION_COLOR_READ_TYPE_OES:
+    case GL_IMPLEMENTATION_COLOR_READ_FORMAT_OES:
+        GLint i;
+        glGetIntegerv(pname, &i);
+        *params = (i != 0) ? GL_TRUE : GL_FALSE;
+        break;
+
+    default:
+        ctx->dispatcher().glGetBooleanv(pname,params);
+    }
 }
 
 GL_API void GL_APIENTRY  glGetBufferParameteriv( GLenum target, GLenum pname, GLint *params) {
@@ -596,22 +607,56 @@ GL_API void GL_APIENTRY  glGetClipPlanex( GLenum pname, GLfixed eqn[4]) {
 
 GL_API void GL_APIENTRY  glGetFixedv( GLenum pname, GLfixed *params) {
     GET_CTX()
-    size_t nParams = glParamSize(pname);
-    GLfloat fParams[16];
-    ctx->dispatcher().glGetFloatv(pname,fParams);
-    for(size_t i =0 ; i < nParams;i++) {
-        params[i] = F2X(fParams[i]);
+    switch(pname)
+    {
+    case GL_IMPLEMENTATION_COLOR_READ_TYPE_OES:
+    case GL_IMPLEMENTATION_COLOR_READ_FORMAT_OES:
+        GLint i;
+        glGetIntegerv(pname, &i);
+        *params = I2X(i);
+        break;
+
+    default:
+        size_t nParams = glParamSize(pname);
+        GLfloat fParams[16];
+        ctx->dispatcher().glGetFloatv(pname,fParams);
+        for(size_t i =0 ; i < nParams;i++) {
+            params[i] = F2X(fParams[i]);
+        }
     }
 }
 
 GL_API void GL_APIENTRY  glGetFloatv( GLenum pname, GLfloat *params) {
     GET_CTX()
-    ctx->dispatcher().glGetFloatv(pname,params);
+    switch(pname)
+    {
+    case GL_IMPLEMENTATION_COLOR_READ_TYPE_OES:
+    case GL_IMPLEMENTATION_COLOR_READ_FORMAT_OES:
+        GLint i;
+        glGetIntegerv(pname, &i);
+        *params = (GLfloat)i;
+        break;
+
+    default:
+        ctx->dispatcher().glGetFloatv(pname,params);
+    }
 }
 
 GL_API void GL_APIENTRY  glGetIntegerv( GLenum pname, GLint *params) {
     GET_CTX()
-    ctx->dispatcher().glGetIntegerv(pname,params);
+    switch(pname)
+    {
+    case GL_IMPLEMENTATION_COLOR_READ_TYPE_OES:
+        *params = GL_UNSIGNED_BYTE;
+        break;
+
+    case GL_IMPLEMENTATION_COLOR_READ_FORMAT_OES:
+        *params = GL_RGBA;
+        break;
+
+    default:
+        ctx->dispatcher().glGetIntegerv(pname,params);
+    }
 }
 
 GL_API void GL_APIENTRY  glGetLightfv( GLenum light, GLenum pname, GLfloat *params) {
@@ -632,6 +677,11 @@ GL_API void GL_APIENTRY  glGetLightxv( GLenum light, GLenum pname, GLfixed *para
             params[3] = F2X(tmpParams[3]);
         case GL_SPOT_DIRECTION:
             params[2] = F2X(tmpParams[2]);
+        case GL_SPOT_EXPONENT:
+        case GL_SPOT_CUTOFF:
+        case GL_CONSTANT_ATTENUATION:
+        case GL_LINEAR_ATTENUATION:
+        case GL_QUADRATIC_ATTENUATION:
             params[1] = F2X(tmpParams[1]);
             break;
         default:{
@@ -663,6 +713,7 @@ GL_API void GL_APIENTRY  glGetMaterialxv( GLenum face, GLenum pname, GLfixed *pa
         params[1] = tmpParams[1];
     case GL_SHININESS:
         params[0] = tmpParams[0];
+        break;
     default:{
             ctx->setGLerror(GL_INVALID_ENUM);
             return;
@@ -780,18 +831,24 @@ GL_API void GL_APIENTRY  glLightxv( GLenum light, GLenum pname, const GLfixed *p
         case GL_AMBIENT:
         case GL_DIFFUSE:
         case GL_SPECULAR:
+        case GL_EMISSION:
         case GL_POSITION:
             tmpParams[3] = X2F(params[3]);
         case GL_SPOT_DIRECTION:
             tmpParams[2] = X2F(params[2]);
             tmpParams[1] = X2F(params[1]);
+        case GL_SPOT_EXPONENT:
+        case GL_SPOT_CUTOFF:
+        case GL_CONSTANT_ATTENUATION:
+        case GL_LINEAR_ATTENUATION:
+        case GL_QUADRATIC_ATTENUATION:
+            tmpParams[0] = X2F(params[0]);
             break;
         default: {
                 ctx->setGLerror(GL_INVALID_ENUM);
                 return;
             }
     }
-    tmpParams[0] = X2F(params[0]);
     ctx->dispatcher().glLightfv(light,pname,tmpParams);
 }
 
@@ -935,14 +992,9 @@ GL_API void GL_APIENTRY  glPointParameterx( GLenum pname, GLfixed param)
 
 GL_API void GL_APIENTRY  glPointParameterxv( GLenum pname, const GLfixed *params) {
     GET_CTX()
-    GLfloat tmpParams[3];
-    int i = 0;
 
-    do {
-        tmpParams[i] = X2F(params[i]);
-        i++;
-    }while(pname != GL_POINT_DISTANCE_ATTENUATION);
-    ctx->dispatcher().glPointParameterfv(pname,tmpParams);
+    GLfloat tmpParam = X2F(*params) ;
+    ctx->dispatcher().glPointParameterfv(pname,&tmpParam);
 }
 
 GL_API void GL_APIENTRY  glPointSize( GLfloat size) {
