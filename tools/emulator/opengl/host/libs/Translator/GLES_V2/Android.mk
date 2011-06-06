@@ -7,10 +7,11 @@ translator_path := $(LOCAL_PATH)/..
 #exclude darwin builds
 ifeq (, $(findstring $(HOST_OS), darwin))
 
-LOCAL_SRC_FILES :=      \
-     GLESv2Context.cpp    \
-     GLESv2Validate.cpp \
-     GLESv2Imp.cpp
+LOCAL_SRC_FILES :=                    \
+     GLESv2Imp.cpp                    \
+     GLESv2Context.cpp                \
+     GLESv2Validate.cpp               \
+     ShaderParser.cpp                 \
 
 LOCAL_C_INCLUDES += \
                  $(translator_path)/include \

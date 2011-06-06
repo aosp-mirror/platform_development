@@ -23,6 +23,7 @@
 #include <utils/threads.h>
 
 
+
 class GLESv2Context : public GLEScontext{
 public:
     void init();
@@ -31,7 +32,6 @@ public:
 private:
     void sendArr(GLvoid* arr,GLenum arrayType,GLint size,GLsizei stride,int pointsIndex = -1);
     void initExtensionString();
-
 };
 
 #endif
