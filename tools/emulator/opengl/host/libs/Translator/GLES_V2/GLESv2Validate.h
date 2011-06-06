@@ -30,7 +30,8 @@ static bool hintTargetMode(GLenum target,GLenum mode);
 static bool capability(GLenum cap);
 static bool pixelStoreParam(GLenum param);
 static bool readPixelFrmt(GLenum format);
-
+static bool shaderType(GLenum type);
+static bool precisionType(GLenum type);
 };
 
 #endif

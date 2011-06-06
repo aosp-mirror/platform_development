@@ -119,3 +119,20 @@ bool GLESv2Validate::readPixelFrmt(GLenum format){
     return false;
 }
 
+
+bool GLESv2Validate::shaderType(GLenum type){
+    return type == GL_VERTEX_SHADER || type == GL_FRAGMENT_SHADER;
+}
+
+bool GLESv2Validate::precisionType(GLenum type){
+    switch(type){
+    case GL_LOW_FLOAT:
+    case GL_MEDIUM_FLOAT:
+    case GL_HIGH_FLOAT:
+    case GL_LOW_INT:
+    case GL_MEDIUM_INT:
+    case GL_HIGH_INT:
+        return true;
+    }
+    return false;
+}

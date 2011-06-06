@@ -27,6 +27,7 @@
 #include <GLcommon/ThreadInfo.h>
 #include "GLESv2Context.h"
 #include "GLESv2Validate.h"
+#include "ShaderParser.h"
 
 extern "C" {
 
@@ -313,11 +314,13 @@ GL_APICALL GLuint GL_APIENTRY glCreateProgram(void){
 }
 
 GL_APICALL GLuint GL_APIENTRY glCreateShader(GLenum type){
-    GET_CTX_RET(0);
+    GET_CTX_V2_RET(0);
     const GLuint globalShaderName = ctx->dispatcher().glCreateShader(type);
     if(thrd->shareGroup.Ptr() && globalShaderName) {
             const GLuint localShaderName = thrd->shareGroup->genName(SHADER);
+            ShaderParser* sp = new ShaderParser(type);
             thrd->shareGroup->replaceGlobalName(SHADER,localShaderName,globalShaderName);
+            thrd->shareGroup->setObjectData(SHADER,localShaderName,ObjectDataPtr(sp));
             return localShaderName;
     }
     if(globalShaderName){
@@ -381,7 +384,8 @@ GL_APICALL void  GL_APIENTRY glDeleteProgram(GLuint program){
     GET_CTX();
     if(thrd->shareGroup.Ptr()) {
         const GLuint globalProgramName = thrd->shareGroup->getGlobalName(SHADER,program);
-        ctx->dispatcher().glDeleteProgram(globalProgramName);
+        thrd->shareGroup->deleteName(SHADER,program);
+        ctx->dispatcher().glDeleteProgram(program);
     }
 }
 
@@ -389,7 +393,8 @@ GL_APICALL void  GL_APIENTRY glDeleteShader(GLuint shader){
     GET_CTX();
     if(thrd->shareGroup.Ptr()) {
         const GLuint globalShaderName = thrd->shareGroup->getGlobalName(SHADER,shader);
-        ctx->dispatcher().glDeleteShader(globalShaderName);
+        thrd->shareGroup->deleteName(SHADER,shader);
+        ctx->dispatcher().glDeleteShader(shader);
     }
 }
 
@@ -685,17 +690,28 @@ GL_APICALL void  GL_APIENTRY glGetShaderInfoLog(GLuint shader, GLsizei bufsize, 
 }
 
 GL_APICALL void  GL_APIENTRY glGetShaderPrecisionFormat(GLenum shadertype, GLenum precisiontype, GLint* range, GLint* precision){
-    GET_CTX();
-    ctx->dispatcher().glGetShaderPrecisionFormat(shadertype,precisiontype,range,precision);
+    GET_CTX_V2();
+    SET_ERROR_IF(!(GLESv2Validate::shaderType(shadertype) && GLESv2Validate::precisionType(precisiontype)),GL_INVALID_ENUM);
+    if(ctx->glslVersion() < Version(1,30,10)){ //version 1.30.10 is the first version of GLSL Language containing precision qualifiers
+        range[0] = range[1] = 0;
+        precision = 0;
+    } else {
+        ctx->dispatcher().glGetShaderPrecisionFormat(shadertype,precisiontype,range,precision);
+    }
 }
 
-//TODO: may need to convert the source to fit to gles 2.0 shadders
 GL_APICALL void  GL_APIENTRY glGetShaderSource(GLuint shader, GLsizei bufsize, GLsizei* length, GLchar* source){
     GET_CTX();
     if(thrd->shareGroup.Ptr()) {
-        const GLuint globalShaderName = thrd->shareGroup->getGlobalName(SHADER,shader);
-        ctx->dispatcher().glGetShaderSource(globalShaderName,bufsize,length,source);
-        //now need to convert it to match gles syntax
+       const GLuint globalShaderName = thrd->shareGroup->getGlobalName(SHADER,shader);
+       SET_ERROR_IF(globalShaderName == 0,GL_INVALID_VALUE);
+       ObjectDataPtr objData = thrd->shareGroup->getObjectData(SHADER,shader);
+       SET_ERROR_IF(!objData.Ptr(),GL_INVALID_OPERATION);
+       const char* src = ((ShaderParser*)objData.Ptr())->getOriginalSrc();
+       int srcLength = strlen(src);
+       SET_ERROR_IF(bufsize < 0 || srcLength > bufsize,GL_INVALID_VALUE);
+       *length = srcLength;
+       strncpy(source,src,srcLength);
     }
 }
 
@@ -969,12 +985,17 @@ GL_APICALL void  GL_APIENTRY glShaderBinary(GLsizei n, const GLuint* shaders, GL
     }
 }
 
-//TODO: may need to change the source to match to GL shaders format
 GL_APICALL void  GL_APIENTRY glShaderSource(GLuint shader, GLsizei count, const GLchar** string, const GLint* length){
-    GET_CTX();
+    GET_CTX_V2();
+    SET_ERROR_IF(count < 0,GL_INVALID_VALUE);
     if(thrd->shareGroup.Ptr()){
             const GLuint globalShaderName = thrd->shareGroup->getGlobalName(SHADER,shader);
-            ctx->dispatcher().glShaderSource(globalShaderName,count,string,length);
+            SET_ERROR_IF(globalShaderName == 0,GL_INVALID_VALUE);
+            ObjectDataPtr objData = thrd->shareGroup->getObjectData(SHADER,shader);
+            SET_ERROR_IF(!objData.Ptr(),GL_INVALID_OPERATION);
+            ShaderParser* sp = (ShaderParser*)objData.Ptr();
+            sp->setSrc(ctx->glslVersion(),count,string,length);
+            ctx->dispatcher().glShaderSource(globalShaderName,1,sp->parsedLines(),NULL);
     }
 }
 

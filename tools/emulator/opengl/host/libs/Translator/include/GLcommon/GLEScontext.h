@@ -22,6 +22,20 @@ typedef struct _textureUnitState {
     GLboolean enabled[NUM_TEXTURE_TARGETS];
 } textureUnitState;
 
+class Version{
+public:
+    Version();
+    Version(int major,int minor,int release);
+    Version(const char* versionString);
+    Version(const Version& ver);
+    bool operator<(const Version& ver) const;
+    Version& operator=(const Version& ver);
+private:
+    int m_major;
+    int m_minor;
+    int m_release;
+};
+
 struct GLSupport {
     GLSupport():maxLights(0),maxVertexAttribs(0),maxClipPlane(0),maxTexUnits(0),maxTexSize(0) , \
                 GL_EXT_TEXTURE_FORMAT_BGRA8888(false), GL_EXT_FRAMEBUFFER_OBJECT(false), \
@@ -34,6 +48,7 @@ struct GLSupport {
     int  maxClipPlane;
     int  maxTexUnits;
     int  maxTexSize;
+    Version glslVersion;
     bool GL_EXT_TEXTURE_FORMAT_BGRA8888;
     bool GL_EXT_FRAMEBUFFER_OBJECT;
     bool GL_ARB_VERTEX_BLEND;
@@ -93,6 +108,7 @@ public:
     static int getMaxClipPlanes(){return s_glSupport.maxClipPlane;}
     static int getMaxTexUnits(){return s_glSupport.maxTexUnits;}
     static int getMaxTexSize(){return s_glSupport.maxTexSize;}
+    static Version glslVersion(){return s_glSupport.glslVersion;}
 
 
 protected:
