@@ -712,11 +712,15 @@ struct private_module_t HAL_MODULE_INFO_SYM = {
             id: GRALLOC_HARDWARE_MODULE_ID,
             name: "Graphics Memory Allocator Module",
             author: "The Android Open Source Project",
-            methods: &gralloc_module_methods
+            methods: &gralloc_module_methods,
+            dso: NULL,
+            reserved: {0, }
         },
         registerBuffer: gralloc_register_buffer,
         unregisterBuffer: gralloc_unregister_buffer,
         lock: gralloc_lock,
         unlock: gralloc_unlock,
+        perform: NULL,
+        reserved_proc : {NULL, }
     }
 };
