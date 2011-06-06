@@ -10,6 +10,10 @@
 #include <EGL/egl.h>
 #include <GLES2/gl2.h>
 
+#ifdef __APPLE__
+extern "C" void * createGLView(void *nsWindowPtr, int x, int y, int width, int height);
+#endif
+
 #undef HAVE_MALLOC_H
 #include <SDL.h>
 #include <SDL_syswm.h>
@@ -233,8 +237,10 @@ int main(int argc, char **argv)
 
     #ifdef _WIN32
         HWND   windowId = NULL;
-    #else
+    #elif __linux__
         Window windowId = NULL;
+    #elif __APPLE__
+        void* windowId  = NULL;
     #endif
 
         //      // Inialize SDL window
@@ -255,8 +261,10 @@ int main(int argc, char **argv)
         SDL_GetWMInfo(&wminfo);
     #ifdef _WIN32
         windowId = wminfo.window;
-    #else
+    #elif __linux__
         windowId = wminfo.info.x11.window;
+    #elif __APPLE__
+        windowId = createGLView(wminfo.nsWindowPtr,0,0,WINDOW_WIDTH,WINDOW_HEIGHT);
     #endif
 
         int major,minor,num_config;
