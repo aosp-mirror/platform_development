@@ -122,6 +122,10 @@ void (GLAPIENTRY *GLDispatch::glTexParameteri)(GLenum,GLenum,GLint) = NULL;
 void (GLAPIENTRY *GLDispatch::glTexParameteriv)(GLenum,GLenum,const GLint *) = NULL;
 void (GLAPIENTRY *GLDispatch::glTexSubImage2D)(GLenum,GLint,GLint,GLint,GLsizei,GLsizei,GLenum,GLenum,const GLvoid *) = NULL;
 void (GLAPIENTRY *GLDispatch::glViewport)(GLint,GLint,GLsizei,GLsizei) = NULL;
+void (GLAPIENTRY *GLDispatch::glPushAttrib) ( GLbitfield mask ) = NULL;
+void (GLAPIENTRY *GLDispatch::glPopAttrib) ( void ) = NULL;
+void (GLAPIENTRY *GLDispatch::glPushClientAttrib) ( GLbitfield mask ) = NULL;
+void (GLAPIENTRY *GLDispatch::glPopClientAttrib) ( void ) = NULL;
 
 /*GLES 1.1*/
 void (GLAPIENTRY *GLDispatch::glAlphaFunc)(GLenum,GLclampf) = NULL;
@@ -363,6 +367,10 @@ void GLDispatch::dispatchFuncs(GLESVersion version){
     LOAD_GL_FUNC(glTexParameteriv);
     LOAD_GL_FUNC(glTexSubImage2D);
     LOAD_GL_FUNC(glViewport);
+    LOAD_GL_FUNC(glPushAttrib);
+    LOAD_GL_FUNC(glPushClientAttrib);
+    LOAD_GL_FUNC(glPopAttrib);
+    LOAD_GL_FUNC(glPopClientAttrib);
     
     /* Loading OpenGL functions which are needed ONLY for implementing GLES 1.1*/
     if(version == GLES_1_1){
