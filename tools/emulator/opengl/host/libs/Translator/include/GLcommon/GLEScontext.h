@@ -34,6 +34,7 @@ public:
     const GLESpointer* getPointer(GLenum arrType);
     virtual void convertArrs(GLESFloatArrays& fArrs,GLint first,GLsizei count,GLenum type,const GLvoid* indices,bool direct) = 0;
     void bindBuffer(GLenum target,GLuint buffer);
+    void unbindBuffer(GLuint buffer);
     bool isBuffer(GLuint buffer);
     bool isBindedBuffer(GLenum target);
     GLvoid* getBindedBuffer(GLenum target);
