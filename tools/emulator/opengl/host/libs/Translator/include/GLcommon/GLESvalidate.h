@@ -17,17 +17,26 @@
 #define GLES_VALIDATE_H
 
 #include <GLES/gl.h>
-
+#include "GLEScontext.h"
 struct GLESvalidate
 {
 static bool textureEnum(GLenum e,unsigned int maxTex);
-static bool pixelType(GLenum type);
+static bool pixelType(GLEScontext * ctx,GLenum type);
 static bool pixelOp(GLenum format,GLenum type); 
-static bool pixelFrmt(GLenum format);
+static bool pixelFrmt(GLEScontext* ctx , GLenum format);
 static bool bufferTarget(GLenum target);
 static bool bufferParam(GLenum param);
 static bool drawMode(GLenum mode);
 static bool drawType(GLenum mode);
+static bool textureTarget(GLenum target);
+static bool textureTargetLimited(GLenum target);
+static bool textureTargetEx(GLenum target);
+static bool blendEquationMode(GLenum mode);
+static bool framebufferTarget(GLenum target);
+static bool framebufferAttachment(GLenum attachment);
+static bool framebufferAttachmentParams(GLenum pname);
+static bool renderbufferTarget(GLenum target);
+static bool renderbufferParams(GLenum pname);
 };
 
 #endif

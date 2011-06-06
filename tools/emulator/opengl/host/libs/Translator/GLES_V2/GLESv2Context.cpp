@@ -15,22 +15,17 @@
 */
 
 #include "GLESv2Context.h"
-GLv2Support GLESv2Context::s_glSupport;
 
 void GLESv2Context::init() {
     android::Mutex::Autolock mutex(s_lock);
     if(!m_initialized) {
-        int maxTexUnits;
         s_glDispatch.dispatchFuncs(GLES_2_0);
-        s_glDispatch.glGetIntegerv(GL_MAX_VERTEX_ATTRIBS,&s_glSupport.maxVertexAttribs);
-        s_glDispatch.glGetIntegerv(GL_MAX_TEXTURE_UNITS,&maxTexUnits);
-        s_glSupport.maxTexUnits = maxTexUnits < MAX_TEX_UNITS ? maxTexUnits:MAX_TEX_UNITS;
+        initCapsLocked(s_glDispatch.glGetString(GL_EXTENSIONS));
 
         for(int i=0; i < s_glSupport.maxVertexAttribs;i++){
             m_map[i] = new GLESpointer();
         }
     }
-
     m_initialized = true;
 }
 
