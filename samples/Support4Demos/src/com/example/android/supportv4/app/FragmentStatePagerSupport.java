@@ -14,19 +14,16 @@
  * limitations under the License.
  */
 
-package com.example.android.supportv13.app;
+package com.example.android.supportv4.app;
 
-import com.example.android.supportv13.Cheeses;
-import com.example.android.supportv13.R;
-
-import android.support.v13.app.FragmentStatePagerAdapter;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentStatePagerAdapter;
+import android.support.v4.app.ListFragment;
 import android.support.v4.view.ViewPager;
 
 import android.os.Bundle;
-import android.app.Activity;
-import android.app.Fragment;
-import android.app.FragmentManager;
-import android.app.ListFragment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -37,7 +34,10 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 
-public class FragmentStatePagerSupport extends Activity {
+import com.example.android.supportv4.Cheeses;
+import com.example.android.supportv4.R;
+
+public class FragmentStatePagerSupport extends FragmentActivity {
     static final int NUM_ITEMS = 10;
 
     MyAdapter mAdapter;
@@ -49,7 +49,7 @@ public class FragmentStatePagerSupport extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.fragment_pager);
 
-        mAdapter = new MyAdapter(getFragmentManager());
+        mAdapter = new MyAdapter(getSupportFragmentManager());
 
         mPager = (ViewPager)findViewById(R.id.pager);
         mPager.setAdapter(mAdapter);

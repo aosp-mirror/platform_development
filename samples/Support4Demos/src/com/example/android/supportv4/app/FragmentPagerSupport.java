@@ -22,8 +22,10 @@ import com.example.android.supportv4.R;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
-import android.support.v4.app.FragmentPager;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.app.ListFragment;
+import android.support.v4.view.ViewPager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -34,19 +36,22 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 
-public class FragmentPagerSupport extends FragmentActivity
-        implements FragmentPager.Adapter {
+public class FragmentPagerSupport extends FragmentActivity {
     static final int NUM_ITEMS = 10;
 
-    FragmentPager mPager;
+    MyAdapter mAdapter;
+
+    ViewPager mPager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.fragment_pager);
 
-        mPager = (FragmentPager)findViewById(R.id.pager);
-        mPager.setAdapter(this);
+        mAdapter = new MyAdapter(getSupportFragmentManager());
+
+        mPager = (ViewPager)findViewById(R.id.pager);
+        mPager.setAdapter(mAdapter);
 
         // Watch for button clicks.
         Button button = (Button)findViewById(R.id.goto_first);
@@ -63,14 +68,20 @@ public class FragmentPagerSupport extends FragmentActivity
         });
     }
 
-    @Override
-    public int getCount() {
-        return NUM_ITEMS;
-    }
+    public static class MyAdapter extends FragmentPagerAdapter {
+        public MyAdapter(FragmentManager fm) {
+            super(fm);
+        }
 
-    @Override
-    public Fragment getItem(int position) {
-        return ArrayListFragment.newInstance(position);
+        @Override
+        public int getCount() {
+            return NUM_ITEMS;
+        }
+
+        @Override
+        public Fragment getItem(int position) {
+            return ArrayListFragment.newInstance(position);
+        }
     }
 
     public static class ArrayListFragment extends ListFragment {
