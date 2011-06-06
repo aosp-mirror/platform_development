@@ -29,11 +29,11 @@ void GLEScmContext::init() {
         initExtensionString();
     }
     m_texCoords = new GLESpointer[s_glSupport.maxTexUnits];
-    m_map[GL_TEXTURE_COORD_ARRAY]  = &m_texCoords[m_activeTexture];
+    m_map[GL_TEXTURE_COORD_ARRAY]  = &m_texCoords[m_clientActiveTexture];
     m_initialized = true;
 }
 
-GLEScmContext::GLEScmContext():GLEScontext(),m_pointsIndex(-1){
+GLEScmContext::GLEScmContext():GLEScontext(),m_pointsIndex(-1), m_clientActiveTexture(0) {
 
     m_map[GL_COLOR_ARRAY]          = new GLESpointer();
     m_map[GL_NORMAL_ARRAY]         = new GLESpointer();
@@ -44,7 +44,11 @@ GLEScmContext::GLEScmContext():GLEScontext(),m_pointsIndex(-1){
 
 void GLEScmContext::setActiveTexture(GLenum tex) {
    m_activeTexture = tex - GL_TEXTURE0;
-   m_map[GL_TEXTURE_COORD_ARRAY] = &m_texCoords[m_activeTexture];
+}
+
+void GLEScmContext::setClientActiveTexture(GLenum tex) {
+   m_clientActiveTexture = tex - GL_TEXTURE0;
+   m_map[GL_TEXTURE_COORD_ARRAY] = &m_texCoords[m_clientActiveTexture];
 }
 
 GLEScmContext::~GLEScmContext(){
@@ -90,7 +94,7 @@ void GLEScmContext::convertArrs(GLESFloatArrays& fArrs,GLint first,GLsizei count
         chooseConvertMethod(fArrs,first,count,type,indices,direct,p,array_id,index);
     }
 
-    unsigned int activeTexture = m_activeTexture + GL_TEXTURE0;
+    unsigned int activeTexture = m_clientActiveTexture + GL_TEXTURE0;
 
     s_lock.lock();
     int maxTexUnits = s_glSupport.maxTexUnits;
@@ -100,7 +104,7 @@ void GLEScmContext::convertArrs(GLESFloatArrays& fArrs,GLint first,GLsizei count
     for(int i=0; i< maxTexUnits;i++) {
 
         unsigned int tex = GL_TEXTURE0+i;
-        setActiveTexture(tex);
+        setClientActiveTexture(tex);
         s_glDispatch.glClientActiveTexture(tex);
 
         GLenum array_id   = GL_TEXTURE_COORD_ARRAY;
@@ -108,7 +112,7 @@ void GLEScmContext::convertArrs(GLESFloatArrays& fArrs,GLint first,GLsizei count
         chooseConvertMethod(fArrs,first,count,type,indices,direct,p,array_id,index);
     }
 
-    setActiveTexture(activeTexture);
+    setClientActiveTexture(activeTexture);
     s_glDispatch.glClientActiveTexture(activeTexture);
 }
 
@@ -181,7 +185,7 @@ void GLEScmContext::initExtensionString() {
                       "GL_OES_byte_coordinates GL_OES_compressed_paletted_texture GL_OES_point_size_array "
                       "GL_OES_point_sprite GL_OES_single_precision GL_OES_stencil_wrap GL_OES_texture_env_crossbar "
                       "GL_OES_texture_mirored_repeat GL_OES_EGL_image GL_OES_element_index_uint GL_OES_draw_texture "
-                      "GL_OES_texture_cube_map ";
+                      "GL_OES_texture_cube_map GL_OES_draw_texture ";
     if (s_glSupport.GL_OES_READ_FORMAT)
         *s_glExtensions+="GL_OES_read_format ";
     if (s_glSupport.GL_EXT_FRAMEBUFFER_OBJECT) {

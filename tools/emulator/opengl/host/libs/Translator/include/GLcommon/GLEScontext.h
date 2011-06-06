@@ -11,6 +11,17 @@
 
 typedef std::map<GLenum,GLESpointer*>  ArraysMap;
 
+enum TextureTarget {
+TEXTURE_2D,
+TEXTURE_CUBE_MAP,
+NUM_TEXTURE_TARGETS
+};
+
+typedef struct _textureUnitState {
+    GLuint texture;
+    GLboolean enabled[NUM_TEXTURE_TARGETS];
+} textureUnitState;
+
 struct GLSupport {
     GLSupport():maxLights(0),maxVertexAttribs(0),maxClipPlane(0),maxTexUnits(0),maxTexSize(0) , \
                 GL_EXT_TEXTURE_FORMAT_BGRA8888(false), GL_EXT_FRAMEBUFFER_OBJECT(false), \
@@ -44,8 +55,11 @@ public:
     void setGLerror(GLenum err);
     void setShareGroup(ShareGroupPtr grp){m_shareGroup = grp;};
     virtual void setActiveTexture(GLenum tex);
-    unsigned int getBindedTexture(){return m_tex2DBind[m_activeTexture];};
-    void setBindedTexture(unsigned int tex){ m_tex2DBind[m_activeTexture] = tex;};
+    unsigned int getBindedTexture(){return m_tex2DBind[m_activeTexture].texture;};
+    unsigned int getBindedTexture(GLenum unit) { return m_tex2DBind[unit - GL_TEXTURE0].texture;};
+    void setBindedTexture(unsigned int tex){ m_tex2DBind[m_activeTexture].texture = tex;};
+    bool isTextureUnitEnabled(GLenum unit);
+    void setTextureEnabled(TextureTarget target, GLenum enable) {m_tex2DBind[m_activeTexture].enabled[target] = enable; };
 
     bool  isArrEnabled(GLenum);
     void  enableArr(GLenum arr,bool enable);
@@ -97,7 +111,7 @@ private:
 
     ShareGroupPtr         m_shareGroup;
     GLenum                m_glError;
-    unsigned int          m_tex2DBind[MAX_TEX_UNITS];
+    textureUnitState      m_tex2DBind[MAX_TEX_UNITS];
     unsigned int          m_arrayBuffer;
     unsigned int          m_elementBuffer;
 };

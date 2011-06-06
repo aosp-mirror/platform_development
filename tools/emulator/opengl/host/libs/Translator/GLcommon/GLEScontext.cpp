@@ -28,7 +28,11 @@ GLEScontext::GLEScontext():
                            m_glError(GL_NO_ERROR)  ,
                            m_arrayBuffer(0)        ,
                            m_elementBuffer(0) {
-      
+    for (int i=0;i<MAX_TEX_UNITS;++i) {
+        m_tex2DBind[i].texture = 0;
+        for (int j=0;j<NUM_TEXTURE_TARGETS;++j)
+            m_tex2DBind[i].enabled[j] = GL_FALSE;
+    }  
 };
 
 GLenum GLEScontext::getGLerror() {
@@ -395,5 +399,13 @@ void GLEScontext::initCapsLocked(const GLubyte * extensionString)
 
     //init extension string
     s_glExtensions = new std::string("");
+}
+
+bool GLEScontext::isTextureUnitEnabled(GLenum unit) {
+    for (int i=0;i<NUM_TEXTURE_TARGETS;++i) {
+        if (m_tex2DBind[unit-GL_TEXTURE0].enabled[i])
+            return true;
+    }
+    return false;
 }
 

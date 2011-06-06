@@ -90,7 +90,10 @@ public:
     static void (GLAPIENTRY *glTexParameteriv) (GLenum target, GLenum pname, const GLint *params);
     static void (GLAPIENTRY *glTexSubImage2D) (GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid *pixels);
     static void (GLAPIENTRY *glViewport) (GLint x, GLint y, GLsizei width, GLsizei height);
-
+    static void (GLAPIENTRY *glPushAttrib) ( GLbitfield mask );
+    static void (GLAPIENTRY *glPopAttrib) ( void );
+    static void (GLAPIENTRY *glPushClientAttrib) ( GLbitfield mask );
+    static void (GLAPIENTRY *glPopClientAttrib) ( void );
 
     /* OpenGL functions which are needed ONLY for implementing GLES 1.1*/
     static void (GLAPIENTRY *glAlphaFunc) (GLenum func, GLclampf ref);

@@ -18,6 +18,7 @@
 #undef GL_API
 #define GL_API __declspec(dllexport)
 #endif
+#define GL_GLEXT_PROTOTYPES
 #include "GLEScmContext.h"
 #include "GLEScmValidate.h"
 #include "GLEScmUtils.h"
@@ -30,7 +31,6 @@
 #include <GLcommon/TranslatorIfaces.h>
 #include <GLcommon/ThreadInfo.h>
 #include <GLES/gl.h>
-#define GL_GLEXT_PROTOTYPES
 #include <GLES/glext.h>
 #include <cmath>
 #include <map>
@@ -138,6 +138,14 @@ static __translatorMustCastToProperFunctionPointerType getProcAddress(const char
             (*s_glesExtensions)["glGetFramebufferAttachmentParameterivOES"] = (__translatorMustCastToProperFunctionPointerType)glGetFramebufferAttachmentParameterivOES;
             (*s_glesExtensions)["glGenerateMipmapOES"] = (__translatorMustCastToProperFunctionPointerType)glGenerateMipmapOES;
         }
+        (*s_glesExtensions)["glDrawTexsOES"] = (__translatorMustCastToProperFunctionPointerType)glDrawTexsOES;
+        (*s_glesExtensions)["glDrawTexiOES"] = (__translatorMustCastToProperFunctionPointerType)glDrawTexiOES;
+        (*s_glesExtensions)["glDrawTexfOES"] = (__translatorMustCastToProperFunctionPointerType)glDrawTexfOES;
+        (*s_glesExtensions)["glDrawTexxOES"] = (__translatorMustCastToProperFunctionPointerType)glDrawTexxOES;
+        (*s_glesExtensions)["glDrawTexsvOES"] = (__translatorMustCastToProperFunctionPointerType)glDrawTexsvOES;
+        (*s_glesExtensions)["glDrawTexivOES"] = (__translatorMustCastToProperFunctionPointerType)glDrawTexivOES;
+        (*s_glesExtensions)["glDrawTexfvOES"] = (__translatorMustCastToProperFunctionPointerType)glDrawTexfvOES;
+        (*s_glesExtensions)["glDrawTexxvOES"] = (__translatorMustCastToProperFunctionPointerType)glDrawTexxvOES;
     }
     __translatorMustCastToProperFunctionPointerType ret=NULL;
     ProcTableMap::iterator val = s_glesExtensions->find(procName);
@@ -153,6 +161,22 @@ GLESiface* __translator_getIfaces(EGLiface* eglIface){
     return & s_glesIface;
 }
 
+}
+
+static TextureData* getTextureData(){
+    GET_CTX_RET(NULL);
+    unsigned int tex = ctx->getBindedTexture();
+    if (tex==0)
+        return NULL;
+    TextureData *texData = NULL;
+    ObjectDataPtr objData = thrd->shareGroup->getObjectData(TEXTURE,tex);
+    if(!objData.Ptr()){
+        texData = new TextureData();
+        thrd->shareGroup->setObjectData(TEXTURE, tex, ObjectDataPtr(texData));
+    } else {
+        texData = (TextureData*)objData.Ptr();
+    }
+    return texData;
 }
 
 GL_API GLboolean GL_APIENTRY glIsBuffer(GLuint buffer) {
@@ -222,6 +246,7 @@ GL_API const GLubyte * GL_APIENTRY  glGetString( GLenum name) {
 GL_API void GL_APIENTRY  glActiveTexture( GLenum texture) {
     GET_CTX_CM()
     SET_ERROR_IF(!GLEScmValidate::textureEnum(texture,ctx->getMaxTexUnits()),GL_INVALID_ENUM);
+    ctx->setActiveTexture(texture);
     ctx->dispatcher().glActiveTexture(texture);
 }
 
@@ -267,7 +292,7 @@ GL_API void GL_APIENTRY  glBindTexture( GLenum target, GLuint texture) {
             globalTextureName = thrd->shareGroup->getGlobalName(TEXTURE,texture);
         }
     }
-    ctx->setBindedTexture(globalTextureName);
+    ctx->setBindedTexture(texture);
     ctx->dispatcher().glBindTexture(target,globalTextureName);
 }
 
@@ -325,7 +350,7 @@ GL_API void GL_APIENTRY  glClearStencil( GLint s) {
 GL_API void GL_APIENTRY  glClientActiveTexture( GLenum texture) {
     GET_CTX_CM()
     SET_ERROR_IF(!GLEScmValidate::textureEnum(texture,ctx->getMaxTexUnits()),GL_INVALID_ENUM);
-    ctx->setActiveTexture(texture);
+    ctx->setClientActiveTexture(texture);
     ctx->dispatcher().glClientActiveTexture(texture);
 
 }
@@ -476,8 +501,11 @@ GL_API void GL_APIENTRY  glDisable( GLenum cap) {
         ctx->dispatcher().glDisable(GL_TEXTURE_GEN_T);
         ctx->dispatcher().glDisable(GL_TEXTURE_GEN_R);
     }
-    else
-        ctx->dispatcher().glDisable(cap);
+    ctx->dispatcher().glDisable(cap);
+    if (cap==GL_TEXTURE_2D)
+        ctx->setTextureEnabled(TEXTURE_2D,false);
+    else if (cap==GL_TEXTURE_CUBE_MAP_OES)
+        ctx->setTextureEnabled(TEXTURE_CUBE_MAP,false);
 }
 
 GL_API void GL_APIENTRY  glDisableClientState( GLenum array) {
@@ -537,6 +565,10 @@ GL_API void GL_APIENTRY  glEnable( GLenum cap) {
     }
     else
         ctx->dispatcher().glEnable(cap);
+    if (cap==GL_TEXTURE_2D)
+        ctx->setTextureEnabled(TEXTURE_2D,true);
+    else if (cap==GL_TEXTURE_CUBE_MAP_OES)
+        ctx->setTextureEnabled(TEXTURE_CUBE_MAP,true);
 }
 
 GL_API void GL_APIENTRY  glEnableClientState( GLenum array) {
@@ -858,19 +890,43 @@ GL_API void GL_APIENTRY  glGetTexEnvxv( GLenum env, GLenum pname, GLfixed *param
 
 GL_API void GL_APIENTRY  glGetTexParameterfv( GLenum target, GLenum pname, GLfloat *params) {
     GET_CTX()
-    ctx->dispatcher().glGetTexParameterfv(target,pname,params);
+   if (pname==GL_TEXTURE_CROP_RECT_OES) {
+      TextureData *texData = getTextureData();
+      SET_ERROR_IF(texData==NULL,GL_INVALID_OPERATION);
+      for (int i=0;i<4;++i)
+        params[i] = texData->crop_rect[i];
+    }
+    else {
+      ctx->dispatcher().glGetTexParameterfv(target,pname,params);
+    }
 }
 
 GL_API void GL_APIENTRY  glGetTexParameteriv( GLenum target, GLenum pname, GLint *params) {
     GET_CTX()
-    ctx->dispatcher().glGetTexParameteriv(target,pname,params);
+    if (pname==GL_TEXTURE_CROP_RECT_OES) {
+      TextureData *texData = getTextureData();
+      SET_ERROR_IF(texData==NULL,GL_INVALID_OPERATION);
+      for (int i=0;i<4;++i)
+        params[i] = texData->crop_rect[i];
+    }
+    else {
+      ctx->dispatcher().glGetTexParameteriv(target,pname,params);
+    }
 }
 
 GL_API void GL_APIENTRY  glGetTexParameterxv( GLenum target, GLenum pname, GLfixed *params) {
     GET_CTX()
-    GLfloat tmpParam;
-    ctx->dispatcher().glGetTexParameterfv(target,pname,&tmpParam);
-    params[0] = static_cast<GLfixed>(tmpParam);
+    if (pname==GL_TEXTURE_CROP_RECT_OES) {
+      TextureData *texData = getTextureData();
+      SET_ERROR_IF(texData==NULL,GL_INVALID_OPERATION);
+      for (int i=0;i<4;++i)
+        params[i] = F2X(texData->crop_rect[i]);
+    }
+    else {
+      GLfloat tmpParam;
+      ctx->dispatcher().glGetTexParameterfv(target,pname,&tmpParam);
+      params[0] = static_cast<GLfixed>(tmpParam);
+    }
 }
 
 GL_API void GL_APIENTRY  glHint( GLenum target, GLenum mode) {
@@ -1252,20 +1308,6 @@ GL_API void GL_APIENTRY  glTexEnvxv( GLenum target, GLenum pname, const GLfixed 
     ctx->dispatcher().glTexEnvfv(target,pname,tmpParams);
 }
 
-static TextureData* getTextureData(){
-    GET_CTX_RET(NULL);
-    unsigned int tex = ctx->getBindedTexture();
-    TextureData *texData = NULL;
-    ObjectDataPtr objData = thrd->shareGroup->getObjectData(TEXTURE,tex);
-    if(!objData.Ptr()){
-        texData = new TextureData();
-        thrd->shareGroup->setObjectData(TEXTURE, tex, ObjectDataPtr(texData));
-    } else {
-        texData = (TextureData*)objData.Ptr();
-    }
-    return texData;
-}
-
 GL_API void GL_APIENTRY  glTexImage2D( GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid *pixels) {
     GET_CTX()
 
@@ -1277,8 +1319,8 @@ GL_API void GL_APIENTRY  glTexImage2D( GLenum target, GLint level, GLint interna
     SET_ERROR_IF(!(GLEScmValidate::pixelOp(format,type) && internalformat == ((GLint)format)),GL_INVALID_OPERATION);
 
     if (thrd->shareGroup.Ptr()){
-        unsigned int tex = ctx->getBindedTexture();
         TextureData *texData = getTextureData();
+        SET_ERROR_IF(texData==NULL,GL_INVALID_OPERATION);
         if(texData) {
             texData->width = width;
             texData->height = height;
@@ -1298,7 +1340,15 @@ GL_API void GL_APIENTRY  glTexParameterf( GLenum target, GLenum pname, GLfloat p
 GL_API void GL_APIENTRY  glTexParameterfv( GLenum target, GLenum pname, const GLfloat *params) {
     GET_CTX()
     SET_ERROR_IF(!GLEScmValidate::texParams(target,pname),GL_INVALID_ENUM);
-    ctx->dispatcher().glTexParameterfv(target,pname,params);
+    if (pname==GL_TEXTURE_CROP_RECT_OES) {
+        TextureData *texData = getTextureData();
+        SET_ERROR_IF(texData==NULL,GL_INVALID_OPERATION);
+        for (int i=0;i<4;++i)
+            texData->crop_rect[i] = params[i];
+    }
+    else {
+        ctx->dispatcher().glTexParameterfv(target,pname,params);
+    }
 }
 
 GL_API void GL_APIENTRY  glTexParameteri( GLenum target, GLenum pname, GLint param) {
@@ -1310,7 +1360,15 @@ GL_API void GL_APIENTRY  glTexParameteri( GLenum target, GLenum pname, GLint par
 GL_API void GL_APIENTRY  glTexParameteriv( GLenum target, GLenum pname, const GLint *params) {
     GET_CTX()
     SET_ERROR_IF(!GLEScmValidate::texParams(target,pname),GL_INVALID_ENUM);
-    ctx->dispatcher().glTexParameteriv(target,pname,params);
+    if (pname==GL_TEXTURE_CROP_RECT_OES) {
+        TextureData *texData = getTextureData();
+        SET_ERROR_IF(texData==NULL,GL_INVALID_OPERATION);
+        for (int i=0;i<4;++i)
+            texData->crop_rect[i] = params[i];
+    }
+    else {
+        ctx->dispatcher().glTexParameteriv(target,pname,params);
+    }
 }
 
 GL_API void GL_APIENTRY  glTexParameterx( GLenum target, GLenum pname, GLfixed param) {
@@ -1322,8 +1380,16 @@ GL_API void GL_APIENTRY  glTexParameterx( GLenum target, GLenum pname, GLfixed p
 GL_API void GL_APIENTRY  glTexParameterxv( GLenum target, GLenum pname, const GLfixed *params) {
     GET_CTX()
     SET_ERROR_IF(!GLEScmValidate::texParams(target,pname),GL_INVALID_ENUM);
-    GLfloat param = static_cast<GLfloat>(params[0]);
-    ctx->dispatcher().glTexParameterfv(target,pname,&param);
+    if (pname==GL_TEXTURE_CROP_RECT_OES) {
+        TextureData *texData = getTextureData();
+        SET_ERROR_IF(texData==NULL,GL_INVALID_OPERATION);
+        for (int i=0;i<4;++i)
+            texData->crop_rect[i] = X2F(params[i]);
+    }
+    else {
+        GLfloat param = static_cast<GLfloat>(params[0]);
+        ctx->dispatcher().glTexParameterfv(target,pname,&param);
+    }
 }
 
 GL_API void GL_APIENTRY  glTexSubImage2D( GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid *pixels) {
@@ -1379,6 +1445,7 @@ GL_API void GL_APIENTRY glEGLImageTargetTexture2DOES(GLenum target, GLeglImageOE
             thrd->shareGroup->replaceGlobalName(TEXTURE, tex,img->globalTexName);
             ctx->dispatcher().glBindTexture(GL_TEXTURE_2D, img->globalTexName);
             TextureData *texData = getTextureData();
+            SET_ERROR_IF(texData==NULL,GL_INVALID_OPERATION);
             texData->sourceEGLImage = (unsigned int)image;
             texData->eglImageDetach = s_eglIface->eglDetachEGLImage;
         }
@@ -1701,4 +1768,128 @@ GL_API void GL_APIENTRY glGetTexGenxvOES (GLenum coord, GLenum pname, GLfixed *p
         ctx->dispatcher().glGetTexGenfv(coord,pname,tmpParams);
 
     params[0] = F2X(tmpParams[1]);
+}
+
+template <class T, GLenum TypeName>
+void glDrawTexOES (T x, T y, T z, T width, T height) {
+    GET_CTX()
+    int numClipPlanes;
+
+    GLint viewport[4];
+    z = (z>1 ? 1 : (z<0 ?  0 : z));
+
+    T     vertices[4*3] = {x , y, z,
+                             x , y+height, z,
+                             x+width, y+height, z,
+                             x+width, y, z};
+    GLfloat texels[ctx->getMaxTexUnits()][4*2];
+
+    ctx->dispatcher().glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
+    ctx->dispatcher().glPushAttrib(GL_TRANSFORM_BIT);
+
+    //setup projection matrix to draw in viewport aligned coordinates
+    ctx->dispatcher().glMatrixMode(GL_PROJECTION);
+    ctx->dispatcher().glPushMatrix();
+    ctx->dispatcher().glLoadIdentity();
+    ctx->dispatcher().glGetIntegerv(GL_VIEWPORT,viewport);
+    ctx->dispatcher().glOrtho(viewport[0],viewport[0] + viewport[2],viewport[1],viewport[1]+viewport[3],0,-1);
+    //setup texture matrix
+    ctx->dispatcher().glMatrixMode(GL_TEXTURE);
+    ctx->dispatcher().glPushMatrix();
+    ctx->dispatcher().glLoadIdentity();
+    //setup modelview matrix
+    ctx->dispatcher().glMatrixMode(GL_MODELVIEW);
+    ctx->dispatcher().glPushMatrix();
+    ctx->dispatcher().glLoadIdentity();
+    //backup vbo's
+    int array_buffer,element_array_buffer;
+    glGetIntegerv(GL_ARRAY_BUFFER_BINDING,&array_buffer);
+    glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING,&element_array_buffer);
+    ctx->dispatcher().glBindBuffer(GL_ARRAY_BUFFER,0);
+    ctx->dispatcher().glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
+
+    //disable clip planes
+    ctx->dispatcher().glGetIntegerv(GL_MAX_CLIP_PLANES,&numClipPlanes);
+    for (int i=0;i<numClipPlanes;++i)
+        ctx->dispatcher().glDisable(GL_CLIP_PLANE0+i);
+
+    for (int i=0;i<ctx->getMaxTexUnits();++i) {
+        if (ctx->isTextureUnitEnabled(GL_TEXTURE0+i)) {
+            TextureData * texData = NULL;
+            int tex = ctx->getBindedTexture(GL_TEXTURE0+i);
+            ctx->dispatcher().glClientActiveTexture(GL_TEXTURE0+i);
+            ObjectDataPtr objData = thrd->shareGroup->getObjectData(TEXTURE,tex);
+            if (objData.Ptr()) {
+                texData = (TextureData*)objData.Ptr();
+                //calculate texels
+                texels[i][0] = (float)(texData->crop_rect[0])/(float)(texData->width);
+                texels[i][1] = (float)(texData->crop_rect[1])/(float)(texData->height);
+
+                texels[i][2] = (float)(texData->crop_rect[0])/(float)(texData->width);
+                texels[i][3] = (float)(texData->crop_rect[3]+texData->crop_rect[1])/(float)(texData->height);
+
+                texels[i][4] = (float)(texData->crop_rect[2]+texData->crop_rect[0])/(float)(texData->width);
+                texels[i][5] = (float)(texData->crop_rect[3]+texData->crop_rect[1])/(float)(texData->height);
+                
+                texels[i][6] = (float)(texData->crop_rect[2]+texData->crop_rect[0])/(float)(texData->width);
+                texels[i][7] = (float)(texData->crop_rect[1])/(float)(texData->height);
+
+                ctx->dispatcher().glTexCoordPointer(2,GL_FLOAT,0,texels[i]);
+             }
+        }
+    }
+
+    //draw rectangle
+    ctx->dispatcher().glEnableClientState(GL_VERTEX_ARRAY);
+    ctx->dispatcher().glVertexPointer(3,TypeName,0,vertices);
+    ctx->dispatcher().glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+    ctx->dispatcher().glDrawArrays(GL_TRIANGLE_FAN,0,4);
+
+    //restore vbo's
+    ctx->dispatcher().glBindBuffer(GL_ARRAY_BUFFER,array_buffer);
+    ctx->dispatcher().glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,element_array_buffer);
+
+    //restore matrix state
+
+    ctx->dispatcher().glMatrixMode(GL_MODELVIEW);
+    ctx->dispatcher().glPopMatrix();
+    ctx->dispatcher().glMatrixMode(GL_TEXTURE);
+    ctx->dispatcher().glPopMatrix();
+    ctx->dispatcher().glMatrixMode(GL_PROJECTION);
+    ctx->dispatcher().glPopMatrix();
+
+    ctx->dispatcher().glPopAttrib();
+    ctx->dispatcher().glPopClientAttrib();
+}
+
+GL_API void GL_APIENTRY glDrawTexsOES (GLshort x, GLshort y, GLshort z, GLshort width, GLshort height) {
+    glDrawTexOES<GLshort,GL_SHORT>(x,y,z,width,height);
+}
+
+GL_API void GL_APIENTRY glDrawTexiOES (GLint x, GLint y, GLint z, GLint width, GLint height) {
+    glDrawTexOES<GLint,GL_INT>(x,y,z,width,height);
+}
+
+GL_API void GL_APIENTRY glDrawTexfOES (GLfloat x, GLfloat y, GLfloat z, GLfloat width, GLfloat height) {
+    glDrawTexOES<GLfloat,GL_FLOAT>(x,y,z,width,height);
+}
+
+GL_API void GL_APIENTRY glDrawTexxOES (GLfixed x, GLfixed y, GLfixed z, GLfixed width, GLfixed height) {
+    glDrawTexOES<GLfloat,GL_FLOAT>(X2F(x),X2F(y),X2F(z),X2F(width),X2F(height));
+}
+
+GL_API void GL_APIENTRY glDrawTexsvOES (const GLshort * coords) { 
+    glDrawTexOES<GLshort,GL_SHORT>(coords[0],coords[1],coords[2],coords[3],coords[4]);
+}
+
+GL_API void GL_APIENTRY glDrawTexivOES (const GLint * coords) { 
+    glDrawTexOES<GLint,GL_INT>(coords[0],coords[1],coords[2],coords[3],coords[4]);
+}
+
+GL_API void GL_APIENTRY glDrawTexfvOES (const GLfloat * coords) { 
+    glDrawTexOES<GLfloat,GL_FLOAT>(coords[0],coords[1],coords[2],coords[3],coords[4]);
+}
+
+GL_API void GL_APIENTRY glDrawTexxvOES (const GLfixed * coords) { 
+    glDrawTexOES<GLfloat,GL_FLOAT>(X2F(coords[0]),X2F(coords[1]),X2F(coords[2]),X2F(coords[3]),X2F(coords[4]));
 }
