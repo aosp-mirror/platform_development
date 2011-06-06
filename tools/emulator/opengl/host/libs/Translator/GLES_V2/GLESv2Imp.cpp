@@ -19,6 +19,7 @@
 #define GL_APICALL __declspec(dllexport)
 #endif
 
+#define GL_GLEXT_PROTOTYPES
 #include <stdio.h>
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
@@ -37,6 +38,12 @@ static GLEScontext* createGLESContext();
 static __translatorMustCastToProperFunctionPointerType getProcAddress(const char* procName);
 
 }
+
+/************************************** GLES EXTENSIONS *********************************************************/
+//extentions descriptor
+typedef std::map<std::string, __translatorMustCastToProperFunctionPointerType> ProcTableMap;
+ProcTableMap *s_glesExtensions = NULL;
+/****************************************************************************************************************/
 
 static EGLiface*  s_eglIface = NULL;
 static GLESiface  s_glesIface = {
@@ -71,7 +78,25 @@ static void setShareGroup(GLEScontext* ctx,ShareGroupPtr grp) {
 }
 
 static __translatorMustCastToProperFunctionPointerType getProcAddress(const char* procName) {
-    return NULL;
+    GET_CTX_RET(NULL)
+    ctx->getGlobalLock();
+    static bool proc_table_initialized = false;
+    if (!proc_table_initialized) {
+        proc_table_initialized = true;
+        if (!s_glesExtensions)
+            s_glesExtensions = new ProcTableMap();
+        else
+            s_glesExtensions->clear();
+        (*s_glesExtensions)["glEGLImageTargetTexture2DOES"] = (__translatorMustCastToProperFunctionPointerType)glEGLImageTargetTexture2DOES;
+        (*s_glesExtensions)["glEGLImageTargetRenderbufferStorageOES"]=(__translatorMustCastToProperFunctionPointerType)glEGLImageTargetRenderbufferStorageOES;
+    }
+    __translatorMustCastToProperFunctionPointerType ret=NULL;
+    ProcTableMap::iterator val = s_glesExtensions->find(procName);
+    if (val!=s_glesExtensions->end())
+        ret = val->second;
+    ctx->releaseGlobalLock();
+
+    return ret;
 }
 
 GL_APICALL GLESiface* __translator_getIfaces(EGLiface* eglIface){
@@ -808,7 +833,7 @@ GL_APICALL void  GL_APIENTRY glGetVertexAttribiv(GLuint index, GLenum pname, GLi
 GL_APICALL void  GL_APIENTRY glGetVertexAttribPointerv(GLuint index, GLenum pname, GLvoid** pointer){
     GET_CTX();
     SET_ERROR_IF(pname != GL_VERTEX_ATTRIB_ARRAY_POINTER,GL_INVALID_ENUM); 
-
+    
     const GLESpointer* p = ctx->getPointer(pname);
     if(p) {
         *pointer = const_cast<void *>( p->getBufferData());
@@ -1011,6 +1036,8 @@ GL_APICALL void  GL_APIENTRY glTexImage2D(GLenum target, GLint level, GLint inte
             texData->internalFormat = internalformat;
         }
     }
+    if (type==GL_HALF_FLOAT_OES)
+        type = GL_HALF_FLOAT_NV;
     ctx->dispatcher().glTexImage2D(target,level,internalformat,width,height,border,format,type,pixels);
 }
 
@@ -1042,6 +1069,8 @@ GL_APICALL void  GL_APIENTRY glTexSubImage2D(GLenum target, GLint level, GLint x
                    GLESv2Validate::pixelFrmt(ctx,format)&&
                    GLESv2Validate::pixelType(ctx,type)),GL_INVALID_ENUM);
     SET_ERROR_IF(!GLESv2Validate::pixelOp(format,type),GL_INVALID_OPERATION);
+    if (type==GL_HALF_FLOAT_OES)
+        type = GL_HALF_FLOAT_NV;
 
     ctx->dispatcher().glTexSubImage2D(target,level,xoffset,yoffset,width,height,format,type,pixels);
 
@@ -1194,6 +1223,8 @@ GL_APICALL void  GL_APIENTRY glVertexAttrib4fv(GLuint indx, const GLfloat* value
 
 GL_APICALL void  GL_APIENTRY glVertexAttribPointer(GLuint indx, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const GLvoid* ptr){
     GET_CTX();
+    if (type==GL_HALF_FLOAT_OES)
+        type = GL_HALF_FLOAT;
     const GLvoid* data = ctx->setPointer(indx,size,type,stride,ptr);
     if(type != GL_FIXED) ctx->dispatcher().glVertexAttribPointer(indx,size,type,normalized,stride,ptr);
 }
@@ -1201,4 +1232,38 @@ GL_APICALL void  GL_APIENTRY glVertexAttribPointer(GLuint indx, GLint size, GLen
 GL_APICALL void  GL_APIENTRY glViewport(GLint x, GLint y, GLsizei width, GLsizei height){
     GET_CTX();
     ctx->dispatcher().glViewport(x,y,width,height);
+}
+
+GL_APICALL void GL_APIENTRY glEGLImageTargetTexture2DOES(GLenum target, GLeglImageOES image)
+{
+    GET_CTX();
+    SET_ERROR_IF(!GLESv2Validate::textureTargetLimited(target),GL_INVALID_ENUM);
+    EglImage *img = s_eglIface->eglAttachEGLImage((unsigned int)image);
+    if (img) {
+        // Create the texture object in the underlying EGL implementation,
+        // flag to the OpenGL layer to skip the image creation and map the
+        // current binded texture object to the existing global object.
+        if (thrd->shareGroup.Ptr()) {
+            unsigned int tex = ctx->getBindedTexture();
+            unsigned int oldGlobal = thrd->shareGroup->getGlobalName(TEXTURE, tex);
+            // Delete old texture object
+            if (oldGlobal) {
+                ctx->dispatcher().glDeleteTextures(1, &oldGlobal);
+            }
+            // replace mapping and bind the new global object
+            thrd->shareGroup->replaceGlobalName(TEXTURE, tex,img->globalTexName);
+            ctx->dispatcher().glBindTexture(GL_TEXTURE_2D, img->globalTexName);
+            TextureData *texData = getTextureData();
+            SET_ERROR_IF(texData==NULL,GL_INVALID_OPERATION);
+            texData->sourceEGLImage = (unsigned int)image;
+            texData->eglImageDetach = s_eglIface->eglDetachEGLImage;
+        }
+    }
+}
+
+GL_APICALL void GL_APIENTRY glEGLImageTargetRenderbufferStorageOES(GLenum target, GLeglImageOES image)
+{
+    GET_CTX()
+    //not supported by EGL
+    SET_ERROR_IF(false,GL_INVALID_OPERATION);
 }
