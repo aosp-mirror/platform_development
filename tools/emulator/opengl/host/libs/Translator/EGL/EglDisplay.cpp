@@ -170,10 +170,13 @@ int EglDisplay::getConfigs(EGLConfig* configs,int config_size) {
 int EglDisplay::chooseConfigs(const EglConfig& dummy,EGLConfig* configs,int config_size) {
     android::Mutex::Autolock mutex(m_lock);
     int added = 0;
-    for(ConfigsList::iterator it = m_configs.begin(); it != m_configs.end() && added < config_size;it++) {
+    for(ConfigsList::iterator it = m_configs.begin(); it != m_configs.end() && (added < config_size || !configs);it++) {
 
        if( (*it)->choosen(dummy)){
-           configs[added++] = static_cast<EGLConfig>(*it);
+            if(configs) {
+                configs[added] = static_cast<EGLConfig>(*it);
+            }
+            added++;
        }
     }
     //no need to sort since the configurations are saved already in sorted maner
