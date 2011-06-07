@@ -195,18 +195,21 @@ class TestRunner(object):
     Raises:
       AbortError: If a fatal error occurred when parsing the tests.
     """
-    core_test_path = os.path.join(self._root_path, self._CORE_TEST_PATH)
     try:
       known_tests = test_defs.TestDefinitions()
-      known_tests.Parse(core_test_path)
-      # read all <android root>/vendor/*/tests/testinfo/test_defs.xml paths
-      vendor_tests_pattern = os.path.join(self._root_path,
-                                          self._VENDOR_TEST_PATH)
-      test_file_paths = glob.glob(vendor_tests_pattern)
-      for test_file_path in test_file_paths:
-        known_tests.Parse(test_file_path)
-      if os.path.isfile(self._options.user_tests_file):
-        known_tests.Parse(self._options.user_tests_file)
+      # only read tests when not in path mode
+      if not self._options.test_path:
+        core_test_path = os.path.join(self._root_path, self._CORE_TEST_PATH)
+        if os.path.isfile(core_test_path):
+          known_tests.Parse(core_test_path)
+        # read all <android root>/vendor/*/tests/testinfo/test_defs.xml paths
+        vendor_tests_pattern = os.path.join(self._root_path,
+                                            self._VENDOR_TEST_PATH)
+        test_file_paths = glob.glob(vendor_tests_pattern)
+        for test_file_path in test_file_paths:
+          known_tests.Parse(test_file_path)
+        if os.path.isfile(self._options.user_tests_file):
+          known_tests.Parse(self._options.user_tests_file)
       return known_tests
     except errors.ParseError:
       raise errors.AbortError
