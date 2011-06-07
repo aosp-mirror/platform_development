@@ -66,22 +66,20 @@ $(android_jar_full_target): $(full_target)
 ALL_SDK_FILES += $(android_jar_full_target)
 
 
-android-support-v4_build_module := $(TARGET_OUT_COMMON_INTERMEDIATES)/JAVA_LIBRARIES/android-support-v4_intermediates/javalib.jar
-android-support-v4_intermediates := $(TARGET_OUT_COMMON_INTERMEDIATES)/PACKAGING/android-support-v4_intermediates
-android-support-v4_full_target := $(android-support-v4_intermediates)/android-support-v4.jar
-$(android-support-v4_full_target): $(android-support-v4_build_module)
-	@echo Package android-support-v4.jar: $@
-	$(hide)mkdir -p $(dir $@)
-	$(hide)$(ACP) $< $@
+# $(1): the Java library name
+define _package_sdk_library
+$(eval _psm_build_module := $(TARGET_OUT_COMMON_INTERMEDIATES)/JAVA_LIBRARIES/$(1)_intermediates/javalib.jar)
+$(eval _psm_packaging_target := $(TARGET_OUT_COMMON_INTERMEDIATES)/PACKAGING/$(1)_intermediates/$(1).jar)
+$(_psm_packaging_target) : $(_psm_build_module) | $(ACP)
+	@echo "Package $(1).jar: $$@"
+	$(hide) mkdir -p $$(dir $$@)
+	$(hide) $(ACP) $$< $$@
 
-ALL_SDK_FILES += $(android-support-v4_full_target)
+ALL_SDK_FILES += $(_psm_packaging_target)
+$(eval _psm_build_module :=)
+$(eval _psm_packaging_target :=)
+endef
 
-android-support-v13_build_module := $(TARGET_OUT_COMMON_INTERMEDIATES)/JAVA_LIBRARIES/android-support-v13_intermediates/javalib.jar
-android-support-v13_intermediates := $(TARGET_OUT_COMMON_INTERMEDIATES)/PACKAGING/android-support-v13_intermediates
-android-support-v13_full_target := $(android-support-v13_intermediates)/android-support-v13.jar
-$(android-support-v13_full_target): $(android-support-v13_build_module)
-	@echo Package android-support-v13.jar: $@
-	$(hide)mkdir -p $(dir $@)
-	$(hide)$(ACP) $< $@
+ANDROID_SUPPORT_LIBRARIES := android-support-v4 android-support-v13
 
-ALL_SDK_FILES += $(android-support-v13_full_target)
+$(foreach lib, $(ANDROID_SUPPORT_LIBRARIES), $(eval $(call _package_sdk_library,$(lib))))
