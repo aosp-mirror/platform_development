@@ -18,6 +18,7 @@
 
 #include <map>
 #include <EGL/egl.h>
+#include <GLcommon/GLutils.h>
 #include <GLcommon/SmartPtr.h>
 #include <GLcommon/TranslatorIfaces.h>
 #include <GLcommon/objectNameManager.h>
@@ -27,11 +28,6 @@
 #include "EglSurface.h"
 
 
-typedef enum{
-             GLES_1_1 = 0,
-             GLES_2_0 = 1,
-             MAX_GLES_VERSION //Must be last
-            }GLESVersion;
 
 class EglContext;
 typedef  SmartPtr<EglContext> ContextPtr;

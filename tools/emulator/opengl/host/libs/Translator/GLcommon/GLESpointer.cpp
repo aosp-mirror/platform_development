@@ -13,10 +13,17 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-#include "GLESpointer.h"
+#include <GLcommon/GLESpointer.h>
 #include <stdlib.h>
 
-GLESpointer::GLESpointer():m_size(0),m_type(0),m_stride(0),m_enabled(false),m_data(NULL),m_buffer(NULL),m_buffOffset(0){};
+GLESpointer::GLESpointer():m_size(0),
+                           m_type(0),
+                           m_stride(0),
+                           m_enabled(false),
+                           m_normalize(false),
+                           m_data(NULL),
+                           m_buffer(NULL),
+                           m_buffOffset(0){};
 
 
 GLenum GLESpointer:: getType() const {
@@ -49,25 +56,31 @@ bool GLESpointer::isEnable() const {
     return m_enabled;
 }
 
+bool GLESpointer::isNormalize() const {
+    return m_normalize;
+}
+
 void GLESpointer::enable(bool b) {
     m_enabled = b;
 }
 
-void GLESpointer::setArray(GLint size,GLenum type,GLsizei stride,const GLvoid* data) {
+void GLESpointer::setArray(GLint size,GLenum type,GLsizei stride,const GLvoid* data,bool normalize) {
     m_size   = size;
     m_type   = type;
     m_stride = stride;
     m_data   = data;
     m_buffer = NULL;
+    m_normalize = normalize;
 }
 
-void GLESpointer::setBuffer(GLint size,GLenum type,GLsizei stride,GLESbuffer* buf,int offset) {
+void GLESpointer::setBuffer(GLint size,GLenum type,GLsizei stride,GLESbuffer* buf,int offset,bool normalize) {
     m_size   = size;
     m_type   = type;
     m_stride = stride;
     m_data   = NULL;
     m_buffer = buf;
     m_buffOffset = offset;
+    m_normalize = normalize;
 }
 
 void GLESpointer::getBufferConversions(const RangeList& rl,RangeList& rlOut) {

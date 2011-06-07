@@ -13,7 +13,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-#include "GLESutils.h"
+#include "GLEScmUtils.h"
 
 
 size_t glParamSize(GLenum param)

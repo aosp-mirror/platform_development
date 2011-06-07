@@ -13,27 +13,24 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-#include "GLESvalidate.h"
+#include "GLEScmValidate.h"
 #include <GLcommon/GLutils.h>
 
-bool  GLESvalidate::textureEnum(GLenum e,unsigned int maxTex) {
-    return e >= GL_TEXTURE0 && e <= (GL_TEXTURE0 + maxTex);
-}
 
-bool GLESvalidate::lightEnum(GLenum e,unsigned int maxLights) {
+bool GLEScmValidate::lightEnum(GLenum e,unsigned int maxLights) {
     return  e >=GL_LIGHT0 && e <= (GL_LIGHT0+maxLights);
 }
 
-bool GLESvalidate::clipPlaneEnum(GLenum e,unsigned int maxClipPlanes) {
+bool GLEScmValidate::clipPlaneEnum(GLenum e,unsigned int maxClipPlanes) {
     return  e >=GL_CLIP_PLANE0 && e <= (GL_CLIP_PLANE0+maxClipPlanes);
 }
 
-bool GLESvalidate::textureTarget(GLenum target) {
+bool GLEScmValidate::textureTarget(GLenum target) {
     return target == GL_TEXTURE_2D;
 }
 
 
-bool GLESvalidate::alphaFunc(GLenum f) {
+bool GLEScmValidate::alphaFunc(GLenum f) {
     switch(f) {
     case GL_NEVER:
     case GL_LESS:
@@ -48,49 +45,20 @@ bool GLESvalidate::alphaFunc(GLenum f) {
     return false;
 }
 
-bool GLESvalidate::blendSrc(GLenum s) {
-   switch(s) {
-    case GL_ZERO:
-    case GL_ONE:
-    case GL_DST_COLOR:
-    case GL_ONE_MINUS_DST_COLOR:
-    case GL_SRC_ALPHA:
-    case GL_ONE_MINUS_SRC_ALPHA:
-    case GL_DST_ALPHA:
-    case GL_ONE_MINUS_DST_ALPHA:
-        return true;
-  }
-  return false;
-}
 
-bool GLESvalidate::blendDst(GLenum d) {
-   switch(d) {
-    case GL_ZERO:
-    case GL_ONE:
-    case GL_SRC_COLOR:
-    case GL_ONE_MINUS_SRC_COLOR:
-    case GL_SRC_ALPHA:
-    case GL_ONE_MINUS_SRC_ALPHA:
-    case GL_DST_ALPHA:
-    case GL_ONE_MINUS_DST_ALPHA:
-        return true;
-   }
-   return false;
-}
-
-bool GLESvalidate::vertexPointerParams(GLint size,GLsizei stride) {
+bool GLEScmValidate::vertexPointerParams(GLint size,GLsizei stride) {
     return ((size >=2) && (size <= 4)) && (stride >=0) ;
 }
 
-bool GLESvalidate::colorPointerParams(GLint size,GLsizei stride) {
+bool GLEScmValidate::colorPointerParams(GLint size,GLsizei stride) {
     return ((size >=3) && (size <= 4)) && (stride >=0) ;
 }
 
-bool GLESvalidate::texCoordPointerParams(GLint size,GLsizei stride) {
+bool GLEScmValidate::texCoordPointerParams(GLint size,GLsizei stride) {
     return ((size >=1) && (size <= 4)) && (stride >=0) ;
 }
 
-bool GLESvalidate::supportedArrays(GLenum arr) {
+bool GLEScmValidate::supportedArrays(GLenum arr) {
     switch(arr) {
     case GL_COLOR_ARRAY:
     case GL_NORMAL_ARRAY:
@@ -102,25 +70,8 @@ bool GLESvalidate::supportedArrays(GLenum arr) {
     return false;
 }
 
-bool GLESvalidate::drawMode(GLenum mode) {
-    switch(mode) {
-    case GL_POINTS:
-    case GL_LINE_STRIP:
-    case GL_LINE_LOOP:
-    case GL_LINES:
-    case GL_TRIANGLE_STRIP:
-    case GL_TRIANGLE_FAN:
-    case GL_TRIANGLES:
-        return true;
-    }
-    return false;
-}
 
-bool GLESvalidate::drawType(GLenum mode) {
-    return mode == GL_UNSIGNED_BYTE || mode == GL_UNSIGNED_SHORT;
-}
-
-bool GLESvalidate::hintTargetMode(GLenum target,GLenum mode) {
+bool GLEScmValidate::hintTargetMode(GLenum target,GLenum mode) {
    switch(target) {
    case GL_FOG_HINT:
    case GL_GENERATE_MIPMAP_HINT:
@@ -140,7 +91,7 @@ bool GLESvalidate::hintTargetMode(GLenum target,GLenum mode) {
    return true;
 }
 
-bool GLESvalidate::texParams(GLenum target,GLenum pname) {
+bool GLEScmValidate::texParams(GLenum target,GLenum pname) {
     switch(pname) {
     case GL_TEXTURE_MIN_FILTER:
     case GL_TEXTURE_MAG_FILTER:
@@ -153,7 +104,7 @@ bool GLESvalidate::texParams(GLenum target,GLenum pname) {
     return target == GL_TEXTURE_2D;
 }
 
-bool GLESvalidate::texEnv(GLenum target,GLenum pname) {
+bool GLEScmValidate::texEnv(GLenum target,GLenum pname) {
     switch(pname) {
     case GL_TEXTURE_ENV_MODE:
     case GL_COMBINE_RGB:
@@ -180,7 +131,7 @@ bool GLESvalidate::texEnv(GLenum target,GLenum pname) {
     return (target == GL_TEXTURE_ENV || target == GL_POINT_SPRITE_OES);
 }
 
-bool GLESvalidate::capability(GLenum cap,int maxLights,int maxClipPlanes) {
+bool GLEScmValidate::capability(GLenum cap,int maxLights,int maxClipPlanes) {
     switch(cap) {
     case GL_ALPHA_TEST:
     case GL_BLEND:
@@ -211,33 +162,12 @@ bool GLESvalidate::capability(GLenum cap,int maxLights,int maxClipPlanes) {
     case GL_VERTEX_ARRAY:
         return true;
     }
-    return GLESvalidate::lightEnum(cap,maxLights) || GLESvalidate::clipPlaneEnum(cap,maxClipPlanes);
+    return GLEScmValidate::lightEnum(cap,maxLights) || GLEScmValidate::clipPlaneEnum(cap,maxClipPlanes);
 }
 
-bool GLESvalidate::pixelType(GLenum type) {
-    switch(type) {
-    case GL_UNSIGNED_BYTE:
-    case GL_UNSIGNED_SHORT_5_6_5:
-    case GL_UNSIGNED_SHORT_4_4_4_4:
-    case GL_UNSIGNED_SHORT_5_5_5_1:
-        return true;
-    }
-    return false;
-}
 
-bool GLESvalidate::pixelFrmt(GLenum format) {
-    switch(format) {
-    case GL_ALPHA:
-    case GL_RGB:
-    case GL_RGBA:
-    case GL_LUMINANCE:
-    case GL_LUMINANCE_ALPHA:
-        return true;
-    }
-    return false;
-}
 
-bool GLESvalidate::texCompImgFrmt(GLenum format) {
+bool GLEScmValidate::texCompImgFrmt(GLenum format) {
     switch(format) {
     case GL_PALETTE4_RGB8_OES:
     case GL_PALETTE4_RGBA8_OES:
@@ -254,28 +184,42 @@ bool GLESvalidate::texCompImgFrmt(GLenum format) {
     return false;
 }
 
-bool GLESvalidate::pixelOp(GLenum format,GLenum type) {
-     switch(type) {
-     case GL_UNSIGNED_SHORT_4_4_4_4:
-     case GL_UNSIGNED_SHORT_5_5_5_1:
-         return format == GL_RGBA;
-     case GL_UNSIGNED_SHORT_5_6_5:
-         return format == GL_RGB;
-     }
-     return true;
-}
 
-bool GLESvalidate::texImgDim(GLsizei width,GLsizei height,int maxTexSize) {
+bool GLEScmValidate::texImgDim(GLsizei width,GLsizei height,int maxTexSize) {
 
  if( width < 0 || height < 0 || width > maxTexSize || height > maxTexSize)
     return false;
  return isPowerOf2(width) && isPowerOf2(height);
 }
 
-bool GLESvalidate::bufferTarget(GLenum target) {
-    return target == GL_ARRAY_BUFFER || target == GL_ELEMENT_ARRAY_BUFFER;
+
+
+bool GLEScmValidate::blendSrc(GLenum s) {
+   switch(s) {
+    case GL_ZERO:
+    case GL_ONE:
+    case GL_DST_COLOR:
+    case GL_ONE_MINUS_DST_COLOR:
+    case GL_SRC_ALPHA:
+    case GL_ONE_MINUS_SRC_ALPHA:
+    case GL_DST_ALPHA:
+    case GL_ONE_MINUS_DST_ALPHA:
+        return true;
+  }
+  return false;
 }
 
-bool GLESvalidate::bufferParam(GLenum param) {
- return  (param == GL_BUFFER_SIZE) || (param == GL_BUFFER_USAGE);
+bool GLEScmValidate::blendDst(GLenum d) {
+   switch(d) {
+    case GL_ZERO:
+    case GL_ONE:
+    case GL_SRC_COLOR:
+    case GL_ONE_MINUS_SRC_COLOR:
+    case GL_SRC_ALPHA:
+    case GL_ONE_MINUS_SRC_ALPHA:
+    case GL_DST_ALPHA:
+    case GL_ONE_MINUS_DST_ALPHA:
+        return true;
+   }
+   return false;
 }
