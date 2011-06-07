@@ -155,6 +155,7 @@ class AdbInterface:
       return True
     elif "restarting adbd as root" in output:
       # device will disappear from adb, wait for it to come back
+      time.sleep(2)
       self.SendCommand("wait-for-device")
       return True
     else:
