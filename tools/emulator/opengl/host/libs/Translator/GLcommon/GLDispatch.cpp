@@ -24,6 +24,8 @@
 #include <windows.h>
 #endif
 
+#include "DummyGLfuncs.h"
+
 typedef void (*GL_FUNC_PTR)();
 
 static GL_FUNC_PTR getGLFuncAddress(const char *funcName) {
@@ -43,14 +45,16 @@ static GL_FUNC_PTR getGLFuncAddress(const char *funcName) {
     return ret;
 }
 
-#define LOAD_GL_FUNC(name)  {   void * funcAddrs = NULL;                                \
-                                if(name == NULL){                                       \
-                                funcAddrs = (void *)getGLFuncAddress(#name);            \
-                                if(funcAddrs)                                           \
-                                    *(void**)(&name) = funcAddrs;                       \
-                                else                                                    \
-                                    fprintf(stderr,"could not load func %s\n",#name);   \
-                                }                                                       \
+#define LOAD_GL_FUNC(name)  {   void * funcAddrs = NULL;                                    \
+                                if(name == NULL){                                           \
+                                    funcAddrs = (void *)getGLFuncAddress(#name);            \
+                                    if(funcAddrs){                                          \
+                                        *(void**)(&name) = funcAddrs;                       \
+                                    } else {                                                \
+                                        fprintf(stderr,"could not load func %s\n",#name);   \
+                                        *(void**)(&name) = (void *)dummy_##name;            \
+                                    }                                                       \
+                                }                                                           \
                            }
 
 #define LOAD_GLEXT_FUNC(name)  {   void * funcAddrs = NULL;                                \
