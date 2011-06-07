@@ -22,6 +22,45 @@ android::Mutex GLEScontext::s_lock;
 std::string*   GLEScontext::s_glExtensions= NULL;
 GLSupport      GLEScontext::s_glSupport;
 
+Version::Version():m_major(0),
+                   m_minor(0),
+                   m_release(0){};
+
+Version::Version(int major,int minor,int release):m_major(major),
+                                                  m_minor(minor),
+                                                  m_release(release){};
+
+Version::Version(const Version& ver):m_major(ver.m_major),
+                                     m_minor(ver.m_minor),
+                                     m_release(ver.m_release){}
+
+Version::Version(const char* versionString){
+    m_release = 0;
+    if((!versionString) || 
+      ((!(sscanf(versionString,"%d.%d"   ,&m_major,&m_minor) == 2)) && 
+       (!(sscanf(versionString,"%d.%d.%d",&m_major,&m_minor,&m_release) == 3)))){
+        m_major = m_minor = 0; // the version is not in the right format 
+    }
+}
+
+Version& Version::operator=(const Version& ver){
+    m_major   = ver.m_major;
+    m_minor   = ver.m_minor;
+    m_release = ver.m_release;
+    return *this;
+}
+
+bool Version::operator<(const Version& ver) const{
+    if(m_major < ver.m_major) return true;
+    if(m_major == ver.m_major){
+        if(m_minor < ver.m_minor) return true;
+        if(m_minor == ver.m_minor){
+           return m_release < ver.m_release;
+        }
+    }
+    return false;
+}
+
 GLEScontext::GLEScontext():
                            m_initialized(false)    ,
                            m_activeTexture(0)      ,
@@ -378,6 +417,8 @@ void GLEScontext::initCapsLocked(const GLubyte * extensionString)
     s_glDispatch.glGetIntegerv(GL_MAX_TEXTURE_SIZE,&s_glSupport.maxTexSize);
     s_glDispatch.glGetIntegerv(GL_MAX_TEXTURE_UNITS,&maxTexUnits);
     s_glSupport.maxTexUnits = maxTexUnits < MAX_TEX_UNITS ? maxTexUnits:MAX_TEX_UNITS;
+    const GLubyte* glslVersion = s_glDispatch.glGetString(GL_SHADING_LANGUAGE_VERSION);
+    s_glSupport.glslVersion = Version((const  char*)(glslVersion));
 
     if (strstr(cstring,"GL_EXT_bgra ")!=NULL)
         s_glSupport.GL_EXT_TEXTURE_FORMAT_BGRA8888 = true;
