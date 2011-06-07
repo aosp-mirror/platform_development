@@ -18,12 +18,22 @@
 
 #include "objectNameManager.h"
 
+class EglContext;
+class EglDisplay;
+class GLEScontext;
+
 struct ThreadInfo {
     ThreadInfo():eglContext(NULL),glesContext(NULL),objManager(NULL){}
-    void updateInfo(void* eglctx,void* dpy,void* glesCtx,ShareGroupPtr share,ObjectNameManager* manager);
-    void*                eglContext;
-    void*                eglDisplay;
-    void*                glesContext;
+
+    void updateInfo(EglContext* eglctx,
+                    EglDisplay* dpy,
+                    GLEScontext* glesCtx,
+                    ShareGroupPtr share,
+                    ObjectNameManager* manager);
+
+    EglContext*          eglContext;
+    EglDisplay*          eglDisplay;
+    GLEScontext*         glesContext;
     ShareGroupPtr        shareGroup;
     ObjectNameManager*   objManager;
 };
