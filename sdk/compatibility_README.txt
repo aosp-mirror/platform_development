@@ -4,7 +4,10 @@ This SDK component contains static libraries providing access to newer APIs
 on older platforms. To use those libraries, simply copy them as static libraries
 into your project.
 
-"v4" provides support for using new APIs on Android API 4 (1.6 - Donut) and above.
+Each library is called v<api>, indicating the minimum API level that they require.
+
+
+*** V4 ***
 
 v4/android-support-v4.jar contains:
 - Fragment API. New in API 11 (3.0 - Honeycomb). http://developer.android.com/reference/android/app/Fragment.html
@@ -13,4 +16,13 @@ v4/android-support-v4.jar contains:
 - MenuCompat allows calling MenuItem.setShowAsAction which only exists on API 11.
 
 v4/src/ is the source code for the compatibility library
-v4/samples/ provides a version of ApiDemos using the library.
+v4/samples/ provides a sample app using the library.
+
+
+*** V13 ***
+
+Provides the same features as v4, plus:
+- FragmentPagerAdapter: Implementation of PagerAdapter that represents each page as a Fragment.
+
+v13/src/ is the source code for the compatibility library, not including the v4 source
+v13/samples/ provides a sample app using the library.

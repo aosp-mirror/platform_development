@@ -75,3 +75,13 @@ $(android-support-v4_full_target): $(android-support-v4_build_module)
 	$(hide)$(ACP) $< $@
 
 ALL_SDK_FILES += $(android-support-v4_full_target)
+
+android-support-v13_build_module := $(TARGET_OUT_COMMON_INTERMEDIATES)/JAVA_LIBRARIES/android-support-v13_intermediates/javalib.jar
+android-support-v13_intermediates := $(TARGET_OUT_COMMON_INTERMEDIATES)/PACKAGING/android-support-v13_intermediates
+android-support-v13_full_target := $(android-support-v13_intermediates)/android-support-v13.jar
+$(android-support-v13_full_target): $(android-support-v13_build_module)
+	@echo Package android-support-v13.jar: $@
+	$(hide)mkdir -p $(dir $@)
+	$(hide)$(ACP) $< $@
+
+ALL_SDK_FILES += $(android-support-v13_full_target)
