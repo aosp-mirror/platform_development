@@ -18,7 +18,16 @@
 #include <GLcommon/GLutils.h>
 #include <utils/threads.h>
 
-EglDisplay::EglDisplay(EGLNativeDisplayType dpy,bool isDefault):m_dpy(dpy),m_initialized(false),m_configInitialized(false),m_isDefault(isDefault),m_nextEglImageId(0){};
+EglDisplay::EglDisplay(EGLNativeDisplayType dpy,bool isDefault) :
+    m_dpy(dpy),
+    m_initialized(false),
+    m_configInitialized(false),
+    m_isDefault(isDefault),
+    m_nextEglImageId(0)
+{
+    m_manager[GLES_1_1] = new ObjectNameManager(&m_globalNameSpace);
+    m_manager[GLES_2_0] = new ObjectNameManager(&m_globalNameSpace);
+};
 
 EglDisplay::~EglDisplay() {
     android::Mutex::Autolock mutex(m_lock);
@@ -31,6 +40,9 @@ EglDisplay::~EglDisplay() {
         EglConfig* pConfig = *it;
         if(pConfig) delete pConfig;
     }
+
+    delete m_manager[GLES_1_1];
+    delete m_manager[GLES_2_0];
 }
 
 EGLNativeDisplayType EglDisplay::nativeType(){return m_dpy;}

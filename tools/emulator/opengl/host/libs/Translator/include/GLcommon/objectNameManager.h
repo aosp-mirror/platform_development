@@ -48,13 +48,14 @@ typedef SmartPtr<ObjectData> ObjectDataPtr;
 //   NOTE: this class does not used by the EGL/GLES layer directly,
 //         the EGL/GLES layer creates objects using the ShareGroup class
 //         interface (see below).
+class GlobalNameSpace;
 class NameSpace
 {
     friend class ShareGroup;
     friend class GlobalNameSpace;
 
 private:
-    explicit NameSpace(NamedObjectType p_type);
+    NameSpace(NamedObjectType p_type, GlobalNameSpace *globalNameSpace);
     ~NameSpace();
 
     //
@@ -98,6 +99,54 @@ private:
     unsigned int m_nextName;
     NamesMap m_localToGlobalMap;
     const NamedObjectType m_type;
+    GlobalNameSpace *m_globalNameSpace;
+};
+
+class GlobalNameSpace
+{
+public:
+    GlobalNameSpace()
+    {
+        mutex_init(&m_lock);
+
+        for (int i=0; i<NUM_OBJECT_TYPES; i++) {
+            m_nameSpace[i] = new NameSpace((NamedObjectType)i, NULL);
+        }
+
+    }
+
+    ~GlobalNameSpace()
+    {
+        mutex_lock(&m_lock);
+        for (int i=0; i<NUM_OBJECT_TYPES; i++) {
+            delete m_nameSpace[i];
+        }
+        mutex_unlock(&m_lock);
+        mutex_destroy(&m_lock);
+    }
+
+    unsigned int genName(NamedObjectType p_type)
+    {
+        if ( p_type >= NUM_OBJECT_TYPES ) return 0;
+
+        mutex_lock(&m_lock);
+        unsigned int name = m_nameSpace[p_type]->genName(0, false);
+        mutex_unlock(&m_lock);
+        return name;
+    }
+
+    void deleteName(NamedObjectType p_type, unsigned int p_name)
+    {
+        if ( p_type >= NUM_OBJECT_TYPES ) return;
+
+        mutex_lock(&m_lock);
+        m_nameSpace[p_type]->deleteName(p_name);
+        mutex_unlock(&m_lock);
+    }
+
+private:
+    mutex_t m_lock;
+    NameSpace *m_nameSpace[NUM_OBJECT_TYPES];
 };
 
 //
@@ -163,7 +212,7 @@ public:
     ObjectDataPtr getObjectData(NamedObjectType p_type, unsigned int p_localName);
 
 private:
-    ShareGroup();
+    explicit ShareGroup(GlobalNameSpace *globalNameSpace);
     ~ShareGroup();
 
 private:
@@ -187,7 +236,7 @@ typedef std::multimap<void *, ShareGroupPtr> ShareGroupsMap;
 class ObjectNameManager
 {
 public:
-    ObjectNameManager();
+    explicit ObjectNameManager(GlobalNameSpace *globalNameSpace);
     ~ObjectNameManager();
 
     //
@@ -226,6 +275,7 @@ public:
 private:
     ShareGroupsMap m_groups;
     mutex_t m_lock;
+    GlobalNameSpace *m_globalNameSpace;
 };
 
 #endif

@@ -55,7 +55,7 @@ public:
     ContextPtr getContext(EGLContext ctx);
     bool removeContext(EGLContext ctx);
     bool removeContext(ContextPtr ctx);
-    ObjectNameManager* getManager(GLESVersion ver){ return &m_manager[ver];}
+    ObjectNameManager* getManager(GLESVersion ver){ return m_manager[ver];}
 
     ~EglDisplay();
     void initialize(int renderableType);
@@ -76,7 +76,8 @@ private:
    ConfigsList            m_configs;
    ContextsHndlMap        m_contexts;
    SurfacesHndlMap        m_surfaces;
-   ObjectNameManager      m_manager[MAX_GLES_VERSION];
+   GlobalNameSpace        m_globalNameSpace;
+   ObjectNameManager      *m_manager[MAX_GLES_VERSION];
    android::Mutex         m_lock;
    ImagesHndlMap           m_eglImages;
    unsigned int           m_nextEglImageId;
