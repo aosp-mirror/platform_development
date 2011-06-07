@@ -17,12 +17,10 @@ LOCAL_C_INCLUDES += \
                  $(translator_path)/../../../shared
 
 LOCAL_STATIC_LIBRARIES := \
+    libGLcommon           \
     libOpenglOsUtils      \
     libutils              \
     libcutils
-
-LOCAL_SHARED_LIBRARIES := \
-    libGLcommon
 
 LOCAL_CFLAGS := -g -O0
 LOCAL_MODULE_TAGS := debug
