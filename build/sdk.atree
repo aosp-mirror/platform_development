@@ -167,6 +167,7 @@ development/samples/JetBoy                     samples/${PLATFORM_NAME}/JetBoy
 development/samples/LunarLander                samples/${PLATFORM_NAME}/LunarLander
 development/samples/MultiResolution            samples/${PLATFORM_NAME}/MultiResolution
 development/samples/NotePad                    samples/${PLATFORM_NAME}/NotePad
+development/samples/RandomMusicPlayer          samples/${PLATFORM_NAME}/RandomMusicPlayer
 development/samples/SampleSyncAdapter          samples/${PLATFORM_NAME}/SampleSyncAdapter
 development/samples/SearchableDictionary       samples/${PLATFORM_NAME}/SearchableDictionary
 development/samples/SipDemo                    samples/${PLATFORM_NAME}/SipDemo
