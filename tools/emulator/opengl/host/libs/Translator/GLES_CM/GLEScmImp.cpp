@@ -1215,7 +1215,7 @@ void glEGLImageTargetTexture2DOES(GLenum target, GLeglImageOES image)
         // Create the texture object in the underlying EGL implementation,
         // flag to the OpenGL layer to skip the image creation and map the
         // current binded texture object to the existing global object.
-        if (thrd->shareGroup) {
+        if (thrd->shareGroup.Ptr()) {
             unsigned int tex = ctx->getBindedTexture();
             unsigned int oldGlobal = thrd->shareGroup->getGlobalName(TEXTURE, tex);
             // Delete old texture object

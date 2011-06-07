@@ -53,6 +53,7 @@ public:
     bool attachImage(unsigned int imageId,ImagePtr img);
     void detachImage(unsigned int imageId);
 
+    ~EglContext(){}
 private:
     static unsigned int  s_nextContextHndl;
     EGLNativeContextType m_native;

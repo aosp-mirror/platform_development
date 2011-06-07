@@ -91,10 +91,6 @@ public:
         return *m_ptr;
     }
 
-    operator void*() const {
-        return (void *)m_ptr;
-    }
-
     // This gives STL lists something to compare.
     bool operator <(const SmartPtr<T>& t1) const {
         return m_ptr < t1.m_ptr;
