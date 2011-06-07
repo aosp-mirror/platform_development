@@ -35,6 +35,7 @@ import optparse
 import os
 from sets import Set
 import sys
+import time
 
 # local imports
 import adb_interface
@@ -388,6 +389,8 @@ class TestRunner(object):
           self._adb.SendShellCommand("\"echo %s >> /data/local.prop\""
                                      % self._DALVIK_VERIFIER_OFF_PROP)
           self._adb.SendCommand("reboot")
+          # wait for device to go offline
+          time.sleep(10)
           self._adb.SendCommand("wait-for-device", timeout_time=60,
                                 retry_count=3)
           self._adb.EnableAdbRoot()
