@@ -14,9 +14,19 @@ LOCAL_SRC_FILES :=                    \
 LOCAL_C_INCLUDES += \
                  $(translator_path)/include \
 
+LOCAL_STATIC_LIBRARIES := \
+    libGLcommon           \
+    libOpenglOsUtils      \
+    libutils              \
+    libcutils
 
-LOCAL_SHARED_LIBRARIES := \
-    libGLcommon
+ifeq ($(HOST_OS),linux)
+    LOCAL_LDLIBS := -lGL -ldl
+endif
+
+ifeq ($(HOST_OS),windows)
+    LOCAL_LDLIBS := -lopengl32 -lgdi32
+endif
 
 LOCAL_CFLAGS := -g -O0
 LOCAL_MODULE_TAGS := debug

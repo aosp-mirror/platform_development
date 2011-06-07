@@ -39,4 +39,4 @@ ifeq ($(HOST_OS),windows)
     LOCAL_LDLIBS := -lopengl32 -lgdi32
 endif
 
-include $(BUILD_HOST_SHARED_LIBRARY)
+include $(BUILD_HOST_STATIC_LIBRARY)
