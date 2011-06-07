@@ -1,6 +1,8 @@
 #include<GLcommon/GLESvalidate.h>
 #include<GLES/gl.h>
 #include<GLES/glext.h>
+#include<GLES2/gl2.h>
+#include<GLES2/gl2ext.h>
 
 
 bool  GLESvalidate::textureEnum(GLenum e,unsigned int maxTex) {
@@ -8,15 +10,21 @@ bool  GLESvalidate::textureEnum(GLenum e,unsigned int maxTex) {
 }
 
 bool GLESvalidate::pixelType(GLEScontext * ctx, GLenum type) {
-    if (ctx && ctx->getCaps()->GL_NV_PACKED_DEPTH_STENCIL) {
-        if (type == GL_UNSIGNED_INT_24_8_OES)
-            return true;
-    }
+    if ((ctx && ctx->getCaps()->GL_NV_PACKED_DEPTH_STENCIL) &&
+       (type == GL_UNSIGNED_INT_24_8_OES) )
+        return true;
+
+    if (ctx && 
+       (ctx->getCaps()->GL_ARB_HALF_FLOAT_PIXEL || ctx->getCaps()->GL_NV_HALF_FLOAT) &&
+       (type == GL_HALF_FLOAT_OES))
+        return true;
+
     switch(type) {
     case GL_UNSIGNED_BYTE:
     case GL_UNSIGNED_SHORT_5_6_5:
     case GL_UNSIGNED_SHORT_4_4_4_4:
     case GL_UNSIGNED_SHORT_5_5_5_1:
+    case GL_FLOAT:
         return true;
     }
     return false;
