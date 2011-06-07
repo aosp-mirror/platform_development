@@ -164,9 +164,9 @@ static __translator_getGLESIfaceFunc loadIfaces(const char* libName){
 #elif __linux__
 #define LIB_GLES_CM_NAME "libGLES_CM_translator.so"
 #define LIB_GLES_V2_NAME "libGLES_V2_translator.so"
-#else
-#define LIB_GLES_CM_NAME "libGLES_CM_translator"
-#define LIB_GLES_V2_NAME "libGLES_V2_translator"
+#elif __APPLE__
+#define LIB_GLES_CM_NAME "libGLES_CM_translator.dylib"
+#define LIB_GLES_V2_NAME "libGLES_V2_translator.dylib"
 #endif
 
 EGLAPI EGLBoolean EGLAPIENTRY eglInitialize(EGLDisplay display, EGLint *major, EGLint *minor) {

@@ -83,14 +83,14 @@ typedef HWND                   EGLNativeWindowType;
 
 #elif defined(__APPLE__)
 
-typedef int  EGLNativePixelFormatType;
-#define PIXEL_FORMAT_INITIALIZER 0
+typedef void*                  EGLNativePixelFormatType;
+#define PIXEL_FORMAT_INITIALIZER NULL
+typedef void*                  EGLNativeContextType;
+typedef void*                  EGLNativePbufferType;
+typedef unsigned int           EGLNativeDisplayType;
+typedef void*                  EGLNativePixmapType;
+typedef void*                  EGLNativeWindowType;
 
-typedef struct _EGLNativeContextType*      EGLNativeContextType;
-typedef struct _EGLNativePbufferType*      EGLNativePbufferType;
-typedef struct _EGLNativeDisplayType*      EGLNativeDisplayType;
-typedef int       EGLNativePixmapType;
-typedef int       EGLNativeWindowType;
 
 #elif defined(__unix__)
 

@@ -4,8 +4,6 @@ LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
 
 translator_path := $(LOCAL_PATH)/..
-#exclude darwin builds
-ifeq (, $(findstring $(HOST_OS), darwin))
 
 LOCAL_SRC_FILES :=                    \
      GLESv2Imp.cpp                    \
@@ -27,4 +25,3 @@ LOCAL_MODULE := libGLES_V2_translator
 
 include $(BUILD_HOST_SHARED_LIBRARY)
 
-endif
