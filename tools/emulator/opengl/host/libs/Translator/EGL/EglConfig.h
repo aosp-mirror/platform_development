@@ -17,6 +17,7 @@
 #define EGL_CONFIG_H
 
 #include<EGL/egl.h>
+#include<EGL/eglinternalplatform.h>
 
 #define MIN_SWAP_INTERVAL 1
 #define MAX_SWAP_INTERVAL 10
