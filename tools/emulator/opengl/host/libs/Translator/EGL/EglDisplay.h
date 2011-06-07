@@ -58,7 +58,7 @@ public:
     ObjectNameManager* getManager(GLESVersion ver){ return &m_manager[ver];}
 
     ~EglDisplay();
-    void initialize();
+    void initialize(int renderableType);
     void terminate();
     bool isInitialize();
 
@@ -67,7 +67,7 @@ public:
     bool destroyImageKHR(EGLImageKHR img);
 
 private:
-   void initConfigurations();
+   void initConfigurations(int renderableType);
 
    EGLNativeDisplayType   m_dpy;
    bool                   m_initialized;

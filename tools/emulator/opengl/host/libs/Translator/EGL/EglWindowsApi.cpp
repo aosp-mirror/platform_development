@@ -224,7 +224,7 @@ bool releaseDisplay(EGLNativeDisplayType dpy) {
 
 
 
-EglConfig* pixelFormatToConfig(EGLNativeDisplayType display,EGLNativePixelFormatType* frmt,int index){
+EglConfig* pixelFormatToConfig(EGLNativeDisplayType display,int renderableType,EGLNativePixelFormatType* frmt,int index){
 
     EGLint  red,green,blue,alpha,depth,stencil;
     EGLint  supportedSurfaces,visualType,visualId;
@@ -287,12 +287,12 @@ EglConfig* pixelFormatToConfig(EGLNativeDisplayType display,EGLNativePixelFormat
     alpha   = frmt->cAlphaBits;
     depth   = frmt->cDepthBits;
     stencil = frmt->cStencilBits;
-    return new EglConfig(red,green,blue,alpha,caveat,(EGLint)index,depth,level,pMaxWidth,pMaxHeight,pMaxPixels,renderable,
+    return new EglConfig(red,green,blue,alpha,caveat,(EGLint)index,depth,level,pMaxWidth,pMaxHeight,pMaxPixels,renderable,renderableType,
                          visualId,visualType,samples,stencil,supportedSurfaces,transparentType,tRed,tGreen,tBlue,*frmt);
 }
 
 
-void queryConfigs(EGLNativeDisplayType display,ConfigsList& listOut) {
+void queryConfigs(EGLNativeDisplayType display,int renderableType,ConfigsList& listOut) {
     PIXELFORMATDESCRIPTOR  pfd;
     int  iPixelFormat = 1;
     HDC dpy = display->getCurrentDC();
@@ -304,7 +304,7 @@ void queryConfigs(EGLNativeDisplayType display,ConfigsList& listOut) {
     //inserting rest of formats
     for(iPixelFormat;iPixelFormat < nFormats; iPixelFormat++) {
          DescribePixelFormat(dpy, iPixelFormat,sizeof(PIXELFORMATDESCRIPTOR), &pfd);
-         EglConfig* pConfig = pixelFormatToConfig(display,&pfd,iPixelFormat);
+         EglConfig* pConfig = pixelFormatToConfig(display,renderableType,&pfd,iPixelFormat);
          if(pConfig) listOut.push_back(pConfig);
     }
 
