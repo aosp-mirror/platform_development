@@ -32,10 +32,14 @@ static bool hintTargetMode(GLenum target,GLenum mode);
 static bool capability(GLenum cap,int maxLights,int maxClipPlanes);
 static bool texParams(GLenum target,GLenum pname);
 static bool texCoordPointerParams(GLint size,GLsizei stride);
-static bool textureTarget(GLenum target);
+
 static bool texEnv(GLenum target,GLenum pname);
 static bool texCompImgFrmt(GLenum format);
 static bool texImgDim(GLsizei width,GLsizei height,int maxTexSize);
+
+static bool renderbufferInternalFrmt(GLEScontext * ctx, GLenum internalformat);
+static bool stencilOp(GLenum param);
+static bool texGen(GLenum coord,GLenum pname);
 };
 
 #endif
