@@ -14,7 +14,11 @@ ifeq ($(HOST_OS),linux)
 endif
 
 ifeq ($(HOST_OS),darwin)
-    OS_SRCS = EglMacApi.cpp
+    OS_SRCS = EglMacApi.cpp \
+              MacNative.m   \
+              MacPixelFormatsAttribs.m
+
+    LOCAL_LDLIBS := -Wl,-framework,AppKit
 endif
 
 ifeq ($(HOST_OS),windows)
