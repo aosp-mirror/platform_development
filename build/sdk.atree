@@ -154,7 +154,6 @@ development/samples/source.properties        samples/${PLATFORM_NAME}/source.pro
 development/samples/AccessibilityService       samples/${PLATFORM_NAME}/AccessibilityService
 development/samples/AccelerometerPlay          samples/${PLATFORM_NAME}/AccelerometerPlay
 development/samples/ApiDemos                   samples/${PLATFORM_NAME}/ApiDemos
-${OUT_DIR}/target/common/obj/PACKAGING/android-support-v4_intermediates/android-support-v4.jar    samples/${PLATFORM_NAME}/ApiDemos/libs/android-support-v4.jar
 development/samples/BackupRestore              samples/${PLATFORM_NAME}/BackupRestore
 development/samples/BasicGLSurfaceView         samples/${PLATFORM_NAME}/BasicGLSurfaceView
 development/samples/BluetoothChat              samples/${PLATFORM_NAME}/BluetoothChat
@@ -211,4 +210,7 @@ development/sdk/compatibility_README.txt                                        
 sdk/files/sdk_files_NOTICE.txt                                                                    extras/android/compatibility/NOTICE.txt
 ${OUT_DIR}/target/common/obj/PACKAGING/android-support-v4_intermediates/android-support-v4.jar    extras/android/compatibility/v4/android-support-v4.jar
 frameworks/support/v4                                                                             extras/android/compatibility/v4/src
-development/samples/ApiDemos                                                                      extras/android/compatibility/v4/samples/ApiDemos
+development/samples/Support4Demos                                                                 extras/android/compatibility/v4/samples/Support4Demos
+${OUT_DIR}/target/common/obj/PACKAGING/android-support-v13_intermediates/android-support-v13.jar  extras/android/compatibility/v13/android-support-v13.jar
+frameworks/support/v13                                                                            extras/android/compatibility/v13/src
+development/samples/Support13Demos                                                                extras/android/compatibility/v13/samples/Support13Demos
