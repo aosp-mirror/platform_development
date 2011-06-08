@@ -5,10 +5,29 @@
 #include "GLESpointer.h"
 #include "objectNameManager.h"
 #include <utils/threads.h>
+#include <string>
 
 #define MAX_TEX_UNITS 8
 
 typedef std::map<GLenum,GLESpointer*>  ArraysMap;
+
+struct GLSupport {
+    GLSupport():maxLights(0),maxVertexAttribs(0),maxClipPlane(0),maxTexUnits(0),maxTexSize(0) , \
+                GL_EXT_TEXTURE_FORMAT_BGRA8888(false), GL_EXT_FRAMEBUFFER_OBJECT(false), \
+                GL_ARB_VERTEX_BLEND(false), GL_ARB_MATRIX_PALETTE(false), \
+                GL_NV_PACKED_DEPTH_STENCIL(false) , GL_OES_READ_FORMAT(false) {} ;
+    int  maxLights;
+    int  maxVertexAttribs;
+    int  maxClipPlane;
+    int  maxTexUnits;
+    int  maxTexSize;
+    bool GL_EXT_TEXTURE_FORMAT_BGRA8888;
+    bool GL_EXT_FRAMEBUFFER_OBJECT;
+    bool GL_ARB_VERTEX_BLEND;
+    bool GL_ARB_MATRIX_PALETTE;
+    bool GL_NV_PACKED_DEPTH_STENCIL;
+    bool GL_OES_READ_FORMAT;
+};
 
 struct GLESFloatArrays
 {
@@ -42,19 +61,30 @@ public:
     void getBufferUsage(GLenum target,GLint* param);
     bool setBufferData(GLenum target,GLsizeiptr size,const GLvoid* data,GLenum usage);
     bool setBufferSubData(GLenum target,GLintptr offset,GLsizeiptr size,const GLvoid* data);
-
+    const char * getExtensionString();
+    void getGlobalLock();
+    void releaseGlobalLock();
+    virtual GLSupport*  getCaps(){return &s_glSupport;};
     virtual ~GLEScontext();
 
     static GLDispatch& dispatcher(){return s_glDispatch;};
 
+    static int getMaxLights(){return s_glSupport.maxLights;}
+    static int getMaxClipPlanes(){return s_glSupport.maxClipPlane;}
+    static int getMaxTexUnits(){return s_glSupport.maxTexUnits;}
+    static int getMaxTexSize(){return s_glSupport.maxTexSize;}
+
+
 protected:
     void chooseConvertMethod(GLESFloatArrays& fArrs,GLint first,GLsizei count,GLenum type,const GLvoid* indices,bool direct,GLESpointer* p,GLenum array_id,unsigned int& index);
-
+    void initCapsLocked(const GLubyte * extensionString);
     static android::Mutex s_lock;
     static GLDispatch     s_glDispatch;
     bool                  m_initialized;
     unsigned int          m_activeTexture;
     ArraysMap             m_map;
+    static std::string*   s_glExtensions;
+    static GLSupport      s_glSupport;
 
 private:
 

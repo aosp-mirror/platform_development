@@ -1,5 +1,7 @@
 #include <GLcommon/GLEScontext.h>
 #include <GLcommon/GLfixed_ops.h>
+#include <GLES/gl.h>
+#include <GLES/glext.h>
 
 //decleration
 static int findMaxIndex(GLsizei count,GLenum type,const GLvoid* indices);
@@ -17,14 +19,17 @@ GLESFloatArrays::~GLESFloatArrays() {
 
 GLDispatch     GLEScontext::s_glDispatch;
 android::Mutex GLEScontext::s_lock;
+std::string*   GLEScontext::s_glExtensions= NULL;
+GLSupport      GLEScontext::s_glSupport;
 
 GLEScontext::GLEScontext():
                            m_initialized(false)    ,
                            m_activeTexture(0)      ,
                            m_glError(GL_NO_ERROR)  ,
                            m_arrayBuffer(0)        ,
-                           m_elementBuffer(0){};
-
+                           m_elementBuffer(0) {
+      
+};
 
 GLenum GLEScontext::getGLerror() {
     return m_glError;
@@ -337,3 +342,58 @@ bool GLEScontext::setBufferSubData(GLenum target,GLintptr offset,GLsizeiptr size
     GLESbuffer* vbo = static_cast<GLESbuffer*>(m_shareGroup->getObjectData(VERTEXBUFFER,bufferName).Ptr());
     return vbo->setSubBuffer(offset,size,data);
 }
+
+const char * GLEScontext::getExtensionString() { 
+    const char * ret;
+    s_lock.lock();
+    if (s_glExtensions)
+        ret = s_glExtensions->c_str();
+    else 
+        ret="";
+    s_lock.unlock();
+    return ret;
+}
+
+void GLEScontext::getGlobalLock() {
+    s_lock.lock();
+}
+
+void GLEScontext::releaseGlobalLock() {
+    s_lock.unlock();
+}
+
+
+void GLEScontext::initCapsLocked(const GLubyte * extensionString)
+{
+    int maxTexUnits;
+    const char* cstring = (const char*)extensionString; 
+
+    s_glDispatch.glGetIntegerv(GL_MAX_VERTEX_ATTRIBS,&s_glSupport.maxVertexAttribs);
+    s_glDispatch.glGetIntegerv(GL_MAX_CLIP_PLANES,&s_glSupport.maxClipPlane);
+    s_glDispatch.glGetIntegerv(GL_MAX_LIGHTS,&s_glSupport.maxLights);
+    s_glDispatch.glGetIntegerv(GL_MAX_TEXTURE_SIZE,&s_glSupport.maxTexSize);
+    s_glDispatch.glGetIntegerv(GL_MAX_TEXTURE_UNITS,&maxTexUnits);
+    s_glSupport.maxTexUnits = maxTexUnits < MAX_TEX_UNITS ? maxTexUnits:MAX_TEX_UNITS;
+
+    if (strstr(cstring,"GL_EXT_bgra ")!=NULL)
+        s_glSupport.GL_EXT_TEXTURE_FORMAT_BGRA8888 = true;
+
+    if (strstr(cstring,"GL_EXT_framebuffer_object ")!=NULL)
+        s_glSupport.GL_EXT_FRAMEBUFFER_OBJECT = true;
+
+    if (strstr(cstring,"GL_ARB_vertex_blend ")!=NULL)
+        s_glSupport.GL_ARB_VERTEX_BLEND = true;
+
+    if (strstr(cstring,"GL_ARB_matrix_palette ")!=NULL)
+        s_glSupport.GL_ARB_MATRIX_PALETTE = true;
+
+    if (strstr(cstring,"GL_NV_packed_depth_stencil ")!=NULL)
+        s_glSupport.GL_NV_PACKED_DEPTH_STENCIL = true;
+
+    if (strstr(cstring,"GL_OES_read_format ")!=NULL)
+        s_glSupport.GL_OES_READ_FORMAT = true;
+
+    //init extension string
+    s_glExtensions = new std::string("");
+}
+

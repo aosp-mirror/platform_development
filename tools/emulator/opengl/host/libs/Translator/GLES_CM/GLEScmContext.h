@@ -22,18 +22,11 @@
 #include <GLcommon/GLEScontext.h>
 #include <map>
 #include <vector>
+#include <string>
 #include <utils/threads.h>
 
 
 typedef std::map<GLfloat,std::vector<int> > PointSizeIndices;
-
-struct GLcmSupport {
-    GLcmSupport():maxLights(0),maxClipPlane(0),maxTexUnits(0),maxTexSize(0){};
-    int  maxLights;
-    int  maxClipPlane;
-    int  maxTexUnits;
-    int  maxTexSize;
-};
 
 class GLEScmContext: public GLEScontext
 {
@@ -48,20 +41,11 @@ public:
   
     ~GLEScmContext();
 
-    static int getMaxLights(){return s_glSupport.maxLights;}
-    static int getMaxClipPlanes(){return s_glSupport.maxClipPlane;}
-    static int getMaxTexUnits(){return s_glSupport.maxTexUnits;}
-    static int getMaxTexSize(){return s_glSupport.maxTexSize;}
-
-
 private:
-
     void sendArr(GLvoid* arr,GLenum arrayType,GLint size,GLsizei stride,int pointsIndex = -1);
     void drawPoints(PointSizeIndices* points);
     void drawPointsData(GLESFloatArrays& arrs,GLint first,GLsizei count,GLenum type,const GLvoid* indices_in,bool isElemsDraw);
-
-
-    static GLcmSupport    s_glSupport;
+    void initExtensionString();
 
     GLESpointer*          m_texCoords;
     int                   m_pointsIndex;
