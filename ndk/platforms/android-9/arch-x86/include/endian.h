@@ -31,14 +31,14 @@
 
 #if defined(_KERNEL) && !defined(I386_CPU)
 #define	__swap32md(x) ({						\
-	u_int32_t __swap32md_x = (x);					\
+	uint32_t __swap32md_x = (x);					\
 									\
 	__asm ("bswap %1" : "+r" (__swap32md_x));			\
 	__swap32md_x;							\
 })
 #else
 #define	__swap32md(x) ({						\
-	u_int32_t __swap32md_x = (x);					\
+	uint32_t __swap32md_x = (x);					\
 									\
 	__asm ("rorw $8, %w1; rorl $16, %1; rorw $8, %w1" :		\
 	    "+r" (__swap32md_x));					\
@@ -47,13 +47,13 @@
 #endif	/* _KERNEL && !I386_CPU */
 
 #define	__swap64md(x) ({						\
-	u_int64_t __swap64md_x = (x);					\
+	uint64_t __swap64md_x = (x);					\
 									\
-	(u_int64_t)__swap32md(__swap64md_x >> 32) |			\
-	    (u_int64_t)__swap32md(__swap64md_x & 0xffffffff) << 32;	\
+	(uint64_t)__swap32md(__swap64md_x >> 32) |			\
+	    (uint64_t)__swap32md(__swap64md_x & 0xffffffff) << 32;	\
 })
 #define	__swap16md(x) ({						\
-	u_int16_t __swap16md_x = (x);					\
+	uint16_t __swap16md_x = (x);					\
 									\
 	__asm ("rorw $8, %w1" : "+r" (__swap16md_x));			\
 	__swap16md_x;							\

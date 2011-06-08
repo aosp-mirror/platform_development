@@ -1,0 +1,5 @@
+AndroidBitmap_getInfo
+AndroidBitmap_lockPixels
+AndroidBitmap_unlockPixels
+__FINI_ARRAY__
+__INIT_ARRAY__
