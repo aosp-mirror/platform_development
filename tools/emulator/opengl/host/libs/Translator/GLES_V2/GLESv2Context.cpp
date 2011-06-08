@@ -16,6 +16,8 @@
 
 #include "GLESv2Context.h"
 
+
+
 void GLESv2Context::init() {
     android::Mutex::Autolock mutex(s_lock);
     if(!m_initialized) {
