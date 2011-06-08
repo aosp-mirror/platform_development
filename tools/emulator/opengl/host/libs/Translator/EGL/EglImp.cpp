@@ -564,7 +564,7 @@ EGLAPI EGLBoolean EGLAPIENTRY eglDestroySurface(EGLDisplay display, EGLSurface s
         RETURN_ERROR(EGL_FALSE,EGL_BAD_SURFACE);
     }
 
-    srfc->destroy(); //mark surface for destruction
+    srfc->markForDestruction(); //mark surface for destruction
     if(destroySurfaceIfNotCurrent(dpy,srfc)) { //removes surface from the list if not current
         dpy->removeSurface(surface);
     }
@@ -659,7 +659,7 @@ EGLAPI EGLBoolean EGLAPIENTRY eglDestroyContext(EGLDisplay display, EGLContext c
     VALIDATE_DISPLAY(display);
     VALIDATE_CONTEXT(context);
 
-    ctx->destroy(); //mark for destruction
+    ctx->markForDestruction(); //mark for destruction
     if(destroyContextIfNotCurrent(dpy,ctx)){ //removes the context from the list if it is not current
         g_eglInfo->getIface(ctx->version())->deleteGLESContext(ctx->getGlesContext());
         dpy->removeContext(context);
@@ -816,7 +816,7 @@ EGLAPI EGLContext EGLAPIENTRY eglGetCurrentContext(void) {
     EglDisplay* dpy    = static_cast<EglDisplay*>(thread->eglDisplay);
     EglContext* ctx    = static_cast<EglContext*>(thread->eglContext);
     if(dpy && ctx){
-        return dpy->getContext(ContextPtr(ctx));
+        return dpy->getContext(ctx).Ptr();
     }
     return EGL_NO_CONTEXT;
 }
@@ -830,7 +830,16 @@ EGLAPI EGLSurface EGLAPIENTRY eglGetCurrentSurface(EGLint readdraw) {
 
     if(dpy && ctx) {
         SurfacePtr surface = readdraw == EGL_READ ? ctx->read() : ctx->draw();
-        return dpy->getSurface(surface);
+        if(surface.Ptr())
+        {
+            // This double check is required because a surface might still be
+            // current after it is destroyed - in which case its handle should
+            // be invalid, that is EGL_NO_SURFACE should be returned even
+            // though the surface is current.
+            surface = dpy->getSurface(surface.Ptr());
+            if(surface.Ptr())
+                return surface.Ptr();
+        }
     }
     return EGL_NO_SURFACE;
 }
@@ -858,7 +867,7 @@ EGLAPI EGLBoolean EGLAPIENTRY eglWaitNative(EGLint engine) {
         SurfacePtr draw = currCtx->draw();
 
         EGLNativeDisplayType nativeDisplay = dpy->nativeType();
-        if(read) {
+        if(read.Ptr()) {
             if(read->type() == EglSurface::WINDOW &&
                !EglOS::validNativeWin(nativeDisplay,reinterpret_cast<EGLNativeWindowType>(read->native()))) {
                 RETURN_ERROR(EGL_FALSE,EGL_BAD_SURFACE);
@@ -868,7 +877,7 @@ EGLAPI EGLBoolean EGLAPIENTRY eglWaitNative(EGLint engine) {
                 RETURN_ERROR(EGL_FALSE,EGL_BAD_SURFACE);
             }
         }
-        if(draw) {
+        if(draw.Ptr()) {
             if(draw->type() == EglSurface::WINDOW &&
                !EglOS::validNativeWin(nativeDisplay,reinterpret_cast<EGLNativeWindowType>(draw->native()))) {
                 RETURN_ERROR(EGL_FALSE,EGL_BAD_SURFACE);
