@@ -28,7 +28,6 @@ enum NamedObjectType {
     RENDERBUFFER = 2,
     FRAMEBUFFER = 3,
     SHADER = 4,
-    PROGRAM = 5,
     NUM_OBJECT_TYPES = 6  // Must be last
 };
 
