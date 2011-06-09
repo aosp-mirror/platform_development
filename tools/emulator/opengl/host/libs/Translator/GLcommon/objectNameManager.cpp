@@ -16,58 +16,11 @@
 #include <map>
 #include <GLcommon/objectNameManager.h>
 
-class GlobalNameSpace
-{
-public:
-    GlobalNameSpace()
-    {
-        mutex_init(&m_lock);
 
-        for (int i=0; i<NUM_OBJECT_TYPES; i++) {
-            m_nameSpace[i] = new NameSpace((NamedObjectType)i);
-        }
-
-    }
-
-    ~GlobalNameSpace()
-    {
-        mutex_lock(&m_lock);
-        for (int i=0; i<NUM_OBJECT_TYPES; i++) {
-            delete m_nameSpace[i];
-        }
-        mutex_unlock(&m_lock);
-        mutex_destroy(&m_lock);
-    }
-
-    unsigned int genName(NamedObjectType p_type)
-    {
-        if ( p_type >= NUM_OBJECT_TYPES ) return 0;
-
-        mutex_lock(&m_lock);
-        unsigned int name = m_nameSpace[p_type]->genName(0, false);
-        mutex_unlock(&m_lock);
-        return name;
-    }
-
-    void deleteName(NamedObjectType p_type, unsigned int p_name)
-    {
-        if ( p_type >= NUM_OBJECT_TYPES ) return;
-
-        mutex_lock(&m_lock);
-        m_nameSpace[p_type]->deleteName(p_name);
-        mutex_unlock(&m_lock);
-    }
-
-private:
-    mutex_t m_lock;
-    NameSpace *m_nameSpace[NUM_OBJECT_TYPES];
-};
-
-static GlobalNameSpace *s_globalNameSpace = NULL;
-
-NameSpace::NameSpace(NamedObjectType p_type) :
+NameSpace::NameSpace(NamedObjectType p_type, GlobalNameSpace *globalNameSpace) :
     m_nextName(0),
-    m_type(p_type)
+    m_type(p_type),
+    m_globalNameSpace(globalNameSpace)
 {
 }
 
@@ -76,7 +29,7 @@ NameSpace::~NameSpace()
     for (NamesMap::iterator n = m_localToGlobalMap.begin();
          n != m_localToGlobalMap.end();
          n++) {
-        s_globalNameSpace->deleteName(m_type, (*n).second);
+        m_globalNameSpace->deleteName(m_type, (*n).second);
     }
 }
 
@@ -92,7 +45,7 @@ NameSpace::genName(unsigned int p_localName, bool genGlobal)
     }
 
     if (genGlobal) {
-        unsigned int globalName = s_globalNameSpace->genName(m_type);
+        unsigned int globalName = m_globalNameSpace->genName(m_type);
         m_localToGlobalMap[localName] = globalName;
     }
 
@@ -131,7 +84,7 @@ NameSpace::deleteName(unsigned int p_localName)
 {
     NamesMap::iterator n( m_localToGlobalMap.find(p_localName) );
     if (n != m_localToGlobalMap.end()) {
-        s_globalNameSpace->deleteName(m_type, (*n).second);
+        m_globalNameSpace->deleteName(m_type, (*n).second);
         m_localToGlobalMap.erase(p_localName);
     }
 }
@@ -147,7 +100,7 @@ NameSpace::replaceGlobalName(unsigned int p_localName, unsigned int p_globalName
 {
     NamesMap::iterator n( m_localToGlobalMap.find(p_localName) );
     if (n != m_localToGlobalMap.end()) {
-        s_globalNameSpace->deleteName(m_type, (*n).second);
+        m_globalNameSpace->deleteName(m_type, (*n).second);
         (*n).second = p_globalName;
     }
 }
@@ -155,12 +108,12 @@ NameSpace::replaceGlobalName(unsigned int p_localName, unsigned int p_globalName
 typedef std::pair<NamedObjectType, unsigned int> ObjectIDPair;
 typedef std::map<ObjectIDPair, ObjectDataPtr> ObjectDataMap;
 
-ShareGroup::ShareGroup()
+ShareGroup::ShareGroup(GlobalNameSpace *globalNameSpace)
 {
     mutex_init(&m_lock);
 
     for (int i=0; i<NUM_OBJECT_TYPES; i++) {
-        m_nameSpace[i] = new NameSpace((NamedObjectType)i);
+        m_nameSpace[i] = new NameSpace((NamedObjectType)i, globalNameSpace);
     }
 
     m_objectsData = NULL;
@@ -291,7 +244,8 @@ ShareGroup::getObjectData(NamedObjectType p_type, unsigned int p_localName)
     return ret;
 }
 
-ObjectNameManager::ObjectNameManager()
+ObjectNameManager::ObjectNameManager(GlobalNameSpace *globalNameSpace) :
+    m_globalNameSpace(globalNameSpace)
 {
     mutex_init(&m_lock);
 }
@@ -306,8 +260,6 @@ ObjectNameManager::createShareGroup(void *p_groupName)
 {
     mutex_lock(&m_lock);
 
-    if (!s_globalNameSpace) s_globalNameSpace = new GlobalNameSpace();
-
     ShareGroupPtr shareGroupReturn;
 
     ShareGroupsMap::iterator s( m_groups.find(p_groupName) );
@@ -318,7 +270,7 @@ ObjectNameManager::createShareGroup(void *p_groupName)
         //
         // Group does not exist, create new group
         //
-        shareGroupReturn = ShareGroupPtr( new ShareGroup() );
+        shareGroupReturn = ShareGroupPtr( new ShareGroup(m_globalNameSpace) );
         m_groups.insert( std::pair<void *, ShareGroupPtr>(p_groupName, shareGroupReturn) );
     }
 
@@ -331,8 +283,6 @@ ShareGroupPtr
 ObjectNameManager::getShareGroup(void *p_groupName)
 {
     mutex_lock(&m_lock);
-
-    if (!s_globalNameSpace) s_globalNameSpace = new GlobalNameSpace();
 
     ShareGroupPtr shareGroupReturn(NULL);
 
@@ -349,8 +299,6 @@ ShareGroupPtr
 ObjectNameManager::attachShareGroup(void *p_groupName, void *p_existingGroupName)
 {
     mutex_lock(&m_lock);
-
-    if (!s_globalNameSpace) s_globalNameSpace = new GlobalNameSpace();
 
     ShareGroupPtr shareGroupReturn;
 
@@ -383,10 +331,6 @@ ObjectNameManager::deleteShareGroup(void *p_groupName)
         m_groups.erase(s);
     }
 
-    if (m_groups.size() == 0 && s_globalNameSpace) {
-        delete s_globalNameSpace;
-        s_globalNameSpace = NULL;
-    }
     mutex_unlock(&m_lock);
 }
 
