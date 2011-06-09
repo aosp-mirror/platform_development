@@ -17,6 +17,7 @@
 #define EGL_OS_API_H
 
 #include <EGL/egl.h>
+#include <EGL/eglinternalplatform.h>
 #ifdef __APPLE__
 #include <OpenGL/gl.h>
 #else
