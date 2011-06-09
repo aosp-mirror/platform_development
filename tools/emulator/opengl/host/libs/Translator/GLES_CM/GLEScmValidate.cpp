@@ -263,3 +263,51 @@ bool GLEScmValidate::texGen(GLenum coord, GLenum pname) {
     return (coord == GL_TEXTURE_GEN_STR_OES && pname == GL_TEXTURE_GEN_MODE_OES);
 }
 
+bool GLEScmValidate::colorPointerType(GLenum type){
+    switch(type){
+    case GL_UNSIGNED_BYTE:
+    case GL_FIXED:
+    case GL_FLOAT:
+        return true;
+    }
+    return false;
+}
+
+bool GLEScmValidate::normalPointerType(GLenum type){
+
+    switch(type){
+    case GL_BYTE:
+    case GL_SHORT:
+    case GL_FLOAT:
+    case GL_FIXED:
+        return true;
+    }
+    return false;
+}
+
+bool GLEScmValidate::pointPointerType(GLenum type){
+    return type == GL_FIXED || type == GL_FLOAT;
+}
+
+bool GLEScmValidate::texCoordPointerType(GLenum type){
+    switch(type){
+    case GL_BYTE:
+    case GL_SHORT:
+    case GL_FLOAT:
+    case GL_FIXED:
+        return true;
+    }
+    return false;
+}
+
+bool GLEScmValidate::vertexPointerType(GLenum type){
+    switch(type){
+    case GL_BYTE:
+    case GL_SHORT:
+    case GL_FLOAT:
+    case GL_FIXED:
+        return true;
+    }
+    return false;
+}
+
