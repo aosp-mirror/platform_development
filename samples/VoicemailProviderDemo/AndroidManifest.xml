@@ -23,10 +23,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     android:versionCode="1" android:versionName="1.0" package="com.example.android.voicemail">
 
-    <uses-sdk android:minSdkVersion="9" />
-    <uses-sdk android:targetSdkVersion="9" />
+    <uses-sdk android:minSdkVersion="13"
+              android:targetSdkVersion="13" />
 
-    <uses-permission android:name="com.android.providers.voicemail.permission.READ_WRITE_OWN_VOICEMAIL" />
+    <uses-permission android:name="com.android.voicemail.permission.READ_WRITE_OWN_VOICEMAIL" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
     <application android:icon="@drawable/icon" android:label="@string/app_name">

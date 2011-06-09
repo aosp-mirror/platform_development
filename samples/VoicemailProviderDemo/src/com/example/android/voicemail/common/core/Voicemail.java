@@ -16,6 +16,8 @@
 
 package com.example.android.voicemail.common.core;
 
+import com.example.android.provider.VoicemailContract;
+
 import android.net.Uri;
 
 /**
@@ -41,11 +43,11 @@ public interface Voicemail {
      */
     public enum Mailbox {
         /** After being fetched from the server, a message usually starts in the inbox. */
-        INBOX(0),
+        INBOX(VoicemailContract.Voicemails.STATE_INBOX),
         /** Indicates that a message has been deleted. */
-        DELETED(1),
+        DELETED(VoicemailContract.Voicemails.STATE_DELETED),
         /** Restored from having been deleted, distinct from being in the inbox. */
-        UNDELETED(2);
+        UNDELETED(VoicemailContract.Voicemails.STATE_UNDELETED);
 
         private final int mValue;
 
@@ -89,24 +91,21 @@ public interface Voicemail {
      * Returns the package name of the source that added this voicemail, or null if this field is
      * not set.
      */
-    public String getSource();
+    public String getSourcePackage();
 
-    public boolean hasSource();
+    public boolean hasSourcePackage();
 
     /**
-     * Returns the provider-specific data type stored with the voicemail, or null if this field is
-     * not set.
+     * Returns the application-specific data type stored with the voicemail, or null if this field
+     * is not set.
      * <p>
-     * Provider data is typically used as an identifier to uniquely identify the voicemail against
+     * Source data is typically used as an identifier to uniquely identify the voicemail against
      * the voicemail server. This is likely to be something like the IMAP UID, or some other
      * server-generated identifying string.
      */
-    // TODO:4: we should rename the provider data field to be called provider message id, which is
-    // more explicit. I think we should also rename the get id method to get content id or something
-    // like that.
-    public String getProviderData();
+    public String getSourceData();
 
-    public boolean hasProviderData();
+    public boolean hasSourceData();
 
     /**
      * Gets the Uri that can be used to refer to this voicemail, and to make it play.

@@ -16,18 +16,8 @@
 
 package com.example.android.voicemail.common.core;
 
-import static com.android.providers.voicemail.api.VoicemailProvider.CONTENT_URI_PROVIDER_ID_QUERY;
-import static com.android.providers.voicemail.api.VoicemailProvider.Tables.Voicemails.Columns.DATA_MIME_TYPE;
-import static com.android.providers.voicemail.api.VoicemailProvider.Tables.Voicemails.Columns.DATE;
-import static com.android.providers.voicemail.api.VoicemailProvider.Tables.Voicemails.Columns.DURATION;
-import static com.android.providers.voicemail.api.VoicemailProvider.Tables.Voicemails.Columns.NUMBER;
-import static com.android.providers.voicemail.api.VoicemailProvider.Tables.Voicemails.Columns.PROVIDER;
-import static com.android.providers.voicemail.api.VoicemailProvider.Tables.Voicemails.Columns.PROVIDER_DATA;
-import static com.android.providers.voicemail.api.VoicemailProvider.Tables.Voicemails.Columns.READ_STATUS;
-import static com.android.providers.voicemail.api.VoicemailProvider.Tables.Voicemails.Columns.STATE;
-import static com.android.providers.voicemail.api.VoicemailProvider.Tables.Voicemails.Columns._DATA_FILE_EXISTS;
-import static com.android.providers.voicemail.api.VoicemailProvider.Tables.Voicemails.Columns._ID;
-
+import com.example.android.provider.VoicemailContract;
+import com.example.android.provider.VoicemailContract.Voicemails;
 import com.example.android.voicemail.common.logging.Logger;
 import com.example.android.voicemail.common.utils.CloseUtils;
 import com.example.android.voicemail.common.utils.DbQueryUtils;
@@ -38,8 +28,6 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
-
-import com.android.providers.voicemail.api.VoicemailProvider;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -54,8 +42,15 @@ public final class VoicemailProviderHelpers implements VoicemailProviderHelper {
 
     /** Full projection on the voicemail table, giving us all the columns. */
     private static final String[] FULL_PROJECTION = new String[] {
-            _ID, _DATA_FILE_EXISTS, NUMBER, DURATION, DATE, PROVIDER, PROVIDER_DATA, READ_STATUS,
-            STATE
+            Voicemails._ID,
+            Voicemails.HAS_CONTENT,
+            Voicemails.NUMBER,
+            Voicemails.DURATION,
+            Voicemails.DATE,
+            Voicemails.SOURCE_PACKAGE,
+            Voicemails.SOURCE_DATA,
+            Voicemails.NEW,
+            Voicemails.STATE
     };
 
     private final ContentResolver mContentResolver;
@@ -81,7 +76,7 @@ public final class VoicemailProviderHelpers implements VoicemailProviderHelper {
      * <code>com.android.providers.voicemail.permission.READ_WRITE_OWN_VOICEMAIL</code>.
      */
     public static VoicemailProviderHelper createFullVoicemailProvider(Context context) {
-        return new VoicemailProviderHelpers(VoicemailProvider.CONTENT_URI,
+        return new VoicemailProviderHelpers(VoicemailContract.CONTENT_URI,
                 context.getContentResolver());
     }
 
@@ -93,7 +88,7 @@ public final class VoicemailProviderHelpers implements VoicemailProviderHelper {
      * <code>com.android.providers.voicemail.permission.READ_WRITE_OWN_VOICEMAIL</code>.
      */
     public static VoicemailProviderHelper createPackageScopedVoicemailProvider(Context context) {
-        Uri providerUri = Uri.withAppendedPath(VoicemailProvider.CONTENT_URI_PROVIDER_QUERY,
+        Uri providerUri = Uri.withAppendedPath(VoicemailContract.CONTENT_URI_SOURCE,
                 context.getPackageName());
         return new VoicemailProviderHelpers(providerUri, context.getContentResolver());
     }
@@ -120,7 +115,7 @@ public final class VoicemailProviderHelpers implements VoicemailProviderHelper {
     @Override
     public OutputStream setVoicemailContent(Uri voicemailUri, String mimeType) throws IOException {
         ContentValues values = new ContentValues();
-        values.put(DATA_MIME_TYPE, mimeType);
+        values.put(Voicemails.MIME_TYPE, mimeType);
         int updatedCount = mContentResolver.update(voicemailUri, values, null, null);
         if (updatedCount != 1) {
             throw new IOException("Updating voicemail should have updated 1 row, was: "
@@ -131,15 +126,14 @@ public final class VoicemailProviderHelpers implements VoicemailProviderHelper {
     }
 
     @Override
-    public Voicemail findVoicemailByProviderData(String providerData) {
+    public Voicemail findVoicemailBySourceData(String sourceData) {
         Cursor cursor = null;
         try {
             cursor = mContentResolver.query(mBaseUri, FULL_PROJECTION,
-                    DbQueryUtils.getEqualityClause(
-                            VoicemailProvider.Tables.Voicemails.NAME, PROVIDER_DATA, providerData),
+                    DbQueryUtils.getEqualityClause(Voicemails.SOURCE_DATA, sourceData),
                     null, null);
             if (cursor.getCount() != 1) {
-                logger.w("Expected 1 voicemail matching providerData " + providerData + ", got " +
+                logger.w("Expected 1 voicemail matching sourceData " + sourceData + ", got " +
                         cursor.getCount());
                 return null;
             }
@@ -244,23 +238,26 @@ public final class VoicemailProviderHelpers implements VoicemailProviderHelper {
     }
 
     private VoicemailImpl getVoicemailFromCursor(Cursor cursor) {
-        long id = cursor.getLong(cursor.getColumnIndexOrThrow(_ID));
-        String provider = cursor.getString(cursor.getColumnIndexOrThrow(PROVIDER));
+        long id = cursor.getLong(cursor.getColumnIndexOrThrow(Voicemails._ID));
+        String sourcePackage = cursor.getString(
+                cursor.getColumnIndexOrThrow(Voicemails.SOURCE_PACKAGE));
         Uri voicemailUri = ContentUris.withAppendedId(
-                Uri.withAppendedPath(CONTENT_URI_PROVIDER_ID_QUERY, provider), id);
+                Uri.withAppendedPath(VoicemailContract.CONTENT_URI_SOURCE, sourcePackage), id);
         VoicemailImpl voicemail = VoicemailImpl
                 .createEmptyBuilder()
-                .setTimestamp(cursor.getLong(cursor.getColumnIndexOrThrow(DATE)))
-                .setNumber(cursor.getString(cursor.getColumnIndexOrThrow(NUMBER)))
+                .setTimestamp(cursor.getLong(cursor.getColumnIndexOrThrow(Voicemails.DATE)))
+                .setNumber(cursor.getString(cursor.getColumnIndexOrThrow(Voicemails.NUMBER)))
                 .setId(id)
-                .setDuration(cursor.getLong(cursor.getColumnIndexOrThrow(DURATION)))
-                .setSource(provider)
-                .setProviderData(cursor.getString(cursor.getColumnIndexOrThrow(PROVIDER_DATA)))
+                .setDuration(cursor.getLong(cursor.getColumnIndexOrThrow(Voicemails.DURATION)))
+                .setSourcePackage(sourcePackage)
+                .setSourceData(cursor.getString(
+                        cursor.getColumnIndexOrThrow(Voicemails.SOURCE_DATA)))
                 .setUri(voicemailUri)
-                .setHasContent(cursor.getInt(cursor.getColumnIndexOrThrow(_DATA_FILE_EXISTS)) == 1)
-                .setIsRead(cursor.getInt(cursor.getColumnIndexOrThrow(READ_STATUS)) == 1)
-                .setMailbox(
-                        mapValueToMailBoxEnum(cursor.getInt(cursor.getColumnIndexOrThrow(STATE))))
+                .setHasContent(cursor.getInt(
+                        cursor.getColumnIndexOrThrow(Voicemails.HAS_CONTENT)) == 1)
+                .setIsRead(cursor.getInt(cursor.getColumnIndexOrThrow(Voicemails.NEW)) == 1)
+                .setMailbox(mapValueToMailBoxEnum(cursor.getInt(
+                        cursor.getColumnIndexOrThrow(Voicemails.STATE))))
                 .build();
         return voicemail;
     }
@@ -280,25 +277,25 @@ public final class VoicemailProviderHelpers implements VoicemailProviderHelper {
     private ContentValues getContentValues(Voicemail voicemail) {
         ContentValues contentValues = new ContentValues();
         if (voicemail.hasTimestampMillis()) {
-            contentValues.put(DATE, String.valueOf(voicemail.getTimestampMillis()));
+            contentValues.put(Voicemails.DATE, String.valueOf(voicemail.getTimestampMillis()));
         }
         if (voicemail.hasNumber()) {
-            contentValues.put(NUMBER, voicemail.getNumber());
+            contentValues.put(Voicemails.NUMBER, voicemail.getNumber());
         }
         if (voicemail.hasDuration()) {
-            contentValues.put(DURATION, String.valueOf(voicemail.getDuration()));
+            contentValues.put(Voicemails.DURATION, String.valueOf(voicemail.getDuration()));
         }
-        if (voicemail.hasSource()) {
-            contentValues.put(PROVIDER, voicemail.getSource());
+        if (voicemail.hasSourcePackage()) {
+            contentValues.put(Voicemails.SOURCE_PACKAGE, voicemail.getSourcePackage());
         }
-        if (voicemail.hasProviderData()) {
-            contentValues.put(PROVIDER_DATA, voicemail.getProviderData());
+        if (voicemail.hasSourceData()) {
+            contentValues.put(Voicemails.SOURCE_DATA, voicemail.getSourceData());
         }
         if (voicemail.hasRead()) {
-            contentValues.put(READ_STATUS, voicemail.isRead() ? 1 : 0);
+            contentValues.put(Voicemails.NEW, voicemail.isRead() ? 1 : 0);
         }
         if (voicemail.hasMailbox()) {
-            contentValues.put(STATE, voicemail.getMailbox().getValue());
+            contentValues.put(Voicemails.STATE, voicemail.getMailbox().getValue());
         }
         return contentValues;
     }
