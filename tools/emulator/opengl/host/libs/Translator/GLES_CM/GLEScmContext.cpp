@@ -56,6 +56,7 @@ GLEScmContext::~GLEScmContext(){
         delete[] m_texCoords;
         m_texCoords = NULL;
     }
+    m_map[GL_TEXTURE_COORD_ARRAY] = NULL;
 }
 
 
