@@ -1833,6 +1833,9 @@ GL_API void GL_APIENTRY glGetTexGenxvOES (GLenum coord, GLenum pname, GLfixed *p
 template <class T, GLenum TypeName>
 void glDrawTexOES (T x, T y, T z, T width, T height) {
     GET_CTX()
+
+    SET_ERROR_IF((width<=0 || height<=0),GL_INVALID_VALUE);
+
     int numClipPlanes;
 
     GLint viewport[4];
