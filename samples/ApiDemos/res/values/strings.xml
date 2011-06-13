@@ -150,6 +150,8 @@
     <string name="fragment_stack">App/Fragment/Stack</string>
     <string name="new_fragment">New fragment</string>
 
+    <string name="fragment_tabs">App/Fragment/Tabs</string>
+
     <string name="loader_cursor">App/Loader/Cursor</string>
 
     <string name="loader_custom">App/Loader/Custom</string>
