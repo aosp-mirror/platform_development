@@ -325,7 +325,11 @@ EGLBoolean egl_window_surface_t::connect()
     if (nativeWindow->dequeueBuffer(nativeWindow, &buffer) != NO_ERROR) {
         setErrorReturn(EGL_BAD_ALLOC, EGL_FALSE);
     }
+
     buffer->common.incRef(&buffer->common);
+
+    // lock the buffer
+    nativeWindow->lockBuffer(nativeWindow, buffer);
 
     DEFINE_AND_VALIDATE_HOST_CONNECTION(EGL_FALSE);
     rcEnc->rcSetWindowColorBuffer(rcEnc, rcSurface, ((cb_handle_t *)(buffer->handle))->hostHandle);
@@ -359,6 +363,9 @@ EGLBoolean egl_window_surface_t::swapBuffers()
     if (nativeWindow->dequeueBuffer(nativeWindow, &buffer)) {
         setErrorReturn(EGL_BAD_ALLOC, EGL_FALSE);
     }
+
+    // lock the buffer
+    nativeWindow->lockBuffer(nativeWindow, buffer);
 
     rcEnc->rcSetWindowColorBuffer(rcEnc, rcSurface, ((cb_handle_t *)(buffer->handle))->hostHandle);
 
