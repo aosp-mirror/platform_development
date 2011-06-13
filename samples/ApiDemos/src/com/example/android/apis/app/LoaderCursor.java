@@ -159,7 +159,11 @@ public class LoaderCursor extends Activity {
             mAdapter.swapCursor(data);
 
             // The list should now be shown.
-            setListShown(true);
+            if (isResumed()) {
+                setListShown(true);
+            } else {
+                setListShownNoAnimation(true);
+            }
         }
 
         public void onLoaderReset(Loader<Cursor> loader) {
