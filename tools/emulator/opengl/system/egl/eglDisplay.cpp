@@ -367,10 +367,42 @@ const char *eglDisplay::queryString(EGLint name)
     }
 }
 
-EGLint eglDisplay::getConfigAttrib(EGLConfig config, EGLint attrib)
+EGLBoolean eglDisplay::getAttribValue(EGLConfig config, EGLint attribIdx, EGLint * value)
 {
-    EGLint attrIdx = m_attribs.valueFor(attrib);
+    if (attribIdx == ATTRIBUTE_NONE)
+    {
+        LOGE("[%s] Bad attribute idx\n", __FUNCTION__);
+        return EGL_FALSE;
+    }
+    *value = *(m_configs + (int)config*m_numConfigAttribs + attribIdx);
+    return EGL_TRUE;
+}
 
-    if (attrIdx == ATTRIBUTE_NONE) return ATTRIBUTE_NONE;
-    else return *(m_configs + (int)config*m_numConfigAttribs + attrIdx);
+EGLBoolean eglDisplay::getConfigAttrib(EGLConfig config, EGLint attrib, EGLint * value)
+{
+    return getAttribValue(config, m_attribs.valueFor(attrib), value);
+}
+
+EGLBoolean eglDisplay::getConfigPixelFormat(EGLConfig config, GLenum * format)
+{
+    EGLint redSize, blueSize, greenSize, alphaSize;
+
+    if ( !(getAttribValue(config, m_attribs.valueFor(EGL_RED_SIZE), &redSize) &&
+        getAttribValue(config, m_attribs.valueFor(EGL_BLUE_SIZE), &blueSize) &&
+        getAttribValue(config, m_attribs.valueFor(EGL_GREEN_SIZE), &greenSize) &&
+        getAttribValue(config, m_attribs.valueFor(EGL_ALPHA_SIZE), &alphaSize)) )
+    {
+        LOGE("Couldn't find value for one of the pixel format attributes");
+        return EGL_FALSE;
+    }
+
+    //calculate the GL internal format
+    if ((redSize==8)&&(blueSize==8)&&(greenSize==8)&&(alphaSize==8)) *format = GL_RGBA;
+    else if ((redSize==8)&&(blueSize==8)&&(greenSize==8)&&(alphaSize==0)) *format = GL_RGB;
+    else if ((redSize==5)&&(blueSize==6)&&(greenSize==5)&&(alphaSize==0)) *format = GL_RGB565_OES;
+    else if ((redSize==5)&&(blueSize==5)&&(greenSize==5)&&(alphaSize==1)) *format = GL_RGB5_A1_OES;
+    else if ((redSize==4)&&(blueSize==4)&&(greenSize==4)&&(alphaSize==4)) *format = GL_RGBA4_OES;
+    else return EGL_FALSE;
+
+    return EGL_TRUE;
 }
