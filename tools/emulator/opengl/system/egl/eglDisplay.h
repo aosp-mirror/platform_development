@@ -17,6 +17,7 @@
 #define _SYSTEM_EGL_DISPLAY_H
 
 #include <pthread.h>
+#include "glUtils.h"
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
 #include "EGLClientIface.h"
@@ -44,12 +45,14 @@ public:
     const EGLClient_glesInterface *gles2_iface() const { return m_gles2_iface; }
 
     int     getNumConfigs(){ return m_numConfigs; }
-    EGLint  getConfigAttrib(EGLConfig config, EGLint attrib);
+    EGLBoolean  getConfigAttrib(EGLConfig config, EGLint attrib, EGLint * value);
+    EGLBoolean getConfigPixelFormat(EGLConfig config, GLenum * format);
 
 private:
     EGLClient_glesInterface *loadGLESClientAPI(const char *libName,
                                                EGLClient_eglInterface *eglIface,
                                                void **libHandle);
+    EGLBoolean getAttribValue(EGLConfig config, EGLint attribIdxi, EGLint * value);
 
 private:
     pthread_mutex_t m_lock;
