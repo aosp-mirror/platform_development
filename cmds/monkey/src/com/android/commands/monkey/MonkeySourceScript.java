@@ -117,6 +117,10 @@ public class MonkeySourceScript implements MonkeyEventSource {
 
     private static final String EVENT_KEYWORD_DRAG = "Drag";
 
+    private static final String EVENT_KEYWORD_START_FRAMERATE_CAPTURE = "StartCaptureFramerate";
+
+    private static final String EVENT_KEYWORD_END_FRAMERATE_CAPTURE = "EndCaptureFramerate";
+
     // a line at the end of the header
     private static final String STARTING_DATA_LINE = "start data >>";
 
@@ -522,6 +526,21 @@ public class MonkeySourceScript implements MonkeyEventSource {
             mQ.addLast(e);
             return;
         }
+
+        if (s.indexOf(EVENT_KEYWORD_START_FRAMERATE_CAPTURE) >= 0) {
+            MonkeyGetFrameRateEvent e = new MonkeyGetFrameRateEvent("start");
+            mQ.addLast(e);
+            return;
+        }
+
+        if (s.indexOf(EVENT_KEYWORD_END_FRAMERATE_CAPTURE) >= 0 && args.length == 1) {
+            String input = args[0];
+            MonkeyGetFrameRateEvent e = new MonkeyGetFrameRateEvent("end", input);
+            mQ.addLast(e);
+            return;
+        }
+
+
 
     }
 
