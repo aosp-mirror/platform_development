@@ -19,12 +19,13 @@
 #include "egl_ftable.h"
 #include <cutils/log.h>
 
-// The one and only supported display object.
-static eglDisplay s_display;
+#include <private/ui/android_natives_priv.h>
 
-static EGLClient_eglInterface s_eglIface = {
-    getThreadInfo: getEGLThreadInfo
-};
+template<typename T>
+static T setError(GLint error, T returnValue) {
+    getEGLThreadInfo()->eglError = error;
+    return returnValue;
+}
 
 #define RETURN_ERROR(ret,err)           \
     getEGLThreadInfo()->eglError = err; \
@@ -48,6 +49,206 @@ static EGLClient_eglInterface s_eglIface = {
         return ret; \
     }
 
+#define DEFINE_HOST_CONNECTION \
+    HostConnection *hostCon = HostConnection::get(); \
+    renderControl_encoder_context_t *rcEnc = (hostCon ? hostCon->rcEncoder() : NULL)
+
+#define DEFINE_AND_VALIDATE_HOST_CONNECTION(ret) \
+    HostConnection *hostCon = HostConnection::get(); \
+    if (!hostCon) { \
+        LOGE("egl: Failed to get host connection\n"); \
+        return ret; \
+    } \
+    renderControl_encoder_context_t *rcEnc = hostCon->rcEncoder(); \
+    if (!rcEnc) { \
+        LOGE("egl: Failed to get renderControl encoder context\n"); \
+        return ret; \
+    }
+
+
+// ----------------------------------------------------------------------------
+//egl_surface_t
+
+//we don't need to handle depth since it's handled when window created on the host
+
+struct egl_surface_t {
+
+    EGLDisplay          dpy;
+    EGLConfig           config;
+    EGLContext          ctx;
+
+    egl_surface_t(EGLDisplay dpy, EGLConfig config);
+    virtual     ~egl_surface_t();
+    virtual     EGLBoolean         createRc() = 0;
+    virtual     EGLBoolean         destroyRc() = 0;
+    void         setRcSurface(uint32_t handle){ rcSurface = handle; }
+    uint32_t     getRcSurface(){ return rcSurface; }
+
+    virtual     EGLBoolean    isValid(){ return valid; }
+    virtual     EGLint      getWidth() const = 0;
+    virtual     EGLint      getHeight() const = 0;
+
+protected:
+    EGLBoolean            valid;
+    uint32_t             rcSurface; //handle to surface created via remote control
+};
+
+egl_surface_t::egl_surface_t(EGLDisplay dpy, EGLConfig config)
+    : dpy(dpy), config(config), ctx(0), valid(EGL_FALSE), rcSurface(0)
+{
+}
+
+egl_surface_t::~egl_surface_t()
+{
+}
+
+// ----------------------------------------------------------------------------
+// egl_window_surface_t
+
+struct egl_window_surface_t : public egl_surface_t {
+
+    ANativeWindow*     nativeWindow;
+    int width;
+    int height;
+
+    virtual     EGLint      getWidth() const    { return width;  }
+    virtual     EGLint      getHeight() const   { return height; }
+
+    egl_window_surface_t(
+            EGLDisplay dpy, EGLConfig config,
+            ANativeWindow* window);
+
+    ~egl_window_surface_t();
+    virtual     EGLBoolean     createRc();
+    virtual     EGLBoolean     destroyRc();
+
+};
+
+
+egl_window_surface_t::egl_window_surface_t (
+            EGLDisplay dpy, EGLConfig config,
+            ANativeWindow* window)
+    : egl_surface_t(dpy, config),
+    nativeWindow(window)
+{
+    // keep a reference on the window
+    nativeWindow->common.incRef(&nativeWindow->common);
+    nativeWindow->query(nativeWindow, NATIVE_WINDOW_WIDTH, &width);
+    nativeWindow->query(nativeWindow, NATIVE_WINDOW_HEIGHT, &height);
+
+}
+
+egl_window_surface_t::~egl_window_surface_t() {
+    nativeWindow->common.decRef(&nativeWindow->common);
+}
+
+EGLBoolean egl_window_surface_t::createRc()
+{
+    DEFINE_AND_VALIDATE_HOST_CONNECTION(EGL_FALSE);
+    uint32_t rcSurface = rcEnc->rcCreateWindowSurface(rcEnc, (uint32_t)config, getWidth(), getHeight());
+    if (!rcSurface) {
+        LOGE("rcCreateWindowSurface returned 0");
+        return EGL_FALSE;
+    }
+    valid = EGL_TRUE;
+    return EGL_TRUE;
+}
+
+EGLBoolean egl_window_surface_t::destroyRc()
+{
+    if (!rcSurface) {
+        LOGE("destroyRc called on invalid rcSurface");
+        return EGL_FALSE;
+    }
+
+    DEFINE_AND_VALIDATE_HOST_CONNECTION(EGL_FALSE);
+    rcEnc->rcDestroyWindowSurface(rcEnc, rcSurface);
+    rcSurface = 0;
+
+    return EGL_TRUE;
+}
+
+// ----------------------------------------------------------------------------
+//egl_pbuffer_surface_t
+
+struct egl_pbuffer_surface_t : public egl_surface_t {
+
+    int width;
+    int height;
+    GLenum    format;
+
+    virtual     EGLint      getWidth() const    { return width;  }
+    virtual     EGLint      getHeight() const   { return height; }
+
+    egl_pbuffer_surface_t(
+            EGLDisplay dpy, EGLConfig config,
+            int32_t w, int32_t h, GLenum format);
+
+    virtual ~egl_pbuffer_surface_t();
+    virtual     EGLBoolean     createRc();
+    virtual     EGLBoolean     destroyRc();
+
+    uint32_t    getRcColorBuffer(){ return rcColorBuffer; }
+    void         setRcColorBuffer(uint32_t colorBuffer){ rcColorBuffer = colorBuffer; }
+private:
+    uint32_t rcColorBuffer;
+};
+
+egl_pbuffer_surface_t::egl_pbuffer_surface_t(
+        EGLDisplay dpy, EGLConfig config,
+        int32_t w, int32_t h, GLenum pixelFormat)
+    : egl_surface_t(dpy, config),
+    width(w), height(h), format(pixelFormat)
+{
+}
+
+egl_pbuffer_surface_t::~egl_pbuffer_surface_t()
+{
+    rcColorBuffer = 0;
+}
+
+EGLBoolean egl_pbuffer_surface_t::createRc()
+{
+    DEFINE_AND_VALIDATE_HOST_CONNECTION(EGL_FALSE);
+    rcSurface = rcEnc->rcCreateWindowSurface(rcEnc, (uint32_t)config, getWidth(), getHeight());
+    if (!rcSurface) {
+        LOGE("rcCreateWindowSurface returned 0");
+        return EGL_FALSE;
+    }
+    rcColorBuffer = rcEnc->rcCreateColorBuffer(rcEnc, getWidth(), getHeight(), format);
+    if (!rcColorBuffer) {
+        LOGE("rcCreateColorBuffer returned 0");
+        return EGL_FALSE;
+    }
+
+    valid = EGL_TRUE;
+    return EGL_TRUE;
+}
+
+EGLBoolean egl_pbuffer_surface_t::destroyRc()
+{
+    if ((!rcSurface)||(!rcColorBuffer)) {
+        LOGE("destroyRc called on invalid rcSurface");
+        return EGL_FALSE;
+    }
+
+    DEFINE_AND_VALIDATE_HOST_CONNECTION(EGL_FALSE);
+    rcEnc->rcDestroyWindowSurface(rcEnc, rcSurface);
+    rcEnc->rcDestroyColorBuffer(rcEnc, rcColorBuffer);
+    rcSurface = 0;
+
+    return EGL_TRUE;
+}
+
+
+// ----------------------------------------------------------------------------
+
+// The one and only supported display object.
+static eglDisplay s_display;
+
+static EGLClient_eglInterface s_eglIface = {
+    getThreadInfo: getEGLThreadInfo
+};
 EGLDisplay eglGetDisplay(EGLNativeDisplayType display_id)
 {
     //
@@ -164,40 +365,102 @@ EGLBoolean eglGetConfigAttrib(EGLDisplay dpy, EGLConfig config, EGLint attribute
     VALIDATE_DISPLAY_INIT(dpy, NULL);
     VALIDATE_CONFIG(config, EGL_FALSE);
 
-    EGLint attribVal = s_display.getConfigAttrib(config, attribute);
-
-    if (attribVal == ATTRIBUTE_NONE) {
+    if (s_display.getConfigAttrib(config, attribute, value))
+    {
+        return EGL_TRUE;
+    }
+    else
+    {
         RETURN_ERROR(EGL_FALSE, EGL_BAD_ATTRIBUTE);
     }
-
-    *value = attribVal;
-    return EGL_TRUE;
-
-
 }
 
 EGLSurface eglCreateWindowSurface(EGLDisplay dpy, EGLConfig config, EGLNativeWindowType win, const EGLint *attrib_list)
 {
-    //TODO
-    return 0;
+    VALIDATE_DISPLAY_INIT(dpy, NULL);
+    VALIDATE_CONFIG(config, EGL_FALSE);
+    if (win == 0)
+    {
+        return setError(EGL_BAD_MATCH, EGL_NO_SURFACE);
+    }
+
+    EGLint surfaceType;
+    if (s_display.getConfigAttrib(config, EGL_SURFACE_TYPE, &surfaceType) == EGL_FALSE)    return EGL_FALSE;
+
+    if (!(surfaceType & EGL_WINDOW_BIT)) {
+        return setError(EGL_BAD_MATCH, EGL_NO_SURFACE);
+    }
+
+
+    if (static_cast<ANativeWindow*>(win)->common.magic != ANDROID_NATIVE_WINDOW_MAGIC) {
+        return setError(EGL_BAD_NATIVE_WINDOW, EGL_NO_SURFACE);
+    }
+
+    egl_surface_t* surface;
+    surface = new egl_window_surface_t(&s_display, config, static_cast<ANativeWindow*>(win));
+    if (!surface) setError(EGL_BAD_ALLOC, EGL_NO_SURFACE);
+    if (!surface->createRc()) setError(EGL_BAD_ALLOC, EGL_NO_SURFACE);
+
+    return surface;
 }
 
 EGLSurface eglCreatePbufferSurface(EGLDisplay dpy, EGLConfig config, const EGLint *attrib_list)
 {
-    //TODO
-    return 0;
+    VALIDATE_DISPLAY_INIT(dpy, NULL);
+    VALIDATE_CONFIG(config, EGL_FALSE);
+
+    EGLint surfaceType;
+    if (s_display.getConfigAttrib(config, EGL_SURFACE_TYPE, &surfaceType) == EGL_FALSE)    return EGL_FALSE;
+
+    if (!(surfaceType & EGL_PBUFFER_BIT)) {
+        return setError(EGL_BAD_MATCH, EGL_NO_SURFACE);
+    }
+
+    int32_t w = 0;
+    int32_t h = 0;
+    while (attrib_list[0]) {
+        if (attrib_list[0] == EGL_WIDTH)  w = attrib_list[1];
+        if (attrib_list[0] == EGL_HEIGHT) h = attrib_list[1];
+        attrib_list+=2;
+    }
+
+    GLenum pixelFormat;
+    if (s_display.getConfigPixelFormat(config, &pixelFormat) == EGL_FALSE)
+        return setError(EGL_BAD_MATCH, EGL_NO_SURFACE);
+
+    egl_surface_t* surface = new egl_pbuffer_surface_t(dpy, config, w, h, pixelFormat);
+    if (!surface) setError(EGL_BAD_ALLOC, EGL_NO_SURFACE);
+    if (!surface->createRc()) setError(EGL_BAD_ALLOC, EGL_NO_SURFACE);
+
+    return surface;
 }
 
 EGLSurface eglCreatePixmapSurface(EGLDisplay dpy, EGLConfig config, EGLNativePixmapType pixmap, const EGLint *attrib_list)
 {
-    //TODO
-    return 0;
+    //XXX: Pixmap not supported. The host cannot render to a pixmap resource
+    //     located on host. In order to support Pixmaps we should either punt
+    //     to s/w rendering -or- let the host render to a buffer that will be
+    //     copied back to guest at some sync point. None of those methods not
+    //     implemented and pixmaps are not used with OpenGL anyway ...
+    return EGL_NO_SURFACE;
 }
 
-EGLBoolean eglDestroySurface(EGLDisplay dpy, EGLSurface surface)
+EGLBoolean eglDestroySurface(EGLDisplay dpy, EGLSurface eglSurface)
 {
-    //TODO
-    return 0;
+    VALIDATE_DISPLAY_INIT(dpy, NULL);
+
+    if (eglSurface != EGL_NO_SURFACE)
+    {
+        egl_surface_t* surface( static_cast<egl_surface_t*>(eglSurface) );
+        if (!surface->isValid())
+            return setError(EGL_BAD_SURFACE, EGL_FALSE);
+        if (surface->dpy != dpy)
+            return setError(EGL_BAD_DISPLAY, EGL_FALSE);
+
+        surface->destroyRc();
+        delete surface;
+    }
+    return EGL_TRUE;
 }
 
 EGLBoolean eglQuerySurface(EGLDisplay dpy, EGLSurface surface, EGLint attribute, EGLint *value)
