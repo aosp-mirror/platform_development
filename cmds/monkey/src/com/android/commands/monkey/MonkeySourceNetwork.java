@@ -48,6 +48,8 @@ import java.util.StringTokenizer;
  */
 public class MonkeySourceNetwork implements MonkeyEventSource {
     private static final String TAG = "MonkeyStub";
+    /* The version of the monkey network protocol */
+    public static final int MONKEY_NETWORK_VERSION = 2;
 
     /**
      * ReturnValue from the MonkeyCommand that indicates whether the
@@ -95,7 +97,7 @@ public class MonkeySourceNetwork implements MonkeyEventSource {
          *
          * @param command the command line.
          * @param queue the command queue.
-         * @returs MonkeyCommandReturn indicating what happened.
+         * @return MonkeyCommandReturn indicating what happened.
          */
         MonkeyCommandReturn translateCommand(List<String> command, CommandQueue queue);
     }
@@ -234,7 +236,7 @@ public class MonkeySourceNetwork implements MonkeyEventSource {
      * Get an integer keycode value from a given keyname.
      *
      * @param keyName the key name to get the code for
-     * @returns the integer keycode value, or -1 on error.
+     * @return the integer keycode value, or -1 on error.
      */
     private static int getKeyCode(String keyName) {
         int keyCode = -1;
@@ -408,6 +410,11 @@ public class MonkeySourceNetwork implements MonkeyEventSource {
         COMMAND_MAP.put("type", new TypeCommand());
         COMMAND_MAP.put("listvar", new MonkeySourceNetworkVars.ListVarCommand());
         COMMAND_MAP.put("getvar", new MonkeySourceNetworkVars.GetVarCommand());
+        COMMAND_MAP.put("listviews", new MonkeySourceNetworkViews.ListViewsCommand());
+        COMMAND_MAP.put("queryview", new MonkeySourceNetworkViews.QueryViewCommand());
+        COMMAND_MAP.put("getrootview", new MonkeySourceNetworkViews.GetRootViewCommand());
+        COMMAND_MAP.put("getviewswithtext",
+                        new MonkeySourceNetworkViews.GetViewsWithTextCommand());
     }
 
     // QUIT command
@@ -444,7 +451,7 @@ public class MonkeySourceNetwork implements MonkeyEventSource {
         /**
          * Get the next queued event to excecute.
          *
-         * @returns the next event, or null if there aren't any more.
+         * @return the next event, or null if there aren't any more.
          */
         public MonkeyEvent getNextQueuedEvent() {
             return queuedEvents.poll();
@@ -477,8 +484,12 @@ public class MonkeySourceNetwork implements MonkeyEventSource {
      */
     private void startServer() throws IOException {
         clientSocket = serverSocket.accept();
-        // At this point, we have a client connected.  Wake the device
-        // up in preparation for doing some commands.
+        // At this point, we have a client connected.
+        // Attach the accessibility listeners so that we can start receiving
+        // view events. Do this before wake so we can catch the wake event
+        // if possible.
+        MonkeySourceNetworkViews.setup();
+        // Wake the device up in preparation for doing some commands.
         wake();
 
         input = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
@@ -501,7 +512,7 @@ public class MonkeySourceNetwork implements MonkeyEventSource {
      * charaters with their real values.
      *
      * @param input the string to do replacement on.
-     * @returns the results with the characters replaced.
+     * @return the results with the characters replaced.
      */
     private static String replaceQuotedChars(String input) {
         return input.replace("\\\"", "\"");
@@ -559,8 +570,7 @@ public class MonkeySourceNetwork implements MonkeyEventSource {
         if (parts.size() > 0) {
             MonkeyCommand command = COMMAND_MAP.get(parts.get(0));
             if (command != null) {
-                MonkeyCommandReturn ret = command.translateCommand(parts,
-                                                                   commandQueue);
+                MonkeyCommandReturn ret = command.translateCommand(parts, commandQueue);
                 if (ret.wasSuccessful()) {
                     if (ret.hasMessage()) {
                         returnOk(ret.getMessage());
