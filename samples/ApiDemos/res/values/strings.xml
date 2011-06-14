@@ -153,6 +153,8 @@
     <string name="first">First</string>
     <string name="last">Last</string>
 
+    <string name="fragment_tabs">App/Fragment/Tabs</string>
+
     <string name="loader_cursor">App/Loader/Cursor</string>
 
     <string name="loader_custom">App/Loader/Custom</string>
