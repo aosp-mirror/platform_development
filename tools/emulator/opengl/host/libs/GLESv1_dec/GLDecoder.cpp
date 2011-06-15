@@ -15,7 +15,6 @@
 */
 #include "GLDecoder.h"
 #include <string.h>
-#include <dlfcn.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <EGL/egl.h>
@@ -31,7 +30,7 @@ GLDecoder::GLDecoder()
 GLDecoder::~GLDecoder()
 {
     if (m_glesDso != NULL) {
-        dlclose(m_glesDso);
+        delete m_glesDso;
     }
 }
 
@@ -44,7 +43,7 @@ int GLDecoder::initGL(get_proc_func_t getProcFunc, void *getProcFuncData)
             libname = getenv(GLES_LIBNAME_VAR);
         }
 
-        m_glesDso = dlopen(libname, RTLD_NOW);
+        m_glesDso = osUtils::dynLibrary::open(libname);
         if (m_glesDso == NULL) {
             fprintf(stderr, "Couldn't find %s \n", GLES_LIBNAME);
             return -1;
@@ -233,7 +232,7 @@ void *GLDecoder::s_getProc(const char *name, void *userData)
     func = (void *) eglGetProcAddress(name);
 #endif
     if (func == NULL) {
-        func = dlsym(ctx->m_glesDso, name);
+        func = (void *)(ctx->m_glesDso->findSymbol(name));
     }
     return func;
 }

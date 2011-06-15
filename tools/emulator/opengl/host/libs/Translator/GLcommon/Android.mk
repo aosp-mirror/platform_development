@@ -29,6 +29,6 @@ ifeq ($(HOST_OS),windows)
 endif
 
 $(call emugl-export,C_INCLUDES,$(LOCAL_PATH)/../include $(EMUGL_PATH)/shared)
-$(call emugl-export,STATIC_LIBRARIES, libcutils liblog)
+$(call emugl-export,STATIC_LIBRARIES, libcutils libutils liblog)
 
 $(call emugl-end-module)
