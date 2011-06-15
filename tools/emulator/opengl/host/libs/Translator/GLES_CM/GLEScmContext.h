@@ -44,6 +44,11 @@ public:
     virtual const GLESpointer* getPointer(GLenum arrType);
     int  getMaxTexUnits();
 
+    virtual bool glGetIntegerv(GLenum pname, GLint *params);
+    virtual bool glGetBooleanv(GLenum pname, GLboolean *params);
+    virtual bool glGetFloatv(GLenum pname, GLfloat *params);
+    virtual bool glGetFixedv(GLenum pname, GLfixed *params);
+  
     ~GLEScmContext();
 protected:
 

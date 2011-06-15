@@ -662,6 +662,11 @@ GL_API void GL_APIENTRY  glGenTextures( GLsizei n, GLuint *textures) {
 GL_API void GL_APIENTRY  glGetBooleanv( GLenum pname, GLboolean *params) {
     GET_CTX()
 
+    if(ctx->glGetBooleanv(pname, params))
+    {
+        return;
+    }
+
     GLint i;
 
     switch(pname)
@@ -734,6 +739,11 @@ GL_API void GL_APIENTRY  glGetClipPlanex( GLenum pname, GLfixed eqn[4]) {
 GL_API void GL_APIENTRY  glGetFixedv( GLenum pname, GLfixed *params) {
     GET_CTX()
 
+    if(ctx->glGetFixedv(pname, params))
+    {
+        return;
+    }
+
     size_t nParams = glParamSize(pname);
     GLfloat fParams[16];
     GLint i;
@@ -782,6 +792,11 @@ GL_API void GL_APIENTRY  glGetFixedv( GLenum pname, GLfixed *params) {
 GL_API void GL_APIENTRY  glGetFloatv( GLenum pname, GLfloat *params) {
     GET_CTX()
 
+    if(ctx->glGetFloatv(pname, params))
+    {
+        return;
+    }
+
     GLint i;
 
     switch(pname)
@@ -819,6 +834,12 @@ GL_API void GL_APIENTRY  glGetFloatv( GLenum pname, GLfloat *params) {
 
 GL_API void GL_APIENTRY  glGetIntegerv( GLenum pname, GLint *params) {
     GET_CTX()
+
+    if(ctx->glGetIntegerv(pname, params))
+    {
+        return;
+    }
+
     switch(pname)
     {
     case GL_IMPLEMENTATION_COLOR_READ_TYPE_OES:
@@ -912,7 +933,12 @@ GL_API void GL_APIENTRY  glGetPointerv( GLenum pname, void **params) {
     GET_CTX()
     const GLESpointer* p = ctx->getPointer(pname);
     if(p) {
-        *params = const_cast<void *>( p->getArrayData());
+        if(p->isVBO())
+        {
+            *params = (void*)(p->getBufferOffset());
+        }else{
+            *params = const_cast<void *>( p->getArrayData());
+        }
     } else {
         ctx->setGLerror(GL_INVALID_ENUM);
     }
