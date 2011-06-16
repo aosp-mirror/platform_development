@@ -130,7 +130,8 @@ public class AddVoicemailActivity extends Activity {
         long duration = durationStr.length() != 0 ? Long.parseLong(durationStr) : 0;
         return VoicemailImpl.createForInsertion(time, sender)
                 .setDuration(duration)
-                .setSource(sourcePackageName)
+                .setSourcePackage(sourcePackageName)
+                .setMailbox(Voicemail.Mailbox.INBOX)
                 .build();
     }
 

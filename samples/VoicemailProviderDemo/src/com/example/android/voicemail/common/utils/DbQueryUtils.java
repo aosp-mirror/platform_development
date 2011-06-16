@@ -27,11 +27,14 @@ public class DbQueryUtils {
     private DbQueryUtils() {
     }
 
-    /** Returns a WHERE clause assert equality of a field to a value. */
+    /** Returns a WHERE clause assert equality of a field to a value for the specified table . */
     public static String getEqualityClause(String table, String field, String value) {
+        return getEqualityClause(table + "." + field, value);
+    }
+
+    /** Returns a WHERE clause assert equality of a field to a value. */
+    public static String getEqualityClause(String field, String value) {
         StringBuilder clause = new StringBuilder();
-        clause.append(table);
-        clause.append(".");
         clause.append(field);
         clause.append(" = ");
         DatabaseUtils.appendEscapedSQLString(clause, value);

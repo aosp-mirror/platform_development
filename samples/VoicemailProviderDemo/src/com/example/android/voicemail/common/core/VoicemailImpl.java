@@ -89,14 +89,16 @@ public final class VoicemailImpl implements Voicemail {
      * Builder pattern for creating a {@link VoicemailImpl}.
      * <p>
      * All fields are optional, and can be set with the various {@code setXXX} methods.
+     * <p>
+     * This class is <b>not thread safe</b>
      */
     public static class Builder {
         private Long mBuilderTimestamp;
         private String mBuilderNumber;
         private Long mBuilderId;
         private Long mBuilderDuration;
-        private String mBuilderSource;
-        private String mBuilderProviderData;
+        private String mBuilderSourcePackage;
+        private String mBuilderSourceData;
         private Uri mBuilderUri;
         private Voicemail.Mailbox mBuilderMailbox;
         private Boolean mBuilderIsRead;
@@ -126,13 +128,13 @@ public final class VoicemailImpl implements Voicemail {
             return this;
         }
 
-        public Builder setSource(String source) {
-            mBuilderSource = source;
+        public Builder setSourcePackage(String sourcePackage) {
+            mBuilderSourcePackage = sourcePackage;
             return this;
         }
 
-        public Builder setProviderData(String providerData) {
-            mBuilderProviderData = providerData;
+        public Builder setSourceData(String sourceData) {
+            mBuilderSourceData = sourceData;
             return this;
         }
 
@@ -159,7 +161,7 @@ public final class VoicemailImpl implements Voicemail {
         public VoicemailImpl build() {
             return new VoicemailImpl(mBuilderTimestamp, mBuilderNumber, mBuilderId,
                     mBuilderDuration,
-                    mBuilderSource, mBuilderProviderData, mBuilderUri, mBuilderMailbox,
+                    mBuilderSourcePackage, mBuilderSourceData, mBuilderUri, mBuilderMailbox,
                     mBuilderIsRead,
                     mBuilderHasContent);
         }
@@ -206,22 +208,22 @@ public final class VoicemailImpl implements Voicemail {
     }
 
     @Override
-    public String getSource() {
+    public String getSourcePackage() {
         return mSource;
     }
 
     @Override
-    public boolean hasSource() {
+    public boolean hasSourcePackage() {
         return mSource != null;
     }
 
     @Override
-    public String getProviderData() {
+    public String getSourceData() {
         return mProviderData;
     }
 
     @Override
-    public boolean hasProviderData() {
+    public boolean hasSourceData() {
         return mProviderData != null;
     }
 

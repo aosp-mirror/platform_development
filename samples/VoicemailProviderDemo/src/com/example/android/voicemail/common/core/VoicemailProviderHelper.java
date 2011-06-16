@@ -16,9 +16,9 @@
 
 package com.example.android.voicemail.common.core;
 
-import android.net.Uri;
+import com.example.android.provider.VoicemailContract;
 
-import com.android.providers.voicemail.api.VoicemailProvider;
+import android.net.Uri;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -74,7 +74,7 @@ public interface VoicemailProviderHelper {
      * It is expected that there be one such voicemail. Returns null if no such voicemail exists,
      * and returns one chosen arbitrarily if more than one exists.
      */
-    public Voicemail findVoicemailByProviderData(String providerData);
+    public Voicemail findVoicemailBySourceData(String providerData);
 
     /**
      * Returns the {@link Voicemail} corresponding to a given Uri. The uri must correspond to a
@@ -121,7 +121,7 @@ public interface VoicemailProviderHelper {
      *
      * @param filter The filter to apply while retrieving voicemails.
      * @param sortColumn The column to sort by. Must be one of the values defined in
-     *            {@link VoicemailProvider.Tables.Voicemails.Columns}.
+     *            {@link VoicemailContract.Voicemails}.
      * @param sortOrder Order to sort by
      * @return the list of voicemails, sorted by the requested DB column in specified sort order.
      */
