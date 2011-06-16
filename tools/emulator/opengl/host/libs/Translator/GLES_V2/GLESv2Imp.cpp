@@ -711,10 +711,13 @@ GL_APICALL void  GL_APIENTRY glGetShaderSource(GLuint shader, GLsizei bufsize, G
        SET_ERROR_IF(!objData.Ptr(),GL_INVALID_OPERATION);
        const char* src = ((ShaderParser*)objData.Ptr())->getOriginalSrc();
        int srcLength = strlen(src);
-       SET_ERROR_IF(bufsize < 0 || srcLength > bufsize,GL_INVALID_VALUE);
+
+       int returnLength = bufsize<srcLength ? bufsize-1 : srcLength;
+       strncpy(source,src, returnLength);
+       source[returnLength] = '\0';
+
        if (length)
-          *length = srcLength;
-       strncpy(source,src,srcLength);
+          *length = returnLength;
     }
 }
 
