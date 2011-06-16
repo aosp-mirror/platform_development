@@ -488,9 +488,17 @@ GL_API void GL_APIENTRY  glDeleteTextures( GLsizei n, const GLuint *textures) {
     SET_ERROR_IF(n<0,GL_INVALID_VALUE);
     if(thrd->shareGroup.Ptr()) {
         for(int i=0; i < n; i++){
-           thrd->shareGroup->deleteName(TEXTURE,textures[i]);
-           const GLuint globalTextureName = thrd->shareGroup->getGlobalName(TEXTURE,textures[i]);
-           ctx->dispatcher().glDeleteTextures(1,&globalTextureName);
+            if(textures[i] != 0)
+            {
+                thrd->shareGroup->deleteName(TEXTURE,textures[i]);
+                const GLuint globalTextureName = thrd->shareGroup->getGlobalName(TEXTURE,textures[i]);
+                ctx->dispatcher().glDeleteTextures(1,&globalTextureName);
+
+                if(ctx->getBindedTexture() == textures[i])
+                {
+                    ctx->setBindedTexture(0);
+                }
+            }
         }
     }
 }
