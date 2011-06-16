@@ -325,9 +325,8 @@ GLint * GL2Encoder::getCompressedTextureFormats()
     return m_compressedTextureFormats;
 }
 
-void GL2Encoder::s_glShaderSource(void *self, GLuint shader, GLsizei count, const GLstr *string, const GLint *length)
+void GL2Encoder::s_glShaderSource(void *self, GLuint shader, GLsizei count, const GLchar **string, const GLint *length)
 {
-
     int len = glUtilsCalcShaderSourceLen((char**)string, (GLint*)length, count);
     char *str = new char[len + 1];
     glUtilsPackStrings(str, (char**)string, (GLint*)length, count);

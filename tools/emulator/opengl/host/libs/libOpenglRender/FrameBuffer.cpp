@@ -77,8 +77,8 @@ static const char *getGLES2ExtensionString(EGLDisplay p_dpy,
     }
 
     s_egl.eglMakeCurrent(p_dpy, NULL, NULL, NULL);
-    s_egl.eglDestroySurface(p_dpy, surface);
     s_egl.eglDestroyContext(p_dpy, ctx);
+    s_egl.eglDestroySurface(p_dpy, surface);
 
     return extString;
 }
@@ -564,8 +564,14 @@ bool FrameBuffer::bindContext(HandleType p_context,
     tinfo->currContext = ctx;
     tinfo->currDrawSurf = draw;
     tinfo->currReadSurf = read;
-    tinfo->m_glDec.setContextData(&ctx->decoderContextData());
-
+    if (ctx) {
+        if (ctx->isGL2()) tinfo->m_gl2Dec.setContextData(&ctx->decoderContextData());
+        else tinfo->m_glDec.setContextData(&ctx->decoderContextData());
+    }
+    else {
+        tinfo->m_glDec.setContextData(NULL);
+        tinfo->m_gl2Dec.setContextData(NULL);
+    }
     return true;
 }
 

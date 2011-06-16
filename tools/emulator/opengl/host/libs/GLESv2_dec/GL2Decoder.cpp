@@ -108,7 +108,7 @@ void GL2Decoder::s_glDrawElementsOffset(void *self, GLenum mode, GLsizei count, 
     ctx->glDrawElements(mode, count, type, (void *)offset);
 }
 
-void GL2Decoder::s_glShaderString(void *self, GLuint shader, GLstr string, GLsizei len)
+void GL2Decoder::s_glShaderString(void *self, GLuint shader, const GLchar* string, GLsizei len)
 {
     GL2Decoder *ctx = (GL2Decoder *)self;
     ctx->glShaderSource(shader, 1, &string, NULL);
