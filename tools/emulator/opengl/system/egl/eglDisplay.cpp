@@ -168,7 +168,7 @@ bool eglDisplay::initialize(EGLClient_eglInterface *eglIface)
         }
 
         //Copy the actual configs data to m_configs
-        memcpy(m_configs, tmp_buf + m_numConfigAttribs*sizeof(EGLint), m_numConfigs*sizeof(EGLint));
+        memcpy(m_configs, tmp_buf + m_numConfigAttribs, m_numConfigs*sizeof(EGLint));
 
         m_initialized = true;
     }
@@ -367,6 +367,9 @@ const char *eglDisplay::queryString(EGLint name)
     }
 }
 
+/* To get the value of attribute <a> of config <c> use the following formula:
+ * value = *(m_configs + (int)c*m_numConfigAttribs + a);
+ */
 EGLBoolean eglDisplay::getAttribValue(EGLConfig config, EGLint attribIdx, EGLint * value)
 {
     if (attribIdx == ATTRIBUTE_NONE)
