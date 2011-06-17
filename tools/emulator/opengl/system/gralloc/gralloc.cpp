@@ -13,9 +13,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-#include <hardware/hardware.h>
-#include <hardware/gralloc.h>
-#include <cutils/native_handle.h>
+#include "gralloc_cb.h"
 #include <pthread.h>
 #ifdef HAVE_ANDROID_OS      // just want PAGE_SIZE define
 # include <asm/page.h>
@@ -30,7 +28,6 @@
 #include "glUtils.h"
 #include <cutils/log.h>
 
-#define BUFFER_HANDLE_MAGIC ((int)0xabfabfab)
 
 //
 // our private gralloc module structure
@@ -60,72 +57,6 @@ struct gralloc_device_t {
 //
 struct fb_device_t {
     framebuffer_device_t  device;
-};
-
-#define CB_HANDLE_NUM_INTS(nfds) ((sizeof(cb_handle_t) - (nfds)*sizeof(int)) / sizeof(int))
-
-//
-// Our buffer handle structure
-//
-struct cb_handle_t : public native_handle {
-
-    cb_handle_t(int p_fd, int p_ashmemSize, int p_usage,
-                int p_width, int p_height, int p_glFormat) :
-        fd(p_fd),
-        magic(BUFFER_HANDLE_MAGIC),
-        usage(p_usage),
-        width(p_width),
-        height(p_height),
-        glFormat(p_glFormat),
-        ashmemSize(p_ashmemSize),
-        ashmemBase(NULL),
-        ashmemBasePid(0),
-        mappedPid(0),
-        lockedLeft(0),
-        lockedTop(0),
-        lockedWidth(0),
-        lockedHeight(0),
-        hostHandle(0)
-    {
-        version = sizeof(native_handle);
-        numFds = 1;
-        numInts = CB_HANDLE_NUM_INTS(numFds);
-    }
-
-    ~cb_handle_t() {
-        magic = 0;
-    }
-
-    bool validate() const {
-        return (version == sizeof(native_handle) &&
-                magic == BUFFER_HANDLE_MAGIC &&
-                numInts == CB_HANDLE_NUM_INTS(1) &&
-                numFds == 1);
-    }
-
-    bool canBePosted() {
-        return (0 != (usage & GRALLOC_USAGE_HW_FB));
-    }
-
-    // file-descriptors
-    int fd;  // ashmem fd (-1 of ashmem region did not allocated, i.e. no SW access needed)
-
-    // ints
-    int magic;              // magic number in order to validate a pointer to be a cb_handle_t
-    int usage;              // usage bits the buffer was created with
-    int width;              // buffer width
-    int height;             // buffer height
-    int glFormat;           // OpenGL format enum used for host h/w color buffer
-    int ashmemSize;         // ashmem region size for the buffer (0 unless is HW_FB buffer or
-                            //                                    s/w access is needed)
-    int ashmemBase;         // CPU address of the mapped ashmem region
-    int ashmemBasePid;      // process id which mapped the ashmem region
-    int mappedPid;          // process id which succeeded gralloc_register call
-    int lockedLeft;         // region of buffer locked for s/w write
-    int lockedTop;
-    int lockedWidth;
-    int lockedHeight;
-    uint32_t hostHandle;
 };
 
 static int map_buffer(cb_handle_t *cb, void **vaddr)

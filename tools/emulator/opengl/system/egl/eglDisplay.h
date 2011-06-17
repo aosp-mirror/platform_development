@@ -62,7 +62,14 @@ private:
     int  m_hostRendererVersion;
     int  m_numConfigs;
     int  m_numConfigAttribs;
-    DefaultKeyedVector<EGLint, EGLint>  m_attribs;
+
+    /* This is the mapping between an attribute name to it's index in any given config */
+    DefaultKeyedVector<EGLint, EGLint>    m_attribs;
+    /* This is an array of all config's attributes values stored in the following sequencial fasion (read: v[c,a] = the value of attribute <a> of config <c>)
+     * v[0,0],..,v[0,m_numConfigAttribs-1],
+     *...
+     * v[m_numConfigs-1,0],..,v[m_numConfigs-1,m_numConfigAttribs-1]
+     */
     EGLint *m_configs;
     EGLClient_glesInterface *m_gles_iface;
     EGLClient_glesInterface *m_gles2_iface;
