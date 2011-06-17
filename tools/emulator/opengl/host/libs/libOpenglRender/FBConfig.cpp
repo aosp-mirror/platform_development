@@ -24,15 +24,15 @@ int FBConfig::s_numConfigs = 0;
 const GLuint FBConfig::s_configAttribs[] = {
     EGL_DEPTH_SIZE,     // must be first - see getDepthSize()
     EGL_STENCIL_SIZE,   // must be second - see getStencilSize()
-    EGL_RENDERABLE_TYPE, // must be third - see getRenderableType()
-    EGL_SURFACE_TYPE,  // must be fourth - see getSurfaceType()
+    EGL_RENDERABLE_TYPE,// must be third - see getRenderableType()
+    EGL_SURFACE_TYPE,   // must be fourth - see getSurfaceType()
+    EGL_CONFIG_ID,      // must be fifth  - see chooseConfig()
     EGL_BUFFER_SIZE,
     EGL_ALPHA_SIZE,
     EGL_BLUE_SIZE,
     EGL_GREEN_SIZE,
     EGL_RED_SIZE,
     EGL_CONFIG_CAVEAT,
-    EGL_CONFIG_ID,
     EGL_LEVEL,
     EGL_MAX_PBUFFER_HEIGHT,
     EGL_MAX_PBUFFER_PIXELS,
@@ -199,6 +199,52 @@ void FBConfig::packConfigsInfo(GLuint *buffer)
                &s_fbConfigs[i]->m_attribValues,
                s_numConfigAttribs * sizeof(GLuint));
     }
+}
+
+int FBConfig::chooseConfig(FrameBuffer *fb, EGLint * attribs, uint32_t * configs, uint32_t configs_size)
+{
+    EGLDisplay dpy = fb->getDisplay();
+    int ret = 0;
+
+    if (dpy == EGL_NO_DISPLAY) {
+        fprintf(stderr,"Could not get EGL Display\n");
+        return ret;
+    }
+    //
+    // Query the num of configs in the EGL backend
+    //
+    EGLint nConfigs;
+    if (!s_egl.eglGetConfigs(dpy, NULL, 0, &nConfigs)) {
+        fprintf(stderr, "Could not get number of available configs\n");
+        return ret;
+    }
+    //
+    // Query the max matching configs in the backend
+    //
+    EGLConfig *matchedConfigs = new EGLConfig[nConfigs];
+    s_egl.eglChooseConfig(dpy, attribs, matchedConfigs, nConfigs, &nConfigs);
+
+    //
+    // From all matchedConfigs we need only config_size FBConfigs, so we intersect both lists compating the CONFIG_ID attribute
+    //
+    uint32_t nVerifiedCfgs = 0;
+    for (int matchedIdx=0; matchedIdx<nConfigs; matchedIdx++) {
+        if (nVerifiedCfgs >= configs_size) break; //We have enouhgt configs
+        int sCfgId;
+        s_egl.eglGetConfigAttrib(dpy, matchedConfigs[matchedIdx], EGL_CONFIG_ID, &sCfgId);
+        for (int fbIdx=0; fbIdx<s_numConfigs; fbIdx++) {
+            int dCfgId = s_fbConfigs[fbIdx]->m_attribValues[4]; //CONFIG_ID
+            if (sCfgId == dCfgId) {
+                //This config matches the requested attributes and filtered into fbConfigs, so we're happy with it
+                configs[nVerifiedCfgs++] = fbIdx;
+                break;
+            }
+        }
+    }
+
+    delete matchedConfigs;
+
+    return nVerifiedCfgs;
 }
 
 FBConfig::FBConfig(EGLDisplay p_eglDpy, EGLConfig p_eglCfg)
