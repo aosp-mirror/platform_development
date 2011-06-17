@@ -12,7 +12,9 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */package com.example.android.xmladapters;
+ */
+
+package com.example.android.xmladapters;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -58,14 +60,16 @@ public class ImageDownloader {
     // Hard cache, with a fixed maximum capacity and a life duration
     private final HashMap<String, Bitmap> sHardBitmapCache =
         new LinkedHashMap<String, Bitmap>(HARD_CACHE_CAPACITY / 2, 0.75f, true) {
+        private static final long serialVersionUID = -7190622541619388252L;
         @Override
         protected boolean removeEldestEntry(LinkedHashMap.Entry<String, Bitmap> eldest) {
             if (size() > HARD_CACHE_CAPACITY) {
                 // Entries push-out of hard reference cache are transferred to soft reference cache
                 sSoftBitmapCache.put(eldest.getKey(), new SoftReference<Bitmap>(eldest.getValue()));
                 return true;
-            } else
+            } else {
                 return false;
+            }
         }
     };
 

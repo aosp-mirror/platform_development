@@ -17,7 +17,6 @@
 package com.example.android.xmladapters;
 
 import android.app.ListActivity;
-import android.content.XmlDocumentProvider;
 import android.net.Uri;
 import android.os.Bundle;
 import android.widget.AdapterView.OnItemClickListener;

@@ -16,9 +16,6 @@
 
 package com.example.android.xmladapters;
 
-import org.xmlpull.v1.XmlPullParser;
-import org.xmlpull.v1.XmlPullParserException;
-
 import android.app.Activity;
 import android.content.Context;
 import android.content.res.Resources;
@@ -36,6 +33,9 @@ import android.widget.CursorAdapter;
 import android.widget.ImageView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
+
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
@@ -257,7 +257,6 @@ import java.util.HashMap;
  * attr ref android.R.styleable#CursorAdapter_TransformItem_withClass
  * attr ref android.R.styleable#CursorAdapter_TransformItem_withExpression
  */
-@SuppressWarnings({"JavadocReference"})
 public class Adapters {
     private static final String ADAPTER_CURSOR = "cursor-adapter";
 
@@ -898,10 +897,13 @@ public class Adapters {
      * of a SimpleCursorAdapter. The main difference is the ability to handle CursorBinders.
      */
     private static class XmlCursorAdapter extends SimpleCursorAdapter implements ManagedAdapter {
+        private Context mContext;
         private String mUri;
         private final String mSelection;
         private final String[] mSelectionArgs;
         private final String mSortOrder;
+        private final int[] mTo;
+        private final String[] mFrom;
         private final String[] mColumns;
         private final CursorBinder[] mBinders;
         private AsyncTask<Void,Void,Cursor> mLoadTask;
@@ -913,6 +915,8 @@ public class Adapters {
             super(context, layout, null, from, to);
             mContext = context;
             mUri = uri;
+            mFrom = from;
+            mTo = to;
             mSelection = selection;
             mSelectionArgs = selectionArgs;
             mSortOrder = sortOrder;
@@ -935,14 +939,14 @@ public class Adapters {
         @Override
         public void bindView(View view, Context context, Cursor cursor) {
             final int count = mTo.length;
-            final int[] from = mFrom;
             final int[] to = mTo;
             final CursorBinder[] binders = mBinders;
 
             for (int i = 0; i < count; i++) {
                 final View v = view.findViewById(to[i]);
                 if (v != null) {
-                    binders[i].bind(v, cursor, from[i]);
+                    // Not optimal, the column index could be cached
+                    binders[i].bind(v, cursor, cursor.getColumnIndex(mFrom[i]));
                 }
             }
         }
