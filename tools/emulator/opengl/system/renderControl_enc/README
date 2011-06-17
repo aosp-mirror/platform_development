@@ -39,6 +39,15 @@ EGLint rcGetConfigs(uint32_t bufSize, GLuint* buffer);
        holding the attribute values for that config, the values are specified
        in the same order as the attribute vector.
 
+EGLint rcChooseConfig(EGLint *attribs, uint32_t attribs_size, uint32_t *configs, uint32_t configs_size)
+       This function triggers an eglChooseConfig on the host, to get a list of 
+       configs matching the given attribs values.
+ 	attribs - a list of attribute names followed by the desired values, terminated by EGL_NONE
+	attribs_size - the size of the list
+	configs - the returned matching configuration names (same names as familiar to the client in rcGetConfigs)
+	configs_size - the size of the configs buffers
+	returns - the actual number of matching configurations (<= configs_size) 
+
 EGLint rcGetFBParam(EGLint param);
        queries the host for framebuffer parameter, see renderControl_types.h
        for possible values of 'param'.

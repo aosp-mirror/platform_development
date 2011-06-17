@@ -35,6 +35,7 @@ public:
     static int getNumConfigs();
     static int getNumAttribs() { return s_numConfigAttribs; }
     static void packConfigsInfo(GLuint *buffer);
+    static int chooseConfig(FrameBuffer *fb, EGLint * attribs, uint32_t * configs, uint32_t configs_size);
     ~FBConfig();
 
     EGLConfig getEGLConfig() const { return m_eglConfig; }
