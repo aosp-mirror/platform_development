@@ -78,6 +78,16 @@ static EGLint rcGetConfigs(uint32_t bufSize, GLuint* buffer)
     return nConfigs;
 }
 
+static EGLint rcChooseConfig(EGLint *attribs, uint32_t attribs_size, uint32_t *configs, uint32_t configs_size)
+{
+    FrameBuffer *fb = FrameBuffer::getFB();
+    if (!fb) {
+        return 0;
+    }
+
+    return FBConfig::chooseConfig(fb, attribs, configs, configs_size);
+}
+
 static EGLint rcGetFBParam(EGLint param)
 {
     FrameBuffer *fb = FrameBuffer::getFB();
@@ -252,6 +262,7 @@ void initRenderControlContext(renderControl_decoder_context_t *dec)
     dec->set_rcQueryEGLString(rcQueryEGLString);
     dec->set_rcGetNumConfigs(rcGetNumConfigs);
     dec->set_rcGetConfigs(rcGetConfigs);
+    dec->set_rcChooseConfig(rcChooseConfig);
     dec->set_rcGetFBParam(rcGetFBParam);
     dec->set_rcCreateContext(rcCreateContext);
     dec->set_rcDestroyContext(rcDestroyContext);
