@@ -18,6 +18,7 @@
 #include "eglDisplay.h"
 #include "egl_ftable.h"
 #include <cutils/log.h>
+#include "gralloc_cb.h"
 
 #include <private/ui/android_natives_priv.h>
 
@@ -91,7 +92,7 @@ struct EGLContext_t {
         NEVER_CURRENT   =   0x00020000
     };
 
-    EGLContext_t(EGLDisplay dpy, EGLConfig config) : dpy(dpy), config(config), read(EGL_NO_SURFACE), draw(EGL_NO_SURFACE), rcContext(0) {};
+    EGLContext_t(EGLDisplay dpy, EGLConfig config) : dpy(dpy), config(config), read(EGL_NO_SURFACE), draw(EGL_NO_SURFACE), rcContext(0) { version = 1; };
     ~EGLContext_t(){};
 //    EGLBoolean    rcCreate();
 //    EGLBoolean    rcDestroy();
@@ -100,6 +101,7 @@ struct EGLContext_t {
     EGLConfig           config;
     EGLSurface          read;
     EGLSurface          draw;
+    EGLint                version;
     uint32_t             rcContext;
 };
 
@@ -115,18 +117,24 @@ struct egl_surface_t {
 
     egl_surface_t(EGLDisplay dpy, EGLConfig config);
     virtual     ~egl_surface_t();
-    virtual    EGLBoolean       rcCreate() = 0;
-    virtual    EGLBoolean       rcDestroy() = 0;
-    void       setRcSurface(uint32_t handle){ rcSurface = handle; }
-    uint32_t    getRcSurface(){ return rcSurface; }
+
+    virtual     EGLBoolean         rcCreate() = 0;
+    virtual     EGLBoolean         rcDestroy() = 0;
+
+    virtual     EGLBoolean  connect() { return EGL_TRUE; }
+    virtual     void        disconnect() {}
+    virtual     EGLBoolean     swapBuffers() { return EGL_TRUE; }
+
+    void         setRcSurface(uint32_t handle){ rcSurface = handle; }
+    uint32_t     getRcSurface(){ return rcSurface; }
 
     virtual     EGLBoolean    isValid(){ return valid; }
     virtual     EGLint      getWidth() const = 0;
     virtual     EGLint      getHeight() const = 0;
 
 protected:
-    EGLBoolean            valid;
-    uint32_t             rcSurface; //handle to surface created via remote control
+    EGLBoolean    valid;
+    uint32_t     rcSurface; //handle to surface created via remote control
 };
 
 egl_surface_t::egl_surface_t(EGLDisplay dpy, EGLConfig config)
@@ -143,20 +151,28 @@ egl_surface_t::~egl_surface_t()
 
 struct egl_window_surface_t : public egl_surface_t {
 
-    ANativeWindow*     nativeWindow;
-    int width;
-    int height;
-
-    virtual     EGLint      getWidth() const    { return width;  }
-    virtual     EGLint      getHeight() const   { return height; }
-
     egl_window_surface_t(
             EGLDisplay dpy, EGLConfig config,
             ANativeWindow* window);
 
     ~egl_window_surface_t();
+
     virtual     EGLBoolean     rcCreate();
     virtual     EGLBoolean     rcDestroy();
+
+    virtual     EGLBoolean  connect();
+    virtual     void        disconnect();
+    virtual     EGLBoolean  swapBuffers();
+
+    virtual     EGLint      getWidth() const    { return width;  }
+    virtual     EGLint      getHeight() const   { return height; }
+
+
+private:
+    ANativeWindow*     nativeWindow;
+    int width;
+    int height;
+    android_native_buffer_t*   buffer;
 
 };
 
@@ -171,7 +187,6 @@ egl_window_surface_t::egl_window_surface_t (
     nativeWindow->common.incRef(&nativeWindow->common);
     nativeWindow->query(nativeWindow, NATIVE_WINDOW_WIDTH, &width);
     nativeWindow->query(nativeWindow, NATIVE_WINDOW_HEIGHT, &height);
-
 }
 
 egl_window_surface_t::~egl_window_surface_t() {
@@ -200,6 +215,44 @@ EGLBoolean egl_window_surface_t::rcDestroy()
     DEFINE_AND_VALIDATE_HOST_CONNECTION(EGL_FALSE);
     rcEnc->rcDestroyWindowSurface(rcEnc, rcSurface);
     rcSurface = 0;
+
+    return EGL_TRUE;
+}
+
+EGLBoolean egl_window_surface_t::connect()
+{
+    // dequeue a buffer
+    if (nativeWindow->dequeueBuffer(nativeWindow, &buffer) != NO_ERROR) {
+        return setError(EGL_BAD_ALLOC, EGL_FALSE);
+    }
+
+    DEFINE_AND_VALIDATE_HOST_CONNECTION(EGL_FALSE);
+    rcEnc->rcSetWindowColorBuffer(rcEnc, rcSurface, ((cb_handle_t *)(buffer->handle))->hostHandle);
+
+    return EGL_TRUE;
+}
+
+void egl_window_surface_t::disconnect()
+{
+    //TODO: do we need this?
+}
+
+EGLBoolean egl_window_surface_t::swapBuffers()
+{
+    if (!buffer) {
+        return setError(EGL_BAD_ACCESS, EGL_FALSE);
+    }
+
+    //post the back buffer
+    nativeWindow->queueBuffer(nativeWindow, buffer);
+
+    // dequeue a new buffer
+    if (nativeWindow->dequeueBuffer(nativeWindow, &buffer)) {
+        return setError(EGL_BAD_ALLOC, EGL_FALSE);
+    }
+
+    DEFINE_AND_VALIDATE_HOST_CONNECTION(EGL_FALSE);
+    rcEnc->rcSetWindowColorBuffer(rcEnc, rcSurface, ((cb_handle_t *)(buffer->handle))->hostHandle);
 
     return EGL_TRUE;
 }
@@ -390,10 +443,44 @@ EGLBoolean eglGetConfigs(EGLDisplay dpy, EGLConfig *configs, EGLint config_size,
 
 EGLBoolean eglChooseConfig(EGLDisplay dpy, const EGLint *attrib_list, EGLConfig *configs, EGLint config_size, EGLint *num_config)
 {
+#if 0
     VALIDATE_DISPLAY_INIT(dpy, NULL);
 
-    //TODO
-    return 0;
+    //First construct a vector of all configs
+    Vector<EGLint> possibleConfigs;
+    for (int i=0; i<s_display.getNumConfigs(); i++)
+        possibleConfigs.push(i);
+
+    //Now go over the attrib_list and drop unmatching configs
+    while (attrib_list[0])
+    {
+        EGLInt paramAttrName = attrib_list[0];
+        EGLInt paramAttrVal = attrib_list[1];
+        attrib_list+=2;
+
+        int cIdx = 0;
+        while (cIdx < possibleConfigs.size()) {
+            EGLInt conf = possibleConfigs[cIdx];
+            EGLInt value;
+            if (s_display.getConfigAttrib((EGLConfig)conf, paramAttrName, &value) == EGL_FALSE) {
+                return setError(EGL_BAD_ATTRIBUTE, EGL_FALSE)
+            }
+            //if the attrib value doesn't match, the current config doesn't match
+            if (paramAttrValue != value)
+                possibleConfigs.removeAt(cIdx); //don't advance cIdx
+            else
+                cIdx++;
+        }
+    }
+
+    //at this point possibleConfigs holds (if any) the matching configs
+    cIdx=0;
+    for (cIdx=0 ; cIdx<possibleConfigs.size() && cIdx<config_size ; cIdx++) {
+        *configs++ = possibleConfigs[cIdx]
+    }
+    *num_config = cIdx;
+#endif
+    return EGL_TRUE;
 }
 
 EGLBoolean eglGetConfigAttrib(EGLDisplay dpy, EGLConfig config, EGLint attribute, EGLint *value)
@@ -426,7 +513,6 @@ EGLSurface eglCreateWindowSurface(EGLDisplay dpy, EGLConfig config, EGLNativeWin
     if (!(surfaceType & EGL_WINDOW_BIT)) {
         return setError(EGL_BAD_MATCH, EGL_NO_SURFACE);
     }
-
 
     if (static_cast<ANativeWindow*>(win)->common.magic != ANDROID_NATIVE_WINDOW_MAGIC) {
         return setError(EGL_BAD_NATIVE_WINDOW, EGL_NO_SURFACE);
@@ -491,7 +577,7 @@ EGLSurface eglCreatePixmapSurface(EGLDisplay dpy, EGLConfig config, EGLNativePix
 
 EGLBoolean eglDestroySurface(EGLDisplay dpy, EGLSurface eglSurface)
 {
-    VALIDATE_DISPLAY_INIT(dpy, NULL);
+    VALIDATE_DISPLAY_INIT(dpy, EGL_FALSE);
     VALIDATE_SURFACE_RETURN(eglSurface, EGL_FALSE);
 
     egl_surface_t* surface( static_cast<egl_surface_t*>(eglSurface) );
@@ -502,10 +588,30 @@ EGLBoolean eglDestroySurface(EGLDisplay dpy, EGLSurface eglSurface)
     return EGL_TRUE;
 }
 
-EGLBoolean eglQuerySurface(EGLDisplay dpy, EGLSurface surface, EGLint attribute, EGLint *value)
+EGLBoolean eglQuerySurface(EGLDisplay dpy, EGLSurface eglSurface, EGLint attribute, EGLint *value)
 {
-    //TODO
-    return 0;
+    VALIDATE_DISPLAY_INIT(dpy, EGL_FALSE);
+    VALIDATE_SURFACE_RETURN(eglSurface, EGL_FALSE);
+
+    egl_surface_t* surface( static_cast<egl_surface_t*>(eglSurface) );
+    EGLBoolean ret = EGL_TRUE;
+    switch (attribute) {
+        case EGL_CONFIG_ID:
+            ret = s_display.getConfigAttrib(surface->config, EGL_CONFIG_ID, value);
+            break;
+        case EGL_WIDTH:
+            *value = surface->getWidth();
+            break;
+        case EGL_HEIGHT:
+            *value = surface->getHeight();
+            break;
+            //TODO: complete other attributes
+        default:
+            ret = setError(EGL_BAD_ATTRIBUTE, EGL_FALSE);
+            break;
+    }
+
+    return ret;
 }
 
 EGLBoolean eglBindAPI(EGLenum api)
@@ -567,7 +673,6 @@ EGLContext eglCreateContext(EGLDisplay dpy, EGLConfig config, EGLContext share_c
     VALIDATE_DISPLAY_INIT(dpy, EGL_NO_CONTEXT);
     VALIDATE_CONFIG(config, EGL_NO_CONTEXT);
 
-
     EGLint version = 1; //default
     while (attrib_list[0]) {
         if (attrib_list[0] == EGL_CONTEXT_CLIENT_VERSION) version = attrib_list[1];
@@ -593,6 +698,7 @@ EGLContext eglCreateContext(EGLDisplay dpy, EGLConfig config, EGLContext share_c
     if (!context)
         return setError(EGL_BAD_ALLOC, EGL_NO_CONTEXT);
 
+    context->version = 1;
     context->rcContext = rcContext;
 
 
@@ -650,6 +756,10 @@ EGLBoolean eglMakeCurrent(EGLDisplay dpy, EGLSurface draw, EGLSurface read, EGLC
     //Now make current
     getEGLThreadInfo()->currentContext = context;
 
+    //connect the color buffer
+    if (drawSurf)
+        drawSurf->connect();
+
     return EGL_TRUE;
 }
 
@@ -685,8 +795,33 @@ EGLDisplay eglGetCurrentDisplay()
 
 EGLBoolean eglQueryContext(EGLDisplay dpy, EGLContext ctx, EGLint attribute, EGLint *value)
 {
-    //TODO
-    return 0;
+    VALIDATE_DISPLAY_INIT(dpy, EGL_FALSE);
+    VALIDATE_CONTEXT_RETURN(ctx, EGL_FALSE);
+
+    EGLContext_t * context = static_cast<EGLContext_t*>(ctx);
+
+    EGLBoolean ret = EGL_TRUE;
+    switch (attribute) {
+        case EGL_CONFIG_ID:
+            ret = s_display.getConfigAttrib(context->config, EGL_CONFIG_ID, value);
+            break;
+        case EGL_CONTEXT_CLIENT_TYPE:
+            *value = EGL_OPENGL_ES_API;
+            break;
+        case EGL_CONTEXT_CLIENT_VERSION:
+            *value = context->version;
+            break;
+        case EGL_RENDER_BUFFER:
+            if (!context->draw)
+                *value = EGL_NONE;
+            else
+                *value = EGL_BACK_BUFFER; //single buffer not supported
+            break;
+        default:
+            return setError(EGL_BAD_ATTRIBUTE, EGL_FALSE);
+    }
+
+    return ret;
 }
 
 EGLBoolean eglWaitGL()
@@ -701,10 +836,22 @@ EGLBoolean eglWaitNative(EGLint engine)
     return 0;
 }
 
-EGLBoolean eglSwapBuffers(EGLDisplay dpy, EGLSurface surface)
+EGLBoolean eglSwapBuffers(EGLDisplay dpy, EGLSurface eglSurface)
 {
-    //TODO
-    return 0;
+    VALIDATE_DISPLAY_INIT(dpy, EGL_FALSE);
+    if (eglSurface == EGL_NO_SURFACE)
+        return setError(EGL_BAD_SURFACE, EGL_FALSE);
+
+    egl_surface_t* d = static_cast<egl_surface_t*>(eglSurface);
+    if (!d->isValid())
+        return setError(EGL_BAD_SURFACE, EGL_FALSE);
+    if (d->dpy != dpy)
+        return setError(EGL_BAD_DISPLAY, EGL_FALSE);
+
+    // post the surface
+    d->swapBuffers();
+
+    return EGL_TRUE;
 }
 
 EGLBoolean eglCopyBuffers(EGLDisplay dpy, EGLSurface surface, EGLNativePixmapType target)
