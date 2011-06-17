@@ -383,7 +383,11 @@ EGLBoolean eglDisplay::getAttribValue(EGLConfig config, EGLint attribIdx, EGLint
 
 EGLBoolean eglDisplay::getConfigAttrib(EGLConfig config, EGLint attrib, EGLint * value)
 {
-    return getAttribValue(config, m_attribs.valueFor(attrib), value);
+    //Though it seems that valueFor() is thread-safe, we don't take chanses
+    pthread_mutex_lock(&m_lock);
+    EGLBoolean ret = getAttribValue(config, m_attribs.valueFor(attrib), value);
+    pthread_mutex_unlock(&m_lock);
+    return ret;
 }
 
 EGLBoolean eglDisplay::getConfigPixelFormat(EGLConfig config, GLenum * format)
