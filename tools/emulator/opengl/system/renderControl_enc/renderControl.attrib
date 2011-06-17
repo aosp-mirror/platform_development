@@ -20,6 +20,12 @@ rcGetConfigs
     dir buffer out
     len buffer bufSize
 
+rcChooseConfig
+    dir attribs in
+	len attribs attribs_size
+	dir configs out
+	len configs configs_size
+
 rcReadColorBuffer
     dir pixels out
     len pixels (((glUtilsPixelBitSize(format, type) * width) >> 3) * height)
