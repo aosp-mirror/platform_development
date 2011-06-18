@@ -105,3 +105,41 @@ class AbstractTestSuite(object):
       adb: asdb_interface to device under test
     """
     raise NotImplementedError
+
+class AbstractTestFactory(object):
+  """generic test suite factory."""
+
+  def __init__(self, test_root_path, upstream_build_path=None):
+    """Creates a test suite factory.
+
+    Args:
+      test_root_path: the filesystem path to the tests build directory
+      upstream_build_path: optional filesystem path for the directory
+      to build when running tests. If unspecified, will use test_root_path
+    """
+    self._test_root_path = test_root_path
+    if upstream_build_path:
+      self._build_path = upstream_build_path
+    else:
+      self._build_path = self._test_root_path
+
+  def GetBuildPath(self):
+    return self._build_path
+
+  def GetTestsRootPath(self):
+    return self._test_root_path
+
+  def CreateTests(self, sub_tests_path=None):
+    """Creates the tests at given test_path.
+
+    Subclasses must implement this.
+
+    Args:
+      sub_tests_path: the child path of test_root_path containing the tests to
+        run. If unspecified will be set to test_root_path.
+
+    Returns:
+      an array of AbstractTestSuite, or empty AbstractTestSuite if no tests
+      were defined
+    """
+    raise NotImplementedError
