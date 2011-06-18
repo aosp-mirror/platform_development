@@ -215,3 +215,9 @@ development/samples/Support4Demos                                               
 ${OUT_DIR}/target/common/obj/PACKAGING/android-support-v13_intermediates/android-support-v13.jar  extras/android/compatibility/v13/android-support-v13.jar
 frameworks/support/v13                                                                            extras/android/compatibility/v13/src
 development/samples/Support13Demos                                                                extras/android/compatibility/v13/samples/Support13Demos
+
+##############################################################################
+# Tests Component
+##############################################################################
+framework/layoutlib-tests.jar tests/libtests/layoutlib-tests.jar
+
