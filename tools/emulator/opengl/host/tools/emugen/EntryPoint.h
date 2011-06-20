@@ -45,6 +45,8 @@ public:
     void setUnsupported(bool state) { m_unsupported = state; }
     bool customDecoder() { return m_customDecoder; }
     void setCustomDecoder(bool state) { m_customDecoder = state; }
+    bool notApi() const { return m_notApi; }
+    void setNotApi(bool state) { m_notApi = state; }
     int setAttribute(const std::string &line, size_t lc);
 
 private:
@@ -54,6 +56,7 @@ private:
     VarsArray m_vars;
     bool m_unsupported;
     bool m_customDecoder;
+    bool m_notApi;
 
     void err(unsigned int lc, const char *msg) {
         fprintf(stderr, "line %d: %s\n", lc, msg);
