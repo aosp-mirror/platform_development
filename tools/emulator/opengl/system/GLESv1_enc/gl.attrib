@@ -268,30 +268,35 @@ glVertexPointerData
 	len data datalen
 	custom_pack data glUtilsPackPointerData((unsigned char *)ptr, (unsigned char *)data, size, type, stride, datalen)
 	flag custom_decoder
+	flag not_api
 
 #void glColorPointerData(GLint size, GLenum type, GLsizei stride, void *data, GLuint datalen)
 glColorPointerData
 	len data datalen
 	flag custom_decoder
 	custom_pack data glUtilsPackPointerData((unsigned char *)ptr, (unsigned char *)data, size, type, stride, datalen)
+	flag not_api
 
 #void glNormalPointerData(GLenum type, GLsizei stride, void *data, GLuint datalen)
 glNormalPointerData
 	len data datalen
 	flag custom_decoder
 	custom_pack data glUtilsPackPointerData((unsigned char *)ptr, (unsigned char *)data, 3, type, stride, datalen)
+	flag not_api
 
 #void glPointSizePointerData(GLenum type, GLsizei stride, void *data, GLuint datalen)
 glPointSizePointerData
 	len data datalen
 	flag custom_decoder
 	custom_pack data glUtilsPackPointerData((unsigned char *)ptr, (unsigned char *)data, 1, type, stride, datalen)
+	flag not_api
 
 #void glTexCoordPointerData(GLint size, GLenum type, GLsizei stride, void *data, GLuint datalen)
 glTexCoordPointerData
 	len data datalen
 	flag custom_decoder
 	custom_pack data glUtilsPackPointerData((unsigned char *)ptr, (unsigned char *)data, size, type, stride, datalen)
+	flag not_api
 
 #void glWeightPointerData(GLint size, GLenum type, GLsizei stride,  void * data, GLuint datalen)
 glWeightPointerData
@@ -309,30 +314,40 @@ glMatrixIndexPointerData
 
 glVertexPointerOffset
 	flag custom_decoder
+	flag not_api
 glNormalPointerOffset
 	flag custom_decoder
+	flag not_api
 glTexCoordPointerOffset
 	flag custom_decoder
+	flag not_api
 glPointSizePointerOffset
 	flag custom_decoder
+	flag not_api
 glColorPointerOffset
 	flag custom_decoder
+	flag not_api
 glWeightPointerOffset
-  flag custom_decoder
+    flag custom_decoder
+	flag not_api
 glMatrixIndexPointerOffset
-  flag custom_decoder
+    flag custom_decoder
+	flag not_api
 
 glDrawElementsData
 	len data datalen
 	flag custom_decoder
+	flag not_api
 
 glDrawElementsOffset
 	flag custom_decoder
+	flag not_api
 
 glGetCompressedTextureFormats
 	dir formats out
 	len formats (count * sizeof(GLint))
 	flag custom_decoder
+	flag not_api
 
 
 #gles1 extensions

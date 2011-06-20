@@ -125,6 +125,7 @@ int main(int argc, char *argv[])
         apiEntries.genContextImpl(encoderDir + "/" + baseName + "_client_context.cpp", ApiGen::CLIENT_SIDE);
 
         apiEntries.genProcTypes(encoderDir + "/" + baseName + "_client_proc.h", ApiGen::CLIENT_SIDE);
+        apiEntries.genFuncTable(encoderDir + "/" + baseName + "_ftable.h", ApiGen::CLIENT_SIDE);
 
         apiEntries.genEntryPoints(encoderDir + "/" + baseName + "_entry.cpp", ApiGen::CLIENT_SIDE);
         apiEntries.genEncoderHeader(encoderDir + "/" + baseName + "_enc.h");
