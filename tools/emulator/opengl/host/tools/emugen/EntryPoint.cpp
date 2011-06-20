@@ -57,9 +57,10 @@ bool parseTypeField(const std::string & f, std::string *vartype, std::string *va
         case ST_TYPE:
             if (str == "const") {
                 pos = last;
+                *vartype = "const ";
             } else {
                 // must be a type name;
-                *vartype = str;
+                *vartype += str;
                 state = ST_NAME;
                 pos = last;
             }
