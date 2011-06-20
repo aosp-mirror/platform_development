@@ -134,6 +134,8 @@ int TypeFactory::initFromFile(const std::string &filename)
                     lc, name.c_str(), lc);
         }
         g_varMap.insert(std::pair<std::string, VarType>(name, VarType(g_typeId++, name, v ,printString,isPointer)));
+        std::string constName = "const " + name;
+        g_varMap.insert(std::pair<std::string, VarType>(constName, VarType(g_typeId++, constName, v ,printString,isPointer))); //add a const type
     }
     g_initialized = true;
     return 0;

@@ -295,15 +295,17 @@ glTexCoordPointerData
 
 #void glWeightPointerData(GLint size, GLenum type, GLsizei stride,  void * data, GLuint datalen)
 glWeightPointerData
-  len data datalen
-  custom_pack data glUtilsPackPointerData((unsigned char *)ptr, (unsigned char*)data, size, type, stride, datalen)
-  flag custom_decoder
+  	len data datalen
+  	custom_pack data glUtilsPackPointerData((unsigned char *)ptr, (unsigned char*)data, size, type, stride, datalen)
+  	flag custom_decoder
+	flag not_api
 
 #void glMatrixIndexPointerData(GLint size, GLenum type, GLsizei stride,  void * data, GLuint datalen)
 glMatrixIndexPointerData
-  len data datalen
-  custom_pack data glUtilsPackPointerData((unsigned char *)ptr, (unsigned char*)data, size, type, stride, datalen)
-  flag custom_decoder
+	len data datalen
+  	custom_pack data glUtilsPackPointerData((unsigned char *)ptr, (unsigned char*)data, size, type, stride, datalen)
+  	flag custom_decoder
+	flag not_api
 
 glVertexPointerOffset
 	flag custom_decoder
@@ -513,32 +515,26 @@ glGetClipPlanefOES
 
 #void glTexGenfvOES(GLenum coord, GLenum pname, GLfloat *params)
 glTexGenfvOES
-	dir params out
 	len params (glUtilsParamSize(pname) * sizeof(GLfloat))
 
 #void glTexGenivOES(GLenum coord, GLenum pname, GLint *params)
 glTexGenivOES
-	dir params out
 	len params (glUtilsParamSize(pname) * sizeof(GLint))
 
 #void glTexGenxvOES(GLenum coord, GLenum pname, GLfixed *params)
 glTexGenxvOES
-	dir params out
 	len params (glUtilsParamSize(pname) * sizeof(GLfixed))
 
 #void glGetTexGenfvOES(GLenum coord, GLenum pname, GLfloat *params)
 glGetTexGenfvOES
-	dir params out
 	len params (glUtilsParamSize(pname) * sizeof(GLfloat))
 
 #void glGetTexGenivOES(GLenum coord, GLenum pname, GLint *params)
 glGetTexGenivOES
-	dir params out
 	len params (glUtilsParamSize(pname) * sizeof(GLint))
 
 #void glGetTexGenxvOES(GLenum coord, GLenum pname, GLfixed *params)
 glGetTexGenxvOES
-	dir params out
 	len params (glUtilsParamSize(pname) * sizeof(GLfixed))
 
 #void glDeleteVertexArraysOES(GLsizei n, const GLuint *arrays)

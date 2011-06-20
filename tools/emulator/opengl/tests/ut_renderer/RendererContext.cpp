@@ -56,7 +56,7 @@ GLuint RendererContext::getTex2DBind()
     return m_tex2DBind[m_activeTexture];
 }
 
-void RendererContext::addPendingCropRect(int *rect)
+void RendererContext::addPendingCropRect(const int *rect)
 {
     PendingCropRect *r = new PendingCropRect;
     r->texture = m_tex2DBind[m_activeTexture];

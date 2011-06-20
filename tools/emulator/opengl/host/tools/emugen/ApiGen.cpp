@@ -155,27 +155,32 @@ int ApiGen::genEntryPoints(const std::string & filename, SideType side)
     fprintf(fp, "#include \"%s_%s_context.h\"\n", m_basename.c_str(), sideString(side));
     fprintf(fp, "\n");
 
+    fprintf(fp, "#ifndef GL_TRUE\n");
     fprintf(fp, "extern \"C\" {\n");
 
     for (size_t i = 0; i < size(); i++) {
         fprintf(fp, "\t"); at(i).print(fp, false); fprintf(fp, ";\n");
     }
     fprintf(fp, "};\n\n");
+    fprintf(fp, "#endif\n");
 
+    fprintf(fp, "#ifndef GET_CONTEXT\n");
     fprintf(fp, "static %s_%s_context_t::CONTEXT_ACCESSOR_TYPE *getCurrentContext = NULL;\n",
             m_basename.c_str(), sideString(side));
 
     fprintf(fp,
-            "void %s_%s_context_t::setContextAccessor(CONTEXT_ACCESSOR_TYPE *f) { getCurrentContext = f; }\n\n",
+            "void %s_%s_context_t::setContextAccessor(CONTEXT_ACCESSOR_TYPE *f) { getCurrentContext = f; }\n",
             m_basename.c_str(), sideString(side));
+    fprintf(fp, "#define GET_CONTEXT %s_%s_context_t * ctx = getCurrentContext() \n",
+                m_basename.c_str(), sideString(side));
+    fprintf(fp, "#endif\n\n");
 
 
     for (size_t i = 0; i < size(); i++) {
         EntryPoint *e = &at(i);
         e->print(fp);
         fprintf(fp, "{\n");
-        fprintf(fp, "\t %s_%s_context_t * ctx = getCurrentContext(); \n",
-                m_basename.c_str(), sideString(side));
+        fprintf(fp, "\tGET_CONTEXT; \n");
 
         bool shouldReturn = !e->retval().isVoid();
         bool shouldCallWithContext = (side == CLIENT_SIDE);
