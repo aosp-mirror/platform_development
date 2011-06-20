@@ -79,6 +79,38 @@ int ApiGen::genProcTypes(const std::string &filename, SideType side)
     return 0;
 }
 
+int ApiGen::genFuncTable(const std::string &filename, SideType side)
+{
+    FILE *fp = fopen(filename.c_str(), "wt");
+    if (fp == NULL) {
+        perror(filename.c_str());
+        return -1;
+    }
+    printHeader(fp);
+
+    fprintf(fp, "#ifndef __%s_%s_ftable_t_h\n", m_basename.c_str(), sideString(side));
+    fprintf(fp, "#define __%s_%s_ftable_t_h\n", m_basename.c_str(), sideString(side));
+    fprintf(fp, "\n\n");
+    fprintf(fp, "static struct _%s_funcs_by_name {\n", m_basename.c_str());
+    fprintf(fp,
+            "\tconst char *name;\n" \
+            "\tvoid *proc;\n" \
+            "} %s_funcs_by_name[] = {\n", m_basename.c_str());
+
+
+    for (size_t i = 0; i < size(); i++) {
+        EntryPoint *e = &at(i);
+        if (e->notApi()) continue;
+        fprintf(fp, "\t{\"%s\", (void*)%s},\n", e->name().c_str(), e->name().c_str());
+    }
+    fprintf(fp, "};\n");
+    fprintf(fp, "static int %s_num_funcs = sizeof(%s_funcs_by_name) / sizeof(struct _%s_funcs_by_name);\n",
+            m_basename.c_str(), m_basename.c_str(), m_basename.c_str());
+    fprintf(fp, "\n\n#endif\n");
+    return 0;
+}
+
+
 int ApiGen::genContext(const std::string & filename, SideType side)
 {
     FILE *fp = fopen(filename.c_str(), "wt");
