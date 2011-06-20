@@ -27,7 +27,7 @@
 __thread RenderingThread * RenderingThread::m_tls;
 
 #ifdef PVR_WAR
-void RenderingThread::s_glTexParameteriv(GLenum target, GLenum param, int *p)
+void RenderingThread::s_glTexParameteriv(GLenum target, GLenum param, const int *p)
 {
     if (target == GL_TEXTURE_2D && param == GL_TEXTURE_CROP_RECT_OES) {
         m_tls->m_currentContext->addPendingCropRect(p);
@@ -64,28 +64,28 @@ void RenderingThread::s_glDrawTexxOES(GLfixed x, GLfixed y, GLfixed z, GLfixed w
     m_tls->fixTextureEnable();
 }
 
-void RenderingThread::s_glDrawTexfvOES(GLfloat *coords)
+void RenderingThread::s_glDrawTexfvOES(const GLfloat *coords)
 {
     m_tls->applyPendingCropRects();
     m_tls->m_glDrawTexfvOES(coords);
     m_tls->fixTextureEnable();
 }
 
-void RenderingThread::s_glDrawTexsvOES(GLshort *coords)
+void RenderingThread::s_glDrawTexsvOES(const GLshort *coords)
 {
     m_tls->applyPendingCropRects();
     m_tls->m_glDrawTexsvOES(coords);
     m_tls->fixTextureEnable();
 }
 
-void RenderingThread::s_glDrawTexivOES(GLint *coords)
+void RenderingThread::s_glDrawTexivOES(const GLint *coords)
 {
     m_tls->applyPendingCropRects();
     m_tls->m_glDrawTexivOES(coords);
     m_tls->fixTextureEnable();
 }
 
-void RenderingThread::s_glDrawTexxvOES(GLfixed *coords)
+void RenderingThread::s_glDrawTexxvOES(const GLfixed *coords)
 {
     m_tls->applyPendingCropRects();
     m_tls->m_glDrawTexxvOES(coords);

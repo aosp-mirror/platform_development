@@ -51,7 +51,7 @@ public:
     }
     bool isTex2DEnable(int texunit) { return m_tex2DEnable[texunit]; }
     GLuint getTex2DBind();
-    void addPendingCropRect(int *rect);
+    void addPendingCropRect(const int *rect);
     PendingCropRectSet &getPendingCropRects() { return m_pendingCropRects; }
 
     void setClientActiveTexture(GLenum texture) { m_clientActiveTexture = texture - GL_TEXTURE0; }

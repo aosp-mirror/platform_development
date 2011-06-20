@@ -73,15 +73,15 @@ private:
     static int s_makeCurrent(uint32_t pid, uint32_t drawSurface, uint32_t readSurface, uint32_t ctx);
     static void s_swapBuffers(uint32_t pid, uint32_t surface);
 #ifdef PVR_WAR
-    static void s_glTexParameteriv(GLenum target, GLenum param, int *p);
+    static void s_glTexParameteriv(GLenum target, GLenum param, const int *p);
     static void s_glDrawTexfOES(GLfloat x, GLfloat y, GLfloat z, GLfloat w, GLfloat h);
     static void s_glDrawTexsOES(GLshort x, GLshort y, GLshort z, GLshort w, GLshort h);
     static void s_glDrawTexiOES(GLint x, GLint y, GLint z, GLint w, GLint h);
     static void s_glDrawTexxOES(GLfixed x, GLfixed y, GLfixed z, GLfixed w, GLfixed h);
-    static void s_glDrawTexfvOES(GLfloat *coords);
-    static void s_glDrawTexsvOES(GLshort *coords);
-    static void s_glDrawTexivOES(GLint *coords);
-    static void s_glDrawTexxvOES(GLfixed *coords);
+    static void s_glDrawTexfvOES(const GLfloat *coords);
+    static void s_glDrawTexsvOES(const GLshort *coords);
+    static void s_glDrawTexivOES(const GLint *coords);
+    static void s_glDrawTexxvOES(const GLfixed *coords);
 
     static void s_glActiveTexture(GLenum texture);
     static void s_glBindTexture(GLenum target, GLuint texture);
