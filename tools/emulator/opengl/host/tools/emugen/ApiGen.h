@@ -67,6 +67,7 @@ public:
     int genOpcodes(const std::string &filename);
     int genAttributesTemplate(const std::string &filename);
     int genProcTypes(const std::string &filename, SideType side);
+    int genFuncTable(const std::string &filename, SideType side);
 
     int genContext(const std::string &filename, SideType side);
     int genContextImpl(const std::string &filename, SideType side);

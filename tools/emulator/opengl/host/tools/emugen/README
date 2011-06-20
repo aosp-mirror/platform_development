@@ -324,5 +324,6 @@ custom_pack
 		       	 custom implementation. The call to the
 		       	 deocder function includes a pointer to the
 		       	 context
+    not_api - the function is not native gl api
 
 
