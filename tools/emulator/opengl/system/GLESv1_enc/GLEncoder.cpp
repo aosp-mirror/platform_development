@@ -16,6 +16,9 @@
 #include "GLEncoder.h"
 #include "glUtils.h"
 #include "FixedBuffer.h"
+#include "HostConnection.h"
+#include <private/ui/android_natives_priv.h>
+#include "gralloc_cb.h"
 
 #include <cutils/log.h>
 #include <assert.h>
@@ -24,6 +27,18 @@ static GLubyte *gVendorString= (GLubyte *) "Android";
 static GLubyte *gRendererString= (GLubyte *) "Android HW-GLES 1.0";
 static GLubyte *gVersionString= (GLubyte *) "OpenGL ES-CM 1.0";
 static GLubyte *gExtensionsString= (GLubyte *) ""; // no extensions at this point;
+
+#define DEFINE_AND_VALIDATE_HOST_CONNECTION(ret) \
+    HostConnection *hostCon = HostConnection::get(); \
+    if (!hostCon) { \
+        LOGE("egl: Failed to get host connection\n"); \
+        return ret; \
+    } \
+    renderControl_encoder_context_t *rcEnc = hostCon->rcEncoder(); \
+    if (!rcEnc) { \
+        LOGE("egl: Failed to get renderControl encoder context\n"); \
+        return ret; \
+    }
 
 
 GLint * GLEncoder::getCompressedTextureFormats()
@@ -468,6 +483,7 @@ GLEncoder::GLEncoder(IOStream *stream) : gl_encoder_context_t(stream)
     m_glDrawElements_enc = set_glDrawElements(s_glDrawElements);
     set_glGetString(s_glGetString);
     set_glFinish(s_glFinish);
+    set_glEGLImageTargetTexture2DOES(s_glEGLImageTargetTexture2DOES);
 
 }
 
@@ -486,4 +502,23 @@ void GLEncoder::s_glFinish(void *self)
 {
     GLEncoder *ctx = (GLEncoder *)self;
     ctx->glFinishRoundTrip(self);
+}
+
+void GLEncoder::s_glEGLImageTargetTexture2DOES(void * self, GLenum target, GLeglImageOES image)
+{
+    //TODO: check error - we don't have a way to set gl error
+    android_native_buffer_t* native_buffer = (android_native_buffer_t*)image;
+
+    if (native_buffer->common.magic != ANDROID_NATIVE_BUFFER_MAGIC) {
+        return;
+    }
+
+    if (native_buffer->common.version != sizeof(android_native_buffer_t)) {
+        return;
+    }
+
+    DEFINE_AND_VALIDATE_HOST_CONNECTION();
+    rcEnc->rcBindTexture(rcEnc, ((cb_handle_t *)(native_buffer->handle))->hostHandle);
+
+    return;
 }
