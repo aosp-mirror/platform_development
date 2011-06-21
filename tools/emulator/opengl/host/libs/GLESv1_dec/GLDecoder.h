@@ -59,6 +59,8 @@ private:
     static void s_glMatrixIndexPointerData(void * self, GLint size, GLenum type, GLsizei stride, void * data, GLuint datalen);
     static void s_glMatrixIndexPointerOffset(void * self, GLint size, GLenum type, GLsizei stride, GLuint offset);
 
+    static int s_glFinishRoundTrip(void *self);
+
     static void * s_getProc(const char *name, void *userData);
 
     GLDecoderContextData *m_contextData;
