@@ -26,6 +26,7 @@ GL2Encoder::GL2Encoder(IOStream *stream) : gl2_encoder_context_t(stream)
     m_glGetVertexAttribfv_enc = set_glGetVertexAttribfv(s_glGetVertexAttribfv);
     m_glGetVertexAttribPointerv = set_glGetVertexAttribPointerv(s_glGetVertexAttribPointerv);
     set_glShaderSource(s_glShaderSource);
+    set_glFinish(s_glFinish);
 }
 
 GL2Encoder::~GL2Encoder()
@@ -335,3 +336,10 @@ void GL2Encoder::s_glShaderSource(void *self, GLuint shader, GLsizei count, cons
     ctx->glShaderString(ctx, shader, str, len + 1);
     delete str;
 }
+
+void GL2Encoder::s_glFinish(void *self)
+{
+    GL2Encoder *ctx = (GL2Encoder *)self;
+    ctx->glFinishRoundTrip(self);
+}
+
