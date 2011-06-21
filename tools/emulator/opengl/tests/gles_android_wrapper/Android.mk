@@ -127,10 +127,11 @@ LOCAL_SHARED_LIBRARIES := libdl \
 	libcutils \
 	libGLESv1_enc \
 	libGLESv2_enc \
-	libut_rendercontrol_enc \
-    libOpenglSystemCommon
+	libOpenglSystemCommon \
+	libut_rendercontrol_enc
 
-LOCAL_STATIC_LIBRARIES := libOpenglCodecCommon libqemu
+LOCAL_STATIC_LIBRARIES := libOpenglCodecCommon \
+						  libqemu
 
 include $(BUILD_SHARED_LIBRARY)
 
