@@ -28,17 +28,38 @@ ColorBuffer *ColorBuffer::create(int p_width, int p_height,
 {
     FrameBuffer *fb = FrameBuffer::getFB();
 
+    GLenum texInternalFormat = 0;
+
+    switch(p_internalFormat) {
+        case GL_RGB:
+        case GL_RGB565_OES:
+            texInternalFormat = GL_RGB;
+            break;
+
+        case GL_RGBA:
+        case GL_RGB5_A1_OES:
+        case GL_RGBA4_OES:
+            texInternalFormat = GL_RGBA;
+            break;
+
+        default:
+            return NULL;
+            break;
+    }
+
     if (!fb->bind_locked()) {
         return NULL;
     }
 
     ColorBuffer *cb = new ColorBuffer();
 
+
     s_gl.glGenTextures(1, &cb->m_tex);
     s_gl.glBindTexture(GL_TEXTURE_2D, cb->m_tex);
-    s_gl.glTexImage2D(GL_TEXTURE_2D, 0, p_internalFormat,
+    s_gl.glTexImage2D(GL_TEXTURE_2D, 0, texInternalFormat,
                       p_width, p_height, 0,
-                      GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+                      texInternalFormat,
+                      GL_UNSIGNED_BYTE, NULL);
     s_gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     s_gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     s_gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
