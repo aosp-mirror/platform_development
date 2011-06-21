@@ -40,7 +40,7 @@ void GL2Encoder::s_glFlush(void *self)
     ctx->m_stream->flush();
 }
 
-GLubyte *GL2Encoder::s_glGetString(void *self, GLenum name)
+const GLubyte *GL2Encoder::s_glGetString(void *self, GLenum name)
 {
     GLubyte *retval =  (GLubyte *) "";
     switch(name) {
@@ -78,7 +78,7 @@ void GL2Encoder::s_glBindBuffer(void *self, GLenum target, GLuint id)
     ctx->m_glBindBuffer_enc(self, target, id);
 }
 
-void GL2Encoder::s_glVertexAtrribPointer(void *self, GLuint indx, GLint size, GLenum type, GLboolean normalized, GLsizei stride, GLvoid * ptr)
+void GL2Encoder::s_glVertexAtrribPointer(void *self, GLuint indx, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const GLvoid * ptr)
 {
     GL2Encoder *ctx = (GL2Encoder *)self;
     assert(ctx->m_state != NULL);
@@ -232,7 +232,7 @@ void GL2Encoder::s_glDrawArrays(void *self, GLenum mode, GLint first, GLsizei co
 }
 
 
-void GL2Encoder::s_glDrawElements(void *self, GLenum mode, GLsizei count, GLenum type, void *indices)
+void GL2Encoder::s_glDrawElements(void *self, GLenum mode, GLsizei count, GLenum type, const void *indices)
 {
 
     GL2Encoder *ctx = (GL2Encoder *)self;
@@ -266,7 +266,7 @@ void GL2Encoder::s_glDrawElements(void *self, GLenum mode, GLsizei count, GLenum
             LOGE("glDrawElements: indirect index arrays, with immidate-mode data array is not supported\n");
         }
     } else {
-        void *adjustedIndices = indices;
+        void *adjustedIndices = (void*)indices;
         int minIndex = 0, maxIndex = 0;
 
         switch(type) {
@@ -324,12 +324,12 @@ GLint * GL2Encoder::getCompressedTextureFormats()
     return m_compressedTextureFormats;
 }
 
-void GL2Encoder::s_glShaderSource(void *self, GLuint shader, GLsizei count, GLstr *string, GLint *length)
+void GL2Encoder::s_glShaderSource(void *self, GLuint shader, GLsizei count, const GLstr *string, const GLint *length)
 {
 
-    int len = glUtilsCalcShaderSourceLen(string, length, count);
+    int len = glUtilsCalcShaderSourceLen((char**)string, (GLint*)length, count);
     char *str = new char[len + 1];
-    glUtilsPackStrings(str, string, length, count);
+    glUtilsPackStrings(str, (char**)string, (GLint*)length, count);
 
     GL2Encoder *ctx = (GL2Encoder *)self;
     ctx->glShaderString(ctx, shader, str, len + 1);

@@ -70,7 +70,7 @@ void GLClientState::enable(int location, int state)
     m_states[location].enabled = state;
 }
 
-void GLClientState::setState(int location, int size, GLenum type, GLboolean normalized, GLsizei stride, void *data)
+void GLClientState::setState(int location, int size, GLenum type, GLboolean normalized, GLsizei stride, const void *data)
 {
     if (!validLocation(location)) {
         return;
@@ -78,7 +78,7 @@ void GLClientState::setState(int location, int size, GLenum type, GLboolean norm
     m_states[location].size = size;
     m_states[location].type = type;
     m_states[location].stride = stride;
-    m_states[location].data = data;
+    m_states[location].data = (void*)data;
     m_states[location].bufferObject = m_currentArrayVbo;
     m_states[location].elementSize = glSizeof(type) * size;
     m_states[location].normalized = normalized;

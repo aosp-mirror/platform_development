@@ -51,7 +51,7 @@ private:
     static void s_glPixelStorei(void *self, GLenum param, GLint value);
 
     glGetString_client_proc_t m_glGetString_enc;
-    static GLubyte * s_glGetString(void *self, GLenum name);
+    static const GLubyte * s_glGetString(void *self, GLenum name);
 
     glBindBuffer_client_proc_t m_glBindBuffer_enc;
     static void s_glBindBuffer(void *self, GLenum target, GLuint id);
@@ -60,7 +60,7 @@ private:
     static void s_glDrawArrays(void *self, GLenum mode, GLint first, GLsizei count);
 
     glDrawElements_client_proc_t m_glDrawElements_enc;
-    static void s_glDrawElements(void *self, GLenum mode, GLsizei count, GLenum type, void *indices);
+    static void s_glDrawElements(void *self, GLenum mode, GLsizei count, GLenum type, const void *indices);
 
 
     glGetIntegerv_client_proc_t m_glGetIntegerv_enc;
@@ -74,7 +74,7 @@ private:
 
     glVertexAttribPointer_client_proc_t m_glVertexAttribPointer_enc;
     static void s_glVertexAtrribPointer(void *self, GLuint indx, GLint size, GLenum type,
-                                        GLboolean normalized, GLsizei stride, GLvoid * ptr);
+                                        GLboolean normalized, GLsizei stride, const GLvoid * ptr);
 
     glEnableVertexAttribArray_client_proc_t m_glEnableVertexAttribArray_enc;
     static void s_glEnableVertexAttribArray(void *self, GLuint index);
@@ -91,6 +91,6 @@ private:
     glGetVertexAttribPointerv_client_proc_t m_glGetVertexAttribPointerv;
     static void s_glGetVertexAttribPointerv(void *self, GLuint index, GLenum pname, GLvoid **pointer);
 
-    static void s_glShaderSource(void *self, GLuint shader, GLsizei count, GLstr *string, GLint *length);
+    static void s_glShaderSource(void *self, GLuint shader, GLsizei count, const GLstr *string, const GLint *length);
 };
 #endif
