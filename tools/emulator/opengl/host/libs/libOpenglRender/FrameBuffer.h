@@ -67,6 +67,7 @@ public:
 
     bool  bindContext(HandleType p_context, HandleType p_drawSurface, HandleType p_readSurface);
     bool  setWindowSurfaceColorBuffer(HandleType p_surface, HandleType p_colorbuffer);
+    bool  bindColorBufferToTexture(HandleType p_colorbuffer);
 
     bool post(HandleType p_colorbuffer);
 

@@ -229,7 +229,12 @@ static void rcFBSetSwapInterval(EGLint interval)
 
 static void rcBindTexture(uint32_t colorBuffer)
 {
-   // XXX: TBD - should be implemented
+    FrameBuffer *fb = FrameBuffer::getFB();
+    if (!fb) {
+        return;
+    }
+
+    fb->bindColorBufferToTexture(colorBuffer);
 }
 
 static EGLint rcColorBufferCacheFlush(uint32_t colorBuffer,

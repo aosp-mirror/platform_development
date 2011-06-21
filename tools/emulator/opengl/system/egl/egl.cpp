@@ -118,7 +118,7 @@ struct egl_surface_t {
     EGLConfig           config;
 
 
-    egl_surface_t(EGLDisplay dpy, EGLConfig config);
+    egl_surface_t(EGLDisplay dpy, EGLConfig config, EGLint surfaceType);
     virtual     ~egl_surface_t();
 
     virtual     EGLBoolean         rcCreate() = 0;
@@ -132,6 +132,7 @@ struct egl_surface_t {
     uint32_t     getRcSurface(){ return rcSurface; }
 
     virtual     EGLBoolean    isValid(){ return valid; }
+    EGLint        getSurfaceType(){ return surfaceType; }
 
     void        setWidth(EGLint w){ width = w; }
     EGLint      getWidth(){ return width; }
@@ -152,14 +153,15 @@ private:
     EGLint    texTarget;
 
 protected:
+    EGLint        surfaceType;
     EGLBoolean    valid;
     uint32_t     rcSurface; //handle to surface created via remote control
 
 
 };
 
-egl_surface_t::egl_surface_t(EGLDisplay dpy, EGLConfig config)
-    : dpy(dpy), config(config), valid(EGL_FALSE), rcSurface(0)
+egl_surface_t::egl_surface_t(EGLDisplay dpy, EGLConfig config, EGLint surfaceType)
+    : dpy(dpy), config(config), surfaceType(surfaceType), valid(EGL_FALSE), rcSurface(0)
 {
     width = 0;
     height = 0;
@@ -177,7 +179,7 @@ egl_surface_t::~egl_surface_t()
 struct egl_window_surface_t : public egl_surface_t {
 
     egl_window_surface_t(
-            EGLDisplay dpy, EGLConfig config,
+            EGLDisplay dpy, EGLConfig config, EGLint surfType,
             ANativeWindow* window);
 
     ~egl_window_surface_t();
@@ -197,9 +199,9 @@ private:
 
 
 egl_window_surface_t::egl_window_surface_t (
-            EGLDisplay dpy, EGLConfig config,
+            EGLDisplay dpy, EGLConfig config, EGLint surfType,
             ANativeWindow* window)
-    : egl_surface_t(dpy, config),
+    : egl_surface_t(dpy, config, surfType),
     nativeWindow(window),
     buffer(NULL)
 {
@@ -294,7 +296,7 @@ struct egl_pbuffer_surface_t : public egl_surface_t {
     GLenum    format;
 
     egl_pbuffer_surface_t(
-            EGLDisplay dpy, EGLConfig config,
+            EGLDisplay dpy, EGLConfig config, EGLint surfType,
             int32_t w, int32_t h, GLenum format);
 
     virtual ~egl_pbuffer_surface_t();
@@ -310,9 +312,9 @@ private:
 };
 
 egl_pbuffer_surface_t::egl_pbuffer_surface_t(
-        EGLDisplay dpy, EGLConfig config,
+        EGLDisplay dpy, EGLConfig config, EGLint surfType,
         int32_t w, int32_t h, GLenum pixelFormat)
-    : egl_surface_t(dpy, config), format(pixelFormat)
+    : egl_surface_t(dpy, config, surfType), format(pixelFormat)
 {
     setWidth(w);
     setHeight(h);
@@ -530,7 +532,7 @@ EGLSurface eglCreateWindowSurface(EGLDisplay dpy, EGLConfig config, EGLNativeWin
     }
 
     egl_surface_t* surface;
-    surface = new egl_window_surface_t(&s_display, config, static_cast<ANativeWindow*>(win));
+    surface = new egl_window_surface_t(&s_display, config, surfaceType, static_cast<ANativeWindow*>(win));
     if (!surface)
         return setError(EGL_BAD_ALLOC, EGL_NO_SURFACE);
     if (!surface->rcCreate()) {
@@ -586,7 +588,7 @@ EGLSurface eglCreatePbufferSurface(EGLDisplay dpy, EGLConfig config, const EGLin
     if (s_display.getConfigPixelFormat(config, &pixelFormat) == EGL_FALSE)
         return setError(EGL_BAD_MATCH, EGL_NO_SURFACE);
 
-    egl_surface_t* surface = new egl_pbuffer_surface_t(dpy, config, w, h, pixelFormat);
+    egl_surface_t* surface = new egl_pbuffer_surface_t(dpy, config, surfaceType, w, h, pixelFormat);
     if (!surface)
         return setError(EGL_BAD_ALLOC, EGL_NO_SURFACE);
     if (!surface->rcCreate()) {
@@ -697,11 +699,35 @@ EGLBoolean eglSurfaceAttrib(EGLDisplay dpy, EGLSurface surface, EGLint attribute
     return 0;
 }
 
-EGLBoolean eglBindTexImage(EGLDisplay dpy, EGLSurface surface, EGLint buffer)
+EGLBoolean eglBindTexImage(EGLDisplay dpy, EGLSurface eglSurface, EGLint buffer)
 {
-    //TODO
-    LOGW("%s not implemented", __FUNCTION__);
-    return 0;
+    VALIDATE_DISPLAY_INIT(dpy, EGL_FALSE);
+    VALIDATE_SURFACE_RETURN(eglSurface, EGL_FALSE);
+    if (eglSurface == EGL_NO_SURFACE) {
+        return setError(EGL_BAD_SURFACE, EGL_FALSE);
+    }
+
+    if (buffer != EGL_BACK_BUFFER) {
+        return setError(EGL_BAD_PARAMETER, EGL_FALSE);
+    }
+
+    egl_surface_t* surface( static_cast<egl_surface_t*>(eglSurface) );
+
+    if (surface->getTextureFormat() == EGL_NO_TEXTURE) {
+        return setError(EGL_BAD_MATCH, EGL_FALSE);
+    }
+
+    if (!(surface->getSurfaceType() & EGL_PBUFFER_BIT)) {
+        return setError(EGL_BAD_SURFACE, EGL_FALSE);
+    }
+
+    //It's now safe to cast to pbuffer surface
+    egl_pbuffer_surface_t* pbSurface = (egl_pbuffer_surface_t*)surface;
+
+    DEFINE_AND_VALIDATE_HOST_CONNECTION(EGL_FALSE);
+    rcEnc->rcBindTexture(rcEnc, pbSurface->getRcColorBuffer());
+
+    return GL_TRUE;
 }
 
 EGLBoolean eglReleaseTexImage(EGLDisplay dpy, EGLSurface surface, EGLint buffer)
@@ -713,9 +739,11 @@ EGLBoolean eglReleaseTexImage(EGLDisplay dpy, EGLSurface surface, EGLint buffer)
 
 EGLBoolean eglSwapInterval(EGLDisplay dpy, EGLint interval)
 {
-    //TODO
-    LOGW("%s not implemented", __FUNCTION__);
-    return 0;
+    VALIDATE_DISPLAY_INIT(dpy, EGL_FALSE);
+
+    DEFINE_AND_VALIDATE_HOST_CONNECTION(EGL_FALSE);
+    rcEnc->rcFBSetSwapInterval(rcEnc, interval); //TODO: implement on the host
+    return EGL_TRUE;
 }
 
 EGLContext eglCreateContext(EGLDisplay dpy, EGLConfig config, EGLContext share_context, const EGLint *attrib_list)

@@ -21,11 +21,18 @@ LOCAL_C_INCLUDES +=  \
     $(emulatorOpengl)/shared/OpenglCodecCommon \
     $(emulatorOpengl)/system/OpenglSystemCommon \
     $(emulatorOpengl)/host/include/libOpenglRender \
+    $(emulatorOpengl)/system/renderControl_enc \
+	$(call intermediates-dir-for, SHARED_LIBRARIES, lib_renderControl_enc) \
     $(glesv1_intermediates)
 
 LOCAL_STATIC_LIBRARIES := \
-        libOpenglCodecCommon
-LOCAL_SHARED_LIBRARIES := libcutils
+    libOpenglSystemCommon \
+    libOpenglCodecCommon  \
+	libqemu
+
+LOCAL_SHARED_LIBRARIES := 	\
+    lib_renderControl_enc	\
+	libcutils
 
 EMUGEN := $(HOST_OUT_EXECUTABLES)/emugen
 

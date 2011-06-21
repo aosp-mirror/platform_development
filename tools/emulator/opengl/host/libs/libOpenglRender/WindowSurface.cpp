@@ -65,10 +65,15 @@ WindowSurface *WindowSurface::create(int p_config, int p_width, int p_height)
     //     and either there is no need for depth or stencil buffer
     //     or GL_KHR_gl_renderbuffer_image present.
     //
+#if 0
+    //XXX: This path should be implemented
     win->m_useEGLImage =
          (caps.has_eglimage_texture_2d &&
           (caps.has_eglimage_renderbuffer ||
            (fbconf->getDepthSize() + fbconf->getStencilSize() == 0)) );
+#else
+    win->m_useEGLImage = false;
+#endif
 
     if (win->m_useEGLImage) {
     }

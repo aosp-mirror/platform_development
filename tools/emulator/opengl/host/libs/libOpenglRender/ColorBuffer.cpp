@@ -17,6 +17,10 @@
 #include "FrameBuffer.h"
 #include "EGLDispatch.h"
 #include "GLDispatch.h"
+#include "ThreadInfo.h"
+#ifdef WITH_GLES2
+#include "GL2Dispatch.h"
+#endif
 #include <stdio.h>
 
 ColorBuffer *ColorBuffer::create(int p_width, int p_height,
@@ -132,6 +136,27 @@ bool ColorBuffer::blitFromPbuffer(EGLSurface p_pbufSurface)
 
     fb->unbind_locked();
     return true;
+}
+
+bool ColorBuffer::bindToTexture()
+{
+    if (m_eglImage) {
+        RenderThreadInfo *tInfo = getRenderThreadInfo();
+        if (tInfo->currContext.Ptr()) {
+#ifdef WITH_GLES2
+            if (tInfo->currContext->isGL2()) {
+                s_gl2.glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, m_eglImage);
+            }
+            else {
+                s_gl.glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, m_eglImage);
+            }
+#else
+            s_gl.glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, m_eglImage);
+#endif
+            return true;
+        }
+    }
+    return false;
 }
 
 bool ColorBuffer::bind_fbo()
