@@ -18,12 +18,14 @@
 
 #include "RenderContext.h"
 #include "WindowSurface.h"
+#include "GLDecoder.h"
 
 struct RenderThreadInfo
 {
     RenderContextPtr currContext;
     WindowSurfacePtr currDrawSurf;
     WindowSurfacePtr currReadSurf;
+    GLDecoder        m_glDec;
 };
 
 RenderThreadInfo *getRenderThreadInfo();
