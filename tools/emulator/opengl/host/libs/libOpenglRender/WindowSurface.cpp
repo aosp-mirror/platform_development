@@ -123,12 +123,11 @@ WindowSurface *WindowSurface::create(int p_config, int p_width, int p_height)
 }
 
 //
-// setColorBuffer - this function is called when a new color buffer needs to
-//    be attached to the surface. The function should make sure that the
+// flushColorBuffer - The function makes sure that the
 //    previous attached color buffer is updated, if copy or blit should be done
 //    in order to update it - it is being done here.
 //
-void WindowSurface::setColorBuffer(ColorBufferPtr p_colorBuffer)
+void WindowSurface::flushColorBuffer()
 {
     if (m_attachedColorBuffer.Ptr() != NULL) {
 
@@ -143,9 +142,18 @@ void WindowSurface::setColorBuffer(ColorBufferPtr p_colorBuffer)
             }
         }
         else {
+            //TODO: EGLImage
         }
     }
+}
 
+//
+// setColorBuffer - this function is called when a new color buffer needs to
+//    be attached to the surface. The function doesn't make sure that the
+//    previous attached color buffer is updated, this is done by flushColorBuffer
+//
+void WindowSurface::setColorBuffer(ColorBufferPtr p_colorBuffer)
+{
     m_attachedColorBuffer = p_colorBuffer;
 }
 
@@ -226,5 +234,4 @@ void WindowSurface::copyToColorBuffer()
     s_egl.eglMakeCurrent(fb->getDisplay(), prevDrawSurf,
                          prevReadSurf, prevContext);
 
-    free(data);
 }

@@ -27,6 +27,7 @@ bool init_egl_dispatch()
 
     osUtils::dynLibrary *lib = osUtils::dynLibrary::open(libName);
     if (!lib) {
+        printf("Failed to open %s\n", libName);
         return NULL;
     }
 

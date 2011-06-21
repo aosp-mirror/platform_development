@@ -106,7 +106,7 @@ bool FrameBuffer::initialize(FBNativeWindowType p_window,
     //
     if (!init_gl_dispatch()) {
         // Failed to load GLES
-        printf("Failed to init_gl_dispatch\n");
+        ERR("Failed to init_gl_dispatch\n");
         return false;
     }
 
@@ -115,7 +115,7 @@ bool FrameBuffer::initialize(FBNativeWindowType p_window,
     //
     FrameBuffer *fb = new FrameBuffer(p_x, p_y, p_width, p_height);
     if (!fb) {
-        printf("Fialed to create fb\n");
+        ERR("Failed to create fb\n");
         return false;
     }
 
@@ -138,11 +138,18 @@ bool FrameBuffer::initialize(FBNativeWindowType p_window,
     //
     fb->m_eglDisplay = s_egl.eglGetDisplay(EGL_DEFAULT_DISPLAY);
     if (fb->m_eglDisplay == EGL_NO_DISPLAY) {
-        printf("Failed to Initialize backend EGL display\n");
+        ERR("Failed to Initialize backend EGL display\n");
         delete fb;
         return false;
     }
-    s_egl.eglInitialize(fb->m_eglDisplay, &fb->m_caps.eglMajor, &fb->m_caps.eglMinor);
+
+    if (!s_egl.eglInitialize(fb->m_eglDisplay, &fb->m_caps.eglMajor, &fb->m_caps.eglMinor)) {
+        ERR("Failed to eglInitialize\n");
+        delete fb;
+        return false;
+    }
+
+    DBG("egl: %d %d\n", fb->m_caps.eglMajor, fb->m_caps.eglMinor);
     s_egl.eglBindAPI(EGL_OPENGL_ES_API);
 
     fb->m_nativeWindow = p_window;
@@ -166,17 +173,26 @@ bool FrameBuffer::initialize(FBNativeWindowType p_window,
     // Create EGL context and Surface attached to the native window, for
     // framebuffer post rendering.
     //
+#if 0
     GLint configAttribs[] = {
         EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
         EGL_RENDERABLE_TYPE, EGL_OPENGL_ES_BIT,
         EGL_NONE
     };
-
+#else
+    GLint configAttribs[] = {
+        EGL_RED_SIZE, 1,
+        EGL_GREEN_SIZE, 1,
+        EGL_BLUE_SIZE, 1,
+        EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
+        EGL_NONE
+    };
+#endif
     EGLConfig eglConfig;
     int n;
     if (!s_egl.eglChooseConfig(fb->m_eglDisplay, configAttribs,
                                &eglConfig, 1, &n)) {
-        printf("Failed on eglChooseConfig\n");
+        ERR("Failed on eglChooseConfig\n");
         delete fb;
         return false;
     }
@@ -186,6 +202,7 @@ bool FrameBuffer::initialize(FBNativeWindowType p_window,
                                                   (EGLNativeWindowType)p_window,
                                                   NULL);
     if (fb->m_eglSurface == EGL_NO_SURFACE) {
+        ERR("Failed to create surface\n");
         delete fb;
         return false;
     }
@@ -207,6 +224,7 @@ bool FrameBuffer::initialize(FBNativeWindowType p_window,
 
     // Make the context current
     if (!fb->bind_locked()) {
+        ERR("Failed to make current\n");
         delete fb;
         return false;
     }
@@ -243,6 +261,7 @@ bool FrameBuffer::initialize(FBNativeWindowType p_window,
     //
     InitConfigStatus configStatus = FBConfig::initConfigList(fb);
     if (configStatus == INIT_CONFIG_FAILED) {
+        ERR("Failed: Initialize set of configs\n");
         delete fb;
         return false;
     }
@@ -403,6 +422,21 @@ void FrameBuffer::DestroyColorBuffer(HandleType p_colorbuffer)
     m_colorbuffers.erase(p_colorbuffer);
 }
 
+bool FrameBuffer::flushWindowSurfaceColorBuffer(HandleType p_surface)
+{
+    android::Mutex::Autolock mutex(m_lock);
+
+    WindowSurfaceMap::iterator w( m_windows.find(p_surface) );
+    if (w == m_windows.end()) {
+        // bad surface handle
+        return false;
+    }
+
+    (*w).second->flushColorBuffer();
+
+    return true;
+}
+
 bool FrameBuffer::setWindowSurfaceColorBuffer(HandleType p_surface,
                                               HandleType p_colorbuffer)
 {
@@ -421,6 +455,23 @@ bool FrameBuffer::setWindowSurfaceColorBuffer(HandleType p_surface,
     }
 
     (*w).second->setColorBuffer( (*c).second );
+
+    return true;
+}
+
+bool FrameBuffer::updateColorBuffer(HandleType p_colorbuffer,
+                                    int x, int y, int width, int height,
+                                    GLenum format, GLenum type, void *pixels)
+{
+    android::Mutex::Autolock mutex(m_lock);
+
+    ColorBufferMap::iterator c( m_colorbuffers.find(p_colorbuffer) );
+    if (c == m_colorbuffers.end()) {
+        // bad colorbuffer handle
+        return false;
+    }
+
+    (*c).second->subUpdate(x, y, width, height, format, type, pixels);
 
     return true;
 }
@@ -513,6 +564,7 @@ bool FrameBuffer::bindContext(HandleType p_context,
     tinfo->currContext = ctx;
     tinfo->currDrawSurf = draw;
     tinfo->currReadSurf = read;
+    tinfo->m_glDec.setContextData(&ctx->decoderContextData());
 
     return true;
 }
@@ -528,6 +580,7 @@ bool FrameBuffer::bind_locked()
 
     if (!s_egl.eglMakeCurrent(m_eglDisplay, m_eglSurface,
                               m_eglSurface, m_eglContext)) {
+        ERR("eglMakeCurrent failed\n");
         return false;
     }
 
