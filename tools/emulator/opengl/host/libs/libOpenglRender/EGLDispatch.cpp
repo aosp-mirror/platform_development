@@ -65,16 +65,21 @@ bool init_egl_dispatch()
     s_egl.eglSwapBuffers = (eglSwapBuffers_t) lib->findSymbol("eglSwapBuffers");
     s_egl.eglCopyBuffers = (eglCopyBuffers_t) lib->findSymbol("eglCopyBuffers");
     s_egl.eglGetProcAddress = (eglGetProcAddress_t) lib->findSymbol("eglGetProcAddress");
-    s_egl.eglLockSurfaceKHR = (eglLockSurfaceKHR_t) lib->findSymbol("eglLockSurfaceKHR");
-    s_egl.eglUnlockSurfaceKHR = (eglUnlockSurfaceKHR_t) lib->findSymbol("eglUnlockSurfaceKHR");
-    s_egl.eglCreateImageKHR = (eglCreateImageKHR_t) lib->findSymbol("eglCreateImageKHR");
-    s_egl.eglDestroyImageKHR = (eglDestroyImageKHR_t) lib->findSymbol("eglDestroyImageKHR");
-    s_egl.eglCreateSyncKHR = (eglCreateSyncKHR_t) lib->findSymbol("eglCreateSyncKHR");
-    s_egl.eglDestroySyncKHR = (eglDestroySyncKHR_t) lib->findSymbol("eglDestroySyncKHR");
-    s_egl.eglClientWaitSyncKHR = (eglClientWaitSyncKHR_t) lib->findSymbol("eglClientWaitSyncKHR");
-    s_egl.eglSignalSyncKHR = (eglSignalSyncKHR_t) lib->findSymbol("eglSignalSyncKHR");
-    s_egl.eglGetSyncAttribKHR = (eglGetSyncAttribKHR_t) lib->findSymbol("eglGetSyncAttribKHR");
-    s_egl.eglSetSwapRectangleANDROID = (eglSetSwapRectangleANDROID_t) lib->findSymbol("eglSetSwapRectangleANDROID");
+
+#define INIT_EGL_EXT_FUNC(name) \
+    if (s_egl.eglGetProcAddress) s_egl.name = (name ## _t) s_egl.eglGetProcAddress(#name); \
+    if (!s_egl.name || !s_egl.eglGetProcAddress) s_egl.name = (name ## _t) lib->findSymbol(#name)
+
+    INIT_EGL_EXT_FUNC(eglLockSurfaceKHR);
+    INIT_EGL_EXT_FUNC(eglUnlockSurfaceKHR);
+    INIT_EGL_EXT_FUNC(eglCreateImageKHR);
+    INIT_EGL_EXT_FUNC(eglDestroyImageKHR);
+    INIT_EGL_EXT_FUNC(eglCreateSyncKHR);
+    INIT_EGL_EXT_FUNC(eglDestroySyncKHR);
+    INIT_EGL_EXT_FUNC(eglClientWaitSyncKHR);
+    INIT_EGL_EXT_FUNC(eglSignalSyncKHR);
+    INIT_EGL_EXT_FUNC(eglGetSyncAttribKHR);
+    INIT_EGL_EXT_FUNC(eglSetSwapRectangleANDROID);
 
     return true;
 }
