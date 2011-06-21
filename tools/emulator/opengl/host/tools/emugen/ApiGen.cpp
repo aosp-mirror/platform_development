@@ -348,6 +348,7 @@ int ApiGen::genEncoderImpl(const std::string &filename)
         e->print(fp, true, "_enc", /* classname + "::" */"", "void *self");
         fprintf(fp, "{\n");
 
+//      fprintf(fp, "\n\tDBG(\">>>> %s\\n\");\n", e->name().c_str());
         fprintf(fp, "\n\t%s *ctx = (%s *)self;\n\n",
                 classname.c_str(),
                 classname.c_str());
@@ -454,6 +455,7 @@ int ApiGen::genEncoderImpl(const std::string &filename)
                 }
             }
         }
+//XXX       fprintf(fp, "\n\tDBG(\"<<<< %s\\n\");\n", e->name().c_str());
         // todo - return value for pointers
         if (e->retval().isPointer()) {
             fprintf(stderr, "WARNING: %s : return value of pointer is unsupported\n",

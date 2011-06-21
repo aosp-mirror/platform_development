@@ -32,7 +32,6 @@ private:
 
 private:
     IOStream *m_stream;
-    GLDecoder   m_glDec;
     renderControl_decoder_context_t m_rcDec;
 };
 

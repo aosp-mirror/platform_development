@@ -32,6 +32,7 @@ RenderServer *RenderServer::create(int port)
 
     server->m_listenSock = new TcpStream();
     if (server->m_listenSock->listen(port) < 0) {
+        ERR("RenderServer::create failed to listen on port %d\n", port);
         delete server;
         return NULL;
     }
@@ -48,6 +49,7 @@ int RenderServer::Main()
             break;
         }
 
+        DBG("\n\n\n\n Got new stream!!!! \n\n\n\n\n");
         // check if we have been requested to exit while waiting on accept
         if (m_exit) {
             break;

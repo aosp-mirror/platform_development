@@ -15,6 +15,7 @@
 */
 #include "RenderThread.h"
 #include "RenderControl.h"
+#include "ThreadInfo.h"
 #include "ReadBuffer.h"
 #include "TimeUtils.h"
 #include "GLDispatch.h"
@@ -41,10 +42,11 @@ RenderThread *RenderThread::create(IOStream *p_stream)
 
 int RenderThread::Main()
 {
+    RenderThreadInfo * tInfo = getRenderThreadInfo();
     //
     // initialize decoders
     //
-    m_glDec.initGL( gl_dispatch_get_proc_func, NULL );
+    tInfo->m_glDec.initGL( gl_dispatch_get_proc_func, NULL );
     initRenderControlContext( &m_rcDec );
 
     ReadBuffer readBuf(m_stream, STREAM_BUFFER_SIZE);
@@ -79,7 +81,7 @@ int RenderThread::Main()
             //
             // try to process some of the command buffer using the GLES decoder
             //
-            size_t last = m_glDec.decode(readBuf.buf(), readBuf.validData(), m_stream);
+            size_t last = tInfo->m_glDec.decode(readBuf.buf(), readBuf.validData(), m_stream);
             if (last > 0) {
                 progress = true;
                 readBuf.consume(last);
