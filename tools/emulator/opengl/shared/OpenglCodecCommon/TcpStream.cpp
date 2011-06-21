@@ -148,12 +148,11 @@ const unsigned char *TcpStream::readFully(void *buf, size_t len)
 {
     if (!valid()) return NULL;
     if (!buf) {
-      ERR("TcpStream::readFully failed, buf=NULL");
       return NULL;  // do not allow NULL buf in that implementation
     }
     size_t res = len;
     while (res > 0) {
-        ssize_t stat = ::recv(m_sock, (char *)(buf) + len - res, len, 0);
+        ssize_t stat = ::recv(m_sock, (char *)(buf) + len - res, res, 0);
         if (stat == 0) {
             // client shutdown;
             return NULL;
@@ -161,7 +160,6 @@ const unsigned char *TcpStream::readFully(void *buf, size_t len)
             if (errno == EINTR) {
                 continue;
             } else {
-                ERR("TcpStream::readFully failed (buf 0x%x): %s\n", buf, strerror(errno));
                 return NULL;
             }
         } else {
@@ -175,7 +173,6 @@ const unsigned char *TcpStream::read( void *buf, size_t *inout_len)
 {
     if (!valid()) return NULL;
     if (!buf) {
-      ERR("TcpStream::read failed, buf=NULL");
       return NULL;  // do not allow NULL buf in that implementation
     }
 
