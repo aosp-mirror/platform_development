@@ -19,18 +19,62 @@
 #include "egl_ftable.h"
 #include <cutils/log.h>
 #include "gralloc_cb.h"
+#include "GLClientState.h"
 
 #include <private/ui/android_natives_priv.h>
 
 template<typename T>
-static T setError(GLint error, T returnValue) {
+static T setErrorFunc(GLint error, T returnValue) {
     getEGLThreadInfo()->eglError = error;
     return returnValue;
 }
 
+const char *  eglStrError(EGLint err)
+{
+    switch (err){
+        case EGL_SUCCESS:           return "EGL_SUCCESS";
+        case EGL_NOT_INITIALIZED:   return "EGL_NOT_INITIALIZED";
+        case EGL_BAD_ACCESS:        return "EGL_BAD_ACCESS";
+        case EGL_BAD_ALLOC:         return "EGL_BAD_ALLOC";
+        case EGL_BAD_ATTRIBUTE:     return "EGL_BAD_ATTRIBUTE";
+        case EGL_BAD_CONFIG:        return "EGL_BAD_CONFIG";
+        case EGL_BAD_CONTEXT:       return "EGL_BAD_CONTEXT";
+        case EGL_BAD_CURRENT_SURFACE: return "EGL_BAD_CURRENT_SURFACE";
+        case EGL_BAD_DISPLAY:       return "EGL_BAD_DISPLAY";
+        case EGL_BAD_MATCH:         return "EGL_BAD_MATCH";
+        case EGL_BAD_NATIVE_PIXMAP: return "EGL_BAD_NATIVE_PIXMAP";
+        case EGL_BAD_NATIVE_WINDOW: return "EGL_BAD_NATIVE_WINDOW";
+        case EGL_BAD_PARAMETER:     return "EGL_BAD_PARAMETER";
+        case EGL_BAD_SURFACE:       return "EGL_BAD_SURFACE";
+        case EGL_CONTEXT_LOST:      return "EGL_CONTEXT_LOST";
+        default: return "UNKNOWN";
+    }
+}
+
+#define LOG_EGL_ERRORS 1
+
+#ifdef LOG_EGL_ERRORS
+
+#define setErrorReturn(error, retVal)     \
+    {                                                \
+        LOGE("tid %d: %s(%d): error 0x%x (%s)", gettid(), __FUNCTION__, __LINE__, error, eglStrError(error));     \
+        return setErrorFunc(error, retVal);            \
+    }
+
+#define RETURN_ERROR(ret,err)           \
+    LOGE("tid %d: %s(%d): error 0x%x (%s)", gettid(), __FUNCTION__, __LINE__, err, eglStrError(err));    \
+    getEGLThreadInfo()->eglError = err;    \
+    return ret;
+
+#else //!LOG_EGL_ERRORS
+
+#define setErrorReturn(error, retVal) return setErrorFunc(error, retVal);
+
 #define RETURN_ERROR(ret,err)           \
     getEGLThreadInfo()->eglError = err; \
     return ret;
+
+#endif //LOG_EGL_ERRORS
 
 #define VALIDATE_CONFIG(cfg,ret) \
     if(((int)cfg<0)||((int)cfg>s_display.getNumConfigs())) { \
@@ -39,15 +83,13 @@ static T setError(GLint error, T returnValue) {
 
 #define VALIDATE_DISPLAY(dpy,ret) \
     if ((dpy) != (EGLDisplay)&s_display) { \
-        getEGLThreadInfo()->eglError = EGL_BAD_DISPLAY; \
-        return ret; \
+        RETURN_ERROR(ret, EGL_BAD_DISPLAY);    \
     }
 
 #define VALIDATE_DISPLAY_INIT(dpy,ret) \
     VALIDATE_DISPLAY(dpy, ret)    \
     if (!s_display.initialized()) {        \
-        getEGLThreadInfo()->eglError = EGL_NOT_INITIALIZED;    \
-        return ret; \
+        RETURN_ERROR(ret, EGL_NOT_INITIALIZED);    \
     }
 
 #define DEFINE_HOST_CONNECTION \
@@ -75,9 +117,9 @@ static T setError(GLint error, T returnValue) {
     if (surface != EGL_NO_SURFACE) {    \
         egl_surface_t* s( static_cast<egl_surface_t*>(surface) );    \
         if (!s->isValid())    \
-            return setError(EGL_BAD_SURFACE, EGL_FALSE);    \
+            setErrorReturn(EGL_BAD_SURFACE, EGL_FALSE);    \
         if (s->dpy != (EGLDisplay)&s_display)    \
-            return setError(EGL_BAD_DISPLAY, EGL_FALSE);    \
+            setErrorReturn(EGL_BAD_DISPLAY, EGL_FALSE);    \
     }
 
 
@@ -91,13 +133,8 @@ struct EGLContext_t {
         NEVER_CURRENT   =   0x00020000
     };
 
-    EGLContext_t(EGLDisplay dpy, EGLConfig config) : dpy(dpy), config(config),
-        read(EGL_NO_SURFACE), draw(EGL_NO_SURFACE),
-        rcContext(0) {
-            flags = 0;
-            version = 1;
-        };
-    ~EGLContext_t(){};
+    EGLContext_t(EGLDisplay dpy, EGLConfig config);
+    ~EGLContext_t();
     uint32_t            flags;
     EGLDisplay          dpy;
     EGLConfig           config;
@@ -105,8 +142,24 @@ struct EGLContext_t {
     EGLSurface          draw;
     EGLint                version;
     uint32_t             rcContext;
+
+    GLClientState * getClientState(){ return clientState; }
+private:
+    GLClientState    *    clientState;
 };
 
+EGLContext_t::EGLContext_t(EGLDisplay dpy, EGLConfig config) : dpy(dpy), config(config),
+        read(EGL_NO_SURFACE), draw(EGL_NO_SURFACE), rcContext(0)
+{
+    flags = 0;
+    version = 1;
+    clientState = new GLClientState();
+};
+
+EGLContext_t::~EGLContext_t()
+{
+    if (clientState) delete clientState;
+}
 // ----------------------------------------------------------------------------
 //egl_surface_t
 
@@ -127,6 +180,7 @@ struct egl_surface_t {
     virtual     EGLBoolean  connect() { return EGL_TRUE; }
     virtual     void        disconnect() {}
     virtual     EGLBoolean     swapBuffers() { return EGL_TRUE; }
+    virtual     EGLint        getSwapBehavior() const;
 
     void         setRcSurface(uint32_t handle){ rcSurface = handle; }
     uint32_t     getRcSurface(){ return rcSurface; }
@@ -167,6 +221,10 @@ egl_surface_t::egl_surface_t(EGLDisplay dpy, EGLConfig config, EGLint surfaceTyp
     height = 0;
     texFormat = EGL_NO_TEXTURE;
     texTarget = EGL_NO_TEXTURE;
+}
+
+EGLint egl_surface_t::getSwapBehavior() const {
+        return EGL_BUFFER_PRESERVED;
 }
 
 egl_surface_t::~egl_surface_t()
@@ -221,7 +279,7 @@ egl_window_surface_t::~egl_window_surface_t() {
 EGLBoolean egl_window_surface_t::rcCreate()
 {
     DEFINE_AND_VALIDATE_HOST_CONNECTION(EGL_FALSE);
-    uint32_t rcSurface = rcEnc->rcCreateWindowSurface(rcEnc, (uint32_t)config, getWidth(), getHeight());
+    rcSurface = rcEnc->rcCreateWindowSurface(rcEnc, (uint32_t)config, getWidth(), getHeight());
     if (!rcSurface) {
         LOGE("rcCreateWindowSurface returned 0");
         return EGL_FALSE;
@@ -248,7 +306,7 @@ EGLBoolean egl_window_surface_t::connect()
 {
     // dequeue a buffer
     if (nativeWindow->dequeueBuffer(nativeWindow, &buffer) != NO_ERROR) {
-        return setError(EGL_BAD_ALLOC, EGL_FALSE);
+        setErrorReturn(EGL_BAD_ALLOC, EGL_FALSE);
     }
     buffer->common.incRef(&buffer->common);
 
@@ -270,17 +328,19 @@ void egl_window_surface_t::disconnect()
 EGLBoolean egl_window_surface_t::swapBuffers()
 {
     if (!buffer) {
-        return setError(EGL_BAD_ACCESS, EGL_FALSE);
+        setErrorReturn(EGL_BAD_ACCESS, EGL_FALSE);
     }
 
     DEFINE_AND_VALIDATE_HOST_CONNECTION(EGL_FALSE);
+
+    rcEnc->rcFlushWindowColorBuffer(rcEnc, rcSurface);
 
     //post the back buffer
     nativeWindow->queueBuffer(nativeWindow, buffer);
 
     // dequeue a new buffer
     if (nativeWindow->dequeueBuffer(nativeWindow, &buffer)) {
-        return setError(EGL_BAD_ALLOC, EGL_FALSE);
+        setErrorReturn(EGL_BAD_ALLOC, EGL_FALSE);
     }
 
     rcEnc->rcSetWindowColorBuffer(rcEnc, rcSurface, ((cb_handle_t *)(buffer->handle))->hostHandle);
@@ -374,6 +434,8 @@ static eglDisplay s_display;
 static EGLClient_eglInterface s_eglIface = {
     getThreadInfo: getEGLThreadInfo
 };
+
+#define DBG_FUNC DBG("%s\n", __FUNCTION__)
 EGLDisplay eglGetDisplay(EGLNativeDisplayType display_id)
 {
     //
@@ -492,7 +554,7 @@ EGLBoolean eglChooseConfig(EGLDisplay dpy, const EGLint *attrib_list, EGLConfig 
     }
 
     DEFINE_AND_VALIDATE_HOST_CONNECTION(EGL_FALSE);
-    *num_config = rcEnc->rcChooseConfig(rcEnc, (EGLint*)attrib_list, attribs_size, (uint32_t*)configs, config_size);
+    *num_config = rcEnc->rcChooseConfig(rcEnc, (EGLint*)attrib_list, attribs_size * sizeof(EGLint), (uint32_t*)configs, config_size*sizeof(EGLint));
 
     return EGL_TRUE;
 }
@@ -517,27 +579,27 @@ EGLSurface eglCreateWindowSurface(EGLDisplay dpy, EGLConfig config, EGLNativeWin
     VALIDATE_DISPLAY_INIT(dpy, NULL);
     VALIDATE_CONFIG(config, EGL_FALSE);
     if (win == 0) {
-        return setError(EGL_BAD_MATCH, EGL_NO_SURFACE);
+        setErrorReturn(EGL_BAD_MATCH, EGL_NO_SURFACE);
     }
 
     EGLint surfaceType;
     if (s_display.getConfigAttrib(config, EGL_SURFACE_TYPE, &surfaceType) == EGL_FALSE)    return EGL_FALSE;
 
     if (!(surfaceType & EGL_WINDOW_BIT)) {
-        return setError(EGL_BAD_MATCH, EGL_NO_SURFACE);
+        setErrorReturn(EGL_BAD_MATCH, EGL_NO_SURFACE);
     }
 
     if (static_cast<ANativeWindow*>(win)->common.magic != ANDROID_NATIVE_WINDOW_MAGIC) {
-        return setError(EGL_BAD_NATIVE_WINDOW, EGL_NO_SURFACE);
+        setErrorReturn(EGL_BAD_NATIVE_WINDOW, EGL_NO_SURFACE);
     }
 
     egl_surface_t* surface;
     surface = new egl_window_surface_t(&s_display, config, surfaceType, static_cast<ANativeWindow*>(win));
     if (!surface)
-        return setError(EGL_BAD_ALLOC, EGL_NO_SURFACE);
+        setErrorReturn(EGL_BAD_ALLOC, EGL_NO_SURFACE);
     if (!surface->rcCreate()) {
         delete surface;
-        return setError(EGL_BAD_ALLOC, EGL_NO_SURFACE);
+        setErrorReturn(EGL_BAD_ALLOC, EGL_NO_SURFACE);
     }
 
     return surface;
@@ -552,7 +614,7 @@ EGLSurface eglCreatePbufferSurface(EGLDisplay dpy, EGLConfig config, const EGLin
     if (s_display.getConfigAttrib(config, EGL_SURFACE_TYPE, &surfaceType) == EGL_FALSE)    return EGL_FALSE;
 
     if (!(surfaceType & EGL_PBUFFER_BIT)) {
-        return setError(EGL_BAD_MATCH, EGL_NO_SURFACE);
+        setErrorReturn(EGL_BAD_MATCH, EGL_NO_SURFACE);
     }
 
     int32_t w = 0;
@@ -580,20 +642,20 @@ EGLSurface eglCreatePbufferSurface(EGLDisplay dpy, EGLConfig config, const EGLin
     }
     if (((texFormat == EGL_NO_TEXTURE)&&(texTarget != EGL_NO_TEXTURE)) ||
         ((texFormat != EGL_NO_TEXTURE)&&(texTarget == EGL_NO_TEXTURE))) {
-        return setError(EGL_BAD_MATCH, EGL_NO_SURFACE);
+        setErrorReturn(EGL_BAD_MATCH, EGL_NO_SURFACE);
     }
     // TODO: check EGL_TEXTURE_FORMAT - need to support eglBindTexImage
 
     GLenum pixelFormat;
-    if (s_display.getConfigPixelFormat(config, &pixelFormat) == EGL_FALSE)
-        return setError(EGL_BAD_MATCH, EGL_NO_SURFACE);
+    if (s_display.getConfigGLPixelFormat(config, &pixelFormat) == EGL_FALSE)
+        setErrorReturn(EGL_BAD_MATCH, EGL_NO_SURFACE);
 
     egl_surface_t* surface = new egl_pbuffer_surface_t(dpy, config, surfaceType, w, h, pixelFormat);
     if (!surface)
-        return setError(EGL_BAD_ALLOC, EGL_NO_SURFACE);
+        setErrorReturn(EGL_BAD_ALLOC, EGL_NO_SURFACE);
     if (!surface->rcCreate()) {
         delete surface;
-        return setError(EGL_BAD_ALLOC, EGL_NO_SURFACE);
+        setErrorReturn(EGL_BAD_ALLOC, EGL_NO_SURFACE);
     }
 
     //setup attributes
@@ -650,9 +712,13 @@ EGLBoolean eglQuerySurface(EGLDisplay dpy, EGLSurface eglSurface, EGLint attribu
         case EGL_TEXTURE_TARGET:
             *value = surface->getTextureTarget();
             break;
+        case EGL_SWAP_BEHAVIOR:
+            *value = surface->getSwapBehavior();
+            break;
             //TODO: complete other attributes
         default:
-            ret = setError(EGL_BAD_ATTRIBUTE, EGL_FALSE);
+            LOGE("eglQuerySurface %x  EGL_BAD_ATTRIBUTE", attribute);
+            ret = setErrorFunc(EGL_BAD_ATTRIBUTE, EGL_FALSE);
             break;
     }
 
@@ -662,7 +728,7 @@ EGLBoolean eglQuerySurface(EGLDisplay dpy, EGLSurface eglSurface, EGLint attribu
 EGLBoolean eglBindAPI(EGLenum api)
 {
     if (api != EGL_OPENGL_ES_API)
-        return setError(EGL_BAD_PARAMETER, EGL_FALSE);
+        setErrorReturn(EGL_BAD_PARAMETER, EGL_FALSE);
     return EGL_TRUE;
 }
 
@@ -704,21 +770,21 @@ EGLBoolean eglBindTexImage(EGLDisplay dpy, EGLSurface eglSurface, EGLint buffer)
     VALIDATE_DISPLAY_INIT(dpy, EGL_FALSE);
     VALIDATE_SURFACE_RETURN(eglSurface, EGL_FALSE);
     if (eglSurface == EGL_NO_SURFACE) {
-        return setError(EGL_BAD_SURFACE, EGL_FALSE);
+        setErrorReturn(EGL_BAD_SURFACE, EGL_FALSE);
     }
 
     if (buffer != EGL_BACK_BUFFER) {
-        return setError(EGL_BAD_PARAMETER, EGL_FALSE);
+        setErrorReturn(EGL_BAD_PARAMETER, EGL_FALSE);
     }
 
     egl_surface_t* surface( static_cast<egl_surface_t*>(eglSurface) );
 
     if (surface->getTextureFormat() == EGL_NO_TEXTURE) {
-        return setError(EGL_BAD_MATCH, EGL_FALSE);
+        setErrorReturn(EGL_BAD_MATCH, EGL_FALSE);
     }
 
     if (!(surface->getSurfaceType() & EGL_PBUFFER_BIT)) {
-        return setError(EGL_BAD_SURFACE, EGL_FALSE);
+        setErrorReturn(EGL_BAD_SURFACE, EGL_FALSE);
     }
 
     //It's now safe to cast to pbuffer surface
@@ -752,7 +818,7 @@ EGLContext eglCreateContext(EGLDisplay dpy, EGLConfig config, EGLContext share_c
     VALIDATE_CONFIG(config, EGL_NO_CONTEXT);
 
     EGLint version = 1; //default
-    while (attrib_list[0]) {
+    while (attrib_list && attrib_list[0]) {
         if (attrib_list[0] == EGL_CONTEXT_CLIENT_VERSION) version = attrib_list[1];
         attrib_list+=2;
     }
@@ -762,19 +828,19 @@ EGLContext eglCreateContext(EGLDisplay dpy, EGLConfig config, EGLContext share_c
         EGLContext_t * shareCtx = static_cast<EGLContext_t*>(share_context);
         rcShareCtx = shareCtx->rcContext;
         if (shareCtx->dpy != dpy)
-            return setError(EGL_BAD_MATCH, EGL_NO_CONTEXT);
+            setErrorReturn(EGL_BAD_MATCH, EGL_NO_CONTEXT);
     }
 
     DEFINE_AND_VALIDATE_HOST_CONNECTION(EGL_NO_CONTEXT);
     uint32_t rcContext = rcEnc->rcCreateContext(rcEnc, (uint32_t)config, rcShareCtx, version);
     if (!rcContext) {
         LOGE("rcCreateContext returned 0");
-        return setError(EGL_BAD_ALLOC, EGL_NO_CONTEXT);
+        setErrorReturn(EGL_BAD_ALLOC, EGL_NO_CONTEXT);
     }
 
     EGLContext_t * context = new EGLContext_t(dpy, config);
     if (!context)
-        return setError(EGL_BAD_ALLOC, EGL_NO_CONTEXT);
+        setErrorReturn(EGL_BAD_ALLOC, EGL_NO_CONTEXT);
 
     context->version = version;
     context->rcContext = rcContext;
@@ -812,9 +878,9 @@ EGLBoolean eglMakeCurrent(EGLDisplay dpy, EGLSurface draw, EGLSurface read, EGLC
     VALIDATE_SURFACE_RETURN(read, EGL_FALSE);
 
     if ((read == EGL_NO_SURFACE && draw == EGL_NO_SURFACE) && (ctx != EGL_NO_CONTEXT))
-        return setError(EGL_BAD_MATCH, EGL_FALSE);
+        setErrorReturn(EGL_BAD_MATCH, EGL_FALSE);
     if ((read != EGL_NO_SURFACE || draw != EGL_NO_SURFACE) && (ctx == EGL_NO_CONTEXT))
-        return setError(EGL_BAD_MATCH, EGL_FALSE);
+        setErrorReturn(EGL_BAD_MATCH, EGL_FALSE);
 
     EGLContext_t * context = static_cast<EGLContext_t*>(ctx);
     uint32_t ctxHandle = (context) ? context->rcContext : 0;
@@ -836,13 +902,13 @@ EGLBoolean eglMakeCurrent(EGLDisplay dpy, EGLSurface draw, EGLSurface read, EGLC
 
     if (context && (context->flags & EGLContext_t::IS_CURRENT) && (context != tInfo->currentContext)) {
         //context is current to another thread
-        return setError(EGL_BAD_ACCESS, EGL_FALSE);
+        setErrorReturn(EGL_BAD_ACCESS, EGL_FALSE);
     }
 
     DEFINE_AND_VALIDATE_HOST_CONNECTION(EGL_FALSE);
     if (rcEnc->rcMakeCurrent(rcEnc, ctxHandle, drawHandle, readHandle) == EGL_FALSE) {
         LOGE("rcMakeCurrent returned EGL_FALSE");
-        return setError(EGL_BAD_CONTEXT, EGL_FALSE);
+        setErrorReturn(EGL_BAD_CONTEXT, EGL_FALSE);
     }
 
     //
@@ -858,14 +924,28 @@ EGLBoolean eglMakeCurrent(EGLDisplay dpy, EGLSurface draw, EGLSurface read, EGLC
         context->draw = draw;
         context->read = read;
         context->flags |= EGLContext_t::IS_CURRENT;
+        //set the client state
+        hostCon->glEncoder()->setClientState(context->getClientState());
     }
 
     if (tInfo->currentContext)
         tInfo->currentContext->flags &= ~EGLContext_t::IS_CURRENT;
 
+    //Check maybe we need to init the encoder, if it's first eglMakeCurrent
+    if (tInfo->currentContext) {
+        if (!hostCon->glEncoder()->isInitialized()) {
+            if (tInfo->currentContext->version == 2) {
+                s_display.gles2_iface()->init();
+            }
+            else {
+                s_display.gles_iface()->init();
+            }
+            hostCon->glEncoder()->setInitialized();
+        }
+    }
+
     //Now make current
     tInfo->currentContext = context;
-
 
     //connect the color buffer
     if (drawSurf)
@@ -891,7 +971,7 @@ EGLSurface eglGetCurrentSurface(EGLint readdraw)
         case EGL_DRAW:
             return context->draw;
         default:
-            return setError(EGL_BAD_PARAMETER, EGL_NO_SURFACE);
+            setErrorReturn(EGL_BAD_PARAMETER, EGL_NO_SURFACE);
     }
 }
 
@@ -929,7 +1009,9 @@ EGLBoolean eglQueryContext(EGLDisplay dpy, EGLContext ctx, EGLint attribute, EGL
                 *value = EGL_BACK_BUFFER; //single buffer not supported
             break;
         default:
-            return setError(EGL_BAD_ATTRIBUTE, EGL_FALSE);
+            LOGE("eglQueryContext %x  EGL_BAD_ATTRIBUTE", attribute);
+            setErrorReturn(EGL_BAD_ATTRIBUTE, EGL_FALSE);
+            break;
     }
 
     return ret;
@@ -961,15 +1043,15 @@ EGLBoolean eglSwapBuffers(EGLDisplay dpy, EGLSurface eglSurface)
 {
     VALIDATE_DISPLAY_INIT(dpy, EGL_FALSE);
     if (eglSurface == EGL_NO_SURFACE)
-        return setError(EGL_BAD_SURFACE, EGL_FALSE);
+        setErrorReturn(EGL_BAD_SURFACE, EGL_FALSE);
 
     DEFINE_AND_VALIDATE_HOST_CONNECTION(EGL_FALSE);
 
     egl_surface_t* d = static_cast<egl_surface_t*>(eglSurface);
     if (!d->isValid())
-        return setError(EGL_BAD_SURFACE, EGL_FALSE);
+        setErrorReturn(EGL_BAD_SURFACE, EGL_FALSE);
     if (d->dpy != dpy)
-        return setError(EGL_BAD_DISPLAY, EGL_FALSE);
+        setErrorReturn(EGL_BAD_DISPLAY, EGL_FALSE);
 
     // post the surface
     d->swapBuffers();
@@ -1001,19 +1083,19 @@ EGLImageKHR eglCreateImageKHR(EGLDisplay dpy, EGLContext ctx, EGLenum target, EG
     VALIDATE_DISPLAY_INIT(dpy, EGL_NO_IMAGE_KHR);
 
     if (ctx != EGL_NO_CONTEXT) {
-        return setError(EGL_BAD_CONTEXT, EGL_NO_IMAGE_KHR);
+        setErrorReturn(EGL_BAD_CONTEXT, EGL_NO_IMAGE_KHR);
     }
     if (target != EGL_NATIVE_BUFFER_ANDROID) {
-        return setError(EGL_BAD_PARAMETER, EGL_NO_IMAGE_KHR);
+        setErrorReturn(EGL_BAD_PARAMETER, EGL_NO_IMAGE_KHR);
     }
 
     android_native_buffer_t* native_buffer = (android_native_buffer_t*)buffer;
 
     if (native_buffer->common.magic != ANDROID_NATIVE_BUFFER_MAGIC)
-        return setError(EGL_BAD_PARAMETER, EGL_NO_IMAGE_KHR);
+        setErrorReturn(EGL_BAD_PARAMETER, EGL_NO_IMAGE_KHR);
 
     if (native_buffer->common.version != sizeof(android_native_buffer_t))
-        return setError(EGL_BAD_PARAMETER, EGL_NO_IMAGE_KHR);
+        setErrorReturn(EGL_BAD_PARAMETER, EGL_NO_IMAGE_KHR);
 
     switch (native_buffer->format) {
         case HAL_PIXEL_FORMAT_RGBA_8888:
@@ -1025,7 +1107,7 @@ EGLImageKHR eglCreateImageKHR(EGLDisplay dpy, EGLContext ctx, EGLenum target, EG
         case HAL_PIXEL_FORMAT_RGBA_4444:
             break;
         default:
-            return setError(EGL_BAD_PARAMETER, EGL_NO_IMAGE_KHR);
+            setErrorReturn(EGL_BAD_PARAMETER, EGL_NO_IMAGE_KHR);
     }
 
     native_buffer->common.incRef(&native_buffer->common);
@@ -1039,10 +1121,10 @@ EGLBoolean eglDestroyImageKHR(EGLDisplay dpy, EGLImageKHR img)
     android_native_buffer_t* native_buffer = (android_native_buffer_t*)img;
 
     if (native_buffer->common.magic != ANDROID_NATIVE_BUFFER_MAGIC)
-        return setError(EGL_BAD_PARAMETER, EGL_FALSE);
+        setErrorReturn(EGL_BAD_PARAMETER, EGL_FALSE);
 
     if (native_buffer->common.version != sizeof(android_native_buffer_t))
-        return setError(EGL_BAD_PARAMETER, EGL_FALSE);
+        setErrorReturn(EGL_BAD_PARAMETER, EGL_FALSE);
 
     native_buffer->common.decRef(&native_buffer->common);
 

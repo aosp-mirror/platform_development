@@ -81,6 +81,9 @@ uint32_t rcCreateColorBuffer(uint32_t width, uint32_t height, GLenum internalFor
 void rcDestroyColorBuffer(uint32_t colorbuffer);
        destroyes a colorBuffer object.
 
+void rcFlushWindowColorBuffer(uint32_t windowSurface, uint32_t colorBuffer);
+	   This flushes the current window color buffer
+
 void rcSetWindowColorBuffer(uint32_t windowSurface, uint32_t colorBuffer);
        This set the target color buffer for a windowSurface, when set the
        previous target colorBuffer gets updated before switching to the new

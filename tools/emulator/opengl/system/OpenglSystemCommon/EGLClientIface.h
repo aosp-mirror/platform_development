@@ -9,6 +9,7 @@ typedef struct {
 
 typedef struct {
     void* (*getProcAddress)(const char *funcName);
+    void (*init)();
     void (*finish)();
 } EGLClient_glesInterface;
 

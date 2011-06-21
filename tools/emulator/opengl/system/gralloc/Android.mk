@@ -31,12 +31,12 @@ LOCAL_MODULE_PATH = $(TARGET_OUT_SHARED_LIBRARIES)/hw
 LOCAL_MODULE := gralloc.goldfish
 
 LOCAL_STATIC_LIBRARIES := \
-    libOpenglSystemCommon \
     libOpenglCodecCommon \
     libqemu
 
 LOCAL_SHARED_LIBRARIES := \
     libcutils \
+    libOpenglSystemCommon \
     libGLESv1_enc \
     lib_renderControl_enc
 
