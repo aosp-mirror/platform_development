@@ -26,7 +26,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int n
 int main(int argc, char *argv[])
 #endif
 {
-    int portNum = 4141;
+    int portNum = 22468;
     int winWidth = 320;
     int winHeight = 480;
     FBNativeWindowType windowId = NULL;

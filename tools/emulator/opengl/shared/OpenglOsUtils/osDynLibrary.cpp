@@ -36,6 +36,10 @@ dynLibrary *dynLibrary::open(const char *p_libName)
 #endif
 
     if (lib->m_lib == NULL) {
+        printf("Failed to load %s\n", p_libName);
+#ifndef _WIN32
+        printf("error %s\n", dlerror()); //only on linux
+#endif
         delete lib;
         return NULL;
     }
