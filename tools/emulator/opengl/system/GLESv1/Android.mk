@@ -26,12 +26,12 @@ LOCAL_C_INCLUDES +=  \
 		$(call intermediates-dir-for, SHARED_LIBRARIES, libGLESv1_enc)
 
 LOCAL_MODULE_TAGS := debug
-LOCAL_MODULE := libGL_emulation
+LOCAL_MODULE_PATH := $(TARGET_OUT_SHARED_LIBRARIES)/egl
+LOCAL_MODULE := libGLESv1_CM_emulation
 LOCAL_MODULE_CLASS := SHARED_LIBRARIES
 
 
 LOCAL_STATIC_LIBRARIES := \
-    libOpenglSystemCommon \
     libOpenglCodecCommon  \
 	libqemu
 
@@ -39,7 +39,8 @@ LOCAL_SHARED_LIBRARIES := \
     libcutils \
 	libutils \
 	libdl \
-	libGLESv1_enc \
+    libOpenglSystemCommon \
+	libGLESv1_enc	\
 	lib_renderControl_enc
 
 

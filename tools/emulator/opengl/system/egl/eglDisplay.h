@@ -23,6 +23,8 @@
 #include "EGLClientIface.h"
 #include <utils/KeyedVector.h>
 
+#include <ui/PixelFormat.h>
+
 #define ATTRIBUTE_NONE -1
 //FIXME: are we in this namespace?
 using namespace android;
@@ -46,13 +48,18 @@ public:
 
     int     getNumConfigs(){ return m_numConfigs; }
     EGLBoolean  getConfigAttrib(EGLConfig config, EGLint attrib, EGLint * value);
-    EGLBoolean getConfigPixelFormat(EGLConfig config, GLenum * format);
+    EGLBoolean  setConfigAttrib(EGLConfig config, EGLint attrib, EGLint value);
+    EGLBoolean getConfigGLPixelFormat(EGLConfig config, GLenum * format);
+    EGLBoolean getConfigNativePixelFormat(EGLConfig config, PixelFormat * format);
 
+    void     dumpConfig(EGLConfig config);
 private:
     EGLClient_glesInterface *loadGLESClientAPI(const char *libName,
                                                EGLClient_eglInterface *eglIface,
                                                void **libHandle);
     EGLBoolean getAttribValue(EGLConfig config, EGLint attribIdxi, EGLint * value);
+    EGLBoolean setAttribValue(EGLConfig config, EGLint attribIdxi, EGLint value);
+    void     processConfigs();
 
 private:
     pthread_mutex_t m_lock;

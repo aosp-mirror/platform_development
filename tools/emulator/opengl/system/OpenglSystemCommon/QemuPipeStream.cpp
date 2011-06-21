@@ -84,6 +84,7 @@ int QemuPipeStream::commitBuffer(size_t size)
 
 int QemuPipeStream::writeFully(const void *buf, size_t len)
 {
+    //DBG(">> QemuPipeStream::writeFully %d\n", len);
     if (!valid()) return -1;
 
     size_t res = len;
@@ -107,11 +108,13 @@ int QemuPipeStream::writeFully(const void *buf, size_t len)
         ERR("QemuPipeStream::writeFully failed: %s\n", strerror(errno));
         break;
     }
+    //DBG("<< QemuPipeStream::writeFully %d\n", len );
     return retval;
 }
 
 const unsigned char *QemuPipeStream::readFully(void *buf, size_t len)
 {
+    //DBG(">> QemuPipeStream::readFully %d\n", len);
     if (!valid()) return NULL;
     if (!buf) {
         ERR("QemuPipeStream::readFully failed, buf=NULL");
@@ -135,11 +138,13 @@ const unsigned char *QemuPipeStream::readFully(void *buf, size_t len)
             res -= stat;
         }
     }
+    //DBG("<< QemuPipeStream::readFully %d\n", len);
     return (const unsigned char *)buf;
 }
 
 const unsigned char *QemuPipeStream::read( void *buf, size_t *inout_len)
 {
+    //DBG(">> QemuPipeStream::read %d\n", *inout_len);
     if (!valid()) return NULL;
     if (!buf) {
       ERR("QemuPipeStream::read failed, buf=NULL");
@@ -153,6 +158,7 @@ const unsigned char *QemuPipeStream::read( void *buf, size_t *inout_len)
         return (const unsigned char *)buf;
     }
 
+    //DBG("<< QemuPipeStream::read %d\n", *inout_len);
     return NULL;
 }
 
