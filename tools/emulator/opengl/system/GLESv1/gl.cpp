@@ -3,6 +3,10 @@
 #include "GLEncoder.h"
 #include "GLES/gl.h"
 #include "GLES/glext.h"
+#include "ErrorLog.h"
+#include <private/ui/android_natives_priv.h>
+#include "gralloc_cb.h"
+
 
 //XXX: fix this macro to get the context from fast tls path
 #define GET_CONTEXT gl_client_context_t * ctx = HostConnection::get()->glEncoder();
@@ -14,6 +18,39 @@
 
 static EGLClient_eglInterface * s_egl = NULL;
 static EGLClient_glesInterface * s_gl = NULL;
+
+#define DEFINE_AND_VALIDATE_HOST_CONNECTION(ret) \
+    HostConnection *hostCon = HostConnection::get(); \
+    if (!hostCon) { \
+        LOGE("egl: Failed to get host connection\n"); \
+        return ret; \
+    } \
+    renderControl_encoder_context_t *rcEnc = hostCon->rcEncoder(); \
+    if (!rcEnc) { \
+        LOGE("egl: Failed to get renderControl encoder context\n"); \
+        return ret; \
+    }
+
+//GL extensions
+void glEGLImageTargetTexture2DOES(void * self, GLenum target, GLeglImageOES image)
+{
+    DBG("glEGLImageTargetTexture2DOES");
+    //TODO: check error - we don't have a way to set gl error
+    android_native_buffer_t* native_buffer = (android_native_buffer_t*)image;
+
+    if (native_buffer->common.magic != ANDROID_NATIVE_BUFFER_MAGIC) {
+        return;
+    }
+
+    if (native_buffer->common.version != sizeof(android_native_buffer_t)) {
+        return;
+    }
+
+    DEFINE_AND_VALIDATE_HOST_CONNECTION();
+    rcEnc->rcBindTexture(rcEnc, ((cb_handle_t *)(native_buffer->handle))->hostHandle);
+
+    return;
+}
 
 void * getProcAddress(const char * procname)
 {
@@ -31,6 +68,13 @@ void finish()
     glFinish();
 }
 
+void init()
+{
+    GET_CONTEXT;
+    ctx->set_glEGLImageTargetTexture2DOES(glEGLImageTargetTexture2DOES);
+}
+
+extern "C" {
 EGLClient_glesInterface * init_emul_gles(EGLClient_eglInterface *eglIface)
 {
     s_egl = eglIface;
@@ -39,8 +83,11 @@ EGLClient_glesInterface * init_emul_gles(EGLClient_eglInterface *eglIface)
         s_gl = new EGLClient_glesInterface();
         s_gl->getProcAddress = getProcAddress;
         s_gl->finish = finish;
+        s_gl->init = init;
     }
 
     return s_gl;
 }
+} //extern
+
 

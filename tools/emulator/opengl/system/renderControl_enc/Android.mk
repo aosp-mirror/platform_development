@@ -20,6 +20,8 @@ LOCAL_STATIC_LIBRARIES := \
         libOpenglCodecCommon
 LOCAL_SHARED_LIBRARIES := libcutils
 
+LOCAL_CFLAGS += -DDEBUG_PRINTOUT -O0 -g
+
 RC_GEN := \
 	$(rc_intermediates)/renderControl_enc.cpp \
 	$(rc_intermediates)/renderControl_enc.h

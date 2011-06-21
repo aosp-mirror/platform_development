@@ -20,7 +20,7 @@
 #include <cutils/log.h>
 
 #define STREAM_BUFFER_SIZE  4*1024*1024
-#define STREAM_PORT_NUM     4141
+#define STREAM_PORT_NUM     22468
 
 /* Set to 1 to use a QEMU pipe, or 0 for a TCP connection */
 #define  USE_QEMU_PIPE  1
@@ -56,6 +56,22 @@ HostConnection *HostConnection::get()
             return NULL;
         }
 
+#if 0
+            TcpStream *stream = new TcpStream(STREAM_BUFFER_SIZE);
+            if (stream) {
+                if (stream->connect("10.0.2.2", STREAM_PORT_NUM) < 0) {
+                    LOGE("Failed to connect to host (TcpStream)!!!\n");
+                    delete stream;
+                    stream = NULL;
+                }
+                else {
+                    con->m_stream = stream;
+                    LOGE("Established TCP connection with HOST\n");
+                }
+            }
+            if (!stream)
+#endif
+
         if (useQemuPipe) {
             QemuPipeStream *stream = new QemuPipeStream(STREAM_BUFFER_SIZE);
             if (!stream) {
@@ -64,7 +80,7 @@ HostConnection *HostConnection::get()
                 return NULL;
             }
             if (stream->connect() < 0) {
-                LOGE("Failed to connect to host !!!\n");
+                LOGE("Failed to connect to host (QemuPipeStream)!!!\n");
                 delete con;
                 return NULL;
             }
@@ -80,13 +96,13 @@ HostConnection *HostConnection::get()
             }
 
             if (stream->connect("10.0.2.2", STREAM_PORT_NUM) < 0) {
-                LOGE("Failed to connect to host !!!\n");
+                LOGE("Failed to connect to host (TcpStream)!!!\n");
                 delete con;
                 return NULL;
             }
             con->m_stream = stream;
         }
-        LOGD("Host Connection established \n");
+        LOGD("HostConnection::get() New Host Connection established %p, tid %d\n", con, gettid());
         tinfo->hostConn = con;
     }
 
@@ -97,6 +113,7 @@ GLEncoder *HostConnection::glEncoder()
 {
     if (!m_glEnc) {
         m_glEnc = new GLEncoder(m_stream);
+        DBG("HostConnection::glEncoder new encoder %p, tid %d", m_glEnc, gettid());
         m_glEnc->setContextAccessor(s_getGLContext);
     }
     return m_glEnc;
