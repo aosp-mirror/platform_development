@@ -97,6 +97,7 @@ bool FrameBuffer::initialize(FBNativeWindowType p_window,
     //
     if (!init_egl_dispatch()) {
         // Failed to load EGL
+        printf("Failed to init_egl_dispatch\n");
         return false;
     }
 
@@ -105,6 +106,7 @@ bool FrameBuffer::initialize(FBNativeWindowType p_window,
     //
     if (!init_gl_dispatch()) {
         // Failed to load GLES
+        printf("Failed to init_gl_dispatch\n");
         return false;
     }
 
@@ -113,6 +115,7 @@ bool FrameBuffer::initialize(FBNativeWindowType p_window,
     //
     FrameBuffer *fb = new FrameBuffer(p_x, p_y, p_width, p_height);
     if (!fb) {
+        printf("Fialed to create fb\n");
         return false;
     }
 
@@ -135,6 +138,7 @@ bool FrameBuffer::initialize(FBNativeWindowType p_window,
     //
     fb->m_eglDisplay = s_egl.eglGetDisplay(EGL_DEFAULT_DISPLAY);
     if (fb->m_eglDisplay == EGL_NO_DISPLAY) {
+        printf("Failed to Initialize backend EGL display\n");
         delete fb;
         return false;
     }
@@ -172,6 +176,7 @@ bool FrameBuffer::initialize(FBNativeWindowType p_window,
     int n;
     if (!s_egl.eglChooseConfig(fb->m_eglDisplay, configAttribs,
                                &eglConfig, 1, &n)) {
+        printf("Failed on eglChooseConfig\n");
         delete fb;
         return false;
     }
@@ -418,6 +423,19 @@ bool FrameBuffer::setWindowSurfaceColorBuffer(HandleType p_surface,
     (*w).second->setColorBuffer( (*c).second );
 
     return true;
+}
+
+bool FrameBuffer::bindColorBufferToTexture(HandleType p_colorbuffer)
+{
+    android::Mutex::Autolock mutex(m_lock);
+
+    ColorBufferMap::iterator c( m_colorbuffers.find(p_colorbuffer) );
+    if (c == m_colorbuffers.end()) {
+        // bad colorbuffer handle
+        return false;
+    }
+
+    return (*c).second->bindToTexture();
 }
 
 bool FrameBuffer::bindContext(HandleType p_context,
