@@ -249,17 +249,16 @@ int FBConfig::chooseConfig(FrameBuffer *fb, EGLint * attribs, uint32_t * configs
     attrib_p += attribCnt;
     *attrib_p = EGL_NONE;
 
-#if 1
-    DBG("EGLint %d", sizeof(EGLint));
+#if 0
     if (newAttribs) {
         EGLint * attrib_p = newAttribs;
         while (attrib_p[0] != EGL_NONE) {
-            DBG("attr: 0x%x %d", attrib_p[0], attrib_p[1]);
+            DBG("attr: 0x%x %d, ", attrib_p[0], attrib_p[1]);
             attrib_p += 2;
         }
     }
-
 #endif
+
     s_egl.eglChooseConfig(dpy, newAttribs, matchedConfigs, nConfigs, &nConfigs);
 
     delete newAttribs;
@@ -269,14 +268,17 @@ int FBConfig::chooseConfig(FrameBuffer *fb, EGLint * attribs, uint32_t * configs
     //
     uint32_t nVerifiedCfgs = 0;
     for (int matchedIdx=0; matchedIdx<nConfigs; matchedIdx++) {
-        if (nVerifiedCfgs >= configs_size) break; //We have enouhgt configs
+        if ((configs_size > 0) && (nVerifiedCfgs >= configs_size)) break; //We have enouhgt configs
         int sCfgId;
         s_egl.eglGetConfigAttrib(dpy, matchedConfigs[matchedIdx], EGL_CONFIG_ID, &sCfgId);
         for (int fbIdx=0; fbIdx<s_numConfigs; fbIdx++) {
             int dCfgId = s_fbConfigs[fbIdx]->m_attribValues[4]; //CONFIG_ID
             if (sCfgId == dCfgId) {
                 //This config matches the requested attributes and filtered into fbConfigs, so we're happy with it
-                configs[nVerifiedCfgs++] = fbIdx;
+                if (nVerifiedCfgs < configs_size) {
+                    configs[nVerifiedCfgs] = fbIdx;
+                }
+                nVerifiedCfgs++;
                 break;
             }
         }
