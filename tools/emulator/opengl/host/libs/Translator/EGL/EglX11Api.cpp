@@ -39,16 +39,16 @@ int ErrorHandler::s_lastErrorCode = 0;
 android::Mutex ErrorHandler::s_lock;
 
 ErrorHandler::ErrorHandler(EGLNativeDisplayType dpy){
-   s_lock.lock();
+   android::Mutex::Autolock mutex(s_lock);
    XSync(dpy,False);
    s_lastErrorCode = 0;
    m_oldErrorHandler = XSetErrorHandler(errorHandlerProc);
 }
 
 ErrorHandler::~ErrorHandler(){
+   android::Mutex::Autolock mutex(s_lock);
    XSetErrorHandler(m_oldErrorHandler);
    s_lastErrorCode = 0;
-   s_lock.unlock();
 }
 
 int ErrorHandler::errorHandlerProc(EGLNativeDisplayType dpy,XErrorEvent* event){
@@ -130,7 +130,11 @@ EglConfig* pixelFormatToConfig(EGLNativeDisplayType dpy,int renderableType,EGLNa
     IS_SUCCESS(glXGetFBConfigAttrib(dpy,*frmt,GLX_LEVEL,&level));
     IS_SUCCESS(glXGetFBConfigAttrib(dpy,*frmt,GLX_FBCONFIG_ID,&configId));
     IS_SUCCESS(glXGetFBConfigAttrib(dpy,*frmt,GLX_SAMPLES,&samples));
-
+    //Filter out configs that does not support RGBA
+    IS_SUCCESS(glXGetFBConfigAttrib(dpy,*frmt,GLX_RENDER_TYPE,&tmp));
+    if (!(tmp & GLX_RGBA_BIT)) {
+        return NULL;
+    }
 
     return new EglConfig(red,green,blue,alpha,caveat,configId,depth,level,pMaxWidth,pMaxHeight,
                               pMaxPixels,renderable,renderableType,visualId,visualType,samples,stencil,

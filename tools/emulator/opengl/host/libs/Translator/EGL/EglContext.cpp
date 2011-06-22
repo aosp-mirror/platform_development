@@ -29,12 +29,21 @@ m_glesContext(glesCtx),
 m_read(NULL),
 m_draw(NULL),
 m_destroy(false),
-m_version(ver)
+m_version(ver),
+m_mngr(mngr)
 {
     m_shareGroup = shared_context.Ptr()?
                    mngr->attachShareGroup(context,shared_context.Ptr()->getShareGroup().Ptr()):
                    mngr->createShareGroup(context);
     m_hndl = ++s_nextContextHndl;
+}
+
+EglContext::~EglContext()
+{
+    if (m_mngr)
+    {
+        m_mngr->deleteShareGroup(m_native);
+    }
 }
 
 void EglContext::setSurfaces(SurfacePtr read,SurfacePtr draw)
