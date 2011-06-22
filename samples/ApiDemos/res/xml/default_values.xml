@@ -20,10 +20,16 @@
         xmlns:android="http://schemas.android.com/apk/res/android">
 
     <CheckBoxPreference
-            android:key="default_toggle"
+            android:key="default_checkbox"
             android:defaultValue="true"
             android:title="@string/title_checkbox_preference"
             android:summary="@string/summary_checkbox_preference" />
+
+    <SwitchPreference
+            android:key="default_switch"
+            android:defaultValue="false"
+            android:title="@string/title_switch_preference"
+            android:summary="@string/summary_switch_preference" />
 
     <EditTextPreference
             android:key="default_edittext"
