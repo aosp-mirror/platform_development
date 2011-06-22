@@ -121,6 +121,7 @@ static int gralloc_alloc(alloc_device_t* dev,
     int ashmem_size = 0;
     *pStride = 0;
     GLenum glFormat = 0;
+    GLenum glType = 0;
 
     int bpp = 0;
     switch (format) {
@@ -129,22 +130,27 @@ static int gralloc_alloc(alloc_device_t* dev,
         case HAL_PIXEL_FORMAT_BGRA_8888:
             bpp = 4;
             glFormat = GL_RGBA;
+            glType = GL_UNSIGNED_BYTE;
             break;
         case HAL_PIXEL_FORMAT_RGB_888:
             bpp = 3;
             glFormat = GL_RGB;
+            glType = GL_UNSIGNED_BYTE;
             break;
         case HAL_PIXEL_FORMAT_RGB_565:
             bpp = 2;
             glFormat = GL_RGB565_OES;
+            glType = GL_UNSIGNED_SHORT_5_6_5;
             break;
         case HAL_PIXEL_FORMAT_RGBA_5551:
             bpp = 2;
             glFormat = GL_RGB5_A1_OES;
+            glType = GL_UNSIGNED_SHORT_5_5_5_1;
             break;
         case HAL_PIXEL_FORMAT_RGBA_4444:
             bpp = 2;
             glFormat = GL_RGBA4_OES;
+            glType = GL_UNSIGNED_SHORT_4_4_4_4;
             break;
 
         default:
@@ -181,7 +187,8 @@ static int gralloc_alloc(alloc_device_t* dev,
         }
     }
 
-    cb_handle_t *cb = new cb_handle_t(fd, ashmem_size, usage, w, h, glFormat);
+    cb_handle_t *cb = new cb_handle_t(fd, ashmem_size, usage,
+                                      w, h, glFormat, glType);
 
     if (ashmem_size > 0) {
         //
@@ -556,7 +563,7 @@ static int gralloc_unlock(gralloc_module_t const* module,
         }
 
         if (cb->lockedWidth < cb->width || cb->lockedHeight < cb->height) {
-            int bpp = glUtilsPixelBitSize(cb->glFormat, GL_UNSIGNED_BYTE) >> 3;
+            int bpp = glUtilsPixelBitSize(cb->glFormat, cb->glType) >> 3;
             char *tmpBuf = new char[cb->lockedWidth * cb->lockedHeight * bpp];
 
             int dst_line_len = cb->lockedWidth * bpp;
@@ -572,7 +579,7 @@ static int gralloc_unlock(gralloc_module_t const* module,
             rcEnc->rcUpdateColorBuffer(rcEnc, cb->hostHandle,
                                        cb->lockedLeft, cb->lockedTop,
                                        cb->lockedWidth, cb->lockedHeight,
-                                       cb->glFormat, GL_UNSIGNED_BYTE,
+                                       cb->glFormat, cb->glType,
                                        tmpBuf);
 
             delete [] tmpBuf;
@@ -580,7 +587,7 @@ static int gralloc_unlock(gralloc_module_t const* module,
         else {
             rcEnc->rcUpdateColorBuffer(rcEnc, cb->hostHandle, 0, 0,
                                        cb->width, cb->height,
-                                       cb->glFormat, GL_UNSIGNED_BYTE,
+                                       cb->glFormat, cb->glType,
                                        cpu_addr);
         }
     }
