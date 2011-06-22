@@ -5,6 +5,7 @@ struct EGLThreadInfo;  // defined in ThreadInfo.h
 
 typedef struct {
     EGLThreadInfo* (*getThreadInfo)();
+    const char* (*getGLString)(int glEnum);
 } EGLClient_eglInterface;
 
 typedef struct {

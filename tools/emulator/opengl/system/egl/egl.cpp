@@ -142,14 +142,26 @@ struct EGLContext_t {
     EGLSurface          draw;
     EGLint                version;
     uint32_t             rcContext;
+    const char*         versionString;
+    const char*         vendorString;
+    const char*         rendererString;
+    const char*         extensionString;
 
     GLClientState * getClientState(){ return clientState; }
 private:
     GLClientState    *    clientState;
 };
 
-EGLContext_t::EGLContext_t(EGLDisplay dpy, EGLConfig config) : dpy(dpy), config(config),
-        read(EGL_NO_SURFACE), draw(EGL_NO_SURFACE), rcContext(0)
+EGLContext_t::EGLContext_t(EGLDisplay dpy, EGLConfig config) :
+    dpy(dpy),
+    config(config),
+    read(EGL_NO_SURFACE),
+    draw(EGL_NO_SURFACE),
+    rcContext(0),
+    versionString(NULL),
+    vendorString(NULL),
+    rendererString(NULL),
+    extensionString(NULL)
 {
     flags = 0;
     version = 1;
@@ -158,8 +170,13 @@ EGLContext_t::EGLContext_t(EGLDisplay dpy, EGLConfig config) : dpy(dpy), config(
 
 EGLContext_t::~EGLContext_t()
 {
-    if (clientState) delete clientState;
+    delete clientState;
+    delete [] versionString;
+    delete [] vendorString;
+    delete [] rendererString;
+    delete [] extensionString;
 }
+
 // ----------------------------------------------------------------------------
 //egl_surface_t
 
@@ -426,13 +443,76 @@ EGLBoolean egl_pbuffer_surface_t::connect()
     return EGL_TRUE;
 }
 
+static const char *getGLString(int glEnum)
+{
+    EGLThreadInfo *tInfo = getEGLThreadInfo();
+    if (!tInfo || !tInfo->currentContext) {
+        return NULL;
+    }
+
+    const char** strPtr = NULL;
+
+#define GL_VENDOR                         0x1F00
+#define GL_RENDERER                       0x1F01
+#define GL_VERSION                        0x1F02
+#define GL_EXTENSIONS                     0x1F03
+
+    switch(glEnum) {
+        case GL_VERSION:
+            strPtr = &tInfo->currentContext->versionString;
+            break;
+        case GL_VENDOR:
+            strPtr = &tInfo->currentContext->vendorString;
+            break;
+        case GL_RENDERER:
+            strPtr = &tInfo->currentContext->rendererString;
+            break;
+        case GL_EXTENSIONS:
+            strPtr = &tInfo->currentContext->extensionString;
+            break;
+    }
+
+    if (!strPtr) {
+        return NULL;
+    }
+
+    if (*strPtr != NULL) {
+        //
+        // string is already cached
+        //
+        return *strPtr;
+    }
+
+    //
+    // first query of that string - need to query host
+    //
+    DEFINE_AND_VALIDATE_HOST_CONNECTION(NULL);
+    char *hostStr = NULL;
+    int n = rcEnc->rcGetGLString(rcEnc, glEnum, NULL, 0);
+    if (n < 0) {
+        hostStr = new char[-n+1];
+        n = rcEnc->rcGetGLString(rcEnc, glEnum, hostStr, -n);
+        if (n <= 0) {
+            delete [] hostStr;
+            hostStr = NULL;
+        }
+    }
+
+    //
+    // keep the string in the context and return its value
+    //
+    *strPtr = hostStr;
+    return hostStr;
+}
+
 // ----------------------------------------------------------------------------
 
 // The one and only supported display object.
 static eglDisplay s_display;
 
 static EGLClient_eglInterface s_eglIface = {
-    getThreadInfo: getEGLThreadInfo
+    getThreadInfo: getEGLThreadInfo,
+    getGLString: getGLString
 };
 
 #define DBG_FUNC DBG("%s\n", __FUNCTION__)
@@ -931,6 +1011,9 @@ EGLBoolean eglMakeCurrent(EGLDisplay dpy, EGLSurface draw, EGLSurface read, EGLC
     if (tInfo->currentContext)
         tInfo->currentContext->flags &= ~EGLContext_t::IS_CURRENT;
 
+    //Now make current
+    tInfo->currentContext = context;
+
     //Check maybe we need to init the encoder, if it's first eglMakeCurrent
     if (tInfo->currentContext) {
         if (!hostCon->glEncoder()->isInitialized()) {
@@ -943,9 +1026,6 @@ EGLBoolean eglMakeCurrent(EGLDisplay dpy, EGLSurface draw, EGLSurface read, EGLC
             hostCon->glEncoder()->setInitialized();
         }
     }
-
-    //Now make current
-    tInfo->currentContext = context;
 
     //connect the color buffer
     if (drawSurf)
