@@ -68,10 +68,19 @@ void finish()
     glFinish();
 }
 
+const GLubyte *my_glGetString (void *self, GLenum name)
+{
+    if (s_egl) {
+        return (const GLubyte*)s_egl->getGLString(name);
+    }
+    return NULL;
+}
+
 void init()
 {
     GET_CONTEXT;
     ctx->set_glEGLImageTargetTexture2DOES(glEGLImageTargetTexture2DOES);
+    ctx->set_glGetString(my_glGetString);
 }
 
 extern "C" {
