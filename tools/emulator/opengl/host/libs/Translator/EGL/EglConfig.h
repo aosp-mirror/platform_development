@@ -91,6 +91,7 @@ private:
     const EGLint                    m_trans_red_val;
     const EGLint                    m_trans_green_val;
     const EGLint                    m_trans_blue_val;
+    const EGLenum                   m_conformant;
 
     const EGLNativePixelFormatType  m_nativeFormat;
 };

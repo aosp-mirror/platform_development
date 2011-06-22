@@ -141,7 +141,7 @@ GL_APICALL void  GL_APIENTRY glBindBuffer(GLenum target, GLuint buffer){
     }
     ctx->bindBuffer(target,buffer);
     GLESbuffer* vbo = (GLESbuffer*)thrd->shareGroup->getObjectData(VERTEXBUFFER,buffer).Ptr();
-    vbo->wasBinded();
+    vbo->setBinded();
 }
 
 GL_APICALL void  GL_APIENTRY glBindFramebuffer(GLenum target, GLuint framebuffer){
@@ -1251,7 +1251,7 @@ GL_APICALL void  GL_APIENTRY glVertexAttribPointer(GLuint indx, GLint size, GLen
     if (type==GL_HALF_FLOAT_OES)
         type = GL_HALF_FLOAT;
     const GLvoid* data = ctx->setPointer(indx,size,type,stride,ptr);
-    if(type != GL_FIXED) ctx->dispatcher().glVertexAttribPointer(indx,size,type,normalized,stride,ptr);
+    if(type != GL_FIXED) ctx->dispatcher().glVertexAttribPointer(indx,size,type,normalized,stride,data);
 }
 
 GL_APICALL void  GL_APIENTRY glViewport(GLint x, GLint y, GLsizei width, GLsizei height){

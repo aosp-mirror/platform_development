@@ -53,7 +53,8 @@ public:
     bool attachImage(unsigned int imageId,ImagePtr img);
     void detachImage(unsigned int imageId);
 
-    ~EglContext(){}
+    ~EglContext();
+
 private:
     static unsigned int  s_nextContextHndl;
     EGLNativeContextType m_native;
@@ -64,6 +65,7 @@ private:
     SurfacePtr           m_draw;
     bool                 m_destroy;
     GLESVersion          m_version;
+    ObjectNameManager    *m_mngr;
     unsigned int         m_hndl;
     ImagesHndlMap        m_attachedImages;
 };
