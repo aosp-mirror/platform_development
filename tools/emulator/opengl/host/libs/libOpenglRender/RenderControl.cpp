@@ -17,6 +17,9 @@
 #include "FrameBuffer.h"
 #include "FBConfig.h"
 #include "EGLDispatch.h"
+#include "GLDispatch.h"
+#include "GL2Dispatch.h"
+#include "ThreadInfo.h"
 
 static const GLint rendererVersion = 1;
 
@@ -45,6 +48,38 @@ static EGLint rcQueryEGLString(EGLenum name, void* buffer, EGLint bufferSize)
     }
 
     const char *str = s_egl.eglQueryString(fb->getDisplay(), name);
+    if (!str) {
+        return 0;
+    }
+
+    int len = strlen(str) + 1;
+    if (!buffer || len > bufferSize) {
+        return -len;
+    }
+
+    strcpy((char *)buffer, str);
+    return len;
+}
+
+static EGLint rcGetGLString(EGLenum name, void* buffer, EGLint bufferSize)
+{
+    RenderThreadInfo *tInfo = getRenderThreadInfo();
+    if (!tInfo || !tInfo->currContext.Ptr()) {
+        return 0;
+    }
+
+    const char *str = NULL;
+#ifdef WITH_GLES2
+    if (tInfo->currContext->isGL2()) {
+        str = (const char *)s_gl2.glGetString(name);
+    }
+    else {
+#endif
+        str = (const char *)s_gl.glGetString(name);
+#ifdef WITH_GLES2
+    }
+#endif
+
     if (!str) {
         return 0;
     }
@@ -279,6 +314,7 @@ void initRenderControlContext(renderControl_decoder_context_t *dec)
     dec->set_rcGetRendererVersion(rcGetRendererVersion);
     dec->set_rcGetEGLVersion(rcGetEGLVersion);
     dec->set_rcQueryEGLString(rcQueryEGLString);
+    dec->set_rcGetGLString(rcGetGLString);
     dec->set_rcGetNumConfigs(rcGetNumConfigs);
     dec->set_rcGetConfigs(rcGetConfigs);
     dec->set_rcChooseConfig(rcChooseConfig);
