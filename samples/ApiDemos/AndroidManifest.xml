@@ -36,6 +36,8 @@
     <!-- For android.media.audiofx.Visualizer -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
+    <!-- For NetworkDetector sample: listen for phone state changes -->
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-sdk android:minSdkVersion="7" android:targetSdkVersion="11" />
 
     <!-- The smallest screen this app works on is a phone.  The app will
@@ -2505,6 +2507,17 @@
                 <action android:name="android.intent.ACTION_TIME" />
             </intent-filter>
         </receiver>
+
+        <!-- ************************************* -->
+        <!--           TELEPHONY SAMPLES           -->
+        <!-- ************************************* -->
+
+        <activity android:name=".telephony.NetworkDetector" android:label="Telephony/NetworkDetector">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
 
         <!-- ************************************* -->
         <!--             OTHER SAMPLES             -->
