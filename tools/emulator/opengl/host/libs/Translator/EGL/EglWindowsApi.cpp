@@ -203,7 +203,7 @@ void initPtrToWglFunctions(){
     if(!s_wglExtProcs){
         s_wglExtProcs = new WglExtProcs();
         s_wglExtProcs->wglGetPixelFormatAttribivARB = (PFNWGLGETPIXELFORMATATTRIBIVARBPROC)wglGetExtentionsProcAddress(dpy,"WGL_ARB_pixel_format","wglGetPixelFormatAttribivARB");
-        s_wglExtProcs->wglChoosePixelFormatARB      = (PFNWGLCHOOSEPIXELFORMATARBPROC)wglGetExtentionsProcAddress(dpy,"WGL_ARB_pixel_format","wglPixelFormatARB");
+        s_wglExtProcs->wglChoosePixelFormatARB      = (PFNWGLCHOOSEPIXELFORMATARBPROC)wglGetExtentionsProcAddress(dpy,"WGL_ARB_pixel_format","wglChoosePixelFormatARB");
         s_wglExtProcs->wglCreatePbufferARB          = (PFNWGLCREATEPBUFFERARBPROC)wglGetExtentionsProcAddress(dpy,"WGL_ARB_pbuffer","wglCreatePbufferARB");
         s_wglExtProcs->wglReleasePbufferDCARB       = (PFNWGLRELEASEPBUFFERDCARBPROC)wglGetExtentionsProcAddress(dpy,"WGL_ARB_pbuffer","wglReleasePbufferDCARB");
         s_wglExtProcs->wglDestroyPbufferARB         = (PFNWGLDESTROYPBUFFERARBPROC)wglGetExtentionsProcAddress(dpy,"WGL_ARB_pbuffer","wglDestroyPbufferARB");
@@ -321,8 +321,36 @@ bool validNativePixmap(EGLNativeDisplayType dpy,EGLNativePixmapType pix) {
 }
 
 static bool setPixelFormat(HDC dc,EglConfig* cfg) {
+   EGLint red,green,blue,alpha,depth,stencil;
+    bool   gotAttribs = cfg->getConfAttrib(EGL_RED_SIZE,&red)     &&
+                        cfg->getConfAttrib(EGL_GREEN_SIZE,&green) &&
+                        cfg->getConfAttrib(EGL_BLUE_SIZE,&blue)   &&
+                        cfg->getConfAttrib(EGL_ALPHA_SIZE,&alpha) &&
+                        cfg->getConfAttrib(EGL_DEPTH_SIZE,&depth) &&
+                        cfg->getConfAttrib(EGL_STENCIL_SIZE,&stencil) ;
+
+     if(!gotAttribs) return false;
+     int wglPixelFormatAttribs[] = {
+                                    WGL_SUPPORT_OPENGL_ARB       ,TRUE,
+                                    WGL_DRAW_TO_PBUFFER_ARB      ,TRUE,
+                                    WGL_DRAW_TO_WINDOW_ARB       ,TRUE,
+                                    WGL_COLOR_BITS_ARB           ,red+green+blue,
+                                    WGL_RED_BITS_ARB             ,red,
+                                    WGL_GREEN_BITS_ARB           ,green,
+                                    WGL_BLUE_BITS_ARB            ,blue,
+                                    WGL_ALPHA_BITS_ARB           ,alpha,
+                                    WGL_STENCIL_BITS_ARB         ,stencil,
+                                    WGL_DEPTH_BITS_ARB           ,depth,
+                                    WGL_DOUBLE_BUFFER_ARB        ,TRUE,
+                                    0
+                                   };
+    int iPixelFormat;
+    unsigned int numpf;
+    if(!s_wglExtProcs->wglChoosePixelFormatARB || !s_wglExtProcs->wglChoosePixelFormatARB(dc,wglPixelFormatAttribs, NULL, 1, &iPixelFormat, &numpf)) {
+        return false;
+    }
    EGLNativePixelFormatType frmt = cfg->nativeConfig();
-   int iPixelFormat = ChoosePixelFormat(dc,&frmt);
+   //int iPixelFormat = ChoosePixelFormat(dc,&frmt);
    if(!iPixelFormat) return false;
    return SetPixelFormat(dc,iPixelFormat,&frmt);
 }
@@ -472,6 +500,7 @@ HDC getSurfaceDC(EGLNativeDisplayType dpy,EglSurface* srfc){
 }
 
 bool releaseSurfaceDC(EGLNativeDisplayType dpy,HDC dc,EglSurface*srfc){
+    if(!srfc) return true;
     switch(srfc->type()){
     case EglSurface::WINDOW:
          ReleaseDC(static_cast<EGLNativeWindowType>(srfc->native()),dc);
@@ -488,15 +517,18 @@ bool releaseSurfaceDC(EGLNativeDisplayType dpy,HDC dc,EglSurface*srfc){
 
 bool makeCurrent(EGLNativeDisplayType display,EglSurface* read,EglSurface* draw,EGLNativeContextType ctx) {
 
-    HDC hdcRead = getSurfaceDC(display,read);
-    HDC hdcDraw = getSurfaceDC(display,draw);
+    HDC hdcRead = read ? getSurfaceDC(display,read):0;
+    HDC hdcDraw = draw ? getSurfaceDC(display,draw):0;
     bool retVal = false;
 
-    if(!s_wglExtProcs->wglMakeContextCurrentARB ){
-        if(hdcRead == hdcDraw){
-            return wglMakeCurrent(hdcDraw,ctx);
-        }
-        if(!hdcRead || !hdcDraw) return false;
+
+    if(hdcRead == hdcDraw){
+            printf("making current read == draw\n");
+            bool ret =  wglMakeCurrent(hdcDraw,ctx);
+            printf("last error is %d\n",GetLastError());
+            return ret;
+    } else if (!s_wglExtProcs->wglMakeContextCurrentARB ) {
+        return false;
     }
     retVal = s_wglExtProcs->wglMakeContextCurrentARB(hdcDraw,hdcRead,ctx);
 
