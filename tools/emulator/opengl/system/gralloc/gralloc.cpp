@@ -271,7 +271,7 @@ static int gralloc_free(alloc_device_t* dev,
            n->next->prev = n->prev;
        }
        if (n->prev) {
-           n->prev = n->next;
+           n->prev->next = n->next;
        }
        else {
            grdev->allocListHead = n->next;
@@ -304,7 +304,6 @@ static int gralloc_device_close(struct hw_device_t *dev)
 
 static int fb_compositionComplete(struct framebuffer_device_t* dev)
 {
-    LOGI("fb_compositionComplete");
     return 0;
 }
 
