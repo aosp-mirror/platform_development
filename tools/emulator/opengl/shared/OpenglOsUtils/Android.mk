@@ -1,42 +1,48 @@
+# This build script corresponds to a small library containing
+# OS-specific support functions for:
+#   - thread-local storage
+#   - dynamic library loading
+#   - child process creation and wait  (probably not needed in guest)
+#
 LOCAL_PATH := $(call my-dir)
-emulatorOpengl := $(LOCAL_PATH)/../..
 
-### OpenglOsUtils ##############################################
+### Guest library ##############################################
+$(call emugl-begin-static-library,libOpenglOsUtils)
 
-include $(CLEAR_VARS)
-
-LOCAL_SRC_FILES := \
-        osProcessUnix.cpp \
-        osThreadUnix.cpp \
-        osDynLibrary.cpp
-
-LOCAL_MODULE_TAGS := debug
-LOCAL_MODULE := libOpenglOsUtils
-
-include $(BUILD_STATIC_LIBRARY)
-
-### OpenglOsUtils  host ##############################################
-include $(CLEAR_VARS)
-
-ifneq ($(HOST_OS),windows)
+    $(call emugl-export,C_INCLUDES,$(LOCAL_PATH))
+    $(call emugl-export,LDLIBS,-ldl)
 
     LOCAL_SRC_FILES := \
         osProcessUnix.cpp \
         osThreadUnix.cpp \
         osDynLibrary.cpp
 
-    LOCAL_LDLIBS := -ldl
+$(call emugl-end-module)
 
-else # !linux
 
-    LOCAL_SRC_FILES := \
-        osProcessWin.cpp \
-        osThreadWin.cpp \
-        osDynLibrary.cpp
+### Host library ##############################################
+$(call emugl-begin-host-static-library,libOpenglOsUtils)
 
-endif # windows
+    $(call emugl-export,C_INCLUDES,$(LOCAL_PATH))
 
-LOCAL_MODULE_TAGS := debug
-LOCAL_MODULE := libOpenglOsUtils
+    LOCAL_SRC_FILES := osDynLibrary.cpp
 
-include $(BUILD_HOST_STATIC_LIBRARY)
+    ifeq ($(HOST_OS),windows)
+        LOCAL_SRC_FILES += \
+            osProcessWin.cpp \
+            osThreadWin.cpp
+
+        $(call emugl-export,LDLIBS,-lws2_32)
+    else
+        LOCAL_SRC_FILES += \
+            osProcessUnix.cpp \
+            osThreadUnix.cpp
+
+        $(call emugl-export,LDLIBS,-ldl)
+    endif
+
+    ifeq ($(HOST_OS),linux)
+        $(call emugl-export,LDLIBS,-lpthread -lrt)
+    endif
+
+$(call emugl-end-module)
