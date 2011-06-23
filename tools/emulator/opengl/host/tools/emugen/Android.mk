@@ -1,10 +1,16 @@
-
 LOCAL_PATH:=$(call my-dir)
 
-include $(CLEAR_VARS)
+$(call emugl-begin-host-executable,emugen)
 
-LOCAL_MODULE_TAGS := debug
-LOCAL_SRC_FILES := ApiGen.cpp EntryPoint.cpp main.cpp strUtils.cpp TypeFactory.cpp
-LOCAL_MODULE := emugen
+    LOCAL_SRC_FILES := \
+        ApiGen.cpp \
+        EntryPoint.cpp \
+        main.cpp \
+        strUtils.cpp \
+        TypeFactory.cpp
 
-include $(BUILD_HOST_EXECUTABLE)
+$(call emugl-end-module)
+
+# The location of the emugen host tool that is used to generate wire
+# protocol encoders/ decoders. This variable is used by other emugl modules.
+EMUGL_EMUGEN := $(LOCAL_BUILT_MODULE)
