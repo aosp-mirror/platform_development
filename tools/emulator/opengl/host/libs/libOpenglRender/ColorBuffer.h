@@ -35,6 +35,7 @@ public:
     void update(GLenum p_format, GLenum p_type, void *pixels);
     bool blitFromPbuffer(EGLSurface p_pbufSurface);
     bool post();
+    bool bindToTexture();
 
 private:
     ColorBuffer();

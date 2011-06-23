@@ -121,14 +121,14 @@ bool stopOpenGLRenderer()
         // flag the thread it should exit
         s_renderThread->flagNeedExit();
 
-        // open a dummy connection to the renderer to make it 
+        // open a dummy connection to the renderer to make it
         // realize the exit request
         IOStream *dummy = createRenderThread(8);
         if (dummy) {
             // wait for the thread to exit
             int status;
             ret = s_renderThread->wait(&status);
-    
+
             delete dummy;
         }
 
@@ -143,10 +143,12 @@ IOStream *createRenderThread(int p_stream_buffer_size)
 {
     TcpStream *stream = new TcpStream(p_stream_buffer_size);
     if (!stream) {
+        ERR("createRenderThread failed to create stream\n");
         return NULL;
     }
 
     if (stream->connect("localhost", s_renderPort) < 0) {
+        ERR("createRenderThread failed to connect\n");
         delete stream;
         return NULL;
     }
