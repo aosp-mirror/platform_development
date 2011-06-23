@@ -5,7 +5,7 @@
 #define GLES2_LIBNAME     "libGLESv2.so"
 
 #include "gl2_dec.h"
-#include "OpenglOsUtils/osDynLibrary.h"
+#include "osDynLibrary.h"
 #include "GLDecoderContextData.h"
 
 

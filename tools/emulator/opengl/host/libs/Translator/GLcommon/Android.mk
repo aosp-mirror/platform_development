@@ -1,8 +1,9 @@
-
 LOCAL_PATH := $(call my-dir)
 
 ### EGL host implementation ########################
-include $(CLEAR_VARS)
+$(call emugl-begin-host-static-library,libGLcommon)
+
+$(call emugl-import,libOpenglOsUtils)
 
 translator_path := $(LOCAL_PATH)/..
 
@@ -18,25 +19,16 @@ LOCAL_SRC_FILES :=           \
      objectNameManager.cpp
 
 
-LOCAL_C_INCLUDES += \
-                 $(translator_path)/include \
-                 $(translator_path)/../../../shared
-
-LOCAL_STATIC_LIBRARIES := \
-    libOpenglOsUtils      \
-    libutils              \
-    libcutils
-
-LOCAL_CFLAGS := -g -O0
-LOCAL_MODULE_TAGS := debug
-LOCAL_MODULE := libGLcommon
 ifeq ($(HOST_OS),linux)
-    LOCAL_LDFLAGS := -Wl,--whole-archive
-    LOCAL_LDLIBS := -lGL -ldl
+#    $(call emugl-export,LDFLAGS,-Wl,--whole-archive)
+    $(call emugl-export,LDLIBS,-lGL -ldl)
 endif
 
 ifeq ($(HOST_OS),windows)
-    LOCAL_LDLIBS := -lopengl32 -lgdi32
+    $(call emugl-export,LDLIBS,-lopengl32 -lgdi32)
 endif
 
-include $(BUILD_HOST_STATIC_LIBRARY)
+$(call emugl-export,C_INCLUDES,$(LOCAL_PATH)/../include $(EMUGL_PATH)/shared)
+$(call emugl-export,STATIC_LIBRARIES, libcutils liblog)
+
+$(call emugl-end-module)
