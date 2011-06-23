@@ -16,10 +16,6 @@
 #include "GLEncoder.h"
 #include "glUtils.h"
 #include "FixedBuffer.h"
-#include "HostConnection.h"
-#include <private/ui/android_natives_priv.h>
-#include "gralloc_cb.h"
-
 #include <cutils/log.h>
 #include <assert.h>
 
@@ -154,7 +150,7 @@ void GLEncoder::s_glPixelStorei(void *self, GLenum param, GLint value)
 {
     GLEncoder *ctx = (GLEncoder *)self;
     ctx->m_glPixelStorei_enc(ctx, param, value);
-    assert(ctx->m_state != NULL);
+    LOG_ASSERT(ctx->m_state, "GLEncoder::s_glPixelStorei");
     ctx->m_state->setPixelStore(param, value);
 }
 
@@ -455,6 +451,7 @@ void GLEncoder::s_glDrawElements(void *self, GLenum mode, GLsizei count, GLenum 
 
 GLEncoder::GLEncoder(IOStream *stream) : gl_encoder_context_t(stream)
 {
+    m_initialized = false;
     m_state = NULL;
     m_compressedTextureFormats = NULL;
     // overrides;
@@ -483,7 +480,6 @@ GLEncoder::GLEncoder(IOStream *stream) : gl_encoder_context_t(stream)
     m_glDrawElements_enc = set_glDrawElements(s_glDrawElements);
     set_glGetString(s_glGetString);
     set_glFinish(s_glFinish);
-    set_glEGLImageTargetTexture2DOES(s_glEGLImageTargetTexture2DOES);
 
 }
 
@@ -504,21 +500,3 @@ void GLEncoder::s_glFinish(void *self)
     ctx->glFinishRoundTrip(self);
 }
 
-void GLEncoder::s_glEGLImageTargetTexture2DOES(void * self, GLenum target, GLeglImageOES image)
-{
-    //TODO: check error - we don't have a way to set gl error
-    android_native_buffer_t* native_buffer = (android_native_buffer_t*)image;
-
-    if (native_buffer->common.magic != ANDROID_NATIVE_BUFFER_MAGIC) {
-        return;
-    }
-
-    if (native_buffer->common.version != sizeof(android_native_buffer_t)) {
-        return;
-    }
-
-    DEFINE_AND_VALIDATE_HOST_CONNECTION();
-    rcEnc->rcBindTexture(rcEnc, ((cb_handle_t *)(native_buffer->handle))->hostHandle);
-
-    return;
-}

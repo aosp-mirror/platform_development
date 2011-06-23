@@ -23,7 +23,19 @@ LOCAL_C_INCLUDES += \
 		$(call intermediates-dir-for, SHARED_LIBRARIES, lib_renderControl_enc) \
 		$(call intermediates-dir-for, SHARED_LIBRARIES, libGLESv1_enc)
 
+LOCAL_STATIC_LIBRARIES := \
+    libOpenglCodecCommon  \
+	libqemu
+
+LOCAL_SHARED_LIBRARIES := \
+	lib_renderControl_enc	\
+	libGLESv1_enc	\
+	libcutils \
+	libutils 
+
+LOCAL_PRELINK_MODULE := false
 LOCAL_MODULE_TAGS := debug
 LOCAL_MODULE := libOpenglSystemCommon
+LOCAL_MODULE_CLASS := SHARED_LIBRARIES
 
-include $(BUILD_STATIC_LIBRARY)
+include $(BUILD_SHARED_LIBRARY)

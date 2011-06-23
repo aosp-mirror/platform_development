@@ -19,19 +19,16 @@ LOCAL_PRELINK_MODULE := false
 LOCAL_CFLAGS += -DLOG_TAG=\"egl_GLESv1_enc\"
 LOCAL_C_INCLUDES +=  \
     $(emulatorOpengl)/shared/OpenglCodecCommon \
-    $(emulatorOpengl)/system/OpenglSystemCommon \
     $(emulatorOpengl)/host/include/libOpenglRender \
     $(emulatorOpengl)/system/renderControl_enc \
 	$(call intermediates-dir-for, SHARED_LIBRARIES, lib_renderControl_enc) \
     $(glesv1_intermediates)
 
 LOCAL_STATIC_LIBRARIES := \
-    libOpenglSystemCommon \
     libOpenglCodecCommon  \
 	libqemu
 
 LOCAL_SHARED_LIBRARIES := 	\
-    lib_renderControl_enc	\
 	libcutils
 
 EMUGEN := $(HOST_OUT_EXECUTABLES)/emugen

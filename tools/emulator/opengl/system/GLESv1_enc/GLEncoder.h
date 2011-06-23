@@ -30,8 +30,13 @@ public:
     }
     void flush() { m_stream->flush(); }
     size_t pixelDataSize(GLsizei width, GLsizei height, GLenum format, GLenum type, int pack);
+
+    void setInitialized(){ m_initialized = true; };
+    bool isInitialized(){ return m_initialized; };
+
 private:
 
+    bool    m_initialized;
     GLClientState *m_state;
     FixedBuffer m_fixedBuffer;
     GLint *m_compressedTextureFormats;
