@@ -1,38 +1,33 @@
-
+# This build script corresponds to a library containing many definitions
+# common to both the guest and the host. They relate to
+#
 LOCAL_PATH := $(call my-dir)
-emulatorOpengl := $(LOCAL_PATH)/../..
 
-### OpenglCodecCommon ##############################################
+### CodecCommon  guest ##############################################
+$(call emugl-begin-static-library,libOpenglCodecCommon)
 
-include $(CLEAR_VARS)
-
-OpenglCodecCommon := \
+LOCAL_SRC_FILES := \
         GLClientState.cpp \
         glUtils.cpp \
         TcpStream.cpp \
         TimeUtils.cpp
 
-LOCAL_SRC_FILES :=  $(OpenglCodecCommon)
-
-LOCAL_C_INCLUDES += $(emulatorOpengl)/host/include/libOpenglRender 
-
 LOCAL_CFLAGS += -DLOG_TAG=\"eglCodecCommon\"
-LOCAL_MODULE_TAGS := debug
-LOCAL_MODULE := libOpenglCodecCommon
 
-include $(BUILD_STATIC_LIBRARY)
+$(call emugl-export,SHARED_LIBRARIES,libcutils)
+$(call emugl-export,C_INCLUDES,$(LOCAL_PATH))
+$(call emugl-end-module)
 
 ### OpenglCodecCommon  host ##############################################
-include $(CLEAR_VARS)
+$(call emugl-begin-host-static-library,libOpenglCodecCommon)
 
-LOCAL_SRC_FILES :=  $(OpenglCodecCommon)
+LOCAL_SRC_FILES := \
+        GLClientState.cpp \
+        glUtils.cpp \
+        TcpStream.cpp \
+        TimeUtils.cpp
 
-LOCAL_C_INCLUDES += $(emulatorOpengl)/host/include/libOpenglRender 
+$(call emugl-export,STATIC_LIBRARIES,libcutils)
+$(call emugl-export,C_INCLUDES,$(LOCAL_PATH))
+$(call emugl-end-module)
 
-LOCAL_MODULE_TAGS := debug
-LOCAL_MODULE := libOpenglCodecCommon
-LOCAL_PRELINK_MODULE := false
-
-# XXX - enable the next line for host debugging - JR
-# LOCAL_CFLAGS := -O0 -g
-include $(BUILD_HOST_STATIC_LIBRARY)
