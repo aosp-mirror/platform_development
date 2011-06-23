@@ -92,6 +92,17 @@ void ColorBuffer::update(GLenum p_format, GLenum p_type, void *pixels)
     fb->unbind_locked();
 }
 
+void ColorBuffer::subUpdate(int x, int y, int width, int height, GLenum p_format, GLenum p_type, void *pixels)
+{
+    FrameBuffer *fb = FrameBuffer::getFB();
+    if (!fb->bind_locked()) return;
+    s_gl.glBindTexture(GL_TEXTURE_2D, m_tex);
+    s_gl.glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    s_gl.glTexSubImage2D(GL_TEXTURE_2D, 0, x, y,
+                         width, height, p_format, p_type, pixels);
+    fb->unbind_locked();
+}
+
 bool ColorBuffer::blitFromPbuffer(EGLSurface p_pbufSurface)
 {
     FrameBuffer *fb = FrameBuffer::getFB();

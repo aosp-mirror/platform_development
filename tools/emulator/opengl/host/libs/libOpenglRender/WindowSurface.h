@@ -37,6 +37,7 @@ public:
     EGLSurface getEGLSurface() const { return m_eglSurface; }
 
     void setColorBuffer(ColorBufferPtr p_colorBuffer);
+    void flushColorBuffer();
     void bind(RenderContextPtr p_ctx, SurfaceBindType p_bindType);
 
 private:

@@ -196,7 +196,7 @@ void FBConfig::packConfigsInfo(GLuint *buffer)
     memcpy(buffer, s_configAttribs, s_numConfigAttribs * sizeof(GLuint));
     for (int i=0; i<s_numConfigs; i++) {
         memcpy(buffer+(i+1)*s_numConfigAttribs,
-               &s_fbConfigs[i]->m_attribValues,
+               s_fbConfigs[i]->m_attribValues,
                s_numConfigAttribs * sizeof(GLuint));
     }
 }
@@ -222,7 +222,47 @@ int FBConfig::chooseConfig(FrameBuffer *fb, EGLint * attribs, uint32_t * configs
     // Query the max matching configs in the backend
     //
     EGLConfig *matchedConfigs = new EGLConfig[nConfigs];
-    s_egl.eglChooseConfig(dpy, attribs, matchedConfigs, nConfigs, &nConfigs);
+
+    //
+    //Until we have EGLImage implementation, we force pbuf configs
+    //
+    bool needToAddPbufAttr = true;
+    int attribCnt = 0;
+    EGLint * attrib_p = attribs;
+    if (attribs) {
+        while (attrib_p[0] != EGL_NONE) {
+            if (attrib_p[0] == EGL_SURFACE_TYPE) {
+                attrib_p[1] = EGL_PBUFFER_BIT; //replace whatever was there before
+                needToAddPbufAttr = false;
+            }
+            attrib_p += 2;
+            attribCnt += 2;
+        }
+    }
+    EGLint * newAttribs = new EGLint[attribCnt + 1 + ((needToAddPbufAttr) ? 2 : 0)];
+    attrib_p = newAttribs;
+    if (needToAddPbufAttr) {
+        *(attrib_p++) = EGL_SURFACE_TYPE;
+        *(attrib_p++) = EGL_PBUFFER_BIT;
+    }
+    memcpy(attrib_p, attribs, attribCnt*sizeof(EGLint));
+    attrib_p += attribCnt;
+    *attrib_p = EGL_NONE;
+
+#if 1
+    DBG("EGLint %d", sizeof(EGLint));
+    if (newAttribs) {
+        EGLint * attrib_p = newAttribs;
+        while (attrib_p[0] != EGL_NONE) {
+            DBG("attr: 0x%x %d", attrib_p[0], attrib_p[1]);
+            attrib_p += 2;
+        }
+    }
+
+#endif
+    s_egl.eglChooseConfig(dpy, newAttribs, matchedConfigs, nConfigs, &nConfigs);
+
+    delete newAttribs;
 
     //
     // From all matchedConfigs we need only config_size FBConfigs, so we intersect both lists compating the CONFIG_ID attribute
