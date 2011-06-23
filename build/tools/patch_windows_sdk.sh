@@ -6,7 +6,7 @@
 #   platform-dependent folders and files.
 # - sdk/build/patch_windows_sdk.sh to process folder and files which
 #   depend on the sdk.git repo. This file is invoked by the makefile
-#   at development/tools/build/windows_sdk.mk.
+#   at development/build/tools/windows_sdk.mk.
 #
 # Input arguments:
 # -q = Optional arg to make this silent. Must be given first.
@@ -59,10 +59,10 @@ PLATFORM_TOOLS=$TEMP_SDK_DIR/platform-tools
 LIB=$TEMP_SDK_DIR/tools/lib
 rm $V $TOOLS/{dmtracedump,etc1tool,hprof-conv,sqlite3,zipalign}
 rm $V $LIB/*/swt.jar
-rm $V $PLATFORM_TOOLS/{adb,aapt,aidl,dx,dexdump,llvm-rs-cc}
+rm $V $PLATFORM_TOOLS/{adb,aapt,aidl,dx,dexdump,llvm-rs-cc,llvm-rs-cc-2}
 
 # Copy all the new stuff in tools
-# Note: some tools are first copied here and then moved in platforms/<name>/tools/
+# Note: some tools are first copied here and then moved in platform-tools
 cp $V $WIN_OUT_DIR/host/windows-x86/bin/*.{exe,dll} $TOOLS/
 # Remove some tools we don't want to take in the SDK
 rm $V -f $TOOLS/{fastboot.exe,rs-spec-gen.exe,tblgen.exe}
@@ -100,11 +100,14 @@ cp -r $V ${TOPDIR}external/sonivox/docs/JET_Creator_User_Manual_files  $JETDOC/
 # Copy or move platform specific tools to the default platform.
 cp $V ${TOPDIR}dalvik/dx/etc/dx.bat $PLATFORM_TOOLS/
 mv $V $TOOLS/{adb.exe,aapt.exe,aidl.exe,dexdump.exe} $PLATFORM_TOOLS/
-mv $V $TOOLS/llvm-rs-cc.exe $PLATFORM_TOOLS/
 mv $V $TOOLS/Adb*.dll $PLATFORM_TOOLS/
+# The platform actually produces llvm-rs-cc-2 (via sdk.atree), whereas
+# the original version 1 (just named llvm-rs-cc) is stored in the prebuilts.
+cp $V ${TOPDIR}prebuilt/windows/llvm-rs-cc/llvm-rs-cc.exe $PLATFORM_TOOLS/llvm-rs-cc.exe
+mv $V $TOOLS/llvm-rs-cc.exe                               $PLATFORM_TOOLS/llvm-rs-cc-2.exe
 
 # Fix EOL chars to make window users happy - fix all files at the top level
-# as well as all batch files including those in platforms/<name>/tools/
+# as well as all batch files including those in platform-tools/
 if [[ -x $UNIX2DOS ]]; then
   find $TEMP_SDK_DIR -maxdepth 1 -name "*.[ht]*" -type f -print0 | xargs -0 $UNIX2DOS
   find $TEMP_SDK_DIR -maxdepth 3 -name "*.bat"   -type f -print0 | xargs -0 $UNIX2DOS
