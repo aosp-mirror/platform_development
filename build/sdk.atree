@@ -70,6 +70,7 @@ system.img                              platforms/${PLATFORM_NAME}/images/${TARG
 ramdisk.img                             platforms/${PLATFORM_NAME}/images/${TARGET_CPU_ABI}/ramdisk.img
 userdata.img                            platforms/${PLATFORM_NAME}/images/${TARGET_CPU_ABI}/userdata.img
 prebuilt/android-${TARGET_ARCH}/kernel/kernel-qemu platforms/${PLATFORM_NAME}/images/${TARGET_CPU_ABI}/kernel-qemu
+system/build.prop platforms/${PLATFORM_NAME}/images/${TARGET_CPU_ABI}/build.prop
 
 # emulator skins from sdk.git
 development/tools/emulator/skins/QVGA      platforms/${PLATFORM_NAME}/skins/QVGA
@@ -138,7 +139,7 @@ frameworks/base/docs/docs-samples-redirect.html docs/samples/index.html
 
 # samples to include in the sdk samples package
 #
-# the list here should match the list of samples that we generate docs for, 
+# the list here should match the list of samples that we generate docs for,
 # (see web_docs_sample_code_flags in frameworks/base/Android.mk)
 development/apps/GestureBuilder              samples/${PLATFORM_NAME}/GestureBuilder
 development/samples/source.properties        samples/${PLATFORM_NAME}/source.properties
