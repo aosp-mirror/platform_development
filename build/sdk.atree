@@ -1,4 +1,4 @@
- #
+#
 # Copyright (C) 2007 The Android Open Source Project
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -41,7 +41,9 @@ frameworks/base/docs/docs-redirect.html documentation.html
 bin/adb                                       platform-tools/adb
 bin/aapt                                      platform-tools/aapt
 bin/aidl                                      platform-tools/aidl
-bin/llvm-rs-cc                                platform-tools/llvm-rs-cc
+bin/llvm-rs-cc                                platform-tools/llvm-rs-cc-2
+development/sdk/llvm-rs-cc.txt                platform-tools/llvm-rs-cc.txt
+
 # dx
 bin/dx                                        platform-tools/dx
 bin/dexdump                                   platform-tools/dexdump
