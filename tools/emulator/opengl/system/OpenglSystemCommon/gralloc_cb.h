@@ -14,13 +14,15 @@
 struct cb_handle_t : public native_handle {
 
     cb_handle_t(int p_fd, int p_ashmemSize, int p_usage,
-                int p_width, int p_height, int p_glFormat) :
+                int p_width, int p_height,
+                int p_glFormat, int p_glType) :
         fd(p_fd),
         magic(BUFFER_HANDLE_MAGIC),
         usage(p_usage),
         width(p_width),
         height(p_height),
         glFormat(p_glFormat),
+        glType(p_glType),
         ashmemSize(p_ashmemSize),
         ashmemBase(NULL),
         ashmemBasePid(0),
@@ -70,6 +72,7 @@ struct cb_handle_t : public native_handle {
     int width;              // buffer width
     int height;             // buffer height
     int glFormat;           // OpenGL format enum used for host h/w color buffer
+    int glType;             // OpenGL type enum used when uploading to host
     int ashmemSize;         // ashmem region size for the buffer (0 unless is HW_FB buffer or
                             //                                    s/w access is needed)
     int ashmemBase;         // CPU address of the mapped ashmem region
