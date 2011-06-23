@@ -139,7 +139,7 @@ static int gralloc_alloc(alloc_device_t* dev,
             break;
         case HAL_PIXEL_FORMAT_RGB_565:
             bpp = 2;
-            glFormat = GL_RGB565_OES;
+            glFormat = GL_RGB;
             glType = GL_UNSIGNED_SHORT_5_6_5;
             break;
         case HAL_PIXEL_FORMAT_RGBA_5551:
