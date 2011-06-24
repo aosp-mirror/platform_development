@@ -1,45 +1,16 @@
-
 LOCAL_PATH := $(call my-dir)
 
-### GLESv1 Decoder ###########################################
-include $(CLEAR_VARS)
+$(call emugl-begin-host-shared-library,libGLESv1_dec)
 
-emulatorOpengl := $(LOCAL_PATH)/../../..
-EMUGEN := $(HOST_OUT_EXECUTABLES)/emugen
+$(call emugl-import, libOpenglCodecCommon)
+$(call emugl-export,C_INCLUDES,$(LOCAL_PATH))
+$(call emugl-export,LDLIBS,-ldl)
 
-LOCAL_IS_HOST_MODULE := true
-LOCAL_MODULE_CLASS := SHARED_LIBRARIES
-LOCAL_MODULE_TAGS := debug
-LOCAL_MODULE := libGLESv1_dec
+$(call emugl-gen-decoder,$(EMUGL_PATH)/system/GLESv1_enc,gl)
 
-intermediates := $(local-intermediates-dir)
+LOCAL_SRC_FILES := GLDecoder.cpp
 
-LOCAL_SRC_FILES := \
-        GLDecoder.cpp
+# for gl_types.h !
+$(call emugl-export,C_INCLUDES,$(EMUGL_PATH)/system/GLESv1_enc)
 
-LOCAL_C_INCLUDES += \
-    $(emulatorOpengl)/shared/OpenglCodecCommon \
-    $(emulatorOpengl)/host/include/libOpenglRender \
-    $(emulatorOpengl)/system/GLESv1_enc
-
-LOCAL_STATIC_LIBRARIES := \
-        libOpenglCodecCommon \
-        liblog
-
-# XXX - uncomment for debug
-#LOCAL_CFLAGS := -DDEBUG_PRINTOUT -O0 -g
-LOCAL_LDLIBS := -ldl
-
-
-GEN := $(intermediates)/gl_server_context.cpp $(intermediates)/gl_dec.cpp $(intermediates)/gl_dec.h
-
-$(GEN) : PRIVATE_PATH := $(LOCAL_PATH)
-$(GEN) : PRIVATE_CUSTOM_TOOL := $(EMUGEN) -D $(intermediates) -i $(emulatorOpengl)/system/GLESv1_enc gl
-$(GEN) : $(EMUGEN) \
-        $(emulatorOpengl)/system/GLESv1_enc/gl.attrib \
-        $(emulatorOpengl)/system/GLESv1_enc/gl.in \
-        $(emulatorOpengl)/system/GLESv1_enc/gl.types
-	$(transform-generated-source)
-
-LOCAL_GENERATED_SOURCES += $(GEN)
-include $(BUILD_HOST_SHARED_LIBRARY)
+$(call emugl-end-module)

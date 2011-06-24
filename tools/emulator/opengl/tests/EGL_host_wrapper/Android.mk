@@ -2,19 +2,15 @@ ifeq ($(HOST_OS),linux)
 
 LOCAL_PATH := $(call my-dir)
 
-include $(CLEAR_VARS)
+$(call emugl-begin-host-static-library,libEGL_host_wrapper)
 
 LOCAL_SRC_FILES :=  \
         egl.cpp \
         egl_dispatch.cpp
 
-LOCAL_MODULE := libEGL_host_wrapper
-LOCAL_MODULE_TAGS := debug
+$(call emugl-export,LDLIBS,-ldl -pthread)
+$(call emugl-export,C_INCLUDES,$(LOCAL_PATH))
 
-OS_LDLIBS := -ldl -lpthread
-
-LOCAL_LDLIBS := $(OS_LDLIBS)
-
-include $(BUILD_HOST_SHARED_LIBRARY) 
+$(call emugl-end-module)
 
 endif # HOST_OS == linux

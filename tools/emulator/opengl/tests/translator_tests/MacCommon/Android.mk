@@ -1,20 +1,30 @@
-
 LOCAL_PATH := $(call my-dir)
 
 ifeq ($(HOST_OS),darwin)
-include $(CLEAR_VARS)
+$(call emugl-begin-host-static-library,libMac_view)
 
+LIBMACVIEW_FRAMEWORKS := AppKit AudioToolbox AudioUnit
+LIBMACVIEW_PREFIX := -Wl,-framework,
 
-LOCAL_LDLIBS := -Wl,-framework,AppKit
+$(call emugl-export,LDLIBS,$(foreach _framework,$(LIBMACVIEW_FRAMEWORKS),$(LIBMACVIEW_PREFIX)$(_framework)))
+LOCAL_SRC_FILES := setup_gl.m
+LOCAL_CFLAGS += -g -O0
+$(call emugl-end-module)
+endif # HOST_OS == darwin
 
-LOCAL_SRC_FILES :=  setup_gl.m
-
-
-
-LOCAL_CFLAGS := -g -O0
-LOCAL_MODULE_TAGS := debug
-LOCAL_MODULE := libMac_view
-
-
-include $(BUILD_HOST_STATIC_LIBRARY)
-endif
+# include $(CLEAR_VARS)
+#
+#
+# LOCAL_LDLIBS := -Wl,-framework,AppKit
+#
+# LOCAL_SRC_FILES :=  setup_gl.m
+#
+#
+#
+# LOCAL_CFLAGS := -g -O0
+# LOCAL_MODULE_TAGS := debug
+# LOCAL_MODULE := libMac_view
+#
+#
+# include $(BUILD_HOST_STATIC_LIBRARY)
+# endif
