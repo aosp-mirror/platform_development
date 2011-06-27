@@ -67,7 +67,7 @@ EglConfig::EglConfig(EGLint     red_size,
                      m_trans_red_val(trans_red_val),
                      m_trans_green_val(trans_green_val),
                      m_trans_blue_val(trans_blue_val),
-                     m_conformant(((red_size + green_size + blue_size + alpha_size > 0)  && 
+                     m_conformant(((red_size + green_size + blue_size + alpha_size > 0)  &&
                                   (caveat!=EGL_NON_CONFORMANT_CONFIG)) ?
                                     m_renderable_type : 0),
                      m_nativeFormat(frmt) {};
@@ -217,6 +217,10 @@ bool EglConfig::compitableWith(const EglConfig& conf) const {
 
 //following the sorting EGLconfig as in spec
 bool EglConfig::operator<(const EglConfig& conf) const {
+    //0
+    if(m_conformant != conf.m_conformant) {
+       return m_conformant != 0; //We want the conformant ones first
+    }
     //1
     if(m_caveat != conf.m_caveat) {
        return m_caveat < conf.m_caveat; // EGL_NONE < EGL_SLOW_CONFIG < EGL_NON_CONFORMANT_CONFIG
@@ -291,8 +295,8 @@ bool EglConfig::choosen(const EglConfig& dummy) {
    //mask
    if(dummy.m_surface_type != EGL_DONT_CARE &&
     ((dummy.m_surface_type & m_surface_type) != dummy.m_surface_type)) return false;
-   
-   if(dummy.m_conformant != EGL_DONT_CARE &&
+
+   if(dummy.m_conformant != (EGLenum)EGL_DONT_CARE &&
     ((dummy.m_conformant & m_conformant) != dummy.m_conformant)) return false;
 
    if(dummy.m_renderable_type != EGL_DONT_CARE &&
