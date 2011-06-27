@@ -289,7 +289,7 @@ EGLAPI EGLBoolean EGLAPIENTRY eglChooseConfig(EGLDisplay display, const EGLint *
             case EGL_MAX_PBUFFER_HEIGHT:
             case EGL_MAX_PBUFFER_PIXELS:
             case EGL_NATIVE_VISUAL_ID:
-                continue; //we dont care from those selection crateria
+                break; //we dont care from those selection crateria
             case EGL_LEVEL:
                 if(attrib_list[i+1] == EGL_DONT_CARE) {
                     RETURN_ERROR(EGL_FALSE,EGL_BAD_ATTRIBUTE);
