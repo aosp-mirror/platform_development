@@ -22,6 +22,9 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <codec_defs.h>
+#ifdef _WIN32
+#include <winsock2.h>
+#endif
 
 
 static void printUsage(const char *progName)
@@ -92,6 +95,13 @@ int main(int argc, char *argv[])
     printf("renderer pid %d , press any key to continue...\n", getpid());
     getchar();
 
+#ifdef _WIN32
+    WSADATA  wsaData;
+    int      rc = WSAStartup( MAKEWORD(2,2), &wsaData);
+    if (rc != 0) {
+            printf( "could not initialize Winsock\n" );
+    }
+#endif
     //
     // initialize Framebuffer
     //
