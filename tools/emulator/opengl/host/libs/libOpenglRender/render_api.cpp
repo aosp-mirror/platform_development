@@ -23,6 +23,10 @@ static osUtils::childProcess *s_renderProc = NULL;
 static RenderServer *s_renderThread = NULL;
 static int s_renderPort = 0;
 
+#ifdef __APPLE__
+#define  RENDER_API_USE_THREAD
+#endif
+
 bool initOpenGLRenderer(FBNativeWindowType window,
                         int x, int y, int width, int height,
                         int portNum)
@@ -75,7 +79,32 @@ bool initOpenGLRenderer(FBNativeWindowType window,
     IOStream *dummy = NULL;
     do {
         ++nTrys;
+
+        //
+        // Wait a bit to make the renderer process a chance to be
+        // initialized.
+        // On Windows we need during this time to handle windows
+        // events since the renderer generates a subwindow of this
+        // process's window, we need to be responsive for windows
+        // during this time to let the renderer generates this subwindow.
+        //
+#ifndef _WIN32
         TimeSleepMS(300);
+#else
+        long long t0 = GetCurrentTimeMS();
+        while( (GetCurrentTimeMS() - t0) < 300 ) {
+            MSG msg;
+            int n = 0;
+            while( PeekMessage(&msg, NULL, 0, 0, PM_REMOVE) )
+            {
+                n++;
+                TranslateMessage( &msg );
+                DispatchMessage( &msg );
+            }
+            if (n == 0) TimeSleepMS(10);
+        }
+#endif
+
         dummy = createRenderThread(8);
 
         if (!dummy) {
