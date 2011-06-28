@@ -869,6 +869,19 @@
     <string name="game_controller_input_key_pressed">Pressed</string>
     <string name="game_controller_input_key_released">Released</string>
 
+    <string name="hover_description">
+        This activity demonstrates how to handle hover events with View.onHoverEvent,
+        ViewGroup.onInterceptHoverEvent, and View.setOnHoverListener.
+    </string>
+    <string name="hover_intercept_checkbox">Make container intercept hover events</string>
+    <string name="hover_message_initial">Try using a mouse or touch pad to hover over views within this activity.</string>
+    <string name="hover_message_entered_at">Entered the container at (%1$f,%2$f).</string>
+    <string name="hover_message_moved_at">Moved within the container at (%1$f,%2$f).</string>
+    <string name="hover_message_exited_at">Exited the container at (%1$f,%2$f).  The pointer may be inside the bounds of a child instead.</string>
+    <string name="hover_intercept_message_initial">Try hovering over the button.</string>
+    <string name="hover_intercept_message_intercepted">Intercepted hover event instead of sending it to the button.  Om nom nom!</string>
+    <string name="hover_button">Hover Here</string>
+
     <!-- ============================== -->
     <!--  GoogleLogin examples strings  -->
     <!-- ============================== -->
