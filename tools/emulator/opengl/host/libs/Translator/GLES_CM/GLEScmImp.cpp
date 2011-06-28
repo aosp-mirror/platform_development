@@ -658,12 +658,20 @@ GL_API void GL_APIENTRY  glGenTextures( GLsizei n, GLuint *textures) {
 
 GL_API void GL_APIENTRY  glGetBooleanv( GLenum pname, GLboolean *params) {
     GET_CTX()
+
+    GLint i;
+
     switch(pname)
     {
     case GL_IMPLEMENTATION_COLOR_READ_TYPE_OES:
     case GL_IMPLEMENTATION_COLOR_READ_FORMAT_OES:
-        GLint i;
+    case GL_NUM_COMPRESSED_TEXTURE_FORMATS:
         glGetIntegerv(pname, &i);
+        *params = (i != 0) ? GL_TRUE : GL_FALSE;
+        break;
+
+    case GL_COMPRESSED_TEXTURE_FORMATS:
+        glGetIntegerv(GL_NUM_COMPRESSED_TEXTURE_FORMATS, &i);
         *params = (i != 0) ? GL_TRUE : GL_FALSE;
         break;
 
@@ -725,15 +733,31 @@ GL_API void GL_APIENTRY  glGetFixedv( GLenum pname, GLfixed *params) {
 
     size_t nParams = glParamSize(pname);
     GLfloat fParams[16];
+    GLint i;
 
     switch(pname)
     {
     case GL_IMPLEMENTATION_COLOR_READ_TYPE_OES:
     case GL_IMPLEMENTATION_COLOR_READ_FORMAT_OES:
-        GLint i;
+    case GL_NUM_COMPRESSED_TEXTURE_FORMATS:
         glGetIntegerv(pname, &i);
         *params = I2X(i);
         nParams = 0;
+        break;
+
+    case GL_COMPRESSED_TEXTURE_FORMATS:
+        glGetIntegerv(GL_NUM_COMPRESSED_TEXTURE_FORMATS, &i);
+        if(i > 0)
+        {
+            GLint* iParams = new GLint[i];
+            glGetIntegerv(GL_COMPRESSED_TEXTURE_FORMATS, iParams);
+            while(i >= 0)
+            {
+                params[i] = I2X(iParams[i]);
+                i--;
+            }
+            delete [] iParams;
+        }
         break;
 
     case GL_TEXTURE_GEN_STR_OES:
@@ -754,13 +778,31 @@ GL_API void GL_APIENTRY  glGetFixedv( GLenum pname, GLfixed *params) {
 
 GL_API void GL_APIENTRY  glGetFloatv( GLenum pname, GLfloat *params) {
     GET_CTX()
+
+    GLint i;
+
     switch(pname)
     {
     case GL_IMPLEMENTATION_COLOR_READ_TYPE_OES:
     case GL_IMPLEMENTATION_COLOR_READ_FORMAT_OES:
-        GLint i;
+    case GL_NUM_COMPRESSED_TEXTURE_FORMATS:
         glGetIntegerv(pname, &i);
         *params = (GLfloat)i;
+        break;
+
+    case GL_COMPRESSED_TEXTURE_FORMATS:
+        glGetIntegerv(GL_NUM_COMPRESSED_TEXTURE_FORMATS, &i);
+        if(i > 0)
+        {
+            GLint* iParams = new GLint[i];
+            glGetIntegerv(GL_COMPRESSED_TEXTURE_FORMATS, iParams);
+            while(i >= 0)
+            {
+                params[i] = (GLfloat)iParams[i];
+                i--;
+            }
+            delete [] iParams;
+        }
         break;
 
     case GL_TEXTURE_GEN_STR_OES:
@@ -786,6 +828,14 @@ GL_API void GL_APIENTRY  glGetIntegerv( GLenum pname, GLint *params) {
 
     case GL_TEXTURE_GEN_STR_OES:
         ctx->dispatcher().glGetIntegerv(GL_TEXTURE_GEN_S,&params[0]);
+        break;
+
+    case GL_COMPRESSED_TEXTURE_FORMATS:
+        getCompressedFormats(params);
+        break;
+
+    case GL_NUM_COMPRESSED_TEXTURE_FORMATS:
+        *params = getCompressedFormats(NULL);
         break;
 
     default:
