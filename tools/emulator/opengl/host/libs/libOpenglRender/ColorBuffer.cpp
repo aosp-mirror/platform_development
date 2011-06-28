@@ -56,10 +56,16 @@ ColorBuffer *ColorBuffer::create(int p_width, int p_height,
 
     s_gl.glGenTextures(1, &cb->m_tex);
     s_gl.glBindTexture(GL_TEXTURE_2D, cb->m_tex);
+    int nComp = (texInternalFormat == GL_RGB ? 3 : 4);
+    char *zBuff = new char[nComp*p_width*p_height];
+    if (zBuff) {
+        memset(zBuff, 0, nComp*p_width*p_height);
+    }
     s_gl.glTexImage2D(GL_TEXTURE_2D, 0, texInternalFormat,
                       p_width, p_height, 0,
                       texInternalFormat,
-                      GL_UNSIGNED_BYTE, NULL);
+                      GL_UNSIGNED_BYTE, zBuff);
+    delete [] zBuff;
     s_gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     s_gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     s_gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -231,10 +237,10 @@ void ColorBuffer::drawTexQuad()
                          +1.0f, -1.0f, 0.0f,
                          +1.0f, +1.0f, 0.0f };
 
-    GLfloat tcoords[] = { 0.0f, 0.0f,
-                           0.0f, 1.0f,
-                           1.0f, 0.0f,
-                           1.0f, 1.0f };
+    GLfloat tcoords[] = { 0.0f, 1.0f,
+                           0.0f, 0.0f,
+                           1.0f, 1.0f,
+                           1.0f, 0.0f };
 
     s_gl.glClientActiveTexture(GL_TEXTURE0);
     s_gl.glEnableClientState(GL_TEXTURE_COORD_ARRAY);

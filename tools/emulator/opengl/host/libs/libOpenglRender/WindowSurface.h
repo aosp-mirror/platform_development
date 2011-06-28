@@ -58,6 +58,7 @@ private:
     bool m_useEGLImage;
     bool m_useBindToTexture;
     FixedBuffer m_xferBuffer;
+    FixedBuffer m_xUpdateBuf;
 };
 
 typedef SmartPtr<WindowSurface> WindowSurfacePtr;
