@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright (C) 2011 The Android Open Source Project
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+          http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+-->
+
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.android.ttsengine">
+
+    <!-- TODO: Fix this when the API level for ICS is finalized. -->
+    <uses-sdk android:minSdkVersion="IceCreamSandwich"
+        android:targetSdkVersion="IceCreamSandwich" />
+
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <application android:label="@string/app_name">
+        <service android:name=".RobotSpeakTtsService"
+                  android:label="@string/app_name">
+            <intent-filter>
+                <action android:name="android.intent.action.TTS_SERVICE" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+            <!-- Note that this meta data element must be inside the service
+                 definition of the service that handles the TTS_SERVICE intent
+                 -->
+            <meta-data android:name="android.speech.tts" android:resource="@xml/tts_engine" />
+        </service>
+
+        <activity android:name=".CheckVoiceData"
+                android:theme="@android:style/Theme.NoDisplay">
+            <intent-filter>
+                <action android:name="android.speech.tts.engine.CHECK_TTS_DATA" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".RobotSpeakSettings"
+                android:label="@string/general_settings"  />
+
+    </application>
+
+</manifest>
+
