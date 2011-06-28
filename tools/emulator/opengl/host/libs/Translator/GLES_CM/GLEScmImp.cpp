@@ -167,8 +167,6 @@ GLESiface* __translator_getIfaces(EGLiface* eglIface){
 static TextureData* getTextureData(){
     GET_CTX_RET(NULL);
     unsigned int tex = ctx->getBindedTexture();
-    if (tex==0)
-        return NULL;
     TextureData *texData = NULL;
     ObjectDataPtr objData = thrd->shareGroup->getObjectData(TEXTURE,tex);
     if(!objData.Ptr()){
