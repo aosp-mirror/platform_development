@@ -441,6 +441,8 @@ static int gralloc_unregister_buffer(gralloc_module_t const* module,
         if (err) {
             return -EINVAL;
         }
+        cb->ashmemBase = NULL;
+        cb->mappedPid = 0;
     }
 
     return 0;

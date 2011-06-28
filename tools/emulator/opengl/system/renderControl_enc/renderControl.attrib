@@ -28,7 +28,7 @@ rcChooseConfig
     dir attribs in
 	len attribs attribs_size
 	dir configs out
-	len configs configs_size
+	len configs configs_size*sizeof(uint32_t)
 
 rcReadColorBuffer
     dir pixels out
