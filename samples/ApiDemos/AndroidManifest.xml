@@ -36,14 +36,7 @@
     <!-- For android.media.audiofx.Visualizer -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
-    <uses-sdk android:minSdkVersion="7" android:targetSdkVersion="11" />
-
-    <!-- The smallest screen this app works on is a phone.  The app will
-         scale its UI to larger screens but doesn't make good use of them
-         so allow the compatibility mode button to be shown (mostly because
-         this is just convenient for testing). -->
-    <supports-screens android:requiresSmallestWidthDp="320"
-            android:compatibleWidthLimitDp="480" />
+    <uses-sdk android:minSdkVersion="3" android:targetSdkVersion="3" />
 
     <!-- We will request access to the camera, saying we require a camera
          of some sort but not one with autofocus capability. -->
