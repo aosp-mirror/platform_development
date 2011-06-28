@@ -18,6 +18,8 @@
 
 #include <GLES/gl.h>
 
+
 unsigned char* uncompressTexture(GLenum internalformat,GLenum& formatOut,GLsizei width,GLsizei height,GLsizei imageSize, const GLvoid* data,GLint level);
+int getCompressedFormats(int* formats);
 
 #endif
