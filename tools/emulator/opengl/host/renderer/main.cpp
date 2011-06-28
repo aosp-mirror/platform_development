@@ -92,8 +92,12 @@ int main(int argc, char *argv[])
         printUsage(argv[0]);
     }
 
-    printf("renderer pid %d , press any key to continue...\n", getpid());
+#if 0 //Enable to attach gdb to renderer on startup
+    fprintf(stderr, "renderer pid %d , press any key to continue...\n", getpid());
     getchar();
+#else
+    fprintf(stderr, "renderer pid %d \n", getpid());
+#endif
 
 #ifdef _WIN32
     WSADATA  wsaData;
