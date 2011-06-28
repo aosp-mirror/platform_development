@@ -48,7 +48,7 @@ public:
     }
 
     ~GLDecoderContextData() {
-        delete m_pointerData;
+        delete [] m_pointerData;
     }
 
     void storePointerData(unsigned int loc, void *data, size_t len) {
