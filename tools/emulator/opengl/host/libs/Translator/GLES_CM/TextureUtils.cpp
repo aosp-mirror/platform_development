@@ -16,6 +16,8 @@
 #include "TextureUtils.h"
 #include <stdio.h>
 
+#define MAX_SUPPORTED_PALLETE 10
+
 
 struct Color
 {
@@ -163,4 +165,20 @@ unsigned char* uncompressTexture(GLenum internalformat,GLenum& formatOut,GLsizei
         }
     }
     return pixelsOut;
+}
+
+int getCompressedFormats(int* formats){
+    if(formats){
+        formats[0] = GL_PALETTE4_RGBA8_OES;
+        formats[1] = GL_PALETTE4_RGBA4_OES;
+        formats[2] = GL_PALETTE8_RGBA8_OES;
+        formats[3] = GL_PALETTE8_RGBA4_OES;
+        formats[4] = GL_PALETTE4_RGB8_OES;
+        formats[5] = GL_PALETTE8_RGB8_OES;
+        formats[6] = GL_PALETTE4_RGB5_A1_OES;
+        formats[7] = GL_PALETTE8_RGB5_A1_OES;
+        formats[8] = GL_PALETTE4_R5_G6_B5_OES;
+        formats[9] = GL_PALETTE8_R5_G6_B5_OES;
+    }
+    return MAX_SUPPORTED_PALLETE;
 }
