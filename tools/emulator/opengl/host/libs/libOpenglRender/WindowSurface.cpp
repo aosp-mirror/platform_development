@@ -227,8 +227,27 @@ void WindowSurface::copyToColorBuffer()
                           GL_RGBA, GL_UNSIGNED_BYTE, data);
     }
 
+#define FLIP_BUFFER 1
+#if FLIP_BUFFER
+    //We need to flip the pixels
+    int bpp = 4;
+    void *tmpBuf = m_xUpdateBuf.alloc(m_width * m_height * bpp);
+
+    int dst_line_len = m_width * bpp;
+    int src_line_len = m_width * bpp;
+    char *src = (char *)data;
+    char *dst = (char*)tmpBuf + (m_height-1)*dst_line_len;
+    for (uint32_t  y=0; y<m_height; y++) {
+        memcpy(dst, src, dst_line_len);
+        src += src_line_len;
+        dst -= dst_line_len;
+    }
+    // update the attached color buffer with the fliped readback pixels
+    m_attachedColorBuffer->update(GL_RGBA, GL_UNSIGNED_BYTE, tmpBuf);
+#else
     // update the attached color buffer with the readback pixels
     m_attachedColorBuffer->update(GL_RGBA, GL_UNSIGNED_BYTE, data);
+#endif
 
     // restore current context/surface
     s_egl.eglMakeCurrent(fb->getDisplay(), prevDrawSurf,
