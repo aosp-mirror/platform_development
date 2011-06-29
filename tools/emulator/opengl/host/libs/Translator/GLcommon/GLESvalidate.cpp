@@ -7,7 +7,6 @@
 
 
 bool  GLESvalidate::textureEnum(GLenum e,unsigned int maxTex) {
-    if (!((e >= GL_TEXTURE0) && (e <= (GL_TEXTURE0 + maxTex)))) ERR("GLESvalidate::textureEnum: e = 0x%X max %d\n", e, maxTex);
     return e >= GL_TEXTURE0 && e <= (GL_TEXTURE0 + maxTex);
 }
 
@@ -29,7 +28,6 @@ bool GLESvalidate::pixelType(GLEScontext * ctx, GLenum type) {
     case GL_FLOAT:
         return true;
     }
-    ERR("Error: GLESvalidate::pixelType 0x%X\n", type);
     return false;
 }
 
@@ -57,7 +55,6 @@ bool GLESvalidate::pixelFrmt(GLEScontext* ctx ,GLenum format) {
     case GL_LUMINANCE_ALPHA:
         return true;
     }
-    ERR("Error: GLESvalidate::pixelFrmt 0x%X\n", format);
     return false;
 }
 
@@ -107,8 +104,7 @@ bool GLESvalidate::textureTargetEx(GLenum target) {
     case GL_TEXTURE_CUBE_MAP_NEGATIVE_Z_OES:
     case GL_TEXTURE_2D:
       return true;
-    }
-    ERR("GLESvalidate::textureTargetEx 0x%X\n", target);
+    } 
     return false;
 }
 

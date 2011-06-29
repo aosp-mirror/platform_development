@@ -47,6 +47,9 @@ LOCAL_C_INCLUDES += $(EMUGL_PATH)/host/libs/Translator/include
 
 LOCAL_STATIC_LIBRARIES += libutils liblog
 
+#For gl debbuging
+#$(call emugl-export,CFLAGS,-DCHECK_GL_ERROR)
+
 $(call emugl-end-module)
 
 endif # HOST_OS != darwin
