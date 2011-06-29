@@ -60,6 +60,12 @@ public:
 
     EglConfig(const EglConfig& conf);
 
+    EglConfig(const EglConfig& conf,
+              EGLint config_id,
+              EGLint red_size,
+              EGLint green_size,
+              EGLint blue_size,
+              EGLint alpha_size);
 
 private:
 
