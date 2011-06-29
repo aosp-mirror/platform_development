@@ -76,8 +76,9 @@ external/clang/LICENSE.TXT       platforms/${PLATFORM_NAME}/renderscript/clang-i
 system.img                              platforms/${PLATFORM_NAME}/images/${TARGET_CPU_ABI}/system.img
 ramdisk.img                             platforms/${PLATFORM_NAME}/images/${TARGET_CPU_ABI}/ramdisk.img
 userdata.img                            platforms/${PLATFORM_NAME}/images/${TARGET_CPU_ABI}/userdata.img
-prebuilt/android-${TARGET_ARCH}/kernel/kernel-qemu platforms/${PLATFORM_NAME}/images/${TARGET_CPU_ABI}/kernel-qemu
 system/build.prop platforms/${PLATFORM_NAME}/images/${TARGET_CPU_ABI}/build.prop
+
+# Note: the kernel image is handled by sdk-android-<abi>.atree now.
 
 # emulator skins from sdk.git
 #development/tools/emulator/skins/QVGA      platforms/${PLATFORM_NAME}/skins/QVGA
