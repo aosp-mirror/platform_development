@@ -65,6 +65,7 @@ public:
     ImagePtr getImage(EGLImageKHR img);
     EGLImageKHR addImageKHR(ImagePtr);
     bool destroyImageKHR(EGLImageKHR img);
+    EGLNativeContextType getGlobalSharedContext();
 
 private:
    int doChooseConfigs(const EglConfig& dummy,EGLConfig* configs,int config_size);
@@ -81,8 +82,9 @@ private:
    GlobalNameSpace        m_globalNameSpace;
    ObjectNameManager      *m_manager[MAX_GLES_VERSION];
    android::Mutex         m_lock;
-   ImagesHndlMap           m_eglImages;
+   ImagesHndlMap          m_eglImages;
    unsigned int           m_nextEglImageId;
+   EGLNativeContextType   m_globalSharedContext;
 };
 
 #endif
