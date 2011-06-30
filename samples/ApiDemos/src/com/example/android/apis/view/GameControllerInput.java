@@ -41,6 +41,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
 
@@ -155,7 +156,8 @@ public class GameControllerInput extends Activity {
             mDevice = device;
 
             int numAxes = 0;
-            for (MotionRange range : device.getMotionRanges()) {
+            final List<MotionRange> ranges = device.getMotionRanges();
+            for (MotionRange range : ranges) {
                 if ((range.getSource() & InputDevice.SOURCE_CLASS_JOYSTICK) != 0) {
                     numAxes += 1;
                 }
@@ -164,11 +166,10 @@ public class GameControllerInput extends Activity {
             mAxes = new int[numAxes];
             mAxisValues = new float[numAxes];
             int i = 0;
-            for (MotionRange range : device.getMotionRanges()) {
+            for (MotionRange range : ranges) {
                 if ((range.getSource() & InputDevice.SOURCE_CLASS_JOYSTICK) != 0) {
-                    numAxes += 1;
+                    mAxes[i++] = range.getAxis();
                 }
-                mAxes[i++] = range.getAxis();
             }
 
             mKeys = new SparseIntArray();
