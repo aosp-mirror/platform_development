@@ -547,9 +547,10 @@ EGLBoolean eglInitialize(EGLDisplay dpy, EGLint *major, EGLint *minor)
     if (!s_display.initialize(&s_eglIface)) {
         return EGL_FALSE;
     }
-
-    *major = s_display.getVersionMajor();
-    *minor = s_display.getVersionMinor();
+    if (major!=NULL)
+        *major = s_display.getVersionMajor();
+    if (minor!=NULL)
+        *minor = s_display.getVersionMinor();
     return EGL_TRUE;
 }
 
