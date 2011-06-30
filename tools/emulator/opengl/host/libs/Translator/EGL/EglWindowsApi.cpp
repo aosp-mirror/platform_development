@@ -22,8 +22,6 @@
         if(a != true) return false;
 
 
-
-
 struct DisplayInfo{
     DisplayInfo():dc(NULL),hwnd(NULL),isPixelFormatSet(false){};
     DisplayInfo(HDC hdc,HWND wnd):isPixelFormatSet(false){dc = hdc; hwnd = wnd;};
@@ -66,7 +64,6 @@ void WinDisplay::setCurrent(int configurationIndex,const DisplayInfo& info){
     m_map[configurationIndex] = info;
     m_current = configurationIndex;
 }
-namespace EglOS{
 
 struct WglExtProcs{
     PFNWGLGETPIXELFORMATATTRIBIVARBPROC wglGetPixelFormatAttribivARB;
@@ -80,6 +77,62 @@ struct WglExtProcs{
 };
 
 static WglExtProcs* s_wglExtProcs = NULL;
+
+class SrfcInfo{
+public:
+    typedef enum {
+                 WINDOW  = 0,
+                 PBUFFER = 1,
+                 PIXMAP  = 2
+                 }SurfaceType;
+    explicit SrfcInfo(HWND wnd);
+    explicit SrfcInfo(HPBUFFERARB pb);
+    explicit SrfcInfo(HBITMAP bmap);
+    HWND getHwnd(){ return m_hwnd;};
+    HDC  getDC(){ return m_hdc;};
+    HBITMAP  getBmap(){ return m_bmap;};
+    HPBUFFERARB  getPbuffer(){ return m_pb;};
+    ~SrfcInfo();
+private:
+    HWND        m_hwnd;
+    HPBUFFERARB m_pb; 
+    HBITMAP     m_bmap;
+    HDC         m_hdc;
+    SurfaceType m_type;
+};
+
+SrfcInfo::SrfcInfo(HBITMAP bmap):m_hwnd(NULL),
+                                 m_pb(NULL),
+                                 m_hdc(NULL),
+                                 m_type(PIXMAP){
+    m_bmap = bmap;
+}
+
+SrfcInfo::SrfcInfo(HWND wnd):m_pb(NULL),
+                             m_bmap(NULL),
+                             m_type(WINDOW){
+    m_hwnd = wnd;
+    m_hdc = GetDC(wnd); 
+}
+
+SrfcInfo::SrfcInfo(HPBUFFERARB pb):m_hwnd(NULL),
+                                   m_bmap(NULL),
+                                   m_type(PBUFFER){
+    m_pb = pb;
+    if(s_wglExtProcs->wglGetPbufferDCARB){
+        m_hdc =  s_wglExtProcs->wglGetPbufferDCARB(pb);
+    }
+}
+
+SrfcInfo::~SrfcInfo(){
+    if(m_type == WINDOW){
+        ReleaseDC(m_hwnd,m_hdc);
+    }
+}
+
+namespace EglOS{
+
+
 
 PROC wglGetExtentionsProcAddress(HDC hdc,const char *extension_name,const char* proc_name)
 {
@@ -314,14 +367,17 @@ void queryConfigs(EGLNativeDisplayType display,int renderableType,ConfigsList& l
 
 }
 
-
 bool validNativeWin(EGLNativeDisplayType dpy,EGLNativeWindowType win) {
     return IsWindow(win);
 }
 
-bool validNativePixmap(EGLNativeDisplayType dpy,EGLNativePixmapType pix) {
+bool validNativeWin(EGLNativeDisplayType dpy,EGLNativeSurfaceType win) {
+    return validNativeWin(dpy,win->getHwnd());
+}
+
+bool validNativePixmap(EGLNativeDisplayType dpy,EGLNativeSurfaceType pix) {
     BITMAP bm;
-    return GetObject(pix, sizeof(BITMAP), (LPSTR)&bm);
+    return GetObject(pix->getBmap(), sizeof(BITMAP), (LPSTR)&bm);
 }
 
 static bool setPixelFormat(HDC dc,EglConfig* cfg) {
@@ -382,7 +438,7 @@ bool checkPixmapPixelFormatMatch(EGLNativeDisplayType dpy,EGLNativePixmapType pi
     return true;
 }
 
-EGLNativePbufferType createPbuffer(EGLNativeDisplayType display,EglConfig* cfg,EglPbufferSurface* pbSurface) {
+EGLNativeSurfaceType createPbufferSurface(EGLNativeDisplayType display,EglConfig* cfg,EglPbufferSurface* pbSurface) {
 
   //converting configuration into WGL pixel Format
    EGLint red,green,blue,alpha,depth,stencil;
@@ -445,13 +501,13 @@ EGLNativePbufferType createPbuffer(EGLNativeDisplayType display,EglConfig* cfg,E
         DWORD err = GetLastError();
         return NULL;
     }
-    return pb;
+    return new SrfcInfo(pb);
 }
 
-bool releasePbuffer(EGLNativeDisplayType display,EGLNativePbufferType pb) {
+bool releasePbuffer(EGLNativeDisplayType display,EGLNativeSurfaceType pb) {
     HDC  dis =  display->getCurrentDC();
     if(!s_wglExtProcs->wglReleasePbufferDCARB || !s_wglExtProcs->wglDestroyPbufferARB) return false;
-    if(!s_wglExtProcs->wglReleasePbufferDCARB(pb,dis) || !s_wglExtProcs->wglDestroyPbufferARB(pb)){
+    if(!s_wglExtProcs->wglReleasePbufferDCARB(pb->getPbuffer(),pb->getDC()) || !s_wglExtProcs->wglDestroyPbufferARB(pb->getPbuffer())){
         DWORD err = GetLastError();
         return false;
     }
@@ -495,39 +551,10 @@ bool destroyContext(EGLNativeDisplayType dpy,EGLNativeContextType ctx) {
 }
 
 
-HDC getSurfaceDC(EGLNativeDisplayType dpy,EglSurface* srfc){
-    switch(srfc->type()){
-    case EglSurface::WINDOW:
-        return GetDC(static_cast<EGLNativeWindowType>(srfc->native()));
-    case EglSurface::PBUFFER:
-        if(!s_wglExtProcs->wglGetPbufferDCARB) return NULL;
-        return s_wglExtProcs->wglGetPbufferDCARB(static_cast<EGLNativePbufferType>(srfc->native()));
-    case EglSurface::PIXMAP: //not supported;
-    default:
-        return NULL;
-    }
-}
-
-bool releaseSurfaceDC(EGLNativeDisplayType dpy,HDC dc,EglSurface*srfc){
-    if(!srfc) return true;
-    switch(srfc->type()){
-    case EglSurface::WINDOW:
-         ReleaseDC(static_cast<EGLNativeWindowType>(srfc->native()),dc);
-         return true;
-    case EglSurface::PBUFFER:
-        if(!s_wglExtProcs->wglReleasePbufferDCARB) return false;
-        s_wglExtProcs->wglReleasePbufferDCARB(static_cast<EGLNativePbufferType>(srfc->native()),dc);
-        return true;
-    case EglSurface::PIXMAP: //not supported;
-    default:
-        return false;
-    }
-}
-
 bool makeCurrent(EGLNativeDisplayType display,EglSurface* read,EglSurface* draw,EGLNativeContextType ctx) {
 
-    HDC hdcRead = read ? getSurfaceDC(display,read):0;
-    HDC hdcDraw = draw ? getSurfaceDC(display,draw):0;
+    HDC hdcRead = read ? read->native()->getDC(): NULL;
+    HDC hdcDraw = draw ? draw->native()->getDC(): NULL;
     bool retVal = false;
 
 
@@ -535,33 +562,40 @@ bool makeCurrent(EGLNativeDisplayType display,EglSurface* read,EglSurface* draw,
             bool ret =  wglMakeCurrent(hdcDraw,ctx);
             return ret;
     } else if (!s_wglExtProcs->wglMakeContextCurrentARB ) {
+        printf("OS :1-:make current failed %d\n",GetLastError());
         return false;
     }
     retVal = s_wglExtProcs->wglMakeContextCurrentARB(hdcDraw,hdcRead,ctx);
+    printf("OS ::2-make current failed %d\n",GetLastError());
 
-    releaseSurfaceDC(display,hdcRead,read);
-    releaseSurfaceDC(display,hdcDraw,draw);
     return retVal;
 }
 
-void swapBuffers(EGLNativeDisplayType display,EGLNativeWindowType win) {
-
-    HDC dc  = GetDC(win);
-    if(!SwapBuffers(dc)) {
+void swapBuffers(EGLNativeDisplayType display,EGLNativeSurfaceType srfc){
+    if(!SwapBuffers(srfc->getDC())) {
         DWORD err = GetLastError();
     }
-    ReleaseDC(win,dc);
-
 }
 
 
 void waitNative(){}
 
-void swapInterval(EGLNativeDisplayType dpy,EGLNativeWindowType win,int interval) {
+void swapInterval(EGLNativeDisplayType dpy,EGLNativeSurfaceType win,int interval) {
 
     if (s_wglExtProcs->wglSwapIntervalEXT){
         s_wglExtProcs->wglSwapIntervalEXT(interval);
     }
 }
 
+EGLNativeSurfaceType createWindowSurface(EGLNativeWindowType wnd){
+    return new SrfcInfo(wnd);
+}
+
+EGLNativeSurfaceType createPixmapSurface(EGLNativePixmapType pix){
+    return new SrfcInfo(pix);
+}
+
+void destroySurface(EGLNativeSurfaceType srfc){
+    delete srfc;
+}
 };
