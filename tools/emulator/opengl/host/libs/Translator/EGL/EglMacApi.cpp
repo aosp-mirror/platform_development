@@ -117,7 +117,7 @@ bool validNativePixmap(EGLNativeDisplayType dpy, EGLNativePixmapType pix) {
 bool checkWindowPixelFormatMatch(EGLNativeDisplayType dpy,EGLNativeWindowType win,EglConfig* cfg,unsigned int* width,unsigned int* height) {
     int r,g,b;
     bool ret = nsGetWinDims(win,width,height);
- 
+
     cfg->getConfAttrib(EGL_RED_SIZE,&r);
     cfg->getConfAttrib(EGL_GREEN_SIZE,&g);
     cfg->getConfAttrib(EGL_BLUE_SIZE,&b);
@@ -156,6 +156,17 @@ bool destroyContext(EGLNativeDisplayType dpy,EGLNativeContextType ctx) {
 }
 
 bool makeCurrent(EGLNativeDisplayType dpy,EglSurface* read,EglSurface* draw,EGLNativeContextType ctx){
+
+    // check for unbind
+    if (ctx == NULL && read == NULL && draw == NULL) {
+        nsWindowMakeCurrent(NULL, NULL);
+        return true;
+    }
+    else if (ctx == NULL || read == NULL || draw == NULL) {
+        // error !
+        return false;
+    }
+
     //dont supporting diffrent read & draw surfaces on Mac
     if(read->native() != draw->native()) return false;
     switch(draw->type()){
