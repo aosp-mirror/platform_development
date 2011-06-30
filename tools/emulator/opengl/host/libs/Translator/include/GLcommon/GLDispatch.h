@@ -95,6 +95,23 @@ public:
     static void (GLAPIENTRY *glPopAttrib) ( void );
     static void (GLAPIENTRY *glPushClientAttrib) ( GLbitfield mask );
     static void (GLAPIENTRY *glPopClientAttrib) ( void );
+    static GLboolean (GLAPIENTRY *glIsRenderbufferEXT) (GLuint renderbuffer);
+    static void (GLAPIENTRY *glBindRenderbufferEXT) (GLenum target, GLuint renderbuffer);
+    static void (GLAPIENTRY *glDeleteRenderbuffersEXT) (GLsizei n, const GLuint *renderbuffers);
+    static void (GLAPIENTRY *glGenRenderbuffersEXT) (GLsizei n, GLuint *renderbuffers);
+    static void (GLAPIENTRY *glRenderbufferStorageEXT) (GLenum target, GLenum internalformat, GLsizei width, GLsizei height);
+    static void (GLAPIENTRY *glGetRenderbufferParameterivEXT) (GLenum target, GLenum pname, GLint *params);
+    static GLboolean (GLAPIENTRY *glIsFramebufferEXT) (GLuint framebuffer);
+    static void (GLAPIENTRY *glBindFramebufferEXT) (GLenum target, GLuint framebuffer);
+    static void (GLAPIENTRY *glDeleteFramebuffersEXT) (GLsizei n, const GLuint *framebuffers);
+    static void (GLAPIENTRY *glGenFramebuffersEXT) (GLsizei n, GLuint *framebuffers);
+    static GLenum (GLAPIENTRY *glCheckFramebufferStatusEXT) (GLenum target);
+    static void (GLAPIENTRY *glFramebufferTexture1DEXT) (GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level);
+    static void (GLAPIENTRY *glFramebufferTexture2DEXT) (GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level);
+    static void (GLAPIENTRY *glFramebufferTexture3DEXT) (GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level, GLint zoffset);
+    static void (GLAPIENTRY *glFramebufferRenderbufferEXT) (GLenum target, GLenum attachment, GLenum renderbuffertarget, GLuint renderbuffer);
+    static void (GLAPIENTRY *glGetFramebufferAttachmentParameterivEXT) (GLenum target, GLenum attachment, GLenum pname, GLint *params);
+    static void (GLAPIENTRY *glGenerateMipmapEXT) (GLenum target);
 
     /* OpenGL functions which are needed ONLY for implementing GLES 1.1*/
     static void (GLAPIENTRY *glAlphaFunc) (GLenum func, GLclampf ref);
@@ -163,23 +180,6 @@ public:
     static void (GLAPIENTRY *glVertexPointer) (GLint size, GLenum type, GLsizei stride, const GLvoid *pointer);
 
     /* OpenGL functions which are needed ONLY for implementing GLES 1.1 EXTENSIONS*/
-    static GLboolean (GLAPIENTRY *glIsRenderbufferEXT) (GLuint renderbuffer);
-    static void (GLAPIENTRY *glBindRenderbufferEXT) (GLenum target, GLuint renderbuffer);
-    static void (GLAPIENTRY *glDeleteRenderbuffersEXT) (GLsizei n, const GLuint *renderbuffers);
-    static void (GLAPIENTRY *glGenRenderbuffersEXT) (GLsizei n, GLuint *renderbuffers);
-    static void (GLAPIENTRY *glRenderbufferStorageEXT) (GLenum target, GLenum internalformat, GLsizei width, GLsizei height);
-    static void (GLAPIENTRY *glGetRenderbufferParameterivEXT) (GLenum target, GLenum pname, GLint *params);
-    static GLboolean (GLAPIENTRY *glIsFramebufferEXT) (GLuint framebuffer);
-    static void (GLAPIENTRY *glBindFramebufferEXT) (GLenum target, GLuint framebuffer);
-    static void (GLAPIENTRY *glDeleteFramebuffersEXT) (GLsizei n, const GLuint *framebuffers);
-    static void (GLAPIENTRY *glGenFramebuffersEXT) (GLsizei n, GLuint *framebuffers);
-    static GLenum (GLAPIENTRY *glCheckFramebufferStatusEXT) (GLenum target);
-    static void (GLAPIENTRY *glFramebufferTexture1DEXT) (GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level);
-    static void (GLAPIENTRY *glFramebufferTexture2DEXT) (GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level);
-    static void (GLAPIENTRY *glFramebufferTexture3DEXT) (GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level, GLint zoffset);
-    static void (GLAPIENTRY *glFramebufferRenderbufferEXT) (GLenum target, GLenum attachment, GLenum renderbuffertarget, GLuint renderbuffer);
-    static void (GLAPIENTRY *glGetFramebufferAttachmentParameterivEXT) (GLenum target, GLenum attachment, GLenum pname, GLint *params);
-    static void (GLAPIENTRY *glGenerateMipmapEXT) (GLenum target);
     static void (GLAPIENTRY *glCurrentPaletteMatrixARB) (GLint index);
     static void (GLAPIENTRY *glMatrixIndexuivARB) (GLint size, GLuint * indices);
     static void (GLAPIENTRY *glMatrixIndexPointerARB) (GLint size, GLenum type, GLsizei stride, const GLvoid* pointer);
@@ -195,11 +195,6 @@ public:
     static void (GL_APIENTRY *glBlendColor) (GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha);
     static void (GL_APIENTRY *glStencilFuncSeparate)(GLenum face, GLenum func, GLint ref, GLuint mask);
     static void (GL_APIENTRY *glStencilMaskSeparate)(GLenum face, GLuint mask);
-    static void (GL_APIENTRY *glGenerateMipmap)(GLenum target);
-    static void (GL_APIENTRY *glBindFramebuffer)(GLenum target, GLuint framebuffer);
-    static void (GL_APIENTRY *glBindRenderbuffer)(GLenum target, GLuint renderbuffer);
-    static void (GL_APIENTRY *glDeleteFramebuffers)(GLsizei n, const GLuint* framebuffers);
-    static void (GL_APIENTRY *glDeleteRenderbuffers)(GLsizei n, const GLuint* renderbuffers);
     static GLboolean (GL_APIENTRY *glIsProgram)(GLuint program);
     static GLboolean (GL_APIENTRY *glIsShader)(GLuint shader);
     static void (GL_APIENTRY *glVertexAttrib1f)(GLuint indx, GLfloat x);
@@ -235,11 +230,6 @@ public:
     static void (GL_APIENTRY *glUniformMatrix2fv)(GLint location, GLsizei count, GLboolean transpose, const GLfloat* value);
     static void (GL_APIENTRY *glUniformMatrix3fv)(GLint location, GLsizei count, GLboolean transpose, const GLfloat* value);
     static void (GL_APIENTRY *glUniformMatrix4fv)(GLint location, GLsizei count, GLboolean transpose, const GLfloat* value);
-    static void (GL_APIENTRY *glGetFramebufferAttachmentParameteriv)(GLenum target, GLenum attachment, GLenum pname, GLint* params);
-    static void (GL_APIENTRY *glGetRenderbufferParameteriv)(GLenum target, GLenum pname, GLint* params);
-    static GLboolean (GL_APIENTRY *glIsFramebuffer)(GLuint framebuffer);
-    static GLboolean (GL_APIENTRY *glIsRenderbuffer)(GLuint renderbuffer);
-    static GLenum (GL_APIENTRY *glCheckFramebufferStatus)(GLenum target);
     static void (GL_APIENTRY *glAttachShader)(GLuint program, GLuint shader);
     static void (GL_APIENTRY *glBindAttribLocation)(GLuint program, GLuint index, const GLchar* name);
     static void (GL_APIENTRY *glCompileShader)(GLuint shader);
@@ -265,11 +255,8 @@ public:
     static void (GL_APIENTRY *glGetUniformiv)(GLuint program, GLint location, GLint* params);
     static int  (GL_APIENTRY *glGetUniformLocation)(GLuint program, const GLchar* name);
     static void (GL_APIENTRY *glReleaseShaderCompiler)(void);
-    static void (GL_APIENTRY *glRenderbufferStorage)(GLenum target, GLenum internalformat, GLsizei width, GLsizei height);
     static void (GL_APIENTRY *glShaderBinary)(GLsizei n, const GLuint* shaders, GLenum binaryformat, const GLvoid* binary, GLsizei length);
     static void (GL_APIENTRY *glShaderSource)(GLuint shader, GLsizei count, const GLchar** string, const GLint* length);
-    static void (GL_APIENTRY *glFramebufferRenderbuffer)(GLenum target, GLenum attachment, GLenum renderbuffertarget, GLuint renderbuffer);
-    static void (GL_APIENTRY *glFramebufferTexture2D)(GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level);
 
 private:
     bool                    m_isLoaded;
