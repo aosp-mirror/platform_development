@@ -26,10 +26,19 @@ static osUtils::dynLibrary *s_gles_lib = NULL;
 // This function is called only once during initialiation before
 // any thread has been created - hence it should NOT be thread safe.
 //
+
+#ifdef _WIN32
+#define DEFAULT_GLES_CM_LIB "libGLES_CM_translator"
+#elif defined(__APPLE__)
+#define DEFAULT_GLES_CM_LIB "libGLES_CM_translator.dylib"
+#else
+#define DEFAULT_GLES_CM_LIB "libGLES_CM_translator.so"
+#endif
+
 bool init_gl_dispatch()
 {
     const char *libName = getenv("ANDROID_GLESv1_LIB");
-    if (!libName) libName = "libGLES_CM.so";
+    if (!libName) libName = DEFAULT_GLES_CM_LIB;
 
     s_gles_lib = osUtils::dynLibrary::open(libName);
     if (!s_gles_lib) return false;
