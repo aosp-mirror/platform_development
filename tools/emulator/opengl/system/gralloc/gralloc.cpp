@@ -245,7 +245,8 @@ static int gralloc_free(alloc_device_t* dev,
                         buffer_handle_t handle)
 {
     const cb_handle_t *cb = (const cb_handle_t *)handle;
-    if (!cb || !cb->validate()) {
+    if (!cb_handle_t::validate((cb_handle_t*)cb)) {
+        ERR("gralloc_free: invalid handle");
         return -EINVAL;
     }
 
@@ -322,7 +323,7 @@ static int fb_post(struct framebuffer_device_t* dev, buffer_handle_t buffer)
     fb_device_t *fbdev = (fb_device_t *)dev;
     cb_handle_t *cb = (cb_handle_t *)buffer;
 
-    if (!fbdev || !cb || !cb->validate() || !cb->canBePosted()) {
+    if (!fbdev || !cb_handle_t::validate(cb) || !cb->canBePosted()) {
         return -EINVAL;
     }
 
@@ -402,7 +403,8 @@ static int gralloc_register_buffer(gralloc_module_t const* module,
 {
     private_module_t *gr = (private_module_t *)module;
     cb_handle_t *cb = (cb_handle_t *)handle;
-    if (!gr || !cb || !cb->validate()) {
+    if (!gr || !cb_handle_t::validate(cb)) {
+        ERR("gralloc_register_buffer: invalid buffer");
         return -EINVAL;
     }
 
@@ -414,6 +416,7 @@ static int gralloc_register_buffer(gralloc_module_t const* module,
         void *vaddr;
         int err = map_buffer(cb, &vaddr);
         if (err) {
+            ERR("gralloc_register_buffer: map failed");
             return -err;
         }
         cb->mappedPid = getpid();
@@ -427,7 +430,8 @@ static int gralloc_unregister_buffer(gralloc_module_t const* module,
 {
     private_module_t *gr = (private_module_t *)module;
     cb_handle_t *cb = (cb_handle_t *)handle;
-    if (!gr || !cb || !cb->validate()) {
+    if (!gr || !cb_handle_t::validate(cb)) {
+        ERR("gralloc_unregister_buffer: invalid buffer");
         return -EINVAL;
     }
 
@@ -439,6 +443,7 @@ static int gralloc_unregister_buffer(gralloc_module_t const* module,
         void *vaddr;
         int err = munmap((void *)cb->ashmemBase, cb->ashmemSize);
         if (err) {
+            ERR("gralloc_unregister_buffer: unmap failed");
             return -EINVAL;
         }
         cb->ashmemBase = NULL;
@@ -455,7 +460,7 @@ static int gralloc_lock(gralloc_module_t const* module,
 {
     private_module_t *gr = (private_module_t *)module;
     cb_handle_t *cb = (cb_handle_t *)handle;
-    if (!gr || !cb || !cb->validate()) {
+    if (!gr || !cb_handle_t::validate(cb)) {
         LOGE("gralloc_lock bad handle\n");
         return -EINVAL;
     }
@@ -543,7 +548,7 @@ static int gralloc_unlock(gralloc_module_t const* module,
 {
     private_module_t *gr = (private_module_t *)module;
     cb_handle_t *cb = (cb_handle_t *)handle;
-    if (!gr || !cb || !cb->validate()) {
+    if (!gr || !cb_handle_t::validate(cb)) {
         return -EINVAL;
     }
 
