@@ -36,7 +36,7 @@
     <!-- For android.media.audiofx.Visualizer -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
-    <uses-sdk android:minSdkVersion="3" android:targetSdkVersion="3" />
+    <uses-sdk android:minSdkVersion="4" android:targetSdkVersion="13" />
 
     <!-- We will request access to the camera, saying we require a camera
          of some sort but not one with autofocus capability. -->
@@ -900,6 +900,15 @@
         </activity>
 
         <activity android:name=".content.StyledText" android:label="@string/activity_styled_text">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+                <category android:name="android.intent.category.EMBED" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".content.ResourcesLayoutReference"
+                android:label="@string/activity_resources_layout_reference">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
