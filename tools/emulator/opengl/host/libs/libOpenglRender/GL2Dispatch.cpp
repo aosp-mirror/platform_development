@@ -23,6 +23,14 @@ gl2_decoder_context_t s_gl2;
 
 static osUtils::dynLibrary *s_gles2_lib = NULL;
 
+#ifdef _WIN32
+#define DEFAULT_GLES_V2_LIB "libGLES_V2_translator"
+#elif defined(__APPLE__)
+#define DEFAULT_GLES_V2_LIB "libGLES_V2_translator.dylib"
+#else
+#define DEFAULT_GLES_V2_LIB "libGLES_V2_translator.so"
+#endif
+
 //
 // This function is called only once during initialiation before
 // any thread has been created - hence it should NOT be thread safe.
@@ -30,7 +38,7 @@ static osUtils::dynLibrary *s_gles2_lib = NULL;
 bool init_gl2_dispatch()
 {
     const char *libName = getenv("ANDROID_GLESv2_LIB");
-    if (!libName) libName = "libGLESv2.so";
+    if (!libName) libName = DEFAULT_GLES_V2_LIB;
 
     //
     // Load the GLES library

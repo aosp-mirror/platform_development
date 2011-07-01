@@ -20,17 +20,25 @@
 
 EGLDispatch s_egl;
 
+#ifdef _WIN32
+#define DEFAULT_EGL_LIB "libEGL_translator"
+#elif defined(__APPLE__)
+#define DEFAULT_EGL_LIB "libEGL_translator.dylib"
+#else
+#define DEFAULT_EGL_LIB "libEGL_translator.so"
+#endif
+
 bool init_egl_dispatch()
 {
+
     const char *libName = getenv("ANDROID_EGL_LIB");
-    if (!libName) libName = "libEGL.so";
+    if (!libName) libName = DEFAULT_EGL_LIB;
 
     osUtils::dynLibrary *lib = osUtils::dynLibrary::open(libName);
     if (!lib) {
         printf("Failed to open %s\n", libName);
         return NULL;
     }
-
     s_egl.eglGetError = (eglGetError_t) lib->findSymbol("eglGetError");
     s_egl.eglGetDisplay = (eglGetDisplay_t) lib->findSymbol("eglGetDisplay");
     s_egl.eglInitialize = (eglInitialize_t) lib->findSymbol("eglInitialize");
