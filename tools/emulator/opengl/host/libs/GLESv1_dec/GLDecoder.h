@@ -35,32 +35,32 @@ public:
     void setContextData(GLDecoderContextData *contextData) { m_contextData = contextData; }
 
 private:
-    static void s_glGetCompressedTextureFormats(void * self, GLint cont, GLint *data);
-    static void s_glVertexPointerData(void *self, GLint size, GLenum type, GLsizei stride, void *data, GLuint datalen);
-    static void s_glVertexPointerOffset(void *self, GLint size, GLenum type, GLsizei stride, GLuint offset);
+    static void gl_APIENTRY s_glGetCompressedTextureFormats(void * self, GLint cont, GLint *data);
+    static void gl_APIENTRY s_glVertexPointerData(void *self, GLint size, GLenum type, GLsizei stride, void *data, GLuint datalen);
+    static void gl_APIENTRY s_glVertexPointerOffset(void *self, GLint size, GLenum type, GLsizei stride, GLuint offset);
 
-    static void s_glColorPointerData(void *self, GLint size, GLenum type, GLsizei stride, void *data, GLuint datalen);
-    static void s_glColorPointerOffset(void *self, GLint size, GLenum type, GLsizei stride, GLuint offset);
+    static void gl_APIENTRY s_glColorPointerData(void *self, GLint size, GLenum type, GLsizei stride, void *data, GLuint datalen);
+    static void gl_APIENTRY s_glColorPointerOffset(void *self, GLint size, GLenum type, GLsizei stride, GLuint offset);
 
-    static void s_glTexCoordPointerData(void *self, GLint unit, GLint size, GLenum type, GLsizei stride, void *data, GLuint datalen);
-    static void s_glTexCoordPointerOffset(void *self, GLint size, GLenum type, GLsizei stride, GLuint offset);
+    static void gl_APIENTRY s_glTexCoordPointerData(void *self, GLint unit, GLint size, GLenum type, GLsizei stride, void *data, GLuint datalen);
+    static void gl_APIENTRY s_glTexCoordPointerOffset(void *self, GLint size, GLenum type, GLsizei stride, GLuint offset);
 
-    static void s_glNormalPointerData(void *self, GLenum type, GLsizei stride, void *data, GLuint datalen);
-    static void s_glNormalPointerOffset(void *self, GLenum type, GLsizei stride, GLuint offset);
+    static void gl_APIENTRY s_glNormalPointerData(void *self, GLenum type, GLsizei stride, void *data, GLuint datalen);
+    static void gl_APIENTRY s_glNormalPointerOffset(void *self, GLenum type, GLsizei stride, GLuint offset);
 
-    static void s_glPointSizePointerData(void *self, GLenum type, GLsizei stride, void *data, GLuint datalen);
-    static void s_glPointSizePointerOffset(void *self, GLenum type, GLsizei stride, GLuint offset);
+    static void gl_APIENTRY s_glPointSizePointerData(void *self, GLenum type, GLsizei stride, void *data, GLuint datalen);
+    static void gl_APIENTRY s_glPointSizePointerOffset(void *self, GLenum type, GLsizei stride, GLuint offset);
 
-    static void s_glDrawElementsOffset(void *self, GLenum mode, GLsizei count, GLenum type, GLuint offset);
-    static void s_glDrawElementsData(void *self, GLenum mode, GLsizei count, GLenum type, void * data, GLuint datalen);
+    static void gl_APIENTRY s_glDrawElementsOffset(void *self, GLenum mode, GLsizei count, GLenum type, GLuint offset);
+    static void gl_APIENTRY s_glDrawElementsData(void *self, GLenum mode, GLsizei count, GLenum type, void * data, GLuint datalen);
 
-    static void s_glWeightPointerData(void * self, GLint size, GLenum type, GLsizei stride, void * data, GLuint datalen);
-    static void s_glWeightPointerOffset(void * self, GLint size, GLenum type, GLsizei stride, GLuint offset);
+    static void gl_APIENTRY s_glWeightPointerData(void * self, GLint size, GLenum type, GLsizei stride, void * data, GLuint datalen);
+    static void gl_APIENTRY s_glWeightPointerOffset(void * self, GLint size, GLenum type, GLsizei stride, GLuint offset);
 
-    static void s_glMatrixIndexPointerData(void * self, GLint size, GLenum type, GLsizei stride, void * data, GLuint datalen);
-    static void s_glMatrixIndexPointerOffset(void * self, GLint size, GLenum type, GLsizei stride, GLuint offset);
+    static void gl_APIENTRY s_glMatrixIndexPointerData(void * self, GLint size, GLenum type, GLsizei stride, void * data, GLuint datalen);
+    static void gl_APIENTRY s_glMatrixIndexPointerOffset(void * self, GLint size, GLenum type, GLsizei stride, GLuint offset);
 
-    static int s_glFinishRoundTrip(void *self);
+    static int gl_APIENTRY s_glFinishRoundTrip(void *self);
 
     static void * s_getProc(const char *name, void *userData);
 

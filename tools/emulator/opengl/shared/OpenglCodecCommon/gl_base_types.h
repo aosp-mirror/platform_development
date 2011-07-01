@@ -17,6 +17,15 @@
 #define __GL_BASE_TYPES__H
 
 #include <KHR/khrplatform.h>
+
+#ifndef gl_APIENTRY
+#define gl_APIENTRY KHRONOS_APIENTRY
+#endif
+
+#ifndef gl2_APIENTRY
+#define gl2_APIENTRY KHRONOS_APIENTRY
+#endif
+
 typedef void             GLvoid;
 typedef unsigned int     GLenum;
 typedef unsigned char    GLboolean;
