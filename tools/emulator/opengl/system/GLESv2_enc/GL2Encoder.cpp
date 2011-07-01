@@ -9,7 +9,11 @@ static GLubyte *gExtensionsString= (GLubyte *) ""; // no extensions at this poin
 
 GL2Encoder::GL2Encoder(IOStream *stream) : gl2_encoder_context_t(stream)
 {
+    m_initialized = false;
     m_state = NULL;
+    m_num_compressedTextureFormats = 0;
+    m_compressedTextureFormats = NULL;
+    //overrides
     m_glFlush_enc = set_glFlush(s_glFlush);
     m_glPixelStorei_enc = set_glPixelStorei(s_glPixelStorei);
     m_glGetString_enc = set_glGetString(s_glGetString);
