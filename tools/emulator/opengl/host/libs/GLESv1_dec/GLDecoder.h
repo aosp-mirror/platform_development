@@ -19,6 +19,7 @@
 #include "gl_dec.h"
 #include "FixedBuffer.h"
 #include "GLDecoderContextData.h"
+#include <osDynLibrary.h>
 
 #define GLES_LIBNAME_VAR "ANDROID_GLESv1_LIB"
 #define GLES_LIBNAME "libGLES_CM.so"
@@ -64,7 +65,7 @@ private:
     static void * s_getProc(const char *name, void *userData);
 
     GLDecoderContextData *m_contextData;
-    void *m_glesDso;
+    osUtils::dynLibrary* m_glesDso;
 };
 
 #endif
