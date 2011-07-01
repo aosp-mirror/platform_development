@@ -25,6 +25,11 @@ LOCAL_SRC_FILES := \
 
 $(call emugl-export,C_INCLUDES,$(EMUGL_PATH)/host/include)
 
+# use Translator's egl/gles headers
+LOCAL_C_INCLUDES += $(EMUGL_PATH)/host/libs/Translator/include
+
+LOCAL_STATIC_LIBRARIES += libutils liblog
+
 $(call emugl-end-module)
 
 endif # HOST_OS != darwin
