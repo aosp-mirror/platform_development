@@ -23,6 +23,7 @@ LOCAL_C_INCLUDES := $(emulatorOpengl)/host/include \
 
 LOCAL_SHARED_LIBRARIES := libOpenglRender \
         libGLESv1_dec \
+        libGLESv2_dec \
         lib_renderControl_dec
 
 include $(BUILD_HOST_EXECUTABLE)
