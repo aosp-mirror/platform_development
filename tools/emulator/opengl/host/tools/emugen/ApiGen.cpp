@@ -50,17 +50,23 @@ int ApiGen::genProcTypes(const std::string &filename, SideType side)
     }
     printHeader(fp);
 
-    fprintf(fp, "#ifndef __%s_%s_proc_t_h\n", m_basename.c_str(), sideString(side));
-    fprintf(fp, "#define __%s_%s_proc_t_h\n", m_basename.c_str(), sideString(side));
+    const char* basename = m_basename.c_str();
+
+    fprintf(fp, "#ifndef __%s_%s_proc_t_h\n", basename, sideString(side));
+    fprintf(fp, "#define __%s_%s_proc_t_h\n", basename, sideString(side));
     fprintf(fp, "\n\n");
-    fprintf(fp, "\n#include \"%s_types.h\"\n", m_basename.c_str());
+    fprintf(fp, "\n#include \"%s_types.h\"\n",basename);
+    fprintf(fp, "#ifndef %s_APIENTRY\n",basename);
+    fprintf(fp, "#define %s_APIENTRY \n",basename);
+    fprintf(fp, "#endif\n");
+
 
     for (size_t i = 0; i < size(); i++) {
         EntryPoint *e = &at(i);
 
         fprintf(fp, "typedef ");
         e->retval().printType(fp);
-        fprintf(fp, " (* %s_%s_proc_t) (", e->name().c_str(), sideString(side));
+        fprintf(fp, " (%s_APIENTRY *%s_%s_proc_t) (", basename, e->name().c_str(), sideString(side));
         if (side == CLIENT_SIDE) { fprintf(fp, "void * ctx"); }
         if (e->customDecoder() && side == SERVER_SIDE) { fprintf(fp, "void *ctx"); }
 
