@@ -19,6 +19,7 @@
 #include "ReadBuffer.h"
 #include "TimeUtils.h"
 #include "GLDispatch.h"
+#include "GL2Dispatch.h"
 
 #define STREAM_BUFFER_SIZE 4*1024*1024
 
@@ -47,6 +48,7 @@ int RenderThread::Main()
     // initialize decoders
     //
     tInfo->m_glDec.initGL( gl_dispatch_get_proc_func, NULL );
+    tInfo->m_gl2Dec.initGL( gl2_dispatch_get_proc_func, NULL );
     initRenderControlContext( &m_rcDec );
 
     ReadBuffer readBuf(m_stream, STREAM_BUFFER_SIZE);
@@ -79,9 +81,18 @@ int RenderThread::Main()
             progress = false;
 
             //
-            // try to process some of the command buffer using the GLES decoder
+            // try to process some of the command buffer using the GLESv1 decoder
             //
             size_t last = tInfo->m_glDec.decode(readBuf.buf(), readBuf.validData(), m_stream);
+            if (last > 0) {
+                progress = true;
+                readBuf.consume(last);
+            }
+
+            //
+            // try to process some of the command buffer using the GLESv2 decoder
+            //
+            last = tInfo->m_gl2Dec.decode(readBuf.buf(), readBuf.validData(), m_stream);
             if (last > 0) {
                 progress = true;
                 readBuf.consume(last);

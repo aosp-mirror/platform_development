@@ -5,7 +5,7 @@ ifneq ($(HOST_OS),darwin)
 ### libOpenglRender #################################################
 $(call emugl-begin-host-shared-library,libOpenglRender)
 
-$(call emugl-import,libGLESv1_dec lib_renderControl_dec libOpenglCodecCommon libOpenglOsUtils)
+$(call emugl-import,libGLESv1_dec libGLESv2_dec lib_renderControl_dec libOpenglCodecCommon libOpenglOsUtils)
 
 LOCAL_SRC_FILES := \
     render_api.cpp \

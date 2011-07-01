@@ -21,6 +21,11 @@
 #include "gralloc_cb.h"
 #include "GLClientState.h"
 
+#include "GLEncoder.h"
+#ifdef WITH_GLES2
+#include "GL2Encoder.h"
+#endif
+
 #include <private/ui/android_natives_priv.h>
 
 template<typename T>
@@ -1012,7 +1017,12 @@ EGLBoolean eglMakeCurrent(EGLDisplay dpy, EGLSurface draw, EGLSurface read, EGLC
         context->read = read;
         context->flags |= EGLContext_t::IS_CURRENT;
         //set the client state
-        hostCon->glEncoder()->setClientState(context->getClientState());
+        if (context->version == 2) {
+            hostCon->gl2Encoder()->setClientState(context->getClientState());
+        }
+        else {
+            hostCon->glEncoder()->setClientState(context->getClientState());
+        }
     }
 
     if (tInfo->currentContext)
@@ -1023,14 +1033,17 @@ EGLBoolean eglMakeCurrent(EGLDisplay dpy, EGLSurface draw, EGLSurface read, EGLC
 
     //Check maybe we need to init the encoder, if it's first eglMakeCurrent
     if (tInfo->currentContext) {
-        if (!hostCon->glEncoder()->isInitialized()) {
-            if (tInfo->currentContext->version == 2) {
+        if (tInfo->currentContext->version == 2) {
+            if (!hostCon->gl2Encoder()->isInitialized()) {
                 s_display.gles2_iface()->init();
+                hostCon->gl2Encoder()->setInitialized();
             }
-            else {
+        }
+        else {
+            if (!hostCon->glEncoder()->isInitialized()) {
                 s_display.gles_iface()->init();
+                hostCon->glEncoder()->setInitialized();
             }
-            hostCon->glEncoder()->setInitialized();
         }
     }
 
