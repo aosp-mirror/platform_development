@@ -22,14 +22,14 @@ private:
     osUtils::dynLibrary * m_GL2library;
 
     static void *s_getProc(const char *name, void *userData);
-    static void s_glGetCompressedTextureFormats(void *self, int count, GLint *formats);
-    static void s_glVertexAttribPointerData(void *self, GLuint indx, GLint size, GLenum type,
+    static void gl2_APIENTRY s_glGetCompressedTextureFormats(void *self, int count, GLint *formats);
+    static void gl2_APIENTRY s_glVertexAttribPointerData(void *self, GLuint indx, GLint size, GLenum type,
                                       GLboolean normalized, GLsizei stride,  void * data, GLuint datalen);
-    static void s_glVertexAttribPointerOffset(void *self, GLuint indx, GLint size, GLenum type,
+    static void gl2_APIENTRY s_glVertexAttribPointerOffset(void *self, GLuint indx, GLint size, GLenum type,
                                         GLboolean normalized, GLsizei stride,  GLuint offset);
 
-    static void s_glDrawElementsOffset(void *self, GLenum mode, GLsizei count, GLenum type, GLuint offset);
-    static void s_glDrawElementsData(void *self, GLenum mode, GLsizei count, GLenum type, void * data, GLuint datalen);
-    static void s_glShaderString(void *self, GLuint shader, const GLchar* string, GLsizei len);
+    static void gl2_APIENTRY s_glDrawElementsOffset(void *self, GLenum mode, GLsizei count, GLenum type, GLuint offset);
+    static void gl2_APIENTRY s_glDrawElementsData(void *self, GLenum mode, GLsizei count, GLenum type, void * data, GLuint datalen);
+    static void gl2_APIENTRY s_glShaderString(void *self, GLuint shader, const GLchar* string, GLsizei len);
 };
 #endif

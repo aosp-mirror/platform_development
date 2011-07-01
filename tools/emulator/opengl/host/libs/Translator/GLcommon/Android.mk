@@ -26,6 +26,8 @@ endif
 
 ifeq ($(HOST_OS),windows)
     $(call emugl-export,LDLIBS,-lopengl32 -lgdi32)
+    GL_COMMON_LINKER_FLAGS := -Wl,--add-stdcall-alias
+    $(call emugl-export,LDFLAGS,$(GL_COMMON_LINKER_FLAGS))
 endif
 
 $(call emugl-export,C_INCLUDES,$(LOCAL_PATH)/../include $(EMUGL_PATH)/shared)
