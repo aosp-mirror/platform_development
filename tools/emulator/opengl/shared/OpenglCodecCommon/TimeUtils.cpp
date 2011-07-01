@@ -16,7 +16,7 @@
 #include "TimeUtils.h"
 
 #ifdef _WIN32
-#include <Windows.h>
+#include <windows.h>
 #include <time.h>
 #include <stdio.h>
 #elif defined(__linux__)
