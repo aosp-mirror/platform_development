@@ -18,6 +18,8 @@
 #include "QemuPipeStream.h"
 #include "ThreadInfo.h"
 #include <cutils/log.h>
+#include "GLEncoder.h"
+#include "GL2Encoder.h"
 
 #define STREAM_BUFFER_SIZE  4*1024*1024
 #define STREAM_PORT_NUM     22468
@@ -28,6 +30,7 @@
 HostConnection::HostConnection() :
     m_stream(NULL),
     m_glEnc(NULL),
+    m_gl2Enc(NULL),
     m_rcEnc(NULL)
 {
 }
@@ -36,6 +39,7 @@ HostConnection::~HostConnection()
 {
     delete m_stream;
     delete m_glEnc;
+    delete m_gl2Enc;
     delete m_rcEnc;
 }
 
@@ -119,6 +123,16 @@ GLEncoder *HostConnection::glEncoder()
     return m_glEnc;
 }
 
+GL2Encoder *HostConnection::gl2Encoder()
+{
+    if (!m_gl2Enc) {
+        m_gl2Enc = new GL2Encoder(m_stream);
+        DBG("HostConnection::gl2Encoder new encoder %p, tid %d", m_gl2Enc, gettid());
+        m_gl2Enc->setContextAccessor(s_getGL2Context);
+    }
+    return m_gl2Enc;
+}
+
 renderControl_encoder_context_t *HostConnection::rcEncoder()
 {
     if (!m_rcEnc) {
@@ -132,6 +146,15 @@ gl_client_context_t *HostConnection::s_getGLContext()
     EGLThreadInfo *ti = getEGLThreadInfo();
     if (ti->hostConn) {
         return ti->hostConn->m_glEnc;
+    }
+    return NULL;
+}
+
+gl2_client_context_t *HostConnection::s_getGL2Context()
+{
+    EGLThreadInfo *ti = getEGLThreadInfo();
+    if (ti->hostConn) {
+        return ti->hostConn->m_gl2Enc;
     }
     return NULL;
 }

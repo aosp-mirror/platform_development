@@ -17,8 +17,12 @@
 #define __COMMON_HOST_CONNECTION_H
 
 #include "IOStream.h"
-#include "GLEncoder.h"
 #include "renderControl_enc.h"
+
+class GLEncoder;
+class gl_client_context_t;
+class GL2Encoder;
+class gl2_client_context_t;
 
 class HostConnection
 {
@@ -27,6 +31,7 @@ public:
     ~HostConnection();
 
     GLEncoder *glEncoder();
+    GL2Encoder *gl2Encoder();
     renderControl_encoder_context_t *rcEncoder();
 
     void flush() {
@@ -37,11 +42,13 @@ public:
 
 private:
     HostConnection();
-    static gl_client_context_t *s_getGLContext();
+    static gl_client_context_t  *s_getGLContext();
+    static gl2_client_context_t *s_getGL2Context();
 
 private:
     IOStream *m_stream;
-    GLEncoder *m_glEnc;
+    GLEncoder   *m_glEnc;
+    GL2Encoder  *m_gl2Enc;
     renderControl_encoder_context_t *m_rcEnc;
 };
 

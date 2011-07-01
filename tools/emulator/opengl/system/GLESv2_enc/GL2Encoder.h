@@ -33,7 +33,13 @@ public:
     void flush() {
         gl2_encoder_context_t::m_stream->flush();
     }
+
+    void setInitialized(){ m_initialized = true; };
+    bool isInitialized(){ return m_initialized; };
+
 private:
+
+    bool    m_initialized;
     GLClientState *m_state;
 
     GLint *m_compressedTextureFormats;
@@ -91,7 +97,7 @@ private:
     glGetVertexAttribPointerv_client_proc_t m_glGetVertexAttribPointerv;
     static void s_glGetVertexAttribPointerv(void *self, GLuint index, GLenum pname, GLvoid **pointer);
 
-    static void s_glShaderSource(void *self, GLuint shader, GLsizei count, const GLstr *string, const GLint *length);
+    static void s_glShaderSource(void *self, GLuint shader, GLsizei count, const GLchar **string, const GLint *length);
 
     static void s_glFinish(void *self);
 };

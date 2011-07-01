@@ -18,15 +18,17 @@ LOCAL_SRC_FILES := \
 
 
 LOCAL_PRELINK_MODULE := false
-LOCAL_CFLAGS += -DLOG_TAG=\"EGL_emulation\" -DEGL_EGLEXT_PROTOTYPES
+LOCAL_CFLAGS += -DLOG_TAG=\"EGL_emulation\" -DEGL_EGLEXT_PROTOTYPES -DWITH_GLES2
 LOCAL_C_INCLUDES +=  \
         $(emulatorOpengl)/host/include/libOpenglRender \
         $(emulatorOpengl)/shared/OpenglCodecCommon \
         $(emulatorOpengl)/system/OpenglSystemCommon \
         $(emulatorOpengl)/system/GLESv1_enc \
+        $(emulatorOpengl)/system/GLESv2_enc \
         $(emulatorOpengl)/system/renderControl_enc \
 		$(call intermediates-dir-for, SHARED_LIBRARIES, lib_renderControl_enc) \
-		$(call intermediates-dir-for, SHARED_LIBRARIES, libGLESv1_enc)
+		$(call intermediates-dir-for, SHARED_LIBRARIES, libGLESv1_enc)  \
+		$(call intermediates-dir-for, SHARED_LIBRARIES, libGLESv2_enc)
 
 LOCAL_MODULE_TAGS := debug
 LOCAL_MODULE_PATH := $(TARGET_OUT_SHARED_LIBRARIES)/egl
@@ -43,6 +45,7 @@ LOCAL_SHARED_LIBRARIES := \
 	libutils \
 	libdl	\
     libGLESv1_enc \
+    libGLESv2_enc \
     libOpenglSystemCommon \
     lib_renderControl_enc
 

@@ -114,8 +114,8 @@ glGetFloatv
 
 #void glGetFramebufferAttachmentParameteriv(GLenum target, GLenum attachment, GLenum pname, GLint *params)
 glGetFramebufferAttachmentParameteriv
-      dir params out
-      len params (sizeof(GLint))
+	dir params out
+	len params (sizeof(GLint))
 
 #void glGetIntegerv(GLenum pname, GLint *params)
 glGetIntegerv
@@ -152,6 +152,7 @@ glGetShaderiv
 glGetShaderInfoLog
 	dir length out
 	len length (sizeof(GLsizei))
+	var_flag length nullAllowed
 	dir infolog out
 	len infolog bufsize
 	
@@ -521,9 +522,11 @@ glVertexAttribPointerData
 	len data datalen
 	custom_pack data glUtilsPackPointerData((unsigned char *)ptr, (unsigned char *)data, size, type, stride, datalen) 
 	flag custom_decoder
+	flag not_api
 
 glVertexAttribPointerOffset
 	flag custom_decoder
+	flag not_api
 
 #client-state, handled by the encoder
 #GL_ENTRY(void, glGetVertexAttribPointerv, GLuint index, GLenum pname, GLvoid** pointer)
@@ -533,20 +536,24 @@ glGetVertexAttribPointerv
 glDrawElementsData
 	len data datalen
 	flag custom_decoder
+	flag not_api
 
 glDrawElementsOffset
 	flag custom_decoder
+	flag not_api
 
 #GL_ENTRY(void, glGetCompressedTextureFormats, int count, GLint *formats)
 glGetCompressedTextureFormats
 	dir formats out
 	len formats (count * sizeof(GLint))
 	flag custom_decoder
+	flag not_api
 
 #GL_ENTRY(void, glShaderString, GLuint shader, GLchar *string, GLsizei len)
 glShaderString
 	len string len
 	flag custom_decoder
+	flag not_api
 	
 glFinishRoundTrip
 	flag custom_decoder

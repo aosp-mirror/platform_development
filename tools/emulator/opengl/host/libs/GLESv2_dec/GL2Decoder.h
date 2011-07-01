@@ -30,6 +30,6 @@ private:
 
     static void s_glDrawElementsOffset(void *self, GLenum mode, GLsizei count, GLenum type, GLuint offset);
     static void s_glDrawElementsData(void *self, GLenum mode, GLsizei count, GLenum type, void * data, GLuint datalen);
-    static void s_glShaderString(void *self, GLuint shader, GLstr string, GLsizei len);
+    static void s_glShaderString(void *self, GLuint shader, const GLchar* string, GLsizei len);
 };
 #endif

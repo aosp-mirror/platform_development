@@ -38,6 +38,7 @@ emugl-begin-module = \
     $(eval LOCAL_MODULE_CLASS := $(patsubst HOST_%,%,$(patsubst %EXECUTABLE,%EXECUTABLES,$(patsubst %LIBRARY,%LIBRARIES,$2)))) \
     $(eval LOCAL_IS_HOST_MODULE := $(if $3,true,))\
     $(eval LOCAL_C_INCLUDES := $(EMUGL_COMMON_INCLUDES)) \
+    $(eval LOCAL_CFLAGS := $(EMUGL_COMMON_CFLAGS)) \
     $(eval LOCAL_PRELINK_MODULE := false)\
     $(eval _EMUGL_INCLUDE_TYPE := $(BUILD_$2)) \
     $(call _emugl-init-module,$1,$2,$3)
