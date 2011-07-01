@@ -19,6 +19,7 @@
 #include "RenderContext.h"
 #include "WindowSurface.h"
 #include "GLDecoder.h"
+#include "GL2Decoder.h"
 
 struct RenderThreadInfo
 {
@@ -26,6 +27,7 @@ struct RenderThreadInfo
     WindowSurfacePtr currDrawSurf;
     WindowSurfacePtr currReadSurf;
     GLDecoder        m_glDec;
+    GL2Decoder       m_gl2Dec;
 };
 
 RenderThreadInfo *getRenderThreadInfo();

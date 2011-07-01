@@ -637,7 +637,7 @@ int ApiGen::genDecoderImpl(const std::string &filename)
                 }
             } else if (pass == PASS_DebugPrint) {
                 fprintf(fp, "#ifdef DEBUG_PRINTOUT\n");
-                fprintf(fp, "\t\t\tfprintf(stderr,\"%s(%s)\\n\"", e->name().c_str(), printString.c_str());
+                fprintf(fp, "\t\t\tfprintf(stderr,\"%s: %s(%s)\\n\"", m_basename.c_str(), e->name().c_str(), printString.c_str());
                 if (e->vars().size() > 0 && !e->vars()[0].isVoid()) fprintf(fp, ",");
             }
 

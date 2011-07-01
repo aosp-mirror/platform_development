@@ -41,7 +41,8 @@ bool init_gl2_dispatch()
     //
     // init the GLES dispatch table
     //
-    return s_gl2.initDispatchByName( gl2_dispatch_get_proc_func, NULL );
+    s_gl2.initDispatchByName( gl2_dispatch_get_proc_func, NULL );
+    return true;
 }
 
 //

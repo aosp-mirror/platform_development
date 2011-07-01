@@ -29,6 +29,7 @@ GLubyte* 32 0x%08x true
 GLuint* 32 0x%08x true
 GLvoid* 32 0x%08x true
 GLchar* 32 0x%08x true
+GLchar** 32 0x%08x true
 GLvoid** 32 0x%08x true
 void* 32 0x%08x true
 GLstr 32 %s true

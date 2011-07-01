@@ -117,7 +117,7 @@ const unsigned char *QemuPipeStream::readFully(void *buf, size_t len)
     //DBG(">> QemuPipeStream::readFully %d\n", len);
     if (!valid()) return NULL;
     if (!buf) {
-        ERR("QemuPipeStream::readFully failed, buf=NULL");
+        ERR("QemuPipeStream::readFully failed, buf=NULL, len %d", len);
         return NULL;  // do not allow NULL buf in that implementation
     }
     size_t res = len;
