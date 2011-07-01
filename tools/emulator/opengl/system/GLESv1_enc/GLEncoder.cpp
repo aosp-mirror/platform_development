@@ -453,6 +453,7 @@ GLEncoder::GLEncoder(IOStream *stream) : gl_encoder_context_t(stream)
 {
     m_initialized = false;
     m_state = NULL;
+    m_num_compressedTextureFormats = 0;
     m_compressedTextureFormats = NULL;
     // overrides;
     m_glFlush_enc = set_glFlush(s_glFlush);
