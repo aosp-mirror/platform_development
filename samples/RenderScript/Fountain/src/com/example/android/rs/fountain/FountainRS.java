@@ -30,7 +30,7 @@ public class FountainRS {
     private Resources mRes;
     private RenderScriptGL mRS;
     private ScriptC_fountain mScript;
-    public void init(RenderScriptGL rs, Resources res, int width, int height) {
+    public void init(RenderScriptGL rs, Resources res) {
         mRS = rs;
         mRes = res;
 

@@ -20,7 +20,7 @@ import java.io.Writer;
 import java.util.ArrayList;
 import java.util.concurrent.Semaphore;
 
-import android.renderscript.RSSurfaceView;
+import android.renderscript.RSTextureView;
 import android.renderscript.RenderScript;
 import android.renderscript.RenderScriptGL;
 
@@ -39,7 +39,7 @@ import android.view.SurfaceView;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 
-public class FountainView extends RSSurfaceView {
+public class FountainView extends RSTextureView {
 
     public FountainView(Context context) {
         super(context);
@@ -49,19 +49,22 @@ public class FountainView extends RSSurfaceView {
     private RenderScriptGL mRS;
     private FountainRS mRender;
 
-    public void surfaceChanged(SurfaceHolder holder, int format, int w, int h) {
-        super.surfaceChanged(holder, format, w, h);
+    @Override
+    protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        android.util.Log.e("rs", "onAttachedToWindow");
         if (mRS == null) {
             RenderScriptGL.SurfaceConfig sc = new RenderScriptGL.SurfaceConfig();
             mRS = createRenderScriptGL(sc);
-            mRS.setSurface(holder, w, h);
             mRender = new FountainRS();
-            mRender.init(mRS, getResources(), w, h);
+            mRender.init(mRS, getResources());
         }
     }
 
     @Override
     protected void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+        android.util.Log.e("rs", "onDetachedFromWindow");
         if (mRS != null) {
             mRS = null;
             destroyRenderScriptGL();
