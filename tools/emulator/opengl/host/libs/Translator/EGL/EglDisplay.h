@@ -67,6 +67,8 @@ public:
     bool destroyImageKHR(EGLImageKHR img);
 
 private:
+   int doChooseConfigs(const EglConfig& dummy,EGLConfig* configs,int config_size);
+   void addMissingConfigs(void);
    void initConfigurations(int renderableType);
 
    EGLNativeDisplayType   m_dpy;
