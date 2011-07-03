@@ -23,7 +23,8 @@ EglDisplay::EglDisplay(EGLNativeDisplayType dpy,bool isDefault) :
     m_initialized(false),
     m_configInitialized(false),
     m_isDefault(isDefault),
-    m_nextEglImageId(0)
+    m_nextEglImageId(0),
+    m_globalSharedContext(NULL)
 {
     m_manager[GLES_1_1] = new ObjectNameManager(&m_globalNameSpace);
     m_manager[GLES_2_0] = new ObjectNameManager(&m_globalNameSpace);
@@ -31,6 +32,15 @@ EglDisplay::EglDisplay(EGLNativeDisplayType dpy,bool isDefault) :
 
 EglDisplay::~EglDisplay() {
     android::Mutex::Autolock mutex(m_lock);
+
+    //
+    // Destroy the global context if one was created.
+    // (should be true for windows platform only)
+    //
+    if (m_globalSharedContext != NULL) {
+        EglOS::destroyContext( m_dpy, m_globalSharedContext);
+    }
+
     if(m_isDefault) {
         EglOS::releaseDisplay(m_dpy);
     }
@@ -264,7 +274,6 @@ EGLContext EglDisplay::addContext(ContextPtr ctx ) {
    if(m_contexts.find(hndl) != m_contexts.end()) {
        return ret;
    }
-
    m_contexts[hndl] = ctx;
    return ret;
 }
@@ -293,4 +302,29 @@ bool EglDisplay:: destroyImageKHR(EGLImageKHR img) {
         return true;
     }
     return false;
+}
+
+EGLNativeContextType EglDisplay::getGlobalSharedContext(){
+    android::Mutex::Autolock mutex(m_lock);
+#ifndef _WIN32
+    return (EGLNativeContextType)m_manager[GLES_1_1]->getGlobalContext();
+#else
+    if (!m_globalSharedContext) {
+        //
+        // On windows we create a dummy context to serve as the
+        // "global context" which all contexts share with.
+        // This is because on windows it is not possible to share
+        // with a context which is already current. This dummy context
+        // will never be current to any thread so it is safe to share with.
+        // Create that context using the first config
+        if (m_configs.size() < 1) {
+            // Should not happen! config list should be initialized at this point
+            return NULL;
+        }
+        EglConfig *cfg = (*m_configs.begin());
+        m_globalSharedContext = EglOS::createContext(m_dpy,cfg,NULL);
+    }
+
+    return m_globalSharedContext;
+#endif
 }

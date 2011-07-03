@@ -641,7 +641,9 @@ EGLAPI EGLContext EGLAPIENTRY eglCreateContext(EGLDisplay display, EGLConfig con
         nativeShared = sharedCtxPtr->nativeType();
     }
 
-    EGLNativeContextType nativeContext = EglOS::createContext(dpy->nativeType(),cfg,static_cast<EGLNativeContextType>(dpy->getManager(version)->getGlobalContext()));
+    EGLNativeContextType globalSharedContext = dpy->getGlobalSharedContext();
+    EGLNativeContextType nativeContext = EglOS::createContext(dpy->nativeType(),cfg,globalSharedContext);
+
     if(nativeContext) {
         ContextPtr ctx(new EglContext(nativeContext,sharedCtxPtr,cfg,glesCtx,version,dpy->getManager(version)));
         return dpy->addContext(ctx);
