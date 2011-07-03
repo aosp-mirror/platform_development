@@ -73,7 +73,7 @@ public:
 
     EGLDisplay getDisplay() const { return m_eglDisplay; }
     EGLContext getContext() const { return m_eglContext; }
-
+    EGLNativeWindowType getSubWindow() const { return m_subWin; }
     bool bind_locked();
     bool unbind_locked();
 
