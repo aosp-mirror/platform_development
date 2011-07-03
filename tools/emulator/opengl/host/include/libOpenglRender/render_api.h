@@ -31,6 +31,10 @@ typedef HWND    FBNativeWindowType;
 
 typedef Window   FBNativeWindowType;
 
+#elif defined(__APPLE__)
+
+typedef void*   FBNativeWindowType;
+
 #else
 #warning "Unsupported platform"
 #endif

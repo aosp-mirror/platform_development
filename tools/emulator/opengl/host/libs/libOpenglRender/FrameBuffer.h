@@ -51,6 +51,7 @@ public:
     static bool initialize(FBNativeWindowType p_window,
                            int x, int y,
                            int width, int height);
+    static void finalize();
     static FrameBuffer *getFB() { return s_theFrameBuffer; }
 
     const FrameBufferCaps &getCaps() const { return m_caps; }
@@ -107,5 +108,7 @@ private:
     EGLContext m_prevContext;
     EGLSurface m_prevReadSurf;
     EGLSurface m_prevDrawSurf;
+    EGLNativeWindowType m_subWin;
+    EGLNativeDisplayType m_subWinDisplay;
 };
 #endif
