@@ -12,4 +12,8 @@ LOCAL_SRC_FILES := GLDecoder.cpp
 # for gl_types.h !
 $(call emugl-export,C_INCLUDES,$(EMUGL_PATH)/system/GLESv1_enc)
 
+#For gl debbuging
+#$(call emugl-export,CFLAGS,-DCHECK_GL_ERROR)
+#$(call emugl-export,CFLAGS,-DDEBUG_PRINTOUT)
+
 $(call emugl-end-module)
