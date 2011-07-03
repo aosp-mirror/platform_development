@@ -14,6 +14,7 @@
 * limitations under the License.
 */
 #include "EglPixmapSurface.h"
+#include "EglOsApi.h"
 
 std::set<EGLNativePixmapType> EglPixmapSurface::s_associatedPixmaps;
 
@@ -24,6 +25,7 @@ bool EglPixmapSurface::alreadyAssociatedWithConfig(EGLNativePixmapType pix) {
 
 EglPixmapSurface::EglPixmapSurface(EGLNativePixmapType pix,EglConfig* config):EglSurface(PIXMAP,config,0,0),m_pixmap(pix) {
     s_associatedPixmaps.insert(pix);
+    m_native = EglOS::createPixmapSurface(pix);
 }
 
 EglPixmapSurface::~EglPixmapSurface() {
