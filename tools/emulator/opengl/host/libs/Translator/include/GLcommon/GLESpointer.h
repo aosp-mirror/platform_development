@@ -29,6 +29,7 @@ public:
     GLsizei       getStride() const;
     const GLvoid* getArrayData() const;
     GLvoid*       getBufferData() const;
+    const GLvoid* getData() const;
     unsigned int  getBufferOffset() const;
     void          redirectPointerData();
     void          getBufferConversions(const RangeList& rl,RangeList& rlOut);

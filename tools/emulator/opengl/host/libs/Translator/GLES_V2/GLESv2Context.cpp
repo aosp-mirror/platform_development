@@ -32,7 +32,7 @@ void GLESv2Context::init() {
 
 GLESv2Context::GLESv2Context():GLEScontext(){};
 
-void GLESv2Context::setupArraysPointers(GLESConversionArrays& fArrs,GLint first,GLsizei count,GLenum type,const GLvoid* indices,bool direct) {
+void GLESv2Context::setupArraysPointers(GLESConversionArrays& cArrs,GLint first,GLsizei count,GLenum type,const GLvoid* indices,bool direct) {
     ArraysMap::iterator it;
 
     //going over all clients arrays Pointers
@@ -42,17 +42,14 @@ void GLESv2Context::setupArraysPointers(GLESConversionArrays& fArrs,GLint first,
         if(!isArrEnabled(array_id)) continue;
 
         unsigned int size = p->getSize();
-        bool usingVBO = p->isVBO();
 
-        if(needConvert(fArrs,first,count,type,indices,direct,p,array_id)){
+        if(needConvert(cArrs,first,count,type,indices,direct,p,array_id)){
             //conversion has occured
-            unsigned int convertedStride = usingVBO ? p->getStride() : 0;
-            const void* data = usingVBO ? p->getBufferData() : fArrs.getCurrentData();
-            setupArr(data,array_id,GL_FLOAT,size,convertedStride);
-            ++fArrs;
+            ArrayData currentArr = cArrs.getCurrentArray();
+            setupArr(currentArr.data,array_id,currentArr.type,size,currentArr.stride);
+            ++cArrs;
         } else {
-            const void* data = usingVBO ? p->getBufferData() : p->getArrayData();
-            setupArr(data,array_id,p->getType(),size,p->getStride());
+            setupArr(p->getData(),array_id,p->getType(),size,p->getStride());
         }
     }
 }
@@ -63,7 +60,7 @@ void GLESv2Context::setupArr(const GLvoid* arr,GLenum arrayType,GLenum dataType,
      s_glDispatch.glVertexAttribPointer(arrayType,size,dataType,GL_FALSE,stride,arr);
 }
 
-bool GLESv2Context::needConvert(GLESConversionArrays& fArrs,GLint first,GLsizei count,GLenum type,const GLvoid* indices,bool direct,GLESpointer* p,GLenum array_id) {
+bool GLESv2Context::needConvert(GLESConversionArrays& cArrs,GLint first,GLsizei count,GLenum type,const GLvoid* indices,bool direct,GLESpointer* p,GLenum array_id) {
 
     bool usingVBO = p->isVBO();
     GLenum arrType = p->getType();
@@ -75,15 +72,15 @@ bool GLESv2Context::needConvert(GLESConversionArrays& fArrs,GLint first,GLsizei 
 
     if(!usingVBO) {
         if (direct) {
-            convertDirect(fArrs,first,count,array_id,p);
+            convertDirect(cArrs,first,count,array_id,p);
         } else {
-            convertIndirect(fArrs,count,type,indices,array_id,p);
+            convertIndirect(cArrs,count,type,indices,array_id,p);
         }
     } else {
         if (direct) {
-            convertDirectVBO(first,count,array_id,p) ;
+            convertDirectVBO(cArrs,first,count,array_id,p) ;
         } else {
-            convertIndirectVBO(count,type,indices,array_id,p);
+            convertIndirectVBO(cArrs,count,type,indices,array_id,p);
         }
     }
     return true;
