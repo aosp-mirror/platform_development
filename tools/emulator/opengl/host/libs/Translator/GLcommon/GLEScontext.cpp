@@ -92,18 +92,33 @@ bool Version::operator<(const Version& ver) const{
     return false;
 }
 
+void GLEScontext::init() {
+
+    if (!s_glExtensions) {
+        initCapsLocked(s_glDispatch.glGetString(GL_EXTENSIONS));
+        s_glExtensions = new std::string("");
+    }
+
+    if (!m_initialized) {
+        initExtensionString();
+
+        int maxTexUnits = getMaxTexUnits();
+        m_tex2DBind = new textureUnitState[maxTexUnits];
+        for (int i=0;i<maxTexUnits;++i) {
+            m_tex2DBind[i].texture = 0;
+            for (int j=0;j<NUM_TEXTURE_TARGETS;++j)
+                m_tex2DBind[i].enabled[j] = GL_FALSE;
+        }  
+    }
+}
+
 GLEScontext::GLEScontext():
                            m_initialized(false)    ,
                            m_activeTexture(0)      ,
                            m_glError(GL_NO_ERROR)  ,
+                           m_tex2DBind(0)          ,
                            m_arrayBuffer(0)        ,
-                           m_elementBuffer(0) {
-    for (int i=0;i<MAX_TEX_UNITS;++i) {
-        m_tex2DBind[i].texture = 0;
-        for (int j=0;j<NUM_TEXTURE_TARGETS;++j)
-            m_tex2DBind[i].enabled[j] = GL_FALSE;
-    }
-};
+                           m_elementBuffer(0){};
 
 GLenum GLEScontext::getGLerror() {
     return m_glError;
@@ -124,6 +139,8 @@ GLEScontext::~GLEScontext() {
             delete p;
         }
     }
+    delete[] m_tex2DBind;
+    m_tex2DBind = NULL;
 }
 
 const GLvoid* GLEScontext::setPointer(GLenum arrType,GLint size,GLenum type,GLsizei stride,const GLvoid* data,bool normalize) {
@@ -147,18 +164,7 @@ bool GLEScontext::isArrEnabled(GLenum arr) {
 }
 
 const GLESpointer* GLEScontext::getPointer(GLenum arrType) {
-    GLenum type =
-        arrType == GL_VERTEX_ARRAY_POINTER          ? GL_VERTEX_ARRAY :
-        arrType == GL_NORMAL_ARRAY_POINTER          ? GL_NORMAL_ARRAY :
-        arrType == GL_TEXTURE_COORD_ARRAY_POINTER   ? GL_TEXTURE_COORD_ARRAY :
-        arrType == GL_COLOR_ARRAY_POINTER           ? GL_COLOR_ARRAY :
-        arrType == GL_POINT_SIZE_ARRAY_POINTER_OES  ? GL_POINT_SIZE_ARRAY_OES :
-        0;
-
-    if(type != 0 && m_map.find(type) != m_map.end())
-    {
-        return m_map[type];
-    }
+    if (m_map.find(arrType) != m_map.end()) return m_map[arrType];
     return NULL;
 }
 
@@ -443,15 +449,14 @@ void GLEScontext::releaseGlobalLock() {
 
 void GLEScontext::initCapsLocked(const GLubyte * extensionString)
 {
-    int maxTexUnits;
-    const char* cstring = (const char*)extensionString;
+    const char* cstring = (const char*)extensionString; 
 
     s_glDispatch.glGetIntegerv(GL_MAX_VERTEX_ATTRIBS,&s_glSupport.maxVertexAttribs);
     s_glDispatch.glGetIntegerv(GL_MAX_CLIP_PLANES,&s_glSupport.maxClipPlane);
     s_glDispatch.glGetIntegerv(GL_MAX_LIGHTS,&s_glSupport.maxLights);
     s_glDispatch.glGetIntegerv(GL_MAX_TEXTURE_SIZE,&s_glSupport.maxTexSize);
-    s_glDispatch.glGetIntegerv(GL_MAX_TEXTURE_UNITS,&maxTexUnits);
-    s_glSupport.maxTexUnits = maxTexUnits < MAX_TEX_UNITS ? maxTexUnits:MAX_TEX_UNITS;
+    s_glDispatch.glGetIntegerv(GL_MAX_TEXTURE_UNITS,&s_glSupport.maxTexUnits);
+    s_glDispatch.glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS,&s_glSupport.maxTexImageUnits);
     const GLubyte* glslVersion = s_glDispatch.glGetString(GL_SHADING_LANGUAGE_VERSION);
     s_glSupport.glslVersion = Version((const  char*)(glslVersion));
 
@@ -482,8 +487,6 @@ void GLEScontext::initCapsLocked(const GLubyte * extensionString)
     if (strstr(cstring,"GL_ARB_half_float_vertex ")!=NULL)
         s_glSupport.GL_ARB_HALF_FLOAT_VERTEX = true;
 
-    //init extension string
-    s_glExtensions = new std::string("");
 }
 
 bool GLEScontext::isTextureUnitEnabled(GLenum unit) {

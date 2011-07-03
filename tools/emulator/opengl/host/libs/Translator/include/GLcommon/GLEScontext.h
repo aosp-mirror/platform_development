@@ -8,8 +8,6 @@
 #include <string>
 #include <utility>
 
-#define MAX_TEX_UNITS 8
-
 typedef std::map<GLenum,GLESpointer*>  ArraysMap;
 
 enum TextureTarget {
@@ -38,7 +36,8 @@ private:
 };
 
 struct GLSupport {
-    GLSupport():maxLights(0),maxVertexAttribs(0),maxClipPlane(0),maxTexUnits(0),maxTexSize(0) , \
+    GLSupport():maxLights(0),maxVertexAttribs(0),maxClipPlane(0),maxTexUnits(0), \
+                maxTexImageUnits(0),maxTexSize(0) , \
                 GL_EXT_TEXTURE_FORMAT_BGRA8888(false), GL_EXT_FRAMEBUFFER_OBJECT(false), \
                 GL_ARB_VERTEX_BLEND(false), GL_ARB_MATRIX_PALETTE(false), \
                 GL_NV_PACKED_DEPTH_STENCIL(false) , GL_OES_READ_FORMAT(false), \
@@ -48,6 +47,7 @@ struct GLSupport {
     int  maxVertexAttribs;
     int  maxClipPlane;
     int  maxTexUnits;
+    int  maxTexImageUnits;
     int  maxTexSize;
     Version glslVersion;
     bool GL_EXT_TEXTURE_FORMAT_BGRA8888;
@@ -80,7 +80,7 @@ private:
 
 class GLEScontext{
 public:
-    virtual void init() = 0;
+    virtual void init();
     GLEScontext();
     GLenum getGLerror();
     void setGLerror(GLenum err);
@@ -91,6 +91,7 @@ public:
     void setBindedTexture(unsigned int tex){ m_tex2DBind[m_activeTexture].texture = tex;};
     bool isTextureUnitEnabled(GLenum unit);
     void setTextureEnabled(TextureTarget target, GLenum enable) {m_tex2DBind[m_activeTexture].enabled[target] = enable; };
+    bool isInitialized() { return m_initialized; };
 
     bool  isArrEnabled(GLenum);
     void  enableArr(GLenum arr,bool enable);
@@ -111,12 +112,12 @@ public:
     void releaseGlobalLock();
     virtual GLSupport*  getCaps(){return &s_glSupport;};
     virtual ~GLEScontext();
+    virtual int getMaxTexUnits() = 0;
 
     static GLDispatch& dispatcher(){return s_glDispatch;};
 
     static int getMaxLights(){return s_glSupport.maxLights;}
     static int getMaxClipPlanes(){return s_glSupport.maxClipPlane;}
-    static int getMaxTexUnits(){return s_glSupport.maxTexUnits;}
     static int getMaxTexSize(){return s_glSupport.maxTexSize;}
     static Version glslVersion(){return s_glSupport.glslVersion;}
 
@@ -128,6 +129,7 @@ protected:
     void convertIndirect(GLESConversionArrays& fArrs,GLsizei count,GLenum type,const GLvoid* indices,GLenum array_id,GLESpointer* p);
     void convertIndirectVBO(GLsizei count,GLenum indices_type,const GLvoid* indices,GLenum array_id,GLESpointer* p);
     void initCapsLocked(const GLubyte * extensionString);
+    virtual void initExtensionString() =0;
     static android::Mutex s_lock;
     static GLDispatch     s_glDispatch;
     bool                  m_initialized;
@@ -143,7 +145,7 @@ private:
 
     ShareGroupPtr         m_shareGroup;
     GLenum                m_glError;
-    textureUnitState      m_tex2DBind[MAX_TEX_UNITS];
+    textureUnitState*     m_tex2DBind;
     unsigned int          m_arrayBuffer;
     unsigned int          m_elementBuffer;
 };

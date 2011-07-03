@@ -22,9 +22,7 @@ void GLESv2Context::init() {
     android::Mutex::Autolock mutex(s_lock);
     if(!m_initialized) {
         s_glDispatch.dispatchFuncs(GLES_2_0);
-        initCapsLocked(s_glDispatch.glGetString(GL_EXTENSIONS));
-        initExtensionString();
-
+        GLEScontext::init();
         for(int i=0; i < s_glSupport.maxVertexAttribs;i++){
             m_map[i] = new GLESpointer();
         }
@@ -100,4 +98,8 @@ void GLESv2Context::initExtensionString() {
         *s_glExtensions+="GL_OES_packed_depth_stencil ";
     if (s_glSupport.GL_ARB_HALF_FLOAT_VERTEX)
         *s_glExtensions+="GL_OES_vertex_half_float ";
+}
+
+int GLESv2Context::getMaxTexUnits() {
+    return getCaps()->maxTexImageUnits;
 }
