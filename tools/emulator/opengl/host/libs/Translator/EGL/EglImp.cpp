@@ -556,11 +556,11 @@ static bool destroySurfaceIfNotCurrent(EglDisplay* dpy,SurfacePtr surface) {
 
     ThreadInfo* thread  = getThreadInfo();
     EglContext* currCtx = static_cast<EglContext*>(thread->eglContext);
-    if(currCtx && !currCtx->usingSurface(surface)){
+    if((!currCtx) || (currCtx && !currCtx->usingSurface(surface))){
         if(surface->type() == EglSurface::PBUFFER) {
             EglOS::releasePbuffer(dpy->nativeType(),reinterpret_cast<EGLNativePbufferType>(surface->native()));
-            return true;
         }
+        return true;
     }
     return false;
 }
