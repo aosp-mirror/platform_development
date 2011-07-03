@@ -1,20 +1,51 @@
 #include <GLcommon/GLEScontext.h>
-#include <GLcommon/GLfixed_ops.h>
+#include <GLcommon/GLconversion_macros.h>
 #include <GLES/gl.h>
 #include <GLES/glext.h>
 
 //decleration
 static int findMaxIndex(GLsizei count,GLenum type,const GLvoid* indices);
-static void convertDirectLoop(const char* dataIn,unsigned int strideIn,void* dataOut,unsigned int nBytes,unsigned int strideOut,int attribSize);
-static void convertIndirectLoop(const char* dataIn,unsigned int strideIn,void* dataOut,GLsizei count,GLenum indices_type,const GLvoid* indices,unsigned int strideOut,int attribSize);
+static void convertFixedDirectLoop(const char* dataIn,unsigned int strideIn,void* dataOut,unsigned int nBytes,unsigned int strideOut,int attribSize);
+static void convertFixedIndirectLoop(const char* dataIn,unsigned int strideIn,void* dataOut,GLsizei count,GLenum indices_type,const GLvoid* indices,unsigned int strideOut,int attribSize);
+static void convertByteDirectLoop(const char* dataIn,unsigned int strideIn,void* dataOut,unsigned int nBytes,unsigned int strideOut,int attribSize);
+static void convertByteIndirectLoop(const char* dataIn,unsigned int strideIn,void* dataOut,GLsizei count,GLenum indices_type,const GLvoid* indices,unsigned int strideOut,int attribSize);
 
-GLESFloatArrays::~GLESFloatArrays() {
-    for(std::map<GLenum,GLfloat*>::iterator it = arrays.begin(); it != arrays.end();it++) {
-        GLfloat* p = (*it).second;
-        if(p) {
-            delete[] p;
+GLESConversionArrays::~GLESConversionArrays() {
+    for(std::map<GLenum,std::pair<GLenum,void*> >::iterator it = m_arrays.begin(); it != m_arrays.end();it++) {
+        if((*it).second.first == GL_FLOAT){
+            GLfloat* p = (GLfloat *)((*it).second.second);
+            if(p) delete[] p;
+        } else if((*it).second.first == GL_SHORT){
+            GLshort* p = (GLshort *)((*it).second.second);
+            if(p) delete[] p;
         }
     }
+}
+
+void GLESConversionArrays::alloc(unsigned int size,GLenum type){
+    if(type == GL_FIXED){
+        m_arrays[m_current].second = new GLfloat[size];
+        m_arrays[m_current].first = GL_FLOAT;
+    } else if(type == GL_BYTE){
+        m_arrays[m_current].second = new GLshort[size];
+        m_arrays[m_current].first = GL_SHORT;
+    }
+}
+
+void* GLESConversionArrays::getCurrentData(){
+    return m_arrays[m_current].second;
+}
+
+unsigned int GLESConversionArrays::getCurrentIndex(){
+    return m_current;
+}
+
+void* GLESConversionArrays::operator[](int i){
+    return m_arrays[i].second;
+}
+
+void GLESConversionArrays::operator++(){
+    m_current++;
 }
 
 GLDispatch     GLEScontext::s_glDispatch;
@@ -36,10 +67,10 @@ Version::Version(const Version& ver):m_major(ver.m_major),
 
 Version::Version(const char* versionString){
     m_release = 0;
-    if((!versionString) || 
-      ((!(sscanf(versionString,"%d.%d"   ,&m_major,&m_minor) == 2)) && 
+    if((!versionString) ||
+      ((!(sscanf(versionString,"%d.%d"   ,&m_major,&m_minor) == 2)) &&
        (!(sscanf(versionString,"%d.%d.%d",&m_major,&m_minor,&m_release) == 3)))){
-        m_major = m_minor = 0; // the version is not in the right format 
+        m_major = m_minor = 0; // the version is not in the right format
     }
 }
 
@@ -71,7 +102,7 @@ GLEScontext::GLEScontext():
         m_tex2DBind[i].texture = 0;
         for (int j=0;j<NUM_TEXTURE_TARGETS;++j)
             m_tex2DBind[i].enabled[j] = GL_FALSE;
-    }  
+    }
 };
 
 GLenum GLEScontext::getGLerror() {
@@ -131,7 +162,7 @@ const GLESpointer* GLEScontext::getPointer(GLenum arrType) {
     return NULL;
 }
 
-static void convertDirectLoop(const char* dataIn,unsigned int strideIn,void* dataOut,unsigned int nBytes,unsigned int strideOut,int attribSize) {
+static void convertFixedDirectLoop(const char* dataIn,unsigned int strideIn,void* dataOut,unsigned int nBytes,unsigned int strideOut,int attribSize) {
 
     for(unsigned int i = 0; i < nBytes;i+=strideOut) {
         const GLfixed* fixed_data = (const GLfixed *)dataIn;
@@ -143,7 +174,7 @@ static void convertDirectLoop(const char* dataIn,unsigned int strideIn,void* dat
     }
 }
 
-static void convertIndirectLoop(const char* dataIn,unsigned int strideIn,void* dataOut,GLsizei count,GLenum indices_type,const GLvoid* indices,unsigned int strideOut,int attribSize) {
+static void convertFixedIndirectLoop(const char* dataIn,unsigned int strideIn,void* dataOut,GLsizei count,GLenum indices_type,const GLvoid* indices,unsigned int strideOut,int attribSize) {
     for(int i = 0 ;i < count ;i++) {
         unsigned short index = indices_type == GL_UNSIGNED_BYTE? ((GLubyte *)indices)[i]:
                                                              ((GLushort *)indices)[i];
@@ -156,6 +187,30 @@ static void convertIndirectLoop(const char* dataIn,unsigned int strideIn,void* d
     }
 }
 
+static void convertByteDirectLoop(const char* dataIn,unsigned int strideIn,void* dataOut,unsigned int nBytes,unsigned int strideOut,int attribSize) {
+
+    for(unsigned int i = 0; i < nBytes;i+=strideOut) {
+        const GLbyte* byte_data = (const GLbyte *)dataIn;
+        //filling attrib
+        for(int j=0;j<attribSize;j++) {
+            reinterpret_cast<GLshort*>(&static_cast<unsigned char*>(dataOut)[i])[j] = B2S(byte_data[j]);
+        }
+        dataIn += strideIn;
+    }
+}
+
+static void convertByteIndirectLoop(const char* dataIn,unsigned int strideIn,void* dataOut,GLsizei count,GLenum indices_type,const GLvoid* indices,unsigned int strideOut,int attribSize) {
+    for(int i = 0 ;i < count ;i++) {
+        unsigned short index = indices_type == GL_UNSIGNED_BYTE? ((GLubyte *)indices)[i]:
+                                                             ((GLushort *)indices)[i];
+        const GLbyte* bytes_data = (GLbyte *)(dataIn  + index*strideIn);
+        GLshort* short_data = reinterpret_cast<GLshort*>(static_cast<unsigned char*>(dataOut) + index*strideOut);
+
+        for(int j=0;j<attribSize;j++) {
+            short_data[j] = B2S(bytes_data[j]);
+         }
+    }
+}
 static void directToBytesRanges(GLint first,GLsizei count,GLESpointer* p,RangeList& list) {
 
     int attribSize = p->getSize()*4; //4 is the sizeof GLfixed or GLfloat in bytes
@@ -200,46 +255,46 @@ int bytesRangesToIndices(RangeList& ranges,GLESpointer* p,GLushort* indices) {
     }
     return n;
 }
-void GLEScontext::convertDirect(GLESFloatArrays& fArrs,GLint first,GLsizei count,GLenum array_id,GLESpointer* p,unsigned int& index) {
-    GLenum type    = p->getType();
-    if(isArrEnabled(array_id) && type == GL_FIXED) {
-        int attribSize = p->getSize();
-        unsigned int size = attribSize*count + first;
-        fArrs.arrays[index] = new GLfloat[size];
-        int stride = p->getStride()?p->getStride():sizeof(GLfixed)*attribSize;
-        const char* data = (const char*)p->getArrayData() + (first*stride);
 
-        convertDirectLoop(data,stride,fArrs.arrays[index],size*sizeof(GLfloat),attribSize*sizeof(GLfloat),attribSize);
-        sendArr(fArrs.arrays[index],array_id,attribSize,0,index);
-        index++;
+void GLEScontext::convertDirect(GLESConversionArrays& fArrs,GLint first,GLsizei count,GLenum array_id,GLESpointer* p) {
+
+    GLenum type    = p->getType();
+    int attribSize = p->getSize();
+    unsigned int size = attribSize*count + first;
+    unsigned int bytes = type == GL_FIXED ? sizeof(GLfixed):sizeof(GLbyte);
+    fArrs.alloc(size,type);
+    int stride = p->getStride()?p->getStride():bytes*attribSize;
+    const char* data = (const char*)p->getArrayData() + (first*stride);
+
+    if(type == GL_FIXED) {
+        convertFixedDirectLoop(data,stride,fArrs.getCurrentData(),size*sizeof(GLfloat),attribSize*sizeof(GLfloat),attribSize);
+    } else if(type == GL_BYTE) {
+        convertByteDirectLoop(data,stride,fArrs.getCurrentData(),size*sizeof(GLshort),attribSize*sizeof(GLshort),attribSize);
     }
 }
 
 void GLEScontext::convertDirectVBO(GLint first,GLsizei count,GLenum array_id,GLESpointer* p) {
+
+    RangeList ranges;
+    RangeList conversions;
+    GLushort* indices = NULL;
     GLenum type    = p->getType();
-    if(isArrEnabled(array_id) && type == GL_FIXED) {
-        RangeList ranges;
-        RangeList conversions;
-        GLushort* indices = NULL;
-        int attribSize = p->getSize();
-        int stride = p->getStride()?p->getStride():sizeof(GLfixed)*attribSize;
-        unsigned int size = p->getStride()?p->getStride()*count:attribSize*count*sizeof(GLfixed);
-        char* data = (char*)p->getBufferData() + (first*stride);
+    int attribSize = p->getSize();
+    int stride = p->getStride()?p->getStride():sizeof(GLfixed)*attribSize;
+    unsigned int size = p->getStride()?p->getStride()*count:attribSize*count*sizeof(GLfixed);
+    char* data = (char*)p->getBufferData() + (first*stride);
 
-        if(p->bufferNeedConversion()) {
-            directToBytesRanges(first,count,p,ranges); //converting indices range to buffer bytes ranges by offset
-            p->getBufferConversions(ranges,conversions); // getting from the buffer the relevant ranges that still needs to be converted
+    if(p->bufferNeedConversion()) {
+        directToBytesRanges(first,count,p,ranges); //converting indices range to buffer bytes ranges by offset
+        p->getBufferConversions(ranges,conversions); // getting from the buffer the relevant ranges that still needs to be converted
 
-            if(conversions.size()) { // there are some elements to convert
-               indices = new GLushort[count];
-               int nIndices = bytesRangesToIndices(conversions,p,indices); //converting bytes ranges by offset to indices in this array
-               convertIndirectLoop(data,stride,data,nIndices,GL_UNSIGNED_SHORT,indices,stride,attribSize);
-            }
+        if(conversions.size()) { // there are some elements to convert
+           indices = new GLushort[count];
+           int nIndices = bytesRangesToIndices(conversions,p,indices); //converting bytes ranges by offset to indices in this array
+           convertFixedIndirectLoop(data,stride,data,nIndices,GL_UNSIGNED_SHORT,indices,stride,attribSize);
         }
-
-        sendArr(data,array_id,attribSize,p->getStride());
-        if(indices) delete[] indices;
     }
+    if(indices) delete[] indices;
 }
 
 static int findMaxIndex(GLsizei count,GLenum type,const GLvoid* indices) {
@@ -259,64 +314,44 @@ static int findMaxIndex(GLsizei count,GLenum type,const GLvoid* indices) {
     return max;
 }
 
-void GLEScontext::convertIndirect(GLESFloatArrays& fArrs,GLsizei count,GLenum indices_type,const GLvoid* indices,GLenum array_id,GLESpointer* p,unsigned int& index_out) {
+void GLEScontext::convertIndirect(GLESConversionArrays& fArrs,GLsizei count,GLenum indices_type,const GLvoid* indices,GLenum array_id,GLESpointer* p) {
     GLenum type    = p->getType();
     int maxElements = findMaxIndex(count,type,indices) + 1;
 
-    if(isArrEnabled(array_id) && type == GL_FIXED) {
-        int attribSize = p->getSize();
-        int size = attribSize * maxElements;
-        fArrs.arrays[index_out] = new GLfloat[size];
-        int stride = p->getStride()?p->getStride():sizeof(GLfixed)*attribSize;
+    int attribSize = p->getSize();
+    int size = attribSize * maxElements;
+    unsigned int bytes = type == GL_FIXED ? sizeof(GLfixed):sizeof(GLbyte);
+    fArrs.alloc(size,type);
+    int stride = p->getStride()?p->getStride():bytes*attribSize;
 
-        const char* data = (const char*)p->getArrayData();
-        convertIndirectLoop(data,stride,fArrs.arrays[index_out],count,indices_type,indices,attribSize*sizeof(GLfloat),attribSize);
-        sendArr(fArrs.arrays[index_out],array_id,attribSize,0,index_out);
-        index_out++;
+    const char* data = (const char*)p->getArrayData();
+    if(type == GL_FIXED) {
+        convertFixedIndirectLoop(data,stride,fArrs.getCurrentData(),count,indices_type,indices,attribSize*sizeof(GLfloat),attribSize);
+    } else if(type == GL_BYTE){
+        convertByteIndirectLoop(data,stride,fArrs.getCurrentData(),count,indices_type,indices,attribSize*sizeof(GLshort),attribSize);
     }
 }
 
 void GLEScontext::convertIndirectVBO(GLsizei count,GLenum indices_type,const GLvoid* indices,GLenum array_id,GLESpointer* p) {
+    RangeList ranges;
+    RangeList conversions;
+    GLushort* conversionIndices = NULL;
     GLenum type    = p->getType();
-
-    if(isArrEnabled(array_id) && type == GL_FIXED) {
-        RangeList ranges;
-        RangeList conversions;
-        GLushort* conversionIndices = NULL;
-        int attribSize = p->getSize();
-        int stride = p->getStride()?p->getStride():sizeof(GLfixed)*attribSize;
-        char* data = static_cast<char*>(p->getBufferData());
-        if(p->bufferNeedConversion()) {
-            indirectToBytesRanges(indices,indices_type,count,p,ranges); //converting indices range to buffer bytes ranges by offset
-            p->getBufferConversions(ranges,conversions); // getting from the buffer the relevant ranges that still needs to be converted
-            if(conversions.size()) { // there are some elements to convert
-                conversionIndices = new GLushort[count];
-                int nIndices = bytesRangesToIndices(conversions,p,conversionIndices); //converting bytes ranges by offset to indices in this array
-                convertIndirectLoop(data,stride,data,nIndices,GL_UNSIGNED_SHORT,conversionIndices,stride,attribSize);
-            }
-        }
-        sendArr(data,array_id,attribSize,p->getStride());
-        if(conversionIndices) delete[] conversionIndices;
-    }
-}
-
-void GLEScontext::chooseConvertMethod(GLESFloatArrays& fArrs,GLint first,GLsizei count,GLenum type,const GLvoid* indices,bool direct,GLESpointer* p,GLenum array_id, unsigned int& index) {
-
-    bool vertexVBO = m_arrayBuffer!= 0;
-    if(direct) {
-        if(vertexVBO) {
-            convertDirectVBO(first,count,array_id,p);
-        } else {
-            convertDirect(fArrs,first,count,array_id,p,index);
-        }
-    } else {
-        if(vertexVBO) {
-            convertIndirectVBO(count,type,indices,array_id,p);
-        } else {
-            convertIndirect(fArrs,count,type,indices,array_id,p,index);
+    int attribSize = p->getSize();
+    int stride = p->getStride()?p->getStride():sizeof(GLfixed)*attribSize;
+    char* data = static_cast<char*>(p->getBufferData());
+    if(p->bufferNeedConversion()) {
+        indirectToBytesRanges(indices,indices_type,count,p,ranges); //converting indices range to buffer bytes ranges by offset
+        p->getBufferConversions(ranges,conversions); // getting from the buffer the relevant ranges that still needs to be converted
+        if(conversions.size()) { // there are some elements to convert
+            conversionIndices = new GLushort[count];
+            int nIndices = bytesRangesToIndices(conversions,p,conversionIndices); //converting bytes ranges by offset to indices in this array
+            convertFixedIndirectLoop(data,stride,data,nIndices,GL_UNSIGNED_SHORT,conversionIndices,stride,attribSize);
         }
     }
+    if(conversionIndices) delete[] conversionIndices;
 }
+
 
 
 void GLEScontext::bindBuffer(GLenum target,GLuint buffer) {
@@ -386,12 +421,12 @@ bool GLEScontext::setBufferSubData(GLenum target,GLintptr offset,GLsizeiptr size
     return vbo->setSubBuffer(offset,size,data);
 }
 
-const char * GLEScontext::getExtensionString() { 
+const char * GLEScontext::getExtensionString() {
     const char * ret;
     s_lock.lock();
     if (s_glExtensions)
         ret = s_glExtensions->c_str();
-    else 
+    else
         ret="";
     s_lock.unlock();
     return ret;
@@ -409,7 +444,7 @@ void GLEScontext::releaseGlobalLock() {
 void GLEScontext::initCapsLocked(const GLubyte * extensionString)
 {
     int maxTexUnits;
-    const char* cstring = (const char*)extensionString; 
+    const char* cstring = (const char*)extensionString;
 
     s_glDispatch.glGetIntegerv(GL_MAX_VERTEX_ATTRIBS,&s_glSupport.maxVertexAttribs);
     s_glDispatch.glGetIntegerv(GL_MAX_CLIP_PLANES,&s_glSupport.maxClipPlane);
