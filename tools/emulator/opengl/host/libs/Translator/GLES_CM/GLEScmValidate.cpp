@@ -111,6 +111,7 @@ bool GLEScmValidate::texParams(GLenum target,GLenum pname) {
     case GL_TEXTURE_WRAP_S:
     case GL_TEXTURE_WRAP_T:
     case GL_TEXTURE_CROP_RECT_OES:
+    case GL_GENERATE_MIPMAP:
         break;
     default:
         return false;
