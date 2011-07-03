@@ -3,9 +3,11 @@
 #include<GLES/glext.h>
 #include<GLES2/gl2.h>
 #include<GLES2/gl2ext.h>
+#include <OpenglCodecCommon/ErrorLog.h>
 
 
 bool  GLESvalidate::textureEnum(GLenum e,unsigned int maxTex) {
+    if (!((e >= GL_TEXTURE0) && (e <= (GL_TEXTURE0 + maxTex)))) ERR("GLESvalidate::textureEnum: e = 0x%X max %d\n", e, maxTex);
     return e >= GL_TEXTURE0 && e <= (GL_TEXTURE0 + maxTex);
 }
 
@@ -14,7 +16,7 @@ bool GLESvalidate::pixelType(GLEScontext * ctx, GLenum type) {
        (type == GL_UNSIGNED_INT_24_8_OES) )
         return true;
 
-    if (ctx && 
+    if (ctx &&
        (ctx->getCaps()->GL_ARB_HALF_FLOAT_PIXEL || ctx->getCaps()->GL_NV_HALF_FLOAT) &&
        (type == GL_HALF_FLOAT_OES))
         return true;
@@ -27,6 +29,7 @@ bool GLESvalidate::pixelType(GLEScontext * ctx, GLenum type) {
     case GL_FLOAT:
         return true;
     }
+    ERR("Error: GLESvalidate::pixelType 0x%X\n", type);
     return false;
 }
 
@@ -54,6 +57,7 @@ bool GLESvalidate::pixelFrmt(GLEScontext* ctx ,GLenum format) {
     case GL_LUMINANCE_ALPHA:
         return true;
     }
+    ERR("Error: GLESvalidate::pixelFrmt 0x%X\n", format);
     return false;
 }
 
@@ -80,8 +84,8 @@ bool GLESvalidate::drawMode(GLenum mode) {
 }
 
 bool GLESvalidate::drawType(GLenum mode) {
-    return  mode == GL_UNSIGNED_BYTE || 
-            mode == GL_UNSIGNED_SHORT || 
+    return  mode == GL_UNSIGNED_BYTE ||
+            mode == GL_UNSIGNED_SHORT ||
             mode == GL_UNSIGNED_INT;
 }
 
@@ -103,7 +107,8 @@ bool GLESvalidate::textureTargetEx(GLenum target) {
     case GL_TEXTURE_CUBE_MAP_NEGATIVE_Z_OES:
     case GL_TEXTURE_2D:
       return true;
-    } 
+    }
+    ERR("GLESvalidate::textureTargetEx 0x%X\n", target);
     return false;
 }
 
