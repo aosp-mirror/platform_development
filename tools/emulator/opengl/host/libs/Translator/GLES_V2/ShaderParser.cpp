@@ -19,11 +19,16 @@ void ShaderParser::setSrc(const Version& ver,GLsizei count,const GLchar** string
       all precision qualifiers from the shader source , otherwise we will use a shader parser
       which set the default precisions to be the same as the default precisions of GLSL ES
     */
+#if 0
     if(ver < Version(1,30,10)){
         parseOmitPrecision();
      } else {
         parseExtendDefaultPrecision();
      }
+#else
+    //XXX: Until proved otherwise, glsl doesn't know/use those precision macros, so we omit then
+    parseOmitPrecision();
+#endif
 }
 
 const char* ShaderParser::getOriginalSrc(){
