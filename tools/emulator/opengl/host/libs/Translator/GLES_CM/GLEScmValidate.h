@@ -40,6 +40,12 @@ static bool texImgDim(GLsizei width,GLsizei height,int maxTexSize);
 static bool renderbufferInternalFrmt(GLEScontext * ctx, GLenum internalformat);
 static bool stencilOp(GLenum param);
 static bool texGen(GLenum coord,GLenum pname);
+
+static bool colorPointerType(GLenum type);
+static bool normalPointerType(GLenum type);
+static bool pointPointerType(GLenum type);
+static bool texCoordPointerType(GLenum type);
+static bool vertexPointerType(GLenum type);
 };
 
 #endif
