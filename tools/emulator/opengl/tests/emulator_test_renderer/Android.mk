@@ -16,6 +16,10 @@ SDL_LDLIBS := $(filter-out %.a %.lib,$(shell $(SDL_CONFIG) --static-libs))
 LOCAL_CFLAGS += $(SDL_CFLAGS) -g -O0
 LOCAL_LDLIBS += $(SDL_LDLIBS)
 
+ifeq ($(HOST_OS),windows)
+LOCAL_LDLIBS += -lws2_32
+endif
+
 LOCAL_STATIC_LIBRARIES += libSDL libSDLmain
 
 $(call emugl-end-module)
