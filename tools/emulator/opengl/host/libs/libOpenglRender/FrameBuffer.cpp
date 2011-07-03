@@ -27,7 +27,7 @@ HandleType FrameBuffer::s_nextHandle = 0;
 
 #ifdef WITH_GLES2
 static const char *getGLES2ExtensionString(EGLDisplay p_dpy,
-                                 FBNativeWindowType p_window)
+                                 EGLNativeWindowType p_window)
 {
     EGLConfig config;
     EGLSurface surface;
@@ -44,14 +44,12 @@ static const char *getGLES2ExtensionString(EGLDisplay p_dpy,
         return NULL;
     }
 
-#if defined(__linux__) || defined(_WIN32) || defined(__VC32__) && !defined(__CYGWIN__)
     surface = s_egl.eglCreateWindowSurface(p_dpy, config,
-                                              (EGLNativeWindowType)p_window,
+                                              p_window,
                                               NULL);
     if (surface == EGL_NO_SURFACE) {
         return NULL;
     }
-#endif
 
     GLint gl2ContextAttribs[] = {
         EGL_CONTEXT_CLIENT_VERSION, 2,
@@ -165,6 +163,8 @@ bool FrameBuffer::initialize(FBNativeWindowType p_window,
 
     fb->m_nativeWindow = p_window;
 
+    fb->m_subWin = createSubWindow(p_window,&fb->m_subWinDisplay,p_x,p_y,p_width,p_height);
+
     //
     // if GLES2 plugin has loaded - try to make GLES2 context and
     // get GLES2 extension string
@@ -172,7 +172,7 @@ bool FrameBuffer::initialize(FBNativeWindowType p_window,
     const char *gl2Extensions = NULL;
 #ifdef WITH_GLES2
     if (fb->m_caps.hasGL2) {
-        gl2Extensions = getGLES2ExtensionString(fb->m_eglDisplay, p_window);
+        gl2Extensions = getGLES2ExtensionString(fb->m_eglDisplay, fb->m_subWin);
         if (!gl2Extensions) {
             // Could not create GLES2 context - drop GL2 capability
             fb->m_caps.hasGL2 = false;
@@ -209,7 +209,6 @@ bool FrameBuffer::initialize(FBNativeWindowType p_window,
     }
 
     EGLNativeDisplayType dpy;
-    fb->m_subWin = createSubWindow(p_window,&fb->m_subWinDisplay,p_x,p_y,p_width,p_height);
     fb->m_eglSurface = s_egl.eglCreateWindowSurface(fb->m_eglDisplay, eglConfig,
                                                   fb->m_subWin,
                                                   NULL);

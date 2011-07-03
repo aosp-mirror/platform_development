@@ -228,7 +228,14 @@ void WindowSurface::copyToColorBuffer()
                           GL_RGBA, GL_UNSIGNED_BYTE, data);
     }
 
+//
+// XXX: for some reason flipping the image is not required on
+//      Mac. Need to find the reason, currently unkbown.
+//
+#ifndef __APPLE__
 #define FLIP_BUFFER 1
+#endif
+
 #if FLIP_BUFFER
     //We need to flip the pixels
     int bpp = 4;

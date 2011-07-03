@@ -1,8 +1,5 @@
 LOCAL_PATH:=$(call my-dir)
 
-# For now, OS X is not supported
-ifneq ($(HOST_OS),darwin)
-
 $(call emugl-begin-host-executable,emulator_test_renderer)
 $(call emugl-import,libOpenglRender)
 
@@ -23,5 +20,3 @@ endif
 LOCAL_STATIC_LIBRARIES += libSDL libSDLmain
 
 $(call emugl-end-module)
-
-endif # HOST_OS != darwin

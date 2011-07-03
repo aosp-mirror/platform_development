@@ -16,22 +16,40 @@
 #include "NativeSubWindow.h"
 #include <Cocoa/Cocoa.h>
 
+/*
+ * EmuGLView inherit from NSView and override the isOpaque
+ * method to return YES. That prevents drawing of underlying window/view
+ * when the view needs to be redrawn.
+ */
+@interface EmuGLView : NSView {
+} @end
+
+@implementation EmuGLView
+
+  - (BOOL)isOpaque {
+      return YES;
+  }
+
+@end
+
 
 EGLNativeWindowType createSubWindow(FBNativeWindowType p_window,
                                     EGLNativeDisplayType* display_out,
                                     int x, int y,int width, int height){
     NSRect contentRect = NSMakeRect(x, y, width, height);
-    NSView *glView = [[NSView alloc] initWithFrame:contentRect];
+    NSView *glView = [[EmuGLView alloc] initWithFrame:contentRect];
     if (glView) {
         NSWindow *win = (NSWindow *)p_window;
         [[win contentView] addSubview:glView];
         [win makeKeyAndOrderFront:nil];
-        }
+    }
+
     return (EGLNativeWindowType)glView;
 }
 
 void destroySubWindow(EGLNativeDisplayType dis,EGLNativeWindowType win){
     if(win){
-        delete  win;
+        NSView *glView = (NSView *)win;
+        [glView release];
     }
 }

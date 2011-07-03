@@ -1,7 +1,5 @@
 LOCAL_PATH := $(call my-dir)
 
-ifneq ($(HOST_OS),darwin)
-
 ### libOpenglRender #################################################
 $(call emugl-begin-host-shared-library,libOpenglRender)
 
@@ -51,5 +49,3 @@ LOCAL_STATIC_LIBRARIES += libutils liblog
 #$(call emugl-export,CFLAGS,-DCHECK_GL_ERROR)
 
 $(call emugl-end-module)
-
-endif # HOST_OS != darwin
