@@ -16,7 +16,6 @@
 
 package com.example.android.voicemail.common.core;
 
-import com.example.android.provider.VoicemailContract;
 import com.example.android.provider.VoicemailContract.Voicemails;
 import com.example.android.voicemail.common.logging.Logger;
 import com.example.android.voicemail.common.utils.CloseUtils;
@@ -76,8 +75,7 @@ public final class VoicemailProviderHelpers implements VoicemailProviderHelper {
      * <code>com.android.providers.voicemail.permission.READ_WRITE_OWN_VOICEMAIL</code>.
      */
     public static VoicemailProviderHelper createFullVoicemailProvider(Context context) {
-        return new VoicemailProviderHelpers(VoicemailContract.CONTENT_URI,
-                context.getContentResolver());
+        return new VoicemailProviderHelpers(Voicemails.CONTENT_URI, context.getContentResolver());
     }
 
     /**
@@ -88,9 +86,8 @@ public final class VoicemailProviderHelpers implements VoicemailProviderHelper {
      * <code>com.android.providers.voicemail.permission.READ_WRITE_OWN_VOICEMAIL</code>.
      */
     public static VoicemailProviderHelper createPackageScopedVoicemailProvider(Context context) {
-        Uri providerUri = Uri.withAppendedPath(VoicemailContract.CONTENT_URI_SOURCE,
-                context.getPackageName());
-        return new VoicemailProviderHelpers(providerUri, context.getContentResolver());
+        return new VoicemailProviderHelpers(Voicemails.buildSourceUri(context.getPackageName()),
+                context.getContentResolver());
     }
 
     @Override
@@ -241,8 +238,6 @@ public final class VoicemailProviderHelpers implements VoicemailProviderHelper {
         long id = cursor.getLong(cursor.getColumnIndexOrThrow(Voicemails._ID));
         String sourcePackage = cursor.getString(
                 cursor.getColumnIndexOrThrow(Voicemails.SOURCE_PACKAGE));
-        Uri voicemailUri = ContentUris.withAppendedId(
-                Uri.withAppendedPath(VoicemailContract.CONTENT_URI_SOURCE, sourcePackage), id);
         VoicemailImpl voicemail = VoicemailImpl
                 .createEmptyBuilder()
                 .setTimestamp(cursor.getLong(cursor.getColumnIndexOrThrow(Voicemails.DATE)))
@@ -252,7 +247,7 @@ public final class VoicemailProviderHelpers implements VoicemailProviderHelper {
                 .setSourcePackage(sourcePackage)
                 .setSourceData(cursor.getString(
                         cursor.getColumnIndexOrThrow(Voicemails.SOURCE_DATA)))
-                .setUri(voicemailUri)
+                .setUri(buildUriWithSourcePackage(id, sourcePackage))
                 .setHasContent(cursor.getInt(
                         cursor.getColumnIndexOrThrow(Voicemails.HAS_CONTENT)) == 1)
                 .setIsRead(cursor.getInt(cursor.getColumnIndexOrThrow(Voicemails.NEW)) == 1)
@@ -260,6 +255,10 @@ public final class VoicemailProviderHelpers implements VoicemailProviderHelper {
                         cursor.getColumnIndexOrThrow(Voicemails.STATE))))
                 .build();
         return voicemail;
+    }
+
+    private Uri buildUriWithSourcePackage(long id, String sourcePackage) {
+        return ContentUris.withAppendedId(Voicemails.buildSourceUri(sourcePackage), id);
     }
 
     private Voicemail.Mailbox mapValueToMailBoxEnum(int value) {
