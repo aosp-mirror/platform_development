@@ -159,7 +159,7 @@ protected:
 
 private:
 
-    virtual void setupArr(const GLvoid* arr,GLenum arrayType,GLenum dataType,GLint size,GLsizei stride,int pointsIndex = -1) = 0 ;
+    virtual void setupArr(const GLvoid* arr,GLenum arrayType,GLenum dataType,GLint size,GLsizei stride, GLboolean normalized, int pointsIndex = -1) = 0 ;
     GLuint getBuffer(GLenum target);
 
     ShareGroupPtr         m_shareGroup;
