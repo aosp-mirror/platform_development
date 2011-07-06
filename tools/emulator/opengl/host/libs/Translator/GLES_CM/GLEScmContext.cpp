@@ -136,31 +136,6 @@ void GLEScmContext::setupArraysPointers(GLESConversionArrays& cArrs,GLint first,
     s_glDispatch.glClientActiveTexture(activeTexture);
 }
 
-void GLEScmContext::drawPoints(PointSizeIndices* points) {
-
-    GLushort* indices = NULL;
-    int last_size = 0;
-
-    //drawing each group of vertices by the points size
-    for(PointSizeIndices::iterator it = points->begin();it != points->end(); it++) {
-            int count = (*it).second.size();
-            int pointSize = (*it).first;
-            std::vector<int>& arr = (*it).second;
-
-            if(count > last_size) {
-             if(indices) delete [] indices;
-             indices = new GLushort[count];
-            }
-            int i = 0 ;
-            for(std::vector<int>::iterator it2 = arr.begin();it2 != arr.end();it2++) {
-                indices[i++] = (*it2);
-            }
-            s_glDispatch.glPointSize(pointSize);
-            s_glDispatch.glDrawElements(GL_POINTS,count,GL_UNSIGNED_SHORT,indices);
-    }
-    if(indices) delete [] indices;
-}
-
 void  GLEScmContext::drawPointsData(GLESConversionArrays& cArrs,GLint first,GLsizei count,GLenum type,const GLvoid* indices_in,bool isElemsDraw) {
     const char  *pointsArr =  NULL;
     int stride = 0;
@@ -179,23 +154,52 @@ void  GLEScmContext::drawPointsData(GLESConversionArrays& cArrs,GLint first,GLsi
         stride = sizeof(GLfloat);
     }
 
-    //filling  arrays before sorting them
-    PointSizeIndices  points;
+
     if(isElemsDraw) {
-        for(int i=0; i< count; i++) {
-            GLushort index = (type == GL_UNSIGNED_SHORT?
-                    static_cast<const GLushort*>(indices_in)[i]:
-                    static_cast<const GLubyte*>(indices_in)[i]);
-            GLfloat pSize = *((GLfloat*)(pointsArr+(index*stride)));
-            points[pSize].push_back(index);
+        int tSize = type == GL_UNSIGNED_SHORT ? 2 : 1;
+
+        int i = 0;
+        while(i<count)
+        {
+            int sStart = i;
+            int sCount = 1;
+
+#define INDEX \
+                (type == GL_UNSIGNED_SHORT ? \
+                static_cast<const GLushort*>(indices_in)[i]: \
+                static_cast<const GLubyte*>(indices_in)[i])
+
+            GLfloat pSize = *((GLfloat*)(pointsArr+(INDEX*stride)));
+            i++;
+
+            while(i < count && pSize == *((GLfloat*)(pointsArr+(INDEX*stride))))
+            {
+                sCount++;
+                i++;
+            }
+
+            s_glDispatch.glPointSize(pSize);
+            s_glDispatch.glDrawElements(GL_POINTS, sCount, type, (char*)indices_in+sStart*tSize);
         }
     } else {
-        for(int i=0; i< count; i++) {
-            GLfloat pSize = *((GLfloat*)(pointsArr+(first+i*stride)));
-            points[pSize].push_back(i+first);
+        int i = 0;
+        while(i<count)
+        {
+            int sStart = i;
+            int sCount = 1;
+            GLfloat pSize = *((GLfloat*)(pointsArr+((first+i)*stride)));
+            i++;
+
+            while(i < count && pSize == *((GLfloat*)(pointsArr+((first+i)*stride))))
+            {
+                sCount++;
+                i++;
+            }
+
+            s_glDispatch.glPointSize(pSize);
+            s_glDispatch.glDrawArrays(GL_POINTS, first+sStart, sCount);
         }
     }
-    drawPoints(&points);
 }
 
 void  GLEScmContext::drawPointsArrs(GLESConversionArrays& arrs,GLint first,GLsizei count) {
