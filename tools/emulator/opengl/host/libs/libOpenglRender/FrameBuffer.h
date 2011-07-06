@@ -25,11 +25,6 @@
 #include <EGL/egl.h>
 #include <stdint.h>
 
-#if defined(__linux__) || defined(_WIN32) || defined(__VC32__) && !defined(__CYGWIN__)
-#else
-#warning "Unsupported Platform"
-#endif
-
 typedef uint32_t HandleType;
 typedef std::map<HandleType, RenderContextPtr> RenderContextMap;
 typedef std::map<HandleType, WindowSurfacePtr> WindowSurfaceMap;
