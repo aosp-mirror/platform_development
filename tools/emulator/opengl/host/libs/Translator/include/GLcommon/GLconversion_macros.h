@@ -16,9 +16,10 @@
 #ifndef _GL_FIXED_OPS_H
 #define _GL_FIXED_OPS_H
 
-#define X2F(x)  (((float)(x))/65536.0f)
-#define X2D(x)  (((double)(x))/65536.0)
-#define X2I(x)             ((x) /65536)
+#define X2F(x)        (((float)(x))/65536.0f)
+#define X2D(x)        (((double)(x))/65536.0)
+#define X2I(x)        ((x) /65536)
+#define B2S(x)        ((short)x)
 
 
 #define F2X(d) ((d) > 32767.65535 ? 32767 * 65536 + 65535 :  \

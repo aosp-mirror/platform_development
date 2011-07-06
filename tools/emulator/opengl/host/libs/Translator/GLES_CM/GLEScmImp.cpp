@@ -27,7 +27,7 @@
 #include <stdio.h>
 #include <GLcommon/gldefs.h>
 #include <GLcommon/GLDispatch.h>
-#include <GLcommon/GLfixed_ops.h>
+#include <GLcommon/GLconversion_macros.h>
 #include <GLcommon/TranslatorIfaces.h>
 #include <GLcommon/ThreadInfo.h>
 #include <GLES/gl.h>
@@ -192,7 +192,7 @@ GL_API GLboolean GL_APIENTRY  glIsEnabled( GLenum cap) {
     GET_CTX_CM_RET(GL_FALSE)
     RET_AND_SET_ERROR_IF(!GLEScmValidate::capability(cap,ctx->getMaxLights(),ctx->getMaxClipPlanes()),GL_INVALID_ENUM,GL_FALSE);
 
-    if (cap == GL_POINT_SIZE_ARRAY_OES) 
+    if (cap == GL_POINT_SIZE_ARRAY_OES)
         return ctx->isArrEnabled(cap);
     else if (cap==GL_TEXTURE_GEN_STR_OES)
         return (ctx->dispatcher().glIsEnabled(GL_TEXTURE_GEN_S) &&
@@ -396,9 +396,7 @@ GL_API void GL_APIENTRY  glColorMask( GLboolean red, GLboolean green, GLboolean 
 GL_API void GL_APIENTRY  glColorPointer( GLint size, GLenum type, GLsizei stride, const GLvoid *pointer) {
     GET_CTX()
     SET_ERROR_IF(!GLEScmValidate::colorPointerParams(size,stride),GL_INVALID_VALUE);
-
-    const GLvoid* data = ctx->setPointer(GL_COLOR_ARRAY,size,type,stride,pointer);
-    if(type != GL_FIXED) ctx->dispatcher().glColorPointer(size,type,stride,data);
+    ctx->setPointer(GL_COLOR_ARRAY,size,type,stride,pointer);
 }
 
 GL_API void GL_APIENTRY  glCompressedTexImage2D( GLenum target, GLint level, GLenum internalformat, GLsizei width, GLsizei height, GLint border, GLsizei imageSize, const GLvoid *data) {
@@ -523,8 +521,8 @@ GL_API void GL_APIENTRY  glDrawArrays( GLenum mode, GLint first, GLsizei count) 
 
     if(!ctx->isArrEnabled(GL_VERTEX_ARRAY)) return;
 
-    GLESFloatArrays tmpArrs;
-    ctx->convertArrs(tmpArrs,first,count,0,NULL,true);
+    GLESConversionArrays tmpArrs;
+    ctx->setupArraysPointers(tmpArrs,first,count,0,NULL,true);
     if(mode != GL_POINTS || !ctx->isArrEnabled(GL_POINT_SIZE_ARRAY_OES)){
         ctx->dispatcher().glDrawArrays(mode,first,count);
     }
@@ -540,13 +538,13 @@ GL_API void GL_APIENTRY  glDrawElements( GLenum mode, GLsizei count, GLenum type
     if(!ctx->isArrEnabled(GL_VERTEX_ARRAY)) return;
 
     const GLvoid* indices = elementsIndices;
-    GLESFloatArrays tmpArrs;
+    GLESConversionArrays tmpArrs;
     if(ctx->isBindedBuffer(GL_ELEMENT_ARRAY_BUFFER)) { // if vbo is binded take the indices from the vbo
         const unsigned char* buf = static_cast<unsigned char *>(ctx->getBindedBuffer(GL_ELEMENT_ARRAY_BUFFER));
         indices = buf+reinterpret_cast<unsigned int>(elementsIndices);
     }
 
-    ctx->convertArrs(tmpArrs,0,count,type,indices,false);
+    ctx->setupArraysPointers(tmpArrs,0,count,type,indices,false);
     if(mode != GL_POINTS || !ctx->isArrEnabled(GL_POINT_SIZE_ARRAY_OES)){
         ctx->dispatcher().glDrawElements(mode,count,type,indices);
     }
@@ -1161,8 +1159,7 @@ GL_API void GL_APIENTRY  glNormal3x( GLfixed nx, GLfixed ny, GLfixed nz) {
 GL_API void GL_APIENTRY  glNormalPointer( GLenum type, GLsizei stride, const GLvoid *pointer) {
     GET_CTX()
     SET_ERROR_IF(stride < 0,GL_INVALID_VALUE);
-    const GLvoid* data = ctx->setPointer(GL_NORMAL_ARRAY,3,type,stride,pointer);//3 normal verctor
-    if(type != GL_FIXED) ctx->dispatcher().glNormalPointer(type,stride,data);
+    ctx->setPointer(GL_NORMAL_ARRAY,3,type,stride,pointer);//3 normal verctor
 }
 
 GL_API void GL_APIENTRY  glOrthof( GLfloat left, GLfloat right, GLfloat bottom, GLfloat top, GLfloat zNear, GLfloat zFar) {
@@ -1306,9 +1303,7 @@ GL_API void GL_APIENTRY  glStencilOp( GLenum fail, GLenum zfail, GLenum zpass) {
 GL_API void GL_APIENTRY  glTexCoordPointer( GLint size, GLenum type, GLsizei stride, const GLvoid *pointer) {
     GET_CTX()
     SET_ERROR_IF(!GLEScmValidate::texCoordPointerParams(size,stride),GL_INVALID_VALUE);
-
-    const GLvoid* data = ctx->setPointer(GL_TEXTURE_COORD_ARRAY,size,type,stride,pointer);
-    if(type != GL_FIXED) ctx->dispatcher().glTexCoordPointer(size,type,stride,data);
+    ctx->setPointer(GL_TEXTURE_COORD_ARRAY,size,type,stride,pointer);
 }
 
 GL_API void GL_APIENTRY  glTexEnvf( GLenum target, GLenum pname, GLfloat param) {
@@ -1464,9 +1459,7 @@ GL_API void GL_APIENTRY  glTranslatex( GLfixed x, GLfixed y, GLfixed z) {
 GL_API void GL_APIENTRY  glVertexPointer( GLint size, GLenum type, GLsizei stride, const GLvoid *pointer) {
     GET_CTX()
     SET_ERROR_IF(!GLEScmValidate::vertexPointerParams(size,stride),GL_INVALID_VALUE);
-
-    const GLvoid* data = ctx->setPointer(GL_VERTEX_ARRAY,size,type,stride,pointer);
-    if(type != GL_FIXED) ctx->dispatcher().glVertexPointer(size,type,stride,data);
+    ctx->setPointer(GL_VERTEX_ARRAY,size,type,stride,pointer);
 }
 
 GL_API void GL_APIENTRY  glViewport( GLint x, GLint y, GLsizei width, GLsizei height) {
@@ -1505,21 +1498,21 @@ GL_API void GL_APIENTRY glEGLImageTargetRenderbufferStorageOES(GLenum target, GL
 {
     GET_CTX()
     //not supported by EGL
-    SET_ERROR_IF(false,GL_INVALID_OPERATION); 
+    SET_ERROR_IF(false,GL_INVALID_OPERATION);
 }
 
 /* GL_OES_blend_subtract*/
 GL_API void GL_APIENTRY glBlendEquationOES(GLenum mode) {
     GET_CTX()
     SET_ERROR_IF(!(GLEScmValidate::blendEquationMode(mode)), GL_INVALID_ENUM);
-    ctx->dispatcher().glBlendEquation(mode);   
+    ctx->dispatcher().glBlendEquation(mode);
 }
 
 /* GL_OES_blend_equation_separate */
 GL_API void GL_APIENTRY glBlendEquationSeparateOES (GLenum modeRGB, GLenum modeAlpha) {
     GET_CTX()
     SET_ERROR_IF(!(GLEScmValidate::blendEquationMode(modeRGB) && GLEScmValidate::blendEquationMode(modeAlpha)), GL_INVALID_ENUM);
-    ctx->dispatcher().glBlendEquationSeparate(modeRGB,modeAlpha);   
+    ctx->dispatcher().glBlendEquationSeparate(modeRGB,modeAlpha);
 }
 
 /* GL_OES_blend_func_separate */
@@ -1551,7 +1544,7 @@ GL_API void GLAPIENTRY glBindRenderbufferOES(GLenum target, GLuint renderbuffer)
     }
 
     int globalBufferName = thrd->shareGroup->getGlobalName(RENDERBUFFER,renderbuffer);
-    ctx->dispatcher().glBindRenderbufferEXT(target,globalBufferName); 
+    ctx->dispatcher().glBindRenderbufferEXT(target,globalBufferName);
 }
 
 GL_API void GLAPIENTRY glDeleteRenderbuffersOES(GLsizei n, const GLuint *renderbuffers) {
@@ -1584,7 +1577,7 @@ GL_API void GLAPIENTRY glRenderbufferStorageOES(GLenum target, GLenum internalfo
 }
 
 GL_API void GLAPIENTRY glGetRenderbufferParameterivOES(GLenum target, GLenum pname, GLint* params) {
-    GET_CTX() 
+    GET_CTX()
     SET_ERROR_IF(!ctx->getCaps()->GL_EXT_FRAMEBUFFER_OBJECT,GL_INVALID_OPERATION);
     SET_ERROR_IF(!GLEScmValidate::renderbufferTarget(target) || !GLEScmValidate::renderbufferParams(pname) ,GL_INVALID_ENUM);
     ctx->dispatcher().glGetRenderbufferParameterivEXT(target,pname,params);
@@ -1600,8 +1593,8 @@ GL_API GLboolean GLAPIENTRY glIsFramebufferOES(GLuint framebuffer) {
 }
 
 GL_API void GLAPIENTRY glBindFramebufferOES(GLenum target, GLuint framebuffer) {
-    GET_CTX() 
-    SET_ERROR_IF(!ctx->getCaps()->GL_EXT_FRAMEBUFFER_OBJECT,GL_INVALID_OPERATION); 
+    GET_CTX()
+    SET_ERROR_IF(!ctx->getCaps()->GL_EXT_FRAMEBUFFER_OBJECT,GL_INVALID_OPERATION);
     SET_ERROR_IF(!GLEScmValidate::framebufferTarget(target) ,GL_INVALID_ENUM);
     if (thrd->shareGroup.Ptr() && !thrd->shareGroup->isObject(FRAMEBUFFER,framebuffer)) {
         thrd->shareGroup->genName(FRAMEBUFFER,framebuffer);
@@ -1612,16 +1605,16 @@ GL_API void GLAPIENTRY glBindFramebufferOES(GLenum target, GLuint framebuffer) {
 
 GL_API void GLAPIENTRY glDeleteFramebuffersOES(GLsizei n, const GLuint *framebuffers) {
     GET_CTX()
-    SET_ERROR_IF(!ctx->getCaps()->GL_EXT_FRAMEBUFFER_OBJECT,GL_INVALID_OPERATION); 
+    SET_ERROR_IF(!ctx->getCaps()->GL_EXT_FRAMEBUFFER_OBJECT,GL_INVALID_OPERATION);
     for (int i=0;i<n;++i) {
         GLuint globalBufferName = thrd->shareGroup->getGlobalName(FRAMEBUFFER,framebuffers[i]);
         ctx->dispatcher().glDeleteFramebuffersEXT(1,&globalBufferName);
     }
 }
 
-GL_API void GLAPIENTRY glGenFramebuffersOES(GLsizei n, GLuint *framebuffers) { 
+GL_API void GLAPIENTRY glGenFramebuffersOES(GLsizei n, GLuint *framebuffers) {
     GET_CTX()
-    SET_ERROR_IF(!ctx->getCaps()->GL_EXT_FRAMEBUFFER_OBJECT,GL_INVALID_OPERATION); 
+    SET_ERROR_IF(!ctx->getCaps()->GL_EXT_FRAMEBUFFER_OBJECT,GL_INVALID_OPERATION);
     SET_ERROR_IF(n<0,GL_INVALID_VALUE);
     if (thrd->shareGroup.Ptr()) {
         for (int i=0;i<n;i++) {
@@ -1631,15 +1624,15 @@ GL_API void GLAPIENTRY glGenFramebuffersOES(GLsizei n, GLuint *framebuffers) {
 }
 
 GL_API GLenum GLAPIENTRY glCheckFramebufferStatusOES(GLenum target) {
-    GET_CTX_RET(0) 
-    RET_AND_SET_ERROR_IF(!ctx->getCaps()->GL_EXT_FRAMEBUFFER_OBJECT,GL_INVALID_OPERATION,0); 
+    GET_CTX_RET(0)
+    RET_AND_SET_ERROR_IF(!ctx->getCaps()->GL_EXT_FRAMEBUFFER_OBJECT,GL_INVALID_OPERATION,0);
     RET_AND_SET_ERROR_IF(!GLEScmValidate::framebufferTarget(target) ,GL_INVALID_ENUM,0);
     return ctx->dispatcher().glCheckFramebufferStatusEXT(target);
 }
 
 GL_API void GLAPIENTRY glFramebufferTexture2DOES(GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level) {
     GET_CTX()
-    SET_ERROR_IF(!ctx->getCaps()->GL_EXT_FRAMEBUFFER_OBJECT,GL_INVALID_OPERATION); 
+    SET_ERROR_IF(!ctx->getCaps()->GL_EXT_FRAMEBUFFER_OBJECT,GL_INVALID_OPERATION);
     SET_ERROR_IF(!GLEScmValidate::framebufferTarget(target) || !GLEScmValidate::framebufferAttachment(attachment) ||
                  !GLEScmValidate::textureTargetEx(textarget),GL_INVALID_ENUM);
     if (thrd->shareGroup.Ptr() && !thrd->shareGroup->isObject(TEXTURE,texture)) {
@@ -1671,14 +1664,14 @@ GL_API void GLAPIENTRY glGetFramebufferAttachmentParameterivOES(GLenum target, G
 
 GL_API void GL_APIENTRY glGenerateMipmapOES(GLenum target) {
     GET_CTX()
-    SET_ERROR_IF(!ctx->getCaps()->GL_EXT_FRAMEBUFFER_OBJECT,GL_INVALID_OPERATION); 
+    SET_ERROR_IF(!ctx->getCaps()->GL_EXT_FRAMEBUFFER_OBJECT,GL_INVALID_OPERATION);
     SET_ERROR_IF(!GLEScmValidate::textureTargetLimited(target),GL_INVALID_ENUM);
     ctx->dispatcher().glGenerateMipmapEXT(target);
 }
 
 GL_API void GL_APIENTRY glCurrentPaletteMatrixOES(GLuint index) {
     GET_CTX()
-    SET_ERROR_IF(!(ctx->getCaps()->GL_ARB_MATRIX_PALETTE && ctx->getCaps()->GL_ARB_VERTEX_BLEND),GL_INVALID_OPERATION); 
+    SET_ERROR_IF(!(ctx->getCaps()->GL_ARB_MATRIX_PALETTE && ctx->getCaps()->GL_ARB_VERTEX_BLEND),GL_INVALID_OPERATION);
     ctx->dispatcher().glCurrentPaletteMatrixARB(index);
 }
 
@@ -1693,13 +1686,13 @@ GL_API void GL_APIENTRY glLoadPaletteFromModelViewMatrixOES() {
 
 GL_API void GL_APIENTRY glMatrixIndexPointerOES(GLint size, GLenum type, GLsizei stride, const GLvoid *pointer) {
     GET_CTX()
-    SET_ERROR_IF(!(ctx->getCaps()->GL_ARB_MATRIX_PALETTE && ctx->getCaps()->GL_ARB_VERTEX_BLEND),GL_INVALID_OPERATION); 
+    SET_ERROR_IF(!(ctx->getCaps()->GL_ARB_MATRIX_PALETTE && ctx->getCaps()->GL_ARB_VERTEX_BLEND),GL_INVALID_OPERATION);
     ctx->dispatcher().glMatrixIndexPointerARB(size,type,stride,pointer);
 }
 
 GL_API void GL_APIENTRY glWeightPointerOES(GLint size, GLenum type, GLsizei stride, const GLvoid *pointer) {
     GET_CTX()
-    SET_ERROR_IF(!(ctx->getCaps()->GL_ARB_MATRIX_PALETTE && ctx->getCaps()->GL_ARB_VERTEX_BLEND),GL_INVALID_OPERATION); 
+    SET_ERROR_IF(!(ctx->getCaps()->GL_ARB_MATRIX_PALETTE && ctx->getCaps()->GL_ARB_VERTEX_BLEND),GL_INVALID_OPERATION);
     ctx->dispatcher().glWeightPointerARB(size,type,stride,pointer);
 
 }
@@ -1710,7 +1703,7 @@ GL_API void GL_APIENTRY glTexGenfOES (GLenum coord, GLenum pname, GLfloat param)
     if (coord == GL_TEXTURE_GEN_STR_OES) {
         ctx->dispatcher().glTexGenf(GL_TEXTURE_GEN_S,pname,param);
         ctx->dispatcher().glTexGenf(GL_TEXTURE_GEN_T,pname,param);
-        ctx->dispatcher().glTexGenf(GL_TEXTURE_GEN_R,pname,param); 
+        ctx->dispatcher().glTexGenf(GL_TEXTURE_GEN_R,pname,param);
     }
     else
         ctx->dispatcher().glTexGenf(coord,pname,param);
@@ -1733,7 +1726,7 @@ GL_API void GL_APIENTRY glTexGeniOES (GLenum coord, GLenum pname, GLint param) {
     if (coord == GL_TEXTURE_GEN_STR_OES) {
         ctx->dispatcher().glTexGeni(GL_TEXTURE_GEN_S,pname,param);
         ctx->dispatcher().glTexGeni(GL_TEXTURE_GEN_T,pname,param);
-        ctx->dispatcher().glTexGeni(GL_TEXTURE_GEN_R,pname,param); 
+        ctx->dispatcher().glTexGeni(GL_TEXTURE_GEN_R,pname,param);
     }
     else
         ctx->dispatcher().glTexGeni(coord,pname,param);
@@ -1744,7 +1737,7 @@ GL_API void GL_APIENTRY glTexGenivOES (GLenum coord, GLenum pname, const GLint *
     if (coord == GL_TEXTURE_GEN_STR_OES) {
         ctx->dispatcher().glTexGeniv(GL_TEXTURE_GEN_S,pname,params);
         ctx->dispatcher().glTexGeniv(GL_TEXTURE_GEN_T,pname,params);
-        ctx->dispatcher().glTexGeniv(GL_TEXTURE_GEN_R,pname,params); 
+        ctx->dispatcher().glTexGeniv(GL_TEXTURE_GEN_R,pname,params);
     }
     else
         ctx->dispatcher().glTexGeniv(coord,pname,params);
@@ -1755,7 +1748,7 @@ GL_API void GL_APIENTRY glTexGenxOES (GLenum coord, GLenum pname, GLfixed param)
     if (coord == GL_TEXTURE_GEN_STR_OES) {
         ctx->dispatcher().glTexGenf(GL_TEXTURE_GEN_S,pname,X2F(param));
         ctx->dispatcher().glTexGenf(GL_TEXTURE_GEN_T,pname,X2F(param));
-        ctx->dispatcher().glTexGenf(GL_TEXTURE_GEN_R,pname,X2F(param)); 
+        ctx->dispatcher().glTexGenf(GL_TEXTURE_GEN_R,pname,X2F(param));
     }
     else
         ctx->dispatcher().glTexGenf(coord,pname,X2F(param));
@@ -1768,7 +1761,7 @@ GL_API void GL_APIENTRY glTexGenxvOES (GLenum coord, GLenum pname, const GLfixed
     if (coord == GL_TEXTURE_GEN_STR_OES) {
         ctx->dispatcher().glTexGenfv(GL_TEXTURE_GEN_S,pname,tmpParams);
         ctx->dispatcher().glTexGenfv(GL_TEXTURE_GEN_T,pname,tmpParams);
-        ctx->dispatcher().glTexGenfv(GL_TEXTURE_GEN_R,pname,tmpParams); 
+        ctx->dispatcher().glTexGenfv(GL_TEXTURE_GEN_R,pname,tmpParams);
     }
     else
         ctx->dispatcher().glTexGenfv(coord,pname,tmpParams);
@@ -1886,7 +1879,7 @@ void glDrawTexOES (T x, T y, T z, T width, T height) {
 
                 texels[i][4] = (float)(texData->crop_rect[2]+texData->crop_rect[0])/(float)(texData->width);
                 texels[i][5] = (float)(texData->crop_rect[3]+texData->crop_rect[1])/(float)(texData->height);
-                
+
                 texels[i][6] = (float)(texData->crop_rect[2]+texData->crop_rect[0])/(float)(texData->width);
                 texels[i][7] = (float)(texData->crop_rect[1])/(float)(texData->height);
 
@@ -1934,18 +1927,18 @@ GL_API void GL_APIENTRY glDrawTexxOES (GLfixed x, GLfixed y, GLfixed z, GLfixed 
     glDrawTexOES<GLfloat,GL_FLOAT>(X2F(x),X2F(y),X2F(z),X2F(width),X2F(height));
 }
 
-GL_API void GL_APIENTRY glDrawTexsvOES (const GLshort * coords) { 
+GL_API void GL_APIENTRY glDrawTexsvOES (const GLshort * coords) {
     glDrawTexOES<GLshort,GL_SHORT>(coords[0],coords[1],coords[2],coords[3],coords[4]);
 }
 
-GL_API void GL_APIENTRY glDrawTexivOES (const GLint * coords) { 
+GL_API void GL_APIENTRY glDrawTexivOES (const GLint * coords) {
     glDrawTexOES<GLint,GL_INT>(coords[0],coords[1],coords[2],coords[3],coords[4]);
 }
 
-GL_API void GL_APIENTRY glDrawTexfvOES (const GLfloat * coords) { 
+GL_API void GL_APIENTRY glDrawTexfvOES (const GLfloat * coords) {
     glDrawTexOES<GLfloat,GL_FLOAT>(coords[0],coords[1],coords[2],coords[3],coords[4]);
 }
 
-GL_API void GL_APIENTRY glDrawTexxvOES (const GLfixed * coords) { 
+GL_API void GL_APIENTRY glDrawTexxvOES (const GLfixed * coords) {
     glDrawTexOES<GLfloat,GL_FLOAT>(X2F(coords[0]),X2F(coords[1]),X2F(coords[2]),X2F(coords[3]),X2F(coords[4]));
 }

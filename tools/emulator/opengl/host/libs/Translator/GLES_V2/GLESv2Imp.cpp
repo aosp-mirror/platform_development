@@ -440,8 +440,8 @@ GL_APICALL void  GL_APIENTRY glDrawArrays(GLenum mode, GLint first, GLsizei coun
     //if no vertex are enabled no need to convert anything
     if(!ctx->isArrEnabled(0)) return;
 
-    GLESFloatArrays tmpArrs;
-    ctx->convertArrs(tmpArrs,first,count,0,NULL,true);
+    GLESConversionArrays tmpArrs;
+    ctx->setupArraysPointers(tmpArrs,first,count,0,NULL,true);
     ctx->dispatcher().glDrawArrays(mode,first,count);
 }
 
@@ -459,8 +459,8 @@ GL_APICALL void  GL_APIENTRY glDrawElements(GLenum mode, GLsizei count, GLenum t
     //if no vertex are enabled no need to convert anything
     if(!ctx->isArrEnabled(0)) return;
 
-    GLESFloatArrays tmpArrs;
-    ctx->convertArrs(tmpArrs,0,count,type,indices,false);
+    GLESConversionArrays tmpArrs;
+    ctx->setupArraysPointers(tmpArrs,0,count,type,indices,false);
     ctx->dispatcher().glDrawElements(mode,count,type,indices);
 }
 
@@ -848,8 +848,8 @@ GL_APICALL void  GL_APIENTRY glGetVertexAttribiv(GLuint index, GLenum pname, GLi
 
 GL_APICALL void  GL_APIENTRY glGetVertexAttribPointerv(GLuint index, GLenum pname, GLvoid** pointer){
     GET_CTX();
-    SET_ERROR_IF(pname != GL_VERTEX_ATTRIB_ARRAY_POINTER,GL_INVALID_ENUM); 
-    
+    SET_ERROR_IF(pname != GL_VERTEX_ATTRIB_ARRAY_POINTER,GL_INVALID_ENUM);
+
     const GLESpointer* p = ctx->getPointer(pname);
     if(p) {
         *pointer = const_cast<void *>( p->getBufferData());
@@ -1248,10 +1248,8 @@ GL_APICALL void  GL_APIENTRY glVertexAttrib4fv(GLuint indx, const GLfloat* value
 
 GL_APICALL void  GL_APIENTRY glVertexAttribPointer(GLuint indx, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const GLvoid* ptr){
     GET_CTX();
-    if (type==GL_HALF_FLOAT_OES)
-        type = GL_HALF_FLOAT;
-    const GLvoid* data = ctx->setPointer(indx,size,type,stride,ptr);
-    if(type != GL_FIXED) ctx->dispatcher().glVertexAttribPointer(indx,size,type,normalized,stride,data);
+    if (type == GL_HALF_FLOAT_OES) type = GL_HALF_FLOAT;
+    ctx->setPointer(indx,size,type,stride,ptr,normalized);
 }
 
 GL_APICALL void  GL_APIENTRY glViewport(GLint x, GLint y, GLsizei width, GLsizei height){

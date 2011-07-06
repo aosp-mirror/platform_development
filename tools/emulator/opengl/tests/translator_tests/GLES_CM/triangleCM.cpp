@@ -45,6 +45,7 @@ unsigned char *genTexture(int width, int height, int comp)
     for (int i = 0; i < height; i++) {
         for (int j = 0; j < width; j++) {
             unsigned char col = ((i / 8 + j / 8) % 2) * 255 ;
+            if (j>(width/2)) col/=2;
             for (int c = 0; c < comp; c++) {
                 *ptr = col; ptr++;
             }
@@ -99,6 +100,17 @@ void usage(const char *progname)
     fprintf(stderr, "\t-p: use point size OES extention\n");
 }
 
+#define SWITCH_SOURCE(add)\
+            if(useConvertedType){                            \
+                if(useFixed){                                \
+                      data = (GLvoid*)(fixedVertices+(add)); \
+                } else {                                     \
+                      data = (GLvoid*)(byteVertices +(add)); \
+                }                                            \
+            } else {                                         \
+                      data = (GLvoid*)(afVertices+(add));    \
+            }                                                \
+
 #ifdef _WIN32
 int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd)
 #else
@@ -110,12 +122,13 @@ int main(int argc, char **argv)
     GLuint  ui32Texture;
 
     int nframes = 100;
-    bool immidateMode     = true;
-    bool useIndices       = false;
+    bool immidateMode     = false;
+    bool useIndices       = true;
     bool useTexture       = false;
     bool useCompTexture   = false;
+    bool useConvertedType = true;
     bool useFixed         = false;
-    bool usePoints        = true;
+    bool usePoints        = false;
     bool useCopy          = false;
     bool useSubCopy       = false;
 
@@ -248,6 +261,26 @@ int main(int argc, char **argv)
                  14.0f
     };
 
+#define MAX_T 1
+#define MID_T 0
+#define MIN_T 0
+
+    GLbyte byteVertices[] = { -1,-1,0, // Position
+                             255,0,0,255, // Color
+                             MIN_T, MIN_T, // texture
+                             12, //point size
+
+                             1,-1,0,
+                             0,255,0,255,
+                             MAX_T,MIN_T,
+                             47,
+
+                            0,1,0,
+                            0,0,255,255,
+                            MID_T, MAX_T,
+                            14
+    };
+
     GLfixed fixedVertices[] = { F_to_X(-0.4f),F_to_X(-0.4f),F_to_X(0.0f), // Position
                     F_to_X(1.0f),F_to_X(0.0f),F_to_X(0.0f),F_to_X(1.0f), // Color
                     F_to_X(0.0f),F_to_X(0.0f), // texture
@@ -272,8 +305,17 @@ int main(int argc, char **argv)
          printf("ui32Vbo = %d\n", ui32Vbo);
 
         glBindBuffer(GL_ARRAY_BUFFER, ui32Vbo);
-        unsigned int uiSize = 3 * (sizeof(float) * 10);
-        glBufferData(GL_ARRAY_BUFFER, uiSize, useFixed?(void *)fixedVertices:(void*)afVertices, GL_STATIC_DRAW);
+        void* data = (void*)afVertices;
+        unsigned int uiSize = 3*(sizeof(float)*10);
+        if(useConvertedType){
+           if(useFixed){
+               data = (void*)fixedVertices;
+           } else {
+               data   = (void*)byteVertices;
+               uiSize = 3*(sizeof(GLbyte)*10);
+           }
+        }
+        glBufferData(GL_ARRAY_BUFFER, uiSize,data, GL_STATIC_DRAW);
 
         ui32IndexVbo = 2;
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ui32IndexVbo);
@@ -290,18 +332,24 @@ int main(int argc, char **argv)
     GLvoid* arr = NULL;
     GLenum  type;
     GLenum  drawType;
+    GLenum  colorType;
     int     size_of;
 
-    if(useFixed)
-    {
-        arr = fixedVertices;
-        type = GL_FIXED;
-        size_of = sizeof(GLfixed);
-    }
-    else
-    {
+    if(useConvertedType){
+        if(useFixed)
+        {
+            arr = fixedVertices;
+            colorType = type = GL_FIXED;
+            size_of = sizeof(GLfixed);
+        } else {
+            arr = byteVertices;
+            colorType = GL_UNSIGNED_BYTE;
+            type = GL_BYTE;
+            size_of = sizeof(GLbyte);
+        }
+    }else {
         arr = afVertices;
-        type = GL_FLOAT;
+        colorType = type = GL_FLOAT;
         size_of = sizeof(float);
     }
 
@@ -312,7 +360,8 @@ int main(int argc, char **argv)
     else
         drawType = GL_TRIANGLES;
 
-    for (int i = 0; i < 10000; i++) {
+    GLvoid* data = NULL;
+    for (int i = 0; i < 100; i++) {
 
         glClear(GL_COLOR_BUFFER_BIT);
         glPushMatrix();
@@ -329,14 +378,16 @@ int main(int argc, char **argv)
         // Set color data in the same way
         glEnableClientState(GL_COLOR_ARRAY);
         if (immidateMode) {
-            glColorPointer(4, type, size_of * 10, useFixed?(GLvoid*)(fixedVertices+3):(GLvoid*)(afVertices+3));
+            SWITCH_SOURCE(3)
+            glColorPointer(4, colorType, size_of * 10, data);
         } else {
-            glColorPointer(4,type,size_of * 10, (GLvoid*) (size_of * 3) );
+            glColorPointer(4,colorType,size_of * 10, (GLvoid*) (size_of * 3) );
         }
         if (useTexture) {
             glEnableClientState(GL_TEXTURE_COORD_ARRAY);
             if (immidateMode) {
-                glTexCoordPointer(2, type, size_of * 10, useFixed?(GLvoid*)(fixedVertices + 7):(GLvoid*)(afVertices+7));
+                SWITCH_SOURCE(7)
+                glTexCoordPointer(2, type, size_of * 10,data);
             } else {
                 glTexCoordPointer(2, type, size_of * 10, (GLvoid*)(size_of * 7));
             }
@@ -345,7 +396,8 @@ int main(int argc, char **argv)
         {
             glEnableClientState(GL_POINT_SIZE_ARRAY_OES);
             if (immidateMode) {
-                glPointSizePointerOES(type,size_of * 10,useFixed?(GLvoid*)(fixedVertices + 9):(GLvoid*)(afVertices+9));
+                SWITCH_SOURCE(9)
+                glPointSizePointerOES(type,size_of * 10,data);
                         } else {
                 glPointSizePointerOES(type,size_of * 10,(GLvoid*)(size_of * 9));
                         }
