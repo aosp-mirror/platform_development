@@ -68,7 +68,7 @@ class GLEScontext;
 
 typedef struct {
     GLEScontext*                                    (*createGLESContext)();
-    void                                            (*initContext)(GLEScontext*);
+    void                                            (*initContext)(GLEScontext*,ShareGroupPtr);
     void                                            (*deleteGLESContext)(GLEScontext*);
     void                                            (*flush)();
     void                                            (*finish)();

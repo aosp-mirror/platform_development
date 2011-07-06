@@ -753,8 +753,7 @@ EGLAPI EGLBoolean EGLAPIENTRY eglMakeCurrent(EGLDisplay display, EGLSurface draw
 
         thread->updateInfo(newCtx,dpy,newCtx->getGlesContext(),newCtx->getShareGroup(),dpy->getManager(newCtx->version()));
         newCtx->setSurfaces(newReadSrfc,newDrawSrfc);
-        g_eglInfo->getIface(newCtx->version())->initContext(newCtx->getGlesContext());
-        g_eglInfo->getIface(newCtx->version())->setShareGroup(newCtx->getGlesContext(),newCtx->getShareGroup());
+        g_eglInfo->getIface(newCtx->version())->initContext(newCtx->getGlesContext(),newCtx->getShareGroup());
     }
 
     SurfacePtr  prevRead;
