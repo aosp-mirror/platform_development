@@ -396,6 +396,7 @@ GL_API void GL_APIENTRY  glColorMask( GLboolean red, GLboolean green, GLboolean 
 GL_API void GL_APIENTRY  glColorPointer( GLint size, GLenum type, GLsizei stride, const GLvoid *pointer) {
     GET_CTX()
     SET_ERROR_IF(!GLEScmValidate::colorPointerParams(size,stride),GL_INVALID_VALUE);
+    SET_ERROR_IF(!GLEScmValidate::colorPointerType(type),GL_INVALID_ENUM);
     ctx->setPointer(GL_COLOR_ARRAY,size,type,stride,pointer);
 }
 
@@ -1159,6 +1160,7 @@ GL_API void GL_APIENTRY  glNormal3x( GLfixed nx, GLfixed ny, GLfixed nz) {
 GL_API void GL_APIENTRY  glNormalPointer( GLenum type, GLsizei stride, const GLvoid *pointer) {
     GET_CTX()
     SET_ERROR_IF(stride < 0,GL_INVALID_VALUE);
+    SET_ERROR_IF(!GLEScmValidate::normalPointerType(type),GL_INVALID_ENUM);
     ctx->setPointer(GL_NORMAL_ARRAY,3,type,stride,pointer);//3 normal verctor
 }
 
@@ -1208,6 +1210,7 @@ GL_API void GL_APIENTRY  glPointSize( GLfloat size) {
 GL_API void GL_APIENTRY  glPointSizePointerOES( GLenum type, GLsizei stride, const GLvoid *pointer) {
     GET_CTX()
     SET_ERROR_IF(stride < 0,GL_INVALID_VALUE);
+    SET_ERROR_IF(!GLEScmValidate::pointPointerType(type),GL_INVALID_ENUM);
     ctx->setPointer(GL_POINT_SIZE_ARRAY_OES,1,type,stride,pointer);
 }
 
@@ -1303,6 +1306,7 @@ GL_API void GL_APIENTRY  glStencilOp( GLenum fail, GLenum zfail, GLenum zpass) {
 GL_API void GL_APIENTRY  glTexCoordPointer( GLint size, GLenum type, GLsizei stride, const GLvoid *pointer) {
     GET_CTX()
     SET_ERROR_IF(!GLEScmValidate::texCoordPointerParams(size,stride),GL_INVALID_VALUE);
+    SET_ERROR_IF(!GLEScmValidate::texCoordPointerType(type),GL_INVALID_ENUM);
     ctx->setPointer(GL_TEXTURE_COORD_ARRAY,size,type,stride,pointer);
 }
 
@@ -1459,6 +1463,7 @@ GL_API void GL_APIENTRY  glTranslatex( GLfixed x, GLfixed y, GLfixed z) {
 GL_API void GL_APIENTRY  glVertexPointer( GLint size, GLenum type, GLsizei stride, const GLvoid *pointer) {
     GET_CTX()
     SET_ERROR_IF(!GLEScmValidate::vertexPointerParams(size,stride),GL_INVALID_VALUE);
+    SET_ERROR_IF(!GLEScmValidate::vertexPointerType(type),GL_INVALID_ENUM);
     ctx->setPointer(GL_VERTEX_ARRAY,size,type,stride,pointer);
 }
 
