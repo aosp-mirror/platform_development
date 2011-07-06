@@ -25,7 +25,6 @@ public:
     EglPixmapSurface(EGLNativePixmapType pix,EglConfig* config);
     ~EglPixmapSurface();
 
-    void* native(){ return (void*)m_pixmap;};
     bool getAttrib(EGLint attrib,EGLint* val);
 
     static bool alreadyAssociatedWithConfig(EGLNativePixmapType pix);

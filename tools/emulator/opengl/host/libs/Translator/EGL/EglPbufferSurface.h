@@ -24,11 +24,9 @@ public:
                                          m_texFormat(EGL_NO_TEXTURE),
                                          m_texTarget(EGL_NO_TEXTURE),
                                          m_texMipmap(EGL_FALSE),
-                                         m_largest(EGL_FALSE),
-                                         m_nativePbuffer(0){};
+                                         m_largest(EGL_FALSE){};
 
-    void* native(){ return (void*)m_nativePbuffer;};
-    void  setNativePbuffer(EGLNativePbufferType pb){ m_nativePbuffer = pb;};
+    void  setNativePbuffer(EGLNativeSurfaceType srfc){ m_native = srfc;};
     bool  setAttrib(EGLint attrib,EGLint val);
     bool  getAttrib(EGLint attrib,EGLint* val);
     void  getDim(EGLint* width,EGLint* height,EGLint* largest){
@@ -44,6 +42,5 @@ private:
     EGLint               m_texTarget;
     EGLint               m_texMipmap;
     EGLint               m_largest;
-    EGLNativePbufferType m_nativePbuffer;
 };
 #endif

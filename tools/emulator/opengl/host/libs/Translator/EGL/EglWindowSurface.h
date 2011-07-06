@@ -26,7 +26,6 @@ public:
     EglWindowSurface(EGLNativeWindowType win,EglConfig* config,unsigned width,unsigned int height);
     ~EglWindowSurface();
     bool  getAttrib(EGLint attrib,EGLint* val);
-    void* native(){ return (void *)m_win;};
 
     static bool alreadyAssociatedWithConfig(EGLNativeWindowType win);
 private:
