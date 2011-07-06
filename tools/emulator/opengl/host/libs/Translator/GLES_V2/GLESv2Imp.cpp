@@ -724,7 +724,6 @@ GL_APICALL const GLubyte* GL_APIENTRY glGetString(GLenum name){
     static GLubyte VENDOR[]     = "Google";
     static GLubyte RENDERER[]   = "OpenGL ES 2.0";
     static GLubyte VERSION[]    = "OpenGL ES 2.0";
-    static GLubyte EXTENSIONS[] = "";
     static GLubyte SHADING[]    = "OpenGL ES GLSL ES 1.0.17";
     switch(name) {
         case GL_VENDOR:
@@ -736,7 +735,7 @@ GL_APICALL const GLubyte* GL_APIENTRY glGetString(GLenum name){
         case GL_SHADING_LANGUAGE_VERSION:
             return SHADING;
         case GL_EXTENSIONS:
-            return EXTENSIONS;
+            return (const GLubyte*)ctx->getExtensionString();
         default:
             RET_AND_SET_ERROR_IF(true,GL_INVALID_ENUM,NULL);
     }
