@@ -21,6 +21,7 @@
 #include "libOpenglRender/render_api.h"
 
 #ifdef _WIN32
+#include <winsock2.h>
 int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd)
 #else
 int main(int argc, char *argv[])
@@ -50,8 +51,15 @@ int main(int argc, char *argv[])
     SDL_GetWMInfo(&wminfo);
 #ifdef _WIN32
     windowId = wminfo.window;
-#else
+    WSADATA  wsaData;
+    int      rc = WSAStartup( MAKEWORD(2,2), &wsaData);
+    if (rc != 0) {
+            printf( "could not initialize Winsock\n" );
+    }
+#elif __linux__
     windowId = wminfo.info.x11.window;
+#elif __APPLE__
+    windowId = wminfo.nsWindowPtr;
 #endif
 
     printf("initializing renderer process\n");
