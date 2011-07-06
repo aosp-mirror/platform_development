@@ -6,7 +6,6 @@
 #include "objectNameManager.h"
 #include <utils/threads.h>
 #include <string>
-#include <utility>
 
 typedef std::map<GLenum,GLESpointer*>  ArraysMap;
 
@@ -62,19 +61,33 @@ struct GLSupport {
 
 };
 
+struct ArrayData{
+    ArrayData():data(NULL),
+                type(0),
+                stride(0),
+                allocated(false){};
+
+    void*        data;
+    GLenum       type;
+    unsigned int stride;
+    bool         allocated;
+};
+
 class GLESConversionArrays
 {
 public:
     GLESConversionArrays():m_current(0){};
-    void alloc(unsigned int size,GLenum type);
-    void* operator[](int i);
+    void setArr(void* data,unsigned int stride,GLenum type);
+    void allocArr(unsigned int size,GLenum type);
+    ArrayData& operator[](int i);
     void* getCurrentData();
+    ArrayData& getCurrentArray();
     unsigned int getCurrentIndex();
     void operator++();
 
     ~GLESConversionArrays();
 private:
-    std::map<GLenum,std::pair<GLenum,void*> > m_arrays;
+    std::map<GLenum,ArrayData> m_arrays;
     unsigned int m_current;
 };
 
@@ -125,9 +138,9 @@ public:
 protected:
     virtual bool needConvert(GLESConversionArrays& fArrs,GLint first,GLsizei count,GLenum type,const GLvoid* indices,bool direct,GLESpointer* p,GLenum array_id) = 0;
     void convertDirect(GLESConversionArrays& fArrs,GLint first,GLsizei count,GLenum array_id,GLESpointer* p);
-    void convertDirectVBO(GLint first,GLsizei count,GLenum array_id,GLESpointer* p);
+    void convertDirectVBO(GLESConversionArrays& fArrs,GLint first,GLsizei count,GLenum array_id,GLESpointer* p);
     void convertIndirect(GLESConversionArrays& fArrs,GLsizei count,GLenum type,const GLvoid* indices,GLenum array_id,GLESpointer* p);
-    void convertIndirectVBO(GLsizei count,GLenum indices_type,const GLvoid* indices,GLenum array_id,GLESpointer* p);
+    void convertIndirectVBO(GLESConversionArrays& fArrs,GLsizei count,GLenum indices_type,const GLvoid* indices,GLenum array_id,GLESpointer* p);
     void initCapsLocked(const GLubyte * extensionString);
     virtual void initExtensionString() =0;
     static android::Mutex s_lock;
