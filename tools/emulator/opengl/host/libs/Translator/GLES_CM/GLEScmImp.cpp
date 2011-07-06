@@ -555,11 +555,12 @@ GL_API void GL_APIENTRY  glDrawArrays( GLenum mode, GLint first, GLsizei count) 
 
     GLESConversionArrays tmpArrs;
     ctx->setupArraysPointers(tmpArrs,first,count,0,NULL,true);
-    if(mode != GL_POINTS || !ctx->isArrEnabled(GL_POINT_SIZE_ARRAY_OES)){
-        ctx->dispatcher().glDrawArrays(mode,first,count);
-    }
-    else{
+    if(mode == GL_POINTS && ctx->isArrEnabled(GL_POINT_SIZE_ARRAY_OES)){
         ctx->drawPointsArrs(tmpArrs,first,count);
+    }
+    else
+    {
+        ctx->dispatcher().glDrawArrays(mode,first,count);
     }
 }
 
@@ -577,11 +578,11 @@ GL_API void GL_APIENTRY  glDrawElements( GLenum mode, GLsizei count, GLenum type
     }
 
     ctx->setupArraysPointers(tmpArrs,0,count,type,indices,false);
-    if(mode != GL_POINTS || !ctx->isArrEnabled(GL_POINT_SIZE_ARRAY_OES)){
-        ctx->dispatcher().glDrawElements(mode,count,type,indices);
+    if(mode == GL_POINTS && ctx->isArrEnabled(GL_POINT_SIZE_ARRAY_OES)){
+        ctx->drawPointsElems(tmpArrs,count,type,indices);
     }
     else{
-        ctx->drawPointsElems(tmpArrs,count,type,indices);
+        ctx->dispatcher().glDrawElements(mode,count,type,indices);
     }
 }
 
