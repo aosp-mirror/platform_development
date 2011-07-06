@@ -164,7 +164,7 @@ GL_APICALL void  GL_APIENTRY glBindFramebuffer(GLenum target, GLuint framebuffer
             globalFrameBufferName = thrd->shareGroup->getGlobalName(FRAMEBUFFER,framebuffer);
         }
     }
-    ctx->dispatcher().glBindFramebuffer(target,globalFrameBufferName);
+    ctx->dispatcher().glBindFramebufferEXT(target,globalFrameBufferName);
 }
 
 GL_APICALL void  GL_APIENTRY glBindRenderbuffer(GLenum target, GLuint renderbuffer){
@@ -180,7 +180,7 @@ GL_APICALL void  GL_APIENTRY glBindRenderbuffer(GLenum target, GLuint renderbuff
             globalRenderBufferName = thrd->shareGroup->getGlobalName(RENDERBUFFER,renderbuffer);
         }
     }
-    ctx->dispatcher().glBindRenderbuffer(target,globalRenderBufferName);
+    ctx->dispatcher().glBindRenderbufferEXT(target,globalRenderBufferName);
 }
 
 GL_APICALL void  GL_APIENTRY glBindTexture(GLenum target, GLuint texture){
@@ -248,7 +248,7 @@ GL_APICALL void  GL_APIENTRY glBufferSubData(GLenum target, GLintptr offset, GLs
 GL_APICALL GLenum GL_APIENTRY glCheckFramebufferStatus(GLenum target){
     GET_CTX_RET(GL_FRAMEBUFFER_COMPLETE);
     RET_AND_SET_ERROR_IF(!GLESv2Validate::framebufferTarget(target),GL_INVALID_ENUM,GL_FRAMEBUFFER_COMPLETE);
-    return ctx->dispatcher().glCheckFramebufferStatus(target);
+    return ctx->dispatcher().glCheckFramebufferStatusEXT(target);
 }
 
 GL_APICALL void  GL_APIENTRY glClear(GLbitfield mask){
@@ -358,7 +358,7 @@ GL_APICALL void  GL_APIENTRY glDeleteFramebuffers(GLsizei n, const GLuint* frame
         for(int i=0; i < n; i++){
            const GLuint globalFrameBufferName = thrd->shareGroup->getGlobalName(FRAMEBUFFER,framebuffers[i]);
            thrd->shareGroup->deleteName(FRAMEBUFFER,framebuffers[i]);
-           ctx->dispatcher().glDeleteFramebuffers(1,&globalFrameBufferName);
+           ctx->dispatcher().glDeleteFramebuffersEXT(1,&globalFrameBufferName);
         }
     }
 }
@@ -370,7 +370,7 @@ GL_APICALL void  GL_APIENTRY glDeleteRenderbuffers(GLsizei n, const GLuint* rend
         for(int i=0; i < n; i++){
            const GLuint globalRenderBufferName = thrd->shareGroup->getGlobalName(RENDERBUFFER,renderbuffers[i]);
            thrd->shareGroup->deleteName(RENDERBUFFER,renderbuffers[i]);
-           ctx->dispatcher().glDeleteRenderbuffers(1,&globalRenderBufferName);
+           ctx->dispatcher().glDeleteRenderbuffersEXT(1,&globalRenderBufferName);
         }
     }
 }
@@ -496,7 +496,7 @@ GL_APICALL void  GL_APIENTRY glFramebufferRenderbuffer(GLenum target, GLenum att
 
     if(thrd->shareGroup.Ptr()) {
             GLuint globalRenderbufferName = thrd->shareGroup->getGlobalName(RENDERBUFFER,renderbuffer);
-            ctx->dispatcher().glFramebufferRenderbuffer(target,attachment,renderbuffertarget,globalRenderbufferName);
+            ctx->dispatcher().glFramebufferRenderbufferEXT(target,attachment,renderbuffertarget,globalRenderbufferName);
     }
 
 }
@@ -510,7 +510,7 @@ GL_APICALL void  GL_APIENTRY glFramebufferTexture2D(GLenum target, GLenum attach
 
     if(thrd->shareGroup.Ptr()) {
             GLuint globalTextureName = thrd->shareGroup->getGlobalName(TEXTURE,texture);
-            ctx->dispatcher().glFramebufferTexture2D(target,attachment,textarget,globalTextureName,level);
+            ctx->dispatcher().glFramebufferTexture2DEXT(target,attachment,textarget,globalTextureName,level);
     }
 }
 
@@ -535,7 +535,7 @@ GL_APICALL void  GL_APIENTRY glGenBuffers(GLsizei n, GLuint* buffers){
 GL_APICALL void  GL_APIENTRY glGenerateMipmap(GLenum target){
     GET_CTX();
     SET_ERROR_IF(!GLESv2Validate::textureTargetEx(target),GL_INVALID_ENUM);
-    ctx->dispatcher().glGenerateMipmap(target);
+    ctx->dispatcher().glGenerateMipmapEXT(target);
 }
 
 GL_APICALL void  GL_APIENTRY glGenFramebuffers(GLsizei n, GLuint* framebuffers){
@@ -650,13 +650,13 @@ GL_APICALL void  GL_APIENTRY glGetFramebufferAttachmentParameteriv(GLenum target
     SET_ERROR_IF(!(GLESv2Validate::framebufferTarget(target)         &&
                    GLESv2Validate::framebufferAttachment(attachment) &&
                    GLESv2Validate::framebufferAttachmentParams(pname)),GL_INVALID_ENUM);
-    ctx->dispatcher().glGetFramebufferAttachmentParameteriv(target,attachment,pname,params);
+    ctx->dispatcher().glGetFramebufferAttachmentParameterivEXT(target,attachment,pname,params);
 }
 
 GL_APICALL void  GL_APIENTRY glGetRenderbufferParameteriv(GLenum target, GLenum pname, GLint* params){
     GET_CTX();
     SET_ERROR_IF(!(GLESv2Validate::renderbufferTarget(target) && GLESv2Validate::renderbufferParams(pname)),GL_INVALID_ENUM);
-    ctx->dispatcher().glGetRenderbufferParameteriv(target,pname,params);
+    ctx->dispatcher().glGetRenderbufferParameterivEXT(target,pname,params);
 }
 
 
@@ -969,7 +969,7 @@ GL_APICALL void  GL_APIENTRY glReleaseShaderCompiler(void){
 
 GL_APICALL void  GL_APIENTRY glRenderbufferStorage(GLenum target, GLenum internalformat, GLsizei width, GLsizei height){
     GET_CTX();
-    ctx->dispatcher().glRenderbufferStorage(target,internalformat,width,height);
+    ctx->dispatcher().glRenderbufferStorageEXT(target,internalformat,width,height);
 }
 
 GL_APICALL void  GL_APIENTRY glSampleCoverage(GLclampf value, GLboolean invert){

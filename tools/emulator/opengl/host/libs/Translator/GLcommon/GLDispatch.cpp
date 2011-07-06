@@ -230,11 +230,6 @@ void (GLAPIENTRY *GLDispatch::glGetTexGeniv) (GLenum coord, GLenum pname, GLint 
 void (GL_APIENTRY *GLDispatch::glBlendColor)(GLclampf,GLclampf,GLclampf,GLclampf) = NULL;
 void (GL_APIENTRY *GLDispatch::glStencilFuncSeparate)(GLenum,GLenum,GLint,GLuint) = NULL;
 void (GL_APIENTRY *GLDispatch::glStencilMaskSeparate)(GLenum,GLuint) = NULL;
-void (GL_APIENTRY *GLDispatch::glGenerateMipmap)(GLenum) = NULL;
-void (GL_APIENTRY *GLDispatch::glBindFramebuffer)(GLenum,GLuint) = NULL;
-void (GL_APIENTRY *GLDispatch::glBindRenderbuffer)(GLenum,GLuint) = NULL;
-void (GL_APIENTRY *GLDispatch::glDeleteFramebuffers)(GLsizei,const GLuint*) = NULL;
-void (GL_APIENTRY *GLDispatch::glDeleteRenderbuffers)(GLsizei,const GLuint*) = NULL;
 GLboolean (GL_APIENTRY *GLDispatch::glIsProgram)(GLuint program) = NULL;
 GLboolean (GL_APIENTRY *GLDispatch::glIsShader)(GLuint shader) = NULL;
 void (GL_APIENTRY *GLDispatch::glVertexAttrib1f)(GLuint,GLfloat) = NULL;
@@ -270,11 +265,6 @@ void (GL_APIENTRY *GLDispatch::glUniform4iv)(GLint,GLsizei,const GLint*) = NULL;
 void (GL_APIENTRY *GLDispatch::glUniformMatrix2fv)(GLint,GLsizei,GLboolean,const GLfloat*) = NULL;
 void (GL_APIENTRY *GLDispatch::glUniformMatrix3fv)(GLint,GLsizei,GLboolean,const GLfloat*) = NULL;
 void (GL_APIENTRY *GLDispatch::glUniformMatrix4fv)(GLint,GLsizei,GLboolean,const GLfloat*) = NULL;
-void (GL_APIENTRY *GLDispatch::glGetFramebufferAttachmentParameteriv)(GLenum,GLenum,GLenum,GLint*) = NULL;
-void (GL_APIENTRY *GLDispatch::glGetRenderbufferParameteriv)(GLenum,GLenum,GLint*) = NULL;
-GLboolean (GL_APIENTRY *GLDispatch::glIsFramebuffer)(GLuint) = NULL;
-GLboolean (GL_APIENTRY *GLDispatch::glIsRenderbuffer)(GLuint) = NULL;
-GLenum (GL_APIENTRY *GLDispatch::glCheckFramebufferStatus)(GLenum) = NULL;
 void (GL_APIENTRY *GLDispatch::glAttachShader)(GLuint,GLuint) = NULL;
 void (GL_APIENTRY *GLDispatch::glBindAttribLocation)(GLuint,GLuint,const GLchar*) = NULL;
 void (GL_APIENTRY *GLDispatch::glCompileShader)(GLuint) = NULL;
@@ -300,11 +290,8 @@ void (GL_APIENTRY *GLDispatch::glGetUniformfv)(GLuint,GLint,GLfloat*) = NULL;
 void (GL_APIENTRY *GLDispatch::glGetUniformiv)(GLuint,GLint,GLint*) = NULL;
 int  (GL_APIENTRY *GLDispatch::glGetUniformLocation)(GLuint,const GLchar*) = NULL;
 void (GL_APIENTRY *GLDispatch::glReleaseShaderCompiler)() = NULL;
-void (GL_APIENTRY *GLDispatch::glRenderbufferStorage)(GLenum,GLenum,GLsizei,GLsizei) = NULL;
 void (GL_APIENTRY *GLDispatch::glShaderBinary)(GLsizei,const GLuint*,GLenum,const GLvoid*,GLsizei) = NULL;
 void (GL_APIENTRY *GLDispatch::glShaderSource)(GLuint,GLsizei,const GLchar**,const GLint*) = NULL;
-void (GL_APIENTRY *GLDispatch::glFramebufferRenderbuffer)(GLenum,GLenum,GLenum,GLuint) = NULL;
-void (GL_APIENTRY *GLDispatch::glFramebufferTexture2D)(GLenum,GLenum,GLenum,GLuint,GLint) = NULL;
 
 GLDispatch::GLDispatch():m_isLoaded(false){};
 
@@ -380,7 +367,24 @@ void GLDispatch::dispatchFuncs(GLESVersion version){
     LOAD_GL_FUNC(glPushClientAttrib);
     LOAD_GL_FUNC(glPopAttrib);
     LOAD_GL_FUNC(glPopClientAttrib);
-    
+    LOAD_GLEXT_FUNC(glIsRenderbufferEXT);
+    LOAD_GLEXT_FUNC(glBindRenderbufferEXT);
+    LOAD_GLEXT_FUNC(glDeleteRenderbuffersEXT);
+    LOAD_GLEXT_FUNC(glGenRenderbuffersEXT);
+    LOAD_GLEXT_FUNC(glRenderbufferStorageEXT);
+    LOAD_GLEXT_FUNC(glGetRenderbufferParameterivEXT);
+    LOAD_GLEXT_FUNC(glIsFramebufferEXT);
+    LOAD_GLEXT_FUNC(glBindFramebufferEXT);
+    LOAD_GLEXT_FUNC(glDeleteFramebuffersEXT);
+    LOAD_GLEXT_FUNC(glGenFramebuffersEXT);
+    LOAD_GLEXT_FUNC(glCheckFramebufferStatusEXT);
+    LOAD_GLEXT_FUNC(glFramebufferTexture1DEXT);
+    LOAD_GLEXT_FUNC(glFramebufferTexture2DEXT);
+    LOAD_GLEXT_FUNC(glFramebufferTexture3DEXT);
+    LOAD_GLEXT_FUNC(glFramebufferRenderbufferEXT);
+    LOAD_GLEXT_FUNC(glGetFramebufferAttachmentParameterivEXT);
+    LOAD_GLEXT_FUNC(glGenerateMipmapEXT);
+
     /* Loading OpenGL functions which are needed ONLY for implementing GLES 1.1*/
     if(version == GLES_1_1){
         LOAD_GL_FUNC(glAlphaFunc);
@@ -445,23 +449,6 @@ void GLDispatch::dispatchFuncs(GLESVersion version){
         LOAD_GL_FUNC(glTranslatef);
         LOAD_GL_FUNC(glVertexPointer);
 
-   	    LOAD_GLEXT_FUNC(glIsRenderbufferEXT);
-        LOAD_GLEXT_FUNC(glBindRenderbufferEXT);
-        LOAD_GLEXT_FUNC(glDeleteRenderbuffersEXT);
-        LOAD_GLEXT_FUNC(glGenRenderbuffersEXT);
-        LOAD_GLEXT_FUNC(glRenderbufferStorageEXT);
-        LOAD_GLEXT_FUNC(glGetRenderbufferParameterivEXT);
-        LOAD_GLEXT_FUNC(glIsFramebufferEXT);
-        LOAD_GLEXT_FUNC(glBindFramebufferEXT);
-        LOAD_GLEXT_FUNC(glDeleteFramebuffersEXT);
-        LOAD_GLEXT_FUNC(glGenFramebuffersEXT);
-        LOAD_GLEXT_FUNC(glCheckFramebufferStatusEXT);
-        LOAD_GLEXT_FUNC(glFramebufferTexture1DEXT);
-        LOAD_GLEXT_FUNC(glFramebufferTexture2DEXT);
-        LOAD_GLEXT_FUNC(glFramebufferTexture3DEXT);
-        LOAD_GLEXT_FUNC(glFramebufferRenderbufferEXT);
-        LOAD_GLEXT_FUNC(glGetFramebufferAttachmentParameterivEXT);
-        LOAD_GLEXT_FUNC(glGenerateMipmapEXT);
         LOAD_GLEXT_FUNC(glCurrentPaletteMatrixARB);
         LOAD_GLEXT_FUNC(glMatrixIndexuivARB);
         LOAD_GLEXT_FUNC(glMatrixIndexPointerARB);
@@ -480,11 +467,6 @@ void GLDispatch::dispatchFuncs(GLESVersion version){
         LOAD_GL_FUNC(glBlendColor);
         LOAD_GL_FUNC(glBlendFuncSeparate);
         LOAD_GL_FUNC(glStencilFuncSeparate);
-        LOAD_GL_FUNC(glGenerateMipmap);
-        LOAD_GL_FUNC(glBindFramebuffer);
-        LOAD_GL_FUNC(glBindRenderbuffer);
-        LOAD_GL_FUNC(glDeleteFramebuffers);
-        LOAD_GL_FUNC(glDeleteRenderbuffers);
         LOAD_GL_FUNC(glIsProgram);
         LOAD_GL_FUNC(glIsShader);
         LOAD_GL_FUNC(glVertexAttrib1f);
@@ -501,8 +483,6 @@ void GLDispatch::dispatchFuncs(GLESVersion version){
         LOAD_GL_FUNC(glGetVertexAttribfv);
         LOAD_GL_FUNC(glGetVertexAttribiv);
         LOAD_GL_FUNC(glGetVertexAttribPointerv);
-        LOAD_GL_FUNC(glIsFramebuffer);
-        LOAD_GL_FUNC(glIsRenderbuffer);
         LOAD_GL_FUNC(glUniform1f);
         LOAD_GL_FUNC(glUniform1fv);
         LOAD_GL_FUNC(glUniform1i);
@@ -522,9 +502,6 @@ void GLDispatch::dispatchFuncs(GLESVersion version){
         LOAD_GL_FUNC(glUniformMatrix2fv);
         LOAD_GL_FUNC(glUniformMatrix3fv);
         LOAD_GL_FUNC(glUniformMatrix4fv);
-        LOAD_GL_FUNC(glCheckFramebufferStatus);
-        LOAD_GL_FUNC(glGetFramebufferAttachmentParameteriv);
-        LOAD_GL_FUNC(glGetRenderbufferParameteriv);
         LOAD_GL_FUNC(glAttachShader);
         LOAD_GL_FUNC(glBindAttribLocation);
         LOAD_GL_FUNC(glCompileShader);
@@ -550,12 +527,9 @@ void GLDispatch::dispatchFuncs(GLESVersion version){
         LOAD_GL_FUNC(glGetUniformiv);
         LOAD_GL_FUNC(glGetUniformLocation);
         LOAD_GL_FUNC(glReleaseShaderCompiler);
-        LOAD_GL_FUNC(glRenderbufferStorage);
         LOAD_GL_FUNC(glShaderBinary);
         LOAD_GL_FUNC(glShaderSource);
         LOAD_GL_FUNC(glStencilMaskSeparate);
-        LOAD_GL_FUNC(glFramebufferRenderbuffer);
-        LOAD_GL_FUNC(glFramebufferTexture2D);
     }
     m_isLoaded = true;
 }
