@@ -22,7 +22,7 @@ struct EGLContext_t;
 
 struct EGLThreadInfo
 {
-    EGLThreadInfo() : currentContext(NULL), hostConn(NULL), eglError(0) {}
+    EGLThreadInfo() : currentContext(NULL), hostConn(NULL), eglError(EGL_SUCCESS) {}
 
     EGLContext_t *currentContext;
     HostConnection *hostConn;
