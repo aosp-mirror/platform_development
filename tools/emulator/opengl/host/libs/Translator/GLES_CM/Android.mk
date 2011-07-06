@@ -8,7 +8,6 @@ $(call emugl-import,libGLcommon)
 LOCAL_SRC_FILES :=      \
      GLEScmImp.cpp      \
      GLEScmUtils.cpp    \
-     TextureUtils.cpp   \
      GLEScmContext.cpp  \
      GLEScmValidate.cpp
 

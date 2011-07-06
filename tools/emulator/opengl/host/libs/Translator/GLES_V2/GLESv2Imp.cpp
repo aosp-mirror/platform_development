@@ -280,11 +280,14 @@ GL_APICALL void  GL_APIENTRY glCompileShader(GLuint shader){
     }
 }
 
-GL_APICALL void  GL_APIENTRY glCompressedTexImage2D(GLenum target, GLint level, GLenum internalformat, GLsizei width, GLsizei height, GLint border, GLsizei imageSize, const GLvoid* data){
+GL_APICALL void  GL_APIENTRY glCompressedTexImage2D(GLenum target, GLint level, GLenum internalformat, GLsizei width, GLsizei height, GLint border, GLsizei imageSize, const GLvoid* data)
+{
     GET_CTX();
     SET_ERROR_IF(!GLESv2Validate::textureTargetEx(target),GL_INVALID_ENUM);
-    SET_ERROR_IF(border != 0 , GL_INVALID_VALUE);
-    ctx->dispatcher().glCompressedTexImage2D(target,level,internalformat,width,height,border,imageSize,data);
+
+    ctx->doCompressedTexImage2D(target, level, internalformat,
+                                width, height, border,
+                                imageSize, data);
 }
 
 GL_APICALL void  GL_APIENTRY glCompressedTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLsizei imageSize, const GLvoid* data){
@@ -946,6 +949,8 @@ GL_APICALL void  GL_APIENTRY glLinkProgram(GLuint program){
 GL_APICALL void  GL_APIENTRY glPixelStorei(GLenum pname, GLint param){
     GET_CTX();
     SET_ERROR_IF(!GLESv2Validate::pixelStoreParam(pname),GL_INVALID_ENUM);
+    SET_ERROR_IF(!((param==1)||(param==2)||(param==4)||(param==8)), GL_INVALID_VALUE);
+    ctx->setUnpackAlignment(param);
     ctx->dispatcher().glPixelStorei(pname,param);
 }
 
