@@ -32,7 +32,7 @@ $(call emugl-begin-host-static-library,libOpenglOsUtils)
             osProcessWin.cpp \
             osThreadWin.cpp
 
-        $(call emugl-export,LDLIBS,-lws2_32)
+        $(call emugl-export,LDLIBS,-lws2_32 -lpsapi)
     else
         LOCAL_SRC_FILES += \
             osProcessUnix.cpp \
