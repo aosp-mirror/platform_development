@@ -125,7 +125,32 @@ int main(int argc, char *argv[])
         return -1;
     }
 
+#ifndef _WIN32
+    //
+    // run the server listener loop
+    //
     server->Main(); // never returns
+#else
+    //
+    // on windows we need to handle messages for the
+    // created subwindow. So we run the server on a seperate
+    // thread and running the windows message pump loop
+    // in this main thread.
+    //
+    server->start();
+
+    //
+    // Dispatch events for the subwindow
+    //
+    MSG msg;
+    HWND hWnd = FrameBuffer::getFB()->getSubWindow();
+    bool done = 0;
+    while(!done) {
+        GetMessage(&msg, hWnd, 0, 0);
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
+    }
+#endif
 
     return 0;
 }
