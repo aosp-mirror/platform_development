@@ -32,6 +32,7 @@ public:
     bool choosen(const EglConfig& dummy);
     EGLint surfaceType(){ return m_surface_type;};
     EGLint id(){return m_config_id;};
+    EGLint nativeId(){return m_native_config_id;};
     EGLNativePixelFormatType nativeConfig(){ return m_nativeFormat;}
 
     EglConfig(EGLint red_size,
@@ -78,6 +79,7 @@ private:
     const EGLBoolean                m_bind_to_tex_rgba;
     const EGLenum                   m_caveat;
     const EGLint                    m_config_id;
+    const EGLint                    m_native_config_id;
     const EGLint                    m_frame_buffer_level;
     const EGLint                    m_depth_size;
     const EGLint                    m_max_pbuffer_width;
