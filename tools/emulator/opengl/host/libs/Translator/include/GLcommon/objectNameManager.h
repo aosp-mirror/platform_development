@@ -60,12 +60,12 @@ private:
 
     //
     // genName - creates new object in the namespace and  returns its name.
-    //           if p_localName is specified this name will be used.
+    //           if genLocal is false then the specified p_localName will be used.
     //           This function also generate a global name for the object,
     //           the value of the global name can be retrieved using the
     //           getGlobalName function.
     //
-    unsigned int genName(unsigned int p_localName = 0, bool genGlobal = true);
+    unsigned int genName(unsigned int p_localName, bool genGlobal, bool genLocal);
 
     //
     // getGlobalName - returns the global name of an object or 0 if the object
@@ -130,7 +130,7 @@ public:
         if ( p_type >= NUM_OBJECT_TYPES ) return 0;
 
         mutex_lock(&m_lock);
-        unsigned int name = m_nameSpace[p_type]->genName(0, false);
+        unsigned int name = m_nameSpace[p_type]->genName(0, false,true);
         mutex_unlock(&m_lock);
         return name;
     }
@@ -166,11 +166,11 @@ public:
 
     //
     // genName - generates new object name and returns its name value.
-    //           if p_localName is specified this name will be used.
+    //           if genLocal is false, p_localName will be used as the name.
     //           This function also generates a "global" name for the object
     //           which can be queried using the getGlobalName function.
     //
-    unsigned int genName(NamedObjectType p_type, unsigned int p_localName = 0);
+    unsigned int genName(NamedObjectType p_type, unsigned int p_localName = 0, bool genLocal= false);
 
     //
     // getGlobalName - retrieves the "global" name of an object or 0 if the

@@ -34,11 +34,11 @@ NameSpace::~NameSpace()
 }
 
 unsigned int
-NameSpace::genName(unsigned int p_localName, bool genGlobal)
+NameSpace::genName(unsigned int p_localName, bool genGlobal, bool genLocal)
 {
 
     unsigned int localName = p_localName;
-    if (localName == 0) {
+    if (genLocal) {
         do {
             localName = ++m_nextName;
         } while( localName == 0 || m_localToGlobalMap.find(localName) != m_localToGlobalMap.end() );
@@ -134,12 +134,12 @@ ShareGroup::~ShareGroup()
 }
 
 unsigned int
-ShareGroup::genName(NamedObjectType p_type, unsigned int p_localName)
+ShareGroup::genName(NamedObjectType p_type, unsigned int p_localName, bool genLocal)
 {
     if (p_type >= NUM_OBJECT_TYPES) return 0;
 
     mutex_lock(&m_lock);
-    unsigned int localName = m_nameSpace[p_type]->genName(p_localName);
+    unsigned int localName = m_nameSpace[p_type]->genName(p_localName,true,genLocal);
     mutex_unlock(&m_lock);
 
     return localName;
