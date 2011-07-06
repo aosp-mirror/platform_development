@@ -60,20 +60,21 @@ GLEScmContext::~GLEScmContext(){
 }
 
 
-//sending data to server side
-void GLEScmContext::sendArr(GLvoid* arr,GLenum arrayType,GLint size,GLsizei stride,int index) {
+//setting client side arr
+void GLEScmContext::setupArr(const GLvoid* arr,GLenum arrayType,GLenum dataType,GLint size,GLsizei stride,int index){
+    if( arr == NULL) return;
     switch(arrayType) {
         case GL_VERTEX_ARRAY:
-            s_glDispatch.glVertexPointer(size,GL_FLOAT,stride,arr);
+            s_glDispatch.glVertexPointer(size,dataType,stride,arr);
             break;
         case GL_NORMAL_ARRAY:
-            s_glDispatch.glNormalPointer(GL_FLOAT,stride,arr);
+            s_glDispatch.glNormalPointer(dataType,stride,arr);
             break;
         case GL_TEXTURE_COORD_ARRAY:
-            s_glDispatch.glTexCoordPointer(size,GL_FLOAT,stride,arr);
+            s_glDispatch.glTexCoordPointer(size,dataType,stride,arr);
             break;
         case GL_COLOR_ARRAY:
-            s_glDispatch.glColorPointer(size,GL_FLOAT,stride,arr);
+            s_glDispatch.glColorPointer(size,dataType,stride,arr);
             break;
         case GL_POINT_SIZE_ARRAY_OES:
             m_pointsIndex = index;
@@ -81,18 +82,37 @@ void GLEScmContext::sendArr(GLvoid* arr,GLenum arrayType,GLint size,GLsizei stri
     }
 }
 
-void GLEScmContext::convertArrs(GLESFloatArrays& fArrs,GLint first,GLsizei count,GLenum type,const GLvoid* indices,bool direct) {
+
+void GLEScmContext::setupArrayPointerHelper(GLESConversionArrays& fArrs,GLint first,GLsizei count,GLenum type,const GLvoid* indices,bool direct,GLenum array_id,GLESpointer* p){
+        unsigned int size = p->getSize();
+        bool usingVBO = p->isVBO();
+        GLenum dataType = p->getType();
+
+        if(needConvert(fArrs,first,count,type,indices,direct,p,array_id)){
+            //conversion has occured
+            unsigned int convertedStride = (usingVBO && dataType != GL_BYTE) ? p->getStride() : 0;
+            const void* data = (usingVBO && dataType!= GL_BYTE) ? p->getBufferData() : fArrs.getCurrentData();
+            dataType = (dataType == GL_FIXED) ? GL_FLOAT:GL_SHORT;
+            setupArr(data,array_id,dataType,size,convertedStride,fArrs.getCurrentIndex());
+            ++fArrs;
+        } else {
+            const void* data = usingVBO ? p->getBufferData() : p->getArrayData();
+            setupArr(data,array_id,dataType,size,p->getStride());
+        }
+}
+
+void GLEScmContext::setupArraysPointers(GLESConversionArrays& fArrs,GLint first,GLsizei count,GLenum type,const GLvoid* indices,bool direct) {
     ArraysMap::iterator it;
-    unsigned int index = 0;
     m_pointsIndex = -1;
 
     //going over all clients arrays Pointers
     for ( it=m_map.begin() ; it != m_map.end(); it++ ) {
+
         GLenum array_id   = (*it).first;
         GLESpointer* p = (*it).second;
-
+        if(!isArrEnabled(array_id)) continue;
         if(array_id == GL_TEXTURE_COORD_ARRAY) continue; //handling textures later
-        chooseConvertMethod(fArrs,first,count,type,indices,direct,p,array_id,index);
+        setupArrayPointerHelper(fArrs,first,count,type,indices,direct,array_id,p);
     }
 
     unsigned int activeTexture = m_clientActiveTexture + GL_TEXTURE0;
@@ -110,7 +130,8 @@ void GLEScmContext::convertArrs(GLESFloatArrays& fArrs,GLint first,GLsizei count
 
         GLenum array_id   = GL_TEXTURE_COORD_ARRAY;
         GLESpointer* p = m_map[array_id];
-        chooseConvertMethod(fArrs,first,count,type,indices,direct,p,array_id,index);
+        if(!isArrEnabled(array_id)) continue;
+        setupArrayPointerHelper(fArrs,first,count,type,indices,direct,array_id,p);
     }
 
     setClientActiveTexture(activeTexture);
@@ -142,17 +163,18 @@ void GLEScmContext::drawPoints(PointSizeIndices* points) {
     if(indices) delete [] indices;
 }
 
-void  GLEScmContext::drawPointsData(GLESFloatArrays& fArrs,GLint first,GLsizei count,GLenum type,const GLvoid* indices_in,bool isElemsDraw) {
+void  GLEScmContext::drawPointsData(GLESConversionArrays& fArrs,GLint first,GLsizei count,GLenum type,const GLvoid* indices_in,bool isElemsDraw) {
     const GLfloat  *pointsArr =  NULL;
     int stride = 0; //steps in GLfloats
+    bool usingVBO = isBindedBuffer(GL_ARRAY_BUFFER);
 
     //choosing the right points sizes array source
-    if(m_pointsIndex >= 0) { //point size array was converted
-        pointsArr=fArrs.arrays[m_pointsIndex];
+    if(m_pointsIndex >= 0 && !usingVBO) { //point size array was converted
+        pointsArr= (const GLfloat*)fArrs[m_pointsIndex];
         stride = 1;
     } else {
         GLESpointer* p = m_map[GL_POINT_SIZE_ARRAY_OES];
-        pointsArr = static_cast<const GLfloat*>(isBindedBuffer(GL_ARRAY_BUFFER)?p->getBufferData():p->getArrayData());
+        pointsArr = static_cast<const GLfloat*>(usingVBO ? p->getBufferData():p->getArrayData());
         stride = p->getStride()?p->getStride()/sizeof(GLfloat):1;
     }
 
@@ -173,12 +195,47 @@ void  GLEScmContext::drawPointsData(GLESFloatArrays& fArrs,GLint first,GLsizei c
     drawPoints(&points);
 }
 
-void  GLEScmContext::drawPointsArrs(GLESFloatArrays& arrs,GLint first,GLsizei count) {
+void  GLEScmContext::drawPointsArrs(GLESConversionArrays& arrs,GLint first,GLsizei count) {
     drawPointsData(arrs,first,count,0,NULL,false);
 }
 
-void GLEScmContext::drawPointsElems(GLESFloatArrays& arrs,GLsizei count,GLenum type,const GLvoid* indices_in) {
+void GLEScmContext::drawPointsElems(GLESConversionArrays& arrs,GLsizei count,GLenum type,const GLvoid* indices_in) {
     drawPointsData(arrs,0,count,type,indices_in,true);
+}
+
+bool GLEScmContext::needConvert(GLESConversionArrays& fArrs,GLint first,GLsizei count,GLenum type,const GLvoid* indices,bool direct,GLESpointer* p,GLenum array_id) {
+
+    bool usingVBO = p->isVBO();
+    GLenum arrType = p->getType();
+    /*
+     conversion is not necessary in the following cases:
+      (*) array type is byte but it is not vertex or texture array
+      (*) array type is not fixed
+    */
+    if((arrType != GL_FIXED) && (arrType != GL_BYTE)) return false;
+    if((arrType == GL_BYTE   && (array_id != GL_VERTEX_ARRAY)) &&
+       (arrType == GL_BYTE   && (array_id != GL_TEXTURE_COORD_ARRAY)) ) return false;
+
+
+    bool byteVBO = (arrType == GL_BYTE) && usingVBO;
+    if(byteVBO){
+        p->redirectPointerData();
+    }
+
+    if(!usingVBO || byteVBO) {
+        if (direct) {
+            convertDirect(fArrs,first,count,array_id,p);
+        } else {
+            convertIndirect(fArrs,count,type,indices,array_id,p);
+        }
+    } else {
+        if (direct) {
+            convertDirectVBO(first,count,array_id,p) ;
+        } else {
+            convertIndirectVBO(count,type,indices,array_id,p);
+        }
+    }
+    return true;
 }
 
 void GLEScmContext::initExtensionString() {
@@ -205,5 +262,5 @@ void GLEScmContext::initExtensionString() {
         dispatcher().glGetIntegerv(GL_MAX_VERTEX_UNITS_OES,&max_vertex_units);
         if (max_palette_matrices>=32 && max_vertex_units>=4)
             *s_glExtensions+="GL_OES_extended_matrix_palette ";
-    } 
+    }
 }
