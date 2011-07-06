@@ -163,7 +163,7 @@ const GLvoid* GLEScontext::setPointer(GLenum arrType,GLint size,GLenum type,GLsi
     if(bufferName) {
         unsigned int offset = reinterpret_cast<unsigned int>(data);
         GLESbuffer* vbo = static_cast<GLESbuffer*>(m_shareGroup->getObjectData(VERTEXBUFFER,bufferName).Ptr());
-        m_map[arrType]->setBuffer(size,type,stride,vbo,offset,normalize);
+        m_map[arrType]->setBuffer(size,type,stride,vbo,bufferName,offset,normalize);
         return  static_cast<const unsigned char*>(vbo->getData()) +  offset;
     }
     m_map[arrType]->setArray(size,type,stride,data,normalize);
@@ -514,3 +514,60 @@ bool GLEScontext::isTextureUnitEnabled(GLenum unit) {
     return false;
 }
 
+bool GLEScontext::glGetBooleanv(GLenum pname, GLboolean *params)
+{
+    GLint iParam;
+
+    if(glGetIntegerv(pname, &iParam))
+    {
+        *params = (iParam != 0);
+        return true;
+    }
+
+    return false;
+}
+
+bool GLEScontext::glGetFixedv(GLenum pname, GLfixed *params)
+{
+    GLint iParam;
+
+    if(glGetIntegerv(pname, &iParam))
+    {
+        *params = I2X(iParam);
+        return true;
+    }
+
+    return false;
+}
+
+bool GLEScontext::glGetFloatv(GLenum pname, GLfloat *params)
+{
+    GLint iParam;
+
+    if(glGetIntegerv(pname, &iParam))
+    {
+        *params = (GLfloat)iParam;
+        return true;
+    }
+
+    return false;
+}
+
+bool GLEScontext::glGetIntegerv(GLenum pname, GLint *params)
+{
+    switch(pname)
+    {
+        case GL_ARRAY_BUFFER_BINDING:
+            *params = m_arrayBuffer;
+            break;
+
+        case GL_ELEMENT_ARRAY_BUFFER_BINDING:
+            *params = m_elementBuffer;
+            break;
+
+        default:
+            return false;
+    }
+
+    return true;
+}
