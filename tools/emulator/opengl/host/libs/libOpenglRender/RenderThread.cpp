@@ -71,7 +71,7 @@ int RenderThread::Main()
         long long dt = GetCurrentTimeMS() - stats_t0;
         if (dt > 1000) {
             float dts = (float)dt / 1000.0f;
-            printf("Used Bandwidth %5.3f MB/s\n", ((float)stats_totalBytes / dts) / (1024.0f*1024.0f));
+            //printf("Used Bandwidth %5.3f MB/s\n", ((float)stats_totalBytes / dts) / (1024.0f*1024.0f));
             stats_totalBytes = 0;
             stats_t0 = GetCurrentTimeMS();
         }

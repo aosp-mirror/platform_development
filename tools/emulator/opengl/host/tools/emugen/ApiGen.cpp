@@ -595,6 +595,9 @@ int ApiGen::genDecoderImpl(const std::string &filename)
 \tif (len < 8) return pos; \n\
 \tunsigned char *ptr = (unsigned char *)buf;\n\
 \tbool unknownOpcode = false;  \n\
+#ifdef CHECK_GL_ERROR \n\
+\tchar lastCall[256] = {0}; \n\
+#endif \n\
 \twhile ((len - pos >= 8) && !unknownOpcode) {   \n\
 \t\tvoid *params[%u]; \n\
 \t\tint opcode = *(int *)ptr;   \n\
@@ -747,6 +750,9 @@ int ApiGen::genDecoderImpl(const std::string &filename)
 
         } // pass;
         fprintf(fp, "\t\t\t}\n");
+        fprintf(fp, "#ifdef CHECK_GL_ERROR\n");
+        fprintf(fp, "\t\t\tsprintf(lastCall, \"%s\");\n", e->name().c_str());
+        fprintf(fp, "#endif\n");
         fprintf(fp, "\t\t\tbreak;\n");
 
         delete [] tmpBufOffset;
@@ -754,6 +760,12 @@ int ApiGen::genDecoderImpl(const std::string &filename)
     fprintf(fp, "\t\t\tdefault:\n");
     fprintf(fp, "\t\t\t\tunknownOpcode = true;\n");
     fprintf(fp, "\t\t} //switch\n");
+    if (strstr(m_basename.c_str(), "gl")) {
+        fprintf(fp, "#ifdef CHECK_GL_ERROR\n");
+        fprintf(fp, "\tint err = this->glGetError();\n");
+        fprintf(fp, "\tif (err) printf(\"%s Error: 0x%%X in %%s\\n\", err, lastCall);\n", m_basename.c_str());
+        fprintf(fp, "#endif\n");
+    }
     fprintf(fp, "\t} // while\n");
     fprintf(fp, "\treturn pos;\n");
     fprintf(fp, "}\n");
