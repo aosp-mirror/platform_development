@@ -16,6 +16,7 @@
 
 #ifdef _WIN32
 #undef  GL_APICALL
+#define GL_API __declspec(dllexport)
 #define GL_APICALL __declspec(dllexport)
 #endif
 
