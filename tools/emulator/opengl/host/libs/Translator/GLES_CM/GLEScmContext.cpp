@@ -361,6 +361,12 @@ bool GLEScmContext::glGetIntegerv(GLenum pname, GLint *params)
             ptr = getPointer(GL_TEXTURE_COORD_ARRAY_POINTER);
             break;
 
+        case GL_POINT_SIZE_ARRAY_BUFFER_BINDING_OES:
+        case GL_POINT_SIZE_ARRAY_STRIDE_OES:
+        case GL_POINT_SIZE_ARRAY_TYPE_OES:
+            ptr = getPointer(GL_POINT_SIZE_ARRAY_POINTER_OES);
+            break;
+
         default:
             return false;
     }
@@ -371,6 +377,7 @@ bool GLEScmContext::glGetIntegerv(GLenum pname, GLint *params)
         case GL_NORMAL_ARRAY_BUFFER_BINDING:
         case GL_COLOR_ARRAY_BUFFER_BINDING:
         case GL_TEXTURE_COORD_ARRAY_BUFFER_BINDING:
+        case GL_POINT_SIZE_ARRAY_BUFFER_BINDING_OES:
             *params = ptr ? ptr->getBufferName() : 0;
             break;
 
@@ -378,6 +385,7 @@ bool GLEScmContext::glGetIntegerv(GLenum pname, GLint *params)
         case GL_NORMAL_ARRAY_STRIDE:
         case GL_COLOR_ARRAY_STRIDE:
         case GL_TEXTURE_COORD_ARRAY_STRIDE:
+        case GL_POINT_SIZE_ARRAY_STRIDE_OES:
             *params = ptr ? ptr->getStride() : 0;
             break;
 
@@ -391,6 +399,7 @@ bool GLEScmContext::glGetIntegerv(GLenum pname, GLint *params)
         case GL_NORMAL_ARRAY_TYPE:
         case GL_COLOR_ARRAY_TYPE:
         case GL_TEXTURE_COORD_ARRAY_TYPE:
+        case GL_POINT_SIZE_ARRAY_TYPE_OES:
             *params = ptr ? ptr->getType() : 0;
             break;
     }
