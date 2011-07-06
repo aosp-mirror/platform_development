@@ -34,6 +34,20 @@ static int errorHandlerProc(EGLNativeDisplayType dpy,XErrorEvent* event);
 
 };
 
+class SrfcInfo{
+public:
+    typedef enum{
+                 WINDOW  = 0,
+                 PBUFFER = 1, 
+                 PIXMAP
+                }SurfaceType;
+    SrfcInfo(GLXDrawable drawable,SurfaceType type):m_type(type),
+                                                    m_srfc(drawable){};
+    GLXDrawable srfc(){return m_srfc;};
+private: 
+    SurfaceType m_type;
+    GLXDrawable  m_srfc; 
+};
 
 int ErrorHandler::s_lastErrorCode = 0;
 android::Mutex ErrorHandler::s_lock;
@@ -160,12 +174,16 @@ bool validNativeWin(EGLNativeDisplayType dpy,EGLNativeWindowType win) {
    return handler.getLastError() == 0;
 }
 
-bool validNativePixmap(EGLNativeDisplayType dpy,EGLNativePixmapType pix) {
+bool validNativeWin(EGLNativeDisplayType dpy,EGLNativeSurfaceType win) {
+    return validNativeWin(dpy,win->srfc());
+}
+
+bool validNativePixmap(EGLNativeDisplayType dpy,EGLNativeSurfaceType pix) {
    Window root;
    int tmp;
    unsigned int utmp;
    ErrorHandler handler(dpy);
-   if(!XGetGeometry(dpy,pix,&root,&tmp,&tmp,&utmp,&utmp,&utmp,&utmp)) return false;
+   if(!XGetGeometry(dpy,pix->srfc(),&root,&tmp,&tmp,&utmp,&utmp,&utmp,&utmp)) return false;
    return handler.getLastError() == 0;
 }
 
@@ -194,7 +212,7 @@ bool checkPixmapPixelFormatMatch(EGLNativeDisplayType dpy,EGLNativePixmapType pi
    return depth >= configDepth;
 }
 
-EGLNativePbufferType createPbuffer(EGLNativeDisplayType dpy,EglConfig* cfg,EglPbufferSurface* srfc){
+EGLNativeSurfaceType createPbufferSurface(EGLNativeDisplayType dpy,EglConfig* cfg,EglPbufferSurface* srfc){
     EGLint width,height,largest;
     srfc->getDim(&width,&height,&largest);
 
@@ -204,11 +222,12 @@ EGLNativePbufferType createPbuffer(EGLNativeDisplayType dpy,EglConfig* cfg,EglPb
                      GLX_LARGEST_PBUFFER         ,largest,
                      None
                     };
-    return glXCreatePbuffer(dpy,cfg->nativeConfig(),attribs);
+    GLXPbuffer pb = glXCreatePbuffer(dpy,cfg->nativeConfig(),attribs);
+    return pb ? new SrfcInfo(pb,SrfcInfo::PBUFFER) : NULL;
 }
 
-bool releasePbuffer(EGLNativeDisplayType dis,EGLNativePbufferType pb) {
-    glXDestroyPbuffer(dis,pb);
+bool releasePbuffer(EGLNativeDisplayType dis,EGLNativeSurfaceType pb) {
+    glXDestroyPbuffer(dis,pb->srfc());
 
     return true;
 }
@@ -224,36 +243,29 @@ bool destroyContext(EGLNativeDisplayType dpy,EGLNativeContextType ctx) {
     return true;
 }
 
-GLXDrawable convertSurface(EglSurface* srfc) {
-    if(!srfc) return None;
-    switch(srfc->type()){
-    case EglSurface::PIXMAP:
-        return (GLXPixmap)srfc->native();
-    case EglSurface::PBUFFER:
-        return (GLXPbuffer)srfc->native();
-    case EglSurface::WINDOW:
-    default:
-        return (GLXWindow)srfc->native();
-    }
-}
-
-
 bool makeCurrent(EGLNativeDisplayType dpy,EglSurface* read,EglSurface* draw,EGLNativeContextType ctx){
 
     ErrorHandler handler(dpy);
-    bool retval = glXMakeContextCurrent(dpy,convertSurface(draw),convertSurface(read),ctx);
+    bool retval = false;
+    if (!ctx && !read && !draw) {
+        // unbind
+        retval = glXMakeContextCurrent(dpy, NULL, NULL, NULL);
+    }
+    else if (ctx && read && draw) {
+        retval = glXMakeContextCurrent(dpy,draw->native()->srfc(),read->native()->srfc(),ctx);
+    }
     return (handler.getLastError() == 0) && retval;
 }
 
-void swapBuffers(EGLNativeDisplayType dpy,EGLNativeWindowType win) {
-    glXSwapBuffers(dpy,win);
+void swapBuffers(EGLNativeDisplayType dpy,EGLNativeSurfaceType srfc){
+    glXSwapBuffers(dpy,srfc->srfc());
 }
 
 void waitNative() {
     glXWaitX();
 }
 
-void swapInterval(EGLNativeDisplayType dpy,EGLNativeWindowType win,int interval){
+void swapInterval(EGLNativeDisplayType dpy,EGLNativeSurfaceType win,int interval){
     const char* extensions = glXQueryExtensionsString(dpy,DefaultScreen(dpy));
     typedef void (*GLXSWAPINTERVALEXT)(Display*,GLXDrawable,int);
     GLXSWAPINTERVALEXT glXSwapIntervalEXT = NULL;
@@ -262,8 +274,17 @@ void swapInterval(EGLNativeDisplayType dpy,EGLNativeWindowType win,int interval)
         glXSwapIntervalEXT = (GLXSWAPINTERVALEXT)glXGetProcAddress((const GLubyte*)"glXSwapIntervalEXT");
     }
     if(glXSwapIntervalEXT) {
-        glXSwapIntervalEXT(dpy,win,interval);
+        glXSwapIntervalEXT(dpy,win->srfc(),interval);
     }
 }
 
+EGLNativeSurfaceType createWindowSurface(EGLNativeWindowType wnd){
+    return new SrfcInfo(wnd,SrfcInfo::WINDOW);
+}
+
+EGLNativeSurfaceType createPixmapSurface(EGLNativePixmapType pix){
+    return new SrfcInfo(pix,SrfcInfo::PIXMAP);
+}
+
+void destroySurface(EGLNativeSurfaceType srfc){};
 };

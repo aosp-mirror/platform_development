@@ -108,8 +108,12 @@ bool validNativeWin(EGLNativeDisplayType dpy, EGLNativeWindowType win) {
     return nsGetWinDims(win,&width,&height);
 }
 
+bool validNativeWin(EGLNativeDisplayType dpy, EGLNativeSurfaceType win) {
+    return validNativeWin(dpy,(EGLNativeWindowType)win);
+}
+
 //no support for pixmap in mac
-bool validNativePixmap(EGLNativeDisplayType dpy, EGLNativePixmapType pix) {
+bool validNativePixmap(EGLNativeDisplayType dpy, EGLNativeSurfaceType pix) {
 
    return true;
 }
@@ -131,17 +135,17 @@ bool checkPixmapPixelFormatMatch(EGLNativeDisplayType dpy,EGLNativePixmapType pi
     return false;
 }
 
-EGLNativePbufferType createPbuffer(EGLNativeDisplayType dpy,EglConfig* cfg,EglPbufferSurface* srfc){
+EGLNativeSurfaceType createPbufferSurface(EGLNativeDisplayType dpy,EglConfig* cfg,EglPbufferSurface* srfc){
     EGLint width,height,hasMipmap,tmp;
     EGLint target,format;
     srfc->getDim(&width,&height,&tmp);
     srfc->getTexInfo(&format,&target);
     srfc->getAttrib(EGL_MIPMAP_TEXTURE,&hasMipmap);
     EGLint maxMipmap = hasMipmap ? MAX_PBUFFER_MIPMAP_LEVEL:0;
-    return nsCreatePBuffer(target,format,maxMipmap,width,height);
+    return (EGLNativeSurfaceType)nsCreatePBuffer(target,format,maxMipmap,width,height);
 }
 
-bool releasePbuffer(EGLNativeDisplayType dis,EGLNativePbufferType pb) {
+bool releasePbuffer(EGLNativeDisplayType dis,EGLNativeSurfaceType pb) {
     nsDestroyPBuffer(pb);
     return true;
 }
@@ -188,14 +192,24 @@ bool makeCurrent(EGLNativeDisplayType dpy,EglSurface* read,EglSurface* draw,EGLN
     return true;
 }
 
-void swapBuffers(EGLNativeDisplayType dpy,EGLNativeWindowType win) {
+void swapBuffers(EGLNativeDisplayType dpy,EGLNativeSurfaceType srfc){
     nsSwapBuffers();
 }
 
 void waitNative(){}
 
-void swapInterval(EGLNativeDisplayType dpy,EGLNativeWindowType win,int interval){
+void swapInterval(EGLNativeDisplayType dpy,EGLNativeSurfaceType win,int interval){
     nsSwapInterval(&interval);
 }
 
+EGLNativeSurfaceType createWindowSurface(EGLNativeWindowType wnd){
+    return (EGLNativeSurfaceType)wnd;
+}
+
+EGLNativeSurfaceType createPixmapSurface(EGLNativePixmapType pix){
+    return (EGLNativeSurfaceType)pix;
+}
+
+void destroySurface(EGLNativeSurfaceType srfc){
+}
 };

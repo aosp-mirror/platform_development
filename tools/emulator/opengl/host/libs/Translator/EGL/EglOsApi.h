@@ -34,21 +34,25 @@
 namespace EglOS{
 
     void queryConfigs(EGLNativeDisplayType dpy,int renderable_type,ConfigsList& listOut);
-    bool releasePbuffer(EGLNativeDisplayType dis,EGLNativePbufferType pb);
+    bool releasePbuffer(EGLNativeDisplayType dis,EGLNativeSurfaceType pb);
     bool destroyContext(EGLNativeDisplayType dpy,EGLNativeContextType ctx);
     bool releaseDisplay(EGLNativeDisplayType dpy);
+    bool validNativeWin(EGLNativeDisplayType dpy,EGLNativeSurfaceType win);
     bool validNativeWin(EGLNativeDisplayType dpy,EGLNativeWindowType win);
-    bool validNativePixmap(EGLNativeDisplayType dpy,EGLNativePixmapType pix);
+    bool validNativePixmap(EGLNativeDisplayType dpy,EGLNativeSurfaceType pix);
     bool checkWindowPixelFormatMatch(EGLNativeDisplayType dpy,EGLNativeWindowType win,EglConfig* cfg,unsigned int* width,unsigned int* height);
     bool checkPixmapPixelFormatMatch(EGLNativeDisplayType dpy,EGLNativePixmapType pix,EglConfig* cfg,unsigned int* width,unsigned int* height);
     bool makeCurrent(EGLNativeDisplayType dpy,EglSurface* read,EglSurface* draw,EGLNativeContextType);
-    void swapBuffers(EGLNativeDisplayType dpy,EGLNativeWindowType win);
-    void swapInterval(EGLNativeDisplayType dpy,EGLNativeWindowType win,int interval);
+    void swapBuffers(EGLNativeDisplayType dpy,EGLNativeSurfaceType srfc);
+    void swapInterval(EGLNativeDisplayType dpy,EGLNativeSurfaceType win,int interval);
     void waitNative();
 
     EGLNativeDisplayType getDefaultDisplay();
-    EGLNativePbufferType createPbuffer(EGLNativeDisplayType dpy,EglConfig* cfg,EglPbufferSurface* pb);
+    EGLNativeSurfaceType createPbufferSurface(EGLNativeDisplayType dpy,EglConfig* cfg,EglPbufferSurface* pb);
     EGLNativeContextType createContext(EGLNativeDisplayType dpy,EglConfig* cfg,EGLNativeContextType sharedContext);
+    EGLNativeSurfaceType createWindowSurface(EGLNativeWindowType wnd);
+    EGLNativeSurfaceType createPixmapSurface(EGLNativePixmapType pix);
+    void destroySurface(EGLNativeSurfaceType srfc);
 #ifdef _WIN32
     void initPtrToWglFunctions();
 #endif
