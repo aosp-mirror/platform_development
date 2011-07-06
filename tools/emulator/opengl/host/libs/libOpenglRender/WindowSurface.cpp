@@ -22,6 +22,7 @@
 #include "GL2Dispatch.h"
 #include <stdio.h>
 #include <string.h>
+#include "GLErrorLog.h"
 
 WindowSurface::WindowSurface() :
     m_fbObj(0),
