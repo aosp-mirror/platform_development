@@ -32,6 +32,7 @@ static bool pixelStoreParam(GLenum param);
 static bool readPixelFrmt(GLenum format);
 static bool shaderType(GLenum type);
 static bool precisionType(GLenum type);
+static bool arrayIndex(GLEScontext * ctx,GLuint index);
 };
 
 #endif

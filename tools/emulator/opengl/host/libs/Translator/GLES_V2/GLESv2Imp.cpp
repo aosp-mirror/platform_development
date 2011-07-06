@@ -433,6 +433,7 @@ GL_APICALL void  GL_APIENTRY glDisable(GLenum cap){
 
 GL_APICALL void  GL_APIENTRY glDisableVertexAttribArray(GLuint index){
     GET_CTX();
+    SET_ERROR_IF((!GLESv2Validate::arrayIndex(ctx,index)),GL_INVALID_VALUE);
     ctx->enableArr(index,false);
     ctx->dispatcher().glDisableVertexAttribArray(index);
 }
@@ -471,6 +472,7 @@ GL_APICALL void  GL_APIENTRY glEnable(GLenum cap){
 
 GL_APICALL void  GL_APIENTRY glEnableVertexAttribArray(GLuint index){
     GET_CTX();
+    SET_ERROR_IF(!(GLESv2Validate::arrayIndex(ctx,index)),GL_INVALID_VALUE);
     ctx->enableArr(index,true);
     ctx->dispatcher().glEnableVertexAttribArray(index);
 }
@@ -849,8 +851,9 @@ GL_APICALL void  GL_APIENTRY glGetVertexAttribiv(GLuint index, GLenum pname, GLi
 
 GL_APICALL void  GL_APIENTRY glGetVertexAttribPointerv(GLuint index, GLenum pname, GLvoid** pointer){
     GET_CTX();
-    SET_ERROR_IF(pname != GL_VERTEX_ATTRIB_ARRAY_POINTER,GL_INVALID_ENUM); 
-    
+    SET_ERROR_IF(pname != GL_VERTEX_ATTRIB_ARRAY_POINTER,GL_INVALID_ENUM);
+    SET_ERROR_IF((!GLESv2Validate::arrayIndex(ctx,index)),GL_INVALID_VALUE);
+
     const GLESpointer* p = ctx->getPointer(index);
     if(p) {
         *pointer = const_cast<void *>( p->getBufferData());
@@ -1249,6 +1252,7 @@ GL_APICALL void  GL_APIENTRY glVertexAttrib4fv(GLuint indx, const GLfloat* value
 
 GL_APICALL void  GL_APIENTRY glVertexAttribPointer(GLuint indx, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const GLvoid* ptr){
     GET_CTX();
+    SET_ERROR_IF((!GLESv2Validate::arrayIndex(ctx,indx)),GL_INVALID_VALUE);
     if (type == GL_HALF_FLOAT_OES) type = GL_HALF_FLOAT;
     ctx->setPointer(indx,size,type,stride,ptr,normalized);
 }
