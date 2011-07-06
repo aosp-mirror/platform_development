@@ -44,6 +44,7 @@ public:
      void setCurrent(int configurationIndex,const DisplayInfo& info);
      bool isCurrentPixelFormatSet(){ return m_map[m_current].isPixelFormatSet;}
      void currentPixelFormatWasSet(){m_map[m_current].isPixelFormatSet = true;}
+     bool needToSetCurrent(int configurationIndex);
      void releaseAll();
 private:
     std::map<int,DisplayInfo> m_map;
@@ -57,8 +58,11 @@ void WinDisplay::releaseAll(){
     }
 }
 
+bool WinDisplay::needToSetCurrent(int configurationIndex){
+    return m_map.find(configurationIndex) == m_map.end();
+}
+
 void WinDisplay::setCurrent(int configurationIndex,const DisplayInfo& info){
-    if(m_map.find(configurationIndex) != m_map.end()) return;
     m_map[configurationIndex] = info;
     m_current = configurationIndex;
 }
@@ -321,7 +325,7 @@ bool validNativePixmap(EGLNativeDisplayType dpy,EGLNativePixmapType pix) {
 }
 
 static bool setPixelFormat(HDC dc,EglConfig* cfg) {
-   EGLint red,green,blue,alpha,depth,stencil;
+    EGLint red,green,blue,alpha,depth,stencil;
     bool   gotAttribs = cfg->getConfAttrib(EGL_RED_SIZE,&red)     &&
                         cfg->getConfAttrib(EGL_GREEN_SIZE,&green) &&
                         cfg->getConfAttrib(EGL_BLUE_SIZE,&blue)   &&
@@ -457,9 +461,14 @@ bool releasePbuffer(EGLNativeDisplayType display,EGLNativePbufferType pb) {
 EGLNativeContextType createContext(EGLNativeDisplayType display,EglConfig* cfg,EGLNativeContextType sharedContext) {
 
     EGLNativeContextType ctx = NULL;
-    HWND hwnd = createDummyWindow();
-    HDC  dpy  =  GetDC(hwnd);
-    display->setCurrent(cfg->id(),DisplayInfo(dpy,hwnd));
+    HDC  dpy  = NULL;
+    if(display->needToSetCurrent(cfg->id())){
+        HWND hwnd = createDummyWindow();
+        HDC  dpy  = GetDC(hwnd);
+        display->setCurrent(cfg->id(),DisplayInfo(dpy,hwnd));
+    } else {
+        dpy = display->getCurrentDC();
+    }
 
     if(!display->isCurrentPixelFormatSet()){
         if(!setPixelFormat(dpy,cfg)) return NULL;
@@ -523,9 +532,7 @@ bool makeCurrent(EGLNativeDisplayType display,EglSurface* read,EglSurface* draw,
 
 
     if(hdcRead == hdcDraw){
-            printf("making current read == draw\n");
             bool ret =  wglMakeCurrent(hdcDraw,ctx);
-            printf("last error is %d\n",GetLastError());
             return ret;
     } else if (!s_wglExtProcs->wglMakeContextCurrentARB ) {
         return false;
