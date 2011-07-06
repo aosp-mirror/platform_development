@@ -33,7 +33,7 @@ void* getPixelFormat(int i){
 
 void getPixelFormatAttrib(void* pixelFormat,int attrib,int* val){
     NSOpenGLPixelFormat *frmt = (NSOpenGLPixelFormat *)pixelFormat;
-    [frmt getValues:val forAttribute:attrib forVirtualScreen:0]; 
+    [frmt getValues:val forAttribute:attrib forVirtualScreen:0];
 }
 
 void* nsCreateContext(void* format,void* share){
@@ -60,12 +60,9 @@ void nsWindowMakeCurrent(void* context,void* nativeWin){
     NSView* win = (NSView *)nativeWin;
     if(ctx == nil){
         [NSOpenGLContext clearCurrentContext];
-    } else {
-        if(win != nil){
-            [ctx clearDrawable];
-            [ctx setView: win];
-            [ctx makeCurrentContext];
-        }
+    } else if (win != nil) {
+        [ctx setView: win];
+        [ctx makeCurrentContext];
     }
 }
 
@@ -93,11 +90,11 @@ void nsDestroyContext(void* context){
 
 
 void* nsCreatePBuffer(GLenum target,GLenum format,int maxMip,int width,int height){
-    return [[NSOpenGLPixelBuffer alloc] initWithTextureTarget:target 
-                                        textureInternalFormat:format 
-                                        textureMaxMipMapLevel:maxMip 
+    return [[NSOpenGLPixelBuffer alloc] initWithTextureTarget:target
+                                        textureInternalFormat:format
+                                        textureMaxMipMapLevel:maxMip
                                         pixelsWide:width pixelsHigh:height];
-    
+
 }
 
 void nsDestroyPBuffer(void* pbuffer){
@@ -129,7 +126,7 @@ bool  nsCheckColor(void* win,int colorSize){
            int depth = (limit != 0) ? NSBitsPerPixelFromDepth(limit):
                                       NSBitsPerPixelFromDepth(defaultLimit);
            return depth >= colorSize;
- 
+
        }
    }
    return false;
