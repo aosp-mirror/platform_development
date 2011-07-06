@@ -105,6 +105,44 @@ EglConfig::EglConfig(EGLint     red_size,
                                                 m_nativeFormat(conf.m_nativeFormat) {};
 
 
+EglConfig::EglConfig(const EglConfig& conf,
+                     EGLint config_id,
+                     EGLint red_size,
+                     EGLint green_size,
+                     EGLint blue_size,
+                     EGLint alpha_size):
+
+                     m_buffer_size(red_size + green_size + blue_size + alpha_size),
+                     m_red_size(red_size),
+                     m_green_size(green_size),
+                     m_blue_size(blue_size),
+                     m_alpha_size(alpha_size),
+                     m_bind_to_tex_rgb(conf.m_bind_to_tex_rgb),
+                     m_bind_to_tex_rgba(conf.m_bind_to_tex_rgba),
+                     m_caveat(conf.m_caveat),
+                     m_config_id(config_id),
+                     m_frame_buffer_level(conf.m_frame_buffer_level),
+                     m_depth_size(conf.m_depth_size),
+                     m_max_pbuffer_width(conf.m_max_pbuffer_width),
+                     m_max_pbuffer_height(conf.m_max_pbuffer_height),
+                     m_max_pbuffer_size(conf.m_max_pbuffer_size),
+                     m_max_swap_interval(conf.m_max_swap_interval),
+                     m_min_swap_interval(conf.m_min_swap_interval),
+                     m_native_renderable(conf.m_native_renderable),
+                     m_renderable_type(conf.m_renderable_type),
+                     m_native_visual_id(conf.m_native_visual_id),
+                     m_native_visual_type(conf.m_native_visual_type),
+                     m_sample_buffers_num(conf.m_sample_buffers_num),
+                     m_samples_per_pixel(conf.m_samples_per_pixel),
+                     m_stencil_size(conf.m_stencil_size),
+                     m_surface_type(conf.m_surface_type),
+                     m_transparent_type(conf.m_transparent_type),
+                     m_trans_red_val(conf.m_trans_red_val),
+                     m_trans_green_val(conf.m_trans_green_val),
+                     m_trans_blue_val(conf.m_trans_blue_val),
+                     m_conformant(conf.m_conformant),
+                     m_nativeFormat(conf.m_nativeFormat) {};
+
 
 bool EglConfig::getConfAttrib(EGLint attrib,EGLint* val) const {
     switch(attrib) {
