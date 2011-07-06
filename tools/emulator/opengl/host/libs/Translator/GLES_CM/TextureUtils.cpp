@@ -87,19 +87,20 @@ Color paletteColor(const unsigned char* pallete,unsigned int index,GLenum format
     case GL_PALETTE8_R5_G6_B5_OES:
     case GL_PALETTE4_R5_G6_B5_OES:
             s = *((short *)(pallete+index));
-            return Color(s >> 10,(s >> 5) & 0x3f ,s & 0x1f,0);
+            return Color((s >> 11)*255/31,((s >> 5) & 0x3f)*255/63 ,(s & 0x1f)*255/31,0);
 
         //RGBA
     case GL_PALETTE4_RGBA8_OES:
     case GL_PALETTE8_RGBA8_OES:
             return Color(pallete[index],pallete[index+1],pallete[index+2],pallete[index+3]);
     case GL_PALETTE4_RGBA4_OES:
+    case GL_PALETTE8_RGBA4_OES:
             s = *((short *)(pallete+index));
-            return Color((s >> 12) & 0xf,(s >> 8) & 0xf,(s >> 4) & 0xf ,s & 0xf);
+            return Color(((s >> 12) & 0xf)*255/15,((s >> 8) & 0xf)*255/15,((s >> 4) & 0xf)*255/15 ,(s & 0xf)*255/15);
     case GL_PALETTE4_RGB5_A1_OES:
     case GL_PALETTE8_RGB5_A1_OES:
             s = *((short *)(pallete+index));
-            return Color((s >> 11) & 0x1f,(s >> 6) & 0x1f,(s >> 1) & 0x1f ,s & 0x1 * 255);
+            return Color(((s >> 11) & 0x1f)*255/31,((s >> 6) & 0x1f)*255/31,((s >> 1) & 0x1f)*255/31 ,s & 0x1 * 255);
         default:
             return Color(255,255,255,255);
     }
@@ -148,7 +149,8 @@ unsigned char* uncompressTexture(GLenum internalformat,GLenum& formatOut,GLsizei
         int paletteIndex = 0;
         int indexOut = i*colorSizeOut;
         if(indexSizeBits == 4) {
-            paletteIndex = (i%2)? imageIndices[i/2] >> 4:  //upper bits
+            paletteIndex = (i%2) == 0 ?
+                           imageIndices[i/2] >> 4:  //upper bits
                            imageIndices[i/2] & 0xf; //lower bits
         } else {
             paletteIndex = imageIndices[i];
