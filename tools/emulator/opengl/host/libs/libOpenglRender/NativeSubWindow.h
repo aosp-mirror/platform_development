@@ -17,7 +17,11 @@
 #define NATIVE_SUB_WINDOW_H
 
 #include <EGL/egl.h>
-#include "libOpenglRender/render_api.h"
+#include "libOpenglRender/render_api_platform_types.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 EGLNativeWindowType createSubWindow(FBNativeWindowType p_window,
                                     EGLNativeDisplayType* display_out,
@@ -25,5 +29,9 @@ EGLNativeWindowType createSubWindow(FBNativeWindowType p_window,
 
 
 void destroySubWindow(EGLNativeDisplayType dis,EGLNativeWindowType win);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

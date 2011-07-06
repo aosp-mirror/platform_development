@@ -17,28 +17,7 @@
 #define _OPENGL_RENDERER_RENDER_API_H
 
 #include "IOStream.h"
-
-#if defined(_WIN32) || defined(__VC32__) && !defined(__CYGWIN__) && !defined(__SCITECH_SNAP__) /* Win32 and WinCE */
-#include <windows.h>
-
-typedef HDC     FBNativeDisplayType;
-typedef HWND    FBNativeWindowType;
-
-#elif defined(__linux__)
-
-#include <X11/Xlib.h>
-#include <X11/Xutil.h>
-
-typedef Window   FBNativeWindowType;
-
-#elif defined(__APPLE__)
-
-typedef void*   FBNativeWindowType;
-
-#else
-#warning "Unsupported platform"
-#endif
-
+#include "render_api_platform_types.h"
 
 //
 // initOpenGLRenderer - initialize the OpenGL renderer process.
