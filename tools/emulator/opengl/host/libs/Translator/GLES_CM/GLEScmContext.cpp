@@ -84,25 +84,21 @@ void GLEScmContext::setupArr(const GLvoid* arr,GLenum arrayType,GLenum dataType,
 }
 
 
-void GLEScmContext::setupArrayPointerHelper(GLESConversionArrays& fArrs,GLint first,GLsizei count,GLenum type,const GLvoid* indices,bool direct,GLenum array_id,GLESpointer* p){
+void GLEScmContext::setupArrayPointerHelper(GLESConversionArrays& cArrs,GLint first,GLsizei count,GLenum type,const GLvoid* indices,bool direct,GLenum array_id,GLESpointer* p){
         unsigned int size = p->getSize();
-        bool usingVBO = p->isVBO();
         GLenum dataType = p->getType();
 
-        if(needConvert(fArrs,first,count,type,indices,direct,p,array_id)){
+        if(needConvert(cArrs,first,count,type,indices,direct,p,array_id)){
             //conversion has occured
-            unsigned int convertedStride = (usingVBO && dataType != GL_BYTE) ? p->getStride() : 0;
-            const void* data = (usingVBO && dataType!= GL_BYTE) ? p->getBufferData() : fArrs.getCurrentData();
-            dataType = (dataType == GL_FIXED) ? GL_FLOAT:GL_SHORT;
-            setupArr(data,array_id,dataType,size,convertedStride,fArrs.getCurrentIndex());
-            ++fArrs;
+            ArrayData currentArr = cArrs.getCurrentArray();
+            setupArr(currentArr.data,array_id,currentArr.type,size,currentArr.stride,cArrs.getCurrentIndex());
+            ++cArrs;
         } else {
-            const void* data = usingVBO ? p->getBufferData() : p->getArrayData();
-            setupArr(data,array_id,dataType,size,p->getStride());
+            setupArr(p->getData(),array_id,dataType,size,p->getStride());
         }
 }
 
-void GLEScmContext::setupArraysPointers(GLESConversionArrays& fArrs,GLint first,GLsizei count,GLenum type,const GLvoid* indices,bool direct) {
+void GLEScmContext::setupArraysPointers(GLESConversionArrays& cArrs,GLint first,GLsizei count,GLenum type,const GLvoid* indices,bool direct) {
     ArraysMap::iterator it;
     m_pointsIndex = -1;
 
@@ -113,7 +109,7 @@ void GLEScmContext::setupArraysPointers(GLESConversionArrays& fArrs,GLint first,
         GLESpointer* p = (*it).second;
         if(!isArrEnabled(array_id)) continue;
         if(array_id == GL_TEXTURE_COORD_ARRAY) continue; //handling textures later
-        setupArrayPointerHelper(fArrs,first,count,type,indices,direct,array_id,p);
+        setupArrayPointerHelper(cArrs,first,count,type,indices,direct,array_id,p);
     }
 
     unsigned int activeTexture = m_clientActiveTexture + GL_TEXTURE0;
@@ -132,7 +128,7 @@ void GLEScmContext::setupArraysPointers(GLESConversionArrays& fArrs,GLint first,
         GLenum array_id   = GL_TEXTURE_COORD_ARRAY;
         GLESpointer* p = m_map[array_id];
         if(!isArrEnabled(array_id)) continue;
-        setupArrayPointerHelper(fArrs,first,count,type,indices,direct,array_id,p);
+        setupArrayPointerHelper(cArrs,first,count,type,indices,direct,array_id,p);
     }
 
     setClientActiveTexture(activeTexture);
@@ -164,19 +160,22 @@ void GLEScmContext::drawPoints(PointSizeIndices* points) {
     if(indices) delete [] indices;
 }
 
-void  GLEScmContext::drawPointsData(GLESConversionArrays& fArrs,GLint first,GLsizei count,GLenum type,const GLvoid* indices_in,bool isElemsDraw) {
-    const GLfloat  *pointsArr =  NULL;
-    int stride = 0; //steps in GLfloats
-    bool usingVBO = isBindedBuffer(GL_ARRAY_BUFFER);
+void  GLEScmContext::drawPointsData(GLESConversionArrays& cArrs,GLint first,GLsizei count,GLenum type,const GLvoid* indices_in,bool isElemsDraw) {
+    const char  *pointsArr =  NULL;
+    int stride = 0;
+    GLESpointer* p = m_map[GL_POINT_SIZE_ARRAY_OES];
 
     //choosing the right points sizes array source
-    if(m_pointsIndex >= 0 && !usingVBO) { //point size array was converted
-        pointsArr= (const GLfloat*)fArrs[m_pointsIndex];
-        stride = 1;
+    if(m_pointsIndex >= 0) { //point size array was converted
+        pointsArr = (const char*)(cArrs[m_pointsIndex].data);
+        stride = cArrs[m_pointsIndex].stride;
     } else {
-        GLESpointer* p = m_map[GL_POINT_SIZE_ARRAY_OES];
-        pointsArr = static_cast<const GLfloat*>(usingVBO ? p->getBufferData():p->getArrayData());
-        stride = p->getStride()?p->getStride()/sizeof(GLfloat):1;
+        pointsArr = static_cast<const char*>(p->getData());
+        stride = p->getStride();
+    }
+
+    if(stride == 0){
+        stride = sizeof(GLfloat);
     }
 
     //filling  arrays before sorting them
@@ -186,11 +185,13 @@ void  GLEScmContext::drawPointsData(GLESConversionArrays& fArrs,GLint first,GLsi
             GLushort index = (type == GL_UNSIGNED_SHORT?
                     static_cast<const GLushort*>(indices_in)[i]:
                     static_cast<const GLubyte*>(indices_in)[i]);
-            points[pointsArr[index*stride]].push_back(index);
+            GLfloat pSize = *((GLfloat*)(pointsArr+(index*stride)));
+            points[pSize].push_back(index);
         }
     } else {
         for(int i=0; i< count; i++) {
-            points[pointsArr[first+i*stride]].push_back(i+first);
+            GLfloat pSize = *((GLfloat*)(pointsArr+(first+i*stride)));
+            points[pSize].push_back(i+first);
         }
     }
     drawPoints(&points);
@@ -204,7 +205,7 @@ void GLEScmContext::drawPointsElems(GLESConversionArrays& arrs,GLsizei count,GLe
     drawPointsData(arrs,0,count,type,indices_in,true);
 }
 
-bool GLEScmContext::needConvert(GLESConversionArrays& fArrs,GLint first,GLsizei count,GLenum type,const GLvoid* indices,bool direct,GLESpointer* p,GLenum array_id) {
+bool GLEScmContext::needConvert(GLESConversionArrays& cArrs,GLint first,GLsizei count,GLenum type,const GLvoid* indices,bool direct,GLESpointer* p,GLenum array_id) {
 
     bool usingVBO = p->isVBO();
     GLenum arrType = p->getType();
@@ -225,15 +226,15 @@ bool GLEScmContext::needConvert(GLESConversionArrays& fArrs,GLint first,GLsizei 
 
     if(!usingVBO || byteVBO) {
         if (direct) {
-            convertDirect(fArrs,first,count,array_id,p);
+            convertDirect(cArrs,first,count,array_id,p);
         } else {
-            convertIndirect(fArrs,count,type,indices,array_id,p);
+            convertIndirect(cArrs,count,type,indices,array_id,p);
         }
     } else {
         if (direct) {
-            convertDirectVBO(first,count,array_id,p) ;
+            convertDirectVBO(cArrs,first,count,array_id,p) ;
         } else {
-            convertIndirectVBO(count,type,indices,array_id,p);
+            convertIndirectVBO(cArrs,count,type,indices,array_id,p);
         }
     }
     return true;
