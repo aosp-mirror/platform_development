@@ -22,6 +22,8 @@ LOCAL_SRC_FILES :=           \
 ifeq ($(HOST_OS),linux)
 #    $(call emugl-export,LDFLAGS,-Wl,--whole-archive)
     $(call emugl-export,LDLIBS,-lGL -ldl)
+    GL_COMMON_LINKER_FLAGS := -Wl,-Bsymbolic
+    $(call emugl-export,LDFLAGS,$(GL_COMMON_LINKER_FLAGS))
 endif
 
 ifeq ($(HOST_OS),windows)
