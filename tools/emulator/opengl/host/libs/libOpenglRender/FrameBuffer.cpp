@@ -14,6 +14,7 @@
 * limitations under the License.
 */
 #include "FrameBuffer.h"
+#include "NativeSubWindow.h"
 #include "FBConfig.h"
 #include "EGLDispatch.h"
 #include "GLDispatch.h"
@@ -83,6 +84,16 @@ static const char *getGLES2ExtensionString(EGLDisplay p_dpy,
     return extString;
 }
 #endif
+
+void FrameBuffer::finalize(){
+    if(s_theFrameBuffer){
+        s_egl.eglMakeCurrent(s_theFrameBuffer->m_eglDisplay, NULL, NULL, NULL);
+        s_egl.eglDestroySurface(s_theFrameBuffer->m_eglDisplay,s_theFrameBuffer->m_eglSurface);
+        s_egl.eglDestroyContext(s_theFrameBuffer->m_eglDisplay,s_theFrameBuffer->m_eglContext);
+        delete s_theFrameBuffer;
+        s_theFrameBuffer = NULL;
+    }
+}
 
 bool FrameBuffer::initialize(FBNativeWindowType p_window,
                              int p_x, int p_y,
@@ -197,16 +208,16 @@ bool FrameBuffer::initialize(FBNativeWindowType p_window,
         return false;
     }
 
-#if defined(__linux__) || defined(_WIN32) || defined(__VC32__) && !defined(__CYGWIN__)
+    EGLNativeDisplayType dpy;
+    fb->m_subWin = createSubWindow(p_window,&fb->m_subWinDisplay,p_x,p_y,p_width,p_height);
     fb->m_eglSurface = s_egl.eglCreateWindowSurface(fb->m_eglDisplay, eglConfig,
-                                                  (EGLNativeWindowType)p_window,
+                                                  fb->m_subWin,
                                                   NULL);
     if (fb->m_eglSurface == EGL_NO_SURFACE) {
         ERR("Failed to create surface\n");
         delete fb;
         return false;
     }
-#endif
 
     GLint glContextAttribs[] = {
         EGL_CONTEXT_CLIENT_VERSION, 1,
@@ -333,7 +344,9 @@ FrameBuffer::FrameBuffer(int p_x, int p_y, int p_width, int p_height) :
     m_eglContext(EGL_NO_CONTEXT),
     m_prevContext(EGL_NO_CONTEXT),
     m_prevReadSurf(EGL_NO_SURFACE),
-    m_prevDrawSurf(EGL_NO_SURFACE)
+    m_prevDrawSurf(EGL_NO_SURFACE),
+    m_subWin(NULL),
+    m_subWinDisplay(NULL)
 {
 }
 
