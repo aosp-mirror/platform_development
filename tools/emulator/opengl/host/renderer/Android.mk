@@ -21,6 +21,10 @@ LOCAL_C_INCLUDES := $(emulatorOpengl)/host/include \
                     $(emulatorOpengl)/shared/OpenglCodecCommon \
                     $(emulatorOpengl)/host/libs/libOpenglRender
 
+ifeq ($(HOST_OS),windows)
+LOCAL_LDLIBS += -lws2_32
+endif
+
 LOCAL_SHARED_LIBRARIES := libOpenglRender \
         libGLESv1_dec \
         libGLESv2_dec \
