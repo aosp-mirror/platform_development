@@ -17,6 +17,7 @@
 #include "GLEScmContext.h"
 #include "GLEScmUtils.h"
 #include <GLcommon/GLutils.h>
+#include <GLcommon/GLconversion_macros.h>
 #include <string.h>
 #include <GLES/gl.h>
 #include <GLES/glext.h>
@@ -284,4 +285,115 @@ void GLEScmContext::initExtensionString() {
 
 int GLEScmContext::getMaxTexUnits() {
     return getCaps()->maxTexUnits;
+}
+
+bool GLEScmContext::glGetBooleanv(GLenum pname, GLboolean *params)
+{
+    GLint iParam;
+
+    if(glGetIntegerv(pname, &iParam))
+    {
+        *params = (iParam != 0);
+        return true;
+    }
+
+    return false;
+}
+
+bool GLEScmContext::glGetFixedv(GLenum pname, GLfixed *params)
+{
+    GLint iParam;
+
+    if(glGetIntegerv(pname, &iParam))
+    {
+        *params = I2X(iParam);
+        return true;
+    }
+
+    return false;
+}
+
+bool GLEScmContext::glGetFloatv(GLenum pname, GLfloat *params)
+{
+    GLint iParam;
+
+    if(glGetIntegerv(pname, &iParam))
+    {
+        *params = (GLfloat)iParam;
+        return true;
+    }
+
+    return false;
+}
+
+bool GLEScmContext::glGetIntegerv(GLenum pname, GLint *params)
+{
+    if(GLEScontext::glGetIntegerv(pname, params))
+        return true;
+
+    const GLESpointer* ptr = NULL;
+
+    switch(pname){
+        case GL_VERTEX_ARRAY_BUFFER_BINDING:
+        case GL_VERTEX_ARRAY_SIZE:
+        case GL_VERTEX_ARRAY_STRIDE:
+        case GL_VERTEX_ARRAY_TYPE:
+            ptr = getPointer(GL_VERTEX_ARRAY_POINTER);
+            break;
+
+        case GL_NORMAL_ARRAY_BUFFER_BINDING:
+        case GL_NORMAL_ARRAY_STRIDE:
+        case GL_NORMAL_ARRAY_TYPE:
+            ptr = getPointer(GL_NORMAL_ARRAY_POINTER);
+            break;
+
+        case GL_COLOR_ARRAY_BUFFER_BINDING:
+        case GL_COLOR_ARRAY_SIZE:
+        case GL_COLOR_ARRAY_STRIDE:
+        case GL_COLOR_ARRAY_TYPE:
+            ptr = getPointer(GL_COLOR_ARRAY_POINTER);
+            break;
+
+        case GL_TEXTURE_COORD_ARRAY_BUFFER_BINDING:
+        case GL_TEXTURE_COORD_ARRAY_SIZE:
+        case GL_TEXTURE_COORD_ARRAY_STRIDE:
+        case GL_TEXTURE_COORD_ARRAY_TYPE:
+            ptr = getPointer(GL_TEXTURE_COORD_ARRAY_POINTER);
+            break;
+
+        default:
+            return false;
+    }
+
+    switch(pname)
+    {
+        case GL_VERTEX_ARRAY_BUFFER_BINDING:
+        case GL_NORMAL_ARRAY_BUFFER_BINDING:
+        case GL_COLOR_ARRAY_BUFFER_BINDING:
+        case GL_TEXTURE_COORD_ARRAY_BUFFER_BINDING:
+            *params = ptr ? ptr->getBufferName() : 0;
+            break;
+
+        case GL_VERTEX_ARRAY_STRIDE:
+        case GL_NORMAL_ARRAY_STRIDE:
+        case GL_COLOR_ARRAY_STRIDE:
+        case GL_TEXTURE_COORD_ARRAY_STRIDE:
+            *params = ptr ? ptr->getStride() : 0;
+            break;
+
+        case GL_VERTEX_ARRAY_SIZE:
+        case GL_COLOR_ARRAY_SIZE:
+        case GL_TEXTURE_COORD_ARRAY_SIZE:
+            *params = ptr ? ptr->getSize() : 0;
+            break;
+
+        case GL_VERTEX_ARRAY_TYPE:
+        case GL_NORMAL_ARRAY_TYPE:
+        case GL_COLOR_ARRAY_TYPE:
+        case GL_TEXTURE_COORD_ARRAY_TYPE:
+            *params = ptr ? ptr->getType() : 0;
+            break;
+    }
+
+    return true;
 }

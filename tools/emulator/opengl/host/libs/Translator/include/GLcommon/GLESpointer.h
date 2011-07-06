@@ -29,13 +29,14 @@ public:
     GLsizei       getStride() const;
     const GLvoid* getArrayData() const;
     GLvoid*       getBufferData() const;
+    GLuint        getBufferName() const;
     const GLvoid* getData() const;
     unsigned int  getBufferOffset() const;
     void          redirectPointerData();
     void          getBufferConversions(const RangeList& rl,RangeList& rlOut);
     bool          bufferNeedConversion(){ return !m_buffer->fullyConverted();}
     void          setArray (GLint size,GLenum type,GLsizei stride,const GLvoid* data,bool normalize = false);
-    void          setBuffer(GLint size,GLenum type,GLsizei stride,GLESbuffer* buf,int offset,bool normalize = false);
+    void          setBuffer(GLint size,GLenum type,GLsizei stride,GLESbuffer* buf,GLuint bufferName,int offset,bool normalize = false);
     bool          isEnable() const;
     bool          isNormalize() const;
     bool          isVBO() const;
@@ -49,6 +50,7 @@ private:
     bool          m_normalize;
     const GLvoid* m_data;
     GLESbuffer*   m_buffer;
+    GLuint        m_bufferName;
     unsigned int  m_buffOffset;
     bool          m_isVBO;
 };

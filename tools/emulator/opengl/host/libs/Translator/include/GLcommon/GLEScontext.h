@@ -134,6 +134,10 @@ public:
     static int getMaxTexSize(){return s_glSupport.maxTexSize;}
     static Version glslVersion(){return s_glSupport.glslVersion;}
 
+    virtual bool glGetIntegerv(GLenum pname, GLint *params);
+    virtual bool glGetBooleanv(GLenum pname, GLboolean *params);
+    virtual bool glGetFloatv(GLenum pname, GLfloat *params);
+    virtual bool glGetFixedv(GLenum pname, GLfixed *params);
 
 protected:
     virtual bool needConvert(GLESConversionArrays& fArrs,GLint first,GLsizei count,GLenum type,const GLvoid* indices,bool direct,GLESpointer* p,GLenum array_id) = 0;

@@ -23,6 +23,7 @@ GLESpointer::GLESpointer():m_size(0),
                            m_normalize(false),
                            m_data(NULL),
                            m_buffer(NULL),
+                           m_bufferName(0),
                            m_buffOffset(0),
                            m_isVBO(false){};
 
@@ -55,6 +56,10 @@ void GLESpointer::redirectPointerData(){
     m_data = getBufferData();
 }
 
+GLuint GLESpointer::getBufferName() const {
+    return m_bufferName;
+}
+
 unsigned int GLESpointer::getBufferOffset() const {
 
     return  m_buffOffset;
@@ -82,16 +87,18 @@ void GLESpointer::setArray(GLint size,GLenum type,GLsizei stride,const GLvoid* d
     m_stride = stride;
     m_data   = data;
     m_buffer = NULL;
+    m_bufferName = 0;
     m_normalize = normalize;
     m_isVBO = false;
 }
 
-void GLESpointer::setBuffer(GLint size,GLenum type,GLsizei stride,GLESbuffer* buf,int offset,bool normalize) {
+void GLESpointer::setBuffer(GLint size,GLenum type,GLsizei stride,GLESbuffer* buf,GLuint bufferName,int offset,bool normalize) {
     m_size   = size;
     m_type   = type;
     m_stride = stride;
     m_data   = NULL;
     m_buffer = buf;
+    m_bufferName = bufferName;
     m_buffOffset = offset;
     m_normalize = normalize;
     m_isVBO = true;
