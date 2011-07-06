@@ -17,9 +17,9 @@
 #define EGL_SURFACE_H
 
 #include <EGL/egl.h>
+#include <EGL/eglinternalplatform.h>
 #include <map>
 #include <GLcommon/SmartPtr.h>
-
 #include "EglConfig.h"
 
 class EglSurface;
@@ -34,7 +34,7 @@ public:
                   PIXMAP  = 3
                  } ESurfaceType;
   ESurfaceType  type(){ return m_type;};
-  virtual void* native() = 0;
+  EGLNativeSurfaceType native(){return m_native;}
   virtual bool  setAttrib(EGLint attrib,EGLint val);
   virtual bool  getAttrib(EGLint attrib,EGLint* val) = 0;
   void          setDim(int width,int height){ m_width = width; m_height = height;};
@@ -42,7 +42,7 @@ public:
   bool          destroy(){return m_destroy;};
   EglConfig*    getConfig(){return m_config;};
   unsigned int  getHndl(){return m_hndl;};
-  virtual       ~EglSurface(){};
+  virtual       ~EglSurface();
 
 private:
     static unsigned int   s_nextSurfaceHndl;
@@ -55,9 +55,11 @@ protected:
                                                                                m_destroy(false),
                                                                                m_config(config),
                                                                                m_width(width),
-                                                                               m_height(height){ m_hndl = ++s_nextSurfaceHndl;};
-    EglConfig*   m_config;
-    EGLint       m_width;
-    EGLint       m_height;
+                                                                               m_height(height),
+                                                                               m_native(NULL){ m_hndl = ++s_nextSurfaceHndl;};
+    EglConfig*            m_config;
+    EGLint                m_width;
+    EGLint                m_height;
+    EGLNativeSurfaceType  m_native;
 };
 #endif
