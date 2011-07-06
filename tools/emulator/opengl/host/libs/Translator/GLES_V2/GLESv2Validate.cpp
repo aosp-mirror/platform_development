@@ -136,3 +136,7 @@ bool GLESv2Validate::precisionType(GLenum type){
     }
     return false;
 }
+
+bool GLESv2Validate::arrayIndex(GLEScontext * ctx,GLuint index) {
+    return index < (GLuint)ctx->getCaps()->maxVertexAttribs;
+}
