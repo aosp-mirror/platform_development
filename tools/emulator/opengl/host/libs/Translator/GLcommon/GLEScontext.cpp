@@ -504,6 +504,9 @@ void GLEScontext::initCapsLocked(const GLubyte * extensionString)
     if (strstr(cstring,"GL_ARB_half_float_vertex ")!=NULL)
         s_glSupport.GL_ARB_HALF_FLOAT_VERTEX = true;
 
+    if (strstr(cstring,"GL_SGIS_generate_mipmap ")!=NULL)
+        s_glSupport.GL_SGIS_GENERATE_MIPMAP = true;
+
 }
 
 bool GLEScontext::isTextureUnitEnabled(GLenum unit) {
@@ -563,6 +566,10 @@ bool GLEScontext::glGetIntegerv(GLenum pname, GLint *params)
 
         case GL_ELEMENT_ARRAY_BUFFER_BINDING:
             *params = m_elementBuffer;
+            break;
+
+        case GL_TEXTURE_BINDING_2D:
+            *params = m_tex2DBind[m_activeTexture].texture;
             break;
 
         default:

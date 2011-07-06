@@ -168,9 +168,14 @@ GL_API GLESiface* __translator_getIfaces(EGLiface* eglIface){
 
 }
 
-static TextureData* getTextureData(){
+static TextureData* getTextureData(unsigned int tex){
     GET_CTX_RET(NULL);
-    unsigned int tex = ctx->getBindedTexture();
+
+    if(!thrd->shareGroup->isObject(TEXTURE,tex))
+    {
+        return NULL;
+    }
+
     TextureData *texData = NULL;
     ObjectDataPtr objData = thrd->shareGroup->getObjectData(TEXTURE,tex);
     if(!objData.Ptr()){
@@ -180,6 +185,13 @@ static TextureData* getTextureData(){
         texData = (TextureData*)objData.Ptr();
     }
     return texData;
+}
+
+static TextureData* getTextureData(){
+    GET_CTX_RET(NULL);
+    unsigned int tex = ctx->getBindedTexture();
+
+    return getTextureData(tex);
 }
 
 GL_API GLboolean GL_APIENTRY glIsBuffer(GLuint buffer) {
@@ -208,10 +220,12 @@ GL_API GLboolean GL_APIENTRY  glIsEnabled( GLenum cap) {
 
 GL_API GLboolean GL_APIENTRY  glIsTexture( GLuint texture) {
     GET_CTX_RET(GL_FALSE)
-    if(texture && thrd->shareGroup.Ptr()){
-        return thrd->shareGroup->isObject(TEXTURE,texture) ? GL_TRUE :GL_FALSE;
-    }
-    return ctx->dispatcher().glIsTexture(texture);
+
+    if(texture == 0) // Special case
+        return GL_FALSE;
+
+    TextureData* tex = getTextureData(texture);
+    return tex ? tex->wasBound : GL_FALSE;
 }
 
 GL_API GLenum GL_APIENTRY  glGetError(void) {
@@ -298,6 +312,9 @@ GL_API void GL_APIENTRY  glBindTexture( GLenum target, GLuint texture) {
         }
     }
     ctx->setBindedTexture(texture);
+    TextureData* tex = getTextureData(texture);
+    tex->wasBound = true;
+
     ctx->dispatcher().glBindTexture(target,globalTextureName);
 }
 
@@ -1398,6 +1415,8 @@ GL_API void GL_APIENTRY  glTexImage2D( GLenum target, GLint level, GLint interna
 
     SET_ERROR_IF(!(GLEScmValidate::pixelOp(format,type) && internalformat == ((GLint)format)),GL_INVALID_OPERATION);
 
+    ctx->dispatcher().glTexImage2D(target,level,internalformat,width,height,border,format,type,pixels);
+
     if (thrd->shareGroup.Ptr()){
         TextureData *texData = getTextureData();
         SET_ERROR_IF(texData==NULL,GL_INVALID_OPERATION);
@@ -1406,20 +1425,49 @@ GL_API void GL_APIENTRY  glTexImage2D( GLenum target, GLint level, GLint interna
             texData->height = height;
             texData->border = border;
             texData->internalFormat = internalformat;
+
+            if(texData->requiresAutoMipmap)
+            {
+                ctx->dispatcher().glGenerateMipmapEXT(target);
+            }
         }
     }
-    ctx->dispatcher().glTexImage2D(target,level,internalformat,width,height,border,format,type,pixels);
+}
+
+static bool handleMipmapGeneration(GLenum pname, bool param)
+{
+    GET_CTX_RET(false)
+
+    if(pname == GL_GENERATE_MIPMAP && !ctx->isAutoMipmapSupported())
+    {
+        TextureData *texData = getTextureData();
+        if(texData)
+        {
+            texData->requiresAutoMipmap = param;
+        }
+        return true;
+    }
+
+    return false;
 }
 
 GL_API void GL_APIENTRY  glTexParameterf( GLenum target, GLenum pname, GLfloat param) {
     GET_CTX()
     SET_ERROR_IF(!GLEScmValidate::texParams(target,pname),GL_INVALID_ENUM);
+
+    if(handleMipmapGeneration(pname, (bool)param))
+        return;
+
     ctx->dispatcher().glTexParameterf(target,pname,param);
 }
 
 GL_API void GL_APIENTRY  glTexParameterfv( GLenum target, GLenum pname, const GLfloat *params) {
     GET_CTX()
     SET_ERROR_IF(!GLEScmValidate::texParams(target,pname),GL_INVALID_ENUM);
+
+    if(handleMipmapGeneration(pname, (bool)(*params)))
+        return;
+
     if (pname==GL_TEXTURE_CROP_RECT_OES) {
         TextureData *texData = getTextureData();
         SET_ERROR_IF(texData==NULL,GL_INVALID_OPERATION);
@@ -1434,12 +1482,20 @@ GL_API void GL_APIENTRY  glTexParameterfv( GLenum target, GLenum pname, const GL
 GL_API void GL_APIENTRY  glTexParameteri( GLenum target, GLenum pname, GLint param) {
     GET_CTX()
     SET_ERROR_IF(!GLEScmValidate::texParams(target,pname),GL_INVALID_ENUM);
+
+    if(handleMipmapGeneration(pname, (bool)param))
+        return;
+
     ctx->dispatcher().glTexParameteri(target,pname,param);
 }
 
 GL_API void GL_APIENTRY  glTexParameteriv( GLenum target, GLenum pname, const GLint *params) {
     GET_CTX()
     SET_ERROR_IF(!GLEScmValidate::texParams(target,pname),GL_INVALID_ENUM);
+
+    if(handleMipmapGeneration(pname, (bool)(*params)))
+        return;
+
     if (pname==GL_TEXTURE_CROP_RECT_OES) {
         TextureData *texData = getTextureData();
         SET_ERROR_IF(texData==NULL,GL_INVALID_OPERATION);
@@ -1454,12 +1510,20 @@ GL_API void GL_APIENTRY  glTexParameteriv( GLenum target, GLenum pname, const GL
 GL_API void GL_APIENTRY  glTexParameterx( GLenum target, GLenum pname, GLfixed param) {
     GET_CTX()
     SET_ERROR_IF(!GLEScmValidate::texParams(target,pname),GL_INVALID_ENUM);
+
+    if(handleMipmapGeneration(pname, (bool)param))
+        return;
+
     ctx->dispatcher().glTexParameterf(target,pname,static_cast<GLfloat>(param));
 }
 
 GL_API void GL_APIENTRY  glTexParameterxv( GLenum target, GLenum pname, const GLfixed *params) {
     GET_CTX()
     SET_ERROR_IF(!GLEScmValidate::texParams(target,pname),GL_INVALID_ENUM);
+
+    if(handleMipmapGeneration(pname, (bool)(*params)))
+        return;
+
     if (pname==GL_TEXTURE_CROP_RECT_OES) {
         TextureData *texData = getTextureData();
         SET_ERROR_IF(texData==NULL,GL_INVALID_OPERATION);
@@ -1480,6 +1544,15 @@ GL_API void GL_APIENTRY  glTexSubImage2D( GLenum target, GLint level, GLint xoff
     SET_ERROR_IF(!GLEScmValidate::pixelOp(format,type),GL_INVALID_OPERATION);
 
     ctx->dispatcher().glTexSubImage2D(target,level,xoffset,yoffset,width,height,format,type,pixels);
+
+    if (thrd->shareGroup.Ptr()){
+        TextureData *texData = getTextureData();
+        SET_ERROR_IF(texData==NULL,GL_INVALID_OPERATION);
+        if(texData && texData->requiresAutoMipmap)
+        {
+                ctx->dispatcher().glGenerateMipmapEXT(target);
+        }
+    }
 }
 
 GL_API void GL_APIENTRY  glTranslatef( GLfloat x, GLfloat y, GLfloat z) {
