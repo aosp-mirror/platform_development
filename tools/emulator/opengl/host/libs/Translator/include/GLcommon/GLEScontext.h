@@ -109,7 +109,7 @@ public:
     bool  isArrEnabled(GLenum);
     void  enableArr(GLenum arr,bool enable);
     const GLvoid* setPointer(GLenum arrType,GLint size,GLenum type,GLsizei stride,const GLvoid* data,bool normalize = false);
-    const GLESpointer* getPointer(GLenum arrType);
+    virtual const GLESpointer* getPointer(GLenum arrType);
     virtual void setupArraysPointers(GLESConversionArrays& fArrs,GLint first,GLsizei count,GLenum type,const GLvoid* indices,bool direct) = 0;
     void bindBuffer(GLenum target,GLuint buffer);
     void unbindBuffer(GLuint buffer);
