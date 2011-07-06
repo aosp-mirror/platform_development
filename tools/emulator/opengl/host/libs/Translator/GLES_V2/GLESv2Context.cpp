@@ -34,28 +34,67 @@ void GLESv2Context::init() {
 
 GLESv2Context::GLESv2Context():GLEScontext(){};
 
-void GLESv2Context::convertArrs(GLESFloatArrays& fArrs,GLint first,GLsizei count,GLenum type,const GLvoid* indices,bool direct) {
+void GLESv2Context::setupArraysPointers(GLESConversionArrays& fArrs,GLint first,GLsizei count,GLenum type,const GLvoid* indices,bool direct) {
     ArraysMap::iterator it;
-    unsigned int index = 0;
 
     //going over all clients arrays Pointers
     for ( it=m_map.begin() ; it != m_map.end(); it++ ) {
         GLenum array_id   = (*it).first;
         GLESpointer* p = (*it).second;
+        if(!isArrEnabled(array_id)) continue;
 
-        chooseConvertMethod(fArrs,first,count,type,indices,direct,p,array_id,index);
+        unsigned int size = p->getSize();
+        bool usingVBO = p->isVBO();
+
+        if(needConvert(fArrs,first,count,type,indices,direct,p,array_id)){
+            //conversion has occured
+            unsigned int convertedStride = usingVBO ? p->getStride() : 0;
+            const void* data = usingVBO ? p->getBufferData() : fArrs.getCurrentData();
+            setupArr(data,array_id,GL_FLOAT,size,convertedStride);
+            ++fArrs;
+        } else {
+            const void* data = usingVBO ? p->getBufferData() : p->getArrayData();
+            setupArr(data,array_id,p->getType(),size,p->getStride());
+        }
     }
 }
 
-//sending data to server side
-void GLESv2Context::sendArr(GLvoid* arr,GLenum arrayType,GLint size,GLsizei stride,int index) {
-     s_glDispatch.glVertexAttribPointer(arrayType,size,GL_FLOAT,GL_FALSE,stride,arr);
+//setting client side arr
+void GLESv2Context::setupArr(const GLvoid* arr,GLenum arrayType,GLenum dataType,GLint size,GLsizei stride,int index){
+     if(arr == NULL) return;
+     s_glDispatch.glVertexAttribPointer(arrayType,size,dataType,GL_FALSE,stride,arr);
+}
+
+bool GLESv2Context::needConvert(GLESConversionArrays& fArrs,GLint first,GLsizei count,GLenum type,const GLvoid* indices,bool direct,GLESpointer* p,GLenum array_id) {
+
+    bool usingVBO = p->isVBO();
+    GLenum arrType = p->getType();
+    /*
+     conversion is not necessary in the following cases:
+      (*) array type is not fixed
+    */
+    if(arrType != GL_FIXED) return false;
+
+    if(!usingVBO) {
+        if (direct) {
+            convertDirect(fArrs,first,count,array_id,p);
+        } else {
+            convertIndirect(fArrs,count,type,indices,array_id,p);
+        }
+    } else {
+        if (direct) {
+            convertDirectVBO(first,count,array_id,p) ;
+        } else {
+            convertIndirectVBO(count,type,indices,array_id,p);
+        }
+    }
+    return true;
 }
 
 void GLESv2Context::initExtensionString() {
     *s_glExtensions = "GL_OES_EGL_image GL_OES_depth24 GL_OES_depth32 GL_OES_element_index_uint "
                       "GL_OES_standard_derivatives GL_OES_texture_float GL_OES_texture_float_linear ";
-    if (s_glSupport.GL_ARB_HALF_FLOAT_PIXEL || s_glSupport.GL_NV_HALF_FLOAT)       
+    if (s_glSupport.GL_ARB_HALF_FLOAT_PIXEL || s_glSupport.GL_NV_HALF_FLOAT)
         *s_glExtensions+="GL_OES_texture_half_float GL_OES_texture_half_float_linear ";
     if (s_glSupport.GL_NV_PACKED_DEPTH_STENCIL)
         *s_glExtensions+="GL_OES_packed_depth_stencil ";

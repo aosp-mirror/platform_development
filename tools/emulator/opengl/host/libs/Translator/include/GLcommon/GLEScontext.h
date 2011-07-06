@@ -6,6 +6,7 @@
 #include "objectNameManager.h"
 #include <utils/threads.h>
 #include <string>
+#include <utility>
 
 #define MAX_TEX_UNITS 8
 
@@ -61,11 +62,20 @@ struct GLSupport {
 
 };
 
-struct GLESFloatArrays
+class GLESConversionArrays
 {
-    GLESFloatArrays(){};
-    ~GLESFloatArrays();
-    std::map<GLenum,GLfloat*> arrays;
+public:
+    GLESConversionArrays():m_current(0){};
+    void alloc(unsigned int size,GLenum type);
+    void* operator[](int i);
+    void* getCurrentData();
+    unsigned int getCurrentIndex();
+    void operator++();
+
+    ~GLESConversionArrays();
+private:
+    std::map<GLenum,std::pair<GLenum,void*> > m_arrays;
+    unsigned int m_current;
 };
 
 class GLEScontext{
@@ -86,7 +96,7 @@ public:
     void  enableArr(GLenum arr,bool enable);
     const GLvoid* setPointer(GLenum arrType,GLint size,GLenum type,GLsizei stride,const GLvoid* data,bool normalize = false);
     const GLESpointer* getPointer(GLenum arrType);
-    virtual void convertArrs(GLESFloatArrays& fArrs,GLint first,GLsizei count,GLenum type,const GLvoid* indices,bool direct) = 0;
+    virtual void setupArraysPointers(GLESConversionArrays& fArrs,GLint first,GLsizei count,GLenum type,const GLvoid* indices,bool direct) = 0;
     void bindBuffer(GLenum target,GLuint buffer);
     void unbindBuffer(GLuint buffer);
     bool isBuffer(GLuint buffer);
@@ -112,7 +122,11 @@ public:
 
 
 protected:
-    void chooseConvertMethod(GLESFloatArrays& fArrs,GLint first,GLsizei count,GLenum type,const GLvoid* indices,bool direct,GLESpointer* p,GLenum array_id,unsigned int& index);
+    virtual bool needConvert(GLESConversionArrays& fArrs,GLint first,GLsizei count,GLenum type,const GLvoid* indices,bool direct,GLESpointer* p,GLenum array_id) = 0;
+    void convertDirect(GLESConversionArrays& fArrs,GLint first,GLsizei count,GLenum array_id,GLESpointer* p);
+    void convertDirectVBO(GLint first,GLsizei count,GLenum array_id,GLESpointer* p);
+    void convertIndirect(GLESConversionArrays& fArrs,GLsizei count,GLenum type,const GLvoid* indices,GLenum array_id,GLESpointer* p);
+    void convertIndirectVBO(GLsizei count,GLenum indices_type,const GLvoid* indices,GLenum array_id,GLESpointer* p);
     void initCapsLocked(const GLubyte * extensionString);
     static android::Mutex s_lock;
     static GLDispatch     s_glDispatch;
@@ -124,12 +138,8 @@ protected:
 
 private:
 
-    virtual void sendArr(GLvoid* arr,GLenum arrayType,GLint size,GLsizei stride,int pointsIndex = -1) = 0 ;
+    virtual void setupArr(const GLvoid* arr,GLenum arrayType,GLenum dataType,GLint size,GLsizei stride,int pointsIndex = -1) = 0 ;
     GLuint getBuffer(GLenum target);
-    void convertDirect(GLESFloatArrays& fArrs,GLint first,GLsizei count,GLenum array_id,GLESpointer* p,unsigned int& index);
-    void convertDirectVBO(GLint first,GLsizei count,GLenum array_id,GLESpointer* p);
-    void convertIndirect(GLESFloatArrays& fArrs,GLsizei count,GLenum type,const GLvoid* indices,GLenum array_id,GLESpointer* p,unsigned int& index);
-    void convertIndirectVBO(GLsizei count,GLenum indices_type,const GLvoid* indices,GLenum array_id,GLESpointer* p);
 
     ShareGroupPtr         m_shareGroup;
     GLenum                m_glError;
