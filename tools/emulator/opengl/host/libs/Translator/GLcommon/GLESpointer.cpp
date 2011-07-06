@@ -44,7 +44,6 @@ const GLvoid* GLESpointer::getArrayData() const {
 }
 
 GLvoid* GLESpointer::getBufferData() const {
-
     return  m_buffer ? static_cast<unsigned char*>(m_buffer->getData()) + m_buffOffset : NULL;
 }
 

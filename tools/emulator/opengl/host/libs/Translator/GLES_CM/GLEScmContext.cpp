@@ -25,11 +25,12 @@ void GLEScmContext::init() {
     android::Mutex::Autolock mutex(s_lock);
     if(!m_initialized) {
         s_glDispatch.dispatchFuncs(GLES_1_1);
-        initCapsLocked(s_glDispatch.glGetString(GL_EXTENSIONS));
-        initExtensionString();
+        GLEScontext::init();
+
+        m_texCoords = new GLESpointer[s_glSupport.maxTexUnits];
+        m_map[GL_TEXTURE_COORD_ARRAY]  = &m_texCoords[m_clientActiveTexture];
+
     }
-    m_texCoords = new GLESpointer[s_glSupport.maxTexUnits];
-    m_map[GL_TEXTURE_COORD_ARRAY]  = &m_texCoords[m_clientActiveTexture];
     m_initialized = true;
 }
 
@@ -238,6 +239,21 @@ bool GLEScmContext::needConvert(GLESConversionArrays& fArrs,GLint first,GLsizei 
     return true;
 }
 
+const GLESpointer* GLEScmContext::getPointer(GLenum arrType) {
+    GLenum type =
+        arrType == GL_VERTEX_ARRAY_POINTER          ? GL_VERTEX_ARRAY :
+        arrType == GL_NORMAL_ARRAY_POINTER          ? GL_NORMAL_ARRAY :
+        arrType == GL_TEXTURE_COORD_ARRAY_POINTER   ? GL_TEXTURE_COORD_ARRAY :
+        arrType == GL_COLOR_ARRAY_POINTER           ? GL_COLOR_ARRAY :
+        arrType == GL_POINT_SIZE_ARRAY_POINTER_OES  ? GL_POINT_SIZE_ARRAY_OES :
+        0;
+    if(type != 0)
+    {
+        return GLEScontext::getPointer(type);
+    }
+    return NULL;
+}
+
 void GLEScmContext::initExtensionString() {
     *s_glExtensions = "GL_OES_blend_func_separate GL_OES_blend_equation_separate GL_OES_blend_subtract "
                       "GL_OES_byte_coordinates GL_OES_compressed_paletted_texture GL_OES_point_size_array "
@@ -263,4 +279,8 @@ void GLEScmContext::initExtensionString() {
         if (max_palette_matrices>=32 && max_vertex_units>=4)
             *s_glExtensions+="GL_OES_extended_matrix_palette ";
     }
+}
+
+int GLEScmContext::getMaxTexUnits() {
+    return getCaps()->maxTexUnits;
 }

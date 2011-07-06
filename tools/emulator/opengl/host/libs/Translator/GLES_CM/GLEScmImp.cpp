@@ -38,7 +38,7 @@
 extern "C" {
 
 //decleration
-static void initContext(GLEScontext* ctx);
+static void initContext(GLEScontext* ctx,ShareGroupPtr grp);
 static void deleteGLESContext(GLEScontext* ctx);
 static void setShareGroup(GLEScontext* ctx,ShareGroupPtr grp);
 static GLEScontext* createGLESContext();
@@ -67,8 +67,12 @@ static GLESiface  s_glesIface = {
 
 extern "C" {
 
-static void initContext(GLEScontext* ctx) {
-    ctx->init();
+static void initContext(GLEScontext* ctx,ShareGroupPtr grp) {
+    if (!ctx->isInitialized()) {
+        ctx->setShareGroup(grp);
+        ctx->init();
+        glBindTexture(GL_TEXTURE_2D,0);
+     }
 }
 
 static GLEScontext* createGLESContext() {
@@ -268,13 +272,15 @@ GL_API void GL_APIENTRY  glBindBuffer( GLenum target, GLuint buffer) {
     SET_ERROR_IF(!GLEScmValidate::bufferTarget(target),GL_INVALID_ENUM);
 
     //if buffer wasn't generated before,generate one
-    if(thrd->shareGroup.Ptr() && !thrd->shareGroup->isObject(VERTEXBUFFER,buffer)){
+    if(buffer && thrd->shareGroup.Ptr() && !thrd->shareGroup->isObject(VERTEXBUFFER,buffer)){
         thrd->shareGroup->genName(VERTEXBUFFER,buffer);
         thrd->shareGroup->setObjectData(VERTEXBUFFER,buffer,ObjectDataPtr(new GLESbuffer()));
     }
     ctx->bindBuffer(target,buffer);
-    GLESbuffer* vbo = (GLESbuffer*)thrd->shareGroup->getObjectData(VERTEXBUFFER,buffer).Ptr();
-    vbo->wasBinded();
+    if (buffer) {
+        GLESbuffer* vbo = (GLESbuffer*)thrd->shareGroup->getObjectData(VERTEXBUFFER,buffer).Ptr();
+        vbo->setBinded();
+    }
 }
 
 
@@ -283,7 +289,7 @@ GL_API void GL_APIENTRY  glBindTexture( GLenum target, GLuint texture) {
     SET_ERROR_IF(!GLEScmValidate::textureTarget(target),GL_INVALID_ENUM)
 
     GLuint globalTextureName = texture;
-    if(texture && thrd->shareGroup.Ptr()){
+    if(thrd->shareGroup.Ptr()){
         globalTextureName = thrd->shareGroup->getGlobalName(TEXTURE,texture);
         //if texture wasn't generated before,generate one
         if(!globalTextureName){
@@ -637,7 +643,7 @@ GL_API void GL_APIENTRY  glGenBuffers( GLsizei n, GLuint *buffers) {
     SET_ERROR_IF(n<0,GL_INVALID_VALUE);
     if(thrd->shareGroup.Ptr()) {
         for(int i=0; i<n ;i++) {
-            buffers[i] = thrd->shareGroup->genName(VERTEXBUFFER);
+            buffers[i] = thrd->shareGroup->genName(VERTEXBUFFER, 0, true);
             //generating vbo object related to this buffer name
             thrd->shareGroup->setObjectData(VERTEXBUFFER,buffers[i],ObjectDataPtr(new GLESbuffer()));
         }
@@ -648,7 +654,7 @@ GL_API void GL_APIENTRY  glGenTextures( GLsizei n, GLuint *textures) {
     GET_CTX();
     if(thrd->shareGroup.Ptr()) {
         for(int i=0; i<n ;i++) {
-            textures[i] = thrd->shareGroup->genName(TEXTURE);
+            textures[i] = thrd->shareGroup->genName(TEXTURE, 0, true);
         }
     }
 }
@@ -1544,11 +1550,11 @@ GL_API void GLAPIENTRY glBindRenderbufferOES(GLenum target, GLuint renderbuffer)
     SET_ERROR_IF(!GLEScmValidate::renderbufferTarget(target),GL_INVALID_ENUM);
 
     //if buffer wasn't generated before,generate one
-    if(thrd->shareGroup.Ptr() && !thrd->shareGroup->isObject(RENDERBUFFER,renderbuffer)){
+    if(renderbuffer && thrd->shareGroup.Ptr() && !thrd->shareGroup->isObject(RENDERBUFFER,renderbuffer)){
         thrd->shareGroup->genName(RENDERBUFFER,renderbuffer);
     }
 
-    int globalBufferName = thrd->shareGroup->getGlobalName(RENDERBUFFER,renderbuffer);
+    int globalBufferName = (renderbuffer != 0) ? thrd->shareGroup->getGlobalName(RENDERBUFFER,renderbuffer) : 0;
     ctx->dispatcher().glBindRenderbufferEXT(target,globalBufferName);
 }
 
@@ -1567,7 +1573,7 @@ GL_API void GLAPIENTRY glGenRenderbuffersOES(GLsizei n, GLuint *renderbuffers) {
     SET_ERROR_IF(n<0,GL_INVALID_VALUE);
     if(thrd->shareGroup.Ptr()) {
         for(int i=0; i<n ;i++) {
-            renderbuffers[i] = thrd->shareGroup->genName(RENDERBUFFER);
+            renderbuffers[i] = thrd->shareGroup->genName(RENDERBUFFER, 0, true);
         }
     }
 }
@@ -1601,10 +1607,10 @@ GL_API void GLAPIENTRY glBindFramebufferOES(GLenum target, GLuint framebuffer) {
     GET_CTX()
     SET_ERROR_IF(!ctx->getCaps()->GL_EXT_FRAMEBUFFER_OBJECT,GL_INVALID_OPERATION);
     SET_ERROR_IF(!GLEScmValidate::framebufferTarget(target) ,GL_INVALID_ENUM);
-    if (thrd->shareGroup.Ptr() && !thrd->shareGroup->isObject(FRAMEBUFFER,framebuffer)) {
+    if (framebuffer && thrd->shareGroup.Ptr() && !thrd->shareGroup->isObject(FRAMEBUFFER,framebuffer)) {
         thrd->shareGroup->genName(FRAMEBUFFER,framebuffer);
     }
-    int globalBufferName = thrd->shareGroup->getGlobalName(FRAMEBUFFER,framebuffer);
+    int globalBufferName = (framebuffer!=0) ? thrd->shareGroup->getGlobalName(FRAMEBUFFER,framebuffer) : 0;
     ctx->dispatcher().glBindFramebufferEXT(target,globalBufferName);
 }
 
@@ -1623,7 +1629,7 @@ GL_API void GLAPIENTRY glGenFramebuffersOES(GLsizei n, GLuint *framebuffers) {
     SET_ERROR_IF(n<0,GL_INVALID_VALUE);
     if (thrd->shareGroup.Ptr()) {
         for (int i=0;i<n;i++) {
-            framebuffers[i] = thrd->shareGroup->genName(FRAMEBUFFER);
+            framebuffers[i] = thrd->shareGroup->genName(FRAMEBUFFER, 0, true);
         }
     }
 }
