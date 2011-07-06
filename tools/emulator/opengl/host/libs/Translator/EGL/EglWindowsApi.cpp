@@ -35,18 +35,16 @@ public:
      typedef enum {
                       DEFAULT_DISPLAY = 0
                   };
-     WinDisplay():m_current(DEFAULT_DISPLAY){};
+     WinDisplay(){};
      DisplayInfo& getInfo(int configurationIndex){ return m_map[configurationIndex];}
-     HDC  getCurrentDC(){return m_map[m_current].dc;}
-     void setDefault(const DisplayInfo& info){m_map[DEFAULT_DISPLAY] = info; m_current = DEFAULT_DISPLAY;}
-     void setCurrent(int configurationIndex,const DisplayInfo& info);
-     bool isCurrentPixelFormatSet(){ return m_map[m_current].isPixelFormatSet;}
-     void currentPixelFormatWasSet(){m_map[m_current].isPixelFormatSet = true;}
-     bool needToSetCurrent(int configurationIndex);
+     HDC  getDC(int configId){return m_map[configId].dc;}
+     void setInfo(int configurationIndex,const DisplayInfo& info);
+     bool isPixelFormatSet(int cfgId){ return m_map[cfgId].isPixelFormatSet;}
+     void pixelFormatWasSet(int cfgId){m_map[cfgId].isPixelFormatSet = true;}
+     bool infoExists(int configurationIndex);
      void releaseAll();
 private:
     std::map<int,DisplayInfo> m_map;
-    int                       m_current;
 };
 
 void WinDisplay::releaseAll(){
@@ -56,13 +54,12 @@ void WinDisplay::releaseAll(){
     }
 }
 
-bool WinDisplay::needToSetCurrent(int configurationIndex){
+bool WinDisplay::infoExists(int configurationIndex){
     return m_map.find(configurationIndex) == m_map.end();
 }
 
-void WinDisplay::setCurrent(int configurationIndex,const DisplayInfo& info){
+void WinDisplay::setInfo(int configurationIndex,const DisplayInfo& info){
     m_map[configurationIndex] = info;
-    m_current = configurationIndex;
 }
 
 struct WglExtProcs{
@@ -198,11 +195,23 @@ EGLNativeDisplayType getDefaultDisplay() {
 
     HWND hwnd = createDummyWindow();
     HDC  hdc  =  GetDC(hwnd);
-    dpy->setDefault(DisplayInfo(hdc,hwnd));
+    dpy->setInfo(WinDisplay::DEFAULT_DISPLAY,DisplayInfo(hdc,hwnd));
     return static_cast<EGLNativeDisplayType>(dpy);
 }
 
 
+static HDC getDummyDC(EGLNativeDisplayType display,int cfgId){
+
+    HDC dpy = NULL;
+    if(display->infoExists(cfgId)){
+        HWND hwnd = createDummyWindow();
+        dpy  = GetDC(hwnd);
+        display->setInfo(cfgId,DisplayInfo(dpy,hwnd));
+    } else {
+        dpy = display->getDC(cfgId);
+    }
+    return dpy;
+}
 void initPtrToWglFunctions(){
 
     HWND hwnd = createDummyWindow();
@@ -250,11 +259,11 @@ void initPtrToWglFunctions(){
     ctx = wglCreateContext(dpy);
     if(!ctx){
         err =  GetLastError();
-        printf("error while creating dummy context %d\n",err);
+        fprintf(stderr,"error while creating dummy context %d\n",err);
     }
     if(!wglMakeCurrent(dpy,ctx)){
         err =  GetLastError();
-        printf("error while making dummy context current %d\n",err);
+        fprintf(stderr,"error while making dummy context current %d\n",err);
     }
 
     if(!s_wglExtProcs){
@@ -280,6 +289,17 @@ bool releaseDisplay(EGLNativeDisplayType dpy) {
 }
 
 
+static bool initPixelFormat(HDC dc){
+    PIXELFORMATDESCRIPTOR  pfd;
+    unsigned int numpf;
+    int iPixelFormat;
+
+    if(s_wglExtProcs->wglChoosePixelFormatARB) {
+        return s_wglExtProcs->wglChoosePixelFormatARB(dc,NULL, NULL, 1, &iPixelFormat, &numpf);
+    } else {
+        return ChoosePixelFormat(dc,&pfd);
+    }
+}
 
 EglConfig* pixelFormatToConfig(EGLNativeDisplayType display,int renderableType,EGLNativePixelFormatType* frmt,int index){
 
@@ -290,10 +310,11 @@ EglConfig* pixelFormatToConfig(EGLNativeDisplayType display,int renderableType,E
     EGLint  pMaxWidth,pMaxHeight,pMaxPixels;
     EGLint  configId,level;
     EGLint  window,bitmap,pbuffer,transparent;
-    HDC dpy = display->getCurrentDC();
+    HDC dpy = getDummyDC(display,WinDisplay::DEFAULT_DISPLAY);
 
     if(frmt->iPixelType != PFD_TYPE_RGBA) return NULL; // other formats are not supported yet
     if(!((frmt->dwFlags & PFD_SUPPORT_OPENGL) && (frmt->dwFlags & PFD_DOUBLEBUFFER))) return NULL; //pixel format does not supports opengl or double buffer
+    if( 0 != (frmt->dwFlags & (PFD_GENERIC_FORMAT | PFD_NEED_PALETTE )) ) return NULL; //discard generic pixel formats as well as pallete pixel formats
 
     int attribs [] = {
                           WGL_DRAW_TO_WINDOW_ARB,
@@ -314,6 +335,7 @@ EglConfig* pixelFormatToConfig(EGLNativeDisplayType display,int renderableType,E
     if(window)  supportedSurfaces |= EGL_WINDOW_BIT;
     if(bitmap)  supportedSurfaces |= EGL_PIXMAP_BIT;
     if(pbuffer) supportedSurfaces |= EGL_PBUFFER_BIT;
+
 
     if(!supportedSurfaces) return NULL;
 
@@ -352,8 +374,14 @@ EglConfig* pixelFormatToConfig(EGLNativeDisplayType display,int renderableType,E
 void queryConfigs(EGLNativeDisplayType display,int renderableType,ConfigsList& listOut) {
     PIXELFORMATDESCRIPTOR  pfd;
     int  iPixelFormat = 1;
-    HDC dpy = display->getCurrentDC();
+    HDC dpy = getDummyDC(display,WinDisplay::DEFAULT_DISPLAY);
 
+    //
+    // We need to call wglChoosePixelFormat at least once,
+    // seems that the driver needs to initialize itself.
+    // do it here during initialization.
+    //
+    initPixelFormat(dpy);
 
     //quering num of formats
     int nFormats = DescribePixelFormat(dpy, iPixelFormat,sizeof(PIXELFORMATDESCRIPTOR), &pfd);
@@ -364,7 +392,6 @@ void queryConfigs(EGLNativeDisplayType display,int renderableType,ConfigsList& l
          EglConfig* pConfig = pixelFormatToConfig(display,renderableType,&pfd,iPixelFormat);
          if(pConfig) listOut.push_back(pConfig);
     }
-
 }
 
 bool validNativeWin(EGLNativeDisplayType dpy,EGLNativeWindowType win) {
@@ -380,49 +407,13 @@ bool validNativePixmap(EGLNativeDisplayType dpy,EGLNativeSurfaceType pix) {
     return GetObject(pix->getBmap(), sizeof(BITMAP), (LPSTR)&bm);
 }
 
-static bool setPixelFormat(HDC dc,EglConfig* cfg) {
-    EGLint red,green,blue,alpha,depth,stencil;
-    bool   gotAttribs = cfg->getConfAttrib(EGL_RED_SIZE,&red)     &&
-                        cfg->getConfAttrib(EGL_GREEN_SIZE,&green) &&
-                        cfg->getConfAttrib(EGL_BLUE_SIZE,&blue)   &&
-                        cfg->getConfAttrib(EGL_ALPHA_SIZE,&alpha) &&
-                        cfg->getConfAttrib(EGL_DEPTH_SIZE,&depth) &&
-                        cfg->getConfAttrib(EGL_STENCIL_SIZE,&stencil) ;
-
-     if(!gotAttribs) return false;
-     int wglPixelFormatAttribs[] = {
-                                    WGL_SUPPORT_OPENGL_ARB       ,TRUE,
-                                    WGL_DRAW_TO_PBUFFER_ARB      ,TRUE,
-                                    WGL_DRAW_TO_WINDOW_ARB       ,TRUE,
-                                    WGL_COLOR_BITS_ARB           ,red+green+blue,
-                                    WGL_RED_BITS_ARB             ,red,
-                                    WGL_GREEN_BITS_ARB           ,green,
-                                    WGL_BLUE_BITS_ARB            ,blue,
-                                    WGL_ALPHA_BITS_ARB           ,alpha,
-                                    WGL_STENCIL_BITS_ARB         ,stencil,
-                                    WGL_DEPTH_BITS_ARB           ,depth,
-                                    WGL_DOUBLE_BUFFER_ARB        ,TRUE,
-                                    0
-                                   };
-    int iPixelFormat;
-    unsigned int numpf;
-    if(!s_wglExtProcs->wglChoosePixelFormatARB || !s_wglExtProcs->wglChoosePixelFormatARB(dc,wglPixelFormatAttribs, NULL, 1, &iPixelFormat, &numpf)) {
-        return false;
-    }
-   EGLNativePixelFormatType frmt = cfg->nativeConfig();
-   //int iPixelFormat = ChoosePixelFormat(dc,&frmt);
-   if(!iPixelFormat) return false;
-   return SetPixelFormat(dc,iPixelFormat,&frmt);
-}
-
-
 bool checkWindowPixelFormatMatch(EGLNativeDisplayType dpy,EGLNativeWindowType win,EglConfig* cfg,unsigned int* width,unsigned int* height) {
    RECT r;
    if(!GetClientRect(win,&r)) return false;
    *width  = r.right  - r.left;
    *height = r.bottom - r.top;
    HDC dc = GetDC(win);
-   bool ret = setPixelFormat(dc,cfg);
+   bool ret = SetPixelFormat(dc,cfg->nativeId(),&cfg->nativeConfig());
    DeleteDC(dc);
    return ret;
 }
@@ -440,39 +431,8 @@ bool checkPixmapPixelFormatMatch(EGLNativeDisplayType dpy,EGLNativePixmapType pi
 
 EGLNativeSurfaceType createPbufferSurface(EGLNativeDisplayType display,EglConfig* cfg,EglPbufferSurface* pbSurface) {
 
-  //converting configuration into WGL pixel Format
-   EGLint red,green,blue,alpha,depth,stencil;
-   bool   gotAttribs = cfg->getConfAttrib(EGL_RED_SIZE,&red)     &&
-                       cfg->getConfAttrib(EGL_GREEN_SIZE,&green) &&
-                       cfg->getConfAttrib(EGL_BLUE_SIZE,&blue)   &&
-                       cfg->getConfAttrib(EGL_ALPHA_SIZE,&alpha) &&
-                       cfg->getConfAttrib(EGL_DEPTH_SIZE,&depth) &&
-                       cfg->getConfAttrib(EGL_STENCIL_SIZE,&stencil) ;
 
- if(!gotAttribs) return false;
- int wglPixelFormatAttribs[] = {
-                                WGL_SUPPORT_OPENGL_ARB       ,TRUE,
-                                WGL_DRAW_TO_PBUFFER_ARB      ,TRUE,
-                                WGL_BIND_TO_TEXTURE_RGBA_ARB ,TRUE,
-                                WGL_COLOR_BITS_ARB           ,red+green+blue,
-                                WGL_RED_BITS_ARB             ,red,
-                                WGL_GREEN_BITS_ARB           ,green,
-                                WGL_BLUE_BITS_ARB            ,blue,
-                                WGL_ALPHA_BITS_ARB           ,alpha,
-                                WGL_STENCIL_BITS_ARB         ,stencil,
-                                WGL_DEPTH_BITS_ARB           ,depth,
-                                WGL_DOUBLE_BUFFER_ARB        ,TRUE,
-                                0
-                               };
-
-    HDC dpy = display->getCurrentDC();
-    int pixfmt;
-    unsigned int numpf;
-    if(!s_wglExtProcs->wglChoosePixelFormatARB || !s_wglExtProcs->wglChoosePixelFormatARB(dpy,wglPixelFormatAttribs, NULL, 1, &pixfmt, &numpf)) {
-        DWORD err = GetLastError();
-        return NULL;
-    }
-
+    HDC dpy = getDummyDC(display,cfg->nativeId());
     EGLint width,height,largest,texTarget,texFormat;
     pbSurface->getDim(&width,&height,&largest);
     pbSurface->getTexInfo(&texTarget,&texFormat);
@@ -496,7 +456,7 @@ EGLNativeSurfaceType createPbufferSurface(EGLNativeDisplayType display,EglConfig
                        0
                       };
     if(!s_wglExtProcs->wglCreatePbufferARB) return NULL;
-    EGLNativePbufferType pb = s_wglExtProcs->wglCreatePbufferARB(dpy,pixfmt,width,height,pbAttribs);
+    EGLNativePbufferType pb = s_wglExtProcs->wglCreatePbufferARB(dpy,cfg->nativeId(),width,height,pbAttribs);
     if(!pb) {
         DWORD err = GetLastError();
         return NULL;
@@ -505,7 +465,6 @@ EGLNativeSurfaceType createPbufferSurface(EGLNativeDisplayType display,EglConfig
 }
 
 bool releasePbuffer(EGLNativeDisplayType display,EGLNativeSurfaceType pb) {
-    HDC  dis =  display->getCurrentDC();
     if(!s_wglExtProcs->wglReleasePbufferDCARB || !s_wglExtProcs->wglDestroyPbufferARB) return false;
     if(!s_wglExtProcs->wglReleasePbufferDCARB(pb->getPbuffer(),pb->getDC()) || !s_wglExtProcs->wglDestroyPbufferARB(pb->getPbuffer())){
         DWORD err = GetLastError();
@@ -517,18 +476,13 @@ bool releasePbuffer(EGLNativeDisplayType display,EGLNativeSurfaceType pb) {
 EGLNativeContextType createContext(EGLNativeDisplayType display,EglConfig* cfg,EGLNativeContextType sharedContext) {
 
     EGLNativeContextType ctx = NULL;
-    HDC  dpy  = NULL;
-    if(display->needToSetCurrent(cfg->id())){
-        HWND hwnd = createDummyWindow();
-        dpy  = GetDC(hwnd);
-        display->setCurrent(cfg->id(),DisplayInfo(dpy,hwnd));
-    } else {
-        dpy = display->getCurrentDC();
-    }
+    HDC  dpy  = getDummyDC(display,cfg->nativeId());
 
-    if(!display->isCurrentPixelFormatSet()){
-        if(!setPixelFormat(dpy,cfg)) return NULL;
-        display->currentPixelFormatWasSet();
+    if(!display->isPixelFormatSet(cfg->nativeId())){
+        if(!SetPixelFormat(dpy,cfg->nativeId(),&cfg->nativeConfig())){
+            return NULL;
+        }
+        display->pixelFormatWasSet(cfg->nativeId());
     }
 
     ctx = wglCreateContext(dpy);
@@ -562,11 +516,9 @@ bool makeCurrent(EGLNativeDisplayType display,EglSurface* read,EglSurface* draw,
             bool ret =  wglMakeCurrent(hdcDraw,ctx);
             return ret;
     } else if (!s_wglExtProcs->wglMakeContextCurrentARB ) {
-        printf("OS :1-:make current failed %d\n",GetLastError());
         return false;
     }
     retVal = s_wglExtProcs->wglMakeContextCurrentARB(hdcDraw,hdcRead,ctx);
-    printf("OS ::2-make current failed %d\n",GetLastError());
 
     return retVal;
 }
