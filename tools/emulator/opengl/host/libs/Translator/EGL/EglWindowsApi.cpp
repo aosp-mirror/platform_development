@@ -464,7 +464,7 @@ EGLNativeContextType createContext(EGLNativeDisplayType display,EglConfig* cfg,E
     HDC  dpy  = NULL;
     if(display->needToSetCurrent(cfg->id())){
         HWND hwnd = createDummyWindow();
-        HDC  dpy  = GetDC(hwnd);
+        dpy  = GetDC(hwnd);
         display->setCurrent(cfg->id(),DisplayInfo(dpy,hwnd));
     } else {
         dpy = display->getCurrentDC();
