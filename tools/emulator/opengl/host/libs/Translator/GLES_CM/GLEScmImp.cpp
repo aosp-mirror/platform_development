@@ -17,6 +17,7 @@
 #ifdef _WIN32
 #undef GL_API
 #define GL_API __declspec(dllexport)
+#define GL_APICALL __declspec(dllexport)
 #endif
 #define GL_GLEXT_PROTOTYPES
 #include "GLEScmContext.h"
