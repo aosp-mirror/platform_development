@@ -30,7 +30,8 @@ public:
         m_lenExpression(""),
         m_pointerDir(POINTER_IN),
         m_nullAllowed(false),
-        m_packExpression("")
+        m_packExpression(""),
+        m_paramCheckExpression("")
 
     {
     }
@@ -45,7 +46,8 @@ public:
         m_lenExpression(lenExpression),
         m_pointerDir(dir),
         m_nullAllowed(false),
-        m_packExpression(packExpression)
+        m_packExpression(packExpression),
+		m_paramCheckExpression("")	
     {
     }
 
@@ -67,8 +69,10 @@ public:
     bool isVoid() const { return ((m_type->bytes() == 0) && (!m_type->isPointer())); }
     const std::string & lenExpression() const { return m_lenExpression; }
     const std::string & packExpression() const { return(m_packExpression); }
+    const std::string & paramCheckExpression() const { return m_paramCheckExpression; }
     void setLenExpression(const std::string & lenExpression) { m_lenExpression = lenExpression; }
     void setPackExpression(const std::string & packExpression) { m_packExpression = packExpression; }
+    void setParamCheckExpression(const std::string & paramCheckExpression) { m_paramCheckExpression = paramCheckExpression; }
     void setPointerDir(PointerDir dir) { m_pointerDir = dir; }
     PointerDir pointerDir() { return m_pointerDir; }
     void setNullAllowed(bool state) { m_nullAllowed = state; }
@@ -84,6 +88,7 @@ private:
     PointerDir m_pointerDir;
     bool m_nullAllowed;
     std::string m_packExpression; // an expression to pack data into the stream
+    std::string m_paramCheckExpression; //an expression to check parameter value
 
 };
 

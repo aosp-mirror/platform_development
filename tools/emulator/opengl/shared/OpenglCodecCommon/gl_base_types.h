@@ -48,4 +48,15 @@ typedef char *GLstr;
 /* JR XXX Treating this as an in handle - is this correct? */
 typedef void * GLeglImageOES;
 
+/* ErrorCode */
+#ifndef GL_INVALID_ENUM
+#define GL_NO_ERROR                       0
+#define GL_INVALID_ENUM                   0x0500
+#define GL_INVALID_VALUE                  0x0501
+#define GL_INVALID_OPERATION              0x0502
+#define GL_STACK_OVERFLOW                 0x0503
+#define GL_STACK_UNDERFLOW                0x0504
+#define GL_OUT_OF_MEMORY                  0x0505
+#endif
+
 #endif
