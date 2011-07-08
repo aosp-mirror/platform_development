@@ -175,6 +175,7 @@ bool validNativeWin(EGLNativeDisplayType dpy,EGLNativeWindowType win) {
 }
 
 bool validNativeWin(EGLNativeDisplayType dpy,EGLNativeSurfaceType win) {
+    if (!win) return false;
     return validNativeWin(dpy,win->srfc());
 }
 
@@ -183,7 +184,7 @@ bool validNativePixmap(EGLNativeDisplayType dpy,EGLNativeSurfaceType pix) {
    int tmp;
    unsigned int utmp;
    ErrorHandler handler(dpy);
-   if(!XGetGeometry(dpy,pix->srfc(),&root,&tmp,&tmp,&utmp,&utmp,&utmp,&utmp)) return false;
+   if(!XGetGeometry(dpy,pix ? pix->srfc() : NULL,&root,&tmp,&tmp,&utmp,&utmp,&utmp,&utmp)) return false;
    return handler.getLastError() == 0;
 }
 
@@ -227,6 +228,7 @@ EGLNativeSurfaceType createPbufferSurface(EGLNativeDisplayType dpy,EglConfig* cf
 }
 
 bool releasePbuffer(EGLNativeDisplayType dis,EGLNativeSurfaceType pb) {
+    if (!pb) return false;
     glXDestroyPbuffer(dis,pb->srfc());
 
     return true;
@@ -258,7 +260,9 @@ bool makeCurrent(EGLNativeDisplayType dpy,EglSurface* read,EglSurface* draw,EGLN
 }
 
 void swapBuffers(EGLNativeDisplayType dpy,EGLNativeSurfaceType srfc){
-    glXSwapBuffers(dpy,srfc->srfc());
+    if (srfc) {
+        glXSwapBuffers(dpy,srfc->srfc());
+    }
 }
 
 void waitNative() {
@@ -273,7 +277,7 @@ void swapInterval(EGLNativeDisplayType dpy,EGLNativeSurfaceType win,int interval
     if(strstr(extensions,"EXT_swap_control")) {
         glXSwapIntervalEXT = (GLXSWAPINTERVALEXT)glXGetProcAddress((const GLubyte*)"glXSwapIntervalEXT");
     }
-    if(glXSwapIntervalEXT) {
+    if(glXSwapIntervalEXT && win) {
         glXSwapIntervalEXT(dpy,win->srfc(),interval);
     }
 }
@@ -286,5 +290,8 @@ EGLNativeSurfaceType createPixmapSurface(EGLNativePixmapType pix){
     return new SrfcInfo(pix,SrfcInfo::PIXMAP);
 }
 
-void destroySurface(EGLNativeSurfaceType srfc){};
+void destroySurface(EGLNativeSurfaceType srfc){
+    delete srfc;
+};
+
 };

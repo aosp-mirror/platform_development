@@ -399,11 +399,13 @@ bool validNativeWin(EGLNativeDisplayType dpy,EGLNativeWindowType win) {
 }
 
 bool validNativeWin(EGLNativeDisplayType dpy,EGLNativeSurfaceType win) {
+    if (!win) return false;
     return validNativeWin(dpy,win->getHwnd());
 }
 
 bool validNativePixmap(EGLNativeDisplayType dpy,EGLNativeSurfaceType pix) {
     BITMAP bm;
+    if (!pix) return false;
     return GetObject(pix->getBmap(), sizeof(BITMAP), (LPSTR)&bm);
 }
 
@@ -465,6 +467,7 @@ EGLNativeSurfaceType createPbufferSurface(EGLNativeDisplayType display,EglConfig
 }
 
 bool releasePbuffer(EGLNativeDisplayType display,EGLNativeSurfaceType pb) {
+    if (!pb) return false;
     if(!s_wglExtProcs->wglReleasePbufferDCARB || !s_wglExtProcs->wglDestroyPbufferARB) return false;
     if(!s_wglExtProcs->wglReleasePbufferDCARB(pb->getPbuffer(),pb->getDC()) || !s_wglExtProcs->wglDestroyPbufferARB(pb->getPbuffer())){
         DWORD err = GetLastError();
@@ -524,7 +527,7 @@ bool makeCurrent(EGLNativeDisplayType display,EglSurface* read,EglSurface* draw,
 }
 
 void swapBuffers(EGLNativeDisplayType display,EGLNativeSurfaceType srfc){
-    if(!SwapBuffers(srfc->getDC())) {
+    if(srfc && !SwapBuffers(srfc->getDC())) {
         DWORD err = GetLastError();
     }
 }
