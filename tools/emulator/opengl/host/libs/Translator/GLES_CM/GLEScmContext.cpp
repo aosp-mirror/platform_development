@@ -285,6 +285,7 @@ void GLEScmContext::initExtensionString() {
         if (max_palette_matrices>=32 && max_vertex_units>=4)
             *s_glExtensions+="GL_OES_extended_matrix_palette ";
     }
+    *s_glExtensions+="GL_OES_compressed_ETC1_RGB8_texture ";
 }
 
 int GLEScmContext::getMaxTexUnits() {
