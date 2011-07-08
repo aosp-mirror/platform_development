@@ -26,18 +26,22 @@ glCompressedTexSubImage2D
 #void glDeleteBuffers(GLsizei n, GLuint *buffers)
 glDeleteBuffers
 	len buffers (n * sizeof(GLuint))
+    param_check n if(n<0){ ctx->setError(GL_INVALID_VALUE); return; } 
 
 #void glDeleteFramebuffers(GLsizei n, GLuint *framebuffers)
 glDeleteFramebuffers
 	len framebuffers (n * sizeof(GLuint))
+    param_check n if(n<0){ ctx->setError(GL_INVALID_VALUE); return; } 
 
 #void glDeleteRenderbuffers(GLsizei n, GLuint *renderbuffers)
 glDeleteRenderbuffers
 	len renderbuffers (n * sizeof(GLuint))
+    param_check n if(n<0){ ctx->setError(GL_INVALID_VALUE); return; } 
 
 #void glDeleteTextures(GLsizei n, GLuint *textures)
 glDeleteTextures
 	len textures (n * sizeof(GLuint))
+    param_check n if(n<0){ ctx->setError(GL_INVALID_VALUE); return; } 
 
 #void glDrawElements(GLenum mode, GLsizei count, GLenum type, GLvoid *indices)
 glDrawElements
@@ -47,21 +51,25 @@ glDrawElements
 glGenBuffers
 	len buffers (n * sizeof(GLuint))
 	dir buffers out
+    param_check n if(n<0){ ctx->setError(GL_INVALID_VALUE); return; } 
 
 #void glGenFramebuffers(GLsizei n, GLuint *framebuffers)
 glGenFramebuffers
 	len framebuffers (n * sizeof(GLuint))
 	dir framebuffers out
+    param_check n if(n<0){ ctx->setError(GL_INVALID_VALUE); return; } 
 
 #void glGenRenderbuffers(GLsizei n, GLuint *renderbuffers)
 glGenRenderbuffers
 	len renderbuffers (n * sizeof(GLuint))
 	dir renderbuffers out
+    param_check n if(n<0){ ctx->setError(GL_INVALID_VALUE); return; } 
 
 #void glGenTextures(GLsizei n, GLuint *textures)
 glGenTextures
 	len textures (n * sizeof(GLuint))
 	dir textures out
+    param_check n if(n<0){ ctx->setError(GL_INVALID_VALUE); return; } 
 
 #void glGetActiveAttrib(GLuint program, GLuint index, GLsizei bufsize, GLsizei *length, GLint *size, GLenum *type, GLchar *name)
 glGetActiveAttrib
@@ -330,11 +338,13 @@ glCompressedTexSubImage3DOES
 #void glDeleteVertexArraysOES(GLsizei n, GLuint *arrays)
 glDeleteVertexArraysOES
 	len arrays (n * sizeof(GLuint))
+    param_check n if(n<0){ ctx->setError(GL_INVALID_VALUE); return; } 
 
 #void glGenVertexArraysOES(GLsizei n, GLuint *arrays)
 glGenVertexArraysOES
 	len arrays (n * sizeof(GLuint))
 	dir arrays out
+    param_check n if(n<0){ ctx->setError(GL_INVALID_VALUE); return; } 
 
 
 #void glDiscardFramebufferEXT(GLenum target, GLsizei numAttachments, GLenum *attachments)

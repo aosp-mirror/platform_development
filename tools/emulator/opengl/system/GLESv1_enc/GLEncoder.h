@@ -34,16 +34,21 @@ public:
     void setInitialized(){ m_initialized = true; };
     bool isInitialized(){ return m_initialized; };
 
+    virtual void setError(GLenum error){ m_error = error; };
+    virtual GLenum getError() { return m_error; };
+
 private:
 
     bool    m_initialized;
     GLClientState *m_state;
+    GLenum  m_error;
     FixedBuffer m_fixedBuffer;
     GLint *m_compressedTextureFormats;
     GLint m_num_compressedTextureFormats;
 
     GLint *getCompressedTextureFormats();
     // original functions;
+    glGetError_client_proc_t    m_glGetError_enc;
     glGetIntegerv_client_proc_t m_glGetIntegerv_enc;
     glGetFloatv_client_proc_t m_glGetFloatv_enc;
     glGetFixedv_client_proc_t m_glGetFixedv_enc;
@@ -69,6 +74,7 @@ private:
     glFlush_client_proc_t m_glFlush_enc;
 
     // statics
+    static GLenum s_glGetError(void * self);
     static void s_glGetIntegerv(void *self, GLenum pname, GLint *ptr);
     static void s_glGetBooleanv(void *self, GLenum pname, GLboolean *ptr);
     static void s_glGetFloatv(void *self, GLenum pname, GLfloat *ptr);

@@ -165,6 +165,12 @@ int ApiGen::genContext(const std::string & filename, SideType side)
     // init function
     fprintf(fp, "\tint initDispatchByName( void *(*getProc)(const char *name, void *userData), void *userData);\n");
 
+    //client site set error virtual func
+    if (side == CLIENT_SIDE) {
+        fprintf(fp, "\tvirtual void setError(unsigned int  error){};\n");
+        fprintf(fp, "\tvirtual unsigned int getError(){ return 0; };\n");
+    }
+
     fprintf(fp, "};\n");
 
     fprintf(fp, "\n#endif\n");
@@ -222,6 +228,13 @@ int ApiGen::genEntryPoints(const std::string & filename, SideType side)
 
         bool shouldReturn = !e->retval().isVoid();
         bool shouldCallWithContext = (side == CLIENT_SIDE);
+        //param check
+        if (shouldCallWithContext) {
+            for (size_t j=0; j<e->vars().size(); j++) {
+                if (e->vars()[j].paramCheckExpression() != "") 
+                    fprintf(fp, "\t%s\n", e->vars()[j].paramCheckExpression().c_str());
+            }
+        }
         fprintf(fp, "\t %sctx->%s(%s",
                 shouldReturn ? "return " : "",
                 e->name().c_str(),

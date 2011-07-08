@@ -99,10 +99,12 @@ glCompressedTexSubImage2D
 #void glDeleteBuffers(GLsizei n, GLuint *buffers)
 glDeleteBuffers
 	len buffers (n * sizeof(GLuint))
+    param_check n if(n<0){ ctx->setError(GL_INVALID_VALUE); return; } 
 
 #void glDeleteTextures(GLsizei n, GLuint *textures)
 glDeleteTextures
 	len textures (n * sizeof(GLuint))
+    param_check n if(n<0){ ctx->setError(GL_INVALID_VALUE); return; } 
 
 #this function is marked as unsupported - it shouldn't be called directly
 #instead it translated into - glDrawDirectElements and glDrawIndirectElements
@@ -129,11 +131,13 @@ glGetBufferParameteriv
 glGenBuffers
 	len buffers (n * sizeof(GLuint))
 	dir buffers out
+    param_check n if(n<0){ ctx->setError(GL_INVALID_VALUE); return; } 
 
 #void glGenTextures(GLsizei n, GLuint *textures)
 glGenTextures
 	len textures (n * sizeof(GLuint))
 	dir textures out
+    param_check n if(n<0){ ctx->setError(GL_INVALID_VALUE); return; } 
 
 #void glGetFixedv(GLenum pname, GLfixed *params)
 glGetFixedv
@@ -465,11 +469,13 @@ glTexParameterxvOES
 glDeleteRenderbuffersOES
 	dir renderbuffers in
 	len renderbuffers (n * sizeof(GLuint))
+    param_check n if(n<0){ ctx->setError(GL_INVALID_VALUE); return; } 
 
 #void glGenRenderbuffersOES(GLsizei n, GLuint *renderbuffers)
 glGenRenderbuffersOES
 	dir renderbuffers in
 	len renderbuffers (n * sizeof(GLuint))
+    param_check n if(n<0){ ctx->setError(GL_INVALID_VALUE); return; } 
 
 #void glGetRenderbufferParameterivOES(GLenum target, GLenum pname, GLint *params)
 glGetRenderbufferParameterivOES
@@ -480,11 +486,13 @@ glGetRenderbufferParameterivOES
 glDeleteFramebuffersOES
 	dir framebuffers in
 	len framebuffers (n * sizeof(GLuint))
+    param_check n if(n<0){ ctx->setError(GL_INVALID_VALUE); return; } 
 
 #void glGenFramebuffersOES(GLsizei n, GLuint *framebuffers)
 glGenFramebuffersOES
 	dir framebuffers out
 	len framebuffers (n * sizeof(GLuint))
+    param_check n if(n<0){ ctx->setError(GL_INVALID_VALUE); return; } 
 
 #void glGetFramebufferAttachmentParameterivOES(GLenum target, GLenum attachment, GLenum pname, GLint *params)
 glGetFramebufferAttachmentParameterivOES
@@ -559,11 +567,13 @@ glGetTexGenxvOES
 glDeleteVertexArraysOES
 	dir arrays in
 	len arrays (n * sizeof(GLuint))
+    param_check n if(n<0){ ctx->setError(GL_INVALID_VALUE); return; } 
 
 #void glGenVertexArraysOES(GLsizei n, GLuint *arrays)
 glGenVertexArraysOES
 	dir arrays out
 	len arrays (n * sizeof(GLuint))
+    param_check n if(n<0){ ctx->setError(GL_INVALID_VALUE); return; } 
 
 #void glDiscardFramebufferEXT(GLenum target, GLsizei numAttachments, const GLenum *attachments)
 glDiscardFramebufferEXT
@@ -590,11 +600,13 @@ glMultiDrawElementsSUN
 glDeleteFencesNV
 	dir fences in
 	len fences (n * sizeof(GLuint))
+    param_check n if(n<0){ ctx->setError(GL_INVALID_VALUE); return; } 
 
 #void glGenFencesNV(GLsizei n, GLuint *fences)
 glGenFencesNV
 	dir fences in
 	len fences (n * sizeof(GLuint))
+    param_check n if(n<0){ ctx->setError(GL_INVALID_VALUE); return; } 
 
 #void glGetFenceivNV(GLuint fence, GLenum pname, GLint *params)
 glGetFenceivNV
