@@ -36,6 +36,18 @@ static GLubyte *gExtensionsString= (GLubyte *) ""; // no extensions at this poin
         return ret; \
     }
 
+GLenum GLEncoder::s_glGetError(void * self)
+{
+    GLEncoder *ctx = (GLEncoder *)self;
+    GLenum err = ctx->getError();
+    if(err != GL_NO_ERROR) {
+        ctx->setError(GL_NO_ERROR);
+        return err;
+    }
+
+    return ctx->m_glGetError_enc(self);
+
+}
 
 GLint * GLEncoder::getCompressedTextureFormats()
 {
@@ -453,6 +465,7 @@ GLEncoder::GLEncoder(IOStream *stream) : gl_encoder_context_t(stream)
 {
     m_initialized = false;
     m_state = NULL;
+    m_error = GL_NO_ERROR;
     m_num_compressedTextureFormats = 0;
     m_compressedTextureFormats = NULL;
     // overrides;
@@ -481,6 +494,7 @@ GLEncoder::GLEncoder(IOStream *stream) : gl_encoder_context_t(stream)
     m_glDrawElements_enc = set_glDrawElements(s_glDrawElements);
     set_glGetString(s_glGetString);
     set_glFinish(s_glFinish);
+    m_glGetError_enc = set_glGetError(s_glGetError);
 
 }
 
