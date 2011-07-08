@@ -106,6 +106,9 @@ public:
     bool isTextureUnitEnabled(GLenum unit);
     void setTextureEnabled(TextureTarget target, GLenum enable) {m_tex2DBind[m_activeTexture].enabled[target] = enable; };
     bool isInitialized() { return m_initialized; };
+    void setUnpackAlignment(GLint param){ m_unpackAlignment = param; };
+    GLint getUnpackAlignment(){ return m_unpackAlignment; };
+    void  doCompressedTexImage2D(GLenum target, GLint level, GLenum internalformat, GLsizei width, GLsizei height, GLint border, GLsizei imageSize, const GLvoid* data);
 
     bool  isArrEnabled(GLenum);
     void  enableArr(GLenum arr,bool enable);
@@ -153,6 +156,7 @@ protected:
     static GLDispatch     s_glDispatch;
     bool                  m_initialized;
     unsigned int          m_activeTexture;
+    GLint                 m_unpackAlignment;
     ArraysMap             m_map;
     static std::string*   s_glExtensions;
     static GLSupport      s_glSupport;

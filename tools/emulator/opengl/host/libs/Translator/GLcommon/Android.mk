@@ -16,6 +16,8 @@ LOCAL_SRC_FILES :=           \
      GLESbuffer.cpp          \
      DummyGLfuncs.cpp        \
      RangeManip.cpp          \
+     TextureUtils.cpp        \
+     etc1.cpp                \
      objectNameManager.cpp
 
 

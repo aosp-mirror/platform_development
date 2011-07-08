@@ -35,7 +35,6 @@ static bool texCoordPointerParams(GLint size,GLsizei stride);
 
 static bool texEnv(GLenum target,GLenum pname);
 static bool texCompImgFrmt(GLenum format);
-static bool texImgDim(GLsizei width,GLsizei height,int maxTexSize);
 
 static bool renderbufferInternalFrmt(GLEScontext * ctx, GLenum internalformat);
 static bool stencilOp(GLenum param);
