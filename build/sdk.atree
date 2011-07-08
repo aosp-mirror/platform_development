@@ -66,10 +66,12 @@ out/target/common/obj/PACKAGING/android_jar_intermediates/android.jar platforms/
 obj/framework.aidl platforms/${PLATFORM_NAME}/framework.aidl
 
 # System images + Kernel
-system.img                              platforms/${PLATFORM_NAME}/images/system.img
-ramdisk.img                             platforms/${PLATFORM_NAME}/images/ramdisk.img
-userdata.img                            platforms/${PLATFORM_NAME}/images/userdata.img
-prebuilt/android-arm/kernel/kernel-qemu platforms/${PLATFORM_NAME}/images/kernel-qemu
+system.img                              platforms/${PLATFORM_NAME}/images/${TARGET_CPU_ABI}/system.img
+ramdisk.img                             platforms/${PLATFORM_NAME}/images/${TARGET_CPU_ABI}/ramdisk.img
+userdata.img                            platforms/${PLATFORM_NAME}/images/${TARGET_CPU_ABI}/userdata.img
+system/build.prop platforms/${PLATFORM_NAME}/images/${TARGET_CPU_ABI}/build.prop
+
+# Note: the kernel image is handled by sdk-android-<abi>.atree now.
 
 # emulator skins from sdk.git
 development/tools/emulator/skins/QVGA      platforms/${PLATFORM_NAME}/skins/QVGA
