@@ -30,6 +30,7 @@ public:
     const GLvoid* getArrayData() const;
     GLvoid*       getBufferData() const;
     GLuint        getBufferName() const;
+    GLboolean     getNormalized() const { return m_normalize ? GL_TRUE : GL_FALSE; }
     const GLvoid* getData() const;
     unsigned int  getBufferOffset() const;
     void          redirectPointerData();
