@@ -23,7 +23,7 @@
 #include "GLEScmContext.h"
 #include "GLEScmValidate.h"
 #include "GLEScmUtils.h"
-#include "TextureUtils.h"
+#include <GLcommon/TextureUtils.h>
 
 #include <stdio.h>
 #include <GLcommon/gldefs.h>
@@ -426,22 +426,11 @@ GL_API void GL_APIENTRY  glColorPointer( GLint size, GLenum type, GLsizei stride
 
 GL_API void GL_APIENTRY  glCompressedTexImage2D( GLenum target, GLint level, GLenum internalformat, GLsizei width, GLsizei height, GLint border, GLsizei imageSize, const GLvoid *data) {
     GET_CTX_CM()
-    SET_ERROR_IF(!(GLEScmValidate::texCompImgFrmt(internalformat) && GLEScmValidate::textureTargetEx(target)),GL_INVALID_ENUM);
-    SET_ERROR_IF(level > log2(ctx->getMaxTexSize())|| border !=0 || level > 0 || !GLEScmValidate::texImgDim(width,height,ctx->getMaxTexSize()+2),GL_INVALID_VALUE)
+    SET_ERROR_IF(!GLEScmValidate::textureTargetEx(target),GL_INVALID_ENUM);
 
-    int nMipmaps = -level + 1;
-    GLsizei tmpWidth  = width;
-    GLsizei tmpHeight = height;
-
-    for(int i = 0; i < nMipmaps ; i++)
-    {
-       GLenum uncompressedFrmt;
-       unsigned char* uncompressed = uncompressTexture(internalformat,uncompressedFrmt,width,height,imageSize,data,i);
-       ctx->dispatcher().glTexImage2D(target,i,uncompressedFrmt,width,height,border,uncompressedFrmt,GL_UNSIGNED_BYTE,uncompressed);
-       tmpWidth/=2;
-       tmpHeight/=2;
-       delete uncompressed;
-    }
+    ctx->doCompressedTexImage2D(target, level, internalformat,
+                                width, height, border,
+                                imageSize, data);
 }
 
 GL_API void GL_APIENTRY  glCompressedTexSubImage2D( GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLsizei imageSize, const GLvoid *data) {
@@ -1235,6 +1224,9 @@ GL_API void GL_APIENTRY  glOrthox( GLfixed left, GLfixed right, GLfixed bottom, 
 
 GL_API void GL_APIENTRY  glPixelStorei( GLenum pname, GLint param) {
     GET_CTX()
+    SET_ERROR_IF(!(pname == GL_PACK_ALIGNMENT || pname == GL_UNPACK_ALIGNMENT),GL_INVALID_ENUM);
+    SET_ERROR_IF(!((param==1)||(param==2)||(param==4)||(param==8)), GL_INVALID_VALUE);
+    ctx->setUnpackAlignment(param);
     ctx->dispatcher().glPixelStorei(pname,param);
 }
 

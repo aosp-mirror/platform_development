@@ -159,3 +159,10 @@ bool GLESvalidate::renderbufferParams(GLenum pname){
     return false;
 }
 
+bool GLESvalidate::texImgDim(GLsizei width,GLsizei height,int maxTexSize) {
+
+ if( width < 0 || height < 0 || width > maxTexSize || height > maxTexSize)
+    return false;
+ return isPowerOf2(width) && isPowerOf2(height);
+}
+
