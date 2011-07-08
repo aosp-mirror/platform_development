@@ -11,6 +11,7 @@ GL2Encoder::GL2Encoder(IOStream *stream) : gl2_encoder_context_t(stream)
 {
     m_initialized = false;
     m_state = NULL;
+    m_error = GL_NO_ERROR;
     m_num_compressedTextureFormats = 0;
     m_compressedTextureFormats = NULL;
     //overrides
@@ -31,11 +32,25 @@ GL2Encoder::GL2Encoder(IOStream *stream) : gl2_encoder_context_t(stream)
     m_glGetVertexAttribPointerv = set_glGetVertexAttribPointerv(s_glGetVertexAttribPointerv);
     set_glShaderSource(s_glShaderSource);
     set_glFinish(s_glFinish);
+    m_glGetError_enc = set_glGetError(s_glGetError);
 }
 
 GL2Encoder::~GL2Encoder()
 {
     delete m_compressedTextureFormats;
+}
+
+GLenum GL2Encoder::s_glGetError(void * self)
+{
+    GL2Encoder *ctx = (GL2Encoder *)self;
+    GLenum err = ctx->getError();
+    if(err != GL_NO_ERROR) {
+        ctx->setError(GL_NO_ERROR);
+        return err;
+    }
+
+    return ctx->m_glGetError_enc(self);
+
 }
 
 void GL2Encoder::s_glFlush(void *self)
