@@ -263,8 +263,10 @@ class AdbInterface:
     inst_command_string = self._BuildInstrumentationCommand(
         package_name, runner_name, no_window_animation=no_window_animation,
         raw_mode=raw_mode, instrumentation_args=instrumentation_args)
-    command_string = "adb %s shell %s" % (self._target_arg, inst_command_string)
-    return command_string
+    return self.PreviewShellCommand(inst_command_string)
+
+  def PreviewShellCommand(self, cmd):
+    return "adb %s shell %s" % (self._target_arg, cmd)
 
   def _BuildInstrumentationCommand(
       self, package, runner_name, no_window_animation=False, profile=False,
