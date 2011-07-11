@@ -1235,6 +1235,7 @@ GL_APICALL void  GL_APIENTRY glUseProgram(GLuint program){
     GET_CTX();
     if(thrd->shareGroup.Ptr()) {
         const GLuint globalProgramName = thrd->shareGroup->getGlobalName(SHADER,program);
+        SET_ERROR_IF(program!=0 && globalProgramName==0,GL_INVALID_VALUE);
         ctx->dispatcher().glUseProgram(globalProgramName);
     }
 }
