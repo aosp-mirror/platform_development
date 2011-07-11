@@ -31,6 +31,7 @@ static bool drawType(GLenum mode);
 static bool textureTarget(GLenum target);
 static bool textureTargetLimited(GLenum target);
 static bool textureTargetEx(GLenum target);
+static bool texImgDim(GLsizei width,GLsizei height,int maxTexSize);
 static bool blendEquationMode(GLenum mode);
 static bool framebufferTarget(GLenum target);
 static bool framebufferAttachment(GLenum attachment);

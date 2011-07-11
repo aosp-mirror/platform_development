@@ -13,7 +13,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-#include "TextureUtils.h"
+#include "GLcommon/TextureUtils.h"
 #include <stdio.h>
 
 #define MAX_SUPPORTED_PALLETE 10

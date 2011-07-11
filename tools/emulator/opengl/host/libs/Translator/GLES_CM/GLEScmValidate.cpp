@@ -199,15 +199,6 @@ bool GLEScmValidate::texCompImgFrmt(GLenum format) {
     return false;
 }
 
-
-bool GLEScmValidate::texImgDim(GLsizei width,GLsizei height,int maxTexSize) {
-
- if( width < 0 || height < 0 || width > maxTexSize || height > maxTexSize)
-    return false;
- return isPowerOf2(width) && isPowerOf2(height);
-}
-
-
 bool GLEScmValidate::blendDst(GLenum d) {
    switch(d) {
     case GL_ZERO:
