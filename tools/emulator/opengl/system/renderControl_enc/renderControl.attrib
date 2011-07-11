@@ -28,6 +28,7 @@ rcChooseConfig
     dir attribs in
 	len attribs attribs_size
 	dir configs out
+    var_flag configs nullAllowed
 	len configs configs_size*sizeof(uint32_t)
 
 rcReadColorBuffer
