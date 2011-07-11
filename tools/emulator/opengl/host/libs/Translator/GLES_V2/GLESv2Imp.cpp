@@ -638,7 +638,9 @@ GL_APICALL int GL_APIENTRY glGetAttribLocation(GLuint program, const GLchar* nam
 
 GL_APICALL void  GL_APIENTRY glGetBooleanv(GLenum pname, GLboolean* params){
     GET_CTX();
-    ctx->dispatcher().glGetBooleanv(pname,params);
+    if (!ctx->glGetBooleanv(pname,params)) {
+        ctx->dispatcher().glGetBooleanv(pname,params);
+    }
 }
 
 GL_APICALL void  GL_APIENTRY glGetBufferParameteriv(GLenum target, GLenum pname, GLint* params){
@@ -669,12 +671,55 @@ GL_APICALL GLenum GL_APIENTRY glGetError(void){
 
 GL_APICALL void  GL_APIENTRY glGetFloatv(GLenum pname, GLfloat* params){
     GET_CTX();
-    ctx->dispatcher().glGetFloatv(pname,params);
+    if (ctx->glGetFloatv(pname,params)) {
+        return;
+    }
+    GLint i;
+    switch (pname) {
+    case GL_CURRENT_PROGRAM:
+    case GL_FRAMEBUFFER_BINDING:
+    case GL_RENDERBUFFER_BINDING:
+        glGetIntegerv(pname,&i);
+        *params = (GLfloat)i;
+        break;
+
+    default:
+        ctx->dispatcher().glGetFloatv(pname,params);
+    }
 }
 
 GL_APICALL void  GL_APIENTRY glGetIntegerv(GLenum pname, GLint* params){
     GET_CTX();
-    ctx->dispatcher().glGetIntegerv(pname,params);
+
+    if (ctx->glGetIntegerv(pname,params))
+    {
+        return;
+    }
+  
+    GLint i;
+
+    switch (pname) {
+    case GL_CURRENT_PROGRAM:
+        if (thrd->shareGroup.Ptr()) {
+            ctx->dispatcher().glGetIntegerv(pname,&i);
+            *params = thrd->shareGroup->getLocalName(SHADER,i);
+        }
+        break;
+    case GL_FRAMEBUFFER_BINDING:
+        if (thrd->shareGroup.Ptr()) {
+            ctx->dispatcher().glGetIntegerv(pname,&i);
+            *params = thrd->shareGroup->getLocalName(FRAMEBUFFER,i);
+        }
+        break;
+    case GL_RENDERBUFFER_BINDING:
+        if (thrd->shareGroup.Ptr()) {
+            ctx->dispatcher().glGetIntegerv(pname,&i);
+            *params = thrd->shareGroup->getLocalName(RENDERBUFFER,i);
+        }
+        break;
+    default:
+        ctx->dispatcher().glGetIntegerv(pname,params);
+    }
 }
 
 GL_APICALL void  GL_APIENTRY glGetFramebufferAttachmentParameteriv(GLenum target, GLenum attachment, GLenum pname, GLint* params){
