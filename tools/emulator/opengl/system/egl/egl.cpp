@@ -808,7 +808,12 @@ EGLBoolean eglQuerySurface(EGLDisplay dpy, EGLSurface eglSurface, EGLint attribu
         case EGL_SWAP_BEHAVIOR:
             *value = surface->getSwapBehavior();
             break;
-            //TODO: complete other attributes
+        case EGL_LARGEST_PBUFFER:
+            // not modified for a window or pixmap surface
+            // and we ignore it when creating a PBuffer surface (default is EGL_FALSE)
+            if (surface->getSurfaceType() & EGL_PBUFFER_BIT) *value = EGL_FALSE;
+            break;
+        //TODO: complete other attributes
         default:
             LOGE("eglQuerySurface %x  EGL_BAD_ATTRIBUTE", attribute);
             ret = setErrorFunc(EGL_BAD_ATTRIBUTE, EGL_FALSE);
@@ -987,9 +992,8 @@ EGLBoolean eglMakeCurrent(EGLDisplay dpy, EGLSurface draw, EGLSurface read, EGLC
     //
     EGLThreadInfo *tInfo = getEGLThreadInfo();
     if (tInfo->currentContext == context &&
-        context &&
-        context->draw == draw &&
-        context->read == read) {
+        (context == NULL ||
+        (context && context->draw == draw && context->read == read))) {
         return EGL_TRUE;
     }
 

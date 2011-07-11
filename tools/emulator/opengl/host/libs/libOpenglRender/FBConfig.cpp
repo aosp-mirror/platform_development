@@ -268,14 +268,14 @@ int FBConfig::chooseConfig(FrameBuffer *fb, EGLint * attribs, uint32_t * configs
     //
     uint32_t nVerifiedCfgs = 0;
     for (int matchedIdx=0; matchedIdx<nConfigs; matchedIdx++) {
-        if ((configs_size > 0) && (nVerifiedCfgs >= configs_size)) break; //We have enouhgt configs
+        if ((configs != NULL) && (configs_size > 0) && (nVerifiedCfgs >= configs_size)) break; //We have enouhgt configs
         int sCfgId;
         s_egl.eglGetConfigAttrib(dpy, matchedConfigs[matchedIdx], EGL_CONFIG_ID, &sCfgId);
         for (int fbIdx=0; fbIdx<s_numConfigs; fbIdx++) {
             int dCfgId = s_fbConfigs[fbIdx]->m_attribValues[4]; //CONFIG_ID
             if (sCfgId == dCfgId) {
                 //This config matches the requested attributes and filtered into fbConfigs, so we're happy with it
-                if (nVerifiedCfgs < configs_size) {
+                if (configs && nVerifiedCfgs < configs_size) {
                     configs[nVerifiedCfgs] = fbIdx;
                 }
                 nVerifiedCfgs++;
