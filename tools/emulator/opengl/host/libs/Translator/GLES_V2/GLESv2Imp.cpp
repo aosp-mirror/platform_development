@@ -846,7 +846,7 @@ GL_APICALL void  GL_APIENTRY glGetVertexAttribfv(GLuint index, GLenum pname, GLf
             ctx->setGLerror(GL_INVALID_ENUM);
         }
     } else {
-        ctx->setGLerror(GL_INVALID_ENUM);
+        ctx->setGLerror(GL_INVALID_VALUE);
     }
 }
 
@@ -880,7 +880,7 @@ GL_APICALL void  GL_APIENTRY glGetVertexAttribiv(GLuint index, GLenum pname, GLi
             ctx->setGLerror(GL_INVALID_ENUM);
         }
     } else {
-        ctx->setGLerror(GL_INVALID_ENUM);
+        ctx->setGLerror(GL_INVALID_VALUE);
     }
 }
 
@@ -893,7 +893,7 @@ GL_APICALL void  GL_APIENTRY glGetVertexAttribPointerv(GLuint index, GLenum pnam
     if(p) {
         *pointer = const_cast<void *>( p->getBufferData());
     } else {
-        ctx->setGLerror(GL_INVALID_ENUM);
+        ctx->setGLerror(GL_INVALID_VALUE);
     }
 }
 
