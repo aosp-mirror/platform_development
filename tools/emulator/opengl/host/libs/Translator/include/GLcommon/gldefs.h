@@ -25,3 +25,5 @@ typedef double      GLdouble;   /* double precision float */
 #define GL_INT                0x1404
 #define GL_HALF_FLOAT_NV      0x140B
 #define GL_HALF_FLOAT         0x140B
+#define GL_VERTEX_PROGRAM_POINT_SIZE 0x8642
+#define GL_POINT_SPRITE       0x8861

@@ -26,6 +26,7 @@
 #include <GLES2/gl2ext.h>
 #include <GLcommon/TranslatorIfaces.h>
 #include <GLcommon/ThreadInfo.h>
+#include <GLcommon/gldefs.h>
 #include "GLESv2Context.h"
 #include "GLESv2Validate.h"
 #include "ShaderParser.h"
@@ -453,7 +454,20 @@ GL_APICALL void  GL_APIENTRY glDrawArrays(GLenum mode, GLint first, GLsizei coun
 
     GLESConversionArrays tmpArrs;
     ctx->setupArraysPointers(tmpArrs,first,count,0,NULL,true);
+
+    //Enable texture generation for GL_POINTS and gl_PointSize shader variable
+    //GLES2 assumes this is enabled by default, we need to set this state for GL
+    if (mode==GL_POINTS) {
+        ctx->dispatcher().glEnable(GL_POINT_SPRITE);
+        ctx->dispatcher().glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
+    }
+
     ctx->dispatcher().glDrawArrays(mode,first,count);
+
+    if (mode==GL_POINTS) {
+        ctx->dispatcher().glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
+        ctx->dispatcher().glDisable(GL_POINT_SPRITE);
+    }
 }
 
 GL_APICALL void  GL_APIENTRY glDrawElements(GLenum mode, GLsizei count, GLenum type, const GLvoid* elementsIndices){
@@ -469,7 +483,19 @@ GL_APICALL void  GL_APIENTRY glDrawElements(GLenum mode, GLsizei count, GLenum t
 
     GLESConversionArrays tmpArrs;
     ctx->setupArraysPointers(tmpArrs,0,count,type,indices,false);
+    
+    //See glDrawArrays
+    if (mode==GL_POINTS) {
+        ctx->dispatcher().glEnable(GL_POINT_SPRITE);
+        ctx->dispatcher().glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
+    }
+
     ctx->dispatcher().glDrawElements(mode,count,type,indices);
+
+    if (mode==GL_POINTS) {
+        ctx->dispatcher().glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
+        ctx->dispatcher().glDisable(GL_POINT_SPRITE);
+    }
 }
 
 GL_APICALL void  GL_APIENTRY glEnable(GLenum cap){
