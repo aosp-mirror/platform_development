@@ -538,29 +538,59 @@ bool GLEScontext::glGetBooleanv(GLenum pname, GLboolean *params)
 
 bool GLEScontext::glGetFixedv(GLenum pname, GLfixed *params)
 {
-    GLint iParam;
+    bool result = false;
+    GLint numParams = 1;
 
-    if(glGetIntegerv(pname, &iParam))
+    switch(pname)
     {
-        *params = I2X(iParam);
-        return true;
+    case GL_COMPRESSED_TEXTURE_FORMATS:
+        glGetIntegerv(GL_NUM_COMPRESSED_TEXTURE_FORMATS, &numParams);
+        break;
+    default:
+        numParams=1;
     }
 
-    return false;
+    GLint* iParams = new GLint[numParams];
+    if (numParams>0 && glGetIntegerv(pname,iParams)) {
+        while(numParams >= 0)
+        {
+            params[numParams] = I2X(iParams[numParams]);
+            numParams--;
+        }
+        result = true;
+    }
+    delete [] iParams;
+
+    return result;
 }
 
 bool GLEScontext::glGetFloatv(GLenum pname, GLfloat *params)
 {
-    GLint iParam;
+    bool result = false;
+    GLint numParams = 1;
 
-    if(glGetIntegerv(pname, &iParam))
+    switch(pname)
     {
-        *params = (GLfloat)iParam;
-        return true;
+    case GL_COMPRESSED_TEXTURE_FORMATS:
+        glGetIntegerv(GL_NUM_COMPRESSED_TEXTURE_FORMATS, &numParams);
+        break;
+    default:
+        numParams=1;
     }
 
-    return false;
-}
+    GLint* iParams = new GLint[numParams];
+    if (numParams>0 && glGetIntegerv(pname,iParams)) {
+        while(numParams >= 0)
+        {
+            params[numParams] = (GLfloat)iParams[numParams];
+            numParams--;
+        }
+        result = true;
+    }
+    delete [] iParams;
+
+    return result;
+}        
 
 bool GLEScontext::glGetIntegerv(GLenum pname, GLint *params)
 {
@@ -574,8 +604,29 @@ bool GLEScontext::glGetIntegerv(GLenum pname, GLint *params)
             *params = m_elementBuffer;
             break;
 
+        case GL_TEXTURE_BINDING_CUBE_MAP:
         case GL_TEXTURE_BINDING_2D:
             *params = m_tex2DBind[m_activeTexture].texture;
+            break;
+
+        case GL_ACTIVE_TEXTURE:
+            *params = m_activeTexture+GL_TEXTURE0;
+            break;
+
+        case GL_COMPRESSED_TEXTURE_FORMATS:
+            getCompressedFormats(params);
+            break;
+        
+        case GL_NUM_COMPRESSED_TEXTURE_FORMATS:
+            *params = getCompressedFormats(NULL);
+            break;
+        
+        case GL_IMPLEMENTATION_COLOR_READ_TYPE_OES:
+            *params = GL_UNSIGNED_BYTE;
+            break;
+
+        case GL_IMPLEMENTATION_COLOR_READ_FORMAT_OES:
+            *params = GL_RGBA;
             break;
 
         default:

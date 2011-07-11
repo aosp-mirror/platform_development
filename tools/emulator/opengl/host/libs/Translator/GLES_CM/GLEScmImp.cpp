@@ -687,18 +687,14 @@ GL_API void GL_APIENTRY  glGetBooleanv( GLenum pname, GLboolean *params) {
 
     switch(pname)
     {
-    case GL_IMPLEMENTATION_COLOR_READ_TYPE_OES:
-    case GL_IMPLEMENTATION_COLOR_READ_FORMAT_OES:
-    case GL_NUM_COMPRESSED_TEXTURE_FORMATS:
-        glGetIntegerv(pname, &i);
-        *params = (i != 0) ? GL_TRUE : GL_FALSE;
-        break;
-
-    case GL_COMPRESSED_TEXTURE_FORMATS:
-        glGetIntegerv(GL_NUM_COMPRESSED_TEXTURE_FORMATS, &i);
-        *params = (i != 0) ? GL_TRUE : GL_FALSE;
-        break;
-
+    case GL_FRAMEBUFFER_BINDING_OES:
+    case GL_RENDERBUFFER_BINDING_OES:
+        {
+            GLint name;
+            glGetIntegerv(pname,&name);
+            *params = name!=0 ? GL_TRUE: GL_FALSE;
+        }
+    break;
     case GL_TEXTURE_GEN_STR_OES:
         {
             GLboolean state_s = GL_FALSE;
@@ -709,8 +705,7 @@ GL_API void GL_APIENTRY  glGetBooleanv( GLenum pname, GLboolean *params) {
             ctx->dispatcher().glGetBooleanv(GL_TEXTURE_GEN_R,&state_r);
             *params = state_s && state_t && state_r ? GL_TRUE: GL_FALSE;
         }
-        break;
-
+    break;
     default:
         ctx->dispatcher().glGetBooleanv(pname,params);
     }
@@ -766,33 +761,11 @@ GL_API void GL_APIENTRY  glGetFixedv( GLenum pname, GLfixed *params) {
 
     switch(pname)
     {
-    case GL_IMPLEMENTATION_COLOR_READ_TYPE_OES:
-    case GL_IMPLEMENTATION_COLOR_READ_FORMAT_OES:
-    case GL_NUM_COMPRESSED_TEXTURE_FORMATS:
-        glGetIntegerv(pname, &i);
-        *params = I2X(i);
-        nParams = 0;
-        break;
-
-    case GL_COMPRESSED_TEXTURE_FORMATS:
-        glGetIntegerv(GL_NUM_COMPRESSED_TEXTURE_FORMATS, &i);
-        if(i > 0)
-        {
-            GLint* iParams = new GLint[i];
-            glGetIntegerv(GL_COMPRESSED_TEXTURE_FORMATS, iParams);
-            while(i >= 0)
-            {
-                params[i] = I2X(iParams[i]);
-                i--;
-            }
-            delete [] iParams;
-        }
-        break;
-
+    case GL_FRAMEBUFFER_BINDING_OES:
+    case GL_RENDERBUFFER_BINDING_OES:
     case GL_TEXTURE_GEN_STR_OES:
-        ctx->dispatcher().glGetFloatv(GL_TEXTURE_GEN_S,&fParams[0]);
+        glGetFloatv(pname,&fParams[0]);
         break;
-
     default:
         ctx->dispatcher().glGetFloatv(pname,fParams);
     }
@@ -815,34 +788,13 @@ GL_API void GL_APIENTRY  glGetFloatv( GLenum pname, GLfloat *params) {
 
     GLint i;
 
-    switch(pname)
-    {
-    case GL_IMPLEMENTATION_COLOR_READ_TYPE_OES:
-    case GL_IMPLEMENTATION_COLOR_READ_FORMAT_OES:
-    case GL_NUM_COMPRESSED_TEXTURE_FORMATS:
-        glGetIntegerv(pname, &i);
+    switch (pname) {
+    case GL_FRAMEBUFFER_BINDING_OES:
+    case GL_RENDERBUFFER_BINDING_OES:
+    case GL_TEXTURE_GEN_STR_OES:
+        glGetIntegerv(pname,&i);
         *params = (GLfloat)i;
         break;
-
-    case GL_COMPRESSED_TEXTURE_FORMATS:
-        glGetIntegerv(GL_NUM_COMPRESSED_TEXTURE_FORMATS, &i);
-        if(i > 0)
-        {
-            GLint* iParams = new GLint[i];
-            glGetIntegerv(GL_COMPRESSED_TEXTURE_FORMATS, iParams);
-            while(i >= 0)
-            {
-                params[i] = (GLfloat)iParams[i];
-                i--;
-            }
-            delete [] iParams;
-        }
-        break;
-
-    case GL_TEXTURE_GEN_STR_OES:
-        ctx->dispatcher().glGetFloatv(GL_TEXTURE_GEN_S,&params[0]);
-        break;
-
     default:
         ctx->dispatcher().glGetFloatv(pname,params);
     }
@@ -855,29 +807,26 @@ GL_API void GL_APIENTRY  glGetIntegerv( GLenum pname, GLint *params) {
     {
         return;
     }
+    
+    GLint i;
 
     switch(pname)
     {
-    case GL_IMPLEMENTATION_COLOR_READ_TYPE_OES:
-        *params = GL_UNSIGNED_BYTE;
-        break;
-
-    case GL_IMPLEMENTATION_COLOR_READ_FORMAT_OES:
-        *params = GL_RGBA;
-        break;
-
     case GL_TEXTURE_GEN_STR_OES:
         ctx->dispatcher().glGetIntegerv(GL_TEXTURE_GEN_S,&params[0]);
         break;
-
-    case GL_COMPRESSED_TEXTURE_FORMATS:
-        getCompressedFormats(params);
+    case GL_FRAMEBUFFER_BINDING_OES:
+        if (thrd->shareGroup.Ptr()) {
+            ctx->dispatcher().glGetIntegerv(pname,&i);
+            *params = thrd->shareGroup->getLocalName(FRAMEBUFFER,i);
+        }
         break;
-
-    case GL_NUM_COMPRESSED_TEXTURE_FORMATS:
-        *params = getCompressedFormats(NULL);
+    case GL_RENDERBUFFER_BINDING_OES:
+        if (thrd->shareGroup.Ptr()) {
+            ctx->dispatcher().glGetIntegerv(pname,&i);
+            *params = thrd->shareGroup->getLocalName(RENDERBUFFER,i);
+        }
         break;
-
     default:
         ctx->dispatcher().glGetIntegerv(pname,params);
     }
