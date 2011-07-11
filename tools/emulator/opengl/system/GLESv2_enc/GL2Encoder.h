@@ -37,10 +37,14 @@ public:
     void setInitialized(){ m_initialized = true; };
     bool isInitialized(){ return m_initialized; };
 
+    virtual void setError(GLenum error){ m_error = error; };
+    virtual GLenum getError() { return m_error; };
+
 private:
 
     bool    m_initialized;
     GLClientState *m_state;
+    GLenum  m_error;
 
     GLint *m_compressedTextureFormats;
     GLint m_num_compressedTextureFormats;
@@ -49,6 +53,9 @@ private:
     FixedBuffer m_fixedBuffer;
 
     void sendVertexAttributes(GLint first, GLsizei count);
+
+    glGetError_client_proc_t    m_glGetError_enc;
+    static GLenum s_glGetError(void * self);
 
     glFlush_client_proc_t m_glFlush_enc;
     static void s_glFlush(void * self);

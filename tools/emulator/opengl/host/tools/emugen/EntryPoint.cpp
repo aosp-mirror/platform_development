@@ -225,6 +225,24 @@ int EntryPoint::setAttribute(const std::string &line, size_t lc)
         // set the size expression into var
         pos = last;
         v->setLenExpression(line.substr(pos));
+    } else if (token == "param_check") {
+        pos = last;
+        std::string varname = getNextToken(line, pos, &last, WHITESPACE);
+
+        if (varname.size() == 0) {
+            fprintf(stderr, "ERROR: %u: Missing variable name in 'param_check' attribute\n", (unsigned int)lc);
+            return -1;
+        }
+        Var * v = var(varname);
+        if (v == NULL) {
+            fprintf(stderr, "ERROR: %u: variable %s is not a parameter of %s\n",
+                    (unsigned int)lc, varname.c_str(), name().c_str());
+            return -2;
+        }
+        // set the size expression into var
+        pos = last;
+        v->setParamCheckExpression(line.substr(pos));
+
     } else if (token == "dir") {
         pos = last;
         std::string varname = getNextToken(line, pos, &last, WHITESPACE);
