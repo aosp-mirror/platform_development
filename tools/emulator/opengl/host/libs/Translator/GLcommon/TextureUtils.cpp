@@ -45,10 +45,10 @@ void getPaletteInfo(GLenum internalFormat,unsigned int& indexSizeBits,unsigned i
         break;
 
     case GL_PALETTE4_RGBA4_OES:
+    case GL_PALETTE4_RGB5_A1_OES:
         colorFrmt = GL_RGBA;
         /* fall-through */
     case GL_PALETTE4_R5_G6_B5_OES:
-    case GL_PALETTE4_RGB5_A1_OES:
         indexSizeBits = 4;
         colorSizeBytes = 2;
         break;
@@ -65,10 +65,10 @@ void getPaletteInfo(GLenum internalFormat,unsigned int& indexSizeBits,unsigned i
         break;
 
     case GL_PALETTE8_RGBA4_OES:
+    case GL_PALETTE8_RGB5_A1_OES:
         colorFrmt = GL_RGBA;
         /* fall-through */
     case GL_PALETTE8_R5_G6_B5_OES:
-    case GL_PALETTE8_RGB5_A1_OES:
         indexSizeBits = 8;
         colorSizeBytes = 2;
         break;
@@ -100,7 +100,7 @@ Color paletteColor(const unsigned char* pallete,unsigned int index,GLenum format
     case GL_PALETTE4_RGB5_A1_OES:
     case GL_PALETTE8_RGB5_A1_OES:
             s = *((short *)(pallete+index));
-            return Color(((s >> 11) & 0x1f)*255/31,((s >> 6) & 0x1f)*255/31,((s >> 1) & 0x1f)*255/31 ,s & 0x1 * 255);
+            return Color(((s >> 11) & 0x1f)*255/31,((s >> 6) & 0x1f)*255/31,((s >> 1) & 0x1f)*255/31 ,(s & 0x1) * 255);
         default:
             return Color(255,255,255,255);
     }
