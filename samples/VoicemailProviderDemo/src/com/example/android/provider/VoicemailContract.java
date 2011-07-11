@@ -59,13 +59,23 @@ public class VoicemailContract {
 
     /** The authority used by the voicemail provider. */
     public static final String AUTHORITY = "com.android.voicemail";
-
-    /** URI to insert/retrieve all voicemails. */
+    /**
+     * URI to insert/retrieve all voicemails.
+     * @deprecated
+     */
     public static final Uri CONTENT_URI =
             Uri.parse("content://" + AUTHORITY + "/voicemail");
-    /** URI to insert/retrieve voicemails by a given voicemail source. */
+    /**
+     * URI to insert/retrieve voicemails by a given voicemail source.
+     * @deprecated
+     */
     public static final Uri CONTENT_URI_SOURCE =
             Uri.parse("content://" + AUTHORITY + "/voicemail/source/");
+    /**
+     * Parameter key used in the URI to specify the voicemail source package name.
+     * <p> This field must be set in all requests that originate from a voicemail source.
+     */
+    public static final String PARAM_KEY_SOURCE_PACKAGE = "source_package";
 
     // TODO: Move ACTION_NEW_VOICEMAIL to the Intent class.
     /** Broadcast intent when a new voicemail record is inserted. */
@@ -77,14 +87,26 @@ public class VoicemailContract {
      */
     public static final String EXTRA_SELF_CHANGE = "com.android.voicemail.extra.SELF_CHANGE";
 
-    /** The mime type for a collection of voicemails. */
-    public static final String DIR_TYPE =
-            "vnd.android.cursor.dir/voicemails";
+    /**
+     * The mime type for a collection of voicemails.
+     * @deprecated */
+    public static final String DIR_TYPE = "vnd.android.cursor.dir/voicemails";
 
+    /** Defines fields exposed through the /voicemail path of this content provider. */
     public static final class Voicemails implements BaseColumns {
         /** Not instantiable. */
         private Voicemails() {
         }
+
+        /** URI to insert/retrieve voicemails by a given voicemail source. */
+        public static final Uri CONTENT_URI =
+            Uri.parse("content://" + AUTHORITY + "/voicemail");
+        /** URI to insert/retrieve voicemails by a given voicemail source. */
+        public static final Uri CONTENT_URI_SOURCE =
+                Uri.parse("content://" + AUTHORITY + "/voicemail/source/");
+
+        /** The mime type for a collection of voicemails. */
+        public static final String DIR_TYPE = "vnd.android.cursor.dir/voicemails";
 
         /**
          * Phone number of the voicemail sender.
@@ -149,5 +171,101 @@ public class VoicemailContract {
          * @hide
          */
         public static final String _DATA = "_data";
+
+        /**
+         * A convenience method to build voicemail URI specific to a source package by appending
+         * {@link VoicemailContract#PARAM_KEY_SOURCE_PACKAGE} param to the base URI.
+         */
+        public static Uri buildSourceUri(String packageName) {
+            return Voicemails.CONTENT_URI.buildUpon()
+                    .appendQueryParameter(PARAM_KEY_SOURCE_PACKAGE, packageName).build();
+        }
+    }
+
+    /** Defines fields exposed through the /status path of this content provider. */
+    public static final class Status implements BaseColumns {
+        /** URI to insert/retrieve status of voicemail source. */
+        public static final Uri CONTENT_URI = Uri.parse("content://" + AUTHORITY + "/status");
+        /** The mime type for a collection of voicemail source statuses. */
+        public static final String DIR_TYPE = "vnd.android.cursor.dir/voicemail.source.status";
+        /** The mime type for a collection of voicemails. */
+        public static final String ITEM_TYPE = "vnd.android.cursor.item/voicemail.source.status";
+
+        /** Not instantiable. */
+        private Status() {
+        }
+        /**
+         * The package name of the voicemail source. There can only be a one entry per source.
+         * <P>Type: TEXT</P>
+         */
+        public static final String SOURCE_PACKAGE = "source_package";
+        /**
+         * The URI to call to invoke source specific voicemail settings screen. On a user request
+         * to setup voicemail an intent with action VIEW with this URI will be fired by the system.
+         * <P>Type: TEXT</P>
+         */
+        public static final String SETTINGS_URI = "settings_uri";
+        /**
+         * The URI to call when the user requests to directly access the voicemail from the remote
+         * server. In case of an IVR voicemail system this is typically set to the the voicemail
+         * number specified using a tel:/ URI.
+         * <P>Type: TEXT</P>
+         */
+        public static final String VOICEMAIL_ACCESS_URI = "voicemail_access_uri";
+        /**
+         * The configuration state of the voicemail source.
+         * <P> Possible values:
+         * {@link #CONFIGURATION_STATE_OK},
+         * {@link #CONFIGURATION_STATE_NOT_CONFIGURED},
+         * {@link #CONFIGURATION_STATE_CAN_BE_CONFIGURED}
+         * <P>Type: INTEGER</P>
+         */
+        public static final String CONFIGURATION_STATE = "configuration_state";
+        public static final int CONFIGURATION_STATE_OK = 0;
+        public static final int CONFIGURATION_STATE_NOT_CONFIGURED = 1;
+        /**
+         * This state must be used when the source has verified that the current user can be
+         * upgraded to visual voicemail and would like to show a set up invitation message.
+         */
+        public static final int CONFIGURATION_STATE_CAN_BE_CONFIGURED = 2;
+        /**
+         * The data channel state of the voicemail source. This the channel through which the source
+         * pulls voicemail data from a remote server.
+         * <P> Possible values:
+         * {@link #DATA_CHANNEL_STATE_OK},
+         * {@link #DATA_CHANNEL_STATE_NO_CONNECTION}
+         * </P>
+         * <P>Type: INTEGER</P>
+         */
+        public static final String DATA_CHANNEL_STATE = "data_channel_state";
+        public static final int DATA_CHANNEL_STATE_OK = 0;
+        public static final int DATA_CHANNEL_STATE_NO_CONNECTION = 1;
+        /**
+         * The notification channel state of the voicemail source. This is the channel through which
+         * the source gets notified of new voicemails on the remote server.
+         * <P> Possible values:
+         * {@link #NOTIFICATION_CHANNEL_STATE_OK},
+         * {@link #NOTIFICATION_CHANNEL_STATE_NO_CONNECTION},
+         * {@link #NOTIFICATION_CHANNEL_STATE_MESSAGE_WAITING}
+         * </P>
+         * <P>Type: INTEGER</P>
+         */
+        public static final String NOTIFICATION_CHANNEL_STATE = "notification_channel_state";
+        public static final int NOTIFICATION_CHANNEL_STATE_OK = 0;
+        public static final int NOTIFICATION_CHANNEL_STATE_NO_CONNECTION = 1;
+        /**
+         * Use this state when the notification can only tell that there are pending messages on
+         * the server but no details of the sender/time etc are known.
+         */
+        public static final int NOTIFICATION_CHANNEL_STATE_MESSAGE_WAITING = 2;
+
+        /**
+         * A convenience method to build status URI specific to a source package by appending
+         * {@link VoicemailContract#PARAM_KEY_SOURCE_PACKAGE} param to the base URI.
+         */
+        public static Uri buildSourceUri(String packageName) {
+            return Status.CONTENT_URI.buildUpon()
+                    .appendQueryParameter(PARAM_KEY_SOURCE_PACKAGE, packageName).build();
+        }
     }
 }
