@@ -392,8 +392,9 @@ GL_APICALL void  GL_APIENTRY glDeleteTextures(GLsizei n, const GLuint* textures)
 
 GL_APICALL void  GL_APIENTRY glDeleteProgram(GLuint program){
     GET_CTX();
-    if(thrd->shareGroup.Ptr()) {
+    if(program && thrd->shareGroup.Ptr()) {
         const GLuint globalProgramName = thrd->shareGroup->getGlobalName(SHADER,program);
+        SET_ERROR_IF(!globalProgramName,GL_INVALID_VALUE);
         thrd->shareGroup->deleteName(SHADER,program);
         ctx->dispatcher().glDeleteProgram(globalProgramName);
     }
@@ -401,11 +402,13 @@ GL_APICALL void  GL_APIENTRY glDeleteProgram(GLuint program){
 
 GL_APICALL void  GL_APIENTRY glDeleteShader(GLuint shader){
     GET_CTX();
-    if(thrd->shareGroup.Ptr()) {
+    if(shader && thrd->shareGroup.Ptr()) {
         const GLuint globalShaderName = thrd->shareGroup->getGlobalName(SHADER,shader);
+        SET_ERROR_IF(!globalShaderName,GL_INVALID_VALUE);
         thrd->shareGroup->deleteName(SHADER,shader);
         ctx->dispatcher().glDeleteShader(globalShaderName);
     }
+        
 }
 
 GL_APICALL void  GL_APIENTRY glDepthFunc(GLenum func){
