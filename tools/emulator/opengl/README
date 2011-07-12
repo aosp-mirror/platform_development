@@ -24,7 +24,7 @@ Note that emugen is capable of generating, from a single set of specification
 files, three types of auto-generated sources:
 
   - sources to encode commands into a byte stream.
-  - sources to decide the byte stream into commands.
+  - sources to decode the byte stream into commands.
   - sources to wrap normal procedural EGL/GLES calls into context-aware ones.
 
 Modules under the system/ directory corresponds to code that runs on the
