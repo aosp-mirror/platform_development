@@ -17,6 +17,7 @@ LOCAL_SRC_FILES :=           \
      DummyGLfuncs.cpp        \
      RangeManip.cpp          \
      TextureUtils.cpp        \
+     PaletteTexture.cpp      \
      etc1.cpp                \
      objectNameManager.cpp
 
