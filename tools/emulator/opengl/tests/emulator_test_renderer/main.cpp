@@ -19,6 +19,9 @@
 #include <stdio.h>
 #include <string.h>
 #include "libOpenglRender/render_api.h"
+#include <EventInjector.h>
+
+static int convert_keysym(int sym); // forward
 
 #ifdef _WIN32
 #include <winsock2.h>
@@ -31,8 +34,11 @@ int main(int argc, char *argv[])
     int winWidth = 320;
     int winHeight = 480;
     int width, height;
+    int mouseDown = 0;
     const char* env = getenv("ANDROID_WINDOW_SIZE");
     FBNativeWindowType windowId = NULL;
+    EventInjector* injector;
+    int consolePort = 5554;
 
     if (env && sscanf(env, "%dx%d", &width, &height) == 2) {
         winWidth = width;
@@ -81,14 +87,53 @@ int main(int argc, char *argv[])
     }
     printf("renderer process started\n");
 
+    injector = new EventInjector(consolePort);
+
     // Just wait until the window is closed
     SDL_Event ev;
-    while( SDL_WaitEvent(&ev) ) {
-        if (ev.type == SDL_QUIT) {
-            break;
+
+    for (;;) {
+        injector->wait(1000/15);
+        injector->poll();
+
+        while (SDL_PollEvent(&ev)) {
+            switch (ev.type) {
+            case SDL_MOUSEBUTTONDOWN:
+                if (!mouseDown) {
+                    injector->sendMouseDown(ev.button.x, ev.button.y);
+                    mouseDown = 1;
+                }
+		break;
+            case SDL_MOUSEBUTTONUP:
+                if (mouseDown) {
+                    injector->sendMouseUp(ev.button.x,ev.button.y);
+                    mouseDown = 0;
+                }
+                break;
+            case SDL_MOUSEMOTION:
+                if (mouseDown)
+                    injector->sendMouseMotion(ev.button.x,ev.button.y);
+                break;
+
+            case SDL_KEYDOWN:
+#ifdef __APPLE__
+                /* special code to deal with Command-Q properly */
+                if (ev.key.keysym.sym == SDLK_q &&
+                    ev.key.keysym.mod & KMOD_META) {
+                  goto EXIT;
+                }
+#endif
+		injector->sendKeyDown(convert_keysym(ev.key.keysym.sym));
+                break;
+            case SDL_KEYUP:
+                injector->sendKeyUp(convert_keysym(ev.key.keysym.sym));
+                break;
+            case SDL_QUIT:
+                goto EXIT;
+            }
         }
     }
-
+EXIT:
     //
     // stop the renderer
     //
@@ -97,3 +142,26 @@ int main(int argc, char *argv[])
 
     return 0;
 }
+
+static int convert_keysym(int sym)
+{
+#define  EE(x,y)   SDLK_##x, EventInjector::KEY_##y,
+    static const int keymap[] = {
+        EE(LEFT,LEFT)
+        EE(RIGHT,RIGHT)
+        EE(DOWN,DOWN)
+        EE(UP,UP)
+        EE(RETURN,ENTER)
+        EE(F1,SOFT1)
+        EE(ESCAPE,BACK)
+        EE(HOME,HOME)
+        -1
+    };
+    int nn;
+    for (nn = 0; keymap[nn] >= 0; nn += 2) {
+        if (keymap[nn] == sym)
+            return keymap[nn+1];
+    }
+    return sym;
+}
+
