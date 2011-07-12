@@ -12,6 +12,7 @@
 	<classpathentry kind="src" path="packages/apps/Email/emailcommon/src"/>
 	<classpathentry kind="src" path="packages/apps/Exchange/src"/>
 	<classpathentry kind="src" path="packages/apps/Gallery3D/new3d/src"/>
+	<classpathentry kind="src" path="packages/apps/Gallery3D/PicasaProvider/src"/>
 	<classpathentry kind="src" path="packages/apps/HTMLViewer/src"/>
 	<classpathentry kind="src" path="packages/apps/Launcher2/src"/>
 	<classpathentry kind="src" path="packages/apps/Mms/src"/>
@@ -51,10 +52,11 @@
 	<classpathentry kind="src" path="frameworks/base/telephony/java"/>
 	<classpathentry kind="src" path="frameworks/base/test-runner/src"/>
 	<classpathentry kind="src" path="frameworks/base/voip/java"/>
-	<classpathentry kind="src" path="frameworks/base/vpn/java"/>
 	<classpathentry kind="src" path="frameworks/base/wifi/java"/>
 	<classpathentry kind="src" path="frameworks/ex/carousel/java"/>
+	<classpathentry kind="src" path="frameworks/ex/chips/src"/>
 	<classpathentry kind="src" path="frameworks/ex/common/java"/>
+	<classpathentry kind="src" path="frameworks/opt/calendar/src"/>
 	<classpathentry kind="src" path="frameworks/opt/vcard/java"/>
 	<classpathentry kind="src" path="frameworks/support/v13/java"/>
 	<classpathentry kind="src" path="development/samples/ApiDemos/src"/>
@@ -95,7 +97,6 @@
 	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/framework_intermediates/src/media/java"/>
 	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/framework_intermediates/src/telephony/java"/>
 	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/framework_intermediates/src/voip/java"/>
-	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/framework_intermediates/src/vpn/java"/>
 	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/framework_intermediates/src/wifi/java"/>
 	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/services_intermediates/src"/>
 	<classpathentry kind="src" path="out/target/common/R"/>
