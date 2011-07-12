@@ -85,6 +85,7 @@ include $(EMUGL_PATH)/host/renderer/Android.mk
 
 # Host unit-test for the renderer. this one uses its own small
 # EGL host wrapper.
+include $(EMUGL_PATH)/tests/event_injector/Android.mk
 include $(EMUGL_PATH)/tests/EGL_host_wrapper/Android.mk
 include $(EMUGL_PATH)/tests/emulator_test_renderer/Android.mk
 include $(EMUGL_PATH)/tests/ut_renderer/Android.mk
