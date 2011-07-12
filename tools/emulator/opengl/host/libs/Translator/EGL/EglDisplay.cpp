@@ -18,7 +18,7 @@
 #include <GLcommon/GLutils.h>
 #include <utils/threads.h>
 
-EglDisplay::EglDisplay(EGLNativeDisplayType dpy,bool isDefault) :
+EglDisplay::EglDisplay(EGLNativeInternalDisplayType dpy,bool isDefault) :
     m_dpy(dpy),
     m_initialized(false),
     m_configInitialized(false),
@@ -53,9 +53,10 @@ EglDisplay::~EglDisplay() {
 
     delete m_manager[GLES_1_1];
     delete m_manager[GLES_2_0];
+    EglOS::deleteDisplay(m_dpy);
 }
 
-EGLNativeDisplayType EglDisplay::nativeType(){return m_dpy;}
+EGLNativeInternalDisplayType EglDisplay::nativeType(){return m_dpy;}
 
 void EglDisplay::initialize(int renderableType) {
     android::Mutex::Autolock mutex(m_lock);
