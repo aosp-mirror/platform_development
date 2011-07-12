@@ -41,7 +41,8 @@ struct GLSupport {
                 GL_ARB_VERTEX_BLEND(false), GL_ARB_MATRIX_PALETTE(false), \
                 GL_NV_PACKED_DEPTH_STENCIL(false) , GL_OES_READ_FORMAT(false), \
                 GL_ARB_HALF_FLOAT_PIXEL(false), GL_NV_HALF_FLOAT(false), \
-                GL_ARB_HALF_FLOAT_VERTEX(false),GL_SGIS_GENERATE_MIPMAP(false) {} ;
+                GL_ARB_HALF_FLOAT_VERTEX(false),GL_SGIS_GENERATE_MIPMAP(false),
+                GL_ARB_ES2_COMPATIBILITY(false) {} ;
     int  maxLights;
     int  maxVertexAttribs;
     int  maxClipPlane;
@@ -59,6 +60,7 @@ struct GLSupport {
     bool GL_NV_HALF_FLOAT;
     bool GL_ARB_HALF_FLOAT_VERTEX;
     bool GL_SGIS_GENERATE_MIPMAP;
+    bool GL_ARB_ES2_COMPATIBILITY;
 
 };
 
