@@ -1,7 +1,7 @@
 LOCAL_PATH:=$(call my-dir)
 
 $(call emugl-begin-host-executable,emulator_test_renderer)
-$(call emugl-import,libOpenglRender)
+$(call emugl-import,libOpenglRender event_injector)
 
 LOCAL_SRC_FILES := main.cpp
 
