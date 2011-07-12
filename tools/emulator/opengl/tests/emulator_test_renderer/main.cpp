@@ -30,7 +30,14 @@ int main(int argc, char *argv[])
     int portNum = 22468;
     int winWidth = 320;
     int winHeight = 480;
+    int width, height;
+    const char* env = getenv("ANDROID_WINDOW_SIZE");
     FBNativeWindowType windowId = NULL;
+
+    if (env && sscanf(env, "%dx%d", &width, &height) == 2) {
+        winWidth = width;
+        winHeight = height;
+    }
 
     //
     // Inialize SDL window
