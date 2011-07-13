@@ -14,7 +14,6 @@
 
 LOCAL_PATH := $(call my-dir)
 
-ifneq ($(TARGET_PRODUCT),sim)
 # HAL module implemenation, not prelinked and stored in
 # hw/<LIGHTS_HARDWARE_MODULE_ID>.<ro.hardware>.so
 include $(CLEAR_VARS)
@@ -26,4 +25,3 @@ LOCAL_MODULE := lights.goldfish
 LOCAL_MODULE_TAGS := debug
 LOCAL_CFLAGS += -DLIGHT_BACKLIGHT
 include $(BUILD_SHARED_LIBRARY)
-endif

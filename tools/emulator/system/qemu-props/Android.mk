@@ -25,8 +25,6 @@ BUILD_EMULATOR_QEMU_PROPS := true
 
 LOCAL_PATH := $(call my-dir)
 
-ifneq ($(TARGET_PRODUCT),sim)
-
 # The 'qemu-props' program is run from /system/etc/init.goldfish.rc
 # to setup various system properties sent by the emulator program.
 #
@@ -38,7 +36,5 @@ LOCAL_SHARED_LIBRARIES := libcutils
 # emulator-specific binaries.
 LOCAL_MODULE_TAGS := debug
 include $(BUILD_EXECUTABLE)
-
-endif # TARGET_PRODUCT != sim
 
 endif # BUILD_EMULATOR_QEMU_PROPS
