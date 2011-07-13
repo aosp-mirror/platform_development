@@ -22,7 +22,6 @@ BUILD_EMULATOR_GPS_MODULE := true
 
 LOCAL_PATH := $(call my-dir)
 
-ifneq ($(TARGET_PRODUCT),sim)
 # HAL module implemenation stored in
 # hw/<GPS_HARDWARE_MODULE_ID>.<ro.hardware>.so
 include $(CLEAR_VARS)
@@ -38,6 +37,5 @@ LOCAL_MODULE := gps.goldfish
 endif
 LOCAL_MODULE_TAGS := debug
 include $(BUILD_SHARED_LIBRARY)
-endif
 
 endif # BUILD_EMULATOR_GPS_MODULE
