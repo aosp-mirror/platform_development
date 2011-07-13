@@ -117,6 +117,8 @@ public class MonkeySourceScript implements MonkeyEventSource {
 
     private static final String EVENT_KEYWORD_DRAG = "Drag";
 
+    private static final String EVENT_KEYWORD_PINCH_ZOOM = "PinchZoom";
+
     private static final String EVENT_KEYWORD_START_FRAMERATE_CAPTURE = "StartCaptureFramerate";
 
     private static final String EVENT_KEYWORD_END_FRAMERATE_CAPTURE = "EndCaptureFramerate";
@@ -386,6 +388,61 @@ public class MonkeySourceScript implements MonkeyEventSource {
                 e = new MonkeyTouchEvent(MotionEvent.ACTION_UP).setDownTime(downTime)
                     .setEventTime(eventTime).addPointer(0, x, y, 1, 5);
                 mQ.addLast(e);
+            }
+        }
+
+        // Handle pinch or zoom action
+        if ((s.indexOf(EVENT_KEYWORD_PINCH_ZOOM) >= 0) && args.length == 9) {
+            //Parse the parameters
+            float pt1xStart = Float.parseFloat(args[0]);
+            float pt1yStart = Float.parseFloat(args[1]);
+            float pt1xEnd = Float.parseFloat(args[2]);
+            float pt1yEnd = Float.parseFloat(args[3]);
+
+            float pt2xStart = Float.parseFloat(args[4]);
+            float pt2yStart = Float.parseFloat(args[5]);
+            float pt2xEnd = Float.parseFloat(args[6]);
+            float pt2yEnd = Float.parseFloat(args[7]);
+
+            int stepCount = Integer.parseInt(args[8]);
+
+            float x1 = pt1xStart;
+            float y1 = pt1yStart;
+            float x2 = pt2xStart;
+            float y2 = pt2yStart;
+
+            long downTime = SystemClock.uptimeMillis();
+            long eventTime = SystemClock.uptimeMillis();
+
+            if (stepCount > 0) {
+                float pt1xStep = (pt1xEnd - pt1xStart) / stepCount;
+                float pt1yStep = (pt1yEnd - pt1yStart) / stepCount;
+
+                float pt2xStep = (pt2xEnd - pt2xStart) / stepCount;
+                float pt2yStep = (pt2yEnd - pt2yStart) / stepCount;
+
+                mQ.addLast(new MonkeyTouchEvent(MotionEvent.ACTION_DOWN).setDownTime(downTime)
+                        .setEventTime(eventTime).addPointer(0, x1, y1, 1, 5));
+
+                mQ.addLast(new MonkeyTouchEvent(MotionEvent.ACTION_POINTER_DOWN
+                        | (1 << MotionEvent.ACTION_POINTER_INDEX_SHIFT)).setDownTime(downTime)
+                        .addPointer(0, x1, y1).addPointer(1, x2, y2).setIntermediateNote(true));
+
+                for (int i = 0; i < stepCount; ++i) {
+                    x1 += pt1xStep;
+                    y1 += pt1yStep;
+                    x2 += pt2xStep;
+                    y2 += pt2yStep;
+
+                    eventTime = SystemClock.uptimeMillis();
+                    mQ.addLast(new MonkeyTouchEvent(MotionEvent.ACTION_MOVE).setDownTime(downTime)
+                            .setEventTime(eventTime).addPointer(0, x1, y1, 1, 5).addPointer(1, x2,
+                                    y2, 1, 5));
+                }
+                eventTime = SystemClock.uptimeMillis();
+                mQ.addLast(new MonkeyTouchEvent(MotionEvent.ACTION_POINTER_UP)
+                        .setDownTime(downTime).setEventTime(eventTime).addPointer(0, x1, y1)
+                        .addPointer(1, x2, y2));
             }
         }
 
