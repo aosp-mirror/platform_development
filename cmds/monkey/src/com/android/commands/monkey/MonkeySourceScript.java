@@ -300,23 +300,29 @@ public class MonkeySourceScript implements MonkeyEventSource {
         }
 
         // Handle tap event
-        if ((s.indexOf(EVENT_KEYWORD_TAP) >= 0) && args.length == 2) {
+        if ((s.indexOf(EVENT_KEYWORD_TAP) >= 0) && args.length >= 2) {
             try {
                 float x = Float.parseFloat(args[0]);
                 float y = Float.parseFloat(args[1]);
+                long tapDuration = 0;
+                if (args.length == 3) {
+                    tapDuration = Long.parseLong(args[2]);
+                }
 
                 // Set the default parameters
                 long downTime = SystemClock.uptimeMillis();
-
                 MonkeyMotionEvent e1 = new MonkeyTouchEvent(MotionEvent.ACTION_DOWN)
                         .setDownTime(downTime)
                         .setEventTime(downTime)
                         .addPointer(0, x, y, 1, 5);
+                mQ.addLast(e1);
+                if (tapDuration > 0){
+                    mQ.addLast(new MonkeyWaitEvent(tapDuration));
+                }
                 MonkeyMotionEvent e2 = new MonkeyTouchEvent(MotionEvent.ACTION_UP)
                         .setDownTime(downTime)
                         .setEventTime(downTime)
                         .addPointer(0, x, y, 1, 5);
-                mQ.addLast(e1);
                 mQ.addLast(e2);
             } catch (NumberFormatException e) {
                 System.err.println("// " + e.toString());
