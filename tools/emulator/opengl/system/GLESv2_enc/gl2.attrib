@@ -18,6 +18,7 @@ glBufferSubData
 #void glCompressedTexImage2D(GLenum target, GLint level, GLenum internalformat, GLsizei width, GLsizei height, GLint border, GLsizei imageSize, GLvoid *data)
 glCompressedTexImage2D
 	len data imageSize
+    var_flag data nullAllowed
 
 #void glCompressedTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLsizei imageSize, GLvoid *data)
 glCompressedTexSubImage2D
