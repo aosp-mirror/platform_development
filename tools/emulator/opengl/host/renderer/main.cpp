@@ -72,7 +72,6 @@ int main(int argc, char *argv[])
             if (++i >= argc || sscanf(argv[i],"%d", &winY) != 1) {
                 printUsage(argv[0]);
             }
-            i++;
         }
         else if (!strncmp(argv[i], "-width", 6)) {
             if (++i >= argc || sscanf(argv[i],"%d", &winWidth) != 1) {
