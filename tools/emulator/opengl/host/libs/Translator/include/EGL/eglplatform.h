@@ -66,11 +66,9 @@
 #endif
 #include <windows.h>
 
-class WinDisplay; //defined in EglWindows.cpp
-typedef WinDisplay* DISPLAY;
 
 
-typedef DISPLAY                EGLNativeDisplayType;
+typedef HDC                    EGLNativeDisplayType;
 typedef HBITMAP                EGLNativePixmapType;
 typedef HWND                   EGLNativeWindowType;
 

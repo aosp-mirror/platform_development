@@ -134,15 +134,20 @@ EGLAPI EGLint EGLAPIENTRY eglGetError(void) {
 
 EGLAPI EGLDisplay EGLAPIENTRY eglGetDisplay(EGLNativeDisplayType display_id) {
     EglDisplay* dpy = NULL;
+    EGLNativeInternalDisplayType internalDisplay = NULL;
 
-    if( display_id == EGL_DEFAULT_DISPLAY) {
-        display_id = g_eglInfo->getDefaultNativeDisplay();
-    }
 
     if ((dpy = g_eglInfo->getDisplay(display_id))) {
         return dpy;
     } else {
-        dpy = g_eglInfo->addDisplay(display_id);
+
+        if( display_id == EGL_DEFAULT_DISPLAY) {
+            internalDisplay = g_eglInfo->getDefaultNativeDisplay();
+        } else {
+            internalDisplay = g_eglInfo->generateInternalDisplay(display_id);
+        }
+
+        dpy = g_eglInfo->addDisplay(display_id,internalDisplay);
         if(dpy) return dpy;
         return EGL_NO_DISPLAY;
     }
@@ -726,7 +731,7 @@ EGLAPI EGLBoolean EGLAPIENTRY eglMakeCurrent(EGLDisplay display, EGLSurface draw
             RETURN_ERROR(EGL_FALSE,EGL_BAD_MATCH);
         }
 
-         EGLNativeDisplayType nativeDisplay = dpy->nativeType();
+         EGLNativeInternalDisplayType nativeDisplay = dpy->nativeType();
          EGLNativeSurfaceType nativeRead = newReadPtr->native();
          EGLNativeSurfaceType nativeDraw = newDrawPtr->native();
         //checking native window validity
@@ -899,7 +904,7 @@ EGLAPI EGLBoolean EGLAPIENTRY eglWaitNative(EGLint engine) {
         SurfacePtr read = currCtx->read();
         SurfacePtr draw = currCtx->draw();
 
-        EGLNativeDisplayType nativeDisplay = dpy->nativeType();
+        EGLNativeInternalDisplayType nativeDisplay = dpy->nativeType();
         if(read.Ptr()) {
             if(read->type() == EglSurface::WINDOW &&
                !EglOS::validNativeWin(nativeDisplay,read->native())) {
