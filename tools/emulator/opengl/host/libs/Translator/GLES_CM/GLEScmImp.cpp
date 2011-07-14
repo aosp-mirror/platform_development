@@ -428,7 +428,7 @@ GL_API void GL_APIENTRY  glCompressedTexImage2D( GLenum target, GLint level, GLe
     GET_CTX_CM()
     SET_ERROR_IF(!GLEScmValidate::textureTargetEx(target),GL_INVALID_ENUM);
 
-    ctx->doCompressedTexImage2D(target, level, internalformat,
+    doCompressedTexImage2D(ctx, target, level, internalformat,
                                 width, height, border,
                                 imageSize, data);
 }
@@ -705,6 +705,20 @@ GL_API void GL_APIENTRY  glGetBooleanv( GLenum pname, GLboolean *params) {
             ctx->dispatcher().glGetBooleanv(GL_TEXTURE_GEN_R,&state_r);
             *params = state_s && state_t && state_r ? GL_TRUE: GL_FALSE;
         }
+    break; 
+    case GL_NUM_COMPRESSED_TEXTURE_FORMATS:
+        *params = (GLboolean)getCompressedFormats(NULL); 
+    break;    
+    case GL_COMPRESSED_TEXTURE_FORMATS:
+        {
+            int nparams = getCompressedFormats(NULL);
+            if (nparams>0) {
+                int * iparams = new int[nparams];
+                getCompressedFormats(iparams);
+                for (int i=0; i<nparams; i++) params[i] = (GLboolean)iparams[i];
+                delete [] iparams;
+            }
+        }
     break;
     default:
         ctx->dispatcher().glGetBooleanv(pname,params);
@@ -766,6 +780,22 @@ GL_API void GL_APIENTRY  glGetFixedv( GLenum pname, GLfixed *params) {
     case GL_TEXTURE_GEN_STR_OES:
         glGetFloatv(pname,&fParams[0]);
         break;
+    case GL_NUM_COMPRESSED_TEXTURE_FORMATS:
+        *params = I2X(getCompressedFormats(NULL));
+        return;
+    break;    
+    case GL_COMPRESSED_TEXTURE_FORMATS:
+        {
+            int nparams = getCompressedFormats(NULL);
+            if (nparams>0) {
+                int * iparams = new int[nparams];
+                getCompressedFormats(iparams);
+                for (int i=0; i<nparams; i++) params[i] = I2X(iparams[i]);
+                delete [] iparams;
+            }
+			return;
+        }
+    break;
     default:
         ctx->dispatcher().glGetFloatv(pname,fParams);
     }
@@ -794,7 +824,21 @@ GL_API void GL_APIENTRY  glGetFloatv( GLenum pname, GLfloat *params) {
     case GL_TEXTURE_GEN_STR_OES:
         glGetIntegerv(pname,&i);
         *params = (GLfloat)i;
-        break;
+    break;   
+    case GL_NUM_COMPRESSED_TEXTURE_FORMATS:
+        *params = (GLfloat)getCompressedFormats(NULL); 
+    break;    
+    case GL_COMPRESSED_TEXTURE_FORMATS:
+        {
+            int nparams = getCompressedFormats(NULL);
+            if (nparams>0) {
+                int * iparams = new int[nparams];
+                getCompressedFormats(iparams);
+                for (int i=0; i<nparams; i++) params[i] = (GLfloat)iparams[i];
+                delete [] iparams;
+            }
+        }
+    break;
     default:
         ctx->dispatcher().glGetFloatv(pname,params);
     }
@@ -826,6 +870,12 @@ GL_API void GL_APIENTRY  glGetIntegerv( GLenum pname, GLint *params) {
             ctx->dispatcher().glGetIntegerv(pname,&i);
             *params = thrd->shareGroup->getLocalName(RENDERBUFFER,i);
         }
+        break;
+    case GL_NUM_COMPRESSED_TEXTURE_FORMATS:
+        *params = getCompressedFormats(NULL); 
+        break;    
+    case GL_COMPRESSED_TEXTURE_FORMATS:
+        getCompressedFormats(params);
         break;
     default:
         ctx->dispatcher().glGetIntegerv(pname,params);
