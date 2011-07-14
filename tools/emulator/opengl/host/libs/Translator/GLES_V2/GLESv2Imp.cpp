@@ -30,6 +30,7 @@
 #include "GLESv2Context.h"
 #include "GLESv2Validate.h"
 #include "ShaderParser.h"
+#include <GLcommon/TextureUtils.h>
 
 extern "C" {
 
@@ -286,7 +287,7 @@ GL_APICALL void  GL_APIENTRY glCompressedTexImage2D(GLenum target, GLint level, 
     GET_CTX();
     SET_ERROR_IF(!GLESv2Validate::textureTargetEx(target),GL_INVALID_ENUM);
 
-    ctx->doCompressedTexImage2D(target, level, internalformat,
+    doCompressedTexImage2D(ctx, target, level, internalformat,
                                 width, height, border,
                                 imageSize, data);
 }
@@ -682,6 +683,20 @@ GL_APICALL void  GL_APIENTRY glGetFloatv(GLenum pname, GLfloat* params){
         glGetIntegerv(pname,&i);
         *params = (GLfloat)i;
         break;
+    case GL_NUM_COMPRESSED_TEXTURE_FORMATS:
+        *params = (GLfloat)getCompressedFormats(NULL); 
+        break;    
+    case GL_COMPRESSED_TEXTURE_FORMATS:
+        {
+            int nparams = getCompressedFormats(NULL);
+            if (nparams>0) {
+                int * iparams = new int[nparams];
+                getCompressedFormats(iparams);
+                for (int i=0; i<nparams; i++) params[i] = (GLfloat)iparams[i];
+                delete [] iparams;
+            }
+        }
+        break;
 
     default:
         ctx->dispatcher().glGetFloatv(pname,params);
@@ -716,6 +731,12 @@ GL_APICALL void  GL_APIENTRY glGetIntegerv(GLenum pname, GLint* params){
             ctx->dispatcher().glGetIntegerv(pname,&i);
             *params = thrd->shareGroup->getLocalName(RENDERBUFFER,i);
         }
+        break;
+    case GL_NUM_COMPRESSED_TEXTURE_FORMATS:
+        *params = getCompressedFormats(NULL); 
+        break;    
+    case GL_COMPRESSED_TEXTURE_FORMATS:
+        getCompressedFormats(params);
         break;
     default:
         ctx->dispatcher().glGetIntegerv(pname,params);
