@@ -639,8 +639,32 @@ GL_APICALL int GL_APIENTRY glGetAttribLocation(GLuint program, const GLchar* nam
 
 GL_APICALL void  GL_APIENTRY glGetBooleanv(GLenum pname, GLboolean* params){
     GET_CTX();
-    if (!ctx->glGetBooleanv(pname,params)) {
-        ctx->dispatcher().glGetBooleanv(pname,params);
+
+    if (ctx->glGetBooleanv(pname,params))
+    {
+        return;
+    }
+
+    switch(pname)
+    {
+        case GL_SHADER_COMPILER:
+        case GL_SHADER_BINARY_FORMATS:
+        case GL_NUM_SHADER_BINARY_FORMATS:
+        case GL_MAX_VERTEX_UNIFORM_VECTORS:
+        case GL_MAX_VARYING_VECTORS:
+        case GL_MAX_FRAGMENT_UNIFORM_VECTORS:
+            if(ctx->getCaps()->GL_ARB_ES2_COMPATIBILITY)
+                ctx->dispatcher().glGetBooleanv(pname,params);
+            else
+            {
+                GLint iparam;
+                glGetIntegerv(pname,&iparam);
+                *params = (iparam != 0);
+            }
+            break;
+
+        default:
+            ctx->dispatcher().glGetBooleanv(pname,params);
     }
 }
 
@@ -672,10 +696,13 @@ GL_APICALL GLenum GL_APIENTRY glGetError(void){
 
 GL_APICALL void  GL_APIENTRY glGetFloatv(GLenum pname, GLfloat* params){
     GET_CTX();
+
     if (ctx->glGetFloatv(pname,params)) {
         return;
     }
+
     GLint i;
+
     switch (pname) {
     case GL_CURRENT_PROGRAM:
     case GL_FRAMEBUFFER_BINDING:
@@ -698,6 +725,21 @@ GL_APICALL void  GL_APIENTRY glGetFloatv(GLenum pname, GLfloat* params){
         }
         break;
 
+    case GL_SHADER_COMPILER:
+    case GL_SHADER_BINARY_FORMATS:
+    case GL_NUM_SHADER_BINARY_FORMATS:
+    case GL_MAX_VERTEX_UNIFORM_VECTORS:
+    case GL_MAX_VARYING_VECTORS:
+    case GL_MAX_FRAGMENT_UNIFORM_VECTORS:
+        if(ctx->getCaps()->GL_ARB_ES2_COMPATIBILITY)
+            ctx->dispatcher().glGetFloatv(pname,params);
+        else
+        {
+            glGetIntegerv(pname,&i);
+            *params = (GLfloat)i;
+        }
+        break;
+
     default:
         ctx->dispatcher().glGetFloatv(pname,params);
     }
@@ -711,6 +753,7 @@ GL_APICALL void  GL_APIENTRY glGetIntegerv(GLenum pname, GLint* params){
         return;
     }
   
+    bool es2 = ctx->getCaps()->GL_ARB_ES2_COMPATIBILITY;
     GLint i;
 
     switch (pname) {
@@ -732,12 +775,54 @@ GL_APICALL void  GL_APIENTRY glGetIntegerv(GLenum pname, GLint* params){
             *params = thrd->shareGroup->getLocalName(RENDERBUFFER,i);
         }
         break;
+
     case GL_NUM_COMPRESSED_TEXTURE_FORMATS:
         *params = getCompressedFormats(NULL); 
         break;    
     case GL_COMPRESSED_TEXTURE_FORMATS:
         getCompressedFormats(params);
         break;
+
+    case GL_SHADER_COMPILER:
+        if(es2)
+            ctx->dispatcher().glGetIntegerv(pname,params);
+        else
+            *params = 1;
+        break;
+
+    case GL_SHADER_BINARY_FORMATS:
+        if(es2)
+            ctx->dispatcher().glGetIntegerv(pname,params);
+        break;
+
+    case GL_NUM_SHADER_BINARY_FORMATS:
+        if(es2)
+            ctx->dispatcher().glGetIntegerv(pname,params);
+        else
+            *params = 0;
+        break;
+
+    case GL_MAX_VERTEX_UNIFORM_VECTORS:
+        if(es2)
+            ctx->dispatcher().glGetIntegerv(pname,params);
+        else
+            *params = 128;
+        break;
+
+    case GL_MAX_VARYING_VECTORS:
+        if(es2)
+            ctx->dispatcher().glGetIntegerv(pname,params);
+        else
+            *params = 8;
+        break;
+
+    case GL_MAX_FRAGMENT_UNIFORM_VECTORS:
+        if(es2)
+            ctx->dispatcher().glGetIntegerv(pname,params);
+        else
+            *params = 16;
+        break;
+
     default:
         ctx->dispatcher().glGetIntegerv(pname,params);
     }
@@ -793,11 +878,29 @@ GL_APICALL void  GL_APIENTRY glGetShaderInfoLog(GLuint shader, GLsizei bufsize, 
 GL_APICALL void  GL_APIENTRY glGetShaderPrecisionFormat(GLenum shadertype, GLenum precisiontype, GLint* range, GLint* precision){
     GET_CTX_V2();
     SET_ERROR_IF(!(GLESv2Validate::shaderType(shadertype) && GLESv2Validate::precisionType(precisiontype)),GL_INVALID_ENUM);
-    if(ctx->glslVersion() < Version(1,30,10)){ //version 1.30.10 is the first version of GLSL Language containing precision qualifiers
-        range[0] = range[1] = 0;
-        precision = 0;
-    } else {
+
+    if(ctx->dispatcher().glGetShaderPrecisionFormat != NULL)
+    {
         ctx->dispatcher().glGetShaderPrecisionFormat(shadertype,precisiontype,range,precision);
+    }
+    else
+    {
+        switch(precisiontype)
+        {
+            case GL_LOW_INT:
+            case GL_MEDIUM_INT:
+            case GL_HIGH_INT:
+                range[0] = range[1] = 16;
+                *precision = 0;
+            break;
+
+            case GL_LOW_FLOAT:
+            case GL_MEDIUM_FLOAT:
+            case GL_HIGH_FLOAT:
+                range[0] = range[1] = 127;
+                *precision = 24;
+            break;
+        }
     }
 }
 
@@ -1064,7 +1167,11 @@ GL_APICALL void  GL_APIENTRY glReadPixels(GLint x, GLint y, GLsizei width, GLsiz
 
 GL_APICALL void  GL_APIENTRY glReleaseShaderCompiler(void){
     GET_CTX();
-    ctx->dispatcher().glReleaseShaderCompiler();
+
+    if(ctx->dispatcher().glReleaseShaderCompiler != NULL)
+    {
+        ctx->dispatcher().glReleaseShaderCompiler();
+    }
 }
 
 GL_APICALL void  GL_APIENTRY glRenderbufferStorage(GLenum target, GLenum internalformat, GLsizei width, GLsizei height){
@@ -1084,6 +1191,9 @@ GL_APICALL void  GL_APIENTRY glScissor(GLint x, GLint y, GLsizei width, GLsizei 
 
 GL_APICALL void  GL_APIENTRY glShaderBinary(GLsizei n, const GLuint* shaders, GLenum binaryformat, const GLvoid* binary, GLsizei length){
     GET_CTX();
+
+    SET_ERROR_IF( (ctx->dispatcher().glShaderBinary == NULL), GL_INVALID_OPERATION);
+
     if(thrd->shareGroup.Ptr()){
         for(int i=0; i < n ; i++){
             const GLuint globalShaderName = thrd->shareGroup->getGlobalName(SHADER,shaders[i]);
