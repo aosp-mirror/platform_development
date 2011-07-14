@@ -30,10 +30,14 @@ typedef SURFACE EGLNativeSurfaceType;
 #define WGL_WGLEXT_PROTOTYPES
 #include <GL/wglext.h>
 
+class WinDisplay; //defined in EglWindows.cpp
+typedef WinDisplay* DISPLAY;
+
 typedef PIXELFORMATDESCRIPTOR  EGLNativePixelFormatType;
 #define PIXEL_FORMAT_INITIALIZER {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 typedef HGLRC                  EGLNativeContextType;
 typedef HPBUFFERARB            EGLNativePbufferType;
+typedef DISPLAY                EGLNativeInternalDisplayType;
 
 #elif defined(__APPLE__)
 
@@ -41,6 +45,7 @@ typedef void*                  EGLNativePixelFormatType;
 #define PIXEL_FORMAT_INITIALIZER NULL
 typedef void*                  EGLNativeContextType;
 typedef void*                  EGLNativePbufferType;
+typedef EGLNativeDisplayType   EGLNativeInternalDisplayType;
 
 
 #elif defined(__unix__)
@@ -50,10 +55,11 @@ typedef void*                  EGLNativePbufferType;
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 
-typedef GLXFBConfig         EGLNativePixelFormatType;
+typedef GLXFBConfig           EGLNativePixelFormatType;
 #define PIXEL_FORMAT_INITIALIZER 0;
-typedef GLXContext          EGLNativeContextType;
-typedef GLXPbuffer          EGLNativePbufferType;
+typedef GLXContext            EGLNativeContextType;
+typedef GLXPbuffer            EGLNativePbufferType;
+typedef EGLNativeDisplayType  EGLNativeInternalDisplayType;
 
 #else
 #error "Platform not recognized"

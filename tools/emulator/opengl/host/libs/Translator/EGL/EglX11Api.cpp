@@ -294,4 +294,11 @@ void destroySurface(EGLNativeSurfaceType srfc){
     delete srfc;
 };
 
+EGLNativeInternalDisplayType getInternalDisplay(EGLNativeDisplayType dpy){
+    return dpy;
+}
+
+void deleteDisplay(EGLNativeInternalDisplayType idpy){
+}
+
 };
