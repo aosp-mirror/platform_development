@@ -13,19 +13,13 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-#ifndef _TEXTURE_UTILS_H
-#define _TEXTURE_UTILS_H
+#ifndef __PALETTE_TEXTURE_H__
+#define __PALETTE_TEXTURE_H__
 
 #include <GLES/gl.h>
-#include <GLES/glext.h>
-#include "GLEScontext.h"
-#include "PaletteTexture.h"
-#include "etc1.h"
 
-int getCompressedFormats(int* formats);
-void  doCompressedTexImage2D(GLEScontext * ctx, GLenum target, GLint level, 
-                                          GLenum internalformat, GLsizei width, 
-                                          GLsizei height, GLint border, 
-                                          GLsizei imageSize, const GLvoid* data);
+#define MAX_SUPPORTED_PALETTE 10
+
+unsigned char* uncompressTexture(GLenum internalformat,GLenum& formatOut,GLsizei width,GLsizei height,GLsizei imageSize, const GLvoid* data,GLint level);
 
 #endif
