@@ -1946,6 +1946,7 @@ void glDrawTexOES (T x, T y, T z, T width, T height) {
                              x+width, y+height, z,
                              x+width, y, z};
     GLfloat texels[ctx->getMaxTexUnits()][4*2];
+    memset((void*)texels, 0, ctx->getMaxTexUnits()*4*2*sizeof(GLfloat));
 
     ctx->dispatcher().glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
     ctx->dispatcher().glPushAttrib(GL_TRANSFORM_BIT);
@@ -1976,6 +1977,7 @@ void glDrawTexOES (T x, T y, T z, T width, T height) {
     for (int i=0;i<numClipPlanes;++i)
         ctx->dispatcher().glDisable(GL_CLIP_PLANE0+i);
 
+    int nTexPtrs = 0;
     for (int i=0;i<ctx->getMaxTexUnits();++i) {
         if (ctx->isTextureUnitEnabled(GL_TEXTURE0+i)) {
             TextureData * texData = NULL;
@@ -1998,15 +2000,18 @@ void glDrawTexOES (T x, T y, T z, T width, T height) {
                 texels[i][7] = (float)(texData->crop_rect[1])/(float)(texData->height);
 
                 ctx->dispatcher().glTexCoordPointer(2,GL_FLOAT,0,texels[i]);
+                nTexPtrs++;
              }
         }
     }
 
-    //draw rectangle
-    ctx->dispatcher().glEnableClientState(GL_VERTEX_ARRAY);
-    ctx->dispatcher().glVertexPointer(3,TypeName,0,vertices);
-    ctx->dispatcher().glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-    ctx->dispatcher().glDrawArrays(GL_TRIANGLE_FAN,0,4);
+    if (nTexPtrs>0) {
+        //draw rectangle - only if we have some textures enabled & ready
+        ctx->dispatcher().glEnableClientState(GL_VERTEX_ARRAY);
+        ctx->dispatcher().glVertexPointer(3,TypeName,0,vertices);
+        ctx->dispatcher().glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+        ctx->dispatcher().glDrawArrays(GL_TRIANGLE_FAN,0,4);
+    }
 
     //restore vbo's
     ctx->dispatcher().glBindBuffer(GL_ARRAY_BUFFER,array_buffer);
