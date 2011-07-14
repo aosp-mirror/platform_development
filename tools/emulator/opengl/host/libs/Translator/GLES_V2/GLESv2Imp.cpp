@@ -293,7 +293,7 @@ GL_APICALL void  GL_APIENTRY glCompressedTexImage2D(GLenum target, GLint level, 
 
     doCompressedTexImage2D(ctx, target, level, internalformat,
                                 width, height, border,
-                                imageSize, data);
+                                imageSize, data, (void*)glTexImage2D);
 }
 
 GL_APICALL void  GL_APIENTRY glCompressedTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLsizei imageSize, const GLvoid* data){
