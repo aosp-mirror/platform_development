@@ -108,7 +108,6 @@ public:
     bool isInitialized() { return m_initialized; };
     void setUnpackAlignment(GLint param){ m_unpackAlignment = param; };
     GLint getUnpackAlignment(){ return m_unpackAlignment; };
-    void  doCompressedTexImage2D(GLenum target, GLint level, GLenum internalformat, GLsizei width, GLsizei height, GLint border, GLsizei imageSize, const GLvoid* data);
 
     bool  isArrEnabled(GLenum);
     void  enableArr(GLenum arr,bool enable);

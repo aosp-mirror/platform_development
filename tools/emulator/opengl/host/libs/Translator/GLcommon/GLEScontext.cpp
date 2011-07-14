@@ -3,10 +3,8 @@
 #include <GLcommon/GLESmacros.h>
 #include <GLES/gl.h>
 #include <GLES/glext.h>
-#include <GLcommon/etc1.h>
 #include <GLcommon/GLESvalidate.h>
 #include <GLcommon/TextureUtils.h>
-#include <cmath>
 
 //decleration
 static int findMaxIndex(GLsizei count,GLenum type,const GLvoid* indices);
@@ -541,15 +539,6 @@ bool GLEScontext::glGetFixedv(GLenum pname, GLfixed *params)
     bool result = false;
     GLint numParams = 1;
 
-    switch(pname)
-    {
-    case GL_COMPRESSED_TEXTURE_FORMATS:
-        glGetIntegerv(GL_NUM_COMPRESSED_TEXTURE_FORMATS, &numParams);
-        break;
-    default:
-        numParams=1;
-    }
-
     GLint* iParams = new GLint[numParams];
     if (numParams>0 && glGetIntegerv(pname,iParams)) {
         while(numParams >= 0)
@@ -568,15 +557,6 @@ bool GLEScontext::glGetFloatv(GLenum pname, GLfloat *params)
 {
     bool result = false;
     GLint numParams = 1;
-
-    switch(pname)
-    {
-    case GL_COMPRESSED_TEXTURE_FORMATS:
-        glGetIntegerv(GL_NUM_COMPRESSED_TEXTURE_FORMATS, &numParams);
-        break;
-    default:
-        numParams=1;
-    }
 
     GLint* iParams = new GLint[numParams];
     if (numParams>0 && glGetIntegerv(pname,iParams)) {
@@ -613,14 +593,6 @@ bool GLEScontext::glGetIntegerv(GLenum pname, GLint *params)
             *params = m_activeTexture+GL_TEXTURE0;
             break;
 
-        case GL_COMPRESSED_TEXTURE_FORMATS:
-            getCompressedFormats(params);
-            break;
-        
-        case GL_NUM_COMPRESSED_TEXTURE_FORMATS:
-            *params = getCompressedFormats(NULL);
-            break;
-        
         case GL_IMPLEMENTATION_COLOR_READ_TYPE_OES:
             *params = GL_UNSIGNED_BYTE;
             break;
@@ -628,7 +600,6 @@ bool GLEScontext::glGetIntegerv(GLenum pname, GLint *params)
         case GL_IMPLEMENTATION_COLOR_READ_FORMAT_OES:
             *params = GL_RGBA;
             break;
-
         default:
             return false;
     }
@@ -636,67 +607,3 @@ bool GLEScontext::glGetIntegerv(GLenum pname, GLint *params)
     return true;
 }
 
-void  GLEScontext::doCompressedTexImage2D(GLenum target, GLint level, 
-                                          GLenum internalformat, GLsizei width, 
-                                          GLsizei height, GLint border, 
-                                          GLsizei imageSize, const GLvoid* data)
-{
-    GLEScontext *ctx = this; // needed for macros used below
-
-    switch (internalformat) {
-        case GL_ETC1_RGB8_OES:
-            {
-                GLint format = GL_RGB;
-                GLint type = GL_UNSIGNED_BYTE;
-
-                GLsizei compressedSize = etc1_get_encoded_data_size(width, height);
-                SET_ERROR_IF((compressedSize > imageSize), GL_INVALID_VALUE);
-
-                const int32_t align = getUnpackAlignment()-1;
-                const int32_t bpr = ((width * 3) + align) & ~align;
-                const size_t size = bpr * height;
-
-                etc1_byte* pOut = new etc1_byte[size];
-                int res = etc1_decode_image((const etc1_byte*)data, pOut, width, height, 3, bpr);
-                SET_ERROR_IF(res!=0, GL_INVALID_VALUE);
-                dispatcher().glTexImage2D(target,level,format,width,height,border,format,type,pOut);
-                delete [] pOut;
-            }
-            break;
-            
-        case GL_PALETTE4_RGB8_OES:
-        case GL_PALETTE4_RGBA8_OES:
-        case GL_PALETTE4_R5_G6_B5_OES:
-        case GL_PALETTE4_RGBA4_OES:
-        case GL_PALETTE4_RGB5_A1_OES:
-        case GL_PALETTE8_RGB8_OES:
-        case GL_PALETTE8_RGBA8_OES:
-        case GL_PALETTE8_R5_G6_B5_OES:
-        case GL_PALETTE8_RGBA4_OES:
-        case GL_PALETTE8_RGB5_A1_OES:
-            {
-                SET_ERROR_IF(level > log2(getMaxTexSize()) || 
-                             border !=0 || level > 0 || 
-                             !GLESvalidate::texImgDim(width,height,getMaxTexSize()+2),GL_INVALID_VALUE)
-
-                int nMipmaps = -level + 1;
-                GLsizei tmpWidth  = width;
-                GLsizei tmpHeight = height;
-
-                for(int i = 0; i < nMipmaps ; i++)
-                {
-                   GLenum uncompressedFrmt;
-                   unsigned char* uncompressed = uncompressTexture(internalformat,uncompressedFrmt,width,height,imageSize,data,i);
-                   dispatcher().glTexImage2D(target,i,uncompressedFrmt,tmpWidth,tmpHeight,border,uncompressedFrmt,GL_UNSIGNED_BYTE,uncompressed);
-                   tmpWidth/=2;
-                   tmpHeight/=2;
-                   delete uncompressed;
-                }
-            }
-            break;
-
-        default:
-            SET_ERROR_IF(1, GL_INVALID_ENUM);
-            break;
-    }
-}
