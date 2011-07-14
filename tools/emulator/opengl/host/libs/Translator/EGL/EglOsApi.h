@@ -33,23 +33,25 @@
 
 namespace EglOS{
 
-    void queryConfigs(EGLNativeDisplayType dpy,int renderable_type,ConfigsList& listOut);
-    bool releasePbuffer(EGLNativeDisplayType dis,EGLNativeSurfaceType pb);
-    bool destroyContext(EGLNativeDisplayType dpy,EGLNativeContextType ctx);
-    bool releaseDisplay(EGLNativeDisplayType dpy);
-    bool validNativeWin(EGLNativeDisplayType dpy,EGLNativeSurfaceType win);
-    bool validNativeWin(EGLNativeDisplayType dpy,EGLNativeWindowType win);
-    bool validNativePixmap(EGLNativeDisplayType dpy,EGLNativeSurfaceType pix);
-    bool checkWindowPixelFormatMatch(EGLNativeDisplayType dpy,EGLNativeWindowType win,EglConfig* cfg,unsigned int* width,unsigned int* height);
-    bool checkPixmapPixelFormatMatch(EGLNativeDisplayType dpy,EGLNativePixmapType pix,EglConfig* cfg,unsigned int* width,unsigned int* height);
-    bool makeCurrent(EGLNativeDisplayType dpy,EglSurface* read,EglSurface* draw,EGLNativeContextType);
-    void swapBuffers(EGLNativeDisplayType dpy,EGLNativeSurfaceType srfc);
-    void swapInterval(EGLNativeDisplayType dpy,EGLNativeSurfaceType win,int interval);
+    void queryConfigs(EGLNativeInternalDisplayType dpy,int renderable_type,ConfigsList& listOut);
+    bool releasePbuffer(EGLNativeInternalDisplayType dis,EGLNativeSurfaceType pb);
+    bool destroyContext(EGLNativeInternalDisplayType dpy,EGLNativeContextType ctx);
+    bool releaseDisplay(EGLNativeInternalDisplayType dpy);
+    bool validNativeWin(EGLNativeInternalDisplayType dpy,EGLNativeSurfaceType win);
+    bool validNativeWin(EGLNativeInternalDisplayType dpy,EGLNativeWindowType win);
+    bool validNativePixmap(EGLNativeInternalDisplayType dpy,EGLNativeSurfaceType pix);
+    bool checkWindowPixelFormatMatch(EGLNativeInternalDisplayType dpy,EGLNativeWindowType win,EglConfig* cfg,unsigned int* width,unsigned int* height);
+    bool checkPixmapPixelFormatMatch(EGLNativeInternalDisplayType dpy,EGLNativePixmapType pix,EglConfig* cfg,unsigned int* width,unsigned int* height);
+    bool makeCurrent(EGLNativeInternalDisplayType dpy,EglSurface* read,EglSurface* draw,EGLNativeContextType);
+    void swapBuffers(EGLNativeInternalDisplayType dpy,EGLNativeSurfaceType srfc);
+    void swapInterval(EGLNativeInternalDisplayType dpy,EGLNativeSurfaceType win,int interval);
     void waitNative();
 
-    EGLNativeDisplayType getDefaultDisplay();
-    EGLNativeSurfaceType createPbufferSurface(EGLNativeDisplayType dpy,EglConfig* cfg,EglPbufferSurface* pb);
-    EGLNativeContextType createContext(EGLNativeDisplayType dpy,EglConfig* cfg,EGLNativeContextType sharedContext);
+    EGLNativeInternalDisplayType getDefaultDisplay();
+    EGLNativeInternalDisplayType getInternalDisplay(EGLNativeDisplayType dpy);
+    void deleteDisplay(EGLNativeInternalDisplayType idpy);
+    EGLNativeSurfaceType createPbufferSurface(EGLNativeInternalDisplayType dpy,EglConfig* cfg,EglPbufferSurface* pb);
+    EGLNativeContextType createContext(EGLNativeInternalDisplayType dpy,EglConfig* cfg,EGLNativeContextType sharedContext);
     EGLNativeSurfaceType createWindowSurface(EGLNativeWindowType wnd);
     EGLNativeSurfaceType createPixmapSurface(EGLNativePixmapType pix);
     void destroySurface(EGLNativeSurfaceType srfc);

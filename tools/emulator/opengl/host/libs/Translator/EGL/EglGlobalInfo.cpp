@@ -47,28 +47,27 @@ void EglGlobalInfo::delInstance() {
 
 }
 
-EglDisplay* EglGlobalInfo::addDisplay(EGLNativeDisplayType dpy) {
+EglDisplay* EglGlobalInfo::addDisplay(EGLNativeDisplayType dpy,EGLNativeInternalDisplayType idpy) {
     //search if it is not already exists
     android::Mutex::Autolock mutex(m_lock);
-    for(DisplaysList::iterator it = m_displays.begin(); it != m_displays.end() ;it++) {
-        if((*it)->nativeType() == dpy) return (*it);
+    for(DisplaysMap::iterator it = m_displays.begin(); it != m_displays.end() ;it++) {
+        if((*it).second == dpy) return (*it).first;
     }
 
-    EglDisplay* p_dpy = new EglDisplay(dpy);
+    EglDisplay* p_dpy = new EglDisplay(idpy);
     if(p_dpy) {
-        m_displays.push_front(p_dpy);
+        m_displays[p_dpy] = dpy;
         return p_dpy;
     }
     return NULL;
 }
 
 bool  EglGlobalInfo::removeDisplay(EGLDisplay dpy) {
-
     android::Mutex::Autolock mutex(m_lock);
-    for(DisplaysList::iterator it = m_displays.begin(); it != m_displays.end() ;it++) {
-        if(static_cast<EGLDisplay>(*it) == dpy) {
-            delete (*it);
-            m_displays.remove(*it);
+    for(DisplaysMap::iterator it = m_displays.begin(); it != m_displays.end() ;it++) {
+        if(static_cast<EGLDisplay>((*it).first) == dpy) {
+            delete (*it).first;
+            m_displays.erase(it);
             return true;
         }
     }
@@ -77,16 +76,18 @@ bool  EglGlobalInfo::removeDisplay(EGLDisplay dpy) {
 
 EglDisplay* EglGlobalInfo::getDisplay(EGLNativeDisplayType dpy) {
     android::Mutex::Autolock mutex(m_lock);
-    for(DisplaysList::iterator it = m_displays.begin(); it != m_displays.end() ;it++) {
-        if((*it)->nativeType() == dpy) return (*it);
+    for(DisplaysMap::iterator it = m_displays.begin(); it != m_displays.end() ;it++) {
+        if((*it).second == dpy) return (*it).first;
     }
     return NULL;
 }
 
 EglDisplay* EglGlobalInfo::getDisplay(EGLDisplay dpy) {
     android::Mutex::Autolock mutex(m_lock);
-    for(DisplaysList::iterator it = m_displays.begin(); it != m_displays.end() ;it++) {
-        if(static_cast<EGLDisplay>(*it) == dpy) return (*it);
-    }
-    return NULL;
+    DisplaysMap::iterator it = m_displays.find(static_cast<EglDisplay*>(dpy));
+    return (it != m_displays.end() ? (*it).first : NULL);
+}
+
+EGLNativeInternalDisplayType EglGlobalInfo::generateInternalDisplay(EGLNativeDisplayType dpy){
+    return EglOS::getInternalDisplay(dpy);
 }
