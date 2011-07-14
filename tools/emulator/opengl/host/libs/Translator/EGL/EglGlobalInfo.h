@@ -24,17 +24,18 @@
 #include "EglConfig.h"
 #include "EglContext.h"
 
-typedef std::list<EglDisplay*> DisplaysList;
+typedef std::map<EglDisplay*,EGLNativeDisplayType>DisplaysMap;
 
 
 class EglGlobalInfo {
 
 public:
-    EglDisplay* addDisplay(EGLNativeDisplayType dpy);
+    EglDisplay* addDisplay(EGLNativeDisplayType dpy,EGLNativeInternalDisplayType idpy);
     EglDisplay* getDisplay(EGLNativeDisplayType dpy);
     EglDisplay* getDisplay(EGLDisplay dpy);
     bool removeDisplay(EGLDisplay dpy);
-    EGLNativeDisplayType getDefaultNativeDisplay(){ return m_default;};
+    EGLNativeInternalDisplayType getDefaultNativeDisplay(){ return m_default;};
+    EGLNativeInternalDisplayType generateInternalDisplay(EGLNativeDisplayType dpy);
 
     void setIface(GLESiface* iface,GLESVersion ver) { m_gles_ifaces[ver] = iface;};
     GLESiface* getIface(GLESVersion ver){ return m_gles_ifaces[ver];}
@@ -49,13 +50,13 @@ private:
     EglGlobalInfo();
     ~EglGlobalInfo(){};
 
-    static EglGlobalInfo*   m_singleton;
-    static int              m_refCount;
+    static EglGlobalInfo*          m_singleton;
+    static int                     m_refCount;
 
-    DisplaysList            m_displays;
-    EGLNativeDisplayType    m_default;
-    GLESiface*              m_gles_ifaces[MAX_GLES_VERSION];
-   android::Mutex m_lock;
+    DisplaysMap                    m_displays;
+    EGLNativeInternalDisplayType   m_default;
+    GLESiface*                     m_gles_ifaces[MAX_GLES_VERSION];
+    android::Mutex                 m_lock;
 };
 
 #endif

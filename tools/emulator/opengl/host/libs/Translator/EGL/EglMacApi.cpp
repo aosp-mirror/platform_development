@@ -212,4 +212,12 @@ EGLNativeSurfaceType createPixmapSurface(EGLNativePixmapType pix){
 
 void destroySurface(EGLNativeSurfaceType srfc){
 }
+
+EGLNativeInternalDisplayType getInternalDisplay(EGLNativeDisplayType dpy){
+    return (EGLNativeInternalDisplayType)dpy;
+}
+
+void deleteDisplay(EGLNativeInternalDisplayType idpy){
+}
+
 };
