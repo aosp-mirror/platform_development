@@ -15,6 +15,8 @@
 #ifndef __etc1_h__
 #define __etc1_h__
 
+#define MAX_ETC_SUPPORTED 1
+
 #define ETC1_ENCODED_BLOCK_SIZE 8
 #define ETC1_DECODED_BLOCK_SIZE 48
 
