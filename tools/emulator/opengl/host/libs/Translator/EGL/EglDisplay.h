@@ -38,8 +38,8 @@ class EglDisplay {
 public:
 
 
-    EglDisplay(EGLNativeDisplayType dpy,bool isDefault = true);
-    EGLNativeDisplayType nativeType();
+    EglDisplay(EGLNativeInternalDisplayType dpy,bool isDefault = true);
+    EGLNativeInternalDisplayType nativeType();
     int nConfigs(){ return m_configs.size();}
     int getConfigs(EGLConfig* configs,int config_size);
     int chooseConfigs(const EglConfig& dummy,EGLConfig* configs,int config_size);
@@ -72,19 +72,19 @@ private:
    void addMissingConfigs(void);
    void initConfigurations(int renderableType);
 
-   EGLNativeDisplayType   m_dpy;
-   bool                   m_initialized;
-   bool                   m_configInitialized;
-   bool                   m_isDefault;
-   ConfigsList            m_configs;
-   ContextsHndlMap        m_contexts;
-   SurfacesHndlMap        m_surfaces;
-   GlobalNameSpace        m_globalNameSpace;
-   ObjectNameManager      *m_manager[MAX_GLES_VERSION];
-   android::Mutex         m_lock;
-   ImagesHndlMap          m_eglImages;
-   unsigned int           m_nextEglImageId;
-   EGLNativeContextType   m_globalSharedContext;
+   EGLNativeInternalDisplayType   m_dpy;
+   bool                           m_initialized;
+   bool                           m_configInitialized;
+   bool                           m_isDefault;
+   ConfigsList                    m_configs;
+   ContextsHndlMap                m_contexts;
+   SurfacesHndlMap                m_surfaces;
+   GlobalNameSpace                m_globalNameSpace;
+   ObjectNameManager              *m_manager[MAX_GLES_VERSION];
+   android::Mutex                 m_lock;
+   ImagesHndlMap                  m_eglImages;
+   unsigned int                   m_nextEglImageId;
+   EGLNativeContextType           m_globalSharedContext;
 };
 
 #endif

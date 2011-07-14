@@ -49,7 +49,9 @@ private:
 
 void WinDisplay::releaseAll(){
     for(std::map<int,DisplayInfo>::iterator it = m_map.begin(); it != m_map.end();it++){
-       DestroyWindow((*it).second.hwnd);
+       if((*it).second.hwnd){
+           DestroyWindow((*it).second.hwnd);
+       }
        DeleteDC((*it).second.dc);
     }
 }
@@ -190,17 +192,22 @@ HWND createDummyWindow(){
     return hwnd;
 }
 
-EGLNativeDisplayType getDefaultDisplay() {
+EGLNativeInternalDisplayType getDefaultDisplay() {
     WinDisplay* dpy = new WinDisplay();
 
     HWND hwnd = createDummyWindow();
     HDC  hdc  =  GetDC(hwnd);
     dpy->setInfo(WinDisplay::DEFAULT_DISPLAY,DisplayInfo(hdc,hwnd));
-    return static_cast<EGLNativeDisplayType>(dpy);
+    return static_cast<EGLNativeInternalDisplayType>(dpy);
 }
 
+EGLNativeInternalDisplayType getInternalDisplay(EGLNativeDisplayType display){
+    WinDisplay* dpy = new WinDisplay();
+    dpy->setInfo(WinDisplay::DEFAULT_DISPLAY,DisplayInfo(display,NULL));
+    return dpy;
+}
 
-static HDC getDummyDC(EGLNativeDisplayType display,int cfgId){
+static HDC getDummyDC(EGLNativeInternalDisplayType display,int cfgId){
 
     HDC dpy = NULL;
     if(display->infoExists(cfgId)){
@@ -283,9 +290,15 @@ void initPtrToWglFunctions(){
    DeleteDC(dpy);
 }
 
-bool releaseDisplay(EGLNativeDisplayType dpy) {
+bool releaseDisplay(EGLNativeInternalDisplayType dpy) {
     dpy->releaseAll();
     return true;
+}
+
+void deleteDisplay(EGLNativeInternalDisplayType idpy){
+    if(idpy){
+        delete idpy;
+    }
 }
 
 
@@ -301,7 +314,7 @@ static bool initPixelFormat(HDC dc){
     }
 }
 
-EglConfig* pixelFormatToConfig(EGLNativeDisplayType display,int renderableType,EGLNativePixelFormatType* frmt,int index){
+EglConfig* pixelFormatToConfig(EGLNativeInternalDisplayType display,int renderableType,EGLNativePixelFormatType* frmt,int index){
 
     EGLint  red,green,blue,alpha,depth,stencil;
     EGLint  supportedSurfaces,visualType,visualId;
@@ -371,7 +384,7 @@ EglConfig* pixelFormatToConfig(EGLNativeDisplayType display,int renderableType,E
 }
 
 
-void queryConfigs(EGLNativeDisplayType display,int renderableType,ConfigsList& listOut) {
+void queryConfigs(EGLNativeInternalDisplayType display,int renderableType,ConfigsList& listOut) {
     PIXELFORMATDESCRIPTOR  pfd;
     int  iPixelFormat = 1;
     HDC dpy = getDummyDC(display,WinDisplay::DEFAULT_DISPLAY);
@@ -394,22 +407,22 @@ void queryConfigs(EGLNativeDisplayType display,int renderableType,ConfigsList& l
     }
 }
 
-bool validNativeWin(EGLNativeDisplayType dpy,EGLNativeWindowType win) {
+bool validNativeWin(EGLNativeInternalDisplayType dpy,EGLNativeWindowType win) {
     return IsWindow(win);
 }
 
-bool validNativeWin(EGLNativeDisplayType dpy,EGLNativeSurfaceType win) {
+bool validNativeWin(EGLNativeInternalDisplayType dpy,EGLNativeSurfaceType win) {
     if (!win) return false;
     return validNativeWin(dpy,win->getHwnd());
 }
 
-bool validNativePixmap(EGLNativeDisplayType dpy,EGLNativeSurfaceType pix) {
+bool validNativePixmap(EGLNativeInternalDisplayType dpy,EGLNativeSurfaceType pix) {
     BITMAP bm;
     if (!pix) return false;
     return GetObject(pix->getBmap(), sizeof(BITMAP), (LPSTR)&bm);
 }
 
-bool checkWindowPixelFormatMatch(EGLNativeDisplayType dpy,EGLNativeWindowType win,EglConfig* cfg,unsigned int* width,unsigned int* height) {
+bool checkWindowPixelFormatMatch(EGLNativeInternalDisplayType dpy,EGLNativeWindowType win,EglConfig* cfg,unsigned int* width,unsigned int* height) {
    RECT r;
    if(!GetClientRect(win,&r)) return false;
    *width  = r.right  - r.left;
@@ -420,7 +433,7 @@ bool checkWindowPixelFormatMatch(EGLNativeDisplayType dpy,EGLNativeWindowType wi
    return ret;
 }
 
-bool checkPixmapPixelFormatMatch(EGLNativeDisplayType dpy,EGLNativePixmapType pix,EglConfig* cfg,unsigned int* width,unsigned int* height){
+bool checkPixmapPixelFormatMatch(EGLNativeInternalDisplayType dpy,EGLNativePixmapType pix,EglConfig* cfg,unsigned int* width,unsigned int* height){
 
     BITMAP bm;
     if(!GetObject(pix, sizeof(BITMAP), (LPSTR)&bm)) return false;
@@ -431,7 +444,7 @@ bool checkPixmapPixelFormatMatch(EGLNativeDisplayType dpy,EGLNativePixmapType pi
     return true;
 }
 
-EGLNativeSurfaceType createPbufferSurface(EGLNativeDisplayType display,EglConfig* cfg,EglPbufferSurface* pbSurface) {
+EGLNativeSurfaceType createPbufferSurface(EGLNativeInternalDisplayType display,EglConfig* cfg,EglPbufferSurface* pbSurface) {
 
 
     HDC dpy = getDummyDC(display,cfg->nativeId());
@@ -466,7 +479,7 @@ EGLNativeSurfaceType createPbufferSurface(EGLNativeDisplayType display,EglConfig
     return new SrfcInfo(pb);
 }
 
-bool releasePbuffer(EGLNativeDisplayType display,EGLNativeSurfaceType pb) {
+bool releasePbuffer(EGLNativeInternalDisplayType display,EGLNativeSurfaceType pb) {
     if (!pb) return false;
     if(!s_wglExtProcs->wglReleasePbufferDCARB || !s_wglExtProcs->wglDestroyPbufferARB) return false;
     if(!s_wglExtProcs->wglReleasePbufferDCARB(pb->getPbuffer(),pb->getDC()) || !s_wglExtProcs->wglDestroyPbufferARB(pb->getPbuffer())){
@@ -476,7 +489,7 @@ bool releasePbuffer(EGLNativeDisplayType display,EGLNativeSurfaceType pb) {
     return true;
 }
 
-EGLNativeContextType createContext(EGLNativeDisplayType display,EglConfig* cfg,EGLNativeContextType sharedContext) {
+EGLNativeContextType createContext(EGLNativeInternalDisplayType display,EglConfig* cfg,EGLNativeContextType sharedContext) {
 
     EGLNativeContextType ctx = NULL;
     HDC  dpy  = getDummyDC(display,cfg->nativeId());
@@ -499,7 +512,7 @@ EGLNativeContextType createContext(EGLNativeDisplayType display,EglConfig* cfg,E
     return ctx;
 }
 
-bool destroyContext(EGLNativeDisplayType dpy,EGLNativeContextType ctx) {
+bool destroyContext(EGLNativeInternalDisplayType dpy,EGLNativeContextType ctx) {
     if(!wglDeleteContext(ctx)) {
         DWORD err = GetLastError();
         return false;
@@ -508,7 +521,7 @@ bool destroyContext(EGLNativeDisplayType dpy,EGLNativeContextType ctx) {
 }
 
 
-bool makeCurrent(EGLNativeDisplayType display,EglSurface* read,EglSurface* draw,EGLNativeContextType ctx) {
+bool makeCurrent(EGLNativeInternalDisplayType display,EglSurface* read,EglSurface* draw,EGLNativeContextType ctx) {
 
     HDC hdcRead = read ? read->native()->getDC(): NULL;
     HDC hdcDraw = draw ? draw->native()->getDC(): NULL;
@@ -526,7 +539,7 @@ bool makeCurrent(EGLNativeDisplayType display,EglSurface* read,EglSurface* draw,
     return retVal;
 }
 
-void swapBuffers(EGLNativeDisplayType display,EGLNativeSurfaceType srfc){
+void swapBuffers(EGLNativeInternalDisplayType display,EGLNativeSurfaceType srfc){
     if(srfc && !SwapBuffers(srfc->getDC())) {
         DWORD err = GetLastError();
     }
@@ -535,7 +548,7 @@ void swapBuffers(EGLNativeDisplayType display,EGLNativeSurfaceType srfc){
 
 void waitNative(){}
 
-void swapInterval(EGLNativeDisplayType dpy,EGLNativeSurfaceType win,int interval) {
+void swapInterval(EGLNativeInternalDisplayType dpy,EGLNativeSurfaceType win,int interval) {
 
     if (s_wglExtProcs->wglSwapIntervalEXT){
         s_wglExtProcs->wglSwapIntervalEXT(interval);
@@ -553,4 +566,6 @@ EGLNativeSurfaceType createPixmapSurface(EGLNativePixmapType pix){
 void destroySurface(EGLNativeSurfaceType srfc){
     delete srfc;
 }
+
+
 };
