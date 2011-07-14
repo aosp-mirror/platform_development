@@ -521,13 +521,13 @@ void GLDispatch::dispatchFuncs(GLESVersion version){
         LOAD_GL_FUNC(glGetProgramInfoLog);
         LOAD_GL_FUNC(glGetShaderiv);
         LOAD_GL_FUNC(glGetShaderInfoLog);
-        LOAD_GL_FUNC(glGetShaderPrecisionFormat);
+        LOAD_GLEXT_FUNC(glGetShaderPrecisionFormat);
         LOAD_GL_FUNC(glGetShaderSource);
         LOAD_GL_FUNC(glGetUniformfv);
         LOAD_GL_FUNC(glGetUniformiv);
         LOAD_GL_FUNC(glGetUniformLocation);
-        LOAD_GL_FUNC(glReleaseShaderCompiler);
-        LOAD_GL_FUNC(glShaderBinary);
+        LOAD_GLEXT_FUNC(glReleaseShaderCompiler);
+        LOAD_GLEXT_FUNC(glShaderBinary);
         LOAD_GL_FUNC(glShaderSource);
         LOAD_GL_FUNC(glStencilMaskSeparate);
     }
