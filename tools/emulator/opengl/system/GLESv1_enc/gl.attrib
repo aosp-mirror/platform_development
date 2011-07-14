@@ -238,7 +238,8 @@ glTexEnvxv
 #void glTexImage2D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, GLvoid *pixels)
 glTexImage2D
 	dir pixels in
-	len pixels (pixels == NULL ? 0 : pixelDataSize(self, width, height, format, type, 1))
+	len pixels pixelDataSize(self, width, height, format, type, 1)
+	var_flag pixels nullAllowed
 
 #void glTexParameteriv(GLenum target, GLenum pname, GLint *params)
 glTexParameteriv
