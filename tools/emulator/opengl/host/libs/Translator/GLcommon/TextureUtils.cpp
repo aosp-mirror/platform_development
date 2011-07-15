@@ -15,6 +15,7 @@
 */
 #include <GLcommon/TextureUtils.h>
 #include <GLcommon/GLESmacros.h>
+#include <GLcommon/GLDispatch.h>
 #include <GLcommon/GLESvalidate.h>
 #include <stdio.h>
 #include <cmath>
@@ -41,8 +42,13 @@ int getCompressedFormats(int* formats){
 void  doCompressedTexImage2D(GLEScontext * ctx, GLenum target, GLint level, 
                                           GLenum internalformat, GLsizei width, 
                                           GLsizei height, GLint border, 
-                                          GLsizei imageSize, const GLvoid* data)
+                                          GLsizei imageSize, const GLvoid* data, void * funcPtr)
 {
+    /* XXX: This is just a hack to fix the resolve of glTexImage2D problem
+       It will be removed when we'll no longer link against ligGL */
+    typedef void (GLAPIENTRY *glTexImage2DPtr_t ) (GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid *pixels);
+    glTexImage2DPtr_t glTexImage2DPtr;
+    glTexImage2DPtr =  (glTexImage2DPtr_t)funcPtr; 
 
     switch (internalformat) {
         case GL_ETC1_RGB8_OES:
@@ -60,7 +66,7 @@ void  doCompressedTexImage2D(GLEScontext * ctx, GLenum target, GLint level,
                 etc1_byte* pOut = new etc1_byte[size];
                 int res = etc1_decode_image((const etc1_byte*)data, pOut, width, height, 3, bpr);
                 SET_ERROR_IF(res!=0, GL_INVALID_VALUE);
-                ctx->dispatcher().glTexImage2D(target,level,format,width,height,border,format,type,pOut);
+                glTexImage2DPtr(target,level,format,width,height,border,format,type,pOut);
                 delete [] pOut;
             }
             break;
@@ -88,7 +94,7 @@ void  doCompressedTexImage2D(GLEScontext * ctx, GLenum target, GLint level,
                 {
                    GLenum uncompressedFrmt;
                    unsigned char* uncompressed = uncompressTexture(internalformat,uncompressedFrmt,width,height,imageSize,data,i);
-                   ctx->dispatcher().glTexImage2D(target,i,uncompressedFrmt,tmpWidth,tmpHeight,border,uncompressedFrmt,GL_UNSIGNED_BYTE,uncompressed);
+                   glTexImage2DPtr(target,i,uncompressedFrmt,tmpWidth,tmpHeight,border,uncompressedFrmt,GL_UNSIGNED_BYTE,uncompressed);
                    tmpWidth/=2;
                    tmpHeight/=2;
                    delete uncompressed;
