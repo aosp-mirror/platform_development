@@ -799,6 +799,15 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".app.ActionBarActionProviderActivity"
+                android:label="@string/action_bar_action_provider"
+                android:enabled="@bool/atLeastIceCreamSandwich">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
         <!-- Application Updating Samples -->
 
 <!-- BEGIN_INCLUDE(app_update_declaration) -->
