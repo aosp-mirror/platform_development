@@ -16,6 +16,7 @@
 #include <errno.h>
 #include <stdlib.h>
 #include "iolooper.h"
+#include "sockets.h"
 
 /* An implementation of iolooper.h based on Unix select() */
 #ifdef _WIN32
@@ -238,9 +239,25 @@ iolooper_has_operations( IoLooper* iol )
 int64_t
 iolooper_now(void)
 {
+#ifdef _WIN32
+    FILETIME now;
+    int64_t now_100ns;
+
+    GetSystemTimeAsFileTime(&now);
+
+    /* Get the time as hundreds of nanosecond intervals since
+       12:00 AM January 1t 1601 UTC. We don't really need
+       to compute the value relative to the Posix epoch */
+    now_100ns = ((int64_t)now.dwHighDateTime << 32) | now.dwLowDateTime;
+
+    /* 100 ns == 0.1 us == 0.0001 ms */
+    return now_100ns / 10000LL;
+
+#else /* !_WIN32 */
     struct timeval time_now;
     return gettimeofday(&time_now, NULL) ? -1 : (int64_t)time_now.tv_sec * 1000LL +
                                                 time_now.tv_usec / 1000;
+#endif /* !_WIN32 */
 }
 
 int
