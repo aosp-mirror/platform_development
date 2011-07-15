@@ -30,6 +30,9 @@ LOCAL_PACKAGE_NAME := SampleBrowserPlugin
 
 LOCAL_JNI_SHARED_LIBRARIES := libsampleplugin
 
+# TODO: doesn't compile with this set
+#LOCAL_SDK_VERSION := current
+
 include $(BUILD_PACKAGE)
 
 # ============================================================
