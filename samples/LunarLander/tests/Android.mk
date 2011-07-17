@@ -11,4 +11,6 @@ LOCAL_MODULE_TAGS := tests
 
 LOCAL_INSTRUMENTATION_FOR := LunarLander
 
+LOCAL_SDK_VERSION := current
+
 include $(BUILD_PACKAGE)

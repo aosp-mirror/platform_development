@@ -34,6 +34,8 @@ LOCAL_JNI_SHARED_LIBRARIES := libsimplejni
 
 LOCAL_PROGUARD_ENABLED := disabled
 
+LOCAL_SDK_VERSION := current
+
 include $(BUILD_PACKAGE)
 
 # ============================================================

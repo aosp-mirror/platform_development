@@ -7,4 +7,7 @@ LOCAL_SRC_FILES := $(call all-subdir-java-files)
 
 LOCAL_PACKAGE_NAME := GlobalTime
 
+# TODO: build fails with this set
+# LOCAL_SDK_VERSION := current
+
 include $(BUILD_PACKAGE)

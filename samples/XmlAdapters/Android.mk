@@ -10,6 +10,8 @@ LOCAL_PACKAGE_NAME := xmladapters
 
 LOCAL_PROGUARD_ENABLED := disabled
 
+LOCAL_SDK_VERSION := current
+
 include $(BUILD_PACKAGE)
 
 # Use the following include to make our test apk.
