@@ -191,7 +191,7 @@ class TestWalker(object):
     """
     if android_mk_parser.HasGTest():
       return gtest.GTestFactory(path, upstream_build_path=upstream_build_path)
-    elif android_mk_parser.HasJavaLibrary('android.test.runner'):
+    elif instrumentation_test.HasInstrumentationTest(path):
       return instrumentation_test.InstrumentationTestFactory(path,
           upstream_build_path=upstream_build_path)
     else:
