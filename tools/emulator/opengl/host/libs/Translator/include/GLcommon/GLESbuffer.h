@@ -23,7 +23,7 @@
 
 class GLESbuffer: public ObjectData {
 public:
-   GLESbuffer():m_size(0),m_usage(GL_STATIC_DRAW),m_data(NULL),m_wasBound(false){}
+   GLESbuffer():ObjectData(BUFFER_DATA),m_size(0),m_usage(GL_STATIC_DRAW),m_data(NULL),m_wasBound(false){}
    GLuint getSize(){return m_size;};
    GLuint getUsage(){return m_usage;};
    GLvoid* getData(){ return m_data;}

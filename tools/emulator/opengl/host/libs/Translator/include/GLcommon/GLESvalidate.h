@@ -22,7 +22,7 @@ struct GLESvalidate
 {
 static bool textureEnum(GLenum e,unsigned int maxTex);
 static bool pixelType(GLEScontext * ctx,GLenum type);
-static bool pixelOp(GLenum format,GLenum type); 
+static bool pixelOp(GLenum format,GLenum type);
 static bool pixelFrmt(GLEScontext* ctx , GLenum format);
 static bool bufferTarget(GLenum target);
 static bool bufferParam(GLenum param);

@@ -13,17 +13,28 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
+#ifndef PROGRAM_DATA_H
+#define PROGRAM_DATA_H
 
-typedef double      GLclampd;   /* double precision float in [0,1] */
-typedef double      GLdouble;   /* double precision float */
+class ProgramData:public ObjectData{
+public:
+    ProgramData();
+    virtual ~ProgramData();
 
-#define GL_TEXTURE_GEN_S            0x0C60
-#define GL_TEXTURE_GEN_T            0x0C61
-#define GL_TEXTURE_GEN_R            0x0C62
-#define GL_CLIENT_VERTEX_ARRAY_BIT    0x00000002
-#define GL_TRANSFORM_BIT      0x00001000
-#define GL_INT                0x1404
-#define GL_HALF_FLOAT_NV      0x140B
-#define GL_HALF_FLOAT         0x140B
-#define GL_VERTEX_PROGRAM_POINT_SIZE 0x8642
-#define GL_POINT_SPRITE       0x8861
+    GLuint getAttachedVertexShader();
+    GLuint getAttachedFragmentShader();
+    GLuint getAttachedShader(GLenum type);
+
+    bool attachShader(GLuint shader,GLenum type);
+    bool isAttached(GLuint shader);
+    bool detachShader(GLuint shader);
+
+    void setLinkStatus(GLint status);
+    GLint getLinkStatus();
+
+private:
+    GLuint AttachedVertexShader;
+    GLuint AttachedFragmentShader;
+    GLint  LinkStatus;
+};
+#endif
