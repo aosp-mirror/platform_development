@@ -50,7 +50,7 @@ static RsdHalFunctions FunctionTable = {
     {
         rsdAllocationInit,
         rsdAllocationDestroy,
-        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
+        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
     },
     { NULL, NULL, NULL }, { NULL, NULL, NULL }, { NULL, NULL, NULL },
     { NULL, NULL, NULL }, { NULL, NULL, NULL }, { NULL, NULL },
