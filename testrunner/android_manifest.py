@@ -34,7 +34,7 @@ class AndroidManifest(object):
 
   def __init__(self, app_path=None):
     if app_path:
-      self.ParseManifest(app_path)
+      self._ParseManifest(app_path)
 
   def GetAppPath(self):
     """Retrieve file system path to this manifest file's directory."""
@@ -51,7 +51,7 @@ class AndroidManifest(object):
       return None
     return manifest.getAttribute('package')
 
-  def ParseManifest(self, app_path):
+  def _ParseManifest(self, app_path):
     """Parse AndroidManifest.xml at the specified path.
 
     Args:
@@ -108,3 +108,20 @@ class AndroidManifest(object):
     """Saves the manifest to disk."""
     self._dom.writexml(open(self._manifest_path, mode='w'), encoding='utf-8')
 
+
+def CreateAndroidManifest(path):
+  """Factory method for creating a AndroidManifest.
+
+  Args:
+    path: the directory for the manifest file
+
+  Return:
+    the AndroidManifest or None if there was no file present
+  """
+  manifest_path = os.path.join(path, AndroidManifest.FILENAME)
+  if os.path.isfile(manifest_path):
+    manifest = AndroidManifest()
+    manifest._ParseManifest(path)
+    return manifest
+  else:
+    return None

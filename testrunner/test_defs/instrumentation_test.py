@@ -199,6 +199,17 @@ class InstrumentationTestSuite(test_suite.AbstractTestSuite):
                (total_count, fail_count, error_count))
 
 
+def HasInstrumentationTest(path):
+  """Determine if given path defines an instrumentation test.
+
+  Args:
+    path: file system path to instrumentation test.
+  """
+  manifest_parser = android_manifest.CreateAndroidManifest(path)
+  if manifest_parser:
+    return manifest_parser.GetInstrumentationNames()
+  return False
+
 class InstrumentationTestFactory(test_suite.AbstractTestFactory):
   """A factory for creating InstrumentationTestSuites"""
 
