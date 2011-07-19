@@ -33,11 +33,11 @@ NameSpace::~NameSpace()
     }
 }
 
-unsigned int
-NameSpace::genName(unsigned int p_localName, bool genGlobal, bool genLocal)
+ObjectLocalName
+NameSpace::genName(ObjectLocalName p_localName, bool genGlobal, bool genLocal)
 {
 
-    unsigned int localName = p_localName;
+    ObjectLocalName localName = p_localName;
     if (genLocal) {
         do {
             localName = ++m_nextName;
@@ -53,7 +53,7 @@ NameSpace::genName(unsigned int p_localName, bool genGlobal, bool genLocal)
 }
 
 unsigned int
-NameSpace::getGlobalName(unsigned int p_localName)
+NameSpace::getGlobalName(ObjectLocalName p_localName)
 {
     NamesMap::iterator n( m_localToGlobalMap.find(p_localName) );
     if (n != m_localToGlobalMap.end()) {
@@ -65,7 +65,7 @@ NameSpace::getGlobalName(unsigned int p_localName)
     return 0;
 }
 
-unsigned int
+ObjectLocalName
 NameSpace::getLocalName(unsigned int p_globalName)
 {
     for(NamesMap::iterator it = m_localToGlobalMap.begin(); it != m_localToGlobalMap.end();it++){
@@ -80,7 +80,7 @@ NameSpace::getLocalName(unsigned int p_globalName)
 }
 
 void
-NameSpace::deleteName(unsigned int p_localName)
+NameSpace::deleteName(ObjectLocalName p_localName)
 {
     NamesMap::iterator n( m_localToGlobalMap.find(p_localName) );
     if (n != m_localToGlobalMap.end()) {
@@ -90,13 +90,13 @@ NameSpace::deleteName(unsigned int p_localName)
 }
 
 bool
-NameSpace::isObject(unsigned int p_localName)
+NameSpace::isObject(ObjectLocalName p_localName)
 {
     return (m_localToGlobalMap.find(p_localName) != m_localToGlobalMap.end() );
 }
 
 void
-NameSpace::replaceGlobalName(unsigned int p_localName, unsigned int p_globalName)
+NameSpace::replaceGlobalName(ObjectLocalName p_localName, unsigned int p_globalName)
 {
     NamesMap::iterator n( m_localToGlobalMap.find(p_localName) );
     if (n != m_localToGlobalMap.end()) {
@@ -105,7 +105,7 @@ NameSpace::replaceGlobalName(unsigned int p_localName, unsigned int p_globalName
     }
 }
 
-typedef std::pair<NamedObjectType, unsigned int> ObjectIDPair;
+typedef std::pair<NamedObjectType, ObjectLocalName> ObjectIDPair;
 typedef std::map<ObjectIDPair, ObjectDataPtr> ObjectDataMap;
 
 ShareGroup::ShareGroup(GlobalNameSpace *globalNameSpace)
@@ -133,20 +133,20 @@ ShareGroup::~ShareGroup()
     mutex_destroy(&m_lock);
 }
 
-unsigned int
-ShareGroup::genName(NamedObjectType p_type, unsigned int p_localName, bool genLocal)
+ObjectLocalName
+ShareGroup::genName(NamedObjectType p_type, ObjectLocalName p_localName, bool genLocal)
 {
     if (p_type >= NUM_OBJECT_TYPES) return 0;
 
     mutex_lock(&m_lock);
-    unsigned int localName = m_nameSpace[p_type]->genName(p_localName,true,genLocal);
+    ObjectLocalName localName = m_nameSpace[p_type]->genName(p_localName,true,genLocal);
     mutex_unlock(&m_lock);
 
     return localName;
 }
 
 unsigned int
-ShareGroup::getGlobalName(NamedObjectType p_type, unsigned int p_localName)
+ShareGroup::getGlobalName(NamedObjectType p_type, ObjectLocalName p_localName)
 {
     if (p_type >= NUM_OBJECT_TYPES) return 0;
 
@@ -157,20 +157,20 @@ ShareGroup::getGlobalName(NamedObjectType p_type, unsigned int p_localName)
     return globalName;
 }
 
-unsigned int
+ObjectLocalName
 ShareGroup::getLocalName(NamedObjectType p_type, unsigned int p_globalName)
 {
     if (p_type >= NUM_OBJECT_TYPES) return 0;
 
     mutex_lock(&m_lock);
-    unsigned int localName = m_nameSpace[p_type]->getLocalName(p_globalName);
+    ObjectLocalName localName = m_nameSpace[p_type]->getLocalName(p_globalName);
     mutex_unlock(&m_lock);
 
     return localName;
 }
 
 void
-ShareGroup::deleteName(NamedObjectType p_type, unsigned int p_localName)
+ShareGroup::deleteName(NamedObjectType p_type, ObjectLocalName p_localName)
 {
     if (p_type >= NUM_OBJECT_TYPES) return;
 
@@ -184,7 +184,7 @@ ShareGroup::deleteName(NamedObjectType p_type, unsigned int p_localName)
 }
 
 bool
-ShareGroup::isObject(NamedObjectType p_type, unsigned int p_localName)
+ShareGroup::isObject(NamedObjectType p_type, ObjectLocalName p_localName)
 {
     if (p_type >= NUM_OBJECT_TYPES) return 0;
 
@@ -196,7 +196,7 @@ ShareGroup::isObject(NamedObjectType p_type, unsigned int p_localName)
 }
 
 void
-ShareGroup::replaceGlobalName(NamedObjectType p_type, unsigned int p_localName, unsigned int p_globalName)
+ShareGroup::replaceGlobalName(NamedObjectType p_type, ObjectLocalName p_localName, unsigned int p_globalName)
 {
     if (p_type >= NUM_OBJECT_TYPES) return;
 
@@ -206,7 +206,7 @@ ShareGroup::replaceGlobalName(NamedObjectType p_type, unsigned int p_localName, 
 }
 
 void
-ShareGroup::setObjectData(NamedObjectType p_type, unsigned int p_localName, ObjectDataPtr data)
+ShareGroup::setObjectData(NamedObjectType p_type, ObjectLocalName p_localName, ObjectDataPtr data)
 {
     if (p_type >= NUM_OBJECT_TYPES) return;
 
@@ -225,7 +225,7 @@ ShareGroup::setObjectData(NamedObjectType p_type, unsigned int p_localName, Obje
 }
 
 ObjectDataPtr
-ShareGroup::getObjectData(NamedObjectType p_type, unsigned int p_localName)
+ShareGroup::getObjectData(NamedObjectType p_type, ObjectLocalName p_localName)
 {
     ObjectDataPtr ret;
 
