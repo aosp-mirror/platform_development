@@ -81,14 +81,14 @@ system/build.prop platforms/${PLATFORM_NAME}/images/${TARGET_CPU_ABI}/build.prop
 # Note: the kernel image is handled by sdk-android-<abi>.atree now.
 
 # emulator skins from sdk.git
-#development/tools/emulator/skins/QVGA      platforms/${PLATFORM_NAME}/skins/QVGA
-#development/tools/emulator/skins/WQVGA432  platforms/${PLATFORM_NAME}/skins/WQVGA432
-#development/tools/emulator/skins/WQVGA400  platforms/${PLATFORM_NAME}/skins/WQVGA400
-#development/tools/emulator/skins/HVGA      platforms/${PLATFORM_NAME}/skins/HVGA
-#development/tools/emulator/skins/WVGA800   platforms/${PLATFORM_NAME}/skins/WVGA800
-#development/tools/emulator/skins/WVGA854   platforms/${PLATFORM_NAME}/skins/WVGA854
-development/tools/emulator/skins/WSVGA      platforms/${PLATFORM_NAME}/skins/WSVGA
-development/tools/emulator/skins/WXGA       platforms/${PLATFORM_NAME}/skins/WXGA
+development/tools/emulator/skins/QVGA      platforms/${PLATFORM_NAME}/skins/QVGA
+development/tools/emulator/skins/WQVGA432  platforms/${PLATFORM_NAME}/skins/WQVGA432
+development/tools/emulator/skins/WQVGA400  platforms/${PLATFORM_NAME}/skins/WQVGA400
+development/tools/emulator/skins/HVGA      platforms/${PLATFORM_NAME}/skins/HVGA
+development/tools/emulator/skins/WVGA800   platforms/${PLATFORM_NAME}/skins/WVGA800
+development/tools/emulator/skins/WVGA854   platforms/${PLATFORM_NAME}/skins/WVGA854
+development/tools/emulator/skins/WSVGA     platforms/${PLATFORM_NAME}/skins/WSVGA
+development/tools/emulator/skins/WXGA      platforms/${PLATFORM_NAME}/skins/WXGA
 
 # Platform SDK properties
 development/sdk/sdk.properties               platforms/${PLATFORM_NAME}/sdk.properties
