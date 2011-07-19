@@ -111,7 +111,11 @@ public class MonkeySourceNetworkViews {
             public void onInterrupt() {}
 
             public void onAccessibilityEvent(AccessibilityEvent event) {
-                 sLastAccessibilityEvent.set(AccessibilityEvent.obtain(event));
+                Log.d(TAG, "Accessibility Event");
+                sLastAccessibilityEvent.set(AccessibilityEvent.obtain(event));
+                synchronized(sConnection) {
+                    sConnection.notifyAll();
+                }
             }
         };
         IAccessibilityManager manager = IAccessibilityManager.Stub.asInterface(
@@ -401,6 +405,11 @@ public class MonkeySourceNetworkViews {
             if (args.size() == 0) {
                 if (node.isPassword()){
                     return new MonkeyCommandReturn(false, "Node contains a password");
+                }
+                /* Occasionally we get a null from the accessibility API, rather than an empty
+                 * string */
+                if (node.getText() == null) {
+                    return new MonkeyCommandReturn(true, "");
                 }
                 return new MonkeyCommandReturn(true, node.getText().toString());
             }
