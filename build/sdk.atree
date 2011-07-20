@@ -226,4 +226,4 @@ development/samples/Support13Demos                                              
 # Tests Component
 ##############################################################################
 framework/layoutlib-tests.jar tests/libtests/layoutlib-tests.jar
-
+system/app/ConnectivityTest.apk tests/emulator-test-apps/ConnectivityTest.apk
