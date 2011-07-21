@@ -159,6 +159,11 @@ public class MonkeySourceNetworkVars {
                     return Long.toString(System.currentTimeMillis());
                 }
             });
+        VAR_MAP.put("monkey.version", new VarGetter() {
+                public String get() {
+                    return Integer.toString(MonkeySourceNetwork.MONKEY_NETWORK_VERSION);
+                }
+            });
     }
 
     /**
