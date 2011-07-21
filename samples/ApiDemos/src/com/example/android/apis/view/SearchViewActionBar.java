@@ -25,8 +25,10 @@ import android.content.Context;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
+import android.view.MenuItem.OnActionExpandListener;
 import android.widget.Button;
 import android.widget.SearchView;
 import android.widget.TextView;
@@ -65,15 +67,21 @@ public class SearchViewActionBar extends Activity implements SearchView.OnQueryT
 
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.searchview_in_menu, menu);
-        mSearchView = (SearchView) menu.findItem(R.id.action_search).getActionView();
-        setupSearchView();
+        MenuItem searchItem = menu.findItem(R.id.action_search);
+        mSearchView = (SearchView) searchItem.getActionView();
+        setupSearchView(searchItem);
 
         return true;
     }
 
-    private void setupSearchView() {
+    private void setupSearchView(MenuItem searchItem) {
 
-        mSearchView.setIconifiedByDefault(true);
+        if (isAlwaysExpanded()) {
+            mSearchView.setIconifiedByDefault(false);
+        } else {
+            searchItem.setShowAsActionFlags(MenuItem.SHOW_AS_ACTION_IF_ROOM
+                    | MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
+        }
 
         SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
         if (searchManager != null) {
@@ -115,5 +123,9 @@ public class SearchViewActionBar extends Activity implements SearchView.OnQueryT
         } else if (view == mOpenButton) {
             mSearchView.setIconified(false);
         }
+    }
+
+    protected boolean isAlwaysExpanded() {
+        return false;
     }
 }
