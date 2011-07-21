@@ -9,6 +9,6 @@ and ViewDebug.stopLooperProfiling().
 After profiling the file must be pulled from the device using adb pull.
 
 To use this tool, compile the single .java file and run:
-java LooperTraceToJSON myLooperTracesFile > looper.trace.json
+java LooperTraceToTraceView myLooperTracesFile looperTraceViewFile
 
-Then open LooperTrace.html and you can inspect your looper traces.
+The run traceview looperTraceViewFile
