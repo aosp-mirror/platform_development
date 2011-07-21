@@ -75,7 +75,8 @@ public class ForegroundDispatch extends Activity {
     @Override
     public void onResume() {
         super.onResume();
-        mAdapter.enableForegroundDispatch(this, mPendingIntent, mFilters, mTechLists);
+        if (mAdapter != null) mAdapter.enableForegroundDispatch(this, mPendingIntent, mFilters,
+                mTechLists);
     }
 
     @Override
@@ -87,7 +88,6 @@ public class ForegroundDispatch extends Activity {
     @Override
     public void onPause() {
         super.onPause();
-        //mAdapter.disableForegroundDispatch(this);
-        throw new RuntimeException("onPause not implemented to fix build");
+        if (mAdapter != null) mAdapter.disableForegroundDispatch(this);
     }
 }
