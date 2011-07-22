@@ -263,6 +263,15 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".app.FragmentCustomAnimations"
+                android:label="@string/fragment_custom_animations"
+                android:enabled="@bool/atLeastHoneycombMR2">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
         <activity android:name=".app.FragmentHideShow"
                 android:label="@string/fragment_hide_show"
                 android:windowSoftInputMode="stateUnchanged"

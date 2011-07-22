@@ -114,6 +114,8 @@
     <string name="fragment_arguments_embedded">From Attributes</string>
     <string name="fragment_arguments_embedded_land">Landscape Only</string>
 
+    <string name="fragment_custom_animations">App/Fragment/Custom Animations</string>
+
     <string name="fragment_hide_show">App/Fragment/Hide and Show</string>
 
     <string name="fragment_context_menu">App/Fragment/Context Menu</string>
