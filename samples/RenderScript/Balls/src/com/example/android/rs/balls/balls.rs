@@ -68,7 +68,7 @@ int root() {
     bc.dimX = rsAllocationGetDimX(bc.ain);
     bc.dt = 1.f / 30.f;
 
-    rsForEach(physics_script, bc.ain, bc.aout, &bc);
+    rsForEach(physics_script, bc.ain, bc.aout, &bc, sizeof(bc));
 
     for (uint32_t ct=0; ct < bc.dimX; ct++) {
         point[ct].position = bout[ct].position;
