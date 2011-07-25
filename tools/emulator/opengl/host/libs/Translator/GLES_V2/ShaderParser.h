@@ -18,7 +18,7 @@ public:
 
 private:
     void parseOriginalSrc();
-    void parseGLSLversion();
+    void parseGLSLversion(const char *forceVersion);
     void parseOmitPrecision();
     void parseExtendDefaultPrecision();
     void clearParsedSrc();
