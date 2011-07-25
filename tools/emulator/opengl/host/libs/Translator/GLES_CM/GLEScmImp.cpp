@@ -886,6 +886,16 @@ GL_API void GL_APIENTRY  glGetIntegerv( GLenum pname, GLint *params) {
     case GL_COMPRESSED_TEXTURE_FORMATS:
         getCompressedFormats(params);
         break;
+    case GL_MAX_CLIP_PLANES:
+        ctx->dispatcher().glGetIntegerv(pname,params);
+        if(*params > 6)
+        {
+            // GLES spec requires only 6, and the ATI driver erronously
+            // returns 8 (although it supports only 6). This WAR is simple,
+            // compliant and good enough for developers.
+            *params = 6;
+        }
+        break;
     default:
         ctx->dispatcher().glGetIntegerv(pname,params);
     }
