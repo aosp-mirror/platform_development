@@ -117,6 +117,13 @@ See test_defs.xsd for more information.
     coverage_target="framework"
     continuous="true" />
 
+<test name="ex-variablespeed"
+    build_path="frameworks/ex/variablespeed/tests"
+    package="com.android.ex.variablespeed.tests"
+    coverage_target="framework"
+    continuous="true"
+    description="Framework variable speed audio tests" />
+
 <test-native name="libui"
     build_path="frameworks/base/libs/ui/tests"
     description="Framework libui unit tests." />
