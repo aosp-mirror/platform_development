@@ -862,6 +862,7 @@ GL_API void GL_APIENTRY  glGetIntegerv( GLenum pname, GLint *params) {
     }
     
     GLint i;
+    GLfloat f;
 
     switch(pname)
     {
@@ -896,6 +897,13 @@ GL_API void GL_APIENTRY  glGetIntegerv( GLenum pname, GLint *params) {
             *params = 6;
         }
         break;
+    case GL_ALPHA_TEST_REF:
+        // Both the ATI and nVidia OpenGL drivers return the wrong answer
+        // here. So return the right one.
+        ctx->dispatcher().glGetFloatv(pname,&f);
+        *params = (int)(f * (float)0x7fffffff);
+        break;
+
     default:
         ctx->dispatcher().glGetIntegerv(pname,params);
     }
