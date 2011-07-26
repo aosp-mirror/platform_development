@@ -47,7 +47,7 @@
         android:name="android.permission.WRITE_SYNC_SETTINGS" />
 
     <uses-sdk android:minSdkVersion="8" android:targetSdkVersion="11"/>
-        
+
     <application
         android:icon="@drawable/icon"
         android:label="@string/label">
@@ -111,6 +111,16 @@
                     android:name="android.intent.action.EDIT" />
                 <data
                     android:mimeType="vnd.android.cursor.item/raw_contact" />
+            </intent-filter>
+            <!--
+                We use the INVITE intent to add a raw contact to an existing contact.
+                It always comes with a lookup URI.
+            -->
+            <intent-filter>
+                <action
+                    android:name="com.android.contacts.action.INVITE_CONTACT" />
+                <data
+                    android:mimeType="vnd.android.cursor.item/contact" />
             </intent-filter>
         </activity>
     </application>

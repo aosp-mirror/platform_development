@@ -32,6 +32,7 @@ import android.provider.ContactsContract.CommonDataKinds.Im;
 import android.provider.ContactsContract.CommonDataKinds.Phone;
 import android.provider.ContactsContract.CommonDataKinds.Photo;
 import android.provider.ContactsContract.CommonDataKinds.StructuredName;
+import android.provider.ContactsContract.Contacts;
 import android.provider.ContactsContract.Data;
 import android.provider.ContactsContract.RawContacts;
 import android.provider.ContactsContract.Settings;
@@ -750,5 +751,19 @@ public class ContactManager {
         public static final int COLUMN_SYNC_DIRTY = COLUMN_SYNC1;
 
         public static final String SELECTION = Data.RAW_CONTACT_ID + "=?";
+    }
+
+    /**
+     * Constants for a query to read basic contact columns
+     */
+    final public static class ContactQuery {
+        private ContactQuery() {
+        }
+
+        public static final String[] PROJECTION =
+            new String[] {Contacts._ID, Contacts.DISPLAY_NAME};
+
+        public static final int COLUMN_ID = 0;
+        public static final int COLUMN_DISPLAY_NAME = 1;
     }
 }
