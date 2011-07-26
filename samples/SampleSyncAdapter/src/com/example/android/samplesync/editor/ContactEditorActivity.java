@@ -15,12 +15,16 @@
  */
 package com.example.android.samplesync.editor;
 
+import com.example.android.samplesync.Constants;
 import com.example.android.samplesync.R;
 import com.example.android.samplesync.client.RawContact;
 import com.example.android.samplesync.platform.BatchOperation;
 import com.example.android.samplesync.platform.ContactManager;
+import com.example.android.samplesync.platform.ContactManager.ContactQuery;
 import com.example.android.samplesync.platform.ContactManager.EditorQuery;
 
+import android.accounts.Account;
+import android.accounts.AccountManager;
 import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.Context;
@@ -29,6 +33,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.provider.ContactsContract;
 import android.provider.ContactsContract.CommonDataKinds.Email;
 import android.provider.ContactsContract.CommonDataKinds.Phone;
 import android.provider.ContactsContract.CommonDataKinds.StructuredName;
@@ -86,8 +91,8 @@ public class ContactEditorActivity extends Activity {
         mWorkPhoneEditText = (EditText)findViewById(R.id.editor_phone_work);
         mEmailEditText = (EditText)findViewById(R.id.editor_email);
 
-        // Figure out whether we're creating a new contact (ACTION_INSERT) or editing
-        // an existing contact.
+        // Figure out whether we're creating a new contact (ACTION_INSERT), editing
+        // an existing contact, or adding a new one to existing contact (INVITE_CONTACT).
         Intent intent = getIntent();
         String action = intent.getAction();
         if (Intent.ACTION_INSERT.equals(action)) {
@@ -100,6 +105,24 @@ public class ContactEditorActivity extends Activity {
                 finish();
             }
             setAccountName(accountName);
+        } else if (ContactsContract.Intents.INVITE_CONTACT.equals(action)) {
+            // Adding to an existing contact.
+            mIsInsert = true;
+            // Use the first account found.
+            Account[] myAccounts = AccountManager.get(this).getAccountsByType(
+                    Constants.ACCOUNT_TYPE);
+            if (myAccounts.length == 0) {
+                Log.e(TAG, "Account not configured");
+                finish();
+            }
+            setAccountName(myAccounts[0].name);
+
+            Uri lookupUri = intent.getData();
+            if (lookupUri == null) {
+                Log.e(TAG, "Contact lookup URI is required");
+                finish();
+            }
+            startLoadContactEntity(lookupUri);
         } else {
             // We're editing an existing contact. Load in the data from the contact
             // so that the user can edit it.
@@ -163,7 +186,7 @@ public class ContactEditorActivity extends Activity {
      * successfully loaded from the Contacts data provider.
      */
     public void onRawContactEntityLoaded(Cursor cursor) {
-        while (cursor.moveToNext()) {
+        if (cursor.moveToFirst()) {
             String mimetype = cursor.getString(EditorQuery.COLUMN_MIMETYPE);
             if (StructuredName.CONTENT_ITEM_TYPE.equals(mimetype)) {
                 setAccountName(cursor.getString(EditorQuery.COLUMN_ACCOUNT_NAME));
@@ -181,6 +204,23 @@ public class ContactEditorActivity extends Activity {
             } else if (Email.CONTENT_ITEM_TYPE.equals(mimetype)) {
                 mEmailEditText.setText(cursor.getString(EditorQuery.COLUMN_DATA1));
             }
+        }
+    }
+
+    /**
+     * Create an AsyncTask to load the contact from the Contacts data provider
+     */
+    private void startLoadContactEntity(Uri lookupUri) {
+        new LoadContactTask().execute(lookupUri);
+    }
+
+    /**
+     * Called by the LoadContactTask when the contact information has been
+     * successfully loaded from the Contacts data provider.
+     */
+    public void onContactEntityLoaded(Cursor cursor) {
+        if (cursor.moveToFirst()) {
+            mNameEditText.setText(cursor.getString(ContactQuery.COLUMN_DISPLAY_NAME));
         }
     }
 
@@ -212,6 +252,7 @@ public class ContactEditorActivity extends Activity {
      */
     private void setAccountName(String accountName) {
         mAccountName = accountName;
+        Log.i(TAG, "account=" + mAccountName);
         if (accountName != null) {
             TextView accountNameLabel = (TextView)findViewById(R.id.header_account_name);
             if (accountNameLabel != null) {
@@ -286,12 +327,11 @@ public class ContactEditorActivity extends Activity {
 
         @Override
         protected void onPostExecute(Cursor cursor) {
+            if (cursor == null) return;
             // After we've successfully loaded the contact, call back into
             // the ContactEditorActivity so we can update the UI
             try {
-                if (cursor != null) {
-                    onRawContactEntityLoaded(cursor);
-                }
+                onRawContactEntityLoaded(cursor);
             } finally {
                 cursor.close();
             }
@@ -364,6 +404,27 @@ public class ContactEditorActivity extends Activity {
         protected void onPostExecute(Uri result) {
             // Tell the UI that the contact has been successfully saved
             onContactSaved(result);
+        }
+    }
+
+    /**
+     * Loads contact information by a lookup URI.
+     */
+    public class LoadContactTask extends AsyncTask<Uri, Void, Cursor> {
+
+        @Override
+        protected Cursor doInBackground(Uri... params) {
+            return getContentResolver().query(params[0], ContactQuery.PROJECTION, null, null, null);
+        }
+
+        @Override
+        protected void onPostExecute(Cursor cursor) {
+            if (cursor == null) return;
+            try {
+                onContactEntityLoaded(cursor);
+            } finally {
+                cursor.close();
+            }
         }
     }
 }

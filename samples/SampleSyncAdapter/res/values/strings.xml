@@ -102,4 +102,11 @@
         name="menu_done">Done</string>
     <string
         name="menu_cancel">Cancel</string>
+
+    <!-- Strings for contacts.xml -->
+    <skip />
+
+    <!-- The label of the button to add contact to this contact provider  -->
+    <string name="invite_action_label">Add to Sample SyncAdaper</string>
+
 </resources>
