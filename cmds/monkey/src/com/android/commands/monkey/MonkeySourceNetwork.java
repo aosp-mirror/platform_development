@@ -50,6 +50,7 @@ public class MonkeySourceNetwork implements MonkeyEventSource {
     private static final String TAG = "MonkeyStub";
     /* The version of the monkey network protocol */
     public static final int MONKEY_NETWORK_VERSION = 2;
+    private static DeferredReturn deferredReturn;
 
     /**
      * ReturnValue from the MonkeyCommand that indicates whether the
@@ -378,6 +379,52 @@ public class MonkeySourceNetwork implements MonkeyEventSource {
     }
 
     /**
+     * Command to defer the return of another command until the given event occurs.
+     * deferreturn takes three arguments. It takes an event to wait for (e.g. waiting for the
+     * device to display a different activity would the "screenchange" event), a
+     * timeout, which is the number of microseconds to wait for the event to occur, and it takes
+     * a command. The command can be any other Monkey command that can be issued over the network
+     * (e.g. press KEYCODE_HOME). deferreturn will then run this command, return an OK, wait for
+     * the event to occur and return the deferred return value when either the event occurs or
+     * when the timeout is reached (whichever occurs first). Note that there is no difference
+     * between an event occurring and the timeout being reached; the client will have to verify
+     * that the change actually occured.
+     *
+     * Example:
+     *     deferreturn screenchange 1000 press KEYCODE_HOME
+     * This command will press the home key on the device and then wait for the screen to change
+     * for up to one second. Either the screen will change, and the results fo the key press will
+     * be returned to the client, or the timeout will be reached, and the results for the key
+     * press will be returned to the client.
+     */
+    private static class DeferReturnCommand implements MonkeyCommand {
+        // deferreturn [event] [timeout (ms)] [command]
+        // deferreturn screenchange 100 tap 10 10
+        public MonkeyCommandReturn translateCommand(List<String> command,
+                                                    CommandQueue queue) {
+            if (command.size() > 3) {
+                String event = command.get(1);
+                int eventId;
+                if (event.equals("screenchange")) {
+                    eventId = DeferredReturn.ON_WINDOW_STATE_CHANGE;
+                } else {
+                    return EARG;
+                }
+                long timeout = Long.parseLong(command.get(2));
+                MonkeyCommand deferredCommand = COMMAND_MAP.get(command.get(3));
+                if (deferredCommand != null) {
+                    List<String> parts = command.subList(3, command.size());
+                    MonkeyCommandReturn ret = deferredCommand.translateCommand(parts, queue);
+                    deferredReturn = new DeferredReturn(eventId, ret, timeout);
+                    return OK;
+                }
+            }
+            return EARG;
+        }
+    }
+
+
+    /**
      * Force the device to wake up.
      *
      * @return true if woken up OK.
@@ -415,6 +462,7 @@ public class MonkeySourceNetwork implements MonkeyEventSource {
         COMMAND_MAP.put("getrootview", new MonkeySourceNetworkViews.GetRootViewCommand());
         COMMAND_MAP.put("getviewswithtext",
                         new MonkeySourceNetworkViews.GetViewsWithTextCommand());
+        COMMAND_MAP.put("deferreturn", new DeferReturnCommand());
     }
 
     // QUIT command
@@ -455,6 +503,40 @@ public class MonkeySourceNetwork implements MonkeyEventSource {
          */
         public MonkeyEvent getNextQueuedEvent() {
             return queuedEvents.poll();
+        }
+    };
+
+    // A holder class for a deferred return value. This allows us to defer returning the success of
+    // a call until a given event has occurred.
+    private static class DeferredReturn {
+        public static final int ON_WINDOW_STATE_CHANGE = 1;
+
+        private int event;
+        private MonkeyCommandReturn deferredReturn;
+        private long timeout;
+
+        public DeferredReturn(int event, MonkeyCommandReturn deferredReturn, long timeout) {
+            this.event = event;
+            this.deferredReturn = deferredReturn;
+            this.timeout = timeout;
+        }
+
+        /**
+         * Wait until the given event has occurred before returning the value.
+         * @return The MonkeyCommandReturn from the command that was deferred.
+         */
+        public MonkeyCommandReturn waitForEvent() {
+            switch(event) {
+                case ON_WINDOW_STATE_CHANGE:
+                    try {
+                        synchronized(MonkeySourceNetworkViews.sConnection) {
+                            MonkeySourceNetworkViews.sConnection.wait(timeout);
+                        }
+                    } catch(InterruptedException e) {
+                        Log.d(TAG, "Deferral interrupted: " + e.getMessage());
+                    }
+            }
+            return deferredReturn;
         }
     };
 
@@ -571,22 +653,27 @@ public class MonkeySourceNetwork implements MonkeyEventSource {
             MonkeyCommand command = COMMAND_MAP.get(parts.get(0));
             if (command != null) {
                 MonkeyCommandReturn ret = command.translateCommand(parts, commandQueue);
-                if (ret.wasSuccessful()) {
-                    if (ret.hasMessage()) {
-                        returnOk(ret.getMessage());
-                    } else {
-                        returnOk();
-                    }
-                } else {
-                    if (ret.hasMessage()) {
-                        returnError(ret.getMessage());
-                    } else {
-                        returnError();
-                    }
-                }
+                handleReturn(ret);
             }
         }
     }
+
+    private void handleReturn(MonkeyCommandReturn ret) {
+        if (ret.wasSuccessful()) {
+            if (ret.hasMessage()) {
+                returnOk(ret.getMessage());
+            } else {
+                returnOk();
+            }
+        } else {
+            if (ret.hasMessage()) {
+                returnError(ret.getMessage());
+            } else {
+                returnError();
+            }
+        }
+    }
+
 
     public MonkeyEvent getNextEvent() {
         if (!started) {
@@ -609,6 +696,16 @@ public class MonkeySourceNetwork implements MonkeyEventSource {
                 if (queuedEvent != null) {
                     // dispatch the event
                     return queuedEvent;
+                }
+
+                // Check to see if we have any returns that have been deferred. If so, now that
+                // we've run the queued commands, wait for the given event to happen (or the timeout
+                // to be reached), and handle the deferred MonkeyCommandReturn.
+                if (deferredReturn != null) {
+                    Log.d(TAG, "Waiting for event");
+                    MonkeyCommandReturn ret = deferredReturn.waitForEvent();
+                    deferredReturn = null;
+                    handleReturn(ret);
                 }
 
                 String command = input.readLine();
