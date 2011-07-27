@@ -18,9 +18,12 @@
 
 #include "EglSurface.h"
 
+class EglDisplay;
+
 class EglPbufferSurface:public EglSurface {
 public:
-    EglPbufferSurface(EglConfig* config):EglSurface(PBUFFER,config,0,0),
+    EglPbufferSurface(EglDisplay *dpy, EglConfig* config):
+                                         EglSurface(dpy,PBUFFER,config,0,0),
                                          m_texFormat(EGL_NO_TEXTURE),
                                          m_texTarget(EGL_NO_TEXTURE),
                                          m_texMipmap(EGL_FALSE),
