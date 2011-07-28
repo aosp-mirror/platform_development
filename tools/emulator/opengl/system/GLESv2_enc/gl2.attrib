@@ -175,6 +175,7 @@ glGetShaderPrecisionFormat
 glGetShaderSource
 	dir length out
 	len length (sizeof(GLsizei))
+	var_flag length nullAllowed
 	dir source out
 	len source bufsize
 
