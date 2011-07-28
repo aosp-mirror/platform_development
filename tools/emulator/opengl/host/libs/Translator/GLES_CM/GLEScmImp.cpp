@@ -323,7 +323,7 @@ GL_API void GL_APIENTRY  glBindTexture( GLenum target, GLuint texture) {
         if (texData->target==0)
             texData->target = target;
         //if texture was already bound to another target
-        SET_ERROR_IF(texData->target!=target,GL_INVALID_OPERATION);
+        SET_ERROR_IF(ctx->GLTextureTargetToLocal(texData->target) != ctx->GLTextureTargetToLocal(target), GL_INVALID_OPERATION);
         texData->wasBound = true;
     }
 
@@ -532,7 +532,7 @@ GL_API void GL_APIENTRY  glDisable( GLenum cap) {
         ctx->dispatcher().glDisable(GL_TEXTURE_GEN_T);
         ctx->dispatcher().glDisable(GL_TEXTURE_GEN_R);
     }
-    ctx->dispatcher().glDisable(cap);
+    else ctx->dispatcher().glDisable(cap);
     if (cap==GL_TEXTURE_2D || cap==GL_TEXTURE_CUBE_MAP_OES)
         ctx->setTextureEnabled(cap,false);
 }
@@ -1849,9 +1849,9 @@ GL_API void GL_APIENTRY glTexGenfOES (GLenum coord, GLenum pname, GLfloat param)
     GET_CTX()
     SET_ERROR_IF(!GLEScmValidate::texGen(coord,pname),GL_INVALID_ENUM);
     if (coord == GL_TEXTURE_GEN_STR_OES) {
-        ctx->dispatcher().glTexGenf(GL_TEXTURE_GEN_S,pname,param);
-        ctx->dispatcher().glTexGenf(GL_TEXTURE_GEN_T,pname,param);
-        ctx->dispatcher().glTexGenf(GL_TEXTURE_GEN_R,pname,param);
+        ctx->dispatcher().glTexGenf(GL_S,pname,param);
+        ctx->dispatcher().glTexGenf(GL_T,pname,param);
+        ctx->dispatcher().glTexGenf(GL_R,pname,param);
     }
     else
         ctx->dispatcher().glTexGenf(coord,pname,param);
@@ -1861,9 +1861,9 @@ GL_API void GL_APIENTRY glTexGenfvOES (GLenum coord, GLenum pname, const GLfloat
     GET_CTX()
     SET_ERROR_IF(!GLEScmValidate::texGen(coord,pname),GL_INVALID_ENUM);
     if (coord == GL_TEXTURE_GEN_STR_OES) {
-        ctx->dispatcher().glTexGenfv(GL_TEXTURE_GEN_S,pname,params);
-        ctx->dispatcher().glTexGenfv(GL_TEXTURE_GEN_T,pname,params);
-        ctx->dispatcher().glTexGenfv(GL_TEXTURE_GEN_R,pname,params);
+        ctx->dispatcher().glTexGenfv(GL_S,pname,params);
+        ctx->dispatcher().glTexGenfv(GL_T,pname,params);
+        ctx->dispatcher().glTexGenfv(GL_R,pname,params);
     }
     else
         ctx->dispatcher().glTexGenfv(coord,pname,params);
@@ -1872,9 +1872,9 @@ GL_API void GL_APIENTRY glTexGeniOES (GLenum coord, GLenum pname, GLint param) {
     GET_CTX()
     SET_ERROR_IF(!GLEScmValidate::texGen(coord,pname),GL_INVALID_ENUM);
     if (coord == GL_TEXTURE_GEN_STR_OES) {
-        ctx->dispatcher().glTexGeni(GL_TEXTURE_GEN_S,pname,param);
-        ctx->dispatcher().glTexGeni(GL_TEXTURE_GEN_T,pname,param);
-        ctx->dispatcher().glTexGeni(GL_TEXTURE_GEN_R,pname,param);
+        ctx->dispatcher().glTexGeni(GL_S,pname,param);
+        ctx->dispatcher().glTexGeni(GL_T,pname,param);
+        ctx->dispatcher().glTexGeni(GL_R,pname,param);
     }
     else
         ctx->dispatcher().glTexGeni(coord,pname,param);
@@ -1883,9 +1883,9 @@ GL_API void GL_APIENTRY glTexGenivOES (GLenum coord, GLenum pname, const GLint *
     GET_CTX()
     SET_ERROR_IF(!GLEScmValidate::texGen(coord,pname),GL_INVALID_ENUM);
     if (coord == GL_TEXTURE_GEN_STR_OES) {
-        ctx->dispatcher().glTexGeniv(GL_TEXTURE_GEN_S,pname,params);
-        ctx->dispatcher().glTexGeniv(GL_TEXTURE_GEN_T,pname,params);
-        ctx->dispatcher().glTexGeniv(GL_TEXTURE_GEN_R,pname,params);
+        ctx->dispatcher().glTexGeniv(GL_S,pname,params);
+        ctx->dispatcher().glTexGeniv(GL_T,pname,params);
+        ctx->dispatcher().glTexGeniv(GL_R,pname,params);
     }
     else
         ctx->dispatcher().glTexGeniv(coord,pname,params);
@@ -1894,9 +1894,9 @@ GL_API void GL_APIENTRY glTexGenxOES (GLenum coord, GLenum pname, GLfixed param)
     GET_CTX()
     SET_ERROR_IF(!GLEScmValidate::texGen(coord,pname),GL_INVALID_ENUM);
     if (coord == GL_TEXTURE_GEN_STR_OES) {
-        ctx->dispatcher().glTexGenf(GL_TEXTURE_GEN_S,pname,X2F(param));
-        ctx->dispatcher().glTexGenf(GL_TEXTURE_GEN_T,pname,X2F(param));
-        ctx->dispatcher().glTexGenf(GL_TEXTURE_GEN_R,pname,X2F(param));
+        ctx->dispatcher().glTexGenf(GL_S,pname,X2F(param));
+        ctx->dispatcher().glTexGenf(GL_T,pname,X2F(param));
+        ctx->dispatcher().glTexGenf(GL_R,pname,X2F(param));
     }
     else
         ctx->dispatcher().glTexGenf(coord,pname,X2F(param));
@@ -1907,9 +1907,9 @@ GL_API void GL_APIENTRY glTexGenxvOES (GLenum coord, GLenum pname, const GLfixed
     SET_ERROR_IF(!GLEScmValidate::texGen(coord,pname),GL_INVALID_ENUM);
     tmpParams[0] = X2F(params[0]);
     if (coord == GL_TEXTURE_GEN_STR_OES) {
-        ctx->dispatcher().glTexGenfv(GL_TEXTURE_GEN_S,pname,tmpParams);
-        ctx->dispatcher().glTexGenfv(GL_TEXTURE_GEN_T,pname,tmpParams);
-        ctx->dispatcher().glTexGenfv(GL_TEXTURE_GEN_R,pname,tmpParams);
+        ctx->dispatcher().glTexGenfv(GL_S,pname,tmpParams);
+        ctx->dispatcher().glTexGenfv(GL_T,pname,tmpParams);
+        ctx->dispatcher().glTexGenfv(GL_R,pname,tmpParams);
     }
     else
         ctx->dispatcher().glTexGenfv(coord,pname,tmpParams);
@@ -1922,9 +1922,9 @@ GL_API void GL_APIENTRY glGetTexGenfvOES (GLenum coord, GLenum pname, GLfloat *p
         GLfloat state_s = GL_FALSE;
         GLfloat state_t = GL_FALSE;
         GLfloat state_r = GL_FALSE;
-        ctx->dispatcher().glGetTexGenfv(GL_TEXTURE_GEN_S,pname,&state_s);
-        ctx->dispatcher().glGetTexGenfv(GL_TEXTURE_GEN_T,pname,&state_t);
-        ctx->dispatcher().glGetTexGenfv(GL_TEXTURE_GEN_R,pname,&state_r);
+        ctx->dispatcher().glGetTexGenfv(GL_S,pname,&state_s);
+        ctx->dispatcher().glGetTexGenfv(GL_T,pname,&state_t);
+        ctx->dispatcher().glGetTexGenfv(GL_R,pname,&state_r);
         *params = state_s && state_t && state_r ? GL_TRUE: GL_FALSE;
     }
     else
@@ -1938,9 +1938,9 @@ GL_API void GL_APIENTRY glGetTexGenivOES (GLenum coord, GLenum pname, GLint *par
         GLint state_s = GL_FALSE;
         GLint state_t = GL_FALSE;
         GLint state_r = GL_FALSE;
-        ctx->dispatcher().glGetTexGeniv(GL_TEXTURE_GEN_S,pname,&state_s);
-        ctx->dispatcher().glGetTexGeniv(GL_TEXTURE_GEN_T,pname,&state_t);
-        ctx->dispatcher().glGetTexGeniv(GL_TEXTURE_GEN_R,pname,&state_r);
+        ctx->dispatcher().glGetTexGeniv(GL_S,pname,&state_s);
+        ctx->dispatcher().glGetTexGeniv(GL_T,pname,&state_t);
+        ctx->dispatcher().glGetTexGeniv(GL_R,pname,&state_r);
         *params = state_s && state_t && state_r ? GL_TRUE: GL_FALSE;
     }
     else
