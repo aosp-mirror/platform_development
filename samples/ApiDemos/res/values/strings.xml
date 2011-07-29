@@ -208,7 +208,10 @@
     <string name="kill_process">Kill Process</string>
     <string name="remote_service_connected">Connected to remote service</string>
     <string name="remote_service_disconnected">Disconnected from remote service</string>
+    <string name="remote_service_unbind_disconn">Unbinding due to disconnect</string>
     <string name="remote_call_failed">Failure calling remote service</string>
+
+    <string name="activity_remote_service_binding_options">App/Service/Remote Service Binding Options</string>
 
     <string name="service_start_arguments_label">Sample Service Start Arguments
     </string>

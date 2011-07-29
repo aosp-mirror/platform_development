@@ -489,6 +489,14 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".app.RemoteService$BindingOptions"
+                android:label="@string/activity_remote_service_binding_options">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
         <service android:name=".app.ServiceStartArguments" />
 
         <activity android:name=".app.ServiceStartArguments$Controller"
