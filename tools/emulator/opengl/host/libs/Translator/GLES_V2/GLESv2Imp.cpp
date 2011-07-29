@@ -31,6 +31,7 @@
 #include "ShaderParser.h"
 #include "ProgramData.h"
 #include <GLcommon/TextureUtils.h>
+#include <GLcommon/FramebufferData.h>
 
 extern "C" {
 
@@ -202,10 +203,15 @@ GL_APICALL void  GL_APIENTRY glBindFramebuffer(GLenum target, GLuint framebuffer
         //if framebuffer wasn't generated before,generate one
         if(!globalFrameBufferName){
             ctx->shareGroup()->genName(FRAMEBUFFER,framebuffer);
+            ctx->shareGroup()->setObjectData(FRAMEBUFFER, framebuffer,
+                                             ObjectDataPtr(new FramebufferData(framebuffer)));
             globalFrameBufferName = ctx->shareGroup()->getGlobalName(FRAMEBUFFER,framebuffer);
         }
     }
     ctx->dispatcher().glBindFramebufferEXT(target,globalFrameBufferName);
+
+    // update framebuffer binding state
+    ctx->setFramebufferBinding(framebuffer);
 }
 
 GL_APICALL void  GL_APIENTRY glBindRenderbuffer(GLenum target, GLuint renderbuffer){
@@ -218,10 +224,16 @@ GL_APICALL void  GL_APIENTRY glBindRenderbuffer(GLenum target, GLuint renderbuff
         //if renderbuffer wasn't generated before,generate one
         if(!globalRenderBufferName){
             ctx->shareGroup()->genName(RENDERBUFFER,renderbuffer);
+            ctx->shareGroup()->setObjectData(RENDERBUFFER,
+                                         renderbuffer,
+                                         ObjectDataPtr(new RenderbufferData()));
             globalRenderBufferName = ctx->shareGroup()->getGlobalName(RENDERBUFFER,renderbuffer);
         }
     }
     ctx->dispatcher().glBindRenderbufferEXT(target,globalRenderBufferName);
+
+    // update renderbuffer binding state
+    ctx->setRenderbufferBinding(renderbuffer);
 }
 
 GL_APICALL void  GL_APIENTRY glBindTexture(GLenum target, GLuint texture){
@@ -439,9 +451,14 @@ GL_APICALL void  GL_APIENTRY glDeleteTextures(GLsizei n, const GLuint* textures)
     if(ctx->shareGroup().Ptr()) {
         for(int i=0; i < n; i++){
             if (textures[i]!=0) {
-                const GLuint globalTextureName = ctx->shareGroup()->getGlobalName(TEXTURE,textures[i]);
+                TextureData* tData = getTextureData(textures[i]);
+                // delete the underlying OpenGL texture but only if this
+                // texture is not a target of EGLImage.
+                if (!tData || tData->sourceEGLImage == 0) {
+                    const GLuint globalTextureName = ctx->shareGroup()->getGlobalName(TEXTURE,textures[i]);
+                    ctx->dispatcher().glDeleteTextures(1,&globalTextureName);
+                }
                 ctx->shareGroup()->deleteName(TEXTURE,textures[i]);
-                ctx->dispatcher().glDeleteTextures(1,&globalTextureName);
 
                 if (ctx->getBindedTexture(GL_TEXTURE_2D) == textures[i])
                     ctx->setBindedTexture(GL_TEXTURE_2D,0);
@@ -597,12 +614,50 @@ GL_APICALL void  GL_APIENTRY glFramebufferRenderbuffer(GLenum target, GLenum att
     SET_ERROR_IF(!(GLESv2Validate::framebufferTarget(target)              &&
                    GLESv2Validate::renderbufferTarget(renderbuffertarget) &&
                    GLESv2Validate::framebufferAttachment(attachment)),GL_INVALID_ENUM);
+    SET_ERROR_IF(!ctx->shareGroup().Ptr(), GL_INVALID_OPERATION);
 
-    if(ctx->shareGroup().Ptr()) {
-            GLuint globalRenderbufferName = ctx->shareGroup()->getGlobalName(RENDERBUFFER,renderbuffer);
-            ctx->dispatcher().glFramebufferRenderbufferEXT(target,attachment,renderbuffertarget,globalRenderbufferName);
+    GLuint globalRenderbufferName = 0;
+    ObjectDataPtr obj;
+
+    // generate the renderbuffer object if not yet exist
+    if(renderbuffer) {
+        if (!ctx->shareGroup()->isObject(RENDERBUFFER,renderbuffer)) {
+            ctx->shareGroup()->genName(RENDERBUFFER,renderbuffer);
+            obj = ObjectDataPtr(new RenderbufferData());
+            ctx->shareGroup()->setObjectData(RENDERBUFFER,
+                                         renderbuffer, obj);
+        }
+        else {
+            obj = ctx->shareGroup()->getObjectData(RENDERBUFFER, renderbuffer);
+        }
+
+        globalRenderbufferName = ctx->shareGroup()->getGlobalName(RENDERBUFFER,renderbuffer);
     }
 
+    // Update the the current framebuffer object attachment state
+    GLuint fbName = ctx->getFramebufferBinding();
+    ObjectDataPtr fbObj = ctx->shareGroup()->getObjectData(FRAMEBUFFER,fbName);
+    if (fbObj.Ptr() != NULL) {
+        FramebufferData *fbData = (FramebufferData *)fbObj.Ptr();
+        fbData->setAttachment(attachment, renderbuffertarget, renderbuffer, obj);
+    }
+
+    if (renderbuffer && obj.Ptr() != NULL) {
+        RenderbufferData *rbData = (RenderbufferData *)obj.Ptr();
+        if (rbData->sourceEGLImage != 0) {
+            //
+            // This renderbuffer object is an eglImage target
+            // attach the eglimage's texture instead the renderbuffer.
+            //
+            ctx->dispatcher().glFramebufferTexture2DEXT(target,
+                                                    attachment,
+                                                    GL_TEXTURE_2D,
+                                                    rbData->eglImageGlobalTexName,0);
+            return;
+        }
+    }
+
+    ctx->dispatcher().glFramebufferRenderbufferEXT(target,attachment,renderbuffertarget,globalRenderbufferName);
 }
 
 GL_APICALL void  GL_APIENTRY glFramebufferTexture2D(GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level){
@@ -611,19 +666,27 @@ GL_APICALL void  GL_APIENTRY glFramebufferTexture2D(GLenum target, GLenum attach
                    GLESv2Validate::textureTargetEx(textarget)  &&
                    GLESv2Validate::framebufferAttachment(attachment)),GL_INVALID_ENUM);
     SET_ERROR_IF(level != 0, GL_INVALID_VALUE);
+    SET_ERROR_IF(!ctx->shareGroup().Ptr(), GL_INVALID_OPERATION);
 
-    if(texture == 0)
-    {
-        // Special case - detach texture
-        ctx->dispatcher().glFramebufferTexture2DEXT(target,attachment,textarget,0,level);
-    }
-    else
-    {
-        if(ctx->shareGroup().Ptr()) {
-            ObjectLocalName texname = TextureLocalName(textarget,texture);
-            GLuint globalTextureName = ctx->shareGroup()->getGlobalName(TEXTURE,texname);
-            ctx->dispatcher().glFramebufferTexture2DEXT(target,attachment,textarget,globalTextureName,level);
+    GLuint globalTextureName = 0;
+
+    if(texture) {
+        if (!ctx->shareGroup()->isObject(TEXTURE,texture)) {
+            ctx->shareGroup()->genName(TEXTURE,texture);
         }
+        ObjectLocalName texname = TextureLocalName(textarget,texture);
+        globalTextureName = ctx->shareGroup()->getGlobalName(TEXTURE,texname);
+    }
+
+    ctx->dispatcher().glFramebufferTexture2DEXT(target,attachment,textarget,globalTextureName,level);
+
+    // Update the the current framebuffer object attachment state
+    GLuint fbName = ctx->getFramebufferBinding();
+    ObjectDataPtr fbObj = ctx->shareGroup()->getObjectData(FRAMEBUFFER,fbName);
+    if (fbObj.Ptr() != NULL) {
+        FramebufferData *fbData = (FramebufferData *)fbObj.Ptr();
+        fbData->setAttachment(attachment, textarget, 
+                              texture, ObjectDataPtr(NULL));
     }
 }
 
@@ -657,6 +720,8 @@ GL_APICALL void  GL_APIENTRY glGenFramebuffers(GLsizei n, GLuint* framebuffers){
     if(ctx->shareGroup().Ptr()) {
         for(int i=0; i<n ;i++) {
             framebuffers[i] = ctx->shareGroup()->genName(FRAMEBUFFER, 0 ,true);
+            ctx->shareGroup()->setObjectData(FRAMEBUFFER, framebuffers[i],
+                                             ObjectDataPtr(new FramebufferData(framebuffers[i])));
         }
     }
 }
@@ -667,6 +732,9 @@ GL_APICALL void  GL_APIENTRY glGenRenderbuffers(GLsizei n, GLuint* renderbuffers
     if(ctx->shareGroup().Ptr()) {
         for(int i=0; i<n ;i++) {
             renderbuffers[i] = ctx->shareGroup()->genName(RENDERBUFFER, 0, true);
+            ctx->shareGroup()->setObjectData(RENDERBUFFER,
+                                         renderbuffers[i],
+                                         ObjectDataPtr(new RenderbufferData()));
         }
     }
 }
@@ -927,12 +995,95 @@ GL_APICALL void  GL_APIENTRY glGetFramebufferAttachmentParameteriv(GLenum target
     SET_ERROR_IF(!(GLESv2Validate::framebufferTarget(target)         &&
                    GLESv2Validate::framebufferAttachment(attachment) &&
                    GLESv2Validate::framebufferAttachmentParams(pname)),GL_INVALID_ENUM);
+
+    //
+    // Take the attachment attribute from our state - if available
+    //
+    GLuint fbName = ctx->getFramebufferBinding();
+    if (fbName) {
+        ObjectDataPtr fbObj = ctx->shareGroup()->getObjectData(FRAMEBUFFER,fbName);
+        if (fbObj.Ptr() != NULL) {
+            FramebufferData *fbData = (FramebufferData *)fbObj.Ptr();
+            GLenum target;
+            GLuint name = fbData->getAttachment(attachment, &target, NULL);
+            if (pname == GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE) {
+                if (target == GL_TEXTURE_2D) {
+                    *params = GL_TEXTURE;
+                    return;
+                }
+                else if (target == GL_RENDERBUFFER) {
+                    *params = GL_RENDERBUFFER;
+                    return;
+                }
+            }
+            else if (pname == GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME) {
+                *params = name;
+                return;
+            }
+        }
+    }
+
     ctx->dispatcher().glGetFramebufferAttachmentParameterivEXT(target,attachment,pname,params);
 }
 
 GL_APICALL void  GL_APIENTRY glGetRenderbufferParameteriv(GLenum target, GLenum pname, GLint* params){
     GET_CTX();
     SET_ERROR_IF(!(GLESv2Validate::renderbufferTarget(target) && GLESv2Validate::renderbufferParams(pname)),GL_INVALID_ENUM);
+
+    //
+    // If this is a renderbuffer which is eglimage's target, we
+    // should query the underlying eglimage's texture object instead.
+    //
+    GLuint rb = ctx->getRenderbufferBinding();
+    if (rb) {
+        ObjectDataPtr objData = ctx->shareGroup()->getObjectData(RENDERBUFFER,rb);
+        RenderbufferData *rbData = (RenderbufferData *)objData.Ptr();
+        if (rbData && rbData->sourceEGLImage != 0) {
+            GLenum texPname;
+            switch(pname) {
+                case GL_RENDERBUFFER_WIDTH:
+                    texPname = GL_TEXTURE_WIDTH;
+                    break;
+                case GL_RENDERBUFFER_HEIGHT:
+                    texPname = GL_TEXTURE_HEIGHT;
+                    break;
+                case GL_RENDERBUFFER_INTERNAL_FORMAT:
+                    texPname = GL_TEXTURE_INTERNAL_FORMAT;
+                    break;
+                case GL_RENDERBUFFER_RED_SIZE:
+                    texPname = GL_TEXTURE_RED_SIZE;
+                    break;
+                case GL_RENDERBUFFER_GREEN_SIZE:
+                    texPname = GL_TEXTURE_GREEN_SIZE;
+                    break;
+                case GL_RENDERBUFFER_BLUE_SIZE:
+                    texPname = GL_TEXTURE_BLUE_SIZE;
+                    break;
+                case GL_RENDERBUFFER_ALPHA_SIZE:
+                    texPname = GL_TEXTURE_ALPHA_SIZE;
+                    break;
+                case GL_RENDERBUFFER_DEPTH_SIZE:
+                    texPname = GL_TEXTURE_DEPTH_SIZE;
+                    break;
+                case GL_RENDERBUFFER_STENCIL_SIZE:
+                default:
+                    *params = 0; //XXX
+                    return;
+                    break;
+            }
+
+            GLint prevTex;
+            ctx->dispatcher().glGetIntegerv(GL_TEXTURE_BINDING_2D, &prevTex);
+            ctx->dispatcher().glBindTexture(GL_TEXTURE_2D,
+                                            rbData->eglImageGlobalTexName);
+            ctx->dispatcher().glGetTexLevelParameteriv(GL_TEXTURE_2D, 0,
+                                                       texPname,
+                                                       params);
+            ctx->dispatcher().glBindTexture(GL_TEXTURE_2D, prevTex);
+            return;
+        }
+    }
+
     ctx->dispatcher().glGetRenderbufferParameterivEXT(target,pname,params);
 }
 
@@ -1338,6 +1489,27 @@ GL_APICALL void  GL_APIENTRY glRenderbufferStorage(GLenum target, GLenum interna
         internal = internalformat;
         break;
     }
+
+    // Get current bounded renderbuffer
+    // raise INVALID_OPERATIOn if no renderbuffer is bounded
+    GLuint rb = ctx->getRenderbufferBinding();
+    SET_ERROR_IF(rb == 0,GL_INVALID_OPERATION);
+    ObjectDataPtr objData = ctx->shareGroup()->getObjectData(RENDERBUFFER,rb);
+    RenderbufferData *rbData = (RenderbufferData *)objData.Ptr();
+    SET_ERROR_IF(!rbData,GL_INVALID_OPERATION);
+
+    //
+    // if the renderbuffer was an eglImage target, detach from
+    // the eglImage.
+    //
+    if (rbData->sourceEGLImage != 0) {
+        if (rbData->eglImageDetach) {
+            (*rbData->eglImageDetach)(rbData->sourceEGLImage);
+        }
+        rbData->sourceEGLImage = 0;
+        rbData->eglImageGlobalTexName = 0;
+    }
+
     ctx->dispatcher().glRenderbufferStorageEXT(target,internal,width,height);
 }
 
@@ -1432,8 +1604,28 @@ GL_APICALL void  GL_APIENTRY glTexImage2D(GLenum target, GLint level, GLint inte
             texData->border = border;
             texData->internalFormat = internalformat;
             texData->target = target;
+
+            if (texData->sourceEGLImage != 0) {
+                //
+                // This texture was a target of EGLImage,
+                // but now it is re-defined so we need to detach
+                // from the EGLImage and re-generate global texture name
+                // for it.
+                //
+                if (texData->eglImageDetach) {
+                    (*texData->eglImageDetach)(texData->sourceEGLImage);
+                }
+                unsigned int tex = ctx->getBindedTexture(target);
+                ctx->shareGroup()->replaceGlobalName(TEXTURE,
+                                                     tex,
+                                                     texData->oldGlobal);
+                ctx->dispatcher().glBindTexture(GL_TEXTURE_2D, texData->oldGlobal);
+                texData->sourceEGLImage = 0;
+                texData->oldGlobal = 0;
+            }
         }
     }
+
     if (type==GL_HALF_FLOAT_OES)
         type = GL_HALF_FLOAT_NV;
     if (pixels==NULL && type==GL_UNSIGNED_SHORT_5_5_5_1)
@@ -1658,13 +1850,54 @@ GL_APICALL void GL_APIENTRY glEGLImageTargetTexture2DOES(GLenum target, GLeglIma
             SET_ERROR_IF(texData==NULL,GL_INVALID_OPERATION);
             texData->sourceEGLImage = (unsigned int)image;
             texData->eglImageDetach = s_eglIface->eglDetachEGLImage;
+            texData->oldGlobal = oldGlobal;
         }
     }
 }
 
 GL_APICALL void GL_APIENTRY glEGLImageTargetRenderbufferStorageOES(GLenum target, GLeglImageOES image)
 {
-    GET_CTX()
-    //not supported by EGL
-    SET_ERROR_IF(false,GL_INVALID_OPERATION);
+    GET_CTX();
+    SET_ERROR_IF(target != GL_RENDERBUFFER_OES,GL_INVALID_ENUM);
+    EglImage *img = s_eglIface->eglAttachEGLImage((unsigned int)image);
+    SET_ERROR_IF(!img,GL_INVALID_VALUE);
+    SET_ERROR_IF(!ctx->shareGroup().Ptr(),GL_INVALID_OPERATION);
+
+    // Get current bounded renderbuffer
+    // raise INVALID_OPERATIOn if no renderbuffer is bounded
+    GLuint rb = ctx->getRenderbufferBinding();
+    SET_ERROR_IF(rb == 0,GL_INVALID_OPERATION);
+    ObjectDataPtr objData = ctx->shareGroup()->getObjectData(RENDERBUFFER,rb);
+    RenderbufferData *rbData = (RenderbufferData *)objData.Ptr();
+    SET_ERROR_IF(!rbData,GL_INVALID_OPERATION);
+
+    //
+    // flag in the renderbufferData that it is an eglImage target
+    //
+    rbData->sourceEGLImage = (unsigned int)image;
+    rbData->eglImageDetach = s_eglIface->eglDetachEGLImage;
+    rbData->eglImageGlobalTexName = img->globalTexName;
+
+    //
+    // if the renderbuffer is attached to a framebuffer
+    // change the framebuffer attachment in the undelying OpenGL
+    // to point to the eglImage texture object.
+    //
+    if (rbData->attachedFB) {
+        // update the framebuffer attachment point to the
+        // underlying texture of the img
+        GLuint prevFB = ctx->getFramebufferBinding();
+        if (prevFB != rbData->attachedFB) {
+            ctx->dispatcher().glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 
+                                                   rbData->attachedFB);
+        }
+        ctx->dispatcher().glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT,
+                                                    rbData->attachedPoint,
+                                                    GL_TEXTURE_2D,
+                                                    img->globalTexName,0);
+        if (prevFB != rbData->attachedFB) {
+            ctx->dispatcher().glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 
+                                                   prevFB);
+        }
+    }
 }

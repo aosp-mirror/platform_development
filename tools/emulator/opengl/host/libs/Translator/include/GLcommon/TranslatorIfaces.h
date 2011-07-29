@@ -45,7 +45,8 @@ public:
                     sourceEGLImage(0),
                     wasBound(false),
                     requiresAutoMipmap(false),
-                    target(0) {
+                    target(0),
+                    oldGlobal(0) {
         memset(crop_rect,0,4*sizeof(int));
     };
 
@@ -59,6 +60,7 @@ public:
     int          crop_rect[4];
     void (*eglImageDetach)(unsigned int imageId);
     GLenum target;
+    GLuint oldGlobal;
 };
 
 struct EglImage
