@@ -24,7 +24,8 @@ static osUtils::childProcess *s_renderProc = NULL;
 static RenderServer *s_renderThread = NULL;
 static int s_renderPort = 0;
 
-static IOStream *createRenderThread(int p_stream_buffer_size);
+static IOStream *createRenderThread(int p_stream_buffer_size,
+                                    unsigned int clientFlags);
 
 #ifdef __APPLE__
 #define  RENDER_API_USE_THREAD
@@ -108,7 +109,7 @@ bool initOpenGLRenderer(FBNativeWindowType window,
         }
 #endif
 
-        dummy = createRenderThread(8);
+        dummy = createRenderThread(8, 0);
 
         if (!dummy) {
             // stop if the process is no longer running
@@ -139,30 +140,27 @@ bool stopOpenGLRenderer()
 {
     bool ret = false;
 
+    // open a dummy connection to the renderer to make it
+    // realize the exit request.
+    // (send the exit request in clientFlags)
+    IOStream *dummy = createRenderThread(8, IOSTREAM_CLIENT_EXIT_SERVER);
+    if (!dummy) return false;
+
     if (s_renderProc) {
         //
-        // kill the render process
+        // wait for the process to exit
         //
-        ret = osUtils::KillProcess(s_renderProc->getPID(), true) != 0;
-        if (ret) {
-            delete s_renderProc;
-            s_renderProc = NULL;
-        }
+        int exitStatus;
+        ret = s_renderProc->wait(&exitStatus);
+
+        delete s_renderProc;
+        s_renderProc = NULL;
     }
     else if (s_renderThread) {
-        // flag the thread it should exit
-        s_renderThread->flagNeedExit();
 
-        // open a dummy connection to the renderer to make it
-        // realize the exit request
-        IOStream *dummy = createRenderThread(8);
-        if (dummy) {
-            // wait for the thread to exit
-            int status;
-            ret = s_renderThread->wait(&status);
-
-            delete dummy;
-        }
+        // wait for the thread to exit
+        int status;
+        ret = s_renderThread->wait(&status);
 
         delete s_renderThread;
         s_renderThread = NULL;
@@ -171,7 +169,7 @@ bool stopOpenGLRenderer()
     return ret;
 }
 
-IOStream *createRenderThread(int p_stream_buffer_size)
+IOStream *createRenderThread(int p_stream_buffer_size, unsigned int clientFlags)
 {
     TcpStream *stream = new TcpStream(p_stream_buffer_size);
     if (!stream) {
@@ -184,6 +182,14 @@ IOStream *createRenderThread(int p_stream_buffer_size)
         delete stream;
         return NULL;
     }
+
+    //
+    // send clientFlags to the renderer
+    //
+    unsigned int *pClientFlags = 
+                (unsigned int *)stream->allocBuffer(sizeof(unsigned int));
+    *pClientFlags = clientFlags;
+    stream->commitBuffer(sizeof(unsigned int));
 
     return stream;
 }
