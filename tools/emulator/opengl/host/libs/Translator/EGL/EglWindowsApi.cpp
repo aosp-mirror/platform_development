@@ -220,7 +220,6 @@ static HDC getDummyDC(EGLNativeInternalDisplayType display,int cfgId){
     return dpy;
 }
 void initPtrToWglFunctions(){
-
     HWND hwnd = createDummyWindow();
     HDC dpy =  GetDC(hwnd);
     if(!hwnd || !dpy){
@@ -308,7 +307,9 @@ static bool initPixelFormat(HDC dc){
     int iPixelFormat;
 
     if(s_wglExtProcs->wglChoosePixelFormatARB) {
-        return s_wglExtProcs->wglChoosePixelFormatARB(dc,NULL, NULL, 1, &iPixelFormat, &numpf);
+        int i0 = 0;
+        float f0 = 0.0f;
+        return s_wglExtProcs->wglChoosePixelFormatARB(dc,&i0, &f0, 1, &iPixelFormat, &numpf);
     } else {
         return ChoosePixelFormat(dc,&pfd);
     }
