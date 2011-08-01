@@ -132,11 +132,12 @@ class TestWalker(object):
       return tests
     android_mk_parser = android_mk.CreateAndroidMK(path)
     if android_mk_parser:
+      build_rel_path = self._MakePathRelativeToBuild(path)
       if not upstream_build_path:
         # haven't found a parent makefile which builds this dir. Use current
         # dir as build path
         tests.extend(self._CreateSuites(
-            android_mk_parser, path, self._MakePathRelativeToBuild(path)))
+            android_mk_parser, path, build_rel_path))
       else:
         tests.extend(self._CreateSuites(android_mk_parser, path,
                                         upstream_build_path))
@@ -174,7 +175,7 @@ class TestWalker(object):
     else:
       return []
 
-  def _GetTestFactory(self, android_mk_parser, path, upstream_build_path=None):
+  def _GetTestFactory(self, android_mk_parser, path, build_path):
     """Get the test factory for given makefile.
 
     If given path is a valid tests build path, will return the TestFactory
@@ -183,17 +184,17 @@ class TestWalker(object):
     Args:
       android_mk_parser: the android mk to evaluate
       path: the filesystem path of the makefile
-      upstream_build_path: optional filesystem path for the directory
-      to build when running tests. If unspecified, will use path
+      build_path: filesystem path for the directory
+      to build when running tests, relative to source root.
 
     Returns:
       the TestFactory or None if path is not a valid tests build path
     """
     if android_mk_parser.HasGTest():
-      return gtest.GTestFactory(path, upstream_build_path=upstream_build_path)
+      return gtest.GTestFactory(path, build_path)
     elif instrumentation_test.HasInstrumentationTest(path):
       return instrumentation_test.InstrumentationTestFactory(path,
-          upstream_build_path=upstream_build_path)
+          build_path)
     else:
       # somewhat unusual, but will continue searching
       logger.SilentLog('Found makefile at %s, but did not detect any tests.'
@@ -215,7 +216,8 @@ class TestWalker(object):
     """
     android_mk_parser = android_mk.CreateAndroidMK(path)
     if android_mk_parser:
-      return self._GetTestFactory(android_mk_parser, path)
+      build_path = self._MakePathRelativeToBuild(path)
+      return self._GetTestFactory(android_mk_parser, path, build_path)
     else:
       return None
 
@@ -251,7 +253,7 @@ class TestWalker(object):
       the list of tests created
     """
     factory = self._GetTestFactory(android_mk_parser, path,
-                                   upstream_build_path=upstream_build_path)
+                                   build_path=upstream_build_path)
     if factory:
       return factory.CreateTests(path)
     else:

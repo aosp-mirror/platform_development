@@ -109,19 +109,16 @@ class AbstractTestSuite(object):
 class AbstractTestFactory(object):
   """generic test suite factory."""
 
-  def __init__(self, test_root_path, upstream_build_path=None):
+  def __init__(self, test_root_path, build_path):
     """Creates a test suite factory.
 
     Args:
       test_root_path: the filesystem path to the tests build directory
-      upstream_build_path: optional filesystem path for the directory
-      to build when running tests. If unspecified, will use test_root_path
+      upstream_build_path: filesystem path for the directory
+      to build when running tests, relative to the source tree root.
     """
     self._test_root_path = test_root_path
-    if upstream_build_path:
-      self._build_path = upstream_build_path
-    else:
-      self._build_path = self._test_root_path
+    self._build_path = build_path
 
   def GetBuildPath(self):
     return self._build_path

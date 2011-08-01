@@ -59,9 +59,9 @@ class GTestSuite(test_suite.AbstractTestSuite):
 
 class GTestFactory(test_suite.AbstractTestFactory):
 
-  def __init__(self, test_root_path, upstream_build_path=None):
+  def __init__(self, test_root_path, build_path):
     test_suite.AbstractTestFactory.__init__(self, test_root_path,
-        upstream_build_path=upstream_build_path)
+        build_path)
 
   def CreateTests(self, sub_tests_path=None):
     """Create tests found in sub_tests_path.

@@ -213,9 +213,9 @@ def HasInstrumentationTest(path):
 class InstrumentationTestFactory(test_suite.AbstractTestFactory):
   """A factory for creating InstrumentationTestSuites"""
 
-  def __init__(self, test_root_path, upstream_build_path=None):
+  def __init__(self, test_root_path, build_path):
     test_suite.AbstractTestFactory.__init__(self, test_root_path,
-                                            upstream_build_path=upstream_build_path)
+                                            build_path)
 
   def CreateTests(self, sub_tests_path=None):
     """Create tests found in test_path.
