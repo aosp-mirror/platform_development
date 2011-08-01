@@ -32,6 +32,7 @@
 #include "ErrorLog.h"
 #include <utils/KeyedVector.h>
 #include <utils/threads.h>
+#include <utils/List.h>
 #include "FixedBuffer.h"
 #include "SmartPtr.h"
 
@@ -42,10 +43,32 @@ struct BufferData {
     FixedBuffer m_fixedBuffer;    
 };
 
+class ProgramData {
+private:
+    typedef struct _IndexInfo {
+        GLint base;
+        GLint size;
+        GLenum type;
+    }IndexInfo;
+
+    GLuint m_numIndexes;
+    IndexInfo* m_Indexes;
+    bool m_initialized;
+public:
+    ProgramData();
+    void initProgramData(GLuint numIndexes);
+    bool isInitialized();
+    virtual ~ProgramData();
+    void setIndexInfo(GLuint index, GLint base, GLint size, GLenum type);
+    GLuint getIndexForLocation(GLint location);
+    GLenum getTypeForLocation(GLint location);
+};
 
 class GLSharedGroup {
 private:
     android::DefaultKeyedVector<GLuint, BufferData*>    m_buffers;
+    android::DefaultKeyedVector<GLuint, ProgramData*>    m_programs;
+    android::List<GLuint> m_shaders;
     mutable android::Mutex       m_lock;
 public:
     GLSharedGroup();
@@ -55,6 +78,19 @@ public:
     void    updateBufferData(GLuint bufferId, GLsizeiptr size, void * data);
     GLenum  subUpdateBufferData(GLuint bufferId, GLintptr offset, GLsizeiptr size, void * data);
     void    deleteBufferData(GLuint);
+
+    bool    isProgram(GLuint program);
+    bool    isProgramInitialized(GLuint program);
+    void    addProgramData(GLuint program); 
+    void    initProgramData(GLuint program, GLuint numIndexes);
+    void    deleteProgramData(GLuint program);
+    void    setProgramIndexInfo(GLuint program, GLuint index, GLint base, GLint size, GLenum type);
+    GLenum  getProgramUniformType(GLuint program, GLint location);
+
+    void    addShaderData(GLuint shader);
+    bool    isShader(GLuint shader);
+    void    deleteShaderData(GLuint shader);
+
 };
 
 typedef SmartPtr<GLSharedGroup> GLSharedGroupPtr; 
