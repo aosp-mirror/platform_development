@@ -12,17 +12,20 @@ public:
     ShaderParser(GLenum type);
     void           setSrc(const Version& ver,GLsizei count,const GLchar** strings,const GLint* length);
     const char*    getOriginalSrc();
-    const GLchar** parsedLines(){return const_cast<const GLchar**>(&m_parsedLines);};
+    const GLchar** parsedLines();
     GLenum         getType();
     ~ShaderParser();
 
 private:
+    void parseOriginalSrc();
+    void parseGLSLversion();
     void parseOmitPrecision();
     void parseExtendDefaultPrecision();
     void clearParsedSrc();
 
     GLenum      m_type;
     std::string m_src;
+    std::string m_parsedSrc;
     GLchar*     m_parsedLines;
 };
 #endif
