@@ -34,8 +34,6 @@ import android.view.Window;
 import android.widget.Button;
 import android.widget.ListView;
 
-import java.lang.Runtime;
-
 import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
@@ -100,7 +98,7 @@ public class Balls extends Activity implements SensorEventListener {
     protected void onPause() {
         super.onPause();
         mView.pause();
-        Runtime.getRuntime().exit(0);
+        onStop();
     }
 
     @Override
