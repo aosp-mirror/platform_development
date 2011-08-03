@@ -164,8 +164,7 @@ LOCAL_SHARED_LIBRARIES := libdl \
 	libOpenglSystemCommon \
 	libut_rendercontrol_enc
 
-LOCAL_STATIC_LIBRARIES := libOpenglCodecCommon \
-						  libqemu
+LOCAL_STATIC_LIBRARIES := libOpenglCodecCommon
 
 include $(BUILD_SHARED_LIBRARY)
 

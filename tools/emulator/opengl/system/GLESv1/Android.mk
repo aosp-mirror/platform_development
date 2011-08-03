@@ -7,7 +7,6 @@ $(call emugl-import,libOpenglSystemCommon libGLESv1_enc lib_renderControl_enc)
 LOCAL_CFLAGS += -DLOG_TAG=\"GLES_emulation\" -DGL_GLEXT_PROTOTYPES
 
 LOCAL_SRC_FILES := gl.cpp
-LOCAL_STATIC_LIBRARIES += libqemu
 LOCAL_MODULE_PATH := $(TARGET_OUT_SHARED_LIBRARIES)/egl
 
 $(call emugl-end-module)
@@ -44,7 +43,6 @@ $(call emugl-end-module)
 #
 # LOCAL_STATIC_LIBRARIES := \
 #     libOpenglCodecCommon  \
-# 	libqemu
 #
 # LOCAL_SHARED_LIBRARIES := \
 #     libcutils \
