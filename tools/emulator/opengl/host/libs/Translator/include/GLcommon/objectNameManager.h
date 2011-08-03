@@ -28,13 +28,26 @@ enum NamedObjectType {
     RENDERBUFFER = 2,
     FRAMEBUFFER = 3,
     SHADER = 4,
-    NUM_OBJECT_TYPES = 6  // Must be last
+    NUM_OBJECT_TYPES = 5  // Must be last
+};
+
+enum ObjectDataType {
+    SHADER_DATA,
+    PROGRAM_DATA,
+    TEXTURE_DATA,
+    BUFFER_DATA,
+    UNDEFINED_DATA
 };
 
 class ObjectData
 {
 public:
-    virtual ~ObjectData() {}
+    ObjectData() : m_dataType(UNDEFINED_DATA) {};
+    ObjectData(ObjectDataType type): m_dataType(type) {};
+    ObjectDataType getDataType() { return m_dataType; };
+    virtual ~ObjectData() {};
+private:
+    ObjectDataType m_dataType;
 };
 typedef SmartPtr<ObjectData> ObjectDataPtr;
 

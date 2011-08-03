@@ -793,7 +793,7 @@ GL_API void GL_APIENTRY  glGetFixedv( GLenum pname, GLfixed *params) {
                 for (int i=0; i<nparams; i++) params[i] = I2X(iparams[i]);
                 delete [] iparams;
             }
-			return;
+            return;
         }
     break;
     default:
@@ -872,8 +872,8 @@ GL_API void GL_APIENTRY  glGetIntegerv( GLenum pname, GLint *params) {
         }
         break;
     case GL_NUM_COMPRESSED_TEXTURE_FORMATS:
-        *params = getCompressedFormats(NULL); 
-        break;    
+        *params = getCompressedFormats(NULL);
+        break;
     case GL_COMPRESSED_TEXTURE_FORMATS:
         getCompressedFormats(params);
         break;

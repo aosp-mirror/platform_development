@@ -1,12 +1,14 @@
 #include "ShaderParser.h"
 #include <string.h>
 
-ShaderParser::ShaderParser():m_type(0),
+ShaderParser::ShaderParser():ObjectData(SHADER_DATA),
+                             m_type(0),
                              m_src(NULL),
                              m_parsedLines(NULL){};
 
-ShaderParser::ShaderParser(GLenum type):m_type(type),
-                                                    m_parsedLines(NULL){};
+ShaderParser::ShaderParser(GLenum type):ObjectData(SHADER_DATA), 
+                                        m_type(type),
+                                        m_parsedLines(NULL){};
 
 void ShaderParser::setSrc(const Version& ver,GLsizei count,const GLchar** strings,const GLint* length){
     for(int i = 0;i<count;i++){
@@ -81,6 +83,10 @@ void ShaderParser::clearParsedSrc(){
     if(m_parsedLines){
         delete[] m_parsedLines;
     }
+}
+
+GLenum ShaderParser::getType() {
+    return m_type;
 }
 
 ShaderParser::~ShaderParser(){

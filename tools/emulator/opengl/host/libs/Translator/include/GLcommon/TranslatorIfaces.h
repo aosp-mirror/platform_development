@@ -37,7 +37,14 @@ public:
     ~TextureData() {
         if (sourceEGLImage && eglImageDetach) (*eglImageDetach)(sourceEGLImage);
     }
-    TextureData():width(0),height(0),border(0),internalFormat(GL_RGBA),sourceEGLImage(0),wasBound(false),requiresAutoMipmap(false){
+    TextureData():  ObjectData(TEXTURE_DATA),
+                    width(0),
+                    height(0),
+                    border(0),
+                    internalFormat(GL_RGBA),
+                    sourceEGLImage(0),
+                    wasBound(false),
+                    requiresAutoMipmap(false){
         memset(crop_rect,0,4*sizeof(int));
     };
 
