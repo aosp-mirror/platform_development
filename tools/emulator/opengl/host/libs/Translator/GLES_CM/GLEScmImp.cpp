@@ -1631,7 +1631,7 @@ GL_API void GL_APIENTRY  glTranslatef( GLfloat x, GLfloat y, GLfloat z) {
 
 GL_API void GL_APIENTRY  glTranslatex( GLfixed x, GLfixed y, GLfixed z) {
     GET_CTX()
-    ctx->dispatcher().glTranslatef(x,y,z);
+    ctx->dispatcher().glTranslatef(X2F(x),X2F(y),X2F(z));
 }
 
 GL_API void GL_APIENTRY  glVertexPointer( GLint size, GLenum type, GLsizei stride, const GLvoid *pointer) {
