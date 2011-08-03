@@ -13,6 +13,7 @@ public:
     void           setSrc(const Version& ver,GLsizei count,const GLchar** strings,const GLint* length);
     const char*    getOriginalSrc();
     const GLchar** parsedLines(){return const_cast<const GLchar**>(&m_parsedLines);};
+    GLenum         getType();
     ~ShaderParser();
 
 private:
