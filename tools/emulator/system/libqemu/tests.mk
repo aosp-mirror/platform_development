@@ -19,12 +19,12 @@ include $(CLEAR_VARS)
 LOCAL_MODULE := test-libqemu-1
 LOCAL_SRC_FILES := test_guest_1.c test_util.c
 LOCAL_MODULE_TAGS := debug
-LOCAL_STATIC_LIBRARIES := libqemu libcutils
+LOCAL_STATIC_LIBRARIES := libcutils
 include $(BUILD_EXECUTABLE)
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := test-libqemu-2
 LOCAL_SRC_FILES := test_guest_2.c test_util.c
 LOCAL_MODULE_TAGS := debug
-LOCAL_STATIC_LIBRARIES := libqemu libcutils
+LOCAL_STATIC_LIBRARIES := libcutils
 include $(BUILD_EXECUTABLE)
