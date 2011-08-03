@@ -37,8 +37,7 @@ LOCAL_MODULE_CLASS := SHARED_LIBRARIES
 LOCAL_PRELINK_MODULE := false
 
 LOCAL_STATIC_LIBRARIES := \
-    libOpenglCodecCommon  \
-	libqemu
+    libOpenglCodecCommon
 
 LOCAL_SHARED_LIBRARIES := \
     libcutils \
