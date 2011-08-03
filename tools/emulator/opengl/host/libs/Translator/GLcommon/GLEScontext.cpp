@@ -121,11 +121,13 @@ void GLEScontext::init() {
         initExtensionString();
 
         int maxTexUnits = getMaxTexUnits();
-        m_tex2DBind = new textureUnitState[maxTexUnits];
+        m_texState = new textureUnitState[maxTexUnits];
         for (int i=0;i<maxTexUnits;++i) {
-            m_tex2DBind[i].texture = 0;
             for (int j=0;j<NUM_TEXTURE_TARGETS;++j)
-                m_tex2DBind[i].enabled[j] = GL_FALSE;
+            {
+                m_texState[i][j].texture = 0;
+                m_texState[i][j].enabled = GL_FALSE;
+            }
         }
     }
 }
@@ -135,7 +137,7 @@ GLEScontext::GLEScontext():
                            m_activeTexture(0)      ,
                            m_unpackAlignment(4)    ,
                            m_glError(GL_NO_ERROR)  ,
-                           m_tex2DBind(0)          ,
+                           m_texState(0)          ,
                            m_arrayBuffer(0)        ,
                            m_elementBuffer(0){};
 
@@ -158,8 +160,8 @@ GLEScontext::~GLEScontext() {
             delete p;
         }
     }
-    delete[] m_tex2DBind;
-    m_tex2DBind = NULL;
+    delete[] m_texState;
+    m_texState = NULL;
 }
 
 const GLvoid* GLEScontext::setPointer(GLenum arrType,GLint size,GLenum type,GLsizei stride,const GLvoid* data,bool normalize) {
@@ -518,7 +520,7 @@ void GLEScontext::initCapsLocked(const GLubyte * extensionString)
 
 bool GLEScontext::isTextureUnitEnabled(GLenum unit) {
     for (int i=0;i<NUM_TEXTURE_TARGETS;++i) {
-        if (m_tex2DBind[unit-GL_TEXTURE0].enabled[i])
+        if (m_texState[unit-GL_TEXTURE0][i].enabled)
             return true;
     }
     return false;
@@ -588,8 +590,11 @@ bool GLEScontext::glGetIntegerv(GLenum pname, GLint *params)
             break;
 
         case GL_TEXTURE_BINDING_CUBE_MAP:
+            *params = m_texState[m_activeTexture][TEXTURE_CUBE_MAP].texture;
+            break;
+
         case GL_TEXTURE_BINDING_2D:
-            *params = m_tex2DBind[m_activeTexture].texture;
+            *params = m_texState[m_activeTexture][TEXTURE_2D].texture;
             break;
 
         case GL_ACTIVE_TEXTURE:
@@ -610,3 +615,59 @@ bool GLEScontext::glGetIntegerv(GLenum pname, GLint *params)
     return true;
 }
 
+TextureTarget GLEScontext::GLTextureTargetToLocal(GLenum target) {
+    TextureTarget value=TEXTURE_2D;
+    switch (target) {
+    case GL_TEXTURE_CUBE_MAP:
+    case GL_TEXTURE_CUBE_MAP_POSITIVE_X:
+    case GL_TEXTURE_CUBE_MAP_POSITIVE_Y:
+    case GL_TEXTURE_CUBE_MAP_POSITIVE_Z:
+    case GL_TEXTURE_CUBE_MAP_NEGATIVE_X:
+    case GL_TEXTURE_CUBE_MAP_NEGATIVE_Y:
+    case GL_TEXTURE_CUBE_MAP_NEGATIVE_Z:
+        value = TEXTURE_CUBE_MAP;
+        break;
+    case GL_TEXTURE_2D:
+        value = TEXTURE_2D;
+        break;
+    }
+    return value;
+}
+
+unsigned int GLEScontext::getBindedTexture(GLenum target) {
+    TextureTarget pos = GLTextureTargetToLocal(target);
+    return m_texState[m_activeTexture][pos].texture;
+}
+  
+unsigned int GLEScontext::getBindedTexture(GLenum unit, GLenum target) {
+    TextureTarget pos = GLTextureTargetToLocal(target);
+    return m_texState[unit-GL_TEXTURE0][pos].texture;
+}
+
+void GLEScontext::setBindedTexture(GLenum target, unsigned int tex) {
+    TextureTarget pos = GLTextureTargetToLocal(target);
+    m_texState[m_activeTexture][pos].texture = tex;
+}
+
+void GLEScontext::setTextureEnabled(GLenum target, GLenum enable) {
+    TextureTarget pos = GLTextureTargetToLocal(target);
+    m_texState[m_activeTexture][pos].enabled = enable;
+}
+
+#define INTERNAL_NAME(x) (x +0x100000000ll);
+
+ObjectLocalName GLEScontext::getDefaultTextureName(GLenum target) {
+    ObjectLocalName name = 0;
+    switch (GLTextureTargetToLocal(target)) {
+    case TEXTURE_2D:
+        name = INTERNAL_NAME(0);
+        break;
+    case TEXTURE_CUBE_MAP:
+        name = INTERNAL_NAME(1);
+        break;
+    default:
+        name = 0;
+        break;
+    }
+    return name;
+}

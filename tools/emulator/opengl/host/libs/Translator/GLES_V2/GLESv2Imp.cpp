@@ -70,6 +70,7 @@ static void initContext(GLEScontext* ctx,ShareGroupPtr grp) {
         ctx->setShareGroup(grp);
         ctx->init();
         glBindTexture(GL_TEXTURE_2D,0);
+        glBindTexture(GL_TEXTURE_CUBE_MAP,0);
     }
 }
 static GLEScontext* createGLESContext() {
@@ -113,6 +114,30 @@ GL_APICALL GLESiface* __translator_getIfaces(EGLiface* eglIface){
     return & s_glesIface;
 }
 
+}
+
+static ObjectLocalName TextureLocalName(GLenum target,unsigned int tex) {
+    GET_CTX_RET(0);
+    return (tex!=0? tex : ctx->getDefaultTextureName(target));
+}
+
+static TextureData* getTextureData(ObjectLocalName tex) {
+    GET_CTX_RET(NULL);
+    TextureData *texData = NULL;
+    ObjectDataPtr objData = thrd->shareGroup->getObjectData(TEXTURE,tex);
+    if(!objData.Ptr()){
+        texData = new TextureData();
+        thrd->shareGroup->setObjectData(TEXTURE, tex, ObjectDataPtr(texData));
+    } else {
+        texData = (TextureData*)objData.Ptr();
+    }
+    return texData;
+}
+
+static TextureData* getTextureTargetData(GLenum target){
+    GET_CTX_RET(NULL);
+    unsigned int tex = ctx->getBindedTexture(target);
+    return getTextureData(TextureLocalName(target,tex));
 }
 
 GL_APICALL void  GL_APIENTRY glActiveTexture(GLenum texture){
@@ -204,16 +229,27 @@ GL_APICALL void  GL_APIENTRY glBindTexture(GLenum target, GLuint texture){
     GET_CTX();
     SET_ERROR_IF(!GLESv2Validate::textureTarget(target),GL_INVALID_ENUM)
 
-    GLuint globalTextureName = texture;
+    //for handling default texture (0)
+    ObjectLocalName localTexName = TextureLocalName(target,texture);
+    
+    GLuint globalTextureName = localTexName;
     if(thrd->shareGroup.Ptr()){
-        globalTextureName = thrd->shareGroup->getGlobalName(TEXTURE,texture);
+        globalTextureName = thrd->shareGroup->getGlobalName(TEXTURE,localTexName);
         //if texture wasn't generated before,generate one
         if(!globalTextureName){
-            thrd->shareGroup->genName(TEXTURE,texture);
-            globalTextureName = thrd->shareGroup->getGlobalName(TEXTURE,texture);
+            thrd->shareGroup->genName(TEXTURE,localTexName);
+            globalTextureName = thrd->shareGroup->getGlobalName(TEXTURE,localTexName);
         }
+
+        TextureData* texData = getTextureData(localTexName);
+        if (texData->target==0)
+            texData->target = target;
+        //if texture was already bound to another target
+        SET_ERROR_IF(texData->target !=target,GL_INVALID_OPERATION);
+        texData->wasBound = true;
     }
-    ctx->setBindedTexture(texture);
+
+    ctx->setBindedTexture(target,texture);
     ctx->dispatcher().glBindTexture(target,globalTextureName);
 }
 
@@ -403,9 +439,16 @@ GL_APICALL void  GL_APIENTRY glDeleteTextures(GLsizei n, const GLuint* textures)
     SET_ERROR_IF(n<0,GL_INVALID_VALUE);
     if(thrd->shareGroup.Ptr()) {
         for(int i=0; i < n; i++){
-           const GLuint globalTextureName = thrd->shareGroup->getGlobalName(TEXTURE,textures[i]);
-           thrd->shareGroup->deleteName(TEXTURE,textures[i]);
-           ctx->dispatcher().glDeleteTextures(1,&globalTextureName);
+            if (textures[i]!=0) {
+                const GLuint globalTextureName = thrd->shareGroup->getGlobalName(TEXTURE,textures[i]);
+                thrd->shareGroup->deleteName(TEXTURE,textures[i]);
+                ctx->dispatcher().glDeleteTextures(1,&globalTextureName);
+
+                if (ctx->getBindedTexture(GL_TEXTURE_2D) == textures[i])
+                    ctx->setBindedTexture(GL_TEXTURE_2D,0);
+                if (ctx->getBindedTexture(GL_TEXTURE_CUBE_MAP) == textures[i])
+                    ctx->setBindedTexture(GL_TEXTURE_CUBE_MAP,0);
+            }
         }
     }
 }
@@ -571,7 +614,8 @@ GL_APICALL void  GL_APIENTRY glFramebufferTexture2D(GLenum target, GLenum attach
     SET_ERROR_IF(level != 0, GL_INVALID_VALUE);
 
     if(thrd->shareGroup.Ptr()) {
-            GLuint globalTextureName = thrd->shareGroup->getGlobalName(TEXTURE,texture);
+            ObjectLocalName texname = TextureLocalName(textarget,texture);
+            GLuint globalTextureName = thrd->shareGroup->getGlobalName(TEXTURE,texname);
             ctx->dispatcher().glFramebufferTexture2DEXT(target,attachment,textarget,globalTextureName,level);
     }
 }
@@ -1158,10 +1202,10 @@ GL_APICALL GLboolean    GL_APIENTRY glIsRenderbuffer(GLuint renderbuffer){
 
 GL_APICALL GLboolean    GL_APIENTRY glIsTexture(GLuint texture){
     GET_CTX_RET(GL_FALSE)
-    if(texture && thrd->shareGroup.Ptr()){
-        return thrd->shareGroup->isObject(TEXTURE,texture) ? GL_TRUE :GL_FALSE;
-    }
-    return GL_FALSE;
+    if (texture==0)
+        return GL_FALSE;
+    TextureData* tex = getTextureData(texture);
+    return tex ? tex->wasBound : GL_FALSE;
 }
 
 GL_APICALL GLboolean    GL_APIENTRY glIsProgram(GLuint program){
@@ -1310,20 +1354,6 @@ GL_APICALL void  GL_APIENTRY glStencilOpSeparate(GLenum face, GLenum fail, GLenu
     ctx->dispatcher().glStencilOp(fail,zfail,zpass);
 }
 
-static TextureData* getTextureData(){
-    GET_CTX_RET(NULL);
-    unsigned int tex = ctx->getBindedTexture();
-    TextureData *texData = NULL;
-    ObjectDataPtr objData = thrd->shareGroup->getObjectData(TEXTURE,tex);
-    if(!objData.Ptr()){
-        texData = new TextureData();
-        thrd->shareGroup->setObjectData(TEXTURE, tex, ObjectDataPtr(texData));
-    } else {
-        texData = (TextureData*)objData.Ptr();
-    }
-    return texData;
-}
-
 GL_APICALL void  GL_APIENTRY glTexImage2D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid* pixels){
     GET_CTX();
     SET_ERROR_IF(!(GLESv2Validate::textureTargetEx(target) &&
@@ -1335,13 +1365,13 @@ GL_APICALL void  GL_APIENTRY glTexImage2D(GLenum target, GLint level, GLint inte
     SET_ERROR_IF(border != 0,GL_INVALID_VALUE);
 
     if (thrd->shareGroup.Ptr()){
-        unsigned int tex = ctx->getBindedTexture();
-        TextureData *texData = getTextureData();
+        TextureData *texData = getTextureTargetData(target);
         if(texData) {
             texData->width = width;
             texData->height = height;
             texData->border = border;
             texData->internalFormat = internalformat;
+            texData->target = target;
         }
     }
     if (type==GL_HALF_FLOAT_OES)
@@ -1553,7 +1583,7 @@ GL_APICALL void GL_APIENTRY glEGLImageTargetTexture2DOES(GLenum target, GLeglIma
         // flag to the OpenGL layer to skip the image creation and map the
         // current binded texture object to the existing global object.
         if (thrd->shareGroup.Ptr()) {
-            unsigned int tex = ctx->getBindedTexture();
+            ObjectLocalName tex = TextureLocalName(target,ctx->getBindedTexture(target));
             unsigned int oldGlobal = thrd->shareGroup->getGlobalName(TEXTURE, tex);
             // Delete old texture object
             if (oldGlobal) {
@@ -1562,7 +1592,7 @@ GL_APICALL void GL_APIENTRY glEGLImageTargetTexture2DOES(GLenum target, GLeglIma
             // replace mapping and bind the new global object
             thrd->shareGroup->replaceGlobalName(TEXTURE, tex,img->globalTexName);
             ctx->dispatcher().glBindTexture(GL_TEXTURE_2D, img->globalTexName);
-            TextureData *texData = getTextureData();
+            TextureData *texData = getTextureTargetData(target);
             SET_ERROR_IF(texData==NULL,GL_INVALID_OPERATION);
             texData->sourceEGLImage = (unsigned int)image;
             texData->eglImageDetach = s_eglIface->eglDetachEGLImage;

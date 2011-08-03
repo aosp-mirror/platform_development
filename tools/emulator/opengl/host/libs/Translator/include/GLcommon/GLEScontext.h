@@ -15,10 +15,12 @@ TEXTURE_CUBE_MAP,
 NUM_TEXTURE_TARGETS
 };
 
-typedef struct _textureUnitState {
+typedef struct _textureTargetState {
     GLuint texture;
-    GLboolean enabled[NUM_TEXTURE_TARGETS];
-} textureUnitState;
+    GLboolean enabled;
+} textureTargetState;
+
+typedef textureTargetState textureUnitState[NUM_TEXTURE_TARGETS];
 
 class Version{
 public:
@@ -102,11 +104,12 @@ public:
     void setGLerror(GLenum err);
     void setShareGroup(ShareGroupPtr grp){m_shareGroup = grp;};
     virtual void setActiveTexture(GLenum tex);
-    unsigned int getBindedTexture(){return m_tex2DBind[m_activeTexture].texture;};
-    unsigned int getBindedTexture(GLenum unit) { return m_tex2DBind[unit - GL_TEXTURE0].texture;};
-    void setBindedTexture(unsigned int tex){ m_tex2DBind[m_activeTexture].texture = tex;};
+    unsigned int getBindedTexture(GLenum target);
+    unsigned int getBindedTexture(GLenum unit,GLenum target);
+    void setBindedTexture(GLenum target,unsigned int tex);
     bool isTextureUnitEnabled(GLenum unit);
-    void setTextureEnabled(TextureTarget target, GLenum enable) {m_tex2DBind[m_activeTexture].enabled[target] = enable; };
+    void setTextureEnabled(GLenum target, GLenum enable);
+    ObjectLocalName getDefaultTextureName(GLenum target);
     bool isInitialized() { return m_initialized; };
     void setUnpackAlignment(GLint param){ m_unpackAlignment = param; };
     GLint getUnpackAlignment(){ return m_unpackAlignment; };
@@ -166,10 +169,11 @@ private:
 
     virtual void setupArr(const GLvoid* arr,GLenum arrayType,GLenum dataType,GLint size,GLsizei stride, GLboolean normalized, int pointsIndex = -1) = 0 ;
     GLuint getBuffer(GLenum target);
+    TextureTarget GLTextureTargetToLocal(GLenum target);
 
     ShareGroupPtr         m_shareGroup;
     GLenum                m_glError;
-    textureUnitState*     m_tex2DBind;
+    textureUnitState*     m_texState;
     unsigned int          m_arrayBuffer;
     unsigned int          m_elementBuffer;
 };
