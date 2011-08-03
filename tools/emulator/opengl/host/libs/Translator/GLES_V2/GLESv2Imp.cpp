@@ -935,6 +935,21 @@ GL_APICALL void  GL_APIENTRY glGetProgramiv(GLuint program, GLenum pname, GLint*
                 params[0] = programData->getLinkStatus();
             }
             break;
+#ifdef NV_WAR
+        //validate status should not return GL_TRUE if link failed
+        case GL_VALIDATE_STATUS:
+            {
+                ObjectDataPtr objData = thrd->shareGroup->getObjectData(SHADER,program);
+                SET_ERROR_IF(!objData.Ptr() ,GL_INVALID_OPERATION);
+                SET_ERROR_IF(objData.Ptr()->getDataType()!=PROGRAM_DATA,GL_INVALID_OPERATION);
+                ProgramData* programData = (ProgramData*)objData.Ptr();
+                if (programData->getLinkStatus()==GL_TRUE) 
+                    ctx->dispatcher().glGetProgramiv(globalProgramName,pname,params);
+                else
+                    params[0] = GL_FALSE;
+            }
+            break;
+#endif
         default:
             ctx->dispatcher().glGetProgramiv(globalProgramName,pname,params);
         }
