@@ -20,8 +20,6 @@
 #include <map>
 #include "SmartPtr.h"
 
-typedef std::map<unsigned int, unsigned int> NamesMap;
-
 enum NamedObjectType {
     VERTEXBUFFER = 0,
     TEXTURE = 1,
@@ -50,6 +48,8 @@ private:
     ObjectDataType m_dataType;
 };
 typedef SmartPtr<ObjectData> ObjectDataPtr;
+typedef unsigned long long ObjectLocalName;
+typedef std::map<ObjectLocalName, unsigned int> NamesMap;
 
 //
 // Class NameSpace - this class manages allocations and deletions of objects
@@ -78,38 +78,38 @@ private:
     //           the value of the global name can be retrieved using the
     //           getGlobalName function.
     //
-    unsigned int genName(unsigned int p_localName, bool genGlobal, bool genLocal);
+    ObjectLocalName genName(ObjectLocalName p_localName, bool genGlobal, bool genLocal);
 
     //
     // getGlobalName - returns the global name of an object or 0 if the object
     //                 does not exist.
     //
-    unsigned int getGlobalName(unsigned int p_localName);
+    unsigned int getGlobalName(ObjectLocalName p_localName);
 
     //
     // getLocaalName - returns the local name of an object or 0 if the object
     //                 does not exist.
     //
-    unsigned int getLocalName(unsigned int p_globalName);
+    ObjectLocalName getLocalName(unsigned int p_globalName);
 
     //
     // deleteName - deletes and object from the namespace as well as its
     //              global name from the global name space.
     //
-    void deleteName(unsigned int p_localName);
+    void deleteName(ObjectLocalName p_localName);
 
     //
     // isObject - returns true if the named object exist.
     //
-    bool isObject(unsigned int p_localName);
+    bool isObject(ObjectLocalName p_localName);
 
     //
     // replaces an object to map to an existing global object
     //
-    void replaceGlobalName(unsigned int p_localName, unsigned int p_globalName);
+    void replaceGlobalName(ObjectLocalName p_localName, unsigned int p_globalName);
 
 private:
-    unsigned int m_nextName;
+    ObjectLocalName m_nextName;
     NamesMap m_localToGlobalMap;
     const NamedObjectType m_type;
     GlobalNameSpace *m_globalNameSpace;
@@ -183,46 +183,46 @@ public:
     //           This function also generates a "global" name for the object
     //           which can be queried using the getGlobalName function.
     //
-    unsigned int genName(NamedObjectType p_type, unsigned int p_localName = 0, bool genLocal= false);
+    ObjectLocalName genName(NamedObjectType p_type, ObjectLocalName p_localName = 0, bool genLocal= false);
 
     //
     // getGlobalName - retrieves the "global" name of an object or 0 if the
     //                 object does not exist.
     //
-    unsigned int getGlobalName(NamedObjectType p_type, unsigned int p_localName);
+    unsigned int getGlobalName(NamedObjectType p_type, ObjectLocalName p_localName);
 
     //
     // getLocalName - retrieves the "local" name of an object or 0 if the
     //                 object does not exist.
     //
-    unsigned int getLocalName(NamedObjectType p_type, unsigned int p_globalName);
+    ObjectLocalName getLocalName(NamedObjectType p_type, unsigned int p_globalName);
 
     //
     // deleteName - deletes and object from the namespace as well as its
     //              global name from the global name space.
     //
-    void deleteName(NamedObjectType p_type, unsigned int p_localName);
+    void deleteName(NamedObjectType p_type, ObjectLocalName p_localName);
 
     //
     // replaceGlobalName - replaces an object to map to an existing global
     //        named object. (used when creating EGLImage siblings)
     //
-    void replaceGlobalName(NamedObjectType p_type, unsigned int p_localName, unsigned int p_globalName);
+    void replaceGlobalName(NamedObjectType p_type, ObjectLocalName p_localName, unsigned int p_globalName);
 
     //
     // isObject - returns true if the named object exist.
     //
-    bool isObject(NamedObjectType p_type, unsigned int p_localName);
+    bool isObject(NamedObjectType p_type, ObjectLocalName p_localName);
 
     //
     // Assign object global data to a names object
     //
-    void setObjectData(NamedObjectType p_type, unsigned int p_localName, ObjectDataPtr data);
+    void setObjectData(NamedObjectType p_type, ObjectLocalName p_localName, ObjectDataPtr data);
 
     //
     // Retrieve object global data
     //
-    ObjectDataPtr getObjectData(NamedObjectType p_type, unsigned int p_localName);
+    ObjectDataPtr getObjectData(NamedObjectType p_type, ObjectLocalName p_localName);
 
 private:
     explicit ShareGroup(GlobalNameSpace *globalNameSpace);

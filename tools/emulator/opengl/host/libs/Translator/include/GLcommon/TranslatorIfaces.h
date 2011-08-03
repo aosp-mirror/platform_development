@@ -44,7 +44,8 @@ public:
                     internalFormat(GL_RGBA),
                     sourceEGLImage(0),
                     wasBound(false),
-                    requiresAutoMipmap(false){
+                    requiresAutoMipmap(false),
+                    target(0) {
         memset(crop_rect,0,4*sizeof(int));
     };
 
@@ -57,6 +58,7 @@ public:
     bool requiresAutoMipmap;
     int          crop_rect[4];
     void (*eglImageDetach)(unsigned int imageId);
+    GLenum target;
 };
 
 struct EglImage
