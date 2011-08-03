@@ -115,16 +115,7 @@ docs/widgets.txt              platforms/${PLATFORM_NAME}/data/widgets.txt
 docs/features.txt             platforms/${PLATFORM_NAME}/data/features.txt
 
 # fonts for layoutlib.
-frameworks/base/data/fonts/fonts.xml                 platforms/${PLATFORM_NAME}/data/fonts/fonts.xml
-frameworks/base/data/fonts/DroidSans.ttf             platforms/${PLATFORM_NAME}/data/fonts/DroidSans.ttf
-frameworks/base/data/fonts/DroidSans-Bold.ttf        platforms/${PLATFORM_NAME}/data/fonts/DroidSans-Bold.ttf
-frameworks/base/data/fonts/DroidSansMono.ttf         platforms/${PLATFORM_NAME}/data/fonts/DroidSansMono.ttf
-frameworks/base/data/fonts/DroidSerif-Bold.ttf       platforms/${PLATFORM_NAME}/data/fonts/DroidSerif-Bold.ttf
-frameworks/base/data/fonts/DroidSerif-BoldItalic.ttf platforms/${PLATFORM_NAME}/data/fonts/DroidSerif-BoldItalic.ttf
-frameworks/base/data/fonts/DroidSerif-Italic.ttf     platforms/${PLATFORM_NAME}/data/fonts/DroidSerif-Italic.ttf
-frameworks/base/data/fonts/DroidSerif-Regular.ttf    platforms/${PLATFORM_NAME}/data/fonts/DroidSerif-Regular.ttf
-frameworks/base/data/fonts/DroidSansFallback.ttf     platforms/${PLATFORM_NAME}/data/fonts/DroidSansFallback.ttf
-frameworks/base/data/fonts/DroidSansJapanese.ttf     platforms/${PLATFORM_NAME}/data/fonts/DroidSansJapanese.ttf
+frameworks/base/data/fonts    platforms/${PLATFORM_NAME}/data/fonts
 
 # NOTICE files are copied by build/core/Makefile from sdk.git
 sdk/files/sdk_files_NOTICE.txt platforms/${PLATFORM_NAME}/templates/NOTICE.txt
