@@ -307,12 +307,14 @@
     <string name="menu_from_xml_instructions_go_back">If you want to choose another menu resource, go back and re-run this activity.</string>
 
     <string name="voice_recognition">App/Voice Recognition</string>
+    <string name="supported_languages">Supported languages</string>
+    <string name="language_preference">Voice Search in Settings</string>
 
     <string name="text_to_speech">App/Text-To-Speech</string>
     <string name="again">Again</string>
 
     <string name="app_update_received">ApiDemos has been updated!</string>
-    
+
     <!-- ============================== -->
     <!--  app/content examples strings  -->
     <!-- ============================== -->
