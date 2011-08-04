@@ -15,10 +15,11 @@ void ShaderParser::setSrc(const Version& ver,GLsizei count,const GLchar** string
     }
     clearParsedSrc();
 
-    if(getenv("NV_WAR"))
+    const char *forceVersion = getenv("GOOGLE_GLES_FORCE_GLSL_VERSION");
+    if (forceVersion)
     {
         fprintf(stderr, "Workaround for nVidia's liberal shader compilation - adding #version token to shader\n");
-        parseGLSLversion();
+        parseGLSLversion(forceVersion);
     }
     /*
       version 1.30.10 is the first version of GLSL Language containing precision qualifiers
@@ -52,10 +53,10 @@ void ShaderParser::parseOriginalSrc() {
     m_parsedSrc+=m_src;
 }
 
-void ShaderParser::parseGLSLversion() {
+void ShaderParser::parseGLSLversion(const char *forceVersion) {
     //if no version definition is found
     if (m_src.find("#version ", 0) == std::string::npos) {
-        m_parsedSrc += "#version 100\n";
+        m_parsedSrc += std::string("#version ") + std::string(forceVersion) + std::string("\n");
     }
 }
 

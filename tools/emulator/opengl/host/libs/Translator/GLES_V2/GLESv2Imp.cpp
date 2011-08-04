@@ -935,7 +935,6 @@ GL_APICALL void  GL_APIENTRY glGetProgramiv(GLuint program, GLenum pname, GLint*
                 params[0] = programData->getLinkStatus();
             }
             break;
-#ifdef NV_WAR
         //validate status should not return GL_TRUE if link failed
         case GL_VALIDATE_STATUS:
             {
@@ -949,7 +948,6 @@ GL_APICALL void  GL_APIENTRY glGetProgramiv(GLuint program, GLenum pname, GLint*
                     params[0] = GL_FALSE;
             }
             break;
-#endif
         default:
             ctx->dispatcher().glGetProgramiv(globalProgramName,pname,params);
         }
@@ -1300,19 +1298,17 @@ GL_APICALL void  GL_APIENTRY glReleaseShaderCompiler(void){
 GL_APICALL void  GL_APIENTRY glRenderbufferStorage(GLenum target, GLenum internalformat, GLsizei width, GLsizei height){
     GET_CTX();
     GLenum internal = internalformat;
-#ifdef NV_WAR
     switch (internalformat) {
     case GL_RGB565:
         internal = GL_RGB;
         break;
     case GL_RGB5_A1:
-        internal = GL_RGBA4;
+        internal = GL_RGBA;
         break;
     default:
         internal = internalformat;
         break;
     }
-#endif
     ctx->dispatcher().glRenderbufferStorageEXT(target,internal,width,height);
 }
 
@@ -1405,10 +1401,8 @@ GL_APICALL void  GL_APIENTRY glTexImage2D(GLenum target, GLint level, GLint inte
     }
     if (type==GL_HALF_FLOAT_OES)
         type = GL_HALF_FLOAT_NV;
-#ifdef NV_WAR
     if (pixels==NULL && type==GL_UNSIGNED_SHORT_5_5_5_1)
         type = GL_UNSIGNED_SHORT;
-#endif
     ctx->dispatcher().glTexImage2D(target,level,internalformat,width,height,border,format,type,pixels);
 }
 
