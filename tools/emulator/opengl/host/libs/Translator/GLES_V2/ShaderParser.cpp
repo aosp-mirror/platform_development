@@ -3,18 +3,23 @@
 
 ShaderParser::ShaderParser():ObjectData(SHADER_DATA),
                              m_type(0),
-                             m_src(NULL),
-                             m_parsedLines(NULL){};
+                             m_parsedLines(NULL) {};
 
 ShaderParser::ShaderParser(GLenum type):ObjectData(SHADER_DATA), 
                                         m_type(type),
-                                        m_parsedLines(NULL){};
+                                        m_parsedLines(NULL) {};
 
 void ShaderParser::setSrc(const Version& ver,GLsizei count,const GLchar** strings,const GLint* length){
     for(int i = 0;i<count;i++){
         m_src.append(strings[i]);
     }
     clearParsedSrc();
+
+    if(getenv("NV_WAR"))
+    {
+        fprintf(stderr, "Workaround for nVidia's liberal shader compilation - adding #version token to shader\n");
+        parseGLSLversion();
+    }
     /*
       version 1.30.10 is the first version of GLSL Language containing precision qualifiers
       if the glsl version is less than 1.30.10 than we will use a shader parser which omits
@@ -31,10 +36,27 @@ void ShaderParser::setSrc(const Version& ver,GLsizei count,const GLchar** string
     //XXX: Until proved otherwise, glsl doesn't know/use those precision macros, so we omit then
     parseOmitPrecision();
 #endif
+
+    parseOriginalSrc();
 }
+const GLchar** ShaderParser::parsedLines() {
+      m_parsedLines = (GLchar*)m_parsedSrc.c_str();
+      return const_cast<const GLchar**> (&m_parsedLines);
+};
 
 const char* ShaderParser::getOriginalSrc(){
     return m_src.c_str();
+}
+
+void ShaderParser::parseOriginalSrc() {
+    m_parsedSrc+=m_src;
+}
+
+void ShaderParser::parseGLSLversion() {
+    //if no version definition is found
+    if (m_src.find("#version ", 0) == std::string::npos) {
+        m_parsedSrc += "#version 100\n";
+    }
 }
 
 void ShaderParser::parseOmitPrecision(){
@@ -47,16 +69,7 @@ void ShaderParser::parseOmitPrecision(){
                                          "#define highp \n"
                                          "#define precision \n"
                                      };
-
-    //the lengths of defines we need to add in order to Omit precisions qualifiers
-    static GLuint definesLength   = strlen(defines);
-
-    const GLchar* origSrc = m_src.c_str();
-    unsigned int origLength = strlen(origSrc);
-
-    m_parsedLines = new GLchar[origLength + definesLength + 1];
-    strncpy(m_parsedLines,defines,definesLength);
-    strcpy(m_parsedLines+definesLength,origSrc);
+    m_parsedSrc+=defines;
 }
 
 void ShaderParser::parseExtendDefaultPrecision(){
@@ -68,21 +81,11 @@ void ShaderParser::parseExtendDefaultPrecision(){
                                       "precision lowp samplerCube;\n"
                                    };
 
-    //the length of the precision lines which we need to add to the shader
-    static GLint extendLength = strlen(extend);
-
-    const GLchar* origSrc = m_src.c_str();
-    unsigned int origLength = strlen(origSrc);
-
-    m_parsedLines = new GLchar[origLength + extendLength + 1];
-    strncpy(m_parsedLines,extend,extendLength);
-    strcpy(m_parsedLines+extendLength,origSrc);
+    m_parsedSrc+=extend;
 }
 
 void ShaderParser::clearParsedSrc(){
-    if(m_parsedLines){
-        delete[] m_parsedLines;
-    }
+    m_parsedSrc.clear();
 }
 
 GLenum ShaderParser::getType() {
