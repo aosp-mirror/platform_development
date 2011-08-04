@@ -354,6 +354,8 @@ GL_API void GL_APIENTRY  glBufferSubData( GLenum target, GLintptr offset, GLsize
 
 GL_API void GL_APIENTRY  glClear( GLbitfield mask) {
     GET_CTX()
+    ctx->drawValidate();
+
     ctx->dispatcher().glClear(mask);
 }
 
@@ -557,6 +559,8 @@ GL_API void GL_APIENTRY  glDrawArrays( GLenum mode, GLint first, GLsizei count) 
     SET_ERROR_IF(count < 0,GL_INVALID_VALUE)
     SET_ERROR_IF(!GLEScmValidate::drawMode(mode),GL_INVALID_ENUM)
 
+    ctx->drawValidate();
+
     if(!ctx->isArrEnabled(GL_VERTEX_ARRAY)) return;
 
     GLESConversionArrays tmpArrs;
@@ -575,6 +579,8 @@ GL_API void GL_APIENTRY  glDrawElements( GLenum mode, GLsizei count, GLenum type
     SET_ERROR_IF(count < 0,GL_INVALID_VALUE)
     SET_ERROR_IF((!GLEScmValidate::drawMode(mode) || !GLEScmValidate::drawType(type)),GL_INVALID_ENUM)
     if(!ctx->isArrEnabled(GL_VERTEX_ARRAY)) return;
+
+    ctx->drawValidate();
 
     const GLvoid* indices = elementsIndices;
     GLESConversionArrays tmpArrs;
@@ -2214,6 +2220,8 @@ void glDrawTexOES (T x, T y, T z, T width, T height) {
     GET_CTX()
 
     SET_ERROR_IF((width<=0 || height<=0),GL_INVALID_VALUE);
+
+    ctx->drawValidate();
 
     int numClipPlanes;
 

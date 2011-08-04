@@ -80,6 +80,11 @@ private:
     //
     ObjectLocalName genName(ObjectLocalName p_localName, bool genGlobal, bool genLocal);
 
+    // genGlobalName() - This function creates a global name
+    //                   with no associated local name, for the
+    //                   translator internal use.
+    unsigned int genGlobalName(void);
+
     //
     // getGlobalName - returns the global name of an object or 0 if the object
     //                 does not exist.
@@ -149,6 +154,11 @@ public:
     //           which can be queried using the getGlobalName function.
     //
     ObjectLocalName genName(NamedObjectType p_type, ObjectLocalName p_localName = 0, bool genLocal= false);
+
+    // genGlobalName() - This function creates a global name
+    //                   with no associated local name, for the
+    //                   translator internal use.
+    unsigned int genGlobalName(NamedObjectType p_type);
 
     //
     // getGlobalName - retrieves the "global" name of an object or 0 if the
