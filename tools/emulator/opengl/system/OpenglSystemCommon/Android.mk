@@ -10,6 +10,4 @@ LOCAL_SRC_FILES := \
 
 $(call emugl-export,C_INCLUDES,$(LOCAL_PATH))
 
-LOCAL_STATIC_LIBRARIES += libqemu
-
 $(call emugl-end-module)
