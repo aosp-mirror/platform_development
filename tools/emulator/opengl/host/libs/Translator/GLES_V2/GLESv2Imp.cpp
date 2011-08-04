@@ -1257,9 +1257,21 @@ GL_APICALL void  GL_APIENTRY glLinkProgram(GLuint program){
         SET_ERROR_IF(!objData.Ptr(), GL_INVALID_OPERATION);
         SET_ERROR_IF(objData.Ptr()->getDataType()!=PROGRAM_DATA, GL_INVALID_OPERATION);
         ProgramData* programData = (ProgramData*)objData.Ptr();
-        if (programData->getAttachedVertexShader()!=0 && programData->getAttachedFragmentShader()!=0) {
-            ctx->dispatcher().glLinkProgram(globalProgramName);
-            ctx->dispatcher().glGetProgramiv(globalProgramName,GL_LINK_STATUS,&linkStatus);
+        GLint fragmentShader   = programData->getAttachedFragmentShader();
+        GLint vertexShader =  programData->getAttachedVertexShader();
+        if (vertexShader != 0 && fragmentShader!=0) {
+            /* validating that the fragment & vertex shaders were compiled successfuly*/
+            GLint fCompileStatus = GL_FALSE;
+            GLint vCompileStatus = GL_FALSE;
+            GLuint fragmentShaderGlobal = thrd->shareGroup->getGlobalName(SHADER,fragmentShader);
+            GLuint vertexShaderGlobal = thrd->shareGroup->getGlobalName(SHADER,vertexShader);
+            ctx->dispatcher().glGetShaderiv(fragmentShaderGlobal,GL_COMPILE_STATUS,&fCompileStatus);
+            ctx->dispatcher().glGetShaderiv(vertexShaderGlobal,GL_COMPILE_STATUS,&vCompileStatus);
+
+            if(fCompileStatus != 0 && vCompileStatus != 0){
+                ctx->dispatcher().glLinkProgram(globalProgramName);
+                ctx->dispatcher().glGetProgramiv(globalProgramName,GL_LINK_STATUS,&linkStatus);
+            }
         }
         programData->setLinkStatus(linkStatus);
     }
