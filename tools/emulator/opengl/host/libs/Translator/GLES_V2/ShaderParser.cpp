@@ -15,12 +15,10 @@ void ShaderParser::setSrc(const Version& ver,GLsizei count,const GLchar** string
     }
     clearParsedSrc();
 
-    const char *forceVersion = getenv("GOOGLE_GLES_FORCE_GLSL_VERSION");
-    if (forceVersion)
-    {
-        fprintf(stderr, "Workaround for nVidia's liberal shader compilation - adding #version token to shader\n");
-        parseGLSLversion(forceVersion);
-    }
+    // parseGLSLversion must be called first since #version should be the
+    // first token in the shader source.
+    parseGLSLversion();
+    parseBuiltinConstants();
     /*
       version 1.30.10 is the first version of GLSL Language containing precision qualifiers
       if the glsl version is less than 1.30.10 than we will use a shader parser which omits
@@ -53,11 +51,117 @@ void ShaderParser::parseOriginalSrc() {
     m_parsedSrc+=m_src;
 }
 
-void ShaderParser::parseGLSLversion(const char *forceVersion) {
-    //if no version definition is found
-    if (m_src.find("#version ", 0) == std::string::npos) {
-        m_parsedSrc += std::string("#version ") + std::string(forceVersion) + std::string("\n");
+void ShaderParser::parseGLSLversion() {
+
+    //
+    // find in shader the #version token if exist.
+    // That token should be the first non-comment or blank token
+    //
+    const char *src = m_src.c_str();
+    int glslVersion = 0;
+    enum {
+        PARSE_NONE,
+        PARSE_IN_C_COMMENT,
+        PARSE_IN_LINE_COMMENT
+    } parseState = PARSE_NONE;
+    const char *c = src;
+
+    while( c && *c != '\0') {
+        if (parseState == PARSE_IN_C_COMMENT) {
+            if (*c == '*' && *(c+1) == '/') {
+                parseState = PARSE_NONE;
+                c += 2;
+            }
+            else c++;
+        }
+        else if (parseState == PARSE_IN_LINE_COMMENT) {
+            if (*c == '\n') {
+                parseState = PARSE_NONE;
+            }
+            c++;
+        }
+        else if (*c == '/' && *(c+1) == '/') {
+            parseState = PARSE_IN_LINE_COMMENT;
+            c += 2;
+        }
+        else if (*c == '/' && *(c+1) == '*') {
+            parseState = PARSE_IN_C_COMMENT;
+            c += 2;
+        }
+        else if (*c == ' ' || *c == '\t' || *c == '\r' || *c == '\n') {
+            c++;
+        }
+        else {
+            //
+            // We have reached the first non-blank character outside
+            // a comment, this must be a #version token or else #version
+            // token does not exist in this shader source.
+            //
+            if (!strncmp(c,"#version",8)) {
+                if (sscanf(c+8,"%d",&glslVersion) != 1) {
+                    //
+                    // #version found but failed to parse the version value!
+                    // this must be an error, set glslVersion to -1 to flag
+                    // that we do not want to override the version, just let
+                    // the shader compiler handle it.
+                    //
+                    glslVersion = -1;
+                }
+                else {
+                    //
+                    // parsed version string correctly, blank out the
+                    // version token from the source, we will add it later at
+                    // the begining of the shader.
+                    //
+                    char *cc = (char *)c;
+                    for (int i=0; i<8; i++,cc++) *cc = ' ';
+                    while (*cc < '0' || *cc > '9') { *cc = ' '; cc++; }
+                    while (*cc >= '0' && *cc <= '9') { *cc = ' '; cc++; }
+                }
+            }
+
+            //
+            // break the loop, no need to go further on the source.
+            break;
+        }
     }
+
+    //
+    // if no version token found, check if default glsl version
+    // has been requested through environment variable.
+    //
+    if (glslVersion == 0) {
+        const char *defVersion = getenv("GOOGLE_GLES_DEFAULT_GLSL_VERSION");
+        if (defVersion) {
+            if (sscanf(defVersion,"%d",&glslVersion) != 1) {
+                fprintf(stderr,"Wrong value to GOOGLE_GLES_DEFAULT_GLSL_VERSION, should be an integer\n");
+                glslVersion = 0;
+            }
+        }
+    }
+
+    //
+    // if glslVersion is defined, add it to the parsed source
+    //
+    if (glslVersion > 0) {
+        char vstr[16];
+        sprintf(vstr,"%d",glslVersion);
+        m_parsedSrc += std::string("#version ") + 
+                       std::string(vstr) + 
+                       std::string("\n");
+    }
+}
+
+void ShaderParser::parseBuiltinConstants()
+{
+    m_parsedSrc += 
+                   "const int _translator_gl_MaxVertexUniformVectors = 256;\n"
+                   "const int _translator_gl_MaxFragmentUniformVectors = 256;\n"
+                   "const int _translator_gl_MaxVaryingVectors = 15;\n"
+                   "#define gl_MaxVertexUniformVectors _translator_gl_MaxVertexUniformVectors\n"
+                   "#define gl_MaxFragmentUniformVectors _translator_gl_MaxFragmentUniformVectors\n"
+                   "#define gl_MaxVaryingVectors _translator_gl_MaxVaryingVectors\n";
+
 }
 
 void ShaderParser::parseOmitPrecision(){
