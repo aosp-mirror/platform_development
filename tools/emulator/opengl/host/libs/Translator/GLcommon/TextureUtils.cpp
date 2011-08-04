@@ -97,7 +97,7 @@ void  doCompressedTexImage2D(GLEScontext * ctx, GLenum target, GLint level,
                    glTexImage2DPtr(target,i,uncompressedFrmt,tmpWidth,tmpHeight,border,uncompressedFrmt,GL_UNSIGNED_BYTE,uncompressed);
                    tmpWidth/=2;
                    tmpHeight/=2;
-                   delete uncompressed;
+                   delete[] uncompressed;
                 }
             }
             break;
