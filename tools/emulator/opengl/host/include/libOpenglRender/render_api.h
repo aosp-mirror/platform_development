@@ -16,7 +16,10 @@
 #ifndef _OPENGL_RENDERER_RENDER_API_H
 #define _OPENGL_RENDERER_RENDER_API_H
 
-#include "IOStream.h"
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "render_api_platform_types.h"
 
 //
@@ -41,14 +44,8 @@ bool initOpenGLRenderer(FBNativeWindowType window,
 //
 bool stopOpenGLRenderer();
 
-//
-// createRenderThread - opens a new communication channel to the renderer
-//   process and creates new rendering thread.
-//   returns a pointer to IOStream through which command tokens are being sent
-//   to the render thread for execution. 'p_stream_buffer_size' is the internal
-//   stream buffer size.
-//   The thread is destroyed when deleting the IOStream object.
-//
-IOStream *createRenderThread(int p_stream_buffer_size);
+#ifdef __cplusplus
+}
+#endif
 
 #endif
