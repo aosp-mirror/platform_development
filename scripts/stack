@@ -1,0 +1,418 @@
+#!/usr/bin/env python
+#
+# Copyright 2006 Google Inc. All Rights Reserved.
+
+"""stack symbolizes native crash dumps."""
+
+import getopt
+import getpass
+import glob
+import os
+import re
+import subprocess
+import sys
+import urllib
+
+import symbol
+
+
+def PrintUsage():
+  """Print usage and exit with error."""
+  # pylint: disable-msg=C6310
+  print
+  print "  usage: " + sys.argv[0] + " [options] [FILE]"
+  print
+  print "  --symbols-dir=path"
+  print "       the path to a symbols dir, such as =/tmp/out/target/product/dream/symbols"
+  print
+  print "  --symbols-zip=path"
+  print "       the path to a symbols zip file, such as =dream-symbols-12345.zip"
+  print
+  print "  --auto"
+  print "       attempt to:"
+  print "         1) automatically find the build number in the crash"
+  print "         2) if it's an official build, download the symbols "
+  print "            from the build server, and use them"
+  print
+  print "  FILE should contain a stack trace in it somewhere"
+  print "       the tool will find that and re-print it with"
+  print "       source files and line numbers.  If you don't"
+  print "       pass FILE, or if file is -, it reads from"
+  print "       stdin."
+  print
+  # pylint: enable-msg=C6310
+  sys.exit(1)
+
+
+class SSOCookie(object):
+  """Creates a cookie file so we can download files from the build server."""
+
+  def __init__(self, cookiename=".sso.cookie", keep=False):
+    self.sso_server = "login.corp.google.com"
+    self.name = cookiename
+    self.keeper = keep
+    if not os.path.exists(self.name):
+      user = os.environ["USER"]
+      print "\n%s, to access the symbols, please enter your LDAP " % user,
+      sys.stdout.flush()
+      password = getpass.getpass()
+      params = urllib.urlencode({"u": user, "pw": password})
+      url = "https://%s/login?ssoformat=CORP_SSO" % self.sso_server
+      # login to SSO
+      curlcmd = ["/usr/bin/curl",
+                 "--cookie", self.name,
+                 "--cookie-jar", self.name,
+                 "--silent",
+                 "--location",
+                 "--data", params,
+                 "--output", "/dev/null",
+                 url]
+      subprocess.check_call(curlcmd)
+      if os.path.exists(self.name):
+        os.chmod(self.name, 0600)
+      else:
+        print "Could not log in to SSO"
+        sys.exit(1)
+
+  def __del__(self):
+    """Clean up."""
+    if not self.keeper:
+      os.remove(self.name)
+
+
+class NoBuildIDException(Exception):
+  pass
+
+
+def FindBuildFingerprint(lines):
+  """Searches the given file (array of lines) for the build fingerprint."""
+  fingerprint_regex = re.compile("^.*Build fingerprint:\s'(?P<fingerprint>.*)'")
+  for line in lines:
+    fingerprint_search = fingerprint_regex.match(line.strip())
+    if fingerprint_search:
+      return fingerprint_search.group("fingerprint")
+
+  return None  # didn't find the fingerprint string, so return none
+
+
+class SymbolDownloadException(Exception):
+  pass
+
+
+DEFAULT_SYMROOT = "/tmp/symbols"
+
+
+def DownloadSymbols(fingerprint, cookie):
+  """Attempts to download the symbols from the build server.
+
+  If successful, extracts them, and returns the path.
+
+  Args:
+    fingerprint: build fingerprint from the input stack trace
+    cookie: SSOCookie
+
+  Returns:
+    tuple (None, None) if no fingerprint is provided. Otherwise
+    tuple (root directory, symbols directory).
+
+  Raises:
+    SymbolDownloadException: Problem downloading symbols for fingerprint
+  """
+  if fingerprint is None:
+    return (None, None)
+  symdir = "%s/%s" % (DEFAULT_SYMROOT, hash(fingerprint))
+  if not os.path.exists(symdir):
+    os.makedirs(symdir)
+  # build server figures out the branch based on the CL
+  params = {
+      "op": "GET-SYMBOLS-LINK",
+      "fingerprint": fingerprint,
+      }
+  print "url: http://android-build/buildbot-update?" + urllib.urlencode(params)
+  url = urllib.urlopen("http://android-build/buildbot-update?",
+                       urllib.urlencode(params)).readlines()[0]
+  if not url:
+    raise SymbolDownloadException("Build server down? Failed to find syms...")
+
+  regex_str = (r"(?P<base_url>http\:\/\/android-build\/builds\/.*\/[0-9]+)"
+               r"(?P<img>.*)")
+  url_regex = re.compile(regex_str)
+  url_match = url_regex.match(url)
+  if url_match is None:
+    raise SymbolDownloadException("Unexpected results from build server URL...")
+
+  base_url = url_match.group("base_url")
+  img = url_match.group("img")
+  symbolfile = img.replace("-img-", "-symbols-")
+  symurl = base_url + symbolfile
+  localsyms = symdir + symbolfile
+
+  if not os.path.exists(localsyms):
+    print "downloading %s ..." % symurl
+    curlcmd = ["/usr/bin/curl",
+               "--cookie", cookie.name,
+               "--silent",
+               "--location",
+               "--write-out", "%{http_code}",
+               "--output", localsyms,
+               symurl]
+    p = subprocess.Popen(curlcmd,
+                         stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                         close_fds=True)
+    code = p.stdout.read()
+    err = p.stderr.read()
+    if err:
+      raise SymbolDownloadException("stderr from curl download: %s" % err)
+    if code != "200":
+      raise SymbolDownloadException("Faied to download %s" % symurl)
+  else:
+    print "using existing cache for symbols"
+
+  return UnzipSymbols(localsyms, symdir)
+
+
+def UnzipSymbols(symbolfile, symdir=None):
+  """Unzips a file to DEFAULT_SYMROOT and returns the unzipped location.
+
+  Args:
+    symbolfile: The .zip file to unzip
+    symdir: Optional temporary directory to use for extraction
+
+  Returns:
+    A tuple containing (the directory into which the zip file was unzipped,
+    the path to the "symbols" directory in the unzipped file).  To clean
+    up, the caller can delete the first element of the tuple.
+
+  Raises:
+    SymbolDownloadException: When the unzip fails.
+  """
+  if not symdir:
+    symdir = "%s/%s" % (DEFAULT_SYMROOT, hash(symbolfile))
+  if not os.path.exists(symdir):
+    os.makedirs(symdir)
+
+  print "extracting %s..." % symbolfile
+  saveddir = os.getcwd()
+  os.chdir(symdir)
+  try:
+    unzipcode = subprocess.call(["unzip", "-qq", "-o", symbolfile])
+    if unzipcode > 0:
+      os.remove(symbolfile)
+      raise SymbolDownloadException("failed to extract symbol files (%s)."
+                                    % symbolfile)
+  finally:
+    os.chdir(saveddir)
+
+  return (symdir, glob.glob("%s/out/target/product/*/symbols" % symdir)[0])
+
+
+def PrintTraceLines(trace_lines):
+  """Print back trace."""
+  maxlen = max(map(lambda tl: len(tl[1]), trace_lines))
+  print
+  print "Stack Trace:"
+  print "  RELADDR   " + "FUNCTION".ljust(maxlen) + "  FILE:LINE"
+  for tl in trace_lines:
+    (addr, symbol_with_offset, location) = tl
+    print "  %8s  %s  %s" % (addr, symbol_with_offset.ljust(maxlen), location)
+  return
+
+
+def PrintValueLines(value_lines):
+  """Print stack data values."""
+  print
+  print "Stack Data:"
+  print "  ADDR      VALUE     FILE:LINE/FUNCTION"
+  for vl in value_lines:
+    (addr, value, symbol_with_offset, location) = vl
+    print "  " + addr + "  " + value + "  " + location
+    if location:
+      print "                      " + symbol_with_offset
+  return
+
+UNKNOWN = "<unknown>"
+HEAP = "[heap]"
+STACK = "[stack]"
+
+
+def ConvertTrace(lines):
+  """Convert strings containing native crash to a stack."""
+  process_info_line = re.compile("(pid: [0-9]+, tid: [0-9]+.*)")
+  signal_line = re.compile("(signal [0-9]+ \(.*\).*)")
+  register_line = re.compile("(([ ]*[0-9a-z]{2} [0-9a-f]{8}){4})")
+  thread_line = re.compile("(.*)(\-\-\- ){15}\-\-\-")
+  # Note taht both trace and value line matching allow for variable amounts of
+  # whitespace (e.g. \t). This is because the we want to allow for the stack
+  # tool to operate on AndroidFeedback provided system logs. AndroidFeedback
+  # strips out double spaces that are found in tombsone files and logcat output.
+  #
+  # Examples of matched trace lines include lines from tombstone files like:
+  #   #00  pc 001cf42e  /data/data/com.my.project/lib/libmyproject.so
+  # Or lines from AndroidFeedback crash report system logs like:
+  #   03-25 00:51:05.520 I/DEBUG ( 65): #00 pc 001cf42e /data/data/com.my.project/lib/libmyproject.so
+  # Please note the spacing differences.
+  trace_line = re.compile("(.*)\#([0-9]+)[ \t]+(..)[ \t]+([0-9a-f]{8})[ \t]+([^\r\n \t]*)( \((.*)\))?")  # pylint: disable-msg=C6310
+  # Examples of matched value lines include:
+  #   bea4170c  8018e4e9  /data/data/com.my.project/lib/libmyproject.so
+  #   03-25 00:51:05.530 I/DEBUG ( 65): bea4170c 8018e4e9 /data/data/com.my.project/lib/libmyproject.so
+  # Again, note the spacing differences.
+  value_line = re.compile("(.*)([0-9a-f]{8})[ \t]+([0-9a-f]{8})[ \t]+([^\r\n \t]*)")
+  # Lines from 'code around' sections of the output will be matched before
+  # value lines because otheriwse the 'code around' sections will be confused as
+  # value lines.
+  #
+  # Examples include:
+  #   801cf40c ffffc4cc 00b2f2c5 00b2f1c7 00c1e1a8
+  #   03-25 00:51:05.530 I/DEBUG ( 65): 801cf40c ffffc4cc 00b2f2c5 00b2f1c7 00c1e1a8
+  code_line = re.compile("(.*)[ \t]*[a-f0-9]{8}[ \t]*[a-f0-9]{8}[ \t]*[a-f0-9]{8}[ \t]*[a-f0-9]{8}[ \t]*[a-f0-9]{8}[ \t]*[ \r\n]")  # pylint: disable-msg=C6310
+
+  trace_lines = []
+  value_lines = []
+
+  for ln in lines:
+    # AndroidFeedback adds zero width spaces into its crash reports. These
+    # should be removed or the regular expresssions will fail to match.
+    line = unicode(ln, errors='ignore')
+    header = process_info_line.search(line)
+    if header:
+      print header.group(1)
+      continue
+    header = signal_line.search(line)
+    if header:
+      print header.group(1)
+      continue
+    header = register_line.search(line)
+    if header:
+      print header.group(1)
+      continue
+    if trace_line.match(line):
+      match = trace_line.match(line)
+      (unused_0, unused_1, unused_2,
+       code_addr, area, symbol_present, symbol_name) = match.groups()
+
+      if area == UNKNOWN or area == HEAP or area == STACK:
+        trace_lines.append((code_addr, area, area))
+      else:
+        # If a calls b which further calls c and c is inlined to b, we want to
+        # display "a -> b -> c" in the stack trace instead of just "a -> c"
+        (source_symbol,
+         source_location,
+         object_symbol_with_offset) = symbol.SymbolInformation(area, code_addr)
+        if not source_symbol:
+          if symbol_present:
+            source_symbol = symbol.CallCppFilt(symbol_name)
+          else:
+            source_symbol = UNKNOWN
+        if not source_location:
+          source_location = area
+        if not object_symbol_with_offset:
+          object_symbol_with_offset = source_symbol
+        if not object_symbol_with_offset.startswith(source_symbol):
+          trace_lines.append(("v------>", source_symbol, source_location))
+          trace_lines.append((code_addr,
+                              object_symbol_with_offset,
+                              source_location))
+        else:
+          trace_lines.append((code_addr,
+                              object_symbol_with_offset,
+                              source_location))
+    if code_line.match(line):
+      # Code lines should be ignored. If this were exluded the 'code around'
+      # sections would trigger value_line matches.
+      continue;
+    if value_line.match(line):
+      match = value_line.match(line)
+      (unused_, addr, value, area) = match.groups()
+      if area == UNKNOWN or area == HEAP or area == STACK or not area:
+        value_lines.append((addr, value, area, ""))
+      else:
+        (source_symbol,
+         source_location,
+         object_symbol_with_offset) = symbol.SymbolInformation(area, value)
+        if not source_location:
+          source_location = ""
+        if not object_symbol_with_offset:
+          object_symbol_with_offset = UNKNOWN
+        value_lines.append((addr,
+                            value,
+                            object_symbol_with_offset,
+                            source_location))
+    header = thread_line.search(line)
+    if header:
+      if trace_lines:
+        PrintTraceLines(trace_lines)
+
+      if value_lines:
+        PrintValueLines(value_lines)
+      trace_lines = []
+      value_lines = []
+      print
+      print "-----------------------------------------------------\n"
+
+  if trace_lines:
+    PrintTraceLines(trace_lines)
+
+  if value_lines:
+    PrintValueLines(value_lines)
+
+
+def main():
+  try:
+    options, arguments = getopt.getopt(sys.argv[1:], "",
+                                       ["auto",
+                                        "symbols-dir=",
+                                        "symbols-zip=",
+                                        "help"])
+  except getopt.GetoptError, unused_error:
+    PrintUsage()
+
+  zip_arg = None
+  auto = False
+  fingerprint = None
+  for option, value in options:
+    if option == "--help":
+      PrintUsage()
+    elif option == "--symbols-dir":
+      symbol.SYMBOLS_DIR = os.path.expanduser(value)
+    elif option == "--symbols-zip":
+      zip_arg = os.path.expanduser(value)
+    elif option == "--auto":
+      auto = True
+
+  if len(arguments) > 1:
+    PrintUsage()
+
+  if auto:
+    cookie = SSOCookie(".symbols.cookie")
+
+  if not arguments or arguments[0] == "-":
+    print "Reading native crash info from stdin"
+    f = sys.stdin
+  else:
+    print "Searching for native crashes in %s" % arguments[0]
+    f = open(arguments[0], "r")
+
+  lines = f.readlines()
+  f.close()
+
+  rootdir = None
+  if auto:
+    fingerprint = FindBuildFingerprint(lines)
+    print "fingerprint:", fingerprint
+    rootdir, symbol.SYMBOLS_DIR = DownloadSymbols(fingerprint, cookie)
+  elif zip_arg:
+    rootdir, symbol.SYMBOLS_DIR = UnzipSymbols(zip_arg)
+
+  print "Reading symbols from", symbol.SYMBOLS_DIR
+  ConvertTrace(lines)
+
+  if rootdir:
+    # be a good citizen and clean up...os.rmdir and os.removedirs() don't work
+    cmd = "rm -rf \"%s\"" % rootdir
+    print "\ncleaning up (%s)" % cmd
+    os.system(cmd)
+
+if __name__ == "__main__":
+  main()
+
+# vi: ts=2 sw=2
