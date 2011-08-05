@@ -23,14 +23,12 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #include "AnimationThread.h"
-#include "ANPOpenGL_npapi.h"
 
-#include <EGL/egl.h>
-#include <GLES2/gl2.h>
 #include <utils/SystemClock.h>
+#include "ANPNativeWindow_npapi.h"
 
-extern ANPLogInterfaceV0       gLogI;
-extern ANPOpenGLInterfaceV0    gOpenGLI;
+extern ANPLogInterfaceV0           gLogI;
+extern ANPNativeWindowInterfaceV0  gNativeWindowI;
 
 AnimationThread::AnimationThread(NPP npp) : RenderingThread(npp) {
     m_counter = 0;
@@ -52,6 +50,8 @@ AnimationThread::AnimationThread(NPP npp) : RenderingThread(npp) {
 
     m_startExecutionTime = 0;
     m_startTime = android::uptimeMillis();
+    m_stallTime = android::uptimeMillis();
+
 }
 
 AnimationThread::~AnimationThread() {
@@ -84,15 +84,14 @@ static void bounce(float* x, float* dx, const float max) {
 }
 
 bool AnimationThread::threadLoop() {
-
-    m_startIdleTime = android::uptimeMillis();
-
-    ANPTextureInfo textureInfo = gOpenGLI.lockTexture(m_npp);
-    GLuint textureId = textureInfo.textureId;
+    if (android::uptimeMillis() - m_stallTime < MS_PER_FRAME)
+        return true;
+    m_stallTime = android::uptimeMillis();
 
     m_idleTime += android::uptimeMillis() - m_startIdleTime;
     m_startExecutionTime = android::uptimeMillis();
 
+    bool reCreateFlag = false;
     int width, height;
     getDimensions(width, height);
 
@@ -110,6 +109,7 @@ bool AnimationThread::threadLoop() {
         // change the ball's speed to match the size
         m_dx = width * .005f;
         m_dy = height * .007f;
+        reCreateFlag = true;
     }
 
     // setup variables
@@ -131,19 +131,14 @@ bool AnimationThread::threadLoop() {
     m_paint->setColor(0xAAFF0000);
     m_canvas->drawOval(m_oval, *m_paint);
 
-    if (textureInfo.width == width && textureInfo.height == height) {
-        updateTextureWithBitmap(textureId, *m_bitmap);
+    if (!reCreateFlag) {
+        updateNativeWindow(m_ANW, *m_bitmap);
     } else {
-        createTextureWithBitmap(textureId, *m_bitmap);
-        textureInfo.width = width;
-        textureInfo.height = height;
-        textureInfo.internalFormat = GL_RGBA;
+        setupNativeWindow(m_ANW, *m_bitmap);
     }
 
     m_executionTime += android::uptimeMillis() - m_startExecutionTime;
     m_counter++;
-
-    gOpenGLI.releaseTexture(m_npp, &textureInfo);
 
     if (android::uptimeMillis() - m_lastPrintTime > 5000) {
         float fps = m_counter / ((android::uptimeMillis() - m_startTime) / 1000);
@@ -160,5 +155,6 @@ bool AnimationThread::threadLoop() {
         m_startTime = android::uptimeMillis();
     }
 
+    m_startIdleTime = android::uptimeMillis(); // count delay between frames
     return true;
 }

@@ -32,6 +32,8 @@
 #ifndef RenderingThread__DEFINED
 #define RenderingThread__DEFINED
 
+#define USE_SOFTWARE_RENDERING false
+#define MS_PER_FRAME 17 // approx 60 fps
 
 class RenderingThread : public android::Thread {
 public:
@@ -44,13 +46,14 @@ public:
 
 protected:
     NPP m_npp;
+    ANativeWindow* m_ANW;
 
     static void printGLString(const char *name, GLenum s);
     static void checkGlError(const char* op);
     static GLenum getInternalFormat(SkBitmap::Config config);
     static GLenum getType(SkBitmap::Config config);
-    static void createTextureWithBitmap(GLuint texture, SkBitmap& bitmap);
-    static void updateTextureWithBitmap(GLuint texture, SkBitmap& bitmap);
+    void setupNativeWindow(ANativeWindow* ANW, const SkBitmap& bitmap);
+    void updateNativeWindow(ANativeWindow* ANW, const SkBitmap& bitmap);
 
 private:
     virtual bool threadLoop() = 0;
@@ -58,6 +61,13 @@ private:
     android::Mutex m_sync;
     int m_width;
     int m_height;
+
+#if (!USE_SOFTWARE_RENDERING)
+    EGLDisplay m_eglDisplay;
+    EGLSurface m_eglSurface;
+    EGLContext m_eglContext;
+    EGLConfig  m_eglConfig;
+#endif
 };
 
 

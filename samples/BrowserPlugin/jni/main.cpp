@@ -77,7 +77,7 @@ ANPSurfaceInterfaceV0       gSurfaceI;
 ANPSystemInterfaceV0        gSystemI;
 ANPTypefaceInterfaceV0      gTypefaceI;
 ANPWindowInterfaceV1        gWindowI;
-ANPOpenGLInterfaceV0        gOpenGLI;
+ANPNativeWindowInterfaceV0  gNativeWindowI;
 
 #define ARRAY_COUNT(array)      (sizeof(array) / sizeof(array[0]))
 #define DEBUG_PLUGIN_EVENTS     0
@@ -115,18 +115,18 @@ NPError NP_Initialize(NPNetscapeFuncs* browserFuncs, NPPluginFuncs* pluginFuncs,
         uint32_t        size;
         ANPInterface*   i;
     } gPairs[] = {
-        { kAudioTrackInterfaceV0_ANPGetValue,   sizeof(gSoundI),    &gSoundI },
-        { kBitmapInterfaceV0_ANPGetValue,       sizeof(gBitmapI),   &gBitmapI },
-        { kCanvasInterfaceV0_ANPGetValue,       sizeof(gCanvasI),   &gCanvasI },
-        { kEventInterfaceV0_ANPGetValue,        sizeof(gEventI),    &gEventI },
-        { kLogInterfaceV0_ANPGetValue,          sizeof(gLogI),      &gLogI },
-        { kPaintInterfaceV0_ANPGetValue,        sizeof(gPaintI),    &gPaintI },
-        { kPathInterfaceV0_ANPGetValue,         sizeof(gPathI),     &gPathI },
-        { kSurfaceInterfaceV0_ANPGetValue,      sizeof(gSurfaceI),  &gSurfaceI },
-        { kSystemInterfaceV0_ANPGetValue,       sizeof(gSystemI),   &gSystemI },
-        { kTypefaceInterfaceV0_ANPGetValue,     sizeof(gTypefaceI), &gTypefaceI },
-        { kWindowInterfaceV1_ANPGetValue,       sizeof(gWindowI),   &gWindowI },
-        { kOpenGLInterfaceV0_ANPGetValue,       sizeof(gOpenGLI),   &gOpenGLI },
+        { kAudioTrackInterfaceV0_ANPGetValue,   sizeof(gSoundI),        &gSoundI },
+        { kBitmapInterfaceV0_ANPGetValue,       sizeof(gBitmapI),       &gBitmapI },
+        { kCanvasInterfaceV0_ANPGetValue,       sizeof(gCanvasI),       &gCanvasI },
+        { kEventInterfaceV0_ANPGetValue,        sizeof(gEventI),        &gEventI },
+        { kLogInterfaceV0_ANPGetValue,          sizeof(gLogI),          &gLogI },
+        { kPaintInterfaceV0_ANPGetValue,        sizeof(gPaintI),        &gPaintI },
+        { kPathInterfaceV0_ANPGetValue,         sizeof(gPathI),         &gPathI },
+        { kSurfaceInterfaceV0_ANPGetValue,      sizeof(gSurfaceI),      &gSurfaceI },
+        { kSystemInterfaceV0_ANPGetValue,       sizeof(gSystemI),       &gSystemI },
+        { kTypefaceInterfaceV0_ANPGetValue,     sizeof(gTypefaceI),     &gTypefaceI },
+        { kWindowInterfaceV1_ANPGetValue,       sizeof(gWindowI),       &gWindowI },
+        { kNativeWindowInterfaceV0_ANPGetValue, sizeof(gNativeWindowI), &gNativeWindowI },
     };
     for (size_t i = 0; i < ARRAY_COUNT(gPairs); i++) {
         gPairs[i].i->inSize = gPairs[i].size;
@@ -233,6 +233,9 @@ NPError NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc
             else if (!strcmp(argv[i], "Video")) {
                 obj->pluginType = kVideo_PluginType;
                 obj->activePlugin = new VideoPlugin(instance);
+            }
+            else {
+                gLogI.log(kError_ANPLogType, "PluginType %s unknown!", argv[i]);
             }
             break;
         }

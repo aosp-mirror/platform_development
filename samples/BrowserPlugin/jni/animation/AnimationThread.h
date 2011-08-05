@@ -48,6 +48,7 @@ private:
     int64_t m_startTime;
     int64_t m_startExecutionTime;
     int64_t m_startIdleTime;
+    int64_t m_stallTime;
 
     float m_x;
     float m_y;
