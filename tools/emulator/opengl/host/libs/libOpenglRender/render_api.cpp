@@ -14,6 +14,7 @@
 * limitations under the License.
 */
 #include "libOpenglRender/render_api.h"
+#include "IOStream.h"
 #include "FrameBuffer.h"
 #include "RenderServer.h"
 #include "osProcess.h"
@@ -22,6 +23,8 @@
 static osUtils::childProcess *s_renderProc = NULL;
 static RenderServer *s_renderThread = NULL;
 static int s_renderPort = 0;
+
+static IOStream *createRenderThread(int p_stream_buffer_size);
 
 #ifdef __APPLE__
 #define  RENDER_API_USE_THREAD
