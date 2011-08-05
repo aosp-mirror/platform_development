@@ -51,7 +51,11 @@ typedef long int       ssize_t;
 #endif
 #ifndef _PTRDIFF_T
 #define _PTRDIFF_T
-typedef long           ptrdiff_t;
+#  ifdef __ANDROID__
+     typedef int            ptrdiff_t;
+#  else
+     typedef long           ptrdiff_t;
+#  endif
 #endif
 
 #include <linux/types.h>
