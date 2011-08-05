@@ -60,6 +60,19 @@ public class IntelliJ {
         sourceRootsXml.append("<excludeFolder "
                 + "url=\"file://$MODULE_DIR$/out/eclipse\"/>\n");
 
+        // Exclude some other directories that take a long time to scan.
+        sourceRootsXml.append("<excludeFolder url=\"file://$MODULE_DIR$/.repo\"/>\n");
+        sourceRootsXml.append("<excludeFolder url=\"file://$MODULE_DIR$/external/bluetooth\"/>\n");
+        sourceRootsXml.append("<excludeFolder url=\"file://$MODULE_DIR$/external/chromium\"/>\n");
+        sourceRootsXml.append("<excludeFolder url=\"file://$MODULE_DIR$/external/icu4c\"/>\n");
+        sourceRootsXml.append("<excludeFolder url=\"file://$MODULE_DIR$/external/webkit\"/>\n");
+        sourceRootsXml.append("<excludeFolder url=\"file://$MODULE_DIR$/frameworks/base/docs\"/>\n");
+        sourceRootsXml.append("<excludeFolder url=\"file://$MODULE_DIR$/out/host\"/>\n");
+        sourceRootsXml.append("<excludeFolder url=\"file://$MODULE_DIR$/out/target/common/docs\"/>\n");
+        sourceRootsXml.append("<excludeFolder url=\"file://$MODULE_DIR$/out/target/common/obj/JAVA_LIBRARIES/android_stubs_current_intermediates\"/>\n");
+        sourceRootsXml.append("<excludeFolder url=\"file://$MODULE_DIR$/out/target/product\"/>\n");
+        sourceRootsXml.append("<excludeFolder url=\"file://$MODULE_DIR$/prebuilt\"/>\n");
+
         StringBuilder jarsXml = new StringBuilder();
         for (File jar : c.jarFiles) {
             jarsXml.append("<orderEntry type=\"module-library\">"
