@@ -50,6 +50,7 @@ GLClientState::GLClientState(int nLocations)
     m_states[MATRIXINDEX_LOCATION].glConst = GL_MATRIX_INDEX_ARRAY_OES;
     m_states[WEIGHT_LOCATION].glConst = GL_WEIGHT_ARRAY_OES;
     m_activeTexture = 0;
+    m_currentProgram = 0;
 
     m_pixelStore.unpack_alignment = 4;
     m_pixelStore.pack_alignment = 4;

@@ -141,5 +141,49 @@ private:
     glDeleteShader_client_proc_t m_glDeleteShader_enc;
     static void s_glDeleteShader(void *self, GLuint shader);
 
+    glGetUniformLocation_client_proc_t m_glGetUniformLocation_enc;
+    static int s_glGetUniformLocation(void *self, GLuint program, const GLchar *name);
+    glUseProgram_client_proc_t m_glUseProgram_enc;
+
+    glUniform1f_client_proc_t m_glUniform1f_enc;
+    glUniform1fv_client_proc_t m_glUniform1fv_enc;
+    glUniform1i_client_proc_t m_glUniform1i_enc;
+    glUniform1iv_client_proc_t m_glUniform1iv_enc;
+    glUniform2f_client_proc_t m_glUniform2f_enc;
+    glUniform2fv_client_proc_t m_glUniform2fv_enc;
+    glUniform2i_client_proc_t m_glUniform2i_enc;
+    glUniform2iv_client_proc_t m_glUniform2iv_enc;
+    glUniform3f_client_proc_t m_glUniform3f_enc;
+    glUniform3fv_client_proc_t m_glUniform3fv_enc;
+    glUniform3i_client_proc_t m_glUniform3i_enc;
+    glUniform3iv_client_proc_t m_glUniform3iv_enc;
+    glUniform4f_client_proc_t m_glUniform4f_enc;
+    glUniform4fv_client_proc_t m_glUniform4fv_enc;
+    glUniform4i_client_proc_t m_glUniform4i_enc;
+    glUniform4iv_client_proc_t m_glUniform4iv_enc;
+    glUniformMatrix2fv_client_proc_t m_glUniformMatrix2fv_enc;
+    glUniformMatrix3fv_client_proc_t m_glUniformMatrix3fv_enc;
+    glUniformMatrix4fv_client_proc_t m_glUniformMatrix4fv_enc;
+
+    static void s_glUseProgram(void *self, GLuint program);
+	static void s_glUniform1f(void *self , GLint location, GLfloat x);
+	static void s_glUniform1fv(void *self , GLint location, GLsizei count, const GLfloat* v);
+	static void s_glUniform1i(void *self , GLint location, GLint x);
+	static void s_glUniform1iv(void *self , GLint location, GLsizei count, const GLint* v);
+	static void s_glUniform2f(void *self , GLint location, GLfloat x, GLfloat y);
+	static void s_glUniform2fv(void *self , GLint location, GLsizei count, const GLfloat* v);
+	static void s_glUniform2i(void *self , GLint location, GLint x, GLint y);
+	static void s_glUniform2iv(void *self , GLint location, GLsizei count, const GLint* v);
+	static void s_glUniform3f(void *self , GLint location, GLfloat x, GLfloat y, GLfloat z);
+	static void s_glUniform3fv(void *self , GLint location, GLsizei count, const GLfloat* v);
+	static void s_glUniform3i(void *self , GLint location, GLint x, GLint y, GLint z);
+	static void s_glUniform3iv(void *self , GLint location, GLsizei count, const GLint* v);
+	static void s_glUniform4f(void *self , GLint location, GLfloat x, GLfloat y, GLfloat z, GLfloat w);
+	static void s_glUniform4fv(void *self , GLint location, GLsizei count, const GLfloat* v);
+	static void s_glUniform4i(void *self , GLint location, GLint x, GLint y, GLint z, GLint w);
+	static void s_glUniform4iv(void *self , GLint location, GLsizei count, const GLint* v);
+	static void s_glUniformMatrix2fv(void *self , GLint location, GLsizei count, GLboolean transpose, const GLfloat* value);
+	static void s_glUniformMatrix3fv(void *self , GLint location, GLsizei count, GLboolean transpose, const GLfloat* value);
+	static void s_glUniformMatrix4fv(void *self , GLint location, GLsizei count, GLboolean transpose, const GLfloat* value);
 };
 #endif
