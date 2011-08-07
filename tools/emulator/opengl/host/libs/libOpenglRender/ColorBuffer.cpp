@@ -197,6 +197,27 @@ bool ColorBuffer::bindToTexture()
     return false;
 }
 
+bool ColorBuffer::bindToRenderbuffer()
+{
+    if (m_eglImage) {
+        RenderThreadInfo *tInfo = getRenderThreadInfo();
+        if (tInfo->currContext.Ptr()) {
+#ifdef WITH_GLES2
+            if (tInfo->currContext->isGL2()) {
+                s_gl2.glEGLImageTargetRenderbufferStorageOES(GL_RENDERBUFFER_OES, m_eglImage);
+            }
+            else {
+                s_gl.glEGLImageTargetRenderbufferStorageOES(GL_RENDERBUFFER_OES, m_eglImage);
+            }
+#else
+            s_gl.glEGLImageTargetRenderbufferStorageOES(GL_RENDERBUFFER_OES, m_eglImage);
+#endif
+            return true;
+        }
+    }
+    return false;
+}
+
 bool ColorBuffer::bind_fbo()
 {
     if (m_fbo) {
