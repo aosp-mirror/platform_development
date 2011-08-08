@@ -151,6 +151,7 @@ public:
     static Version glslVersion(){return s_glSupport.glslVersion;}
     static bool isAutoMipmapSupported(){return s_glSupport.GL_SGIS_GENERATE_MIPMAP;}
     static TextureTarget GLTextureTargetToLocal(GLenum target);
+    static int findMaxIndex(GLsizei count,GLenum type,const GLvoid* indices);
 
     virtual bool glGetIntegerv(GLenum pname, GLint *params);
     virtual bool glGetBooleanv(GLenum pname, GLboolean *params);
