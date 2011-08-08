@@ -16,39 +16,46 @@
 
 <set xmlns:android="http://schemas.android.com/apk/res/android" android:shareInterpolator="false">
 
-	<scale 
-		android:interpolator="@android:anim/accelerate_decelerate_interpolator"
-		android:fromXScale="1.0" 
-		android:toXScale="1.4" 
-		android:fromYScale="1.0" 
-		android:toYScale="0.6" 
-		android:pivotX="50%"
-		android:pivotY="50%"
-		android:fillAfter="false"
-		android:duration="700" />
+    <scale 
+        android:interpolator="@android:anim/accelerate_decelerate_interpolator"
+        android:fromXScale="1.0" 
+        android:toXScale="1.4" 
+        android:fromYScale="1.0" 
+        android:toYScale="0.6" 
+        android:pivotX="50%"
+        android:pivotY="50%"
+        android:fillEnabled="true"
+        android:fillAfter="false"
+        android:duration="700" />
 
 
-	<set 
-		android:interpolator="@android:anim/accelerate_interpolator"
-                android:startOffset="700">
-		
-		<scale
-			android:fromXScale="1.4" 
-			android:toXScale="0.0"
-		        android:fromYScale="0.6"
-	 		android:toYScale="0.0" 
-	 		android:pivotX="50%" 
-	 		android:pivotY="50%" 
-	 		android:duration="400" />
- 		
-		<rotate 
-			android:fromDegrees="0" 
-			android:toDegrees="-45"
-	 		android:toYScale="0.0" 
-	 		android:pivotX="50%" 
-	 		android:pivotY="50%"
-	 		android:duration="400" />
-	</set>
+    <set android:interpolator="@android:anim/accelerate_interpolator">
+        
+        <scale
+            android:fromXScale="1.4" 
+            android:toXScale="0.0"
+            android:fromYScale="0.6"
+            android:toYScale="0.0"
+            android:pivotX="50%"
+            android:pivotY="50%"
+            android:fillEnabled="true"
+            android:fillBefore="false"
+            android:fillAfter="true"
+            android:startOffset="700"
+            android:duration="400" />
+         
+        <rotate 
+            android:fromDegrees="0" 
+            android:toDegrees="-45"
+            android:toYScale="0.0"
+            android:pivotX="50%"
+            android:pivotY="50%"
+            android:fillEnabled="true"
+            android:fillBefore="false"
+            android:fillAfter="true"
+            android:startOffset="700"
+            android:duration="400" />
+    </set>
 
 </set>
 
