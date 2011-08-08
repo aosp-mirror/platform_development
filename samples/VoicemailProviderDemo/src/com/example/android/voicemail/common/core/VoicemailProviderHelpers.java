@@ -16,7 +16,6 @@
 
 package com.example.android.voicemail.common.core;
 
-import com.example.android.provider.VoicemailContract.Voicemails;
 import com.example.android.voicemail.common.logging.Logger;
 import com.example.android.voicemail.common.utils.CloseUtils;
 import com.example.android.voicemail.common.utils.DbQueryUtils;
@@ -27,6 +26,8 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
+import android.provider.VoicemailContract;
+import android.provider.VoicemailContract.Voicemails;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -48,8 +49,7 @@ public final class VoicemailProviderHelpers implements VoicemailProviderHelper {
             Voicemails.DATE,
             Voicemails.SOURCE_PACKAGE,
             Voicemails.SOURCE_DATA,
-            Voicemails.NEW,
-            Voicemails.STATE
+            Voicemails.IS_READ
     };
 
     private final ContentResolver mContentResolver;
@@ -98,6 +98,10 @@ public final class VoicemailProviderHelpers implements VoicemailProviderHelper {
         check(voicemail.hasNumber(), "Inserted voicemails must have a number", voicemail);
         logger.d(String.format("Inserting new voicemail: %s", voicemail));
         ContentValues contentValues = getContentValues(voicemail);
+        if (!voicemail.hasRead()) {
+            // If is_read is not set then set it to false as default value.
+            contentValues.put(Voicemails.IS_READ, 0);
+        }
         return mContentResolver.insert(mBaseUri, contentValues);
     }
 
@@ -250,24 +254,13 @@ public final class VoicemailProviderHelpers implements VoicemailProviderHelper {
                 .setUri(buildUriWithSourcePackage(id, sourcePackage))
                 .setHasContent(cursor.getInt(
                         cursor.getColumnIndexOrThrow(Voicemails.HAS_CONTENT)) == 1)
-                .setIsRead(cursor.getInt(cursor.getColumnIndexOrThrow(Voicemails.NEW)) == 1)
-                .setMailbox(mapValueToMailBoxEnum(cursor.getInt(
-                        cursor.getColumnIndexOrThrow(Voicemails.STATE))))
+                .setIsRead(cursor.getInt(cursor.getColumnIndexOrThrow(Voicemails.IS_READ)) == 1)
                 .build();
         return voicemail;
     }
 
     private Uri buildUriWithSourcePackage(long id, String sourcePackage) {
         return ContentUris.withAppendedId(Voicemails.buildSourceUri(sourcePackage), id);
-    }
-
-    private Voicemail.Mailbox mapValueToMailBoxEnum(int value) {
-        for (Voicemail.Mailbox mailbox : Voicemail.Mailbox.values()) {
-            if (mailbox.getValue() == value) {
-                return mailbox;
-            }
-        }
-        throw new IllegalArgumentException("Value: " + value + " not valid for Voicemail.Mailbox.");
     }
 
     /**
@@ -291,10 +284,7 @@ public final class VoicemailProviderHelpers implements VoicemailProviderHelper {
             contentValues.put(Voicemails.SOURCE_DATA, voicemail.getSourceData());
         }
         if (voicemail.hasRead()) {
-            contentValues.put(Voicemails.NEW, voicemail.isRead() ? 1 : 0);
-        }
-        if (voicemail.hasMailbox()) {
-            contentValues.put(Voicemails.STATE, voicemail.getMailbox().getValue());
+            contentValues.put(Voicemails.IS_READ, voicemail.isRead() ? 1 : 0);
         }
         return contentValues;
     }

@@ -16,7 +16,7 @@
 
 package com.example.android.voicemail.common.core;
 
-import com.example.android.provider.VoicemailContract;
+import android.provider.VoicemailContract;
 
 import android.net.Uri;
 
