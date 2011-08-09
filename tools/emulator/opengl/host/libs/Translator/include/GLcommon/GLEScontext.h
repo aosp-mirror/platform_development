@@ -41,7 +41,7 @@ struct GLSupport {
                 maxTexImageUnits(0),maxTexSize(0) , \
                 GL_EXT_TEXTURE_FORMAT_BGRA8888(false), GL_EXT_FRAMEBUFFER_OBJECT(false), \
                 GL_ARB_VERTEX_BLEND(false), GL_ARB_MATRIX_PALETTE(false), \
-                GL_NV_PACKED_DEPTH_STENCIL(false) , GL_OES_READ_FORMAT(false), \
+                GL_EXT_PACKED_DEPTH_STENCIL(false) , GL_OES_READ_FORMAT(false), \
                 GL_ARB_HALF_FLOAT_PIXEL(false), GL_NV_HALF_FLOAT(false), \
                 GL_ARB_HALF_FLOAT_VERTEX(false),GL_SGIS_GENERATE_MIPMAP(false),
                 GL_ARB_ES2_COMPATIBILITY(false) {} ;
@@ -56,7 +56,7 @@ struct GLSupport {
     bool GL_EXT_FRAMEBUFFER_OBJECT;
     bool GL_ARB_VERTEX_BLEND;
     bool GL_ARB_MATRIX_PALETTE;
-    bool GL_NV_PACKED_DEPTH_STENCIL;
+    bool GL_EXT_PACKED_DEPTH_STENCIL;
     bool GL_OES_READ_FORMAT;
     bool GL_ARB_HALF_FLOAT_PIXEL;
     bool GL_NV_HALF_FLOAT;
