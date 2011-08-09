@@ -3,11 +3,18 @@
 
 ShaderParser::ShaderParser():ObjectData(SHADER_DATA),
                              m_type(0),
-                             m_parsedLines(NULL) {};
+                             m_parsedLines(NULL) {
+    m_infoLog = new GLchar[1];
+    m_infoLog[0] = '\0';
+};
 
 ShaderParser::ShaderParser(GLenum type):ObjectData(SHADER_DATA), 
                                         m_type(type),
-                                        m_parsedLines(NULL) {};
+                                        m_parsedLines(NULL) {
+
+    m_infoLog = new GLchar[1];
+    m_infoLog[0] = '\0';
+};
 
 void ShaderParser::setSrc(const Version& ver,GLsizei count,const GLchar** strings,const GLint* length){
     for(int i = 0;i<count;i++){
@@ -191,6 +198,18 @@ GLenum ShaderParser::getType() {
     return m_type;
 }
 
+void ShaderParser::setInfoLog(GLchar* infoLog)
+{
+    delete[] m_infoLog;
+    m_infoLog = infoLog;
+}
+
+GLchar* ShaderParser::getInfoLog()
+{   
+    return m_infoLog;
+}
+
 ShaderParser::~ShaderParser(){
     clearParsedSrc();
+    delete[] m_infoLog;
 }
