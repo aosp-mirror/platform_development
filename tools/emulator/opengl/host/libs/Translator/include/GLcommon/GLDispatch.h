@@ -73,6 +73,7 @@ public:
     static const GLubyte * (GLAPIENTRY *glGetString) (GLenum name);
     static void (GLAPIENTRY *glGetTexParameterfv) (GLenum target, GLenum pname, GLfloat *params);
     static void (GLAPIENTRY *glGetTexParameteriv) (GLenum target, GLenum pname, GLint *params);
+    static void (GLAPIENTRY *glGetTexLevelParameteriv) (GLenum target, GLint level, GLenum pname, GLint *params);
     static void (GLAPIENTRY *glHint) (GLenum target, GLenum mode);
     static GLboolean (GLAPIENTRY *glIsBuffer) (GLuint);
     static GLboolean (GLAPIENTRY *glIsEnabled) (GLenum cap);
