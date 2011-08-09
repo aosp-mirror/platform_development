@@ -571,7 +571,9 @@ EGLBoolean eglTerminate(EGLDisplay dpy)
 
 EGLint eglGetError()
 {
-    return getEGLThreadInfo()->eglError;
+    EGLint error = getEGLThreadInfo()->eglError;
+    getEGLThreadInfo()->eglError = EGL_SUCCESS;
+    return error;
 }
 
 __eglMustCastToProperFunctionPointerType eglGetProcAddress(const char *procname)
