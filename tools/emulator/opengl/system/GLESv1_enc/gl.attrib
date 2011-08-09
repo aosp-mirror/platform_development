@@ -475,7 +475,7 @@ glDeleteRenderbuffersOES
 
 #void glGenRenderbuffersOES(GLsizei n, GLuint *renderbuffers)
 glGenRenderbuffersOES
-	dir renderbuffers in
+	dir renderbuffers out 
 	len renderbuffers (n * sizeof(GLuint))
     param_check n if(n<0){ ctx->setError(GL_INVALID_VALUE); return; } 
 
