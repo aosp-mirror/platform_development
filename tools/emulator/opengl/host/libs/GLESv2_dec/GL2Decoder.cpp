@@ -58,8 +58,16 @@ int GL2Decoder::initGL(get_proc_func_t getProcFunc, void *getProcFuncData)
     set_glDrawElementsOffset(s_glDrawElementsOffset);
     set_glDrawElementsData(s_glDrawElementsData);
     set_glShaderString(s_glShaderString);
+    set_glFinishRoundTrip(s_glFinishRoundTrip);
     return 0;
 
+}
+
+int GL2Decoder::s_glFinishRoundTrip(void *self)
+{
+    GL2Decoder *ctx = (GL2Decoder *)self;
+    ctx->glFinish();
+    return 0;
 }
 
 void GL2Decoder::s_glGetCompressedTextureFormats(void *self, int count, GLint *formats)
