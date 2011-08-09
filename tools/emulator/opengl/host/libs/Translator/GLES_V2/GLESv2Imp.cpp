@@ -612,10 +612,18 @@ GL_APICALL void  GL_APIENTRY glFramebufferTexture2D(GLenum target, GLenum attach
                    GLESv2Validate::framebufferAttachment(attachment)),GL_INVALID_ENUM);
     SET_ERROR_IF(level != 0, GL_INVALID_VALUE);
 
-    if(ctx->shareGroup().Ptr()) {
+    if(texture == 0)
+    {
+        // Special case - detach texture
+        ctx->dispatcher().glFramebufferTexture2DEXT(target,attachment,textarget,0,level);
+    }
+    else
+    {
+        if(ctx->shareGroup().Ptr()) {
             ObjectLocalName texname = TextureLocalName(textarget,texture);
             GLuint globalTextureName = ctx->shareGroup()->getGlobalName(TEXTURE,texname);
             ctx->dispatcher().glFramebufferTexture2DEXT(target,attachment,textarget,globalTextureName,level);
+        }
     }
 }
 
