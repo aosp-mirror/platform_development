@@ -902,6 +902,16 @@ GL_API void GL_APIENTRY  glGetIntegerv( GLenum pname, GLint *params) {
         ctx->dispatcher().glGetFloatv(pname,&f);
         *params = (int)(f * (float)0x7fffffff);
         break;
+    case GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS:
+        ctx->dispatcher().glGetIntegerv(pname,params);
+        if(*params > 16)
+        {
+            // GLES spec requires only 2, and the ATI driver erronously
+            // returns 32 (although it supports only 16). This WAR is simple,
+            // compliant and good enough for developers.
+            *params = 16;
+        }
+        break;
 
     default:
         ctx->dispatcher().glGetIntegerv(pname,params);
