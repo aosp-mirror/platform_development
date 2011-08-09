@@ -40,8 +40,9 @@ public:
     void setIface(GLESiface* iface,GLESVersion ver) { m_gles_ifaces[ver] = iface;};
     GLESiface* getIface(GLESVersion ver){ return m_gles_ifaces[ver];}
 
-
     int  nDisplays() const { return m_displays.size();};
+
+    void initClientExtFuncTable(GLESVersion ver);
 
     static EglGlobalInfo* getInstance();
     static void delInstance();
@@ -56,6 +57,7 @@ private:
     DisplaysMap                    m_displays;
     EGLNativeInternalDisplayType   m_default;
     GLESiface*                     m_gles_ifaces[MAX_GLES_VERSION];
+    bool                           m_gles_extFuncs_inited[MAX_GLES_VERSION];
     android::Mutex                 m_lock;
 };
 

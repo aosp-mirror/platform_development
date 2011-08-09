@@ -36,6 +36,7 @@
 #include "EglContext.h"
 #include "EglConfig.h"
 #include "EglOsApi.h"
+#include "ClientAPIExts.h"
 
 #define MAJOR          1
 #define MINOR          4
@@ -739,6 +740,12 @@ EGLAPI EGLBoolean EGLAPIENTRY eglMakeCurrent(EGLDisplay display, EGLSurface draw
         thread->updateInfo(newCtx,dpy,newCtx->getGlesContext(),newCtx->getShareGroup(),dpy->getManager(newCtx->version()));
         newCtx->setSurfaces(newReadSrfc,newDrawSrfc);
         g_eglInfo->getIface(newCtx->version())->initContext(newCtx->getGlesContext(),newCtx->getShareGroup());
+
+        // Initialize the GLES extension function table used in
+        // eglGetProcAddress for the context's GLES version if not
+        // yet initialized. We initialize it here to make sure we call the
+        // GLES getProcAddress after when a context is bound.
+        g_eglInfo->initClientExtFuncTable(newCtx->version());
     }
 
     // release previous context surface binding
@@ -928,14 +935,15 @@ EGLAPI __eglMustCastToProperFunctionPointerType EGLAPIENTRY
                 break;
             }
         }
-    } else if (!strncmp(procname,"gl",2)){ //GL proc
-        retVal = g_eglInfo->getIface(GLES_1_1)->getProcAddress(procname); //try to get it from GLES 1.0
-        if(!retVal){ //try to get it from GLES 2.0
-            retVal = g_eglInfo->getIface(GLES_2_0)->getProcAddress(procname);
-        }
+    }
+    else {
+        // Look at the clientAPI (GLES) supported extension
+        // function table.
+        retVal = ClientAPIExts::getProcAddress(procname);
     }
     return retVal;
 }
+
 //not supported for now
 /************************* NOT SUPPORTED FOR NOW ***********************/
 EGLAPI EGLSurface EGLAPIENTRY eglCreatePbufferFromClientBuffer(
