@@ -31,5 +31,6 @@ private:
     static void gl2_APIENTRY s_glDrawElementsOffset(void *self, GLenum mode, GLsizei count, GLenum type, GLuint offset);
     static void gl2_APIENTRY s_glDrawElementsData(void *self, GLenum mode, GLsizei count, GLenum type, void * data, GLuint datalen);
     static void gl2_APIENTRY s_glShaderString(void *self, GLuint shader, const GLchar* string, GLsizei len);
+    static int  gl2_APIENTRY s_glFinishRoundTrip(void *self);
 };
 #endif
