@@ -90,7 +90,7 @@ bool GLESv2Context::needConvert(GLESConversionArrays& cArrs,GLint first,GLsizei 
 void GLESv2Context::initExtensionString() {
     *s_glExtensions = "GL_OES_EGL_image GL_OES_depth24 GL_OES_depth32 GL_OES_element_index_uint "
                       "GL_OES_standard_derivatives GL_OES_texture_float GL_OES_texture_float_linear "
-                      "GL_OES_compressed_paletted_texture GL_OES_compressed_ETC1_RGB8_texture ";
+                      "GL_OES_compressed_paletted_texture GL_OES_compressed_ETC1_RGB8_texture GL_OES_depth_texture ";
     if (s_glSupport.GL_ARB_HALF_FLOAT_PIXEL || s_glSupport.GL_NV_HALF_FLOAT)
         *s_glExtensions+="GL_OES_texture_half_float GL_OES_texture_half_float_linear ";
     if (s_glSupport.GL_EXT_PACKED_DEPTH_STENCIL)

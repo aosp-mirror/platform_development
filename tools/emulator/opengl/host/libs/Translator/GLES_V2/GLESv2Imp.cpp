@@ -1415,6 +1415,12 @@ GL_APICALL void  GL_APIENTRY glTexImage2D(GLenum target, GLint level, GLint inte
                    GLESv2Validate::pixelFrmt(ctx,format)&&
                    GLESv2Validate::pixelType(ctx,type)),GL_INVALID_ENUM);
 
+    SET_ERROR_IF((format == GL_DEPTH_COMPONENT || internalformat == GL_DEPTH_COMPONENT) &&
+                    (type != GL_UNSIGNED_SHORT && type != GL_UNSIGNED_INT), GL_INVALID_OPERATION);
+
+    SET_ERROR_IF((type == GL_UNSIGNED_SHORT || type == GL_UNSIGNED_INT) &&
+                    (format != GL_DEPTH_COMPONENT || internalformat != GL_DEPTH_COMPONENT), GL_INVALID_OPERATION);
+
     SET_ERROR_IF(!(GLESv2Validate::pixelOp(format,type) && internalformat == ((GLint)format)),GL_INVALID_OPERATION);
     SET_ERROR_IF(border != 0,GL_INVALID_VALUE);
 
