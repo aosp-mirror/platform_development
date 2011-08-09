@@ -244,7 +244,7 @@ GL_APICALL void  GL_APIENTRY glBindTexture(GLenum target, GLuint texture){
         if (texData->target==0)
             texData->target = target;
         //if texture was already bound to another target
-        SET_ERROR_IF(texData->target !=target,GL_INVALID_OPERATION);
+        SET_ERROR_IF(ctx->GLTextureTargetToLocal(texData->target) != ctx->GLTextureTargetToLocal(target), GL_INVALID_OPERATION);
         texData->wasBound = true;
     }
 
