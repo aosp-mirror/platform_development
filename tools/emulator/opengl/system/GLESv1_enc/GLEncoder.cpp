@@ -36,6 +36,19 @@ static GLubyte *gExtensionsString= (GLubyte *) ""; // no extensions at this poin
         return ret; \
     }
 
+#define SET_ERROR_IF(condition,err) if((condition)) {                            \
+        LOGE("%s:%s:%d GL error 0x%x\n", __FILE__, __FUNCTION__, __LINE__, err); \
+        ctx->setError(err);                                    \
+        return;                                                  \
+    }
+
+
+#define RET_AND_SET_ERROR_IF(condition,err,ret) if((condition)) {                \
+        LOGE("%s:%s:%d GL error 0x%x\n", __FILE__, __FUNCTION__, __LINE__, err); \
+        ctx->setError(err);                                    \
+        return ret;                                              \
+    }
+
 GLenum GLEncoder::s_glGetError(void * self)
 {
     GLEncoder *ctx = (GLEncoder *)self;
@@ -263,6 +276,39 @@ void GLEncoder::s_glBindBuffer(void *self, GLenum target, GLuint id)
     ctx->m_glBindBuffer_enc(self, target, id);
 }
 
+void GLEncoder::s_glBufferData(void * self, GLenum target, GLsizeiptr size, const GLvoid * data, GLenum usage)
+{
+    GLEncoder *ctx = (GLEncoder *) self;
+    GLuint bufferId = ctx->m_state->getBuffer(target);
+    SET_ERROR_IF(bufferId==0, GL_INVALID_OPERATION);
+    SET_ERROR_IF(size<0, GL_INVALID_VALUE);
+
+    ctx->m_shared->updateBufferData(bufferId, size, (void*)data);
+    ctx->m_glBufferData_enc(self, target, size, data, usage);
+}
+
+void GLEncoder::s_glBufferSubData(void * self, GLenum target, GLintptr offset, GLsizeiptr size, const GLvoid * data)
+{
+    GLEncoder *ctx = (GLEncoder *) self;
+    GLuint bufferId = ctx->m_state->getBuffer(target);
+    SET_ERROR_IF(bufferId==0, GL_INVALID_OPERATION);
+
+    GLenum res = ctx->m_shared->subUpdateBufferData(bufferId, offset, size, (void*)data);
+    SET_ERROR_IF(res, res);
+
+    ctx->m_glBufferSubData_enc(self, target, offset, size, data);
+}
+
+void GLEncoder::s_glDeleteBuffers(void * self, GLsizei n, const GLuint * buffers)
+{
+    GLEncoder *ctx = (GLEncoder *) self;
+    SET_ERROR_IF(n<0, GL_INVALID_VALUE);
+    for (int i=0; i<n; i++) {
+        ctx->m_shared->deleteBufferData(buffers[i]);
+        ctx->m_glDeleteBuffers_enc(self,1,&buffers[i]);
+    }
+}
+
 void GLEncoder::sendVertexData(unsigned int first, unsigned int count)
 {
     assert(m_state != NULL);
@@ -331,7 +377,7 @@ void GLEncoder::sendVertexData(unsigned int first, unsigned int count)
                     break;
                 }
             } else {
-                this->glBindBuffer(this, GL_ARRAY_BUFFER, state->bufferObject);
+                this->m_glBindBuffer_enc(this, GL_ARRAY_BUFFER, state->bufferObject);
 
                 switch(i) {
                 case GLClientState::VERTEX_LOCATION:
@@ -369,7 +415,8 @@ void GLEncoder::sendVertexData(unsigned int first, unsigned int count)
                     this->glMatrixIndexPointerOffset(this,state->size,state->type,state->stride,
                                               (GLuint)state->data+firstIndex);
                     break;
-                }
+                }                
+                this->m_glBindBuffer_enc(this, GL_ARRAY_BUFFER, m_state->currentArrayVbo());
             }
         } else {
             this->m_glDisableClientState_enc(this, state->glConst);
@@ -390,6 +437,7 @@ void GLEncoder::s_glDrawElements(void *self, GLenum mode, GLsizei count, GLenum 
 
     GLEncoder *ctx = (GLEncoder *)self;
     assert(ctx->m_state != NULL);
+    SET_ERROR_IF(count<0, GL_INVALID_VALUE);
 
     bool has_immediate_arrays = false;
     bool has_indirect_arrays = false;
@@ -410,14 +458,20 @@ void GLEncoder::s_glDrawElements(void *self, GLenum mode, GLsizei count, GLenum 
         return;
     }
 
+    bool adjustIndices = true;
     if (ctx->m_state->currentIndexVbo() != 0) {
         if (!has_immediate_arrays) {
             ctx->sendVertexData(0, count);
+            ctx->m_glBindBuffer_enc(self, GL_ELEMENT_ARRAY_BUFFER, ctx->m_state->currentIndexVbo());
             ctx->glDrawElementsOffset(ctx, mode, count, type, (GLuint)indices);
+            adjustIndices = false;
         } else {
-            LOGE("glDrawElements: indirect index arrays, with immidate-mode data array is not supported\n");
+            BufferData * buf = ctx->m_shared->getBufferData(ctx->m_state->currentIndexVbo());
+            ctx->m_glBindBuffer_enc(self, GL_ELEMENT_ARRAY_BUFFER, 0);
+            indices = (void*)((GLintptr)buf->m_fixedBuffer.ptr() + (GLintptr)indices);
         }
-    } else {
+    } 
+    if (adjustIndices) {
         void *adjustedIndices = (void*)indices;
         int minIndex = 0, maxIndex = 0;
 
@@ -487,6 +541,10 @@ GLEncoder::GLEncoder(IOStream *stream) : gl_encoder_context_t(stream)
     m_glGetPointerv_enc = set_glGetPointerv(s_glGetPointerv);
 
     m_glBindBuffer_enc = set_glBindBuffer(s_glBindBuffer);
+    m_glBufferData_enc = set_glBufferData(s_glBufferData);
+    m_glBufferSubData_enc = set_glBufferSubData(s_glBufferSubData);
+    m_glDeleteBuffers_enc = set_glDeleteBuffers(s_glDeleteBuffers);
+    
     m_glEnableClientState_enc = set_glEnableClientState(s_glEnableClientState);
     m_glDisableClientState_enc = set_glDisableClientState(s_glDisableClientState);
     m_glIsEnabled_enc = set_glIsEnabled(s_glIsEnabled);

@@ -20,6 +20,7 @@
 #include <cutils/log.h>
 #include "gralloc_cb.h"
 #include "GLClientState.h"
+#include "GLSharedGroup.h"
 
 #include "GLEncoder.h"
 #ifdef WITH_GLES2
@@ -138,13 +139,14 @@ struct EGLContext_t {
         NEVER_CURRENT   =   0x00020000
     };
 
-    EGLContext_t(EGLDisplay dpy, EGLConfig config);
+    EGLContext_t(EGLDisplay dpy, EGLConfig config, EGLContext_t* shareCtx);
     ~EGLContext_t();
     uint32_t            flags;
     EGLDisplay          dpy;
     EGLConfig           config;
     EGLSurface          read;
     EGLSurface          draw;
+    EGLContext_t    *   shareCtx;
     EGLint                version;
     uint32_t             rcContext;
     const char*         versionString;
@@ -153,15 +155,18 @@ struct EGLContext_t {
     const char*         extensionString;
 
     GLClientState * getClientState(){ return clientState; }
+    GLSharedGroupPtr getSharedGroup(){ return sharedGroup; }
 private:
     GLClientState    *    clientState;
+    GLSharedGroupPtr      sharedGroup;
 };
 
-EGLContext_t::EGLContext_t(EGLDisplay dpy, EGLConfig config) :
+EGLContext_t::EGLContext_t(EGLDisplay dpy, EGLConfig config, EGLContext_t* shareCtx) :
     dpy(dpy),
     config(config),
     read(EGL_NO_SURFACE),
     draw(EGL_NO_SURFACE),
+    shareCtx(shareCtx),
     rcContext(0),
     versionString(NULL),
     vendorString(NULL),
@@ -171,6 +176,8 @@ EGLContext_t::EGLContext_t(EGLDisplay dpy, EGLConfig config) :
     flags = 0;
     version = 1;
     clientState = new GLClientState();
+    if (shareCtx) sharedGroup = shareCtx->getSharedGroup();
+    else sharedGroup = GLSharedGroupPtr(new GLSharedGroup());
 };
 
 EGLContext_t::~EGLContext_t()
@@ -931,8 +938,9 @@ EGLContext eglCreateContext(EGLDisplay dpy, EGLConfig config, EGLContext share_c
     }
 
     uint32_t rcShareCtx = 0;
+    EGLContext_t * shareCtx = NULL;
     if (share_context) {
-        EGLContext_t * shareCtx = static_cast<EGLContext_t*>(share_context);
+        shareCtx = static_cast<EGLContext_t*>(share_context);
         rcShareCtx = shareCtx->rcContext;
         if (shareCtx->dpy != dpy)
             setErrorReturn(EGL_BAD_MATCH, EGL_NO_CONTEXT);
@@ -945,7 +953,7 @@ EGLContext eglCreateContext(EGLDisplay dpy, EGLConfig config, EGLContext share_c
         setErrorReturn(EGL_BAD_ALLOC, EGL_NO_CONTEXT);
     }
 
-    EGLContext_t * context = new EGLContext_t(dpy, config);
+    EGLContext_t * context = new EGLContext_t(dpy, config, shareCtx);
     if (!context)
         setErrorReturn(EGL_BAD_ALLOC, EGL_NO_CONTEXT);
 
@@ -1033,10 +1041,24 @@ EGLBoolean eglMakeCurrent(EGLDisplay dpy, EGLSurface draw, EGLSurface read, EGLC
         //set the client state
         if (context->version == 2) {
             hostCon->gl2Encoder()->setClientState(context->getClientState());
+            hostCon->gl2Encoder()->setSharedGroup(context->getSharedGroup());
         }
         else {
             hostCon->glEncoder()->setClientState(context->getClientState());
+            hostCon->glEncoder()->setSharedGroup(context->getSharedGroup());
         }
+    } 
+    else {
+        //release ClientState & SharedGroup
+        if (tInfo->currentContext->version == 2) {
+            hostCon->gl2Encoder()->setClientState(NULL);
+            hostCon->gl2Encoder()->setSharedGroup(GLSharedGroupPtr(NULL));
+        }
+        else {
+            hostCon->glEncoder()->setClientState(NULL);
+            hostCon->glEncoder()->setSharedGroup(GLSharedGroupPtr(NULL));
+        }
+
     }
 
     if (tInfo->currentContext)
