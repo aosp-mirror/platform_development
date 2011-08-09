@@ -373,13 +373,15 @@ void glUtilsPackStrings(char *ptr,  char **strings,  GLint *length, GLsizei coun
     char *p = ptr;
     *p = '\0';
     for (int i = 0; i < count; i++) {
-        int l;
-        if (length == NULL || length[i] < 0) {
-            l = strlen(strings[i]);
-            strcat(p, strings[i]);
-        } else {
-            l = length[i];
-            strncat(p, strings[i], l);
+        int l=0;
+        if (strings[i]!=NULL) {
+            if (length == NULL || length[i] < 0) {
+                l = strlen(strings[i]);
+                strcat(p, strings[i]);
+            } else {
+                l = length[i];
+                strncat(p, strings[i], l);
+            }
         }
         p += l;
     }
@@ -392,7 +394,7 @@ int glUtilsCalcShaderSourceLen( char **strings,  GLint *length, GLsizei count)
     for (int i = 0; i < count; i++) {
         int l;
         if (length == NULL || length[i] < 0) {
-            l = strlen(strings[i]);
+            l = strings[i]!=NULL ? strlen(strings[i]) : 0;
         } else {
             l = length[i];
         }
