@@ -16,22 +16,21 @@
 #ifndef THREAD_INFO_H
 #define THREAD_INFO_H
 
-#include "objectNameManager.h"
+#include "EglContext.h"
 
-class EglContext;
 class EglDisplay;
 class GLEScontext;
 
 struct ThreadInfo {
-    ThreadInfo():eglContext(NULL),glesContext(NULL),objManager(NULL){}
+    ThreadInfo():glesContext(NULL),objManager(NULL){}
 
-    void updateInfo(EglContext* eglctx,
+    void updateInfo(ContextPtr eglctx,
                     EglDisplay* dpy,
                     GLEScontext* glesCtx,
                     ShareGroupPtr share,
                     ObjectNameManager* manager);
 
-    EglContext*          eglContext;
+    ContextPtr           eglContext;
     EglDisplay*          eglDisplay;
     GLEScontext*         glesContext;
     ShareGroupPtr        shareGroup;
