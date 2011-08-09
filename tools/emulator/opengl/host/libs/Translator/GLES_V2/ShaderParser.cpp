@@ -58,7 +58,8 @@ void ShaderParser::parseGLSLversion() {
     // That token should be the first non-comment or blank token
     //
     const char *src = m_src.c_str();
-    int glslVersion = 0;
+    const int minGLSLVersion = 120;
+    int glslVersion = minGLSLVersion;
     enum {
         PARSE_NONE,
         PARSE_IN_C_COMMENT,
@@ -98,16 +99,8 @@ void ShaderParser::parseGLSLversion() {
             // token does not exist in this shader source.
             //
             if (!strncmp(c,"#version",8)) {
-                if (sscanf(c+8,"%d",&glslVersion) != 1) {
-                    //
-                    // #version found but failed to parse the version value!
-                    // this must be an error, set glslVersion to -1 to flag
-                    // that we do not want to override the version, just let
-                    // the shader compiler handle it.
-                    //
-                    glslVersion = -1;
-                }
-                else {
+                int ver;
+                if (sscanf(c+8,"%d",&ver) == 1) {
                     //
                     // parsed version string correctly, blank out the
                     // version token from the source, we will add it later at
@@ -117,6 +110,10 @@ void ShaderParser::parseGLSLversion() {
                     for (int i=0; i<8; i++,cc++) *cc = ' ';
                     while (*cc < '0' || *cc > '9') { *cc = ' '; cc++; }
                     while (*cc >= '0' && *cc <= '9') { *cc = ' '; cc++; }
+
+                    // Use the version from the source but only if
+                    // it is larger than our minGLSLVersion
+                    if (ver > minGLSLVersion) glslVersion = ver;
                 }
             }
 
@@ -127,16 +124,13 @@ void ShaderParser::parseGLSLversion() {
     }
 
     //
-    // if no version token found, check if default glsl version
-    // has been requested through environment variable.
+    // allow to force GLSL version through environment variable
     //
-    if (glslVersion == 0) {
-        const char *defVersion = getenv("GOOGLE_GLES_DEFAULT_GLSL_VERSION");
-        if (defVersion) {
-            if (sscanf(defVersion,"%d",&glslVersion) != 1) {
-                fprintf(stderr,"Wrong value to GOOGLE_GLES_DEFAULT_GLSL_VERSION, should be an integer\n");
-                glslVersion = 0;
-            }
+    const char *forceVersion = getenv("GOOGLE_GLES_FORCE_GLSL_VERSION");
+    if (forceVersion) {
+        int ver;
+        if (sscanf(forceVersion,"%d",&ver) == 1) {
+            glslVersion = ver;
         }
     }
 
