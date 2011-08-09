@@ -18,6 +18,7 @@
 
 #include "gl_enc.h"
 #include "GLClientState.h"
+#include "GLSharedGroup.h"
 #include "FixedBuffer.h"
 
 class GLEncoder : public gl_encoder_context_t {
@@ -28,6 +29,7 @@ public:
     void setClientState(GLClientState *state) {
         m_state = state;
     }
+    void setSharedGroup(GLSharedGroupPtr shared) { m_shared = shared; }
     void flush() { m_stream->flush(); }
     size_t pixelDataSize(GLsizei width, GLsizei height, GLenum format, GLenum type, int pack);
 
@@ -41,6 +43,7 @@ private:
 
     bool    m_initialized;
     GLClientState *m_state;
+    GLSharedGroupPtr m_shared;
     GLenum  m_error;
     FixedBuffer m_fixedBuffer;
     GLint *m_compressedTextureFormats;
@@ -66,6 +69,10 @@ private:
     glWeightPointerOES_client_proc_t m_glWeightPointerOES_enc;
 
     glBindBuffer_client_proc_t m_glBindBuffer_enc;
+    glBufferData_client_proc_t m_glBufferData_enc;
+    glBufferSubData_client_proc_t m_glBufferSubData_enc;
+    glDeleteBuffers_client_proc_t m_glDeleteBuffers_enc;
+    
     glEnableClientState_client_proc_t m_glEnableClientState_enc;
     glDisableClientState_client_proc_t m_glDisableClientState_enc;
     glIsEnabled_client_proc_t m_glIsEnabled_enc;
@@ -95,6 +102,11 @@ private:
     static void s_glEnableClientState(void *self, GLenum state);
     static GLboolean s_glIsEnabled(void *self, GLenum cap);
     static void s_glBindBuffer(void *self, GLenum target, GLuint id);
+    static void s_glBufferData(void *self, GLenum target, GLsizeiptr size, const GLvoid * data, GLenum usage);
+    static void s_glBufferSubData(void *self, GLenum target, GLintptr offset, GLsizeiptr size, const GLvoid * data);
+    static void s_glDeleteBuffers(void *self, GLsizei n, const GLuint * buffers);
+
+
     static void s_glDrawArrays(void *self, GLenum mode, GLint first, GLsizei count);
     static void s_glDrawElements(void *self, GLenum mode, GLsizei count, GLenum type, const void *indices);
     static void s_glPixelStorei(void *self, GLenum param, GLint value);

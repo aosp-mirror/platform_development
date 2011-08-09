@@ -8,13 +8,14 @@ $(call emugl-begin-static-library,libOpenglCodecCommon)
 
 LOCAL_SRC_FILES := \
         GLClientState.cpp \
+        GLSharedGroup.cpp \
         glUtils.cpp \
         TcpStream.cpp \
         TimeUtils.cpp
 
 LOCAL_CFLAGS += -DLOG_TAG=\"eglCodecCommon\"
 
-$(call emugl-export,SHARED_LIBRARIES,libcutils)
+$(call emugl-export,SHARED_LIBRARIES,libcutils libutils)
 $(call emugl-export,C_INCLUDES,$(LOCAL_PATH))
 $(call emugl-end-module)
 
