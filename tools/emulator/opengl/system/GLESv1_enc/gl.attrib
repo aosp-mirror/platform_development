@@ -221,7 +221,7 @@ glPointParameterxv
 #void glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid *pixels)
 glReadPixels
 	dir pixels out
-	len pixels pixelDataSize(self, width, height, format, type, 0)
+	len pixels pixelDataSize(self, width, height, format, type, 1)
 
 #void glTexCoordPointer(GLint size, GLenum type, GLsizei stride, GLvoid *pointer)
 glTexCoordPointer
@@ -239,7 +239,7 @@ glTexEnvxv
 #void glTexImage2D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, GLvoid *pixels)
 glTexImage2D
 	dir pixels in
-	len pixels pixelDataSize(self, width, height, format, type, 1)
+	len pixels pixelDataSize(self, width, height, format, type, 0)
 	var_flag pixels nullAllowed
 
 #void glTexParameteriv(GLenum target, GLenum pname, GLint *params)
@@ -252,7 +252,7 @@ glTexParameterxv
 
 #void glTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid *pixels)
 glTexSubImage2D
-	len pixels pixelDataSize(self, width, height, format, type, 1)
+	len pixels pixelDataSize(self, width, height, format, type, 0)
 
 #void glVertexPointer(GLint size, GLenum type, GLsizei stride, GLvoid *pointer)
 # we treat the pointer as an offset to a VBO
