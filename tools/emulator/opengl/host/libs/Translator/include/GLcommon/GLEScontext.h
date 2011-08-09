@@ -143,6 +143,7 @@ public:
     static int getMaxTexSize(){return s_glSupport.maxTexSize;}
     static Version glslVersion(){return s_glSupport.glslVersion;}
     static bool isAutoMipmapSupported(){return s_glSupport.GL_SGIS_GENERATE_MIPMAP;}
+    static TextureTarget GLTextureTargetToLocal(GLenum target);
 
     virtual bool glGetIntegerv(GLenum pname, GLint *params);
     virtual bool glGetBooleanv(GLenum pname, GLboolean *params);
@@ -170,7 +171,6 @@ private:
 
     virtual void setupArr(const GLvoid* arr,GLenum arrayType,GLenum dataType,GLint size,GLsizei stride, GLboolean normalized, int pointsIndex = -1) = 0 ;
     GLuint getBuffer(GLenum target);
-    TextureTarget GLTextureTargetToLocal(GLenum target);
 
     ShareGroupPtr         m_shareGroup;
     GLenum                m_glError;
