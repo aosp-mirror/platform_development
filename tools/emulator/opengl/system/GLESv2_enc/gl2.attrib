@@ -221,7 +221,7 @@ glGetVertexAttribiv
 #void glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid *pixels)
 glReadPixels
 	dir pixels out
-	len pixels pixelDataSize(self, width, height, format, type, 0)
+	len pixels pixelDataSize(self, width, height, format, type, 1)
 
 #void glShaderBinary(GLsizei n, GLuint *shaders, GLenum binaryformat, GLvoid *binary, GLsizei length)
 glShaderBinary
@@ -230,7 +230,7 @@ glShaderBinary
 #void glTexImage2D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, GLvoid *pixels)
 glTexImage2D
 	dir pixels in
-	len pixels pixelDataSize(self, width, height, format, type, 1)
+	len pixels pixelDataSize(self, width, height, format, type, 0)
 	var_flag pixels nullAllowed
 
 #void glTexParameterfv(GLenum target, GLenum pname, GLfloat *params)
@@ -242,7 +242,7 @@ glTexParameteriv
 
 #void glTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid *pixels)
 glTexSubImage2D
-	len pixels pixelDataSize(self, width, height, format, type, 1)
+	len pixels pixelDataSize(self, width, height, format, type, 0)
 	
 #void glUniform1fv(GLint location, GLsizei count, GLfloat *v)
 glUniform1fv
@@ -321,12 +321,12 @@ glMapBufferOES
 
 #void glTexImage3DOES(GLenum target, GLint level, GLenum internalformat, GLsizei width, GLsizei height, GLsizei depth, GLint border, GLenum format, GLenum type, GLvoid *pixels)
 glTexImage3DOES
-	len pixels pixelDataSize3D(self, width, height, depth, format, type, 1)	
+	len pixels pixelDataSize3D(self, width, height, depth, format, type, 0)	
 	var_flag pixels nullAllowed
 
 #void glTexSubImage3DOES(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type, GLvoid *pixels)
 glTexSubImage3DOES
-	len pixels pixelDataSize3D(self, width, height, depth, format, type, 1)	
+	len pixels pixelDataSize3D(self, width, height, depth, format, type, 0)	
 
 #void glCompressedTexImage3DOES(GLenum target, GLint level, GLenum internalformat, GLsizei width, GLsizei height, GLsizei depth, GLint border, GLsizei imageSize, GLvoid *data)
 glCompressedTexImage3DOES
