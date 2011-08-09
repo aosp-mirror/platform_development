@@ -116,7 +116,7 @@ bool GLEScmValidate::texParams(GLenum target,GLenum pname) {
     default:
         return false;
     }
-    return target == GL_TEXTURE_2D;
+    return (target == GL_TEXTURE_2D)||(target == GL_TEXTURE_CUBE_MAP_OES);
 }
 
 bool GLEScmValidate::texEnv(GLenum target,GLenum pname) {

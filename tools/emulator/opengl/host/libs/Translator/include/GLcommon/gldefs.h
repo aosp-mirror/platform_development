@@ -17,6 +17,10 @@
 typedef double      GLclampd;   /* double precision float in [0,1] */
 typedef double      GLdouble;   /* double precision float */
 
+#define GL_S                    0x2000
+#define GL_T                    0x2001
+#define GL_R                    0x2002
+#define GL_Q                    0x2003
 #define GL_TEXTURE_GEN_S            0x0C60
 #define GL_TEXTURE_GEN_T            0x0C61
 #define GL_TEXTURE_GEN_R            0x0C62
