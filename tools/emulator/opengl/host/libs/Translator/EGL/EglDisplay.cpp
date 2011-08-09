@@ -308,7 +308,12 @@ bool EglDisplay:: destroyImageKHR(EGLImageKHR img) {
 EGLNativeContextType EglDisplay::getGlobalSharedContext(){
     android::Mutex::Autolock mutex(m_lock);
 #ifndef _WIN32
-    return (EGLNativeContextType)m_manager[GLES_1_1]->getGlobalContext();
+    // find an existing OpenGL context to share with, if exist
+    EGLNativeContextType ret = 
+        (EGLNativeContextType)m_manager[GLES_1_1]->getGlobalContext();
+    if (!ret)
+        ret = (EGLNativeContextType)m_manager[GLES_2_0]->getGlobalContext();
+    return ret;
 #else
     if (!m_globalSharedContext) {
         //

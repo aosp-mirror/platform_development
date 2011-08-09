@@ -63,6 +63,7 @@
     const GLubyte * GLAPIENTRY dummy_glGetString(GLenum name);
     void GLAPIENTRY dummy_glGetTexParameterfv(GLenum target, GLenum pname, GLfloat *params);
     void GLAPIENTRY dummy_glGetTexParameteriv(GLenum target, GLenum pname, GLint *params);
+    void GLAPIENTRY dummy_glGetTexLevelParameteriv(GLenum target, GLint level, GLenum pname, GLint *params);
     void GLAPIENTRY dummy_glHint(GLenum target, GLenum mode);
     GLboolean GLAPIENTRY dummy_glIsBuffer(GLuint);
     GLboolean GLAPIENTRY dummy_glIsEnabled(GLenum cap);
