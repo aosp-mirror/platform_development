@@ -14,21 +14,26 @@
 * limitations under the License.
 */
 #include "EglContext.h"
+#include "EglDisplay.h"
+#include "EglGlobalInfo.h"
+#include "EglOsApi.h"
 
 unsigned int EglContext::s_nextContextHndl = 0;
+
+extern EglGlobalInfo* g_eglInfo; // defined in EglImp.cpp
 
 bool EglContext::usingSurface(SurfacePtr surface) {
   return surface.Ptr() == m_read.Ptr() || surface.Ptr() == m_draw.Ptr();
 }
 
-EglContext::EglContext(EGLNativeContextType context,ContextPtr shared_context,
+EglContext::EglContext(EglDisplay *dpy, EGLNativeContextType context,ContextPtr shared_context,
             EglConfig* config,GLEScontext* glesCtx,GLESVersion ver,ObjectNameManager* mngr):
+m_dpy(dpy),
 m_native(context),
 m_config(config),
 m_glesContext(glesCtx),
 m_read(NULL),
 m_draw(NULL),
-m_destroy(false),
 m_version(ver),
 m_mngr(mngr)
 {
@@ -40,6 +45,17 @@ m_mngr(mngr)
 
 EglContext::~EglContext()
 {
+  
+    //
+    // remove the context in the underlying OS layer
+    // 
+    EglOS::destroyContext(m_dpy->nativeType(),m_native);
+
+    //
+    // call the client-api to remove the GLES context
+    // 
+    g_eglInfo->getIface(version())->deleteGLESContext(m_glesContext);
+
     if (m_mngr)
     {
         m_mngr->deleteShareGroup(m_native);

@@ -23,8 +23,9 @@
 #include "EglConfig.h"
 
 class EglSurface;
-
 typedef  SmartPtr<EglSurface> SurfacePtr;
+
+class EglDisplay;
 
 class EglSurface {
 public:
@@ -38,8 +39,6 @@ public:
   virtual bool  setAttrib(EGLint attrib,EGLint val);
   virtual bool  getAttrib(EGLint attrib,EGLint* val) = 0;
   void          setDim(int width,int height){ m_width = width; m_height = height;};
-  void          markForDestruction(){m_destroy = true;};
-  bool          destroy(){return m_destroy;};
   EglConfig*    getConfig(){return m_config;};
   unsigned int  getHndl(){return m_hndl;};
   virtual       ~EglSurface();
@@ -47,19 +46,29 @@ public:
 private:
     static unsigned int   s_nextSurfaceHndl;
     ESurfaceType          m_type;
-    bool                  m_destroy;
     unsigned int          m_hndl;
 
 protected:
-    EglSurface(ESurfaceType type,EglConfig* config,EGLint width,EGLint height):m_type(type),
-                                                                               m_destroy(false),
-                                                                               m_config(config),
-                                                                               m_width(width),
-                                                                               m_height(height),
-                                                                               m_native(NULL){ m_hndl = ++s_nextSurfaceHndl;};
+    EglSurface(EglDisplay *dpy,
+               ESurfaceType type,
+               EglConfig* config,
+               EGLint width,
+               EGLint height) :
+       m_type(type),
+       m_config(config),
+       m_width(width),
+       m_height(height),
+       m_native(NULL),
+       m_dpy(dpy)
+    { 
+        m_hndl = ++s_nextSurfaceHndl;
+    }
+
+protected:
     EglConfig*            m_config;
     EGLint                m_width;
     EGLint                m_height;
     EGLNativeSurfaceType  m_native;
+    EglDisplay           *m_dpy;
 };
 #endif

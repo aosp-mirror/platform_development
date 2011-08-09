@@ -21,9 +21,11 @@
 #include "EglSurface.h"
 #include "EglConfig.h"
 
+class EglDisplay;
+
 class EglWindowSurface: public EglSurface {
 public:
-    EglWindowSurface(EGLNativeWindowType win,EglConfig* config,unsigned width,unsigned int height);
+    EglWindowSurface(EglDisplay *dpy, EGLNativeWindowType win,EglConfig* config,unsigned width,unsigned int height);
     ~EglWindowSurface();
     bool  getAttrib(EGLint attrib,EGLint* val);
 

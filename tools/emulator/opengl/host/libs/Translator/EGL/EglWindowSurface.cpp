@@ -23,7 +23,13 @@ bool EglWindowSurface::alreadyAssociatedWithConfig(EGLNativeWindowType win) {
 
 }
 
-EglWindowSurface::EglWindowSurface(EGLNativeWindowType win,EglConfig* config,unsigned int width,unsigned int height):EglSurface(WINDOW,config,width,height),m_win(win){
+EglWindowSurface::EglWindowSurface(EglDisplay *dpy, 
+                                   EGLNativeWindowType win,
+                                   EglConfig* config,
+                                   unsigned int width,unsigned int height) :
+                  EglSurface(dpy, WINDOW,config,width,height),
+                  m_win(win)
+{
     s_associatedWins.insert(win);
     m_native = EglOS::createWindowSurface(win);
 }

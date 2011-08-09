@@ -23,7 +23,12 @@ bool EglPixmapSurface::alreadyAssociatedWithConfig(EGLNativePixmapType pix) {
 
 }
 
-EglPixmapSurface::EglPixmapSurface(EGLNativePixmapType pix,EglConfig* config):EglSurface(PIXMAP,config,0,0),m_pixmap(pix) {
+EglPixmapSurface::EglPixmapSurface(EglDisplay *dpy,
+                                   EGLNativePixmapType pix,
+                                   EglConfig* config) :
+           EglSurface(dpy, PIXMAP,config,0,0),
+           m_pixmap(pix)
+{
     s_associatedPixmaps.insert(pix);
     m_native = EglOS::createPixmapSurface(pix);
 }

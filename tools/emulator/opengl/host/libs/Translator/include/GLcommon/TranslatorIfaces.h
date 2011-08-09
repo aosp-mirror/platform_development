@@ -15,9 +15,9 @@
 */
 #ifndef TRANSLATOR_IFACES_H
 #define TRANSLATOR_IFACES_H
-#include <GLcommon/ThreadInfo.h>
 #include <GLES/gl.h>
 #include <string.h>
+#include "objectNameManager.h"
 
 extern "C" {
 
@@ -89,7 +89,7 @@ typedef struct {
 
 
 typedef struct {
-    ThreadInfo* (*getThreadInfo)();
+    GLEScontext* (*getGLESContext)();
     EglImage* (*eglAttachEGLImage)(unsigned int imageId);
     void        (*eglDetachEGLImage)(unsigned int imageId);
 }EGLiface;

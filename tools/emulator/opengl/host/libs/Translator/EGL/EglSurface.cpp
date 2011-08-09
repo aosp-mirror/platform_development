@@ -19,6 +19,11 @@
 unsigned int EglSurface::s_nextSurfaceHndl = 0;
 
 EglSurface::~EglSurface(){ 
+
+    if(m_type == EglSurface::PBUFFER) {
+        EglOS::releasePbuffer(m_dpy->nativeType(),m_native);
+    }
+
     if(m_native) EglOS::destroySurface(m_native);
 }
 
