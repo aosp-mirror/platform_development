@@ -361,8 +361,15 @@ EGLBoolean egl_window_surface_t::swapBuffers()
 
     rcEnc->rcFlushWindowColorBuffer(rcEnc, rcSurface);
 
+    android_native_buffer_t* prevBuf = buffer;
     //post the back buffer
     nativeWindow->queueBuffer(nativeWindow, buffer);
+
+    buffer->common.incRef(&buffer->common);
+
+    if (prevBuf) {
+        prevBuf->common.decRef(&prevBuf->common);
+    }
 
     // dequeue a new buffer
     if (nativeWindow->dequeueBuffer(nativeWindow, &buffer)) {
