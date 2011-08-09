@@ -103,6 +103,7 @@ public:
     GLenum getGLerror();
     void setGLerror(GLenum err);
     void setShareGroup(ShareGroupPtr grp){m_shareGroup = grp;};
+    ShareGroupPtr shareGroup() const { return m_shareGroup; }
     virtual void setActiveTexture(GLenum tex);
     unsigned int getBindedTexture(GLenum target);
     unsigned int getBindedTexture(GLenum unit,GLenum target);

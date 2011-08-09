@@ -14,10 +14,10 @@
 * limitations under the License.
 */
 
-#include <GLcommon/ThreadInfo.h>
+#include "ThreadInfo.h"
 
 
-void ThreadInfo::updateInfo(EglContext* eglCtx,
+void ThreadInfo::updateInfo(ContextPtr eglCtx,
                             EglDisplay* dpy,
                             GLEScontext* glesCtx,
                             ShareGroupPtr share,
