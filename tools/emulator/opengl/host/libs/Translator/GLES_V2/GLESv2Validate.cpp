@@ -140,3 +140,17 @@ bool GLESv2Validate::precisionType(GLenum type){
 bool GLESv2Validate::arrayIndex(GLEScontext * ctx,GLuint index) {
     return index < (GLuint)ctx->getCaps()->maxVertexAttribs;
 }
+
+bool GLESv2Validate::pixelType(GLEScontext * ctx,GLenum type) {
+    if(type == GL_UNSIGNED_SHORT || type == GL_UNSIGNED_INT)
+        return true;
+
+    return GLESvalidate::pixelType(ctx, type);
+}
+
+bool GLESv2Validate::pixelFrmt(GLEScontext* ctx,GLenum format) {
+    if(format == GL_DEPTH_COMPONENT)
+        return true;
+
+    return GLESvalidate::pixelFrmt(ctx, format);
+}
