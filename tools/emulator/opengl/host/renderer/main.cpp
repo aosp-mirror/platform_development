@@ -26,6 +26,9 @@
 #include <winsock2.h>
 #endif
 
+#ifdef __linux__
+#include <X11/Xlib.h>
+#endif
 
 static void printUsage(const char *progName)
 {
@@ -105,6 +108,15 @@ int main(int argc, char *argv[])
             printf( "could not initialize Winsock\n" );
     }
 #endif
+
+#ifdef __linux__
+    // some OpenGL implementations may call X functions
+    // it is safer to synchronize all X calls made by all the
+    // rendering threads. (although the calls we do are locked
+    // in the FrameBuffer singleton object).
+    XInitThreads();
+#endif
+
     //
     // initialize Framebuffer
     //
