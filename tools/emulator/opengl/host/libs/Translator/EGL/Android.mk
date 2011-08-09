@@ -37,7 +37,8 @@ LOCAL_SRC_FILES :=            \
      EglPbufferSurface.cpp    \
      EglPixmapSurface.cpp     \
      EglThreadInfo.cpp        \
-     EglDisplay.cpp
+     EglDisplay.cpp           \
+     ClientAPIExts.cpp
 
 $(call emugl-end-module)
 

@@ -16,6 +16,7 @@
 #include "EglGlobalInfo.h"
 #include "EglOsApi.h"
 #include <string.h>
+#include "ClientAPIExts.h"
 
 int EglGlobalInfo::m_refCount = 0;
 EglGlobalInfo* EglGlobalInfo::m_singleton = NULL;
@@ -27,6 +28,7 @@ EglGlobalInfo::EglGlobalInfo(){
     EglOS::initPtrToWglFunctions();
 #endif
     memset(m_gles_ifaces,0,sizeof(m_gles_ifaces));
+    memset(m_gles_extFuncs_inited,0,sizeof(m_gles_extFuncs_inited));
 }
 
 EglGlobalInfo* EglGlobalInfo::getInstance() {
@@ -90,4 +92,13 @@ EglDisplay* EglGlobalInfo::getDisplay(EGLDisplay dpy) {
 
 EGLNativeInternalDisplayType EglGlobalInfo::generateInternalDisplay(EGLNativeDisplayType dpy){
     return EglOS::getInternalDisplay(dpy);
+}
+
+void EglGlobalInfo::initClientExtFuncTable(GLESVersion ver)
+{
+    android::Mutex::Autolock mutex(m_lock);
+    if (!m_gles_extFuncs_inited[ver]) {
+        ClientAPIExts::initClientFuncs(m_gles_ifaces[ver], (int)ver - 1);
+        m_gles_extFuncs_inited[ver] = true;
+    }
 }
