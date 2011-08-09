@@ -16,6 +16,16 @@
 
 package com.example.android.voicemail;
 
+import com.example.android.voicemail.common.core.Voicemail;
+import com.example.android.voicemail.common.core.VoicemailImpl;
+import com.example.android.voicemail.common.core.VoicemailProviderHelper;
+import com.example.android.voicemail.common.core.VoicemailProviderHelpers;
+import com.example.android.voicemail.common.inject.InjectView;
+import com.example.android.voicemail.common.inject.Injector;
+import com.example.android.voicemail.common.logging.Logger;
+import com.example.android.voicemail.common.ui.DialogHelperImpl;
+import com.example.android.voicemail.common.utils.CloseUtils;
+
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.Intent;
@@ -27,16 +37,6 @@ import android.util.Pair;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
-
-import com.example.android.voicemail.common.core.Voicemail;
-import com.example.android.voicemail.common.core.VoicemailImpl;
-import com.example.android.voicemail.common.core.VoicemailProviderHelper;
-import com.example.android.voicemail.common.core.VoicemailProviderHelpers;
-import com.example.android.voicemail.common.inject.InjectView;
-import com.example.android.voicemail.common.inject.Injector;
-import com.example.android.voicemail.common.logging.Logger;
-import com.example.android.voicemail.common.ui.DialogHelperImpl;
-import com.example.android.voicemail.common.utils.CloseUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -131,7 +131,6 @@ public class AddVoicemailActivity extends Activity {
         return VoicemailImpl.createForInsertion(time, sender)
                 .setDuration(duration)
                 .setSourcePackage(sourcePackageName)
-                .setMailbox(Voicemail.Mailbox.INBOX)
                 .build();
     }
 

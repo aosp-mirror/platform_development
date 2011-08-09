@@ -29,7 +29,6 @@ public final class VoicemailImpl implements Voicemail {
     private final String mSource;
     private final String mProviderData;
     private final Uri mUri;
-    private final Voicemail.Mailbox mMailbox;
     private final Boolean mIsRead;
     private final boolean mHasContent;
 
@@ -44,7 +43,6 @@ public final class VoicemailImpl implements Voicemail {
             String source,
             String providerData,
             Uri uri,
-            Voicemail.Mailbox mailbox,
             Boolean isRead,
             boolean hasContent) {
         mId = id;
@@ -54,7 +52,6 @@ public final class VoicemailImpl implements Voicemail {
         mSource = source;
         mProviderData = providerData;
         mUri = uri;
-        mMailbox = mailbox;
         mIsRead = isRead;
         mHasContent = hasContent;
     }
@@ -100,7 +97,6 @@ public final class VoicemailImpl implements Voicemail {
         private String mBuilderSourcePackage;
         private String mBuilderSourceData;
         private Uri mBuilderUri;
-        private Voicemail.Mailbox mBuilderMailbox;
         private Boolean mBuilderIsRead;
         private boolean mBuilderHasContent;
 
@@ -143,11 +139,6 @@ public final class VoicemailImpl implements Voicemail {
             return this;
         }
 
-        public Builder setMailbox(Voicemail.Mailbox mailbox) {
-            mBuilderMailbox = mailbox;
-            return this;
-        }
-
         public Builder setIsRead(boolean isRead) {
             mBuilderIsRead = isRead;
             return this;
@@ -161,7 +152,7 @@ public final class VoicemailImpl implements Voicemail {
         public VoicemailImpl build() {
             return new VoicemailImpl(mBuilderTimestamp, mBuilderNumber, mBuilderId,
                     mBuilderDuration,
-                    mBuilderSourcePackage, mBuilderSourceData, mBuilderUri, mBuilderMailbox,
+                    mBuilderSourcePackage, mBuilderSourceData, mBuilderUri,
                     mBuilderIsRead,
                     mBuilderHasContent);
         }
@@ -238,16 +229,6 @@ public final class VoicemailImpl implements Voicemail {
     }
 
     @Override
-    public Mailbox getMailbox() {
-        return mMailbox;
-    }
-
-    @Override
-    public boolean hasMailbox() {
-        return mMailbox != null;
-    }
-
-    @Override
     public boolean isRead() {
         return hasRead() ? mIsRead : false;
     }
@@ -266,7 +247,7 @@ public final class VoicemailImpl implements Voicemail {
     public String toString() {
         return "VoicemailImpl [mTimestamp=" + mTimestamp + ", mNumber=" + mNumber + ", mId=" + mId
                 + ", mDuration=" + mDuration + ", mSource=" + mSource + ", mProviderData="
-                + mProviderData + ", mUri=" + mUri + ", mMailbox=" + mMailbox + ", mIsRead="
-                + mIsRead + ", mHasContent=" + mHasContent + "]";
+                + mProviderData + ", mUri=" + mUri + ", mIsRead=" + mIsRead + ", mHasContent="
+                + mHasContent + "]";
     }
 }

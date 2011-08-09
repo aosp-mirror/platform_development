@@ -20,9 +20,7 @@ import static com.example.android.voicemail.common.utils.DbQueryUtils.concatenat
 import static com.example.android.voicemail.common.utils.DbQueryUtils.concatenateClausesWithOr;
 import static com.example.android.voicemail.common.utils.DbQueryUtils.getEqualityClause;
 
-import com.example.android.voicemail.common.core.Voicemail.Mailbox;
-import com.example.android.provider.VoicemailContract.Voicemails;
-
+import android.provider.VoicemailContract.Voicemails;
 import android.text.TextUtils;
 
 import java.util.ArrayList;
@@ -31,8 +29,8 @@ import java.util.List;
 /**
  * Factory class to create {@link VoicemailFilter} objects for various filtering needs.
  * <p>
- * Factory methods like {@link #createWithMailbox(Mailbox)}, {@link #createWithReadStatus(boolean)}
- * and {@link #createWithMatchingFields(Voicemail)} can be used to create a voicemail filter that
+ * Factory methods like {@link #createWithReadStatus(boolean)} and
+ * {@link #createWithMatchingFields(Voicemail)} can be used to create a voicemail filter that
  * matches the value of the specific field.
  * <p>
  * It is possible to combine multiple filters with OR or AND operation using the methods
@@ -44,13 +42,6 @@ import java.util.List;
  * content provider database and is therefore less recommended.
  */
 public class VoicemailFilterFactory {
-    /** Predefined filter for inbox only messages. */
-    public static final VoicemailFilter INBOX_MESSAGES_FILTER = createWithOrOf(
-            createWithMailbox(Mailbox.INBOX), createWithMailbox(Mailbox.UNDELETED));
-    /** Predefined filter for trashed messages. */
-    public static final VoicemailFilter TRASHED_MESSAGES_FILTER =
-            createWithMailbox(Mailbox.DELETED);
-
     /**
      * Creates a voicemail filter with the specified where clause. Use this method only if you know
      * and want to directly use the column names of the content provider. For most of the usages
@@ -76,12 +67,6 @@ public class VoicemailFilterFactory {
         }
         return VoicemailFilterFactory.createWithWhereClause(
                 getWhereClauseForMatchingFields(fieldMatch));
-    }
-
-    /** Creates a voicemail filter with the specified mailbox state. */
-    public static VoicemailFilter createWithMailbox(Mailbox mailbox) {
-        return createWithMatchingFields(
-                VoicemailImpl.createEmptyBuilder().setMailbox(mailbox).build());
     }
 
     /** Creates a voicemail filter with the specified read status. */
@@ -111,11 +96,7 @@ public class VoicemailFilterFactory {
     private static String getWhereClauseForMatchingFields(Voicemail fieldMatch) {
         List<String> clauses = new ArrayList<String>();
         if (fieldMatch.hasRead()) {
-            clauses.add(getEqualityClause(Voicemails.NEW, fieldMatch.isRead() ? "1" : "0"));
-        }
-        if (fieldMatch.hasMailbox()) {
-            clauses.add(getEqualityClause(Voicemails.STATE,
-                    Integer.toString(fieldMatch.getMailbox().getValue())));
+            clauses.add(getEqualityClause(Voicemails.IS_READ, fieldMatch.isRead() ? "1" : "0"));
         }
         if (fieldMatch.hasNumber()) {
             clauses.add(getEqualityClause(Voicemails.NUMBER, fieldMatch.getNumber()));

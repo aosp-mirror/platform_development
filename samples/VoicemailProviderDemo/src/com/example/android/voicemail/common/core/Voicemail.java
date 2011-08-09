@@ -16,8 +16,6 @@
 
 package com.example.android.voicemail.common.core;
 
-import com.example.android.provider.VoicemailContract;
-
 import android.net.Uri;
 
 /**
@@ -26,41 +24,6 @@ import android.net.Uri;
  * The presence of a field is indicated by a corresponding 'has' method.
  */
 public interface Voicemail {
-    /**
-     * Which mailbox the message is sitting in.
-     * <p>
-     * Note that inbox and deleted are alone insufficient, because we may have a provider that is
-     * not able to undelete (re-upload) a message. Thus we need a state to represent the (common)
-     * case where the user has deleted a message (which results in the message being removed from
-     * the server) and then restored the message (where we are unable to re-upload the message to
-     * the server). That's what the undeleted state is for.
-     * <p>
-     * The presence of an undeleted mailbox prevents the voicemail source from having to keep a list
-     * of all such deleted-then-restored message ids, without which it would be unable to tell the
-     * difference between a message that has been deleted-then-restored by the user and a message
-     * which has been deleted on the server and should now be removed (for example one removed via
-     * an IVR).
-     */
-    public enum Mailbox {
-        /** After being fetched from the server, a message usually starts in the inbox. */
-        INBOX(VoicemailContract.Voicemails.STATE_INBOX),
-        /** Indicates that a message has been deleted. */
-        DELETED(VoicemailContract.Voicemails.STATE_DELETED),
-        /** Restored from having been deleted, distinct from being in the inbox. */
-        UNDELETED(VoicemailContract.Voicemails.STATE_UNDELETED);
-
-        private final int mValue;
-
-        private Mailbox(int value) {
-            mValue = value;
-        }
-
-        /** Returns the DB value of this mailbox state. */
-        public int getValue() {
-            return mValue;
-        }
-    }
-
     /**
      * The identifier of the voicemail in the content provider.
      * <p>
@@ -115,11 +78,6 @@ public interface Voicemail {
     public Uri getUri();
 
     public boolean hasUri();
-
-    /** Tells us which mailbox the message is sitting in, returns null if this is not set. */
-    public Voicemail.Mailbox getMailbox();
-
-    public boolean hasMailbox();
 
     /**
      * Tells us if the voicemail message has been marked as read.
