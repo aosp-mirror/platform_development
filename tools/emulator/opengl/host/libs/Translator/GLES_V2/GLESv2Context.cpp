@@ -93,7 +93,7 @@ void GLESv2Context::initExtensionString() {
                       "GL_OES_compressed_paletted_texture GL_OES_compressed_ETC1_RGB8_texture ";
     if (s_glSupport.GL_ARB_HALF_FLOAT_PIXEL || s_glSupport.GL_NV_HALF_FLOAT)
         *s_glExtensions+="GL_OES_texture_half_float GL_OES_texture_half_float_linear ";
-    if (s_glSupport.GL_NV_PACKED_DEPTH_STENCIL)
+    if (s_glSupport.GL_EXT_PACKED_DEPTH_STENCIL)
         *s_glExtensions+="GL_OES_packed_depth_stencil ";
     if (s_glSupport.GL_ARB_HALF_FLOAT_VERTEX)
         *s_glExtensions+="GL_OES_vertex_half_float ";

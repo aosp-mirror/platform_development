@@ -272,7 +272,7 @@ void GLEScmContext::initExtensionString() {
         *s_glExtensions+="GL_OES_framebuffer_object GL_OES_depth24 GL_OES_depth32 GL_OES_fbo_render_mipmap "
                          "GL_OES_rgb8_rgba8 GL_OES_stencil1 GL_OES_stencil4 GL_OES_stencil8 ";
     }
-    if (s_glSupport.GL_NV_PACKED_DEPTH_STENCIL)
+    if (s_glSupport.GL_EXT_PACKED_DEPTH_STENCIL)
         *s_glExtensions+="GL_OES_packed_depth_stencil ";
     if (s_glSupport.GL_EXT_TEXTURE_FORMAT_BGRA8888)
         *s_glExtensions+="GL_EXT_texture_format_BGRA8888 GL_APPLE_texture_format_BGRA8888 ";

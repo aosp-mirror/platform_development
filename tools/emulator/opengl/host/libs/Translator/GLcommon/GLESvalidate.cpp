@@ -11,7 +11,7 @@ bool  GLESvalidate::textureEnum(GLenum e,unsigned int maxTex) {
 }
 
 bool GLESvalidate::pixelType(GLEScontext * ctx, GLenum type) {
-    if ((ctx && ctx->getCaps()->GL_NV_PACKED_DEPTH_STENCIL) &&
+    if ((ctx && ctx->getCaps()->GL_EXT_PACKED_DEPTH_STENCIL) &&
        (type == GL_UNSIGNED_INT_24_8_OES) )
         return true;
 
@@ -45,7 +45,7 @@ bool GLESvalidate::pixelOp(GLenum format,GLenum type) {
 bool GLESvalidate::pixelFrmt(GLEScontext* ctx ,GLenum format) {
     if (ctx && ctx->getCaps()->GL_EXT_TEXTURE_FORMAT_BGRA8888 && format == GL_BGRA_EXT)
       return true;
-    if (ctx && ctx->getCaps()->GL_NV_PACKED_DEPTH_STENCIL && format == GL_DEPTH_STENCIL_OES)
+    if (ctx && ctx->getCaps()->GL_EXT_PACKED_DEPTH_STENCIL && format == GL_DEPTH_STENCIL_OES)
       return true;
     switch(format) {
     case GL_ALPHA:
