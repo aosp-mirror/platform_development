@@ -23,6 +23,7 @@
     createContactActivity="com.example.android.samplesync.editor.ContactEditorActivity"
     inviteContactActivity="com.example.android.samplesync.editor.ContactEditorActivity"
     inviteContactActionLabel="@string/invite_action_label"
+    viewContactNotifyService="com.example.android.samplesync.notifier.NotifierService"
 >
 
     <ContactsDataKind

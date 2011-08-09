@@ -77,6 +77,15 @@
                 android:name="android.provider.CONTACTS_STRUCTURE"
                 android:resource="@xml/contacts" />
         </service>
+        <!-- The view notification service -->
+        <service
+            android:name=".notifier.NotifierService"
+            android:exported="true">
+            <!--
+                No intent-filter here! This activity is only ever launched by
+                someone who explicitly knows the class name
+            -->
+        </service>
         <activity
             android:name=".authenticator.AuthenticatorActivity"
             android:label="@string/ui_activity_title"
