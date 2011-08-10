@@ -183,7 +183,7 @@ InitConfigStatus FBConfig::initConfigList(FrameBuffer *fb)
     }
     s_numConfigs = j;
 
-    delete configs;
+    delete[] configs;
     return ret;
 }
 
@@ -303,6 +303,7 @@ FBConfig::FBConfig(EGLDisplay p_eglDpy, EGLConfig p_eglCfg)
     m_eglConfig = p_eglCfg;
     m_attribValues = new GLint[s_numConfigAttribs];
     for (int i=0; i<s_numConfigAttribs; i++) {
+        m_attribValues[i] = 0;
         s_egl.eglGetConfigAttrib(p_eglDpy, p_eglCfg, s_configAttribs[i], &m_attribValues[i]);
 
         //

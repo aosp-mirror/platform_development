@@ -36,6 +36,7 @@ FramebufferData::FramebufferData(GLuint name):m_dirty(false) {
         m_attachPoints[i].target = 0;
         m_attachPoints[i].name = 0;
         m_attachPoints[i].obj = ObjectDataPtr(NULL);
+        m_attachPoints[i].owned = false;
     }
 }
 

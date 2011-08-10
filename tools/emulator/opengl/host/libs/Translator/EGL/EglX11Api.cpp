@@ -87,7 +87,7 @@ EglConfig* pixelFormatToConfig(EGLNativeDisplayType dpy,int renderableType,EGLNa
     int  bSize,red,green,blue,alpha,depth,stencil;
     int  supportedSurfaces,visualType,visualId;
     int  caveat,transparentType,samples;
-    int  tRed,tGreen,tBlue;
+    int  tRed=0,tGreen=0,tBlue=0;
     int  pMaxWidth,pMaxHeight,pMaxPixels;
     int  tmp;
     int  configId,level,renderable;

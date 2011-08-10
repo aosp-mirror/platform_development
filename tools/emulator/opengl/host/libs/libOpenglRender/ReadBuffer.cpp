@@ -36,7 +36,7 @@ ReadBuffer::~ReadBuffer()
 int ReadBuffer::getData()
 {
     if ((m_validData > 0) && (m_readPtr > m_buf)) {
-        memcpy(m_buf, m_readPtr, m_validData);
+        memmove(m_buf, m_readPtr, m_validData);
     }
     // get fresh data into the buffer;
     size_t len = m_size - m_validData;
