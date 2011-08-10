@@ -27,6 +27,7 @@ size_t glSizeof(GLenum type)
         break;
     case GL_SHORT:
     case GL_UNSIGNED_SHORT:
+    case GL_HALF_FLOAT_OES:
         retval = 2;
         break;
     case GL_FLOAT:
@@ -38,6 +39,8 @@ size_t glSizeof(GLenum type)
         retval = 8;
         break;
 #endif
+    default:
+        ERR("**** ERROR unknown type 0x%x (%s,%d)\n", type, __FUNCTION__,__LINE__);
     }
     return retval;
 
