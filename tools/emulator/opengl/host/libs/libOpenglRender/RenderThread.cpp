@@ -20,12 +20,14 @@
 #include "TimeUtils.h"
 #include "GLDispatch.h"
 #include "GL2Dispatch.h"
+#include "EGLDispatch.h"
 
 #define STREAM_BUFFER_SIZE 4*1024*1024
 
 RenderThread::RenderThread() :
     osUtils::Thread(),
-    m_stream(NULL)
+    m_stream(NULL),
+    m_finished(false)
 {
 }
 
@@ -140,6 +142,22 @@ int RenderThread::Main()
     if (dumpFP) {
         fclose(dumpFP);
     }
+
+    //
+    // release the thread from any EGL context
+    // if bound to context.
+    //
+    EGLDisplay eglDpy = s_egl.eglGetCurrentDisplay();
+    if (eglDpy != EGL_NO_DISPLAY) {
+        s_egl.eglMakeCurrent(eglDpy, 
+                             EGL_NO_SURFACE,
+                             EGL_NO_SURFACE,
+                             EGL_NO_CONTEXT);
+    }
+
+    //
+    // flag that this thread has finished execution
+    m_finished = true;
 
     return 0;
 }

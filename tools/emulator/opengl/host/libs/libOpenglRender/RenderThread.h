@@ -26,6 +26,8 @@ class RenderThread : public osUtils::Thread
 public:
     static RenderThread *create(IOStream *p_stream);
 
+    bool isFinished() const { return m_finished; }
+
 private:
     RenderThread();
     virtual int Main();
@@ -33,6 +35,7 @@ private:
 private:
     IOStream *m_stream;
     renderControl_decoder_context_t m_rcDec;
+    bool m_finished;
 };
 
 #endif

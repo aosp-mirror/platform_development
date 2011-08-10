@@ -85,6 +85,9 @@ static const char *getGLES2ExtensionString(EGLDisplay p_dpy,
 
 void FrameBuffer::finalize(){
     if(s_theFrameBuffer){
+        s_theFrameBuffer->m_colorbuffers.clear();
+        s_theFrameBuffer->m_windows.clear();
+        s_theFrameBuffer->m_contexts.clear();
         s_egl.eglMakeCurrent(s_theFrameBuffer->m_eglDisplay, NULL, NULL, NULL);
         s_egl.eglDestroySurface(s_theFrameBuffer->m_eglDisplay,s_theFrameBuffer->m_eglSurface);
         s_egl.eglDestroyContext(s_theFrameBuffer->m_eglDisplay,s_theFrameBuffer->m_eglContext);
