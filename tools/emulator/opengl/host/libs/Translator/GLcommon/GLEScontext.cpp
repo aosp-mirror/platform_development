@@ -495,8 +495,8 @@ void GLEScontext::initCapsLocked(const GLubyte * extensionString)
     if (strstr(cstring,"GL_ARB_matrix_palette ")!=NULL)
         s_glSupport.GL_ARB_MATRIX_PALETTE = true;
 
-    if (strstr(cstring,"GL_NV_packed_depth_stencil ")!=NULL)
-        s_glSupport.GL_NV_PACKED_DEPTH_STENCIL = true;
+    if (strstr(cstring,"GL_EXT_packed_depth_stencil ")!=NULL )
+        s_glSupport.GL_EXT_PACKED_DEPTH_STENCIL = true;
 
     if (strstr(cstring,"GL_OES_read_format ")!=NULL)
         s_glSupport.GL_OES_READ_FORMAT = true;
