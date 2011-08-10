@@ -19,6 +19,7 @@
 #include "gl2_enc.h"
 #include "IOStream.h"
 #include "GLClientState.h"
+#include "GLSharedGroup.h"
 #include "FixedBuffer.h"
 
 
@@ -29,6 +30,7 @@ public:
     void setClientState(GLClientState *state) {
         m_state = state;
     }
+    void setSharedGroup(GLSharedGroupPtr shared){ m_shared = shared; }
     const GLClientState *state() { return m_state; }
     void flush() {
         gl2_encoder_context_t::m_stream->flush();
@@ -44,6 +46,7 @@ private:
 
     bool    m_initialized;
     GLClientState *m_state;
+    GLSharedGroupPtr m_shared;
     GLenum  m_error;
 
     GLint *m_compressedTextureFormats;
@@ -68,6 +71,14 @@ private:
 
     glBindBuffer_client_proc_t m_glBindBuffer_enc;
     static void s_glBindBuffer(void *self, GLenum target, GLuint id);
+
+    
+    glBufferData_client_proc_t m_glBufferData_enc;
+    static void s_glBufferData(void *self, GLenum target, GLsizeiptr size, const GLvoid * data, GLenum usage);
+    glBufferSubData_client_proc_t m_glBufferSubData_enc;
+    static void s_glBufferSubData(void *self, GLenum target, GLintptr offset, GLsizeiptr size, const GLvoid * data);
+    glDeleteBuffers_client_proc_t m_glDeleteBuffers_enc;
+    static void s_glDeleteBuffers(void *self, GLsizei n, const GLuint * buffers);
 
     glDrawArrays_client_proc_t m_glDrawArrays_enc;
     static void s_glDrawArrays(void *self, GLenum mode, GLint first, GLsizei count);
