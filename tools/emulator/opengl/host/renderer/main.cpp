@@ -140,7 +140,7 @@ int main(int argc, char *argv[])
     //
     // run the server listener loop
     //
-    server->Main(); // never returns
+    server->Main();
 #else
     //
     // on windows we need to handle messages for the
@@ -152,24 +152,15 @@ int main(int argc, char *argv[])
 
     //
     // Dispatch events for the subwindow
+    // During termination of the render server, the FrameBuffer
+    // will be finalized, the Framebuffer subwindow will
+    // get destroyed and the following loop will exit.
     //
     MSG msg;
     HWND hWnd = FrameBuffer::getFB()->getSubWindow();
-    bool done = 0;
-    while(!done) {
-        GetMessage(&msg, hWnd, 0, 0);
+    while( GetMessage(&msg, hWnd, 0, 0) > 0 ) {
         TranslateMessage(&msg);
         DispatchMessage(&msg);
-
-        //
-        // if server thread has exiting
-        // wait for it to exit and done.
-        //
-        if (server->isExiting()) {
-            int exitStatus;
-            server->wait(&exitStatus);
-            done = true;
-        }
     }
 #endif
 
