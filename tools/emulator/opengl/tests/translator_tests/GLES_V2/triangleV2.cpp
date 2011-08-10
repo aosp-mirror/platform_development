@@ -33,6 +33,24 @@ extern "C" void * createGLView(void *nsWindowPtr, int x, int y, int width, int h
 
 //#define __FIXED__
 
+const char *def_vShaderStr =
+       "attribute vec4 vPosition;   \n"
+       "void main()                 \n"
+       "{                           \n"
+       "   gl_Position = vPosition; \n"
+       "}                           \n";
+
+const char *def_fShaderStr =
+       "precision mediump float;                   \n"
+       "void main()                                \n"
+       "{                                          \n"
+#ifndef __FIXED__
+       " gl_FragColor = vec4(0.2, 0.5, 0.1, 1.0); \n"
+#else
+       " gl_FragColor = vec4(0.4, 0.3, 0.7, 1.0); \n"
+#endif
+       "}                                          \n";
+
 static EGLint const attribute_list[] = {
     EGL_RED_SIZE, 1,
     EGL_GREEN_SIZE, 1,
@@ -71,16 +89,11 @@ unsigned char *genRedTexture(int width, int height, int comp)
 }
 
 
-void usage(const char *progname)
+void printUsage(const char *progname)
 {
-    fprintf(stderr, "usage: %s [-n <nframes> -i -h]\n", progname);
-    fprintf(stderr, "\t-h: this message\n");
-    fprintf(stderr, "\t-i: immidate mode\n");
-    fprintf(stderr, "\t-n nframes: generate nframes\n");
-    fprintf(stderr, "\t-e: use index arrays\n");
-    fprintf(stderr, "\t-t: use texture\n");
-    fprintf(stderr, "\t-f: use fixed points\n");
-    fprintf(stderr, "\t-p: use point size OES extention\n");
+    fprintf(stderr, "usage: %s [options]\n", progname);
+    fprintf(stderr, "\t-vs <filename>  - vertex shader to use\n");
+    fprintf(stderr, "\t-fs <filename>  - fragment shader to use\n");
 }
 
 
@@ -115,27 +128,51 @@ GLuint LoadShader(GLenum type,const char *shaderSrc)
    }
    return shader;
 }
+
+const char *readShader(const char *fileName)
+{
+    FILE *fp = fopen(fileName, "rb");
+    if (!fp) return NULL;
+   
+    int bSize = 1024;
+    int nBufs = 1;
+    char *buf = (char *)malloc(bSize);
+    int n;
+    int len = 0;
+    n = fread(&buf[0], 1, bSize, fp);
+    while( n == bSize ) {
+        len += n;
+        nBufs++;
+        buf = (char *)realloc(buf, bSize * nBufs);
+        n = fread(&buf[len], 1, bSize, fp);
+    }
+    len += n;
+
+    buf[len] = '\0';
+    return (const char *)buf;
+}
+
+void dumpUniforms(GLuint program)
+{
+    GLint numU;
+    glGetProgramiv(program, GL_ACTIVE_UNIFORMS, &numU);
+    printf("==== Program %d has %d active uniforms ===\n", program, numU);
+    char name[512];
+    GLsizei len;
+    GLint size;
+    GLenum type;
+    for (int i=0; i<numU; i++) {
+        glGetActiveUniform(program, i,
+                           512, &len, &size, &type, name);
+        printf("\t%s : type=0x%x size=%d\n", name, type, size);
+    }
+}
+
 ///
 // Initialize the shader and program object
 //
-int Init()
+int Init(const char *vShaderStr, const char *fShaderStr)
 {
-   char vShaderStr[] =
-       "attribute vec4 vPosition;   \n"
-       "void main()                 \n"
-       "{                           \n"
-       "   gl_Position = vPosition; \n"
-       "}                           \n";
-   char fShaderStr[] =
-       "precision mediump float;                   \n"
-       "void main()                                \n"
-       "{                                          \n"
-#ifndef __FIXED__
-       " gl_FragColor = vec4(0.2, 0.5, 0.1, 1.0); \n"
-#else
-       " gl_FragColor = vec4(0.4, 0.3, 0.7, 1.0); \n"
-#endif
-       "}                                          \n";
    GLuint vertexShader;
    GLuint fragmentShader;
    GLuint programObject;
@@ -169,6 +206,10 @@ int Init()
      glDeleteProgram(programObject);
      return -1;
   }
+
+  // dump active uniforms
+  dumpUniforms(programObject);
+
   // Store the program object
 #ifndef __FIXED__
   glClearColor(0.0f, 0.0f, 1.0f, 1.0f);
@@ -213,6 +254,44 @@ void Draw(EGLDisplay display,EGLSurface surface,int width,int height,GLuint prog
 }
 
 #ifdef _WIN32
+char **parseCmdLine(char *cmdLine, int *argc)
+{
+    int argvSize = 10;
+    char **argv = (char **)malloc(argvSize * sizeof(char *));
+    *argc = 0;
+    int i=0;
+    bool prevIsSpace = true;
+    int argStart = 0;
+
+    argv[(*argc)++] = strdup("playdump");
+
+    while(cmdLine[i] != '\0') {
+        bool isSpace = (cmdLine[i] == ' ' || cmdLine[i] == '\t');
+        if ( !isSpace && prevIsSpace ) {
+            argStart = i;
+        }
+        else if (isSpace && !prevIsSpace) {
+            cmdLine[i] = '\0';
+            if (*argc >= argvSize) {
+                argvSize *= 2;
+                argv = (char **)realloc(argv, argvSize * sizeof(char *));
+            }
+            argv[(*argc)++] = &cmdLine[argStart];
+            argStart = i+1;
+        }
+
+        prevIsSpace = isSpace;
+        i++;
+    }
+
+    if (i > argStart) {
+        argv[(*argc)++] = &cmdLine[argStart];
+    }
+    return argv;
+}
+#endif
+
+#ifdef _WIN32
 int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd)
 #else
 int main(int argc, char **argv)
@@ -232,8 +311,47 @@ int main(int argc, char **argv)
     bool useCopy          = false;
     bool useSubCopy       = false;
 
-    int c;
-    extern char *optarg;
+#ifdef _WIN32
+    int argc;
+    char **argv = parseCmdLine(lpCmdLine, &argc);
+#endif
+    const char *vShader = def_vShaderStr;
+    const char *fShader = def_fShaderStr;
+
+    for (int i=1; i<argc; i++) {
+        if (!strcmp(argv[i],"-vs")) {
+            if (++i >= argc) {
+                printUsage(argv[0]);
+                return -1;
+            }
+            vShader = readShader(argv[i]);
+            if (!vShader) {
+                vShader = def_vShaderStr;
+                printf("Failed to load vshader %s, using defualt\n", argv[i]);
+            }
+            else {
+                printf("Using vshader %s\n", argv[i]);
+            }
+        }
+        else if (!strcmp(argv[i],"-fs")) {
+            if (++i >= argc) {
+                printUsage(argv[0]);
+                return -1;
+            }
+            fShader = readShader(argv[i]);
+            if (!fShader) {
+                fShader = def_fShaderStr;
+                printf("Failed to load fshader %s, using defualt\n", argv[i]);
+            }
+            else {
+                printf("Using fshader %s\n", argv[i]);
+            }
+        }
+        else {
+            printUsage(argv[0]);
+            return -1;
+        }
+    }
 
     #ifdef _WIN32
         HWND   windowId = NULL;
@@ -296,7 +414,7 @@ int main(int argc, char **argv)
         printf("no error before drawing\n");
         }
 
-        int program = Init();
+        int program = Init(vShader, fShader);
         if(program  < 0){
             printf("failed init shaders\n");
             return false;
