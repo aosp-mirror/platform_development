@@ -16,8 +16,8 @@
 #include <GLcommon/GLESpointer.h>
 #include <stdlib.h>
 
-GLESpointer::GLESpointer():m_size(0),
-                           m_type(0),
+GLESpointer::GLESpointer():m_size(4),
+                           m_type(GL_FLOAT),
                            m_stride(0),
                            m_enabled(false),
                            m_normalize(false),
