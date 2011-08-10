@@ -778,7 +778,9 @@ GL_APICALL void  GL_APIENTRY glGetAttachedShaders(GLuint program, GLsizei maxcou
         const GLuint globalProgramName = ctx->shareGroup()->getGlobalName(SHADER,program);
         SET_ERROR_IF(globalProgramName==0, GL_INVALID_VALUE);
         ctx->dispatcher().glGetAttachedShaders(globalProgramName,maxcount,count,shaders);
-        for(int i=0 ; i < *count ;i++){
+        GLint numShaders=0;
+        ctx->dispatcher().glGetProgramiv(globalProgramName,GL_ATTACHED_SHADERS,&numShaders);
+        for(int i=0 ; i < maxcount && i<numShaders ;i++){
            shaders[i] = ctx->shareGroup()->getLocalName(SHADER,shaders[i]);
         }
     }
