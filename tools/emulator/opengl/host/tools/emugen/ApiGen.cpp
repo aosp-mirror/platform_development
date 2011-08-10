@@ -355,7 +355,7 @@ int ApiGen::genEncoderImpl(const std::string &filename)
     size_t n = size();
 
     // unsupport printout
-    fprintf(fp, "static void enc_unsupported()\n{\n\tfprintf(stderr, \"Function is unsupported\\n\");\n}\n\n");
+    fprintf(fp, "static void enc_unsupported()\n{\n\tLOGE(\"Function is unsupported\\n\");\n}\n\n");
 
     // entry points;
     for (size_t i = 0; i < n; i++) {
@@ -776,7 +776,7 @@ int ApiGen::genDecoderImpl(const std::string &filename)
     if (strstr(m_basename.c_str(), "gl")) {
         fprintf(fp, "#ifdef CHECK_GL_ERROR\n");
         fprintf(fp, "\tint err = this->glGetError();\n");
-        fprintf(fp, "\tif (err) printf(\"%s Error: 0x%%X in %%s\\n\", err, lastCall);\n", m_basename.c_str());
+        fprintf(fp, "\tif (err) fprintf(stderr, \"%s Error: 0x%%X in %%s\\n\", err, lastCall);\n", m_basename.c_str());
         fprintf(fp, "#endif\n");
     }
     fprintf(fp, "\t} // while\n");
