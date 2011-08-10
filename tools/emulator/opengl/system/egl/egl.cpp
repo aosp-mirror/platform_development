@@ -21,6 +21,8 @@
 #include "gralloc_cb.h"
 #include "GLClientState.h"
 #include "GLSharedGroup.h"
+#include "eglContext.h"
+#include "ClientAPIExts.h"
 
 #include "GLEncoder.h"
 #ifdef WITH_GLES2
@@ -128,38 +130,6 @@ const char *  eglStrError(EGLint err)
             setErrorReturn(EGL_BAD_DISPLAY, EGL_FALSE);    \
     }
 
-
-// ----------------------------------------------------------------------------
-//EGLContext_t
-
-struct EGLContext_t {
-
-    enum {
-        IS_CURRENT      =   0x00010000,
-        NEVER_CURRENT   =   0x00020000
-    };
-
-    EGLContext_t(EGLDisplay dpy, EGLConfig config, EGLContext_t* shareCtx);
-    ~EGLContext_t();
-    uint32_t            flags;
-    EGLDisplay          dpy;
-    EGLConfig           config;
-    EGLSurface          read;
-    EGLSurface          draw;
-    EGLContext_t    *   shareCtx;
-    EGLint                version;
-    uint32_t             rcContext;
-    const char*         versionString;
-    const char*         vendorString;
-    const char*         rendererString;
-    const char*         extensionString;
-
-    GLClientState * getClientState(){ return clientState; }
-    GLSharedGroupPtr getSharedGroup(){ return sharedGroup; }
-private:
-    GLClientState    *    clientState;
-    GLSharedGroupPtr      sharedGroup;
-};
 
 EGLContext_t::EGLContext_t(EGLDisplay dpy, EGLConfig config, EGLContext_t* shareCtx) :
     dpy(dpy),
@@ -601,19 +571,8 @@ __eglMustCastToProperFunctionPointerType eglGetProcAddress(const char *procname)
         }
     }
 
-    // look in gles
-    void *proc = s_display.gles_iface()->getProcAddress( procname );
-    if (proc != NULL) {
-        return (__eglMustCastToProperFunctionPointerType)proc;
-    }
-
-    // look in gles2
-    if (s_display.gles2_iface() != NULL) {
-        proc = s_display.gles2_iface()->getProcAddress( procname );
-        if (proc != NULL) {
-            return (__eglMustCastToProperFunctionPointerType)proc;
-        }
-    }
+    // look in gles client api's extensions table
+    return (__eglMustCastToProperFunctionPointerType)ClientAPIExts::getProcAddress(procname);
 
     // Fail - function not found.
     return NULL;
@@ -1073,12 +1032,14 @@ EGLBoolean eglMakeCurrent(EGLDisplay dpy, EGLSurface draw, EGLSurface read, EGLC
             if (!hostCon->gl2Encoder()->isInitialized()) {
                 s_display.gles2_iface()->init();
                 hostCon->gl2Encoder()->setInitialized();
+                ClientAPIExts::initClientFuncs(s_display.gles2_iface(), 1);
             }
         }
         else {
             if (!hostCon->glEncoder()->isInitialized()) {
                 s_display.gles_iface()->init();
                 hostCon->glEncoder()->setInitialized();
+                ClientAPIExts::initClientFuncs(s_display.gles_iface(), 0);
             }
         }
     }
@@ -1217,7 +1178,6 @@ EGLBoolean eglUnlockSurfaceKHR(EGLDisplay display, EGLSurface surface)
 EGLImageKHR eglCreateImageKHR(EGLDisplay dpy, EGLContext ctx, EGLenum target, EGLClientBuffer buffer, const EGLint *attrib_list)
 {
     VALIDATE_DISPLAY_INIT(dpy, EGL_NO_IMAGE_KHR);
-
     if (ctx != EGL_NO_CONTEXT) {
         setErrorReturn(EGL_BAD_CONTEXT, EGL_NO_IMAGE_KHR);
     }
@@ -1253,7 +1213,6 @@ EGLImageKHR eglCreateImageKHR(EGLDisplay dpy, EGLContext ctx, EGLenum target, EG
 EGLBoolean eglDestroyImageKHR(EGLDisplay dpy, EGLImageKHR img)
 {
     VALIDATE_DISPLAY_INIT(dpy, EGL_FALSE);
-
     android_native_buffer_t* native_buffer = (android_native_buffer_t*)img;
 
     if (native_buffer->common.magic != ANDROID_NATIVE_BUFFER_MAGIC)

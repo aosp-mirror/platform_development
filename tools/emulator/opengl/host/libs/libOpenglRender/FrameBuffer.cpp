@@ -508,6 +508,19 @@ bool FrameBuffer::bindColorBufferToTexture(HandleType p_colorbuffer)
     return (*c).second->bindToTexture();
 }
 
+bool FrameBuffer::bindColorBufferToRenderbuffer(HandleType p_colorbuffer)
+{
+    android::Mutex::Autolock mutex(m_lock);
+
+    ColorBufferMap::iterator c( m_colorbuffers.find(p_colorbuffer) );
+    if (c == m_colorbuffers.end()) {
+        // bad colorbuffer handle
+        return false;
+    }
+
+    return (*c).second->bindToRenderbuffer();
+}
+
 bool FrameBuffer::bindContext(HandleType p_context,
                               HandleType p_drawSurface,
                               HandleType p_readSurface)

@@ -18,6 +18,7 @@ GL_ENTRY(EGLint, rcMakeCurrent, uint32_t context, uint32_t drawSurf, uint32_t re
 GL_ENTRY(void, rcFBPost, uint32_t colorBuffer)
 GL_ENTRY(void, rcFBSetSwapInterval, EGLint interval)
 GL_ENTRY(void, rcBindTexture, uint32_t colorBuffer)
+GL_ENTRY(void, rcBindRenderbuffer, uint32_t colorBuffer)
 GL_ENTRY(EGLint, rcColorBufferCacheFlush, uint32_t colorbuffer, EGLint postCount,int forRead)
 GL_ENTRY(void, rcReadColorBuffer, uint32_t colorbuffer, GLint x, GLint y, GLint width, GLint height, GLenum format, GLenum type, void *pixels)
 GL_ENTRY(int, rcUpdateColorBuffer, uint32_t colorbuffer, GLint x, GLint y, GLint width, GLint height, GLenum format, GLenum type, void *pixels)
