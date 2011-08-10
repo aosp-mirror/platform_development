@@ -25,9 +25,11 @@ private:
     void parseBuiltinConstants();
     void parseOmitPrecision();
     void parseExtendDefaultPrecision();
+    void parseLineNumbers();
     void clearParsedSrc();
 
     GLenum      m_type;
+    char*       m_originalSrc;
     std::string m_src;
     std::string m_parsedSrc;
     GLchar*     m_parsedLines;
