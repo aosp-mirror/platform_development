@@ -86,17 +86,17 @@ void RangeList::delRange(const Range& r,RangeList& deleted) {
          erase(i);
          i--;
          if (intersection!=old) { // otherwise split:
-                 //intersection on right side
-                 if(old.getStart() != intersection.getStart()) {
-                     list.insert(list.begin(),Range(old.getStart(),intersection.getStart() - old.getStart()));
-                 }
-
-                 //intersection on left side
-                 if(old.getEnd() != intersection.getEnd()) {
-                     list.insert(list.begin(),Range(intersection.getEnd(),old.getEnd() - intersection.getEnd()));
-                 }
-                 deleted.addRange(intersection);
+             //intersection on right side
+             if(old.getStart() != intersection.getStart()) {
+                 list.insert(list.begin(),Range(old.getStart(),intersection.getStart() - old.getStart()));
              }
+
+             //intersection on left side
+             if(old.getEnd() != intersection.getEnd()) {
+                 list.insert(list.begin(),Range(intersection.getEnd(),old.getEnd() - intersection.getEnd()));
+             }
+         }
+         deleted.addRange(intersection);
      }
  }
 }
