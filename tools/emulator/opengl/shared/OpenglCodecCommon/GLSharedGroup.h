@@ -54,6 +54,7 @@ private:
     GLuint m_numIndexes;
     IndexInfo* m_Indexes;
     bool m_initialized;
+    bool m_locShiftWAR;
 public:
     ProgramData();
     void initProgramData(GLuint numIndexes);
@@ -62,6 +63,11 @@ public:
     void setIndexInfo(GLuint index, GLint base, GLint size, GLenum type);
     GLuint getIndexForLocation(GLint location);
     GLenum getTypeForLocation(GLint location);
+
+    void setupLocationShiftWAR();
+    GLint locationWARHostToApp(GLint hostLoc);
+    GLint locationWARAppToHost(GLint appLoc);
+    
 };
 
 class GLSharedGroup {
@@ -86,6 +92,9 @@ public:
     void    deleteProgramData(GLuint program);
     void    setProgramIndexInfo(GLuint program, GLuint index, GLint base, GLint size, GLenum type);
     GLenum  getProgramUniformType(GLuint program, GLint location);
+    void    setupLocationShiftWAR(GLuint program);
+    GLint   locationWARHostToApp(GLuint program, GLint hostLoc);
+    GLint   locationWARAppToHost(GLuint program, GLint appLoc);
 
     void    addShaderData(GLuint shader);
     bool    isShader(GLuint shader);

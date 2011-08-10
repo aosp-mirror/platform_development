@@ -120,6 +120,9 @@ public:
     }
     size_t pixelDataSize(GLsizei width, GLsizei height, GLenum format, GLenum type, int pack) const;
 
+    void setCurrentProgram(GLint program) { m_currentProgram = program; }
+    GLint currentProgram() const { return m_currentProgram; }
+
 private:
     PixelStoreState m_pixelStore;
     VertexAttribState *m_states;
@@ -127,7 +130,7 @@ private:
     GLuint m_currentArrayVbo;
     GLuint m_currentIndexVbo;
     int m_activeTexture;
-
+    GLint m_currentProgram;
 
     bool validLocation(int location) { return (location >= 0 && location < m_nLocations); }
 public:
