@@ -15,6 +15,7 @@
 */
 #include <map>
 #include <GLcommon/objectNameManager.h>
+#include <GLcommon/GLEScontext.h>
 
 
 NameSpace::NameSpace(NamedObjectType p_type, GlobalNameSpace *globalNameSpace) :
@@ -103,6 +104,50 @@ NameSpace::replaceGlobalName(ObjectLocalName p_localName, unsigned int p_globalN
         m_globalNameSpace->deleteName(m_type, (*n).second);
         (*n).second = p_globalName;
     }
+}
+
+
+GlobalNameSpace::GlobalNameSpace()
+{
+    mutex_init(&m_lock);
+}
+
+GlobalNameSpace::~GlobalNameSpace()
+{
+    mutex_destroy(&m_lock);
+}
+
+unsigned int 
+GlobalNameSpace::genName(NamedObjectType p_type)
+{
+    if ( p_type >= NUM_OBJECT_TYPES ) return 0;
+    unsigned int name = 0;
+
+    mutex_lock(&m_lock);
+    switch (p_type) {
+    case VERTEXBUFFER:
+        GLEScontext::dispatcher().glGenBuffers(1,&name);
+        break;
+    case TEXTURE:
+        GLEScontext::dispatcher().glGenTextures(1,&name);
+        break;
+    case RENDERBUFFER:
+        GLEScontext::dispatcher().glGenRenderbuffersEXT(1,&name);
+        break;
+    case FRAMEBUFFER:
+        GLEScontext::dispatcher().glGenFramebuffersEXT(1,&name);
+        break;
+    case SHADER: //objects in shader namepace are not handled
+    default:
+        name = 0;
+    }
+    mutex_unlock(&m_lock);
+    return name;
+}
+
+void 
+GlobalNameSpace::deleteName(NamedObjectType p_type, unsigned int p_name)
+{
 }
 
 typedef std::pair<NamedObjectType, ObjectLocalName> ObjectIDPair;
