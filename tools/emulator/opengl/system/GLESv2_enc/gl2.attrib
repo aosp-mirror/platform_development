@@ -76,8 +76,10 @@ glGenTextures
 glGetActiveAttrib
 	len name bufsize
 	dir name out
+	var_flag name nullAllowed
 	dir length out
 	len length (sizeof(GLsizei))
+	var_flag length nullAllowed
 	dir size out
 	len size (sizeof(GLint))
 	dir type out
@@ -87,8 +89,10 @@ glGetActiveAttrib
 glGetActiveUniform
 	len name bufsize
 	dir name out
+	  var_flag name nullAllowed
 	dir length out
 	len length (sizeof(GLsizei))
+	var_flag length nullAllowed
 	dir size out
 	len size (sizeof(GLint))
 	dir type out
@@ -168,7 +172,9 @@ glGetShaderInfoLog
 
 #void glGetShaderPrecisionFormat(GLenum shadertype, GLenum precisiontype, GLint *range, GLint *precision)
 glGetShaderPrecisionFormat
-	len range (sizeof(GLint))
+	dir range out
+	len range (2 * sizeof(GLint))
+	dir precision out
 	len precision (sizeof(GLint))
 
 #void glGetShaderSource(GLuint shader, GLsizei bufsize, GLsizei *length, GLchar *source)
@@ -195,11 +201,13 @@ glGetTexParameteriv
 
 #void glGetUniformfv(GLuint program, GLint location, GLfloat *params)
 glGetUniformfv
-	flag unsupported
+	dir params out
+	len params glSizeof(uniformType(self, program, location))
 
 #void glGetUniformiv(GLuint program, GLint location, GLint *params)
 glGetUniformiv
-	flag unsupported
+	dir params out
+	len params glSizeof(uniformType(self, program, location))
 
 #int glGetUniformLocation(GLuint program, GLchar *name)
 glGetUniformLocation
@@ -210,11 +218,13 @@ glGetUniformLocation
 # thus we still need to implement it. 
 #void glGetVertexAttribfv(GLuint index, GLenum pname, GLfloat *params)
 glGetVertexAttribfv
+	dir params out
 	len params (glUtilsParamSize(pname) * sizeof(GLfloat))
 
 #see glGetVertexAttribfv for comments
 #void glGetVertexAttribiv(GLuint index, GLenum pname, GLint *params)
 glGetVertexAttribiv
+	dir params out
 	len params (glUtilsParamSize(pname) * sizeof(GLint))
 
 
