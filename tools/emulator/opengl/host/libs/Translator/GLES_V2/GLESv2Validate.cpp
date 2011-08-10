@@ -154,3 +154,29 @@ bool GLESv2Validate::pixelFrmt(GLEScontext* ctx,GLenum format) {
 
     return GLESvalidate::pixelFrmt(ctx, format);
 }
+
+bool GLESv2Validate::attribName(const GLchar* name){
+    const GLchar* found = strstr(name,"gl_");
+    return (!found) ||
+           (found != name) ; // attrib name does not start with gl_
+}
+
+bool GLESv2Validate::attribIndex(int index){
+    return index >=0 && index < GL_MAX_VERTEX_ATTRIBS;
+}
+
+bool GLESv2Validate::programParam(GLenum pname){
+    switch(pname){
+        case GL_DELETE_STATUS:
+        case GL_LINK_STATUS:
+        case GL_VALIDATE_STATUS:
+        case GL_INFO_LOG_LENGTH:
+        case GL_ATTACHED_SHADERS:
+        case GL_ACTIVE_ATTRIBUTES:
+        case GL_ACTIVE_ATTRIBUTE_MAX_LENGTH:
+        case GL_ACTIVE_UNIFORMS:
+        case GL_ACTIVE_UNIFORM_MAX_LENGTH:
+            return true;
+    }
+    return false;
+}

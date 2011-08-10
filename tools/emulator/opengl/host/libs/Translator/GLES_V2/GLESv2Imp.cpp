@@ -171,9 +171,14 @@ GL_APICALL void  GL_APIENTRY glAttachShader(GLuint program, GLuint shader){
 
 GL_APICALL void  GL_APIENTRY glBindAttribLocation(GLuint program, GLuint index, const GLchar* name){
     GET_CTX();
+    SET_ERROR_IF(!GLESv2Validate::attribName(name),GL_INVALID_OPERATION);
+    SET_ERROR_IF(!GLESv2Validate::attribIndex(index),GL_INVALID_VALUE);
     if(ctx->shareGroup().Ptr()) {
         const GLuint globalProgramName = ctx->shareGroup()->getGlobalName(SHADER,program);
         SET_ERROR_IF(globalProgramName==0, GL_INVALID_VALUE);
+        ObjectDataPtr objData = ctx->shareGroup()->getObjectData(SHADER,program);
+        SET_ERROR_IF(objData.Ptr()->getDataType()!=PROGRAM_DATA,GL_INVALID_OPERATION);
+
         ctx->dispatcher().glBindAttribLocation(globalProgramName,index,name);
     }
 }
@@ -343,6 +348,8 @@ GL_APICALL void  GL_APIENTRY glCompileShader(GLuint shader){
     if(ctx->shareGroup().Ptr()) {
        const GLuint globalShaderName = ctx->shareGroup()->getGlobalName(SHADER,shader);
         SET_ERROR_IF(globalShaderName==0, GL_INVALID_VALUE);
+        ObjectDataPtr objData = ctx->shareGroup()->getObjectData(SHADER,shader);
+        SET_ERROR_IF(objData.Ptr()->getDataType()!= SHADER_DATA,GL_INVALID_OPERATION);
        ctx->dispatcher().glCompileShader(globalShaderName);
     }
 }
@@ -394,6 +401,7 @@ GL_APICALL GLuint GL_APIENTRY glCreateProgram(void){
 
 GL_APICALL GLuint GL_APIENTRY glCreateShader(GLenum type){
     GET_CTX_V2_RET(0);
+    RET_AND_SET_ERROR_IF(!GLESv2Validate::shaderType(type),GL_INVALID_ENUM,0);
     const GLuint globalShaderName = ctx->dispatcher().glCreateShader(type);
     if(ctx->shareGroup().Ptr() && globalShaderName) {
             const GLuint localShaderName = ctx->shareGroup()->genName(SHADER, 0, true);
@@ -759,6 +767,8 @@ GL_APICALL void  GL_APIENTRY glGetActiveAttrib(GLuint program, GLuint index, GLs
     if(ctx->shareGroup().Ptr()) {
         const GLuint globalProgramName = ctx->shareGroup()->getGlobalName(SHADER,program);
         SET_ERROR_IF(globalProgramName==0, GL_INVALID_VALUE);
+        ObjectDataPtr objData = ctx->shareGroup()->getObjectData(SHADER,program);
+        SET_ERROR_IF(objData.Ptr()->getDataType()!=PROGRAM_DATA,GL_INVALID_OPERATION);
         ctx->dispatcher().glGetActiveAttrib(globalProgramName,index,bufsize,length,size,type,name);
     }
 }
@@ -768,6 +778,8 @@ GL_APICALL void  GL_APIENTRY glGetActiveUniform(GLuint program, GLuint index, GL
     if(ctx->shareGroup().Ptr()) {
         const GLuint globalProgramName = ctx->shareGroup()->getGlobalName(SHADER,program);
         SET_ERROR_IF(globalProgramName==0, GL_INVALID_VALUE);
+        ObjectDataPtr objData = ctx->shareGroup()->getObjectData(SHADER,program);
+        SET_ERROR_IF(objData.Ptr()->getDataType()!=PROGRAM_DATA,GL_INVALID_OPERATION);
         ctx->dispatcher().glGetActiveUniform(globalProgramName,index,bufsize,length,size,type,name);
     }
 }
@@ -778,6 +790,8 @@ GL_APICALL void  GL_APIENTRY glGetAttachedShaders(GLuint program, GLsizei maxcou
         const GLuint globalProgramName = ctx->shareGroup()->getGlobalName(SHADER,program);
         SET_ERROR_IF(globalProgramName==0, GL_INVALID_VALUE);
         ctx->dispatcher().glGetAttachedShaders(globalProgramName,maxcount,count,shaders);
+        ObjectDataPtr objData = ctx->shareGroup()->getObjectData(SHADER,program);
+        SET_ERROR_IF(objData.Ptr()->getDataType()!=PROGRAM_DATA,GL_INVALID_OPERATION);
         GLint numShaders=0;
         ctx->dispatcher().glGetProgramiv(globalProgramName,GL_ATTACHED_SHADERS,&numShaders);
         for(int i=0 ; i < maxcount && i<numShaders ;i++){
@@ -791,6 +805,10 @@ GL_APICALL int GL_APIENTRY glGetAttribLocation(GLuint program, const GLchar* nam
      if(ctx->shareGroup().Ptr()) {
         const GLuint globalProgramName = ctx->shareGroup()->getGlobalName(SHADER,program);
         RET_AND_SET_ERROR_IF(globalProgramName==0, GL_INVALID_VALUE,-1);
+        ObjectDataPtr objData = ctx->shareGroup()->getObjectData(SHADER,program);
+        RET_AND_SET_ERROR_IF(objData.Ptr()->getDataType()!=PROGRAM_DATA,GL_INVALID_OPERATION,-1);
+        ProgramData* pData = (ProgramData *)objData.Ptr();
+        RET_AND_SET_ERROR_IF(pData->getLinkStatus() != GL_TRUE,GL_INVALID_OPERATION,-1);
         return ctx->dispatcher().glGetAttribLocation(globalProgramName,name);
      }
      return -1;
@@ -1097,6 +1115,7 @@ GL_APICALL void  GL_APIENTRY glGetRenderbufferParameteriv(GLenum target, GLenum 
 
 GL_APICALL void  GL_APIENTRY glGetProgramiv(GLuint program, GLenum pname, GLint* params){
     GET_CTX();
+    SET_ERROR_IF(!GLESv2Validate::programParam(pname),GL_INVALID_ENUM);
     if(ctx->shareGroup().Ptr()) {
         const GLuint globalProgramName = ctx->shareGroup()->getGlobalName(SHADER,program);
         SET_ERROR_IF(globalProgramName==0, GL_INVALID_VALUE);
@@ -1238,18 +1257,28 @@ GL_APICALL void  GL_APIENTRY glGetTexParameteriv(GLenum target, GLenum pname, GL
 
 GL_APICALL void  GL_APIENTRY glGetUniformfv(GLuint program, GLint location, GLfloat* params){
     GET_CTX();
+    SET_ERROR_IF(location < 0,GL_INVALID_OPERATION);
     if(ctx->shareGroup().Ptr()) {
         const GLuint globalProgramName = ctx->shareGroup()->getGlobalName(SHADER,program);
         SET_ERROR_IF(globalProgramName==0, GL_INVALID_VALUE);
+        ObjectDataPtr objData = ctx->shareGroup()->getObjectData(SHADER,program);
+        SET_ERROR_IF(objData.Ptr()->getDataType()!=PROGRAM_DATA,GL_INVALID_OPERATION);
+        ProgramData* pData = (ProgramData *)objData.Ptr();
+        SET_ERROR_IF(pData->getLinkStatus() != GL_TRUE,GL_INVALID_OPERATION);
         ctx->dispatcher().glGetUniformfv(globalProgramName,location,params);
     }
 }
 
 GL_APICALL void  GL_APIENTRY glGetUniformiv(GLuint program, GLint location, GLint* params){
     GET_CTX();
+    SET_ERROR_IF(location < 0,GL_INVALID_OPERATION);
     if(ctx->shareGroup().Ptr()) {
         const GLuint globalProgramName = ctx->shareGroup()->getGlobalName(SHADER,program);
         SET_ERROR_IF(globalProgramName==0, GL_INVALID_VALUE);
+        ObjectDataPtr objData = ctx->shareGroup()->getObjectData(SHADER,program);
+        SET_ERROR_IF(objData.Ptr()->getDataType()!=PROGRAM_DATA,GL_INVALID_OPERATION);
+        ProgramData* pData = (ProgramData *)objData.Ptr();
+        SET_ERROR_IF(pData->getLinkStatus() != GL_TRUE,GL_INVALID_OPERATION);
         ctx->dispatcher().glGetUniformiv(globalProgramName,location,params);
     }
 }
@@ -1259,6 +1288,10 @@ GL_APICALL int GL_APIENTRY glGetUniformLocation(GLuint program, const GLchar* na
     if(ctx->shareGroup().Ptr()) {
         const GLuint globalProgramName = ctx->shareGroup()->getGlobalName(SHADER,program);
         RET_AND_SET_ERROR_IF(globalProgramName==0, GL_INVALID_VALUE,-1);
+        ObjectDataPtr objData = ctx->shareGroup()->getObjectData(SHADER,program);
+        RET_AND_SET_ERROR_IF(objData.Ptr()->getDataType()!=PROGRAM_DATA,GL_INVALID_OPERATION,-1);
+        ProgramData* pData = (ProgramData *)objData.Ptr();
+        RET_AND_SET_ERROR_IF(pData->getLinkStatus() != GL_TRUE,GL_INVALID_OPERATION,-1);
         return ctx->dispatcher().glGetUniformLocation(globalProgramName,name);
     }
     return -1;
@@ -1765,6 +1798,8 @@ GL_APICALL void  GL_APIENTRY glUseProgram(GLuint program){
     if(ctx->shareGroup().Ptr()) {
         const GLuint globalProgramName = ctx->shareGroup()->getGlobalName(SHADER,program);
         SET_ERROR_IF(program!=0 && globalProgramName==0,GL_INVALID_VALUE);
+        ObjectDataPtr objData = ctx->shareGroup()->getObjectData(SHADER,program);
+        SET_ERROR_IF(objData.Ptr() && (objData.Ptr()->getDataType()!=PROGRAM_DATA),GL_INVALID_OPERATION);
         ctx->dispatcher().glUseProgram(globalProgramName);
     }
 }
@@ -1774,6 +1809,8 @@ GL_APICALL void  GL_APIENTRY glValidateProgram(GLuint program){
     if(ctx->shareGroup().Ptr()) {
         const GLuint globalProgramName = ctx->shareGroup()->getGlobalName(SHADER,program);
         SET_ERROR_IF(globalProgramName==0, GL_INVALID_VALUE);
+        ObjectDataPtr objData = ctx->shareGroup()->getObjectData(SHADER,program);
+        SET_ERROR_IF(objData.Ptr()->getDataType()!=PROGRAM_DATA,GL_INVALID_OPERATION);
         ctx->dispatcher().glValidateProgram(globalProgramName);
     }
 }
