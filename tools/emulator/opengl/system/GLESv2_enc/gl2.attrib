@@ -104,6 +104,7 @@ glGetAttachedShaders
 	len shaders (maxcount*sizeof(GLuint))
 	dir shaders out
 	dir count out
+	var_flag count nullAllowed
 	len count (sizeof(GLsizei))
 
 #int glGetAttribLocation(GLuint program, GLchar *name)
