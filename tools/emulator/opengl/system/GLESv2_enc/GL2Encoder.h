@@ -32,6 +32,7 @@ public:
     }
     void setSharedGroup(GLSharedGroupPtr shared){ m_shared = shared; }
     const GLClientState *state() { return m_state; }
+    const GLSharedGroupPtr shared() { return m_shared; }
     void flush() {
         gl2_encoder_context_t::m_stream->flush();
     }
@@ -118,5 +119,27 @@ private:
     static void s_glShaderSource(void *self, GLuint shader, GLsizei count, const GLchar **string, const GLint *length);
 
     static void s_glFinish(void *self);
+
+    glLinkProgram_client_proc_t m_glLinkProgram_enc;
+    static void s_glLinkProgram(void *self, GLuint program);
+
+    glDeleteProgram_client_proc_t m_glDeleteProgram_enc;
+    static void s_glDeleteProgram(void * self, GLuint program);
+
+    glGetUniformiv_client_proc_t m_glGetUniformiv_enc;
+    static void s_glGetUniformiv(void *self, GLuint program, GLint location , GLint *params);
+
+    glGetUniformfv_client_proc_t m_glGetUniformfv_enc;
+    static void s_glGetUniformfv(void *self, GLuint program, GLint location , GLfloat *params);
+
+    glCreateProgram_client_proc_t m_glCreateProgram_enc;
+    static GLuint s_glCreateProgram(void *self);
+
+    glCreateShader_client_proc_t m_glCreateShader_enc;
+    static GLuint s_glCreateShader(void *self, GLenum shaderType);
+
+    glDeleteShader_client_proc_t m_glDeleteShader_enc;
+    static void s_glDeleteShader(void *self, GLuint shader);
+
 };
 #endif
