@@ -106,6 +106,13 @@ HostConnection *HostConnection::get()
             }
             con->m_stream = stream;
         }
+
+        // send zero 'clientFlags' to the host.
+        unsigned int *pClientFlags = 
+                (unsigned int *)con->m_stream->allocBuffer(sizeof(unsigned int));
+        *pClientFlags = 0;
+        con->m_stream->commitBuffer(sizeof(unsigned int));
+        
         LOGD("HostConnection::get() New Host Connection established %p, tid %d\n", con, gettid());
         tinfo->hostConn = con;
     }

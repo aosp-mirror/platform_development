@@ -16,10 +16,14 @@
 #include "RenderServer.h"
 #include "TcpStream.h"
 #include "RenderThread.h"
+#include "FrameBuffer.h"
+#include <set>
+
+typedef std::set<RenderThread *> RenderThreadsSet;
 
 RenderServer::RenderServer() :
     m_listenSock(NULL),
-    m_exit(false)
+    m_exiting(false)
 {
 }
 
@@ -42,16 +46,26 @@ RenderServer *RenderServer::create(int port)
 
 int RenderServer::Main()
 {
-    while(!m_exit) {
+    RenderThreadsSet threads;
+
+    while(1) {
         TcpStream *stream = m_listenSock->accept();
         if (!stream) {
             fprintf(stderr,"Error accepting connection, aborting\n");
             break;
         }
 
+        unsigned int clientFlags;
+        if (!stream->readFully(&clientFlags, sizeof(unsigned int))) {
+            fprintf(stderr,"Error reading clientFlags\n");
+            delete stream;
+            continue;
+        }
+
         DBG("\n\n\n\n Got new stream!!!! \n\n\n\n\n");
         // check if we have been requested to exit while waiting on accept
-        if (m_exit) {
+        if ((clientFlags & IOSTREAM_CLIENT_EXIT_SERVER) != 0) {
+            m_exiting = true;
             break;
         }
 
@@ -64,10 +78,49 @@ int RenderServer::Main()
         if (!rt->start()) {
             fprintf(stderr,"Failed to start RenderThread\n");
             delete stream;
+            delete rt;
         }
+
+        //
+        // remove from the threads list threads which are
+        // no longer running
+        //
+        for (RenderThreadsSet::iterator n,t = threads.begin();
+             t != threads.end();
+             t = n) {
+            // first find next iterator
+            n = t;
+            n++;
+
+            // delete and erase the current iterator
+            // if thread is no longer running
+            if ((*t)->isFinished()) {
+                delete (*t);
+                threads.erase(t);
+            }
+        }
+
+        // insert the added thread to the list
+        threads.insert(rt);
 
         printf("Started new RenderThread\n");
     }
 
+    //
+    // Wait for all threads to finish
+    //
+    for (RenderThreadsSet::iterator t = threads.begin();
+         t != threads.end();
+         t++) {
+        int exitStatus;
+        (*t)->wait(&exitStatus);
+        delete (*t);
+    }
+    threads.clear();
+
+    //
+    // de-initialize the FrameBuffer object
+    //
+    FrameBuffer::finalize();
     return 0;
 }
