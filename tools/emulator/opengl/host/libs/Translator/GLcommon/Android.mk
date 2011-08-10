@@ -19,8 +19,8 @@ LOCAL_SRC_FILES :=           \
      TextureUtils.cpp        \
      PaletteTexture.cpp      \
      etc1.cpp                \
-     objectNameManager.cpp
-
+     objectNameManager.cpp   \
+     FramebufferData.cpp
 
 ifeq ($(HOST_OS),linux)
 #    $(call emugl-export,LDFLAGS,-Wl,--whole-archive)
