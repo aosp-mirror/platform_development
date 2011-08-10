@@ -91,6 +91,7 @@ EglConfig* pixelFormatToConfig(EGLNativeDisplayType dpy,int renderableType,EGLNa
     int  pMaxWidth,pMaxHeight,pMaxPixels;
     int  tmp;
     int  configId,level,renderable;
+    int  doubleBuffer;
 
     IS_SUCCESS(glXGetFBConfigAttrib(dpy,*frmt,GLX_TRANSPARENT_TYPE,&tmp));
     if(tmp == GLX_TRANSPARENT_INDEX) {
@@ -105,6 +106,12 @@ EglConfig* pixelFormatToConfig(EGLNativeDisplayType dpy,int renderableType,EGLNa
         IS_SUCCESS(glXGetFBConfigAttrib(dpy,*frmt,GLX_TRANSPARENT_BLUE_VALUE,&tBlue));
     }
 
+
+    //
+    // filter out single buffer configurations
+    //
+    IS_SUCCESS(glXGetFBConfigAttrib(dpy,*frmt,GLX_DOUBLEBUFFER,&doubleBuffer));
+    if (!doubleBuffer) return NULL;
 
     IS_SUCCESS(glXGetFBConfigAttrib(dpy,*frmt,GLX_BUFFER_SIZE,&bSize));
     IS_SUCCESS(glXGetFBConfigAttrib(dpy,*frmt,GLX_RED_SIZE,&red));
@@ -123,13 +130,12 @@ EglConfig* pixelFormatToConfig(EGLNativeDisplayType dpy,int renderableType,EGLNa
     //supported surfaces types
     IS_SUCCESS(glXGetFBConfigAttrib(dpy,*frmt,GLX_DRAWABLE_TYPE,&tmp));
     supportedSurfaces = 0;
-    if(tmp & GLX_WINDOW_BIT) {
+    if(tmp & GLX_WINDOW_BIT && visualId != 0) {
         supportedSurfaces |= EGL_WINDOW_BIT;
     } else {
         visualId = 0;
         visualType = EGL_NONE;
     }
-    if(tmp & GLX_PIXMAP_BIT)  supportedSurfaces |= EGL_PIXMAP_BIT;
     if(tmp & GLX_PBUFFER_BIT) supportedSurfaces |= EGL_PBUFFER_BIT;
 
     caveat = 0;
