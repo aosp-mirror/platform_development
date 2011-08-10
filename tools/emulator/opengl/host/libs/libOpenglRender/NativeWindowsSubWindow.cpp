@@ -38,9 +38,11 @@ EGLNativeWindowType createSubWindow(FBNativeWindowType p_window,
 
     RegisterClass(&wc);
     printf("creating window %d %d %d %d\n",x,y,width,height);
-    EGLNativeWindowType ret = CreateWindow("subWin",
+    EGLNativeWindowType ret = CreateWindowEx(
+                        WS_EX_NOPARENTNOTIFY,  // do not bother our parent window
+                        "subWin",
                         "sub",
-                        WS_CHILD,
+                        WS_CHILD|WS_DISABLED,
                         x,y,width,height,
                         p_window,
                         NULL,
@@ -51,5 +53,5 @@ EGLNativeWindowType createSubWindow(FBNativeWindowType p_window,
 }
 
 void destroySubWindow(EGLNativeDisplayType dis,EGLNativeWindowType win){
-    DestroyWindow(win);
+    PostMessage(win, WM_CLOSE, 0, 0);
 }
