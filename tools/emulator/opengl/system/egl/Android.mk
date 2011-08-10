@@ -14,7 +14,8 @@ LOCAL_ADDITIONAL_DEPENDENCIES := \
 
 LOCAL_SRC_FILES := \
         eglDisplay.cpp \
-        egl.cpp
+        egl.cpp \
+        ClientAPIExts.cpp
 
 
 LOCAL_PRELINK_MODULE := false

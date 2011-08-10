@@ -282,6 +282,16 @@ static void rcBindTexture(uint32_t colorBuffer)
     fb->bindColorBufferToTexture(colorBuffer);
 }
 
+static void rcBindRenderbuffer(uint32_t colorBuffer)
+{
+    FrameBuffer *fb = FrameBuffer::getFB();
+    if (!fb) {
+        return;
+    }
+
+    fb->bindColorBufferToRenderbuffer(colorBuffer);
+}
+
 static EGLint rcColorBufferCacheFlush(uint32_t colorBuffer,
                                       EGLint postCount, int forRead)
 {
@@ -333,6 +343,7 @@ void initRenderControlContext(renderControl_decoder_context_t *dec)
     dec->set_rcFBPost(rcFBPost);
     dec->set_rcFBSetSwapInterval(rcFBSetSwapInterval);
     dec->set_rcBindTexture(rcBindTexture);
+    dec->set_rcBindRenderbuffer(rcBindRenderbuffer);
     dec->set_rcColorBufferCacheFlush(rcColorBufferCacheFlush);
     dec->set_rcReadColorBuffer(rcReadColorBuffer);
     dec->set_rcUpdateColorBuffer(rcUpdateColorBuffer);
