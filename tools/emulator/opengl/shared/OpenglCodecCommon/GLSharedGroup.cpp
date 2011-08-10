@@ -11,7 +11,9 @@ BufferData::BufferData(GLsizeiptr size, void * data) : m_size(size)
 }
 
 /**** ProgramData ****/
-ProgramData::ProgramData() : m_numIndexes(0), m_initialized(false)
+ProgramData::ProgramData() : m_numIndexes(0),
+                             m_initialized(false),
+                             m_locShiftWAR(false)
 {
     m_Indexes = NULL;
 }
@@ -22,6 +24,7 @@ void ProgramData::initProgramData(GLuint numIndexes)
     m_numIndexes = numIndexes;
     delete[] m_Indexes;
     m_Indexes = new IndexInfo[numIndexes];
+    m_locShiftWAR = false;
 }
 
 bool ProgramData::isInitialized()
@@ -65,6 +68,30 @@ GLenum ProgramData::getTypeForLocation(GLint location)
     }
     return 0;
 }
+
+void ProgramData::setupLocationShiftWAR()
+{
+    m_locShiftWAR = false;
+    for (int i=0; i<m_numIndexes; i++) {
+        if (0 != (m_Indexes[i].base & 0xffff)) {
+            return;
+        }
+    }
+    m_locShiftWAR = true;
+}
+
+GLint ProgramData::locationWARHostToApp(GLint hostLoc)
+{
+    if (m_locShiftWAR) return hostLoc>>16;
+    else return hostLoc;
+}
+
+GLint ProgramData::locationWARAppToHost(GLint appLoc)
+{
+    if (m_locShiftWAR) return appLoc<<16;
+    else return appLoc;
+}
+
 
 /***** GLSharedGroup ****/
 
@@ -186,6 +213,29 @@ bool  GLSharedGroup::isProgram(GLuint program)
     android::AutoMutex _lock(m_lock);
     ProgramData* pData = m_programs.valueFor(program);
     return (pData!=NULL);
+}
+
+void GLSharedGroup::setupLocationShiftWAR(GLuint program)
+{
+    android::AutoMutex _lock(m_lock);
+    ProgramData* pData = m_programs.valueFor(program);
+    if (pData) pData->setupLocationShiftWAR();
+}
+
+GLint GLSharedGroup::locationWARHostToApp(GLuint program, GLint hostLoc)
+{
+    android::AutoMutex _lock(m_lock);
+    ProgramData* pData = m_programs.valueFor(program);
+    if (pData) return pData->locationWARHostToApp(hostLoc);
+    else return hostLoc;
+}
+
+GLint GLSharedGroup::locationWARAppToHost(GLuint program, GLint appLoc)
+{
+    android::AutoMutex _lock(m_lock);
+    ProgramData* pData = m_programs.valueFor(program);
+    if (pData) return pData->locationWARAppToHost(appLoc);
+    else return appLoc;
 }
 
 
