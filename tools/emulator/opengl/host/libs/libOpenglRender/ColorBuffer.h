@@ -37,6 +37,7 @@ public:
     bool blitFromPbuffer(EGLSurface p_pbufSurface);
     bool post();
     bool bindToTexture();
+    bool bindToRenderbuffer();
 
 private:
     ColorBuffer();
