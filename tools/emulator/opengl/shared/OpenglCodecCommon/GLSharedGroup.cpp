@@ -82,13 +82,13 @@ void ProgramData::setupLocationShiftWAR()
 
 GLint ProgramData::locationWARHostToApp(GLint hostLoc)
 {
-    if (m_locShiftWAR) return hostLoc>>16;
+    if (m_locShiftWAR && hostLoc>0) return hostLoc>>16;
     else return hostLoc;
 }
 
 GLint ProgramData::locationWARAppToHost(GLint appLoc)
 {
-    if (m_locShiftWAR) return appLoc<<16;
+    if (m_locShiftWAR && appLoc>0) return appLoc<<16;
     else return appLoc;
 }
 
