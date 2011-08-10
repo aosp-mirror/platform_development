@@ -47,6 +47,13 @@ GL2Encoder::GL2Encoder(IOStream *stream) : gl2_encoder_context_t(stream)
     set_glShaderSource(s_glShaderSource);
     set_glFinish(s_glFinish);
     m_glGetError_enc = set_glGetError(s_glGetError);
+    m_glLinkProgram_enc = set_glLinkProgram(s_glLinkProgram);
+    m_glDeleteProgram_enc = set_glDeleteProgram(s_glDeleteProgram);
+    m_glGetUniformiv_enc = set_glGetUniformiv(s_glGetUniformiv);
+    m_glGetUniformfv_enc = set_glGetUniformfv(s_glGetUniformfv);
+    m_glCreateProgram_enc = set_glCreateProgram(s_glCreateProgram);
+    m_glCreateShader_enc = set_glCreateShader(s_glCreateShader);
+    m_glDeleteShader_enc = set_glDeleteShader(s_glDeleteShader);
 }
 
 GL2Encoder::~GL2Encoder()
@@ -416,3 +423,86 @@ void GL2Encoder::s_glFinish(void *self)
     ctx->glFinishRoundTrip(self);
 }
 
+void GL2Encoder::s_glLinkProgram(void * self, GLuint program)
+{
+    GL2Encoder *ctx = (GL2Encoder *)self;
+    ctx->m_glLinkProgram_enc(self, program);
+
+    GLint linkStatus = 0;
+    ctx->glGetProgramiv(self,program,GL_LINK_STATUS,&linkStatus);
+    if (!linkStatus)
+        return;
+
+    //get number of active uniforms in the program
+    GLint numUniforms=0;
+    ctx->glGetProgramiv(self, program, GL_ACTIVE_UNIFORMS, &numUniforms);
+    ctx->m_shared->initProgramData(program,numUniforms);
+
+    //get the length of the longest uniform name
+    GLint maxLength=0;
+    ctx->glGetProgramiv(self, program, GL_ACTIVE_UNIFORM_MAX_LENGTH, &maxLength);
+
+    GLint size;
+    GLenum type;
+    GLchar *name = new GLchar[maxLength+1];
+    GLint location;
+    //for each active uniform, get its size and starting location.
+    for (GLint i=0 ; i<numUniforms ; ++i) 
+    {
+        ctx->glGetActiveUniform(self, program, i, maxLength, NULL, &size, &type, name);
+        location = ctx->glGetUniformLocation(self, program, name);
+        ctx->m_shared->setProgramIndexInfo(program, i, location, size, type);
+    }
+
+    delete[] name;
+}
+
+void GL2Encoder::s_glDeleteProgram(void *self, GLuint program)
+{
+    GL2Encoder *ctx = (GL2Encoder*)self;
+    ctx->m_glDeleteProgram_enc(self, program);
+
+    ctx->m_shared->deleteProgramData(program);
+}
+
+void GL2Encoder::s_glGetUniformiv(void *self, GLuint program, GLint location, GLint* params)
+{
+    GL2Encoder *ctx = (GL2Encoder*)self;
+    SET_ERROR_IF(!(ctx->m_shared->isProgram(program) || ctx->m_shared->isShader(program)), GL_INVALID_VALUE);
+    SET_ERROR_IF(!ctx->m_shared->isProgramInitialized(program), GL_INVALID_OPERATION);
+    SET_ERROR_IF(ctx->m_shared->getProgramUniformType(program,location)==0, GL_INVALID_OPERATION);
+    ctx->m_glGetUniformiv_enc(self, program, location, params);
+}
+void GL2Encoder::s_glGetUniformfv(void *self, GLuint program, GLint location, GLfloat* params)
+{
+    GL2Encoder *ctx = (GL2Encoder*)self;
+    SET_ERROR_IF(!(ctx->m_shared->isProgram(program) || ctx->m_shared->isShader(program)), GL_INVALID_VALUE);
+    SET_ERROR_IF(!ctx->m_shared->isProgramInitialized(program), GL_INVALID_OPERATION);
+    SET_ERROR_IF(ctx->m_shared->getProgramUniformType(program,location)==0, GL_INVALID_OPERATION);
+    ctx->m_glGetUniformfv_enc(self, program, location, params);
+}
+
+GLuint GL2Encoder::s_glCreateProgram(void * self)
+{
+    GL2Encoder *ctx = (GL2Encoder*)self;
+    GLuint program = ctx->m_glCreateProgram_enc(self);
+    if (program!=0)
+        ctx->m_shared->addProgramData(program);
+    return program;
+}
+
+GLuint GL2Encoder::s_glCreateShader(void *self, GLenum shaderType)
+{
+    GL2Encoder *ctx = (GL2Encoder*)self;
+    GLuint shader = ctx->m_glCreateShader_enc(self, shaderType);
+    if (shader!=0)
+        ctx->m_shared->addShaderData(shader);
+    return shader;
+}
+
+void GL2Encoder::s_glDeleteShader(void *self, GLenum shader)
+{
+    GL2Encoder *ctx = (GL2Encoder*)self;
+    ctx->m_glDeleteShader_enc(self,shader);
+    ctx->m_shared->deleteShaderData(shader);
+}

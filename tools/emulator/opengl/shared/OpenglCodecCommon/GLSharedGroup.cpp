@@ -10,16 +10,75 @@ BufferData::BufferData(GLsizeiptr size, void * data) : m_size(size)
     if (data) memcpy(buffer, data, size);
 }
 
+/**** ProgramData ****/
+ProgramData::ProgramData() : m_numIndexes(0), m_initialized(false)
+{
+    m_Indexes = NULL;
+}
+
+void ProgramData::initProgramData(GLuint numIndexes)
+{
+    m_initialized = true;
+    m_numIndexes = numIndexes;
+    delete[] m_Indexes;
+    m_Indexes = new IndexInfo[numIndexes];
+}
+
+bool ProgramData::isInitialized()
+{
+    return m_initialized;
+}
+
+ProgramData::~ProgramData()
+{
+    delete[] m_Indexes;
+    m_Indexes = NULL;
+}
+
+void ProgramData::setIndexInfo(GLuint index, GLint base, GLint size, GLenum type)
+{   
+    if (index>=m_numIndexes)
+        return;
+    m_Indexes[index].base = base;
+    m_Indexes[index].size = size;
+    m_Indexes[index].type = type;
+}
+
+GLuint ProgramData::getIndexForLocation(GLint location)
+{
+    GLuint i=0;
+    for (i=0;i<m_numIndexes;++i)
+    {
+        GLint low = m_Indexes[i].base;;
+        GLint high = low + m_Indexes[i].size;
+        if (location >= low && location < high)
+            break;
+    }
+    return i;
+}
+
+GLenum ProgramData::getTypeForLocation(GLint location)
+{
+    GLuint index = getIndexForLocation(location);
+    if (index<m_numIndexes) {
+        return m_Indexes[index].type;
+    }
+    return 0;
+}
+
 /***** GLSharedGroup ****/
 
 GLSharedGroup::GLSharedGroup() :
-    m_buffers(android::DefaultKeyedVector<GLuint, BufferData*>(NULL))
+    m_buffers(android::DefaultKeyedVector<GLuint, BufferData*>(NULL)),
+    m_programs(android::DefaultKeyedVector<GLuint, ProgramData*>(NULL)),
+    m_shaders(android::List<GLuint>())
 {
 }
 
 GLSharedGroup::~GLSharedGroup()
 {
     m_buffers.clear();
+    m_programs.clear();
 }
 
 BufferData * GLSharedGroup::getBufferData(GLuint bufferId)
@@ -55,4 +114,112 @@ void GLSharedGroup::deleteBufferData(GLuint bufferId)
 {
     android::AutoMutex _lock(m_lock);
     m_buffers.removeItem(bufferId);
+}
+
+void GLSharedGroup::addProgramData(GLuint program)
+{
+    android::AutoMutex _lock(m_lock);
+    ProgramData *pData = m_programs.valueFor(program);
+    if (pData) 
+    {   
+        m_programs.removeItem(program);
+        delete pData;
+    }
+
+    m_programs.add(program,new ProgramData());
+}
+
+void GLSharedGroup::initProgramData(GLuint program, GLuint numIndexes)
+{
+    android::AutoMutex _lock(m_lock);
+    ProgramData *pData = m_programs.valueFor(program);
+    if (pData)
+    {
+        pData->initProgramData(numIndexes);
+    }
+}
+
+bool GLSharedGroup::isProgramInitialized(GLuint program)
+{
+    android::AutoMutex _lock(m_lock);
+    ProgramData* pData = m_programs.valueFor(program);
+    if (pData) 
+    {
+        return pData->isInitialized();
+    }
+    return false;
+}
+
+void GLSharedGroup::deleteProgramData(GLuint program)
+{
+    android::AutoMutex _lock(m_lock);
+    ProgramData *pData = m_programs.valueFor(program);
+    if (pData)
+        delete pData;
+    m_programs.removeItem(program); 
+}
+
+void GLSharedGroup::setProgramIndexInfo(GLuint program, GLuint index, GLint base, GLint size, GLenum type)
+{
+    android::AutoMutex _lock(m_lock);
+    ProgramData* pData = m_programs.valueFor(program);
+    if (pData)
+    {
+        pData->setIndexInfo(index,base,size,type);
+    }
+}
+
+GLenum GLSharedGroup::getProgramUniformType(GLuint program, GLint location)
+{
+    android::AutoMutex _lock(m_lock);
+    ProgramData* pData = m_programs.valueFor(program);
+    GLenum type=0;
+    if (pData) 
+    {
+        type = pData->getTypeForLocation(location);
+    }
+    return type;
+}
+
+bool  GLSharedGroup::isProgram(GLuint program)
+{
+    android::AutoMutex _lock(m_lock);
+    ProgramData* pData = m_programs.valueFor(program);
+    return (pData!=NULL);
+}
+
+
+void  GLSharedGroup::addShaderData(GLuint shader)
+{
+    android::AutoMutex _lock(m_lock);
+    m_shaders.push_front(shader);
+    
+}
+bool  GLSharedGroup::isShader(GLuint shader)
+{
+    android::AutoMutex _lock(m_lock);
+    android::List<GLuint>::iterator iter;
+    iter = m_shaders.begin();
+    while (iter!=m_shaders.end())
+    {
+        if (*iter==shader)
+            return true;
+        iter++;
+    }
+    return false;
+}
+void  GLSharedGroup::deleteShaderData(GLuint shader)
+{
+    android::AutoMutex _lock(m_lock);
+    android::List<GLuint>::iterator iter;
+    iter = m_shaders.begin();
+    while (iter!=m_shaders.end())
+    {
+        if (*iter==shader)
+        {
+            m_shaders.erase(iter);
+            return;
+        }
+        iter++;
+    }
 }

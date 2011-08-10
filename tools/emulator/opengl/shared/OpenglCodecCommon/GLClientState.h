@@ -167,6 +167,7 @@ public:
             handled = false;
             break;
         default:
+            handled = false;
             ERR("unknown vertex-attrib parameter param %d\n", param);
         }
         return handled;

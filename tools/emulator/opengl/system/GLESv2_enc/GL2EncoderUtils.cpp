@@ -30,3 +30,10 @@ size_t pixelDataSize3D(void *self, GLsizei width, GLsizei height, GLsizei depth,
     size_t layerSize = pixelDataSize(self, width, height, format, type, pack);
     return layerSize * depth;
 }
+
+GLenum uniformType(void * self, GLuint program, GLint location)
+{
+    GL2Encoder * ctx = (GL2Encoder *) self;
+    assert (ctx->shared() != NULL);
+    return ctx->shared()->getProgramUniformType(program, location);
+}
