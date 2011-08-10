@@ -91,6 +91,10 @@ void FrameBuffer::finalize(){
         s_egl.eglMakeCurrent(s_theFrameBuffer->m_eglDisplay, NULL, NULL, NULL);
         s_egl.eglDestroySurface(s_theFrameBuffer->m_eglDisplay,s_theFrameBuffer->m_eglSurface);
         s_egl.eglDestroyContext(s_theFrameBuffer->m_eglDisplay,s_theFrameBuffer->m_eglContext);
+        if (s_theFrameBuffer->m_subWin) {
+            destroySubWindow(s_theFrameBuffer->m_subWinDisplay,
+                             s_theFrameBuffer->m_subWin);
+        }
         delete s_theFrameBuffer;
         s_theFrameBuffer = NULL;
     }

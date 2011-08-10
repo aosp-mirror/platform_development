@@ -44,7 +44,11 @@ TcpStream::TcpStream(int sock, size_t bufSize) :
 TcpStream::~TcpStream()
 {
     if (m_sock >= 0) {
+#ifdef _WIN32
+        closesocket(m_sock);
+#else
         ::close(m_sock);
+#endif
     }
     if (m_buf != NULL) {
         free(m_buf);
