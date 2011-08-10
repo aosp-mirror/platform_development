@@ -49,7 +49,16 @@ GLEScontext* getGLESContext();
 
 #define tls_thread  EglThreadInfo::get()
 
-EglGlobalInfo* g_eglInfo = EglGlobalInfo::getInstance();
+EglGlobalInfo* g_eglInfo = NULL;
+android::Mutex  s_eglLock;
+
+void initGlobalInfo()
+{
+    android::Mutex::Autolock mutex(s_eglLock);
+    if (!g_eglInfo) {
+        g_eglInfo = EglGlobalInfo::getInstance();
+    } 
+}
 
 static EGLiface            s_eglIface = {
     getGLESContext    : getGLESContext,
@@ -144,6 +153,7 @@ EGLAPI EGLDisplay EGLAPIENTRY eglGetDisplay(EGLNativeDisplayType display_id) {
     EglDisplay* dpy = NULL;
     EGLNativeInternalDisplayType internalDisplay = NULL;
 
+    initGlobalInfo();
 
     if ((dpy = g_eglInfo->getDisplay(display_id))) {
         return dpy;
@@ -185,6 +195,9 @@ static __translator_getGLESIfaceFunc loadIfaces(const char* libName){
 #endif
 
 EGLAPI EGLBoolean EGLAPIENTRY eglInitialize(EGLDisplay display, EGLint *major, EGLint *minor) {
+
+    initGlobalInfo();
+
     EglDisplay* dpy = g_eglInfo->getDisplay(display);
     if(!dpy) {
          RETURN_ERROR(EGL_FALSE,EGL_BAD_DISPLAY);
@@ -928,6 +941,9 @@ EGLAPI EGLBoolean EGLAPIENTRY eglReleaseThread(void) {
 EGLAPI __eglMustCastToProperFunctionPointerType EGLAPIENTRY
        eglGetProcAddress(const char *procname){
     __eglMustCastToProperFunctionPointerType retVal = NULL;
+
+    initGlobalInfo();
+
     if(!strncmp(procname,"egl",3)) { //EGL proc
         for(int i=0;i < s_eglExtentionsSize;i++){
             if(strcmp(procname,s_eglExtentions[i].name) == 0){
