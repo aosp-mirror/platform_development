@@ -546,7 +546,7 @@ GL_APICALL void  GL_APIENTRY glDisableVertexAttribArray(GLuint index){
 }
 
 GL_APICALL void  GL_APIENTRY glDrawArrays(GLenum mode, GLint first, GLsizei count){
-    GET_CTX();
+    GET_CTX_V2();
     SET_ERROR_IF(count < 0,GL_INVALID_VALUE)
     SET_ERROR_IF(!GLESv2Validate::drawMode(mode),GL_INVALID_ENUM);
 
@@ -554,6 +554,8 @@ GL_APICALL void  GL_APIENTRY glDrawArrays(GLenum mode, GLint first, GLsizei coun
 
     GLESConversionArrays tmpArrs;
     ctx->setupArraysPointers(tmpArrs,first,count,0,NULL,true);
+
+    ctx->validateAtt0PreDraw(count);
 
     //Enable texture generation for GL_POINTS and gl_PointSize shader variable
     //GLES2 assumes this is enabled by default, we need to set this state for GL
@@ -568,10 +570,12 @@ GL_APICALL void  GL_APIENTRY glDrawArrays(GLenum mode, GLint first, GLsizei coun
         ctx->dispatcher().glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
         ctx->dispatcher().glDisable(GL_POINT_SPRITE);
     }
+
+    ctx->validateAtt0PostDraw();
 }
 
 GL_APICALL void  GL_APIENTRY glDrawElements(GLenum mode, GLsizei count, GLenum type, const GLvoid* elementsIndices){
-    GET_CTX();
+    GET_CTX_V2();
     SET_ERROR_IF(count < 0,GL_INVALID_VALUE)
     SET_ERROR_IF(!(GLESv2Validate::drawMode(mode) && GLESv2Validate::drawType(type)),GL_INVALID_ENUM);
 
@@ -585,6 +589,9 @@ GL_APICALL void  GL_APIENTRY glDrawElements(GLenum mode, GLsizei count, GLenum t
 
     GLESConversionArrays tmpArrs;
     ctx->setupArraysPointers(tmpArrs,0,count,type,indices,false);
+
+    int maxIndex = ctx->findMaxIndex(count, type, indices);
+    ctx->validateAtt0PreDraw(maxIndex);
     
     //See glDrawArrays
     if (mode==GL_POINTS) {
@@ -598,6 +605,8 @@ GL_APICALL void  GL_APIENTRY glDrawElements(GLenum mode, GLsizei count, GLenum t
         ctx->dispatcher().glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
         ctx->dispatcher().glDisable(GL_POINT_SPRITE);
     }
+
+    ctx->validateAtt0PostDraw();
 }
 
 GL_APICALL void  GL_APIENTRY glEnable(GLenum cap){
@@ -1300,7 +1309,7 @@ GL_APICALL int GL_APIENTRY glGetUniformLocation(GLuint program, const GLchar* na
 
 
 GL_APICALL void  GL_APIENTRY glGetVertexAttribfv(GLuint index, GLenum pname, GLfloat* params){
-    GET_CTX();
+    GET_CTX_V2();
     const GLESpointer* p = ctx->getPointer(index);
     if(p) {
         switch(pname){
@@ -1323,7 +1332,14 @@ GL_APICALL void  GL_APIENTRY glGetVertexAttribfv(GLuint index, GLenum pname, GLf
             *params = p->isNormalize();
             break;
         case GL_CURRENT_VERTEX_ATTRIB:
-            ctx->dispatcher().glGetVertexAttribfv(index,pname,params);
+            if(index == 0)
+            {
+                const float* att0 = ctx->getAtt0();
+                for(int i=0; i<4; i++)
+                    params[i] = att0[i];
+            }
+            else
+                ctx->dispatcher().glGetVertexAttribfv(index,pname,params);
             break;
         default:
             ctx->setGLerror(GL_INVALID_ENUM);
@@ -1334,7 +1350,7 @@ GL_APICALL void  GL_APIENTRY glGetVertexAttribfv(GLuint index, GLenum pname, GLf
 }
 
 GL_APICALL void  GL_APIENTRY glGetVertexAttribiv(GLuint index, GLenum pname, GLint* params){
-    GET_CTX();
+    GET_CTX_V2();
     const GLESpointer* p = ctx->getPointer(index);
     if(p) {
         switch(pname){
@@ -1357,7 +1373,14 @@ GL_APICALL void  GL_APIENTRY glGetVertexAttribiv(GLuint index, GLenum pname, GLi
             *params = p->isNormalize();
             break;
         case GL_CURRENT_VERTEX_ATTRIB:
-            ctx->dispatcher().glGetVertexAttribiv(index,pname,params);
+            if(index == 0)
+            {
+                const float* att0 = ctx->getAtt0();
+                for(int i=0; i<4; i++)
+                    params[i] = (GLint)att0[i];
+            }
+            else
+                ctx->dispatcher().glGetVertexAttribiv(index,pname,params);
             break;
         default:
             ctx->setGLerror(GL_INVALID_ENUM);
@@ -1816,43 +1839,59 @@ GL_APICALL void  GL_APIENTRY glValidateProgram(GLuint program){
 }
 
 GL_APICALL void  GL_APIENTRY glVertexAttrib1f(GLuint indx, GLfloat x){
-    GET_CTX();
+    GET_CTX_V2();
     ctx->dispatcher().glVertexAttrib1f(indx,x);
+    if(indx == 0)
+        ctx->setAttribute0value(x, 0.0, 0.0, 1.0);
 }
 
 GL_APICALL void  GL_APIENTRY glVertexAttrib1fv(GLuint indx, const GLfloat* values){
-    GET_CTX();
+    GET_CTX_V2();
     ctx->dispatcher().glVertexAttrib1fv(indx,values);
+    if(indx == 0)
+        ctx->setAttribute0value(values[0], 0.0, 0.0, 1.0);
 }
 
 GL_APICALL void  GL_APIENTRY glVertexAttrib2f(GLuint indx, GLfloat x, GLfloat y){
-    GET_CTX();
+    GET_CTX_V2();
     ctx->dispatcher().glVertexAttrib2f(indx,x,y);
+    if(indx == 0)
+        ctx->setAttribute0value(x, y, 0.0, 1.0);
 }
 
 GL_APICALL void  GL_APIENTRY glVertexAttrib2fv(GLuint indx, const GLfloat* values){
-    GET_CTX();
+    GET_CTX_V2();
     ctx->dispatcher().glVertexAttrib2fv(indx,values);
+    if(indx == 0)
+        ctx->setAttribute0value(values[0], values[1], 0.0, 1.0);
 }
 
 GL_APICALL void  GL_APIENTRY glVertexAttrib3f(GLuint indx, GLfloat x, GLfloat y, GLfloat z){
-    GET_CTX();
+    GET_CTX_V2();
     ctx->dispatcher().glVertexAttrib3f(indx,x,y,z);
+    if(indx == 0)
+        ctx->setAttribute0value(x, y, z, 1.0);
 }
 
 GL_APICALL void  GL_APIENTRY glVertexAttrib3fv(GLuint indx, const GLfloat* values){
-    GET_CTX();
+    GET_CTX_V2();
     ctx->dispatcher().glVertexAttrib3fv(indx,values);
+    if(indx == 0)
+        ctx->setAttribute0value(values[0], values[1], values[2], 1.0);
 }
 
 GL_APICALL void  GL_APIENTRY glVertexAttrib4f(GLuint indx, GLfloat x, GLfloat y, GLfloat z, GLfloat w){
-    GET_CTX();
+    GET_CTX_V2();
     ctx->dispatcher().glVertexAttrib4f(indx,x,y,z,w);
+    if(indx == 0)
+        ctx->setAttribute0value(x, y, z, w);
 }
 
 GL_APICALL void  GL_APIENTRY glVertexAttrib4fv(GLuint indx, const GLfloat* values){
-    GET_CTX();
+    GET_CTX_V2();
     ctx->dispatcher().glVertexAttrib4fv(indx,values);
+    if(indx == 0)
+        ctx->setAttribute0value(values[0], values[1], values[2], values[3]);
 }
 
 GL_APICALL void  GL_APIENTRY glVertexAttribPointer(GLuint indx, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const GLvoid* ptr){

@@ -9,7 +9,6 @@
 #include <strings.h>
 
 //decleration
-static int findMaxIndex(GLsizei count,GLenum type,const GLvoid* indices);
 static void convertFixedDirectLoop(const char* dataIn,unsigned int strideIn,void* dataOut,unsigned int nBytes,unsigned int strideOut,int attribSize);
 static void convertFixedIndirectLoop(const char* dataIn,unsigned int strideIn,void* dataOut,GLsizei count,GLenum indices_type,const GLvoid* indices,unsigned int strideOut,int attribSize);
 static void convertByteDirectLoop(const char* dataIn,unsigned int strideIn,void* dataOut,unsigned int nBytes,unsigned int strideOut,int attribSize);
@@ -331,7 +330,7 @@ void GLEScontext::convertDirectVBO(GLESConversionArrays& cArrs,GLint first,GLsiz
     cArrs.setArr(data,p->getStride(),GL_FLOAT);
 }
 
-static int findMaxIndex(GLsizei count,GLenum type,const GLvoid* indices) {
+int GLEScontext::findMaxIndex(GLsizei count,GLenum type,const GLvoid* indices) {
     //finding max index
     int max = 0;
     if(type == GL_UNSIGNED_BYTE) {
