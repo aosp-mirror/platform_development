@@ -97,7 +97,7 @@ glGetActiveUniform
 
 #void glGetAttachedShaders(GLuint program, GLsizei maxcount, GLsizei *count, GLuint *shaders)
 glGetAttachedShaders
-	len shaders maxcount
+	len shaders (maxcount*sizeof(GLuint))
 	dir shaders out
 	dir count out
 	len count (sizeof(GLsizei))
