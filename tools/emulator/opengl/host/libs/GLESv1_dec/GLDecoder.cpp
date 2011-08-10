@@ -38,7 +38,7 @@ GLDecoder::~GLDecoder()
 int GLDecoder::initGL(get_proc_func_t getProcFunc, void *getProcFuncData)
 {
     if (getProcFunc == NULL) {
-        char *libname = GLES_LIBNAME;
+        const char *libname = GLES_LIBNAME;
         if (getenv(GLES_LIBNAME_VAR) != NULL) {
             libname = getenv(GLES_LIBNAME_VAR);
         }
