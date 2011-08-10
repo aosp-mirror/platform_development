@@ -27,7 +27,7 @@
 #include <npfunctions.h>
 #include <npruntime.h>
 #include "android_npapi.h"
-#include "ANPOpenGL_npapi.h"
+#include "ANPNativeWindow_npapi.h"
 #include "ANPSurface_npapi.h"
 #include "ANPSystem_npapi.h"
 
