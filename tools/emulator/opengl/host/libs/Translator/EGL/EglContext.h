@@ -32,15 +32,15 @@
 class EglContext;
 typedef  SmartPtr<EglContext> ContextPtr;
 
+class EglDisplay;
+
 class EglContext {
 
 public:
 
-    EglContext(EGLNativeContextType context,ContextPtr shared_context,EglConfig* config,GLEScontext* glesCtx,GLESVersion ver,ObjectNameManager* mngr);
+    EglContext(EglDisplay *dpy, EGLNativeContextType context,ContextPtr shared_context,EglConfig* config,GLEScontext* glesCtx,GLESVersion ver,ObjectNameManager* mngr);
     bool usingSurface(SurfacePtr surface);
     EGLNativeContextType nativeType(){return m_native;};
-    void markForDestruction(){m_destroy = true;}
-    bool destroy(){ return m_destroy;}
     bool getAttrib(EGLint attrib,EGLint* value);
     SurfacePtr read(){ return m_read;};
     SurfacePtr draw(){ return m_draw;};
@@ -57,13 +57,13 @@ public:
 
 private:
     static unsigned int  s_nextContextHndl;
+    EglDisplay          *m_dpy;
     EGLNativeContextType m_native;
     EglConfig*           m_config;
     GLEScontext*         m_glesContext;
     ShareGroupPtr        m_shareGroup;
     SurfacePtr           m_read;
     SurfacePtr           m_draw;
-    bool                 m_destroy;
     GLESVersion          m_version;
     ObjectNameManager    *m_mngr;
     unsigned int         m_hndl;

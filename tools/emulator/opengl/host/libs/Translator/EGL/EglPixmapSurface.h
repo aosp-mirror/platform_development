@@ -20,9 +20,11 @@
 #include <EGL/egl.h>
 #include "EglSurface.h"
 
+class EglDisplay;
+
 class EglPixmapSurface: public EglSurface {
 public:
-    EglPixmapSurface(EGLNativePixmapType pix,EglConfig* config);
+    EglPixmapSurface(EglDisplay *dpy, EGLNativePixmapType pix,EglConfig* config);
     ~EglPixmapSurface();
 
     bool getAttrib(EGLint attrib,EGLint* val);
