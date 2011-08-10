@@ -53,6 +53,13 @@ NameSpace::genName(ObjectLocalName p_localName, bool genGlobal, bool genLocal)
     return localName;
 }
 
+
+unsigned int
+NameSpace::genGlobalName(void)
+{
+    return m_globalNameSpace->genName(m_type);
+}
+
 unsigned int
 NameSpace::getGlobalName(ObjectLocalName p_localName)
 {
@@ -188,6 +195,18 @@ ShareGroup::genName(NamedObjectType p_type, ObjectLocalName p_localName, bool ge
     mutex_unlock(&m_lock);
 
     return localName;
+}
+
+unsigned int
+ShareGroup::genGlobalName(NamedObjectType p_type)
+{
+    if (p_type >= NUM_OBJECT_TYPES) return 0;
+
+    mutex_lock(&m_lock);
+    unsigned int name = m_nameSpace[p_type]->genGlobalName();
+    mutex_unlock(&m_lock);
+
+    return name;
 }
 
 unsigned int
@@ -389,3 +408,4 @@ void *ObjectNameManager::getGlobalContext()
 
     return ret;
 }
+

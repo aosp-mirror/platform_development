@@ -5,6 +5,7 @@
 #include <GLES/glext.h>
 #include <GLcommon/GLESvalidate.h>
 #include <GLcommon/TextureUtils.h>
+#include <GLcommon/FramebufferData.h>
 #include <strings.h>
 
 //decleration
@@ -675,4 +676,18 @@ ObjectLocalName GLEScontext::getDefaultTextureName(GLenum target) {
         break;
     }
     return name;
+}
+
+void GLEScontext::drawValidate(void)
+{
+    if(m_framebuffer == 0)
+        return;
+
+    ObjectDataPtr fbObj = m_shareGroup->getObjectData(FRAMEBUFFER,m_framebuffer);
+    if (fbObj.Ptr() == NULL)
+        return;
+
+    FramebufferData *fbData = (FramebufferData *)fbObj.Ptr();
+
+    fbData->validate(this);
 }
