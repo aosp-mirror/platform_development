@@ -45,11 +45,14 @@ public:
     void setAttachment(GLenum attachment,
                        GLenum target,
                        GLuint name,
-                       ObjectDataPtr obj);
+                       ObjectDataPtr obj,
+                       bool takeOwnership = false);
 
     GLuint getAttachment(GLenum attachment,
                          GLenum *outTarget,
                          ObjectDataPtr *outObj);
+
+    void validate(class GLEScontext* ctx);
 
 private:
     inline int attachmentPointIndex(GLenum attachment);
@@ -58,10 +61,12 @@ private:
 private:
     GLuint m_fbName;
     struct attachPoint {
-        GLenum target;
-        GLuint name;
+        GLenum target; // OGL if owned, GLES otherwise
+        GLuint name; // OGL if owned, GLES otherwise
         ObjectDataPtr obj;
+        bool owned;
     } m_attachPoints[MAX_ATTACH_POINTS+1];
+    bool m_dirty;
 };
 
 #endif

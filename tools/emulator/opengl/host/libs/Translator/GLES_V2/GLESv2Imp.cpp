@@ -317,6 +317,8 @@ GL_APICALL GLenum GL_APIENTRY glCheckFramebufferStatus(GLenum target){
 
 GL_APICALL void  GL_APIENTRY glClear(GLbitfield mask){
     GET_CTX();
+    ctx->drawValidate();
+
     ctx->dispatcher().glClear(mask);
 }
 GL_APICALL void  GL_APIENTRY glClearColor(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha){
@@ -535,11 +537,12 @@ GL_APICALL void  GL_APIENTRY glDisableVertexAttribArray(GLuint index){
     ctx->dispatcher().glDisableVertexAttribArray(index);
 }
 
-
 GL_APICALL void  GL_APIENTRY glDrawArrays(GLenum mode, GLint first, GLsizei count){
     GET_CTX();
     SET_ERROR_IF(count < 0,GL_INVALID_VALUE)
     SET_ERROR_IF(!GLESv2Validate::drawMode(mode),GL_INVALID_ENUM);
+
+    ctx->drawValidate();
 
     GLESConversionArrays tmpArrs;
     ctx->setupArraysPointers(tmpArrs,first,count,0,NULL,true);
@@ -563,6 +566,8 @@ GL_APICALL void  GL_APIENTRY glDrawElements(GLenum mode, GLsizei count, GLenum t
     GET_CTX();
     SET_ERROR_IF(count < 0,GL_INVALID_VALUE)
     SET_ERROR_IF(!(GLESv2Validate::drawMode(mode) && GLESv2Validate::drawType(type)),GL_INVALID_ENUM);
+
+    ctx->drawValidate();
 
     const GLvoid* indices = elementsIndices;
     if(ctx->isBindedBuffer(GL_ELEMENT_ARRAY_BUFFER)) { // if vbo is binded take the indices from the vbo
