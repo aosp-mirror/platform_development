@@ -136,6 +136,11 @@ public:
     virtual ~GLEScontext();
     virtual int getMaxTexUnits() = 0;
 
+    void setRenderbufferBinding(GLuint rb) { m_renderbuffer = rb; }
+    GLuint getRenderbufferBinding() const { return m_renderbuffer; }
+    void setFramebufferBinding(GLuint fb) { m_framebuffer = fb; }
+    GLuint getFramebufferBinding() const { return m_framebuffer; }
+
     static GLDispatch& dispatcher(){return s_glDispatch;};
 
     static int getMaxLights(){return s_glSupport.maxLights;}
@@ -177,6 +182,8 @@ private:
     textureUnitState*     m_texState;
     unsigned int          m_arrayBuffer;
     unsigned int          m_elementBuffer;
+    GLuint                m_renderbuffer;
+    GLuint                m_framebuffer;
 };
 
 #endif

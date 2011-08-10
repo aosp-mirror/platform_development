@@ -31,3 +31,12 @@ typedef double      GLdouble;   /* double precision float */
 #define GL_HALF_FLOAT         0x140B
 #define GL_VERTEX_PROGRAM_POINT_SIZE 0x8642
 #define GL_POINT_SPRITE       0x8861
+#define GL_FRAMEBUFFER_EXT                0x8D40
+#define GL_TEXTURE_WIDTH			0x1000
+#define GL_TEXTURE_HEIGHT			0x1001
+#define GL_TEXTURE_RED_SIZE			0x805C
+#define GL_TEXTURE_GREEN_SIZE			0x805D
+#define GL_TEXTURE_BLUE_SIZE			0x805E
+#define GL_TEXTURE_ALPHA_SIZE			0x805F
+#define GL_TEXTURE_DEPTH_SIZE             0x884A
+#define GL_TEXTURE_INTERNAL_FORMAT		0x1003

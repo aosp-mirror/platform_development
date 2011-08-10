@@ -5,6 +5,7 @@
 #include <GLES/glext.h>
 #include <GLcommon/GLESvalidate.h>
 #include <GLcommon/TextureUtils.h>
+#include <strings.h>
 
 //decleration
 static int findMaxIndex(GLsizei count,GLenum type,const GLvoid* indices);
@@ -139,7 +140,11 @@ GLEScontext::GLEScontext():
                            m_glError(GL_NO_ERROR)  ,
                            m_texState(0)          ,
                            m_arrayBuffer(0)        ,
-                           m_elementBuffer(0){};
+                           m_elementBuffer(0),
+                           m_renderbuffer(0),
+                           m_framebuffer(0)
+{
+};
 
 GLenum GLEScontext::getGLerror() {
     return m_glError;
