@@ -1153,28 +1153,24 @@ GL_APICALL void  GL_APIENTRY glGetShaderPrecisionFormat(GLenum shadertype, GLenu
     GET_CTX_V2();
     SET_ERROR_IF(!(GLESv2Validate::shaderType(shadertype) && GLESv2Validate::precisionType(precisiontype)),GL_INVALID_ENUM);
 
-    if(ctx->dispatcher().glGetShaderPrecisionFormat != NULL)
-    {
-        ctx->dispatcher().glGetShaderPrecisionFormat(shadertype,precisiontype,range,precision);
-    }
-    else
-    {
-        switch(precisiontype)
-        {
-            case GL_LOW_INT:
-            case GL_MEDIUM_INT:
-            case GL_HIGH_INT:
-                range[0] = range[1] = 16;
-                *precision = 0;
-            break;
+    switch (precisiontype) {
+    case GL_LOW_INT:
+    case GL_MEDIUM_INT:
+    case GL_HIGH_INT:
+        range[0] = range[1] = 16;
+        *precision = 0;
+        break;
 
-            case GL_LOW_FLOAT:
-            case GL_MEDIUM_FLOAT:
-            case GL_HIGH_FLOAT:
-                range[0] = range[1] = 127;
-                *precision = 24;
-            break;
+    case GL_LOW_FLOAT:
+    case GL_MEDIUM_FLOAT:
+    case GL_HIGH_FLOAT:
+        if(ctx->dispatcher().glGetShaderPrecisionFormat != NULL) {
+            ctx->dispatcher().glGetShaderPrecisionFormat(shadertype,precisiontype,range,precision);
+        } else {
+            range[0] = range[1] = 127;
+            *precision = 24;
         }
+        break;
     }
 }
 
