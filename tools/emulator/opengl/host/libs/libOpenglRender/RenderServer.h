@@ -25,14 +25,14 @@ public:
     static RenderServer *create(int port);
     virtual int Main();
 
-    void flagNeedExit() { m_exit = true; }
+    bool isExiting() const { return m_exiting; }
 
 private:
     RenderServer();
 
 private:
     TcpStream *m_listenSock;
-    bool m_exit;
+    bool m_exiting;
 };
 
 #endif

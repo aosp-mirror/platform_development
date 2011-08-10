@@ -160,6 +160,16 @@ int main(int argc, char *argv[])
         GetMessage(&msg, hWnd, 0, 0);
         TranslateMessage(&msg);
         DispatchMessage(&msg);
+
+        //
+        // if server thread has exiting
+        // wait for it to exit and done.
+        //
+        if (server->isExiting()) {
+            int exitStatus;
+            server->wait(&exitStatus);
+            done = true;
+        }
     }
 #endif
 

@@ -88,4 +88,13 @@ private:
     size_t m_free;
 };
 
+//
+// When a client opens a connection to the renderer, it should
+// send unsigned int value indicating the "clientFlags".
+// The following are the bitmask of the clientFlags.
+// currently only one bit is used which flags the server
+// it should exit.
+//
+#define IOSTREAM_CLIENT_EXIT_SERVER      1
+
 #endif
