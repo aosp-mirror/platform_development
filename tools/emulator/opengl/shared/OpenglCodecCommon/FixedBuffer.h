@@ -32,7 +32,7 @@ public:
     void * alloc(size_t size) {
         if (m_bufferLen >= size) return (void *)(m_buffer);
 
-        if (m_buffer != NULL) delete m_buffer;
+        if (m_buffer != NULL) delete[] m_buffer;
 
         m_bufferLen = size;
         m_buffer = new unsigned char[m_bufferLen];

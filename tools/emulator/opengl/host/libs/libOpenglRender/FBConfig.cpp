@@ -261,7 +261,7 @@ int FBConfig::chooseConfig(FrameBuffer *fb, EGLint * attribs, uint32_t * configs
 
     s_egl.eglChooseConfig(dpy, newAttribs, matchedConfigs, nConfigs, &nConfigs);
 
-    delete newAttribs;
+    delete[] newAttribs;
 
     //
     // From all matchedConfigs we need only config_size FBConfigs, so we intersect both lists compating the CONFIG_ID attribute
@@ -284,7 +284,7 @@ int FBConfig::chooseConfig(FrameBuffer *fb, EGLint * attribs, uint32_t * configs
         }
     }
 
-    delete matchedConfigs;
+    delete[] matchedConfigs;
 
     return nVerifiedCfgs;
 }
@@ -308,6 +308,6 @@ FBConfig::FBConfig(EGLDisplay p_eglDpy, EGLConfig p_eglCfg)
 FBConfig::~FBConfig()
 {
     if (m_attribValues) {
-        delete m_attribValues;
+        delete[] m_attribValues;
     }
 }
