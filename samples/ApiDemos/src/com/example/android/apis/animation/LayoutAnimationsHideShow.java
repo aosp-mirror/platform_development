@@ -44,6 +44,7 @@ public class LayoutAnimationsHideShow extends Activity {
 
     private int numButtons = 1;
     ViewGroup container = null;
+    private LayoutTransition mTransitioner;
 
     /** Called when the activity is first created. */
     @Override
@@ -69,8 +70,8 @@ public class LayoutAnimationsHideShow extends Activity {
                 }
             });
         }
-        final LayoutTransition transitioner = new LayoutTransition();
-        container.setLayoutTransition(transitioner);
+
+        resetTransition();
 
         ViewGroup parent = (ViewGroup) findViewById(R.id.parent);
         parent.addView(container);
@@ -90,25 +91,25 @@ public class LayoutAnimationsHideShow extends Activity {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 long duration;
                 if (isChecked) {
-                    transitioner.setStagger(LayoutTransition.CHANGE_APPEARING, 30);
-                    transitioner.setStagger(LayoutTransition.CHANGE_DISAPPEARING, 30);
-                    setupAnimations(transitioner);
+                    mTransitioner.setStagger(LayoutTransition.CHANGE_APPEARING, 30);
+                    mTransitioner.setStagger(LayoutTransition.CHANGE_DISAPPEARING, 30);
+                    setupCustomAnimations();
                     duration = 500;
                 } else {
-                    transitioner.setStagger(LayoutTransition.CHANGE_APPEARING, 0);
-                    transitioner.setStagger(LayoutTransition.CHANGE_DISAPPEARING, 0);
-                    transitioner.setAnimator(LayoutTransition.APPEARING, null);
-                    transitioner.setAnimator(LayoutTransition.DISAPPEARING, null);
-                    transitioner.setAnimator(LayoutTransition.CHANGE_APPEARING, null);
-                    transitioner.setAnimator(LayoutTransition.CHANGE_DISAPPEARING, null);
+                    resetTransition();
                     duration = 300;
                 }
-                transitioner.setDuration(duration);
+                mTransitioner.setDuration(duration);
             }
         });
     }
 
-    private void setupAnimations(LayoutTransition transition) {
+    private void resetTransition() {
+        mTransitioner = new LayoutTransition();
+        container.setLayoutTransition(mTransitioner);
+    }
+
+    private void setupCustomAnimations() {
         // Changing while Adding
         PropertyValuesHolder pvhLeft =
                 PropertyValuesHolder.ofInt("left", 0, 1);
@@ -124,8 +125,8 @@ public class LayoutAnimationsHideShow extends Activity {
                 PropertyValuesHolder.ofFloat("scaleY", 1f, 0f, 1f);
         final ObjectAnimator changeIn = ObjectAnimator.ofPropertyValuesHolder(
                         this, pvhLeft, pvhTop, pvhRight, pvhBottom, pvhScaleX, pvhScaleY).
-                setDuration(transition.getDuration(LayoutTransition.CHANGE_APPEARING));
-        transition.setAnimator(LayoutTransition.CHANGE_APPEARING, changeIn);
+                setDuration(mTransitioner.getDuration(LayoutTransition.CHANGE_APPEARING));
+        mTransitioner.setAnimator(LayoutTransition.CHANGE_APPEARING, changeIn);
         changeIn.addListener(new AnimatorListenerAdapter() {
             public void onAnimationEnd(Animator anim) {
                 View view = (View) ((ObjectAnimator) anim).getTarget();
@@ -142,8 +143,8 @@ public class LayoutAnimationsHideShow extends Activity {
                 PropertyValuesHolder.ofKeyframe("rotation", kf0, kf1, kf2);
         final ObjectAnimator changeOut = ObjectAnimator.ofPropertyValuesHolder(
                         this, pvhLeft, pvhTop, pvhRight, pvhBottom, pvhRotation).
-                setDuration(transition.getDuration(LayoutTransition.CHANGE_DISAPPEARING));
-        transition.setAnimator(LayoutTransition.CHANGE_DISAPPEARING, changeOut);
+                setDuration(mTransitioner.getDuration(LayoutTransition.CHANGE_DISAPPEARING));
+        mTransitioner.setAnimator(LayoutTransition.CHANGE_DISAPPEARING, changeOut);
         changeOut.addListener(new AnimatorListenerAdapter() {
             public void onAnimationEnd(Animator anim) {
                 View view = (View) ((ObjectAnimator) anim).getTarget();
@@ -153,8 +154,8 @@ public class LayoutAnimationsHideShow extends Activity {
 
         // Adding
         ObjectAnimator animIn = ObjectAnimator.ofFloat(null, "rotationY", 90f, 0f).
-                setDuration(transition.getDuration(LayoutTransition.APPEARING));
-        transition.setAnimator(LayoutTransition.APPEARING, animIn);
+                setDuration(mTransitioner.getDuration(LayoutTransition.APPEARING));
+        mTransitioner.setAnimator(LayoutTransition.APPEARING, animIn);
         animIn.addListener(new AnimatorListenerAdapter() {
             public void onAnimationEnd(Animator anim) {
                 View view = (View) ((ObjectAnimator) anim).getTarget();
@@ -164,9 +165,9 @@ public class LayoutAnimationsHideShow extends Activity {
 
         // Removing
         ObjectAnimator animOut = ObjectAnimator.ofFloat(null, "rotationX", 0f, 90f).
-                setDuration(transition.getDuration(LayoutTransition.DISAPPEARING));
-        transition.setAnimator(LayoutTransition.DISAPPEARING, animOut);
-        animIn.addListener(new AnimatorListenerAdapter() {
+                setDuration(mTransitioner.getDuration(LayoutTransition.DISAPPEARING));
+        mTransitioner.setAnimator(LayoutTransition.DISAPPEARING, animOut);
+        animOut.addListener(new AnimatorListenerAdapter() {
             public void onAnimationEnd(Animator anim) {
                 View view = (View) ((ObjectAnimator) anim).getTarget();
                 view.setRotationX(0f);
