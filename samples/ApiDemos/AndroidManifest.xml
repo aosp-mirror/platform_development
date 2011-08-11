@@ -984,6 +984,18 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".content.InstallApk" android:label="@string/activity_install_apk"
+                android:enabled="@bool/atLeastHoneycombMR2">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <provider android:name=".content.FileProvider"
+                  android:authorities="com.example.android.apis.content.FileProvider"
+                  android:enabled="@bool/atLeastHoneycombMR2" />
+
         <!-- ************************************* -->
         <!--     OS PACKAGE SAMPLES                -->
         <!-- ************************************* -->
