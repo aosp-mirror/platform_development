@@ -39,12 +39,9 @@ import java.util.List;
  * This demonstrates the usage of SearchView in an ActionBar as a menu item.
  * It sets a SearchableInfo on the SearchView for suggestions and submitting queries to.
  */
-public class SearchViewActionBar extends Activity implements SearchView.OnQueryTextListener,
-        SearchView.OnCloseListener, Button.OnClickListener {
+public class SearchViewActionBar extends Activity implements SearchView.OnQueryTextListener {
 
     private SearchView mSearchView;
-    private Button mOpenButton;
-    private Button mCloseButton;
     private TextView mStatusView;
 
     @Override
@@ -55,10 +52,6 @@ public class SearchViewActionBar extends Activity implements SearchView.OnQueryT
         setContentView(R.layout.searchview_actionbar);
 
         mStatusView = (TextView) findViewById(R.id.status_text);
-        mOpenButton = (Button) findViewById(R.id.open_button);
-        mCloseButton = (Button) findViewById(R.id.close_button);
-        mOpenButton.setOnClickListener(this);
-        mCloseButton.setOnClickListener(this);
     }
 
     @Override
@@ -99,7 +92,6 @@ public class SearchViewActionBar extends Activity implements SearchView.OnQueryT
         }
 
         mSearchView.setOnQueryTextListener(this);
-        mSearchView.setOnCloseListener(this);
     }
 
     public boolean onQueryTextChange(String newText) {
@@ -115,14 +107,6 @@ public class SearchViewActionBar extends Activity implements SearchView.OnQueryT
     public boolean onClose() {
         mStatusView.setText("Closed!");
         return false;
-    }
-
-    public void onClick(View view) {
-        if (view == mCloseButton) {
-            mSearchView.setIconified(true);
-        } else if (view == mOpenButton) {
-            mSearchView.setIconified(false);
-        }
     }
 
     protected boolean isAlwaysExpanded() {
