@@ -32,9 +32,13 @@ public:
     void setLinkStatus(GLint status);
     GLint getLinkStatus();
 
+    void setInfoLog(GLchar *log);
+    GLchar* getInfoLog();
+
 private:
     GLuint AttachedVertexShader;
     GLuint AttachedFragmentShader;
     GLint  LinkStatus;
+    GLchar* infoLog;
 };
 #endif

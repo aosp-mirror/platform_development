@@ -346,11 +346,19 @@ GL_APICALL void  GL_APIENTRY glColorMask(GLboolean red, GLboolean green, GLboole
 GL_APICALL void  GL_APIENTRY glCompileShader(GLuint shader){
     GET_CTX();
     if(ctx->shareGroup().Ptr()) {
-       const GLuint globalShaderName = ctx->shareGroup()->getGlobalName(SHADER,shader);
+        const GLuint globalShaderName = ctx->shareGroup()->getGlobalName(SHADER,shader);
         SET_ERROR_IF(globalShaderName==0, GL_INVALID_VALUE);
         ObjectDataPtr objData = ctx->shareGroup()->getObjectData(SHADER,shader);
         SET_ERROR_IF(objData.Ptr()->getDataType()!= SHADER_DATA,GL_INVALID_OPERATION);
-       ctx->dispatcher().glCompileShader(globalShaderName);
+        ShaderParser* sp = (ShaderParser*)objData.Ptr();
+        ctx->dispatcher().glCompileShader(globalShaderName);
+
+        GLsizei infoLogLength=0;
+        GLchar* infoLog;
+        ctx->dispatcher().glGetShaderiv(globalShaderName,GL_INFO_LOG_LENGTH,&infoLogLength);
+        infoLog = new GLchar[infoLogLength+1];
+        ctx->dispatcher().glGetShaderInfoLog(globalShaderName,infoLogLength,NULL,infoLog);
+        sp->setInfoLog(infoLog);
     }
 }
 
@@ -1151,6 +1159,16 @@ GL_APICALL void  GL_APIENTRY glGetProgramiv(GLuint program, GLenum pname, GLint*
                     params[0] = GL_FALSE;
             }
             break;
+        case GL_INFO_LOG_LENGTH:
+            {
+                ObjectDataPtr objData = ctx->shareGroup()->getObjectData(SHADER,program);
+                SET_ERROR_IF(!objData.Ptr() ,GL_INVALID_OPERATION);
+                SET_ERROR_IF(objData.Ptr()->getDataType()!=PROGRAM_DATA,GL_INVALID_OPERATION);
+                ProgramData* programData = (ProgramData*)objData.Ptr();
+                GLint logLength = strlen(programData->getInfoLog());
+                params[0] = (logLength>0) ? logLength+1 : 0;
+            }
+            break;   
         default:
             ctx->dispatcher().glGetProgramiv(globalProgramName,pname,params);
         }
@@ -1162,7 +1180,30 @@ GL_APICALL void  GL_APIENTRY glGetProgramInfoLog(GLuint program, GLsizei bufsize
     if(ctx->shareGroup().Ptr()) {
         const GLuint globalProgramName = ctx->shareGroup()->getGlobalName(SHADER,program);
         SET_ERROR_IF(globalProgramName==0, GL_INVALID_VALUE);
-        ctx->dispatcher().glGetProgramInfoLog(globalProgramName,bufsize,length,infolog);
+        ObjectDataPtr objData = ctx->shareGroup()->getObjectData(SHADER,program);
+        SET_ERROR_IF(!objData.Ptr() ,GL_INVALID_OPERATION);
+        SET_ERROR_IF(objData.Ptr()->getDataType()!=PROGRAM_DATA,GL_INVALID_OPERATION);
+        ProgramData* programData = (ProgramData*)objData.Ptr();
+
+        if (bufsize==0) {
+            if (length) {
+                *length = 0;
+            }
+            return;
+        }
+
+        GLsizei logLength;
+        logLength = strlen(programData->getInfoLog());
+        
+        GLsizei returnLength=0;
+        if (infolog) {
+            returnLength = bufsize-1 < logLength ? bufsize-1 : logLength;
+            strncpy(infolog,programData->getInfoLog(),returnLength+1);
+            infolog[returnLength] = '\0';
+        }
+        if (length) {
+            *length = returnLength;
+        }
     }
 }
 
@@ -1171,16 +1212,53 @@ GL_APICALL void  GL_APIENTRY glGetShaderiv(GLuint shader, GLenum pname, GLint* p
     if(ctx->shareGroup().Ptr()) {
         const GLuint globalShaderName = ctx->shareGroup()->getGlobalName(SHADER,shader);
         SET_ERROR_IF(globalShaderName==0, GL_INVALID_VALUE);
-        ctx->dispatcher().glGetShaderiv(globalShaderName,pname,params);
+        switch(pname) {
+        case GL_INFO_LOG_LENGTH:
+            {
+                ObjectDataPtr objData = ctx->shareGroup()->getObjectData(SHADER,shader);
+                SET_ERROR_IF(!objData.Ptr() ,GL_INVALID_OPERATION);
+                SET_ERROR_IF(objData.Ptr()->getDataType()!=SHADER_DATA,GL_INVALID_OPERATION);
+                ShaderParser* sp = (ShaderParser*)objData.Ptr();
+                GLint logLength = strlen(sp->getInfoLog());
+                params[0] = (logLength>0) ? logLength+1 : 0;
+            }
+            break;
+        default:
+            ctx->dispatcher().glGetShaderiv(globalShaderName,pname,params);
+        }
     }
 }
+
 
 GL_APICALL void  GL_APIENTRY glGetShaderInfoLog(GLuint shader, GLsizei bufsize, GLsizei* length, GLchar* infolog){
     GET_CTX();
     if(ctx->shareGroup().Ptr()) {
         const GLuint globalShaderName = ctx->shareGroup()->getGlobalName(SHADER,shader);
         SET_ERROR_IF(globalShaderName==0, GL_INVALID_VALUE);
-        ctx->dispatcher().glGetShaderInfoLog(globalShaderName,bufsize,length,infolog);
+        ObjectDataPtr objData = ctx->shareGroup()->getObjectData(SHADER,shader);
+        SET_ERROR_IF(!objData.Ptr() ,GL_INVALID_OPERATION);
+        SET_ERROR_IF(objData.Ptr()->getDataType()!=SHADER_DATA,GL_INVALID_OPERATION);
+        ShaderParser* sp = (ShaderParser*)objData.Ptr();
+
+        if (bufsize==0) {
+            if (length) {
+                *length = 0;
+            }
+            return;
+        }
+
+        GLsizei logLength;
+        logLength = strlen(sp->getInfoLog());
+        
+        GLsizei returnLength=0;
+        if (infolog) {
+            returnLength = bufsize-1 <logLength ? bufsize-1 : logLength;
+            strncpy(infolog,sp->getInfoLog(),returnLength+1);
+            infolog[returnLength] = '\0';
+        }
+        if (length) {
+            *length = returnLength;
+        }
     }
 }
 
@@ -1501,6 +1579,13 @@ GL_APICALL void  GL_APIENTRY glLinkProgram(GLuint program){
             }
         }
         programData->setLinkStatus(linkStatus);
+        
+        GLsizei infoLogLength=0;
+        GLchar* infoLog;
+        ctx->dispatcher().glGetProgramiv(globalProgramName,GL_INFO_LOG_LENGTH,&infoLogLength);
+        infoLog = new GLchar[infoLogLength+1];
+        ctx->dispatcher().glGetProgramInfoLog(globalProgramName,infoLogLength,NULL,infoLog);
+        programData->setInfoLog(infoLog);
     }
 }
 
@@ -1834,7 +1919,15 @@ GL_APICALL void  GL_APIENTRY glValidateProgram(GLuint program){
         SET_ERROR_IF(globalProgramName==0, GL_INVALID_VALUE);
         ObjectDataPtr objData = ctx->shareGroup()->getObjectData(SHADER,program);
         SET_ERROR_IF(objData.Ptr()->getDataType()!=PROGRAM_DATA,GL_INVALID_OPERATION);
+        ProgramData* programData = (ProgramData*)objData.Ptr();
         ctx->dispatcher().glValidateProgram(globalProgramName);
+
+        GLsizei infoLogLength=0;
+        GLchar* infoLog;
+        ctx->dispatcher().glGetProgramiv(globalProgramName,GL_INFO_LOG_LENGTH,&infoLogLength);
+        infoLog = new GLchar[infoLogLength+1];
+        ctx->dispatcher().glGetProgramInfoLog(globalProgramName,infoLogLength,NULL,infoLog);
+        programData->setInfoLog(infoLog);
     }
 }
 
