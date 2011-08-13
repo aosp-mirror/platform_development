@@ -120,10 +120,16 @@ int main(int argc, char *argv[])
     //
     // initialize Framebuffer
     //
-    bool inited = FrameBuffer::initialize(windowId,
-                                          winX, winY, winWidth, winHeight);
+    bool inited = FrameBuffer::initialize(winWidth, winHeight);
     if (!inited) {
         fprintf(stderr,"Failed to initialize Framebuffer\n");
+        return -1;
+    }
+
+    inited = FrameBuffer::setupSubWindow(windowId,
+                                         winX, winY, winWidth, winHeight, 0.0);
+    if (!inited) {
+        fprintf(stderr,"Failed to create subwindow Framebuffer\n");
         return -1;
     }
 

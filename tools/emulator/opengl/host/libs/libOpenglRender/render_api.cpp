@@ -27,13 +27,19 @@ static int s_renderPort = 0;
 static IOStream *createRenderThread(int p_stream_buffer_size,
                                     unsigned int clientFlags);
 
-#ifdef __APPLE__
+//
+// For now run the renderer as a thread inside the calling
+// process instead as running it in a separate process for all
+// platforms.
+// at the future we want it to run as a seperate process except for
+// Mac OS X since it is imposibble on this platform to make one process
+// render to a window created by another process.
+//
+//#ifdef __APPLE__
 #define  RENDER_API_USE_THREAD
-#endif
+//#endif
 
-bool initOpenGLRenderer(FBNativeWindowType window,
-                        int x, int y, int width, int height,
-                        int portNum)
+bool initOpenGLRenderer(int width, int height, int portNum)
 {
 
     //
@@ -50,7 +56,7 @@ bool initOpenGLRenderer(FBNativeWindowType window,
     // initialize the renderer and listen to connections
     // on a thread in the current process.
     //
-    bool inited = FrameBuffer::initialize(window, x, y, width, height);
+    bool inited = FrameBuffer::initialize(width, height);
     if (!inited) {
         return false;
     }
@@ -167,6 +173,71 @@ bool stopOpenGLRenderer()
     }
 
     return ret;
+}
+
+bool createOpenGLSubwindow(FBNativeWindowType window,
+                           int x, int y, int width, int height, float zRot)
+{
+    if (s_renderThread) {
+        return FrameBuffer::setupSubWindow(window,x,y,width,height, zRot);
+    }
+    else {
+        //
+        // XXX: should be implemented by sending the renderer process
+        //      a request
+        ERR("%s not implemented for separate renderer process !!!\n",
+            __FUNCTION__);
+    }
+    return false;
+}
+
+bool destroyOpenGLSubwindow()
+{
+    if (s_renderThread) {
+        return FrameBuffer::removeSubWindow();
+    }
+    else {
+        //
+        // XXX: should be implemented by sending the renderer process
+        //      a request
+        ERR("%s not implemented for separate renderer process !!!\n",
+                __FUNCTION__);
+        return false;
+    }
+}
+
+void setOpenGLDisplayRotation(float zRot)
+{
+    if (s_renderThread) {
+        FrameBuffer *fb = FrameBuffer::getFB();
+        if (fb) {
+            fb->setDisplayRotation(zRot);
+        }
+    }
+    else {
+        //
+        // XXX: should be implemented by sending the renderer process
+        //      a request
+        ERR("%s not implemented for separate renderer process !!!\n",
+                __FUNCTION__);
+    }
+}
+
+void repaintOpenGLDisplay()
+{
+    if (s_renderThread) {
+        FrameBuffer *fb = FrameBuffer::getFB();
+        if (fb) {
+            fb->repost();
+        }
+    }
+    else {
+        //
+        // XXX: should be implemented by sending the renderer process
+        //      a request
+        ERR("%s not implemented for separate renderer process !!!\n",
+                __FUNCTION__);
+    }
 }
 
 IOStream *createRenderThread(int p_stream_buffer_size, unsigned int clientFlags)
