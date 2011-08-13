@@ -18,6 +18,50 @@
 #include <OpenGL/OpenGL.h>
 #include "MacPixelFormatsAttribs.h"
 
+//
+// EmuGLContext inherit from NSOpenGLContext
+// and adds binding state for the context to know
+// if it was last bounded to a pbuffer or a window.
+// This is because after the context was bounded to
+// a Pbuffer, before we bind it to a window we must
+// release it form the pbuffer by calling the
+// clearDrawable method. We do not want to call clearDrawable
+// more than really needed since when it is called at a time
+// that a window is bounded to the context it will clear the
+// window content causing flickering effect.
+// Thererfore we call clearDrawable only when we bind the context
+// to a window and it was previously bound to a Pbuffer.
+//
+@interface EmuGLContext : NSOpenGLContext {
+    @private
+        int boundToPbuffer;
+        int boundToWin;
+}
+
+- (id) initWithFormat:(NSOpenGLPixelFormat *)pixelFormat shareContext:(NSOpenGLContext *)share;
+- (void) preBind:(int)forPbuffer;
+@end
+
+@implementation EmuGLContext
+- (id) initWithFormat:(NSOpenGLPixelFormat *)pixelFormat shareContext:(NSOpenGLContext *)share
+{
+    self = [super initWithFormat:pixelFormat shareContext:share];
+    if (self != nil) {
+        boundToPbuffer = 0;
+        boundToWin = 0;
+    }
+    return self;
+}
+
+- (void) preBind:(int)forPbuffer
+{
+    if ((!forPbuffer && boundToPbuffer)) {
+        [self clearDrawable]; 
+    }
+    boundToPbuffer = forPbuffer;
+    boundToWin = !boundToPbuffer;
+}
+@end
 
 int getNumPixelFormats(){
     int size;
@@ -38,17 +82,17 @@ void getPixelFormatAttrib(void* pixelFormat,int attrib,int* val){
 
 void* nsCreateContext(void* format,void* share){
     NSOpenGLPixelFormat* frmt = (NSOpenGLPixelFormat*)format;
-    return [[NSOpenGLContext alloc] initWithFormat:frmt shareContext:share];
+    return [[EmuGLContext alloc] initWithFormat:frmt shareContext:share];
 }
 
 void  nsPBufferMakeCurrent(void* context,void* nativePBuffer,int level){
-    NSOpenGLContext* ctx = (NSOpenGLContext *)context;
+    EmuGLContext* ctx = (EmuGLContext *)context;
     NSOpenGLPixelBuffer* pbuff = (NSOpenGLPixelBuffer *)nativePBuffer;
     if(ctx == nil){
         [NSOpenGLContext clearCurrentContext];
     } else {
         if(pbuff != nil){
-            [ctx clearDrawable];
+            [ctx preBind:1];
             [ctx setPixelBuffer:pbuff cubeMapFace:0 mipMapLevel:level currentVirtualScreen:0];
             [ctx makeCurrentContext];
         }
@@ -56,11 +100,12 @@ void  nsPBufferMakeCurrent(void* context,void* nativePBuffer,int level){
 }
 
 void nsWindowMakeCurrent(void* context,void* nativeWin){
-    NSOpenGLContext* ctx = (NSOpenGLContext *)context;
+    EmuGLContext* ctx = (EmuGLContext *)context;
     NSView* win = (NSView *)nativeWin;
     if(ctx == nil){
         [NSOpenGLContext clearCurrentContext];
     } else if (win != nil) {
+        [ctx preBind:0];
         [ctx setView: win];
         [ctx makeCurrentContext];
     }
@@ -82,7 +127,7 @@ void nsSwapInterval(int *interval){
 
 
 void nsDestroyContext(void* context){
-    NSOpenGLContext *ctx = (NSOpenGLContext*)context;
+    EmuGLContext *ctx = (EmuGLContext*)context;
     if(ctx != nil){
         [ctx release];
     }
