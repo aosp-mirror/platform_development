@@ -16,6 +16,9 @@ public:
     GLenum         getType();
     ~ShaderParser();
 
+    void setInfoLog(GLchar * infoLog);
+    GLchar* getInfoLog();
+
 private:
     void parseOriginalSrc();
     void parseGLSLversion();
@@ -28,5 +31,6 @@ private:
     std::string m_src;
     std::string m_parsedSrc;
     GLchar*     m_parsedLines;
+    GLchar*     m_infoLog;
 };
 #endif
