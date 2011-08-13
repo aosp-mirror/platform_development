@@ -33,6 +33,7 @@
 
 #ifdef _WIN32
 #  define xxWIN32_LEAN_AND_MEAN
+#  define _WIN32_WINNT 0x501
 #  include <windows.h>
 #  include <winsock2.h>
 #  include <ws2tcpip.h>
@@ -171,9 +172,7 @@ _errno_str(void)
     }
 
     if (result == NULL) {
-        result = tempstr_format(
-                    "Unkown socket error (Winsock=0x%08x) errno=%d: %s",
-                    winsock_error, errno, strerror(errno));
+        result = "Unknown socket error";
     }
     return result;
 }
@@ -1227,25 +1226,6 @@ int socket_init(void)
 
 #ifdef _WIN32
 
-static void
-socket_close_handler( void*  _fd )
-{
-    int   fd = (int)_fd;
-    int   ret;
-    char  buff[64];
-
-    /* we want to drain the read side of the socket before closing it */
-    do {
-        ret = recv( fd, buff, sizeof(buff), 0 );
-    } while (ret < 0 && WSAGetLastError() == WSAEINTR);
-
-    if (ret < 0 && WSAGetLastError() == EWOULDBLOCK)
-        return;
-
-    qemu_set_fd_handler( fd, NULL, NULL, NULL );
-    closesocket( fd );
-}
-
 void
 socket_close( int  fd )
 {
@@ -1253,7 +1233,8 @@ socket_close( int  fd )
 
     shutdown( fd, SD_BOTH );
     /* we want to drain the socket before closing it */
-    qemu_set_fd_handler( fd, socket_close_handler, NULL, (void*)fd );
+    //qemu_set_fd_handler( fd, socket_close_handler, NULL, (void*)fd );
+    closesocket(fd);
 
     errno = old_errno;
 }

@@ -164,4 +164,3 @@ static int convert_keysym(int sym)
     }
     return sym;
 }
-
