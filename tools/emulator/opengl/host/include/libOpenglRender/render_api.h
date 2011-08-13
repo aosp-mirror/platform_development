@@ -24,18 +24,51 @@ extern "C" {
 
 //
 // initOpenGLRenderer - initialize the OpenGL renderer process.
-//     window is the native window to be used as the framebuffer.
-//     x,y,width,height are the dimensions of the rendering subwindow.
 //     portNum is the tcp port number the renderer is listening to.
+//     width and height are the framebuffer dimensions that will be
+//     reported to the guest display driver.
 //
-// returns true if renderer has been starter successfully;
+// returns true if renderer has been started successfully;
 //
 // This function is *NOT* thread safe and should be called first
 // to initialize the renderer.
 //
-bool initOpenGLRenderer(FBNativeWindowType window,
-                        int x, int y, int width, int height,
-                        int portNum);
+bool initOpenGLRenderer(int width, int height, int portNum);
+
+
+//
+// createOpenGLSubwindow -
+//     Create a native subwindow which is a child of 'window'
+//     to be used for framebuffer display.
+//     Framebuffer will not get displayed if a subwindow is not
+//     created.
+//     x,y,width,height are the dimensions of the rendering subwindow.
+//     zRot is the rotation to apply on the framebuffer display image.
+//
+bool createOpenGLSubwindow(FBNativeWindowType window,
+                           int x, int y, int width, int height, float zRot);
+
+//
+// destroyOpenGLSubwindow -
+//   destroys the created native subwindow. Once destroyed,
+//   Framebuffer content will not be visible until a new
+//   subwindow will be created.
+//
+bool destroyOpenGLSubwindow();
+
+//
+// setOpenGLDisplatRotation -
+//    set the framebuffer display image rotation in units
+//    of degrees around the z axis
+//
+void setOpenGLDisplayRotation(float zRot);
+
+//
+// repaintOpenGLDisplay -
+//    causes the OpenGL subwindow to get repainted with the
+//    latest framebuffer content.
+//
+void repaintOpenGLDisplay();
 
 //
 // stopOpenGLRenderer - stops the OpenGL renderer process.
