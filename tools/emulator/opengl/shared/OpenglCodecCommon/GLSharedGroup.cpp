@@ -45,19 +45,30 @@ void ProgramData::setIndexInfo(GLuint index, GLint base, GLint size, GLenum type
     m_Indexes[index].base = base;
     m_Indexes[index].size = size;
     m_Indexes[index].type = type;
+    if (index > 0) {
+        m_Indexes[index].appBase = m_Indexes[index-1].appBase +
+                                   m_Indexes[index-1].size;
+    }
+    else {
+        m_Indexes[index].appBase = 0;
+    }
+    m_Indexes[index].hostLocsPerElement = 1;
 }
 
 GLuint ProgramData::getIndexForLocation(GLint location)
 {
-    GLuint i=0;
-    for (i=0;i<m_numIndexes;++i)
+    GLuint index = m_numIndexes;
+    GLint minDist = -1;
+    for (GLuint i=0;i<m_numIndexes;++i)
     {
-        GLint low = m_Indexes[i].base;;
-        GLint high = low + m_Indexes[i].size;
-        if (location >= low && location < high)
-            break;
+        GLint dist = location - m_Indexes[i].base;
+        if (dist >= 0 && 
+            (minDist < 0 || dist < minDist)) {
+            index = i;
+            minDist = dist;
+        }
     }
-    return i;
+    return index;
 }
 
 GLenum ProgramData::getTypeForLocation(GLint location)
@@ -72,24 +83,44 @@ GLenum ProgramData::getTypeForLocation(GLint location)
 void ProgramData::setupLocationShiftWAR()
 {
     m_locShiftWAR = false;
-    for (int i=0; i<m_numIndexes; i++) {
+    for (GLuint i=0; i<m_numIndexes; i++) {
         if (0 != (m_Indexes[i].base & 0xffff)) {
             return;
         }
     }
-    m_locShiftWAR = true;
+    // if we have one uniform at location 0, we do not need the WAR.
+    if (m_numIndexes > 1) {
+        m_locShiftWAR = true;
+    }
 }
 
-GLint ProgramData::locationWARHostToApp(GLint hostLoc)
+GLint ProgramData::locationWARHostToApp(GLint hostLoc, GLint arrIndex)
 {
-    if (m_locShiftWAR && hostLoc>0) return hostLoc>>16;
-    else return hostLoc;
+    if (!m_locShiftWAR) return hostLoc;
+
+    GLuint index = getIndexForLocation(hostLoc);
+    if (index<m_numIndexes) {
+        if (arrIndex > 0) {
+            m_Indexes[index].hostLocsPerElement = 
+                              (hostLoc - m_Indexes[index].base) / arrIndex;
+        }
+        return m_Indexes[index].appBase + arrIndex;
+    }
+    return -1;
 }
 
 GLint ProgramData::locationWARAppToHost(GLint appLoc)
 {
-    if (m_locShiftWAR && appLoc>0) return appLoc<<16;
-    else return appLoc;
+    if (!m_locShiftWAR) return appLoc;
+
+    for(GLuint i=0; i<m_numIndexes; i++) {
+        GLint elemIndex = appLoc - m_Indexes[i].appBase;
+        if (elemIndex >= 0 && elemIndex < m_Indexes[i].size) {
+            return m_Indexes[i].base +
+                   elemIndex * m_Indexes[i].hostLocsPerElement;
+        }
+    }
+    return -1;
 }
 
 
@@ -222,11 +253,11 @@ void GLSharedGroup::setupLocationShiftWAR(GLuint program)
     if (pData) pData->setupLocationShiftWAR();
 }
 
-GLint GLSharedGroup::locationWARHostToApp(GLuint program, GLint hostLoc)
+GLint GLSharedGroup::locationWARHostToApp(GLuint program, GLint hostLoc, GLint arrIndex)
 {
     android::AutoMutex _lock(m_lock);
     ProgramData* pData = m_programs.valueFor(program);
-    if (pData) return pData->locationWARHostToApp(hostLoc);
+    if (pData) return pData->locationWARHostToApp(hostLoc, arrIndex);
     else return hostLoc;
 }
 
@@ -236,6 +267,14 @@ GLint GLSharedGroup::locationWARAppToHost(GLuint program, GLint appLoc)
     ProgramData* pData = m_programs.valueFor(program);
     if (pData) return pData->locationWARAppToHost(appLoc);
     else return appLoc;
+}
+
+bool GLSharedGroup::needUniformLocationWAR(GLuint program)
+{
+    android::AutoMutex _lock(m_lock);
+    ProgramData* pData = m_programs.valueFor(program);
+    if (pData) return pData->needUniformLocationWAR();
+    return false;
 }
 
 
