@@ -49,7 +49,9 @@ private:
         GLint base;
         GLint size;
         GLenum type;
-    }IndexInfo;
+        GLint appBase;
+        GLint hostLocsPerElement;
+    } IndexInfo;
 
     GLuint m_numIndexes;
     IndexInfo* m_Indexes;
@@ -64,8 +66,9 @@ public:
     GLuint getIndexForLocation(GLint location);
     GLenum getTypeForLocation(GLint location);
 
+    bool needUniformLocationWAR() const { return m_locShiftWAR; }
     void setupLocationShiftWAR();
-    GLint locationWARHostToApp(GLint hostLoc);
+    GLint locationWARHostToApp(GLint hostLoc, GLint arrIndex);
     GLint locationWARAppToHost(GLint appLoc);
     
 };
@@ -93,8 +96,9 @@ public:
     void    setProgramIndexInfo(GLuint program, GLuint index, GLint base, GLint size, GLenum type);
     GLenum  getProgramUniformType(GLuint program, GLint location);
     void    setupLocationShiftWAR(GLuint program);
-    GLint   locationWARHostToApp(GLuint program, GLint hostLoc);
+    GLint   locationWARHostToApp(GLuint program, GLint hostLoc, GLint arrIndex);
     GLint   locationWARAppToHost(GLuint program, GLint appLoc);
+    bool    needUniformLocationWAR(GLuint program);
 
     void    addShaderData(GLuint shader);
     bool    isShader(GLuint shader);
