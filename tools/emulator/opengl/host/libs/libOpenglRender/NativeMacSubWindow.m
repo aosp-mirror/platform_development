@@ -50,6 +50,7 @@ EGLNativeWindowType createSubWindow(FBNativeWindowType p_window,
 void destroySubWindow(EGLNativeDisplayType dis,EGLNativeWindowType win){
     if(win){
         NSView *glView = (NSView *)win;
+        [glView removeFromSuperview];
         [glView release];
     }
 }
