@@ -106,5 +106,9 @@ private:
     EGLSurface m_prevDrawSurf;
     EGLNativeWindowType m_subWin;
     EGLNativeDisplayType m_subWinDisplay;
+
+    int m_statsNumFrames;
+    long long m_statsStartTime;
+    bool m_fpsStats;
 };
 #endif
