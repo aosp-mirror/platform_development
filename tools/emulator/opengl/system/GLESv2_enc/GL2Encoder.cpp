@@ -534,9 +534,30 @@ void GL2Encoder::s_glDeleteShader(void *self, GLenum shader)
 
 int GL2Encoder::s_glGetUniformLocation(void *self, GLuint program, const GLchar *name)
 {
+    if (!name) return -1;
+
     GL2Encoder *ctx = (GL2Encoder*)self;
+
+    // if we need the uniform location WAR
+    // parse array index from the end of the name string
+    int arrIndex = 0;
+    bool needLocationWAR = ctx->m_shared->needUniformLocationWAR(program);
+    if (needLocationWAR) {
+        int namelen = strlen(name);
+        if (name[namelen-1] == ']') {
+            char *brace = strrchr(name,'[');
+            if (!brace || sscanf(brace+1,"%d",&arrIndex) != 1) {
+                return -1;
+            }
+        
+        }
+    }
+
     int hostLoc = ctx->m_glGetUniformLocation_enc(self, program, name);
-    return ctx->m_shared->locationWARHostToApp(program, hostLoc);
+    if (hostLoc >= 0 && needLocationWAR) {
+        return ctx->m_shared->locationWARHostToApp(program, hostLoc, arrIndex);
+    }
+    return hostLoc;
 }
 
 void GL2Encoder::s_glUseProgram(void *self, GLuint program)
