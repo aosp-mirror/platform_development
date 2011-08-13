@@ -20,9 +20,23 @@
 ProgramData::ProgramData() :  ObjectData(PROGRAM_DATA),
                               AttachedVertexShader(0),
                               AttachedFragmentShader(0),
-                              LinkStatus(GL_FALSE) {}
+                              LinkStatus(GL_FALSE) {
+    infoLog = new GLchar[1];
+    infoLog[0] = '\0';
+}
 
-ProgramData::~ProgramData () {};
+ProgramData::~ProgramData () {
+    delete[] infoLog;
+};
+
+void ProgramData::setInfoLog(GLchar* log) {
+    delete[] infoLog;
+    infoLog = log;
+}
+
+GLchar* ProgramData::getInfoLog() {
+    return infoLog;
+}
 
 GLuint ProgramData::getAttachedVertexShader() {
     return AttachedVertexShader;
