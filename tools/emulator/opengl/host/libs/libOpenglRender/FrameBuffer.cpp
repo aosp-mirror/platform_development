@@ -27,14 +27,13 @@ FrameBuffer *FrameBuffer::s_theFrameBuffer = NULL;
 HandleType FrameBuffer::s_nextHandle = 0;
 
 #ifdef WITH_GLES2
-static const char *getGLES2ExtensionString(EGLDisplay p_dpy,
-                                 EGLNativeWindowType p_window)
+static const char *getGLES2ExtensionString(EGLDisplay p_dpy)
 {
     EGLConfig config;
     EGLSurface surface;
 
     GLint configAttribs[] = {
-        EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
+        EGL_SURFACE_TYPE, EGL_WINDOW_BIT | EGL_PBUFFER_BIT,
         EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
         EGL_NONE
     };
@@ -45,9 +44,13 @@ static const char *getGLES2ExtensionString(EGLDisplay p_dpy,
         return NULL;
     }
 
-    surface = s_egl.eglCreateWindowSurface(p_dpy, config,
-                                              p_window,
-                                              NULL);
+    EGLint pbufAttribs[] = {
+        EGL_WIDTH, 1,
+        EGL_HEIGHT, 1,
+        EGL_NONE
+    };
+
+    surface = s_egl.eglCreatePbufferSurface(p_dpy, config, pbufAttribs);
     if (surface == EGL_NO_SURFACE) {
         return NULL;
     }
@@ -86,24 +89,17 @@ static const char *getGLES2ExtensionString(EGLDisplay p_dpy,
 
 void FrameBuffer::finalize(){
     if(s_theFrameBuffer){
+        s_theFrameBuffer->removeSubWindow();
         s_theFrameBuffer->m_colorbuffers.clear();
         s_theFrameBuffer->m_windows.clear();
         s_theFrameBuffer->m_contexts.clear();
-        s_egl.eglMakeCurrent(s_theFrameBuffer->m_eglDisplay, NULL, NULL, NULL);
-        s_egl.eglDestroySurface(s_theFrameBuffer->m_eglDisplay,s_theFrameBuffer->m_eglSurface);
         s_egl.eglDestroyContext(s_theFrameBuffer->m_eglDisplay,s_theFrameBuffer->m_eglContext);
-        if (s_theFrameBuffer->m_subWin) {
-            destroySubWindow(s_theFrameBuffer->m_subWinDisplay,
-                             s_theFrameBuffer->m_subWin);
-        }
-        delete s_theFrameBuffer;
+        s_egl.eglDestroySurface(s_theFrameBuffer->m_eglDisplay,s_theFrameBuffer->m_pbufSurface);
         s_theFrameBuffer = NULL;
     }
 }
 
-bool FrameBuffer::initialize(FBNativeWindowType p_window,
-                             int p_x, int p_y,
-                             int p_width, int p_height)
+bool FrameBuffer::initialize(int width, int height)
 {
     if (s_theFrameBuffer != NULL) {
         return true;
@@ -130,7 +126,7 @@ bool FrameBuffer::initialize(FBNativeWindowType p_window,
     //
     // allocate space for the FrameBuffer object
     //
-    FrameBuffer *fb = new FrameBuffer(p_x, p_y, p_width, p_height);
+    FrameBuffer *fb = new FrameBuffer(width, height);
     if (!fb) {
         ERR("Failed to create fb\n");
         return false;
@@ -169,10 +165,6 @@ bool FrameBuffer::initialize(FBNativeWindowType p_window,
     DBG("egl: %d %d\n", fb->m_caps.eglMajor, fb->m_caps.eglMinor);
     s_egl.eglBindAPI(EGL_OPENGL_ES_API);
 
-    fb->m_nativeWindow = p_window;
-
-    fb->m_subWin = createSubWindow(p_window,&fb->m_subWinDisplay,p_x,p_y,p_width,p_height);
-
     //
     // if GLES2 plugin has loaded - try to make GLES2 context and
     // get GLES2 extension string
@@ -180,7 +172,7 @@ bool FrameBuffer::initialize(FBNativeWindowType p_window,
     const char *gl2Extensions = NULL;
 #ifdef WITH_GLES2
     if (fb->m_caps.hasGL2) {
-        gl2Extensions = getGLES2ExtensionString(fb->m_eglDisplay, fb->m_subWin);
+        gl2Extensions = getGLES2ExtensionString(fb->m_eglDisplay);
         if (!gl2Extensions) {
             // Could not create GLES2 context - drop GL2 capability
             fb->m_caps.hasGL2 = false;
@@ -189,8 +181,7 @@ bool FrameBuffer::initialize(FBNativeWindowType p_window,
 #endif
 
     //
-    // Create EGL context and Surface attached to the native window, for
-    // framebuffer post rendering.
+    // Create EGL context for framebuffer post rendering.
     //
 #if 0
     GLint configAttribs[] = {
@@ -203,25 +194,15 @@ bool FrameBuffer::initialize(FBNativeWindowType p_window,
         EGL_RED_SIZE, 1,
         EGL_GREEN_SIZE, 1,
         EGL_BLUE_SIZE, 1,
-        EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
+        EGL_SURFACE_TYPE, EGL_WINDOW_BIT | EGL_PBUFFER_BIT,
         EGL_NONE
     };
 #endif
-    EGLConfig eglConfig;
+
     int n;
     if (!s_egl.eglChooseConfig(fb->m_eglDisplay, configAttribs,
-                               &eglConfig, 1, &n)) {
+                               &fb->m_eglConfig, 1, &n)) {
         ERR("Failed on eglChooseConfig\n");
-        delete fb;
-        return false;
-    }
-
-    EGLNativeDisplayType dpy;
-    fb->m_eglSurface = s_egl.eglCreateWindowSurface(fb->m_eglDisplay, eglConfig,
-                                                  fb->m_subWin,
-                                                  NULL);
-    if (fb->m_eglSurface == EGL_NO_SURFACE) {
-        ERR("Failed to create surface\n");
         delete fb;
         return false;
     }
@@ -231,11 +212,31 @@ bool FrameBuffer::initialize(FBNativeWindowType p_window,
         EGL_NONE
     };
 
-    fb->m_eglContext = s_egl.eglCreateContext(fb->m_eglDisplay, eglConfig,
+    fb->m_eglContext = s_egl.eglCreateContext(fb->m_eglDisplay, fb->m_eglConfig,
                                               EGL_NO_CONTEXT,
                                               glContextAttribs);
     if (fb->m_eglContext == EGL_NO_CONTEXT) {
         printf("Failed to create Context 0x%x\n", s_egl.eglGetError());
+        delete fb;
+        return false;
+    }
+
+    //
+    // create a 1x1 pbuffer surface which will be used for binding
+    // the FB context.
+    // The FB output will go to a subwindow, if one exist.
+    //
+    EGLint pbufAttribs[] = {
+        EGL_WIDTH, 1,
+        EGL_HEIGHT, 1,
+        EGL_NONE
+    };
+
+    fb->m_pbufSurface = s_egl.eglCreatePbufferSurface(fb->m_eglDisplay,
+                                                  fb->m_eglConfig,
+                                                  pbufAttribs);
+    if (fb->m_pbufSurface == EGL_NO_SURFACE) {
+        printf("Failed to create pbuf surface for FB 0x%x\n", s_egl.eglGetError());
         delete fb;
         return false;
     }
@@ -341,9 +342,7 @@ bool FrameBuffer::initialize(FBNativeWindowType p_window,
     return true;
 }
 
-FrameBuffer::FrameBuffer(int p_x, int p_y, int p_width, int p_height) :
-    m_x(p_x),
-    m_y(p_y),
+FrameBuffer::FrameBuffer(int p_width, int p_height) :
     m_width(p_width),
     m_height(p_height),
     m_eglDisplay(EGL_NO_DISPLAY),
@@ -354,6 +353,8 @@ FrameBuffer::FrameBuffer(int p_x, int p_y, int p_width, int p_height) :
     m_prevDrawSurf(EGL_NO_SURFACE),
     m_subWin(NULL),
     m_subWinDisplay(NULL),
+    m_lastPostedColorBuffer(0),
+    m_zRot(0.0f),
     m_statsNumFrames(0),
     m_statsStartTime(0LL)
 {
@@ -362,6 +363,74 @@ FrameBuffer::FrameBuffer(int p_x, int p_y, int p_width, int p_height) :
 
 FrameBuffer::~FrameBuffer()
 {
+}
+
+bool FrameBuffer::setupSubWindow(FBNativeWindowType p_window,
+                                  int p_x, int p_y,
+                                  int p_width, int p_height, float zRot)
+{
+    bool success = false;
+
+    if (s_theFrameBuffer) {
+        s_theFrameBuffer->m_lock.lock();
+        FrameBuffer *fb = s_theFrameBuffer;
+        if (!fb->m_subWin) {
+
+            // create native subwindow for FB display output
+            fb->m_subWin = createSubWindow(p_window,
+                                           &fb->m_subWinDisplay,
+                                           p_x,p_y,p_width,p_height);
+            if (fb->m_subWin) {
+                fb->m_nativeWindow = p_window;
+
+                // create EGLSurface from the generated subwindow
+                fb->m_eglSurface = s_egl.eglCreateWindowSurface(fb->m_eglDisplay, 
+                                                    fb->m_eglConfig,
+                                                    fb->m_subWin,
+                                                    NULL);
+
+                if (fb->m_eglSurface == EGL_NO_SURFACE) {
+                    ERR("Failed to create surface\n");
+                    destroySubWindow(fb->m_subWinDisplay, fb->m_subWin);
+                    fb->m_subWin = NULL;
+                }
+                else if (fb->bindSubwin_locked()) {
+                    // Subwin creation was successfull,
+                    // update viewport and z rotation and draw
+                    // the last posted color buffer.
+                    s_gl.glViewport(0, 0, p_width, p_height);
+                    fb->m_zRot = zRot;
+                    fb->post( fb->m_lastPostedColorBuffer, false );
+                    fb->unbind_locked();
+                    success = true;
+                }
+             }
+        }
+        s_theFrameBuffer->m_lock.unlock();
+     }
+
+    return success;
+}
+
+bool FrameBuffer::removeSubWindow()
+{
+    bool removed = false;
+    if (s_theFrameBuffer) {
+        s_theFrameBuffer->m_lock.lock();
+        if (s_theFrameBuffer->m_subWin) {
+            s_egl.eglMakeCurrent(s_theFrameBuffer->m_eglDisplay, NULL, NULL, NULL);
+            s_egl.eglDestroySurface(s_theFrameBuffer->m_eglDisplay,
+                                    s_theFrameBuffer->m_eglSurface);
+            destroySubWindow(s_theFrameBuffer->m_subWinDisplay,
+                             s_theFrameBuffer->m_subWin);
+
+            s_theFrameBuffer->m_eglSurface = EGL_NO_SURFACE;
+            s_theFrameBuffer->m_subWin = NULL;
+            removed = true;
+        }
+        s_theFrameBuffer->m_lock.unlock();
+    }
+    return removed;
 }
 
 HandleType FrameBuffer::genHandle()
@@ -620,6 +689,24 @@ bool FrameBuffer::bind_locked()
     EGLSurface prevReadSurf = s_egl.eglGetCurrentSurface(EGL_READ);
     EGLSurface prevDrawSurf = s_egl.eglGetCurrentSurface(EGL_DRAW);
 
+    if (!s_egl.eglMakeCurrent(m_eglDisplay, m_pbufSurface,
+                              m_pbufSurface, m_eglContext)) {
+        ERR("eglMakeCurrent failed\n");
+        return false;
+    }
+
+    m_prevContext = prevContext;
+    m_prevReadSurf = prevReadSurf;
+    m_prevDrawSurf = prevDrawSurf;
+    return true;
+}
+
+bool FrameBuffer::bindSubwin_locked()
+{
+    EGLContext prevContext = s_egl.eglGetCurrentContext();
+    EGLSurface prevReadSurf = s_egl.eglGetCurrentSurface(EGL_READ);
+    EGLSurface prevDrawSurf = s_egl.eglGetCurrentSurface(EGL_DRAW);
+
     if (!s_egl.eglMakeCurrent(m_eglDisplay, m_eglSurface,
                               m_eglSurface, m_eglContext)) {
         ERR("eglMakeCurrent failed\n");
@@ -645,17 +732,41 @@ bool FrameBuffer::unbind_locked()
     return true;
 }
 
-bool FrameBuffer::post(HandleType p_colorbuffer)
+bool FrameBuffer::post(HandleType p_colorbuffer, bool needLock)
 {
-    android::Mutex::Autolock mutex(m_lock);
+    if (needLock) m_lock.lock();
     bool ret = false;
 
     ColorBufferMap::iterator c( m_colorbuffers.find(p_colorbuffer) );
     if (c != m_colorbuffers.end()) {
-        if (!bind_locked()) {
+
+        m_lastPostedColorBuffer = p_colorbuffer;
+        if (!m_subWin) {
+            // no subwindow created for the FB output
+            // cannot post the colorbuffer
+            if (needLock) m_lock.unlock();
+            return ret;
+        }
+
+
+        // bind the subwindow eglSurface
+        if (!bindSubwin_locked()) {
+            ERR("FrameBuffer::post eglMakeCurrent failed\n");
+            if (needLock) m_lock.unlock();
             return false;
         }
+
+        //
+        // render the color buffer to the window
+        //
+        s_gl.glPushMatrix();
+        s_gl.glRotatef(m_zRot, 0.0f, 0.0f, 1.0f);
+        if (m_zRot != 0.0f) {
+            s_gl.glClear(GL_COLOR_BUFFER_BIT);
+        }
         ret = (*c).second->post();
+        s_gl.glPopMatrix();
+
         if (ret) {
 
             //
@@ -674,8 +785,19 @@ bool FrameBuffer::post(HandleType p_colorbuffer)
 
             s_egl.eglSwapBuffers(m_eglDisplay, m_eglSurface);
         }
+ 
+        // restore previous binding
         unbind_locked();
     }
 
+    if (needLock) m_lock.unlock();
     return ret;
+}
+
+bool FrameBuffer::repost()
+{
+    if (m_lastPostedColorBuffer) {
+        return post( m_lastPostedColorBuffer );
+    }
+    return false;
 }
