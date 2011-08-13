@@ -21,6 +21,7 @@
 #include "GL2Dispatch.h"
 #include "ThreadInfo.h"
 #include <stdio.h>
+#include "TimeUtils.h"
 
 FrameBuffer *FrameBuffer::s_theFrameBuffer = NULL;
 HandleType FrameBuffer::s_nextHandle = 0;
@@ -352,8 +353,11 @@ FrameBuffer::FrameBuffer(int p_x, int p_y, int p_width, int p_height) :
     m_prevReadSurf(EGL_NO_SURFACE),
     m_prevDrawSurf(EGL_NO_SURFACE),
     m_subWin(NULL),
-    m_subWinDisplay(NULL)
+    m_subWinDisplay(NULL),
+    m_statsNumFrames(0),
+    m_statsStartTime(0LL)
 {
+    m_fpsStats = getenv("SHOW_FPS_STATS") != NULL;
 }
 
 FrameBuffer::~FrameBuffer()
@@ -653,6 +657,21 @@ bool FrameBuffer::post(HandleType p_colorbuffer)
         }
         ret = (*c).second->post();
         if (ret) {
+
+            //
+            // output FPS statistics
+            //
+            if (m_fpsStats) {
+                long long currTime = GetCurrentTimeMS();
+                m_statsNumFrames++;
+                if (currTime - m_statsStartTime >= 1000) {
+                    float dt = (float)(currTime - m_statsStartTime) / 1000.0f;
+                    printf("FPS: %5.3f\n", (float)m_statsNumFrames / dt);
+                    m_statsStartTime = currTime;
+                    m_statsNumFrames = 0;
+                }
+            }
+
             s_egl.eglSwapBuffers(m_eglDisplay, m_eglSurface);
         }
         unbind_locked();
