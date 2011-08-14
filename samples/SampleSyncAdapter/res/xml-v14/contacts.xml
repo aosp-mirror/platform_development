@@ -17,6 +17,8 @@
  */
 -->
 
+<!-- This sample doesn't currently support groups or stream items. viewGroupActivity and
+     viewStreamItemActivity and viewStreamItemPhotoActivity or just here for reference -->
 <ContactsAccountType
     xmlns:android="http://schemas.android.com/apk/res/android"
     editContactActivity="com.example.android.samplesync.editor.ContactEditorActivity"
@@ -24,6 +26,9 @@
     inviteContactActivity="com.example.android.samplesync.editor.ContactEditorActivity"
     inviteContactActionLabel="@string/invite_action_label"
     viewContactNotifyService="com.example.android.samplesync.notifier.NotifierService"
+    viewGroupActivity="com.example.android.samplesync.viewer.ViewGroupActivity"
+    viewStreamItemActivity="com.example.android.samplesync.viewer.ViewStreamItemActivity"
+    viewStreamItemPhotoActivity="com.example.android.samplesync.viewer.ViewStreamItemPhotoActivity"
 >
 
     <ContactsDataKind
