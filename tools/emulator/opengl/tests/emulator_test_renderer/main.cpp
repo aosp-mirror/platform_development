@@ -23,7 +23,11 @@
 
 static int convert_keysym(int sym); // forward
 
+#ifdef __linux__
+#include <X11/Xlib.h>
+#endif
 #ifdef _WIN32
+
 #include <winsock2.h>
 int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd)
 #else
@@ -44,6 +48,14 @@ int main(int argc, char *argv[])
         winWidth = width;
         winHeight = height;
     }
+
+#ifdef __linux__
+    // some OpenGL implementations may call X functions
+    // it is safer to synchronize all X calls made by all the
+    // rendering threads. (although the calls we do are locked
+    // in the FrameBuffer singleton object).
+    XInitThreads();
+#endif
 
     //
     // Inialize SDL window
