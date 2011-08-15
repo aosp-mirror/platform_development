@@ -15,17 +15,34 @@
 */
 #include "NativeSubWindow.h"
 
+static Bool WaitForMapNotify(Display *d, XEvent *e, char *arg)
+{
+    if (e->type == MapNotify && e->xmap.window == (Window)arg) {
+	    return 1;
+    }
+    return 0;
+}
+
+static Display *s_display = NULL;
 
 EGLNativeWindowType createSubWindow(FBNativeWindowType p_window,
                                     EGLNativeDisplayType* display_out,
                                     int x, int y,int width, int height){
-   *display_out = XOpenDisplay(NULL);
-    Window win = XCreateWindow(*display_out,p_window,x,y, width,height,0,CopyFromParent,CopyFromParent,CopyFromParent,0,NULL);
+
+   // The call to this function is protected by a lock
+   // in FrameBuffer so it is safe to check and initialize s_display here
+   if (!s_display) s_display = XOpenDisplay(NULL);
+   *display_out = s_display;
+
+    XSetWindowAttributes wa;
+    wa.event_mask = StructureNotifyMask;
+    Window win = XCreateWindow(*display_out,p_window,x,y, width,height,0,CopyFromParent,CopyFromParent,CopyFromParent,CWEventMask,&wa);
     XMapWindow(*display_out,win);
-    XSync(*display_out,False);
+    XEvent e;
+    XIfEvent(*display_out, &e, WaitForMapNotify, (char *)win);
     return win;
 }
 
 void destroySubWindow(EGLNativeDisplayType dis,EGLNativeWindowType win){
-    XCloseDisplay(dis);
+    XDestroyWindow(dis, win);
 }
