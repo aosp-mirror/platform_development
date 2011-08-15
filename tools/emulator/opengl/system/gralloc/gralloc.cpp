@@ -682,7 +682,7 @@ static int gralloc_device_open(const hw_module_t* module,
         dev->device.common.close = fb_close;
         dev->device.setSwapInterval = fb_setSwapInterval;
         dev->device.post            = fb_post;
-        dev->device.setUpdateRect   = fb_setUpdateRect;
+        dev->device.setUpdateRect   = 0; //fb_setUpdateRect;
         dev->device.compositionComplete = fb_compositionComplete; //XXX: this is a dummy
 
         const_cast<uint32_t&>(dev->device.flags) = 0;
