@@ -30,25 +30,40 @@ struct DisplayInfo{
     bool isPixelFormatSet;
 };
 
+struct TlsData {
+    std::map<int,DisplayInfo> m_map;
+};
+
+static DWORD s_tlsIndex = 0;
+
+static TlsData *getTLS() {
+    TlsData *tls = (TlsData *)TlsGetValue(s_tlsIndex);
+    if (!tls) {
+        tls = new TlsData();
+        TlsSetValue(s_tlsIndex, tls);
+    }
+    return tls;
+}
+
 class WinDisplay{
 public:
      typedef enum {
                       DEFAULT_DISPLAY = 0
                   };
      WinDisplay(){};
-     DisplayInfo& getInfo(int configurationIndex){ return m_map[configurationIndex];}
-     HDC  getDC(int configId){return m_map[configId].dc;}
+     DisplayInfo& getInfo(int configurationIndex){ return getTLS()->m_map[configurationIndex];}
+     HDC  getDC(int configId){return getTLS()->m_map[configId].dc;}
      void setInfo(int configurationIndex,const DisplayInfo& info);
-     bool isPixelFormatSet(int cfgId){ return m_map[cfgId].isPixelFormatSet;}
-     void pixelFormatWasSet(int cfgId){m_map[cfgId].isPixelFormatSet = true;}
+     bool isPixelFormatSet(int cfgId){ return getTLS()->m_map[cfgId].isPixelFormatSet;}
+     void pixelFormatWasSet(int cfgId){getTLS()->m_map[cfgId].isPixelFormatSet = true;}
      bool infoExists(int configurationIndex);
      void releaseAll();
-private:
-    std::map<int,DisplayInfo> m_map;
 };
 
 void WinDisplay::releaseAll(){
-    for(std::map<int,DisplayInfo>::iterator it = m_map.begin(); it != m_map.end();it++){
+    TlsData * tls = getTLS();
+    
+    for(std::map<int,DisplayInfo>::iterator it = tls->m_map.begin(); it != tls->m_map.end();it++){
        if((*it).second.hwnd){
            DestroyWindow((*it).second.hwnd);
        }
@@ -57,11 +72,11 @@ void WinDisplay::releaseAll(){
 }
 
 bool WinDisplay::infoExists(int configurationIndex){
-    return m_map.find(configurationIndex) == m_map.end();
+    return getTLS()->m_map.find(configurationIndex) != getTLS()->m_map.end();
 }
 
 void WinDisplay::setInfo(int configurationIndex,const DisplayInfo& info){
-    m_map[configurationIndex] = info;
+    getTLS()->m_map[configurationIndex] = info;
 }
 
 struct WglExtProcs{
@@ -193,6 +208,7 @@ HWND createDummyWindow(){
 }
 
 EGLNativeInternalDisplayType getDefaultDisplay() {
+    if (!s_tlsIndex) s_tlsIndex = TlsAlloc();
     WinDisplay* dpy = new WinDisplay();
 
     HWND hwnd = createDummyWindow();
@@ -202,6 +218,7 @@ EGLNativeInternalDisplayType getDefaultDisplay() {
 }
 
 EGLNativeInternalDisplayType getInternalDisplay(EGLNativeDisplayType display){
+    if (!s_tlsIndex) s_tlsIndex = TlsAlloc();
     WinDisplay* dpy = new WinDisplay();
     dpy->setInfo(WinDisplay::DEFAULT_DISPLAY,DisplayInfo(display,NULL));
     return dpy;
@@ -210,7 +227,7 @@ EGLNativeInternalDisplayType getInternalDisplay(EGLNativeDisplayType display){
 static HDC getDummyDC(EGLNativeInternalDisplayType display,int cfgId){
 
     HDC dpy = NULL;
-    if(display->infoExists(cfgId)){
+    if(!display->infoExists(cfgId)){
         HWND hwnd = createDummyWindow();
         dpy  = GetDC(hwnd);
         display->setInfo(cfgId,DisplayInfo(dpy,hwnd));
