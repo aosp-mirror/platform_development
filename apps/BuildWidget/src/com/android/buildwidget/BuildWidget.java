@@ -26,6 +26,7 @@ import android.content.Intent;
 import android.content.res.Resources;
 import android.net.Uri;
 import android.os.IBinder;
+import android.text.format.DateUtils;
 import android.text.format.Time;
 import android.util.Log;
 import android.widget.RemoteViews;
@@ -69,12 +70,11 @@ public class BuildWidget extends AppWidgetProvider {
                     0 /* no flags */);
             updateViews.setOnClickPendingIntent(R.id.widget, pendingIntent);
 
-            updateViews.setTextViewText(R.id.build_info, 
-                android.os.Build.VERSION.CODENAME + " " +
-                android.os.Build.ID);
-            updateViews.setTextViewText(R.id.build_changelist,
-                android.os.Build.FINGERPRINT
-                );
+            updateViews.setTextViewText(R.id.build_info, android.os.Build.ID);
+            updateViews.setTextViewText(R.id.build_date, 
+                    DateUtils.formatDateTime(context, android.os.Build.TIME, 
+                        DateUtils.FORMAT_NUMERIC_DATE));
+            updateViews.setTextViewText(R.id.build_extra, android.os.Build.FINGERPRINT);
             return updateViews;
         }
 

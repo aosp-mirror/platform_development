@@ -14,31 +14,64 @@
      limitations under the License.
 -->
 
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widget"
     android:layout_width="fill_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:padding="6dip"
     >
 
-    <TextView
-        android:id="@+id/build_info"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:gravity="left"
-        style="@style/Text.BuildInfo.Fancy"
-        android:textSize="18dip"
-        />
+    <LinearLayout
+        android:id="@+id/block1x1"
+        android:layout_width="80dp"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center"
+        >
 
-    <TextView
-        android:id="@+id/build_changelist"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:gravity="left"
-        android:layout_marginTop="4dip"
-        style="@style/Text.BuildInfo.Fancy"
-        android:textSize="9dip"
-        />
+        <TextView
+            android:id="@+id/build_info"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            style="@style/Text.BuildInfo.Fancy"
+            android:textSize="18dip"
+            />
 
-</LinearLayout>
+        <TextView
+            android:id="@+id/build_date"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            style="@style/Text.BuildInfo.Fancy"
+            android:textSize="14dip"
+            />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_toRightOf="@id/block1x1"
+        >
+        <TextView
+            android:id="@+id/build_extra"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginLeft="32dp"
+            android:gravity="left|center_vertical"
+            android:minWidth="60dp"
+            style="@style/Text.BuildInfo.Fancy"
+            android:textSize="10dip"
+            android:layout_weight="1"
+            />
+
+        <ImageView
+            android:id="@+id/platlogo"
+            android:layout_width="64dp"
+            android:layout_height="match_parent"
+            android:padding="3dp"
+            android:src="@*android:drawable/platlogo"
+            android:scaleType="centerInside"
+            android:layout_weight="0"
+            />
+    </LinearLayout>
+</RelativeLayout>
