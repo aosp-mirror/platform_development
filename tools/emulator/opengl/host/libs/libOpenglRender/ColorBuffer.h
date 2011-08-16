@@ -38,6 +38,7 @@ public:
     bool post();
     bool bindToTexture();
     bool bindToRenderbuffer();
+    bool blitFromCurrentReadBuffer();
 
 private:
     ColorBuffer();
@@ -46,10 +47,13 @@ private:
 
 private:
     GLuint m_tex;
+    GLuint m_blitTex;
     EGLImageKHR m_eglImage;
+    EGLImageKHR m_blitEGLImage;
     GLuint m_width;
     GLuint m_height;
     GLuint m_fbo;
+    GLenum m_internalFormat;
 };
 
 typedef SmartPtr<ColorBuffer> ColorBufferPtr;
