@@ -17,6 +17,7 @@ LOCAL_SRC_FILES := \
         egl.cpp \
         ClientAPIExts.cpp
 
+LOCAL_C_INCLUDES += bionic/libc/private
 
 LOCAL_PRELINK_MODULE := false
 LOCAL_CFLAGS += -DLOG_TAG=\"EGL_emulation\" -DEGL_EGLEXT_PROTOTYPES -DWITH_GLES2

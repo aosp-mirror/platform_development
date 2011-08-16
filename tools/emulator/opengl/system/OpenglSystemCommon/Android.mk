@@ -8,6 +8,6 @@ LOCAL_SRC_FILES := \
     QemuPipeStream.cpp \
     ThreadInfo.cpp
 
-$(call emugl-export,C_INCLUDES,$(LOCAL_PATH))
+$(call emugl-export,C_INCLUDES,$(LOCAL_PATH) bionic/libc/private)
 
 $(call emugl-end-module)
