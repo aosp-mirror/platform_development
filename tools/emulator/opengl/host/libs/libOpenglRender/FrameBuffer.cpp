@@ -276,6 +276,18 @@ bool FrameBuffer::initialize(int width, int height)
     }
 
     //
+    // Fail initialization if not all of the following extensions
+    // exist:
+    //     EGL_KHR_gl_texture_2d_image
+    //     GL_OES_EGL_IMAGE (by both GLES implementations [1 and 2])
+    //
+    if (!fb->m_caps.has_eglimage_texture_2d) {
+        ERR("Failed: Missing egl_image related extension(s)\n");
+        delete fb;
+        return false;
+    }
+
+    //
     // Initialize set of configs
     //
     InitConfigStatus configStatus = FBConfig::initConfigList(fb);
@@ -315,13 +327,6 @@ bool FrameBuffer::initialize(int width, int height)
     if (nGL2Configs == 0) {
         fb->m_caps.hasGL2 = false;
     }
-
-    //
-    // update Pbuffer bind to texture capability based on configs
-    //
-    fb->m_caps.has_BindToTexture =
-        (configStatus == INIT_CONFIG_HAS_BIND_TO_TEXTURE);
-
 
     //
     // Initialize some GL state
