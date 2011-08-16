@@ -67,7 +67,7 @@ public class MonkeyActivityEvent extends MonkeyEvent {
 
         try {
             iam.startActivity(null, intent, null, null, 0, null, null, 0,
-                    false, false);
+                    false, false, null, null, false);
         } catch (RemoteException e) {
             System.err.println("** Failed talking with activity manager!");
             return MonkeyEvent.INJECT_ERROR_REMOTE_EXCEPTION;
