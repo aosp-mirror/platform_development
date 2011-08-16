@@ -35,7 +35,6 @@ struct FrameBufferCaps
     bool hasGL2;
     bool has_eglimage_texture_2d;
     bool has_eglimage_renderbuffer;
-    bool has_BindToTexture;
     EGLint eglMajor;
     EGLint eglMinor;
 };

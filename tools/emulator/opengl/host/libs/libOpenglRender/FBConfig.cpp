@@ -87,88 +87,22 @@ InitConfigStatus FBConfig::initConfigList(FrameBuffer *fb)
     s_egl.eglGetConfigs(dpy, configs, nConfigs, &nConfigs);
 
     //
-    // Find number of usable configs which support pbuffer rendering
-    // for each ES and ES2 as well as number of configs supporting
-    // EGL_BIND_TO_TEXTURE_RGBA for each of ES and ES2.
+    // copy the config attributes, filter out
+    // configs we do not want to support.
     //
-    const int GL = 0;
-    const int GL1 = 1;
-    const int GL2 = 2;
-    int numPbuf[3] = {0, 0, 0};
-    int numBindToTexture[3] = {0, 0, 0};
-    for (int i=0; i<nConfigs; i++) {
-        GLint depthSize, stencilSize;
-        GLint renderType, surfaceType;
-        GLint bindToTexture;
-
-        s_egl.eglGetConfigAttrib(dpy, configs[i], EGL_DEPTH_SIZE, &depthSize);
-        s_egl.eglGetConfigAttrib(dpy, configs[i], EGL_STENCIL_SIZE, &stencilSize);
-        s_egl.eglGetConfigAttrib(dpy, configs[i], EGL_RENDERABLE_TYPE, &renderType);
-        s_egl.eglGetConfigAttrib(dpy, configs[i], EGL_SURFACE_TYPE, &surfaceType);
-        if (depthSize > 0 && stencilSize > 0 &&
-            (surfaceType & EGL_PBUFFER_BIT) != 0) {
-
-            numPbuf[GL]++;
-
-            if ((renderType & EGL_OPENGL_ES_BIT) != 0) {
-                numPbuf[GL1]++;
-            }
-
-            if ((renderType & EGL_OPENGL_ES2_BIT) != 0) {
-                numPbuf[GL2]++;
-            }
-
-            s_egl.eglGetConfigAttrib(dpy, configs[i],
-                                     EGL_BIND_TO_TEXTURE_RGBA, &bindToTexture);
-            if (bindToTexture) {
-                numBindToTexture[GL]++;
-                if ((renderType & EGL_OPENGL_ES_BIT) != 0) {
-                    numBindToTexture[GL1]++;
-                }
-
-                if ((renderType & EGL_OPENGL_ES2_BIT) != 0) {
-                    numBindToTexture[GL2]++;
-                }
-            }
-        }
-    }
-
-    bool useOnlyPbuf = false;
-    bool useOnlyBindToTexture = false;
-    int numConfigs = nConfigs;
-    if ( numPbuf[GL1] > 0 &&
-        (!caps.hasGL2 || numPbuf[GL2] > 0)) {
-        useOnlyPbuf = true;
-        numConfigs = numPbuf[GL];
-    }
-    if (useOnlyPbuf &&
-        !(caps.has_eglimage_texture_2d &&
-          caps.has_eglimage_renderbuffer) &&
-        numBindToTexture[GL1] > 0 &&
-        (!caps.hasGL2 || numBindToTexture[GL2] > 0)) {
-        useOnlyBindToTexture = true;
-        numConfigs = numBindToTexture[GL];
-        ret = INIT_CONFIG_HAS_BIND_TO_TEXTURE;
-    }
-    else {
-        ret = INIT_CONFIG_PASSED;
-    }
-
     int j = 0;
     s_fbConfigs = new FBConfig*[nConfigs];
     for (int i=0; i<nConfigs; i++) {
-        if (useOnlyBindToTexture) {
-            EGLint bindToTexture;
-            s_egl.eglGetConfigAttrib(dpy, configs[i],
-                                     EGL_BIND_TO_TEXTURE_RGBA, &bindToTexture);
-            if (!bindToTexture) continue;
-        }
-        else if (useOnlyPbuf) {
-            EGLint surfaceType;
-            s_egl.eglGetConfigAttrib(dpy, configs[i],
-                                     EGL_SURFACE_TYPE, &surfaceType);
-            if (!(surfaceType & EGL_PBUFFER_BIT)) continue;
-        }
+
+        //
+        // filter out configs which does not support pbuffers.
+        // we only support pbuffer configs since we use a pbuffer
+        // handle to bind a guest created window object.
+        //
+        EGLint surfaceType;
+        s_egl.eglGetConfigAttrib(dpy, configs[i],
+                                 EGL_SURFACE_TYPE, &surfaceType);
+        if (!(surfaceType & EGL_PBUFFER_BIT)) continue;
 
         //
         // Filter out not RGB configs
@@ -184,7 +118,8 @@ InitConfigStatus FBConfig::initConfigList(FrameBuffer *fb)
     s_numConfigs = j;
 
     delete[] configs;
-    return ret;
+
+    return s_numConfigs > 0 ? INIT_CONFIG_PASSED : INIT_CONFIG_FAILED;
 }
 
 const FBConfig *FBConfig::get(int p_config)
