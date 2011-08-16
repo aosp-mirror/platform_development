@@ -35,9 +35,7 @@ WindowSurface::WindowSurface() :
     m_width(0),
     m_height(0),
     m_pbufWidth(0),
-    m_pbufHeight(0),
-    m_useEGLImage(false),
-    m_useBindToTexture(false)
+    m_pbufHeight(0)
 {
 }
 
@@ -64,31 +62,10 @@ WindowSurface *WindowSurface::create(int p_config, int p_width, int p_height)
     const FrameBufferCaps &caps = fb->getCaps();
 
     //
-    // We can use eglimage and prevent copies if:
-    //     GL_KHR_gl_texture_2D_image is present.
-    //     and either there is no need for depth or stencil buffer
-    //     or GL_KHR_gl_renderbuffer_image present.
+    // Create a pbuffer to be used as the egl surface
+    // for that window.
     //
-#if 0
-    //XXX: This path should be implemented
-    win->m_useEGLImage =
-         (caps.has_eglimage_texture_2d &&
-          (caps.has_eglimage_renderbuffer ||
-           (fbconf->getDepthSize() + fbconf->getStencilSize() == 0)) );
-#else
-    win->m_useEGLImage = false;
-#endif
-
-    if (win->m_useEGLImage) {
-    }
-    else if (0 != (fbconf->getSurfaceType() & EGL_PBUFFER_BIT)) {
-        if (!win->resizePbuffer(p_width, p_height)) {
-            delete win;
-            return NULL;
-        }
-    }
-    else {
-        // no EGLImage support and not Pbuffer support - fail
+    if (!win->resizePbuffer(p_width, p_height)) {
         delete win;
         return NULL;
     }
@@ -108,20 +85,8 @@ void WindowSurface::flushColorBuffer()
 {
     if (m_attachedColorBuffer.Ptr() != NULL) {
 
-        if (!m_useEGLImage) {
-            bool copied = false;
-            if (m_useBindToTexture) {
-                copied = m_attachedColorBuffer->blitFromPbuffer(m_eglSurface);
-            }
-
-            if (!copied) {
-                //copyToColorBuffer();
-                blitToColorBuffer();
-            }
-        }
-        else {
-            //TODO: EGLImage
-        }
+        //copyToColorBuffer();
+        blitToColorBuffer();
     }
 }
 
@@ -175,9 +140,6 @@ void WindowSurface::bind(RenderContextPtr p_ctx, SurfaceBindType p_bindType)
         return;  // bad param
     }
 
-    if (m_useEGLImage) {
-        // XXX: should be implemented
-    }
 }
 
 void WindowSurface::copyToColorBuffer()
@@ -323,27 +285,14 @@ bool WindowSurface::resizePbuffer(unsigned int p_width, unsigned int p_height)
     const FrameBufferCaps &caps = fb->getCaps();
 
     //
-    // Create pbuffer surface, if possible
-    // set it such that it will be able to be bound to a texture
-    // later to prevent readback.
+    // Create pbuffer surface.
     //
-    EGLint pbufAttribs[12];
+    EGLint pbufAttribs[5];
     pbufAttribs[0] = EGL_WIDTH;
     pbufAttribs[1] = p_width;
     pbufAttribs[2] = EGL_HEIGHT;
     pbufAttribs[3] = p_height;
-
-    if (caps.has_BindToTexture) {
-        pbufAttribs[4] = EGL_TEXTURE_FORMAT;
-        pbufAttribs[5] = EGL_TEXTURE_RGBA;
-        pbufAttribs[6] = EGL_TEXTURE_TARGET;
-        pbufAttribs[7] = EGL_TEXTURE_2D;
-        pbufAttribs[8] = EGL_NONE;
-        m_useBindToTexture = true;
-    }
-    else {
-        pbufAttribs[4] = EGL_NONE;
-    }
+    pbufAttribs[4] = EGL_NONE;
 
     m_eglSurface = s_egl.eglCreatePbufferSurface(fb->getDisplay(),
                                                  m_fbconf->getEGLConfig(),
