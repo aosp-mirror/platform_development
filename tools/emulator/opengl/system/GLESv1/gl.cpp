@@ -6,10 +6,11 @@
 #include "ErrorLog.h"
 #include <private/ui/android_natives_priv.h>
 #include "gralloc_cb.h"
+#include "ThreadInfo.h"
 
 
 //XXX: fix this macro to get the context from fast tls path
-#define GET_CONTEXT gl_client_context_t * ctx = HostConnection::get()->glEncoder();
+#define GET_CONTEXT gl_client_context_t * ctx = getEGLThreadInfo()->hostConn->glEncoder();
 
 #include "gl_entry.cpp"
 
