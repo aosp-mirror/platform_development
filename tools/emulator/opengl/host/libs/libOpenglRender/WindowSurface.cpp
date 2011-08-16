@@ -115,7 +115,8 @@ void WindowSurface::flushColorBuffer()
             }
 
             if (!copied) {
-                copyToColorBuffer();
+                //copyToColorBuffer();
+                blitToColorBuffer();
             }
         }
         else {
@@ -250,6 +251,36 @@ void WindowSurface::copyToColorBuffer()
     // update the attached color buffer with the readback pixels
     m_attachedColorBuffer->update(GL_RGBA, GL_UNSIGNED_BYTE, data);
 #endif
+
+    // restore current context/surface
+    s_egl.eglMakeCurrent(fb->getDisplay(), prevDrawSurf,
+                         prevReadSurf, prevContext);
+
+}
+
+void WindowSurface::blitToColorBuffer()
+{
+    if (!m_width && !m_height) return;
+
+    if (m_attachedColorBuffer->getWidth() != m_width ||
+        m_attachedColorBuffer->getHeight() != m_height) {
+        // XXX: should never happen - how this needs to be handled?
+        return;
+    }
+
+    //
+    // Make the surface current
+    //
+    EGLContext prevContext = s_egl.eglGetCurrentContext();
+    EGLSurface prevReadSurf = s_egl.eglGetCurrentSurface(EGL_READ);
+    EGLSurface prevDrawSurf = s_egl.eglGetCurrentSurface(EGL_DRAW);
+    FrameBuffer *fb = FrameBuffer::getFB();
+    if (!s_egl.eglMakeCurrent(fb->getDisplay(), m_eglSurface,
+                              m_eglSurface, m_drawContext->getEGLContext())) {
+        return;
+    }
+
+    m_attachedColorBuffer->blitFromCurrentReadBuffer();
 
     // restore current context/surface
     s_egl.eglMakeCurrent(fb->getDisplay(), prevDrawSurf,
