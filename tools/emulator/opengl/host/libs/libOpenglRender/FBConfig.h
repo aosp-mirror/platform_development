@@ -23,8 +23,7 @@ class FrameBuffer;
 
 enum InitConfigStatus {
     INIT_CONFIG_FAILED = 0,
-    INIT_CONFIG_PASSED = 1,
-    INIT_CONFIG_HAS_BIND_TO_TEXTURE = 2
+    INIT_CONFIG_PASSED = 1
 };
 
 class FBConfig
