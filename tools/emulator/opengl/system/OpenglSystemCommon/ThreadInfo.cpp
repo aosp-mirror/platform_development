@@ -27,7 +27,7 @@ static void tlsDestruct(void *ptr)
     }
 }
 
-EGLThreadInfo *getEGLThreadInfo()
+EGLThreadInfo *slow_getEGLThreadInfo()
 {
     EGLThreadInfo *ti = (EGLThreadInfo *)thread_store_get(&s_tls);
     if (ti) return ti;
