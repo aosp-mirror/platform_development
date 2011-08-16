@@ -15,6 +15,8 @@ LOCAL_ADDITIONAL_DEPENDENCIES := \
 LOCAL_SRC_FILES := \
         gralloc.cpp
 
+LOCAL_C_INCLUDES += bionic/libc/private
+
 LOCAL_C_INCLUDES += \
         $(emulatorOpengl)/host/include/libOpenglRender \
         $(emulatorOpengl)/shared/OpenglCodecCommon \
