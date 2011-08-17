@@ -519,6 +519,13 @@ See test_defs.xsd for more information.
     package="com.android.quicksearchbox.tests"
     coverage_target="QuickSearchBox" />
 
+<test name="systemui"
+    build_path="frameworks/base/packages/SystemUI"
+    package="com.android.systemui.tests"
+    coverage_target="SystemUI"
+    continuous="true"
+    description="SystemUI tests" />
+
 <!--  native tests  -->
 
 <!-- Bionic C++ -->
