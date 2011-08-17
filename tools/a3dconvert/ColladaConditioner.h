@@ -23,6 +23,8 @@ private:
 public:
     bool triangulate(DAE *dae);
     bool triangulate(const char *inputFile);
+    bool stripGeometry(DAE *dae);
+    bool stripGeometry(const char *inputFile);
 };
 
 #endif //COLLADA_CONDITIONER

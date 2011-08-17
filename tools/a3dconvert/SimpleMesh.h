@@ -75,22 +75,28 @@ public:
         }
 
         // Generate the element that describes our channel layout
-        rsc->mStateElement.elementBuilderBegin();
+        Element::Builder vtxBuilder;
         for (uint32_t c = 0; c < mChannels.size(); c ++) {
             // Skip empty channels
             if (mChannels[c].mData.size() == 0) {
                 continue;
             }
-            const Element *subElem = Element::create(rsc, RS_TYPE_FLOAT_32, RS_KIND_USER, false, mChannels[c].mStride);
-            rsc->mStateElement.elementBuilderAdd(subElem, mChannels[c].mName.c_str(), 1);
+            ObjectBaseRef<const Element> subElem = Element::createRef(rsc,
+                                                                      RS_TYPE_FLOAT_32,
+                                                                      RS_KIND_USER,
+                                                                      false,
+                                                                      mChannels[c].mStride);
+            vtxBuilder.add(subElem.get(), mChannels[c].mName.c_str(), 1);
         }
-        const Element *vertexDataElem = rsc->mStateElement.elementBuilderCreate(rsc);
+        ObjectBaseRef<const Element> vertexDataElem = vtxBuilder.create(rsc);
 
         uint32_t numVerts = mChannels[0].mData.size()/mChannels[0].mStride;
-        Type *vertexDataType = Type::getType(rsc, vertexDataElem, numVerts, 0, 0, false, false);
+        ObjectBaseRef<Type> vertexDataType = Type::getTypeRef(rsc, vertexDataElem.get(),
+                                                              numVerts, 0, 0, false, false);
         vertexDataType->compute();
 
-        Allocation *vertexAlloc = Allocation::createAllocation(rsc, vertexDataType, RS_ALLOCATION_USAGE_SCRIPT);
+        Allocation *vertexAlloc = Allocation::createAllocation(rsc, vertexDataType.get(),
+                                                               RS_ALLOCATION_USAGE_SCRIPT);
 
         uint32_t vertexSize = vertexDataElem->getSizeBytes()/sizeof(float);
         // Fill this allocation with some data
@@ -112,7 +118,8 @@ public:
         }
 
         // Now lets write index data
-        const Element *indexElem = Element::create(rsc, RS_TYPE_UNSIGNED_16, RS_KIND_USER, false, 1);
+        ObjectBaseRef<const Element> indexElem = Element::createRef(rsc, RS_TYPE_UNSIGNED_16,
+                                                                    RS_KIND_USER, false, 1);
 
         Mesh *mesh = new Mesh(rsc, 1, mTriangleLists.size());
         mesh->setName(mName.c_str());
@@ -122,11 +129,13 @@ public:
         for (uint32_t pCount = 0; pCount < mTriangleLists.size(); pCount ++) {
 
             uint32_t numIndicies = mTriangleLists[pCount].size();
-            Type *indexType = Type::getType(rsc, indexElem, numIndicies, 0, 0, false, false );
+            ObjectBaseRef<Type> indexType = Type::getTypeRef(rsc, indexElem.get(),
+                                                             numIndicies, 0, 0, false, false );
 
             indexType->compute();
 
-            Allocation *indexAlloc = Allocation::createAllocation(rsc, indexType, RS_ALLOCATION_USAGE_SCRIPT);
+            Allocation *indexAlloc = Allocation::createAllocation(rsc, indexType.get(),
+                                                                  RS_ALLOCATION_USAGE_SCRIPT);
             uint16_t *indexPtr = (uint16_t*)indexAlloc->getPtr();
             const std::vector<uint32_t> &indexList = mTriangleLists[pCount];
             uint32_t numTries = numIndicies / 3;

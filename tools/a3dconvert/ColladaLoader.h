@@ -19,6 +19,7 @@
 
 #include <vector>
 
+class DAE;
 class domLibrary_geometries;
 class domGeometry;
 class ColladaGeometry;
@@ -36,8 +37,10 @@ public:
     virtual uint32_t getNumMeshes() const {
         return mGeometries.size();
     }
+    bool stripGeometryAndSave();
 
 private:
+    DAE *mDae;
     void clearGeometry();
     std::vector<ColladaGeometry*> mGeometries;
 

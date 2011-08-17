@@ -87,7 +87,7 @@ int main (int argc, char * const argv[]) {
     const char *objExt = ".obj";
     const char *daeExt = ".dae";
 
-    if(argc != 3) {
+    if(argc != 3 && argc != 4) {
         printf("-----------------------------------------------------------------\n");
         printf("Usage:\n");
         printf("a3dconvert input_file a3d_output_file\n");
@@ -105,10 +105,17 @@ int main (int argc, char * const argv[]) {
         return 1;
     }
 
+    bool stripColladaGeo = false;
     GeometryLoader *loader = NULL;
     std::string ext = filename.substr(dotPos);
     if (ext == daeExt) {
         loader = new ColladaLoader();
+        if (argc == 4) {
+            std::string option = argv[3];
+            if (option == "-d") {
+                stripColladaGeo = true;
+            }
+        }
     } else if (ext == objExt) {
         loader = new ObjLoader();
     } else {
@@ -119,6 +126,11 @@ int main (int argc, char * const argv[]) {
     isSuccessful = loader->init(argv[1]);
     if (isSuccessful) {
         isSuccessful = convertToA3D(loader, argv[2]);
+    }
+
+    if (isSuccessful && stripColladaGeo) {
+        ColladaLoader *colladaLoader = (ColladaLoader*)loader;
+        colladaLoader->stripGeometryAndSave();
     }
 
     delete loader;
