@@ -84,6 +84,8 @@
     <coverage_target name="Mms" build_path="packages/apps/Mms" type="APPS" />
     <coverage_target name="Music" build_path="packages/apps/Music"
         type="APPS" />
+    <coverage_target name="SystemUI" build_path="frameworks/base/packages/SystemUI"
+        type="APPS" />
     <coverage_target name="VoiceDialer" build_path="packages/apps/VoiceDialer"
         type="APPS" />
 
