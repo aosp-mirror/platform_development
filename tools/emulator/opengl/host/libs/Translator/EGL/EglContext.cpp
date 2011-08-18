@@ -38,7 +38,7 @@ m_version(ver),
 m_mngr(mngr)
 {
     m_shareGroup = shared_context.Ptr()?
-                   mngr->attachShareGroup(context,shared_context.Ptr()->getShareGroup().Ptr()):
+                   mngr->attachShareGroup(context,shared_context->nativeType()):
                    mngr->createShareGroup(context);
     m_hndl = ++s_nextContextHndl;
 }
