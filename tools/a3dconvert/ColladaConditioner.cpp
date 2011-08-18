@@ -201,3 +201,39 @@ bool ColladaConditioner::triangulate(const char *inputFile) {
 
     return convertSuceeded;
 }
+
+bool ColladaConditioner::stripGeometry(DAE *dae) {
+    bool convertSuceeded = true;
+    int geometryElementCount = (int)(dae->getDatabase()->getElementCount(NULL,
+                                                                         "library_geometries" ));
+
+    for(int currentGeometry = 0; currentGeometry < geometryElementCount; currentGeometry++) {
+
+        daeElement * element = 0;
+        int error = dae->getDatabase()->getElement(&element, currentGeometry,
+                                                   NULL, "library_geometries");
+        daeBool removed = daeElement::removeFromParent(element);
+        convertSuceeded = convertSuceeded && removed;
+    }
+    return convertSuceeded;
+}
+
+bool ColladaConditioner::stripGeometry(const char *inputFile) {
+    DAE dae;
+    bool convertSuceeded = true;
+    domCOLLADA* root = dae.open(inputFile);
+
+    if (!root) {
+        printf("Failed to read file %s.\n", inputFile);
+        return false;
+    }
+
+    stripGeometry(&dae);
+
+    dae.writeAll();
+    if(!convertSuceeded) {
+        printf("Encountered errors\n");
+    }
+
+    return convertSuceeded;
+}

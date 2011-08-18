@@ -26,6 +26,9 @@ ColladaLoader::ColladaLoader() {
 }
 
 ColladaLoader::~ColladaLoader() {
+    if (mDae) {
+        delete mDae;
+    }
     clearGeometry();
 }
 
@@ -37,13 +40,16 @@ void ColladaLoader::clearGeometry() {
 }
 
 bool ColladaLoader::init(const char *colladaFile) {
-    DAE dae;
-
+    if (mDae) {
+        delete mDae;
+    }
     clearGeometry();
+
+    mDae = new DAE();
 
     bool convertSuceeded = true;
 
-    domCOLLADA* root = dae.open(colladaFile);
+    domCOLLADA* root = mDae->open(colladaFile);
     if (!root) {
         fprintf(stderr, "Failed to read file %s.\n", colladaFile);
         return false;
@@ -51,7 +57,7 @@ bool ColladaLoader::init(const char *colladaFile) {
 
     // We only want to deal with triangulated meshes since rendering complex polygons is not feasible
     ColladaConditioner conditioner;
-    conditioner.triangulate(&dae);
+    conditioner.triangulate(mDae);
 
     domLibrary_geometries *allGeometry = daeSafeCast<domLibrary_geometries>(root->getDescendant("library_geometries"));
 
@@ -99,6 +105,21 @@ bool ColladaLoader::convertGeometry(domGeometry *geometry) {
     convertedGeo->init(geometry);
 
     mGeometries.push_back(convertedGeo);
+
+    return convertSuceeded;
+}
+
+bool ColladaLoader::stripGeometryAndSave() {
+
+    ColladaConditioner conditioner;
+    bool convertSuceeded = conditioner.stripGeometry(mDae);
+
+    mDae->writeAll();
+    if(!convertSuceeded) {
+        printf("Encountered errors\n");
+    } else {
+        printf("Stripped geometry data from collada file\n");
+    }
 
     return convertSuceeded;
 }
