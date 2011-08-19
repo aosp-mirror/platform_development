@@ -16,7 +16,7 @@
 <PreferenceScreen
     xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <CheckboxPreference
+    <CheckBoxPreference
         android:key="robot_speak_whisper"
         android:title="@string/whisper_title"
         android:summary="@string/whisper_summary"
