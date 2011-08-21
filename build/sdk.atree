@@ -218,3 +218,4 @@ development/samples/Support13Demos                                              
 ##############################################################################
 framework/layoutlib-tests.jar tests/libtests/layoutlib-tests.jar
 system/app/ConnectivityTest.apk tests/emulator-test-apps/ConnectivityTest.apk
+system/app/GpsLocationTest.apk test/emulator-test-apps/GpsLocationTest.apk
