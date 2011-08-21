@@ -106,8 +106,6 @@
         build_path="frameworks/base/packages/SettingsProvider" type="APPS" />
     <coverage_target name="TelephonyProvider"
         build_path="packages/providers/telephony" type="APPS" />
-    <coverage_target name="VoicemailProvider"
-        build_path="packages/providers/VoicemailProvider" type="APPS" />
 
     <!-- input methods -->
     <coverage_target name="LatinIME" build_path="packages/inputmethods/LatinIME"

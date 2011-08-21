@@ -446,12 +446,6 @@ See test_defs.xsd for more information.
     coverage_target="CalendarProvider"
     continuous="true" />
 
-<test name="voicemailprovider"
-    build_path="packages/providers/VoicemailProvider"
-    package="com.android.providers.voicemail.tests"
-    coverage_target="VoicemailProvider"
-    continuous="true" />
-
 <test name="contactsprov"
     build_path="packages/providers/ContactsProvider"
     package="com.android.providers.contacts.tests"
