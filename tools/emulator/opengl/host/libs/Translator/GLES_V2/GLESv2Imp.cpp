@@ -317,6 +317,7 @@ GL_APICALL void  GL_APIENTRY glBufferSubData(GLenum target, GLintptr offset, GLs
 GL_APICALL GLenum GL_APIENTRY glCheckFramebufferStatus(GLenum target){
     GET_CTX_RET(GL_FRAMEBUFFER_COMPLETE);
     RET_AND_SET_ERROR_IF(!GLESv2Validate::framebufferTarget(target),GL_INVALID_ENUM,GL_FRAMEBUFFER_COMPLETE);
+    ctx->drawValidate();
     return ctx->dispatcher().glCheckFramebufferStatusEXT(target);
 }
 
