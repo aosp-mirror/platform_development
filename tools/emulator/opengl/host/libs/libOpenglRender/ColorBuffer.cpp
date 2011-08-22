@@ -93,13 +93,13 @@ ColorBuffer *ColorBuffer::create(int p_width, int p_height,
 
     if (fb->getCaps().has_eglimage_texture_2d) {
         cb->m_eglImage = s_egl.eglCreateImageKHR(fb->getDisplay(),
-                                                 fb->getContext(),
+                                                 s_egl.eglGetCurrentContext(),
                                                  EGL_GL_TEXTURE_2D_KHR,
                                                  (EGLClientBuffer)cb->m_tex,
                                                  NULL);
 
         cb->m_blitEGLImage = s_egl.eglCreateImageKHR(fb->getDisplay(),
-                                                 fb->getContext(),
+                                                 s_egl.eglGetCurrentContext(),
                                                  EGL_GL_TEXTURE_2D_KHR,
                                                  (EGLClientBuffer)cb->m_blitTex,
                                                  NULL);
@@ -254,6 +254,8 @@ bool ColorBuffer::blitFromCurrentReadBuffer()
 
             // render m_blitTex
             s_gl.glBindTexture(GL_TEXTURE_2D, m_blitTex);
+            s_gl.glEnable(GL_TEXTURE_2D);
+            s_gl.glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
             drawTexQuad();  // this will render the texture flipped
 
             // unbind the fbo
@@ -353,6 +355,7 @@ bool ColorBuffer::post()
 {
     s_gl.glBindTexture(GL_TEXTURE_2D, m_tex);
     s_gl.glEnable(GL_TEXTURE_2D);
+    s_gl.glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
     drawTexQuad();
 
     return true;

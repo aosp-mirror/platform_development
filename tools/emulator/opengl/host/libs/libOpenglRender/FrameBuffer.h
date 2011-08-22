@@ -75,7 +75,6 @@ public:
     bool repost();
 
     EGLDisplay getDisplay() const { return m_eglDisplay; }
-    EGLContext getContext() const { return m_eglContext; }
     EGLNativeWindowType getSubWindow() const { return m_subWin; }
     bool bind_locked();
     bool unbind_locked();
@@ -90,6 +89,7 @@ private:
     ~FrameBuffer();
     HandleType genHandle();
     bool bindSubwin_locked();
+    void initGLState();
 
 private:
     static FrameBuffer *s_theFrameBuffer;
@@ -109,6 +109,7 @@ private:
     EGLSurface m_eglSurface;
     EGLContext m_eglContext;
     EGLSurface m_pbufSurface;
+    EGLContext m_pbufContext;
 
     EGLContext m_prevContext;
     EGLSurface m_prevReadSurf;
@@ -118,6 +119,7 @@ private:
     EGLConfig  m_eglConfig;
     HandleType m_lastPostedColorBuffer;
     float      m_zRot;
+    bool       m_eglContextInitialized;
 
     int m_statsNumFrames;
     long long m_statsStartTime;
