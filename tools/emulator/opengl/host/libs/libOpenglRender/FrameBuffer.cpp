@@ -93,7 +93,9 @@ void FrameBuffer::finalize(){
         s_theFrameBuffer->m_colorbuffers.clear();
         s_theFrameBuffer->m_windows.clear();
         s_theFrameBuffer->m_contexts.clear();
+        s_egl.eglMakeCurrent(s_theFrameBuffer->m_eglDisplay, NULL, NULL, NULL);
         s_egl.eglDestroyContext(s_theFrameBuffer->m_eglDisplay,s_theFrameBuffer->m_eglContext);
+        s_egl.eglDestroyContext(s_theFrameBuffer->m_eglDisplay,s_theFrameBuffer->m_pbufContext);
         s_egl.eglDestroySurface(s_theFrameBuffer->m_eglDisplay,s_theFrameBuffer->m_pbufSurface);
         s_theFrameBuffer = NULL;
     }
@@ -222,6 +224,23 @@ bool FrameBuffer::initialize(int width, int height)
     }
 
     //
+    // Create another context which shares with the eglContext to be used
+    // when we bind the pbuffer. That prevent switching drawable binding
+    // back and forth on framebuffer context.
+    // The main purpose of it is to solve a "blanking" behaviour we see on
+    // on Mac platform when switching binded drawable for a context however
+    // it is more efficient on other platforms as well.
+    //
+    fb->m_pbufContext = s_egl.eglCreateContext(fb->m_eglDisplay, fb->m_eglConfig,
+                                               fb->m_eglContext,
+                                               glContextAttribs);
+    if (fb->m_pbufContext == EGL_NO_CONTEXT) {
+        printf("Failed to create Pbuffer Context 0x%x\n", s_egl.eglGetError());
+        delete fb;
+        return false;
+    }
+
+    //
     // create a 1x1 pbuffer surface which will be used for binding
     // the FB context.
     // The FB output will go to a subwindow, if one exist.
@@ -329,13 +348,9 @@ bool FrameBuffer::initialize(int width, int height)
     }
 
     //
-    // Initialize some GL state
+    // Initialize some GL state in the pbuffer context
     //
-    s_gl.glMatrixMode(GL_PROJECTION);
-    s_gl.glLoadIdentity();
-    s_gl.glOrthof(-1.0, 1.0, -1.0, 1.0, -1.0, 1.0);
-    s_gl.glMatrixMode(GL_MODELVIEW);
-    s_gl.glLoadIdentity();
+    fb->initGLState();
 
     // release the FB context
     fb->unbind_locked();
@@ -353,6 +368,7 @@ FrameBuffer::FrameBuffer(int p_width, int p_height) :
     m_eglDisplay(EGL_NO_DISPLAY),
     m_eglSurface(EGL_NO_SURFACE),
     m_eglContext(EGL_NO_CONTEXT),
+    m_pbufContext(EGL_NO_CONTEXT),
     m_prevContext(EGL_NO_CONTEXT),
     m_prevReadSurf(EGL_NO_SURFACE),
     m_prevDrawSurf(EGL_NO_SURFACE),
@@ -360,6 +376,7 @@ FrameBuffer::FrameBuffer(int p_width, int p_height) :
     m_subWinDisplay(NULL),
     m_lastPostedColorBuffer(0),
     m_zRot(0.0f),
+    m_eglContextInitialized(false),
     m_statsNumFrames(0),
     m_statsStartTime(0LL)
 {
@@ -695,7 +712,7 @@ bool FrameBuffer::bind_locked()
     EGLSurface prevDrawSurf = s_egl.eglGetCurrentSurface(EGL_DRAW);
 
     if (!s_egl.eglMakeCurrent(m_eglDisplay, m_pbufSurface,
-                              m_pbufSurface, m_eglContext)) {
+                              m_pbufSurface, m_pbufContext)) {
         ERR("eglMakeCurrent failed\n");
         return false;
     }
@@ -716,6 +733,14 @@ bool FrameBuffer::bindSubwin_locked()
                               m_eglSurface, m_eglContext)) {
         ERR("eglMakeCurrent failed\n");
         return false;
+    }
+
+    //
+    // initialize GL state in eglContext if not yet initilaized
+    //
+    if (!m_eglContextInitialized) {
+        initGLState();
+        m_eglContextInitialized = true;
     }
 
     m_prevContext = prevContext;
@@ -805,4 +830,13 @@ bool FrameBuffer::repost()
         return post( m_lastPostedColorBuffer );
     }
     return false;
+}
+
+void FrameBuffer::initGLState()
+{
+    s_gl.glMatrixMode(GL_PROJECTION);
+    s_gl.glLoadIdentity();
+    s_gl.glOrthof(-1.0, 1.0, -1.0, 1.0, -1.0, 1.0);
+    s_gl.glMatrixMode(GL_MODELVIEW);
+    s_gl.glLoadIdentity();
 }
