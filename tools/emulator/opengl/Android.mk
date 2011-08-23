@@ -9,6 +9,15 @@
 #
 ifeq (true,$(BUILD_EMULATOR_OPENGL))
 
+# By default, always build the gralloc.goldfish support library to ensure
+# that SurfaceFlinger always uses our GLES emulation libraries. If you
+# don't want this, explicitely set BUILD_EMULATOR_OPENGL_DRIVER to 'false'
+# in your environment or your BoardConfig.mk. For the record, this should
+# only be done for debugging specific applications and requires remoting
+# the GL window from the emulator UI to be usable.
+#
+BUILD_EMULATOR_OPENGL_DRIVER ?= true
+
 # Top-level for all modules
 EMUGL_PATH := $(call my-dir)
 
@@ -57,15 +66,18 @@ include $(EMUGL_PATH)/system/GLESv1_enc/Android.mk
 include $(EMUGL_PATH)/system/GLESv2_enc/Android.mk
 include $(EMUGL_PATH)/system/renderControl_enc/Android.mk
 include $(EMUGL_PATH)/system/OpenglSystemCommon/Android.mk
-include $(EMUGL_PATH)/tests/ut_rendercontrol_enc/Android.mk
 
 # System shared libraries
 include $(EMUGL_PATH)/system/GLESv1/Android.mk
 include $(EMUGL_PATH)/system/GLESv2/Android.mk
-include $(EMUGL_PATH)/system/egl/Android.mk
-include $(EMUGL_PATH)/tests/gles_android_wrapper/Android.mk
 
-include $(EMUGL_PATH)/system/gralloc/Android.mk
+ifeq (false,$(BUILD_EMULATOR_OPENGL_DRIVER))
+  include $(EMUGL_PATH)/tests/ut_rendercontrol_enc/Android.mk
+  include $(EMUGL_PATH)/tests/gles_android_wrapper/Android.mk
+else
+  include $(EMUGL_PATH)/system/gralloc/Android.mk
+  include $(EMUGL_PATH)/system/egl/Android.mk
+endif
 
 # Host static libraries
 include $(EMUGL_PATH)/host/libs/GLESv1_dec/Android.mk
