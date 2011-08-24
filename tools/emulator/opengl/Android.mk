@@ -33,6 +33,10 @@ EMUGL_COMMON_INCLUDES := $(EMUGL_PATH)/host/include/libOpenglRender
 #
 EMUGL_COMMON_CFLAGS := -DWITH_GLES2
 
+# Uncomment the following line if you want to enable debug traces
+# in the GLES emulation libraries.
+# EMUGL_COMMON_CFLAGS += -DEMUGL_DEBUG=1
+
 # Include common definitions used by all the modules included later
 # in this build file. This contains the definition of all useful
 # emugl-xxxx functions.
