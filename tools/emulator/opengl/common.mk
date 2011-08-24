@@ -109,6 +109,7 @@ _emugl-init-module = \
     $(eval _mod = $(_emugl_MODULE)) \
     $(eval _emugl.$(_mod).type := $(patsubst HOST_%,%,$2))\
     $(eval _emugl.$(_mod).imports :=) \
+    $(eval _emugl,$(_mod).moved :=) \
     $(foreach _type,$(EMUGL_EXPORT_TYPES),\
         $(eval _emugl.$(_mod).export.$(_type) :=)\
     )
@@ -156,7 +157,9 @@ _emugl-module-import = \
                 $(eval LOCAL_STATIC_LIBRARIES := $(1:HOST_%=%) $(LOCAL_STATIC_LIBRARIES))\
             )\
             $(if $(filter SHARED_LIBRARY,$(_emugl.$1.type)),\
-                $(eval LOCAL_SHARED_LIBRARIES := $(1:HOST_%=%) $(LOCAL_SHARED_LIBRARIES))\
+                $(if $(_emugl.$1.moved),,\
+                  $(eval LOCAL_SHARED_LIBRARIES := $(1:HOST_%=%) $(LOCAL_SHARED_LIBRARIES))\
+                )\
             )\
         )\
     )
@@ -332,5 +335,7 @@ endef
 # For example: $(call emugl-set-shared-library-subpath,egl)
 emugl-set-shared-library-subpath = \
     $(eval LOCAL_MODULE_PATH := $(TARGET_OUT_SHARED_LIBRARIES)/$1)\
+    $(eval LOCAL_UNSTRIPPED_PATH := $(TARGET_OUT_SHARED_LIBRARIES_UNSTRIPPED)/$1)\
+    $(eval _emugl.$(LOCAL_MODULE).moved := true)\
     $(call emugl-export-outer,ADDITIONAL_DEPENDENCIES,$(LOCAL_MODULE_PATH)/$(LOCAL_MODULE)$(TARGET_SHLIB_SUFFIX))
 

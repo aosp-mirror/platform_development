@@ -1,57 +1,24 @@
-ifneq (,$(BUILD_EMULATOR_OPENGL_DRIVER))
+ifneq (false,$(BUILD_EMULATOR_OPENGL_DRIVER))
 
 LOCAL_PATH := $(call my-dir)
-emulatorOpengl := $(LOCAL_PATH)/../..
 
-### EGL implementation ###########################################
-include $(CLEAR_VARS)
+$(call emugl-begin-shared-library,libEGL_emulation)
+$(call emugl-import,libOpenglSystemCommon)
+$(call emugl-set-shared-library-subpath,egl)
 
-# add additional depencies to ensure that the generated code that we depend on
-# is generated
-LOCAL_ADDITIONAL_DEPENDENCIES := \
-	$(TARGET_OUT_SHARED_LIBRARIES)/lib_renderControl_enc$(TARGET_SHLIB_SUFFIX) \
-	$(TARGET_OUT_SHARED_LIBRARIES)/libGLESv1_enc$(TARGET_SHLIB_SUFFIX)
+LOCAL_CFLAGS += -DLOG_TAG=\"EGL_emulation\" -DEGL_EGLEXT_PROTOTYPES -DWITH_GLES2
 
 LOCAL_SRC_FILES := \
-        eglDisplay.cpp \
-        egl.cpp \
-        ClientAPIExts.cpp
+    eglDisplay.cpp \
+    egl.cpp \
+    ClientAPIExts.cpp
 
+LOCAL_SHARED_LIBRARIES += libdl
+
+# Used to access the Bionic private OpenGL TLS slot
 LOCAL_C_INCLUDES += bionic/libc/private
 
-LOCAL_PRELINK_MODULE := false
-LOCAL_CFLAGS += -DLOG_TAG=\"EGL_emulation\" -DEGL_EGLEXT_PROTOTYPES -DWITH_GLES2
-LOCAL_C_INCLUDES +=  \
-        $(emulatorOpengl)/host/include/libOpenglRender \
-        $(emulatorOpengl)/shared/OpenglCodecCommon \
-        $(emulatorOpengl)/system/OpenglSystemCommon \
-        $(emulatorOpengl)/system/GLESv1_enc \
-        $(emulatorOpengl)/system/GLESv2_enc \
-        $(emulatorOpengl)/system/renderControl_enc \
-		$(call intermediates-dir-for, SHARED_LIBRARIES, lib_renderControl_enc) \
-		$(call intermediates-dir-for, SHARED_LIBRARIES, libGLESv1_enc)  \
-		$(call intermediates-dir-for, SHARED_LIBRARIES, libGLESv2_enc)
-
-LOCAL_MODULE_TAGS := debug
-LOCAL_MODULE_PATH := $(TARGET_OUT_SHARED_LIBRARIES)/egl
-LOCAL_MODULE := libEGL_emulation
-LOCAL_MODULE_CLASS := SHARED_LIBRARIES
-LOCAL_PRELINK_MODULE := false
-
-LOCAL_STATIC_LIBRARIES := \
-    libOpenglCodecCommon
-
-LOCAL_SHARED_LIBRARIES := \
-    libcutils \
-	libutils \
-	libdl	\
-    libGLESv1_enc \
-    libGLESv2_enc \
-    libOpenglSystemCommon \
-    lib_renderControl_enc
-
-
-include $(BUILD_SHARED_LIBRARY)
+$(call emugl-end-module)
 
 #### egl.cfg ####
 
@@ -70,6 +37,6 @@ LOCAL_MODULE_TAGS := debug
 LOCAL_MODULE_CLASS := ETC
 
 include $(BUILD_PREBUILT)
-endif # TARGET_PRODUCT in 'full sdk full_x86 sdk_x86'
+endif # TARGET_PRODUCT in 'full sdk full_x86 sdk_x86)
 
-endif # of ifneq (,$(BUILD_EMULATOR_OPENGL_DRIVER))
+endif # BUILD_EMULATOR_OPENGL_DRIVER != false

@@ -1,46 +1,19 @@
-ifneq (,$(BUILD_EMULATOR_OPENGL_DRIVER))
+ifneq (false,$(BUILD_EMULATOR_OPENGL_DRIVER))
 
 LOCAL_PATH := $(call my-dir)
-emulatorOpengl := $(LOCAL_PATH)/../..
 
-### OpenglSystemCommon ##############################################
-include $(CLEAR_VARS)
+$(call emugl-begin-shared-library,gralloc.goldfish)
+$(call emugl-import,libGLESv1_enc lib_renderControl_enc libOpenglSystemCommon)
+$(call emugl-set-shared-library-subpath,hw)
 
-# add additional depencies to ensure that the generated code that we depend on
-# is generated
-LOCAL_ADDITIONAL_DEPENDENCIES := \
-	$(TARGET_OUT_SHARED_LIBRARIES)/lib_renderControl_enc$(TARGET_SHLIB_SUFFIX) \
-	$(TARGET_OUT_SHARED_LIBRARIES)/libGLESv1_enc$(TARGET_SHLIB_SUFFIX)
+LOCAL_CFLAGS += -DLOG_TAG=\"gralloc_goldfish\"
 
-LOCAL_SRC_FILES := \
-        gralloc.cpp
+LOCAL_SRC_FILES := gralloc.cpp
 
+# Need to access the special OPENGL TLS Slot
 LOCAL_C_INCLUDES += bionic/libc/private
 
-LOCAL_C_INCLUDES += \
-        $(emulatorOpengl)/host/include/libOpenglRender \
-        $(emulatorOpengl)/shared/OpenglCodecCommon \
-        $(emulatorOpengl)/system/OpenglSystemCommon \
-        $(emulatorOpengl)/system/GLESv1_enc \
-        $(emulatorOpengl)/system/renderControl_enc \
-		$(call intermediates-dir-for, SHARED_LIBRARIES, lib_renderControl_enc) \
-		$(call intermediates-dir-for, SHARED_LIBRARIES, libGLESv1_enc)
 
-LOCAL_MODULE_TAGS := debug
-LOCAL_PRELINK_MODULE := false
-LOCAL_CFLAGS:= -DLOG_TAG=\"gralloc_goldfish\"
-LOCAL_MODULE_PATH = $(TARGET_OUT_SHARED_LIBRARIES)/hw
-LOCAL_MODULE := gralloc.goldfish
+$(call emugl-end-module)
 
-LOCAL_STATIC_LIBRARIES := \
-    libOpenglCodecCommon
-
-LOCAL_SHARED_LIBRARIES := \
-    libcutils \
-    libOpenglSystemCommon \
-    libGLESv1_enc \
-    lib_renderControl_enc
-
-include $(BUILD_SHARED_LIBRARY)
-
-endif # of ifneq (,$(GEODON_DRIVER))
+endif # BUILD_EMULATOR_OPENGL_DRIVER != false
