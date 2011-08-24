@@ -17,7 +17,6 @@
 package com.example.android.hcgallery;
 
 import android.app.ActionBar;
-import android.app.Activity;
 import android.app.Fragment;
 import android.content.ClipData;
 import android.content.ClipData.Item;
@@ -37,6 +36,8 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.Toast;
 
@@ -46,8 +47,16 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.StringTokenizer;
 
+/** Fragment that shows the content selected from the TitlesFragment.
+ * When running on a screen size smaller than "large", this fragment is hosted in
+ * ContentActivity. Otherwise, it appears side by side with the TitlesFragment
+ * in MainActivity. */
 public class ContentFragment extends Fragment {
     private View mContentView;
+    private int mCategory = 0;
+    private int mCurPosition = 0;
+    private boolean mSystemUiVisible = true;
+    private boolean mSoloFragment = false;
 
     // The bitmap currently used by ImageView
     private Bitmap mBitmap = null;
@@ -55,11 +64,9 @@ public class ContentFragment extends Fragment {
     // Current action mode (contextual action bar, a.k.a. CAB)
     private ActionMode mCurrentActionMode;
 
-    @Override
-    public void onActivityCreated(Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
-    }
-
+    /** This is where we initialize the fragment's UI and attach some
+     * event listeners to UI components.
+     */
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
             Bundle savedInstanceState) {
@@ -67,65 +74,48 @@ public class ContentFragment extends Fragment {
         final ImageView imageView = (ImageView) mContentView.findViewById(R.id.image);
         mContentView.setDrawingCacheEnabled(false);
 
+        // Handle drag events when a list item is dragged into the view
         mContentView.setOnDragListener(new View.OnDragListener() {
-            public boolean onDrag(View v, DragEvent event) {
+            public boolean onDrag(View view, DragEvent event) {
                 switch (event.getAction()) {
                     case DragEvent.ACTION_DRAG_ENTERED:
-                        mContentView.setBackgroundColor(
+                        view.setBackgroundColor(
                                 getResources().getColor(R.color.drag_active_color));
                         break;
 
                     case DragEvent.ACTION_DRAG_EXITED:
-                        mContentView.setBackgroundColor(Color.TRANSPARENT);
+                        view.setBackgroundColor(Color.TRANSPARENT);
                         break;
 
                     case DragEvent.ACTION_DRAG_STARTED:
                         return processDragStarted(event);
 
                     case DragEvent.ACTION_DROP:
-                        mContentView.setBackgroundColor(Color.TRANSPARENT);
+                        view.setBackgroundColor(Color.TRANSPARENT);
                         return processDrop(event, imageView);
                 }
                 return false;
             }
         });
 
-        // Keep the action bar visibility in sync with the system status bar. That is, when entering
-        // 'lights out mode,' hide the action bar, and when exiting this mode, show the action bar.
-
-        final Activity activity = getActivity();
-        mContentView.setOnSystemUiVisibilityChangeListener(
-                new View.OnSystemUiVisibilityChangeListener() {
-                    public void onSystemUiVisibilityChange(int visibility) {
-                        ActionBar actionBar = activity.getActionBar();
-                        if (actionBar != null) {
-                            mContentView.setSystemUiVisibility(visibility);
-                            if (visibility == View.STATUS_BAR_VISIBLE) {
-                                actionBar.show();
-                            } else {
-                                actionBar.hide();
-                            }
-                        }
-                    }
-                });
-
-        // Show/hide the system status bar when single-clicking a photo. This is also called
-        // 'lights out mode.' Activating and deactivating this mode also invokes the listener
-        // defined above, which will show or hide the action bar accordingly.
-
+        // Show/hide the system status bar when single-clicking a photo.
         mContentView.setOnClickListener(new OnClickListener() {
-            public void onClick(View v) {
-                if (mContentView.getSystemUiVisibility() == View.STATUS_BAR_VISIBLE) {
-                    mContentView.setSystemUiVisibility(View.STATUS_BAR_HIDDEN);
+            public void onClick(View view) {
+                if (mCurrentActionMode != null) {
+                  // If we're in an action mode, don't toggle the action bar
+                  return;
+                }
+
+                if (mSystemUiVisible) {
+                  setSystemUiVisible(false);
                 } else {
-                    mContentView.setSystemUiVisibility(View.STATUS_BAR_VISIBLE);
+                  setSystemUiVisible(true);
                 }
             }
         });
 
         // When long-pressing a photo, activate the action mode for selection, showing the
         // contextual action bar (CAB).
-
         mContentView.setOnLongClickListener(new View.OnLongClickListener() {
             public boolean onLongClick(View view) {
                 if (mCurrentActionMode != null) {
@@ -134,12 +124,105 @@ public class ContentFragment extends Fragment {
 
                 mCurrentActionMode = getActivity().startActionMode(
                         mContentSelectionActionModeCallback);
-                mContentView.setSelected(true);
+                view.setSelected(true);
                 return true;
             }
         });
 
         return mContentView;
+    }
+
+    /** This is where we perform additional setup for the fragment that's either
+     * not related to the fragment's layout or must be done after the layout is drawn.
+     */
+    @Override
+    public void onActivityCreated(Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+
+        // Set member variable for whether this fragment is the only one in the activity
+        Fragment listFragment = getFragmentManager().findFragmentById(R.id.titles_frag);
+        mSoloFragment = listFragment == null ? true : false;
+
+        if (mSoloFragment) {
+            // The fragment is alone, so enable up navigation
+            getActivity().getActionBar().setDisplayHomeAsUpEnabled(true);
+            // Must call in order to get callback to onOptionsItemSelected()
+            setHasOptionsMenu(true);
+        }
+
+        // Current position and UI visibility should survive screen rotations.
+        if (savedInstanceState != null) {
+            setSystemUiVisible(savedInstanceState.getBoolean("systemUiVisible"));
+            if (mSoloFragment) {
+                // Restoring these members is not necessary when this fragment
+                // is combined with the TitlesFragment, because when the TitlesFragment
+                // is restored, it selects the appropriate item and sends the event
+                // to the updateContentAndRecycleBitmap() method itself
+                mCategory = savedInstanceState.getInt("category");
+                mCurPosition = savedInstanceState.getInt("listPosition");
+                updateContentAndRecycleBitmap(mCategory, mCurPosition);
+            }
+        }
+
+        if (mSoloFragment) {
+          String title = Directory.getCategory(mCategory).getEntry(mCurPosition).getName();
+          ActionBar bar = getActivity().getActionBar();
+          bar.setTitle(title);
+        }
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // This callback is used only when mSoloFragment == true (see onActivityCreated above)
+        switch (item.getItemId()) {
+        case android.R.id.home:
+            // App icon in Action Bar clicked; go up
+            Intent intent = new Intent(getActivity(), MainActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP); // Reuse the existing instance
+            startActivity(intent);
+            return true;
+        default:
+            return super.onOptionsItemSelected(item);
+        }
+    }
+
+    @Override
+    public void onSaveInstanceState (Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putInt("listPosition", mCurPosition);
+        outState.putInt("category", mCategory);
+        outState.putBoolean("systemUiVisible", mSystemUiVisible);
+    }
+
+    /** Toggle whether the system UI (status bar / system bar) is visible.
+     *  This also toggles the action bar visibility.
+     * @param show True to show the system UI, false to hide it.
+     */
+    void setSystemUiVisible(boolean show) {
+        mSystemUiVisible = show;
+
+        Window window = getActivity().getWindow();
+        WindowManager.LayoutParams winParams = window.getAttributes();
+        View view = getView();
+        ActionBar actionBar = getActivity().getActionBar();
+
+        if (show) {
+            // Show status bar (remove fullscreen flag)
+            window.setFlags(0, WindowManager.LayoutParams.FLAG_FULLSCREEN);
+            // Show system bar
+            view.setSystemUiVisibility(View.STATUS_BAR_VISIBLE);
+            // Show action bar
+            actionBar.show();
+        } else {
+            // Add fullscreen flag (hide status bar)
+            window.setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+                WindowManager.LayoutParams.FLAG_FULLSCREEN);
+            // Hide system bar
+            view.setSystemUiVisibility(View.STATUS_BAR_HIDDEN);
+            // Hide action bar
+            actionBar.hide();
+        }
+        window.setAttributes(winParams);
     }
 
     boolean processDragStarted(DragEvent event) {
@@ -176,7 +259,7 @@ public class ContentFragment extends Fragment {
                     updateContentAndRecycleBitmap(category, entryId);
                     // Update list fragment with selected entry.
                     TitlesFragment titlesFrag = (TitlesFragment)
-                            getFragmentManager().findFragmentById(R.id.frag_title);
+                            getFragmentManager().findFragmentById(R.id.titles_frag);
                     titlesFrag.selectPosition(entryId);
                     return true;
                 }
@@ -185,7 +268,15 @@ public class ContentFragment extends Fragment {
         return false;
     }
 
+    /**
+     * Sets the current image visible.
+     * @param category Index position of the image category
+     * @param position Index position of the image
+     */
     void updateContentAndRecycleBitmap(int category, int position) {
+        mCategory = category;
+        mCurPosition = position;
+
         if (mCurrentActionMode != null) {
             mCurrentActionMode.finish();
         }
@@ -203,6 +294,9 @@ public class ContentFragment extends Fragment {
         ((ImageView) getView().findViewById(R.id.image)).setImageBitmap(mBitmap);
     }
 
+    /** Share the currently selected photo using an AsyncTask to compress the image
+     * and then invoke the appropriate share intent.
+     */
     void shareCurrentPhoto() {
         File externalCacheDir = getActivity().getExternalCacheDir();
         if (externalCacheDir == null) {
@@ -229,6 +323,7 @@ public class ContentFragment extends Fragment {
              * Compress and write the bitmap to disk on a separate thread.
              * @return TRUE if the write was successful, FALSE otherwise.
              */
+            @Override
             protected Boolean doInBackground(Void... voids) {
                 try {
                     FileOutputStream fo = new FileOutputStream(tempFile, false);
@@ -250,6 +345,7 @@ public class ContentFragment extends Fragment {
              * After doInBackground completes (either successfully or in failure), we invoke an
              * intent to share the photo. This code is run on the main (UI) thread.
              */
+            @Override
             protected void onPostExecute(Boolean result) {
                 if (result != Boolean.TRUE) {
                     return;
@@ -283,7 +379,7 @@ public class ContentFragment extends Fragment {
 
         public boolean onActionItemClicked(ActionMode actionMode, MenuItem menuItem) {
             switch (menuItem.getItemId()) {
-                case R.id.share:
+                case R.id.menu_share:
                     shareCurrentPhoto();
                     actionMode.finish();
                     return true;

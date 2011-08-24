@@ -25,4 +25,14 @@
     <string name="notification_text">Example notification text</string>
 
     <string name="photo_selection_cab_title">Photo selection</string>
+
+    <!-- Menu strings -->
+    <string name="share">Share</string>
+    <string name="camera">Camera</string>
+    <string name="toggle_titles">Toggle Titles</string>
+    <string name="day_night">Day/Night</string>
+    <string name="show_dialog">Show a dialog</string>
+    <string name="basic_notification">Show a basic notification</string>
+    <string name="custom_notification">Show a custom notification</string>
+    <string name="switch_camera">Switch camera</string>
 </resources>

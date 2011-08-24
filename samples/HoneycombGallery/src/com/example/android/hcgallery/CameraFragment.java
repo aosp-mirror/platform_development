@@ -16,12 +16,9 @@
 
 package com.example.android.hcgallery;
 
-import java.io.IOException;
-import java.util.List;
-
-import android.app.Fragment;
-import android.app.Activity;
 import android.app.ActionBar;
+import android.app.Activity;
+import android.app.Fragment;
 import android.content.Context;
 import android.content.Intent;
 import android.hardware.Camera;
@@ -38,12 +35,16 @@ import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
 
+import java.io.IOException;
+import java.util.List;
+
 public class CameraFragment extends Fragment {
 
     private Preview mPreview;
     Camera mCamera;
     int mNumberOfCameras;
-    int mCameraCurrentlyLocked;
+    int mCurrentCamera;  // Camera ID currently chosen
+    int mCameraCurrentlyLocked;  // Camera ID that's actually acquired
 
     // The first rear facing camera
     int mDefaultCameraId;
@@ -52,20 +53,18 @@ public class CameraFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-
-        // Create a RelativeLayout container that will hold a SurfaceView,
-        // and set it as the content of our activity.
+        // Create a container that will hold a SurfaceView for camera previews
         mPreview = new Preview(this.getActivity());
 
         // Find the total number of cameras available
         mNumberOfCameras = Camera.getNumberOfCameras();
 
-        // Find the ID of the default camera
+        // Find the ID of the rear-facing ("default") camera
         CameraInfo cameraInfo = new CameraInfo();
         for (int i = 0; i < mNumberOfCameras; i++) {
             Camera.getCameraInfo(i, cameraInfo);
             if (cameraInfo.facing == CameraInfo.CAMERA_FACING_BACK) {
-                mDefaultCameraId = i;
+                mCurrentCamera = mDefaultCameraId = i;
             }
         }
         setHasOptionsMenu(mNumberOfCameras > 1);
@@ -95,9 +94,10 @@ public class CameraFragment extends Fragment {
     public void onResume() {
         super.onResume();
 
-        // Open the default i.e. the first rear facing camera.
-        mCamera = Camera.open(mDefaultCameraId);
-        mCameraCurrentlyLocked = mDefaultCameraId;
+        // Use mCurrentCamera to select the camera desired to safely restore
+        // the fragment after the camera has been changed
+        mCamera = Camera.open(mCurrentCamera);
+        mCameraCurrentlyLocked = mCurrentCamera;
         mPreview.setCamera(mCamera);
     }
 
@@ -128,7 +128,7 @@ public class CameraFragment extends Fragment {
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle item selection
         switch (item.getItemId()) {
-        case R.id.switch_cam:
+        case R.id.menu_switch_cam:
             // Release this camera -> mCameraCurrentlyLocked
             if (mCamera != null) {
                 mCamera.stopPreview();
@@ -139,10 +139,9 @@ public class CameraFragment extends Fragment {
 
             // Acquire the next camera and request Preview to reconfigure
             // parameters.
-            mCamera = Camera
-                    .open((mCameraCurrentlyLocked + 1) % mNumberOfCameras);
-            mCameraCurrentlyLocked = (mCameraCurrentlyLocked + 1)
-                    % mNumberOfCameras;
+            mCurrentCamera = (mCameraCurrentlyLocked + 1) % mNumberOfCameras;
+            mCamera = Camera.open(mCurrentCamera);
+            mCameraCurrentlyLocked = mCurrentCamera;
             mPreview.switchCamera(mCamera);
 
             // Start the preview
@@ -152,6 +151,7 @@ public class CameraFragment extends Fragment {
             Intent intent = new Intent(this.getActivity(), MainActivity.class);
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP|Intent.FLAG_ACTIVITY_SINGLE_TOP);
             startActivity(intent);
+            return true;
 
         default:
             return super.onOptionsItemSelected(item);
@@ -175,6 +175,7 @@ class Preview extends ViewGroup implements SurfaceHolder.Callback {
     Size mPreviewSize;
     List<Size> mSupportedPreviewSizes;
     Camera mCamera;
+    boolean mSurfaceCreated = false;
 
     Preview(Context context) {
         super(context);
@@ -194,7 +195,7 @@ class Preview extends ViewGroup implements SurfaceHolder.Callback {
         if (mCamera != null) {
             mSupportedPreviewSizes = mCamera.getParameters()
                     .getSupportedPreviewSizes();
-            requestLayout();
+            if (mSurfaceCreated) requestLayout();
         }
     }
 
@@ -205,11 +206,6 @@ class Preview extends ViewGroup implements SurfaceHolder.Callback {
         } catch (IOException exception) {
             Log.e(TAG, "IOException caused by setPreviewDisplay()", exception);
         }
-        Camera.Parameters parameters = camera.getParameters();
-        parameters.setPreviewSize(mPreviewSize.width, mPreviewSize.height);
-        requestLayout();
-
-        camera.setParameters(parameters);
     }
 
     @Override
@@ -227,11 +223,18 @@ class Preview extends ViewGroup implements SurfaceHolder.Callback {
             mPreviewSize = getOptimalPreviewSize(mSupportedPreviewSizes, width,
                     height);
         }
+
+        if (mCamera != null) {
+          Camera.Parameters parameters = mCamera.getParameters();
+          parameters.setPreviewSize(mPreviewSize.width, mPreviewSize.height);
+
+          mCamera.setParameters(parameters);
+        }
     }
 
     @Override
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
-        if (changed && getChildCount() > 0) {
+        if (getChildCount() > 0) {
             final View child = getChildAt(0);
 
             final int width = r - l;
@@ -269,6 +272,8 @@ class Preview extends ViewGroup implements SurfaceHolder.Callback {
         } catch (IOException exception) {
             Log.e(TAG, "IOException caused by setPreviewDisplay()", exception);
         }
+        if (mPreviewSize == null) requestLayout();
+        mSurfaceCreated = true;
     }
 
     public void surfaceDestroyed(SurfaceHolder holder) {

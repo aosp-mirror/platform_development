@@ -14,12 +14,20 @@
   See the License for the specific language governing permissions and
   limitations under the License.
  -->
-
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="horizontal"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
-    <fragment android:name="com.example.android.hcgallery.CameraFragment"
-        android:id="@+id/camera_frag"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
-</FrameLayout>
+    android:layout_height="match_parent"
+    android:id="@+id/frags">
+
+    <fragment class="com.example.android.hcgallery.TitlesFragment"
+            android:id="@+id/titles_frag"
+            android:layout_width="@dimen/titles_size"
+            android:layout_height="match_parent"/>
+
+    <fragment class="com.example.android.hcgallery.ContentFragment"
+            android:id="@+id/content_frag"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+</LinearLayout>
