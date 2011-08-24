@@ -10,8 +10,6 @@ LOCAL_PACKAGE_NAME := SampleSyncAdapter
 
 LOCAL_SDK_VERSION := current
 
-LOCAL_DX_FLAGS=--target-api=11
-
 include $(BUILD_PACKAGE)
 
 # Use the folloing include to make our test apk.
