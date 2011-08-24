@@ -103,7 +103,7 @@ int RenderServer::Main()
         // insert the added thread to the list
         threads.insert(rt);
 
-        printf("Started new RenderThread\n");
+        DBG("Started new RenderThread\n");
     }
 
     //
