@@ -1,13 +1,28 @@
 /*
- * Copyright 2006 The Android Open Source Project
+ * Copyright (C) 2006 The Android Open Source Project
  *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/*
  * JNI specification, as defined by Sun:
  * http://java.sun.com/javase/6/docs/technotes/guides/jni/spec/jniTOC.html
  *
  * Everything here is expected to be VM-neutral.
  */
-#ifndef _JNI_H
-#define _JNI_H
+
+#ifndef JNI_H_
+#define JNI_H_
 
 #include <stdarg.h>
 
@@ -124,10 +139,10 @@ typedef enum jobjectRefType {
     JNIWeakGlobalRefType = 3
 } jobjectRefType;
 
-typedef struct { 
-    const char* name; 
-    const char* signature; 
-    void*       fnPtr; 
+typedef struct {
+    const char* name;
+    const char* signature;
+    void*       fnPtr;
 } JNINativeMethod;
 
 struct _JNIEnv;
@@ -1037,7 +1052,7 @@ struct JNIInvokeInterface {
     void*       reserved0;
     void*       reserved1;
     void*       reserved2;
- 
+
     jint        (*DestroyJavaVM)(JavaVM*);
     jint        (*AttachCurrentThread)(JavaVM*, JNIEnv**, void*);
     jint        (*DetachCurrentThread)(JavaVM*);
@@ -1097,16 +1112,22 @@ extern "C" {
  *
  * Note these are the only symbols exported for JNI by the VM.
  */
+#if 0  /* In practice, these are not exported by the NDK so don't declare them */
 jint JNI_GetDefaultJavaVMInitArgs(void*);
 jint JNI_CreateJavaVM(JavaVM**, JNIEnv**, void*);
 jint JNI_GetCreatedJavaVMs(JavaVM**, jsize, jsize*);
+#endif
+
+#define JNIIMPORT
+#define JNIEXPORT  __attribute__ ((visibility ("default")))
+#define JNICALL
 
 /*
  * Prototypes for functions exported by loadable shared libs.  These are
  * called by JNI, not provided by JNI.
  */
-jint JNI_OnLoad(JavaVM* vm, void* reserved);
-void JNI_OnUnload(JavaVM* vm, void* reserved);
+JNIEXPORT jint JNI_OnLoad(JavaVM* vm, void* reserved);
+JNIEXPORT void JNI_OnUnload(JavaVM* vm, void* reserved);
 
 #ifdef __cplusplus
 }
@@ -1132,9 +1153,4 @@ void JNI_OnUnload(JavaVM* vm, void* reserved);
 #define JNI_COMMIT      1           /* copy content, do not free buffer */
 #define JNI_ABORT       2           /* free buffer w/o copying back */
 
-/* need these for Windows-aware headers */
-#define JNIIMPORT
-#define JNIEXPORT
-#define JNICALL
-
-#endif /*_JNI_H*/
+#endif  /* JNI_H_ */
