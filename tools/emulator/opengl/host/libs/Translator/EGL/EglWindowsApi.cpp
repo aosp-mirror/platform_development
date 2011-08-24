@@ -17,6 +17,7 @@
 #include <windows.h>
 #include <wingdi.h>
 #include <GL/wglext.h>
+#include <stdio.h>
 
 #define IS_TRUE(a) \
         if(a != true) return false;
