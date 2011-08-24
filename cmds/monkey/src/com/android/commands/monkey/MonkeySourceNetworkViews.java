@@ -28,6 +28,7 @@ import android.graphics.Rect;
 import android.os.ServiceManager;
 import android.os.RemoteException;
 import android.util.Log;
+import android.view.accessibility.AccessibilityInteractionClient;
 import android.view.accessibility.AccessibilityNodeInfo;
 import android.view.accessibility.IAccessibilityManager;
 import android.view.accessibility.AccessibilityEvent;
@@ -203,16 +204,18 @@ public class MonkeySourceNetworkViews {
     }
 
     private static AccessibilityNodeInfo getNodeByAccessibilityIds(
-            String windowString, String viewString) throws RemoteException {
+            String windowString, String viewString) {
         int windowId = Integer.parseInt(windowString);
         int viewId = Integer.parseInt(viewString);
-        return sConnection.findAccessibilityNodeInfoByAccessibilityId(windowId, viewId);
+        return AccessibilityInteractionClient.getInstance()
+            .findAccessibilityNodeInfoByAccessibilityId(sConnection, windowId, viewId);
     }
 
     private static AccessibilityNodeInfo getNodeByViewId(String viewId, AccessibilityEvent event)
-            throws RemoteException, MonkeyViewException {
+            throws MonkeyViewException {
         int id = getId(viewId, event);
-        return sConnection.findAccessibilityNodeInfoByViewIdInActiveWindow(id);
+        return AccessibilityInteractionClient.getInstance()
+            .findAccessibilityNodeInfoByViewIdInActiveWindow(sConnection, id);
     }
 
     /**
@@ -281,8 +284,6 @@ public class MonkeySourceNetworkViews {
                         node = getNodeByViewId(command.get(2), lastEvent);
                         viewQuery = command.get(3);
                         args = command.subList(4, command.size());
-                    } catch (RemoteException e) {
-                        return new MonkeyCommandReturn(false, REMOTE_ERROR);
                     } catch (MonkeyViewException e) {
                         return new MonkeyCommandReturn(false, e.getMessage());
                     }
@@ -291,8 +292,6 @@ public class MonkeySourceNetworkViews {
                         node = getNodeByAccessibilityIds(command.get(2), command.get(3));
                         viewQuery = command.get(4);
                         args = command.subList(5, command.size());
-                    } catch (RemoteException e) {
-                        return new MonkeyCommandReturn(false, REMOTE_ERROR);
                     } catch (NumberFormatException e) {
                         return EARG;
                     }
@@ -344,17 +343,9 @@ public class MonkeySourceNetworkViews {
                 return new MonkeyCommandReturn(false, NO_CONNECTION);
             }
             if (command.size() == 2) {
-                StringBuilder logs = new StringBuilder();
                 String text = command.get(1);
-                List<AccessibilityNodeInfo> nodes;
-                try {
-                    nodes = sConnection.findAccessibilityNodeInfosByViewTextInActiveWindow(text);
-                } catch (RemoteException e) {
-                    return new MonkeyCommandReturn(false, REMOTE_ERROR);
-                }
-                if (nodes == null) {
-                    return new MonkeyCommandReturn(true, "");
-                }
+                List<AccessibilityNodeInfo> nodes = AccessibilityInteractionClient.getInstance()
+                    .findAccessibilityNodeInfosByViewTextInActiveWindow(sConnection, text);
                 ViewIntrospectionCommand idGetter = new GetAccessibilityIds();
                 List<String> emptyArgs = new ArrayList<String>();
                 StringBuilder ids = new StringBuilder();
