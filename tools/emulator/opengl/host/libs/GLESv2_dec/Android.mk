@@ -1,6 +1,6 @@
 LOCAL_PATH := $(call my-dir)
 
-$(call emugl-begin-host-shared-library,libGLESv2_dec)
+$(call emugl-begin-host-static-library,libGLESv2_dec)
 $(call emugl-import, libOpenglCodecCommon libOpenglOsUtils)
 $(call emugl-gen-decoder,$(EMUGL_PATH)/system/GLESv2_enc,gl2)
 
