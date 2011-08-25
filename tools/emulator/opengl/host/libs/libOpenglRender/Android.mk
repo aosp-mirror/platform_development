@@ -39,6 +39,7 @@ LOCAL_SRC_FILES := \
     RenderServer.cpp
 
 $(call emugl-export,C_INCLUDES,$(EMUGL_PATH)/host/include)
+$(call emugl-export,C_INCLUDES,$(LOCAL_PATH))
 
 # use Translator's egl/gles headers
 LOCAL_C_INCLUDES += $(EMUGL_PATH)/host/libs/Translator/include
