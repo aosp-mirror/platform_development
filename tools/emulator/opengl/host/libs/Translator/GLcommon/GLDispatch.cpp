@@ -37,7 +37,7 @@ static GL_FUNC_PTR getGLFuncAddress(const char *funcName) {
     static osUtils::dynLibrary* libGL = osUtils::dynLibrary::open("opengl32");
     ret = (GL_FUNC_PTR)wglGetProcAddress(funcName);
 #elif defined(__APPLE__)
-    static osUtils::dynLibrary* libGL = osUtils::dynLibrary::open("libGL.dylib");
+    static osUtils::dynLibrary* libGL = osUtils::dynLibrary::open("/System/Library/Frameworks/OpenGL.framework/OpenGL");
 #endif
     if(!ret && libGL){
         ret = libGL->findSymbol(funcName);
