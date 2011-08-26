@@ -12,7 +12,7 @@ LOCAL_SRC_FILES := gralloc.cpp
 
 # Need to access the special OPENGL TLS Slot
 LOCAL_C_INCLUDES += bionic/libc/private
-
+LOCAL_SHARED_LIBRARIES += libdl
 
 $(call emugl-end-module)
 
