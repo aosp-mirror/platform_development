@@ -23,11 +23,12 @@
 #include <cutils/ashmem.h>
 #include <unistd.h>
 #include <errno.h>
+#include <dlfcn.h>
 #include <sys/mman.h>
 #include "HostConnection.h"
 #include "glUtils.h"
 #include <cutils/log.h>
-
+#include <cutils/properties.h>
 
 #define DBG_FUNC DBG("%s\n", __FUNCTION__)
 //
@@ -36,6 +37,16 @@
 struct private_module_t {
     gralloc_module_t base;
 };
+
+/* If not NULL, this is a pointer to the fallback module.
+ * This really is gralloc.default, which we'll use if we detect
+ * that the emulator we're running in does not support GPU emulation.
+ */
+static gralloc_module_t*  sFallback;
+static pthread_once_t     sFallbackOnce = PTHREAD_ONCE_INIT;
+
+static void fallback_init(void);  // forward
+
 
 typedef struct _alloc_list_node {
     buffer_handle_t handle;
@@ -401,6 +412,12 @@ static int fb_close(struct hw_device_t *dev)
 static int gralloc_register_buffer(gralloc_module_t const* module,
                                    buffer_handle_t handle)
 {
+    pthread_once(&sFallbackOnce, fallback_init);
+    if (sFallback != NULL) {
+        return sFallback->registerBuffer(sFallback, handle);
+    }
+
+
     private_module_t *gr = (private_module_t *)module;
     cb_handle_t *cb = (cb_handle_t *)handle;
     if (!gr || !cb_handle_t::validate(cb)) {
@@ -428,6 +445,10 @@ static int gralloc_register_buffer(gralloc_module_t const* module,
 static int gralloc_unregister_buffer(gralloc_module_t const* module,
                                      buffer_handle_t handle)
 {
+    if (sFallback != NULL) {
+        return sFallback->unregisterBuffer(sFallback, handle);
+    }
+
     private_module_t *gr = (private_module_t *)module;
     cb_handle_t *cb = (cb_handle_t *)handle;
     if (!gr || !cb_handle_t::validate(cb)) {
@@ -458,6 +479,10 @@ static int gralloc_lock(gralloc_module_t const* module,
                         int l, int t, int w, int h,
                         void** vaddr)
 {
+    if (sFallback != NULL) {
+        return sFallback->lock(sFallback, handle, usage, l, t, w, h, vaddr);
+    }
+
     private_module_t *gr = (private_module_t *)module;
     cb_handle_t *cb = (cb_handle_t *)handle;
     if (!gr || !cb_handle_t::validate(cb)) {
@@ -546,6 +571,10 @@ static int gralloc_lock(gralloc_module_t const* module,
 static int gralloc_unlock(gralloc_module_t const* module,
                           buffer_handle_t handle)
 {
+    if (sFallback != NULL) {
+        return sFallback->unlock(sFallback, handle);
+    }
+
     private_module_t *gr = (private_module_t *)module;
     cb_handle_t *cb = (cb_handle_t *)handle;
     if (!gr || !cb_handle_t::validate(cb)) {
@@ -603,6 +632,7 @@ static int gralloc_unlock(gralloc_module_t const* module,
     return 0;
 }
 
+
 static int gralloc_device_open(const hw_module_t* module,
                                const char* name,
                                hw_device_t** device)
@@ -610,6 +640,11 @@ static int gralloc_device_open(const hw_module_t* module,
     int status = -EINVAL;
 
     LOGD("gralloc_device_open %s\n", name);
+
+    pthread_once( &sFallbackOnce, fallback_init );
+    if (sFallback != NULL) {
+        return sFallback->common.methods->open(&sFallback->common, name, device);
+    }
 
     if (!strcmp(name, GRALLOC_HARDWARE_GPU0)) {
 
@@ -731,3 +766,32 @@ struct private_module_t HAL_MODULE_INFO_SYM = {
         reserved_proc : {NULL, }
     }
 };
+
+/* This function is called once to detect whether the emulator supports
+ * GPU emulation (this is done by looking at the qemu.gles kernel
+ * parameter, which must be > 0 if this is the case).
+ *
+ * If not, then load gralloc.default instead as a fallback.
+ */
+static void
+fallback_init(void)
+{
+    char  prop[PROPERTY_VALUE_MAX];
+    void* module;
+
+    property_get("ro.kernel.qemu.gles", prop, "0");
+    if (atoi(prop) > 0) {
+        return;
+    }
+    LOGD("Emulator without GPU emulation detected.");
+    module = dlopen("/system/lib/hw/gralloc.default.so", RTLD_LAZY|RTLD_LOCAL);
+    if (module != NULL) {
+        sFallback = reinterpret_cast<gralloc_module_t*>(dlsym(module, HAL_MODULE_INFO_SYM_AS_STR));
+        if (sFallback == NULL) {
+            dlclose(module);
+        }
+    }
+    if (sFallback == NULL) {
+        LOGE("Could not find software fallback module!?");
+    }
+}
