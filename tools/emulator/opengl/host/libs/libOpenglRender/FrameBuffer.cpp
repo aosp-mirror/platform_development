@@ -108,24 +108,6 @@ bool FrameBuffer::initialize(int width, int height)
     }
 
     //
-    // Load EGL Plugin
-    //
-    if (!init_egl_dispatch()) {
-        // Failed to load EGL
-        printf("Failed to init_egl_dispatch\n");
-        return false;
-    }
-
-    //
-    // Load GLES Plugin
-    //
-    if (!init_gl_dispatch()) {
-        // Failed to load GLES
-        ERR("Failed to init_gl_dispatch\n");
-        return false;
-    }
-
-    //
     // allocate space for the FrameBuffer object
     //
     FrameBuffer *fb = new FrameBuffer(width, height);
@@ -142,7 +124,7 @@ bool FrameBuffer::initialize(int width, int height)
         fb->m_caps.hasGL2 = false;
     }
     else {
-        fb->m_caps.hasGL2 = init_gl2_dispatch();
+        fb->m_caps.hasGL2 = s_gl2_enabled;
     }
 #else
     fb->m_caps.hasGL2 = false;
