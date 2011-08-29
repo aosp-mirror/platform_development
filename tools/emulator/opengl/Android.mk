@@ -9,14 +9,10 @@
 #
 ifeq (true,$(BUILD_EMULATOR_OPENGL))
 
-# By default, always build the gralloc.goldfish support library to ensure
-# that SurfaceFlinger always uses our GLES emulation libraries. If you
-# don't want this, explicitely set BUILD_EMULATOR_OPENGL_DRIVER to 'false'
-# in your environment or your BoardConfig.mk. For the record, this should
-# only be done for debugging specific applications and requires remoting
-# the GL window from the emulator UI to be usable.
-#
-BUILD_EMULATOR_OPENGL_DRIVER ?= true
+# By default, NEVER build the gralloc.goldfish support library because
+# the code has not been ported to Honeycomb / IceCreamSandwich yet and
+# will fail to build properly.
+BUILD_EMULATOR_OPENGL_DRIVER ?= false
 
 # Top-level for all modules
 EMUGL_PATH := $(call my-dir)
