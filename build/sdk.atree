@@ -94,15 +94,15 @@ development/tools/emulator/skins/WXGA      platforms/${PLATFORM_NAME}/skins/WXGA
 development/sdk/sdk.properties               platforms/${PLATFORM_NAME}/sdk.properties
 
 # sdk.git Ant templates for project files
-sdk/templates/AndroidManifest.template        platforms/${PLATFORM_NAME}/templates/AndroidManifest.template
-sdk/templates/AndroidManifest.tests.template  platforms/${PLATFORM_NAME}/templates/AndroidManifest.tests.template
-sdk/templates/java_file.template              platforms/${PLATFORM_NAME}/templates/java_file.template
-sdk/templates/java_tests_file.template        platforms/${PLATFORM_NAME}/templates/java_tests_file.template
-sdk/templates/layout.template                 platforms/${PLATFORM_NAME}/templates/layout.template
-sdk/templates/strings.template                platforms/${PLATFORM_NAME}/templates/strings.template
-sdk/templates/icon_ldpi.png                   platforms/${PLATFORM_NAME}/templates/icon_ldpi.png
-sdk/templates/icon_mdpi.png                   platforms/${PLATFORM_NAME}/templates/icon_mdpi.png
-sdk/templates/icon_hdpi.png                   platforms/${PLATFORM_NAME}/templates/icon_hdpi.png
+development/tools/templates/AndroidManifest.template        platforms/${PLATFORM_NAME}/templates/AndroidManifest.template
+development/tools/templates/AndroidManifest.tests.template  platforms/${PLATFORM_NAME}/templates/AndroidManifest.tests.template
+development/tools/templates/java_file.template              platforms/${PLATFORM_NAME}/templates/java_file.template
+development/tools/templates/java_tests_file.template        platforms/${PLATFORM_NAME}/templates/java_tests_file.template
+development/tools/templates/layout.template                 platforms/${PLATFORM_NAME}/templates/layout.template
+development/tools/templates/strings.template                platforms/${PLATFORM_NAME}/templates/strings.template
+development/tools/templates/ic_launcher_ldpi.png            platforms/${PLATFORM_NAME}/templates/ic_launcher_ldpi.png
+development/tools/templates/ic_launcher_mdpi.png            platforms/${PLATFORM_NAME}/templates/ic_launcher_mdpi.png
+development/tools/templates/ic_launcher_hdpi.png            platforms/${PLATFORM_NAME}/templates/ic_launcher_hdpi.png
 
 # Eclipse Editors support
 framework/layoutlib.jar       platforms/${PLATFORM_NAME}/data/layoutlib.jar
