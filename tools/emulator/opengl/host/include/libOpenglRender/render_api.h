@@ -22,6 +22,16 @@ extern "C" {
 
 #include "render_api_platform_types.h"
 
+// initLibrary - initialize the library and tries to load the corresponding
+//     GLES translator libraries. This function must be called before anything
+//     else to ensure that everything works. If it returns an error, then
+//     you cannot use the library at all (this can happen under certain
+//     environments where the desktop GL libraries are not available)
+//
+// returns true if the library could be initialized successfully;
+//
+bool initLibrary(void);
+
 //
 // initOpenGLRenderer - initialize the OpenGL renderer process.
 //     portNum is the tcp port number the renderer is listening to.
@@ -31,7 +41,7 @@ extern "C" {
 // returns true if renderer has been started successfully;
 //
 // This function is *NOT* thread safe and should be called first
-// to initialize the renderer.
+// to initialize the renderer after initLibrary().
 //
 bool initOpenGLRenderer(int width, int height, int portNum);
 

@@ -20,6 +20,10 @@
 #include "osProcess.h"
 #include "TimeUtils.h"
 
+#include "EGLDispatch.h"
+#include "GLDispatch.h"
+#include "GL2Dispatch.h"
+
 static osUtils::childProcess *s_renderProc = NULL;
 static RenderServer *s_renderThread = NULL;
 static int s_renderPort = 0;
@@ -38,6 +42,32 @@ static IOStream *createRenderThread(int p_stream_buffer_size,
 //#ifdef __APPLE__
 #define  RENDER_API_USE_THREAD
 //#endif
+
+bool initLibrary(void)
+{
+    //
+    // Load EGL Plugin
+    //
+    if (!init_egl_dispatch()) {
+        // Failed to load EGL
+        printf("Failed to init_egl_dispatch\n");
+        return false;
+    }
+
+    //
+    // Load GLES Plugin
+    //
+    if (!init_gl_dispatch()) {
+        // Failed to load GLES
+        ERR("Failed to init_gl_dispatch\n");
+        return false;
+    }
+
+    /* failure to init the GLES2 dispatch table is not fatal */
+    init_gl2_dispatch();
+
+    return true;
+}
 
 bool initOpenGLRenderer(int width, int height, int portNum)
 {
