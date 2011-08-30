@@ -20,6 +20,7 @@
 #include "osDynLibrary.h"
 
 gl2_decoder_context_t s_gl2;
+int                   s_gl2_enabled;
 
 static osUtils::dynLibrary *s_gles2_lib = NULL;
 
@@ -50,6 +51,7 @@ bool init_gl2_dispatch()
     // init the GLES dispatch table
     //
     s_gl2.initDispatchByName( gl2_dispatch_get_proc_func, NULL );
+    s_gl2_enabled = true;
     return true;
 }
 
