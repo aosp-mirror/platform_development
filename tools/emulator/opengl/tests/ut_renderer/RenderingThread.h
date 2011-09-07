@@ -16,7 +16,7 @@
 #ifndef _RENDERING_THREAD_H_
 #define _RENDERING_THREAD_H_
 
-#include "TcpStream.h"
+#include "SocketStream.h"
 #include "GLDecoder.h"
 #include "GL2Decoder.h"
 #include "ut_rendercontrol_dec.h"
@@ -38,7 +38,7 @@ class RendererContext;
 
 class RenderingThread {
 public:
-    RenderingThread(TcpStream *stream);
+    RenderingThread(SocketStream *stream);
     int start();
     void *thread();
     RendererContext *currentContext() { return m_currentContext; }
@@ -54,7 +54,7 @@ private:
     ut_rendercontrol_decoder_context_t m_utDec;
     GL2Decoder m_gl2Dec;
 
-    TcpStream   *m_stream;
+    SocketStream   *m_stream;
     pthread_t m_thread;
     RendererContext * m_currentContext;
 

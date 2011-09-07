@@ -255,7 +255,7 @@ void RenderingThread::s_swapBuffers(uint32_t pid, uint32_t surface)
 }
 
 
-RenderingThread::RenderingThread(TcpStream *stream) :
+RenderingThread::RenderingThread(SocketStream *stream) :
     m_stream(stream),
     m_currentContext(NULL)
 {

@@ -16,11 +16,11 @@
 #ifndef _READ_BUFFER_H
 #define _READ_BUFFER_H
 
-#include "TcpStream.h"
+#include "SocketStream.h"
 
 class ReadBuffer {
 public:
-    ReadBuffer(TcpStream *stream, size_t bufSize);
+    ReadBuffer(SocketStream *stream, size_t bufSize);
     ~ReadBuffer();
     int getData(); // get fresh data from the stream
     unsigned char *buf() { return m_readPtr; } // return the next read location
@@ -31,6 +31,6 @@ private:
     unsigned char *m_readPtr;
     size_t m_size;
     size_t m_validData;
-    TcpStream *m_stream;
+    SocketStream *m_stream;
 };
 #endif
