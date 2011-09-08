@@ -59,7 +59,7 @@ PLATFORM_TOOLS=$TEMP_SDK_DIR/platform-tools
 LIB=$TEMP_SDK_DIR/tools/lib
 rm $V $TOOLS/{dmtracedump,etc1tool,hprof-conv,sqlite3,zipalign}
 rm $V $LIB/*/swt.jar
-rm $V $PLATFORM_TOOLS/{adb,aapt,aidl,dx,dexdump,llvm-rs-cc,llvm-rs-cc-2}
+rm $V $PLATFORM_TOOLS/{adb,aapt,aidl,dx,dexdump,llvm-rs-cc}
 
 # Copy all the new stuff in tools
 # Note: some tools are first copied here and then moved in platform-tools
@@ -101,10 +101,7 @@ cp -r $V ${TOPDIR}external/sonivox/docs/JET_Creator_User_Manual_files  $JETDOC/
 cp $V ${TOPDIR}dalvik/dx/etc/dx.bat $PLATFORM_TOOLS/
 mv $V $TOOLS/{adb.exe,aapt.exe,aidl.exe,dexdump.exe} $PLATFORM_TOOLS/
 mv $V $TOOLS/Adb*.dll $PLATFORM_TOOLS/
-# The platform actually produces llvm-rs-cc-2 (via sdk.atree), whereas
-# the original version 1 (just named llvm-rs-cc) is stored in the prebuilts.
-cp $V ${TOPDIR}prebuilt/windows/llvm-rs-cc/llvm-rs-cc.exe $PLATFORM_TOOLS/llvm-rs-cc.exe
-mv $V $TOOLS/llvm-rs-cc.exe                               $PLATFORM_TOOLS/llvm-rs-cc-2.exe
+mv $V $TOOLS/llvm-rs-cc.exe                               $PLATFORM_TOOLS/llvm-rs-cc.exe
 
 # Fix EOL chars to make window users happy - fix all files at the top level
 # as well as all batch files including those in platform-tools/

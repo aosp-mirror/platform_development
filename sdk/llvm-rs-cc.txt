@@ -3,4 +3,3 @@
 # the compiler version number maps to the filename llvm-rs-cc-<version>[.exe]
 # except for version 1 which is simply llvm-rs-cc[.exe]
 1:11
-2:12
