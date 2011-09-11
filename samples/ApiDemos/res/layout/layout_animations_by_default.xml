@@ -24,18 +24,11 @@
         android:text="Add Button"
         android:id="@+id/addNewButton"
         />
-    <LinearLayout
-        android:orientation="horizontal"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/horizontalContainer"
-        android:animateLayoutChanges="true"
-        />
-    <LinearLayout
-        android:orientation="vertical"
+    <GridLayout
+        android:columnCount="4"
         android:layout_width="wrap_content"
-        android:layout_height="match_parent"
-        android:id="@+id/verticalContainer"
+        android:layout_height="wrap_content"
+        android:id="@+id/gridContainer"
         android:animateLayoutChanges="true"
         />
 </LinearLayout>
