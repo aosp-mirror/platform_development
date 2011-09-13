@@ -62,7 +62,7 @@ status_t EmulatedQemuCameraDevice::Initialize(const char* device_name)
              __FUNCTION__, device_name);
         mDeviceName = device_name;
     } else {
-        mQemuClient.disconnectDevice();
+        mQemuClient.queryDisconnect();
     }
 
     return res;

@@ -112,6 +112,8 @@ EmulatedCameraFactory::~EmulatedCameraFactory()
 
 int EmulatedCameraFactory::cameraDeviceOpen(int camera_id, hw_device_t** device)
 {
+    LOGV("%s: id = %d", __FUNCTION__, camera_id);
+
     *device = NULL;
 
     if (!isConstructedOK()) {
@@ -130,6 +132,8 @@ int EmulatedCameraFactory::cameraDeviceOpen(int camera_id, hw_device_t** device)
 
 int EmulatedCameraFactory::getCameraInfo(int camera_id, struct camera_info* info)
 {
+    LOGV("%s: id = %d", __FUNCTION__, camera_id);
+
     if (!isConstructedOK()) {
         LOGE("%s: EmulatedCameraFactory has failed to initialize", __FUNCTION__);
         return -EINVAL;

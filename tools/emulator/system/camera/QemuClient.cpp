@@ -240,6 +240,8 @@ status_t QemuClient::connectClient(const char* param)
 
 void QemuClient::disconnectClient()
 {
+    LOGV("%s", __FUNCTION__);
+
     if (mPipeFD >= 0) {
         close(mPipeFD);
         mPipeFD = -1;
@@ -368,6 +370,8 @@ FactoryQemuClient::~FactoryQemuClient()
 
 status_t FactoryQemuClient::listCameras(char** list)
 {
+    LOGV("%s", __FUNCTION__);
+
     QemuQuery query(mQueryList);
     doQuery(&query);
     if (!query.isQuerySucceeded()) {
@@ -424,6 +428,8 @@ CameraQemuClient::~CameraQemuClient()
 
 status_t CameraQemuClient::queryConnect()
 {
+    LOGV("%s", __FUNCTION__);
+
     QemuQuery query(mQueryConnect);
     doQuery(&query);
     const status_t res = query.getCompletionStatus();
@@ -435,6 +441,8 @@ status_t CameraQemuClient::queryConnect()
 
 status_t CameraQemuClient::queryDisconnect()
 {
+    LOGV("%s", __FUNCTION__);
+
     QemuQuery query(mQueryDisconnect);
     doQuery(&query);
     const status_t res = query.getCompletionStatus();
@@ -448,6 +456,8 @@ status_t CameraQemuClient::queryStart(uint32_t pixel_format,
                                       int width,
                                       int height)
 {
+    LOGV("%s", __FUNCTION__);
+
     char query_str[256];
     snprintf(query_str, sizeof(query_str), "%s dim=%dx%d pix=%d",
              mQueryStart, width, height, pixel_format);
@@ -462,6 +472,8 @@ status_t CameraQemuClient::queryStart(uint32_t pixel_format,
 
 status_t CameraQemuClient::queryStop()
 {
+    LOGV("%s", __FUNCTION__);
+
     QemuQuery query(mQueryStop);
     doQuery(&query);
     const status_t res = query.getCompletionStatus();
@@ -476,6 +488,8 @@ status_t CameraQemuClient::queryFrame(void* vframe,
                                       size_t vframe_size,
                                       size_t pframe_size)
 {
+    LOGV("%s", __FUNCTION__);
+
     char query_str[256];
     snprintf(query_str, sizeof(query_str), "%s video=%d preview=%d",
              mQueryFrame, (vframe && vframe_size) ? vframe_size : 0,

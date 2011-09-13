@@ -88,8 +88,6 @@ EmulatedCamera::~EmulatedCamera()
 
 status_t EmulatedCamera::Initialize()
 {
-    LOGV("%s", __FUNCTION__);
-
     /*
      * Fake required parameters.
      */
@@ -243,16 +241,12 @@ int EmulatedCamera::isMsgTypeEnabled(int32_t msg_type)
 
 status_t EmulatedCamera::startPreview()
 {
-    LOGV("%s", __FUNCTION__);
-
     /* Callback should return a negative errno. */
     return -doStartPreview();
 }
 
 void EmulatedCamera::stopPreview()
 {
-    LOGV("%s", __FUNCTION__);
-
     doStopPreview();
 }
 
@@ -458,6 +452,8 @@ status_t EmulatedCamera::dumpCamera(int fd)
 
 status_t EmulatedCamera::doStartPreview()
 {
+    LOGV("%s", __FUNCTION__);
+
     status_t res = mPreviewWindow.startPreview();
 
     /* Start the camera. */
@@ -474,6 +470,8 @@ status_t EmulatedCamera::doStartPreview()
 
 status_t EmulatedCamera::doStopPreview()
 {
+    LOGV("%s", __FUNCTION__);
+
     status_t res = NO_ERROR;
     /* Stop the camera. */
     if (getCameraDevice()->isCapturing()) {
@@ -490,6 +488,8 @@ status_t EmulatedCamera::doStopPreview()
 
 status_t EmulatedCamera::startCamera()
 {
+    LOGV("%s", __FUNCTION__);
+
     status_t res = EINVAL;
     EmulatedCameraDevice* camera_dev = getCameraDevice();
     if (camera_dev != NULL) {
@@ -539,6 +539,8 @@ status_t EmulatedCamera::startCamera()
 
 status_t EmulatedCamera::stopCamera()
 {
+    LOGV("%s", __FUNCTION__);
+
     status_t res = NO_ERROR;
     EmulatedCameraDevice* const camera_dev = getCameraDevice();
     if (camera_dev != NULL) {

@@ -54,8 +54,6 @@ EmulatedCameraDevice::~EmulatedCameraDevice()
 
 status_t EmulatedCameraDevice::Initialize()
 {
-    LOGV("%s", __FUNCTION__);
-
     if (isInitialized()) {
         LOGW("%s: Emulated camera device is already initialized: mState = %d",
              __FUNCTION__, mState);

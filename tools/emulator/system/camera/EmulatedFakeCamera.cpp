@@ -43,8 +43,6 @@ EmulatedFakeCamera::~EmulatedFakeCamera()
 
 status_t EmulatedFakeCamera::Initialize()
 {
-    LOGV("%s", __FUNCTION__);
-
     status_t res = mFakeCameraDevice.Initialize();
     if (res != NO_ERROR) {
         return res;
