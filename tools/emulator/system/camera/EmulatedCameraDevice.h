@@ -27,14 +27,14 @@
  */
 
 #include <utils/threads.h>
-#include "emulated_camera_common.h"
+#include "EmulatedCameraCommon.h"
 
 namespace android {
 
 class EmulatedCamera;
 
-/* Encapsulates an abstract class EmulatedCameraDevice that defines functionality
- * expected from an emulated physical camera device:
+/* Encapsulates an abstract class EmulatedCameraDevice that defines
+ * functionality expected from an emulated physical camera device:
  *  - Obtaining and setting camera device parameters
  *  - Capturing frames
  *  - Streaming video
@@ -52,9 +52,9 @@ public:
     /* Destructs EmulatedCameraDevice instance. */
     virtual ~EmulatedCameraDevice();
 
-    /****************************************************************************
+    /***************************************************************************
      * Emulated camera device abstract interface
-     ***************************************************************************/
+     **************************************************************************/
 
 public:
     /* Connects to the camera device.
@@ -62,7 +62,7 @@ public:
      * Return:
      *  NO_ERROR on success, or an appropriate error status.
      */
-    virtual status_t Connect() = 0;
+    virtual status_t connectDevice() = 0;
 
     /* Disconnects from the camera device.
      * Return:
@@ -72,7 +72,7 @@ public:
      *  called for an instance that is in "capturing" state, this method must
      *  return a failure.
      */
-    virtual status_t Disconnect() = 0;
+    virtual status_t disconnectDevice() = 0;
 
 protected:
     /* Starts capturing frames from the camera device.
@@ -81,26 +81,27 @@ protected:
      * requested by the framework through the camera HAL, and starts a worker
      * thread that will listen to the physical device for available frames. When
      * new frame becomes available, it will be cached in current_framebuffer_,
-     * and the containing emulated camera object will be notified via call to its
-     * OnNextFrameAvailable method. This method must be called on a connected
-     * instance of this class. If it is called on a disconnected instance, this
-     * method must return a failure.
+     * and the containing emulated camera object will be notified via call to
+     * its onNextFrameAvailable method. This method must be called on a
+     * connected instance of this class. If it is called on a disconnected
+     * instance, this method must return a failure.
      * Return:
      *  NO_ERROR on success, or an appropriate error status.
      */
-    virtual status_t StartCamera() = 0;
+    virtual status_t startDevice() = 0;
 
     /* Stops capturing frames from the camera device.
      * Return:
      *  NO_ERROR on success, or an appropriate error status. If this method is
-     *  called for an object that is not capturing frames, or is disconnected, or
-     *  is uninitialized, a successful status must be returned from this method.
+     *  called for an object that is not capturing frames, or is disconnected,
+     *  or is uninitialized, a successful status must be returned from this
+     *  method.
      */
-    virtual status_t StopCamera() = 0;
+    virtual status_t stopDevice() = 0;
 
-    /****************************************************************************
+    /***************************************************************************
      * Emulated camera device public API
-     ***************************************************************************/
+     **************************************************************************/
 
 public:
     /* Initializes EmulatedCameraDevice instance.
@@ -116,25 +117,26 @@ public:
     /* Starts capturing frames from the camera device.
      *
      * Typically, this method caches desired frame parameters, and calls
-     * StartCamera method to start capturing video frames from the camera device.
-     * This method must be called on a connected instance of this class. If it is
-     * called on a disconnected instance, this method must return a failure.
+     * startDevice method to start capturing video frames from the camera
+     * device. This method must be called on a connected instance of this class.
+     * If it is called on a disconnected instance, this method must return a
+     * failure.
      * Return:
      *  NO_ERROR on success, or an appropriate error status.
      */
-    virtual status_t StartCapturing(int width, int height, uint32_t pix_fmt);
+    virtual status_t startCapturing(int width, int height, uint32_t pix_fmt);
 
     /* Stops capturing frames from the camera device.
      *
-     * Typically, this method calls StopCamera method of this class, and
+     * Typically, this method calls stopDevice method of this class, and
      * uninitializes frame properties, saved in StartCapturing method of this
      * class.
-     * This method must be called on a connected instance of this class. If it is
-     * called on a disconnected instance, this method must return a failure.
+     * This method must be called on a connected instance of this class. If it
+     * is called on a disconnected instance, this method must return a failure.
      * Return:
      *  NO_ERROR on success, or an appropriate error status.
      */
-    virtual status_t StopCapturing();
+    virtual status_t stopCapturing();
 
     /* Gets current fame into provided buffer.
      * Typically, this method is called by the emulated camera (HAL) in response
@@ -148,7 +150,7 @@ public:
      *      large enough to contain the entire frame, as defined by frame's width,
      *      height, and pixel format that are current for the camera device.
      */
-    virtual status_t GetCurrentFrame(void* buffer);
+    virtual status_t getCurrentFrame(void* buffer);
 
     /* Gets current preview fame into provided buffer.
      * Param:
@@ -158,30 +160,30 @@ public:
      *      due to the the limitations of the camera framework in emulator, the
      *      preview frame is always formatted with RGBA8888.
      */
-    virtual status_t GetCurrentPreviewFrame(void* buffer);
+    virtual status_t getCurrentPreviewFrame(void* buffer);
 
     /* Gets width of the frame obtained from the physical device. */
-    inline int GetFrameWidth() const
+    inline int getFrameWidth() const
     {
-        return frame_width_;
+        return mFrameWidth;
     }
 
     /* Gets height of the frame obtained from the physical device. */
-    inline int GetFrameHeight() const
+    inline int getFrameHeight() const
     {
-        return frame_height_;
+        return mFrameHeight;
     }
 
     /* Gets byte size of the current frame buffer. */
-    inline size_t GetFrameBufferSize() const
+    inline size_t getFrameBufferSize() const
     {
-        return framebuffer_size_;
+        return mFrameBufferSize;
     }
 
     /* Gets number of pixels in the current frame buffer. */
-    inline int GetPixelNum() const
+    inline int getPixelNum() const
     {
-        return total_pixels_;
+        return mTotalPixels;
     }
 
     /* Gets pixel format of the frame that physical device streams.
@@ -205,28 +207,28 @@ public:
      * Return:
      *  Current framebuffer's pixel format.
      */
-    inline uint32_t GetOriginalPixelFormat() const
+    inline uint32_t getOriginalPixelFormat() const
     {
-        return pixel_format_;
+        return mPixelFormat;
     }
 
     /*
      * State checkers.
      */
 
-    inline bool IsInitialized() const {
+    inline bool isInitialized() const {
         /* Instance is initialized when the worker thread has been successfuly
          * created (but not necessarily started). */
-        return worker_thread_.get() != NULL && state_ != ECDS_CONSTRUCTED;
+        return mWorkerThread.get() != NULL && mState != ECDS_CONSTRUCTED;
     }
-    inline bool IsConnected() const {
+    inline bool isConnected() const {
         /* Instance is connected when it is initialized and its status is either
          * "connected", or "capturing". */
-        return IsInitialized() &&
-               (state_ == ECDS_CONNECTED || state_ == ECDS_CAPTURING);
+        return isInitialized() &&
+               (mState == ECDS_CONNECTED || mState == ECDS_CAPTURING);
     }
-    inline bool IsCapturing() const {
-        return IsInitialized() && state_ == ECDS_CAPTURING;
+    inline bool isCapturing() const {
+        return isInitialized() && mState == ECDS_CAPTURING;
     }
 
     /****************************************************************************
@@ -245,14 +247,14 @@ protected:
      * Return:
      *  NO_ERROR on success, or an appropriate error status.
      */
-    virtual status_t StartWorkerThread();
+    virtual status_t startWorkerThread();
 
     /* Stops the worker thread.
      * Note that this method will always wait for the worker thread to terminate.
      * Return:
      *  NO_ERROR on success, or an appropriate error status.
      */
-    virtual status_t StopWorkerThread();
+    virtual status_t stopWorkerThread();
 
     /* Implementation of the worker thread routine.
      * In the default implementation of the worker thread routine we simply
@@ -263,7 +265,7 @@ protected:
      *  true To continue thread loop (this method will be called again), or false
      *  to exit the thread loop and to terminate the thread.
      */
-    virtual bool InWorkerThread();
+    virtual bool inWorkerThread();
 
     /* Encapsulates a worker thread used by the emulated camera device.
      */
@@ -277,27 +279,27 @@ protected:
         public:
             inline explicit WorkerThread(EmulatedCameraDevice* camera_dev)
                 : Thread(true),   // Callbacks may involve Java calls.
-                  camera_dev_(camera_dev),
-                  thread_control_(-1),
-                  control_fd_(-1)
+                  mCameraDevice(camera_dev),
+                  mThreadControl(-1),
+                  mControlFD(-1)
             {
             }
 
             inline ~WorkerThread()
             {
-                LOGW_IF(thread_control_ >= 0 || control_fd_ >= 0,
+                LOGW_IF(mThreadControl >= 0 || mControlFD >= 0,
                         "%s: Control FDs are opened in the destructor",
                         __FUNCTION__);
-                if (thread_control_ >= 0) {
-                    close(thread_control_);
+                if (mThreadControl >= 0) {
+                    close(mThreadControl);
                 }
-                if (control_fd_ >= 0) {
-                    close(control_fd_);
+                if (mControlFD >= 0) {
+                    close(mControlFD);
                 }
             }
 
             /* Starts the thread */
-            inline status_t Start()
+            inline status_t startThread()
             {
                 return run(NULL, ANDROID_PRIORITY_URGENT_DISPLAY, 0);
             }
@@ -309,7 +311,7 @@ protected:
             status_t readyToRun();
 
             /* Stops the thread. */
-            status_t Stop();
+            status_t stopThread();
 
             /* Values returned from the Select method of this class. */
             enum SelectRes {
@@ -344,17 +346,17 @@ protected:
             inline bool threadLoop()
             {
                 /* Simply dispatch the call to the containing camera device. */
-                return camera_dev_->InWorkerThread();
+                return mCameraDevice->inWorkerThread();
             }
 
             /* Containing camera device object. */
-            EmulatedCameraDevice*   camera_dev_;
+            EmulatedCameraDevice*   mCameraDevice;
 
             /* FD that is used to send control messages into the thread. */
-            int                     thread_control_;
+            int                     mThreadControl;
 
             /* FD that thread uses to receive control messages. */
-            int                     control_fd_;
+            int                     mControlFD;
 
             /* Enumerates control messages that can be sent into the thread. */
             enum ControlMessage {
@@ -364,9 +366,9 @@ protected:
     };
 
     /* Worker thread accessor. */
-    inline WorkerThread* worker_thread() const
+    inline WorkerThread* getWorkerThread() const
     {
-        return worker_thread_.get();
+        return mWorkerThread.get();
     }
 
     /****************************************************************************
@@ -375,45 +377,45 @@ protected:
 
 protected:
     /* Locks this instance for parameters, state, etc. change. */
-    Mutex                       object_lock_;
+    Mutex                       mObjectLock;
 
     /* Worker thread that is used in frame capturing. */
-    sp<WorkerThread>            worker_thread_;
+    sp<WorkerThread>            mWorkerThread;
 
     /* Timestamp of the current frame. */
-    nsecs_t                     timestamp_;
+    nsecs_t                     mCurFrameTimestamp;
 
     /* Emulated camera object containing this instance. */
-    EmulatedCamera*             camera_hal_;
+    EmulatedCamera*             mCameraHAL;
 
     /* Framebuffer containing the current frame. */
-    uint8_t*                    current_frame_;
+    uint8_t*                    mCurrentFrame;
 
-    /* Cb panel inside the framebuffer. */
-    uint8_t*                    frame_Cb_;
+    /* U panel inside the framebuffer. */
+    uint8_t*                    mFrameU;
 
-    /* Cr panel inside the framebuffer. */
-    uint8_t*                    frame_Cr_;
+    /* V panel inside the framebuffer. */
+    uint8_t*                    mFrameV;
 
     /*
      * Framebuffer properties.
      */
 
     /* Byte size of the framebuffer. */
-    size_t                      framebuffer_size_;
+    size_t                      mFrameBufferSize;
 
     /* Original pixel format (one of the V4L2_PIX_FMT_XXX values, as defined in
      * bionic/libc/kernel/common/linux/videodev2.h */
-    uint32_t                    pixel_format_;
+    uint32_t                    mPixelFormat;
 
     /* Frame width */
-    int                         frame_width_;
+    int                         mFrameWidth;
 
     /* Frame height */
-    int                         frame_height_;
+    int                         mFrameHeight;
 
     /* Total number of pixels */
-    int                         total_pixels_;
+    int                         mTotalPixels;
 
     /* Defines possible states of the emulated camera device object.
      */
@@ -429,7 +431,7 @@ protected:
     };
 
     /* Object state. */
-    EmulatedCameraDeviceState   state_;
+    EmulatedCameraDeviceState   mState;
 };
 
 }; /* namespace android */

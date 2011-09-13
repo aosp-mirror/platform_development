@@ -83,9 +83,9 @@ static const uint32_t kWhite32  = kRed8 | kGreen8 | kBlue8;
 #define G16(rgb)    static_cast<uint8_t>((rgb & kGreen6) >> 5)
 #define B16(rgb)    static_cast<uint8_t>((rgb & kBlue5) >> 11)
 /* Make 8 bits red, green, and blue, extracted from RGB565 word. */
-#define R16_32(rgb) (uint8_t)(((rgb & kRed5) << 3) | ((rgb & kRed5) >> 2))
-#define G16_32(rgb) (uint8_t)(((rgb & kGreen6) >> 3) | ((rgb & kGreen6) >> 9))
-#define B16_32(rgb) (uint8_t)(((rgb & kBlue5) >> 8) | ((rgb & kBlue5) >> 14))
+#define R16_32(rgb) static_cast<uint8_t>(((rgb & kRed5) << 3) | ((rgb & kRed5) >> 2))
+#define G16_32(rgb) static_cast<uint8_t>(((rgb & kGreen6) >> 3) | ((rgb & kGreen6) >> 9))
+#define B16_32(rgb) static_cast<uint8_t>(((rgb & kBlue5) >> 8) | ((rgb & kBlue5) >> 14))
 /* Extract red, green, and blue bytes from RGB32 dword. */
 #define R32(rgb)    static_cast<uint8_t>(rgb & kRed8)
 #define G32(rgb)    static_cast<uint8_t>(((rgb & kGreen8) >> 8) & 0xff)
@@ -100,9 +100,9 @@ static const uint32_t kWhite32  = kRed8 | kGreen8 | kBlue8;
 #define G16(rgb)    static_cast<uint8_t>((rgb & kGreen6) >> 5)
 #define B16(rgb)    static_cast<uint8_t>(rgb & kBlue5)
 /* Make 8 bits red, green, and blue, extracted from RGB565 word. */
-#define R16_32(rgb) (uint8_t)(((rgb & kRed5) >> 8) | ((rgb & kRed5) >> 14))
-#define G16_32(rgb) (uint8_t)(((rgb & kGreen6) >> 3) | ((rgb & kGreen6) >> 9))
-#define B16_32(rgb) (uint8_t)(((rgb & kBlue5) << 3) | ((rgb & kBlue5) >> 2))
+#define R16_32(rgb) static_cast<uint8_t>(((rgb & kRed5) >> 8) | ((rgb & kRed5) >> 14))
+#define G16_32(rgb) static_cast<uint8_t>(((rgb & kGreen6) >> 3) | ((rgb & kGreen6) >> 9))
+#define B16_32(rgb) static_cast<uint8_t>(((rgb & kBlue5) << 3) | ((rgb & kBlue5) >> 2))
 /* Extract red, green, and blue bytes from RGB32 dword. */
 #define R32(rgb)    static_cast<uint8_t>((rgb & kRed8) >> 16)
 #define G32(rgb)    static_cast<uint8_t>((rgb & kGreen8) >> 8)
@@ -226,30 +226,30 @@ YUVToRGB32(int y, int u, int v)
     return rgb.color;
 }
 
-/* YCbCr pixel descriptor. */
+/* YUV pixel descriptor. */
 struct YUVPixel {
     uint8_t     Y;
-    uint8_t     Cb;
-    uint8_t     Cr;
+    uint8_t     U;
+    uint8_t     V;
 
     inline YUVPixel()
-        : Y(0), Cb(0), Cr(0)
+        : Y(0), U(0), V(0)
     {
     }
 
     inline explicit YUVPixel(uint16_t rgb565)
     {
-        RGB565ToYUV(rgb565, &Y, &Cb, &Cr);
+        RGB565ToYUV(rgb565, &Y, &U, &V);
     }
 
     inline explicit YUVPixel(uint32_t rgb32)
     {
-        RGB32ToYUV(rgb32, &Y, &Cb, &Cr);
+        RGB32ToYUV(rgb32, &Y, &U, &V);
     }
 
-    inline void get(uint8_t* pY, uint8_t* pCb, uint8_t* pCr) const
+    inline void get(uint8_t* pY, uint8_t* pU, uint8_t* pV) const
     {
-        *pY = Y; *pCb = Cb; *pCr = Cr;
+        *pY = Y; *pU = U; *pV = V;
     }
 };
 

@@ -49,7 +49,7 @@ public:
      * This method is called by the containing emulated camera object when it is
      * handing the camera_device_ops_t::set_callbacks callback.
      */
-    void SetCallbacks(camera_notify_callback notify_cb,
+    void setCallbacks(camera_notify_callback notify_cb,
                       camera_data_callback data_cb,
                       camera_data_timestamp_callback data_cb_timestamp,
                       camera_request_memory get_memory,
@@ -59,13 +59,13 @@ public:
      * This method is called by the containing emulated camera object when it is
      * handing the camera_device_ops_t::enable_msg_type callback.
      */
-    void EnableMessage(uint msg_type);
+    void enableMessage(uint msg_type);
 
     /* Actual handler for camera_device_ops_t::disable_msg_type callback.
      * This method is called by the containing emulated camera object when it is
      * handing the camera_device_ops_t::disable_msg_type callback.
      */
-    void DisableMessage(uint msg_type);
+    void disableMessage(uint msg_type);
 
     /* Actual handler for camera_device_ops_t::msg_type_enabled callback.
      * This method is called by the containing emulated camera object when it is
@@ -73,7 +73,7 @@ public:
      * Return:
      *  0 if message is disabled, or non-zero value, if message is enabled.
      */
-    int IsMessageEnabled(uint msg_type);
+    int isMessageEnabled(uint msg_type);
 
     /* Actual handler for camera_device_ops_t::store_meta_data_in_buffers
      * callback. This method is called by the containing emulated camera object
@@ -82,25 +82,25 @@ public:
      * Return:
      *  NO_ERROR on success, or an appropriate error status.
      */
-    status_t StoreMetaDataInBuffers(bool enable);
+    status_t storeMetaDataInBuffers(bool enable);
 
     /* Enables video recording.
      * This method is called by the containing emulated camera object when it is
      * handing the camera_device_ops_t::start_recording callback.
      * Param:
      *  fps - Video frame frequency. This parameter determins when a frame
-     *      received via OnNextFrameAvailable call will be pushed through the
+     *      received via onNextFrameAvailable call will be pushed through the
      *      callback.
      * Return:
      *  NO_ERROR on success, or an appropriate error status.
      */
-    status_t EnableVideoRecording(int fps);
+    status_t enableVideoRecording(int fps);
 
     /* Disables video recording.
      * This method is called by the containing emulated camera object when it is
      * handing the camera_device_ops_t::stop_recording callback.
      */
-    void DisableVideoRecording();
+    void disableVideoRecording();
 
     /* Checks id video recording is enabled.
      * This method is called by the containing emulated camera object when it is
@@ -108,13 +108,13 @@ public:
      * Return:
      *  true if video recording is enabled, or false if it is disabled.
      */
-    bool IsVideoRecordingEnabled();
+    bool isVideoRecordingEnabled();
 
     /* Releases video frame, sent to the framework.
      * This method is called by the containing emulated camera object when it is
      * handing the camera_device_ops_t::release_recording_frame callback.
      */
-    void ReleaseRecordingFrame(const void* opaque);
+    void releaseRecordingFrame(const void* opaque);
 
     /****************************************************************************
      * Public API
@@ -122,7 +122,7 @@ public:
 
 public:
     /* Resets the callback notifier. */
-    void Cleanup();
+    void cleanupCBNotifier();
 
     /* Next frame is available in the camera device.
      * This is a notification callback that is invoked by the camera device when
@@ -139,7 +139,7 @@ public:
      * timestamp - Frame's timestamp.
      * camera_dev - Camera device instance that delivered the frame.
      */
-    void OnNextFrameAvailable(const void* frame,
+    void onNextFrameAvailable(const void* frame,
                               nsecs_t timestamp,
                               EmulatedCameraDevice* camera_dev);
 
@@ -152,7 +152,7 @@ protected:
      * Note that this method must be called while object is locked.
      * Param:
      *  timestamp - Timestamp for the new frame. */
-    bool IsTimeForNewVideoFrame(nsecs_t timestamp);
+    bool isNewVideoFrameTime(nsecs_t timestamp);
 
     /****************************************************************************
      * Data members
@@ -160,29 +160,29 @@ protected:
 
 protected:
     /* Locks this instance for data change. */
-    Mutex                           object_lock_;
+    Mutex                           mObjectLock;
 
     /*
      * Callbacks, registered in set_callbacks.
      */
 
-    camera_notify_callback          notify_cb_;
-    camera_data_callback            data_cb_;
-    camera_data_timestamp_callback  data_cb_timestamp_;
-    camera_request_memory           get_memory_;
-    void*                           cb_opaque_;
+    camera_notify_callback          mNotifyCB;
+    camera_data_callback            mDataCB;
+    camera_data_timestamp_callback  mDdataCBTimestamp;
+    camera_request_memory           mGetMemoryCB;
+    void*                           mCBOpaque;
 
     /* Timestamp when last frame has been delivered to the framework. */
-    nsecs_t                         last_frame_;
+    nsecs_t                         mLastFrameTimestamp;
 
     /* Video frequency in nanosec. */
-    nsecs_t                         frame_after_;
+    nsecs_t                         mFrameRefreshFreq;
 
     /* Message enabler. */
-    uint32_t                        message_enabler_;
+    uint32_t                        mMessageEnabler;
 
     /* Video recording status. */
-    bool                            video_recording_enabled_;
+    bool                            mVideoRecEnabled;
 };
 
 }; /* namespace android */

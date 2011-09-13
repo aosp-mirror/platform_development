@@ -27,9 +27,9 @@
  */
 
 #include <camera/CameraParameters.h>
-#include "emulated_camera_device.h"
-#include "preview_window.h"
-#include "callback_notifier.h"
+#include "EmulatedCameraDevice.h"
+#include "PreviewWindow.h"
+#include "CallbackNotifier.h"
 
 namespace android {
 
@@ -38,8 +38,8 @@ namespace android {
  *
  * Note that EmulatedCameraFactory instantiates object of this class just once,
  * when EmulatedCameraFactory instance gets constructed. Connection to /
- * disconnection from the actual camera device is handled by calls to Connect(),
- * and Close() methods of this class that are ivoked in response to
+ * disconnection from the actual camera device is handled by calls to connectDevice(),
+ * and closeCamera() methods of this class that are ivoked in response to
  * hw_module_methods_t::open, and camera_device::close callbacks.
  */
 class EmulatedCamera : public camera_device {
@@ -62,7 +62,7 @@ public:
 public:
     /* Gets emulated camera device used by this instance of the emulated camera.
      */
-    virtual EmulatedCameraDevice* GetCameraDevice() = 0;
+    virtual EmulatedCameraDevice* getCameraDevice() = 0;
 
     /****************************************************************************
      * Public API
@@ -90,7 +90,7 @@ public:
      * timestamp - Frame's timestamp.
      * camera_dev - Camera device instance that delivered the frame.
      */
-    virtual void OnNextFrameAvailable(const void* frame,
+    virtual void onNextFrameAvailable(const void* frame,
                                       nsecs_t timestamp,
                                       EmulatedCameraDevice* camera_dev);
 
@@ -104,14 +104,14 @@ public:
      * NOTE: When this method is called the object is locked.
      * Note that failures in this method are reported as negave EXXX statuses.
      */
-    virtual status_t Connect(hw_device_t** device);
+    virtual status_t connectCamera(hw_device_t** device);
 
     /* Closes connection to the emulated camera.
      * This method is called in response to camera_device::close callback.
      * NOTE: When this method is called the object is locked.
      * Note that failures in this method are reported as negave EXXX statuses.
      */
-    virtual status_t Close();
+    virtual status_t closeCamera();
 
     /* Gets camera information.
      * This method is called in response to camera_module_t::get_camera_info
@@ -119,7 +119,7 @@ public:
      * NOTE: When this method is called the object is locked.
      * Note that failures in this method are reported as negave EXXX statuses.
      */
-    virtual status_t GetCameraInfo(struct camera_info* info);
+    virtual status_t getCameraInfo(struct camera_info* info);
 
     /****************************************************************************
      * Camera API implementation.
@@ -131,12 +131,12 @@ protected:
      * NOTE: When this method is called the object is locked.
      * Note that failures in this method are reported as negave EXXX statuses.
      */
-    virtual status_t SetPreviewWindow(struct preview_stream_ops *window);
+    virtual status_t setPreviewWindow(struct preview_stream_ops *window);
 
     /* Actual handler for camera_device_ops_t::set_callbacks callback.
      * NOTE: When this method is called the object is locked.
      */
-    virtual void SetCallbacks(camera_notify_callback notify_cb,
+    virtual void setCallbacks(camera_notify_callback notify_cb,
                               camera_data_callback data_cb,
                               camera_data_timestamp_callback data_cb_timestamp,
                               camera_request_memory get_memory,
@@ -145,96 +145,96 @@ protected:
     /* Actual handler for camera_device_ops_t::enable_msg_type callback.
      * NOTE: When this method is called the object is locked.
      */
-    virtual void EnableMsgType(int32_t msg_type);
+    virtual void enableMsgType(int32_t msg_type);
 
     /* Actual handler for camera_device_ops_t::disable_msg_type callback.
      * NOTE: When this method is called the object is locked.
      */
-    virtual void DisableMsgType(int32_t msg_type);
+    virtual void disableMsgType(int32_t msg_type);
 
     /* Actual handler for camera_device_ops_t::msg_type_enabled callback.
      * NOTE: When this method is called the object is locked.
      * Return:
      *  0 if message(s) is (are) disabled, != 0 if enabled.
      */
-    virtual int MsgTypeEnabled(int32_t msg_type);
+    virtual int isMsgTypeEnabled(int32_t msg_type);
 
     /* Actual handler for camera_device_ops_t::start_preview callback.
      * NOTE: When this method is called the object is locked.
      * Note that failures in this method are reported as negave EXXX statuses.
      */
-    virtual status_t StartPreview();
+    virtual status_t startPreview();
 
     /* Actual handler for camera_device_ops_t::stop_preview callback.
      * NOTE: When this method is called the object is locked.
      */
-    virtual void StopPreview();
+    virtual void stopPreview();
 
     /* Actual handler for camera_device_ops_t::preview_enabled callback.
      * NOTE: When this method is called the object is locked.
      * Return:
      *  0 if preview is disabled, != 0 if enabled.
      */
-    virtual int PreviewEnabled();
+    virtual int isPreviewEnabled();
 
     /* Actual handler for camera_device_ops_t::store_meta_data_in_buffers callback.
      * NOTE: When this method is called the object is locked.
      * Note that failures in this method are reported as negave EXXX statuses.
      */
-    virtual status_t StoreMetaDataInBuffers(int enable);
+    virtual status_t storeMetaDataInBuffers(int enable);
 
     /* Actual handler for camera_device_ops_t::start_recording callback.
      * NOTE: When this method is called the object is locked.
      * Note that failures in this method are reported as negave EXXX statuses.
      */
-    virtual status_t StartRecording();
+    virtual status_t startRecording();
 
     /* Actual handler for camera_device_ops_t::stop_recording callback.
      * NOTE: When this method is called the object is locked.
      */
-    virtual void StopRecording();
+    virtual void stopRecording();
 
     /* Actual handler for camera_device_ops_t::recording_enabled callback.
      * NOTE: When this method is called the object is locked.
      * Return:
      *  0 if recording is disabled, != 0 if enabled.
      */
-    virtual int RecordingEnabled();
+    virtual int isRecordingEnabled();
 
     /* Actual handler for camera_device_ops_t::release_recording_frame callback.
      * NOTE: When this method is called the object is locked.
      */
-    virtual void ReleaseRecordingFrame(const void* opaque);
+    virtual void releaseRecordingFrame(const void* opaque);
 
     /* Actual handler for camera_device_ops_t::auto_focus callback.
      * NOTE: When this method is called the object is locked.
      * Note that failures in this method are reported as negave EXXX statuses.
      */
-    virtual status_t AutoFocus();
+    virtual status_t setAutoFocus();
 
     /* Actual handler for camera_device_ops_t::cancel_auto_focus callback.
      * NOTE: When this method is called the object is locked.
      * Note that failures in this method are reported as negave EXXX statuses.
      */
-    virtual status_t CancelAutoFocus();
+    virtual status_t cancelAutoFocus();
 
     /* Actual handler for camera_device_ops_t::take_picture callback.
      * NOTE: When this method is called the object is locked.
      * Note that failures in this method are reported as negave EXXX statuses.
      */
-    virtual status_t TakePicture();
+    virtual status_t takePicture();
 
     /* Actual handler for camera_device_ops_t::cancel_picture callback.
      * NOTE: When this method is called the object is locked.
      * Note that failures in this method are reported as negave EXXX statuses.
      */
-    virtual status_t CancelPicture();
+    virtual status_t cancelPicture();
 
     /* Actual handler for camera_device_ops_t::set_parameters callback.
      * NOTE: When this method is called the object is locked.
      * Note that failures in this method are reported as negave EXXX statuses.
      */
-    virtual status_t SetParameters(const char* parms);
+    virtual status_t setParameters(const char* parms);
 
     /* Actual handler for camera_device_ops_t::get_parameters callback.
      * NOTE: When this method is called the object is locked.
@@ -242,7 +242,7 @@ protected:
      *  Flattened parameters string. The caller will free the buffer allocated
      *  for the string by calling camera_device_ops_t::put_parameters callback.
      */
-    virtual char* GetParameters();
+    virtual char* getParameters();
 
     /* Actual handler for camera_device_ops_t::put_parameters callback.
      * Called to free the string returned from camera_device_ops_t::get_parameters
@@ -250,24 +250,24 @@ protected:
      * misleading.
      * NOTE: When this method is called the object is locked.
      */
-    virtual void PutParameters(char* params);
+    virtual void putParameters(char* params);
 
     /* Actual handler for camera_device_ops_t::send_command callback.
      * NOTE: When this method is called the object is locked.
      * Note that failures in this method are reported as negave EXXX statuses.
      */
-    virtual status_t SendCommand(int32_t cmd, int32_t arg1, int32_t arg2);
+    virtual status_t sendCommand(int32_t cmd, int32_t arg1, int32_t arg2);
 
     /* Actual handler for camera_device_ops_t::release callback.
      * NOTE: When this method is called the object is locked.
      */
-    virtual void Release();
+    virtual void releaseCamera();
 
     /* Actual handler for camera_device_ops_t::dump callback.
      * NOTE: When this method is called the object is locked.
      * Note that failures in this method are reported as negave EXXX statuses.
      */
-    virtual status_t Dump(int fd);
+    virtual status_t dumpCamera(int fd);
 
     /****************************************************************************
      * Preview management.
@@ -275,32 +275,32 @@ protected:
 
 protected:
     /* Starts preview.
-     * Note that when this method is called preview_window_ may be NULL,
+     * Note that when this method is called mPreviewWindow may be NULL,
      * indicating that framework has an intention to start displaying video
      * frames, but didn't create the preview window yet.
      * Return:
      *  NO_ERROR on success, or an appropriate error status on failure.
      */
-    virtual status_t DoStartPreview();
+    virtual status_t doStartPreview();
 
     /* Stops preview.
      * This method reverts DoStartPreview.
      * Return:
      *  NO_ERROR on success, or an appropriate error status on failure.
      */
-    virtual status_t DoStopPreview();
+    virtual status_t doStopPreview();
 
     /* Starts capturing frames
      * Return:
      *  NO_ERROR on success, or an appropriate error status on failure.
      */
-    virtual status_t StartCamera();
+    virtual status_t startCamera();
 
     /* Stops capturing frames.
      * Return:
      *  NO_ERROR on success, or an appropriate error status on failure.
      */
-    virtual status_t StopCamera();
+    virtual status_t stopCamera();
 
     /****************************************************************************
      * Private API.
@@ -308,7 +308,7 @@ protected:
 
 protected:
     /* Cleans up camera when released. */
-    virtual status_t Cleanup();
+    virtual status_t cleanupCamera();
 
     /****************************************************************************
      * Camera API callbacks as defined by camera_device_ops structure.
@@ -383,23 +383,23 @@ private:
 
 protected:
     /* Locks this instance for parameters, state, etc. change. */
-    Mutex                           object_lock_;
+    Mutex                           mObjectLock;
 
     /* Camera parameters. */
-    CameraParameters                parameters_;
+    CameraParameters                mPparameters;
 
     /* Preview window. */
-    PreviewWindow                   preview_window_;
+    PreviewWindow                   mPreviewWindow;
 
     /* Callback notifier. */
-    CallbackNotifier                callback_notifier_;
+    CallbackNotifier                mCallbackNotifier;
 
     /* Zero-based ID assigned to this camera. */
-    int                             camera_id_;
+    int                             mCameraID;
 
 private:
     /* Registered callbacks implementing camera API. */
-    static camera_device_ops_t      device_ops_;
+    static camera_device_ops_t      mDeviceOps;
 
     /****************************************************************************
      * Common keys

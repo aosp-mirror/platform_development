@@ -23,7 +23,7 @@
  * managing emulated cameras.
  */
 
-#include "emulated_camera_factory.h"
+#include "EmulatedCameraFactory.h"
 
 /*
  * Required HAL header.
@@ -36,7 +36,7 @@ camera_module_t HAL_MODULE_INFO_SYM = {
          id:            CAMERA_HARDWARE_MODULE_ID,
          name:          "Emulated Camera Module",
          author:        "The Android Open Source Project",
-         methods:       &android::EmulatedCameraFactory::camera_module_methods_,
+         methods:       &android::EmulatedCameraFactory::mCameraModuleMethods,
          dso:           NULL,
          reserved:      {0},
     },

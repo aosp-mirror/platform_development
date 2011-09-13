@@ -22,14 +22,14 @@
 #define LOG_NDEBUG 0
 #define LOG_TAG "EmulatedCamera_FakeCamera"
 #include <cutils/log.h>
-#include "emulated_fake_camera.h"
-#include "emulated_camera_factory.h"
+#include "EmulatedFakeCamera.h"
+#include "EmulatedCameraFactory.h"
 
 namespace android {
 
 EmulatedFakeCamera::EmulatedFakeCamera(int cameraId, struct hw_module_t* module)
         : EmulatedCamera(cameraId, module),
-          fake_camera_dev_(this)
+          mFakeCameraDevice(this)
 {
 }
 
@@ -45,19 +45,19 @@ status_t EmulatedFakeCamera::Initialize()
 {
     LOGV("%s", __FUNCTION__);
 
-    status_t res = fake_camera_dev_.Initialize();
+    status_t res = mFakeCameraDevice.Initialize();
     if (res != NO_ERROR) {
         return res;
     }
 
     const char* facing = EmulatedCamera::FACING_BACK;
-    if (_emulated_camera_factory.GetFakeCameraOrientation() == CAMERA_FACING_FRONT) {
+    if (gEmulatedCameraFactory.getFakeCameraOrientation() == CAMERA_FACING_FRONT) {
         facing = EmulatedCamera::FACING_FRONT;
     }
-    parameters_.set(EmulatedCamera::FACING_KEY, facing);
+    mPparameters.set(EmulatedCamera::FACING_KEY, facing);
 
-    parameters_.set(EmulatedCamera::ORIENTATION_KEY,
-                    _emulated_camera_factory.GetFakeCameraOrientation());
+    mPparameters.set(EmulatedCamera::ORIENTATION_KEY,
+                    gEmulatedCameraFactory.getFakeCameraOrientation());
 
     res = EmulatedCamera::Initialize();
     if (res != NO_ERROR) {
@@ -68,17 +68,17 @@ status_t EmulatedFakeCamera::Initialize()
      * Parameters provided by the camera device.
      */
 
-    parameters_.set(CameraParameters::KEY_SUPPORTED_PICTURE_SIZES, "640x480");
-    parameters_.set(CameraParameters::KEY_SUPPORTED_PREVIEW_SIZES, "640x480");
-    parameters_.setPreviewSize(640, 480);
-    parameters_.setPictureSize(640, 480);
+    mPparameters.set(CameraParameters::KEY_SUPPORTED_PICTURE_SIZES, "640x480");
+    mPparameters.set(CameraParameters::KEY_SUPPORTED_PREVIEW_SIZES, "640x480");
+    mPparameters.setPreviewSize(640, 480);
+    mPparameters.setPictureSize(640, 480);
 
     return NO_ERROR;
 }
 
-EmulatedCameraDevice* EmulatedFakeCamera::GetCameraDevice()
+EmulatedCameraDevice* EmulatedFakeCamera::getCameraDevice()
 {
-    return &fake_camera_dev_;
+    return &mFakeCameraDevice;
 }
 
 };  /* namespace android */

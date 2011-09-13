@@ -23,13 +23,13 @@
 #define LOG_TAG "EmulatedCamera_CallbackNotifier"
 #include <cutils/log.h>
 #include <media/stagefright/MetadataBufferType.h>
-#include "emulated_camera_device.h"
-#include "callback_notifier.h"
+#include "EmulatedCameraDevice.h"
+#include "CallbackNotifier.h"
 
 namespace android {
 
 /* String representation of camera messages. */
-static const char* _camera_messages[] =
+static const char* lCameraMessages[] =
 {
     "CAMERA_MSG_ERROR",
     "CAMERA_MSG_SHUTTER",
@@ -43,7 +43,7 @@ static const char* _camera_messages[] =
     "CAMERA_MSG_RAW_IMAGE_NOTIFY",
     "CAMERA_MSG_PREVIEW_METADATA"
 };
-static const int _camera_messages_num = sizeof(_camera_messages) / sizeof(char*);
+static const int lCameraMessagesNum = sizeof(lCameraMessages) / sizeof(char*);
 
 /* Builds an array of strings for the given set of messages.
  * Param:
@@ -53,17 +53,17 @@ static const int _camera_messages_num = sizeof(_camera_messages) / sizeof(char*)
  * Return:
  *  Number of strings saved into the 'strings' array.
  */
-static int _GetMessageStrings(uint32_t msg, const char** strings, int max)
+static int GetMessageStrings(uint32_t msg, const char** strings, int max)
 {
     int index = 0;
     int out = 0;
-    while (msg != 0 && out < max && index < _camera_messages_num) {
-        while ((msg & 0x1) == 0 && index < _camera_messages_num) {
+    while (msg != 0 && out < max && index < lCameraMessagesNum) {
+        while ((msg & 0x1) == 0 && index < lCameraMessagesNum) {
             msg >>= 1;
             index++;
         }
-        if ((msg & 0x1) != 0 && index < _camera_messages_num) {
-            strings[out] = _camera_messages[index];
+        if ((msg & 0x1) != 0 && index < lCameraMessagesNum) {
+            strings[out] = lCameraMessages[index];
             out++;
             msg >>= 1;
             index++;
@@ -74,25 +74,25 @@ static int _GetMessageStrings(uint32_t msg, const char** strings, int max)
 }
 
 /* Logs messages, enabled by the mask. */
-static void _PrintMessages(uint32_t msg)
+static void PrintMessages(uint32_t msg)
 {
-    const char* strs[_camera_messages_num];
-    const int translated = _GetMessageStrings(msg, strs, _camera_messages_num);
+    const char* strs[lCameraMessagesNum];
+    const int translated = GetMessageStrings(msg, strs, lCameraMessagesNum);
     for (int n = 0; n < translated; n++) {
         LOGV("    %s", strs[n]);
     }
 }
 
 CallbackNotifier::CallbackNotifier()
-    : notify_cb_(NULL),
-      data_cb_(NULL),
-      data_cb_timestamp_(NULL),
-      get_memory_(NULL),
-      cb_opaque_(NULL),
-      last_frame_(0),
-      frame_after_(0),
-      message_enabler_(0),
-      video_recording_enabled_(false)
+    : mNotifyCB(NULL),
+      mDataCB(NULL),
+      mDdataCBTimestamp(NULL),
+      mGetMemoryCB(NULL),
+      mCBOpaque(NULL),
+      mLastFrameTimestamp(0),
+      mFrameRefreshFreq(0),
+      mMessageEnabler(0),
+      mVideoRecEnabled(false)
 {
 }
 
@@ -104,7 +104,7 @@ CallbackNotifier::~CallbackNotifier()
  * Camera API
  ***************************************************************************/
 
-void CallbackNotifier::SetCallbacks(camera_notify_callback notify_cb,
+void CallbackNotifier::setCallbacks(camera_notify_callback notify_cb,
                                     camera_data_callback data_cb,
                                     camera_data_timestamp_callback data_cb_timestamp,
                                     camera_request_memory get_memory,
@@ -113,77 +113,77 @@ void CallbackNotifier::SetCallbacks(camera_notify_callback notify_cb,
     LOGV("%s: %p, %p, %p, %p (%p)",
          __FUNCTION__, notify_cb, data_cb, data_cb_timestamp, get_memory, user);
 
-    Mutex::Autolock locker(&object_lock_);
-    notify_cb_ = notify_cb;
-    data_cb_ = data_cb;
-    data_cb_timestamp_ = data_cb_timestamp;
-    get_memory_ = get_memory;
-    cb_opaque_ = user;
+    Mutex::Autolock locker(&mObjectLock);
+    mNotifyCB = notify_cb;
+    mDataCB = data_cb;
+    mDdataCBTimestamp = data_cb_timestamp;
+    mGetMemoryCB = get_memory;
+    mCBOpaque = user;
 }
 
-void CallbackNotifier::EnableMessage(uint msg_type)
+void CallbackNotifier::enableMessage(uint msg_type)
 {
     LOGV("%s: msg_type = 0x%x", __FUNCTION__, msg_type);
-    _PrintMessages(msg_type);
+    PrintMessages(msg_type);
 
-    Mutex::Autolock locker(&object_lock_);
-    message_enabler_ |= msg_type;
+    Mutex::Autolock locker(&mObjectLock);
+    mMessageEnabler |= msg_type;
     LOGV("**** Currently enabled messages:");
-    _PrintMessages(message_enabler_);
+    PrintMessages(mMessageEnabler);
 }
 
-void CallbackNotifier::DisableMessage(uint msg_type)
+void CallbackNotifier::disableMessage(uint msg_type)
 {
     LOGV("%s: msg_type = 0x%x", __FUNCTION__, msg_type);
-    _PrintMessages(msg_type);
+    PrintMessages(msg_type);
 
-    Mutex::Autolock locker(&object_lock_);
-    message_enabler_ &= ~msg_type;
+    Mutex::Autolock locker(&mObjectLock);
+    mMessageEnabler &= ~msg_type;
     LOGV("**** Currently enabled messages:");
-    _PrintMessages(message_enabler_);
+    PrintMessages(mMessageEnabler);
 }
 
-int CallbackNotifier::IsMessageEnabled(uint msg_type)
+int CallbackNotifier::isMessageEnabled(uint msg_type)
 {
-    Mutex::Autolock locker(&object_lock_);
-    return message_enabler_ & ~msg_type;
+    Mutex::Autolock locker(&mObjectLock);
+    return mMessageEnabler & ~msg_type;
 }
 
-status_t CallbackNotifier::EnableVideoRecording(int fps)
+status_t CallbackNotifier::enableVideoRecording(int fps)
 {
     LOGV("%s: FPS = %d", __FUNCTION__, fps);
 
-    Mutex::Autolock locker(&object_lock_);
-    video_recording_enabled_ = true;
-    last_frame_ = 0;
-    frame_after_ = 1000000000LL / fps;
+    Mutex::Autolock locker(&mObjectLock);
+    mVideoRecEnabled = true;
+    mLastFrameTimestamp = 0;
+    mFrameRefreshFreq = 1000000000LL / fps;
 
     return NO_ERROR;
 }
 
-void CallbackNotifier::DisableVideoRecording()
+void CallbackNotifier::disableVideoRecording()
 {
     LOGV("%s:", __FUNCTION__);
 
-    Mutex::Autolock locker(&object_lock_);
-    video_recording_enabled_ = false;
-    last_frame_ = 0;
-    frame_after_ = 0;
+    Mutex::Autolock locker(&mObjectLock);
+    mVideoRecEnabled = false;
+    mLastFrameTimestamp = 0;
+    mFrameRefreshFreq = 0;
 }
 
-bool CallbackNotifier::IsVideoRecordingEnabled()
+bool CallbackNotifier::isVideoRecordingEnabled()
 {
-    Mutex::Autolock locker(&object_lock_);
-    return video_recording_enabled_;
+    Mutex::Autolock locker(&mObjectLock);
+    return mVideoRecEnabled;
 }
 
-void CallbackNotifier::ReleaseRecordingFrame(const void* opaque)
+void CallbackNotifier::releaseRecordingFrame(const void* opaque)
 {
     /* We don't really have anything to release here, since we report video
      * frames by copying them directly to the camera memory. */
 }
 
-status_t CallbackNotifier::StoreMetaDataInBuffers(bool enable)
+status_t CallbackNotifier::storeMetaDataInBuffers(bool enable)
 {
     /* Return INVALID_OPERATION means HAL does not support metadata. So HAL will
      * return actual frame data with CAMERA_MSG_VIDEO_FRRAME. Return
@@ -195,35 +195,35 @@ status_t CallbackNotifier::StoreMetaDataInBuffers(bool enable)
  * Public API
  ***************************************************************************/
 
-void CallbackNotifier::Cleanup()
+void CallbackNotifier::cleanupCBNotifier()
 {
-    Mutex::Autolock locker(&object_lock_);
-    message_enabler_ = 0;
-    notify_cb_ = NULL;
-    data_cb_ = NULL;
-    data_cb_timestamp_ = NULL;
-    get_memory_ = NULL;
-    cb_opaque_ = NULL;
-    last_frame_ = 0;
-    frame_after_ = 0;
-    video_recording_enabled_ = false;
+    Mutex::Autolock locker(&mObjectLock);
+    mMessageEnabler = 0;
+    mNotifyCB = NULL;
+    mDataCB = NULL;
+    mDdataCBTimestamp = NULL;
+    mGetMemoryCB = NULL;
+    mCBOpaque = NULL;
+    mLastFrameTimestamp = 0;
+    mFrameRefreshFreq = 0;
+    mVideoRecEnabled = false;
 }
 
-void CallbackNotifier::OnNextFrameAvailable(const void* frame,
+void CallbackNotifier::onNextFrameAvailable(const void* frame,
                                             nsecs_t timestamp,
                                             EmulatedCameraDevice* camera_dev)
 {
-    Mutex::Autolock locker(&object_lock_);
+    Mutex::Autolock locker(&mObjectLock);
 
-    if ((message_enabler_ & CAMERA_MSG_VIDEO_FRAME) != 0 &&
-            data_cb_timestamp_ != NULL && video_recording_enabled_ &&
-            IsTimeForNewVideoFrame(timestamp)) {
+    if ((mMessageEnabler & CAMERA_MSG_VIDEO_FRAME) != 0 &&
+            mDdataCBTimestamp != NULL && mVideoRecEnabled &&
+            isNewVideoFrameTime(timestamp)) {
         camera_memory_t* cam_buff =
-            get_memory_(-1, camera_dev->GetFrameBufferSize(), 1, NULL);
+            mGetMemoryCB(-1, camera_dev->getFrameBufferSize(), 1, NULL);
         if (NULL != cam_buff && NULL != cam_buff->data) {
-            memcpy(cam_buff->data, frame, camera_dev->GetFrameBufferSize());
-            data_cb_timestamp_(timestamp, CAMERA_MSG_VIDEO_FRAME,
-                               cam_buff, 0, cb_opaque_);
+            memcpy(cam_buff->data, frame, camera_dev->getFrameBufferSize());
+            mDdataCBTimestamp(timestamp, CAMERA_MSG_VIDEO_FRAME,
+                               cam_buff, 0, mCBOpaque);
         } else {
             LOGE("%s: Memory failure in CAMERA_MSG_VIDEO_FRAME", __FUNCTION__);
         }
@@ -234,10 +234,10 @@ void CallbackNotifier::OnNextFrameAvailable(const void* frame,
  * Private API
  ***************************************************************************/
 
-bool CallbackNotifier::IsTimeForNewVideoFrame(nsecs_t timestamp)
+bool CallbackNotifier::isNewVideoFrameTime(nsecs_t timestamp)
 {
-    if ((timestamp - last_frame_) >= frame_after_) {
-        last_frame_ = timestamp;
+    if ((timestamp - mLastFrameTimestamp) >= mFrameRefreshFreq) {
+        mLastFrameTimestamp = timestamp;
         return true;
     }
     return false;

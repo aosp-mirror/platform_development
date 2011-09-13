@@ -21,7 +21,7 @@
 #define LOG_NDEBUG 0
 #define LOG_TAG "EmulatedCamera_Converter"
 #include <cutils/log.h>
-#include "converters.h"
+#include "Converters.h"
 
 namespace android {
 
@@ -30,26 +30,26 @@ void YV12ToRGB565(const void* yv12, void* rgb, int width, int height)
     const int pix_total = width * height;
     uint16_t* rgb_buf = reinterpret_cast<uint16_t*>(rgb);
     const uint8_t* Y = reinterpret_cast<const uint8_t*>(yv12);
-    const uint8_t* Cb_pos = Y + pix_total;
-    const uint8_t* Cr_pos = Cb_pos + pix_total / 4;
-    const uint8_t* Cb = Cb_pos;
-    const uint8_t* Cr = Cr_pos;
+    const uint8_t* U_pos = Y + pix_total;
+    const uint8_t* V_pos = U_pos + pix_total / 4;
+    const uint8_t* U = U_pos;
+    const uint8_t* V = V_pos;
 
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x += 2) {
-            const uint8_t nCb = *Cb; Cb++;
-            const uint8_t nCr = *Cr; Cr++;
-            *rgb_buf = YUVToRGB565(*Y, nCb, nCr);
+            const uint8_t nU = *U; U++;
+            const uint8_t nV = *V; V++;
+            *rgb_buf = YUVToRGB565(*Y, nU, nV);
             Y++; rgb_buf++;
-            *rgb_buf = YUVToRGB565(*Y, nCb, nCr);
+            *rgb_buf = YUVToRGB565(*Y, nU, nV);
             Y++; rgb_buf++;
         }
         if (y & 0x1) {
-            Cb_pos = Cb;
-            Cr_pos = Cr;
+            U_pos = U;
+            V_pos = V;
         } else {
-            Cb = Cb_pos;
-            Cr = Cr_pos;
+            U = U_pos;
+            V = V_pos;
         }
     }
 }
@@ -59,26 +59,26 @@ void YV12ToRGB32(const void* yv12, void* rgb, int width, int height)
     const int pix_total = width * height;
     uint32_t* rgb_buf = reinterpret_cast<uint32_t*>(rgb);
     const uint8_t* Y = reinterpret_cast<const uint8_t*>(yv12);
-    const uint8_t* Cb_pos = Y + pix_total;
-    const uint8_t* Cr_pos = Cb_pos + pix_total / 4;
-    const uint8_t* Cb = Cb_pos;
-    const uint8_t* Cr = Cr_pos;
+    const uint8_t* U_pos = Y + pix_total;
+    const uint8_t* V_pos = U_pos + pix_total / 4;
+    const uint8_t* U = U_pos;
+    const uint8_t* V = V_pos;
 
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x += 2) {
-            const uint8_t nCb = *Cb; Cb++;
-            const uint8_t nCr = *Cr; Cr++;
-            *rgb_buf = YUVToRGB32(*Y, nCb, nCr);
+            const uint8_t nU = *U; U++;
+            const uint8_t nV = *V; V++;
+            *rgb_buf = YUVToRGB32(*Y, nU, nV);
             Y++; rgb_buf++;
-            *rgb_buf = YUVToRGB32(*Y, nCb, nCr);
+            *rgb_buf = YUVToRGB32(*Y, nU, nV);
             Y++; rgb_buf++;
         }
         if (y & 0x1) {
-            Cb_pos = Cb;
-            Cr_pos = Cr;
+            U_pos = U;
+            V_pos = V;
         } else {
-            Cb = Cb_pos;
-            Cr = Cr_pos;
+            U = U_pos;
+            V = V_pos;
         }
     }
 }

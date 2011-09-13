@@ -103,7 +103,7 @@ public:
      * Return:
      *  NO_ERROR on success, or an appropriate error status.
      */
-    status_t Create(const char* name, const char* param);
+    status_t createQuery(const char* name, const char* param);
 
     /* Completes the query after a reply from the emulator.
      * This method will parse the reply buffer, and calculate the final query
@@ -119,32 +119,32 @@ public:
      * Return:
      *  NO_ERROR on success, or an appropriate error status on failure. Note that
      *  status returned here just signals whether or not the method has succeeded.
-     *  Use IsSucceeded() / GetCompletionStatus() methods to check the final
+     *  Use isQuerySucceeded() / getCompletionStatus() methods to check the final
      *  query status.
      */
-    status_t Completed(status_t status);
+    status_t completeQuery(status_t status);
 
     /* Resets the query from a previous use. */
-    void Reset();
+    void resetQuery();
 
     /* Checks if query has succeeded.
-     * Note that this method must be called after Completed() method of this
+     * Note that this method must be called after completeQuery() method of this
      * class has been executed.
      */
-    inline bool IsSucceeded() const {
-        return query_status_ == NO_ERROR && reply_status_ != 0;
+    inline bool isQuerySucceeded() const {
+        return mQueryStatus == NO_ERROR && mReplyStatus != 0;
     }
 
     /* Gets final completion status of the query.
-     * Note that this method must be called after Completed() method of this
+     * Note that this method must be called after completeQuery() method of this
      * class has been executed.
      *  NO_ERROR on success, or an appropriate error status on failure.
      */
-    inline status_t GetCompletionStatus() const {
-        if (IsSucceeded()) {
+    inline status_t getCompletionStatus() const {
+        if (isQuerySucceeded()) {
             return NO_ERROR;
         }
-        return (query_status_ != NO_ERROR) ? query_status_ : EINVAL;
+        return (mQueryStatus != NO_ERROR) ? mQueryStatus : EINVAL;
     }
 
     /****************************************************************************
@@ -153,19 +153,19 @@ public:
 
 public:
     /* Query string. */
-    char*       query_;
+    char*       mQuery;
     /* Query status. */
-    status_t    query_status_;
+    status_t    mQueryStatus;
     /* Reply buffer */
-    char*       reply_buffer_;
+    char*       mReplyBuffer;
     /* Reply data (past 'ok'/'ko'). If NULL, there were no data in reply. */
-    char*       reply_data_;
+    char*       mReplyData;
     /* Reply buffer size. */
-    size_t      reply_size_;
+    size_t      mReplySize;
     /* Reply data size. */
-    size_t      reply_data_size_;
+    size_t      mReplyDataSize;
     /* Reply status: 1 - ok, 0 - ko. */
-    int         reply_status_;
+    int         mReplyStatus;
 
     /****************************************************************************
      * Private data memebers
@@ -173,7 +173,7 @@ public:
 
 protected:
     /* Preallocated buffer for small queries. */
-    char    query_prealloc_[256];
+    char    mQueryPrealloc[256];
 };
 
 /****************************************************************************
@@ -223,10 +223,10 @@ public:
      * Return:
      *  NO_ERROR on success, or an appropriate error status.
      */
-    virtual status_t Connect(const char* param);
+    virtual status_t connectClient(const char* param);
 
     /* Disconnects from the service. */
-    virtual void Disconnect();
+    virtual void disconnectClient();
 
     /* Sends data to the service.
      * Param:
@@ -234,7 +234,7 @@ public:
      * Return:
      *  NO_ERROR on success, or an appropriate error status on failure.
      */
-    virtual status_t Send(const void* data, size_t data_size);
+    virtual status_t sendMessage(const void* data, size_t data_size);
 
     /* Receives data from the service.
      * This method assumes that data to receive will come in two chunks: 8
@@ -250,7 +250,7 @@ public:
      * Return:
      *  NO_ERROR on success, or an appropriate error status on failure.
      */
-    virtual status_t Receive(void** data, size_t* data_size);
+    virtual status_t receiveMessage(void** data, size_t* data_size);
 
     /* Sends a query, and receives a response from the service.
      * Param:
@@ -258,14 +258,14 @@ public:
      *  is completed, and all its relevant data members are properly initialized.
      * Return:
      *  NO_ERROR on success, or an appropriate error status on failure. Note that
-     *  status returned here is not the final query status. Use IsSucceeded(), or
-     *  GetCompletionStatus() method on the query to see if it has succeeded.
+     *  status returned here is not the final query status. Use isQuerySucceeded(),
+     *  or getCompletionStatus() method on the query to see if it has succeeded.
      *  However, if this method returns a failure, it means that the query has
      *  failed, and there is no guarantee that its data members are properly
-     *  initialized (except for the 'query_status_', which is always in the
+     *  initialized (except for the 'mQueryStatus', which is always in the
      *  proper state).
      */
-    virtual status_t Query(QemuQuery* query);
+    virtual status_t doQuery(QemuQuery* query);
 
     /****************************************************************************
      * Data members
@@ -273,11 +273,11 @@ public:
 
 protected:
     /* Qemu pipe handle. */
-    int     fd_;
+    int     mPipeFD;
 
 private:
     /* Camera service name. */
-    static const char camera_service_name_[];
+    static const char mCameraServiceName[];
 };
 
 /****************************************************************************
@@ -322,7 +322,7 @@ public:
      * Return:
      *  NO_ERROR on success, or an appropriate error status on failure.
      */
-    status_t ListCameras(char** list);
+    status_t listCameras(char** list);
 
     /****************************************************************************
      * Names of the queries available for the emulated camera factory.
@@ -330,7 +330,7 @@ public:
 
 private:
     /* List cameras connected to the host. */
-    static const char query_list_[];
+    static const char mQueryList[];
 };
 
 /****************************************************************************
@@ -356,13 +356,13 @@ public:
      * Return:
      *  NO_ERROR on success, or an appropriate error status on failure.
      */
-    status_t QueryConnect();
+    status_t queryConnect();
 
     /* Queries camera disconnection.
      * Return:
      *  NO_ERROR on success, or an appropriate error status on failure.
      */
-    status_t QueryDisconnect();
+    status_t queryDisconnect();
 
     /* Queries camera to start capturing video.
      * Param:
@@ -372,13 +372,13 @@ public:
      * Return:
      *  NO_ERROR on success, or an appropriate error status on failure.
      */
-    status_t QueryStart(uint32_t pixel_format, int width, int height);
+    status_t queryStart(uint32_t pixel_format, int width, int height);
 
     /* Queries camera to stop capturing video.
      * Return:
      *  NO_ERROR on success, or an appropriate error status on failure.
      */
-    status_t QueryStop();
+    status_t queryStop();
 
     /* Queries camera for the next video frame.
      * Param:
@@ -391,7 +391,7 @@ public:
      * Return:
      *  NO_ERROR on success, or an appropriate error status on failure.
      */
-    status_t QueryFrame(void* vframe,
+    status_t queryFrame(void* vframe,
                         void* pframe,
                         size_t vframe_size,
                         size_t pframe_size);
@@ -402,15 +402,15 @@ public:
 
 private:
     /* Connect to the camera. */
-    static const char query_connect_[];
+    static const char mQueryConnect[];
     /* Disconnect from the camera. */
-    static const char query_disconnect_[];
+    static const char mQueryDisconnect[];
     /* Start video capturing. */
-    static const char query_start_[];
+    static const char mQueryStart[];
     /* Stop video capturing. */
-    static const char query_stop_[];
+    static const char mQueryStop[];
     /* Query frame(s). */
-    static const char query_frame_[];
+    static const char mQueryFrame[];
 };
 
 }; /* namespace android */

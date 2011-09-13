@@ -22,22 +22,22 @@
 #define LOG_NDEBUG 0
 #define LOG_TAG "EmulatedCamera_QemuDevice"
 #include <cutils/log.h>
-#include "emulated_qemu_camera.h"
-#include "emulated_qemu_camera_device.h"
+#include "EmulatedQemuCamera.h"
+#include "EmulatedQemuCameraDevice.h"
 
 namespace android {
 
 EmulatedQemuCameraDevice::EmulatedQemuCameraDevice(EmulatedQemuCamera* camera_hal)
     : EmulatedCameraDevice(camera_hal),
-      qemu_client_(),
-      preview_frame_(NULL)
+      mQemuClient(),
+      mPreviewFrame(NULL)
 {
 }
 
 EmulatedQemuCameraDevice::~EmulatedQemuCameraDevice()
 {
-    if (preview_frame_ != NULL) {
-        delete[] preview_frame_;
+    if (mPreviewFrame != NULL) {
+        delete[] mPreviewFrame;
     }
 }
 
@@ -50,7 +50,7 @@ status_t EmulatedQemuCameraDevice::Initialize(const char* device_name)
     /* Connect to the service. */
     char connect_str[256];
     snprintf(connect_str, sizeof(connect_str), "name=%s", device_name);
-    status_t res = qemu_client_.Connect(connect_str);
+    status_t res = mQemuClient.connectClient(connect_str);
     if (res != NO_ERROR) {
         return res;
     }
@@ -60,9 +60,9 @@ status_t EmulatedQemuCameraDevice::Initialize(const char* device_name)
     if (res == NO_ERROR) {
         LOGV("%s: Connected to the emulated camera service '%s'",
              __FUNCTION__, device_name);
-        device_name_ = device_name;
+        mDeviceName = device_name;
     } else {
-        qemu_client_.Disconnect();
+        mQemuClient.disconnectDevice();
     }
 
     return res;
@@ -72,24 +72,24 @@ status_t EmulatedQemuCameraDevice::Initialize(const char* device_name)
  * Emulated camera device abstract interface implementation.
  ***************************************************************************/
 
-status_t EmulatedQemuCameraDevice::Connect()
+status_t EmulatedQemuCameraDevice::connectDevice()
 {
     LOGV("%s", __FUNCTION__);
 
-    Mutex::Autolock locker(&object_lock_);
-    if (!IsInitialized()) {
+    Mutex::Autolock locker(&mObjectLock);
+    if (!isInitialized()) {
         LOGE("%s: Qemu camera device is not initialized.", __FUNCTION__);
         return EINVAL;
     }
-    if (IsConnected()) {
+    if (isConnected()) {
         LOGW("%s: Qemu camera device is already connected.", __FUNCTION__);
         return NO_ERROR;
     }
 
-    const status_t res = qemu_client_.QueryConnect();
+    const status_t res = mQemuClient.queryConnect();
     if (res == NO_ERROR) {
         LOGV("%s: Connected", __FUNCTION__);
-        state_ = ECDS_CONNECTED;
+        mState = ECDS_CONNECTED;
     } else {
         LOGE("%s: Connection failed", __FUNCTION__);
     }
@@ -97,24 +97,24 @@ status_t EmulatedQemuCameraDevice::Connect()
     return res;
 }
 
-status_t EmulatedQemuCameraDevice::Disconnect()
+status_t EmulatedQemuCameraDevice::disconnectDevice()
 {
     LOGV("%s", __FUNCTION__);
 
-    Mutex::Autolock locker(&object_lock_);
-    if (!IsConnected()) {
+    Mutex::Autolock locker(&mObjectLock);
+    if (!isConnected()) {
         LOGW("%s: Qemu camera device is already disconnected.", __FUNCTION__);
         return NO_ERROR;
     }
-    if (IsCapturing()) {
+    if (isCapturing()) {
         LOGE("%s: Cannot disconnect while in the capturing state.", __FUNCTION__);
         return EINVAL;
     }
 
-    const status_t res = qemu_client_.QueryDisconnect();
+    const status_t res = mQemuClient.queryDisconnect();
     if (res == NO_ERROR) {
         LOGV("%s: Disonnected", __FUNCTION__);
-        state_ = ECDS_INITIALIZED;
+        mState = ECDS_INITIALIZED;
     } else {
         LOGE("%s: Disconnection failed", __FUNCTION__);
     }
@@ -122,16 +122,16 @@ status_t EmulatedQemuCameraDevice::Disconnect()
     return res;
 }
 
-status_t EmulatedQemuCameraDevice::StartCamera()
+status_t EmulatedQemuCameraDevice::startDevice()
 {
     LOGV("%s", __FUNCTION__);
 
-    Mutex::Autolock locker(&object_lock_);
-    if (!IsConnected()) {
+    Mutex::Autolock locker(&mObjectLock);
+    if (!isConnected()) {
         LOGE("%s: Qemu camera device is not connected.", __FUNCTION__);
         return EINVAL;
     }
-    if (IsCapturing()) {
+    if (isCapturing()) {
         LOGW("%s: Qemu camera device is already capturing.", __FUNCTION__);
         return NO_ERROR;
     }
@@ -139,24 +139,24 @@ status_t EmulatedQemuCameraDevice::StartCamera()
     /* Allocate preview frame buffer. */
     /* TODO: Watch out for preview format changes! At this point we implement
      * RGB32 only.*/
-    preview_frame_ = new uint16_t[total_pixels_ * 4];
-    if (preview_frame_ == NULL) {
+    mPreviewFrame = new uint16_t[mTotalPixels * 4];
+    if (mPreviewFrame == NULL) {
         LOGE("%s: Unable to allocate %d bytes for preview frame",
-             __FUNCTION__, total_pixels_ * 4);
+             __FUNCTION__, mTotalPixels * 4);
         return ENOMEM;
     }
-    memset(preview_frame_, 0, total_pixels_ * 4);
+    memset(mPreviewFrame, 0, mTotalPixels * 4);
 
     /* Start the actual camera device. */
     status_t res =
-        qemu_client_.QueryStart(pixel_format_, frame_width_, frame_height_);
+        mQemuClient.queryStart(mPixelFormat, mFrameWidth, mFrameHeight);
     if (res == NO_ERROR) {
         /* Start the worker thread. */
-        res = StartWorkerThread();
+        res = startWorkerThread();
         if (res == NO_ERROR) {
-            state_ = ECDS_CAPTURING;
+            mState = ECDS_CAPTURING;
         } else {
-            qemu_client_.QueryStop();
+            mQemuClient.queryStop();
         }
     } else {
         LOGE("%s: Start failed", __FUNCTION__);
@@ -165,27 +165,27 @@ status_t EmulatedQemuCameraDevice::StartCamera()
     return res;
 }
 
-status_t EmulatedQemuCameraDevice::StopCamera()
+status_t EmulatedQemuCameraDevice::stopDevice()
 {
     LOGV("%s", __FUNCTION__);
 
-    Mutex::Autolock locker(&object_lock_);
-    if (!IsCapturing()) {
+    Mutex::Autolock locker(&mObjectLock);
+    if (!isCapturing()) {
         LOGW("%s: Qemu camera device is not capturing.", __FUNCTION__);
         return NO_ERROR;
     }
 
     /* Stop the actual camera device. */
-    status_t res = qemu_client_.QueryStop();
+    status_t res = mQemuClient.queryStop();
     if (res == NO_ERROR) {
         /* Stop the worker thread. */
-        res = StopWorkerThread();
+        res = stopWorkerThread();
         if (res == NO_ERROR) {
-            if (preview_frame_ == NULL) {
-                delete[] preview_frame_;
-                preview_frame_ = NULL;
+            if (mPreviewFrame == NULL) {
+                delete[] mPreviewFrame;
+                mPreviewFrame = NULL;
             }
-            state_ = ECDS_CONNECTED;
+            mState = ECDS_CONNECTED;
             LOGV("%s: Stopped", __FUNCTION__);
         }
     } else {
@@ -199,14 +199,14 @@ status_t EmulatedQemuCameraDevice::StopCamera()
  * EmulatedCameraDevice virtual overrides
  ***************************************************************************/
 
-status_t EmulatedQemuCameraDevice::GetCurrentPreviewFrame(void* buffer)
+status_t EmulatedQemuCameraDevice::getCurrentPreviewFrame(void* buffer)
 {
-    LOGW_IF(preview_frame_ == NULL, "%s: No preview frame", __FUNCTION__);
-    if (preview_frame_ != NULL) {
-        memcpy(buffer, preview_frame_, total_pixels_ * 4);
+    LOGW_IF(mPreviewFrame == NULL, "%s: No preview frame", __FUNCTION__);
+    if (mPreviewFrame != NULL) {
+        memcpy(buffer, mPreviewFrame, mTotalPixels * 4);
         return 0;
     } else {
-        return EmulatedCameraDevice::GetCurrentPreviewFrame(buffer);
+        return EmulatedCameraDevice::getCurrentPreviewFrame(buffer);
     }
 }
 
@@ -214,24 +214,24 @@ status_t EmulatedQemuCameraDevice::GetCurrentPreviewFrame(void* buffer)
  * Worker thread management overrides.
  ***************************************************************************/
 
-bool EmulatedQemuCameraDevice::InWorkerThread()
+bool EmulatedQemuCameraDevice::inWorkerThread()
 {
     /* Wait till FPS timeout expires, or thread exit message is received. */
     WorkerThread::SelectRes res =
-        worker_thread()->Select(-1, 1000000 / emulated_fps_);
+        getWorkerThread()->Select(-1, 1000000 / mEmulatedFPS);
     if (res == WorkerThread::EXIT_THREAD) {
         LOGV("%s: Worker thread has been terminated.", __FUNCTION__);
         return false;
     }
 
     /* Query frames from the service. */
-    status_t query_res = qemu_client_.QueryFrame(current_frame_, preview_frame_,
-                                                 framebuffer_size_,
-                                                 total_pixels_ * 4);
+    status_t query_res = mQemuClient.queryFrame(mCurrentFrame, mPreviewFrame,
+                                                 mFrameBufferSize,
+                                                 mTotalPixels * 4);
     if (query_res == NO_ERROR) {
         /* Timestamp the current frame, and notify the camera HAL. */
-        timestamp_ = systemTime(SYSTEM_TIME_MONOTONIC);
-        camera_hal_->OnNextFrameAvailable(current_frame_, timestamp_, this);
+        mCurFrameTimestamp = systemTime(SYSTEM_TIME_MONOTONIC);
+        mCameraHAL->onNextFrameAvailable(mCurrentFrame, mCurFrameTimestamp, this);
     } else {
         LOGE("%s: Unable to get current video frame: %s",
              __FUNCTION__, strerror(query_res));

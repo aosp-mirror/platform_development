@@ -23,8 +23,8 @@
  * for EmulatedFakeCameraDevice instance.
  */
 
-#include "emulated_camera.h"
-#include "emulated_fake_camera_device.h"
+#include "EmulatedCamera.h"
+#include "EmulatedFakeCameraDevice.h"
 
 namespace android {
 
@@ -59,7 +59,7 @@ public:
 protected:
     /* Gets emulated camera device ised by this instance of the emulated camera.
      */
-    EmulatedCameraDevice* GetCameraDevice();
+    EmulatedCameraDevice* getCameraDevice();
 
     /****************************************************************************
      * Data memebers.
@@ -67,7 +67,7 @@ protected:
 
 protected:
     /* Contained fake camera device object. */
-    EmulatedFakeCameraDevice    fake_camera_dev_;
+    EmulatedFakeCameraDevice    mFakeCameraDevice;
 };
 
 }; /* namespace android */

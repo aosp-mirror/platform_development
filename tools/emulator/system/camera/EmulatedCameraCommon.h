@@ -33,18 +33,18 @@ class HWERoutineTracker {
 public:
     /* Constructor that prints an "entry" trace message. */
     explicit HWERoutineTracker(const char* name)
-            : name_(name) {
-        LOGV("Entering %s", name_);
+            : mName(name) {
+        LOGV("Entering %s", mName);
     }
 
     /* Destructor that prints a "leave" trace message. */
     ~HWERoutineTracker() {
-        LOGV("Leaving %s", name_);
+        LOGV("Leaving %s", mName);
     }
 
 private:
     /* Stores the routine name. */
-    const char* name_;
+    const char* mName;
 };
 
 /* Logs an execution of a routine / method. */

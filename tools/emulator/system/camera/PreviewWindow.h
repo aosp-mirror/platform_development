@@ -40,9 +40,9 @@ public:
     /* Destructs PreviewWindow instance. */
     ~PreviewWindow();
 
-    /****************************************************************************
+    /***************************************************************************
      * Camera API
-     ***************************************************************************/
+     **************************************************************************/
 
 public:
     /* Actual handler for camera_device_ops_t::set_preview_window callback.
@@ -52,29 +52,29 @@ public:
      *  window - Preview window to set. This parameter might be NULL, which
      *      indicates preview window reset.
      *  preview_fps - Preview's frame frequency. This parameter determins when
-     *      a frame received via OnNextFrameAvailable call will be pushed to the
-     *      preview window. If 'window' parameter passed to this method is NULL,
-     *      this parameter is ignored.
+     *      a frame received via onNextFrameAvailable call will be pushed to
+     *      the preview window. If 'window' parameter passed to this method is
+     *      NULL, this parameter is ignored.
      * Return:
      *  NO_ERROR on success, or an appropriate error status.
      */
-    status_t SetPreviewWindow(struct preview_stream_ops* window,
+    status_t setPreviewWindow(struct preview_stream_ops* window,
                               int preview_fps);
 
     /* Starts the preview.
      * This method is called by the containing emulated camera object when it is
      * handing the camera_device_ops_t::start_preview callback.
      */
-    status_t Start();
+    status_t startPreview();
 
     /* Stops the preview.
      * This method is called by the containing emulated camera object when it is
      * handing the camera_device_ops_t::start_preview callback.
      */
-    void Stop();
+    void stopPreview();
 
     /* Checks if preview is enabled. */
-    bool IsEnabled();
+    bool isPreviewEnabled();
 
     /****************************************************************************
      * Public API
@@ -96,13 +96,13 @@ public:
      * timestamp - Frame's timestamp.
      * camera_dev - Camera device instance that delivered the frame.
      */
-    void OnNextFrameAvailable(const void* frame,
+    void onNextFrameAvailable(const void* frame,
                               nsecs_t timestamp,
                               EmulatedCameraDevice* camera_dev);
 
-    /****************************************************************************
+    /***************************************************************************
      * Private API
-     ***************************************************************************/
+     **************************************************************************/
 
 protected:
     /* Adjusts cached dimensions of the preview window frame according to the
@@ -111,9 +111,9 @@ protected:
      * When preview is started, it's not known (hard to define) what are going
      * to be the dimensions of the frames that are going to be displayed. Plus,
      * it might be possible, that such dimensions can be changed on the fly. So,
-     * in order to be always in sync with frame dimensions, this method is called
-     * for each frame passed to OnNextFrameAvailable method, in order to properly
-     * adjust frame dimensions, used by the preview window.
+     * in order to be always in sync with frame dimensions, this method is
+     * called for each frame passed to onNextFrameAvailable method, in order to
+     * properly adjust frame dimensions, used by the preview window.
      * Note that this method must be called while object is locked.
      * Param:
      *  camera_dev - Camera device, prpviding frames displayed in the preview
@@ -122,39 +122,39 @@ protected:
      *  true if cached dimensions have been adjusted, or false if cached
      *  dimensions match device's frame dimensions.
      */
-    bool AdjustPreviewDimensions(EmulatedCameraDevice* camera_dev);
+    bool adjustPreviewDimensions(EmulatedCameraDevice* camera_dev);
 
     /* Checks if it's the time to push new frame to the preview window.
      * Note that this method must be called while object is locked. */
-    bool IsTimeToPreview();
+    bool isPreviewTime();
 
-    /****************************************************************************
+    /***************************************************************************
      * Data members
-     ***************************************************************************/
+     **************************************************************************/
 
 protected:
     /* Locks this instance for data changes. */
-    Mutex                           object_lock_;
+    Mutex                           mObjectLock;
 
     /* Preview window instance. */
-    preview_stream_ops*             preview_window_;
+    preview_stream_ops*             mPreviewWindow;
 
     /* Timestamp (abs. microseconds) when last frame has been pushed to the
      * preview window. */
-    uint64_t                        last_previewed_;
+    uint64_t                        mLastPreviewed;
 
     /* Preview frequency in microseconds. */
-    uint32_t                        preview_after_;
+    uint32_t                        mPreviewAfter;
 
     /*
      * Cached preview window frame dimensions.
      */
 
-    int                             preview_frame_width_;
-    int                             preview_frame_height_;
+    int                             mPreviewFrameWidth;
+    int                             mPreviewFrameHeight;
 
     /* Preview status. */
-    bool                            preview_enabled_;
+    bool                            mPreviewEnabled;
 };
 
 }; /* namespace android */

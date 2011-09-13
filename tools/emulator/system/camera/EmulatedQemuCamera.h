@@ -22,8 +22,8 @@
  * functionality of an emulated camera connected to the host.
  */
 
-#include "emulated_camera.h"
-#include "emulated_qemu_camera_device.h"
+#include "EmulatedCamera.h"
+#include "EmulatedQemuCameraDevice.h"
 
 namespace android {
 
@@ -37,9 +37,9 @@ public:
     /* Destructs EmulatedQemuCamera instance. */
     ~EmulatedQemuCamera();
 
-    /****************************************************************************
+    /***************************************************************************
      * EmulatedCamera virtual overrides.
-     ***************************************************************************/
+     **************************************************************************/
 
 public:
     /* Initializes EmulatedQemuCamera instance.
@@ -49,25 +49,25 @@ public:
      */
      status_t Initialize(const char* device_name, const char* frame_dims);
 
-    /****************************************************************************
+    /***************************************************************************
      * EmulatedCamera abstract API implementation.
-     ***************************************************************************/
+     **************************************************************************/
 
 protected:
     /* Gets emulated camera device ised by this instance of the emulated camera.
      */
-    EmulatedCameraDevice* GetCameraDevice();
+    EmulatedCameraDevice* getCameraDevice();
 
-    /****************************************************************************
+    /***************************************************************************
      * Data memebers.
-     ***************************************************************************/
+     **************************************************************************/
 
 protected:
     /* Contained qemu camera device object. */
-    EmulatedQemuCameraDevice    qemu_camera_dev_;
+    EmulatedQemuCameraDevice    mQemuCameraDevice;
 
     /* Supported frame dimensions reported by the camera device. */
-    String8                     frame_dims_;
+    String8                     mFrameDims;
 };
 
 }; /* namespace android */

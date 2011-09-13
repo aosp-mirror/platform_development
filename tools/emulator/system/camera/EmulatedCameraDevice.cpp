@@ -27,24 +27,24 @@
 #define LOG_TAG "EmulatedCamera_Device"
 #include <cutils/log.h>
 #include <sys/select.h>
-#include "emulated_camera_device.h"
-#include "converters.h"
+#include "EmulatedCameraDevice.h"
+#include "Converters.h"
 
 namespace android {
 
 EmulatedCameraDevice::EmulatedCameraDevice(EmulatedCamera* camera_hal)
-    : object_lock_(),
-      timestamp_(0),
-      camera_hal_(camera_hal),
-      current_frame_(NULL),
-      state_(ECDS_CONSTRUCTED)
+    : mObjectLock(),
+      mCurFrameTimestamp(0),
+      mCameraHAL(camera_hal),
+      mCurrentFrame(NULL),
+      mState(ECDS_CONSTRUCTED)
 {
 }
 
 EmulatedCameraDevice::~EmulatedCameraDevice()
 {
-    if (current_frame_ != NULL) {
-        delete[] current_frame_;
+    if (mCurrentFrame != NULL) {
+        delete[] mCurrentFrame;
     }
 }
 
@@ -56,25 +56,25 @@ status_t EmulatedCameraDevice::Initialize()
 {
     LOGV("%s", __FUNCTION__);
 
-    if (IsInitialized()) {
-        LOGW("%s: Emulated camera device is already initialized: state_ = %d",
-             __FUNCTION__, state_);
+    if (isInitialized()) {
+        LOGW("%s: Emulated camera device is already initialized: mState = %d",
+             __FUNCTION__, mState);
         return NO_ERROR;
     }
 
     /* Instantiate worker thread object. */
-    worker_thread_ = new WorkerThread(this);
-    if (worker_thread() == NULL) {
+    mWorkerThread = new WorkerThread(this);
+    if (getWorkerThread() == NULL) {
         LOGE("%s: Unable to instantiate worker thread object", __FUNCTION__);
         return ENOMEM;
     }
 
-    state_ = ECDS_INITIALIZED;
+    mState = ECDS_INITIALIZED;
 
     return NO_ERROR;
 }
 
-status_t EmulatedCameraDevice::StartCapturing(int width,
+status_t EmulatedCameraDevice::startCapturing(int width,
                                               int height,
                                               uint32_t pix_fmt)
 {
@@ -83,7 +83,7 @@ status_t EmulatedCameraDevice::StartCapturing(int width,
     /* Validate pixel format, and calculate framebuffer size at the same time. */
     switch (pix_fmt) {
         case V4L2_PIX_FMT_YVU420:
-            framebuffer_size_ = (width * height * 12) / 8;
+            mFrameBufferSize = (width * height * 12) / 8;
             break;
 
         default:
@@ -93,87 +93,87 @@ status_t EmulatedCameraDevice::StartCapturing(int width,
     }
 
     /* Cache framebuffer info. */
-    frame_width_ = width;
-    frame_height_ = height;
-    pixel_format_ = pix_fmt;
-    total_pixels_ = width * height;
+    mFrameWidth = width;
+    mFrameHeight = height;
+    mPixelFormat = pix_fmt;
+    mTotalPixels = width * height;
 
     /* Allocate framebuffer. */
-    current_frame_ = new uint8_t[framebuffer_size_];
-    if (current_frame_ == NULL) {
+    mCurrentFrame = new uint8_t[mFrameBufferSize];
+    if (mCurrentFrame == NULL) {
         LOGE("%s: Unable to allocate framebuffer", __FUNCTION__);
         return ENOMEM;
     }
-    /* Calculate Cb/Cr panes inside the framebuffer. */
-    frame_Cb_ = current_frame_ + total_pixels_;
-    frame_Cr_ = frame_Cb_ + total_pixels_ / 4;
+    /* Calculate U/V panes inside the framebuffer. */
+    mFrameU = mCurrentFrame + mTotalPixels;
+    mFrameV = mFrameU + mTotalPixels / 4;
 
     /* Start the camera. */
-    const status_t res = StartCamera();
+    const status_t res = startDevice();
     if (res == NO_ERROR) {
         LOGD("Camera device is started:\n"
              "      Framebuffer dimensions: %dx%d.\n"
              "      Pixel format: %.4s",
-             frame_width_, frame_height_,
-             reinterpret_cast<const char*>(&pixel_format_));
+             mFrameWidth, mFrameHeight,
+             reinterpret_cast<const char*>(&mPixelFormat));
     } else {
-        delete[] current_frame_;
-        current_frame_ = NULL;
+        delete[] mCurrentFrame;
+        mCurrentFrame = NULL;
     }
 
     return res;
 }
 
-status_t EmulatedCameraDevice::StopCapturing()
+status_t EmulatedCameraDevice::stopCapturing()
 {
     LOGV("%s", __FUNCTION__);
 
     /* Stop the camera. */
-    const status_t res = StopCamera();
+    const status_t res = stopDevice();
     if (res == NO_ERROR) {
         /* Release resources allocated for capturing. */
-        if (current_frame_ != NULL) {
-            delete[] current_frame_;
-            current_frame_ = NULL;
+        if (mCurrentFrame != NULL) {
+            delete[] mCurrentFrame;
+            mCurrentFrame = NULL;
         }
     }
 
     return res;
 }
 
-status_t EmulatedCameraDevice::GetCurrentFrame(void* buffer)
+status_t EmulatedCameraDevice::getCurrentFrame(void* buffer)
 {
-    Mutex::Autolock locker(&object_lock_);
+    Mutex::Autolock locker(&mObjectLock);
 
-    if (!IsCapturing() || current_frame_ == NULL) {
+    if (!isCapturing() || mCurrentFrame == NULL) {
         LOGE("%s is called on a device that is not in the capturing state",
             __FUNCTION__);
         return EINVAL;
     }
 
-    memcpy(buffer, current_frame_, framebuffer_size_);
+    memcpy(buffer, mCurrentFrame, mFrameBufferSize);
 
     return NO_ERROR;
 }
 
-status_t EmulatedCameraDevice::GetCurrentPreviewFrame(void* buffer)
+status_t EmulatedCameraDevice::getCurrentPreviewFrame(void* buffer)
 {
-    Mutex::Autolock locker(&object_lock_);
+    Mutex::Autolock locker(&mObjectLock);
 
-    if (!IsCapturing() || current_frame_ == NULL) {
+    if (!isCapturing() || mCurrentFrame == NULL) {
         LOGE("%s is called on a device that is not in the capturing state",
             __FUNCTION__);
         return EINVAL;
     }
 
     /* In emulation the framebuffer is never RGB. */
-    switch (pixel_format_) {
+    switch (mPixelFormat) {
         case V4L2_PIX_FMT_YVU420:
-            YV12ToRGB32(current_frame_, buffer, frame_width_, frame_height_);
+            YV12ToRGB32(mCurrentFrame, buffer, mFrameWidth, mFrameHeight);
             return NO_ERROR;
 
         default:
-            LOGE("%s: Unknown pixel format %d", __FUNCTION__, pixel_format_);
+            LOGE("%s: Unknown pixel format %d", __FUNCTION__, mPixelFormat);
             return EINVAL;
     }
 }
@@ -182,37 +182,37 @@ status_t EmulatedCameraDevice::GetCurrentPreviewFrame(void* buffer)
  * Worker thread management.
  ***************************************************************************/
 
-status_t EmulatedCameraDevice::StartWorkerThread()
+status_t EmulatedCameraDevice::startWorkerThread()
 {
     LOGV("%s", __FUNCTION__);
 
-    if (!IsInitialized()) {
+    if (!isInitialized()) {
         LOGE("%s: Emulated camera device is not initialized", __FUNCTION__);
         return EINVAL;
     }
 
-    const status_t ret = worker_thread()->Start();
+    const status_t ret = getWorkerThread()->startThread();
     LOGE_IF(ret != NO_ERROR, "%s: Unable to start worker thread: %d -> %s",
             __FUNCTION__, ret, strerror(ret));
 
     return ret;
 }
 
-status_t EmulatedCameraDevice::StopWorkerThread()
+status_t EmulatedCameraDevice::stopWorkerThread()
 {
     LOGV("%s", __FUNCTION__);
 
-    if (!IsInitialized()) {
+    if (!isInitialized()) {
         LOGE("%s: Emulated camera device is not initialized", __FUNCTION__);
         return EINVAL;
     }
 
-    worker_thread()->Stop();
+    getWorkerThread()->stopThread();
 
     return NO_ERROR;
 }
 
-bool EmulatedCameraDevice::InWorkerThread()
+bool EmulatedCameraDevice::inWorkerThread()
 {
     /* This will end the thread loop, and will terminate the thread. */
     return false;
@@ -226,13 +226,13 @@ status_t EmulatedCameraDevice::WorkerThread::readyToRun()
 {
     LOGV("Starting emulated camera device worker thread...");
 
-    LOGW_IF(thread_control_ >= 0 || control_fd_ >= 0,
+    LOGW_IF(mThreadControl >= 0 || mControlFD >= 0,
             "%s: Thread control FDs are opened", __FUNCTION__);
     /* Create a pair of FDs that would be used to control the thread. */
     int thread_fds[2];
     if (pipe(thread_fds) == 0) {
-        thread_control_ = thread_fds[1];
-        control_fd_ = thread_fds[0];
+        mThreadControl = thread_fds[1];
+        mControlFD = thread_fds[0];
         LOGV("Emulated device's worker thread has been started.");
         return NO_ERROR;
     } else {
@@ -242,28 +242,28 @@ status_t EmulatedCameraDevice::WorkerThread::readyToRun()
     }
 }
 
-status_t EmulatedCameraDevice::WorkerThread::Stop()
+status_t EmulatedCameraDevice::WorkerThread::stopThread()
 {
     LOGV("Stopping emulated camera device's worker thread...");
 
     status_t res = EINVAL;
-    if (thread_control_ >= 0) {
+    if (mThreadControl >= 0) {
         /* Send "stop" message to the thread loop. */
         const ControlMessage msg = THREAD_STOP;
         const int wres =
-            TEMP_FAILURE_RETRY(write(thread_control_, &msg, sizeof(msg)));
+            TEMP_FAILURE_RETRY(write(mThreadControl, &msg, sizeof(msg)));
         if (wres == sizeof(msg)) {
             /* Stop the thread, and wait till it's terminated. */
             res = requestExitAndWait();
             if (res == NO_ERROR) {
                 /* Close control FDs. */
-                if (thread_control_ >= 0) {
-                    close(thread_control_);
-                    thread_control_ = -1;
+                if (mThreadControl >= 0) {
+                    close(mThreadControl);
+                    mThreadControl = -1;
                 }
-                if (control_fd_ >= 0) {
-                    close(control_fd_);
-                    control_fd_ = -1;
+                if (mControlFD >= 0) {
+                    close(mControlFD);
+                    mControlFD = -1;
                 }
                 LOGV("Emulated camera device's worker thread has been stopped.");
             } else {
@@ -288,10 +288,10 @@ EmulatedCameraDevice::WorkerThread::Select(int fd, int timeout)
     fd_set fds[1];
     struct timeval tv, *tvp = NULL;
 
-    const int fd_num = (fd >= 0) ? max(fd, control_fd_) + 1 :
-                                   control_fd_ + 1;
+    const int fd_num = (fd >= 0) ? max(fd, mControlFD) + 1 :
+                                   mControlFD + 1;
     FD_ZERO(fds);
-    FD_SET(control_fd_, fds);
+    FD_SET(mControlFD, fds);
     if (fd >= 0) {
         FD_SET(fd, fds);
     }
@@ -308,10 +308,10 @@ EmulatedCameraDevice::WorkerThread::Select(int fd, int timeout)
     } else if (res == 0) {
         /* Timeout. */
         return TIMEOUT;
-    } else if (FD_ISSET(control_fd_, fds)) {
+    } else if (FD_ISSET(mControlFD, fds)) {
         /* A control event. Lets read the message. */
         ControlMessage msg;
-        res = TEMP_FAILURE_RETRY(read(control_fd_, &msg, sizeof(msg)));
+        res = TEMP_FAILURE_RETRY(read(mControlFD, &msg, sizeof(msg)));
         if (res != sizeof(msg)) {
             LOGE("%s: Unexpected message size %d, or an error %d -> %s",
                  __FUNCTION__, res, errno, strerror(errno));

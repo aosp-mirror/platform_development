@@ -22,8 +22,8 @@
  * a fake camera device.
  */
 
-#include "converters.h"
-#include "emulated_camera_device.h"
+#include "Converters.h"
+#include "EmulatedCameraDevice.h"
 
 namespace android {
 
@@ -43,51 +43,51 @@ public:
     /* Destructs EmulatedFakeCameraDevice instance. */
     ~EmulatedFakeCameraDevice();
 
-    /****************************************************************************
+    /***************************************************************************
      * Emulated camera device abstract interface implementation.
      * See declarations of these methods in EmulatedCameraDevice class for
      * information on each of these methods.
-     ***************************************************************************/
+     **************************************************************************/
 
 public:
     /* Connects to the camera device.
-     * Since there is no real device to connect to, this method does nothing, but
-     * changes the state.
+     * Since there is no real device to connect to, this method does nothing,
+     * but changes the state.
      */
-    status_t Connect();
+    status_t connectDevice();
 
     /* Disconnects from the camera device.
      * Since there is no real device to disconnect from, this method does
      * nothing, but changes the state.
      */
-    status_t Disconnect();
+    status_t disconnectDevice();
 
 protected:
     /* Starts capturing frames from the camera device.
      * Since there is no real device to control, this method simply starts the
      * worker thread, and changes the state.
      */
-    status_t StartCamera();
+    status_t startDevice();
 
     /* Stops capturing frames from the camera device.
      * Since there is no real device to control, this method simply stops the
      * worker thread, and changes the state.
      */
-    status_t StopCamera();
+    status_t stopDevice();
 
-    /****************************************************************************
+    /***************************************************************************
      * Worker thread management overrides.
      * See declarations of these methods in EmulatedCameraDevice class for
      * information on each of these methods.
-     ***************************************************************************/
+     **************************************************************************/
 
 protected:
     /* Implementation of the worker thread routine.
      * This method simply sleeps for a period of time defined by FPS property of
      * the fake camera (simulating frame frequency), and then calls emulated
-     * camera's OnNextFrameAvailable method.
+     * camera's onNextFrameAvailable method.
      */
-    bool InWorkerThread();
+    bool inWorkerThread();
 
     /****************************************************************************
      * Fake camera device private API
@@ -95,7 +95,7 @@ protected:
 
 private:
     /* Draws a black and white checker board in the current frame buffer. */
-    void DrawCheckerboard();
+    void drawCheckerboard();
 
     /* Draws a square of the given color in the current frame buffer.
      * Param:
@@ -103,7 +103,7 @@ private:
      *  size - Size of the square's side.
      *  color - Square's color.
      */
-    void DrawSquare(int x, int y, int size, const YUVPixel* color);
+    void drawSquare(int x, int y, int size, const YUVPixel* color);
 
     /****************************************************************************
      * Fake camera device data members
@@ -111,31 +111,31 @@ private:
 
 private:
     /*
-     * Pixel colors in YCbCr format used when drawing the checker board.
+     * Pixel colors in YUV format used when drawing the checker board.
      */
 
-    YUVPixel    black_YCbCr_;
-    YUVPixel    white_YCbCr_;
-    YUVPixel    red_YCbCr_;
-    YUVPixel    green_YCbCr_;
-    YUVPixel    blue_YCbCr_;
+    YUVPixel    mBlackYUV;
+    YUVPixel    mWhiteYUV;
+    YUVPixel    mRedYUV;
+    YUVPixel    mGreenYUV;
+    YUVPixel    mBlueYUV;
 
     /*
      * Drawing related stuff
      */
 
-    int         check_x_;
-    int         check_y_;
-    int         counter_;
-    int         half_width_;
+    int         mCheckX;
+    int         mCheckY;
+    int         mCcounter;
+    int         mHalfWidth;
 
     /* Emulated FPS (frames per second).
      * We will emulate 50 FPS. */
-    static const int        emulated_fps_ = 50;
+    static const int        mEmulatedFPS = 50;
 
     /* Defines time (in nanoseconds) between redrawing the checker board.
      * We will redraw the checker board every 15 milliseconds. */
-    static const nsecs_t    redraw_after_ = 15000000LL;
+    static const nsecs_t    mRedrawAfter = 15000000LL;
 };
 
 }; /* namespace android */

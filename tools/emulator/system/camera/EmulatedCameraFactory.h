@@ -17,7 +17,7 @@
 #ifndef HW_EMULATOR_CAMERA_EMULATED_CAMERA_FACTORY_H
 #define HW_EMULATOR_CAMERA_EMULATED_CAMERA_FACTORY_H
 
-#include "emulated_camera.h"
+#include "EmulatedCamera.h"
 #include "QemuClient.h"
 
 namespace android {
@@ -50,7 +50,7 @@ public:
     /* Constructs EmulatedCameraFactory instance.
      * In this constructor the factory will create and initialize a list of
      * emulated cameras. All errors that occur on this constructor are reported
-     * via constructed_ok_ data member of this class.
+     * via mConstructedOK data member of this class.
      */
     EmulatedCameraFactory();
 
@@ -65,12 +65,12 @@ public:
     /* Opens (connects to) a camera device.
      * This method is called in response to hw_module_methods_t::open callback.
      */
-    int CameraDeviceOpen(int camera_id, hw_device_t** device);
+    int cameraDeviceOpen(int camera_id, hw_device_t** device);
 
     /* Gets emulated camera information.
      * This method is called in response to camera_module_t::get_camera_info callback.
      */
-    int GetCameraInfo(int camera_id, struct camera_info *info);
+    int getCameraInfo(int camera_id, struct camera_info *info);
 
     /****************************************************************************
      * Camera HAL API callbacks.
@@ -95,39 +95,39 @@ private:
 
 public:
     /* Gets fake camera facing. */
-    int GetFakeCameraFacing() {
+    int getFakeCameraFacing() {
         /* TODO: Have a boot property that controls that. */
         return CAMERA_FACING_BACK;
     }
 
     /* Gets fake camera orientation. */
-    int GetFakeCameraOrientation() {
+    int getFakeCameraOrientation() {
         /* TODO: Have a boot property that controls that. */
         return 90;
     }
 
     /* Gets qemu camera facing. */
-    int GetQemuCameraFacing() {
+    int getQemuCameraFacing() {
         /* TODO: Have a boot property that controls that. */
         return CAMERA_FACING_FRONT;
     }
 
     /* Gets qemu camera orientation. */
-    int GetQemuCameraOrientation() {
+    int getQemuCameraOrientation() {
         /* TODO: Have a boot property that controls that. */
         return 270;
     }
 
     /* Gets number of emulated cameras.
      */
-    int emulated_camera_num() const {
-        return emulated_camera_num_;
+    int getEmulatedCameraNum() const {
+        return mEmulatedCameraNum;
     }
 
     /* Checks whether or not the constructor has succeeded.
      */
-    bool constructed_ok() const {
-        return constructed_ok_;
+    bool isConstructedOK() const {
+        return mConstructedOK;
     }
 
     /****************************************************************************
@@ -137,16 +137,16 @@ public:
 private:
     /* Populates emulated cameras array with cameras that are available via
      * 'camera' service in the emulator. For each such camera and instance of
-     * the EmulatedCameraQemud will be created and added to the emulated_cameras_
+     * the EmulatedCameraQemud will be created and added to the mEmulatedCameras
      * array.
      */
-    void CreateQemuCameras();
+    void createQemuCameras();
 
     /* Checks if qemu camera emulation is on. */
-    bool IsQemuCameraEmulationOn();
+    bool isQemuCameraEmulationOn();
 
     /* Checks if fake camera emulation is on. */
-    bool IsFakeCameraEmulationOn();
+    bool isFakeCameraEmulationOn();
 
     /****************************************************************************
      * Data members.
@@ -154,28 +154,28 @@ private:
 
 private:
     /* Connection to the camera service in the emulator. */
-    FactoryQemuClient   qemu_client_;
+    FactoryQemuClient   mQemuClient;
 
     /* Array of cameras available for the emulation. */
-    EmulatedCamera**    emulated_cameras_;
+    EmulatedCamera**    mEmulatedCameras;
 
     /* Number of emulated cameras (including the fake one). */
-    int                 emulated_camera_num_;
+    int                 mEmulatedCameraNum;
 
     /* Fake camera ID. */
-    int                 fake_camera_id_;
+    int                 mFakeCameraID;
 
     /* Flags whether or not constructor has succeeded. */
-    bool                constructed_ok_;
+    bool                mConstructedOK;
 
 public:
     /* Contains device open entry point, as required by HAL API. */
-    static struct hw_module_methods_t   camera_module_methods_;
+    static struct hw_module_methods_t   mCameraModuleMethods;
 };
 
 }; /* namespace android */
 
 /* References the global EmulatedCameraFactory instance. */
-extern android::EmulatedCameraFactory   _emulated_camera_factory;
+extern android::EmulatedCameraFactory   gEmulatedCameraFactory;
 
 #endif  /* HW_EMULATOR_CAMERA_EMULATED_CAMERA_FACTORY_H */

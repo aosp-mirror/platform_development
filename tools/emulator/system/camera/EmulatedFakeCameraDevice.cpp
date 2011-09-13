@@ -22,21 +22,21 @@
 #define LOG_NDEBUG 0
 #define LOG_TAG "EmulatedCamera_FakeDevice"
 #include <cutils/log.h>
-#include "emulated_fake_camera.h"
-#include "emulated_fake_camera_device.h"
+#include "EmulatedFakeCamera.h"
+#include "EmulatedFakeCameraDevice.h"
 
 namespace android {
 
 EmulatedFakeCameraDevice::EmulatedFakeCameraDevice(EmulatedFakeCamera* camera_hal)
     : EmulatedCameraDevice(camera_hal),
-      black_YCbCr_(kBlack32),
-      white_YCbCr_(kWhite32),
-      red_YCbCr_(kRed8),
-      green_YCbCr_(kGreen8),
-      blue_YCbCr_(kBlue8),
-      check_x_(0),
-      check_y_(0),
-      counter_(0)
+      mBlackYUV(kBlack32),
+      mWhiteYUV(kWhite32),
+      mRedYUV(kRed8),
+      mGreenYUV(kGreen8),
+      mBlueYUV(kBlue8),
+      mCheckX(0),
+      mCheckY(0),
+      mCcounter(0)
 {
 }
 
@@ -48,83 +48,83 @@ EmulatedFakeCameraDevice::~EmulatedFakeCameraDevice()
  * Emulated camera device abstract interface implementation.
  ***************************************************************************/
 
-status_t EmulatedFakeCameraDevice::Connect()
+status_t EmulatedFakeCameraDevice::connectDevice()
 {
     LOGV("%s", __FUNCTION__);
 
-    Mutex::Autolock locker(&object_lock_);
-    if (!IsInitialized()) {
+    Mutex::Autolock locker(&mObjectLock);
+    if (!isInitialized()) {
         LOGE("%s: Fake camera device is not initialized.", __FUNCTION__);
         return EINVAL;
     }
-    if (IsConnected()) {
+    if (isConnected()) {
         LOGW("%s: Fake camera device is already connected.", __FUNCTION__);
         return NO_ERROR;
     }
 
-    state_ = ECDS_CONNECTED;
+    mState = ECDS_CONNECTED;
 
     return NO_ERROR;
 }
 
-status_t EmulatedFakeCameraDevice::Disconnect()
+status_t EmulatedFakeCameraDevice::disconnectDevice()
 {
     LOGV("%s", __FUNCTION__);
 
-    Mutex::Autolock locker(&object_lock_);
-    if (!IsConnected()) {
+    Mutex::Autolock locker(&mObjectLock);
+    if (!isConnected()) {
         LOGW("%s: Fake camera device is already disconnected.", __FUNCTION__);
         return NO_ERROR;
     }
-    if (IsCapturing()) {
+    if (isCapturing()) {
         LOGE("%s: Cannot disconnect while in the capturing state.", __FUNCTION__);
         return EINVAL;
     }
 
-    state_ = ECDS_INITIALIZED;
+    mState = ECDS_INITIALIZED;
 
     return NO_ERROR;
 }
 
-status_t EmulatedFakeCameraDevice::StartCamera()
+status_t EmulatedFakeCameraDevice::startDevice()
 {
     LOGV("%s", __FUNCTION__);
 
-    Mutex::Autolock locker(&object_lock_);
-    if (!IsConnected()) {
+    Mutex::Autolock locker(&mObjectLock);
+    if (!isConnected()) {
         LOGE("%s: Fake camera device is not connected.", __FUNCTION__);
         return EINVAL;
     }
-    if (IsCapturing()) {
+    if (isCapturing()) {
         LOGW("%s: Fake camera device is already capturing.", __FUNCTION__);
         return NO_ERROR;
     }
 
-    /* Used in calculating Cb/Cr position when drawing the square. */
-    half_width_ = frame_width_ / 2;
+    /* Used in calculating U/V position when drawing the square. */
+    mHalfWidth = mFrameWidth / 2;
 
     /* Just start the worker thread: there is no real device to deal with. */
-    const status_t ret = StartWorkerThread();
+    const status_t ret = startWorkerThread();
     if (ret == NO_ERROR) {
-        state_ = ECDS_CAPTURING;
+        mState = ECDS_CAPTURING;
     }
 
     return ret;
 }
 
-status_t EmulatedFakeCameraDevice::StopCamera()
+status_t EmulatedFakeCameraDevice::stopDevice()
 {
     LOGV("%s", __FUNCTION__);
 
-    if (!IsCapturing()) {
+    if (!isCapturing()) {
         LOGW("%s: Fake camera device is not capturing.", __FUNCTION__);
         return NO_ERROR;
     }
 
     /* Just stop the worker thread: there is no real device to deal with. */
-    const status_t ret = StopWorkerThread();
+    const status_t ret = stopWorkerThread();
     if (ret == NO_ERROR) {
-        state_ = ECDS_CONNECTED;
+        mState = ECDS_CONNECTED;
     }
 
     return ret;
@@ -134,39 +134,39 @@ status_t EmulatedFakeCameraDevice::StopCamera()
  * Worker thread management overrides.
  ***************************************************************************/
 
-bool EmulatedFakeCameraDevice::InWorkerThread()
+bool EmulatedFakeCameraDevice::inWorkerThread()
 {
     /* Wait till FPS timeout expires, or thread exit message is received. */
     WorkerThread::SelectRes res =
-        worker_thread()->Select(-1, 1000000 / emulated_fps_);
+        getWorkerThread()->Select(-1, 1000000 / mEmulatedFPS);
     if (res == WorkerThread::EXIT_THREAD) {
         LOGV("%s: Worker thread has been terminated.", __FUNCTION__);
         return false;
     }
 
     /* Lets see if we need to generate a new frame. */
-    if ((systemTime(SYSTEM_TIME_MONOTONIC) - timestamp_) >= redraw_after_) {
+    if ((systemTime(SYSTEM_TIME_MONOTONIC) - mCurFrameTimestamp) >= mRedrawAfter) {
         /*
          * Time to generate a new frame.
          */
 
         /* Draw the checker board. */
-        DrawCheckerboard();
+        drawCheckerboard();
 
         /* Run the square. */
-        int x = ((counter_ * 3) & 255);
+        int x = ((mCcounter * 3) & 255);
         if(x > 128) x = 255 - x;
-        int y = ((counter_ * 5) & 255);
+        int y = ((mCcounter * 5) & 255);
         if(y > 128) y = 255 - y;
-        const int size = frame_width_ / 10;
-        DrawSquare(x * size / 32, y * size / 32, (size * 5) >> 1,
-                   (counter_ & 0x100) ? &red_YCbCr_ : &green_YCbCr_);
-        counter_++;
+        const int size = mFrameWidth / 10;
+        drawSquare(x * size / 32, y * size / 32, (size * 5) >> 1,
+                   (mCcounter & 0x100) ? &mRedYUV : &mGreenYUV);
+        mCcounter++;
     }
 
     /* Timestamp the current frame, and notify the camera HAL about new frame. */
-    timestamp_ = systemTime(SYSTEM_TIME_MONOTONIC);
-    camera_hal_->OnNextFrameAvailable(current_frame_, timestamp_, this);
+    mCurFrameTimestamp = systemTime(SYSTEM_TIME_MONOTONIC);
+    mCameraHAL->onNextFrameAvailable(mCurrentFrame, mCurFrameTimestamp, this);
 
     return true;
 }
@@ -175,35 +175,35 @@ bool EmulatedFakeCameraDevice::InWorkerThread()
  * Fake camera device private API
  ***************************************************************************/
 
-void EmulatedFakeCameraDevice::DrawCheckerboard()
+void EmulatedFakeCameraDevice::drawCheckerboard()
 {
-    const int size = frame_width_ / 10;
+    const int size = mFrameWidth / 10;
     bool black = true;
 
-    if((check_x_ / size) & 1)
+    if((mCheckX / size) & 1)
         black = false;
-    if((check_y_ / size) & 1)
+    if((mCheckY / size) & 1)
         black = !black;
 
-    int county = check_y_ % size;
-    int checkxremainder = check_x_ % size;
-    uint8_t* Y = current_frame_;
-    uint8_t* Cb_pos = frame_Cb_;
-    uint8_t* Cr_pos = frame_Cr_;
-    uint8_t* Cb = Cb_pos;
-    uint8_t* Cr = Cr_pos;
+    int county = mCheckY % size;
+    int checkxremainder = mCheckX % size;
+    uint8_t* Y = mCurrentFrame;
+    uint8_t* U_pos = mFrameU;
+    uint8_t* V_pos = mFrameV;
+    uint8_t* U = U_pos;
+    uint8_t* V = V_pos;
 
-    for(int y = 0; y < frame_height_; y++) {
+    for(int y = 0; y < mFrameHeight; y++) {
         int countx = checkxremainder;
         bool current = black;
-        for(int x = 0; x < frame_width_; x += 2) {
+        for(int x = 0; x < mFrameWidth; x += 2) {
             if (current) {
-                black_YCbCr_.get(Y, Cb, Cr);
+                mBlackYUV.get(Y, U, V);
             } else {
-                white_YCbCr_.get(Y, Cb, Cr);
+                mWhiteYUV.get(Y, U, V);
             }
             Y[1] = *Y;
-            Y += 2; Cb++; Cr++;
+            Y += 2; U++; V++;
             countx += 2;
             if(countx >= size) {
                 countx = 0;
@@ -211,43 +211,43 @@ void EmulatedFakeCameraDevice::DrawCheckerboard()
             }
         }
         if (y & 0x1) {
-            Cb_pos = Cb;
-            Cr_pos = Cr;
+            U_pos = U;
+            V_pos = V;
         } else {
-            Cb = Cb_pos;
-            Cr = Cr_pos;
+            U = U_pos;
+            V = V_pos;
         }
         if(county++ >= size) {
             county = 0;
             black = !black;
         }
     }
-    check_x_ += 3;
-    check_y_++;
+    mCheckX += 3;
+    mCheckY++;
 }
 
-void EmulatedFakeCameraDevice::DrawSquare(int x,
+void EmulatedFakeCameraDevice::drawSquare(int x,
                                           int y,
                                           int size,
                                           const YUVPixel* color)
 {
     const int half_x = x / 2;
-    const int square_xstop = min(frame_width_, x+size);
-    const int square_ystop = min(frame_height_, y+size);
-    uint8_t* Y_pos = current_frame_ + y * frame_width_ + x;
+    const int square_xstop = min(mFrameWidth, x+size);
+    const int square_ystop = min(mFrameHeight, y+size);
+    uint8_t* Y_pos = mCurrentFrame + y * mFrameWidth + x;
 
     // Draw the square.
     for (; y < square_ystop; y++) {
-        const int iCbCr = (y / 2) * half_width_ + half_x;
-        uint8_t* sqCb = frame_Cb_ + iCbCr;
-        uint8_t* sqCr = frame_Cr_ + iCbCr;
+        const int iUV = (y / 2) * mHalfWidth + half_x;
+        uint8_t* sqU = mFrameU + iUV;
+        uint8_t* sqV = mFrameV + iUV;
         uint8_t* sqY = Y_pos;
         for (int i = x; i < square_xstop; i += 2) {
-            color->get(sqY, sqCb, sqCr);
+            color->get(sqY, sqU, sqV);
             sqY[1] = *sqY;
-            sqY += 2; sqCb++; sqCr++;
+            sqY += 2; sqU++; sqV++;
         }
-        Y_pos += frame_width_;
+        Y_pos += mFrameWidth;
     }
 }
 

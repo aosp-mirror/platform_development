@@ -22,7 +22,7 @@
  * an emulated camera device connected to the host.
  */
 
-#include "emulated_camera_device.h"
+#include "EmulatedCameraDevice.h"
 #include "QemuClient.h"
 
 namespace android {
@@ -39,9 +39,9 @@ public:
     /* Destructs EmulatedQemuCameraDevice instance. */
     ~EmulatedQemuCameraDevice();
 
-    /****************************************************************************
+    /***************************************************************************
      * Public API
-     ***************************************************************************/
+     **************************************************************************/
 
 public:
     /* Initializes EmulatedQemuCameraDevice instance.
@@ -54,65 +54,65 @@ public:
      */
     status_t Initialize(const char* device_name);
 
-    /****************************************************************************
+    /***************************************************************************
      * Emulated camera device abstract interface implementation.
      * See declarations of these methods in EmulatedCameraDevice class for
      * information on each of these methods.
-     ***************************************************************************/
+     **************************************************************************/
 
 public:
     /* Connects to the camera device. */
-    status_t Connect();
+    status_t connectDevice();
 
     /* Disconnects from the camera device. */
-    status_t Disconnect();
+    status_t disconnectDevice();
 
 protected:
     /* Starts capturing frames from the camera device. */
-    status_t StartCamera();
+    status_t startDevice();
 
     /* Stops capturing frames from the camera device. */
-    status_t StopCamera();
+    status_t stopDevice();
 
-    /****************************************************************************
+    /***************************************************************************
      * EmulatedCameraDevice virtual overrides
-     ***************************************************************************/
+     **************************************************************************/
 
 public:
     /* Gets current preview fame into provided buffer.
      * We override this method in order to provide preview frames cached in this
      * object.
      */
-    status_t GetCurrentPreviewFrame(void* buffer);
+    status_t getCurrentPreviewFrame(void* buffer);
 
-    /****************************************************************************
+    /***************************************************************************
      * Worker thread management overrides.
      * See declarations of these methods in EmulatedCameraDevice class for
      * information on each of these methods.
-     ***************************************************************************/
+     **************************************************************************/
 
 protected:
     /* Implementation of the worker thread routine. */
-    bool InWorkerThread();
+    bool inWorkerThread();
 
-    /****************************************************************************
+    /***************************************************************************
      * Qemu camera device data members
-     ***************************************************************************/
+     **************************************************************************/
 
 private:
-    /* Qemu client that is used to communicate with the 'emulated camera' service,
-     * created for this instance in the emulator. */
-    CameraQemuClient    qemu_client_;
+    /* Qemu client that is used to communicate with the 'emulated camera'
+     * service, created for this instance in the emulator. */
+    CameraQemuClient    mQemuClient;
 
     /* Name of the camera device connected to the host. */
-    String8             device_name_;
+    String8             mDeviceName;
 
     /* Current preview framebuffer. */
-    uint16_t*           preview_frame_;
+    uint16_t*           mPreviewFrame;
 
     /* Emulated FPS (frames per second).
      * We will emulate 50 FPS. */
-    static const int    emulated_fps_ = 50;
+    static const int    mEmulatedFPS = 50;
 };
 
 }; /* namespace android */

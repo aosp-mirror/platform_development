@@ -22,14 +22,14 @@
 #define LOG_NDEBUG 0
 #define LOG_TAG "EmulatedCamera_QemuCamera"
 #include <cutils/log.h>
-#include "emulated_qemu_camera.h"
-#include "emulated_camera_factory.h"
+#include "EmulatedQemuCamera.h"
+#include "EmulatedCameraFactory.h"
 
 namespace android {
 
 EmulatedQemuCamera::EmulatedQemuCamera(int cameraId, struct hw_module_t* module)
         : EmulatedCamera(cameraId, module),
-          qemu_camera_dev_(this)
+          mQemuCameraDevice(this)
 {
 }
 
@@ -45,10 +45,10 @@ status_t EmulatedQemuCamera::Initialize(const char* device_name,
                                         const char* frame_dims)
 {
     /* Save dimensions. */
-    frame_dims_ = frame_dims;
+    mFrameDims = frame_dims;
 
     /* Initialize camera device. */
-    status_t res = qemu_camera_dev_.Initialize(device_name);
+    status_t res = mQemuCameraDevice.Initialize(device_name);
     if (res != NO_ERROR) {
         return res;
     }
@@ -64,14 +64,14 @@ status_t EmulatedQemuCamera::Initialize(const char* device_name,
      */
 
     const char* facing = EmulatedCamera::FACING_FRONT;
-    if (_emulated_camera_factory.GetQemuCameraOrientation() == CAMERA_FACING_BACK) {
+    if (gEmulatedCameraFactory.getQemuCameraOrientation() == CAMERA_FACING_BACK) {
         facing = EmulatedCamera::FACING_BACK;
     }
-    parameters_.set(EmulatedCamera::FACING_KEY, facing);
-    parameters_.set(EmulatedCamera::ORIENTATION_KEY,
-                    _emulated_camera_factory.GetQemuCameraOrientation());
-    parameters_.set(CameraParameters::KEY_SUPPORTED_PICTURE_SIZES, frame_dims);
-    parameters_.set(CameraParameters::KEY_SUPPORTED_PREVIEW_SIZES, frame_dims);
+    mPparameters.set(EmulatedCamera::FACING_KEY, facing);
+    mPparameters.set(EmulatedCamera::ORIENTATION_KEY,
+                    gEmulatedCameraFactory.getQemuCameraOrientation());
+    mPparameters.set(CameraParameters::KEY_SUPPORTED_PICTURE_SIZES, frame_dims);
+    mPparameters.set(CameraParameters::KEY_SUPPORTED_PREVIEW_SIZES, frame_dims);
 
     /*
      * Use first dimension reported by the device to set current preview and
@@ -103,8 +103,8 @@ status_t EmulatedQemuCamera::Initialize(const char* device_name,
     *sep = '\0';
     const int x = atoi(first_dim);
     const int y = atoi(sep + 1);
-    parameters_.setPreviewSize(x, y);
-    parameters_.setPictureSize(x, y);
+    mPparameters.setPreviewSize(x, y);
+    mPparameters.setPictureSize(x, y);
 
     LOGV("%s: Qemu camera %s is initialized. Current frame is %dx%d",
          __FUNCTION__, device_name, x, y);
@@ -112,9 +112,9 @@ status_t EmulatedQemuCamera::Initialize(const char* device_name,
     return NO_ERROR;
 }
 
-EmulatedCameraDevice* EmulatedQemuCamera::GetCameraDevice()
+EmulatedCameraDevice* EmulatedQemuCamera::getCameraDevice()
 {
-    return &qemu_camera_dev_;
+    return &mQemuCameraDevice;
 }
 
 };  /* namespace android */

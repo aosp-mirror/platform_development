@@ -29,17 +29,17 @@ LOCAL_SHARED_LIBRARIES:= \
     libui \
 
 LOCAL_SRC_FILES := \
-	emulated_camera_hal.cpp \
-    emulated_camera_factory.cpp \
-    emulated_camera.cpp \
-	emulated_camera_device.cpp \
-	emulated_qemu_camera.cpp \
-	emulated_qemu_camera_device.cpp \
-	emulated_fake_camera.cpp \
-	emulated_fake_camera_device.cpp \
-	converters.cpp \
-	preview_window.cpp \
-	callback_notifier.cpp \
+	EmulatedCameraHal.cpp \
+    EmulatedCameraFactory.cpp \
+    EmulatedCamera.cpp \
+	EmulatedCameraDevice.cpp \
+	EmulatedQemuCamera.cpp \
+	EmulatedQemuCameraDevice.cpp \
+	EmulatedFakeCamera.cpp \
+	EmulatedFakeCameraDevice.cpp \
+	Converters.cpp \
+	PreviewWindow.cpp \
+	CallbackNotifier.cpp \
 	QemuClient.cpp
 
 ifeq ($(TARGET_PRODUCT),vbox_x86)
