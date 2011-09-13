@@ -20,6 +20,11 @@
 #include "osProcess.h"
 #include "TimeUtils.h"
 
+#include "TcpStream.h"
+#ifndef _WIN32
+#include "UnixStream.h"
+#endif
+
 #include "EGLDispatch.h"
 #include "GLDispatch.h"
 #include "GL2Dispatch.h"
@@ -270,15 +275,35 @@ void repaintOpenGLDisplay()
     }
 }
 
+
+/* NOTE: For now, always use TCP mode by default, until the emulator
+ *        has been updated to support Unix and Win32 pipes
+ */
+#define  DEFAULT_STREAM_MODE  STREAM_MODE_TCP
+
+int gRendererStreamMode = DEFAULT_STREAM_MODE;
+
 IOStream *createRenderThread(int p_stream_buffer_size, unsigned int clientFlags)
 {
-    TcpStream *stream = new TcpStream(p_stream_buffer_size);
+    SocketStream*  stream = NULL;
+
+    if (gRendererStreamMode == STREAM_MODE_TCP) {
+        stream = new TcpStream(p_stream_buffer_size);
+#ifdef _WIN32
+    } else {
+        /* XXX: Need Win32 named pipe stream here */
+        stream = new TcpStream(p_stream_buffer_size);
+#else
+    } else if (gRendererStreamMode == STREAM_MODE_UNIX) {
+        stream = new UnixStream(p_stream_buffer_size);
+#endif
+    }
+
     if (!stream) {
         ERR("createRenderThread failed to create stream\n");
         return NULL;
     }
-
-    if (stream->connect("localhost", s_renderPort) < 0) {
+    if (stream->connect(s_renderPort) < 0) {
         ERR("createRenderThread failed to connect\n");
         delete stream;
         return NULL;
@@ -287,10 +312,36 @@ IOStream *createRenderThread(int p_stream_buffer_size, unsigned int clientFlags)
     //
     // send clientFlags to the renderer
     //
-    unsigned int *pClientFlags = 
+    unsigned int *pClientFlags =
                 (unsigned int *)stream->allocBuffer(sizeof(unsigned int));
     *pClientFlags = clientFlags;
     stream->commitBuffer(sizeof(unsigned int));
 
     return stream;
+}
+
+int
+setStreamMode(int mode)
+{
+    switch (mode) {
+        case STREAM_MODE_DEFAULT:
+            mode = DEFAULT_STREAM_MODE;
+            break;
+
+        case STREAM_MODE_TCP:
+            break;
+
+#ifndef _WIN32
+        case STREAM_MODE_UNIX:
+            break;
+#else /* _WIN32 */
+        case STREAM_MODE_PIPE:
+            break;
+#endif /* _WIN32 */
+        default:
+            // Invalid stream mode
+            return -1;
+    }
+    gRendererStreamMode = mode;
+    return 0;
 }

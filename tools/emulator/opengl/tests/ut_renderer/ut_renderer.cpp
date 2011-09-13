@@ -20,22 +20,33 @@
 #include "codec_defs.h"
 #include "RenderingThread.h"
 #include "TcpStream.h"
+#ifndef _WIN32
+#include "UnixStream.h"
+#endif
 
 
 int main(int argc, char **argv)
 {
-
-    TcpStream *socket = new TcpStream;
+#ifdef _WIN32
+    TcpStream *socket = new TcpStream();
 
     if (socket->listen(CODEC_SERVER_PORT) < 0) {
         perror("listen");
         exit(1);
     }
+#else
+    UnixStream *socket = new UnixStream();
+
+    if (socket->listen(CODEC_SERVER_PORT) < 0) {
+        perror("listen");
+        exit(1);
+    }
+#endif
 
     printf("waiting for client connection on port: %d\n", CODEC_SERVER_PORT);
     while (1) {
         // wait for client connection
-        TcpStream  *glStream = socket->accept();
+        SocketStream  *glStream = socket->accept();
         if (glStream == NULL) {
             printf("failed to get client.. aborting\n");
             exit(3);

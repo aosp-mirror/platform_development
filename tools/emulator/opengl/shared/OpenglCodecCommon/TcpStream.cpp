@@ -29,18 +29,12 @@
 #endif
 
 TcpStream::TcpStream(size_t bufSize) :
-    IOStream(bufSize),
-    m_sock(-1),
-    m_bufsize(bufSize),
-    m_buf(NULL)
+    SocketStream(bufSize)
 {
 }
 
 TcpStream::TcpStream(int sock, size_t bufSize) :
-    IOStream(bufSize),
-    m_sock(sock),
-    m_bufsize(bufSize),
-    m_buf(NULL)
+    SocketStream(sock, bufSize)
 {
     // disable Nagle algorithm to improve bandwidth of small
     // packets which are quite common in our implementation.
@@ -53,34 +47,15 @@ TcpStream::TcpStream(int sock, size_t bufSize) :
     setsockopt( sock, IPPROTO_TCP, TCP_NODELAY, (const char*)&flag, sizeof(flag) );
 }
 
-TcpStream::~TcpStream()
+int TcpStream::listen(unsigned short port)
 {
-    if (m_sock >= 0) {
-#ifdef _WIN32
-        closesocket(m_sock);
-#else
-        ::close(m_sock);
-#endif
-    }
-    if (m_buf != NULL) {
-        free(m_buf);
-    }
-}
-
-
-int TcpStream::listen(unsigned short port, bool localhost_only)
-{
-    if (localhost_only) {
-        m_sock = socket_loopback_server(port, SOCK_STREAM);
-    } else {
-        m_sock = socket_inaddr_any_server(port, SOCK_STREAM);
-    }
+    m_sock = socket_loopback_server(port, SOCK_STREAM);
     if (!valid()) return int(ERR_INVALID_SOCKET);
 
     return 0;
 }
 
-TcpStream * TcpStream::accept()
+SocketStream * TcpStream::accept()
 {
     int clientSock = -1;
 
@@ -103,120 +78,14 @@ TcpStream * TcpStream::accept()
     return clientStream;
 }
 
+int TcpStream::connect(unsigned short port)
+{
+    return connect("127.0.0.1",port);
+}
 
-int TcpStream::connect(const char *hostname, unsigned short port)
+int TcpStream::connect(const char* hostname, unsigned short port)
 {
     m_sock = socket_network_client(hostname, port, SOCK_STREAM);
     if (!valid()) return -1;
     return 0;
-}
-
-void *TcpStream::allocBuffer(size_t minSize)
-{
-    size_t allocSize = (m_bufsize < minSize ? minSize : m_bufsize);
-    if (!m_buf) {
-        m_buf = (unsigned char *)malloc(allocSize);
-    }
-    else if (m_bufsize < allocSize) {
-        unsigned char *p = (unsigned char *)realloc(m_buf, allocSize);
-        if (p != NULL) {
-            m_buf = p;
-            m_bufsize = allocSize;
-        } else {
-            ERR("realloc (%d) failed\n", allocSize);
-            free(m_buf);
-            m_buf = NULL;
-            m_bufsize = 0;
-        }
-    }
-
-    return m_buf;
-};
-
-int TcpStream::commitBuffer(size_t size)
-{
-    return writeFully(m_buf, size);
-}
-
-int TcpStream::writeFully(const void *buf, size_t len)
-{
-    if (!valid()) return -1;
-
-    size_t res = len;
-    int retval = 0;
-
-    while (res > 0) {
-        ssize_t stat = ::send(m_sock, (const char *)(buf) + (len - res), res, 0);
-        if (stat < 0) {
-            if (errno != EINTR) {
-                retval =  stat;
-                ERR("TcpStream::writeFully failed: %s\n", strerror(errno));
-                break;
-            }
-        } else {
-            res -= stat;
-        }
-    }
-    return retval;
-}
-
-const unsigned char *TcpStream::readFully(void *buf, size_t len)
-{
-    if (!valid()) return NULL;
-    if (!buf) {
-      return NULL;  // do not allow NULL buf in that implementation
-    }
-    size_t res = len;
-    while (res > 0) {
-        ssize_t stat = ::recv(m_sock, (char *)(buf) + len - res, res, 0);
-        if (stat == 0) {
-            // client shutdown;
-            return NULL;
-        } else if (stat < 0) {
-            if (errno == EINTR) {
-                continue;
-            } else {
-                return NULL;
-            }
-        } else {
-            res -= stat;
-        }
-    }
-    return (const unsigned char *)buf;
-}
-
-const unsigned char *TcpStream::read( void *buf, size_t *inout_len)
-{
-    if (!valid()) return NULL;
-    if (!buf) {
-      return NULL;  // do not allow NULL buf in that implementation
-    }
-
-    int n;
-    do {
-        n = recv(buf, *inout_len);
-    } while( n < 0 && errno == EINTR );
-
-    if (n > 0) {
-        *inout_len = n;
-        return (const unsigned char *)buf;
-    }
-
-    return NULL;
-}
-
-int TcpStream::recv(void *buf, size_t len)
-{
-    if (!valid()) return int(ERR_INVALID_SOCKET);
-    int res = 0;
-    while(true) {
-        res = ::recv(m_sock, (char *)buf, len, 0);
-        if (res < 0) {
-            if (errno == EINTR) {
-                continue;
-            }
-        }
-        break;
-    }
-    return res;
 }

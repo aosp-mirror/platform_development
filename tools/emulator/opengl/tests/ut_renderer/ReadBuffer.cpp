@@ -17,7 +17,7 @@
 #include <string.h>
 #include <assert.h>
 
-ReadBuffer::ReadBuffer(TcpStream *stream, size_t bufsize)
+ReadBuffer::ReadBuffer(SocketStream *stream, size_t bufsize)
 {
     m_size = bufsize;
     m_stream = stream;
