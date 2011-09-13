@@ -28,22 +28,6 @@
 
 namespace android {
 
-/* Descriptor for video frame metadata. */
-struct VideoFrameMetadata
-{
-    /* Required field that defines metadata buffer type. */
-    MetadataBufferType  type;
-
-    /*
-     * TODO: This is taken from a sample code. It seems to work, but requires
-     * clarifications on what metadata structure should look like!
-     */
-
-    const void*         frame;
-    int                 offset;
-    camera_memory_t*    holder;
-};
-
 /* String representation of camera messages. */
 static const char* _camera_messages[] =
 {
@@ -108,8 +92,7 @@ CallbackNotifier::CallbackNotifier()
       last_frame_(0),
       frame_after_(0),
       message_enabler_(0),
-      video_recording_enabled_(false),
-      store_meta_data_in_buffers_(true)
+      video_recording_enabled_(false)
 {
 }
 
@@ -173,7 +156,7 @@ status_t CallbackNotifier::EnableVideoRecording(int fps)
     Mutex::Autolock locker(&object_lock_);
     video_recording_enabled_ = true;
     last_frame_ = 0;
-    frame_after_ = 1000000 / fps;
+    frame_after_ = 1000000000LL / fps;
 
     return NO_ERROR;
 }
@@ -196,25 +179,12 @@ bool CallbackNotifier::IsVideoRecordingEnabled()
 
 void CallbackNotifier::ReleaseRecordingFrame(const void* opaque)
 {
-    LOGV("%s: frame = %p", __FUNCTION__, opaque);
-
-    if (opaque != NULL) {
-        const VideoFrameMetadata* meta =
-            reinterpret_cast<const VideoFrameMetadata*>(opaque);
-        if (meta->type == kMetadataBufferTypeCameraSource &&
-            meta->holder != NULL) {
-            meta->holder->release(meta->holder);
-        }
-    }
+    /* We don't really have anything to release here, since we report video
+     * frames by copying them directly to the camera memory. */
 }
 
 status_t CallbackNotifier::StoreMetaDataInBuffers(bool enable)
 {
-    LOGV("%s: %s", __FUNCTION__, enable ? "true" : "false");
-
-    Mutex::Autolock locker(&object_lock_);
-    store_meta_data_in_buffers_ = enable;
-
     /* Return INVALID_OPERATION means HAL does not support metadata. So HAL will
      * return actual frame data with CAMERA_MSG_VIDEO_FRRAME. Return
      * INVALID_OPERATION to mean metadata is not supported. */
@@ -237,7 +207,6 @@ void CallbackNotifier::Cleanup()
     last_frame_ = 0;
     frame_after_ = 0;
     video_recording_enabled_ = false;
-    store_meta_data_in_buffers_ = true;
 }
 
 void CallbackNotifier::OnNextFrameAvailable(const void* frame,
@@ -247,31 +216,16 @@ void CallbackNotifier::OnNextFrameAvailable(const void* frame,
     Mutex::Autolock locker(&object_lock_);
 
     if ((message_enabler_ & CAMERA_MSG_VIDEO_FRAME) != 0 &&
-        data_cb_timestamp_ != NULL && video_recording_enabled_ &&
-        IsTimeForNewVideoFrame()) {
-        /* Ready for new video frame. Allocate frame holder. */
-        camera_memory_t* holder =
-            get_memory_(-1, sizeof(VideoFrameMetadata), 1, NULL);
-        if (NULL != holder && NULL != holder->data) {
-            if (store_meta_data_in_buffers_) {
-                VideoFrameMetadata* meta =
-                    reinterpret_cast<VideoFrameMetadata*>(holder->data);
-                meta->type = kMetadataBufferTypeCameraSource;
-                meta->frame = frame;
-                meta->offset = 0;
-                meta->holder = holder;
-                data_cb_timestamp_(timestamp, CAMERA_MSG_VIDEO_FRAME,
-                                   holder, 0, cb_opaque_);
-                /* Allocated holder will be released by release_recording_frame
-                 * call. */
-            } else {
-                holder->data = const_cast<void*>(frame);
-                data_cb_timestamp_(timestamp, CAMERA_MSG_VIDEO_FRAME,
-                                   holder, 0, cb_opaque_);
-                holder->release(holder);
-            }
+            data_cb_timestamp_ != NULL && video_recording_enabled_ &&
+            IsTimeForNewVideoFrame(timestamp)) {
+        camera_memory_t* cam_buff =
+            get_memory_(-1, camera_dev->GetFrameBufferSize(), 1, NULL);
+        if (NULL != cam_buff && NULL != cam_buff->data) {
+            memcpy(cam_buff->data, frame, camera_dev->GetFrameBufferSize());
+            data_cb_timestamp_(timestamp, CAMERA_MSG_VIDEO_FRAME,
+                               cam_buff, 0, cb_opaque_);
         } else {
-            LOGE("%s: Memory failure", __FUNCTION__);
+            LOGE("%s: Memory failure in CAMERA_MSG_VIDEO_FRAME", __FUNCTION__);
         }
     }
 }
@@ -280,13 +234,10 @@ void CallbackNotifier::OnNextFrameAvailable(const void* frame,
  * Private API
  ***************************************************************************/
 
-bool CallbackNotifier::IsTimeForNewVideoFrame()
+bool CallbackNotifier::IsTimeForNewVideoFrame(nsecs_t timestamp)
 {
-    timeval cur_time;
-    gettimeofday(&cur_time, NULL);
-    const uint64_t cur_mks = cur_time.tv_sec * 1000000LL + cur_time.tv_usec;
-    if ((cur_mks - last_frame_) >= frame_after_) {
-        last_frame_ = cur_mks;
+    if ((timestamp - last_frame_) >= frame_after_) {
+        last_frame_ = timestamp;
         return true;
     }
     return false;

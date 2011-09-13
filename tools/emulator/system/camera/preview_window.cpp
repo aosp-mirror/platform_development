@@ -129,7 +129,7 @@ void PreviewWindow::OnNextFrameAvailable(const void* frame,
         res = preview_window_->set_buffers_geometry(preview_window_,
                                                     preview_frame_width_,
                                                     preview_frame_height_,
-                                                    HAL_PIXEL_FORMAT_RGB_565);
+                                                    HAL_PIXEL_FORMAT_RGBA_8888);
         if (res != NO_ERROR) {
             LOGE("%s: Error in set_buffers_geometry %d -> %s",
                  __FUNCTION__, -res, strerror(-res));

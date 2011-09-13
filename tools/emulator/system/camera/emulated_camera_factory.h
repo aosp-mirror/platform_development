@@ -18,6 +18,7 @@
 #define HW_EMULATOR_CAMERA_EMULATED_CAMERA_FACTORY_H
 
 #include "emulated_camera.h"
+#include "QemuClient.h"
 
 namespace android {
 
@@ -93,6 +94,30 @@ private:
      ***************************************************************************/
 
 public:
+    /* Gets fake camera facing. */
+    int GetFakeCameraFacing() {
+        /* TODO: Have a boot property that controls that. */
+        return CAMERA_FACING_BACK;
+    }
+
+    /* Gets fake camera orientation. */
+    int GetFakeCameraOrientation() {
+        /* TODO: Have a boot property that controls that. */
+        return 90;
+    }
+
+    /* Gets qemu camera facing. */
+    int GetQemuCameraFacing() {
+        /* TODO: Have a boot property that controls that. */
+        return CAMERA_FACING_FRONT;
+    }
+
+    /* Gets qemu camera orientation. */
+    int GetQemuCameraOrientation() {
+        /* TODO: Have a boot property that controls that. */
+        return 270;
+    }
+
     /* Gets number of emulated cameras.
      */
     int emulated_camera_num() const {
@@ -110,30 +135,27 @@ public:
      ***************************************************************************/
 
 private:
-    /* Gets number of cameras that are available via 'camera' service in the
-     * emulator.
-     * Return:
-     *  Number of 'qemud' cameras reported by the 'camera' service, or -1 on
-     *  failure.
-     */
-    int GetQemudCameraNumber();
-
     /* Populates emulated cameras array with cameras that are available via
      * 'camera' service in the emulator. For each such camera and instance of
      * the EmulatedCameraQemud will be created and added to the emulated_cameras_
      * array.
-     * Param:
-     *  num - Number of cameras returned by GetQemudCameraNumber method.
-     * Return:
-     *  true on success, or false on failure.
      */
-    bool CreateQemudCameras(int num);
+    void CreateQemuCameras();
+
+    /* Checks if qemu camera emulation is on. */
+    bool IsQemuCameraEmulationOn();
+
+    /* Checks if fake camera emulation is on. */
+    bool IsFakeCameraEmulationOn();
 
     /****************************************************************************
      * Data members.
      ***************************************************************************/
 
 private:
+    /* Connection to the camera service in the emulator. */
+    FactoryQemuClient   qemu_client_;
+
     /* Array of cameras available for the emulation. */
     EmulatedCamera**    emulated_cameras_;
 

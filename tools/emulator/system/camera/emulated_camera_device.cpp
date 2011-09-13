@@ -34,6 +34,7 @@ namespace android {
 
 EmulatedCameraDevice::EmulatedCameraDevice(EmulatedCamera* camera_hal)
     : object_lock_(),
+      timestamp_(0),
       camera_hal_(camera_hal),
       current_frame_(NULL),
       state_(ECDS_CONSTRUCTED)
@@ -98,7 +99,7 @@ status_t EmulatedCameraDevice::StartCapturing(int width,
     total_pixels_ = width * height;
 
     /* Allocate framebuffer. */
-    current_frame_ = new uint8_t[GetFrameBufferSize()];
+    current_frame_ = new uint8_t[framebuffer_size_];
     if (current_frame_ == NULL) {
         LOGE("%s: Unable to allocate framebuffer", __FUNCTION__);
         return ENOMEM;
@@ -150,7 +151,7 @@ status_t EmulatedCameraDevice::GetCurrentFrame(void* buffer)
         return EINVAL;
     }
 
-    memcpy(buffer, current_frame_, GetFrameBufferSize());
+    memcpy(buffer, current_frame_, framebuffer_size_);
 
     return NO_ERROR;
 }
@@ -168,7 +169,7 @@ status_t EmulatedCameraDevice::GetCurrentPreviewFrame(void* buffer)
     /* In emulation the framebuffer is never RGB. */
     switch (pixel_format_) {
         case V4L2_PIX_FMT_YVU420:
-            YV12ToRGB565(current_frame_, buffer, frame_width_, frame_height_);
+            YV12ToRGB32(current_frame_, buffer, frame_width_, frame_height_);
             return NO_ERROR;
 
         default:

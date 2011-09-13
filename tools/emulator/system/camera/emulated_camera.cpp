@@ -90,17 +90,12 @@ status_t EmulatedCamera::Initialize()
 {
     LOGV("%s", __FUNCTION__);
 
-    /* Emulated camera is facing back. */
-    parameters_.set(EmulatedCamera::FACING_KEY, EmulatedCamera::FACING_BACK);
-    /* Portrait orientation. */
-    parameters_.set(EmulatedCamera::ORIENTATION_KEY, 90);
-
     /*
      * Fake required parameters.
      */
 
     /* Only RGBX are supported by the framework for preview window in the emulator! */
-    parameters_.set(CameraParameters::KEY_SUPPORTED_PREVIEW_FORMATS, CameraParameters::PIXEL_FORMAT_RGB565);
+    parameters_.set(CameraParameters::KEY_SUPPORTED_PREVIEW_FORMATS, CameraParameters::PIXEL_FORMAT_RGBA8888);
     parameters_.set(CameraParameters::KEY_SUPPORTED_PREVIEW_FRAME_RATES, "60,50,25,15,10");
     parameters_.set(CameraParameters::KEY_SUPPORTED_PREVIEW_FPS_RANGE, "(10,60)");
     parameters_.set(CameraParameters::KEY_PREVIEW_FPS_RANGE, "10,60");
@@ -115,7 +110,25 @@ status_t EmulatedCamera::Initialize()
     parameters_.set(CameraParameters::KEY_HORIZONTAL_VIEW_ANGLE, "54.8");
     parameters_.set(CameraParameters::KEY_VERTICAL_VIEW_ANGLE, "42.5");
     parameters_.set(CameraParameters::KEY_JPEG_THUMBNAIL_QUALITY, "90");
-    parameters_.setPreviewFormat(CameraParameters::PIXEL_FORMAT_RGB565);
+
+    /* Only RGB formats are supported by preview window in emulator. */
+    parameters_.setPreviewFormat(CameraParameters::PIXEL_FORMAT_RGBA8888);
+
+    /* We don't relay on the actual frame rates supported by the camera device,
+     * since we will emulate them through timeouts in the emulated camera device
+     * worker thread. */
+    parameters_.set(CameraParameters::KEY_SUPPORTED_PREVIEW_FRAME_RATES,
+                    "30,24,20,15,10,5");
+    parameters_.set(CameraParameters::KEY_SUPPORTED_PREVIEW_FPS_RANGE, "(5,30)");
+    parameters_.set(CameraParameters::KEY_PREVIEW_FPS_RANGE, "5,30");
+    parameters_.setPreviewFrameRate(24);
+
+    /* Only PIXEL_FORMAT_YUV420P is accepted by camera framework in emulator! */
+    parameters_.set(CameraParameters::KEY_VIDEO_FRAME_FORMAT,
+                    CameraParameters::PIXEL_FORMAT_YUV420P);
+    parameters_.set(CameraParameters::KEY_SUPPORTED_PICTURE_FORMATS,
+                    CameraParameters::PIXEL_FORMAT_YUV420P);
+    parameters_.setPictureFormat(CameraParameters::PIXEL_FORMAT_YUV420P);
 
     /*
      * Not supported features
@@ -504,10 +517,10 @@ status_t EmulatedCamera::StartCamera()
                 return EINVAL;
             }
             uint32_t org_fmt;
-            if (strcmp(pix_fmt, CameraParameters::PIXEL_FORMAT_RGB565) == 0) {
-                org_fmt = V4L2_PIX_FMT_RGB565;
-            } else if (strcmp(pix_fmt, CameraParameters::PIXEL_FORMAT_YUV420P) == 0) {
+            if (strcmp(pix_fmt, CameraParameters::PIXEL_FORMAT_YUV420P) == 0) {
                 org_fmt = V4L2_PIX_FMT_YVU420;
+            } else if (strcmp(pix_fmt, CameraParameters::PIXEL_FORMAT_RGBA8888) == 0) {
+                org_fmt = V4L2_PIX_FMT_RGB32;
             } else {
                 LOGE("%s: Unsupported pixel format %s", __FUNCTION__, pix_fmt);
                 return EINVAL;
