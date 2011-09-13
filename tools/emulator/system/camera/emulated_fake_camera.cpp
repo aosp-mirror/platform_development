@@ -23,6 +23,7 @@
 #define LOG_TAG "EmulatedCamera_FakeCamera"
 #include <cutils/log.h>
 #include "emulated_fake_camera.h"
+#include "emulated_camera_factory.h"
 
 namespace android {
 
@@ -49,6 +50,15 @@ status_t EmulatedFakeCamera::Initialize()
         return res;
     }
 
+    const char* facing = EmulatedCamera::FACING_BACK;
+    if (_emulated_camera_factory.GetFakeCameraOrientation() == CAMERA_FACING_FRONT) {
+        facing = EmulatedCamera::FACING_FRONT;
+    }
+    parameters_.set(EmulatedCamera::FACING_KEY, facing);
+
+    parameters_.set(EmulatedCamera::ORIENTATION_KEY,
+                    _emulated_camera_factory.GetFakeCameraOrientation());
+
     res = EmulatedCamera::Initialize();
     if (res != NO_ERROR) {
         return res;
@@ -60,15 +70,8 @@ status_t EmulatedFakeCamera::Initialize()
 
     parameters_.set(CameraParameters::KEY_SUPPORTED_PICTURE_SIZES, "640x480");
     parameters_.set(CameraParameters::KEY_SUPPORTED_PREVIEW_SIZES, "640x480");
-    parameters_.set(CameraParameters::KEY_SUPPORTED_PICTURE_FORMATS,
-                    CameraParameters::PIXEL_FORMAT_YUV420P);
-    parameters_.set(CameraParameters::KEY_VIDEO_FRAME_FORMAT,
-                    CameraParameters::PIXEL_FORMAT_YUV420P);
-
-    parameters_.setPreviewFrameRate(25);
     parameters_.setPreviewSize(640, 480);
     parameters_.setPictureSize(640, 480);
-    parameters_.setPictureFormat(CameraParameters::PIXEL_FORMAT_YUV420P);
 
     return NO_ERROR;
 }

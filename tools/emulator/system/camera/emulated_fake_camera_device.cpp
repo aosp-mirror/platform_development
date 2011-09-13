@@ -29,12 +29,11 @@ namespace android {
 
 EmulatedFakeCameraDevice::EmulatedFakeCameraDevice(EmulatedFakeCamera* camera_hal)
     : EmulatedCameraDevice(camera_hal),
-      last_redrawn_(0),
-      black_YCbCr_(0),
-      white_YCbCr_(0xffff),
-      red_YCbCr_(kRed),
-      green_YCbCr_(kGreen),
-      blue_YCbCr_(kBlue),
+      black_YCbCr_(kBlack32),
+      white_YCbCr_(kWhite32),
+      red_YCbCr_(kRed8),
+      green_YCbCr_(kGreen8),
+      blue_YCbCr_(kBlue8),
       check_x_(0),
       check_y_(0),
       counter_(0)
@@ -117,7 +116,6 @@ status_t EmulatedFakeCameraDevice::StopCamera()
 {
     LOGV("%s", __FUNCTION__);
 
-    Mutex::Autolock locker(&object_lock_);
     if (!IsCapturing()) {
         LOGW("%s: Fake camera device is not capturing.", __FUNCTION__);
         return NO_ERROR;
@@ -147,10 +145,7 @@ bool EmulatedFakeCameraDevice::InWorkerThread()
     }
 
     /* Lets see if we need to generate a new frame. */
-    timeval cur_time;
-    gettimeofday(&cur_time, NULL);
-    const uint64_t cur_mks = cur_time.tv_sec * 1000000LL + cur_time.tv_usec;
-    if ((cur_mks - last_redrawn_) >= redraw_after_) {
+    if ((systemTime(SYSTEM_TIME_MONOTONIC) - timestamp_) >= redraw_after_) {
         /*
          * Time to generate a new frame.
          */
@@ -167,12 +162,11 @@ bool EmulatedFakeCameraDevice::InWorkerThread()
         DrawSquare(x * size / 32, y * size / 32, (size * 5) >> 1,
                    (counter_ & 0x100) ? &red_YCbCr_ : &green_YCbCr_);
         counter_++;
-        last_redrawn_ = cur_mks;
     }
 
-    /* Notify the camera HAL about new frame. */
-    camera_hal_->OnNextFrameAvailable(current_frame_,
-                                      systemTime(SYSTEM_TIME_MONOTONIC), this);
+    /* Timestamp the current frame, and notify the camera HAL about new frame. */
+    timestamp_ = systemTime(SYSTEM_TIME_MONOTONIC);
+    camera_hal_->OnNextFrameAvailable(current_frame_, timestamp_, this);
 
     return true;
 }
@@ -235,7 +229,7 @@ void EmulatedFakeCameraDevice::DrawCheckerboard()
 void EmulatedFakeCameraDevice::DrawSquare(int x,
                                           int y,
                                           int size,
-                                          const YCbCrPixel* color)
+                                          const YUVPixel* color)
 {
     const int half_x = x / 2;
     const int square_xstop = min(frame_width_, x+size);

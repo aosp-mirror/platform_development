@@ -103,25 +103,22 @@ private:
      *  size - Size of the square's side.
      *  color - Square's color.
      */
-    void DrawSquare(int x, int y, int size, const YCbCrPixel* color);
+    void DrawSquare(int x, int y, int size, const YUVPixel* color);
 
     /****************************************************************************
      * Fake camera device data members
      ***************************************************************************/
 
 private:
-    /* Last time (absoulte microsec) when the checker board has been redrawn. */
-    uint64_t    last_redrawn_;
-
     /*
      * Pixel colors in YCbCr format used when drawing the checker board.
      */
 
-    YCbCrPixel  black_YCbCr_;
-    YCbCrPixel  white_YCbCr_;
-    YCbCrPixel  red_YCbCr_;
-    YCbCrPixel  green_YCbCr_;
-    YCbCrPixel  blue_YCbCr_;
+    YUVPixel    black_YCbCr_;
+    YUVPixel    white_YCbCr_;
+    YUVPixel    red_YCbCr_;
+    YUVPixel    green_YCbCr_;
+    YUVPixel    blue_YCbCr_;
 
     /*
      * Drawing related stuff
@@ -133,12 +130,12 @@ private:
     int         half_width_;
 
     /* Emulated FPS (frames per second).
-     * We will emulate the "semi-high end" 50 FPS. */
+     * We will emulate 50 FPS. */
     static const int        emulated_fps_ = 50;
 
-    /* Defines time (in microseconds) between redrawing the checker board.
+    /* Defines time (in nanoseconds) between redrawing the checker board.
      * We will redraw the checker board every 15 milliseconds. */
-    static const uint32_t   redraw_after_ = 15000;
+    static const nsecs_t    redraw_after_ = 15000000LL;
 };
 
 }; /* namespace android */

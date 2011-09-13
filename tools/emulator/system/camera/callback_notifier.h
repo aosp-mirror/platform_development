@@ -149,8 +149,10 @@ public:
 
 protected:
     /* Checks if it's time to push new video frame.
-     * Note that this method must be called while object is locked. */
-    bool IsTimeForNewVideoFrame();
+     * Note that this method must be called while object is locked.
+     * Param:
+     *  timestamp - Timestamp for the new frame. */
+    bool IsTimeForNewVideoFrame(nsecs_t timestamp);
 
     /****************************************************************************
      * Data members
@@ -170,21 +172,17 @@ protected:
     camera_request_memory           get_memory_;
     void*                           cb_opaque_;
 
-    /* Timestamp (abs. microseconds) when last frame has been delivered to the
-     * framework. */
-    uint64_t                        last_frame_;
+    /* Timestamp when last frame has been delivered to the framework. */
+    nsecs_t                         last_frame_;
 
-    /* Video frequency in microseconds. */
-    uint32_t                        frame_after_;
+    /* Video frequency in nanosec. */
+    nsecs_t                         frame_after_;
 
     /* Message enabler. */
     uint32_t                        message_enabler_;
 
     /* Video recording status. */
     bool                            video_recording_enabled_;
-
-    /* Status of the metadata buffering. */
-    bool                            store_meta_data_in_buffers_;
 };
 
 }; /* namespace android */

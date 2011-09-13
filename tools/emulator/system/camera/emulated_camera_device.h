@@ -156,7 +156,7 @@ public:
      *      must be large enough to contain the entire preview frame, as defined
      *      by frame's width, height, and preview pixel format. Note also, that
      *      due to the the limitations of the camera framework in emulator, the
-     *      preview frame is always formatted with RGB565.
+     *      preview frame is always formatted with RGBA8888.
      */
     virtual status_t GetCurrentPreviewFrame(void* buffer);
 
@@ -379,6 +379,9 @@ protected:
 
     /* Worker thread that is used in frame capturing. */
     sp<WorkerThread>            worker_thread_;
+
+    /* Timestamp of the current frame. */
+    nsecs_t                     timestamp_;
 
     /* Emulated camera object containing this instance. */
     EmulatedCamera*             camera_hal_;

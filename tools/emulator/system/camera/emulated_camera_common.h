@@ -50,16 +50,6 @@ private:
 /* Logs an execution of a routine / method. */
 #define LOGRE() HWERoutineTracker hwertracker_##__LINE__(__FUNCTION__)
 
-static __inline__ void Sleep(int millisec)
-{
-    if (millisec != 0) {
-        timeval to;
-        to.tv_sec = millisec / 1000;
-        to.tv_usec = (millisec % 1000) * 1000;
-        select(0, NULL, NULL, NULL, &to);
-    }
-}
-
 /*
  * min / max macros
  */
