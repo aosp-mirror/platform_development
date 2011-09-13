@@ -15,7 +15,9 @@
 */
 #include "RenderServer.h"
 #include "TcpStream.h"
-#ifndef _WIN32
+#ifdef _WIN32
+#include "Win32PipeStream.h"
+#else
 #include "UnixStream.h"
 #endif
 #include "RenderThread.h"
@@ -43,9 +45,9 @@ RenderServer *RenderServer::create(int port)
         server->m_listenSock = new TcpStream();
     } else {
 #ifdef _WIN32
-    server->m_listenSock = new TcpStream();
+        server->m_listenSock = new Win32PipeStream();
 #else
-    server->m_listenSock = new UnixStream();
+        server->m_listenSock = new UnixStream();
 #endif
     }
 
