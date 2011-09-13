@@ -13,7 +13,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-#include "gralloc_cb.h"
+#include <string.h>
 #include <pthread.h>
 #ifdef HAVE_ANDROID_OS      // just want PAGE_SIZE define
 # include <asm/page.h>
@@ -25,6 +25,7 @@
 #include <errno.h>
 #include <dlfcn.h>
 #include <sys/mman.h>
+#include "gralloc_cb.h"
 #include "HostConnection.h"
 #include "glUtils.h"
 #include <cutils/log.h>
