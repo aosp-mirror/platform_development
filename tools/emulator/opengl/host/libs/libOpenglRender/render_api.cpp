@@ -21,7 +21,9 @@
 #include "TimeUtils.h"
 
 #include "TcpStream.h"
-#ifndef _WIN32
+#ifdef _WIN32
+#include "Win32PipeStream.h"
+#else
 #include "UnixStream.h"
 #endif
 
@@ -289,12 +291,10 @@ IOStream *createRenderThread(int p_stream_buffer_size, unsigned int clientFlags)
 
     if (gRendererStreamMode == STREAM_MODE_TCP) {
         stream = new TcpStream(p_stream_buffer_size);
-#ifdef _WIN32
     } else {
-        /* XXX: Need Win32 named pipe stream here */
-        stream = new TcpStream(p_stream_buffer_size);
-#else
-    } else if (gRendererStreamMode == STREAM_MODE_UNIX) {
+#ifdef _WIN32
+        stream = new Win32PipeStream(p_stream_buffer_size);
+#else /* !_WIN32 */
         stream = new UnixStream(p_stream_buffer_size);
 #endif
     }
