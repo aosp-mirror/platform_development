@@ -11,10 +11,6 @@ commonSources := \
         TcpStream.cpp \
         TimeUtils.cpp
 
-ifneq ($(HOST_OS),windows)
-    commonSources += UnixStream.cpp
-endif
-
 ### CodecCommon  guest ##############################################
 $(call emugl-begin-static-library,libOpenglCodecCommon)
 
@@ -30,6 +26,12 @@ $(call emugl-end-module)
 $(call emugl-begin-host-static-library,libOpenglCodecCommon)
 
 LOCAL_SRC_FILES := $(commonSources)
+
+ifeq ($(HOST_OS),windows)
+    LOCAL_SRC_FILES += Win32PipeStream.cpp
+else
+    LOCAL_SRC_FILES += UnixStream.cpp
+endif
 
 $(call emugl-export,STATIC_LIBRARIES,libcutils)
 $(call emugl-export,C_INCLUDES,$(LOCAL_PATH))
