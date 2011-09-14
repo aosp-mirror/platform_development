@@ -90,7 +90,6 @@ status_t EmulatedFakeCameraDevice::startDevice()
 {
     LOGV("%s", __FUNCTION__);
 
-    Mutex::Autolock locker(&mObjectLock);
     if (!isConnected()) {
         LOGE("%s: Fake camera device is not connected.", __FUNCTION__);
         return EINVAL;

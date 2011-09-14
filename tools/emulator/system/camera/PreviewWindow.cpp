@@ -111,8 +111,6 @@ void PreviewWindow::onNextFrameAvailable(const void* frame,
                                          nsecs_t timestamp,
                                          EmulatedCameraDevice* camera_dev)
 {
-    LOGV("%s", __FUNCTION__);
-
     int res;
     Mutex::Autolock locker(&mObjectLock);
 

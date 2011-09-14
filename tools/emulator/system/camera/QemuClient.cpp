@@ -25,6 +25,13 @@
 #include "EmulatedCamera.h"
 #include "QemuClient.h"
 
+#define LOG_QUERIES 0
+#if LOG_QUERIES
+#define LOGQ(...)   LOGD(__VA_ARGS__)
+#else
+#define LOGQ(...)   (void(0))
+
+#endif  // LOG_QUERIES
 namespace android {
 
 /****************************************************************************
@@ -329,13 +336,18 @@ status_t QemuClient::doQuery(QemuQuery* query)
         return query->mQueryStatus;
     }
 
+    LOGQ("Send query '%s'", query->mQuery);
+
     /* Send the query. */
     status_t res = sendMessage(query->mQuery, strlen(query->mQuery) + 1);
     if (res == NO_ERROR) {
         /* Read the response. */
         res = receiveMessage(reinterpret_cast<void**>(&query->mReplyBuffer),
                       &query->mReplySize);
-        if (res != NO_ERROR) {
+        if (res == NO_ERROR) {
+            LOGQ("Response to query '%s': Status = '%.2s', %d bytes in response",
+                 query->mQuery, query->mReplyBuffer, query->mReplySize);
+        } else {
             LOGE("%s Response to query '%s' has failed: %s",
                  __FUNCTION__, query->mQuery, strerror(res));
         }
@@ -488,8 +500,6 @@ status_t CameraQemuClient::queryFrame(void* vframe,
                                       size_t vframe_size,
                                       size_t pframe_size)
 {
-    LOGV("%s", __FUNCTION__);
-
     char query_str[256];
     snprintf(query_str, sizeof(query_str), "%s video=%d preview=%d",
              mQueryFrame, (vframe && vframe_size) ? vframe_size : 0,

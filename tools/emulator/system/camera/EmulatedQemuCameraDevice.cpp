@@ -126,7 +126,6 @@ status_t EmulatedQemuCameraDevice::startDevice()
 {
     LOGV("%s", __FUNCTION__);
 
-    Mutex::Autolock locker(&mObjectLock);
     if (!isConnected()) {
         LOGE("%s: Qemu camera device is not connected.", __FUNCTION__);
         return EINVAL;
@@ -169,17 +168,16 @@ status_t EmulatedQemuCameraDevice::stopDevice()
 {
     LOGV("%s", __FUNCTION__);
 
-    Mutex::Autolock locker(&mObjectLock);
     if (!isCapturing()) {
         LOGW("%s: Qemu camera device is not capturing.", __FUNCTION__);
         return NO_ERROR;
     }
 
-    /* Stop the actual camera device. */
-    status_t res = mQemuClient.queryStop();
+    /* Stop the worker thread first. */
+    status_t res = stopWorkerThread();
     if (res == NO_ERROR) {
-        /* Stop the worker thread. */
-        res = stopWorkerThread();
+        /* Stop the actual camera device. */
+        res = mQemuClient.queryStop();
         if (res == NO_ERROR) {
             if (mPreviewFrame == NULL) {
                 delete[] mPreviewFrame;
@@ -187,9 +185,11 @@ status_t EmulatedQemuCameraDevice::stopDevice()
             }
             mState = ECDS_CONNECTED;
             LOGV("%s: Stopped", __FUNCTION__);
+        } else {
+            LOGE("%s: Stop failed", __FUNCTION__);
         }
     } else {
-        LOGE("%s: Stop failed", __FUNCTION__);
+        LOGE("%s: Unable to stop worker thread", __FUNCTION__);
     }
 
     return res;

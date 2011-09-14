@@ -78,6 +78,7 @@ status_t EmulatedCameraDevice::startCapturing(int width,
 {
     LOGV("%s", __FUNCTION__);
 
+    Mutex::Autolock locker(&mObjectLock);
     /* Validate pixel format, and calculate framebuffer size at the same time. */
     switch (pix_fmt) {
         case V4L2_PIX_FMT_YVU420:
@@ -126,6 +127,7 @@ status_t EmulatedCameraDevice::stopCapturing()
 {
     LOGV("%s", __FUNCTION__);
 
+    Mutex::Autolock locker(&mObjectLock);
     /* Stop the camera. */
     const status_t res = stopDevice();
     if (res == NO_ERROR) {
