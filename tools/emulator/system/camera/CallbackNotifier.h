@@ -31,6 +31,9 @@ class EmulatedCameraDevice;
  *
  * Objects of this class are contained in EmulatedCamera objects, and handle
  * relevant camera API callbacks.
+ * Locking considerations. Apparently, it's not allowed to call callbacks
+ * registered in this class, while holding a lock: recursion is quite possible,
+ * which will cause a deadlock.
  */
 class CallbackNotifier {
 public:
@@ -67,14 +70,6 @@ public:
      */
     void disableMessage(uint msg_type);
 
-    /* Actual handler for camera_device_ops_t::msg_type_enabled callback.
-     * This method is called by the containing emulated camera object when it is
-     * handing the camera_device_ops_t::msg_type_enabled callback.
-     * Return:
-     *  0 if message is disabled, or non-zero value, if message is enabled.
-     */
-    int isMessageEnabled(uint msg_type);
-
     /* Actual handler for camera_device_ops_t::store_meta_data_in_buffers
      * callback. This method is called by the containing emulated camera object
      * when it is handing the camera_device_ops_t::store_meta_data_in_buffers
@@ -102,19 +97,40 @@ public:
      */
     void disableVideoRecording();
 
-    /* Checks id video recording is enabled.
-     * This method is called by the containing emulated camera object when it is
-     * handing the camera_device_ops_t::recording_enabled callback.
-     * Return:
-     *  true if video recording is enabled, or false if it is disabled.
-     */
-    bool isVideoRecordingEnabled();
-
     /* Releases video frame, sent to the framework.
      * This method is called by the containing emulated camera object when it is
      * handing the camera_device_ops_t::release_recording_frame callback.
      */
     void releaseRecordingFrame(const void* opaque);
+
+    /* Actual handler for camera_device_ops_t::msg_type_enabled callback.
+     * This method is called by the containing emulated camera object when it is
+     * handing the camera_device_ops_t::msg_type_enabled callback.
+     * Note: this method doesn't grab a lock while checking message status, since
+     * upon exit the status would be undefined anyway. So, grab a lock before
+     * calling this method if you care about persisting a defined message status.
+     * Return:
+     *  0 if message is disabled, or non-zero value, if message is enabled.
+     */
+    inline int isMessageEnabled(uint msg_type)
+    {
+        return mMessageEnabler & ~msg_type;
+    }
+
+    /* Checks id video recording is enabled.
+     * This method is called by the containing emulated camera object when it is
+     * handing the camera_device_ops_t::recording_enabled callback.
+     * Note: this method doesn't grab a lock while checking video recordin status,
+     * since upon exit the status would be undefined anyway. So, grab a lock
+     * before calling this method if you care about persisting of a defined video
+     * recording status.
+     * Return:
+     *  true if video recording is enabled, or false if it is disabled.
+     */
+    inline bool isVideoRecordingEnabled()
+    {
+        return mVideoRecEnabled;
+    }
 
     /****************************************************************************
      * Public API

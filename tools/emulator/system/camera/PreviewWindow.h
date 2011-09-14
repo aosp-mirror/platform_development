@@ -74,7 +74,10 @@ public:
     void stopPreview();
 
     /* Checks if preview is enabled. */
-    bool isPreviewEnabled();
+    inline bool isPreviewEnabled()
+    {
+        return mPreviewEnabled;
+    }
 
     /****************************************************************************
      * Public API
