@@ -86,7 +86,7 @@ static void PrintMessages(uint32_t msg)
 CallbackNotifier::CallbackNotifier()
     : mNotifyCB(NULL),
       mDataCB(NULL),
-      mDdataCBTimestamp(NULL),
+      mDataCBTimestamp(NULL),
       mGetMemoryCB(NULL),
       mCBOpaque(NULL),
       mLastFrameTimestamp(0),
@@ -116,7 +116,7 @@ void CallbackNotifier::setCallbacks(camera_notify_callback notify_cb,
     Mutex::Autolock locker(&mObjectLock);
     mNotifyCB = notify_cb;
     mDataCB = data_cb;
-    mDdataCBTimestamp = data_cb_timestamp;
+    mDataCBTimestamp = data_cb_timestamp;
     mGetMemoryCB = get_memory;
     mCBOpaque = user;
 }
@@ -201,7 +201,7 @@ void CallbackNotifier::cleanupCBNotifier()
     mMessageEnabler = 0;
     mNotifyCB = NULL;
     mDataCB = NULL;
-    mDdataCBTimestamp = NULL;
+    mDataCBTimestamp = NULL;
     mGetMemoryCB = NULL;
     mCBOpaque = NULL;
     mLastFrameTimestamp = 0;
@@ -216,13 +216,13 @@ void CallbackNotifier::onNextFrameAvailable(const void* frame,
     Mutex::Autolock locker(&mObjectLock);
 
     if ((mMessageEnabler & CAMERA_MSG_VIDEO_FRAME) != 0 &&
-            mDdataCBTimestamp != NULL && mVideoRecEnabled &&
+            mDataCBTimestamp != NULL && mVideoRecEnabled &&
             isNewVideoFrameTime(timestamp)) {
         camera_memory_t* cam_buff =
             mGetMemoryCB(-1, camera_dev->getFrameBufferSize(), 1, NULL);
         if (NULL != cam_buff && NULL != cam_buff->data) {
             memcpy(cam_buff->data, frame, camera_dev->getFrameBufferSize());
-            mDdataCBTimestamp(timestamp, CAMERA_MSG_VIDEO_FRAME,
+            mDataCBTimestamp(timestamp, CAMERA_MSG_VIDEO_FRAME,
                                cam_buff, 0, mCBOpaque);
         } else {
             LOGE("%s: Memory failure in CAMERA_MSG_VIDEO_FRAME", __FUNCTION__);

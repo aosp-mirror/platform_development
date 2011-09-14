@@ -93,47 +93,47 @@ status_t EmulatedCamera::Initialize()
      */
 
     /* Only RGBX are supported by the framework for preview window in the emulator! */
-    mPparameters.set(CameraParameters::KEY_SUPPORTED_PREVIEW_FORMATS, CameraParameters::PIXEL_FORMAT_RGBA8888);
-    mPparameters.set(CameraParameters::KEY_SUPPORTED_PREVIEW_FRAME_RATES, "60,50,25,15,10");
-    mPparameters.set(CameraParameters::KEY_SUPPORTED_PREVIEW_FPS_RANGE, "(10,60)");
-    mPparameters.set(CameraParameters::KEY_PREVIEW_FPS_RANGE, "10,60");
-    mPparameters.set(CameraParameters::KEY_SUPPORTED_JPEG_THUMBNAIL_SIZES, "320x240,0x0");
-    mPparameters.set(CameraParameters::KEY_MAX_EXPOSURE_COMPENSATION, "6");
-    mPparameters.set(CameraParameters::KEY_MIN_EXPOSURE_COMPENSATION, "-6");
-    mPparameters.set(CameraParameters::KEY_EXPOSURE_COMPENSATION_STEP, "0.5");
-    mPparameters.set(CameraParameters::KEY_JPEG_THUMBNAIL_WIDTH, "512");
-    mPparameters.set(CameraParameters::KEY_JPEG_THUMBNAIL_HEIGHT, "384");
-    mPparameters.set(CameraParameters::KEY_JPEG_QUALITY, "90");
-    mPparameters.set(CameraParameters::KEY_FOCAL_LENGTH, "4.31");
-    mPparameters.set(CameraParameters::KEY_HORIZONTAL_VIEW_ANGLE, "54.8");
-    mPparameters.set(CameraParameters::KEY_VERTICAL_VIEW_ANGLE, "42.5");
-    mPparameters.set(CameraParameters::KEY_JPEG_THUMBNAIL_QUALITY, "90");
+    mParameters.set(CameraParameters::KEY_SUPPORTED_PREVIEW_FORMATS, CameraParameters::PIXEL_FORMAT_RGBA8888);
+    mParameters.set(CameraParameters::KEY_SUPPORTED_PREVIEW_FRAME_RATES, "60,50,25,15,10");
+    mParameters.set(CameraParameters::KEY_SUPPORTED_PREVIEW_FPS_RANGE, "(10,60)");
+    mParameters.set(CameraParameters::KEY_PREVIEW_FPS_RANGE, "10,60");
+    mParameters.set(CameraParameters::KEY_SUPPORTED_JPEG_THUMBNAIL_SIZES, "320x240,0x0");
+    mParameters.set(CameraParameters::KEY_MAX_EXPOSURE_COMPENSATION, "6");
+    mParameters.set(CameraParameters::KEY_MIN_EXPOSURE_COMPENSATION, "-6");
+    mParameters.set(CameraParameters::KEY_EXPOSURE_COMPENSATION_STEP, "0.5");
+    mParameters.set(CameraParameters::KEY_JPEG_THUMBNAIL_WIDTH, "512");
+    mParameters.set(CameraParameters::KEY_JPEG_THUMBNAIL_HEIGHT, "384");
+    mParameters.set(CameraParameters::KEY_JPEG_QUALITY, "90");
+    mParameters.set(CameraParameters::KEY_FOCAL_LENGTH, "4.31");
+    mParameters.set(CameraParameters::KEY_HORIZONTAL_VIEW_ANGLE, "54.8");
+    mParameters.set(CameraParameters::KEY_VERTICAL_VIEW_ANGLE, "42.5");
+    mParameters.set(CameraParameters::KEY_JPEG_THUMBNAIL_QUALITY, "90");
 
     /* Only RGB formats are supported by preview window in emulator. */
-    mPparameters.setPreviewFormat(CameraParameters::PIXEL_FORMAT_RGBA8888);
+    mParameters.setPreviewFormat(CameraParameters::PIXEL_FORMAT_RGBA8888);
 
     /* We don't relay on the actual frame rates supported by the camera device,
      * since we will emulate them through timeouts in the emulated camera device
      * worker thread. */
-    mPparameters.set(CameraParameters::KEY_SUPPORTED_PREVIEW_FRAME_RATES,
+    mParameters.set(CameraParameters::KEY_SUPPORTED_PREVIEW_FRAME_RATES,
                     "30,24,20,15,10,5");
-    mPparameters.set(CameraParameters::KEY_SUPPORTED_PREVIEW_FPS_RANGE, "(5,30)");
-    mPparameters.set(CameraParameters::KEY_PREVIEW_FPS_RANGE, "5,30");
-    mPparameters.setPreviewFrameRate(24);
+    mParameters.set(CameraParameters::KEY_SUPPORTED_PREVIEW_FPS_RANGE, "(5,30)");
+    mParameters.set(CameraParameters::KEY_PREVIEW_FPS_RANGE, "5,30");
+    mParameters.setPreviewFrameRate(24);
 
     /* Only PIXEL_FORMAT_YUV420P is accepted by camera framework in emulator! */
-    mPparameters.set(CameraParameters::KEY_VIDEO_FRAME_FORMAT,
+    mParameters.set(CameraParameters::KEY_VIDEO_FRAME_FORMAT,
                     CameraParameters::PIXEL_FORMAT_YUV420P);
-    mPparameters.set(CameraParameters::KEY_SUPPORTED_PICTURE_FORMATS,
+    mParameters.set(CameraParameters::KEY_SUPPORTED_PICTURE_FORMATS,
                     CameraParameters::PIXEL_FORMAT_YUV420P);
-    mPparameters.setPictureFormat(CameraParameters::PIXEL_FORMAT_YUV420P);
+    mParameters.setPictureFormat(CameraParameters::PIXEL_FORMAT_YUV420P);
 
     /*
      * Not supported features
      */
 
-    mPparameters.set(CameraParameters::KEY_SUPPORTED_FOCUS_MODES, CameraParameters::FOCUS_MODE_FIXED);
-    mPparameters.set(CameraParameters::KEY_FOCUS_MODE, CameraParameters::FOCUS_MODE_FIXED);
+    mParameters.set(CameraParameters::KEY_SUPPORTED_FOCUS_MODES, CameraParameters::FOCUS_MODE_FIXED);
+    mParameters.set(CameraParameters::KEY_FOCUS_MODE, CameraParameters::FOCUS_MODE_FIXED);
 
     return NO_ERROR;
 }
@@ -185,7 +185,7 @@ status_t EmulatedCamera::getCameraInfo(struct camera_info* info)
 
     const char* valstr = NULL;
 
-    valstr = mPparameters.get(EmulatedCamera::FACING_KEY);
+    valstr = mParameters.get(EmulatedCamera::FACING_KEY);
     if (valstr != NULL) {
         if (strcmp(valstr, EmulatedCamera::FACING_FRONT) == 0) {
             info->facing = CAMERA_FACING_FRONT;
@@ -197,7 +197,7 @@ status_t EmulatedCamera::getCameraInfo(struct camera_info* info)
         info->facing = CAMERA_FACING_BACK;
     }
 
-    valstr = mPparameters.get(EmulatedCamera::ORIENTATION_KEY);
+    valstr = mParameters.get(EmulatedCamera::ORIENTATION_KEY);
     if (valstr != NULL) {
         info->orientation = atoi(valstr);
     } else {
@@ -211,7 +211,7 @@ status_t EmulatedCamera::setPreviewWindow(struct preview_stream_ops* window)
 {
     /* Callback should return a negative errno. */
     return -mPreviewWindow.setPreviewWindow(window,
-                                             mPparameters.getPreviewFrameRate());
+                                             mParameters.getPreviewFrameRate());
 }
 
 void EmulatedCamera::setCallbacks(camera_notify_callback notify_cb,
@@ -264,7 +264,7 @@ status_t EmulatedCamera::storeMetaDataInBuffers(int enable)
 status_t EmulatedCamera::startRecording()
 {
     /* Callback should return a negative errno. */
-    return -mCallbackNotifier.enableVideoRecording(mPparameters.getPreviewFrameRate());
+    return -mCallbackNotifier.enableVideoRecording(mParameters.getPreviewFrameRate());
 }
 
 void EmulatedCamera::stopRecording()
@@ -330,12 +330,12 @@ status_t EmulatedCamera::cancelPicture()
 status_t EmulatedCamera::setParameters(const char* parms)
 {
     LOGV("%s", __FUNCTION__);
-    PrintParamDiff(mPparameters, parms);
+    PrintParamDiff(mParameters, parms);
 
     CameraParameters new_param;
     String8 str8_param(parms);
     new_param.unflatten(str8_param);
-    mPparameters = new_param;
+    mParameters = new_param;
 
     /*
      * In emulation, there are certain parameters that are required by the
@@ -345,49 +345,49 @@ status_t EmulatedCamera::setParameters(const char* parms)
      */
 
     /* Supported preview size. */
-    const char* check = mPparameters.get(CameraParameters::KEY_PREVIEW_SIZE);
+    const char* check = mParameters.get(CameraParameters::KEY_PREVIEW_SIZE);
     if (check != NULL) {
         const char* current =
-            mPparameters.get(CameraParameters::KEY_SUPPORTED_PREVIEW_SIZES);
+            mParameters.get(CameraParameters::KEY_SUPPORTED_PREVIEW_SIZES);
         if (strstr(current, check) == NULL) {
             /* Required size doesn't exist in the list. Add it. */
             char* to_add = AddValue(current, check);
             if (to_add != NULL) {
                 LOGD("+++ %s: Added %s to supported preview sizes",
                      __FUNCTION__, check);
-                mPparameters.set(CameraParameters::KEY_SUPPORTED_PREVIEW_SIZES, to_add);
+                mParameters.set(CameraParameters::KEY_SUPPORTED_PREVIEW_SIZES, to_add);
                 free(to_add);
             }
         }
     }
 
     /* Supported preview frame rate. */
-    check = mPparameters.get(CameraParameters::KEY_PREVIEW_FRAME_RATE);
+    check = mParameters.get(CameraParameters::KEY_PREVIEW_FRAME_RATE);
     if (check != NULL) {
         const char* current =
-            mPparameters.get(CameraParameters::KEY_SUPPORTED_PREVIEW_FRAME_RATES);
+            mParameters.get(CameraParameters::KEY_SUPPORTED_PREVIEW_FRAME_RATES);
         if (strstr(current, check) == NULL) {
             char* to_add = AddValue(current, check);
             if (to_add != NULL) {
                 LOGD("+++ %s: Added %s to supported preview frame rates",
                      __FUNCTION__, check);
-                mPparameters.set(CameraParameters::KEY_SUPPORTED_PREVIEW_FRAME_RATES, to_add);
+                mParameters.set(CameraParameters::KEY_SUPPORTED_PREVIEW_FRAME_RATES, to_add);
                 free(to_add);
             }
         }
     }
 
     /* Supported picture size. */
-    check = mPparameters.get(CameraParameters::KEY_PICTURE_SIZE);
+    check = mParameters.get(CameraParameters::KEY_PICTURE_SIZE);
     if (check != NULL) {
         const char* current =
-            mPparameters.get(CameraParameters::KEY_SUPPORTED_PICTURE_SIZES);
+            mParameters.get(CameraParameters::KEY_SUPPORTED_PICTURE_SIZES);
         if (strstr(current, check) == NULL) {
             char* to_add = AddValue(current, check);
             if (to_add != NULL) {
                 LOGD("+++ %s: Added %s to supported picture sizes",
                      __FUNCTION__, check);
-                mPparameters.set(CameraParameters::KEY_SUPPORTED_PICTURE_SIZES, to_add);
+                mParameters.set(CameraParameters::KEY_SUPPORTED_PICTURE_SIZES, to_add);
                 free(to_add);
             }
         }
@@ -401,7 +401,7 @@ status_t EmulatedCamera::setParameters(const char* parms)
 static char lNoParam = '\0';
 char* EmulatedCamera::getParameters()
 {
-    String8 params(mPparameters.flatten());
+    String8 params(mParameters.flatten());
     char* ret_str =
         reinterpret_cast<char*>(malloc(sizeof(char) * (params.length()+1)));
     memset(ret_str, 0, params.length()+1);
@@ -502,16 +502,16 @@ status_t EmulatedCamera::startCamera()
         if (!camera_dev->isCapturing()) {
             int width, height;
             /* Lets see what should we use for frame width, and height. */
-            if (mPparameters.get(CameraParameters::KEY_VIDEO_SIZE) != NULL) {
-                mPparameters.getVideoSize(&width, &height);
+            if (mParameters.get(CameraParameters::KEY_VIDEO_SIZE) != NULL) {
+                mParameters.getVideoSize(&width, &height);
             } else {
-                mPparameters.getPreviewSize(&width, &height);
+                mParameters.getPreviewSize(&width, &height);
             }
             /* Lets see what should we use for the frame pixel format. */
             const char* pix_fmt =
-                mPparameters.get(CameraParameters::KEY_VIDEO_FRAME_FORMAT);
+                mParameters.get(CameraParameters::KEY_VIDEO_FRAME_FORMAT);
             if (pix_fmt == NULL) {
-                pix_fmt = mPparameters.getPreviewFormat();
+                pix_fmt = mParameters.getPreviewFormat();
             }
             if (pix_fmt == NULL) {
                 LOGE("%s: Unable to obtain video format", __FUNCTION__);

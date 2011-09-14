@@ -67,11 +67,11 @@ status_t EmulatedQemuCamera::Initialize(const char* device_name,
     if (gEmulatedCameraFactory.getQemuCameraOrientation() == CAMERA_FACING_BACK) {
         facing = EmulatedCamera::FACING_BACK;
     }
-    mPparameters.set(EmulatedCamera::FACING_KEY, facing);
-    mPparameters.set(EmulatedCamera::ORIENTATION_KEY,
+    mParameters.set(EmulatedCamera::FACING_KEY, facing);
+    mParameters.set(EmulatedCamera::ORIENTATION_KEY,
                     gEmulatedCameraFactory.getQemuCameraOrientation());
-    mPparameters.set(CameraParameters::KEY_SUPPORTED_PICTURE_SIZES, frame_dims);
-    mPparameters.set(CameraParameters::KEY_SUPPORTED_PREVIEW_SIZES, frame_dims);
+    mParameters.set(CameraParameters::KEY_SUPPORTED_PICTURE_SIZES, frame_dims);
+    mParameters.set(CameraParameters::KEY_SUPPORTED_PREVIEW_SIZES, frame_dims);
 
     /*
      * Use first dimension reported by the device to set current preview and
@@ -103,8 +103,8 @@ status_t EmulatedQemuCamera::Initialize(const char* device_name,
     *sep = '\0';
     const int x = atoi(first_dim);
     const int y = atoi(sep + 1);
-    mPparameters.setPreviewSize(x, y);
-    mPparameters.setPictureSize(x, y);
+    mParameters.setPreviewSize(x, y);
+    mParameters.setPictureSize(x, y);
 
     LOGV("%s: Qemu camera %s is initialized. Current frame is %dx%d",
          __FUNCTION__, device_name, x, y);

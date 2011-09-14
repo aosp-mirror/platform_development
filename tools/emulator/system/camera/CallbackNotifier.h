@@ -168,7 +168,7 @@ protected:
 
     camera_notify_callback          mNotifyCB;
     camera_data_callback            mDataCB;
-    camera_data_timestamp_callback  mDdataCBTimestamp;
+    camera_data_timestamp_callback  mDataCBTimestamp;
     camera_request_memory           mGetMemoryCB;
     void*                           mCBOpaque;
 

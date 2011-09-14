@@ -386,7 +386,7 @@ protected:
     Mutex                           mObjectLock;
 
     /* Camera parameters. */
-    CameraParameters                mPparameters;
+    CameraParameters                mParameters;
 
     /* Preview window. */
     PreviewWindow                   mPreviewWindow;

@@ -52,9 +52,9 @@ status_t EmulatedFakeCamera::Initialize()
     if (gEmulatedCameraFactory.getFakeCameraOrientation() == CAMERA_FACING_FRONT) {
         facing = EmulatedCamera::FACING_FRONT;
     }
-    mPparameters.set(EmulatedCamera::FACING_KEY, facing);
+    mParameters.set(EmulatedCamera::FACING_KEY, facing);
 
-    mPparameters.set(EmulatedCamera::ORIENTATION_KEY,
+    mParameters.set(EmulatedCamera::ORIENTATION_KEY,
                     gEmulatedCameraFactory.getFakeCameraOrientation());
 
     res = EmulatedCamera::Initialize();
@@ -66,10 +66,10 @@ status_t EmulatedFakeCamera::Initialize()
      * Parameters provided by the camera device.
      */
 
-    mPparameters.set(CameraParameters::KEY_SUPPORTED_PICTURE_SIZES, "640x480");
-    mPparameters.set(CameraParameters::KEY_SUPPORTED_PREVIEW_SIZES, "640x480");
-    mPparameters.setPreviewSize(640, 480);
-    mPparameters.setPictureSize(640, 480);
+    mParameters.set(CameraParameters::KEY_SUPPORTED_PICTURE_SIZES, "640x480");
+    mParameters.set(CameraParameters::KEY_SUPPORTED_PREVIEW_SIZES, "640x480");
+    mParameters.setPreviewSize(640, 480);
+    mParameters.setPictureSize(640, 480);
 
     return NO_ERROR;
 }
