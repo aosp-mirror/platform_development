@@ -33,6 +33,7 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
@@ -43,92 +44,86 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.Window;
 import android.widget.RemoteViews;
 
-public class MainActivity extends Activity implements ActionBar.TabListener {
+/** This is the main "launcher" activity.
+ * When running on a "large" or larger screen, this activity displays both the
+ * TitlesFragments and the Content Fragment. When on a smaller screen size, this
+ * activity displays only the TitlesFragment. In which case, selecting a list
+ * item opens the ContentActivity, holds only the ContentFragment. */
+public class MainActivity extends Activity implements TitlesFragment.OnItemSelectedListener {
 
-    private static final int NOTIFICATION_DEFAULT = 1;
-    private static final String ACTION_DIALOG = "com.example.android.hcgallery.action.DIALOG";
-
-    private View mActionBarView;
     private Animator mCurrentTitlesAnimator;
     private String[] mToggleLabels = {"Show Titles", "Hide Titles"};
-    private int mLabelIndex = 1;
+    private static final int NOTIFICATION_DEFAULT = 1;
+    private static final String ACTION_DIALOG = "com.example.android.hcgallery.action.DIALOG";
     private int mThemeId = -1;
+    private boolean mDualFragments = false;
+    private boolean mTitlesHidden = false;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        if(savedInstanceState != null && savedInstanceState.getInt("theme", -1) != -1) {
-            mThemeId = savedInstanceState.getInt("theme");
-            this.setTheme(mThemeId);
+        if(savedInstanceState != null) {
+            if (savedInstanceState.getInt("theme", -1) != -1) {
+              mThemeId = savedInstanceState.getInt("theme");
+              this.setTheme(mThemeId);
+            }
+            mTitlesHidden = savedInstanceState.getBoolean("titlesHidden");
         }
 
         setContentView(R.layout.main);
 
-        Directory.initializeDirectory();
-
         ActionBar bar = getActionBar();
+        bar.setDisplayShowTitleEnabled(false);
 
-        int i;
-        for (i = 0; i < Directory.getCategoryCount(); i++) {
-            bar.addTab(bar.newTab().setText(Directory.getCategory(i).getName())
-                    .setTabListener(this));
+        ContentFragment frag = (ContentFragment) getFragmentManager()
+                .findFragmentById(R.id.content_frag);
+        if (frag != null) mDualFragments = true;
+        
+        if (mTitlesHidden) {
+            getFragmentManager().beginTransaction()
+                    .hide(getFragmentManager().findFragmentById(R.id.titles_frag)).commit();
         }
-
-        mActionBarView = getLayoutInflater().inflate(
-                R.layout.action_bar_custom, null);
-
-        bar.setCustomView(mActionBarView);
-        bar.setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM | ActionBar.DISPLAY_USE_LOGO);
-        bar.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
-        bar.setDisplayShowHomeEnabled(true);
-
-        // If category is not saved to the savedInstanceState,
-        // 0 is returned by default.
-        if(savedInstanceState != null) {
-            int category = savedInstanceState.getInt("category");
-            bar.selectTab(bar.getTabAt(category));
-        }
-    }
-
-    public void onTabSelected(ActionBar.Tab tab, FragmentTransaction ft) {
-        TitlesFragment titleFrag = (TitlesFragment) getFragmentManager()
-                .findFragmentById(R.id.frag_title);
-        titleFrag.populateTitles(tab.getPosition());
-
-        titleFrag.selectPosition(0);
-    }
-
-    public void onTabUnselected(ActionBar.Tab tab, FragmentTransaction ft) {
-    }
-
-    public void onTabReselected(ActionBar.Tab tab, FragmentTransaction ft) {
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.main_menu, menu);
+        // If the device doesn't support camera, remove the camera menu item
+        if (!getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA)) {
+            menu.removeItem(R.id.menu_camera);
+        }
         return true;
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        // If not showing both fragments, remove the "toggle titles" menu item
+        if (!mDualFragments) {
+            menu.removeItem(R.id.menu_toggleTitles);
+        } else {
+            menu.findItem(R.id.menu_toggleTitles).setTitle(mToggleLabels[mTitlesHidden ? 0 : 1]);
+        }
+        return super.onPrepareOptionsMenu(menu);
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-        case R.id.camera:
-            Intent intent = new Intent(this, CameraSample.class);
+        case R.id.menu_camera:
+            Intent intent = new Intent(this, CameraActivity.class);
             intent.putExtra("theme", mThemeId);
             startActivity(intent);
             return true;
 
-        case R.id.toggleTitles:
+        case R.id.menu_toggleTitles:
             toggleVisibleTitles();
             return true;
 
-        case R.id.toggleTheme:
+        case R.id.menu_toggleTheme:
             if (mThemeId == R.style.AppTheme_Dark) {
                 mThemeId = R.style.AppTheme_Light;
             } else {
@@ -137,15 +132,15 @@ public class MainActivity extends Activity implements ActionBar.TabListener {
             this.recreate();
             return true;
 
-        case R.id.showDialog:
+        case R.id.menu_showDialog:
             showDialog("This is indeed an awesome dialog.");
             return true;
 
-        case R.id.showStandardNotification:
+        case R.id.menu_showStandardNotification:
             showNotification(false);
             return true;
 
-        case R.id.showCustomNotification:
+        case R.id.menu_showCustomNotification:
             showNotification(true);
             return true;
 
@@ -154,13 +149,13 @@ public class MainActivity extends Activity implements ActionBar.TabListener {
         }
     }
 
+    /** Respond to the "toogle titles" item in the action bar */
     public void toggleVisibleTitles() {
         // Use these for custom animations.
         final FragmentManager fm = getFragmentManager();
         final TitlesFragment f = (TitlesFragment) fm
-                .findFragmentById(R.id.frag_title);
+                .findFragmentById(R.id.titles_frag);
         final View titlesView = f.getView();
-        mLabelIndex = 1 - mLabelIndex;
 
         // Determine if we're in portrait, and whether we're showing or hiding the titles
         // with this toggle.
@@ -207,6 +202,8 @@ public class MainActivity extends Activity implements ActionBar.TabListener {
                 @Override
                 public void onAnimationEnd(Animator animator) {
                     mCurrentTitlesAnimator = null;
+                    mTitlesHidden = false;
+                    invalidateOptionsMenu();
                 }
             });
 
@@ -226,6 +223,8 @@ public class MainActivity extends Activity implements ActionBar.TabListener {
                         return;
                     mCurrentTitlesAnimator = null;
                     fm.beginTransaction().hide(f).commit();
+                    mTitlesHidden = true;
+                    invalidateOptionsMenu();
                 }
             });
         }
@@ -233,8 +232,6 @@ public class MainActivity extends Activity implements ActionBar.TabListener {
         // Start the animation.
         objectAnimator.start();
         mCurrentTitlesAnimator = objectAnimator;
-
-        invalidateOptionsMenu();
 
         // Manually trigger onNewIntent to check for ACTION_DIALOG.
         onNewIntent(getIntent());
@@ -314,21 +311,35 @@ public class MainActivity extends Activity implements ActionBar.TabListener {
     }
 
     @Override
-    public boolean onPrepareOptionsMenu(Menu menu) {
-        menu.getItem(1).setTitle(mToggleLabels[mLabelIndex]);
-        return true;
-    }
-
-    @Override
     public void onSaveInstanceState (Bundle outState) {
         super.onSaveInstanceState(outState);
-        ActionBar bar = getActionBar();
-        int category = bar.getSelectedTab().getPosition();
-        outState.putInt("category", category);
         outState.putInt("theme", mThemeId);
+        outState.putBoolean("titlesHidden", mTitlesHidden);
+    }
+
+    /** Implementation for TitlesFragment.OnItemSelectedListener.
+     * When the TitlesFragment receives an onclick event for a list item,
+     * it's passed back to this activity through this method so that we can
+     * deliver it to the ContentFragment in the manner appropriate */
+    public void onItemSelected(int category, int position) {
+      if (!mDualFragments) {
+          // If showing only the TitlesFragment, start the ContentActivity and
+          // pass it the info about the selected item
+          Intent intent = new Intent(this, ContentActivity.class);
+          intent.putExtra("category", category);
+          intent.putExtra("position", position);
+          intent.putExtra("theme", mThemeId);
+          startActivity(intent);
+      } else {
+          // If showing both fragments, directly update the ContentFragment
+          ContentFragment frag = (ContentFragment) getFragmentManager()
+                  .findFragmentById(R.id.content_frag);
+          frag.updateContentAndRecycleBitmap(category, position);
+      }
     }
 
 
+    /** Dialog implementation that shows a simple dialog as a fragment */
     public static class MyDialogFragment extends DialogFragment {
 
         public static MyDialogFragment newInstance(String title) {

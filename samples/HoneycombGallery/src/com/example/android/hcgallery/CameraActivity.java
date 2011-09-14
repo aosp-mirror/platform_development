@@ -19,7 +19,8 @@ package com.example.android.hcgallery;
 import android.app.Activity;
 import android.os.Bundle;
 
-public class CameraSample extends Activity {
+/** Basic shell activity that hosts CameraFragment. */
+public class CameraActivity extends Activity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

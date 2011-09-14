@@ -15,10 +15,16 @@
   limitations under the License.
  -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.android.hcgallery" android:versionCode="1"
-    android:versionName="1.0">
+    package="com.example.android.hcgallery" android:versionCode="2"
+    android:versionName="1.2">
 
-    <uses-sdk android:minSdkVersion="11" />
+    <uses-sdk android:minSdkVersion="11" android:targetSdkVersion="13" />
+
+    <!-- Declares that the app supports devices w/o touch, such as a mouse-driven device
+         or a device that provides only a d-pad for navigation -->
+    <uses-feature android:name="android.hardware.touchscreen" android:required="false" />
+    <!-- The app uses the camera, but checks for it at runtime and will work without it -->
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
 
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
@@ -27,8 +33,7 @@
         android:icon="@drawable/icon"
         android:logo="@drawable/logo"
         android:theme="@style/AppTheme.Light"
-        android:hardwareAccelerated="true"
-        android:debuggable="true">
+        android:hardwareAccelerated="true">
 
         <activity android:name=".MainActivity"
             android:label="@string/app_name"
@@ -43,8 +48,11 @@
             </intent-filter>
         </activity>
 
-        <!-- CameraSample -->
-        <activity android:name=".CameraSample"
+        <!-- Holds the ContentFragment for small/normal screens -->
+        <activity android:name=".ContentActivity" />
+
+        <!-- Camera Sample -->
+        <activity android:name=".CameraActivity"
             android:label="@string/camera_sample"
             android:screenOrientation="landscape" />
       </application>

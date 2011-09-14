@@ -21,14 +21,12 @@
     android:id="@+id/frags">
 
     <fragment class="com.example.android.hcgallery.TitlesFragment"
-            android:id="@+id/frag_title"
-            android:visibility="gone"
-            android:layout_marginTop="?android:attr/actionBarSize"
+            android:id="@+id/titles_frag"
             android:layout_width="match_parent"
-            android:layout_height="@dimen/titles_size"/>
+            android:layout_height="@dimen/titles_size" />
 
     <fragment class="com.example.android.hcgallery.ContentFragment"
-            android:id="@+id/frag_content"
+            android:id="@+id/content_frag"
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
 
