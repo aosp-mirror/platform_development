@@ -97,12 +97,6 @@ void PreviewWindow::stopPreview()
     mPreviewEnabled = false;
 }
 
-bool PreviewWindow::isPreviewEnabled()
-{
-    Mutex::Autolock locker(&mObjectLock);
-    return mPreviewEnabled;
-}
-
 /****************************************************************************
  * Public API
  ***************************************************************************/
@@ -114,7 +108,7 @@ void PreviewWindow::onNextFrameAvailable(const void* frame,
     int res;
     Mutex::Autolock locker(&mObjectLock);
 
-    if (!mPreviewEnabled || mPreviewWindow == NULL || !isPreviewTime()) {
+    if (!isPreviewEnabled() || mPreviewWindow == NULL || !isPreviewTime()) {
         return;
     }
 

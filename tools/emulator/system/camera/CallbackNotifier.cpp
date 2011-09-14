@@ -143,12 +143,6 @@ void CallbackNotifier::disableMessage(uint msg_type)
     PrintMessages(mMessageEnabler);
 }
 
-int CallbackNotifier::isMessageEnabled(uint msg_type)
-{
-    Mutex::Autolock locker(&mObjectLock);
-    return mMessageEnabler & ~msg_type;
-}
-
 status_t CallbackNotifier::enableVideoRecording(int fps)
 {
     LOGV("%s: FPS = %d", __FUNCTION__, fps);
@@ -169,12 +163,6 @@ void CallbackNotifier::disableVideoRecording()
     mVideoRecEnabled = false;
     mLastFrameTimestamp = 0;
     mFrameRefreshFreq = 0;
-}
-
-bool CallbackNotifier::isVideoRecordingEnabled()
-{
-    Mutex::Autolock locker(&mObjectLock);
-    return mVideoRecEnabled;
 }
 
 void CallbackNotifier::releaseRecordingFrame(const void* opaque)
@@ -213,10 +201,7 @@ void CallbackNotifier::onNextFrameAvailable(const void* frame,
                                             nsecs_t timestamp,
                                             EmulatedCameraDevice* camera_dev)
 {
-    Mutex::Autolock locker(&mObjectLock);
-
-    if ((mMessageEnabler & CAMERA_MSG_VIDEO_FRAME) != 0 &&
-            mDataCBTimestamp != NULL && mVideoRecEnabled &&
+    if (isMessageEnabled(CAMERA_MSG_VIDEO_FRAME) && isVideoRecordingEnabled() &&
             isNewVideoFrameTime(timestamp)) {
         camera_memory_t* cam_buff =
             mGetMemoryCB(-1, camera_dev->getFrameBufferSize(), 1, NULL);
@@ -236,6 +221,7 @@ void CallbackNotifier::onNextFrameAvailable(const void* frame,
 
 bool CallbackNotifier::isNewVideoFrameTime(nsecs_t timestamp)
 {
+    Mutex::Autolock locker(&mObjectLock);
     if ((timestamp - mLastFrameTimestamp) >= mFrameRefreshFreq) {
         mLastFrameTimestamp = timestamp;
         return true;
