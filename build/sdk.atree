@@ -38,10 +38,10 @@ frameworks/base/docs/docs-redirect.html documentation.html
 ##############################################################################
 
 # host tools from out/host/$(HOST_OS)-$(HOST_ARCH)/
-bin/adb                                       platform-tools/adb
-bin/aapt                                      platform-tools/aapt
-bin/aidl                                      platform-tools/aidl
-bin/llvm-rs-cc                                platform-tools/llvm-rs-cc
+bin/adb                                 strip platform-tools/adb
+bin/aapt                                strip platform-tools/aapt
+bin/aidl                                strip platform-tools/aidl
+bin/llvm-rs-cc                          strip platform-tools/llvm-rs-cc
 
 # dx
 bin/dx                                        platform-tools/dx

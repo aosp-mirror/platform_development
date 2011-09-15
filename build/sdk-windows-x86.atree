@@ -1,0 +1,60 @@
+#
+# Copyright (C) 2011 The Android Open Source Project
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+#
+# These are the files that comprise the *Windows* SDK.
+#
+# The Windows SDK is based on the Linux one so in this file we
+# need to remove Linux binaries and replace them by their
+# Windows counterparts.
+#
+# This file only includes platform-dependent files.
+# Tools-dependent files (and not tied to a specific platform)
+# are controled by sdk/build/tools.windows.atree.
+#
+
+rm platform-tools/adb
+bin/adb.exe                             strip platform-tools/adb.exe
+bin/AdbWinUsbApi.dll                          platform-tools/AdbWinUsbApi.dll
+bin/AdbWinApi.dll                             platform-tools/AdbWinApi.dll
+
+rm platform-tools/aapt
+bin/aapt.exe                            strip platform-tools/aapt.exe
+
+rm platform-tools/aidl
+bin/aidl.exe                            strip platform-tools/aidl.exe
+
+rm platform-tools/dx
+dalvik/dx/etc/dx.bat                          platform-tools/dx
+
+rm platform-tools/dexdump
+bin/dexdump.exe                         strip platform-tools/dexdump.exe
+
+rm platform-tools/llvm-rs-cc
+bin/llvm-rs-cc.exe                      strip platform-tools/llvm-rs-cc.exe
+
+prebuilt/windows/swt/swt.jar                  tools/lib/x86/swt.jar
+prebuilt/windows-x86_64/swt/swt.jar           tools/lib/x86_64/swt.jar
+
+external/sonivox/jet_tools/JetCreator                 tools/Jet/JetCreator
+external/sonivox/jet_tools/JetCreator_content         tools/Jet/demo_content
+external/sonivox/jet_tools/logic_templates            tools/Jet/logic_templates
+prebuilt/windows/jetcreator/EASDLL.dll                tools/Jet/JetCreator/EASDLL.dll
+external/sonivox/docs/JET_Authoring_Guidelines.html   docs/JetCreator/JET_Authoring_Guidelines.html
+external/sonivox/docs/JET_Authoring_Guidelines_files  docs/JetCreator/JET_Authoring_Guidelines_files
+external/sonivox/docs/JET_Creator_User_Manual.html    docs/JetCreator/JET_Creator_User_Manual.html
+external/sonivox/docs/JET_Creator_User_Manual_files   docs/JetCreator/JET_Creator_User_Manual_files
+
