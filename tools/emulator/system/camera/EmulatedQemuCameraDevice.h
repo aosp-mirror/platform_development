@@ -67,15 +67,16 @@ public:
     /* Disconnects from the camera device. */
     status_t disconnectDevice();
 
-protected:
     /* Starts capturing frames from the camera device. */
-    status_t startDevice();
+    status_t startDevice(int width, int height, uint32_t pix_fmt);
 
     /* Stops capturing frames from the camera device. */
     status_t stopDevice();
 
     /***************************************************************************
      * EmulatedCameraDevice virtual overrides
+     * See declarations of these methods in EmulatedCameraDevice class for
+     * information on each of these methods.
      **************************************************************************/
 
 public:
@@ -108,7 +109,7 @@ private:
     String8             mDeviceName;
 
     /* Current preview framebuffer. */
-    uint16_t*           mPreviewFrame;
+    uint32_t*           mPreviewFrame;
 
     /* Emulated FPS (frames per second).
      * We will emulate 50 FPS. */

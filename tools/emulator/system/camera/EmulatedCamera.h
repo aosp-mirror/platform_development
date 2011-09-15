@@ -290,18 +290,6 @@ protected:
      */
     virtual status_t doStopPreview();
 
-    /* Starts capturing frames
-     * Return:
-     *  NO_ERROR on success, or an appropriate error status on failure.
-     */
-    virtual status_t startCamera();
-
-    /* Stops capturing frames.
-     * Return:
-     *  NO_ERROR on success, or an appropriate error status on failure.
-     */
-    virtual status_t stopCamera();
-
     /****************************************************************************
      * Private API.
      ***************************************************************************/

@@ -62,18 +62,14 @@ public:
      */
     status_t disconnectDevice();
 
-protected:
-    /* Starts capturing frames from the camera device.
-     * Since there is no real device to control, this method simply starts the
-     * worker thread, and changes the state.
-     */
-    status_t startDevice();
+    /* Starts the camera device. */
+    status_t startDevice(int width, int height, uint32_t pix_fmt);
 
-    /* Stops capturing frames from the camera device.
-     * Since there is no real device to control, this method simply stops the
-     * worker thread, and changes the state.
-     */
+    /* Stops the camera device. */
     status_t stopDevice();
+
+    /* Gets current preview fame into provided buffer. */
+    status_t getPreviewFrame(void* buffer);
 
     /***************************************************************************
      * Worker thread management overrides.
@@ -83,8 +79,8 @@ protected:
 
 protected:
     /* Implementation of the worker thread routine.
-     * This method simply sleeps for a period of time defined by FPS property of
-     * the fake camera (simulating frame frequency), and then calls emulated
+     * This method simply sleeps for a period of time defined by the FPS property
+     * of the fake camera (simulating frame frequency), and then calls emulated
      * camera's onNextFrameAvailable method.
      */
     bool inWorkerThread();
@@ -128,6 +124,9 @@ private:
     int         mCheckY;
     int         mCcounter;
     int         mHalfWidth;
+
+    /* Last time the checkerboard has been redrawn. */
+    nsecs_t    mLastRedrawn;
 
     /* Emulated FPS (frames per second).
      * We will emulate 50 FPS. */
