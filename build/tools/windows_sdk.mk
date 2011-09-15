@@ -22,10 +22,13 @@ ifeq ($(strip $(shell which unix2dos todos 2>/dev/null)),)
 $(error Need a unix2dos command. Please 'apt-get install tofrodos')
 endif
 
+# Define WIN_SDK_TARGETS, the list of targets located in topdir/sdk
+# and are tools-dependent, not platform-dependent.
 include $(TOPDIR)sdk/build/windows_sdk_tools.mk
 
-# This is the list of target that we want to generate as
-# Windows executables.
+# This is the list of targets that we want to generate as
+# Windows executables. All the targets specified here are located in
+# the topdir/development directory and are somehow platform-dependent.
 WIN_TARGETS := \
 	aapt adb aidl \
 	etc1tool \
@@ -84,7 +87,6 @@ $(WIN_SDK_ZIP): winsdk-tools sdk
 	$(hide) USB_DRIVER_HOOK=$(USB_DRIVER_HOOK) \
 		$(TOPDIR)development/build/tools/patch_windows_sdk.sh $(subst @,-q,$(hide)) \
 		$(WIN_SDK_DIR)/$(WIN_SDK_NAME) $(OUT_DIR) $(TOPDIR)
-	$(hide) strip --strip-all $(WIN_SDK_DIR)/$(WIN_SDK_NAME)/platform-tools/llvm-rs-cc.exe
 	$(hide) $(TOPDIR)sdk/build/patch_windows_sdk.sh $(subst @,-q,$(hide)) \
 		$(WIN_SDK_DIR)/$(WIN_SDK_NAME) $(OUT_DIR) $(TOPDIR)
 	$(hide) ( \

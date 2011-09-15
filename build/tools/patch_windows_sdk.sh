@@ -1,4 +1,19 @@
 #!/bin/bash
+#
+# Copyright (C) 2009 The Android Open Source Project
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
 
 # This script takes a Linux SDK, cleans it and injects the necessary Windows
 # binaries needed by the SDK. The script has 2 parts:
@@ -53,55 +68,12 @@ if [[ -n "$USB_DRIVER_HOOK" ]]; then
     $USB_DRIVER_HOOK $V $TEMP_SDK_DIR $TOPDIR
 fi
 
-# Remove obsolete stuff from tools & platform
-TOOLS=$TEMP_SDK_DIR/tools
-PLATFORM_TOOLS=$TEMP_SDK_DIR/platform-tools
-LIB=$TEMP_SDK_DIR/tools/lib
-rm $V $TOOLS/{dmtracedump,etc1tool,hprof-conv,sqlite3,zipalign}
-rm $V $LIB/*/swt.jar
-rm $V $PLATFORM_TOOLS/{adb,aapt,aidl,dx,dexdump,llvm-rs-cc}
 
-# Copy all the new stuff in tools
-# Note: some tools are first copied here and then moved in platform-tools
-cp $V $WIN_OUT_DIR/host/windows-x86/bin/*.{exe,dll} $TOOLS/
-# Remove some tools we don't want to take in the SDK
-rm $V -f $TOOLS/{fastboot.exe,rs-spec-gen.exe,tblgen.exe}
-mkdir -pv $LIB/x86
-cp $V ${TOPDIR}prebuilt/windows/swt/swt.jar         $LIB/x86/
-mkdir -pv $LIB/x86_64
-cp $V ${TOPDIR}prebuilt/windows-x86_64/swt/swt.jar  $LIB/x86_64/
-
-# Put the JetCreator tools, content and docs (not available in the linux SDK)
-JET=$TOOLS/Jet
-JETCREATOR=$JET/JetCreator
-JETDEMOCONTENT=$JET/demo_content
-JETLOGICTEMPLATES=$JET/logic_templates
-JETDOC=$TEMP_SDK_DIR/docs/JetCreator
-
-# need to rm these folders since a Mac SDK will have them and it might create a conflict
-rm -rf $V $JET
-rm -rf $V $JETDOC
-
-# now create fresh folders for JetCreator
-mkdir $V $JET
-mkdir $V $JETDOC
-
-cp -r $V ${TOPDIR}external/sonivox/jet_tools/JetCreator         $JETCREATOR/
-cp -r $V ${TOPDIR}external/sonivox/jet_tools/JetCreator_content $JETDEMOCONTENT/
-cp -r $V ${TOPDIR}external/sonivox/jet_tools/logic_templates    $JETLOGICTEMPLATES/
-chmod $V -R u+w $JETCREATOR  # fixes an issue where Cygwin might copy the above as u+rx only
-cp $V ${TOPDIR}prebuilt/windows/jetcreator/EASDLL.dll           $JETCREATOR/
-
-cp    $V ${TOPDIR}external/sonivox/docs/JET_Authoring_Guidelines.html  $JETDOC/
-cp -r $V ${TOPDIR}external/sonivox/docs/JET_Authoring_Guidelines_files $JETDOC/
-cp    $V ${TOPDIR}external/sonivox/docs/JET_Creator_User_Manual.html   $JETDOC/
-cp -r $V ${TOPDIR}external/sonivox/docs/JET_Creator_User_Manual_files  $JETDOC/
-
-# Copy or move platform specific tools to the default platform.
-cp $V ${TOPDIR}dalvik/dx/etc/dx.bat $PLATFORM_TOOLS/
-mv $V $TOOLS/{adb.exe,aapt.exe,aidl.exe,dexdump.exe} $PLATFORM_TOOLS/
-mv $V $TOOLS/Adb*.dll $PLATFORM_TOOLS/
-mv $V $TOOLS/llvm-rs-cc.exe                               $PLATFORM_TOOLS/llvm-rs-cc.exe
+# Invoke atree to copy the files
+atree -f ${TOPDIR}development/build/sdk-windows-x86.atree \
+      -I $WIN_OUT_DIR/host/windows-x86 \
+      -I ${TOPDIR:-.} \
+      -o $TEMP_SDK_DIR
 
 # Fix EOL chars to make window users happy - fix all files at the top level
 # as well as all batch files including those in platform-tools/
