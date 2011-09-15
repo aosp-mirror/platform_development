@@ -27,6 +27,6 @@
     <!-- This resource is true if running under at least IceCreamSandwich
          API level.  The default value is false; an alternative value
          for IceCreamSandwich is true. -->
-    <bool name="atLeastIceCreamSandwich">true</bool>
+    <bool name="atLeastIceCreamSandwich">false</bool>
 
 </resources>
