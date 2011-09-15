@@ -69,28 +69,30 @@ public:
      *  NO_ERROR on success, or an appropriate error status. If this method is
      *  called for already disconnected, or uninitialized instance of this class,
      *  a successful status must be returned from this method. If this method is
-     *  called for an instance that is in "capturing" state, this method must
+     *  called for an instance that is in the "started" state, this method must
      *  return a failure.
      */
     virtual status_t disconnectDevice() = 0;
 
-protected:
-    /* Starts capturing frames from the camera device.
-     *
-     * Typically, this method initializes the camera device with the settings
-     * requested by the framework through the camera HAL, and starts a worker
-     * thread that will listen to the physical device for available frames. When
-     * new frame becomes available, it will be cached in current_framebuffer_,
-     * and the containing emulated camera object will be notified via call to
-     * its onNextFrameAvailable method. This method must be called on a
-     * connected instance of this class. If it is called on a disconnected
-     * instance, this method must return a failure.
+    /* Starts the camera device.
+     * This method tells the camera device to start capturing frames of the given
+     * dimensions for the given pixel format. Note that this method doesn't start
+     * the delivery of the captured frames to the emulated camera. Call
+     * startDeliveringFrames method to start delivering frames. This method must
+     * be called on a connected instance of this class. If it is called on a
+     * disconnected instance, this method must return a failure.
+     * Param:
+     *  width, height - Frame dimensions to use when capturing video frames.
+     *  pix_fmt - Pixel format to use when capturing video frames.
      * Return:
      *  NO_ERROR on success, or an appropriate error status.
      */
-    virtual status_t startDevice() = 0;
+    virtual status_t startDevice(int width, int height, uint32_t pix_fmt) = 0;
 
-    /* Stops capturing frames from the camera device.
+    /* Stops the camera device.
+     * This method tells the camera device to stop capturing frames. Note that
+     * this method doesn't stop delivering frames to the emulated camera. Always
+     * call stopDeliveringFrames prior to calling this method.
      * Return:
      *  NO_ERROR on success, or an appropriate error status. If this method is
      *  called for an object that is not capturing frames, or is disconnected,
@@ -114,79 +116,95 @@ public:
      */
     virtual status_t Initialize();
 
-    /* Starts capturing frames from the camera device.
-     *
-     * Typically, this method caches desired frame parameters, and calls
-     * startDevice method to start capturing video frames from the camera
-     * device. This method must be called on a connected instance of this class.
-     * If it is called on a disconnected instance, this method must return a
-     * failure.
+    /* Starts delivering frames captured from the camera device.
+     * This method will start the worker thread that would be pulling frames from
+     * the camera device, and will deliver the pulled frames back to the emulated
+     * camera via onNextFrameAvailable callback. This method must be called on a
+     * connected instance of this class with a started camera device. If it is
+     * called on a disconnected instance, or camera device has not been started,
+     * this method must return a failure.
+     * Param:
+     *  one_burst - Controls how many frames should be delivered. If this
+     *      parameter is 'true', only one captured frame will be delivered to the
+     *      emulated camera. If this parameter is 'false', frames will keep
+     *      coming until stopDeliveringFrames method is called. Typically, this
+     *      parameter is set to 'true' only in order to obtain a single frame
+     *      that will be used as a "picture" in takePicture method of the
+     *      emulated camera.
      * Return:
      *  NO_ERROR on success, or an appropriate error status.
      */
-    virtual status_t startCapturing(int width, int height, uint32_t pix_fmt);
+    virtual status_t startDeliveringFrames(bool one_burst);
 
-    /* Stops capturing frames from the camera device.
-     *
-     * Typically, this method calls stopDevice method of this class, and
-     * uninitializes frame properties, saved in StartCapturing method of this
-     * class.
-     * This method must be called on a connected instance of this class. If it
-     * is called on a disconnected instance, this method must return a failure.
+    /* Stops delivering frames captured from the camera device.
+     * This method will stop the worker thread started by startDeliveringFrames.
      * Return:
      *  NO_ERROR on success, or an appropriate error status.
      */
-    virtual status_t stopCapturing();
+    virtual status_t stopDeliveringFrames();
 
-    /* Gets current fame into provided buffer.
-     * Typically, this method is called by the emulated camera (HAL) in response
-     * to a callback from the emulated camera device that gets invoked when new
-     * captured frame is available.
-     * This method must be called on an instance that is capturing frames from
-     * the physical device. If this method is called on an instance that is not
-     * capturing frames from the physical device, it must return a failure.
+    /* Gets current framebuffer, converted into preview frame format.
+     * This method must be called on a connected instance of this class with a
+     * started camera device. If it is called on a disconnected instance, or
+     * camera device has not been started, this method must return a failure.
+     * Note that this method should be called only after at least one frame has
+     * been captured and delivered. Otherwise it will return garbage in the
+     * preview frame buffer. Typically, this method shuld be called from
+     * onNextFrameAvailable callback.
      * Param:
-     *  buffer - A buffer where to return the frame. Note that the buffer must be
-     *      large enough to contain the entire frame, as defined by frame's width,
-     *      height, and pixel format that are current for the camera device.
-     */
-    virtual status_t getCurrentFrame(void* buffer);
-
-    /* Gets current preview fame into provided buffer.
-     * Param:
-     *  buffer - A buffer where to return the preview frame. Note that the buffer
-     *      must be large enough to contain the entire preview frame, as defined
-     *      by frame's width, height, and preview pixel format. Note also, that
-     *      due to the the limitations of the camera framework in emulator, the
-     *      preview frame is always formatted with RGBA8888.
+     *  buffer - Buffer, large enough to contain the entire preview frame.
+     * Return:
+     *  NO_ERROR on success, or an appropriate error status.
      */
     virtual status_t getCurrentPreviewFrame(void* buffer);
 
-    /* Gets width of the frame obtained from the physical device. */
+    /* Gets width of the frame obtained from the physical device.
+     * Return:
+     *  Width of the frame obtained from the physical device. Note that value
+     *  returned from this method is valid only in case if camera device has been
+     *  started.
+     */
     inline int getFrameWidth() const
     {
+        LOGE_IF(!isStarted(), "%s: Device is not started", __FUNCTION__);
         return mFrameWidth;
     }
 
-    /* Gets height of the frame obtained from the physical device. */
+    /* Gets height of the frame obtained from the physical device.
+     * Return:
+     *  Height of the frame obtained from the physical device. Note that value
+     *  returned from this method is valid only in case if camera device has been
+     *  started.
+     */
     inline int getFrameHeight() const
     {
+        LOGE_IF(!isStarted(), "%s: Device is not started", __FUNCTION__);
         return mFrameHeight;
     }
 
-    /* Gets byte size of the current frame buffer. */
+    /* Gets byte size of the current frame buffer.
+     * Return:
+     *  Byte size of the frame buffer. Note that value returned from this method
+     *  is valid only in case if camera device has been started.
+     */
     inline size_t getFrameBufferSize() const
     {
+        LOGE_IF(!isStarted(), "%s: Device is not started", __FUNCTION__);
         return mFrameBufferSize;
     }
 
-    /* Gets number of pixels in the current frame buffer. */
+    /* Gets number of pixels in the current frame buffer.
+     * Return:
+     *  Number of pixels in the frame buffer. Note that value returned from this
+     *  method is valid only in case if camera device has been started.
+     */
     inline int getPixelNum() const
     {
+        LOGE_IF(!isStarted(), "%s: Device is not started", __FUNCTION__);
         return mTotalPixels;
     }
 
-    /* Gets pixel format of the frame that physical device streams.
+    /* Gets pixel format of the frame that camera device streams to this class.
      * Throughout camera framework, there are three different forms of pixel
      * format representation:
      *  - Original format, as reported by the actual camera device. Values for
@@ -198,17 +216,17 @@ public:
      * pixel format in the original form. And that's the pixel format
      * representation that will be returned from this method. HAL components will
      * need to translate value returned from this method to the appropriate form.
-     * This method must be called only on connected instance of this class, since
-     * it's applicable only when physical device is ready to stream frames. If
-     * this method is called on an instance that is not connected, it must return
-     * a failure.
+     * This method must be called only on started instance of this class, since
+     * it's applicable only when camera device is ready to stream frames.
      * Param:
      *  pix_fmt - Upon success contains the original pixel format.
      * Return:
-     *  Current framebuffer's pixel format.
+     *  Current framebuffer's pixel format. Note that value returned from this
+     *  method is valid only in case if camera device has been started.
      */
     inline uint32_t getOriginalPixelFormat() const
     {
+        LOGE_IF(!isStarted(), "%s: Device is not started", __FUNCTION__);
         return mPixelFormat;
     }
 
@@ -222,14 +240,30 @@ public:
         return mWorkerThread.get() != NULL && mState != ECDS_CONSTRUCTED;
     }
     inline bool isConnected() const {
-        /* Instance is connected when it is initialized and its status is either
-         * "connected", or "capturing". */
-        return isInitialized() &&
-               (mState == ECDS_CONNECTED || mState == ECDS_CAPTURING);
+        /* Instance is connected when its status is either"connected", or
+         * "started". */
+        return mState == ECDS_CONNECTED || mState == ECDS_STARTED;
     }
-    inline bool isCapturing() const {
-        return isInitialized() && mState == ECDS_CAPTURING;
+    inline bool isStarted() const {
+        return mState == ECDS_STARTED;
     }
+
+    /****************************************************************************
+     * Emulated camera device private API
+     ***************************************************************************/
+protected:
+    /* Performs common validation and calculation of startDevice parameters.
+     * Param:
+     *  width, height, pix_fmt - Parameters passed to the startDevice method.
+     * Return:
+     *  NO_ERROR on success, or an appropriate error status.
+     */
+    virtual status_t commonStartDevice(int width, int height, uint32_t pix_fmt);
+
+    /* Performs common cleanup on stopDevice.
+     * This method will undo what commonStartDevice had done.
+     */
+    virtual void commonStopDevice();
 
     /****************************************************************************
      * Worker thread management.
@@ -242,15 +276,22 @@ public:
 
 protected:
     /* Starts the worker thread.
-     * Typically, worker thread is started from StartCamera method of this
-     * class.
+     * Typically, worker thread is started from startDeliveringFrames method of
+     * this class.
+     * Param:
+     *  one_burst - Controls how many times thread loop should run. If this
+     *      parameter is 'true', thread routine will run only once If this
+     *      parameter is 'false', thread routine will run until stopWorkerThread
+     *      method is called. See startDeliveringFrames for more info.
      * Return:
      *  NO_ERROR on success, or an appropriate error status.
      */
-    virtual status_t startWorkerThread();
+    virtual status_t startWorkerThread(bool one_burst);
 
     /* Stops the worker thread.
      * Note that this method will always wait for the worker thread to terminate.
+     * Typically, worker thread is started from stopDeliveringFrames method of
+     * this class.
      * Return:
      *  NO_ERROR on success, or an appropriate error status.
      */
@@ -260,7 +301,7 @@ protected:
      * In the default implementation of the worker thread routine we simply
      * return 'false' forcing the thread loop to exit, and the thread to
      * terminate. Derived class should override that method to provide there the
-     * actual frame capturing functionality.
+     * actual frame delivery.
      * Return:
      *  true To continue thread loop (this method will be called again), or false
      *  to exit the thread loop and to terminate the thread.
@@ -298,9 +339,19 @@ protected:
                 }
             }
 
-            /* Starts the thread */
-            inline status_t startThread()
+            /* Starts the thread
+             * Param:
+             *  one_burst - Controls how many times thread loop should run. If
+             *      this parameter is 'true', thread routine will run only once
+             *      If this parameter is 'false', thread routine will run until
+             *      stopThread method is called. See startWorkerThread for more
+             *      info.
+             * Return:
+             *  NO_ERROR on success, or an appropriate error status.
+             */
+            inline status_t startThread(bool one_burst)
             {
+                mOneBurst = one_burst;
                 return run(NULL, ANDROID_PRIORITY_URGENT_DISPLAY, 0);
             }
 
@@ -343,10 +394,15 @@ protected:
 
         private:
             /* Implements abstract method of the base Thread class. */
-            inline bool threadLoop()
+            bool threadLoop()
             {
                 /* Simply dispatch the call to the containing camera device. */
-                return mCameraDevice->inWorkerThread();
+                if (mCameraDevice->inWorkerThread()) {
+                    /* Respect "one burst" parameter (see startThread). */
+                    return !mOneBurst;
+                } else {
+                    return false;
+                }
             }
 
             /* Containing camera device object. */
@@ -357,6 +413,10 @@ protected:
 
             /* FD that thread uses to receive control messages. */
             int                     mControlFD;
+
+            /* Controls number of times the thread loop runs.
+             * See startThread for more information. */
+            bool                    mOneBurst;
 
             /* Enumerates control messages that can be sent into the thread. */
             enum ControlMessage {
@@ -426,8 +486,8 @@ protected:
         ECDS_INITIALIZED,
         /* Object has been connected to the physical device. */
         ECDS_CONNECTED,
-        /* Frames are being captured. */
-        ECDS_CAPTURING,
+        /* Camera device has been started. */
+        ECDS_STARTED,
     };
 
     /* Object state. */

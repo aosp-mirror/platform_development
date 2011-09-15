@@ -45,11 +45,7 @@ public:
      ***************************************************************************/
 
 public:
-    /* Initializes EmulatedFakeCamera instance.
-     * The contained EmulatedFakeCameraDevice will be initialized in this method.
-     * Return:
-     *  NO_ERROR on success, or an appropriate error statsu on failure.
-     */
+    /* Initializes EmulatedFakeCamera instance. */
      status_t Initialize();
 
     /****************************************************************************

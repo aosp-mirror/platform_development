@@ -42,11 +42,7 @@ public:
      **************************************************************************/
 
 public:
-    /* Initializes EmulatedQemuCamera instance.
-     * The contained EmulatedQemuCameraDevice will be initialized in this method.
-     * Return:
-     *  NO_ERROR on success, or an appropriate error status.
-     */
+    /* Initializes EmulatedQemuCamera instance. */
      status_t Initialize(const char* device_name, const char* frame_dims);
 
     /***************************************************************************

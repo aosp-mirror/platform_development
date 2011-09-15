@@ -57,7 +57,9 @@ namespace android {
  *  - '=' are allowed only to divide parameter names from parameter values.
  *
  * Emulator replies to each query in two chunks:
- * - 4 bytes encoding the payload size
+ * - 8 bytes encoding the payload size as a string containing hexadecimal
+ *   representation of the payload size value. This is done in order to simplify
+ *   dealing with different endianness on the host, and on the guest.
  * - Payload, whose size is defined by the first chunk.
  *
  * Every payload always begins with two characters, encoding the result of the
@@ -66,7 +68,9 @@ namespace android {
  *  - 'ko' Encoding a failure.
  * After that payload may have optional data. If payload has more data following
  * the query result, there is a ':' character separating them. If payload carries
- * only the result, it always ends with a zero-terminator.
+ * only the result, it always ends with a zero-terminator. So, payload 'ok'/'ko'
+ * prefix is always 3 bytes long: it either includes a zero-terminator, if there
+ * is no data, or a ':' separator.
  */
 class QemuQuery {
 public:
@@ -81,7 +85,7 @@ public:
      */
     explicit QemuQuery(const char* query_string);
 
-    /* Constructs and initializes QemuQuery instance for a query.
+    /* Constructs and initializes QemuQuery instance for a query with parameters.
      * Param:
      *  query_name - Query name.
      *  query_param - Query parameters. Can be NULL.
@@ -96,7 +100,8 @@ public:
      ***************************************************************************/
 
     /* Creates new query.
-     * This method will reset this instance prior to creating a new query.
+     * Note: this method will reset this instance prior to creating a new query
+     * in order to discard possible "leftovers" from the previous query.
      * Param:
      *  query_name - Query name.
      *  query_param - Query parameters. Can be NULL.
@@ -108,19 +113,19 @@ public:
     /* Completes the query after a reply from the emulator.
      * This method will parse the reply buffer, and calculate the final query
      * status, which depends not only on the transport success / failure, but
-     * also on 'ok' / 'ko' in the query reply.
+     * also on 'ok' / 'ko' in the reply buffer.
      * Param:
      *  status - Query delivery status. This status doesn't necessarily reflects
-     *  the final query status (which is defined by 'ok'/'ko' in the reply buffer).
-     *  This status simply states whether or not the query has been sent, and a
-     *  reply has been received successfuly. However, if status indicates a
-     *  failure, the entire query has failed. If status indicates a success, the
-     *  reply will be checked here to calculate the final query status.
+     *      the final query status (which is defined by 'ok'/'ko' prefix in the
+     *      reply buffer). This status simply states whether or not the query has
+     *      been sent, and a reply has been received successfuly. However, if
+     *      this status indicates a failure, it means that the entire query has
+     *      failed.
      * Return:
      *  NO_ERROR on success, or an appropriate error status on failure. Note that
      *  status returned here just signals whether or not the method has succeeded.
-     *  Use isQuerySucceeded() / getCompletionStatus() methods to check the final
-     *  query status.
+     *  Use isQuerySucceeded() / getCompletionStatus() methods of this class to
+     *  check the final query status.
      */
     status_t completeQuery(status_t status);
 
@@ -132,19 +137,26 @@ public:
      * class has been executed.
      */
     inline bool isQuerySucceeded() const {
-        return mQueryStatus == NO_ERROR && mReplyStatus != 0;
+        return mQueryDeliveryStatus == NO_ERROR && mReplyStatus != 0;
     }
 
     /* Gets final completion status of the query.
      * Note that this method must be called after completeQuery() method of this
      * class has been executed.
-     *  NO_ERROR on success, or an appropriate error status on failure.
+     * Return:
+     *  NO_ERROR if query has succeeded, or an appropriate error status on query
+     *  failure.
      */
     inline status_t getCompletionStatus() const {
-        if (isQuerySucceeded()) {
-            return NO_ERROR;
+        if (mQueryDeliveryStatus == NO_ERROR) {
+            if (mReplyStatus) {
+                return NO_ERROR;
+            } else {
+                return EINVAL;
+            }
+        } else {
+            return mQueryDeliveryStatus;
         }
-        return (mQueryStatus != NO_ERROR) ? mQueryStatus : EINVAL;
     }
 
     /****************************************************************************
@@ -154,8 +166,8 @@ public:
 public:
     /* Query string. */
     char*       mQuery;
-    /* Query status. */
-    status_t    mQueryStatus;
+    /* Query delivery status. */
+    status_t    mQueryDeliveryStatus;
     /* Reply buffer */
     char*       mReplyBuffer;
     /* Reply data (past 'ok'/'ko'). If NULL, there were no data in reply. */
@@ -208,7 +220,7 @@ public:
      *      the 'factory' service, while connection with parameters means
      *      connection to an 'emulated camera' service, where camera is identified
      *      by one of the connection parameters. So, passing NULL, or an empty
-     *      string to this method will establish connection with a 'factory'
+     *      string to this method will establish a connection with the 'factory'
      *      service, while not empty string passed here will establish connection
      *      with an 'emulated camera' service. Parameters defining the emulated
      *      camera must be formatted as such:
@@ -216,10 +228,10 @@ public:
      *          "name=<device name> [inp_channel=<input channel #>]",
      *
      *      where 'device name' is a required parameter defining name of the
-     *      camera device, 'input channel' is an optional parameter (positive
-     *      integer), defining input channel to use on the camera device. Note
-     *      that device name passed here must have been previously obtained from
-     *      the factory service.
+     *      camera device, and 'input channel' is an optional parameter (positive
+     *      integer), defining the input channel to use on the camera device.
+     *      Note that device name passed here must have been previously obtained
+     *      from the factory service using 'list' query.
      * Return:
      *  NO_ERROR on success, or an appropriate error status.
      */
@@ -259,11 +271,11 @@ public:
      * Return:
      *  NO_ERROR on success, or an appropriate error status on failure. Note that
      *  status returned here is not the final query status. Use isQuerySucceeded(),
-     *  or getCompletionStatus() method on the query to see if it has succeeded.
-     *  However, if this method returns a failure, it means that the query has
-     *  failed, and there is no guarantee that its data members are properly
-     *  initialized (except for the 'mQueryStatus', which is always in the
-     *  proper state).
+     *  or getCompletionStatus() method on the query object to see if it has
+     *  succeeded. However, if this method returns a failure, it means that the
+     *  query has failed, and there is no guarantee that its data members are
+     *  properly initialized (except for the 'mQueryDeliveryStatus', which is
+     *  always in the proper state).
      */
     virtual status_t doQuery(QemuQuery* query);
 
@@ -300,25 +312,26 @@ public:
 public:
     /* Lists camera devices connected to the host.
      * Param:
-     *  list - Upon success contains list of cameras connected to the host. The
+     *  list - Upon success contains a list of cameras connected to the host. The
      *      list returned here is represented as a string, containing multiple
-     *      lines, separated with '\n', where each line represents a camera. Each
+     *      lines separated with '\n', where each line represents a camera. Each
      *      camera line is formatted as such:
      *
      *          "name=<device name> channel=<num> pix=<num> framedims=<dimensions>\n"
      *
      *      Where:
-     *      - 'name' is the name of camera device attached to the host. This name
-     *        must be used for subsequent connection to the 'emulated camera'
+     *      - 'name' is the name of the camera device attached to the host. This
+     *        name must be used for subsequent connection to the 'emulated camera'
      *        service for that camera.
      *      - 'channel' - input channel number (positive int) to use to communicate
      *        with the camera.
-     *      - 'pix' - pixel format (a "fourcc" int), chosen for the video frames.
+     *      - 'pix' - pixel format (a "fourcc" uint), chosen for the video frames
+     *        by the camera service.
      *      - 'framedims' contains a list of frame dimensions supported by the
-     *        camera. Each etry in the list is in form '<width>x<height>', where
-     *        'width' and 'height' are numeric values for width and height of a
-     *        supported frame dimension. Entries in this list are separated with
-     *        ','.
+     *        camera for the chosen pixel format. Each etry in the list is in form
+     *        '<width>x<height>', where 'width' and 'height' are numeric values
+     *        for width and height of a supported frame dimension. Entries in
+     *        this list are separated with ',' with no spaces between the entries.
      * Return:
      *  NO_ERROR on success, or an appropriate error status on failure.
      */

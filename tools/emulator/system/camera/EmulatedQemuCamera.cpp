@@ -84,7 +84,7 @@ status_t EmulatedQemuCamera::Initialize(const char* device_name,
     if (c == NULL) {
         strncpy(first_dim, frame_dims, sizeof(first_dim));
         first_dim[sizeof(first_dim)-1] = '\0';
-    } else if ((c - frame_dims) < sizeof(first_dim)) {
+    } else if (static_cast<size_t>(c - frame_dims) < sizeof(first_dim)) {
         memcpy(first_dim, frame_dims, c - frame_dims);
         first_dim[c - frame_dims] = '\0';
     } else {

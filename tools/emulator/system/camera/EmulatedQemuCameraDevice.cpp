@@ -82,16 +82,20 @@ status_t EmulatedQemuCameraDevice::connectDevice()
         return EINVAL;
     }
     if (isConnected()) {
-        LOGW("%s: Qemu camera device is already connected.", __FUNCTION__);
+        LOGW("%s: Qemu camera device '%s' is already connected.",
+             __FUNCTION__, (const char*)mDeviceName);
         return NO_ERROR;
     }
 
+    /* Connect to the camera device via emulator. */
     const status_t res = mQemuClient.queryConnect();
     if (res == NO_ERROR) {
-        LOGV("%s: Connected", __FUNCTION__);
+        LOGV("%s: Connected to device '%s'",
+             __FUNCTION__, (const char*)mDeviceName);
         mState = ECDS_CONNECTED;
     } else {
-        LOGE("%s: Connection failed", __FUNCTION__);
+        LOGE("%s: Connection to device '%s' failed",
+             __FUNCTION__, (const char*)mDeviceName);
     }
 
     return res;
@@ -103,62 +107,76 @@ status_t EmulatedQemuCameraDevice::disconnectDevice()
 
     Mutex::Autolock locker(&mObjectLock);
     if (!isConnected()) {
-        LOGW("%s: Qemu camera device is already disconnected.", __FUNCTION__);
+        LOGW("%s: Qemu camera device '%s' is already disconnected.",
+             __FUNCTION__, (const char*)mDeviceName);
         return NO_ERROR;
     }
-    if (isCapturing()) {
-        LOGE("%s: Cannot disconnect while in the capturing state.", __FUNCTION__);
+    if (isStarted()) {
+        LOGE("%s: Cannot disconnect from the started device '%s.",
+             __FUNCTION__, (const char*)mDeviceName);
         return EINVAL;
     }
 
+    /* Disconnect from the camera device via emulator. */
     const status_t res = mQemuClient.queryDisconnect();
     if (res == NO_ERROR) {
-        LOGV("%s: Disonnected", __FUNCTION__);
+        LOGV("%s: Disonnected from device '%s'",
+             __FUNCTION__, (const char*)mDeviceName);
         mState = ECDS_INITIALIZED;
     } else {
-        LOGE("%s: Disconnection failed", __FUNCTION__);
+        LOGE("%s: Disconnection from device '%s' failed",
+             __FUNCTION__, (const char*)mDeviceName);
     }
 
     return res;
 }
 
-status_t EmulatedQemuCameraDevice::startDevice()
+status_t EmulatedQemuCameraDevice::startDevice(int width,
+                                               int height,
+                                               uint32_t pix_fmt)
 {
     LOGV("%s", __FUNCTION__);
 
+    Mutex::Autolock locker(&mObjectLock);
     if (!isConnected()) {
-        LOGE("%s: Qemu camera device is not connected.", __FUNCTION__);
+        LOGE("%s: Qemu camera device '%s' is not connected.",
+             __FUNCTION__, (const char*)mDeviceName);
         return EINVAL;
     }
-    if (isCapturing()) {
-        LOGW("%s: Qemu camera device is already capturing.", __FUNCTION__);
+    if (isStarted()) {
+        LOGW("%s: Qemu camera device '%s' is already started.",
+             __FUNCTION__, (const char*)mDeviceName);
         return NO_ERROR;
+    }
+
+    status_t res = EmulatedCameraDevice::commonStartDevice(width, height, pix_fmt);
+    if (res != NO_ERROR) {
+        LOGE("%s: commonStartDevice failed", __FUNCTION__);
+        return res;
     }
 
     /* Allocate preview frame buffer. */
     /* TODO: Watch out for preview format changes! At this point we implement
      * RGB32 only.*/
-    mPreviewFrame = new uint16_t[mTotalPixels * 4];
+    mPreviewFrame = new uint32_t[mTotalPixels];
     if (mPreviewFrame == NULL) {
         LOGE("%s: Unable to allocate %d bytes for preview frame",
-             __FUNCTION__, mTotalPixels * 4);
+             __FUNCTION__, mTotalPixels);
         return ENOMEM;
     }
-    memset(mPreviewFrame, 0, mTotalPixels * 4);
 
     /* Start the actual camera device. */
-    status_t res =
-        mQemuClient.queryStart(mPixelFormat, mFrameWidth, mFrameHeight);
+    res = mQemuClient.queryStart(mPixelFormat, mFrameWidth, mFrameHeight);
     if (res == NO_ERROR) {
-        /* Start the worker thread. */
-        res = startWorkerThread();
-        if (res == NO_ERROR) {
-            mState = ECDS_CAPTURING;
-        } else {
-            mQemuClient.queryStop();
-        }
+        LOGV("%s: Qemu camera device '%s' is started for %.4s[%dx%d] frames",
+             __FUNCTION__, (const char*)mDeviceName,
+             reinterpret_cast<const char*>(&mPixelFormat),
+             mFrameWidth, mFrameHeight);
+        mState = ECDS_STARTED;
     } else {
-        LOGE("%s: Start failed", __FUNCTION__);
+        LOGE("%s: Unable to start device '%s' for %.4s[%dx%d] frames",
+             __FUNCTION__, (const char*)mDeviceName,
+             reinterpret_cast<const char*>(&pix_fmt), width, height);
     }
 
     return res;
@@ -168,28 +186,27 @@ status_t EmulatedQemuCameraDevice::stopDevice()
 {
     LOGV("%s", __FUNCTION__);
 
-    if (!isCapturing()) {
-        LOGW("%s: Qemu camera device is not capturing.", __FUNCTION__);
+    Mutex::Autolock locker(&mObjectLock);
+    if (!isStarted()) {
+        LOGW("%s: Qemu camera device '%s' is not started.",
+             __FUNCTION__, (const char*)mDeviceName);
         return NO_ERROR;
     }
 
-    /* Stop the worker thread first. */
-    status_t res = stopWorkerThread();
+    /* Stop the actual camera device. */
+    status_t res = mQemuClient.queryStop();
     if (res == NO_ERROR) {
-        /* Stop the actual camera device. */
-        res = mQemuClient.queryStop();
-        if (res == NO_ERROR) {
-            if (mPreviewFrame == NULL) {
-                delete[] mPreviewFrame;
-                mPreviewFrame = NULL;
-            }
-            mState = ECDS_CONNECTED;
-            LOGV("%s: Stopped", __FUNCTION__);
-        } else {
-            LOGE("%s: Stop failed", __FUNCTION__);
+        if (mPreviewFrame == NULL) {
+            delete[] mPreviewFrame;
+            mPreviewFrame = NULL;
         }
+        EmulatedCameraDevice::commonStopDevice();
+        mState = ECDS_CONNECTED;
+        LOGV("%s: Qemu camera device '%s' is stopped",
+             __FUNCTION__, (const char*)mDeviceName);
     } else {
-        LOGE("%s: Unable to stop worker thread", __FUNCTION__);
+        LOGE("%s: Unable to stop device '%s'",
+             __FUNCTION__, (const char*)mDeviceName);
     }
 
     return res;

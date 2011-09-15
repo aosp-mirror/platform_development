@@ -36,7 +36,8 @@ EmulatedFakeCameraDevice::EmulatedFakeCameraDevice(EmulatedFakeCamera* camera_ha
       mBlueYUV(kBlue8),
       mCheckX(0),
       mCheckY(0),
-      mCcounter(0)
+      mCcounter(0),
+      mLastRedrawn(0)
 {
 }
 
@@ -62,6 +63,7 @@ status_t EmulatedFakeCameraDevice::connectDevice()
         return NO_ERROR;
     }
 
+    /* There is no device to connect to. */
     mState = ECDS_CONNECTED;
 
     return NO_ERROR;
@@ -76,57 +78,62 @@ status_t EmulatedFakeCameraDevice::disconnectDevice()
         LOGW("%s: Fake camera device is already disconnected.", __FUNCTION__);
         return NO_ERROR;
     }
-    if (isCapturing()) {
-        LOGE("%s: Cannot disconnect while in the capturing state.", __FUNCTION__);
+    if (isStarted()) {
+        LOGE("%s: Cannot disconnect from the started device.", __FUNCTION__);
         return EINVAL;
     }
 
+    /* There is no device to disconnect from. */
     mState = ECDS_INITIALIZED;
 
     return NO_ERROR;
 }
 
-status_t EmulatedFakeCameraDevice::startDevice()
+status_t EmulatedFakeCameraDevice::startDevice(int width,
+                                               int height,
+                                               uint32_t pix_fmt)
 {
     LOGV("%s", __FUNCTION__);
 
+    Mutex::Autolock locker(&mObjectLock);
     if (!isConnected()) {
         LOGE("%s: Fake camera device is not connected.", __FUNCTION__);
         return EINVAL;
     }
-    if (isCapturing()) {
-        LOGW("%s: Fake camera device is already capturing.", __FUNCTION__);
-        return NO_ERROR;
+    if (isStarted()) {
+        LOGE("%s: Fake camera device is already started.", __FUNCTION__);
+        return EINVAL;
     }
 
-    /* Used in calculating U/V position when drawing the square. */
-    mHalfWidth = mFrameWidth / 2;
-
-    /* Just start the worker thread: there is no real device to deal with. */
-    const status_t ret = startWorkerThread();
-    if (ret == NO_ERROR) {
-        mState = ECDS_CAPTURING;
+    /* Initialize the base class. */
+    const status_t res =
+        EmulatedCameraDevice::commonStartDevice(width, height, pix_fmt);
+    if (res == NO_ERROR) {
+        /* Used in calculating U/V position when drawing the square. */
+        mHalfWidth = mFrameWidth / 2;
+        mState = ECDS_STARTED;
+    } else {
+        LOGE("%s: commonStartDevice failed", __FUNCTION__);
     }
 
-    return ret;
+    return res;
 }
 
 status_t EmulatedFakeCameraDevice::stopDevice()
 {
     LOGV("%s", __FUNCTION__);
 
-    if (!isCapturing()) {
-        LOGW("%s: Fake camera device is not capturing.", __FUNCTION__);
+    Mutex::Autolock locker(&mObjectLock);
+    if (!isStarted()) {
+        LOGW("%s: Fake camera device is not started.", __FUNCTION__);
         return NO_ERROR;
     }
 
-    /* Just stop the worker thread: there is no real device to deal with. */
-    const status_t ret = stopWorkerThread();
-    if (ret == NO_ERROR) {
-        mState = ECDS_CONNECTED;
-    }
+    mHalfWidth = 0;
+    EmulatedCameraDevice::commonStopDevice();
+    mState = ECDS_CONNECTED;
 
-    return ret;
+    return NO_ERROR;
 }
 
 /****************************************************************************
@@ -144,7 +151,7 @@ bool EmulatedFakeCameraDevice::inWorkerThread()
     }
 
     /* Lets see if we need to generate a new frame. */
-    if ((systemTime(SYSTEM_TIME_MONOTONIC) - mCurFrameTimestamp) >= mRedrawAfter) {
+    if ((systemTime(SYSTEM_TIME_MONOTONIC) - mLastRedrawn) >= mRedrawAfter) {
         /*
          * Time to generate a new frame.
          */
@@ -161,6 +168,7 @@ bool EmulatedFakeCameraDevice::inWorkerThread()
         drawSquare(x * size / 32, y * size / 32, (size * 5) >> 1,
                    (mCcounter & 0x100) ? &mRedYUV : &mGreenYUV);
         mCcounter++;
+        mLastRedrawn = systemTime(SYSTEM_TIME_MONOTONIC);
     }
 
     /* Timestamp the current frame, and notify the camera HAL about new frame. */

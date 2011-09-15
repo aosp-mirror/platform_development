@@ -455,14 +455,63 @@ status_t EmulatedCamera::doStartPreview()
     LOGV("%s", __FUNCTION__);
 
     status_t res = mPreviewWindow.startPreview();
+    if (res != NO_ERROR) {
+        return res;
+    }
+    if (getCameraDevice()->isStarted()) {
+        return NO_ERROR;
+    }
 
-    /* Start the camera. */
-    if (res == NO_ERROR && !getCameraDevice()->isCapturing()) {
-        res = startCamera();
+    EmulatedCameraDevice* camera_dev = getCameraDevice();
+
+    /* Make sure camera device is connected. */
+    if (!camera_dev->isConnected()) {
+        res = camera_dev->connectDevice();
         if (res != NO_ERROR) {
-            /* If camera didn't start, disable the preview window. */
             mPreviewWindow.stopPreview();
+            return res;
         }
+    }
+
+    int width, height;
+    /* Lets see what should we use for frame width, and height. */
+    if (mParameters.get(CameraParameters::KEY_VIDEO_SIZE) != NULL) {
+        mParameters.getVideoSize(&width, &height);
+    } else {
+        mParameters.getPreviewSize(&width, &height);
+    }
+    /* Lets see what should we use for the frame pixel format. */
+    const char* pix_fmt =
+        mParameters.get(CameraParameters::KEY_VIDEO_FRAME_FORMAT);
+    if (pix_fmt == NULL) {
+        pix_fmt = mParameters.getPreviewFormat();
+    }
+    if (pix_fmt == NULL) {
+        LOGE("%s: Unable to obtain video format", __FUNCTION__);
+        mPreviewWindow.stopPreview();
+        return EINVAL;
+    }
+    uint32_t org_fmt;
+    if (strcmp(pix_fmt, CameraParameters::PIXEL_FORMAT_YUV420P) == 0) {
+        org_fmt = V4L2_PIX_FMT_YVU420;
+    } else if (strcmp(pix_fmt, CameraParameters::PIXEL_FORMAT_RGBA8888) == 0) {
+        org_fmt = V4L2_PIX_FMT_RGB32;
+    } else {
+        LOGE("%s: Unsupported pixel format %s", __FUNCTION__, pix_fmt);
+        mPreviewWindow.stopPreview();
+        return EINVAL;
+    }
+    LOGD("Starting camera: %dx%d -> %s", width, height, pix_fmt);
+    res = camera_dev->startDevice(width, height, org_fmt);
+    if (res != NO_ERROR) {
+        mPreviewWindow.stopPreview();
+        return res;
+    }
+
+    res = camera_dev->startDeliveringFrames(false);
+    if (res != NO_ERROR) {
+        camera_dev->stopDevice();
+        mPreviewWindow.stopPreview();
     }
 
     return res;
@@ -474,8 +523,9 @@ status_t EmulatedCamera::doStopPreview()
 
     status_t res = NO_ERROR;
     /* Stop the camera. */
-    if (getCameraDevice()->isCapturing()) {
-        res = stopCamera();
+    if (getCameraDevice()->isStarted()) {
+        getCameraDevice()->stopDeliveringFrames();
+        res = getCameraDevice()->stopDevice();
     }
 
     if (res == NO_ERROR) {
@@ -485,76 +535,6 @@ status_t EmulatedCamera::doStopPreview()
 
     return NO_ERROR;
 }
-
-status_t EmulatedCamera::startCamera()
-{
-    LOGV("%s", __FUNCTION__);
-
-    status_t res = EINVAL;
-    EmulatedCameraDevice* camera_dev = getCameraDevice();
-    if (camera_dev != NULL) {
-        if (!camera_dev->isConnected()) {
-            res = camera_dev->connectDevice();
-            if (res != NO_ERROR) {
-                return res;
-            }
-        }
-        if (!camera_dev->isCapturing()) {
-            int width, height;
-            /* Lets see what should we use for frame width, and height. */
-            if (mParameters.get(CameraParameters::KEY_VIDEO_SIZE) != NULL) {
-                mParameters.getVideoSize(&width, &height);
-            } else {
-                mParameters.getPreviewSize(&width, &height);
-            }
-            /* Lets see what should we use for the frame pixel format. */
-            const char* pix_fmt =
-                mParameters.get(CameraParameters::KEY_VIDEO_FRAME_FORMAT);
-            if (pix_fmt == NULL) {
-                pix_fmt = mParameters.getPreviewFormat();
-            }
-            if (pix_fmt == NULL) {
-                LOGE("%s: Unable to obtain video format", __FUNCTION__);
-                return EINVAL;
-            }
-            uint32_t org_fmt;
-            if (strcmp(pix_fmt, CameraParameters::PIXEL_FORMAT_YUV420P) == 0) {
-                org_fmt = V4L2_PIX_FMT_YVU420;
-            } else if (strcmp(pix_fmt, CameraParameters::PIXEL_FORMAT_RGBA8888) == 0) {
-                org_fmt = V4L2_PIX_FMT_RGB32;
-            } else {
-                LOGE("%s: Unsupported pixel format %s", __FUNCTION__, pix_fmt);
-                return EINVAL;
-            }
-            LOGD("Starting camera: %dx%d -> %s", width, height, pix_fmt);
-            res = camera_dev->startCapturing(width, height, org_fmt);
-            if (res != NO_ERROR) {
-                return res;
-            }
-        }
-    }
-
-    return res;
-}
-
-status_t EmulatedCamera::stopCamera()
-{
-    LOGV("%s", __FUNCTION__);
-
-    status_t res = NO_ERROR;
-    EmulatedCameraDevice* const camera_dev = getCameraDevice();
-    if (camera_dev != NULL) {
-        if (camera_dev->isCapturing()) {
-            res = camera_dev->stopCapturing();
-            if (res != NO_ERROR) {
-                return res;
-            }
-        }
-    }
-
-    return res;
-}
-
 
 /****************************************************************************
  * Private API.
@@ -573,8 +553,9 @@ status_t EmulatedCamera::cleanupCamera()
     /* Stop and disconnect the camera device. */
     EmulatedCameraDevice* const camera_dev = getCameraDevice();
     if (camera_dev != NULL) {
-        if (camera_dev->isCapturing()) {
-            res = camera_dev->stopCapturing();
+        if (camera_dev->isStarted()) {
+            camera_dev->stopDeliveringFrames();
+            res = camera_dev->stopDevice();
             if (res != NO_ERROR) {
                 return -res;
             }

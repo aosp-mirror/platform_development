@@ -72,13 +72,67 @@ status_t EmulatedCameraDevice::Initialize()
     return NO_ERROR;
 }
 
-status_t EmulatedCameraDevice::startCapturing(int width,
-                                              int height,
-                                              uint32_t pix_fmt)
+status_t EmulatedCameraDevice::startDeliveringFrames(bool one_burst)
 {
     LOGV("%s", __FUNCTION__);
 
-    Mutex::Autolock locker(&mObjectLock);
+    if (!isStarted()) {
+        LOGE("%s: Device is not started", __FUNCTION__);
+        return EINVAL;
+    }
+
+    /* Frames will be delivered from the thread routine. */
+    const status_t res = startWorkerThread(one_burst);
+    LOGE_IF(res != NO_ERROR, "%s: startWorkerThread failed", __FUNCTION__);
+    return res;
+}
+
+status_t EmulatedCameraDevice::stopDeliveringFrames()
+{
+    LOGV("%s", __FUNCTION__);
+
+    if (!isStarted()) {
+        LOGW("%s: Device is not started", __FUNCTION__);
+        return NO_ERROR;
+    }
+
+    const status_t res = stopWorkerThread();
+    LOGE_IF(res != NO_ERROR, "%s: startWorkerThread failed", __FUNCTION__);
+    return res;
+}
+
+status_t EmulatedCameraDevice::getCurrentPreviewFrame(void* buffer)
+{
+    if (!isStarted()) {
+        LOGE("%s: Device is not started", __FUNCTION__);
+        return EINVAL;
+    }
+    if (mCurrentFrame == NULL || buffer == NULL) {
+        LOGE("%s: No framebuffer", __FUNCTION__);
+        return EINVAL;
+    }
+
+    /* In emulation the framebuffer is never RGB. */
+    switch (mPixelFormat) {
+        case V4L2_PIX_FMT_YVU420:
+            YV12ToRGB32(mCurrentFrame, buffer, mFrameWidth, mFrameHeight);
+            return NO_ERROR;
+
+        default:
+            LOGE("%s: Unknown pixel format %.4s",
+                 __FUNCTION__, reinterpret_cast<const char*>(&mPixelFormat));
+            return EINVAL;
+    }
+}
+
+/****************************************************************************
+ * Emulated camera device private API
+ ***************************************************************************/
+
+status_t EmulatedCameraDevice::commonStartDevice(int width,
+                                                 int height,
+                                                 uint32_t pix_fmt)
+{
     /* Validate pixel format, and calculate framebuffer size at the same time. */
     switch (pix_fmt) {
         case V4L2_PIX_FMT_YVU420:
@@ -107,82 +161,26 @@ status_t EmulatedCameraDevice::startCapturing(int width,
     mFrameU = mCurrentFrame + mTotalPixels;
     mFrameV = mFrameU + mTotalPixels / 4;
 
-    /* Start the camera. */
-    const status_t res = startDevice();
-    if (res == NO_ERROR) {
-        LOGD("Camera device is started:\n"
-             "      Framebuffer dimensions: %dx%d.\n"
-             "      Pixel format: %.4s",
-             mFrameWidth, mFrameHeight,
-             reinterpret_cast<const char*>(&mPixelFormat));
-    } else {
-        delete[] mCurrentFrame;
-        mCurrentFrame = NULL;
-    }
-
-    return res;
-}
-
-status_t EmulatedCameraDevice::stopCapturing()
-{
-    LOGV("%s", __FUNCTION__);
-
-    Mutex::Autolock locker(&mObjectLock);
-    /* Stop the camera. */
-    const status_t res = stopDevice();
-    if (res == NO_ERROR) {
-        /* Release resources allocated for capturing. */
-        if (mCurrentFrame != NULL) {
-            delete[] mCurrentFrame;
-            mCurrentFrame = NULL;
-        }
-    }
-
-    return res;
-}
-
-status_t EmulatedCameraDevice::getCurrentFrame(void* buffer)
-{
-    Mutex::Autolock locker(&mObjectLock);
-
-    if (!isCapturing() || mCurrentFrame == NULL) {
-        LOGE("%s is called on a device that is not in the capturing state",
-            __FUNCTION__);
-        return EINVAL;
-    }
-
-    memcpy(buffer, mCurrentFrame, mFrameBufferSize);
-
     return NO_ERROR;
 }
 
-status_t EmulatedCameraDevice::getCurrentPreviewFrame(void* buffer)
+void EmulatedCameraDevice::commonStopDevice()
 {
-    Mutex::Autolock locker(&mObjectLock);
+    mFrameWidth = mFrameHeight = mTotalPixels = 0;
+    mPixelFormat = 0;
 
-    if (!isCapturing() || mCurrentFrame == NULL) {
-        LOGE("%s is called on a device that is not in the capturing state",
-            __FUNCTION__);
-        return EINVAL;
+    if (mCurrentFrame != NULL) {
+        delete[] mCurrentFrame;
+        mCurrentFrame = NULL;
     }
-
-    /* In emulation the framebuffer is never RGB. */
-    switch (mPixelFormat) {
-        case V4L2_PIX_FMT_YVU420:
-            YV12ToRGB32(mCurrentFrame, buffer, mFrameWidth, mFrameHeight);
-            return NO_ERROR;
-
-        default:
-            LOGE("%s: Unknown pixel format %d", __FUNCTION__, mPixelFormat);
-            return EINVAL;
-    }
+    mFrameU = mFrameV = NULL;
 }
 
 /****************************************************************************
  * Worker thread management.
  ***************************************************************************/
 
-status_t EmulatedCameraDevice::startWorkerThread()
+status_t EmulatedCameraDevice::startWorkerThread(bool one_burst)
 {
     LOGV("%s", __FUNCTION__);
 
@@ -191,11 +189,9 @@ status_t EmulatedCameraDevice::startWorkerThread()
         return EINVAL;
     }
 
-    const status_t ret = getWorkerThread()->startThread();
-    LOGE_IF(ret != NO_ERROR, "%s: Unable to start worker thread: %d -> %s",
-            __FUNCTION__, ret, strerror(ret));
-
-    return ret;
+    const status_t res = getWorkerThread()->startThread(one_burst);
+    LOGE_IF(res != NO_ERROR, "%s: Unable to start worker thread", __FUNCTION__);
+    return res;
 }
 
 status_t EmulatedCameraDevice::stopWorkerThread()
@@ -207,14 +203,15 @@ status_t EmulatedCameraDevice::stopWorkerThread()
         return EINVAL;
     }
 
-    getWorkerThread()->stopThread();
-
-    return NO_ERROR;
+    const status_t res = getWorkerThread()->stopThread();
+    LOGE_IF(res != NO_ERROR, "%s: Unable to stop worker thread", __FUNCTION__);
+    return res;
 }
 
 bool EmulatedCameraDevice::inWorkerThread()
 {
-    /* This will end the thread loop, and will terminate the thread. */
+    /* This will end the thread loop, and will terminate the thread. Derived
+     * classes must override this method. */
     return false;
 }
 
@@ -268,10 +265,10 @@ status_t EmulatedCameraDevice::WorkerThread::stopThread()
                 LOGV("Emulated camera device's worker thread has been stopped.");
             } else {
                 LOGE("%s: requestExitAndWait failed: %d -> %s",
-                     __FUNCTION__, res, strerror(res));
+                     __FUNCTION__, res, strerror(-res));
             }
         } else {
-            LOGE("%s: Unable to send THREAD_STOP: %d -> %s",
+            LOGE("%s: Unable to send THREAD_STOP message: %d -> %s",
                  __FUNCTION__, errno, strerror(errno));
             res = errno ? errno : EINVAL;
         }
