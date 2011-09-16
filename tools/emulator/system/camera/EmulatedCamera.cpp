@@ -125,8 +125,8 @@ status_t EmulatedCamera::Initialize()
     mParameters.set(CameraParameters::KEY_VIDEO_FRAME_FORMAT,
                     CameraParameters::PIXEL_FORMAT_YUV420P);
     mParameters.set(CameraParameters::KEY_SUPPORTED_PICTURE_FORMATS,
-                    CameraParameters::PIXEL_FORMAT_YUV420P);
-    mParameters.setPictureFormat(CameraParameters::PIXEL_FORMAT_YUV420P);
+                    CameraParameters::PIXEL_FORMAT_JPEG);
+    mParameters.setPictureFormat(CameraParameters::PIXEL_FORMAT_JPEG);
 
     /*
      * Not supported features
@@ -302,22 +302,71 @@ status_t EmulatedCamera::takePicture()
 {
     LOGV("%s", __FUNCTION__);
 
+    status_t res;
+    int width, height;
+    uint32_t org_fmt;
+
+    /* Collect frame info for the picture. */
+    mParameters.getPictureSize(&width, &height);
+    const char* pix_fmt = mParameters.getPictureFormat();
+    if (strcmp(pix_fmt, CameraParameters::PIXEL_FORMAT_YUV420P) == 0) {
+        org_fmt = V4L2_PIX_FMT_YUV420;
+    } else if (strcmp(pix_fmt, CameraParameters::PIXEL_FORMAT_RGBA8888) == 0) {
+        org_fmt = V4L2_PIX_FMT_RGB32;
+    } else if (strcmp(pix_fmt, CameraParameters::PIXEL_FORMAT_YUV420SP) == 0) {
+        org_fmt = V4L2_PIX_FMT_NV21;
+    } else if (strcmp(pix_fmt, CameraParameters::PIXEL_FORMAT_JPEG) == 0) {
+        /* We only have JPEG converted for NV21 format. */
+        org_fmt = V4L2_PIX_FMT_NV21;
+    } else {
+        LOGE("%s: Unsupported pixel format %s", __FUNCTION__, pix_fmt);
+        return EINVAL;
+    }
+
     /*
-     * Before taking picture, pause the camera (pause worker thread), and pause
-     * the preview.
+     * Make sure preview is not running, and device is stopped before taking
+     * picture.
      */
+
+    const bool preview_on = mPreviewWindow.isPreviewEnabled();
+    if (preview_on) {
+        doStopPreview();
+    }
+
+    /* Camera device should have been stopped when the shutter message has been
+     * enabled. */
+    EmulatedCameraDevice* const camera_dev = getCameraDevice();
+    if (camera_dev->isStarted()) {
+        LOGW("%s: Camera device is started", __FUNCTION__);
+        camera_dev->stopDeliveringFrames();
+        camera_dev->stopDevice();
+    }
 
     /*
      * Take the picture now.
      */
 
-    /*
-     * After picture has been taken, resume the preview, and the camera (if any
-     * has been paused.
-     */
+    /* Start camera device for the picture frame. */
+    LOGD("Starting camera for picture: %.4s(%s)[%dx%d]",
+         reinterpret_cast<const char*>(&org_fmt), pix_fmt, width, height);
+    res = camera_dev->startDevice(width, height, org_fmt);
+    if (res != NO_ERROR) {
+        if (preview_on) {
+            doStartPreview();
+        }
+        return res;
+    }
 
-
-    return NO_ERROR;
+    /* Deliver one frame only. */
+    mCallbackNotifier.setTakingPicture(true);
+    res = camera_dev->startDeliveringFrames(true);
+    if (res != NO_ERROR) {
+        mCallbackNotifier.setTakingPicture(false);
+        if (preview_on) {
+            doStartPreview();
+        }
+    }
+    return res;
 }
 
 status_t EmulatedCamera::cancelPicture()
@@ -496,12 +545,14 @@ status_t EmulatedCamera::doStartPreview()
         org_fmt = V4L2_PIX_FMT_YVU420;
     } else if (strcmp(pix_fmt, CameraParameters::PIXEL_FORMAT_RGBA8888) == 0) {
         org_fmt = V4L2_PIX_FMT_RGB32;
+    } else if (strcmp(pix_fmt, CameraParameters::PIXEL_FORMAT_YUV420SP) == 0) {
+        org_fmt = V4L2_PIX_FMT_NV21;
     } else {
         LOGE("%s: Unsupported pixel format %s", __FUNCTION__, pix_fmt);
         mPreviewWindow.stopPreview();
         return EINVAL;
     }
-    LOGD("Starting camera: %dx%d -> %s", width, height, pix_fmt);
+    LOGD("Starting camera: %dx%d -> %.4s", width, height, pix_fmt);
     res = camera_dev->startDevice(width, height, org_fmt);
     if (res != NO_ERROR) {
         mPreviewWindow.stopPreview();

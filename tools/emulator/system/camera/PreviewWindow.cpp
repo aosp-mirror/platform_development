@@ -180,6 +180,10 @@ void PreviewWindow::onNextFrameAvailable(const void* frame,
     grbuffer_mapper.unlock(*buffer);
 }
 
+/***************************************************************************
+ * Private API
+ **************************************************************************/
+
 bool PreviewWindow::adjustPreviewDimensions(EmulatedCameraDevice* camera_dev)
 {
     /* Match the cached frame dimensions against the actual ones. */

@@ -25,6 +25,15 @@
 #include "Converters.h"
 #include "EmulatedCameraDevice.h"
 
+/* This is used for debugging format / conversion issues. If EFCD_ROTATE_FRAME is
+ * set to 0, the frame content will be always the "checkerboard". Otherwise, if
+ * EFCD_ROTATE_FRAME is set to a non-zero value, the frame content will "rotate"
+ * from a "checkerboard" frame to a "white/red/green/blue stripes" frame, to a
+ * "white/red/green/blue" frame. Frame content rotation helps finding bugs in
+ * format conversions.
+ */
+#define EFCD_ROTATE_FRAME   1
+
 namespace android {
 
 class EmulatedFakeCamera;
@@ -101,6 +110,12 @@ private:
      */
     void drawSquare(int x, int y, int size, const YUVPixel* color);
 
+#if EFCD_ROTATE_FRAME
+    void drawSolid(YUVPixel* color);
+    void drawStripes();
+    int rotateFrame();
+#endif  // EFCD_ROTATE_FRAME
+
     /****************************************************************************
      * Fake camera device data members
      ***************************************************************************/
@@ -116,17 +131,37 @@ private:
     YUVPixel    mGreenYUV;
     YUVPixel    mBlueYUV;
 
+    /* Last time the frame has been redrawn. */
+    nsecs_t     mLastRedrawn;
+
     /*
-     * Drawing related stuff
+     * Precalculated values related to U/V panes.
+     */
+
+    /* U pane inside the framebuffer. */
+    uint8_t*    mFrameU;
+
+    /* V pane inside the framebuffer. */
+    uint8_t*    mFrameV;
+
+    /* Defines byte distance between adjacent U, and V values. */
+    int         mUVStep;
+
+    /* Defines number of Us and Vs in a row inside the U/V panes.
+     * Note that if U/V panes are interleaved, this value reflects the total
+     * number of both, Us and Vs in a single row in the interleaved UV pane. */
+    int         mUVInRow;
+
+    /* Total number of each, U, and V elements in the framebuffer. */
+    int         mUVTotalNum;
+
+    /*
+     * Checkerboard drawing related stuff
      */
 
     int         mCheckX;
     int         mCheckY;
     int         mCcounter;
-    int         mHalfWidth;
-
-    /* Last time the checkerboard has been redrawn. */
-    nsecs_t    mLastRedrawn;
 
     /* Emulated FPS (frames per second).
      * We will emulate 50 FPS. */
@@ -135,6 +170,25 @@ private:
     /* Defines time (in nanoseconds) between redrawing the checker board.
      * We will redraw the checker board every 15 milliseconds. */
     static const nsecs_t    mRedrawAfter = 15000000LL;
+
+#if EFCD_ROTATE_FRAME
+    /* Frame rotation frequency in nanosec (currently - 3 sec) */
+    static const nsecs_t    mRotateFreq = 3000000000LL;
+
+    /* Last time the frame has rotated. */
+    nsecs_t     mLastRotatedAt;
+
+    /* Type of the frame to display in the current rotation:
+     *  0 - Checkerboard.
+     *  1 - White/Red/Green/Blue horisontal stripes
+     *  2 - Solid color. */
+    int         mCurrentFrameType;
+
+    /* Color to use to paint the solid color frame. Colors will rotate between
+     * white, red, gree, and blue each time rotation comes to the solid color
+     * frame. */
+    YUVPixel*   mCurrentColor;
+#endif  // EFCD_ROTATE_FRAME
 };
 
 }; /* namespace android */

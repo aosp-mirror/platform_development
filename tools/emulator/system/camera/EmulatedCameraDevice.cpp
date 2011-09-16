@@ -117,6 +117,12 @@ status_t EmulatedCameraDevice::getCurrentPreviewFrame(void* buffer)
         case V4L2_PIX_FMT_YVU420:
             YV12ToRGB32(mCurrentFrame, buffer, mFrameWidth, mFrameHeight);
             return NO_ERROR;
+        case V4L2_PIX_FMT_NV21:
+            NV21ToRGB32(mCurrentFrame, buffer, mFrameWidth, mFrameHeight);
+            return NO_ERROR;
+        case V4L2_PIX_FMT_NV12:
+            NV12ToRGB32(mCurrentFrame, buffer, mFrameWidth, mFrameHeight);
+            return NO_ERROR;
 
         default:
             LOGE("%s: Unknown pixel format %.4s",
@@ -136,6 +142,8 @@ status_t EmulatedCameraDevice::commonStartDevice(int width,
     /* Validate pixel format, and calculate framebuffer size at the same time. */
     switch (pix_fmt) {
         case V4L2_PIX_FMT_YVU420:
+        case V4L2_PIX_FMT_NV21:
+        case V4L2_PIX_FMT_NV12:
             mFrameBufferSize = (width * height * 12) / 8;
             break;
 
@@ -157,10 +165,9 @@ status_t EmulatedCameraDevice::commonStartDevice(int width,
         LOGE("%s: Unable to allocate framebuffer", __FUNCTION__);
         return ENOMEM;
     }
-    /* Calculate U/V panes inside the framebuffer. */
-    mFrameU = mCurrentFrame + mTotalPixels;
-    mFrameV = mFrameU + mTotalPixels / 4;
-
+    LOGV("%s: Allocated %p %d bytes for %d pixels in %.4s[%dx%d] frame",
+         __FUNCTION__, mCurrentFrame, mFrameBufferSize, mTotalPixels,
+         reinterpret_cast<const char*>(&mPixelFormat), mFrameWidth, mFrameHeight);
     return NO_ERROR;
 }
 
@@ -173,7 +180,6 @@ void EmulatedCameraDevice::commonStopDevice()
         delete[] mCurrentFrame;
         mCurrentFrame = NULL;
     }
-    mFrameU = mFrameV = NULL;
 }
 
 /****************************************************************************

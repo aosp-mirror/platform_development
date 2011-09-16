@@ -25,24 +25,25 @@
 
 namespace android {
 
-void YV12ToRGB565(const void* yv12, void* rgb, int width, int height)
+static void _YUV420SToRGB565(const uint8_t* Y,
+                             const uint8_t* U,
+                             const uint8_t* V,
+                             int dUV,
+                             uint16_t* rgb,
+                             int width,
+                             int height)
 {
-    const int pix_total = width * height;
-    uint16_t* rgb_buf = reinterpret_cast<uint16_t*>(rgb);
-    const uint8_t* Y = reinterpret_cast<const uint8_t*>(yv12);
-    const uint8_t* U_pos = Y + pix_total;
-    const uint8_t* V_pos = U_pos + pix_total / 4;
-    const uint8_t* U = U_pos;
-    const uint8_t* V = V_pos;
+    const uint8_t* U_pos = U;
+    const uint8_t* V_pos = V;
 
     for (int y = 0; y < height; y++) {
-        for (int x = 0; x < width; x += 2) {
-            const uint8_t nU = *U; U++;
-            const uint8_t nV = *V; V++;
-            *rgb_buf = YUVToRGB565(*Y, nU, nV);
-            Y++; rgb_buf++;
-            *rgb_buf = YUVToRGB565(*Y, nU, nV);
-            Y++; rgb_buf++;
+        for (int x = 0; x < width; x += 2, U += dUV, V += dUV) {
+            const uint8_t nU = *U;
+            const uint8_t nV = *V;
+            *rgb = YUVToRGB565(*Y, nU, nV);
+            Y++; rgb++;
+            *rgb = YUVToRGB565(*Y, nU, nV);
+            Y++; rgb++;
         }
         if (y & 0x1) {
             U_pos = U;
@@ -54,24 +55,25 @@ void YV12ToRGB565(const void* yv12, void* rgb, int width, int height)
     }
 }
 
-void YV12ToRGB32(const void* yv12, void* rgb, int width, int height)
+static void _YUV420SToRGB32(const uint8_t* Y,
+                            const uint8_t* U,
+                            const uint8_t* V,
+                            int dUV,
+                            uint32_t* rgb,
+                            int width,
+                            int height)
 {
-    const int pix_total = width * height;
-    uint32_t* rgb_buf = reinterpret_cast<uint32_t*>(rgb);
-    const uint8_t* Y = reinterpret_cast<const uint8_t*>(yv12);
-    const uint8_t* U_pos = Y + pix_total;
-    const uint8_t* V_pos = U_pos + pix_total / 4;
-    const uint8_t* U = U_pos;
-    const uint8_t* V = V_pos;
+    const uint8_t* U_pos = U;
+    const uint8_t* V_pos = V;
 
     for (int y = 0; y < height; y++) {
-        for (int x = 0; x < width; x += 2) {
-            const uint8_t nU = *U; U++;
-            const uint8_t nV = *V; V++;
-            *rgb_buf = YUVToRGB32(*Y, nU, nV);
-            Y++; rgb_buf++;
-            *rgb_buf = YUVToRGB32(*Y, nU, nV);
-            Y++; rgb_buf++;
+        for (int x = 0; x < width; x += 2, U += dUV, V += dUV) {
+            const uint8_t nU = *U;
+            const uint8_t nV = *V;
+            *rgb = YUVToRGB32(*Y, nU, nV);
+            Y++; rgb++;
+            *rgb = YUVToRGB32(*Y, nU, nV);
+            Y++; rgb++;
         }
         if (y & 0x1) {
             U_pos = U;
@@ -81,6 +83,108 @@ void YV12ToRGB32(const void* yv12, void* rgb, int width, int height)
             V = V_pos;
         }
     }
+}
+
+void YV12ToRGB565(const void* yv12, void* rgb, int width, int height)
+{
+    const int pix_total = width * height;
+    const uint8_t* Y = reinterpret_cast<const uint8_t*>(yv12);
+    const uint8_t* U = Y + pix_total;
+    const uint8_t* V = U + pix_total / 4;
+    _YUV420SToRGB565(Y, U, V, 1, reinterpret_cast<uint16_t*>(rgb), width, height);
+}
+
+void YV12ToRGB32(const void* yv12, void* rgb, int width, int height)
+{
+    const int pix_total = width * height;
+    const uint8_t* Y = reinterpret_cast<const uint8_t*>(yv12);
+    const uint8_t* U = Y + pix_total;
+    const uint8_t* V = U + pix_total / 4;
+    _YUV420SToRGB32(Y, U, V, 1, reinterpret_cast<uint32_t*>(rgb), width, height);
+}
+
+/* Common converter for YUV 4:2:0 interleaved to RGB565.
+ * y, u, and v point to Y,U, and V panes, where U and V values are interleaved.
+ */
+static void _NVXXToRGB565(const uint8_t* Y,
+                          const uint8_t* U,
+                          const uint8_t* V,
+                          uint16_t* rgb,
+                          int width,
+                          int height)
+{
+#if 1
+    _YUV420SToRGB565(Y, U, V, 2, rgb, width, height);
+#else
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x += 2, U += 2, V += 2) {
+            const uint8_t nU = *U;
+            const uint8_t nV = *V;
+            *rgb = YUVToRGB565(*Y, nU, nV);
+            Y++; rgb++;
+            *rgb = YUVToRGB565(*Y, nU, nV);
+            Y++; rgb++;
+        }
+    }
+#endif
+}
+
+/* Common converter for YUV 4:2:0 interleaved to RGB32.
+ * y, u, and v point to Y,U, and V panes, where U and V values are interleaved.
+ */
+static void _NVXXToRGB32(const uint8_t* Y,
+                         const uint8_t* U,
+                         const uint8_t* V,
+                         uint32_t* rgb,
+                         int width,
+                         int height)
+{
+#if 1
+    _YUV420SToRGB32(Y, U, V, 2, rgb, width, height);
+#else
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x += 2, U += 2, V += 2) {
+            const uint8_t nU = *U;
+            const uint8_t nV = *V;
+            *rgb = YUVToRGB32(*Y, nU, nV);
+            Y++; rgb++;
+            *rgb = YUVToRGB32(*Y, nU, nV);
+            Y++; rgb++;
+        }
+    }
+#endif
+}
+
+void NV12ToRGB565(const void* nv12, void* rgb, int width, int height)
+{
+    const int pix_total = width * height;
+    const uint8_t* y = reinterpret_cast<const uint8_t*>(nv12);
+    _NVXXToRGB565(y, y + pix_total, y + pix_total + 1,
+                  reinterpret_cast<uint16_t*>(rgb), width, height);
+}
+
+void NV12ToRGB32(const void* nv12, void* rgb, int width, int height)
+{
+    const int pix_total = width * height;
+    const uint8_t* y = reinterpret_cast<const uint8_t*>(nv12);
+    _NVXXToRGB32(y, y + pix_total, y + pix_total + 1,
+                 reinterpret_cast<uint32_t*>(rgb), width, height);
+}
+
+void NV21ToRGB565(const void* nv21, void* rgb, int width, int height)
+{
+    const int pix_total = width * height;
+    const uint8_t* y = reinterpret_cast<const uint8_t*>(nv21);
+    _NVXXToRGB565(y, y + pix_total + 1, y + pix_total,
+                  reinterpret_cast<uint16_t*>(rgb), width, height);
+}
+
+void NV21ToRGB32(const void* nv21, void* rgb, int width, int height)
+{
+    const int pix_total = width * height;
+    const uint8_t* y = reinterpret_cast<const uint8_t*>(nv21);
+    _NVXXToRGB32(y, y + pix_total + 1, y + pix_total,
+                 reinterpret_cast<uint32_t*>(rgb), width, height);
 }
 
 }; /* namespace android */

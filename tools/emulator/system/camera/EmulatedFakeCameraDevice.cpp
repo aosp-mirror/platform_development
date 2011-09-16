@@ -34,10 +34,15 @@ EmulatedFakeCameraDevice::EmulatedFakeCameraDevice(EmulatedFakeCamera* camera_ha
       mRedYUV(kRed8),
       mGreenYUV(kGreen8),
       mBlueYUV(kBlue8),
+      mLastRedrawn(0),
       mCheckX(0),
       mCheckY(0),
-      mCcounter(0),
-      mLastRedrawn(0)
+      mCcounter(0)
+#if EFCD_ROTATE_FRAME
+      , mLastRotatedAt(0),
+        mCurrentFrameType(0),
+        mCurrentColor(&mWhiteYUV)
+#endif  // EFCD_ROTATE_FRAME
 {
 }
 
@@ -109,8 +114,38 @@ status_t EmulatedFakeCameraDevice::startDevice(int width,
     const status_t res =
         EmulatedCameraDevice::commonStartDevice(width, height, pix_fmt);
     if (res == NO_ERROR) {
-        /* Used in calculating U/V position when drawing the square. */
-        mHalfWidth = mFrameWidth / 2;
+        /* Calculate U/V panes inside the framebuffer. */
+        switch (mPixelFormat) {
+            case V4L2_PIX_FMT_YVU420:
+                mFrameU = mCurrentFrame + mTotalPixels;
+                mFrameV = mFrameU + mTotalPixels / 4;
+                mUVStep = 1;
+                mUVTotalNum = mTotalPixels / 4;
+                break;
+
+            case V4L2_PIX_FMT_NV21:
+                /* Interleaved UV pane, V first. */
+                mFrameV = mCurrentFrame + mTotalPixels;
+                mFrameU = mFrameV + 1;
+                mUVStep = 2;
+                mUVTotalNum = mTotalPixels / 4;
+                break;
+
+            case V4L2_PIX_FMT_NV12:
+                /* Interleaved UV pane, U first. */
+                mFrameU = mCurrentFrame + mTotalPixels;
+                mFrameV = mFrameU + 1;
+                mUVStep = 2;
+                mUVTotalNum = mTotalPixels / 4;
+                break;
+
+            default:
+                LOGE("%s: Unknown pixel format %.4s", __FUNCTION__,
+                     reinterpret_cast<const char*>(&mPixelFormat));
+                return EINVAL;
+        }
+        /* Number of items in a single row inside U/V panes. */
+        mUVInRow = (width / 2) * mUVStep;
         mState = ECDS_STARTED;
     } else {
         LOGE("%s: commonStartDevice failed", __FUNCTION__);
@@ -129,7 +164,7 @@ status_t EmulatedFakeCameraDevice::stopDevice()
         return NO_ERROR;
     }
 
-    mHalfWidth = 0;
+    mFrameU = mFrameV = NULL;
     EmulatedCameraDevice::commonStopDevice();
     mState = ECDS_CONNECTED;
 
@@ -156,18 +191,25 @@ bool EmulatedFakeCameraDevice::inWorkerThread()
          * Time to generate a new frame.
          */
 
+#if EFCD_ROTATE_FRAME
+        const int frame_type = rotateFrame();
+        switch (frame_type) {
+            case 0:
+                drawCheckerboard();
+                break;
+            case 1:
+                drawStripes();
+                break;
+            case 2:
+                drawSolid(mCurrentColor);
+                break;
+        }
+#else
         /* Draw the checker board. */
         drawCheckerboard();
 
-        /* Run the square. */
-        int x = ((mCcounter * 3) & 255);
-        if(x > 128) x = 255 - x;
-        int y = ((mCcounter * 5) & 255);
-        if(y > 128) y = 255 - y;
-        const int size = mFrameWidth / 10;
-        drawSquare(x * size / 32, y * size / 32, (size * 5) >> 1,
-                   (mCcounter & 0x100) ? &mRedYUV : &mGreenYUV);
-        mCcounter++;
+#endif  // EFCD_ROTATE_FRAME
+
         mLastRedrawn = systemTime(SYSTEM_TIME_MONOTONIC);
     }
 
@@ -210,7 +252,7 @@ void EmulatedFakeCameraDevice::drawCheckerboard()
                 mWhiteYUV.get(Y, U, V);
             }
             Y[1] = *Y;
-            Y += 2; U++; V++;
+            Y += 2; U += mUVStep; V += mUVStep;
             countx += 2;
             if(countx >= size) {
                 countx = 0;
@@ -231,6 +273,16 @@ void EmulatedFakeCameraDevice::drawCheckerboard()
     }
     mCheckX += 3;
     mCheckY++;
+
+    /* Run the square. */
+    int sqx = ((mCcounter * 3) & 255);
+    if(sqx > 128) sqx = 255 - sqx;
+    int sqy = ((mCcounter * 5) & 255);
+    if(sqy > 128) sqy = 255 - sqy;
+    const int sqsize = mFrameWidth / 10;
+    drawSquare(sqx * sqsize / 32, sqy * sqsize / 32, (sqsize * 5) >> 1,
+               (mCcounter & 0x100) ? &mRedYUV : &mGreenYUV);
+    mCcounter++;
 }
 
 void EmulatedFakeCameraDevice::drawSquare(int x,
@@ -238,24 +290,115 @@ void EmulatedFakeCameraDevice::drawSquare(int x,
                                           int size,
                                           const YUVPixel* color)
 {
-    const int half_x = x / 2;
-    const int square_xstop = min(mFrameWidth, x+size);
-    const int square_ystop = min(mFrameHeight, y+size);
+    const int square_xstop = min(mFrameWidth, x + size);
+    const int square_ystop = min(mFrameHeight, y + size);
     uint8_t* Y_pos = mCurrentFrame + y * mFrameWidth + x;
 
     // Draw the square.
     for (; y < square_ystop; y++) {
-        const int iUV = (y / 2) * mHalfWidth + half_x;
+        const int iUV = (y / 2) * mUVInRow + (x / 2) * mUVStep;
         uint8_t* sqU = mFrameU + iUV;
         uint8_t* sqV = mFrameV + iUV;
         uint8_t* sqY = Y_pos;
         for (int i = x; i < square_xstop; i += 2) {
             color->get(sqY, sqU, sqV);
             sqY[1] = *sqY;
-            sqY += 2; sqU++; sqV++;
+            sqY += 2; sqU += mUVStep; sqV += mUVStep;
         }
         Y_pos += mFrameWidth;
     }
 }
+
+#if EFCD_ROTATE_FRAME
+
+void EmulatedFakeCameraDevice::drawSolid(YUVPixel* color)
+{
+    /* All Ys are the same. */
+    memset(mCurrentFrame, color->Y, mTotalPixels);
+
+    /* Fill U, and V panes. */
+    uint8_t* U = mFrameU;
+    uint8_t* V = mFrameV;
+    for (int k = 0; k < mUVTotalNum; k++, U += mUVStep, V += mUVStep) {
+        *U = color->U;
+        *V = color->V;
+    }
+}
+
+void EmulatedFakeCameraDevice::drawStripes()
+{
+    /* Divide frame into 4 stripes. */
+    const int change_color_at = mFrameHeight / 4;
+    const int each_in_row = mUVInRow / mUVStep;
+    uint8_t* pY = mCurrentFrame;
+    for (int y = 0; y < mFrameHeight; y++, pY += mFrameWidth) {
+        /* Select the color. */
+        YUVPixel* color;
+        const int color_index = y / change_color_at;
+        if (color_index == 0) {
+            /* White stripe on top. */
+            color = &mWhiteYUV;
+        } else if (color_index == 1) {
+            /* Then the red stripe. */
+            color = &mRedYUV;
+        } else if (color_index == 2) {
+            /* Then the green stripe. */
+            color = &mGreenYUV;
+        } else {
+            /* And the blue stripe at the bottom. */
+            color = &mBlueYUV;
+        }
+
+        /* All Ys at the row are the same. */
+        memset(pY, color->Y, mFrameWidth);
+
+        /* Offset of the current row inside U/V panes. */
+        const int uv_off = (y / 2) * mUVInRow;
+        /* Fill U, and V panes. */
+        uint8_t* U = mFrameU + uv_off;
+        uint8_t* V = mFrameV + uv_off;
+        for (int k = 0; k < each_in_row; k++, U += mUVStep, V += mUVStep) {
+            *U = color->U;
+            *V = color->V;
+        }
+    }
+}
+
+int EmulatedFakeCameraDevice::rotateFrame()
+{
+    if ((systemTime(SYSTEM_TIME_MONOTONIC) - mLastRotatedAt) >= mRotateFreq) {
+        mLastRotatedAt = systemTime(SYSTEM_TIME_MONOTONIC);
+        mCurrentFrameType++;
+        if (mCurrentFrameType > 2) {
+            mCurrentFrameType = 0;
+        }
+        if (mCurrentFrameType == 2) {
+            LOGD("********** Rotated to the SOLID COLOR frame **********");
+            /* Solid color: lets rotate color too. */
+            if (mCurrentColor == &mWhiteYUV) {
+                LOGD("----- Painting a solid RED frame -----");
+                mCurrentColor = &mRedYUV;
+            } else if (mCurrentColor == &mRedYUV) {
+                LOGD("----- Painting a solid GREEN frame -----");
+                mCurrentColor = &mGreenYUV;
+            } else if (mCurrentColor == &mGreenYUV) {
+                LOGD("----- Painting a solid BLUE frame -----");
+                mCurrentColor = &mBlueYUV;
+            } else {
+                /* Back to white. */
+                LOGD("----- Painting a solid WHITE frame -----");
+                mCurrentColor = &mWhiteYUV;
+            }
+        } else if (mCurrentFrameType == 0) {
+            LOGD("********** Rotated to the CHECKERBOARD frame **********");
+        } else {
+            LOGD("********** Rotated to the STRIPED frame **********");
+        }
+    }
+
+    return mCurrentFrameType;
+}
+
+#endif  // EFCD_ROTATE_FRAME
 
 }; /* namespace android */

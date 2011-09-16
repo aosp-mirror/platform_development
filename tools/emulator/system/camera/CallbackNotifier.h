@@ -114,7 +114,7 @@ public:
      */
     inline int isMessageEnabled(uint msg_type)
     {
-        return mMessageEnabler & ~msg_type;
+        return mMessageEnabler & msg_type;
     }
 
     /* Checks id video recording is enabled.
@@ -159,6 +159,15 @@ public:
                               nsecs_t timestamp,
                               EmulatedCameraDevice* camera_dev);
 
+    /* Sets, or resets taking picture state.
+     * This state control whether or not to notify the framework about compressed
+     * image, shutter, and other picture related events.
+     */
+    void setTakingPicture(bool taking)
+    {
+        mTakingPicture = taking;
+    }
+
     /****************************************************************************
      * Private API
      ***************************************************************************/
@@ -199,6 +208,9 @@ protected:
 
     /* Video recording status. */
     bool                            mVideoRecEnabled;
+
+    /* Picture taking status. */
+    bool                            mTakingPicture;
 };
 
 }; /* namespace android */
