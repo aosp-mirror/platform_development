@@ -70,7 +70,8 @@ fi
 
 
 # Invoke atree to copy the files
-atree -f ${TOPDIR}development/build/sdk-windows-x86.atree \
+# TODO: pass down OUT_HOST_EXECUTABLE to get the right bin/atree directory
+${TOPDIR}out/host/linux-x86/bin/atree -f ${TOPDIR}development/build/sdk-windows-x86.atree \
       -I $WIN_OUT_DIR/host/windows-x86 \
       -I ${TOPDIR:-.} \
       -o $TEMP_SDK_DIR
