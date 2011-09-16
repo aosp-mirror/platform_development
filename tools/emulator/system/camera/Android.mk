@@ -28,6 +28,16 @@ LOCAL_SHARED_LIBRARIES:= \
     libcamera_client \
     libui \
 
+# JPEG conversion libraries and includes.
+LOCAL_SHARED_LIBRARIES += \
+	libjpeg \
+	libskia \
+	libandroid_runtime \
+
+LOCAL_C_INCLUDES += external/jpeg \
+					external/skia/include/core/ \
+					frameworks/base/core/jni/android/graphics
+
 LOCAL_SRC_FILES := \
 	EmulatedCameraHal.cpp \
     EmulatedCameraFactory.cpp \
@@ -40,7 +50,8 @@ LOCAL_SRC_FILES := \
 	Converters.cpp \
 	PreviewWindow.cpp \
 	CallbackNotifier.cpp \
-	QemuClient.cpp
+	QemuClient.cpp \
+	JpegCompressor.cpp
 
 ifeq ($(TARGET_PRODUCT),vbox_x86)
 LOCAL_MODULE := camera.vbox_x86

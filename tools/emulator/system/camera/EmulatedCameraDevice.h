@@ -451,12 +451,6 @@ protected:
     /* Framebuffer containing the current frame. */
     uint8_t*                    mCurrentFrame;
 
-    /* U panel inside the framebuffer. */
-    uint8_t*                    mFrameU;
-
-    /* V panel inside the framebuffer. */
-    uint8_t*                    mFrameV;
-
     /*
      * Framebuffer properties.
      */

@@ -25,6 +25,7 @@
 #include <media/stagefright/MetadataBufferType.h>
 #include "EmulatedCameraDevice.h"
 #include "CallbackNotifier.h"
+#include "JpegCompressor.h"
 
 namespace android {
 
@@ -92,7 +93,8 @@ CallbackNotifier::CallbackNotifier()
       mLastFrameTimestamp(0),
       mFrameRefreshFreq(0),
       mMessageEnabler(0),
-      mVideoRecEnabled(false)
+      mVideoRecEnabled(false),
+      mTakingPicture(false)
 {
 }
 
@@ -212,6 +214,37 @@ void CallbackNotifier::onNextFrameAvailable(const void* frame,
         } else {
             LOGE("%s: Memory failure in CAMERA_MSG_VIDEO_FRAME", __FUNCTION__);
         }
+    }
+
+    if (mTakingPicture) {
+        if (isMessageEnabled(CAMERA_MSG_RAW_IMAGE_NOTIFY)) {
+            mNotifyCB(CAMERA_MSG_RAW_IMAGE_NOTIFY, 0, 0, mCBOpaque);
+        }
+        if (isMessageEnabled(CAMERA_MSG_COMPRESSED_IMAGE)) {
+            /* Compress the frame to JPEG. TODO: Make sure that frame is NV21! */
+            NV21JpegCompressor compressor;
+            status_t res =
+                compressor.compressRawImage(frame, camera_dev->getFrameWidth(),
+                                            camera_dev->getFrameHeight(), 90);
+            if (res == NO_ERROR) {
+                camera_memory_t* jpeg_buff =
+                    mGetMemoryCB(-1, compressor.getCompressedSize(), 1, NULL);
+                if (NULL != jpeg_buff && NULL != jpeg_buff->data) {
+                    compressor.getCompressedImage(jpeg_buff->data);
+                    mDataCB(CAMERA_MSG_COMPRESSED_IMAGE, jpeg_buff, 0, NULL, mCBOpaque);
+                    jpeg_buff->release(jpeg_buff);
+                } else {
+                    LOGE("%s: Memory failure in CAMERA_MSG_VIDEO_FRAME", __FUNCTION__);
+                }
+            } else {
+                LOGE("%s: Compression failure in CAMERA_MSG_VIDEO_FRAME", __FUNCTION__);
+            }
+        }
+        if (isMessageEnabled(CAMERA_MSG_SHUTTER)) {
+            mNotifyCB(CAMERA_MSG_SHUTTER, 0, 0, mCBOpaque);
+        }
+        /* This happens just once. */
+        mTakingPicture = false;
     }
 }
 

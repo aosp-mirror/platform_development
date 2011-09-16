@@ -269,6 +269,38 @@ void YV12ToRGB565(const void* yv12, void* rgb, int width, int height);
  */
 void YV12ToRGB32(const void* yv12, void* rgb, int width, int height);
 
+/* Converts an NV12 framebuffer to RGB565 framebuffer.
+ * Param:
+ *  nv12 - NV12 framebuffer.
+ *  rgb - RGB565 framebuffer.
+ *  width, height - Dimensions for both framebuffers.
+ */
+void NV12ToRGB565(const void* nv12, void* rgb, int width, int height);
+
+/* Converts an NV12 framebuffer to RGB32 framebuffer.
+ * Param:
+ *  nv12 - NV12 framebuffer.
+ *  rgb - RGB32 framebuffer.
+ *  width, height - Dimensions for both framebuffers.
+ */
+void NV12ToRGB32(const void* nv12, void* rgb, int width, int height);
+
+/* Converts an NV21 framebuffer to RGB565 framebuffer.
+ * Param:
+ *  nv21 - NV21 framebuffer.
+ *  rgb - RGB565 framebuffer.
+ *  width, height - Dimensions for both framebuffers.
+ */
+void NV21ToRGB565(const void* nv21, void* rgb, int width, int height);
+
+/* Converts an NV21 framebuffer to RGB32 framebuffer.
+ * Param:
+ *  nv21 - NV21 framebuffer.
+ *  rgb - RGB32 framebuffer.
+ *  width, height - Dimensions for both framebuffers.
+ */
+void NV21ToRGB32(const void* nv21, void* rgb, int width, int height);
+
 }; /* namespace android */
 
 #endif  /* HW_EMULATOR_CAMERA_CONVERTERS_H */
