@@ -1,8 +1,9 @@
-Compatibility Libraries for Android.
+Support Libraries for Android.
 
 This SDK component contains static libraries providing access to newer APIs
-on older platforms. To use those libraries, simply copy them as static libraries
-into your project.
+on older platforms and various helper classes.
+
+To use those libraries, simply copy them as static libraries into your project.
 
 Each library is called v<api>, indicating the minimum API level that they require.
 
@@ -21,7 +22,7 @@ v4/samples/ provides a sample app using the library.
 
 *** V13 ***
 
-Provides the same features as v4, plus:
+v13/android-support-v13.jar provides the same features as v4, plus:
 - FragmentPagerAdapter: Implementation of PagerAdapter that represents each page as a Fragment.
 
 v13/src/ is the source code for the compatibility library, not including the v4 source
