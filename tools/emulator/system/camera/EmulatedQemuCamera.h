@@ -43,7 +43,9 @@ public:
 
 public:
     /* Initializes EmulatedQemuCamera instance. */
-     status_t Initialize(const char* device_name, const char* frame_dims);
+     status_t Initialize(const char* device_name,
+                         const char* frame_dims,
+                         const char* facing_dir);
 
     /***************************************************************************
      * EmulatedCamera abstract API implementation.

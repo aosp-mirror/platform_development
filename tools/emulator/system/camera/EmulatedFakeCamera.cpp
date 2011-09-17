@@ -22,6 +22,7 @@
 #define LOG_NDEBUG 0
 #define LOG_TAG "EmulatedCamera_FakeCamera"
 #include <cutils/log.h>
+#include <cutils/properties.h>
 #include "EmulatedFakeCamera.h"
 #include "EmulatedCameraFactory.h"
 
@@ -48,11 +49,14 @@ status_t EmulatedFakeCamera::Initialize()
         return res;
     }
 
+    /* Fake camera facing is defined by the qemu.sf.fake_camera boot property. */
     const char* facing = EmulatedCamera::FACING_BACK;
-    if (gEmulatedCameraFactory.getFakeCameraOrientation() == CAMERA_FACING_FRONT) {
-        facing = EmulatedCamera::FACING_FRONT;
+    char prop[PROPERTY_VALUE_MAX];
+    if (property_get("qemu.sf.fake_camera", prop, NULL) > 0) {
+        facing = prop;
     }
     mParameters.set(EmulatedCamera::FACING_KEY, facing);
+    LOGD("%s: Fake camera is facing %s", __FUNCTION__, facing);
 
     mParameters.set(EmulatedCamera::ORIENTATION_KEY,
                     gEmulatedCameraFactory.getFakeCameraOrientation());
