@@ -86,12 +86,17 @@ ATTRS=(
   Platform.Version              version
   AndroidVersion.ApiLevel       api-level
   AndroidVersion.CodeName       codename
+  Platform.IncludedAbi          included-abi
   Platform.MinToolsRev          min-tools-rev
   Platform.MinPlatformToolsRev  min-platform-tools-rev
-  Extra.Path                    path
   Extra.Vendor                  vendor
+  Extra.Path                    path
+  Extra.OldPaths                old-paths
   Extra.MinApiLevel             min-api-level
   Sample.MinApiLevel            min-api-level
+  SystemImage.Abi               abi
+  Layoutlib.Api                 layoutlib/api
+  Layoutlib.Revision            layoutlib/revision
   # for addon packages
   vendor                        vendor
   name                          name
@@ -124,14 +129,24 @@ function output_attributes() {
   local OUT="$1"
   shift
   local KEY VALUE
+  local NODE LAST_NODE
 
   while [[ "$1" ]]; do
     KEY="$1"
     VALUE="${2//@/ }"
+    NODE="${KEY%%/*}"
+    KEY="${KEY##*/}"
+    [[ "$NODE" == "$KEY" ]] && NODE=""
+    if [[ "$NODE" != "$LAST_NODE" ]]; then
+        [[ "$LAST_NODE" ]] && echo "          </sdk:$LAST_NODE>" >> "$OUT"
+        LAST_NODE="$NODE"
+        [[ "$NODE"      ]] && echo "          <sdk:$NODE>" >> "$OUT"
+    fi
     echo "        <sdk:$KEY>$VALUE</sdk:$KEY>" >> "$OUT"
     shift
     shift
   done
+  if [[ "$LAST_NODE" ]]; then echo "          </sdk:$LAST_NODE>" >> "$OUT"; fi
 }
 
 while [[ -n "$1" ]]; do
@@ -168,13 +183,16 @@ while [[ -n "$1" ]]; do
     # - description             all
     # - revision                all
     # - version                 platform
-    # - api-level               platform sample doc add-on
-    # - codename                platform sample doc add-on
+    # - included-abi            platform
+    # - api-level               platform sample doc add-on system-image
+    # - codename                platform sample doc add-on system-image
     # - min-tools-rev           platform sample
     # - min-platform-tools-rev  tool
     # - min-api-level           extra
     # - vendor                  extra               add-on
     # - path                    extra
+    # - old-paths               extra
+    # - abi                     system-image
     #
     # We don't actually validate here.
     # Just take whatever is defined and put it in the XML.
