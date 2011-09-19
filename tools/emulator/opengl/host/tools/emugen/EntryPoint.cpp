@@ -286,22 +286,36 @@ int EntryPoint::setAttribute(const std::string &line, size_t lc)
                     (unsigned int)lc, varname.c_str(), name().c_str());
             return -2;
         }
-        pos = last;
-        std::string flag = getNextToken(line, pos, &last, WHITESPACE);
-        if (flag.size() == 0) {
-            fprintf(stderr, "ERROR: %u: missing flag\n", (unsigned int) lc);
-            return -3;
-        }
-
-        if (flag == "nullAllowed") {
-            if (v->isPointer()) {
-                v->setNullAllowed(true);
-            } else {
-                fprintf(stderr, "WARNING: %u: setting nullAllowed for non-pointer variable %s\n",
-                        (unsigned int) lc, v->name().c_str());
+        int count = 0;
+        for (;;) {
+            pos = last;
+            std::string flag = getNextToken(line, pos, &last, WHITESPACE);
+            if (flag.size() == 0) {
+                if (count == 0) {
+                    fprintf(stderr, "ERROR: %u: missing flag\n", (unsigned int) lc);
+                    return -3;
+                }
+                break;
             }
-        } else {
-            fprintf(stderr, "WARNING: %u: unknow flag %s\n", (unsigned int)lc, flag.c_str());
+            count++;
+
+            if (flag == "nullAllowed") {
+                if (v->isPointer()) {
+                    v->setNullAllowed(true);
+                } else {
+                    fprintf(stderr, "WARNING: %u: setting nullAllowed for non-pointer variable %s\n",
+                            (unsigned int) lc, v->name().c_str());
+                }
+            } else if (flag == "isLarge") {
+                if (v->isPointer()) {
+                    v->setIsLarge(true);
+                } else {
+                    fprintf(stderr, "WARNING: %u: setting isLarge flag for a non-pointer variable %s\n",
+                            (unsigned int) lc, v->name().c_str());
+                }
+            } else {
+                fprintf(stderr, "WARNING: %u: unknow flag %s\n", (unsigned int)lc, flag.c_str());
+            }
         }
     } else if (token == "custom_pack") {
         pos = last;

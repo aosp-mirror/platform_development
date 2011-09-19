@@ -34,6 +34,7 @@ public:
     virtual int commitBuffer(size_t size) = 0;
     virtual const unsigned char *readFully( void *buf, size_t len) = 0;
     virtual const unsigned char *read( void *buf, size_t *inout_len) = 0;
+    virtual int writeFully(const void* buf, size_t len) = 0;
 
     virtual ~IOStream() {
 
@@ -81,6 +82,7 @@ public:
         flush();
         return readFully(buf, len);
     }
+
 
 private:
     unsigned char *m_buf;

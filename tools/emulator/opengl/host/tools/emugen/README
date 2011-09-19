@@ -313,7 +313,10 @@ custom_pack
 
  var_flag 
  	 description : set variable flags
- 	 format: var_flag <varname> < nullAllowed | ... >
+ 	 format: var_flag <varname> < nullAllowed | isLarge | ... >
+
+        nullAllowed -> for pointer variables, indicates that NULL is a valid value
+        isLarge     -> for pointer variables, indicates that the data should be sent without an intermediate copy
 
  flag
 	description: set entry point flag; 

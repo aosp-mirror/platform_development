@@ -30,6 +30,7 @@ public:
         m_lenExpression(""),
         m_pointerDir(POINTER_IN),
         m_nullAllowed(false),
+        m_isLarge(false),
         m_packExpression(""),
         m_paramCheckExpression("")
 
@@ -46,8 +47,9 @@ public:
         m_lenExpression(lenExpression),
         m_pointerDir(dir),
         m_nullAllowed(false),
+        m_isLarge(false),
         m_packExpression(packExpression),
-		m_paramCheckExpression("")	
+	m_paramCheckExpression("")
     {
     }
 
@@ -60,6 +62,7 @@ public:
         m_packExpression = packExpression;
         m_pointerDir = dir;
         m_nullAllowed = false;
+        m_isLarge = false;
 
     }
 
@@ -76,7 +79,9 @@ public:
     void setPointerDir(PointerDir dir) { m_pointerDir = dir; }
     PointerDir pointerDir() { return m_pointerDir; }
     void setNullAllowed(bool state) { m_nullAllowed = state; }
+    void setIsLarge(bool state) { m_isLarge = state; }
     bool nullAllowed() const { return m_nullAllowed; }
+    bool isLarge() const { return m_isLarge; }
     void printType(FILE *fp) { fprintf(fp, "%s", m_type->name().c_str()); }
     void printTypeName(FILE *fp) { printType(fp); fprintf(fp, " %s", m_name.c_str()); }
 
@@ -87,6 +92,7 @@ private:
     std::string m_lenExpression; // an expression to calcualte a pointer data size
     PointerDir m_pointerDir;
     bool m_nullAllowed;
+    bool m_isLarge;
     std::string m_packExpression; // an expression to pack data into the stream
     std::string m_paramCheckExpression; //an expression to check parameter value
 
