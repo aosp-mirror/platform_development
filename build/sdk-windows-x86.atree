@@ -38,7 +38,7 @@ rm platform-tools/aidl
 bin/aidl.exe                            strip platform-tools/aidl.exe
 
 rm platform-tools/dx
-dalvik/dx/etc/dx.bat                          platform-tools/dx
+dalvik/dx/etc/dx.bat                          platform-tools/dx.bat
 
 rm platform-tools/dexdump
 bin/dexdump.exe                         strip platform-tools/dexdump.exe
