@@ -42,8 +42,11 @@ EmulatedQemuCamera::~EmulatedQemuCamera()
  ***************************************************************************/
 
 status_t EmulatedQemuCamera::Initialize(const char* device_name,
-                                        const char* frame_dims)
+                                        const char* frame_dims,
+                                        const char* facing_dir)
 {
+    LOGV("%s:\n   Name=%s\n   Facing '%s'\n   Dimensions=%s",
+         __FUNCTION__, device_name, facing_dir, frame_dims);
     /* Save dimensions. */
     mFrameDims = frame_dims;
 
@@ -63,11 +66,7 @@ status_t EmulatedQemuCamera::Initialize(const char* device_name,
      * Set customizable parameters.
      */
 
-    const char* facing = EmulatedCamera::FACING_FRONT;
-    if (gEmulatedCameraFactory.getQemuCameraOrientation() == CAMERA_FACING_BACK) {
-        facing = EmulatedCamera::FACING_BACK;
-    }
-    mParameters.set(EmulatedCamera::FACING_KEY, facing);
+    mParameters.set(EmulatedCamera::FACING_KEY, facing_dir);
     mParameters.set(EmulatedCamera::ORIENTATION_KEY,
                     gEmulatedCameraFactory.getQemuCameraOrientation());
     mParameters.set(CameraParameters::KEY_SUPPORTED_PICTURE_SIZES, frame_dims);

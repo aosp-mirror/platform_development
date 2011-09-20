@@ -94,22 +94,11 @@ private:
      ***************************************************************************/
 
 public:
-    /* Gets fake camera facing. */
-    int getFakeCameraFacing() {
-        /* TODO: Have a boot property that controls that. */
-        return CAMERA_FACING_BACK;
-    }
 
     /* Gets fake camera orientation. */
     int getFakeCameraOrientation() {
         /* TODO: Have a boot property that controls that. */
         return 90;
-    }
-
-    /* Gets qemu camera facing. */
-    int getQemuCameraFacing() {
-        /* TODO: Have a boot property that controls that. */
-        return CAMERA_FACING_FRONT;
     }
 
     /* Gets qemu camera orientation. */
@@ -141,9 +130,6 @@ private:
      * array.
      */
     void createQemuCameras();
-
-    /* Checks if qemu camera emulation is on. */
-    bool isQemuCameraEmulationOn();
 
     /* Checks if fake camera emulation is on. */
     bool isFakeCameraEmulationOn();
