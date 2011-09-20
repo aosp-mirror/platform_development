@@ -50,11 +50,10 @@ status_t EmulatedFakeCamera::Initialize()
     }
 
     /* Fake camera facing is defined by the qemu.sf.fake_camera boot property. */
-    const char* facing = EmulatedCamera::FACING_BACK;
     char prop[PROPERTY_VALUE_MAX];
-    if (property_get("qemu.sf.fake_camera", prop, NULL) > 0) {
-        facing = prop;
-    }
+    property_get("qemu.sf.fake_camera", prop, EmulatedCamera::FACING_BACK);
+    const char* facing = prop;
+
     mParameters.set(EmulatedCamera::FACING_KEY, facing);
     LOGD("%s: Fake camera is facing %s", __FUNCTION__, facing);
 
