@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="fill_parent"
+    android:layout_height="fill_parent">
+    <LinearLayout android:layout_width="match_parent" android:id="@+id/linearLayout1"
+        android:layout_height="fill_parent" android:orientation="horizontal">
+        <fragment class="com.example.android.wifidirect.DeviceListFragment"
+            android:id="@+id/frag_list" android:layout_width="@dimen/tablet_list_width"
+            android:layout_height="match_parent">
+            <!-- Preview: layout=@layout/row_devices -->
+        </fragment>
+        <fragment class="com.example.android.wifidirect.DeviceDetailFragment"
+            android:id="@+id/frag_detail" android:layout_width="match_parent"
+            android:layout_height="match_parent">
+            <!-- Preview: layout=@layout/device_detail -->
+        </fragment>
+    </LinearLayout>
+</LinearLayout>
