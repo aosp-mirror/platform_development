@@ -22,6 +22,7 @@
 #define LOG_NDEBUG 0
 #define LOG_TAG "EmulatedCamera_Factory"
 #include <cutils/log.h>
+#include <cutils/properties.h>
 #include "EmulatedQemuCamera.h"
 #include "EmulatedFakeCamera.h"
 #include "EmulatedCameraFactory.h"
@@ -43,9 +44,8 @@ EmulatedCameraFactory::EmulatedCameraFactory()
           mConstructedOK(false)
 
 {
-    /* If qemu camera emulation is on, try to connect to the factory service in
-     * the emulator. */
-    if (isQemuCameraEmulationOn() && mQemuClient.connectClient(NULL) == NO_ERROR) {
+    /* Connect to the factory service in the emulator, and create Qemu cameras. */
+    if (mQemuClient.connectClient(NULL) == NO_ERROR) {
         /* Connection has succeeded. Create emulated cameras for each camera
          * device, reported by the service. */
         createQemuCameras();
@@ -82,6 +82,8 @@ EmulatedCameraFactory::EmulatedCameraFactory()
             mFakeCameraID = -1;
             LOGE("%s: Unable to instantiate fake camera class", __FUNCTION__);
         }
+    } else {
+        LOGD("Fake camera emulation is disabled.");
     }
 
     LOGV("%d cameras are being emulated. Fake camera ID is %d",
@@ -197,6 +199,8 @@ int EmulatedCameraFactory::get_camera_info(int camera_id,
 static const char lListNameToken[]    = "name=";
 /* Frame dimensions token. */
 static const char lListDimsToken[]    = "framedims=";
+/* Facing direction token. */
+static const char lListDirToken[]     = "dir=";
 
 void EmulatedCameraFactory::createQemuCameras()
 {
@@ -252,13 +256,15 @@ void EmulatedCameraFactory::createQemuCameras()
             next_entry++;   // Start of the next entry.
         }
 
-        /* Find 'name', and 'framedims' tokens that are required here. */
+        /* Find 'name', 'framedims', and 'dir' tokens that are required here. */
         char* name_start = strstr(cur_entry, lListNameToken);
         char* dim_start = strstr(cur_entry, lListDimsToken);
-        if (name_start != NULL && dim_start != NULL) {
+        char* dir_start = strstr(cur_entry, lListDirToken);
+        if (name_start != NULL && dim_start != NULL && dir_start != NULL) {
             /* Advance to the token values. */
             name_start += strlen(lListNameToken);
             dim_start += strlen(lListDimsToken);
+            dir_start += strlen(lListDirToken);
 
             /* Terminate token values with zero. */
             char* s = strchr(name_start, ' ');
@@ -269,12 +275,16 @@ void EmulatedCameraFactory::createQemuCameras()
             if (s != NULL) {
                 *s = '\0';
             }
+            s = strchr(dir_start, ' ');
+            if (s != NULL) {
+                *s = '\0';
+            }
 
             /* Create and initialize qemu camera. */
             EmulatedQemuCamera* qemu_cam =
                 new EmulatedQemuCamera(index, &HAL_MODULE_INFO_SYM.common);
             if (NULL != qemu_cam) {
-                res = qemu_cam->Initialize(name_start, dim_start);
+                res = qemu_cam->Initialize(name_start, dim_start, dir_start);
                 if (res == NO_ERROR) {
                     mEmulatedCameras[index] = qemu_cam;
                     index++;
@@ -295,16 +305,17 @@ void EmulatedCameraFactory::createQemuCameras()
     mEmulatedCameraNum = index;
 }
 
-bool EmulatedCameraFactory::isQemuCameraEmulationOn()
-{
-    /* TODO: Have a boot property that controls that! */
-    return true;
-}
-
 bool EmulatedCameraFactory::isFakeCameraEmulationOn()
 {
-    /* TODO: Have a boot property that controls that! */
-    return true;
+    /* Defined by 'qemu.sf.fake_camera' boot property: If property is there
+     * and contains 'off', fake camera emulation is disabled. */
+    char prop[PROPERTY_VALUE_MAX];
+    if (property_get("qemu.sf.fake_camera", prop, NULL) <= 0 ||
+        strcmp(prop, "off")) {
+        return true;
+    } else {
+        return false;
+    }
 }
 
 /********************************************************************************
