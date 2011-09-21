@@ -117,6 +117,13 @@ status_t EmulatedFakeCameraDevice::startDevice(int width,
         /* Calculate U/V panes inside the framebuffer. */
         switch (mPixelFormat) {
             case V4L2_PIX_FMT_YVU420:
+                mFrameV = mCurrentFrame + mTotalPixels;
+                mFrameU = mFrameU + mTotalPixels / 4;
+                mUVStep = 1;
+                mUVTotalNum = mTotalPixels / 4;
+                break;
+
+            case V4L2_PIX_FMT_YUV420:
                 mFrameU = mCurrentFrame + mTotalPixels;
                 mFrameV = mFrameU + mTotalPixels / 4;
                 mUVStep = 1;

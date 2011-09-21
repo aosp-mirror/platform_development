@@ -98,6 +98,15 @@ void YV12ToRGB32(const void* yv12, void* rgb, int width, int height)
 {
     const int pix_total = width * height;
     const uint8_t* Y = reinterpret_cast<const uint8_t*>(yv12);
+    const uint8_t* V = Y + pix_total;
+    const uint8_t* U = V + pix_total / 4;
+    _YUV420SToRGB32(Y, U, V, 1, reinterpret_cast<uint32_t*>(rgb), width, height);
+}
+
+void YU12ToRGB32(const void* yu12, void* rgb, int width, int height)
+{
+    const int pix_total = width * height;
+    const uint8_t* Y = reinterpret_cast<const uint8_t*>(yu12);
     const uint8_t* U = Y + pix_total;
     const uint8_t* V = U + pix_total / 4;
     _YUV420SToRGB32(Y, U, V, 1, reinterpret_cast<uint32_t*>(rgb), width, height);
@@ -113,20 +122,7 @@ static void _NVXXToRGB565(const uint8_t* Y,
                           int width,
                           int height)
 {
-#if 1
     _YUV420SToRGB565(Y, U, V, 2, rgb, width, height);
-#else
-    for (int y = 0; y < height; y++) {
-        for (int x = 0; x < width; x += 2, U += 2, V += 2) {
-            const uint8_t nU = *U;
-            const uint8_t nV = *V;
-            *rgb = YUVToRGB565(*Y, nU, nV);
-            Y++; rgb++;
-            *rgb = YUVToRGB565(*Y, nU, nV);
-            Y++; rgb++;
-        }
-    }
-#endif
 }
 
 /* Common converter for YUV 4:2:0 interleaved to RGB32.
@@ -139,20 +135,7 @@ static void _NVXXToRGB32(const uint8_t* Y,
                          int width,
                          int height)
 {
-#if 1
     _YUV420SToRGB32(Y, U, V, 2, rgb, width, height);
-#else
-    for (int y = 0; y < height; y++) {
-        for (int x = 0; x < width; x += 2, U += 2, V += 2) {
-            const uint8_t nU = *U;
-            const uint8_t nV = *V;
-            *rgb = YUVToRGB32(*Y, nU, nV);
-            Y++; rgb++;
-            *rgb = YUVToRGB32(*Y, nU, nV);
-            Y++; rgb++;
-        }
-    }
-#endif
 }
 
 void NV12ToRGB565(const void* nv12, void* rgb, int width, int height)
