@@ -503,15 +503,16 @@ status_t EmulatedCamera::doStartPreview()
 {
     LOGV("%s", __FUNCTION__);
 
+    EmulatedCameraDevice* camera_dev = getCameraDevice();
+    if (camera_dev->isStarted()) {
+        camera_dev->stopDeliveringFrames();
+        camera_dev->stopDevice();
+    }
+
     status_t res = mPreviewWindow.startPreview();
     if (res != NO_ERROR) {
         return res;
     }
-    if (getCameraDevice()->isStarted()) {
-        return NO_ERROR;
-    }
-
-    EmulatedCameraDevice* camera_dev = getCameraDevice();
 
     /* Make sure camera device is connected. */
     if (!camera_dev->isConnected()) {
@@ -573,15 +574,17 @@ status_t EmulatedCamera::doStopPreview()
     LOGV("%s", __FUNCTION__);
 
     status_t res = NO_ERROR;
-    /* Stop the camera. */
-    if (getCameraDevice()->isStarted()) {
-        getCameraDevice()->stopDeliveringFrames();
-        res = getCameraDevice()->stopDevice();
-    }
+    if (mPreviewWindow.isPreviewEnabled()) {
+        /* Stop the camera. */
+        if (getCameraDevice()->isStarted()) {
+            getCameraDevice()->stopDeliveringFrames();
+            res = getCameraDevice()->stopDevice();
+        }
 
-    if (res == NO_ERROR) {
-        /* Disable preview as well. */
-        mPreviewWindow.stopPreview();
+        if (res == NO_ERROR) {
+            /* Disable preview as well. */
+            mPreviewWindow.stopPreview();
+        }
     }
 
     return NO_ERROR;

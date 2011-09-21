@@ -217,6 +217,16 @@ void CallbackNotifier::onNextFrameAvailable(const void* frame,
     }
 
     if (mTakingPicture) {
+        /* This happens just once. */
+        mTakingPicture = false;
+        /* The sequence of callbacks during picture taking is:
+         *  - CAMERA_MSG_SHUTTER
+         *  - CAMERA_MSG_RAW_IMAGE_NOTIFY
+         *  - CAMERA_MSG_COMPRESSED_IMAGE
+         */
+        if (isMessageEnabled(CAMERA_MSG_SHUTTER)) {
+            mNotifyCB(CAMERA_MSG_SHUTTER, 0, 0, mCBOpaque);
+        }
         if (isMessageEnabled(CAMERA_MSG_RAW_IMAGE_NOTIFY)) {
             mNotifyCB(CAMERA_MSG_RAW_IMAGE_NOTIFY, 0, 0, mCBOpaque);
         }
@@ -240,11 +250,6 @@ void CallbackNotifier::onNextFrameAvailable(const void* frame,
                 LOGE("%s: Compression failure in CAMERA_MSG_VIDEO_FRAME", __FUNCTION__);
             }
         }
-        if (isMessageEnabled(CAMERA_MSG_SHUTTER)) {
-            mNotifyCB(CAMERA_MSG_SHUTTER, 0, 0, mCBOpaque);
-        }
-        /* This happens just once. */
-        mTakingPicture = false;
     }
 }
 
