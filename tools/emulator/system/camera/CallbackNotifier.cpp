@@ -93,6 +93,7 @@ CallbackNotifier::CallbackNotifier()
       mLastFrameTimestamp(0),
       mFrameRefreshFreq(0),
       mMessageEnabler(0),
+      mJpegQuality(90),
       mVideoRecEnabled(false),
       mTakingPicture(false)
 {
@@ -196,7 +197,9 @@ void CallbackNotifier::cleanupCBNotifier()
     mCBOpaque = NULL;
     mLastFrameTimestamp = 0;
     mFrameRefreshFreq = 0;
+    mJpegQuality = 90;
     mVideoRecEnabled = false;
+    mTakingPicture = false;
 }
 
 void CallbackNotifier::onNextFrameAvailable(const void* frame,
@@ -235,7 +238,8 @@ void CallbackNotifier::onNextFrameAvailable(const void* frame,
             NV21JpegCompressor compressor;
             status_t res =
                 compressor.compressRawImage(frame, camera_dev->getFrameWidth(),
-                                            camera_dev->getFrameHeight(), 90);
+                                            camera_dev->getFrameHeight(),
+                                            mJpegQuality);
             if (res == NO_ERROR) {
                 camera_memory_t* jpeg_buff =
                     mGetMemoryCB(-1, compressor.getCompressedSize(), 1, NULL);

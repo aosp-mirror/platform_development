@@ -168,6 +168,12 @@ public:
         mTakingPicture = taking;
     }
 
+    /* Sets JPEG quality used to compress frame during picture taking. */
+    void setJpegQuality(int jpeg_quality)
+    {
+        mJpegQuality = jpeg_quality;
+    }
+
     /****************************************************************************
      * Private API
      ***************************************************************************/
@@ -205,6 +211,9 @@ protected:
 
     /* Message enabler. */
     uint32_t                        mMessageEnabler;
+
+    /* JPEG quality used to compress frame during picture taking. */
+    int                             mJpegQuality;
 
     /* Video recording status. */
     bool                            mVideoRecEnabled;

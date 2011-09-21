@@ -322,6 +322,11 @@ status_t EmulatedCamera::takePicture()
         LOGE("%s: Unsupported pixel format %s", __FUNCTION__, pix_fmt);
         return EINVAL;
     }
+    /* Get JPEG quality. */
+    int jpeg_quality = mParameters.getInt(CameraParameters::KEY_JPEG_QUALITY);
+    if (jpeg_quality <= 0) {
+        jpeg_quality = 90;  /* Fall back to default. */
+    }
 
     /*
      * Make sure preview is not running, and device is stopped before taking
@@ -358,6 +363,7 @@ status_t EmulatedCamera::takePicture()
     }
 
     /* Deliver one frame only. */
+    mCallbackNotifier.setJpegQuality(jpeg_quality);
     mCallbackNotifier.setTakingPicture(true);
     res = camera_dev->startDeliveringFrames(true);
     if (res != NO_ERROR) {
