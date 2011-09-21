@@ -50,7 +50,7 @@ status_t NV21JpegCompressor::compressRawImage(const void* image,
     offsets[0] = 0;
     offsets[1] = width * height;
     mStrides[0] = width;
-    mStrides[1] = mStrides[2] = width / 4;
+    mStrides[1] = width;
     if (encode(&mStream, pY, width, height, offsets, quality)) {
         LOGV("%s: Compressed JPEG: %d[%dx%d] -> %d bytes",
              __FUNCTION__, (width * height * 12) / 8, width, height, mStream.getOffset());
@@ -59,7 +59,6 @@ status_t NV21JpegCompressor::compressRawImage(const void* image,
         LOGE("%s: JPEG compression failed", __FUNCTION__);
         return errno ? errno : EINVAL;
     }
-
 }
 
 }; /* namespace android */
