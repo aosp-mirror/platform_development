@@ -543,7 +543,7 @@ status_t EmulatedCamera::doStartPreview()
     }
     uint32_t org_fmt;
     if (strcmp(pix_fmt, CameraParameters::PIXEL_FORMAT_YUV420P) == 0) {
-        org_fmt = V4L2_PIX_FMT_YVU420;
+        org_fmt = V4L2_PIX_FMT_YUV420;
     } else if (strcmp(pix_fmt, CameraParameters::PIXEL_FORMAT_RGBA8888) == 0) {
         org_fmt = V4L2_PIX_FMT_RGB32;
     } else if (strcmp(pix_fmt, CameraParameters::PIXEL_FORMAT_YUV420SP) == 0) {

@@ -117,6 +117,9 @@ status_t EmulatedCameraDevice::getCurrentPreviewFrame(void* buffer)
         case V4L2_PIX_FMT_YVU420:
             YV12ToRGB32(mCurrentFrame, buffer, mFrameWidth, mFrameHeight);
             return NO_ERROR;
+        case V4L2_PIX_FMT_YUV420:
+            YU12ToRGB32(mCurrentFrame, buffer, mFrameWidth, mFrameHeight);
+            return NO_ERROR;
         case V4L2_PIX_FMT_NV21:
             NV21ToRGB32(mCurrentFrame, buffer, mFrameWidth, mFrameHeight);
             return NO_ERROR;
@@ -142,6 +145,7 @@ status_t EmulatedCameraDevice::commonStartDevice(int width,
     /* Validate pixel format, and calculate framebuffer size at the same time. */
     switch (pix_fmt) {
         case V4L2_PIX_FMT_YVU420:
+        case V4L2_PIX_FMT_YUV420:
         case V4L2_PIX_FMT_NV21:
         case V4L2_PIX_FMT_NV12:
             mFrameBufferSize = (width * height * 12) / 8;
