@@ -54,7 +54,7 @@ development/sdk/plat_tools_source.properties  platform-tools/source.properties
 # Platform Component
 ##############################################################################
 
-# version files for the SDK updater, from sdk.git
+# version files for the SDK updater, from development.git
 development/sdk/platform_source.properties    platforms/${PLATFORM_NAME}/source.properties
 
 # copy build prop from out/.../sdk/
@@ -70,14 +70,6 @@ obj/framework.aidl platforms/${PLATFORM_NAME}/framework.aidl
 frameworks/base/libs/rs/scriptc  platforms/${PLATFORM_NAME}/renderscript/include
 external/clang/lib/Headers       platforms/${PLATFORM_NAME}/renderscript/clang-include
 external/clang/LICENSE.TXT       platforms/${PLATFORM_NAME}/renderscript/clang-include/LICENSE.TXT
-
-# System images + Kernel
-system.img                              platforms/${PLATFORM_NAME}/images/${TARGET_CPU_ABI}/system.img
-ramdisk.img                             platforms/${PLATFORM_NAME}/images/${TARGET_CPU_ABI}/ramdisk.img
-userdata.img                            platforms/${PLATFORM_NAME}/images/${TARGET_CPU_ABI}/userdata.img
-system/build.prop platforms/${PLATFORM_NAME}/images/${TARGET_CPU_ABI}/build.prop
-
-# Note: the kernel image is handled by sdk-android-<abi>.atree now.
 
 # emulator skins from sdk.git
 development/tools/emulator/skins/QVGA      platforms/${PLATFORM_NAME}/skins/QVGA
@@ -120,6 +112,18 @@ frameworks/base/data/fonts    platforms/${PLATFORM_NAME}/data/fonts
 sdk/files/sdk_files_NOTICE.txt platforms/${PLATFORM_NAME}/templates/NOTICE.txt
 sdk/files/sdk_files_NOTICE.txt platforms/${PLATFORM_NAME}/data/NOTICE.txt
 sdk/files/sdk_files_NOTICE.txt platforms/${PLATFORM_NAME}/skins/NOTICE.txt
+
+##############################################################################
+# System image Component
+##############################################################################
+
+# System images + Kernel
+system.img                                 system-images/${PLATFORM_NAME}/${TARGET_CPU_ABI}/system.img
+ramdisk.img                                system-images/${PLATFORM_NAME}/${TARGET_CPU_ABI}/ramdisk.img
+userdata.img                               system-images/${PLATFORM_NAME}/${TARGET_CPU_ABI}/userdata.img
+system/build.prop                          system-images/${PLATFORM_NAME}/${TARGET_CPU_ABI}/build.prop
+
+# Note: the kernel image is handled by sdk-android-<abi>.atree now.
 
 ##############################################################################
 # Docs Component
