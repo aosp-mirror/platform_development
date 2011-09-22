@@ -84,7 +84,8 @@ public class LabelView extends View {
     private final void initLabelView() {
         mTextPaint = new Paint();
         mTextPaint.setAntiAlias(true);
-        mTextPaint.setTextSize(16);
+        // Must manually scale the desired text size to match screen density
+        mTextPaint.setTextSize(16 * getResources().getDisplayMetrics().density);
         mTextPaint.setColor(0xFF000000);
         setPadding(3, 3, 3, 3);
     }
@@ -104,6 +105,7 @@ public class LabelView extends View {
      * @param size Font size
      */
     public void setTextSize(int size) {
+        // This text size has been pre-scaled by the getDimensionPixelOffset method
         mTextPaint.setTextSize(size);
         requestLayout();
         invalidate();
