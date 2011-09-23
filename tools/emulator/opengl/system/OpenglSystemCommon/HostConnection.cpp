@@ -60,22 +60,6 @@ HostConnection *HostConnection::get()
             return NULL;
         }
 
-#if 0
-            TcpStream *stream = new TcpStream(STREAM_BUFFER_SIZE);
-            if (stream) {
-                if (stream->connect("10.0.2.2", STREAM_PORT_NUM) < 0) {
-                    LOGE("Failed to connect to host (TcpStream)!!!\n");
-                    delete stream;
-                    stream = NULL;
-                }
-                else {
-                    con->m_stream = stream;
-                    LOGE("Established TCP connection with HOST\n");
-                }
-            }
-            if (!stream)
-#endif
-
         if (useQemuPipe) {
             QemuPipeStream *stream = new QemuPipeStream(STREAM_BUFFER_SIZE);
             if (!stream) {
@@ -108,11 +92,11 @@ HostConnection *HostConnection::get()
         }
 
         // send zero 'clientFlags' to the host.
-        unsigned int *pClientFlags = 
+        unsigned int *pClientFlags =
                 (unsigned int *)con->m_stream->allocBuffer(sizeof(unsigned int));
         *pClientFlags = 0;
         con->m_stream->commitBuffer(sizeof(unsigned int));
-        
+
         LOGD("HostConnection::get() New Host Connection established %p, tid %d\n", con, gettid());
         tinfo->hostConn = con;
     }

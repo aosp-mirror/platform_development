@@ -13,20 +13,19 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-#ifndef __TCP_STREAM_H
-#define __TCP_STREAM_H
+#ifndef __UNIX_STREAM_H
+#define __UNIX_STREAM_H
 
 #include "SocketStream.h"
 
-class TcpStream : public SocketStream {
+class UnixStream : public SocketStream {
 public:
-    explicit TcpStream(size_t bufsize = 10000);
+    explicit UnixStream(size_t bufsize = 10000);
     virtual int listen(unsigned short port);
     virtual SocketStream *accept();
     virtual int connect(unsigned short port);
-    int connect(const char* hostname, unsigned short port);
 private:
-    TcpStream(int sock, size_t bufSize);
+    UnixStream(int sock, size_t bufSize);
 };
 
 #endif
