@@ -149,6 +149,12 @@ void EmulatedCamera::onNextFrameAvailable(const void* frame,
     mCallbackNotifier.onNextFrameAvailable(frame, timestamp, camera_dev);
 }
 
+void EmulatedCamera::onCameraDeviceError(int err)
+{
+    /* Errors are reported through the callback notifier */
+    mCallbackNotifier.onCameraDeviceError(err);
+}
+
 /****************************************************************************
  * Camera API implementation.
  ***************************************************************************/
@@ -559,7 +565,8 @@ status_t EmulatedCamera::doStartPreview()
         mPreviewWindow.stopPreview();
         return EINVAL;
     }
-    LOGD("Starting camera: %dx%d -> %.4s", width, height, pix_fmt);
+    LOGD("Starting camera: %dx%d -> %.4s(%s)",
+         width, height, reinterpret_cast<const char*>(&org_fmt), pix_fmt);
     res = camera_dev->startDevice(width, height, org_fmt);
     if (res != NO_ERROR) {
         mPreviewWindow.stopPreview();
