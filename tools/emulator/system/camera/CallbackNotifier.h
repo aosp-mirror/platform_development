@@ -159,6 +159,12 @@ public:
                               nsecs_t timestamp,
                               EmulatedCameraDevice* camera_dev);
 
+    /* Entry point for notifications that occur in camera device.
+     * Param:
+     *  err - CAMERA_ERROR_XXX error code.
+     */
+    void onCameraDeviceError(int err);
+
     /* Sets, or resets taking picture state.
      * This state control whether or not to notify the framework about compressed
      * image, shutter, and other picture related events.

@@ -94,6 +94,12 @@ public:
                                       nsecs_t timestamp,
                                       EmulatedCameraDevice* camera_dev);
 
+    /* Entry point for notifications that occur in camera device.
+     * Param:
+     *  err - CAMERA_ERROR_XXX error code.
+     */
+    virtual void onCameraDeviceError(int err);
+
     /****************************************************************************
      * Camera API implementation
      ***************************************************************************/
