@@ -92,11 +92,6 @@ status_t EmulatedCamera::Initialize()
      * Fake required parameters.
      */
 
-    /* Only RGBX are supported by the framework for preview window in the emulator! */
-    mParameters.set(CameraParameters::KEY_SUPPORTED_PREVIEW_FORMATS, CameraParameters::PIXEL_FORMAT_RGBA8888);
-    mParameters.set(CameraParameters::KEY_SUPPORTED_PREVIEW_FRAME_RATES, "60,50,25,15,10");
-    mParameters.set(CameraParameters::KEY_SUPPORTED_PREVIEW_FPS_RANGE, "(10,60)");
-    mParameters.set(CameraParameters::KEY_PREVIEW_FPS_RANGE, "10,60");
     mParameters.set(CameraParameters::KEY_SUPPORTED_JPEG_THUMBNAIL_SIZES, "320x240,0x0");
     mParameters.set(CameraParameters::KEY_MAX_EXPOSURE_COMPENSATION, "6");
     mParameters.set(CameraParameters::KEY_MIN_EXPOSURE_COMPENSATION, "-6");
@@ -109,8 +104,13 @@ status_t EmulatedCamera::Initialize()
     mParameters.set(CameraParameters::KEY_VERTICAL_VIEW_ANGLE, "42.5");
     mParameters.set(CameraParameters::KEY_JPEG_THUMBNAIL_QUALITY, "90");
 
-    /* Only RGB formats are supported by preview window in emulator. */
-    mParameters.setPreviewFormat(CameraParameters::PIXEL_FORMAT_RGBA8888);
+    /* Preview format settings used here are related to panoramic view only. It's
+     * not related to the preview window that works only with RGB frames, which
+     * is explicitly stated when set_buffers_geometry is called on the preview
+     * window object. */
+    mParameters.set(CameraParameters::KEY_SUPPORTED_PREVIEW_FORMATS,
+                    CameraParameters::PIXEL_FORMAT_YUV420SP);
+    mParameters.setPreviewFormat(CameraParameters::PIXEL_FORMAT_YUV420SP);
 
     /* We don't relay on the actual frame rates supported by the camera device,
      * since we will emulate them through timeouts in the emulated camera device
