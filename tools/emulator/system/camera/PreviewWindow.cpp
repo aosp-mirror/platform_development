@@ -121,9 +121,9 @@ void PreviewWindow::onNextFrameAvailable(const void* frame,
              __FUNCTION__, mPreviewWindow, mPreviewFrameWidth,
              mPreviewFrameHeight);
         res = mPreviewWindow->set_buffers_geometry(mPreviewWindow,
-                                                    mPreviewFrameWidth,
-                                                    mPreviewFrameHeight,
-                                                    HAL_PIXEL_FORMAT_RGBA_8888);
+                                                   mPreviewFrameWidth,
+                                                   mPreviewFrameHeight,
+                                                   HAL_PIXEL_FORMAT_RGBA_8888);
         if (res != NO_ERROR) {
             LOGE("%s: Error in set_buffers_geometry %d -> %s",
                  __FUNCTION__, -res, strerror(-res));
