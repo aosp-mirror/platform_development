@@ -234,7 +234,8 @@ void CallbackNotifier::onNextFrameAvailable(const void* frame,
             mNotifyCB(CAMERA_MSG_RAW_IMAGE_NOTIFY, 0, 0, mCBOpaque);
         }
         if (isMessageEnabled(CAMERA_MSG_COMPRESSED_IMAGE)) {
-            /* Compress the frame to JPEG. TODO: Make sure that frame is NV21! */
+            /* Compress the frame to JPEG. Note that when taking pictures, we
+             * have requested camera device to provide us with NV21 frames. */
             NV21JpegCompressor compressor;
             status_t res =
                 compressor.compressRawImage(frame, camera_dev->getFrameWidth(),
