@@ -257,6 +257,13 @@ void CallbackNotifier::onNextFrameAvailable(const void* frame,
     }
 }
 
+void CallbackNotifier::onCameraDeviceError(int err)
+{
+    if (isMessageEnabled(CAMERA_MSG_ERROR) && mNotifyCB != NULL) {
+        mNotifyCB(CAMERA_MSG_ERROR, err, 0, mCBOpaque);
+    }
+}
+
 /****************************************************************************
  * Private API
  ***************************************************************************/

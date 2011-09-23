@@ -249,12 +249,13 @@ bool EmulatedQemuCameraDevice::inWorkerThread()
         /* Timestamp the current frame, and notify the camera HAL. */
         mCurFrameTimestamp = systemTime(SYSTEM_TIME_MONOTONIC);
         mCameraHAL->onNextFrameAvailable(mCurrentFrame, mCurFrameTimestamp, this);
+        return true;
     } else {
         LOGE("%s: Unable to get current video frame: %s",
              __FUNCTION__, strerror(query_res));
+        mCameraHAL->onCameraDeviceError(CAMERA_ERROR_SERVER_DIED);
+        return false;
     }
-
-    return true;
 }
 
 }; /* namespace android */
