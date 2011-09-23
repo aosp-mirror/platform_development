@@ -13,20 +13,29 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-#ifndef __TCP_STREAM_H
-#define __TCP_STREAM_H
+#ifndef __WIN32_PIPE_STREAM_H
+#define __WIN32_PIPE_STREAM_H
 
 #include "SocketStream.h"
+#include <windows.h>
 
-class TcpStream : public SocketStream {
+class Win32PipeStream : public SocketStream {
 public:
-    explicit TcpStream(size_t bufsize = 10000);
+    explicit Win32PipeStream(size_t bufsize = 10000);
+    virtual ~Win32PipeStream();
     virtual int listen(unsigned short port);
     virtual SocketStream *accept();
     virtual int connect(unsigned short port);
-    int connect(const char* hostname, unsigned short port);
+
+    virtual int commitBuffer(size_t size);
+    virtual const unsigned char *readFully(void *buf, size_t len);
+    virtual const unsigned char *read(void *buf, size_t *inout_len);
+
 private:
-    TcpStream(int sock, size_t bufSize);
+    Win32PipeStream(HANDLE pipe, size_t bufSize);
+    HANDLE  m_pipe;
+    int     m_port;
 };
+
 
 #endif

@@ -32,6 +32,16 @@ extern "C" {
 //
 bool initLibrary(void);
 
+// list of constants to be passed to setStreamMode, which determines
+// which
+#define STREAM_MODE_DEFAULT   0
+#define STREAM_MODE_TCP       1
+#define STREAM_MODE_UNIX      2
+#define STREAM_MODE_PIPE      3
+
+// Change the stream mode. This must be called before initOpenGLRenderer
+int setStreamMode(int mode);
+
 //
 // initOpenGLRenderer - initialize the OpenGL renderer process.
 //     portNum is the tcp port number the renderer is listening to.

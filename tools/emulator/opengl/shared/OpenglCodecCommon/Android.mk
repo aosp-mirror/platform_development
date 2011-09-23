@@ -3,15 +3,18 @@
 #
 LOCAL_PATH := $(call my-dir)
 
-### CodecCommon  guest ##############################################
-$(call emugl-begin-static-library,libOpenglCodecCommon)
-
-LOCAL_SRC_FILES := \
+commonSources := \
         GLClientState.cpp \
         GLSharedGroup.cpp \
         glUtils.cpp \
+        SocketStream.cpp \
         TcpStream.cpp \
         TimeUtils.cpp
+
+### CodecCommon  guest ##############################################
+$(call emugl-begin-static-library,libOpenglCodecCommon)
+
+LOCAL_SRC_FILES := $(commonSources)
 
 LOCAL_CFLAGS += -DLOG_TAG=\"eglCodecCommon\"
 
@@ -22,11 +25,13 @@ $(call emugl-end-module)
 ### OpenglCodecCommon  host ##############################################
 $(call emugl-begin-host-static-library,libOpenglCodecCommon)
 
-LOCAL_SRC_FILES := \
-        GLClientState.cpp \
-        glUtils.cpp \
-        TcpStream.cpp \
-        TimeUtils.cpp
+LOCAL_SRC_FILES := $(commonSources)
+
+ifeq ($(HOST_OS),windows)
+    LOCAL_SRC_FILES += Win32PipeStream.cpp
+else
+    LOCAL_SRC_FILES += UnixStream.cpp
+endif
 
 $(call emugl-export,STATIC_LIBRARIES,libcutils)
 $(call emugl-export,C_INCLUDES,$(LOCAL_PATH))

@@ -15,6 +15,11 @@
 */
 #include "RenderServer.h"
 #include "TcpStream.h"
+#ifdef _WIN32
+#include "Win32PipeStream.h"
+#else
+#include "UnixStream.h"
+#endif
 #include "RenderThread.h"
 #include "FrameBuffer.h"
 #include <set>
@@ -27,6 +32,8 @@ RenderServer::RenderServer() :
 {
 }
 
+extern "C" int gRendererStreamMode;
+
 RenderServer *RenderServer::create(int port)
 {
     RenderServer *server = new RenderServer();
@@ -34,7 +41,16 @@ RenderServer *RenderServer::create(int port)
         return NULL;
     }
 
-    server->m_listenSock = new TcpStream();
+    if (gRendererStreamMode == STREAM_MODE_TCP) {
+        server->m_listenSock = new TcpStream();
+    } else {
+#ifdef _WIN32
+        server->m_listenSock = new Win32PipeStream();
+#else
+        server->m_listenSock = new UnixStream();
+#endif
+    }
+
     if (server->m_listenSock->listen(port) < 0) {
         ERR("RenderServer::create failed to listen on port %d\n", port);
         delete server;
@@ -49,7 +65,7 @@ int RenderServer::Main()
     RenderThreadsSet threads;
 
     while(1) {
-        TcpStream *stream = m_listenSock->accept();
+        SocketStream *stream = m_listenSock->accept();
         if (!stream) {
             fprintf(stderr,"Error accepting connection, aborting\n");
             break;

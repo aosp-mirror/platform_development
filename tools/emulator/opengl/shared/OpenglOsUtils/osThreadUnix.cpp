@@ -27,6 +27,7 @@ Thread::Thread() :
 
 Thread::~Thread()
 {
+    pthread_mutex_destroy(&m_lock);
 }
 
 bool

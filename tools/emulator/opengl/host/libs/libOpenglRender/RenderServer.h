@@ -16,7 +16,7 @@
 #ifndef _LIB_OPENGL_RENDER_RENDER_SERVER_H
 #define _LIB_OPENGL_RENDER_RENDER_SERVER_H
 
-#include "TcpStream.h"
+#include "SocketStream.h"
 #include "osThread.h"
 
 class RenderServer : public osUtils::Thread
@@ -31,7 +31,7 @@ private:
     RenderServer();
 
 private:
-    TcpStream *m_listenSock;
+    SocketStream *m_listenSock;
     bool m_exiting;
 };
 
