@@ -9,11 +9,6 @@
 #
 ifeq (true,$(BUILD_EMULATOR_OPENGL))
 
-# By default, NEVER build the gralloc.goldfish support library because
-# the code has not been ported to Honeycomb / IceCreamSandwich yet and
-# will fail to build properly.
-BUILD_EMULATOR_OPENGL_DRIVER ?= true
-
 # Top-level for all modules
 EMUGL_PATH := $(call my-dir)
 
@@ -71,13 +66,8 @@ include $(EMUGL_PATH)/system/OpenglSystemCommon/Android.mk
 include $(EMUGL_PATH)/system/GLESv1/Android.mk
 include $(EMUGL_PATH)/system/GLESv2/Android.mk
 
-ifeq (false,$(BUILD_EMULATOR_OPENGL_DRIVER))
-  include $(EMUGL_PATH)/tests/ut_rendercontrol_enc/Android.mk
-  include $(EMUGL_PATH)/tests/gles_android_wrapper/Android.mk
-else
-  include $(EMUGL_PATH)/system/gralloc/Android.mk
-  include $(EMUGL_PATH)/system/egl/Android.mk
-endif
+include $(EMUGL_PATH)/system/gralloc/Android.mk
+include $(EMUGL_PATH)/system/egl/Android.mk
 
 # Host static libraries
 include $(EMUGL_PATH)/host/libs/GLESv1_dec/Android.mk
@@ -95,12 +85,7 @@ include $(EMUGL_PATH)/host/libs/libOpenglRender/Android.mk
 # Host executables
 include $(EMUGL_PATH)/host/renderer/Android.mk
 
-# Host unit-test for the renderer. this one uses its own small
-# EGL host wrapper.
-include $(EMUGL_PATH)/tests/event_injector/Android.mk
-include $(EMUGL_PATH)/tests/EGL_host_wrapper/Android.mk
-include $(EMUGL_PATH)/tests/emulator_test_renderer/Android.mk
-include $(EMUGL_PATH)/tests/ut_renderer/Android.mk
+# Host unit-test for the renderer.
 
 include $(EMUGL_PATH)/tests/translator_tests/MacCommon/Android.mk
 include $(EMUGL_PATH)/tests/translator_tests/GLES_CM/Android.mk
