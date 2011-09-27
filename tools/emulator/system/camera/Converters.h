@@ -17,7 +17,7 @@
 #ifndef HW_EMULATOR_CAMERA_CONVERTERS_H
 #define HW_EMULATOR_CAMERA_CONVERTERS_H
 
-#include <sys/endian.h>
+#include <endian.h>
 
 #ifndef __BYTE_ORDER
 #error "could not determine byte order"
