@@ -19,17 +19,17 @@
 
 static const int systemEGLVersionMajor = 1;
 static const int systemEGLVersionMinor = 4;
-static const char *systemEGLVendor = "Google Android emulator";
+static const char systemEGLVendor[] = "Google Android emulator";
 
 // list of extensions supported by this EGL implementation
 //  NOTE that each extension name should be suffixed with space
-static const char *systemStaticEGLExtensions =
+static const char systemStaticEGLExtensions[] =
             "EGL_ANDROID_image_native_buffer ";
 
 // list of extensions supported by this EGL implementation only if supported
 // on the host implementation.
 //  NOTE that each extension name should be suffixed with space
-static const char *systemDynamicEGLExtensions =
+static const char systemDynamicEGLExtensions[] =
             "EGL_KHR_image_base "
             "EGL_KHR_gl_texture_2d_image ";
 
