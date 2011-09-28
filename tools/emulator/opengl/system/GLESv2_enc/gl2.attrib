@@ -9,20 +9,22 @@ glBindAttribLocation
 #void glBufferData(GLenum target, GLsizeiptr size, GLvoid *data, GLenum usage)
 glBufferData
 	len data size
-	var_flag data nullAllowed
+	var_flag data nullAllowed isLarge
 
 #void glBufferSubData(GLenum target, GLintptr offset, GLsizeiptr size, GLvoid *data)
 glBufferSubData
 	len data size
+        var_flag data isLarge
 
 #void glCompressedTexImage2D(GLenum target, GLint level, GLenum internalformat, GLsizei width, GLsizei height, GLint border, GLsizei imageSize, GLvoid *data)
 glCompressedTexImage2D
 	len data imageSize
-    var_flag data nullAllowed
+    var_flag data nullAllowed isLarge
 
 #void glCompressedTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLsizei imageSize, GLvoid *data)
 glCompressedTexSubImage2D
 	len data imageSize
+        var_flag data isLarge
 
 #void glDeleteBuffers(GLsizei n, GLuint *buffers)
 glDeleteBuffers
@@ -243,7 +245,7 @@ glShaderBinary
 glTexImage2D
 	dir pixels in
 	len pixels pixelDataSize(self, width, height, format, type, 0)
-	var_flag pixels nullAllowed
+	var_flag pixels nullAllowed isLarge
 
 #void glTexParameterfv(GLenum target, GLenum pname, GLfloat *params)
 glTexParameterfv
@@ -255,6 +257,7 @@ glTexParameteriv
 #void glTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid *pixels)
 glTexSubImage2D
 	len pixels pixelDataSize(self, width, height, format, type, 0)
+        var_flag pixels isLarge
 	
 #void glUniform1fv(GLint location, GLsizei count, GLfloat *v)
 glUniform1fv
@@ -333,20 +336,23 @@ glMapBufferOES
 
 #void glTexImage3DOES(GLenum target, GLint level, GLenum internalformat, GLsizei width, GLsizei height, GLsizei depth, GLint border, GLenum format, GLenum type, GLvoid *pixels)
 glTexImage3DOES
-	len pixels pixelDataSize3D(self, width, height, depth, format, type, 0)	
-	var_flag pixels nullAllowed
+	len pixels pixelDataSize3D(self, width, height, depth, format, type, 0)
+	var_flag pixels nullAllowed isLarge
 
 #void glTexSubImage3DOES(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type, GLvoid *pixels)
 glTexSubImage3DOES
 	len pixels pixelDataSize3D(self, width, height, depth, format, type, 0)	
+        var_flag pixels isLarge
 
 #void glCompressedTexImage3DOES(GLenum target, GLint level, GLenum internalformat, GLsizei width, GLsizei height, GLsizei depth, GLint border, GLsizei imageSize, GLvoid *data)
 glCompressedTexImage3DOES
 	len data imageSize
+        var_flag data isLarge
 
 #void glCompressedTexSubImage3DOES(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLsizei imageSize, GLvoid *data)
 glCompressedTexSubImage3DOES
 	len data imageSize
+        var_flag data isLarge
 
 #void glDeleteVertexArraysOES(GLsizei n, GLuint *arrays)
 glDeleteVertexArraysOES
