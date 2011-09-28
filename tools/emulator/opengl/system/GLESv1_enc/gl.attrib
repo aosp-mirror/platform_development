@@ -240,7 +240,7 @@ glTexEnvxv
 glTexImage2D
 	dir pixels in
 	len pixels pixelDataSize(self, width, height, format, type, 0)
-	var_flag pixels nullAllowed
+	var_flag pixels nullAllowed isLarge
 
 #void glTexParameteriv(GLenum target, GLenum pname, GLint *params)
 glTexParameteriv
@@ -253,6 +253,7 @@ glTexParameterxv
 #void glTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid *pixels)
 glTexSubImage2D
 	len pixels pixelDataSize(self, width, height, format, type, 0)
+        var_flag pixels isLarge
 
 #void glVertexPointer(GLint size, GLenum type, GLsizei stride, GLvoid *pointer)
 # we treat the pointer as an offset to a VBO
