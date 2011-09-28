@@ -37,6 +37,7 @@ public:
 
     bool valid() { return m_sock >= 0; }
     virtual int recv(void *buf, size_t len);
+    virtual int writeFully(const void *buf, size_t len);
 
 protected:
     int            m_sock;
@@ -44,7 +45,6 @@ protected:
     unsigned char *m_buf;
 
     SocketStream(int sock, size_t bufSize);
-    int writeFully(const void *buf, size_t len);
 };
 
 #endif /* __SOCKET_STREAM_H */

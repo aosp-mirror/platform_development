@@ -39,8 +39,7 @@ public:
     bool valid() { return m_sock >= 0; }
     int recv(void *buf, size_t len);
 
-private:
-    int writeFully(const void *buf, size_t len);
+    virtual int writeFully(const void *buf, size_t len);
 
 private:
     int m_sock;

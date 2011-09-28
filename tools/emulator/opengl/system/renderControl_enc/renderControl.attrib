@@ -26,10 +26,10 @@ rcGetConfigs
 
 rcChooseConfig
     dir attribs in
-	len attribs attribs_size
-	dir configs out
+    len attribs attribs_size
+    dir configs out
     var_flag configs nullAllowed
-	len configs configs_size*sizeof(uint32_t)
+    len configs configs_size*sizeof(uint32_t)
 
 rcReadColorBuffer
     dir pixels out
@@ -38,3 +38,4 @@ rcReadColorBuffer
 rcUpdateColorBuffer
     dir pixels in
     len pixels (((glUtilsPixelBitSize(format, type) * width) >> 3) * height)
+    var_flag pixels isLarge

@@ -85,13 +85,18 @@ void *SocketStream::allocBuffer(size_t minSize)
 
 int SocketStream::commitBuffer(size_t size)
 {
+    return writeFully(m_buf, size);
+}
+
+int SocketStream::writeFully(const void* buffer, size_t size)
+{
     if (!valid()) return -1;
 
     size_t res = size;
     int retval = 0;
 
     while (res > 0) {
-        ssize_t stat = ::send(m_sock, (const char *)(m_buf) + (size - res), res, 0);
+        ssize_t stat = ::send(m_sock, (const char *)buffer + (size - res), res, 0);
         if (stat < 0) {
             if (errno != EINTR) {
                 retval =  stat;
