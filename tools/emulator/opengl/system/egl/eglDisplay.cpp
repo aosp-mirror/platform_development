@@ -70,6 +70,11 @@ eglDisplay::eglDisplay() :
     pthread_mutex_init(&m_lock, NULL);
 }
 
+eglDisplay::~eglDisplay()
+{
+    pthread_mutex_destroy(&m_lock);
+}
+
 bool eglDisplay::initialize(EGLClient_eglInterface *eglIface)
 {
     pthread_mutex_lock(&m_lock);
