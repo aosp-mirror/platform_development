@@ -21,6 +21,15 @@
 #include <errno.h>
 #include <sys/types.h>
 
+/* Define this to 1 to enable support for the 'isLarge' variable flag
+ * that instructs the encoder to send large data buffers by a direct
+ * write through the pipe (i.e. without copying it into a temporary
+ * buffer. This has definite performance benefits when using a QEMU Pipe.
+ *
+ * Set to 0 otherwise.
+ */
+#define WITH_LARGE_SUPPORT  1
+
 EntryPoint * ApiGen::findEntryByName(const std::string & name)
 {
     EntryPoint * entry = NULL;
@@ -338,6 +347,99 @@ int ApiGen::genEncoderHeader(const std::string &filename)
     return 0;
 }
 
+// Format the byte length expression for a given variable into a user-provided buffer
+// If the variable type is not a pointer, this is simply its size as a decimal constant
+// If the variable is a pointer, this will be an expression provided by the .attrib file
+// through the 'len' attribute.
+//
+// Returns 1 if the variable is a pointer, 0 otherwise
+//
+static int getVarEncodingSizeExpression(Var&  var, EntryPoint* e, char* buff, size_t bufflen)
+{
+    int ret = 0;
+    if (!var.isPointer()) {
+        snprintf(buff, bufflen, "%u", (unsigned int) var.type()->bytes());
+    } else {
+        ret = 1;
+        const char* lenExpr = var.lenExpression().c_str();
+        const char* varname = var.name().c_str();
+        if (e != NULL && lenExpr[0] == '\0') {
+            fprintf(stderr, "%s: data len is undefined for '%s'\n",
+                    e->name().c_str(), varname);
+        }
+        if (var.nullAllowed()) {
+            snprintf(buff, bufflen, "((%s != NULL) ? %s : 0)", varname, lenExpr);
+        } else {
+            snprintf(buff, bufflen, "%s", lenExpr);
+        }
+    }
+    return ret;
+}
+
+static int writeVarEncodingSize(Var& var, FILE* fp)
+{
+    int ret = 0;
+    if (!var.isPointer()) {
+        fprintf(fp, "%u", (unsigned int) var.type()->bytes());
+    } else {
+        ret = 1;
+        fprintf(fp, "__size_%s", var.name().c_str());
+    }
+    return ret;
+}
+
+
+
+static void writeVarEncodingExpression(Var& var, FILE* fp)
+{
+    const char* varname = var.name().c_str();
+
+    if (var.isPointer()) {
+        // encode a pointer header
+        fprintf(fp, "\t*(unsigned int *)(ptr) = __size_%s; ptr += 4;\n", varname);
+
+        Var::PointerDir dir = var.pointerDir();
+        if (dir == Var::POINTER_INOUT || dir == Var::POINTER_IN) {
+            if (var.nullAllowed()) {
+                fprintf(fp, "\tif (%s != NULL) ", varname);
+            } else {
+                fprintf(fp, "\t");
+            }
+
+            if (var.packExpression().size() != 0) {
+                fprintf(fp, "%s;", var.packExpression().c_str());
+            } else {
+                fprintf(fp, "memcpy(ptr, %s, __size_%s);",
+                        varname, varname);
+            }
+
+            fprintf(fp, "ptr += __size_%s;\n", varname);
+        }
+    } else {
+        // encode a non pointer variable
+        if (!var.isVoid()) {
+            fprintf(fp, "\t*(%s *) (ptr) = %s; ptr += %u;\n",
+                    var.type()->name().c_str(), varname,
+                    (uint) var.type()->bytes());
+        }
+    }
+}
+
+#if WITH_LARGE_SUPPORT
+static void writeVarLargeEncodingExpression(Var& var, FILE* fp)
+{
+    const char* varname = var.name().c_str();
+
+    fprintf(fp, "\tstream->writeFully(&__size_%s,4);\n", varname);
+    if (var.nullAllowed()) {
+        fprintf(fp, "\tif (%s != NULL) ", varname);
+    } else {
+        fprintf(fp, "\t");
+    }
+    fprintf(fp, "stream->writeFully(%s, __size_%s);\n", varname, varname);
+}
+#endif /* WITH_LARGE_SUPPORT */
+
 int ApiGen::genEncoderImpl(const std::string &filename)
 {
     FILE *fp = fopen(filename.c_str(), "wt");
@@ -368,46 +470,139 @@ int ApiGen::genEncoderImpl(const std::string &filename)
         fprintf(fp, "{\n");
 
 //      fprintf(fp, "\n\tDBG(\">>>> %s\\n\");\n", e->name().c_str());
-        fprintf(fp, "\n\t%s *ctx = (%s *)self;\n\n",
+        fprintf(fp, "\n\t%s *ctx = (%s *)self;\n",
                 classname.c_str(),
                 classname.c_str());
-
-        // size calculation ;
-        fprintf(fp, "\t size_t packetSize = ");
-
+        fprintf(fp, "\tIOStream *stream = ctx->m_stream;\n\n");
         VarsArray & evars = e->vars();
+        size_t  maxvars = evars.size();
+        size_t  j;
+
+        char    buff[256];
+
+        // Define the __size_XXX variables that contain the size of data
+        // associated with pointers.
+        for (j = 0; j < maxvars; j++) {
+            Var& var = evars[j];
+
+            if (!var.isPointer())
+                continue;
+
+            const char* varname = var.name().c_str();
+            fprintf(fp, "\tconst unsigned int __size_%s = ", varname);
+
+            getVarEncodingSizeExpression(var, e, buff, sizeof(buff));
+            fprintf(fp, "%s;\n", buff);
+        }
+
+#if WITH_LARGE_SUPPORT
+        // We need to take care of 'isLarge' variable in a special way
+        // Anything before an isLarge variable can be packed into a single
+        // buffer, which is then commited. Each isLarge variable is a pointer
+        // to data that can be written to directly through the pipe, which
+        // will be instant when using a QEMU pipe
+
+        size_t  nvars   = 0;
+        size_t  npointers = 0;
+
+        // First, compute the total size, 8 bytes for the opcode + payload size
+        fprintf(fp, "\t unsigned char *ptr;\n");
+        fprintf(fp, "\t const size_t packetSize = 8");
+
+        for (j = 0; j < maxvars; j++) {
+            fprintf(fp, " + ");
+            npointers += writeVarEncodingSize(evars[j], fp);
+        }
+        if (npointers > 0) {
+            fprintf(fp, " + %u*4", npointers);
+        }
+        fprintf(fp, ";\n");
+
+        // We need to divide the packet into fragments. Each fragment contains
+        // either copied arguments to a temporary buffer, or direct writes for
+        // large variables.
+        //
+        // The first fragment must also contain the opcode+payload_size
+        //
+        nvars = 0;
+        while (nvars < maxvars || maxvars == 0) {
+
+            // Skip over non-large fields
+            for (j = nvars; j < maxvars; j++) {
+                if (evars[j].isLarge())
+                    break;
+            }
+
+            // Write a fragment if needed.
+            if (nvars == 0 || j > nvars) {
+                const char* plus = "";
+
+                if (nvars == 0 && j == maxvars) {
+                    // Simple shortcut for the common case where we don't have large variables;
+                    fprintf(fp, "\tptr = stream->alloc(packetSize);\n");
+
+                } else {
+                    // allocate buffer from the stream until the first large variable
+                    fprintf(fp, "\tptr = stream->alloc(");
+                    plus = "";
+
+                    if (nvars == 0) {
+                        fprintf(fp,"8"); plus = " + ";
+                    }
+                    if (j > nvars) {
+                        npointers = 0;
+                        for (j = nvars; j < maxvars && !evars[j].isLarge(); j++) {
+                            fprintf(fp, "%s", plus); plus = " + ";
+                            npointers += writeVarEncodingSize(evars[j], fp);
+                        }
+                        if (npointers > 0) {
+                            fprintf(fp, "%s%u*4", plus, npointers); plus = " + ";
+                        }
+                    }
+                    fprintf(fp,");\n");
+                }
+
+                // encode packet header if needed.
+                if (nvars == 0) {
+                    fprintf(fp, "\t*(unsigned int *)(ptr) = OP_%s; ptr += 4;\n", e->name().c_str());
+                    fprintf(fp, "\t*(unsigned int *)(ptr) = (unsigned int) packetSize; ptr += 4;\n");
+                }
+
+                if (maxvars == 0)
+                    break;
+
+                // encode non-large fields in this fragment
+                for (j = nvars; j < maxvars && !evars[j].isLarge(); j++) {
+                    writeVarEncodingExpression(evars[j],fp);
+                }
+
+                // Ensure the fragment is commited if it is followed by a large variable
+                if (j < maxvars) {
+                    fprintf(fp, "\tstream->flush();\n");
+                }
+            }
+
+            // If we have one or more large variables, write them directly.
+            // As size + data
+            for ( ; j < maxvars && evars[j].isLarge(); j++) {
+                writeVarLargeEncodingExpression(evars[j], fp);
+            }
+
+            nvars = j;
+        }
+
+#else /* !WITH_LARGE_SUPPORT */
         size_t nvars = evars.size();
         size_t npointers = 0;
+        fprintf(fp, "\t const size_t packetSize = 8");
         for (size_t j = 0; j < nvars; j++) {
-            fprintf(fp, "%s ", j == 0 ? "" : " +");
-            if (evars[j].isPointer()) {
-                npointers++;
-
-                if (evars[j].lenExpression() == "") {
-                    fprintf(stderr, "%s: data len is undefined for '%s'\n",
-                            e->name().c_str(), evars[j].name().c_str());
-                }
-
-                if (evars[j].nullAllowed()) {
-                    fprintf(fp, "(%s != NULL ? %s : 0)",
-                            evars[j].name().c_str(),
-                            evars[j].lenExpression().c_str());
-                } else {
-                    if (evars[j].pointerDir() == Var::POINTER_IN ||
-                        evars[j].pointerDir() == Var::POINTER_INOUT) {
-                        fprintf(fp, "%s", evars[j].lenExpression().c_str());
-                    } else {
-                        fprintf(fp, "0");
-                    }
-                }
-            } else {
-                fprintf(fp, "%u", (unsigned int) evars[j].type()->bytes());
-            }
+            npointers += getVarEncodingSizeExpression(evars[j],e,buff,sizeof(buff));
+            fprintf(fp, " + %s", buff);
         }
-        fprintf(fp, " %s 8 + %u * 4;\n", nvars != 0 ? "+" : "", (unsigned int) npointers);
+        fprintf(fp, " + %u * 4;\n", (unsigned int) npointers);
 
         // allocate buffer from the stream;
-        fprintf(fp, "\t unsigned char *ptr = ctx->m_stream->alloc(packetSize);\n\n");
+        fprintf(fp, "\t unsigned char *ptr = stream->alloc(packetSize);\n\n");
 
         // encode into the stream;
         fprintf(fp, "\t*(unsigned int *)(ptr) = OP_%s; ptr += 4;\n",  e->name().c_str());
@@ -415,62 +610,23 @@ int ApiGen::genEncoderImpl(const std::string &filename)
 
         // out variables
         for (size_t j = 0; j < nvars; j++) {
-            if (evars[j].isPointer()) {
-                // encode a pointer header
-                if (evars[j].nullAllowed()) {
-                    fprintf(fp, "\t*(unsigned int *)(ptr) = (%s != NULL) ? %s : 0; ptr += 4; \n",
-                            evars[j].name().c_str(), evars[j].lenExpression().c_str());
-                } else {
-                    fprintf(fp, "\t*(unsigned int *)(ptr) = %s; ptr += 4; \n",
-                            evars[j].lenExpression().c_str());
-                }
-
-                Var::PointerDir dir = evars[j].pointerDir();
-                if (dir == Var::POINTER_INOUT || dir == Var::POINTER_IN) {
-                    if (evars[j].nullAllowed()) {
-                        fprintf(fp, "\tif (%s != NULL) ", evars[j].name().c_str());
-                    } else {
-                        fprintf(fp, "\t");
-                    }
-
-                    if (evars[j].packExpression().size() != 0) {
-                        fprintf(fp, "%s;", evars[j].packExpression().c_str());
-                    } else {
-                        fprintf(fp, "memcpy(ptr, %s, %s);",
-                                evars[j].name().c_str(),
-                                evars[j].lenExpression().c_str());
-                    }
-
-                    if (evars[j].nullAllowed()) {
-                        fprintf(fp, "ptr += %s == NULL ? 0 : %s; \n", evars[j].name().c_str(), evars[j].lenExpression().c_str());
-                    } else {
-                        fprintf(fp, "ptr += %s;\n", evars[j].lenExpression().c_str());
-                    }
-                }
-            } else {
-                // encode a non pointer variable
-                if (!evars[j].isVoid()) {
-                    fprintf(fp, "\t*(%s *) (ptr) = %s; ptr += %u;\n",
-                            evars[j].type()->name().c_str(), evars[j].name().c_str(),
-                            (uint) evars[j].type()->bytes());
-                }
-            }
+            writeVarEncodingExpression(evars[j], fp);
         }
+#endif /* !WITH_LARGE_SUPPORT */
+
         // in variables;
         for (size_t j = 0; j < nvars; j++) {
             if (evars[j].isPointer()) {
                 Var::PointerDir dir = evars[j].pointerDir();
                 if (dir == Var::POINTER_INOUT || dir == Var::POINTER_OUT) {
+                    const char* varname = evars[j].name().c_str();
                     if (evars[j].nullAllowed()) {
-                        fprintf(fp, "\tif (%s != NULL) ctx->m_stream->readback(%s, %s);\n",
-                                evars[j].name().c_str(),
-                                evars[j].name().c_str(),
-                                evars[j].lenExpression().c_str());
+                        fprintf(fp, "\tif (%s != NULL) ",varname);
                     } else {
-                        fprintf(fp, "\tctx->m_stream->readback(%s, %s);\n",
-                                evars[j].name().c_str(),
-                                evars[j].lenExpression().c_str());
+                        fprintf(fp, "\t");
                     }
+                    fprintf(fp, "stream->readback(%s, __size_%s);\n",
+                            varname, varname);
                 }
             }
         }
@@ -482,7 +638,7 @@ int ApiGen::genEncoderImpl(const std::string &filename)
             fprintf(fp, "\t return NULL;\n");
         } else if (e->retval().type()->name() != "void") {
             fprintf(fp, "\n\t%s retval;\n", e->retval().type()->name().c_str());
-            fprintf(fp, "\tctx->m_stream->readback(&retval, %u);\n",(uint) e->retval().type()->bytes());
+            fprintf(fp, "\tstream->readback(&retval, %u);\n",(uint) e->retval().type()->bytes());
             fprintf(fp, "\treturn retval;\n");
         }
         fprintf(fp, "}\n\n");
