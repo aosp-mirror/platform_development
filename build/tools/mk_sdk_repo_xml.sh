@@ -6,7 +6,7 @@ set -e
 
 PROG_DIR=$(dirname $0)
 
-TYPES="tool platform-tool platform sample doc add-on"
+TYPES="tool platform-tool platform sample doc add-on system-image"
 OSES="linux macosx windows any linux-x86 darwin"
 
 TMP_DIR=$(mktemp -d -t sdkrepo.tmp.XXXXXXXX)
@@ -151,7 +151,7 @@ function output_attributes() {
 
 while [[ -n "$1" ]]; do
   # Process archives.
-  # First we expect a type. For conveniency the type can be plural.
+  # First we expect a type. For convenience the type can be plural.
   TYPE=$(check_enum "${1%%s}" $TYPES)
   [[ -z $TYPE ]] && error "Unknown archive type '$1'."
   shift
