@@ -2,7 +2,7 @@
 // Each extension function should have one of the following
 // macro definitions:
 //    API_ENTRY(funcname, paramlist, arglist)
-//  -or- (in case funciton has return value)
+//  -or- (if the function has a return value)
 //    API_ENTRY_RET(return_type,funcname, paramlist, arglist)
 //
 API_ENTRY(glEGLImageTargetTexture2DOES,

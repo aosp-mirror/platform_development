@@ -13,7 +13,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-static struct _egl_funcs_by_name {
+static const struct _egl_funcs_by_name {
     const char *name;
     void *proc;
 } egl_funcs_by_name[] = {
@@ -63,4 +63,4 @@ static struct _egl_funcs_by_name {
     {"eglSetSwapRectangleANDROID", (void *)eglSetSwapRectangleANDROID}
 };
 
-static int egl_num_funcs = sizeof(egl_funcs_by_name) / sizeof(struct _egl_funcs_by_name);
+static const int egl_num_funcs = sizeof(egl_funcs_by_name) / sizeof(struct _egl_funcs_by_name);
