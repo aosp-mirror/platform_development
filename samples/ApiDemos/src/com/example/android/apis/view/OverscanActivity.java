@@ -99,9 +99,8 @@ public class OverscanActivity extends Activity {
     }
     private class OverscanState implements State {
         public void apply() {
-            display("FULLSCREEN + LOW_PROFILE + HIDE_NAVIGATION");
-            mImage.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LOW_PROFILE
-                                       | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
+            display("FULLSCREEN + HIDE_NAVIGATION");
+            mImage.setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
         }
         public State next() {
             return new NormalState();
