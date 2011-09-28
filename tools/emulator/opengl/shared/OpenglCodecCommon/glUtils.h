@@ -51,6 +51,9 @@ extern "C" {
     void   glUtilsPackPointerData(unsigned char *dst, unsigned char *str,
                            int size, GLenum type, unsigned int stride,
                            unsigned int datalen);
+    void glUtilsWritePackPointerData(void* stream, unsigned char *src,
+                                    int size, GLenum type, unsigned int stride,
+                                    unsigned int datalen);
     int glUtilsPixelBitSize(GLenum format, GLenum type);
     void   glUtilsPackStrings(char *ptr, char **strings, GLint *length, GLsizei count);
     int glUtilsCalcShaderSourceLen(char **strings, GLint *length, GLsizei count);
