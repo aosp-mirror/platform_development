@@ -16,6 +16,7 @@
 #include "glUtils.h"
 #include <string.h>
 #include "ErrorLog.h"
+#include <IOStream.h>
 
 size_t glSizeof(GLenum type)
 {
@@ -339,6 +340,25 @@ void glUtilsPackPointerData(unsigned char *dst, unsigned char *src,
         for (unsigned int i = 0; i < datalen; i += vsize) {
             memcpy(dst, src, vsize);
             dst += vsize;
+            src += stride;
+        }
+    }
+}
+
+void glUtilsWritePackPointerData(void* _stream, unsigned char *src,
+                                 int size, GLenum type, unsigned int stride,
+                                 unsigned int datalen)
+{
+    IOStream* stream = reinterpret_cast<IOStream*>(_stream);
+
+    unsigned int  vsize = size * glSizeof(type);
+    if (stride == 0) stride = vsize;
+
+    if (stride == vsize) {
+        stream->writeFully(src, datalen);
+    } else {
+        for (unsigned int i = 0; i < datalen; i += vsize) {
+            stream->writeFully(src, (size_t)vsize);
             src += stride;
         }
     }

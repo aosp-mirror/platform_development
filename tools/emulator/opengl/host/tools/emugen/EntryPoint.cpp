@@ -119,7 +119,7 @@ bool EntryPoint::parse(unsigned int lc, const std::string & str)
         fprintf(stderr, "UNKNOWN retval: %s\n", linestr.c_str());
     }
 
-    m_retval.init(std::string(""), theType, std::string(""), Var::POINTER_OUT, std::string(""));
+    m_retval.init(std::string(""), theType, std::string(""), Var::POINTER_OUT, std::string(""), std::string(""));
 
     // function name
     m_name = getNextToken(linestr, pos, &last, ",)");
@@ -146,7 +146,7 @@ bool EntryPoint::parse(unsigned int lc, const std::string & str)
                 varname = oss.str();
             }
 
-            m_vars.push_back(Var(varname, v, std::string(""), Var::POINTER_IN, ""));
+            m_vars.push_back(Var(varname, v, std::string(""), Var::POINTER_IN, "", ""));
         }
         pos = last + 1;
     }
@@ -334,6 +334,23 @@ int EntryPoint::setAttribute(const std::string &line, size_t lc)
         // set the size expression into var
         pos = last;
         v->setPackExpression(line.substr(pos));
+    } else if (token == "custom_write") {
+        pos = last;
+        std::string varname = getNextToken(line, pos, &last, WHITESPACE);
+
+        if (varname.size() == 0) {
+            fprintf(stderr, "ERROR: %u: Missing variable name in 'custom_write' attribute\n", (unsigned int)lc);
+            return -1;
+        }
+        Var * v = var(varname);
+        if (v == NULL) {
+            fprintf(stderr, "ERROR: %u: variable %s is not a parameter of %s\n",
+                    (unsigned int)lc, varname.c_str(), name().c_str());
+            return -2;
+        }
+        // set the size expression into var
+        pos = last;
+        v->setWriteExpression(line.substr(pos));
     } else if (token == "flag") {
         pos = last;
         std::string flag = getNextToken(line, pos, &last, WHITESPACE);
