@@ -67,7 +67,7 @@ $(eval $(call mk-sdk-repo-pkg-1,windows,$(WIN_SDK_ZIP),tools))
 $(eval $(call mk-sdk-repo-pkg-1,windows,$(WIN_SDK_ZIP),platform-tools))
 
 SDK_REPO_DEPS += \
-		$(call sdk-repo-pkg-zip,windows,$(WIN_SDK_ZIP),tools) \
+	$(call sdk-repo-pkg-zip,windows,$(WIN_SDK_ZIP),tools) \
         $(call sdk-repo-pkg-zip,windows,$(WIN_SDK_ZIP),platform-tools)
 
 endif
@@ -82,6 +82,7 @@ $(eval $(call mk-sdk-repo-pkg-1,$(HOST_OS),$(MAIN_SDK_ZIP),platform-tools))
 $(eval $(call mk-sdk-repo-pkg-1,$(HOST_OS),$(MAIN_SDK_ZIP),docs))
 $(eval $(call mk-sdk-repo-pkg-2,$(HOST_OS),$(MAIN_SDK_ZIP),platforms))
 $(eval $(call mk-sdk-repo-pkg-2,$(HOST_OS),$(MAIN_SDK_ZIP),samples))
+$(eval $(call mk-sdk-repo-pkg-2,$(HOST_OS),$(MAIN_SDK_ZIP),system-images))
 
 SDK_REPO_DEPS += \
 		$(call sdk-repo-pkg-zip,$(HOST_OS),$(MAIN_SDK_ZIP),tools) \
@@ -89,6 +90,7 @@ SDK_REPO_DEPS += \
 		$(call sdk-repo-pkg-zip,$(HOST_OS),$(MAIN_SDK_ZIP),docs) \
 		$(call sdk-repo-pkg-zip,$(HOST_OS),$(MAIN_SDK_ZIP),platforms) \
 		$(call sdk-repo-pkg-zip,$(HOST_OS),$(MAIN_SDK_ZIP),samples) \
+		$(call sdk-repo-pkg-zip,$(HOST_OS),$(MAIN_SDK_ZIP),system-images)
 
 endif
 
