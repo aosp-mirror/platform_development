@@ -56,6 +56,23 @@ SDK_REPO_XML_ARGS += $(3) $(1) \
 	$(call sdk-repo-pkg-zip,$(1),$(2),$(3)):$(notdir $(call sdk-repo-pkg-zip,$(1),$(2),$(3)))
 endef
 
+# Defines the rule to build an SDK sources package.
+#
+# $1=OS (e.g. linux-x86, windows, etc)
+# $2=sdk zip (e.g. out/host/linux.../android-eng-sdk.zip)
+# $3=package to create, must be "sources"
+#
+define mk-sdk-repo-sources
+$(call sdk-repo-pkg-zip,$(1),$(2),$(3)): $(2) $(TOPDIR)development/sdk/source_source.properties
+	@echo "Building SDK sources package"
+	$(hide) $(TOPDIR)development/build/tools/mk_sources_zip.py \
+			$(TOPDIR)development/sdk/source_source.properties \
+			$(call sdk-repo-pkg-zip,$(1),$(2),$(3)) \
+			$(TOPDIR).
+$(call dist-for-goals, sdk_repo, $(call sdk-repo-pkg-zip,$(1),$(2),$(3)))
+SDK_REPO_XML_ARGS += $(3) $(1) \
+	$(call sdk-repo-pkg-zip,$(1),$(2),$(3)):$(notdir $(call sdk-repo-pkg-zip,$(1),$(2),$(3)))
+endef
 
 # -----------------------------------------------------------------
 # Rules for win_sdk
@@ -83,6 +100,7 @@ $(eval $(call mk-sdk-repo-pkg-1,$(HOST_OS),$(MAIN_SDK_ZIP),docs))
 $(eval $(call mk-sdk-repo-pkg-2,$(HOST_OS),$(MAIN_SDK_ZIP),platforms))
 $(eval $(call mk-sdk-repo-pkg-2,$(HOST_OS),$(MAIN_SDK_ZIP),samples))
 $(eval $(call mk-sdk-repo-pkg-2,$(HOST_OS),$(MAIN_SDK_ZIP),system-images))
+$(eval $(call mk-sdk-repo-sources,$(HOST_OS),$(MAIN_SDK_ZIP),sources))
 
 SDK_REPO_DEPS += \
 		$(call sdk-repo-pkg-zip,$(HOST_OS),$(MAIN_SDK_ZIP),tools) \
@@ -90,7 +108,8 @@ SDK_REPO_DEPS += \
 		$(call sdk-repo-pkg-zip,$(HOST_OS),$(MAIN_SDK_ZIP),docs) \
 		$(call sdk-repo-pkg-zip,$(HOST_OS),$(MAIN_SDK_ZIP),platforms) \
 		$(call sdk-repo-pkg-zip,$(HOST_OS),$(MAIN_SDK_ZIP),samples) \
-		$(call sdk-repo-pkg-zip,$(HOST_OS),$(MAIN_SDK_ZIP),system-images)
+		$(call sdk-repo-pkg-zip,$(HOST_OS),$(MAIN_SDK_ZIP),system-images) \
+		$(call sdk-repo-pkg-zip,$(HOST_OS),$(MAIN_SDK_ZIP),sources)
 
 endif
 
