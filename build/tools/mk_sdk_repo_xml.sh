@@ -6,7 +6,7 @@ set -e
 
 PROG_DIR=$(dirname $0)
 
-TYPES="tool platform-tool platform sample doc add-on system-image"
+TYPES="tool platform-tool platform sample doc add-on system-image source"
 OSES="linux macosx windows any linux-x86 darwin"
 
 TMP_DIR=$(mktemp -d -t sdkrepo.tmp.XXXXXXXX)
