@@ -436,7 +436,12 @@ static void writeVarLargeEncodingExpression(Var& var, FILE* fp)
     } else {
         fprintf(fp, "\t");
     }
-    fprintf(fp, "stream->writeFully(%s, __size_%s);\n", varname, varname);
+    if (var.writeExpression() != "") {
+        fprintf(fp, "%s", var.writeExpression().c_str());
+    } else {
+        fprintf(fp, "stream->writeFully(%s, __size_%s)", varname, varname);
+    }
+    fprintf(fp, ";\n");
 }
 #endif /* WITH_LARGE_SUPPORT */
 
