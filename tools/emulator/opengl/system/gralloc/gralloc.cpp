@@ -31,6 +31,21 @@
 #include <cutils/log.h>
 #include <cutils/properties.h>
 
+/* Set to 1 or 2 to enable debug traces */
+#define DEBUG  0
+
+#if DEBUG >= 1
+#  define D(...)   LOGD(__VA_ARGS__)
+#else
+#  define D(...)   ((void)0)
+#endif
+
+#if DEBUG >= 2
+#  define DD(...)  LOGD(__VA_ARGS__)
+#else
+#  define DD(...)  ((void)0)
+#endif
+
 #define DBG_FUNC DBG("%s\n", __FUNCTION__)
 //
 // our private gralloc module structure
@@ -115,7 +130,7 @@ static int gralloc_alloc(alloc_device_t* dev,
                          int w, int h, int format, int usage,
                          buffer_handle_t* pHandle, int* pStride)
 {
-    LOGD("gralloc_alloc w=%d h=%d usage=0x%x\n", w, h, usage);
+    D("gralloc_alloc w=%d h=%d usage=0x%x\n", w, h, usage);
 
     gralloc_device_t *grdev = (gralloc_device_t *)dev;
     if (!grdev || !pHandle || !pStride)
@@ -182,7 +197,7 @@ static int gralloc_alloc(alloc_device_t* dev,
         *pStride = bpr / bpp;
     }
 
-    LOGD("gralloc_alloc ashmem_size=%d, tid %d\n", ashmem_size, gettid());
+    D("gralloc_alloc ashmem_size=%d, tid %d\n", ashmem_size, gettid());
 
     //
     // Allocate space in ashmem if needed
@@ -194,7 +209,7 @@ static int gralloc_alloc(alloc_device_t* dev,
 
         fd = ashmem_create_region("gralloc-buffer", ashmem_size);
         if (fd < 0) {
-            LOGE("gralloc_alloc failed to create ashmem region err=%d\n", errno);
+            LOGE("gralloc_alloc failed to create ashmem region: %s\n", strerror(errno));
             return -errno;
         }
     }
@@ -224,7 +239,7 @@ static int gralloc_alloc(alloc_device_t* dev,
         DEFINE_HOST_CONNECTION;
         if (hostCon && rcEnc) {
             cb->hostHandle = rcEnc->rcCreateColorBuffer(rcEnc, w, h, glFormat);
-            LOGD("Created host ColorBuffer 0x%x\n", cb->hostHandle);
+            D("Created host ColorBuffer 0x%x\n", cb->hostHandle);
         }
 
         if (!cb->hostHandle) {
@@ -264,7 +279,7 @@ static int gralloc_free(alloc_device_t* dev,
 
     if (cb->hostHandle != 0) {
         DEFINE_AND_VALIDATE_HOST_CONNECTION;
-
+        D("Destroying host ColorBuffer 0x%x\n", cb->hostHandle);
         rcEnc->rcDestroyColorBuffer(rcEnc, cb->hostHandle);
     }
 
@@ -370,7 +385,7 @@ static int fb_setUpdateRect(struct framebuffer_device_t* dev,
     DEFINE_AND_VALIDATE_HOST_CONNECTION;
 
     // send request to host
-    // XXX - should be implemented
+    // TODO: XXX - should be implemented
     //rcEnc->rc_XXX
 
     return 0;
@@ -399,9 +414,7 @@ static int fb_close(struct hw_device_t *dev)
 {
     fb_device_t *fbdev = (fb_device_t *)dev;
 
-    if (fbdev) {
-        delete fbdev;
-    }
+    delete fbdev;
 
     return 0;
 }
@@ -418,11 +431,12 @@ static int gralloc_register_buffer(gralloc_module_t const* module,
         return sFallback->registerBuffer(sFallback, handle);
     }
 
+    D("gralloc_register_buffer(%p) called", handle);
 
     private_module_t *gr = (private_module_t *)module;
     cb_handle_t *cb = (cb_handle_t *)handle;
     if (!gr || !cb_handle_t::validate(cb)) {
-        ERR("gralloc_register_buffer: invalid buffer");
+        ERR("gralloc_register_buffer(%p): invalid buffer", cb);
         return -EINVAL;
     }
 
@@ -434,7 +448,7 @@ static int gralloc_register_buffer(gralloc_module_t const* module,
         void *vaddr;
         int err = map_buffer(cb, &vaddr);
         if (err) {
-            ERR("gralloc_register_buffer: map failed");
+            ERR("gralloc_register_buffer(%p): map failed: %s", cb, strerror(-err));
             return -err;
         }
         cb->mappedPid = getpid();
@@ -453,7 +467,7 @@ static int gralloc_unregister_buffer(gralloc_module_t const* module,
     private_module_t *gr = (private_module_t *)module;
     cb_handle_t *cb = (cb_handle_t *)handle;
     if (!gr || !cb_handle_t::validate(cb)) {
-        ERR("gralloc_unregister_buffer: invalid buffer");
+        ERR("gralloc_unregister_buffer(%p): invalid buffer", cb);
         return -EINVAL;
     }
 
@@ -465,12 +479,14 @@ static int gralloc_unregister_buffer(gralloc_module_t const* module,
         void *vaddr;
         int err = munmap((void *)cb->ashmemBase, cb->ashmemSize);
         if (err) {
-            ERR("gralloc_unregister_buffer: unmap failed");
+            ERR("gralloc_unregister_buffer(%p): unmap failed", cb);
             return -EINVAL;
         }
         cb->ashmemBase = NULL;
         cb->mappedPid = 0;
     }
+
+    D("gralloc_unregister_buffer(%p) done\n", cb);
 
     return 0;
 }
@@ -640,7 +656,7 @@ static int gralloc_device_open(const hw_module_t* module,
 {
     int status = -EINVAL;
 
-    LOGD("gralloc_device_open %s\n", name);
+    D("gralloc_device_open %s\n", name);
 
     pthread_once( &sFallbackOnce, fallback_init );
     if (sFallback != NULL) {
@@ -689,16 +705,21 @@ static int gralloc_device_open(const hw_module_t* module,
         //
         // Query the host for Framebuffer attributes
         //
-        LOGD("gralloc: query Frabuffer attribs\n");
+        D("gralloc: query Frabuffer attribs\n");
         EGLint width = rcEnc->rcGetFBParam(rcEnc, FB_WIDTH);
-        LOGD("gralloc: width=%d\n", width);
+        D("gralloc: width=%d\n", width);
         EGLint height = rcEnc->rcGetFBParam(rcEnc, FB_HEIGHT);
-        LOGD("gralloc: height=%d\n", height);
+        D("gralloc: height=%d\n", height);
         EGLint xdpi = rcEnc->rcGetFBParam(rcEnc, FB_XDPI);
+        D("gralloc: xdpi=%d\n", xdpi);
         EGLint ydpi = rcEnc->rcGetFBParam(rcEnc, FB_YDPI);
+        D("gralloc: ydpi=%d\n", ydpi);
         EGLint fps = rcEnc->rcGetFBParam(rcEnc, FB_FPS);
+        D("gralloc: fps=%d\n", fps);
         EGLint min_si = rcEnc->rcGetFBParam(rcEnc, FB_MIN_SWAP_INTERVAL);
+        D("gralloc: min_swap=%d\n", min_si);
         EGLint max_si = rcEnc->rcGetFBParam(rcEnc, FB_MAX_SWAP_INTERVAL);
+        D("gralloc: max_swap=%d\n", max_si);
 
         //
         // Allocate memory for the framebuffer device
