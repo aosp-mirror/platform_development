@@ -33,6 +33,7 @@ class eglDisplay
 {
 public:
     eglDisplay();
+    ~eglDisplay();
 
     bool initialize(EGLClient_eglInterface *eglIface);
     void terminate();
