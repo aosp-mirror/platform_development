@@ -544,7 +544,7 @@ GLEncoder::GLEncoder(IOStream *stream) : gl_encoder_context_t(stream)
     m_glBufferData_enc = set_glBufferData(s_glBufferData);
     m_glBufferSubData_enc = set_glBufferSubData(s_glBufferSubData);
     m_glDeleteBuffers_enc = set_glDeleteBuffers(s_glDeleteBuffers);
-    
+
     m_glEnableClientState_enc = set_glEnableClientState(s_glEnableClientState);
     m_glDisableClientState_enc = set_glDisableClientState(s_glDisableClientState);
     m_glIsEnabled_enc = set_glIsEnabled(s_glIsEnabled);
@@ -558,7 +558,7 @@ GLEncoder::GLEncoder(IOStream *stream) : gl_encoder_context_t(stream)
 
 GLEncoder::~GLEncoder()
 {
-    delete m_compressedTextureFormats;
+    delete [] m_compressedTextureFormats;
 }
 
 size_t GLEncoder::pixelDataSize(GLsizei width, GLsizei height, GLenum format, GLenum type, int pack)
