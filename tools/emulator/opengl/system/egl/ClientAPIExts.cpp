@@ -129,7 +129,7 @@ void initClientFuncs(const EGLClient_glesInterface *iface, int idx)
 #define API_ENTRY_RET(rtype,fname,params,args) \
     API_ENTRY(fname,params,args)
 
-static struct _client_ext_funcs {
+static const struct _client_ext_funcs {
     const char *fname;
     void* proc;
 } s_client_ext_funcs[] = {
