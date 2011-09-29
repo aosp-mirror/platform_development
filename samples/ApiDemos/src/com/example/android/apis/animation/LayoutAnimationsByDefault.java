@@ -21,11 +21,11 @@ package com.example.android.apis.animation;
 import com.example.android.apis.R;
 
 import android.view.View;
-import android.view.ViewGroup;
 
 import android.app.Activity;
 import android.os.Bundle;
 import android.widget.Button;
+import android.widget.GridLayout;
 
 /**
  * This application demonstrates how to use the animateLayoutChanges tag in XML to automate
@@ -35,36 +35,25 @@ public class LayoutAnimationsByDefault extends Activity {
 
     private int numButtons = 1;
 
-    /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.layout_animations_by_default);
 
-        final ViewGroup horizontalContainer = (ViewGroup) findViewById(R.id.horizontalContainer);
-        final ViewGroup verticalContainer = (ViewGroup) findViewById(R.id.verticalContainer);
+        final GridLayout gridContainer = (GridLayout) findViewById(R.id.gridContainer);
 
         Button addButton = (Button) findViewById(R.id.addNewButton);
         addButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 Button newButton = new Button(LayoutAnimationsByDefault.this);
-                newButton.setText("Click To Remove " + (numButtons++));
+                newButton.setText(String.valueOf(numButtons++));
                 newButton.setOnClickListener(new View.OnClickListener() {
                     public void onClick(View v) {
-                        horizontalContainer.removeView(v);
+                        gridContainer.removeView(v);
                     }
                 });
-                horizontalContainer.addView(newButton, Math.min(1, horizontalContainer.getChildCount()));
-
-                newButton = new Button(LayoutAnimationsByDefault.this);
-                newButton.setText("Click To Remove " + (numButtons++));
-                newButton.setOnClickListener(new View.OnClickListener() {
-                    public void onClick(View v) {
-                        verticalContainer.removeView(v);
-                    }
-                });
-                verticalContainer.addView(newButton, Math.min(1, verticalContainer.getChildCount()));
+                gridContainer.addView(newButton, Math.min(1, gridContainer.getChildCount()));
             }
         });
     }
