@@ -25,6 +25,7 @@ import android.content.Context;
 import android.net.Uri;
 import android.provider.ContactsContract;
 import android.provider.ContactsContract.CommonDataKinds.Email;
+import android.provider.ContactsContract.CommonDataKinds.GroupMembership;
 import android.provider.ContactsContract.CommonDataKinds.Phone;
 import android.provider.ContactsContract.CommonDataKinds.Photo;
 import android.provider.ContactsContract.CommonDataKinds.StructuredName;
@@ -182,6 +183,20 @@ public class ContactOperations {
             mValues.put(Phone.MIMETYPE, Phone.CONTENT_ITEM_TYPE);
             addInsertOp();
         }
+        return this;
+    }
+
+    /**
+     * Adds a group membership
+     *
+     * @param id The id of the group to assign
+     * @return instance of ContactOperations
+     */
+    public ContactOperations addGroupMembership(long groupId) {
+        mValues.clear();
+        mValues.put(GroupMembership.GROUP_ROW_ID, groupId);
+        mValues.put(GroupMembership.MIMETYPE, GroupMembership.CONTENT_ITEM_TYPE);
+        addInsertOp();
         return this;
     }
 

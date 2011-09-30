@@ -109,4 +109,34 @@
     <!-- The label of the button to add contact to this contact provider  -->
     <string name="invite_action_label">Add to Sample SyncAdaper</string>
 
+    <!-- The description for the invite contact flow -->
+    <string name="invite_contact_description">Congratulations! The user wants to add the contact
+        to the amazing Sample SyncAdapter social network. If this was a real app, it should now
+        make best efforts to add the contact to this network. This would probably involve
+        looking up the person on the network, inviting if he is not there already and syncing
+        the new contact down.
+
+        Ideally, when the user gets back to the People app, the new contact should already
+        be there, enriching the original contact.
+
+        This is the information we got to lookup the contact:</string>
+
+    <!-- The label of the button to view a group -->
+    <string name="view_group_action_label">Show sample group details</string>
+
+    <!-- The description for the view group button -->
+    <string name="view_group_description">This would now show the details of the group.
+
+        This is the group uri:</string>
+
+    <!-- The description for the view stream item -->
+    <string name="view_stream_item_description">This would now show the details of the stream item.
+
+        This is the uri of the stream item:</string>
+
+    <!-- The description for the view stream item photo -->
+    <string name="view_stream_item_photo_description">This would now show the details of the stream item photo.
+
+        This is the uri of the photo:</string>
+
 </resources>

@@ -110,7 +110,7 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
         mMessage = (TextView) findViewById(R.id.message);
         mUsernameEdit = (EditText) findViewById(R.id.username_edit);
         mPasswordEdit = (EditText) findViewById(R.id.password_edit);
-        mUsernameEdit.setText(mUsername);
+        if (!TextUtils.isEmpty(mUsername)) mUsernameEdit.setText(mUsername);
         mMessage.setText(getMessage());
     }
 

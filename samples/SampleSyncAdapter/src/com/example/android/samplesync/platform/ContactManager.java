@@ -34,6 +34,7 @@ import android.provider.ContactsContract.CommonDataKinds.Photo;
 import android.provider.ContactsContract.CommonDataKinds.StructuredName;
 import android.provider.ContactsContract.Contacts;
 import android.provider.ContactsContract.Data;
+import android.provider.ContactsContract.Groups;
 import android.provider.ContactsContract.RawContacts;
 import android.provider.ContactsContract.Settings;
 import android.provider.ContactsContract.StatusUpdates;
@@ -54,6 +55,41 @@ public class ContactManager {
 
     private static final String TAG = "ContactManager";
 
+    public static final String SAMPLE_GROUP_NAME = "Sample Group";
+
+    public static long ensureSampleGroupExists(Context context, Account account) {
+        final ContentResolver resolver = context.getContentResolver();
+
+        // Lookup the sample group
+        long groupId = 0;
+        final Cursor cursor = resolver.query(Groups.CONTENT_URI, new String[] { Groups._ID },
+                Groups.ACCOUNT_NAME + "=? AND " + Groups.ACCOUNT_TYPE + "=? AND " +
+                Groups.TITLE + "=?",
+                new String[] { account.name, account.type, SAMPLE_GROUP_NAME }, null);
+        if (cursor != null) {
+            try {
+                if (cursor.moveToFirst()) {
+                    groupId = cursor.getLong(0);
+                }
+            } finally {
+                cursor.close();
+            }
+        }
+
+        if (groupId == 0) {
+            // Sample group doesn't exist yet, so create it
+            final ContentValues contentValues = new ContentValues();
+            contentValues.put(Groups.ACCOUNT_NAME, account.name);
+            contentValues.put(Groups.ACCOUNT_TYPE, account.type);
+            contentValues.put(Groups.TITLE, SAMPLE_GROUP_NAME);
+            contentValues.put(Groups.GROUP_IS_READ_ONLY, true);
+
+            final Uri newGroupUri = resolver.insert(Groups.CONTENT_URI, contentValues);
+            groupId = ContentUris.parseId(newGroupUri);
+        }
+        return groupId;
+    }
+
     /**
      * Take a list of updated contacts and apply those changes to the
      * contacts database. Typically this list of contacts would have been
@@ -67,7 +103,7 @@ public class ContactManager {
      * sync request.
      */
     public static synchronized long updateContacts(Context context, String account,
-            List<RawContact> rawContacts, long lastSyncMarker) {
+            List<RawContact> rawContacts, long groupId, long lastSyncMarker) {
 
         long currentSyncMarker = lastSyncMarker;
         final ContentResolver resolver = context.getContentResolver();
@@ -112,7 +148,7 @@ public class ContactManager {
                 Log.d(TAG, "In addContact");
                 if (!rawContact.isDeleted()) {
                     newUsers.add(rawContact);
-                    addContact(context, account, rawContact, true, batchOperation);
+                    addContact(context, account, rawContact, groupId, true, batchOperation);
                 }
             }
             // A sync adapter should batch operations on multiple contacts,
@@ -235,12 +271,13 @@ public class ContactManager {
      * @param context the Authenticator Activity context
      * @param accountName the account the contact belongs to
      * @param rawContact the sample SyncAdapter User object
+     * @param groupId the id of the sample group
      * @param inSync is the add part of a client-server sync?
      * @param batchOperation allow us to batch together multiple operations
      *        into a single provider call
      */
     public static void addContact(Context context, String accountName, RawContact rawContact,
-        boolean inSync, BatchOperation batchOperation) {
+            long groupId, boolean inSync, BatchOperation batchOperation) {
 
         // Put the data in the contacts provider
         final ContactOperations contactOp = ContactOperations.createNewContact(
@@ -252,6 +289,7 @@ public class ContactManager {
                 .addPhone(rawContact.getCellPhone(), Phone.TYPE_MOBILE)
                 .addPhone(rawContact.getHomePhone(), Phone.TYPE_HOME)
                 .addPhone(rawContact.getOfficePhone(), Phone.TYPE_WORK)
+                .addGroupMembership(groupId)
                 .addAvatar(rawContact.getAvatarUrl());
 
         // If we have a serverId, then go ahead and create our status profile.
