@@ -1,7 +1,7 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8" ?>
 <!--
 /**
- * Copyright (c) 2010, The Android Open Source Project
+ * Copyright (c) 2011, The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,16 +16,17 @@
  * limitations under the License.
  */
 -->
-
-<ContactsSource
+<LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
->
-
-    <ContactsDataKind
-        android:mimeType="vnd.android.cursor.item/vnd.samplesyncadapter.profile"
-        android:icon="@drawable/icon"
-        android:summaryColumn="data2"
-        android:detailColumn="data3"
-        android:detailSocialSummary="true" />
-
-</ContactsSource>
+    android:orientation="vertical"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content">
+    <TextView
+        android:text="@string/view_stream_item_photo_description"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+    <TextView
+        android:id="@+id/view_stream_item_photo_uri"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+</LinearLayout>
