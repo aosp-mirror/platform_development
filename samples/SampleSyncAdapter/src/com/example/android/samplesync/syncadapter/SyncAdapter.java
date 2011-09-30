@@ -15,6 +15,15 @@
  */
 package com.example.android.samplesync.syncadapter;
 
+import com.example.android.samplesync.Constants;
+import com.example.android.samplesync.client.NetworkUtilities;
+import com.example.android.samplesync.client.RawContact;
+import com.example.android.samplesync.platform.ContactManager;
+
+import org.apache.http.ParseException;
+import org.apache.http.auth.AuthenticationException;
+import org.json.JSONException;
+
 import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.accounts.AuthenticatorException;
@@ -27,18 +36,7 @@ import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
 
-import com.example.android.samplesync.Constants;
-import com.example.android.samplesync.client.NetworkUtilities;
-import com.example.android.samplesync.client.RawContact;
-import com.example.android.samplesync.platform.ContactManager;
-
-import org.apache.http.ParseException;
-import org.apache.http.auth.AuthenticationException;
-import org.json.JSONException;
-
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -91,6 +89,9 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
             final String authtoken = mAccountManager.blockingGetAuthToken(account,
                     Constants.AUTHTOKEN_TYPE, NOTIFY_AUTH_FAILURE);
 
+            // Make sure that the sample group exists
+            final long groupId = ContactManager.ensureSampleGroupExists(mContext, account);
+
             // Find the local 'dirty' contacts that we need to tell the server about...
             // Find the local users that need to be sync'd to the server...
             dirtyContacts = ContactManager.getDirtyContacts(mContext, account);
@@ -106,6 +107,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
             long newSyncState = ContactManager.updateContacts(mContext,
                     account.name,
                     updatedContacts,
+                    groupId,
                     lastSyncMarker);
 
             // This is a demo of how you can update IM-style status messages
