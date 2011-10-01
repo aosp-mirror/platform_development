@@ -51,7 +51,6 @@ public class AudioFocusHelper implements AudioManager.OnAudioFocusChangeListener
      * Called by AudioManager on audio focus changes. We implement this by calling our
      * MusicFocusable appropriately to relay the message.
      */
-    @Override
     public void onAudioFocusChange(int focusChange) {
         if (mFocusable == null) return;
         switch (focusChange) {
