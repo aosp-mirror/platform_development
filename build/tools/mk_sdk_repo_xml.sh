@@ -6,7 +6,7 @@ set -e
 
 PROG_DIR=$(dirname $0)
 
-TYPES="tool platform-tool platform sample doc add-on system-image source"
+TYPES="tool platform-tool platform sample doc add-on system-image source support"
 OSES="linux macosx windows any linux-x86 darwin"
 
 TMP_DIR=$(mktemp -d -t sdkrepo.tmp.XXXXXXXX)
@@ -156,6 +156,10 @@ while [[ -n "$1" ]]; do
   [[ -z $TYPE ]] && error "Unknown archive type '$1'."
   shift
 
+  ELEMENT="$TYPE"
+  # The element name is different for extras:
+  [[ "$TYPE" == "support" ]] && ELEMENT="extra"
+
   MAP=""
   FIRST="1"
   LIBS_XML=""
@@ -230,7 +234,7 @@ while [[ -n "$1" ]]; do
       MAP=$(parse_attributes "$PROPS" ${ATTRS[@]})
 
       # Time to generate the XML for the package
-      echo "    <sdk:${TYPE}>" >> "$OUT"
+      echo "    <sdk:${ELEMENT}>" >> "$OUT"
       output_attributes "$OUT" $MAP
       [[ -n "$LIBS_XML" ]] && echo "$LIBS_XML" >> "$OUT"
       echo "        <sdk:archives>" >> "$OUT"
@@ -259,7 +263,7 @@ EOFA
 
     if [[ ! "$OS" ]]; then
       echo "        </sdk:archives>" >> "$OUT"
-      echo "    </sdk:${TYPE}>" >> "$OUT"
+      echo "    </sdk:${ELEMENT}>" >> "$OUT"
     fi
   done
 
