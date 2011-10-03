@@ -56,6 +56,31 @@ SDK_REPO_XML_ARGS += $(3) $(1) \
 	$(call sdk-repo-pkg-zip,$(1),$(2),$(3)):$(notdir $(call sdk-repo-pkg-zip,$(1),$(2),$(3)))
 endef
 
+# Defines the rule to build an SDK repository package when the
+# package directory contains 3 levels from the sdk dir, for example
+# to package SDK/extra/android/support or SDK/system-images/android-N/armeabi.
+# Because we do not know the intermediary directory name, this only works
+# if each directory contains a single sub-directory (e.g. sdk/$4/*/* must be
+# unique.)
+#
+# $1=OS (e.g. linux-x86, windows, etc)
+# $2=sdk zip (e.g. out/host/linux.../android-eng-sdk.zip)
+# $3=package to create (e.g. system-images, support, etc.)
+# $4=the root of directory to package in the sdk (e.g. extra/android).
+#    this must be a 2-segment path, the last one can be *.
+#
+# The rule depends on the SDK zip file, which is defined by $2.
+#
+define mk-sdk-repo-pkg-3
+$(call sdk-repo-pkg-zip,$(1),$(2),$(3)): $(2)
+	@echo "Building SDK repository package $(3) from $(notdir $(2))"
+	$(hide) cd $(basename $(2))/$(4) && \
+			zip -9rq ../../../$(notdir $(call sdk-repo-pkg-zip,$(1),$(2),$(3))) *
+$(call dist-for-goals, sdk_repo, $(call sdk-repo-pkg-zip,$(1),$(2),$(3)))
+SDK_REPO_XML_ARGS += $(3) $(1) \
+	$(call sdk-repo-pkg-zip,$(1),$(2),$(3)):$(notdir $(call sdk-repo-pkg-zip,$(1),$(2),$(3)))
+endef
+
 # Defines the rule to build an SDK sources package.
 #
 # $1=OS (e.g. linux-x86, windows, etc)
@@ -99,7 +124,8 @@ $(eval $(call mk-sdk-repo-pkg-1,$(HOST_OS),$(MAIN_SDK_ZIP),platform-tools))
 $(eval $(call mk-sdk-repo-pkg-1,$(HOST_OS),$(MAIN_SDK_ZIP),docs))
 $(eval $(call mk-sdk-repo-pkg-2,$(HOST_OS),$(MAIN_SDK_ZIP),platforms))
 $(eval $(call mk-sdk-repo-pkg-2,$(HOST_OS),$(MAIN_SDK_ZIP),samples))
-$(eval $(call mk-sdk-repo-pkg-2,$(HOST_OS),$(MAIN_SDK_ZIP),system-images))
+$(eval $(call mk-sdk-repo-pkg-3,$(HOST_OS),$(MAIN_SDK_ZIP),system-images,system-images/*))
+$(eval $(call mk-sdk-repo-pkg-3,$(HOST_OS),$(MAIN_SDK_ZIP),support,extras/android))
 $(eval $(call mk-sdk-repo-sources,$(HOST_OS),$(MAIN_SDK_ZIP),sources))
 
 SDK_REPO_DEPS += \
@@ -109,6 +135,7 @@ SDK_REPO_DEPS += \
 		$(call sdk-repo-pkg-zip,$(HOST_OS),$(MAIN_SDK_ZIP),platforms) \
 		$(call sdk-repo-pkg-zip,$(HOST_OS),$(MAIN_SDK_ZIP),samples) \
 		$(call sdk-repo-pkg-zip,$(HOST_OS),$(MAIN_SDK_ZIP),system-images) \
+		$(call sdk-repo-pkg-zip,$(HOST_OS),$(MAIN_SDK_ZIP),support) \
 		$(call sdk-repo-pkg-zip,$(HOST_OS),$(MAIN_SDK_ZIP),sources)
 
 endif
