@@ -43,9 +43,14 @@ RenderingThread::RenderingThread(NPP npp) : android::Thread() {
 }
 
 android::status_t RenderingThread::readyToRun() {
+    gLogI.log(kError_ANPLogType, "thread %p acquiring native window...", this);
     while (m_ANW == NULL) {
         m_ANW = gNativeWindowI.acquireNativeWindow(m_npp);
+        if (!m_ANW)
+            gLogI.log(kError_ANPLogType, "thread %p acquire native window FAILED!", this);
+
     }
+    gLogI.log(kError_ANPLogType, "thread %p acquired native window successfully!", this);
 
 #if (!USE_SOFTWARE_RENDERING)
     m_eglDisplay = eglGetDisplay(EGL_DEFAULT_DISPLAY);
@@ -165,6 +170,8 @@ void RenderingThread::updateNativeWindow(ANativeWindow* ANW,
                                          const SkBitmap& bitmap)
 {
 #if USE_SOFTWARE_RENDERING
+    if (bitmap.height() == 0 || bitmap.width() == 0)
+        return;
 
     //STEP 1: lock the ANW, getting a buffer
     ANativeWindow_Buffer buffer;

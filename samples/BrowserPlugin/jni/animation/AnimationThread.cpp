@@ -45,7 +45,7 @@ AnimationThread::AnimationThread(NPP npp) : RenderingThread(npp) {
     m_paint = new SkPaint;
     m_paint->setAntiAlias(true);
 
-    m_bitmap = constructBitmap(DEFAULT_WIDTH, DEFAULT_HEIGHT);
+    m_bitmap = constructBitmap(0, 0);
     m_canvas = new SkCanvas(*m_bitmap);
 
     m_startExecutionTime = 0;
@@ -94,11 +94,6 @@ bool AnimationThread::threadLoop() {
     bool reCreateFlag = false;
     int width, height;
     getDimensions(width, height);
-
-    if (width <= 0)
-        width = DEFAULT_WIDTH;
-    if (height <= 0)
-        height = DEFAULT_HEIGHT;
 
     if (m_bitmap->width() != width || m_bitmap->height() != height) {
         delete m_canvas;
