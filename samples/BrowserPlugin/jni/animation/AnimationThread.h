@@ -59,9 +59,6 @@ private:
     SkPaint* m_paint;
     SkBitmap* m_bitmap;
     SkCanvas* m_canvas;
-
-    static const unsigned int DEFAULT_WIDTH = 400;
-    static const unsigned int DEFAULT_HEIGHT = 400;
 };
 
 
