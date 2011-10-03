@@ -37,8 +37,9 @@ class Params(object):
         # DIR is the list of directories to scan in TOPDIR.
         self.DIR = "frameworks libcore"
         # IGNORE is a list of namespaces to ignore. Must be java
-        # package definitions (e.g. "com.something.foo.")
-        self.IGNORE = [ "sun.", "com.", "libcore.", "dalvik.",
+        # package definitions (e.g. "com.blah.foo.")
+        self.IGNORE = [ "sun.", "libcore.", "dalvik.",
+                        "com.test.", "com.google.",
                         "coretestutils.", "test.", "test2.", "tests." ]
         self.zipfile = None
 
