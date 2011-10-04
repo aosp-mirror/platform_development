@@ -79,7 +79,8 @@ development/tools/emulator/skins/HVGA      platforms/${PLATFORM_NAME}/skins/HVGA
 development/tools/emulator/skins/WVGA800   platforms/${PLATFORM_NAME}/skins/WVGA800
 development/tools/emulator/skins/WVGA854   platforms/${PLATFORM_NAME}/skins/WVGA854
 development/tools/emulator/skins/WSVGA     platforms/${PLATFORM_NAME}/skins/WSVGA
-development/tools/emulator/skins/WXGA      platforms/${PLATFORM_NAME}/skins/WXGA
+development/tools/emulator/skins/WXGA720   platforms/${PLATFORM_NAME}/skins/WXGA720
+development/tools/emulator/skins/WXGA800   platforms/${PLATFORM_NAME}/skins/WXGA800
 
 # Platform SDK properties
 development/sdk/sdk.properties               platforms/${PLATFORM_NAME}/sdk.properties
