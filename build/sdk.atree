@@ -153,6 +153,7 @@ development/samples/source.properties        samples/${PLATFORM_NAME}/source.pro
 #
 development/samples/AccessibilityService       samples/${PLATFORM_NAME}/AccessibilityService
 development/samples/AccelerometerPlay          samples/${PLATFORM_NAME}/AccelerometerPlay
+development/samples/AndroidBeam                samples/${PLATFORM_NAME}/AndroidBeam
 development/samples/ApiDemos                   samples/${PLATFORM_NAME}/ApiDemos
 development/samples/BackupRestore              samples/${PLATFORM_NAME}/BackupRestore
 development/samples/BasicGLSurfaceView         samples/${PLATFORM_NAME}/BasicGLSurfaceView
