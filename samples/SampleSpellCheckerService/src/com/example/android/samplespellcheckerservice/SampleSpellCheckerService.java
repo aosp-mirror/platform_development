@@ -43,8 +43,9 @@ public class SampleSpellCheckerService extends SpellCheckerService {
             }
             final String input = textInfo.getText();
             final int length = input.length();
-            // length <= 3 for too short words
-            // length > 20 for too long words that is possibly CJK words
+            // Just a fake logic:
+            // length <= 3 for short words that we assume are in the fake dictionary
+            // length > 20 for too long words that we assume can't be recognized (such as CJK words)
             final int flags = length <= 3 ? SuggestionsInfo.RESULT_ATTR_IN_THE_DICTIONARY
                     : length <= 20 ? SuggestionsInfo.RESULT_ATTR_LOOKS_LIKE_TYPO : 0;
             return new SuggestionsInfo(flags,
