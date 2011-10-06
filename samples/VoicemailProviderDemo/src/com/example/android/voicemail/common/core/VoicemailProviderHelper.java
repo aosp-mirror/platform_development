@@ -21,7 +21,7 @@ import android.provider.VoicemailContract;
 import android.net.Uri;
 
 import java.io.IOException;
-import java.io.OutputStream;
+import java.io.InputStream;
 import java.util.List;
 
 /**
@@ -99,14 +99,25 @@ public interface VoicemailProviderHelper {
     public int update(Uri uri, Voicemail voicemail);
 
     /**
-     * Get the OutputStream to write the voicemail content with the given mime type.
+     * Sets the voicemail content from the supplied input stream.
      * <p>
-     * <b>Remember to close the OutputStream after you're done writing.</b>
+     * The inputStream is owned by the caller and must be closed by it as usual after the call has
+     * returned.
      *
      * @throws IOException if there is a problem creating the file or no voicemail is found matching
      *             the given Uri
      */
-    public OutputStream setVoicemailContent(Uri voicemailUri, String mimeType) throws IOException;
+    public void setVoicemailContent(Uri voicemailUri, InputStream inputStream, String mimeType)
+            throws IOException;
+
+    /**
+     * Sets the voicemail content from the supplied byte array.
+     *
+     * @throws IOException if there is a problem creating the file or no voicemail is found matching
+     *             the given Uri
+     */
+    public void setVoicemailContent(Uri voicemailUri, byte[] inputBytes, String mimeType)
+            throws IOException;
 
     /**
      * Fetch all the voicemails accessible to this voicemail content provider.

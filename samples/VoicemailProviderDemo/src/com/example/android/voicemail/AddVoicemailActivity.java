@@ -206,13 +206,10 @@ public class AddVoicemailActivity extends Activity {
             Uri newVoicemailUri = mVoicemailProviderHelper.insert(voicemail);
             logger.i("Inserted new voicemail URI: " + newVoicemailUri);
             if (inputAudioStream != null) {
-                OutputStream outputStream = null;
                 try {
-                    outputStream = mVoicemailProviderHelper.setVoicemailContent(
-                            newVoicemailUri, getContentResolver().getType(recordingUri));
-                    copyStreamData(inputAudioStream, outputStream);
+                    mVoicemailProviderHelper.setVoicemailContent(newVoicemailUri, inputAudioStream,
+                            getContentResolver().getType(recordingUri));
                 } finally {
-                    CloseUtils.closeQuietly(outputStream);
                     CloseUtils.closeQuietly(inputAudioStream);
                 }
             }
@@ -228,13 +225,5 @@ public class AddVoicemailActivity extends Activity {
             }
         }
 
-        private void copyStreamData(InputStream in, OutputStream out) throws IOException {
-            // Copy 8K chunk at a time.
-            byte[] data = new byte[8 * 1024];
-            int numBytes;
-            while ((numBytes = in.read(data)) > 0) {
-                out.write(data, 0, numBytes);
-            }
-        }
     }
 }
