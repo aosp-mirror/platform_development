@@ -30,6 +30,7 @@ import android.provider.VoicemailContract;
 import android.provider.VoicemailContract.Voicemails;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -114,16 +115,45 @@ public final class VoicemailProviderHelpers implements VoicemailProviderHelper {
     }
 
     @Override
-    public OutputStream setVoicemailContent(Uri voicemailUri, String mimeType) throws IOException {
+    public void setVoicemailContent(Uri voicemailUri, InputStream inputStream, String mimeType)
+            throws IOException {
+        setVoicemailContent(voicemailUri, null, inputStream, mimeType);
+    }
+
+    @Override
+    public void setVoicemailContent(Uri voicemailUri, byte[] inputBytes, String mimeType)
+            throws IOException {
+        setVoicemailContent(voicemailUri, inputBytes, null, mimeType);
+    }
+
+    private void setVoicemailContent(Uri voicemailUri, byte[] inputBytes, InputStream inputStream,
+            String mimeType) throws IOException {
+        if (inputBytes != null && inputStream != null) {
+            throw new IllegalArgumentException("Both inputBytes & inputStream non-null. Don't" +
+                    " know which one to use.");
+        }
+
+        logger.d(String.format("Writing new voicemail content: %s", voicemailUri));
+        OutputStream outputStream = null;
+        try {
+            outputStream = mContentResolver.openOutputStream(voicemailUri);
+            if (inputBytes != null) {
+                outputStream.write(inputBytes);
+            } else if (inputStream != null) {
+                copyStreamData(inputStream, outputStream);
+            }
+        } finally {
+            CloseUtils.closeQuietly(outputStream);
+        }
+        // Update mime_type & has_content after we are done with file update.
         ContentValues values = new ContentValues();
         values.put(Voicemails.MIME_TYPE, mimeType);
+        values.put(Voicemails.HAS_CONTENT, true);
         int updatedCount = mContentResolver.update(voicemailUri, values, null, null);
         if (updatedCount != 1) {
             throw new IOException("Updating voicemail should have updated 1 row, was: "
                     + updatedCount);
         }
-        logger.d(String.format("Writing new voicemail content: %s", voicemailUri));
-        return mContentResolver.openOutputStream(voicemailUri);
     }
 
     @Override
@@ -287,5 +317,14 @@ public final class VoicemailProviderHelpers implements VoicemailProviderHelper {
             contentValues.put(Voicemails.IS_READ, voicemail.isRead() ? 1 : 0);
         }
         return contentValues;
+    }
+
+    private void copyStreamData(InputStream in, OutputStream out) throws IOException {
+        byte[] data = new byte[8 * 1024];
+        int numBytes;
+        while ((numBytes = in.read(data)) > 0) {
+            out.write(data, 0, numBytes);
+        }
+
     }
 }
