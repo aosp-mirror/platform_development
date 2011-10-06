@@ -40,34 +40,40 @@
     <LinearLayout
         android:orientation="horizontal"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         >
         <CheckBox
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:checked="true"
-            android:text="Appearing Animation"
+            android:text="In"
             android:id="@+id/appearingCB"
             />
         <CheckBox
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:checked="true"
-            android:text="Disappearing Animation"
+            android:text="Out"
             android:id="@+id/disappearingCB"
             />
+    </LinearLayout>
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        >
         <CheckBox
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:checked="true"
-            android:text="Changing/Appearing Animation"
+            android:text="Changing-In"
             android:id="@+id/changingAppearingCB"
             />
         <CheckBox
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:checked="true"
-            android:text="Changing/Disappearing Animation"
+            android:text="Changing-Out"
             android:id="@+id/changingDisappearingCB"
             />
     </LinearLayout>

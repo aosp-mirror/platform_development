@@ -20,7 +20,6 @@ package com.example.android.apis.animation;
 // class is in a sub-package.
 import android.animation.Animator;
 import android.animation.ObjectAnimator;
-import android.widget.LinearLayout;
 import com.example.android.apis.R;
 
 import android.animation.AnimatorListenerAdapter;
@@ -59,8 +58,8 @@ public class LayoutAnimations extends Activity {
 
         container = new FixedGridLayout(this);
         container.setClipChildren(false);
-        ((FixedGridLayout)container).setCellHeight(50);
-        ((FixedGridLayout)container).setCellWidth(200);
+        ((FixedGridLayout)container).setCellHeight(90);
+        ((FixedGridLayout)container).setCellWidth(100);
         final LayoutTransition transitioner = new LayoutTransition();
         container.setLayoutTransition(transitioner);
         defaultAppearingAnim = transitioner.getAnimator(LayoutTransition.APPEARING);
@@ -83,7 +82,7 @@ public class LayoutAnimations extends Activity {
         addButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 Button newButton = new Button(LayoutAnimations.this);
-                newButton.setText("Click to Delete " + (numButtons++));
+                newButton.setText(String.valueOf(numButtons++));
                 newButton.setOnClickListener(new View.OnClickListener() {
                     public void onClick(View v) {
                         container.removeView(v);
