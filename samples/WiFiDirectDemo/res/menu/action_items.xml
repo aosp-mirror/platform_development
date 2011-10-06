@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu
+    xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/atn_direct_enable"
+        android:icon="@drawable/ic_action_on_off"
+        android:title="@string/enable_p2p_button"
+        android:showAsAction="ifRoom|withText" />
+
+    <item
+        android:id="@+id/atn_direct_discover"
+        android:icon="@drawable/ic_action_discover"
+        android:title="@string/discover_peers_button"
+        android:showAsAction="ifRoom|withText" />
+</menu>
