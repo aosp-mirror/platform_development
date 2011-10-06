@@ -60,9 +60,9 @@ public class LayoutAnimationsHideShow extends Activity {
 
         // Add a slew of buttons to the container. We won't add any more buttons at runtime, but
         // will just show/hide the buttons we've already created
-        for (int i = 0; i < 6; ++i) {
+        for (int i = 0; i < 4; ++i) {
             Button newButton = new Button(this);
-            newButton.setText("Click to Hide " + i);
+            newButton.setText(String.valueOf(i));
             container.addView(newButton);
             newButton.setOnClickListener(new View.OnClickListener() {
                 public void onClick(View v) {
