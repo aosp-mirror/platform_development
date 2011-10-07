@@ -14,9 +14,15 @@
      limitations under the License.
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="294dp"
+    android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:layout_marginTop="@dimen/widget_margin_top"
+    android:layout_marginBottom="@dimen/widget_margin_bottom"
+    android:layout_marginLeft="@dimen/widget_margin_left"
+    android:layout_marginRight="@dimen/widget_margin_right">
+    <!-- We define separate margins to allow for flexibility in twiddling the margins
+         depending on device form factor and target SDK version. -->
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
@@ -24,12 +30,14 @@
             android:id="@+id/header"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:scaleType="fitXY"
             android:src="@drawable/header" />
         <ImageButton
             android:id="@+id/refresh"
             android:layout_width="56dp"
             android:layout_height="39dp"
-            android:layout_marginLeft="222dp"
+            android:layout_gravity="right|top"
+            android:layout_marginRight="15dp"
             android:layout_marginTop="20dp"
             android:background="@drawable/refresh_button" />
     </FrameLayout>
@@ -57,5 +65,6 @@
         android:id="@+id/footer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:scaleType="fitXY"
         android:src="@drawable/footer" />
 </LinearLayout>
