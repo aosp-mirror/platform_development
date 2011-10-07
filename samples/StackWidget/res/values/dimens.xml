@@ -13,15 +13,6 @@
      See the License for the specific language governing permissions and
      limitations under the License.
 -->
-<appwidget-provider
-  xmlns:android="http://schemas.android.com/apk/res/android"
-  android:minWidth="110dip"
-  android:minHeight="110dip"
-  android:updatePeriodMillis="3600000"
-  android:previewImage="@drawable/preview"
-  android:initialLayout="@layout/widget_layout"
-  android:autoAdvanceViewId="@id/stack_view">
-</appwidget-provider>
-<!--to enable resizing:
- android:resizeMode="horizontal|vertical" -->
- 
+<resources>
+    <dimen name="widget_margin">8dp</dimen>
+</resources>
