@@ -22,7 +22,7 @@
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.android.stackwidget">
-    <uses-sdk android:targetSdkVersion="11" android:minSdkVersion="11"/>
+    <uses-sdk android:targetSdkVersion="14" android:minSdkVersion="11"/>
     <application android:label="StackWidget">
         <receiver android:name="StackWidgetProvider">
             <intent-filter>
