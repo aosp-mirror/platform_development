@@ -13,14 +13,9 @@
      See the License for the specific language governing permissions and
      limitations under the License.
 -->
-<appwidget-provider
-  xmlns:android="http://schemas.android.com/apk/res/android"
-  android:minWidth="250dp"
-  android:minHeight="180dp"
-  android:updatePeriodMillis="1800000"
-  android:initialLayout="@layout/widget_layout"
-  android:resizeMode="vertical"
-  android:minResizeWidth="250dp"
-  android:minResizeHeight="110dp"
-  android:previewImage="@drawable/preview">
-</appwidget-provider>
+<resources>
+    <dimen name="widget_margin_top">8dp</dimen>
+    <dimen name="widget_margin_bottom">8dp</dimen>
+    <dimen name="widget_margin_left">8dp</dimen>
+    <dimen name="widget_margin_right">8dp</dimen>
+</resources>
