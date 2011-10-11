@@ -137,7 +137,7 @@ public class Monkey {
     private boolean mRequestAppCrashBugreport = false;
 
     /**Request the bugreport based on the mBugreportFrequency. */
-    private boolean mGetPeriodicBugreport = true;
+    private boolean mGetPeriodicBugreport = false;
 
     /**
      * Request the bugreport based on the mBugreportFrequency.
