@@ -466,6 +466,12 @@ See test_defs.xsd for more information.
     runner="com.android.contacts.ContactsLaunchPerformance"
     description="Launch performance for Contacts." />
 
+<test name="downloadprovider"
+    build_path="packages/providers/DownloadProvider/tests"
+    package="com.android.providers.downloads.tests"
+    coverage_target="DownloadProvider"
+    continuous="true" />
+
 <test name="downloadprovider-permission"
     build_path="packages/providers/DownloadProvider/tests/permission"
     package="com.android.providers.downloads.permission.tests"
