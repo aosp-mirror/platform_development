@@ -1,6 +1,4 @@
 __exp__D
-__fedisableexcept
-__feenableexcept
 __fpclassifyd
 __fpclassifyf
 __fpclassifyl
@@ -27,7 +25,7 @@ __log__D
 __signbit
 __signbitf
 __signbitl
-__test_sse
+_scan_nan
 acos
 acosf
 acosh
@@ -72,10 +70,19 @@ fabsl
 fdim
 fdimf
 fdiml
+feclearexcept
+fedisableexcept
+feenableexcept
 fegetenv
+fegetexcept
+fegetexceptflag
+fegetround
 feholdexcept
 feraiseexcept
+fesetenv
 fesetexceptflag
+fesetround
+fetestexcept
 feupdateenv
 finite
 finitef
@@ -137,6 +144,8 @@ lroundf
 lroundl
 modf
 modff
+nan
+nanf
 nearbyint
 nearbyintf
 nextafter
@@ -174,6 +183,7 @@ tanf
 tanh
 tanhf
 tgamma
+tgammaf
 trunc
 truncf
 truncl
