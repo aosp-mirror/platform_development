@@ -402,6 +402,7 @@ private:
 public:
     static const char FACING_KEY[];
     static const char ORIENTATION_KEY[];
+    static const char RECORDING_HINT_KEY[];
 
      /****************************************************************************
      * Common string values
