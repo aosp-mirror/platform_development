@@ -96,6 +96,7 @@ status_t EmulatedCamera::Initialize()
     mParameters.set(CameraParameters::KEY_MAX_EXPOSURE_COMPENSATION, "6");
     mParameters.set(CameraParameters::KEY_MIN_EXPOSURE_COMPENSATION, "-6");
     mParameters.set(CameraParameters::KEY_EXPOSURE_COMPENSATION_STEP, "0.5");
+    mParameters.set(CameraParameters::KEY_EXPOSURE_COMPENSATION, "0");
     mParameters.set(CameraParameters::KEY_JPEG_THUMBNAIL_WIDTH, "512");
     mParameters.set(CameraParameters::KEY_JPEG_THUMBNAIL_HEIGHT, "384");
     mParameters.set(CameraParameters::KEY_JPEG_QUALITY, "90");
@@ -396,6 +397,34 @@ status_t EmulatedCamera::setParameters(const char* parms)
     CameraParameters new_param;
     String8 str8_param(parms);
     new_param.unflatten(str8_param);
+
+    int new_exposure_compensation = new_param.getInt(
+            CameraParameters::KEY_EXPOSURE_COMPENSATION);
+    const int min_exposure_compensation = new_param.getInt(
+            CameraParameters::KEY_MIN_EXPOSURE_COMPENSATION);
+    const int max_exposure_compensation = new_param.getInt(
+            CameraParameters::KEY_MAX_EXPOSURE_COMPENSATION);
+
+    // Checks if the exposure compensation change is supported.
+    if ((min_exposure_compensation != 0) || (max_exposure_compensation != 0)) {
+        if (new_exposure_compensation > max_exposure_compensation) {
+            new_exposure_compensation = max_exposure_compensation;
+        }
+        if (new_exposure_compensation < min_exposure_compensation) {
+            new_exposure_compensation = min_exposure_compensation;
+        }
+
+        const int current_exposure_compensation = mParameters.getInt(
+                CameraParameters::KEY_EXPOSURE_COMPENSATION);
+        if (current_exposure_compensation != new_exposure_compensation) {
+            const float exposure_value = new_exposure_compensation *
+                    new_param.getFloat(
+                            CameraParameters::KEY_EXPOSURE_COMPENSATION_STEP);
+
+            getCameraDevice()->setExposureCompensation(
+                    exposure_value);
+        }
+    }
     mParameters = new_param;
 
     /*

@@ -27,6 +27,7 @@
 #define LOG_TAG "EmulatedCamera_Device"
 #include <cutils/log.h>
 #include <sys/select.h>
+#include <cmath>
 #include "EmulatedCameraDevice.h"
 #include "Converters.h"
 
@@ -37,6 +38,7 @@ EmulatedCameraDevice::EmulatedCameraDevice(EmulatedCamera* camera_hal)
       mCurFrameTimestamp(0),
       mCameraHAL(camera_hal),
       mCurrentFrame(NULL),
+      mExposureCompensation(1.0f),
       mState(ECDS_CONSTRUCTED)
 {
 }
@@ -99,6 +101,17 @@ status_t EmulatedCameraDevice::stopDeliveringFrames()
     const status_t res = stopWorkerThread();
     LOGE_IF(res != NO_ERROR, "%s: startWorkerThread failed", __FUNCTION__);
     return res;
+}
+
+void EmulatedCameraDevice::setExposureCompensation(const float ev) {
+    LOGV("%s", __FUNCTION__);
+
+    if (!isStarted()) {
+        LOGW("%s: Fake camera device is not started.", __FUNCTION__);
+    }
+
+    mExposureCompensation = std::pow(2.0f, ev);
+    LOGV("New exposure compensation is %f", mExposureCompensation);
 }
 
 status_t EmulatedCameraDevice::getCurrentPreviewFrame(void* buffer)
