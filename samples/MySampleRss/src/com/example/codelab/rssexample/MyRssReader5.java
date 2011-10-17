@@ -95,12 +95,12 @@ public class MyRssReader5 extends Activity implements OnItemSelectedListener {
             mLogger.warning("MyRssReader5.onItemSelected() couldn't get the content" +
                             "from the cursor " + e.getMessage()); 
         }
-        mWebView.loadData(content, "text/html", "utf-8");
+        mWebView.loadData(content, "text/html", null);
     }
 //END_INCLUDE(5_4)
     
     public void onNothingSelected(AdapterView parent){
-        mWebView.loadData("<html><body><p>No selection chosen</p></body></html>", "text/html", "utf-8");   
+        mWebView.loadData("<html><body><p>No selection chosen</p></body></html>", "text/html", null);
     }
    
     // Store our state before we are potentially bumped from memory.
