@@ -44,6 +44,13 @@ EmulatedFakeCameraDevice::EmulatedFakeCameraDevice(EmulatedFakeCamera* camera_ha
         mCurrentColor(&mWhiteYUV)
 #endif  // EFCD_ROTATE_FRAME
 {
+    // Makes the image with the original exposure compensation darker.
+    // So the effects of changing the exposure compensation can be seen.
+    mBlackYUV.Y = mBlackYUV.Y / 4;
+    mWhiteYUV.Y = mWhiteYUV.Y / 4;
+    mRedYUV.Y = mRedYUV.Y / 4;
+    mGreenYUV.Y = mGreenYUV.Y / 4;
+    mBlueYUV.Y = mBlueYUV.Y / 4;
 }
 
 EmulatedFakeCameraDevice::~EmulatedFakeCameraDevice()
@@ -258,6 +265,7 @@ void EmulatedFakeCameraDevice::drawCheckerboard()
             } else {
                 mWhiteYUV.get(Y, U, V);
             }
+            *Y = changeExposure(*Y);
             Y[1] = *Y;
             Y += 2; U += mUVStep; V += mUVStep;
             countx += 2;
@@ -309,6 +317,7 @@ void EmulatedFakeCameraDevice::drawSquare(int x,
         uint8_t* sqY = Y_pos;
         for (int i = x; i < square_xstop; i += 2) {
             color->get(sqY, sqU, sqV);
+            *sqY = changeExposure(*sqY);
             sqY[1] = *sqY;
             sqY += 2; sqU += mUVStep; sqV += mUVStep;
         }
@@ -321,7 +330,7 @@ void EmulatedFakeCameraDevice::drawSquare(int x,
 void EmulatedFakeCameraDevice::drawSolid(YUVPixel* color)
 {
     /* All Ys are the same. */
-    memset(mCurrentFrame, color->Y, mTotalPixels);
+    memset(mCurrentFrame, changeExposure(color->Y), mTotalPixels);
 
     /* Fill U, and V panes. */
     uint8_t* U = mFrameU;
@@ -357,7 +366,7 @@ void EmulatedFakeCameraDevice::drawStripes()
         }
 
         /* All Ys at the row are the same. */
-        memset(pY, color->Y, mFrameWidth);
+        memset(pY, changeExposure(color->Y), mFrameWidth);
 
         /* Offset of the current row inside U/V panes. */
         const int uv_off = (y / 2) * mUVInRow;

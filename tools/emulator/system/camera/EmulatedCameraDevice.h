@@ -143,6 +143,10 @@ public:
      */
     virtual status_t stopDeliveringFrames();
 
+    /* Sets the exposure compensation for the camera device.
+     */
+    virtual void setExposureCompensation(const float ev);
+
     /* Gets current framebuffer, converted into preview frame format.
      * This method must be called on a connected instance of this class with a
      * started camera device. If it is called on a disconnected instance, or
@@ -470,6 +474,9 @@ protected:
 
     /* Total number of pixels */
     int                         mTotalPixels;
+
+    /* Exposure compensation value */
+    float                       mExposureCompensation;
 
     /* Defines possible states of the emulated camera device object.
      */
