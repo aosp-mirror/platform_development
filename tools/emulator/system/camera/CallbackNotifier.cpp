@@ -219,6 +219,18 @@ void CallbackNotifier::onNextFrameAvailable(const void* frame,
         }
     }
 
+    if (isMessageEnabled(CAMERA_MSG_PREVIEW_FRAME)) {
+        camera_memory_t* cam_buff =
+            mGetMemoryCB(-1, camera_dev->getFrameBufferSize(), 1, NULL);
+        if (NULL != cam_buff && NULL != cam_buff->data) {
+            memcpy(cam_buff->data, frame, camera_dev->getFrameBufferSize());
+            mDataCB(CAMERA_MSG_PREVIEW_FRAME, cam_buff, 0, NULL, mCBOpaque);
+            cam_buff->release(cam_buff);
+        } else {
+            LOGE("%s: Memory failure in CAMERA_MSG_PREVIEW_FRAME", __FUNCTION__);
+        }
+    }
+
     if (mTakingPicture) {
         /* This happens just once. */
         mTakingPicture = false;
