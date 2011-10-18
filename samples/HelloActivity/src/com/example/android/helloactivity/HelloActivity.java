@@ -18,6 +18,8 @@ package com.example.android.helloactivity;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.view.View;
+import android.view.WindowManager;
 
 
 /**
@@ -33,7 +35,19 @@ public class HelloActivity extends Activity {
 
         // Set the layout for this activity.  You can find it
         // in res/layout/hello_activity.xml
-        setContentView(R.layout.hello_activity);
+        View view = getLayoutInflater().inflate(R.layout.hello_activity, null);
+        setContentView(view);
+
+        WindowManager.LayoutParams params = getWindow().getAttributes();
+        params.systemUiVisibility = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION;
+        getWindow().setAttributes(params);
+        view.setOnSystemUiVisibilityChangeListener(new View.OnSystemUiVisibilityChangeListener() {
+            @Override public void onSystemUiVisibilityChange(int visibility) {
+                WindowManager.LayoutParams params = getWindow().getAttributes();
+                params.systemUiVisibility = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION;
+                getWindow().setAttributes(params);
+            }
+        });
     }
 }
 
