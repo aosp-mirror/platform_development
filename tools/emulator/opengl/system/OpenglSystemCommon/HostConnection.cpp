@@ -69,6 +69,7 @@ HostConnection *HostConnection::get()
             }
             if (stream->connect() < 0) {
                 LOGE("Failed to connect to host (QemuPipeStream)!!!\n");
+                delete stream;
                 delete con;
                 return NULL;
             }
@@ -85,6 +86,7 @@ HostConnection *HostConnection::get()
 
             if (stream->connect("10.0.2.2", STREAM_PORT_NUM) < 0) {
                 LOGE("Failed to connect to host (TcpStream)!!!\n");
+                delete stream;
                 delete con;
                 return NULL;
             }
