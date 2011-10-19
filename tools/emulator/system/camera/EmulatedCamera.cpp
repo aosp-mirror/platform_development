@@ -28,7 +28,7 @@
 #include <cutils/log.h>
 #include <ui/Rect.h>
 #include "EmulatedCamera.h"
-#include "EmulatedFakeCameraDevice.h"
+//#include "EmulatedFakeCameraDevice.h"
 #include "Converters.h"
 
 /* Defines whether we should trace parameter changes. */
@@ -99,12 +99,8 @@ status_t EmulatedCamera::Initialize()
      * Fake required parameters.
      */
 
-    mParameters.set(CameraParameters::KEY_SUPPORTED_JPEG_THUMBNAIL_SIZES,
-                    "320x240,0x0");
-    mParameters.set(CameraParameters::KEY_MAX_EXPOSURE_COMPENSATION, "6");
-    mParameters.set(CameraParameters::KEY_MIN_EXPOSURE_COMPENSATION, "-6");
-    mParameters.set(CameraParameters::KEY_EXPOSURE_COMPENSATION_STEP, "0.5");
-    mParameters.set(CameraParameters::KEY_EXPOSURE_COMPENSATION, "0");
+    mParameters.set(CameraParameters::KEY_SUPPORTED_JPEG_THUMBNAIL_SIZES, "320x240,0x0");
+
     mParameters.set(CameraParameters::KEY_JPEG_THUMBNAIL_WIDTH, "512");
     mParameters.set(CameraParameters::KEY_JPEG_THUMBNAIL_HEIGHT, "384");
     mParameters.set(CameraParameters::KEY_JPEG_QUALITY, "90");
@@ -137,10 +133,22 @@ status_t EmulatedCamera::Initialize()
                     CameraParameters::PIXEL_FORMAT_JPEG);
     mParameters.setPictureFormat(CameraParameters::PIXEL_FORMAT_JPEG);
 
-    /*
-     * Not supported features
-     */
+    /* Sets the default exposure compensation support to be disabled. */
+    mParameters.set(CameraParameters::KEY_MAX_EXPOSURE_COMPENSATION, "0");
+    mParameters.set(CameraParameters::KEY_MIN_EXPOSURE_COMPENSATION, "0");
 
+    /* Sets auto white balance as default. */
+    getCameraDevice()->initializeWhiteBalanceModes(
+            CameraParameters::WHITE_BALANCE_AUTO, 1.0f, 1.0f);
+    mParameters.set(CameraParameters::KEY_SUPPORTED_WHITE_BALANCE,
+                    CameraParameters::WHITE_BALANCE_AUTO);
+    mParameters.set(CameraParameters::KEY_WHITE_BALANCE,
+                    CameraParameters::WHITE_BALANCE_AUTO);
+    getCameraDevice()->setWhiteBalanceMode(
+            mParameters.get(CameraParameters::KEY_WHITE_BALANCE));
+
+    /* Not supported features
+     */
     mParameters.set(CameraParameters::KEY_SUPPORTED_FOCUS_MODES,
                     CameraParameters::FOCUS_MODE_FIXED);
     mParameters.set(CameraParameters::KEY_FOCUS_MODE,
@@ -408,6 +416,9 @@ status_t EmulatedCamera::setParameters(const char* parms)
     String8 str8_param(parms);
     new_param.unflatten(str8_param);
 
+    /*
+     * Check for new exposure compensation parameter.
+     */
     int new_exposure_compensation = new_param.getInt(
             CameraParameters::KEY_EXPOSURE_COMPENSATION);
     const int min_exposure_compensation = new_param.getInt(
@@ -435,6 +446,24 @@ status_t EmulatedCamera::setParameters(const char* parms)
                     exposure_value);
         }
     }
+
+    const char* new_white_balance = new_param.get(
+            CameraParameters::KEY_WHITE_BALANCE);
+    const char* supported_white_balance = new_param.get(
+            CameraParameters::KEY_SUPPORTED_WHITE_BALANCE);
+
+    if ((supported_white_balance != NULL) && (new_white_balance != NULL) &&
+        (strstr(supported_white_balance, new_white_balance) != NULL)) {
+
+        const char* current_white_balance = mParameters.get(
+                CameraParameters::KEY_WHITE_BALANCE);
+        if ((current_white_balance == NULL) ||
+            (strcmp(current_white_balance, new_white_balance) != 0)) {
+            LOGV("Setting white balance to %s", new_white_balance);
+            getCameraDevice()->setWhiteBalanceMode(new_white_balance);
+        }
+    }
+
     mParameters = new_param;
 
     return NO_ERROR;

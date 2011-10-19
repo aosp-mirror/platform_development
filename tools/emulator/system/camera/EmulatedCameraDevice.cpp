@@ -29,24 +29,32 @@
 #include <sys/select.h>
 #include <cmath>
 #include "EmulatedCameraDevice.h"
-#include "Converters.h"
 
 namespace android {
 
+const float GAMMA_CORRECTION = 2.2f;
 EmulatedCameraDevice::EmulatedCameraDevice(EmulatedCamera* camera_hal)
     : mObjectLock(),
       mCurFrameTimestamp(0),
       mCameraHAL(camera_hal),
       mCurrentFrame(NULL),
       mExposureCompensation(1.0f),
+      mWhiteBalanceScale(NULL),
+      mSupportedWhiteBalanceScale(),
       mState(ECDS_CONSTRUCTED)
 {
 }
 
 EmulatedCameraDevice::~EmulatedCameraDevice()
 {
+    LOGV("EmulatedCameraDevice destructor");
     if (mCurrentFrame != NULL) {
         delete[] mCurrentFrame;
+    }
+    for (int i = 0; i < mSupportedWhiteBalanceScale.size(); ++i) {
+        if (mSupportedWhiteBalanceScale.valueAt(i) != NULL) {
+            delete[] mSupportedWhiteBalanceScale.valueAt(i);
+        }
     }
 }
 
@@ -110,8 +118,41 @@ void EmulatedCameraDevice::setExposureCompensation(const float ev) {
         LOGW("%s: Fake camera device is not started.", __FUNCTION__);
     }
 
-    mExposureCompensation = std::pow(2.0f, ev);
+    mExposureCompensation = std::pow(2.0f, ev / GAMMA_CORRECTION);
     LOGV("New exposure compensation is %f", mExposureCompensation);
+}
+
+void EmulatedCameraDevice::initializeWhiteBalanceModes(const char* mode,
+                                                       const float r_scale,
+                                                       const float b_scale) {
+    LOGV("%s with %s, %f, %f", __FUNCTION__, mode, r_scale, b_scale);
+    float* value = new float[3];
+    value[0] = r_scale; value[1] = 1.0f; value[2] = b_scale;
+    mSupportedWhiteBalanceScale.add(String8(mode), value);
+}
+
+void EmulatedCameraDevice::setWhiteBalanceMode(const char* mode) {
+    LOGV("%s with white balance %s", __FUNCTION__, mode);
+    mWhiteBalanceScale =
+            mSupportedWhiteBalanceScale.valueFor(String8(mode));
+}
+
+/* Computes the pixel value after adjusting the white balance to the current
+ * one. The input the y, u, v channel of the pixel and the adjusted value will
+ * be stored in place. The adjustment is done in RGB space.
+ */
+void EmulatedCameraDevice::changeWhiteBalance(uint8_t& y,
+                                              uint8_t& u,
+                                              uint8_t& v) const {
+    float r_scale = mWhiteBalanceScale[0];
+    float b_scale = mWhiteBalanceScale[2];
+    int r = static_cast<float>(YUV2R(y, u, v)) / r_scale;
+    int g = YUV2G(y, u, v);
+    int b = static_cast<float>(YUV2B(y, u, v)) / b_scale;
+
+    y = RGB2Y(r, g, b);
+    u = RGB2U(r, g, b);
+    v = RGB2V(r, g, b);
 }
 
 status_t EmulatedCameraDevice::getCurrentPreviewFrame(void* buffer)
