@@ -25,18 +25,21 @@ public:
     }
 
     ~FixedBuffer() {
-        delete m_buffer;
+        delete [] m_buffer;
         m_bufferLen = 0;
     }
 
     void * alloc(size_t size) {
-        if (m_bufferLen >= size) return (void *)(m_buffer);
+        if (m_bufferLen >= size)
+            return (void *)(m_buffer);
 
-        if (m_buffer != NULL) delete[] m_buffer;
+        if (m_buffer != NULL)
+            delete[] m_buffer;
 
         m_bufferLen = size;
         m_buffer = new unsigned char[m_bufferLen];
-        if (m_buffer == NULL) m_bufferLen = 0;
+        if (m_buffer == NULL)
+            m_bufferLen = 0;
 
         return m_buffer;
     }

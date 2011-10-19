@@ -146,8 +146,10 @@ EGLContext_t::EGLContext_t(EGLDisplay dpy, EGLConfig config, EGLContext_t* share
     flags = 0;
     version = 1;
     clientState = new GLClientState();
-    if (shareCtx) sharedGroup = shareCtx->getSharedGroup();
-    else sharedGroup = GLSharedGroupPtr(new GLSharedGroup());
+    if (shareCtx)
+        sharedGroup = shareCtx->getSharedGroup();
+    else
+        sharedGroup = GLSharedGroupPtr(new GLSharedGroup());
 };
 
 EGLContext_t::~EGLContext_t()
