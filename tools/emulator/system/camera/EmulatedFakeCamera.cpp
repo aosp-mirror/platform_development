@@ -66,7 +66,7 @@ status_t EmulatedFakeCamera::Initialize()
     mParameters.set(CameraParameters::KEY_MIN_EXPOSURE_COMPENSATION, "-6");
     mParameters.set(CameraParameters::KEY_EXPOSURE_COMPENSATION_STEP, "0.5");
     mParameters.set(CameraParameters::KEY_EXPOSURE_COMPENSATION, "0");
-    LOGV("Set camera supported exposure values");
+    ALOGV("Set camera supported exposure values");
 
     // Sets the white balance modes and the device-dependent scale factors.
     mFakeCameraDevice.initializeWhiteBalanceModes(
@@ -86,7 +86,7 @@ status_t EmulatedFakeCamera::Initialize()
     mParameters.set(CameraParameters::KEY_SUPPORTED_WHITE_BALANCE,
                     supported_white_balance);
 
-    LOGV("Set camera supported white balance modes");
+    ALOGV("Set camera supported white balance modes");
 
     if (res != NO_ERROR) {
         return res;

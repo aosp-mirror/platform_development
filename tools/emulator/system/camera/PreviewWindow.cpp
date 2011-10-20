@@ -49,7 +49,7 @@ PreviewWindow::~PreviewWindow()
 status_t PreviewWindow::setPreviewWindow(struct preview_stream_ops* window,
                                          int preview_fps)
 {
-    LOGV("%s: current: %p -> new: %p", __FUNCTION__, mPreviewWindow, window);
+    ALOGV("%s: current: %p -> new: %p", __FUNCTION__, mPreviewWindow, window);
 
     status_t res = NO_ERROR;
     Mutex::Autolock locker(&mObjectLock);
@@ -81,7 +81,7 @@ status_t PreviewWindow::setPreviewWindow(struct preview_stream_ops* window,
 
 status_t PreviewWindow::startPreview()
 {
-    LOGV("%s", __FUNCTION__);
+    ALOGV("%s", __FUNCTION__);
 
     Mutex::Autolock locker(&mObjectLock);
     mPreviewEnabled = true;
@@ -91,7 +91,7 @@ status_t PreviewWindow::startPreview()
 
 void PreviewWindow::stopPreview()
 {
-    LOGV("%s", __FUNCTION__);
+    ALOGV("%s", __FUNCTION__);
 
     Mutex::Autolock locker(&mObjectLock);
     mPreviewEnabled = false;
@@ -117,7 +117,7 @@ void PreviewWindow::onNextFrameAvailable(const void* frame,
         /* Need to set / adjust buffer geometry for the preview window.
          * Note that in the emulator preview window uses only RGB for pixel
          * formats. */
-        LOGV("%s: Adjusting preview windows %p geometry to %dx%d",
+        ALOGV("%s: Adjusting preview windows %p geometry to %dx%d",
              __FUNCTION__, mPreviewWindow, mPreviewFrameWidth,
              mPreviewFrameHeight);
         res = mPreviewWindow->set_buffers_geometry(mPreviewWindow,

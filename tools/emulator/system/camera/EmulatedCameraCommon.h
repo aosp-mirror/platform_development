@@ -34,12 +34,12 @@ public:
     /* Constructor that prints an "entry" trace message. */
     explicit HWERoutineTracker(const char* name)
             : mName(name) {
-        LOGV("Entering %s", mName);
+        ALOGV("Entering %s", mName);
     }
 
     /* Destructor that prints a "leave" trace message. */
     ~HWERoutineTracker() {
-        LOGV("Leaving %s", mName);
+        ALOGV("Leaving %s", mName);
     }
 
 private:

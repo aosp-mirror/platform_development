@@ -212,7 +212,7 @@ QemuClient::~QemuClient()
 
 status_t QemuClient::connectClient(const char* param)
 {
-    LOGV("%s: '%s'", __FUNCTION__, param ? param : "");
+    ALOGV("%s: '%s'", __FUNCTION__, param ? param : "");
 
     /* Make sure that client is not connected already. */
     if (mPipeFD >= 0) {
@@ -247,7 +247,7 @@ status_t QemuClient::connectClient(const char* param)
 
 void QemuClient::disconnectClient()
 {
-    LOGV("%s", __FUNCTION__);
+    ALOGV("%s", __FUNCTION__);
 
     if (mPipeFD >= 0) {
         close(mPipeFD);
@@ -386,7 +386,7 @@ FactoryQemuClient::~FactoryQemuClient()
 
 status_t FactoryQemuClient::listCameras(char** list)
 {
-    LOGV("%s", __FUNCTION__);
+    ALOGV("%s", __FUNCTION__);
 
     QemuQuery query(mQueryList);
     if (doQuery(&query) || !query.isQuerySucceeded()) {
@@ -445,7 +445,7 @@ CameraQemuClient::~CameraQemuClient()
 
 status_t CameraQemuClient::queryConnect()
 {
-    LOGV("%s", __FUNCTION__);
+    ALOGV("%s", __FUNCTION__);
 
     QemuQuery query(mQueryConnect);
     doQuery(&query);
@@ -458,7 +458,7 @@ status_t CameraQemuClient::queryConnect()
 
 status_t CameraQemuClient::queryDisconnect()
 {
-    LOGV("%s", __FUNCTION__);
+    ALOGV("%s", __FUNCTION__);
 
     QemuQuery query(mQueryDisconnect);
     doQuery(&query);
@@ -473,7 +473,7 @@ status_t CameraQemuClient::queryStart(uint32_t pixel_format,
                                       int width,
                                       int height)
 {
-    LOGV("%s", __FUNCTION__);
+    ALOGV("%s", __FUNCTION__);
 
     char query_str[256];
     snprintf(query_str, sizeof(query_str), "%s dim=%dx%d pix=%d",
@@ -489,7 +489,7 @@ status_t CameraQemuClient::queryStart(uint32_t pixel_format,
 
 status_t CameraQemuClient::queryStop()
 {
-    LOGV("%s", __FUNCTION__);
+    ALOGV("%s", __FUNCTION__);
 
     QemuQuery query(mQueryStop);
     doQuery(&query);
@@ -505,7 +505,7 @@ status_t CameraQemuClient::queryFrame(void* vframe,
                                       size_t vframe_size,
                                       size_t pframe_size)
 {
-    LOGV("%s", __FUNCTION__);
+    ALOGV("%s", __FUNCTION__);
 
     char query_str[256];
     snprintf(query_str, sizeof(query_str), "%s video=%d preview=%d",

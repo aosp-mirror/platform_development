@@ -45,7 +45,7 @@ status_t EmulatedQemuCamera::Initialize(const char* device_name,
                                         const char* frame_dims,
                                         const char* facing_dir)
 {
-    LOGV("%s:\n   Name=%s\n   Facing '%s'\n   Dimensions=%s",
+    ALOGV("%s:\n   Name=%s\n   Facing '%s'\n   Dimensions=%s",
          __FUNCTION__, device_name, facing_dir, frame_dims);
     /* Save dimensions. */
     mFrameDims = frame_dims;
@@ -105,7 +105,7 @@ status_t EmulatedQemuCamera::Initialize(const char* device_name,
     mParameters.setPreviewSize(x, y);
     mParameters.setPictureSize(x, y);
 
-    LOGV("%s: Qemu camera %s is initialized. Current frame is %dx%d",
+    ALOGV("%s: Qemu camera %s is initialized. Current frame is %dx%d",
          __FUNCTION__, device_name, x, y);
 
     return NO_ERROR;

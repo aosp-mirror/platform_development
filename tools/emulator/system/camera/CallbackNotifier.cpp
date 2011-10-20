@@ -80,7 +80,7 @@ static void PrintMessages(uint32_t msg)
     const char* strs[lCameraMessagesNum];
     const int translated = GetMessageStrings(msg, strs, lCameraMessagesNum);
     for (int n = 0; n < translated; n++) {
-        LOGV("    %s", strs[n]);
+        ALOGV("    %s", strs[n]);
     }
 }
 
@@ -113,7 +113,7 @@ void CallbackNotifier::setCallbacks(camera_notify_callback notify_cb,
                                     camera_request_memory get_memory,
                                     void* user)
 {
-    LOGV("%s: %p, %p, %p, %p (%p)",
+    ALOGV("%s: %p, %p, %p, %p (%p)",
          __FUNCTION__, notify_cb, data_cb, data_cb_timestamp, get_memory, user);
 
     Mutex::Autolock locker(&mObjectLock);
@@ -126,29 +126,29 @@ void CallbackNotifier::setCallbacks(camera_notify_callback notify_cb,
 
 void CallbackNotifier::enableMessage(uint msg_type)
 {
-    LOGV("%s: msg_type = 0x%x", __FUNCTION__, msg_type);
+    ALOGV("%s: msg_type = 0x%x", __FUNCTION__, msg_type);
     PrintMessages(msg_type);
 
     Mutex::Autolock locker(&mObjectLock);
     mMessageEnabler |= msg_type;
-    LOGV("**** Currently enabled messages:");
+    ALOGV("**** Currently enabled messages:");
     PrintMessages(mMessageEnabler);
 }
 
 void CallbackNotifier::disableMessage(uint msg_type)
 {
-    LOGV("%s: msg_type = 0x%x", __FUNCTION__, msg_type);
+    ALOGV("%s: msg_type = 0x%x", __FUNCTION__, msg_type);
     PrintMessages(msg_type);
 
     Mutex::Autolock locker(&mObjectLock);
     mMessageEnabler &= ~msg_type;
-    LOGV("**** Currently enabled messages:");
+    ALOGV("**** Currently enabled messages:");
     PrintMessages(mMessageEnabler);
 }
 
 status_t CallbackNotifier::enableVideoRecording(int fps)
 {
-    LOGV("%s: FPS = %d", __FUNCTION__, fps);
+    ALOGV("%s: FPS = %d", __FUNCTION__, fps);
 
     Mutex::Autolock locker(&mObjectLock);
     mVideoRecEnabled = true;
@@ -160,7 +160,7 @@ status_t CallbackNotifier::enableVideoRecording(int fps)
 
 void CallbackNotifier::disableVideoRecording()
 {
-    LOGV("%s:", __FUNCTION__);
+    ALOGV("%s:", __FUNCTION__);
 
     Mutex::Autolock locker(&mObjectLock);
     mVideoRecEnabled = false;

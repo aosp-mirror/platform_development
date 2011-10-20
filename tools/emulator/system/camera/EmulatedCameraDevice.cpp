@@ -47,7 +47,7 @@ EmulatedCameraDevice::EmulatedCameraDevice(EmulatedCamera* camera_hal)
 
 EmulatedCameraDevice::~EmulatedCameraDevice()
 {
-    LOGV("EmulatedCameraDevice destructor");
+    ALOGV("EmulatedCameraDevice destructor");
     if (mCurrentFrame != NULL) {
         delete[] mCurrentFrame;
     }
@@ -84,7 +84,7 @@ status_t EmulatedCameraDevice::Initialize()
 
 status_t EmulatedCameraDevice::startDeliveringFrames(bool one_burst)
 {
-    LOGV("%s", __FUNCTION__);
+    ALOGV("%s", __FUNCTION__);
 
     if (!isStarted()) {
         LOGE("%s: Device is not started", __FUNCTION__);
@@ -99,7 +99,7 @@ status_t EmulatedCameraDevice::startDeliveringFrames(bool one_burst)
 
 status_t EmulatedCameraDevice::stopDeliveringFrames()
 {
-    LOGV("%s", __FUNCTION__);
+    ALOGV("%s", __FUNCTION__);
 
     if (!isStarted()) {
         LOGW("%s: Device is not started", __FUNCTION__);
@@ -112,27 +112,27 @@ status_t EmulatedCameraDevice::stopDeliveringFrames()
 }
 
 void EmulatedCameraDevice::setExposureCompensation(const float ev) {
-    LOGV("%s", __FUNCTION__);
+    ALOGV("%s", __FUNCTION__);
 
     if (!isStarted()) {
         LOGW("%s: Fake camera device is not started.", __FUNCTION__);
     }
 
     mExposureCompensation = std::pow(2.0f, ev / GAMMA_CORRECTION);
-    LOGV("New exposure compensation is %f", mExposureCompensation);
+    ALOGV("New exposure compensation is %f", mExposureCompensation);
 }
 
 void EmulatedCameraDevice::initializeWhiteBalanceModes(const char* mode,
                                                        const float r_scale,
                                                        const float b_scale) {
-    LOGV("%s with %s, %f, %f", __FUNCTION__, mode, r_scale, b_scale);
+    ALOGV("%s with %s, %f, %f", __FUNCTION__, mode, r_scale, b_scale);
     float* value = new float[3];
     value[0] = r_scale; value[1] = 1.0f; value[2] = b_scale;
     mSupportedWhiteBalanceScale.add(String8(mode), value);
 }
 
 void EmulatedCameraDevice::setWhiteBalanceMode(const char* mode) {
-    LOGV("%s with white balance %s", __FUNCTION__, mode);
+    ALOGV("%s with white balance %s", __FUNCTION__, mode);
     mWhiteBalanceScale =
             mSupportedWhiteBalanceScale.valueFor(String8(mode));
 }
@@ -223,7 +223,7 @@ status_t EmulatedCameraDevice::commonStartDevice(int width,
         LOGE("%s: Unable to allocate framebuffer", __FUNCTION__);
         return ENOMEM;
     }
-    LOGV("%s: Allocated %p %d bytes for %d pixels in %.4s[%dx%d] frame",
+    ALOGV("%s: Allocated %p %d bytes for %d pixels in %.4s[%dx%d] frame",
          __FUNCTION__, mCurrentFrame, mFrameBufferSize, mTotalPixels,
          reinterpret_cast<const char*>(&mPixelFormat), mFrameWidth, mFrameHeight);
     return NO_ERROR;
@@ -246,7 +246,7 @@ void EmulatedCameraDevice::commonStopDevice()
 
 status_t EmulatedCameraDevice::startWorkerThread(bool one_burst)
 {
-    LOGV("%s", __FUNCTION__);
+    ALOGV("%s", __FUNCTION__);
 
     if (!isInitialized()) {
         LOGE("%s: Emulated camera device is not initialized", __FUNCTION__);
@@ -260,7 +260,7 @@ status_t EmulatedCameraDevice::startWorkerThread(bool one_burst)
 
 status_t EmulatedCameraDevice::stopWorkerThread()
 {
-    LOGV("%s", __FUNCTION__);
+    ALOGV("%s", __FUNCTION__);
 
     if (!isInitialized()) {
         LOGE("%s: Emulated camera device is not initialized", __FUNCTION__);
@@ -285,7 +285,7 @@ bool EmulatedCameraDevice::inWorkerThread()
 
 status_t EmulatedCameraDevice::WorkerThread::readyToRun()
 {
-    LOGV("Starting emulated camera device worker thread...");
+    ALOGV("Starting emulated camera device worker thread...");
 
     LOGW_IF(mThreadControl >= 0 || mControlFD >= 0,
             "%s: Thread control FDs are opened", __FUNCTION__);
@@ -294,7 +294,7 @@ status_t EmulatedCameraDevice::WorkerThread::readyToRun()
     if (pipe(thread_fds) == 0) {
         mThreadControl = thread_fds[1];
         mControlFD = thread_fds[0];
-        LOGV("Emulated device's worker thread has been started.");
+        ALOGV("Emulated device's worker thread has been started.");
         return NO_ERROR;
     } else {
         LOGE("%s: Unable to create thread control FDs: %d -> %s",
@@ -305,7 +305,7 @@ status_t EmulatedCameraDevice::WorkerThread::readyToRun()
 
 status_t EmulatedCameraDevice::WorkerThread::stopThread()
 {
-    LOGV("Stopping emulated camera device's worker thread...");
+    ALOGV("Stopping emulated camera device's worker thread...");
 
     status_t res = EINVAL;
     if (mThreadControl >= 0) {
@@ -326,7 +326,7 @@ status_t EmulatedCameraDevice::WorkerThread::stopThread()
                     close(mControlFD);
                     mControlFD = -1;
                 }
-                LOGV("Emulated camera device's worker thread has been stopped.");
+                ALOGV("Emulated camera device's worker thread has been stopped.");
             } else {
                 LOGE("%s: requestExitAndWait failed: %d -> %s",
                      __FUNCTION__, res, strerror(-res));
@@ -380,7 +380,7 @@ EmulatedCameraDevice::WorkerThread::Select(int fd, int timeout)
         }
         /* THREAD_STOP is the only message expected here. */
         if (msg == THREAD_STOP) {
-            LOGV("%s: THREAD_STOP message is received", __FUNCTION__);
+            ALOGV("%s: THREAD_STOP message is received", __FUNCTION__);
             return EXIT_THREAD;
         } else {
             LOGE("Unknown worker thread message %d", msg);

@@ -63,7 +63,7 @@ EmulatedFakeCameraDevice::~EmulatedFakeCameraDevice()
 
 status_t EmulatedFakeCameraDevice::connectDevice()
 {
-    LOGV("%s", __FUNCTION__);
+    ALOGV("%s", __FUNCTION__);
 
     Mutex::Autolock locker(&mObjectLock);
     if (!isInitialized()) {
@@ -83,7 +83,7 @@ status_t EmulatedFakeCameraDevice::connectDevice()
 
 status_t EmulatedFakeCameraDevice::disconnectDevice()
 {
-    LOGV("%s", __FUNCTION__);
+    ALOGV("%s", __FUNCTION__);
 
     Mutex::Autolock locker(&mObjectLock);
     if (!isConnected()) {
@@ -105,7 +105,7 @@ status_t EmulatedFakeCameraDevice::startDevice(int width,
                                                int height,
                                                uint32_t pix_fmt)
 {
-    LOGV("%s", __FUNCTION__);
+    ALOGV("%s", __FUNCTION__);
 
     Mutex::Autolock locker(&mObjectLock);
     if (!isConnected()) {
@@ -170,7 +170,7 @@ status_t EmulatedFakeCameraDevice::startDevice(int width,
 
 status_t EmulatedFakeCameraDevice::stopDevice()
 {
-    LOGV("%s", __FUNCTION__);
+    ALOGV("%s", __FUNCTION__);
 
     Mutex::Autolock locker(&mObjectLock);
     if (!isStarted()) {
@@ -195,7 +195,7 @@ bool EmulatedFakeCameraDevice::inWorkerThread()
     WorkerThread::SelectRes res =
         getWorkerThread()->Select(-1, 1000000 / mEmulatedFPS);
     if (res == WorkerThread::EXIT_THREAD) {
-        LOGV("%s: Worker thread has been terminated.", __FUNCTION__);
+        ALOGV("%s: Worker thread has been terminated.", __FUNCTION__);
         return false;
     }
 

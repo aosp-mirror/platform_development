@@ -180,7 +180,7 @@ void EmulatedCamera::onCameraDeviceError(int err)
 
 status_t EmulatedCamera::connectCamera(hw_device_t** device)
 {
-    LOGV("%s", __FUNCTION__);
+    ALOGV("%s", __FUNCTION__);
 
     status_t res = EINVAL;
     EmulatedCameraDevice* const camera_dev = getCameraDevice();
@@ -199,14 +199,14 @@ status_t EmulatedCamera::connectCamera(hw_device_t** device)
 
 status_t EmulatedCamera::closeCamera()
 {
-    LOGV("%s", __FUNCTION__);
+    ALOGV("%s", __FUNCTION__);
 
     return cleanupCamera();
 }
 
 status_t EmulatedCamera::getCameraInfo(struct camera_info* info)
 {
-    LOGV("%s", __FUNCTION__);
+    ALOGV("%s", __FUNCTION__);
 
     const char* valstr = NULL;
 
@@ -309,7 +309,7 @@ void EmulatedCamera::releaseRecordingFrame(const void* opaque)
 
 status_t EmulatedCamera::setAutoFocus()
 {
-    LOGV("%s", __FUNCTION__);
+    ALOGV("%s", __FUNCTION__);
 
     /* TODO: Future enhancements. */
     return NO_ERROR;
@@ -317,7 +317,7 @@ status_t EmulatedCamera::setAutoFocus()
 
 status_t EmulatedCamera::cancelAutoFocus()
 {
-    LOGV("%s", __FUNCTION__);
+    ALOGV("%s", __FUNCTION__);
 
     /* TODO: Future enhancements. */
     return NO_ERROR;
@@ -325,7 +325,7 @@ status_t EmulatedCamera::cancelAutoFocus()
 
 status_t EmulatedCamera::takePicture()
 {
-    LOGV("%s", __FUNCTION__);
+    ALOGV("%s", __FUNCTION__);
 
     status_t res;
     int width, height;
@@ -402,14 +402,14 @@ status_t EmulatedCamera::takePicture()
 
 status_t EmulatedCamera::cancelPicture()
 {
-    LOGV("%s", __FUNCTION__);
+    ALOGV("%s", __FUNCTION__);
 
     return NO_ERROR;
 }
 
 status_t EmulatedCamera::setParameters(const char* parms)
 {
-    LOGV("%s", __FUNCTION__);
+    ALOGV("%s", __FUNCTION__);
     PrintParamDiff(mParameters, parms);
 
     CameraParameters new_param;
@@ -459,7 +459,7 @@ status_t EmulatedCamera::setParameters(const char* parms)
                 CameraParameters::KEY_WHITE_BALANCE);
         if ((current_white_balance == NULL) ||
             (strcmp(current_white_balance, new_white_balance) != 0)) {
-            LOGV("Setting white balance to %s", new_white_balance);
+            ALOGV("Setting white balance to %s", new_white_balance);
             getCameraDevice()->setWhiteBalanceMode(new_white_balance);
         }
     }
@@ -498,7 +498,7 @@ void EmulatedCamera::putParameters(char* params)
 
 status_t EmulatedCamera::sendCommand(int32_t cmd, int32_t arg1, int32_t arg2)
 {
-    LOGV("%s: cmd = %d, arg1 = %d, arg2 = %d", __FUNCTION__, cmd, arg1, arg2);
+    ALOGV("%s: cmd = %d, arg1 = %d, arg2 = %d", __FUNCTION__, cmd, arg1, arg2);
 
     /* TODO: Future enhancements. */
     return 0;
@@ -506,14 +506,14 @@ status_t EmulatedCamera::sendCommand(int32_t cmd, int32_t arg1, int32_t arg2)
 
 void EmulatedCamera::releaseCamera()
 {
-    LOGV("%s", __FUNCTION__);
+    ALOGV("%s", __FUNCTION__);
 
     cleanupCamera();
 }
 
 status_t EmulatedCamera::dumpCamera(int fd)
 {
-    LOGV("%s", __FUNCTION__);
+    ALOGV("%s", __FUNCTION__);
 
     /* TODO: Future enhancements. */
     return -EINVAL;
@@ -525,7 +525,7 @@ status_t EmulatedCamera::dumpCamera(int fd)
 
 status_t EmulatedCamera::doStartPreview()
 {
-    LOGV("%s", __FUNCTION__);
+    ALOGV("%s", __FUNCTION__);
 
     EmulatedCameraDevice* camera_dev = getCameraDevice();
     if (camera_dev->isStarted()) {
@@ -613,7 +613,7 @@ status_t EmulatedCamera::doStartPreview()
 
 status_t EmulatedCamera::doStopPreview()
 {
-    LOGV("%s", __FUNCTION__);
+    ALOGV("%s", __FUNCTION__);
 
     status_t res = NO_ERROR;
     if (mPreviewWindow.isPreviewEnabled()) {

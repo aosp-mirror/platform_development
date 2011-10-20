@@ -86,7 +86,7 @@ EmulatedCameraFactory::EmulatedCameraFactory()
         LOGD("Fake camera emulation is disabled.");
     }
 
-    LOGV("%d cameras are being emulated. Fake camera ID is %d",
+    ALOGV("%d cameras are being emulated. Fake camera ID is %d",
          mEmulatedCameraNum, mFakeCameraID);
 
     mConstructedOK = true;
@@ -114,7 +114,7 @@ EmulatedCameraFactory::~EmulatedCameraFactory()
 
 int EmulatedCameraFactory::cameraDeviceOpen(int camera_id, hw_device_t** device)
 {
-    LOGV("%s: id = %d", __FUNCTION__, camera_id);
+    ALOGV("%s: id = %d", __FUNCTION__, camera_id);
 
     *device = NULL;
 
@@ -134,7 +134,7 @@ int EmulatedCameraFactory::cameraDeviceOpen(int camera_id, hw_device_t** device)
 
 int EmulatedCameraFactory::getCameraInfo(int camera_id, struct camera_info* info)
 {
-    LOGV("%s: id = %d", __FUNCTION__, camera_id);
+    ALOGV("%s: id = %d", __FUNCTION__, camera_id);
 
     if (!isConstructedOK()) {
         LOGE("%s: EmulatedCameraFactory has failed to initialize", __FUNCTION__);
