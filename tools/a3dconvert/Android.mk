@@ -41,7 +41,7 @@ LOCAL_C_INCLUDES += external/collada/include/1.4
 LOCAL_C_INCLUDES += frameworks/base/libs/rs
 LOCAL_C_INCLUDES += $(intermediates)
 
-LOCAL_LDLIBS := -lpthread
+LOCAL_LDLIBS := -ldl -lpthread
 LOCAL_STATIC_LIBRARIES += libRS libutils libcutils
 LOCAL_STATIC_LIBRARIES += colladadom libtinyxml libpcrecpp libpcre
 include $(BUILD_HOST_EXECUTABLE)
