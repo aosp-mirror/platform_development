@@ -816,8 +816,17 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".app.ActionBarActionProviderActivity"
-                android:label="@string/action_bar_action_provider"
+        <activity android:name=".app.ActionBarSettingsActionProviderActivity"
+                android:label="@string/action_bar_settings_action_provider"
+                android:enabled="@bool/atLeastIceCreamSandwich">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".app.ActionBarShareActionProviderActivity"
+                android:label="@string/action_bar_share_action_provider"
                 android:enabled="@bool/atLeastIceCreamSandwich">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
