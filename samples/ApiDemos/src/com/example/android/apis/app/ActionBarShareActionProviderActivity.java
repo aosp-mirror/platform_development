@@ -38,7 +38,7 @@ import java.io.InputStream;
  * a menu item with ShareActionProvider as its action provider. The
  * ShareActionProvider is responsible for managing the UI for sharing actions.
  */
-public class ActionBarActionProviderActivity extends Activity {
+public class ActionBarShareActionProviderActivity extends Activity {
 
     private static final String SHARED_FILE_NAME = "shared.png";
 
@@ -51,7 +51,7 @@ public class ActionBarActionProviderActivity extends Activity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate your menu.
-        getMenuInflater().inflate(R.menu.action_bar_action_provider, menu);
+        getMenuInflater().inflate(R.menu.action_bar_share_action_provider, menu);
 
         // Set file with share history to the provider and set the share intent.
         MenuItem actionItem = menu.findItem(R.id.menu_item_share_action_provider_action_bar);
