@@ -46,11 +46,11 @@ EmulatedFakeCameraDevice::EmulatedFakeCameraDevice(EmulatedFakeCamera* camera_ha
 {
     // Makes the image with the original exposure compensation darker.
     // So the effects of changing the exposure compensation can be seen.
-    mBlackYUV.Y = mBlackYUV.Y / 4;
-    mWhiteYUV.Y = mWhiteYUV.Y / 4;
-    mRedYUV.Y = mRedYUV.Y / 4;
-    mGreenYUV.Y = mGreenYUV.Y / 4;
-    mBlueYUV.Y = mBlueYUV.Y / 4;
+    mBlackYUV.Y = mBlackYUV.Y / 2;
+    mWhiteYUV.Y = mWhiteYUV.Y / 2;
+    mRedYUV.Y = mRedYUV.Y / 2;
+    mGreenYUV.Y = mGreenYUV.Y / 2;
+    mBlueYUV.Y = mBlueYUV.Y / 2;
 }
 
 EmulatedFakeCameraDevice::~EmulatedFakeCameraDevice()
@@ -256,6 +256,9 @@ void EmulatedFakeCameraDevice::drawCheckerboard()
     uint8_t* U = U_pos;
     uint8_t* V = V_pos;
 
+    YUVPixel adjustedWhite = YUVPixel(mWhiteYUV);
+    changeWhiteBalance(adjustedWhite.Y, adjustedWhite.U, adjustedWhite.V);
+
     for(int y = 0; y < mFrameHeight; y++) {
         int countx = checkxremainder;
         bool current = black;
@@ -263,7 +266,7 @@ void EmulatedFakeCameraDevice::drawCheckerboard()
             if (current) {
                 mBlackYUV.get(Y, U, V);
             } else {
-                mWhiteYUV.get(Y, U, V);
+                adjustedWhite.get(Y, U, V);
             }
             *Y = changeExposure(*Y);
             Y[1] = *Y;
@@ -407,7 +410,7 @@ int EmulatedFakeCameraDevice::rotateFrame()
             }
         } else if (mCurrentFrameType == 0) {
             LOGD("********** Rotated to the CHECKERBOARD frame **********");
-        } else {
+        } else if (mCurrentFrameType == 1) {
             LOGD("********** Rotated to the STRIPED frame **********");
         }
     }

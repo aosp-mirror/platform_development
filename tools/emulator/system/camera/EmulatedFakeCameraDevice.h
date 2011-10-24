@@ -99,6 +99,7 @@ protected:
      ***************************************************************************/
 
 private:
+
     /* Draws a black and white checker board in the current frame buffer. */
     void drawCheckerboard();
 
@@ -110,10 +111,6 @@ private:
      */
     void drawSquare(int x, int y, int size, const YUVPixel* color);
 
-    inline uint8_t changeExposure(uint8_t inputY) {
-        return static_cast<uint8_t>(static_cast<float>(inputY) *
-                                    mExposureCompensation);
-    }
 #if EFCD_ROTATE_FRAME
     void drawSolid(YUVPixel* color);
     void drawStripes();
