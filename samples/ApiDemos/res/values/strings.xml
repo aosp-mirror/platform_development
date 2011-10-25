@@ -1286,4 +1286,13 @@
     <string name="dismiss">Dismiss</string>
 
     <string name="share">Share</string>
+
+    <!-- ============================ -->
+    <!--  Accessibility examples strings  -->
+    <!-- ============================ -->
+
+    <string name="accessibility_node_provider">Accessibility/Accessibility Node Provider</string>
+    <string name="accessibility_node_provider_instructions">Enable TalkBack and Explore-by-touch from accessibility
+        settings. Then touch the colored squares.</string>
+
 </resources>
