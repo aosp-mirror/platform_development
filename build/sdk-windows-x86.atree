@@ -27,7 +27,9 @@
 #
 
 rm platform-tools/adb
+rm platform-tools/fastboot
 bin/adb.exe                             strip platform-tools/adb.exe
+bin/fastboot.exe                        strip platform-tools/fastboot.exe
 bin/AdbWinUsbApi.dll                          platform-tools/AdbWinUsbApi.dll
 bin/AdbWinApi.dll                             platform-tools/AdbWinApi.dll
 
