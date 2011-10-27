@@ -2137,7 +2137,7 @@
         <!-- ************************************* -->
 
         <activity android:name=".graphics.kube.Kube" android:label="Graphics/OpenGL ES/Kube"
-                android:configChanges="orientation|keyboardHidden">
+                android:configChanges="keyboardHidden|orientation|screenLayout|screenSize|smallestScreenSize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -2161,7 +2161,7 @@
         <activity android:name=".graphics.CompressedTextureActivity"
                 android:label="Graphics/OpenGL ES/Compressed Texture"
                 android:theme="@android:style/Theme.NoTitleBar"
-                android:configChanges="orientation|keyboardHidden">
+                android:configChanges="keyboardHidden|orientation|screenLayout|screenSize|smallestScreenSize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -2171,7 +2171,7 @@
         <activity android:name=".graphics.CubeMapActivity"
                 android:label="Graphics/OpenGL ES/Cube Map"
                 android:theme="@android:style/Theme.NoTitleBar"
-                android:configChanges="orientation|keyboardHidden">
+                android:configChanges="keyboardHidden|orientation|screenLayout|screenSize|smallestScreenSize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -2182,7 +2182,7 @@
         <activity android:name=".graphics.FrameBufferObjectActivity"
                 android:label="Graphics/OpenGL ES/Frame Buffer Object"
                 android:theme="@android:style/Theme.NoTitleBar"
-                android:configChanges="orientation|keyboardHidden">
+                android:configChanges="keyboardHidden|orientation|screenLayout|screenSize|smallestScreenSize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -2192,7 +2192,7 @@
         <activity android:name=".graphics.GLSurfaceViewActivity"
                 android:label="Graphics/OpenGL ES/GLSurfaceView"
                 android:theme="@android:style/Theme.NoTitleBar"
-                android:configChanges="orientation|keyboardHidden">
+                android:configChanges="keyboardHidden|orientation|screenLayout|screenSize|smallestScreenSize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -2202,7 +2202,7 @@
         <activity android:name=".graphics.GLES20Activity"
                 android:label="Graphics/OpenGL ES/OpenGL ES 2.0"
                 android:theme="@android:style/Theme.NoTitleBar"
-                android:configChanges="orientation|keyboardHidden">
+                android:configChanges="keyboardHidden|orientation|screenLayout|screenSize|smallestScreenSize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -2211,7 +2211,7 @@
 
         <activity android:name=".graphics.MatrixPaletteActivity"
                 android:label="Graphics/OpenGL ES/Matrix Palette Skinning"
-                android:configChanges="orientation|keyboardHidden">
+                android:configChanges="keyboardHidden|orientation|screenLayout|screenSize|smallestScreenSize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -2221,7 +2221,7 @@
         <activity android:name=".graphics.TranslucentGLSurfaceViewActivity"
                 android:label="Graphics/OpenGL ES/Translucent GLSurfaceView"
                 android:theme="@style/Theme.Translucent"
-                android:configChanges="orientation|keyboardHidden">
+                android:configChanges="keyboardHidden|orientation|screenLayout|screenSize|smallestScreenSize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -2231,7 +2231,7 @@
         <activity android:name=".graphics.HiddenActivity"
                 android:label="Graphics/OpenGL ES/Hidden Activity"
                 android:theme="@android:style/Theme.Translucent"
-                android:configChanges="orientation|keyboardHidden">
+                android:configChanges="keyboardHidden|orientation|screenLayout|screenSize|smallestScreenSize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -2241,7 +2241,7 @@
         <activity android:name=".graphics.TriangleActivity"
                 android:label="Graphics/OpenGL ES/Textured Triangle"
                 android:theme="@android:style/Theme.Holo.Dialog"
-                android:configChanges="orientation|keyboardHidden">
+                android:configChanges="keyboardHidden|orientation|screenLayout|screenSize|smallestScreenSize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -2251,7 +2251,7 @@
         <activity android:name=".graphics.spritetext.SpriteTextActivity"
                 android:label="Graphics/OpenGL ES/Sprite Text"
                 android:theme="@android:style/Theme.NoTitleBar"
-                android:configChanges="orientation|keyboardHidden">
+                android:configChanges="keyboardHidden|orientation|screenLayout|screenSize|smallestScreenSize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -2261,7 +2261,7 @@
         <activity android:name=".graphics.TouchRotateActivity"
                 android:label="Graphics/OpenGL ES/Touch Rotate"
                 android:theme="@android:style/Theme.NoTitleBar"
-                android:configChanges="orientation|keyboardHidden">
+                android:configChanges="keyboardHidden|orientation|screenLayout|screenSize|smallestScreenSize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -2482,7 +2482,7 @@
 
         <activity android:name=".graphics.TouchPaint" android:label="Graphics/Touch Paint"
                 android:theme="@style/Theme.Black"
-                android:configChanges="keyboard|keyboardHidden|navigation|orientation">
+                android:configChanges="keyboard|keyboardHidden|navigation|orientation|screenLayout|screenSize|smallestScreenSize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
