@@ -36,7 +36,7 @@
     <!-- For android.media.audiofx.Visualizer -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
-    <uses-sdk android:minSdkVersion="4" android:targetSdkVersion="13" />
+    <uses-sdk android:minSdkVersion="4" android:targetSdkVersion="14" />
 
     <!-- We will request access to the camera, saying we require a camera
          of some sort but not one with autofocus capability. -->
@@ -242,7 +242,7 @@
                 <category android:name="android.intent.category.SAMPLE_CODE" />
             </intent-filter>
         </activity>
-        
+
         <!-- Fragment Samples -->
 
         <activity android:name=".app.FragmentAlertDialog"
@@ -540,6 +540,25 @@
                 <category android:name="android.intent.category.SAMPLE_CODE" />
             </intent-filter>
         </activity>
+
+        <activity android:name=".accessibility.TaskListActivity"
+                  android:label="@string/accessibility_taskapp_name"
+                  android:enabled="@bool/atLeastIceCreamSandwich">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+    <service android:name=".accessibility.TaskBackService"
+             android:label="@string/accessibility_service_label"
+             android:enabled="@bool/atLeastIceCreamSandwich">
+      <intent-filter>
+        <action android:name="android.accessibilityservice.AccessibilityService" />
+      </intent-filter>
+      <meta-data android:name="android.accessibilityservice" android:resource="@xml/taskbackconfig" />
+    </service>
+
 
         <!-- Instrumentation Samples -->
 
@@ -2247,7 +2266,7 @@
                 <category android:name="android.intent.category.SAMPLE_CODE" />
             </intent-filter>
         </activity>
-        
+
         <activity android:name=".graphics.TriangleActivity"
                 android:label="Graphics/OpenGL ES/Textured Triangle"
                 android:theme="@android:style/Theme.Holo.Dialog"
