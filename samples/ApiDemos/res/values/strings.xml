@@ -1286,4 +1286,18 @@
     <string name="dismiss">Dismiss</string>
 
     <string name="share">Share</string>
-</resources>
+
+    <!-- ============================ -->
+    <!--  Accessibility examples strings  -->
+    <!-- ============================ -->
+
+
+    <string name="accessibility_taskapp_name">Accessibility/Accessibility Node Querying</string>
+    <string name="accessibility_service_description">Task App Accessibility Service</string>
+    <string name="accessibility_service_label">TaskBack</string>
+
+    <string name="task_name">Task</string>
+    <string name="task_complete_template">Task %1$s %2$s</string>
+    <string name="task_complete">is complete</string>
+    <string name="task_not_complete">is not complete</string>
+  </resources>
