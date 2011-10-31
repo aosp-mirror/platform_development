@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 
-package com.example.android.clockback;
+package com.example.android.apis.accessibility;
+
+import com.example.android.apis.R;
 
 import android.accessibilityservice.AccessibilityService;
 import android.accessibilityservice.AccessibilityServiceInfo;
@@ -54,19 +56,7 @@ import java.util.List;
  *     Providing dynamic, context-dependent feedback &mdash; feedback type changes
  *     depending on the ringer state.
  *   </li>
- *   <li>
- *     Application specific UI enhancement - application domain knowledge is
- *     utilized to enhance the provided feedback.
- *   </li>
  * </ol>
- * <p>
- *   <strong>
- *     Note: This code sample will work only on devices shipped with the default Clock
- *     application. If you are running Android 1.6 of Android 2.0 you should enable first
- *     ClockBack and then TalkBack since in these releases accessibility services are
- *     notified in the order of registration.
- *   </strong>
- * </p>
  */
 public class ClockBackService extends AccessibilityService {
 
@@ -147,56 +137,6 @@ public class ClockBackService extends AccessibilityService {
     /** The space string constant. */
     private static final String SPACE = " ";
 
-    /**
-     * The class name of the number picker buttons with no text we want to
-     * announce in the Clock application.
-     */
-    private static final String CLASS_NAME_NUMBER_PICKER_BUTTON_CLOCK = "android.widget.NumberPickerButton";
-
-    /**
-     * The class name of the number picker buttons with no text we want to
-     * announce in the AlarmClock application.
-     */
-    private static final String CLASS_NAME_NUMBER_PICKER_BUTTON_ALARM_CLOCK = "com.android.internal.widget.NumberPickerButton";
-
-    /**
-     * The class name of the edit text box for hours and minutes we want to
-     * better announce.
-     */
-    private static final String CLASS_NAME_EDIT_TEXT = "android.widget.EditText";
-
-    /**
-     * Mapping from integer to string resource id where the keys are generated
-     * from the {@link AccessibilityEvent#getText()},
-     * {@link AccessibilityEvent#getItemCount()} and
-     * {@link AccessibilityEvent#getCurrentItemIndex()} properties.
-     * <p>
-     * Note: In general, computing these mappings includes the widget position on
-     * the screen. This is fragile and should be used as a last resort since
-     * changing the layout could potentially change the widget position. This is
-     * a workaround since the widgets of interest are image buttons that do not
-     * have contentDescription attribute set (plus/minus buttons) or no other
-     * information in the accessibility event is available to distinguish them
-     * aside of their positions on the screen (hour/minute inputs).<br/>
-     * If you are owner of the target application (Clock in this case) you
-     * should add contentDescription attribute to all image buttons such that a
-     * screen reader knows how to speak them. For input fields (while not
-     * applicable for the hour and minute inputs since they are not empty) a
-     * hint text should be set to enable better announcement.
-     * </p>
-     */
-    private static final SparseArray<Integer> sEventDataMappedStringResourceIds = new SparseArray<Integer>();
-    static {
-        sEventDataMappedStringResourceIds.put(110, R.string.value_increase_hours);
-        sEventDataMappedStringResourceIds.put(1140, R.string.value_increase_minutes);
-        sEventDataMappedStringResourceIds.put(1120, R.string.value_decrease_hours);
-        sEventDataMappedStringResourceIds.put(1160, R.string.value_decrease_minutes);
-        sEventDataMappedStringResourceIds.put(1111, R.string.value_hour);
-        sEventDataMappedStringResourceIds.put(1110, R.string.value_hours);
-        sEventDataMappedStringResourceIds.put(1151, R.string.value_minute);
-        sEventDataMappedStringResourceIds.put(1150, R.string.value_minutes);
-    }
-
     /** Mapping from integers to vibration patterns for haptic feedback. */
     private static final SparseArray<long[]> sVibrationPatterns = new SparseArray<long[]>();
     static {
@@ -215,6 +155,9 @@ public class ClockBackService extends AccessibilityService {
         sVibrationPatterns.put(AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED, new long[] {
                 0L, 25L, 50L, 25L, 50L, 25L
         });
+        sVibrationPatterns.put(AccessibilityEvent.TYPE_VIEW_HOVER_ENTER, new long[] {
+                0L, 15L, 10L, 15L, 15L, 10L
+        });
         sVibrationPatterns.put(INDEX_SCREEN_ON, new long[] {
                 0L, 10L, 10L, 20L, 20L, 30L
         });
@@ -226,11 +169,18 @@ public class ClockBackService extends AccessibilityService {
     /** Mapping from integers to raw sound resource ids. */
     private static SparseArray<Integer> sSoundsResourceIds = new SparseArray<Integer>();
     static {
-        sSoundsResourceIds.put(AccessibilityEvent.TYPE_VIEW_CLICKED, R.raw.sound_view_clicked);
-        sSoundsResourceIds.put(AccessibilityEvent.TYPE_VIEW_LONG_CLICKED, R.raw.sound_view_clicked);
-        sSoundsResourceIds.put(AccessibilityEvent.TYPE_VIEW_SELECTED, R.raw.sound_view_focused_or_selected);
-        sSoundsResourceIds.put(AccessibilityEvent.TYPE_VIEW_FOCUSED, R.raw.sound_view_focused_or_selected);
-        sSoundsResourceIds.put(AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED, R.raw.sound_window_state_changed);
+        sSoundsResourceIds.put(AccessibilityEvent.TYPE_VIEW_CLICKED,
+                R.raw.sound_view_clicked);
+        sSoundsResourceIds.put(AccessibilityEvent.TYPE_VIEW_LONG_CLICKED,
+                R.raw.sound_view_clicked);
+        sSoundsResourceIds.put(AccessibilityEvent.TYPE_VIEW_SELECTED,
+                R.raw.sound_view_focused_or_selected);
+        sSoundsResourceIds.put(AccessibilityEvent.TYPE_VIEW_FOCUSED,
+                R.raw.sound_view_focused_or_selected);
+        sSoundsResourceIds.put(AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED,
+                R.raw.sound_window_state_changed);
+        sSoundsResourceIds.put(AccessibilityEvent.TYPE_VIEW_HOVER_ENTER,
+                R.raw.sound_view_hover_enter);
         sSoundsResourceIds.put(INDEX_SCREEN_ON, R.raw.sound_screen_on);
         sSoundsResourceIds.put(INDEX_SCREEN_OFF, R.raw.sound_screen_off);
         sSoundsResourceIds.put(INDEX_RINGER_SILENT, R.raw.sound_ringer_silent);
@@ -304,7 +254,9 @@ public class ClockBackService extends AccessibilityService {
                 case MESSAGE_VIBRATE:
                     int key = message.arg1;
                     long[] pattern = sVibrationPatterns.get(key);
-                    mVibrator.vibrate(pattern, -1);
+                    if (pattern != null) {
+                        mVibrator.vibrate(pattern, -1);
+                    }
                     return;
                 case MESSAGE_STOP_VIBRATE:
                     mVibrator.cancel();
@@ -473,12 +425,6 @@ public class ClockBackService extends AccessibilityService {
      *             Let some other services provide audible feedback (SounBack) and haptic
      *             feedback (KickBack).
      * </p>
-     * Note: In the above description an assumption is made that all default feedback
-     *       services are enabled. Such services are TalkBack, SoundBack, and KickBack.
-     *       Also the feature of defining a service as the default for a given feedback
-     *       type will be available in Android 2.2 and above. For previous releases the package
-     *       specific accessibility service must be registered first i.e. checked in the
-     *       settings.
      *
      * @param ringerMode The device ringer mode.
      */
@@ -593,19 +539,6 @@ public class ClockBackService extends AccessibilityService {
                 utterance.append(SPACE);
             }
 
-            // Here we do a bit of enhancement of the UI presentation by using the semantic
-            // of the event source in the context of the Clock application.
-            if (event.getEventType() == AccessibilityEvent.TYPE_VIEW_FOCUSED
-                    && CLASS_NAME_EDIT_TEXT.equals(event.getClassName())) {
-                // If the source is an edit text box and we have a mapping based on
-                // its position in the items of the container parent of the event source
-                // we append that value as well. We say "XX hours" and "XX minutes".
-                String resourceValue = getEventDataMappedStringResource(event);
-                if (resourceValue != null) {
-                    utterance.append(resourceValue);
-                }
-            }
-
             return utterance.toString();
         }
 
@@ -617,68 +550,7 @@ public class ClockBackService extends AccessibilityService {
             return utterance.toString();
         }
 
-        // No text and content description for the plus and minus buttons, so we lookup
-        // custom values based on the event's itemCount and currentItemIndex properties.
-        CharSequence className = event.getClassName();
-
-        if (event.getEventType() == AccessibilityEvent.TYPE_VIEW_FOCUSED
-                && (CLASS_NAME_NUMBER_PICKER_BUTTON_ALARM_CLOCK.equals(className)
-                || CLASS_NAME_NUMBER_PICKER_BUTTON_CLOCK.equals(className))) {
-            String resourceValue = getEventDataMappedStringResource(event);
-            utterance.append(resourceValue);
-        }
-
         return utterance.toString();
-    }
-
-    /**
-     * Returns a string resource mapped based on the accessibility event
-     * data, specifically the
-     * {@link AccessibilityEvent#getText()},
-     * {@link AccessibilityEvent#getItemCount()}, and
-     * {@link AccessibilityEvent#getCurrentItemIndex()} properties.
-     *
-     * @param event The {@link AccessibilityEvent} to process.
-     * @return The mapped string if such exists, null otherwise.
-     */
-    private String getEventDataMappedStringResource(AccessibilityEvent event) {
-        int lookupIndex = computeLookupIndex(event);
-        int resourceId = sEventDataMappedStringResourceIds.get(lookupIndex);
-        return getString(resourceId);
-    }
-
-    /**
-     * Computes an index for looking up the custom text for views which either
-     * do not have text/content description or the position information
-     * is the only oracle for deciding from which widget was an accessibility
-     * event generated. The index is computed based on
-     * {@link AccessibilityEvent#getText()},
-     * {@link AccessibilityEvent#getItemCount()}, and
-     * {@link AccessibilityEvent#getCurrentItemIndex()} properties.
-     *
-     * @param event The event from which to compute the index.
-     * @return The lookup index.
-     */
-    private int computeLookupIndex(AccessibilityEvent event) {
-        int lookupIndex = event.getItemCount();
-        int divided = event.getCurrentItemIndex();
-
-        while (divided > 0) {
-            lookupIndex *= 10;
-            divided /= 10;
-        }
-
-        lookupIndex += event.getCurrentItemIndex();
-        lookupIndex *= 10;
-
-        // This is primarily for handling the zero hour/zero minutes cases
-        if (!event.getText().isEmpty()
-                && ("1".equals(event.getText().get(0).toString()) || "01".equals(event.getText()
-                        .get(0).toString()))) {
-            lookupIndex++;
-        }
-
-        return lookupIndex;
     }
 
     /**
@@ -690,10 +562,12 @@ public class ClockBackService extends AccessibilityService {
         String earconName = mEarconNames.get(earconId);
         if (earconName == null) {
             // We do not know the sound id, hence we need to load the sound.
-            int resourceId = sSoundsResourceIds.get(earconId);
-            earconName = "[" + earconId + "]";
-            mTts.addEarcon(earconName, getPackageName(), resourceId);
-            mEarconNames.put(earconId, earconName);
+            Integer resourceId = sSoundsResourceIds.get(earconId);
+            if (resourceId != null) {
+                earconName = "[" + earconId + "]";
+                mTts.addEarcon(earconName, getPackageName(), resourceId);
+                mEarconNames.put(earconId, earconName);
+            }
         }
 
         mTts.playEarcon(earconName, QUEUING_MODE_INTERRUPT, null);
