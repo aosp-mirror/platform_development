@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Copyright (C) 2011 The Android Open Source Project
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<resources>
+    <string name="app_name">HDP Sample</string>
+    <string name="app_registration">App Registration</string>
+    <string name="bluetooth_not_available">Bluetooth is not available</string>
+    <string name="bluetooth_health_profile_not_available">Bluetooth health profile is not available</string>
+    <string name="channel_connection">Channel Connection</string>
+    <string name="channel_connection_desc">(some devices automatically initiate connection)</string>
+    <string name="connect">Connect</string>
+    <string name="connected">CONNECTED</string>
+    <string name="connection_state">Connection State</string>
+    <string name="data_ind">Data Indicator</string>
+    <string name="disconnect">Disconnect</string>
+    <string name="disconnected">DISCONNECTED</string>
+    <string name="empty"> </string>
+    <string name="none">None...</string>
+    <string name="ok">Okay</string>
+    <string name="read_data">Reading data...</string>
+    <string name="read_data_done">Done with reading data...</string>
+    <string name="register">Register</string>
+    <string name="select_device">Select a device</string>
+    <string name="status_create_channel">Create channel status: %d</string>
+    <string name="status_destroy_channel">Destroy channel status: %d</string>
+    <string name="status_msg">Status Message</string>
+    <string name="status_reg">App registration status: %d</string>
+    <string name="status_unreg">App unregistration status: %d</string>
+    <string name="unregister">Unregister</string>
+</resources>

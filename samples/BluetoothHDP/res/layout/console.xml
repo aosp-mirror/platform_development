@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright (C) 2011 The Android Open Source Project
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+          http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+-->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" >
+    <LinearLayout android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_margin="5dp">
+        <TextView android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/app_registration"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+        <LinearLayout android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="5dp"
+            android:gravity="center" >
+            <Button android:id="@+id/button_register_app"
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:minWidth="130dp"
+                android:text="@string/register" />
+            <Button android:id="@+id/button_unregister_app"
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:minWidth="130dp"
+                android:text="@string/unregister" />
+        </LinearLayout>
+
+        <TextView android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/channel_connection"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+        <TextView android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/channel_connection_desc"
+            android:textSize="14sp" />
+        <LinearLayout android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="5dp"
+            android:gravity="center" >
+            <Button android:id="@+id/button_connect_channel"
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:minWidth="130dp"
+                android:text="@string/connect" />
+            <Button android:id="@+id/button_disconnect_channel"
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:minWidth="130dp"
+                android:text="@string/disconnect" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="5dp"
+            android:orientation="horizontal" >
+            <TextView android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/connection_state"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+            <Space android:layout_width="10dp"
+                android:layout_height="0px" />
+            <TextView android:id="@+id/connect_ind"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/disconnected"
+                android:textSize="18sp"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="5dp"
+            android:orientation="horizontal" >
+            <TextView android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/data_ind"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+            <Space android:layout_width="10dp"
+                android:layout_height="0px" />
+            <ImageView android:id="@+id/data_ind"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_marginTop="4dp"
+                android:src="@drawable/led_indicator" />
+        </LinearLayout>
+        <View android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#FFFFFF"/>
+        <TextView android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="5dp"
+            android:text="@string/status_msg"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+        <TextView android:id="@+id/status_msg"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/empty"
+            android:textSize="18sp"
+            android:layout_margin="10dp"/>
+    </LinearLayout>
+</ScrollView>
