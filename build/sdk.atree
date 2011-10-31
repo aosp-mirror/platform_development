@@ -152,7 +152,6 @@ development/samples/source.properties        samples/${PLATFORM_NAME}/source.pro
 #
 # PLEASE KEEP THE SAMPLES IN ALPHABETICAL ORDER.
 #
-development/samples/AccessibilityService       samples/${PLATFORM_NAME}/AccessibilityService
 development/samples/AccelerometerPlay          samples/${PLATFORM_NAME}/AccelerometerPlay
 development/samples/ActionBarCompat            samples/${PLATFORM_NAME}/ActionBarCompat
 development/samples/AndroidBeamDemo            samples/${PLATFORM_NAME}/AndroidBeamDemo

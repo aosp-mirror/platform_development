@@ -19,18 +19,26 @@ package com.example.android.apis.accessibility;
 import com.example.android.apis.R;
 
 import android.app.ListActivity;
+import android.content.Intent;
 import android.os.Bundle;
-import android.widget.ArrayAdapter;
+import android.provider.Settings;
+import android.view.View;
+import android.widget.ImageButton;
 
 /** Starts up the task list that will interact with the AccessibilityService sample. */
 public class TaskListActivity extends ListActivity {
+
+    /** An intent for launching the system settings. */
+    private static final Intent sSettingsIntent =
+        new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS);
+
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.tasklist_main);
 
-        // Hardcoded hand-waving here.
+        // Hard-coded hand-waving here.
         boolean[] checkboxes = {true, true, false, true, false, false, false};
         String[] labels = {"Take out Trash", "Do Laundry",
                            "Conquer World", "Nap", "Do Taxes",
@@ -38,5 +46,14 @@ public class TaskListActivity extends ListActivity {
 
         TaskAdapter myAdapter = new TaskAdapter(this, labels, checkboxes);
         this.setListAdapter(myAdapter);
+
+        // Add a shortcut to the accessibility settings.
+        ImageButton button = (ImageButton) findViewById(R.id.button);
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(sSettingsIntent);
+            }
+        });
     }
 }

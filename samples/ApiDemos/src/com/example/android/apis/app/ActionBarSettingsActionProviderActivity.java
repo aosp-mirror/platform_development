@@ -19,7 +19,6 @@ package com.example.android.apis.app;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.os.Bundle;
 import android.provider.Settings;
 import android.view.ActionProvider;
 import android.view.LayoutInflater;
@@ -38,14 +37,6 @@ import com.example.android.apis.R;
  * provider.
  */
 public class ActionBarSettingsActionProviderActivity extends Activity {
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-    }
 
     /**
      * {@inheritDoc}
