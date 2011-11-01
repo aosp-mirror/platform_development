@@ -1295,12 +1295,37 @@
     <string name="accessibility_node_provider_instructions">Enable TalkBack and Explore-by-touch from accessibility
         settings. Then touch the colored squares.</string>
 
-    <string name="accessibility_taskapp_name">Accessibility/Accessibility Node Querying</string>
-    <string name="accessibility_service_description">Task App Accessibility Service</string>
-    <string name="accessibility_service_label">TaskBack</string>
+    <string name="accessibility_service">Accessibility/Accessibility Service</string>
+    <string name="accessibility_service_label">ClockBack</string>
+    <string name="accessibility_service_instructions">
+        1. Enable TalkBack (Settings -> Accessibility -> TalkBack).
+        \n\n2. Enable Explore-byTouch (Settings -> Accessibility -> Explore by Touch).
+        \n\n3. Touch explore the Clock application and the home screen.
+        \n\n4. Go to the Clock application and change the time of an alarm.
+        \n\n5. Enable ClockBack (Settings -> Accessibility -> ClockBack).
+        \n\n6. Go to the Clock application and change an alarm.
+        \n\n7. Set the ringer to vibration mode and change an alarm.
+        \n\n8. Set the ringer to muted mode and change an alarm.
+    </string>
+
+    <string name="value_ringer_audible">Ringer audible</string>
+    <string name="value_ringer_vibrate">Ringer vibrate</string>
+    <string name="value_ringer_silent">Ringer silent</string>
+    <string name="template_screen_on">Screen on. Volume %1$s percent.</string>
+    <string name="template_screen_off">Screen off. Volume %1$s percent.</string>
+
+    <string name="accessibility_query_window">Accessibility/Accessibility Node Querying</string>
+    <string name="accessibility_query_window_label">QueryBack</string>
+    <string name="accessibility_query_window_description">Task App Accessibility Service</string>
+    <string name="accessibility_query_window_instructions">
+        1. Enable QueryBack (Settings -> Accessibility -> QueryBack).
+        \n\n2. Enable Explore-byTouch (Settings -> Accessibility -> Explore by Touch).
+        \n\n3. Touch explore the list.
+    </string>
 
     <string name="task_name">Task</string>
     <string name="task_complete_template">Task %1$s %2$s</string>
     <string name="task_complete">is complete</string>
     <string name="task_not_complete">is not complete</string>
+
   </resources>

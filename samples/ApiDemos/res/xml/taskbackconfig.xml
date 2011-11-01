@@ -15,11 +15,10 @@
   limitations under the License.
  -->
 
-    <accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
-        android:accessibilityEventTypes="typeViewClicked|typeViewFocused"
-        android:packageNames="com.example.android.apis"
-        android:accessibilityFeedbackType="feedbackSpoken"
-        android:notificationTimeout="100"
-        android:accessibilityFlags="flagDefault"
-        android:canRetrieveWindowContent="true"
-        android:description="@string/accessibility_service_description" />
+<accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
+    android:accessibilityEventTypes="typeAllMask"
+    android:packageNames="com.example.android.apis"
+    android:accessibilityFeedbackType="feedbackSpoken"
+    android:notificationTimeout="100"
+    android:canRetrieveWindowContent="true"
+    android:description="@string/accessibility_query_window_description" />

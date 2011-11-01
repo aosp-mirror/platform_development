@@ -19,6 +19,7 @@ package com.example.android.apis.accessibility;
 import com.example.android.apis.R;
 
 import android.accessibilityservice.AccessibilityService;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
@@ -28,26 +29,40 @@ import android.speech.tts.TextToSpeech.OnInitListener;
 
 import java.util.Locale;
 
-/** The TaskBackService listens for AccessibilityEvents, and turns them into information it can
- *  communicate to the user with speech.
+/**
+ * This class demonstrates how an accessibility service can query
+ * window content to improve the feedback given to the user.
  */
 public class TaskBackService extends AccessibilityService implements OnInitListener {
 
-    private final String LOG_TAG = "TaskBackService/onAccessibilityEvent";
-    private boolean mTextToSpeechInitialized = false;
-    private TextToSpeech mTts = null;
+    /** Tag for logging. */
+    private static final String LOG_TAG = "TaskBackService/onAccessibilityEvent";
+
+    /** Comma separator. */
     private static final String SEPARATOR = ", ";
 
+    /** The class name of TaskListView - for simplicity we speak only its items. */
+    private static final String TASK_LIST_VIEW_CLASS_NAME =
+        "com.example.android.apis.accessibility.TaskListView";
 
+    /** Flag whether Text-To-Speech is initialized. */
+    private boolean mTextToSpeechInitialized;
 
-    /** Initializes the Text-To-Speech engine as soon as the service is connected. */
+    /** Handle to the Text-To-Speech engine. */
+    private TextToSpeech mTts;
+
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void onServiceConnected() {
+        // Initializes the Text-To-Speech engine as soon as the service is connected.
         mTts = new TextToSpeech(getApplicationContext(), this);
     }
 
-    /** Processes an AccessibilityEvent, by traversing the View's tree and putting together a
-     *  message to speak to the user.
+    /**
+     * Processes an AccessibilityEvent, by traversing the View's tree and
+     * putting together a message to speak to the user.
      */
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
@@ -56,55 +71,49 @@ public class TaskBackService extends AccessibilityService implements OnInitListe
             return;
         }
 
-        int eventType = event.getEventType();
-        if (eventType != AccessibilityEvent.TYPE_VIEW_CLICKED) {
+        // This AccessibilityNodeInfo represents the view that fired the
+        // AccessibilityEvent. The following code will use it to traverse the
+        // view hierarchy, using this node as a starting point.
+        //
+        // NOTE: Every method that returns an AccessibilityNodeInfo may return null,
+        // because the explored window is in another process and the
+        // corresponding View might be gone by the time your request reaches the
+        // view hierarchy.
+        AccessibilityNodeInfo source = event.getSource();
+        if (source == null) {
             return;
         }
 
-        /* This AccessibilityNodeInfo represents the view that fired the
-         * AccessibilityEvent.  The following code will use it to traverse
-         * the view hierarchy, using this node as a starting point.
-         */
-        AccessibilityNodeInfo entryNode = event.getSource();
-
-        /* Every method that returns an AccessibilityNodeInfo may return null,
-         * because the explored window is in another process and the corresponding
-         * View might be gone by the time your request reaches the view hierarchy."
-         */
-        if (entryNode == null) {
-          return;
-        }
         // Grab the parent of the view that fired the event.
-        AccessibilityNodeInfo rowNode = entryNode.getParent();
-
+        AccessibilityNodeInfo rowNode = getListItemNodeInfo(source);
         if (rowNode == null) {
-          return;
+            return;
         }
 
-        /* Using this parent, get references to both child nodes,
-         * the label and the checkbox.
-         */
+        // Using this parent, get references to both child nodes, the label and the checkbox.
         AccessibilityNodeInfo labelNode = rowNode.getChild(0);
-        AccessibilityNodeInfo completeNode = rowNode.getChild(1);
-
-        if (labelNode == null || completeNode == null) {
-          return;
+        if (labelNode == null) {
+            rowNode.recycle();
+            return;
         }
 
-        /* Using these to determine what the task is and whether or not
-         * it's complete, based on the text inside the label, and the state
-         * of the checkbox.
-         */
+        AccessibilityNodeInfo completeNode = rowNode.getChild(1);
+        if (completeNode == null) {
+            rowNode.recycle();
+            return;
+        }
 
-        // Quick check to make sure we're not in the ApiDemos nav.
+        // Determine what the task is and whether or not it's complete, based on
+        // the text inside the label, and the state of the check-box.
         if (rowNode.getChildCount() < 2 || !rowNode.getChild(1).isCheckable()) {
+            rowNode.recycle();
             return;
         }
 
         CharSequence taskLabel = labelNode.getText();
-        boolean isComplete = completeNode.isChecked();
+        final boolean isComplete = completeNode.isChecked();
 
-        String completeStr = null;;
+        String completeStr = null;
         if (isComplete) {
             completeStr = getString(R.string.task_complete);
         } else {
@@ -112,44 +121,66 @@ public class TaskBackService extends AccessibilityService implements OnInitListe
         }
 
         String taskStr = getString(R.string.task_complete_template, taskLabel, completeStr);
-        StringBuilder forSpeech = new StringBuilder(taskStr);
+        StringBuilder utterance = new StringBuilder(taskStr);
 
-        /* The custom listview added extra context to the event by adding
-         * an AccessibilityRecord to it.  Extract that from the event and read it.
-         */
-        int records = event.getRecordCount();
-
+        // The custom ListView added extra context to the event by adding an
+        // AccessibilityRecord to it. Extract that from the event and read it.
+        final int records = event.getRecordCount();
         for (int i = 0; i < records; i++) {
             AccessibilityRecord record = event.getRecord(i);
             CharSequence contentDescription = record.getContentDescription();
-            if (contentDescription != null) {
-                forSpeech.append(SEPARATOR).append(contentDescription);
+            if (!TextUtils.isEmpty(contentDescription )) {
+                utterance.append(SEPARATOR);
+                utterance.append(contentDescription);
             }
         }
 
-        /* Speak the forSpeech string to the user.  QUEUE_ADD adds the string to the end of the
-         * queue, QUEUE_FLUSH would interrupt whatever was currently being said.
-         */
-        mTts.speak(forSpeech.toString() ,  TextToSpeech.QUEUE_ADD, null);
-        Log.d(LOG_TAG, forSpeech.toString());
+        // Announce the utterance.
+        mTts.speak(utterance.toString(), TextToSpeech.QUEUE_FLUSH, null);
+        Log.d(LOG_TAG, utterance.toString());
     }
 
-    @Override
-    public void onInterrupt() {
-      /* do nothing */
+    private AccessibilityNodeInfo getListItemNodeInfo(AccessibilityNodeInfo source) {
+        AccessibilityNodeInfo current = source;
+        while (true) {
+            AccessibilityNodeInfo parent = current.getParent();
+            if (parent == null) {
+                return null;
+            }
+            if (TASK_LIST_VIEW_CLASS_NAME.equals(parent.getClassName())) {
+                return current;
+            }
+            // NOTE: Recycle the infos.
+            AccessibilityNodeInfo oldCurrent = current;
+            current = parent;
+            oldCurrent.recycle();
+        }
     }
 
-    /** Sets a flag so that the TaskBackService knows that the Text-To-Speech engine has been
-     *  initialized, and can now handle speaking requests.
+    /**
+     * {@inheritDoc}
      */
     @Override
-    public void onInit (int status) {
+    public void onInterrupt() {
+        /* do nothing */
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void onInit(int status) {
+        // Set a flag so that the TaskBackService knows that the Text-To-Speech
+        // engine has been initialized, and can now handle speaking requests.
         if (status == TextToSpeech.SUCCESS) {
             mTts.setLanguage(Locale.US);
             mTextToSpeechInitialized = true;
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void onDestroy() {
         super.onDestroy();
