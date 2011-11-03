@@ -492,14 +492,26 @@ public class MonkeySourceScript implements MonkeyEventSource {
             String cl_name = "com.google.android.powerutil.WakeUpScreen";
             long deviceSleepTime = mDeviceSleepTime;
 
+            //Start the wakeUpScreen test activity to turn off the screen.
             ComponentName mApp = new ComponentName(pkg_name, cl_name);
-            MonkeyActivityEvent e1 = new MonkeyActivityEvent(mApp, deviceSleepTime);
-            mQ.addLast(e1);
+            mQ.addLast(new MonkeyActivityEvent(mApp, deviceSleepTime));
+
+            //inject the special key for the wakeUpScreen test activity.
+            mQ.addLast(new MonkeyKeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_0));
+            mQ.addLast(new MonkeyKeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_0));
 
             //Add the wait event after the device sleep event so that the monkey
             //can continue after the device wake up.
-            MonkeyWaitEvent e2 = new MonkeyWaitEvent(deviceSleepTime + 3000);
-            mQ.addLast(e2);
+            mQ.addLast(new MonkeyWaitEvent(deviceSleepTime + 3000));
+
+            //Insert the menu key to unlock the screen
+            mQ.addLast(new MonkeyKeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MENU));
+            mQ.addLast(new MonkeyKeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_MENU));
+
+            //Insert the back key to dismiss the test activity
+            mQ.addLast(new MonkeyKeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_BACK));
+            mQ.addLast(new MonkeyKeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_BACK));
+
             return;
         }
 
