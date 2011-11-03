@@ -195,6 +195,7 @@ development/samples/WiktionarySimple           samples/${PLATFORM_NAME}/Wiktiona
 development/samples/XmlAdapters                samples/${PLATFORM_NAME}/XmlAdapters
 development/samples/RenderScript/Balls         samples/${PLATFORM_NAME}/RenderScript/Balls
 development/samples/RenderScript/Fountain      samples/${PLATFORM_NAME}/RenderScript/Fountain
+development/samples/RenderScript/FountainFbo   samples/${PLATFORM_NAME}/RenderScript/FountainFbo
 development/samples/RenderScript/HelloCompute  samples/${PLATFORM_NAME}/RenderScript/HelloCompute
 development/samples/RenderScript/HelloWorld    samples/${PLATFORM_NAME}/RenderScript/HelloWorld
 development/samples/RenderScript/MiscSamples   samples/${PLATFORM_NAME}/RenderScript/MiscSamples
