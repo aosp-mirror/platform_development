@@ -206,7 +206,7 @@ control__set_delay(struct sensors_poll_device_t *dev, int32_t ms)
 }
 
 static int
-control__close(struct hw_device_t *dev) 
+control__close(struct hw_device_t *dev)
 {
     SensorPoll*  ctl = (void*)dev;
     close(ctl->fd);
@@ -350,7 +350,7 @@ data__poll(struct sensors_poll_device_t *dev, sensors_event_t* values)
         }
 
         /* "temperature:<celsius>" */
-        if (sscanf(buff, "temperature:%g", params+0) == 2) {
+        if (sscanf(buff, "temperature:%g", params+0) == 1) {
             new_sensors |= SENSORS_TEMPERATURE;
             data->sensors[ID_TEMPERATURE].temperature = params[0];
             continue;
@@ -397,7 +397,7 @@ data__poll(struct sensors_poll_device_t *dev, sensors_event_t* values)
 }
 
 static int
-data__close(struct hw_device_t *dev) 
+data__close(struct hw_device_t *dev)
 {
     SensorPoll* data = (SensorPoll*)dev;
     if (data) {
@@ -545,7 +545,7 @@ static const struct sensor_t sSensorListInit[] = {
 static struct sensor_t  sSensorList[MAX_NUM_SENSORS];
 
 static int sensors__get_sensors_list(struct sensors_module_t* module,
-        struct sensor_t const** list) 
+        struct sensor_t const** list)
 {
     int  fd = qemud_channel_open(SENSORS_SERVICE_NAME);
     char buffer[12];
