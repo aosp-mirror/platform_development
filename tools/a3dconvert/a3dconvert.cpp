@@ -53,7 +53,7 @@ static RsdHalFunctions FunctionTable = {
         NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
     },
     { NULL, NULL, NULL }, { NULL, NULL, NULL }, { NULL, NULL, NULL },
-    { NULL, NULL, NULL }, { NULL, NULL, NULL }, { NULL, NULL },
+    { NULL, NULL, NULL }, { NULL, NULL, NULL }, { NULL, NULL, NULL, NULL }, { NULL, NULL },
     { NULL, NULL, NULL},
 };
 
