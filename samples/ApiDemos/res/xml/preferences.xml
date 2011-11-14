@@ -27,18 +27,6 @@
                 android:title="@string/title_checkbox_preference"
                 android:summary="@string/summary_checkbox_preference" />
 
-        <SwitchPreference
-                android:key="checkbox_preference"
-                android:title="@string/title_switch_preference"
-                android:summary="@string/summary_switch_preference" />
-
-        <SwitchPreference
-                android:key="checkbox_preference"
-                android:title="@string/title_switch_preference"
-                android:summary="@string/summary_switch_preference_yes_no"
-                android:switchTextOn = "YES"
-                android:switchTextOff = "NO" />
-            
     </PreferenceCategory>
                 
     <PreferenceCategory
