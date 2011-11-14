@@ -1673,6 +1673,10 @@ GL_API void GL_APIENTRY glEGLImageTargetTexture2DOES(GLenum target, GLeglImageOE
             ctx->dispatcher().glBindTexture(GL_TEXTURE_2D, img->globalTexName);
             TextureData *texData = getTextureTargetData(target);
             SET_ERROR_IF(texData==NULL,GL_INVALID_OPERATION);
+            texData->width = img->width;
+            texData->height = img->height;
+            texData->border = img->border;
+            texData->internalFormat = img->internalFormat;
             texData->sourceEGLImage = (unsigned int)image;
             texData->eglImageDetach = s_eglIface->eglDetachEGLImage;
         }
