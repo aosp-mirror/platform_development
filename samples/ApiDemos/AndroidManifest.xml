@@ -962,6 +962,15 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".preference.SwitchPreference"
+                android:label="@string/switch_preference"
+                android:enabled="@bool/atLeastIceCreamSandwich">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
         <!-- ************************************* -->
         <!--        CONTENT PACKAGE SAMPLES        -->
         <!-- ************************************* -->

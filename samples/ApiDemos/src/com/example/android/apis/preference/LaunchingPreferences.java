@@ -44,12 +44,9 @@ public class LaunchingPreferences extends Activity implements OnClickListener {
         super.onCreate(savedInstanceState);
 
         /*
-         * If this were my app's main activity, I would load the default values
-         * so they're set even if the user does not go into the preferences
-         * screen. Another good place to call this method would be from a
-         * subclass of Application, so your default values would be loaded
-         * regardless of entry into your application (for example, a service or
-         * activity).
+         * These preferences have defaults, so before using them go apply those
+         * defaults.  This will only execute once -- when the defaults are applied
+         * a boolean preference is set so they will not be applied again.
          */
         PreferenceManager.setDefaultValues(this, R.xml.advanced_preferences, false);
 

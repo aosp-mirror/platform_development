@@ -17,12 +17,12 @@
 package com.example.android.apis;
 
 import android.app.Application;
-import android.preference.PreferenceManager;
 
 /**
- * This is an example of a {@link android.app.Application} class.  Ordinarily you would use
- * a class like this as a central repository for information that might be shared between multiple
- * activities.
+ * This is an example of a {@link android.app.Application} class.  This can
+ * be used as a central repository for per-process information about your app;
+ * however it is recommended to use singletons for that instead rather than merge
+ * all of these globals from across your application into one place here.
  * 
  * In this case, we have not defined any specific work for this Application.
  * 
@@ -30,17 +30,7 @@ import android.preference.PreferenceManager;
  * of how to perform unit tests on an Application object.
  */
 public class ApiDemosApplication extends Application {
-
     @Override
     public void onCreate() {
-        /*
-         * This populates the default values from the preferences XML file. See
-         * {@link DefaultValues} for more details.
-         */
-        PreferenceManager.setDefaultValues(this, R.xml.default_values, false);
-    }
-
-    @Override
-    public void onTerminate() {
     }
 }

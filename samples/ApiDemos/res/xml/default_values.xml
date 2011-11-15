@@ -25,12 +25,6 @@
             android:title="@string/title_checkbox_preference"
             android:summary="@string/summary_checkbox_preference" />
 
-    <SwitchPreference
-            android:key="default_switch"
-            android:defaultValue="false"
-            android:title="@string/title_switch_preference"
-            android:summary="@string/summary_switch_preference" />
-
     <EditTextPreference
             android:key="default_edittext"
             android:defaultValue="@string/default_value_edittext_preference"

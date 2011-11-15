@@ -525,6 +525,7 @@
     <string name="advanced_preferences">Preference/6. Advanced preferences</string>
     <string name="fragment_preferences">Preference/7. Fragment</string>
     <string name="preference_with_headers">Preference/8. Headers</string>
+    <string name="switch_preference">Preference/9. Switch</string>
 
     <string name="launch_preference_activity">Launch PreferenceActivity</string>
     <string name="counter_value_is">The counter value is</string>
