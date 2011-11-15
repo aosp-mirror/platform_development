@@ -106,13 +106,18 @@ public:
             uint32_t vertexPos = i*vertexSize;
             float *vertexPtr = dataPtr + vertexPos;
 
+            uint32_t elemIndex = 0;
             for (uint32_t c = 0; c < mChannels.size(); c ++) {
                 // Skip empty channels
                 if (mChannels[c].mData.size() == 0) {
                     continue;
                 }
+                // This will address vector element alignment issues
+                uint32_t elemlOffset = vertexDataElem->getFieldOffsetBytes(elemIndex)/sizeof(float);
+                elemIndex ++;
+                float *channelPtr = vertexPtr + elemlOffset;
                 for (uint32_t cStride = 0; cStride < mChannels[c].mStride; cStride ++) {
-                    *(vertexPtr++) = mChannels[c].mData[i * mChannels[c].mStride + cStride];
+                    *(channelPtr++) = mChannels[c].mData[i * mChannels[c].mStride + cStride];
                 }
             }
         }
