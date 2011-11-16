@@ -59,8 +59,7 @@ static const struct _egl_funcs_by_name {
     {"eglDestroySyncKHR", (void *)eglDestroySyncKHR},
     {"eglClientWaitSyncKHR", (void *)eglClientWaitSyncKHR},
     {"eglSignalSyncKHR", (void *)eglSignalSyncKHR},
-    {"eglGetSyncAttribKHR", (void *)eglGetSyncAttribKHR},
-    {"eglSetSwapRectangleANDROID", (void *)eglSetSwapRectangleANDROID}
+    {"eglGetSyncAttribKHR", (void *)eglGetSyncAttribKHR}
 };
 
 static const int egl_num_funcs = sizeof(egl_funcs_by_name) / sizeof(struct _egl_funcs_by_name);
