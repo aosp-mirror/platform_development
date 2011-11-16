@@ -1257,9 +1257,3 @@ EGLBoolean eglGetSyncAttribKHR(EGLDisplay dpy, EGLSyncKHR sync, EGLint attribute
     //TODO later
     return 0;
 }
-
-EGLBoolean eglSetSwapRectangleANDROID(EGLDisplay dpy, EGLSurface draw, EGLint left, EGLint top, EGLint width, EGLint height)
-{
-    //TODO later
-    return 0;
-}
