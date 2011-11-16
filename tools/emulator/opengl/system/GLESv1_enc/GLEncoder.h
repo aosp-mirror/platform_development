@@ -39,6 +39,9 @@ public:
     virtual void setError(GLenum error){ m_error = error; };
     virtual GLenum getError() { return m_error; };
 
+    void override2DTextureTarget(GLenum target);
+    void restore2DTextureTarget();
+
 private:
 
     bool    m_initialized;
@@ -80,6 +83,21 @@ private:
     glDrawElements_client_proc_t m_glDrawElements_enc;
     glFlush_client_proc_t m_glFlush_enc;
 
+    glActiveTexture_client_proc_t m_glActiveTexture_enc;
+    glBindTexture_client_proc_t m_glBindTexture_enc;
+    glDeleteTextures_client_proc_t m_glDeleteTextures_enc;
+    glDisable_client_proc_t m_glDisable_enc;
+    glEnable_client_proc_t m_glEnable_enc;
+    glGetTexParameterfv_client_proc_t m_glGetTexParameterfv_enc;
+    glGetTexParameteriv_client_proc_t m_glGetTexParameteriv_enc;
+    glGetTexParameterxv_client_proc_t m_glGetTexParameterxv_enc;
+    glTexParameterf_client_proc_t m_glTexParameterf_enc;
+    glTexParameterfv_client_proc_t m_glTexParameterfv_enc;
+    glTexParameteri_client_proc_t m_glTexParameteri_enc;
+    glTexParameterx_client_proc_t m_glTexParameterx_enc;
+    glTexParameteriv_client_proc_t m_glTexParameteriv_enc;
+    glTexParameterxv_client_proc_t m_glTexParameterxv_enc;
+
     // statics
     static GLenum s_glGetError(void * self);
     static void s_glGetIntegerv(void *self, GLenum pname, GLint *ptr);
@@ -106,14 +124,26 @@ private:
     static void s_glBufferSubData(void *self, GLenum target, GLintptr offset, GLsizeiptr size, const GLvoid * data);
     static void s_glDeleteBuffers(void *self, GLsizei n, const GLuint * buffers);
 
-
     static void s_glDrawArrays(void *self, GLenum mode, GLint first, GLsizei count);
     static void s_glDrawElements(void *self, GLenum mode, GLsizei count, GLenum type, const void *indices);
     static void s_glPixelStorei(void *self, GLenum param, GLint value);
 
     static void s_glFinish(void *self);
-    static void s_glEGLImageTargetTexture2DOES(void * self, GLenum target, GLeglImageOES image);
     void sendVertexData(unsigned first, unsigned count);
 
+    static void s_glActiveTexture(void* self, GLenum texture);
+    static void s_glBindTexture(void* self, GLenum target, GLuint texture);
+    static void s_glDeleteTextures(void* self, GLsizei n, const GLuint* textures);
+    static void s_glDisable(void* self, GLenum cap);
+    static void s_glEnable(void* self, GLenum cap);
+    static void s_glGetTexParameterfv(void* self, GLenum target, GLenum pname, GLfloat* params);
+    static void s_glGetTexParameteriv(void* self, GLenum target, GLenum pname, GLint* params);
+    static void s_glGetTexParameterxv(void* self, GLenum target, GLenum pname, GLfixed* params);
+    static void s_glTexParameterf(void* self, GLenum target, GLenum pname, GLfloat param);
+    static void s_glTexParameterfv(void* self, GLenum target, GLenum pname, const GLfloat* params);
+    static void s_glTexParameteri(void* self, GLenum target, GLenum pname, GLint param);
+    static void s_glTexParameterx(void* self, GLenum target, GLenum pname, GLfixed param);
+    static void s_glTexParameteriv(void* self, GLenum target, GLenum pname, const GLint* params);
+    static void s_glTexParameterxv(void* self, GLenum target, GLenum pname, const GLfixed* params);
 };
 #endif

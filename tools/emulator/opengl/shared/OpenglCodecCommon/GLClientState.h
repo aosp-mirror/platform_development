@@ -70,6 +70,10 @@ public:
         int pack_alignment;
     } PixelStoreState;
 
+    enum {
+        MAX_TEXTURE_UNITS = 32,
+    };
+
 public:
     GLClientState(int nLocations = CODEC_MAX_VERTEX_ATTRIBUTES);
     ~GLClientState();
@@ -123,6 +127,53 @@ public:
     void setCurrentProgram(GLint program) { m_currentProgram = program; }
     GLint currentProgram() const { return m_currentProgram; }
 
+    /* OES_EGL_image_external
+     *
+     * These functions manipulate GL state which interacts with the
+     * OES_EGL_image_external extension, to support client-side emulation on
+     * top of host implementations that don't have it.
+     *
+     * Most of these calls should only be used with TEXTURE_2D or
+     * TEXTURE_EXTERNAL_OES texture targets; TEXTURE_CUBE_MAP or other extension
+     * targets should bypass this. An exception is bindTexture(), which should
+     * see all glBindTexture() calls for any target.
+     */
+
+    // glActiveTexture(GL_TEXTURE0 + i)
+    // Sets the active texture unit. Up to MAX_TEXTURE_UNITS are supported.
+    GLenum setActiveTextureUnit(GLenum texture);
+
+    // glEnable(GL_TEXTURE_(2D|EXTERNAL_OES))
+    void enableTextureTarget(GLenum target);
+
+    // glDisable(GL_TEXTURE_(2D|EXTERNAL_OES))
+    void disableTextureTarget(GLenum target);
+
+    // Implements the target priority logic:
+    // * Return GL_TEXTURE_EXTERNAL_OES if enabled, else
+    // * Return GL_TEXTURE_2D if enabled, else
+    // * Return the allDisabled value.
+    // For some cases passing GL_TEXTURE_2D for allDisabled makes callee code
+    // simpler; for other cases passing a recognizable enum like GL_ZERO or
+    // GL_INVALID_ENUM is appropriate.
+    GLenum getPriorityEnabledTarget(GLenum allDisabled) const;
+
+    // glBindTexture(GL_TEXTURE_*, ...)
+    // Set the target binding of the active texture unit to texture. Returns
+    // GL_NO_ERROR on success or GL_INVALID_OPERATION if the texture has
+    // previously been bound to a different target. If firstUse is not NULL,
+    // it is set to indicate whether this is the first use of the texture.
+    // For accurate error detection, bindTexture should be called for *all*
+    // targets, not just 2D and EXTERNAL_OES.
+    GLenum bindTexture(GLenum target, GLuint texture, GLboolean* firstUse);
+
+    // Return the texture currently bound to GL_TEXTURE_(2D|EXTERNAL_OES).
+    GLuint getBoundTexture(GLenum target) const;
+
+    // glDeleteTextures(...)
+    // Remove references to the to-be-deleted textures.
+    void deleteTextures(GLsizei n, const GLuint* textures);
+
 private:
     PixelStoreState m_pixelStore;
     VertexAttribState *m_states;
@@ -133,6 +184,32 @@ private:
     GLint m_currentProgram;
 
     bool validLocation(int location) { return (location >= 0 && location < m_nLocations); }
+
+    enum TextureTarget {
+        TEXTURE_2D = 0,
+        TEXTURE_EXTERNAL = 1,
+        TEXTURE_TARGET_COUNT
+    };
+    struct TextureUnit {
+        unsigned int enables;
+        GLuint texture[TEXTURE_TARGET_COUNT];
+    };
+    struct TextureRec {
+        GLuint id;
+        GLenum target;
+    };
+    struct TextureState {
+        TextureUnit unit[MAX_TEXTURE_UNITS];
+        TextureUnit* activeUnit;
+        TextureRec* textures;
+        GLuint numTextures;
+        GLuint allocTextures;
+    };
+    TextureState m_tex;
+
+    static int compareTexId(const void* pid, const void* prec);
+    TextureRec* addTextureRec(GLuint id, GLenum target);
+
 public:
     void getClientStatePointer(GLenum pname, GLvoid** params);
 
