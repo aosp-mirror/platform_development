@@ -75,6 +75,7 @@
 <!ATTLIST VideoEditorCap maxInputFrameHeight CDATA #REQUIRED>
 <!ATTLIST VideoEditorCap maxOutputFrameWidth CDATA #REQUIRED>
 <!ATTLIST VideoEditorCap maxOutputFrameHeight CDATA #REQUIRED>
+<!ATTLIST VideoEditorCap maxPrefetchYUVFrames CDATA #REQUIRED>
 <!ELEMENT ExportVideoProfile EMPTY>
 <!ATTLIST ExportVideoProfile name (h264|h263|m4v) #REQUIRED>
 <!ATTLIST ExportVideoProfile profile CDATA #REQUIRED>
@@ -374,9 +375,22 @@
     -->
     <VideoDecoderCap name="wmv" enabled="false"/>
     <AudioDecoderCap name="wma" enabled="false"/>
+
+    <!--
+        The VideoEditor Capability configuration:
+        - maxInputFrameWidth: maximum video width of imported video clip.
+        - maxInputFrameHeight: maximum video height of imported video clip.
+        - maxOutputFrameWidth: maximum video width of exported video clip.
+        - maxOutputFrameHeight: maximum video height of exported video clip.
+        - maxPrefetchYUVFrames: maximum prefetch YUV frames for encoder,
+        used to limit the amount of memory for prefetched YUV frames.
+        For this platform, it allows maximum ~1MB(~0.1MB per QVGA frame x 10
+        frames) memory.
+    -->
+
     <VideoEditorCap  maxInputFrameWidth="320"
         maxInputFrameHeight="240" maxOutputFrameWidth="320"
-        maxOutputFrameHeight="240"/>
+        maxOutputFrameHeight="240" maxPrefetchYUVFrames="10" />
     <!--
         The VideoEditor Export codec profile and level values
         correspond to the values in OMX_Video.h.
