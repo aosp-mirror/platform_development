@@ -1664,9 +1664,12 @@ GL_API void GL_APIENTRY glEGLImageTargetTexture2DOES(GLenum target, GLeglImageOE
         if (ctx->shareGroup().Ptr()) {
             ObjectLocalName tex = TextureLocalName(target,ctx->getBindedTexture(target));
             unsigned int oldGlobal = ctx->shareGroup()->getGlobalName(TEXTURE, tex);
-            // Delete old texture object
+            // Delete old texture object but only if it is not a target of a EGLImage
             if (oldGlobal) {
-                ctx->dispatcher().glDeleteTextures(1, &oldGlobal);
+                TextureData* oldTexData = getTextureData(tex);
+                if (!oldTexData || oldTexData->sourceEGLImage == 0) {
+                    ctx->dispatcher().glDeleteTextures(1, &oldGlobal);
+                }
             }
             // replace mapping and bind the new global object
             ctx->shareGroup()->replaceGlobalName(TEXTURE, tex,img->globalTexName);
