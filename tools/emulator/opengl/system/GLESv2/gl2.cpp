@@ -35,7 +35,7 @@ static EGLClient_glesInterface * s_gl = NULL;
 //GL extensions
 void glEGLImageTargetTexture2DOES(void * self, GLenum target, GLeglImageOES image)
 {
-    DBG("glEGLImageTargetTexture2DOES v2 img=0x%x\n", image);
+    DBG("glEGLImageTargetTexture2DOES v2 img=%p\n", image);
     //TODO: check error - we don't have a way to set gl error
     android_native_buffer_t* native_buffer = (android_native_buffer_t*)image;
 
@@ -55,7 +55,7 @@ void glEGLImageTargetTexture2DOES(void * self, GLenum target, GLeglImageOES imag
 
 void glEGLImageTargetRenderbufferStorageOES(void *self, GLenum target, GLeglImageOES image)
 {
-    DBG("glEGLImageTargetRenderbufferStorageOES v2 image=0x%x\n", image);
+    DBG("glEGLImageTargetRenderbufferStorageOES v2 image=%p\n", image);
     //TODO: check error - we don't have a way to set gl error
     android_native_buffer_t* native_buffer = (android_native_buffer_t*)image;
 
