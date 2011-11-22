@@ -10,7 +10,7 @@
 
 
 //XXX: fix this macro to get the context from fast tls path
-#define GET_CONTEXT gl_client_context_t * ctx = getEGLThreadInfo()->hostConn->glEncoder();
+#define GET_CONTEXT GLEncoder * ctx = getEGLThreadInfo()->hostConn->glEncoder();
 
 #include "gl_entry.cpp"
 
@@ -35,7 +35,7 @@ static EGLClient_glesInterface * s_gl = NULL;
 //GL extensions
 void glEGLImageTargetTexture2DOES(void * self, GLenum target, GLeglImageOES image)
 {
-    DBG("glEGLImageTargetTexture2DOES v1 image=0x%x", image);
+    DBG("glEGLImageTargetTexture2DOES v1 target=%#x image=%p", target, image);
     //TODO: check error - we don't have a way to set gl error
     android_native_buffer_t* native_buffer = (android_native_buffer_t*)image;
 
@@ -47,15 +47,21 @@ void glEGLImageTargetTexture2DOES(void * self, GLenum target, GLeglImageOES imag
         return;
     }
 
+    GET_CONTEXT;
     DEFINE_AND_VALIDATE_HOST_CONNECTION();
-    rcEnc->rcBindTexture(rcEnc, ((cb_handle_t *)(native_buffer->handle))->hostHandle);
+
+    ctx->override2DTextureTarget(target);
+    rcEnc->rcBindTexture(rcEnc,
+            ((cb_handle_t *)(native_buffer->handle))->hostHandle);
+    ctx->restore2DTextureTarget();
 
     return;
 }
 
 void glEGLImageTargetRenderbufferStorageOES(void *self, GLenum target, GLeglImageOES image)
 {
-    DBG("glEGLImageTargetRenderbufferStorageOES v1 image=0x%x", image);
+    DBG("glEGLImageTargetRenderbufferStorageOES v1 target=%#x image=%p",
+            target, image);
     //TODO: check error - we don't have a way to set gl error
     android_native_buffer_t* native_buffer = (android_native_buffer_t*)image;
 
@@ -67,8 +73,13 @@ void glEGLImageTargetRenderbufferStorageOES(void *self, GLenum target, GLeglImag
         return;
     }
 
+    GET_CONTEXT;
     DEFINE_AND_VALIDATE_HOST_CONNECTION();
-    rcEnc->rcBindRenderbuffer(rcEnc, ((cb_handle_t *)(native_buffer->handle))->hostHandle);
+
+    ctx->override2DTextureTarget(target);
+    rcEnc->rcBindRenderbuffer(rcEnc,
+            ((cb_handle_t *)(native_buffer->handle))->hostHandle);
+    ctx->restore2DTextureTarget();
 
     return;
 }
