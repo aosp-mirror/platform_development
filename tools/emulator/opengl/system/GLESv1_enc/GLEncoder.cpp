@@ -16,25 +16,18 @@
 #include "GLEncoder.h"
 #include "glUtils.h"
 #include "FixedBuffer.h"
+#include <private/ui/android_natives_priv.h>
 #include <cutils/log.h>
 #include <assert.h>
+
+#ifndef MIN
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
+#endif
 
 static GLubyte *gVendorString= (GLubyte *) "Android";
 static GLubyte *gRendererString= (GLubyte *) "Android HW-GLES 1.0";
 static GLubyte *gVersionString= (GLubyte *) "OpenGL ES-CM 1.0";
 static GLubyte *gExtensionsString= (GLubyte *) ""; // no extensions at this point;
-
-#define DEFINE_AND_VALIDATE_HOST_CONNECTION(ret) \
-    HostConnection *hostCon = HostConnection::get(); \
-    if (!hostCon) { \
-        LOGE("egl: Failed to get host connection\n"); \
-        return ret; \
-    } \
-    renderControl_encoder_context_t *rcEnc = hostCon->rcEncoder(); \
-    if (!rcEnc) { \
-        LOGE("egl: Failed to get renderControl encoder context\n"); \
-        return ret; \
-    }
 
 #define SET_ERROR_IF(condition,err) if((condition)) {                            \
         LOGE("%s:%s:%d GL error 0x%x\n", __FILE__, __FUNCTION__, __LINE__, err); \
@@ -80,14 +73,37 @@ void GLEncoder::s_glGetIntegerv(void *self, GLenum param, GLint *ptr)
 {
     GLEncoder *ctx = (GLEncoder *)self;
     assert(ctx->m_state != NULL);
-    if (param == GL_COMPRESSED_TEXTURE_FORMATS) {
+    GLClientState* state = ctx->m_state;
+
+    switch (param) {
+    case GL_COMPRESSED_TEXTURE_FORMATS: {
         GLint * compressedTextureFormats = ctx->getCompressedTextureFormats();
-        if (ctx->m_num_compressedTextureFormats > 0 && compressedTextureFormats != NULL) {
-            memcpy(ptr, compressedTextureFormats, ctx->m_num_compressedTextureFormats * sizeof(GLint));
+        if (ctx->m_num_compressedTextureFormats > 0 &&
+                compressedTextureFormats != NULL) {
+            memcpy(ptr, compressedTextureFormats,
+                   ctx->m_num_compressedTextureFormats * sizeof(GLint));
         }
+        break;
     }
-    else if (!ctx->m_state->getClientStateParameter<GLint>(param,ptr)) {
+
+    case GL_MAX_TEXTURE_UNITS:
         ctx->m_glGetIntegerv_enc(self, param, ptr);
+        *ptr = MIN(*ptr, GLClientState::MAX_TEXTURE_UNITS);
+        break;
+
+    case GL_TEXTURE_BINDING_2D:
+        *ptr = state->getBoundTexture(GL_TEXTURE_2D);
+        break;
+
+    case GL_TEXTURE_BINDING_EXTERNAL_OES:
+        *ptr = state->getBoundTexture(GL_TEXTURE_EXTERNAL_OES);
+        break;
+
+    default:
+        if (!state->getClientStateParameter<GLint>(param,ptr)) {
+            ctx->m_glGetIntegerv_enc(self, param, ptr);
+        }
+        break;
     }
 }
 
@@ -95,16 +111,38 @@ void GLEncoder::s_glGetFloatv(void *self, GLenum param, GLfloat *ptr)
 {
     GLEncoder *ctx = (GLEncoder *)self;
     assert(ctx->m_state != NULL);
-    if (param == GL_COMPRESSED_TEXTURE_FORMATS) {
+    GLClientState* state = ctx->m_state;
+
+    switch (param) {
+    case GL_COMPRESSED_TEXTURE_FORMATS: {
         GLint * compressedTextureFormats = ctx->getCompressedTextureFormats();
-        if (ctx->m_num_compressedTextureFormats > 0 && compressedTextureFormats != NULL) {
+        if (ctx->m_num_compressedTextureFormats > 0 &&
+                compressedTextureFormats != NULL) {
             for (int i = 0; i < ctx->m_num_compressedTextureFormats; i++) {
                 ptr[i] = (GLfloat) compressedTextureFormats[i];
             }
         }
+        break;
     }
-    else if (!ctx->m_state->getClientStateParameter<GLfloat>(param,ptr)) {
+
+    case GL_MAX_TEXTURE_UNITS:
         ctx->m_glGetFloatv_enc(self, param, ptr);
+        *ptr = MIN(*ptr, (GLfloat)GLClientState::MAX_TEXTURE_UNITS);
+        break;
+
+    case GL_TEXTURE_BINDING_2D:
+        *ptr = (GLfloat)state->getBoundTexture(GL_TEXTURE_2D);
+        break;
+
+    case GL_TEXTURE_BINDING_EXTERNAL_OES:
+        *ptr = (GLfloat)state->getBoundTexture(GL_TEXTURE_EXTERNAL_OES);
+        break;
+
+    default:
+        if (!state->getClientStateParameter<GLfloat>(param,ptr)) {
+            ctx->m_glGetFloatv_enc(self, param, ptr);
+        }
+        break;
     }
 }
 
@@ -112,16 +150,38 @@ void GLEncoder::s_glGetFixedv(void *self, GLenum param, GLfixed *ptr)
 {
     GLEncoder *ctx = (GLEncoder *)self;
     assert(ctx->m_state != NULL);
-    if (param == GL_COMPRESSED_TEXTURE_FORMATS) {
+    GLClientState* state = ctx->m_state;
+
+    switch (param) {
+    case GL_COMPRESSED_TEXTURE_FORMATS: {
         GLint * compressedTextureFormats = ctx->getCompressedTextureFormats();
-        if (ctx->m_num_compressedTextureFormats > 0 && compressedTextureFormats != NULL) {
+        if (ctx->m_num_compressedTextureFormats > 0 &&
+                compressedTextureFormats != NULL) {
             for (int i = 0; i < ctx->m_num_compressedTextureFormats; i++) {
                 ptr[i] =  compressedTextureFormats[i] << 16;
             }
         }
+        break;
     }
-    else if (!ctx->m_state->getClientStateParameter<GLfixed>(param,ptr)) {
+
+    case GL_MAX_TEXTURE_UNITS:
         ctx->m_glGetFixedv_enc(self, param, ptr);
+        *ptr = MIN(*ptr, GLClientState::MAX_TEXTURE_UNITS << 16);
+        break;
+
+    case GL_TEXTURE_BINDING_2D:
+        *ptr = state->getBoundTexture(GL_TEXTURE_2D) << 16;
+        break;
+
+    case GL_TEXTURE_BINDING_EXTERNAL_OES:
+        *ptr = state->getBoundTexture(GL_TEXTURE_EXTERNAL_OES) << 16;
+        break;
+
+    default:
+        if (!state->getClientStateParameter<GLfixed>(param,ptr)) {
+            ctx->m_glGetFixedv_enc(self, param, ptr);
+        }
+        break;
     }
 }
 
@@ -129,11 +189,34 @@ void GLEncoder::s_glGetBooleanv(void *self, GLenum param, GLboolean *ptr)
 {
     GLEncoder *ctx = (GLEncoder *)self;
     assert(ctx->m_state != NULL);
-    if (param == GL_COMPRESSED_TEXTURE_FORMATS) {
-        // ignore the command, although we should have generated a GLerror;
+    GLClientState* state = ctx->m_state;
+
+    switch (param) {
+    case GL_COMPRESSED_TEXTURE_FORMATS: {
+        GLint* compressedTextureFormats = ctx->getCompressedTextureFormats();
+        if (ctx->m_num_compressedTextureFormats > 0 &&
+                compressedTextureFormats != NULL) {
+            for (int i = 0; i < ctx->m_num_compressedTextureFormats; i++) {
+                ptr[i] = compressedTextureFormats[i] != 0 ? GL_TRUE : GL_FALSE;
+            }
+        }
+        break;
     }
-    else if (!ctx->m_state->getClientStateParameter<GLboolean>(param,ptr)) {
-        ctx->m_glGetBooleanv_enc(self, param, ptr);
+
+    case GL_TEXTURE_BINDING_2D:
+        *ptr = state->getBoundTexture(GL_TEXTURE_2D) != 0 ? GL_TRUE : GL_FALSE;
+        break;
+
+    case GL_TEXTURE_BINDING_EXTERNAL_OES:
+        *ptr = state->getBoundTexture(GL_TEXTURE_EXTERNAL_OES) != 0
+                ? GL_TRUE : GL_FALSE;
+        break;
+
+    default:
+        if (!state->getClientStateParameter<GLboolean>(param,ptr)) {
+            ctx->m_glGetBooleanv_enc(self, param, ptr);
+        }
+        break;
     }
 }
 
@@ -515,6 +598,273 @@ void GLEncoder::s_glDrawElements(void *self, GLenum mode, GLsizei count, GLenum 
     }
 }
 
+void GLEncoder::s_glActiveTexture(void* self, GLenum texture)
+{
+    GLEncoder* ctx = (GLEncoder*)self;
+    GLClientState* state = ctx->m_state;
+    GLenum err;
+
+    if ((err = state->setActiveTextureUnit(texture)) != GL_NO_ERROR) {
+        LOGE("%s:%s:%d GL error %#x\n", __FILE__, __FUNCTION__, __LINE__, err);
+        ctx->setError(err);
+        return;
+    }
+
+    ctx->m_glActiveTexture_enc(ctx, texture);
+}
+
+void GLEncoder::s_glBindTexture(void* self, GLenum target, GLuint texture)
+{
+    GLEncoder* ctx = (GLEncoder*)self;
+    GLClientState* state = ctx->m_state;
+    GLenum err;
+
+    GLboolean firstUse;
+    if ((err = state->bindTexture(target, texture, &firstUse)) != GL_NO_ERROR) {
+        LOGE("%s:%s:%d GL error %#x\n", __FILE__, __FUNCTION__, __LINE__, err);
+        ctx->setError(err);
+        return;
+    }
+
+    if (target != GL_TEXTURE_2D && target != GL_TEXTURE_EXTERNAL_OES) {
+        ctx->m_glBindTexture_enc(ctx, target, texture);
+        return;
+    }
+
+    GLenum priorityTarget = state->getPriorityEnabledTarget(GL_TEXTURE_2D);
+
+    if (target == GL_TEXTURE_EXTERNAL_OES && firstUse) {
+        ctx->m_glBindTexture_enc(ctx, GL_TEXTURE_2D, texture);
+        ctx->m_glTexParameteri_enc(ctx, GL_TEXTURE_2D,
+                GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        ctx->m_glTexParameteri_enc(ctx, GL_TEXTURE_2D,
+                GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        ctx->m_glTexParameteri_enc(ctx, GL_TEXTURE_2D,
+                GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+        if (target != priorityTarget) {
+            ctx->m_glBindTexture_enc(ctx, GL_TEXTURE_2D,
+                    state->getBoundTexture(GL_TEXTURE_2D));
+        }
+    }
+
+    if (target == priorityTarget) {
+        ctx->m_glBindTexture_enc(ctx, GL_TEXTURE_2D, texture);
+    }
+}
+
+void GLEncoder::s_glDeleteTextures(void* self, GLsizei n, const GLuint* textures)
+{
+    GLEncoder* ctx = (GLEncoder*)self;
+    GLClientState* state = ctx->m_state;
+
+    state->deleteTextures(n, textures);
+    ctx->m_glDeleteTextures_enc(ctx, n, textures);
+}
+
+void GLEncoder::s_glDisable(void* self, GLenum cap)
+{
+    GLEncoder* ctx = (GLEncoder*)self;
+    GLClientState* state = ctx->m_state;
+
+    if (cap == GL_TEXTURE_2D || cap == GL_TEXTURE_EXTERNAL_OES) {
+        GLenum prevTarget = state->getPriorityEnabledTarget(GL_INVALID_ENUM);
+        state->disableTextureTarget(cap);
+        GLenum currTarget = state->getPriorityEnabledTarget(GL_INVALID_ENUM);
+
+        if (prevTarget != currTarget) {
+            if (currTarget == GL_INVALID_ENUM) {
+                ctx->m_glDisable_enc(ctx, GL_TEXTURE_2D);
+                currTarget = GL_TEXTURE_2D;
+            }
+            // maintain the invariant that when TEXTURE_EXTERNAL_OES is
+            // disabled, the TEXTURE_2D binding is active, even if
+            // TEXTURE_2D is also disabled.
+            ctx->m_glBindTexture_enc(ctx, GL_TEXTURE_2D,
+                    state->getBoundTexture(currTarget));
+        }
+
+    } else {
+        ctx->m_glDisable_enc(ctx, cap);
+    }
+}
+
+void GLEncoder::s_glEnable(void* self, GLenum cap)
+{
+    GLEncoder* ctx = (GLEncoder*)self;
+    GLClientState* state = ctx->m_state;
+
+    if (cap == GL_TEXTURE_2D || cap == GL_TEXTURE_EXTERNAL_OES) {
+        GLenum prevTarget = state->getPriorityEnabledTarget(GL_INVALID_ENUM);
+        state->enableTextureTarget(cap);
+        GLenum currTarget = state->getPriorityEnabledTarget(GL_INVALID_ENUM);
+
+        if (prevTarget != currTarget) {
+            if (prevTarget == GL_INVALID_ENUM) {
+                ctx->m_glEnable_enc(ctx, GL_TEXTURE_2D);
+            }
+            if (currTarget == GL_TEXTURE_EXTERNAL_OES) {
+                ctx->m_glBindTexture_enc(ctx, GL_TEXTURE_2D,
+                        state->getBoundTexture(currTarget));
+            }
+        }
+
+    } else {
+        ctx->m_glEnable_enc(ctx, cap);
+    }
+}
+
+void GLEncoder::s_glGetTexParameterfv(void* self,
+        GLenum target, GLenum pname, GLfloat* params)
+{
+    GLEncoder* ctx = (GLEncoder*)self;
+    const GLClientState* state = ctx->m_state;
+
+    if (target == GL_TEXTURE_2D || target == GL_TEXTURE_EXTERNAL_OES) {
+        ctx->override2DTextureTarget(target);
+        ctx->m_glGetTexParameterfv_enc(ctx, GL_TEXTURE_2D, pname, params);
+        ctx->restore2DTextureTarget();
+    } else {
+        ctx->m_glGetTexParameterfv_enc(ctx, target, pname, params);
+    }
+}
+
+void GLEncoder::s_glGetTexParameteriv(void* self,
+        GLenum target, GLenum pname, GLint* params)
+{
+    GLEncoder* ctx = (GLEncoder*)self;
+    const GLClientState* state = ctx->m_state;
+
+    if (target == GL_TEXTURE_2D || target == GL_TEXTURE_EXTERNAL_OES) {
+        ctx->override2DTextureTarget(target);
+        ctx->m_glGetTexParameteriv_enc(ctx, GL_TEXTURE_2D, pname, params);
+        ctx->restore2DTextureTarget();
+    } else {
+        ctx->m_glGetTexParameteriv_enc(ctx, target, pname, params);
+    }
+}
+
+void GLEncoder::s_glGetTexParameterxv(void* self,
+        GLenum target, GLenum pname, GLfixed* params)
+{
+    GLEncoder* ctx = (GLEncoder*)self;
+    const GLClientState* state = ctx->m_state;
+
+    if (target == GL_TEXTURE_2D || target == GL_TEXTURE_EXTERNAL_OES) {
+        ctx->override2DTextureTarget(target);
+        ctx->m_glGetTexParameterxv_enc(ctx, GL_TEXTURE_2D, pname, params);
+        ctx->restore2DTextureTarget();
+    } else {
+        ctx->m_glGetTexParameterxv_enc(ctx, target, pname, params);
+    }
+}
+
+void GLEncoder::s_glTexParameterf(void* self,
+        GLenum target, GLenum pname, GLfloat param)
+{
+    GLEncoder* ctx = (GLEncoder*)self;
+    const GLClientState* state = ctx->m_state;
+
+    if (target == GL_TEXTURE_2D || target == GL_TEXTURE_EXTERNAL_OES) {
+        ctx->override2DTextureTarget(target);
+        ctx->m_glTexParameterf_enc(ctx, GL_TEXTURE_2D, pname, param);
+        ctx->restore2DTextureTarget();
+    } else {
+        ctx->m_glTexParameterf_enc(ctx, target, pname, param);
+    }
+}
+
+void GLEncoder::s_glTexParameterfv(void* self,
+        GLenum target, GLenum pname, const GLfloat* params)
+{
+    GLEncoder* ctx = (GLEncoder*)self;
+    const GLClientState* state = ctx->m_state;
+
+    if (target == GL_TEXTURE_2D || target == GL_TEXTURE_EXTERNAL_OES) {
+        ctx->override2DTextureTarget(target);
+        ctx->m_glTexParameterfv_enc(ctx, GL_TEXTURE_2D, pname, params);
+        ctx->restore2DTextureTarget();
+    } else {
+        ctx->m_glTexParameterfv_enc(ctx, target, pname, params);
+    }
+}
+
+void GLEncoder::s_glTexParameteri(void* self,
+        GLenum target, GLenum pname, GLint param)
+{
+    GLEncoder* ctx = (GLEncoder*)self;
+    const GLClientState* state = ctx->m_state;
+
+    if (target == GL_TEXTURE_2D || target == GL_TEXTURE_EXTERNAL_OES) {
+        ctx->override2DTextureTarget(target);
+        ctx->m_glTexParameteri_enc(ctx, GL_TEXTURE_2D, pname, param);
+        ctx->restore2DTextureTarget();
+    } else {
+        ctx->m_glTexParameteri_enc(ctx, target, pname, param);
+    }
+}
+
+void GLEncoder::s_glTexParameterx(void* self,
+        GLenum target, GLenum pname, GLfixed param)
+{
+    GLEncoder* ctx = (GLEncoder*)self;
+    const GLClientState* state = ctx->m_state;
+
+    if (target == GL_TEXTURE_2D || target == GL_TEXTURE_EXTERNAL_OES) {
+        ctx->override2DTextureTarget(target);
+        ctx->m_glTexParameterx_enc(ctx, GL_TEXTURE_2D, pname, param);
+        ctx->restore2DTextureTarget();
+    } else {
+        ctx->m_glTexParameterx_enc(ctx, target, pname, param);
+    }
+}
+
+void GLEncoder::s_glTexParameteriv(void* self,
+        GLenum target, GLenum pname, const GLint* params)
+{
+    GLEncoder* ctx = (GLEncoder*)self;
+    const GLClientState* state = ctx->m_state;
+
+    if (target == GL_TEXTURE_2D || target == GL_TEXTURE_EXTERNAL_OES) {
+        ctx->override2DTextureTarget(target);
+        ctx->m_glTexParameteriv_enc(ctx, GL_TEXTURE_2D, pname, params);
+        ctx->restore2DTextureTarget();
+    } else {
+        ctx->m_glTexParameteriv_enc(ctx, target, pname, params);
+    }
+}
+
+void GLEncoder::s_glTexParameterxv(void* self,
+        GLenum target, GLenum pname, const GLfixed* params)
+{
+    GLEncoder* ctx = (GLEncoder*)self;
+    const GLClientState* state = ctx->m_state;
+
+    if (target == GL_TEXTURE_2D || target == GL_TEXTURE_EXTERNAL_OES) {
+        ctx->override2DTextureTarget(target);
+        ctx->m_glTexParameterxv_enc(ctx, GL_TEXTURE_2D, pname, params);
+        ctx->restore2DTextureTarget();
+    } else {
+        ctx->m_glTexParameterxv_enc(ctx, target, pname, params);
+    }
+}
+
+void GLEncoder::override2DTextureTarget(GLenum target)
+{
+    if ((target == GL_TEXTURE_2D || target == GL_TEXTURE_EXTERNAL_OES) &&
+        target != m_state->getPriorityEnabledTarget(GL_TEXTURE_2D)) {
+            m_glBindTexture_enc(this, GL_TEXTURE_2D,
+                    m_state->getBoundTexture(target));
+    }
+}
+
+void GLEncoder::restore2DTextureTarget()
+{
+    GLenum priorityTarget = m_state->getPriorityEnabledTarget(GL_TEXTURE_2D);
+    m_glBindTexture_enc(this, GL_TEXTURE_2D,
+            m_state->getBoundTexture(priorityTarget));
+}
+
 GLEncoder::GLEncoder(IOStream *stream) : gl_encoder_context_t(stream)
 {
     m_initialized = false;
@@ -554,6 +904,20 @@ GLEncoder::GLEncoder(IOStream *stream) : gl_encoder_context_t(stream)
     set_glFinish(s_glFinish);
     m_glGetError_enc = set_glGetError(s_glGetError);
 
+    m_glActiveTexture_enc = set_glActiveTexture(s_glActiveTexture);
+    m_glBindTexture_enc = set_glBindTexture(s_glBindTexture);
+    m_glDeleteTextures_enc = set_glDeleteTextures(s_glDeleteTextures);
+    m_glDisable_enc = set_glDisable(s_glDisable);
+    m_glEnable_enc = set_glEnable(s_glEnable);
+    m_glGetTexParameterfv_enc = set_glGetTexParameterfv(s_glGetTexParameterfv);
+    m_glGetTexParameteriv_enc = set_glGetTexParameteriv(s_glGetTexParameteriv);
+    m_glGetTexParameterxv_enc = set_glGetTexParameterxv(s_glGetTexParameterxv);
+    m_glTexParameterf_enc = set_glTexParameterf(s_glTexParameterf);
+    m_glTexParameterfv_enc = set_glTexParameterfv(s_glTexParameterfv);
+    m_glTexParameteri_enc = set_glTexParameteri(s_glTexParameteri);
+    m_glTexParameterx_enc = set_glTexParameterx(s_glTexParameterx);
+    m_glTexParameteriv_enc = set_glTexParameteriv(s_glTexParameteriv);
+    m_glTexParameterxv_enc = set_glTexParameterxv(s_glTexParameterxv);
 }
 
 GLEncoder::~GLEncoder()
@@ -572,4 +936,3 @@ void GLEncoder::s_glFinish(void *self)
     GLEncoder *ctx = (GLEncoder *)self;
     ctx->glFinishRoundTrip(self);
 }
-

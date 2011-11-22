@@ -21,6 +21,10 @@
 #include "glUtils.h"
 #include <cutils/log.h>
 
+#ifndef MAX
+#define MAX(a, b) ((a) < (b) ? (b) : (a))
+#endif
+
 GLClientState::GLClientState(int nLocations)
 {
     if (nLocations < LAST_LOCATION) {
@@ -54,6 +58,12 @@ GLClientState::GLClientState(int nLocations)
 
     m_pixelStore.unpack_alignment = 4;
     m_pixelStore.pack_alignment = 4;
+
+    memset(m_tex.unit, 0, sizeof(m_tex.unit));
+    m_tex.activeUnit = &m_tex.unit[0];
+    m_tex.textures = NULL;
+    m_tex.numTextures = 0;
+    m_tex.allocTextures = 0;
 }
 
 GLClientState::~GLClientState()
@@ -230,3 +240,173 @@ size_t GLClientState::pixelDataSize(GLsizei width, GLsizei height, GLenum format
     return aligned_linesize * height;
 }
 
+GLenum GLClientState::setActiveTextureUnit(GLenum texture)
+{
+    GLuint unit = texture - GL_TEXTURE0;
+    if (unit >= MAX_TEXTURE_UNITS) {
+        return GL_INVALID_OPERATION;
+    }
+    m_tex.activeUnit = &m_tex.unit[unit];
+    return GL_NO_ERROR;
+}
+
+void GLClientState::enableTextureTarget(GLenum target)
+{
+    switch (target) {
+    case GL_TEXTURE_2D:
+        m_tex.activeUnit->enables |= (1u << TEXTURE_2D);
+        break;
+    case GL_TEXTURE_EXTERNAL_OES:
+        m_tex.activeUnit->enables |= (1u << TEXTURE_EXTERNAL);
+        break;
+    }
+}
+
+void GLClientState::disableTextureTarget(GLenum target)
+{
+    switch (target) {
+    case GL_TEXTURE_2D:
+        m_tex.activeUnit->enables &= ~(1u << TEXTURE_2D);
+        break;
+    case GL_TEXTURE_EXTERNAL_OES:
+        m_tex.activeUnit->enables &= ~(1u << TEXTURE_EXTERNAL);
+        break;
+    }
+}
+
+GLenum GLClientState::getPriorityEnabledTarget(GLenum allDisabled) const
+{
+    unsigned int enables = m_tex.activeUnit->enables;
+    if (enables & (1u << TEXTURE_EXTERNAL)) {
+        return GL_TEXTURE_EXTERNAL_OES;
+    } else if (enables & (1u << TEXTURE_2D)) {
+        return GL_TEXTURE_2D;
+    } else {
+        return allDisabled;
+    }
+}
+
+int GLClientState::compareTexId(const void* pid, const void* prec)
+{
+    const GLuint* id = (const GLuint*)pid;
+    const TextureRec* rec = (const TextureRec*)prec;
+    return (GLint)(*id) - (GLint)rec->id;
+}
+
+GLenum GLClientState::bindTexture(GLenum target, GLuint texture,
+        GLboolean* firstUse)
+{
+    GLboolean first = GL_FALSE;
+    TextureRec* texrec = NULL;
+    if (texture != 0) {
+        if (m_tex.textures) {
+            texrec = (TextureRec*)bsearch(&texture, m_tex.textures,
+                    m_tex.numTextures, sizeof(TextureRec), compareTexId);
+        }
+        if (!texrec) {
+            if (!(texrec = addTextureRec(texture, target))) {
+                return GL_OUT_OF_MEMORY;
+            }
+            first = GL_TRUE;
+        }
+        if (target != texrec->target) {
+            return GL_INVALID_OPERATION;
+        }
+    }
+
+    switch (target) {
+    case GL_TEXTURE_2D:
+        m_tex.activeUnit->texture[TEXTURE_2D] = texture;
+        break;
+    case GL_TEXTURE_EXTERNAL_OES:
+        m_tex.activeUnit->texture[TEXTURE_EXTERNAL] = texture;
+        break;
+    }
+
+    if (firstUse) {
+        *firstUse = first;
+    }
+
+    return GL_NO_ERROR;
+}
+
+GLClientState::TextureRec* GLClientState::addTextureRec(GLuint id,
+        GLenum target)
+{
+    if (m_tex.numTextures == m_tex.allocTextures) {
+        const GLuint MAX_TEXTURES = 0xFFFFFFFFu;
+
+        GLuint newAlloc;
+        if (MAX_TEXTURES - m_tex.allocTextures >= m_tex.allocTextures) {
+            newAlloc = MAX(4, 2 * m_tex.allocTextures);
+        } else {
+            if (m_tex.allocTextures == MAX_TEXTURES) {
+                return NULL;
+            }
+            newAlloc = MAX_TEXTURES;
+        }
+
+        TextureRec* newTextures = (TextureRec*)realloc(m_tex.textures,
+                newAlloc * sizeof(TextureRec));
+        if (!newTextures) {
+            return NULL;
+        }
+
+        m_tex.textures = newTextures;
+        m_tex.allocTextures = newAlloc;
+    }
+
+    TextureRec* tex = m_tex.textures + m_tex.numTextures;
+    TextureRec* prev = tex - 1;
+    while (tex != m_tex.textures && id < prev->id) {
+        *tex-- = *prev--;
+    }
+    tex->id = id;
+    tex->target = target;
+    m_tex.numTextures++;
+
+    return tex;
+}
+
+GLuint GLClientState::getBoundTexture(GLenum target) const
+{
+    switch (target) {
+    case GL_TEXTURE_2D:
+        return m_tex.activeUnit->texture[TEXTURE_2D];
+    case GL_TEXTURE_EXTERNAL_OES:
+        return m_tex.activeUnit->texture[TEXTURE_EXTERNAL];
+    default:
+        return 0;
+    }
+}
+
+void GLClientState::deleteTextures(GLsizei n, const GLuint* textures)
+{
+    // Updating the textures array could be made more efficient when deleting
+    // several textures:
+    // - compacting the array could be done in a single pass once the deleted
+    //   textures are marked, or
+    // - could swap deleted textures to the end and re-sort.
+    TextureRec* texrec;
+    for (const GLuint* texture = textures; texture != textures + n; texture++) {
+        texrec = (TextureRec*)bsearch(texture, m_tex.textures,
+                m_tex.numTextures, sizeof(TextureRec), compareTexId);
+        if (texrec) {
+            const TextureRec* end = m_tex.textures + m_tex.numTextures;
+            memmove(texrec, texrec + 1,
+                    (end - texrec + 1) * sizeof(TextureRec));
+            m_tex.numTextures--;
+
+            for (TextureUnit* unit = m_tex.unit;
+                 unit != m_tex.unit + MAX_TEXTURE_UNITS;
+                 unit++)
+            {
+                if (unit->texture[TEXTURE_2D] == *texture) {
+                    unit->texture[TEXTURE_2D] = 0;
+                } else if (unit->texture[TEXTURE_EXTERNAL] == *texture) {
+                    unit->texture[TEXTURE_EXTERNAL] = 0;
+                }
+            }
+        }
+    }
+}
