@@ -69,8 +69,12 @@ status_t EmulatedFakeCamera::Initialize()
      * Parameters provided by the camera device.
      */
 
-    mParameters.set(CameraParameters::KEY_SUPPORTED_PICTURE_SIZES, "640x480");
-    mParameters.set(CameraParameters::KEY_SUPPORTED_PREVIEW_SIZES, "640x480");
+    /* 352x288 and 320x240 frame dimensions are required by the framework for
+     * video mode preview and video recording. */
+    mParameters.set(CameraParameters::KEY_SUPPORTED_PICTURE_SIZES,
+                    "640x480,352x288,320x240");
+    mParameters.set(CameraParameters::KEY_SUPPORTED_PREVIEW_SIZES,
+                    "640x480,352x288,320x240");
     mParameters.setPreviewSize(640, 480);
     mParameters.setPictureSize(640, 480);
 
