@@ -401,13 +401,19 @@ public:
      *  pframe, pframe_size - Define buffer, allocated to receive a preview frame.
      *      Any of these parameters can be 0, indicating that the caller is
      *      interested only in video frame.
+     *  r_scale, g_scale, b_scale - White balance scale.
+     *  exposure_comp - Expsoure compensation.
      * Return:
      *  NO_ERROR on success, or an appropriate error status on failure.
      */
     status_t queryFrame(void* vframe,
                         void* pframe,
                         size_t vframe_size,
-                        size_t pframe_size);
+                        size_t pframe_size,
+                        float r_scale,
+                        float g_scale,
+                        float b_scale,
+                        float exposure_comp);
 
     /****************************************************************************
      * Names of the queries available for the emulated camera.
