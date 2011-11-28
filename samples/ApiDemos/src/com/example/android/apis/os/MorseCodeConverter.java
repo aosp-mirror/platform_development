@@ -48,7 +48,7 @@ class MorseCodeConverter {
         /* S */ new long[] { DOT, GAP, DOT, GAP, DOT },
         /* T */ new long[] { DASH },
         /* U */ new long[] { DOT, GAP, DOT, GAP, DASH },
-        /* V */ new long[] { DOT, GAP, DOT, GAP, DASH },
+        /* V */ new long[] { DOT, GAP, DOT, GAP, DOT, GAP, DASH },
         /* W */ new long[] { DOT, GAP, DASH, GAP, DASH },
         /* X */ new long[] { DASH, GAP, DOT, GAP, DOT, GAP, DASH },
         /* Y */ new long[] { DASH, GAP, DOT, GAP, DASH, GAP, DASH },
