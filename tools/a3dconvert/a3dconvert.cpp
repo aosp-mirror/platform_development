@@ -44,21 +44,11 @@ void rsdAllocationDestroy(const Context *rsc, Allocation *alloc) {
 
 // We only care to implement allocation memory initialization and destruction
 // because we need no other renderscript hal features for serialization
-static RsdHalFunctions FunctionTable = {
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-    { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,NULL },
-    {
-        rsdAllocationInit,
-        rsdAllocationDestroy,
-        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
-    },
-    { NULL, NULL, NULL }, { NULL, NULL, NULL }, { NULL, NULL, NULL },
-    { NULL, NULL, NULL }, { NULL, NULL, NULL }, { NULL, NULL },
-    { NULL, NULL, NULL},
-};
-
-// No-op initizlizer for rs context hal since we only
+static RsdHalFunctions FunctionTable;
 bool rsdHalInit(Context *rsc, uint32_t version_major, uint32_t version_minor) {
+    memset(&FunctionTable, 0, sizeof(FunctionTable));
+    FunctionTable.allocation.init = rsdAllocationInit;
+    FunctionTable.allocation.destroy = rsdAllocationDestroy;
     rsc->mHal.funcs = FunctionTable;
     return true;
 }
