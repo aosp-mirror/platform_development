@@ -19,6 +19,8 @@ import re
 import os
 import sys
 import getopt
+import shutil
+import subprocess
 import zipfile
 
 VERBOSE = False
@@ -28,6 +30,7 @@ _RE_PKG = re.compile("^\s*package\s+([^\s;]+)\s*;.*")
 # Holds cmd-line arguments and context information
 class Params(object):
     def __init__(self):
+        self.EXEC_ZIP = False
         self.DRY = False
         self.PROPS = None
         self.SRC = None
@@ -36,6 +39,7 @@ class Params(object):
         self.CNT_NOPKG = 0
         # DIR is the list of directories to scan in TOPDIR.
         self.DIR = "frameworks libcore"
+        self.IGNORE_DIR = [ "hosttests" ]
         # IGNORE is a list of namespaces to ignore. Must be java
         # package definitions (e.g. "com.blah.foo.")
         self.IGNORE = [ "sun.", "libcore.", "dalvik.",
@@ -62,12 +66,13 @@ def usage(error=None):
    by the SDK Manager.
 
  Usage:
-   %s [-n|-v] <source.properties> <sources.zip> <topdir>
+   %s [-n|-v|-z] <source.properties> <sources.zip> <topdir>
 
  The source.properties file must exist and will be injected in the Zip file.
  The source directory must already exist.
  Use -v for verbose output (lists each file being picked up or ignored).
  Use -n for a dry-run (doesn't write the zip file).
+ Use -z to use the system 'zip' command instead of the Python Zip module.
 
 """ % sys.argv[0]
 
@@ -84,19 +89,25 @@ def parseArgs(argv):
 
     try:
         opts, args = getopt.getopt(argv[1:],
-                                   "vns:",
-                                   [ "--verbose", "--dry", "--sourcedir=" ])
+                         "zvns:",
+                         [ "exec-zip", "verbose", "dry", "sourcedir=" ])
     except getopt.GetoptError, e:
         error = str(e)
 
     if error is None:
         for o, a in opts:
             if o in [ "-n", "--dry" ]:
+                # Dry mode: don't copy/zip, print what would be done.
                 p.DRY = True
             if o in [ "-v", "--verbose" ]:
+                # Verbose mode. Display everything that's going on.
                 VERBOSE = True
             elif o in [ "-s", "--sourcedir" ]:
+                # The source directories to process (space separated list)
                 p.DIR = a
+            elif o in [ "-z", "--exec-zip" ]:
+                # Don't use Python zip, instead call the 'zip' system exec.
+                p.EXEC_ZIP = True
 
         if len(args) != 3:
             error = "Missing arguments: <source> <dest>"
@@ -131,8 +142,11 @@ def parseSrcDir(p, srcdir):
                 verbose("No package found in %s", filepath)
             if pkg:
                 # Should we ignore this package?
+                pkg2 = pkg
+                if not "." in pkg2:
+                    pkg2 += "."
                 for ignore in p.IGNORE:
-                    if pkg.startswith(ignore):
+                    if pkg2.startswith(ignore):
                         verbose("Ignore package %s [%s]", pkg, filepath)
                         pkg = None
                         break
@@ -144,7 +158,8 @@ def parseSrcDir(p, srcdir):
             else:
                 p.CNT_NOPKG += 1
         elif os.path.isdir(filepath):
-            parseSrcDir(p, filepath)
+            if not filename in p.IGNORE_DIR:
+                parseSrcDir(p, filepath)
 
 
 # Check a java file to find its package declaration, if any
@@ -165,14 +180,41 @@ def checkJavaFile(path):
     return None
 
 
+USED_ARC_PATH = {}
+
 # Copy the given file (given its absolute filepath) to
 # the relative desk_pkg directory in the zip file.
 def copy(p, filepath, dest_pkg):
     arc_path = os.path.join(TOP_FOLDER, dest_pkg, os.path.basename(filepath))
+    if arc_path in USED_ARC_PATH:
+        verbose("Ignore duplicate archive path %s", arc_path)
+    USED_ARC_PATH[arc_path] = 1
     if p.DRY:
         print >>sys.stderr, "zip %s [%s]" % (arc_path, filepath)
     elif p.zipfile is not None:
-        p.zipfile.write(filepath, arc_path)
+        if p.EXEC_ZIP:
+            # zipfile is a path. Copy to it.
+            dest_path = os.path.join(p.zipfile, arc_path)
+            dest_dir = os.path.dirname(dest_path)
+            if not os.path.isdir(dest_dir):
+                os.makedirs(dest_dir)
+            shutil.copyfile(filepath, dest_path)
+        else:
+            # zipfile is a ZipFile object. Compress with it.
+            p.zipfile.write(filepath, arc_path)
+
+
+def shellExec(*cmd):
+  """
+  Executes the given system command.
+
+  The command must be split into a list (c.f. shext.split().)
+
+  This raises an exception if the command fails.
+  Stdin/out/err are not being redirected.
+  """
+  verbose("exec: %s", repr(cmd))
+  subprocess.check_call(cmd)
 
 
 def main():
@@ -180,11 +222,28 @@ def main():
     z = None
     try:
         if not p.DRY:
-            p.zipfile = z = zipfile.ZipFile(p.DST, "w", zipfile.ZIP_DEFLATED)
-            z.write(p.PROPS, TOP_FOLDER + "/source.properties")
+            if p.EXEC_ZIP:
+                p.zipfile = p.DST + "_temp_dir"
+                if os.path.exists(p.zipfile):
+                    shutil.rmtree(p.zipfile)
+                props_dest = os.path.join(p.zipfile, TOP_FOLDER + "/source.properties")
+                os.makedirs(os.path.dirname(props_dest))
+                shutil.copyfile(p.PROPS, props_dest)
+            else:
+                p.zipfile = z = zipfile.ZipFile(p.DST, "w", zipfile.ZIP_DEFLATED)
+                z.write(p.PROPS, TOP_FOLDER + "/source.properties")
         for d in p.DIR.split():
             if d:
                 parseSrcDir(p, os.path.join(p.SRC, d))
+        if p.EXEC_ZIP and not p.DRY:
+            curr_dir = os.getcwd()
+            os.chdir(p.zipfile)
+            if os.path.exists("_temp.zip"):
+                os.unlink("_temp.zip");
+            shellExec("zip", "-9r", "_temp.zip", TOP_FOLDER)
+            os.chdir(curr_dir)
+            shutil.move(os.path.join(p.zipfile, "_temp.zip"), p.DST)
+            shutil.rmtree(p.zipfile)
     finally:
         if z is not None:
             z.close()

@@ -90,7 +90,7 @@ endef
 define mk-sdk-repo-sources
 $(call sdk-repo-pkg-zip,$(1),$(2),$(3)): $(2) $(TOPDIR)development/sdk/source_source.properties
 	@echo "Building SDK sources package"
-	$(hide) $(TOPDIR)development/build/tools/mk_sources_zip.py \
+	$(hide) $(TOPDIR)development/build/tools/mk_sources_zip.py --exec-zip \
 			$(TOPDIR)development/sdk/source_source.properties \
 			$(call sdk-repo-pkg-zip,$(1),$(2),$(3)) \
 			$(TOPDIR).
