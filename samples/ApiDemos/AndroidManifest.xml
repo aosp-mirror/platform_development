@@ -542,7 +542,7 @@
         </activity>
 
         <!-- ============================ -->
-        <!--  Accessibility examples strings  -->
+        <!--  Accessibility examples      -->
         <!-- ============================ -->
 
         <activity android:name=".accessibility.ClockBackActivity"
@@ -579,6 +579,15 @@
                 android:name="android.accessibilityservice"
                 android:resource="@xml/taskbackconfig" />
         </service>
+
+        <activity android:name=".accessibility.CustomViewAccessibilityActivity"
+                  android:label="@string/accessibility_custom_view"
+                  android:enabled="@bool/atLeastIceCreamSandwich">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
 
         <!-- Instrumentation Samples -->
 
