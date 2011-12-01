@@ -529,8 +529,8 @@ public class MonkeySourceNetwork implements MonkeyEventSource {
             switch(event) {
                 case ON_WINDOW_STATE_CHANGE:
                     try {
-                        synchronized(MonkeySourceNetworkViews.sConnection) {
-                            MonkeySourceNetworkViews.sConnection.wait(timeout);
+                        synchronized(MonkeySourceNetworkViews.class) {
+                            MonkeySourceNetworkViews.class.wait(timeout);
                         }
                     } catch(InterruptedException e) {
                         Log.d(TAG, "Deferral interrupted: " + e.getMessage());
