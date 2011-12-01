@@ -378,7 +378,7 @@ public class MonkeySourceNetworkViews {
             if (command.size() == 2) {
                 String text = command.get(1);
                 List<AccessibilityNodeInfo> nodes = AccessibilityInteractionClient.getInstance()
-                    .findAccessibilityNodeInfosByViewTextInActiveWindow(sConnectionId, text);
+                    .findAccessibilityNodeInfosByTextInActiveWindow(sConnectionId, text);
                 ViewIntrospectionCommand idGetter = new GetAccessibilityIds();
                 List<String> emptyArgs = new ArrayList<String>();
                 StringBuilder ids = new StringBuilder();
