@@ -33,6 +33,9 @@ GL2Encoder::GL2Encoder(IOStream *stream) : gl2_encoder_context_t(stream)
     m_glPixelStorei_enc = set_glPixelStorei(s_glPixelStorei);
     m_glGetString_enc = set_glGetString(s_glGetString);
     m_glBindBuffer_enc = set_glBindBuffer(s_glBindBuffer);
+    m_glBufferData_enc = set_glBufferData(s_glBufferData);
+    m_glBufferSubData_enc = set_glBufferSubData(s_glBufferSubData);
+    m_glDeleteBuffers_enc = set_glDeleteBuffers(s_glDeleteBuffers);
     m_glDrawArrays_enc = set_glDrawArrays(s_glDrawArrays);
     m_glDrawElements_enc = set_glDrawElements(s_glDrawElements);
     m_glGetIntegerv_enc = set_glGetIntegerv(s_glGetIntegerv);
