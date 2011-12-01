@@ -1296,7 +1296,7 @@
     <string name="accessibility_service_label">ClockBack</string>
     <string name="accessibility_service_instructions">
         1. Enable TalkBack (Settings -> Accessibility -> TalkBack).
-        \n\n2. Enable Explore-byTouch (Settings -> Accessibility -> Explore by Touch).
+        \n\n2. Enable Explore-by-Touch (Settings -> Accessibility -> Explore by Touch).
         \n\n3. Touch explore the Clock application and the home screen.
         \n\n4. Go to the Clock application and change the time of an alarm.
         \n\n5. Enable ClockBack (Settings -> Accessibility -> ClockBack).
@@ -1316,9 +1316,18 @@
     <string name="accessibility_query_window_description">Task App Accessibility Service</string>
     <string name="accessibility_query_window_instructions">
         1. Enable QueryBack (Settings -> Accessibility -> QueryBack).
-        \n\n2. Enable Explore-byTouch (Settings -> Accessibility -> Explore by Touch).
+        \n\n2. Enable Explore-by-Touch (Settings -> Accessibility -> Explore by Touch).
         \n\n3. Touch explore the list.
     </string>
+
+    <string name="accessibility_custom_view">Accessibility/Custom View</string>
+    <string name="accessibility_custom_view_instructions">
+        1. Enable TalkBack (Settings -> Accessibility -> TalkBack).
+        \n\n2. Enable Explore-by-Touch (Settings -> Accessibility -> Explore by Touch).
+        \n\n3. Touch explore/poke the buttons.
+    </string>
+    <string name="accessibility_custom_on">On</string>
+    <string name="accessibility_custom_off">Off</string>
 
     <string name="task_name">Task</string>
     <string name="task_complete_template">Task %1$s %2$s</string>
