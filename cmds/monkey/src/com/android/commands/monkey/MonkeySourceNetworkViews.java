@@ -20,13 +20,13 @@ import static com.android.commands.monkey.MonkeySourceNetwork.EARG;
 
 import android.accessibilityservice.IAccessibilityServiceConnection;
 import android.accessibilityservice.IEventListener;
-import android.accessibilityservice.AccessibilityServiceInfo;
 import android.content.Context;
 import android.content.pm.IPackageManager;
 import android.content.pm.ApplicationInfo;
 import android.graphics.Rect;
 import android.os.ServiceManager;
 import android.os.RemoteException;
+import android.os.SystemClock;
 import android.util.Log;
 import android.view.accessibility.AccessibilityInteractionClient;
 import android.view.accessibility.AccessibilityNodeInfo;
@@ -54,9 +54,13 @@ import java.util.ArrayList;
 public class MonkeySourceNetworkViews {
     private static final String TAG = "MonkeyViews";
 
+    private static final int TIMEOUT_REGISTER_EVENT_LISTENER = 2000;
+
+    private static final int NO_ID = -1;
+
     private static volatile AtomicReference<AccessibilityEvent> sLastAccessibilityEvent
             = new AtomicReference<AccessibilityEvent>();
-    protected static IAccessibilityServiceConnection sConnection;
+    protected static int sConnectionId;
     private static IPackageManager sPm =
             IPackageManager.Stub.asInterface(ServiceManager.getService("package"));
     private static Map<String, Class<?>> sClassMap = new HashMap<String, Class<?>>();
@@ -96,17 +100,23 @@ public class MonkeySourceNetworkViews {
         COMMAND_MAP.put("getaccessibilityids", new GetAccessibilityIds());
     }
 
-    /* This registers our listener with accessibility services, and gives us a connection object */
-    private static IAccessibilityServiceConnection getConnection() throws RemoteException {
+    private static int getConnection() throws RemoteException {
+        if (sConnectionId != NO_ID) {
+            return sConnectionId;
+        }
         IEventListener listener = new IEventListener.Stub() {
-            public void setConnection(IAccessibilityServiceConnection connection)
-                    throws RemoteException {
-                AccessibilityServiceInfo info = new AccessibilityServiceInfo();
-                info.eventTypes = AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED;
-                info.feedbackType = AccessibilityServiceInfo.FEEDBACK_GENERIC;
-                info.notificationTimeout = 0;
-                info.flags = AccessibilityServiceInfo.DEFAULT;
-                connection.setServiceInfo(info);
+            public void setConnection(IAccessibilityServiceConnection connection,
+                    int connectionId) {
+                sConnectionId = connectionId;
+                if (connection != null) {
+                    AccessibilityInteractionClient.getInstance().addConnection(connectionId,
+                            connection);
+                } else {
+                    AccessibilityInteractionClient.getInstance().removeConnection(connectionId);
+                }
+                synchronized (MonkeySourceNetworkViews.class) {
+                    notifyAll();
+                }
             }
 
             public void onInterrupt() {}
@@ -114,14 +124,37 @@ public class MonkeySourceNetworkViews {
             public void onAccessibilityEvent(AccessibilityEvent event) {
                 Log.d(TAG, "Accessibility Event");
                 sLastAccessibilityEvent.set(AccessibilityEvent.obtain(event));
-                synchronized(sConnection) {
-                    sConnection.notifyAll();
+                synchronized (MonkeySourceNetworkViews.class) {
+                    notifyAll();
                 }
             }
         };
+
         IAccessibilityManager manager = IAccessibilityManager.Stub.asInterface(
                 ServiceManager.getService(Context.ACCESSIBILITY_SERVICE));
-        return manager.registerEventListener(listener);
+
+        final long beginTime = SystemClock.uptimeMillis();
+        synchronized (MonkeySourceNetworkViews.class) {
+            manager.registerEventListener(listener);
+            while (true) {
+                if (sConnectionId != NO_ID) {
+                    return sConnectionId;
+                }
+                final long elapsedTime = (SystemClock.uptimeMillis() - beginTime);
+                final long remainingTime = TIMEOUT_REGISTER_EVENT_LISTENER - elapsedTime;
+                if (remainingTime <= 0) {
+                    if (sConnectionId == NO_ID) {
+                        throw new IllegalStateException("Cound not register IEventListener.");
+                    }
+                    return sConnectionId;
+                }
+                try {
+                    MonkeySourceNetworkViews.class.wait(remainingTime);
+                } catch (InterruptedException ie) {
+                    /* ignore */
+                }
+            }
+        }
     }
 
     /**
@@ -131,7 +164,7 @@ public class MonkeySourceNetworkViews {
      */
     public static void setup() {
         try {
-            sConnection = getConnection();
+            sConnectionId = getConnection();
         } catch (RemoteException re) {
             Log.e(TAG,"Remote Exception encountered when"
                   + " attempting to connect to Accessibility Service");
@@ -208,14 +241,14 @@ public class MonkeySourceNetworkViews {
         int windowId = Integer.parseInt(windowString);
         int viewId = Integer.parseInt(viewString);
         return AccessibilityInteractionClient.getInstance()
-            .findAccessibilityNodeInfoByAccessibilityId(sConnection, windowId, viewId);
+            .findAccessibilityNodeInfoByAccessibilityId(sConnectionId, windowId, viewId);
     }
 
     private static AccessibilityNodeInfo getNodeByViewId(String viewId, AccessibilityEvent event)
             throws MonkeyViewException {
         int id = getId(viewId, event);
         return AccessibilityInteractionClient.getInstance()
-            .findAccessibilityNodeInfoByViewIdInActiveWindow(sConnection, id);
+            .findAccessibilityNodeInfoByViewIdInActiveWindow(sConnectionId, id);
     }
 
     /**
@@ -267,7 +300,7 @@ public class MonkeySourceNetworkViews {
         public MonkeyCommandReturn translateCommand(List<String> command,
                                                     CommandQueue queue) {
             if (command.size() > 2) {
-                if (sConnection == null) {
+                if (sConnectionId < 0) {
                     return new MonkeyCommandReturn(false, NO_CONNECTION);
                 }
                 AccessibilityEvent lastEvent = sLastAccessibilityEvent.get();
@@ -339,13 +372,13 @@ public class MonkeySourceNetworkViews {
         // getviewswithtext "some text here"
         public MonkeyCommandReturn translateCommand(List<String> command,
                                                     CommandQueue queue) {
-            if (sConnection == null) {
+            if (sConnectionId < 0) {
                 return new MonkeyCommandReturn(false, NO_CONNECTION);
             }
             if (command.size() == 2) {
                 String text = command.get(1);
                 List<AccessibilityNodeInfo> nodes = AccessibilityInteractionClient.getInstance()
-                    .findAccessibilityNodeInfosByViewTextInActiveWindow(sConnection, text);
+                    .findAccessibilityNodeInfosByViewTextInActiveWindow(sConnectionId, text);
                 ViewIntrospectionCommand idGetter = new GetAccessibilityIds();
                 List<String> emptyArgs = new ArrayList<String>();
                 StringBuilder ids = new StringBuilder();
