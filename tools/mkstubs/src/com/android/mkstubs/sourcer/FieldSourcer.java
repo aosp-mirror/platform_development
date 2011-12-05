@@ -19,13 +19,14 @@ package com.android.mkstubs.sourcer;
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.Attribute;
 import org.objectweb.asm.FieldVisitor;
+import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.signature.SignatureReader;
 
 /**
- * A field visitor that generates Java source defining a field. 
+ * A field visitor that generates Java source defining a field.
  */
-class FieldSourcer implements FieldVisitor {
+class FieldSourcer extends FieldVisitor {
 
     private final Output mOutput;
     private final int mAccess;
@@ -34,6 +35,7 @@ class FieldSourcer implements FieldVisitor {
     private final String mSignature;
 
     public FieldSourcer(Output output, int access, String name, String desc, String signature) {
+        super(Opcodes.ASM4);
         mOutput = output;
         mAccess = access;
         mName = name;
@@ -41,21 +43,24 @@ class FieldSourcer implements FieldVisitor {
         mSignature = signature;
     }
 
+    @Override
     public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
         mOutput.write("@%s", desc);
         return new AnnotationSourcer(mOutput);
     }
 
+    @Override
     public void visitAttribute(Attribute attr) {
         mOutput.write("%s /* non-standard attribute */ ", attr.type);
     }
 
+    @Override
     public void visitEnd() {
         // Need to write type and field name after the annotations and attributes.
 
         AccessSourcer as = new AccessSourcer(mOutput);
         as.write(mAccess, AccessSourcer.IS_FIELD);
-        
+
         if (mSignature == null) {
             mOutput.write(" %s", Type.getType(mDesc).getClassName());
         } else {

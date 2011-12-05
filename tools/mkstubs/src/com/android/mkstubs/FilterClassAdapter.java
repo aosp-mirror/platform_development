@@ -20,7 +20,6 @@ import com.android.mkstubs.Main.Logger;
 
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.Attribute;
-import org.objectweb.asm.ClassAdapter;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.MethodVisitor;
@@ -30,14 +29,14 @@ import org.objectweb.asm.Opcodes;
  * A class visitor that filters out all members (fields, methods and inner classes) that are
  * either private, default-access or rejected by the {@link Filter}.
  */
-class FilterClassAdapter extends ClassAdapter {
+class FilterClassAdapter extends ClassVisitor {
 
     private final Logger mLog;
     private final Filter mFilter;
     private String mClassName;
 
     public FilterClassAdapter(ClassVisitor writer, Filter filter, Logger log) {
-        super(writer);
+        super(Opcodes.ASM4, writer);
         mFilter = filter;
         mLog = log;
     }

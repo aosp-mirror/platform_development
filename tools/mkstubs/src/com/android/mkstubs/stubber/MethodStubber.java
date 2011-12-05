@@ -19,7 +19,6 @@ package com.android.mkstubs.stubber;
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.Attribute;
 import org.objectweb.asm.Label;
-import org.objectweb.asm.MethodAdapter;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
@@ -32,13 +31,13 @@ import org.objectweb.asm.Opcodes;
  * Note that constructors rewritten this way will probably fail with the runtime bytecode
  * verifier since no call to <code>super</code> is generated.
  */
-public class MethodStubber extends MethodAdapter {
+public class MethodStubber extends MethodVisitor {
 
     public MethodStubber(MethodVisitor mw,
             int access, String name, String desc, String signature, String[] exceptions) {
-        super(mw);
+        super(Opcodes.ASM4, mw);
     }
-    
+
     @Override
     public void visitCode() {
         Label l0 = new Label();
@@ -64,7 +63,7 @@ public class MethodStubber extends MethodAdapter {
                 0);                                             // index
         mv.visitMaxs(3, 1); // maxStack, maxLocals
     }
-    
+
     @Override
     public void visitEnd() {
         super.visitEnd();
@@ -74,110 +73,110 @@ public class MethodStubber extends MethodAdapter {
     public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
         return super.visitAnnotation(desc, visible);
     }
-    
+
     @Override
     public AnnotationVisitor visitAnnotationDefault() {
         return super.visitAnnotationDefault();
     }
- 
+
     @Override
     public void visitAttribute(Attribute attr) {
         super.visitAttribute(attr);
     }
-    
+
     @Override
     public AnnotationVisitor visitParameterAnnotation(int parameter, String desc, boolean visible) {
         return super.visitParameterAnnotation(parameter, desc, visible);
     }
 
     // -- stuff that gets skipped
-    
+
     @Override
     public void visitFieldInsn(int opcode, String owner, String name, String desc) {
         // skip
     }
-    
+
     @Override
     public void visitFrame(int type, int local, Object[] local2, int stack, Object[] stack2) {
         // skip
     }
-    
+
     @Override
     public void visitIincInsn(int var, int increment) {
         // skip
     }
-    
+
     @Override
     public void visitInsn(int opcode) {
         // skip
     }
-    
+
     @Override
     public void visitIntInsn(int opcode, int operand) {
         // skip
     }
-    
+
     @Override
     public void visitJumpInsn(int opcode, Label label) {
         // skip
     }
-    
+
     @Override
     public void visitLabel(Label label) {
         // skip
     }
-    
+
     @Override
     public void visitLdcInsn(Object cst) {
         // skip
     }
-    
+
     @Override
     public void visitLineNumber(int line, Label start) {
         // skip
     }
-    
+
     @Override
     public void visitLocalVariable(String name, String desc, String signature,
             Label start, Label end, int index) {
         // skip
     }
-    
+
     @Override
     public void visitLookupSwitchInsn(Label dflt, int[] keys, Label[] labels) {
         // skip
     }
-    
+
     @Override
     public void visitMaxs(int maxStack, int maxLocals) {
         // skip
     }
-    
+
     @Override
     public void visitMethodInsn(int opcode, String owner, String name, String desc) {
         // skip
     }
-    
+
     @Override
     public void visitMultiANewArrayInsn(String desc, int dims) {
         // skip
     }
-    
+
     @Override
     public void visitTableSwitchInsn(int min, int max, Label dflt, Label[] labels) {
         // skip
     }
-    
+
     @Override
     public void visitTryCatchBlock(Label start, Label end, Label handler, String type) {
         // skip
     }
-    
+
     @Override
     public void visitTypeInsn(int opcode, String type) {
         // skip
     }
-    
+
     @Override
     public void visitVarInsn(int opcode, int var) {
         // skip

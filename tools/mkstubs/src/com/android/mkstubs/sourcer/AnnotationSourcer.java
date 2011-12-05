@@ -17,11 +17,12 @@
 package com.android.mkstubs.sourcer;
 
 import org.objectweb.asm.AnnotationVisitor;
+import org.objectweb.asm.Opcodes;
 
 /**
  * An annotation visitor that generates Java source for an annotation.
  */
-class AnnotationSourcer implements AnnotationVisitor {
+class AnnotationSourcer extends AnnotationVisitor {
 
     private final String mOpenChar;
     private final String mCloseChar;
@@ -33,11 +34,13 @@ class AnnotationSourcer implements AnnotationVisitor {
     }
 
     public AnnotationSourcer(Output output, boolean isArray) {
+        super(Opcodes.ASM4);
         mOutput = output;
         mOpenChar = isArray ? "[" : "(";
         mCloseChar = isArray ? "]" : ")";
     }
 
+    @Override
     public void visit(String name, Object value) {
         startOpen();
 
@@ -56,6 +59,7 @@ class AnnotationSourcer implements AnnotationVisitor {
         }
     }
 
+    @Override
     public void visitEnd() {
         if (mNeedClose) {
             mOutput.write(mCloseChar);
@@ -63,18 +67,21 @@ class AnnotationSourcer implements AnnotationVisitor {
         mOutput.write("\n");
     }
 
+    @Override
     public AnnotationVisitor visitAnnotation(String name, String desc) {
         startOpen();
-        
+
         mOutput.write("@%s", name);
         return this;
     }
 
+    @Override
     public AnnotationVisitor visitArray(String name) {
         startOpen();
         return new AnnotationSourcer(mOutput, true /*isArray*/);
     }
 
+    @Override
     public void visitEnum(String name, String desc, String value) {
         mOutput.write("/* annotation enum not supported: %s */\n", name);
     }
