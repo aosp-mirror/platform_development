@@ -16,6 +16,7 @@
 
 package com.android.mkstubs.sourcer;
 
+import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.signature.SignatureReader;
 import org.objectweb.asm.signature.SignatureVisitor;
@@ -36,12 +37,12 @@ import java.util.ArrayList;
  * <p/>
  * Note: When processing a method's signature, the signature order is the reverse of the source
  * order, e.g. the signature is written as "(parameters)return-type" where we want to generate
- * "return-type method-name (parameters)". To hanlde this case, the return-type and parameters
+ * "return-type method-name (parameters)". To handle this case, the return-type and parameters
  * are <em>not</em> output directly but are instead accumulated in internal variables that you can
  * get later using {@link #getReturnType()}, {@link #getParameters()}, {@link #getSuperClass()}
  * and {@link #formalsToString()}.
  */
-class SignatureSourcer implements SignatureVisitor {
+class SignatureSourcer extends SignatureVisitor {
 
     /**
      * Buffer used to construct the signature.
@@ -85,13 +86,14 @@ class SignatureSourcer implements SignatureVisitor {
     private ArrayList<SignatureSourcer> mParameters = new ArrayList<SignatureSourcer>();
 
 
-    
+
     /**
      * Constructs a new {@link SignatureWriter} object.
      */
     public SignatureSourcer() {
+        super(Opcodes.ASM4);
     }
-    
+
     private StringBuilder getBuf() {
         if (mWritingFormals) {
             return mFormalsBuf;
@@ -117,7 +119,7 @@ class SignatureSourcer implements SignatureVisitor {
     public SignatureSourcer getReturnType() {
         return mReturnType;
     }
-    
+
     /**
      * Will be non-empty if a parameters were processed
      * by {@link SignatureReader#accept(SignatureVisitor)}
@@ -125,19 +127,19 @@ class SignatureSourcer implements SignatureVisitor {
     public ArrayList<SignatureSourcer> getParameters() {
         return mParameters;
     }
-    
+
     /**
-     * True if the signature contains formal type parameters, which are available 
+     * True if the signature contains formal type parameters, which are available
      * via {@link #formalsToString()} after calling {@link SignatureReader#accept(SignatureVisitor)}
      */
     public boolean hasFormalsContent() {
         return mFormalsBuf.length() > 0;
     }
-    
+
     public String formalsToString() {
         return mFormalsBuf.toString();
     }
-    
+
     /**
      * Will be non-null if a super class was processed
      * by {@link SignatureReader#accept(SignatureVisitor)}
@@ -150,6 +152,7 @@ class SignatureSourcer implements SignatureVisitor {
     // Implementation of the SignatureVisitor interface
     // ------------------------------------------------------------------------
 
+    @Override
     public void visitFormalTypeParameter(final String name) {
         if (!mWritingFormals) {
             mWritingFormals = true;
@@ -161,16 +164,19 @@ class SignatureSourcer implements SignatureVisitor {
         getBuf().append(" extends ");
     }
 
+    @Override
     public SignatureVisitor visitClassBound() {
-        // we don't differentiate between visiting a sub class or interface type 
+        // we don't differentiate between visiting a sub class or interface type
         return this;
     }
 
+    @Override
     public SignatureVisitor visitInterfaceBound() {
-        // we don't differentiate between visiting a sub class or interface type 
+        // we don't differentiate between visiting a sub class or interface type
         return this;
     }
 
+    @Override
     public SignatureVisitor visitSuperclass() {
         endFormals();
         SignatureSourcer sourcer = new SignatureSourcer();
@@ -179,10 +185,12 @@ class SignatureSourcer implements SignatureVisitor {
         return sourcer;
     }
 
+    @Override
     public SignatureVisitor visitInterface() {
         return this;
     }
 
+    @Override
     public SignatureVisitor visitParameterType() {
         endFormals();
         SignatureSourcer sourcer = new SignatureSourcer();
@@ -190,6 +198,7 @@ class SignatureSourcer implements SignatureVisitor {
         return sourcer;
     }
 
+    @Override
     public SignatureVisitor visitReturnType() {
         endFormals();
         SignatureSourcer sourcer = new SignatureSourcer();
@@ -198,29 +207,35 @@ class SignatureSourcer implements SignatureVisitor {
         return sourcer;
     }
 
+    @Override
     public SignatureVisitor visitExceptionType() {
         getBuf().append('^');
         return this;
     }
 
+    @Override
     public void visitBaseType(final char descriptor) {
         getBuf().append(Type.getType(Character.toString(descriptor)).getClassName());
     }
 
+    @Override
     public void visitTypeVariable(final String name) {
         getBuf().append(name.replace('/', '.'));
     }
 
+    @Override
     public SignatureVisitor visitArrayType() {
         getBuf().append('[');
         return this;
     }
 
+    @Override
     public void visitClassType(final String name) {
         getBuf().append(name.replace('/', '.'));
         mArgumentStack *= 2;
     }
 
+    @Override
     public void visitInnerClassType(final String name) {
         endArguments();
         getBuf().append('.');
@@ -228,6 +243,7 @@ class SignatureSourcer implements SignatureVisitor {
         mArgumentStack *= 2;
     }
 
+    @Override
     public void visitTypeArgument() {
         if (mArgumentStack % 2 == 0) {
             ++mArgumentStack;
@@ -238,6 +254,7 @@ class SignatureSourcer implements SignatureVisitor {
         getBuf().append('*');
     }
 
+    @Override
     public SignatureVisitor visitTypeArgument(final char wildcard) {
         if (mArgumentStack % 2 == 0) {
             ++mArgumentStack;
@@ -258,6 +275,7 @@ class SignatureSourcer implements SignatureVisitor {
         return this;
     }
 
+    @Override
     public void visitEnd() {
         endArguments();
     }
