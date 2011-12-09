@@ -17,24 +17,30 @@ package com.android.emulator.gps.test;
 
 import android.content.Context;
 import android.location.Location;
+import android.location.LocationListener;
 import android.location.LocationManager;
+import android.os.Bundle;
+import android.os.HandlerThread;
 import android.test.AndroidTestCase;
+
+import junit.framework.Assert;
 
 /**
  * GPS Location Test
  *
  * Test the GPS API by verifying the previously set location
  */
-public class GpsLocationTest extends AndroidTestCase {
+public class GpsLocationTest extends AndroidTestCase implements LocationListener {
 
     private LocationManager locationManager;
-
+    private Location mLocation;
     /**
      * Prior to running this test the GPS location must be set to the following
      * longitude and latitude coordinates via the geo fix command
      */
     private static final double LONGITUDE = -122.08345770835876;
     private static final double LATITUDE = 37.41991859119417;
+    private static final int TIMEOUT = 5000;
 
     @Override
     protected void setUp() throws Exception {
@@ -48,9 +54,37 @@ public class GpsLocationTest extends AndroidTestCase {
      * via geo fix command
      */
     public void testCurrentLocationGivenLocation(){
-        Location lastLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-        assertNotNull(lastLocation);
-        assertEquals(lastLocation.getLongitude(), LONGITUDE);
-        assertEquals(lastLocation.getLatitude(), LATITUDE);
+        try{
+            synchronized ( this ){
+                HandlerThread handlerThread = new HandlerThread("testLocationUpdates");
+                handlerThread.start();
+                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, this,
+                        handlerThread.getLooper());
+                this.wait(TIMEOUT);
+            }
+        }catch ( InterruptedException ie){
+            ie.printStackTrace();
+            Assert.fail();
+        }
+        assertNotNull(mLocation);
+        assertEquals(new Float(LONGITUDE), new Float(mLocation.getLongitude()));
+        assertEquals(new Float(LATITUDE), new Float(mLocation.getLatitude()));
+        locationManager.removeUpdates(this);
+    }
+
+    public void onLocationChanged(Location location) {
+        synchronized ( this ){
+            mLocation=location;
+            this.notify();
+        }
+    }
+
+    public void onProviderDisabled(String arg0) {
+    }
+
+    public void onProviderEnabled(String arg0) {
+    }
+
+    public void onStatusChanged(String arg0, int arg1, Bundle arg2) {
     }
 }
