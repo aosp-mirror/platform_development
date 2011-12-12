@@ -308,8 +308,6 @@ EGLBoolean egl_window_surface_t::connect()
         setErrorReturn(EGL_BAD_ALLOC, EGL_FALSE);
     }
 
-    buffer->common.incRef(&buffer->common);
-
     // lock the buffer
     nativeWindow->lockBuffer(nativeWindow, buffer);
 
@@ -323,7 +321,6 @@ void egl_window_surface_t::disconnect()
 {
     if (buffer) {
         nativeWindow->queueBuffer(nativeWindow, buffer);
-        buffer->common.decRef(&buffer->common);
         buffer = 0;
     }
 }
@@ -338,15 +335,8 @@ EGLBoolean egl_window_surface_t::swapBuffers()
 
     rcEnc->rcFlushWindowColorBuffer(rcEnc, rcSurface);
 
-    android_native_buffer_t* prevBuf = buffer;
     //post the back buffer
     nativeWindow->queueBuffer(nativeWindow, buffer);
-
-    buffer->common.incRef(&buffer->common);
-
-    if (prevBuf) {
-        prevBuf->common.decRef(&prevBuf->common);
-    }
 
     // dequeue a new buffer
     if (nativeWindow->dequeueBuffer(nativeWindow, &buffer)) {
