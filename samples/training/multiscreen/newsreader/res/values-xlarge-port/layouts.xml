@@ -14,7 +14,9 @@
      limitations under the License.
 -->
 
+<!-- BEGIN_INCLUDE(all) -->
 <resources>
-    <item name="main_layout" type="layout">@layout/twopanes</item>
-    <string name="has_two_panes">true</string>
+    <item name="main_layout" type="layout">@layout/twopanes_narrow</item>
+    <bool name="has_two_panes">true</bool>
 </resources>
+<!-- END_INCLUDE(all) -->
