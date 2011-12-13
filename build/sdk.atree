@@ -43,13 +43,13 @@ development/sdk/plat_tools_source.properties  platform-tools/source.properties
 bin/adb                                 strip platform-tools/adb
 bin/aapt                                strip platform-tools/aapt
 bin/aidl                                strip platform-tools/aidl
+bin/fastboot                            strip platform-tools/fastboot
 bin/llvm-rs-cc                          strip platform-tools/llvm-rs-cc
 
 # dx
 bin/dx                                        platform-tools/dx
 bin/dexdump                                   platform-tools/dexdump
 framework/dx.jar                              platform-tools/lib/dx.jar
-
 
 # Framework include for Renderscript
 frameworks/base/libs/rs/scriptc               platform-tools/renderscript/include
