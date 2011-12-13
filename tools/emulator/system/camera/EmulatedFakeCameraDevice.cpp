@@ -312,6 +312,9 @@ void EmulatedFakeCameraDevice::drawSquare(int x,
     const int square_ystop = min(mFrameHeight, y + size);
     uint8_t* Y_pos = mCurrentFrame + y * mFrameWidth + x;
 
+    YUVPixel adjustedColor = *color;
+    changeWhiteBalance(adjustedColor.Y, adjustedColor.U, adjustedColor.V);
+
     // Draw the square.
     for (; y < square_ystop; y++) {
         const int iUV = (y / 2) * mUVInRow + (x / 2) * mUVStep;
@@ -319,7 +322,7 @@ void EmulatedFakeCameraDevice::drawSquare(int x,
         uint8_t* sqV = mFrameV + iUV;
         uint8_t* sqY = Y_pos;
         for (int i = x; i < square_xstop; i += 2) {
-            color->get(sqY, sqU, sqV);
+            adjustedColor.get(sqY, sqU, sqV);
             *sqY = changeExposure(*sqY);
             sqY[1] = *sqY;
             sqY += 2; sqU += mUVStep; sqV += mUVStep;
@@ -332,8 +335,11 @@ void EmulatedFakeCameraDevice::drawSquare(int x,
 
 void EmulatedFakeCameraDevice::drawSolid(YUVPixel* color)
 {
+    YUVPixel adjustedColor = *color;
+    changeWhiteBalance(adjustedColor.Y, adjustedColor.U, adjustedColor.V);
+
     /* All Ys are the same. */
-    memset(mCurrentFrame, changeExposure(color->Y), mTotalPixels);
+    memset(mCurrentFrame, changeExposure(adjustedColor.Y), mTotalPixels);
 
     /* Fill U, and V panes. */
     uint8_t* U = mFrameU;
@@ -367,6 +373,7 @@ void EmulatedFakeCameraDevice::drawStripes()
             /* And the blue stripe at the bottom. */
             color = &mBlueYUV;
         }
+        changeWhiteBalance(color->Y, color->U, color->V);
 
         /* All Ys at the row are the same. */
         memset(pY, changeExposure(color->Y), mFrameWidth);

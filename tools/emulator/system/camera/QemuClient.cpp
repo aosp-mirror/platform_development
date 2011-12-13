@@ -503,14 +503,19 @@ status_t CameraQemuClient::queryStop()
 status_t CameraQemuClient::queryFrame(void* vframe,
                                       void* pframe,
                                       size_t vframe_size,
-                                      size_t pframe_size)
+                                      size_t pframe_size,
+                                      float r_scale,
+                                      float g_scale,
+                                      float b_scale,
+                                      float exposure_comp)
 {
     ALOGV("%s", __FUNCTION__);
 
     char query_str[256];
-    snprintf(query_str, sizeof(query_str), "%s video=%d preview=%d",
+    snprintf(query_str, sizeof(query_str), "%s video=%d preview=%d whiteb=%g,%g,%g expcomp=%g",
              mQueryFrame, (vframe && vframe_size) ? vframe_size : 0,
-                           (pframe && pframe_size) ? pframe_size : 0);
+             (pframe && pframe_size) ? pframe_size : 0, r_scale, g_scale, b_scale,
+             exposure_comp);
     QemuQuery query(query_str);
     doQuery(&query);
     const status_t res = query.getCompletionStatus();
