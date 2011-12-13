@@ -14,19 +14,37 @@
      limitations under the License.
 -->
 
-<LinearLayout
-  xmlns:android="http://schemas.android.com/apk/res/android"
-  android:orientation="vertical"
-  android:layout_width="match_parent"
-  android:layout_height="match_parent">
-    <LinearLayout android:layout_width="match_parent" android:id="@+id/linearLayout1"  android:gravity="center" android:layout_height="50dp">
-        <ImageView android:id="@+id/imageView1" android:layout_height="wrap_content" android:layout_width="wrap_content" android:src="@drawable/logo" android:paddingRight="30dp" android:layout_gravity="left" android:layout_weight="0"></ImageView>
-        <View android:layout_height="wrap_content" android:id="@+id/view1" android:layout_width="wrap_content" android:layout_weight="1"></View>
-        <Button android:id="@+id/categorybutton" android:text="one" android:background="@drawable/button_bg" android:layout_height="match_parent" android:layout_weight="0" android:layout_width="120dp" style="@style/CategoryButtonStyle"/>
+<!-- BEGIN_INCLUDE(all) -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <LinearLayout android:layout_width="match_parent" 
+                  android:id="@+id/linearLayout1"  
+                  android:gravity="center"
+                  android:layout_height="50dp">
+        <ImageView android:id="@+id/imageView1" 
+                   android:layout_height="wrap_content"
+                   android:layout_width="wrap_content"
+                   android:src="@drawable/logo"
+                   android:paddingRight="30dp"
+                   android:layout_gravity="left"
+                   android:layout_weight="0" />
+        <View android:layout_height="wrap_content" 
+              android:id="@+id/view1"
+              android:layout_width="wrap_content"
+              android:layout_weight="1" />
+        <Button android:id="@+id/categorybutton"
+                android:background="@drawable/button_bg"
+                android:layout_height="match_parent"
+                android:layout_weight="0"
+                android:layout_width="120dp"
+                style="@style/CategoryButtonStyle"/>
     </LinearLayout>
 
-    <fragment android:id="@+id/headlines" android:layout_height="fill_parent"
+    <fragment android:id="@+id/headlines" 
+              android:layout_height="fill_parent"
               android:name="com.example.android.newsreader.HeadlinesFragment"
               android:layout_width="match_parent" />
-
 </LinearLayout>
+<!-- END_INCLUDE(all) -->
