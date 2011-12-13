@@ -133,19 +133,33 @@ status_t EmulatedCamera::Initialize()
                     CameraParameters::PIXEL_FORMAT_JPEG);
     mParameters.setPictureFormat(CameraParameters::PIXEL_FORMAT_JPEG);
 
-    /* Sets the default exposure compensation support to be disabled. */
-    mParameters.set(CameraParameters::KEY_MAX_EXPOSURE_COMPENSATION, "0");
-    mParameters.set(CameraParameters::KEY_MIN_EXPOSURE_COMPENSATION, "0");
+    /* Set exposure compensation. */
+    mParameters.set(CameraParameters::KEY_MAX_EXPOSURE_COMPENSATION, "6");
+    mParameters.set(CameraParameters::KEY_MIN_EXPOSURE_COMPENSATION, "-6");
+    mParameters.set(CameraParameters::KEY_EXPOSURE_COMPENSATION_STEP, "0.5");
+    mParameters.set(CameraParameters::KEY_EXPOSURE_COMPENSATION, "0");
 
-    /* Sets auto white balance as default. */
-    getCameraDevice()->initializeWhiteBalanceModes(
-            CameraParameters::WHITE_BALANCE_AUTO, 1.0f, 1.0f);
+    /* Sets the white balance modes and the device-dependent scale factors. */
+    char supported_white_balance[1024];
+    snprintf(supported_white_balance, sizeof(supported_white_balance),
+             "%s,%s,%s,%s",
+             CameraParameters::WHITE_BALANCE_AUTO,
+             CameraParameters::WHITE_BALANCE_INCANDESCENT,
+             CameraParameters::WHITE_BALANCE_DAYLIGHT,
+             CameraParameters::WHITE_BALANCE_TWILIGHT);
     mParameters.set(CameraParameters::KEY_SUPPORTED_WHITE_BALANCE,
-                    CameraParameters::WHITE_BALANCE_AUTO);
+                    supported_white_balance);
     mParameters.set(CameraParameters::KEY_WHITE_BALANCE,
                     CameraParameters::WHITE_BALANCE_AUTO);
-    getCameraDevice()->setWhiteBalanceMode(
-            mParameters.get(CameraParameters::KEY_WHITE_BALANCE));
+    getCameraDevice()->initializeWhiteBalanceModes(
+            CameraParameters::WHITE_BALANCE_AUTO, 1.0f, 1.0f);
+    getCameraDevice()->initializeWhiteBalanceModes(
+            CameraParameters::WHITE_BALANCE_INCANDESCENT, 1.38f, 0.60f);
+    getCameraDevice()->initializeWhiteBalanceModes(
+            CameraParameters::WHITE_BALANCE_DAYLIGHT, 1.09f, 0.92f);
+    getCameraDevice()->initializeWhiteBalanceModes(
+            CameraParameters::WHITE_BALANCE_TWILIGHT, 0.92f, 1.22f);
+    getCameraDevice()->setWhiteBalanceMode(CameraParameters::WHITE_BALANCE_AUTO);
 
     /* Not supported features
      */

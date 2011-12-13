@@ -244,7 +244,11 @@ bool EmulatedQemuCameraDevice::inWorkerThread()
     /* Query frames from the service. */
     status_t query_res = mQemuClient.queryFrame(mCurrentFrame, mPreviewFrame,
                                                  mFrameBufferSize,
-                                                 mTotalPixels * 4);
+                                                 mTotalPixels * 4,
+                                                 mWhiteBalanceScale[0],
+                                                 mWhiteBalanceScale[1],
+                                                 mWhiteBalanceScale[2],
+                                                 mExposureCompensation);
     if (query_res == NO_ERROR) {
         /* Timestamp the current frame, and notify the camera HAL. */
         mCurFrameTimestamp = systemTime(SYSTEM_TIME_MONOTONIC);
