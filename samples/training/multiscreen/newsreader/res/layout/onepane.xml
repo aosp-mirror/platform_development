@@ -14,14 +14,15 @@
      limitations under the License.
 -->
 
-<LinearLayout
-  xmlns:android="http://schemas.android.com/apk/res/android"
-  android:orientation="vertical"
-  android:layout_width="match_parent"
-  android:layout_height="match_parent">
+<!-- BEGIN_INCLUDE(all) -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
 
-  <fragment android:id="@+id/headlines" android:layout_height="fill_parent"
-    android:name="com.example.android.newsreader.HeadlinesFragment"
-    android:layout_width="match_parent" />
-
+    <fragment android:id="@+id/headlines"
+              android:layout_height="fill_parent"
+              android:name="com.example.android.newsreader.HeadlinesFragment"
+              android:layout_width="match_parent" />
 </LinearLayout>
+<!-- END_INCLUDE(all) -->
