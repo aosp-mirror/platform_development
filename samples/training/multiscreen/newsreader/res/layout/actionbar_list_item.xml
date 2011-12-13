@@ -14,11 +14,11 @@
      limitations under the License.
 -->
 
-<TextView
-  xmlns:android="http://schemas.android.com/apk/res/android"
-  android:layout_width="match_parent"
-  android:layout_height="wrap_content"
-  android:textSize="14sp"
-  android:textColor="#01511a"
-  android:padding="5dp">
-</TextView>
+<!-- BEGIN_INCLUDE(all) -->
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:textSize="14sp"
+    android:textColor="#01511a"
+    android:padding="5dp" />
+<!-- END_INCLUDE(all) -->
