@@ -47,11 +47,8 @@ public class ArticleActivity extends FragmentActivity {
         mCatIndex = getIntent().getExtras().getInt("catIndex", 0);
         mArtIndex = getIntent().getExtras().getInt("artIndex", 0);
 
-        // If we are in two-pane layout mode and the device is in landscape orientation, we are
-        // no longer necessary
-        if (getResources().getString(R.string.has_two_panes).equals("true") &&
-                    getResources().getConfiguration().orientation ==
-                    Configuration.ORIENTATION_LANDSCAPE) {
+        // If we are in two-pane layout mode, this activity is no longer necessary
+        if (getResources().getBoolean(R.bool.has_two_panes)) {
             finish();
             return;
         }
