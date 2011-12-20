@@ -83,7 +83,7 @@ EmulatedCameraFactory::EmulatedCameraFactory()
             LOGE("%s: Unable to instantiate fake camera class", __FUNCTION__);
         }
     } else {
-        LOGD("Fake camera emulation is disabled.");
+        ALOGD("Fake camera emulation is disabled.");
     }
 
     ALOGV("%d cameras are being emulated. Fake camera ID is %d",

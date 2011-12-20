@@ -27,7 +27,7 @@
 
 #define LOG_QUERIES 0
 #if LOG_QUERIES
-#define LOGQ(...)   LOGD(__VA_ARGS__)
+#define LOGQ(...)   ALOGD(__VA_ARGS__)
 #else
 #define LOGQ(...)   (void(0))
 
@@ -405,7 +405,7 @@ status_t FactoryQemuClient::listCameras(char** list)
     *list = (char*)malloc(query.mReplyDataSize);
     if (*list != NULL) {
         memcpy(*list, query.mReplyData, query.mReplyDataSize);
-        LOGD("Emulated camera list: %s", *list);
+        ALOGD("Emulated camera list: %s", *list);
         return NO_ERROR;
     } else {
         LOGE("%s: Unable to allocate %d bytes",

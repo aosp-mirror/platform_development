@@ -399,26 +399,26 @@ int EmulatedFakeCameraDevice::rotateFrame()
             mCurrentFrameType = 0;
         }
         if (mCurrentFrameType == 2) {
-            LOGD("********** Rotated to the SOLID COLOR frame **********");
+            ALOGD("********** Rotated to the SOLID COLOR frame **********");
             /* Solid color: lets rotate color too. */
             if (mCurrentColor == &mWhiteYUV) {
-                LOGD("----- Painting a solid RED frame -----");
+                ALOGD("----- Painting a solid RED frame -----");
                 mCurrentColor = &mRedYUV;
             } else if (mCurrentColor == &mRedYUV) {
-                LOGD("----- Painting a solid GREEN frame -----");
+                ALOGD("----- Painting a solid GREEN frame -----");
                 mCurrentColor = &mGreenYUV;
             } else if (mCurrentColor == &mGreenYUV) {
-                LOGD("----- Painting a solid BLUE frame -----");
+                ALOGD("----- Painting a solid BLUE frame -----");
                 mCurrentColor = &mBlueYUV;
             } else {
                 /* Back to white. */
-                LOGD("----- Painting a solid WHITE frame -----");
+                ALOGD("----- Painting a solid WHITE frame -----");
                 mCurrentColor = &mWhiteYUV;
             }
         } else if (mCurrentFrameType == 0) {
-            LOGD("********** Rotated to the CHECKERBOARD frame **********");
+            ALOGD("********** Rotated to the CHECKERBOARD frame **********");
         } else if (mCurrentFrameType == 1) {
-            LOGD("********** Rotated to the STRIPED frame **********");
+            ALOGD("********** Rotated to the STRIPED frame **********");
         }
     }
 

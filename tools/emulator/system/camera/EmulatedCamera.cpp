@@ -391,7 +391,7 @@ status_t EmulatedCamera::takePicture()
      */
 
     /* Start camera device for the picture frame. */
-    LOGD("Starting camera for picture: %.4s(%s)[%dx%d]",
+    ALOGD("Starting camera for picture: %.4s(%s)[%dx%d]",
          reinterpret_cast<const char*>(&org_fmt), pix_fmt, width, height);
     res = camera_dev->startDevice(width, height, org_fmt);
     if (res != NO_ERROR) {
@@ -608,7 +608,7 @@ status_t EmulatedCamera::doStartPreview()
         mPreviewWindow.stopPreview();
         return EINVAL;
     }
-    LOGD("Starting camera: %dx%d -> %.4s(%s)",
+    ALOGD("Starting camera: %dx%d -> %.4s(%s)",
          width, height, reinterpret_cast<const char*>(&org_fmt), pix_fmt);
     res = camera_dev->startDevice(width, height, org_fmt);
     if (res != NO_ERROR) {
@@ -1029,10 +1029,10 @@ static void PrintParamDiff(const CameraParameters& current,
             const char* in_current = current.get(tmp);
             if (in_current != NULL) {
                 if (strcmp(in_current, val)) {
-                    LOGD("=== Value changed: %s: %s -> %s", tmp, in_current, val);
+                    ALOGD("=== Value changed: %s: %s -> %s", tmp, in_current, val);
                 }
             } else {
-                LOGD("+++ New parameter: %s=%s", tmp, val);
+                ALOGD("+++ New parameter: %s=%s", tmp, val);
             }
         } else {
             LOGW("No value separator in %s", tmp);

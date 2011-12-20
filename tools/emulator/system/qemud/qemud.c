@@ -87,7 +87,7 @@
 #if DEBUG
 #  define LOG_TAG  "qemud"
 #  include <cutils/log.h>
-#  define  D(...)   LOGD(__VA_ARGS__)
+#  define  D(...)   ALOGD(__VA_ARGS__)
 #else
 #  define  D(...)  ((void)0)
 #  define  T(...)  ((void)0)

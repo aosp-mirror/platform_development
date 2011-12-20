@@ -20,7 +20,7 @@
 #    include <cutils/log.h>
 #    define ERR(...)    LOGE(__VA_ARGS__)
 #    ifdef EMUGL_DEBUG
-#        define DBG(...)    LOGD(__VA_ARGS__)
+#        define DBG(...)    ALOGD(__VA_ARGS__)
 #    else
 #        define DBG(...)    ((void)0)
 #    endif

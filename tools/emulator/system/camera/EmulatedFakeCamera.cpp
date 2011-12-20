@@ -55,7 +55,7 @@ status_t EmulatedFakeCamera::Initialize()
     const char* facing = prop;
 
     mParameters.set(EmulatedCamera::FACING_KEY, facing);
-    LOGD("%s: Fake camera is facing %s", __FUNCTION__, facing);
+    ALOGD("%s: Fake camera is facing %s", __FUNCTION__, facing);
 
     mParameters.set(EmulatedCamera::ORIENTATION_KEY,
                     gEmulatedCameraFactory.getFakeCameraOrientation());
