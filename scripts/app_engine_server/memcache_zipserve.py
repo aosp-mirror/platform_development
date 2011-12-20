@@ -337,6 +337,10 @@ class MemcachedZipHandler(webapp.RequestHandler):
       self.response.headers['Content-Type'] = 'application/octet-stream'
       self.SetCachingHeaders(mustRevalidate)
       self.response.out.write(resp_data)
+    elif name.endswith('.svg'):
+      self.response.headers['Content-Type'] = 'image/svg+xml'
+      self.SetCachingHeaders(mustRevalidate)
+      self.response.out.write(resp_data)
     return True
 
   def GetFromStore(self, file_path):
