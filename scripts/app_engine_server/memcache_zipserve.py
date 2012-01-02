@@ -341,6 +341,14 @@ class MemcachedZipHandler(webapp.RequestHandler):
       self.response.headers['Content-Type'] = 'image/svg+xml'
       self.SetCachingHeaders(mustRevalidate)
       self.response.out.write(resp_data)
+    elif name.endswith('.mp4'):
+      self.response.headers['Content-Type'] = 'video/mp4'
+      self.SetCachingHeaders(mustRevalidate)
+      self.response.out.write(resp_data)
+    elif name.endswith('.webm'):
+      self.response.headers['Content-Type'] = 'video/webm'
+      self.SetCachingHeaders(mustRevalidate)
+      self.response.out.write(resp_data)
     return True
 
   def GetFromStore(self, file_path):
