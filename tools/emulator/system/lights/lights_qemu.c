@@ -44,7 +44,7 @@
 /* Set to 1 to enable debug messages to the log */
 #define DEBUG 0
 #if DEBUG
-# define D(...) LOGD(__VA_ARGS__)
+# define D(...) ALOGD(__VA_ARGS__)
 #else
 # define D(...) do{}while(0)
 #endif

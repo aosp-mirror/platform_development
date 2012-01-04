@@ -39,7 +39,7 @@
 #include <hardware/sensors.h>
 
 #if 0
-#define  D(...)  LOGD(__VA_ARGS__)
+#define  D(...)  ALOGD(__VA_ARGS__)
 #else
 #define  D(...)  ((void)0)
 #endif
@@ -402,7 +402,7 @@ data__close(struct hw_device_t *dev)
     SensorPoll* data = (SensorPoll*)dev;
     if (data) {
         if (data->events_fd >= 0) {
-            //LOGD("(device close) about to close fd=%d", data->events_fd);
+            //ALOGD("(device close) about to close fd=%d", data->events_fd);
             close(data->events_fd);
         }
         free(data);

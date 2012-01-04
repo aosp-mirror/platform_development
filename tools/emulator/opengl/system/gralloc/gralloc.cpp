@@ -35,13 +35,13 @@
 #define DEBUG  0
 
 #if DEBUG >= 1
-#  define D(...)   LOGD(__VA_ARGS__)
+#  define D(...)   ALOGD(__VA_ARGS__)
 #else
 #  define D(...)   ((void)0)
 #endif
 
 #if DEBUG >= 2
-#  define DD(...)  LOGD(__VA_ARGS__)
+#  define DD(...)  ALOGD(__VA_ARGS__)
 #else
 #  define DD(...)  ((void)0)
 #endif
@@ -805,7 +805,7 @@ fallback_init(void)
     if (atoi(prop) > 0) {
         return;
     }
-    LOGD("Emulator without GPU emulation detected.");
+    ALOGD("Emulator without GPU emulation detected.");
     module = dlopen("/system/lib/hw/gralloc.default.so", RTLD_LAZY|RTLD_LOCAL);
     if (module != NULL) {
         sFallback = reinterpret_cast<gralloc_module_t*>(dlsym(module, HAL_MODULE_INFO_SYM_AS_STR));
