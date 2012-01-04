@@ -24,7 +24,7 @@
 static jint
 add(JNIEnv *env, jobject thiz, jint a, jint b) {
 int result = a + b;
-    LOGI("%d + %d = %d", a, b, result);
+    ALOGI("%d + %d = %d", a, b, result);
     return result;
 }
 
@@ -89,7 +89,7 @@ jint JNI_OnLoad(JavaVM* vm, void* reserved)
     jint result = -1;
     JNIEnv* env = NULL;
     
-    LOGI("JNI_OnLoad");
+    ALOGI("JNI_OnLoad");
 
     if (vm->GetEnv(&uenv.venv, JNI_VERSION_1_4) != JNI_OK) {
         LOGE("ERROR: GetEnv failed");
