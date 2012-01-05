@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
 /*
-* Copyright (C) 2008 The Android Open Source Project
+* Copyright (C) 2012 The Android Open Source Project
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -21,7 +21,6 @@
     <!-- General -->
     <skip />
     <!--slider label -->
-    <string name="blur_description">Blur Radius</string>
     <string name="in_white">In White</string>
     <string name="out_white">Out White</string>
     <string name="in_black">In Black</string>
