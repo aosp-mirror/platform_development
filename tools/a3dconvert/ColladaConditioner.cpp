@@ -204,15 +204,27 @@ bool ColladaConditioner::triangulate(const char *inputFile) {
 
 bool ColladaConditioner::stripGeometry(DAE *dae) {
     bool convertSuceeded = true;
-    int geometryElementCount = (int)(dae->getDatabase()->getElementCount(NULL,
-                                                                         "library_geometries" ));
 
+    int error = 0;
+
+    // How many geometry elements are there?
+    int geometryElementCount = (int)(dae->getDatabase()->getElementCount(NULL, "geometry" ));
     for(int currentGeometry = 0; currentGeometry < geometryElementCount; currentGeometry++) {
 
+        // Find the next geometry element
+        domGeometry *thisGeometry = 0;
         daeElement * element = 0;
-        int error = dae->getDatabase()->getElement(&element, currentGeometry,
-                                                   NULL, "library_geometries");
-        daeBool removed = daeElement::removeFromParent(element);
+        error = dae->getDatabase()->getElement(&element, currentGeometry, NULL, "geometry");
+        thisGeometry = (domGeometry *) element;
+
+        // Get the mesh out of the geometry
+        domMesh *thisMesh = thisGeometry->getMesh();
+
+        if (thisMesh == NULL){
+            continue;
+        }
+
+        daeBool removed = daeElement::removeFromParent(thisMesh);
         convertSuceeded = convertSuceeded && removed;
     }
     return convertSuceeded;
