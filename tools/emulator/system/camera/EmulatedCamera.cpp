@@ -381,7 +381,7 @@ status_t EmulatedCamera::takePicture()
      * enabled. */
     EmulatedCameraDevice* const camera_dev = getCameraDevice();
     if (camera_dev->isStarted()) {
-        LOGW("%s: Camera device is started", __FUNCTION__);
+        ALOGW("%s: Camera device is started", __FUNCTION__);
         camera_dev->stopDeliveringFrames();
         camera_dev->stopDevice();
     }
@@ -1035,7 +1035,7 @@ static void PrintParamDiff(const CameraParameters& current,
                 ALOGD("+++ New parameter: %s=%s", tmp, val);
             }
         } else {
-            LOGW("No value separator in %s", tmp);
+            ALOGW("No value separator in %s", tmp);
         }
         wrk = next + 1;
         next = strchr(wrk, ';');

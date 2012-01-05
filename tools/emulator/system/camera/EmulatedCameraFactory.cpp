@@ -296,7 +296,7 @@ void EmulatedCameraFactory::createQemuCameras()
                      __FUNCTION__);
             }
         } else {
-            LOGW("%s: Bad camera information: %s", __FUNCTION__, cur_entry);
+            ALOGW("%s: Bad camera information: %s", __FUNCTION__, cur_entry);
         }
 
         cur_entry = next_entry;

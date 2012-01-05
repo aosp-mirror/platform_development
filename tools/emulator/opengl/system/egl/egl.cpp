@@ -819,14 +819,14 @@ EGLBoolean eglReleaseThread()
 EGLSurface eglCreatePbufferFromClientBuffer(EGLDisplay dpy, EGLenum buftype, EGLClientBuffer buffer, EGLConfig config, const EGLint *attrib_list)
 {
     //TODO
-    LOGW("%s not implemented", __FUNCTION__);
+    ALOGW("%s not implemented", __FUNCTION__);
     return 0;
 }
 
 EGLBoolean eglSurfaceAttrib(EGLDisplay dpy, EGLSurface surface, EGLint attribute, EGLint value)
 {
     //TODO
-    LOGW("%s not implemented", __FUNCTION__);
+    ALOGW("%s not implemented", __FUNCTION__);
     return 0;
 }
 
@@ -864,7 +864,7 @@ EGLBoolean eglBindTexImage(EGLDisplay dpy, EGLSurface eglSurface, EGLint buffer)
 EGLBoolean eglReleaseTexImage(EGLDisplay dpy, EGLSurface surface, EGLint buffer)
 {
     //TODO
-    LOGW("%s not implemented", __FUNCTION__);
+    ALOGW("%s not implemented", __FUNCTION__);
     return 0;
 }
 

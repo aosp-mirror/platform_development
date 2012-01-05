@@ -65,7 +65,7 @@ EmulatedCameraDevice::~EmulatedCameraDevice()
 status_t EmulatedCameraDevice::Initialize()
 {
     if (isInitialized()) {
-        LOGW("%s: Emulated camera device is already initialized: mState = %d",
+        ALOGW("%s: Emulated camera device is already initialized: mState = %d",
              __FUNCTION__, mState);
         return NO_ERROR;
     }
@@ -102,7 +102,7 @@ status_t EmulatedCameraDevice::stopDeliveringFrames()
     ALOGV("%s", __FUNCTION__);
 
     if (!isStarted()) {
-        LOGW("%s: Device is not started", __FUNCTION__);
+        ALOGW("%s: Device is not started", __FUNCTION__);
         return NO_ERROR;
     }
 
@@ -115,7 +115,7 @@ void EmulatedCameraDevice::setExposureCompensation(const float ev) {
     ALOGV("%s", __FUNCTION__);
 
     if (!isStarted()) {
-        LOGW("%s: Fake camera device is not started.", __FUNCTION__);
+        ALOGW("%s: Fake camera device is not started.", __FUNCTION__);
     }
 
     mExposureCompensation = std::pow(2.0f, ev / GAMMA_CORRECTION);
@@ -287,7 +287,7 @@ status_t EmulatedCameraDevice::WorkerThread::readyToRun()
 {
     ALOGV("Starting emulated camera device worker thread...");
 
-    LOGW_IF(mThreadControl >= 0 || mControlFD >= 0,
+    ALOGW_IF(mThreadControl >= 0 || mControlFD >= 0,
             "%s: Thread control FDs are opened", __FUNCTION__);
     /* Create a pair of FDs that would be used to control the thread. */
     int thread_fds[2];
@@ -388,7 +388,7 @@ EmulatedCameraDevice::WorkerThread::Select(int fd, int timeout)
         }
     } else {
         /* Must be an FD. */
-        LOGW_IF(fd < 0 || !FD_ISSET(fd, fds), "%s: Undefined 'select' result",
+        ALOGW_IF(fd < 0 || !FD_ISSET(fd, fds), "%s: Undefined 'select' result",
                 __FUNCTION__);
         return READY;
     }
