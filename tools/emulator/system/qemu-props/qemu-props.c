@@ -28,7 +28,7 @@
 
 #if DEBUG
 #  include <cutils/log.h>
-#  define  DD(...)    LOGI(__VA_ARGS__)
+#  define  DD(...)    ALOGI(__VA_ARGS__)
 #else
 #  define  DD(...)    ((void)0)
 #endif
