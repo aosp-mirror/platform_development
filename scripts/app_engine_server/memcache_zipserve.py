@@ -349,6 +349,10 @@ class MemcachedZipHandler(webapp.RequestHandler):
       self.response.headers['Content-Type'] = 'video/webm'
       self.SetCachingHeaders(mustRevalidate)
       self.response.out.write(resp_data)
+    elif name.endswith('.ogv'):
+      self.response.headers['Content-Type'] = 'video/ogg'
+      self.SetCachingHeaders(mustRevalidate)
+      self.response.out.write(resp_data)
     return True
 
   def GetFromStore(self, file_path):
