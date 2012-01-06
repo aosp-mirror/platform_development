@@ -94,7 +94,7 @@ status_t EmulatedQemuCamera::Initialize(const char* device_name,
     /* Width and height are separated with 'x' */
     char* sep = strchr(first_dim, 'x');
     if (sep == NULL) {
-        LOGE("%s: Invalid first dimension format in %s",
+        ALOGE("%s: Invalid first dimension format in %s",
              __FUNCTION__, frame_dims);
         return EINVAL;
     }

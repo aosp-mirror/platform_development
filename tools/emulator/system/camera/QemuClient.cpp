@@ -86,7 +86,7 @@ status_t QemuQuery::createQuery(const char* name, const char* param)
 
     /* Query name cannot be NULL or an empty string. */
     if (name == NULL || *name == '\0') {
-        LOGE("%s: NULL or an empty string is passed as query name.",
+        ALOGE("%s: NULL or an empty string is passed as query name.",
              __FUNCTION__);
         mQueryDeliveryStatus = EINVAL;
         return EINVAL;
@@ -100,7 +100,7 @@ status_t QemuQuery::createQuery(const char* name, const char* param)
         /* Preallocated buffer was too small. Allocate a bigger query buffer. */
         mQuery = new char[required];
         if (mQuery == NULL) {
-            LOGE("%s: Unable to allocate %d bytes for query buffer",
+            ALOGE("%s: Unable to allocate %d bytes for query buffer",
                  __FUNCTION__, required);
             mQueryDeliveryStatus = ENOMEM;
             return ENOMEM;
@@ -131,7 +131,7 @@ status_t QemuQuery::completeQuery(status_t status)
      * with a ':'. If there is no more data in the reply, the prefix will be
      * zero-terminated, and the terminator will be inculded in the reply. */
     if (mReplyBuffer == NULL || mReplySize < 3) {
-        LOGE("%s: Invalid reply to the query", __FUNCTION__);
+        ALOGE("%s: Invalid reply to the query", __FUNCTION__);
         mQueryDeliveryStatus = EINVAL;
         return EINVAL;
     }
@@ -142,7 +142,7 @@ status_t QemuQuery::completeQuery(status_t status)
     } else if (!memcmp(mReplyBuffer, "ko", 2)) {
         mReplyStatus = 0;
     } else {
-        LOGE("%s: Invalid query reply: '%s'", __FUNCTION__, mReplyBuffer);
+        ALOGE("%s: Invalid query reply: '%s'", __FUNCTION__, mReplyBuffer);
         mQueryDeliveryStatus = EINVAL;
         return EINVAL;
     }
@@ -152,7 +152,7 @@ status_t QemuQuery::completeQuery(status_t status)
         /* There are extra data. Make sure they are separated from the status
          * with a ':' */
         if (mReplyBuffer[2] != ':') {
-            LOGE("%s: Invalid query reply: '%s'", __FUNCTION__, mReplyBuffer);
+            ALOGE("%s: Invalid query reply: '%s'", __FUNCTION__, mReplyBuffer);
             mQueryDeliveryStatus = EINVAL;
             return EINVAL;
         }
@@ -162,7 +162,7 @@ status_t QemuQuery::completeQuery(status_t status)
         /* Make sure reply buffer containing just 'ok'/'ko' ends with
          * zero-terminator. */
         if (mReplyBuffer[2] != '\0') {
-            LOGE("%s: Invalid query reply: '%s'", __FUNCTION__, mReplyBuffer);
+            ALOGE("%s: Invalid query reply: '%s'", __FUNCTION__, mReplyBuffer);
             mQueryDeliveryStatus = EINVAL;
             return EINVAL;
         }
@@ -216,7 +216,7 @@ status_t QemuClient::connectClient(const char* param)
 
     /* Make sure that client is not connected already. */
     if (mPipeFD >= 0) {
-        LOGE("%s: Qemu client is already connected", __FUNCTION__);
+        ALOGE("%s: Qemu client is already connected", __FUNCTION__);
         return EINVAL;
     }
 
@@ -237,7 +237,7 @@ status_t QemuClient::connectClient(const char* param)
         delete[] connection_str;
     }
     if (mPipeFD < 0) {
-        LOGE("%s: Unable to connect to the camera service '%s': %s",
+        ALOGE("%s: Unable to connect to the camera service '%s': %s",
              __FUNCTION__, param ? param : "Factory", strerror(errno));
         return errno ? errno : EINVAL;
     }
@@ -258,7 +258,7 @@ void QemuClient::disconnectClient()
 status_t QemuClient::sendMessage(const void* data, size_t data_size)
 {
     if (mPipeFD < 0) {
-        LOGE("%s: Qemu client is not connected", __FUNCTION__);
+        ALOGE("%s: Qemu client is not connected", __FUNCTION__);
         return EINVAL;
     }
 
@@ -270,7 +270,7 @@ status_t QemuClient::sendMessage(const void* data, size_t data_size)
     if (written == data_size) {
         return NO_ERROR;
     } else {
-        LOGE("%s: Error sending data via qemu pipe: '%s'",
+        ALOGE("%s: Error sending data via qemu pipe: '%s'",
              __FUNCTION__, strerror(errno));
         return errno ? errno : EIO;
     }
@@ -282,7 +282,7 @@ status_t QemuClient::receiveMessage(void** data, size_t* data_size)
     *data_size = 0;
 
     if (mPipeFD < 0) {
-        LOGE("%s: Qemu client is not connected", __FUNCTION__);
+        ALOGE("%s: Qemu client is not connected", __FUNCTION__);
         return EINVAL;
     }
 
@@ -294,7 +294,7 @@ status_t QemuClient::receiveMessage(void** data, size_t* data_size)
     char payload_size_str[9];
     int rd_res = qemud_fd_read(mPipeFD, payload_size_str, 8);
     if (rd_res != 8) {
-        LOGE("%s: Unable to obtain payload size: %s",
+        ALOGE("%s: Unable to obtain payload size: %s",
              __FUNCTION__, strerror(errno));
         return errno ? errno : EIO;
     }
@@ -304,14 +304,14 @@ status_t QemuClient::receiveMessage(void** data, size_t* data_size)
     payload_size_str[8] = '\0';
     payload_size = strtol(payload_size_str, NULL, 16);
     if (errno) {
-        LOGE("%s: Invalid payload size '%s'", __FUNCTION__, payload_size_str);
+        ALOGE("%s: Invalid payload size '%s'", __FUNCTION__, payload_size_str);
         return EIO;
     }
 
     /* Allocate payload data buffer, and read the payload there. */
     *data = malloc(payload_size);
     if (*data == NULL) {
-        LOGE("%s: Unable to allocate %d bytes payload buffer",
+        ALOGE("%s: Unable to allocate %d bytes payload buffer",
              __FUNCTION__, payload_size);
         return ENOMEM;
     }
@@ -320,7 +320,7 @@ status_t QemuClient::receiveMessage(void** data, size_t* data_size)
         *data_size = payload_size;
         return NO_ERROR;
     } else {
-        LOGE("%s: Read size %d doesnt match expected payload size %d: %s",
+        ALOGE("%s: Read size %d doesnt match expected payload size %d: %s",
              __FUNCTION__, rd_res, payload_size, strerror(errno));
         free(*data);
         *data = NULL;
@@ -332,7 +332,7 @@ status_t QemuClient::doQuery(QemuQuery* query)
 {
     /* Make sure that query has been successfuly constructed. */
     if (query->mQueryDeliveryStatus != NO_ERROR) {
-        LOGE("%s: Query is invalid", __FUNCTION__);
+        ALOGE("%s: Query is invalid", __FUNCTION__);
         return query->mQueryDeliveryStatus;
     }
 
@@ -348,17 +348,17 @@ status_t QemuClient::doQuery(QemuQuery* query)
             LOGQ("Response to query '%s': Status = '%.2s', %d bytes in response",
                  query->mQuery, query->mReplyBuffer, query->mReplySize);
         } else {
-            LOGE("%s Response to query '%s' has failed: %s",
+            ALOGE("%s Response to query '%s' has failed: %s",
                  __FUNCTION__, query->mQuery, strerror(res));
         }
     } else {
-        LOGE("%s: Send query '%s' failed: %s",
+        ALOGE("%s: Send query '%s' failed: %s",
              __FUNCTION__, query->mQuery, strerror(res));
     }
 
     /* Complete the query, and return its completion handling status. */
     const status_t res1 = query->completeQuery(res);
-    LOGE_IF(res1 != NO_ERROR && res1 != res,
+    ALOGE_IF(res1 != NO_ERROR && res1 != res,
             "%s: Error %d in query '%s' completion",
             __FUNCTION__, res1, query->mQuery);
     return res1;
@@ -390,14 +390,14 @@ status_t FactoryQemuClient::listCameras(char** list)
 
     QemuQuery query(mQueryList);
     if (doQuery(&query) || !query.isQuerySucceeded()) {
-        LOGE("%s: List cameras query failed: %s", __FUNCTION__,
+        ALOGE("%s: List cameras query failed: %s", __FUNCTION__,
              query.mReplyData ? query.mReplyData : "No error message");
         return query.getCompletionStatus();
     }
 
     /* Make sure there is a list returned. */
     if (query.mReplyDataSize == 0) {
-        LOGE("%s: No camera list is returned.", __FUNCTION__);
+        ALOGE("%s: No camera list is returned.", __FUNCTION__);
         return EINVAL;
     }
 
@@ -408,7 +408,7 @@ status_t FactoryQemuClient::listCameras(char** list)
         ALOGD("Emulated camera list: %s", *list);
         return NO_ERROR;
     } else {
-        LOGE("%s: Unable to allocate %d bytes",
+        ALOGE("%s: Unable to allocate %d bytes",
              __FUNCTION__, query.mReplyDataSize);
         return ENOMEM;
     }
@@ -450,7 +450,7 @@ status_t CameraQemuClient::queryConnect()
     QemuQuery query(mQueryConnect);
     doQuery(&query);
     const status_t res = query.getCompletionStatus();
-    LOGE_IF(res != NO_ERROR, "%s: Query failed: %s",
+    ALOGE_IF(res != NO_ERROR, "%s: Query failed: %s",
             __FUNCTION__, query.mReplyData ? query.mReplyData :
                                              "No error message");
     return res;
@@ -463,7 +463,7 @@ status_t CameraQemuClient::queryDisconnect()
     QemuQuery query(mQueryDisconnect);
     doQuery(&query);
     const status_t res = query.getCompletionStatus();
-    LOGE_IF(res != NO_ERROR, "%s: Query failed: %s",
+    ALOGE_IF(res != NO_ERROR, "%s: Query failed: %s",
             __FUNCTION__, query.mReplyData ? query.mReplyData :
                                              "No error message");
     return res;
@@ -481,7 +481,7 @@ status_t CameraQemuClient::queryStart(uint32_t pixel_format,
     QemuQuery query(query_str);
     doQuery(&query);
     const status_t res = query.getCompletionStatus();
-    LOGE_IF(res != NO_ERROR, "%s: Query failed: %s",
+    ALOGE_IF(res != NO_ERROR, "%s: Query failed: %s",
             __FUNCTION__, query.mReplyData ? query.mReplyData :
                                              "No error message");
     return res;
@@ -494,7 +494,7 @@ status_t CameraQemuClient::queryStop()
     QemuQuery query(mQueryStop);
     doQuery(&query);
     const status_t res = query.getCompletionStatus();
-    LOGE_IF(res != NO_ERROR, "%s: Query failed: %s",
+    ALOGE_IF(res != NO_ERROR, "%s: Query failed: %s",
             __FUNCTION__, query.mReplyData ? query.mReplyData :
                                              "No error message");
     return res;
@@ -520,7 +520,7 @@ status_t CameraQemuClient::queryFrame(void* vframe,
     doQuery(&query);
     const status_t res = query.getCompletionStatus();
     if( res != NO_ERROR) {
-        LOGE("%s: Query failed: %s",
+        ALOGE("%s: Query failed: %s",
              __FUNCTION__, query.mReplyData ? query.mReplyData :
                                               "No error message");
         return res;
@@ -536,7 +536,7 @@ status_t CameraQemuClient::queryFrame(void* vframe,
             memcpy(vframe, frame, vframe_size);
             cur_offset += vframe_size;
         } else {
-            LOGE("%s: Reply %d bytes is to small to contain %d bytes video frame",
+            ALOGE("%s: Reply %d bytes is to small to contain %d bytes video frame",
                  __FUNCTION__, query.mReplyDataSize - cur_offset, vframe_size);
             return EINVAL;
         }
@@ -547,7 +547,7 @@ status_t CameraQemuClient::queryFrame(void* vframe,
             memcpy(pframe, frame + cur_offset, pframe_size);
             cur_offset += pframe_size;
         } else {
-            LOGE("%s: Reply %d bytes is to small to contain %d bytes preview frame",
+            ALOGE("%s: Reply %d bytes is to small to contain %d bytes preview frame",
                  __FUNCTION__, query.mReplyDataSize - cur_offset, pframe_size);
             return EINVAL;
         }

@@ -462,7 +462,8 @@ int ApiGen::genEncoderImpl(const std::string &filename)
     size_t n = size();
 
     // unsupport printout
-    fprintf(fp, "static void enc_unsupported()\n{\n\tLOGE(\"Function is unsupported\\n\");\n}\n\n");
+    fprintf(fp,
+            "static void enc_unsupported()\n{\n\tALOGE(\"Function is unsupported\\n\");\n}\n\n");
 
     // entry points;
     for (size_t i = 0; i < n; i++) {

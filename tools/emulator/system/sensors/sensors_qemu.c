@@ -44,7 +44,7 @@
 #define  D(...)  ((void)0)
 #endif
 
-#define  E(...)  LOGE(__VA_ARGS__)
+#define  E(...)  ALOGE(__VA_ARGS__)
 
 #include <hardware/qemud.h>
 
@@ -281,7 +281,7 @@ pick_sensor(SensorPoll*       data,
             return i;
         }
     }
-    LOGE("No sensor to return!!! pendingSensors=%08x", data->pendingSensors);
+    ALOGE("No sensor to return!!! pendingSensors=%08x", data->pendingSensors);
     // we may end-up in a busy loop, slow things down, just in case.
     usleep(100000);
     return -EINVAL;

@@ -65,12 +65,12 @@ const char *  eglStrError(EGLint err)
 
 #define setErrorReturn(error, retVal)     \
     {                                                \
-        LOGE("tid %d: %s(%d): error 0x%x (%s)", gettid(), __FUNCTION__, __LINE__, error, eglStrError(error));     \
+        ALOGE("tid %d: %s(%d): error 0x%x (%s)", gettid(), __FUNCTION__, __LINE__, error, eglStrError(error));     \
         return setErrorFunc(error, retVal);            \
     }
 
 #define RETURN_ERROR(ret,err)           \
-    LOGE("tid %d: %s(%d): error 0x%x (%s)", gettid(), __FUNCTION__, __LINE__, err, eglStrError(err));    \
+    ALOGE("tid %d: %s(%d): error 0x%x (%s)", gettid(), __FUNCTION__, __LINE__, err, eglStrError(err));    \
     getEGLThreadInfo()->eglError = err;    \
     return ret;
 
@@ -107,12 +107,12 @@ const char *  eglStrError(EGLint err)
 #define DEFINE_AND_VALIDATE_HOST_CONNECTION(ret) \
     HostConnection *hostCon = HostConnection::get(); \
     if (!hostCon) { \
-        LOGE("egl: Failed to get host connection\n"); \
+        ALOGE("egl: Failed to get host connection\n"); \
         return ret; \
     } \
     renderControl_encoder_context_t *rcEnc = hostCon->rcEncoder(); \
     if (!rcEnc) { \
-        LOGE("egl: Failed to get renderControl encoder context\n"); \
+        ALOGE("egl: Failed to get renderControl encoder context\n"); \
         return ret; \
     }
 
@@ -282,7 +282,7 @@ EGLBoolean egl_window_surface_t::rcCreate()
     DEFINE_AND_VALIDATE_HOST_CONNECTION(EGL_FALSE);
     rcSurface = rcEnc->rcCreateWindowSurface(rcEnc, (uint32_t)config, getWidth(), getHeight());
     if (!rcSurface) {
-        LOGE("rcCreateWindowSurface returned 0");
+        ALOGE("rcCreateWindowSurface returned 0");
         return EGL_FALSE;
     }
     valid = EGL_TRUE;
@@ -292,7 +292,7 @@ EGLBoolean egl_window_surface_t::rcCreate()
 EGLBoolean egl_window_surface_t::rcDestroy()
 {
     if (!rcSurface) {
-        LOGE("rcDestroy called on invalid rcSurface");
+        ALOGE("rcDestroy called on invalid rcSurface");
         return EGL_FALSE;
     }
 
@@ -395,12 +395,12 @@ EGLBoolean egl_pbuffer_surface_t::rcCreate()
     DEFINE_AND_VALIDATE_HOST_CONNECTION(EGL_FALSE);
     rcSurface = rcEnc->rcCreateWindowSurface(rcEnc, (uint32_t)config, getWidth(), getHeight());
     if (!rcSurface) {
-        LOGE("rcCreateWindowSurface returned 0");
+        ALOGE("rcCreateWindowSurface returned 0");
         return EGL_FALSE;
     }
     rcColorBuffer = rcEnc->rcCreateColorBuffer(rcEnc, getWidth(), getHeight(), format);
     if (!rcColorBuffer) {
-        LOGE("rcCreateColorBuffer returned 0");
+        ALOGE("rcCreateColorBuffer returned 0");
         return EGL_FALSE;
     }
 
@@ -411,7 +411,7 @@ EGLBoolean egl_pbuffer_surface_t::rcCreate()
 EGLBoolean egl_pbuffer_surface_t::rcDestroy()
 {
     if ((!rcSurface)||(!rcColorBuffer)) {
-        LOGE("destroyRc called on invalid rcSurface");
+        ALOGE("destroyRc called on invalid rcSurface");
         return EGL_FALSE;
     }
 
@@ -782,7 +782,7 @@ EGLBoolean eglQuerySurface(EGLDisplay dpy, EGLSurface eglSurface, EGLint attribu
             break;
         //TODO: complete other attributes
         default:
-            LOGE("eglQuerySurface %x  EGL_BAD_ATTRIBUTE", attribute);
+            ALOGE("eglQuerySurface %x  EGL_BAD_ATTRIBUTE", attribute);
             ret = setErrorFunc(EGL_BAD_ATTRIBUTE, EGL_FALSE);
             break;
     }
@@ -900,7 +900,7 @@ EGLContext eglCreateContext(EGLDisplay dpy, EGLConfig config, EGLContext share_c
     DEFINE_AND_VALIDATE_HOST_CONNECTION(EGL_NO_CONTEXT);
     uint32_t rcContext = rcEnc->rcCreateContext(rcEnc, (uint32_t)config, rcShareCtx, version);
     if (!rcContext) {
-        LOGE("rcCreateContext returned 0");
+        ALOGE("rcCreateContext returned 0");
         setErrorReturn(EGL_BAD_ALLOC, EGL_NO_CONTEXT);
     }
 
@@ -972,7 +972,7 @@ EGLBoolean eglMakeCurrent(EGLDisplay dpy, EGLSurface draw, EGLSurface read, EGLC
 
     DEFINE_AND_VALIDATE_HOST_CONNECTION(EGL_FALSE);
     if (rcEnc->rcMakeCurrent(rcEnc, ctxHandle, drawHandle, readHandle) == EGL_FALSE) {
-        LOGE("rcMakeCurrent returned EGL_FALSE");
+        ALOGE("rcMakeCurrent returned EGL_FALSE");
         setErrorReturn(EGL_BAD_CONTEXT, EGL_FALSE);
     }
 
@@ -1098,7 +1098,7 @@ EGLBoolean eglQueryContext(EGLDisplay dpy, EGLContext ctx, EGLint attribute, EGL
                 *value = EGL_BACK_BUFFER; //single buffer not supported
             break;
         default:
-            LOGE("eglQueryContext %x  EGL_BAD_ATTRIBUTE", attribute);
+            ALOGE("eglQueryContext %x  EGL_BAD_ATTRIBUTE", attribute);
             setErrorReturn(EGL_BAD_ATTRIBUTE, EGL_FALSE);
             break;
     }

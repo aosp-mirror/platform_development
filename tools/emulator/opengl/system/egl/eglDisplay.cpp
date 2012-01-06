@@ -88,7 +88,7 @@ bool eglDisplay::initialize(EGLClient_eglInterface *eglIface)
                                          &s_gles_lib);
         if (!m_gles_iface) {
             pthread_mutex_unlock(&m_lock);
-            LOGE("Failed to load gles1 iface");
+            ALOGE("Failed to load gles1 iface");
             return false;
         }
 
@@ -106,7 +106,7 @@ bool eglDisplay::initialize(EGLClient_eglInterface *eglIface)
         HostConnection *hcon = HostConnection::get();
         if (!hcon) {
             pthread_mutex_unlock(&m_lock);
-            LOGE("Failed to establish connection with the host\n");
+            ALOGE("Failed to establish connection with the host\n");
             return false;
         }
 
@@ -116,7 +116,7 @@ bool eglDisplay::initialize(EGLClient_eglInterface *eglIface)
         renderControl_encoder_context_t *rcEnc = hcon->rcEncoder();
         if (!rcEnc) {
             pthread_mutex_unlock(&m_lock);
-            LOGE("Failed to get renderControl encoder instance");
+            ALOGE("Failed to get renderControl encoder instance");
             return false;
         }
 
@@ -228,13 +228,13 @@ EGLClient_glesInterface *eglDisplay::loadGLESClientAPI(const char *libName,
 {
     void *lib = dlopen(libName, RTLD_NOW);
     if (!lib) {
-        LOGE("Failed to dlopen %s", libName);
+        ALOGE("Failed to dlopen %s", libName);
         return NULL;
     }
 
     init_emul_gles_t init_gles_func = (init_emul_gles_t)dlsym(lib,"init_emul_gles");
     if (!init_gles_func) {
-        LOGE("Failed to find init_emul_gles");
+        ALOGE("Failed to find init_emul_gles");
         dlclose((void*)lib);
         return NULL;
     }
@@ -385,7 +385,7 @@ const char *eglDisplay::queryString(EGLint name)
         return m_extensionString;
     }
     else {
-        LOGE("[%s] Unknown name %d\n", __FUNCTION__, name);
+        ALOGE("[%s] Unknown name %d\n", __FUNCTION__, name);
         return NULL;
     }
 }
@@ -397,7 +397,7 @@ EGLBoolean eglDisplay::getAttribValue(EGLConfig config, EGLint attribIdx, EGLint
 {
     if (attribIdx == ATTRIBUTE_NONE)
     {
-        LOGE("[%s] Bad attribute idx\n", __FUNCTION__);
+        ALOGE("[%s] Bad attribute idx\n", __FUNCTION__);
         return EGL_FALSE;
     }
     *value = *(m_configs + (int)config*m_numConfigAttribs + attribIdx);
@@ -430,7 +430,7 @@ EGLBoolean eglDisplay::setAttribValue(EGLConfig config, EGLint attribIdx, EGLint
 {
     if (attribIdx == ATTRIBUTE_NONE)
     {
-        LOGE("[%s] Bad attribute idx\n", __FUNCTION__);
+        ALOGE("[%s] Bad attribute idx\n", __FUNCTION__);
         return EGL_FALSE;
     }
     *(m_configs + (int)config*m_numConfigAttribs + attribIdx) = value;
@@ -456,7 +456,7 @@ EGLBoolean eglDisplay::getConfigNativePixelFormat(EGLConfig config, PixelFormat 
         getAttribValue(config, m_attribs.valueFor(EGL_GREEN_SIZE), &greenSize) &&
         getAttribValue(config, m_attribs.valueFor(EGL_ALPHA_SIZE), &alphaSize)) )
     {
-        LOGE("Couldn't find value for one of the pixel format attributes");
+        ALOGE("Couldn't find value for one of the pixel format attributes");
         return EGL_FALSE;
     }
 
@@ -480,7 +480,7 @@ EGLBoolean eglDisplay::getConfigGLPixelFormat(EGLConfig config, GLenum * format)
         getAttribValue(config, m_attribs.valueFor(EGL_GREEN_SIZE), &greenSize) &&
         getAttribValue(config, m_attribs.valueFor(EGL_ALPHA_SIZE), &alphaSize)) )
     {
-        LOGE("Couldn't find value for one of the pixel format attributes");
+        ALOGE("Couldn't find value for one of the pixel format attributes");
         return EGL_FALSE;
     }
 

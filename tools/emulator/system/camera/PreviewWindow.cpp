@@ -70,7 +70,7 @@ status_t PreviewWindow::setPreviewWindow(struct preview_stream_ops* window,
         } else {
             window = NULL;
             res = -res; // set_usage returns a negative errno.
-            LOGE("%s: Error setting preview window usage %d -> %s",
+            ALOGE("%s: Error setting preview window usage %d -> %s",
                  __FUNCTION__, res, strerror(res));
         }
     }
@@ -125,7 +125,7 @@ void PreviewWindow::onNextFrameAvailable(const void* frame,
                                                    mPreviewFrameHeight,
                                                    HAL_PIXEL_FORMAT_RGBA_8888);
         if (res != NO_ERROR) {
-            LOGE("%s: Error in set_buffers_geometry %d -> %s",
+            ALOGE("%s: Error in set_buffers_geometry %d -> %s",
                  __FUNCTION__, -res, strerror(-res));
             return;
         }
@@ -140,7 +140,7 @@ void PreviewWindow::onNextFrameAvailable(const void* frame,
     int stride = 0;
     res = mPreviewWindow->dequeue_buffer(mPreviewWindow, &buffer, &stride);
     if (res != NO_ERROR || buffer == NULL) {
-        LOGE("%s: Unable to dequeue preview window buffer: %d -> %s",
+        ALOGE("%s: Unable to dequeue preview window buffer: %d -> %s",
             __FUNCTION__, -res, strerror(-res));
         return;
     }
@@ -148,7 +148,7 @@ void PreviewWindow::onNextFrameAvailable(const void* frame,
     /* Let the preview window to lock the buffer. */
     res = mPreviewWindow->lock_buffer(mPreviewWindow, buffer);
     if (res != NO_ERROR) {
-        LOGE("%s: Unable to lock preview window buffer: %d -> %s",
+        ALOGE("%s: Unable to lock preview window buffer: %d -> %s",
              __FUNCTION__, -res, strerror(-res));
         mPreviewWindow->cancel_buffer(mPreviewWindow, buffer);
         return;
@@ -161,7 +161,7 @@ void PreviewWindow::onNextFrameAvailable(const void* frame,
     GraphicBufferMapper& grbuffer_mapper(GraphicBufferMapper::get());
     res = grbuffer_mapper.lock(*buffer, GRALLOC_USAGE_SW_WRITE_OFTEN, rect, &img);
     if (res != NO_ERROR) {
-        LOGE("%s: grbuffer_mapper.lock failure: %d -> %s",
+        ALOGE("%s: grbuffer_mapper.lock failure: %d -> %s",
              __FUNCTION__, res, strerror(res));
         mPreviewWindow->cancel_buffer(mPreviewWindow, buffer);
         return;
@@ -174,7 +174,7 @@ void PreviewWindow::onNextFrameAvailable(const void* frame,
         /* Show it. */
         mPreviewWindow->enqueue_buffer(mPreviewWindow, buffer);
     } else {
-        LOGE("%s: Unable to obtain preview frame: %d", __FUNCTION__, res);
+        ALOGE("%s: Unable to obtain preview frame: %d", __FUNCTION__, res);
         mPreviewWindow->cancel_buffer(mPreviewWindow, buffer);
     }
     grbuffer_mapper.unlock(*buffer);

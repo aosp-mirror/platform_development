@@ -198,7 +198,7 @@ status_t EmulatedCamera::connectCamera(hw_device_t** device)
 
     status_t res = EINVAL;
     EmulatedCameraDevice* const camera_dev = getCameraDevice();
-    LOGE_IF(camera_dev == NULL, "%s: No camera device instance.", __FUNCTION__);
+    ALOGE_IF(camera_dev == NULL, "%s: No camera device instance.", __FUNCTION__);
 
     if (camera_dev != NULL) {
         /* Connect to the camera device. */
@@ -358,7 +358,7 @@ status_t EmulatedCamera::takePicture()
         /* We only have JPEG converted for NV21 format. */
         org_fmt = V4L2_PIX_FMT_NV21;
     } else {
-        LOGE("%s: Unsupported pixel format %s", __FUNCTION__, pix_fmt);
+        ALOGE("%s: Unsupported pixel format %s", __FUNCTION__, pix_fmt);
         return EINVAL;
     }
     /* Get JPEG quality. */
@@ -496,7 +496,7 @@ char* EmulatedCamera::getParameters()
         strncpy(ret_str, params.string(), params.length()+1);
         return ret_str;
     } else {
-        LOGE("%s: Unable to allocate string for %s", __FUNCTION__, params.string());
+        ALOGE("%s: Unable to allocate string for %s", __FUNCTION__, params.string());
         /* Apparently, we can't return NULL fron this routine. */
         return &lNoParam;
     }
@@ -590,7 +590,7 @@ status_t EmulatedCamera::doStartPreview()
         pix_fmt = mParameters.getPreviewFormat();
     }
     if (pix_fmt == NULL) {
-        LOGE("%s: Unable to obtain video format", __FUNCTION__);
+        ALOGE("%s: Unable to obtain video format", __FUNCTION__);
         mPreviewWindow.stopPreview();
         return EINVAL;
     }
@@ -604,7 +604,7 @@ status_t EmulatedCamera::doStartPreview()
     } else if (strcmp(pix_fmt, CameraParameters::PIXEL_FORMAT_YUV420SP) == 0) {
         org_fmt = V4L2_PIX_FMT_NV21;
     } else {
-        LOGE("%s: Unsupported pixel format %s", __FUNCTION__, pix_fmt);
+        ALOGE("%s: Unsupported pixel format %s", __FUNCTION__, pix_fmt);
         mPreviewWindow.stopPreview();
         return EINVAL;
     }
@@ -695,7 +695,7 @@ int EmulatedCamera::set_preview_window(struct camera_device* dev,
 {
     EmulatedCamera* ec = reinterpret_cast<EmulatedCamera*>(dev->priv);
     if (ec == NULL) {
-        LOGE("%s: Unexpected NULL camera device", __FUNCTION__);
+        ALOGE("%s: Unexpected NULL camera device", __FUNCTION__);
         return -EINVAL;
     }
     return ec->setPreviewWindow(window);
@@ -711,7 +711,7 @@ void EmulatedCamera::set_callbacks(
 {
     EmulatedCamera* ec = reinterpret_cast<EmulatedCamera*>(dev->priv);
     if (ec == NULL) {
-        LOGE("%s: Unexpected NULL camera device", __FUNCTION__);
+        ALOGE("%s: Unexpected NULL camera device", __FUNCTION__);
         return;
     }
     ec->setCallbacks(notify_cb, data_cb, data_cb_timestamp, get_memory, user);
@@ -721,7 +721,7 @@ void EmulatedCamera::enable_msg_type(struct camera_device* dev, int32_t msg_type
 {
     EmulatedCamera* ec = reinterpret_cast<EmulatedCamera*>(dev->priv);
     if (ec == NULL) {
-        LOGE("%s: Unexpected NULL camera device", __FUNCTION__);
+        ALOGE("%s: Unexpected NULL camera device", __FUNCTION__);
         return;
     }
     ec->enableMsgType(msg_type);
@@ -731,7 +731,7 @@ void EmulatedCamera::disable_msg_type(struct camera_device* dev, int32_t msg_typ
 {
     EmulatedCamera* ec = reinterpret_cast<EmulatedCamera*>(dev->priv);
     if (ec == NULL) {
-        LOGE("%s: Unexpected NULL camera device", __FUNCTION__);
+        ALOGE("%s: Unexpected NULL camera device", __FUNCTION__);
         return;
     }
     ec->disableMsgType(msg_type);
@@ -741,7 +741,7 @@ int EmulatedCamera::msg_type_enabled(struct camera_device* dev, int32_t msg_type
 {
     EmulatedCamera* ec = reinterpret_cast<EmulatedCamera*>(dev->priv);
     if (ec == NULL) {
-        LOGE("%s: Unexpected NULL camera device", __FUNCTION__);
+        ALOGE("%s: Unexpected NULL camera device", __FUNCTION__);
         return -EINVAL;
     }
     return ec->isMsgTypeEnabled(msg_type);
@@ -751,7 +751,7 @@ int EmulatedCamera::start_preview(struct camera_device* dev)
 {
     EmulatedCamera* ec = reinterpret_cast<EmulatedCamera*>(dev->priv);
     if (ec == NULL) {
-        LOGE("%s: Unexpected NULL camera device", __FUNCTION__);
+        ALOGE("%s: Unexpected NULL camera device", __FUNCTION__);
         return -EINVAL;
     }
     return ec->startPreview();
@@ -761,7 +761,7 @@ void EmulatedCamera::stop_preview(struct camera_device* dev)
 {
     EmulatedCamera* ec = reinterpret_cast<EmulatedCamera*>(dev->priv);
     if (ec == NULL) {
-        LOGE("%s: Unexpected NULL camera device", __FUNCTION__);
+        ALOGE("%s: Unexpected NULL camera device", __FUNCTION__);
         return;
     }
     ec->stopPreview();
@@ -771,7 +771,7 @@ int EmulatedCamera::preview_enabled(struct camera_device* dev)
 {
     EmulatedCamera* ec = reinterpret_cast<EmulatedCamera*>(dev->priv);
     if (ec == NULL) {
-        LOGE("%s: Unexpected NULL camera device", __FUNCTION__);
+        ALOGE("%s: Unexpected NULL camera device", __FUNCTION__);
         return -EINVAL;
     }
     return ec->isPreviewEnabled();
@@ -782,7 +782,7 @@ int EmulatedCamera::store_meta_data_in_buffers(struct camera_device* dev,
 {
     EmulatedCamera* ec = reinterpret_cast<EmulatedCamera*>(dev->priv);
     if (ec == NULL) {
-        LOGE("%s: Unexpected NULL camera device", __FUNCTION__);
+        ALOGE("%s: Unexpected NULL camera device", __FUNCTION__);
         return -EINVAL;
     }
     return ec->storeMetaDataInBuffers(enable);
@@ -792,7 +792,7 @@ int EmulatedCamera::start_recording(struct camera_device* dev)
 {
     EmulatedCamera* ec = reinterpret_cast<EmulatedCamera*>(dev->priv);
     if (ec == NULL) {
-        LOGE("%s: Unexpected NULL camera device", __FUNCTION__);
+        ALOGE("%s: Unexpected NULL camera device", __FUNCTION__);
         return -EINVAL;
     }
     return ec->startRecording();
@@ -802,7 +802,7 @@ void EmulatedCamera::stop_recording(struct camera_device* dev)
 {
     EmulatedCamera* ec = reinterpret_cast<EmulatedCamera*>(dev->priv);
     if (ec == NULL) {
-        LOGE("%s: Unexpected NULL camera device", __FUNCTION__);
+        ALOGE("%s: Unexpected NULL camera device", __FUNCTION__);
         return;
     }
     ec->stopRecording();
@@ -812,7 +812,7 @@ int EmulatedCamera::recording_enabled(struct camera_device* dev)
 {
     EmulatedCamera* ec = reinterpret_cast<EmulatedCamera*>(dev->priv);
     if (ec == NULL) {
-        LOGE("%s: Unexpected NULL camera device", __FUNCTION__);
+        ALOGE("%s: Unexpected NULL camera device", __FUNCTION__);
         return -EINVAL;
     }
     return ec->isRecordingEnabled();
@@ -823,7 +823,7 @@ void EmulatedCamera::release_recording_frame(struct camera_device* dev,
 {
     EmulatedCamera* ec = reinterpret_cast<EmulatedCamera*>(dev->priv);
     if (ec == NULL) {
-        LOGE("%s: Unexpected NULL camera device", __FUNCTION__);
+        ALOGE("%s: Unexpected NULL camera device", __FUNCTION__);
         return;
     }
     ec->releaseRecordingFrame(opaque);
@@ -833,7 +833,7 @@ int EmulatedCamera::auto_focus(struct camera_device* dev)
 {
     EmulatedCamera* ec = reinterpret_cast<EmulatedCamera*>(dev->priv);
     if (ec == NULL) {
-        LOGE("%s: Unexpected NULL camera device", __FUNCTION__);
+        ALOGE("%s: Unexpected NULL camera device", __FUNCTION__);
         return -EINVAL;
     }
     return ec->setAutoFocus();
@@ -843,7 +843,7 @@ int EmulatedCamera::cancel_auto_focus(struct camera_device* dev)
 {
     EmulatedCamera* ec = reinterpret_cast<EmulatedCamera*>(dev->priv);
     if (ec == NULL) {
-        LOGE("%s: Unexpected NULL camera device", __FUNCTION__);
+        ALOGE("%s: Unexpected NULL camera device", __FUNCTION__);
         return -EINVAL;
     }
     return ec->cancelAutoFocus();
@@ -853,7 +853,7 @@ int EmulatedCamera::take_picture(struct camera_device* dev)
 {
     EmulatedCamera* ec = reinterpret_cast<EmulatedCamera*>(dev->priv);
     if (ec == NULL) {
-        LOGE("%s: Unexpected NULL camera device", __FUNCTION__);
+        ALOGE("%s: Unexpected NULL camera device", __FUNCTION__);
         return -EINVAL;
     }
     return ec->takePicture();
@@ -863,7 +863,7 @@ int EmulatedCamera::cancel_picture(struct camera_device* dev)
 {
     EmulatedCamera* ec = reinterpret_cast<EmulatedCamera*>(dev->priv);
     if (ec == NULL) {
-        LOGE("%s: Unexpected NULL camera device", __FUNCTION__);
+        ALOGE("%s: Unexpected NULL camera device", __FUNCTION__);
         return -EINVAL;
     }
     return ec->cancelPicture();
@@ -873,7 +873,7 @@ int EmulatedCamera::set_parameters(struct camera_device* dev, const char* parms)
 {
     EmulatedCamera* ec = reinterpret_cast<EmulatedCamera*>(dev->priv);
     if (ec == NULL) {
-        LOGE("%s: Unexpected NULL camera device", __FUNCTION__);
+        ALOGE("%s: Unexpected NULL camera device", __FUNCTION__);
         return -EINVAL;
     }
     return ec->setParameters(parms);
@@ -883,7 +883,7 @@ char* EmulatedCamera::get_parameters(struct camera_device* dev)
 {
     EmulatedCamera* ec = reinterpret_cast<EmulatedCamera*>(dev->priv);
     if (ec == NULL) {
-        LOGE("%s: Unexpected NULL camera device", __FUNCTION__);
+        ALOGE("%s: Unexpected NULL camera device", __FUNCTION__);
         return NULL;
     }
     return ec->getParameters();
@@ -893,7 +893,7 @@ void EmulatedCamera::put_parameters(struct camera_device* dev, char* params)
 {
     EmulatedCamera* ec = reinterpret_cast<EmulatedCamera*>(dev->priv);
     if (ec == NULL) {
-        LOGE("%s: Unexpected NULL camera device", __FUNCTION__);
+        ALOGE("%s: Unexpected NULL camera device", __FUNCTION__);
         return;
     }
     ec->putParameters(params);
@@ -906,7 +906,7 @@ int EmulatedCamera::send_command(struct camera_device* dev,
 {
     EmulatedCamera* ec = reinterpret_cast<EmulatedCamera*>(dev->priv);
     if (ec == NULL) {
-        LOGE("%s: Unexpected NULL camera device", __FUNCTION__);
+        ALOGE("%s: Unexpected NULL camera device", __FUNCTION__);
         return -EINVAL;
     }
     return ec->sendCommand(cmd, arg1, arg2);
@@ -916,7 +916,7 @@ void EmulatedCamera::release(struct camera_device* dev)
 {
     EmulatedCamera* ec = reinterpret_cast<EmulatedCamera*>(dev->priv);
     if (ec == NULL) {
-        LOGE("%s: Unexpected NULL camera device", __FUNCTION__);
+        ALOGE("%s: Unexpected NULL camera device", __FUNCTION__);
         return;
     }
     ec->releaseCamera();
@@ -926,7 +926,7 @@ int EmulatedCamera::dump(struct camera_device* dev, int fd)
 {
     EmulatedCamera* ec = reinterpret_cast<EmulatedCamera*>(dev->priv);
     if (ec == NULL) {
-        LOGE("%s: Unexpected NULL camera device", __FUNCTION__);
+        ALOGE("%s: Unexpected NULL camera device", __FUNCTION__);
         return -EINVAL;
     }
     return ec->dumpCamera(fd);
@@ -937,7 +937,7 @@ int EmulatedCamera::close(struct hw_device_t* device)
     EmulatedCamera* ec =
         reinterpret_cast<EmulatedCamera*>(reinterpret_cast<struct camera_device*>(device)->priv);
     if (ec == NULL) {
-        LOGE("%s: Unexpected NULL camera device", __FUNCTION__);
+        ALOGE("%s: Unexpected NULL camera device", __FUNCTION__);
         return -EINVAL;
     }
     return ec->closeCamera();
@@ -997,7 +997,7 @@ static char* AddValue(const char* param, const char* val)
     const size_t len1 = strlen(param);
     const size_t len2 = strlen(val);
     char* ret = reinterpret_cast<char*>(malloc(len1 + len2 + 2));
-    LOGE_IF(ret == NULL, "%s: Memory failure", __FUNCTION__);
+    ALOGE_IF(ret == NULL, "%s: Memory failure", __FUNCTION__);
     if (ret != NULL) {
         memcpy(ret, param, len1);
         ret[len1] = ',';

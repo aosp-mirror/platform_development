@@ -83,7 +83,7 @@ int ServerConnection::create(size_t bufsize,
         QemuPipeStream*  pipeStream = new QemuPipeStream(bufsize);
 
         if (pipeStream->connect() < 0) {
-            LOGE("couldn't connect to host server\n");
+            ALOGE("couldn't connect to host server\n");
             delete pipeStream;
             return -1;
         }
@@ -102,7 +102,7 @@ int ServerConnection::create(size_t bufsize,
         }
 
         if (tcpStream->connect(hostname, CODEC_SERVER_PORT) < 0) {
-            LOGE("couldn't connect to %s\n", hostname);
+            ALOGE("couldn't connect to %s\n", hostname);
             free(hostname);
             delete tcpStream;
             return -1;

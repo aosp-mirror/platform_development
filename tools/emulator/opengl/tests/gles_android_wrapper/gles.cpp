@@ -27,7 +27,7 @@ void init_gles(void *gles_android)
 {
     s_dispatch = create_gles_dispatch(gles_android);
     if (s_dispatch == NULL) {
-        LOGE("failed to create gles dispatch\n");
+        ALOGE("failed to create gles dispatch\n");
     }
 }
 
