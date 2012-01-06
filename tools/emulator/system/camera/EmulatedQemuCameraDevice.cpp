@@ -82,7 +82,7 @@ status_t EmulatedQemuCameraDevice::connectDevice()
         return EINVAL;
     }
     if (isConnected()) {
-        LOGW("%s: Qemu camera device '%s' is already connected.",
+        ALOGW("%s: Qemu camera device '%s' is already connected.",
              __FUNCTION__, (const char*)mDeviceName);
         return NO_ERROR;
     }
@@ -107,7 +107,7 @@ status_t EmulatedQemuCameraDevice::disconnectDevice()
 
     Mutex::Autolock locker(&mObjectLock);
     if (!isConnected()) {
-        LOGW("%s: Qemu camera device '%s' is already disconnected.",
+        ALOGW("%s: Qemu camera device '%s' is already disconnected.",
              __FUNCTION__, (const char*)mDeviceName);
         return NO_ERROR;
     }
@@ -144,7 +144,7 @@ status_t EmulatedQemuCameraDevice::startDevice(int width,
         return EINVAL;
     }
     if (isStarted()) {
-        LOGW("%s: Qemu camera device '%s' is already started.",
+        ALOGW("%s: Qemu camera device '%s' is already started.",
              __FUNCTION__, (const char*)mDeviceName);
         return NO_ERROR;
     }
@@ -188,7 +188,7 @@ status_t EmulatedQemuCameraDevice::stopDevice()
 
     Mutex::Autolock locker(&mObjectLock);
     if (!isStarted()) {
-        LOGW("%s: Qemu camera device '%s' is not started.",
+        ALOGW("%s: Qemu camera device '%s' is not started.",
              __FUNCTION__, (const char*)mDeviceName);
         return NO_ERROR;
     }
@@ -218,7 +218,7 @@ status_t EmulatedQemuCameraDevice::stopDevice()
 
 status_t EmulatedQemuCameraDevice::getCurrentPreviewFrame(void* buffer)
 {
-    LOGW_IF(mPreviewFrame == NULL, "%s: No preview frame", __FUNCTION__);
+    ALOGW_IF(mPreviewFrame == NULL, "%s: No preview frame", __FUNCTION__);
     if (mPreviewFrame != NULL) {
         memcpy(buffer, mPreviewFrame, mTotalPixels * 4);
         return 0;

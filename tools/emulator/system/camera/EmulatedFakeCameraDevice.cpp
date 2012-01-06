@@ -71,7 +71,7 @@ status_t EmulatedFakeCameraDevice::connectDevice()
         return EINVAL;
     }
     if (isConnected()) {
-        LOGW("%s: Fake camera device is already connected.", __FUNCTION__);
+        ALOGW("%s: Fake camera device is already connected.", __FUNCTION__);
         return NO_ERROR;
     }
 
@@ -87,7 +87,7 @@ status_t EmulatedFakeCameraDevice::disconnectDevice()
 
     Mutex::Autolock locker(&mObjectLock);
     if (!isConnected()) {
-        LOGW("%s: Fake camera device is already disconnected.", __FUNCTION__);
+        ALOGW("%s: Fake camera device is already disconnected.", __FUNCTION__);
         return NO_ERROR;
     }
     if (isStarted()) {
@@ -174,7 +174,7 @@ status_t EmulatedFakeCameraDevice::stopDevice()
 
     Mutex::Autolock locker(&mObjectLock);
     if (!isStarted()) {
-        LOGW("%s: Fake camera device is not started.", __FUNCTION__);
+        ALOGW("%s: Fake camera device is not started.", __FUNCTION__);
         return NO_ERROR;
     }
 
