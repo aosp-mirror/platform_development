@@ -94,6 +94,10 @@ extern int getresuid(uid_t *ruid, uid_t *euid, uid_t *suid);
 extern int getresgid(gid_t *rgid, gid_t *egid, gid_t *sgid);
 extern int issetugid(void);
 extern char* getlogin(void);
+extern char* getusershell(void);
+extern void setusershell(void);
+extern void endusershell(void);
+
 
 
 /* Macros for access() */
@@ -109,6 +113,9 @@ extern int chdir(const char *);
 extern int fchdir(int);
 extern int rmdir(const char *);
 extern int pipe(int *);
+#ifdef _GNU_SOURCE  /* GLibc compatibility */
+extern int pipe2(int *, int);
+#endif
 extern int chroot(const char *);
 extern int symlink(const char *, const char *);
 extern int readlink(const char *, char *, size_t);
@@ -127,7 +134,9 @@ extern off64_t lseek64(int, off64_t, int);
 extern ssize_t read(int, void *, size_t);
 extern ssize_t write(int, const void *, size_t);
 extern ssize_t pread(int, void *, size_t, off_t);
+extern ssize_t pread64(int, void *, size_t, off64_t);
 extern ssize_t pwrite(int, const void *, size_t, off_t);
+extern ssize_t pwrite64(int, const void *, size_t, off64_t);
 
 extern int dup(int);
 extern int dup2(int, int);
@@ -135,12 +144,14 @@ extern int fcntl(int, int, ...);
 extern int ioctl(int, int, ...);
 extern int flock(int, int);
 extern int fsync(int);
+extern int fdatasync(int);
 extern int ftruncate(int, off_t);
+extern int ftruncate64(int, off64_t);
 
 extern int pause(void);
 extern unsigned int alarm(unsigned int);
 extern unsigned int sleep(unsigned int);
-extern void usleep(unsigned long);
+extern int usleep(unsigned long);
 
 extern int gethostname(char *, size_t);
 
@@ -156,6 +167,7 @@ extern int optind, opterr, optopt;
 
 extern int isatty(int);
 extern char* ttyname(int);
+extern int ttyname_r(int, char*, size_t);
 
 extern int  acct(const char*  filepath);
 
@@ -184,15 +196,10 @@ extern int execvpe(const char *, char * const *, char * const *);
 extern int execlpe(const char *, const char *, ...);
 extern int getfsuid(uid_t);
 extern int setfsuid(uid_t);
-extern int fdatasync(int);
 extern int getlogin_r(char* name, size_t namesize);
-extern char* getusershell(void);
-extern void setusershell(void);
-extern void endusershell(void);
 extern int sethostname(const char *, size_t);
 extern int getdomainname(char *, size_t);
 extern int setdomainname(const char *, size_t);
-extern int ttyname_r(int, char*, size_t);
 #endif /* MISSING */
 
 /* Used to retry syscalls that can return EINTR. */
