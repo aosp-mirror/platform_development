@@ -1,17 +1,5 @@
 This directory contains the modules related to hardware OpenGL ES emulation.
 
-For now, this feature is experimental, and *nothing* will be built unless
-you define BUILD_EMULATOR_OPENGL in your environment, for example with:
-
-  export BUILD_EMULATOR_OPENGL=true
-
-You can also define the following to enable the "gralloc" module, which
-corresponds to system-wide GLES emulation (by default, only a specific set
-of applications are enabled, see below):
-
-  export BUILD_EMULATOR_OPENGL_DRIVER=true
-
-
 I. Overview of components:
 ==========================
 
