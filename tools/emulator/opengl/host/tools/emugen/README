@@ -46,7 +46,7 @@ will be encoded into :
 	101, // foo opcode
 	14, // sizeof(opcode) + sizeof(packet_len) + sizeof(int) + sizeof(short)
 	p1, // 4 bytes
-	s1 // 4 bytes
+	s1 // 2 bytes
 }
 
 Since ‘foo’ returns value, the caller is expected to read back the return packet from the server->client stream. The return value in this example is in thus the return packet is:
