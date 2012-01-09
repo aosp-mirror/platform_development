@@ -73,9 +73,8 @@ public class Beam extends Activity implements CreateNdefMessageCallback,
         time.setToNow();
         String text = ("Beam me up!\n\n" +
                 "Beam Time: " + time.format("%H:%M:%S"));
-        NdefMessage msg = new NdefMessage(
-                new NdefRecord[] { createMimeRecord(
-                        "application/com.example.android.beam", text.getBytes())
+        NdefMessage msg = new NdefMessage(NdefRecord.createMime(
+                "application/com.example.android.beam", text.getBytes())
          /**
           * The Android Application Record (AAR) is commented out. When a device
           * receives a push with an AAR in it, the application specified in the AAR
@@ -85,7 +84,7 @@ public class Beam extends Activity implements CreateNdefMessageCallback,
           * uses the tag dispatch system.
           */
           //,NdefRecord.createApplicationRecord("com.example.android.beam")
-        });
+        );
         return msg;
     }
 
@@ -136,18 +135,6 @@ public class Beam extends Activity implements CreateNdefMessageCallback,
         NdefMessage msg = (NdefMessage) rawMsgs[0];
         // record 0 contains the MIME type, record 1 is the AAR, if present
         mInfoText.setText(new String(msg.getRecords()[0].getPayload()));
-    }
-
-    /**
-     * Creates a custom MIME type encapsulated in an NDEF record
-     *
-     * @param mimeType
-     */
-    public NdefRecord createMimeRecord(String mimeType, byte[] payload) {
-        byte[] mimeBytes = mimeType.getBytes(Charset.forName("US-ASCII"));
-        NdefRecord mimeRecord = new NdefRecord(
-                NdefRecord.TNF_MIME_MEDIA, mimeBytes, new byte[0], payload);
-        return mimeRecord;
     }
 
     @Override
