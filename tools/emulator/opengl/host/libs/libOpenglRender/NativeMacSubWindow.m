@@ -36,10 +36,18 @@
 EGLNativeWindowType createSubWindow(FBNativeWindowType p_window,
                                     EGLNativeDisplayType* display_out,
                                     int x, int y,int width, int height){
-    NSRect contentRect = NSMakeRect(x, y, width, height);
+    NSWindow *win = (NSWindow *)p_window;
+    if (!win) {
+        return NULL;
+    }
+
+    /* (x,y) assume an upper-left origin, but Cocoa uses a lower-left origin */
+    NSRect content_rect = [win contentRectForFrameRect:[win frame]];
+    int cocoa_y = (int)content_rect.size.height - (y + height);
+    NSRect contentRect = NSMakeRect(x, cocoa_y, width, height);
+
     NSView *glView = [[EmuGLView alloc] initWithFrame:contentRect];
     if (glView) {
-        NSWindow *win = (NSWindow *)p_window;
         [[win contentView] addSubview:glView];
         [win makeKeyAndOrderFront:nil];
     }
