@@ -78,7 +78,6 @@ int RenderThread::Main()
 
         int stat = readBuf.getData();
         if (stat <= 0) {
-            fprintf(stderr, "client shutdown\n");
             break;
         }
 
