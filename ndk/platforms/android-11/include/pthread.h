@@ -163,7 +163,14 @@ int pthread_mutex_destroy(pthread_mutex_t *mutex);
 int pthread_mutex_lock(pthread_mutex_t *mutex);
 int pthread_mutex_unlock(pthread_mutex_t *mutex);
 int pthread_mutex_trylock(pthread_mutex_t *mutex);
+#if 0 /* MISSING FROM BIONIC */
 int pthread_mutex_timedlock(pthread_mutex_t *mutex, struct timespec*  ts);
+#endif /* MISSING */
+
+int pthread_condattr_init(pthread_condattr_t *attr);
+int pthread_condattr_getpshared(pthread_condattr_t *attr, int *pshared);
+int pthread_condattr_setpshared(pthread_condattr_t* attr, int pshared);
+int pthread_condattr_destroy(pthread_condattr_t *attr);
 
 int pthread_cond_init(pthread_cond_t *cond,
                       const pthread_condattr_t *attr);
@@ -179,13 +186,75 @@ int pthread_cond_timedwait(pthread_cond_t *cond,
  *         to the CLOCK_MONOTONIC clock instead, to avoid any problems when
  *         the wall-clock time is changed brutally
  */
+int pthread_cond_timedwait_monotonic_np(pthread_cond_t         *cond,
+                                        pthread_mutex_t        *mutex,
+                                        const struct timespec  *abstime);
+
+/* BIONIC: DEPRECATED. same as pthread_cond_timedwait_monotonic_np()
+ * unfortunately pthread_cond_timedwait_monotonic has shipped already
+ */
 int pthread_cond_timedwait_monotonic(pthread_cond_t         *cond,
                                      pthread_mutex_t        *mutex,
                                      const struct timespec  *abstime);
 
+#define HAVE_PTHREAD_COND_TIMEDWAIT_MONOTONIC 1
+
+/* BIONIC: same as pthread_cond_timedwait, except the 'reltime' given refers
+ *         is relative to the current time.
+ */
+int pthread_cond_timedwait_relative_np(pthread_cond_t         *cond,
+                                     pthread_mutex_t        *mutex,
+                                     const struct timespec  *reltime);
+
+#define HAVE_PTHREAD_COND_TIMEDWAIT_RELATIVE 1
+
+
+
 int pthread_cond_timeout_np(pthread_cond_t *cond,
                             pthread_mutex_t * mutex,
                             unsigned msecs);
+
+/* same as pthread_mutex_lock(), but will wait up to 'msecs' milli-seconds
+ * before returning. same return values than pthread_mutex_trylock though, i.e.
+ * returns EBUSY if the lock could not be acquired after the timeout
+ * expired.
+ */
+int pthread_mutex_lock_timeout_np(pthread_mutex_t *mutex, unsigned msecs);
+
+/* read-write lock support */
+
+typedef int pthread_rwlockattr_t;
+
+typedef struct {
+    pthread_mutex_t  lock;
+    pthread_cond_t   cond;
+    int              numLocks;
+    int              writerThreadId;
+    int              pendingReaders;
+    int              pendingWriters;
+    void*            reserved[4];  /* for future extensibility */
+} pthread_rwlock_t;
+
+#define PTHREAD_RWLOCK_INITIALIZER  { PTHREAD_MUTEX_INITIALIZER, PTHREAD_COND_INITIALIZER, 0, 0, 0, 0, { NULL, NULL, NULL, NULL } }
+
+int pthread_rwlockattr_init(pthread_rwlockattr_t *attr);
+int pthread_rwlockattr_destroy(pthread_rwlockattr_t *attr);
+int pthread_rwlockattr_setpshared(pthread_rwlockattr_t *attr, int  pshared);
+int pthread_rwlockattr_getpshared(pthread_rwlockattr_t *attr, int *pshared);
+
+int pthread_rwlock_init(pthread_rwlock_t *rwlock, const pthread_rwlockattr_t *attr);
+int pthread_rwlock_destroy(pthread_rwlock_t *rwlock);
+
+int pthread_rwlock_rdlock(pthread_rwlock_t *rwlock);
+int pthread_rwlock_tryrdlock(pthread_rwlock_t *rwlock);
+int pthread_rwlock_timedrdlock(pthread_rwlock_t *rwlock, const struct timespec *abs_timeout);
+
+int pthread_rwlock_wrlock(pthread_rwlock_t *rwlock);
+int pthread_rwlock_trywrlock(pthread_rwlock_t *rwlock);
+int pthread_rwlock_timedwrlock(pthread_rwlock_t *rwlock, const struct timespec *abs_timeout);
+
+int pthread_rwlock_unlock(pthread_rwlock_t *rwlock);
+
 
 int pthread_key_create(pthread_key_t *key, void (*destructor_function)(void *));
 int pthread_key_delete (pthread_key_t);
@@ -198,6 +267,10 @@ int pthread_sigmask(int how, const sigset_t *set, sigset_t *oset);
 int pthread_getcpuclockid(pthread_t  tid, clockid_t  *clockid);
 
 int pthread_once(pthread_once_t  *once_control, void (*init_routine)(void));
+
+int pthread_setname_np(pthread_t thid, const char *thname);
+
+int pthread_atfork(void (*prepare)(void), void (*parent)(void), void(*child)(void));
 
 typedef void  (*__pthread_cleanup_func_t)(void*);
 
