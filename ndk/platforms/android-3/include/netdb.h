@@ -137,10 +137,7 @@ struct addrinfo {
 /*
  * Error return codes from getaddrinfo()
  */
-#if 0
-/* obsoleted */
 #define	EAI_ADDRFAMILY	 1	/* address family for hostname not supported */
-#endif
 #define	EAI_AGAIN	 2	/* temporary failure in name resolution */
 #define	EAI_BADFLAGS	 3	/* invalid value for ai_flags */
 #define	EAI_FAIL	 4	/* non-recoverable failure in name resolution */
