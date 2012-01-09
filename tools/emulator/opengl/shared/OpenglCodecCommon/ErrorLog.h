@@ -18,7 +18,7 @@
 
 #if (HAVE_ANDROID_OS == 1)
 #    include <cutils/log.h>
-#    define ERR(...)    LOGE(__VA_ARGS__)
+#    define ERR(...)    ALOGE(__VA_ARGS__)
 #    ifdef EMUGL_DEBUG
 #        define DBG(...)    ALOGD(__VA_ARGS__)
 #    else

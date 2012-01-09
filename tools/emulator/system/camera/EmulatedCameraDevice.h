@@ -192,7 +192,7 @@ public:
      */
     inline int getFrameWidth() const
     {
-        LOGE_IF(!isStarted(), "%s: Device is not started", __FUNCTION__);
+        ALOGE_IF(!isStarted(), "%s: Device is not started", __FUNCTION__);
         return mFrameWidth;
     }
 
@@ -204,7 +204,7 @@ public:
      */
     inline int getFrameHeight() const
     {
-        LOGE_IF(!isStarted(), "%s: Device is not started", __FUNCTION__);
+        ALOGE_IF(!isStarted(), "%s: Device is not started", __FUNCTION__);
         return mFrameHeight;
     }
 
@@ -215,7 +215,7 @@ public:
      */
     inline size_t getFrameBufferSize() const
     {
-        LOGE_IF(!isStarted(), "%s: Device is not started", __FUNCTION__);
+        ALOGE_IF(!isStarted(), "%s: Device is not started", __FUNCTION__);
         return mFrameBufferSize;
     }
 
@@ -226,7 +226,7 @@ public:
      */
     inline int getPixelNum() const
     {
-        LOGE_IF(!isStarted(), "%s: Device is not started", __FUNCTION__);
+        ALOGE_IF(!isStarted(), "%s: Device is not started", __FUNCTION__);
         return mTotalPixels;
     }
 
@@ -252,7 +252,7 @@ public:
      */
     inline uint32_t getOriginalPixelFormat() const
     {
-        LOGE_IF(!isStarted(), "%s: Device is not started", __FUNCTION__);
+        ALOGE_IF(!isStarted(), "%s: Device is not started", __FUNCTION__);
         return mPixelFormat;
     }
 

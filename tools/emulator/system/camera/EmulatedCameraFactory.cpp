@@ -61,7 +61,7 @@ EmulatedCameraFactory::EmulatedCameraFactory()
         if (mEmulatedCameras == NULL) {
             mEmulatedCameras = new EmulatedCamera*[mEmulatedCameraNum];
             if (mEmulatedCameras == NULL) {
-                LOGE("%s: Unable to allocate emulated camera array for %d entries",
+                ALOGE("%s: Unable to allocate emulated camera array for %d entries",
                      __FUNCTION__, mEmulatedCameraNum);
                 return;
             }
@@ -80,7 +80,7 @@ EmulatedCameraFactory::EmulatedCameraFactory()
         } else {
             mEmulatedCameras--;
             mFakeCameraID = -1;
-            LOGE("%s: Unable to instantiate fake camera class", __FUNCTION__);
+            ALOGE("%s: Unable to instantiate fake camera class", __FUNCTION__);
         }
     } else {
         ALOGD("Fake camera emulation is disabled.");
@@ -119,12 +119,12 @@ int EmulatedCameraFactory::cameraDeviceOpen(int camera_id, hw_device_t** device)
     *device = NULL;
 
     if (!isConstructedOK()) {
-        LOGE("%s: EmulatedCameraFactory has failed to initialize", __FUNCTION__);
+        ALOGE("%s: EmulatedCameraFactory has failed to initialize", __FUNCTION__);
         return -EINVAL;
     }
 
     if (camera_id < 0 || camera_id >= getEmulatedCameraNum()) {
-        LOGE("%s: Camera id %d is out of bounds (%d)",
+        ALOGE("%s: Camera id %d is out of bounds (%d)",
              __FUNCTION__, camera_id, getEmulatedCameraNum());
         return -EINVAL;
     }
@@ -137,12 +137,12 @@ int EmulatedCameraFactory::getCameraInfo(int camera_id, struct camera_info* info
     ALOGV("%s: id = %d", __FUNCTION__, camera_id);
 
     if (!isConstructedOK()) {
-        LOGE("%s: EmulatedCameraFactory has failed to initialize", __FUNCTION__);
+        ALOGE("%s: EmulatedCameraFactory has failed to initialize", __FUNCTION__);
         return -EINVAL;
     }
 
     if (camera_id < 0 || camera_id >= getEmulatedCameraNum()) {
-        LOGE("%s: Camera id %d is out of bounds (%d)",
+        ALOGE("%s: Camera id %d is out of bounds (%d)",
              __FUNCTION__, camera_id, getEmulatedCameraNum());
         return -EINVAL;
     }
@@ -164,12 +164,12 @@ int EmulatedCameraFactory::device_open(const hw_module_t* module,
      */
 
     if (module != &HAL_MODULE_INFO_SYM.common) {
-        LOGE("%s: Invalid module %p expected %p",
+        ALOGE("%s: Invalid module %p expected %p",
              __FUNCTION__, module, &HAL_MODULE_INFO_SYM.common);
         return -EINVAL;
     }
     if (name == NULL) {
-        LOGE("%s: NULL name is not expected here", __FUNCTION__);
+        ALOGE("%s: NULL name is not expected here", __FUNCTION__);
         return -EINVAL;
     }
 
@@ -233,7 +233,7 @@ void EmulatedCameraFactory::createQemuCameras()
      * one more entry for the fake camera emulation. */
     mEmulatedCameras = new EmulatedCamera*[num + 1];
     if (mEmulatedCameras == NULL) {
-        LOGE("%s: Unable to allocate emulated camera array for %d entries",
+        ALOGE("%s: Unable to allocate emulated camera array for %d entries",
              __FUNCTION__, num + 1);
         free(camera_list);
         return;
@@ -292,7 +292,7 @@ void EmulatedCameraFactory::createQemuCameras()
                     delete qemu_cam;
                 }
             } else {
-                LOGE("%s: Unable to instantiate EmulatedQemuCamera",
+                ALOGE("%s: Unable to instantiate EmulatedQemuCamera",
                      __FUNCTION__);
             }
         } else {

@@ -56,7 +56,7 @@ status_t NV21JpegCompressor::compressRawImage(const void* image,
              __FUNCTION__, (width * height * 12) / 8, width, height, mStream.getOffset());
         return NO_ERROR;
     } else {
-        LOGE("%s: JPEG compression failed", __FUNCTION__);
+        ALOGE("%s: JPEG compression failed", __FUNCTION__);
         return errno ? errno : EINVAL;
     }
 }

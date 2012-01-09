@@ -8,14 +8,14 @@ static GLubyte *gVersionString= (GLubyte *) "OpenGL ES 2.0";
 static GLubyte *gExtensionsString= (GLubyte *) ""; // no extensions at this point;
 
 #define SET_ERROR_IF(condition,err) if((condition)) {                            \
-        LOGE("%s:%s:%d GL error 0x%x\n", __FILE__, __FUNCTION__, __LINE__, err); \
+        ALOGE("%s:%s:%d GL error 0x%x\n", __FILE__, __FUNCTION__, __LINE__, err); \
         ctx->setError(err);                                    \
         return;                                                  \
     }
 
 
 #define RET_AND_SET_ERROR_IF(condition,err,ret) if((condition)) {                \
-        LOGE("%s:%s:%d GL error 0x%x\n", __FILE__, __FUNCTION__, __LINE__, err); \
+        ALOGE("%s:%s:%d GL error 0x%x\n", __FILE__, __FUNCTION__, __LINE__, err); \
         ctx->setError(err);                                    \
         return ret;                                              \
     }
@@ -355,7 +355,7 @@ void GL2Encoder::s_glDrawElements(void *self, GLenum mode, GLsizei count, GLenum
     }
 
     if (!has_immediate_arrays && !has_indirect_arrays) {
-        LOGE("glDrawElements: no data bound to the command - ignoring\n");
+        ALOGE("glDrawElements: no data bound to the command - ignoring\n");
         return;
     }
 
@@ -398,7 +398,7 @@ void GL2Encoder::s_glDrawElements(void *self, GLenum mode, GLsizei count, GLenum
             }
             break;
         default:
-            LOGE("unsupported index buffer type %d\n", type);
+            ALOGE("unsupported index buffer type %d\n", type);
         }
         if (has_indirect_arrays || 1) {
             ctx->sendVertexAttributes(minIndex, maxIndex - minIndex + 1);
@@ -411,7 +411,7 @@ void GL2Encoder::s_glDrawElements(void *self, GLenum mode, GLsizei count, GLenum
         } else {
             // we are all direct arrays and immidate mode index array -
             // rebuild the arrays and the index array;
-            LOGE("glDrawElements: direct index & direct buffer data - will be implemented in later versions;\n");
+            ALOGE("glDrawElements: direct index & direct buffer data - will be implemented in later versions;\n");
         }
     }
 }

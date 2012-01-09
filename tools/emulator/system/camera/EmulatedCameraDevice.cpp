@@ -73,7 +73,7 @@ status_t EmulatedCameraDevice::Initialize()
     /* Instantiate worker thread object. */
     mWorkerThread = new WorkerThread(this);
     if (getWorkerThread() == NULL) {
-        LOGE("%s: Unable to instantiate worker thread object", __FUNCTION__);
+        ALOGE("%s: Unable to instantiate worker thread object", __FUNCTION__);
         return ENOMEM;
     }
 
@@ -87,13 +87,13 @@ status_t EmulatedCameraDevice::startDeliveringFrames(bool one_burst)
     ALOGV("%s", __FUNCTION__);
 
     if (!isStarted()) {
-        LOGE("%s: Device is not started", __FUNCTION__);
+        ALOGE("%s: Device is not started", __FUNCTION__);
         return EINVAL;
     }
 
     /* Frames will be delivered from the thread routine. */
     const status_t res = startWorkerThread(one_burst);
-    LOGE_IF(res != NO_ERROR, "%s: startWorkerThread failed", __FUNCTION__);
+    ALOGE_IF(res != NO_ERROR, "%s: startWorkerThread failed", __FUNCTION__);
     return res;
 }
 
@@ -107,7 +107,7 @@ status_t EmulatedCameraDevice::stopDeliveringFrames()
     }
 
     const status_t res = stopWorkerThread();
-    LOGE_IF(res != NO_ERROR, "%s: startWorkerThread failed", __FUNCTION__);
+    ALOGE_IF(res != NO_ERROR, "%s: startWorkerThread failed", __FUNCTION__);
     return res;
 }
 
@@ -158,11 +158,11 @@ void EmulatedCameraDevice::changeWhiteBalance(uint8_t& y,
 status_t EmulatedCameraDevice::getCurrentPreviewFrame(void* buffer)
 {
     if (!isStarted()) {
-        LOGE("%s: Device is not started", __FUNCTION__);
+        ALOGE("%s: Device is not started", __FUNCTION__);
         return EINVAL;
     }
     if (mCurrentFrame == NULL || buffer == NULL) {
-        LOGE("%s: No framebuffer", __FUNCTION__);
+        ALOGE("%s: No framebuffer", __FUNCTION__);
         return EINVAL;
     }
 
@@ -182,7 +182,7 @@ status_t EmulatedCameraDevice::getCurrentPreviewFrame(void* buffer)
             return NO_ERROR;
 
         default:
-            LOGE("%s: Unknown pixel format %.4s",
+            ALOGE("%s: Unknown pixel format %.4s",
                  __FUNCTION__, reinterpret_cast<const char*>(&mPixelFormat));
             return EINVAL;
     }
@@ -206,7 +206,7 @@ status_t EmulatedCameraDevice::commonStartDevice(int width,
             break;
 
         default:
-            LOGE("%s: Unknown pixel format %.4s",
+            ALOGE("%s: Unknown pixel format %.4s",
                  __FUNCTION__, reinterpret_cast<const char*>(&pix_fmt));
             return EINVAL;
     }
@@ -220,7 +220,7 @@ status_t EmulatedCameraDevice::commonStartDevice(int width,
     /* Allocate framebuffer. */
     mCurrentFrame = new uint8_t[mFrameBufferSize];
     if (mCurrentFrame == NULL) {
-        LOGE("%s: Unable to allocate framebuffer", __FUNCTION__);
+        ALOGE("%s: Unable to allocate framebuffer", __FUNCTION__);
         return ENOMEM;
     }
     ALOGV("%s: Allocated %p %d bytes for %d pixels in %.4s[%dx%d] frame",
@@ -249,12 +249,12 @@ status_t EmulatedCameraDevice::startWorkerThread(bool one_burst)
     ALOGV("%s", __FUNCTION__);
 
     if (!isInitialized()) {
-        LOGE("%s: Emulated camera device is not initialized", __FUNCTION__);
+        ALOGE("%s: Emulated camera device is not initialized", __FUNCTION__);
         return EINVAL;
     }
 
     const status_t res = getWorkerThread()->startThread(one_burst);
-    LOGE_IF(res != NO_ERROR, "%s: Unable to start worker thread", __FUNCTION__);
+    ALOGE_IF(res != NO_ERROR, "%s: Unable to start worker thread", __FUNCTION__);
     return res;
 }
 
@@ -263,12 +263,12 @@ status_t EmulatedCameraDevice::stopWorkerThread()
     ALOGV("%s", __FUNCTION__);
 
     if (!isInitialized()) {
-        LOGE("%s: Emulated camera device is not initialized", __FUNCTION__);
+        ALOGE("%s: Emulated camera device is not initialized", __FUNCTION__);
         return EINVAL;
     }
 
     const status_t res = getWorkerThread()->stopThread();
-    LOGE_IF(res != NO_ERROR, "%s: Unable to stop worker thread", __FUNCTION__);
+    ALOGE_IF(res != NO_ERROR, "%s: Unable to stop worker thread", __FUNCTION__);
     return res;
 }
 
@@ -297,7 +297,7 @@ status_t EmulatedCameraDevice::WorkerThread::readyToRun()
         ALOGV("Emulated device's worker thread has been started.");
         return NO_ERROR;
     } else {
-        LOGE("%s: Unable to create thread control FDs: %d -> %s",
+        ALOGE("%s: Unable to create thread control FDs: %d -> %s",
              __FUNCTION__, errno, strerror(errno));
         return errno;
     }
@@ -328,16 +328,16 @@ status_t EmulatedCameraDevice::WorkerThread::stopThread()
                 }
                 ALOGV("Emulated camera device's worker thread has been stopped.");
             } else {
-                LOGE("%s: requestExitAndWait failed: %d -> %s",
+                ALOGE("%s: requestExitAndWait failed: %d -> %s",
                      __FUNCTION__, res, strerror(-res));
             }
         } else {
-            LOGE("%s: Unable to send THREAD_STOP message: %d -> %s",
+            ALOGE("%s: Unable to send THREAD_STOP message: %d -> %s",
                  __FUNCTION__, errno, strerror(errno));
             res = errno ? errno : EINVAL;
         }
     } else {
-        LOGE("%s: Thread control FDs are not opened", __FUNCTION__);
+        ALOGE("%s: Thread control FDs are not opened", __FUNCTION__);
     }
 
     return res;
@@ -363,7 +363,7 @@ EmulatedCameraDevice::WorkerThread::Select(int fd, int timeout)
     }
     int res = TEMP_FAILURE_RETRY(select(fd_num, fds, NULL, NULL, tvp));
     if (res < 0) {
-        LOGE("%s: select returned %d and failed: %d -> %s",
+        ALOGE("%s: select returned %d and failed: %d -> %s",
              __FUNCTION__, res, errno, strerror(errno));
         return ERROR;
     } else if (res == 0) {
@@ -374,7 +374,7 @@ EmulatedCameraDevice::WorkerThread::Select(int fd, int timeout)
         ControlMessage msg;
         res = TEMP_FAILURE_RETRY(read(mControlFD, &msg, sizeof(msg)));
         if (res != sizeof(msg)) {
-            LOGE("%s: Unexpected message size %d, or an error %d -> %s",
+            ALOGE("%s: Unexpected message size %d, or an error %d -> %s",
                  __FUNCTION__, res, errno, strerror(errno));
             return ERROR;
         }
@@ -383,7 +383,7 @@ EmulatedCameraDevice::WorkerThread::Select(int fd, int timeout)
             ALOGV("%s: THREAD_STOP message is received", __FUNCTION__);
             return EXIT_THREAD;
         } else {
-            LOGE("Unknown worker thread message %d", msg);
+            ALOGE("Unknown worker thread message %d", msg);
             return ERROR;
         }
     } else {

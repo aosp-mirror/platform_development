@@ -23,12 +23,12 @@ static EGLClient_glesInterface * s_gl = NULL;
 #define DEFINE_AND_VALIDATE_HOST_CONNECTION(ret) \
     HostConnection *hostCon = HostConnection::get(); \
     if (!hostCon) { \
-        LOGE("egl: Failed to get host connection\n"); \
+        ALOGE("egl: Failed to get host connection\n"); \
         return ret; \
     } \
     renderControl_encoder_context_t *rcEnc = hostCon->rcEncoder(); \
     if (!rcEnc) { \
-        LOGE("egl: Failed to get renderControl encoder context\n"); \
+        ALOGE("egl: Failed to get renderControl encoder context\n"); \
         return ret; \
     }
 

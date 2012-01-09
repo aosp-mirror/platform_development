@@ -49,7 +49,7 @@
 # define D(...) do{}while(0)
 #endif
 
-#define  E(...)  LOGE(__VA_ARGS__)
+#define  E(...)  ALOGE(__VA_ARGS__)
 
 /* Get brightness(0~255) from state. */
 static int

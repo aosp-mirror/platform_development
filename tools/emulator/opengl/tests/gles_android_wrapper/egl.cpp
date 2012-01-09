@@ -58,7 +58,7 @@ int initApi(const char *driverLibName, const char *implLibName, T **dispatchTabl
 {
     void *driverLib = dlopen(driverLibName, RTLD_NOW | RTLD_LOCAL);
     if (driverLib == NULL) {
-        LOGE("failed to load %s : %s\n", driverLibName, dlerror());
+        ALOGE("failed to load %s : %s\n", driverLibName, dlerror());
         return -1;
     }
 
@@ -66,13 +66,13 @@ int initApi(const char *driverLibName, const char *implLibName, T **dispatchTabl
     createFcn_t createFcn;
     createFcn = (createFcn_t) dlsym(driverLib, "createFromLib");
     if (createFcn == NULL) {
-        LOGE("failed to load createFromLib constructor function\n");
+        ALOGE("failed to load createFromLib constructor function\n");
         return -1;
     }
 
     void *implLib = dlopen(implLibName, RTLD_NOW | RTLD_LOCAL);
     if (implLib == NULL) {
-        LOGE("couldn't open %s", implLibName);
+        ALOGE("couldn't open %s", implLibName);
         return -2;
     }
     *dispatchTable = createFcn(implLib, accessor);
@@ -112,20 +112,20 @@ const char *getProcName()
             // we need to obtain our process name from the command line;
             FILE *fp = fopen("/proc/self/cmdline", "rt");
             if (fp == NULL) {
-                LOGE("couldn't open /proc/self/cmdline\n");
+                ALOGE("couldn't open /proc/self/cmdline\n");
                 return NULL;
             }
 
             char line[1000];
             if (fgets(line, sizeof(line), fp) == NULL) {
-                LOGE("couldn't read the self cmdline from \n");
+                ALOGE("couldn't read the self cmdline from \n");
                 fclose(fp);
                 return NULL;
             }
             fclose(fp);
 
             if (line[0] == '\0') {
-                LOGE("cmdline is empty\n");
+                ALOGE("cmdline is empty\n");
                 return NULL;
             }
 
@@ -159,7 +159,7 @@ bool isNeedEncode()
     // check on our whitelist
     FILE *fp = fopen(GLES_EMUL_TARGETS_FILE, "rt");
     if (fp == NULL) {
-        LOGE("couldn't open %s\n", GLES_EMUL_TARGETS_FILE);
+        ALOGE("couldn't open %s\n", GLES_EMUL_TARGETS_FILE);
         return false;
     }
 
@@ -213,7 +213,7 @@ void initDispatchTables()
         // initialize a connection to the server, and the GLESv1/v2 encoders;
         ServerConnection * connection = ServerConnection::s_getServerConnection();
         if (connection == NULL) {
-            LOGE("couldn't create server connection\n");
+            ALOGE("couldn't create server connection\n");
             s_needEncode = false;
         }
     }

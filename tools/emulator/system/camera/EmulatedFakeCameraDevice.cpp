@@ -67,7 +67,7 @@ status_t EmulatedFakeCameraDevice::connectDevice()
 
     Mutex::Autolock locker(&mObjectLock);
     if (!isInitialized()) {
-        LOGE("%s: Fake camera device is not initialized.", __FUNCTION__);
+        ALOGE("%s: Fake camera device is not initialized.", __FUNCTION__);
         return EINVAL;
     }
     if (isConnected()) {
@@ -91,7 +91,7 @@ status_t EmulatedFakeCameraDevice::disconnectDevice()
         return NO_ERROR;
     }
     if (isStarted()) {
-        LOGE("%s: Cannot disconnect from the started device.", __FUNCTION__);
+        ALOGE("%s: Cannot disconnect from the started device.", __FUNCTION__);
         return EINVAL;
     }
 
@@ -109,11 +109,11 @@ status_t EmulatedFakeCameraDevice::startDevice(int width,
 
     Mutex::Autolock locker(&mObjectLock);
     if (!isConnected()) {
-        LOGE("%s: Fake camera device is not connected.", __FUNCTION__);
+        ALOGE("%s: Fake camera device is not connected.", __FUNCTION__);
         return EINVAL;
     }
     if (isStarted()) {
-        LOGE("%s: Fake camera device is already started.", __FUNCTION__);
+        ALOGE("%s: Fake camera device is already started.", __FUNCTION__);
         return EINVAL;
     }
 
@@ -154,7 +154,7 @@ status_t EmulatedFakeCameraDevice::startDevice(int width,
                 break;
 
             default:
-                LOGE("%s: Unknown pixel format %.4s", __FUNCTION__,
+                ALOGE("%s: Unknown pixel format %.4s", __FUNCTION__,
                      reinterpret_cast<const char*>(&mPixelFormat));
                 return EINVAL;
         }
@@ -162,7 +162,7 @@ status_t EmulatedFakeCameraDevice::startDevice(int width,
         mUVInRow = (width / 2) * mUVStep;
         mState = ECDS_STARTED;
     } else {
-        LOGE("%s: commonStartDevice failed", __FUNCTION__);
+        ALOGE("%s: commonStartDevice failed", __FUNCTION__);
     }
 
     return res;

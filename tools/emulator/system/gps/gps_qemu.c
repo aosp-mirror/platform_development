@@ -686,13 +686,13 @@ gps_state_thread( void*  arg )
         nevents = epoll_wait( epoll_fd, events, 2, -1 );
         if (nevents < 0) {
             if (errno != EINTR)
-                LOGE("epoll_wait() unexpected error: %s", strerror(errno));
+                ALOGE("epoll_wait() unexpected error: %s", strerror(errno));
             continue;
         }
         D("gps thread received %d events", nevents);
         for (ne = 0; ne < nevents; ne++) {
             if ((events[ne].events & (EPOLLERR|EPOLLHUP)) != 0) {
-                LOGE("EPOLLERR or EPOLLHUP after epoll_wait() !?");
+                ALOGE("EPOLLERR or EPOLLHUP after epoll_wait() !?");
                 return;
             }
             if ((events[ne].events & EPOLLIN) != 0) {
@@ -738,7 +738,7 @@ gps_state_thread( void*  arg )
                             if (errno == EINTR)
                                 continue;
                             if (errno != EWOULDBLOCK)
-                                LOGE("error while reading from gps daemon socket: %s:", strerror(errno));
+                                ALOGE("error while reading from gps daemon socket: %s:", strerror(errno));
                             break;
                         }
                         D("received %d bytes: %.*s", ret, ret, buff);
@@ -749,7 +749,7 @@ gps_state_thread( void*  arg )
                 }
                 else
                 {
-                    LOGE("epoll_wait() returned unkown fd %d ?", fd);
+                    ALOGE("epoll_wait() returned unkown fd %d ?", fd);
                 }
             }
         }
@@ -775,14 +775,14 @@ gps_state_init( GpsState*  state, GpsCallbacks* callbacks )
     D("gps emulation will read from '%s' qemud channel", QEMU_CHANNEL_NAME );
 
     if ( socketpair( AF_LOCAL, SOCK_STREAM, 0, state->control ) < 0 ) {
-        LOGE("could not create thread control socket pair: %s", strerror(errno));
+        ALOGE("could not create thread control socket pair: %s", strerror(errno));
         goto Fail;
     }
 
     state->thread = callbacks->create_thread_cb( "gps_state_thread", gps_state_thread, state );
 
     if ( !state->thread ) {
-        LOGE("could not create gps thread: %s", strerror(errno));
+        ALOGE("could not create gps thread: %s", strerror(errno));
         goto Fail;
     }
 

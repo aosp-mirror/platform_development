@@ -113,12 +113,12 @@ static int map_buffer(cb_handle_t *cb, void **vaddr)
 #define DEFINE_AND_VALIDATE_HOST_CONNECTION \
     HostConnection *hostCon = HostConnection::get(); \
     if (!hostCon) { \
-        LOGE("gralloc: Failed to get host connection\n"); \
+        ALOGE("gralloc: Failed to get host connection\n"); \
         return -EIO; \
     } \
     renderControl_encoder_context_t *rcEnc = hostCon->rcEncoder(); \
     if (!rcEnc) { \
-        LOGE("gralloc: Failed to get renderControl encoder context\n"); \
+        ALOGE("gralloc: Failed to get renderControl encoder context\n"); \
         return -EIO; \
     }
 
@@ -209,7 +209,7 @@ static int gralloc_alloc(alloc_device_t* dev,
 
         fd = ashmem_create_region("gralloc-buffer", ashmem_size);
         if (fd < 0) {
-            LOGE("gralloc_alloc failed to create ashmem region: %s\n", strerror(errno));
+            ALOGE("gralloc_alloc failed to create ashmem region: %s\n", strerror(errno));
             return -errno;
         }
     }
@@ -503,7 +503,7 @@ static int gralloc_lock(gralloc_module_t const* module,
     private_module_t *gr = (private_module_t *)module;
     cb_handle_t *cb = (cb_handle_t *)handle;
     if (!gr || !cb_handle_t::validate(cb)) {
-        LOGE("gralloc_lock bad handle\n");
+        ALOGE("gralloc_lock bad handle\n");
         return -EINVAL;
     }
 
@@ -522,7 +522,7 @@ static int gralloc_lock(gralloc_module_t const* module,
          (!sw_read && !sw_write) ||
          (sw_read && !sw_read_allowed) ||
          (sw_write && !sw_write_allowed) ) {
-        LOGE("gralloc_lock usage mismatch usage=0x%x cb->usage=0x%x\n", usage, cb->usage);
+        ALOGE("gralloc_lock usage mismatch usage=0x%x cb->usage=0x%x\n", usage, cb->usage);
         return -EINVAL;
     }
 
@@ -559,7 +559,7 @@ static int gralloc_lock(gralloc_module_t const* module,
         if (hostSyncStatus < 0) {
             // host failed the color buffer sync - probably since it was already
             // locked for write access. fail the lock.
-            LOGE("gralloc_lock cacheFlush failed postCount=%d sw_read=%d\n",
+            ALOGE("gralloc_lock cacheFlush failed postCount=%d sw_read=%d\n",
                  postCount, sw_read);
             return -EBUSY;
         }
@@ -669,7 +669,7 @@ static int gralloc_device_open(const hw_module_t* module,
         // return error if connection with host can not be established
         HostConnection *hostCon = HostConnection::get();
         if (!hostCon) {
-            LOGE("gralloc: failed to get host connection while opening %s\n", name);
+            ALOGE("gralloc: failed to get host connection while opening %s\n", name);
             return -EIO;
         }
 
@@ -814,6 +814,6 @@ fallback_init(void)
         }
     }
     if (sFallback == NULL) {
-        LOGE("Could not find software fallback module!?");
+        ALOGE("Could not find software fallback module!?");
     }
 }
