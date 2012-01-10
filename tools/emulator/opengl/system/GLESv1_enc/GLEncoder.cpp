@@ -258,7 +258,7 @@ void GLEncoder::s_glPixelStorei(void *self, GLenum param, GLint value)
 {
     GLEncoder *ctx = (GLEncoder *)self;
     ctx->m_glPixelStorei_enc(ctx, param, value);
-    LOG_ASSERT(ctx->m_state, "GLEncoder::s_glPixelStorei");
+    ALOG_ASSERT(ctx->m_state, "GLEncoder::s_glPixelStorei");
     ctx->m_state->setPixelStore(param, value);
 }
 
