@@ -32,6 +32,7 @@ import android.content.AbstractThreadedSyncAdapter;
 import android.content.ContentProviderClient;
 import android.content.Context;
 import android.content.SyncResult;
+import android.os.Build;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
@@ -115,7 +116,20 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
             // 2-way contact sync providers - it's more likely that one-way
             // sync providers (IM clients, social networking apps, etc) would
             // use this feature.
+
             ContactManager.updateStatusMessages(mContext, updatedContacts);
+
+            // This is a demo of how you can add stream items for contacts on
+            // the client. This probably won't apply to
+            // 2-way contact sync providers - it's more likely that one-way
+            // sync providers (IM clients, social networking apps, etc) would
+            // use this feature. This is only supported in ICS MR1 or above.
+
+            if (Build.VERSION.SDK_INT >=
+                    Build.VERSION_CODES.ICE_CREAM_SANDWICH_MR1) {
+                ContactManager.addStreamItems(mContext, updatedContacts,
+                    account.name, account.type);
+            }
 
             // Save off the new sync marker. On our next sync, we only want to receive
             // contacts that have changed since this sync...
@@ -168,3 +182,4 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
         mAccountManager.setUserData(account, SYNC_MARKER_KEY, Long.toString(marker));
     }
 }
+
