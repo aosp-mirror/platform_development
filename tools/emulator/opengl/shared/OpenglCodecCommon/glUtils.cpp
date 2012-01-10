@@ -81,6 +81,7 @@ size_t glUtilsParamSize(GLenum param)
 
     switch(param)
     {
+    case GL_DEPTH_TEST:
     case GL_DEPTH_FUNC:
     case GL_DEPTH_BITS:
     case GL_MAX_CLIP_PLANES:

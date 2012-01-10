@@ -1,8 +1,8 @@
-#include<GLcommon/GLESvalidate.h>
-#include<GLES/gl.h>
-#include<GLES/glext.h>
-#include<GLES2/gl2.h>
-#include<GLES2/gl2ext.h>
+#include <GLcommon/GLESvalidate.h>
+#include <GLES/gl.h>
+#include <GLES/glext.h>
+#include <GLES2/gl2.h>
+#include <GLES2/gl2ext.h>
 #include <OpenglCodecCommon/ErrorLog.h>
 
 
