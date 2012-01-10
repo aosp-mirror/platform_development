@@ -233,8 +233,11 @@ class TestRunner(object):
     self._TurnOffVerifier(tests)
     self._DoFullBuild(tests)
 
-    target_set = Set()
-    extra_args_set = Set()
+    target_set = []
+    if self._IsCtsTests(tests):
+      target_set.append("cts/CtsBuild.mk")
+
+    extra_args_set = []
     for test_suite in tests:
       self._AddBuildTarget(test_suite, target_set, extra_args_set)
 
@@ -260,8 +263,8 @@ class TestRunner(object):
           logger.Log(cmd)
           run_command.RunCommand(cmd, return_output=False)
 
-      target_build_string = " ".join(list(target_set))
-      extra_args_string = " ".join(list(extra_args_set))
+      target_build_string = " ".join(target_set)
+      extra_args_string = " ".join(extra_args_set)
 
       # mmm cannot be used from python, so perform a similar operation using
       # ONE_SHOT_MAKEFILE
@@ -315,7 +318,7 @@ class TestRunner(object):
     if not test_suite.IsFullMake():
       build_dir = test_suite.GetBuildPath()
       if self._AddBuildTargetPath(build_dir, target_set):
-        extra_args_set.add(test_suite.GetExtraBuildArgs())
+        extra_args_set.append(test_suite.GetExtraBuildArgs())
       for path in test_suite.GetBuildDependencies(self._options):
         self._AddBuildTargetPath(path, target_set)
 
@@ -323,7 +326,7 @@ class TestRunner(object):
     if build_dir is not None:
       build_file_path = os.path.join(build_dir, "Android.mk")
       if os.path.isfile(os.path.join(self._root_path, build_file_path)):
-        target_set.add(build_file_path)
+        target_set.append(build_file_path)
         return True
       else:
         logger.Log("%s has no Android.mk, skipping" % build_dir)
