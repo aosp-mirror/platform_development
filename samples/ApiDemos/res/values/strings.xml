@@ -1195,11 +1195,9 @@
 
     <string name="google_login_username_text"></string>
 
-    <string name="incoming_message_notify_text">Show Notification</string>
-
     <string name="incoming_message_info_message_text">this is the text of a previous message.\nkthx. meet u for dinner. cul8r</string>
 
-    <string name="incoming_message_view_message_text">this is the text of a previous message.\nkthx. meet u for dinner. cul8r</string>
+    <string name="incoming_message_view_message_text">This is the text of the posted notification.</string>
     <string name="imcoming_message_view_message2_text">Did you notice that the status bar icon disappeared?</string>
     <string name="imcoming_message_ticker_text">New text message: <xliff:g id="text">%0$s</xliff:g></string>
 
