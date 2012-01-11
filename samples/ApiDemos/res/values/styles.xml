@@ -30,6 +30,13 @@
     <style name="ThemeHolo" parent="android:Theme">
     </style>
 
+    <!-- This is a theme that will adjust itself depending on the API version.
+         The default definition is the safe one, using a theme that has always
+         been defined.  Look at values-11/styles.xml for a variation that is
+         selected when the holographic theme is available. -->
+    <style name="ThemeHoloDialog" parent="android:Theme.Dialog">
+    </style>
+
     <!-- Base application theme is the default theme. -->
     <style name="Theme" parent="android:Theme">
     </style>
