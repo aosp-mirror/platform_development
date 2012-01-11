@@ -615,23 +615,26 @@
             </intent-filter>
         </activity>
 
-<!-- BEGIN_INCLUDE(no_task_affinity) -->
         <activity android:name=".app.IncomingMessage"
-                android:label="App/Notification/IncomingMessage"
-                android:taskAffinity="">
+                android:label="App/Notification/IncomingMessage">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
             </intent-filter>
         </activity>
-<!-- END_INCLUDE(no_task_affinity) -->
 
-        <activity android:name=".app.IncomingMessageView" android:label="App/Notification/IncomingMessageView">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.EMBED" />
-            </intent-filter>
+        <activity android:name=".app.IncomingMessageView"
+                android:label="App/Notification/IncomingMessageView">
         </activity>
+
+<!-- BEGIN_INCLUDE(interstitial_affinity) -->
+        <activity android:name=".app.IncomingMessageInterstitial"
+                android:label="You have messages"
+                android:theme="@style/ThemeHoloDialog"
+                android:launchMode="singleInstance"
+                android:excludeFromRecents="true">
+        </activity>
+<!-- END_INCLUDE(interstitial_affinity) -->
 
         <!-- This is used to display a notification selected by the user
              from StatusBarNotifications.  Note the configuration here so

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Copyright (C) 2007 The Android Open Source Project
+<!-- Copyright (C) 2012 The Android Open Source Project
 
      Licensed under the Apache License, Version 2.0 (the "License");
      you may not use this file except in compliance with the License.
@@ -24,27 +24,14 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
+        android:paddingBottom="4dp"
         android:textAppearance="?android:attr/textAppearanceMedium"
-        android:text="Display a notification that will switch to the app in a new activity stack." />
+        android:text="This would be where you would see a summary of the information related to the notification.  Instead, we'll just give you a button." />
 
     <Button
         android:id="@+id/notify_app"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Show App Notification" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:paddingTop="16dp"
-        android:textAppearance="?android:attr/textAppearanceMedium"
-        android:text="Display a notification that will go to a dedicated interstitial activity." />
-
-    <Button
-        android:id="@+id/notify_interstitial"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Show Interstitial Notification" />
+        android:text="Switch To App" />
 
 </LinearLayout>
