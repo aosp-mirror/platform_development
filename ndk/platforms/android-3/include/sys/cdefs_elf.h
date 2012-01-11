@@ -95,6 +95,10 @@
 	__asm__(".section _sec\n\t.asciz _str\n\t.previous")
 #endif
 
+/* GCC visibility helper macro */
+#define __LIBC_HIDDEN__							\
+	__attribute__ ((visibility ("hidden")))
+
 #define	__IDSTRING(_n,_s)		__SECTIONSTRING(.ident,_s)
 
 #define	__RCSID(_s)			__IDSTRING(rcsid,_s)
