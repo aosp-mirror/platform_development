@@ -83,7 +83,7 @@ struct ip {
 #define	IPTOS_LOWDELAY		0x10
 #define	IPTOS_THROUGHPUT	0x08
 #define	IPTOS_RELIABILITY	0x04
-/*	IPTOS_LOWCOST		0x02 XXX */
+#define	IPTOS_MINCOST		0x02
 #if 1
 /* ECN RFC3168 obsoletes RFC2481, and these will be deprecated soon. */
 #define IPTOS_CE		0x01	/* congestion experienced */
