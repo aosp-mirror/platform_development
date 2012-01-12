@@ -25,7 +25,9 @@ bool  GLESbuffer::setBuffer(GLuint size,GLuint usage,const GLvoid* data) {
     }
     m_data = new unsigned char[size];
     if(m_data) {
-        memcpy(m_data,data,size);
+        if(data) {
+            memcpy(m_data,data,size);
+        }
         m_conversionManager.clear();
         m_conversionManager.addRange(Range(0,m_size));
         return true;
