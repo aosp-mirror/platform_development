@@ -69,7 +69,7 @@ class TestRunner(object):
       "for a list of tests, or you can launch one or more tests.")
 
   # default value for make -jX
-  _DEFAULT_JOBS = 4
+  _DEFAULT_JOBS = 16
 
   _DALVIK_VERIFIER_OFF_PROP = "dalvik.vm.dexopt-flags = v=n"
 
