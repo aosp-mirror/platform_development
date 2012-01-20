@@ -14,43 +14,55 @@
      limitations under the License.
 -->
 
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:orientation="vertical"
-              android:layout_width="match_parent"
-              android:layout_height="wrap_content">
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
 
-  <!-- Four TextView widgets, each one displaying text containing links. -->
+    <LinearLayout android:orientation="vertical"
+                  android:layout_width="match_parent"
+                  android:layout_height="wrap_content"
+                  android:showDividers="middle"
+                  android:divider="?android:attr/listDivider">
 
-  <!-- text1 automatically linkifies things like URLs and phone numbers. -->
-  <TextView xmlns:android="http://schemas.android.com/apk/res/android"
-            android:id="@+id/text1"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:autoLink="all"
-            android:text="@string/link_text_auto"
-            />
+      <!-- Four TextView widgets, each one displaying text containing links. -->
 
-  <!-- text2 uses a string resource containing explicit <a> tags to
-       specify links. -->
-  <TextView xmlns:android="http://schemas.android.com/apk/res/android"
-            android:id="@+id/text2"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:text="@string/link_text_manual"
-            />
+      <!-- text1 automatically linkifies things like URLs and phone numbers. -->
+      <TextView android:id="@+id/text1"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:paddingBottom="8dp"
+                android:autoLink="all"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:text="@string/link_text_auto"
+                />
 
-  <!-- text3 builds the text in the Java code using HTML. -->
-  <TextView xmlns:android="http://schemas.android.com/apk/res/android"
-            android:id="@+id/text3"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            />
+      <!-- text2 uses a string resource containing explicit <a> tags to
+           specify links. -->
+      <TextView android:id="@+id/text2"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:text="@string/link_text_manual"
+                />
 
-  <!-- text4 builds the text in the Java code without using HTML. -->
-  <TextView xmlns:android="http://schemas.android.com/apk/res/android"
-            android:id="@+id/text4"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            />
+      <!-- text3 builds the text in the Java code using HTML. -->
+      <TextView android:id="@+id/text3"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                />
 
-</LinearLayout>
+      <!-- text4 builds the text in the Java code without using HTML. -->
+      <TextView android:id="@+id/text4"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:paddingTop="8dp"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                />
+
+    </LinearLayout>
+</ScrollView>
