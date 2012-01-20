@@ -45,8 +45,12 @@
         android:name="android.permission.READ_SYNC_SETTINGS" />
     <uses-permission
         android:name="android.permission.WRITE_SYNC_SETTINGS" />
+    <uses-permission
+        android:name="android.permission.READ_SOCIAL_STREAM" />
+    <uses-permission
+        android:name="android.permission.WRITE_SOCIAL_STREAM" />
 
-    <uses-sdk android:minSdkVersion="8" android:targetSdkVersion="14"/>
+    <uses-sdk android:minSdkVersion="8" android:targetSdkVersion="15" />
 
     <application
         android:icon="@drawable/icon"
