@@ -26,6 +26,7 @@ import android.provider.ContactsContract;
 import android.util.Log;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * This class handles execution of batch mOperations on Contacts provider.
@@ -52,24 +53,27 @@ final public class BatchOperation {
         mOperations.add(cpo);
     }
 
-    public Uri execute() {
-        Uri result = null;
+    public List<Uri> execute() {
+        List<Uri> resultUris = new ArrayList<Uri>();
 
         if (mOperations.size() == 0) {
-            return result;
+            return resultUris;
         }
         // Apply the mOperations to the content provider
         try {
             ContentProviderResult[] results = mResolver.applyBatch(ContactsContract.AUTHORITY,
                     mOperations);
-            if ((results != null) && (results.length > 0))
-                result = results[0].uri;
+            if ((results != null) && (results.length > 0)){
+                for (int i = 0; i < results.length; i++){
+                    resultUris.add(results[i].uri);
+                }
+            }
         } catch (final OperationApplicationException e1) {
             Log.e(TAG, "storing contact data failed", e1);
         } catch (final RemoteException e2) {
             Log.e(TAG, "storing contact data failed", e2);
         }
         mOperations.clear();
-        return result;
+        return resultUris;
     }
 }
