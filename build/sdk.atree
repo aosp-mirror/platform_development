@@ -56,6 +56,9 @@ frameworks/base/libs/rs/scriptc               platform-tools/renderscript/includ
 external/clang/lib/Headers                    platform-tools/renderscript/clang-include
 external/clang/LICENSE.TXT                    platform-tools/renderscript/clang-include/LICENSE.TXT
 
+# API database for tools such as lint
+development/sdk/api-versions.xml              platform-tools/api/api-versions.xml
+
 ##############################################################################
 # Platform Component
 ##############################################################################
