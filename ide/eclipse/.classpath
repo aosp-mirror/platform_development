@@ -7,6 +7,9 @@
 	<classpathentry kind="src" path="packages/apps/CertInstaller/src"/>
 	<classpathentry kind="src" path="packages/apps/Contacts/src"/>
 	<classpathentry kind="src" path="packages/apps/DeskClock/src"/>
+	<classpathentry kind="src" path="packages/apps/Email/src"/>
+	<classpathentry kind="src" path="packages/apps/Email/emailcommon/src"/>
+	<classpathentry kind="src" path="packages/apps/Exchange/src"/>
 	<classpathentry kind="src" path="packages/apps/HTMLViewer/src"/>
 	<classpathentry kind="src" path="packages/apps/Launcher2/src"/>
 	<classpathentry kind="src" path="packages/apps/Mms/src"/>
@@ -17,6 +20,7 @@
 	<classpathentry kind="src" path="packages/apps/Settings/src"/>
 	<classpathentry kind="src" path="packages/apps/SoundRecorder/src"/>
 	<classpathentry kind="src" path="packages/apps/Stk/src"/>
+	<classpathentry kind="src" path="packages/apps/UnifiedEmail/src"/>
 	<classpathentry kind="src" path="packages/apps/VoiceDialer/src"/>
 	<classpathentry kind="src" path="packages/providers/CalendarProvider/src"/>
 	<classpathentry kind="src" path="packages/providers/ContactsProvider/src"/>
@@ -84,6 +88,7 @@
 	<classpathentry kind="src" path="out/target/common/obj/APPS/Phone_intermediates/src/src"/>
 	<classpathentry kind="src" path="out/target/common/obj/APPS/QuickSearchBox_intermediates/src/src"/>
 	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/android-common-carousel_intermediates/src/renderscript/src"/>
+	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/com.android.emailcommon_intermediates/src/src"/>
 	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/framework_intermediates/src/core/java"/>
 	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/framework_intermediates/src/keystore/java"/>
 	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/framework_intermediates/src/location/java"/>
