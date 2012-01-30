@@ -4,16 +4,9 @@
 	<classpathentry kind="src" path="packages/apps/Browser/src"/>
 	<classpathentry kind="src" path="packages/apps/Calendar/src"/>
 	<classpathentry kind="src" path="packages/apps/Calculator/src"/>
-	<classpathentry kind="src" path="packages/apps/Camera/src"/>
 	<classpathentry kind="src" path="packages/apps/CertInstaller/src"/>
 	<classpathentry kind="src" path="packages/apps/Contacts/src"/>
 	<classpathentry kind="src" path="packages/apps/DeskClock/src"/>
-	<classpathentry kind="src" path="packages/apps/Email/src"/>
-	<classpathentry kind="src" path="packages/apps/Email/emailcommon/src"/>
-	<classpathentry kind="src" path="packages/apps/Exchange/src"/>
-	<classpathentry kind="src" path="packages/apps/Gallery2/src"/>
-	<classpathentry kind="src" path="packages/apps/Gallery2/src_pd"/>
-	<classpathentry kind="src" path="packages/apps/Gallery2/gallerycommon/src"/>
 	<classpathentry kind="src" path="packages/apps/HTMLViewer/src"/>
 	<classpathentry kind="src" path="packages/apps/Launcher2/src"/>
 	<classpathentry kind="src" path="packages/apps/Mms/src"/>
@@ -60,6 +53,8 @@
 	<classpathentry kind="src" path="frameworks/opt/calendar/src"/>
 	<classpathentry kind="src" path="frameworks/opt/vcard/java"/>
 	<classpathentry kind="src" path="frameworks/support/v13/java"/>
+	<classpathentry kind="src" path="frameworks/support/v13/ics"/>
+	<classpathentry kind="src" path="frameworks/support/v13/ics-mr1"/>
 	<classpathentry kind="src" path="development/samples/ApiDemos/src"/>
 	<classpathentry kind="src" path="development/samples/ApiDemos/tests/src"/>
 	<classpathentry kind="src" path="development/samples/Compass/src"/>
@@ -89,7 +84,6 @@
 	<classpathentry kind="src" path="out/target/common/obj/APPS/Phone_intermediates/src/src"/>
 	<classpathentry kind="src" path="out/target/common/obj/APPS/QuickSearchBox_intermediates/src/src"/>
 	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/android-common-carousel_intermediates/src/renderscript/src"/>
-	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/com.android.emailcommon_intermediates/src/src"/>
 	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/framework_intermediates/src/core/java"/>
 	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/framework_intermediates/src/keystore/java"/>
 	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/framework_intermediates/src/location/java"/>
