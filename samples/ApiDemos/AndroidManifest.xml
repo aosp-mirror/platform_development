@@ -631,7 +631,8 @@
         <activity android:name=".app.IncomingMessageInterstitial"
                 android:label="You have messages"
                 android:theme="@style/ThemeHoloDialog"
-                android:launchMode="singleInstance"
+                android:launchMode="singleTask"
+                android:taskAffinity=""
                 android:excludeFromRecents="true">
         </activity>
 <!-- END_INCLUDE(interstitial_affinity) -->
