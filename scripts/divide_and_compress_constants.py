@@ -36,23 +36,24 @@ file_preamble = """#!/usr/bin/env python
 # limitations under the License.
 #
 
-import wsgiref.handlers\n'
-from google.appengine.ext import zipserve\n'
-from google.appengine.ext import webapp\n'
-import memcache_zipserve\n\n\n'
+import wsgiref.handlers
+from google.appengine.ext import zipserve
+from google.appengine.ext import webapp
+import memcache_zipserve
+
 class MainHandler(webapp.RequestHandler):
 
   def get(self):
     self.response.out.write('Hello world!')
 
 def main():
-  application = webapp.WSGIApplication(['/(.*)',
-    memcache_zipserve.create_handler(["""
+  handler = memcache_zipserve.create_handler(["""
 
-file_endpiece = """])),
-],
-debug=False)
+file_endpiece = """
+    ])
+  application = webapp.WSGIApplication([('/(.*)', handler)], debug=False)
   wsgiref.handlers.CGIHandler().run(application)
 
-if __name__ == __main__:
-  main()"""
+if __name__ == '__main__':
+    main()
+"""
