@@ -1096,7 +1096,6 @@ public class Monkey {
                     eventCounter++;
                     if (mCountEvents) {
                         cycleCounter++;
-                        writeScriptLog(cycleCounter);
                     }
                 }
             } else {
