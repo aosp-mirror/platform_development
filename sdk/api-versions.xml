@@ -6947,9 +6947,9 @@
 		<extends name="java/lang/Enum" />
 		<method name="valueOf(Ljava/lang/String;)Landroid/database/CursorJoiner$Result;" />
 		<method name="values()[Landroid/database/CursorJoiner$Result;" />
-		<field name="BOTH" since="14" />
-		<field name="LEFT" since="14" />
-		<field name="RIGHT" since="14" />
+		<field name="BOTH" />
+		<field name="LEFT" />
+		<field name="RIGHT" />
 	</class>
 	<class name="android/database/CursorWindow" since="1">
 		<extends name="android/database/sqlite/SQLiteClosable" />
@@ -7849,8 +7849,8 @@
 		<extends name="java/lang/Enum" />
 		<method name="valueOf(Ljava/lang/String;)Landroid/graphics/AvoidXfermode$Mode;" />
 		<method name="values()[Landroid/graphics/AvoidXfermode$Mode;" />
-		<field name="AVOID" since="14" />
-		<field name="TARGET" since="14" />
+		<field name="AVOID" />
+		<field name="TARGET" />
 	</class>
 	<class name="android/graphics/Bitmap" since="1">
 		<extends name="java/lang/Object" />
@@ -7904,18 +7904,18 @@
 		<extends name="java/lang/Enum" />
 		<method name="valueOf(Ljava/lang/String;)Landroid/graphics/Bitmap$CompressFormat;" />
 		<method name="values()[Landroid/graphics/Bitmap$CompressFormat;" />
-		<field name="JPEG" since="14" />
-		<field name="PNG" since="14" />
+		<field name="JPEG" />
+		<field name="PNG" />
 		<field name="WEBP" since="14" />
 	</class>
 	<class name="android/graphics/Bitmap$Config" since="1">
 		<extends name="java/lang/Enum" />
 		<method name="valueOf(Ljava/lang/String;)Landroid/graphics/Bitmap$Config;" />
 		<method name="values()[Landroid/graphics/Bitmap$Config;" />
-		<field name="ALPHA_8" since="14" />
-		<field name="ARGB_4444" since="14" />
-		<field name="ARGB_8888" since="14" />
-		<field name="RGB_565" since="14" />
+		<field name="ALPHA_8" />
+		<field name="ARGB_4444" />
+		<field name="ARGB_8888" />
+		<field name="RGB_565" />
 	</class>
 	<class name="android/graphics/BitmapFactory" since="1">
 		<extends name="java/lang/Object" />
@@ -7979,10 +7979,10 @@
 		<extends name="java/lang/Enum" />
 		<method name="valueOf(Ljava/lang/String;)Landroid/graphics/BlurMaskFilter$Blur;" />
 		<method name="values()[Landroid/graphics/BlurMaskFilter$Blur;" />
-		<field name="INNER" since="14" />
-		<field name="NORMAL" since="14" />
-		<field name="OUTER" since="14" />
-		<field name="SOLID" since="14" />
+		<field name="INNER" />
+		<field name="NORMAL" />
+		<field name="OUTER" />
+		<field name="SOLID" />
 	</class>
 	<class name="android/graphics/Camera" since="1">
 		<extends name="java/lang/Object" />
@@ -8102,16 +8102,16 @@
 		<extends name="java/lang/Enum" />
 		<method name="valueOf(Ljava/lang/String;)Landroid/graphics/Canvas$EdgeType;" />
 		<method name="values()[Landroid/graphics/Canvas$EdgeType;" />
-		<field name="AA" since="14" />
-		<field name="BW" since="14" />
+		<field name="AA" />
+		<field name="BW" />
 	</class>
 	<class name="android/graphics/Canvas$VertexMode" since="1">
 		<extends name="java/lang/Enum" />
 		<method name="valueOf(Ljava/lang/String;)Landroid/graphics/Canvas$VertexMode;" />
 		<method name="values()[Landroid/graphics/Canvas$VertexMode;" />
-		<field name="TRIANGLES" since="14" />
-		<field name="TRIANGLE_FAN" since="14" />
-		<field name="TRIANGLE_STRIP" since="14" />
+		<field name="TRIANGLES" />
+		<field name="TRIANGLE_FAN" />
+		<field name="TRIANGLE_STRIP" />
 	</class>
 	<class name="android/graphics/Color" since="1">
 		<extends name="java/lang/Object" />
@@ -8226,9 +8226,9 @@
 		<extends name="java/lang/Enum" />
 		<method name="valueOf(Ljava/lang/String;)Landroid/graphics/Interpolator$Result;" />
 		<method name="values()[Landroid/graphics/Interpolator$Result;" />
-		<field name="FREEZE_END" since="14" />
-		<field name="FREEZE_START" since="14" />
-		<field name="NORMAL" since="14" />
+		<field name="FREEZE_END" />
+		<field name="FREEZE_START" />
+		<field name="NORMAL" />
 	</class>
 	<class name="android/graphics/LayerRasterizer" since="1">
 		<extends name="android/graphics/Rasterizer" />
@@ -8312,10 +8312,10 @@
 		<extends name="java/lang/Enum" />
 		<method name="valueOf(Ljava/lang/String;)Landroid/graphics/Matrix$ScaleToFit;" />
 		<method name="values()[Landroid/graphics/Matrix$ScaleToFit;" />
-		<field name="CENTER" since="14" />
-		<field name="END" since="14" />
-		<field name="FILL" since="14" />
-		<field name="START" since="14" />
+		<field name="CENTER" />
+		<field name="END" />
+		<field name="FILL" />
+		<field name="START" />
 	</class>
 	<class name="android/graphics/Movie" since="1">
 		<extends name="java/lang/Object" />
@@ -8449,17 +8449,17 @@
 		<extends name="java/lang/Enum" />
 		<method name="valueOf(Ljava/lang/String;)Landroid/graphics/Paint$Align;" />
 		<method name="values()[Landroid/graphics/Paint$Align;" />
-		<field name="CENTER" since="14" />
-		<field name="LEFT" since="14" />
-		<field name="RIGHT" since="14" />
+		<field name="CENTER" />
+		<field name="LEFT" />
+		<field name="RIGHT" />
 	</class>
 	<class name="android/graphics/Paint$Cap" since="1">
 		<extends name="java/lang/Enum" />
 		<method name="valueOf(Ljava/lang/String;)Landroid/graphics/Paint$Cap;" />
 		<method name="values()[Landroid/graphics/Paint$Cap;" />
-		<field name="BUTT" since="14" />
-		<field name="ROUND" since="14" />
-		<field name="SQUARE" since="14" />
+		<field name="BUTT" />
+		<field name="ROUND" />
+		<field name="SQUARE" />
 	</class>
 	<class name="android/graphics/Paint$FontMetrics" since="1">
 		<extends name="java/lang/Object" />
@@ -8483,17 +8483,17 @@
 		<extends name="java/lang/Enum" />
 		<method name="valueOf(Ljava/lang/String;)Landroid/graphics/Paint$Join;" />
 		<method name="values()[Landroid/graphics/Paint$Join;" />
-		<field name="BEVEL" since="14" />
-		<field name="MITER" since="14" />
-		<field name="ROUND" since="14" />
+		<field name="BEVEL" />
+		<field name="MITER" />
+		<field name="ROUND" />
 	</class>
 	<class name="android/graphics/Paint$Style" since="1">
 		<extends name="java/lang/Enum" />
 		<method name="valueOf(Ljava/lang/String;)Landroid/graphics/Paint$Style;" />
 		<method name="values()[Landroid/graphics/Paint$Style;" />
-		<field name="FILL" since="14" />
-		<field name="FILL_AND_STROKE" since="14" />
-		<field name="STROKE" since="14" />
+		<field name="FILL" />
+		<field name="FILL_AND_STROKE" />
+		<field name="STROKE" />
 	</class>
 	<class name="android/graphics/PaintFlagsDrawFilter" since="1">
 		<extends name="android/graphics/DrawFilter" />
@@ -8545,17 +8545,17 @@
 		<extends name="java/lang/Enum" />
 		<method name="valueOf(Ljava/lang/String;)Landroid/graphics/Path$Direction;" />
 		<method name="values()[Landroid/graphics/Path$Direction;" />
-		<field name="CCW" since="14" />
-		<field name="CW" since="14" />
+		<field name="CCW" />
+		<field name="CW" />
 	</class>
 	<class name="android/graphics/Path$FillType" since="1">
 		<extends name="java/lang/Enum" />
 		<method name="valueOf(Ljava/lang/String;)Landroid/graphics/Path$FillType;" />
 		<method name="values()[Landroid/graphics/Path$FillType;" />
-		<field name="EVEN_ODD" since="14" />
-		<field name="INVERSE_EVEN_ODD" since="14" />
-		<field name="INVERSE_WINDING" since="14" />
-		<field name="WINDING" since="14" />
+		<field name="EVEN_ODD" />
+		<field name="INVERSE_EVEN_ODD" />
+		<field name="INVERSE_WINDING" />
+		<field name="WINDING" />
 	</class>
 	<class name="android/graphics/PathDashPathEffect" since="1">
 		<extends name="android/graphics/PathEffect" />
@@ -8565,9 +8565,9 @@
 		<extends name="java/lang/Enum" />
 		<method name="valueOf(Ljava/lang/String;)Landroid/graphics/PathDashPathEffect$Style;" />
 		<method name="values()[Landroid/graphics/PathDashPathEffect$Style;" />
-		<field name="MORPH" since="14" />
-		<field name="ROTATE" since="14" />
-		<field name="TRANSLATE" since="14" />
+		<field name="MORPH" />
+		<field name="ROTATE" />
+		<field name="TRANSLATE" />
 	</class>
 	<class name="android/graphics/PathEffect" since="1">
 		<extends name="java/lang/Object" />
@@ -8674,24 +8674,24 @@
 		<extends name="java/lang/Enum" />
 		<method name="valueOf(Ljava/lang/String;)Landroid/graphics/PorterDuff$Mode;" />
 		<method name="values()[Landroid/graphics/PorterDuff$Mode;" />
-		<field name="ADD" since="14" />
-		<field name="CLEAR" since="14" />
-		<field name="DARKEN" since="14" />
-		<field name="DST" since="14" />
-		<field name="DST_ATOP" since="14" />
-		<field name="DST_IN" since="14" />
-		<field name="DST_OUT" since="14" />
-		<field name="DST_OVER" since="14" />
-		<field name="LIGHTEN" since="14" />
-		<field name="MULTIPLY" since="14" />
-		<field name="OVERLAY" since="14" />
-		<field name="SCREEN" since="14" />
-		<field name="SRC" since="14" />
-		<field name="SRC_ATOP" since="14" />
-		<field name="SRC_IN" since="14" />
-		<field name="SRC_OUT" since="14" />
-		<field name="SRC_OVER" since="14" />
-		<field name="XOR" since="14" />
+		<field name="ADD" since="11" />
+		<field name="CLEAR" />
+		<field name="DARKEN" />
+		<field name="DST" />
+		<field name="DST_ATOP" />
+		<field name="DST_IN" />
+		<field name="DST_OUT" />
+		<field name="DST_OVER" />
+		<field name="LIGHTEN" />
+		<field name="MULTIPLY" />
+		<field name="OVERLAY" since="11" />
+		<field name="SCREEN" />
+		<field name="SRC" />
+		<field name="SRC_ATOP" />
+		<field name="SRC_IN" />
+		<field name="SRC_OUT" />
+		<field name="SRC_OVER" />
+		<field name="XOR" />
 	</class>
 	<class name="android/graphics/PorterDuffColorFilter" since="1">
 		<extends name="android/graphics/ColorFilter" />
@@ -8837,12 +8837,12 @@
 		<extends name="java/lang/Enum" />
 		<method name="valueOf(Ljava/lang/String;)Landroid/graphics/Region$Op;" />
 		<method name="values()[Landroid/graphics/Region$Op;" />
-		<field name="DIFFERENCE" since="14" />
-		<field name="INTERSECT" since="14" />
-		<field name="REPLACE" since="14" />
-		<field name="REVERSE_DIFFERENCE" since="14" />
-		<field name="UNION" since="14" />
-		<field name="XOR" since="14" />
+		<field name="DIFFERENCE" />
+		<field name="INTERSECT" />
+		<field name="REPLACE" />
+		<field name="REVERSE_DIFFERENCE" />
+		<field name="UNION" />
+		<field name="XOR" />
 	</class>
 	<class name="android/graphics/RegionIterator" since="1">
 		<extends name="java/lang/Object" />
@@ -8859,9 +8859,9 @@
 		<extends name="java/lang/Enum" />
 		<method name="valueOf(Ljava/lang/String;)Landroid/graphics/Shader$TileMode;" />
 		<method name="values()[Landroid/graphics/Shader$TileMode;" />
-		<field name="CLAMP" since="14" />
-		<field name="MIRROR" since="14" />
-		<field name="REPEAT" since="14" />
+		<field name="CLAMP" />
+		<field name="MIRROR" />
+		<field name="REPEAT" />
 	</class>
 	<class name="android/graphics/SumPathEffect" since="1">
 		<extends name="android/graphics/PathEffect" />
@@ -9136,14 +9136,14 @@
 		<extends name="java/lang/Enum" />
 		<method name="valueOf(Ljava/lang/String;)Landroid/graphics/drawable/GradientDrawable$Orientation;" />
 		<method name="values()[Landroid/graphics/drawable/GradientDrawable$Orientation;" />
-		<field name="BL_TR" since="14" />
-		<field name="BOTTOM_TOP" since="14" />
-		<field name="BR_TL" since="14" />
-		<field name="LEFT_RIGHT" since="14" />
-		<field name="RIGHT_LEFT" since="14" />
-		<field name="TL_BR" since="14" />
-		<field name="TOP_BOTTOM" since="14" />
-		<field name="TR_BL" since="14" />
+		<field name="BL_TR" />
+		<field name="BOTTOM_TOP" />
+		<field name="BR_TL" />
+		<field name="LEFT_RIGHT" />
+		<field name="RIGHT_LEFT" />
+		<field name="TL_BR" />
+		<field name="TOP_BOTTOM" />
+		<field name="TR_BL" />
 	</class>
 	<class name="android/graphics/drawable/InsetDrawable" since="1">
 		<extends name="android/graphics/drawable/Drawable" />
@@ -11669,9 +11669,9 @@
 		<extends name="java/lang/Enum" />
 		<method name="valueOf(Ljava/lang/String;)Landroid/net/LocalSocketAddress$Namespace;" />
 		<method name="values()[Landroid/net/LocalSocketAddress$Namespace;" />
-		<field name="ABSTRACT" since="14" />
-		<field name="FILESYSTEM" since="14" />
-		<field name="RESERVED" since="14" />
+		<field name="ABSTRACT" />
+		<field name="FILESYSTEM" />
+		<field name="RESERVED" />
 	</class>
 	<class name="android/net/MailTo" since="1">
 		<extends name="java/lang/Object" />
@@ -11708,28 +11708,28 @@
 		<extends name="java/lang/Enum" />
 		<method name="valueOf(Ljava/lang/String;)Landroid/net/NetworkInfo$DetailedState;" />
 		<method name="values()[Landroid/net/NetworkInfo$DetailedState;" />
-		<field name="AUTHENTICATING" since="14" />
+		<field name="AUTHENTICATING" />
 		<field name="BLOCKED" since="14" />
-		<field name="CONNECTED" since="14" />
-		<field name="CONNECTING" since="14" />
-		<field name="DISCONNECTED" since="14" />
-		<field name="DISCONNECTING" since="14" />
-		<field name="FAILED" since="14" />
-		<field name="IDLE" since="14" />
-		<field name="OBTAINING_IPADDR" since="14" />
-		<field name="SCANNING" since="14" />
-		<field name="SUSPENDED" since="14" />
+		<field name="CONNECTED" />
+		<field name="CONNECTING" />
+		<field name="DISCONNECTED" />
+		<field name="DISCONNECTING" />
+		<field name="FAILED" />
+		<field name="IDLE" />
+		<field name="OBTAINING_IPADDR" />
+		<field name="SCANNING" />
+		<field name="SUSPENDED" />
 	</class>
 	<class name="android/net/NetworkInfo$State" since="1">
 		<extends name="java/lang/Enum" />
 		<method name="valueOf(Ljava/lang/String;)Landroid/net/NetworkInfo$State;" />
 		<method name="values()[Landroid/net/NetworkInfo$State;" />
-		<field name="CONNECTED" since="14" />
-		<field name="CONNECTING" since="14" />
-		<field name="DISCONNECTED" since="14" />
-		<field name="DISCONNECTING" since="14" />
-		<field name="SUSPENDED" since="14" />
-		<field name="UNKNOWN" since="14" />
+		<field name="CONNECTED" />
+		<field name="CONNECTING" />
+		<field name="DISCONNECTED" />
+		<field name="DISCONNECTING" />
+		<field name="SUSPENDED" />
+		<field name="UNKNOWN" />
 	</class>
 	<class name="android/net/ParseException" since="1">
 		<extends name="java/lang/RuntimeException" />
@@ -12288,19 +12288,19 @@
 		<method name="valueOf(Ljava/lang/String;)Landroid/net/wifi/SupplicantState;" />
 		<method name="values()[Landroid/net/wifi/SupplicantState;" />
 		<method name="writeToParcel(Landroid/os/Parcel;I)V" />
-		<field name="ASSOCIATED" since="14" />
-		<field name="ASSOCIATING" since="14" />
+		<field name="ASSOCIATED" />
+		<field name="ASSOCIATING" />
 		<field name="AUTHENTICATING" since="14" />
-		<field name="COMPLETED" since="14" />
-		<field name="DISCONNECTED" since="14" />
-		<field name="DORMANT" since="14" />
-		<field name="FOUR_WAY_HANDSHAKE" since="14" />
-		<field name="GROUP_HANDSHAKE" since="14" />
-		<field name="INACTIVE" since="14" />
+		<field name="COMPLETED" />
+		<field name="DISCONNECTED" />
+		<field name="DORMANT" />
+		<field name="FOUR_WAY_HANDSHAKE" />
+		<field name="GROUP_HANDSHAKE" />
+		<field name="INACTIVE" />
 		<field name="INTERFACE_DISABLED" since="14" />
-		<field name="INVALID" since="14" />
-		<field name="SCANNING" since="14" />
-		<field name="UNINITIALIZED" since="14" />
+		<field name="INVALID" />
+		<field name="SCANNING" />
+		<field name="UNINITIALIZED" />
 	</class>
 	<class name="android/net/wifi/WifiConfiguration" since="1">
 		<extends name="java/lang/Object" />
@@ -14271,9 +14271,9 @@
 		<extends name="java/lang/Enum" />
 		<method name="valueOf(Ljava/lang/String;)Landroid/os/AsyncTask$Status;" />
 		<method name="values()[Landroid/os/AsyncTask$Status;" />
-		<field name="FINISHED" since="14" />
-		<field name="PENDING" since="14" />
-		<field name="RUNNING" since="14" />
+		<field name="FINISHED" />
+		<field name="PENDING" />
+		<field name="RUNNING" />
 	</class>
 	<class name="android/os/BadParcelableException" since="1">
 		<extends name="android/util/AndroidRuntimeException" />
@@ -17859,9 +17859,9 @@
 		<extends name="java/lang/Enum" />
 		<method name="valueOf(Ljava/lang/String;)Landroid/renderscript/Allocation$MipmapControl;" />
 		<method name="values()[Landroid/renderscript/Allocation$MipmapControl;" />
-		<field name="MIPMAP_FULL" since="14" />
-		<field name="MIPMAP_NONE" since="14" />
-		<field name="MIPMAP_ON_SYNC_TO_TEXTURE" since="14" />
+		<field name="MIPMAP_FULL" />
+		<field name="MIPMAP_NONE" />
+		<field name="MIPMAP_ON_SYNC_TO_TEXTURE" />
 	</class>
 	<class name="android/renderscript/AllocationAdapter" since="11">
 		<extends name="android/renderscript/Allocation" />
@@ -18012,45 +18012,45 @@
 		<extends name="java/lang/Enum" />
 		<method name="valueOf(Ljava/lang/String;)Landroid/renderscript/Element$DataKind;" />
 		<method name="values()[Landroid/renderscript/Element$DataKind;" />
-		<field name="PIXEL_A" since="14" />
+		<field name="PIXEL_A" />
 		<field name="PIXEL_DEPTH" since="14" />
-		<field name="PIXEL_L" since="14" />
-		<field name="PIXEL_LA" since="14" />
-		<field name="PIXEL_RGB" since="14" />
-		<field name="PIXEL_RGBA" since="14" />
-		<field name="USER" since="14" />
+		<field name="PIXEL_L" />
+		<field name="PIXEL_LA" />
+		<field name="PIXEL_RGB" />
+		<field name="PIXEL_RGBA" />
+		<field name="USER" />
 	</class>
 	<class name="android/renderscript/Element$DataType" since="11">
 		<extends name="java/lang/Enum" />
 		<method name="valueOf(Ljava/lang/String;)Landroid/renderscript/Element$DataType;" />
 		<method name="values()[Landroid/renderscript/Element$DataType;" />
-		<field name="BOOLEAN" since="14" />
-		<field name="FLOAT_32" since="14" />
-		<field name="FLOAT_64" since="14" />
-		<field name="MATRIX_2X2" since="14" />
-		<field name="MATRIX_3X3" since="14" />
-		<field name="MATRIX_4X4" since="14" />
-		<field name="RS_ALLOCATION" since="14" />
-		<field name="RS_ELEMENT" since="14" />
-		<field name="RS_MESH" since="14" />
-		<field name="RS_PROGRAM_FRAGMENT" since="14" />
-		<field name="RS_PROGRAM_RASTER" since="14" />
-		<field name="RS_PROGRAM_STORE" since="14" />
-		<field name="RS_PROGRAM_VERTEX" since="14" />
-		<field name="RS_SAMPLER" since="14" />
-		<field name="RS_SCRIPT" since="14" />
-		<field name="RS_TYPE" since="14" />
-		<field name="SIGNED_16" since="14" />
-		<field name="SIGNED_32" since="14" />
-		<field name="SIGNED_64" since="14" />
-		<field name="SIGNED_8" since="14" />
-		<field name="UNSIGNED_16" since="14" />
-		<field name="UNSIGNED_32" since="14" />
-		<field name="UNSIGNED_4_4_4_4" since="14" />
-		<field name="UNSIGNED_5_5_5_1" since="14" />
-		<field name="UNSIGNED_5_6_5" since="14" />
-		<field name="UNSIGNED_64" since="14" />
-		<field name="UNSIGNED_8" since="14" />
+		<field name="BOOLEAN" />
+		<field name="FLOAT_32" />
+		<field name="FLOAT_64" />
+		<field name="MATRIX_2X2" />
+		<field name="MATRIX_3X3" />
+		<field name="MATRIX_4X4" />
+		<field name="RS_ALLOCATION" />
+		<field name="RS_ELEMENT" />
+		<field name="RS_MESH" />
+		<field name="RS_PROGRAM_FRAGMENT" />
+		<field name="RS_PROGRAM_RASTER" />
+		<field name="RS_PROGRAM_STORE" />
+		<field name="RS_PROGRAM_VERTEX" />
+		<field name="RS_SAMPLER" />
+		<field name="RS_SCRIPT" />
+		<field name="RS_TYPE" />
+		<field name="SIGNED_16" />
+		<field name="SIGNED_32" />
+		<field name="SIGNED_64" />
+		<field name="SIGNED_8" />
+		<field name="UNSIGNED_16" />
+		<field name="UNSIGNED_32" />
+		<field name="UNSIGNED_4_4_4_4" />
+		<field name="UNSIGNED_5_5_5_1" />
+		<field name="UNSIGNED_5_6_5" />
+		<field name="UNSIGNED_64" />
+		<field name="UNSIGNED_8" />
 	</class>
 	<class name="android/renderscript/FieldPacker" since="11">
 		<extends name="java/lang/Object" />
@@ -18119,8 +18119,8 @@
 		<extends name="java/lang/Enum" />
 		<method name="valueOf(Ljava/lang/String;)Landroid/renderscript/FileA3D$EntryType;" />
 		<method name="values()[Landroid/renderscript/FileA3D$EntryType;" />
-		<field name="MESH" since="14" />
-		<field name="UNKNOWN" since="14" />
+		<field name="MESH" />
+		<field name="UNKNOWN" />
 	</class>
 	<class name="android/renderscript/FileA3D$IndexEntry" since="11">
 		<extends name="java/lang/Object" />
@@ -18165,10 +18165,10 @@
 		<extends name="java/lang/Enum" />
 		<method name="valueOf(Ljava/lang/String;)Landroid/renderscript/Font$Style;" />
 		<method name="values()[Landroid/renderscript/Font$Style;" />
-		<field name="BOLD" since="14" />
-		<field name="BOLD_ITALIC" since="14" />
-		<field name="ITALIC" since="14" />
-		<field name="NORMAL" since="14" />
+		<field name="BOLD" />
+		<field name="BOLD_ITALIC" />
+		<field name="ITALIC" />
+		<field name="NORMAL" />
 	</class>
 	<class name="android/renderscript/Int2" since="11">
 		<extends name="java/lang/Object" />
@@ -18318,12 +18318,12 @@
 		<extends name="java/lang/Enum" />
 		<method name="valueOf(Ljava/lang/String;)Landroid/renderscript/Mesh$Primitive;" />
 		<method name="values()[Landroid/renderscript/Mesh$Primitive;" />
-		<field name="LINE" since="14" />
-		<field name="LINE_STRIP" since="14" />
-		<field name="POINT" since="14" />
-		<field name="TRIANGLE" since="14" />
-		<field name="TRIANGLE_FAN" since="14" />
-		<field name="TRIANGLE_STRIP" since="14" />
+		<field name="LINE" />
+		<field name="LINE_STRIP" />
+		<field name="POINT" />
+		<field name="TRIANGLE" />
+		<field name="TRIANGLE_FAN" />
+		<field name="TRIANGLE_STRIP" />
 	</class>
 	<class name="android/renderscript/Mesh$TriangleMeshBuilder" since="11">
 		<extends name="java/lang/Object" />
@@ -18360,8 +18360,8 @@
 		<extends name="java/lang/Enum" />
 		<method name="valueOf(Ljava/lang/String;)Landroid/renderscript/Program$TextureType;" />
 		<method name="values()[Landroid/renderscript/Program$TextureType;" />
-		<field name="TEXTURE_2D" since="14" />
-		<field name="TEXTURE_CUBE" since="14" />
+		<field name="TEXTURE_2D" />
+		<field name="TEXTURE_CUBE" />
 	</class>
 	<class name="android/renderscript/ProgramFragment" since="11">
 		<extends name="android/renderscript/Program" />
@@ -18387,18 +18387,18 @@
 		<extends name="java/lang/Enum" />
 		<method name="valueOf(Ljava/lang/String;)Landroid/renderscript/ProgramFragmentFixedFunction$Builder$EnvMode;" />
 		<method name="values()[Landroid/renderscript/ProgramFragmentFixedFunction$Builder$EnvMode;" />
-		<field name="DECAL" since="14" />
-		<field name="MODULATE" since="14" />
-		<field name="REPLACE" since="14" />
+		<field name="DECAL" />
+		<field name="MODULATE" />
+		<field name="REPLACE" />
 	</class>
 	<class name="android/renderscript/ProgramFragmentFixedFunction$Builder$Format" since="11">
 		<extends name="java/lang/Enum" />
 		<method name="valueOf(Ljava/lang/String;)Landroid/renderscript/ProgramFragmentFixedFunction$Builder$Format;" />
 		<method name="values()[Landroid/renderscript/ProgramFragmentFixedFunction$Builder$Format;" />
-		<field name="ALPHA" since="14" />
-		<field name="LUMINANCE_ALPHA" since="14" />
-		<field name="RGB" since="14" />
-		<field name="RGBA" since="14" />
+		<field name="ALPHA" />
+		<field name="LUMINANCE_ALPHA" />
+		<field name="RGB" />
+		<field name="RGBA" />
 	</class>
 	<class name="android/renderscript/ProgramRaster" since="11">
 		<extends name="android/renderscript/BaseObj" />
@@ -18417,9 +18417,9 @@
 		<extends name="java/lang/Enum" />
 		<method name="valueOf(Ljava/lang/String;)Landroid/renderscript/ProgramRaster$CullMode;" />
 		<method name="values()[Landroid/renderscript/ProgramRaster$CullMode;" />
-		<field name="BACK" since="14" />
-		<field name="FRONT" since="14" />
-		<field name="NONE" since="14" />
+		<field name="BACK" />
+		<field name="FRONT" />
+		<field name="NONE" />
 	</class>
 	<class name="android/renderscript/ProgramStore" since="11">
 		<extends name="android/renderscript/BaseObj" />
@@ -18432,28 +18432,28 @@
 		<extends name="java/lang/Enum" />
 		<method name="valueOf(Ljava/lang/String;)Landroid/renderscript/ProgramStore$BlendDstFunc;" />
 		<method name="values()[Landroid/renderscript/ProgramStore$BlendDstFunc;" />
-		<field name="DST_ALPHA" since="14" />
-		<field name="ONE" since="14" />
-		<field name="ONE_MINUS_DST_ALPHA" since="14" />
-		<field name="ONE_MINUS_SRC_ALPHA" since="14" />
-		<field name="ONE_MINUS_SRC_COLOR" since="14" />
-		<field name="SRC_ALPHA" since="14" />
-		<field name="SRC_COLOR" since="14" />
-		<field name="ZERO" since="14" />
+		<field name="DST_ALPHA" />
+		<field name="ONE" />
+		<field name="ONE_MINUS_DST_ALPHA" />
+		<field name="ONE_MINUS_SRC_ALPHA" />
+		<field name="ONE_MINUS_SRC_COLOR" />
+		<field name="SRC_ALPHA" />
+		<field name="SRC_COLOR" />
+		<field name="ZERO" />
 	</class>
 	<class name="android/renderscript/ProgramStore$BlendSrcFunc" since="11">
 		<extends name="java/lang/Enum" />
 		<method name="valueOf(Ljava/lang/String;)Landroid/renderscript/ProgramStore$BlendSrcFunc;" />
 		<method name="values()[Landroid/renderscript/ProgramStore$BlendSrcFunc;" />
-		<field name="DST_ALPHA" since="14" />
-		<field name="DST_COLOR" since="14" />
-		<field name="ONE" since="14" />
-		<field name="ONE_MINUS_DST_ALPHA" since="14" />
-		<field name="ONE_MINUS_DST_COLOR" since="14" />
-		<field name="ONE_MINUS_SRC_ALPHA" since="14" />
-		<field name="SRC_ALPHA" since="14" />
-		<field name="SRC_ALPHA_SATURATE" since="14" />
-		<field name="ZERO" since="14" />
+		<field name="DST_ALPHA" />
+		<field name="DST_COLOR" />
+		<field name="ONE" />
+		<field name="ONE_MINUS_DST_ALPHA" />
+		<field name="ONE_MINUS_DST_COLOR" />
+		<field name="ONE_MINUS_SRC_ALPHA" />
+		<field name="SRC_ALPHA" />
+		<field name="SRC_ALPHA_SATURATE" />
+		<field name="ZERO" />
 	</class>
 	<class name="android/renderscript/ProgramStore$Builder" since="11">
 		<extends name="java/lang/Object" />
@@ -18469,13 +18469,13 @@
 		<extends name="java/lang/Enum" />
 		<method name="valueOf(Ljava/lang/String;)Landroid/renderscript/ProgramStore$DepthFunc;" />
 		<method name="values()[Landroid/renderscript/ProgramStore$DepthFunc;" />
-		<field name="ALWAYS" since="14" />
-		<field name="EQUAL" since="14" />
-		<field name="GREATER" since="14" />
-		<field name="GREATER_OR_EQUAL" since="14" />
-		<field name="LESS" since="14" />
-		<field name="LESS_OR_EQUAL" since="14" />
-		<field name="NOT_EQUAL" since="14" />
+		<field name="ALWAYS" />
+		<field name="EQUAL" />
+		<field name="GREATER" />
+		<field name="GREATER_OR_EQUAL" />
+		<field name="LESS" />
+		<field name="LESS_OR_EQUAL" />
+		<field name="NOT_EQUAL" />
 	</class>
 	<class name="android/renderscript/ProgramVertex" since="11">
 		<extends name="android/renderscript/Program" />
@@ -18568,8 +18568,8 @@
 		<extends name="java/lang/Enum" />
 		<method name="valueOf(Ljava/lang/String;)Landroid/renderscript/RenderScript$Priority;" />
 		<method name="values()[Landroid/renderscript/RenderScript$Priority;" />
-		<field name="LOW" since="14" />
-		<field name="NORMAL" since="14" />
+		<field name="LOW" />
+		<field name="NORMAL" />
 	</class>
 	<class name="android/renderscript/RenderScript$RSErrorHandler" since="11">
 		<extends name="java/lang/Object" />
@@ -18635,12 +18635,12 @@
 		<extends name="java/lang/Enum" />
 		<method name="valueOf(Ljava/lang/String;)Landroid/renderscript/Sampler$Value;" />
 		<method name="values()[Landroid/renderscript/Sampler$Value;" />
-		<field name="CLAMP" since="14" />
-		<field name="LINEAR" since="14" />
-		<field name="LINEAR_MIP_LINEAR" since="14" />
-		<field name="LINEAR_MIP_NEAREST" since="14" />
-		<field name="NEAREST" since="14" />
-		<field name="WRAP" since="14" />
+		<field name="CLAMP" />
+		<field name="LINEAR" />
+		<field name="LINEAR_MIP_LINEAR" />
+		<field name="LINEAR_MIP_NEAREST" />
+		<field name="NEAREST" />
+		<field name="WRAP" />
 	</class>
 	<class name="android/renderscript/Script" since="11">
 		<extends name="android/renderscript/BaseObj" />
@@ -18724,15 +18724,15 @@
 		<extends name="java/lang/Enum" />
 		<method name="valueOf(Ljava/lang/String;)Landroid/renderscript/Type$CubemapFace;" />
 		<method name="values()[Landroid/renderscript/Type$CubemapFace;" />
-		<field name="NEGATIVE_X" since="14" />
-		<field name="NEGATIVE_Y" since="14" />
-		<field name="NEGATIVE_Z" since="14" />
+		<field name="NEGATIVE_X" />
+		<field name="NEGATIVE_Y" />
+		<field name="NEGATIVE_Z" />
 		<field name="POSITIVE_X" since="14" />
 		<field name="POSITIVE_Y" since="14" />
 		<field name="POSITIVE_Z" since="14" />
-		<field name="POSITVE_X" since="14" />
-		<field name="POSITVE_Y" since="14" />
-		<field name="POSITVE_Z" since="14" />
+		<field name="POSITVE_X" />
+		<field name="POSITVE_Y" />
+		<field name="POSITVE_Z" />
 	</class>
 	<class name="android/sax/Element" since="1">
 		<extends name="java/lang/Object" />
@@ -19251,11 +19251,11 @@
 		<extends name="java/lang/Enum" />
 		<method name="valueOf(Ljava/lang/String;)Landroid/telephony/SmsMessage$MessageClass;" />
 		<method name="values()[Landroid/telephony/SmsMessage$MessageClass;" />
-		<field name="CLASS_0" since="14" />
-		<field name="CLASS_1" since="14" />
-		<field name="CLASS_2" since="14" />
-		<field name="CLASS_3" since="14" />
-		<field name="UNKNOWN" since="14" />
+		<field name="CLASS_0" />
+		<field name="CLASS_1" />
+		<field name="CLASS_2" />
+		<field name="CLASS_3" />
+		<field name="UNKNOWN" />
 	</class>
 	<class name="android/telephony/SmsMessage$SubmitPdu" since="4">
 		<extends name="java/lang/Object" />
@@ -19420,11 +19420,11 @@
 		<extends name="java/lang/Enum" />
 		<method name="valueOf(Ljava/lang/String;)Landroid/telephony/gsm/SmsMessage$MessageClass;" />
 		<method name="values()[Landroid/telephony/gsm/SmsMessage$MessageClass;" />
-		<field name="CLASS_0" since="14" />
-		<field name="CLASS_1" since="14" />
-		<field name="CLASS_2" since="14" />
-		<field name="CLASS_3" since="14" />
-		<field name="UNKNOWN" since="14" />
+		<field name="CLASS_0" />
+		<field name="CLASS_1" />
+		<field name="CLASS_2" />
+		<field name="CLASS_3" />
+		<field name="UNKNOWN" />
 	</class>
 	<class name="android/telephony/gsm/SmsMessage$SubmitPdu" since="1">
 		<extends name="java/lang/Object" />
@@ -20268,9 +20268,9 @@
 		<extends name="java/lang/Enum" />
 		<method name="valueOf(Ljava/lang/String;)Landroid/text/Layout$Alignment;" />
 		<method name="values()[Landroid/text/Layout$Alignment;" />
-		<field name="ALIGN_CENTER" since="14" />
-		<field name="ALIGN_NORMAL" since="14" />
-		<field name="ALIGN_OPPOSITE" since="14" />
+		<field name="ALIGN_CENTER" />
+		<field name="ALIGN_NORMAL" />
+		<field name="ALIGN_OPPOSITE" />
 	</class>
 	<class name="android/text/Layout$Directions" since="1">
 		<extends name="java/lang/Object" />
@@ -20541,10 +20541,10 @@
 		<extends name="java/lang/Enum" />
 		<method name="valueOf(Ljava/lang/String;)Landroid/text/TextUtils$TruncateAt;" />
 		<method name="values()[Landroid/text/TextUtils$TruncateAt;" />
-		<field name="END" since="14" />
-		<field name="MARQUEE" since="14" />
-		<field name="MIDDLE" since="14" />
-		<field name="START" since="14" />
+		<field name="END" />
+		<field name="MARQUEE" since="2" />
+		<field name="MIDDLE" />
+		<field name="START" />
 	</class>
 	<class name="android/text/TextWatcher" since="1">
 		<implements name="android/text/NoCopySpan" since="3" />
@@ -20954,10 +20954,10 @@
 		<extends name="java/lang/Enum" />
 		<method name="valueOf(Ljava/lang/String;)Landroid/text/method/TextKeyListener$Capitalize;" />
 		<method name="values()[Landroid/text/method/TextKeyListener$Capitalize;" />
-		<field name="CHARACTERS" since="14" />
-		<field name="NONE" since="14" />
-		<field name="SENTENCES" since="14" />
-		<field name="WORDS" since="14" />
+		<field name="CHARACTERS" />
+		<field name="NONE" />
+		<field name="SENTENCES" />
+		<field name="WORDS" />
 	</class>
 	<class name="android/text/method/TimeKeyListener" since="1">
 		<extends name="android/text/method/NumberKeyListener" />
@@ -21571,16 +21571,16 @@
 		<extends name="java/lang/Enum" />
 		<method name="valueOf(Ljava/lang/String;)Landroid/util/JsonToken;" />
 		<method name="values()[Landroid/util/JsonToken;" />
-		<field name="BEGIN_ARRAY" since="14" />
-		<field name="BEGIN_OBJECT" since="14" />
-		<field name="BOOLEAN" since="14" />
-		<field name="END_ARRAY" since="14" />
-		<field name="END_DOCUMENT" since="14" />
-		<field name="END_OBJECT" since="14" />
-		<field name="NAME" since="14" />
-		<field name="NULL" since="14" />
-		<field name="NUMBER" since="14" />
-		<field name="STRING" since="14" />
+		<field name="BEGIN_ARRAY" />
+		<field name="BEGIN_OBJECT" />
+		<field name="BOOLEAN" />
+		<field name="END_ARRAY" />
+		<field name="END_DOCUMENT" />
+		<field name="END_OBJECT" />
+		<field name="NAME" />
+		<field name="NULL" />
+		<field name="NUMBER" />
+		<field name="STRING" />
 	</class>
 	<class name="android/util/JsonWriter" since="11">
 		<extends name="java/lang/Object" />
@@ -21896,10 +21896,10 @@
 		<extends name="java/lang/Enum" />
 		<method name="valueOf(Ljava/lang/String;)Landroid/util/Xml$Encoding;" />
 		<method name="values()[Landroid/util/Xml$Encoding;" />
-		<field name="ISO_8859_1" since="14" />
-		<field name="US_ASCII" since="14" />
-		<field name="UTF_16" since="14" />
-		<field name="UTF_8" since="14" />
+		<field name="ISO_8859_1" />
+		<field name="US_ASCII" />
+		<field name="UTF_16" />
+		<field name="UTF_8" />
 	</class>
 	<class name="android/view/AbsSavedState" since="1">
 		<extends name="java/lang/Object" />
@@ -23692,14 +23692,14 @@
 		<extends name="java/lang/Enum" />
 		<method name="valueOf(Ljava/lang/String;)Landroid/view/ViewDebug$HierarchyTraceType;" />
 		<method name="values()[Landroid/view/ViewDebug$HierarchyTraceType;" />
-		<field name="BUILD_CACHE" since="14" />
-		<field name="DRAW" since="14" />
-		<field name="INVALIDATE" since="14" />
-		<field name="INVALIDATE_CHILD" since="14" />
-		<field name="INVALIDATE_CHILD_IN_PARENT" since="14" />
-		<field name="ON_LAYOUT" since="14" />
-		<field name="ON_MEASURE" since="14" />
-		<field name="REQUEST_LAYOUT" since="14" />
+		<field name="BUILD_CACHE" />
+		<field name="DRAW" />
+		<field name="INVALIDATE" />
+		<field name="INVALIDATE_CHILD" />
+		<field name="INVALIDATE_CHILD_IN_PARENT" />
+		<field name="ON_LAYOUT" />
+		<field name="ON_MEASURE" />
+		<field name="REQUEST_LAYOUT" />
 	</class>
 	<class name="android/view/ViewDebug$IntToString" since="1">
 		<extends name="java/lang/Object" />
@@ -23709,12 +23709,13 @@
 		<extends name="java/lang/Enum" />
 		<method name="valueOf(Ljava/lang/String;)Landroid/view/ViewDebug$RecyclerTraceType;" />
 		<method name="values()[Landroid/view/ViewDebug$RecyclerTraceType;" />
-		<field name="BIND_VIEW" since="14" />
-		<field name="MOVE_FROM_ACTIVE_TO_SCRAP_HEAP" since="14" />
-		<field name="MOVE_TO_SCRAP_HEAP" since="14" />
-		<field name="NEW_VIEW" since="14" />
-		<field name="RECYCLE_FROM_ACTIVE_HEAP" since="14" />
-		<field name="RECYCLE_FROM_SCRAP_HEAP" since="14" />
+		<field name="BIND_VIEW" />
+		<field name="MOVE_FROM_ACTIVE_TO_SCRAP_HEAP" />
+		<field name="MOVE_TO_ACTIVE_HEAP" />
+		<field name="MOVE_TO_SCRAP_HEAP" />
+		<field name="NEW_VIEW" />
+		<field name="RECYCLE_FROM_ACTIVE_HEAP" />
+		<field name="RECYCLE_FROM_SCRAP_HEAP" />
 	</class>
 	<class name="android/view/ViewGroup" since="1">
 		<extends name="android/view/View" />
@@ -25158,11 +25159,11 @@
 		<extends name="java/lang/Enum" />
 		<method name="valueOf(Ljava/lang/String;)Landroid/webkit/ConsoleMessage$MessageLevel;" />
 		<method name="values()[Landroid/webkit/ConsoleMessage$MessageLevel;" />
-		<field name="DEBUG" since="14" />
-		<field name="ERROR" since="14" />
-		<field name="LOG" since="14" />
-		<field name="TIP" since="14" />
-		<field name="WARNING" since="14" />
+		<field name="DEBUG" />
+		<field name="ERROR" />
+		<field name="LOG" />
+		<field name="TIP" />
+		<field name="WARNING" />
 	</class>
 	<class name="android/webkit/CookieManager" since="1">
 		<extends name="java/lang/Object" />
@@ -25494,43 +25495,43 @@
 		<extends name="java/lang/Enum" />
 		<method name="valueOf(Ljava/lang/String;)Landroid/webkit/WebSettings$LayoutAlgorithm;" />
 		<method name="values()[Landroid/webkit/WebSettings$LayoutAlgorithm;" />
-		<field name="NARROW_COLUMNS" since="14" />
-		<field name="NORMAL" since="14" />
-		<field name="SINGLE_COLUMN" since="14" />
+		<field name="NARROW_COLUMNS" />
+		<field name="NORMAL" />
+		<field name="SINGLE_COLUMN" />
 	</class>
 	<class name="android/webkit/WebSettings$PluginState" since="8">
 		<extends name="java/lang/Enum" />
 		<method name="valueOf(Ljava/lang/String;)Landroid/webkit/WebSettings$PluginState;" />
 		<method name="values()[Landroid/webkit/WebSettings$PluginState;" />
-		<field name="OFF" since="14" />
-		<field name="ON" since="14" />
-		<field name="ON_DEMAND" since="14" />
+		<field name="OFF" />
+		<field name="ON" />
+		<field name="ON_DEMAND" />
 	</class>
 	<class name="android/webkit/WebSettings$RenderPriority" since="1">
 		<extends name="java/lang/Enum" />
 		<method name="valueOf(Ljava/lang/String;)Landroid/webkit/WebSettings$RenderPriority;" />
 		<method name="values()[Landroid/webkit/WebSettings$RenderPriority;" />
-		<field name="HIGH" since="14" />
-		<field name="LOW" since="14" />
-		<field name="NORMAL" since="14" />
+		<field name="HIGH" />
+		<field name="LOW" />
+		<field name="NORMAL" />
 	</class>
 	<class name="android/webkit/WebSettings$TextSize" since="1">
 		<extends name="java/lang/Enum" />
 		<method name="valueOf(Ljava/lang/String;)Landroid/webkit/WebSettings$TextSize;" />
 		<method name="values()[Landroid/webkit/WebSettings$TextSize;" />
-		<field name="LARGER" since="14" />
-		<field name="LARGEST" since="14" />
-		<field name="NORMAL" since="14" />
-		<field name="SMALLER" since="14" />
-		<field name="SMALLEST" since="14" />
+		<field name="LARGER" />
+		<field name="LARGEST" />
+		<field name="NORMAL" />
+		<field name="SMALLER" />
+		<field name="SMALLEST" />
 	</class>
 	<class name="android/webkit/WebSettings$ZoomDensity" since="7">
 		<extends name="java/lang/Enum" />
 		<method name="valueOf(Ljava/lang/String;)Landroid/webkit/WebSettings$ZoomDensity;" />
 		<method name="values()[Landroid/webkit/WebSettings$ZoomDensity;" />
-		<field name="CLOSE" since="14" />
-		<field name="FAR" since="14" />
-		<field name="MEDIUM" since="14" />
+		<field name="CLOSE" />
+		<field name="FAR" />
+		<field name="MEDIUM" />
 	</class>
 	<class name="android/webkit/WebStorage" since="5">
 		<extends name="java/lang/Object" />
@@ -26663,14 +26664,14 @@
 		<extends name="java/lang/Enum" />
 		<method name="valueOf(Ljava/lang/String;)Landroid/widget/ImageView$ScaleType;" />
 		<method name="values()[Landroid/widget/ImageView$ScaleType;" />
-		<field name="CENTER" since="14" />
-		<field name="CENTER_CROP" since="14" />
-		<field name="CENTER_INSIDE" since="14" />
-		<field name="FIT_CENTER" since="14" />
-		<field name="FIT_END" since="14" />
-		<field name="FIT_START" since="14" />
-		<field name="FIT_XY" since="14" />
-		<field name="MATRIX" since="14" />
+		<field name="CENTER" />
+		<field name="CENTER_CROP" />
+		<field name="CENTER_INSIDE" />
+		<field name="FIT_CENTER" />
+		<field name="FIT_END" />
+		<field name="FIT_START" />
+		<field name="FIT_XY" />
+		<field name="MATRIX" />
 	</class>
 	<class name="android/widget/LinearLayout" since="1">
 		<extends name="android/view/ViewGroup" />
@@ -27782,9 +27783,9 @@
 		<extends name="java/lang/Enum" />
 		<method name="valueOf(Ljava/lang/String;)Landroid/widget/TextView$BufferType;" />
 		<method name="values()[Landroid/widget/TextView$BufferType;" />
-		<field name="EDITABLE" since="14" />
-		<field name="NORMAL" since="14" />
-		<field name="SPANNABLE" since="14" />
+		<field name="EDITABLE" />
+		<field name="NORMAL" />
+		<field name="SPANNABLE" />
 	</class>
 	<class name="android/widget/TextView$OnEditorActionListener" since="3">
 		<method name="onEditorAction(Landroid/widget/TextView;ILandroid/view/KeyEvent;)Z" />
@@ -27964,6 +27965,12 @@
 	</class>
 	<class name="com/android/internal/util/Predicate" since="1">
 		<method name="apply(LT;)Z" />
+	</class>
+	<class name="com/google/android/maps/MapView$ReticleDrawMode" since="1">
+		<extends name="java/lang/Enum" />
+		<field name="DRAW_RETICLE_NEVER" />
+		<field name="DRAW_RETICLE_OVER" />
+		<field name="DRAW_RETICLE_UNDER" />
 	</class>
 	<class name="dalvik/annotation/TestTarget" since="1">
 		<extends name="java/lang/Object" />
@@ -30927,12 +30934,12 @@
 		<extends name="java/lang/Enum" />
 		<method name="valueOf(Ljava/lang/String;)Ljava/lang/Thread$State;" />
 		<method name="values()[Ljava/lang/Thread$State;" />
-		<field name="BLOCKED" since="14" />
-		<field name="NEW" since="14" />
-		<field name="RUNNABLE" since="14" />
-		<field name="TERMINATED" since="14" />
-		<field name="TIMED_WAITING" since="14" />
-		<field name="WAITING" since="14" />
+		<field name="BLOCKED" />
+		<field name="NEW" />
+		<field name="RUNNABLE" />
+		<field name="TERMINATED" />
+		<field name="TIMED_WAITING" />
+		<field name="WAITING" />
 	</class>
 	<class name="java/lang/Thread$UncaughtExceptionHandler" since="1">
 		<method name="uncaughtException(Ljava/lang/Thread;Ljava/lang/Throwable;)V" />
@@ -31063,14 +31070,14 @@
 		<extends name="java/lang/Enum" />
 		<method name="valueOf(Ljava/lang/String;)Ljava/lang/annotation/ElementType;" />
 		<method name="values()[Ljava/lang/annotation/ElementType;" />
-		<field name="ANNOTATION_TYPE" since="14" />
-		<field name="CONSTRUCTOR" since="14" />
-		<field name="FIELD" since="14" />
-		<field name="LOCAL_VARIABLE" since="14" />
-		<field name="METHOD" since="14" />
-		<field name="PACKAGE" since="14" />
-		<field name="PARAMETER" since="14" />
-		<field name="TYPE" since="14" />
+		<field name="ANNOTATION_TYPE" />
+		<field name="CONSTRUCTOR" />
+		<field name="FIELD" />
+		<field name="LOCAL_VARIABLE" />
+		<field name="METHOD" />
+		<field name="PACKAGE" />
+		<field name="PARAMETER" />
+		<field name="TYPE" />
 	</class>
 	<class name="java/lang/annotation/IncompleteAnnotationException" since="1">
 		<extends name="java/lang/RuntimeException" />
@@ -31090,9 +31097,9 @@
 		<extends name="java/lang/Enum" />
 		<method name="valueOf(Ljava/lang/String;)Ljava/lang/annotation/RetentionPolicy;" />
 		<method name="values()[Ljava/lang/annotation/RetentionPolicy;" />
-		<field name="CLASS" since="14" />
-		<field name="RUNTIME" since="14" />
-		<field name="SOURCE" since="14" />
+		<field name="CLASS" />
+		<field name="RUNTIME" />
+		<field name="SOURCE" />
 	</class>
 	<class name="java/lang/annotation/Target" since="1">
 		<extends name="java/lang/Object" />
@@ -31505,14 +31512,14 @@
 		<method name="valueOf(I)Ljava/math/RoundingMode;" />
 		<method name="valueOf(Ljava/lang/String;)Ljava/math/RoundingMode;" />
 		<method name="values()[Ljava/math/RoundingMode;" />
-		<field name="CEILING" since="14" />
-		<field name="DOWN" since="14" />
-		<field name="FLOOR" since="14" />
-		<field name="HALF_DOWN" since="14" />
-		<field name="HALF_EVEN" since="14" />
-		<field name="HALF_UP" since="14" />
-		<field name="UNNECESSARY" since="14" />
-		<field name="UP" since="14" />
+		<field name="CEILING" />
+		<field name="DOWN" />
+		<field name="FLOOR" />
+		<field name="HALF_DOWN" />
+		<field name="HALF_EVEN" />
+		<field name="HALF_UP" />
+		<field name="UNNECESSARY" />
+		<field name="UP" />
 	</class>
 	<class name="java/net/Authenticator" since="1">
 		<extends name="java/lang/Object" />
@@ -31535,8 +31542,8 @@
 		<extends name="java/lang/Enum" />
 		<method name="valueOf(Ljava/lang/String;)Ljava/net/Authenticator$RequestorType;" />
 		<method name="values()[Ljava/net/Authenticator$RequestorType;" />
-		<field name="PROXY" since="14" />
-		<field name="SERVER" since="14" />
+		<field name="PROXY" />
+		<field name="SERVER" />
 	</class>
 	<class name="java/net/BindException" since="1">
 		<extends name="java/net/SocketException" />
@@ -31951,9 +31958,9 @@
 		<extends name="java/lang/Enum" />
 		<method name="valueOf(Ljava/lang/String;)Ljava/net/Proxy$Type;" />
 		<method name="values()[Ljava/net/Proxy$Type;" />
-		<field name="DIRECT" since="14" />
-		<field name="HTTP" since="14" />
-		<field name="SOCKS" since="14" />
+		<field name="DIRECT" />
+		<field name="HTTP" />
+		<field name="SOCKS" />
 	</class>
 	<class name="java/net/ProxySelector" since="1">
 		<extends name="java/lang/Object" />
@@ -33365,9 +33372,9 @@
 		<extends name="java/lang/Enum" />
 		<method name="valueOf(Ljava/lang/String;)Ljava/security/KeyRep$Type;" />
 		<method name="values()[Ljava/security/KeyRep$Type;" />
-		<field name="PRIVATE" since="14" />
-		<field name="PUBLIC" since="14" />
-		<field name="SECRET" since="14" />
+		<field name="PRIVATE" />
+		<field name="PUBLIC" />
+		<field name="SECRET" />
 	</class>
 	<class name="java/security/KeyStore" since="1">
 		<extends name="java/lang/Object" />
@@ -34753,10 +34760,10 @@
 		<extends name="java/lang/Enum" />
 		<method name="valueOf(Ljava/lang/String;)Ljava/sql/ClientInfoStatus;" />
 		<method name="values()[Ljava/sql/ClientInfoStatus;" />
-		<field name="REASON_UNKNOWN" since="14" />
-		<field name="REASON_UNKNOWN_PROPERTY" since="14" />
-		<field name="REASON_VALUE_INVALID" since="14" />
-		<field name="REASON_VALUE_TRUNCATED" since="14" />
+		<field name="REASON_UNKNOWN" />
+		<field name="REASON_UNKNOWN_PROPERTY" />
+		<field name="REASON_VALUE_INVALID" />
+		<field name="REASON_VALUE_TRUNCATED" />
 	</class>
 	<class name="java/sql/Clob" since="1">
 		<method name="free()V" since="9" />
@@ -35438,11 +35445,11 @@
 		<extends name="java/lang/Enum" />
 		<method name="valueOf(Ljava/lang/String;)Ljava/sql/RowIdLifetime;" />
 		<method name="values()[Ljava/sql/RowIdLifetime;" />
-		<field name="ROWID_UNSUPPORTED" since="14" />
-		<field name="ROWID_VALID_FOREVER" since="14" />
-		<field name="ROWID_VALID_OTHER" since="14" />
-		<field name="ROWID_VALID_SESSION" since="14" />
-		<field name="ROWID_VALID_TRANSACTION" since="14" />
+		<field name="ROWID_UNSUPPORTED" />
+		<field name="ROWID_VALID_FOREVER" />
+		<field name="ROWID_VALID_OTHER" />
+		<field name="ROWID_VALID_SESSION" />
+		<field name="ROWID_VALID_TRANSACTION" />
 	</class>
 	<class name="java/sql/SQLClientInfoException" since="9">
 		<extends name="java/sql/SQLException" />
@@ -36240,10 +36247,10 @@
 		<extends name="java/lang/Enum" />
 		<method name="valueOf(Ljava/lang/String;)Ljava/text/Normalizer$Form;" />
 		<method name="values()[Ljava/text/Normalizer$Form;" />
-		<field name="NFC" since="14" />
-		<field name="NFD" since="14" />
-		<field name="NFKC" since="14" />
-		<field name="NFKD" since="14" />
+		<field name="NFC" />
+		<field name="NFD" />
+		<field name="NFKC" />
+		<field name="NFKD" />
 	</class>
 	<class name="java/text/NumberFormat" since="1">
 		<extends name="java/text/Format" />
@@ -37013,8 +37020,8 @@
 		<extends name="java/lang/Enum" />
 		<method name="valueOf(Ljava/lang/String;)Ljava/util/Formatter$BigDecimalLayoutForm;" />
 		<method name="values()[Ljava/util/Formatter$BigDecimalLayoutForm;" />
-		<field name="DECIMAL_FLOAT" since="14" />
-		<field name="SCIENTIFIC" since="14" />
+		<field name="DECIMAL_FLOAT" />
+		<field name="SCIENTIFIC" />
 	</class>
 	<class name="java/util/FormatterClosedException" since="1">
 		<extends name="java/lang/IllegalStateException" />
@@ -38539,13 +38546,13 @@
 		<method name="toSeconds(J)J" />
 		<method name="valueOf(Ljava/lang/String;)Ljava/util/concurrent/TimeUnit;" />
 		<method name="values()[Ljava/util/concurrent/TimeUnit;" />
-		<field name="DAYS" since="14" />
-		<field name="HOURS" since="14" />
-		<field name="MICROSECONDS" since="14" />
-		<field name="MILLISECONDS" since="14" />
-		<field name="MINUTES" since="14" />
-		<field name="NANOSECONDS" since="14" />
-		<field name="SECONDS" since="14" />
+		<field name="DAYS" since="9" />
+		<field name="HOURS" since="9" />
+		<field name="MICROSECONDS" />
+		<field name="MILLISECONDS" />
+		<field name="MINUTES" since="9" />
+		<field name="NANOSECONDS" />
+		<field name="SECONDS" />
 	</class>
 	<class name="java/util/concurrent/TimeoutException" since="1">
 		<extends name="java/lang/Exception" />
@@ -41189,20 +41196,20 @@
 		<extends name="java/lang/Enum" />
 		<method name="valueOf(Ljava/lang/String;)Ljavax/net/ssl/SSLEngineResult$HandshakeStatus;" />
 		<method name="values()[Ljavax/net/ssl/SSLEngineResult$HandshakeStatus;" />
-		<field name="FINISHED" since="14" />
-		<field name="NEED_TASK" since="14" />
-		<field name="NEED_UNWRAP" since="14" />
-		<field name="NEED_WRAP" since="14" />
-		<field name="NOT_HANDSHAKING" since="14" />
+		<field name="FINISHED" />
+		<field name="NEED_TASK" />
+		<field name="NEED_UNWRAP" />
+		<field name="NEED_WRAP" />
+		<field name="NOT_HANDSHAKING" />
 	</class>
 	<class name="javax/net/ssl/SSLEngineResult$Status" since="1">
 		<extends name="java/lang/Enum" />
 		<method name="valueOf(Ljava/lang/String;)Ljavax/net/ssl/SSLEngineResult$Status;" />
 		<method name="values()[Ljavax/net/ssl/SSLEngineResult$Status;" />
-		<field name="BUFFER_OVERFLOW" since="14" />
-		<field name="BUFFER_UNDERFLOW" since="14" />
-		<field name="CLOSED" since="14" />
-		<field name="OK" since="14" />
+		<field name="BUFFER_OVERFLOW" />
+		<field name="BUFFER_UNDERFLOW" />
+		<field name="CLOSED" />
+		<field name="OK" />
 	</class>
 	<class name="javax/net/ssl/SSLException" since="1">
 		<extends name="java/io/IOException" />
@@ -43595,15 +43602,15 @@
 		<extends name="java/lang/Enum" />
 		<method name="valueOf(Ljava/lang/String;)Lorg/apache/http/conn/routing/RouteInfo$LayerType;" />
 		<method name="values()[Lorg/apache/http/conn/routing/RouteInfo$LayerType;" />
-		<field name="LAYERED" since="14" />
-		<field name="PLAIN" since="14" />
+		<field name="LAYERED" />
+		<field name="PLAIN" />
 	</class>
 	<class name="org/apache/http/conn/routing/RouteInfo$TunnelType" since="1">
 		<extends name="java/lang/Enum" />
 		<method name="valueOf(Ljava/lang/String;)Lorg/apache/http/conn/routing/RouteInfo$TunnelType;" />
 		<method name="values()[Lorg/apache/http/conn/routing/RouteInfo$TunnelType;" />
-		<field name="PLAIN" since="14" />
-		<field name="TUNNELLED" since="14" />
+		<field name="PLAIN" />
+		<field name="TUNNELLED" />
 	</class>
 	<class name="org/apache/http/conn/routing/RouteTracker" since="1">
 		<extends name="java/lang/Object" />
