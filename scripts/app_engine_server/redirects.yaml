@@ -49,3 +49,7 @@
 #
 
 redirects:
+- src: /%2B/?$
+  dst: https://plus.google.com/b/108967384991768947849/
+  type: permanent
+  comment: Redirect /+ and /+/ to Google+
