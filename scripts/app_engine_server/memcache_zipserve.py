@@ -31,7 +31,10 @@ __author__ = 'jmatt@google.com (Justin Mattson)'
 import email.Utils
 import logging
 import mimetypes
+import re
+import sys
 import time
+import yaml
 import zipfile
 
 from google.appengine.api import memcache
@@ -94,9 +97,21 @@ class MemcachedZipHandler(webapp.RequestHandler):
   PUBLIC = True                     # public cache setting
   CACHE_PREFIX = 'cache://'         # memcache key prefix for actual URLs
   NEG_CACHE_PREFIX = 'noncache://'  # memcache key prefix for non-existant URL
+  REDIRECT_PREFIX = 'redirect://'   # memcache key prefix for redirect data
+  REDIRECT_FILE = 'redirects.yaml'  # Name of file that contains redirect table
+  REDIRECT_SRC = 'src'              # Name of the 'source' attribute for a
+                                    #   redirect table entry
+  REDIRECT_DST = 'dst'              # Name of the 'destination' attribute for
+                                    #   a redirect table entry
+  REDIRECT_TYPE = 'type'            # Name of the 'type' attribute for a
+                                    #   redirect table entry
+  REDIRECT_TYPE_PERM = 'permanent'  # Redirect 'type' string indicating a 301
+                                    #   redirect should be served
+  REDIRECT_TYPE_TEMP = 'temporary'  # Redirect 'type'string indicate a 302
+                                    #   Redirect should be served
   intlString = 'intl/'
   validLangs = ['en', 'de', 'es', 'fr','it','ja','zh-CN','zh-TW']
-  
+
   def TrueGet(self, reqUri):
     """The top-level entry point to serving requests.
 
@@ -118,7 +133,7 @@ class MemcachedZipHandler(webapp.RequestHandler):
     isStripped = False
 
     # Try to retrieve the user's lang pref from the cookie. If there is no
-    # lang pref cookie in the request, add set-cookie to the response with the 
+    # lang pref cookie in the request, add set-cookie to the response with the
     # default value of 'en'.
     try:
       langName = self.request.cookies['android_developer_pref_lang']
@@ -127,64 +142,201 @@ class MemcachedZipHandler(webapp.RequestHandler):
       #logging.info('==========================EXCEPTION: NO LANG COOKIE FOUND, USING [%s]', langName)
     logging.info('==========================REQ INIT name [%s] langName [%s] resetLangCookie [%s]', reqUri, langName, resetLangCookie)
 
+    # Do some prep for handling intl requests. Parse the url and validate
+    # the intl/lang substring, extract the url lang code (urlLangName) and the
+    # the uri that follows the intl/lang substring(contentUri)
+    sections = reqUri.split("/", 2)
+    isIntl = len(sections) > 2 and (sections[0] == "intl")
+    if isIntl:
+      isValidIntl = sections[1] in self.validLangs
+      urlLangName = sections[1]
+      contentUri = sections[2]
+      logging.info('  Content URI is [%s]...', contentUri)
+      if isValidIntl:
+        if (langName != urlLangName) or (langName == 'en'):
+          # if the lang code in the request is different from that in
+          # the cookie, or if the target lang is en, strip the
+          # intl/nn substring. It will later be redirected to
+          # the user's preferred language url.
+          # logging.info('  Handling a MISMATCHED intl request')
+          reqUri = contentUri
+          isStripped = True
+          isValidIntl = False
+          isIntl = False
+          #logging.info('INTL PREP resetting langName to urlLangName [%s]', langName)
+        #else:
+        #  logging.info('INTL PREP no need to reset langName')
+    else:
+      contentUri = reqUri
+
+    # Apply manual redirects from redirects.yaml. This occurs before any
+    # other mutations are performed, to avoid odd redirect behavior
+    # (For example, a user may want to redirect a directory without having
+    # /index.html appended.)
+    did_redirect = self.ProcessManualRedirects(contentUri, langName, isIntl)
+    if did_redirect:
+      return
+
     # Preprocess the req url. If it references a directory or the domain itself,
     # append '/index.html' to the url and 302 redirect. Otherwise, continue
     # processing the request below.
-    name = self.PreprocessUrl(reqUri, langName)
-    if name:
-      # Do some prep for handling intl requests. Parse the url and validate
-      # the intl/lang substring, extract the url lang code (urlLangName) and the
-      # the uri that follows the intl/lang substring(contentUri)
-      sections = name.split("/", 2)
-      contentUri = 0
-      isIntl = len(sections) > 1 and (sections[0] == "intl")
-      if isIntl:
-        isValidIntl = sections[1] in self.validLangs
-        if isValidIntl:
-          urlLangName = sections[1]
-          contentUri = sections[2]
-          logging.info('  Content URI is [%s]...', contentUri)
-          if (urlLangName != langName) or (langName == 'en'):
-            # if the lang code in the request is different from that in 
-            # the cookie, or if the target lang is en, strip the 
-            # intl/nn substring. It will later be redirected to
-            # the user's preferred language url. 
-            # logging.info('  Handling a MISMATCHED intl request')
-            name = contentUri
-            isStripped = True
-            isValidIntl = False
-            isIntl = False
+    did_redirect = self.PreprocessUrl(reqUri, langName)
+    if did_redirect:
+      return
 
-      # Send for processing
-      if self.isCleanUrl(name, langName, isValidIntl, isStripped):
-        # handle a 'clean' request.
-        # Try to form a response using the actual request url.
-        # logging.info('  Request being handled as clean: [%s]', name)
-        if not self.CreateResponse(name, langName, isValidIntl, resetLangCookie):
-          # If CreateResponse returns False, there was no such document
-          # in the intl/lang tree. Before going to 404, see if there is an
-          # English-language version of the doc in the default
-          # default tree and return it, else go to 404.
-          self.CreateResponse(contentUri, langName, False, resetLangCookie)
+    # Send for processing
+    if self.isCleanUrl(reqUri, langName, isValidIntl, isStripped):
+      # handle a 'clean' request.
+      # Try to form a response using the actual request url.
+      # logging.info('  Request being handled as clean: [%s]', name)
+      if not self.CreateResponse(reqUri, langName, isValidIntl, resetLangCookie):
+        # If CreateResponse returns False, there was no such document
+        # in the intl/lang tree. Before going to 404, see if there is an
+        # English-language version of the doc in the default
+        # default tree and return it, else go to 404.
+        self.CreateResponse(contentUri, langName, False, resetLangCookie)
 
-      elif isIntl:
-        # handle the case where we need to pass through an invalid intl req 
-        # for processing (so as to get 404 as appropriate). This is needed
-        # because intl urls are passed through clean and retried in English,
-        # if necessary.
-        # logging.info('  Handling an invalid intl request...')
-        self.CreateResponse(name, langName, isValidIntl, resetLangCookie)
+    elif isIntl:
+      # handle the case where we need to pass through an invalid intl req
+      # for processing (so as to get 404 as appropriate). This is needed
+      # because intl urls are passed through clean and retried in English,
+      # if necessary.
+      # logging.info('  Handling an invalid intl request...')
+      self.CreateResponse(reqUri, langName, isValidIntl, resetLangCookie)
 
-      else:
-        # handle the case where we have a non-clean url (usually a non-intl
-        # url) that we need to interpret in the context of any lang pref
-        # that is set. Prepend an intl/lang string to the request url and
-        # send it as a 302 redirect. After the redirect, the subsequent
-        # request will be handled as a clean url.
-        self.RedirToIntl(name, self.intlString, langName)
+    else:
+      # handle the case where we have a non-clean url (usually a non-intl
+      # url) that we need to interpret in the context of any lang pref
+      # that is set. Prepend an intl/lang string to the request url and
+      # send it as a 302 redirect. After the redirect, the subsequent
+      # request will be handled as a clean url.
+      self.RedirToIntl(reqUri, self.intlString, langName)
+
+  def ProcessManualRedirects(self, contentUri, langName, isIntl):
+    """Compute any manual redirects for a request and execute them.
+
+    This allows content authors to manually define a set of regex rules which,
+    when matched, will cause an HTTP redirect to be performed.
+
+    Redirect rules are typically stored in a file named redirects.yaml. See the
+    comments in that file for more information about formatting.
+
+    Redirect computations are stored in memcache for performance.
+
+    Note that international URIs are handled automatically, and are assumed to
+    mirror redirects for non-intl requests.
+
+    Args:
+      contentUri: The relative URI (without leading slash) that was requested.
+        This should NOT contain an intl-prefix, if otherwise present.
+      langName: The requested language.
+      isIntl: True if contentUri originally contained an intl prefix.
+
+    Results:
+      boolean: True if a redirect has been set, False otherwise.
+    """
+    # Redirect data is stored in memcache for performance
+    memcache_key = self.REDIRECT_PREFIX + contentUri
+    redirect_data = memcache.get(memcache_key)
+    if redirect_data is None:
+      logging.info('Redirect cache miss. Computing new redirect data.\n'
+                   'Memcache Key: ' + memcache_key)
+      redirect_data = self.ComputeManualRedirectUrl(contentUri)
+      memcache.set(memcache_key, redirect_data)
+    contentUri = redirect_data[0]
+    redirectType = redirect_data[1]
+
+    # If this is an international URL, prepend intl path to minimize
+    # number of redirects
+    if isIntl:
+      contentUri = '/%s%s%s' % (self.intlString, langName, contentUri)
+
+    if redirectType is None:
+      # No redirect necessary
+      return False
+    elif redirectType == self.REDIRECT_TYPE_PERM:
+      logging.info('Sending permanent redirect: ' + contentUri);
+      self.redirect(contentUri, permanent=True)
+      return True
+    elif redirectType == self.REDIRECT_TYPE_TEMP:
+      logging.info('Sending temporary redirect: ' + contentUri);
+      self.redirect(contentUri, permanent=False)
+      return True
+    else:
+      # Invalid redirect type
+      logging.error('Invalid redirect type: %s', redirectType)
+      raise ('Invalid redirect type: %s', redirectType)
+
+  def ComputeManualRedirectUrl(self, uri):
+    """Read redirects file and evaluate redirect rules for a given URI.
+
+    Args:
+      uri: The relative URI (without leading slash) for which redirect data
+        should be computed. No special handling of intl URIs is pefromed
+        at this level.
+
+    Returns:
+      tuple: The computed redirect data. This tuple has two parts:
+        redirect_uri: The new URI that should be used. (If no redirect rule is
+          found, the original input to 'uri' will be returned.
+        redirect_type: Either 'permanent' for an HTTP 301 redirect, 'temporary'
+          for an HTTP 302 redirect, or None if no redirect should be performed.
+    """
+    # Redircts are defined in a file named redirects.yaml.
+    try:
+      f = open(self.REDIRECT_FILE)
+      data = yaml.load(f)
+      f.close()
+    except IOError, e:
+      logging.warning('Error opening redirect file (' + self.REDIRECT_FILE +
+                      '): ' + e.strerror)
+      return (uri, None)
+
+    # The incoming path is missing a leading slash. However, many parts of the
+    # redirect system require leading slashes to distinguish between relative
+    # and absolute redirects. So, to compensate for this, we'll add a leading
+    # slash here as well.
+    uri = '/' + uri
+
+    # Check to make sure we actually got an iterable list out of the YAML file
+    if data is None:
+      logging.warning('Redirect file (' + self.REDIRECT_FILE + ') not valid '
+                      'YAML.')
+    elif 'redirects' not in data:
+      logging.warning('Redirect file (' + self.REDIRECT_FILE + ') not '
+                      'properly formatted -- no \'redirects:\' header.')
+    elif hasattr(data['redirects'], '__iter__'):
+      # Iterate through redirect data, try to find a redirect that matches.
+      for redirect in data['redirects']:
+          # Note: re.search adds an implied '^' to the beginning of the regex
+          # This means that the regex must match from the beginning of the
+          # string.
+          try:
+            if re.match(redirect[self.REDIRECT_SRC], uri):
+              # Match found. Apply redirect rule.
+              redirect_uri = re.sub('^' + redirect[self.REDIRECT_SRC],
+                  redirect[self.REDIRECT_DST], uri)
+              logging.info('Redirect rule matched.\n'
+                             'Rule: %s\n'
+                             'Src: %s\n'
+                             'Dst: %s',
+                           redirect[self.REDIRECT_SRC], uri, redirect_uri)
+              if self.REDIRECT_TYPE in redirect:
+                redirect_type = redirect[self.REDIRECT_TYPE]
+              else:
+                # Default redirect type, if unspecified
+                redirect_type = self.REDIRECT_TYPE_PERM
+              return (redirect_uri, redirect_type)
+          except:
+            e = sys.exc_info()[1]
+            raise ('Error while processing redirect rule.\n'
+                     'Rule: %s\n'
+                     'Error: %s' % (redirect[self.REDIRECT_SRC], e))
+    # No redirect found, return URL unchanged
+    return (uri, None)
 
   def isCleanUrl(self, name, langName, isValidIntl, isStripped):
-    """Determine whether to pass an incoming url straight to processing. 
+    """Determine whether to pass an incoming url straight to processing.
 
        Args:
          name: The incoming URL
@@ -208,9 +360,10 @@ class MemcachedZipHandler(webapp.RequestHandler):
       name: The incoming URL
 
     Returns:
-      False if the request was redirected to '/index.html', or
-      The processed URL, otherwise
+      True if the request was redirected to '/index.html'.
+      Otherewise False.
     """
+
     # determine if this is a request for a directory
     final_path_segment = name
     final_slash_offset = name.rfind('/')
@@ -224,16 +377,16 @@ class MemcachedZipHandler(webapp.RequestHandler):
       uri = ''.join(['/', name, 'index.html'])
       # logging.info('--->PREPROCESSING REDIRECT [%s] to [%s] with langName [%s]', name, uri, langName)
       self.redirect(uri, False)
-      return False
+      return True
     else:
-      return name
+      return False
 
   def RedirToIntl(self, name, intlString, langName):
     """Redirect an incoming request to the appropriate intl uri.
 
        For non-en langName, builds the intl/lang string from a
-       base (en) string and redirects (302) the request to look for 
-       a version of the file in langName. For en langName, simply 
+       base (en) string and redirects (302) the request to look for
+       a version of the file in langName. For en langName, simply
        redirects a stripped uri string (intl/nn removed).
 
     Args:
@@ -247,25 +400,25 @@ class MemcachedZipHandler(webapp.RequestHandler):
     else:
       builtIntlLangUri = name
     uri = ''.join(['/', builtIntlLangUri])
-    logging.info('-->>REDIRECTING %s to  %s', name, uri)
+    logging.info('-->REDIRECTING %s to  %s', name, uri)
     self.redirect(uri, False)
     return uri
 
   def CreateResponse(self, name, langName, isValidIntl, resetLangCookie):
     """Process the url and form a response, if appropriate.
 
-       Attempts to retrieve the requested file (name) from cache, 
-       negative cache, or store (zip) and form the response. 
-       For intl requests that are not found (in the localized tree), 
+       Attempts to retrieve the requested file (name) from cache,
+       negative cache, or store (zip) and form the response.
+       For intl requests that are not found (in the localized tree),
        returns False rather than forming a response, so that
-       the request can be retried with the base url (this is the 
-       fallthrough to default language). 
+       the request can be retried with the base url (this is the
+       fallthrough to default language).
 
        For requests that are found, forms the headers and
        adds the content to the response entity. If the request was
-       for an intl (localized) url, also resets the language cookie 
-       to the language specified in the url if needed, to ensure that 
-       the client language and response data remain harmonious. 
+       for an intl (localized) url, also resets the language cookie
+       to the language specified in the url if needed, to ensure that
+       the client language and response data remain harmonious.
 
     Args:
       name: The incoming, preprocessed URL
@@ -281,7 +434,7 @@ class MemcachedZipHandler(webapp.RequestHandler):
       False: No response was created.
     """
     # see if we have the page in the memcache
-    logging.info('PROCESSING %s langName [%s] isValidIntl [%s] resetLang [%s]', 
+    logging.info('PROCESSING %s langName [%s] isValidIntl [%s] resetLang [%s]',
       name, langName, isValidIntl, resetLangCookie)
     resp_data = self.GetFromCache(name)
     if resp_data is None:
@@ -314,12 +467,12 @@ class MemcachedZipHandler(webapp.RequestHandler):
       logging.info('  Resetting android_developer_pref_lang cookie to [%s]',
       langName)
       expireDate = time.mktime(localtime()) + 60 * 60 * 24 * 365 * 10
-      self.response.headers.add_header('Set-Cookie', 
-      'android_developer_pref_lang=%s; path=/; expires=%s' % 
+      self.response.headers.add_header('Set-Cookie',
+      'android_developer_pref_lang=%s; path=/; expires=%s' %
       (langName, strftime("%a, %d %b %Y %H:%M:%S", localtime(expireDate))))
     mustRevalidate = False
     if ('.html' in name):
-      # revalidate html files -- workaround for cache inconsistencies for 
+      # revalidate html files -- workaround for cache inconsistencies for
       # negotiated responses
       mustRevalidate = True
       #logging.info('  Adding [Vary: Cookie] to response...')
@@ -391,7 +544,7 @@ class MemcachedZipHandler(webapp.RequestHandler):
           x = False
         if resp_data is not None:
           logging.info('%s read from %s', file_path, archive_name)
-          
+
       try:
         archive_name = file_itr.next()[0]
       except (StopIteration), err:
@@ -459,7 +612,7 @@ class MemcachedZipHandler(webapp.RequestHandler):
 
     We say that file1 is lexigraphically before file2 if the last non-matching
     path segment of file1 is alphabetically before file2.
-    
+
     Args:
       file1: the first file path
       file2: the second file path
