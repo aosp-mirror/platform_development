@@ -1,0 +1,51 @@
+# Redirect file.
+# This file contains the list of rewrite rules that are applied when serving
+# pages.
+#
+# Each redirect has four parts:
+#
+# - src: The path to redirect. This is a regex rule prefixed with an implied
+#   '^'. Unless you're doing something advanced, your path should start with
+#   '/' character.
+#
+# - dst: The path to redirect to. If the path begins with a slash,
+#   it is considered a relative redirect. Otherwise, it is an absolute
+#   redirct (and should probably begin with http: or http://). You may use
+#   capturing groups to preserve part of the source path. To referece a
+#   capturing group, use \N, where N is the (1-based) index of desired group.
+#
+# - type: Either 'permanent' or 'temporary', depending on whether you want an
+#   HTTP 301 or HTTP 302 redirect, respectiviely. See RFC 2616 for the
+#   difference between these:
+#
+#       http://tools.ietf.org/html/rfc2616
+#
+#   If you don't specify a type, 'permanent' will be used by default. Note that
+#   this is different from the Apache convention (which uses 'temporary' by
+#   default.)
+#
+# - comment: Currently ignored by the computer, but useful for humans.
+#
+# Example:
+#
+# redirects:
+# - src: /foo
+#   dst: /bar
+#   # Redirect /foo to /bar. This will also redirect foo/ and
+#   # foo/test.html. Note that the redirect type is optional. This will be
+#   # treated as a permanent redirect.
+#
+# - src: /(.+droid(/.*)?)$
+#   dst: /droids/\1
+#   type: permanent
+#   # Redirect /android to /droids/android and /bugdroid to
+#   # /droids/bugdroid. However, it will not redirect /droid or
+#   # /bugdroids.
+#
+# - src: /google
+#   dst: http://www.google.com
+#   type: temporary
+#   # This is an example of a redirect to an absolute URI.
+#
+
+redirects:
