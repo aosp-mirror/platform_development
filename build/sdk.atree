@@ -99,6 +99,7 @@ development/tools/templates/strings.template                platforms/${PLATFORM
 development/tools/templates/ic_launcher_ldpi.png            platforms/${PLATFORM_NAME}/templates/ic_launcher_ldpi.png
 development/tools/templates/ic_launcher_mdpi.png            platforms/${PLATFORM_NAME}/templates/ic_launcher_mdpi.png
 development/tools/templates/ic_launcher_hdpi.png            platforms/${PLATFORM_NAME}/templates/ic_launcher_hdpi.png
+development/tools/templates/ic_launcher_xhdpi.png           platforms/${PLATFORM_NAME}/templates/ic_launcher_xhdpi.png
 
 # Eclipse Editors support
 framework/layoutlib.jar       platforms/${PLATFORM_NAME}/data/layoutlib.jar
