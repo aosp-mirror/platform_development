@@ -394,7 +394,7 @@ void GLClientState::deleteTextures(GLsizei n, const GLuint* textures)
         if (texrec) {
             const TextureRec* end = m_tex.textures + m_tex.numTextures;
             memmove(texrec, texrec + 1,
-                    (end - texrec + 1) * sizeof(TextureRec));
+                    (end - texrec - 1) * sizeof(TextureRec));
             m_tex.numTextures--;
 
             for (TextureUnit* unit = m_tex.unit;
