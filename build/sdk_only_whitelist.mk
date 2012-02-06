@@ -51,7 +51,8 @@ subdirs += \
 	system/core/fastboot \
 	system/core/libcutils \
 	system/core/liblog \
-	system/core/libzipfile
+	system/core/libzipfile \
+	system/extras/ext4_utils
 
 # -----
 # Whitelist of platform specific projects that DO require Java
