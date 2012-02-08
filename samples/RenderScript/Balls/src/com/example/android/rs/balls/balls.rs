@@ -58,11 +58,11 @@ int root() {
     if (frame & 1) {
         bc.ain = rsGetAllocation(balls2);
         bc.aout = rsGetAllocation(balls1);
-        bout = balls2;
+        bout = balls1;
     } else {
         bc.ain = rsGetAllocation(balls1);
         bc.aout = rsGetAllocation(balls2);
-        bout = balls1;
+        bout = balls2;
     }
 
     bc.dimX = rsAllocationGetDimX(bc.ain);
