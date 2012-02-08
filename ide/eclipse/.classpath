@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="packages/apps/Bluetooth/src"/>
+	<classpathentry kind="src" path="packages/apps/Camera/src"/>
 	<classpathentry kind="src" path="packages/apps/Browser/src"/>
 	<classpathentry kind="src" path="packages/apps/Calendar/src"/>
 	<classpathentry kind="src" path="packages/apps/Calculator/src"/>
@@ -10,6 +11,9 @@
 	<classpathentry kind="src" path="packages/apps/Email/src"/>
 	<classpathentry kind="src" path="packages/apps/Email/emailcommon/src"/>
 	<classpathentry kind="src" path="packages/apps/Exchange/src"/>
+	<classpathentry kind="src" path="packages/apps/Gallery2/src"/>
+	<classpathentry kind="src" path="packages/apps/Gallery2/src_pd"/>
+	<classpathentry kind="src" path="packages/apps/Gallery2/gallerycommon/src"/>
 	<classpathentry kind="src" path="packages/apps/HTMLViewer/src"/>
 	<classpathentry kind="src" path="packages/apps/Launcher2/src"/>
 	<classpathentry kind="src" path="packages/apps/Mms/src"/>
@@ -59,6 +63,9 @@
 	<classpathentry kind="src" path="frameworks/support/v13/java"/>
 	<classpathentry kind="src" path="frameworks/support/v13/ics"/>
 	<classpathentry kind="src" path="frameworks/support/v13/ics-mr1"/>
+	<classpathentry kind="src" path="system/media/mca/filterfw/java"/>
+	<classpathentry kind="src" path="system/media/mca/effect/java"/>
+	<classpathentry kind="src" path="system/media/mca/filterpacks/java"/>
 	<classpathentry kind="src" path="development/samples/ApiDemos/src"/>
 	<classpathentry kind="src" path="development/samples/ApiDemos/tests/src"/>
 	<classpathentry kind="src" path="development/samples/Compass/src"/>
