@@ -239,6 +239,20 @@
     <string name="start_service_foreground">Start Service Foreground</string>
     <string name="start_service_background">Start Service Background</string>
 
+    <string name="activity_isolated_service_controller">App/Service/Isolated Service Controller</string>
+    <string name="isolated_service_controller">This demonstrates the use of android:isolatedProcess
+            with services.  There are two services, which can be independently controlled; they will
+            each run in their own isolated process</string>
+    <string name="start_service_1">Start Service 1</string>
+    <string name="stop_service_1">Stop Service 1</string>
+    <string name="bind_service_1">Bind Service 1</string>
+    <string name="start_service_2">Start Service 2</string>
+    <string name="stop_service_2">Stop Service 2</string>
+    <string name="bind_service_2">Bind Service 2</string>
+    <string name="isolated_service_1_started">Isolated service 1 has started</string>
+    <string name="isolated_service_1_stopped">Isolated service 1 has stopped</string>
+    <string name="isolated_service_1_label">Sample Isolated Service 1</string>
+
     <string name="one_shot_received">The one-shot alarm has gone off</string>
     <string name="repeating_received">The repeating alarm has gone off</string>
 

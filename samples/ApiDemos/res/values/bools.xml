@@ -29,4 +29,9 @@
          for IceCreamSandwich is true. -->
     <bool name="atLeastIceCreamSandwich">false</bool>
 
+    <!-- This resource is true if running under at least JellyBean
+         API level.  The default value is false; an alternative value
+         for JellyBean is true. -->
+    <bool name="atLeastJellyBean">false</bool>
+
 </resources>

@@ -519,6 +519,21 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".app.IsolatedService$Controller"
+                android:label="@string/activity_isolated_service_controller"
+                android:launchMode="singleTop"
+                android:enabled="@bool/atLeastJellyBean">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <service android:name=".app.IsolatedService" android:isolatedProcess="true"
+                android:enabled="@bool/atLeastJellyBean" />
+        <service android:name=".app.IsolatedService2" android:isolatedProcess="true"
+                android:enabled="@bool/atLeastJellyBean" />
+
         <!-- Alarm Samples -->
 
         <receiver android:name=".app.OneShotAlarm" android:process=":remote" />
