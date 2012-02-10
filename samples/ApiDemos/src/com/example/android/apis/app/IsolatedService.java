@@ -17,9 +17,6 @@
 package com.example.android.apis.app;
 
 import android.app.Activity;
-import android.app.Notification;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.app.Service;
 import android.content.ComponentName;
 import android.content.Context;
@@ -27,17 +24,14 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.RemoteException;
-import android.os.Handler;
 import android.os.IBinder;
-import android.os.Message;
-import android.os.Process;
 import android.os.RemoteCallbackList;
+import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.TextView;
-import android.widget.Toast;
 
 // Need the following import to get access to the app resources, since this
 // class is in a sub-package.
@@ -56,21 +50,15 @@ public class IsolatedService extends Service {
             = new RemoteCallbackList<IRemoteServiceCallback>();
     
     int mValue = 0;
-    NotificationManager mNM;
     
     @Override
     public void onCreate() {
-        mNM = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
-        
-        // Tell the user we stopped.
-        Toast.makeText(this, R.string.isolated_service_1_started, Toast.LENGTH_SHORT).show();
+        Log.i("IsolatedService", "Creating IsolatedService: " + this);
     }
 
     @Override
     public void onDestroy() {
-        // Tell the user we stopped.
-        Toast.makeText(this, R.string.isolated_service_1_stopped, Toast.LENGTH_SHORT).show();
-        
+        Log.i("IsolatedService", "Destroying IsolatedService: " + this);
         // Unregister all callbacks.
         mCallbacks.kill();
     }
@@ -94,7 +82,7 @@ public class IsolatedService extends Service {
     
     @Override
     public void onTaskRemoved(Intent rootIntent) {
-        Toast.makeText(this, "Task removed: " + rootIntent, Toast.LENGTH_LONG).show();
+        Log.i("IsolatedService", "Task removed in " + this + ": " + rootIntent);
         stopSelf();
     }
 
@@ -117,12 +105,13 @@ public class IsolatedService extends Service {
     public static class Controller extends Activity {
         static class ServiceInfo {
             final Activity mActivity;
-            final Class mClz;
+            final Class<?> mClz;
             final TextView mStatus;
             boolean mServiceBound;
             IRemoteService mService;
 
-            ServiceInfo(Activity activity, Class clz, int start, int stop, int bind, int status) {
+            ServiceInfo(Activity activity, Class<?> clz,
+                    int start, int stop, int bind, int status) {
                 mActivity = activity;
                 mClz = clz;
                 Button button = (Button)mActivity.findViewById(start);
