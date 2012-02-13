@@ -58,7 +58,7 @@ void root(const Ball_t *ballIn, Ball_t *ballOut, const BallControl_t *ctl, uint3
                     //ballOut->color.rgb = 1.f;
                     //ballOut->arcID = -1;
                     //ballOut->arcStr = 0;
-                    return;
+                    continue;
                 }
                 // Collision
                 float2 axis = normalize(vec);
