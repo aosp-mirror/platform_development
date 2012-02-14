@@ -63,8 +63,6 @@
         </activity>
         <activity android:name="PackageSummary" android:label="Package Summary">
         </activity>
-        <activity android:name="ShowActivity" android:label="Activity">
-        </activity>
         <activity android:name="AppPicker"
                 android:theme="@android:style/Theme.Dialog">
         </activity>
@@ -98,12 +96,6 @@
         <activity android:name="Details">
         </activity>
         <activity android:name="Connectivity" android:label="Connectivity" >
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.TEST" />
-            </intent-filter>
-        </activity>
-        <activity android:name="DevelopmentSettings" android:label="Development Settings" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.TEST" />
