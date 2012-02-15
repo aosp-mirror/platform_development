@@ -35,5 +35,6 @@ void root(const uchar4 *in, uchar4 *out, uint32_t x, uint32_t y) {
     pixel = pixel * outWMinOutB + outBlack;
     pixel = clamp(pixel, 0.f, 255.f);
     out->xyz = convert_uchar3(pixel);
+    out->w = 0xff;
 }
 
