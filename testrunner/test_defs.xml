@@ -136,6 +136,11 @@ See test_defs.xsd for more information.
     build_path="frameworks/base/services/input/tests"
     description="Framework libinput unit tests." />
 
+<test name="volley"
+    build_path="frameworks/support/volley/tests"
+    package="com.android.volley.tests"
+    continuous="true" />
+
 <!--  end of framework tests -->
 
 <!-- media framework tests -->
