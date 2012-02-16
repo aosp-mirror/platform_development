@@ -151,8 +151,8 @@ frameworks/base/docs/docs-samples-redirect.html docs/samples/index.html
 #
 # the list here should match the list of samples that we generate docs for,
 # (see web_docs_sample_code_flags in frameworks/base/Android.mk)
-development/apps/GestureBuilder              samples/${PLATFORM_NAME}/GestureBuilder
-development/samples/source.properties        samples/${PLATFORM_NAME}/source.properties
+development/apps/GestureBuilder                samples/${PLATFORM_NAME}/GestureBuilder
+development/samples/samples_source.properties  samples/${PLATFORM_NAME}/source.properties
 #
 # PLEASE KEEP THE SAMPLES IN ALPHABETICAL ORDER.
 #
