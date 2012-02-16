@@ -385,18 +385,33 @@ class TestRunner(object):
         if self._options.preview:
           logger.Log("adb shell \"echo %s >> /data/local.prop\""
                      % self._DALVIK_VERIFIER_OFF_PROP)
+          logger.Log("adb shell chmod 644 /data/local.prop")
           logger.Log("adb reboot")
           logger.Log("adb wait-for-device")
         else:
           logger.Log("Turning off dalvik verifier and rebooting")
           self._adb.SendShellCommand("\"echo %s >> /data/local.prop\""
                                      % self._DALVIK_VERIFIER_OFF_PROP)
-          self._adb.SendCommand("reboot")
-          # wait for device to go offline
-          time.sleep(10)
-          self._adb.SendCommand("wait-for-device", timeout_time=60,
-                                retry_count=3)
-          self._adb.EnableAdbRoot()
+
+          self._ChmodReboot()
+      elif not self._options.preview:
+        # check the permissions on the file
+        permout = self._adb.SendShellCommand("ls -l /data/local.prop")
+        if not "-rw-r--r--" in permout:
+          logger.Log("Fixing permissions on /data/local.prop and rebooting")
+          self._ChmodReboot()
+
+  def _ChmodReboot(self):
+    """Perform a chmod of /data/local.prop and reboot.
+    """
+    self._adb.SendShellCommand("chmod 644 /data/local.prop")
+    self._adb.SendCommand("reboot")
+    # wait for device to go offline
+    time.sleep(10)
+    self._adb.SendCommand("wait-for-device", timeout_time=60,
+                          retry_count=3)
+    self._adb.EnableAdbRoot()
+
 
   def RunTests(self):
     """Main entry method - executes the tests according to command line args."""
