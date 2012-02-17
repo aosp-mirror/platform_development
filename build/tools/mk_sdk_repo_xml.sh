@@ -90,6 +90,9 @@ ATTRS=(
   Platform.MinToolsRev          min-tools-rev
   Platform.MinPlatformToolsRev  min-platform-tools-rev
   Extra.Vendor                  vendor
+  Extra.VendorId                vendor-id
+  Extra.VendorDisplay           vendor-display
+  Extra.NameDisplay             name-display
   Extra.Path                    path
   Extra.OldPaths                old-paths
   Extra.MinApiLevel             min-api-level
@@ -99,7 +102,11 @@ ATTRS=(
   Layoutlib.Revision            layoutlib/revision
   # for addon packages
   vendor                        vendor
+  vendor-id                     vendor-id
+  vendor-display                vendor-display
   name                          name
+  name-id                       name-id
+  name-display                  name-display
   description                   description
   api                           api-level
   version                       revision
