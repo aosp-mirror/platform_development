@@ -102,7 +102,7 @@ public class MonkeySourceRandom implements MonkeyEventSource {
      * be an expensive operation.
      *
      * @param keyName the name of the KEYCODE_VALUE to lookup.
-     * @returns the intenger keyCode value, or -1 if not found
+     * @returns the intenger keyCode value, or KeyEvent.KEYCODE_UNKNOWN if not found
      */
     public static int getKeyCode(String keyName) {
         return KeyEvent.keyCodeFromString(keyName);
