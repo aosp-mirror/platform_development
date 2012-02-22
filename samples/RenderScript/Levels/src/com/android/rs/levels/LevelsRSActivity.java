@@ -21,20 +21,23 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.os.Bundle;
+import android.graphics.SurfaceTexture;
+import android.renderscript.Allocation;
 import android.renderscript.Matrix3f;
+import android.renderscript.RenderScript;
 import android.util.Log;
+import android.view.TextureView;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
-import android.renderscript.Allocation;
-import android.renderscript.RenderScript;
 
 public class LevelsRSActivity extends Activity
-                              implements SeekBar.OnSeekBarChangeListener {
+                              implements SeekBar.OnSeekBarChangeListener,
+                                         TextureView.SurfaceTextureListener
+{
     private final String TAG = "Img";
     private Bitmap mBitmapIn;
-    private Bitmap mBitmapOut;
     private float mInBlack = 0.0f;
     private SeekBar mInBlackSeekBar;
     private float mOutBlack = 0.0f;
@@ -48,7 +51,7 @@ public class LevelsRSActivity extends Activity
     private float mSaturation = 1.0f;
     private SeekBar mSaturationSeekBar;
     private TextView mBenchmarkResult;
-    private ImageView mDisplayView;
+    private TextureView mDisplayView;
 
     Matrix3f satMatrix = new Matrix3f();
     float mInWMinInB;
@@ -128,13 +131,10 @@ public class LevelsRSActivity extends Activity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.main);
+        setContentView(R.layout.rs);
 
         mBitmapIn = loadBitmap(R.drawable.city);
-        mBitmapOut = loadBitmap(R.drawable.city);
-
-        mDisplayView = (ImageView) findViewById(R.id.display);
-        mDisplayView.setImageBitmap(mBitmapOut);
+        mDisplayView = (TextureView) findViewById(R.id.display);
 
         mInBlackSeekBar = (SeekBar)findViewById(R.id.inBlack);
         mInBlackSeekBar.setOnSeekBarChangeListener(this);
@@ -170,15 +170,16 @@ public class LevelsRSActivity extends Activity
         mInPixelsAllocation = Allocation.createFromBitmap(mRS, mBitmapIn,
                                                           Allocation.MipmapControl.MIPMAP_NONE,
                                                           Allocation.USAGE_SCRIPT);
-        mOutPixelsAllocation = Allocation.createFromBitmap(mRS, mBitmapOut,
-                                                           Allocation.MipmapControl.MIPMAP_NONE,
-                                                           Allocation.USAGE_SCRIPT);
+        mOutPixelsAllocation = Allocation.createTyped(mRS, mInPixelsAllocation.getType(),
+                                                      Allocation.USAGE_SCRIPT |
+                                                      Allocation.USAGE_IO_OUTPUT);
+        mDisplayView.setSurfaceTextureListener(this);
+
         mScript = new ScriptC_levels(mRS, getResources(), R.raw.levels);
         mScript.set_gamma(mGamma);
 
         setSaturation();
         setLevels();
-        filter();
     }
 
     private Bitmap loadBitmap(int resource) {
@@ -194,7 +195,8 @@ public class LevelsRSActivity extends Activity
 
     private void filter() {
         mScript.forEach_root(mInPixelsAllocation, mOutPixelsAllocation);
-        mOutPixelsAllocation.copyTo(mBitmapOut);
+        mOutPixelsAllocation.ioSendOutput();
+        mRS.finish();
     }
 
     public void benchmark(View v) {
@@ -204,5 +206,27 @@ public class LevelsRSActivity extends Activity
         t = java.lang.System.currentTimeMillis() - t;
         mDisplayView.invalidate();
         mBenchmarkResult.setText("Result: " + t + " ms");
+    }
+
+
+    @Override
+    public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
+        mOutPixelsAllocation.setSurfaceTexture(surface);
+        filter();
+    }
+
+    @Override
+    public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {
+        mOutPixelsAllocation.setSurfaceTexture(surface);
+    }
+
+    @Override
+    public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
+        mOutPixelsAllocation.setSurfaceTexture(null);
+        return true;
+    }
+
+    @Override
+    public void onSurfaceTextureUpdated(SurfaceTexture surface) {
     }
 }
