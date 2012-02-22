@@ -1682,6 +1682,7 @@ GL_API void GL_APIENTRY glEGLImageTargetTexture2DOES(GLenum target, GLeglImageOE
             texData->internalFormat = img->internalFormat;
             texData->sourceEGLImage = (unsigned int)image;
             texData->eglImageDetach = s_eglIface->eglDetachEGLImage;
+            texData->oldGlobal = oldGlobal;
         }
     }
 }
