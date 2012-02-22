@@ -26,9 +26,13 @@
 #include <stdint.h>
 
 typedef uint32_t HandleType;
+struct ColorBufferRef {
+    ColorBufferPtr cb;
+    uint32_t refcount;  // number of client-side references
+};
 typedef std::map<HandleType, RenderContextPtr> RenderContextMap;
 typedef std::map<HandleType, WindowSurfacePtr> WindowSurfaceMap;
-typedef std::map<HandleType, ColorBufferPtr> ColorBufferMap;
+typedef std::map<HandleType, ColorBufferRef> ColorBufferMap;
 
 struct FrameBufferCaps
 {
@@ -60,7 +64,8 @@ public:
     HandleType createColorBuffer(int p_width, int p_height, GLenum p_internalFormat);
     void DestroyRenderContext(HandleType p_context);
     void DestroyWindowSurface(HandleType p_surface);
-    void DestroyColorBuffer(HandleType p_colorbuffer);
+    void openColorBuffer(HandleType p_colorbuffer);
+    void closeColorBuffer(HandleType p_colorbuffer);
 
     bool  bindContext(HandleType p_context, HandleType p_drawSurface, HandleType p_readSurface);
     bool  setWindowSurfaceColorBuffer(HandleType p_surface, HandleType p_colorbuffer);
