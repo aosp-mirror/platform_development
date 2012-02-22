@@ -215,13 +215,22 @@ static uint32_t rcCreateColorBuffer(uint32_t width,
     return fb->createColorBuffer(width, height, internalFormat);
 }
 
-static void rcDestroyColorBuffer(uint32_t colorbuffer)
+static void rcOpenColorBuffer(uint32_t colorbuffer)
 {
     FrameBuffer *fb = FrameBuffer::getFB();
     if (!fb) {
         return;
     }
-    fb->DestroyColorBuffer( colorbuffer );
+    fb->openColorBuffer( colorbuffer );
+}
+
+static void rcCloseColorBuffer(uint32_t colorbuffer)
+{
+    FrameBuffer *fb = FrameBuffer::getFB();
+    if (!fb) {
+        return;
+    }
+    fb->closeColorBuffer( colorbuffer );
 }
 
 static int rcFlushWindowColorBuffer(uint32_t windowSurface)
@@ -336,7 +345,8 @@ void initRenderControlContext(renderControl_decoder_context_t *dec)
     dec->set_rcCreateWindowSurface(rcCreateWindowSurface);
     dec->set_rcDestroyWindowSurface(rcDestroyWindowSurface);
     dec->set_rcCreateColorBuffer(rcCreateColorBuffer);
-    dec->set_rcDestroyColorBuffer(rcDestroyColorBuffer);
+    dec->set_rcOpenColorBuffer(rcOpenColorBuffer);
+    dec->set_rcCloseColorBuffer(rcCloseColorBuffer);
     dec->set_rcSetWindowColorBuffer(rcSetWindowColorBuffer);
     dec->set_rcFlushWindowColorBuffer(rcFlushWindowColorBuffer);
     dec->set_rcMakeCurrent(rcMakeCurrent);

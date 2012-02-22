@@ -458,7 +458,8 @@ HandleType FrameBuffer::createColorBuffer(int p_width, int p_height,
     ColorBufferPtr cb( ColorBuffer::create(p_width, p_height, p_internalFormat) );
     if (cb.Ptr() != NULL) {
         ret = genHandle();
-        m_colorbuffers[ret] = cb;
+        m_colorbuffers[ret].cb = cb;
+        m_colorbuffers[ret].refcount = 1;
     }
     return ret;
 }
@@ -512,10 +513,28 @@ void FrameBuffer::DestroyWindowSurface(HandleType p_surface)
     m_windows.erase(p_surface);
 }
 
-void FrameBuffer::DestroyColorBuffer(HandleType p_colorbuffer)
+void FrameBuffer::openColorBuffer(HandleType p_colorbuffer)
 {
     android::Mutex::Autolock mutex(m_lock);
-    m_colorbuffers.erase(p_colorbuffer);
+    ColorBufferMap::iterator c(m_colorbuffers.find(p_colorbuffer));
+    if (c == m_colorbuffers.end()) {
+        // bad colorbuffer handle
+        return;
+    }
+    (*c).second.refcount++;
+}
+
+void FrameBuffer::closeColorBuffer(HandleType p_colorbuffer)
+{
+    android::Mutex::Autolock mutex(m_lock);
+    ColorBufferMap::iterator c(m_colorbuffers.find(p_colorbuffer));
+    if (c == m_colorbuffers.end()) {
+        // bad colorbuffer handle
+        return;
+    }
+    if (--(*c).second.refcount == 0) {
+        m_colorbuffers.erase(c);
+    }
 }
 
 bool FrameBuffer::flushWindowSurfaceColorBuffer(HandleType p_surface)
@@ -550,7 +569,7 @@ bool FrameBuffer::setWindowSurfaceColorBuffer(HandleType p_surface,
         return false;
     }
 
-    (*w).second->setColorBuffer( (*c).second );
+    (*w).second->setColorBuffer( (*c).second.cb );
 
     return true;
 }
@@ -567,7 +586,7 @@ bool FrameBuffer::updateColorBuffer(HandleType p_colorbuffer,
         return false;
     }
 
-    (*c).second->subUpdate(x, y, width, height, format, type, pixels);
+    (*c).second.cb->subUpdate(x, y, width, height, format, type, pixels);
 
     return true;
 }
@@ -582,7 +601,7 @@ bool FrameBuffer::bindColorBufferToTexture(HandleType p_colorbuffer)
         return false;
     }
 
-    return (*c).second->bindToTexture();
+    return (*c).second.cb->bindToTexture();
 }
 
 bool FrameBuffer::bindColorBufferToRenderbuffer(HandleType p_colorbuffer)
@@ -595,7 +614,7 @@ bool FrameBuffer::bindColorBufferToRenderbuffer(HandleType p_colorbuffer)
         return false;
     }
 
-    return (*c).second->bindToRenderbuffer();
+    return (*c).second.cb->bindToRenderbuffer();
 }
 
 bool FrameBuffer::bindContext(HandleType p_context,
@@ -776,7 +795,7 @@ bool FrameBuffer::post(HandleType p_colorbuffer, bool needLock)
         if (m_zRot != 0.0f) {
             s_gl.glClear(GL_COLOR_BUFFER_BIT);
         }
-        ret = (*c).second->post();
+        ret = (*c).second.cb->post();
         s_gl.glPopMatrix();
 
         if (ret) {

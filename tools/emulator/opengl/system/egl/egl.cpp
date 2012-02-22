@@ -417,7 +417,7 @@ EGLBoolean egl_pbuffer_surface_t::rcDestroy()
 
     DEFINE_AND_VALIDATE_HOST_CONNECTION(EGL_FALSE);
     rcEnc->rcDestroyWindowSurface(rcEnc, rcSurface);
-    rcEnc->rcDestroyColorBuffer(rcEnc, rcColorBuffer);
+    rcEnc->rcCloseColorBuffer(rcEnc, rcColorBuffer);
     rcSurface = 0;
 
     return EGL_TRUE;
