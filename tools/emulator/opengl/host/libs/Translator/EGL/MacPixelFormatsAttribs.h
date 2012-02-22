@@ -1,8 +1,5 @@
-#ifndef MAC_PIXELS_FORMATS_ATTRIBS_H	
-#define MAC_PIXELS_FORMATS_ATTRIBS_H	
-
 /*
-* Copyright (C) 2011 The Android Open Source Project
+* Copyright 2011 The Android Open Source Project
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -16,6 +13,9 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
+
+#ifndef MAC_PIXELS_FORMATS_ATTRIBS_H
+#define MAC_PIXELS_FORMATS_ATTRIBS_H
 
 #include <Cocoa/Cocoa.h>
 NSOpenGLPixelFormatAttribute** getPixelFormatsAttributes(int* size);
