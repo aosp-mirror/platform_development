@@ -279,8 +279,8 @@ static int gralloc_free(alloc_device_t* dev,
 
     if (cb->hostHandle != 0) {
         DEFINE_AND_VALIDATE_HOST_CONNECTION;
-        D("Destroying host ColorBuffer 0x%x\n", cb->hostHandle);
-        rcEnc->rcDestroyColorBuffer(rcEnc, cb->hostHandle);
+        D("Closing host ColorBuffer 0x%x\n", cb->hostHandle);
+        rcEnc->rcCloseColorBuffer(rcEnc, cb->hostHandle);
     }
 
     //
@@ -440,6 +440,12 @@ static int gralloc_register_buffer(gralloc_module_t const* module,
         return -EINVAL;
     }
 
+    if (cb->hostHandle != 0) {
+        DEFINE_AND_VALIDATE_HOST_CONNECTION;
+        D("Opening host ColorBuffer 0x%x\n", cb->hostHandle);
+        rcEnc->rcOpenColorBuffer(rcEnc, cb->hostHandle);
+    }
+
     //
     // if the color buffer has ashmem region and it is not mapped in this
     // process map it now.
@@ -469,6 +475,12 @@ static int gralloc_unregister_buffer(gralloc_module_t const* module,
     if (!gr || !cb_handle_t::validate(cb)) {
         ERR("gralloc_unregister_buffer(%p): invalid buffer", cb);
         return -EINVAL;
+    }
+
+    if (cb->hostHandle != 0) {
+        DEFINE_AND_VALIDATE_HOST_CONNECTION;
+        D("Closing host ColorBuffer 0x%x\n", cb->hostHandle);
+        rcEnc->rcCloseColorBuffer(rcEnc, cb->hostHandle);
     }
 
     //

@@ -76,13 +76,19 @@ uint32_t rcCreateColorBuffer(uint32_t width, uint32_t height, GLenum internalFor
        be specified as a render target for a window surface through 
        rcSetWindowColorBuffer or to be displayed on the framebuffer window
        through rcFBPost.
-       The function returns a handle to the colorBuffer object.
+       The function returns a handle to the colorBuffer object, with an initial
+       reference count of 1.
 
-void rcDestroyColorBuffer(uint32_t colorbuffer);
-       destroyes a colorBuffer object.
+void rcOpenColorBuffer(uint32_t colorbuffer);
+       Adds an additional reference to the colorbuffer, typically from a
+       different Android process than the one which created it.
+
+void rcCloseColorBuffer(uint32_t colorbuffer);
+       Removes a reference to the colorbuffer. When the reference count drops
+       to zero the colorbuffer is automatically destroyed.
 
 void rcFlushWindowColorBuffer(uint32_t windowSurface, uint32_t colorBuffer);
-	   This flushes the current window color buffer
+       This flushes the current window color buffer
 
 void rcSetWindowColorBuffer(uint32_t windowSurface, uint32_t colorBuffer);
        This set the target color buffer for a windowSurface, when set the
