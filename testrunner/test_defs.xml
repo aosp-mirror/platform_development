@@ -451,12 +451,12 @@ See test_defs.xsd for more information.
     coverage_target="CalendarProvider"
     continuous="true" />
 
-<test name="camera-activity"
+<test name="camera-functional"
     build_path="packages/apps/Camera"
-    package="com.android.camera.activity"
-    runner="android.test.InstrumentationTestRunner"
+    package="com.google.android.camera.tests"
+    runner="com.android.camera.CameraTestRunner"
     coverage_target="Camera"
-    description="Basic camera activity test with mock camera"
+    description="Camera functional test"
     continuous="true" />
 
 <test name="contactsprov"
