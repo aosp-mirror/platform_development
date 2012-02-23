@@ -73,13 +73,9 @@ void glEGLImageTargetRenderbufferStorageOES(void *self, GLenum target, GLeglImag
         return;
     }
 
-    GET_CONTEXT;
     DEFINE_AND_VALIDATE_HOST_CONNECTION();
-
-    ctx->override2DTextureTarget(target);
     rcEnc->rcBindRenderbuffer(rcEnc,
             ((cb_handle_t *)(native_buffer->handle))->hostHandle);
-    ctx->restore2DTextureTarget();
 
     return;
 }
