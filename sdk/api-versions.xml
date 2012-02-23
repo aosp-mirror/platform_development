@@ -31198,7 +31198,7 @@
 		<extends name="java/lang/reflect/AccessibleObject" />
 		<implements name="java/lang/reflect/Member" />
 		<method name="get(Ljava/lang/Object;)Ljava/lang/Object;" />
-		<method name="getAnnotation(Ljava/lang/Class;)LA;" since="14" />
+		<method name="getAnnotation(Ljava/lang/Class;)LA;" />
 		<method name="getBoolean(Ljava/lang/Object;)Z" />
 		<method name="getByte(Ljava/lang/Object;)B" />
 		<method name="getChar(Ljava/lang/Object;)C" />
