@@ -17,7 +17,6 @@
 #define _GL2_ENCODER_H_
 
 #include "gl2_enc.h"
-#include "IOStream.h"
 #include "GLClientState.h"
 #include "GLSharedGroup.h"
 #include "FixedBuffer.h"
@@ -33,15 +32,16 @@ public:
     void setSharedGroup(GLSharedGroupPtr shared){ m_shared = shared; }
     const GLClientState *state() { return m_state; }
     const GLSharedGroupPtr shared() { return m_shared; }
-    void flush() {
-        gl2_encoder_context_t::m_stream->flush();
-    }
+    void flush() { m_stream->flush(); }
 
     void setInitialized(){ m_initialized = true; };
     bool isInitialized(){ return m_initialized; };
 
     virtual void setError(GLenum error){ m_error = error; };
     virtual GLenum getError() { return m_error; };
+
+    void override2DTextureTarget(GLenum target);
+    void restore2DTextureTarget();
 
 private:
 
@@ -57,6 +57,7 @@ private:
     FixedBuffer m_fixedBuffer;
 
     void sendVertexAttributes(GLint first, GLsizei count);
+    bool updateHostTexture2DBinding(GLenum texUnit, GLenum newTarget);
 
     glGetError_client_proc_t    m_glGetError_enc;
     static GLenum s_glGetError(void * self);
@@ -141,6 +142,12 @@ private:
     glDeleteShader_client_proc_t m_glDeleteShader_enc;
     static void s_glDeleteShader(void *self, GLuint shader);
 
+    glAttachShader_client_proc_t m_glAttachShader_enc;
+    static void s_glAttachShader(void *self, GLuint program, GLuint shader);
+
+    glDetachShader_client_proc_t m_glDetachShader_enc;
+    static void s_glDetachShader(void *self, GLuint program, GLuint shader);
+
     glGetUniformLocation_client_proc_t m_glGetUniformLocation_enc;
     static int s_glGetUniformLocation(void *self, GLuint program, const GLchar *name);
     glUseProgram_client_proc_t m_glUseProgram_enc;
@@ -185,5 +192,25 @@ private:
 	static void s_glUniformMatrix2fv(void *self , GLint location, GLsizei count, GLboolean transpose, const GLfloat* value);
 	static void s_glUniformMatrix3fv(void *self , GLint location, GLsizei count, GLboolean transpose, const GLfloat* value);
 	static void s_glUniformMatrix4fv(void *self , GLint location, GLsizei count, GLboolean transpose, const GLfloat* value);
+
+    glActiveTexture_client_proc_t m_glActiveTexture_enc;
+    glBindTexture_client_proc_t m_glBindTexture_enc;
+    glDeleteTextures_client_proc_t m_glDeleteTextures_enc;
+    glGetTexParameterfv_client_proc_t m_glGetTexParameterfv_enc;
+    glGetTexParameteriv_client_proc_t m_glGetTexParameteriv_enc;
+    glTexParameterf_client_proc_t m_glTexParameterf_enc;
+    glTexParameterfv_client_proc_t m_glTexParameterfv_enc;
+    glTexParameteri_client_proc_t m_glTexParameteri_enc;
+    glTexParameteriv_client_proc_t m_glTexParameteriv_enc;
+
+    static void s_glActiveTexture(void* self, GLenum texture);
+    static void s_glBindTexture(void* self, GLenum target, GLuint texture);
+    static void s_glDeleteTextures(void* self, GLsizei n, const GLuint* textures);
+    static void s_glGetTexParameterfv(void* self, GLenum target, GLenum pname, GLfloat* params);
+    static void s_glGetTexParameteriv(void* self, GLenum target, GLenum pname, GLint* params);
+    static void s_glTexParameterf(void* self, GLenum target, GLenum pname, GLfloat param);
+    static void s_glTexParameterfv(void* self, GLenum target, GLenum pname, const GLfloat* params);
+    static void s_glTexParameteri(void* self, GLenum target, GLenum pname, GLint param);
+    static void s_glTexParameteriv(void* self, GLenum target, GLenum pname, const GLint* params);
 };
 #endif
