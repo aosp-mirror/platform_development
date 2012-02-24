@@ -142,6 +142,7 @@ public:
     // glActiveTexture(GL_TEXTURE0 + i)
     // Sets the active texture unit. Up to MAX_TEXTURE_UNITS are supported.
     GLenum setActiveTextureUnit(GLenum texture);
+    GLenum getActiveTextureUnit() const;
 
     // glEnable(GL_TEXTURE_(2D|EXTERNAL_OES))
     void enableTextureTarget(GLenum target);
