@@ -9,7 +9,7 @@
 #include "ThreadInfo.h"
 
 //XXX: fix this macro to get the context from fast tls path
-#define GET_CONTEXT gl2_client_context_t * ctx = getEGLThreadInfo()->hostConn->gl2Encoder();
+#define GET_CONTEXT GL2Encoder * ctx = getEGLThreadInfo()->hostConn->gl2Encoder();
 
 #include "gl2_entry.cpp"
 
@@ -35,7 +35,7 @@ static EGLClient_glesInterface * s_gl = NULL;
 //GL extensions
 void glEGLImageTargetTexture2DOES(void * self, GLenum target, GLeglImageOES image)
 {
-    DBG("glEGLImageTargetTexture2DOES v2 img=%p\n", image);
+    DBG("glEGLImageTargetTexture2DOES v2 target=%#x img=%p\n", target, image);
     //TODO: check error - we don't have a way to set gl error
     android_native_buffer_t* native_buffer = (android_native_buffer_t*)image;
 
@@ -47,8 +47,12 @@ void glEGLImageTargetTexture2DOES(void * self, GLenum target, GLeglImageOES imag
         return;
     }
 
+    GET_CONTEXT;
     DEFINE_AND_VALIDATE_HOST_CONNECTION();
+
+    ctx->override2DTextureTarget(target);
     rcEnc->rcBindTexture(rcEnc, ((cb_handle_t *)(native_buffer->handle))->hostHandle);
+    ctx->restore2DTextureTarget();
 
     return;
 }

@@ -1,6 +1,27 @@
-#include "GL2Encoder.h"
-#include <assert.h>
+/*
+* Copyright (C) 2011 The Android Open Source Project
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+* http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
 
+#include "GL2Encoder.h"
+#include <private/ui/android_natives_priv.h>
+#include <assert.h>
+#include <ctype.h>
+
+#ifndef MIN
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
+#endif
 
 static GLubyte *gVendorString= (GLubyte *) "Android";
 static GLubyte *gRendererString= (GLubyte *) "Android HW-GLES 2.0";
@@ -57,6 +78,8 @@ GL2Encoder::GL2Encoder(IOStream *stream) : gl2_encoder_context_t(stream)
     m_glCreateProgram_enc = set_glCreateProgram(s_glCreateProgram);
     m_glCreateShader_enc = set_glCreateShader(s_glCreateShader);
     m_glDeleteShader_enc = set_glDeleteShader(s_glDeleteShader);
+    m_glAttachShader_enc = set_glAttachShader(s_glAttachShader);
+    m_glDetachShader_enc = set_glDetachShader(s_glDetachShader);
     m_glGetUniformLocation_enc = set_glGetUniformLocation(s_glGetUniformLocation);
     m_glUseProgram_enc = set_glUseProgram(s_glUseProgram);
 
@@ -79,6 +102,16 @@ GL2Encoder::GL2Encoder(IOStream *stream) : gl2_encoder_context_t(stream)
     m_glUniformMatrix2fv_enc = set_glUniformMatrix2fv(s_glUniformMatrix2fv);
     m_glUniformMatrix3fv_enc = set_glUniformMatrix3fv(s_glUniformMatrix3fv);
     m_glUniformMatrix4fv_enc = set_glUniformMatrix4fv(s_glUniformMatrix4fv);
+
+    m_glActiveTexture_enc = set_glActiveTexture(s_glActiveTexture);
+    m_glBindTexture_enc = set_glBindTexture(s_glBindTexture);
+    m_glDeleteTextures_enc = set_glDeleteTextures(s_glDeleteTextures);
+    m_glGetTexParameterfv_enc = set_glGetTexParameterfv(s_glGetTexParameterfv);
+    m_glGetTexParameteriv_enc = set_glGetTexParameteriv(s_glGetTexParameteriv);
+    m_glTexParameterf_enc = set_glTexParameterf(s_glTexParameterf);
+    m_glTexParameterfv_enc = set_glTexParameterfv(s_glTexParameterfv);
+    m_glTexParameteri_enc = set_glTexParameteri(s_glTexParameteri);
+    m_glTexParameteriv_enc = set_glTexParameteriv(s_glTexParameteriv);
 }
 
 GL2Encoder::~GL2Encoder()
@@ -184,21 +217,49 @@ void GL2Encoder::s_glVertexAtrribPointer(void *self, GLuint indx, GLint size, GL
     ctx->m_state->setState(indx, size, type, normalized, stride, ptr);
 }
 
-void GL2Encoder::s_glGetIntegerv(void *self, GLenum param, GLint *params)
+void GL2Encoder::s_glGetIntegerv(void *self, GLenum param, GLint *ptr)
 {
     GL2Encoder *ctx = (GL2Encoder *) self;
     assert(ctx->m_state != NULL);
-    if (param == GL_NUM_SHADER_BINARY_FORMATS) {
-        *params = 0;
-    } else if (param == GL_SHADER_BINARY_FORMATS) {
+    GLClientState* state = ctx->m_state;
+
+    switch (param) {
+    case GL_NUM_SHADER_BINARY_FORMATS:
+        *ptr = 0;
+        break;
+    case GL_SHADER_BINARY_FORMATS:
         // do nothing
-    } else  if (param == GL_COMPRESSED_TEXTURE_FORMATS) {
+        break;
+
+    case GL_COMPRESSED_TEXTURE_FORMATS: {
         GLint *compressedTextureFormats = ctx->getCompressedTextureFormats();
-        if (ctx->m_num_compressedTextureFormats > 0 && compressedTextureFormats != NULL) {
-            memcpy(params, compressedTextureFormats, ctx->m_num_compressedTextureFormats * sizeof(GLint));
+        if (ctx->m_num_compressedTextureFormats > 0 &&
+                compressedTextureFormats != NULL) {
+            memcpy(ptr, compressedTextureFormats,
+                    ctx->m_num_compressedTextureFormats * sizeof(GLint));
         }
-    } else if (!ctx->m_state->getClientStateParameter<GLint>(param, params)) {
-        ctx->m_glGetIntegerv_enc(self, param, params);
+        break;
+    }
+
+    case GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS:
+    case GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS:
+    case GL_MAX_TEXTURE_IMAGE_UNITS:
+        ctx->m_glGetIntegerv_enc(self, param, ptr);
+        *ptr = MIN(*ptr, GLClientState::MAX_TEXTURE_UNITS);
+        break;
+
+    case GL_TEXTURE_BINDING_2D:
+        *ptr = state->getBoundTexture(GL_TEXTURE_2D);
+        break;
+    case GL_TEXTURE_BINDING_EXTERNAL_OES:
+        *ptr = state->getBoundTexture(GL_TEXTURE_EXTERNAL_OES);
+        break;
+
+    default:
+        if (!ctx->m_state->getClientStateParameter<GLint>(param, ptr)) {
+            ctx->m_glGetIntegerv_enc(self, param, ptr);
+        }
+        break;
     }
 }
 
@@ -207,20 +268,46 @@ void GL2Encoder::s_glGetFloatv(void *self, GLenum param, GLfloat *ptr)
 {
     GL2Encoder *ctx = (GL2Encoder *)self;
     assert(ctx->m_state != NULL);
-    if (param == GL_NUM_SHADER_BINARY_FORMATS) {
+    GLClientState* state = ctx->m_state;
+
+    switch (param) {
+    case GL_NUM_SHADER_BINARY_FORMATS:
         *ptr = 0;
-    } else if (param == GL_SHADER_BINARY_FORMATS) {
-        // do nothing;
-    } else  if (param == GL_COMPRESSED_TEXTURE_FORMATS) {
-        GLint * compressedTextureFormats = ctx->getCompressedTextureFormats();
-        if (ctx->m_num_compressedTextureFormats > 0 && compressedTextureFormats != NULL) {
+        break;
+    case GL_SHADER_BINARY_FORMATS:
+        // do nothing
+        break;
+
+    case GL_COMPRESSED_TEXTURE_FORMATS: {
+        GLint *compressedTextureFormats = ctx->getCompressedTextureFormats();
+        if (ctx->m_num_compressedTextureFormats > 0 &&
+                compressedTextureFormats != NULL) {
             for (int i = 0; i < ctx->m_num_compressedTextureFormats; i++) {
                 ptr[i] = (GLfloat) compressedTextureFormats[i];
             }
         }
+        break;
     }
-    else if (!ctx->m_state->getClientStateParameter<GLfloat>(param,ptr)) {
+
+    case GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS:
+    case GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS:
+    case GL_MAX_TEXTURE_IMAGE_UNITS:
         ctx->m_glGetFloatv_enc(self, param, ptr);
+        *ptr = MIN(*ptr, (GLfloat)GLClientState::MAX_TEXTURE_UNITS);
+        break;
+
+    case GL_TEXTURE_BINDING_2D:
+        *ptr = (GLfloat)state->getBoundTexture(GL_TEXTURE_2D);
+        break;
+    case GL_TEXTURE_BINDING_EXTERNAL_OES:
+        *ptr = (GLfloat)state->getBoundTexture(GL_TEXTURE_EXTERNAL_OES);
+        break;
+
+    default:
+        if (!ctx->m_state->getClientStateParameter<GLfloat>(param, ptr)) {
+            ctx->m_glGetFloatv_enc(self, param, ptr);
+        }
+        break;
     }
 }
 
@@ -229,11 +316,40 @@ void GL2Encoder::s_glGetBooleanv(void *self, GLenum param, GLboolean *ptr)
 {
     GL2Encoder *ctx = (GL2Encoder *)self;
     assert(ctx->m_state != NULL);
-    if (param == GL_COMPRESSED_TEXTURE_FORMATS) {
-        // ignore the command, although we should have generated a GLerror;
+    GLClientState* state = ctx->m_state;
+
+    switch (param) {
+    case GL_NUM_SHADER_BINARY_FORMATS:
+        *ptr = GL_FALSE;
+        break;
+    case GL_SHADER_BINARY_FORMATS:
+        // do nothing
+        break;
+
+    case GL_COMPRESSED_TEXTURE_FORMATS: {
+        GLint *compressedTextureFormats = ctx->getCompressedTextureFormats();
+        if (ctx->m_num_compressedTextureFormats > 0 &&
+                compressedTextureFormats != NULL) {
+            for (int i = 0; i < ctx->m_num_compressedTextureFormats; i++) {
+                ptr[i] = compressedTextureFormats[i] != 0 ? GL_TRUE : GL_FALSE;
+            }
+        }
+        break;
     }
-    else if (!ctx->m_state->getClientStateParameter<GLboolean>(param,ptr)) {
-        ctx->m_glGetBooleanv_enc(self, param, ptr);
+
+    case GL_TEXTURE_BINDING_2D:
+        *ptr = state->getBoundTexture(GL_TEXTURE_2D) != 0 ? GL_TRUE : GL_FALSE;
+        break;
+    case GL_TEXTURE_BINDING_EXTERNAL_OES:
+        *ptr = state->getBoundTexture(GL_TEXTURE_EXTERNAL_OES) != 0
+                ? GL_TRUE : GL_FALSE;
+        break;
+
+    default:
+        if (!ctx->m_state->getClientStateParameter<GLboolean>(param, ptr)) {
+            ctx->m_glGetBooleanv_enc(self, param, ptr);
+        }
+        break;
     }
 }
 
@@ -431,13 +547,112 @@ GLint * GL2Encoder::getCompressedTextureFormats()
     return m_compressedTextureFormats;
 }
 
+// Replace uses of samplerExternalOES with sampler2D, recording the names of
+// modified shaders in data. Also remove
+//   #extension GL_OES_EGL_image_external : require
+// statements.
+//
+// This implementation assumes the input has already been pre-processed. If not,
+// a few cases will be mishandled:
+//
+// 1. "mySampler" will be incorrectly recorded as being a samplerExternalOES in
+//    the following code:
+//      #if 1
+//      uniform sampler2D mySampler;
+//      #else
+//      uniform samplerExternalOES mySampler;
+//      #endif
+//
+// 2. Comments that look like sampler declarations will be incorrectly modified
+//    and recorded:
+//      // samplerExternalOES hahaFooledYou
+//
+// 3. However, GLSL ES does not have a concatentation operator, so things like
+//    this (valid in C) are invalid and not a problem:
+//      #define SAMPLER(TYPE, NAME) uniform sampler#TYPE NAME
+//      SAMPLER(ExternalOES, mySampler);
+//
+static bool replaceSamplerExternalWith2D(char* const str, ShaderData* const data)
+{
+    static const char STR_HASH_EXTENSION[] = "#extension";
+    static const char STR_GL_OES_EGL_IMAGE_EXTERNAL[] = "GL_OES_EGL_image_external";
+    static const char STR_SAMPLER_EXTERNAL_OES[] = "samplerExternalOES";
+    static const char STR_SAMPLER2D_SPACE[]      = "sampler2D         ";
+
+    // -- overwrite all "#extension GL_OES_EGL_image_external : xxx" statements
+    char* c = str;
+    while ((c = strstr(c, STR_HASH_EXTENSION))) {
+        char* start = c;
+        c += sizeof(STR_HASH_EXTENSION)-1;
+        while (isspace(*c) && *c != '\0') {
+            c++;
+        }
+        if (strncmp(c, STR_GL_OES_EGL_IMAGE_EXTERNAL,
+                sizeof(STR_GL_OES_EGL_IMAGE_EXTERNAL)-1) == 0)
+        {
+            // #extension statements are terminated by end of line
+            c = start;
+            while (*c != '\0' && *c != '\r' && *c != '\n') {
+                *c++ = ' ';
+            }
+        }
+    }
+
+    // -- replace "samplerExternalOES" with "sampler2D" and record name
+    c = str;
+    while ((c = strstr(c, STR_SAMPLER_EXTERNAL_OES))) {
+        // Make sure "samplerExternalOES" isn't a substring of a larger token
+        if (c == str || !isspace(*(c-1))) {
+            c++;
+            continue;
+        }
+        char* sampler_start = c;
+        c += sizeof(STR_SAMPLER_EXTERNAL_OES)-1;
+        if (!isspace(*c) && *c != '\0') {
+            continue;
+        }
+
+        // capture sampler name
+        while (isspace(*c) && *c != '\0') {
+            c++;
+        }
+        if (!isalpha(*c) && *c != '_') {
+            // not an identifier
+            return false;
+        }
+        char* name_start = c;
+        do {
+            c++;
+        } while (isalnum(*c) || *c == '_');
+        data->samplerExternalNames.push_back(
+                android::String8(name_start, c - name_start));
+
+        // memcpy instead of strcpy since we don't want the NUL terminator
+        memcpy(sampler_start, STR_SAMPLER2D_SPACE, sizeof(STR_SAMPLER2D_SPACE)-1);
+    }
+
+    return true;
+}
+
 void GL2Encoder::s_glShaderSource(void *self, GLuint shader, GLsizei count, const GLchar **string, const GLint *length)
 {
+    GL2Encoder* ctx = (GL2Encoder*)self;
+    ShaderData* shaderData = ctx->m_shared->getShaderData(shader);
+    SET_ERROR_IF(!shaderData, GL_INVALID_VALUE);
+
     int len = glUtilsCalcShaderSourceLen((char**)string, (GLint*)length, count);
     char *str = new char[len + 1];
     glUtilsPackStrings(str, (char**)string, (GLint*)length, count);
 
-    GL2Encoder *ctx = (GL2Encoder *)self;
+    // TODO: pre-process str before calling replaceSamplerExternalWith2D().
+    // Perhaps we can borrow Mesa's pre-processor?
+
+    if (!replaceSamplerExternalWith2D(str, shaderData)) {
+        delete str;
+        ctx->setError(GL_OUT_OF_MEMORY);
+        return;
+    }
+
     ctx->glShaderString(ctx, shader, str, len + 1);
     delete str;
 }
@@ -476,7 +691,7 @@ void GL2Encoder::s_glLinkProgram(void * self, GLuint program)
     {
         ctx->glGetActiveUniform(self, program, i, maxLength, NULL, &size, &type, name);
         location = ctx->m_glGetUniformLocation_enc(self, program, name);
-        ctx->m_shared->setProgramIndexInfo(program, i, location, size, type);
+        ctx->m_shared->setProgramIndexInfo(program, i, location, size, type, name);
     }
     ctx->m_shared->setupLocationShiftWAR(program);
 
@@ -494,7 +709,7 @@ void GL2Encoder::s_glDeleteProgram(void *self, GLuint program)
 void GL2Encoder::s_glGetUniformiv(void *self, GLuint program, GLint location, GLint* params)
 {
     GL2Encoder *ctx = (GL2Encoder*)self;
-    SET_ERROR_IF(!(ctx->m_shared->isProgram(program) || ctx->m_shared->isShader(program)), GL_INVALID_VALUE);
+    SET_ERROR_IF(!ctx->m_shared->isProgram(program), GL_INVALID_VALUE);
     SET_ERROR_IF(!ctx->m_shared->isProgramInitialized(program), GL_INVALID_OPERATION);
     GLint hostLoc = ctx->m_shared->locationWARAppToHost(program, location);
     SET_ERROR_IF(ctx->m_shared->getProgramUniformType(program,hostLoc)==0, GL_INVALID_OPERATION);
@@ -503,7 +718,7 @@ void GL2Encoder::s_glGetUniformiv(void *self, GLuint program, GLint location, GL
 void GL2Encoder::s_glGetUniformfv(void *self, GLuint program, GLint location, GLfloat* params)
 {
     GL2Encoder *ctx = (GL2Encoder*)self;
-    SET_ERROR_IF(!(ctx->m_shared->isProgram(program) || ctx->m_shared->isShader(program)), GL_INVALID_VALUE);
+    SET_ERROR_IF(!ctx->m_shared->isProgram(program), GL_INVALID_VALUE);
     SET_ERROR_IF(!ctx->m_shared->isProgramInitialized(program), GL_INVALID_OPERATION);
     GLint hostLoc = ctx->m_shared->locationWARAppToHost(program,location);
     SET_ERROR_IF(ctx->m_shared->getProgramUniformType(program,hostLoc)==0, GL_INVALID_OPERATION);
@@ -523,8 +738,12 @@ GLuint GL2Encoder::s_glCreateShader(void *self, GLenum shaderType)
 {
     GL2Encoder *ctx = (GL2Encoder*)self;
     GLuint shader = ctx->m_glCreateShader_enc(self, shaderType);
-    if (shader!=0)
-        ctx->m_shared->addShaderData(shader);
+    if (shader != 0) {
+        if (!ctx->m_shared->addShaderData(shader)) {
+            ctx->m_glDeleteShader_enc(self, shader);
+            return 0;
+        }
+    }
     return shader;
 }
 
@@ -532,7 +751,21 @@ void GL2Encoder::s_glDeleteShader(void *self, GLenum shader)
 {
     GL2Encoder *ctx = (GL2Encoder*)self;
     ctx->m_glDeleteShader_enc(self,shader);
-    ctx->m_shared->deleteShaderData(shader);
+    ctx->m_shared->unrefShaderData(shader);
+}
+
+void GL2Encoder::s_glAttachShader(void *self, GLuint program, GLuint shader)
+{
+    GL2Encoder *ctx = (GL2Encoder*)self;
+    ctx->m_glAttachShader_enc(self, program, shader);
+    ctx->m_shared->attachShader(program, shader);
+}
+
+void GL2Encoder::s_glDetachShader(void *self, GLuint program, GLuint shader)
+{
+    GL2Encoder *ctx = (GL2Encoder*)self;
+    ctx->m_glDetachShader_enc(self, program, shader);
+    ctx->m_shared->detachShader(program, shader);
 }
 
 int GL2Encoder::s_glGetUniformLocation(void *self, GLuint program, const GLchar *name)
@@ -563,11 +796,58 @@ int GL2Encoder::s_glGetUniformLocation(void *self, GLuint program, const GLchar 
     return hostLoc;
 }
 
+bool GL2Encoder::updateHostTexture2DBinding(GLenum texUnit, GLenum newTarget)
+{
+    if (newTarget != GL_TEXTURE_2D && newTarget != GL_TEXTURE_EXTERNAL_OES)
+        return false;
+
+    m_state->setActiveTextureUnit(texUnit);
+
+    GLenum oldTarget = m_state->getPriorityEnabledTarget(GL_TEXTURE_2D);
+    if (newTarget != oldTarget) {
+        if (newTarget == GL_TEXTURE_EXTERNAL_OES) {
+            m_state->disableTextureTarget(GL_TEXTURE_2D);
+            m_state->enableTextureTarget(GL_TEXTURE_EXTERNAL_OES);
+        } else {
+            m_state->disableTextureTarget(GL_TEXTURE_EXTERNAL_OES);
+            m_state->enableTextureTarget(GL_TEXTURE_2D);
+        }
+        m_glActiveTexture_enc(this, texUnit);
+        m_glBindTexture_enc(this, GL_TEXTURE_2D,
+                m_state->getBoundTexture(newTarget));
+        return true;
+    }
+
+    return false;
+}
+
 void GL2Encoder::s_glUseProgram(void *self, GLuint program)
 {
     GL2Encoder *ctx = (GL2Encoder*)self;
+    GLClientState* state = ctx->m_state;
+    GLSharedGroupPtr shared = ctx->m_shared;
+
     ctx->m_glUseProgram_enc(self, program);
     ctx->m_state->setCurrentProgram(program);
+
+    GLenum origActiveTexture = state->getActiveTextureUnit();
+    GLenum hostActiveTexture = origActiveTexture;
+    GLint samplerIdx = -1;
+    GLint samplerVal;
+    GLenum samplerTarget;
+    while ((samplerIdx = shared->getNextSamplerUniform(program, samplerIdx, &samplerVal, &samplerTarget)) != -1) {
+        if (samplerVal < 0 || samplerVal >= GLClientState::MAX_TEXTURE_UNITS)
+            continue;
+        if (ctx->updateHostTexture2DBinding(GL_TEXTURE0 + samplerVal,
+                samplerTarget))
+        {
+            hostActiveTexture = GL_TEXTURE0 + samplerVal;
+        }
+    }
+    state->setActiveTextureUnit(origActiveTexture);
+    if (hostActiveTexture != origActiveTexture) {
+        ctx->m_glActiveTexture_enc(self, origActiveTexture);
+    }
 }
 
 void GL2Encoder::s_glUniform1f(void *self , GLint location, GLfloat x)
@@ -587,8 +867,20 @@ void GL2Encoder::s_glUniform1fv(void *self , GLint location, GLsizei count, cons
 void GL2Encoder::s_glUniform1i(void *self , GLint location, GLint x)
 {
     GL2Encoder *ctx = (GL2Encoder*)self;
+    GLClientState* state = ctx->m_state;
+    GLSharedGroupPtr shared = ctx->m_shared;
+
     GLint hostLoc = ctx->m_shared->locationWARAppToHost(ctx->m_state->currentProgram(),location);
     ctx->m_glUniform1i_enc(self, hostLoc, x);
+
+    GLenum target;
+    if (shared->setSamplerUniform(state->currentProgram(), location, x, &target)) {
+        GLenum origActiveTexture = state->getActiveTextureUnit();
+        if (ctx->updateHostTexture2DBinding(GL_TEXTURE0 + x, target)) {
+            ctx->m_glActiveTexture_enc(self, origActiveTexture);
+        }
+        state->setActiveTextureUnit(origActiveTexture);
+    }
 }
 
 void GL2Encoder::s_glUniform1iv(void *self , GLint location, GLsizei count, const GLint* v)
@@ -703,3 +995,204 @@ void GL2Encoder::s_glUniformMatrix4fv(void *self , GLint location, GLsizei count
     ctx->m_glUniformMatrix4fv_enc(self, hostLoc, count, transpose, value);
 }
 
+void GL2Encoder::s_glActiveTexture(void* self, GLenum texture)
+{
+    GL2Encoder* ctx = (GL2Encoder*)self;
+    GLClientState* state = ctx->m_state;
+    GLenum err;
+
+    SET_ERROR_IF((err = state->setActiveTextureUnit(texture)) != GL_NO_ERROR, err);
+
+    ctx->m_glActiveTexture_enc(ctx, texture);
+}
+
+void GL2Encoder::s_glBindTexture(void* self, GLenum target, GLuint texture)
+{
+    GL2Encoder* ctx = (GL2Encoder*)self;
+    GLClientState* state = ctx->m_state;
+    GLenum err;
+    GLboolean firstUse;
+
+    SET_ERROR_IF((err = state->bindTexture(target, texture, &firstUse)) != GL_NO_ERROR, err);
+
+    if (target != GL_TEXTURE_2D && target != GL_TEXTURE_EXTERNAL_OES) {
+        ctx->m_glBindTexture_enc(ctx, target, texture);
+        return;
+    }
+
+    GLenum priorityTarget = state->getPriorityEnabledTarget(GL_TEXTURE_2D);
+
+    if (target == GL_TEXTURE_EXTERNAL_OES && firstUse) {
+        ctx->m_glBindTexture_enc(ctx, GL_TEXTURE_2D, texture);
+        ctx->m_glTexParameteri_enc(ctx, GL_TEXTURE_2D,
+                GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        ctx->m_glTexParameteri_enc(ctx, GL_TEXTURE_2D,
+                GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        ctx->m_glTexParameteri_enc(ctx, GL_TEXTURE_2D,
+                GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+        if (target != priorityTarget) {
+            ctx->m_glBindTexture_enc(ctx, GL_TEXTURE_2D,
+                    state->getBoundTexture(GL_TEXTURE_2D));
+        }
+    }
+
+    if (target == priorityTarget) {
+        ctx->m_glBindTexture_enc(ctx, GL_TEXTURE_2D, texture);
+    }
+}
+
+void GL2Encoder::s_glDeleteTextures(void* self, GLsizei n, const GLuint* textures)
+{
+    GL2Encoder* ctx = (GL2Encoder*)self;
+    GLClientState* state = ctx->m_state;
+
+    state->deleteTextures(n, textures);
+    ctx->m_glDeleteTextures_enc(ctx, n, textures);
+}
+
+void GL2Encoder::s_glGetTexParameterfv(void* self,
+        GLenum target, GLenum pname, GLfloat* params)
+{
+    GL2Encoder* ctx = (GL2Encoder*)self;
+    const GLClientState* state = ctx->m_state;
+
+    if (target == GL_TEXTURE_2D || target == GL_TEXTURE_EXTERNAL_OES) {
+        ctx->override2DTextureTarget(target);
+        ctx->m_glGetTexParameterfv_enc(ctx, GL_TEXTURE_2D, pname, params);
+        ctx->restore2DTextureTarget();
+    } else {
+        ctx->m_glGetTexParameterfv_enc(ctx, target, pname, params);
+    }
+}
+
+void GL2Encoder::s_glGetTexParameteriv(void* self,
+        GLenum target, GLenum pname, GLint* params)
+{
+    GL2Encoder* ctx = (GL2Encoder*)self;
+    const GLClientState* state = ctx->m_state;
+
+    switch (pname) {
+    case GL_REQUIRED_TEXTURE_IMAGE_UNITS_OES:
+        *params = 1;
+        break;
+
+    default:
+        if (target == GL_TEXTURE_2D || target == GL_TEXTURE_EXTERNAL_OES) {
+            ctx->override2DTextureTarget(target);
+            ctx->m_glGetTexParameteriv_enc(ctx, GL_TEXTURE_2D, pname, params);
+            ctx->restore2DTextureTarget();
+        } else {
+            ctx->m_glGetTexParameteriv_enc(ctx, target, pname, params);
+        }
+        break;
+    }
+}
+
+static bool isValidTextureExternalParam(GLenum pname, GLenum param)
+{
+    switch (pname) {
+    case GL_TEXTURE_MIN_FILTER:
+    case GL_TEXTURE_MAG_FILTER:
+        return param == GL_NEAREST || param == GL_LINEAR;
+
+    case GL_TEXTURE_WRAP_S:
+    case GL_TEXTURE_WRAP_T:
+        return param == GL_CLAMP_TO_EDGE;
+
+    default:
+        return true;
+    }
+}
+
+void GL2Encoder::s_glTexParameterf(void* self,
+        GLenum target, GLenum pname, GLfloat param)
+{
+    GL2Encoder* ctx = (GL2Encoder*)self;
+    const GLClientState* state = ctx->m_state;
+
+    SET_ERROR_IF((target == GL_TEXTURE_EXTERNAL_OES &&
+            !isValidTextureExternalParam(pname, (GLenum)param)),
+            GL_INVALID_ENUM);
+
+    if (target == GL_TEXTURE_2D || target == GL_TEXTURE_EXTERNAL_OES) {
+        ctx->override2DTextureTarget(target);
+        ctx->m_glTexParameterf_enc(ctx, GL_TEXTURE_2D, pname, param);
+        ctx->restore2DTextureTarget();
+    } else {
+        ctx->m_glTexParameterf_enc(ctx, target, pname, param);
+    }
+}
+
+void GL2Encoder::s_glTexParameterfv(void* self,
+        GLenum target, GLenum pname, const GLfloat* params)
+{
+    GL2Encoder* ctx = (GL2Encoder*)self;
+    const GLClientState* state = ctx->m_state;
+
+    SET_ERROR_IF((target == GL_TEXTURE_EXTERNAL_OES &&
+            !isValidTextureExternalParam(pname, (GLenum)params[0])),
+            GL_INVALID_ENUM);
+
+    if (target == GL_TEXTURE_2D || target == GL_TEXTURE_EXTERNAL_OES) {
+        ctx->override2DTextureTarget(target);
+        ctx->m_glTexParameterfv_enc(ctx, GL_TEXTURE_2D, pname, params);
+        ctx->restore2DTextureTarget();
+    } else {
+        ctx->m_glTexParameterfv_enc(ctx, target, pname, params);
+    }
+}
+
+void GL2Encoder::s_glTexParameteri(void* self,
+        GLenum target, GLenum pname, GLint param)
+{
+    GL2Encoder* ctx = (GL2Encoder*)self;
+    const GLClientState* state = ctx->m_state;
+
+    SET_ERROR_IF((target == GL_TEXTURE_EXTERNAL_OES &&
+            !isValidTextureExternalParam(pname, (GLenum)param)),
+            GL_INVALID_ENUM);
+
+    if (target == GL_TEXTURE_2D || target == GL_TEXTURE_EXTERNAL_OES) {
+        ctx->override2DTextureTarget(target);
+        ctx->m_glTexParameteri_enc(ctx, GL_TEXTURE_2D, pname, param);
+        ctx->restore2DTextureTarget();
+    } else {
+        ctx->m_glTexParameteri_enc(ctx, target, pname, param);
+    }
+}
+
+void GL2Encoder::s_glTexParameteriv(void* self,
+        GLenum target, GLenum pname, const GLint* params)
+{
+    GL2Encoder* ctx = (GL2Encoder*)self;
+    const GLClientState* state = ctx->m_state;
+
+    SET_ERROR_IF((target == GL_TEXTURE_EXTERNAL_OES &&
+            !isValidTextureExternalParam(pname, (GLenum)params[0])),
+            GL_INVALID_ENUM);
+
+    if (target == GL_TEXTURE_2D || target == GL_TEXTURE_EXTERNAL_OES) {
+        ctx->override2DTextureTarget(target);
+        ctx->m_glTexParameteriv_enc(ctx, GL_TEXTURE_2D, pname, params);
+        ctx->restore2DTextureTarget();
+    } else {
+        ctx->m_glTexParameteriv_enc(ctx, target, pname, params);
+    }
+}
+
+void GL2Encoder::override2DTextureTarget(GLenum target)
+{
+    if ((target == GL_TEXTURE_2D || target == GL_TEXTURE_EXTERNAL_OES) &&
+        target != m_state->getPriorityEnabledTarget(GL_TEXTURE_2D)) {
+            m_glBindTexture_enc(this, GL_TEXTURE_2D,
+                    m_state->getBoundTexture(target));
+    }
+}
+
+void GL2Encoder::restore2DTextureTarget()
+{
+    GLenum priorityTarget = m_state->getPriorityEnabledTarget(GL_TEXTURE_2D);
+    m_glBindTexture_enc(this, GL_TEXTURE_2D,
+            m_state->getBoundTexture(priorityTarget));
+}

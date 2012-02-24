@@ -250,6 +250,11 @@ GLenum GLClientState::setActiveTextureUnit(GLenum texture)
     return GL_NO_ERROR;
 }
 
+GLenum GLClientState::getActiveTextureUnit() const
+{
+    return GL_TEXTURE0 + (m_tex.activeUnit - &m_tex.unit[0]);
+}
+
 void GLClientState::enableTextureTarget(GLenum target)
 {
     switch (target) {
