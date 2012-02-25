@@ -29,7 +29,7 @@
 #include "GL2Encoder.h"
 #endif
 
-#include <private/ui/android_natives_priv.h>
+#include <system/window.h>
 
 template<typename T>
 static T setErrorFunc(GLint error, T returnValue) {

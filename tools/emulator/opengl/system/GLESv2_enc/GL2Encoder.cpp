@@ -15,7 +15,6 @@
 */
 
 #include "GL2Encoder.h"
-#include <private/ui/android_natives_priv.h>
 #include <assert.h>
 #include <ctype.h>
 

@@ -4,7 +4,6 @@
 #include "GLES/gl.h"
 #include "GLES/glext.h"
 #include "ErrorLog.h"
-#include <private/ui/android_natives_priv.h>
 #include "gralloc_cb.h"
 #include "ThreadInfo.h"
 

@@ -16,7 +16,6 @@
 #include "GLEncoder.h"
 #include "glUtils.h"
 #include "FixedBuffer.h"
-#include <private/ui/android_natives_priv.h>
 #include <cutils/log.h>
 #include <assert.h>
 
