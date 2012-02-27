@@ -180,6 +180,7 @@ struct egl_surface_t {
 
     virtual     EGLBoolean  connect() { return EGL_TRUE; }
     virtual     void        disconnect() {}
+    virtual     void        setSwapInterval(int interval) = 0;
     virtual     EGLBoolean     swapBuffers() { return EGL_TRUE; }
     virtual     EGLint        getSwapBehavior() const;
 
@@ -248,6 +249,7 @@ struct egl_window_surface_t : public egl_surface_t {
 
     virtual     EGLBoolean  connect();
     virtual     void        disconnect();
+    virtual     void        setSwapInterval(int interval);
     virtual     EGLBoolean  swapBuffers();
 
 private:
@@ -327,6 +329,11 @@ void egl_window_surface_t::disconnect()
     }
 }
 
+void egl_window_surface_t::setSwapInterval(int interval)
+{
+    nativeWindow->setSwapInterval(nativeWindow, interval);
+}
+
 EGLBoolean egl_window_surface_t::swapBuffers()
 {
     if (!buffer) {
@@ -369,6 +376,7 @@ struct egl_pbuffer_surface_t : public egl_surface_t {
     virtual     EGLBoolean     rcDestroy();
 
     virtual     EGLBoolean    connect();
+    virtual     void          setSwapInterval(int interval) {}
 
     uint32_t    getRcColorBuffer(){ return rcColorBuffer; }
     void         setRcColorBuffer(uint32_t colorBuffer){ rcColorBuffer = colorBuffer; }
@@ -871,9 +879,20 @@ EGLBoolean eglReleaseTexImage(EGLDisplay dpy, EGLSurface surface, EGLint buffer)
 EGLBoolean eglSwapInterval(EGLDisplay dpy, EGLint interval)
 {
     VALIDATE_DISPLAY_INIT(dpy, EGL_FALSE);
-
     DEFINE_AND_VALIDATE_HOST_CONNECTION(EGL_FALSE);
+
+    EGLContext_t* ctx = getEGLThreadInfo()->currentContext;
+    if (!ctx) {
+        setErrorReturn(EGL_BAD_CONTEXT, EGL_FALSE);
+    }
+    if (!ctx->draw) {
+        setErrorReturn(EGL_BAD_SURFACE, EGL_FALSE);
+    }
+    egl_surface_t* draw(static_cast<egl_surface_t*>(ctx->draw));
+    draw->setSwapInterval(interval);
+
     rcEnc->rcFBSetSwapInterval(rcEnc, interval); //TODO: implement on the host
+
     return EGL_TRUE;
 }
 
