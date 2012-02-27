@@ -26,10 +26,10 @@ import android.view.IWindowManager;
 /**
  * monkey activity event
  */
-public class MonkeyActivityEvent extends MonkeyEvent {    
-    private ComponentName mApp; 
+public class MonkeyActivityEvent extends MonkeyEvent {
+    private ComponentName mApp;
     long mAlarmTime = 0;
-    
+
     public MonkeyActivityEvent(ComponentName app) {
         super(EVENT_TYPE_ACTIVITY);
         mApp = app;
@@ -44,11 +44,11 @@ public class MonkeyActivityEvent extends MonkeyEvent {
     /**
      * @return Intent for the new activity
      */
-    private Intent getEvent() {        
+    private Intent getEvent() {
         Intent intent = new Intent(Intent.ACTION_MAIN);
         intent.addCategory(Intent.CATEGORY_LAUNCHER);
         intent.setComponent(mApp);
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);        
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
         return intent;
     }
 
