@@ -2,8 +2,10 @@
 
 .PHONY: sdk_repo
 
-SDK_REPO_DEPS :=
-SDK_REPO_XML_ARGS :=
+SDK_REPO_DEPS       :=
+SDK_REPO_XML_ARGS   :=
+SDK_EXTRAS_DEPS     :=
+SDK_EXTRAS_XML_ARGS :=
 
 # Define the name of a package zip file to generate
 # $1=OS (e.g. linux-x86, windows, etc)
@@ -100,6 +102,40 @@ SDK_REPO_XML_ARGS += $(3) $(1) \
 endef
 
 # -----------------------------------------------------------------
+# Rules for main host sdk
+
+ifneq ($(filter sdk win_sdk,$(MAKECMDGOALS)),)
+
+# Note that extras are now located in addon.xml, not in repository.xml,
+# so we capture all extras first.
+$(eval $(call mk-sdk-repo-pkg-3,$(HOST_OS),$(MAIN_SDK_ZIP),support,extras/android))
+SDK_EXTRAS_XML_ARGS := $(SDK_REPO_XML_ARGS)
+SDK_REPO_XML_ARGS   :=
+
+SDK_EXTRAS_DEPS += \
+		$(call sdk-repo-pkg-zip,$(HOST_OS),$(MAIN_SDK_ZIP),support)
+
+
+$(eval $(call mk-sdk-repo-pkg-1,$(HOST_OS),$(MAIN_SDK_ZIP),tools))
+$(eval $(call mk-sdk-repo-pkg-1,$(HOST_OS),$(MAIN_SDK_ZIP),platform-tools))
+$(eval $(call mk-sdk-repo-pkg-1,$(HOST_OS),$(MAIN_SDK_ZIP),docs))
+$(eval $(call mk-sdk-repo-pkg-2,$(HOST_OS),$(MAIN_SDK_ZIP),platforms))
+$(eval $(call mk-sdk-repo-pkg-2,$(HOST_OS),$(MAIN_SDK_ZIP),samples))
+$(eval $(call mk-sdk-repo-pkg-3,$(HOST_OS),$(MAIN_SDK_ZIP),system-images,system-images/*))
+$(eval $(call mk-sdk-repo-sources,$(HOST_OS),$(MAIN_SDK_ZIP),sources))
+
+SDK_REPO_DEPS += \
+		$(call sdk-repo-pkg-zip,$(HOST_OS),$(MAIN_SDK_ZIP),tools) \
+		$(call sdk-repo-pkg-zip,$(HOST_OS),$(MAIN_SDK_ZIP),platform-tools) \
+		$(call sdk-repo-pkg-zip,$(HOST_OS),$(MAIN_SDK_ZIP),docs) \
+		$(call sdk-repo-pkg-zip,$(HOST_OS),$(MAIN_SDK_ZIP),platforms) \
+		$(call sdk-repo-pkg-zip,$(HOST_OS),$(MAIN_SDK_ZIP),samples) \
+		$(call sdk-repo-pkg-zip,$(HOST_OS),$(MAIN_SDK_ZIP),system-images) \
+		$(call sdk-repo-pkg-zip,$(HOST_OS),$(MAIN_SDK_ZIP),sources)
+
+endif
+
+# -----------------------------------------------------------------
 # Rules for win_sdk
 
 ifneq ($(WIN_SDK_ZIP),)
@@ -115,30 +151,19 @@ SDK_REPO_DEPS += \
 endif
 
 # -----------------------------------------------------------------
-# Rules for main host sdk
+# Pickup the most recent xml schema for repository and add-on
 
-ifneq ($(filter sdk win_sdk,$(MAKECMDGOALS)),)
+SDK_REPO_XSD := \
+	$(lastword \
+	  $(wildcard \
+	    $(TOPDIR)sdk/sdkmanager/libs/sdklib/src/com/android/sdklib/repository/sdk-repository-*.xsd \
+	))
 
-$(eval $(call mk-sdk-repo-pkg-1,$(HOST_OS),$(MAIN_SDK_ZIP),tools))
-$(eval $(call mk-sdk-repo-pkg-1,$(HOST_OS),$(MAIN_SDK_ZIP),platform-tools))
-$(eval $(call mk-sdk-repo-pkg-1,$(HOST_OS),$(MAIN_SDK_ZIP),docs))
-$(eval $(call mk-sdk-repo-pkg-2,$(HOST_OS),$(MAIN_SDK_ZIP),platforms))
-$(eval $(call mk-sdk-repo-pkg-2,$(HOST_OS),$(MAIN_SDK_ZIP),samples))
-$(eval $(call mk-sdk-repo-pkg-3,$(HOST_OS),$(MAIN_SDK_ZIP),system-images,system-images/*))
-$(eval $(call mk-sdk-repo-pkg-3,$(HOST_OS),$(MAIN_SDK_ZIP),support,extras/android))
-$(eval $(call mk-sdk-repo-sources,$(HOST_OS),$(MAIN_SDK_ZIP),sources))
-
-SDK_REPO_DEPS += \
-		$(call sdk-repo-pkg-zip,$(HOST_OS),$(MAIN_SDK_ZIP),tools) \
-		$(call sdk-repo-pkg-zip,$(HOST_OS),$(MAIN_SDK_ZIP),platform-tools) \
-		$(call sdk-repo-pkg-zip,$(HOST_OS),$(MAIN_SDK_ZIP),docs) \
-		$(call sdk-repo-pkg-zip,$(HOST_OS),$(MAIN_SDK_ZIP),platforms) \
-		$(call sdk-repo-pkg-zip,$(HOST_OS),$(MAIN_SDK_ZIP),samples) \
-		$(call sdk-repo-pkg-zip,$(HOST_OS),$(MAIN_SDK_ZIP),system-images) \
-		$(call sdk-repo-pkg-zip,$(HOST_OS),$(MAIN_SDK_ZIP),support) \
-		$(call sdk-repo-pkg-zip,$(HOST_OS),$(MAIN_SDK_ZIP),sources)
-
-endif
+SDK_ADDON_XSD := \
+	$(lastword \
+	  $(wildcard \
+	    $(TOPDIR)sdk/sdkmanager/libs/sdklib/src/com/android/sdklib/repository/sdk-addon-*.xsd \
+	))
 
 # -----------------------------------------------------------------
 # Rules for sdk addon
@@ -157,12 +182,6 @@ $(call dist-for-goals, sdk_repo, $(RENAMED_ADDON_ZIP))
 
 SDK_ADDON_XML := $(dir $(ADDON_SDK_ZIP))/addon.xml
 
-SDK_ADDON_XSD := \
-	$(lastword \
-	  $(wildcard \
-	    $(TOPDIR)sdk/sdkmanager/libs/sdklib/src/com/android/sdklib/repository/sdk-addon-*.xsd \
-	))
-
 $(SDK_ADDON_XML): $(ADDON_SDK_ZIP)
 	$(hide) $(TOPDIR)development/build/tools/mk_sdk_repo_xml.sh \
 		$(SDK_ADDON_XML) $(SDK_ADDON_XSD) add-on $(HOST_OS) $(RENAMED_ADDON_ZIP)
@@ -174,16 +193,10 @@ endif
 # -----------------------------------------------------------------
 # Rules for the SDK Repository XML
 
-SDK_REPO_XML := $(HOST_OUT)/sdk/repository.xml
+SDK_REPO_XML   := $(HOST_OUT)/sdk/repository.xml
+SDK_EXTRAS_XML := $(HOST_OUT)/sdk/repo-extras.xml
 
 ifneq ($(SDK_REPO_XML_ARGS),)
-
-# Pickup the most recent xml schema
-SDK_REPO_XSD := \
-	$(lastword \
-	  $(wildcard \
-	    $(TOPDIR)sdk/sdkmanager/libs/sdklib/src/com/android/sdklib/repository/sdk-repository-*.xsd \
-	))
 
 $(SDK_REPO_XML): $(SDK_REPO_DEPS)
 	$(hide) $(TOPDIR)development/build/tools/mk_sdk_repo_xml.sh \
@@ -197,8 +210,23 @@ $(SDK_REPO_XML): ;
 
 endif
 
+
+ifneq ($(SDK_EXTRAS_XML_ARGS),)
+
+$(SDK_EXTRAS_XML): $(SDK_EXTRAS_DEPS)
+	$(hide) $(TOPDIR)development/build/tools/mk_sdk_repo_xml.sh \
+		$(SDK_EXTRAS_XML) $(SDK_ADDON_XSD) $(SDK_EXTRAS_XML_ARGS)
+
+$(call dist-for-goals, sdk_repo, $(SDK_EXTRAS_XML))
+
+else
+
+$(SDK_EXTRAS_XML): ;
+
+endif
+
 # -----------------------------------------------------------------
 
-sdk_repo: $(SDK_REPO_DEPS) $(SDK_REPO_XML)
+sdk_repo: $(SDK_REPO_DEPS) $(SDK_REPO_XML) $(SDK_EXTRAS_XML)
 	@echo "Packing of SDK repository done"
 
