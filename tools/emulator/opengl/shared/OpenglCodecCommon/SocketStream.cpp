@@ -73,7 +73,7 @@ void *SocketStream::allocBuffer(size_t minSize)
             m_buf = p;
             m_bufsize = allocSize;
         } else {
-            ERR("%s: realloc (%d) failed\n", __FUNCTION__, allocSize);
+            ERR("%s: realloc (%zu) failed\n", __FUNCTION__, allocSize);
             free(m_buf);
             m_buf = NULL;
             m_bufsize = 0;

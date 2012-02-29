@@ -32,6 +32,7 @@
 #include "ProgramData.h"
 #include <GLcommon/TextureUtils.h>
 #include <GLcommon/FramebufferData.h>
+#include <assert.h>
 
 extern "C" {
 
@@ -593,7 +594,7 @@ GL_APICALL void  GL_APIENTRY glDrawElements(GLenum mode, GLsizei count, GLenum t
     const GLvoid* indices = elementsIndices;
     if(ctx->isBindedBuffer(GL_ELEMENT_ARRAY_BUFFER)) { // if vbo is binded take the indices from the vbo
         const unsigned char* buf = static_cast<unsigned char *>(ctx->getBindedBuffer(GL_ELEMENT_ARRAY_BUFFER));
-        indices = buf+reinterpret_cast<unsigned int>(elementsIndices);
+        indices = buf+reinterpret_cast<uintptr_t>(elementsIndices);
     }
 
     GLESConversionArrays tmpArrs;
@@ -2009,7 +2010,10 @@ GL_APICALL void GL_APIENTRY glEGLImageTargetTexture2DOES(GLenum target, GLeglIma
 {
     GET_CTX();
     SET_ERROR_IF(!GLESv2Validate::textureTargetLimited(target),GL_INVALID_ENUM);
-    EglImage *img = s_eglIface->eglAttachEGLImage((unsigned int)image);
+    uintptr_t imagehndlptr = (uintptr_t)image;
+    unsigned int imagehndl = (unsigned int)imagehndlptr;
+    assert(sizeof(imagehndl) == sizeof(imagehndlptr) || imagehndl == imagehndlptr);
+    EglImage *img = s_eglIface->eglAttachEGLImage(imagehndl);
     if (img) {
         // Create the texture object in the underlying EGL implementation,
         // flag to the OpenGL layer to skip the image creation and map the
@@ -2026,7 +2030,7 @@ GL_APICALL void GL_APIENTRY glEGLImageTargetTexture2DOES(GLenum target, GLeglIma
             ctx->dispatcher().glBindTexture(GL_TEXTURE_2D, img->globalTexName);
             TextureData *texData = getTextureTargetData(target);
             SET_ERROR_IF(texData==NULL,GL_INVALID_OPERATION);
-            texData->sourceEGLImage = (unsigned int)image;
+            texData->sourceEGLImage = (unsigned int)imagehndl;
             texData->eglImageDetach = s_eglIface->eglDetachEGLImage;
             texData->oldGlobal = oldGlobal;
         }
@@ -2037,7 +2041,10 @@ GL_APICALL void GL_APIENTRY glEGLImageTargetRenderbufferStorageOES(GLenum target
 {
     GET_CTX();
     SET_ERROR_IF(target != GL_RENDERBUFFER_OES,GL_INVALID_ENUM);
-    EglImage *img = s_eglIface->eglAttachEGLImage((unsigned int)image);
+    uintptr_t imagehndlptr = (uintptr_t)image;
+    unsigned int imagehndl = (unsigned int)imagehndlptr;
+    assert(sizeof(imagehndl) == sizeof(imagehndlptr) || imagehndl == imagehndlptr);
+    EglImage *img = s_eglIface->eglAttachEGLImage(imagehndl);
     SET_ERROR_IF(!img,GL_INVALID_VALUE);
     SET_ERROR_IF(!ctx->shareGroup().Ptr(),GL_INVALID_OPERATION);
 
@@ -2052,7 +2059,7 @@ GL_APICALL void GL_APIENTRY glEGLImageTargetRenderbufferStorageOES(GLenum target
     //
     // flag in the renderbufferData that it is an eglImage target
     //
-    rbData->sourceEGLImage = (unsigned int)image;
+    rbData->sourceEGLImage = imagehndl;
     rbData->eglImageDetach = s_eglIface->eglDetachEGLImage;
     rbData->eglImageGlobalTexName = img->globalTexName;
 
