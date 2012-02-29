@@ -520,7 +520,7 @@ int ApiGen::genEncoderImpl(const std::string &filename)
             npointers += writeVarEncodingSize(evars[j], fp);
         }
         if (npointers > 0) {
-            fprintf(fp, " + %u*4", npointers);
+            fprintf(fp, " + %zu*4", npointers);
         }
         fprintf(fp, ";\n");
 
@@ -562,7 +562,7 @@ int ApiGen::genEncoderImpl(const std::string &filename)
                             npointers += writeVarEncodingSize(evars[j], fp);
                         }
                         if (npointers > 0) {
-                            fprintf(fp, "%s%u*4", plus, npointers); plus = " + ";
+                            fprintf(fp, "%s%zu*4", plus, npointers); plus = " + ";
                         }
                     }
                     fprintf(fp,");\n");
@@ -761,6 +761,7 @@ int ApiGen::genDecoderImpl(const std::string &filename)
     fprintf(fp, "#include \"%s_opcodes.h\"\n\n", m_basename.c_str());
     fprintf(fp, "#include \"%s_dec.h\"\n\n\n", m_basename.c_str());
     fprintf(fp, "#include <stdio.h>\n\n");
+    fprintf(fp, "typedef unsigned int tsize_t; // Target \"size_t\", which is 32-bit for now. It may or may not be the same as host's size_t when emugen is compiled.\n\n");
 
     // decoder switch;
     fprintf(fp, "size_t %s::decode(void *buf, size_t len, IOStream *stream)\n{\n", classname.c_str());
@@ -860,7 +861,7 @@ int ApiGen::genDecoderImpl(const std::string &filename)
                                         v->type()->name().c_str(), varoffset.c_str(),
                                         varoffset.c_str());
                             }
-                            varoffset += " + 4 + *(size_t *)(ptr +" + varoffset + ")";
+                            varoffset += " + 4 + *(tsize_t *)(ptr +" + varoffset + ")";
                         } else { // out pointer;
                             if (pass == PASS_TmpBuffAlloc) {
                                 fprintf(fp, "\t\t\tsize_t tmpPtr%uSize = (size_t)*(unsigned int *)(ptr + %s);\n",
