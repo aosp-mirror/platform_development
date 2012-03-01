@@ -4,7 +4,11 @@
 ALL_SDK_FILES += $(patsubst \
                    $(TOPDIR)development/sdk/%_source.prop_template, \
                    $(HOST_OUT)/development/sdk/%_source.properties, \
-                   $(wildcard $(TOPDIR)development/sdk/*_source.prop_template))
+                   $(wildcard $(TOPDIR)development/sdk/*_source.prop_template)) \
+                 $(patsubst \
+                   $(TOPDIR)development/samples/%_source.prop_template, \
+                   $(HOST_OUT)/development/samples/%_source.properties, \
+                   $(wildcard $(TOPDIR)development/samples/*_source.prop_template))
 
 # Rule to convert a source.prop template into the desired source.property
 # Rewritten variables:
@@ -12,6 +16,14 @@ ALL_SDK_FILES += $(patsubst \
 # - ${PLATFORM_SDK_VERSION}      e.g. "3", aka the API level
 # - ${PLATFORM_VERSION_CODENAME} e.g. "REL" (transformed into "") or "Cupcake"
 $(HOST_OUT)/development/sdk/%_source.properties : $(TOPDIR)development/sdk/%_source.prop_template
+	@echo Generate $@
+	$(hide) mkdir -p $(dir $@)
+	$(hide) sed -e 's/$${PLATFORM_VERSION}/$(PLATFORM_VERSION)/' \
+		 -e 's/$${PLATFORM_SDK_VERSION}/$(PLATFORM_SDK_VERSION)/' \
+		 -e 's/$${PLATFORM_VERSION_CODENAME}/$(subst REL,,$(PLATFORM_VERSION_CODENAME))/' \
+		 $< > $@
+
+$(HOST_OUT)/development/samples/%_source.properties : $(TOPDIR)development/samples/%_source.prop_template
 	@echo Generate $@
 	$(hide) mkdir -p $(dir $@)
 	$(hide) sed -e 's/$${PLATFORM_VERSION}/$(PLATFORM_VERSION)/' \
