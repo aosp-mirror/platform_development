@@ -623,7 +623,7 @@ static struct hw_module_methods_t sensors_module_methods = {
     .open = open_sensors
 };
 
-const struct sensors_module_t HAL_MODULE_INFO_SYM = {
+struct sensors_module_t HAL_MODULE_INFO_SYM = {
     .common = {
         .tag = HARDWARE_MODULE_TAG,
         .version_major = 1,
