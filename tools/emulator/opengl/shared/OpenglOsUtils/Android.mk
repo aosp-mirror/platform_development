@@ -21,28 +21,37 @@ $(call emugl-end-module)
 
 
 ### Host library ##############################################
+
+host_common_SRC_FILES := osDynLibrary.cpp
+host_common_LDLIBS :=
+
+ifeq ($(HOST_OS),windows)
+    host_common_SRC_FILES += \
+        osProcessWin.cpp \
+        osThreadWin.cpp
+    host_common_LDLIBS += -lws2_32 -lpsapi
+else
+    host_common_SRC_FILES += \
+        osProcessUnix.cpp \
+        osThreadUnix.cpp
+    host_common_LDLIBS += -ldl
+endif
+
+ifeq ($(HOST_OS),linux)
+    host_common_LDLIBS += -lpthread -lrt
+endif
+
+### 32-bit host library ####
 $(call emugl-begin-host-static-library,libOpenglOsUtils)
-
     $(call emugl-export,C_INCLUDES,$(LOCAL_PATH))
+    LOCAL_SRC_FILES = $(host_common_SRC_FILES)
+    $(call emugl-export,LDLIBS,$(host_common_LDLIBS))
+$(call emugl-end-module)
 
-    LOCAL_SRC_FILES := osDynLibrary.cpp
-
-    ifeq ($(HOST_OS),windows)
-        LOCAL_SRC_FILES += \
-            osProcessWin.cpp \
-            osThreadWin.cpp
-
-        $(call emugl-export,LDLIBS,-lws2_32 -lpsapi)
-    else
-        LOCAL_SRC_FILES += \
-            osProcessUnix.cpp \
-            osThreadUnix.cpp
-
-        $(call emugl-export,LDLIBS,-ldl)
-    endif
-
-    ifeq ($(HOST_OS),linux)
-        $(call emugl-export,LDLIBS,-lpthread -lrt)
-    endif
-
+### 64-bit host library ####
+$(call emugl-begin-host-static-library,lib64OpenglOsUtils)
+    $(call emugl-export,C_INCLUDES,$(LOCAL_PATH))
+    LOCAL_SRC_FILES = $(host_common_SRC_FILES)
+    $(call emugl-export,LDLIBS,$(host_common_LDLIBS))
+    $(call emugl-export,CFLAGS,-m64)
 $(call emugl-end-module)
