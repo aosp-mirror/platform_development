@@ -547,6 +547,9 @@ public class MonkeySourceScript implements MonkeyEventSource {
         if (s.indexOf(EVENT_KEYWORD_KEYPRESS) >= 0 && args.length == 1) {
             String key_name = args[0];
             int keyCode = MonkeySourceRandom.getKeyCode(key_name);
+            if (keyCode == KeyEvent.KEYCODE_UNKNOWN) {
+                return;
+            }
             MonkeyKeyEvent e = new MonkeyKeyEvent(KeyEvent.ACTION_DOWN, keyCode);
             mQ.addLast(e);
             e = new MonkeyKeyEvent(KeyEvent.ACTION_UP, keyCode);
@@ -772,7 +775,7 @@ public class MonkeySourceScript implements MonkeyEventSource {
 
         if (e.getEventTime() < 0) {
             return;
-        }      
+        }
         updatedDownTime = SystemClock.uptimeMillis();
         e.setDownTime(updatedDownTime);
         e.setEventTime(updatedDownTime);

@@ -247,13 +247,17 @@ public class MonkeySourceNetwork implements MonkeyEventSource {
             // Ok, it wasn't a number, see if we have a
             // keycode name for it
             keyCode = MonkeySourceRandom.getKeyCode(keyName);
-            if (keyCode == -1) {
+            if (keyCode == KeyEvent.KEYCODE_UNKNOWN) {
                 // OK, one last ditch effort to find a match.
                 // Build the KEYCODE_STRING from the string
                 // we've been given and see if that key
                 // exists.  This would allow you to do "key
                 // down menu", for example.
                 keyCode = MonkeySourceRandom.getKeyCode("KEYCODE_" + keyName.toUpperCase());
+                if (keyCode == KeyEvent.KEYCODE_UNKNOWN) {
+                    // Still unknown
+                    return -1;
+                }
             }
         }
         return keyCode;
