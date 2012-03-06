@@ -11,7 +11,7 @@
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
-    <!-- Market filtering --> 
+    <!-- Google Play filtering --> 
     <uses-feature android:name="android.hardware.wifi.direct" android:required="true"/>
 
     <application
