@@ -223,12 +223,20 @@ sdk/files/README_add-ons.txt add-ons/README.txt
 development/sdk/support_source.properties                                                         extras/android/support/source.properties
 development/sdk/support_README.txt                                                                extras/android/support/README.txt
 sdk/files/sdk_files_NOTICE.txt                                                                    extras/android/support/NOTICE.txt
+
 ${OUT_DIR}/target/common/obj/PACKAGING/android-support-v4_intermediates/android-support-v4.jar    extras/android/support/v4/android-support-v4.jar
 frameworks/support/v4                                                                             extras/android/support/v4/src
 development/samples/Support4Demos                                                                 extras/android/support/v4/samples/Support4Demos
+
 ${OUT_DIR}/target/common/obj/PACKAGING/android-support-v13_intermediates/android-support-v13.jar  extras/android/support/v13/android-support-v13.jar
 frameworks/support/v13                                                                            extras/android/support/v13/src
 development/samples/Support13Demos                                                                extras/android/support/v13/samples/Support13Demos
+
+frameworks/support/v7/gridlayout/AndroidManifest.xml                                              extras/android/support/v7/gridlayout/AndroidManifest.xml
+frameworks/support/v7/gridlayout/project.properties                                               extras/android/support/v7/gridlayout/project.properties
+frameworks/support/v7/gridlayout/res                                                              extras/android/support/v7/gridlayout/res
+frameworks/support/v7/gridlayout/readme                                                           extras/android/support/v7/gridlayout/src/.readme
+${OUT_DIR}/target/common/obj/PACKAGING/android-support-v7-gridlayout_intermediates/android-support-v7-gridlayout.jar    extras/android/support/v7/gridlayout/libs/android-support-v7-gridlayout.jar
 
 ##############################################################################
 # Tests Component
