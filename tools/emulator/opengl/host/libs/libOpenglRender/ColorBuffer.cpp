@@ -131,17 +131,6 @@ ColorBuffer::~ColorBuffer()
     fb->unbind_locked();
 }
 
-void ColorBuffer::update(GLenum p_format, GLenum p_type, void *pixels)
-{
-    FrameBuffer *fb = FrameBuffer::getFB();
-    if (!fb->bind_locked()) return;
-    s_gl.glBindTexture(GL_TEXTURE_2D, m_tex);
-    s_gl.glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    s_gl.glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0,
-                         m_width, m_height, p_format, p_type, pixels);
-    fb->unbind_locked();
-}
-
 void ColorBuffer::subUpdate(int x, int y, int width, int height, GLenum p_format, GLenum p_type, void *pixels)
 {
     FrameBuffer *fb = FrameBuffer::getFB();
@@ -151,52 +140,6 @@ void ColorBuffer::subUpdate(int x, int y, int width, int height, GLenum p_format
     s_gl.glTexSubImage2D(GL_TEXTURE_2D, 0, x, y,
                          width, height, p_format, p_type, pixels);
     fb->unbind_locked();
-}
-
-bool ColorBuffer::blitFromPbuffer(EGLSurface p_pbufSurface)
-{
-    FrameBuffer *fb = FrameBuffer::getFB();
-    if (!fb->bind_locked()) return false;
-
-    //
-    // bind FBO object which has this colorbuffer as render target
-    //
-    if (!bind_fbo()) {
-        fb->unbind_locked();
-        return false;
-    }
-
-    //
-    // bind the pbuffer to a temporary texture object
-    //
-    GLuint tempTex;
-    s_gl.glGenTextures(1, &tempTex);
-    s_gl.glBindTexture(GL_TEXTURE_2D, tempTex);
-    if (!s_egl.eglBindTexImage(fb->getDisplay(), p_pbufSurface, EGL_BACK_BUFFER)) {
-        printf("eglBindTexImage failed 0x%x\n", s_egl.eglGetError());
-        s_gl.glDeleteTextures(1, &tempTex);
-        fb->unbind_locked();
-        return false;
-    }
-
-    s_gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    s_gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    s_gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    s_gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    s_gl.glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-    s_gl.glEnable(GL_TEXTURE_2D);
-
-    drawTexQuad();
-
-    //
-    // unbind FBO, release the pbuffer and delete the temp texture object
-    //
-    s_gl.glBindFramebufferOES(GL_FRAMEBUFFER_OES, 0);
-    s_egl.eglReleaseTexImage(fb->getDisplay(), p_pbufSurface, EGL_BACK_BUFFER);
-    s_gl.glDeleteTextures(1, &tempTex);
-
-    fb->unbind_locked();
-    return true;
 }
 
 bool ColorBuffer::blitFromCurrentReadBuffer()

@@ -44,7 +44,6 @@ public:
 private:
     WindowSurface();
 
-    void copyToColorBuffer();  // copy pbuffer content with readback+download
     void blitToColorBuffer();  // copy pbuffer content with texload and blit
     bool resizePbuffer(unsigned int p_width, unsigned int p_height);
 
