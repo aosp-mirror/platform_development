@@ -70,6 +70,7 @@ void GLESConversionArrays::operator++(){
 GLDispatch     GLEScontext::s_glDispatch;
 android::Mutex GLEScontext::s_lock;
 std::string*   GLEScontext::s_glExtensions= NULL;
+std::string    GLEScontext::s_glRenderer;
 GLSupport      GLEScontext::s_glSupport;
 
 Version::Version():m_major(0),
@@ -464,6 +465,10 @@ const char * GLEScontext::getExtensionString() {
         ret="";
     s_lock.unlock();
     return ret;
+}
+
+const char * GLEScontext::getRendererString() const {
+    return s_glRenderer.c_str();
 }
 
 void GLEScontext::getGlobalLock() {

@@ -27,6 +27,14 @@ void GLESv2Context::init() {
             m_map[i] = new GLESpointer();
         }
         setAttribute0value(0.0, 0.0, 0.0, 1.0);
+
+        const char* baseRenderer = (const char*)dispatcher().glGetString(GL_RENDERER);
+        size_t baseRendererLen = strlen(baseRenderer);
+        s_glRenderer.clear();
+        s_glRenderer.reserve(16 + baseRendererLen);
+        s_glRenderer.append("OpenGL ES 2.0 (", 15);
+        s_glRenderer.append(baseRenderer, baseRendererLen);
+        s_glRenderer.append(")", 1);
     }
     m_initialized = true;
 }
