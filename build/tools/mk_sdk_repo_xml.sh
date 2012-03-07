@@ -12,6 +12,10 @@ OSES="linux macosx windows any linux-x86 darwin"
 TMP_DIR=$(mktemp -d -t sdkrepo.tmp.XXXXXXXX)
 trap "rm -rf $TMP_DIR" EXIT
 
+function debug() {
+  echo "DEBUG: " $@ > /dev/stderr
+}
+
 function error() {
   echo "*** ERROR: " $@
   usage
@@ -105,9 +109,11 @@ ATTRS=(
   Layoutlib.Api                 layoutlib/api            4
   Layoutlib.Revision            layoutlib/revision       4
   # from source.properties for addon.xml packages
-  Extra.Vendor                  vendor                   1
-  Extra.VendorId                vendor-id                4
+  # (note that vendor is mapped to different XML elements based on the XSD version)
   Extra.VendorDisplay           vendor-display           4
+  Extra.VendorId                vendor-id                4
+  Extra.Vendor                  vendor-id                4
+  Extra.Vendor                  vendor                   1
   Extra.NameDisplay             name-display             4
   Extra.Path                    path                     1
   Extra.OldPaths                old-paths                3
