@@ -1,8 +1,5 @@
-#ifndef  MAC_NATIVE_H
-#define  MAC_NATIVE_H
-
 /*
-* Copyright (C) 2011 The Android Open Source Project
+* Copyright 2011 The Android Open Source Project
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -16,6 +13,9 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
+
+#ifndef  MAC_NATIVE_H
+#define  MAC_NATIVE_H
 
 typedef enum {                               // Mac equivalence
                  MAC_HAS_DOUBLE_BUFFER = 5,  // NSOpenGLPFADoubleBuffer
