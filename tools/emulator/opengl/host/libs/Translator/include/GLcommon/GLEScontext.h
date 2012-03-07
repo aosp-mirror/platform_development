@@ -131,6 +131,7 @@ public:
     bool setBufferData(GLenum target,GLsizeiptr size,const GLvoid* data,GLenum usage);
     bool setBufferSubData(GLenum target,GLintptr offset,GLsizeiptr size,const GLvoid* data);
     const char * getExtensionString();
+    const char * getRendererString() const;
     void getGlobalLock();
     void releaseGlobalLock();
     virtual GLSupport*  getCaps(){return &s_glSupport;};
@@ -173,6 +174,7 @@ protected:
     GLint                 m_unpackAlignment;
     ArraysMap             m_map;
     static std::string*   s_glExtensions;
+    static std::string    s_glRenderer;
     static GLSupport      s_glSupport;
 
 private:
