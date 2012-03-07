@@ -84,8 +84,6 @@ WindowSurface *WindowSurface::create(int p_config, int p_width, int p_height)
 void WindowSurface::flushColorBuffer()
 {
     if (m_attachedColorBuffer.Ptr() != NULL) {
-
-        //copyToColorBuffer();
         blitToColorBuffer();
     }
 }
@@ -139,84 +137,6 @@ void WindowSurface::bind(RenderContextPtr p_ctx, SurfaceBindType p_bindType)
     else {
         return;  // bad param
     }
-
-}
-
-void WindowSurface::copyToColorBuffer()
-{
-    if (!m_width && !m_height) return;
-
-    if (m_attachedColorBuffer->getWidth() != m_width ||
-        m_attachedColorBuffer->getHeight() != m_height) {
-        // XXX: should never happen - how this needs to be handled?
-        return;
-    }
-
-    void *data = m_xferBuffer.alloc(m_width * m_height * 4);
-    if (!data) {
-        fprintf(stderr,"WARNING: Failed to copy buffer data - OutOfMemory\n");
-        return;
-    }
-
-    //
-    // Make the surface current
-    //
-    EGLContext prevContext = s_egl.eglGetCurrentContext();
-    EGLSurface prevReadSurf = s_egl.eglGetCurrentSurface(EGL_READ);
-    EGLSurface prevDrawSurf = s_egl.eglGetCurrentSurface(EGL_DRAW);
-    FrameBuffer *fb = FrameBuffer::getFB();
-    if (!s_egl.eglMakeCurrent(fb->getDisplay(), m_eglSurface,
-                              m_eglSurface, m_drawContext->getEGLContext())) {
-        return;
-    }
-
-    if (m_drawContext->isGL2()) {
-#ifdef WITH_GLES2
-        s_gl2.glPixelStorei(GL_PACK_ALIGNMENT, 1);
-        s_gl2.glReadPixels(0, 0, m_width, m_height,
-                          GL_RGBA, GL_UNSIGNED_BYTE, data);
-#else
-        return; // should never happen, context cannot be GL2 in this case.
-#endif
-    }
-    else {
-        s_gl.glPixelStorei(GL_PACK_ALIGNMENT, 1);
-        s_gl.glReadPixels(0, 0, m_width, m_height,
-                          GL_RGBA, GL_UNSIGNED_BYTE, data);
-    }
-
-//
-// XXX: for some reason flipping the image is not required on
-//      Mac. Need to find the reason, currently unkbown.
-//
-#ifndef __APPLE__
-#define FLIP_BUFFER 1
-#endif
-
-#if FLIP_BUFFER
-    //We need to flip the pixels
-    int bpp = 4;
-    void *tmpBuf = m_xUpdateBuf.alloc(m_width * m_height * bpp);
-
-    int dst_line_len = m_width * bpp;
-    int src_line_len = m_width * bpp;
-    char *src = (char *)data;
-    char *dst = (char*)tmpBuf + (m_height-1)*dst_line_len;
-    for (uint32_t  y=0; y<m_height; y++) {
-        memcpy(dst, src, dst_line_len);
-        src += src_line_len;
-        dst -= dst_line_len;
-    }
-    // update the attached color buffer with the fliped readback pixels
-    m_attachedColorBuffer->update(GL_RGBA, GL_UNSIGNED_BYTE, tmpBuf);
-#else
-    // update the attached color buffer with the readback pixels
-    m_attachedColorBuffer->update(GL_RGBA, GL_UNSIGNED_BYTE, data);
-#endif
-
-    // restore current context/surface
-    s_egl.eglMakeCurrent(fb->getDisplay(), prevDrawSurf,
-                         prevReadSurf, prevContext);
 
 }
 
