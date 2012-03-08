@@ -230,6 +230,8 @@ ${OUT_DIR}/target/common/obj/PACKAGING/android-support-v13_intermediates/android
 frameworks/support/v13                                                                            extras/android/support/v13/src
 development/samples/Support13Demos                                                                extras/android/support/v13/samples/Support13Demos
 
+development/sdk/prebuilt/v7                                                                       extras/android/support/v7
+
 ##############################################################################
 # Tests Component
 ##############################################################################
