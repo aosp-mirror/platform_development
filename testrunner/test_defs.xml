@@ -258,12 +258,6 @@ See test_defs.xsd for more information.
     package="android.tests.sigtest.tests"
     suite="cts" />
 
-<test name="cts-apidemos"
-    build_path="cts/tests/ApiDemosReferenceTest"
-    package="android.apidemos.cts"
-    coverage_target="ApiDemos"
-    suite="cts" />
-
 <test name="cts-app"
     build_path="cts/tests/tests/app"
     package="com.android.cts.app"
@@ -324,7 +318,7 @@ See test_defs.xsd for more information.
 <test name="cts-net"
     build_path="cts/tests/tests/net"
     package="com.android.cts.net"
-    runner="android.test.InstrumentationCtsTestRunner"
+    runner="android.test.InstrumentationTestRunner"
     coverage_target="framework"
     suite="cts" />
 
@@ -333,36 +327,6 @@ See test_defs.xsd for more information.
     package="com.android.cts.os"
     runner="android.test.InstrumentationCtsTestRunner"
     coverage_target="framework"
-    suite="cts" />
-
-<test name="cts-perf1"
-    build_path="cts/tests/tests/performance"
-    package="com.android.cts.performance"
-    runner="android.test.InstrumentationCtsTestRunner"
-    suite="cts" />
-
-<test name="cts-perf2"
-    build_path="cts/tests/tests/performance2"
-    package="com.android.cts.performance2"
-    runner="android.test.InstrumentationCtsTestRunner"
-    suite="cts" />
-
-<test name="cts-perf3"
-    build_path="cts/tests/tests/performance3"
-    package="com.android.cts.performance3"
-    runner="android.test.InstrumentationCtsTestRunner"
-    suite="cts" />
-
-<test name="cts-perf4"
-    build_path="cts/tests/tests/performance4"
-    package="com.android.cts.performance4"
-    runner="android.test.InstrumentationCtsTestRunner"
-    suite="cts" />
-
-<test name="cts-perf5"
-    build_path="cts/tests/tests/performance5"
-    package="com.android.cts.performance5"
-    runner="android.test.InstrumentationCtsTestRunner"
     suite="cts" />
 
 <test name="cts-provider"
@@ -572,7 +536,7 @@ See test_defs.xsd for more information.
 
 <!-- host java tests -->
 <test-host name="cts-appsecurity"
-    build_path="cts/tests/appsecurity-tests"
+    build_path="cts/hostsidetests/appsecurity"
     class="com.android.cts.appsecurity.AppSecurityTests"
     jar_name="CtsAppSecurityTests.jar"
     suite="cts" />

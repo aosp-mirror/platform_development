@@ -234,8 +234,6 @@ class TestRunner(object):
     self._DoFullBuild(tests)
 
     target_set = []
-    if self._IsCtsTests(tests):
-      target_set.append("cts/CtsBuild.mk")
 
     extra_args_set = []
     for test_suite in tests:

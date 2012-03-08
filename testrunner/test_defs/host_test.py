@@ -32,7 +32,8 @@ class HostTestSuite(test_suite.AbstractTestSuite):
   _JUNIT_JAR_NAME = "junit.jar"
   _HOSTTESTLIB_NAME = "hosttestlib.jar"
   _DDMLIB_NAME = "ddmlib-prebuilt.jar"
-  _lib_names = [_JUNIT_JAR_NAME, _HOSTTESTLIB_NAME, _DDMLIB_NAME]
+  _TRADEFED_NAME = "tradefed-prebuilt.jar"
+  _lib_names = [_JUNIT_JAR_NAME, _HOSTTESTLIB_NAME, _DDMLIB_NAME, _TRADEFED_NAME]
 
   _JUNIT_BUILD_PATH = os.path.join("external", "junit")
   _HOSTTESTLIB_BUILD_PATH = os.path.join("development", "tools", "hosttestlib")
