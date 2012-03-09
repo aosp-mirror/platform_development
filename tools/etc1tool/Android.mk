@@ -17,8 +17,6 @@ LOCAL_C_INCLUDES += frameworks/base/opengl/include
 #LOCAL_WHOLE_STATIC_LIBRARIES := 
 LOCAL_STATIC_LIBRARIES := \
 	libhost \
-	libutils \
-	libcutils \
 	libexpat \
 	libpng \
 	libETC1
