@@ -47,6 +47,7 @@ subdirs += \
 	external/zlib \
 	frameworks/base \
 	frameworks/compile \
+	frameworks/native \
 	system/core/adb \
 	system/core/fastboot \
 	system/core/libcutils \
