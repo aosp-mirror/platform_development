@@ -226,11 +226,11 @@ sdk/files/sdk_files_NOTICE.txt                                                  
 
 ${OUT_DIR}/target/common/obj/PACKAGING/android-support-v4_intermediates/android-support-v4.jar    extras/android/support/v4/android-support-v4.jar
 frameworks/support/v4                                                                             extras/android/support/v4/src
-development/samples/Support4Demos                                                                 extras/android/support/v4/samples/Support4Demos
+development/samples/Support4Demos                                                                 extras/android/support/samples/Support4Demos
 
 ${OUT_DIR}/target/common/obj/PACKAGING/android-support-v13_intermediates/android-support-v13.jar  extras/android/support/v13/android-support-v13.jar
 frameworks/support/v13                                                                            extras/android/support/v13/src
-development/samples/Support13Demos                                                                extras/android/support/v13/samples/Support13Demos
+development/samples/Support13Demos                                                                extras/android/support/samples/Support13Demos
 
 frameworks/support/v7/gridlayout/AndroidManifest.xml                                              extras/android/support/v7/gridlayout/AndroidManifest.xml
 frameworks/support/v7/gridlayout/project.properties                                               extras/android/support/v7/gridlayout/project.properties
