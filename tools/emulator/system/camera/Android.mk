@@ -36,6 +36,7 @@ LOCAL_SHARED_LIBRARIES += \
 
 LOCAL_C_INCLUDES += external/jpeg \
 					external/skia/include/core/ \
+					frameworks/native/include/media/hardware \
 					frameworks/base/core/jni/android/graphics
 
 LOCAL_SRC_FILES := \
