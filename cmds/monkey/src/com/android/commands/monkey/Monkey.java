@@ -32,6 +32,7 @@ import android.os.ServiceManager;
 import android.os.StrictMode;
 import android.os.SystemClock;
 import android.os.SystemProperties;
+import android.os.UserId;
 import android.view.IWindowManager;
 
 import java.io.BufferedReader;
@@ -935,7 +936,8 @@ public class Monkey {
                 if (category.length() > 0) {
                     intent.addCategory(category);
                 }
-                List<ResolveInfo> mainApps = mPm.queryIntentActivities(intent, null, 0);
+                List<ResolveInfo> mainApps = mPm.queryIntentActivities(intent, null, 0,
+                        UserId.myUserId());
                 if (mainApps == null || mainApps.size() == 0) {
                     System.err.println("// Warning: no activities found for category " + category);
                     continue;

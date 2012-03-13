@@ -24,6 +24,7 @@ import android.content.pm.IPackageManager;
 import android.graphics.Rect;
 import android.os.RemoteException;
 import android.os.ServiceManager;
+import android.os.UserId;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 
@@ -139,7 +140,7 @@ public class MonkeySourceNetworkViews {
         try {
             AccessibilityNodeInfo node = event.getSource();
             String packageName = node.getPackageName().toString();
-            ApplicationInfo appInfo = sPm.getApplicationInfo(packageName, 0);
+            ApplicationInfo appInfo = sPm.getApplicationInfo(packageName, 0, UserId.myUserId());
             Class<?> klass;
             klass = getIdClass(packageName, appInfo.sourceDir);
             return klass.getField(stringId).getInt(null);
@@ -194,7 +195,7 @@ public class MonkeySourceNetworkViews {
             String packageName = node.getPackageName().toString();
             try{
                 Class<?> klass;
-                ApplicationInfo appInfo = sPm.getApplicationInfo(packageName, 0);
+                ApplicationInfo appInfo = sPm.getApplicationInfo(packageName, 0, UserId.myUserId());
                 klass = getIdClass(packageName, appInfo.sourceDir);
                 StringBuilder fieldBuilder = new StringBuilder();
                 Field[] fields = klass.getFields();
