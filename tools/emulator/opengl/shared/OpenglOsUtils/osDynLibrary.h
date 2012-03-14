@@ -45,4 +45,27 @@ private:
 
 } // of namespace osUtils
 
+
+
+// Macro to compose emugl shared library name under various OS and bitness
+// eg.
+//     on x86_64, EMUGL_LIBNAME("foo") --> "lib64foo.so"
+
+#ifdef _WIN32
+#  define DLL_EXTENSION  "" // _WIN32 LoadLibrary only accept name w/o .dll extension
+#elif defined(__APPLE__)
+#  define DLL_EXTENSION  ".dylib"
+#else
+#  define DLL_EXTENSION  ".so"
+#endif
+
+#if defined(__x86_64__)
+#  define EMUGL_LIBNAME(name) "lib64" name DLL_EXTENSION
+#elif defined(__i386__)
+#  define EMUGL_LIBNAME(name) "lib" name DLL_EXTENSION
+#else
+/* This header is included by target w/o using EMUGL_LIBNAME().  Don't #error, leave it undefined */
+#endif
+
+
 #endif
