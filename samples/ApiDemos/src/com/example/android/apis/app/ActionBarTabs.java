@@ -52,7 +52,9 @@ public class ActionBarTabs extends Activity {
 
     public void onRemoveTab(View v) {
         final ActionBar bar = getActionBar();
-        bar.removeTabAt(bar.getTabCount() - 1);
+        if (bar.getTabCount() > 0) {
+            bar.removeTabAt(bar.getTabCount() - 1);
+        }
     }
 
     public void onToggleTabs(View v) {
