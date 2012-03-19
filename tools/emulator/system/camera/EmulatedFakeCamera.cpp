@@ -28,8 +28,11 @@
 
 namespace android {
 
-EmulatedFakeCamera::EmulatedFakeCamera(int cameraId, struct hw_module_t* module)
+EmulatedFakeCamera::EmulatedFakeCamera(int cameraId,
+                                       bool facingBack,
+                                       struct hw_module_t* module)
         : EmulatedCamera(cameraId, module),
+          mFacingBack(facingBack),
           mFakeCameraDevice(this)
 {
 }
@@ -49,10 +52,8 @@ status_t EmulatedFakeCamera::Initialize()
         return res;
     }
 
-    /* Fake camera facing is defined by the qemu.sf.fake_camera boot property. */
-    char prop[PROPERTY_VALUE_MAX];
-    property_get("qemu.sf.fake_camera", prop, EmulatedCamera::FACING_BACK);
-    const char* facing = prop;
+    const char* facing = mFacingBack ? EmulatedCamera::FACING_BACK :
+                                       EmulatedCamera::FACING_FRONT;
 
     mParameters.set(EmulatedCamera::FACING_KEY, facing);
     ALOGD("%s: Fake camera is facing %s", __FUNCTION__, facing);

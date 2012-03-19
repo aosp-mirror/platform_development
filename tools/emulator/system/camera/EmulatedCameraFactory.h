@@ -131,8 +131,11 @@ private:
      */
     void createQemuCameras();
 
-    /* Checks if fake camera emulation is on. */
-    bool isFakeCameraEmulationOn();
+    /* Checks if fake camera emulation is on for the camera facing back. */
+    bool isBackFakeCameraEmulationOn();
+
+    /* Checks if fake camera emulation is on for the camera facing front. */
+    bool isFrontFakeCameraEmulationOn();
 
     /****************************************************************************
      * Data members.
@@ -145,11 +148,11 @@ private:
     /* Array of cameras available for the emulation. */
     EmulatedCamera**    mEmulatedCameras;
 
-    /* Number of emulated cameras (including the fake one). */
+    /* Number of emulated cameras (including the fake ones). */
     int                 mEmulatedCameraNum;
 
-    /* Fake camera ID. */
-    int                 mFakeCameraID;
+    /* Number of emulated fake cameras. */
+    int                 mFakeCameraNum;
 
     /* Flags whether or not constructor has succeeded. */
     bool                mConstructedOK;
