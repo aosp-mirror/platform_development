@@ -28,14 +28,25 @@
         android:text="@string/activity_animation_msg"/>
 
     <Button android:id="@+id/fade_animation"
-        android:layout_width="wrap_content" android:layout_height="wrap_content" 
+        android:layout_width="wrap_content" android:layout_height="wrap_content"
         android:text="@string/activity_animation_fade">
         <requestFocus />
     </Button>
 
     <Button android:id="@+id/zoom_animation"
-        android:layout_width="wrap_content" android:layout_height="wrap_content" 
+        android:layout_width="wrap_content" android:layout_height="wrap_content"
         android:text="@string/activity_animation_zoom">
+    </Button>
+
+    <Button android:id="@+id/modern_fade_animation"
+        android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:text="@string/activity_modern_animation_fade">
+        <requestFocus />
+    </Button>
+
+    <Button android:id="@+id/modern_zoom_animation"
+        android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:text="@string/activity_modern_animation_zoom">
     </Button>
 
 </LinearLayout>

@@ -22,6 +22,7 @@ import com.example.android.apis.R;
 import com.example.android.apis.view.Controls1;
 
 import android.app.Activity;
+import android.app.ActivityOptions;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
@@ -44,6 +45,15 @@ public class Animation extends Activity {
         button.setOnClickListener(mFadeListener);
         button = (Button)findViewById(R.id.zoom_animation);
         button.setOnClickListener(mZoomListener);
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN) {
+            button = (Button)findViewById(R.id.modern_fade_animation);
+            button.setOnClickListener(mModernFadeListener);
+            button = (Button)findViewById(R.id.modern_zoom_animation);
+            button.setOnClickListener(mModernZoomListener);
+        } else {
+            findViewById(R.id.modern_fade_animation).setEnabled(false);
+            findViewById(R.id.modern_zoom_animation).setEnabled(false);
+        }
     }
 
     private OnClickListener mFadeListener = new OnClickListener() {
@@ -68,6 +78,34 @@ public class Animation extends Activity {
             // to be Z-ordered on top (even though it really isn't) to achieve
             // the effect we want.
             overridePendingTransition(R.anim.zoom_enter, R.anim.zoom_exit);
+        }
+    };
+
+    private OnClickListener mModernFadeListener = new OnClickListener() {
+        public void onClick(View v) {
+            // Create the desired custom animation, involving transformations
+            // on both this (exit) and the new (enter) activity.  Note how for
+            // the duration of the animation we force the exiting activity
+            // to be Z-ordered on top (even though it really isn't) to achieve
+            // the effect we want.
+            ActivityOptions opts = ActivityOptions.makeCustomAnimation(Animation.this,
+                    R.anim.fade, R.anim.hold);
+            // Request the activity be started, using the custom animation options.
+            startActivity(new Intent(Animation.this, Controls1.class), opts.toBundle());
+        }
+    };
+
+    private OnClickListener mModernZoomListener = new OnClickListener() {
+        public void onClick(View v) {
+            // Create a more complicated animation, involving transformations
+            // on both this (exit) and the new (enter) activity.  Note how for
+            // the duration of the animation we force the exiting activity
+            // to be Z-ordered on top (even though it really isn't) to achieve
+            // the effect we want.
+            ActivityOptions opts = ActivityOptions.makeCustomAnimation(Animation.this,
+                    R.anim.zoom_enter, R.anim.zoom_enter);
+            // Request the activity be started, using the custom animation options.
+            startActivity(new Intent(Animation.this, Controls1.class), opts.toBundle());
         }
     };
 }
