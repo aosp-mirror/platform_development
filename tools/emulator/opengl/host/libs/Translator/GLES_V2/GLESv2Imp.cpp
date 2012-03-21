@@ -32,7 +32,6 @@
 #include "ProgramData.h"
 #include <GLcommon/TextureUtils.h>
 #include <GLcommon/FramebufferData.h>
-#include <assert.h>
 
 extern "C" {
 
@@ -2009,9 +2008,7 @@ GL_APICALL void GL_APIENTRY glEGLImageTargetTexture2DOES(GLenum target, GLeglIma
 {
     GET_CTX();
     SET_ERROR_IF(!GLESv2Validate::textureTargetLimited(target),GL_INVALID_ENUM);
-    uintptr_t imagehndlptr = (uintptr_t)image;
-    unsigned int imagehndl = (unsigned int)imagehndlptr;
-    assert(sizeof(imagehndl) == sizeof(imagehndlptr) || imagehndl == imagehndlptr);
+    unsigned int imagehndl = ToTargetCompatibleHandle((uintptr_t)image);
     EglImage *img = s_eglIface->eglAttachEGLImage(imagehndl);
     if (img) {
         // Create the texture object in the underlying EGL implementation,
@@ -2047,9 +2044,7 @@ GL_APICALL void GL_APIENTRY glEGLImageTargetRenderbufferStorageOES(GLenum target
 {
     GET_CTX();
     SET_ERROR_IF(target != GL_RENDERBUFFER_OES,GL_INVALID_ENUM);
-    uintptr_t imagehndlptr = (uintptr_t)image;
-    unsigned int imagehndl = (unsigned int)imagehndlptr;
-    assert(sizeof(imagehndl) == sizeof(imagehndlptr) || imagehndl == imagehndlptr);
+    unsigned int imagehndl = ToTargetCompatibleHandle((uintptr_t)image);
     EglImage *img = s_eglIface->eglAttachEGLImage(imagehndl);
     SET_ERROR_IF(!img,GL_INVALID_VALUE);
     SET_ERROR_IF(!ctx->shareGroup().Ptr(),GL_INVALID_OPERATION);

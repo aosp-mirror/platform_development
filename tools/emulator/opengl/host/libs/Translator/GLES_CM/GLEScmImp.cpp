@@ -35,7 +35,6 @@
 #include <GLES/glext.h>
 #include <cmath>
 #include <map>
-#include <assert.h>
 
 extern "C" {
 
@@ -1656,9 +1655,7 @@ GL_API void GL_APIENTRY glEGLImageTargetTexture2DOES(GLenum target, GLeglImageOE
 {
     GET_CTX();
     SET_ERROR_IF(!GLEScmValidate::textureTargetLimited(target),GL_INVALID_ENUM);
-    uintptr_t imagehndlptr = (uintptr_t)image;
-    unsigned int imagehndl = (unsigned int)imagehndlptr;
-    assert(sizeof(imagehndl) == sizeof(imagehndlptr) || imagehndl == imagehndlptr);
+    unsigned int imagehndl = ToTargetCompatibleHandle((uintptr_t)image);
     EglImage *img = s_eglIface->eglAttachEGLImage(imagehndl);
     if (img) {
         // Create the texture object in the underlying EGL implementation,
@@ -1694,9 +1691,7 @@ GL_API void GL_APIENTRY glEGLImageTargetRenderbufferStorageOES(GLenum target, GL
 {
     GET_CTX();
     SET_ERROR_IF(target != GL_RENDERBUFFER_OES,GL_INVALID_ENUM);
-    uintptr_t imagehndlptr = (uintptr_t)image;
-    unsigned int imagehndl = (unsigned int)imagehndlptr;
-    assert(sizeof(imagehndl) == sizeof(imagehndlptr) || imagehndl == imagehndlptr);
+    unsigned int imagehndl = ToTargetCompatibleHandle((uintptr_t)image);
     EglImage *img = s_eglIface->eglAttachEGLImage(imagehndl);
     SET_ERROR_IF(!img,GL_INVALID_VALUE);
     SET_ERROR_IF(!ctx->shareGroup().Ptr(),GL_INVALID_OPERATION);
