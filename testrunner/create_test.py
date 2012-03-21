@@ -121,20 +121,21 @@ def _GenerateTestManifest(manifest, module_name, mapping=None):
   _PrintMessage("Created %s" % tests_manifest_path)
 
 
-def _GenerateTestMK(mk, mapping=None):
+def _GenerateTestMK(mk, app_path, mapping=None):
   """Create and populate tests/Android.mk with variable values from Android.mk.
 
   Does nothing if tests/Android.mk already exists.
 
   Args:
     mk: AndroidMK object for application makefile
+    app_path: path to the application being tested
     mapping: optional user defined mapping of variable values, replaces
         values stored in mk
   Raises:
     IOError: tests/Android.mk cannot be opened for writing
   """
   # skip if file already exists
-  tests_path = "%s/%s" % (mk.app_path, TestsConsts.TESTS_FOLDER)
+  tests_path = "%s/%s" % (app_path, TestsConsts.TESTS_FOLDER)
   tests_mk_path = "%s/%s" % (tests_path, mk.FILENAME)
   if os.path.exists(tests_mk_path):
     _PrintMessage("%s already exists, not overwritten" % tests_mk_path)
@@ -142,7 +143,7 @@ def _GenerateTestMK(mk, mapping=None):
 
   # append test build if not existent in makefile
   if not mk.HasInclude(TestsConsts.MK_BUILD_INCLUDE):
-    mk_path = "%s/%s" % (mk.app_path, mk.FILENAME)
+    mk_path = "%s/%s" % (app_path, mk.FILENAME)
     mk_file = open(mk_path, mode="a")
     mk_file.write(TestsConsts.MK_BUILD_STRING)
     mk_file.close()
@@ -224,12 +225,12 @@ def main(argv):
     sys.exit()
 
   try:
-    mk = android_mk.AndroidMK(app_path=app_path)
+    mk = android_mk.CreateAndroidMK(path=app_path)
     manifest = android_manifest.AndroidManifest(app_path=app_path)
     _ValidateInputFiles(mk, manifest)
 
     module_name = mk.GetVariable(mk.PACKAGE_NAME)
-    _GenerateTestMK(mk)
+    _GenerateTestMK(mk, app_path)
     _GenerateTestManifest(manifest, module_name)
   except Exception, e:
     _PrintError("Error: %s" % e)
