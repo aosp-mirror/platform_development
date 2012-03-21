@@ -42,7 +42,7 @@ struct FrameBufferCaps
 class FrameBuffer
 {
 public:
-    static bool initialize(int width, int height);
+    static bool initialize(int width, int height, OnPostFn onPost, void* onPostContext);
     static bool setupSubWindow(FBNativeWindowType p_window,
                                 int x, int y,
                                 int width, int height, float zRot);
@@ -85,7 +85,7 @@ public:
     }
 
 private:
-    FrameBuffer(int p_width, int p_height);
+    FrameBuffer(int p_width, int p_height, OnPostFn onPost, void* onPostContext);
     ~FrameBuffer();
     HandleType genHandle();
     bool bindSubwin_locked();
@@ -124,5 +124,9 @@ private:
     int m_statsNumFrames;
     long long m_statsStartTime;
     bool m_fpsStats;
+
+    OnPostFn m_onPost;
+    void* m_onPostContext;
+    unsigned char* m_fbImage;
 };
 #endif
