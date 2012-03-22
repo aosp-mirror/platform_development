@@ -1041,13 +1041,13 @@ EGLImageKHR eglCreateImageKHR(EGLDisplay display, EGLContext context, EGLenum ta
     ThreadInfo* thread  = getThreadInfo();
     ShareGroupPtr sg = thread->shareGroup;
     if (sg.Ptr() != NULL) {
-        unsigned int globalTexName = sg->getGlobalName(TEXTURE, (unsigned int)buffer);
+        unsigned int globalTexName = sg->getGlobalName(TEXTURE, (uintptr_t)buffer);
         if (!globalTexName) return EGL_NO_IMAGE_KHR;
 
         ImagePtr img( new EglImage() );
         if (img.Ptr() != NULL) {
 
-            ObjectDataPtr objData = sg->getObjectData(TEXTURE, (unsigned int)buffer);
+            ObjectDataPtr objData = sg->getObjectData(TEXTURE, (uintptr_t)buffer);
             if (!objData.Ptr()) return EGL_NO_IMAGE_KHR;
 
             TextureData *texData = (TextureData *)objData.Ptr();

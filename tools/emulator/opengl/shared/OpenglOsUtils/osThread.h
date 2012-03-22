@@ -20,6 +20,7 @@
 #include <windows.h>
 #else // !WIN32
 #include <pthread.h>
+#include <inttypes.h>
 #endif
 
 namespace osUtils {

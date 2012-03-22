@@ -84,7 +84,7 @@ Thread::thread_main(void *p_arg)
 
     pthread_mutex_lock(&self->m_lock);
     self->m_isRunning = false;
-    self->m_exitStatus = (int)ret;
+    self->m_exitStatus = (int)(intptr_t)ret;
     pthread_mutex_unlock(&self->m_lock);
 
     return ret;
