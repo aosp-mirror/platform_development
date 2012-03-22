@@ -61,7 +61,7 @@ external/clang/LICENSE.TXT                    platform-tools/renderscript/clang-
 ##############################################################################
 
 # version files for the SDK updater, from development.git
-development/sdk/platform_source.properties    platforms/${PLATFORM_NAME}/source.properties
+${HOST_OUT}/development/sdk/platform_source.properties platforms/${PLATFORM_NAME}/source.properties
 
 # copy build prop from out/.../sdk/
 sdk/sdk-build.prop                            platforms/${PLATFORM_NAME}/build.prop
@@ -132,7 +132,7 @@ system/build.prop                          system-images/${PLATFORM_NAME}/${TARG
 ##############################################################################
 
 # version files for the SDK updater, from sdk.git
-development/sdk/doc_source.properties docs/source.properties
+${HOST_OUT}/development/sdk/doc_source.properties docs/source.properties
 
 # the docs
 docs/offline-sdk docs
@@ -147,8 +147,8 @@ frameworks/base/docs/docs-samples-redirect.html docs/samples/index.html
 #
 # the list here should match the list of samples that we generate docs for,
 # (see web_docs_sample_code_flags in frameworks/base/Android.mk)
-development/apps/GestureBuilder              samples/${PLATFORM_NAME}/GestureBuilder
-development/samples/source.properties        samples/${PLATFORM_NAME}/source.properties
+development/apps/GestureBuilder                samples/${PLATFORM_NAME}/GestureBuilder
+development/samples/samples_source.properties  samples/${PLATFORM_NAME}/source.properties
 #
 # PLEASE KEEP THE SAMPLES IN ALPHABETICAL ORDER.
 #
