@@ -19,11 +19,12 @@ package com.example.android.apis.app;
 // Need the following import to get access to the app resources, since this
 // class is in a sub-package.
 import com.example.android.apis.R;
-import com.example.android.apis.view.Controls1;
 
 import android.app.Activity;
 import android.app.ActivityOptions;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.os.Bundle;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -50,16 +51,19 @@ public class Animation extends Activity {
             button.setOnClickListener(mModernFadeListener);
             button = (Button)findViewById(R.id.modern_zoom_animation);
             button.setOnClickListener(mModernZoomListener);
+            button = (Button)findViewById(R.id.zoom_thumbnail_animation);
+            button.setOnClickListener(mZoomThumbnailListener);
         } else {
             findViewById(R.id.modern_fade_animation).setEnabled(false);
             findViewById(R.id.modern_zoom_animation).setEnabled(false);
+            findViewById(R.id.zoom_thumbnail_animation).setEnabled(false);
         }
     }
 
     private OnClickListener mFadeListener = new OnClickListener() {
         public void onClick(View v) {
             // Request the next activity transition (here starting a new one).
-            startActivity(new Intent(Animation.this, Controls1.class));
+            startActivity(new Intent(Animation.this, AlertDialogSamples.class));
             // Supply a custom animation.  This one will just fade the new
             // activity on top.  Note that we need to also supply an animation
             // (here just doing nothing for the same amount of time) for the
@@ -71,7 +75,7 @@ public class Animation extends Activity {
     private OnClickListener mZoomListener = new OnClickListener() {
         public void onClick(View v) {
             // Request the next activity transition (here starting a new one).
-            startActivity(new Intent(Animation.this, Controls1.class));
+            startActivity(new Intent(Animation.this, AlertDialogSamples.class));
             // This is a more complicated animation, involving transformations
             // on both this (exit) and the new (enter) activity.  Note how for
             // the duration of the animation we force the exiting activity
@@ -91,7 +95,7 @@ public class Animation extends Activity {
             ActivityOptions opts = ActivityOptions.makeCustomAnimation(Animation.this,
                     R.anim.fade, R.anim.hold);
             // Request the activity be started, using the custom animation options.
-            startActivity(new Intent(Animation.this, Controls1.class), opts.toBundle());
+            startActivity(new Intent(Animation.this, AlertDialogSamples.class), opts.toBundle());
         }
     };
 
@@ -105,7 +109,23 @@ public class Animation extends Activity {
             ActivityOptions opts = ActivityOptions.makeCustomAnimation(Animation.this,
                     R.anim.zoom_enter, R.anim.zoom_enter);
             // Request the activity be started, using the custom animation options.
-            startActivity(new Intent(Animation.this, Controls1.class), opts.toBundle());
+            startActivity(new Intent(Animation.this, AlertDialogSamples.class), opts.toBundle());
+        }
+    };
+
+    private OnClickListener mZoomThumbnailListener = new OnClickListener() {
+        public void onClick(View v) {
+            // Create a thumbnail animation.  We are going to build our thumbnail
+            // just from the view that was pressed.
+            v.setDrawingCacheEnabled(true);
+            Bitmap bm = v.getDrawingCache();
+            Canvas c = new Canvas(bm);
+            //c.drawARGB(255, 255, 0, 0);
+            ActivityOptions opts = ActivityOptions.makeThumbnailScaleUpAnimation(
+                    v, bm, 0, 0, null);
+            // Request the activity be started, using the custom animation options.
+            startActivity(new Intent(Animation.this, AlertDialogSamples.class), opts.toBundle());
+            v.setDrawingCacheEnabled(false);
         }
     };
 }
