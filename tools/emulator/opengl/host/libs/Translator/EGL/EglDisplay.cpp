@@ -17,6 +17,7 @@
 #include "EglOsApi.h"
 #include <GLcommon/GLutils.h>
 #include <utils/threads.h>
+#include <assert.h>
 
 EglDisplay::EglDisplay(EGLNativeInternalDisplayType dpy,bool isDefault) :
     m_dpy(dpy),
@@ -141,8 +142,12 @@ EglConfig* EglDisplay::getConfig(EGLConfig conf) {
 
 SurfacePtr EglDisplay::getSurface(EGLSurface surface) {
     android::Mutex::Autolock mutex(m_lock);
-
-    SurfacesHndlMap::iterator it = m_surfaces.find(reinterpret_cast<unsigned int>(surface));
+    /* surface is "key" in map<unsigned int, SurfacePtr>.
+       In 64-bit the upper 32-bit should be all zero.  Assert for that. */
+    uintptr_t hndlptr = (uintptr_t)surface;
+    unsigned int hndl = (unsigned int)hndlptr;
+    assert(sizeof(hndl) == sizeof(hndlptr) || hndl == hndlptr);
+    SurfacesHndlMap::iterator it = m_surfaces.find(hndl);
     return it != m_surfaces.end() ?
                                   (*it).second :
                                    SurfacePtr(NULL);
@@ -150,8 +155,12 @@ SurfacePtr EglDisplay::getSurface(EGLSurface surface) {
 
 ContextPtr EglDisplay::getContext(EGLContext ctx) {
     android::Mutex::Autolock mutex(m_lock);
-
-    ContextsHndlMap::iterator it = m_contexts.find(reinterpret_cast<unsigned int>(ctx));
+    /* ctx is "key" in map<unsigned int, ContextPtr>.
+       In 64-bit the upper 32-bit should be all zero.  Assert for that. */
+    uintptr_t hndlptr = (uintptr_t)ctx;
+    unsigned int hndl = (unsigned int)hndlptr;
+    assert(sizeof(hndl) == sizeof(hndlptr) || hndl == hndlptr);
+    ContextsHndlMap::iterator it = m_contexts.find(hndl);
     return it != m_contexts.end() ?
                                   (*it).second :
                                    ContextPtr(NULL);
@@ -159,8 +168,12 @@ ContextPtr EglDisplay::getContext(EGLContext ctx) {
 
 bool EglDisplay::removeSurface(EGLSurface s) {
     android::Mutex::Autolock mutex(m_lock);
-
-    SurfacesHndlMap::iterator it = m_surfaces.find(reinterpret_cast<unsigned int>(s));
+    /* s is "key" in map<unsigned int, SurfacePtr>.
+       In 64-bit the upper 32-bit should be all zero.  Assert for that. */
+    uintptr_t hndlptr = (uintptr_t)s;
+    unsigned int hndl = (unsigned int)hndlptr;
+    assert(sizeof(hndl) == sizeof(hndlptr) || hndl == hndlptr);
+    SurfacesHndlMap::iterator it = m_surfaces.find(hndl);
     if(it != m_surfaces.end()) {
         m_surfaces.erase(it);
         return true;
@@ -187,8 +200,12 @@ bool EglDisplay::removeSurface(SurfacePtr s) {
 
 bool EglDisplay::removeContext(EGLContext ctx) {
     android::Mutex::Autolock mutex(m_lock);
-
-    ContextsHndlMap::iterator it = m_contexts.find(reinterpret_cast<unsigned int>(ctx));
+    /* ctx is "key" in map<unsigned int, ContextPtr>.
+       In 64-bit the upper 32-bit should be all zero.  Assert for that. */
+    uintptr_t hndlptr = (uintptr_t)ctx;
+    unsigned int hndl = (unsigned int)hndlptr;
+    assert(sizeof(hndl) == sizeof(hndlptr) || hndl == hndlptr);
+    ContextsHndlMap::iterator it = m_contexts.find(hndl);
     if(it != m_contexts.end()) {
         m_contexts.erase(it);
         return true;
@@ -254,7 +271,7 @@ int EglDisplay::doChooseConfigs(const EglConfig& dummy,EGLConfig* configs,int co
 }
 
 EGLSurface EglDisplay::addSurface(SurfacePtr s ) {
-    android::Mutex::Autolock mutex(m_lock);
+   android::Mutex::Autolock mutex(m_lock);
    unsigned int hndl = s.Ptr()->getHndl();
    EGLSurface ret =reinterpret_cast<EGLSurface> (hndl);
 
@@ -290,13 +307,23 @@ EGLImageKHR EglDisplay::addImageKHR(ImagePtr img) {
 
 ImagePtr EglDisplay::getImage(EGLImageKHR img) {
     android::Mutex::Autolock mutex(m_lock);
-    ImagesHndlMap::iterator i( m_eglImages.find((unsigned int)img) );
+    /* img is "key" in map<unsigned int, ImagePtr>.
+       In 64-bit the upper 32-bit should be all zero.  Assert for that. */
+    uintptr_t hndlptr = (uintptr_t)img;
+    unsigned int hndl = (unsigned int)hndlptr;
+    assert(sizeof(hndl) == sizeof(hndlptr) || hndl == hndlptr);
+    ImagesHndlMap::iterator i( m_eglImages.find(hndl) );
     return (i != m_eglImages.end()) ? (*i).second :ImagePtr(NULL);
 }
 
 bool EglDisplay:: destroyImageKHR(EGLImageKHR img) {
     android::Mutex::Autolock mutex(m_lock);
-    ImagesHndlMap::iterator i( m_eglImages.find((unsigned int)img) );
+    /* img is "key" in map<unsigned int, ImagePtr>.
+       In 64-bit the upper 32-bit should be all zero.  Assert for that. */
+    uintptr_t hndlptr = (uintptr_t)img;
+    unsigned int hndl = (unsigned int)hndlptr;
+    assert(sizeof(hndl) == sizeof(hndlptr) || hndl == hndlptr);
+    ImagesHndlMap::iterator i( m_eglImages.find(hndl) );
     if (i != m_eglImages.end())
     {
         m_eglImages.erase(i);

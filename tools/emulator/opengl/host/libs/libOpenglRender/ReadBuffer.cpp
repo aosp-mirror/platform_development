@@ -50,7 +50,7 @@ int ReadBuffer::getData()
 
         new_buf = (unsigned char*)realloc(m_buf, new_size);
         if (!new_buf) {
-            ERR("Failed to alloc %d bytes for ReadBuffer\n", new_size);
+            ERR("Failed to alloc %zu bytes for ReadBuffer\n", new_size);
             return -1;
         }
         m_size = new_size;
