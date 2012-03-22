@@ -23,7 +23,6 @@
 #include <GLcommon/TextureUtils.h>
 #include <GLcommon/FramebufferData.h>
 #include <strings.h>
-#include <assert.h>
 
 //decleration
 static void convertFixedDirectLoop(const char* dataIn,unsigned int strideIn,void* dataOut,unsigned int nBytes,unsigned int strideOut,int attribSize);
@@ -190,9 +189,7 @@ GLEScontext::~GLEScontext() {
 const GLvoid* GLEScontext::setPointer(GLenum arrType,GLint size,GLenum type,GLsizei stride,const GLvoid* data,bool normalize) {
     GLuint bufferName = m_arrayBuffer;
     if(bufferName) {
-        uintptr_t offsetptr = (uintptr_t)data;
-        unsigned int offset = offsetptr;
-        assert(sizeof(offset) == sizeof(offsetptr) || offset == offsetptr);
+        unsigned int offset = ToTargetCompatibleHandle((uintptr_t)data);
         GLESbuffer* vbo = static_cast<GLESbuffer*>(m_shareGroup->getObjectData(VERTEXBUFFER,bufferName).Ptr());
         m_map[arrType]->setBuffer(size,type,stride,vbo,bufferName,offset,normalize);
         return  static_cast<const unsigned char*>(vbo->getData()) +  offset;

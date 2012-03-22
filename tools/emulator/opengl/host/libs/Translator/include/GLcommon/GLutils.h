@@ -16,6 +16,9 @@
 #ifndef GL_UTILS_H
 #define GL_UTILS_H
 
+#include <inttypes.h>
+#include <assert.h>
+
 typedef enum{
              GLES_1_1 = 1,
              GLES_2_0 = 2,
@@ -31,5 +34,18 @@ void swap(T& x,T& y) {
 }
 
 bool isPowerOf2(int num);
+
+inline
+unsigned int ToTargetCompatibleHandle(uintptr_t hostHandle)
+{
+    // The host and target handles can have different sizes (e.g. 32-bit
+    // target handle for ARM, and 64-bit host handle on x86_64).
+    // This function checks that the input host handle value can be
+    // converted into a target handle one without losing any bits.
+    //
+    unsigned int targetHandle = (unsigned int)hostHandle;
+    assert(sizeof(targetHandle) == sizeof(hostHandle) || targetHandle == hostHandle);
+    return targetHandle;
+}
 
 #endif
