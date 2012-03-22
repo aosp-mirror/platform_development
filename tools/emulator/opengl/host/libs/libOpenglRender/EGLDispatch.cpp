@@ -20,13 +20,7 @@
 
 EGLDispatch s_egl;
 
-#ifdef _WIN32
-#define DEFAULT_EGL_LIB "libEGL_translator"
-#elif defined(__APPLE__)
-#define DEFAULT_EGL_LIB "libEGL_translator.dylib"
-#else
-#define DEFAULT_EGL_LIB "libEGL_translator.so"
-#endif
+#define DEFAULT_EGL_LIB EMUGL_LIBNAME("EGL_translator")
 
 bool init_egl_dispatch()
 {
