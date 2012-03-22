@@ -101,7 +101,7 @@ void FrameBuffer::finalize(){
     }
 }
 
-bool FrameBuffer::initialize(int width, int height, OnPostFn onPost, void* onPostContext)
+bool FrameBuffer::initialize(int width, int height)
 {
     if (s_theFrameBuffer != NULL) {
         return true;
@@ -110,7 +110,7 @@ bool FrameBuffer::initialize(int width, int height, OnPostFn onPost, void* onPos
     //
     // allocate space for the FrameBuffer object
     //
-    FrameBuffer *fb = new FrameBuffer(width, height, onPost, onPostContext);
+    FrameBuffer *fb = new FrameBuffer(width, height);
     if (!fb) {
         ERR("Failed to create fb\n");
         return false;
@@ -334,17 +334,6 @@ bool FrameBuffer::initialize(int width, int height, OnPostFn onPost, void* onPos
     //
     fb->initGLState();
 
-    //
-    // Allocate space for the onPost framebuffer image
-    //
-    if (onPost) {
-        fb->m_fbImage = (unsigned char*)malloc(4 * width * height);
-        if (!fb->m_fbImage) {
-            delete fb;
-            return false;
-        }
-    }
-
     // release the FB context
     fb->unbind_locked();
 
@@ -355,8 +344,7 @@ bool FrameBuffer::initialize(int width, int height, OnPostFn onPost, void* onPos
     return true;
 }
 
-FrameBuffer::FrameBuffer(int p_width, int p_height,
-        OnPostFn onPost, void* onPostContext) :
+FrameBuffer::FrameBuffer(int p_width, int p_height) :
     m_width(p_width),
     m_height(p_height),
     m_eglDisplay(EGL_NO_DISPLAY),
@@ -372,17 +360,13 @@ FrameBuffer::FrameBuffer(int p_width, int p_height,
     m_zRot(0.0f),
     m_eglContextInitialized(false),
     m_statsNumFrames(0),
-    m_statsStartTime(0LL),
-    m_onPost(onPost),
-    m_onPostContext(onPostContext),
-    m_fbImage(NULL)
+    m_statsStartTime(0LL)
 {
     m_fpsStats = getenv("SHOW_FPS_STATS") != NULL;
 }
 
 FrameBuffer::~FrameBuffer()
 {
-    free(m_fbImage);
 }
 
 bool FrameBuffer::setupSubWindow(FBNativeWindowType p_window,
@@ -815,15 +799,6 @@ bool FrameBuffer::post(HandleType p_colorbuffer, bool needLock)
         s_gl.glPopMatrix();
 
         if (ret) {
-            //
-            // Send framebuffer (without FPS overlay) to callback
-            //
-            if (m_onPost) {
-                s_gl.glReadPixels(0, 0, m_width, m_height,
-                        GL_RGBA, GL_UNSIGNED_BYTE, m_fbImage);
-                m_onPost(m_onPostContext, m_width, m_height, -1,
-                        GL_RGBA, GL_UNSIGNED_BYTE, m_fbImage);
-            }
 
             //
             // output FPS statistics
