@@ -21,6 +21,7 @@ function usage() {
   cat <<EOFU
 Usage: $0 output.xml xml-schema [type [os zip[:dest]]*...]*
 where:
+- schema is one of 'repository' or 'addon'
 - type is one of ${TYPES// /, } (or their plural).
 - os   is one of  ${OSES// /, }.
 There can be more than one zip for the same type
@@ -40,14 +41,19 @@ OUT="$1"
 [[ -z "$OUT" ]] && error "Missing output.xml name."
 shift
 
+# Get the schema type. Must be either "repository" or "addon".
 SCHEMA="$1"
 [[ ! -f "$SCHEMA" ]] && error "Invalid XML schema name: $SCHEMA."
 shift
 
 # Get XML:NS for SDK from the schema
+# This will be something like "http://schemas.android.com/sdk/android/addon/3"
 XMLNS=$(sed -n '/xmlns:sdk="/s/.*"\(.*\)".*/\1/p' "$SCHEMA")
 [[ -z "$XMLNS" ]] && error "Failed to find xmlns:sdk in $SCHEMA."
 echo "## Using xmlns:sdk=$XMLNS"
+
+# Extract the schema version number from the XMLNS, e.g. it would extract "3"
+VERSION="${XMLNS##*/}"
 
 # Get the root element from the schema. This is the first element
 # which name starts with "sdk-" (e.g. sdk-repository, sdk-addon)
@@ -80,30 +86,35 @@ function check_enum() {
 # Parse all archives.
 
 ATTRS=(
+  # Columns:
+  # --------------------------+------------------------+----------------------
+  # Name read from            | XML element written    | Min-XSD version
+  # source.properties         | to repository.xml      | where XML can be used
+  # --------------------------+------------------------+----------------------
   # for repository packages
-  Pkg.Revision                  revision
-  Pkg.Desc                      description
-  Platform.Version              version
-  AndroidVersion.ApiLevel       api-level
-  AndroidVersion.CodeName       codename
-  Platform.IncludedAbi          included-abi
-  Platform.MinToolsRev          min-tools-rev
-  Platform.MinPlatformToolsRev  min-platform-tools-rev
-  Extra.Vendor                  vendor
-  Extra.Path                    path
-  Extra.OldPaths                old-paths
-  Extra.MinApiLevel             min-api-level
-  Sample.MinApiLevel            min-api-level
-  SystemImage.Abi               abi
-  Layoutlib.Api                 layoutlib/api
-  Layoutlib.Revision            layoutlib/revision
+  Pkg.Revision                  revision                 1
+  Pkg.Desc                      description              1
+  Platform.Version              version                  1
+  AndroidVersion.ApiLevel       api-level                1
+  AndroidVersion.CodeName       codename                 1
+  Platform.IncludedAbi          included-abi             5
+  Platform.MinToolsRev          min-tools-rev            1
+  Platform.MinPlatformToolsRev  min-platform-tools-rev   3
+  Extra.Vendor                  vendor                   1
+  Extra.Path                    path                     1
+  Extra.OldPaths                old-paths                3
+  Extra.MinApiLevel             min-api-level            2
+  Sample.MinApiLevel            min-api-level            2
+  SystemImage.Abi               abi                      5
+  Layoutlib.Api                 layoutlib/api            4
+  Layoutlib.Revision            layoutlib/revision       4
   # for addon packages
-  vendor                        vendor
-  name                          name
-  description                   description
-  api                           api-level
-  version                       revision
-  revision                      revision
+  vendor                        vendor                   1
+  name                          name                     1
+  description                   description              1
+  api                           api-level                1
+  version                       revision                 1
+  revision                      revision                 1
 )
 
 function parse_attributes() {
@@ -111,13 +122,31 @@ function parse_attributes() {
   shift
   local RESULT=""
   local VALUE
+  local REV
+  local USED
 
+  # $1 here is the ATTRS list above.
   while [[ "$1" ]]; do
-    # Parse the property, if present. Any space is replaced by @
-    VALUE=$( grep "^$1=" "$PROPS" | cut -d = -f 2 | tr ' ' '@' | tr -d '\r' )
-    if [[ -n "$VALUE" ]]; then
-      RESULT="$RESULT $2 $VALUE"
+    # Check the version in which the attribute was introduced and
+    # ignore things which are too *new* for this schema. This lets
+    # us generate old schemas for backward compatibility purposes.
+    SRC=$1
+    DST=$2
+    REV=$3
+
+    if [[ $VERSION -ge $REV ]]; then
+      # Parse the property, if present. Any space is replaced by @
+      VALUE=$( grep "^$SRC=" "$PROPS" | cut -d = -f 2 | tr ' ' '@' | tr -d '\r' )
+      if [[ -n "$VALUE" ]]; then
+        # In case an XML element would be mapped multiple times,
+        # only use its first definition.
+        if [[ "${USED/$DST/}" == "$USED" ]]; then
+          USED="$USED $DST"
+          RESULT="$RESULT $DST $VALUE"
+        fi
+      fi
     fi
+    shift
     shift
     shift
   done
@@ -129,20 +158,24 @@ function output_attributes() {
   local OUT="$1"
   shift
   local KEY VALUE
-  local NODE LAST_NODE
+  local NODE LAST_NODE EXTRA_SPACE
 
   while [[ "$1" ]]; do
     KEY="$1"
     VALUE="${2//@/ }"
     NODE="${KEY%%/*}"
     KEY="${KEY##*/}"
-    [[ "$NODE" == "$KEY" ]] && NODE=""
-    if [[ "$NODE" != "$LAST_NODE" ]]; then
-        [[ "$LAST_NODE" ]] && echo "          </sdk:$LAST_NODE>" >> "$OUT"
-        LAST_NODE="$NODE"
-        [[ "$NODE"      ]] && echo "          <sdk:$NODE>" >> "$OUT"
+    if [[ "$NODE" == "$KEY" ]]; then
+      NODE=""
+      EXTRA_SPACE=""
     fi
-    echo "        <sdk:$KEY>$VALUE</sdk:$KEY>" >> "$OUT"
+    if [[ "$NODE" != "$LAST_NODE" ]]; then
+      EXTRA_SPACE="    "
+      [[ "$LAST_NODE" ]] && echo "          </sdk:$LAST_NODE>" >> "$OUT"
+      LAST_NODE="$NODE"
+      [[ "$NODE"      ]] && echo "          <sdk:$NODE>" >> "$OUT"
+    fi
+    echo "$EXTRA_SPACE        <sdk:$KEY>$VALUE</sdk:$KEY>" >> "$OUT"
     shift
     shift
   done
