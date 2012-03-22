@@ -22,38 +22,6 @@ extern "C" {
 
 #include "render_api_platform_types.h"
 
-/* If a function with this signature is passed to initOpenGLRenderer(),
- * it will be called by the renderer just before each new frame is displayed,
- * providing a copy of the framebuffer contents.
- *
- * The callback will be called from one of the renderer's threads, so will
- * probably need synchronization on any data structures it modifies. The
- * pixels buffer may be overwritten as soon as the callback returns; if it needs
- * the pixels afterwards it must copy them.
- *
- * The pixels buffer is intentionally not const: the callback may modify the
- * data without copying to another buffer if it wants, e.g. in-place RGBA to RGB
- * conversion, or in-place y-inversion.
- *
- * Parameters are:
- *   context        The pointer optionally provided when the callback was
- *                  registered. The client can use this to pass whatever
- *                  information it wants to the callback.
- *   width, height  Dimensions of the image, in pixels. Rows are tightly packed;
- *                  there is no inter-row padding.
- *   ydir           Indicates row order: 1 means top-to-bottom order, -1 means
- *                  bottom-to-top order.
- *   format, type   Format and type GL enums, as used in glTexImage2D() or
- *                  glReadPixels(), describing the pixel format.
- *   pixels         The framebuffer image.
- *
- * In the first implementation, ydir is always -1 (bottom to top), format and
- * type are always GL_RGBA and GL_UNSIGNED_BYTE, and the width and height will
- * always be the same as the ones passed to initOpenGLRenderer().
- */
-typedef void (*OnPostFn)(void* context, int width, int height, int ydir,
-                         int format, int type, unsigned char* pixels);
-
 // initLibrary - initialize the library and tries to load the corresponding
 //     GLES translator libraries. This function must be called before anything
 //     else to ensure that everything works. If it returns an error, then
@@ -85,8 +53,8 @@ int setStreamMode(int mode);
 // This function is *NOT* thread safe and should be called first
 // to initialize the renderer after initLibrary().
 //
-bool initOpenGLRenderer(int width, int height, int portNum,
-                        OnPostFn onPost, void* onPostContext);
+bool initOpenGLRenderer(int width, int height, int portNum);
+
 
 //
 // createOpenGLSubwindow -
