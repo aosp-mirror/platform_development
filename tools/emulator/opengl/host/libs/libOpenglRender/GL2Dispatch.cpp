@@ -24,13 +24,7 @@ int                   s_gl2_enabled;
 
 static osUtils::dynLibrary *s_gles2_lib = NULL;
 
-#ifdef _WIN32
-#define DEFAULT_GLES_V2_LIB "libGLES_V2_translator"
-#elif defined(__APPLE__)
-#define DEFAULT_GLES_V2_LIB "libGLES_V2_translator.dylib"
-#else
-#define DEFAULT_GLES_V2_LIB "libGLES_V2_translator.so"
-#endif
+#define DEFAULT_GLES_V2_LIB EMUGL_LIBNAME("GLES_V2_translator")
 
 //
 // This function is called only once during initialiation before

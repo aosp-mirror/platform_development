@@ -27,13 +27,7 @@ static osUtils::dynLibrary *s_gles_lib = NULL;
 // any thread has been created - hence it should NOT be thread safe.
 //
 
-#ifdef _WIN32
-#define DEFAULT_GLES_CM_LIB "libGLES_CM_translator"
-#elif defined(__APPLE__)
-#define DEFAULT_GLES_CM_LIB "libGLES_CM_translator.dylib"
-#else
-#define DEFAULT_GLES_CM_LIB "libGLES_CM_translator.so"
-#endif
+#define DEFAULT_GLES_CM_LIB EMUGL_LIBNAME("GLES_CM_translator")
 
 bool init_gl_dispatch()
 {
