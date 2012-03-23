@@ -58,22 +58,17 @@ static void PrintParamDiff(const CameraParameters& current, const char* new_par)
  */
 static char* AddValue(const char* param, const char* val);
 
-EmulatedCamera::EmulatedCamera(int cameraId, struct hw_module_t* module)
-        : mPreviewWindow(),
-          mCallbackNotifier(),
-          mCameraID(cameraId)
+EmulatedCamera::EmulatedCamera(int cameraId,
+                               struct hw_module_t* module)
+        : EmulatedBaseCamera(cameraId,
+                HARDWARE_DEVICE_API_VERSION(1, 0),
+                &common,
+                module),
+          mPreviewWindow(),
+          mCallbackNotifier()
 {
-    /*
-     * Initialize camera_device descriptor for this object.
-     */
-
-    /* Common header */
-    common.tag = HARDWARE_DEVICE_TAG;
-    common.version = 0;
-    common.module = module;
+    /* camera_device v1 fields. */
     common.close = EmulatedCamera::close;
-
-    /* camera_device fields. */
     ops = &mDeviceOps;
     priv = this;
 }
@@ -243,7 +238,7 @@ status_t EmulatedCamera::getCameraInfo(struct camera_info* info)
         info->orientation = 0;
     }
 
-    return NO_ERROR;
+    return EmulatedBaseCamera::getCameraInfo(info);
 }
 
 status_t EmulatedCamera::setPreviewWindow(struct preview_stream_ops* window)

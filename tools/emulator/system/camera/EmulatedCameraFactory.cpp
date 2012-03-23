@@ -60,7 +60,7 @@ EmulatedCameraFactory::EmulatedCameraFactory()
          * cameras created. Note that we preallocate the array so it may contain
          * two fake cameras: one facing back, and another facing front. */
         if (mEmulatedCameras == NULL) {
-            mEmulatedCameras = new EmulatedCamera*[mEmulatedCameraNum + 1];
+            mEmulatedCameras = new EmulatedBaseCamera*[mEmulatedCameraNum + 1];
             if (mEmulatedCameras == NULL) {
                 ALOGE("%s: Unable to allocate emulated camera array for %d entries",
                      __FUNCTION__, mEmulatedCameraNum);
@@ -92,7 +92,7 @@ EmulatedCameraFactory::EmulatedCameraFactory()
         /* Make sure that array is allocated (in case there were no 'qemu'
          * cameras created. */
         if (mEmulatedCameras == NULL) {
-            mEmulatedCameras = new EmulatedCamera*[mEmulatedCameraNum];
+            mEmulatedCameras = new EmulatedBaseCamera*[mEmulatedCameraNum];
             if (mEmulatedCameras == NULL) {
                 ALOGE("%s: Unable to allocate emulated camera array for %d entries",
                      __FUNCTION__, mEmulatedCameraNum);
@@ -136,7 +136,7 @@ EmulatedCameraFactory::~EmulatedCameraFactory()
 /****************************************************************************
  * Camera HAL API handlers.
  *
- * Each handler simply verifies existence of an appropriate EmulatedCamera
+ * Each handler simply verifies existence of an appropriate EmulatedBaseCamera
  * instance, and dispatches the call to that instance.
  *
  ***************************************************************************/
@@ -260,14 +260,14 @@ void EmulatedCameraFactory::createQemuCameras()
 
     /* Allocate the array for emulated camera instances. Note that we allocate
      * two more entries for back and front fake camera emulation. */
-    mEmulatedCameras = new EmulatedCamera*[num + 2];
+    mEmulatedCameras = new EmulatedBaseCamera*[num + 2];
     if (mEmulatedCameras == NULL) {
         ALOGE("%s: Unable to allocate emulated camera array for %d entries",
              __FUNCTION__, num + 1);
         free(camera_list);
         return;
     }
-    memset(mEmulatedCameras, 0, sizeof(EmulatedCamera*) * (num + 1));
+    memset(mEmulatedCameras, 0, sizeof(EmulatedBaseCamera*) * (num + 1));
 
     /*
      * Iterate the list, creating, and initializin emulated qemu cameras for each

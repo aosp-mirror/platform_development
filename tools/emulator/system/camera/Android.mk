@@ -42,6 +42,7 @@ LOCAL_C_INCLUDES += external/jpeg \
 LOCAL_SRC_FILES := \
 	EmulatedCameraHal.cpp \
     EmulatedCameraFactory.cpp \
+    EmulatedBaseCamera.cpp \
     EmulatedCamera.cpp \
 	EmulatedCameraDevice.cpp \
 	EmulatedQemuCamera.cpp \

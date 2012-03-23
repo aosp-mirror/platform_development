@@ -18,31 +18,32 @@
 #define HW_EMULATOR_CAMERA_EMULATED_CAMERA_H
 
 /*
- * Contains declaration of a class EmulatedCamera that encapsulates functionality
- * common to all emulated cameras ("fake", "webcam", "video file", etc.).
- * Instances of this class (for each emulated camera) are created during the
- * construction of the EmulatedCameraFactory instance.
- * This class serves as an entry point for all camera API calls that defined
- * by camera_device_ops_t API.
+ * Contains declaration of a class EmulatedCamera that encapsulates
+ * functionality common to all version 1.0 emulated camera devices ("fake",
+ * "webcam", "video file", etc.).  Instances of this class (for each emulated
+ * camera) are created during the construction of the EmulatedCameraFactory
+ * instance.  This class serves as an entry point for all camera API calls that
+ * defined by camera_device_ops_t API.
  */
 
 #include <camera/CameraParameters.h>
+#include "EmulatedBaseCamera.h"
 #include "EmulatedCameraDevice.h"
 #include "PreviewWindow.h"
 #include "CallbackNotifier.h"
 
 namespace android {
 
-/* Encapsulates functionality common to all emulated cameras ("fake", "webcam",
- * "file stream", etc.).
+/* Encapsulates functionality common to all version 1.0 emulated camera devices
+ * ("fake", "webcam", "file stream", etc.).
  *
  * Note that EmulatedCameraFactory instantiates object of this class just once,
  * when EmulatedCameraFactory instance gets constructed. Connection to /
- * disconnection from the actual camera device is handled by calls to connectDevice(),
- * and closeCamera() methods of this class that are ivoked in response to
- * hw_module_methods_t::open, and camera_device::close callbacks.
+ * disconnection from the actual camera device is handled by calls to
+ * connectDevice(), and closeCamera() methods of this class that are ivoked in
+ * response to hw_module_methods_t::open, and camera_device::close callbacks.
  */
-class EmulatedCamera : public camera_device {
+class EmulatedCamera : public camera_device, public EmulatedBaseCamera {
 public:
     /* Constructs EmulatedCamera instance.
      * Param:
@@ -50,7 +51,8 @@ public:
      *      instance in camera factory's array.
      *  module - Emulated camera HAL module descriptor.
      */
-    EmulatedCamera(int cameraId, struct hw_module_t* module);
+    EmulatedCamera(int cameraId,
+                   struct hw_module_t* module);
 
     /* Destructs EmulatedCamera instance. */
     virtual ~EmulatedCamera();
@@ -69,10 +71,7 @@ public:
      ***************************************************************************/
 
 public:
-    /* Initializes EmulatedCamera instance.
-     * Return:
-     *  NO_ERROR on success, or an appropriate error status on failure.
-     */
+    /** Override of base class method */
     virtual status_t Initialize();
 
     /* Next frame is available in the camera device.
@@ -105,26 +104,13 @@ public:
      ***************************************************************************/
 
 public:
-    /* Creates connection to the emulated camera device.
-     * This method is called in response to hw_module_methods_t::open callback.
-     * NOTE: When this method is called the object is locked.
-     * Note that failures in this method are reported as negave EXXX statuses.
-     */
+    /** Override of base class method */
     virtual status_t connectCamera(hw_device_t** device);
 
-    /* Closes connection to the emulated camera.
-     * This method is called in response to camera_device::close callback.
-     * NOTE: When this method is called the object is locked.
-     * Note that failures in this method are reported as negave EXXX statuses.
-     */
+    /** Override of base class method */
     virtual status_t closeCamera();
 
-    /* Gets camera information.
-     * This method is called in response to camera_module_t::get_camera_info
-     * callback.
-     * NOTE: When this method is called the object is locked.
-     * Note that failures in this method are reported as negave EXXX statuses.
-     */
+    /** Override of base class method */
     virtual status_t getCameraInfo(struct camera_info* info);
 
     /****************************************************************************
@@ -387,9 +373,6 @@ protected:
 
     /* Callback notifier. */
     CallbackNotifier                mCallbackNotifier;
-
-    /* Zero-based ID assigned to this camera. */
-    int                             mCameraID;
 
 private:
     /* Registered callbacks implementing camera API. */

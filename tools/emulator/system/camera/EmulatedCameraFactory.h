@@ -17,7 +17,7 @@
 #ifndef HW_EMULATOR_CAMERA_EMULATED_CAMERA_FACTORY_H
 #define HW_EMULATOR_CAMERA_EMULATED_CAMERA_FACTORY_H
 
-#include "EmulatedCamera.h"
+#include "EmulatedBaseCamera.h"
 #include "QemuClient.h"
 
 namespace android {
@@ -146,7 +146,7 @@ private:
     FactoryQemuClient   mQemuClient;
 
     /* Array of cameras available for the emulation. */
-    EmulatedCamera**    mEmulatedCameras;
+    EmulatedBaseCamera**    mEmulatedCameras;
 
     /* Number of emulated cameras (including the fake ones). */
     int                 mEmulatedCameraNum;
