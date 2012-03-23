@@ -26,6 +26,8 @@
 
 #include "ANPNativeWindow_npapi.h"
 
+#include <android/native_window.h>
+
 extern ANPLogInterfaceV0           gLogI;
 extern ANPNativeWindowInterfaceV0  gNativeWindowI;
 
