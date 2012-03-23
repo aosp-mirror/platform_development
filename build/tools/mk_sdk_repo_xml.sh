@@ -12,6 +12,10 @@ OSES="linux macosx windows any linux-x86 darwin"
 TMP_DIR=$(mktemp -d -t sdkrepo.tmp.XXXXXXXX)
 trap "rm -rf $TMP_DIR" EXIT
 
+function debug() {
+  echo "DEBUG: " $@ > /dev/stderr
+}
+
 function error() {
   echo "*** ERROR: " $@
   usage
@@ -91,7 +95,7 @@ ATTRS=(
   # Name read from            | XML element written    | Min-XSD version
   # source.properties         | to repository.xml      | where XML can be used
   # --------------------------+------------------------+----------------------
-  # for repository packages
+  # from source.properties for repository.xml packages
   Pkg.Revision                  revision                 1
   Pkg.Desc                      description              1
   Platform.Version              version                  1
@@ -100,16 +104,29 @@ ATTRS=(
   Platform.IncludedAbi          included-abi             5
   Platform.MinToolsRev          min-tools-rev            1
   Platform.MinPlatformToolsRev  min-platform-tools-rev   3
-  Extra.Vendor                  vendor                   1
-  Extra.Path                    path                     1
-  Extra.OldPaths                old-paths                3
-  Extra.MinApiLevel             min-api-level            2
   Sample.MinApiLevel            min-api-level            2
   SystemImage.Abi               abi                      5
   Layoutlib.Api                 layoutlib/api            4
   Layoutlib.Revision            layoutlib/revision       4
-  # for addon packages
+  # from source.properties for addon.xml packages
+  # (note that vendor is mapped to different XML elements based on the XSD version)
+  Extra.VendorDisplay           vendor-display           4
+  Extra.VendorId                vendor-id                4
+  Extra.Vendor                  vendor-id                4
+  Extra.Vendor                  vendor                   1
+  Extra.NameDisplay             name-display             4
+  Extra.Path                    path                     1
+  Extra.OldPaths                old-paths                3
+  Extra.MinApiLevel             min-api-level            2
+  # from addon manifest.ini for addon.xml packages
+  # (note that vendor/name are mapped to different XML elements based on the XSD version)
+  vendor-id                     vendor-id                4
+  vendor-display                vendor-display           4
+  vendor                        vendor-display           4
   vendor                        vendor                   1
+  name-id                       name-id                  4
+  name-display                  name-display             4
+  name                          name-display             4
   name                          name                     1
   description                   description              1
   api                           api-level                1
