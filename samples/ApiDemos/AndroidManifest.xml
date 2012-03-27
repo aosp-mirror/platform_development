@@ -2204,7 +2204,29 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".view.OverscanActivity" android:label="Views/Full Screen Modes">
+        <activity android:name=".view.OverscanActivity"
+                android:label="Views/System UI Visibility/System UI Modes"
+                android:uiOptions="splitActionBarWhenNarrow">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".view.ContentBrowserActivity"
+                android:label="Views/System UI Visibility/Content Browser"
+                android:theme="@android:style/Theme.Holo.Light"
+                android:uiOptions="splitActionBarWhenNarrow">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".view.VideoPlayerActivity"
+                android:label="Views/System UI Visibility/Video Player"
+                android:theme="@android:style/Theme.Holo.Light"
+                android:uiOptions="splitActionBarWhenNarrow">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />

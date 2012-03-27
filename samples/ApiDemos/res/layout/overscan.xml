@@ -33,47 +33,119 @@
         android:layout_gravity="bottom|center"
         android:background="#60000000"
         android:padding="8dp"
-        android:orientation="horizontal"
+        android:orientation="vertical"
         >
         <LinearLayout
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical"
+            android:orientation="horizontal"
+            android:baselineAligned="true"
             >
             <TextView
-                android:id="@+id/text1"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_weight="1"
                 android:textColor="#FFFFFFFF"
                 android:textSize="16dp"
                 android:textStyle="bold"
                 android:gravity="left"
+                android:text="Mode:"
                 />
-            <TextView
-                android:id="@+id/text2"
+            <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:baselineAlignedChildIndex="0"
+                >
+                <CheckBox
+                    android:id="@+id/modeLowProfile"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="#FFFFFFFF"
+                    android:textSize="16dp"
+                    android:textStyle="bold"
+                    android:text="LOW_PROFILE"
+                    />
+                <CheckBox
+                    android:id="@+id/modeFullscreen"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="#FFFFFFFF"
+                    android:textSize="16dp"
+                    android:textStyle="bold"
+                    android:text="FULLSCREEN"
+                    />
+                <CheckBox
+                    android:id="@+id/modeHideNavigation"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="#FFFFFFFF"
+                    android:textSize="16dp"
+                    android:textStyle="bold"
+                    android:text="HIDE_NAVIGATION"
+                    />
+            </LinearLayout>
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:orientation="horizontal"
+            android:baselineAligned="true"
+            >
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
                 android:textColor="#FFFFFFFF"
-                android:textSize="11dp"
+                android:textSize="16dp"
                 android:textStyle="bold"
                 android:gravity="left"
+                android:text="Layout:"
                 />
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:baselineAlignedChildIndex="0"
+                >
+                <CheckBox
+                    android:id="@+id/layoutStable"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="#FFFFFFFF"
+                    android:textSize="16dp"
+                    android:textStyle="bold"
+                    android:text="STABLE"
+                    />
+                <CheckBox
+                    android:id="@+id/layoutFullscreen"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="#FFFFFFFF"
+                    android:textSize="16dp"
+                    android:textStyle="bold"
+                    android:text="FULLSCREEN"
+                    />
+                <CheckBox
+                    android:id="@+id/layoutHideNavigation"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="#FFFFFFFF"
+                    android:textSize="16dp"
+                    android:textStyle="bold"
+                    android:text="HIDE_NAVIGATION"
+                    />
+            </LinearLayout>
         </LinearLayout>
         <TextView
-            android:id="@+id/switchy"
-            android:background="#C0000000"
-            android:layout_width="wrap_content"
+            android:id="@+id/metricsText"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="bottom"
-            android:layout_marginTop="4dp"
-            android:padding="10dp"
             android:textColor="#FFFFFFFF"
             android:textSize="11dp"
             android:textStyle="bold"
-            android:clickable="true"
-            android:onClick="clicked"
-            android:text="Switch"
+            android:gravity="center"
             />
     </LinearLayout>
 </FrameLayout>

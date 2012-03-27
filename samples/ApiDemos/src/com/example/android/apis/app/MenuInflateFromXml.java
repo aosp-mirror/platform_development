@@ -23,6 +23,8 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
@@ -86,6 +88,15 @@ public class MenuInflateFromXml extends Activity {
         // so it will automatically save its instance state
         mSpinner.setId(R.id.spinner);
         mSpinner.setAdapter(adapter);
+        mSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                invalidateOptionsMenu();
+            }
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+            }
+        });
         
         // Add the spinner
         layout.addView(mSpinner,
@@ -118,10 +129,6 @@ public class MenuInflateFromXml extends Activity {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(sMenuExampleResources[mSpinner.getSelectedItemPosition()], menu);
         
-        // Disable the spinner since we've already created the menu and the user
-        // can no longer pick a different menu XML.
-        mSpinner.setEnabled(false);
-        
         // Change instructions
         mInstructionsText.setText(getResources().getString(
                 R.string.menu_from_xml_instructions_go_back));
@@ -136,6 +143,7 @@ public class MenuInflateFromXml extends Activity {
             //                   the XML
             case R.id.jump:
                 Toast.makeText(this, "Jump up in the air!", Toast.LENGTH_SHORT).show();
+                invalidateOptionsMenu();
                 return true;
 
             case R.id.dive:
