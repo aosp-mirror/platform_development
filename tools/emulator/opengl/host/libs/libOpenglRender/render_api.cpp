@@ -76,7 +76,8 @@ bool initLibrary(void)
     return true;
 }
 
-bool initOpenGLRenderer(int width, int height, int portNum)
+bool initOpenGLRenderer(int width, int height, int portNum,
+        OnPostFn onPost, void* onPostContext)
 {
 
     //
@@ -93,7 +94,7 @@ bool initOpenGLRenderer(int width, int height, int portNum)
     // initialize the renderer and listen to connections
     // on a thread in the current process.
     //
-    bool inited = FrameBuffer::initialize(width, height);
+    bool inited = FrameBuffer::initialize(width, height, onPost, onPostContext);
     if (!inited) {
         return false;
     }
@@ -106,6 +107,17 @@ bool initOpenGLRenderer(int width, int height, int portNum)
     s_renderThread->start();
 
 #else
+    if (onPost) {
+        // onPost callback not supported with separate renderer process.
+        //
+        // If we ever revive separate process support, we could make the choice
+        // between thread and process at runtime instead of compile time, and
+        // choose the thread path if an onPost callback is requested. Or, the
+        // callback could be supported with a separate process using shmem or
+        // other IPC mechanism.
+        return false;
+    }
+
     //
     // Launch emulator_renderer
     //
