@@ -33,6 +33,7 @@
 #include <string.h>		/* For memset() */
 #include <sys/types.h>
 #include <asm/signal.h>
+#include <asm/sigcontext.h>
 
 #define __ARCH_SI_UID_T __kernel_uid32_t
 #include <asm/siginfo.h>
