@@ -28,6 +28,7 @@
 #ifndef _WCHAR_H_
 #define _WCHAR_H_
 
+#include <limits.h>
 #include <sys/cdefs.h>
 #include <stdio.h>
 
