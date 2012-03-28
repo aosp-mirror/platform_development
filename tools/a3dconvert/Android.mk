@@ -29,16 +29,9 @@ LOCAL_SRC_FILES := \
     ColladaGeometry.cpp \
     ColladaLoader.cpp
 
-# Needed to maintain libRS dependencies
-intermediates := $(call intermediates-dir-for,STATIC_LIBRARIES,libRS,HOST,)
-librs_generated_headers := \
-    $(intermediates)/rsgApiStructs.h \
-    $(intermediates)/rsgApiFuncDecl.h
-LOCAL_GENERATED_SOURCES := $(librs_generated_headers)
-
 LOCAL_C_INCLUDES += external/collada/include
 LOCAL_C_INCLUDES += external/collada/include/1.4
-LOCAL_C_INCLUDES += frameworks/base/libs/rs
+LOCAL_C_INCLUDES += frameworks/rs
 LOCAL_C_INCLUDES += $(intermediates)
 
 LOCAL_LDLIBS := -ldl -lpthread
