@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     Copyright (C) 2012 The Android Open Source Project
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+          http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+-->
+<resources>
+
+    <string name="app_name">KeyChainDemo</string>
+    <string name="cert_label">Certificate</string>
+    <string name="private_key_label">Private Key</string>
+    <string name="keychain_label">Key Chain Installation</string>
+    <string name="keychain_install">Install</string>
+    <string name="keychain_installed">Installed</string>
+    <string name="server_label">Simple SSL Web Server</string>
+    <string name="server_start">Start</string>
+    <string name="server_stop">Stop</string>
+    <string name="test_ssl">Test</string>
+    <string name="ticker_text">Starting KeyChainDemo SSL Server</string>
+    <string name="notification_title">KeyChainDemo SSL Server</string>
+    <string name="notification_message">Click to stop the server</string>
+
+</resources>
