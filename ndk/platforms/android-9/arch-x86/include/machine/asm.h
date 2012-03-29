@@ -103,6 +103,12 @@
 #define _ENTRY(x) \
 	.text; _ALIGN_TEXT; .globl x; .type x,@function; x:
 
+#define _ASM_SIZE(x)    .size x, .-x;
+
+#define _END(x) \
+	.fnend; \
+	_ASM_SIZE(x)
+
 #ifdef GPROF
 # define _PROF_PROLOGUE	\
 	pushl %ebp; movl %esp,%ebp; call PIC_PLT(mcount); popl %ebp
@@ -112,7 +118,11 @@
 
 #define	ENTRY(y)	_ENTRY(_C_LABEL(y)); _PROF_PROLOGUE
 #define	NENTRY(y)	_ENTRY(_C_LABEL(y))
+#define	END(y)		_END(_C_LABEL(y))
 #define	ASENTRY(y)	_ENTRY(_ASM_LABEL(y)); _PROF_PROLOGUE
+
+#define ENTRY_PRIVATE(y)  ENTRY(y); .hidden _C_LABEL(y)
+
 
 #define	ALTENTRY(name)	.globl _C_LABEL(name); _C_LABEL(name):
 
