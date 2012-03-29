@@ -22,7 +22,8 @@
 
 <spell-checker xmlns:android="http://schemas.android.com/apk/res/android"
         android:label="@string/spellchecker_name"
-        android:settingsActivity="com.example.android.samplespellcheckerservice.SpellCheckerSettingsActivity">
+        android:settingsActivity="com.example.android.samplespellcheckerservice.SpellCheckerSettingsActivity"
+        android:supportsSentenceSpellCheck="true">
     <subtype
             android:label="@string/subtype_generic"
             android:subtypeLocale="en"
