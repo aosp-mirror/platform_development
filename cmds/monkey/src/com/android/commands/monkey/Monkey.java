@@ -34,6 +34,7 @@ import android.os.SystemClock;
 import android.os.SystemProperties;
 import android.os.UserId;
 import android.view.IWindowManager;
+import android.view.Surface;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -203,6 +204,8 @@ public class Monkey {
     long mDroppedTrackballEvents = 0;
 
     long mDroppedFlipEvents = 0;
+
+    long mDroppedRotationEvents = 0;
 
     /** The delay between user actions. This is for the scripted monkey. **/
     long mProfileWaitTime = 5000;
@@ -608,7 +611,15 @@ public class Monkey {
         }
 
         mNetworkMonitor.start();
-        int crashedAtCycle = runMonkeyCycles();
+        int crashedAtCycle = 0;
+        try {
+            crashedAtCycle = runMonkeyCycles();
+        } finally {
+            // Release the rotation lock if it's still held and restore the
+            // original orientation.
+            new MonkeyRotationEvent(Surface.ROTATION_0, false).injectEvent(
+                mWm, mAm, mVerbose);
+        }
         mNetworkMonitor.stop();
 
         synchronized (this) {
@@ -662,7 +673,9 @@ public class Monkey {
             System.out.print(" trackballs=");
             System.out.print(mDroppedTrackballEvents);
             System.out.print(" flips=");
-            System.out.println(mDroppedFlipEvents);
+            System.out.print(mDroppedFlipEvents);
+            System.out.print(" rotations=");
+            System.out.println(mDroppedRotationEvents);
         }
 
         // report network stats
@@ -726,6 +739,9 @@ public class Monkey {
                 } else if (opt.equals("--pct-trackball")) {
                     int i = MonkeySourceRandom.FACTOR_TRACKBALL;
                     mFactors[i] = -nextOptionLong("trackball events percentage");
+                } else if (opt.equals("--pct-rotation")) {
+                    int i = MonkeySourceRandom.FACTOR_ROTATION;
+                    mFactors[i] = -nextOptionLong("screen rotation events percentage");
                 } else if (opt.equals("--pct-syskeys")) {
                     int i = MonkeySourceRandom.FACTOR_SYSOPS;
                     mFactors[i] = -nextOptionLong("system (key) operations percentage");
@@ -1082,6 +1098,8 @@ public class Monkey {
                         mDroppedPointerEvents++;
                     } else if (ev instanceof MonkeyFlipEvent) {
                         mDroppedFlipEvents++;
+                    } else if (ev instanceof MonkeyRotationEvent) {
+                        mDroppedRotationEvents++;
                     }
                 } else if (injectCode == MonkeyEvent.INJECT_ERROR_REMOTE_EXCEPTION) {
                     systemCrashed = true;

@@ -20,6 +20,7 @@ import android.content.ComponentName;
 import android.os.SystemClock;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
+import android.view.Surface;
 
 import java.io.BufferedReader;
 import java.io.DataInputStream;
@@ -84,6 +85,8 @@ public class MonkeySourceScript implements MonkeyEventSource {
     private static final String EVENT_KEYWORD_POINTER = "DispatchPointer";
 
     private static final String EVENT_KEYWORD_TRACKBALL = "DispatchTrackball";
+
+    private static final String EVENT_KEYWORD_ROTATION = "RotateScreen";
 
     private static final String EVENT_KEYWORD_KEY = "DispatchKey";
 
@@ -294,6 +297,23 @@ public class MonkeySourceScript implements MonkeyEventSource {
                         .setEdgeFlags(edgeFlags)
                         .addPointer(0, x, y, pressure, size);
                 mQ.addLast(e);
+            } catch (NumberFormatException e) {
+            }
+            return;
+        }
+
+        // Handle screen rotation events
+        if ((s.indexOf(EVENT_KEYWORD_ROTATION) >= 0) && args.length == 2) {
+            try {
+                int rotationDegree = Integer.parseInt(args[0]);
+                int persist = Integer.parseInt(args[1]);
+                if ((rotationDegree == Surface.ROTATION_0) ||
+                    (rotationDegree == Surface.ROTATION_90) ||
+                    (rotationDegree == Surface.ROTATION_180) ||
+                    (rotationDegree == Surface.ROTATION_270)) {
+                    mQ.addLast(new MonkeyRotationEvent(rotationDegree,
+                                                       persist != 0));
+                }
             } catch (NumberFormatException e) {
             }
             return;

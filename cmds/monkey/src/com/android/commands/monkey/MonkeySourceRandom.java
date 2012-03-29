@@ -23,6 +23,7 @@ import android.view.Display;
 import android.view.KeyCharacterMap;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
+import android.view.Surface;
 import android.view.WindowManagerImpl;
 
 import java.util.ArrayList;
@@ -63,18 +64,26 @@ public class MonkeySourceRandom implements MonkeyEventSource {
             PHYSICAL_KEY_EXISTS[SYS_KEYS[i]] = KeyCharacterMap.deviceHasKey(SYS_KEYS[i]);
         }
     }
+    /** Possible screen rotation degrees **/
+    private static final int[] SCREEN_ROTATION_DEGREES = {
+      Surface.ROTATION_0,
+      Surface.ROTATION_90,
+      Surface.ROTATION_180,
+      Surface.ROTATION_270,
+    };
 
     public static final int FACTOR_TOUCH        = 0;
     public static final int FACTOR_MOTION       = 1;
     public static final int FACTOR_PINCHZOOM    = 2;
     public static final int FACTOR_TRACKBALL    = 3;
-    public static final int FACTOR_NAV          = 4;
-    public static final int FACTOR_MAJORNAV     = 5;
-    public static final int FACTOR_SYSOPS       = 6;
-    public static final int FACTOR_APPSWITCH    = 7;
-    public static final int FACTOR_FLIP         = 8;
-    public static final int FACTOR_ANYTHING     = 9;
-    public static final int FACTORZ_COUNT       = 10;    // should be last+1
+    public static final int FACTOR_ROTATION     = 4;
+    public static final int FACTOR_NAV          = 5;
+    public static final int FACTOR_MAJORNAV     = 6;
+    public static final int FACTOR_SYSOPS       = 7;
+    public static final int FACTOR_APPSWITCH    = 8;
+    public static final int FACTOR_FLIP         = 9;
+    public static final int FACTOR_ANYTHING     = 10;
+    public static final int FACTORZ_COUNT       = 11;    // should be last+1
 
     private static final int GESTURE_TAP = 0;
     private static final int GESTURE_DRAG = 1;
@@ -116,6 +125,8 @@ public class MonkeySourceRandom implements MonkeyEventSource {
         mFactors[FACTOR_TOUCH] = 15.0f;
         mFactors[FACTOR_MOTION] = 10.0f;
         mFactors[FACTOR_TRACKBALL] = 15.0f;
+        // Adjust the values if we want to enable rotation by default.
+        mFactors[FACTOR_ROTATION] = 0.0f;
         mFactors[FACTOR_NAV] = 25.0f;
         mFactors[FACTOR_MAJORNAV] = 15.0f;
         mFactors[FACTOR_SYSOPS] = 2.0f;
@@ -370,6 +381,18 @@ public class MonkeySourceRandom implements MonkeyEventSource {
     }
 
     /**
+     * Generates a random screen rotation event.
+     *
+     * @param random Random number source for rotation degree.
+     */
+    private void generateRotationEvent(Random random) {
+        mQ.addLast(new MonkeyRotationEvent(
+                SCREEN_ROTATION_DEGREES[random.nextInt(
+                        SCREEN_ROTATION_DEGREES.length)],
+                random.nextBoolean()));
+    }
+
+    /**
      * generate a random event based on mFactor
      */
     private void generateEvents() {
@@ -387,6 +410,9 @@ public class MonkeySourceRandom implements MonkeyEventSource {
             return;
         } else if (cls < mFactors[FACTOR_TRACKBALL]) {
             generateTrackballEvent(mRandom);
+            return;
+        } else if (cls < mFactors[FACTOR_ROTATION]) {
+            generateRotationEvent(mRandom);
             return;
         }
 
