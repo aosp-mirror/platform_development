@@ -35,9 +35,10 @@ LOCAL_SHARED_LIBRARIES += \
 	libandroid_runtime \
 
 LOCAL_C_INCLUDES += external/jpeg \
-					external/skia/include/core/ \
-					frameworks/native/include/media/hardware \
-					frameworks/base/core/jni/android/graphics
+	external/skia/include/core/ \
+	frameworks/native/include/media/hardware \
+	frameworks/base/core/jni/android/graphics \
+	$(call include-path-for, camera)
 
 LOCAL_SRC_FILES := \
 	EmulatedCameraHal.cpp \
@@ -53,7 +54,10 @@ LOCAL_SRC_FILES := \
 	PreviewWindow.cpp \
 	CallbackNotifier.cpp \
 	QemuClient.cpp \
-	JpegCompressor.cpp
+	JpegCompressor.cpp \
+    EmulatedCamera2.cpp \
+	EmulatedFakeCamera2.cpp \
+	EmulatedQemuCamera2.cpp
 
 ifeq ($(TARGET_PRODUCT),vbox_x86)
 LOCAL_MODULE := camera.vbox_x86
