@@ -126,6 +126,11 @@ public class MonkeySourceScript implements MonkeyEventSource {
 
     private static final String EVENT_KEYWORD_END_FRAMERATE_CAPTURE = "EndCaptureFramerate";
 
+    private static final String EVENT_KEYWORD_START_APP_FRAMERATE_CAPTURE =
+            "StartCaptureAppFramerate";
+
+    private static final String EVENT_KEYWORD_END_APP_FRAMERATE_CAPTURE = "EndCaptureAppFramerate";
+
     // a line at the end of the header
     private static final String STARTING_DATA_LINE = "start data >>";
 
@@ -638,6 +643,20 @@ public class MonkeySourceScript implements MonkeyEventSource {
             return;
         }
 
+        if (s.indexOf(EVENT_KEYWORD_START_APP_FRAMERATE_CAPTURE) >= 0 && args.length == 1) {
+            String app = args[0];
+            MonkeyGetAppFrameRateEvent e = new MonkeyGetAppFrameRateEvent("start", app);
+            mQ.addLast(e);
+            return;
+        }
+
+        if (s.indexOf(EVENT_KEYWORD_END_APP_FRAMERATE_CAPTURE) >= 0 && args.length == 2) {
+            String app = args[0];
+            String label = args[1];
+            MonkeyGetAppFrameRateEvent e = new MonkeyGetAppFrameRateEvent("end", app, label);
+            mQ.addLast(e);
+            return;
+        }
 
 
     }
