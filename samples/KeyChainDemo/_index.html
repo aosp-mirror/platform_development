@@ -1,0 +1,50 @@
+<p>This is a demo application highlighting how to use the KeyChain APIs introduced in API Level 14.</p>
+
+<p>The source code for this demo app shows how to install a PKCS12 key chain stored in the assets folder,
+ grant permission to the app to use the installed key chain and finally display the certificate and
+ private key info.  The app also has a simple implementation of a web server listening to requests
+ at an SSL socket using the same certificate in the key chain.
+</p>
+
+<p>The application includes the following key classes:</p>
+<ul>
+  <li><a href="src/com/example/android/keychain/KeyChainDemoActivity.html"><code>KeyChainDemoActivity</code></a>
+    &mdash; the main <code>Activity</code> that is used to install the key chain and start/stop
+    the web server.  </li>
+  <li><a href="src/com/example/android/keychain/SecureWebServer.html"><code>SecureWebServer</code></a>
+    &mdash; a single thread web server listening at port 8080 for <code>https://localhost:8080</code> request</li>
+  <li><a href="src/com/example/android/keychain/SecureWebServerService.html"><code>SecureWebServerService</code></a>
+    &mdash; a <code>Service</code> that runs the web server in the foreground.</li>
+</ul>
+
+<p>If you are developing an application that uses the KeyChain APIs,
+ remember that the feature is supported only on Android 4.0 (API level 14) and
+ higher versions of the platform. To ensure that your application can only be
+ installed on devices that are running Android 4.0, remember to add the
+ following to the application's manifest:</p>
+<ul>
+  <li><code>&lt;uses-sdk android:minSdkVersion="14" /&gt;</code>, which
+    indicates to the Android platform that your application requires
+    Android 4.0 or higher. For more information, see <a
+    href="../../../guide/appendix/api-levels.html">API Levels</a> and the
+    documentation for the <a
+    href="../../../guide/topics/manifest/uses-sdk-element.html"><code>&lt;uses-sdk&gt;</code></a>
+    element.</li>
+</ul>
+
+<p>Note: Due to browser cache, you need to restart the browser completely before it can recognize
+ any keystore updates.  The easiest way to do this is to dismiss the app in the Recent Apps list.
+</p>
+
+<p>
+  For more information about using the KeyChain API, see the
+  <a href="../../../reference/android/security/KeyChain.html">
+  <code>android.security.KeyChain</code></a>
+  documentation.
+</p>
+
+<img alt="" src="../images/KeyChainDemo1.png" />
+<img alt="" src="../images/KeyChainDemo2.png" />
+<img alt="" src="../images/KeyChainDemo3.png" />
+<img alt="" src="../images/KeyChainDemo4.png" />
+
