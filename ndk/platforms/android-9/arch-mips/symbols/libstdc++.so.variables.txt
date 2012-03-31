@@ -1,0 +1,2 @@
+_ZSt7nothrow
+_ZTV9type_info
