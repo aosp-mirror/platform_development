@@ -170,6 +170,7 @@ development/samples/CubeLiveWallpaper          samples/${PLATFORM_NAME}/CubeLive
 development/samples/Home                       samples/${PLATFORM_NAME}/Home
 development/samples/HoneycombGallery           samples/${PLATFORM_NAME}/HoneycombGallery
 development/samples/JetBoy                     samples/${PLATFORM_NAME}/JetBoy
+development/samples/KeyChainDemo               samples/${PLATFORM_NAME}/KeyChainDemo
 development/samples/LunarLander                samples/${PLATFORM_NAME}/LunarLander
 development/samples/MultiResolution            samples/${PLATFORM_NAME}/MultiResolution
 development/samples/NotePad                    samples/${PLATFORM_NAME}/NotePad
