@@ -34,6 +34,8 @@
 #ifndef _NET_IF_ETHER_H_
 #define _NET_IF_ETHER_H_
 
+#include <sys/types.h>
+
 #ifdef _KERNEL
 #ifdef _KERNEL_OPT
 #include "opt_mbuftrace.h"
