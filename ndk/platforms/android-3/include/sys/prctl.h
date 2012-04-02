@@ -32,8 +32,13 @@
 
 __BEGIN_DECLS
 
-extern int prctl(int option, unsigned long arg2, unsigned long arg3 , unsigned
-               long arg4, unsigned long arg5);
+/* IMPORTANT NOTE: This function is declared as taking a variable number
+ *                 of arguments to match the GLibc definition. However
+ *                 its declaration inside SYSCALLS.TXT *must* make it
+ *                 take 6 arguments to ensure consistency with the kernel
+ *                 implementation.
+ */
+extern int prctl(int option, ...);
 
 __END_DECLS
 
