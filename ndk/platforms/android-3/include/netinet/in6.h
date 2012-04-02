@@ -103,6 +103,7 @@
 #define IPV6_LEAVE_GROUP IPV6_DROP_MEMBERSHIP
 
 #define IN6ADDR_ANY_INIT {{{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}}}
+#define IN6ADDR_LOOPBACK_INIT {{{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1}}}
 
 #define ipv6mr_interface ipv6mr_ifindex
 
