@@ -60,6 +60,10 @@
 #define IN6_IS_ADDR_SITELOCAL(a)	\
 	(((a)->s6_addr[0] == 0xfe) && (((a)->s6_addr[1] & 0xc0) == 0xc0))
 
+/* RFC 4193. */
+#define IN6_IS_ADDR_ULA(a)	\
+	(((a)->s6_addr[0] & 0xfe) == 0xfc)
+
 #define IN6_IS_ADDR_MULTICAST(a)	\
 	(((__const uint8_t *) (a))[0] == 0xff)
 
@@ -99,6 +103,7 @@
 #define IPV6_LEAVE_GROUP IPV6_DROP_MEMBERSHIP
 
 #define IN6ADDR_ANY_INIT {{{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}}}
+#define IN6ADDR_LOOPBACK_INIT {{{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1}}}
 
 #define ipv6mr_interface ipv6mr_ifindex
 
