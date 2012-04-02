@@ -7,15 +7,20 @@
  ***   structures, and macros generated from the original header, and thus,
  ***   contains no copyrightable information.
  ***
+ ***   To edit the content of this header, modify the corresponding
+ ***   source file (e.g. under external/kernel-headers/original/) then
+ ***   run bionic/libc/kernel/tools/update_all.py
+ ***
+ ***   Any manual change here will be lost the next time this script will
+ ***   be run. You've been warned!
+ ***
  ****************************************************************************
  ****************************************************************************/
 #ifndef _ASM_X86_SIGINFO_H
 #define _ASM_X86_SIGINFO_H
-
 #ifdef __x86_64__
 #define __ARCH_SI_PREAMBLE_SIZE (4 * sizeof(int))
+/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
 #endif
-
 #include <asm-generic/siginfo.h>
-
 #endif
