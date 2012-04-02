@@ -47,7 +47,7 @@ extern void*        dlopen(const char*  filename, int flag);
 extern int          dlclose(void*  handle);
 extern const char*  dlerror(void);
 extern void*        dlsym(void*  handle, const char*  symbol);
-extern int          dladdr(void* addr, Dl_info *info);
+extern int          dladdr(const void* addr, Dl_info *info);
 
 enum {
   RTLD_NOW  = 0,
