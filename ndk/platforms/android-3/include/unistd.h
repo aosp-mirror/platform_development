@@ -70,8 +70,9 @@ extern int execlp(const char *, const char *, ...);
 extern int execle(const char *, const char *, ...);
 extern int capget(cap_user_header_t hdrp, cap_user_data_t datap);
 extern int capset(cap_user_header_t hdrp, const cap_user_data_t datap);
-extern int prctl(int  option,  unsigned long arg2, unsigned long arg3,
-                 unsigned long arg4, unsigned long arg5);
+
+/* IMPORTANT: See comment under <sys/prctl.h> about this declaration */
+extern int prctl(int  option, ...);
 
 extern int nice(int);
 
@@ -121,7 +122,7 @@ extern int sync(void);
 
 extern int close(int);
 extern off_t lseek(int, off_t, int);
-extern loff_t lseek64(int, loff_t, int);
+extern off64_t lseek64(int, off64_t, int);
 
 extern ssize_t read(int, void *, size_t);
 extern ssize_t write(int, const void *, size_t);
