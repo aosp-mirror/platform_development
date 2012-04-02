@@ -43,8 +43,9 @@
 #define RLIMIT_MSGQUEUE 12  
 #define RLIMIT_NICE 13  
 #define RLIMIT_RTPRIO 14  
+#define RLIMIT_RTTIME 15  
 
-#define RLIM_NLIMITS 15
+#define RLIM_NLIMITS 16
 
 #ifndef RLIM_INFINITY
 #define RLIM_INFINITY (~0UL)
