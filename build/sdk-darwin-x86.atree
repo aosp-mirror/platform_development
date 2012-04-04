@@ -15,26 +15,8 @@
 #
 
 ##############################################################################
-# Platform Tools Component
+# Docs Component
 ##############################################################################
-
-
-
-##############################################################################
-# Tools Component
-# Legacy: this should be moved to sdk/build/tools.atree
-##############################################################################
-
-# swt
-prebuilt/darwin-x86/swt/swt.jar tools/lib/x86/swt.jar
-prebuilt/darwin-x86_64/swt/swt.jar tools/lib/x86_64/swt.jar
-
-
-# JetCreator (only available on mac/windows)
-external/sonivox/jet_tools/JetCreator tools/Jet/JetCreator
-prebuilt/darwin-x86/jetcreator/libEASLIb.dylib tools/Jet/JetCreator/libEASLIb.dylib
-external/sonivox/jet_tools/JetCreator_content tools/Jet/demo_content
-external/sonivox/jet_tools/logic_templates tools/Jet/logic_templates
 
 external/sonivox/docs/JET_Authoring_Guidelines.html docs/JetCreator/JET_Authoring_Guidelines.html
 external/sonivox/docs/JET_Authoring_Guidelines_files docs/JetCreator/JET_Authoring_Guidelines_files
