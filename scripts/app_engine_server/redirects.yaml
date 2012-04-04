@@ -53,3 +53,8 @@ redirects:
   dst: https://plus.google.com/b/108967384991768947849/
   type: permanent
   comment: Redirect /+ and /+/ to Google+
+
+- src: /guide/publishing/licensing.html
+  dst: /guide/market/licensing/index.html
+  type: permanent
+  comment: Redirect Licensing docs to new location
