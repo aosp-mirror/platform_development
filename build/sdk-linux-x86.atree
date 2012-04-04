@@ -14,17 +14,4 @@
 # limitations under the License.
 #
 
-##############################################################################
-# Platform Tools Component
-##############################################################################
 
-
-
-##############################################################################
-# Tools Component
-# Legacy: this should be moved to sdk/build/tools.atree
-##############################################################################
-
-# swt
-prebuilt/linux-x86/swt/swt.jar tools/lib/x86/swt.jar
-prebuilt/linux-x86_64/swt/swt.jar tools/lib/x86_64/swt.jar
