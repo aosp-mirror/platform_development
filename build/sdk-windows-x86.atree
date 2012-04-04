@@ -48,13 +48,6 @@ bin/dexdump.exe                         strip platform-tools/dexdump.exe
 rm platform-tools/llvm-rs-cc
 bin/llvm-rs-cc.exe                      strip platform-tools/llvm-rs-cc.exe
 
-prebuilt/windows/swt/swt.jar                  tools/lib/x86/swt.jar
-prebuilt/windows-x86_64/swt/swt.jar           tools/lib/x86_64/swt.jar
-
-external/sonivox/jet_tools/JetCreator                 tools/Jet/JetCreator
-external/sonivox/jet_tools/JetCreator_content         tools/Jet/demo_content
-external/sonivox/jet_tools/logic_templates            tools/Jet/logic_templates
-prebuilt/windows/jetcreator/EASDLL.dll                tools/Jet/JetCreator/EASDLL.dll
 external/sonivox/docs/JET_Authoring_Guidelines.html   docs/JetCreator/JET_Authoring_Guidelines.html
 external/sonivox/docs/JET_Authoring_Guidelines_files  docs/JetCreator/JET_Authoring_Guidelines_files
 external/sonivox/docs/JET_Creator_User_Manual.html    docs/JetCreator/JET_Creator_User_Manual.html
