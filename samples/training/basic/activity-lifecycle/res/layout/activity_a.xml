@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright (C) 2012 The Android Open Source Project
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/dark_blue"
+    android:padding="8dip"
+    >
+
+    <TextView android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/activity_a"
+        android:gravity="center_horizontal"
+        android:textSize="@dimen/font_large"
+        android:textColor="@color/light_blue"
+        android:paddingBottom="16dip"
+        />
+
+    <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:orientation="vertical"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        >
+        <Button
+            android:id="@+id/btn_start_b"
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:text="@string/btn_start_b_label"
+            android:onClick="startActivityB"
+            />
+
+        <Button
+            android:id="@+id/btn_start_c"
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:text="@string/btn_start_c_label"
+            android:layout_toRightOf="@id/btn_start_b"
+            android:onClick="startActivityC"
+            />
+
+        <Button
+            android:id="@+id/btn_finish_a"
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:text="@string/btn_finish_a_label"
+            android:layout_toRightOf="@id/btn_start_c"
+            android:onClick="finishActivityA"
+            />
+
+        <Button
+            android:id="@+id/btn_start_dialog"
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:text="@string/btn_start_dialog_label"
+            android:layout_toRightOf="@id/btn_finish_a"
+            android:onClick="startDialog"
+            />
+
+    </RelativeLayout>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="@dimen/font_medium"
+        android:text="@string/lifecycle_method_list"
+        android:textColor="@color/light_blue"
+        />
+
+    <ScrollView
+         android:layout_width="match_parent"
+         android:layout_height="160dp">
+        <TextView
+            android:id="@+id/status_view_a"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@color/white"
+            android:textColor="@color/black"
+            android:padding="4dip"
+            android:typeface="monospace"
+            />
+    </ScrollView>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="@dimen/font_medium"
+        android:text="@string/activity_status"
+        android:textColor="@color/light_blue"
+        />
+
+    <TextView
+        android:id="@+id/status_view_all_a"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/white"
+        android:textColor="@color/black"
+        android:padding="4dip"
+        android:typeface="monospace"
+        />
+</LinearLayout>
+
