@@ -15,7 +15,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-      package="com.example.android"
+      package="com.example.android.lifecycle"
       android:versionCode="1"
       android:versionName="1.0">
 
@@ -23,7 +23,7 @@ limitations under the License.
     <application android:label="@string/app_name"
                  android:icon="@drawable/ic_launcher">
 
-        <activity android:name=".lifecycle.ActivityA"
+        <activity android:name=".ActivityA"
             android:launchMode="singleTask">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -31,11 +31,11 @@ limitations under the License.
             </intent-filter>
         </activity>
 
-        <activity android:name=".lifecycle.ActivityB" />
+        <activity android:name=".ActivityB" />
 
-        <activity android:name=".lifecycle.ActivityC" />
+        <activity android:name=".ActivityC" />
 
-        <activity android:name=".lifecycle.DialogActivity"
+        <activity android:name=".DialogActivity"
                   android:theme="@android:style/Theme.Dialog">
         </activity>
 
