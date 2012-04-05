@@ -2225,7 +2225,7 @@
 
         <activity android:name=".view.VideoPlayerActivity"
                 android:label="Views/System UI Visibility/Video Player"
-                android:theme="@android:style/Theme.Holo.Light"
+                android:theme="@android:style/Theme.Holo"
                 android:uiOptions="splitActionBarWhenNarrow">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
