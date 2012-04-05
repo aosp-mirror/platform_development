@@ -172,6 +172,7 @@ void PreviewWindow::onNextFrameAvailable(const void* frame,
     res = camera_dev->getCurrentPreviewFrame(img);
     if (res == NO_ERROR) {
         /* Show it. */
+        mPreviewWindow->set_timestamp(mPreviewWindow, timestamp);
         mPreviewWindow->enqueue_buffer(mPreviewWindow, buffer);
     } else {
         ALOGE("%s: Unable to obtain preview frame: %d", __FUNCTION__, res);
