@@ -25,6 +25,7 @@
 #include <cutils/properties.h>
 #include "EmulatedQemuCamera.h"
 #include "EmulatedFakeCamera.h"
+#include "EmulatedFakeCamera2.h"
 #include "EmulatedCameraFactory.h"
 
 extern camera_module_t HAL_MODULE_INFO_SYM;
@@ -66,13 +67,27 @@ EmulatedCameraFactory::EmulatedCameraFactory()
                      __FUNCTION__, mEmulatedCameraNum);
                 return;
             }
-            memset(mEmulatedCameras, 0, (mEmulatedCameraNum + 1) * sizeof(EmulatedCamera*));
+            memset(mEmulatedCameras, 0,
+                    (mEmulatedCameraNum + 1) * sizeof(EmulatedBaseCamera*));
         }
 
         /* Create, and initialize the fake camera */
-        mEmulatedCameras[camera_id] =
-            new EmulatedFakeCamera(camera_id, true, &HAL_MODULE_INFO_SYM.common);
+        switch (getBackCameraHalVersion()) {
+            case 1:
+                mEmulatedCameras[camera_id] =
+                        new EmulatedFakeCamera(camera_id, false, &HAL_MODULE_INFO_SYM.common);
+                break;
+            case 2:
+                mEmulatedCameras[camera_id] =
+                        new EmulatedFakeCamera2(camera_id, false, &HAL_MODULE_INFO_SYM.common);
+                break;
+            default:
+                ALOGE("%s: Unknown back camera hal version requested: %d", __FUNCTION__,
+                        getBackCameraHalVersion());
+        }
         if (mEmulatedCameras[camera_id] != NULL) {
+            ALOGV("%s: Back camera device version is %d", __FUNCTION__,
+                    getBackCameraHalVersion());
             if (mEmulatedCameras[camera_id]->Initialize() != NO_ERROR) {
                 delete mEmulatedCameras[camera_id];
                 mEmulatedCameras--;
@@ -98,13 +113,27 @@ EmulatedCameraFactory::EmulatedCameraFactory()
                      __FUNCTION__, mEmulatedCameraNum);
                 return;
             }
-            memset(mEmulatedCameras, 0, mEmulatedCameraNum * sizeof(EmulatedCamera*));
+            memset(mEmulatedCameras, 0,
+                    mEmulatedCameraNum * sizeof(EmulatedBaseCamera*));
         }
 
         /* Create, and initialize the fake camera */
-        mEmulatedCameras[camera_id] =
-            new EmulatedFakeCamera(camera_id, false, &HAL_MODULE_INFO_SYM.common);
+        switch (getFrontCameraHalVersion()) {
+            case 1:
+                mEmulatedCameras[camera_id] =
+                        new EmulatedFakeCamera(camera_id, false, &HAL_MODULE_INFO_SYM.common);
+                break;
+            case 2:
+                mEmulatedCameras[camera_id] =
+                        new EmulatedFakeCamera2(camera_id, false, &HAL_MODULE_INFO_SYM.common);
+                break;
+            default:
+                ALOGE("%s: Unknown front camera hal version requested: %d", __FUNCTION__,
+                        getFrontCameraHalVersion());
+        }
         if (mEmulatedCameras[camera_id] != NULL) {
+            ALOGV("%s: Front camera device version is %d", __FUNCTION__,
+                    getFrontCameraHalVersion());
             if (mEmulatedCameras[camera_id]->Initialize() != NO_ERROR) {
                 delete mEmulatedCameras[camera_id];
                 mEmulatedCameras--;
@@ -348,6 +377,23 @@ bool EmulatedCameraFactory::isBackFakeCameraEmulationOn()
     }
 }
 
+int EmulatedCameraFactory::getBackCameraHalVersion()
+{
+    /* Defined by 'qemu.sf.back_camera_hal_version' boot property: if the
+     * property doesn't exist, it is assumed to be 1. */
+    char prop[PROPERTY_VALUE_MAX];
+    if (property_get("qemu.sf.back_camera_hal", prop, NULL) > 0) {
+        char *prop_end = prop;
+        int val = strtol(prop, &prop_end, 10);
+        if (*prop_end == '\0') {
+            return val;
+        }
+        // Badly formatted property, should just be a number
+        ALOGE("qemu.sf.back_camera_hal is not a number: %s", prop);
+    }
+    return 1;
+}
+
 bool EmulatedCameraFactory::isFrontFakeCameraEmulationOn()
 {
     /* Defined by 'qemu.sf.fake_camera' boot property: if property exist, and
@@ -360,6 +406,23 @@ bool EmulatedCameraFactory::isFrontFakeCameraEmulationOn()
     } else {
         return false;
     }
+}
+
+int EmulatedCameraFactory::getFrontCameraHalVersion()
+{
+    /* Defined by 'qemu.sf.front_camera_hal_version' boot property: if the
+     * property doesn't exist, it is assumed to be 1. */
+    char prop[PROPERTY_VALUE_MAX];
+    if (property_get("qemu.sf.front_camera_hal", prop, NULL) > 0) {
+        char *prop_end = prop;
+        int val = strtol(prop, &prop_end, 10);
+        if (*prop_end == '\0') {
+            return val;
+        }
+        // Badly formatted property, should just be a number
+        ALOGE("qemu.sf.front_camera_hal is not a number: %s", prop);
+    }
+    return 1;
 }
 
 /********************************************************************************
