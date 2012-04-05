@@ -134,14 +134,8 @@ private:
     /* Checks if fake camera emulation is on for the camera facing back. */
     bool isBackFakeCameraEmulationOn();
 
-    /* Gets camera device version number to use for back camera emulation */
-    int getBackCameraHalVersion();
-
     /* Checks if fake camera emulation is on for the camera facing front. */
     bool isFrontFakeCameraEmulationOn();
-
-    /* Gets camera device version number to use for front camera emulation */
-    int getFrontCameraHalVersion();
 
     /****************************************************************************
      * Data members.
