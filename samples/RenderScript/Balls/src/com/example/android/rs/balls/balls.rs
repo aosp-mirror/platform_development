@@ -42,7 +42,7 @@ void initParts(int w, int h)
 
         float r = rsRand(100.f);
         if (r > 90.f) {
-            balls1[ct].size += pow(10.f, rsRand(0.f, 2.f)) * 0.07;
+            balls1[ct].size += pow(10.f, rsRand(0.f, 2.f)) * 0.07f;
         }
     }
 }

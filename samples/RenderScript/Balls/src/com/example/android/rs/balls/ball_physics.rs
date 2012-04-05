@@ -95,7 +95,7 @@ void root(const Ball_t *ballIn, Ball_t *ballOut, const BallControl_t *ctl, uint3
         float d = gMaxPos.x - ballOut->position.x;
         if (d < 0.f) {
             if (ballOut->delta.x > 0) {
-                ballOut->delta.x *= -0.7;
+                ballOut->delta.x *= -0.7f;
             }
             ballOut->position.x = gMaxPos.x;
         } else {
@@ -107,7 +107,7 @@ void root(const Ball_t *ballIn, Ball_t *ballOut, const BallControl_t *ctl, uint3
         float d = ballOut->position.x - gMinPos.x;
         if (d < 0.f) {
             if (ballOut->delta.x < 0) {
-                ballOut->delta.x *= -0.7;
+                ballOut->delta.x *= -0.7f;
             }
             ballOut->position.x = gMinPos.x + 1.f;
         } else {
@@ -119,7 +119,7 @@ void root(const Ball_t *ballIn, Ball_t *ballOut, const BallControl_t *ctl, uint3
         float d = gMaxPos.y - ballOut->position.y;
         if (d < 0.f) {
             if (ballOut->delta.y > 0) {
-                ballOut->delta.y *= -0.7;
+                ballOut->delta.y *= -0.7f;
             }
             ballOut->position.y = gMaxPos.y;
         } else {
@@ -131,7 +131,7 @@ void root(const Ball_t *ballIn, Ball_t *ballOut, const BallControl_t *ctl, uint3
         float d = ballOut->position.y - gMinPos.y;
         if (d < 0.f) {
             if (ballOut->delta.y < 0) {
-                ballOut->delta.y *= -0.7;
+                ballOut->delta.y *= -0.7f;
             }
             ballOut->position.y = gMinPos.y + 1.f;
         } else {
