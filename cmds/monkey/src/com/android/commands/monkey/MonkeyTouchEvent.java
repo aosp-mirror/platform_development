@@ -16,10 +16,7 @@
 
 package com.android.commands.monkey;
 
-import android.os.RemoteException;
-import android.view.IWindowManager;
 import android.view.InputDevice;
-import android.view.MotionEvent;
 
 
 /**
@@ -33,11 +30,5 @@ public class MonkeyTouchEvent extends MonkeyMotionEvent {
     @Override
     protected String getTypeLabel() {
         return "Touch";
-    }
-
-    @Override
-    protected boolean injectMotionEvent(IWindowManager iwm, MotionEvent me)
-            throws RemoteException {
-        return iwm.injectPointerEvent(me, false);
     }
 }

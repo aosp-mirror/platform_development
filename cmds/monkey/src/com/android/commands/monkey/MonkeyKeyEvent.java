@@ -17,8 +17,11 @@
 package com.android.commands.monkey;
 
 import android.app.IActivityManager;
+import android.hardware.input.InputManager;
 import android.os.RemoteException;
+import android.os.SystemClock;
 import android.view.IWindowManager;
+import android.view.InputDevice;
 import android.view.KeyEvent;
 /**
  * monkey key event
@@ -85,22 +88,6 @@ public class MonkeyKeyEvent extends MonkeyEvent {
         mEventTime = eventTime;
     }
 
-    /**
-     * @return the key event
-     */
-    private KeyEvent getEvent() {
-        if (keyEvent == null) {
-            if (mDeviceId < 0) {
-                keyEvent = new KeyEvent(mAction, mKeyCode);
-            } else {
-                // for scripts
-                keyEvent = new KeyEvent(mDownTime, mEventTime, mAction,
-                                        mKeyCode, mRepeatCount, mMetaState, mDeviceId, mScancode);
-            }
-        }
-        return keyEvent;
-    }
-
     @Override
     public boolean isThrottlable() {
         return (getAction() == KeyEvent.ACTION_UP);
@@ -126,15 +113,21 @@ public class MonkeyKeyEvent extends MonkeyEvent {
             }
         }
 
-        // inject key event
-        try {
-            if (!iwm.injectKeyEvent(getEvent(), false)) {
-                return MonkeyEvent.INJECT_FAIL;
-            }
-        } catch (RemoteException ex) {
-            return MonkeyEvent.INJECT_ERROR_REMOTE_EXCEPTION;
+        long eventTime = mEventTime;
+        if (eventTime == 0) {
+            eventTime = SystemClock.uptimeMillis();
         }
-
+        long downTime = mDownTime;
+        if (downTime == 0) {
+            downTime = eventTime;
+        }
+        KeyEvent newEvent = new KeyEvent(downTime, eventTime, mAction, mKeyCode,
+                mRepeatCount, mMetaState, mDeviceId, mScancode,
+                KeyEvent.FLAG_FROM_SYSTEM, InputDevice.SOURCE_KEYBOARD);
+        if (!InputManager.injectInputEvent(newEvent,
+                InputManager.INJECT_INPUT_EVENT_MODE_WAIT_FOR_RESULT)) {
+            return MonkeyEvent.INJECT_FAIL;
+        }
         return MonkeyEvent.INJECT_SUCCESS;
     }
 }
