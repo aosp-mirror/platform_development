@@ -124,9 +124,9 @@ See test_defs.xsd for more information.
     continuous="true"
     description="Framework variable speed audio tests" />
 
-<test-native name="libui"
-    build_path="frameworks/base/libs/ui/tests"
-    description="Framework libui unit tests." />
+<test-native name="libandroidfw"
+    build_path="frameworks/base/libs/androidfw/tests"
+    description="Framework libandroidfw unit tests." />
 
 <test-native name="libutils"
     build_path="frameworks/base/libs/utils/tests"
