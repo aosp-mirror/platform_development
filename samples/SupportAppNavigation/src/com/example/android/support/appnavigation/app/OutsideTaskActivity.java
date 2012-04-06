@@ -13,18 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.example.android.support.appnavigation.app;
 
-package com.example.android.appnavigation.app;
-
-import com.example.android.appnavigation.R;
+import com.example.android.support.appnavigation.R;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
 
-public class SimpleUpActivity extends Activity {
+public class OutsideTaskActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.simple_up);
+        setContentView(R.layout.outside_task);
+    }
+
+    public void onViewContent(View v) {
+        Intent intent = new Intent(Intent.ACTION_VIEW)
+                .setType("application/x-example")
+                .addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);
+        startActivity(intent);
     }
 }

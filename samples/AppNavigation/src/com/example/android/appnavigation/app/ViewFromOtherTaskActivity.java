@@ -21,8 +21,6 @@ import com.example.android.appnavigation.R;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v4.app.NavUtils;
-import android.view.MenuItem;
 import android.view.View;
 
 public class ViewFromOtherTaskActivity extends Activity {
@@ -30,17 +28,6 @@ public class ViewFromOtherTaskActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.view_from_other_task);
-
-        ActionBarCompat.setDisplayHomeAsUpEnabled(this, true);
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == android.R.id.home) {
-            NavUtils.navigateUpFromSameTask(this);
-            return true;
-        }
-        return false;
     }
 
     public void onLaunchOtherTask(View v) {

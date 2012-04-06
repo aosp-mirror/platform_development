@@ -17,7 +17,9 @@
 <manifest android:versionCode="1"
         android:versionName="1"
         xmlns:android="http://schemas.android.com/apk/res/android"
-        package="com.example.android.appnavigation">
+        package="com.example.android.support.appnavigation">
+
+    <uses-sdk android:minSdkVersion="8" android:targetSdkVersion="15" />
 
     <application android:label="@string/app_name">
         <activity android:name=".app.AppNavHomeActivity"
@@ -29,8 +31,7 @@
         </activity>
 
         <activity android:name=".app.SimpleUpActivity"
-                  android:label="@string/simple_up_label"
-                  android:parentActivityName=".app.AppNavHomeActivity">
+                  android:label="@string/simple_up_label">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -40,8 +41,7 @@
         </activity>
 
         <activity android:name=".app.PeerActivity"
-                  android:label="@string/peer_label"
-                  android:parentActivityName=".app.AppNavHomeActivity">
+                  android:label="@string/peer_label">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -51,8 +51,7 @@
         </activity>
 
         <activity android:name=".app.ViewFromOtherTaskActivity"
-                  android:label="@string/view_from_other_task_label"
-                  android:parentActivityName=".app.AppNavHomeActivity">
+                  android:label="@string/view_from_other_task_label">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -72,8 +71,7 @@
         </activity>
 
         <activity android:name=".app.ContentViewActivity"
-                  android:label="@string/content_view_label"
-                  android:parentActivityName=".app.ContentCategoryActivity">
+                  android:label="@string/content_view_label">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <action android:name="android.intent.action.VIEW" />
@@ -85,8 +83,7 @@
         </activity>
 
         <activity android:name=".app.ContentCategoryActivity"
-                  android:label="@string/content_category_label"
-                  android:parentActivityName=".app.AppNavHomeActivity">
+                  android:label="@string/content_category_label">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -96,8 +93,7 @@
         </activity>
 
         <activity android:name=".app.NotificationsActivity"
-                  android:label="@string/notifications_label"
-                  android:parentActivityName=".app.AppNavHomeActivity">
+                  android:label="@string/notifications_label">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />

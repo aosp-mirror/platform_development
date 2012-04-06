@@ -14,13 +14,18 @@
  * limitations under the License.
  */
 
-package com.example.android.appnavigation.app;
+package com.example.android.support.appnavigation.app;
 
-import com.example.android.appnavigation.R;
+import com.example.android.support.appnavigation.R;
 
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v4.app.NavUtils;
+import android.support.v4.app.ShareCompat;
+import android.support.v4.app.TaskStackBuilder;
+import android.text.TextUtils;
+import android.view.MenuItem;
 import android.widget.TextView;
 
 public class ContentViewActivity extends Activity {
@@ -31,6 +36,8 @@ public class ContentViewActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.content_view);
 
+        ActionBarCompat.setDisplayHomeAsUpEnabled(this, true);
+
         Intent intent = getIntent();
         if (Intent.ACTION_VIEW.equals(intent.getAction())) {
             TextView tv = (TextView) findViewById(R.id.status_text);
@@ -39,5 +46,22 @@ public class ContentViewActivity extends Activity {
             TextView tv = (TextView) findViewById(R.id.status_text);
             tv.setText(intent.getStringExtra(EXTRA_TEXT));
         }
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == android.R.id.home) {
+            Intent upIntent = NavUtils.getParentActivityIntent(this);
+            if (NavUtils.shouldUpRecreateTask(this, upIntent)) {
+                TaskStackBuilder.from(this)
+                        .addParentStack(this)
+                        .startActivities();
+                finish();
+            } else {
+                NavUtils.navigateUpTo(this, upIntent);
+            }
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 }

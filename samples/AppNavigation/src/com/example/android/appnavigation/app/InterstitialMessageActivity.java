@@ -19,9 +19,9 @@ package com.example.android.appnavigation.app;
 import com.example.android.appnavigation.R;
 
 import android.app.Activity;
+import android.app.TaskStackBuilder;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v4.app.TaskStackBuilder;
 import android.view.View;
 
 public class InterstitialMessageActivity extends Activity {

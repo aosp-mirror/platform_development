@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.example.android.appnavigation.app;
+package com.example.android.support.appnavigation.app;
 
 import android.app.Activity;
 import android.os.Build;

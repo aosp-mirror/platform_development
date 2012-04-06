@@ -14,13 +14,15 @@
  * limitations under the License.
  */
 
-package com.example.android.appnavigation.app;
+package com.example.android.support.appnavigation.app;
 
-import com.example.android.appnavigation.R;
+import com.example.android.support.appnavigation.R;
 
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v4.app.NavUtils;
+import android.view.MenuItem;
 import android.view.View;
 
 public class ContentCategoryActivity extends Activity {
@@ -28,6 +30,17 @@ public class ContentCategoryActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.content_category);
+
+        ActionBarCompat.setDisplayHomeAsUpEnabled(this, true);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == android.R.id.home) {
+            NavUtils.navigateUpFromSameTask(this);
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     public void onViewContent(View v) {

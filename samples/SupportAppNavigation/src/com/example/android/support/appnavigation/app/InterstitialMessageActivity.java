@@ -14,17 +14,29 @@
  * limitations under the License.
  */
 
-package com.example.android.appnavigation.app;
+package com.example.android.support.appnavigation.app;
 
-import com.example.android.appnavigation.R;
+import com.example.android.support.appnavigation.R;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
+import android.support.v4.app.TaskStackBuilder;
+import android.view.View;
 
-public class SimpleUpActivity extends Activity {
+public class InterstitialMessageActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.simple_up);
+        setContentView(R.layout.interstitial_message);
+    }
+
+    public void onViewContent(View v) {
+        TaskStackBuilder.from(this)
+                .addParentStack(ContentViewActivity.class)
+                .addNextIntent(new Intent(this, ContentViewActivity.class)
+                        .putExtra(ContentViewActivity.EXTRA_TEXT, "From Interstitial Notification"))
+                .startActivities();
+        finish();
     }
 }

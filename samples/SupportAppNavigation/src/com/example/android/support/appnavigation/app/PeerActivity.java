@@ -14,13 +14,16 @@
  * limitations under the License.
  */
 
-package com.example.android.appnavigation.app;
+package com.example.android.support.appnavigation.app;
 
-import com.example.android.appnavigation.R;
+import com.example.android.support.appnavigation.R;
 
+import android.app.ActionBar;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v4.app.NavUtils;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
 
@@ -35,9 +38,20 @@ public class PeerActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.peer);
 
+        ActionBarCompat.setDisplayHomeAsUpEnabled(this, true);
+
         mPeerCount = getIntent().getIntExtra(EXTRA_PEER_COUNT, 0) + 1;
         TextView tv = (TextView) findViewById(R.id.peer_counter);
         tv.setText(getResources().getText(R.string.peer_count).toString() + mPeerCount);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == android.R.id.home) {
+            NavUtils.navigateUpFromSameTask(this);
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     public void onLaunchPeer(View v) {
