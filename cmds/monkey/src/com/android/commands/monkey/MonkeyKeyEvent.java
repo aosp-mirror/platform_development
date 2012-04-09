@@ -124,7 +124,7 @@ public class MonkeyKeyEvent extends MonkeyEvent {
         KeyEvent newEvent = new KeyEvent(downTime, eventTime, mAction, mKeyCode,
                 mRepeatCount, mMetaState, mDeviceId, mScancode,
                 KeyEvent.FLAG_FROM_SYSTEM, InputDevice.SOURCE_KEYBOARD);
-        if (!InputManager.injectInputEvent(newEvent,
+        if (!InputManager.getInstance().injectInputEvent(newEvent,
                 InputManager.INJECT_INPUT_EVENT_MODE_WAIT_FOR_RESULT)) {
             return MonkeyEvent.INJECT_FAIL;
         }
