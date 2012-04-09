@@ -24,6 +24,9 @@
  */
 
 #include "EmulatedCamera2.h"
+#include "fake-pipeline2/Sensor.h"
+#include <utils/Condition.h>
+#include <utils/Thread.h>
 
 namespace android {
 
@@ -44,22 +47,187 @@ public:
 
 public:
     /* Initializes EmulatedFakeCamera2 instance. */
-     status_t Initialize();
+    status_t Initialize();
 
     /****************************************************************************
-     * EmulatedCamera abstract API implementation.
+     * Camera Module API and generic hardware device API implementation
+     ***************************************************************************/
+public:
+
+    virtual status_t connectCamera(hw_device_t** device);
+
+    virtual status_t closeCamera();
+
+    virtual status_t getCameraInfo(struct camera_info *info);
+
+    /****************************************************************************
+     * EmulatedCamera2 abstract API implementation.
+     ***************************************************************************/
+protected:
+    /** Request input queue */
+
+    virtual int requestQueueNotify();
+
+    /** Count of requests in flight */
+    //virtual int getInProgressCount();
+
+    /** Cancel all captures in flight */
+    //virtual int flushCapturesInProgress();
+
+    /** Construct default request */
+    // virtual int constructDefaultRequest(
+    //     int request_template,
+    //     camera_metadata_t **request);
+
+    virtual int allocateStream(
+            uint32_t width,
+            uint32_t height,
+            int format,
+            camera2_stream_ops_t *stream_ops,
+            uint32_t *stream_id,
+            uint32_t *format_actual,
+            uint32_t *usage,
+            uint32_t *max_buffers);
+
+    virtual int registerStreamBuffers(
+            uint32_t stream_id,
+            int num_buffers,
+            buffer_handle_t *buffers);
+
+    virtual int releaseStream(uint32_t stream_id);
+
+    // virtual int allocateReprocessStream(
+    //         uint32_t width,
+    //         uint32_t height,
+    //         uint32_t format,
+    //         camera2_stream_ops_t *stream_ops,
+    //         uint32_t *stream_id,
+    //         uint32_t *format_actual,
+    //         uint32_t *usage,
+    //         uint32_t *max_buffers);
+
+    // virtual int releaseReprocessStream(uint32_t stream_id);
+
+    // virtual int triggerAction(uint32_t trigger_id,
+    //        int ext1,
+    //        int ext2);
+
+    /** Custom tag definitions */
+    virtual const char* getVendorSectionName(uint32_t tag);
+    virtual const char* getVendorTagName(uint32_t tag);
+    virtual int         getVendorTagType(uint32_t tag);
+
+    /** Debug methods */
+
+    virtual int dump(int fd);
+
+    /** Methods for worker threads to call */
+
+    // Notifies rest of camera subsystem of serious error
+    void signalError();
+
+private:
+    /****************************************************************************
+     * Pipeline controller threads
      ***************************************************************************/
 
-protected:
+    class ConfigureThread: public Thread {
+      public:
+        ConfigureThread(EmulatedFakeCamera2 *parent);
+        ~ConfigureThread();
+
+        status_t waitUntilRunning();
+        status_t newRequestAvailable();
+        status_t readyToRun();
+      private:
+        EmulatedFakeCamera2 *mParent;
+
+        bool mRunning;
+        bool threadLoop();
+
+        Mutex mInputMutex; // Protects mActive
+        Condition mInputSignal;
+        bool mActive; // Whether we're waiting for input requests or actively
+                      // working on them
+
+        camera_metadata_t *mRequest;
+        uint32_t *mNextFrameNumber;
+        uint64_t *mNextExposureTime;
+        uint64_t *mNextFrameDuration;
+        uint32_t *mNextSensitivity;
+        buffer_handle_t  *mNextBuffer;
+        int mNextBufferStride;
+    };
+
+    class ReadoutThread: public Thread {
+      public:
+        ReadoutThread(EmulatedFakeCamera2 *parent);
+        ~ReadoutThread();
+
+        status_t readyToRun();
+
+        // Input
+        status_t waitUntilRunning();
+        void setNextCapture(camera_metadata_t *request,
+                buffer_handle_t *buffer);
+
+      private:
+        EmulatedFakeCamera2 *mParent;
+
+        bool mRunning;
+        bool threadLoop();
+
+        // Inputs
+        Mutex mInputMutex; // Protects mActive, mInFlightQueue
+        Condition mInputSignal;
+        bool mActive;
+
+        static const int kInFlightQueueSize = 4;
+        struct InFlightQueue {
+            camera_metadata_t *request;
+            buffer_handle_t   *buffer;
+        } *mInFlightQueue;
+
+        int mInFlightHead;
+        int mInFlightTail;
+
+        // Internals
+        camera_metadata_t *mRequest;
+        buffer_handle_t *mBuffer;
+
+    };
 
     /****************************************************************************
-     * Data memebers.
+     * Static configuration information
+     ***************************************************************************/
+private:
+    static const uint32_t kAvailableFormats[];
+    static const uint32_t kAvailableSizesPerFormat[];
+    static const uint32_t kAvailableSizes[];
+    static const uint64_t kAvailableMinFrameDurations[];
+
+    /****************************************************************************
+     * Data members.
      ***************************************************************************/
 
 protected:
     /* Facing back (true) or front (false) switch. */
-    bool                        mFacingBack;
+    bool mFacingBack;
 
+private:
+    /** Mutex for calls through camera2 device interface */
+    Mutex mMutex;
+
+    /** Stream manipulation */
+    uint32_t mNextStreamId;
+    camera2_stream_ops_t *mRawStreamOps;
+
+    /** Simulated hardware interfaces */
+    sp<Sensor> mSensor;
+
+    /** Pipeline control threads */
+    sp<ConfigureThread> mConfigureThread;
+    sp<ReadoutThread>   mReadoutThread;
 };
 
 }; /* namespace android */

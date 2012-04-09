@@ -75,11 +75,13 @@ EmulatedCameraFactory::EmulatedCameraFactory()
         switch (getBackCameraHalVersion()) {
             case 1:
                 mEmulatedCameras[camera_id] =
-                        new EmulatedFakeCamera(camera_id, false, &HAL_MODULE_INFO_SYM.common);
+                        new EmulatedFakeCamera(camera_id, true,
+                                &HAL_MODULE_INFO_SYM.common);
                 break;
             case 2:
                 mEmulatedCameras[camera_id] =
-                        new EmulatedFakeCamera2(camera_id, false, &HAL_MODULE_INFO_SYM.common);
+                        new EmulatedFakeCamera2(camera_id, true,
+                                &HAL_MODULE_INFO_SYM.common);
                 break;
             default:
                 ALOGE("%s: Unknown back camera hal version requested: %d", __FUNCTION__,
@@ -90,10 +92,10 @@ EmulatedCameraFactory::EmulatedCameraFactory()
                     getBackCameraHalVersion());
             if (mEmulatedCameras[camera_id]->Initialize() != NO_ERROR) {
                 delete mEmulatedCameras[camera_id];
-                mEmulatedCameras--;
+                mEmulatedCameraNum--;
             }
         } else {
-            mEmulatedCameras--;
+            mEmulatedCameraNum--;
             ALOGE("%s: Unable to instantiate fake camera class", __FUNCTION__);
         }
     }
@@ -121,14 +123,17 @@ EmulatedCameraFactory::EmulatedCameraFactory()
         switch (getFrontCameraHalVersion()) {
             case 1:
                 mEmulatedCameras[camera_id] =
-                        new EmulatedFakeCamera(camera_id, false, &HAL_MODULE_INFO_SYM.common);
+                        new EmulatedFakeCamera(camera_id, false,
+                                &HAL_MODULE_INFO_SYM.common);
                 break;
             case 2:
                 mEmulatedCameras[camera_id] =
-                        new EmulatedFakeCamera2(camera_id, false, &HAL_MODULE_INFO_SYM.common);
+                        new EmulatedFakeCamera2(camera_id, false,
+                                &HAL_MODULE_INFO_SYM.common);
                 break;
             default:
-                ALOGE("%s: Unknown front camera hal version requested: %d", __FUNCTION__,
+                ALOGE("%s: Unknown front camera hal version requested: %d",
+                        __FUNCTION__,
                         getFrontCameraHalVersion());
         }
         if (mEmulatedCameras[camera_id] != NULL) {
@@ -136,10 +141,10 @@ EmulatedCameraFactory::EmulatedCameraFactory()
                     getFrontCameraHalVersion());
             if (mEmulatedCameras[camera_id]->Initialize() != NO_ERROR) {
                 delete mEmulatedCameras[camera_id];
-                mEmulatedCameras--;
+                mEmulatedCameraNum--;
             }
         } else {
-            mEmulatedCameras--;
+            mEmulatedCameraNum--;
             ALOGE("%s: Unable to instantiate fake camera class", __FUNCTION__);
         }
     }

@@ -33,6 +33,7 @@ LOCAL_SHARED_LIBRARIES += \
 	libjpeg \
 	libskia \
 	libandroid_runtime \
+	libcamera_metadata
 
 LOCAL_C_INCLUDES += external/jpeg \
 	external/skia/include/core/ \
@@ -57,7 +58,10 @@ LOCAL_SRC_FILES := \
 	JpegCompressor.cpp \
     EmulatedCamera2.cpp \
 	EmulatedFakeCamera2.cpp \
-	EmulatedQemuCamera2.cpp
+	EmulatedQemuCamera2.cpp \
+	fake-pipeline2/Scene.cpp \
+	fake-pipeline2/Sensor.cpp
+
 
 ifeq ($(TARGET_PRODUCT),vbox_x86)
 LOCAL_MODULE := camera.vbox_x86

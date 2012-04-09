@@ -67,7 +67,7 @@ public:
     virtual status_t Initialize();
 
     /****************************************************************************
-     * Camera API implementation
+     * Camera module API and generic hardware device API implementation
      ***************************************************************************/
 
 public:
@@ -75,7 +75,7 @@ public:
 
     virtual status_t closeCamera();
 
-    virtual status_t getCameraInfo(struct camera_info* info);
+    virtual status_t getCameraInfo(struct camera_info* info) = 0;
 
     /****************************************************************************
      * Camera API implementation.
@@ -83,176 +83,133 @@ public:
      ***************************************************************************/
 
 protected:
-    /** Request input queue */
-
-    int setRequestQueueSrcOps(
-        camera2_metadata_queue_src_ops *request_queue_src_ops);
-
-    int requestQueueNotifyNotEmpty();
-
-    /** Reprocessing input queue */
-
-    int setReprocessQueueSrcOps(
-        camera2_metadata_queue_src_ops *reprocess_queue_src_ops);
-
-    int reprocessQueueNotifyNotEmpty();
-
-    /** Frame output queue */
-
-    int setFrameQueueDstOps(camera2_metadata_queue_dst_ops *frame_queue_dst_ops);
-
-    int frameQueueBufferCount();
-    int frameQueueDequeue(camera_metadata_t **buffer);
-    int frameQueueFree(camera_metadata_t *old_buffer);
-
-    /** Notifications to application */
-    int setNotifyCallback(camera2_notify_callback notify_cb);
+    /** Request input queue notification */
+    virtual int requestQueueNotify();
 
     /** Count of requests in flight */
-    int getInProgressCount();
+    virtual int getInProgressCount();
 
     /** Cancel all captures in flight */
-    int flushCapturesInProgress();
+    virtual int flushCapturesInProgress();
 
-    /** Reprocessing input stream management */
-    int reprocessStreamDequeueBuffer(buffer_handle_t** buffer,
-            int *stride);
-
-    int reprocessStreamEnqueueBuffer(buffer_handle_t* buffer);
-
-    int reprocessStreamCancelBuffer(buffer_handle_t* buffer);
-
-    int reprocessStreamSetBufferCount(int count);
-
-    int reprocessStreamSetCrop(int left, int top, int right, int bottom);
-
-    int reprocessStreamSetTimestamp(int64_t timestamp);
-
-    int reprocessStreamSetUsage(int usage);
-
-    int reprocessStreamSetSwapInterval(int interval);
-
-    int reprocessStreamGetMinUndequeuedBufferCount(int *count);
-
-    int reprocessStreamLockBuffer(buffer_handle_t *buffer);
+    virtual int constructDefaultRequest(
+        int request_template,
+        camera_metadata_t **request);
 
     /** Output stream creation and management */
-
-    int getStreamSlotCount();
-
-    int allocateStream(uint32_t stream_slot,
+    virtual int allocateStream(
             uint32_t width,
             uint32_t height,
             int format,
-            camera2_stream_ops_t *stream_ops);
+            camera2_stream_ops_t *stream_ops,
+            uint32_t *stream_id,
+            uint32_t *format_actual,
+            uint32_t *usage,
+            uint32_t *max_buffers);
 
-    int releaseStream(uint32_t stream_slot);
+    virtual int registerStreamBuffers(
+            uint32_t stream_id,
+            int num_buffers,
+            buffer_handle_t *buffers);
+
+    virtual int releaseStream(uint32_t stream_id);
+
+    /** Input stream creation and management */
+    virtual int allocateReprocessStream(
+            uint32_t width,
+            uint32_t height,
+            uint32_t format,
+            camera2_stream_in_ops_t *reprocess_stream_ops,
+            uint32_t *stream_id,
+            uint32_t *consumer_usage,
+            uint32_t *max_buffers);
+
+    virtual int releaseReprocessStream(uint32_t stream_id);
+
+    /** 3A action triggering */
+    virtual int triggerAction(uint32_t trigger_id,
+            int ext1, int ext2);
 
     /** Custom tag definitions */
-    const char* getVendorSectionName(uint32_t tag);
-    const char* getVendorTagName(uint32_t tag);
-    int         getVendorTagType(uint32_t tag);
+    virtual const char* getVendorSectionName(uint32_t tag);
+    virtual const char* getVendorTagName(uint32_t tag);
+    virtual int         getVendorTagType(uint32_t tag);
 
-    /** Shutdown and debug methods */
+    /** Debug methods */
 
-    int release();
-
-    int dump(int fd);
-
-    int close();
+    virtual int dump(int fd);
 
     /****************************************************************************
      * Camera API callbacks as defined by camera2_device_ops structure.  See
      * hardware/libhardware/include/hardware/camera2.h for information on each
      * of these callbacks. Implemented in this class, these callbacks simply
-     * dispatch the call into an instance of EmulatedCamera2 class defined in the
-     * 'camera_device2' parameter.
+     * dispatch the call into an instance of EmulatedCamera2 class defined in
+     * the 'camera_device2' parameter.
      ***************************************************************************/
 
 private:
     /** Input request queue */
     static int set_request_queue_src_ops(camera2_device_t *,
-            camera2_metadata_queue_src_ops *queue_src_ops);
-    static int get_request_queue_dst_ops(camera2_device_t *,
-            camera2_metadata_queue_dst_ops **queue_dst_ops);
-    // for get_request_queue_dst_ops
-    static int request_queue_notify_queue_not_empty(
-        camera2_metadata_queue_dst_ops *);
-
-    /** Input reprocess queue */
-    static int set_reprocess_queue_src_ops(camera2_device_t *,
-            camera2_metadata_queue_src_ops *reprocess_queue_src_ops);
-    static int get_reprocess_queue_dst_ops(camera2_device_t *,
-            camera2_metadata_queue_dst_ops **queue_dst_ops);
-    // for reprocess_queue_dst_ops
-    static int reprocess_queue_notify_queue_not_empty(
-            camera2_metadata_queue_dst_ops *);
+            camera2_request_queue_src_ops *queue_src_ops);
+    static int notify_request_queue_not_empty(camera2_device_t *);
 
     /** Output frame queue */
     static int set_frame_queue_dst_ops(camera2_device_t *,
-            camera2_metadata_queue_dst_ops *queue_dst_ops);
-    static int get_frame_queue_src_ops(camera2_device_t *,
-            camera2_metadata_queue_src_ops **queue_src_ops);
-    // for get_frame_queue_src_ops
-    static int frame_queue_buffer_count(camera2_metadata_queue_src_ops *);
-    static int frame_queue_dequeue(camera2_metadata_queue_src_ops *,
-            camera_metadata_t **buffer);
-    static int frame_queue_free(camera2_metadata_queue_src_ops *,
-            camera_metadata_t *old_buffer);
-
-    /** Notifications to application */
-    static int set_notify_callback(camera2_device_t *,
-            camera2_notify_callback notify_cb);
+            camera2_frame_queue_dst_ops *queue_dst_ops);
 
     /** In-progress request management */
     static int get_in_progress_count(camera2_device_t *);
 
     static int flush_captures_in_progress(camera2_device_t *);
 
-    /** Input reprocessing stream */
-    static int get_reprocess_stream_ops(camera2_device_t *,
-            camera2_stream_ops_t **stream);
-    // for get_reprocess_stream_ops
-    static int reprocess_stream_dequeue_buffer(camera2_stream_ops *,
-            buffer_handle_t** buffer, int *stride);
-    static int reprocess_stream_enqueue_buffer(camera2_stream_ops *,
-            buffer_handle_t* buffer);
-    static int reprocess_stream_cancel_buffer(camera2_stream_ops *,
-            buffer_handle_t* buffer);
-    static int reprocess_stream_set_buffer_count(camera2_stream_ops *,
-            int count);
-    static int reprocess_stream_set_crop(camera2_stream_ops *,
-            int left, int top, int right, int bottom);
-    static int reprocess_stream_set_timestamp(camera2_stream_ops *,
-            int64_t timestamp);
-    static int reprocess_stream_set_usage(camera2_stream_ops *,
-            int usage);
-    static int reprocess_stream_set_swap_interval(camera2_stream_ops *,
-            int interval);
-    static int reprocess_stream_get_min_undequeued_buffer_count(
-            const camera2_stream_ops *,
-            int *count);
-    static int reprocess_stream_lock_buffer(camera2_stream_ops *,
-            buffer_handle_t* buffer);
+    /** Request template creation */
+    static int construct_default_request(camera2_device_t *,
+            int request_template,
+            camera_metadata_t **request);
 
-    /** Output stream allocation and management */
-
-    static int get_stream_slot_count(camera2_device_t *);
-
+    /** Stream management */
     static int allocate_stream(camera2_device_t *,
-            uint32_t stream_slot,
+            uint32_t width,
+            uint32_t height,
+            int format,
+            camera2_stream_ops_t *stream_ops,
+            uint32_t *stream_id,
+            uint32_t *format_actual,
+            uint32_t *usage,
+            uint32_t *max_buffers);
+
+    static int register_stream_buffers(camera2_device_t *,
+            uint32_t stream_id,
+            int num_buffers,
+            buffer_handle_t *buffers);
+
+    static int release_stream(camera2_device_t *,
+            uint32_t stream_id);
+
+    static int allocate_reprocess_stream(camera2_device_t *,
             uint32_t width,
             uint32_t height,
             uint32_t format,
-            camera2_stream_ops_t *stream_ops);
+            camera2_stream_in_ops_t *reprocess_stream_ops,
+            uint32_t *stream_id,
+            uint32_t *consumer_usage,
+            uint32_t *max_buffers);
 
-    static int release_stream(camera2_device_t *,
-            uint32_t stream_slot);
+    static int release_reprocess_stream(camera2_device_t *,
+            uint32_t stream_id);
 
-    static void release(camera2_device_t *);
+    /** 3A triggers*/
+    static int trigger_action(camera2_device_t *,
+            uint32_t trigger_id,
+            int ext1,
+            int ext2);
+
+    /** Notifications to application */
+    static int set_notify_callback(camera2_device_t *,
+            camera2_notify_callback notify_cb,
+            void *user);
 
     /** Vendor metadata registration */
-
     static int get_metadata_vendor_tag_ops(camera2_device_t *,
             vendor_tag_query_ops_t **ops);
     // for get_metadata_vendor_tag_ops
@@ -268,36 +225,28 @@ private:
 
     static int dump(camera2_device_t *, int fd);
 
+    /** For hw_device_t ops */
     static int close(struct hw_device_t* device);
 
     /****************************************************************************
-     * Data members
+     * Data members shared with implementations
      ***************************************************************************/
-
-  private:
-    static camera2_device_ops_t sDeviceOps;
-
-    struct QueueDstOps : public camera2_metadata_queue_dst_ops {
-        EmulatedCamera2 *parent;
-    };
-
-    struct QueueSrcOps : public camera2_metadata_queue_src_ops {
-        EmulatedCamera2 *parent;
-    };
-
-    struct StreamOps : public camera2_stream_ops {
-        EmulatedCamera2 *parent;
-    };
+  protected:
+    camera2_request_queue_src_ops *mRequestQueueSrc;
+    camera2_frame_queue_dst_ops *mFrameQueueDst;
+    camera2_notify_callback mNotifyCb;
+    void* mNotifyUserPtr;
 
     struct TagOps : public vendor_tag_query_ops {
         EmulatedCamera2 *parent;
     };
-
-    QueueDstOps mRequestQueueDstOps;
-    QueueDstOps mReprocessQueueDstOps;
-    QueueSrcOps mFrameQueueSrcOps;
-    StreamOps   mReprocessStreamOps;
     TagOps      mVendorTagOps;
+
+    /****************************************************************************
+     * Data members
+     ***************************************************************************/
+  private:
+    static camera2_device_ops_t sDeviceOps;
 };
 
 }; /* namespace android */
