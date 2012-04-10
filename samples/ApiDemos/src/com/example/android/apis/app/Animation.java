@@ -122,7 +122,7 @@ public class Animation extends Activity {
             Canvas c = new Canvas(bm);
             //c.drawARGB(255, 255, 0, 0);
             ActivityOptions opts = ActivityOptions.makeThumbnailScaleUpAnimation(
-                    v, bm, 0, 0, null);
+                    v, bm, 0, 0);
             // Request the activity be started, using the custom animation options.
             startActivity(new Intent(Animation.this, AlertDialogSamples.class), opts.toBundle());
             v.setDrawingCacheEnabled(false);
