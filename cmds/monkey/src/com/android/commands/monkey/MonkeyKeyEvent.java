@@ -18,7 +18,6 @@ package com.android.commands.monkey;
 
 import android.app.IActivityManager;
 import android.hardware.input.InputManager;
-import android.os.RemoteException;
 import android.os.SystemClock;
 import android.view.IWindowManager;
 import android.view.InputDevice;
@@ -36,7 +35,7 @@ public class MonkeyKeyEvent extends MonkeyEvent {
     private int mDeviceId = -1;
     private long mEventTime = -1;
 
-    private KeyEvent keyEvent = null;
+    private KeyEvent mKeyEvent;
 
     public MonkeyKeyEvent(int action, int keycode) {
         super(EVENT_TYPE_KEY);
@@ -46,7 +45,7 @@ public class MonkeyKeyEvent extends MonkeyEvent {
 
     public MonkeyKeyEvent(KeyEvent e) {
         super(EVENT_TYPE_KEY);
-        keyEvent = e;
+        mKeyEvent = e;
     }
 
     public MonkeyKeyEvent(long downTime, long eventTime, int action,
@@ -113,18 +112,21 @@ public class MonkeyKeyEvent extends MonkeyEvent {
             }
         }
 
-        long eventTime = mEventTime;
-        if (eventTime == 0) {
-            eventTime = SystemClock.uptimeMillis();
+        KeyEvent keyEvent = mKeyEvent;
+        if (keyEvent == null) {
+            long eventTime = mEventTime;
+            if (eventTime <= 0) {
+                eventTime = SystemClock.uptimeMillis();
+            }
+            long downTime = mDownTime;
+            if (downTime <= 0) {
+                downTime = eventTime;
+            }
+            keyEvent = new KeyEvent(downTime, eventTime, mAction, mKeyCode,
+                    mRepeatCount, mMetaState, mDeviceId, mScancode,
+                    KeyEvent.FLAG_FROM_SYSTEM, InputDevice.SOURCE_KEYBOARD);
         }
-        long downTime = mDownTime;
-        if (downTime == 0) {
-            downTime = eventTime;
-        }
-        KeyEvent newEvent = new KeyEvent(downTime, eventTime, mAction, mKeyCode,
-                mRepeatCount, mMetaState, mDeviceId, mScancode,
-                KeyEvent.FLAG_FROM_SYSTEM, InputDevice.SOURCE_KEYBOARD);
-        if (!InputManager.getInstance().injectInputEvent(newEvent,
+        if (!InputManager.getInstance().injectInputEvent(keyEvent,
                 InputManager.INJECT_INPUT_EVENT_MODE_WAIT_FOR_RESULT)) {
             return MonkeyEvent.INJECT_FAIL;
         }
