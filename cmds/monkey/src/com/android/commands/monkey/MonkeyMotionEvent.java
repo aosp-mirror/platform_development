@@ -185,7 +185,7 @@ public abstract class MonkeyMotionEvent extends MonkeyEvent {
             System.out.println(msg.toString());
         }
         try {
-            if (!InputManager.injectInputEvent(me,
+            if (!InputManager.getInstance().injectInputEvent(me,
                     InputManager.INJECT_INPUT_EVENT_MODE_WAIT_FOR_RESULT)) {
                 return MonkeyEvent.INJECT_FAIL;
             }
