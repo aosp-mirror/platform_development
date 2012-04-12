@@ -45,11 +45,7 @@ public class HelloSpellCheckerActivity extends Activity implements SpellCheckerS
     }
 
     private boolean isSentenceSpellCheckSupported() {
-        if (mScs == null || Build.VERSION.SDK_INT < 16) {
-            return false;
-        }
-        // Note that isSentenceSpellCheckSupported works on JB or later.
-        return mScs.isSentenceSpellCheckSupported();
+        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN;
     }
 
     @Override
@@ -70,6 +66,9 @@ public class HelloSpellCheckerActivity extends Activity implements SpellCheckerS
                         "I wold like to here form you")}, 3);
                 mScs.getSentenceSuggestions(new TextInfo[] {new TextInfo("hell othere")}, 3);
             } else {
+                // Note that getSuggestions() is a deprecated API.
+                // It is recommended for an application running on Jelly Bean or later
+                // to call getSentenceSuggestions() only.
                 mScs.getSuggestions(new TextInfo("tgis"), 3);
                 mScs.getSuggestions(new TextInfo("hllo"), 3);
                 mScs.getSuggestions(new TextInfo("helloworld"), 3);
