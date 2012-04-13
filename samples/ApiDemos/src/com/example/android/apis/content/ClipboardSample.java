@@ -26,10 +26,10 @@ import android.content.Intent;
 import android.content.res.Resources;
 import android.net.Uri;
 import android.os.Bundle;
+import android.text.method.LinkMovementMethod;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.AdapterView.OnItemSelectedListener;
@@ -39,15 +39,17 @@ public class ClipboardSample extends Activity {
 
     Spinner mSpinner;
     TextView mMimeTypes;
-    EditText mEditText;
+    TextView mDataText;
 
     CharSequence mStyledText;
     String mPlainText;
+    String mHtmlText;
+    String mHtmlPlainText;
 
     ClipboardManager.OnPrimaryClipChangedListener mPrimaryChangeListener
             = new ClipboardManager.OnPrimaryClipChangedListener() {
         public void onPrimaryClipChanged() {
-            updateClipData();
+            updateClipData(true);
         }
     };
 
@@ -70,6 +72,11 @@ public class ClipboardSample extends Activity {
         tv = (TextView)findViewById(R.id.plain_text);
         tv.setText(mPlainText);
 
+        mHtmlText = "<b>Link:</b> <a href=\"http://www.android.com\">Android</a>";
+        mHtmlPlainText = "Link: http://www.android.com";
+        tv = (TextView)findViewById(R.id.html_text);
+        tv.setText(mHtmlText);
+
         mSpinner = (Spinner) findViewById(R.id.clip_type);
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(
                 this, R.array.clip_data_types, android.R.layout.simple_spinner_item);
@@ -79,16 +86,17 @@ public class ClipboardSample extends Activity {
                 new OnItemSelectedListener() {
                     public void onItemSelected(
                             AdapterView<?> parent, View view, int position, long id) {
+                        updateClipData(false);
                     }
                     public void onNothingSelected(AdapterView<?> parent) {
                     }
                 });
 
         mMimeTypes = (TextView)findViewById(R.id.clip_mime_types);
-        mEditText = (EditText)findViewById(R.id.clip_text);
+        mDataText = (TextView)findViewById(R.id.clip_text);
 
         mClipboard.addPrimaryClipChangedListener(mPrimaryChangeListener);
-        updateClipData();
+        updateClipData(true);
     }
 
     @Override
@@ -105,6 +113,10 @@ public class ClipboardSample extends Activity {
         mClipboard.setPrimaryClip(ClipData.newPlainText("Styled Text", mPlainText));
     }
 
+    public void pasteHtmlText(View button) {
+        mClipboard.setPrimaryClip(ClipData.newHtmlText("HTML Text", mHtmlPlainText, mHtmlText));
+    }
+
     public void pasteIntent(View button) {
         Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.android.com/"));
         mClipboard.setPrimaryClip(ClipData.newIntent("VIEW intent", intent));
@@ -114,31 +126,74 @@ public class ClipboardSample extends Activity {
         mClipboard.setPrimaryClip(ClipData.newRawUri("URI", Uri.parse("http://www.android.com/")));
     }
 
-    void updateClipData() {
+    void updateClipData(boolean updateType) {
         ClipData clip = mClipboard.getPrimaryClip();
         String[] mimeTypes = clip != null ? clip.getDescription().filterMimeTypes("*/*") : null;
-        mMimeTypes.setText("");
         if (mimeTypes != null) {
+            mMimeTypes.setText("");
             for (int i=0; i<mimeTypes.length; i++) {
+                if (i > 0) {
+                    mMimeTypes.append("\n");
+                }
                 mMimeTypes.append(mimeTypes[i]);
-                mMimeTypes.append("\n");
+            }
+        } else {
+            mMimeTypes.setText("NULL");
+        }
+
+        if (updateType) {
+            if (clip != null) {
+                ClipData.Item item = clip.getItemAt(0);
+                if (item.getHtmlText() != null) {
+                    mSpinner.setSelection(2);
+                } else if (item.getText() != null) {
+                    mSpinner.setSelection(1);
+                } else if (item.getIntent() != null) {
+                    mSpinner.setSelection(3);
+                } else if (item.getUri() != null) {
+                    mSpinner.setSelection(4);
+                } else {
+                    mSpinner.setSelection(0);
+                }
+            } else {
+                mSpinner.setSelection(0);
             }
         }
-        if (clip == null) {
-            mSpinner.setSelection(0);
-            mEditText.setText("");
-        } else if (clip.getItemAt(0).getText() != null) {
-            mSpinner.setSelection(1);
-            mEditText.setText(clip.getItemAt(0).getText());
-        } else if (clip.getItemAt(0).getIntent() != null) {
-            mSpinner.setSelection(2);
-            mEditText.setText(clip.getItemAt(0).getIntent().toUri(0));
-        } else if (clip.getItemAt(0).getUri() != null) {
-            mSpinner.setSelection(3);
-            mEditText.setText(clip.getItemAt(0).getUri().toString());
+
+        if (clip != null) {
+            ClipData.Item item = clip.getItemAt(0);
+            switch (mSpinner.getSelectedItemPosition()) {
+                case 0:
+                    mDataText.setText("(No data)");
+                    break;
+                case 1:
+                    mDataText.setText(item.getText());
+                    break;
+                case 2:
+                    mDataText.setText(item.getHtmlText());
+                    break;
+                case 3:
+                    mDataText.setText(item.getIntent().toUri(0));
+                    break;
+                case 4:
+                    mDataText.setText(item.getUri().toString());
+                    break;
+                case 5:
+                    mDataText.setText(item.coerceToText(this));
+                    break;
+                case 6:
+                    mDataText.setText(item.coerceToStyledText(this));
+                    break;
+                case 7:
+                    mDataText.setText(item.coerceToHtmlText(this));
+                    break;
+                default:
+                    mDataText.setText("Unknown option: " + mSpinner.getSelectedItemPosition());
+                    break;
+            }
         } else {
-            mSpinner.setSelection(0);
-            mEditText.setText("Clip containing no data");
+            mDataText.setText("(NULL clip)");
         }
+        mDataText.setMovementMethod(LinkMovementMethod.getInstance());
     }
 }

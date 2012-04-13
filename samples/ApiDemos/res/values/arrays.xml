@@ -42,8 +42,12 @@
     <string-array name="clip_data_types">
         <item>No data in clipboard</item>
         <item>Text clip</item>
+        <item>HTML Text clip</item>
         <item>Intent clip</item>
         <item>Uri clip</item>
+        <item>Coerce to text</item>
+        <item>Coerce to styled text</item>
+        <item>Coerce to HTML text</item>
     </string-array>
 
     <!-- Used in App/SearchInvoke.java -->
