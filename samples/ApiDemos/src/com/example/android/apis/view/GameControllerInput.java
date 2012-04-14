@@ -21,13 +21,12 @@ import com.example.android.apis.R;
 import android.app.Activity;
 import android.content.Context;
 import android.content.res.Resources;
+import android.hardware.input.InputManager;
 import android.os.Bundle;
-import android.util.AttributeSet;
 import android.util.Log;
 import android.util.SparseArray;
 import android.util.SparseIntArray;
 import android.view.InputDevice;
-import android.view.InputEvent;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -42,11 +41,11 @@ import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicLong;
 
 
 /**
  * Demonstrates how to process input events received from game controllers.
+ * It also shows how to detect when input devices are added, removed or reconfigured.
  *
  * This activity displays button states and joystick positions.
  * Also writes detailed information about relevant input events to the log.
@@ -54,9 +53,11 @@ import java.util.concurrent.atomic.AtomicLong;
  * The game controller is also uses to control a very simple game.  See {@link GameView}
  * for the game itself.
  */
-public class GameControllerInput extends Activity {
+public class GameControllerInput extends Activity
+        implements InputManager.InputDeviceListener {
     private static final String TAG = "GameControllerInput";
 
+    private InputManager mInputManager;
     private SparseArray<InputDeviceState> mInputDeviceStates;
     private GameView mGame;
     private ListView mSummaryList;
@@ -65,6 +66,8 @@ public class GameControllerInput extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        mInputManager = (InputManager)getSystemService(Context.INPUT_SERVICE);
 
         mInputDeviceStates = new SparseArray<InputDeviceState>();
         mSummaryAdapter = new SummaryAdapter(this, getResources());
@@ -84,6 +87,30 @@ public class GameControllerInput extends Activity {
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+
+        // Register an input device listener to watch when input devices are
+        // added, removed or reconfigured.
+        mInputManager.registerInputDeviceListener(this, null);
+
+        // Query all input devices.
+        // We do this so that we can see them in the log as they are enumerated.
+        int[] ids = mInputManager.getInputDeviceIds();
+        for (int i = 0; i < ids.length; i++) {
+            getInputDeviceState(ids[i]);
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+
+        // Remove the input device listener when the activity is paused.
+        mInputManager.unregisterInputDeviceListener(this);
+    }
+
+    @Override
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
 
@@ -93,7 +120,7 @@ public class GameControllerInput extends Activity {
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
         // Update device state for visualization and logging.
-        InputDeviceState state = getInputDeviceState(event);
+        InputDeviceState state = getInputDeviceState(event.getDeviceId());
         if (state != null) {
             switch (event.getAction()) {
                 case KeyEvent.ACTION_DOWN:
@@ -115,10 +142,10 @@ public class GameControllerInput extends Activity {
     public boolean dispatchGenericMotionEvent(MotionEvent event) {
         // Check that the event came from a joystick since a generic motion event
         // could be almost anything.
-        if ((event.getSource() & InputDevice.SOURCE_CLASS_JOYSTICK) != 0
+        if (isJoystick(event.getSource())
                 && event.getAction() == MotionEvent.ACTION_MOVE) {
             // Update device state for visualization and logging.
-            InputDeviceState state = getInputDeviceState(event);
+            InputDeviceState state = getInputDeviceState(event.getDeviceId());
             if (state != null && state.onJoystickMotion(event)) {
                 mSummaryAdapter.show(state);
             }
@@ -126,20 +153,50 @@ public class GameControllerInput extends Activity {
         return super.dispatchGenericMotionEvent(event);
     }
 
-    private InputDeviceState getInputDeviceState(InputEvent event) {
-        final int deviceId = event.getDeviceId();
+    private InputDeviceState getInputDeviceState(int deviceId) {
         InputDeviceState state = mInputDeviceStates.get(deviceId);
         if (state == null) {
-            final InputDevice device = event.getDevice();
+            final InputDevice device = mInputManager.getInputDevice(deviceId);
             if (device == null) {
                 return null;
             }
             state = new InputDeviceState(device);
             mInputDeviceStates.put(deviceId, state);
-
-            Log.i(TAG, device.toString());
+            Log.i(TAG, "Device enumerated: " + state.mDevice);
         }
         return state;
+    }
+
+    // Implementation of InputManager.InputDeviceListener.onInputDeviceAdded()
+    @Override
+    public void onInputDeviceAdded(int deviceId) {
+        InputDeviceState state = getInputDeviceState(deviceId);
+        Log.i(TAG, "Device added: " + state.mDevice);
+    }
+
+    // Implementation of InputManager.InputDeviceListener.onInputDeviceChanged()
+    @Override
+    public void onInputDeviceChanged(int deviceId) {
+        InputDeviceState state = mInputDeviceStates.get(deviceId);
+        if (state != null) {
+            mInputDeviceStates.remove(deviceId);
+            state = getInputDeviceState(deviceId);
+            Log.i(TAG, "Device changed: " + state.mDevice);
+        }
+    }
+
+    // Implementation of InputManager.InputDeviceListener.onInputDeviceRemoved()
+    @Override
+    public void onInputDeviceRemoved(int deviceId) {
+        InputDeviceState state = mInputDeviceStates.get(deviceId);
+        if (state != null) {
+            Log.i(TAG, "Device removed: " + state.mDevice);
+            mInputDeviceStates.remove(deviceId);
+        }
+    }
+
+    private static boolean isJoystick(int source) {
+        return (source & InputDevice.SOURCE_CLASS_JOYSTICK) != 0;
     }
 
     /**
