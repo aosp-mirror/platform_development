@@ -23,6 +23,7 @@ import android.graphics.Path;
 import android.graphics.Paint.Style;
 import android.os.Handler;
 import android.os.SystemClock;
+import android.os.Vibrator;
 import android.util.AttributeSet;
 import android.view.InputDevice;
 import android.view.KeyEvent;
@@ -35,6 +36,10 @@ import java.util.Random;
 
 /**
  * A trivial joystick based physics game to demonstrate joystick handling.
+ *
+ * If the game controller has a vibrator, then it is used to provide feedback
+ * when a bullet is fired or the ship crashes into an obstacle.  Otherwise, the
+ * system vibrator is used for that purpose.
  *
  * @see GameControllerInput
  */
@@ -307,6 +312,8 @@ public class GameView extends View {
             bullet.setVelocity(mShip.getBulletVelocityX(mBulletSpeed),
                     mShip.getBulletVelocityY(mBulletSpeed));
             mBullets.add(bullet);
+
+            getVibrator().vibrate(20);
         }
     }
 
@@ -316,10 +323,24 @@ public class GameView extends View {
         }
     }
 
+    private void crash() {
+        getVibrator().vibrate(new long[] { 0, 20, 20, 40, 40, 80, 40, 300 }, -1);
+    }
+
     private void reset() {
         mShip = new Ship();
         mBullets.clear();
         mObstacles.clear();
+    }
+
+    private Vibrator getVibrator() {
+        if (mLastInputDevice != null) {
+            Vibrator vibrator = mLastInputDevice.getVibrator();
+            if (vibrator.hasVibrator()) {
+                return vibrator;
+            }
+        }
+        return (Vibrator)getContext().getSystemService(Context.VIBRATOR_SERVICE);
     }
 
     void animateFrame() {
@@ -679,6 +700,12 @@ public class GameView extends View {
         @Override
         public float getDestroyAnimDuration() {
             return 1.0f;
+        }
+
+        @Override
+        public void destroy() {
+            super.destroy();
+            crash();
         }
     }
 
