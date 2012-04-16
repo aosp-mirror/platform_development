@@ -1,4 +1,0 @@
-GLOBAL
-	base_opcode 10000
-	encoder_headers <stdint.h>
-
