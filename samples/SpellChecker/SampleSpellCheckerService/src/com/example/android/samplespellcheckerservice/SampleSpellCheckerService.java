@@ -37,8 +37,8 @@ public class SampleSpellCheckerService extends SpellCheckerService {
     private static class AndroidSpellCheckerSession extends Session {
 
         private boolean isSentenceSpellCheckApiSupported() {
-            // Note that the sentence level spell check APIs work on JB or later.
-            return Build.VERSION.SDK_INT >= 16;
+            // Note that the sentence level spell check APIs work on Jelly Bean or later.
+            return Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN;
         }
 
         private String mLocale;
@@ -47,6 +47,15 @@ public class SampleSpellCheckerService extends SpellCheckerService {
             mLocale = getLocale();
         }
 
+        /**
+         * This method should have a concrete implementation in all spell checker services.
+         * Please note that the default implementation of
+         * {@link SpellCheckerService.Session#onGetSuggestionsMultiple(TextInfo[], int, boolean)}
+         * calls up this method. You may want to override
+         * {@link SpellCheckerService.Session#onGetSuggestionsMultiple(TextInfo[], int, boolean)}
+         * by your own implementation if you'd like to provide an optimized implementation for
+         * {@link SpellCheckerService.Session#onGetSuggestionsMultiple(TextInfo[], int, boolean)}.
+         */
         @Override
         public SuggestionsInfo onGetSuggestions(TextInfo textInfo, int suggestionsLimit) {
             if (DBG) {
@@ -63,6 +72,16 @@ public class SampleSpellCheckerService extends SpellCheckerService {
                     new String[] {"aaa", "bbb", "Candidate for " + input, mLocale});
         }
 
+        /**
+         * Please consider providing your own implementation of sentence level spell checking.
+         * Please note that this sample implementation is just a mock to demonstrate how a sentence
+         * level spell checker returns the result.
+         * If you don't override this method, the framework converts queries of
+         * {@link SpellCheckerService.Session#onGetSentenceSuggestionsMultiple(TextInfo[], int)}
+         * to queries of
+         * {@link SpellCheckerService.Session#onGetSuggestionsMultiple(TextInfo[], int, boolean)}
+         * by the default implementation.
+         */
         @Override
         public SentenceSuggestionsInfo[] onGetSentenceSuggestionsMultiple(
                 TextInfo[] textInfos, int suggestionsLimit) {
@@ -99,7 +118,7 @@ public class SampleSpellCheckerService extends SpellCheckerService {
                     offsets = new int[] { 2, 15, 20 };
                     lengths = new int[] { 4, 4, 4 };
                 } else {
-                    // Just a fake logic:
+                    // Just a mock logic:
                     // length <= 3 for short words that we assume are in the fake dictionary
                     // length > 20 for too long words that we assume can't be recognized
                     // (such as CJK words)
