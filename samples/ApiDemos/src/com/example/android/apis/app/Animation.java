@@ -51,11 +51,14 @@ public class Animation extends Activity {
             button.setOnClickListener(mModernFadeListener);
             button = (Button)findViewById(R.id.modern_zoom_animation);
             button.setOnClickListener(mModernZoomListener);
+            button = (Button)findViewById(R.id.scale_up_animation);
+            button.setOnClickListener(mScaleUpListener);
             button = (Button)findViewById(R.id.zoom_thumbnail_animation);
             button.setOnClickListener(mZoomThumbnailListener);
         } else {
             findViewById(R.id.modern_fade_animation).setEnabled(false);
             findViewById(R.id.modern_zoom_animation).setEnabled(false);
+            findViewById(R.id.scale_up_animation).setEnabled(false);
             findViewById(R.id.zoom_thumbnail_animation).setEnabled(false);
         }
     }
@@ -113,11 +116,26 @@ public class Animation extends Activity {
         }
     };
 
+    private OnClickListener mScaleUpListener = new OnClickListener() {
+        public void onClick(View v) {
+            // Create a scale-up animation that originates at the button
+            // being pressed.
+            ActivityOptions opts = ActivityOptions.makeScaleUpAnimation(
+                    v, 0, 0, v.getWidth(), v.getHeight());
+            // Request the activity be started, using the custom animation options.
+            startActivity(new Intent(Animation.this, AlertDialogSamples.class), opts.toBundle());
+        }
+    };
+
     private OnClickListener mZoomThumbnailListener = new OnClickListener() {
         public void onClick(View v) {
             // Create a thumbnail animation.  We are going to build our thumbnail
-            // just from the view that was pressed.
+            // just from the view that was pressed.  We make sure the view is
+            // not selected, because by the time the animation starts we will
+            // have finished with the selection of the tap.
             v.setDrawingCacheEnabled(true);
+            v.setPressed(false);
+            v.refreshDrawableState();
             Bitmap bm = v.getDrawingCache();
             Canvas c = new Canvas(bm);
             //c.drawARGB(255, 255, 0, 0);

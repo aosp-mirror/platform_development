@@ -49,6 +49,11 @@
         android:text="@string/activity_modern_animation_zoom">
     </Button>
 
+    <Button android:id="@+id/scale_up_animation"
+        android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:text="@string/activity_scale_up_animation">
+    </Button>
+
     <Button android:id="@+id/zoom_thumbnail_animation"
         android:layout_width="wrap_content" android:layout_height="wrap_content"
         android:text="@string/activity_zoom_thumbnail_animation">
