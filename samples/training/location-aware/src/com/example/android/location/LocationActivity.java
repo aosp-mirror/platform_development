@@ -17,8 +17,11 @@
 package com.example.android.location;
 
 import android.annotation.SuppressLint;
-import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
@@ -29,6 +32,9 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.provider.Settings;
+import android.support.v4.app.DialogFragment;
+import android.support.v4.app.FragmentActivity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -38,7 +44,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
 
-public class LocationActivity extends Activity {
+public class LocationActivity extends FragmentActivity {
     private TextView mLatLng;
     private TextView mAddress;
     private Button mFineProviderButton;
@@ -120,6 +126,32 @@ public class LocationActivity extends Activity {
     protected void onResume() {
         super.onResume();
         setup();
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+        // Check if the GPS setting is currently enabled on the device.
+        // This verification should be done during onStart() because the system calls this method
+        // when the user returns to the activity, which ensures the desired location provider is
+        // enabled each time the activity resumes from the stopped state.
+        LocationManager locationManager =
+                (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        final boolean gpsEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
+
+        if (!gpsEnabled) {
+            // Build an alert dialog here that requests that the user enable
+            // the location services, then when the user clicks the "OK" button,
+            // call enableLocationSettings()
+            new EnableGpsDialogFragment().show(getSupportFragmentManager(), "enableGpsDialog");
+        }
+    }
+
+    // Method to launch Settings
+    private void enableLocationSettings() {
+        Intent settingsIntent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+        startActivity(settingsIntent);
     }
 
     // Stop receiving location updates whenever the Activity becomes invisible.
@@ -336,6 +368,26 @@ public class LocationActivity extends Activity {
                 Message.obtain(mHandler, UPDATE_ADDRESS, addressText).sendToTarget();
             }
             return null;
+        }
+    }
+
+    /**
+     * Dialog to prompt users to enable GPS on the device.
+     */
+    private class EnableGpsDialogFragment extends DialogFragment {
+
+        @Override
+        public Dialog onCreateDialog(Bundle savedInstanceState) {
+            return new AlertDialog.Builder(getActivity())
+                    .setTitle(R.string.enable_gps)
+                    .setMessage(R.string.enable_gps_dialog)
+                    .setPositiveButton(R.string.enable_gps, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            enableLocationSettings();
+                        }
+                    })
+                    .create();
         }
     }
 }
