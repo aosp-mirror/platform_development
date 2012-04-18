@@ -22,6 +22,7 @@ import android.util.Log;
 import android.view.IWindowManager;
 
 import java.lang.Process;
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.BufferedReader;
@@ -47,9 +48,8 @@ public class MonkeyGetAppFrameRateEvent extends MonkeyEvent {
     private static int sEndFrameNo;
 
     private static final String TAG = "MonkeyGetAppFrameRateEvent";
-    private static final String LOG_FILE = Environment.getExternalStorageDirectory().getPath() +
-            "/avgAppFrameRateOut.txt";
-
+    private static final String LOG_FILE = new File(Environment.getExternalStorageDirectory(),
+            "avgAppFrameRateOut.txt").getAbsolutePath();
     private static final Pattern NO_OF_FRAMES_PATTERN =
             Pattern.compile(".* ([0-9]*) frames rendered");
 
