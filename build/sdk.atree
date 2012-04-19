@@ -51,11 +51,6 @@ bin/dx                                        platform-tools/dx
 bin/dexdump                                   platform-tools/dexdump
 framework/dx.jar                              platform-tools/lib/dx.jar
 
-# Framework include for Renderscript
-frameworks/rs/scriptc                         platform-tools/renderscript/include
-external/clang/lib/Headers                    platform-tools/renderscript/clang-include
-external/clang/LICENSE.TXT                    platform-tools/renderscript/clang-include/LICENSE.TXT
-
 # API database for tools such as lint
 development/sdk/api-versions.xml              platform-tools/api/api-versions.xml
 
@@ -200,12 +195,6 @@ development/samples/WiFiDirectDemo             samples/${PLATFORM_NAME}/WiFiDire
 development/samples/Wiktionary                 samples/${PLATFORM_NAME}/Wiktionary
 development/samples/WiktionarySimple           samples/${PLATFORM_NAME}/WiktionarySimple
 development/samples/XmlAdapters                samples/${PLATFORM_NAME}/XmlAdapters
-development/samples/RenderScript/Balls         samples/${PLATFORM_NAME}/RenderScript/Balls
-development/samples/RenderScript/Fountain      samples/${PLATFORM_NAME}/RenderScript/Fountain
-development/samples/RenderScript/FountainFbo   samples/${PLATFORM_NAME}/RenderScript/FountainFbo
-development/samples/RenderScript/HelloCompute  samples/${PLATFORM_NAME}/RenderScript/HelloCompute
-development/samples/RenderScript/HelloWorld    samples/${PLATFORM_NAME}/RenderScript/HelloWorld
-development/samples/RenderScript/MiscSamples   samples/${PLATFORM_NAME}/RenderScript/MiscSamples
 
 # NOTICE files are copied by build/core/Makefile from sdk.git
 sdk/files/sdk_files_NOTICE.txt samples/${PLATFORM_NAME}/NOTICE.txt
