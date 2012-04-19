@@ -59,7 +59,7 @@ public class ImageDownloader {
     private static final int DELAY_BEFORE_PURGE = 30 * 1000; // in milliseconds
 
     // Hard cache, with a fixed maximum capacity and a life duration
-    private final HashMap<String, Bitmap> sHardBitmapCache =
+    private final static HashMap<String, Bitmap> sHardBitmapCache =
         new LinkedHashMap<String, Bitmap>(HARD_CACHE_CAPACITY / 2, 0.75f, true) {
         private static final long serialVersionUID = -7190622541619388252L;
         @Override

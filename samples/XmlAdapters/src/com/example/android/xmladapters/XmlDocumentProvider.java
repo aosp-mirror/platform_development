@@ -59,7 +59,7 @@ import java.util.regex.Pattern;
  * <p>To add this provider in your application, you should add its declaration to your application
  * manifest:
  * <pre class="prettyprint">
- * &lt;provider android:name="android.content.XmlDocumentProvider" android:authorities="xmldocument" /&gt;
+ * &lt;provider android:name="XmlDocumentProvider" android:authorities="xmldocument" /&gt;
  * </pre>
  * </p>
  *

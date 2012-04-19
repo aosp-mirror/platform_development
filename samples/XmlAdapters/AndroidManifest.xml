@@ -47,8 +47,7 @@
             </intent-filter>
         </activity>
 
-        <provider android:name="android.content.XmlDocumentProvider"
-           android:authorities="xmldocument" />
+        <provider android:name="XmlDocumentProvider" android:authorities="xmldocument" />
 
     </application>
 
