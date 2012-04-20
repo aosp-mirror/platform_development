@@ -442,7 +442,7 @@ public class AccessibilityNodeProviderActivity extends Activity {
              * {@inheritDoc}
              */
             @Override
-            public boolean performAccessibilityAction(int action, int virtualViewId) {
+            public boolean performAction(int virtualViewId, int action, Bundle arguments) {
                 if (virtualViewId == View.NO_ID) {
                     // Perform the action on the host View.
                     switch (action) {
