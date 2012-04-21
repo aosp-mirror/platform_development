@@ -223,6 +223,9 @@ ${OUT_DIR}/target/common/obj/PACKAGING/android-support-v13_intermediates/android
 frameworks/support/v13                                                                            extras/android/support/v13/src
 development/samples/Support13Demos                                                                extras/android/support/samples/Support13Demos
 
+frameworks/support/v7/gridlayout/README.txt                                                       extras/android/support/v7/gridlayout/README.txte
+frameworks/support/v7/gridlayout/.project                                                         extras/android/support/v7/gridlayout/.project
+frameworks/support/v7/gridlayout/.classpath                                                       extras/android/support/v7/gridlayout/.classpath
 frameworks/support/v7/gridlayout/AndroidManifest.xml                                              extras/android/support/v7/gridlayout/AndroidManifest.xml
 frameworks/support/v7/gridlayout/project.properties                                               extras/android/support/v7/gridlayout/project.properties
 frameworks/support/v7/gridlayout/res                                                              extras/android/support/v7/gridlayout/res
