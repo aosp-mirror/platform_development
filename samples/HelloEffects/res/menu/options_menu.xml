@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright (C) 2012 The Android Open Source Project
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+          http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+-->
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/none"
+            android:title="@string/none"
+            android:showAsAction="never" />
+
+    <item android:id="@+id/autofix"
+            android:title="@string/autofix"
+            android:showAsAction="never" />
+
+    <item android:id="@+id/bw"
+            android:title="@string/bw"
+            android:showAsAction="never" />
+
+    <item android:id="@+id/brightness"
+            android:title="@string/brightness"
+            android:showAsAction="never" />
+
+    <item android:id="@+id/contrast"
+            android:title="@string/contrast"
+            android:showAsAction="never" />
+
+    <item android:id="@+id/crossprocess"
+            android:title="@string/crossprocess"
+            android:showAsAction="never" />
+
+    <item android:id="@+id/documentary"
+            android:title="@string/documentary"
+            android:showAsAction="never" />
+
+    <item android:id="@+id/duotone"
+            android:title="@string/duotone"
+            android:showAsAction="never" />
+
+    <item android:id="@+id/filllight"
+            android:title="@string/filllight"
+            android:showAsAction="never" />
+
+    <item android:id="@+id/fisheye"
+            android:title="@string/fisheye"
+            android:showAsAction="never" />
+
+    <item android:id="@+id/flipvert"
+            android:title="@string/flipvert"
+            android:showAsAction="never" />
+
+    <item android:id="@+id/fliphor"
+            android:title="@string/fliphor"
+            android:showAsAction="never" />
+
+    <item android:id="@+id/grain"
+            android:title="@string/grain"
+            android:showAsAction="never" />
+
+    <item android:id="@+id/grayscale"
+            android:title="@string/grayscale"
+            android:showAsAction="never" />
+
+    <item android:id="@+id/lomoish"
+            android:title="@string/lomoish"
+            android:showAsAction="never" />
+
+    <item android:id="@+id/negative"
+            android:title="@string/negative"
+            android:showAsAction="never" />
+
+    <item android:id="@+id/posterize"
+            android:title="@string/posterize"
+            android:showAsAction="never" />
+
+    <item android:id="@+id/rotate"
+            android:title="@string/rotate"
+            android:showAsAction="never" />
+
+    <item android:id="@+id/saturate"
+            android:title="@string/saturate"
+            android:showAsAction="never" />
+
+    <item android:id="@+id/sepia"
+            android:title="@string/sepia"
+            android:showAsAction="never" />
+
+    <item android:id="@+id/sharpen"
+            android:title="@string/sharpen"
+            android:showAsAction="never" />
+
+    <item android:id="@+id/temperature"
+            android:title="@string/temperature"
+            android:showAsAction="never" />
+
+    <item android:id="@+id/tint"
+            android:title="@string/tint"
+            android:showAsAction="never" />
+
+    <item android:id="@+id/vignette"
+            android:title="@string/vignette"
+            android:showAsAction="never" />
+</menu>
