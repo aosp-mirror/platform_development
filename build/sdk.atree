@@ -163,6 +163,7 @@ development/samples/BluetoothHDP               samples/${PLATFORM_NAME}/Bluetoot
 development/samples/ContactManager             samples/${PLATFORM_NAME}/ContactManager
 development/samples/CrossCompatibility         samples/${PLATFORM_NAME}/CrossCompatibility
 development/samples/CubeLiveWallpaper          samples/${PLATFORM_NAME}/CubeLiveWallpaper
+development/samples/HelloEffects               samples/${PLATFORM_NAME}/HelloEffects
 development/samples/Home                       samples/${PLATFORM_NAME}/Home
 development/samples/HoneycombGallery           samples/${PLATFORM_NAME}/HoneycombGallery
 development/samples/JetBoy                     samples/${PLATFORM_NAME}/JetBoy
