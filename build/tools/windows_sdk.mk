@@ -22,8 +22,9 @@ ifeq ($(strip $(shell which unix2dos todos 2>/dev/null)),)
 $(error Need a unix2dos command. Please 'apt-get install tofrodos')
 endif
 
-# Define WIN_SDK_TARGETS, the list of targets located in topdir/sdk
-# and are tools-dependent, not platform-dependent.
+# Define WIN_SDK_TARGETS (the list of targets located in topdir/sdk)
+# and the WIN_SDK_BUILD_PREREQ (the list of build prerequisites)
+# that are tools-dependent and not platform-dependent.
 include $(TOPDIR)sdk/build/windows_sdk_tools.mk
 
 # This is the list of targets that we want to generate as
@@ -46,7 +47,8 @@ WIN_TARGETS := \
 # build prerequisites.
 WIN_BUILD_PREREQ := \
 	acp \
-	llvm-rs-cc
+	llvm-rs-cc \
+	$(WIN_SDK_BUILD_PREREQ)
 
 
 # MAIN_SDK_NAME/DIR is set in build/core/Makefile
