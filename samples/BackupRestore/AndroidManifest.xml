@@ -26,6 +26,7 @@
 
     <!-- The backup/restore mechanism was introduced in API version 8 -->
     <uses-sdk android:minSdkVersion="8"/>
+    <uses-feature android:name="android.hardware.touchscreen" android:required="false"/>
 
     <application android:label="Backup/Restore"
         android:backupAgent="ExampleAgent">
