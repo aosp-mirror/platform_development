@@ -79,7 +79,7 @@ public class WidgetPreviewActivity extends Activity implements OnClickListener {
         if (retainedObj instanceof AppWidgetProviderInfo) {
             AppWidgetProviderInfo info = (AppWidgetProviderInfo) retainedObj;
             int id = mAppWidgetHost.allocateAppWidgetId();
-            AppWidgetManager.getInstance(getBaseContext()).bindAppWidgetId(id, info.provider);
+            AppWidgetManager.getInstance(getBaseContext()).bindAppWidgetIdIfAllowed(id, info.provider);
             setAppWidget(id);
         } else {
             startChooseActivity();
