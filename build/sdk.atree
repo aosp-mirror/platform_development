@@ -234,6 +234,10 @@ frameworks/support/v13                                                          
 development/samples/Support13Demos                                                                extras/android/support/samples/Support13Demos
 
 development/sdk/prebuilt/v7                                                                       extras/android/support/v7
+#hidden files aren't picked up.
+development/sdk/prebuilt/v7/gridlayout/.project                                                   extras/android/support/v7/gridlayout/.project
+development/sdk/prebuilt/v7/gridlayout/.classpath                                                 extras/android/support/v7/gridlayout/.classpath
+
 
 ##############################################################################
 # Tests Component
