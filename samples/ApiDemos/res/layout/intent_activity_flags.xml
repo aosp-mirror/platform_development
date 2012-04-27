@@ -24,8 +24,8 @@
 
     <TextView
         android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:layout_weight="0"
-        android:paddingBottom="4dip"
+        android:layout_weight="0" android:paddingBottom="4dip"
+        android:textAppearance="?android:attr/textAppearanceMedium"
         android:text="@string/intent_activity_flags"/>
 
     <Button android:id="@+id/flag_activity_clear_task"

@@ -23,14 +23,15 @@
 
     <TextView
         android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:layout_weight="0"
-        android:paddingBottom="4dip"
+        android:layout_weight="0" android:paddingBottom="4dip"
+        android:textAppearance="?android:attr/textAppearanceMedium"
         android:text="Demonstrates various options that can be used when binding to a service to modify its process management."/>
 
     <TextView android:id="@+id/callback"
         android:layout_width="match_parent" android:layout_height="wrap_content"
         android:layout_weight="0"
-        android:gravity="center_horizontal" android:paddingBottom="4dip"/>
+        android:gravity="center_horizontal" android:paddingBottom="4dip"
+        android:textAppearance="?android:attr/textAppearanceMedium" />
 
     <ScrollView android:layout_width="match_parent" android:layout_height="match_parent">
         <LinearLayout android:orientation="vertical"
