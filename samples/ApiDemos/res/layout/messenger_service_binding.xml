@@ -23,8 +23,8 @@
 
     <TextView
         android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:layout_weight="0"
-        android:paddingBottom="4dip"
+        android:layout_weight="0" android:paddingBottom="4dip"
+        android:textAppearance="?android:attr/textAppearanceMedium"
         android:text="@string/messenger_service_binding"/>
 
     <Button android:id="@+id/bind"
@@ -41,6 +41,7 @@
     <TextView android:id="@+id/callback"
         android:layout_width="match_parent" android:layout_height="wrap_content"
         android:layout_weight="0"
+        android:textAppearance="?android:attr/textAppearanceMedium"
         android:gravity="center_horizontal" android:paddingTop="4dip"/>
 
 </LinearLayout>

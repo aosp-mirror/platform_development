@@ -23,8 +23,8 @@
 
     <TextView
         android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:layout_weight="0"
-        android:paddingBottom="4dip"
+        android:layout_weight="0" android:paddingBottom="4dip"
+        android:textAppearance="?android:attr/textAppearanceMedium"
         android:text="@string/forwarding"/>
 
     <Button android:id="@+id/go"

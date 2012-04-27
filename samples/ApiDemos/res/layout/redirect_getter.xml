@@ -23,14 +23,13 @@
 
     <TextView
         android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:layout_weight="0"
-        android:paddingBottom="4dip"
+        android:layout_weight="0" android:paddingBottom="4dip"
+        android:textAppearance="?android:attr/textAppearanceMedium"
         android:text="@string/redirect_getter"/>
 
     <EditText android:id="@+id/text"
         android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:layout_weight="0"
-        android:paddingBottom="4dip">
+        android:layout_weight="0" android:paddingBottom="4dip">
         <requestFocus />
     </EditText>
 

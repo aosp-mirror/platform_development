@@ -14,9 +14,6 @@
      limitations under the License.
 -->
 
-<!-- Demonstrates starting and stopping a local service.
-     See corresponding Java code com.android.sdk.app.LocalSerice.java. -->
-
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical" android:padding="4dip"
     android:gravity="center_horizontal"
@@ -24,8 +21,8 @@
 
     <TextView
         android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:layout_weight="0"
-        android:paddingBottom="4dip"
+        android:layout_weight="0" android:paddingBottom="4dip"
+        android:textAppearance="?android:attr/textAppearanceMedium"
         android:text="@string/activity_recreate_msg"/>
 
     <Button android:id="@+id/recreate"
