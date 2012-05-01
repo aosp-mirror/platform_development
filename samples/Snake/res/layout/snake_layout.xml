@@ -4,9 +4,9 @@
      Licensed under the Apache License, Version 2.0 (the "License");
      you may not use this file except in compliance with the License.
      You may obtain a copy of the License at
-  
+
           http://www.apache.org/licenses/LICENSE-2.0
-  
+
      Unless required by applicable law or agreed to in writing, software
      distributed under the License is distributed on an "AS IS" BASIS,
      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,30 +14,70 @@
      limitations under the License.
 -->
 
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-	android:layout_width="match_parent"
-	android:layout_height="match_parent">
-	
-	<com.example.android.snake.SnakeView
-	 android:id="@+id/snake"
-		android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                tileSize="24"
-                />
-	
-	<RelativeLayout
-		android:layout_width="match_parent"
-		android:layout_height="match_parent" >
-		
-		<TextView
-		 android:id="@+id/text"
-			android:text="@string/snake_layout_text_text"
-			android:visibility="visible"
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content"
-			android:layout_centerInParent="true"
-			android:gravity="center_horizontal"
-			android:textColor="#ff8888ff"
-			android:textSize="24sp"/>
-	</RelativeLayout>
-</FrameLayout>
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+  xmlns:app="http://schemas.android.com/apk/res/com.example.android.snake">
+
+  <com.example.android.snake.BackgroundView
+    android:id="@+id/background"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    app:colorSegmentOne="@color/muted_red"
+    app:colorSegmentTwo="@color/muted_yellow"
+    app:colorSegmentThree="@color/muted_blue"
+    app:colorSegmentFour="@color/muted_green"
+     />
+
+  <com.example.android.snake.SnakeView
+    android:id="@+id/snake"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    app:tileSize="24dp" />
+
+  <TextView android:id="@+id/text"
+  android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_gravity="center"
+    android:gravity="center"
+    android:textColor="@color/text_violet"
+    android:textSize="24sp"
+    android:visibility="visible" />
+
+  <RelativeLayout android:id="@+id/arrowContainer"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:visibility="gone">
+
+    <ImageView android:id="@+id/imageUp"
+    android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_alignParentTop="true"
+      android:layout_centerHorizontal="true"
+      android:padding="20dp"
+      android:src="@drawable/dpad_up" />
+
+    <ImageView android:id="@+id/imageLeft"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_alignParentLeft="true"
+      android:layout_centerVertical="true"
+      android:padding="20dp"
+      android:src="@drawable/dpad_left" />
+
+    <ImageView android:id="@+id/imageRight"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_alignParentRight="true"
+      android:layout_centerVertical="true"
+      android:padding="20dp"
+      android:src="@drawable/dpad_right" />
+
+    <ImageView android:id="@+id/imageDown"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_alignParentBottom="true"
+      android:layout_centerHorizontal="true"
+      android:padding="20dp"
+      android:src="@drawable/dpad_down" />
+  </RelativeLayout>
+
+</merge>
