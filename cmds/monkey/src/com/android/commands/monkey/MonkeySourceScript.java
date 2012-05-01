@@ -29,7 +29,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.NoSuchElementException;
 import java.util.Random;
-import android.util.Log;
 
 /**
  * monkey event queue. It takes a script to produce events sample script format:
@@ -748,6 +747,7 @@ public class MonkeySourceScript implements MonkeyEventSource {
      *
      * @return True if the file exists and the header is valid, false otherwise.
      */
+    @Override
     public boolean validate() {
         boolean validHeader;
         try {
@@ -763,6 +763,7 @@ public class MonkeySourceScript implements MonkeyEventSource {
         return validHeader;
     }
 
+    @Override
     public void setVerbose(int verbose) {
         mVerbose = verbose;
     }
@@ -812,11 +813,10 @@ public class MonkeySourceScript implements MonkeyEventSource {
     private void adjustMotionEventTime(MonkeyMotionEvent e) {
         long updatedDownTime = 0;
 
-        if (e.getEventTime() < 0) {
-            return;
-        }
         updatedDownTime = SystemClock.uptimeMillis();
-        e.setDownTime(updatedDownTime);
+        if (e.getDownTime() < 0) {
+            e.setDownTime(updatedDownTime);
+        }
         e.setEventTime(updatedDownTime);
     }
 
@@ -830,6 +830,7 @@ public class MonkeySourceScript implements MonkeyEventSource {
      * @return The first event in the event queue or null if the end of the file
      *         is reached or if an error is encountered reading the file.
      */
+    @Override
     public MonkeyEvent getNextEvent() {
         long recordedEventTime = -1;
         MonkeyEvent ev;
