@@ -41,7 +41,7 @@ public class NotificationsActivity extends Activity {
                 .setContentTitle("Direct Notification")
                 .setContentText("This will open the content viewer")
                 .setAutoCancel(true)
-                .setContentIntent(TaskStackBuilder.from(this)
+                .setContentIntent(TaskStackBuilder.create(this)
                         .addParentStack(ContentViewActivity.class)
                         .addNextIntent(new Intent(this, ContentViewActivity.class)
                                 .putExtra(ContentViewActivity.EXTRA_TEXT, "From Notification"))
