@@ -32,7 +32,7 @@ public class InterstitialMessageActivity extends Activity {
     }
 
     public void onViewContent(View v) {
-        TaskStackBuilder.from(this)
+        TaskStackBuilder.create(this)
                 .addParentStack(ContentViewActivity.class)
                 .addNextIntent(new Intent(this, ContentViewActivity.class)
                         .putExtra(ContentViewActivity.EXTRA_TEXT, "From Interstitial Notification"))
