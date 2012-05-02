@@ -16,72 +16,38 @@
 
 package com.example.android.musicplayer;
 
+import android.app.PendingIntent;
 import android.media.AudioManager;
 import android.util.Log;
 
-import java.lang.reflect.Method;
-
 /**
- * Contains methods to handle registering/unregistering remote control clients.  These methods only
- * run on ICS devices.  On previous devices, all methods are no-ops.
+ * Contains methods to handle registering/unregistering remote control clients.
+ * These methods only run on ICS devices. On previous devices, all methods are
+ * no-ops.
  */
-@SuppressWarnings({"unchecked", "rawtypes"})
 public class RemoteControlHelper {
-    private static final String TAG = "RemoteControlHelper";
+	private static final String TAG = "RemoteControlHelper";
 
-    private static boolean sHasRemoteControlAPIs = false;
+	public static IRemoteControlClientCompat registerRemoteControlClient(
+			AudioManager audioManager, PendingIntent intent) {
 
-    private static Method sRegisterRemoteControlClientMethod;
-    private static Method sUnregisterRemoteControlClientMethod;
+		IRemoteControlClientCompat remoteControlClient;
+		try {
+			remoteControlClient = new RemoteControlClientCompat(intent);
+		} catch (NoClassDefFoundError ex) {
+			Log.e(TAG, "Error creating remote control client", ex);
 
-    static {
-        try {
-            ClassLoader classLoader = RemoteControlHelper.class.getClassLoader();
-            Class sRemoteControlClientClass =
-                    RemoteControlClientCompat.getActualRemoteControlClientClass(classLoader);
-            sRegisterRemoteControlClientMethod = AudioManager.class.getMethod(
-                    "registerRemoteControlClient", new Class[]{sRemoteControlClientClass});
-            sUnregisterRemoteControlClientMethod = AudioManager.class.getMethod(
-                    "unregisterRemoteControlClient", new Class[]{sRemoteControlClientClass});
-            sHasRemoteControlAPIs = true;
-        } catch (ClassNotFoundException e) {
-            // Silently fail when running on an OS before ICS.
-        } catch (NoSuchMethodException e) {
-            // Silently fail when running on an OS before ICS.
-        } catch (IllegalArgumentException e) {
-            // Silently fail when running on an OS before ICS.
-        } catch (SecurityException e) {
-            // Silently fail when running on an OS before ICS.
-        }
-    }
+			remoteControlClient = new UnavailableControlClientCompat();
+		}
 
-    public static void registerRemoteControlClient(AudioManager audioManager,
-            RemoteControlClientCompat remoteControlClient) {
-        if (!sHasRemoteControlAPIs) {
-            return;
-        }
+		remoteControlClient.register(audioManager);
 
-        try {
-            sRegisterRemoteControlClientMethod.invoke(audioManager,
-                    remoteControlClient.getActualRemoteControlClientObject());
-        } catch (Exception e) {
-            Log.e(TAG, e.getMessage(), e);
-        }
-    }
+		return remoteControlClient;
+	}
 
+	public static void unregisterRemoteControlClient(AudioManager audioManager,
+			IRemoteControlClientCompat remoteControlClient) {
 
-    public static void unregisterRemoteControlClient(AudioManager audioManager,
-            RemoteControlClientCompat remoteControlClient) {
-        if (!sHasRemoteControlAPIs) {
-            return;
-        }
-
-        try {
-            sUnregisterRemoteControlClientMethod.invoke(audioManager,
-                    remoteControlClient.getActualRemoteControlClientObject());
-        } catch (Exception e) {
-            Log.e(TAG, e.getMessage(), e);
-        }
-    }
+		remoteControlClient.unregister(audioManager);
+	}
 }
-
