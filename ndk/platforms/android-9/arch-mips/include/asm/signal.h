@@ -92,32 +92,33 @@ typedef unsigned long old_sigset_t;
 #define MINSIGSTKSZ 2048
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
 #define SIGSTKSZ 8192
+struct siginfo;
 #define SIG_BLOCK 1  
 #define SIG_UNBLOCK 2  
-#define SIG_SETMASK 3  
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+#define SIG_SETMASK 3  
 #include <asm-generic/signal.h>
 struct sigaction {
  unsigned int sa_flags;
- union {
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+ union {
  __sighandler_t sa_handler;
  void (*sa_sigaction) (int, struct siginfo *, void *);
  } __sigaction_handler;
-#define sa_handler __sigaction_handler.sa_handler
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+#define sa_handler __sigaction_handler.sa_handler
 #define sa_sigaction __sigaction_handler.sa_sigaction
  sigset_t sa_mask;
 };
-struct k_sigaction {
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+struct k_sigaction {
  struct sigaction sa;
 };
 typedef struct sigaltstack {
- void *ss_sp;
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+ void *ss_sp;
  size_t ss_size;
  int ss_flags;
 } stack_t;
-#endif
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+#endif
