@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Copyright (C) 2007 The Android Open Source Project
+<!-- Copyright (C) 2012 The Android Open Source Project
 
      Licensed under the Apache License, Version 2.0 (the "License");
      you may not use this file except in compliance with the License.
@@ -15,16 +15,8 @@
 -->
 
 <resources>
-
-  <declare-styleable name="TileView">
-    <attr name="tileSize" format="dimension" />
-  </declare-styleable>
-  <declare-styleable name="BackgroundView">
-  <!-- Defining properties to use four different colors in 4 segments of BackgroundView -->
-    <attr name="colorSegmentOne" format="color" />
-    <attr name="colorSegmentTwo" format="color" />
-    <attr name="colorSegmentThree" format="color" />
-    <attr name="colorSegmentFour" format="color" />
-  </declare-styleable>
-
+  <string name="app_name">Snake</string>
+  <string name="mode_ready">Snake\nTouch Screen To Play</string>
+  <string name="mode_pause">Paused\nTouch Screen To Resume</string>
+  <string name="mode_lose">Game Over\nScore: %1$d \nTouch Screen To Play</string>
 </resources>
