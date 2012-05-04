@@ -16,33 +16,29 @@
 
 package com.example.android.snake;
 
-import java.util.ArrayList;
-import java.util.Random;
-
 import android.content.Context;
 import android.content.res.Resources;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.util.AttributeSet;
-import android.os.Bundle;
 import android.util.Log;
-import android.view.KeyEvent;
 import android.view.View;
 import android.widget.TextView;
 
+import java.util.ArrayList;
+import java.util.Random;
+
 /**
  * SnakeView: implementation of a simple game of Snake
- * 
- * 
  */
 public class SnakeView extends TileView {
 
     private static final String TAG = "SnakeView";
 
     /**
-     * Current mode of application: READY to run, RUNNING, or you have already
-     * lost. static final ints are used instead of an enum for performance
-     * reasons.
+     * Current mode of application: READY to run, RUNNING, or you have already lost. static final
+     * ints are used instead of an enum for performance reasons.
      */
     private int mMode = READY;
     public static final int PAUSE = 0;
@@ -68,26 +64,36 @@ public class SnakeView extends TileView {
     private static final int GREEN_STAR = 3;
 
     /**
-     * mScore: used to track the number of apples captured mMoveDelay: number of
-     * milliseconds between snake movements. This will decrease as apples are
-     * captured.
+     * mScore: Used to track the number of apples captured mMoveDelay: number of milliseconds
+     * between snake movements. This will decrease as apples are captured.
      */
     private long mScore = 0;
     private long mMoveDelay = 600;
     /**
-     * mLastMove: tracks the absolute time when the snake last moved, and is used
-     * to determine if a move should be made based on mMoveDelay.
+     * mLastMove: Tracks the absolute time when the snake last moved, and is used to determine if a
+     * move should be made based on mMoveDelay.
      */
     private long mLastMove;
-    
+
     /**
-     * mStatusText: text shows to the user in some run states
+     * mStatusText: Text shows to the user in some run states
      */
     private TextView mStatusText;
 
     /**
-     * mSnakeTrail: a list of Coordinates that make up the snake's body
-     * mAppleList: the secret location of the juicy apples the snake craves.
+     * mArrowsView: View which shows 4 arrows to signify 4 directions in which the snake can move
+     */
+    private View mArrowsView;
+
+    /**
+     * mBackgroundView: Background View which shows 4 different colored triangles pressing which
+     * moves the snake
+     */
+    private View mBackgroundView;
+
+    /**
+     * mSnakeTrail: A list of Coordinates that make up the snake's body mAppleList: The secret
+     * location of the juicy apples the snake craves.
      */
     private ArrayList<Coordinate> mSnakeTrail = new ArrayList<Coordinate>();
     private ArrayList<Coordinate> mAppleList = new ArrayList<Coordinate>();
@@ -98,10 +104,11 @@ public class SnakeView extends TileView {
     private static final Random RNG = new Random();
 
     /**
-     * Create a simple handler that we can use to cause animation to happen.  We
-     * set ourselves as a target and we can use the sleep()
-     * function to cause an update/invalidate to occur at a later date.
+     * Create a simple handler that we can use to cause animation to happen. We set ourselves as a
+     * target and we can use the sleep() function to cause an update/invalidate to occur at a later
+     * date.
      */
+
     private RefreshHandler mRedrawHandler = new RefreshHandler();
 
     class RefreshHandler extends Handler {
@@ -113,11 +120,10 @@ public class SnakeView extends TileView {
         }
 
         public void sleep(long delayMillis) {
-        	this.removeMessages(0);
+            this.removeMessages(0);
             sendMessageDelayed(obtainMessage(0), delayMillis);
         }
     };
-
 
     /**
      * Constructs a SnakeView based on inflation from XML
@@ -127,26 +133,26 @@ public class SnakeView extends TileView {
      */
     public SnakeView(Context context, AttributeSet attrs) {
         super(context, attrs);
-        initSnakeView();
-   }
-
-    public SnakeView(Context context, AttributeSet attrs, int defStyle) {
-    	super(context, attrs, defStyle);
-    	initSnakeView();
+        initSnakeView(context);
     }
 
-    private void initSnakeView() {
+    public SnakeView(Context context, AttributeSet attrs, int defStyle) {
+        super(context, attrs, defStyle);
+        initSnakeView(context);
+    }
+
+    private void initSnakeView(Context context) {
+
         setFocusable(true);
 
         Resources r = this.getContext().getResources();
-        
+
         resetTiles(4);
         loadTile(RED_STAR, r.getDrawable(R.drawable.redstar));
         loadTile(YELLOW_STAR, r.getDrawable(R.drawable.yellowstar));
         loadTile(GREEN_STAR, r.getDrawable(R.drawable.greenstar));
-    	
+
     }
-    
 
     private void initNewGame() {
         mSnakeTrail.clear();
@@ -155,7 +161,6 @@ public class SnakeView extends TileView {
         // For now we're just going to load up a short default eastbound snake
         // that's just turned north
 
-        
         mSnakeTrail.add(new Coordinate(7, 7));
         mSnakeTrail.add(new Coordinate(6, 7));
         mSnakeTrail.add(new Coordinate(5, 7));
@@ -172,30 +177,29 @@ public class SnakeView extends TileView {
         mScore = 0;
     }
 
-
     /**
-     * Given a ArrayList of coordinates, we need to flatten them into an array of
-     * ints before we can stuff them into a map for flattening and storage.
+     * Given a ArrayList of coordinates, we need to flatten them into an array of ints before we can
+     * stuff them into a map for flattening and storage.
      * 
      * @param cvec : a ArrayList of Coordinate objects
-     * @return : a simple array containing the x/y values of the coordinates
-     * as [x1,y1,x2,y2,x3,y3...]
+     * @return : a simple array containing the x/y values of the coordinates as
+     *         [x1,y1,x2,y2,x3,y3...]
      */
     private int[] coordArrayListToArray(ArrayList<Coordinate> cvec) {
-        int count = cvec.size();
-        int[] rawArray = new int[count * 2];
-        for (int index = 0; index < count; index++) {
-            Coordinate c = cvec.get(index);
-            rawArray[2 * index] = c.x;
-            rawArray[2 * index + 1] = c.y;
+        int[] rawArray = new int[cvec.size() * 2];
+
+        int i = 0;
+        for (Coordinate c : cvec) {
+            rawArray[i++] = c.x;
+            rawArray[i++] = c.y;
         }
+
         return rawArray;
     }
 
     /**
-     * Save game state so that the user does not lose anything
-     * if the game process is killed while we are in the 
-     * background.
+     * Save game state so that the user does not lose anything if the game process is killed while
+     * we are in the background.
      * 
      * @return a Bundle with this view's state
      */
@@ -213,8 +217,8 @@ public class SnakeView extends TileView {
     }
 
     /**
-     * Given a flattened array of ordinate pairs, we reconstitute them into a
-     * ArrayList of Coordinate objects
+     * Given a flattened array of ordinate pairs, we reconstitute them into a ArrayList of
+     * Coordinate objects
      * 
      * @param rawArray : [x1,y1,x2,y2,...]
      * @return a ArrayList of Coordinates
@@ -246,83 +250,79 @@ public class SnakeView extends TileView {
         mSnakeTrail = coordArrayToArrayList(icicle.getIntArray("mSnakeTrail"));
     }
 
-    /*
-     * handles key events in the game. Update the direction our snake is traveling
-     * based on the DPAD. Ignore events that would cause the snake to immediately
-     * turn back on itself.
-     * 
-     * (non-Javadoc)
-     * 
-     * @see android.view.View#onKeyDown(int, android.os.KeyEvent)
+    /**
+     * Handles snake movement triggers from Snake Activity and moves the snake accordingly. Ignore
+     * events that would cause the snake to immediately turn back on itself.
+     *
+     * @param direction The desired direction of movement
      */
-    @Override
-    public boolean onKeyDown(int keyCode, KeyEvent msg) {
+    public void moveSnake(int direction) {
 
-        if (keyCode == KeyEvent.KEYCODE_DPAD_UP) {
+        if (direction == Snake.MOVE_UP) {
             if (mMode == READY | mMode == LOSE) {
                 /*
                  * At the beginning of the game, or the end of a previous one,
-                 * we should start a new game.
+                 * we should start a new game if UP key is clicked.
                  */
                 initNewGame();
                 setMode(RUNNING);
                 update();
-                return (true);
+                return;
             }
 
             if (mMode == PAUSE) {
                 /*
-                 * If the game is merely paused, we should just continue where
-                 * we left off.
+                 * If the game is merely paused, we should just continue where we left off.
                  */
                 setMode(RUNNING);
                 update();
-                return (true);
+                return;
             }
 
             if (mDirection != SOUTH) {
                 mNextDirection = NORTH;
             }
-            return (true);
+            return;
         }
 
-        if (keyCode == KeyEvent.KEYCODE_DPAD_DOWN) {
+        if (direction == Snake.MOVE_DOWN) {
             if (mDirection != NORTH) {
                 mNextDirection = SOUTH;
             }
-            return (true);
+            return;
         }
 
-        if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT) {
+        if (direction == Snake.MOVE_LEFT) {
             if (mDirection != EAST) {
                 mNextDirection = WEST;
             }
-            return (true);
+            return;
         }
 
-        if (keyCode == KeyEvent.KEYCODE_DPAD_RIGHT) {
+        if (direction == Snake.MOVE_RIGHT) {
             if (mDirection != WEST) {
                 mNextDirection = EAST;
             }
-            return (true);
+            return;
         }
 
-        return super.onKeyDown(keyCode, msg);
     }
 
     /**
-     * Sets the TextView that will be used to give information (such as "Game
-     * Over" to the user.
+     * Sets the Dependent views that will be used to give information (such as "Game Over" to the
+     * user and also to handle touch events for making movements
      * 
      * @param newView
      */
-    public void setTextView(TextView newView) {
-        mStatusText = newView;
+    public void setDependentViews(TextView msgView, View arrowView, View backgroundView) {
+        mStatusText = msgView;
+        mArrowsView = arrowView;
+        mBackgroundView = backgroundView;
     }
 
     /**
-     * Updates the current mode of the application (RUNNING or PAUSED or the like)
-     * as well as sets the visibility of textview for notification
+     * Updates the current mode of the application (RUNNING or PAUSED or the like) as well as sets
+     * the visibility of textview for notification
      * 
      * @param newMode
      */
@@ -330,23 +330,33 @@ public class SnakeView extends TileView {
         int oldMode = mMode;
         mMode = newMode;
 
-        if (newMode == RUNNING & oldMode != RUNNING) {
+        if (newMode == RUNNING && oldMode != RUNNING) {
+            // hide the game instructions
             mStatusText.setVisibility(View.INVISIBLE);
             update();
+            // make the background and arrows visible as soon the snake starts moving
+            mArrowsView.setVisibility(View.VISIBLE);
+            mBackgroundView.setVisibility(View.VISIBLE);
             return;
         }
 
         Resources res = getContext().getResources();
         CharSequence str = "";
         if (newMode == PAUSE) {
+            mArrowsView.setVisibility(View.GONE);
+            mBackgroundView.setVisibility(View.GONE);
             str = res.getText(R.string.mode_pause);
         }
         if (newMode == READY) {
+            mArrowsView.setVisibility(View.GONE);
+            mBackgroundView.setVisibility(View.GONE);
+
             str = res.getText(R.string.mode_ready);
         }
         if (newMode == LOSE) {
-            str = res.getString(R.string.mode_lose_prefix) + mScore
-                  + res.getString(R.string.mode_lose_suffix);
+            mArrowsView.setVisibility(View.GONE);
+            mBackgroundView.setVisibility(View.GONE);
+            str = res.getString(R.string.mode_lose, mScore);
         }
 
         mStatusText.setText(str);
@@ -354,11 +364,16 @@ public class SnakeView extends TileView {
     }
 
     /**
-     * Selects a random location within the garden that is not currently covered
-     * by the snake. Currently _could_ go into an infinite loop if the snake
-     * currently fills the garden, but we'll leave discovery of this prize to a
-     * truly excellent snake-player.
-     * 
+     * @return the Game state as Running, Ready, Paused, Lose
+     */
+    public int getGameState() {
+        return mMode;
+    }
+
+    /**
+     * Selects a random location within the garden that is not currently covered by the snake.
+     * Currently _could_ go into an infinite loop if the snake currently fills the garden, but we'll
+     * leave discovery of this prize to a truly excellent snake-player.
      */
     private void addRandomApple() {
         Coordinate newCoord = null;
@@ -388,10 +403,9 @@ public class SnakeView extends TileView {
         mAppleList.add(newCoord);
     }
 
-
     /**
-     * Handles the basic update loop, checking to see if we are in the running
-     * state, determining if a move should be made, updating the snake's location.
+     * Handles the basic update loop, checking to see if we are in the running state, determining if
+     * a move should be made, updating the snake's location.
      */
     public void update() {
         if (mMode == RUNNING) {
@@ -411,7 +425,6 @@ public class SnakeView extends TileView {
 
     /**
      * Draws some walls.
-     * 
      */
     private void updateWalls() {
         for (int x = 0; x < mXTileCount; x++) {
@@ -426,7 +439,6 @@ public class SnakeView extends TileView {
 
     /**
      * Draws some apples.
-     * 
      */
     private void updateApples() {
         for (Coordinate c : mAppleList) {
@@ -435,38 +447,36 @@ public class SnakeView extends TileView {
     }
 
     /**
-     * Figure out which way the snake is going, see if he's run into anything (the
-     * walls, himself, or an apple). If he's not going to die, we then add to the
-     * front and subtract from the rear in order to simulate motion. If we want to
-     * grow him, we don't subtract from the rear.
-     * 
+     * Figure out which way the snake is going, see if he's run into anything (the walls, himself,
+     * or an apple). If he's not going to die, we then add to the front and subtract from the rear
+     * in order to simulate motion. If we want to grow him, we don't subtract from the rear.
      */
     private void updateSnake() {
         boolean growSnake = false;
 
-        // grab the snake by the head
+        // Grab the snake by the head
         Coordinate head = mSnakeTrail.get(0);
         Coordinate newHead = new Coordinate(1, 1);
 
         mDirection = mNextDirection;
 
         switch (mDirection) {
-        case EAST: {
-            newHead = new Coordinate(head.x + 1, head.y);
-            break;
-        }
-        case WEST: {
-            newHead = new Coordinate(head.x - 1, head.y);
-            break;
-        }
-        case NORTH: {
-            newHead = new Coordinate(head.x, head.y - 1);
-            break;
-        }
-        case SOUTH: {
-            newHead = new Coordinate(head.x, head.y + 1);
-            break;
-        }
+            case EAST: {
+                newHead = new Coordinate(head.x + 1, head.y);
+                break;
+            }
+            case WEST: {
+                newHead = new Coordinate(head.x - 1, head.y);
+                break;
+            }
+            case NORTH: {
+                newHead = new Coordinate(head.x, head.y - 1);
+                break;
+            }
+            case SOUTH: {
+                newHead = new Coordinate(head.x, head.y + 1);
+                break;
+            }
         }
 
         // Collision detection
@@ -495,7 +505,7 @@ public class SnakeView extends TileView {
             if (c.equals(newHead)) {
                 mAppleList.remove(c);
                 addRandomApple();
-                
+
                 mScore++;
                 mMoveDelay *= 0.9;
 
@@ -523,10 +533,8 @@ public class SnakeView extends TileView {
     }
 
     /**
-     * Simple class containing two integer values and a comparison function.
-     * There's probably something I should use instead, but this was quick and
-     * easy to build.
-     * 
+     * Simple class containing two integer values and a comparison function. There's probably
+     * something I should use instead, but this was quick and easy to build.
      */
     private class Coordinate {
         public int x;
@@ -549,5 +557,5 @@ public class SnakeView extends TileView {
             return "Coordinate: [" + x + "," + y + "]";
         }
     }
-    
+
 }
