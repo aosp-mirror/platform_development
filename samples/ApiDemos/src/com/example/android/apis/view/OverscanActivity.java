@@ -26,6 +26,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
+import android.view.ActionMode;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -54,6 +55,7 @@ public class OverscanActivity extends Activity
         implements OnQueryTextListener, ActionBar.TabListener {
     public static class IV extends ImageView implements View.OnSystemUiVisibilityChangeListener {
         private OverscanActivity mActivity;
+        private ActionMode mActionMode;
         public IV(Context context) {
             super(context);
         }
@@ -71,6 +73,44 @@ public class OverscanActivity extends Activity
         @Override
         public void onSystemUiVisibilityChange(int visibility) {
             mActivity.updateCheckControls();
+            mActivity.refreshSizes();
+        }
+
+        private class MyActionModeCallback implements ActionMode.Callback {
+            @Override public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+                mode.setTitle("My Action Mode!");
+                mode.setSubtitle(null);
+                mode.setTitleOptionalHint(false);
+                menu.add("Sort By Size").setIcon(android.R.drawable.ic_menu_sort_by_size);
+                menu.add("Sort By Alpha").setIcon(android.R.drawable.ic_menu_sort_alphabetically);
+                return true;
+            }
+
+            @Override public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
+                return true;
+            }
+
+            @Override public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
+                return true;
+            }
+
+            @Override public void onDestroyActionMode(ActionMode mode) {
+                mActionMode = null;
+                mActivity.clearActionMode();
+            }
+        }
+
+        public void startActionMode() {
+            if (mActionMode == null) {
+                ActionMode.Callback cb = new MyActionModeCallback();
+                mActionMode = startActionMode(cb);
+            }
+        }
+
+        public void stopActionMode() {
+            if (mActionMode != null) {
+                mActionMode.finish();
+            }
         }
     }
 
@@ -137,6 +177,38 @@ public class OverscanActivity extends Activity
         for (int i=0; i<mCheckControls.length; i++) {
             mCheckControls[i].setOnCheckedChangeListener(checkChangeListener);
         }
+        ((CheckBox) findViewById(R.id.windowFullscreen)).setOnCheckedChangeListener(
+                new CompoundButton.OnCheckedChangeListener() {
+                    @Override
+                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                        setFullscreen(isChecked);
+                    }
+                }
+        );
+        ((CheckBox) findViewById(R.id.windowHideActionBar)).setOnCheckedChangeListener(
+                new CompoundButton.OnCheckedChangeListener() {
+                    @Override
+                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                        if (isChecked) {
+                            getActionBar().hide();
+                        } else {
+                            getActionBar().show();
+                        }
+                    }
+                }
+        );
+        ((CheckBox) findViewById(R.id.windowActionMode)).setOnCheckedChangeListener(
+                new CompoundButton.OnCheckedChangeListener() {
+                    @Override
+                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                        if (isChecked) {
+                            mImage.startActionMode();
+                        } else {
+                            mImage.stopActionMode();
+                        }
+                    }
+                }
+        );
         mMetricsText = (TextView) findViewById(R.id.metricsText);
     }
 
@@ -227,5 +299,9 @@ public class OverscanActivity extends Activity
             }
         }
         mImage.setSystemUiVisibility(visibility);
+    }
+
+    public void clearActionMode() {
+        ((CheckBox) findViewById(R.id.windowActionMode)).setChecked(false);
     }
 }
