@@ -74,8 +74,8 @@ public class ContentBrowserActivity extends Activity
             mText = new TextView(context);
             mText.setText(context.getString(R.string.alert_dialog_two_buttons2ultra_msg));
             mText.setClickable(false);
-            mText.setLongClickable(false);
             mText.setOnClickListener(this);
+            mText.setTextIsSelectable(true);
             addView(mText, new ViewGroup.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
 
