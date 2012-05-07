@@ -328,7 +328,7 @@ public class MonkeySourceScript implements MonkeyEventSource {
             try {
                 float x = Float.parseFloat(args[0]);
                 float y = Float.parseFloat(args[1]);
-                long tapDuration = 0;
+                long tapDuration = 5;
                 if (args.length == 3) {
                     tapDuration = Long.parseLong(args[2]);
                 }
@@ -396,6 +396,7 @@ public class MonkeySourceScript implements MonkeyEventSource {
             long downTime = SystemClock.uptimeMillis();
             long eventTime = SystemClock.uptimeMillis();
 
+            MonkeyWaitEvent wayPointDelay = new MonkeyWaitEvent(5);
             if (stepCount > 0) {
                 float xStep = (xEnd - xStart) / stepCount;
                 float yStep = (yEnd - yStart) / stepCount;
@@ -406,6 +407,7 @@ public class MonkeySourceScript implements MonkeyEventSource {
                 mQ.addLast(e);
 
                 for (int i = 0; i < stepCount; ++i) {
+                    mQ.addLast(wayPointDelay);
                     x += xStep;
                     y += yStep;
                     eventTime = SystemClock.uptimeMillis();
@@ -414,6 +416,7 @@ public class MonkeySourceScript implements MonkeyEventSource {
                     mQ.addLast(e);
                 }
 
+                mQ.addLast(wayPointDelay);
                 eventTime = SystemClock.uptimeMillis();
                 e = new MonkeyTouchEvent(MotionEvent.ACTION_UP).setDownTime(downTime)
                     .setEventTime(eventTime).addPointer(0, x, y, 1, 5);
@@ -539,7 +542,7 @@ public class MonkeySourceScript implements MonkeyEventSource {
             return;
         }
 
-       // Handle launch instrumentation events
+        // Handle launch instrumentation events
         if (s.indexOf(EVENT_KEYWORD_INSTRUMENTATION) >= 0 && args.length == 2) {
             String test_name = args[0];
             String runner_name = args[1];
@@ -613,7 +616,7 @@ public class MonkeySourceScript implements MonkeyEventSource {
             mQ.addLast(e);
         }
 
-      //Run the shell command
+        //Run the shell command
         if (s.indexOf(EVENT_KEYWORD_RUNCMD) >= 0 && args.length == 1) {
             String cmd = args[0];
             MonkeyCommandEvent e = new MonkeyCommandEvent(cmd);
@@ -808,16 +811,24 @@ public class MonkeySourceScript implements MonkeyEventSource {
     /**
      * Adjust motion downtime and eventtime according to current system time.
      *
-     * @param e A KeyEvent
+     * @param e A MotionEvent
      */
     private void adjustMotionEventTime(MonkeyMotionEvent e) {
-        long updatedDownTime = 0;
+        long thisEventTime = SystemClock.uptimeMillis();
+        long thisDownTime = e.getDownTime();
 
-        updatedDownTime = SystemClock.uptimeMillis();
-        if (e.getDownTime() < 0) {
-            e.setDownTime(updatedDownTime);
+        if (thisDownTime == mLastRecordedDownTimeMotion) {
+            // this event is the same batch as previous one
+            e.setDownTime(mLastExportDownTimeMotion);
+        } else {
+            // this event is the start of a new batch
+            mLastRecordedDownTimeMotion = thisDownTime;
+            // update down time to match current time
+            e.setDownTime(thisEventTime);
+            mLastExportDownTimeMotion = thisEventTime;
         }
-        e.setEventTime(updatedDownTime);
+        // always refresh event time
+        e.setEventTime(thisEventTime);
     }
 
     /**
