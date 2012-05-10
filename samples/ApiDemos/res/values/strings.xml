@@ -1265,6 +1265,9 @@
     <string name="chronometer_clear_format">Clear format string</string>
     <string name="chronometer_initial_format">Initial format: <xliff:g id="initial-format">%s</xliff:g></string>
 
+    <string name="play">Play</string>
+    <string name="pause">Pause</string>
+
     <!-- ============================ -->
     <!--  vibrator examples strings  -->
     <!-- ============================ -->
