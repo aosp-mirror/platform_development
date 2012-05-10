@@ -26,28 +26,26 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:fitsSystemWindows="true"
+        android:animateLayoutChanges="true"
         >
         <TextView
+            android:id="@+id/title"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="top|center_horizontal"
             android:textColor="#ff000000"
-            android:background="#ffa0a0a0"
-            android:textSize="16dp"
-            android:textStyle="bold"
-            android:gravity="center"
-            android:text="You Could Put Controls Here"
+            android:background="#c0f0f0f0"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:gravity="left"
+            android:padding="16dp"
+            android:text="A title goes here"
             />
-        <TextView
+        <SeekBar
+            android:id="@+id/seekbar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="bottom|center_horizontal"
-            android:textColor="#ff000000"
-            android:background="#ffa0a0a0"
-            android:textSize="16dp"
-            android:textStyle="bold"
-            android:gravity="center"
-            android:text="Or Put Them Here, Too"
+            android:layout_marginBottom="16dp"
             />
     </FrameLayout>
 </FrameLayout>

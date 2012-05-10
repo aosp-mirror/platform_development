@@ -26,14 +26,17 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.AttributeSet;
+import android.util.TypedValue;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
+import android.widget.Button;
 import android.widget.ScrollView;
 import android.widget.SearchView;
+import android.widget.SeekBar;
 import android.widget.ShareActionProvider;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -57,6 +60,8 @@ public class ContentBrowserActivity extends Activity
     public static class Content extends ScrollView
             implements View.OnSystemUiVisibilityChangeListener, View.OnClickListener {
         TextView mText;
+        TextView mTitleView;
+        SeekBar mSeekView;
         boolean mNavVisible;
         int mBaseSystemUiVisibility = SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
                 | SYSTEM_UI_FLAG_LAYOUT_STABLE;
@@ -72,6 +77,7 @@ public class ContentBrowserActivity extends Activity
             super(context, attrs);
     
             mText = new TextView(context);
+            mText.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 16);
             mText.setText(context.getString(R.string.alert_dialog_two_buttons2ultra_msg));
             mText.setClickable(false);
             mText.setOnClickListener(this);
@@ -80,6 +86,13 @@ public class ContentBrowserActivity extends Activity
                     ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
 
             setOnSystemUiVisibilityChangeListener(this);
+        }
+
+        public void init(TextView title, SeekBar seek) {
+            // This called by the containing activity to supply the surrounding
+            // state of the content browser that it will interact with.
+            mTitleView = title;
+            mSeekView = seek;
             setNavVisibility(true);
         }
 
@@ -139,6 +152,8 @@ public class ContentBrowserActivity extends Activity
 
             // Set the new desired visibility.
             setSystemUiVisibility(newVis);
+            mTitleView.setVisibility(visible ? VISIBLE : INVISIBLE);
+            mSeekView.setVisibility(visible ? VISIBLE : INVISIBLE);
         }
     }
 //END_INCLUDE(content)
@@ -156,6 +171,8 @@ public class ContentBrowserActivity extends Activity
 
         setContentView(R.layout.content_browser);
         mContent = (Content)findViewById(R.id.content);
+        mContent.init((TextView)findViewById(R.id.title),
+                (SeekBar)findViewById(R.id.seekbar));
 
         ActionBar bar = getActionBar();
         bar.addTab(bar.newTab().setText("Tab 1").setTabListener(this));
