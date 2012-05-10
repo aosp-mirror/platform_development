@@ -14,11 +14,12 @@
      limitations under the License.
 -->
 
+<!-- BEGIN_INCLUDE(complete) -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent" android:layout_height="match_parent"
     >
     <view class="com.example.android.apis.view.VideoPlayerActivity$Content"
-        android:id="@+id/image"
+        android:id="@+id/content"
         android:src="@drawable/frantic"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -28,28 +29,35 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:fitsSystemWindows="true"
+        android:animateLayoutChanges="true"
         >
         <TextView
+            android:id="@+id/title"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="top|center_horizontal"
-            android:textColor="#ff000000"
-            android:background="#ffa0a0a0"
-            android:textSize="16dp"
-            android:textStyle="bold"
-            android:gravity="center"
-            android:text="You Could Put Controls Here"
+            android:textColor="#ffffffff"
+            android:background="#a0000000"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:gravity="left"
+            android:padding="16dp"
+            android:text="A title goes here"
             />
-        <TextView
+        <Button
+            android:id="@+id/play"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:textSize="28dp"
+            />
+        <SeekBar
+            android:id="@+id/seekbar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="bottom|center_horizontal"
-            android:textColor="#ff000000"
-            android:background="#ffa0a0a0"
-            android:textSize="16dp"
-            android:textStyle="bold"
-            android:gravity="center"
-            android:text="Or Put Them Here, Too"
+            android:layout_marginBottom="16dp"
             />
     </FrameLayout>
 </FrameLayout>
+<!-- END_INCLUDE(complete) -->

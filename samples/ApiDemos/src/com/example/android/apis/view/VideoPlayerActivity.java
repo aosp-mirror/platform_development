@@ -26,15 +26,16 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.Window;
+import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.ScrollView;
 import android.widget.SearchView;
+import android.widget.SeekBar;
 import android.widget.ShareActionProvider;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -58,11 +59,16 @@ public class VideoPlayerActivity extends Activity
      */
 //BEGIN_INCLUDE(content)
     public static class Content extends ImageView implements
-            View.OnSystemUiVisibilityChangeListener, View.OnClickListener {
-        TextView mText;
+            View.OnSystemUiVisibilityChangeListener, View.OnClickListener,
+            ActionBar.OnMenuVisibilityListener {
+        Activity mActivity;
+        TextView mTitleView;
+        Button mPlayButton;
+        SeekBar mSeekView;
+        boolean mAddedMenuListener;
+        boolean mMenusOpen;
+        boolean mPaused;
         boolean mNavVisible;
-        int mBaseSystemUiVisibility = SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                | SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION | SYSTEM_UI_FLAG_LAYOUT_STABLE;
         int mLastSystemUiVis;
 
         Runnable mNavHider = new Runnable() {
@@ -75,17 +81,43 @@ public class VideoPlayerActivity extends Activity
             super(context, attrs);
             setOnSystemUiVisibilityChangeListener(this);
             setOnClickListener(this);
-            setNavVisibility(true);
+        }
+
+        public void init(Activity activity, TextView title, Button playButton,
+                SeekBar seek) {
+            // This called by the containing activity to supply the surrounding
+            // state of the video player that it will interact with.
+            mActivity = activity;
+            mTitleView = title;
+            mPlayButton = playButton;
+            mSeekView = seek;
+            mPlayButton.setOnClickListener(this);
+            setPlayPaused(true);
+        }
+
+        @Override protected void onAttachedToWindow() {
+            super.onAttachedToWindow();
+            if (mActivity != null) {
+                mAddedMenuListener = true;
+                mActivity.getActionBar().addOnMenuVisibilityListener(this);
+            }
+        }
+
+        @Override protected void onDetachedFromWindow() {
+            super.onDetachedFromWindow();
+            if (mAddedMenuListener) {
+                mActivity.getActionBar().removeOnMenuVisibilityListener(this);
+            }
         }
 
         @Override public void onSystemUiVisibilityChange(int visibility) {
-            // Detect when we go out of low-profile mode, to also go out
-            // of full screen.  We only do this when the low profile mode
-            // is changing from its last state, and turning off.
+            // Detect when we go out of nav-hidden mode, to clear our state
+            // back to having the full UI chrome up.  Only do this when
+            // the state is changing and nav is no longer hidden.
             int diff = mLastSystemUiVis ^ visibility;
             mLastSystemUiVis = visibility;
-            if ((diff&SYSTEM_UI_FLAG_LOW_PROFILE) != 0
-                    && (visibility&SYSTEM_UI_FLAG_LOW_PROFILE) == 0) {
+            if ((diff&SYSTEM_UI_FLAG_HIDE_NAVIGATION) != 0
+                    && (visibility&SYSTEM_UI_FLAG_HIDE_NAVIGATION) == 0) {
                 setNavVisibility(true);
             }
         }
@@ -93,23 +125,35 @@ public class VideoPlayerActivity extends Activity
         @Override protected void onWindowVisibilityChanged(int visibility) {
             super.onWindowVisibilityChanged(visibility);
 
-            // When we become visible, we show our navigation elements briefly
-            // before hiding them.
-            setNavVisibility(true);
+            // When we become visible or invisible, play is paused.
+            setPlayPaused(true);
         }
 
         @Override public void onClick(View v) {
-            // When the user clicks, we make the navigation visible.  In a real
-            // implementation, this would probably toggle between pause/play.
+            if (v == mPlayButton) {
+                // Clicking on the play/pause button toggles its state.
+                setPlayPaused(!mPaused);
+            } else {
+                // Clicking elsewhere makes the navigation visible.
+                setNavVisibility(true);
+            }
+        }
+
+        @Override public void onMenuVisibilityChanged(boolean isVisible) {
+            mMenusOpen = isVisible;
             setNavVisibility(true);
         }
 
-        void setBaseSystemUiVisibility(int visibility) {
-            mBaseSystemUiVisibility = visibility;
+        void setPlayPaused(boolean paused) {
+            mPaused = paused;
+            mPlayButton.setText(paused ? R.string.play : R.string.pause);
+            setNavVisibility(true);
         }
 
         void setNavVisibility(boolean visible) {
-            int newVis = mBaseSystemUiVisibility;
+            int newVis = SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                    | SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                    | SYSTEM_UI_FLAG_LAYOUT_STABLE;
             if (!visible) {
                 newVis |= SYSTEM_UI_FLAG_LOW_PROFILE | SYSTEM_UI_FLAG_FULLSCREEN
                         | SYSTEM_UI_FLAG_HIDE_NAVIGATION;
@@ -120,12 +164,18 @@ public class VideoPlayerActivity extends Activity
                 Handler h = getHandler();
                 if (h != null) {
                     h.removeCallbacks(mNavHider);
-                    h.postDelayed(mNavHider, 3000);
+                    if (!mMenusOpen && !mPaused) {
+                        // If the menus are open or play is paused, we will not auto-hide.
+                        h.postDelayed(mNavHider, 3000);
+                    }
                 }
             }
 
             // Set the new desired visibility.
             setSystemUiVisibility(newVis);
+            mTitleView.setVisibility(visible ? VISIBLE : INVISIBLE);
+            mPlayButton.setVisibility(visible ? VISIBLE : INVISIBLE);
+            mSeekView.setVisibility(visible ? VISIBLE : INVISIBLE);
         }
     }
 //END_INCLUDE(content)
@@ -143,6 +193,9 @@ public class VideoPlayerActivity extends Activity
 
         setContentView(R.layout.video_player);
         mContent = (Content)findViewById(R.id.content);
+        mContent.init(this, (TextView)findViewById(R.id.title),
+                (Button)findViewById(R.id.play),
+                (SeekBar)findViewById(R.id.seekbar));
 
         ActionBar bar = getActionBar();
         bar.addTab(bar.newTab().setText("Tab 1").setTabListener(this));
@@ -197,15 +250,6 @@ public class VideoPlayerActivity extends Activity
             case R.id.hide_tabs:
                 getActionBar().setNavigationMode(ActionBar.NAVIGATION_MODE_STANDARD);
                 item.setChecked(true);
-                return true;
-            case R.id.stable_layout:
-                item.setChecked(!item.isChecked());
-                mContent.setBaseSystemUiVisibility(item.isChecked()
-                        ? View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                                | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                                | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                        : View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                                | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION);
                 return true;
         }
         return false;
