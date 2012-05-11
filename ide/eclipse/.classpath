@@ -10,7 +10,6 @@
 	<classpathentry kind="src" path="packages/apps/DeskClock/src"/>
 	<classpathentry kind="src" path="packages/apps/Email/src"/>
 	<classpathentry kind="src" path="packages/apps/Email/emailcommon/src"/>
-	<classpathentry kind="src" path="packages/apps/Exchange/src"/>
 	<classpathentry kind="src" path="packages/apps/Gallery2/src"/>
 	<classpathentry kind="src" path="packages/apps/Gallery2/src_pd"/>
 	<classpathentry kind="src" path="packages/apps/Gallery2/gallerycommon/src"/>
@@ -115,5 +114,6 @@
 	<classpathentry kind="lib" path="out/target/common/obj/JAVA_LIBRARIES/gsf-client_intermediates/javalib.jar"/>
 	<classpathentry kind="lib" path="out/target/common/obj/JAVA_LIBRARIES/guava_intermediates/javalib.jar"/>
 	<classpathentry kind="lib" path="packages/apps/Calculator/arity-2.1.2.jar"/>
+	<classpathentry kind="lib" path="out/target/common/obj/JAVA_LIBRARIES/junit-runner_intermediates/javalib.jar"/>
 	<classpathentry kind="output" path="out/target/common/obj/JAVA_LIBRARIES/android_stubs_current_intermediates/classes"/>
 </classpath>
