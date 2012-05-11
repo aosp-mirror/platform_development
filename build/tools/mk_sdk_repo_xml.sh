@@ -57,7 +57,7 @@ XMLNS=$(sed -n '/xmlns:sdk="/s/.*"\(.*\)".*/\1/p' "$SCHEMA")
 echo "## Using xmlns:sdk=$XMLNS"
 
 # Extract the schema version number from the XMLNS, e.g. it would extract "3"
-VERSION="${XMLNS##*/}"
+XSD_VERSION="${XMLNS##*/}"
 
 # Get the root element from the schema. This is the first element
 # which name starts with "sdk-" (e.g. sdk-repository, sdk-addon)
@@ -87,7 +87,8 @@ function check_enum() {
   done
 }
 
-# Parse all archives.
+# Definition of the attributes we read from source.properties or manifest.ini
+# files and the equivalent XML element being generated.
 
 ATTRS=(
   # Columns:
@@ -134,6 +135,82 @@ ATTRS=(
   revision                      revision                 1
 )
 
+
+# Starting with XSD repo-7 and addon-5, some revision elements are no longer just
+# integers. Instead they are in major.minor.micro.preview format. This defines
+# which elements. This depends on the XSD root element and the XSD version.
+
+if [[ "$ROOT" == "sdk-repository" && "$XSD_VERSION" -ge 7 ]] ||
+   [[ "$ROOT" == "sdk-addon"      && "$XSD_VERSION" -ge 5 ]]; then
+FULL_REVISIONS=(
+  tool          revision
+  platform-tool revision
+  @             min-tools-rev
+  @             min-platform-tools-rev
+)
+else
+FULL_REVISIONS=()
+fi
+
+
+# Parse all archives.
+
+function needs_full_revision() {
+  local PARENT="$1"
+  local ELEMENT="$2"
+  shift
+  shift
+  local P E
+
+  while [[ "$1" ]]; do
+    P=$1
+    E=$2
+    if [[ "$E" == "$ELEMENT" ]] && [[ "$P" == "@" || "$P" == "$PARENT" ]]; then
+      return 0 # true
+    fi
+    shift
+    shift
+  done
+
+  return 1 # false
+}
+
+# Parses and print a full revision in the form "1.2.3 rc4".
+# Note that the format requires to have a # space before the
+# optional "rc" (e.g. '1 rc4', not '1rc4') and no space after
+# the rc (so not '1 rc 4' either)
+function write_full_revision() {
+  local VALUE="$1"
+  local EXTRA_SPACE="$2"
+  local KEYS="major minor micro preview"
+  local V K
+
+  while [[ -n "$VALUE" && -n "$KEYS" ]]; do
+    # Take 1st segment delimited by . or space
+    V="${VALUE%%[. ]*}"
+
+    # Print it
+    if [[ "${V:0:2}" == "rc" ]]; then
+      V="${V:2}"
+      K="preview"
+      KEYS=""
+    else
+      K="${KEYS%% *}"
+    fi
+
+    if [[ -n "$V" && -n "$K" ]]; then
+        echo "$EXTRA_SPACE            <sdk:$K>$V</sdk:$K>"
+    fi
+
+    # Take the rest.
+    K="${KEYS#* }"
+    if [[ "$K" == "$KEYS" ]]; then KEYS=""; else KEYS="$K"; fi
+    V="${VALUE#*[. ]}"
+    if [[ "$V" == "$VALUE" ]]; then VALUE=""; else VALUE="$V"; fi
+  done
+}
+
+
 function parse_attributes() {
   local PROPS="$1"
   shift
@@ -151,7 +228,7 @@ function parse_attributes() {
     DST=$2
     REV=$3
 
-    if [[ $VERSION -ge $REV ]]; then
+    if [[ $XSD_VERSION -ge $REV ]]; then
       # Parse the property, if present. Any space is replaced by @
       VALUE=$( grep "^$SRC=" "$PROPS" | cut -d = -f 2 | tr ' ' '@' | tr -d '\r' )
       if [[ -n "$VALUE" ]]; then
@@ -172,7 +249,9 @@ function parse_attributes() {
 }
 
 function output_attributes() {
-  local OUT="$1"
+  local ELEMENT="$1"
+  local OUT="$2"
+  shift
   shift
   local KEY VALUE
   local NODE LAST_NODE EXTRA_SPACE
@@ -192,7 +271,13 @@ function output_attributes() {
       LAST_NODE="$NODE"
       [[ "$NODE"      ]] && echo "          <sdk:$NODE>" >> "$OUT"
     fi
-    echo "$EXTRA_SPACE        <sdk:$KEY>$VALUE</sdk:$KEY>" >> "$OUT"
+    if needs_full_revision "$ELEMENT" "$KEY" ${FULL_REVISIONS[@]}; then
+      echo "$EXTRA_SPACE        <sdk:$KEY>"       >> "$OUT"
+      write_full_revision "$VALUE" "$EXTRA_SPACE" >> "$OUT"
+      echo "$EXTRA_SPACE        </sdk:$KEY>"      >> "$OUT"
+    else
+      echo "$EXTRA_SPACE        <sdk:$KEY>$VALUE</sdk:$KEY>" >> "$OUT"
+    fi
     shift
     shift
   done
@@ -285,7 +370,7 @@ while [[ -n "$1" ]]; do
 
       # Time to generate the XML for the package
       echo "    <sdk:${ELEMENT}>" >> "$OUT"
-      output_attributes "$OUT" $MAP
+      output_attributes "$ELEMENT" "$OUT" $MAP
       [[ -n "$LIBS_XML" ]] && echo "$LIBS_XML" >> "$OUT"
       echo "        <sdk:archives>" >> "$OUT"
     fi
