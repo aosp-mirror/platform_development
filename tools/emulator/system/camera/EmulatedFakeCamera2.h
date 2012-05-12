@@ -151,10 +151,10 @@ private:
                       // working on them
 
         camera_metadata_t *mRequest;
-        uint32_t *mNextFrameNumber;
-        uint64_t *mNextExposureTime;
-        uint64_t *mNextFrameDuration;
-        uint32_t *mNextSensitivity;
+        int32_t mNextFrameNumber;
+        int64_t mNextExposureTime;
+        int64_t mNextFrameDuration;
+        int32_t mNextSensitivity;
         buffer_handle_t  *mNextBuffer;
         int mNextBufferStride;
     };

@@ -455,81 +455,73 @@ bool EmulatedFakeCamera2::ConfigureThread::threadLoop() {
 
         sort_camera_metadata(mRequest);
 
-        uint8_t *streams;
-        size_t streamCount;
+        camera_metadata_entry_t streams;
         res = find_camera_metadata_entry(mRequest,
                 ANDROID_REQUEST_OUTPUT_STREAMS,
-                NULL,
-                (void**)&streams,
-                &streamCount);
+                &streams);
         if (res != NO_ERROR) {
             ALOGE("%s: error reading output stream tag", __FUNCTION__);
             mParent->signalError();
             return false;
         }
         // TODO: Only raw stream supported
-        if (streamCount != 1 || streams[0] != 0) {
+        if (streams.count != 1 || streams.data.u8[0] != 0) {
             ALOGE("%s: TODO: Only raw stream supported", __FUNCTION__);
             mParent->signalError();
             return false;
         }
 
+        camera_metadata_entry_t e;
         res = find_camera_metadata_entry(mRequest,
                 ANDROID_REQUEST_FRAME_COUNT,
-                NULL,
-                (void**)&mNextFrameNumber,
-                NULL);
+                &e);
         if (res != NO_ERROR) {
             ALOGE("%s: error reading frame count tag", __FUNCTION__);
             mParent->signalError();
             return false;
         }
+        mNextFrameNumber = *e.data.i32;
 
         res = find_camera_metadata_entry(mRequest,
                 ANDROID_SENSOR_EXPOSURE_TIME,
-                NULL,
-                (void**)&mNextExposureTime,
-                NULL);
+                &e);
         if (res != NO_ERROR) {
             ALOGE("%s: error reading exposure time tag", __FUNCTION__);
             mParent->signalError();
             return false;
         }
+        mNextExposureTime = *e.data.i64;
 
         res = find_camera_metadata_entry(mRequest,
                 ANDROID_SENSOR_FRAME_DURATION,
-                NULL,
-                (void**)&mNextFrameDuration,
-                NULL);
+                &e);
         if (res != NO_ERROR) {
             ALOGE("%s: error reading frame duration tag", __FUNCTION__);
             mParent->signalError();
             return false;
         }
-        if (*mNextFrameDuration <
-                *mNextExposureTime + Sensor::kMinVerticalBlank) {
-            *mNextFrameDuration = *mNextExposureTime + Sensor::kMinVerticalBlank;
+        mNextFrameDuration = *e.data.i64;
+
+        if (mNextFrameDuration <
+                mNextExposureTime + Sensor::kMinVerticalBlank) {
+            mNextFrameDuration = mNextExposureTime + Sensor::kMinVerticalBlank;
         }
         res = find_camera_metadata_entry(mRequest,
                 ANDROID_SENSOR_SENSITIVITY,
-                NULL,
-                (void**)&mNextSensitivity,
-                NULL);
+                &e);
         if (res != NO_ERROR) {
             ALOGE("%s: error reading sensitivity tag", __FUNCTION__);
             mParent->signalError();
             return false;
         }
+        mNextSensitivity = *e.data.i32;
 
-        uint32_t *hourOfDay;
         res = find_camera_metadata_entry(mRequest,
                 EMULATOR_SCENE_HOUROFDAY,
-                NULL,
-                (void**)&hourOfDay,
-                NULL);
+                &e);
         if (res == NO_ERROR) {
-            ALOGV("Setting hour: %d", *hourOfDay);
-            mParent->mSensor->getScene().setHour(*hourOfDay);
+            ALOGV("Setting hour: %d", *e.data.i32);
+            mParent->mSensor->getScene().setHour(*e.data.i32);
         }
 
         // TODO: Fetch stride from gralloc
@@ -541,10 +533,10 @@ bool EmulatedFakeCamera2::ConfigureThread::threadLoop() {
     bool vsync = mParent->mSensor->waitForVSync(kWaitPerLoop);
 
     if (vsync) {
-        ALOGV("Configuring sensor for frame %d", *mNextFrameNumber);
-        mParent->mSensor->setExposureTime(*mNextExposureTime);
-        mParent->mSensor->setFrameDuration(*mNextFrameDuration);
-        mParent->mSensor->setSensitivity(*mNextSensitivity);
+        ALOGV("Configuring sensor for frame %d", mNextFrameNumber);
+        mParent->mSensor->setExposureTime(mNextExposureTime);
+        mParent->mSensor->setFrameDuration(mNextFrameDuration);
+        mParent->mSensor->setSensitivity(mNextSensitivity);
 
         /** Get buffer to fill for this frame */
         // TODO: Only does raw stream
@@ -684,12 +676,12 @@ bool EmulatedFakeCamera2::ReadoutThread::threadLoop() {
     // Got sensor data, construct frame and send it out
     ALOGV("Readout: Constructing metadata and frames");
 
-    uint8_t *metadata_mode;
+    camera_metadata_entry_t metadataMode;
     res = find_camera_metadata_entry(mRequest,
             ANDROID_REQUEST_METADATA_MODE,
-            NULL, (void**)&metadata_mode, NULL);
+            &metadataMode);
 
-    if (*metadata_mode == ANDROID_REQUEST_METADATA_FULL) {
+    if (*metadataMode.data.u8 == ANDROID_REQUEST_METADATA_FULL) {
         ALOGV("Metadata requested, constructing");
 
         camera_metadata_t *frame = NULL;
@@ -719,12 +711,11 @@ bool EmulatedFakeCamera2::ReadoutThread::threadLoop() {
                 &captureTime,
                 1);
 
-        uint32_t hourOfDay = (uint32_t)mParent->mSensor->getScene().getHour();
-        uint32_t *requestedHour;
+        int32_t hourOfDay = (int32_t)mParent->mSensor->getScene().getHour();
+        camera_metadata_entry_t requestedHour;
         res = find_camera_metadata_entry(frame,
                 EMULATOR_SCENE_HOUROFDAY,
-                NULL,
-                (void**)&requestedHour, NULL);
+                &requestedHour);
         if (res == NAME_NOT_FOUND) {
             ALOGV("Adding vendor tag");
             res = add_camera_metadata_entry(frame,
@@ -735,7 +726,7 @@ bool EmulatedFakeCamera2::ReadoutThread::threadLoop() {
             }
         } else if (res == OK) {
             ALOGV("Replacing value in vendor tag");
-            *requestedHour = hourOfDay;
+            *requestedHour.data.i32 = hourOfDay;
         } else {
             ALOGE("Error looking up vendor tag");
         }
