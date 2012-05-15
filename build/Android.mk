@@ -12,25 +12,25 @@ ALL_SDK_FILES += $(patsubst \
 
 # Rule to convert a source.prop template into the desired source.property
 # Rewritten variables:
-# - ${PLATFORM_VERSION}          e.g. "1.0".
-# - ${PLATFORM_SDK_VERSION}      e.g. "3", aka the API level.
-# - ${PLATFORM_VERSION_CODENAME} e.g. "REL" (transformed into "") or "Cupcake".
-# - if there's no codename, the codename line is removed.
-# $1 is the directory to process; all development/$1/*_source.prop_template files will
-# be converted.
-define convert-source-prop-template
-$(HOST_OUT)/development/$(1)/%_source.properties : $(TOPDIR)development/$(1)/%_source.prop_template
+# - ${PLATFORM_VERSION}          e.g. "1.0"
+# - ${PLATFORM_SDK_VERSION}      e.g. "3", aka the API level
+# - ${PLATFORM_VERSION_CODENAME} e.g. "REL" (transformed into "") or "Cupcake"
+$(HOST_OUT)/development/sdk/%_source.properties : $(TOPDIR)development/sdk/%_source.prop_template
 	@echo Generate $@
 	$(hide) mkdir -p $(dir $@)
 	$(hide) sed -e 's/$${PLATFORM_VERSION}/$(PLATFORM_VERSION)/' \
 		 -e 's/$${PLATFORM_SDK_VERSION}/$(PLATFORM_SDK_VERSION)/' \
 		 -e 's/$${PLATFORM_VERSION_CODENAME}/$(subst REL,,$(PLATFORM_VERSION_CODENAME))/' \
-		 $< > $@
-	$(hide) sed --in-place -e '/^AndroidVersion.CodeName=\s*$$/d' $@
-endef
+		 $< > $@ && sed --in-place -e '/^AndroidVersion.CodeName=\s*$$/d' $@
 
-$(call convert-source-prop-template,sdk)
-$(call convert-source-prop-template,samples)
+$(HOST_OUT)/development/samples/%_source.properties : $(TOPDIR)development/samples/%_source.prop_template
+	@echo Generate $@
+	$(hide) mkdir -p $(dir $@)
+	$(hide) sed -e 's/$${PLATFORM_VERSION}/$(PLATFORM_VERSION)/' \
+		 -e 's/$${PLATFORM_SDK_VERSION}/$(PLATFORM_SDK_VERSION)/' \
+		 -e 's/$${PLATFORM_VERSION_CODENAME}/$(subst REL,,$(PLATFORM_VERSION_CODENAME))/' \
+		 $< > $@ && sed --in-place -e '/^AndroidVersion.CodeName=\s*$$/d' $@
+
 
 # ===== Android Support/Compatibility Library =====
 
