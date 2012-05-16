@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="packages/apps/Bluetooth/src"/>
-	<classpathentry kind="src" path="packages/apps/Camera/src"/>
 	<classpathentry kind="src" path="packages/apps/Browser/src"/>
 	<classpathentry kind="src" path="packages/apps/Calendar/src"/>
 	<classpathentry kind="src" path="packages/apps/Calculator/src"/>
+	<classpathentry kind="src" path="packages/apps/Camera/src"/>
 	<classpathentry kind="src" path="packages/apps/CertInstaller/src"/>
 	<classpathentry kind="src" path="packages/apps/Contacts/src"/>
 	<classpathentry kind="src" path="packages/apps/DeskClock/src"/>
 	<classpathentry kind="src" path="packages/apps/Email/src"/>
 	<classpathentry kind="src" path="packages/apps/Email/emailcommon/src"/>
-	<classpathentry kind="src" path="packages/apps/Exchange/src"/>
+	<classpathentry kind="src" path="packages/apps/Exchange/exchange2/src"/>
 	<classpathentry kind="src" path="packages/apps/Gallery2/src"/>
 	<classpathentry kind="src" path="packages/apps/Gallery2/src_pd"/>
 	<classpathentry kind="src" path="packages/apps/Gallery2/gallerycommon/src"/>
