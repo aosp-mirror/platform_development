@@ -198,6 +198,404 @@ int EmulatedFakeCamera2::requestQueueNotify() {
     return mConfigureThread->newRequestAvailable();
 }
 
+int EmulatedFakeCamera2::constructDefaultRequest(
+        int request_template,
+        camera_metadata_t **request) {
+
+    if (request == NULL) return BAD_VALUE;
+    if (request_template < 0 || request_template >= CAMERA2_TEMPLATE_COUNT) {
+        return BAD_VALUE;
+    }
+    status_t res;
+    // Pass 1, calculate size and allocate
+    res = constructDefaultRequest(request_template,
+            request,
+            true);
+    if (res != OK) {
+        return res;
+    }
+    // Pass 2, build request
+    res = constructDefaultRequest(request_template,
+            request,
+            false);
+    if (res != OK) {
+        ALOGE("Unable to populate new request for template %d",
+                request_template);
+    }
+
+    return res;
+}
+
+status_t EmulatedFakeCamera2::constructDefaultRequest(
+        int request_template,
+        camera_metadata_t **request,
+        bool sizeRequest) {
+
+    size_t entryCount = 0;
+    size_t dataCount = 0;
+    status_t ret;
+
+#define ADD_OR_SIZE( tag, data, count ) \
+    if ( ( ret = addOrSize(*request, sizeRequest, &entryCount, &dataCount, \
+            tag, data, count) ) != OK ) return ret
+
+    static const int64_t USEC = 1000LL;
+    static const int64_t MSEC = USEC * 1000LL;
+    static const int64_t SEC = MSEC * 1000LL;
+
+    /** android.request */
+
+    static const uint8_t metadataMode = ANDROID_REQUEST_METADATA_NONE;
+    ADD_OR_SIZE(ANDROID_REQUEST_METADATA_MODE, &metadataMode, 1);
+
+    // OUTPUT_STREAMS set by user
+    // FRAME_COUNT set by user
+
+    /** android.lens */
+
+    static const float focusDistance = 0;
+    ADD_OR_SIZE(ANDROID_LENS_FOCUS_DISTANCE, &focusDistance, 1);
+
+    static const float aperture = 2.8f;
+    ADD_OR_SIZE(ANDROID_LENS_APERTURE, &aperture, 1);
+
+    static const float focalLength = 5.0f;
+    ADD_OR_SIZE(ANDROID_LENS_FOCAL_LENGTH, &focalLength, 1);
+
+    static const float filterDensity = 0;
+    ADD_OR_SIZE(ANDROID_LENS_FILTER_DENSITY, &filterDensity, 1);
+
+    static const uint8_t opticalStabilizationMode =
+            ANDROID_LENS_OPTICAL_STABILIZATION_OFF;
+    ADD_OR_SIZE(ANDROID_LENS_OPTICAL_STABILIZATION_MODE,
+            &opticalStabilizationMode, 1);
+
+    // FOCUS_RANGE set only in frame
+
+    /** android.sensor */
+
+    static const int64_t exposureTime = 30 * MSEC;
+    ADD_OR_SIZE(ANDROID_SENSOR_EXPOSURE_TIME, &exposureTime, 1);
+
+    static const int64_t frameDuration = 33333333L; // 1/30 s
+    ADD_OR_SIZE(ANDROID_SENSOR_FRAME_DURATION, &frameDuration, 1);
+
+    static const int32_t sensitivity = 400;
+    ADD_OR_SIZE(ANDROID_SENSOR_SENSITIVITY, &sensitivity, 1);
+
+    // TIMESTAMP set only in frame
+
+    /** android.flash */
+
+    uint8_t flashMode = 0;
+    switch (request_template) {
+      case CAMERA2_TEMPLATE_PREVIEW:
+        flashMode = ANDROID_FLASH_OFF;
+        break;
+      case CAMERA2_TEMPLATE_STILL_CAPTURE:
+        flashMode = ANDROID_FLASH_AUTO_SINGLE;
+        break;
+      case CAMERA2_TEMPLATE_VIDEO_RECORD:
+        flashMode = ANDROID_FLASH_OFF;
+        break;
+      case CAMERA2_TEMPLATE_VIDEO_SNAPSHOT:
+        flashMode = ANDROID_FLASH_OFF;
+        break;
+      case CAMERA2_TEMPLATE_ZERO_SHUTTER_LAG:
+        flashMode = ANDROID_FLASH_OFF;
+        break;
+      default:
+        flashMode = ANDROID_FLASH_OFF;
+        break;
+    }
+    ADD_OR_SIZE(ANDROID_FLASH_MODE, &flashMode, 1);
+
+    static const uint8_t flashPower = 10;
+    ADD_OR_SIZE(ANDROID_FLASH_FIRING_POWER, &flashPower, 1);
+
+    static const int64_t firingTime = 0;
+    ADD_OR_SIZE(ANDROID_FLASH_FIRING_TIME, &firingTime, 1);
+
+    /** Processing block modes */
+    uint8_t hotPixelMode = 0;
+    uint8_t demosaicMode = 0;
+    uint8_t noiseMode = 0;
+    uint8_t shadingMode = 0;
+    uint8_t geometricMode = 0;
+    uint8_t colorMode = 0;
+    uint8_t tonemapMode = 0;
+    uint8_t edgeMode = 0;
+    switch (request_template) {
+      case CAMERA2_TEMPLATE_PREVIEW:
+        hotPixelMode = ANDROID_PROCESSING_FAST;
+        demosaicMode = ANDROID_PROCESSING_FAST;
+        noiseMode = ANDROID_PROCESSING_FAST;
+        shadingMode = ANDROID_PROCESSING_FAST;
+        geometricMode = ANDROID_PROCESSING_FAST;
+        colorMode = ANDROID_PROCESSING_FAST;
+        tonemapMode = ANDROID_PROCESSING_FAST;
+        edgeMode = ANDROID_PROCESSING_FAST;
+        break;
+      case CAMERA2_TEMPLATE_STILL_CAPTURE:
+        hotPixelMode = ANDROID_PROCESSING_HIGH_QUALITY;
+        demosaicMode = ANDROID_PROCESSING_HIGH_QUALITY;
+        noiseMode = ANDROID_PROCESSING_HIGH_QUALITY;
+        shadingMode = ANDROID_PROCESSING_HIGH_QUALITY;
+        geometricMode = ANDROID_PROCESSING_HIGH_QUALITY;
+        colorMode = ANDROID_PROCESSING_HIGH_QUALITY;
+        tonemapMode = ANDROID_PROCESSING_HIGH_QUALITY;
+        edgeMode = ANDROID_PROCESSING_HIGH_QUALITY;
+        break;
+      case CAMERA2_TEMPLATE_VIDEO_RECORD:
+        hotPixelMode = ANDROID_PROCESSING_FAST;
+        demosaicMode = ANDROID_PROCESSING_FAST;
+        noiseMode = ANDROID_PROCESSING_FAST;
+        shadingMode = ANDROID_PROCESSING_FAST;
+        geometricMode = ANDROID_PROCESSING_FAST;
+        colorMode = ANDROID_PROCESSING_FAST;
+        tonemapMode = ANDROID_PROCESSING_FAST;
+        edgeMode = ANDROID_PROCESSING_FAST;
+        break;
+      case CAMERA2_TEMPLATE_VIDEO_SNAPSHOT:
+        hotPixelMode = ANDROID_PROCESSING_HIGH_QUALITY;
+        demosaicMode = ANDROID_PROCESSING_HIGH_QUALITY;
+        noiseMode = ANDROID_PROCESSING_HIGH_QUALITY;
+        shadingMode = ANDROID_PROCESSING_HIGH_QUALITY;
+        geometricMode = ANDROID_PROCESSING_HIGH_QUALITY;
+        colorMode = ANDROID_PROCESSING_HIGH_QUALITY;
+        tonemapMode = ANDROID_PROCESSING_HIGH_QUALITY;
+        edgeMode = ANDROID_PROCESSING_HIGH_QUALITY;
+        break;
+      case CAMERA2_TEMPLATE_ZERO_SHUTTER_LAG:
+        hotPixelMode = ANDROID_PROCESSING_HIGH_QUALITY;
+        demosaicMode = ANDROID_PROCESSING_HIGH_QUALITY;
+        noiseMode = ANDROID_PROCESSING_HIGH_QUALITY;
+        shadingMode = ANDROID_PROCESSING_HIGH_QUALITY;
+        geometricMode = ANDROID_PROCESSING_HIGH_QUALITY;
+        colorMode = ANDROID_PROCESSING_HIGH_QUALITY;
+        tonemapMode = ANDROID_PROCESSING_HIGH_QUALITY;
+        edgeMode = ANDROID_PROCESSING_HIGH_QUALITY;
+        break;
+      default:
+        hotPixelMode = ANDROID_PROCESSING_FAST;
+        demosaicMode = ANDROID_PROCESSING_FAST;
+        noiseMode = ANDROID_PROCESSING_FAST;
+        shadingMode = ANDROID_PROCESSING_FAST;
+        geometricMode = ANDROID_PROCESSING_FAST;
+        colorMode = ANDROID_PROCESSING_FAST;
+        tonemapMode = ANDROID_PROCESSING_FAST;
+        edgeMode = ANDROID_PROCESSING_FAST;
+        break;
+    }
+    ADD_OR_SIZE(ANDROID_HOT_PIXEL_MODE, &hotPixelMode, 1);
+    ADD_OR_SIZE(ANDROID_DEMOSAIC_MODE, &demosaicMode, 1);
+    ADD_OR_SIZE(ANDROID_NOISE_MODE, &noiseMode, 1);
+    ADD_OR_SIZE(ANDROID_SHADING_MODE, &shadingMode, 1);
+    ADD_OR_SIZE(ANDROID_GEOMETRIC_MODE, &geometricMode, 1);
+    ADD_OR_SIZE(ANDROID_COLOR_MODE, &colorMode, 1);
+    ADD_OR_SIZE(ANDROID_TONEMAP_MODE, &tonemapMode, 1);
+    ADD_OR_SIZE(ANDROID_EDGE_MODE, &edgeMode, 1);
+
+    /** android.noise */
+    static const uint8_t noiseStrength = 5;
+    ADD_OR_SIZE(ANDROID_NOISE_STRENGTH, &noiseStrength, 1);
+
+    /** android.color */
+    static const float colorTransform[9] = {
+        1.0f, 0.f, 0.f,
+        0.f, 1.f, 0.f,
+        0.f, 0.f, 1.f
+    };
+    ADD_OR_SIZE(ANDROID_COLOR_TRANSFORM, colorTransform, 9);
+
+    /** android.tonemap */
+    static const float tonemapCurve[4] = {
+        0.f, 0.f,
+        1.f, 1.f
+    };
+    ADD_OR_SIZE(ANDROID_TONEMAP_CURVE_RED, tonemapCurve, 4);
+    ADD_OR_SIZE(ANDROID_TONEMAP_CURVE_GREEN, tonemapCurve, 4);
+    ADD_OR_SIZE(ANDROID_TONEMAP_CURVE_BLUE, tonemapCurve, 4);
+
+    /** android.edge */
+    static const uint8_t edgeStrength = 5;
+    ADD_OR_SIZE(ANDROID_EDGE_STRENGTH, &edgeStrength, 1);
+
+    /** android.scaler */
+    static const int32_t cropRegion[3] = {
+        0, 0, Sensor::kResolution[0]
+    };
+    ADD_OR_SIZE(ANDROID_SCALER_CROP_REGION, cropRegion, 3);
+
+    /** android.jpeg */
+    static const int32_t jpegQuality = 80;
+    ADD_OR_SIZE(ANDROID_JPEG_QUALITY, &jpegQuality, 1);
+
+    static const int32_t thumbnailSize[2] = {
+        640, 480
+    };
+    ADD_OR_SIZE(ANDROID_JPEG_THUMBNAIL_SIZE, thumbnailSize, 2);
+
+    static const int32_t thumbnailQuality = 80;
+    ADD_OR_SIZE(ANDROID_JPEG_THUMBNAIL_QUALITY, &thumbnailQuality, 1);
+
+    static const double gpsCoordinates[2] = {
+        0, 0
+    };
+    ADD_OR_SIZE(ANDROID_JPEG_GPS_COORDINATES, gpsCoordinates, 2);
+
+    static const uint8_t gpsProcessingMethod[32] = "None";
+    ADD_OR_SIZE(ANDROID_JPEG_GPS_PROCESSING_METHOD, gpsProcessingMethod, 32);
+
+    static const int64_t gpsTimestamp = 0;
+    ADD_OR_SIZE(ANDROID_JPEG_GPS_TIMESTAMP, &gpsTimestamp, 1);
+
+    static const int32_t jpegOrientation = 0;
+    ADD_OR_SIZE(ANDROID_JPEG_ORIENTATION, &jpegOrientation, 1);
+
+    /** android.stats */
+
+    static const uint8_t faceDetectMode = ANDROID_STATS_FACE_DETECTION_OFF;
+    ADD_OR_SIZE(ANDROID_STATS_FACE_DETECT_MODE, &faceDetectMode, 1);
+
+    static const uint8_t histogramMode = ANDROID_STATS_OFF;
+    ADD_OR_SIZE(ANDROID_STATS_HISTOGRAM_MODE, &histogramMode, 1);
+
+    static const uint8_t sharpnessMapMode = ANDROID_STATS_OFF;
+    ADD_OR_SIZE(ANDROID_STATS_SHARPNESS_MAP_MODE, &sharpnessMapMode, 1);
+
+    // faceRectangles, faceScores, faceLandmarks, faceIds, histogram,
+    // sharpnessMap only in frames
+
+    /** android.control */
+
+    uint8_t controlIntent = 0;
+    switch (request_template) {
+      case CAMERA2_TEMPLATE_PREVIEW:
+        controlIntent = ANDROID_CONTROL_INTENT_PREVIEW;
+        break;
+      case CAMERA2_TEMPLATE_STILL_CAPTURE:
+        controlIntent = ANDROID_CONTROL_INTENT_STILL_CAPTURE;
+        break;
+      case CAMERA2_TEMPLATE_VIDEO_RECORD:
+        controlIntent = ANDROID_CONTROL_INTENT_VIDEO_RECORD;
+        break;
+      case CAMERA2_TEMPLATE_VIDEO_SNAPSHOT:
+        controlIntent = ANDROID_CONTROL_INTENT_VIDEO_SNAPSHOT;
+        break;
+      case CAMERA2_TEMPLATE_ZERO_SHUTTER_LAG:
+        controlIntent = ANDROID_CONTROL_INTENT_ZERO_SHUTTER_LAG;
+        break;
+      default:
+        controlIntent = ANDROID_CONTROL_INTENT_CUSTOM;
+        break;
+    }
+    ADD_OR_SIZE(ANDROID_CONTROL_CAPTURE_INTENT, &controlIntent, 1);
+
+    static const uint8_t controlMode = ANDROID_CONTROL_AUTO;
+    ADD_OR_SIZE(ANDROID_CONTROL_MODE, &controlMode, 1);
+
+    static const uint8_t effectMode = ANDROID_CONTROL_EFFECT_OFF;
+    ADD_OR_SIZE(ANDROID_CONTROL_EFFECT_MODE, &effectMode, 1);
+
+    static const uint8_t sceneMode = ANDROID_CONTROL_SCENE_MODE_FACE_PRIORITY;
+    ADD_OR_SIZE(ANDROID_CONTROL_SCENE_MODE, &sceneMode, 1);
+
+    static const uint8_t aeMode = ANDROID_CONTROL_AE_ON_AUTO_FLASH;
+    ADD_OR_SIZE(ANDROID_CONTROL_AE_MODE, &aeMode, 1);
+
+    static const int32_t controlRegions[5] = {
+        0, 0, Sensor::kResolution[0], Sensor::kResolution[1], 1000
+    };
+    ADD_OR_SIZE(ANDROID_CONTROL_AE_REGIONS, controlRegions, 5);
+
+    static const int32_t aeExpCompensation = 0;
+    ADD_OR_SIZE(ANDROID_CONTROL_AE_EXP_COMPENSATION, &aeExpCompensation, 1);
+
+    static const int32_t aeTargetFpsRange[2] = {
+        10, 30
+    };
+    ADD_OR_SIZE(ANDROID_CONTROL_AE_TARGET_FPS_RANGE, aeTargetFpsRange, 2);
+
+    static const uint8_t aeAntibandingMode =
+            ANDROID_CONTROL_AE_ANTIBANDING_AUTO;
+    ADD_OR_SIZE(ANDROID_CONTROL_AE_ANTIBANDING_MODE, &aeAntibandingMode, 1);
+
+    static const uint8_t awbMode =
+            ANDROID_CONTROL_AWB_AUTO;
+    ADD_OR_SIZE(ANDROID_CONTROL_AWB_MODE, &awbMode, 1);
+
+    ADD_OR_SIZE(ANDROID_CONTROL_AWB_REGIONS, controlRegions, 5);
+
+    uint8_t afMode = 0;
+    switch (request_template) {
+      case CAMERA2_TEMPLATE_PREVIEW:
+        afMode = ANDROID_CONTROL_AF_AUTO;
+        break;
+      case CAMERA2_TEMPLATE_STILL_CAPTURE:
+        afMode = ANDROID_CONTROL_AF_AUTO;
+        break;
+      case CAMERA2_TEMPLATE_VIDEO_RECORD:
+        afMode = ANDROID_CONTROL_AF_CONTINUOUS_VIDEO;
+        break;
+      case CAMERA2_TEMPLATE_VIDEO_SNAPSHOT:
+        afMode = ANDROID_CONTROL_AF_CONTINUOUS_VIDEO;
+        break;
+      case CAMERA2_TEMPLATE_ZERO_SHUTTER_LAG:
+        afMode = ANDROID_CONTROL_AF_CONTINUOUS_PICTURE;
+        break;
+      default:
+        afMode = ANDROID_CONTROL_AF_AUTO;
+        break;
+    }
+    ADD_OR_SIZE(ANDROID_CONTROL_AF_MODE, &afMode, 1);
+
+    ADD_OR_SIZE(ANDROID_CONTROL_AF_REGIONS, controlRegions, 5);
+
+    static const uint8_t vstabMode = ANDROID_CONTROL_VIDEO_STABILIZATION_OFF;
+    ADD_OR_SIZE(ANDROID_CONTROL_VIDEO_STABILIZATION_MODE, &vstabMode, 1);
+
+    // aeState, awbState, afState only in frame
+
+    /** Allocate metadata if sizing */
+    if (sizeRequest) {
+        ALOGV("Allocating %d entries, %d extra bytes for "
+                "request template type %d",
+                entryCount, dataCount, request_template);
+        *request = allocate_camera_metadata(entryCount, dataCount);
+        if (*request == NULL) {
+            ALOGE("Unable to allocate new request template type %d "
+                    "(%d entries, %d bytes extra data)", request_template,
+                    entryCount, dataCount);
+            return NO_MEMORY;
+        }
+    }
+    return OK;
+#undef ADD_OR_SIZE
+}
+
+status_t EmulatedFakeCamera2::addOrSize(camera_metadata_t *request,
+        bool sizeRequest,
+        size_t *entryCount,
+        size_t *dataCount,
+        uint32_t tag,
+        const void *entryData,
+        size_t entryDataCount) {
+    status_t res;
+    if (!sizeRequest) {
+        return add_camera_metadata_entry(request, tag, entryData,
+                entryDataCount);
+    } else {
+        int type = get_camera_metadata_tag_type(tag);
+        if (type < 0 ) return BAD_VALUE;
+        (*entryCount)++;
+        (*dataCount) += calculate_camera_metadata_entry_data_size(type,
+                entryDataCount);
+        return OK;
+    }
+}
+
+
 int EmulatedFakeCamera2::allocateStream(
         uint32_t width,
         uint32_t height,

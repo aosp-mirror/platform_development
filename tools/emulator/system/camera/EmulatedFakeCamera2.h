@@ -75,9 +75,9 @@ protected:
     //virtual int flushCapturesInProgress();
 
     /** Construct default request */
-    // virtual int constructDefaultRequest(
-    //     int request_template,
-    //     camera_metadata_t **request);
+    virtual int constructDefaultRequest(
+            int request_template,
+            camera_metadata_t **request);
 
     virtual int allocateStream(
             uint32_t width,
@@ -127,6 +127,24 @@ protected:
     void signalError();
 
 private:
+    /****************************************************************************
+     * Utility methods
+     ***************************************************************************/
+    /** Two-pass implementation of constructDefaultRequest */
+    status_t constructDefaultRequest(
+            int request_template,
+            camera_metadata_t **request,
+            bool sizeRequest);
+    /** Helper function for constructDefaultRequest */
+    status_t addOrSize( camera_metadata_t *request,
+            bool sizeRequest,
+            size_t *entryCount,
+            size_t *dataCount,
+            uint32_t tag,
+            const void *entry_data,
+            size_t entry_count);
+
+
     /****************************************************************************
      * Pipeline controller threads
      ***************************************************************************/
