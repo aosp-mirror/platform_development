@@ -50,7 +50,7 @@
 
 redirects:
 - src: /%2B/?$
-  dst: https://plus.google.com/b/108967384991768947849/
+  dst: https://plus.google.com/108967384991768947849/posts
   type: permanent
   comment: Redirect /+ and /+/ to Google+
 
