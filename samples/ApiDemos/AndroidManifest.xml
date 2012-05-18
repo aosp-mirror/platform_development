@@ -579,7 +579,8 @@
         </activity>
 
         <service android:name=".accessibility.ClockBackService"
-            android:label="@string/accessibility_service_label">
+            android:label="@string/accessibility_service_label"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
             <intent-filter>
                 <action android:name="android.accessibilityservice.AccessibilityService" />
             </intent-filter>
@@ -596,7 +597,8 @@
 
         <service android:name=".accessibility.TaskBackService"
                  android:label="@string/accessibility_query_window_label"
-                 android:enabled="@bool/atLeastIceCreamSandwich">
+                 android:enabled="@bool/atLeastIceCreamSandwich"
+                 android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
             <intent-filter>
                 <action android:name="android.accessibilityservice.AccessibilityService" />
             </intent-filter>
