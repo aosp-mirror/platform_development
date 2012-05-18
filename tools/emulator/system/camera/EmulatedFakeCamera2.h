@@ -83,7 +83,7 @@ protected:
             uint32_t width,
             uint32_t height,
             int format,
-            camera2_stream_ops_t *stream_ops,
+            const camera2_stream_ops_t *stream_ops,
             uint32_t *stream_id,
             uint32_t *format_actual,
             uint32_t *usage,
@@ -100,7 +100,7 @@ protected:
     //         uint32_t width,
     //         uint32_t height,
     //         uint32_t format,
-    //         camera2_stream_ops_t *stream_ops,
+    //         const camera2_stream_ops_t *stream_ops,
     //         uint32_t *stream_id,
     //         uint32_t *format_actual,
     //         uint32_t *usage,
@@ -238,7 +238,7 @@ private:
 
     /** Stream manipulation */
     uint32_t mNextStreamId;
-    camera2_stream_ops_t *mRawStreamOps;
+    const camera2_stream_ops_t *mRawStreamOps;
 
     /** Simulated hardware interfaces */
     sp<Sensor> mSensor;

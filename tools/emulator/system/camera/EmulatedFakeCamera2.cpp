@@ -600,7 +600,7 @@ int EmulatedFakeCamera2::allocateStream(
         uint32_t width,
         uint32_t height,
         int format,
-        camera2_stream_ops_t *stream_ops,
+        const camera2_stream_ops_t *stream_ops,
         uint32_t *stream_id,
         uint32_t *format_actual,
         uint32_t *usage,
