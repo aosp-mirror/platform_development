@@ -328,7 +328,7 @@ public class MonkeySourceScript implements MonkeyEventSource {
             try {
                 float x = Float.parseFloat(args[0]);
                 float y = Float.parseFloat(args[1]);
-                long tapDuration = 5;
+                long tapDuration = 0;
                 if (args.length == 3) {
                     tapDuration = Long.parseLong(args[2]);
                 }
@@ -396,7 +396,6 @@ public class MonkeySourceScript implements MonkeyEventSource {
             long downTime = SystemClock.uptimeMillis();
             long eventTime = SystemClock.uptimeMillis();
 
-            MonkeyWaitEvent wayPointDelay = new MonkeyWaitEvent(5);
             if (stepCount > 0) {
                 float xStep = (xEnd - xStart) / stepCount;
                 float yStep = (yEnd - yStart) / stepCount;
@@ -407,7 +406,6 @@ public class MonkeySourceScript implements MonkeyEventSource {
                 mQ.addLast(e);
 
                 for (int i = 0; i < stepCount; ++i) {
-                    mQ.addLast(wayPointDelay);
                     x += xStep;
                     y += yStep;
                     eventTime = SystemClock.uptimeMillis();
@@ -416,7 +414,6 @@ public class MonkeySourceScript implements MonkeyEventSource {
                     mQ.addLast(e);
                 }
 
-                mQ.addLast(wayPointDelay);
                 eventTime = SystemClock.uptimeMillis();
                 e = new MonkeyTouchEvent(MotionEvent.ACTION_UP).setDownTime(downTime)
                     .setEventTime(eventTime).addPointer(0, x, y, 1, 5);
