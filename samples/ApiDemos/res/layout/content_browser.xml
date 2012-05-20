@@ -34,9 +34,9 @@
             android:layout_height="wrap_content"
             android:layout_gravity="top|center_horizontal"
             android:textColor="#ff000000"
-            android:background="#c0f0f0f0"
+            android:background="#c0ffffff"
             android:textAppearance="?android:attr/textAppearanceLarge"
-            android:gravity="left"
+            android:gravity="center"
             android:padding="16dp"
             android:text="A title goes here"
             />
