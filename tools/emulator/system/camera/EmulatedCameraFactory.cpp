@@ -19,7 +19,7 @@
  * available for emulation.
  */
 
-#define LOG_NDEBUG 0
+//#define LOG_NDEBUG 0
 #define LOG_TAG "EmulatedCamera_Factory"
 #include <cutils/log.h>
 #include <cutils/properties.h>
@@ -44,6 +44,7 @@ EmulatedCameraFactory::EmulatedCameraFactory()
           mFakeCameraNum(0),
           mConstructedOK(false)
 {
+    status_t res;
     /* Connect to the factory service in the emulator, and create Qemu cameras. */
     if (mQemuClient.connectClient(NULL) == NO_ERROR) {
         /* Connection has succeeded. Create emulated cameras for each camera
@@ -90,7 +91,10 @@ EmulatedCameraFactory::EmulatedCameraFactory()
         if (mEmulatedCameras[camera_id] != NULL) {
             ALOGV("%s: Back camera device version is %d", __FUNCTION__,
                     getBackCameraHalVersion());
-            if (mEmulatedCameras[camera_id]->Initialize() != NO_ERROR) {
+            res = mEmulatedCameras[camera_id]->Initialize();
+            if (res != NO_ERROR) {
+                ALOGE("%s: Unable to intialize back camera %d: %s (%d)",
+                        __FUNCTION__, camera_id, strerror(-res), res);
                 delete mEmulatedCameras[camera_id];
                 mEmulatedCameraNum--;
             }
@@ -139,7 +143,10 @@ EmulatedCameraFactory::EmulatedCameraFactory()
         if (mEmulatedCameras[camera_id] != NULL) {
             ALOGV("%s: Front camera device version is %d", __FUNCTION__,
                     getFrontCameraHalVersion());
-            if (mEmulatedCameras[camera_id]->Initialize() != NO_ERROR) {
+            res = mEmulatedCameras[camera_id]->Initialize();
+            if (res != NO_ERROR) {
+                ALOGE("%s: Unable to intialize front camera %d: %s (%d)",
+                        __FUNCTION__, camera_id, strerror(-res), res);
                 delete mEmulatedCameras[camera_id];
                 mEmulatedCameraNum--;
             }

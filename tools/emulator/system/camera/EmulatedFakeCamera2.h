@@ -130,6 +130,11 @@ private:
     /****************************************************************************
      * Utility methods
      ***************************************************************************/
+    /** Construct static camera metadata, two-pass */
+    status_t constructStaticInfo(
+            camera_metadata_t **info,
+            bool sizeRequest);
+
     /** Two-pass implementation of constructDefaultRequest */
     status_t constructDefaultRequest(
             int request_template,
@@ -143,7 +148,6 @@ private:
             uint32_t tag,
             const void *entry_data,
             size_t entry_count);
-
 
     /****************************************************************************
      * Pipeline controller threads
@@ -220,9 +224,12 @@ private:
      ***************************************************************************/
 private:
     static const uint32_t kAvailableFormats[];
-    static const uint32_t kAvailableSizesPerFormat[];
-    static const uint32_t kAvailableSizes[];
-    static const uint64_t kAvailableMinFrameDurations[];
+    static const uint32_t kAvailableRawSizes[];
+    static const uint64_t kAvailableRawMinDurations[];
+    static const uint32_t kAvailableProcessedSizes[];
+    static const uint64_t kAvailableProcessedMinDurations[];
+    static const uint32_t kAvailableJpegSizes[];
+    static const uint64_t kAvailableJpegMinDurations[];
 
     /****************************************************************************
      * Data members.
