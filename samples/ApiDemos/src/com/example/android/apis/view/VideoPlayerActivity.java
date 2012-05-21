@@ -147,6 +147,7 @@ public class VideoPlayerActivity extends Activity
         void setPlayPaused(boolean paused) {
             mPaused = paused;
             mPlayButton.setText(paused ? R.string.play : R.string.pause);
+            setKeepScreenOn(!paused);
             setNavVisibility(true);
         }
 
@@ -166,7 +167,7 @@ public class VideoPlayerActivity extends Activity
                     h.removeCallbacks(mNavHider);
                     if (!mMenusOpen && !mPaused) {
                         // If the menus are open or play is paused, we will not auto-hide.
-                        h.postDelayed(mNavHider, 3000);
+                        h.postDelayed(mNavHider, 1500);
                     }
                 }
             }

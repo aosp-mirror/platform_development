@@ -2225,7 +2225,7 @@
 
         <activity android:name=".view.ContentBrowserActivity"
                 android:label="Views/System UI Visibility/Content Browser"
-                android:theme="@android:style/Theme.Holo.Light"
+                android:theme="@android:style/Theme.Holo.Light.DarkActionBar"
                 android:uiOptions="splitActionBarWhenNarrow">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
