@@ -101,7 +101,7 @@ protected:
             uint32_t width,
             uint32_t height,
             int format,
-            camera2_stream_ops_t *stream_ops,
+            const camera2_stream_ops_t *stream_ops,
             uint32_t *stream_id,
             uint32_t *format_actual,
             uint32_t *usage,
@@ -119,7 +119,7 @@ protected:
             uint32_t width,
             uint32_t height,
             uint32_t format,
-            camera2_stream_in_ops_t *reprocess_stream_ops,
+            const camera2_stream_in_ops_t *reprocess_stream_ops,
             uint32_t *stream_id,
             uint32_t *consumer_usage,
             uint32_t *max_buffers);
@@ -149,68 +149,68 @@ protected:
 
 private:
     /** Input request queue */
-    static int set_request_queue_src_ops(camera2_device_t *,
-            camera2_request_queue_src_ops *queue_src_ops);
-    static int notify_request_queue_not_empty(camera2_device_t *);
+    static int set_request_queue_src_ops(const camera2_device_t *,
+            const camera2_request_queue_src_ops *queue_src_ops);
+    static int notify_request_queue_not_empty(const camera2_device_t *);
 
     /** Output frame queue */
-    static int set_frame_queue_dst_ops(camera2_device_t *,
-            camera2_frame_queue_dst_ops *queue_dst_ops);
+    static int set_frame_queue_dst_ops(const camera2_device_t *,
+            const camera2_frame_queue_dst_ops *queue_dst_ops);
 
     /** In-progress request management */
-    static int get_in_progress_count(camera2_device_t *);
+    static int get_in_progress_count(const camera2_device_t *);
 
-    static int flush_captures_in_progress(camera2_device_t *);
+    static int flush_captures_in_progress(const camera2_device_t *);
 
     /** Request template creation */
-    static int construct_default_request(camera2_device_t *,
+    static int construct_default_request(const camera2_device_t *,
             int request_template,
             camera_metadata_t **request);
 
     /** Stream management */
-    static int allocate_stream(camera2_device_t *,
+    static int allocate_stream(const camera2_device_t *,
             uint32_t width,
             uint32_t height,
             int format,
-            camera2_stream_ops_t *stream_ops,
+            const camera2_stream_ops_t *stream_ops,
             uint32_t *stream_id,
             uint32_t *format_actual,
             uint32_t *usage,
             uint32_t *max_buffers);
 
-    static int register_stream_buffers(camera2_device_t *,
+    static int register_stream_buffers(const camera2_device_t *,
             uint32_t stream_id,
             int num_buffers,
             buffer_handle_t *buffers);
 
-    static int release_stream(camera2_device_t *,
+    static int release_stream(const camera2_device_t *,
             uint32_t stream_id);
 
-    static int allocate_reprocess_stream(camera2_device_t *,
+    static int allocate_reprocess_stream(const camera2_device_t *,
             uint32_t width,
             uint32_t height,
             uint32_t format,
-            camera2_stream_in_ops_t *reprocess_stream_ops,
+            const camera2_stream_in_ops_t *reprocess_stream_ops,
             uint32_t *stream_id,
             uint32_t *consumer_usage,
             uint32_t *max_buffers);
 
-    static int release_reprocess_stream(camera2_device_t *,
+    static int release_reprocess_stream(const camera2_device_t *,
             uint32_t stream_id);
 
     /** 3A triggers*/
-    static int trigger_action(camera2_device_t *,
+    static int trigger_action(const camera2_device_t *,
             uint32_t trigger_id,
             int ext1,
             int ext2);
 
     /** Notifications to application */
-    static int set_notify_callback(camera2_device_t *,
+    static int set_notify_callback(const camera2_device_t *,
             camera2_notify_callback notify_cb,
             void *user);
 
     /** Vendor metadata registration */
-    static int get_metadata_vendor_tag_ops(camera2_device_t *,
+    static int get_metadata_vendor_tag_ops(const camera2_device_t *,
             vendor_tag_query_ops_t **ops);
     // for get_metadata_vendor_tag_ops
     static const char* get_camera_vendor_section_name(
@@ -223,7 +223,7 @@ private:
             const vendor_tag_query_ops_t *,
             uint32_t tag);
 
-    static int dump(camera2_device_t *, int fd);
+    static int dump(const camera2_device_t *, int fd);
 
     /** For hw_device_t ops */
     static int close(struct hw_device_t* device);
@@ -232,8 +232,8 @@ private:
      * Data members shared with implementations
      ***************************************************************************/
   protected:
-    camera2_request_queue_src_ops *mRequestQueueSrc;
-    camera2_frame_queue_dst_ops *mFrameQueueDst;
+    const camera2_request_queue_src_ops *mRequestQueueSrc;
+    const camera2_frame_queue_dst_ops *mFrameQueueDst;
     camera2_notify_callback mNotifyCb;
     void* mNotifyUserPtr;
 

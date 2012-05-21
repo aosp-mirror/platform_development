@@ -129,7 +129,7 @@ int EmulatedCamera2::allocateStream(
         uint32_t width,
         uint32_t height,
         int format,
-        camera2_stream_ops_t *stream_ops,
+        const camera2_stream_ops_t *stream_ops,
         uint32_t *stream_id,
         uint32_t *format_actual,
         uint32_t *usage,
@@ -155,7 +155,7 @@ int EmulatedCamera2::allocateReprocessStream(
         uint32_t width,
         uint32_t height,
         uint32_t format,
-        camera2_stream_in_ops_t *reprocess_stream_ops,
+        const camera2_stream_in_ops_t *reprocess_stream_ops,
         uint32_t *stream_id,
         uint32_t *consumer_usage,
         uint32_t *max_buffers) {
@@ -205,114 +205,114 @@ int EmulatedCamera2::dump(int fd) {
  * 'camera_device2' parameter, or set a member value in the same.
  ***************************************************************************/
 
-int EmulatedCamera2::set_request_queue_src_ops(struct camera2_device *d,
-        camera2_request_queue_src_ops *queue_src_ops) {
-    EmulatedCamera2* ec = static_cast<EmulatedCamera2*>(d);
+EmulatedCamera2* getInstance(const camera2_device_t *d) {
+    const EmulatedCamera2* cec = static_cast<const EmulatedCamera2*>(d);
+    return const_cast<EmulatedCamera2*>(cec);
+}
+
+int EmulatedCamera2::set_request_queue_src_ops(const camera2_device_t *d,
+        const camera2_request_queue_src_ops *queue_src_ops) {
+    EmulatedCamera2* ec = getInstance(d);
     ec->mRequestQueueSrc = queue_src_ops;
     return NO_ERROR;
 }
 
-int EmulatedCamera2::notify_request_queue_not_empty(struct camera2_device *d) {
-    EmulatedCamera2* ec = static_cast<EmulatedCamera2*>(d);
+int EmulatedCamera2::notify_request_queue_not_empty(const camera2_device_t *d) {
+    EmulatedCamera2* ec = getInstance(d);
     return ec->requestQueueNotify();
 }
 
-int EmulatedCamera2::set_frame_queue_dst_ops(struct camera2_device *d,
-        camera2_frame_queue_dst_ops *queue_dst_ops) {
-    EmulatedCamera2* ec = static_cast<EmulatedCamera2*>(d);
+int EmulatedCamera2::set_frame_queue_dst_ops(const camera2_device_t *d,
+        const camera2_frame_queue_dst_ops *queue_dst_ops) {
+    EmulatedCamera2* ec = getInstance(d);
     ec->mFrameQueueDst = queue_dst_ops;
     return NO_ERROR;
 }
 
-int EmulatedCamera2::get_in_progress_count(struct camera2_device *d) {
-    EmulatedCamera2* ec = static_cast<EmulatedCamera2*>(d);
+int EmulatedCamera2::get_in_progress_count(const camera2_device_t *d) {
+    EmulatedCamera2* ec = getInstance(d);
     return ec->getInProgressCount();
 }
 
-int EmulatedCamera2::flush_captures_in_progress(struct camera2_device *d) {
-    EmulatedCamera2* ec = static_cast<EmulatedCamera2*>(d);
+int EmulatedCamera2::flush_captures_in_progress(const camera2_device_t *d) {
+    EmulatedCamera2* ec = getInstance(d);
     return ec->flushCapturesInProgress();
 }
 
-int EmulatedCamera2::construct_default_request(struct camera2_device *d,
+int EmulatedCamera2::construct_default_request(const camera2_device_t *d,
         int request_template,
         camera_metadata_t **request) {
-    EmulatedCamera2* ec = static_cast<EmulatedCamera2*>(d);
+    EmulatedCamera2* ec = getInstance(d);
     return ec->constructDefaultRequest(request_template, request);
 }
 
-int EmulatedCamera2::allocate_stream(struct camera2_device *d,
+int EmulatedCamera2::allocate_stream(const camera2_device_t *d,
         uint32_t width,
         uint32_t height,
         int format,
-        camera2_stream_ops_t *stream_ops,
+        const camera2_stream_ops_t *stream_ops,
         uint32_t *stream_id,
         uint32_t *format_actual,
         uint32_t *usage,
         uint32_t *max_buffers) {
-    EmulatedCamera2* ec =
-            static_cast<EmulatedCamera2*>(d);
+    EmulatedCamera2* ec = getInstance(d);
     return ec->allocateStream(width, height, format, stream_ops,
             stream_id, format_actual, usage, max_buffers);
 }
 
-int EmulatedCamera2::register_stream_buffers(struct camera2_device *d,
+int EmulatedCamera2::register_stream_buffers(const camera2_device_t *d,
         uint32_t stream_id,
         int num_buffers,
         buffer_handle_t *buffers) {
-    EmulatedCamera2* ec =
-            static_cast<EmulatedCamera2*>(d);
+    EmulatedCamera2* ec = getInstance(d);
     return ec->registerStreamBuffers(stream_id,
             num_buffers,
             buffers);
 }
-int EmulatedCamera2::release_stream(struct camera2_device *d,
+int EmulatedCamera2::release_stream(const camera2_device_t *d,
         uint32_t stream_id) {
-    EmulatedCamera2* ec =
-            static_cast<EmulatedCamera2*>(d);
+    EmulatedCamera2* ec = getInstance(d);
     return ec->releaseStream(stream_id);
 }
 
-int EmulatedCamera2::allocate_reprocess_stream(struct camera2_device *d,
+int EmulatedCamera2::allocate_reprocess_stream(const camera2_device_t *d,
         uint32_t width,
         uint32_t height,
         uint32_t format,
-        camera2_stream_in_ops_t *reprocess_stream_ops,
+        const camera2_stream_in_ops_t *reprocess_stream_ops,
         uint32_t *stream_id,
         uint32_t *consumer_usage,
         uint32_t *max_buffers) {
-    EmulatedCamera2* ec =
-            static_cast<EmulatedCamera2*>(d);
+    EmulatedCamera2* ec = getInstance(d);
     return ec->allocateReprocessStream(width, height, format,
             reprocess_stream_ops, stream_id, consumer_usage, max_buffers);
 }
 
-int EmulatedCamera2::release_reprocess_stream(struct camera2_device *d,
+int EmulatedCamera2::release_reprocess_stream(const camera2_device_t *d,
         uint32_t stream_id) {
-    EmulatedCamera2* ec =
-            static_cast<EmulatedCamera2*>(d);
+    EmulatedCamera2* ec = getInstance(d);
     return ec->releaseReprocessStream(stream_id);
 }
 
-int EmulatedCamera2::trigger_action(camera2_device_t *d,
+int EmulatedCamera2::trigger_action(const camera2_device_t *d,
         uint32_t trigger_id,
         int ext1,
         int ext2) {
-    EmulatedCamera2* ec = static_cast<EmulatedCamera2*>(d);
+    EmulatedCamera2* ec = getInstance(d);
     return ec->triggerAction(trigger_id, ext1, ext2);
 }
 
-int EmulatedCamera2::set_notify_callback(struct camera2_device *d,
+int EmulatedCamera2::set_notify_callback(const camera2_device_t *d,
         camera2_notify_callback notify_cb, void* user) {
-    EmulatedCamera2* ec = static_cast<EmulatedCamera2*>(d);
+    EmulatedCamera2* ec = getInstance(d);
     ec->mNotifyCb = notify_cb;
     ec->mNotifyUserPtr = user;
     return NO_ERROR;
 }
 
-int EmulatedCamera2::get_metadata_vendor_tag_ops(struct camera2_device *d,
+int EmulatedCamera2::get_metadata_vendor_tag_ops(const camera2_device_t *d,
         vendor_tag_query_ops_t **ops) {
-    EmulatedCamera2* ec = static_cast<EmulatedCamera2*>(d);
+    EmulatedCamera2* ec = getInstance(d);
     *ops = static_cast<vendor_tag_query_ops_t*>(
             &ec->mVendorTagOps);
     return NO_ERROR;
@@ -339,16 +339,15 @@ int EmulatedCamera2::get_camera_vendor_tag_type(
     return ec->getVendorTagType(tag);
 }
 
-int EmulatedCamera2::dump(struct camera2_device *d, int fd) {
-    EmulatedCamera2* ec =
-            static_cast<EmulatedCamera2*>(d);
+int EmulatedCamera2::dump(const camera2_device_t *d, int fd) {
+    EmulatedCamera2* ec = getInstance(d);
     return ec->dump(fd);
 }
 
 int EmulatedCamera2::close(struct hw_device_t* device) {
     EmulatedCamera2* ec =
             static_cast<EmulatedCamera2*>(
-                reinterpret_cast<struct camera2_device*>(device) );
+                reinterpret_cast<camera2_device_t*>(device) );
     if (ec == NULL) {
         ALOGE("%s: Unexpected NULL camera2 device", __FUNCTION__);
         return -EINVAL;
