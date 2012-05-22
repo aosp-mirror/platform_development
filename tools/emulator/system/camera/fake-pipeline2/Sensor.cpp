@@ -15,7 +15,15 @@
  */
 
 //#define LOG_NDEBUG 0
+//#define LOG_NNDEBUG 0
 #define LOG_TAG "EmulatedCamera2_Sensor"
+
+#ifdef LOG_NNDEBUG
+#define ALOGVV(...) ALOGV(__VA_ARGS__)
+#else
+#define ALOGVV(...) ((void)0)
+#endif
+
 #include <utils/Log.h>
 
 #include "Sensor.h"
@@ -108,9 +116,10 @@ Sensor::~Sensor() {
 }
 
 status_t Sensor::startUp() {
+    ALOGV("%s: E", __FUNCTION__);
+
     int res;
     mCapturedBuffer = NULL;
-
     res = readyToRun();
     if (res != OK) {
         ALOGE("Unable to prepare sensor capture thread to run: %d", res);
@@ -126,6 +135,8 @@ status_t Sensor::startUp() {
 }
 
 status_t Sensor::shutDown() {
+    ALOGV("%s: E", __FUNCTION__);
+
     int res;
     res = requestExitAndWait();
     if (res != OK) {
@@ -140,25 +151,27 @@ Scene &Sensor::getScene() {
 
 void Sensor::setExposureTime(uint64_t ns) {
     Mutex::Autolock lock(mControlMutex);
-    ALOGV("Exposure set to %f", ns/1000000.f);
+    ALOGVV("Exposure set to %f", ns/1000000.f);
     mExposureTime = ns;
 }
 
 void Sensor::setFrameDuration(uint64_t ns) {
     Mutex::Autolock lock(mControlMutex);
-    ALOGV("Frame duration set to %f", ns/1000000.f);
+    ALOGVV("Frame duration set to %f", ns/1000000.f);
     mFrameDuration = ns;
 }
 
 void Sensor::setSensitivity(uint32_t gain) {
     Mutex::Autolock lock(mControlMutex);
-    ALOGV("Gain set to %d", gain);
+    ALOGVV("Gain set to %d", gain);
     mGainFactor = gain;
 }
 
-void Sensor::setDestinationBuffer(uint8_t *buffer, uint32_t stride) {
+void Sensor::setDestinationBuffer(uint8_t *buffer,
+        uint32_t format, uint32_t stride) {
     Mutex::Autolock lock(mControlMutex);
     mNextBuffer = buffer;
+    mNextBufferFmt = format;
     mNextStride = stride;
 }
 
@@ -217,6 +230,7 @@ bool Sensor::threadLoop() {
     uint64_t frameDuration;
     uint32_t gain;
     uint8_t *nextBuffer;
+    uint32_t nextBufferFmt;
     uint32_t stride;
     {
         Mutex::Autolock lock(mControlMutex);
@@ -224,12 +238,13 @@ bool Sensor::threadLoop() {
         frameDuration    = mFrameDuration;
         gain             = mGainFactor;
         nextBuffer       = mNextBuffer;
+        nextBufferFmt    = mNextBufferFmt;
         stride           = mNextStride;
         // Don't reuse a buffer
         mNextBuffer = NULL;
 
         // Signal VSync for start of readout
-        ALOGV("Sensor VSync");
+        ALOGVV("Sensor VSync");
         mGotVSync = true;
         mVSync.signal();
     }
@@ -248,7 +263,7 @@ bool Sensor::threadLoop() {
             kRowReadoutTime * kResolution[1];
 
     if (mNextCapturedBuffer != NULL) {
-        ALOGV("Sensor starting readout");
+        ALOGVV("Sensor starting readout");
         // Pretend we're doing readout now; will signal once enough time has elapsed
         capturedBuffer = mNextCapturedBuffer;
         captureTime    = mNextCaptureTime;
@@ -263,66 +278,30 @@ bool Sensor::threadLoop() {
     mNextCapturedBuffer = nextBuffer;
 
     if (mNextCapturedBuffer != NULL) {
-        ALOGV("Sensor capturing image (%d x %d) stride %d",
+        ALOGVV("Sensor capturing image (%d x %d) stride %d",
                 kResolution[0], kResolution[1], stride);
-        ALOGV("Exposure: %f ms, gain: %d", (float)exposureDuration/1e6, gain);
+        ALOGVV("Exposure: %f ms, gain: %d", (float)exposureDuration/1e6, gain);
         mScene.setExposureDuration((float)exposureDuration/1e9);
         mScene.calculateScene(mNextCaptureTime);
 
-        float totalGain = gain/100.0 * kBaseGainFactor;
-        float noiseVarGain =  totalGain * totalGain;
-        float readNoiseVar = kReadNoiseVarBeforeGain * noiseVarGain
-                + kReadNoiseVarAfterGain;
-
-        int bayerSelect[4] = {0, 1, 2, 3}; // RGGB
-
-        for (unsigned int y = 0; y < kResolution[1]; y++ ) {
-            int *bayerRow = bayerSelect + (y & 0x1) * 2;
-            uint16_t *px = (uint16_t*)mNextCapturedBuffer + y * stride;
-            for (unsigned int x = 0; x < kResolution[0]; x++) {
-                uint32_t electronCount;
-                electronCount = mScene.getPixelElectrons(x, y, bayerRow[x & 0x1]);
-
-                // TODO: Better pixel saturation curve?
-                electronCount = (electronCount < kSaturationElectrons) ?
-                        electronCount : kSaturationElectrons;
-
-                // TODO: Better A/D saturation curve?
-                uint16_t rawCount = electronCount * totalGain;
-                rawCount = (rawCount < kMaxRawValue) ? rawCount : kMaxRawValue;
-
-                // Calculate noise value
-                // TODO: Use more-correct Gaussian instead of uniform noise
-                float photonNoiseVar = electronCount * noiseVarGain;
-                float noiseStddev = sqrtf_approx(readNoiseVar + photonNoiseVar);
-                // Scaled to roughly match gaussian/uniform noise stddev
-                float noiseSample = std::rand() * (2.5 / (1.0 + RAND_MAX)) - 1.25;
-
-                rawCount += kBlackLevel;
-                rawCount += noiseStddev * noiseSample;
-
-                *px++ = rawCount;
-            }
-            simulatedTime += kRowReadoutTime;
-
-            // If enough time has elapsed to complete readout, signal done frame
-            // Only check every so often, though
-            if ((capturedBuffer != NULL) &&
-                    ((y & 63) == 0) &&
-                    (systemTime() >= frameReadoutEndRealTime) ) {
-                ALOGV("Sensor readout complete");
-                Mutex::Autolock lock(mReadoutMutex);
-                mCapturedBuffer = capturedBuffer;
-                mCaptureTime = captureTime;
-                mReadoutComplete.signal();
-                capturedBuffer = NULL;
-            }
+        switch(nextBufferFmt) {
+            case HAL_PIXEL_FORMAT_RAW_SENSOR:
+                captureRaw(gain, stride, &capturedBuffer,
+                        captureTime, frameEndRealTime);
+                break;
+            case HAL_PIXEL_FORMAT_RGBA_8888:
+                captureRGBA(gain, stride, &capturedBuffer,
+                        captureTime, frameEndRealTime);
+                break;
+            default:
+                ALOGE("%s: Unknown format %x, no output", __FUNCTION__,
+                        nextBufferFmt);
+                break;
         }
-        ALOGV("Sensor image captured");
     }
     // No capture done, or finished image generation before readout was completed
     if (capturedBuffer != NULL) {
-        ALOGV("Sensor readout complete");
+        ALOGVV("Sensor readout complete");
         Mutex::Autolock lock(mReadoutMutex);
         mCapturedBuffer = capturedBuffer;
         mCaptureTime = captureTime;
@@ -330,7 +309,7 @@ bool Sensor::threadLoop() {
         capturedBuffer = NULL;
     }
 
-    ALOGV("Sensor vertical blanking interval");
+    ALOGVV("Sensor vertical blanking interval");
     nsecs_t workDoneRealTime = systemTime();
     const nsecs_t timeAccuracy = 2e6; // 2 ms of imprecision is ok
     if (workDoneRealTime < frameEndRealTime - timeAccuracy) {
@@ -344,10 +323,106 @@ bool Sensor::threadLoop() {
         } while (ret != 0);
     }
     nsecs_t endRealTime = systemTime();
-    ALOGV("Frame cycle took %d ms, target %d ms",
+    ALOGVV("Frame cycle took %d ms, target %d ms",
             (int)((endRealTime - startRealTime)/1000000),
             (int)(frameDuration / 1000000));
     return true;
 };
+
+void Sensor::captureRaw(uint32_t gain, uint32_t stride,
+        uint8_t **capturedBuffer, nsecs_t captureTime, nsecs_t frameReadoutTime) {
+    float totalGain = gain/100.0 * kBaseGainFactor;
+    float noiseVarGain =  totalGain * totalGain;
+    float readNoiseVar = kReadNoiseVarBeforeGain * noiseVarGain
+            + kReadNoiseVarAfterGain;
+
+    int bayerSelect[4] = {Scene::R, Scene::Gr, Scene::Gb, Scene::B}; // RGGB
+
+    for (unsigned int y = 0; y < kResolution[1]; y++ ) {
+        int *bayerRow = bayerSelect + (y & 0x1) * 2;
+        uint16_t *px = (uint16_t*)mNextCapturedBuffer + y * stride;
+        for (unsigned int x = 0; x < kResolution[0]; x++) {
+            uint32_t electronCount;
+            electronCount = mScene.getPixelElectrons()[bayerRow[x & 0x1]];
+
+            // TODO: Better pixel saturation curve?
+            electronCount = (electronCount < kSaturationElectrons) ?
+                    electronCount : kSaturationElectrons;
+
+            // TODO: Better A/D saturation curve?
+            uint16_t rawCount = electronCount * totalGain;
+            rawCount = (rawCount < kMaxRawValue) ? rawCount : kMaxRawValue;
+
+            // Calculate noise value
+            // TODO: Use more-correct Gaussian instead of uniform noise
+            float photonNoiseVar = electronCount * noiseVarGain;
+            float noiseStddev = sqrtf_approx(readNoiseVar + photonNoiseVar);
+            // Scaled to roughly match gaussian/uniform noise stddev
+            float noiseSample = std::rand() * (2.5 / (1.0 + RAND_MAX)) - 1.25;
+
+            rawCount += kBlackLevel;
+            rawCount += noiseStddev * noiseSample;
+
+            *px++ = rawCount;
+        }
+        // TODO: Handle this better
+        //simulatedTime += kRowReadoutTime;
+
+        // If enough time has elapsed to complete readout, signal done frame
+        // Only check every so often, though
+        if ((*capturedBuffer != NULL) &&
+                ((y & 63) == 0) &&
+                (systemTime() >= frameReadoutTime) ) {
+            ALOGV("Sensor readout complete");
+            Mutex::Autolock lock(mReadoutMutex);
+            mCapturedBuffer = *capturedBuffer;
+            mCaptureTime = captureTime;
+            mReadoutComplete.signal();
+            *capturedBuffer = NULL;
+        }
+    }
+    ALOGVV("Raw sensor image captured");
+}
+
+void Sensor::captureRGBA(uint32_t gain, uint32_t stride,
+        uint8_t **capturedBuffer, nsecs_t captureTime, nsecs_t frameReadoutTime) {
+    float totalGain = gain/100.0 * kBaseGainFactor;
+    float noiseVarGain =  totalGain * totalGain;
+    float readNoiseVar = kReadNoiseVarBeforeGain * noiseVarGain
+            + kReadNoiseVarAfterGain;
+
+    for (unsigned int y = 0; y < kResolution[1]; y++ ) {
+        uint8_t *px = (uint8_t*)mNextCapturedBuffer + y * stride * 4;
+        for (unsigned int x = 0; x < kResolution[0]; x++) {
+            uint32_t rCount, gCount, bCount;
+            // TODO: Perfect demosaicing is a cheat
+            const uint32_t *pixel = mScene.getPixelElectrons();
+            rCount = pixel[Scene::R]  * totalGain;
+            gCount = pixel[Scene::Gr] * totalGain;
+            bCount = pixel[Scene::B]  * totalGain;
+
+            *px++ = rCount / (kMaxRawValue / 255);
+            *px++ = gCount / (kMaxRawValue / 255);
+            *px++ = bCount / (kMaxRawValue / 255);
+            *px++ = 255;
+        }
+        // TODO: Handle this better
+        //simulatedTime += kRowReadoutTime;
+
+        // If enough time has elapsed to complete readout, signal done frame
+        // Only check every so often, though
+        if ((*capturedBuffer != NULL) &&
+                ((y & 63) == 0) &&
+                (systemTime() >= frameReadoutTime) ) {
+            ALOGV("Sensor readout complete");
+            Mutex::Autolock lock(mReadoutMutex);
+            mCapturedBuffer = *capturedBuffer;
+            mCaptureTime = captureTime;
+            mReadoutComplete.signal();
+            *capturedBuffer = NULL;
+        }
+    }
+    ALOGVV("RGBA sensor image captured");
+}
 
 } // namespace android

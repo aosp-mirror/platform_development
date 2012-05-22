@@ -17,6 +17,7 @@
 //#define LOG_NDEBUG 0
 #define LOG_TAG "EmulatedCamera_Scene"
 #include <utils/Log.h>
+#include <stdlib.h>
 
 #include "Scene.h"
 
@@ -27,17 +28,17 @@ namespace android {
 
 // Define single-letter shortcuts for scene definition, for directly indexing
 // mCurrentColors
-#define G Scene::GRASS*4
-#define S Scene::GRASS_SHADOW*4
-#define H Scene::HILL*4
-#define W Scene::WALL*4
-#define R Scene::ROOF*4
-#define D Scene::DOOR*4
-#define C Scene::CHIMNEY*4
-#define I Scene::WINDOW*4
-#define U Scene::SUN*4
-#define K Scene::SKY*4
-#define M Scene::MOON*4
+#define G (Scene::GRASS * Scene::NUM_CHANNELS)
+#define S (Scene::GRASS_SHADOW * Scene::NUM_CHANNELS)
+#define H (Scene::HILL * Scene::NUM_CHANNELS)
+#define W (Scene::WALL * Scene::NUM_CHANNELS)
+#define R (Scene::ROOF * Scene::NUM_CHANNELS)
+#define D (Scene::DOOR * Scene::NUM_CHANNELS)
+#define C (Scene::CHIMNEY * Scene::NUM_CHANNELS)
+#define I (Scene::WINDOW * Scene::NUM_CHANNELS)
+#define U (Scene::SUN * Scene::NUM_CHANNELS)
+#define K (Scene::SKY * Scene::NUM_CHANNELS)
+#define M (Scene::MOON * Scene::NUM_CHANNELS)
 
 const int Scene::kSceneWidth = 20;
 const int Scene::kSceneHeight = 20;
@@ -91,9 +92,9 @@ Scene::Scene(
 {
     // Map scene to sensor pixels
     if (mSensorWidth > mSensorHeight) {
-        mMapDiv = (mSensorWidth / kSceneWidth) + 1;
+        mMapDiv = (mSensorWidth / (kSceneWidth + 1) ) + 1;
     } else {
-        mMapDiv = (mSensorHeight / kSceneHeight) + 1;
+        mMapDiv = (mSensorHeight / (kSceneHeight + 1) ) + 1;
     }
     mOffsetX = (kSceneWidth * mMapDiv - mSensorWidth) / 2;
     mOffsetY = (kSceneHeight * mMapDiv - mSensorHeight) / 2;
@@ -103,6 +104,8 @@ Scene::Scene(
     mFilterGr[0] = -0.9689f; mFilterGr[1] =  1.8758f; mFilterGr[2] =  0.0415f;
     mFilterGb[0] = -0.9689f; mFilterGb[1] =  1.8758f; mFilterGb[2] =  0.0415f;
     mFilterB[0]  =  0.0557f; mFilterB[1]  = -0.2040f; mFilterB[2]  =  1.0570f;
+
+
 }
 
 Scene::~Scene() {
@@ -290,48 +293,53 @@ void Scene::calculateScene(nsecs_t time) {
         ALOGV("Mat %d XYZ: %f, %f, %f", i, matXYZ[0], matXYZ[1], matXYZ[2]);
         float luxToElectrons = mSensorSensitivity * mExposureDuration /
                 (kAperture * kAperture);
-        mCurrentColors[i*4 + 0] =
+        mCurrentColors[i*NUM_CHANNELS + 0] =
                 (mFilterR[0] * matXYZ[0] +
                  mFilterR[1] * matXYZ[1] +
                  mFilterR[2] * matXYZ[2])
                 * luxToElectrons;
-        mCurrentColors[i*4 + 1] =
+        mCurrentColors[i*NUM_CHANNELS + 1] =
                 (mFilterGr[0] * matXYZ[0] +
                  mFilterGr[1] * matXYZ[1] +
                  mFilterGr[2] * matXYZ[2])
                 * luxToElectrons;
-        mCurrentColors[i*4 + 2] =
+        mCurrentColors[i*NUM_CHANNELS + 2] =
                 (mFilterGb[0] * matXYZ[0] +
                  mFilterGb[1] * matXYZ[1] +
                  mFilterGb[2] * matXYZ[2])
                 * luxToElectrons;
-        mCurrentColors[i*4 + 3] =
+        mCurrentColors[i*NUM_CHANNELS + 3] =
                 (mFilterB[0] * matXYZ[0] +
                  mFilterB[1] * matXYZ[1] +
                  mFilterB[2] * matXYZ[2])
                 * luxToElectrons;
+
         ALOGV("Color %d RGGB: %d, %d, %d, %d", i,
-                mCurrentColors[i*4 + 0],
-                mCurrentColors[i*4 + 1],
-                mCurrentColors[i*4 + 2],
-                mCurrentColors[i*4 + 3]);
+                mCurrentColors[i*NUM_CHANNELS + 0],
+                mCurrentColors[i*NUM_CHANNELS + 1],
+                mCurrentColors[i*NUM_CHANNELS + 2],
+                mCurrentColors[i*NUM_CHANNELS + 3]);
     }
+    // Shake viewpoint
+    mHandshakeX = rand() % mMapDiv/4 - mMapDiv/8;
+    mHandshakeY = rand() % mMapDiv/4 - mMapDiv/8;
+    // Set starting pixel
     setReadoutPixel(0,0);
 }
 
 void Scene::setReadoutPixel(int x, int y) {
     mCurrentX = x;
     mCurrentY = y;
-    mSubX = (x + mOffsetY) % mMapDiv;
-    mSubY = (y + mOffsetX) % mMapDiv;
-    mSceneX = (x + mOffsetX) / mMapDiv;
-    mSceneY = (y + mOffsetY) / mMapDiv;
+    mSubX = (x + mOffsetX + mHandshakeX) % mMapDiv;
+    mSubY = (y + mOffsetY + mHandshakeY) % mMapDiv;
+    mSceneX = (x + mOffsetX + mHandshakeX) / mMapDiv;
+    mSceneY = (y + mOffsetY + mHandshakeY) / mMapDiv;
     mSceneIdx = mSceneY * kSceneWidth + mSceneX;
     mCurrentSceneMaterial = &(mCurrentColors[kScene[mSceneIdx]]);
 }
 
-uint32_t Scene::getPixelElectrons(int x, int y, int c) {
-    uint32_t e = mCurrentSceneMaterial[c];
+const uint32_t* Scene::getPixelElectrons() {
+    const uint32_t *pixel = mCurrentSceneMaterial;
     mCurrentX++;
     mSubX++;
     if (mCurrentX >= mSensorWidth) {
@@ -345,8 +353,15 @@ uint32_t Scene::getPixelElectrons(int x, int y, int c) {
         mCurrentSceneMaterial = &(mCurrentColors[kScene[mSceneIdx]]);
         mSubX = 0;
     }
-    return e;
+    return pixel;
 }
+
+// RGB->YUV, Jpeg standard
+const float Scene::kRgb2Yuv[12] = {
+       0.299f,    0.587f,    0.114f,    0.f,
+    -0.16874f, -0.33126f,      0.5f, -128.f,
+         0.5f, -0.41869f, -0.08131f, -128.f,
+};
 
 // Aperture of imaging lens
 const float Scene::kAperture = 2.8;
