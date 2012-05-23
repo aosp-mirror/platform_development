@@ -35,16 +35,10 @@
 
     <!--
         Followed by the EditText field...
-
-        Also give it a standard background (the "android:"
-        part in @android:drawable/editbox_background
-        means it is system resource rather than
-        an application resource.
     -->
     <EditText
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@android:drawable/editbox_background"/>
+        android:layout_height="wrap_content"/>
 
     <!--
         Use a horizontal layout to hold the two buttons.
