@@ -33,16 +33,11 @@
 
     <!--
         Put the EditText field under the TextView
-        Also give it a standard background (the "android:"
-        part in @android:drawable/editbox_background
-        means it is system resource rather than
-        an application resource.
     -->
     <EditText
         android:id="@+id/entry"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@android:drawable/editbox_background"
         android:layout_below="@id/label"/>
 
     <!--
