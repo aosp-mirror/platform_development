@@ -22,7 +22,7 @@
  * for all camera API calls that defined by camera2_device_ops_t API.
  */
 
-#define LOG_NDEBUG 0
+//#define LOG_NDEBUG 0
 #define LOG_TAG "EmulatedCamera2_Camera"
 #include <cutils/log.h>
 
