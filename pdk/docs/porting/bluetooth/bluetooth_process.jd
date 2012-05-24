@@ -1,7 +1,0 @@
-page.title=Bluetooth Process Diagram
-pdk.version=1.0
-doc.type=porting
-@jd:body
-
-<p>The diagram below offers a process-oriented architectural overview of Android's Bluetooth stack. Click <a href="../bluetooth.html">Bluetooth</a> to return to the Bluetooth overview page.</p>
-<img src="images/androidBluetoothProcessDiagram.jpg">
