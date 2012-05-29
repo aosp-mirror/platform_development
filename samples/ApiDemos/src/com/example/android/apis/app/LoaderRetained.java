@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010 The Android Open Source Project
+ * Copyright (C) 2012 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,24 +14,18 @@
  * limitations under the License.
  */
 
-package com.example.android.supportv4.app;
+package com.example.android.apis.app;
 
-import android.support.v4.app.FragmentActivity;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.ListFragment;
-import android.support.v4.app.LoaderManager;
-import android.support.v4.content.CursorLoader;
-import android.support.v4.content.Loader;
-import android.support.v4.view.MenuItemCompat;
-import android.support.v4.widget.SearchViewCompat;
-import android.support.v4.widget.SearchViewCompat.OnQueryTextListenerCompat;
-import android.support.v4.widget.SimpleCursorAdapter;
-
+import android.app.Activity;
+import android.app.FragmentManager;
+import android.app.ListFragment;
+import android.app.LoaderManager;
+import android.content.CursorLoader;
+import android.content.Loader;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
-import android.provider.BaseColumns;
-import android.provider.Contacts.People;
+import android.provider.ContactsContract.Contacts;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.Menu;
@@ -39,19 +33,21 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ListView;
+import android.widget.SearchView;
+import android.widget.SimpleCursorAdapter;
+import android.widget.SearchView.OnQueryTextListener;
 
 /**
  * Demonstration of the use of a CursorLoader to load and display contacts
  * data in a fragment.
  */
-@SuppressWarnings("all")
-public class LoaderCursorSupport extends FragmentActivity {
+public class LoaderRetained extends Activity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        FragmentManager fm = getSupportFragmentManager();
+        FragmentManager fm = getFragmentManager();
 
         // Create the list fragment and add it as our sole content.
         if (fm.findFragmentById(android.R.id.content) == null) {
@@ -62,7 +58,7 @@ public class LoaderCursorSupport extends FragmentActivity {
 
 //BEGIN_INCLUDE(fragment_cursor)
     public static class CursorLoaderListFragment extends ListFragment
-            implements LoaderManager.LoaderCallbacks<Cursor> {
+            implements OnQueryTextListener, LoaderManager.LoaderCallbacks<Cursor> {
 
         // This is the Adapter being used to display the list's data.
         SimpleCursorAdapter mAdapter;
@@ -73,6 +69,9 @@ public class LoaderCursorSupport extends FragmentActivity {
         @Override public void onActivityCreated(Bundle savedInstanceState) {
             super.onActivityCreated(savedInstanceState);
 
+            // In this sample we are going to use a retained fragment.
+            setRetainInstance(true);
+
             // Give some text to display if there is no data.  In a real
             // application this would come from a resource.
             setEmptyText("No phone numbers");
@@ -82,9 +81,9 @@ public class LoaderCursorSupport extends FragmentActivity {
 
             // Create an empty adapter we will use to display the loaded data.
             mAdapter = new SimpleCursorAdapter(getActivity(),
-                    android.R.layout.simple_list_item_1, null,
-                    new String[] { People.DISPLAY_NAME },
-                    new int[] { android.R.id.text1}, 0);
+                    android.R.layout.simple_list_item_2, null,
+                    new String[] { Contacts.DISPLAY_NAME, Contacts.CONTACT_STATUS },
+                    new int[] { android.R.id.text1, android.R.id.text2 }, 0);
             setListAdapter(mAdapter);
 
             // Start out with a progress indicator.
@@ -99,33 +98,34 @@ public class LoaderCursorSupport extends FragmentActivity {
             // Place an action bar item for searching.
             MenuItem item = menu.add("Search");
             item.setIcon(android.R.drawable.ic_menu_search);
-            MenuItemCompat.setShowAsAction(item, MenuItemCompat.SHOW_AS_ACTION_ALWAYS
-                    | MenuItemCompat.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
-            View searchView = SearchViewCompat.newSearchView(getActivity());
-            if (searchView != null) {
-                SearchViewCompat.setOnQueryTextListener(searchView,
-                        new OnQueryTextListenerCompat() {
-                    @Override
-                    public boolean onQueryTextChange(String newText) {
-                        // Called when the action bar search text has changed.  Update
-                        // the search filter, and restart the loader to do a new query
-                        // with this filter.
-                        String newFilter = !TextUtils.isEmpty(newText) ? newText : null;
-                        // Don't do anything if the filter hasn't actually changed.
-                        // Prevents restarting the loader when restoring state.
-                        if (mCurFilter == null && newFilter == null) {
-                            return true;
-                        }
-                        if (mCurFilter != null && mCurFilter.equals(newFilter)) {
-                            return true;
-                        }
-                        mCurFilter = newFilter;
-                        getLoaderManager().restartLoader(0, null, CursorLoaderListFragment.this);
-                        return true;
-                    }
-                });
-                MenuItemCompat.setActionView(item, searchView);
+            item.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM
+                    | MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
+            SearchView sv = new SearchView(getActivity());
+            sv.setOnQueryTextListener(this);
+            item.setActionView(sv);
+        }
+
+        public boolean onQueryTextChange(String newText) {
+            // Called when the action bar search text has changed.  Update
+            // the search filter, and restart the loader to do a new query
+            // with this filter.
+            String newFilter = !TextUtils.isEmpty(newText) ? newText : null;
+            // Don't do anything if the filter hasn't actually changed.
+            // Prevents restarting the loader when restoring state.
+            if (mCurFilter == null && newFilter == null) {
+                return true;
             }
+            if (mCurFilter != null && mCurFilter.equals(newFilter)) {
+                return true;
+            }
+            mCurFilter = newFilter;
+            getLoaderManager().restartLoader(0, null, this);
+            return true;
+        }
+
+        @Override public boolean onQueryTextSubmit(String query) {
+            // Don't care about this.
+            return true;
         }
 
         @Override public void onListItemClick(ListView l, View v, int position, long id) {
@@ -135,8 +135,12 @@ public class LoaderCursorSupport extends FragmentActivity {
 
         // These are the Contacts rows that we will retrieve.
         static final String[] CONTACTS_SUMMARY_PROJECTION = new String[] {
-            People._ID,
-            People.DISPLAY_NAME,
+            Contacts._ID,
+            Contacts.DISPLAY_NAME,
+            Contacts.CONTACT_STATUS,
+            Contacts.CONTACT_PRESENCE,
+            Contacts.PHOTO_ID,
+            Contacts.LOOKUP_KEY,
         };
 
         public Loader<Cursor> onCreateLoader(int id, Bundle args) {
@@ -146,18 +150,20 @@ public class LoaderCursorSupport extends FragmentActivity {
             // currently filtering.
             Uri baseUri;
             if (mCurFilter != null) {
-                baseUri = Uri.withAppendedPath(People.CONTENT_FILTER_URI, Uri.encode(mCurFilter));
+                baseUri = Uri.withAppendedPath(Contacts.CONTENT_FILTER_URI,
+                        Uri.encode(mCurFilter));
             } else {
-                baseUri = People.CONTENT_URI;
+                baseUri = Contacts.CONTENT_URI;
             }
 
             // Now create and return a CursorLoader that will take care of
             // creating a Cursor for the data being displayed.
-            String select = "((" + People.DISPLAY_NAME + " NOTNULL) AND ("
-                    + People.DISPLAY_NAME + " != '' ))";
+            String select = "((" + Contacts.DISPLAY_NAME + " NOTNULL) AND ("
+                    + Contacts.HAS_PHONE_NUMBER + "=1) AND ("
+                    + Contacts.DISPLAY_NAME + " != '' ))";
             return new CursorLoader(getActivity(), baseUri,
                     CONTACTS_SUMMARY_PROJECTION, select, null,
-                    People.DISPLAY_NAME + " COLLATE LOCALIZED ASC");
+                    Contacts.DISPLAY_NAME + " COLLATE LOCALIZED ASC");
         }
 
         public void onLoadFinished(Loader<Cursor> loader, Cursor data) {

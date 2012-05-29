@@ -165,6 +165,8 @@
 
     <string name="loader_cursor">App/Loader/Cursor</string>
 
+    <string name="loader_retained">App/Loader/Retained</string>
+
     <string name="loader_custom">App/Loader/Custom</string>
 
     <string name="loader_throttle">App/Loader/Throttle</string>
