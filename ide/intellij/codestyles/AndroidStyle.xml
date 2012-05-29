@@ -42,7 +42,7 @@
       <package name="" withSubpackages="true" />
     </value>
   </option>
-  <option name="RIGHT_MARGIN" value="80" />
+  <option name="RIGHT_MARGIN" value="100" />
   <option name="CALL_PARAMETERS_WRAP" value="1" />
   <option name="METHOD_PARAMETERS_WRAP" value="1" />
   <option name="EXTENDS_LIST_WRAP" value="1" />
