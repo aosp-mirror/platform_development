@@ -1,0 +1,3 @@
+This directory contains Android-side modules related to hardware OpenGL ES
+emulation. The host-side modules and documentation are in
+$ANDROID_BUILD_TOP/sdk/emulator/opengl.
