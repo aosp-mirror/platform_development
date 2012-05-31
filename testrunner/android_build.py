@@ -42,7 +42,8 @@ def GetTop():
   # TODO: does this need to be reimplemented to be like gettop() in envsetup.sh
   root_path = os.getenv("ANDROID_BUILD_TOP")
   if root_path is None:
-    logger.Log("Error: ANDROID_BUILD_TOP not defined. Please run envsetup.sh")
+    logger.Log("Error: ANDROID_BUILD_TOP not defined. Please run "
+               "envsetup.sh and lunch/choosecombo")
     raise errors.AbortError
   return root_path
 
@@ -109,7 +110,8 @@ def GetProductOut():
   """
   path = os.getenv("ANDROID_PRODUCT_OUT")
   if path is None:
-    logger.Log("Error: ANDROID_PRODUCT_OUT not defined. Please run envsetup.sh")
+    logger.Log("Error: ANDROID_PRODUCT_OUT not defined. Please run "
+               "envsetup.sh and lunch/choosecombo")
     raise errors.AbortError
   return path
 
