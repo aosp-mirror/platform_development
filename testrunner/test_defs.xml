@@ -129,7 +129,7 @@ See test_defs.xsd for more information.
     description="Framework libandroidfw unit tests." />
 
 <test-native name="libutils"
-    build_path="frameworks/base/libs/utils/tests"
+    build_path="frameworks/native/libs/utils/tests"
     description="Framework libutils unit tests." />
 
 <test-native name="libinput"
