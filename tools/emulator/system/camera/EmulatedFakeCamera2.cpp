@@ -236,6 +236,9 @@ int EmulatedFakeCamera2::allocateStream(
             ALOGE("%s: Format 0x%x is not supported", __FUNCTION__, format);
             return BAD_VALUE;
         }
+    } else {
+        // Emulator's opaque format is RGBA
+        format = HAL_PIXEL_FORMAT_RGBA_8888;
     }
 
     const uint32_t *availableSizes;
@@ -263,13 +266,12 @@ int EmulatedFakeCamera2::allocateStream(
     // TODO: Generalize below to work for variable types of streams, etc.
     // Currently only correct for raw sensor format, sensor resolution.
 
-    ALOG_ASSERT(format == HAL_PIXEL_FORMAT_RAW_SENSOR,
-            "%s: TODO: Only supporting raw sensor format right now", __FUNCTION__);
     ALOG_ASSERT(width == Sensor::kResolution[0],
             "%s: TODO: Only supporting raw sensor size right now", __FUNCTION__);
     ALOG_ASSERT(height == Sensor::kResolution[1],
             "%s: TODO: Only supporting raw sensor size right now", __FUNCTION__);
 
+    mStreamFormat = format;
     mRawStreamOps = stream_ops;
 
     *stream_id = mNextStreamId;
@@ -496,7 +498,8 @@ bool EmulatedFakeCamera2::ConfigureThread::threadLoop() {
                 ANDROID_REQUEST_FRAME_COUNT,
                 &e);
         if (res != NO_ERROR) {
-            ALOGE("%s: error reading frame count tag", __FUNCTION__);
+            ALOGE("%s: error reading frame count tag: %s (%d)",
+                    __FUNCTION__, strerror(-res), res);
             mParent->signalError();
             return false;
         }
@@ -506,7 +509,8 @@ bool EmulatedFakeCamera2::ConfigureThread::threadLoop() {
                 ANDROID_SENSOR_EXPOSURE_TIME,
                 &e);
         if (res != NO_ERROR) {
-            ALOGE("%s: error reading exposure time tag", __FUNCTION__);
+            ALOGE("%s: error reading exposure time tag: %s (%d)",
+                    __FUNCTION__, strerror(-res), res);
             mParent->signalError();
             return false;
         }
@@ -587,7 +591,8 @@ bool EmulatedFakeCamera2::ConfigureThread::threadLoop() {
             mParent->signalError();
             return false;
         }
-        mParent->mSensor->setDestinationBuffer(img, mNextBufferStride);
+        mParent->mSensor->setDestinationBuffer(img, mParent->mStreamFormat,
+                mNextBufferStride);
         mParent->mReadoutThread->setNextCapture(mRequest, mNextBuffer);
 
         mRequest = NULL;
@@ -1089,8 +1094,15 @@ status_t EmulatedFakeCamera2::constructDefaultRequest(
     static const uint8_t metadataMode = ANDROID_REQUEST_METADATA_NONE;
     ADD_OR_SIZE(ANDROID_REQUEST_METADATA_MODE, &metadataMode, 1);
 
+    static const int32_t id = 0;
+    ADD_OR_SIZE(ANDROID_REQUEST_ID, &id, 1);
+
+    static const int32_t frameCount = 0;
+    ADD_OR_SIZE(ANDROID_REQUEST_FRAME_COUNT, &frameCount, 1);
+
     // OUTPUT_STREAMS set by user
-    // FRAME_COUNT set by user
+    entryCount += 1;
+    dataCount += 5; // TODO: Should be maximum stream number
 
     /** android.lens */
 

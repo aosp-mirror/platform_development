@@ -246,6 +246,7 @@ private:
     /** Stream manipulation */
     uint32_t mNextStreamId;
     const camera2_stream_ops_t *mRawStreamOps;
+    uint32_t mStreamFormat;
 
     /** Simulated hardware interfaces */
     sp<Sensor> mSensor;

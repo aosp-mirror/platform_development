@@ -67,10 +67,21 @@ class Scene {
     void setReadoutPixel(int x, int y);
 
     // Get sensor response in physical units (electrons) for light hitting the
-    // current readout pixel, after passing through color filters. The color
-    // channels are 0=R, 1=Gr, 2=Gb, 3=B. The readout pixel will be
-    // auto-incremented.
-    uint32_t getPixelElectrons(int x, int y, int c);
+    // current readout pixel, after passing through color filters. The readout
+    // pixel will be auto-incremented. The returned array can be indexed with
+    // ColorChannels.
+    const uint32_t* getPixelElectrons();
+
+    enum ColorChannels {
+        R = 0,
+        Gr,
+        Gb,
+        B,
+        Y,
+        Cb,
+        Cr,
+        NUM_CHANNELS
+    };
 
   private:
     // Sensor color filtering coefficients in XYZ
@@ -81,6 +92,8 @@ class Scene {
 
     int mOffsetX, mOffsetY;
     int mMapDiv;
+
+    int mHandshakeX, mHandshakeY;
 
     int mSensorWidth;
     int mSensorHeight;
@@ -112,11 +125,14 @@ class Scene {
         NUM_MATERIALS
     };
 
-    uint32_t mCurrentColors[NUM_MATERIALS*4];
+    uint32_t mCurrentColors[NUM_MATERIALS*NUM_CHANNELS];
 
     /**
      * Constants for scene definition. These are various degrees of approximate.
      */
+
+    // RGB->YUV conversion
+    static const float kRgb2Yuv[12];
 
     // Aperture of imaging lens
     static const float kAperture;
