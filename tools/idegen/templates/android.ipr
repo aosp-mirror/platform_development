@@ -26,7 +26,6 @@
         <option name="PLACE_ASSIGNMENT_SIGN_ON_NEXT_LINE" value="true" />
       </value>
     </option>
-    <option name="USE_PER_PROJECT_SETTINGS" value="true" />
   </component>
   <component name="CompilerConfiguration">
     <option name="DEFAULT_COMPILER" value="Javac" />
@@ -122,7 +121,7 @@
     <option name="GENERATE_NO_WARNINGS" value="false" />
     <option name="DEPRECATION" value="false" />
     <option name="ADDITIONAL_OPTIONS_STRING" value="-Xlint:all,-deprecation,-serial" />
-    <option name="MAXIMUM_HEAP_SIZE" value="512" />
+    <option name="MAXIMUM_HEAP_SIZE" value="800" />
   </component>
   <component name="JavadocGenerationManager">
     <option name="OUTPUT_DIRECTORY" />
@@ -282,7 +281,7 @@
       <module fileurl="file://$PROJECT_DIR$/android.iml" filepath="$PROJECT_DIR$/android.iml" />
     </modules>
   </component>
-  <component name="ProjectRootManager" version="2" assert-keyword="true" jdk-15="true" project-jdk-name="1.5 (No Libraries)" project-jdk-type="JavaSDK">
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_1_6" assert-keyword="true" jdk-15="true" project-jdk-name="1.6 (No Libraries)" project-jdk-type="JavaSDK">
     <output url="file:///tmp/intellij$PROJECT_DIR$/classes" />
   </component>
   <component name="RmicSettings">

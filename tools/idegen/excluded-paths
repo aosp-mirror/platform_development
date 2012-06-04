@@ -62,3 +62,6 @@ layoutlib
 # This directory contains only an R.java file which is the same as the one in
 # Camera_intermediates.
 ^out/target/common/obj/APPS/CameraTests_intermediates$
+
+# Exclude all prebuilts jars.
+^prebuilts/.*\.jar$
