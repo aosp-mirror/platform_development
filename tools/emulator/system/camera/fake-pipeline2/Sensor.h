@@ -78,13 +78,16 @@
 #include "utils/Timers.h"
 
 #include "Scene.h"
+#include "Base.h"
 
 namespace android {
+
+class EmulatedFakeCamera2;
 
 class Sensor: private Thread, public virtual RefBase {
   public:
 
-    Sensor();
+    Sensor(EmulatedFakeCamera2 *parent);
     ~Sensor();
 
     /*
@@ -107,7 +110,7 @@ class Sensor: private Thread, public virtual RefBase {
     void setFrameDuration(uint64_t ns);
     void setSensitivity(uint32_t gain);
     // Buffer must be at least stride*height*2 bytes in size
-    void setDestinationBuffer(uint8_t *buffer, uint32_t format, uint32_t stride);
+    void setDestinationBuffers(Buffers *buffers);
 
     /*
      * Controls that cause reconfiguration delay
@@ -169,6 +172,7 @@ class Sensor: private Thread, public virtual RefBase {
     static const uint32_t kDefaultSensitivity;
 
   private:
+    EmulatedFakeCamera2 *mParent;
 
     Mutex mControlMutex; // Lock before accessing control parameters
     // Start of control parameters
@@ -177,16 +181,14 @@ class Sensor: private Thread, public virtual RefBase {
     uint64_t  mExposureTime;
     uint64_t  mFrameDuration;
     uint32_t  mGainFactor;
-    uint8_t  *mNextBuffer;
-    uint32_t  mNextBufferFmt;
-    uint32_t  mNextStride;
+    Buffers  *mNextBuffers;
 
     // End of control parameters
 
     Mutex mReadoutMutex; // Lock before accessing readout variables
     // Start of readout variables
     Condition mReadoutComplete;
-    uint8_t  *mCapturedBuffer;
+    Buffers  *mCapturedBuffers;
     nsecs_t   mCaptureTime;
     // End of readout variables
 
@@ -203,17 +205,13 @@ class Sensor: private Thread, public virtual RefBase {
     virtual bool threadLoop();
 
     nsecs_t mNextCaptureTime;
-    uint8_t *mNextCapturedBuffer;
+    Buffers *mNextCapturedBuffers;
 
     Scene mScene;
 
-    void captureRaw(uint32_t gain, uint32_t stride,
-            uint8_t **capturedBuffer, nsecs_t captureTime,
-            nsecs_t frameReadoutTime);
-
-    void captureRGBA(uint32_t gain, uint32_t stride,
-            uint8_t **capturedBuffer, nsecs_t captureTime,
-            nsecs_t frameReadoutTime);
+    void captureRaw(uint8_t *img, uint32_t gain, uint32_t stride);
+    void captureRGBA(uint8_t *img, uint32_t gain, uint32_t stride);
+    void captureRGB(uint8_t *img, uint32_t gain, uint32_t stride);
 
 };
 

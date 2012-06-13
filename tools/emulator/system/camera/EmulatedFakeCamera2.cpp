@@ -30,8 +30,10 @@
 
 namespace android {
 
-const uint32_t EmulatedFakeCamera2::kAvailableFormats[3] = {
+const uint32_t EmulatedFakeCamera2::kAvailableFormats[5] = {
         HAL_PIXEL_FORMAT_RAW_SENSOR,
+        HAL_PIXEL_FORMAT_BLOB,
+        HAL_PIXEL_FORMAT_RGBA_8888,
         HAL_PIXEL_FORMAT_YV12,
         HAL_PIXEL_FORMAT_YCrCb_420_SP
 };
@@ -101,6 +103,11 @@ status_t EmulatedFakeCamera2::Initialize() {
     }
     if (res != OK) return res;
 
+    mNextStreamId = 0;
+    mRawStreamCount = 0;
+    mProcessedStreamCount = 0;
+    mJpegStreamCount = 0;
+
     return NO_ERROR;
 }
 
@@ -114,10 +121,10 @@ status_t EmulatedFakeCamera2::connectCamera(hw_device_t** device) {
 
     mConfigureThread = new ConfigureThread(this);
     mReadoutThread = new ReadoutThread(this);
-    mSensor = new Sensor();
+    mSensor = new Sensor(this);
+    mJpegCompressor = new JpegCompressor(this);
 
     mNextStreamId = 0;
-    mRawStreamOps = NULL;
 
     res = mSensor->startUp();
     if (res != NO_ERROR) return res;
@@ -145,9 +152,11 @@ status_t EmulatedFakeCamera2::closeCamera() {
 
     mConfigureThread->requestExit();
     mReadoutThread->requestExit();
+    mJpegCompressor->cancel();
 
     mConfigureThread->join();
     mReadoutThread->join();
+
 
     ALOGV("%s exit", __FUNCTION__);
     return NO_ERROR;
@@ -174,10 +183,21 @@ int EmulatedFakeCamera2::requestQueueNotify() {
     ALOG_ASSERT(mFrameQueueDst != NULL,
             "%s: Request queue src not set, but received queue notification!",
             __FUNCTION__);
-    ALOG_ASSERT(mRawStreamOps != NULL,
-            "%s: No raw stream allocated, but received queue notification!",
+    ALOG_ASSERT(mStreams.size() != 0,
+            "%s: No streams allocated, but received queue notification!",
             __FUNCTION__);
     return mConfigureThread->newRequestAvailable();
+}
+
+int EmulatedFakeCamera2::getInProgressCount() {
+    Mutex::Autolock l(mMutex);
+
+    int requestCount = 0;
+    requestCount += mConfigureThread->getInProgressCount();
+    requestCount += mReadoutThread->getInProgressCount();
+    requestCount += mJpegCompressor->isBusy() ? 1 : 0;
+
+    return requestCount;
 }
 
 int EmulatedFakeCamera2::constructDefaultRequest(
@@ -219,12 +239,6 @@ int EmulatedFakeCamera2::allocateStream(
         uint32_t *max_buffers) {
     Mutex::Autolock l(mMutex);
 
-    if (mNextStreamId > 0) {
-        // TODO: Support more than one stream
-        ALOGW("%s: Only one stream supported", __FUNCTION__);
-        return BAD_VALUE;
-    }
-
     if (format != CAMERA2_HAL_PIXEL_FORMAT_OPAQUE) {
         unsigned int numFormats = sizeof(kAvailableFormats) / sizeof(uint32_t);
         unsigned int formatIdx = 0;
@@ -243,14 +257,25 @@ int EmulatedFakeCamera2::allocateStream(
 
     const uint32_t *availableSizes;
     size_t availableSizeCount;
-    if (format == HAL_PIXEL_FORMAT_RAW_SENSOR) {
-        availableSizes = kAvailableRawSizes;
-        availableSizeCount = sizeof(kAvailableRawSizes)/sizeof(uint32_t);
-    } else {
-        availableSizes = kAvailableProcessedSizes;
-        availableSizeCount = sizeof(kAvailableProcessedSizes)/sizeof(uint32_t);
+    switch (format) {
+        case HAL_PIXEL_FORMAT_RAW_SENSOR:
+            availableSizes = kAvailableRawSizes;
+            availableSizeCount = sizeof(kAvailableRawSizes)/sizeof(uint32_t);
+            break;
+        case HAL_PIXEL_FORMAT_BLOB:
+            availableSizes = kAvailableJpegSizes;
+            availableSizeCount = sizeof(kAvailableJpegSizes)/sizeof(uint32_t);
+            break;
+        case HAL_PIXEL_FORMAT_RGBA_8888:
+        case HAL_PIXEL_FORMAT_YV12:
+        case HAL_PIXEL_FORMAT_YCrCb_420_SP:
+            availableSizes = kAvailableProcessedSizes;
+            availableSizeCount = sizeof(kAvailableProcessedSizes)/sizeof(uint32_t);
+            break;
+        default:
+            ALOGE("%s: Unknown format 0x%x", __FUNCTION__, format);
+            return BAD_VALUE;
     }
-    // TODO: JPEG sizes
 
     unsigned int resIdx = 0;
     for (; resIdx < availableSizeCount; resIdx++) {
@@ -263,16 +288,41 @@ int EmulatedFakeCamera2::allocateStream(
         return BAD_VALUE;
     }
 
-    // TODO: Generalize below to work for variable types of streams, etc.
-    // Currently only correct for raw sensor format, sensor resolution.
+    switch (format) {
+        case HAL_PIXEL_FORMAT_RAW_SENSOR:
+            if (mRawStreamCount >= kMaxRawStreamCount) {
+                ALOGE("%s: Cannot allocate another raw stream (%d already allocated)",
+                        __FUNCTION__, mRawStreamCount);
+                return INVALID_OPERATION;
+            }
+            mRawStreamCount++;
+            break;
+        case HAL_PIXEL_FORMAT_BLOB:
+            if (mJpegStreamCount >= kMaxJpegStreamCount) {
+                ALOGE("%s: Cannot allocate another JPEG stream (%d already allocated)",
+                        __FUNCTION__, mJpegStreamCount);
+                return INVALID_OPERATION;
+            }
+            mJpegStreamCount++;
+            break;
+        default:
+            if (mProcessedStreamCount >= kMaxProcessedStreamCount) {
+                ALOGE("%s: Cannot allocate another processed stream (%d already allocated)",
+                        __FUNCTION__, mProcessedStreamCount);
+                return INVALID_OPERATION;
+            }
+            mProcessedStreamCount++;
+    }
 
-    ALOG_ASSERT(width == Sensor::kResolution[0],
-            "%s: TODO: Only supporting raw sensor size right now", __FUNCTION__);
-    ALOG_ASSERT(height == Sensor::kResolution[1],
-            "%s: TODO: Only supporting raw sensor size right now", __FUNCTION__);
+    Stream newStream;
+    newStream.ops = stream_ops;
+    newStream.width = width;
+    newStream.height = height;
+    newStream.format = format;
+    // TODO: Query stride from gralloc
+    newStream.stride = width;
 
-    mStreamFormat = format;
-    mRawStreamOps = stream_ops;
+    mStreams.add(mNextStreamId, newStream);
 
     *stream_id = mNextStreamId;
     if (format_actual) *format_actual = format;
@@ -298,11 +348,32 @@ int EmulatedFakeCamera2::registerStreamBuffers(
 
 int EmulatedFakeCamera2::releaseStream(uint32_t stream_id) {
     Mutex::Autolock l(mMutex);
-    ALOG_ASSERT(stream_id == 0,
-            "%s: TODO: Only one stream supported", __FUNCTION__);
 
-    // TODO: Need to clean up better than this - in-flight buffers likely
-    mRawStreamOps = NULL;
+    ssize_t streamIndex = mStreams.indexOfKey(stream_id);
+    if (streamIndex < 0) {
+        ALOGE("%s: Unknown stream id %d!", __FUNCTION__, stream_id);
+        return BAD_VALUE;
+    }
+
+    if (isStreamInUse(stream_id)) {
+        ALOGE("%s: Cannot release stream %d; in use!", __FUNCTION__,
+                stream_id);
+        return BAD_VALUE;
+    }
+
+    switch(mStreams.valueAt(streamIndex).format) {
+        case HAL_PIXEL_FORMAT_RAW_SENSOR:
+            mRawStreamCount--;
+            break;
+        case HAL_PIXEL_FORMAT_BLOB:
+            mJpegStreamCount--;
+            break;
+        default:
+            mProcessedStreamCount--;
+            break;
+    }
+
+    mStreams.removeItemsAt(streamIndex);
 
     return NO_ERROR;
 }
@@ -435,6 +506,21 @@ status_t EmulatedFakeCamera2::ConfigureThread::newRequestAvailable() {
     return OK;
 }
 
+bool EmulatedFakeCamera2::ConfigureThread::isStreamInUse(uint32_t id) {
+    Mutex::Autolock lock(mInternalsMutex);
+
+    if (mNextBuffers == NULL) return false;
+    for (size_t i=0; i < mNextBuffers->size(); i++) {
+        if ((*mNextBuffers)[i].streamId == (int)id) return true;
+    }
+    return false;
+}
+
+int EmulatedFakeCamera2::ConfigureThread::getInProgressCount() {
+    Mutex::Autolock lock(mInternalsMutex);
+    return mNextBuffers == NULL ? 0 : 1;
+}
+
 bool EmulatedFakeCamera2::ConfigureThread::threadLoop() {
     static const nsecs_t kWaitPerLoop = 10000000L; // 10 ms
     status_t res;
@@ -457,6 +543,8 @@ bool EmulatedFakeCamera2::ConfigureThread::threadLoop() {
         // Active
     }
     if (mRequest == NULL) {
+        Mutex::Autolock il(mInternalsMutex);
+
         ALOGV("Getting next request");
         res = mParent->mRequestQueueSrc->dequeue_request(
             mParent->mRequestQueueSrc,
@@ -486,11 +574,24 @@ bool EmulatedFakeCamera2::ConfigureThread::threadLoop() {
             mParent->signalError();
             return false;
         }
-        // TODO: Only raw stream supported
-        if (streams.count != 1 || streams.data.u8[0] != 0) {
-            ALOGE("%s: TODO: Only raw stream supported", __FUNCTION__);
-            mParent->signalError();
-            return false;
+
+        mNextBuffers = new Buffers;
+        mNextNeedsJpeg = false;
+        ALOGV("Setting up buffers for capture");
+        for (size_t i = 0; i < streams.count; i++) {
+            const Stream &s = mParent->getStreamInfo(streams.data.u8[i]);
+            StreamBuffer b;
+            b.streamId = streams.data.u8[i];
+            b.width  = s.width;
+            b.height = s.height;
+            b.format = s.format;
+            b.stride = s.stride;
+            mNextBuffers->push_back(b);
+            ALOGV("  Buffer %d: Stream %d, %d x %d, format 0x%x, stride %d",
+                    i, b.streamId, b.width, b.height, b.format, b.stride);
+            if (b.format == HAL_PIXEL_FORMAT_BLOB) {
+                mNextNeedsJpeg = true;
+            }
         }
 
         camera_metadata_entry_t e;
@@ -548,55 +649,69 @@ bool EmulatedFakeCamera2::ConfigureThread::threadLoop() {
             mParent->mSensor->getScene().setHour(*e.data.i32);
         }
 
-        // TODO: Fetch stride from gralloc
-        mNextBufferStride = Sensor::kResolution[0];
+        // Start waiting on sensor or JPEG block
+        if (mNextNeedsJpeg) {
+            ALOGV("Waiting for JPEG compressor");
+        } else {
+            ALOGV("Waiting for sensor");
+        }
+    }
 
-        // Start waiting on sensor
+    if (mNextNeedsJpeg) {
+        bool jpegDone;
+        jpegDone = mParent->mJpegCompressor->waitForDone(kWaitPerLoop);
+        if (!jpegDone) return true;
+
         ALOGV("Waiting for sensor");
+        mNextNeedsJpeg = false;
     }
     bool vsync = mParent->mSensor->waitForVSync(kWaitPerLoop);
 
-    if (vsync) {
-        ALOGV("Configuring sensor for frame %d", mNextFrameNumber);
-        mParent->mSensor->setExposureTime(mNextExposureTime);
-        mParent->mSensor->setFrameDuration(mNextFrameDuration);
-        mParent->mSensor->setSensitivity(mNextSensitivity);
+    if (!vsync) return true;
 
-        /** Get buffer to fill for this frame */
-        // TODO: Only does raw stream
+    Mutex::Autolock il(mInternalsMutex);
+    ALOGV("Configuring sensor for frame %d", mNextFrameNumber);
+    mParent->mSensor->setExposureTime(mNextExposureTime);
+    mParent->mSensor->setFrameDuration(mNextFrameDuration);
+    mParent->mSensor->setSensitivity(mNextSensitivity);
 
-        /* Get next buffer from raw stream */
-        mNextBuffer = NULL;
-        res = mParent->mRawStreamOps->dequeue_buffer(mParent->mRawStreamOps,
-            &mNextBuffer);
-        if (res != NO_ERROR || mNextBuffer == NULL) {
-            ALOGE("%s: Unable to dequeue buffer from stream %d: %d",
-                    __FUNCTION__, 0, res);
+    /** Get buffers to fill for this frame */
+    for (size_t i = 0; i < mNextBuffers->size(); i++) {
+        StreamBuffer &b = mNextBuffers->editItemAt(i);
+
+        Stream s = mParent->getStreamInfo(b.streamId);
+
+        res = s.ops->dequeue_buffer(s.ops, &(b.buffer) );
+        if (res != NO_ERROR || b.buffer == NULL) {
+            ALOGE("%s: Unable to dequeue buffer from stream %d: %s (%d)",
+                    __FUNCTION__, b.streamId, strerror(-res), res);
             mParent->signalError();
             return false;
         }
 
         /* Lock the buffer from the perspective of the graphics mapper */
         uint8_t *img;
-        const Rect rect(Sensor::kResolution[0], Sensor::kResolution[1]);
+        const Rect rect(s.width, s.height);
 
-        res = GraphicBufferMapper::get().lock(*mNextBuffer,
+        res = GraphicBufferMapper::get().lock(*(b.buffer),
                 GRALLOC_USAGE_SW_WRITE_OFTEN,
-                rect, (void**)&img);
+                rect, (void**)&(b.img) );
 
         if (res != NO_ERROR) {
-            ALOGE("%s: grbuffer_mapper.lock failure: %d", __FUNCTION__, res);
-            mParent->mRawStreamOps->cancel_buffer(mParent->mRawStreamOps,
-                    mNextBuffer);
+            ALOGE("%s: grbuffer_mapper.lock failure: %s (%d)",
+                    __FUNCTION__, strerror(-res), res);
+            s.ops->cancel_buffer(s.ops,
+                    b.buffer);
             mParent->signalError();
             return false;
         }
-        mParent->mSensor->setDestinationBuffer(img, mParent->mStreamFormat,
-                mNextBufferStride);
-        mParent->mReadoutThread->setNextCapture(mRequest, mNextBuffer);
-
-        mRequest = NULL;
     }
+
+    mParent->mReadoutThread->setNextCapture(mRequest, mNextBuffers);
+    mParent->mSensor->setDestinationBuffers(mNextBuffers);
+
+    mRequest = NULL;
+    mNextBuffers = NULL;
 
     return true;
 }
@@ -606,8 +721,7 @@ EmulatedFakeCamera2::ReadoutThread::ReadoutThread(EmulatedFakeCamera2 *parent):
         mParent(parent),
         mRunning(false),
         mActive(false),
-        mRequest(NULL),
-        mBuffer(NULL)
+        mRequest(NULL)
 {
     mInFlightQueue = new InFlightQueue[kInFlightQueueSize];
     mInFlightHead = 0;
@@ -635,8 +749,9 @@ status_t EmulatedFakeCamera2::ReadoutThread::waitUntilRunning() {
     return OK;
 }
 
-void EmulatedFakeCamera2::ReadoutThread::setNextCapture(camera_metadata_t *request,
-        buffer_handle_t *buffer) {
+void EmulatedFakeCamera2::ReadoutThread::setNextCapture(
+        camera_metadata_t *request,
+        Buffers *buffers) {
     Mutex::Autolock lock(mInputMutex);
     if ( (mInFlightTail + 1) % kInFlightQueueSize == mInFlightHead) {
         ALOGE("In flight queue full, dropping captures");
@@ -644,13 +759,48 @@ void EmulatedFakeCamera2::ReadoutThread::setNextCapture(camera_metadata_t *reque
         return;
     }
     mInFlightQueue[mInFlightTail].request = request;
-    mInFlightQueue[mInFlightTail].buffer = buffer;
+    mInFlightQueue[mInFlightTail].buffers = buffers;
     mInFlightTail = (mInFlightTail + 1) % kInFlightQueueSize;
 
     if (!mActive) {
         mActive = true;
         mInputSignal.signal();
     }
+}
+
+bool EmulatedFakeCamera2::ReadoutThread::isStreamInUse(uint32_t id) {
+    Mutex::Autolock lock(mInputMutex);
+
+    size_t i = mInFlightHead;
+    while (i != mInFlightTail) {
+        for (size_t j = 0; j < mInFlightQueue[i].buffers->size(); j++) {
+            if ( (*(mInFlightQueue[i].buffers))[j].streamId == (int)id )
+                return true;
+        }
+        i = (i + 1) % kInFlightQueueSize;
+    }
+
+    Mutex::Autolock iLock(mInternalsMutex);
+
+    if (mBuffers != NULL) {
+        for (i = 0; i < mBuffers->size(); i++) {
+            if ( (*mBuffers)[i].streamId == (int)id) return true;
+        }
+    }
+
+    return false;
+}
+
+int EmulatedFakeCamera2::ReadoutThread::getInProgressCount() {
+    Mutex::Autolock lock(mInputMutex);
+    Mutex::Autolock iLock(mInternalsMutex);
+
+    int requestCount =
+            ((mInFlightTail + kInFlightQueueSize) - mInFlightHead)
+            % kInFlightQueueSize;
+    requestCount += (mBuffers == NULL) ? 0 : 1;
+
+    return requestCount;
 }
 
 bool EmulatedFakeCamera2::ReadoutThread::threadLoop() {
@@ -679,11 +829,14 @@ bool EmulatedFakeCamera2::ReadoutThread::threadLoop() {
                 mActive = false;
                 return true;
             } else {
+                Mutex::Autolock iLock(mInternalsMutex);
                 mRequest = mInFlightQueue[mInFlightHead].request;
-                mBuffer  = mInFlightQueue[mInFlightHead].buffer;
+                mBuffers  = mInFlightQueue[mInFlightHead].buffers;
                 mInFlightQueue[mInFlightHead].request = NULL;
-                mInFlightQueue[mInFlightHead].buffer = NULL;
+                mInFlightQueue[mInFlightHead].buffers = NULL;
                 mInFlightHead = (mInFlightHead + 1) % kInFlightQueueSize;
+                ALOGV("Ready to read out request %p, %d buffers",
+                        mRequest, mBuffers->size());
             }
         }
     }
@@ -700,6 +853,7 @@ bool EmulatedFakeCamera2::ReadoutThread::threadLoop() {
 
     // Got sensor data, construct frame and send it out
     ALOGV("Readout: Constructing metadata and frames");
+    Mutex::Autolock iLock(mInternalsMutex);
 
     camera_metadata_entry_t metadataMode;
     res = find_camera_metadata_entry(mRequest,
@@ -771,16 +925,41 @@ bool EmulatedFakeCamera2::ReadoutThread::threadLoop() {
     }
     mRequest = NULL;
 
-    ALOGV("Sending image buffer to output stream.");
-    GraphicBufferMapper::get().unlock(*mBuffer);
-    res = mParent->mRawStreamOps->enqueue_buffer(mParent->mRawStreamOps,
-            captureTime, mBuffer);
-    if (res != OK) {
-        ALOGE("Error enqueuing image buffer %p: %s (%d)", mBuffer,
-                strerror(-res), res);
-        // TODO: Should this cause a stop?
+    int compressedBufferIndex = -1;
+    ALOGV("Processing %d buffers", mBuffers->size());
+    for (size_t i = 0; i < mBuffers->size(); i++) {
+        const StreamBuffer &b = (*mBuffers)[i];
+        ALOGV("  Buffer %d: Stream %d, %d x %d, format 0x%x, stride %d",
+                i, b.streamId, b.width, b.height, b.format, b.stride);
+        if (b.streamId >= 0) {
+            if (b.format == HAL_PIXEL_FORMAT_BLOB) {
+                // Assumes only one BLOB buffer type per capture
+                compressedBufferIndex = i;
+            } else {
+                ALOGV("Sending image buffer %d to output stream %d",
+                        i, b.streamId);
+                GraphicBufferMapper::get().unlock(*(b.buffer));
+                res = mParent->getStreamInfo(b.streamId).ops->enqueue_buffer(
+                    mParent->getStreamInfo(b.streamId).ops,
+                    captureTime, b.buffer);
+                if (res != OK) {
+                    ALOGE("Error enqueuing image buffer %p: %s (%d)", b.buffer,
+                            strerror(-res), res);
+                    mParent->signalError();
+                }
+            }
+        }
     }
-    mBuffer = NULL;
+    if (compressedBufferIndex == -1) {
+        delete mBuffers;
+        mBuffers = NULL;
+    } else {
+        ALOGV("Starting JPEG compression for buffer %d, stream %d",
+                compressedBufferIndex,
+                (*mBuffers)[compressedBufferIndex].streamId);
+        mParent->mJpegCompressor->start(mBuffers, captureTime);
+        mBuffers = NULL;
+    }
 
     return true;
 }
@@ -789,7 +968,7 @@ bool EmulatedFakeCamera2::ReadoutThread::threadLoop() {
 
 status_t EmulatedFakeCamera2::constructStaticInfo(
         camera_metadata_t **info,
-        bool sizeRequest) {
+        bool sizeRequest) const {
 
     size_t entryCount = 0;
     size_t dataCount = 0;
@@ -958,6 +1137,9 @@ status_t EmulatedFakeCamera2::constructStaticInfo(
     ADD_OR_SIZE(ANDROID_JPEG_AVAILABLE_THUMBNAIL_SIZES,
             jpegThumbnailSizes, sizeof(jpegThumbnailSizes)/sizeof(int32_t));
 
+    static const int32_t jpegMaxSize = JpegCompressor::kMaxJpegSize;
+    ADD_OR_SIZE(ANDROID_JPEG_MAX_SIZE, &jpegMaxSize, 1);
+
     // android.stats
 
     static const uint8_t availableFaceDetectModes[] = {
@@ -1080,7 +1262,7 @@ status_t EmulatedFakeCamera2::constructStaticInfo(
 status_t EmulatedFakeCamera2::constructDefaultRequest(
         int request_template,
         camera_metadata_t **request,
-        bool sizeRequest) {
+        bool sizeRequest) const {
 
     size_t entryCount = 0;
     size_t dataCount = 0;
@@ -1433,5 +1615,25 @@ status_t EmulatedFakeCamera2::addOrSize(camera_metadata_t *request,
     }
 }
 
+bool EmulatedFakeCamera2::isStreamInUse(uint32_t id) {
+    // Assumes mMutex is locked; otherwise new requests could enter
+    // configureThread while readoutThread is being checked
+
+    // Order of isStreamInUse calls matters
+    if (mConfigureThread->isStreamInUse(id) ||
+            mReadoutThread->isStreamInUse(id) ||
+            mJpegCompressor->isStreamInUse(id) ) {
+        ALOGE("%s: Stream %d is in use in active requests!",
+                __FUNCTION__, id);
+        return true;
+    }
+    return false;
+ }
+
+const Stream& EmulatedFakeCamera2::getStreamInfo(uint32_t streamId) {
+    Mutex::Autolock lock(mMutex);
+
+    return mStreams.valueFor(streamId);
+}
 
 };  /* namespace android */
