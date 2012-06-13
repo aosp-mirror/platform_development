@@ -773,8 +773,13 @@ bool EmulatedFakeCamera2::ReadoutThread::threadLoop() {
 
     ALOGV("Sending image buffer to output stream.");
     GraphicBufferMapper::get().unlock(*mBuffer);
-    mParent->mRawStreamOps->enqueue_buffer(mParent->mRawStreamOps,
+    res = mParent->mRawStreamOps->enqueue_buffer(mParent->mRawStreamOps,
             captureTime, mBuffer);
+    if (res != OK) {
+        ALOGE("Error enqueuing image buffer %p: %s (%d)", mBuffer,
+                strerror(-res), res);
+        // TODO: Should this cause a stop?
+    }
     mBuffer = NULL;
 
     return true;
@@ -1127,13 +1132,13 @@ status_t EmulatedFakeCamera2::constructDefaultRequest(
 
     /** android.sensor */
 
-    static const int64_t exposureTime = 30 * MSEC;
+    static const int64_t exposureTime = 10 * MSEC;
     ADD_OR_SIZE(ANDROID_SENSOR_EXPOSURE_TIME, &exposureTime, 1);
 
     static const int64_t frameDuration = 33333333L; // 1/30 s
     ADD_OR_SIZE(ANDROID_SENSOR_FRAME_DURATION, &frameDuration, 1);
 
-    static const int32_t sensitivity = 400;
+    static const int32_t sensitivity = 100;
     ADD_OR_SIZE(ANDROID_SENSOR_SENSITIVITY, &sensitivity, 1);
 
     // TIMESTAMP set only in frame

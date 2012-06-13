@@ -386,10 +386,7 @@ void Sensor::captureRaw(uint32_t gain, uint32_t stride,
 
 void Sensor::captureRGBA(uint32_t gain, uint32_t stride,
         uint8_t **capturedBuffer, nsecs_t captureTime, nsecs_t frameReadoutTime) {
-    float totalGain = gain/100.0 * kBaseGainFactor;
-    float noiseVarGain =  totalGain * totalGain;
-    float readNoiseVar = kReadNoiseVarBeforeGain * noiseVarGain
-            + kReadNoiseVarAfterGain;
+    int totalGain = gain/100.0 * kBaseGainFactor;
 
     for (unsigned int y = 0; y < kResolution[1]; y++ ) {
         uint8_t *px = (uint8_t*)mNextCapturedBuffer + y * stride * 4;
@@ -397,13 +394,13 @@ void Sensor::captureRGBA(uint32_t gain, uint32_t stride,
             uint32_t rCount, gCount, bCount;
             // TODO: Perfect demosaicing is a cheat
             const uint32_t *pixel = mScene.getPixelElectrons();
-            rCount = pixel[Scene::R]  * totalGain;
-            gCount = pixel[Scene::Gr] * totalGain;
-            bCount = pixel[Scene::B]  * totalGain;
+            rCount = pixel[Scene::R]  * totalGain / (kMaxRawValue / 255);
+            gCount = pixel[Scene::Gr] * totalGain / (kMaxRawValue / 255);
+            bCount = pixel[Scene::B]  * totalGain / (kMaxRawValue / 255);
 
-            *px++ = rCount / (kMaxRawValue / 255);
-            *px++ = gCount / (kMaxRawValue / 255);
-            *px++ = bCount / (kMaxRawValue / 255);
+            *px++ = rCount < 255 ? rCount : 255;
+            *px++ = gCount < 255 ? gCount : 255;
+            *px++ = bCount < 255 ? bCount : 255;
             *px++ = 255;
         }
         // TODO: Handle this better
