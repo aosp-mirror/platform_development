@@ -455,6 +455,20 @@ int EmulatedFakeCamera2::getVendorTagType(uint32_t tag) {
 /** Shutdown and debug methods */
 
 int EmulatedFakeCamera2::dump(int fd) {
+    String8 result;
+
+    result.appendFormat("    Camera HAL device: EmulatedFakeCamera2\n");
+    result.appendFormat("      Streams:\n");
+    for (size_t i = 0; i < mStreams.size(); i++) {
+        int id = mStreams.keyAt(i);
+        const Stream& s = mStreams.valueAt(i);
+        result.appendFormat(
+            "         Stream %d: %d x %d, format 0x%x, stride %d\n",
+            id, s.width, s.height, s.format, s.stride);
+    }
+
+    write(fd, result.string(), result.size());
+
     return NO_ERROR;
 }
 

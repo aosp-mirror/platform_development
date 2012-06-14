@@ -41,7 +41,6 @@ struct StreamBuffer {
 typedef Vector<StreamBuffer> Buffers;
 
 struct Stream {
-    uint32_t id;
     const camera2_stream_ops_t *ops;
     uint32_t width, height;
     uint32_t format;
