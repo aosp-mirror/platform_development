@@ -60,7 +60,8 @@ LOCAL_SRC_FILES := \
 	EmulatedFakeCamera2.cpp \
 	EmulatedQemuCamera2.cpp \
 	fake-pipeline2/Scene.cpp \
-	fake-pipeline2/Sensor.cpp
+	fake-pipeline2/Sensor.cpp \
+	fake-pipeline2/JpegCompressor.cpp
 
 
 ifeq ($(TARGET_PRODUCT),vbox_x86)

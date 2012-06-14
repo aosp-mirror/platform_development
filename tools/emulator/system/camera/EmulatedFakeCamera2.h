@@ -24,8 +24,11 @@
  */
 
 #include "EmulatedCamera2.h"
+#include "fake-pipeline2/Base.h"
 #include "fake-pipeline2/Sensor.h"
+#include "fake-pipeline2/JpegCompressor.h"
 #include <utils/Condition.h>
+#include <utils/KeyedVector.h>
 #include <utils/Thread.h>
 
 namespace android {
@@ -69,7 +72,7 @@ protected:
     virtual int requestQueueNotify();
 
     /** Count of requests in flight */
-    //virtual int getInProgressCount();
+    virtual int getInProgressCount();
 
     /** Cancel all captures in flight */
     //virtual int flushCapturesInProgress();
@@ -121,7 +124,13 @@ protected:
 
     virtual int dump(int fd);
 
-    /** Methods for worker threads to call */
+public:
+    /****************************************************************************
+     * Utility methods called by configure/readout threads and pipeline
+     ***************************************************************************/
+
+    // Get information about a given stream. Will lock mMutex
+    const Stream &getStreamInfo(uint32_t streamId);
 
     // Notifies rest of camera subsystem of serious error
     void signalError();
@@ -133,21 +142,25 @@ private:
     /** Construct static camera metadata, two-pass */
     status_t constructStaticInfo(
             camera_metadata_t **info,
-            bool sizeRequest);
+            bool sizeRequest) const;
 
     /** Two-pass implementation of constructDefaultRequest */
     status_t constructDefaultRequest(
             int request_template,
             camera_metadata_t **request,
-            bool sizeRequest);
+            bool sizeRequest) const;
     /** Helper function for constructDefaultRequest */
-    status_t addOrSize( camera_metadata_t *request,
+    static status_t addOrSize( camera_metadata_t *request,
             bool sizeRequest,
             size_t *entryCount,
             size_t *dataCount,
             uint32_t tag,
             const void *entry_data,
             size_t entry_count);
+
+    /** Determine if the stream id is listed in any currently-in-flight
+     * requests. Assumes mMutex is locked */
+    bool isStreamInUse(uint32_t streamId);
 
     /****************************************************************************
      * Pipeline controller threads
@@ -161,6 +174,9 @@ private:
         status_t waitUntilRunning();
         status_t newRequestAvailable();
         status_t readyToRun();
+
+        bool isStreamInUse(uint32_t id);
+        int getInProgressCount();
       private:
         EmulatedFakeCamera2 *mParent;
 
@@ -173,12 +189,14 @@ private:
                       // working on them
 
         camera_metadata_t *mRequest;
+
+        Mutex mInternalsMutex; // Lock before accessing below members.
+        bool    mNextNeedsJpeg;
         int32_t mNextFrameNumber;
         int64_t mNextExposureTime;
         int64_t mNextFrameDuration;
         int32_t mNextSensitivity;
-        buffer_handle_t  *mNextBuffer;
-        int mNextBufferStride;
+        Buffers *mNextBuffers;
     };
 
     class ReadoutThread: public Thread {
@@ -191,8 +209,10 @@ private:
         // Input
         status_t waitUntilRunning();
         void setNextCapture(camera_metadata_t *request,
-                buffer_handle_t *buffer);
+                Buffers *buffers);
 
+        bool isStreamInUse(uint32_t id);
+        int getInProgressCount();
       private:
         EmulatedFakeCamera2 *mParent;
 
@@ -207,15 +227,16 @@ private:
         static const int kInFlightQueueSize = 4;
         struct InFlightQueue {
             camera_metadata_t *request;
-            buffer_handle_t   *buffer;
+            Buffers *buffers;
         } *mInFlightQueue;
 
-        int mInFlightHead;
-        int mInFlightTail;
+        size_t mInFlightHead;
+        size_t mInFlightTail;
 
         // Internals
+        Mutex mInternalsMutex;
         camera_metadata_t *mRequest;
-        buffer_handle_t *mBuffer;
+        Buffers *mBuffers;
 
     };
 
@@ -223,6 +244,9 @@ private:
      * Static configuration information
      ***************************************************************************/
 private:
+    static const uint32_t kMaxRawStreamCount = 1;
+    static const uint32_t kMaxProcessedStreamCount = 3;
+    static const uint32_t kMaxJpegStreamCount = 1;
     static const uint32_t kAvailableFormats[];
     static const uint32_t kAvailableRawSizes[];
     static const uint64_t kAvailableRawMinDurations[];
@@ -245,11 +269,15 @@ private:
 
     /** Stream manipulation */
     uint32_t mNextStreamId;
-    const camera2_stream_ops_t *mRawStreamOps;
-    uint32_t mStreamFormat;
+    uint32_t mRawStreamCount;
+    uint32_t mProcessedStreamCount;
+    uint32_t mJpegStreamCount;
+
+    KeyedVector<uint32_t, Stream> mStreams;
 
     /** Simulated hardware interfaces */
     sp<Sensor> mSensor;
+    sp<JpegCompressor> mJpegCompressor;
 
     /** Pipeline control threads */
     sp<ConfigureThread> mConfigureThread;
