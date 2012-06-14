@@ -29,6 +29,8 @@
 #include "fake-pipeline2/JpegCompressor.h"
 #include <utils/Condition.h>
 #include <utils/KeyedVector.h>
+#include <utils/String8.h>
+#include <utils/String16.h>
 #include <utils/Thread.h>
 
 namespace android {
