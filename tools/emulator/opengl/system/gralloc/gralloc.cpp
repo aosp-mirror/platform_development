@@ -189,8 +189,19 @@ static int gralloc_alloc(alloc_device_t* dev,
                 // Raw sensor data cannot be used by HW
                 return -EINVAL;
             }
+            // Not expecting to actually create any GL surfaces for this
             glFormat = GL_LUMINANCE;
             glType = GL_UNSIGNED_SHORT;
+            break;
+        case HAL_PIXEL_FORMAT_BLOB:
+            bpp = 1;
+            if (! (sw_read && sw_write) ) {
+                // Blob data cannot be used by HW
+                return -EINVAL;
+            }
+            // Not expecting to actually create any GL surfaces for this
+            glFormat = GL_LUMINANCE;
+            glType = GL_UNSIGNED_BYTE;
             break;
         default:
             return -EINVAL;
