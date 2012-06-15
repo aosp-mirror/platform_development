@@ -164,7 +164,7 @@ status_t EmulatedFakeCamera2::closeCamera() {
 
 status_t EmulatedFakeCamera2::getCameraInfo(struct camera_info *info) {
     info->facing = mFacingBack ? CAMERA_FACING_BACK : CAMERA_FACING_FRONT;
-    info->orientation = 0;
+    info->orientation = gEmulatedCameraFactory.getFakeCameraOrientation();
     return EmulatedCamera2::getCameraInfo(info);
 }
 
