@@ -247,7 +247,9 @@ bool Sensor::threadLoop() {
     nsecs_t captureTime = 0;
 
     nsecs_t startRealTime  = systemTime();
-    nsecs_t simulatedTime    = startRealTime - mStartupTime;
+    // Stagefright cares about system time for timestamps, so base simulated
+    // time on that.
+    nsecs_t simulatedTime    = startRealTime;
     nsecs_t frameEndRealTime = startRealTime + frameDuration;
     nsecs_t frameReadoutEndRealTime = startRealTime +
             kRowReadoutTime * kResolution[1];
@@ -312,8 +314,10 @@ bool Sensor::threadLoop() {
                     captureRGB(bAux.img, gain, b.stride);
                     mNextCapturedBuffers->push_back(bAux);
                     break;
-                case HAL_PIXEL_FORMAT_YV12:
                 case HAL_PIXEL_FORMAT_YCrCb_420_SP:
+                    captureNV21(b.img, gain, b.stride);
+                    break;
+                case HAL_PIXEL_FORMAT_YV12:
                     // TODO:
                     ALOGE("%s: Format %x is TODO", __FUNCTION__, b.format);
                     break;
@@ -390,11 +394,12 @@ void Sensor::captureRGBA(uint8_t *img, uint32_t gain, uint32_t stride) {
     float totalGain = gain/100.0 * kBaseGainFactor;
     // In fixed-point math, calculate total scaling from electrons to 8bpp
     int scale64x = 64 * totalGain * 255 / kMaxRawValue;
-    mScene.setReadoutPixel(0,0);
+    uint32_t inc = (stride == 320) ? 2 : 1;
 
-    for (unsigned int y = 0; y < kResolution[1]; y++ ) {
-        uint8_t *px = img + y * stride * 4;
-        for (unsigned int x = 0; x < kResolution[0]; x++) {
+    for (unsigned int y = 0, outY = 0; y < kResolution[1]; y+=inc, outY++ ) {
+        uint8_t *px = img + outY * stride * 4;
+        mScene.setReadoutPixel(0, y);
+        for (unsigned int x = 0; x < kResolution[0]; x+=inc) {
             uint32_t rCount, gCount, bCount;
             // TODO: Perfect demosaicing is a cheat
             const uint32_t *pixel = mScene.getPixelElectrons();
@@ -406,6 +411,7 @@ void Sensor::captureRGBA(uint8_t *img, uint32_t gain, uint32_t stride) {
             *px++ = gCount < 255*64 ? gCount / 64 : 255;
             *px++ = bCount < 255*64 ? bCount / 64 : 255;
             *px++ = 255;
+            if (inc == 2) mScene.getPixelElectrons();
         }
         // TODO: Handle this better
         //simulatedTime += kRowReadoutTime;
@@ -417,11 +423,12 @@ void Sensor::captureRGB(uint8_t *img, uint32_t gain, uint32_t stride) {
     float totalGain = gain/100.0 * kBaseGainFactor;
     // In fixed-point math, calculate total scaling from electrons to 8bpp
     int scale64x = 64 * totalGain * 255 / kMaxRawValue;
-    mScene.setReadoutPixel(0,0);
+    uint32_t inc = (stride == 320) ? 2 : 1;
 
-    for (unsigned int y = 0; y < kResolution[1]; y++ ) {
-        uint8_t *px = img + y * stride * 3;
-        for (unsigned int x = 0; x < kResolution[0]; x++) {
+    for (unsigned int y = 0, outY = 0; y < kResolution[1]; y += inc, outY++ ) {
+        mScene.setReadoutPixel(0, y);
+        uint8_t *px = img + outY * stride * 3;
+        for (unsigned int x = 0; x < kResolution[0]; x += inc) {
             uint32_t rCount, gCount, bCount;
             // TODO: Perfect demosaicing is a cheat
             const uint32_t *pixel = mScene.getPixelElectrons();
@@ -432,11 +439,47 @@ void Sensor::captureRGB(uint8_t *img, uint32_t gain, uint32_t stride) {
             *px++ = rCount < 255*64 ? rCount / 64 : 255;
             *px++ = gCount < 255*64 ? gCount / 64 : 255;
             *px++ = bCount < 255*64 ? bCount / 64 : 255;
+            if (inc == 2) mScene.getPixelElectrons();
         }
         // TODO: Handle this better
         //simulatedTime += kRowReadoutTime;
     }
     ALOGVV("RGB sensor image captured");
+}
+
+void Sensor::captureNV21(uint8_t *img, uint32_t gain, uint32_t stride) {
+    float totalGain = gain/100.0 * kBaseGainFactor;
+    // In fixed-point math, calculate total scaling from electrons to 8bpp
+    int scale64x = 64 * totalGain * 255 / kMaxRawValue;
+
+    // TODO: Make full-color
+    uint32_t inc = (stride == 320) ? 2 : 1;
+    uint32_t outH = kResolution[1] / inc;
+    for (unsigned int y = 0, outY = 0, outUV = outH;
+         y < kResolution[1]; y+=inc, outY++, outUV ) {
+        uint8_t *pxY = img + outY * stride;
+        mScene.setReadoutPixel(0,y);
+        for (unsigned int x = 0; x < kResolution[0]; x+=inc) {
+            uint32_t rCount, gCount, bCount;
+            // TODO: Perfect demosaicing is a cheat
+            const uint32_t *pixel = mScene.getPixelElectrons();
+            rCount = pixel[Scene::R]  * scale64x;
+            gCount = pixel[Scene::Gr] * scale64x;
+            bCount = pixel[Scene::B]  * scale64x;
+            uint32_t avg = (rCount + gCount + bCount) / 3;
+            *pxY++ = avg < 255*64 ? avg / 64 : 255;
+            if (inc == 2) mScene.getPixelElectrons();
+        }
+    }
+    for (unsigned int y = 0, outY = outH; y < kResolution[1]/2; y+=inc, outY++) {
+        uint8_t *px = img + outY * stride;
+        for (unsigned int x = 0; x < kResolution[0]; x+=inc) {
+            // UV to neutral
+            *px++ = 128;
+            *px++ = 128;
+        }
+    }
+    ALOGVV("NV21 sensor image captured");
 }
 
 } // namespace android
