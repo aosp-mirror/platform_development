@@ -39,6 +39,7 @@ LOCAL_C_INCLUDES += external/jpeg \
 	external/skia/include/core/ \
 	frameworks/native/include/media/hardware \
 	frameworks/base/core/jni/android/graphics \
+	$(LOCAL_PATH)/../../opengl/system/OpenglSystemCommon \
 	$(call include-path-for, camera)
 
 LOCAL_SRC_FILES := \
