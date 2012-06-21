@@ -53,7 +53,7 @@
 
 redirects:
 - src: /%2B/?$
-  dst: https://plus.google.com/b/108967384991768947849/
+  dst: https://plus.google.com/108967384991768947849/posts
   type: permanent
   comment: Redirect /+ and /+/ to Google+
 
@@ -169,7 +169,7 @@ redirects:
   comment: Redirect to new location
 
 # new one
-- src: /guide/topics/drawing/
+- src: /guide/topics/drawing/.*
   dst: /guide/topics/graphics/opengl.html
   type: permanent
   comment: Redirect to new location
@@ -259,7 +259,7 @@ redirects:
   comment: Redirect to new location
 
 # new one  
-- src: /resources/dashboard/
+- src: /resources/dashboard/.*
   dst: /about/dashboards/index.html
   type: permanent
   comment: Redirect to new location
@@ -269,7 +269,62 @@ redirects:
   type: permanent
   comment: Redirect to new location
   
-- src: /resources/
+- src: /resources/tutorials/views/hello-linearlayout.html
+  dst: /guide/topics/ui/layout/linear.html
+  type: permanent
+  comment: Redirect to new location
+  
+- src: /resources/tutorials/views/hello-relativelayout.html
+  dst: /guide/topics/ui/layout/relative.html
+  type: permanent
+  comment: Redirect to new location
+  
+- src: /resources/tutorials/views/hello-listview.html
+  dst: /guide/topics/ui/layout/listview.html
+  type: permanent
+  comment: Redirect to new location
+  
+- src: /resources/tutorials/views/hello-gridview.html
+  dst: /guide/topics/ui/layout/gridview.html
+  type: permanent
+  comment: Redirect to new location
+  
+- src: /resources/tutorials/views/hello-webview.html
+  dst: /guide/webapps/webview.html
+  type: permanent
+  comment: Redirect to new location
+  
+- src: /resources/tutorials/views/hello-formstuff.html
+  dst: /guide/topics/ui/controls/index.html
+  type: permanent
+  comment: Redirect to new location
+  
+- src: /resources/tutorials/views/hello-datepicker.html
+  dst: /guide/topics/ui/controls/pickers.html
+  type: permanent
+  comment: Redirect to new location
+  
+- src: /resources/tutorials/views/hello-timepicker.html
+  dst: /guide/topics/ui/controls/pickers.html
+  type: permanent
+  comment: Redirect to new location
+  
+- src: /resources/tutorials/views/hello-autocomplete.html
+  dst: /guide/topics/ui/controls/text.html
+  type: permanent
+  comment: Redirect to new location
+  
+- src: /resources/tutorials/views/hello-spinner.html
+  dst: /guide/topics/ui/controls/spinner.html
+  type: permanent
+  comment: Redirect to new location
+  
+- src: /resources/samples/.*
+  dst: /tools/samples/index.html
+  type: permanent
+  comment: Redirect to new location
+  
+- src: /resources/(?!articles)
   dst: /training/
   type: permanent
   comment: Redirect to new location
@@ -279,6 +334,15 @@ redirects:
   type: permanent
   comment: Redirect to new location
   
-
+- src: /guide/index.html
+  dst: /guide/components/index.html
+  type: permanent
+  comment: Redirect to new location
   
+- src: /shareables/
+  dst: http://commondatastorage.googleapis.com/androiddevelopers/shareables/
+  type: permanent
+  comment: Redirect to new location
+  
+
   
