@@ -46,15 +46,165 @@
 #   dst: http://www.google.com
 #   type: temporary
 #   # This is an example of a redirect to an absolute URI.
-#
+
 
 redirects:
 - src: /%2B/?$
-  dst: https://plus.google.com/108967384991768947849/posts
+  dst: https://plus.google.com/b/108967384991768947849/
   type: permanent
   comment: Redirect /+ and /+/ to Google+
 
 - src: /guide/publishing/licensing.html
-  dst: /guide/market/licensing/index.html
+  dst: /guide/google/licensing/index.html
   type: permanent
   comment: Redirect Licensing docs to new location
+  
+- src: /guide/market/
+  dst: /guide/google/
+  type: permanent
+  comment: redirect billing to new loc
+  
+- src: /guide/developing
+  dst: /tools
+  type: permanent
+  comment: Redirect to new location
+  
+- src: /tools/tools
+  dst: /tools
+  type: permanent
+  comment: Redirect tools reference to new location
+
+- src: /guide/market/publishing/multiple-apks.html
+  dst: /distribute/googleplay/multiple-apks.html
+  type: permanent
+  comment: Redirect to new location
+
+- src: /guide/publishing/publishing.html
+  dst: /distribute/googleplay/publishing.html
+  type: permanent
+  comment: Redirect to new location
+  
+- src: /guide/publishing/
+  dst: /distribute/publishing/
+  type: permanent
+  comment: Redirect to new location
+  
+- src: /sdk/(?!index.html|installing/|exploring)
+  dst: /tools/sdk/
+  type: permanent
+  comment: Redirect sdk reference to new location
+  
+- src: /sdk/compatibility
+  dst: /tools/sdk/support-package.html
+  type: permanent
+  comment: Redirect to new location
+  
+- src: /guide/topics/fundamentals
+  dst: /guide/components
+  type: permanent
+  comment: Redirect to new location
+ 
+- src: /guide/topics/clipboard/copy-paste.html
+  dst: /guide/topics/text
+  type: permanent
+  comment: Redirect to new location
+  
+- src: /guide/topics/wireless
+  dst: /guide/topics/connectivity/wireless
+  type: permanent
+  comment: Redirect to new location
+  
+- src: /guide/topics/usb
+  dst: /guide/topics/connectivity/usb
+  type: permanent
+  comment: Redirect to new location
+  
+- src: /guide/appendix/api-levels.html
+  dst: /tools/sdk/api-levels.html
+  type: permanent
+  comment: Redirect to new location
+  
+- src: /guide/appendix/install-location.html
+  dst: /guide/topics/data/install-location.html
+  type: permanent
+  comment: Redirect to new location
+  
+- src: /guide/topics/security/security.html
+  dst: /guide/topics/security/permissions.html
+  type: permanent
+  comment: Redirect to new location
+  
+# - src: /guide/appendix/market-filters.html
+#   dst: /distribute/google/filters.html
+#   type: permanent
+#   comment: Redirect to new location
+  
+# - src: /guide/market/
+#   dst: /distribute/googleplay/
+#   type: permanent
+#   comment: Redirect to new location
+  
+# - src: /guide/
+#   dst: /distribute/google/tools/
+#   type: permanent
+#   comment: Redirect to new location
+  
+- src: /guide/topics/graphics/animation.html
+  dst: /guide/topics/graphics/overview.html
+  type: permanent
+  comment: Redirect to new location
+  
+- src: /guide/topics/graphics/renderscript.html
+  dst: /guide/topics/graphics/renderscript/index.html
+  type: permanent
+  comment: Redirect to new location
+  
+- src: /guide/topics/renderscript/
+  dst: /guide/topics/graphics/renderscript/
+  type: permanent
+  comment: Redirect to new location
+
+- src: /guide/topics/location/obtaining-user-location.html
+  dst: /guide/topics/location/strategies.html
+  type: permanent
+  comment: Redirect to new location
+
+- src: /guide/topics/nfc/
+  dst: /guide/topics/connectivity/nfc/
+  type: permanent
+  comment: Redirect to new location
+
+- src: /guide/topics/wireless/
+  dst: /guide/topics/connectivity/
+  type: permanent
+  comment: Redirect to new location
+  
+- src: /guide/topics/network/
+  dst: /guide/topics/connectivity/
+  type: permanent
+  comment: Redirect to new location
+  
+- src: /guide/practices/design/
+  dst: /guide/practices/
+  type: permanent
+  comment: Redirect to new location
+  
+- src: /resources/
+  dst: /training/
+  type: permanent
+  comment: Redirect to new location
+  
+- src: /resources/dashboard/*
+  dst: /about/stats/index.html
+  type: permanent
+  comment: Redirect to new location
+  
+- src: /guide/publishing/publishing.html#BuildaButton
+  dst: /distributing/googleplay/promote/badges.html
+  type: permanent
+  comment: Redirect to new location
+  
+- src: /resources/community-groups.html
+  dst: /support.html
+  type: permanent
+  comment: Redirect to new location
