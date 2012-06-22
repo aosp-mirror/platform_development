@@ -20,6 +20,7 @@
 		<field name="ADD_VOICEMAIL" since="14" />
 		<field name="AUTHENTICATE_ACCOUNTS" since="5" />
 		<field name="BATTERY_STATS" />
+		<field name="BIND_ACCESSIBILITY_SERVICE" since="16" />
 		<field name="BIND_APPWIDGET" since="3" />
 		<field name="BIND_DEVICE_ADMIN" since="8" />
 		<field name="BIND_INPUT_METHOD" since="3" />
@@ -146,36 +147,16 @@
 		<extends name="java/lang/Object" />
 		<method name="&lt;init>()V" />
 		<field name="ACCOUNTS" />
-		<field name="AFFECTS_BATTERY" since="16" />
-		<field name="APP_INFO" since="16" />
-		<field name="AUDIO_SETTINGS" since="16" />
-		<field name="BLUETOOTH_NETWORK" since="16" />
-		<field name="BOOKMARKS" since="16" />
-		<field name="CALENDAR" since="16" />
-		<field name="CAMERA" since="16" />
 		<field name="COST_MONEY" />
 		<field name="DEVELOPMENT_TOOLS" />
-		<field name="DEVICE_ALARMS" since="16" />
-		<field name="DISPLAY" since="16" />
 		<field name="HARDWARE_CONTROLS" />
 		<field name="LOCATION" />
 		<field name="MESSAGES" />
-		<field name="MICROPHONE" since="16" />
 		<field name="NETWORK" />
 		<field name="PERSONAL_INFO" />
 		<field name="PHONE_CALLS" />
-		<field name="SCREENLOCK" since="16" />
-		<field name="SHORTRANGE_NETWORK" since="16" />
-		<field name="SOCIAL_INFO" since="16" />
-		<field name="STATUS_BAR" since="16" />
 		<field name="STORAGE" since="4" />
-		<field name="SYNC_SETTINGS" since="16" />
-		<field name="SYSTEM_CLOCK" since="16" />
 		<field name="SYSTEM_TOOLS" />
-		<field name="USER_DICTIONARY" since="16" />
-		<field name="VOICEMAIL" since="16" />
-		<field name="WALLPAPER" since="16" />
-		<field name="WRITE_USER_DICTIONARY" since="16" />
 	</class>
 	<class name="android/R" since="1">
 		<extends name="java/lang/Object" />
@@ -700,6 +681,8 @@
 		<field name="maxWidth" />
 		<field name="measureAllChildren" />
 		<field name="measureWithLargestChild" since="11" />
+		<field name="mediaRouteButtonStyle" since="16" />
+		<field name="mediaRouteTypes" since="16" />
 		<field name="menuCategory" />
 		<field name="mimeType" />
 		<field name="minDate" since="11" />
@@ -760,7 +743,6 @@
 		<field name="pathPrefix" />
 		<field name="permission" />
 		<field name="permissionGroup" />
-		<field name="permissionGroupFlags" since="16" />
 		<field name="persistent" />
 		<field name="persistentDrawingCache" />
 		<field name="phoneNumber" />
@@ -1815,6 +1797,7 @@
 		<field name="Widget_DeviceDefault_Light_ListPopupWindow" since="14" />
 		<field name="Widget_DeviceDefault_Light_ListView" since="14" />
 		<field name="Widget_DeviceDefault_Light_ListView_DropDown" since="14" />
+		<field name="Widget_DeviceDefault_Light_MediaRouteButton" since="16" />
 		<field name="Widget_DeviceDefault_Light_PopupMenu" since="14" />
 		<field name="Widget_DeviceDefault_Light_PopupWindow" since="14" />
 		<field name="Widget_DeviceDefault_Light_ProgressBar" since="14" />
@@ -1840,6 +1823,7 @@
 		<field name="Widget_DeviceDefault_ListPopupWindow" since="14" />
 		<field name="Widget_DeviceDefault_ListView" since="14" />
 		<field name="Widget_DeviceDefault_ListView_DropDown" since="14" />
+		<field name="Widget_DeviceDefault_MediaRouteButton" since="16" />
 		<field name="Widget_DeviceDefault_PopupMenu" since="14" />
 		<field name="Widget_DeviceDefault_PopupWindow" since="14" />
 		<field name="Widget_DeviceDefault_ProgressBar" since="14" />
@@ -1931,6 +1915,7 @@
 		<field name="Widget_Holo_Light_ListPopupWindow" since="11" />
 		<field name="Widget_Holo_Light_ListView" since="11" />
 		<field name="Widget_Holo_Light_ListView_DropDown" since="11" />
+		<field name="Widget_Holo_Light_MediaRouteButton" since="16" />
 		<field name="Widget_Holo_Light_PopupMenu" since="11" />
 		<field name="Widget_Holo_Light_PopupWindow" since="11" />
 		<field name="Widget_Holo_Light_ProgressBar" since="11" />
@@ -1956,6 +1941,7 @@
 		<field name="Widget_Holo_ListPopupWindow" since="11" />
 		<field name="Widget_Holo_ListView" since="11" />
 		<field name="Widget_Holo_ListView_DropDown" since="11" />
+		<field name="Widget_Holo_MediaRouteButton" since="16" />
 		<field name="Widget_Holo_PopupMenu" since="11" />
 		<field name="Widget_Holo_PopupWindow" since="11" />
 		<field name="Widget_Holo_ProgressBar" since="11" />
@@ -3527,6 +3513,8 @@
 		<method name="&lt;init>()V" />
 		<method name="exitKeyguardSecurely(Landroid/app/KeyguardManager$OnKeyguardExitResult;)V" />
 		<method name="inKeyguardRestrictedInputMode()Z" />
+		<method name="isKeyguardLocked()Z" since="16" />
+		<method name="isKeyguardSecure()Z" since="16" />
 		<method name="newKeyguardLock(Ljava/lang/String;)Landroid/app/KeyguardManager$KeyguardLock;" />
 	</class>
 	<class name="android/app/KeyguardManager$KeyguardLock" since="1">
@@ -3621,6 +3609,22 @@
 		<method name="saveInstanceState()Landroid/os/Bundle;" />
 		<method name="startActivity(Ljava/lang/String;Landroid/content/Intent;)Landroid/view/Window;" />
 	</class>
+	<class name="android/app/MediaRouteActionProvider" since="16">
+		<extends name="android/view/ActionProvider" />
+		<method name="&lt;init>(Landroid/content/Context;)V" />
+		<method name="setExtendedSettingsClickListener(Landroid/view/View$OnClickListener;)V" />
+		<method name="setRouteTypes(I)V" />
+	</class>
+	<class name="android/app/MediaRouteButton" since="16">
+		<extends name="android/view/View" />
+		<method name="&lt;init>(Landroid/content/Context;)V" />
+		<method name="&lt;init>(Landroid/content/Context;Landroid/util/AttributeSet;)V" />
+		<method name="&lt;init>(Landroid/content/Context;Landroid/util/AttributeSet;I)V" />
+		<method name="getRouteTypes()I" />
+		<method name="setExtendedSettingsClickListener(Landroid/view/View$OnClickListener;)V" />
+		<method name="setRouteTypes(I)V" />
+		<method name="showDialog()V" />
+	</class>
 	<class name="android/app/NativeActivity" since="9">
 		<extends name="android/app/Activity" />
 		<implements name="android/view/InputQueue$Callback" />
@@ -3651,7 +3655,6 @@
 		<field name="FLAG_ONGOING_EVENT" />
 		<field name="FLAG_ONLY_ALERT_ONCE" />
 		<field name="FLAG_SHOW_LIGHTS" />
-		<field name="KIND_PROMO" since="16" />
 		<field name="PRIORITY_DEFAULT" since="16" />
 		<field name="PRIORITY_HIGH" since="16" />
 		<field name="PRIORITY_LOW" since="16" />
@@ -3684,6 +3687,7 @@
 		<extends name="android/app/Notification$Style" />
 		<method name="&lt;init>()V" />
 		<method name="&lt;init>(Landroid/app/Notification$Builder;)V" />
+		<method name="bigLargeIcon(Landroid/graphics/Bitmap;)Landroid/app/Notification$BigPictureStyle;" />
 		<method name="bigPicture(Landroid/graphics/Bitmap;)Landroid/app/Notification$BigPictureStyle;" />
 		<method name="setBigContentTitle(Ljava/lang/CharSequence;)Landroid/app/Notification$BigPictureStyle;" />
 		<method name="setSummaryText(Ljava/lang/CharSequence;)Landroid/app/Notification$BigPictureStyle;" />
@@ -5255,6 +5259,7 @@
 		<field name="KEYGUARD_SERVICE" />
 		<field name="LAYOUT_INFLATER_SERVICE" />
 		<field name="LOCATION_SERVICE" />
+		<field name="MEDIA_ROUTER_SERVICE" since="16" />
 		<field name="MODE_APPEND" />
 		<field name="MODE_ENABLE_WRITE_AHEAD_LOGGING" since="16" />
 		<field name="MODE_MULTI_PROCESS" since="11" />
@@ -6469,11 +6474,8 @@
 		<method name="&lt;init>(Landroid/content/pm/PermissionGroupInfo;)V" />
 		<method name="loadDescription(Landroid/content/pm/PackageManager;)Ljava/lang/CharSequence;" />
 		<field name="CREATOR" />
-		<field name="FLAG_PERSONAL_INFO" since="16" />
 		<field name="descriptionRes" />
-		<field name="flags" since="16" />
 		<field name="nonLocalizedDescription" />
-		<field name="priority" since="16" />
 	</class>
 	<class name="android/content/pm/PermissionInfo" since="1">
 		<extends name="android/content/pm/PackageItemInfo" />
@@ -11170,6 +11172,110 @@
 		<method name="&lt;init>(Landroid/media/MediaRecorder;)V" />
 		<field name="CAMERA" />
 		<field name="DEFAULT" />
+	</class>
+	<class name="android/media/MediaRouter" since="16">
+		<extends name="java/lang/Object" />
+		<method name="&lt;init>()V" />
+		<method name="addCallback(ILandroid/media/MediaRouter$Callback;)V" />
+		<method name="addUserRoute(Landroid/media/MediaRouter$UserRouteInfo;)V" />
+		<method name="clearUserRoutes()V" />
+		<method name="createRouteCategory(IZ)Landroid/media/MediaRouter$RouteCategory;" />
+		<method name="createRouteCategory(Ljava/lang/CharSequence;Z)Landroid/media/MediaRouter$RouteCategory;" />
+		<method name="createUserRoute(Landroid/media/MediaRouter$RouteCategory;)Landroid/media/MediaRouter$UserRouteInfo;" />
+		<method name="getCategoryAt(I)Landroid/media/MediaRouter$RouteCategory;" />
+		<method name="getCategoryCount()I" />
+		<method name="getRouteAt(I)Landroid/media/MediaRouter$RouteInfo;" />
+		<method name="getRouteCount()I" />
+		<method name="getSelectedRoute(I)Landroid/media/MediaRouter$RouteInfo;" />
+		<method name="removeCallback(Landroid/media/MediaRouter$Callback;)V" />
+		<method name="removeUserRoute(Landroid/media/MediaRouter$UserRouteInfo;)V" />
+		<method name="selectRoute(ILandroid/media/MediaRouter$RouteInfo;)V" />
+		<field name="ROUTE_TYPE_LIVE_AUDIO" />
+		<field name="ROUTE_TYPE_USER" />
+	</class>
+	<class name="android/media/MediaRouter$Callback" since="16">
+		<extends name="java/lang/Object" />
+		<method name="&lt;init>()V" />
+		<method name="onRouteAdded(Landroid/media/MediaRouter;Landroid/media/MediaRouter$RouteInfo;)V" />
+		<method name="onRouteChanged(Landroid/media/MediaRouter;Landroid/media/MediaRouter$RouteInfo;)V" />
+		<method name="onRouteGrouped(Landroid/media/MediaRouter;Landroid/media/MediaRouter$RouteInfo;Landroid/media/MediaRouter$RouteGroup;I)V" />
+		<method name="onRouteRemoved(Landroid/media/MediaRouter;Landroid/media/MediaRouter$RouteInfo;)V" />
+		<method name="onRouteSelected(Landroid/media/MediaRouter;ILandroid/media/MediaRouter$RouteInfo;)V" />
+		<method name="onRouteUngrouped(Landroid/media/MediaRouter;Landroid/media/MediaRouter$RouteInfo;Landroid/media/MediaRouter$RouteGroup;)V" />
+		<method name="onRouteUnselected(Landroid/media/MediaRouter;ILandroid/media/MediaRouter$RouteInfo;)V" />
+		<method name="onRouteVolumeChanged(Landroid/media/MediaRouter;Landroid/media/MediaRouter$RouteInfo;)V" />
+	</class>
+	<class name="android/media/MediaRouter$RouteCategory" since="16">
+		<extends name="java/lang/Object" />
+		<method name="&lt;init>()V" />
+		<method name="getName()Ljava/lang/CharSequence;" />
+		<method name="getName(Landroid/content/Context;)Ljava/lang/CharSequence;" />
+		<method name="getRoutes(Ljava/util/List;)Ljava/util/List;" />
+		<method name="getSupportedTypes()I" />
+		<method name="isGroupable()Z" />
+	</class>
+	<class name="android/media/MediaRouter$RouteGroup" since="16">
+		<extends name="android/media/MediaRouter$RouteInfo" />
+		<method name="&lt;init>()V" />
+		<method name="addRoute(Landroid/media/MediaRouter$RouteInfo;)V" />
+		<method name="addRoute(Landroid/media/MediaRouter$RouteInfo;I)V" />
+		<method name="getRouteAt(I)Landroid/media/MediaRouter$RouteInfo;" />
+		<method name="getRouteCount()I" />
+		<method name="removeRoute(I)V" />
+		<method name="removeRoute(Landroid/media/MediaRouter$RouteInfo;)V" />
+		<method name="setIconDrawable(Landroid/graphics/drawable/Drawable;)V" />
+		<method name="setIconResource(I)V" />
+	</class>
+	<class name="android/media/MediaRouter$RouteInfo" since="16">
+		<extends name="java/lang/Object" />
+		<method name="&lt;init>()V" />
+		<method name="getCategory()Landroid/media/MediaRouter$RouteCategory;" />
+		<method name="getGroup()Landroid/media/MediaRouter$RouteGroup;" />
+		<method name="getIconDrawable()Landroid/graphics/drawable/Drawable;" />
+		<method name="getName()Ljava/lang/CharSequence;" />
+		<method name="getName(Landroid/content/Context;)Ljava/lang/CharSequence;" />
+		<method name="getPlaybackStream()I" />
+		<method name="getPlaybackType()I" />
+		<method name="getStatus()Ljava/lang/CharSequence;" />
+		<method name="getSupportedTypes()I" />
+		<method name="getTag()Ljava/lang/Object;" />
+		<method name="getVolume()I" />
+		<method name="getVolumeHandling()I" />
+		<method name="getVolumeMax()I" />
+		<method name="requestSetVolume(I)V" />
+		<method name="requestUpdateVolume(I)V" />
+		<method name="setTag(Ljava/lang/Object;)V" />
+		<field name="PLAYBACK_TYPE_LOCAL" />
+		<field name="PLAYBACK_TYPE_REMOTE" />
+		<field name="PLAYBACK_VOLUME_FIXED" />
+		<field name="PLAYBACK_VOLUME_VARIABLE" />
+	</class>
+	<class name="android/media/MediaRouter$SimpleCallback" since="16">
+		<extends name="android/media/MediaRouter$Callback" />
+		<method name="&lt;init>()V" />
+	</class>
+	<class name="android/media/MediaRouter$UserRouteInfo" since="16">
+		<extends name="android/media/MediaRouter$RouteInfo" />
+		<method name="&lt;init>()V" />
+		<method name="getRemoteControlClient()Landroid/media/RemoteControlClient;" />
+		<method name="setIconDrawable(Landroid/graphics/drawable/Drawable;)V" />
+		<method name="setIconResource(I)V" />
+		<method name="setName(I)V" />
+		<method name="setName(Ljava/lang/CharSequence;)V" />
+		<method name="setPlaybackStream(I)V" />
+		<method name="setPlaybackType(I)V" />
+		<method name="setRemoteControlClient(Landroid/media/RemoteControlClient;)V" />
+		<method name="setStatus(Ljava/lang/CharSequence;)V" />
+		<method name="setVolume(I)V" />
+		<method name="setVolumeCallback(Landroid/media/MediaRouter$VolumeCallback;)V" />
+		<method name="setVolumeHandling(I)V" />
+		<method name="setVolumeMax(I)V" />
+	</class>
+	<class name="android/media/MediaRouter$VolumeCallback" since="16">
+		<extends name="java/lang/Object" />
+		<method name="&lt;init>()V" />
+		<method name="onVolumeSetRequest(Landroid/media/MediaRouter$RouteInfo;I)V" />
+		<method name="onVolumeUpdateRequest(Landroid/media/MediaRouter$RouteInfo;I)V" />
 	</class>
 	<class name="android/media/MediaScannerConnection" since="1">
 		<extends name="java/lang/Object" />
@@ -17067,6 +17173,8 @@
 		<field name="CONTENT_URI" />
 		<field name="NORMALIZED_NUMBER" since="16" />
 		<field name="NUMBER" />
+		<field name="SEARCH_DISPLAY_NAME_KEY" since="16" />
+		<field name="SEARCH_PHONE_NUMBER_KEY" since="16" />
 		<field name="TYPE_ASSISTANT" />
 		<field name="TYPE_CALLBACK" />
 		<field name="TYPE_CAR" />
@@ -22339,9 +22447,18 @@
 		<extends name="java/lang/Object" />
 		<method name="&lt;init>(Landroid/content/Context;)V" />
 		<method name="hasSubMenu()Z" />
+		<method name="isVisible()Z" since="16" />
 		<method name="onCreateActionView()Landroid/view/View;" />
+		<method name="onCreateActionView(Landroid/view/MenuItem;)Landroid/view/View;" since="16" />
 		<method name="onPerformDefaultAction()Z" />
 		<method name="onPrepareSubMenu(Landroid/view/SubMenu;)V" />
+		<method name="overridesItemVisibility()Z" since="16" />
+		<method name="refreshVisibility()V" since="16" />
+		<method name="setVisibilityListener(Landroid/view/ActionProvider$VisibilityListener;)V" since="16" />
+	</class>
+	<class name="android/view/ActionProvider$VisibilityListener" since="16">
+		<extends name="java/lang/Object" />
+		<method name="onActionProviderVisibilityChanged(Z)V" />
 	</class>
 	<class name="android/view/Choreographer" since="16">
 		<extends name="java/lang/Object" />
@@ -22728,6 +22845,7 @@
 		<field name="KEYCODE_ALT_RIGHT" />
 		<field name="KEYCODE_APOSTROPHE" />
 		<field name="KEYCODE_APP_SWITCH" since="11" />
+		<field name="KEYCODE_ASSIST" since="16" />
 		<field name="KEYCODE_AT" />
 		<field name="KEYCODE_AVR_INPUT" since="11" />
 		<field name="KEYCODE_AVR_POWER" since="11" />
@@ -23923,12 +24041,6 @@
 		<method name="verifyDrawable(Landroid/graphics/drawable/Drawable;)Z" />
 		<method name="willNotCacheDrawing()Z" />
 		<method name="willNotDraw()Z" />
-		<field name="ACCESSIBILITY_FOCUS_BACKWARD" since="16" />
-		<field name="ACCESSIBILITY_FOCUS_DOWN" since="16" />
-		<field name="ACCESSIBILITY_FOCUS_FORWARD" since="16" />
-		<field name="ACCESSIBILITY_FOCUS_LEFT" since="16" />
-		<field name="ACCESSIBILITY_FOCUS_RIGHT" since="16" />
-		<field name="ACCESSIBILITY_FOCUS_UP" since="16" />
 		<field name="ALPHA" since="14" />
 		<field name="DRAWING_CACHE_QUALITY_AUTO" />
 		<field name="DRAWING_CACHE_QUALITY_HIGH" />
@@ -23950,7 +24062,6 @@
 		<field name="FOCUSED_SELECTED_WINDOW_FOCUSED_STATE_SET" />
 		<field name="FOCUSED_STATE_SET" />
 		<field name="FOCUSED_WINDOW_FOCUSED_STATE_SET" />
-		<field name="FOCUS_ACCESSIBILITY" since="16" />
 		<field name="FOCUS_BACKWARD" />
 		<field name="FOCUS_DOWN" />
 		<field name="FOCUS_FORWARD" />
@@ -24927,9 +25038,7 @@
 	<class name="android/view/accessibility/AccessibilityNodeProvider" since="16">
 		<extends name="java/lang/Object" />
 		<method name="&lt;init>()V" />
-		<method name="accessibilityFocusSearch(II)Landroid/view/accessibility/AccessibilityNodeInfo;" />
 		<method name="createAccessibilityNodeInfo(I)Landroid/view/accessibility/AccessibilityNodeInfo;" />
-		<method name="findAccessibilityFocus(I)Landroid/view/accessibility/AccessibilityNodeInfo;" />
 		<method name="findAccessibilityNodeInfosByText(Ljava/lang/String;I)Ljava/util/List;" />
 		<method name="performAction(IILandroid/os/Bundle;)Z" />
 	</class>
@@ -27736,8 +27845,11 @@
 		<method name="setString(ILjava/lang/String;Ljava/lang/String;)V" since="3" />
 		<method name="setTextColor(II)V" since="3" />
 		<method name="setTextViewCompoundDrawables(IIIII)V" since="16" />
+		<method name="setTextViewCompoundDrawablesRelative(IIIII)V" since="16" />
 		<method name="setTextViewText(ILjava/lang/CharSequence;)V" />
+		<method name="setTextViewTextSize(IIF)V" since="16" />
 		<method name="setUri(ILjava/lang/String;Landroid/net/Uri;)V" since="3" />
+		<method name="setViewPadding(IIIII)V" since="16" />
 		<method name="setViewVisibility(II)V" />
 		<method name="showNext(I)V" since="11" />
 		<method name="showPrevious(I)V" since="11" />
