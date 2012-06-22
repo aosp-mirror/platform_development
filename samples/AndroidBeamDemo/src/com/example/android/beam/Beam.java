@@ -56,11 +56,12 @@ public class Beam extends Activity implements CreateNdefMessageCallback,
         if (mNfcAdapter == null) {
             mInfoText = (TextView) findViewById(R.id.textView);
             mInfoText.setText("NFC is not available on this device.");
+        } else {
+            // Register callback to set NDEF message
+            mNfcAdapter.setNdefPushMessageCallback(this, this);
+            // Register callback to listen for message-sent success
+            mNfcAdapter.setOnNdefPushCompleteCallback(this, this);
         }
-        // Register callback to set NDEF message
-        mNfcAdapter.setNdefPushMessageCallback(this, this);
-        // Register callback to listen for message-sent success
-        mNfcAdapter.setOnNdefPushCompleteCallback(this, this);
     }
 
 
