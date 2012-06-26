@@ -60,10 +60,9 @@ _start:
         mov     $0, %edx
         pushl   %edx
         pushl   %eax
-        call     __libc_init
+        call    __libc_init
 
-0:
-        jmp   main
+0:  jmp   main
 
 1:  .long   __PREINIT_ARRAY__
     .long   __INIT_ARRAY__
