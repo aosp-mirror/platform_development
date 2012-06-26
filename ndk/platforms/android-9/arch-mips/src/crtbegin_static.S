@@ -228,4 +228,4 @@ $L3:
 	.weak	__register_frame_info
 
 .include "__dso_handle.S"
-/* NOTE: atexit() is  not be provided by crtbegin_static.S, but by libc.a */
+.include "atexit.S"
