@@ -52,11 +52,6 @@
 #   WATCH OUT -- SRC LINE HAS TO START WITH A HYPHEN !!
 
 redirects:
-- src: /%2B/?$
-  dst: https://plus.google.com/108967384991768947849/posts
-  type: permanent
-  comment: Redirect /+ and /+/ to Google+
-
 # new one works
 - src: /sdk/android-
   dst: /about/versions/android-
@@ -366,6 +361,10 @@ redirects:
   dst: https://developers.google.com/maps/documentation/android/hello-mapview
   type: permanent
   
+- src: /training/tutorials/views/.*
+  dst: /guide/topics/ui/declaring-layout.html#CommonLayouts
+  type: permanent
+  
 - src: /resources/samples/.*
   dst: /tools/samples/index.html
   type: permanent
@@ -391,5 +390,70 @@ redirects:
   type: permanent
   comment: Redirect to new location
   
+- src: /search.html
+  dst: /index.html
+  type: permanent
+  comment: Redirect to new location
+  
+- src: /videos/index.html
+  dst: /develop/index.html
+  type: permanent
+  comment: Redirect to new location
+  
+  
+  
+  
+  
+  
+  
+# -------------------- EASTER EGG REDIRECTS ----------------------
+  
+  
+  
+  
+  
+# ---------- PLATFORM VERSIONS ----------------
+
+- src: /4.1
+  dst: /about/versions/android-4.1.html
+  type: permanent
+  
+- src: /jb
+  dst: /about/versions/jelly-bean.html
+  type: permanent
+  
+- src: /4.0
+  dst: /about/versions/android-4.0.html
+  type: permanent
+  
+- src: /ics
+  dst: /about/versions/android-4.0-highlights.html
+  type: permanent
+  
+- src: /hc
+  dst: /about/versions/android-3.0-highlights.html
+  type: permanent
+  
+- src: /gb
+  dst: /about/versions/android-2.3-highlights.html
+  type: permanent
+       
+
+
+# ---------- MISC -----------------
+
+- src: /%2B/?$
+  dst: https://plus.google.com/108967384991768947849/posts
+  type: permanent
+  comment: Redirect /+ and /+/ to Google+
+  
+- src: /blog
+  dst: http://android-developers.blogspot.com/
+  type: permanent
+  
+- src: /stats
+  dst: /about/dashboards/index.html
+  type: permanent
+
 
   
