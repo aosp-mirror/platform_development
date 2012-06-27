@@ -68,6 +68,11 @@ redirects:
   dst: /tools/extras/oem-usb.html
   type: permanent
   comment: Redirect sdk reference to new location
+  
+- src: /sdk/installing.html
+  dst: /sdk/installing/index.html
+  type: permanent
+  comment: Redirect sdk reference to new location
 
 # new one works
 - src: /sdk/compatibility-library.html
@@ -156,6 +161,10 @@ redirects:
   dst: /guide/components/fundamentals.html
   type: permanent
   
+- src: /guide/topics/intents/intents-filters.html
+  dst: /guide/components/intents-filters.html
+  type: permanent
+  
 - src: /guide/topics/fundamentals/
   dst: /guide/components/
   type: permanent
@@ -177,6 +186,10 @@ redirects:
   dst: /guide/topics/graphics/opengl.html
   type: permanent
   comment: Redirect to new location
+  
+- src: /guide/topics/connectivity/usb/adk.html
+  dst: /tools/adk/index.html
+  type: permanent
   
 - src: /guide/topics/usb
   dst: /guide/topics/connectivity/usb
@@ -210,6 +223,10 @@ redirects:
   dst: /guide/google/play/filters.html
   type: permanent
   comment: Redirect to new location
+  
+- src: /guide/topics/testing/
+  dst: /tools/testing/
+  type: permanent
   
 - src: /guide/topics/graphics/animation.html
   dst: /guide/topics/graphics/overview.html
@@ -249,6 +266,16 @@ redirects:
   type: permanent
   comment: Redirect to new location
 
+# new one
+- src: /resources/articles/creating-input-method.html
+  dst: /guide/topics/text/creating-input-method.html
+  type: permanent
+
+# new one
+- src: /resources/articles/spell-checker-framework.html
+  dst: /guide/topics/text/spell-checker-framework.html
+  type: permanent
+  
 # new one
 - src: /resources/tutorials/hello-world.html
   dst: /training/basics/firstapp/index.html
@@ -333,6 +360,10 @@ redirects:
   
 - src: /resources/tutorials/opengl/opengl-es20.html
   dst: /training/graphics/opengl/index.html
+  type: permanent
+  
+- src: /training/tutorials/views/hello-mapview.html
+  dst: https://developers.google.com/maps/documentation/android/hello-mapview
   type: permanent
   
 - src: /resources/samples/.*
