@@ -21,8 +21,6 @@
     android:layout_marginBottom="@dimen/widget_margin_bottom"
     android:layout_marginLeft="@dimen/widget_margin_left"
     android:layout_marginRight="@dimen/widget_margin_right">
-    <!-- We define separate margins to allow for flexibility in twiddling the margins
-         depending on device form factor and target SDK version. -->
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -47,37 +45,4 @@
             android:textColor="#232323"
             android:textSize="24sp" />
     </LinearLayout>
-
-    <FrameLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_weight="1"
-        android:layout_gravity="center"
-        android:background="#F8F8F8">
-        <ListView
-            android:id="@+id/weather_list"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent" />
-        <TextView
-            android:id="@+id/empty_view"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:gravity="center"
-            android:visibility="gone"
-            android:textColor="#ffffff"
-            android:text="@string/empty_view_text"
-            android:textSize="20sp" />
-    </FrameLayout>
-
-    <Button
-        android:id="@+id/refresh"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:padding="12dp"
-        android:gravity="center"
-        android:background="#F8F8F8"
-        android:text="@string/refresh"
-        android:textAllCaps="true"
-        android:textColor="#232323"
-        android:textSize="14sp" />
 </LinearLayout>

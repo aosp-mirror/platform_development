@@ -70,28 +70,26 @@ class StackRemoteViewsFactory implements RemoteViewsService.RemoteViewsFactory {
 
     public RemoteViews getViewAt(int position) {
         // Get the data for this position from the content provider
-        String city = "Unknown City";
+        String day = "Unknown Day";
         int temp = 0;
         if (mCursor.moveToPosition(position)) {
-            final int cityColIndex = mCursor.getColumnIndex(WeatherDataProvider.Columns.CITY);
+            final int dayColIndex = mCursor.getColumnIndex(WeatherDataProvider.Columns.DAY);
             final int tempColIndex = mCursor.getColumnIndex(
                     WeatherDataProvider.Columns.TEMPERATURE);
-            city = mCursor.getString(cityColIndex);
+            day = mCursor.getString(dayColIndex);
             temp = mCursor.getInt(tempColIndex);
         }
 
-        // Return a proper item with the proper city and temperature.  Just for fun, we alternate
-        // the items to make the list easier to read.
+        // Return a proper item with the proper day and temperature
         final String formatStr = mContext.getResources().getString(R.string.item_format_string);
-        final int itemId = (position % 2 == 0 ? R.layout.light_widget_item
-                : R.layout.dark_widget_item);
+        final int itemId = R.layout.widget_item;
         RemoteViews rv = new RemoteViews(mContext.getPackageName(), itemId);
-        rv.setTextViewText(R.id.widget_item, String.format(formatStr, temp, city));
+        rv.setTextViewText(R.id.widget_item, String.format(formatStr, temp, day));
 
         // Set the click intent so that we can handle it and show a toast message
         final Intent fillInIntent = new Intent();
         final Bundle extras = new Bundle();
-        extras.putString(WeatherWidgetProvider.EXTRA_CITY_ID, city);
+        extras.putString(WeatherWidgetProvider.EXTRA_DAY_ID, day);
         fillInIntent.putExtras(extras);
         rv.setOnClickFillInIntent(R.id.widget_item, fillInIntent);
 

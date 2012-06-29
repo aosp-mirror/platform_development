@@ -36,12 +36,12 @@ import java.util.ArrayList;
  * data will only be stored in memory.
  */
 class WeatherDataPoint {
-    String city;
+    String day;
     int degrees;
 
-    WeatherDataPoint(String c, int d) {
-        city = c;
-        degrees = d;
+    WeatherDataPoint(String d, int deg) {
+        day = d;
+        degrees = deg;
     }
 }
 
@@ -53,7 +53,7 @@ public class WeatherDataProvider extends ContentProvider {
         Uri.parse("content://com.example.android.weatherlistwidget.provider");
     public static class Columns {
         public static final String ID = "_id";
-        public static final String CITY = "city";
+        public static final String DAY = "day";
         public static final String TEMPERATURE = "temperature";
     }
 
@@ -67,17 +67,20 @@ public class WeatherDataProvider extends ContentProvider {
     @Override
     public boolean onCreate() {
         // We are going to initialize the data provider with some default values
-        sData.add(new WeatherDataPoint("San Francisco", 13));
-        sData.add(new WeatherDataPoint("New York", 1));
-        sData.add(new WeatherDataPoint("Seattle", 7));
-        sData.add(new WeatherDataPoint("Boston", 4));
-        sData.add(new WeatherDataPoint("Miami", 22));
-        sData.add(new WeatherDataPoint("Toronto", -10));
-        sData.add(new WeatherDataPoint("Calgary", -13));
-        sData.add(new WeatherDataPoint("Tokyo", 8));
-        sData.add(new WeatherDataPoint("Kyoto", 11));
-        sData.add(new WeatherDataPoint("London", -1));
-        sData.add(new WeatherDataPoint("Nomanisan", 27));
+        sData.add(new WeatherDataPoint("Monday", 13));
+        sData.add(new WeatherDataPoint("Tuesday", 1));
+        sData.add(new WeatherDataPoint("Wednesday", 7));
+        sData.add(new WeatherDataPoint("Thursday", 4));
+        sData.add(new WeatherDataPoint("Friday", 22));
+        sData.add(new WeatherDataPoint("Saturday", -10));
+        sData.add(new WeatherDataPoint("Sunday", -13));
+        sData.add(new WeatherDataPoint("Monday", 8));
+        sData.add(new WeatherDataPoint("Tuesday", 11));
+        sData.add(new WeatherDataPoint("Wednesday", -1));
+        sData.add(new WeatherDataPoint("Thursday", 27));
+        sData.add(new WeatherDataPoint("Friday", 27));
+        sData.add(new WeatherDataPoint("Saturday", 27));
+        sData.add(new WeatherDataPoint("Sunday", 27));
         return true;
     }
 
@@ -89,17 +92,17 @@ public class WeatherDataProvider extends ContentProvider {
         // In this sample, we only query without any parameters, so we can just return a cursor to
         // all the weather data.
         final MatrixCursor c = new MatrixCursor(
-                new String[]{ Columns.ID, Columns.CITY, Columns.TEMPERATURE });
+                new String[]{ Columns.ID, Columns.DAY, Columns.TEMPERATURE });
         for (int i = 0; i < sData.size(); ++i) {
             final WeatherDataPoint data = sData.get(i);
-            c.addRow(new Object[]{ new Integer(i), data.city, new Integer(data.degrees) });
+            c.addRow(new Object[]{ new Integer(i), data.day, new Integer(data.degrees) });
         }
         return c;
     }
 
     @Override
     public String getType(Uri uri) {
-        return "vnd.android.cursor.dir/vnd.weatherlistwidget.citytemperature";
+        return "vnd.android.cursor.dir/vnd.weatherlistwidget.temperature";
     }
 
     @Override
@@ -123,7 +126,7 @@ public class WeatherDataProvider extends ContentProvider {
         // temperature values.
         final int index = Integer.parseInt(uri.getPathSegments().get(0));
         final MatrixCursor c = new MatrixCursor(
-                new String[]{ Columns.ID, Columns.CITY, Columns.TEMPERATURE });
+                new String[]{ Columns.ID, Columns.DAY, Columns.TEMPERATURE });
         assert(0 <= index && index < sData.size());
         final WeatherDataPoint data = sData.get(index);
         data.degrees = values.getAsInteger(Columns.TEMPERATURE);

@@ -15,12 +15,12 @@
 -->
 <appwidget-provider
   xmlns:android="http://schemas.android.com/apk/res/android"
-  android:minWidth="250dp"
+  android:minWidth="280dp"
   android:minHeight="180dp"
   android:updatePeriodMillis="1800000"
   android:initialLayout="@layout/widget_layout"
   android:resizeMode="vertical"
-  android:minResizeWidth="250dp"
-  android:minResizeHeight="110dp"
+  android:minResizeWidth="280dp"
+  android:minResizeHeight="70dp"
   android:previewImage="@drawable/preview">
 </appwidget-provider>

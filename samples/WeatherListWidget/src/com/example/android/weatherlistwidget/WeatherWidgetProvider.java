@@ -28,6 +28,7 @@ import android.content.ContentUris;
 import android.database.Cursor;
 import android.database.ContentObserver;
 import android.net.Uri;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.widget.RemoteViews;
@@ -64,11 +65,15 @@ class WeatherDataProviderObserver extends ContentObserver {
 public class WeatherWidgetProvider extends AppWidgetProvider {
     public static String CLICK_ACTION = "com.example.android.weatherlistwidget.CLICK";
     public static String REFRESH_ACTION = "com.example.android.weatherlistwidget.REFRESH";
-    public static String EXTRA_CITY_ID = "com.example.android.weatherlistwidget.city";
+    public static String EXTRA_DAY_ID = "com.example.android.weatherlistwidget.day";
 
     private static HandlerThread sWorkerThread;
     private static Handler sWorkerQueue;
     private static WeatherDataProviderObserver sDataObserver;
+    private static final int sMaxDegrees = 96;
+
+    private boolean mIsLargeLayout = true;
+    private int mHeaderWeatherState = 0;
 
     public WeatherWidgetProvider() {
         // Start the worker thread
@@ -76,6 +81,8 @@ public class WeatherWidgetProvider extends AppWidgetProvider {
         sWorkerThread.start();
         sWorkerQueue = new Handler(sWorkerThread.getLooper());
     }
+
+    // XXX: clear the worker queue if we are destroyed?
 
     @Override
     public void onEnabled(Context context) {
@@ -109,7 +116,6 @@ public class WeatherWidgetProvider extends AppWidgetProvider {
                     final Cursor c = r.query(WeatherDataProvider.CONTENT_URI, null, null, null, 
                             null);
                     final int count = c.getCount();
-                    final int maxDegrees = 96;
 
                     // We disable the data changed observer temporarily since each of the updates
                     // will trigger an onChange() in our data observer.
@@ -118,7 +124,7 @@ public class WeatherWidgetProvider extends AppWidgetProvider {
                         final Uri uri = ContentUris.withAppendedId(WeatherDataProvider.CONTENT_URI, i);
                         final ContentValues values = new ContentValues();
                         values.put(WeatherDataProvider.Columns.TEMPERATURE,
-                                new Random().nextInt(maxDegrees));
+                                new Random().nextInt(sMaxDegrees));
                         r.update(uri, values, null, null);
                     }
                     r.registerContentObserver(WeatherDataProvider.CONTENT_URI, true, sDataObserver);
@@ -128,29 +134,31 @@ public class WeatherWidgetProvider extends AppWidgetProvider {
                     mgr.notifyAppWidgetViewDataChanged(mgr.getAppWidgetIds(cn), R.id.weather_list);
                 }
             });
+
+            final int appWidgetId = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID,
+                    AppWidgetManager.INVALID_APPWIDGET_ID);
         } else if (action.equals(CLICK_ACTION)) {
             // Show a toast
             final int appWidgetId = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID,
                     AppWidgetManager.INVALID_APPWIDGET_ID);
-            final String city = intent.getStringExtra(EXTRA_CITY_ID);
+            final String day = intent.getStringExtra(EXTRA_DAY_ID);
             final String formatStr = ctx.getResources().getString(R.string.toast_format_string);
-            Toast.makeText(ctx, String.format(formatStr, city), Toast.LENGTH_SHORT).show();
+            Toast.makeText(ctx, String.format(formatStr, day), Toast.LENGTH_SHORT).show();
         }
 
         super.onReceive(ctx, intent);
     }
 
-    @Override
-    public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
-        // Update each of the widgets with the remote adapter
-        for (int i = 0; i < appWidgetIds.length; ++i) {
+    private RemoteViews buildLayout(Context context, int appWidgetId, boolean largeLayout) {
+        RemoteViews rv;
+        if (largeLayout) {
             // Specify the service to provide data for the collection widget.  Note that we need to
             // embed the appWidgetId via the data otherwise it will be ignored.
             final Intent intent = new Intent(context, WeatherWidgetService.class);
-            intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetIds[i]);
+            intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
             intent.setData(Uri.parse(intent.toUri(Intent.URI_INTENT_SCHEME)));
-            final RemoteViews rv = new RemoteViews(context.getPackageName(), R.layout.widget_layout);
-            rv.setRemoteAdapter(appWidgetIds[i], R.id.weather_list, intent);
+            rv = new RemoteViews(context.getPackageName(), R.layout.widget_layout);
+            rv.setRemoteAdapter(appWidgetId, R.id.weather_list, intent);
 
             // Set the empty view to be displayed if the collection is empty.  It must be a sibling
             // view of the collection view.
@@ -161,7 +169,7 @@ public class WeatherWidgetProvider extends AppWidgetProvider {
             // ignored otherwise.
             final Intent onClickIntent = new Intent(context, WeatherWidgetProvider.class);
             onClickIntent.setAction(WeatherWidgetProvider.CLICK_ACTION);
-            onClickIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetIds[i]);
+            onClickIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
             onClickIntent.setData(Uri.parse(onClickIntent.toUri(Intent.URI_INTENT_SCHEME)));
             final PendingIntent onClickPendingIntent = PendingIntent.getBroadcast(context, 0,
                     onClickIntent, PendingIntent.FLAG_UPDATE_CURRENT);
@@ -174,8 +182,53 @@ public class WeatherWidgetProvider extends AppWidgetProvider {
                     refreshIntent, PendingIntent.FLAG_UPDATE_CURRENT);
             rv.setOnClickPendingIntent(R.id.refresh, refreshPendingIntent);
 
-            appWidgetManager.updateAppWidget(appWidgetIds[i], rv);
+            // Restore the minimal header
+            rv.setTextViewText(R.id.city_name, context.getString(R.string.city_name));
+        } else {
+            rv = new RemoteViews(context.getPackageName(), R.layout.widget_layout_small);
+
+            // Update the header to reflect the weather for "today"
+            Cursor c = context.getContentResolver().query(WeatherDataProvider.CONTENT_URI, null,
+                    null, null, null);
+            if (c.moveToPosition(0)) {
+                int tempColIndex = c.getColumnIndex(WeatherDataProvider.Columns.TEMPERATURE);
+                int temp = c.getInt(tempColIndex);
+                String formatStr = context.getResources().getString(R.string.header_format_string);
+                String header = String.format(formatStr, temp,
+                        context.getString(R.string.city_name));
+                rv.setTextViewText(R.id.city_name, header);
+            }
+            c.close();
+        }
+        return rv;
+    }
+
+    @Override
+    public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
+        // Update each of the widgets with the remote adapter
+        for (int i = 0; i < appWidgetIds.length; ++i) {
+            RemoteViews layout = buildLayout(context, appWidgetIds[i], mIsLargeLayout);
+            appWidgetManager.updateAppWidget(appWidgetIds[i], layout);
         }
         super.onUpdate(context, appWidgetManager, appWidgetIds);
+    }
+
+    @Override
+    public void onAppWidgetOptionsChanged(Context context, AppWidgetManager appWidgetManager,
+            int appWidgetId, Bundle newOptions) {
+
+        int minWidth = newOptions.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH);
+        int maxWidth = newOptions.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_WIDTH);
+        int minHeight = newOptions.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT);
+        int maxHeight = newOptions.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT);
+
+        RemoteViews layout;
+        if (minHeight < 100) {
+            mIsLargeLayout = false;
+        } else {
+            mIsLargeLayout = true;
+        }
+        layout = buildLayout(context, appWidgetId, mIsLargeLayout);
+        appWidgetManager.updateAppWidget(appWidgetId, layout);
     }
 }
