@@ -64,6 +64,8 @@ _start:
 	la	$a3, 1f
 	subu	$sp, 32
 	la	$t9, __libc_init
+	jalr	$t9
+	move	$t9, $0
 	j	$t9
 	.end	__start
 
