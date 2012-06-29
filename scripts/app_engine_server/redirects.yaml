@@ -272,6 +272,16 @@ redirects:
   type: permanent
   
 # new one
+- src: /resources/tutorials/notepad/
+  dst: /training/notepad/
+  type: this is only for external links, until we update this documentation
+  
+# new one
+- src: /resources/faq/
+  dst: /guide/faq/
+  type: FAQ still needs a permanent home
+  
+# new one
 - src: /resources/tutorials/hello-world.html
   dst: /training/basics/firstapp/index.html
   type: permanent
