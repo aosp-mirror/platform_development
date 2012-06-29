@@ -136,6 +136,11 @@ redirects:
   dst: /tools/
   type: permanent
   comment: Redirect to new location
+
+- src: /tools/aidl.html
+  dst: /guide/components/aidl.html
+  type: permanent
+  comment: bug 6755311, aidl doc found by search under tools
   
 - src: /guide/market/publishing/multiple-apks.html
   dst: /guide/google/play/publishing/multiple-apks.html
@@ -228,13 +233,8 @@ redirects:
   type: permanent
   comment: Redirect to new location
   
-- src: /guide/topics/graphics/renderscript.html
-  dst: /guide/topics/graphics/renderscript/index.html
-  type: permanent
-  comment: Redirect to new location
-  
-- src: /guide/topics/renderscript/
-  dst: /guide/topics/graphics/renderscript/
+- src: /guide/topics/graphics/renderscript/(compute.html|index.html|reference.html)
+  dst: /guide/topics/renderscript/index.html
   type: permanent
   comment: Redirect to new location
 
