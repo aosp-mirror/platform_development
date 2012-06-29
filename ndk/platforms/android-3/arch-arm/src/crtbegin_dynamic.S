@@ -53,7 +53,9 @@ _start:
 	ldr	r2, =main
 	adr	r3, 1f
 	ldr	r4, =__libc_init
-	bx	r4
+	blx	r4
+	mov	r0, #0
+	bx	r0
 
 1:  .long   __PREINIT_ARRAY__
     .long   __INIT_ARRAY__
