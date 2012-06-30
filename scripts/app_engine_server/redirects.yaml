@@ -274,12 +274,14 @@ redirects:
 # new one
 - src: /resources/tutorials/notepad/
   dst: /training/notepad/
-  type: this is only for external links, until we update this documentation
+  type: permanent
+  comment: this is only for external links, until we update this documentation
   
 # new one
 - src: /resources/faq/
   dst: /guide/faq/
-  type: FAQ still needs a permanent home
+  type: permanent
+  comment: FAQ still needs a permanent home
   
 # new one
 - src: /resources/tutorials/hello-world.html
@@ -335,7 +337,7 @@ redirects:
   comment: Redirect to new location
   
 - src: /resources/tutorials/views/hello-formstuff.html
-  dst: /guide/topics/ui/controls/index.html
+  dst: /guide/topics/ui/controls.html
   type: permanent
   comment: Redirect to new location
   
