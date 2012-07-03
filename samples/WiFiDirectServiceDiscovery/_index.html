@@ -1,0 +1,52 @@
+<p>This is a demo application highlighting how to advertise and discover local services that are Wi-Fi peer to peer network capable with
+the Wi-Fi Direct Service Discovery APIs.  Service discovery on Wi-Fi direct allows applications to discover and enagage with  peers that support a certain service. 
+As an example, a gaming application can find and associate with devices that support the game. This application allows you to chat with a peer after a succesful connection.</p>
+
+<p>The source code for this demo app shows how to accomplish three key things
+with Wi-Fi Direct  Service Discovery APIs: Advertise services, discover services and connect to peers advertising such services</p>
+
+<p>The application includes:<p>
+<ul> <li><a
+    href="src/com/example/android/wifidirect/discovery/WiFiServiceDiscoveryActivity.html"><code>WiFiServiceDiscoveryActivity</code></a>
+  &mdash; the main <code>Activity</code> that contains two fragments to handle app's UI. It advertises and discovers services and also registers a broadcast receiver for Wi-Fi Direct related events.</li> <li><a
+    href="src/com/example/android/wifidirect/discovery/WiFiDirectBroadcastReceiver.html"><code>
+      WiFiDirectBroadcastReceiver</code></a> &mdash; a <code>BroadcastReceiver</code>
+  that listens for Wi-Fi Direct related events and passes them to
+  <code>WiFiServiceDiscoveryActivity</code> and it's fragments for neccesary action.</li> <li><a
+    href="src/com/example/android/wifidirect/discovery/WiFiDirectServicesList.html"><code>WiFiDirectServicesList</code></a>
+  &mdash; a <code>ListFragment</code> that displays available services, peers and their status. </li>
+<li><a href="src/com/example/android/wifidirect/discovery/WiFiChatFragment.html"><code>WiFiChatFragment</code></a>
+  &mdash; a <code>Fragment</code> that displays handles chat UI </li>
+<li><a href="src/com/example/android/wifidirect/discovery/ChatManager.html"><code>ChatManager</code></a>
+  &mdash; a <code>Runnable</code> that continously performs Socket I/O.</li>
+<li><a href="src/com/example/android/wifidirect/discovery/GroupOwnerSocketHandler.html"><code>GroupOwnerSocketHandler</code></a>
+  &mdash; a <code>Thread</code> that implements a server side Socket handler and spawns a client socket per connection.</li> </ul>
+<li><a href="src/com/example/android/wifidirect/discovery/ClientSocketHandler.html"><code>GroupOwnerSocketHandler</code></a>
+  &mdash; a <code>Thread</code> that implements a client side Socket handler.</li> </ul>
+<p>If you are developing an application that uses the Wi-Fi Direct Service Discovery APIs, remember that the
+feature is supported only on Android 4.1 (API level 16) and higher versions of
+the platform. To ensure that your application can only
+be installed on devices that are capable of supporting Wi-Fi Direct Service Discovery, remember to add the
+following to the application's manifest before publishing to Google Play:</p>
+<ul> <li><code>&lt;uses-sdk android:minSdkVersion="16" /&gt;</code>, which
+  indicates to Google Play and the platform that your application requires
+  Android 4.1 or higher. For more information, see <a
+    href="../../../guide/appendix/api-levels.html">API Levels</a> and the
+  documentation for the <a
+    href="../../../guide/topics/manifest/uses-sdk-element.html"><code>&lt;uses-sdk&gt;</code></a>
+  element.</li> </ul> <p>To control how Google Play filters your application
+from devices that do not support Wi-Fi Direct mode, remember to add the following to the
+application's manifest <ul> <li><code>&lt;uses-feature
+    android:name="android.hardware.wifi.direct" /&gt;</code>, which tells Google
+  Play that your application uses the Wi-Fi Direct API. The declaration should include
+  an <code>android:required</code> attribute that indicates whether you want
+  Google Play to filter the application from devices that do not offer Wi-Fi Direct support. Other <code>&lt;uses-feature&gt;</code> declarations may also be
+  needed, depending on your implementation. For more information, see the
+  documentation for the <a
+    href="../../../guide/topics/manifest/uses-feature-element.html"><code>&lt;uses-feature&gt;</code></a>
+  element.</li> </ul>
+<p>For more information about using the Wi-Fi Direct Service Discovery APIs, see the <a
+  href="../../../reference/android/net/wifi/p2p/package-summary.html"><code>android.net.wifi.p2p	</a></code>
+documentation. </p>
+
+<img alt="" src="../images/WifiDirect.png" />
