@@ -199,6 +199,7 @@ development/samples/VoicemailProviderDemo      samples/${PLATFORM_NAME}/Voicemai
 development/samples/WeatherListWidget          samples/${PLATFORM_NAME}/WeatherListWidget
 development/apps/WidgetPreview                 samples/${PLATFORM_NAME}/WidgetPreview
 development/samples/WiFiDirectDemo             samples/${PLATFORM_NAME}/WiFiDirectDemo
+development/samples/WiFiDirectServiceDiscovery samples/${PLATFORM_NAME}/WiFiDirectServiceDiscovery
 development/samples/Wiktionary                 samples/${PLATFORM_NAME}/Wiktionary
 development/samples/WiktionarySimple           samples/${PLATFORM_NAME}/WiktionarySimple
 development/samples/XmlAdapters                samples/${PLATFORM_NAME}/XmlAdapters
