@@ -145,6 +145,7 @@ static int gralloc_alloc(alloc_device_t* dev,
         return -EINVAL;
     }
     bool sw_read = (0 != (usage & GRALLOC_USAGE_SW_READ_MASK));
+    bool yuv_format = false;
 
     int ashmem_size = 0;
     int stride = w;
@@ -203,6 +204,11 @@ static int gralloc_alloc(alloc_device_t* dev,
             glFormat = GL_LUMINANCE;
             glType = GL_UNSIGNED_BYTE;
             break;
+        case HAL_PIXEL_FORMAT_YCrCb_420_SP:
+            bpp = 0; // Chroma-subsampled format has fractional bpp
+            yuv_format = true;
+            // Not expecting to actually create any GL surfaces for this
+            break;
         default:
             return -EINVAL;
     }
@@ -215,9 +221,15 @@ static int gralloc_alloc(alloc_device_t* dev,
     if (sw_read || sw_write) {
         // keep space for image on guest memory if SW access is needed
 
-        size_t bpr = (w*bpp + (align-1)) & ~(align-1);
-        ashmem_size += (bpr * h);
-        stride = bpr / bpp;
+        if (yuv_format) {
+            // For NV21
+            ashmem_size += w * h * 3 / 2;
+            stride = w;
+        } else {
+            size_t bpr = (w*bpp + (align-1)) & ~(align-1);
+            ashmem_size += (bpr * h);
+            stride = bpr / bpp;
+        }
     }
 
     D("gralloc_alloc ashmem_size=%d, stride=%d, tid %d\n", ashmem_size, stride,
