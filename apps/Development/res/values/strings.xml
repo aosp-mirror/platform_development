@@ -220,6 +220,13 @@
     <string name="bad_behavior_anr_system_label">System ANR (in ActivityManager)</string>
     <string name="bad_behavior_wedge_system_label">Wedge system (5 minute system ANR)</string>
 
+    <!-- CacheAbuser -->
+    <string name="cache_abuser_start_internal_abuse">Quickly abuse internal cache</string>
+    <string name="cache_abuser_start_slow_internal_abuse">Slowly abuse internal cache</string>
+    <string name="cache_abuser_start_external_abuse">Quickly abuse external cache</string>
+    <string name="cache_abuser_start_slow_external_abuse">Slowly abuse external cache</string>
+    <string name="cache_abuser_stop_abuse">Stop cache abuse</string>
+
     <!-- MediaScannerActivity -->
     <string name="scancard">Scan SD card</string>
     <string name="numsongs"># of albums</string>
