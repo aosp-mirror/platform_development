@@ -38,6 +38,7 @@
     <uses-permission android:name="android.permission.USE_CREDENTIALS" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.WRITE_SETTINGS" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="com.google.android.googleapps.permission.ACCESS_GOOGLE_PASSWORD" />
     <uses-permission android:name="com.google.android.googleapps.permission.GOOGLE_AUTH" />
     <uses-permission android:name="com.google.android.googleapps.permission.GOOGLE_AUTH.ALL_SERVICES" />
@@ -168,6 +169,13 @@
             </intent-filter>
         </receiver>
         <service android:name="BadBehaviorActivity$BadService" />
+
+        <activity android:name="CacheAbuser" android:label="Cache Abuser">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.TEST" />
+            </intent-filter>
+        </activity>
 
         <activity android:name="ConfigurationViewer" android:label="Configuration">
             <intent-filter>
