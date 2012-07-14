@@ -36,7 +36,7 @@
     <!-- For android.media.audiofx.Visualizer -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
-    <uses-sdk android:minSdkVersion="4" android:targetSdkVersion="14" />
+    <uses-sdk android:minSdkVersion="4" android:targetSdkVersion="16" />
 
     <!-- We will request access to the camera, saying we require a camera
          of some sort but not one with autofocus capability. -->
@@ -47,7 +47,8 @@
     <application android:name="ApiDemosApplication"
             android:label="@string/activity_sample_code"
             android:icon="@drawable/app_sample_code"
-            android:hardwareAccelerated="true">
+            android:hardwareAccelerated="true"
+            android:supportsRtl="true">
 
         <!-- This is how we can request a library but still allow the app
              to be installed if it doesn't exist. -->
