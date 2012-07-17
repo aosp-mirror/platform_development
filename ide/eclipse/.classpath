@@ -62,6 +62,8 @@
 	<classpathentry kind="src" path="frameworks/ex/photoviewer/src"/>
 	<classpathentry kind="src" path="frameworks/ex/variablespeed/src"/>
 	<classpathentry kind="src" path="frameworks/opt/calendar/src"/>
+	<classpathentry kind="src" path="frameworks/opt/telephony/src/java"/>
+	<classpathentry kind="src" path="frameworks/opt/mms/src/java"/>
 	<classpathentry kind="src" path="frameworks/opt/vcard/java"/>
 	<classpathentry kind="src" path="frameworks/support/v13/java"/>
 	<classpathentry kind="src" path="frameworks/support/v13/ics"/>
