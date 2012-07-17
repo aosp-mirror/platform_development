@@ -25,22 +25,35 @@
 #define CB_HANDLE_NUM_INTS(nfds) (int)((sizeof(cb_handle_t) - (nfds)*sizeof(int)) / sizeof(int))
 
 //
+// Emulator-specific gralloc formats
+//
+enum {
+    // Request that gralloc select the proper format given the usage
+    // flags. Pass this as the format to gralloc_alloc, and then the concrete
+    // format can be found in cb_handle_t.format. It is invalid for
+    // cb_handle_t.format to be AUTO; it must be a concrete format in either the
+    // standard HAL_PIXEL_FORMAT enum or other values in this enum.
+    GRALLOC_EMULATOR_PIXEL_FORMAT_AUTO = 0x100
+};
+
+//
 // Our buffer handle structure
 //
 struct cb_handle_t : public native_handle {
 
     cb_handle_t(int p_fd, int p_ashmemSize, int p_usage,
-                int p_width, int p_height,
+                int p_width, int p_height, int p_format,
                 int p_glFormat, int p_glType) :
         fd(p_fd),
         magic(BUFFER_HANDLE_MAGIC),
         usage(p_usage),
         width(p_width),
         height(p_height),
+        format(p_format),
         glFormat(p_glFormat),
         glType(p_glType),
         ashmemSize(p_ashmemSize),
-        ashmemBase(NULL),
+        ashmemBase(0),
         ashmemBasePid(0),
         mappedPid(0),
         lockedLeft(0),
@@ -88,6 +101,7 @@ struct cb_handle_t : public native_handle {
     int usage;              // usage bits the buffer was created with
     int width;              // buffer width
     int height;             // buffer height
+    int format;             // real internal pixel format format
     int glFormat;           // OpenGL format enum used for host h/w color buffer
     int glType;             // OpenGL type enum used when uploading to host
     int ashmemSize;         // ashmem region size for the buffer (0 unless is HW_FB buffer or
