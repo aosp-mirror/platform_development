@@ -93,18 +93,18 @@ public class ActionBarDisplayOptions extends Activity
             case R.id.cycle_custom_gravity:
                 ActionBar.LayoutParams lp = (ActionBar.LayoutParams) mCustomView.getLayoutParams();
                 int newGravity = 0;
-                switch (lp.gravity & Gravity.HORIZONTAL_GRAVITY_MASK) {
-                    case Gravity.LEFT:
+                switch (lp.gravity & Gravity.RELATIVE_HORIZONTAL_GRAVITY_MASK) {
+                    case Gravity.START:
                         newGravity = Gravity.CENTER_HORIZONTAL;
                         break;
                     case Gravity.CENTER_HORIZONTAL:
-                        newGravity = Gravity.RIGHT;
+                        newGravity = Gravity.END;
                         break;
-                    case Gravity.RIGHT:
-                        newGravity = Gravity.LEFT;
+                    case Gravity.END:
+                        newGravity = Gravity.START;
                         break;
                 }
-                lp.gravity = lp.gravity & ~Gravity.HORIZONTAL_GRAVITY_MASK | newGravity;
+                lp.gravity = lp.gravity & ~Gravity.RELATIVE_HORIZONTAL_GRAVITY_MASK | newGravity;
                 bar.setCustomView(mCustomView, lp);
                 return;
         }
