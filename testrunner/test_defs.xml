@@ -68,7 +68,7 @@ See test_defs.xsd for more information.
     continuous="true" />
 
 <test name="frameworks-telephony"
-    build_path="frameworks/base/telephony/tests/telephonytests"
+    build_path="frameworks/opt/telephony/tests/telephonytests"
     package="com.android.frameworks.telephonytests"
     coverage_target="framework"
     continuous="true" />
