@@ -105,6 +105,7 @@
 	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/framework_intermediates/src/voip/java"/>
 	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/framework_intermediates/src/wifi/java"/>
 	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/services_intermediates/src"/>
+	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/telephony-common_intermediates/src/src/java"/>
 	<classpathentry kind="src" path="out/target/common/R"/>
 	<classpathentry kind="src" path="external/apache-http/src"/>
 	<classpathentry kind="src" path="external/bouncycastle/src/main/java"/>
