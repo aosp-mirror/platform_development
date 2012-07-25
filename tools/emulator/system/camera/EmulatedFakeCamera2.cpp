@@ -517,7 +517,9 @@ void EmulatedFakeCamera2::signalError() {
 
 EmulatedFakeCamera2::ConfigureThread::ConfigureThread(EmulatedFakeCamera2 *parent):
         Thread(false),
-        mParent(parent) {
+        mParent(parent),
+        mNextBuffers(NULL),
+        mRequestCount(0) {
     mRunning = false;
 }
 
@@ -567,8 +569,8 @@ bool EmulatedFakeCamera2::ConfigureThread::isStreamInUse(uint32_t id) {
 }
 
 int EmulatedFakeCamera2::ConfigureThread::getInProgressCount() {
-    Mutex::Autolock lock(mInternalsMutex);
-    return mNextBuffers == NULL ? 0 : 1;
+    Mutex::Autolock lock(mInputMutex);
+    return mRequestCount;
 }
 
 bool EmulatedFakeCamera2::ConfigureThread::threadLoop() {
@@ -610,6 +612,9 @@ bool EmulatedFakeCamera2::ConfigureThread::threadLoop() {
             Mutex::Autolock lock(mInputMutex);
             mActive = false;
             return true;
+        } else {
+            Mutex::Autolock lock(mInputMutex);
+            mRequestCount++;
         }
         // Get necessary parameters for sensor config
 
@@ -770,6 +775,10 @@ bool EmulatedFakeCamera2::ConfigureThread::threadLoop() {
     mRequest = NULL;
     mNextBuffers = NULL;
 
+    Mutex::Autolock lock(mInputMutex);
+    mRequestCount--;
+
+
     return true;
 }
 
@@ -778,7 +787,9 @@ EmulatedFakeCamera2::ReadoutThread::ReadoutThread(EmulatedFakeCamera2 *parent):
         mParent(parent),
         mRunning(false),
         mActive(false),
-        mRequest(NULL)
+        mRequest(NULL),
+        mBuffers(NULL),
+        mRequestCount(0)
 {
     mInFlightQueue = new InFlightQueue[kInFlightQueueSize];
     mInFlightHead = 0;
@@ -818,6 +829,7 @@ void EmulatedFakeCamera2::ReadoutThread::setNextCapture(
     mInFlightQueue[mInFlightTail].request = request;
     mInFlightQueue[mInFlightTail].buffers = buffers;
     mInFlightTail = (mInFlightTail + 1) % kInFlightQueueSize;
+    mRequestCount++;
 
     if (!mActive) {
         mActive = true;
@@ -850,14 +862,8 @@ bool EmulatedFakeCamera2::ReadoutThread::isStreamInUse(uint32_t id) {
 
 int EmulatedFakeCamera2::ReadoutThread::getInProgressCount() {
     Mutex::Autolock lock(mInputMutex);
-    Mutex::Autolock iLock(mInternalsMutex);
 
-    int requestCount =
-            ((mInFlightTail + kInFlightQueueSize) - mInFlightHead)
-            % kInFlightQueueSize;
-    requestCount += (mBuffers == NULL) ? 0 : 1;
-
-    return requestCount;
+    return mRequestCount;
 }
 
 bool EmulatedFakeCamera2::ReadoutThread::threadLoop() {
@@ -996,9 +1002,8 @@ bool EmulatedFakeCamera2::ReadoutThread::threadLoop() {
                 ALOGV("Sending image buffer %d to output stream %d",
                         i, b.streamId);
                 GraphicBufferMapper::get().unlock(*(b.buffer));
-                res = mParent->getStreamInfo(b.streamId).ops->enqueue_buffer(
-                    mParent->getStreamInfo(b.streamId).ops,
-                    captureTime, b.buffer);
+                const Stream &s = mParent->getStreamInfo(b.streamId);
+                res = s.ops->enqueue_buffer(s.ops, captureTime, b.buffer);
                 if (res != OK) {
                     ALOGE("Error enqueuing image buffer %p: %s (%d)", b.buffer,
                             strerror(-res), res);
@@ -1017,6 +1022,9 @@ bool EmulatedFakeCamera2::ReadoutThread::threadLoop() {
         mParent->mJpegCompressor->start(mBuffers, captureTime);
         mBuffers = NULL;
     }
+
+    Mutex::Autolock l(mInputMutex);
+    mRequestCount--;
 
     return true;
 }

@@ -185,10 +185,11 @@ private:
         bool mRunning;
         bool threadLoop();
 
-        Mutex mInputMutex; // Protects mActive
+        Mutex mInputMutex; // Protects mActive, mRequestCount
         Condition mInputSignal;
         bool mActive; // Whether we're waiting for input requests or actively
                       // working on them
+        size_t mRequestCount;
 
         camera_metadata_t *mRequest;
 
@@ -222,7 +223,7 @@ private:
         bool threadLoop();
 
         // Inputs
-        Mutex mInputMutex; // Protects mActive, mInFlightQueue
+        Mutex mInputMutex; // Protects mActive, mInFlightQueue, mRequestCount
         Condition mInputSignal;
         bool mActive;
 
@@ -234,6 +235,8 @@ private:
 
         size_t mInFlightHead;
         size_t mInFlightTail;
+
+        size_t mRequestCount;
 
         // Internals
         Mutex mInternalsMutex;
