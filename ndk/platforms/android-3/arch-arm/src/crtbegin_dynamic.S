@@ -53,6 +53,7 @@ _start:
 	ldr	r2, =main
 	adr	r3, 1f
 	ldr	r4, =__libc_init
+# Use blx intead of bx so stack unwinding past __libc_init can terminate at _start
 	blx	r4
 	mov	r0, #0
 	bx	r0
