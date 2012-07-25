@@ -369,12 +369,16 @@ redirects:
   dst: /training/graphics/opengl/index.html
   type: permanent
   
-- src: /training/tutorials/views/hello-mapview.html
+- src: /resources/tutorials/views/hello-mapview.html
   dst: https://developers.google.com/maps/documentation/android/hello-mapview
   type: permanent
   
-- src: /training/tutorials/views/.*
+- src: /resources/tutorials/views/.*
   dst: /guide/topics/ui/declaring-layout.html#CommonLayouts
+  type: permanent
+  
+- src: /resources/tutorials/localization/.*
+  dst: /training/basics/supporting-devices/languages.html
   type: permanent
   
 - src: /resources/samples/.*
