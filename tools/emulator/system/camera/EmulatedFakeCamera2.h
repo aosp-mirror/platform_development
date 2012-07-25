@@ -255,9 +255,11 @@ private:
     static const uint32_t kAvailableFormats[];
     static const uint32_t kAvailableRawSizes[];
     static const uint64_t kAvailableRawMinDurations[];
-    static const uint32_t kAvailableProcessedSizes[];
+    static const uint32_t kAvailableProcessedSizesBack[];
+    static const uint32_t kAvailableProcessedSizesFront[];
     static const uint64_t kAvailableProcessedMinDurations[];
-    static const uint32_t kAvailableJpegSizes[];
+    static const uint32_t kAvailableJpegSizesBack[];
+    static const uint32_t kAvailableJpegSizesFront[];
     static const uint64_t kAvailableJpegMinDurations[];
 
     /****************************************************************************

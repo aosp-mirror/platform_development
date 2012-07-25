@@ -48,8 +48,13 @@ const uint64_t EmulatedFakeCamera2::kAvailableRawMinDurations[1] = {
     Sensor::kFrameDurationRange[0]
 };
 
-const uint32_t EmulatedFakeCamera2::kAvailableProcessedSizes[4] = {
+const uint32_t EmulatedFakeCamera2::kAvailableProcessedSizesBack[4] = {
     640, 480, 320, 240
+    //    Sensor::kResolution[0], Sensor::kResolution[1]
+};
+
+const uint32_t EmulatedFakeCamera2::kAvailableProcessedSizesFront[4] = {
+    320, 240, 160, 120
     //    Sensor::kResolution[0], Sensor::kResolution[1]
 };
 
@@ -57,10 +62,16 @@ const uint64_t EmulatedFakeCamera2::kAvailableProcessedMinDurations[1] = {
     Sensor::kFrameDurationRange[0]
 };
 
-const uint32_t EmulatedFakeCamera2::kAvailableJpegSizes[2] = {
+const uint32_t EmulatedFakeCamera2::kAvailableJpegSizesBack[2] = {
     640, 480
     //    Sensor::kResolution[0], Sensor::kResolution[1]
 };
+
+const uint32_t EmulatedFakeCamera2::kAvailableJpegSizesFront[2] = {
+    320, 240
+    //    Sensor::kResolution[0], Sensor::kResolution[1]
+};
+
 
 const uint64_t EmulatedFakeCamera2::kAvailableJpegMinDurations[1] = {
     Sensor::kFrameDurationRange[0]
@@ -265,15 +276,21 @@ int EmulatedFakeCamera2::allocateStream(
             availableSizeCount = sizeof(kAvailableRawSizes)/sizeof(uint32_t);
             break;
         case HAL_PIXEL_FORMAT_BLOB:
-            availableSizes = kAvailableJpegSizes;
-            availableSizeCount = sizeof(kAvailableJpegSizes)/sizeof(uint32_t);
+            availableSizes = mFacingBack ?
+                    kAvailableJpegSizesBack : kAvailableJpegSizesFront;
+            availableSizeCount = mFacingBack ?
+                    sizeof(kAvailableJpegSizesBack)/sizeof(uint32_t) :
+                    sizeof(kAvailableJpegSizesFront)/sizeof(uint32_t);
             break;
         case GRALLOC_EMULATOR_PIXEL_FORMAT_AUTO:
         case HAL_PIXEL_FORMAT_RGBA_8888:
         case HAL_PIXEL_FORMAT_YV12:
         case HAL_PIXEL_FORMAT_YCrCb_420_SP:
-            availableSizes = kAvailableProcessedSizes;
-            availableSizeCount = sizeof(kAvailableProcessedSizes)/sizeof(uint32_t);
+            availableSizes = mFacingBack ?
+                    kAvailableProcessedSizesBack : kAvailableProcessedSizesFront;
+            availableSizeCount = mFacingBack ?
+                    sizeof(kAvailableProcessedSizesBack)/sizeof(uint32_t) :
+                    sizeof(kAvailableProcessedSizesFront)/sizeof(uint32_t);
             break;
         default:
             ALOGE("%s: Unknown format 0x%x", __FUNCTION__, format);
@@ -778,7 +795,6 @@ bool EmulatedFakeCamera2::ConfigureThread::threadLoop() {
     Mutex::Autolock lock(mInputMutex);
     mRequestCount--;
 
-
     return true;
 }
 
@@ -1012,6 +1028,7 @@ bool EmulatedFakeCamera2::ReadoutThread::threadLoop() {
             }
         }
     }
+
     if (compressedBufferIndex == -1) {
         delete mBuffers;
         mBuffers = NULL;
@@ -1172,17 +1189,29 @@ status_t EmulatedFakeCamera2::constructStaticInfo(
             kAvailableRawMinDurations,
             sizeof(kAvailableRawMinDurations)/sizeof(uint64_t));
 
-    ADD_OR_SIZE(ANDROID_SCALER_AVAILABLE_PROCESSED_SIZES,
-            kAvailableProcessedSizes,
-            sizeof(kAvailableProcessedSizes)/sizeof(uint32_t));
+    if (mFacingBack) {
+        ADD_OR_SIZE(ANDROID_SCALER_AVAILABLE_PROCESSED_SIZES,
+                kAvailableProcessedSizesBack,
+                sizeof(kAvailableProcessedSizesBack)/sizeof(uint32_t));
+    } else {
+        ADD_OR_SIZE(ANDROID_SCALER_AVAILABLE_PROCESSED_SIZES,
+                kAvailableProcessedSizesFront,
+                sizeof(kAvailableProcessedSizesFront)/sizeof(uint32_t));
+    }
 
     ADD_OR_SIZE(ANDROID_SCALER_AVAILABLE_PROCESSED_MIN_DURATIONS,
             kAvailableProcessedMinDurations,
             sizeof(kAvailableProcessedMinDurations)/sizeof(uint64_t));
 
-    ADD_OR_SIZE(ANDROID_SCALER_AVAILABLE_JPEG_SIZES,
-            kAvailableJpegSizes,
-            sizeof(kAvailableJpegSizes)/sizeof(uint32_t));
+    if (mFacingBack) {
+        ADD_OR_SIZE(ANDROID_SCALER_AVAILABLE_JPEG_SIZES,
+                kAvailableJpegSizesBack,
+                sizeof(kAvailableJpegSizesBack)/sizeof(uint32_t));
+    } else {
+        ADD_OR_SIZE(ANDROID_SCALER_AVAILABLE_JPEG_SIZES,
+                kAvailableJpegSizesFront,
+                sizeof(kAvailableJpegSizesFront)/sizeof(uint32_t));
+    }
 
     ADD_OR_SIZE(ANDROID_SCALER_AVAILABLE_JPEG_MIN_DURATIONS,
             kAvailableJpegMinDurations,
@@ -1196,9 +1225,8 @@ status_t EmulatedFakeCamera2::constructStaticInfo(
 
     static const int32_t jpegThumbnailSizes[] = {
             160, 120,
-            320, 240,
-            640, 480
-    };
+            320, 240
+     };
     ADD_OR_SIZE(ANDROID_JPEG_AVAILABLE_THUMBNAIL_SIZES,
             jpegThumbnailSizes, sizeof(jpegThumbnailSizes)/sizeof(int32_t));
 
