@@ -394,7 +394,7 @@ void Sensor::captureRGBA(uint8_t *img, uint32_t gain, uint32_t stride) {
     float totalGain = gain/100.0 * kBaseGainFactor;
     // In fixed-point math, calculate total scaling from electrons to 8bpp
     int scale64x = 64 * totalGain * 255 / kMaxRawValue;
-    uint32_t inc = (stride == 320) ? 2 : 1;
+    uint32_t inc = kResolution[0] / stride;
 
     for (unsigned int y = 0, outY = 0; y < kResolution[1]; y+=inc, outY++ ) {
         uint8_t *px = img + outY * stride * 4;
@@ -411,7 +411,8 @@ void Sensor::captureRGBA(uint8_t *img, uint32_t gain, uint32_t stride) {
             *px++ = gCount < 255*64 ? gCount / 64 : 255;
             *px++ = bCount < 255*64 ? bCount / 64 : 255;
             *px++ = 255;
-            if (inc == 2) mScene.getPixelElectrons();
+            for (unsigned int j = 1; j < inc; j++)
+                mScene.getPixelElectrons();
         }
         // TODO: Handle this better
         //simulatedTime += kRowReadoutTime;
@@ -423,7 +424,7 @@ void Sensor::captureRGB(uint8_t *img, uint32_t gain, uint32_t stride) {
     float totalGain = gain/100.0 * kBaseGainFactor;
     // In fixed-point math, calculate total scaling from electrons to 8bpp
     int scale64x = 64 * totalGain * 255 / kMaxRawValue;
-    uint32_t inc = (stride == 320) ? 2 : 1;
+    uint32_t inc = kResolution[0] / stride;
 
     for (unsigned int y = 0, outY = 0; y < kResolution[1]; y += inc, outY++ ) {
         mScene.setReadoutPixel(0, y);
@@ -439,7 +440,8 @@ void Sensor::captureRGB(uint8_t *img, uint32_t gain, uint32_t stride) {
             *px++ = rCount < 255*64 ? rCount / 64 : 255;
             *px++ = gCount < 255*64 ? gCount / 64 : 255;
             *px++ = bCount < 255*64 ? bCount / 64 : 255;
-            if (inc == 2) mScene.getPixelElectrons();
+            for (unsigned int j = 1; j < inc; j++)
+                mScene.getPixelElectrons();
         }
         // TODO: Handle this better
         //simulatedTime += kRowReadoutTime;
@@ -453,7 +455,7 @@ void Sensor::captureNV21(uint8_t *img, uint32_t gain, uint32_t stride) {
     int scale64x = 64 * totalGain * 255 / kMaxRawValue;
 
     // TODO: Make full-color
-    uint32_t inc = (stride == 320) ? 2 : 1;
+    uint32_t inc = kResolution[0] / stride;
     uint32_t outH = kResolution[1] / inc;
     for (unsigned int y = 0, outY = 0, outUV = outH;
          y < kResolution[1]; y+=inc, outY++, outUV ) {
@@ -468,7 +470,8 @@ void Sensor::captureNV21(uint8_t *img, uint32_t gain, uint32_t stride) {
             bCount = pixel[Scene::B]  * scale64x;
             uint32_t avg = (rCount + gCount + bCount) / 3;
             *pxY++ = avg < 255*64 ? avg / 64 : 255;
-            if (inc == 2) mScene.getPixelElectrons();
+            for (unsigned int j = 1; j < inc; j++)
+                mScene.getPixelElectrons();
         }
     }
     for (unsigned int y = 0, outY = outH; y < kResolution[1]/2; y+=inc, outY++) {
