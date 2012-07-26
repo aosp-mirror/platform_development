@@ -185,10 +185,11 @@ private:
         bool mRunning;
         bool threadLoop();
 
-        Mutex mInputMutex; // Protects mActive
+        Mutex mInputMutex; // Protects mActive, mRequestCount
         Condition mInputSignal;
         bool mActive; // Whether we're waiting for input requests or actively
                       // working on them
+        size_t mRequestCount;
 
         camera_metadata_t *mRequest;
 
@@ -222,7 +223,7 @@ private:
         bool threadLoop();
 
         // Inputs
-        Mutex mInputMutex; // Protects mActive, mInFlightQueue
+        Mutex mInputMutex; // Protects mActive, mInFlightQueue, mRequestCount
         Condition mInputSignal;
         bool mActive;
 
@@ -234,6 +235,8 @@ private:
 
         size_t mInFlightHead;
         size_t mInFlightTail;
+
+        size_t mRequestCount;
 
         // Internals
         Mutex mInternalsMutex;
@@ -252,9 +255,11 @@ private:
     static const uint32_t kAvailableFormats[];
     static const uint32_t kAvailableRawSizes[];
     static const uint64_t kAvailableRawMinDurations[];
-    static const uint32_t kAvailableProcessedSizes[];
+    static const uint32_t kAvailableProcessedSizesBack[];
+    static const uint32_t kAvailableProcessedSizesFront[];
     static const uint64_t kAvailableProcessedMinDurations[];
-    static const uint32_t kAvailableJpegSizes[];
+    static const uint32_t kAvailableJpegSizesBack[];
+    static const uint32_t kAvailableJpegSizesFront[];
     static const uint64_t kAvailableJpegMinDurations[];
 
     /****************************************************************************

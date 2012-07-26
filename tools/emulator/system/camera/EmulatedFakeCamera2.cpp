@@ -27,6 +27,7 @@
 #include "EmulatedCameraFactory.h"
 #include <ui/Rect.h>
 #include <ui/GraphicBufferMapper.h>
+#include "gralloc_cb.h"
 
 namespace android {
 
@@ -47,8 +48,13 @@ const uint64_t EmulatedFakeCamera2::kAvailableRawMinDurations[1] = {
     Sensor::kFrameDurationRange[0]
 };
 
-const uint32_t EmulatedFakeCamera2::kAvailableProcessedSizes[2] = {
-    640, 480
+const uint32_t EmulatedFakeCamera2::kAvailableProcessedSizesBack[4] = {
+    640, 480, 320, 240
+    //    Sensor::kResolution[0], Sensor::kResolution[1]
+};
+
+const uint32_t EmulatedFakeCamera2::kAvailableProcessedSizesFront[4] = {
+    320, 240, 160, 120
     //    Sensor::kResolution[0], Sensor::kResolution[1]
 };
 
@@ -56,10 +62,16 @@ const uint64_t EmulatedFakeCamera2::kAvailableProcessedMinDurations[1] = {
     Sensor::kFrameDurationRange[0]
 };
 
-const uint32_t EmulatedFakeCamera2::kAvailableJpegSizes[2] = {
+const uint32_t EmulatedFakeCamera2::kAvailableJpegSizesBack[2] = {
     640, 480
     //    Sensor::kResolution[0], Sensor::kResolution[1]
 };
+
+const uint32_t EmulatedFakeCamera2::kAvailableJpegSizesFront[2] = {
+    320, 240
+    //    Sensor::kResolution[0], Sensor::kResolution[1]
+};
+
 
 const uint64_t EmulatedFakeCamera2::kAvailableJpegMinDurations[1] = {
     Sensor::kFrameDurationRange[0]
@@ -251,8 +263,9 @@ int EmulatedFakeCamera2::allocateStream(
             return BAD_VALUE;
         }
     } else {
-        // Emulator's opaque format is RGBA
-        format = HAL_PIXEL_FORMAT_RGBA_8888;
+        // Translate to emulator's magic format.
+        // Note: It is assumed that this is a processed format (not raw or JPEG).
+        format = GRALLOC_EMULATOR_PIXEL_FORMAT_AUTO;
     }
 
     const uint32_t *availableSizes;
@@ -263,14 +276,21 @@ int EmulatedFakeCamera2::allocateStream(
             availableSizeCount = sizeof(kAvailableRawSizes)/sizeof(uint32_t);
             break;
         case HAL_PIXEL_FORMAT_BLOB:
-            availableSizes = kAvailableJpegSizes;
-            availableSizeCount = sizeof(kAvailableJpegSizes)/sizeof(uint32_t);
+            availableSizes = mFacingBack ?
+                    kAvailableJpegSizesBack : kAvailableJpegSizesFront;
+            availableSizeCount = mFacingBack ?
+                    sizeof(kAvailableJpegSizesBack)/sizeof(uint32_t) :
+                    sizeof(kAvailableJpegSizesFront)/sizeof(uint32_t);
             break;
+        case GRALLOC_EMULATOR_PIXEL_FORMAT_AUTO:
         case HAL_PIXEL_FORMAT_RGBA_8888:
         case HAL_PIXEL_FORMAT_YV12:
         case HAL_PIXEL_FORMAT_YCrCb_420_SP:
-            availableSizes = kAvailableProcessedSizes;
-            availableSizeCount = sizeof(kAvailableProcessedSizes)/sizeof(uint32_t);
+            availableSizes = mFacingBack ?
+                    kAvailableProcessedSizesBack : kAvailableProcessedSizesFront;
+            availableSizeCount = mFacingBack ?
+                    sizeof(kAvailableProcessedSizesBack)/sizeof(uint32_t) :
+                    sizeof(kAvailableProcessedSizesFront)/sizeof(uint32_t);
             break;
         default:
             ALOGE("%s: Unknown format 0x%x", __FUNCTION__, format);
@@ -326,7 +346,7 @@ int EmulatedFakeCamera2::allocateStream(
 
     *stream_id = mNextStreamId;
     if (format_actual) *format_actual = format;
-    *usage = GRALLOC_USAGE_SW_WRITE_OFTEN;
+    *usage = GRALLOC_USAGE_HW_CAMERA_WRITE;
     *max_buffers = 4;
 
     ALOGV("Stream allocated: %d, %d x %d, 0x%x. U: %x, B: %d",
@@ -340,9 +360,42 @@ int EmulatedFakeCamera2::registerStreamBuffers(
             uint32_t stream_id,
             int num_buffers,
             buffer_handle_t *buffers) {
-    // Emulator doesn't need to register these with V4L2, etc.
+    Mutex::Autolock l(mMutex);
+
     ALOGV("%s: Stream %d registering %d buffers", __FUNCTION__,
             stream_id, num_buffers);
+    // Need to find out what the final concrete pixel format for our stream is
+    // Assumes that all buffers have the same format.
+    if (num_buffers < 1) {
+        ALOGE("%s: Stream %d only has %d buffers!",
+                __FUNCTION__, stream_id, num_buffers);
+        return BAD_VALUE;
+    }
+    const cb_handle_t *streamBuffer =
+            reinterpret_cast<const cb_handle_t*>(buffers[0]);
+
+    int finalFormat = streamBuffer->format;
+
+    if (finalFormat == GRALLOC_EMULATOR_PIXEL_FORMAT_AUTO) {
+        ALOGE("%s: Stream %d: Bad final pixel format "
+                "GRALLOC_EMULATOR_PIXEL_FORMAT_AUTO; "
+                "concrete pixel format required!", __FUNCTION__, stream_id);
+        return BAD_VALUE;
+    }
+
+    ssize_t streamIndex = mStreams.indexOfKey(stream_id);
+    if (streamIndex < 0) {
+        ALOGE("%s: Unknown stream id %d!", __FUNCTION__, stream_id);
+        return BAD_VALUE;
+    }
+
+    Stream &stream = mStreams.editValueAt(streamIndex);
+
+    ALOGV("%s: Stream %d format set to %x, previously %x",
+            __FUNCTION__, stream_id, finalFormat, stream.format);
+
+    stream.format = finalFormat;
+
     return NO_ERROR;
 }
 
@@ -481,7 +534,9 @@ void EmulatedFakeCamera2::signalError() {
 
 EmulatedFakeCamera2::ConfigureThread::ConfigureThread(EmulatedFakeCamera2 *parent):
         Thread(false),
-        mParent(parent) {
+        mParent(parent),
+        mNextBuffers(NULL),
+        mRequestCount(0) {
     mRunning = false;
 }
 
@@ -531,8 +586,8 @@ bool EmulatedFakeCamera2::ConfigureThread::isStreamInUse(uint32_t id) {
 }
 
 int EmulatedFakeCamera2::ConfigureThread::getInProgressCount() {
-    Mutex::Autolock lock(mInternalsMutex);
-    return mNextBuffers == NULL ? 0 : 1;
+    Mutex::Autolock lock(mInputMutex);
+    return mRequestCount;
 }
 
 bool EmulatedFakeCamera2::ConfigureThread::threadLoop() {
@@ -574,6 +629,9 @@ bool EmulatedFakeCamera2::ConfigureThread::threadLoop() {
             Mutex::Autolock lock(mInputMutex);
             mActive = false;
             return true;
+        } else {
+            Mutex::Autolock lock(mInputMutex);
+            mRequestCount++;
         }
         // Get necessary parameters for sensor config
 
@@ -593,7 +651,14 @@ bool EmulatedFakeCamera2::ConfigureThread::threadLoop() {
         mNextNeedsJpeg = false;
         ALOGV("Setting up buffers for capture");
         for (size_t i = 0; i < streams.count; i++) {
-            const Stream &s = mParent->getStreamInfo(streams.data.u8[i]);
+            int streamId = streams.data.u8[i];
+            const Stream &s = mParent->getStreamInfo(streamId);
+            if (s.format == GRALLOC_EMULATOR_PIXEL_FORMAT_AUTO) {
+                ALOGE("%s: Stream %d does not have a concrete pixel format, but "
+                        "is included in a request!", __FUNCTION__, streamId);
+                mParent->signalError();
+                return false;
+            }
             StreamBuffer b;
             b.streamId = streams.data.u8[i];
             b.width  = s.width;
@@ -708,7 +773,7 @@ bool EmulatedFakeCamera2::ConfigureThread::threadLoop() {
         const Rect rect(s.width, s.height);
 
         res = GraphicBufferMapper::get().lock(*(b.buffer),
-                GRALLOC_USAGE_SW_WRITE_OFTEN,
+                GRALLOC_USAGE_HW_CAMERA_WRITE,
                 rect, (void**)&(b.img) );
 
         if (res != NO_ERROR) {
@@ -727,6 +792,9 @@ bool EmulatedFakeCamera2::ConfigureThread::threadLoop() {
     mRequest = NULL;
     mNextBuffers = NULL;
 
+    Mutex::Autolock lock(mInputMutex);
+    mRequestCount--;
+
     return true;
 }
 
@@ -735,7 +803,9 @@ EmulatedFakeCamera2::ReadoutThread::ReadoutThread(EmulatedFakeCamera2 *parent):
         mParent(parent),
         mRunning(false),
         mActive(false),
-        mRequest(NULL)
+        mRequest(NULL),
+        mBuffers(NULL),
+        mRequestCount(0)
 {
     mInFlightQueue = new InFlightQueue[kInFlightQueueSize];
     mInFlightHead = 0;
@@ -775,6 +845,7 @@ void EmulatedFakeCamera2::ReadoutThread::setNextCapture(
     mInFlightQueue[mInFlightTail].request = request;
     mInFlightQueue[mInFlightTail].buffers = buffers;
     mInFlightTail = (mInFlightTail + 1) % kInFlightQueueSize;
+    mRequestCount++;
 
     if (!mActive) {
         mActive = true;
@@ -807,14 +878,8 @@ bool EmulatedFakeCamera2::ReadoutThread::isStreamInUse(uint32_t id) {
 
 int EmulatedFakeCamera2::ReadoutThread::getInProgressCount() {
     Mutex::Autolock lock(mInputMutex);
-    Mutex::Autolock iLock(mInternalsMutex);
 
-    int requestCount =
-            ((mInFlightTail + kInFlightQueueSize) - mInFlightHead)
-            % kInFlightQueueSize;
-    requestCount += (mBuffers == NULL) ? 0 : 1;
-
-    return requestCount;
+    return mRequestCount;
 }
 
 bool EmulatedFakeCamera2::ReadoutThread::threadLoop() {
@@ -953,9 +1018,8 @@ bool EmulatedFakeCamera2::ReadoutThread::threadLoop() {
                 ALOGV("Sending image buffer %d to output stream %d",
                         i, b.streamId);
                 GraphicBufferMapper::get().unlock(*(b.buffer));
-                res = mParent->getStreamInfo(b.streamId).ops->enqueue_buffer(
-                    mParent->getStreamInfo(b.streamId).ops,
-                    captureTime, b.buffer);
+                const Stream &s = mParent->getStreamInfo(b.streamId);
+                res = s.ops->enqueue_buffer(s.ops, captureTime, b.buffer);
                 if (res != OK) {
                     ALOGE("Error enqueuing image buffer %p: %s (%d)", b.buffer,
                             strerror(-res), res);
@@ -964,6 +1028,7 @@ bool EmulatedFakeCamera2::ReadoutThread::threadLoop() {
             }
         }
     }
+
     if (compressedBufferIndex == -1) {
         delete mBuffers;
         mBuffers = NULL;
@@ -974,6 +1039,9 @@ bool EmulatedFakeCamera2::ReadoutThread::threadLoop() {
         mParent->mJpegCompressor->start(mBuffers, captureTime);
         mBuffers = NULL;
     }
+
+    Mutex::Autolock l(mInputMutex);
+    mRequestCount--;
 
     return true;
 }
@@ -1121,17 +1189,29 @@ status_t EmulatedFakeCamera2::constructStaticInfo(
             kAvailableRawMinDurations,
             sizeof(kAvailableRawMinDurations)/sizeof(uint64_t));
 
-    ADD_OR_SIZE(ANDROID_SCALER_AVAILABLE_PROCESSED_SIZES,
-            kAvailableProcessedSizes,
-            sizeof(kAvailableProcessedSizes)/sizeof(uint32_t));
+    if (mFacingBack) {
+        ADD_OR_SIZE(ANDROID_SCALER_AVAILABLE_PROCESSED_SIZES,
+                kAvailableProcessedSizesBack,
+                sizeof(kAvailableProcessedSizesBack)/sizeof(uint32_t));
+    } else {
+        ADD_OR_SIZE(ANDROID_SCALER_AVAILABLE_PROCESSED_SIZES,
+                kAvailableProcessedSizesFront,
+                sizeof(kAvailableProcessedSizesFront)/sizeof(uint32_t));
+    }
 
     ADD_OR_SIZE(ANDROID_SCALER_AVAILABLE_PROCESSED_MIN_DURATIONS,
             kAvailableProcessedMinDurations,
             sizeof(kAvailableProcessedMinDurations)/sizeof(uint64_t));
 
-    ADD_OR_SIZE(ANDROID_SCALER_AVAILABLE_JPEG_SIZES,
-            kAvailableJpegSizes,
-            sizeof(kAvailableJpegSizes)/sizeof(uint32_t));
+    if (mFacingBack) {
+        ADD_OR_SIZE(ANDROID_SCALER_AVAILABLE_JPEG_SIZES,
+                kAvailableJpegSizesBack,
+                sizeof(kAvailableJpegSizesBack)/sizeof(uint32_t));
+    } else {
+        ADD_OR_SIZE(ANDROID_SCALER_AVAILABLE_JPEG_SIZES,
+                kAvailableJpegSizesFront,
+                sizeof(kAvailableJpegSizesFront)/sizeof(uint32_t));
+    }
 
     ADD_OR_SIZE(ANDROID_SCALER_AVAILABLE_JPEG_MIN_DURATIONS,
             kAvailableJpegMinDurations,
@@ -1145,9 +1225,8 @@ status_t EmulatedFakeCamera2::constructStaticInfo(
 
     static const int32_t jpegThumbnailSizes[] = {
             160, 120,
-            320, 240,
-            640, 480
-    };
+            320, 240
+     };
     ADD_OR_SIZE(ANDROID_JPEG_AVAILABLE_THUMBNAIL_SIZES,
             jpegThumbnailSizes, sizeof(jpegThumbnailSizes)/sizeof(int32_t));
 
@@ -1220,7 +1299,7 @@ status_t EmulatedFakeCamera2::constructStaticInfo(
             sizeof(exposureCompensationRange)/sizeof(int32_t));
 
     static const int32_t availableTargetFpsRanges[] = {
-            5, 30
+            5, 30, 15, 30
     };
     ADD_OR_SIZE(ANDROID_CONTROL_AE_AVAILABLE_TARGET_FPS_RANGES,
             availableTargetFpsRanges,
