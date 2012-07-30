@@ -71,11 +71,17 @@ public class MonkeySourceScript implements MonkeyEventSource {
 
     private long mLastRecordedEventTime = -1;
 
+    // process scripts in line-by-line mode (true) or batch processing mode (false)
+    private boolean mReadScriptLineByLine = false;
+
     private static final boolean THIS_DEBUG = false;
 
     // a parameter that compensates the difference of real elapsed time and
     // time in theory
     private static final long SLEEP_COMPENSATE_DIFF = 16;
+
+    // if this header is present, scripts are read and processed in line-by-line mode
+    private static final String HEADER_LINE_BY_LINE = "linebyline";
 
     // maximum number of events that we read at one time
     private static final int MAX_ONE_TIME_READS = 100;
@@ -147,6 +153,15 @@ public class MonkeySourceScript implements MonkeyEventSource {
 
     BufferedReader mBufferedReader;
 
+    // X and Y coordincates of last touch event. Array Index is the pointerId
+    private float mLastX[] = new float[2];
+
+    private float mLastY[] = new float[2];
+
+    private long mScriptStartTime = -1;
+
+    private long mMonkeyStartTime = -1;
+
     /**
      * Creates a MonkeySourceScript instance.
      *
@@ -207,6 +222,8 @@ public class MonkeySourceScript implements MonkeyEventSource {
                     System.err.println(e);
                     return false;
                 }
+            } else if (line.indexOf(HEADER_LINE_BY_LINE) >= 0) {
+                mReadScriptLineByLine = true;
             } else if (line.indexOf(STARTING_DATA_LINE) >= 0) {
                 return true;
             }
@@ -234,6 +251,21 @@ public class MonkeySourceScript implements MonkeyEventSource {
         return MAX_ONE_TIME_READS;
     }
 
+     /**
+      * Reads one line and processes it.
+      *
+      * @return the number of lines read
+      * @throws IOException If there was an error reading the file.
+      */
+    private int readOneLine() throws IOException {
+        String line = mBufferedReader.readLine();
+        if (line == null) {
+            return 0;
+        }
+        line.trim();
+        processLine(line);
+        return 1;
+    }
 
 
 
@@ -300,6 +332,84 @@ public class MonkeySourceScript implements MonkeyEventSource {
                         .setDeviceId(device)
                         .setEdgeFlags(edgeFlags)
                         .addPointer(0, x, y, pressure, size);
+                mQ.addLast(e);
+            } catch (NumberFormatException e) {
+            }
+            return;
+        }
+
+        // Handle trackball or multi-touch  pointer events. pointer ID is the 13th parameter
+        if ((s.indexOf(EVENT_KEYWORD_POINTER) >= 0 || s.indexOf(EVENT_KEYWORD_TRACKBALL) >= 0)
+                && args.length == 13) {
+            try {
+                long downTime = Long.parseLong(args[0]);
+                long eventTime = Long.parseLong(args[1]);
+                int action = Integer.parseInt(args[2]);
+                float x = Float.parseFloat(args[3]);
+                float y = Float.parseFloat(args[4]);
+                float pressure = Float.parseFloat(args[5]);
+                float size = Float.parseFloat(args[6]);
+                int metaState = Integer.parseInt(args[7]);
+                float xPrecision = Float.parseFloat(args[8]);
+                float yPrecision = Float.parseFloat(args[9]);
+                int device = Integer.parseInt(args[10]);
+                int edgeFlags = Integer.parseInt(args[11]);
+                int pointerId = Integer.parseInt(args[12]);
+
+                MonkeyMotionEvent e;
+                if (s.indexOf("Pointer") > 0) {
+                    if (action == MotionEvent.ACTION_POINTER_DOWN) {
+                        e = new MonkeyTouchEvent(MotionEvent.ACTION_POINTER_DOWN
+                                | (pointerId << MotionEvent.ACTION_POINTER_INDEX_SHIFT))
+                                        .setIntermediateNote(true);
+                    } else {
+                        e = new MonkeyTouchEvent(action);
+                    }
+                    if (mScriptStartTime < 0) {
+                        mMonkeyStartTime = SystemClock.uptimeMillis();
+                        mScriptStartTime = eventTime;
+                    }
+                } else {
+                    e = new MonkeyTrackballEvent(action);
+                }
+
+                if (pointerId == 1) {
+                    e.setDownTime(downTime)
+                            .setEventTime(eventTime)
+                            .setMetaState(metaState)
+                            .setPrecision(xPrecision, yPrecision)
+                            .setDeviceId(device)
+                            .setEdgeFlags(edgeFlags)
+                            .addPointer(0, mLastX[0], mLastY[0], pressure, size)
+                            .addPointer(1, x, y, pressure, size);
+                    mLastX[1] = x;
+                    mLastY[1] = y;
+                } else if (pointerId == 0) {
+                    e.setDownTime(downTime)
+                            .setEventTime(eventTime)
+                            .setMetaState(metaState)
+                            .setPrecision(xPrecision, yPrecision)
+                            .setDeviceId(device)
+                            .setEdgeFlags(edgeFlags)
+                            .addPointer(0, x, y, pressure, size);
+                     if(action == MotionEvent.ACTION_POINTER_UP) {
+                         e.addPointer(1, mLastX[1], mLastY[1]);
+                     }
+                     mLastX[0] = x;
+                     mLastY[0] = y;
+                }
+
+                // Dynamically adjust waiting time to ensure that simulated evnets follow
+                // the time tap specified in the script
+                if (mReadScriptLineByLine) {
+                    long curUpTime = SystemClock.uptimeMillis();
+                    long realElapsedTime = curUpTime - mMonkeyStartTime;
+                    long scriptElapsedTime = eventTime - mScriptStartTime;
+                    if (realElapsedTime < scriptElapsedTime) {
+                        long waitDuration = scriptElapsedTime - realElapsedTime;
+                        mQ.addLast(new MonkeyWaitEvent(waitDuration));
+                    }
+                }
                 mQ.addLast(e);
             } catch (NumberFormatException e) {
             }
@@ -719,7 +829,11 @@ public class MonkeySourceScript implements MonkeyEventSource {
             readHeader();
         }
 
-        linesRead = readLines();
+        if (mReadScriptLineByLine) {
+            linesRead = readOneLine();
+        } else {
+            linesRead = readLines();
+        }
 
         if (linesRead == 0) {
             closeFile();
