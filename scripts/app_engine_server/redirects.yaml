@@ -400,7 +400,22 @@ redirects:
   dst: /guide/components/index.html
   type: permanent
   comment: Redirect to new location
-  
+
+
+
+# ------------------- TRAINING -------------------
+
+- src: /training/cloudsync/aesync.html
+  dst: /guide/google/gcm/index.html
+  type: permanent
+  comment: Syncing with App Engine was removed because it's obsolete.
+
+
+
+
+
+# -------------------- MISC ----------------------
+
 - src: /shareables/
   dst: http://commondatastorage.googleapis.com/androiddevelopers/shareables/
   type: permanent
