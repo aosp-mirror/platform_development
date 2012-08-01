@@ -16,6 +16,7 @@
 	<classpathentry kind="src" path="packages/apps/HTMLViewer/src"/>
 	<classpathentry kind="src" path="packages/apps/Launcher2/src"/>
 	<classpathentry kind="src" path="packages/apps/Mms/src"/>
+	<classpathentry kind="src" path="packages/apps/Nfc/src"/>
 	<classpathentry kind="src" path="packages/apps/PackageInstaller/src"/>
 	<classpathentry kind="src" path="packages/apps/Phone/src"/>
 	<classpathentry kind="src" path="packages/apps/QuickSearchBox/src"/>
@@ -41,12 +42,15 @@
 	<classpathentry kind="src" path="frameworks/base/icu4j/java"/>
 	<classpathentry kind="src" path="frameworks/base/keystore/java"/>
 	<classpathentry kind="src" path="frameworks/base/location/java"/>
+	<classpathentry kind="src" path="frameworks/base/location/lib/java"/>
 	<classpathentry kind="src" path="frameworks/base/media/java"/>
 	<classpathentry kind="src" path="frameworks/base/media/mca/effect/java"/>
 	<classpathentry kind="src" path="frameworks/base/media/mca/filterfw/java"/>
 	<classpathentry kind="src" path="frameworks/base/media/mca/filterpacks/java"/>
+	<classpathentry kind="src" path="frameworks/base/nfc-extras/java"/>
 	<classpathentry kind="src" path="frameworks/base/obex"/>
 	<classpathentry kind="src" path="frameworks/base/opengl/java"/>
+	<classpathentry kind="src" path="frameworks/base/packages/FusedLocation/src"/>
 	<classpathentry kind="src" path="frameworks/base/packages/SettingsProvider/src"/>
 	<classpathentry kind="src" path="frameworks/base/packages/SystemUI/src"/>
 	<classpathentry kind="src" path="frameworks/base/policy/src"/>
