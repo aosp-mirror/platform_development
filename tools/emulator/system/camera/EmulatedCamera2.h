@@ -28,6 +28,8 @@
 #include "hardware/camera2.h"
 #include "system/camera_metadata.h"
 #include "EmulatedBaseCamera.h"
+#include <utils/Thread.h>
+#include <utils/Mutex.h>
 
 namespace android {
 
@@ -128,7 +130,7 @@ protected:
 
     /** 3A action triggering */
     virtual int triggerAction(uint32_t trigger_id,
-            int ext1, int ext2);
+            int32_t ext1, int32_t ext2);
 
     /** Custom tag definitions */
     virtual const char* getVendorSectionName(uint32_t tag);
@@ -232,21 +234,27 @@ private:
      * Data members shared with implementations
      ***************************************************************************/
   protected:
+    /** Mutex for calls through camera2 device interface */
+    Mutex mMutex;
+
     const camera2_request_queue_src_ops *mRequestQueueSrc;
     const camera2_frame_queue_dst_ops *mFrameQueueDst;
-    camera2_notify_callback mNotifyCb;
-    void* mNotifyUserPtr;
 
     struct TagOps : public vendor_tag_query_ops {
         EmulatedCamera2 *parent;
     };
     TagOps      mVendorTagOps;
 
+    void sendNotification(int32_t msgType,
+            int32_t ext1, int32_t ext2, int32_t ext3);
+
     /****************************************************************************
      * Data members
      ***************************************************************************/
   private:
     static camera2_device_ops_t sDeviceOps;
+    camera2_notify_callback mNotifyCb;
+    void* mNotifyUserPtr;
 };
 
 }; /* namespace android */

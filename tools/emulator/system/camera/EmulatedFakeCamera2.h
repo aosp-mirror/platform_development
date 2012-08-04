@@ -31,7 +31,6 @@
 #include <utils/KeyedVector.h>
 #include <utils/String8.h>
 #include <utils/String16.h>
-#include <utils/Thread.h>
 
 namespace android {
 
@@ -113,9 +112,9 @@ protected:
 
     // virtual int releaseReprocessStream(uint32_t stream_id);
 
-    // virtual int triggerAction(uint32_t trigger_id,
-    //        int ext1,
-    //        int ext2);
+    virtual int triggerAction(uint32_t trigger_id,
+            int32_t ext1,
+            int32_t ext2);
 
     /** Custom tag definitions */
     virtual const char* getVendorSectionName(uint32_t tag);
@@ -245,6 +244,80 @@ private:
 
     };
 
+    // 3A management thread (auto-exposure, focus, white balance)
+    class ControlThread: public Thread {
+      public:
+        ControlThread(EmulatedFakeCamera2 *parent);
+        ~ControlThread();
+
+        status_t readyToRun();
+
+        status_t waitUntilRunning();
+
+        // Interpret request's control parameters and override
+        // capture settings as needed
+        status_t processRequest(camera_metadata_t *request);
+
+        status_t triggerAction(uint32_t msgType,
+                int32_t ext1, int32_t ext2);
+      private:
+        ControlThread(const ControlThread &t);
+        ControlThread& operator=(const ControlThread &t);
+
+        // Constants controlling fake 3A behavior
+        static const nsecs_t kControlCycleDelay;
+        static const nsecs_t kMinAfDuration;
+        static const nsecs_t kMaxAfDuration;
+        static const float kAfSuccessRate;
+        static const float kContinuousAfStartRate;
+
+        EmulatedFakeCamera2 *mParent;
+
+        bool mRunning;
+        bool threadLoop();
+
+        Mutex mInputMutex; // Protects input methods
+        Condition mInputSignal;
+
+        // Trigger notifications
+        bool mStartAf;
+        bool mCancelAf;
+        bool mStartPrecapture;
+
+        // Latest state for 3A request fields
+        uint8_t mControlMode;
+
+        uint8_t mEffectMode;
+        uint8_t mSceneMode;
+
+        uint8_t mAfMode;
+        bool mAfModeChange;
+
+        uint8_t mAwbMode;
+        uint8_t mAeMode;
+
+        // Latest trigger IDs
+        int32_t mAfTriggerId;
+        int32_t mPrecaptureTriggerId;
+
+        // Current state for 3A algorithms
+        uint8_t mAfState;
+        uint8_t mAeState;
+        uint8_t mAwbState;
+
+        // Private to threadLoop and its utility methods
+
+        nsecs_t mAfScanDuration;
+        bool mLockAfterPassiveScan;
+
+        // Utility methods
+        int processAfTrigger(uint8_t afMode, uint8_t afState);
+        int maybeStartAfScan(uint8_t afMode, uint8_t afState);
+        int updateAfScan(uint8_t afMode, uint8_t afState, nsecs_t *maxSleep);
+        void updateAfState(uint8_t newState, int32_t triggerId);
+
+    };
+
     /****************************************************************************
      * Static configuration information
      ***************************************************************************/
@@ -271,9 +344,6 @@ protected:
     bool mFacingBack;
 
 private:
-    /** Mutex for calls through camera2 device interface */
-    Mutex mMutex;
-
     /** Stream manipulation */
     uint32_t mNextStreamId;
     uint32_t mRawStreamCount;
@@ -289,6 +359,7 @@ private:
     /** Pipeline control threads */
     sp<ConfigureThread> mConfigureThread;
     sp<ReadoutThread>   mReadoutThread;
+    sp<ControlThread>   mControlThread;
 };
 
 }; /* namespace android */
