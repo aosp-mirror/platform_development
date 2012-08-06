@@ -7,6 +7,7 @@
 #include "Common.h"
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdint.h>
 #include <string.h>
 #include <assert.h>
 #include <ctype.h>
@@ -35,7 +36,7 @@ void printHexDumpEx(FILE* fp, const void* vaddr, size_t length,
 {
     const unsigned char* addr = reinterpret_cast<const unsigned char*>(vaddr);
     char out[77];       /* exact fit */
-    unsigned int offset;    /* offset to show while printing */
+    uintptr_t offset;   /* offset to show while printing */
     char* hex;
     char* asc;
     int gap;
@@ -43,7 +44,7 @@ void printHexDumpEx(FILE* fp, const void* vaddr, size_t length,
     if (mode == kHexDumpLocal)
         offset = 0;
     else
-        offset = (int) addr;
+        offset = (uintptr_t) addr;
 
     memset(out, ' ', sizeof(out)-1);
     out[8] = ':';
