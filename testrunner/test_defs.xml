@@ -515,12 +515,6 @@ See test_defs.xsd for more information.
     build_path="external/skia/tests"
     description="Skia tests." />
 
-<!--  Android STL tests -->
-<test-native name="astl"
-    build_path="external/astl/tests"
-    description="Android STL."
-    extra_build_args="ASTL_TESTS=1" />
-
 <!-- Google Test -->
 <test-native name="gtest"
     build_path="external/gtest"
