@@ -305,6 +305,7 @@ int EmulatedCamera2::trigger_action(const camera2_device_t *d,
 int EmulatedCamera2::set_notify_callback(const camera2_device_t *d,
         camera2_notify_callback notify_cb, void* user) {
     EmulatedCamera2* ec = getInstance(d);
+    Mutex::Autolock l(ec->mMutex);
     ec->mNotifyCb = notify_cb;
     ec->mNotifyUserPtr = user;
     return NO_ERROR;
@@ -353,6 +354,18 @@ int EmulatedCamera2::close(struct hw_device_t* device) {
         return -EINVAL;
     }
     return ec->closeCamera();
+}
+
+void EmulatedCamera2::sendNotification(int32_t msgType,
+        int32_t ext1, int32_t ext2, int32_t ext3) {
+    camera2_notify_callback notifyCb;
+    {
+        Mutex::Autolock l(mMutex);
+        notifyCb = mNotifyCb;
+    }
+    if (notifyCb != NULL) {
+        notifyCb(msgType, ext1, ext2, ext3, mNotifyUserPtr);
+    }
 }
 
 camera2_device_ops_t EmulatedCamera2::sDeviceOps = {
