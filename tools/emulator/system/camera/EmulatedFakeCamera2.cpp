@@ -101,6 +101,9 @@ EmulatedFakeCamera2::~EmulatedFakeCamera2() {
 status_t EmulatedFakeCamera2::Initialize() {
     status_t res;
 
+    set_camera_metadata_vendor_tag_ops(
+            static_cast<vendor_tag_query_ops_t*>(&mVendorTagOps));
+
     res = constructStaticInfo(&mCameraInfo, true);
     if (res != OK) {
         ALOGE("%s: Unable to allocate static info: %s (%d)",
@@ -959,8 +962,9 @@ bool EmulatedFakeCamera2::ReadoutThread::threadLoop() {
         size_t frame_entries = get_camera_metadata_entry_count(mRequest);
         size_t frame_data    = get_camera_metadata_data_count(mRequest);
 
-        frame_entries += 2;
-        frame_data += 8;
+        // TODO: Dynamically calculate based on enabled statistics, etc
+        frame_entries += 10;
+        frame_data += 100;
 
         res = mParent->mFrameQueueDst->dequeue_frame(mParent->mFrameQueueDst,
                 frame_entries, frame_data, &frame);
@@ -1001,6 +1005,7 @@ bool EmulatedFakeCamera2::ReadoutThread::threadLoop() {
             ALOGE("Error looking up vendor tag");
         }
 
+        collectStatisticsMetadata(frame);
         // TODO: Collect all final values used from sensor in addition to timestamp
 
         mParent->mFrameQueueDst->enqueue_frame(mParent->mFrameQueueDst,
@@ -1056,6 +1061,115 @@ bool EmulatedFakeCamera2::ReadoutThread::threadLoop() {
     mRequestCount--;
 
     return true;
+}
+
+status_t EmulatedFakeCamera2::ReadoutThread::collectStatisticsMetadata(
+        camera_metadata_t *frame) {
+    // Completely fake face rectangles, don't correspond to real faces in scene
+    ALOGV("Collecting statistics metadata");
+
+    status_t res;
+    camera_metadata_entry_t entry;
+    res = find_camera_metadata_entry(frame,
+                ANDROID_STATS_FACE_DETECT_MODE,
+                &entry);
+    if (res != OK) {
+        ALOGE("%s: Unable to find face detect mode!", __FUNCTION__);
+        return BAD_VALUE;
+    }
+
+    if (entry.data.u8[0] == ANDROID_STATS_FACE_DETECTION_OFF) return OK;
+
+    // The coordinate system for the face regions is the raw sensor pixel
+    // coordinates. Here, we map from the scene coordinates (0-19 in both axis)
+    // to raw pixels, for the scene defined in fake-pipeline2/Scene.cpp. We
+    // approximately place two faces on top of the windows of the house. No
+    // actual faces exist there, but might one day. Note that this doesn't
+    // account for the offsets used to account for aspect ratio differences, so
+    // the rectangles don't line up quite right.
+    const size_t numFaces = 2;
+    int32_t rects[numFaces * 4] = {
+            Sensor::kResolution[0] * 10 / 20,
+            Sensor::kResolution[1] * 15 / 20,
+            Sensor::kResolution[0] * 12 / 20,
+            Sensor::kResolution[1] * 17 / 20,
+
+            Sensor::kResolution[0] * 16 / 20,
+            Sensor::kResolution[1] * 15 / 20,
+            Sensor::kResolution[0] * 18 / 20,
+            Sensor::kResolution[1] * 17 / 20
+    };
+    // To simulate some kind of real detection going on, we jitter the rectangles on
+    // each frame by a few pixels in each dimension.
+    for (size_t i = 0; i < numFaces * 4; i++) {
+        rects[i] += (int32_t)(((float)rand() / RAND_MAX) * 6 - 3);
+    }
+    // The confidence scores (0-100) are similarly jittered.
+    uint8_t scores[numFaces] = { 85, 95 };
+    for (size_t i = 0; i < numFaces; i++) {
+        scores[i] += (int32_t)(((float)rand() / RAND_MAX) * 10 - 5);
+    }
+
+    res = add_camera_metadata_entry(frame, ANDROID_STATS_FACE_RECTANGLES,
+            rects, numFaces * 4);
+    if (res != OK) {
+        ALOGE("%s: Unable to add face rectangles!", __FUNCTION__);
+        return BAD_VALUE;
+    }
+
+    res = add_camera_metadata_entry(frame, ANDROID_STATS_FACE_SCORES,
+            scores, numFaces);
+    if (res != OK) {
+        ALOGE("%s: Unable to add face scores!", __FUNCTION__);
+        return BAD_VALUE;
+    }
+
+    if (entry.data.u8[0] == ANDROID_STATS_FACE_DETECTION_SIMPLE) return OK;
+
+    // Advanced face detection options - add eye/mouth coordinates.  The
+    // coordinates in order are (leftEyeX, leftEyeY, rightEyeX, rightEyeY,
+    // mouthX, mouthY). The mapping is the same as the face rectangles.
+    int32_t features[numFaces * 6] = {
+        Sensor::kResolution[0] * 10.5 / 20,
+        Sensor::kResolution[1] * 16 / 20,
+        Sensor::kResolution[0] * 11.5 / 20,
+        Sensor::kResolution[1] * 16 / 20,
+        Sensor::kResolution[0] * 11 / 20,
+        Sensor::kResolution[1] * 16.5 / 20,
+
+        Sensor::kResolution[0] * 16.5 / 20,
+        Sensor::kResolution[1] * 16 / 20,
+        Sensor::kResolution[0] * 17.5 / 20,
+        Sensor::kResolution[1] * 16 / 20,
+        Sensor::kResolution[0] * 17 / 20,
+        Sensor::kResolution[1] * 16.5 / 20,
+    };
+    // Jitter these a bit less than the rects
+    for (size_t i = 0; i < numFaces * 6; i++) {
+        features[i] += (int32_t)(((float)rand() / RAND_MAX) * 4 - 2);
+    }
+    // These are unique IDs that are used to identify each face while it's
+    // visible to the detector (if a face went away and came back, it'd get a
+    // new ID).
+    int32_t ids[numFaces] = {
+        100, 200
+    };
+
+    res = add_camera_metadata_entry(frame, ANDROID_STATS_FACE_LANDMARKS,
+            features, numFaces * 6);
+    if (res != OK) {
+        ALOGE("%s: Unable to add face landmarks!", __FUNCTION__);
+        return BAD_VALUE;
+    }
+
+    res = add_camera_metadata_entry(frame, ANDROID_STATS_FACE_IDS,
+            ids, numFaces);
+    if (res != OK) {
+        ALOGE("%s: Unable to add face scores!", __FUNCTION__);
+        return BAD_VALUE;
+    }
+
+    return OK;
 }
 
 EmulatedFakeCamera2::ControlThread::ControlThread(EmulatedFakeCamera2 *parent):
@@ -1588,13 +1702,16 @@ status_t EmulatedFakeCamera2::constructStaticInfo(
     // android.stats
 
     static const uint8_t availableFaceDetectModes[] = {
-            ANDROID_STATS_FACE_DETECTION_OFF
+        ANDROID_STATS_FACE_DETECTION_OFF,
+        ANDROID_STATS_FACE_DETECTION_SIMPLE,
+        ANDROID_STATS_FACE_DETECTION_FULL
     };
+
     ADD_OR_SIZE(ANDROID_STATS_AVAILABLE_FACE_DETECT_MODES,
             availableFaceDetectModes,
             sizeof(availableFaceDetectModes));
 
-    static const int32_t maxFaceCount = 0;
+    static const int32_t maxFaceCount = 8;
     ADD_OR_SIZE(ANDROID_STATS_MAX_FACE_COUNT,
             &maxFaceCount, 1);
 
@@ -1737,7 +1854,7 @@ status_t EmulatedFakeCamera2::constructDefaultRequest(
 
     /** android.request */
 
-    static const uint8_t metadataMode = ANDROID_REQUEST_METADATA_NONE;
+    static const uint8_t metadataMode = ANDROID_REQUEST_METADATA_FULL;
     ADD_OR_SIZE(ANDROID_REQUEST_METADATA_MODE, &metadataMode, 1);
 
     static const int32_t id = 0;
