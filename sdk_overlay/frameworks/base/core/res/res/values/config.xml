@@ -20,8 +20,10 @@
 <!-- These resources are around just to allow their values to be customized
      for different hardware and product builds. -->
 <resources>
-    <!-- Package name providing geocoder API support. -->
-    <string name="config_geocodeProviderPackageName" translatable="false">com.google.android.location</string>
+    <!-- Package name providing location API support. -->
+    <string-array name="config_overlay_locationProviderPackageNames" translatable="false">
+        <item>com.google.android.location</item>
+    </string-array>
 
     <bool name="config_voice_capable">true</bool>
 </resources>
