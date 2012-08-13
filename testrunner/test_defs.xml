@@ -94,7 +94,6 @@ See test_defs.xsd for more information.
 <test name="keystore-unit"
     build_path="frameworks/base/keystore/tests"
     package="android.security.tests"
-    runner=".KeyStoreTestRunner"
     coverage_target="framework"
     continuous="true" />
 
