@@ -221,6 +221,8 @@ private:
         bool mRunning;
         bool threadLoop();
 
+        status_t collectStatisticsMetadata(camera_metadata_t *frame);
+
         // Inputs
         Mutex mInputMutex; // Protects mActive, mInFlightQueue, mRequestCount
         Condition mInputSignal;
