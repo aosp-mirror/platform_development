@@ -101,6 +101,8 @@ $(android_jar_full_target): $(full_target)
 
 ALL_SDK_FILES += $(android_jar_full_target)
 
+# The uiautomator stubs
+ALL_SDK_FILES += $(TARGET_OUT_COMMON_INTERMEDIATES)/JAVA_LIBRARIES/android_uiautomator_intermediates/javalib.jar
 
 # $(1): the Java library name
 define _package_sdk_library
