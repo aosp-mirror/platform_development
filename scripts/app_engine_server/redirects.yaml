@@ -421,6 +421,11 @@ redirects:
   type: permanent
   comment: Redirect to new location
   
+- src: /downloads/
+  dst: http://commondatastorage.googleapis.com/androiddevelopers/
+  type: permanent
+  comment: Redirect to new location
+
 - src: /search.html
   dst: /index.html
   type: permanent
