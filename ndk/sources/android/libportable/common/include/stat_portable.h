@@ -125,7 +125,12 @@ static inline void stat_ntop(struct stat *n_stat, struct stat_portable *p_stat)
 {
     memset(p_stat, '\0', sizeof(struct stat_portable));
     p_stat->st_dev        = n_stat->st_dev;
+#if defined(__mips__)
+    /* MIPS doesn't have __st_ino */
+    p_stat->__st_ino      = 0;
+#else
     p_stat->__st_ino      = n_stat->__st_ino;
+#endif
     p_stat->st_mode       = n_stat->st_mode;
     p_stat->st_nlink      = n_stat->st_nlink;
     p_stat->st_uid        = n_stat->st_uid;
