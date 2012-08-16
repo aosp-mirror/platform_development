@@ -36,7 +36,8 @@ libportable_arch_src_files += \
 			arch-mips/open.c \
 			arch-mips/socket.c \
 			arch-mips/sockopt.c \
-			arch-mips/epoll.c
+			arch-mips/epoll.c \
+			arch-mips/errno.c
 endif
 
 ifeq ($(TARGET_ARCH),arm)
@@ -44,7 +45,8 @@ libportable_arch_src_files += \
 			arch-arm/stat.c \
 			arch-arm/socket.c \
 			arch-arm/sockopt.c \
-			arch-arm/epoll.c
+			arch-arm/epoll.c \
+			arch-arm/errno.c
 endif
 
 ifeq ($(TARGET_ARCH),x86)
@@ -55,7 +57,8 @@ libportable_arch_src_files += \
 			arch-x86/socket.c \
 			arch-x86/sockopt.c \
 			arch-x86/fcntl.c \
-			arch-x86/epoll.c
+			arch-x86/epoll.c \
+			arch-x86/errno.c
 endif
 
 LOCAL_SRC_FILES := \
