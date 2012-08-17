@@ -17,6 +17,7 @@
 #include <stdarg.h>
 #include <sys/ioctl.h>
 #include <ioctls_portable.h>
+#include <termios.h>
 
 #if FIONREAD_PORTABLE==FIONREAD
 #error Bad build environment
@@ -24,20 +25,135 @@
 
 static inline int mips_change_request(int request)
 {
-    /* Only handles FIO* for now */
     switch(request) {
+    case TCGETS_PORTABLE:
+        return TCGETS;
+    case TCSETS_PORTABLE:
+        return TCSETS;
+    case TCSETSW_PORTABLE:
+        return TCSETSW;
+    case TCSETSF_PORTABLE:
+        return TCSETSF;
+    case TCGETA_PORTABLE:
+        return TCGETA;
+    case TCSETA_PORTABLE:
+        return TCSETA;
+    case TCSETAW_PORTABLE:
+        return TCSETAW;
+    case TCSETAF_PORTABLE:
+        return TCSETAF;
+    case TCSBRK_PORTABLE:
+        return TCSBRK;
+    case TCXONC_PORTABLE:
+        return TCXONC;
+    case TCFLSH_PORTABLE:
+        return TCFLSH;
+    case TIOCEXCL_PORTABLE:
+        return TIOCEXCL;
+    case TIOCNXCL_PORTABLE:
+        return TIOCNXCL;
+    case TIOCSCTTY_PORTABLE:
+        return TIOCSCTTY;
+    case TIOCGPGRP_PORTABLE:
+        return TIOCGPGRP;
+    case TIOCSPGRP_PORTABLE:
+        return TIOCSPGRP;
+    case TIOCOUTQ_PORTABLE:
+        return TIOCOUTQ;
+    case TIOCSTI_PORTABLE:
+        return TIOCSTI;
+    case TIOCGWINSZ_PORTABLE:
+        return TIOCGWINSZ;
+    case TIOCSWINSZ_PORTABLE:
+        return TIOCSWINSZ;
+    case TIOCMGET_PORTABLE:
+        return TIOCMGET;
+    case TIOCMBIS_PORTABLE:
+        return TIOCMBIS;
+    case TIOCMBIC_PORTABLE:
+        return TIOCMBIC;
+    case TIOCMSET_PORTABLE:
+        return TIOCMSET;
+    case TIOCGSOFTCAR_PORTABLE:
+        return TIOCGSOFTCAR;
+    case TIOCSSOFTCAR_PORTABLE:
+        return TIOCSSOFTCAR;
     case FIONREAD_PORTABLE:
-	return FIONREAD;
+        return FIONREAD;
+    /* case TIOCINQ_PORTABLE: // same as FIONREAD_PORTABLE
+        return TIOCINQ; */
+    case TIOCLINUX_PORTABLE:
+        return TIOCLINUX;
+    case TIOCCONS_PORTABLE:
+        return TIOCCONS;
+    case TIOCGSERIAL_PORTABLE:
+        return TIOCGSERIAL;
+    case TIOCSSERIAL_PORTABLE:
+        return TIOCSSERIAL;
+    case TIOCPKT_PORTABLE:
+        return TIOCPKT;
     case FIONBIO_PORTABLE:
-	return FIONBIO;
+        return FIONBIO;
+    case TIOCNOTTY_PORTABLE:
+        return TIOCNOTTY;
+    case TIOCSETD_PORTABLE:
+        return TIOCSETD;
+    case TIOCGETD_PORTABLE:
+        return TIOCGETD;
+    case TCSBRKP_PORTABLE:
+        return TCSBRKP;
+    case TIOCSBRK_PORTABLE:
+        return TIOCSBRK;
+    case TIOCCBRK_PORTABLE:
+        return TIOCCBRK;
+    case TIOCGSID_PORTABLE:
+        return TIOCGSID;
     case FIONCLEX_PORTABLE:
-	return FIONCLEX;
+        return FIONCLEX;
     case FIOCLEX_PORTABLE:
-	return FIOCLEX;
+        return FIOCLEX;
     case FIOASYNC_PORTABLE:
-	return FIOASYNC;
+        return FIOASYNC;
+    case TIOCSERCONFIG_PORTABLE:
+        return TIOCSERCONFIG;
+    case TIOCSERGWILD_PORTABLE:
+        return TIOCSERGWILD;
+    case TIOCSERSWILD_PORTABLE:
+        return TIOCSERSWILD;
+    case TIOCGLCKTRMIOS_PORTABLE:
+        return TIOCGLCKTRMIOS;
+    case TIOCSLCKTRMIOS_PORTABLE:
+        return TIOCSLCKTRMIOS;
+    case TIOCSERGSTRUCT_PORTABLE:
+        return TIOCSERGSTRUCT;
+    case TIOCSERGETLSR_PORTABLE:
+        return TIOCSERGETLSR;
+    case TIOCSERGETMULTI_PORTABLE:
+        return TIOCSERGETMULTI;
+    case TIOCSERSETMULTI_PORTABLE:
+        return TIOCSERSETMULTI;
+    case TIOCMIWAIT_PORTABLE:
+        return TIOCMIWAIT;
+    case TIOCGICOUNT_PORTABLE:
+        return TIOCGICOUNT;
     case FIOQSIZE_PORTABLE:
-	return FIOQSIZE;
+        return FIOQSIZE;
+    case TIOCPKT_DATA_PORTABLE:
+        return TIOCPKT_DATA;
+    case TIOCPKT_FLUSHREAD_PORTABLE:
+        return TIOCPKT_FLUSHREAD;
+    case TIOCPKT_FLUSHWRITE_PORTABLE:
+        return TIOCPKT_FLUSHWRITE;
+    case TIOCPKT_STOP_PORTABLE:
+        return TIOCPKT_STOP;
+    case TIOCPKT_START_PORTABLE:
+        return TIOCPKT_START;
+    case TIOCPKT_NOSTOP_PORTABLE:
+        return TIOCPKT_NOSTOP;
+    case TIOCPKT_DOSTOP_PORTABLE:
+        return TIOCPKT_DOSTOP;
+    /* case TIOCSER_TEMT_PORTABLE: // = 1 same as TIOCPKT_FLUSHREAD_PORTABLE
+        return TIOCSER_TEMT; */
     }
     return request;
 }
