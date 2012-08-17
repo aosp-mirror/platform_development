@@ -15,7 +15,6 @@
  */
 
 #include <unistd.h>
-#include <stdio.h>
 #include <errno.h>
 #include <sys/mman.h>
 #include <mman_portable.h>
@@ -38,37 +37,28 @@ static inline int mips_change_prot(int prot)
 static inline int mips_change_flags(int flags)
 {
     int mipsflags = 0;
-    /* These are the documented flags for mmap */
     if (flags & MAP_SHARED_PORTABLE)
        mipsflags |= MAP_SHARED;
     if (flags & MAP_PRIVATE_PORTABLE)
        mipsflags |= MAP_PRIVATE;
-#if defined(MAP_32BIT_PORTABLE) && defined(MAP_32BIT)
-    if (flags & MAP_32BIT_PORTABLE)
-       mipsflags |= MAP_32BIT;
-#endif
-    if (flags & MAP_ANONYMOUS_PORTABLE)
-       mipsflags |= MAP_ANONYMOUS;
     if (flags & MAP_FIXED_PORTABLE)
        mipsflags |= MAP_FIXED;
+    if (flags & MAP_ANONYMOUS_PORTABLE)
+       mipsflags |= MAP_ANONYMOUS;
     if (flags & MAP_GROWSDOWN_PORTABLE)
        mipsflags |= MAP_GROWSDOWN;
-#if defined(MAP_HUGETLB_PORTABLE) && defined(MAP_HUGETLB)
-    if (flags & MAP_HUGETLB_PORTABLE)
-       mipsflags |= MAP_HUGETLB;
-#endif
+    if (flags & MAP_DENYWRITE_PORTABLE)
+       mipsflags |= MAP_DENYWRITE;
+    if (flags & MAP_EXECUTABLE_PORTABLE)
+       mipsflags |= MAP_EXECUTABLE;
     if (flags & MAP_LOCKED_PORTABLE)
        mipsflags |= MAP_LOCKED;
-    if (flags & MAP_NONBLOCK_PORTABLE)
-       mipsflags |= MAP_NONBLOCK;
     if (flags & MAP_NORESERVE_PORTABLE)
        mipsflags |= MAP_NORESERVE;
     if (flags & MAP_POPULATE_PORTABLE)
        mipsflags |= MAP_POPULATE;
-#if defined(MAP_STACK_PORTABLE) && defined(MAP_STACK)
-    if (flags & MAP_STACK_PORTABLE)
-       mipsflags |= MAP_STACK;
-#endif
+    if (flags & MAP_NONBLOCK_PORTABLE)
+       mipsflags |= MAP_NONBLOCK;
 
     return mipsflags;
 }
@@ -77,11 +67,21 @@ static inline int mips_change_flags(int flags)
 extern void *__mmap2(void *, size_t, int, int, int, size_t);
 void *mmap_portable(void *addr, size_t size, int prot, int flags, int fd, long offset)
 {
-    if ( offset & ((1UL << MMAP2_SHIFT)-1) ) {
+    void *ret;
+    int mips_prot, mips_flags;
+
+    if (offset & ((1UL << MMAP2_SHIFT)-1)) {
         errno = EINVAL;
         return MAP_FAILED;
     }
 
-    return __mmap2(addr, size, mips_change_prot(prot), mips_change_flags(flags),
-                   fd, (size_t)offset >> MMAP2_SHIFT);
+    mips_prot = mips_change_prot(prot);
+    mips_flags = mips_change_flags(flags);
+    ret = __mmap2(addr, size, mips_prot, mips_flags, fd,
+                  (size_t)offset >> MMAP2_SHIFT);
+
+    if (ret && (mips_flags & (MAP_PRIVATE | MAP_ANONYMOUS)))
+            madvise(ret, size, MADV_MERGEABLE);
+
+    return ret;
 }
