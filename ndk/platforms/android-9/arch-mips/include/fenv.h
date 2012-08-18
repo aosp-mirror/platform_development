@@ -23,16 +23,16 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $FreeBSD: src/lib/msun/arm/fenv.h,v 1.5 2005/03/16 19:03:45 das Exp $
+ * $FreeBSD: src/lib/msun/mips/fenv.h,v 1.1 2008/04/26 12:20:29 imp Exp $
  */
 
 #ifndef	_FENV_H_
 #define	_FENV_H_
 
-#include <sys/types.h>
+#include <sys/_types.h>
 
-typedef	uint32_t	fenv_t;
-typedef	uint32_t	fexcept_t;
+typedef	__uint32_t	fenv_t;
+typedef	__uint32_t	fexcept_t;
 
 /* Exception flags */
 #define	FE_INVALID	0x0001
@@ -215,3 +215,4 @@ fegetexcept(void)
 /* __END_DECLS */
 
 #endif	/* !_FENV_H_ */
+
