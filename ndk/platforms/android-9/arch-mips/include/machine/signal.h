@@ -57,7 +57,7 @@ typedef int sig_atomic_t;
  * a non-standard exit is performed.
  */
 
-#if defined(ANDROID_CHANGES)
+#if defined(__ANDROID__)
 
 /*
  * The Linux and OpenBSD sigcontext structures are slightly different
@@ -104,7 +104,7 @@ struct	sigcontext {
 
 #else /* __LANGUAGE_ASSEMBLY */
 
-#ifdef ANDROID_CHANGES
+#ifdef __ANDROID__
 
 #define	SC_REGMASK	(0*REGSZ)
 #define	SC_STATUS	(1*REGSZ)
@@ -140,7 +140,7 @@ struct	sigcontext {
 #define	SC_FPUSED	(70 * REGSZ)
 #define	SC_FPC_EIR	(71 * REGSZ)
 
-#endif /*ANDROID CHANGES*/
+#endif /* __ANDROID__ */
 
 #endif /* __LANGUAGE_ASSEMBLY */
 
