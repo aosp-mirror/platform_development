@@ -154,6 +154,47 @@ static inline int mips_change_request(int request)
         return TIOCPKT_DOSTOP;
     /* case TIOCSER_TEMT_PORTABLE: // = 1 same as TIOCPKT_FLUSHREAD_PORTABLE
         return TIOCSER_TEMT; */
+    case TIOCGPTN_PORTABLE:
+        return TIOCGPTN;
+    case TIOCSPTLCK_PORTABLE:
+        return TIOCSPTLCK;
+#ifdef USE_OLD_TTY
+    case TIOCGETD_PORTABLE:
+        return TIOCGETD;
+    case TIOCSETD_PORTABLE:
+        return TIOCSETD;
+#else
+    case OTIOCGETD_PORTABLE:
+        return OTIOCGETD;
+    case OTIOCSETD_PORTABLE:
+        return OTIOCSETD;
+#endif
+    case TIOCHPCL_PORTABLE:
+        return TIOCHPCL;
+    case TIOCGETP_PORTABLE:
+        return TIOCGETP;
+    case TIOCSETP_PORTABLE:
+        return TIOCSETP;
+    case TIOCSETN_PORTABLE:
+        return TIOCSETN;
+    case TIOCSETC_PORTABLE:
+        return TIOCSETC;
+    case TIOCGETC_PORTABLE:
+        return TIOCGETC;
+    case TIOCLBIS_PORTABLE:
+        return TIOCLBIS;
+    case TIOCLBIC_PORTABLE:
+        return TIOCLBIC;
+    case TIOCLSET_PORTABLE:
+        return TIOCLSET;
+    case TIOCLGET_PORTABLE:
+        return TIOCLGET;
+    case TIOCSLTC_PORTABLE:
+        return TIOCSLTC;
+    case TIOCGLTC_PORTABLE:
+        return TIOCGLTC;
+    case OTIOCCONS_PORTABLE:
+        return OTIOCCONS;
     }
     return request;
 }
