@@ -38,7 +38,7 @@
  * IMPORTANT: We have no intention to support anything below an ARMv4T !
  */
 
-/* _ARM_ARCH_REVISION is a number corresponding to the ARM revision
+/* __ARM_ARCH__ is a number corresponding to the ARM revision
  * we're going to support
  *
  * it looks like our toolchain doesn't define __ARM_ARCH__
@@ -142,15 +142,50 @@
  *
  *     ldr  pc, [<some address>]
  *
- * note that this affects any instruction that explicitely changes the
+ * note that this affects any instruction that explicitly changes the
  * value of the pc register, including ldm { ...,pc } or 'add pc, #offset'
  */
 #if __ARM_ARCH__ >= 5
 #  define __ARM_HAVE_PC_INTERWORK
 #endif
 
+/* define __ARM_HAVE_LDREX_STREX for ARMv6 and ARMv7 architecture to be
+ * used in replacement of deprecated swp instruction
+ */
+#if __ARM_ARCH__ >= 6
+#  define __ARM_HAVE_LDREX_STREX
+#endif
+
+/* define __ARM_HAVE_DMB for ARMv7 architecture
+ */
+#if __ARM_ARCH__ >= 7
+#  define __ARM_HAVE_DMB
+#endif
+
+/* define __ARM_HAVE_LDREXD for ARMv7 architecture
+ * (also present in ARMv6K, but not implemented in ARMv7-M, neither of which
+ * we care about)
+ */
+#if __ARM_ARCH__ >= 7
+#  define __ARM_HAVE_LDREXD
+#endif
+
+/* define _ARM_HAVE_VFP if we have VFPv3
+ */
+#if __ARM_ARCH__ >= 7 && defined __VFP_FP__
+#  define __ARM_HAVE_VFP
+#endif
+
+/* define _ARM_HAVE_NEON for ARMv7 architecture if we support the
+ * Neon SIMD instruction set extensions. This also implies
+ * that VFPv3-D32 is supported.
+ */
+#if __ARM_ARCH__ >= 7 && defined __ARM_NEON__
+#  define __ARM_HAVE_NEON
+#endif
 
 /* Assembly-only macros */
+#ifdef __ASSEMBLY__
 
 /* define a handy PLD(address) macro since the cache preload
  * is an optional opcode
@@ -160,5 +195,7 @@
 #else
 #  define  PLD(reg,offset)    /* nothing */
 #endif
+
+#endif /* ! __ASSEMBLY__ */
 
 #endif /* _ARM_MACHINE_CPU_FEATURES_H */
