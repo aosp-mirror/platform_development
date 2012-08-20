@@ -46,8 +46,6 @@ typedef long           ssize_t;
 typedef long           ptrdiff_t;
 #endif
 
-//#include <linux/types.h>
-
 /* 7.18.1.1 Exact-width integer types */
 typedef	__signed char		__int8_t;
 typedef	unsigned char		__uint8_t;
