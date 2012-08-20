@@ -31,11 +31,11 @@
 
 namespace android {
 
-const uint32_t EmulatedFakeCamera2::kAvailableFormats[5] = {
+const uint32_t EmulatedFakeCamera2::kAvailableFormats[4] = {
         HAL_PIXEL_FORMAT_RAW_SENSOR,
         HAL_PIXEL_FORMAT_BLOB,
         HAL_PIXEL_FORMAT_RGBA_8888,
-        HAL_PIXEL_FORMAT_YV12,
+        //        HAL_PIXEL_FORMAT_YV12,
         HAL_PIXEL_FORMAT_YCrCb_420_SP
 };
 
@@ -355,7 +355,7 @@ int EmulatedFakeCamera2::allocateStream(
     *stream_id = mNextStreamId;
     if (format_actual) *format_actual = format;
     *usage = GRALLOC_USAGE_HW_CAMERA_WRITE;
-    *max_buffers = 4;
+    *max_buffers = kMaxBufferCount;
 
     ALOGV("Stream allocated: %d, %d x %d, 0x%x. U: %x, B: %d",
             *stream_id, width, height, format, *usage, *max_buffers);
@@ -630,7 +630,7 @@ bool EmulatedFakeCamera2::ConfigureThread::threadLoop() {
     if (mRequest == NULL) {
         Mutex::Autolock il(mInternalsMutex);
 
-        ALOGV("Getting next request");
+        ALOGV("Configure: Getting next request");
         res = mParent->mRequestQueueSrc->dequeue_request(
             mParent->mRequestQueueSrc,
             &mRequest);
@@ -640,7 +640,7 @@ bool EmulatedFakeCamera2::ConfigureThread::threadLoop() {
             return false;
         }
         if (mRequest == NULL) {
-            ALOGV("Request queue empty, going inactive");
+            ALOGV("Configure: Request queue empty, going inactive");
             // No requests available, go into inactive mode
             Mutex::Autolock lock(mInputMutex);
             mActive = false;
@@ -665,7 +665,7 @@ bool EmulatedFakeCamera2::ConfigureThread::threadLoop() {
 
         mNextBuffers = new Buffers;
         mNextNeedsJpeg = false;
-        ALOGV("Setting up buffers for capture");
+        ALOGV("Configure: Setting up buffers for capture");
         for (size_t i = 0; i < streams.count; i++) {
             int streamId = streams.data.u8[i];
             const Stream &s = mParent->getStreamInfo(streamId);
@@ -682,7 +682,8 @@ bool EmulatedFakeCamera2::ConfigureThread::threadLoop() {
             b.format = s.format;
             b.stride = s.stride;
             mNextBuffers->push_back(b);
-            ALOGV("  Buffer %d: Stream %d, %d x %d, format 0x%x, stride %d",
+            ALOGV("Configure:    Buffer %d: Stream %d, %d x %d, format 0x%x, "
+                    "stride %d",
                     i, b.streamId, b.width, b.height, b.format, b.stride);
             if (b.format == HAL_PIXEL_FORMAT_BLOB) {
                 mNextNeedsJpeg = true;
@@ -744,12 +745,22 @@ bool EmulatedFakeCamera2::ConfigureThread::threadLoop() {
             mParent->mSensor->getScene().setHour(*e.data.i32);
         }
 
-        // Start waiting on sensor or JPEG block
+        // Start waiting on readout thread
+        mWaitingForReadout = true;
+        ALOGV("Configure: Waiting for readout thread");
+    }
+
+    if (mWaitingForReadout) {
+        bool readoutDone;
+        readoutDone = mParent->mReadoutThread->waitForReady(kWaitPerLoop);
+        if (!readoutDone) return true;
+
         if (mNextNeedsJpeg) {
-            ALOGV("Waiting for JPEG compressor");
+            ALOGV("Configure: Waiting for JPEG compressor");
         } else {
-            ALOGV("Waiting for sensor");
+            ALOGV("Configure: Waiting for sensor");
         }
+        mWaitingForReadout = false;
     }
 
     if (mNextNeedsJpeg) {
@@ -757,7 +768,7 @@ bool EmulatedFakeCamera2::ConfigureThread::threadLoop() {
         jpegDone = mParent->mJpegCompressor->waitForDone(kWaitPerLoop);
         if (!jpegDone) return true;
 
-        ALOGV("Waiting for sensor");
+        ALOGV("Configure: Waiting for sensor");
         mNextNeedsJpeg = false;
     }
     bool vsync = mParent->mSensor->waitForVSync(kWaitPerLoop);
@@ -765,7 +776,7 @@ bool EmulatedFakeCamera2::ConfigureThread::threadLoop() {
     if (!vsync) return true;
 
     Mutex::Autolock il(mInternalsMutex);
-    ALOGV("Configuring sensor for frame %d", mNextFrameNumber);
+    ALOGV("Configure: Configuring sensor for frame %d", mNextFrameNumber);
     mParent->mSensor->setExposureTime(mNextExposureTime);
     mParent->mSensor->setFrameDuration(mNextFrameDuration);
     mParent->mSensor->setSensitivity(mNextSensitivity);
@@ -775,7 +786,7 @@ bool EmulatedFakeCamera2::ConfigureThread::threadLoop() {
         StreamBuffer &b = mNextBuffers->editItemAt(i);
 
         Stream s = mParent->getStreamInfo(b.streamId);
-
+        ALOGV("Configure: Dequeing buffer from stream %d", b.streamId);
         res = s.ops->dequeue_buffer(s.ops, &(b.buffer) );
         if (res != NO_ERROR || b.buffer == NULL) {
             ALOGE("%s: Unable to dequeue buffer from stream %d: %s (%d)",
@@ -801,7 +812,7 @@ bool EmulatedFakeCamera2::ConfigureThread::threadLoop() {
             return false;
         }
     }
-
+    ALOGV("Configure: Done configure for frame %d", mNextFrameNumber);
     mParent->mReadoutThread->setNextCapture(mRequest, mNextBuffers);
     mParent->mSensor->setDestinationBuffers(mNextBuffers);
 
@@ -848,11 +859,30 @@ status_t EmulatedFakeCamera2::ReadoutThread::waitUntilRunning() {
     return OK;
 }
 
+bool EmulatedFakeCamera2::ReadoutThread::waitForReady(nsecs_t timeout) {
+    status_t res;
+    Mutex::Autolock lock(mInputMutex);
+    while (!readyForNextCapture()) {
+        res = mReadySignal.waitRelative(mInputMutex, timeout);
+        if (res == TIMED_OUT) return false;
+        if (res != OK) {
+            ALOGE("%s: Error waiting for ready: %s (%d)", __FUNCTION__,
+                    strerror(-res), res);
+            return false;
+        }
+    }
+    return true;
+}
+
+bool EmulatedFakeCamera2::ReadoutThread::readyForNextCapture() {
+    return (mInFlightTail + 1) % kInFlightQueueSize != mInFlightHead;
+}
+
 void EmulatedFakeCamera2::ReadoutThread::setNextCapture(
         camera_metadata_t *request,
         Buffers *buffers) {
     Mutex::Autolock lock(mInputMutex);
-    if ( (mInFlightTail + 1) % kInFlightQueueSize == mInFlightHead) {
+    if ( !readyForNextCapture() ) {
         ALOGE("In flight queue full, dropping captures");
         mParent->signalError();
         return;
@@ -900,6 +930,7 @@ int EmulatedFakeCamera2::ReadoutThread::getInProgressCount() {
 bool EmulatedFakeCamera2::ReadoutThread::threadLoop() {
     static const nsecs_t kWaitPerLoop = 10000000L; // 10 ms
     status_t res;
+    int32_t frameNumber;
 
     // Check if we're currently processing or just waiting
     {
@@ -924,6 +955,7 @@ bool EmulatedFakeCamera2::ReadoutThread::threadLoop() {
                 return true;
             } else {
                 Mutex::Autolock iLock(mInternalsMutex);
+                mReadySignal.signal();
                 mRequest = mInFlightQueue[mInFlightHead].request;
                 mBuffers  = mInFlightQueue[mInFlightHead].buffers;
                 mInFlightQueue[mInFlightHead].request = NULL;
@@ -945,17 +977,36 @@ bool EmulatedFakeCamera2::ReadoutThread::threadLoop() {
 
     if (!gotFrame) return true;
 
-    // Got sensor data, construct frame and send it out
-    ALOGV("Readout: Constructing metadata and frames");
     Mutex::Autolock iLock(mInternalsMutex);
 
-    camera_metadata_entry_t metadataMode;
+    camera_metadata_entry_t entry;
+    res = find_camera_metadata_entry(mRequest,
+            ANDROID_REQUEST_FRAME_COUNT,
+            &entry);
+    if (res != NO_ERROR) {
+        ALOGE("%s: error reading frame count tag: %s (%d)",
+                __FUNCTION__, strerror(-res), res);
+        mParent->signalError();
+        return false;
+    }
+    frameNumber = *entry.data.i32;
+
     res = find_camera_metadata_entry(mRequest,
             ANDROID_REQUEST_METADATA_MODE,
-            &metadataMode);
+            &entry);
+    if (res != NO_ERROR) {
+        ALOGE("%s: error reading metadata mode tag: %s (%d)",
+                __FUNCTION__, strerror(-res), res);
+        mParent->signalError();
+        return false;
+    }
 
-    if (*metadataMode.data.u8 == ANDROID_REQUEST_METADATA_FULL) {
-        ALOGV("Metadata requested, constructing");
+    // Got sensor data and request, construct frame and send it out
+    ALOGV("Readout: Constructing metadata and frames for request %d",
+            frameNumber);
+
+    if (*entry.data.u8 == ANDROID_REQUEST_METADATA_FULL) {
+        ALOGV("Readout: Metadata requested, constructing");
 
         camera_metadata_t *frame = NULL;
 
@@ -991,7 +1042,6 @@ bool EmulatedFakeCamera2::ReadoutThread::threadLoop() {
                 EMULATOR_SCENE_HOUROFDAY,
                 &requestedHour);
         if (res == NAME_NOT_FOUND) {
-            ALOGV("Adding vendor tag");
             res = add_camera_metadata_entry(frame,
                     EMULATOR_SCENE_HOUROFDAY,
                     &hourOfDay, 1);
@@ -999,19 +1049,18 @@ bool EmulatedFakeCamera2::ReadoutThread::threadLoop() {
                 ALOGE("Unable to add vendor tag");
             }
         } else if (res == OK) {
-            ALOGV("Replacing value in vendor tag");
             *requestedHour.data.i32 = hourOfDay;
         } else {
-            ALOGE("Error looking up vendor tag");
+            ALOGE("%s: Error looking up vendor tag", __FUNCTION__);
         }
 
         collectStatisticsMetadata(frame);
         // TODO: Collect all final values used from sensor in addition to timestamp
-
+        ALOGV("Readout: Enqueue frame %d", frameNumber);
         mParent->mFrameQueueDst->enqueue_frame(mParent->mFrameQueueDst,
                 frame);
     }
-
+    ALOGV("Readout: Free request");
     res = mParent->mRequestQueueSrc->free_request(mParent->mRequestQueueSrc, mRequest);
     if (res != NO_ERROR) {
         ALOGE("%s: Unable to return request buffer to queue: %d",
@@ -1022,17 +1071,17 @@ bool EmulatedFakeCamera2::ReadoutThread::threadLoop() {
     mRequest = NULL;
 
     int compressedBufferIndex = -1;
-    ALOGV("Processing %d buffers", mBuffers->size());
+    ALOGV("Readout: Processing %d buffers", mBuffers->size());
     for (size_t i = 0; i < mBuffers->size(); i++) {
         const StreamBuffer &b = (*mBuffers)[i];
-        ALOGV("  Buffer %d: Stream %d, %d x %d, format 0x%x, stride %d",
+        ALOGV("Readout:    Buffer %d: Stream %d, %d x %d, format 0x%x, stride %d",
                 i, b.streamId, b.width, b.height, b.format, b.stride);
         if (b.streamId >= 0) {
             if (b.format == HAL_PIXEL_FORMAT_BLOB) {
                 // Assumes only one BLOB buffer type per capture
                 compressedBufferIndex = i;
             } else {
-                ALOGV("Sending image buffer %d to output stream %d",
+                ALOGV("Readout:    Sending image buffer %d to output stream %d",
                         i, b.streamId);
                 GraphicBufferMapper::get().unlock(*(b.buffer));
                 const Stream &s = mParent->getStreamInfo(b.streamId);
@@ -1050,7 +1099,7 @@ bool EmulatedFakeCamera2::ReadoutThread::threadLoop() {
         delete mBuffers;
         mBuffers = NULL;
     } else {
-        ALOGV("Starting JPEG compression for buffer %d, stream %d",
+        ALOGV("Readout:  Starting JPEG compression for buffer %d, stream %d",
                 compressedBufferIndex,
                 (*mBuffers)[compressedBufferIndex].streamId);
         mParent->mJpegCompressor->start(mBuffers, captureTime);
@@ -1059,14 +1108,14 @@ bool EmulatedFakeCamera2::ReadoutThread::threadLoop() {
 
     Mutex::Autolock l(mInputMutex);
     mRequestCount--;
-
+    ALOGV("Readout: Done with request %d", frameNumber);
     return true;
 }
 
 status_t EmulatedFakeCamera2::ReadoutThread::collectStatisticsMetadata(
         camera_metadata_t *frame) {
     // Completely fake face rectangles, don't correspond to real faces in scene
-    ALOGV("Collecting statistics metadata");
+    ALOGV("Readout:    Collecting statistics metadata");
 
     status_t res;
     camera_metadata_entry_t entry;
