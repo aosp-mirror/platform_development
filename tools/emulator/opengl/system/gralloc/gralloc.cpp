@@ -217,8 +217,8 @@ static int gralloc_alloc(alloc_device_t* dev,
         case HAL_PIXEL_FORMAT_RAW_SENSOR:
             bpp = 2;
             align = 16*bpp;
-            if (! ((sw_read && hw_cam_write) || (sw_write && hw_cam_read) ) ) {
-                // Raw sensor data only goes to/from camera to CPU
+            if (! ((sw_read || hw_cam_read) && (sw_write || hw_cam_write) ) ) {
+                // Raw sensor data only goes between camera and CPU
                 return -EINVAL;
             }
             // Not expecting to actually create any GL surfaces for this
