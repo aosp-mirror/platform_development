@@ -193,6 +193,7 @@ private:
         camera_metadata_t *mRequest;
 
         Mutex mInternalsMutex; // Lock before accessing below members.
+        bool    mWaitingForReadout;
         bool    mNextNeedsJpeg;
         int32_t mNextFrameNumber;
         int64_t mNextExposureTime;
@@ -210,6 +211,7 @@ private:
 
         // Input
         status_t waitUntilRunning();
+        bool waitForReady(nsecs_t timeout);
         void setNextCapture(camera_metadata_t *request,
                 Buffers *buffers);
 
@@ -221,11 +223,14 @@ private:
         bool mRunning;
         bool threadLoop();
 
+        bool readyForNextCapture();
         status_t collectStatisticsMetadata(camera_metadata_t *frame);
 
         // Inputs
         Mutex mInputMutex; // Protects mActive, mInFlightQueue, mRequestCount
         Condition mInputSignal;
+        Condition mReadySignal;
+
         bool mActive;
 
         static const int kInFlightQueueSize = 4;
@@ -327,6 +332,7 @@ private:
     static const uint32_t kMaxRawStreamCount = 1;
     static const uint32_t kMaxProcessedStreamCount = 3;
     static const uint32_t kMaxJpegStreamCount = 1;
+    static const uint32_t kMaxBufferCount = 4;
     static const uint32_t kAvailableFormats[];
     static const uint32_t kAvailableRawSizes[];
     static const uint64_t kAvailableRawMinDurations[];

@@ -188,14 +188,17 @@ bool Sensor::waitForNewFrame(nsecs_t reltime,
     uint8_t *ret;
     if (mCapturedBuffers == NULL) {
         int res;
-        res = mReadoutComplete.waitRelative(mReadoutMutex, reltime);
+        res = mReadoutAvailable.waitRelative(mReadoutMutex, reltime);
         if (res == TIMED_OUT) {
             return false;
         } else if (res != OK || mCapturedBuffers == NULL) {
             ALOGE("Error waiting for sensor readout signal: %d", res);
             return false;
         }
+    } else {
+        mReadoutComplete.signal();
     }
+
     *captureTime = mCaptureTime;
     mCapturedBuffers = NULL;
     return true;
@@ -267,9 +270,14 @@ bool Sensor::threadLoop() {
     if (capturedBuffers != NULL) {
         ALOGVV("Sensor readout complete");
         Mutex::Autolock lock(mReadoutMutex);
+        if (mCapturedBuffers != NULL) {
+            ALOGV("Waiting for readout thread to catch up!");
+            mReadoutComplete.wait(mReadoutMutex);
+        }
+
         mCapturedBuffers = capturedBuffers;
         mCaptureTime = captureTime;
-        mReadoutComplete.signal();
+        mReadoutAvailable.signal();
         capturedBuffers = NULL;
     }
 
