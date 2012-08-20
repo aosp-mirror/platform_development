@@ -58,8 +58,6 @@ typedef long int       ssize_t;
 #  endif
 #endif
 
-#include <linux/types.h>
-
 /* 7.18.1.1 Exact-width integer types */
 typedef	__signed char		__int8_t;
 typedef	unsigned char		__uint8_t;
