@@ -70,7 +70,13 @@
 #define _ASM_TYPE_FUNCTION	#function
 #define _ASM_TYPE_OBJECT	#object
 #define _ENTRY(x) \
-	.text; _ALIGN_TEXT; .globl x; .type x,_ASM_TYPE_FUNCTION; x:
+	.text; _ALIGN_TEXT; .globl x; .type x,_ASM_TYPE_FUNCTION; x: .fnstart
+
+#define _ASM_SIZE(x)	.size x, .-x;
+
+#define _END(x) \
+	.fnend; \
+	_ASM_SIZE(x)
 
 #ifdef GPROF
 # ifdef __ELF__
@@ -86,8 +92,16 @@
 
 #define	ENTRY(y)	_ENTRY(_C_LABEL(y)); _PROF_PROLOGUE
 #define	ENTRY_NP(y)	_ENTRY(_C_LABEL(y))
+#define	END(y)		_END(_C_LABEL(y))
 #define	ASENTRY(y)	_ENTRY(_ASM_LABEL(y)); _PROF_PROLOGUE
 #define	ASENTRY_NP(y)	_ENTRY(_ASM_LABEL(y))
+#define	ASEND(y)	_END(_ASM_LABEL(y))
+
+#ifdef __ELF__
+#define ENTRY_PRIVATE(y)  ENTRY(y); .hidden _C_LABEL(y)
+#else
+#define ENTRY_PRIVATE(y)  ENTRY(y)
+#endif
 
 #define	ASMSTR		.asciz
 
