@@ -236,7 +236,14 @@ static int gralloc_alloc(alloc_device_t* dev,
             glType = GL_UNSIGNED_BYTE;
             break;
         case HAL_PIXEL_FORMAT_YCrCb_420_SP:
-            bpp = 0; // Chroma-subsampled format has fractional bpp
+            align = 1;
+            bpp = 1; // per-channel bpp
+            yuv_format = true;
+            // Not expecting to actually create any GL surfaces for this
+            break;
+        case HAL_PIXEL_FORMAT_YV12:
+            align = 16;
+            bpp = 1; // per-channel bpp
             yuv_format = true;
             // Not expecting to actually create any GL surfaces for this
             break;
@@ -254,9 +261,11 @@ static int gralloc_alloc(alloc_device_t* dev,
         // keep space for image on guest memory if SW access is needed
         // or if the camera is doing writing
         if (yuv_format) {
-            // For NV21
-            ashmem_size += w * h * 3 / 2;
-            stride = w;
+            size_t yStride = (w*bpp + (align - 1)) & ~(align-1);
+            size_t uvStride = (yStride / 2 + (align - 1)) & ~(align-1);
+            size_t uvHeight = h / 2;
+            ashmem_size += yStride * h + 2 * (uvHeight * uvStride);
+            stride = yStride / bpp;
         } else {
             size_t bpr = (w*bpp + (align-1)) & ~(align-1);
             ashmem_size += (bpr * h);
