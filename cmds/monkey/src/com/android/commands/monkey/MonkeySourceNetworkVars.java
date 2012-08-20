@@ -15,10 +15,10 @@
  */
 package com.android.commands.monkey;
 
+import android.hardware.display.DisplayManager;
 import android.os.Build;
 import android.os.SystemClock;
 import android.view.Display;
-import android.view.WindowManagerImpl;
 import android.util.DisplayMetrics;
 
 import com.android.commands.monkey.MonkeySourceNetwork.CommandQueue;
@@ -82,7 +82,7 @@ public class MonkeySourceNetworkVars {
         VAR_MAP.put("build.version.codename", new StaticVarGetter(Build.VERSION.CODENAME));
 
         // Display
-        Display display = WindowManagerImpl.getDefault().getDefaultDisplay();
+        Display display = DisplayManager.getInstance().getRealDisplay(Display.DEFAULT_DISPLAY);
         VAR_MAP.put("display.width", new StaticVarGetter(Integer.toString(display.getWidth())));
         VAR_MAP.put("display.height", new StaticVarGetter(Integer.toString(display.getHeight())));
 
