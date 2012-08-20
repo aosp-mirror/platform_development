@@ -85,3 +85,9 @@ void *mmap_portable(void *addr, size_t size, int prot, int flags, int fd, long o
 
     return ret;
 }
+
+extern int    mprotect(const void *, size_t, int);
+int mprotect_portable(const void *addr, size_t size, int prot)
+{
+    return mprotect(addr, size, mips_change_prot(prot));
+}
