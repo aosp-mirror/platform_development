@@ -187,6 +187,7 @@ class Sensor: private Thread, public virtual RefBase {
 
     Mutex mReadoutMutex; // Lock before accessing readout variables
     // Start of readout variables
+    Condition mReadoutAvailable;
     Condition mReadoutComplete;
     Buffers  *mCapturedBuffers;
     nsecs_t   mCaptureTime;
