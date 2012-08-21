@@ -63,9 +63,9 @@ extern int  __open(const char*, int, int);
 int open_portable(const char *pathname, int flags, ...)
 {
     mode_t  mode = 0;
-    flags |= O_LARGEFILE;
+    flags |= O_LARGEFILE_PORTABLE;
 
-    if (flags & O_CREAT)
+    if (flags & O_CREAT_PORTABLE)
     {
         va_list  args;
 
@@ -75,4 +75,23 @@ int open_portable(const char *pathname, int flags, ...)
     }
 
     return __open(pathname, mips_change_flags(flags), mode);
+}
+
+extern int  __openat(int, const char*, int, int);
+int openat_portable(int fd, const char *pathname, int flags, ...)
+{
+    mode_t  mode = 0;
+
+    flags |= O_LARGEFILE_PORTABLE;
+
+    if (flags & O_CREAT_PORTABLE)
+    {
+        va_list  args;
+
+        va_start(args, flags);
+        mode = (mode_t) va_arg(args, int);
+        va_end(args);
+    }
+
+    return __openat(fd, pathname, mips_change_flags(flags), mode);
 }
