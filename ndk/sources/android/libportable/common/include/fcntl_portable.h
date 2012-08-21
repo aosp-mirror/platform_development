@@ -95,4 +95,20 @@ struct flock64 {
 };
 */
 
+#ifndef F_GETLK_PORTABLE
+#define F_GETLK_PORTABLE 5
+#define F_SETLK_PORTABLE 6
+#define F_SETLKW_PORTABLE 7
+#endif
+#ifndef F_SETOWN_PORTABLE
+#define F_SETOWN_PORTABLE 8
+#define F_GETOWN_PORTABLE 9
+#endif
+
+#ifndef F_GETLK64_PORTABLE
+#define F_GETLK64_PORTABLE 12
+#define F_SETLK64_PORTABLE 13
+#define F_SETLKW64_PORTABLE 14
+#endif
+
 #endif /* _FCNTL_PORTABLE_H */
