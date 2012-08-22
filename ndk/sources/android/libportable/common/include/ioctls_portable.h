@@ -171,4 +171,13 @@ struct sgttyb_portable {
 #define TIOCGLTC_PORTABLE    _IOR_PORTABLE('t',116,struct ltchars_portable)/* get local special chars*/
 #define OTIOCCONS_PORTABLE   _IO_PORTABLE('t', 98)    /* for hp300 -- sans int arg */
 
+/* Derived from development/ndk/platforms/android-3/arch-arm/include/asm/sockios.h */
+
+#define FIOSETOWN_PORTABLE 0x8901
+#define SIOCSPGRP_PORTABLE 0x8902
+#define FIOGETOWN_PORTABLE 0x8903
+#define SIOCGPGRP_PORTABLE 0x8904
+#define SIOCATMARK_PORTABLE 0x8905
+#define SIOCGSTAMP_PORTABLE 0x8906
+
 #endif /* _IOCTLS_PORTABLE_H */
