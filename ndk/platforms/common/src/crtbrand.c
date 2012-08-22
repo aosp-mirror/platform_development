@@ -32,26 +32,17 @@
  */
 typedef int int32_t[sizeof(int) == 4];
 
-#define ABI_VENDOR	"GNU"
-#define ABI_SECTION	".note.ABI-tag"
+#define ABI_VENDOR	"Android"
+#define ABI_SECTION	".note.android.ident"
 #define ABI_NOTETYPE	1
-#define ABI_OS		0
-#define ABI_OS_MAJOR	2
-#define ABI_OS_MINOR	6
-#define ABI_OS_TEENY	15
-#define ABI_ANDROID	1
 #define ABI_ANDROID_API	PLATFORM_SDK_VERSION
 
 /*
- * Special ".note" entry specifying the ABI version.  See
- * http://refspecs.linuxfoundation.org/LSB_4.1.0/LSB-Core-generic/LSB-Core-generic/noteabitag.html
- * for more information.
+ * Special ".note" entry to tag an Android binary and specify the ABI version.
  *
  * For all arches except sparc, gcc emits the section directive for the
- * following struct with a PROGBITS type.  However, newer versions of binutils
- * (after 2.16.90) require the section to be of NOTE type, to guarantee that the
- * .note.ABI-tag section correctly ends up in the first page of the final
- * executable.
+ * following struct with a PROGBITS type.  However, the section should be
+ * of NOTE type, according to the Generic SysV ABI spec.
  *
  * Unfortunately, there is no clean way to tell gcc to use another section type,
  * so this C file (or the C file that includes it) must be compiled in multiple
@@ -69,21 +60,11 @@ static const struct {
     int32_t	descsz;
     int32_t	type;
     char	name[sizeof ABI_VENDOR];
-    int32_t	os;
-    int32_t	major;
-    int32_t	minor;
-    int32_t	teeny;
-    int32_t	os_variant;
     int32_t	android_api;
 } abitag __attribute__ ((section (ABI_SECTION), aligned(4), used)) = {
     sizeof ABI_VENDOR,
-    6 * sizeof(int32_t),
+    sizeof(int32_t),
     ABI_NOTETYPE,
     ABI_VENDOR,
-    ABI_OS,
-    ABI_OS_MAJOR,
-    ABI_OS_MINOR,
-    ABI_OS_TEENY,
-    ABI_ANDROID,
     ABI_ANDROID_API,
 };
