@@ -18,6 +18,7 @@
 #include <sys/ioctl.h>
 #include <ioctls_portable.h>
 #include <termios.h>
+#include <linux/sockios.h>
 
 #if FIONREAD_PORTABLE==FIONREAD
 #error Bad build environment
@@ -195,6 +196,18 @@ static inline int mips_change_request(int request)
         return TIOCGLTC;
     case OTIOCCONS_PORTABLE:
         return OTIOCCONS;
+    case FIOSETOWN_PORTABLE:
+        return FIOSETOWN;
+    case SIOCSPGRP_PORTABLE:
+        return SIOCSPGRP;
+    case FIOGETOWN_PORTABLE:
+        return FIOGETOWN;
+    case SIOCGPGRP_PORTABLE:
+        return SIOCGPGRP;
+    case SIOCATMARK_PORTABLE:
+        return SIOCATMARK;
+    case SIOCGSTAMP_PORTABLE:
+        return SIOCGSTAMP;
     }
     return request;
 }
