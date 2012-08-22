@@ -32,6 +32,7 @@ ifeq ($(TARGET_ARCH),mips)
 libportable_arch_src_files += \
 			arch-mips/ioctl.c \
 			arch-mips/mmap.c \
+			arch-mips/resource.c \
 			arch-mips/stat.c \
 			arch-mips/statfs.c \
 			arch-mips/open.c \
