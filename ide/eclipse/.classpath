@@ -4,6 +4,7 @@
 	<classpathentry kind="src" path="packages/apps/Camera/src"/>
 	<classpathentry kind="src" path="packages/apps/Browser/src"/>
 	<classpathentry kind="src" path="packages/apps/Calendar/src"/>
+	<classpathentry kind="src" path="packages/apps/Calendar/extensions_src"/>
 	<classpathentry kind="src" path="packages/apps/Calculator/src"/>
 	<classpathentry kind="src" path="packages/apps/CertInstaller/src"/>
 	<classpathentry kind="src" path="packages/apps/Contacts/src"/>
@@ -17,6 +18,7 @@
 	<classpathentry kind="src" path="packages/apps/Launcher2/src"/>
 	<classpathentry kind="src" path="packages/apps/Mms/src"/>
 	<classpathentry kind="src" path="packages/apps/Nfc/src"/>
+	<classpathentry kind="src" path="packages/apps/Nfc/nci/src"/>
 	<classpathentry kind="src" path="packages/apps/PackageInstaller/src"/>
 	<classpathentry kind="src" path="packages/apps/Phone/src"/>
 	<classpathentry kind="src" path="packages/apps/QuickSearchBox/src"/>
@@ -108,6 +110,7 @@
 	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/framework_intermediates/src/telephony/java"/>
 	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/framework_intermediates/src/voip/java"/>
 	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/framework_intermediates/src/wifi/java"/>
+	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/NfcLogTags_intermediates/src/src"/>
 	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/services_intermediates/src"/>
 	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/telephony-common_intermediates/src/src/java"/>
 	<classpathentry kind="src" path="out/target/common/R"/>
