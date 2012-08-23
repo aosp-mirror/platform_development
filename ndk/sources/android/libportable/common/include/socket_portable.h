@@ -17,7 +17,7 @@
 #ifndef _SOCKET_PORTABLE_H_
 #define _SOCKET_PORTABLE_H_
 
-/* From ndk/platforms/android-3/include/sys/socket.h */
+/* Derived from development/ndk/platforms/android-3/include/sys/socket.h */
 #define SOCK_STREAM_PORTABLE    1
 #define SOCK_DGRAM_PORTABLE     2
 #define SOCK_RAW_PORTABLE       3
@@ -26,7 +26,7 @@
 #define SOCK_PACKET_PORTABLE    10
 
 
-/* Derived from android-3/arch-arm/include/asm/socket.h */
+/* Derived from development/ndk/platforms/android-3/arch-arm/include/asm/socket.h */
 
 #define SOL_SOCKET_PORTABLE     1
 
