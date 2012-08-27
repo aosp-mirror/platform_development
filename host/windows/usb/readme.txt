@@ -15,7 +15,7 @@ Root of the installation folder must contain:
     * WdfCoInstaller01007.dll
     * WinUSBCoInstaller.dll
     * WUDFUpdate_01007.dll
-    
+
 File contained in i386 and amd64 subfolders are Microsoft distributives needed
 to install WinUsb framework. These files can be obtained from WDK 'redist'
 folder, respectively to the OS: copy x86 files to i386 subfolder, and amd64
