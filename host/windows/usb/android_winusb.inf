@@ -6,15 +6,10 @@ Signature           = "$Windows NT$"
 Class               = AndroidUsbDeviceClass
 ClassGuid           = {3F966BD9-FA04-4ec5-991C-D326973B5128}
 Provider            = %ProviderName%
-DriverVer           = 05/24/2012,6.0.0000.00000
+DriverVer           = 08/22/2012,7.0.0000.00000
 CatalogFile.NTx86   = androidwinusb86.cat
 CatalogFile.NTamd64 = androidwinusba64.cat
 
-;
-; This section seems to be required for WinUsb driver installation.
-; If this section is removed the installer will report an error
-; "Required section not found in INF file".
-;
 [ClassInstall32]
 Addreg = AndroidWinUsbClassReg
 
@@ -22,8 +17,10 @@ Addreg = AndroidWinUsbClassReg
 HKR,,,0,%ClassName%
 HKR,,Icon,,-1
 
+
 [Manufacturer]
 %ProviderName% = Google, NTx86, NTamd64
+
 
 [Google.NTx86]
 
@@ -46,6 +43,19 @@ HKR,,Icon,,-1
 %CompositeAdbInterface%     = USB_Install, USB\VID_18D1&PID_4E42&MI_01
 %CompositeAdbInterface%     = USB_Install, USB\VID_18D1&PID_4E44&MI_01
 
+;Google Nexus Q
+%SingleBootLoaderInterface% = USB_Install, USB\VID_18D1&PID_2C10
+%SingleAdbInterface%        = USB_Install, USB\VID_18D1&PID_2C11
+
+;Google Nexus (generic)
+%SingleBootLoaderInterface% = USB_Install, USB\VID_18D1&PID_4EE0
+%SingleAdbInterface%        = USB_Install, USB\VID_18D1&PID_4EE1
+%CompositeAdbInterface%     = USB_Install, USB\VID_18D1&PID_4EE2
+%CompositeAdbInterface%     = USB_Install, USB\VID_18D1&PID_4EE2&MI_01
+%SingleAdbInterface%        = USB_Install, USB\VID_18D1&PID_4EE3
+%CompositeAdbInterface%     = USB_Install, USB\VID_18D1&PID_4EE4&MI_01
+
+
 [Google.NTamd64]
 
 ;Google Nexus One
@@ -66,6 +76,18 @@ HKR,,Icon,,-1
 %CompositeAdbInterface%     = USB_Install, USB\VID_18D1&PID_4E42
 %CompositeAdbInterface%     = USB_Install, USB\VID_18D1&PID_4E42&MI_01
 %CompositeAdbInterface%     = USB_Install, USB\VID_18D1&PID_4E44&MI_01
+
+;Google Nexus Q
+%SingleBootLoaderInterface% = USB_Install, USB\VID_18D1&PID_2C10
+%SingleAdbInterface%        = USB_Install, USB\VID_18D1&PID_2C11
+
+;Google Nexus (generic)
+%SingleBootLoaderInterface% = USB_Install, USB\VID_18D1&PID_4EE0
+%SingleAdbInterface%        = USB_Install, USB\VID_18D1&PID_4EE1
+%CompositeAdbInterface%     = USB_Install, USB\VID_18D1&PID_4EE2
+%CompositeAdbInterface%     = USB_Install, USB\VID_18D1&PID_4EE2&MI_01
+%SingleAdbInterface%        = USB_Install, USB\VID_18D1&PID_4EE3
+%CompositeAdbInterface%     = USB_Install, USB\VID_18D1&PID_4EE4&MI_01
 
 [USB_Install]
 Include = winusb.inf
@@ -127,4 +149,4 @@ CompositeAdbInterface       = "Android Composite ADB Interface"
 SingleBootLoaderInterface   = "Android Bootloader Interface"
 WinUSB_SvcDesc              = "Android USB Driver"
 DISK_NAME                   = "Android WinUsb installation disk"
-ClassName                   = "Android Phone"
+ClassName                   = "Android Device"
