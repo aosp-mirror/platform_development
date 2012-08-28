@@ -1739,6 +1739,7 @@ status_t EmulatedFakeCamera2::constructStaticInfo(
     // android.jpeg
 
     static const int32_t jpegThumbnailSizes[] = {
+            0, 0,
             160, 120,
             320, 240
      };
