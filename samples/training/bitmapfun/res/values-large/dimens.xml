@@ -17,7 +17,7 @@
 
 <resources>
 
-    <dimen name="image_thumbnail_size">150dp</dimen>
-    <dimen name="image_thumbnail_spacing">1dp</dimen>
+    <dimen name="image_thumbnail_size">148dp</dimen>
+    <dimen name="image_thumbnail_spacing">2dp</dimen>
 
 </resources>
