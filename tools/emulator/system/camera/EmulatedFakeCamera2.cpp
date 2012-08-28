@@ -259,7 +259,7 @@ int EmulatedFakeCamera2::allocateStream(
         uint32_t *max_buffers) {
     Mutex::Autolock l(mMutex);
 
-    if (format != CAMERA2_HAL_PIXEL_FORMAT_OPAQUE) {
+    if (format != HAL_PIXEL_FORMAT_IMPLEMENTATION_DEFINED) {
         unsigned int numFormats = sizeof(kAvailableFormats) / sizeof(uint32_t);
         unsigned int formatIdx = 0;
         unsigned int sizeOffsetIdx = 0;
@@ -270,10 +270,6 @@ int EmulatedFakeCamera2::allocateStream(
             ALOGE("%s: Format 0x%x is not supported", __FUNCTION__, format);
             return BAD_VALUE;
         }
-    } else {
-        // Translate to emulator's magic format.
-        // Note: It is assumed that this is a processed format (not raw or JPEG).
-        format = GRALLOC_EMULATOR_PIXEL_FORMAT_AUTO;
     }
 
     const uint32_t *availableSizes;
@@ -290,7 +286,7 @@ int EmulatedFakeCamera2::allocateStream(
                     sizeof(kAvailableJpegSizesBack)/sizeof(uint32_t) :
                     sizeof(kAvailableJpegSizesFront)/sizeof(uint32_t);
             break;
-        case GRALLOC_EMULATOR_PIXEL_FORMAT_AUTO:
+        case HAL_PIXEL_FORMAT_IMPLEMENTATION_DEFINED:
         case HAL_PIXEL_FORMAT_RGBA_8888:
         case HAL_PIXEL_FORMAT_YV12:
         case HAL_PIXEL_FORMAT_YCrCb_420_SP:
@@ -384,9 +380,9 @@ int EmulatedFakeCamera2::registerStreamBuffers(
 
     int finalFormat = streamBuffer->format;
 
-    if (finalFormat == GRALLOC_EMULATOR_PIXEL_FORMAT_AUTO) {
+    if (finalFormat == HAL_PIXEL_FORMAT_IMPLEMENTATION_DEFINED) {
         ALOGE("%s: Stream %d: Bad final pixel format "
-                "GRALLOC_EMULATOR_PIXEL_FORMAT_AUTO; "
+                "HAL_PIXEL_FORMAT_IMPLEMENTATION_DEFINED; "
                 "concrete pixel format required!", __FUNCTION__, stream_id);
         return BAD_VALUE;
     }
@@ -669,7 +665,7 @@ bool EmulatedFakeCamera2::ConfigureThread::threadLoop() {
         for (size_t i = 0; i < streams.count; i++) {
             int streamId = streams.data.u8[i];
             const Stream &s = mParent->getStreamInfo(streamId);
-            if (s.format == GRALLOC_EMULATOR_PIXEL_FORMAT_AUTO) {
+            if (s.format == HAL_PIXEL_FORMAT_IMPLEMENTATION_DEFINED) {
                 ALOGE("%s: Stream %d does not have a concrete pixel format, but "
                         "is included in a request!", __FUNCTION__, streamId);
                 mParent->signalError();
