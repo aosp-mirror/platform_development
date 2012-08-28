@@ -18,6 +18,7 @@ package com.example.android.bitmapfun.ui;
 
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -25,6 +26,7 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 
 import com.example.android.bitmapfun.R;
+import com.example.android.bitmapfun.util.ImageFetcher;
 import com.example.android.bitmapfun.util.ImageWorker;
 import com.example.android.bitmapfun.util.Utils;
 
@@ -32,22 +34,22 @@ import com.example.android.bitmapfun.util.Utils;
  * This fragment will populate the children of the ViewPager from {@link ImageDetailActivity}.
  */
 public class ImageDetailFragment extends Fragment {
-    private static final String IMAGE_DATA_EXTRA = "resId";
-    private int mImageNum;
+    private static final String IMAGE_DATA_EXTRA = "extra_image_data";
+    private String mImageUrl;
     private ImageView mImageView;
-    private ImageWorker mImageWorker;
+    private ImageFetcher mImageFetcher;
 
     /**
      * Factory method to generate a new instance of the fragment given an image number.
      *
-     * @param imageNum The image number within the parent adapter to load
+     * @param imageUrl The image url to load
      * @return A new instance of ImageDetailFragment with imageNum extras
      */
-    public static ImageDetailFragment newInstance(int imageNum) {
+    public static ImageDetailFragment newInstance(String imageUrl) {
         final ImageDetailFragment f = new ImageDetailFragment();
 
         final Bundle args = new Bundle();
-        args.putInt(IMAGE_DATA_EXTRA, imageNum);
+        args.putString(IMAGE_DATA_EXTRA, imageUrl);
         f.setArguments(args);
 
         return f;
@@ -59,13 +61,13 @@ public class ImageDetailFragment extends Fragment {
     public ImageDetailFragment() {}
 
     /**
-     * Populate image number from extra, use the convenience factory method
-     * {@link ImageDetailFragment#newInstance(int)} to create this fragment.
+     * Populate image using a url from extras, use the convenience factory method
+     * {@link ImageDetailFragment#newInstance(String)} to create this fragment.
      */
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mImageNum = getArguments() != null ? getArguments().getInt(IMAGE_DATA_EXTRA) : -1;
+        mImageUrl = getArguments() != null ? getArguments().getString(IMAGE_DATA_EXTRA) : null;
     }
 
     @Override
@@ -84,23 +86,23 @@ public class ImageDetailFragment extends Fragment {
         // Use the parent activity to load the image asynchronously into the ImageView (so a single
         // cache can be used over all pages in the ViewPager
         if (ImageDetailActivity.class.isInstance(getActivity())) {
-            mImageWorker = ((ImageDetailActivity) getActivity()).getImageWorker();
-            mImageWorker.loadImage(mImageNum, mImageView);
+            mImageFetcher = ((ImageDetailActivity) getActivity()).getImageFetcher();
+            mImageFetcher.loadImage(mImageUrl, mImageView);
         }
 
         // Pass clicks on the ImageView to the parent activity to handle
-        if (OnClickListener.class.isInstance(getActivity()) && Utils.hasActionBar()) {
+        if (OnClickListener.class.isInstance(getActivity()) && Utils.hasHoneycomb()) {
             mImageView.setOnClickListener((OnClickListener) getActivity());
         }
     }
 
-    /**
-     * Cancels the asynchronous work taking place on the ImageView, called by the adapter backing
-     * the ViewPager when the child is destroyed.
-     */
-    public void cancelWork() {
-        ImageWorker.cancelWork(mImageView);
-        mImageView.setImageDrawable(null);
-        mImageView = null;
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        if (mImageView != null) {
+            // Cancel any pending image work
+            ImageWorker.cancelWork(mImageView);
+            mImageView.setImageDrawable(null);
+        }
     }
 }

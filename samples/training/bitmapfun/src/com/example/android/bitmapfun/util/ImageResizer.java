@@ -24,13 +24,15 @@ import android.util.Log;
 
 import com.example.android.bitmapfun.BuildConfig;
 
+import java.io.FileDescriptor;
+
 /**
  * A simple subclass of {@link ImageWorker} that resizes images from resources given a target width
  * and height. Useful for when the input images might be too large to simply load directly into
  * memory.
  */
 public class ImageResizer extends ImageWorker {
-    private static final String TAG = "ImageWorker";
+    private static final String TAG = "ImageResizer";
     protected int mImageWidth;
     protected int mImageHeight;
 
@@ -88,8 +90,7 @@ public class ImageResizer extends ImageWorker {
         if (BuildConfig.DEBUG) {
             Log.d(TAG, "processBitmap - " + resId);
         }
-        return decodeSampledBitmapFromResource(
-                mContext.getResources(), resId, mImageWidth, mImageHeight);
+        return decodeSampledBitmapFromResource(mResources, resId, mImageWidth, mImageHeight);
     }
 
     @Override
@@ -132,7 +133,7 @@ public class ImageResizer extends ImageWorker {
      * @return A bitmap sampled down from the original with the same aspect ratio and dimensions
      *         that are equal to or greater than the requested width and height
      */
-    public static synchronized Bitmap decodeSampledBitmapFromFile(String filename,
+    public static Bitmap decodeSampledBitmapFromFile(String filename,
             int reqWidth, int reqHeight) {
 
         // First decode with inJustDecodeBounds=true to check dimensions
@@ -146,6 +147,31 @@ public class ImageResizer extends ImageWorker {
         // Decode bitmap with inSampleSize set
         options.inJustDecodeBounds = false;
         return BitmapFactory.decodeFile(filename, options);
+    }
+
+    /**
+     * Decode and sample down a bitmap from a file input stream to the requested width and height.
+     *
+     * @param fileDescriptor The file descriptor to read from
+     * @param reqWidth The requested width of the resulting bitmap
+     * @param reqHeight The requested height of the resulting bitmap
+     * @return A bitmap sampled down from the original with the same aspect ratio and dimensions
+     *         that are equal to or greater than the requested width and height
+     */
+    public static Bitmap decodeSampledBitmapFromDescriptor(
+            FileDescriptor fileDescriptor, int reqWidth, int reqHeight) {
+
+        // First decode with inJustDecodeBounds=true to check dimensions
+        final BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inJustDecodeBounds = true;
+        BitmapFactory.decodeFileDescriptor(fileDescriptor, null, options);
+
+        // Calculate inSampleSize
+        options.inSampleSize = calculateInSampleSize(options, reqWidth, reqHeight);
+
+        // Decode bitmap with inSampleSize set
+        options.inJustDecodeBounds = false;
+        return BitmapFactory.decodeFileDescriptor(fileDescriptor, null, options);
     }
 
     /**
