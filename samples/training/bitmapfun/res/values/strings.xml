@@ -19,12 +19,13 @@
 
     <string name="app_name">BitmapFun</string>
     <string name="app_description">This is a sample application for the Android Training class
-        "Displaying Bitmaps Efficiently"
+        &quot;Displaying Bitmaps Efficiently&quot;
         (http://developer.android.com/training/displaying-bitmaps/display-bitmap.html). It is not
         designed to be a full reference application but to demonstrate the concepts discussed in
         training course.</string>
     <string name="clear_cache_menu">Clear Caches</string>
-    <string name="clear_cache_complete">Caches have been cleared</string>
+    <string name="clear_cache_complete_toast">Caches have been cleared</string>
     <string name="imageview_description">Image Thumbnail</string>
+    <string name="no_network_connection_toast">No network connection found</string>
 
 </resources>
