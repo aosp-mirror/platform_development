@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+  <string name="recovery_installing">Systemupdate wird installiert\u2026</string>
+  <string name="recovery_erasing">Löschen\u2026</string>
+  <string name="recovery_no_command">Kein Befehl.</string>
+  <string name="recovery_error">Fehler!</string>
+
+</resources>
