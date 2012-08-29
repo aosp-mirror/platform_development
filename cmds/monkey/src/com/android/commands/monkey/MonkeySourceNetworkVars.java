@@ -15,7 +15,7 @@
  */
 package com.android.commands.monkey;
 
-import android.hardware.display.DisplayManager;
+import android.hardware.display.DisplayManagerGlobal;
 import android.os.Build;
 import android.os.SystemClock;
 import android.view.Display;
@@ -82,7 +82,7 @@ public class MonkeySourceNetworkVars {
         VAR_MAP.put("build.version.codename", new StaticVarGetter(Build.VERSION.CODENAME));
 
         // Display
-        Display display = DisplayManager.getInstance().getRealDisplay(Display.DEFAULT_DISPLAY);
+        Display display = DisplayManagerGlobal.getInstance().getRealDisplay(Display.DEFAULT_DISPLAY);
         VAR_MAP.put("display.width", new StaticVarGetter(Integer.toString(display.getWidth())));
         VAR_MAP.put("display.height", new StaticVarGetter(Integer.toString(display.getHeight())));
 
