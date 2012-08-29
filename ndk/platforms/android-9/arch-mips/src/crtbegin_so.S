@@ -38,24 +38,7 @@ __FINI_ARRAY__:
 	.long -1
 	.long __do_global_dtors_aux
 
-	.section .ctors, "aw"
-	.type __CTOR_LIST__, @object
-	.globl __CTOR_LIST__
-__CTOR_LIST__:
-	.long -1
-
-	.section .dtors, "aw"
-	.type __DTOR_LIST__, @object
-	.globl __DTOR_LIST__
-__DTOR_LIST__:
-	.long -1
-
 	.abicalls
-	.section	.eh_frame,"a",@progbits
-	.align	2
-	.type	__EH_FRAME_BEGIN__, @object
-	.size	__EH_FRAME_BEGIN__, 0
-__EH_FRAME_BEGIN__:
 	.text
 	.align	2
 	.set	nomips16
@@ -105,8 +88,6 @@ $L8:
 	.size	__do_global_dtors_aux, .-__do_global_dtors_aux
 	.local	completed.1269
 	.comm	completed.1269,1,1
-	.local	object.1265
-	.comm	object.1265,24,4
 	.weak	__cxa_finalize
 
 .include "__dso_handle.S"
