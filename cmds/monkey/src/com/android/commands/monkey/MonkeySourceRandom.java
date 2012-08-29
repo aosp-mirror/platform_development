@@ -18,7 +18,7 @@ package com.android.commands.monkey;
 
 import android.content.ComponentName;
 import android.graphics.PointF;
-import android.hardware.display.DisplayManager;
+import android.hardware.display.DisplayManagerGlobal;
 import android.os.SystemClock;
 import android.view.Display;
 import android.view.KeyCharacterMap;
@@ -259,7 +259,7 @@ public class MonkeySourceRandom implements MonkeyEventSource {
      *
      */
     private void generatePointerEvent(Random random, int gesture) {
-        Display display = DisplayManager.getInstance().getRealDisplay(Display.DEFAULT_DISPLAY);
+        Display display = DisplayManagerGlobal.getInstance().getRealDisplay(Display.DEFAULT_DISPLAY);
 
         PointF p1 = randomPoint(random, display);
         PointF v1 = randomVector(random);
