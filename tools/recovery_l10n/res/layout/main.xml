@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="vertical"
+              android:layout_width="fill_parent"
+              android:layout_height="wrap_content"
+              >
+
+  <Spinner android:id="@+id/which"
+           android:layout_width="wrap_content"
+           android:layout_height="wrap_content"
+           />
+
+  <Button android:id="@+id/go"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="@string/go"
+          />
+
+  <TextView android:id="@+id/text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="#ffffffff"
+            android:background="#ff000000"
+            android:maxWidth="480px"
+            />
+
+
+</LinearLayout>
+
+
