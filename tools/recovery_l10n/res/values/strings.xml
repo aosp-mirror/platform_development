@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <!-- Do not translate. -->
+  <string translatable="false" name="go">Go</string>
+
+  <!-- Do not translate. -->
+  <string-array translatable="false" name="string_options">
+    <item>installing</item>
+    <item>erasing</item>
+    <item>no_command</item>
+    <item>error</item>
+  </string-array>
+
+  <!-- Displayed on the screen beneath the animated android while the
+       system is installing an update. [CHAR LIMIT=60] -->
+  <string name="recovery_installing">Installing system update\u2026</string>
+
+  <!-- Displayed on the screen beneath the animated android while the
+       system is erasing a partition (either a data wipe aka "factory
+       reset", or a cache wipe). [CHAR LIMIT=60] -->
+  <string name="recovery_erasing">Erasing\u2026</string>
+
+  <!-- Displayed on the screen when the user has gotten into recovery
+       mode without a command to run.  Will not normally happen, but
+       users (especially developers) may boot into recovery mode
+       manually via special key combinations.  [CHAR LIMIT=60] -->
+  <string name="recovery_no_command">No command.</string>
+
+  <!-- Displayed on the triangle-! screen when a system update
+       installation or data wipe procedure encounters an error.  [CHAR
+       LIMIT=60] -->
+  <string name="recovery_error">Error!</string>
+
+</resources>
