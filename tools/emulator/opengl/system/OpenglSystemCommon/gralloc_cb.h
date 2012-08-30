@@ -25,18 +25,6 @@
 #define CB_HANDLE_NUM_INTS(nfds) (int)((sizeof(cb_handle_t) - (nfds)*sizeof(int)) / sizeof(int))
 
 //
-// Emulator-specific gralloc formats
-//
-enum {
-    // Request that gralloc select the proper format given the usage
-    // flags. Pass this as the format to gralloc_alloc, and then the concrete
-    // format can be found in cb_handle_t.format. It is invalid for
-    // cb_handle_t.format to be AUTO; it must be a concrete format in either the
-    // standard HAL_PIXEL_FORMAT enum or other values in this enum.
-    GRALLOC_EMULATOR_PIXEL_FORMAT_AUTO = 0x100
-};
-
-//
 // Our buffer handle structure
 //
 struct cb_handle_t : public native_handle {

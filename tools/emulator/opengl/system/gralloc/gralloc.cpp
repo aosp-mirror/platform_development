@@ -156,7 +156,7 @@ static int gralloc_alloc(alloc_device_t* dev,
 
     // Pick the right concrete pixel format given the endpoints as encoded in
     // the usage bits.  Every end-point pair needs explicit listing here.
-    if (format == GRALLOC_EMULATOR_PIXEL_FORMAT_AUTO) {
+    if (format == HAL_PIXEL_FORMAT_IMPLEMENTATION_DEFINED) {
         // Camera as producer
         if (usage & GRALLOC_USAGE_HW_CAMERA_WRITE) {
             if (usage & GRALLOC_USAGE_HW_TEXTURE) {
@@ -165,10 +165,13 @@ static int gralloc_alloc(alloc_device_t* dev,
             } else if (usage & GRALLOC_USAGE_HW_VIDEO_ENCODER) {
                 // Camera-to-encoder is NV21
                 format = HAL_PIXEL_FORMAT_YCrCb_420_SP;
+            } else if (usage & GRALLOC_USAGE_HW_CAMERA_ZSL) {
+                // Camera-to-ZSL-queue is RGB_888
+                format = HAL_PIXEL_FORMAT_RGB_888;
             }
         }
 
-        if (format == GRALLOC_EMULATOR_PIXEL_FORMAT_AUTO) {
+        if (format == HAL_PIXEL_FORMAT_IMPLEMENTATION_DEFINED) {
             ALOGE("gralloc_alloc: Requested auto format selection, "
                     "but no known format for this usage: %d x %d, usage %x",
                     w, h, usage);
