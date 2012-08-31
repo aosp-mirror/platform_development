@@ -112,6 +112,10 @@
     <string name="redirect_getter">Enter the text that will be used by the main activity.  Press back to cancel.</string>
     <string name="apply">Apply</string>
 
+    <string name="activity_presentation">App/Activity/Presentation</string>
+    <string name="presentation_activity_text">This activity demonstrates how to use the Presentation activity to show content on other Displays.  Try connecting a secondary display and watch what happens.</string>
+    <string name="presentation_channel_text">You\'re watching channel %1$d on display %2$d.</string>
+
     <string name="fragment_alert_dialog">App/Fragment/Alert Dialog</string>
 
     <string name="fragment_arguments">App/Fragment/Arguments</string>
