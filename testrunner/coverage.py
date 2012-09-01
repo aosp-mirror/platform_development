@@ -289,25 +289,6 @@ def EnableCoverageBuild():
   os.environ["EMMA_INSTRUMENT"] = "true"
 
 
-def TestDeviceCoverageSupport(adb):
-  """Check if device has support for generating code coverage metrics.
-
-  This tries to dump emma help information on device, a response containing
-  help information will indicate that emma is already on system class path.
-
-  Returns:
-    True if device can support code coverage. False otherwise.
-  """
-  try:
-    output = adb.SendShellCommand("exec app_process / emma -h")
-
-    if output.find('emma usage:') == 0:
-      return True
-  except errors.AbortError:
-    pass
-  return False
-
-
 def Run():
   """Does coverage operations based on command line args."""
   # TODO: do we want to support combining coverage for a single target

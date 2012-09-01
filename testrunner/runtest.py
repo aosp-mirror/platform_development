@@ -33,6 +33,7 @@ Do runtest --help to see full list of options.
 import glob
 import optparse
 import os
+import re
 from sets import Set
 import sys
 import time
@@ -72,6 +73,13 @@ class TestRunner(object):
   _DEFAULT_JOBS = 16
 
   _DALVIK_VERIFIER_OFF_PROP = "dalvik.vm.dexopt-flags = v=n"
+
+  # regular expression to match install: statements in make output
+  _RE_MAKE_INSTALL = re.compile(r'Install:\s(.+)')
+
+  # regular expression to find remote device path from a file path relative
+  # to build root
+  _RE_MAKE_INSTALL_PATH = re.compile(r'out\/target\/product\/\w+\/(.+)$')
 
   def __init__(self):
     # disable logging of timestamp
@@ -243,23 +251,11 @@ class TestRunner(object):
       self._adb.EnableAdbRoot()
     else:
       logger.Log("adb root")
-    rebuild_libcore = False
     if target_set:
       if self._options.coverage:
         coverage.EnableCoverageBuild()
-        # hack to remove core library intermediates
-        # hack is needed because:
-        # 1. EMMA_INSTRUMENT changes what source files to include in libcore
-        #    but it does not trigger a rebuild
-        # 2. there's no target (like "clear-intermediates") to remove the files
-        #    decently
-        rebuild_libcore = not coverage.TestDeviceCoverageSupport(self._adb)
-        if rebuild_libcore:
-          cmd = "rm -rf %s" % os.path.join(
-              self._root_path,
-              "out/target/common/obj/JAVA_LIBRARIES/core_intermediates/")
-          logger.Log(cmd)
-          run_command.RunCommand(cmd, return_output=False)
+        target_set.append("external/emma/Android.mk")
+        # TODO: detect if external/emma exists
 
       target_build_string = " ".join(target_set)
       extra_args_string = " ".join(extra_args_set)
@@ -270,17 +266,38 @@ class TestRunner(object):
           target_build_string, self._options.make_jobs, self._root_path,
           extra_args_string)
       logger.Log(cmd)
+      if not self._options.preview:
+        output = run_command.RunCommand(cmd, return_output=True, timeout_time=600)
+        self._DoInstall(output)
 
-      if self._options.preview:
-        # in preview mode, just display to the user what command would have been
-        # run
-        logger.Log("adb sync")
-      else:
-        # set timeout for build to 10 minutes, since libcore may need to
-        # be rebuilt
-        run_command.RunCommand(cmd, return_output=False, timeout_time=600)
-        logger.Log("Syncing to device...")
-        self._adb.Sync(runtime_restart=rebuild_libcore)
+  def _DoInstall(self, make_output):
+    """Install artifacts from build onto device.
+
+    Looks for 'install:' text from make output to find artifacts to install.
+
+    Args:
+      make_output: stdout from make command
+    """
+    for line in make_output.split("\n"):
+      m = self._RE_MAKE_INSTALL.match(line)
+      if m:
+        install_path = m.group(1)
+        if install_path.endswith(".apk"):
+          abs_install_path = os.path.join(self._root_path, install_path)
+          logger.Log("adb install -r %s" % abs_install_path)
+          logger.Log(self._adb.Install(abs_install_path))
+        else:
+          self._PushInstallFileToDevice(install_path)
+
+  def _PushInstallFileToDevice(self, install_path):
+    m = self._RE_MAKE_INSTALL_PATH.match(install_path)
+    if m:
+      remote_path = m.group(1)
+      abs_install_path = os.path.join(self._root_path, install_path)
+      logger.Log("adb push %s %s", abs_install_path, remote_path)
+      self._adb.Push(abs_install_path, remote_path)
+    else:
+      logger.Log("Error: Failed to recognize path of file to install %s" % install_path)
 
   def _DoFullBuild(self, tests):
     """If necessary, run a full 'make' command for the tests that need it."""
@@ -309,8 +326,9 @@ class TestRunner(object):
       if not self._options.preview:
         old_dir = os.getcwd()
         os.chdir(self._root_path)
-        run_command.RunCommand(cmd, return_output=False)
+        output = run_command.RunCommand(cmd, return_output=False)
         os.chdir(old_dir)
+        self._DoInstall(output)
 
   def _AddBuildTarget(self, test_suite, target_set, extra_args_set):
     if not test_suite.IsFullMake():
@@ -369,7 +387,7 @@ class TestRunner(object):
     If one or more tests needs dalvik verifier off, and it is not already off,
     turns off verifier and reboots device to allow change to take effect.
     """
-    # hack to check if these are framework/base tests. If so, turn off verifier
+    # hack to check if these are frameworks/base tests. If so, turn off verifier
     # to allow framework tests to access package-private framework api
     framework_test = False
     for test in test_list:
