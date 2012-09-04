@@ -110,12 +110,7 @@ protected:
     //         uint32_t *usage,
     //         uint32_t *max_buffers);
 
-    virtual int allocateReprocessStreamFromStream(
-            uint32_t output_stream_id,
-            const camera2_stream_in_ops_t *stream_ops,
-            uint32_t *stream_id);
-
-    virtual int releaseReprocessStream(uint32_t stream_id);
+    // virtual int releaseReprocessStream(uint32_t stream_id);
 
     virtual int triggerAction(uint32_t trigger_id,
             int32_t ext1,
@@ -137,7 +132,6 @@ public:
 
     // Get information about a given stream. Will lock mMutex
     const Stream &getStreamInfo(uint32_t streamId);
-    const ReprocessStream &getReprocessStreamInfo(uint32_t streamId);
 
     // Notifies rest of camera subsystem of serious error
     void signalError();
@@ -169,10 +163,6 @@ private:
      * requests. Assumes mMutex is locked */
     bool isStreamInUse(uint32_t streamId);
 
-    /** Determine if the reprocess stream id is listed in any
-     * currently-in-flight requests. Assumes mMutex is locked */
-    bool isReprocessStreamInUse(uint32_t streamId);
-
     /****************************************************************************
      * Pipeline controller threads
      ***************************************************************************/
@@ -190,18 +180,9 @@ private:
         int getInProgressCount();
       private:
         EmulatedFakeCamera2 *mParent;
-        static const nsecs_t kWaitPerLoop = 10000000L; // 10 ms
 
         bool mRunning;
         bool threadLoop();
-
-        bool setupCapture();
-        bool setupReprocess();
-
-        bool configureNextCapture();
-        bool configureNextReprocess();
-
-        bool getBuffers();
 
         Mutex mInputMutex; // Protects mActive, mRequestCount
         Condition mInputSignal;
@@ -214,7 +195,6 @@ private:
         Mutex mInternalsMutex; // Lock before accessing below members.
         bool    mWaitingForReadout;
         bool    mNextNeedsJpeg;
-        bool    mNextIsCapture;
         int32_t mNextFrameNumber;
         int64_t mNextExposureTime;
         int64_t mNextFrameDuration;
@@ -232,9 +212,9 @@ private:
         // Input
         status_t waitUntilRunning();
         bool waitForReady(nsecs_t timeout);
-        void setNextOperation(bool isCapture,
-                camera_metadata_t *request,
+        void setNextCapture(camera_metadata_t *request,
                 Buffers *buffers);
+
         bool isStreamInUse(uint32_t id);
         int getInProgressCount();
       private:
@@ -255,7 +235,6 @@ private:
 
         static const int kInFlightQueueSize = 4;
         struct InFlightQueue {
-            bool isCapture;
             camera_metadata_t *request;
             Buffers *buffers;
         } *mInFlightQueue;
@@ -267,8 +246,6 @@ private:
 
         // Internals
         Mutex mInternalsMutex;
-
-        bool mIsCapture;
         camera_metadata_t *mRequest;
         Buffers *mBuffers;
 
@@ -300,16 +277,6 @@ private:
         static const nsecs_t kMaxAfDuration;
         static const float kAfSuccessRate;
         static const float kContinuousAfStartRate;
-
-        static const float kAeScanStartRate;
-        static const nsecs_t kMinAeDuration;
-        static const nsecs_t kMaxAeDuration;
-        static const nsecs_t kMinPrecaptureAeDuration;
-        static const nsecs_t kMaxPrecaptureAeDuration;
-
-        static const nsecs_t kNormalExposureTime;
-        static const nsecs_t kExposureJump;
-        static const nsecs_t kMinExposureTime;
 
         EmulatedFakeCamera2 *mParent;
 
@@ -345,26 +312,17 @@ private:
         uint8_t mAeState;
         uint8_t mAwbState;
 
-        // Current control parameters
-        nsecs_t mExposureTime;
-
         // Private to threadLoop and its utility methods
 
         nsecs_t mAfScanDuration;
-        nsecs_t mAeScanDuration;
         bool mLockAfterPassiveScan;
 
-        // Utility methods for AF
+        // Utility methods
         int processAfTrigger(uint8_t afMode, uint8_t afState);
         int maybeStartAfScan(uint8_t afMode, uint8_t afState);
         int updateAfScan(uint8_t afMode, uint8_t afState, nsecs_t *maxSleep);
         void updateAfState(uint8_t newState, int32_t triggerId);
 
-        // Utility methods for precapture trigger
-        int processPrecaptureTrigger(uint8_t aeMode, uint8_t aeState);
-        int maybeStartAeScan(uint8_t aeMode, uint8_t aeState);
-        int updateAeScan(uint8_t aeMode, uint8_t aeState, nsecs_t *maxSleep);
-        void updateAeState(uint8_t newState, int32_t triggerId);
     };
 
     /****************************************************************************
@@ -374,7 +332,6 @@ private:
     static const uint32_t kMaxRawStreamCount = 1;
     static const uint32_t kMaxProcessedStreamCount = 3;
     static const uint32_t kMaxJpegStreamCount = 1;
-    static const uint32_t kMaxReprocessStreamCount = 2;
     static const uint32_t kMaxBufferCount = 4;
     static const uint32_t kAvailableFormats[];
     static const uint32_t kAvailableRawSizes[];
@@ -401,11 +358,7 @@ private:
     uint32_t mProcessedStreamCount;
     uint32_t mJpegStreamCount;
 
-    uint32_t mNextReprocessStreamId;
-    uint32_t mReprocessStreamCount;
-
     KeyedVector<uint32_t, Stream> mStreams;
-    KeyedVector<uint32_t, ReprocessStream> mReprocessStreams;
 
     /** Simulated hardware interfaces */
     sp<Sensor> mSensor;

@@ -293,8 +293,6 @@ bool Sensor::threadLoop() {
                 (float)exposureDuration/1e6, gain);
         mScene.setExposureDuration((float)exposureDuration/1e9);
         mScene.calculateScene(mNextCaptureTime);
-
-        // Might be adding more buffers, so size isn't constant
         for (size_t i = 0; i < mNextCapturedBuffers->size(); i++) {
             const StreamBuffer &b = (*mNextCapturedBuffers)[i];
             ALOGVV("Sensor capturing buffer %d: stream %d,"
@@ -305,9 +303,6 @@ bool Sensor::threadLoop() {
                 case HAL_PIXEL_FORMAT_RAW_SENSOR:
                     captureRaw(b.img, gain, b.stride);
                     break;
-                case HAL_PIXEL_FORMAT_RGB_888:
-                    captureRGB(b.img, gain, b.stride);
-                    break;
                 case HAL_PIXEL_FORMAT_RGBA_8888:
                     captureRGBA(b.img, gain, b.stride);
                     break;
@@ -316,7 +311,7 @@ bool Sensor::threadLoop() {
                     // Assumes only one BLOB (JPEG) buffer in
                     // mNextCapturedBuffers
                     StreamBuffer bAux;
-                    bAux.streamId = 0;
+                    bAux.streamId = -1;
                     bAux.width = b.width;
                     bAux.height = b.height;
                     bAux.format = HAL_PIXEL_FORMAT_RGB_888;
@@ -324,6 +319,7 @@ bool Sensor::threadLoop() {
                     bAux.buffer = NULL;
                     // TODO: Reuse these
                     bAux.img = new uint8_t[b.width * b.height * 3];
+                    captureRGB(bAux.img, gain, b.stride);
                     mNextCapturedBuffers->push_back(bAux);
                     break;
                 case HAL_PIXEL_FORMAT_YCrCb_420_SP:
