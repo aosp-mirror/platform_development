@@ -165,8 +165,7 @@ static int gralloc_alloc(alloc_device_t* dev,
             } else if (usage & GRALLOC_USAGE_HW_VIDEO_ENCODER) {
                 // Camera-to-encoder is NV21
                 format = HAL_PIXEL_FORMAT_YCrCb_420_SP;
-            } else if ((usage & GRALLOC_USAGE_HW_CAMERA_MASK) ==
-                    GRALLOC_USAGE_HW_CAMERA_ZSL) {
+            } else if (usage & GRALLOC_USAGE_HW_CAMERA_ZSL) {
                 // Camera-to-ZSL-queue is RGB_888
                 format = HAL_PIXEL_FORMAT_RGB_888;
             }
@@ -615,14 +614,11 @@ static int gralloc_lock(gralloc_module_t const* module,
     bool hw_write = (usage & GRALLOC_USAGE_HW_RENDER);
     bool hw_vid_enc_read = (usage & GRALLOC_USAGE_HW_VIDEO_ENCODER);
     bool hw_cam_write = (usage & GRALLOC_USAGE_HW_CAMERA_WRITE);
-    bool hw_cam_read = (usage & GRALLOC_USAGE_HW_CAMERA_READ);
     bool sw_read_allowed = (0 != (cb->usage & GRALLOC_USAGE_SW_READ_MASK));
     bool sw_write_allowed = (0 != (cb->usage & GRALLOC_USAGE_SW_WRITE_MASK));
 
     if ( (hw_read || hw_write) ||
-         (!sw_read && !sw_write &&
-                 !hw_cam_write && !hw_cam_read &&
-                 !hw_vid_enc_read) ||
+         (!sw_read && !sw_write && !hw_cam_write && !hw_vid_enc_read) ||
          (sw_read && !sw_read_allowed) ||
          (sw_write && !sw_write_allowed) ) {
         ALOGE("gralloc_lock usage mismatch usage=0x%x cb->usage=0x%x\n", usage,
@@ -636,9 +632,7 @@ static int gralloc_lock(gralloc_module_t const* module,
     //
     // make sure ashmem area is mapped if needed
     //
-    if (cb->canBePosted() || sw_read || sw_write ||
-            hw_cam_write || hw_cam_read ||
-            hw_vid_enc_read) {
+    if (cb->canBePosted() || sw_read || sw_write || hw_cam_write || hw_vid_enc_read) {
         if (cb->ashmemBasePid != getpid() || !cb->ashmemBase) {
             return -EACCES;
         }
@@ -675,7 +669,7 @@ static int gralloc_lock(gralloc_module_t const* module,
     //
     // is virtual address required ?
     //
-    if (sw_read || sw_write || hw_cam_write || hw_cam_read || hw_vid_enc_read) {
+    if (sw_read || sw_write || hw_cam_write || hw_vid_enc_read) {
         *vaddr = cpu_addr;
     }
 
