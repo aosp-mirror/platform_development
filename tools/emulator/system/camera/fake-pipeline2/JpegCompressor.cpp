@@ -77,7 +77,8 @@ bool JpegCompressor::threadLoop() {
     Mutex::Autolock lock(mMutex);
     ALOGV("%s: Starting compression thread", __FUNCTION__);
 
-    // Find source and target buffers
+    // Find source and target buffers. Assumes only one buffer matches
+    // each condition!
 
     bool foundJpeg = false, mFoundAux = false;
     for (size_t i = 0; i < mBuffers->size(); i++) {
@@ -85,7 +86,7 @@ bool JpegCompressor::threadLoop() {
         if (b.format == HAL_PIXEL_FORMAT_BLOB) {
             mJpegBuffer = b;
             mFoundJpeg = true;
-        } else if (b.streamId == -1) {
+        } else if (b.streamId <= 0) {
             mAuxBuffer = b;
             mFoundAux = true;
         }
@@ -216,11 +217,24 @@ bool JpegCompressor::checkError(const char *msg) {
 }
 
 void JpegCompressor::cleanUp() {
+    status_t res;
     jpeg_destroy_compress(&mCInfo);
     Mutex::Autolock lock(mBusyMutex);
 
     if (mFoundAux) {
-        delete[] mAuxBuffer.img;
+        if (mAuxBuffer.streamId == 0) {
+            delete[] mAuxBuffer.img;
+        } else {
+            GraphicBufferMapper::get().unlock(*(mAuxBuffer.buffer));
+            const ReprocessStream &s =
+                    mParent->getReprocessStreamInfo(-mAuxBuffer.streamId);
+            res = s.ops->release_buffer(s.ops, mAuxBuffer.buffer);
+            if (res != OK) {
+                ALOGE("Error releasing reprocess buffer %p: %s (%d)",
+                        mAuxBuffer.buffer, strerror(-res), res);
+                mParent->signalError();
+            }
+        }
     }
     delete mBuffers;
     mBuffers = NULL;

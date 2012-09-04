@@ -126,6 +126,11 @@ protected:
             uint32_t *consumer_usage,
             uint32_t *max_buffers);
 
+    virtual int allocateReprocessStreamFromStream(
+            uint32_t output_stream_id,
+            const camera2_stream_in_ops_t *reprocess_stream_ops,
+            uint32_t *stream_id);
+
     virtual int releaseReprocessStream(uint32_t stream_id);
 
     /** 3A action triggering */
@@ -196,6 +201,11 @@ private:
             uint32_t *stream_id,
             uint32_t *consumer_usage,
             uint32_t *max_buffers);
+
+    static int allocate_reprocess_stream_from_stream(const camera2_device_t *,
+            uint32_t output_stream_id,
+            const camera2_stream_in_ops_t *reprocess_stream_ops,
+            uint32_t *stream_id);
 
     static int release_reprocess_stream(const camera2_device_t *,
             uint32_t stream_id);
