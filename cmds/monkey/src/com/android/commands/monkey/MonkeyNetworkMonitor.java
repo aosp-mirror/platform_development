@@ -25,6 +25,7 @@ import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.os.RemoteException;
 import android.os.SystemClock;
+import android.os.UserHandle;
 
 /**
  * Class for monitoring network connectivity during monkey runs.
@@ -40,7 +41,7 @@ public class MonkeyNetworkMonitor extends IIntentReceiver.Stub {
     private long mElapsedTime = 0; // amount of time spent between start() and stop()
     
     public void performReceive(Intent intent, int resultCode, String data, Bundle extras,
-            boolean ordered, boolean sticky) throws RemoteException {
+            boolean ordered, boolean sticky, int sendingUser) throws RemoteException {
         NetworkInfo ni = (NetworkInfo) intent.getParcelableExtra(
                 ConnectivityManager.EXTRA_NETWORK_INFO);
         if (LDEBUG) System.out.println("Network state changed: " 
@@ -84,7 +85,7 @@ public class MonkeyNetworkMonitor extends IIntentReceiver.Stub {
 
     public void register(IActivityManager am) throws RemoteException {
         if (LDEBUG) System.out.println("registering Receiver");
-        am.registerReceiver(null, null, this, filter, null); 
+        am.registerReceiver(null, null, this, filter, null, UserHandle.USER_ALL); 
     }
     
     public void unregister(IActivityManager am) throws RemoteException {
