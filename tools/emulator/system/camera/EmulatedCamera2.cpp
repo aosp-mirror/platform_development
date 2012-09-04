@@ -162,6 +162,13 @@ int EmulatedCamera2::allocateReprocessStream(
     return INVALID_OPERATION;
 }
 
+int EmulatedCamera2::allocateReprocessStreamFromStream(
+        uint32_t output_stream_id,
+        const camera2_stream_in_ops_t *reprocess_stream_ops,
+        uint32_t *stream_id) {
+    return INVALID_OPERATION;
+}
+
 int EmulatedCamera2::releaseReprocessStream(uint32_t stream_id) {
     return INVALID_OPERATION;
 }
@@ -288,6 +295,17 @@ int EmulatedCamera2::allocate_reprocess_stream(const camera2_device_t *d,
             reprocess_stream_ops, stream_id, consumer_usage, max_buffers);
 }
 
+int EmulatedCamera2::allocate_reprocess_stream_from_stream(
+            const camera2_device_t *d,
+            uint32_t output_stream_id,
+            const camera2_stream_in_ops_t *reprocess_stream_ops,
+            uint32_t *stream_id) {
+    EmulatedCamera2* ec = getInstance(d);
+    return ec->allocateReprocessStreamFromStream(output_stream_id,
+            reprocess_stream_ops, stream_id);
+}
+
+
 int EmulatedCamera2::release_reprocess_stream(const camera2_device_t *d,
         uint32_t stream_id) {
     EmulatedCamera2* ec = getInstance(d);
@@ -379,6 +397,7 @@ camera2_device_ops_t EmulatedCamera2::sDeviceOps = {
     EmulatedCamera2::register_stream_buffers,
     EmulatedCamera2::release_stream,
     EmulatedCamera2::allocate_reprocess_stream,
+    EmulatedCamera2::allocate_reprocess_stream_from_stream,
     EmulatedCamera2::release_reprocess_stream,
     EmulatedCamera2::trigger_action,
     EmulatedCamera2::set_notify_callback,
