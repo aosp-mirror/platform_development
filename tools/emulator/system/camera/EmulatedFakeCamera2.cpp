@@ -31,6 +31,10 @@
 
 namespace android {
 
+const int64_t USEC = 1000LL;
+const int64_t MSEC = USEC * 1000LL;
+const int64_t SEC = MSEC * 1000LL;
+
 const uint32_t EmulatedFakeCamera2::kAvailableFormats[4] = {
         HAL_PIXEL_FORMAT_RAW_SENSOR,
         HAL_PIXEL_FORMAT_BLOB,
@@ -118,10 +122,12 @@ status_t EmulatedFakeCamera2::Initialize() {
     }
     if (res != OK) return res;
 
-    mNextStreamId = 0;
+    mNextStreamId = 1;
+    mNextReprocessStreamId = 1;
     mRawStreamCount = 0;
     mProcessedStreamCount = 0;
     mJpegStreamCount = 0;
+    mReprocessStreamCount = 0;
 
     return NO_ERROR;
 }
@@ -140,7 +146,8 @@ status_t EmulatedFakeCamera2::connectCamera(hw_device_t** device) {
     mSensor = new Sensor(this);
     mJpegCompressor = new JpegCompressor(this);
 
-    mNextStreamId = 0;
+    mNextStreamId = 1;
+    mNextReprocessStreamId = 1;
 
     res = mSensor->startUp();
     if (res != NO_ERROR) return res;
@@ -435,6 +442,69 @@ int EmulatedFakeCamera2::releaseStream(uint32_t stream_id) {
     return NO_ERROR;
 }
 
+int EmulatedFakeCamera2::allocateReprocessStreamFromStream(
+        uint32_t output_stream_id,
+        const camera2_stream_in_ops_t *stream_ops,
+        uint32_t *stream_id) {
+    Mutex::Autolock l(mMutex);
+
+    ssize_t baseStreamIndex = mStreams.indexOfKey(output_stream_id);
+    if (baseStreamIndex < 0) {
+        ALOGE("%s: Unknown output stream id %d!", __FUNCTION__, output_stream_id);
+        return BAD_VALUE;
+    }
+
+    const Stream &baseStream = mStreams[baseStreamIndex];
+
+    // We'll reprocess anything we produced
+
+    if (mReprocessStreamCount >= kMaxReprocessStreamCount) {
+        ALOGE("%s: Cannot allocate another reprocess stream (%d already allocated)",
+                __FUNCTION__, mReprocessStreamCount);
+        return INVALID_OPERATION;
+    }
+    mReprocessStreamCount++;
+
+    ReprocessStream newStream;
+    newStream.ops = stream_ops;
+    newStream.width = baseStream.width;
+    newStream.height = baseStream.height;
+    newStream.format = baseStream.format;
+    newStream.stride = baseStream.stride;
+    newStream.sourceStreamId = output_stream_id;
+
+    *stream_id = mNextReprocessStreamId;
+    mReprocessStreams.add(mNextReprocessStreamId, newStream);
+
+    ALOGV("Reprocess stream allocated: %d: %d, %d, 0x%x. Parent stream: %d",
+            *stream_id, newStream.width, newStream.height, newStream.format,
+            output_stream_id);
+
+    mNextReprocessStreamId++;
+    return NO_ERROR;
+}
+
+int EmulatedFakeCamera2::releaseReprocessStream(uint32_t stream_id) {
+    Mutex::Autolock l(mMutex);
+
+    ssize_t streamIndex = mReprocessStreams.indexOfKey(stream_id);
+    if (streamIndex < 0) {
+        ALOGE("%s: Unknown reprocess stream id %d!", __FUNCTION__, stream_id);
+        return BAD_VALUE;
+    }
+
+    if (isReprocessStreamInUse(stream_id)) {
+        ALOGE("%s: Cannot release reprocessing stream %d; in use!", __FUNCTION__,
+                stream_id);
+        return BAD_VALUE;
+    }
+
+    mReprocessStreamCount--;
+    mReprocessStreams.removeItemsAt(streamIndex);
+
+    return NO_ERROR;
+}
+
 int EmulatedFakeCamera2::triggerAction(uint32_t trigger_id,
         int32_t ext1,
         int32_t ext2) {
@@ -603,7 +673,6 @@ int EmulatedFakeCamera2::ConfigureThread::getInProgressCount() {
 }
 
 bool EmulatedFakeCamera2::ConfigureThread::threadLoop() {
-    static const nsecs_t kWaitPerLoop = 10000000L; // 10 ms
     status_t res;
 
     // Check if we're currently processing or just waiting
@@ -645,105 +714,32 @@ bool EmulatedFakeCamera2::ConfigureThread::threadLoop() {
             Mutex::Autolock lock(mInputMutex);
             mRequestCount++;
         }
-        // Get necessary parameters for sensor config
 
-        mParent->mControlThread->processRequest(mRequest);
-
-        camera_metadata_entry_t streams;
+        camera_metadata_entry_t type;
         res = find_camera_metadata_entry(mRequest,
-                ANDROID_REQUEST_OUTPUT_STREAMS,
-                &streams);
+                ANDROID_REQUEST_TYPE,
+                &type);
         if (res != NO_ERROR) {
-            ALOGE("%s: error reading output stream tag", __FUNCTION__);
+            ALOGE("%s: error reading request type", __FUNCTION__);
             mParent->signalError();
             return false;
         }
-
-        mNextBuffers = new Buffers;
-        mNextNeedsJpeg = false;
-        ALOGV("Configure: Setting up buffers for capture");
-        for (size_t i = 0; i < streams.count; i++) {
-            int streamId = streams.data.u8[i];
-            const Stream &s = mParent->getStreamInfo(streamId);
-            if (s.format == HAL_PIXEL_FORMAT_IMPLEMENTATION_DEFINED) {
-                ALOGE("%s: Stream %d does not have a concrete pixel format, but "
-                        "is included in a request!", __FUNCTION__, streamId);
+        bool success = false;;
+        switch (type.data.u8[0]) {
+            case ANDROID_REQUEST_TYPE_CAPTURE:
+                success = setupCapture();
+                break;
+            case ANDROID_REQUEST_TYPE_REPROCESS:
+                success = setupReprocess();
+                break;
+            default:
+                ALOGE("%s: Unexpected request type %d",
+                        __FUNCTION__, type.data.u8[0]);
                 mParent->signalError();
-                return false;
-            }
-            StreamBuffer b;
-            b.streamId = streams.data.u8[i];
-            b.width  = s.width;
-            b.height = s.height;
-            b.format = s.format;
-            b.stride = s.stride;
-            mNextBuffers->push_back(b);
-            ALOGV("Configure:    Buffer %d: Stream %d, %d x %d, format 0x%x, "
-                    "stride %d",
-                    i, b.streamId, b.width, b.height, b.format, b.stride);
-            if (b.format == HAL_PIXEL_FORMAT_BLOB) {
-                mNextNeedsJpeg = true;
-            }
+                break;
         }
+        if (!success) return false;
 
-        camera_metadata_entry_t e;
-        res = find_camera_metadata_entry(mRequest,
-                ANDROID_REQUEST_FRAME_COUNT,
-                &e);
-        if (res != NO_ERROR) {
-            ALOGE("%s: error reading frame count tag: %s (%d)",
-                    __FUNCTION__, strerror(-res), res);
-            mParent->signalError();
-            return false;
-        }
-        mNextFrameNumber = *e.data.i32;
-
-        res = find_camera_metadata_entry(mRequest,
-                ANDROID_SENSOR_EXPOSURE_TIME,
-                &e);
-        if (res != NO_ERROR) {
-            ALOGE("%s: error reading exposure time tag: %s (%d)",
-                    __FUNCTION__, strerror(-res), res);
-            mParent->signalError();
-            return false;
-        }
-        mNextExposureTime = *e.data.i64;
-
-        res = find_camera_metadata_entry(mRequest,
-                ANDROID_SENSOR_FRAME_DURATION,
-                &e);
-        if (res != NO_ERROR) {
-            ALOGE("%s: error reading frame duration tag", __FUNCTION__);
-            mParent->signalError();
-            return false;
-        }
-        mNextFrameDuration = *e.data.i64;
-
-        if (mNextFrameDuration <
-                mNextExposureTime + Sensor::kMinVerticalBlank) {
-            mNextFrameDuration = mNextExposureTime + Sensor::kMinVerticalBlank;
-        }
-        res = find_camera_metadata_entry(mRequest,
-                ANDROID_SENSOR_SENSITIVITY,
-                &e);
-        if (res != NO_ERROR) {
-            ALOGE("%s: error reading sensitivity tag", __FUNCTION__);
-            mParent->signalError();
-            return false;
-        }
-        mNextSensitivity = *e.data.i32;
-
-        res = find_camera_metadata_entry(mRequest,
-                EMULATOR_SCENE_HOUROFDAY,
-                &e);
-        if (res == NO_ERROR) {
-            ALOGV("Setting hour: %d", *e.data.i32);
-            mParent->mSensor->getScene().setHour(*e.data.i32);
-        }
-
-        // Start waiting on readout thread
-        mWaitingForReadout = true;
-        ALOGV("Configure: Waiting for readout thread");
     }
 
     if (mWaitingForReadout) {
@@ -767,49 +763,134 @@ bool EmulatedFakeCamera2::ConfigureThread::threadLoop() {
         ALOGV("Configure: Waiting for sensor");
         mNextNeedsJpeg = false;
     }
-    bool vsync = mParent->mSensor->waitForVSync(kWaitPerLoop);
 
+    if (mNextIsCapture) {
+        return configureNextCapture();
+    } else {
+        return configureNextReprocess();
+    }
+}
+
+bool EmulatedFakeCamera2::ConfigureThread::setupCapture() {
+    status_t res;
+
+    mNextIsCapture = true;
+    // Get necessary parameters for sensor config
+    mParent->mControlThread->processRequest(mRequest);
+
+    camera_metadata_entry_t streams;
+    res = find_camera_metadata_entry(mRequest,
+            ANDROID_REQUEST_OUTPUT_STREAMS,
+            &streams);
+    if (res != NO_ERROR) {
+        ALOGE("%s: error reading output stream tag", __FUNCTION__);
+        mParent->signalError();
+        return false;
+    }
+
+    mNextBuffers = new Buffers;
+    mNextNeedsJpeg = false;
+    ALOGV("Configure: Setting up buffers for capture");
+    for (size_t i = 0; i < streams.count; i++) {
+        int streamId = streams.data.u8[i];
+        const Stream &s = mParent->getStreamInfo(streamId);
+        if (s.format == HAL_PIXEL_FORMAT_IMPLEMENTATION_DEFINED) {
+            ALOGE("%s: Stream %d does not have a concrete pixel format, but "
+                    "is included in a request!", __FUNCTION__, streamId);
+            mParent->signalError();
+            return false;
+        }
+        StreamBuffer b;
+        b.streamId = streams.data.u8[i];
+        b.width  = s.width;
+        b.height = s.height;
+        b.format = s.format;
+        b.stride = s.stride;
+        mNextBuffers->push_back(b);
+        ALOGV("Configure:    Buffer %d: Stream %d, %d x %d, format 0x%x, "
+                "stride %d",
+                i, b.streamId, b.width, b.height, b.format, b.stride);
+        if (b.format == HAL_PIXEL_FORMAT_BLOB) {
+            mNextNeedsJpeg = true;
+        }
+    }
+
+    camera_metadata_entry_t e;
+    res = find_camera_metadata_entry(mRequest,
+            ANDROID_REQUEST_FRAME_COUNT,
+            &e);
+    if (res != NO_ERROR) {
+        ALOGE("%s: error reading frame count tag: %s (%d)",
+                __FUNCTION__, strerror(-res), res);
+        mParent->signalError();
+        return false;
+    }
+    mNextFrameNumber = *e.data.i32;
+
+    res = find_camera_metadata_entry(mRequest,
+            ANDROID_SENSOR_EXPOSURE_TIME,
+            &e);
+    if (res != NO_ERROR) {
+        ALOGE("%s: error reading exposure time tag: %s (%d)",
+                __FUNCTION__, strerror(-res), res);
+        mParent->signalError();
+        return false;
+    }
+    mNextExposureTime = *e.data.i64;
+
+    res = find_camera_metadata_entry(mRequest,
+            ANDROID_SENSOR_FRAME_DURATION,
+            &e);
+    if (res != NO_ERROR) {
+        ALOGE("%s: error reading frame duration tag", __FUNCTION__);
+        mParent->signalError();
+        return false;
+    }
+    mNextFrameDuration = *e.data.i64;
+
+    if (mNextFrameDuration <
+            mNextExposureTime + Sensor::kMinVerticalBlank) {
+        mNextFrameDuration = mNextExposureTime + Sensor::kMinVerticalBlank;
+    }
+    res = find_camera_metadata_entry(mRequest,
+            ANDROID_SENSOR_SENSITIVITY,
+            &e);
+    if (res != NO_ERROR) {
+        ALOGE("%s: error reading sensitivity tag", __FUNCTION__);
+        mParent->signalError();
+        return false;
+    }
+    mNextSensitivity = *e.data.i32;
+
+    res = find_camera_metadata_entry(mRequest,
+            EMULATOR_SCENE_HOUROFDAY,
+            &e);
+    if (res == NO_ERROR) {
+        ALOGV("Setting hour: %d", *e.data.i32);
+        mParent->mSensor->getScene().setHour(*e.data.i32);
+    }
+
+    // Start waiting on readout thread
+    mWaitingForReadout = true;
+    ALOGV("Configure: Waiting for readout thread");
+
+    return true;
+}
+
+bool EmulatedFakeCamera2::ConfigureThread::configureNextCapture() {
+    bool vsync = mParent->mSensor->waitForVSync(kWaitPerLoop);
     if (!vsync) return true;
 
     Mutex::Autolock il(mInternalsMutex);
-    ALOGV("Configure: Configuring sensor for frame %d", mNextFrameNumber);
+    ALOGV("Configure: Configuring sensor for capture %d", mNextFrameNumber);
     mParent->mSensor->setExposureTime(mNextExposureTime);
     mParent->mSensor->setFrameDuration(mNextFrameDuration);
     mParent->mSensor->setSensitivity(mNextSensitivity);
 
-    /** Get buffers to fill for this frame */
-    for (size_t i = 0; i < mNextBuffers->size(); i++) {
-        StreamBuffer &b = mNextBuffers->editItemAt(i);
+    getBuffers();
 
-        Stream s = mParent->getStreamInfo(b.streamId);
-        ALOGV("Configure: Dequeing buffer from stream %d", b.streamId);
-        res = s.ops->dequeue_buffer(s.ops, &(b.buffer) );
-        if (res != NO_ERROR || b.buffer == NULL) {
-            ALOGE("%s: Unable to dequeue buffer from stream %d: %s (%d)",
-                    __FUNCTION__, b.streamId, strerror(-res), res);
-            mParent->signalError();
-            return false;
-        }
-
-        /* Lock the buffer from the perspective of the graphics mapper */
-        uint8_t *img;
-        const Rect rect(s.width, s.height);
-
-        res = GraphicBufferMapper::get().lock(*(b.buffer),
-                GRALLOC_USAGE_HW_CAMERA_WRITE,
-                rect, (void**)&(b.img) );
-
-        if (res != NO_ERROR) {
-            ALOGE("%s: grbuffer_mapper.lock failure: %s (%d)",
-                    __FUNCTION__, strerror(-res), res);
-            s.ops->cancel_buffer(s.ops,
-                    b.buffer);
-            mParent->signalError();
-            return false;
-        }
-    }
-    ALOGV("Configure: Done configure for frame %d", mNextFrameNumber);
-    mParent->mReadoutThread->setNextCapture(mRequest, mNextBuffers);
+    ALOGV("Configure: Done configure for capture %d", mNextFrameNumber);
+    mParent->mReadoutThread->setNextOperation(true, mRequest, mNextBuffers);
     mParent->mSensor->setDestinationBuffers(mNextBuffers);
 
     mRequest = NULL;
@@ -818,6 +899,172 @@ bool EmulatedFakeCamera2::ConfigureThread::threadLoop() {
     Mutex::Autolock lock(mInputMutex);
     mRequestCount--;
 
+    return true;
+}
+
+bool EmulatedFakeCamera2::ConfigureThread::setupReprocess() {
+    status_t res;
+
+    mNextNeedsJpeg = true;
+    mNextIsCapture = false;
+
+    camera_metadata_entry_t reprocessStreams;
+    res = find_camera_metadata_entry(mRequest,
+            ANDROID_REQUEST_INPUT_STREAMS,
+            &reprocessStreams);
+    if (res != NO_ERROR) {
+        ALOGE("%s: error reading output stream tag", __FUNCTION__);
+        mParent->signalError();
+        return false;
+    }
+
+    mNextBuffers = new Buffers;
+
+    ALOGV("Configure: Setting up input buffers for reprocess");
+    for (size_t i = 0; i < reprocessStreams.count; i++) {
+        int streamId = reprocessStreams.data.u8[i];
+        const ReprocessStream &s = mParent->getReprocessStreamInfo(streamId);
+        if (s.format != HAL_PIXEL_FORMAT_RGB_888) {
+            ALOGE("%s: Only ZSL reprocessing supported!",
+                    __FUNCTION__);
+            mParent->signalError();
+            return false;
+        }
+        StreamBuffer b;
+        b.streamId = -streamId;
+        b.width = s.width;
+        b.height = s.height;
+        b.format = s.format;
+        b.stride = s.stride;
+        mNextBuffers->push_back(b);
+    }
+
+    camera_metadata_entry_t streams;
+    res = find_camera_metadata_entry(mRequest,
+            ANDROID_REQUEST_OUTPUT_STREAMS,
+            &streams);
+    if (res != NO_ERROR) {
+        ALOGE("%s: error reading output stream tag", __FUNCTION__);
+        mParent->signalError();
+        return false;
+    }
+
+    ALOGV("Configure: Setting up output buffers for reprocess");
+    for (size_t i = 0; i < streams.count; i++) {
+        int streamId = streams.data.u8[i];
+        const Stream &s = mParent->getStreamInfo(streamId);
+        if (s.format != HAL_PIXEL_FORMAT_BLOB) {
+            // TODO: Support reprocess to YUV
+            ALOGE("%s: Non-JPEG output stream %d for reprocess not supported",
+                    __FUNCTION__, streamId);
+            mParent->signalError();
+            return false;
+        }
+        StreamBuffer b;
+        b.streamId = streams.data.u8[i];
+        b.width  = s.width;
+        b.height = s.height;
+        b.format = s.format;
+        b.stride = s.stride;
+        mNextBuffers->push_back(b);
+        ALOGV("Configure:    Buffer %d: Stream %d, %d x %d, format 0x%x, "
+                "stride %d",
+                i, b.streamId, b.width, b.height, b.format, b.stride);
+    }
+
+    camera_metadata_entry_t e;
+    res = find_camera_metadata_entry(mRequest,
+            ANDROID_REQUEST_FRAME_COUNT,
+            &e);
+    if (res != NO_ERROR) {
+        ALOGE("%s: error reading frame count tag: %s (%d)",
+                __FUNCTION__, strerror(-res), res);
+        mParent->signalError();
+        return false;
+    }
+    mNextFrameNumber = *e.data.i32;
+
+    return true;
+}
+
+bool EmulatedFakeCamera2::ConfigureThread::configureNextReprocess() {
+    Mutex::Autolock il(mInternalsMutex);
+
+    getBuffers();
+
+    ALOGV("Configure: Done configure for reprocess %d", mNextFrameNumber);
+    mParent->mReadoutThread->setNextOperation(false, mRequest, mNextBuffers);
+
+    mRequest = NULL;
+    mNextBuffers = NULL;
+
+    Mutex::Autolock lock(mInputMutex);
+    mRequestCount--;
+
+    return true;
+}
+
+bool EmulatedFakeCamera2::ConfigureThread::getBuffers() {
+    status_t res;
+    /** Get buffers to fill for this frame */
+    for (size_t i = 0; i < mNextBuffers->size(); i++) {
+        StreamBuffer &b = mNextBuffers->editItemAt(i);
+
+        if (b.streamId > 0) {
+            Stream s = mParent->getStreamInfo(b.streamId);
+            ALOGV("Configure: Dequeing buffer from stream %d", b.streamId);
+            res = s.ops->dequeue_buffer(s.ops, &(b.buffer) );
+            if (res != NO_ERROR || b.buffer == NULL) {
+                ALOGE("%s: Unable to dequeue buffer from stream %d: %s (%d)",
+                        __FUNCTION__, b.streamId, strerror(-res), res);
+                mParent->signalError();
+                return false;
+            }
+
+            /* Lock the buffer from the perspective of the graphics mapper */
+            const Rect rect(s.width, s.height);
+
+            res = GraphicBufferMapper::get().lock(*(b.buffer),
+                    GRALLOC_USAGE_HW_CAMERA_WRITE,
+                    rect, (void**)&(b.img) );
+
+            if (res != NO_ERROR) {
+                ALOGE("%s: grbuffer_mapper.lock failure: %s (%d)",
+                        __FUNCTION__, strerror(-res), res);
+                s.ops->cancel_buffer(s.ops,
+                        b.buffer);
+                mParent->signalError();
+                return false;
+            }
+        } else {
+            ReprocessStream s = mParent->getReprocessStreamInfo(-b.streamId);
+            ALOGV("Configure: Acquiring buffer from reprocess stream %d",
+                    -b.streamId);
+            res = s.ops->acquire_buffer(s.ops, &(b.buffer) );
+            if (res != NO_ERROR || b.buffer == NULL) {
+                ALOGE("%s: Unable to acquire buffer from reprocess stream %d: "
+                        "%s (%d)", __FUNCTION__, -b.streamId,
+                        strerror(-res), res);
+                mParent->signalError();
+                return false;
+            }
+
+            /* Lock the buffer from the perspective of the graphics mapper */
+            const Rect rect(s.width, s.height);
+
+            res = GraphicBufferMapper::get().lock(*(b.buffer),
+                    GRALLOC_USAGE_HW_CAMERA_READ,
+                    rect, (void**)&(b.img) );
+            if (res != NO_ERROR) {
+                ALOGE("%s: grbuffer_mapper.lock failure: %s (%d)",
+                        __FUNCTION__, strerror(-res), res);
+                s.ops->release_buffer(s.ops,
+                        b.buffer);
+                mParent->signalError();
+                return false;
+            }
+        }
+    }
     return true;
 }
 
@@ -874,7 +1121,8 @@ bool EmulatedFakeCamera2::ReadoutThread::readyForNextCapture() {
     return (mInFlightTail + 1) % kInFlightQueueSize != mInFlightHead;
 }
 
-void EmulatedFakeCamera2::ReadoutThread::setNextCapture(
+void EmulatedFakeCamera2::ReadoutThread::setNextOperation(
+        bool isCapture,
         camera_metadata_t *request,
         Buffers *buffers) {
     Mutex::Autolock lock(mInputMutex);
@@ -883,6 +1131,7 @@ void EmulatedFakeCamera2::ReadoutThread::setNextCapture(
         mParent->signalError();
         return;
     }
+    mInFlightQueue[mInFlightTail].isCapture = isCapture;
     mInFlightQueue[mInFlightTail].request = request;
     mInFlightQueue[mInFlightTail].buffers = buffers;
     mInFlightTail = (mInFlightTail + 1) % kInFlightQueueSize;
@@ -952,6 +1201,7 @@ bool EmulatedFakeCamera2::ReadoutThread::threadLoop() {
             } else {
                 Mutex::Autolock iLock(mInternalsMutex);
                 mReadySignal.signal();
+                mIsCapture = mInFlightQueue[mInFlightHead].isCapture;
                 mRequest = mInFlightQueue[mInFlightHead].request;
                 mBuffers  = mInFlightQueue[mInFlightHead].buffers;
                 mInFlightQueue[mInFlightHead].request = NULL;
@@ -967,15 +1217,30 @@ bool EmulatedFakeCamera2::ReadoutThread::threadLoop() {
 
     nsecs_t captureTime;
 
-    bool gotFrame;
-    gotFrame = mParent->mSensor->waitForNewFrame(kWaitPerLoop,
-            &captureTime);
+    if (mIsCapture) {
+        bool gotFrame;
+        gotFrame = mParent->mSensor->waitForNewFrame(kWaitPerLoop,
+                &captureTime);
 
-    if (!gotFrame) return true;
+        if (!gotFrame) return true;
+    }
 
     Mutex::Autolock iLock(mInternalsMutex);
 
     camera_metadata_entry_t entry;
+    if (!mIsCapture) {
+        res = find_camera_metadata_entry(mRequest,
+                ANDROID_SENSOR_TIMESTAMP,
+            &entry);
+        if (res != NO_ERROR) {
+            ALOGE("%s: error reading reprocessing timestamp: %s (%d)",
+                    __FUNCTION__, strerror(-res), res);
+            mParent->signalError();
+            return false;
+        }
+        captureTime = entry.data.i64[0];
+    }
+
     res = find_camera_metadata_entry(mRequest,
             ANDROID_REQUEST_FRAME_COUNT,
             &entry);
@@ -1027,31 +1292,34 @@ bool EmulatedFakeCamera2::ReadoutThread::threadLoop() {
             ALOGE("Unable to append request metadata");
         }
 
-        add_camera_metadata_entry(frame,
-                ANDROID_SENSOR_TIMESTAMP,
-                &captureTime,
-                1);
+        if (mIsCapture) {
+            add_camera_metadata_entry(frame,
+                    ANDROID_SENSOR_TIMESTAMP,
+                    &captureTime,
+                    1);
 
-        int32_t hourOfDay = (int32_t)mParent->mSensor->getScene().getHour();
-        camera_metadata_entry_t requestedHour;
-        res = find_camera_metadata_entry(frame,
-                EMULATOR_SCENE_HOUROFDAY,
-                &requestedHour);
-        if (res == NAME_NOT_FOUND) {
-            res = add_camera_metadata_entry(frame,
+            int32_t hourOfDay = (int32_t)mParent->mSensor->getScene().getHour();
+            camera_metadata_entry_t requestedHour;
+            res = find_camera_metadata_entry(frame,
                     EMULATOR_SCENE_HOUROFDAY,
-                    &hourOfDay, 1);
-            if (res != NO_ERROR) {
-                ALOGE("Unable to add vendor tag");
+                    &requestedHour);
+            if (res == NAME_NOT_FOUND) {
+                res = add_camera_metadata_entry(frame,
+                        EMULATOR_SCENE_HOUROFDAY,
+                        &hourOfDay, 1);
+                if (res != NO_ERROR) {
+                    ALOGE("Unable to add vendor tag");
+                }
+            } else if (res == OK) {
+                *requestedHour.data.i32 = hourOfDay;
+            } else {
+                ALOGE("%s: Error looking up vendor tag", __FUNCTION__);
             }
-        } else if (res == OK) {
-            *requestedHour.data.i32 = hourOfDay;
-        } else {
-            ALOGE("%s: Error looking up vendor tag", __FUNCTION__);
+
+            collectStatisticsMetadata(frame);
+            // TODO: Collect all final values used from sensor in addition to timestamp
         }
 
-        collectStatisticsMetadata(frame);
-        // TODO: Collect all final values used from sensor in addition to timestamp
         ALOGV("Readout: Enqueue frame %d", frameNumber);
         mParent->mFrameQueueDst->enqueue_frame(mParent->mFrameQueueDst,
                 frame);
@@ -1072,13 +1340,13 @@ bool EmulatedFakeCamera2::ReadoutThread::threadLoop() {
         const StreamBuffer &b = (*mBuffers)[i];
         ALOGV("Readout:    Buffer %d: Stream %d, %d x %d, format 0x%x, stride %d",
                 i, b.streamId, b.width, b.height, b.format, b.stride);
-        if (b.streamId >= 0) {
+        if (b.streamId > 0) {
             if (b.format == HAL_PIXEL_FORMAT_BLOB) {
                 // Assumes only one BLOB buffer type per capture
                 compressedBufferIndex = i;
             } else {
-                ALOGV("Readout:    Sending image buffer %d to output stream %d",
-                        i, b.streamId);
+                ALOGV("Readout:    Sending image buffer %d (%p) to output stream %d",
+                        i, (void*)*(b.buffer), b.streamId);
                 GraphicBufferMapper::get().unlock(*(b.buffer));
                 const Stream &s = mParent->getStreamInfo(b.streamId);
                 res = s.ops->enqueue_buffer(s.ops, captureTime, b.buffer);
@@ -1253,6 +1521,8 @@ status_t EmulatedFakeCamera2::ControlThread::readyToRun() {
     mAeState = ANDROID_CONTROL_AE_STATE_INACTIVE;
     mAwbState = ANDROID_CONTROL_AWB_STATE_INACTIVE;
 
+    mExposureTime = kNormalExposureTime;
+
     mInputSignal.signal();
     return NO_ERROR;
 }
@@ -1308,13 +1578,24 @@ status_t EmulatedFakeCamera2::ControlThread::processRequest(camera_metadata_t *r
             &mode);
     mAwbMode = mode.data.u8[0];
 
-    // TODO: Override control fields
+    // TODO: Override more control fields
+
+    if (mAeMode != ANDROID_CONTROL_AE_OFF) {
+        camera_metadata_entry_t exposureTime;
+        res = find_camera_metadata_entry(request,
+                ANDROID_SENSOR_EXPOSURE_TIME,
+                &exposureTime);
+        if (res == OK) {
+            exposureTime.data.i64[0] = mExposureTime;
+        }
+    }
 
     return OK;
 }
 
 status_t EmulatedFakeCamera2::ControlThread::triggerAction(uint32_t msgType,
         int32_t ext1, int32_t ext2) {
+    ALOGV("%s: Triggering %d (%d, %d)", __FUNCTION__, msgType, ext1, ext2);
     Mutex::Autolock lock(mInputMutex);
     switch (msgType) {
         case CAMERA2_TRIGGER_AUTOFOCUS:
@@ -1339,12 +1620,24 @@ status_t EmulatedFakeCamera2::ControlThread::triggerAction(uint32_t msgType,
     return OK;
 }
 
-const nsecs_t EmulatedFakeCamera2::ControlThread::kControlCycleDelay = 100000000;
-const nsecs_t EmulatedFakeCamera2::ControlThread::kMinAfDuration = 500000000;
-const nsecs_t EmulatedFakeCamera2::ControlThread::kMaxAfDuration = 900000000;
+const nsecs_t EmulatedFakeCamera2::ControlThread::kControlCycleDelay = 100 * MSEC;
+const nsecs_t EmulatedFakeCamera2::ControlThread::kMinAfDuration = 500 * MSEC;
+const nsecs_t EmulatedFakeCamera2::ControlThread::kMaxAfDuration = 900 * MSEC;
 const float EmulatedFakeCamera2::ControlThread::kAfSuccessRate = 0.9;
+ // Once every 5 seconds
 const float EmulatedFakeCamera2::ControlThread::kContinuousAfStartRate =
-    kControlCycleDelay / 5000000000.0; // Once every 5 seconds
+        kControlCycleDelay / 5.0 * SEC;
+const nsecs_t EmulatedFakeCamera2::ControlThread::kMinAeDuration = 500 * MSEC;
+const nsecs_t EmulatedFakeCamera2::ControlThread::kMaxAeDuration = 2 * SEC;
+const nsecs_t EmulatedFakeCamera2::ControlThread::kMinPrecaptureAeDuration = 100 * MSEC;
+const nsecs_t EmulatedFakeCamera2::ControlThread::kMaxPrecaptureAeDuration = 400 * MSEC;
+ // Once every 3 seconds
+const float EmulatedFakeCamera2::ControlThread::kAeScanStartRate =
+    kControlCycleDelay / 3000000000.0;
+
+const nsecs_t EmulatedFakeCamera2::ControlThread::kNormalExposureTime = 10 * MSEC;
+const nsecs_t EmulatedFakeCamera2::ControlThread::kExposureJump = 5 * MSEC;
+const nsecs_t EmulatedFakeCamera2::ControlThread::kMinExposureTime = 1 * MSEC;
 
 bool EmulatedFakeCamera2::ControlThread::threadLoop() {
     bool afModeChange = false;
@@ -1353,14 +1646,20 @@ bool EmulatedFakeCamera2::ControlThread::threadLoop() {
     uint8_t afState;
     uint8_t afMode;
     int32_t afTriggerId;
+    bool precaptureTriggered = false;
+    uint8_t aeState;
+    uint8_t aeMode;
+    int32_t precaptureTriggerId;
     nsecs_t nextSleep = kControlCycleDelay;
 
     {
         Mutex::Autolock lock(mInputMutex);
         if (mStartAf) {
+            ALOGD("Starting AF trigger processing");
             afTriggered = true;
             mStartAf = false;
         } else if (mCancelAf) {
+            ALOGD("Starting cancel AF trigger processing");
             afCancelled = true;
             mCancelAf = false;
         }
@@ -1370,6 +1669,15 @@ bool EmulatedFakeCamera2::ControlThread::threadLoop() {
         mAfModeChange = false;
 
         afTriggerId = mAfTriggerId;
+
+        if(mStartPrecapture) {
+            ALOGD("Starting precapture trigger processing");
+            precaptureTriggered = true;
+            mStartPrecapture = false;
+        }
+        aeState = mAeState;
+        aeMode = mAeMode;
+        precaptureTriggerId = mPrecaptureTriggerId;
     }
 
     if (afCancelled || afModeChange) {
@@ -1392,6 +1700,16 @@ bool EmulatedFakeCamera2::ControlThread::threadLoop() {
 
     updateAfState(afState, afTriggerId);
 
+    if (precaptureTriggered) {
+        aeState = processPrecaptureTrigger(aeMode, aeState);
+    }
+
+    aeState = maybeStartAeScan(aeMode, aeState);
+
+    aeState = updateAeScan(aeMode, aeState, &nextSleep);
+
+    updateAeState(aeState, precaptureTriggerId);
+
     int ret;
     timespec t;
     t.tv_sec = 0;
@@ -1399,6 +1717,13 @@ bool EmulatedFakeCamera2::ControlThread::threadLoop() {
     do {
         ret = nanosleep(&t, &t);
     } while (ret != 0);
+
+    if (mAfScanDuration > 0) {
+        mAfScanDuration -= nextSleep;
+    }
+    if (mAeScanDuration > 0) {
+        mAeScanDuration -= nextSleep;
+    }
 
     return true;
 }
@@ -1504,7 +1829,7 @@ int EmulatedFakeCamera2::ControlThread::updateAfScan(uint8_t afMode,
         return afState;
     }
 
-    if (mAfScanDuration == 0) {
+    if (mAfScanDuration <= 0) {
         ALOGV("%s: AF scan done", __FUNCTION__);
         switch (afMode) {
             case ANDROID_CONTROL_AF_MACRO:
@@ -1534,9 +1859,6 @@ int EmulatedFakeCamera2::ControlThread::updateAfScan(uint8_t afMode,
     } else {
         if (mAfScanDuration <= *maxSleep) {
             *maxSleep = mAfScanDuration;
-            mAfScanDuration = 0;
-        } else {
-            mAfScanDuration -= *maxSleep;
         }
     }
     return afState;
@@ -1550,6 +1872,97 @@ void EmulatedFakeCamera2::ControlThread::updateAfState(uint8_t newState,
                 newState, triggerId);
         mAfState = newState;
         mParent->sendNotification(CAMERA2_MSG_AUTOFOCUS,
+                newState, triggerId, 0);
+    }
+}
+
+int EmulatedFakeCamera2::ControlThread::processPrecaptureTrigger(uint8_t aeMode,
+        uint8_t aeState) {
+    switch (aeMode) {
+        case ANDROID_CONTROL_AE_OFF:
+        case ANDROID_CONTROL_AE_LOCKED:
+            // Don't do anything for these
+            return aeState;
+        case ANDROID_CONTROL_AE_ON:
+        case ANDROID_CONTROL_AE_ON_AUTO_FLASH:
+        case ANDROID_CONTROL_AE_ON_ALWAYS_FLASH:
+        case ANDROID_CONTROL_AE_ON_AUTO_FLASH_REDEYE:
+            // Trigger a precapture cycle
+            aeState = ANDROID_CONTROL_AE_STATE_PRECAPTURE;
+            mAeScanDuration = ((double)rand() / RAND_MAX) *
+                    (kMaxPrecaptureAeDuration - kMinPrecaptureAeDuration) +
+                    kMinPrecaptureAeDuration;
+            ALOGD("%s: AE precapture scan start, duration %lld ms",
+                    __FUNCTION__, mAeScanDuration / 1000000);
+
+    }
+    return aeState;
+}
+
+int EmulatedFakeCamera2::ControlThread::maybeStartAeScan(uint8_t aeMode,
+        uint8_t aeState) {
+    switch (aeMode) {
+        case ANDROID_CONTROL_AE_OFF:
+        case ANDROID_CONTROL_AE_LOCKED:
+            // Don't do anything for these
+            break;
+        case ANDROID_CONTROL_AE_ON:
+        case ANDROID_CONTROL_AE_ON_AUTO_FLASH:
+        case ANDROID_CONTROL_AE_ON_ALWAYS_FLASH:
+        case ANDROID_CONTROL_AE_ON_AUTO_FLASH_REDEYE: {
+            if (aeState != ANDROID_CONTROL_AE_STATE_INACTIVE &&
+                    aeState != ANDROID_CONTROL_AE_STATE_CONVERGED) break;
+
+            bool startScan = ((double)rand() / RAND_MAX) < kAeScanStartRate;
+            if (startScan) {
+                mAeScanDuration = ((double)rand() / RAND_MAX) *
+                (kMaxAeDuration - kMinAeDuration) + kMinAeDuration;
+                aeState = ANDROID_CONTROL_AE_STATE_SEARCHING;
+                ALOGD("%s: AE scan start, duration %lld ms",
+                        __FUNCTION__, mAeScanDuration / 1000000);
+            }
+        }
+    }
+
+    return aeState;
+}
+
+int EmulatedFakeCamera2::ControlThread::updateAeScan(uint8_t aeMode,
+        uint8_t aeState, nsecs_t *maxSleep) {
+    if ((aeState == ANDROID_CONTROL_AE_STATE_SEARCHING) ||
+            (aeState == ANDROID_CONTROL_AE_STATE_PRECAPTURE ) ) {
+        if (mAeScanDuration <= 0) {
+            ALOGD("%s: AE scan done", __FUNCTION__);
+            aeState = ANDROID_CONTROL_AE_STATE_CONVERGED;
+
+            Mutex::Autolock lock(mInputMutex);
+            mExposureTime = kNormalExposureTime;
+        } else {
+            if (mAeScanDuration <= *maxSleep) {
+                *maxSleep = mAeScanDuration;
+            }
+
+            int64_t exposureDelta =
+                    ((double)rand() / RAND_MAX) * 2 * kExposureJump -
+                    kExposureJump;
+            Mutex::Autolock lock(mInputMutex);
+            mExposureTime = mExposureTime + exposureDelta;
+            if (mExposureTime < kMinExposureTime) mExposureTime = kMinExposureTime;
+        }
+    }
+
+    return aeState;
+}
+
+
+void EmulatedFakeCamera2::ControlThread::updateAeState(uint8_t newState,
+        int32_t triggerId) {
+    Mutex::Autolock lock(mInputMutex);
+    if (mAeState != newState) {
+        ALOGD("%s: Autoexposure state now %d, id %d", __FUNCTION__,
+                newState, triggerId);
+        mAeState = newState;
+        mParent->sendNotification(CAMERA2_MSG_AUTOEXPOSURE,
                 newState, triggerId, 0);
     }
 }
@@ -1894,11 +2307,10 @@ status_t EmulatedFakeCamera2::constructDefaultRequest(
     if ( ( ret = addOrSize(*request, sizeRequest, &entryCount, &dataCount, \
             tag, data, count) ) != OK ) return ret
 
-    static const int64_t USEC = 1000LL;
-    static const int64_t MSEC = USEC * 1000LL;
-    static const int64_t SEC = MSEC * 1000LL;
-
     /** android.request */
+
+    static const uint8_t requestType = ANDROID_REQUEST_TYPE_CAPTURE;
+    ADD_OR_SIZE(ANDROID_REQUEST_TYPE, &requestType, 1);
 
     static const uint8_t metadataMode = ANDROID_REQUEST_METADATA_FULL;
     ADD_OR_SIZE(ANDROID_REQUEST_METADATA_MODE, &metadataMode, 1);
@@ -2250,12 +2662,23 @@ bool EmulatedFakeCamera2::isStreamInUse(uint32_t id) {
         return true;
     }
     return false;
- }
+}
+
+bool EmulatedFakeCamera2::isReprocessStreamInUse(uint32_t id) {
+    // TODO: implement
+    return false;
+}
 
 const Stream& EmulatedFakeCamera2::getStreamInfo(uint32_t streamId) {
     Mutex::Autolock lock(mMutex);
 
     return mStreams.valueFor(streamId);
+}
+
+const ReprocessStream& EmulatedFakeCamera2::getReprocessStreamInfo(uint32_t streamId) {
+    Mutex::Autolock lock(mMutex);
+
+    return mReprocessStreams.valueFor(streamId);
 }
 
 };  /* namespace android */

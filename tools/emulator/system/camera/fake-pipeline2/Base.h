@@ -31,6 +31,9 @@ namespace android {
 
 /* Internal structure for passing buffers across threads */
 struct StreamBuffer {
+    // Positive numbers are output streams
+    // Negative numbers are input reprocess streams
+    // Zero is an auxillary buffer
     int streamId;
     uint32_t width, height;
     uint32_t format;
@@ -45,6 +48,15 @@ struct Stream {
     uint32_t width, height;
     int32_t format;
     uint32_t stride;
+};
+
+struct ReprocessStream {
+    const camera2_stream_in_ops_t *ops;
+    uint32_t width, height;
+    int32_t format;
+    uint32_t stride;
+    // -1 if the reprocessing stream is independent
+    int32_t sourceStreamId;
 };
 
 } // namespace android;
