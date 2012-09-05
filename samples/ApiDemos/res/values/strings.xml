@@ -124,6 +124,9 @@
     <string name="fragment_arguments_embedded">From Attributes</string>
     <string name="fragment_arguments_embedded_land">Landscape Only</string>
 
+    <string name="fragment_arguments_fragment_msg">Demonstrates two embedded fragments
+        that are instantiated with arguments.</string>
+
     <string name="fragment_custom_animations">App/Fragment/Custom Animations</string>
 
     <string name="fragment_hide_show">App/Fragment/Hide and Show</string>
@@ -152,6 +155,8 @@
     <string name="fragment1menu">Show fragment 1 menu</string>
     <string name="fragment2menu">Show fragment 2 menu</string>
 
+    <string name="fragment_nesting_tabs">App/Fragment/Nesting Tabs</string>
+
     <string name="fragment_retain_instance">App/Fragment/Retain Instance</string>
     <string name="fragment_retain_instance_msg">Current progress of retained fragment;
     restarts if fragment is re-created.</string>
@@ -160,8 +165,9 @@
     <string name="fragment_receive_result">App/Fragment/Receive Result</string>
 
     <string name="fragment_stack">App/Fragment/Stack</string>
-    <string name="new_fragment">New fragment</string>
-
+    <string name="new_fragment">Push</string>
+    <string name="delete_fragment">Pop</string>
+    
     <string name="first">First</string>
     <string name="last">Last</string>
 

@@ -44,6 +44,12 @@ public class FragmentStack extends Activity {
                 addFragmentToStack();
             }
         });
+        button = (Button)findViewById(R.id.delete_fragment);
+        button.setOnClickListener(new OnClickListener() {
+            public void onClick(View v) {
+                getFragmentManager().popBackStack();
+            }
+        });
 
         if (savedInstanceState == null) {
             // Do first time initialization -- add initial fragment.

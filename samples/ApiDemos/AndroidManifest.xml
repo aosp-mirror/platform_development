@@ -358,6 +358,15 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".app.FragmentNestingTabs"
+                android:label="@string/fragment_nesting_tabs"
+                android:enabled="@bool/atLeastJellyBeanMR1">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
         <activity android:name=".app.FragmentRetainInstance"
                 android:label="@string/fragment_retain_instance"
                 android:enabled="@bool/atLeastHoneycomb">
