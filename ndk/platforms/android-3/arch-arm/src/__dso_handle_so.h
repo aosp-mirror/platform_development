@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010 The Android Open Source Project
+ * Copyright (C) 2012 The Android Open Source Project
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,13 +26,11 @@
  * SUCH DAMAGE.
  */
 
-# The __dso_handle global variable is used by static
-# C++ constructors and destructors in the binary.
-# See http://www.codesourcery.com/public/cxx-abi/abi.html#dso-dtor
-#
-	.data
-        .align 4
-	.hidden __dso_handle
-        .globl __dso_handle
-__dso_handle:
-        .long __dso_handle
+/* The __dso_handle global variable is used by static
+   C++ constructors and destructors in the binary.
+   See http://www.codesourcery.com/public/cxx-abi/abi.html#dso-dtor
+*/
+
+__attribute__ ((visibility ("hidden")))
+__attribute__ ((section (".data")))
+void *__dso_handle;
