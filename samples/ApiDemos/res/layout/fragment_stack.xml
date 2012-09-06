@@ -28,11 +28,19 @@
             android:layout_weight="1">
     </FrameLayout>
 
-    <Button android:id="@+id/new_fragment"
+    <LinearLayout android:orientation="horizontal" android:padding="4dip"
+        android:gravity="center_horizontal" android:measureWithLargestChild="true"
         android:layout_width="wrap_content" android:layout_height="wrap_content"
-        android:layout_weight="0" 
-        android:text="@string/new_fragment">
-        <requestFocus />
-    </Button>
-
+        android:layout_weight="0">
+        <Button android:id="@+id/new_fragment"
+            android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="@string/new_fragment">
+            <requestFocus />
+        </Button>
+        <Button android:id="@+id/delete_fragment"
+            android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:layout_weight="0" 
+            android:text="@string/delete_fragment">
+        </Button>
+    </LinearLayout>
 </LinearLayout>

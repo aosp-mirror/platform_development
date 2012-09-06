@@ -29,6 +29,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ContextMenu.ContextMenuInfo;
+import android.widget.Toast;
 
 /**
  * Demonstration of displaying a context menu from a fragment.
@@ -65,10 +66,10 @@ public class FragmentContextMenu extends Activity {
         public boolean onContextItemSelected(MenuItem item) {
             switch (item.getItemId()) {
                 case R.id.a_item:
-                    Log.i("ContextMenu", "Item 1a was chosen");
+                    Toast.makeText(getActivity(), "Item 1a was chosen", Toast.LENGTH_SHORT).show();
                     return true;
                 case R.id.b_item:
-                    Log.i("ContextMenu", "Item 1b was chosen");
+                    Toast.makeText(getActivity(), "Item 1b was chosen", Toast.LENGTH_SHORT).show();
                     return true;
             }
             return super.onContextItemSelected(item);
