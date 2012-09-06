@@ -1574,6 +1574,15 @@ status_t EmulatedFakeCamera2::ControlThread::processRequest(camera_metadata_t *r
     mAeMode = mode.data.u8[0];
 
     res = find_camera_metadata_entry(request,
+            ANDROID_CONTROL_AE_LOCK,
+            &mode);
+    bool aeLock = (mode.data.u8[0] == ANDROID_CONTROL_AE_LOCK_ON);
+    if (mAeLock && !aeLock) {
+        mAeState = ANDROID_CONTROL_AE_STATE_INACTIVE;
+    }
+    mAeLock = aeLock;
+
+    res = find_camera_metadata_entry(request,
             ANDROID_CONTROL_AWB_MODE,
             &mode);
     mAwbMode = mode.data.u8[0];
@@ -1636,7 +1645,7 @@ const float EmulatedFakeCamera2::ControlThread::kAeScanStartRate =
     kControlCycleDelay / 3000000000.0;
 
 const nsecs_t EmulatedFakeCamera2::ControlThread::kNormalExposureTime = 10 * MSEC;
-const nsecs_t EmulatedFakeCamera2::ControlThread::kExposureJump = 5 * MSEC;
+const nsecs_t EmulatedFakeCamera2::ControlThread::kExposureJump = 2 * MSEC;
 const nsecs_t EmulatedFakeCamera2::ControlThread::kMinExposureTime = 1 * MSEC;
 
 bool EmulatedFakeCamera2::ControlThread::threadLoop() {
@@ -1649,6 +1658,7 @@ bool EmulatedFakeCamera2::ControlThread::threadLoop() {
     bool precaptureTriggered = false;
     uint8_t aeState;
     uint8_t aeMode;
+    bool    aeLock;
     int32_t precaptureTriggerId;
     nsecs_t nextSleep = kControlCycleDelay;
 
@@ -1677,6 +1687,7 @@ bool EmulatedFakeCamera2::ControlThread::threadLoop() {
         }
         aeState = mAeState;
         aeMode = mAeMode;
+        aeLock = mAeLock;
         precaptureTriggerId = mPrecaptureTriggerId;
     }
 
@@ -1695,19 +1706,15 @@ bool EmulatedFakeCamera2::ControlThread::threadLoop() {
     }
 
     afState = maybeStartAfScan(afMode, afState);
-
     afState = updateAfScan(afMode, afState, &nextSleep);
-
     updateAfState(afState, afTriggerId);
 
     if (precaptureTriggered) {
         aeState = processPrecaptureTrigger(aeMode, aeState);
     }
 
-    aeState = maybeStartAeScan(aeMode, aeState);
-
-    aeState = updateAeScan(aeMode, aeState, &nextSleep);
-
+    aeState = maybeStartAeScan(aeMode, aeLock, aeState);
+    aeState = updateAeScan(aeMode, aeLock, aeState, &nextSleep);
     updateAeState(aeState, precaptureTriggerId);
 
     int ret;
@@ -1880,7 +1887,6 @@ int EmulatedFakeCamera2::ControlThread::processPrecaptureTrigger(uint8_t aeMode,
         uint8_t aeState) {
     switch (aeMode) {
         case ANDROID_CONTROL_AE_OFF:
-        case ANDROID_CONTROL_AE_LOCKED:
             // Don't do anything for these
             return aeState;
         case ANDROID_CONTROL_AE_ON:
@@ -1900,11 +1906,11 @@ int EmulatedFakeCamera2::ControlThread::processPrecaptureTrigger(uint8_t aeMode,
 }
 
 int EmulatedFakeCamera2::ControlThread::maybeStartAeScan(uint8_t aeMode,
+        bool aeLocked,
         uint8_t aeState) {
+    if (aeLocked) return aeState;
     switch (aeMode) {
         case ANDROID_CONTROL_AE_OFF:
-        case ANDROID_CONTROL_AE_LOCKED:
-            // Don't do anything for these
             break;
         case ANDROID_CONTROL_AE_ON:
         case ANDROID_CONTROL_AE_ON_AUTO_FLASH:
@@ -1928,12 +1934,16 @@ int EmulatedFakeCamera2::ControlThread::maybeStartAeScan(uint8_t aeMode,
 }
 
 int EmulatedFakeCamera2::ControlThread::updateAeScan(uint8_t aeMode,
-        uint8_t aeState, nsecs_t *maxSleep) {
-    if ((aeState == ANDROID_CONTROL_AE_STATE_SEARCHING) ||
+        bool aeLock, uint8_t aeState, nsecs_t *maxSleep) {
+    if (aeLock && aeState != ANDROID_CONTROL_AE_STATE_PRECAPTURE) {
+        mAeScanDuration = 0;
+        aeState = ANDROID_CONTROL_AE_STATE_LOCKED;
+    } else if ((aeState == ANDROID_CONTROL_AE_STATE_SEARCHING) ||
             (aeState == ANDROID_CONTROL_AE_STATE_PRECAPTURE ) ) {
         if (mAeScanDuration <= 0) {
             ALOGD("%s: AE scan done", __FUNCTION__);
-            aeState = ANDROID_CONTROL_AE_STATE_CONVERGED;
+            aeState = aeLock ?
+                    ANDROID_CONTROL_AE_STATE_LOCKED :ANDROID_CONTROL_AE_STATE_CONVERGED;
 
             Mutex::Autolock lock(mInputMutex);
             mExposureTime = kNormalExposureTime;
@@ -2558,6 +2568,9 @@ status_t EmulatedFakeCamera2::constructDefaultRequest(
     static const uint8_t aeMode = ANDROID_CONTROL_AE_ON_AUTO_FLASH;
     ADD_OR_SIZE(ANDROID_CONTROL_AE_MODE, &aeMode, 1);
 
+    static const uint8_t aeLock = ANDROID_CONTROL_AE_LOCK_OFF;
+    ADD_OR_SIZE(ANDROID_CONTROL_AE_LOCK, &aeLock, 1);
+
     static const int32_t controlRegions[5] = {
         0, 0, Sensor::kResolution[0], Sensor::kResolution[1], 1000
     };
@@ -2578,6 +2591,9 @@ status_t EmulatedFakeCamera2::constructDefaultRequest(
     static const uint8_t awbMode =
             ANDROID_CONTROL_AWB_AUTO;
     ADD_OR_SIZE(ANDROID_CONTROL_AWB_MODE, &awbMode, 1);
+
+    static const uint8_t awbLock = ANDROID_CONTROL_AWB_LOCK_OFF;
+    ADD_OR_SIZE(ANDROID_CONTROL_AWB_LOCK, &awbLock, 1);
 
     ADD_OR_SIZE(ANDROID_CONTROL_AWB_REGIONS, controlRegions, 5);
 
