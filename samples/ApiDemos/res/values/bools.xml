@@ -34,4 +34,9 @@
          for JellyBean is true. -->
     <bool name="atLeastJellyBean">false</bool>
 
+    <!-- This resource is true if running under at least JellyBean MR1
+         API level.  The default value is false; an alternative value
+         for JellyBean MR 1 is true. -->
+    <bool name="atLeastJellyBeanMR1">false</bool>
+    
 </resources>
