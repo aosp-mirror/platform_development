@@ -14,12 +14,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# Generates a module index file by searching through android source tree for make files.  The
-# intellij-gen.sh script automatically calls this script the first time or if you delete the
-# generated indexed file.  The only time you need to run this manually is if modules are added or
-# deleted.
+# Generates a module index file by searching through android source
+# tree for make files.  The intellij-gen.sh script automatically calls
+# this script the first time or if you delete the generated indexed
+# file.  The only time you need to run this manually is if modules are
+# added or deleted.
 #
-# To use:
+# To use, run the following command from either your repo root or
+# development/tools/idegen:
 #   index-gen.sh
 #
 # Only tested on linux.  Should work for macs but have not tried.
@@ -27,7 +29,15 @@
 set -e
 
 script_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-root_dir=`readlink -f -n $script_dir/../../..`
+#root_dir=`readlink -f -n $script_dir/../../..`
+root_dir=$PWD
+if [ ! -e $root_dir/.repo ]; then
+  root_dir=$PWD/../../..
+  if [ ! -e $root_dir/.repo ]; then
+    echo "Repo root not found. Run this script from your repo root or the idegen directory."
+    exit 1
+  fi
+fi
 tmp_file=tmp.txt
 dest_file=module-index.txt
 
