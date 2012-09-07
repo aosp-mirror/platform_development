@@ -344,6 +344,7 @@ private:
         uint8_t mAfState;
         uint8_t mAeState;
         uint8_t mAwbState;
+        bool    mAeLock;
 
         // Current control parameters
         nsecs_t mExposureTime;
@@ -362,8 +363,9 @@ private:
 
         // Utility methods for precapture trigger
         int processPrecaptureTrigger(uint8_t aeMode, uint8_t aeState);
-        int maybeStartAeScan(uint8_t aeMode, uint8_t aeState);
-        int updateAeScan(uint8_t aeMode, uint8_t aeState, nsecs_t *maxSleep);
+        int maybeStartAeScan(uint8_t aeMode, bool aeLock, uint8_t aeState);
+        int updateAeScan(uint8_t aeMode, bool aeLock, uint8_t aeState,
+                nsecs_t *maxSleep);
         void updateAeState(uint8_t newState, int32_t triggerId);
     };
 
