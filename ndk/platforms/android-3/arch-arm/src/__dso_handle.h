@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010 The Android Open Source Project
+ * Copyright (C) 2012 The Android Open Source Project
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,30 +26,25 @@
  * SUCH DAMAGE.
  */
 
-# The __dso_handle global variable is used by static
-# C++ constructors and destructors in the binary.
-# See http://www.codesourcery.com/public/cxx-abi/abi.html#dso-dtor
-#
-        .data
-        .align 4
+/* The __dso_handle global variable is used by static
+   C++ constructors and destructors in the binary.
+   See http://www.codesourcery.com/public/cxx-abi/abi.html#dso-dtor
 
-/* CRT_LEGACY_WORKAROUND is only defined when building this file
- * for the C library. This forces __dso_handle to be exported by
- * it. This is only required to ensure binary compatibility with
- * old NDK application machine code that contains reference to
- * the symbol, but do not have a proper definition for it.
- *
- * These binaries cannot call their destructorson dlclose(), but
- * at least they will not fail to load.
- *
- * When this file is built for the NDK, CRT_LEGACY_WORKAROUND
- * should never be defined.
+   CRT_LEGACY_WORKAROUND is only defined when building this file
+   for the C library. This forces __dso_handle to be exported by
+   it. This is only required to ensure binary compatibility with
+   old NDK application machine code that contains reference to
+   the symbol, but do not have a proper definition for it.
+
+   These binaries cannot call their destructorson dlclose(), but
+   at least they will not fail to load.
+
+   When this file is built for the NDK, CRT_LEGACY_WORKAROUND
+   should never be defined.
  */
 
 #ifndef CRT_LEGACY_WORKAROUND
-	.hidden __dso_handle
+__attribute__ ((visibility ("hidden")))
 #endif
-
-        .globl __dso_handle
-__dso_handle:
-        .long __dso_handle
+__attribute__ ((section (".bss")))
+void *__dso_handle = (void *) 0;
