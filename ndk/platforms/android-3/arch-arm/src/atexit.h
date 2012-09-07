@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008 The Android Open Source Project
+ * Copyright (C) 2012 The Android Open Source Project
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,65 +25,11 @@
  * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-	.text
-	.align 4
-	.type _start,#function
-	.globl _start
 
-# this is the small startup code that is first run when
-# any executable that is statically-linked with Bionic
-# runs.
-#
-# it's purpose is to call __libc_init with appropriate
-# arguments, which are:
-#
-#    - the address of the raw data block setup by the Linux
-#      kernel ELF loader
-#
-#    - address of an "onexit" function, not used on any
-#      platform supported by Bionic
-#
-#    - address of the "main" function of the program.
-#
-#    - address of the constructor list
-#
-_start:	
-	mov	r0, sp
-	mov	r1, #0
-	ldr	r2, =main
-	adr	r3, 1f
-	ldr	r4, =__libc_init
-# Use blx intead of bx so stack unwinding past __libc_init can terminate at _start
-	blx	r4
-	mov	r0, #0
-	bx	r0
+extern void *__dso_handle;
 
-1:  .long   __PREINIT_ARRAY__
-    .long   __INIT_ARRAY__
-    .long   __FINI_ARRAY__
-    .long   __CTOR_LIST__
-
-	.section .preinit_array, "aw"
-	.globl __PREINIT_ARRAY__
-__PREINIT_ARRAY__:
-	.long -1
-
-	.section .init_array, "aw"
-	.globl __INIT_ARRAY__
-__INIT_ARRAY__:
-	.long -1
-
-	.section .fini_array, "aw"
-	.globl __FINI_ARRAY__
-__FINI_ARRAY__:
-	.long -1
-
-	.section .ctors, "aw"
-	.globl __CTOR_LIST__
-__CTOR_LIST__:
-	.long -1
-
-
-#include "__dso_handle.S"
-/* NOTE: atexit() is  not be provided by crtbegin_static.S, but by libc.a */
-
+__attribute__ ((visibility ("hidden")))
+int atexit(void (*func)(void))
+{
+  return (__cxa_atexit((void (*)(void *))func, (void *)0, &__dso_handle));
+}
