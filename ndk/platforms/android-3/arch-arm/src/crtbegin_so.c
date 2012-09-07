@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008 The Android Open Source Project
+ * Copyright (C) 2012 The Android Open Source Project
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,36 +26,33 @@
  * SUCH DAMAGE.
  */
 
-# Implement static C++ destructors when the shared
-# library is unloaded through dlclose().
-#
-# A call to this function must be the first entry
-# in the .fini_array. See 3.3.5.3.C of C++ ABI
-# standard.
-#
-__on_dlclose:
-        adr     r0, 0f
-        ldr     r0, [r0]
-        b       __cxa_finalize
+extern void __cxa_finalize(void *);
+extern void *__dso_handle;
 
-0:
-        .long   __dso_handle
+__attribute__((visibility("hidden"),destructor))
+void __on_dlclose() {
+  __cxa_finalize(&__dso_handle);
+}
 
-	.section .init_array, "aw"
-	.globl __INIT_ARRAY__
-__INIT_ARRAY__:
-	.long -1
-
-        .section .fini_array, "aw"
-        .globl __FINI_ARRAY__
-__FINI_ARRAY__:
-        .long -1
-        .long __on_dlclose
+/* CRT_LEGACY_WORKAROUND should only be defined when building
+ * this file as part of the platform's C library.
+ *
+ * The C library already defines a function named 'atexit()'
+ * for backwards compatibility with older NDK-generated binaries.
+ *
+ * For newer ones, 'atexit' is actually embedded in the C
+ * runtime objects that are linked into the final ELF
+ * binary (shared library or executable), and will call
+ * __cxa_atexit() in order to un-register any atexit()
+ * handler when a library is unloaded.
+ *
+ * This function must be global *and* hidden. Only the
+ * code inside the same ELF binary should be able to access it.
+ */
 
 #ifdef CRT_LEGACY_WORKAROUND
-#include "__dso_handle.S"
+#include "__dso_handle.h"
 #else
-#include "__dso_handle_so.S"
+#include "__dso_handle_so.h"
+#include "atexit.h"
 #endif
-
-#include "atexit.S"
