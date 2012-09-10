@@ -17,7 +17,7 @@
 package com.android.development;
 
 import android.app.Activity;
-import android.app.ActivityManagerNative;
+import android.app.ActivityManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -30,7 +30,6 @@ import android.content.pm.ProviderInfo;
 import android.content.pm.ServiceInfo;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.RemoteException;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -38,7 +37,6 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-
 
 public class PackageSummary extends Activity {
 
@@ -151,10 +149,9 @@ public class PackageSummary extends Activity {
 
             mRestart.setOnClickListener(new View.OnClickListener() {
                 public void onClick(View v) {
-                    try {
-                        ActivityManagerNative.getDefault().killBackgroundProcesses(mPackageName);
-                    } catch (RemoteException e) {
-                    }
+                    ActivityManager am = (ActivityManager)getSystemService(
+                            Context.ACTIVITY_SERVICE);
+                    am.killBackgroundProcesses(mPackageName);
                 }
             });
             
