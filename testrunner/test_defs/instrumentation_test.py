@@ -33,9 +33,6 @@ class InstrumentationTestSuite(test_suite.AbstractTestSuite):
 
   DEFAULT_RUNNER = "android.test.InstrumentationTestRunner"
 
-  # dependency on libcore (used for Emma)
-  _LIBCORE_BUILD_PATH = "libcore"
-
   def __init__(self):
     test_suite.AbstractTestSuite.__init__(self)
     self._package_name = None
@@ -87,8 +84,6 @@ class InstrumentationTestSuite(test_suite.AbstractTestSuite):
     return self
 
   def GetBuildDependencies(self, options):
-    if options.coverage:
-      return [self._LIBCORE_BUILD_PATH]
     return []
 
   def Run(self, options, adb):
@@ -145,8 +140,6 @@ class InstrumentationTestSuite(test_suite.AbstractTestSuite):
       logger.Log(adb_cmd)
     elif options.coverage:
       coverage_gen = coverage.CoverageGenerator(adb)
-      adb.WaitForInstrumentation(self.GetPackageName(),
-                                 self.GetRunnerName())
       # need to parse test output to determine path to coverage file
       logger.Log("Running in coverage mode, suppressing test output")
       try:
@@ -168,8 +161,6 @@ class InstrumentationTestSuite(test_suite.AbstractTestSuite):
       if coverage_file is not None:
         logger.Log("Coverage report generated at %s" % coverage_file)
     else:
-      adb.WaitForInstrumentation(self.GetPackageName(),
-                                 self.GetRunnerName())
       adb.StartInstrumentationNoResults(
           package_name=self.GetPackageName(),
           runner_name=self.GetRunnerName(),
