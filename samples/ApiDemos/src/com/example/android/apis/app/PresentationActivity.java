@@ -21,19 +21,26 @@ package com.example.android.apis.app;
 import com.example.android.apis.R;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.Presentation;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.res.Resources;
+import android.graphics.Point;
+import android.graphics.drawable.GradientDrawable;
 import android.hardware.display.DisplayManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.util.SparseArray;
 import android.view.Display;
 import android.view.View;
-import android.widget.AdapterView.OnItemClickListener;
-import android.widget.AdapterView;
+import android.view.View.OnClickListener;
+import android.view.ViewGroup;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
+import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -51,18 +58,20 @@ import android.widget.TextView;
  * a few simulated secondary displays.
  * </p>
  */
-public class PresentationActivity extends Activity {
+public class PresentationActivity extends Activity
+        implements OnCheckedChangeListener, OnClickListener {
     private final String TAG = "PresentationActivity";
 
     // The content that we want to show on the presentation.
     private static final int[] CHANNELS = new int[] {
+        R.drawable.sample_4, R.drawable.frantic, R.drawable.beach,
         R.drawable.photo1, R.drawable.photo2, R.drawable.photo3,
         R.drawable.photo4, R.drawable.photo5, R.drawable.photo6,
     };
 
     private DisplayManager mDisplayManager;
-    private ListView mDisplayList;
     private DisplayListAdapter mDisplayListAdapter;
+    private ListView mListView;
     private int mNextChannelNumber;
 
     // All active presentations indexed by display id.
@@ -88,10 +97,8 @@ public class PresentationActivity extends Activity {
         setContentView(R.layout.presentation_activity);
 
         mDisplayListAdapter = new DisplayListAdapter(this);
-
-        mDisplayList = (ListView)findViewById(R.id.display_list);
-        mDisplayList.setAdapter(mDisplayListAdapter);
-        mDisplayList.setOnItemClickListener(mOnItemClickListener);
+        mListView = (ListView)findViewById(R.id.display_list);
+        mListView.setAdapter(mDisplayListAdapter);
     }
 
     @Override
@@ -144,20 +151,50 @@ public class PresentationActivity extends Activity {
     }
 
     /**
-     * Shows a {@link Presentation} on the specified display, or dismisses it if one
-     * already showing there.
+     * Hides a {@link Presentation} on the specified display.
      */
-    private void showOrDismissPresentation(Display display) {
-        // Dismiss if already showing.
-        DemoPresentation presentation = mActivePresentations.get(display.getDisplayId());
+    private void hidePresentation(Display display) {
+        final int displayId = display.getDisplayId();
+        DemoPresentation presentation = mActivePresentations.get(displayId);
         if (presentation != null) {
-            Log.d(TAG, "Dimissing presentation on display " + display.getDisplayId() + ".");
+            Log.d(TAG, "Dimissing presentation on display " + displayId + ".");
             presentation.dismiss();
+            // presentation will be removed from mActivePresentations in onDismiss().
             return;
         }
+    }
 
-        // Otherwise show the presentation.
-        showPresentation(display);
+    @Override
+    /** Presentation CheckBox */
+    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+        final Display display = (Display)buttonView.getTag();
+        if (isChecked) {
+            showPresentation(display);
+        } else {
+            hidePresentation(display);
+        }
+    }
+
+    @Override
+    /** Info Button */
+    public void onClick(View v) {
+        Context context = v.getContext();
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        final Display display = (Display)v.getTag();
+        Resources r = context.getResources();
+        AlertDialog alert = builder
+                .setTitle(r.getString(
+                        R.string.presentation_alert_info_text, display.getDisplayId()))
+                .setMessage(display.toString())
+                .setNeutralButton(R.string.presentation_alert_dismiss_text,
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.dismiss();
+                            }
+                    })
+                .create();
+        alert.show();
     }
 
     /**
@@ -203,9 +240,21 @@ public class PresentationActivity extends Activity {
         @Override
         public void onDismiss(DialogInterface dialog) {
             DemoPresentation presentation = (DemoPresentation)dialog;
-            Display display = presentation.getDisplay();
-            Log.d(TAG, "Presentation on display " + display.getDisplayId() + " was dismissed.");
-            mActivePresentations.remove(display.getDisplayId());
+            int displayId = presentation.getDisplay().getDisplayId();
+            Log.d(TAG, "Presentation on display " + displayId + " was dismissed.");
+            mActivePresentations.remove(displayId);
+
+            // Uncheck the checkbox once removed.
+            final int numChildren = mListView.getChildCount();
+            for (int i = 0; i < numChildren; i++) {
+                CheckBox cb =
+                        (CheckBox)mListView.getChildAt(i).findViewById(R.id.checkbox_presentation);
+                Display cbDisplay = (Display)cb.getTag();
+                if (cbDisplay.getDisplayId() == displayId) {
+                    cb.setChecked(false);
+                    break;
+                }
+            }
         }
     };
 
@@ -214,8 +263,39 @@ public class PresentationActivity extends Activity {
      * Shows information about all displays.
      */
     private final class DisplayListAdapter extends ArrayAdapter<Display> {
+        final Context mContext;
+
         public DisplayListAdapter(Context context) {
-            super(context, android.R.layout.simple_list_item_1);
+            super(context, R.layout.presentation_list_item);
+            mContext = context;
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            final View v;
+            if (convertView == null) {
+                v = ((Activity) mContext).getLayoutInflater().inflate(
+                        R.layout.presentation_list_item, null);
+            } else {
+                v = convertView;
+            }
+
+            final Display display = getItem(position);
+
+            CheckBox cb = (CheckBox)v.findViewById(R.id.checkbox_presentation);
+            cb.setTag(display);
+            cb.setOnCheckedChangeListener(PresentationActivity.this);
+            onCheckedChanged(cb, cb.isChecked());
+
+            TextView tv = (TextView)v.findViewById(R.id.display_id);
+            tv.setText(v.getContext().getResources().getString(
+                    R.string.presentation_display_id_text, display.getDisplayId()));
+
+            Button b = (Button)v.findViewById(R.id.info);
+            b.setTag(display);
+            b.setOnClickListener(PresentationActivity.this);
+
+            return v;
         }
 
         /**
@@ -234,19 +314,6 @@ public class PresentationActivity extends Activity {
             }
         }
     }
-
-    /**
-     * Called when an item in the display list is clicked.
-     *
-     * Causes a presentation to be shown or dismissed on that display if already showing.
-     */
-    private final OnItemClickListener mOnItemClickListener = new OnItemClickListener() {
-        @Override
-        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-            Display display = (Display)parent.getItemAtPosition(position);
-            showOrDismissPresentation(display);
-        }
-    };
 
     /**
      * The presentation to show on the secondary display.
@@ -284,6 +351,20 @@ public class PresentationActivity extends Activity {
             // Show a n image for visual interest.
             ImageView image = (ImageView)findViewById(R.id.image);
             image.setImageDrawable(r.getDrawable(CHANNELS[mChannelNumber]));
+
+            GradientDrawable drawable = new GradientDrawable();
+            drawable.setShape(GradientDrawable.RECTANGLE);
+            drawable.setGradientType(GradientDrawable.RADIAL_GRADIENT);
+
+            // Set the background to a random gradient.
+            Point p = new Point();
+            getDisplay().getSize(p);
+            drawable.setGradientRadius(Math.max(p.x, p.y) / 2);
+            drawable.setColors(new int[] {
+                ((int) (Math.random() * Integer.MAX_VALUE)) | 0xFF000000,
+                ((int) (Math.random() * Integer.MAX_VALUE)) | 0xFF000000
+            });
+            findViewById(android.R.id.content).setBackground(drawable);
         }
     }
 }
