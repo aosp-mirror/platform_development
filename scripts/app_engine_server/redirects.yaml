@@ -296,6 +296,10 @@ redirects:
   type: permanent
   comment: Redirect to new location
 
+- src: /guide/practices/accessibility.html
+  dst: /guide/topics/ui/accessibility/index.html
+  type: permanent
+  
 # new one  
 - src: /resources/dashboard/.*
   dst: /about/dashboards/index.html
@@ -310,7 +314,7 @@ redirects:
 - src: /guide/tutorials/
   dst: /resources/tutorials/
   type: permanent
-  
+
 - src: /resources/tutorials/views/hello-linearlayout.html
   dst: /guide/topics/ui/layout/linear.html
   type: permanent
