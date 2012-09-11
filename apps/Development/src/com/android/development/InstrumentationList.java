@@ -25,6 +25,7 @@ import android.content.pm.InstrumentationInfo;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.RemoteException;
+import android.os.UserHandle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -154,7 +155,7 @@ public class InstrumentationList extends ListActivity
             }
             try {
                 ActivityManagerNative.getDefault().
-                    startInstrumentation(className, profilingFile, 0, null, mWatcher);
+                    startInstrumentation(className, profilingFile, 0, null, mWatcher, UserHandle.myUserId());
             } catch (RemoteException ex) {
             }
         }
