@@ -294,7 +294,7 @@ class TestRunner(object):
     if m:
       remote_path = m.group(1)
       abs_install_path = os.path.join(self._root_path, install_path)
-      logger.Log("adb push %s %s", abs_install_path, remote_path)
+      logger.Log("adb push %s %s" % (abs_install_path, remote_path))
       self._adb.Push(abs_install_path, remote_path)
     else:
       logger.Log("Error: Failed to recognize path of file to install %s" % install_path)

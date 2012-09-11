@@ -140,6 +140,7 @@ class InstrumentationTestSuite(test_suite.AbstractTestSuite):
       logger.Log(adb_cmd)
     elif options.coverage:
       coverage_gen = coverage.CoverageGenerator(adb)
+      self._CheckInstrumentationInstalled(adb)
       # need to parse test output to determine path to coverage file
       logger.Log("Running in coverage mode, suppressing test output")
       try:
@@ -160,12 +161,22 @@ class InstrumentationTestSuite(test_suite.AbstractTestSuite):
           self, device_coverage_path, test_qualifier=options.test_size)
       if coverage_file is not None:
         logger.Log("Coverage report generated at %s" % coverage_file)
+
     else:
-      adb.StartInstrumentationNoResults(
-          package_name=self.GetPackageName(),
-          runner_name=self.GetRunnerName(),
-          raw_mode=options.raw_mode,
-          instrumentation_args=instrumentation_args)
+      self._CheckInstrumentationInstalled(adb)
+      adb.StartInstrumentationNoResults(package_name=self.GetPackageName(),
+                                        runner_name=self.GetRunnerName(),
+                                        raw_mode=options.raw_mode,
+                                        instrumentation_args=
+                                        instrumentation_args)
+
+  def _CheckInstrumentationInstalled(self, adb):
+    if not adb.IsInstrumentationInstalled(self.GetPackageName(),    
+                                          self.GetRunnerName()):
+      msg=("Could not find instrumentation %s/%s on device. Try forcing a "
+           "rebuild by updating a source file, and re-executing runtest." % 
+           (self.GetPackageName(), self.GetRunnerName()))
+      raise errors.AbortError(msg=msg)
 
   def _PrintTestResults(self, test_results):
     """Prints a summary of test result data to stdout.
@@ -188,7 +199,6 @@ class InstrumentationTestSuite(test_suite.AbstractTestSuite):
       total_count+=1
     logger.Log("Tests run: %d, Failures: %d, Errors: %d" %
                (total_count, fail_count, error_count))
-
 
 def HasInstrumentationTest(path):
   """Determine if given path defines an instrumentation test.
