@@ -113,8 +113,14 @@
     <string name="apply">Apply</string>
 
     <string name="activity_presentation">App/Activity/Presentation</string>
-    <string name="presentation_activity_text">This activity demonstrates how to use the Presentation activity to show content on other Displays.  Try connecting a secondary display and watch what happens.</string>
+    <string name="presentation_activity_text">This activity demonstrates how to use the Presentation activity to show content on other Displays.\n
+                  Try connecting a secondary display and watch what happens.\n
+                  Selecting a Display will open a Presentation on it.</string>
     <string name="presentation_channel_text">You\'re watching channel %1$d on display %2$d.</string>
+    <string name="presentation_info_text">Info</string>
+    <string name="presentation_display_id_text">Display #%1$d</string>
+    <string name="presentation_alert_info_text">Display %1$d Info</string>
+    <string name="presentation_alert_dismiss_text">OK</string>
 
     <string name="fragment_alert_dialog">App/Fragment/Alert Dialog</string>
 
