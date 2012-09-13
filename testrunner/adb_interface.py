@@ -336,29 +336,16 @@ class AdbInterface:
       raise errors.WaitForResponseTimedOutError(
           "Package manager did not respond after %s seconds" % wait_time)
 
-  def WaitForInstrumentation(self, package_name, runner_name, wait_time=120):
-    """Waits for given instrumentation to be present on device
-
-    Args:
-      wait_time: time in seconds to wait
-
-    Raises:
-      WaitForResponseTimedOutError if wait_time elapses and instrumentation
-      still not present.
-    """
+  def IsInstrumentationInstalled(self, package_name, runner_name):
+    """Checks if instrumentation is present on device."""
     instrumentation_path = "%s/%s" % (package_name, runner_name)
-    logger.Log("Waiting for instrumentation to be present")
-    # Query the package manager
+    command = "pm list instrumentation | grep %s" % instrumentation_path
     try:
-      command = "pm list instrumentation | grep %s" % instrumentation_path
-      self._WaitForShellCommandContents(command, "instrumentation:", wait_time,
-                                        raise_abort=False)
-    except errors.WaitForResponseTimedOutError :
-      logger.Log(
-          "Could not find instrumentation %s on device. Does the "
-          "instrumentation in test's AndroidManifest.xml match definition"
-          "in test_defs.xml?" % instrumentation_path)
-      raise
+      output = self.SendShellCommand(command)
+      return output.startswith("instrumentation:")
+    except errors.AbortError:
+      # command can return error code on failure
+      return False
 
   def WaitForProcess(self, name, wait_time=120):
     """Wait until a process is running on the device.
