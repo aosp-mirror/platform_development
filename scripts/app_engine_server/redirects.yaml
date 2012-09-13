@@ -440,7 +440,10 @@ redirects:
   type: permanent
   comment: Redirect to new location
   
-  
+- src: /live/index.html
+  dst: https://developers.google.com/live/
+  type: permanent
+  comment: Redirect to new location
   
   
   
