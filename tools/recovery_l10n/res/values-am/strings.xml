@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resources xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <string name="recovery_installing" msgid="7864047928003865598">"የስርዓት ዝማኔ በመጫን ላይ…"</string>
+    <string name="recovery_erasing" msgid="4612809744968710197">"በመደምሰስ ላይ…"</string>
+    <string name="recovery_no_command" msgid="1915703879031023455">"ምንም ትዕዛዝ የለም።"</string>
+    <string name="recovery_error" msgid="4550265746256727080">"ስህተት!"</string>
+</resources>

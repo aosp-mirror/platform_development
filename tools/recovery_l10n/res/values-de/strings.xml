@@ -1,9 +1,8 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-
-  <string name="recovery_installing">Systemupdate wird installiert\u2026</string>
-  <string name="recovery_erasing">Löschen\u2026</string>
-  <string name="recovery_no_command">Kein Befehl.</string>
-  <string name="recovery_error">Fehler!</string>
-
+<?xml version="1.0" encoding="UTF-8"?>
+<resources xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <string name="recovery_installing" msgid="7864047928003865598">"Systemupdate wird installiert…"</string>
+    <string name="recovery_erasing" msgid="4612809744968710197">"Wird gelöscht…"</string>
+    <string name="recovery_no_command" msgid="1915703879031023455">"Kein Befehl"</string>
+    <string name="recovery_error" msgid="4550265746256727080">"Fehler"</string>
 </resources>
