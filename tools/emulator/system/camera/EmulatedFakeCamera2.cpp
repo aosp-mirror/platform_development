@@ -266,6 +266,11 @@ int EmulatedFakeCamera2::allocateStream(
         uint32_t *max_buffers) {
     Mutex::Autolock l(mMutex);
 
+    // Temporary shim until FORMAT_ZSL is removed
+    if (format == CAMERA2_HAL_PIXEL_FORMAT_ZSL) {
+        format = HAL_PIXEL_FORMAT_IMPLEMENTATION_DEFINED;
+    }
+
     if (format != HAL_PIXEL_FORMAT_IMPLEMENTATION_DEFINED) {
         unsigned int numFormats = sizeof(kAvailableFormats) / sizeof(uint32_t);
         unsigned int formatIdx = 0;
