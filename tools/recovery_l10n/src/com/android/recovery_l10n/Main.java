@@ -36,8 +36,10 @@ import android.widget.AdapterView;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.Locale;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Locale;
 
 /**
  * This activity assists in generating the specially-formatted bitmaps
@@ -49,10 +51,6 @@ import java.util.HashMap;
  * To use this app to generate new translations:
  *
  *   - Update the string resources in res/values-*
- *
- *   - Update the list of desired locales (mLocales) below.  Locales
- *     should be ordered by decreasing popularity (ie, the most
- *     commonly-used one first).
  *
  *   - Build and run the app.  Select the string you want to
  *     translate, and press the "Go" button.
@@ -75,8 +73,6 @@ import java.util.HashMap;
 
 public class Main extends Activity {
     private static final String TAG = "RecoveryL10N";
-
-    final Locale[] mLocales = new Locale[] { Locale.US, Locale.GERMANY };
 
     HashMap<Locale, Bitmap> savedBitmaps;
     TextView mText;
@@ -150,7 +146,18 @@ public class Main extends Activity {
 
         mText = (TextView) findViewById(R.id.text);
 
-        final Runnable seq = buildSequence(mLocales);
+        String[] localeNames = getAssets().getLocales();
+        Arrays.sort(localeNames);
+        ArrayList<Locale> locales = new ArrayList<Locale>();
+        for (String ln : localeNames) {
+            int u = ln.indexOf('_');
+            if (u >= 0) {
+                Log.i(TAG, "locale = " + ln);
+                locales.add(new Locale(ln.substring(0, u), ln.substring(u+1)));
+            }
+        }
+
+        final Runnable seq = buildSequence(locales.toArray(new Locale[0]));
 
         Button b = (Button) findViewById(R.id.go);
         b.setOnClickListener(new View.OnClickListener() {
@@ -230,8 +237,12 @@ public class Main extends Activity {
             int h = bm.getHeight();
             int w = bm.getWidth();
 
+            // Make the last country variant for a given language be
+            // the catch-all for that language (because recovery will
+            // take the first one that matches).
             String lang = loc.getLanguage();
             if (countByLanguage.get(lang) > 1) {
+                countByLanguage.put(lang, countByLanguage.get(lang)-1);
                 lang = loc.toString();
             }
             Log.i(TAG, "encoding \"" + loc + "\" as \"" + lang + "\"");
