@@ -237,6 +237,44 @@ public class Main extends Activity {
             int h = bm.getHeight();
             int w = bm.getWidth();
 
+            bm.getPixels(pixels, 0, w, 0, 0, w, h);
+
+            // Find the rightmost and leftmost columns with any
+            // nonblack pixels; we'll copy just that region to the
+            // output image.
+
+            int right = w;
+            while (right > 1) {
+                boolean all_black = true;
+                for (int j = 0; j < h; ++j) {
+                    if (pixels[j*w+right-1] != 0xff000000) {
+                        all_black = false;
+                        break;
+                    }
+                }
+                if (all_black) {
+                    --right;
+                } else {
+                    break;
+                }
+            }
+
+            int left = 0;
+            while (left < right-1) {
+                boolean all_black = true;
+                for (int j = 0; j < h; ++j) {
+                    if (pixels[j*w+left] != 0xff000000) {
+                        all_black = false;
+                        break;
+                    }
+                }
+                if (all_black) {
+                    ++left;
+                } else {
+                    break;
+                }
+            }
+
             // Make the last country variant for a given language be
             // the catch-all for that language (because recovery will
             // take the first one that matches).
@@ -245,10 +283,11 @@ public class Main extends Activity {
                 countByLanguage.put(lang, countByLanguage.get(lang)-1);
                 lang = loc.toString();
             }
-            Log.i(TAG, "encoding \"" + loc + "\" as \"" + lang + "\"");
+            int tw = right - left;
+            Log.i(TAG, "encoding \"" + loc + "\" as \"" + lang + "\": " + tw + " x " + h);
             byte[] langBytes = lang.getBytes();
-            out.setPixel(0, p, colorFor(w & 0xff));
-            out.setPixel(1, p, colorFor(w >>> 8));
+            out.setPixel(0, p, colorFor(tw & 0xff));
+            out.setPixel(1, p, colorFor(tw >>> 8));
             out.setPixel(2, p, colorFor(h & 0xff));
             out.setPixel(3, p, colorFor(h >>> 8));
             out.setPixel(4, p, colorFor(langBytes.length));
@@ -261,8 +300,7 @@ public class Main extends Activity {
 
             p++;
 
-            bm.getPixels(pixels, 0, w, 0, 0, w, h);
-            out.setPixels(pixels, 0, w, 0, p, w, h);
+            out.setPixels(pixels, left, w, 0, p, tw, h);
             p += h;
         }
 
@@ -276,5 +314,6 @@ public class Main extends Activity {
         p++;
 
         saveBitmap(out, "text-out.png");
+        Log.i(TAG, "wrote text-out.png");
     }
 }

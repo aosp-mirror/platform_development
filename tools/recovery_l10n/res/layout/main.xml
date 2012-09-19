@@ -22,6 +22,7 @@
             android:textColor="#ffffffff"
             android:background="#ff000000"
             android:maxWidth="480px"
+            android:gravity="center"
             />
 
 
