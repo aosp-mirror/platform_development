@@ -141,6 +141,9 @@ class TestWalker(object):
       else:
         tests.extend(self._CreateSuites(android_mk_parser, path,
                                         upstream_build_path))
+      # TODO: remove this logic, and rely on caller to collapse build
+      # paths via make_tree
+
       # Try to build as much of original path as possible, so
       # keep track of upper-most parent directory where Android.mk was found
       # that has rule to build sub-directory makefiles.
@@ -148,7 +151,7 @@ class TestWalker(object):
       # ie if a test exists at 'foo' directory  and 'foo/sub', attempting to
       # build both 'foo' and 'foo/sub' will fail.
 
-      if android_mk_parser.HasInclude('call all-makefiles-under,$(LOCAL_PATH)'):
+      if android_mk_parser.IncludesMakefilesUnder():
         # found rule to build sub-directories. The parent path can be used,
         # or if not set, use current path
         if not upstream_build_path:
