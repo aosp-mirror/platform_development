@@ -326,7 +326,7 @@ class TestRunner(object):
       if not self._options.preview:
         old_dir = os.getcwd()
         os.chdir(self._root_path)
-        output = run_command.RunCommand(cmd, return_output=False)
+        output = run_command.RunCommand(cmd, return_output=True)
         os.chdir(old_dir)
         self._DoInstall(output)
 
