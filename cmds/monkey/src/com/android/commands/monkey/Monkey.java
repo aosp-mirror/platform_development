@@ -411,7 +411,7 @@ public class Monkey {
             if (mRequestBugreport) {
                 logOutput =
                         new BufferedWriter(new FileWriter(new File(Environment
-                                .getExternalStorageDirectory(), reportName), true));
+                                .getLegacyExternalStorageDirectory(), reportName), true));
             }
             // pipe everything from process stdout -> System.err
             InputStream inStream = p.getInputStream();
@@ -444,7 +444,7 @@ public class Monkey {
         // TO DO: Add the script file name to the log.
         try {
             Writer output = new BufferedWriter(new FileWriter(new File(
-                    Environment.getExternalStorageDirectory(), "scriptlog.txt"), true));
+                    Environment.getLegacyExternalStorageDirectory(), "scriptlog.txt"), true));
             output.write("iteration: " + count + " time: "
                     + MonkeyUtils.toCalendarTime(System.currentTimeMillis()) + "\n");
             output.close();
