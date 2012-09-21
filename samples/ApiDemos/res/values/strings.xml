@@ -173,7 +173,7 @@
     <string name="fragment_stack">App/Fragment/Stack</string>
     <string name="new_fragment">Push</string>
     <string name="delete_fragment">Pop</string>
-    
+
     <string name="first">First</string>
     <string name="last">Last</string>
 
@@ -677,6 +677,12 @@
     <string name="enable_admin">Enable admin</string>
     <string name="device_capabilities_category">Device capabilities</string>
     <string name="disable_camera">Disable all device cameras</string>
+    <string name="disable_keyguard_widgets">Disable keyguard widgets</string>
+    <string name="disable_keyguard_secure_camera">Disable keyguard secure camera</string>
+    <string name="keyguard_widgets_disabled">Keyguard widgets disabled</string>
+    <string name="keyguard_widgets_enabled">Keyguard widgets enabled</string>
+    <string name="keyguard_secure_camera_disabled">Keyguard secure camera disabled</string>
+    <string name="keyguard_secure_camera_enabled">Keyguard secure camera enabled</string>
     <string name="camera_disabled">Device cameras disabled</string>
     <string name="camera_enabled">Device cameras enabled</string>
     <string name="password_controls_category">Password controls</string>
