@@ -41,9 +41,10 @@ import time
 # local imports
 import adb_interface
 import android_build
-import coverage
+from coverage import coverage
 import errors
 import logger
+import make_tree
 import run_command
 from test_defs import test_defs
 from test_defs import test_walker
@@ -143,6 +144,9 @@ class TestRunner(object):
     parser.add_option("-o", "--coverage", dest="coverage",
                       default=False, action="store_true",
                       help="Generate code coverage metrics for test(s)")
+    parser.add_option("--coverage-target", dest="coverage_target_path",
+                      default=None,
+                      help="Path to app to collect code coverage target data for.")
     parser.add_option("-x", "--path", dest="test_path",
                       help="Run test(s) at given file system path")
     parser.add_option("-t", "--all-tests", dest="all_tests",
@@ -190,6 +194,9 @@ class TestRunner(object):
 
     if self._options.verbose:
       logger.SetVerbose(True)
+
+    if self._options.coverage_target_path:
+      self._options.coverage = True
 
     self._known_tests = self._ReadTests()
 
@@ -241,23 +248,24 @@ class TestRunner(object):
     self._TurnOffVerifier(tests)
     self._DoFullBuild(tests)
 
-    target_set = []
+    target_tree = make_tree.MakeTree()
 
     extra_args_set = []
     for test_suite in tests:
-      self._AddBuildTarget(test_suite, target_set, extra_args_set)
+      self._AddBuildTarget(test_suite, target_tree, extra_args_set)
 
     if not self._options.preview:
       self._adb.EnableAdbRoot()
     else:
       logger.Log("adb root")
-    if target_set:
+
+    if not target_tree.IsEmpty():
       if self._options.coverage:
         coverage.EnableCoverageBuild()
-        target_set.append("external/emma/Android.mk")
-        # TODO: detect if external/emma exists
+        target_tree.AddPath("external/emma")
 
-      target_build_string = " ".join(target_set)
+      target_list = target_tree.GetPrunedMakeList()
+      target_build_string = " ".join(target_list)
       extra_args_string = " ".join(extra_args_set)
 
       # mmm cannot be used from python, so perform a similar operation using
@@ -330,22 +338,18 @@ class TestRunner(object):
         os.chdir(old_dir)
         self._DoInstall(output)
 
-  def _AddBuildTarget(self, test_suite, target_set, extra_args_set):
+  def _AddBuildTarget(self, test_suite, target_tree, extra_args_set):
     if not test_suite.IsFullMake():
       build_dir = test_suite.GetBuildPath()
-      if self._AddBuildTargetPath(build_dir, target_set):
+      if self._AddBuildTargetPath(build_dir, target_tree):
         extra_args_set.append(test_suite.GetExtraBuildArgs())
       for path in test_suite.GetBuildDependencies(self._options):
-        self._AddBuildTargetPath(path, target_set)
+        self._AddBuildTargetPath(path, target_tree)
 
-  def _AddBuildTargetPath(self, build_dir, target_set):
+  def _AddBuildTargetPath(self, build_dir, target_tree):
     if build_dir is not None:
-      build_file_path = os.path.join(build_dir, "Android.mk")
-      if os.path.isfile(os.path.join(self._root_path, build_file_path)):
-        target_set.append(build_file_path)
-        return True
-      else:
-        logger.Log("%s has no Android.mk, skipping" % build_dir)
+      target_tree.AddPath(build_dir)
+      return True
     return False
 
   def _GetTestsToRun(self):
