@@ -24,6 +24,8 @@ import os
 
 # local imports
 import android_build
+import android_mk
+import coverage_target
 import coverage_targets
 import errors
 import logger
@@ -62,7 +64,9 @@ class CoverageGenerator(object):
     self._adb = adb_interface
     self._targets_manifest = self._ReadTargets()
 
-  def ExtractReport(self, test_suite,
+  def ExtractReport(self,
+                    test_suite_name,
+                    target,
                     device_coverage_path,
                     output_path=None,
                     test_qualifier=None):
@@ -70,7 +74,8 @@ class CoverageGenerator(object):
 
     Assumes test has just been executed.
     Args:
-      test_suite: TestSuite to generate coverage data for
+      test_suite_name: name of TestSuite to generate coverage data for
+      target: the CoverageTarget to use as basis for coverage calculation
       device_coverage_path: location of coverage file on device
       output_path: path to place output files in. If None will use
         <android_root_path>/<_COVERAGE_REPORT_PATH>/<target>/<test[-qualifier]>
@@ -81,12 +86,12 @@ class CoverageGenerator(object):
       absolute file path string of generated html report file.
     """
     if output_path is None:
-      report_name = test_suite.GetName()
+      report_name = test_suite_name
       if test_qualifier:
         report_name = report_name + "-" + test_qualifier
       output_path = os.path.join(self._root_path,
                                  self._COVERAGE_REPORT_PATH,
-                                 test_suite.GetTargetName(),
+                                 target.GetName(),
                                  report_name)
 
     coverage_local_name = "%s.%s" % (report_name,
@@ -97,15 +102,8 @@ class CoverageGenerator(object):
 
       report_path = os.path.join(output_path,
                                  report_name)
-      target = self._targets_manifest.GetTarget(test_suite.GetTargetName())
-      if target is None:
-        msg = ["Error: test %s references undefined target %s."
-                % (test_suite.GetName(), test_suite.GetTargetName())]
-        msg.append(" Ensure target is defined in %s" % self._TARGET_DEF_FILE)
-        logger.Log("".join(msg))
-      else:
-        return self._GenerateReport(report_path, coverage_local_path, [target],
-                                    do_src=True)
+      return self._GenerateReport(report_path, coverage_local_path, [target],
+                                  do_src=True)
     return None
 
   def _GenerateReport(self, report_path, coverage_file_path, targets,
@@ -283,11 +281,33 @@ class CoverageGenerator(object):
     self._CombineTestCoverage()
     self._CombineTargetCoverage()
 
+  def GetCoverageTarget(self, name):
+    """Find the CoverageTarget for given name"""
+    target = self._targets_manifest.GetTarget(name)
+    if target is None:
+      msg = ["Error: test references undefined target %s." % name]
+      msg.append(" Ensure target is defined in %s" % self._TARGET_DEF_FILE)
+      raise errors.AbortError(msg)
+    return target
+
+  def GetCoverageTargetForPath(self, path):
+    """Find the CoverageTarget for given file system path"""
+    android_mk_path = os.path.join(path, "Android.mk")
+    if os.path.exists(android_mk_path):
+      android_mk_parser = android_mk.CreateAndroidMK(path)
+      target = coverage_target.CoverageTarget()
+      target.SetBuildPath(os.path.join(path, "src"))
+      target.SetName(android_mk_parser.GetVariable(android_mk_parser.PACKAGE_NAME))
+      target.SetType("APPS")
+      return target
+    else:
+      msg = "No Android.mk found at %s" % path
+      raise errors.AbortError(msg)
+
 
 def EnableCoverageBuild():
   """Enable building an Android target with code coverage instrumentation."""
   os.environ["EMMA_INSTRUMENT"] = "true"
-
 
 def Run():
   """Does coverage operations based on command line args."""

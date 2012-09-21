@@ -22,7 +22,7 @@ import re
 
 # local imports
 import android_manifest
-import coverage
+from coverage import coverage
 import errors
 import logger
 import test_suite
@@ -84,6 +84,8 @@ class InstrumentationTestSuite(test_suite.AbstractTestSuite):
     return self
 
   def GetBuildDependencies(self, options):
+    if options.coverage_target_path:
+      return [options.coverage_target_path]
     return []
 
   def Run(self, options, adb):
@@ -140,6 +142,10 @@ class InstrumentationTestSuite(test_suite.AbstractTestSuite):
       logger.Log(adb_cmd)
     elif options.coverage:
       coverage_gen = coverage.CoverageGenerator(adb)
+      if options.coverage_target_path:
+        coverage_target = coverage_gen.GetCoverageTargetForPath(options.coverage_target_path)
+      elif self.GetTargetName():
+        coverage_target = coverage_gen.GetCoverageTarget(self.GetTargetName())
       self._CheckInstrumentationInstalled(adb)
       # need to parse test output to determine path to coverage file
       logger.Log("Running in coverage mode, suppressing test output")
@@ -158,7 +164,8 @@ class InstrumentationTestSuite(test_suite.AbstractTestSuite):
         return
 
       coverage_file = coverage_gen.ExtractReport(
-          self, device_coverage_path, test_qualifier=options.test_size)
+          self.GetName(), coverage_target, device_coverage_path,
+          test_qualifier=options.test_size)
       if coverage_file is not None:
         logger.Log("Coverage report generated at %s" % coverage_file)
 
@@ -171,10 +178,10 @@ class InstrumentationTestSuite(test_suite.AbstractTestSuite):
                                         instrumentation_args)
 
   def _CheckInstrumentationInstalled(self, adb):
-    if not adb.IsInstrumentationInstalled(self.GetPackageName(),    
+    if not adb.IsInstrumentationInstalled(self.GetPackageName(),
                                           self.GetRunnerName()):
       msg=("Could not find instrumentation %s/%s on device. Try forcing a "
-           "rebuild by updating a source file, and re-executing runtest." % 
+           "rebuild by updating a source file, and re-executing runtest." %
            (self.GetPackageName(), self.GetRunnerName()))
       raise errors.AbortError(msg=msg)
 
