@@ -21,8 +21,12 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FilenameFilter;
+import java.net.URISyntaxException;
 import java.util.HashSet;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -30,6 +34,8 @@ import java.util.regex.Pattern;
  * Find directories utility.
  */
 public class DirectorySearch {
+
+    private static final Logger logger = Logger.getLogger(DirectorySearch.class.getName());
 
     private static final HashSet<String> SOURCE_DIRS = Sets.newHashSet();
     static {
@@ -40,6 +46,9 @@ public class DirectorySearch {
     private static final Pattern EXCLUDE_PATTERN = Pattern.compile("values-..(-.*)*");
 
     private static File repoRoot = null;
+    public static final String REL_TEMPLATE_DIR = "templates";
+    public static final String REL_TEMPLATE_PATH_FROM_ROOT = "development/tools/idegen/"
+            + REL_TEMPLATE_DIR;
 
     /**
      * Find the repo root.  This is the root branch directory of a full repo checkout.
@@ -137,5 +146,39 @@ public class DirectorySearch {
         }
 
         return builder.build();
+    }
+
+    private static File templateDirCurrent = null;
+    private static File templateDirRoot = null;
+
+    public static File findTemplateDir() throws FileNotFoundException {
+        // Cache optimization.
+        if (templateDirCurrent != null && templateDirCurrent.exists()) return templateDirCurrent;
+        if (templateDirRoot != null && templateDirRoot.exists()) return templateDirRoot;
+
+        File currentDir = null;
+        try {
+            currentDir = new File(IntellijProject.class.getProtectionDomain().getCodeSource()
+                    .getLocation().toURI().getPath()).getParentFile();
+        } catch (URISyntaxException e) {
+            logger.log(Level.SEVERE, "Could not get jar location.", e);
+            return null;
+        }
+
+        // First check relative to current run directory.
+        templateDirCurrent = new File(currentDir, REL_TEMPLATE_DIR);
+        if (templateDirCurrent.exists()) {
+            return templateDirCurrent;
+        } else {
+            // Then check relative to root directory.
+            templateDirRoot = new File(repoRoot, REL_TEMPLATE_PATH_FROM_ROOT);
+            if (templateDirRoot.exists()) {
+                return templateDirRoot;
+            }
+        }
+        throw new FileNotFoundException(
+                "Unable to find template dir. Tried the following locations:\n" +
+                templateDirCurrent.getAbsolutePath() + "\n" +
+                templateDirRoot.getAbsolutePath());
     }
 }

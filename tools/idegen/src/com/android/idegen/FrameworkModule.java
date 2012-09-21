@@ -25,15 +25,19 @@ import java.io.File;
  */
 public class FrameworkModule extends StandardModule {
 
+    // Framework needs a special constant for it's intermediates because it does not follow
+    // normal conventions.
+    private static final String FRAMEWORK_INTERMEDIATES = "framework-res_intermediates";
+
     public FrameworkModule(String moduleName, String makeFile) {
-        super(Constants.FRAMEWORK_MODULE, makeFile, true);
+        super(IntellijProject.FRAMEWORK_MODULE, makeFile, true);
     }
 
     @Override
     protected String buildIntermediates() {
         StringBuilder sb = new StringBuilder();
         File intermediates = new File(repoRoot,
-                Constants.REL_OUT_APP_DIR + File.separator +  Constants.FRAMEWORK_INTERMEDIATES);
+                REL_OUT_APP_DIR + File.separator +  FRAMEWORK_INTERMEDIATES);
         ImmutableList<File> intermediateSrcDirs = DirectorySearch.findSourceDirs(intermediates);
         sb.append("    <content url=\"file://").append(intermediates).append("\">\n");
         for (File src : intermediateSrcDirs) {

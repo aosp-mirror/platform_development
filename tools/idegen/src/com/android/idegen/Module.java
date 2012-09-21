@@ -34,6 +34,8 @@ public abstract class Module {
 
     private static final Logger logger = Logger.getLogger(Module.class.getName());
 
+    private static final String IML_TEMPLATE_FILE_NAME = "module-template.iml";
+
     /**
      * All possible attributes for the make file.
      */
@@ -44,23 +46,35 @@ public abstract class Module {
     }
 
     ModuleCache moduleCache = ModuleCache.getInstance();
+
     private File imlFile;
+
     private Set<String> allDependencies = Sets.newHashSet(); // direct + indirect
+
     private Set<File> allDependentImlFiles = Sets.newHashSet();
 
     protected abstract void build() throws IOException;
+
     protected abstract String getName();
+
     protected abstract File getDir();
+
     protected abstract boolean isAndroidModule();
+
     protected abstract List<File> getIntermediatesDirs();
+
     public abstract Set<String> getDirectDependencies();
+
     protected abstract ImmutableList<File> getSourceDirs();
+
     protected abstract ImmutableList<File> getExcludeDirs();
+
     public abstract File getRepoRoot();
 
     public void buildImlFile() throws IOException {
-        String imlTemplate = Files.toString(new File(getRepoRoot(), Constants.REL_IML_TEMPLATE),
-                Constants.CHARSET);
+        String imlTemplate = Files.toString(
+                new File(DirectorySearch.findTemplateDir(), IML_TEMPLATE_FILE_NAME),
+                IntellijProject.CHARSET);
 
         String facetXml = "";
         if (isAndroidModule()) {
@@ -100,7 +114,7 @@ public abstract class Module {
 
         imlFile = new File(moduleDir, getName() + ".iml");
         logger.info("Creating " + imlFile.getAbsolutePath());
-        Files.write(imlTemplate, imlFile, Constants.CHARSET);
+        Files.write(imlTemplate, imlFile, IntellijProject.CHARSET);
     }
 
     protected String buildIntermediates() {
