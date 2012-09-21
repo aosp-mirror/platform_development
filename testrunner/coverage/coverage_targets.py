@@ -50,7 +50,7 @@ class CoverageTargets:
     self._target_map= {}
 
   def __iter__(self):
-    return iter(self._target_map.values()
+    return iter(self._target_map.values())
 
   def Parse(self, file_path):
     """Parse the coverage target data from from given file path, and add it to
