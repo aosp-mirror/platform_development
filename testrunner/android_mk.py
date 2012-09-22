@@ -115,6 +115,10 @@ class AndroidMK(object):
     """
     return identifier in self._includes
 
+  def IncludesMakefilesUnder(self):
+    """Check if makefile has a 'include makefiles under here' rule"""
+    return self.HasInclude('call all-makefiles-under,$(LOCAL_PATH)')
+
   def HasJavaLibrary(self, library_name):
     """Check if library is specified as a local java library in makefile.
 
