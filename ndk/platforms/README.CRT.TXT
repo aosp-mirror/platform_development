@@ -8,11 +8,11 @@ The files are located under the following directories:
   android-9/arch-x86/src/
   android-9/arch-mips/src/
 
-They are all *assembly* files with an .S extension, which means that
-they'll be sent to the C-preprocessor before being assembled into
+They are either C files, or assembly files with an .S extension, which means
+that they'll be sent to the C-preprocessor before being assembled into
 object files. They have the following names and usage:
 
-  crtbegin_static.S
+  crtbegin_static.[cS]
     This file contains a tiny ELF startup entry point (named '_start')
     that is linked into every Android _static_ executable. These binaries can
     run on any Linux ARM system, but cannot perform dynamic linking at all.
@@ -22,8 +22,8 @@ object files. They have the following names and usage:
     C library's runtime initialization, passing it the address of the
     'main' function.
 
-  crtbegin_dynamic.S
-    This is equivalent to crtbegin_static.S, for for _dynamic_ executables.
+  crtbegin_dynamic.[cS]
+    This is equivalent to crtbegin_static.[cS] but for _dynamic_ executables.
     These executables always link to the system C library dynamically.
 
     When the kernel launches such an executable, it actually starts the
@@ -31,14 +31,14 @@ object files. They have the following names and usage:
     executable (possibly loading any dependent system libraries as well),
     then call the _start stub.
 
-  crtbegin_so.S
-    This is equivalent to crtbegin_dynamic.S, but shall be used for
+  crtbegin_so.[cS]
+    This is equivalent to crtbegin_dynamic.[cS], but shall be used for
     shared libraries. One major difference is that there is no _start
     entry point.
 
   crtend_android.S
     This source file shall be used when generating an executable, i.e. used
-    in association with either crtbegin_static.S or crtbegin_dynamic.S
+    in association with either crtbegin_static.[cS] or crtbegin_dynamic.[cS]
 
   crtend.S
     This source file is _strictly_ equivalent to crtend_android.S.
@@ -50,16 +50,16 @@ object files. They have the following names and usage:
 
   crtend_so.S
     This source's object file shall be used when generating a shared library,
-    i.e. used in association with crtbegin_so.S only.
+    i.e. used in association with crtbegin_so.[cS] only.
 
 Content of these files:
 
 ELF section (lists);
 
-  crtbegin_static.S + crtbegin_dynamic.S contain a '_start' entry point for
-  the corresponding executable. crtbegin_so.S doesn't need any.
+  crtbegin_static.[cS] and crtbegin_dynamic.[cS] contain a '_start' entry point
+  for the corresponding executable. crtbegin_so.[cS] doesn't need any.
 
-  all crtbegin_XXX.s files contain the head of various ELF sections, which are
+  all crtbegin_XXX.[cS] files contain the head of various ELF sections, which are
   used to list of ELF constructors and destructors. The sections are:
 
     .init_array:
@@ -137,7 +137,7 @@ atexit() implementation:
   However, this requires that the atexit() implementation be part of the
   shared library itself, rather than the C library.
 
-  The crtbegin_shared.S and crtbegin_static.S files contain an tiny
+  The crtbegin_dynamic.[cS] and crtbegin_so.[cS] files contain an tiny
   implementation of atexit() in assembler that essentially does:
 
       void atexit(void(*myfunc)(void))
@@ -148,7 +148,7 @@ atexit() implementation:
   Because it references the shared library's hidden __dso_handle symbol,
   this code cannot be in the C library itself.
 
-  Note that crtbegin_static.S should *not* provide an atexit() function
+  Note that crtbegin_static.[cS] should *not* provide an atexit() function
   (the latter should be provided by libc.a instead).
 
   See 'BACKWARDS COMPATIBILITY ISSUES' section below.
@@ -183,7 +183,7 @@ is also required to build gdbserver).
   libgcc symbol from the link-time shared libraries it generates. This is done
   by using the lists under:
 
-     $NDK/build/tools/toolchain-symbols/$ARCH/libgcc.a.functions.txt
+     $NDK/build/tools/unwanted-symbols/$ARCH/libgcc.a.functions.txt
 
   You will need to update these files when the toolchain changes.
 
@@ -204,13 +204,13 @@ is also required to build gdbserver).
    - the NDK link-time libc.so shall *never* export or contain any
      __dso_handle symbol.
 
-   - The NDK's crtbegin_dynamic.S and crtbegin_so.S shall provide a *local*
+   - The NDK's crtbegin_dynamic.[cS] and crtbegin_so.[cS] shall provide a *local*
      and *hidden* __dso_handle symbol.
 
    - The NDK's libc.a will containg a *global* and *public* __dso_handle, since
      it is a copy of a release-specific system libc.so.
 
-   - crtbegin_static.S shall not provide any __dso_handle symbol, since static
+   - crtbegin_static.[cS] shall not provide any __dso_handle symbol, since static
      executables will use the one in libc.a instead.
 
 Note that existing NDK machine code that links against the system libc's
@@ -236,7 +236,7 @@ sources.
 
   - The NDK link-time libc.so should *never* export atexit()
 
-  - crtbegin_shared.S, crtbegin_so.S shall define a *local* *hidden*
+  - crtbegin_dynamic.[cS] and crtbegin_so.[cS] shall define a *local* *hidden*
     symbol for atexit(), with a tiny implementation that amounts to the
     following code:
 
@@ -246,7 +246,7 @@ sources.
          }
 
   - The NDK libc.a shall provide an atexit() implementation, and
-    crtbegin_static.S shall *not* provide one to avoid conflicts.
+    crtbegin_static.[cS] shall *not* provide one to avoid conflicts.
 
 Note that existing NDK machine code that links against the system libc's
 atexit symbol will not have their atexit-handler automatically unregistered
