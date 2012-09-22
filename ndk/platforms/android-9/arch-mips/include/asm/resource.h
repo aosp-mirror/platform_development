@@ -24,6 +24,7 @@
 #define RLIMIT_RSS 7  
 #define RLIMIT_NPROC 8  
 #define RLIMIT_MEMLOCK 9  
-#include <asm-generic/resource.h>
+#define RLIM_INFINITY 0x7fffffffUL
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+#include <asm-generic/resource.h>
 #endif
