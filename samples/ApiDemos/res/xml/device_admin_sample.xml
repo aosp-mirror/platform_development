@@ -25,6 +25,7 @@
         <expire-password />
         <encrypted-storage />
         <disable-camera />
+        <disable-keyguard-features />
     </uses-policies>
 </device-admin>
 <!-- END_INCLUDE(meta_data) -->
