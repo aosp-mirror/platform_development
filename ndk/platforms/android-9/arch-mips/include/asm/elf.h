@@ -186,29 +186,33 @@ typedef elf_greg_t elf_gregset_t[ELF_NGREG];
 typedef double elf_fpreg_t;
 typedef elf_fpreg_t elf_fpregset_t[ELF_NFPREG];
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+#define elf_check_arch(hdr)  ({   int __res = 1;   struct elfhdr *__h = (hdr);     if (__h->e_machine != EM_MIPS)   __res = 0;   if (__h->e_ident[EI_CLASS] != ELFCLASS32)   __res = 0;   if ((__h->e_flags & EF_MIPS_ABI2) != 0)   __res = 0;   if (((__h->e_flags & EF_MIPS_ABI) != 0) &&   ((__h->e_flags & EF_MIPS_ABI) != EF_MIPS_ABI_O32))   __res = 0;     __res;  })
+#define ELF_CLASS ELFCLASS32
 #ifdef __MIPSEB__
 #define ELF_DATA ELFDATA2MSB
+/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
 #elif __MIPSEL__
 #define ELF_DATA ELFDATA2LSB
-/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
 #endif
 #define ELF_ARCH EM_MIPS
+/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
 #endif
 struct mips_abi;
-/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+#define SET_PERSONALITY(ex, ibcs2)  do {   if (ibcs2)   set_personality(PER_SVR4);   set_personality(PER_LINUX);     current->thread.abi = &mips_abi;  } while (0)
 struct task_struct;
+/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
 #define ELF_CORE_COPY_REGS(elf_regs, regs)   elf_dump_regs((elf_greg_t *)&(elf_regs), regs);
 #define ELF_CORE_COPY_TASK_REGS(tsk, elf_regs) dump_task_regs(tsk, elf_regs)
 #define ELF_CORE_COPY_FPREGS(tsk, elf_fpregs)   dump_task_fpu(tsk, elf_fpregs)
-/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
 #define USE_ELF_CORE_DUMP
+/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
 #define ELF_EXEC_PAGESIZE PAGE_SIZE
 #define ELF_HWCAP (0)
 #define ELF_PLATFORM (NULL)
-/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
 #define ELF_PLAT_INIT(_r, load_addr) do {   _r->regs[1] = _r->regs[2] = _r->regs[3] = _r->regs[4] = 0;   _r->regs[5] = _r->regs[6] = _r->regs[7] = _r->regs[8] = 0;   _r->regs[9] = _r->regs[10] = _r->regs[11] = _r->regs[12] = 0;   _r->regs[13] = _r->regs[14] = _r->regs[15] = _r->regs[16] = 0;   _r->regs[17] = _r->regs[18] = _r->regs[19] = _r->regs[20] = 0;   _r->regs[21] = _r->regs[22] = _r->regs[23] = _r->regs[24] = 0;   _r->regs[25] = _r->regs[26] = _r->regs[27] = _r->regs[28] = 0;   _r->regs[30] = _r->regs[31] = 0;  } while (0)
+/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
 #ifndef ELF_ET_DYN_BASE
 #define ELF_ET_DYN_BASE (TASK_SIZE / 3 * 2)
 #endif
-/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
 #endif
+/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
