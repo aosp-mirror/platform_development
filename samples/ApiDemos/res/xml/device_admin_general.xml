@@ -35,6 +35,14 @@
             android:key="key_disable_camera"
             android:title="@string/disable_camera" />
 
+        <CheckBoxPreference
+            android:key="key_disable_keyguard_widgets"
+            android:title="@string/disable_keyguard_widgets" />
+
+        <CheckBoxPreference
+            android:key="key_disable_keyguard_secure_camera"
+            android:title="@string/disable_keyguard_secure_camera" />
+
     </PreferenceCategory>
 
 </PreferenceScreen>
