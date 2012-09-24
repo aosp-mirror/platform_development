@@ -16,26 +16,33 @@
  ***
  ****************************************************************************
  ****************************************************************************/
-#ifndef _ASM_MACH_GENERIC_SPACES_H
-#define _ASM_MACH_GENERIC_SPACES_H
-#include <linux/const.h>
-#ifndef PHYS_OFFSET
+#ifndef _PGTABLE_NOPMD_H
+#define _PGTABLE_NOPMD_H
+#ifndef __ASSEMBLY__
+#include <asm-generic/pgtable-nopud.h>
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
-#define PHYS_OFFSET _AC(0, UL)
-#endif
-#define CAC_BASE _AC(0x80000000, UL)
-#define IO_BASE _AC(0xa0000000, UL)
+struct mm_struct;
+#define __PAGETABLE_PMD_FOLDED
+typedef struct { pud_t pud; } pmd_t;
+#define PMD_SHIFT PUD_SHIFT
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
-#define UNCAC_BASE _AC(0xa0000000, UL)
-#ifndef MAP_BASE
-#define MAP_BASE _AC(0xc0000000, UL)
+#define PTRS_PER_PMD 1
+#define PMD_SIZE (1UL << PMD_SHIFT)
+#define PMD_MASK (~(PMD_SIZE-1))
+#define pmd_ERROR(pmd) (pud_ERROR((pmd).pud))
+/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+#define pud_populate(mm, pmd, pte) do { } while (0)
+#define set_pud(pudptr, pudval) set_pmd((pmd_t *)(pudptr), (pmd_t) { pudval })
+#define pmd_val(x) (pud_val((x).pud))
+#define __pmd(x) ((pmd_t) { __pud(x) } )
+/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+#define pud_page(pud) (pmd_page((pmd_t){ pud }))
+#define pud_page_vaddr(pud) (pmd_page_vaddr((pmd_t){ pud }))
+#define pmd_alloc_one(mm, address) NULL
+#define __pmd_free_tlb(tlb, x, a) do { } while (0)
+/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+#undef pmd_addr_end
+#define pmd_addr_end(addr, end) (end)
+#endif
 #endif
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
-#ifndef HIGHMEM_START
-#define HIGHMEM_START _AC(0x20000000, UL)
-#endif
-#ifndef PAGE_OFFSET
-/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
-#define PAGE_OFFSET (CAC_BASE + PHYS_OFFSET)
-#endif
-#endif

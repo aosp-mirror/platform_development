@@ -24,6 +24,8 @@
 #include <linux/sched.h>
 #define pmd_pgtable(pmd) pmd_page(pmd)
 #define __pte_free_tlb(tlb,pte)  do {   pgtable_page_dtor(pte);   tlb_remove_page((tlb), pte);  } while (0)
-#define check_pgt_cache() do { } while (0)
+#define pmd_free(mm, x) do { } while (0)
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+#define __pmd_free_tlb(tlb, x) do { } while (0)
+#define check_pgt_cache() do { } while (0)
 #endif

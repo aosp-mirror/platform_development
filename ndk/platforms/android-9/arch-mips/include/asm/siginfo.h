@@ -24,73 +24,75 @@
 #define HAVE_ARCH_SIGINFO_T
 #define HAVE_ARCH_COPY_SIGINFO
 struct siginfo;
-#include <asm-generic/siginfo.h>
+#define __ARCH_SI_PREAMBLE_SIZE (3 * sizeof(int))
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+#include <asm-generic/siginfo.h>
 typedef struct siginfo {
  int si_signo;
  int si_code;
- int si_errno;
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+ int si_errno;
  int __pad0[SI_MAX_SIZE / sizeof(int) - SI_PAD_SIZE - 3];
  union {
  int _pad[SI_PAD_SIZE];
- struct {
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+ struct {
  pid_t _pid;
  __ARCH_SI_UID_T _uid;
  } _kill;
- struct {
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+ struct {
  timer_t _tid;
  int _overrun;
  char _pad[sizeof( __ARCH_SI_UID_T) - sizeof(int)];
- sigval_t _sigval;
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+ sigval_t _sigval;
  int _sys_private;
  } _timer;
  struct {
- pid_t _pid;
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+ pid_t _pid;
  __ARCH_SI_UID_T _uid;
  sigval_t _sigval;
  } _rt;
- struct {
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+ struct {
  pid_t _pid;
  __ARCH_SI_UID_T _uid;
  int _status;
- clock_t _utime;
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+ clock_t _utime;
  clock_t _stime;
  } _sigchld;
  struct {
- pid_t _pid;
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+ pid_t _pid;
  clock_t _utime;
  int _status;
  clock_t _stime;
- } _irix_sigchld;
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+ } _irix_sigchld;
  struct {
  void __user *_addr;
 #ifdef __ARCH_SI_TRAPNO
- int _trapno;
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+ int _trapno;
 #endif
  } _sigfault;
  struct {
- __ARCH_SI_BAND_T _band;
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+ __ARCH_SI_BAND_T _band;
  int _fd;
  } _sigpoll;
  } _sifields;
-} siginfo_t;
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+} siginfo_t;
 #undef SI_ASYNCIO
 #undef SI_TIMER
 #undef SI_MESGQ
-#define SI_ASYNCIO -2  
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+#define SI_ASYNCIO -2  
 #define SI_TIMER __SI_CODE(__SI_TIMER, -3)  
 #define SI_MESGQ __SI_CODE(__SI_MESGQ, -4)  
 #endif
+/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */

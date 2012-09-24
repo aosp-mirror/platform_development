@@ -161,26 +161,45 @@
 #define cpu_has_userlocal (cpu_data[0].options & MIPS_CPU_ULRI)
 #endif
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+#ifndef cpu_has_nofpuex
+#define cpu_has_nofpuex (cpu_data[0].options & MIPS_CPU_NOFPUEX)
+#endif
+#ifndef cpu_has_64bits
+/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+#define cpu_has_64bits (cpu_data[0].isa_level & MIPS_CPU_ISA_64BIT)
+#endif
+#ifndef cpu_has_64bit_zero_reg
+#define cpu_has_64bit_zero_reg (cpu_data[0].isa_level & MIPS_CPU_ISA_64BIT)
+/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+#endif
+#ifndef cpu_has_64bit_gp_regs
+#define cpu_has_64bit_gp_regs 0
+#endif
+/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+#ifndef cpu_has_64bit_addresses
+#define cpu_has_64bit_addresses 0
+#endif
 #ifndef cpu_has_vint
+/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
 #define cpu_has_vint 0
 #endif
 #ifndef cpu_has_veic
-/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
 #define cpu_has_veic 0
+/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
 #endif
 #ifndef cpu_has_inclusive_pcaches
 #define cpu_has_inclusive_pcaches (cpu_data[0].options & MIPS_CPU_INCLUSIVE_CACHES)
-/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
 #endif
+/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
 #ifndef cpu_dcache_line_size
 #define cpu_dcache_line_size() cpu_data[0].dcache.linesz
 #endif
-/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
 #ifndef cpu_icache_line_size
+/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
 #define cpu_icache_line_size() cpu_data[0].icache.linesz
 #endif
 #ifndef cpu_scache_line_size
-/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
 #define cpu_scache_line_size() cpu_data[0].scache.linesz
+/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
 #endif
 #endif
