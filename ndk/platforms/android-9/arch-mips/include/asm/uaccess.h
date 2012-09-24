@@ -23,35 +23,45 @@
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
 #include <linux/thread_info.h>
 #include <asm-generic/uaccess.h>
+#define __UA_LIMIT 0x80000000UL
+#define __UA_ADDR ".word"
+/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+#define __UA_LA "la"
+#define __UA_ADDU "addu"
+#define __UA_t0 "$8"
+#define __UA_t1 "$9"
+/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
 #define KERNEL_DS ((mm_segment_t) { 0UL })
 #define USER_DS ((mm_segment_t) { __UA_LIMIT })
-/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
 #define VERIFY_READ 0
 #define VERIFY_WRITE 1
+/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
 #define get_ds() (KERNEL_DS)
 #define get_fs() (current_thread_info()->addr_limit)
-/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
 #define set_fs(x) (current_thread_info()->addr_limit = (x))
 #define segment_eq(a, b) ((a).seg == (b).seg)
+/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
 #define __ua_size(size)   ((__builtin_constant_p(size) && (signed long) (size) > 0) ? 0 : (size))
 #define __access_mask get_fs().seg
-/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
 #define __access_ok(addr, size, mask)   (((signed long)((mask) & ((addr) | ((addr) + (size)) | __ua_size(size)))) == 0)
 #define access_ok(type, addr, size)   likely(__access_ok((unsigned long)(addr), (size), __access_mask))
+/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
 #define put_user(x,ptr)   __put_user_check((x), (ptr), sizeof(*(ptr)))
 #define get_user(x,ptr)   __get_user_check((x), (ptr), sizeof(*(ptr)))
-/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
 #define __put_user(x,ptr)   __put_user_nocheck((x), (ptr), sizeof(*(ptr)))
 #define __get_user(x,ptr)   __get_user_nocheck((x), (ptr), sizeof(*(ptr)))
+/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
 struct __large_struct { unsigned long buf[100]; };
 #define __m(x) (*(struct __large_struct __user *)(x))
-/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+#define __GET_USER_DW(val, ptr) __get_user_asm_ll32(val, ptr)
 #define __get_user_common(val, size, ptr)  do {   switch (size) {   case 1: __get_user_asm(val, "lb", ptr); break;   case 2: __get_user_asm(val, "lh", ptr); break;   case 4: __get_user_asm(val, "lw", ptr); break;   case 8: __GET_USER_DW(val, ptr); break;   default: __get_user_unknown(); break;   }  } while (0)
+/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
 #define __get_user_nocheck(x, ptr, size)  ({   long __gu_err;     __get_user_common((x), size, ptr);   __gu_err;  })
 #define __get_user_check(x, ptr, size)  ({   long __gu_err = -EFAULT;   const __typeof__(*(ptr)) __user * __gu_ptr = (ptr);     if (likely(access_ok(VERIFY_READ, __gu_ptr, size)))   __get_user_common((x), size, __gu_ptr);     __gu_err;  })
 #define __get_user_asm(val, insn, addr)  {   long __gu_tmp;     __asm__ __volatile__(   "1:	" insn "	%1, %3				\n"   "2:							\n"   "	.section .fixup,\"ax\"				\n"   "3:	li	%0, %4					\n"   "	j	2b					\n"   "	.previous					\n"   "	.section __ex_table,\"a\"			\n"   "	"__UA_ADDR "\t1b, 3b				\n"   "	.previous					\n"   : "=r" (__gu_err), "=r" (__gu_tmp)   : "0" (0), "o" (__m(addr)), "i" (-EFAULT));     (val) = (__typeof__(*(addr))) __gu_tmp;  }
-/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
 #define __get_user_asm_ll32(val, addr)  {   union {   unsigned long long l;   __typeof__(*(addr)) t;   } __gu_tmp;     __asm__ __volatile__(   "1:	lw	%1, (%3)				\n"   "2:	lw	%D1, 4(%3)				\n"   "3:	.section	.fixup,\"ax\"			\n"   "4:	li	%0, %4					\n"   "	move	%1, $0					\n"   "	move	%D1, $0					\n"   "	j	3b					\n"   "	.previous					\n"   "	.section	__ex_table,\"a\"		\n"   "	" __UA_ADDR "	1b, 4b				\n"   "	" __UA_ADDR "	2b, 4b				\n"   "	.previous					\n"   : "=r" (__gu_err), "=&r" (__gu_tmp.l)   : "0" (0), "r" (addr), "i" (-EFAULT));     (val) = __gu_tmp.t;  }
+/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+#define __PUT_USER_DW(ptr) __put_user_asm_ll32(ptr)
 #define __put_user_nocheck(x, ptr, size)  ({   __typeof__(*(ptr)) __pu_val;   long __pu_err = 0;     __pu_val = (x);   switch (size) {   case 1: __put_user_asm("sb", ptr); break;   case 2: __put_user_asm("sh", ptr); break;   case 4: __put_user_asm("sw", ptr); break;   case 8: __PUT_USER_DW(ptr); break;   default: __put_user_unknown(); break;   }   __pu_err;  })
 #define __put_user_check(x, ptr, size)  ({   __typeof__(*(ptr)) __user *__pu_addr = (ptr);   __typeof__(*(ptr)) __pu_val = (x);   long __pu_err = -EFAULT;     if (likely(access_ok(VERIFY_WRITE, __pu_addr, size))) {   switch (size) {   case 1: __put_user_asm("sb", __pu_addr); break;   case 2: __put_user_asm("sh", __pu_addr); break;   case 4: __put_user_asm("sw", __pu_addr); break;   case 8: __PUT_USER_DW(__pu_addr); break;   default: __put_user_unknown(); break;   }   }   __pu_err;  })
 #define __put_user_asm(insn, ptr)  {   __asm__ __volatile__(   "1:	" insn "	%z2, %3		# __put_user_asm\n"   "2:							\n"   "	.section	.fixup,\"ax\"			\n"   "3:	li	%0, %4					\n"   "	j	2b					\n"   "	.previous					\n"   "	.section	__ex_table,\"a\"		\n"   "	" __UA_ADDR "	1b, 3b				\n"   "	.previous					\n"   : "=r" (__pu_err)   : "0" (0), "Jr" (__pu_val), "o" (__m(ptr)),   "i" (-EFAULT));  }

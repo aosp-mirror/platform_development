@@ -49,8 +49,20 @@ typedef struct {
  Elf64_Byte r_type;
  Elf64_Sxword r_addend;
 } Elf64_Mips_Rela;
+#define Elf_Shdr Elf32_Shdr
+/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+#define Elf_Sym Elf32_Sym
+#define Elf_Ehdr Elf32_Ehdr
+#define Elf_Addr Elf32_Addr
+#define Elf_Mips_Rel Elf32_Rel
+/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+#define Elf_Mips_Rela Elf32_Rela
+#define ELF_MIPS_R_SYM(rel) ELF32_R_SYM(rel.r_info)
+#define ELF_MIPS_R_TYPE(rel) ELF32_R_TYPE(rel.r_info)
 #error MODULE_PROC_FAMILY undefined for your processor configuration
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+#define MODULE_KERNEL_TYPE "32BIT "
 #define MODULE_KERNEL_SMTC ""
 #define MODULE_ARCH_VERMAGIC   MODULE_PROC_FAMILY MODULE_KERNEL_TYPE MODULE_KERNEL_SMTC
 #endif
+/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
