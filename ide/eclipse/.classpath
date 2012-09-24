@@ -39,6 +39,9 @@
 	<classpathentry kind="src" path="packages/providers/DrmProvider/src"/>
 	<classpathentry kind="src" path="packages/providers/MediaProvider/src"/>
 	<classpathentry kind="src" path="packages/providers/TelephonyProvider/src"/>
+	<classpathentry kind="src" path="packages/screensavers/Basic/src"/>
+	<classpathentry kind="src" path="packages/screensavers/PhotoTable/src"/>
+	<classpathentry kind="src" path="packages/screensavers/WebView/src"/>
 	<classpathentry kind="src" path="frameworks/base/cmds/am/src"/>
 	<classpathentry kind="src" path="frameworks/base/cmds/input/src"/>
 	<classpathentry kind="src" path="frameworks/base/cmds/pm/src"/>
