@@ -193,6 +193,7 @@ development/samples/TicTacToeLib               samples/${PLATFORM_NAME}/TicTacTo
 development/samples/TicTacToeMain              samples/${PLATFORM_NAME}/TicTacToeMain
 development/samples/TtsEngine                  samples/${PLATFORM_NAME}/TtsEngine
 development/samples/ToyVpn                     samples/${PLATFORM_NAME}/ToyVpn
+development/samples/UiAutomator                samples/${PLATFORM_NAME}/UiAutomator
 development/samples/USB/MissileLauncher        samples/${PLATFORM_NAME}/USB/MissileLauncher
 development/samples/USB/AdbTest                samples/${PLATFORM_NAME}/USB/AdbTest
 development/samples/VoiceRecognitionService    samples/${PLATFORM_NAME}/VoiceRecognitionService
