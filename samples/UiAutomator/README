@@ -1,0 +1,31 @@
+----------- LaunchSettings Demo -----------
+
+  This demos how we read content-description to properly open the
+  All Apps view and select and application to launch. Then we will
+  use the package name to verify that the current window is actually
+  from the expected package
+
+  To run this demo you must build it first and push it on your device:
+  # adb push uiautomator.samples.jar /data/local/tmp
+  # adb shell uiautomator runtest uiautomator.samples.jar -c com.android.test.uiautomator.demos.LaunchSettings
+
+---------- LogBuildNumber Demo ------------
+
+  This demos how we can scroll list views and verify data in list view
+  items. Here we do the following:
+   + Launch Settings
+   + Select the About
+   + Read the Build string
+
+  To run this demo you must build it first and push it on your device:
+  # adb push uiautomator.samples.jar /data/local/tmp
+  # adb shell uiautomator runtest uiautomator.samples.jar -c com.android.test.uiautomator.demos.LogBuildNumber
+
+---------- SetTwoMinuteAlarm Demo ---------
+
+  Test demonstrates using the UiAutomator APIs to set an alarm to
+  go off in 2 minutes
+
+  To run this demo you must build it first and push it on your device:
+  # adb push uiautomator.samples.jar /data/local/tmp
+  # adb shell uiautomator runtest uiautomator.samples.jar -c com.android.test.uiautomator.demos.SetTwoMinuteAlarm
