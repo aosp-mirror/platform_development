@@ -20,6 +20,7 @@ import android.app.ActionBar;
 import android.app.ActionBar.Tab;
 import android.app.Activity;
 import android.app.Fragment;
+import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.os.Bundle;
 import android.widget.Toast;
@@ -31,6 +32,7 @@ import android.widget.Toast;
 public class FragmentNestingTabs extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        FragmentManager.enableDebugLogging(true);
         super.onCreate(savedInstanceState);
 
         final ActionBar bar = getActionBar();
