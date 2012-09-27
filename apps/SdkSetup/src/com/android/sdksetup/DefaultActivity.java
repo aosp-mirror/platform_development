@@ -38,14 +38,15 @@ public class DefaultActivity extends Activity {
         super.onCreate(icicle);
         
         // Add a persistent setting to allow other apps to know the device has been provisioned.
-        Settings.Secure.putInt(getContentResolver(), Settings.Secure.DEVICE_PROVISIONED, 1);
+        Settings.Global.putInt(getContentResolver(), Settings.Global.DEVICE_PROVISIONED, 1);
 
         // Enable the GPS.
         // Not needed since this SDK will contain the Settings app.
-        Settings.Secure.putString(getContentResolver(), Settings.Secure.LOCATION_PROVIDERS_ALLOWED, LocationManager.GPS_PROVIDER);
+        Settings.Secure.putString(getContentResolver(), Settings.Secure.LOCATION_PROVIDERS_ALLOWED,
+                LocationManager.GPS_PROVIDER);
         
         // enable install from non market
-        Settings.Secure.putInt(getContentResolver(), Settings.Secure.INSTALL_NON_MARKET_APPS, 1);
+        Settings.Global.putInt(getContentResolver(), Settings.Global.INSTALL_NON_MARKET_APPS, 1);
 
         // provision the backup manager.
         IBackupManager bm = IBackupManager.Stub.asInterface(
