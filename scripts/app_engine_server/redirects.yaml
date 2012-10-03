@@ -63,7 +63,7 @@ redirects:
   dst: /tools/extras/oem-usb.html
   type: permanent
   comment: Redirect sdk reference to new location
-  
+
 - src: /sdk/installing.html
   dst: /sdk/installing/index.html
   type: permanent
@@ -86,19 +86,19 @@ redirects:
   dst: /tools/sdk/tools-notes.html
   type: permanent
   comment: Redirect sdk reference to new location
-  
+
 # new one works
 - src: /sdk/adding-components.html
   dst: /sdk/exploring.html
   type: permanent
   comment: Redirect sdk reference to new location
-  
+
 #new one works
 - src: /sdk/ndk/
   dst: /tools/sdk/ndk/
   type: permanent
   comment: Redirect sdk reference to new location
-  
+
 #new one works
 - src: /sdk/requirements.html
   dst: /sdk/index.html
@@ -109,7 +109,7 @@ redirects:
 #  dst: /tools/sdk/
 #  type: permanent
 #  comment: Redirect sdk reference to new location
-  
+
 #- src: /sdk/compatibility
 #  dst: /tools/sdk/support-package.html
 #  type: permanent
@@ -141,7 +141,7 @@ redirects:
   dst: /guide/components/aidl.html
   type: permanent
   comment: bug 6755311, aidl doc found by search under tools
-  
+
 - src: /guide/market/publishing/multiple-apks.html
   dst: /guide/google/play/publishing/multiple-apks.html
   type: permanent
@@ -151,30 +151,30 @@ redirects:
   dst: /distribute/googleplay/publish/preparing.html
   type: permanent
   comment: Redirect to new location
-  
+
 - src: /guide/publishing/
   dst: /tools/publishing/
   type: permanent
   comment: Redirect to new location
-  
+
 - src: /guide/topics/fundamentals.html
   dst: /guide/components/fundamentals.html
   type: permanent
-  
+
 - src: /guide/topics/intents/intents-filters.html
   dst: /guide/components/intents-filters.html
   type: permanent
-  
+
 - src: /guide/topics/fundamentals/
   dst: /guide/components/
   type: permanent
   comment: Redirect to new location
- 
+
 - src: /guide/topics/clipboard/copy-paste.html
   dst: /guide/topics/text/copy-paste.html
   type: permanent
   comment: Redirect to new location
-  
+
 # new one
 - src: /guide/topics/wireless/
   dst: /guide/topics/connectivity/
@@ -186,33 +186,43 @@ redirects:
   dst: /guide/topics/graphics/opengl.html
   type: permanent
   comment: Redirect to new location
-  
+
 - src: /guide/topics/connectivity/usb/adk.html
   dst: /tools/adk/index.html
   type: permanent
-  
+
+- src: /tools/adk/aoa.html
+  dst: http://source.android.com/tech/accessories/aoap/aoa.html
+  type: permanent
+  comment: Open Accessory Protocol content has moved to source.android.com.
+
+- src: /tools/adk/aoa2.html
+  dst: http://source.android.com/tech/accessories/aoap/aoa2.html
+  type: permanent
+  comment: Open Accessory Protocol content has moved to source.android.com.
+
 - src: /guide/topics/usb
   dst: /guide/topics/connectivity/usb
   type: permanent
   comment: Redirect to new location
-  
-# new one  
+
+# new one
 - src: /guide/appendix/api-levels.html
   dst: /guide/topics/manifest/uses-sdk-element.html#ApiLevels
   type: permanent
   comment: Redirect to new location
-  
+
 - src: /guide/appendix/install-location.html
   dst: /guide/topics/data/install-location.html
   type: permanent
   comment: Redirect to new location
 
-# new one  
+# new one
 - src: /guide/basics/what-is-android.html
   dst: /about/index.html
   type: permanent
   comment: Redirect to new location
-  
+
 - src: /guide/topics/security/security.html
   dst: /guide/topics/security/permissions.html
   type: permanent
@@ -223,16 +233,16 @@ redirects:
   dst: /guide/google/play/filters.html
   type: permanent
   comment: Redirect to new location
-  
+
 - src: /guide/topics/testing/
   dst: /tools/testing/
   type: permanent
-  
+
 - src: /guide/topics/graphics/animation.html
   dst: /guide/topics/graphics/overview.html
   type: permanent
   comment: Redirect to new location
-  
+
 - src: /guide/topics/graphics/renderscript/(compute.html|index.html|reference.html)
   dst: /guide/topics/renderscript/index.html
   type: permanent
@@ -242,7 +252,7 @@ redirects:
   dst: /guide/topics/location/strategies.html
   type: permanent
   comment: Redirect to new location
-  
+
 # new one
 - src: /guide/topics/nfc/
   dst: /guide/topics/connectivity/nfc/
@@ -254,7 +264,7 @@ redirects:
   dst: /guide/topics/connectivity/
   type: permanent
   comment: Redirect to new location
-  
+
 # new one
 - src: /guide/topics/network/
   dst: /guide/topics/connectivity/
@@ -270,25 +280,25 @@ redirects:
 - src: /resources/articles/spell-checker-framework.html
   dst: /guide/topics/text/spell-checker-framework.html
   type: permanent
-  
+
 # new one
 - src: /resources/tutorials/notepad/
   dst: /training/notepad/
   type: permanent
   comment: this is only for external links, until we update this documentation
-  
+
 # new one
 - src: /resources/faq/
   dst: /guide/faq/
   type: permanent
   comment: FAQ still needs a permanent home
-  
+
 # new one
 - src: /resources/tutorials/hello-world.html
   dst: /training/basics/firstapp/index.html
   type: permanent
   comment: Redirect to new location
-  
+
 # add the rest of the tutorials here
 
 - src: /guide/practices/design/
@@ -299,8 +309,8 @@ redirects:
 - src: /guide/practices/accessibility.html
   dst: /guide/topics/ui/accessibility/index.html
   type: permanent
-  
-# new one  
+
+# new one
 - src: /resources/dashboard/.*
   dst: /about/dashboards/index.html
   type: permanent
@@ -310,7 +320,7 @@ redirects:
   dst: /support.html
   type: permanent
   comment: Redirect to new location
-  
+
 - src: /guide/tutorials/
   dst: /resources/tutorials/
   type: permanent
@@ -319,87 +329,87 @@ redirects:
   dst: /guide/topics/ui/layout/linear.html
   type: permanent
   comment: Redirect to new location
-  
+
 - src: /resources/tutorials/views/hello-relativelayout.html
   dst: /guide/topics/ui/layout/relative.html
   type: permanent
   comment: Redirect to new location
-  
+
 - src: /resources/tutorials/views/hello-listview.html
   dst: /guide/topics/ui/layout/listview.html
   type: permanent
   comment: Redirect to new location
-  
+
 - src: /resources/tutorials/views/hello-gridview.html
   dst: /guide/topics/ui/layout/gridview.html
   type: permanent
   comment: Redirect to new location
-  
+
 - src: /resources/tutorials/views/hello-webview.html
   dst: /guide/webapps/webview.html
   type: permanent
   comment: Redirect to new location
-  
+
 - src: /resources/tutorials/views/hello-formstuff.html
   dst: /guide/topics/ui/controls.html
   type: permanent
   comment: Redirect to new location
-  
+
 - src: /resources/tutorials/views/hello-datepicker.html
   dst: /guide/topics/ui/controls/pickers.html
   type: permanent
   comment: Redirect to new location
-  
+
 - src: /resources/tutorials/views/hello-timepicker.html
   dst: /guide/topics/ui/controls/pickers.html
   type: permanent
   comment: Redirect to new location
-  
+
 - src: /resources/tutorials/views/hello-autocomplete.html
   dst: /guide/topics/ui/controls/text.html
   type: permanent
   comment: Redirect to new location
-  
+
 - src: /resources/tutorials/views/hello-spinner.html
   dst: /guide/topics/ui/controls/spinner.html
   type: permanent
   comment: Redirect to new location
-  
+
 - src: /resources/tutorials/opengl/opengl-es10.html
   dst: /training/graphics/opengl/index.html
   type: permanent
-  
+
 - src: /resources/tutorials/opengl/opengl-es20.html
   dst: /training/graphics/opengl/index.html
   type: permanent
-  
+
 - src: /resources/tutorials/views/hello-mapview.html
   dst: https://developers.google.com/maps/documentation/android/hello-mapview
   type: permanent
-  
+
 - src: /resources/tutorials/views/.*
   dst: /guide/topics/ui/declaring-layout.html#CommonLayouts
   type: permanent
-  
+
 - src: /resources/tutorials/localization/.*
   dst: /training/basics/supporting-devices/languages.html
   type: permanent
-  
+
 - src: /resources/samples/.*
   dst: /tools/samples/index.html
   type: permanent
   comment: Redirect to new location
-  
+
 - src: /resources/(?!articles)
   dst: /training/
   type: permanent
   comment: Redirect to new location
-  
+
 - src: /guide/publishing/publishing.html#BuildaButton
   dst: /distribute/googleplay/promote/badges.html
   type: permanent
   comment: Redirect to new location
-  
+
 - src: /guide/index.html
   dst: /guide/components/index.html
   type: permanent
@@ -415,16 +425,13 @@ redirects:
   comment: Syncing with App Engine was removed because it's obsolete.
 
 
-
-
-
 # -------------------- MISC ----------------------
 
 - src: /shareables/
   dst: http://commondatastorage.googleapis.com/androiddevelopers/shareables/
   type: permanent
   comment: Redirect to new location
-  
+
 - src: /downloads/
   dst: http://commondatastorage.googleapis.com/androiddevelopers/
   type: permanent
@@ -434,53 +441,53 @@ redirects:
   dst: /index.html
   type: permanent
   comment: Redirect to new location
-  
+
 - src: /videos/index.html
   dst: /develop/index.html
   type: permanent
   comment: Redirect to new location
-  
+
 - src: /live/index.html
   dst: https://developers.google.com/live/
   type: permanent
   comment: Redirect to new location
-  
-  
-  
-  
-  
+
+
+
+
+
 # -------------------- EASTER EGG REDIRECTS ----------------------
-  
-  
-  
-  
-  
+
+
+
+
+
 # ---------- PLATFORM VERSIONS ----------------
 
 - src: /4.1
   dst: /about/versions/android-4.1.html
   type: permanent
-  
+
 - src: /jb
   dst: /about/versions/jelly-bean.html
   type: permanent
-  
+
 - src: /4.0
   dst: /about/versions/android-4.0.html
   type: permanent
-  
+
 - src: /ics
   dst: /about/versions/android-4.0-highlights.html
   type: permanent
-  
+
 - src: /hc
   dst: /about/versions/android-3.0-highlights.html
   type: permanent
-  
+
 - src: /gb
   dst: /about/versions/android-2.3-highlights.html
   type: permanent
-       
+
 
 
 # ---------- MISC -----------------
@@ -489,14 +496,13 @@ redirects:
   dst: https://plus.google.com/108967384991768947849/posts
   type: permanent
   comment: Redirect /+ and /+/ to Google+
-  
+
 - src: /blog
   dst: http://android-developers.blogspot.com/
   type: permanent
-  
+
 - src: /stats
   dst: /about/dashboards/index.html
   type: permanent
 
 
-  
