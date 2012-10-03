@@ -17,13 +17,7 @@
 
 <resources>
 
-    <style name="AppTheme" parent="android:Theme" />
-
-    <style name="AppTheme.FullScreen" parent="@android:style/Theme.Black.NoTitleBar.Fullscreen" />
-
-    <style name="PhotoGridLayout">
-        <item name="android:drawSelectorOnTop">true</item>
-        <item name="android:listSelector">@drawable/photogrid_list_selector</item>
-    </style>
+    <color name="grid_state_pressed">#BB7dbcd3</color>
+    <color name="grid_state_focused">#777dbcd3</color>
 
 </resources>

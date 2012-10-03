@@ -16,32 +16,28 @@
 
 package com.example.android.bitmapfun.ui;
 
-import android.annotation.SuppressLint;
+import android.annotation.TargetApi;
 import android.app.ActionBar;
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
+import android.support.v4.app.NavUtils;
 import android.support.v4.view.ViewPager;
 import android.util.DisplayMetrics;
 import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.view.ViewGroup;
 import android.view.WindowManager.LayoutParams;
 import android.widget.Toast;
 
+import com.example.android.bitmapfun.BuildConfig;
 import com.example.android.bitmapfun.R;
 import com.example.android.bitmapfun.provider.Images;
-import com.example.android.bitmapfun.util.DiskLruCache;
 import com.example.android.bitmapfun.util.ImageCache;
 import com.example.android.bitmapfun.util.ImageFetcher;
-import com.example.android.bitmapfun.util.ImageResizer;
-import com.example.android.bitmapfun.util.ImageWorker;
 import com.example.android.bitmapfun.util.Utils;
 
 public class ImageDetailActivity extends FragmentActivity implements OnClickListener {
@@ -49,51 +45,59 @@ public class ImageDetailActivity extends FragmentActivity implements OnClickList
     public static final String EXTRA_IMAGE = "extra_image";
 
     private ImagePagerAdapter mAdapter;
-    private ImageResizer mImageWorker;
+    private ImageFetcher mImageFetcher;
     private ViewPager mPager;
 
-    @SuppressLint("NewApi")
+    @TargetApi(11)
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        if (BuildConfig.DEBUG) {
+            Utils.enableStrictMode();
+        }
         super.onCreate(savedInstanceState);
         setContentView(R.layout.image_detail_pager);
 
         // Fetch screen height and width, to use as our max size when loading images as this
         // activity runs full screen
-        final DisplayMetrics displaymetrics = new DisplayMetrics();
-        getWindowManager().getDefaultDisplay().getMetrics(displaymetrics);
-        final int height = displaymetrics.heightPixels;
-        final int width = displaymetrics.widthPixels;
-        final int longest = height > width ? height : width;
+        final DisplayMetrics displayMetrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+        final int height = displayMetrics.heightPixels;
+        final int width = displayMetrics.widthPixels;
 
-        // The ImageWorker takes care of loading images into our ImageView children asynchronously
-        mImageWorker = new ImageFetcher(this, longest);
-        mImageWorker.setAdapter(Images.imageWorkerUrlsAdapter);
-        mImageWorker.setImageCache(ImageCache.findOrCreateCache(this, IMAGE_CACHE_DIR));
-        mImageWorker.setImageFadeIn(false);
+        // For this sample we'll use half of the longest width to resize our images. As the
+        // image scaling ensures the image is larger than this, we should be left with a
+        // resolution that is appropriate for both portrait and landscape. For best image quality
+        // we shouldn't divide by 2, but this will use more memory and require a larger memory
+        // cache.
+        final int longest = (height > width ? height : width) / 2;
+
+        ImageCache.ImageCacheParams cacheParams =
+                new ImageCache.ImageCacheParams(this, IMAGE_CACHE_DIR);
+        cacheParams.setMemCacheSizePercent(this, 0.25f); // Set memory cache to 25% of mem class
+
+        // The ImageFetcher takes care of loading images into our ImageView children asynchronously
+        mImageFetcher = new ImageFetcher(this, longest);
+        mImageFetcher.addImageCache(getSupportFragmentManager(), cacheParams);
+        mImageFetcher.setImageFadeIn(false);
 
         // Set up ViewPager and backing adapter
-        mAdapter = new ImagePagerAdapter(getSupportFragmentManager(),
-                mImageWorker.getAdapter().getSize());
+        mAdapter = new ImagePagerAdapter(getSupportFragmentManager(), Images.imageUrls.length);
         mPager = (ViewPager) findViewById(R.id.pager);
         mPager.setAdapter(mAdapter);
         mPager.setPageMargin((int) getResources().getDimension(R.dimen.image_detail_pager_margin));
+        mPager.setOffscreenPageLimit(2);
 
         // Set up activity to go full screen
         getWindow().addFlags(LayoutParams.FLAG_FULLSCREEN);
 
-        // Enable some additional newer visibility and ActionBar features to create a more immersive
-        // photo viewing experience
-        if (Utils.hasActionBar()) {
+        // Enable some additional newer visibility and ActionBar features to create a more
+        // immersive photo viewing experience
+        if (Utils.hasHoneycomb()) {
             final ActionBar actionBar = getActionBar();
 
-            // Enable "up" navigation on ActionBar icon and hide title text
-            actionBar.setDisplayHomeAsUpEnabled(true);
+            // Hide title text and set home as up
             actionBar.setDisplayShowTitleEnabled(false);
-
-            // Start low profile mode and hide ActionBar
-            mPager.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LOW_PROFILE);
-            actionBar.hide();
+            actionBar.setDisplayHomeAsUpEnabled(true);
 
             // Hide and show the ActionBar as the visibility changes
             mPager.setOnSystemUiVisibilityChangeListener(
@@ -107,6 +111,10 @@ public class ImageDetailActivity extends FragmentActivity implements OnClickList
                             }
                         }
                     });
+
+            // Start low profile mode and hide ActionBar
+            mPager.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LOW_PROFILE);
+            actionBar.hide();
         }
 
         // Set the current item based on the extra passed in to this activity
@@ -117,22 +125,34 @@ public class ImageDetailActivity extends FragmentActivity implements OnClickList
     }
 
     @Override
+    public void onResume() {
+        super.onResume();
+        mImageFetcher.setExitTasksEarly(false);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        mImageFetcher.setExitTasksEarly(true);
+        mImageFetcher.flushCache();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        mImageFetcher.closeCache();
+    }
+
+    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case android.R.id.home:
-                // Home or "up" navigation
-                final Intent intent = new Intent(this, ImageGridActivity.class);
-                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                startActivity(intent);
+                NavUtils.navigateUpFromSameTask(this);
                 return true;
             case R.id.clear_cache:
-                final ImageCache cache = mImageWorker.getImageCache();
-                if (cache != null) {
-                    mImageWorker.getImageCache().clearCaches();
-                    DiskLruCache.clearCache(this, ImageFetcher.HTTP_CACHE_DIR);
-                    Toast.makeText(this, R.string.clear_cache_complete,
-                            Toast.LENGTH_SHORT).show();
-                }
+                mImageFetcher.clearCache();
+                Toast.makeText(
+                        this, R.string.clear_cache_complete_toast,Toast.LENGTH_SHORT).show();
                 return true;
         }
         return super.onOptionsItemSelected(item);
@@ -140,18 +160,15 @@ public class ImageDetailActivity extends FragmentActivity implements OnClickList
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.main_menu, menu);
+        getMenuInflater().inflate(R.menu.main_menu, menu);
         return true;
     }
 
     /**
-     * Called by the ViewPager child fragments to load images via the one ImageWorker
-     *
-     * @return
+     * Called by the ViewPager child fragments to load images via the one ImageFetcher
      */
-    public ImageWorker getImageWorker() {
-        return mImageWorker;
+    public ImageFetcher getImageFetcher() {
+        return mImageFetcher;
     }
 
     /**
@@ -174,15 +191,7 @@ public class ImageDetailActivity extends FragmentActivity implements OnClickList
 
         @Override
         public Fragment getItem(int position) {
-            return ImageDetailFragment.newInstance(position);
-        }
-
-        @Override
-        public void destroyItem(ViewGroup container, int position, Object object) {
-            final ImageDetailFragment fragment = (ImageDetailFragment) object;
-            // As the item gets destroyed we try and cancel any existing work.
-            fragment.cancelWork();
-            super.destroyItem(container, position, object);
+            return ImageDetailFragment.newInstance(Images.imageUrls[position]);
         }
     }
 
@@ -190,7 +199,7 @@ public class ImageDetailActivity extends FragmentActivity implements OnClickList
      * Set on the ImageView in the ViewPager children fragments, to enable/disable low profile mode
      * when the ImageView is touched.
      */
-    @SuppressLint("NewApi")
+    @TargetApi(11)
     @Override
     public void onClick(View v) {
         final int vis = mPager.getSystemUiVisibility();
