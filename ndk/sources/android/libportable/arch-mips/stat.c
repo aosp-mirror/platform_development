@@ -14,13 +14,22 @@
  * limitations under the License.
  */
 
+#include <errno.h>
 #include <stat_portable.h>
+
+#include <portability.h>
 
 /* Note: The Portable Header will define stat to stat_portable */
 int stat_portable(const char *path, struct stat_portable *s)
 {
     struct stat mips_stat;
-    int ret = stat(path, &mips_stat);
+    int ret;
+
+    if (invalid_pointer(s)) {
+        errno = EFAULT;
+        return -1;
+    }
+    ret = stat(path, &mips_stat);
     stat_ntop(&mips_stat, s);
     return ret;
 }
@@ -28,7 +37,13 @@ int stat_portable(const char *path, struct stat_portable *s)
 int fstat_portable(int fd, struct stat_portable *s)
 {
     struct stat mips_stat;
-    int ret = fstat(fd, &mips_stat);
+    int ret;
+
+    if (invalid_pointer(s)) {
+        errno = EFAULT;
+        return -1;
+    }
+    ret = fstat(fd, &mips_stat);
     stat_ntop(&mips_stat, s);
     return ret;
 }   
@@ -36,7 +51,13 @@ int fstat_portable(int fd, struct stat_portable *s)
 int lstat_portable(const char *path, struct stat_portable *s)
 {
     struct stat mips_stat;
-    int ret = lstat(path, &mips_stat);
+    int ret;
+
+    if (invalid_pointer(s)) {
+        errno = EFAULT;
+        return -1;
+    }
+    ret = lstat(path, &mips_stat);
     stat_ntop(&mips_stat, s);
     return ret;
 }
@@ -44,7 +65,13 @@ int lstat_portable(const char *path, struct stat_portable *s)
 int fstatat_portable(int dirfd, const char *path, struct stat_portable *s, int flags)
 {
     struct stat mips_stat;
-    int ret = fstatat(dirfd, path, &mips_stat, flags);
+    int ret;
+
+    if (invalid_pointer(s)) {
+        errno = EFAULT;
+        return -1;
+    }
+    ret = fstatat(dirfd, path, &mips_stat, flags);
     stat_ntop(&mips_stat, s);
     return ret;
 }
