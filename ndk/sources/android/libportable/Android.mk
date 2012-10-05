@@ -30,8 +30,9 @@ LOCAL_CFLAGS := -I $(LOCAL_PATH)/common/include
 
 ifeq ($(TARGET_ARCH),mips)
 libportable_arch_src_files += \
-			arch-mips/errno.c \
+			arch-mips/clone.c \
 			arch-mips/epoll.c \
+			arch-mips/errno.c \
 			arch-mips/fcntl.c \
 			arch-mips/ioctl.c \
 			arch-mips/mmap.c \
