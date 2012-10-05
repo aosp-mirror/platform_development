@@ -16,29 +16,66 @@
 
 #include <unistd.h>
 #include <sys/socket.h>
-#include <sys/linux-syscalls.h>
+#include <fcntl.h>
+
 #include <socket_portable.h>
+#include <fcntl_portable.h>
 
 
 #if SOCK_STREAM==SOCK_STREAM_PORTABLE
 #error Bad build environment
 #endif
 
+/* LTP defaults to using O_NONBLOCK if SOCK_NONBLOCK is not defined. */
+#ifndef SOCK_NONBLOCK_PORTABLE
+# define SOCK_NONBLOCK_PORTABLE O_NONBLOCK_PORTABLE
+#endif
+#ifndef SOCK_NONBLOCK
+# define SOCK_NONBLOCK O_NONBLOCK
+#endif
+
+/* Current NDK headers do not define SOCK_CLOEXEC or O_CLOEXEC */
+#if !defined(SOCK_CLOEXEC_PORTABLE) && defined(O_CLOEXEC_PORTABLE)
+# define SOCK_CLOEXEC_PORTABLE O_CLOEXEC_PORTABLE
+#endif
+#if !defined(SOCK_CLOEXEC) && defined(O_CLOEXEC)
+# define SOCK_CLOEXEC O_CLOEXEC
+#endif
+
 static inline int mips_change_type(int type)
 {
-    switch (type) {
-      case SOCK_STREAM_PORTABLE: return SOCK_STREAM;
-      case SOCK_DGRAM_PORTABLE: return SOCK_DGRAM;
-      case SOCK_RAW_PORTABLE: return SOCK_RAW;
-      case SOCK_RDM_PORTABLE: return SOCK_RDM;
-      case SOCK_SEQPACKET_PORTABLE: return SOCK_SEQPACKET;
-      case SOCK_PACKET_PORTABLE: return SOCK_PACKET;
+    int mipstype = 0;
+
+    if (type & SOCK_NONBLOCK_PORTABLE) {
+        mipstype |= SOCK_NONBLOCK;
+        type &= ~SOCK_NONBLOCK_PORTABLE;
     }
-    return type;
+
+#if defined(SOCK_CLOEXEC_PORTABLE) && defined(SOCK_CLOEXEC)
+    if (type & SOCK_CLOEXEC_PORTABLE) {
+        mipstype |= SOCK_CLOEXEC;
+        type &= ~SOCK_CLOEXEC_PORTABLE;
+    }
+#endif
+
+    switch (type) {
+    case SOCK_STREAM_PORTABLE: mipstype |= SOCK_STREAM; break;
+    case SOCK_DGRAM_PORTABLE: mipstype |= SOCK_DGRAM; break;
+    case SOCK_RAW_PORTABLE: mipstype |= SOCK_RAW; break;
+    case SOCK_RDM_PORTABLE: mipstype |= SOCK_RDM; break;
+    case SOCK_SEQPACKET_PORTABLE: mipstype |= SOCK_SEQPACKET; break;
+    case SOCK_PACKET_PORTABLE: mipstype |= SOCK_PACKET; break;
+    default: mipstype |= type;
+    }
+    return mipstype;
 }
 
 extern int socket(int, int, int);
 
 int socket_portable(int domain, int type, int protocol) {
     return socket(domain, mips_change_type(type), protocol);
+}
+
+int socketpair_portable(int domain, int type, int protocol, int sv[2]) {
+    return socketpair(domain, mips_change_type(type), protocol, sv);
 }
