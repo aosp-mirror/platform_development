@@ -17,7 +17,14 @@
 #ifndef _ERRNO_PORTABLE_H_
 #define _ERRNO_PORTABLE_H_
 
-/* Derived from development/ndk/platforms/android-3/include/asm-generic/errno.h */
+#include <portability.h>
+
+/*
+ * Derived from development/ndk/platforms/android-3/include/asm-generic/errno.h
+ * NOTE:
+ *   Base errno #defines from 1...35 are ARCH independent and not defined;
+ *   they are defined in ./asm-generic/errno-base.h
+ */
 #define EDEADLK_PORTABLE 35
 #define ENAMETOOLONG_PORTABLE 36
 #define ENOLCK_PORTABLE 37
@@ -119,5 +126,7 @@
 
 #define EOWNERDEAD_PORTABLE 130
 #define ENOTRECOVERABLE_PORTABLE 131
+
+extern __hidden int ntop_errno(int native_errno);
 
 #endif /* _ERRNO_PORTABLE_H */
