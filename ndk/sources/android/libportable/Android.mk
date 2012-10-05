@@ -46,7 +46,8 @@ libportable_arch_src_files += \
 			arch-mips/stat.c \
 			arch-mips/statfs.c \
 			arch-mips/syscall.c \
-			arch-mips/timer.c
+			arch-mips/timer.c \
+			arch-mips/waitpid.c
 endif
 
 ifeq ($(TARGET_ARCH),arm)
