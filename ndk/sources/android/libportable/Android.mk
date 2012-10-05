@@ -43,6 +43,7 @@ libportable_arch_src_files += \
 			arch-mips/sockopt.c \
 			arch-mips/stat.c \
 			arch-mips/statfs.c \
+			arch-mips/syscall.c \
 			arch-mips/timer.c
 endif
 
