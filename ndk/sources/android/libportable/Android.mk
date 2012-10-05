@@ -38,6 +38,7 @@ libportable_arch_src_files += \
 			arch-mips/open.c \
 			arch-mips/poll.c \
 			arch-mips/resource.c \
+			arch-mips/signal.c \
 			arch-mips/socket.c \
 			arch-mips/sockopt.c \
 			arch-mips/stat.c \
