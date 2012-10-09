@@ -89,6 +89,22 @@
 #include <sys/syslimits.h>
 #endif
 
+/* GLibc compatibility definitions.
+   Note that these are defined by GCC's <limits.h>
+   only when __GNU_LIBRARY__ is defined, i.e. when
+   targetting GLibc. */
+#ifndef LONG_LONG_MIN
+#define LONG_LONG_MIN  LLONG_MIN
+#endif
+
+#ifndef LONG_LONG_MAX
+#define LONG_LONG_MAX  LLONG_MAX
+#endif
+
+#ifndef ULONG_LONG_MAX
+#define ULONG_LONG_MAX  ULLONG_MAX
+#endif
+
 #ifndef PAGESIZE
 #define  PAGESIZE  PAGE_SIZE
 #endif
