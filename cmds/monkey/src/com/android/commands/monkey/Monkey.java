@@ -516,6 +516,10 @@ public class Monkey {
             mMainCategories.add(Intent.CATEGORY_MONKEY);
         }
 
+        if (mSeed == 0) {
+            mSeed = System.currentTimeMillis() + System.identityHashCode(this);
+        }
+
         if (mVerbose > 0) {
             System.out.println(":Monkey: seed=" + mSeed + " count=" + mCount);
             if (mValidPackages.size() > 0) {
@@ -550,8 +554,7 @@ public class Monkey {
             return -4;
         }
 
-        mRandom = new SecureRandom();
-        mRandom.setSeed((mSeed == 0) ? -1 : mSeed);
+        mRandom = new Random(mSeed);
 
         if (mScriptFileNames != null && mScriptFileNames.size() == 1) {
             // script mode, ignore other options
