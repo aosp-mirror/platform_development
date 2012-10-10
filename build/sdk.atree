@@ -243,6 +243,14 @@ frameworks/support/v7/gridlayout/res                                            
 frameworks/support/v7/gridlayout/readme                                                           extras/android/support/v7/gridlayout/src/.readme
 ${OUT_DIR}/target/common/obj/PACKAGING/android-support-v7-gridlayout_intermediates/android-support-v7-gridlayout.jar    extras/android/support/v7/gridlayout/libs/android-support-v7-gridlayout.jar
 
+frameworks/support/appcompat/README.txt                                                           extras/android/support/appcompat/README.txt
+frameworks/support/appcompat/.project                                                             extras/android/support/appcompat/.project
+frameworks/support/appcompat/.classpath                                                           extras/android/support/appcompat/.classpath
+frameworks/support/appcompat/AndroidManifest.xml                                                  extras/android/support/appcompat/AndroidManifest.xml
+frameworks/support/appcompat/project.properties                                                   extras/android/support/appcompat/project.properties
+frameworks/support/appcompat/res                                                                  extras/android/support/appcompat/res
+${OUT_DIR}/target/common/obj/PACKAGING/android-support-appcompat_intermediates/android-support-appcompat.jar    extras/android/support/appcompat/libs/android-support-appcompat.jar
+
 ##############################################################################
 # Tests Component
 ##############################################################################
