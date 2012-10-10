@@ -35,6 +35,7 @@ import android.content.Context;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
+import android.os.UserHandle;
 import android.widget.ArrayAdapter;
 import android.widget.AdapterView;
 import android.widget.Spinner;
@@ -88,14 +89,9 @@ public class SyncAdapterDriver extends Activity
         mSyncAdaptersCache.setListener(this, null /* Handler */);
     }
 
-    protected void onDestroy() {
-        mSyncAdaptersCache.close();
-        super.onDestroy();
-    }
-
     private void getSyncAdapters() {
         Collection<RegisteredServicesCache.ServiceInfo<SyncAdapterType>> all =
-                mSyncAdaptersCache.getAllServices();
+                mSyncAdaptersCache.getAllServices(UserHandle.myUserId());
         synchronized (mSyncAdaptersLock) {
             mSyncAdapters = new Object[all.size()];
             String[] names = new String[mSyncAdapters.length];
@@ -201,7 +197,7 @@ public class SyncAdapterDriver extends Activity
         updateUi();
     }
 
-    public void onServiceChanged(SyncAdapterType type, boolean removed) {
+    public void onServiceChanged(SyncAdapterType type, int userId, boolean removed) {
         getSyncAdapters();
     }
 
