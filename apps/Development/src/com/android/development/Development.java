@@ -16,8 +16,13 @@
 
 package com.android.development;
 
+import java.util.List;
+
 import android.app.LauncherActivity;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
+import android.provider.Settings;
 
 public class Development extends LauncherActivity
 {
@@ -25,7 +30,17 @@ public class Development extends LauncherActivity
     protected Intent getTargetIntent() {
         Intent targetIntent = new Intent(Intent.ACTION_MAIN, null);
         targetIntent.addCategory(Intent.CATEGORY_TEST);
-        targetIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         return targetIntent;
+    }
+
+    protected void onSortResultList(List<ResolveInfo> results) {
+        super.onSortResultList(results);
+        Intent settingsIntent = new Intent(Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS);
+        List<ResolveInfo> topItems = getPackageManager().queryIntentActivities(
+                settingsIntent, PackageManager.MATCH_DEFAULT_ONLY);
+        if (topItems != null) {
+            super.onSortResultList(topItems);
+            results.addAll(0, topItems);
+        }
     }
 }
