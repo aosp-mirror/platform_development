@@ -405,6 +405,16 @@ nmea_reader_update_speed( NmeaReader*  r,
     return 0;
 }
 
+static int
+nmea_reader_update_accuracy( NmeaReader*  r )
+{
+    // Always return 20m accuracy.
+    // Possibly parse it from the NMEA sentence in the future.
+    r->fix.flags    |= GPS_LOCATION_HAS_ACCURACY;
+    r->fix.accuracy = 20;
+    return 0;
+}
+
 
 static void
 nmea_reader_parse( NmeaReader*  r )
@@ -488,6 +498,10 @@ nmea_reader_parse( NmeaReader*  r )
         tok.p -= 2;
         D("unknown sentence '%.*s", tok.end-tok.p, tok.p);
     }
+
+    // Always update accuracy
+    nmea_reader_update_accuracy( r );
+
     if (r->fix.flags != 0) {
 #if GPS_DEBUG
         char   temp[256];
