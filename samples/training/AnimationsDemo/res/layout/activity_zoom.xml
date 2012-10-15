@@ -1,0 +1,79 @@
+<!--
+  Copyright 2012 The Android Open Source Project
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+  -->
+
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/container"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <TextView style="?android:textAppearanceSmall"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/message_zoom_touch_expand" />
+
+        <!-- This is an example layout containing thumbnail image buttons that, when pressed,
+             zoom in to show more detail. All of the zooming and animation logic is in
+             the ZoomActivity class. -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:orientation="horizontal">
+
+            <!-- These buttons don't have any decorations (3D bevel, etc.), but it's still
+                 important to show feedback on touch or focus. The custom
+                 "ToughHighlightImageButton" ImageButton subclass helps achieve this by drawing
+                 the standard system "pressed" and "focused" overlay upon user interaction. -->
+
+            <com.example.android.animationsdemo.TouchHighlightImageButton
+                android:id="@+id/thumb_button_1"
+                android:layout_width="100dp"
+                android:layout_height="75dp"
+                android:layout_marginRight="1dp"
+                android:src="@drawable/thumb1"
+                android:scaleType="centerCrop"
+                android:contentDescription="@string/description_image_1" />
+
+            <com.example.android.animationsdemo.TouchHighlightImageButton
+                android:id="@+id/thumb_button_2"
+                android:layout_width="100dp"
+                android:layout_height="75dp"
+                android:src="@drawable/thumb2"
+                android:scaleType="centerCrop"
+                android:contentDescription="@string/description_image_2" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <!-- This initially-hidden ImageView will hold the expanded/zoomed version of the
+         images above. Without transformations applied, it takes up the entire screen.
+         To achieve the "zoom" animation, this view's bounds are animated from the
+         bounds of the thumbnail buttons above, to its final laid-out bounds. The implementation
+         of this animation is in the ZoomActivity class. -->
+    <ImageView
+        android:id="@+id/expanded_image"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="invisible"
+        android:contentDescription="@string/description_zoom_touch_close" />
+
+</FrameLayout>
