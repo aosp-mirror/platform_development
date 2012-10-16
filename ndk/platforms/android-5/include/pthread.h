@@ -262,9 +262,4 @@ extern void  __pthread_cleanup_pop(__pthread_cleanup_t*  c,
 } /* extern "C" */
 #endif
 
-/************ TO FIX ************/
-
-#define LONG_LONG_MAX __LONG_LONG_MAX__
-#define LONG_LONG_MIN (-__LONG_LONG_MAX__ - 1)
-
 #endif /* _PTHREAD_H_ */
