@@ -175,6 +175,11 @@ redirects:
   type: permanent
   comment: Redirect to new location
 
+- src: /guide/topics/ui/notifiers/index.html
+  dst: /guide/topics/ui/notifiers/notifications.html
+  type: permanent
+  comment: Flatten side nav to make Notifications and Toasts separate
+
 # new one
 - src: /guide/topics/wireless/
   dst: /guide/topics/connectivity/
