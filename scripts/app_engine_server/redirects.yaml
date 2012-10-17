@@ -396,6 +396,10 @@ redirects:
   dst: /guide/topics/ui/declaring-layout.html#CommonLayouts
   type: permanent
 
+- src: /guide/topics/ui/layout-objects.html
+  dst: /guide/topics/ui/declaring-layout.html#CommonLayouts
+  type: permanent
+
 - src: /resources/tutorials/localization/.*
   dst: /training/basics/supporting-devices/languages.html
   type: permanent
