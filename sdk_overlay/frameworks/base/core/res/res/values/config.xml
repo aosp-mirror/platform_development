@@ -21,7 +21,7 @@
      for different hardware and product builds. -->
 <resources>
     <!-- Package name providing location API support. -->
-    <string-array name="config_overlay_locationProviderPackageNames" translatable="false">
+    <string-array name="config_locationProviderPackageNames" translatable="false">
         <item>com.google.android.location</item>
     </string-array>
 
