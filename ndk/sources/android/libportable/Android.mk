@@ -75,6 +75,8 @@ LOCAL_SRC_FILES := \
         $(libportable_common_src_files) \
         $(libportable_arch_src_files)
 
+LOCAL_WHOLE_STATIC_LIBRARIES += cpufeatures
+
 LOCAL_SHARED_LIBRARIES += liblog
 
 include $(BUILD_SHARED_LIBRARY)
