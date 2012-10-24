@@ -23,6 +23,7 @@
     <!-- Package name providing location API support. -->
     <string-array name="config_locationProviderPackageNames" translatable="false">
         <item>com.google.android.location</item>
+        <item>com.android.location.fused</item>
     </string-array>
 
     <bool name="config_voice_capable">true</bool>
