@@ -64,9 +64,10 @@ public class PresentationActivity extends Activity
 
     // The content that we want to show on the presentation.
     private static final int[] CHANNELS = new int[] {
-        R.drawable.sample_4, R.drawable.frantic, R.drawable.beach,
+        R.drawable.frantic,
         R.drawable.photo1, R.drawable.photo2, R.drawable.photo3,
         R.drawable.photo4, R.drawable.photo5, R.drawable.photo6,
+        R.drawable.sample_4,
     };
 
     private DisplayManager mDisplayManager;
@@ -182,8 +183,9 @@ public class PresentationActivity extends Activity
     }
 
     private int getNextChannel() {
+        final int channel = mNextChannelNumber;
         mNextChannelNumber = (mNextChannelNumber + 1) % CHANNELS.length;
-        return mNextChannelNumber;
+        return channel;
     }
 
     @Override
