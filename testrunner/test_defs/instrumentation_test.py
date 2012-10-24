@@ -252,25 +252,29 @@ class InstrumentationTestFactory(test_suite.AbstractTestFactory):
                    (android_manifest.AndroidManifest.FILENAME,
                     self.GetBuildPath()))
         return tests
-
-      for instr_name in manifest_parser.GetInstrumentationNames():
-        pkg_name = manifest_parser.GetPackageName()
-        if instr_name.find(".") < 0:
-          instr_name = "." + instr_name
-        logger.SilentLog('Found instrumentation %s/%s' % (pkg_name, instr_name))
-        suite = InstrumentationTestSuite()
-        suite.SetPackageName(pkg_name)
-        suite.SetBuildPath(self.GetBuildPath())
-        suite.SetRunnerName(instr_name)
-        suite.SetName(pkg_name)
-        suite.SetClassName(class_name_arg)
-        suite.SetJavaPackageFilter(java_package_name)
-        # this is a bit of a hack, assume if 'com.android.cts' is in
-        # package name, this is a cts test
-        # this logic can be removed altogether when cts tests no longer require
-        # custom build steps
-        if suite.GetPackageName().startswith('com.android.cts'):
-          suite.SetSuite('cts')
+      elif len(instrs) > 1:
+        logger.Log("Found multiple instrumentation declarations in %s/%s."
+                   "Only using first declared." %
+                   (self.GetBuildPath(),
+                    android_manifest.AndroidManifest.FILENAME))
+      instr_name = manifest_parser.GetInstrumentationNames()[0]
+      pkg_name = manifest_parser.GetPackageName()
+      if instr_name.find(".") < 0:
+        instr_name = "." + instr_name
+      logger.SilentLog('Found instrumentation %s/%s' % (pkg_name, instr_name))
+      suite = InstrumentationTestSuite()
+      suite.SetPackageName(pkg_name)
+      suite.SetBuildPath(self.GetBuildPath())
+      suite.SetRunnerName(instr_name)
+      suite.SetName(pkg_name)
+      suite.SetClassName(class_name_arg)
+      suite.SetJavaPackageFilter(java_package_name)
+      # this is a bit of a hack, assume if 'com.android.cts' is in
+      # package name, this is a cts test
+      # this logic can be removed altogether when cts tests no longer require
+      # custom build steps
+      if suite.GetPackageName().startswith('com.android.cts'):
+        suite.SetSuite('cts')
         tests.append(suite)
       return tests
 
