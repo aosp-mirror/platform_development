@@ -25,7 +25,7 @@ import android.opengl.GLSurfaceView;
  * Render a pair of tumbling cubes.
  */
 
-class CubeRenderer implements GLSurfaceView.Renderer {
+public class CubeRenderer implements GLSurfaceView.Renderer {
     public CubeRenderer(boolean useTranslucentBackground) {
         mTranslucentBackground = useTranslucentBackground;
         mCube = new Cube();
