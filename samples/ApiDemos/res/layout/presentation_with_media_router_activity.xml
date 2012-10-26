@@ -14,9 +14,7 @@
      limitations under the License.
 -->
 
-<!-- Demonstrates an activity that shows content on secondary displays using
-     the android.app.Presentation class.
-     See corresponding Java code PresentationActivity.java. -->
+<!-- See corresponding Java code PresentationWithMediaRouterActivity.java. -->
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="match_parent"
@@ -30,18 +28,19 @@
         android:layout_weight="0"
         android:gravity="center_vertical|center_horizontal"
         android:textAppearance="?android:attr/textAppearanceMedium"
-        android:text="@string/presentation_activity_text"/>
+        android:text="@string/presentation_with_media_router_activity_text"/>
 
-    <!-- A checkbox to toggle between showing all displays or only presentation displays. -->
-    <CheckBox android:id="@+id/show_all_displays"
+    <!-- Some information about what's going on. -->
+    <TextView android:id="@+id/info"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_weight="0"
-        android:text="@string/presentation_show_all_displays" />
+        android:gravity="center_vertical|center_horizontal"
+        android:textAppearance="?android:attr/textAppearanceMedium"/>
 
-    <!-- List that will show information about all connected displays. -->
-    <ListView android:id="@+id/display_list"
+    <!-- Some content for visual interest in the case where no presentation is showing. -->
+    <android.opengl.GLSurfaceView android:id="@+id/surface_view"
         android:layout_width="match_parent"
-        android:layout_height="0dip"
+        android:layout_height="0dp"
         android:layout_weight="1" />
 </LinearLayout>
