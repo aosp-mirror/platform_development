@@ -51,6 +51,8 @@ import android.view.WindowManager;
  * </p>
  */
 public class SecureSurfaceViewActivity extends Activity {
+    private GLSurfaceView mSurfaceView;
+
     /**
      * Initialization of the Activity after it is first created.  Must at least
      * call {@link android.app.Activity#setContentView setContentView()} to
@@ -69,13 +71,31 @@ public class SecureSurfaceViewActivity extends Activity {
         // Set up the surface view.
         // We use a GLSurfaceView in this demonstration but ordinary
         // SurfaceViews also support the same secure surface functionality.
-        GLSurfaceView surfaceView = (GLSurfaceView)findViewById(R.id.surface_view);
-        surfaceView.setRenderer(new CubeRenderer(false));
+        mSurfaceView = (GLSurfaceView)findViewById(R.id.surface_view);
+        mSurfaceView.setRenderer(new CubeRenderer(false));
 
         // Make the surface view secure.  This must be done at the time the surface view
         // is created before the surface view's containing window is attached to
         // the window manager which happens after onCreate returns.
         // It cannot be changed later.
-        surfaceView.setSecure(true);
+        mSurfaceView.setSecure(true);
+    }
+
+    @Override
+    protected void onResume() {
+        // Be sure to call the super class.
+        super.onResume();
+
+        // Resume rendering.
+        mSurfaceView.onResume();
+    }
+
+    @Override
+    protected void onPause() {
+        // Be sure to call the super class.
+        super.onPause();
+
+        // Pause rendering.
+        mSurfaceView.onPause();
     }
 }
