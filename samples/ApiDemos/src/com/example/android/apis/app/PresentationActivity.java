@@ -30,6 +30,9 @@ import android.graphics.Point;
 import android.graphics.drawable.GradientDrawable;
 import android.hardware.display.DisplayManager;
 import android.os.Bundle;
+import android.os.Parcel;
+import android.os.Parcelable;
+import android.os.Parcelable.Creator;
 import android.util.Log;
 import android.util.SparseArray;
 import android.view.Display;
@@ -45,6 +48,7 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
+//BEGIN_INCLUDE(activity)
 /**
  * <h3>Presentation Activity</h3>
  *
@@ -52,18 +56,32 @@ import android.widget.TextView;
  * This demonstrates how to create an activity that shows some content
  * on a secondary display using a {@link Presentation}.
  * </p><p>
- * The activity automatically creates and displays a {@link Presentation} whenever
- * a new non-default display is detected.  You can try this out by using
- * the "Simulate secondary displays" feature in Development Settings to create
- * a few simulated secondary displays.
+ * The activity uses the {@link DisplayManager} API to enumerate displays.
+ * When the user selects a display, the activity opens a {@link Presentation}
+ * on that display.  We show a different photograph in each presentation
+ * on a unique background along with a label describing the display.
+ * We also write information about displays and display-related events to
+ * the Android log which you can read using <code>adb logcat</code>.
+ * </p><p>
+ * You can try this out using an HDMI or Wifi display or by using the
+ * "Simulate secondary displays" feature in Development Settings to create a few
+ * simulated secondary displays.  Each display will appear in the list along with a
+ * checkbox to show a presentation on that display.
+ * </p><p>
+ * See also the {@link PresentationWithMediaRouterActivity} sample which
+ * uses the media router to automatically select a secondary display
+ * on which to show content based on the currently selected route.
  * </p>
  */
 public class PresentationActivity extends Activity
         implements OnCheckedChangeListener, OnClickListener {
     private final String TAG = "PresentationActivity";
 
+    // Key for storing saved instance state.
+    private static final String PRESENTATION_KEY = "presentation";
+
     // The content that we want to show on the presentation.
-    private static final int[] CHANNELS = new int[] {
+    private static final int[] PHOTOS = new int[] {
         R.drawable.frantic,
         R.drawable.photo1, R.drawable.photo2, R.drawable.photo3,
         R.drawable.photo4, R.drawable.photo5, R.drawable.photo6,
@@ -72,14 +90,16 @@ public class PresentationActivity extends Activity
 
     private DisplayManager mDisplayManager;
     private DisplayListAdapter mDisplayListAdapter;
+    private CheckBox mShowAllDisplaysCheckbox;
     private ListView mListView;
-    private int mNextChannelNumber;
+    private int mNextImageNumber;
 
-    // Indexed by displayId. Persists across pause/resume.
-    private final SparseArray<PresentationContents> mSavedPresentationContents =
-            new SparseArray<PresentationContents>();
+    // List of presentation contents indexed by displayId.
+    // This state persists so that we can restore the old presentation
+    // contents when the activity is paused or resumed.
+    private SparseArray<PresentationContents> mSavedPresentationContents;
 
-    // Indexed by displayId. Contains all currently displayed Presentations.
+    // List of all currently visible presentations indexed by display id.
     private final SparseArray<DemoPresentation> mActivePresentations =
             new SparseArray<DemoPresentation>();
 
@@ -93,6 +113,14 @@ public class PresentationActivity extends Activity
         // Be sure to call the super class.
         super.onCreate(savedInstanceState);
 
+        // Restore saved instance state.
+        if (savedInstanceState != null) {
+            mSavedPresentationContents =
+                    savedInstanceState.getSparseParcelableArray(PRESENTATION_KEY);
+        } else {
+            mSavedPresentationContents = new SparseArray<PresentationContents>();
+        }
+
         // Get the display manager service.
         mDisplayManager = (DisplayManager)getSystemService(Context.DISPLAY_SERVICE);
 
@@ -101,6 +129,11 @@ public class PresentationActivity extends Activity
         // the content of our screen.
         setContentView(R.layout.presentation_activity);
 
+        // Set up checkbox to toggle between showing all displays or only presentation displays.
+        mShowAllDisplaysCheckbox = (CheckBox)findViewById(R.id.show_all_displays);
+        mShowAllDisplaysCheckbox.setOnCheckedChangeListener(this);
+
+        // Set up the list of displays.
         mDisplayListAdapter = new DisplayListAdapter(this);
         mListView = (ListView)findViewById(R.id.display_list);
         mListView.setAdapter(mDisplayListAdapter);
@@ -114,6 +147,7 @@ public class PresentationActivity extends Activity
         // Update our list of displays on resume.
         mDisplayListAdapter.updateContents();
 
+        // Restore presentations from before the activity was paused.
         final int numDisplays = mDisplayListAdapter.getCount();
         for (int i = 0; i < numDisplays; i++) {
             final Display display = mDisplayListAdapter.getItem(i);
@@ -137,7 +171,7 @@ public class PresentationActivity extends Activity
         // Unregister from the display manager.
         mDisplayManager.unregisterDisplayListener(mDisplayListener);
 
-        // Dismiss all of our presentations.
+        // Dismiss all of our presentations but remember their contents.
         Log.d(TAG, "Activity is being paused.  Dismissing all active presentation.");
         for (int i = 0; i < mActivePresentations.size(); i++) {
             DemoPresentation presentation = mActivePresentations.valueAt(i);
@@ -146,6 +180,13 @@ public class PresentationActivity extends Activity
             presentation.dismiss();
         }
         mActivePresentations.clear();
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        // Be sure to call the super class.
+        super.onSaveInstanceState(outState);
+        outState.putSparseParcelableArray(PRESENTATION_KEY, mSavedPresentationContents);
     }
 
     /**
@@ -157,8 +198,8 @@ public class PresentationActivity extends Activity
             return;
         }
 
-        Log.d(TAG, "Showing presentation channel " + contents.channel
-                + " on display " + displayId + ".");
+        Log.d(TAG, "Showing presentation photo #" + contents.photo
+                + " on display #" + displayId + ".");
 
         DemoPresentation presentation = new DemoPresentation(this, display, contents);
         presentation.show();
@@ -176,32 +217,44 @@ public class PresentationActivity extends Activity
             return;
         }
 
-        Log.d(TAG, "Dismissing presentation on display " + displayId + ".");
+        Log.d(TAG, "Dismissing presentation on display #" + displayId + ".");
 
         presentation.dismiss();
         mActivePresentations.delete(displayId);
     }
 
-    private int getNextChannel() {
-        final int channel = mNextChannelNumber;
-        mNextChannelNumber = (mNextChannelNumber + 1) % CHANNELS.length;
-        return channel;
+    private int getNextPhoto() {
+        final int photo = mNextImageNumber;
+        mNextImageNumber = (mNextImageNumber + 1) % PHOTOS.length;
+        return photo;
     }
 
+    /**
+     * Called when the show all displays checkbox is toggled or when
+     * an item in the list of displays is checked or unchecked.
+     */
     @Override
-    /** Presentation CheckBox */
     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-        final Display display = (Display)buttonView.getTag();
-        if (isChecked) {
-            PresentationContents contents = new PresentationContents(getNextChannel());
-            showPresentation(display, contents);
+        if (buttonView == mShowAllDisplaysCheckbox) {
+            // Show all displays checkbox was toggled.
+            mDisplayListAdapter.updateContents();
         } else {
-            hidePresentation(display);
+            // Display item checkbox was toggled.
+            final Display display = (Display)buttonView.getTag();
+            if (isChecked) {
+                PresentationContents contents = new PresentationContents(getNextPhoto());
+                showPresentation(display, contents);
+            } else {
+                hidePresentation(display);
+            }
         }
     }
 
+    /**
+     * Called when the Info button next to a display is clicked to show information
+     * about the display.
+     */
     @Override
-    /** Info Button */
     public void onClick(View v) {
         Context context = v.getContext();
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
@@ -235,19 +288,19 @@ public class PresentationActivity extends Activity
             new DisplayManager.DisplayListener() {
         @Override
         public void onDisplayAdded(int displayId) {
-            Log.d(TAG, "Display " + displayId + " added.");
+            Log.d(TAG, "Display #" + displayId + " added.");
             mDisplayListAdapter.updateContents();
         }
 
         @Override
         public void onDisplayChanged(int displayId) {
-            Log.d(TAG, "Display " + displayId + " changed.");
+            Log.d(TAG, "Display #" + displayId + " changed.");
             mDisplayListAdapter.updateContents();
         }
 
         @Override
         public void onDisplayRemoved(int displayId) {
-            Log.d(TAG, "Display " + displayId + " removed.");
+            Log.d(TAG, "Display #" + displayId + " removed.");
             mDisplayListAdapter.updateContents();
         }
     };
@@ -261,7 +314,7 @@ public class PresentationActivity extends Activity
         public void onDismiss(DialogInterface dialog) {
             DemoPresentation presentation = (DemoPresentation)dialog;
             int displayId = presentation.getDisplay().getDisplayId();
-            Log.d(TAG, "Presentation on display " + displayId + " was dismissed.");
+            Log.d(TAG, "Presentation on display #" + displayId + " was dismissed.");
             mActivePresentations.delete(displayId);
             mDisplayListAdapter.notifyDataSetChanged();
         }
@@ -300,7 +353,7 @@ public class PresentationActivity extends Activity
 
             TextView tv = (TextView)v.findViewById(R.id.display_id);
             tv.setText(v.getContext().getResources().getString(
-                    R.string.presentation_display_id_text, displayId));
+                    R.string.presentation_display_id_text, displayId, display.getName()));
 
             Button b = (Button)v.findViewById(R.id.info);
             b.setTag(display);
@@ -316,7 +369,8 @@ public class PresentationActivity extends Activity
         public void updateContents() {
             clear();
 
-            Display[] displays = mDisplayManager.getDisplays();
+            String displayCategory = getDisplayCategory();
+            Display[] displays = mDisplayManager.getDisplays(displayCategory);
             addAll(displays);
 
             Log.d(TAG, "There are currently " + displays.length + " displays connected.");
@@ -324,12 +378,17 @@ public class PresentationActivity extends Activity
                 Log.d(TAG, "  " + display);
             }
         }
+
+        private String getDisplayCategory() {
+            return mShowAllDisplaysCheckbox.isChecked() ? null :
+                DisplayManager.DISPLAY_CATEGORY_PRESENTATION;
+        }
     }
 
     /**
      * The presentation to show on the secondary display.
      *
-     * Note that this display may have different metrics from the display on which
+     * Note that the presentation display may have different metrics from the display on which
      * the main activity is showing so we must be careful to use the presentation's
      * own {@link Context} whenever we load resources.
      */
@@ -356,15 +415,16 @@ public class PresentationActivity extends Activity
 
             final Display display = getDisplay();
             final int displayId = display.getDisplayId();
-            final int channel = mContents.channel;
+            final int photo = mContents.photo;
 
-            // Show a text message to describe what's going on.
+            // Show a caption to describe what's going on.
             TextView text = (TextView)findViewById(R.id.text);
-            text.setText(r.getString(R.string.presentation_channel_text, channel, displayId));
+            text.setText(r.getString(R.string.presentation_photo_text,
+                    photo, displayId, display.getName()));
 
             // Show a n image for visual interest.
             ImageView image = (ImageView)findViewById(R.id.image);
-            image.setImageDrawable(r.getDrawable(CHANNELS[channel]));
+            image.setImageDrawable(r.getDrawable(PHOTOS[photo]));
 
             GradientDrawable drawable = new GradientDrawable();
             drawable.setShape(GradientDrawable.RECTANGLE);
@@ -379,15 +439,49 @@ public class PresentationActivity extends Activity
         }
     }
 
-    private final static class PresentationContents {
-        final int channel;
+    /**
+     * Information about the content we want to show in a presentation.
+     */
+    private final static class PresentationContents implements Parcelable {
+        final int photo;
         final int[] colors;
 
-        public PresentationContents(int channel) {
-            this.channel = channel;
+        public static final Creator<PresentationContents> CREATOR =
+                new Creator<PresentationContents>() {
+            @Override
+            public PresentationContents createFromParcel(Parcel in) {
+                return new PresentationContents(in);
+            }
+
+            @Override
+            public PresentationContents[] newArray(int size) {
+                return new PresentationContents[size];
+            }
+        };
+
+        public PresentationContents(int photo) {
+            this.photo = photo;
             colors = new int[] {
                     ((int) (Math.random() * Integer.MAX_VALUE)) | 0xFF000000,
                     ((int) (Math.random() * Integer.MAX_VALUE)) | 0xFF000000 };
         }
+
+        private PresentationContents(Parcel in) {
+            photo = in.readInt();
+            colors = new int[] { in.readInt(), in.readInt() };
+        }
+
+        @Override
+        public int describeContents() {
+            return 0;
+        }
+
+        @Override
+        public void writeToParcel(Parcel dest, int flags) {
+            dest.writeInt(photo);
+            dest.writeInt(colors[0]);
+            dest.writeInt(colors[1]);
+        }
     }
 }
+//END_INCLUDE(activity)

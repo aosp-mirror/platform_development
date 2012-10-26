@@ -262,6 +262,14 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".app.PresentationWithMediaRouterActivity"
+                android:label="@string/activity_presentation_with_media_router">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
         <activity android:name=".app.SecureWindowActivity"
                 android:label="@string/activity_secure_window">
             <intent-filter>
