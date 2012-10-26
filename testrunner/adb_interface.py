@@ -305,7 +305,7 @@ class AdbInterface:
       command_string += " -e %s '%s'" % (key, value)
     if raw_mode:
       command_string += " -r"
-    command_string += " -w %s" % instrumentation_path
+    command_string += " -w '%s'" % instrumentation_path
     return command_string
 
   def _CreateTraceDir(self):

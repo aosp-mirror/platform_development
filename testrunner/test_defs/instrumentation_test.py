@@ -253,11 +253,13 @@ class InstrumentationTestFactory(test_suite.AbstractTestFactory):
                     self.GetBuildPath()))
         return tests
       elif len(instrs) > 1:
-        logger.Log("Found multiple instrumentation declarations in %s/%s."
+        logger.Log("Found multiple instrumentation declarations in %s/%s. "
                    "Only using first declared." %
                    (self.GetBuildPath(),
                     android_manifest.AndroidManifest.FILENAME))
       instr_name = manifest_parser.GetInstrumentationNames()[0]
+      # escape inner class names
+      instr_name = instr_name.replace('$', '\$')
       pkg_name = manifest_parser.GetPackageName()
       if instr_name.find(".") < 0:
         instr_name = "." + instr_name
@@ -275,7 +277,7 @@ class InstrumentationTestFactory(test_suite.AbstractTestFactory):
       # custom build steps
       if suite.GetPackageName().startswith('com.android.cts'):
         suite.SetSuite('cts')
-        tests.append(suite)
+      tests.append(suite)
       return tests
 
     except:
