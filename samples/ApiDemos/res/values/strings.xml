@@ -113,14 +113,26 @@
     <string name="apply">Apply</string>
 
     <string name="activity_presentation">App/Activity/Presentation</string>
-    <string name="presentation_activity_text">This activity demonstrates how to use the Presentation activity to show content on other Displays.\n
+    <string name="presentation_activity_text">This activity demonstrates how to use a
+                  Presentation and the DisplayManager to show content on other Displays.\n
                   Try connecting a secondary display and watch what happens.\n
                   Selecting a Display will open a Presentation on it.</string>
-    <string name="presentation_channel_text">You\'re watching channel %1$d on display %2$d.</string>
+    <string name="presentation_show_all_displays">Show all displays</string>
+    <string name="presentation_photo_text">Showing photo #%1$d on display #%2$d: %3$s.</string>
     <string name="presentation_info_text">Info</string>
-    <string name="presentation_display_id_text">Display #%1$d</string>
-    <string name="presentation_alert_info_text">Display %1$d Info</string>
+    <string name="presentation_display_id_text">Display #%1$d: %2$s</string>
+    <string name="presentation_alert_info_text">Display #%1$d Info</string>
     <string name="presentation_alert_dismiss_text">OK</string>
+
+    <string name="activity_presentation_with_media_router">App/Activity/Presentation with Media Router</string>
+    <string name="presentation_with_media_router_activity_text">This activity demonstrates how to
+                  use a Presentation and the MediaRouter to automatically
+                  show content on a secondary display when available based on the currently
+                  selected media route.\n
+                  Try connecting a secondary display and watch what happens.</string>
+    <string name="presentation_with_media_router_play_on">Play on...</string>
+    <string name="presentation_with_media_router_now_playing_locally">Now playing on main display \'%s\'.</string>
+    <string name="presentation_with_media_router_now_playing_remotely">Now playing on secondary display \'%s\'.</string>
 
     <string name="activity_secure_window">App/Activity/Secure Surfaces/Secure Window</string>
     <string name="secure_window_activity_text">This activity demonstrates how to make an activity
