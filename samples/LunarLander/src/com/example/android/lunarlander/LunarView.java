@@ -196,6 +196,8 @@ class LunarView extends SurfaceView implements SurfaceHolder.Callback {
         /** Indicate whether the surface has been created & is ready to draw */
         private boolean mRun = false;
 
+        private final Object mRunLock = new Object();
+
         /** Scratch rect object. */
         private RectF mScratchRect;
 
@@ -356,7 +358,13 @@ class LunarView extends SurfaceView implements SurfaceHolder.Callback {
                     c = mSurfaceHolder.lockCanvas(null);
                     synchronized (mSurfaceHolder) {
                         if (mMode == STATE_RUNNING) updatePhysics();
-                        doDraw(c);
+                        // Critical section. Do not allow mRun to be set false until
+                        // we are sure all canvas draw operations are complete.
+                        //
+                        // If mRun has been toggled false, inhibit canvas operations.
+                        synchronized (mRunLock) {
+                            if (mRun) doDraw(c);
+                        }
                     }
                 } finally {
                     // do this in a finally so that if an exception is thrown
@@ -427,7 +435,11 @@ class LunarView extends SurfaceView implements SurfaceHolder.Callback {
          * @param b true to run, false to shut down
          */
         public void setRunning(boolean b) {
-            mRun = b;
+            // Do not allow mRun to be modified while any canvas operations
+            // are potentially in-flight. See doDraw().
+            synchronized (mRunLock) {
+                mRun = b;
+            }
         }
 
         /**
