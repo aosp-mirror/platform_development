@@ -1073,6 +1073,9 @@
     <string name="focus_5_button4">4</string>
     <string name="focus_5_button5">5</string>
     <string name="gallery_2_text">Testing</string>
+    <string name="grid_layout_1_instructions">Type here:</string>
+    <string name="grid_layout_1_ok">Ok</string>
+    <string name="grid_layout_1_cancel">Cancel</string>
     <string name="googlelogin_login">Login</string>
     <string name="googlelogin_bad_login">Bad Login</string>
     <string name="googlelogin_clear">Clear Credentials</string>
