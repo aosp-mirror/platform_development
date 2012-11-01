@@ -1339,6 +1339,12 @@
         <!--      VIEW/WIDGET PACKAGE SAMPLES      -->
         <!-- ************************************* -->
 
+        <activity android:name=".view.TextClockDemo" android:label="Views/TextClock">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
         <activity android:name=".view.ChronometerDemo" android:label="Views/Chronometer">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
