@@ -18,6 +18,8 @@
         package="com.android.development_settings"
         android:versionCode="1" android:versionName="1.0">
 
+    <uses-sdk android:minSdkVersion="14" />
+
     <application android:hasCode="false" android:label="@string/app_label"
             android:icon="@mipmap/ic_launcher_devsettings">
         <activity android:name="android.app.AliasActivity"
