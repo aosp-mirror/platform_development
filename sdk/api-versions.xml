@@ -497,6 +497,8 @@
 		<field name="foreground" />
 		<field name="foregroundGravity" />
 		<field name="format" />
+		<field name="format12Hour" since="17" />
+		<field name="format24Hour" since="17" />
 		<field name="fragment" since="11" />
 		<field name="fragmentCloseEnterAnimation" since="11" />
 		<field name="fragmentCloseExitAnimation" since="11" />
@@ -1080,6 +1082,7 @@
 		<field name="thumbTextPadding" since="14" />
 		<field name="thumbnail" since="5" />
 		<field name="tileMode" />
+		<field name="timeZone" since="17" />
 		<field name="tint" />
 		<field name="title" />
 		<field name="titleCondensed" />
@@ -1148,7 +1151,6 @@
 		<field name="weekSeparatorLineColor" since="11" />
 		<field name="weightSum" />
 		<field name="widgetCategory" since="17" />
-		<field name="widgetFeatures" since="17" />
 		<field name="widgetLayout" />
 		<field name="width" />
 		<field name="windowActionBar" since="11" />
@@ -4406,8 +4408,6 @@
 		<field name="RESIZE_VERTICAL" since="12" />
 		<field name="WIDGET_CATEGORY_HOME_SCREEN" since="17" />
 		<field name="WIDGET_CATEGORY_KEYGUARD" since="17" />
-		<field name="WIDGET_FEATURES_NONE" since="17" />
-		<field name="WIDGET_FEATURES_STATUS" since="17" />
 		<field name="autoAdvanceViewId" since="11" />
 		<field name="configure" />
 		<field name="icon" />
@@ -4423,7 +4423,6 @@
 		<field name="resizeMode" since="12" />
 		<field name="updatePeriodMillis" />
 		<field name="widgetCategory" since="17" />
-		<field name="widgetFeatures" since="17" />
 	</class>
 	<class name="android/bluetooth/BluetoothA2dp" since="11">
 		<extends name="java/lang/Object" />
@@ -9769,8 +9768,10 @@
 		<method name="&lt;init>()V" />
 		<method name="getDisplay(I)Landroid/view/Display;" />
 		<method name="getDisplays()[Landroid/view/Display;" />
+		<method name="getDisplays(Ljava/lang/String;)[Landroid/view/Display;" />
 		<method name="registerDisplayListener(Landroid/hardware/display/DisplayManager$DisplayListener;Landroid/os/Handler;)V" />
 		<method name="unregisterDisplayListener(Landroid/hardware/display/DisplayManager$DisplayListener;)V" />
+		<field name="DISPLAY_CATEGORY_PRESENTATION" />
 	</class>
 	<class name="android/hardware/display/DisplayManager$DisplayListener" since="17">
 		<extends name="java/lang/Object" />
@@ -10350,7 +10351,6 @@
 	<class name="android/location/LocationManager" since="1">
 		<extends name="java/lang/Object" />
 		<method name="&lt;init>()V" />
-		<method name="addGeofence(Landroid/location/LocationRequest;Landroid/location/Geofence;Landroid/app/PendingIntent;)V" since="17" />
 		<method name="addGpsStatusListener(Landroid/location/GpsStatus$Listener;)Z" since="3" />
 		<method name="addNmeaListener(Landroid/location/GpsStatus$NmeaListener;)Z" since="5" />
 		<method name="addProximityAlert(DDFJLandroid/app/PendingIntent;)V" />
@@ -10362,13 +10362,10 @@
 		<method name="getBestProvider(Landroid/location/Criteria;Z)Ljava/lang/String;" />
 		<method name="getGpsStatus(Landroid/location/GpsStatus;)Landroid/location/GpsStatus;" since="3" />
 		<method name="getLastKnownLocation(Ljava/lang/String;)Landroid/location/Location;" />
-		<method name="getLastLocation()Landroid/location/Location;" since="17" />
 		<method name="getProvider(Ljava/lang/String;)Landroid/location/LocationProvider;" />
 		<method name="getProviders(Landroid/location/Criteria;Z)Ljava/util/List;" />
 		<method name="getProviders(Z)Ljava/util/List;" />
 		<method name="isProviderEnabled(Ljava/lang/String;)Z" />
-		<method name="removeAllGeofences(Landroid/app/PendingIntent;)V" since="17" />
-		<method name="removeGeofence(Landroid/location/Geofence;Landroid/app/PendingIntent;)V" since="17" />
 		<method name="removeGpsStatusListener(Landroid/location/GpsStatus$Listener;)V" since="3" />
 		<method name="removeNmeaListener(Landroid/location/GpsStatus$NmeaListener;)V" since="5" />
 		<method name="removeProximityAlert(Landroid/app/PendingIntent;)V" />
@@ -10377,8 +10374,6 @@
 		<method name="removeUpdates(Landroid/location/LocationListener;)V" />
 		<method name="requestLocationUpdates(JFLandroid/location/Criteria;Landroid/app/PendingIntent;)V" since="9" />
 		<method name="requestLocationUpdates(JFLandroid/location/Criteria;Landroid/location/LocationListener;Landroid/os/Looper;)V" since="9" />
-		<method name="requestLocationUpdates(Landroid/location/LocationRequest;Landroid/app/PendingIntent;)V" since="17" />
-		<method name="requestLocationUpdates(Landroid/location/LocationRequest;Landroid/location/LocationListener;Landroid/os/Looper;)V" since="17" />
 		<method name="requestLocationUpdates(Ljava/lang/String;JFLandroid/app/PendingIntent;)V" since="3" />
 		<method name="requestLocationUpdates(Ljava/lang/String;JFLandroid/location/LocationListener;)V" />
 		<method name="requestLocationUpdates(Ljava/lang/String;JFLandroid/location/LocationListener;Landroid/os/Looper;)V" />
@@ -11412,6 +11407,7 @@
 		<method name="onRouteAdded(Landroid/media/MediaRouter;Landroid/media/MediaRouter$RouteInfo;)V" />
 		<method name="onRouteChanged(Landroid/media/MediaRouter;Landroid/media/MediaRouter$RouteInfo;)V" />
 		<method name="onRouteGrouped(Landroid/media/MediaRouter;Landroid/media/MediaRouter$RouteInfo;Landroid/media/MediaRouter$RouteGroup;I)V" />
+		<method name="onRoutePresentationDisplayChanged(Landroid/media/MediaRouter;Landroid/media/MediaRouter$RouteInfo;)V" since="17" />
 		<method name="onRouteRemoved(Landroid/media/MediaRouter;Landroid/media/MediaRouter$RouteInfo;)V" />
 		<method name="onRouteSelected(Landroid/media/MediaRouter;ILandroid/media/MediaRouter$RouteInfo;)V" />
 		<method name="onRouteUngrouped(Landroid/media/MediaRouter;Landroid/media/MediaRouter$RouteInfo;Landroid/media/MediaRouter$RouteGroup;)V" />
@@ -11449,6 +11445,7 @@
 		<method name="getName(Landroid/content/Context;)Ljava/lang/CharSequence;" />
 		<method name="getPlaybackStream()I" />
 		<method name="getPlaybackType()I" />
+		<method name="getPresentationDisplay()Landroid/view/Display;" since="17" />
 		<method name="getStatus()Ljava/lang/CharSequence;" />
 		<method name="getSupportedTypes()I" />
 		<method name="getTag()Ljava/lang/Object;" />
@@ -16224,6 +16221,7 @@
 		<extends name="java/lang/Object" />
 		<method name="&lt;init>()V" />
 		<method name="getSerialNumberForUser(Landroid/os/UserHandle;)J" />
+		<method name="getUserCount()I" />
 		<method name="getUserForSerialNumber(J)Landroid/os/UserHandle;" />
 		<method name="getUserName()Ljava/lang/String;" />
 		<method name="isUserAGoat()Z" />
@@ -23324,6 +23322,7 @@
 		<method name="getWidth()I" />
 		<method name="isValid()Z" since="17" />
 		<field name="DEFAULT_DISPLAY" />
+		<field name="FLAG_SECURE" since="17" />
 		<field name="FLAG_SUPPORTS_PROTECTED_BUFFERS" since="17" />
 	</class>
 	<class name="android/view/DragEvent" since="11">
@@ -24398,6 +24397,7 @@
 		<method name="&lt;init>(Landroid/content/Context;Landroid/util/AttributeSet;I)V" />
 		<method name="gatherTransparentRegion(Landroid/graphics/Region;)Z" />
 		<method name="getHolder()Landroid/view/SurfaceHolder;" />
+		<method name="setSecure(Z)V" since="17" />
 		<method name="setZOrderMediaOverlay(Z)V" since="5" />
 		<method name="setZOrderOnTop(Z)V" since="5" />
 	</class>
@@ -24966,7 +24966,6 @@
 		<field name="SYSTEM_UI_FLAG_VISIBLE" since="14" />
 		<field name="SYSTEM_UI_LAYOUT_FLAGS" since="16" />
 		<field name="TEXT_ALIGNMENT_CENTER" since="17" />
-		<field name="TEXT_ALIGNMENT_DEFAULT" since="17" />
 		<field name="TEXT_ALIGNMENT_GRAVITY" since="17" />
 		<field name="TEXT_ALIGNMENT_INHERIT" since="16" />
 		<field name="TEXT_ALIGNMENT_RESOLVED_DEFAULT" since="16" />
@@ -24975,7 +24974,6 @@
 		<field name="TEXT_ALIGNMENT_VIEW_END" since="17" />
 		<field name="TEXT_ALIGNMENT_VIEW_START" since="17" />
 		<field name="TEXT_DIRECTION_ANY_RTL" since="17" />
-		<field name="TEXT_DIRECTION_DEFAULT" since="17" />
 		<field name="TEXT_DIRECTION_FIRST_STRONG" since="17" />
 		<field name="TEXT_DIRECTION_INHERIT" since="17" />
 		<field name="TEXT_DIRECTION_LOCALE" since="17" />
@@ -25582,6 +25580,11 @@
 		<method name="removeViewImmediate(Landroid/view/View;)V" />
 	</class>
 	<class name="android/view/WindowManager$BadTokenException" since="1">
+		<extends name="java/lang/RuntimeException" />
+		<method name="&lt;init>()V" />
+		<method name="&lt;init>(Ljava/lang/String;)V" />
+	</class>
+	<class name="android/view/WindowManager$InvalidDisplayException" since="17">
 		<extends name="java/lang/RuntimeException" />
 		<method name="&lt;init>()V" />
 		<method name="&lt;init>(Ljava/lang/String;)V" />
@@ -29172,6 +29175,21 @@
 		<method name="&lt;init>(Landroid/view/ViewGroup$MarginLayoutParams;)V" />
 		<field name="column" />
 		<field name="span" />
+	</class>
+	<class name="android/widget/TextClock" since="17">
+		<extends name="android/widget/TextView" />
+		<method name="&lt;init>(Landroid/content/Context;)V" />
+		<method name="&lt;init>(Landroid/content/Context;Landroid/util/AttributeSet;)V" />
+		<method name="&lt;init>(Landroid/content/Context;Landroid/util/AttributeSet;I)V" />
+		<method name="getFormat12Hour()Ljava/lang/CharSequence;" />
+		<method name="getFormat24Hour()Ljava/lang/CharSequence;" />
+		<method name="getTimeZone()Ljava/lang/String;" />
+		<method name="is24HourModeEnabled()Z" />
+		<method name="setFormat12Hour(Ljava/lang/CharSequence;)V" />
+		<method name="setFormat24Hour(Ljava/lang/CharSequence;)V" />
+		<method name="setTimeZone(Ljava/lang/String;)V" />
+		<field name="DEFAULT_FORMAT_12_HOUR" />
+		<field name="DEFAULT_FORMAT_24_HOUR" />
 	</class>
 	<class name="android/widget/TextSwitcher" since="1">
 		<extends name="android/widget/ViewSwitcher" />
