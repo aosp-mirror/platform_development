@@ -14,7 +14,6 @@
 	<classpathentry kind="src" path="packages/apps/Gallery2/src"/>
 	<classpathentry kind="src" path="packages/apps/Gallery2/src_pd"/>
 	<classpathentry kind="src" path="packages/apps/Gallery2/gallerycommon/src"/>
-	<classpathentry kind="src" path="packages/apps/Gallery2/actionbarsherlock/src"/>
 	<classpathentry kind="src" path="packages/apps/HTMLViewer/src"/>
 	<classpathentry kind="src" path="packages/apps/Launcher2/src"/>
 	<classpathentry kind="src" path="packages/apps/Mms/src"/>
@@ -100,6 +99,7 @@
 	<classpathentry kind="src" path="out/target/common/obj/APPS/Browser_intermediates/src/src"/>
 	<classpathentry kind="src" path="out/target/common/obj/APPS/CalendarProvider_intermediates/src/src"/>
 	<classpathentry kind="src" path="out/target/common/obj/APPS/ContactsProvider_intermediates/src/src"/>
+	<classpathentry kind="src" path="out/target/common/obj/APPS/Gallery2_intermediates/src/renderscript/src"/>
 	<classpathentry kind="src" path="out/target/common/obj/APPS/MediaProvider_intermediates/src/src"/>
 	<classpathentry kind="src" path="out/target/common/obj/APPS/Music_intermediates/src/src"/>
 	<classpathentry kind="src" path="out/target/common/obj/APPS/Phone_intermediates/src/src"/>
@@ -123,6 +123,7 @@
 	<classpathentry kind="src" path="external/mp4parser/isoparser/src/main/java"/>
 	<classpathentry kind="src" path="external/nist-sip/java"/>
 	<classpathentry kind="src" path="external/tagsoup/src"/>
+	<classpathentry kind="src" path="external/xmp_toolkit/XMPCore/src"/>
 	<classpathentry kind="lib" path="out/target/common/obj/JAVA_LIBRARIES/bouncycastle_intermediates/classes-jarjar.jar"/>
 	<classpathentry kind="lib" path="out/target/common/obj/JAVA_LIBRARIES/android-support-v4_intermediates/javalib.jar"/>
 	<classpathentry kind="lib" path="out/target/common/obj/JAVA_LIBRARIES/core-junit_intermediates/classes.jar"/>
