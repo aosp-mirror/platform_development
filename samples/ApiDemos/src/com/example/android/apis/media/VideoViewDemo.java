@@ -18,6 +18,7 @@ package com.example.android.apis.media;
 
 import com.example.android.apis.R;
 import android.app.Activity;
+import android.net.Uri;
 import android.os.Bundle;
 import android.widget.MediaController;
 import android.widget.Toast;
@@ -29,7 +30,6 @@ public class VideoViewDemo extends Activity {
      * TODO: Set the path variable to a streaming video URL or a local media
      * file path.
      */
-    private String path = "";
     private VideoView mVideoView;
 
     @Override
@@ -38,24 +38,14 @@ public class VideoViewDemo extends Activity {
         setContentView(R.layout.videoview);
         mVideoView = (VideoView) findViewById(R.id.surface_view);
 
-        if (path == "") {
-            // Tell the user to provide a media file URL/path.
-            Toast.makeText(
-                    VideoViewDemo.this,
-                    "Please edit VideoViewDemo Activity, and set path"
-                            + " variable to your media file URL/path",
-                    Toast.LENGTH_LONG).show();
 
-        } else {
+        /*
+         * Alternatively, you can use mVideoView.setVideoPath(<path>);
+         */
+        mVideoView.setVideoURI(Uri.parse("android.resource://" + getPackageName() +
+                "/" + R.raw.videoviewdemo));
+        mVideoView.setMediaController(new MediaController(this));
+        mVideoView.requestFocus();
 
-            /*
-             * Alternatively,for streaming media you can use
-             * mVideoView.setVideoURI(Uri.parse(URLstring));
-             */
-            mVideoView.setVideoPath(path);
-            mVideoView.setMediaController(new MediaController(this));
-            mVideoView.requestFocus();
-
-        }
     }
 }
