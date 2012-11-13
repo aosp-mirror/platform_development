@@ -105,6 +105,12 @@ redirects:
   type: permanent
   comment: Redirect sdk reference to new location
 
+- src: /sdk/installing/next.html
+  dst: /training/basics/firstapp/index.html
+  type: permanent
+  comment: Next steps doc was lame and everybody should go to first class
+
+
 #- src: /sdk/(?!index.html|installing/|exploring)
 #  dst: /tools/sdk/
 #  type: permanent
