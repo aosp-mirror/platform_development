@@ -479,6 +479,10 @@ redirects:
 
 # ---------- PLATFORM VERSIONS ----------------
 
+- src: /4.2
+  dst: /about/versions/android-4.2.html
+  type: permanent
+  
 - src: /4.1
   dst: /about/versions/android-4.1.html
   type: permanent
@@ -518,6 +522,18 @@ redirects:
 
 - src: /stats
   dst: /about/dashboards/index.html
+  type: permanent
+
+- src: /youtube
+  dst: http://www.youtube.com/user/androiddevelopers
+  type: permanent
+
+- src: /playbadge
+  dst: http://developer.android.com/distribute/googleplay/promote/badges.html
+  type: permanent
+
+- src: /deviceart
+  dst: http://developer.android.com/distribute/promote/device-art.html
   type: permanent
 
 
