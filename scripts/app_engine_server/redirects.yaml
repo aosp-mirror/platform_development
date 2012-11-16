@@ -324,27 +324,27 @@ redirects:
 # move best practices to training
 
 - src: /guide/practices/app-design/performance.html
-  dst: /training/perf-tips.html
+  dst: /training/articles/perf-tips.html
   type: permanent
 
 - src: /guide/practices/performance.html
-  dst: /training/perf-tips.html
+  dst: /training/articles/perf-tips.html
   type: permanent
 
 - src: /guide/practices/app-design/responsiveness.html
-  dst: /training/perf-anr.html
+  dst: /training/articles/perf-anr.html
   type: permanent
 
 - src: /guide/practices/responsiveness.html
-  dst: /training/perf-anr.html
+  dst: /training/articles/perf-anr.html
   type: permanent
 
 - src: /guide/practices/security.html
-  dst: /training/security-tips.html
+  dst: /training/articles/security-tips.html
   type: permanent
 
 - src: /guide/practices/jni.html
-  dst: /training/perf-jni.html
+  dst: /training/articles/perf-jni.html
   type: permanent
 
 
