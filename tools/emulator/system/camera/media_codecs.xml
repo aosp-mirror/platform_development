@@ -84,6 +84,7 @@ Only the three quirks included above are recognized at this point:
         <MediaCodec name="OMX.google.g711.alaw.decoder" type="audio/g711-alaw" />
         <MediaCodec name="OMX.google.g711.mlaw.decoder" type="audio/g711-mlaw" />
         <MediaCodec name="OMX.google.vorbis.decoder" type="audio/vorbis" />
+        <MediaCodec name="OMX.google.gsm.decoder" type="audio/gsm" />
 
         <MediaCodec name="OMX.google.mpeg4.decoder" type="video/mp4v-es" />
         <MediaCodec name="OMX.google.h263.decoder" type="video/3gpp" />
