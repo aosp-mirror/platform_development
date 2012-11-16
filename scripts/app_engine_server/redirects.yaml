@@ -321,6 +321,34 @@ redirects:
   dst: /guide/topics/ui/accessibility/index.html
   type: permanent
 
+# move best practices to training
+
+- src: /guide/practices/app-design/performance.html
+  dst: /training/perf-tips.html
+  type: permanent
+
+- src: /guide/practices/performance.html
+  dst: /training/perf-tips.html
+  type: permanent
+
+- src: /guide/practices/app-design/responsiveness.html
+  dst: /training/perf-anr.html
+  type: permanent
+
+- src: /guide/practices/responsiveness.html
+  dst: /training/perf-anr.html
+  type: permanent
+
+- src: /guide/practices/security.html
+  dst: /training/security-tips.html
+  type: permanent
+
+- src: /guide/practices/jni.html
+  dst: /training/perf-jni.html
+  type: permanent
+
+
+
 # new one
 - src: /resources/dashboard/.*
   dst: /about/dashboards/index.html
