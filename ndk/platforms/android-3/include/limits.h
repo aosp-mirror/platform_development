@@ -106,6 +106,7 @@
 #endif
 
 #ifndef PAGESIZE
+#include <asm/page.h>
 #define  PAGESIZE  PAGE_SIZE
 #endif
 
