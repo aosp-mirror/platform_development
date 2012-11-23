@@ -23,10 +23,13 @@
 
 __BEGIN_DECLS
 
-#define ANDROID_BITMAP_RESUT_SUCCESS            0
+#define ANDROID_BITMAP_RESULT_SUCCESS            0
 #define ANDROID_BITMAP_RESULT_BAD_PARAMETER     -1
 #define ANDROID_BITMAP_RESULT_JNI_EXCEPTION     -2
 #define ANDROID_BITMAP_RESULT_ALLOCATION_FAILED -3
+
+/* Backward compatibility: this macro used to be mispelt. */
+#define ANDROID_BITMAP_RESUT_SUCCESS ANDROID_BITMAP_RESULT_SUCCESS
 
 enum AndroidBitmapFormat {
     ANDROID_BITMAP_FORMAT_NONE      = 0,
