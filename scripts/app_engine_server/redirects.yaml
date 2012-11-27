@@ -105,6 +105,12 @@ redirects:
   type: permanent
   comment: Redirect sdk reference to new location
 
+- src: /sdk/installing/next.html
+  dst: /training/basics/firstapp/index.html
+  type: permanent
+  comment: Next steps doc was lame and everybody should go to first class
+
+
 #- src: /sdk/(?!index.html|installing/|exploring)
 #  dst: /tools/sdk/
 #  type: permanent
@@ -315,6 +321,34 @@ redirects:
   dst: /guide/topics/ui/accessibility/index.html
   type: permanent
 
+# move best practices to training
+
+- src: /guide/practices/app-design/performance.html
+  dst: /training/articles/perf-tips.html
+  type: permanent
+
+- src: /guide/practices/performance.html
+  dst: /training/articles/perf-tips.html
+  type: permanent
+
+- src: /guide/practices/app-design/responsiveness.html
+  dst: /training/articles/perf-anr.html
+  type: permanent
+
+- src: /guide/practices/responsiveness.html
+  dst: /training/articles/perf-anr.html
+  type: permanent
+
+- src: /guide/practices/security.html
+  dst: /training/articles/security-tips.html
+  type: permanent
+
+- src: /guide/practices/jni.html
+  dst: /training/articles/perf-jni.html
+  type: permanent
+
+
+
 # new one
 - src: /resources/dashboard/.*
   dst: /about/dashboards/index.html
@@ -473,6 +507,10 @@ redirects:
 
 # ---------- PLATFORM VERSIONS ----------------
 
+- src: /4.2
+  dst: /about/versions/android-4.2.html
+  type: permanent
+  
 - src: /4.1
   dst: /about/versions/android-4.1.html
   type: permanent
@@ -512,6 +550,18 @@ redirects:
 
 - src: /stats
   dst: /about/dashboards/index.html
+  type: permanent
+
+- src: /youtube
+  dst: http://www.youtube.com/user/androiddevelopers
+  type: permanent
+
+- src: /playbadge
+  dst: http://developer.android.com/distribute/googleplay/promote/badges.html
+  type: permanent
+
+- src: /deviceart
+  dst: http://developer.android.com/distribute/promote/device-art.html
   type: permanent
 
 
