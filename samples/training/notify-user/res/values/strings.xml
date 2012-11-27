@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+  Copyright (C) 2012 The Android Open Source Project
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+  -->
+
+<resources>
+
+    <string name="app_name">PingMe</string>
+    <string name="app_description">Notification sample.</string>
+    <string name="menu_settings">Settings</string>
+    <string name="title_activity_main">MainActivity</string>
+    <string name="notification">Ping Notification</string>
+    <string name="label">Ping Me</string>
+
+    <!--  Buttons -->
+    <string name="ping">Ping!</string>
+    <string name="snooze">Snooze</string>
+    <string name="dismiss">Dismiss</string>
+
+    <!--  Text Views -->
+
+    <string name="ping_text">Set Seconds Until Ping</string>
+    <string name="done_snoozing">Done Snoozing.</string>
+    <string name="seconds_default">10</string>
+    <string name="reminder_label">Reminder Text</string>
+    <string name="reminder_text">Don\'t forget!</string>
+
+    <!--  Logging -->
+
+    <string name="snoozing">Snoozing!</string>
+    <string name="timer_start">Setting the timer</string>
+    <string name="sleep_error">Sleep failure</string>
+    <string name="timer_finished">Timer finished.</string>
+
+</resources>
+
+
