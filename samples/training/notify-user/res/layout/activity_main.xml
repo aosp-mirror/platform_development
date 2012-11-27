@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" >
+
+    <TextView
+        android:id="@+id/seconds_view"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="32dp"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="@string/ping_text" />
+
+    <EditText
+        android:id="@+id/edit_seconds"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/seconds_view"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="15dp"
+        android:ems="10"
+        android:text="@string/seconds_default"
+        android:inputType="numberSigned">
+
+        <requestFocus />
+    </EditText>
+
+    <TextView
+        android:id="@+id/reminder_view"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/edit_seconds"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="40dp"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="@string/reminder_label" />
+
+    <EditText
+        android:id="@+id/edit_reminder"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/edit_seconds"
+        android:layout_below="@+id/reminder_view"
+        android:layout_marginTop="15dp"
+        android:ems="10"
+        android:text="@string/reminder_text"
+        android:inputType="textMultiLine" />
+
+    <Button
+        android:id="@+id/ping_button"
+        style="?android:attr/buttonStyleSmall"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/edit_reminder"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="25dp"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:onClick="onPingClick"
+        android:text="@string/ping" />
+
+</RelativeLayout>
