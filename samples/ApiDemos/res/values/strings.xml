@@ -21,8 +21,12 @@
     <!--  app/activity examples strings  -->
     <!-- =============================== -->
 
-    <string name="styled_12_hour_clock">MM/<font fgcolor="#ffff0000"><b>dd</b></font>/yy h<font fgcolor="#ffff0000"><sup><small>mm</small></sup></font><b>aa</b></string>
-    <string name="styled_24_hour_clock">MM/<font fgcolor="#ffff0000"><b>dd</b></font>/yy k<font fgcolor="#ffff0000"><sup><small>mm</small></sup></font></string>
+    <!-- The "color" attribute is an alias for "fgcolor" and was introduced in API level 18.  -->
+    <string name="styled_12_hour_clock">MM/<font color="red"><b>dd</b></font>/yy h<font color="#ffff0000"><sup><small>mm</small></sup></font><b>aa</b></string>
+    <string name="styled_24_hour_clock">MM/<font color="red"><b>dd</b></font>/yy k<font color="#ffff0000"><sup><small>mm</small></sup></font></string>
+
+    <string name="styled_12_hour_clock2">\'Custom font:\' <font color="@android:color/primary_text_holo_dark" face="sans-serif-thin">MM/dd/yy h:mm aa</font></string>
+    <string name="styled_24_hour_clock2">\'Custom font:\' <font color="@android:color/primary_text_holo_dark" face="sans-serif-thin">MM/dd/yy k:mm</font></string>
 
     <string name="tabs_1_tab_1">tab1</string>
     <string name="tabs_1_tab_2">tab2</string>
