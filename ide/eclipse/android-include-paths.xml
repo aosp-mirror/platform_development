@@ -5,7 +5,7 @@
 
 </language>
 <language name="Assembly">
-<includepath>${ProjDirPath}/system/core/include/arch/linux-arm</includepath>
+<includepath>${ProjDirPath}/build/core/combo/include/arch/linux-arm</includepath>
 <includepath>${ProjDirPath}/system/core/include</includepath>
 <includepath>${ProjDirPath}/bionic/libc/arch-arm/include</includepath>
 <includepath>${ProjDirPath}/bionic/libc/include</includepath>
@@ -24,11 +24,12 @@
 <includepath>${ProjDirPath}/frameworks/native/opengl/include</includepath>
 <includepath>${ProjDirPath}/external/skia/include</includepath>
 <includepath>${ProjDirPath}/external/skia/include/core</includepath>
+<includepath>${ProjDirPath}/libnativehelper/include/nativehelper</includepath>
 <includepath>${ProjDirPath}/prebuilts/gcc/darwin-x86/arm/arm-linux-androideabi-4.6/lib/gcc/arm-linux-androideabi/4.6.x-google/include</includepath>
 
 </language>
 <language name="GNU C++">
-<includepath>${ProjDirPath}/system/core/include/arch/linux-arm</includepath>
+<includepath>${ProjDirPath}/build/core/combo/include/arch/linux-arm</includepath>
 <includepath>${ProjDirPath}/system/core/include</includepath>
 <includepath>${ProjDirPath}/bionic/libc/arch-arm/include</includepath>
 <includepath>${ProjDirPath}/bionic/libc/include</includepath>
@@ -47,11 +48,12 @@
 <includepath>${ProjDirPath}/frameworks/native/opengl/include</includepath>
 <includepath>${ProjDirPath}/external/skia/include</includepath>
 <includepath>${ProjDirPath}/external/skia/include/core</includepath>
+<includepath>${ProjDirPath}/libnativehelper/include/nativehelper</includepath>
 <includepath>${ProjDirPath}/prebuilts/gcc/darwin-x86/arm/arm-linux-androideabi-4.6/lib/gcc/arm-linux-androideabi/4.6.x-google/include</includepath>
 
 </language>
 <language name="GNU C">
-<includepath>${ProjDirPath}/system/core/include/arch/linux-arm</includepath>
+<includepath>${ProjDirPath}/build/core/combo/include/arch/linux-arm</includepath>
 <includepath>${ProjDirPath}/system/core/include</includepath>
 <includepath>${ProjDirPath}/bionic/libc/arch-arm/include</includepath>
 <includepath>${ProjDirPath}/bionic/libc/include</includepath>
@@ -70,6 +72,7 @@
 <includepath>${ProjDirPath}/frameworks/native/opengl/include</includepath>
 <includepath>${ProjDirPath}/external/skia/include</includepath>
 <includepath>${ProjDirPath}/external/skia/include/core</includepath>
+<includepath>${ProjDirPath}/libnativehelper/include/nativehelper</includepath>
 <includepath>${ProjDirPath}/prebuilts/gcc/darwin-x86/arm/arm-linux-androideabi-4.6/lib/gcc/arm-linux-androideabi/4.6.x-google/include</includepath>
 
 </language>
