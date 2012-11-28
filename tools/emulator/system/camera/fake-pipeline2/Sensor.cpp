@@ -42,7 +42,8 @@ const nsecs_t Sensor::kFrameDurationRange[2] =
     {33331760L, 30000000000L}; // ~1/30 s - 30 sec
 const nsecs_t Sensor::kMinVerticalBlank = 10000L;
 
-const uint8_t Sensor::kColorFilterArrangement = ANDROID_SENSOR_RGGB;
+const uint8_t Sensor::kColorFilterArrangement =
+    ANDROID_SENSOR_INFO_COLOR_FILTER_ARRANGEMENT_RGGB;
 
 // Output image data characteristics
 const uint32_t Sensor::kMaxRawValue = 4000;
