@@ -46,7 +46,7 @@ def ToolPath(tool, toolchain_info=None):
   if not toolchain_info:
     toolchain_info = TOOLCHAIN_INFO
   (label, target) = toolchain_info
-  return os.path.join(ANDROID_BUILD_TOP, "prebuilt", Uname(), "toolchain", label, "bin",
+  return os.path.join(ANDROID_BUILD_TOP, "prebuilts", "gcc", Uname(), "arm", label, "bin",
                      target + "-" + tool)
 
 def FindToolchain():
@@ -61,6 +61,7 @@ def FindToolchain():
 
   ## Known toolchains, newer ones in the front.
   known_toolchains = [
+    ("arm-eabi-4.6", "arm-eabi"),
     ("arm-linux-androideabi-4.4.x", "arm-linux-androideabi"),
     ("arm-eabi-4.4.3", "arm-eabi"),
     ("arm-eabi-4.4.0", "arm-eabi"),
