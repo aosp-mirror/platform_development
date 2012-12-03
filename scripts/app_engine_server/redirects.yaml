@@ -123,13 +123,33 @@ redirects:
 
 # new one
 - src: /guide/market/
-  dst: /guide/google/play/
+  dst: /google/play/
   type: permanent
   comment: redirect billing to new loc
 
+- src: /guide/google/gcm/client-javadoc/.*
+  dst: /reference/com/google/android/gcm/package-summary.html
+  type: permanent
+  comment: redirect to new loc
+
+- src: /guide/google/gcm/server-javadoc/.*
+  dst: /reference/com/google/android/gcm/server/package-summary.html
+  type: permanent
+  comment: redirect to new loc
+
+- src: /guide/google/play/services.html
+  dst: /google/play-services/index.html
+  type: permanent
+  comment: redirect to new loc
+
+- src: /guide/google/
+  dst: /google/
+  type: permanent
+  comment: redirect to new loc
+
 # new one
 - src: /guide/publishing/licensing.html
-  dst: /guide/google/play/licensing/index.html
+  dst: /google/play/licensing/index.html
   type: permanent
   comment: Redirect Licensing docs to new location
 
@@ -149,7 +169,7 @@ redirects:
   comment: bug 6755311, aidl doc found by search under tools
 
 - src: /guide/market/publishing/multiple-apks.html
-  dst: /guide/google/play/publishing/multiple-apks.html
+  dst: /google/play/publishing/multiple-apks.html
   type: permanent
   comment: Redirect to new location
 
@@ -241,7 +261,7 @@ redirects:
 
 # new one
 - src: /guide/appendix/market-filters.html
-  dst: /guide/google/play/filters.html
+  dst: /google/play/filters.html
   type: permanent
   comment: Redirect to new location
 
@@ -463,7 +483,7 @@ redirects:
 # ------------------- TRAINING -------------------
 
 - src: /training/cloudsync/aesync.html
-  dst: /guide/google/gcm/index.html
+  dst: /google/gcm/index.html
   type: permanent
   comment: Syncing with App Engine was removed because it's obsolete.
 
