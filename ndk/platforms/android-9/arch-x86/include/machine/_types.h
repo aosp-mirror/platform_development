@@ -132,4 +132,6 @@ typedef	void *			__wctype_t;
 #define __HAVE_CPUINFO
 #define __HAVE_MUTEX
 
+#define _BYTE_ORDER _LITTLE_ENDIAN
+
 #endif	/* _I386__TYPES_H_ */
