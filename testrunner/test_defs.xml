@@ -278,6 +278,13 @@ See test_defs.xsd for more information.
     coverage_target="framework"
     suite="cts" />
 
+<test name="cts-dreams"
+    build_path="cts/tests/tests/dreams"
+    package="com.android.cts.dreams"
+    runner="android.test.InstrumentationCtsTestRunner"
+    coverage_target="framework"
+    suite="cts" />
+
 <test name="cts-gesture"
     build_path="cts/tests/tests/gesture"
     package="com.android.cts.gesture"
