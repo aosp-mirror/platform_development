@@ -36,7 +36,7 @@ __BEGIN_DECLS
 /* on Linux, ENOTSUP and EOPNOTSUPP are defined as the same error code
  * even if 1000.3 states that they should be different
  */
-#ifndef  ENOTUP
+#ifndef  ENOTSUP
 #define  ENOTSUP  EOPNOTSUPP
 #endif
 
