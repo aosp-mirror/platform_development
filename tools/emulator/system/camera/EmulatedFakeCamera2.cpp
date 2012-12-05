@@ -1271,7 +1271,7 @@ bool EmulatedFakeCamera2::ReadoutThread::threadLoop() {
     ALOGV("Readout: Constructing metadata and frames for request %d",
             frameNumber);
 
-    if (*entry.data.u8 == ANDROID_REQUEST_METADATA_FULL) {
+    if (*entry.data.u8 == ANDROID_REQUEST_METADATA_MODE_FULL) {
         ALOGV("Readout: Metadata requested, constructing");
 
         camera_metadata_t *frame = NULL;
@@ -1389,14 +1389,14 @@ status_t EmulatedFakeCamera2::ReadoutThread::collectStatisticsMetadata(
     status_t res;
     camera_metadata_entry_t entry;
     res = find_camera_metadata_entry(frame,
-                ANDROID_STATS_FACE_DETECT_MODE,
+                ANDROID_STATISTICS_FACE_DETECT_MODE,
                 &entry);
     if (res != OK) {
         ALOGE("%s: Unable to find face detect mode!", __FUNCTION__);
         return BAD_VALUE;
     }
 
-    if (entry.data.u8[0] == ANDROID_STATS_FACE_DETECTION_OFF) return OK;
+    if (entry.data.u8[0] == ANDROID_STATISTICS_FACE_DETECT_MODE_OFF) return OK;
 
     // The coordinate system for the face regions is the raw sensor pixel
     // coordinates. Here, we map from the scene coordinates (0-19 in both axis)
@@ -1428,21 +1428,21 @@ status_t EmulatedFakeCamera2::ReadoutThread::collectStatisticsMetadata(
         scores[i] += (int32_t)(((float)rand() / RAND_MAX) * 10 - 5);
     }
 
-    res = add_camera_metadata_entry(frame, ANDROID_STATS_FACE_RECTANGLES,
+    res = add_camera_metadata_entry(frame, ANDROID_STATISTICS_FACE_RECTANGLES,
             rects, numFaces * 4);
     if (res != OK) {
         ALOGE("%s: Unable to add face rectangles!", __FUNCTION__);
         return BAD_VALUE;
     }
 
-    res = add_camera_metadata_entry(frame, ANDROID_STATS_FACE_SCORES,
+    res = add_camera_metadata_entry(frame, ANDROID_STATISTICS_FACE_SCORES,
             scores, numFaces);
     if (res != OK) {
         ALOGE("%s: Unable to add face scores!", __FUNCTION__);
         return BAD_VALUE;
     }
 
-    if (entry.data.u8[0] == ANDROID_STATS_FACE_DETECTION_SIMPLE) return OK;
+    if (entry.data.u8[0] == ANDROID_STATISTICS_FACE_DETECT_MODE_SIMPLE) return OK;
 
     // Advanced face detection options - add eye/mouth coordinates.  The
     // coordinates in order are (leftEyeX, leftEyeY, rightEyeX, rightEyeY,
@@ -1473,14 +1473,14 @@ status_t EmulatedFakeCamera2::ReadoutThread::collectStatisticsMetadata(
         100, 200
     };
 
-    res = add_camera_metadata_entry(frame, ANDROID_STATS_FACE_LANDMARKS,
+    res = add_camera_metadata_entry(frame, ANDROID_STATISTICS_FACE_LANDMARKS,
             features, numFaces * 6);
     if (res != OK) {
         ALOGE("%s: Unable to add face landmarks!", __FUNCTION__);
         return BAD_VALUE;
     }
 
-    res = add_camera_metadata_entry(frame, ANDROID_STATS_FACE_IDS,
+    res = add_camera_metadata_entry(frame, ANDROID_STATISTICS_FACE_IDS,
             ids, numFaces);
     if (res != OK) {
         ALOGE("%s: Unable to add face scores!", __FUNCTION__);
@@ -1508,16 +1508,16 @@ status_t EmulatedFakeCamera2::ControlThread::readyToRun() {
     mCancelAf = false;
     mStartPrecapture = false;
 
-    mControlMode = ANDROID_CONTROL_AUTO;
+    mControlMode = ANDROID_CONTROL_MODE_AUTO;
 
-    mEffectMode = ANDROID_CONTROL_EFFECT_OFF;
+    mEffectMode = ANDROID_CONTROL_EFFECT_MODE_OFF;
     mSceneMode = ANDROID_CONTROL_SCENE_MODE_FACE_PRIORITY;
 
-    mAfMode = ANDROID_CONTROL_AF_AUTO;
+    mAfMode = ANDROID_CONTROL_AF_MODE_AUTO;
     mAfModeChange = false;
 
-    mAeMode = ANDROID_CONTROL_AE_ON;
-    mAwbMode = ANDROID_CONTROL_AWB_AUTO;
+    mAeMode = ANDROID_CONTROL_AE_MODE_ON;
+    mAwbMode = ANDROID_CONTROL_AWB_MODE_AUTO;
 
     mAfTriggerId = 0;
     mPrecaptureTriggerId = 0;
@@ -1594,7 +1594,7 @@ status_t EmulatedFakeCamera2::ControlThread::processRequest(camera_metadata_t *r
 
     // TODO: Override more control fields
 
-    if (mAeMode != ANDROID_CONTROL_AE_OFF) {
+    if (mAeMode != ANDROID_CONTROL_AE_MODE_OFF) {
         camera_metadata_entry_t exposureTime;
         res = find_camera_metadata_entry(request,
                 ANDROID_SENSOR_EXPOSURE_TIME,
@@ -1743,12 +1743,12 @@ bool EmulatedFakeCamera2::ControlThread::threadLoop() {
 int EmulatedFakeCamera2::ControlThread::processAfTrigger(uint8_t afMode,
         uint8_t afState) {
     switch (afMode) {
-        case ANDROID_CONTROL_AF_OFF:
-        case ANDROID_CONTROL_AF_EDOF:
+        case ANDROID_CONTROL_AF_MODE_OFF:
+        case ANDROID_CONTROL_AF_MODE_EDOF:
             // Do nothing
             break;
-        case ANDROID_CONTROL_AF_MACRO:
-        case ANDROID_CONTROL_AF_AUTO:
+        case ANDROID_CONTROL_AF_MODE_MACRO:
+        case ANDROID_CONTROL_AF_MODE_AUTO:
             switch (afState) {
                 case ANDROID_CONTROL_AF_STATE_INACTIVE:
                 case ANDROID_CONTROL_AF_STATE_FOCUSED_LOCKED:
@@ -1768,7 +1768,7 @@ int EmulatedFakeCamera2::ControlThread::processAfTrigger(uint8_t afMode,
                           afState);
             }
             break;
-        case ANDROID_CONTROL_AF_CONTINUOUS_PICTURE:
+        case ANDROID_CONTROL_AF_MODE_CONTINUOUS_PICTURE:
             switch (afState) {
                 // Picture mode waits for passive scan to complete
                 case ANDROID_CONTROL_AF_STATE_PASSIVE_SCAN:
@@ -1789,7 +1789,7 @@ int EmulatedFakeCamera2::ControlThread::processAfTrigger(uint8_t afMode,
                           afState);
             }
             break;
-        case ANDROID_CONTROL_AF_CONTINUOUS_VIDEO:
+        case ANDROID_CONTROL_AF_MODE_CONTINUOUS_VIDEO:
             switch (afState) {
                 // Video mode does not wait for passive scan to complete
                 case ANDROID_CONTROL_AF_STATE_PASSIVE_SCAN:
@@ -1816,8 +1816,8 @@ int EmulatedFakeCamera2::ControlThread::processAfTrigger(uint8_t afMode,
 
 int EmulatedFakeCamera2::ControlThread::maybeStartAfScan(uint8_t afMode,
         uint8_t afState) {
-    if ((afMode == ANDROID_CONTROL_AF_CONTINUOUS_VIDEO ||
-            afMode == ANDROID_CONTROL_AF_CONTINUOUS_PICTURE) &&
+    if ((afMode == ANDROID_CONTROL_AF_MODE_CONTINUOUS_VIDEO ||
+            afMode == ANDROID_CONTROL_AF_MODE_CONTINUOUS_PICTURE) &&
         (afState == ANDROID_CONTROL_AF_STATE_INACTIVE ||
             afState == ANDROID_CONTROL_AF_STATE_PASSIVE_FOCUSED)) {
 
@@ -1844,8 +1844,8 @@ int EmulatedFakeCamera2::ControlThread::updateAfScan(uint8_t afMode,
     if (mAfScanDuration <= 0) {
         ALOGV("%s: AF scan done", __FUNCTION__);
         switch (afMode) {
-            case ANDROID_CONTROL_AF_MACRO:
-            case ANDROID_CONTROL_AF_AUTO: {
+            case ANDROID_CONTROL_AF_MODE_MACRO:
+            case ANDROID_CONTROL_AF_MODE_AUTO: {
                 bool success = ((double)rand() / RAND_MAX) < kAfSuccessRate;
                 if (success) {
                     afState = ANDROID_CONTROL_AF_STATE_FOCUSED_LOCKED;
@@ -1854,7 +1854,7 @@ int EmulatedFakeCamera2::ControlThread::updateAfScan(uint8_t afMode,
                 }
                 break;
             }
-            case ANDROID_CONTROL_AF_CONTINUOUS_PICTURE:
+            case ANDROID_CONTROL_AF_MODE_CONTINUOUS_PICTURE:
                 if (mLockAfterPassiveScan) {
                     afState = ANDROID_CONTROL_AF_STATE_FOCUSED_LOCKED;
                     mLockAfterPassiveScan = false;
@@ -1862,7 +1862,7 @@ int EmulatedFakeCamera2::ControlThread::updateAfScan(uint8_t afMode,
                     afState = ANDROID_CONTROL_AF_STATE_PASSIVE_FOCUSED;
                 }
                 break;
-            case ANDROID_CONTROL_AF_CONTINUOUS_VIDEO:
+            case ANDROID_CONTROL_AF_MODE_CONTINUOUS_VIDEO:
                 afState = ANDROID_CONTROL_AF_STATE_PASSIVE_FOCUSED;
                 break;
             default:
@@ -1891,13 +1891,13 @@ void EmulatedFakeCamera2::ControlThread::updateAfState(uint8_t newState,
 int EmulatedFakeCamera2::ControlThread::processPrecaptureTrigger(uint8_t aeMode,
         uint8_t aeState) {
     switch (aeMode) {
-        case ANDROID_CONTROL_AE_OFF:
+        case ANDROID_CONTROL_AE_MODE_OFF:
             // Don't do anything for these
             return aeState;
-        case ANDROID_CONTROL_AE_ON:
-        case ANDROID_CONTROL_AE_ON_AUTO_FLASH:
-        case ANDROID_CONTROL_AE_ON_ALWAYS_FLASH:
-        case ANDROID_CONTROL_AE_ON_AUTO_FLASH_REDEYE:
+        case ANDROID_CONTROL_AE_MODE_ON:
+        case ANDROID_CONTROL_AE_MODE_ON_AUTO_FLASH:
+        case ANDROID_CONTROL_AE_MODE_ON_ALWAYS_FLASH:
+        case ANDROID_CONTROL_AE_MODE_ON_AUTO_FLASH_REDEYE:
             // Trigger a precapture cycle
             aeState = ANDROID_CONTROL_AE_STATE_PRECAPTURE;
             mAeScanDuration = ((double)rand() / RAND_MAX) *
@@ -1915,12 +1915,12 @@ int EmulatedFakeCamera2::ControlThread::maybeStartAeScan(uint8_t aeMode,
         uint8_t aeState) {
     if (aeLocked) return aeState;
     switch (aeMode) {
-        case ANDROID_CONTROL_AE_OFF:
+        case ANDROID_CONTROL_AE_MODE_OFF:
             break;
-        case ANDROID_CONTROL_AE_ON:
-        case ANDROID_CONTROL_AE_ON_AUTO_FLASH:
-        case ANDROID_CONTROL_AE_ON_ALWAYS_FLASH:
-        case ANDROID_CONTROL_AE_ON_AUTO_FLASH_REDEYE: {
+        case ANDROID_CONTROL_AE_MODE_ON:
+        case ANDROID_CONTROL_AE_MODE_ON_AUTO_FLASH:
+        case ANDROID_CONTROL_AE_MODE_ON_ALWAYS_FLASH:
+        case ANDROID_CONTROL_AE_MODE_ON_AUTO_FLASH_REDEYE: {
             if (aeState != ANDROID_CONTROL_AE_STATE_INACTIVE &&
                     aeState != ANDROID_CONTROL_AE_STATE_CONVERGED) break;
 
@@ -2000,39 +2000,39 @@ status_t EmulatedFakeCamera2::constructStaticInfo(
 
     // 5 cm min focus distance for back camera, infinity (fixed focus) for front
     const float minFocusDistance = mFacingBack ? 1.0/0.05 : 0.0;
-    ADD_OR_SIZE(ANDROID_LENS_MINIMUM_FOCUS_DISTANCE,
+    ADD_OR_SIZE(ANDROID_LENS_INFO_MINIMUM_FOCUS_DISTANCE,
             &minFocusDistance, 1);
     // 5 m hyperfocal distance for back camera, infinity (fixed focus) for front
     const float hyperFocalDistance = mFacingBack ? 1.0/5.0 : 0.0;
-    ADD_OR_SIZE(ANDROID_LENS_HYPERFOCAL_DISTANCE,
+    ADD_OR_SIZE(ANDROID_LENS_INFO_HYPERFOCAL_DISTANCE,
             &minFocusDistance, 1);
 
     static const float focalLength = 3.30f; // mm
-    ADD_OR_SIZE(ANDROID_LENS_AVAILABLE_FOCAL_LENGTHS,
+    ADD_OR_SIZE(ANDROID_LENS_INFO_AVAILABLE_FOCAL_LENGTHS,
             &focalLength, 1);
     static const float aperture = 2.8f;
-    ADD_OR_SIZE(ANDROID_LENS_AVAILABLE_APERTURES,
+    ADD_OR_SIZE(ANDROID_LENS_INFO_AVAILABLE_APERTURES,
             &aperture, 1);
     static const float filterDensity = 0;
-    ADD_OR_SIZE(ANDROID_LENS_AVAILABLE_FILTER_DENSITY,
+    ADD_OR_SIZE(ANDROID_LENS_INFO_AVAILABLE_FILTER_DENSITIES,
             &filterDensity, 1);
     static const uint8_t availableOpticalStabilization =
-            ANDROID_LENS_OPTICAL_STABILIZATION_OFF;
-    ADD_OR_SIZE(ANDROID_LENS_AVAILABLE_OPTICAL_STABILIZATION,
+            ANDROID_LENS_OPTICAL_STABILIZATION_MODE_OFF;
+    ADD_OR_SIZE(ANDROID_LENS_INFO_AVAILABLE_OPTICAL_STABILIZATION,
             &availableOpticalStabilization, 1);
 
     static const int32_t lensShadingMapSize[] = {1, 1};
-    ADD_OR_SIZE(ANDROID_LENS_SHADING_MAP_SIZE, lensShadingMapSize,
+    ADD_OR_SIZE(ANDROID_LENS_INFO_SHADING_MAP_SIZE, lensShadingMapSize,
             sizeof(lensShadingMapSize)/sizeof(int32_t));
 
     static const float lensShadingMap[3 * 1 * 1 ] =
             { 1.f, 1.f, 1.f };
-    ADD_OR_SIZE(ANDROID_LENS_SHADING_MAP, lensShadingMap,
+    ADD_OR_SIZE(ANDROID_LENS_INFO_SHADING_MAP, lensShadingMap,
             sizeof(lensShadingMap)/sizeof(float));
 
     // Identity transform
     static const int32_t geometricCorrectionMapSize[] = {2, 2};
-    ADD_OR_SIZE(ANDROID_LENS_GEOMETRIC_CORRECTION_MAP_SIZE,
+    ADD_OR_SIZE(ANDROID_LENS_INFO_GEOMETRIC_CORRECTION_MAP_SIZE,
             geometricCorrectionMapSize,
             sizeof(geometricCorrectionMapSize)/sizeof(int32_t));
 
@@ -2041,7 +2041,7 @@ status_t EmulatedFakeCamera2::constructStaticInfo(
             1.f, 0.f,  1.f, 0.f,  1.f, 0.f,
             0.f, 1.f,  0.f, 1.f,  0.f, 1.f,
             1.f, 1.f,  1.f, 1.f,  1.f, 1.f};
-    ADD_OR_SIZE(ANDROID_LENS_GEOMETRIC_CORRECTION_MAP,
+    ADD_OR_SIZE(ANDROID_LENS_INFO_GEOMETRIC_CORRECTION_MAP,
             geometricCorrectionMap,
             sizeof(geometricCorrectionMap)/sizeof(float));
 
@@ -2066,31 +2066,31 @@ status_t EmulatedFakeCamera2::constructStaticInfo(
 
     // android.sensor
 
-    ADD_OR_SIZE(ANDROID_SENSOR_EXPOSURE_TIME_RANGE,
+    ADD_OR_SIZE(ANDROID_SENSOR_INFO_EXPOSURE_TIME_RANGE,
             Sensor::kExposureTimeRange, 2);
 
-    ADD_OR_SIZE(ANDROID_SENSOR_MAX_FRAME_DURATION,
+    ADD_OR_SIZE(ANDROID_SENSOR_INFO_MAX_FRAME_DURATION,
             &Sensor::kFrameDurationRange[1], 1);
 
-    ADD_OR_SIZE(ANDROID_SENSOR_AVAILABLE_SENSITIVITIES,
+    ADD_OR_SIZE(ANDROID_SENSOR_INFO_AVAILABLE_SENSITIVITIES,
             Sensor::kAvailableSensitivities,
             sizeof(Sensor::kAvailableSensitivities)
             /sizeof(uint32_t));
 
-    ADD_OR_SIZE(ANDROID_SENSOR_COLOR_FILTER_ARRANGEMENT,
+    ADD_OR_SIZE(ANDROID_SENSOR_INFO_COLOR_FILTER_ARRANGEMENT,
             &Sensor::kColorFilterArrangement, 1);
 
     static const float sensorPhysicalSize[2] = {3.20f, 2.40f}; // mm
-    ADD_OR_SIZE(ANDROID_SENSOR_PHYSICAL_SIZE,
+    ADD_OR_SIZE(ANDROID_SENSOR_INFO_PHYSICAL_SIZE,
             sensorPhysicalSize, 2);
 
-    ADD_OR_SIZE(ANDROID_SENSOR_PIXEL_ARRAY_SIZE,
+    ADD_OR_SIZE(ANDROID_SENSOR_INFO_PIXEL_ARRAY_SIZE,
             Sensor::kResolution, 2);
 
-    ADD_OR_SIZE(ANDROID_SENSOR_ACTIVE_ARRAY_SIZE,
+    ADD_OR_SIZE(ANDROID_SENSOR_INFO_ACTIVE_ARRAY_SIZE,
             Sensor::kResolution, 2);
 
-    ADD_OR_SIZE(ANDROID_SENSOR_WHITE_LEVEL,
+    ADD_OR_SIZE(ANDROID_SENSOR_INFO_WHITE_LEVEL,
             &Sensor::kMaxRawValue, 1);
 
     static const int32_t blackLevelPattern[4] = {
@@ -2104,10 +2104,10 @@ status_t EmulatedFakeCamera2::constructStaticInfo(
 
     // android.flash
     static const uint8_t flashAvailable = 0;
-    ADD_OR_SIZE(ANDROID_FLASH_AVAILABLE, &flashAvailable, 1);
+    ADD_OR_SIZE(ANDROID_FLASH_INFO_AVAILABLE, &flashAvailable, 1);
 
     static const int64_t flashChargeDuration = 0;
-    ADD_OR_SIZE(ANDROID_FLASH_CHARGE_DURATION, &flashChargeDuration, 1);
+    ADD_OR_SIZE(ANDROID_FLASH_INFO_CHARGE_DURATION, &flashChargeDuration, 1);
 
     // android.tonemap
 
@@ -2157,7 +2157,7 @@ status_t EmulatedFakeCamera2::constructStaticInfo(
             sizeof(kAvailableJpegMinDurations)/sizeof(uint64_t));
 
     static const float maxZoom = 10;
-    ADD_OR_SIZE(ANDROID_SCALER_AVAILABLE_MAX_ZOOM,
+    ADD_OR_SIZE(ANDROID_SCALER_AVAILABLE_MAX_DIGITAL_ZOOM,
             &maxZoom, 1);
 
     // android.jpeg
@@ -2176,33 +2176,33 @@ status_t EmulatedFakeCamera2::constructStaticInfo(
     // android.stats
 
     static const uint8_t availableFaceDetectModes[] = {
-        ANDROID_STATS_FACE_DETECTION_OFF,
-        ANDROID_STATS_FACE_DETECTION_SIMPLE,
-        ANDROID_STATS_FACE_DETECTION_FULL
+        ANDROID_STATISTICS_FACE_DETECT_MODE_OFF,
+        ANDROID_STATISTICS_FACE_DETECT_MODE_SIMPLE,
+        ANDROID_STATISTICS_FACE_DETECT_MODE_FULL
     };
 
-    ADD_OR_SIZE(ANDROID_STATS_AVAILABLE_FACE_DETECT_MODES,
+    ADD_OR_SIZE(ANDROID_STATISTICS_INFO_AVAILABLE_FACE_DETECT_MODES,
             availableFaceDetectModes,
             sizeof(availableFaceDetectModes));
 
     static const int32_t maxFaceCount = 8;
-    ADD_OR_SIZE(ANDROID_STATS_MAX_FACE_COUNT,
+    ADD_OR_SIZE(ANDROID_STATISTICS_INFO_MAX_FACE_COUNT,
             &maxFaceCount, 1);
 
     static const int32_t histogramSize = 64;
-    ADD_OR_SIZE(ANDROID_STATS_HISTOGRAM_BUCKET_COUNT,
+    ADD_OR_SIZE(ANDROID_STATISTICS_INFO_HISTOGRAM_BUCKET_COUNT,
             &histogramSize, 1);
 
     static const int32_t maxHistogramCount = 1000;
-    ADD_OR_SIZE(ANDROID_STATS_MAX_HISTOGRAM_COUNT,
+    ADD_OR_SIZE(ANDROID_STATISTICS_INFO_MAX_HISTOGRAM_COUNT,
             &maxHistogramCount, 1);
 
     static const int32_t sharpnessMapSize[2] = {64, 64};
-    ADD_OR_SIZE(ANDROID_STATS_SHARPNESS_MAP_SIZE,
+    ADD_OR_SIZE(ANDROID_STATISTICS_INFO_SHARPNESS_MAP_SIZE,
             sharpnessMapSize, sizeof(sharpnessMapSize)/sizeof(int32_t));
 
     static const int32_t maxSharpnessMapValue = 1000;
-    ADD_OR_SIZE(ANDROID_STATS_MAX_SHARPNESS_MAP_VALUE,
+    ADD_OR_SIZE(ANDROID_STATISTICS_INFO_MAX_SHARPNESS_MAP_VALUE,
             &maxSharpnessMapValue, 1);
 
     // android.control
@@ -2214,7 +2214,7 @@ status_t EmulatedFakeCamera2::constructStaticInfo(
             availableSceneModes, sizeof(availableSceneModes));
 
     static const uint8_t availableEffects[] = {
-            ANDROID_CONTROL_EFFECT_OFF
+            ANDROID_CONTROL_EFFECT_MODE_OFF
     };
     ADD_OR_SIZE(ANDROID_CONTROL_AVAILABLE_EFFECTS,
             availableEffects, sizeof(availableEffects));
@@ -2224,8 +2224,8 @@ status_t EmulatedFakeCamera2::constructStaticInfo(
             &max3aRegions, 1);
 
     static const uint8_t availableAeModes[] = {
-            ANDROID_CONTROL_AE_OFF,
-            ANDROID_CONTROL_AE_ON
+            ANDROID_CONTROL_AE_MODE_OFF,
+            ANDROID_CONTROL_AE_MODE_ON
     };
     ADD_OR_SIZE(ANDROID_CONTROL_AE_AVAILABLE_MODES,
             availableAeModes, sizeof(availableAeModes));
@@ -2233,11 +2233,11 @@ status_t EmulatedFakeCamera2::constructStaticInfo(
     static const camera_metadata_rational exposureCompensationStep = {
             1, 3
     };
-    ADD_OR_SIZE(ANDROID_CONTROL_AE_EXP_COMPENSATION_STEP,
+    ADD_OR_SIZE(ANDROID_CONTROL_AE_COMPENSATION_STEP,
             &exposureCompensationStep, 1);
 
     int32_t exposureCompensationRange[] = {-9, 9};
-    ADD_OR_SIZE(ANDROID_CONTROL_AE_EXP_COMPENSATION_RANGE,
+    ADD_OR_SIZE(ANDROID_CONTROL_AE_COMPENSATION_RANGE,
             exposureCompensationRange,
             sizeof(exposureCompensationRange)/sizeof(int32_t));
 
@@ -2249,33 +2249,33 @@ status_t EmulatedFakeCamera2::constructStaticInfo(
             sizeof(availableTargetFpsRanges)/sizeof(int32_t));
 
     static const uint8_t availableAntibandingModes[] = {
-            ANDROID_CONTROL_AE_ANTIBANDING_OFF,
-            ANDROID_CONTROL_AE_ANTIBANDING_AUTO
+            ANDROID_CONTROL_AE_ANTIBANDING_MODE_OFF,
+            ANDROID_CONTROL_AE_ANTIBANDING_MODE_AUTO
     };
     ADD_OR_SIZE(ANDROID_CONTROL_AE_AVAILABLE_ANTIBANDING_MODES,
             availableAntibandingModes, sizeof(availableAntibandingModes));
 
     static const uint8_t availableAwbModes[] = {
-            ANDROID_CONTROL_AWB_OFF,
-            ANDROID_CONTROL_AWB_AUTO,
-            ANDROID_CONTROL_AWB_INCANDESCENT,
-            ANDROID_CONTROL_AWB_FLUORESCENT,
-            ANDROID_CONTROL_AWB_DAYLIGHT,
-            ANDROID_CONTROL_AWB_SHADE
+            ANDROID_CONTROL_AWB_MODE_OFF,
+            ANDROID_CONTROL_AWB_MODE_AUTO,
+            ANDROID_CONTROL_AWB_MODE_INCANDESCENT,
+            ANDROID_CONTROL_AWB_MODE_FLUORESCENT,
+            ANDROID_CONTROL_AWB_MODE_DAYLIGHT,
+            ANDROID_CONTROL_AWB_MODE_SHADE
     };
     ADD_OR_SIZE(ANDROID_CONTROL_AWB_AVAILABLE_MODES,
             availableAwbModes, sizeof(availableAwbModes));
 
     static const uint8_t availableAfModesBack[] = {
-            ANDROID_CONTROL_AF_OFF,
-            ANDROID_CONTROL_AF_AUTO,
-            ANDROID_CONTROL_AF_MACRO,
-            ANDROID_CONTROL_AF_CONTINUOUS_VIDEO,
-            ANDROID_CONTROL_AF_CONTINUOUS_PICTURE
+            ANDROID_CONTROL_AF_MODE_OFF,
+            ANDROID_CONTROL_AF_MODE_AUTO,
+            ANDROID_CONTROL_AF_MODE_MACRO,
+            ANDROID_CONTROL_AF_MODE_CONTINUOUS_VIDEO,
+            ANDROID_CONTROL_AF_MODE_CONTINUOUS_PICTURE
     };
 
     static const uint8_t availableAfModesFront[] = {
-            ANDROID_CONTROL_AF_OFF
+            ANDROID_CONTROL_AF_MODE_OFF
     };
 
     if (mFacingBack) {
@@ -2287,7 +2287,7 @@ status_t EmulatedFakeCamera2::constructStaticInfo(
     }
 
     static const uint8_t availableVstabModes[] = {
-            ANDROID_CONTROL_VIDEO_STABILIZATION_OFF
+            ANDROID_CONTROL_VIDEO_STABILIZATION_MODE_OFF
     };
     ADD_OR_SIZE(ANDROID_CONTROL_AVAILABLE_VIDEO_STABILIZATION_MODES,
             availableVstabModes, sizeof(availableVstabModes));
@@ -2327,7 +2327,7 @@ status_t EmulatedFakeCamera2::constructDefaultRequest(
     static const uint8_t requestType = ANDROID_REQUEST_TYPE_CAPTURE;
     ADD_OR_SIZE(ANDROID_REQUEST_TYPE, &requestType, 1);
 
-    static const uint8_t metadataMode = ANDROID_REQUEST_METADATA_FULL;
+    static const uint8_t metadataMode = ANDROID_REQUEST_METADATA_MODE_FULL;
     ADD_OR_SIZE(ANDROID_REQUEST_METADATA_MODE, &metadataMode, 1);
 
     static const int32_t id = 0;
@@ -2355,7 +2355,7 @@ status_t EmulatedFakeCamera2::constructDefaultRequest(
     ADD_OR_SIZE(ANDROID_LENS_FILTER_DENSITY, &filterDensity, 1);
 
     static const uint8_t opticalStabilizationMode =
-            ANDROID_LENS_OPTICAL_STABILIZATION_OFF;
+            ANDROID_LENS_OPTICAL_STABILIZATION_MODE_OFF;
     ADD_OR_SIZE(ANDROID_LENS_OPTICAL_STABILIZATION_MODE,
             &opticalStabilizationMode, 1);
 
@@ -2376,7 +2376,7 @@ status_t EmulatedFakeCamera2::constructDefaultRequest(
 
     /** android.flash */
 
-    static const uint8_t flashMode = ANDROID_FLASH_OFF;
+    static const uint8_t flashMode = ANDROID_FLASH_MODE_OFF;
     ADD_OR_SIZE(ANDROID_FLASH_MODE, &flashMode, 1);
 
     static const uint8_t flashPower = 10;
@@ -2395,79 +2395,47 @@ status_t EmulatedFakeCamera2::constructDefaultRequest(
     uint8_t tonemapMode = 0;
     uint8_t edgeMode = 0;
     switch (request_template) {
-      case CAMERA2_TEMPLATE_PREVIEW:
-        hotPixelMode = ANDROID_PROCESSING_FAST;
-        demosaicMode = ANDROID_PROCESSING_FAST;
-        noiseMode = ANDROID_PROCESSING_FAST;
-        shadingMode = ANDROID_PROCESSING_FAST;
-        geometricMode = ANDROID_PROCESSING_FAST;
-        colorMode = ANDROID_PROCESSING_FAST;
-        tonemapMode = ANDROID_PROCESSING_FAST;
-        edgeMode = ANDROID_PROCESSING_FAST;
-        break;
       case CAMERA2_TEMPLATE_STILL_CAPTURE:
-        hotPixelMode = ANDROID_PROCESSING_HIGH_QUALITY;
-        demosaicMode = ANDROID_PROCESSING_HIGH_QUALITY;
-        noiseMode = ANDROID_PROCESSING_HIGH_QUALITY;
-        shadingMode = ANDROID_PROCESSING_HIGH_QUALITY;
-        geometricMode = ANDROID_PROCESSING_HIGH_QUALITY;
-        colorMode = ANDROID_PROCESSING_HIGH_QUALITY;
-        tonemapMode = ANDROID_PROCESSING_HIGH_QUALITY;
-        edgeMode = ANDROID_PROCESSING_HIGH_QUALITY;
-        break;
-      case CAMERA2_TEMPLATE_VIDEO_RECORD:
-        hotPixelMode = ANDROID_PROCESSING_FAST;
-        demosaicMode = ANDROID_PROCESSING_FAST;
-        noiseMode = ANDROID_PROCESSING_FAST;
-        shadingMode = ANDROID_PROCESSING_FAST;
-        geometricMode = ANDROID_PROCESSING_FAST;
-        colorMode = ANDROID_PROCESSING_FAST;
-        tonemapMode = ANDROID_PROCESSING_FAST;
-        edgeMode = ANDROID_PROCESSING_FAST;
-        break;
+        // fall-through
       case CAMERA2_TEMPLATE_VIDEO_SNAPSHOT:
-        hotPixelMode = ANDROID_PROCESSING_HIGH_QUALITY;
-        demosaicMode = ANDROID_PROCESSING_HIGH_QUALITY;
-        noiseMode = ANDROID_PROCESSING_HIGH_QUALITY;
-        shadingMode = ANDROID_PROCESSING_HIGH_QUALITY;
-        geometricMode = ANDROID_PROCESSING_HIGH_QUALITY;
-        colorMode = ANDROID_PROCESSING_HIGH_QUALITY;
-        tonemapMode = ANDROID_PROCESSING_HIGH_QUALITY;
-        edgeMode = ANDROID_PROCESSING_HIGH_QUALITY;
-        break;
+        // fall-through
       case CAMERA2_TEMPLATE_ZERO_SHUTTER_LAG:
-        hotPixelMode = ANDROID_PROCESSING_HIGH_QUALITY;
-        demosaicMode = ANDROID_PROCESSING_HIGH_QUALITY;
-        noiseMode = ANDROID_PROCESSING_HIGH_QUALITY;
-        shadingMode = ANDROID_PROCESSING_HIGH_QUALITY;
-        geometricMode = ANDROID_PROCESSING_HIGH_QUALITY;
-        colorMode = ANDROID_PROCESSING_HIGH_QUALITY;
-        tonemapMode = ANDROID_PROCESSING_HIGH_QUALITY;
-        edgeMode = ANDROID_PROCESSING_HIGH_QUALITY;
+        hotPixelMode = ANDROID_HOT_PIXEL_MODE_HIGH_QUALITY;
+        demosaicMode = ANDROID_DEMOSAIC_MODE_HIGH_QUALITY;
+        noiseMode = ANDROID_NOISE_REDUCTION_MODE_HIGH_QUALITY;
+        shadingMode = ANDROID_SHADING_MODE_HIGH_QUALITY;
+        geometricMode = ANDROID_GEOMETRIC_MODE_HIGH_QUALITY;
+        colorMode = ANDROID_COLOR_CORRECTION_MODE_HIGH_QUALITY;
+        tonemapMode = ANDROID_TONEMAP_MODE_HIGH_QUALITY;
+        edgeMode = ANDROID_EDGE_MODE_HIGH_QUALITY;
         break;
+      case CAMERA2_TEMPLATE_PREVIEW:
+        // fall-through
+      case CAMERA2_TEMPLATE_VIDEO_RECORD:
+        // fall-through
       default:
-        hotPixelMode = ANDROID_PROCESSING_FAST;
-        demosaicMode = ANDROID_PROCESSING_FAST;
-        noiseMode = ANDROID_PROCESSING_FAST;
-        shadingMode = ANDROID_PROCESSING_FAST;
-        geometricMode = ANDROID_PROCESSING_FAST;
-        colorMode = ANDROID_PROCESSING_FAST;
-        tonemapMode = ANDROID_PROCESSING_FAST;
-        edgeMode = ANDROID_PROCESSING_FAST;
+        hotPixelMode = ANDROID_HOT_PIXEL_MODE_FAST;
+        demosaicMode = ANDROID_DEMOSAIC_MODE_FAST;
+        noiseMode = ANDROID_NOISE_REDUCTION_MODE_FAST;
+        shadingMode = ANDROID_SHADING_MODE_FAST;
+        geometricMode = ANDROID_GEOMETRIC_MODE_FAST;
+        colorMode = ANDROID_COLOR_CORRECTION_MODE_FAST;
+        tonemapMode = ANDROID_TONEMAP_MODE_FAST;
+        edgeMode = ANDROID_EDGE_MODE_FAST;
         break;
     }
     ADD_OR_SIZE(ANDROID_HOT_PIXEL_MODE, &hotPixelMode, 1);
     ADD_OR_SIZE(ANDROID_DEMOSAIC_MODE, &demosaicMode, 1);
-    ADD_OR_SIZE(ANDROID_NOISE_MODE, &noiseMode, 1);
+    ADD_OR_SIZE(ANDROID_NOISE_REDUCTION_MODE, &noiseMode, 1);
     ADD_OR_SIZE(ANDROID_SHADING_MODE, &shadingMode, 1);
     ADD_OR_SIZE(ANDROID_GEOMETRIC_MODE, &geometricMode, 1);
-    ADD_OR_SIZE(ANDROID_COLOR_MODE, &colorMode, 1);
+    ADD_OR_SIZE(ANDROID_COLOR_CORRECTION_MODE, &colorMode, 1);
     ADD_OR_SIZE(ANDROID_TONEMAP_MODE, &tonemapMode, 1);
     ADD_OR_SIZE(ANDROID_EDGE_MODE, &edgeMode, 1);
 
     /** android.noise */
     static const uint8_t noiseStrength = 5;
-    ADD_OR_SIZE(ANDROID_NOISE_STRENGTH, &noiseStrength, 1);
+    ADD_OR_SIZE(ANDROID_NOISE_REDUCTION_STRENGTH, &noiseStrength, 1);
 
     /** android.color */
     static const float colorTransform[9] = {
@@ -2475,7 +2443,7 @@ status_t EmulatedFakeCamera2::constructDefaultRequest(
         0.f, 1.f, 0.f,
         0.f, 0.f, 1.f
     };
-    ADD_OR_SIZE(ANDROID_COLOR_TRANSFORM, colorTransform, 9);
+    ADD_OR_SIZE(ANDROID_COLOR_CORRECTION_TRANSFORM, colorTransform, 9);
 
     /** android.tonemap */
     static const float tonemapCurve[4] = {
@@ -2524,14 +2492,16 @@ status_t EmulatedFakeCamera2::constructDefaultRequest(
 
     /** android.stats */
 
-    static const uint8_t faceDetectMode = ANDROID_STATS_FACE_DETECTION_OFF;
-    ADD_OR_SIZE(ANDROID_STATS_FACE_DETECT_MODE, &faceDetectMode, 1);
+    static const uint8_t faceDetectMode =
+        ANDROID_STATISTICS_FACE_DETECT_MODE_OFF;
+    ADD_OR_SIZE(ANDROID_STATISTICS_FACE_DETECT_MODE, &faceDetectMode, 1);
 
-    static const uint8_t histogramMode = ANDROID_STATS_OFF;
-    ADD_OR_SIZE(ANDROID_STATS_HISTOGRAM_MODE, &histogramMode, 1);
+    static const uint8_t histogramMode = ANDROID_STATISTICS_HISTOGRAM_MODE_OFF;
+    ADD_OR_SIZE(ANDROID_STATISTICS_HISTOGRAM_MODE, &histogramMode, 1);
 
-    static const uint8_t sharpnessMapMode = ANDROID_STATS_OFF;
-    ADD_OR_SIZE(ANDROID_STATS_SHARPNESS_MAP_MODE, &sharpnessMapMode, 1);
+    static const uint8_t sharpnessMapMode =
+        ANDROID_STATISTICS_SHARPNESS_MAP_MODE_OFF;
+    ADD_OR_SIZE(ANDROID_STATISTICS_SHARPNESS_MAP_MODE, &sharpnessMapMode, 1);
 
     // faceRectangles, faceScores, faceLandmarks, faceIds, histogram,
     // sharpnessMap only in frames
@@ -2541,36 +2511,36 @@ status_t EmulatedFakeCamera2::constructDefaultRequest(
     uint8_t controlIntent = 0;
     switch (request_template) {
       case CAMERA2_TEMPLATE_PREVIEW:
-        controlIntent = ANDROID_CONTROL_INTENT_PREVIEW;
+        controlIntent = ANDROID_CONTROL_CAPTURE_INTENT_PREVIEW;
         break;
       case CAMERA2_TEMPLATE_STILL_CAPTURE:
-        controlIntent = ANDROID_CONTROL_INTENT_STILL_CAPTURE;
+        controlIntent = ANDROID_CONTROL_CAPTURE_INTENT_STILL_CAPTURE;
         break;
       case CAMERA2_TEMPLATE_VIDEO_RECORD:
-        controlIntent = ANDROID_CONTROL_INTENT_VIDEO_RECORD;
+        controlIntent = ANDROID_CONTROL_CAPTURE_INTENT_VIDEO_RECORD;
         break;
       case CAMERA2_TEMPLATE_VIDEO_SNAPSHOT:
-        controlIntent = ANDROID_CONTROL_INTENT_VIDEO_SNAPSHOT;
+        controlIntent = ANDROID_CONTROL_CAPTURE_INTENT_VIDEO_SNAPSHOT;
         break;
       case CAMERA2_TEMPLATE_ZERO_SHUTTER_LAG:
-        controlIntent = ANDROID_CONTROL_INTENT_ZERO_SHUTTER_LAG;
+        controlIntent = ANDROID_CONTROL_CAPTURE_INTENT_ZERO_SHUTTER_LAG;
         break;
       default:
-        controlIntent = ANDROID_CONTROL_INTENT_CUSTOM;
+        controlIntent = ANDROID_CONTROL_CAPTURE_INTENT_CUSTOM;
         break;
     }
     ADD_OR_SIZE(ANDROID_CONTROL_CAPTURE_INTENT, &controlIntent, 1);
 
-    static const uint8_t controlMode = ANDROID_CONTROL_AUTO;
+    static const uint8_t controlMode = ANDROID_CONTROL_MODE_AUTO;
     ADD_OR_SIZE(ANDROID_CONTROL_MODE, &controlMode, 1);
 
-    static const uint8_t effectMode = ANDROID_CONTROL_EFFECT_OFF;
+    static const uint8_t effectMode = ANDROID_CONTROL_EFFECT_MODE_OFF;
     ADD_OR_SIZE(ANDROID_CONTROL_EFFECT_MODE, &effectMode, 1);
 
     static const uint8_t sceneMode = ANDROID_CONTROL_SCENE_MODE_FACE_PRIORITY;
     ADD_OR_SIZE(ANDROID_CONTROL_SCENE_MODE, &sceneMode, 1);
 
-    static const uint8_t aeMode = ANDROID_CONTROL_AE_ON_AUTO_FLASH;
+    static const uint8_t aeMode = ANDROID_CONTROL_AE_MODE_ON_AUTO_FLASH;
     ADD_OR_SIZE(ANDROID_CONTROL_AE_MODE, &aeMode, 1);
 
     static const uint8_t aeLock = ANDROID_CONTROL_AE_LOCK_OFF;
@@ -2582,7 +2552,7 @@ status_t EmulatedFakeCamera2::constructDefaultRequest(
     ADD_OR_SIZE(ANDROID_CONTROL_AE_REGIONS, controlRegions, 5);
 
     static const int32_t aeExpCompensation = 0;
-    ADD_OR_SIZE(ANDROID_CONTROL_AE_EXP_COMPENSATION, &aeExpCompensation, 1);
+    ADD_OR_SIZE(ANDROID_CONTROL_AE_EXPOSURE_COMPENSATION, &aeExpCompensation, 1);
 
     static const int32_t aeTargetFpsRange[2] = {
         10, 30
@@ -2590,11 +2560,11 @@ status_t EmulatedFakeCamera2::constructDefaultRequest(
     ADD_OR_SIZE(ANDROID_CONTROL_AE_TARGET_FPS_RANGE, aeTargetFpsRange, 2);
 
     static const uint8_t aeAntibandingMode =
-            ANDROID_CONTROL_AE_ANTIBANDING_AUTO;
+            ANDROID_CONTROL_AE_ANTIBANDING_MODE_AUTO;
     ADD_OR_SIZE(ANDROID_CONTROL_AE_ANTIBANDING_MODE, &aeAntibandingMode, 1);
 
     static const uint8_t awbMode =
-            ANDROID_CONTROL_AWB_AUTO;
+            ANDROID_CONTROL_AWB_MODE_AUTO;
     ADD_OR_SIZE(ANDROID_CONTROL_AWB_MODE, &awbMode, 1);
 
     static const uint8_t awbLock = ANDROID_CONTROL_AWB_LOCK_OFF;
@@ -2605,29 +2575,30 @@ status_t EmulatedFakeCamera2::constructDefaultRequest(
     uint8_t afMode = 0;
     switch (request_template) {
       case CAMERA2_TEMPLATE_PREVIEW:
-        afMode = ANDROID_CONTROL_AF_AUTO;
+        afMode = ANDROID_CONTROL_AF_MODE_AUTO;
         break;
       case CAMERA2_TEMPLATE_STILL_CAPTURE:
-        afMode = ANDROID_CONTROL_AF_AUTO;
+        afMode = ANDROID_CONTROL_AF_MODE_AUTO;
         break;
       case CAMERA2_TEMPLATE_VIDEO_RECORD:
-        afMode = ANDROID_CONTROL_AF_CONTINUOUS_VIDEO;
+        afMode = ANDROID_CONTROL_AF_MODE_CONTINUOUS_VIDEO;
         break;
       case CAMERA2_TEMPLATE_VIDEO_SNAPSHOT:
-        afMode = ANDROID_CONTROL_AF_CONTINUOUS_VIDEO;
+        afMode = ANDROID_CONTROL_AF_MODE_CONTINUOUS_VIDEO;
         break;
       case CAMERA2_TEMPLATE_ZERO_SHUTTER_LAG:
-        afMode = ANDROID_CONTROL_AF_CONTINUOUS_PICTURE;
+        afMode = ANDROID_CONTROL_AF_MODE_CONTINUOUS_PICTURE;
         break;
       default:
-        afMode = ANDROID_CONTROL_AF_AUTO;
+        afMode = ANDROID_CONTROL_AF_MODE_AUTO;
         break;
     }
     ADD_OR_SIZE(ANDROID_CONTROL_AF_MODE, &afMode, 1);
 
     ADD_OR_SIZE(ANDROID_CONTROL_AF_REGIONS, controlRegions, 5);
 
-    static const uint8_t vstabMode = ANDROID_CONTROL_VIDEO_STABILIZATION_OFF;
+    static const uint8_t vstabMode =
+        ANDROID_CONTROL_VIDEO_STABILIZATION_MODE_OFF;
     ADD_OR_SIZE(ANDROID_CONTROL_VIDEO_STABILIZATION_MODE, &vstabMode, 1);
 
     // aeState, awbState, afState only in frame
