@@ -124,7 +124,7 @@ typedef	int			__rune_t;
 typedef	void *			__wctrans_t;
 typedef	void *			__wctype_t;
 
-#ifdef __MIPSEB__
+#if defined(__MIPSEB__)
 #define _BYTE_ORDER _BIG_ENDIAN
 #else
 #define _BYTE_ORDER _LITTLE_ENDIAN
