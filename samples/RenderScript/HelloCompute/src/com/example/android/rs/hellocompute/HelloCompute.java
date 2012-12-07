@@ -58,7 +58,9 @@ public class HelloCompute extends Activity {
         mInAllocation = Allocation.createFromBitmap(mRS, mBitmapIn,
                                                     Allocation.MipmapControl.MIPMAP_NONE,
                                                     Allocation.USAGE_SCRIPT);
-        mOutAllocation = Allocation.createTyped(mRS, mInAllocation.getType());
+        mOutAllocation = Allocation.createFromBitmap(mRS, mBitmapOut,
+                                                     Allocation.MipmapControl.MIPMAP_NONE,
+                                                     Allocation.USAGE_SCRIPT);
 
         mScript = new ScriptC_mono(mRS, getResources(), R.raw.mono);
 
