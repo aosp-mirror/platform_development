@@ -147,9 +147,14 @@ redirects:
   type: permanent
   comment: redirect to new loc
 
-# new one
 - src: /guide/publishing/licensing.html
   dst: /google/play/licensing/index.html
+  type: permanent
+  comment: Redirect Licensing docs to new location
+
+# new one
+- src: /google/play/billing/billing_about.html
+  dst: /google/play/billing/index.html
   type: permanent
   comment: Redirect Licensing docs to new location
 
