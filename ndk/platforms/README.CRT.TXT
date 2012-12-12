@@ -15,7 +15,7 @@ object files. They have the following names and usage:
   crtbegin_static.[cS]
     This file contains a tiny ELF startup entry point (named '_start')
     that is linked into every Android _static_ executable. These binaries can
-    run on any Linux ARM system, but cannot perform dynamic linking at all.
+    run on any Linux system, but cannot perform dynamic linking at all.
 
     Note that the kernel calls the '_start' entry point directly when it
     launches such an executable. The _start stub is used to call the
