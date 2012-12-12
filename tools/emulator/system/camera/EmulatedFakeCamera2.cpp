@@ -165,22 +165,26 @@ status_t EmulatedFakeCamera2::connectCamera(hw_device_t** device) {
 }
 
 status_t EmulatedFakeCamera2::closeCamera() {
-    Mutex::Autolock l(mMutex);
+    {
+        Mutex::Autolock l(mMutex);
 
-    status_t res;
-    ALOGV("%s", __FUNCTION__);
+        status_t res;
+        ALOGV("%s", __FUNCTION__);
 
-    res = mSensor->shutDown();
-    if (res != NO_ERROR) {
-        ALOGE("%s: Unable to shut down sensor: %d", __FUNCTION__, res);
-        return res;
+        res = mSensor->shutDown();
+        if (res != NO_ERROR) {
+            ALOGE("%s: Unable to shut down sensor: %d", __FUNCTION__, res);
+            return res;
+        }
+
+        mConfigureThread->requestExit();
+        mReadoutThread->requestExit();
+        mControlThread->requestExit();
+        mJpegCompressor->cancel();
     }
 
-    mConfigureThread->requestExit();
-    mReadoutThread->requestExit();
-    mControlThread->requestExit();
-    mJpegCompressor->cancel();
-
+    // give up the lock since we will now block and the threads
+    // can call back into this object
     mConfigureThread->join();
     mReadoutThread->join();
     mControlThread->join();
