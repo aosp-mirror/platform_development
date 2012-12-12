@@ -124,12 +124,6 @@ typedef	int			__rune_t;
 typedef	void *			__wctrans_t;
 typedef	void *			__wctype_t;
 
-#if defined(__MIPSEB__)
-#define _BYTE_ORDER _BIG_ENDIAN
-#else
-#define _BYTE_ORDER _LITTLE_ENDIAN
-#endif
-
 #if defined(_KERNEL)
 typedef struct label_t {
 	__register_t val[14];
