@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The reason this is done is that on tablets (>= sw600) , hiding the navigation has no function,
+    but causes the side effect of eating a tap that would otherwise be delivered to the framework.
+-->
+<resources>
+    <bool name="sideBySide">false</bool>
+    <bool name="hideNavigation">true</bool>
+</resources>
