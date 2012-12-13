@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+ * Copyright (C) 2012 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.android.threadsample"
+    android:versionCode="1"
+    android:versionName="1.0" >
+
+    <uses-sdk
+        android:minSdkVersion="11"
+        android:targetSdkVersion="17" />
+
+    <!-- Requires this permission to download RSS data from Picasa -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    
+    <!-- Requires this permission to check the network state       -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+
+    <!--
+        Defines the application.
+    -->
+    <application
+        android:icon="@drawable/icon"
+        android:label="@string/app_name">
+
+        <activity
+            android:name=".DisplayActivity"
+            android:label="@string/activity_title" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!--
+            No intent filters are specified, so android:exported defaults to "false". The
+            service is only available to this app.
+        -->
+        <service
+            android:name=".RSSPullService"
+            android:exported="false"/>
+
+        <!--
+            The attribute "android:exported" must be set to "false" to restrict this content
+            provider to its own app. Otherwise, all apps could access it.
+         -->
+        <provider
+            android:name=".DataProvider"
+            android:exported="false"
+            android:authorities="@string/authority"/>
+    </application>
+
+</manifest>
