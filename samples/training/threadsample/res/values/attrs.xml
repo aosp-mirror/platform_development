@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="ImageDownloaderView">
+        <!-- The sibling to hide after the image is downloaded 
+             and show when the image is being downloaded -->
+        <attr format="reference" name="hideShowSibling" />
+    </declare-styleable>        
+</resources>

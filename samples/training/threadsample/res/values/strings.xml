@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="authority">com.example.android.threadsample</string>
+    <string name="app_name">Picasa Images</string>
+    <string name="activity_title">Picasa Images</string>
+    <string name="progress_starting_update">Starting Update</string>
+    <string name="progress_connecting">Connecting</string>
+    <string name="progress_parsing">Parsing</string>
+    <string name="progress_writing">Writing to Database</string>
+    <string name="no_connection">In offline mode, and no stored data is available.</string>
+    <string name="alert_description">Alert!</string>
+    <string name="offline_mode">In offline mode. Stored data is shown.</string>
+</resources>
