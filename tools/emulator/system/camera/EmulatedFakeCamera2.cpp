@@ -1135,7 +1135,6 @@ void EmulatedFakeCamera2::ReadoutThread::setNextOperation(
         camera_metadata_t *request,
         Buffers *buffers) {
     Mutex::Autolock lock(mInputMutex);
-    Mutex::Autolock iLock(mInternalsMutex);
     if ( !readyForNextCapture() ) {
         ALOGE("In flight queue full, dropping captures");
         mParent->signalError();
