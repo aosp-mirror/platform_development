@@ -1545,6 +1545,7 @@ status_t EmulatedFakeCamera2::ControlThread::waitUntilRunning() {
     return OK;
 }
 
+// Override android.control.* fields with 3A values before sending request to sensor
 status_t EmulatedFakeCamera2::ControlThread::processRequest(camera_metadata_t *request) {
     Mutex::Autolock lock(mInputMutex);
     // TODO: Add handling for all android.control.* fields here
@@ -1555,6 +1556,21 @@ status_t EmulatedFakeCamera2::ControlThread::processRequest(camera_metadata_t *r
             ANDROID_CONTROL_MODE,
             &mode);
     mControlMode = mode.data.u8[0];
+
+    // disable all 3A
+    if (mControlMode == ANDROID_CONTROL_MODE_OFF) {
+        mEffectMode =   ANDROID_CONTROL_EFFECT_MODE_OFF;
+        mSceneMode =    ANDROID_CONTROL_SCENE_MODE_UNSUPPORTED;
+        mAfMode =       ANDROID_CONTROL_AF_MODE_OFF;
+        mAeLock =       ANDROID_CONTROL_AE_LOCK_ON;
+        mAeMode =       ANDROID_CONTROL_AE_MODE_OFF;
+        mAfModeChange = true;
+        mStartAf =      false;
+        mCancelAf =     true;
+        mAeState =      ANDROID_CONTROL_AE_STATE_INACTIVE;
+        mAwbMode =      ANDROID_CONTROL_AWB_MODE_OFF;
+        return res;
+    }
 
     res = find_camera_metadata_entry(request,
             ANDROID_CONTROL_EFFECT_MODE,
