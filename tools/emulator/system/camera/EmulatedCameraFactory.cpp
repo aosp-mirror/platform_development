@@ -196,7 +196,7 @@ int EmulatedCameraFactory::cameraDeviceOpen(int camera_id, hw_device_t** device)
     if (camera_id < 0 || camera_id >= getEmulatedCameraNum()) {
         ALOGE("%s: Camera id %d is out of bounds (%d)",
              __FUNCTION__, camera_id, getEmulatedCameraNum());
-        return -EINVAL;
+        return -ENODEV;
     }
 
     return mEmulatedCameras[camera_id]->connectCamera(device);
@@ -214,7 +214,7 @@ int EmulatedCameraFactory::getCameraInfo(int camera_id, struct camera_info* info
     if (camera_id < 0 || camera_id >= getEmulatedCameraNum()) {
         ALOGE("%s: Camera id %d is out of bounds (%d)",
              __FUNCTION__, camera_id, getEmulatedCameraNum());
-        return -EINVAL;
+        return -ENODEV;
     }
 
     return mEmulatedCameras[camera_id]->getCameraInfo(info);
