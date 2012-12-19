@@ -1155,6 +1155,8 @@ void EmulatedFakeCamera2::ReadoutThread::setNextOperation(
 }
 
 bool EmulatedFakeCamera2::ReadoutThread::isStreamInUse(uint32_t id) {
+    // acquire in same order as threadLoop
+    Mutex::Autolock iLock(mInternalsMutex);
     Mutex::Autolock lock(mInputMutex);
 
     size_t i = mInFlightHead;
@@ -1166,7 +1168,6 @@ bool EmulatedFakeCamera2::ReadoutThread::isStreamInUse(uint32_t id) {
         i = (i + 1) % kInFlightQueueSize;
     }
 
-    Mutex::Autolock iLock(mInternalsMutex);
 
     if (mBuffers != NULL) {
         for (i = 0; i < mBuffers->size(); i++) {
