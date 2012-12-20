@@ -34,6 +34,7 @@
 #include <sys/socket.h>
 #include <stdio.h>
 #include <arpa/nameser.h>
+#include <netinet/in.h>
 
 __BEGIN_DECLS
 
