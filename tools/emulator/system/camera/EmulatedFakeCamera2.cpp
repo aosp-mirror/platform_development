@@ -1553,10 +1553,13 @@ status_t EmulatedFakeCamera2::ControlThread::processRequest(camera_metadata_t *r
     camera_metadata_entry_t mode;
     status_t res;
 
+#define READ_IF_OK(res, what, def)                                             \
+    (((res) == OK) ? (what) : (uint8_t)(def))
+
     res = find_camera_metadata_entry(request,
             ANDROID_CONTROL_MODE,
             &mode);
-    mControlMode = mode.data.u8[0];
+    mControlMode = READ_IF_OK(res, mode.data.u8[0], ANDROID_CONTROL_MODE_OFF);
 
     // disable all 3A
     if (mControlMode == ANDROID_CONTROL_MODE_OFF) {
@@ -1576,12 +1579,14 @@ status_t EmulatedFakeCamera2::ControlThread::processRequest(camera_metadata_t *r
     res = find_camera_metadata_entry(request,
             ANDROID_CONTROL_EFFECT_MODE,
             &mode);
-    mEffectMode = mode.data.u8[0];
+    mEffectMode = READ_IF_OK(res, mode.data.u8[0],
+                             ANDROID_CONTROL_EFFECT_MODE_OFF);
 
     res = find_camera_metadata_entry(request,
             ANDROID_CONTROL_SCENE_MODE,
             &mode);
-    mSceneMode = mode.data.u8[0];
+    mSceneMode = READ_IF_OK(res, mode.data.u8[0],
+                             ANDROID_CONTROL_SCENE_MODE_UNSUPPORTED);
 
     res = find_camera_metadata_entry(request,
             ANDROID_CONTROL_AF_MODE,
@@ -1597,12 +1602,15 @@ status_t EmulatedFakeCamera2::ControlThread::processRequest(camera_metadata_t *r
     res = find_camera_metadata_entry(request,
             ANDROID_CONTROL_AE_MODE,
             &mode);
-    mAeMode = mode.data.u8[0];
+    mAeMode = READ_IF_OK(res, mode.data.u8[0],
+                             ANDROID_CONTROL_AE_MODE_OFF);
 
     res = find_camera_metadata_entry(request,
             ANDROID_CONTROL_AE_LOCK,
             &mode);
-    bool aeLock = (mode.data.u8[0] == ANDROID_CONTROL_AE_LOCK_ON);
+    uint8_t aeLockVal = READ_IF_OK(res, mode.data.u8[0],
+                                   ANDROID_CONTROL_AE_LOCK_ON);
+    bool aeLock = (aeLockVal == ANDROID_CONTROL_AE_LOCK_ON);
     if (mAeLock && !aeLock) {
         mAeState = ANDROID_CONTROL_AE_STATE_INACTIVE;
     }
@@ -1611,7 +1619,8 @@ status_t EmulatedFakeCamera2::ControlThread::processRequest(camera_metadata_t *r
     res = find_camera_metadata_entry(request,
             ANDROID_CONTROL_AWB_MODE,
             &mode);
-    mAwbMode = mode.data.u8[0];
+    mAwbMode = READ_IF_OK(res, mode.data.u8[0],
+                          ANDROID_CONTROL_AWB_MODE_OFF);
 
     // TODO: Override more control fields
 
@@ -1624,6 +1633,8 @@ status_t EmulatedFakeCamera2::ControlThread::processRequest(camera_metadata_t *r
             exposureTime.data.i64[0] = mExposureTime;
         }
     }
+
+#undef READ_IF_OK
 
     return OK;
 }
