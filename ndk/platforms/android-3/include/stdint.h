@@ -226,12 +226,6 @@ typedef int64_t  intmax_t;
 #  define UINTMAX_C(c)	UINT64_C(c)
 #endif
 
-/* size_t is defined by the GCC-specific <stddef.h> */
-#ifndef _SSIZE_T_DEFINED_
-#define _SSIZE_T_DEFINED_
-typedef long int  ssize_t;
-#endif
-
 #define _BITSIZE 32
 
 /* Keep the kernel from trying to define these types... */

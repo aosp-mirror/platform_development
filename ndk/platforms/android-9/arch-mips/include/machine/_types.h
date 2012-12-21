@@ -105,8 +105,6 @@ typedef double			__double_t;
 typedef float			__float_t;
 typedef long long		__off_t;
 typedef long			__ptrdiff_t;
-/*typedef	unsigned long		__size_t;*/
-typedef	long			__ssize_t;
 typedef	int			__time_t;
 typedef int			__timer_t;
 #if defined(__GNUC__) && __GNUC__ >= 3
