@@ -35,17 +35,6 @@
 #ifndef _ARM__TYPES_H_
 #define _ARM__TYPES_H_
 
-
-#if !defined(__ARM_EABI__)
-/* the kernel defines size_t as unsigned int, but g++ wants it to be unsigned long */
-#define _SIZE_T
-#define _SSIZE_T
-#define _PTRDIFF_T
-typedef unsigned long  size_t;
-typedef long           ssize_t;
-typedef long           ptrdiff_t;
-#endif
-
 /* 7.18.1.1 Exact-width integer types */
 typedef	__signed char		__int8_t;
 typedef	unsigned char		__uint8_t;
