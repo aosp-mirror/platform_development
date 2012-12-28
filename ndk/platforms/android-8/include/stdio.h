@@ -39,7 +39,7 @@
 #define	_STDIO_H_
 
 #include <sys/cdefs.h>
-#include <sys/_types.h>
+#include <sys/types.h>
 
 /* va_list and size_t must be defined by stdio.h according to Posix */
 #define __need___va_list
@@ -49,29 +49,8 @@
 #define __need_size_t
 #include <stddef.h>
 
+#define __need_NULL
 #include <stddef.h>
-
-#if __BSD_VISIBLE || __POSIX_VISIBLE || __XPG_VISIBLE
-#include <sys/types.h>	/* XXX should be removed */
-#endif
-
-#ifndef	_SIZE_T_DEFINED_
-#define	_SIZE_T_DEFINED_
-typedef	unsigned long    size_t;
-#endif
-
-#ifndef	_OFF_T_DEFINED_
-#define	_OFF_T_DEFINED_
-typedef	long    off_t;
-#endif
-
-#ifndef NULL
-#ifdef 	__GNUG__
-#define	NULL	__null
-#else
-#define	NULL	0L
-#endif
-#endif
 
 #define	_FSTDIO			/* Define for new stdio with functions. */
 

@@ -35,29 +35,6 @@
 #ifndef _I386__TYPES_H_
 #define _I386__TYPES_H_
 
-/* the kernel defines size_t as unsigned int, but g++ wants it to be unsigned long */
-#ifndef _SIZE_T_DEFINED_
-#  define _SIZE_T_DEFINED_
-#  ifdef __ANDROID__
-     typedef unsigned int  size_t;
-#  else
-     typedef unsigned long  size_t;
-#  endif
-#endif
-#if !defined(_SSIZE_T) && !defined(_SSIZE_T_DEFINED_)
-#define _SSIZE_T
-#define _SSIZE_T_DEFINED_
-typedef long int       ssize_t;
-#endif
-#ifndef _PTRDIFF_T
-#define _PTRDIFF_T
-#  ifdef __ANDROID__
-     typedef int            ptrdiff_t;
-#  else
-     typedef long           ptrdiff_t;
-#  endif
-#endif
-
 /* 7.18.1.1 Exact-width integer types */
 typedef	__signed char		__int8_t;
 typedef	unsigned char		__uint8_t;
