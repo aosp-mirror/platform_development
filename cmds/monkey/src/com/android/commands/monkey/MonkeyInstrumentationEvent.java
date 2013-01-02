@@ -21,7 +21,6 @@ import android.app.IActivityManager;
 import android.content.ComponentName;
 import android.os.Bundle;
 import android.os.RemoteException;
-import android.util.AndroidException;
 import android.view.IWindowManager;
 
 /**
@@ -46,7 +45,7 @@ public class MonkeyInstrumentationEvent extends MonkeyEvent {
         Bundle args = new Bundle();
         args.putString("class", mTestCaseName);
         try {
-            iam.startInstrumentation(cn, null, 0, args, null, 0);
+            iam.startInstrumentation(cn, null, 0, args, null, null, 0);
         } catch (RemoteException e) {
             System.err.println("** Failed talking with activity manager!");
             return MonkeyEvent.INJECT_ERROR_REMOTE_EXCEPTION;
