@@ -169,7 +169,8 @@
 
 #undef   _POSIX_PROCESS_SHARED           /* we don't support process-shared synchronization */
 #undef   _POSIX_THREAD_SAFE_FUNCTIONS    /* most functions are, but not everything yet */
-#define  _POSIX_CHOWN_RESTRICTED    1    /* yes, chown requires appropriate priviledges */
+#define  _POSIX_CHOWN_RESTRICTED    1    /* yes, chown requires appropriate privileges */
+#define  _POSIX_MONOTONIC_CLOCK     0    /* the monotonic clock may be available; ask sysconf */
 #define  _POSIX_NO_TRUNC            1    /* very long pathnames generate an error */
 #define  _POSIX_SAVED_IDS           1    /* saved user ids is a Linux feature */
 #define  _POSIX_JOB_CONTROL         1    /* job control is a Linux feature */
