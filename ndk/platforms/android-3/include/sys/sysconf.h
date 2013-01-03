@@ -127,8 +127,9 @@ __BEGIN_DECLS
 #define _SC_NPROCESSORS_ONLN            0x0061
 #define _SC_PHYS_PAGES                  0x0062
 #define _SC_AVPHYS_PAGES                0x0063
+#define _SC_MONOTONIC_CLOCK             0x0064
 
-extern int sysconf (int  name);
+extern int sysconf(int name);
 
 __END_DECLS
 
