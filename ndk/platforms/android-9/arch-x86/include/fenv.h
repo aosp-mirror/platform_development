@@ -29,8 +29,7 @@
 #ifndef	_FENV_H_
 #define	_FENV_H_
 
-#include <sys/cdefs.h>
-#include <sys/_types.h>
+#include <sys/types.h>
 
 __BEGIN_DECLS
 
