@@ -23,14 +23,13 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $FreeBSD: src/lib/msun/mips/fenv.h,v 1.1 2008/04/26 12:20:29 imp Exp $
+ * $FreeBSD: src/lib/msun/arm/fenv.h,v 1.5 2005/03/16 19:03:45 das Exp $
  */
 
 #ifndef	_FENV_H_
 #define	_FENV_H_
 
-#include <sys/cdefs.h>
-#include <sys/_types.h>
+#include <sys/types.h>
 
 __BEGIN_DECLS
 
@@ -217,4 +216,3 @@ fegetexcept(void)
 __END_DECLS
 
 #endif	/* !_FENV_H_ */
-
