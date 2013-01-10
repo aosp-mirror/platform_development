@@ -28,6 +28,7 @@
 #include <ui/Rect.h>
 #include <ui/GraphicBufferMapper.h>
 #include "gralloc_cb.h"
+#include "FutureMetadata.h"
 
 namespace android {
 
