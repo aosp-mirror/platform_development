@@ -45,10 +45,10 @@ import java.security.NoSuchAlgorithmException;
 public class ImageCache {
     private static final String TAG = "ImageCache";
 
-    // Default memory cache size
-    private static final int DEFAULT_MEM_CACHE_SIZE = 1024 * 1024 * 5; // 5MB
+    // Default memory cache size in kilobytes
+    private static final int DEFAULT_MEM_CACHE_SIZE = 1024 * 5; // 5MB
 
-    // Default disk cache size
+    // Default disk cache size in bytes
     private static final int DEFAULT_DISK_CACHE_SIZE = 1024 * 1024 * 10; // 10MB
 
     // Compression settings when writing images to disk cache
@@ -128,12 +128,13 @@ public class ImageCache {
             }
             mMemoryCache = new LruCache<String, Bitmap>(mCacheParams.memCacheSize) {
                 /**
-                 * Measure item size in bytes rather than units which is more practical
+                 * Measure item size in kilobytes rather than units which is more practical
                  * for a bitmap cache
                  */
                 @Override
                 protected int sizeOf(String key, Bitmap bitmap) {
-                    return getBitmapSize(bitmap);
+                    final int bitmapSize = getBitmapSize(bitmap) / 1024;
+                    return bitmapSize == 0 ? 1 : bitmapSize;
                 }
             };
         }
@@ -383,28 +384,24 @@ public class ImageCache {
         }
 
         /**
-         * Sets the memory cache size based on a percentage of the device memory class.
-         * Eg. setting percent to 0.2 would set the memory cache to one fifth of the device memory
-         * class. Throws {@link IllegalArgumentException} if percent is < 0.05 or > .8.
+         * Sets the memory cache size based on a percentage of the max available VM memory.
+         * Eg. setting percent to 0.2 would set the memory cache to one fifth of the available
+         * memory. Throws {@link IllegalArgumentException} if percent is < 0.05 or > .8.
+         * memCacheSize is stored in kilobytes instead of bytes as this will eventually be passed
+         * to construct a LruCache which takes an int in its constructor.
          *
          * This value should be chosen carefully based on a number of factors
          * Refer to the corresponding Android Training class for more discussion:
          * http://developer.android.com/training/displaying-bitmaps/
          *
-         * @param context Context to use to fetch memory class
-         * @param percent Percent of memory class to use to size memory cache
+         * @param percent Percent of available app memory to use to size memory cache
          */
-        public void setMemCacheSizePercent(Context context, float percent) {
+        public void setMemCacheSizePercent(float percent) {
             if (percent < 0.05f || percent > 0.8f) {
                 throw new IllegalArgumentException("setMemCacheSizePercent - percent must be "
                         + "between 0.05 and 0.8 (inclusive)");
             }
-            memCacheSize = Math.round(percent * getMemoryClass(context) * 1024 * 1024);
-        }
-
-        private static int getMemoryClass(Context context) {
-            return ((ActivityManager) context.getSystemService(
-                    Context.ACTIVITY_SERVICE)).getMemoryClass();
+            memCacheSize = Math.round(percent * Runtime.getRuntime().maxMemory() / 1024);
         }
     }
 
