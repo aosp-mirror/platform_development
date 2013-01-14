@@ -73,7 +73,7 @@ public class ImageDetailActivity extends FragmentActivity implements OnClickList
 
         ImageCache.ImageCacheParams cacheParams =
                 new ImageCache.ImageCacheParams(this, IMAGE_CACHE_DIR);
-        cacheParams.setMemCacheSizePercent(this, 0.25f); // Set memory cache to 25% of mem class
+        cacheParams.setMemCacheSizePercent(0.25f); // Set memory cache to 25% of app memory
 
         // The ImageFetcher takes care of loading images into our ImageView children asynchronously
         mImageFetcher = new ImageFetcher(this, longest);
