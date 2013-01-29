@@ -155,7 +155,8 @@ public class InstrumentationList extends ListActivity
             }
             try {
                 ActivityManagerNative.getDefault().
-                    startInstrumentation(className, profilingFile, 0, null, mWatcher, UserHandle.myUserId());
+                    startInstrumentation(className, profilingFile, 0, null, mWatcher, null,
+                            UserHandle.myUserId());
             } catch (RemoteException ex) {
             }
         }

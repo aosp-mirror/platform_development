@@ -588,6 +588,7 @@ public class MonkeySourceNetwork implements MonkeyEventSource {
      */
     private void stopServer() throws IOException {
         clientSocket.close();
+        MonkeySourceNetworkViews.teardown();
         input.close();
         output.close();
         started = false;
