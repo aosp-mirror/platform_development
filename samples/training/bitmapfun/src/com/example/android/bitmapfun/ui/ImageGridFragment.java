@@ -149,6 +149,7 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
     @Override
     public void onPause() {
         super.onPause();
+        mImageFetcher.setPauseWork(false);
         mImageFetcher.setExitTasksEarly(true);
         mImageFetcher.flushCache();
     }
