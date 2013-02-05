@@ -284,6 +284,11 @@ redirects:
   type: permanent
   comment: Redirect to new location
 
+- src: /guide/topics/graphics/renderscript.html
+  dst: /guide/topics/renderscript/index.html
+  type: permanent
+  comment: Redirect to new location
+
 - src: /guide/topics/location/obtaining-user-location.html
   dst: /guide/topics/location/strategies.html
   type: permanent
