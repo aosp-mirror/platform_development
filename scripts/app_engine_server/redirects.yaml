@@ -171,7 +171,6 @@ redirects:
 - src: /tools/aidl.html
   dst: /guide/components/aidl.html
   type: permanent
-  comment: bug 6755311, aidl doc found by search under tools
 
 - src: /guide/market/publishing/multiple-apks.html
   dst: /google/play/publishing/multiple-apks.html
@@ -260,7 +259,7 @@ redirects:
   comment: Redirect to new location
 
 - src: /guide/topics/security/security.html
-  dst: /guide/topics/security/permissions.html
+  dst: /training/articles/security-tips.html
   type: permanent
   comment: Redirect to new location
 
@@ -535,32 +534,30 @@ redirects:
 - src: /4.2
   dst: /about/versions/android-4.2.html
   type: permanent
-  
+
 - src: /4.1
   dst: /about/versions/android-4.1.html
-  type: permanent
-
-- src: /jb
-  dst: /about/versions/jelly-bean.html
   type: permanent
 
 - src: /4.0
   dst: /about/versions/android-4.0.html
   type: permanent
 
-- src: /ics
+- src: /(j|jb|jellybean)/?$
+  dst: /about/versions/jelly-bean.html
+  type: permanent
+
+- src: /(i|ics|icecreamsandwich)/?$
   dst: /about/versions/android-4.0-highlights.html
   type: permanent
 
-- src: /hc
+- src: /(h|hc|honeycomb)/?$
   dst: /about/versions/android-3.0-highlights.html
   type: permanent
 
-- src: /gb
+- src: /(g|gb|gingerbread)/?$
   dst: /about/versions/android-2.3-highlights.html
   type: permanent
-
-
 
 # ---------- MISC -----------------
 
@@ -588,5 +585,3 @@ redirects:
 - src: /deviceart
   dst: http://developer.android.com/distribute/promote/device-art.html
   type: permanent
-
-
