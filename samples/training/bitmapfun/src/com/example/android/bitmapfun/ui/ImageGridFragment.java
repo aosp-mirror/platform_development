@@ -270,7 +270,7 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
             // Now handle the main ImageView thumbnails
             ImageView imageView;
             if (convertView == null) { // if it's not recycled, instantiate and initialize
-                imageView = new ImageView(mContext);
+                imageView = new RecyclingImageView(mContext);
                 imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
                 imageView.setLayoutParams(mImageViewLayoutParams);
             } else { // Otherwise re-use the converted view
