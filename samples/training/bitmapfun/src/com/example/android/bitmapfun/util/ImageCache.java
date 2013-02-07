@@ -20,8 +20,8 @@ import android.annotation.TargetApi;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
-import android.graphics.drawable.BitmapDrawable;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.StatFs;
@@ -33,11 +33,16 @@ import android.util.Log;
 import com.example.android.bitmapfun.BuildConfig;
 
 import java.io.File;
+import java.io.FileDescriptor;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.ref.SoftReference;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.HashSet;
+import java.util.Iterator;
 
 /**
  * This class holds our bitmap caches (memory and disk).
@@ -67,6 +72,8 @@ public class ImageCache {
     private ImageCacheParams mCacheParams;
     private final Object mDiskCacheLock = new Object();
     private boolean mDiskCacheStarting = true;
+
+    private HashSet<SoftReference<Bitmap>> mReusableBitmaps;
 
     /**
      * Creating a new ImageCache object using the specified parameters.
@@ -126,6 +133,12 @@ public class ImageCache {
             if (BuildConfig.DEBUG) {
                 Log.d(TAG, "Memory cache created (size = " + mCacheParams.memCacheSize + ")");
             }
+
+            // If we're running on Honeycomb or newer, then
+            if (Utils.hasHoneycomb()) {
+                mReusableBitmaps = new HashSet<SoftReference<Bitmap>>();
+            }
+
             mMemoryCache = new LruCache<String, BitmapDrawable>(mCacheParams.memCacheSize) {
 
                 /**
@@ -138,6 +151,14 @@ public class ImageCache {
                         // The removed entry is a recycling drawable, so notify it 
                         // that it has been removed from the memory cache
                         ((RecyclingBitmapDrawable) oldValue).setIsCached(false);
+                    } else {
+                        // The removed entry is a standard BitmapDrawable
+
+                        if (Utils.hasHoneycomb()) {
+                            // We're running on Honeycomb or later, so add the bitmap
+                            // to a SoftRefrence set for possible use with inBitmap later
+                            mReusableBitmaps.add(new SoftReference<Bitmap>(oldValue.getBitmap()));
+                        }
                     }
                 }
 
@@ -277,6 +298,8 @@ public class ImageCache {
      */
     public Bitmap getBitmapFromDiskCache(String data) {
         final String key = hashKeyForDisk(data);
+        Bitmap bitmap = null;
+
         synchronized (mDiskCacheLock) {
             while (mDiskCacheStarting) {
                 try {
@@ -293,8 +316,12 @@ public class ImageCache {
                         }
                         inputStream = snapshot.getInputStream(DISK_CACHE_INDEX);
                         if (inputStream != null) {
-                            final Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
-                            return bitmap;
+                            FileDescriptor fd = ((FileInputStream) inputStream).getFD();
+
+                            // Decode bitmap, but we don't want to sample so give
+                            // MAX_VALUE as the target dimensions
+                            bitmap = ImageResizer.decodeSampledBitmapFromDescriptor(
+                                    fd, Integer.MAX_VALUE, Integer.MAX_VALUE, this);
                         }
                     }
                 } catch (final IOException e) {
@@ -307,8 +334,41 @@ public class ImageCache {
                     } catch (IOException e) {}
                 }
             }
-            return null;
+            return bitmap;
         }
+    }
+
+    /**
+     * @param options - BitmapFactory.Options with out* options populated
+     * @return Bitmap that case be used for inBitmap
+     */
+    protected Bitmap getBitmapFromReusableSet(BitmapFactory.Options options) {
+        Bitmap bitmap = null;
+
+        if (mReusableBitmaps != null && !mReusableBitmaps.isEmpty()) {
+            final Iterator<SoftReference<Bitmap>> iterator = mReusableBitmaps.iterator();
+            Bitmap item;
+
+            while (iterator.hasNext()) {
+                item = iterator.next().get();
+
+                if (null != item && item.isMutable()) {
+                    // Check to see it the item can be used for inBitmap
+                    if (canUseForInBitmap(item, options)) {
+                        bitmap = item;
+
+                        // Remove from reusable set so it can't be used again
+                        iterator.remove();
+                        break;
+                    }
+                } else {
+                    // Remove from the set if the reference has been cleared.
+                    iterator.remove();
+                }
+            }
+        }
+
+        return bitmap;
     }
 
     /**
@@ -423,6 +483,20 @@ public class ImageCache {
             }
             memCacheSize = Math.round(percent * Runtime.getRuntime().maxMemory() / 1024);
         }
+    }
+
+    /**
+     * @param candidate - Bitmap to check
+     * @param targetOptions - Options that have the out* value populated
+     * @return true if <code>candidate</code> can be used for inBitmap re-use with
+     *      <code>targetOptions</code>
+     */
+    private static boolean canUseForInBitmap(
+            Bitmap candidate, BitmapFactory.Options targetOptions) {
+        int width = targetOptions.outWidth / targetOptions.inSampleSize;
+        int height = targetOptions.outHeight / targetOptions.inSampleSize;
+
+        return candidate.getWidth() == width && candidate.getHeight() == height;
     }
 
     /**

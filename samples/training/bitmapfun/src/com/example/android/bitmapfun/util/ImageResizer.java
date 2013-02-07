@@ -16,10 +16,12 @@
 
 package com.example.android.bitmapfun.util;
 
+import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.os.Build;
 import android.util.Log;
 
 import com.example.android.bitmapfun.BuildConfig;
@@ -90,7 +92,8 @@ public class ImageResizer extends ImageWorker {
         if (BuildConfig.DEBUG) {
             Log.d(TAG, "processBitmap - " + resId);
         }
-        return decodeSampledBitmapFromResource(mResources, resId, mImageWidth, mImageHeight);
+        return decodeSampledBitmapFromResource(mResources, resId, mImageWidth,
+                mImageHeight, getImageCache());
     }
 
     @Override
@@ -105,11 +108,12 @@ public class ImageResizer extends ImageWorker {
      * @param resId The resource id of the image data
      * @param reqWidth The requested width of the resulting bitmap
      * @param reqHeight The requested height of the resulting bitmap
+     * @param cache The ImageCache used to find candidate bitmaps for use with inBitmap
      * @return A bitmap sampled down from the original with the same aspect ratio and dimensions
      *         that are equal to or greater than the requested width and height
      */
     public static Bitmap decodeSampledBitmapFromResource(Resources res, int resId,
-            int reqWidth, int reqHeight) {
+            int reqWidth, int reqHeight, ImageCache cache) {
 
         // First decode with inJustDecodeBounds=true to check dimensions
         final BitmapFactory.Options options = new BitmapFactory.Options();
@@ -118,6 +122,11 @@ public class ImageResizer extends ImageWorker {
 
         // Calculate inSampleSize
         options.inSampleSize = calculateInSampleSize(options, reqWidth, reqHeight);
+
+        // If we're running on Honeycomb or newer, try to use inBitmap
+        if (Utils.hasHoneycomb()) {
+            addInBitmapOptions(options, cache);
+        }
 
         // Decode bitmap with inSampleSize set
         options.inJustDecodeBounds = false;
@@ -130,11 +139,12 @@ public class ImageResizer extends ImageWorker {
      * @param filename The full path of the file to decode
      * @param reqWidth The requested width of the resulting bitmap
      * @param reqHeight The requested height of the resulting bitmap
+     * @param cache The ImageCache used to find candidate bitmaps for use with inBitmap
      * @return A bitmap sampled down from the original with the same aspect ratio and dimensions
      *         that are equal to or greater than the requested width and height
      */
     public static Bitmap decodeSampledBitmapFromFile(String filename,
-            int reqWidth, int reqHeight) {
+            int reqWidth, int reqHeight, ImageCache cache) {
 
         // First decode with inJustDecodeBounds=true to check dimensions
         final BitmapFactory.Options options = new BitmapFactory.Options();
@@ -143,6 +153,11 @@ public class ImageResizer extends ImageWorker {
 
         // Calculate inSampleSize
         options.inSampleSize = calculateInSampleSize(options, reqWidth, reqHeight);
+
+        // If we're running on Honeycomb or newer, try to use inBitmap
+        if (Utils.hasHoneycomb()) {
+            addInBitmapOptions(options, cache);
+        }
 
         // Decode bitmap with inSampleSize set
         options.inJustDecodeBounds = false;
@@ -155,11 +170,12 @@ public class ImageResizer extends ImageWorker {
      * @param fileDescriptor The file descriptor to read from
      * @param reqWidth The requested width of the resulting bitmap
      * @param reqHeight The requested height of the resulting bitmap
+     * @param cache The ImageCache used to find candidate bitmaps for use with inBitmap
      * @return A bitmap sampled down from the original with the same aspect ratio and dimensions
      *         that are equal to or greater than the requested width and height
      */
     public static Bitmap decodeSampledBitmapFromDescriptor(
-            FileDescriptor fileDescriptor, int reqWidth, int reqHeight) {
+            FileDescriptor fileDescriptor, int reqWidth, int reqHeight, ImageCache cache) {
 
         // First decode with inJustDecodeBounds=true to check dimensions
         final BitmapFactory.Options options = new BitmapFactory.Options();
@@ -171,7 +187,32 @@ public class ImageResizer extends ImageWorker {
 
         // Decode bitmap with inSampleSize set
         options.inJustDecodeBounds = false;
+
+        // If we're running on Honeycomb or newer, try to use inBitmap
+        if (Utils.hasHoneycomb()) {
+            addInBitmapOptions(options, cache);
+        }
+
         return BitmapFactory.decodeFileDescriptor(fileDescriptor, null, options);
+    }
+
+    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
+    private static void addInBitmapOptions(BitmapFactory.Options options, ImageCache cache) {
+        // inBitmap only works with mutable bitmaps so force the decoder to
+        // return mutable bitmaps.
+        options.inMutable = true;
+
+        if (cache != null) {
+            // Try and find a bitmap to use for inBitmap
+            Bitmap inBitmap = cache.getBitmapFromReusableSet(options);
+
+            if (inBitmap != null) {
+                if (BuildConfig.DEBUG) {
+                    Log.d(TAG, "Found bitmap to use for inBitmap");
+                }
+                options.inBitmap = inBitmap;
+            }
+        }
     }
 
     /**
