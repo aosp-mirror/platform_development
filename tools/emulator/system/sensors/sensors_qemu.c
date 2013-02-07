@@ -233,9 +233,6 @@ data__data_open(struct sensors_poll_device_t *dev, native_handle_t* handle)
     D("%s: dev=%p fd=%d", __FUNCTION__, dev, handle->data[0]);
     memset(&data->sensors, 0, sizeof(data->sensors));
 
-    for (i=0 ; i<MAX_NUM_SENSORS ; i++) {
-        data->sensors[i].acceleration.status = SENSOR_STATUS_ACCURACY_HIGH;
-    }
     data->pendingSensors = 0;
     data->timeStart      = 0;
     data->timeOffset     = 0;
@@ -337,6 +334,7 @@ data__poll(struct sensors_poll_device_t *dev, sensors_event_t* values)
             data->sensors[ID_ORIENTATION].orientation.azimuth = params[0];
             data->sensors[ID_ORIENTATION].orientation.pitch   = params[1];
             data->sensors[ID_ORIENTATION].orientation.roll    = params[2];
+            data->sensors[ID_ORIENTATION].orientation.status  = SENSOR_STATUS_ACCURACY_HIGH;
             continue;
         }
 
@@ -346,6 +344,7 @@ data__poll(struct sensors_poll_device_t *dev, sensors_event_t* values)
             data->sensors[ID_MAGNETIC_FIELD].magnetic.x = params[0];
             data->sensors[ID_MAGNETIC_FIELD].magnetic.y = params[1];
             data->sensors[ID_MAGNETIC_FIELD].magnetic.z = params[2];
+            data->sensors[ID_MAGNETIC_FIELD].magnetic.status = SENSOR_STATUS_ACCURACY_HIGH;
             continue;
         }
 
