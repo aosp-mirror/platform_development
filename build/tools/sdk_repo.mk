@@ -156,13 +156,13 @@ endif
 SDK_REPO_XSD := \
 	$(lastword \
 	  $(wildcard \
-	    $(TOPDIR)prebuilts/devtools/sdklib/repository/com/android/sdklib/repository/sdk-repository-*.xsd \
+	    $(TOPDIR)prebuilts/devtools/repository/sdk-repository-*.xsd \
 	))
 
 SDK_ADDON_XSD := \
 	$(lastword \
 	  $(wildcard \
-	    $(TOPDIR)prebuilts/devtools/sdklib/repository/com/android/sdklib/repository/sdk-addon-*.xsd \
+	    $(TOPDIR)prebuilts/devtools/repository/sdk-addon-*.xsd \
 	))
 
 # -----------------------------------------------------------------
