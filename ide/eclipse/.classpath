@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="packages/apps/Bluetooth/src"/>
-	<classpathentry kind="src" path="packages/apps/Camera/src"/>
 	<classpathentry kind="src" path="packages/apps/Browser/src"/>
 	<classpathentry kind="src" path="packages/apps/Calendar/src"/>
 	<classpathentry kind="src" path="packages/apps/Calendar/extensions_src"/>
@@ -76,6 +75,7 @@
 	<classpathentry kind="src" path="frameworks/opt/mms/src/java"/>
 	<classpathentry kind="src" path="frameworks/opt/net/voip/src/java"/>
 	<classpathentry kind="src" path="frameworks/opt/vcard/java"/>
+	<classpathentry kind="src" path="frameworks/support/renderscript/v8/java/src"/>
 	<classpathentry kind="src" path="frameworks/support/v13/java"/>
 	<classpathentry kind="src" path="frameworks/support/v13/ics"/>
 	<classpathentry kind="src" path="frameworks/support/v13/ics-mr1"/>
