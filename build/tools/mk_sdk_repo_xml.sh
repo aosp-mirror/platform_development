@@ -6,7 +6,7 @@ set -e
 
 PROG_DIR=$(dirname $0)
 
-TYPES="tool platform-tool platform sample doc add-on system-image source support"
+TYPES="tool platform-tool build-tool platform sample doc add-on system-image source support"
 OSES="linux macosx windows any linux-x86 darwin"
 
 TMP_DIR=$(mktemp -d -t sdkrepo.tmp.XXXXXXXX)
@@ -144,6 +144,7 @@ if [[ "$ROOT" == "sdk-repository" && "$XSD_VERSION" -ge 7 ]] ||
    [[ "$ROOT" == "sdk-addon"      && "$XSD_VERSION" -ge 5 ]]; then
 FULL_REVISIONS=(
   tool          revision
+  build-tool    revision
   platform-tool revision
   @             min-tools-rev
   @             min-platform-tools-rev
@@ -409,3 +410,4 @@ echo "</sdk:$ROOT>" >> "$OUT"
 
 echo "## Validate XML against schema"
 xmllint --schema $SCHEMA "$OUT"
+
