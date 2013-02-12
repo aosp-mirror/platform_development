@@ -87,9 +87,11 @@ $(WIN_SDK_ZIP): winsdk-tools sdk
 	$(hide) mkdir -p $(WIN_SDK_DIR)
 	$(hide) cp -rf $(MAIN_SDK_DIR)/$(MAIN_SDK_NAME) $(WIN_SDK_DIR)/$(WIN_SDK_NAME)
 	$(hide) USB_DRIVER_HOOK=$(USB_DRIVER_HOOK) \
+		PLATFORM_VERSION=$(PLATFORM_VERSION) \
 		$(TOPDIR)development/build/tools/patch_windows_sdk.sh $(subst @,-q,$(hide)) \
 		$(WIN_SDK_DIR)/$(WIN_SDK_NAME) $(OUT_DIR) $(TOPDIR)
-	$(hide) $(TOPDIR)sdk/build/patch_windows_sdk.sh $(subst @,-q,$(hide)) \
+	$(hide) PLATFORM_VERSION=$(PLATFORM_VERSION) \
+		$(TOPDIR)sdk/build/patch_windows_sdk.sh $(subst @,-q,$(hide)) \
 		$(WIN_SDK_DIR)/$(WIN_SDK_NAME) $(OUT_DIR) $(TOPDIR)
 	$(hide) ( \
 		cd $(WIN_SDK_DIR) && \
