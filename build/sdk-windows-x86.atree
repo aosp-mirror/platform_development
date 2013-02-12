@@ -26,6 +26,10 @@
 # are controled by sdk/build/tools.windows.atree.
 #
 
+##############################################################################
+# Platform Tools Component
+##############################################################################
+
 rm platform-tools/adb
 rm platform-tools/fastboot
 bin/adb.exe                             strip platform-tools/adb.exe
@@ -33,20 +37,30 @@ bin/fastboot.exe                        strip platform-tools/fastboot.exe
 bin/AdbWinUsbApi.dll                          platform-tools/AdbWinUsbApi.dll
 bin/AdbWinApi.dll                             platform-tools/AdbWinApi.dll
 
-rm platform-tools/aapt
-bin/aapt.exe                            strip platform-tools/aapt.exe
 
-rm platform-tools/aidl
-bin/aidl.exe                            strip platform-tools/aidl.exe
+##############################################################################
+# Build Tools Component
+##############################################################################
 
-rm platform-tools/dx
-dalvik/dx/etc/dx.bat                          platform-tools/dx.bat
+rm build-tools/${PLATFORM_NAME}/aapt
+bin/aapt.exe                            strip build-tools/${PLATFORM_NAME}/aapt.exe
 
-rm platform-tools/dexdump
-bin/dexdump.exe                         strip platform-tools/dexdump.exe
+rm build-tools/${PLATFORM_NAME}/aidl
+bin/aidl.exe                            strip build-tools/${PLATFORM_NAME}/aidl.exe
 
-rm platform-tools/llvm-rs-cc
-bin/llvm-rs-cc.exe                      strip platform-tools/llvm-rs-cc.exe
+rm build-tools/${PLATFORM_NAME}/dx
+dalvik/dx/etc/dx.bat                          build-tools/${PLATFORM_NAME}/dx.bat
+rm build-tools/${PLATFORM_NAME}/dexdump
+bin/dexdump.exe                         strip build-tools/${PLATFORM_NAME}/dexdump.exe
+
+rm build-tools/${PLATFORM_NAME}/llvm-rs-cc
+bin/llvm-rs-cc.exe                      strip build-tools/${PLATFORM_NAME}/llvm-rs-cc.exe
+
+
+
+##############################################################################
+# Docs Component
+##############################################################################
 
 external/sonivox/docs/JET_Authoring_Guidelines.html   docs/JetCreator/JET_Authoring_Guidelines.html
 external/sonivox/docs/JET_Authoring_Guidelines_files  docs/JetCreator/JET_Authoring_Guidelines_files
