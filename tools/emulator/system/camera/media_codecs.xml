@@ -100,5 +100,6 @@ Only the three quirks included above are recognized at this point:
         <MediaCodec name="OMX.google.h264.encoder" type="video/avc" />
         <MediaCodec name="OMX.google.mpeg4.encoder" type="video/mp4v-es" />
         <MediaCodec name="OMX.google.flac.encoder" type="audio/flac" />
+        <MediaCodec name="OMX.google.vpx.encoder" type="video/x-vnd.on2.vp8" />
     </Encoders>
 </MediaCodecs>
