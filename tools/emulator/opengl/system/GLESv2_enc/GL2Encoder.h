@@ -74,7 +74,7 @@ private:
     glBindBuffer_client_proc_t m_glBindBuffer_enc;
     static void s_glBindBuffer(void *self, GLenum target, GLuint id);
 
-    
+
     glBufferData_client_proc_t m_glBufferData_enc;
     static void s_glBufferData(void *self, GLenum target, GLsizeiptr size, const GLvoid * data, GLenum usage);
     glBufferSubData_client_proc_t m_glBufferSubData_enc;
@@ -117,7 +117,7 @@ private:
     glGetVertexAttribPointerv_client_proc_t m_glGetVertexAttribPointerv;
     static void s_glGetVertexAttribPointerv(void *self, GLuint index, GLenum pname, GLvoid **pointer);
 
-    static void s_glShaderSource(void *self, GLuint shader, GLsizei count, const GLchar **string, const GLint *length);
+    static void s_glShaderSource(void *self, GLuint shader, GLsizei count, const GLchar *const *string, const GLint *length);
 
     static void s_glFinish(void *self);
 

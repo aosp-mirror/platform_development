@@ -120,7 +120,7 @@ extern "C" {
 	void glSampleCoverage_enc(void *self , GLclampf value, GLboolean invert);
 	void glScissor_enc(void *self , GLint x, GLint y, GLsizei width, GLsizei height);
 	void glShaderBinary_enc(void *self , GLsizei n, const GLuint* shaders, GLenum binaryformat, const GLvoid* binary, GLsizei length);
-	void glShaderSource_enc(void *self , GLuint shader, GLsizei count, const GLchar** string, const GLint* length);
+	void glShaderSource_enc(void *self , GLuint shader, GLsizei count, const GLchar* const* string, const GLint* length);
 	void glStencilFunc_enc(void *self , GLenum func, GLint ref, GLuint mask);
 	void glStencilFuncSeparate_enc(void *self , GLenum face, GLenum func, GLint ref, GLuint mask);
 	void glStencilMask_enc(void *self , GLuint mask);
