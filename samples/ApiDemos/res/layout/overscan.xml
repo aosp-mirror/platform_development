@@ -163,6 +163,14 @@
                         android:text="FULLSCREEN"
                         />
                     <CheckBox
+                        android:id="@+id/windowOverscan"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="-10dp"
+                        android:textColor="#FFFFFFFF"
+                        android:text="OVERSCAN"
+                        />
+                    <CheckBox
                         android:id="@+id/windowHideActionBar"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"

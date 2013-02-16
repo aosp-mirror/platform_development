@@ -126,6 +126,18 @@ public class OverscanActivity extends Activity
         win.setAttributes(winParams);
     }
 
+    private void setOverscan(boolean on) {
+        Window win = getWindow();
+        WindowManager.LayoutParams winParams = win.getAttributes();
+        final int bits = WindowManager.LayoutParams.FLAG_LAYOUT_IN_OVERSCAN;
+        if (on) {
+            winParams.flags |=  bits;
+        } else {
+            winParams.flags &= ~bits;
+        }
+        win.setAttributes(winParams);
+    }
+
     private String getDisplaySize() {
         DisplayMetrics dm = getResources().getDisplayMetrics();
         return String.format("DisplayMetrics = (%d x %d)", dm.widthPixels, dm.heightPixels);
@@ -182,6 +194,14 @@ public class OverscanActivity extends Activity
                     @Override
                     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                         setFullscreen(isChecked);
+                    }
+                }
+        );
+        ((CheckBox) findViewById(R.id.windowOverscan)).setOnCheckedChangeListener(
+                new CompoundButton.OnCheckedChangeListener() {
+                    @Override
+                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                        setOverscan(isChecked);
                     }
                 }
         );
