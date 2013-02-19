@@ -47,7 +47,6 @@ PRODUCT_PACKAGES += \
 	org.eclipse.equinox.common_3.6.0.v20100503 \
 	org.eclipse.core.commands_3.6.0.I20100512-1500 \
 	osgi \
-	swing-worker-1.1 \
 	vgabios-cirrus.bin
 
 :qa!
