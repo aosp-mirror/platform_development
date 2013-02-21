@@ -23,6 +23,7 @@
 #include <portability.h>
 #include <stdio.h>
 #include <errno.h>
+#include <filefd_portable.h>
 
 #define PORTABLE_TAG "clone_portable"
 #include <log_portable.h>
@@ -58,10 +59,31 @@ int clone_portable(int (*fn)(void *), void *child_stack, int port_flags, void *a
     char        *mips_term_signame;
     int         portable_term_signum;
     char        *portable_term_signame;
+    int         cloning_vm = ((port_flags & CLONE_VM) == CLONE_VM);
+    int         cloning_files = ((port_flags & CLONE_FILES) == CLONE_FILES);
+    int         cloning_sighand = ((port_flags & CLONE_SIGHAND) == CLONE_SIGHAND);
 
     ALOGV(" ");
     ALOGV("%s(fn:%p, child_stack:%p, port_flags:0x%x, arg:%p, ...) {", __func__,
               fn,    child_stack,    port_flags,      arg);
+
+    /* Shared file descriptor table requires shared memory. */
+    if (cloning_files != cloning_vm) {
+        ALOGE("%s: cloning_files:%d != cloning_vm:%d) ...", __func__,
+                   cloning_files,      cloning_vm);
+
+        ALOGE("%s: ... port_flags:0x%x Not Supported by Lib-Portable!", __func__,
+                       port_flags);
+    }
+
+    /* Shared signal handler table requires shared memory. */
+    if (cloning_sighand != cloning_vm) {
+        ALOGE("%s: cloning_sighand:%d != cloning_vm:%d) ...",  __func__,
+                   cloning_sighand,      cloning_vm);
+
+        ALOGE("%s: ... port_flags:0x%x Not Supported by Lib-Portable!", __func__,
+                       port_flags);
+    }
 
     /* Extract optional parameters - they are cumulative. */
     va_start(args, arg);
@@ -84,13 +106,33 @@ int clone_portable(int (*fn)(void *), void *child_stack, int port_flags, void *a
         mips_flags = port_flags;
     } else {
         portable_term_signame = map_portable_signum_to_name(portable_term_signum);
+        ALOGV("%s: portable_term_signum:0x%x:'%s'", __func__,
+                   portable_term_signum, portable_term_signame);
         mips_term_signum = signum_pton(portable_term_signum);
         mips_term_signame = map_mips_signum_to_name(mips_term_signum);
+        ALOGV("%s: mips_term_signum:0x%x:'%s'", __func__,
+                   mips_term_signum, mips_term_signame);
         mips_flags = (port_flags & ~0xFF) | (mips_term_signum & 0xFF);
     }
+    ALOGV("%s: clone(%p, %p, 0x%x, %p, %p, %p, %p);", __func__,
+           fn, child_stack, mips_flags, arg, parent_tidptr, new_tls, child_tidptr);
 
     ret = clone(fn, child_stack, mips_flags, arg, parent_tidptr,
                 new_tls, child_tidptr);
+
+    if (ret > 0) {
+        /*
+         * Disable mapping in the parent if the child could interfere
+         * and make things even worse than skipping the signal and
+         * file read mapping.
+         */
+        if (cloning_files != cloning_vm) {
+            filefd_disable_mapping();
+        }
+        if (cloning_sighand != cloning_vm) {
+            signal_disable_mapping();
+        }
+    }
 
     ALOGV("%s: return(ret:%d); }", __func__, ret);
     return ret;
