@@ -124,7 +124,9 @@ static __inline__ __sighandler_portable_t signal_portable(int s, sighandler_port
 extern __sighandler_portable_t __signal_portable(int, __sighandler_portable_t);
 
 extern int sigprocmask_portable(int, const sigset_portable_t *, sigset_portable_t *);
-extern int sigaction_portable(int, const struct sigaction_portable *, struct sigaction_portable *);
+
+extern int sigaction_portable(int, const struct sigaction_portable *,
+                              struct sigaction_portable *);
 
 extern int sigpending_portable(sigset_portable_t *);
 extern int sigsuspend_portable(const sigset_portable_t *);
@@ -136,12 +138,16 @@ extern int kill_portable(pid_t, int);
 extern int killpg_portable(int pgrp, int sig);
 extern int sigaltstack_portable(const portable_stack_t *ss, portable_stack_t *oss);
 
+
 extern __hidden char *map_portable_signum_to_name(int portable_signum);
 extern __hidden char *map_mips_signum_to_name(int mips_signum);
-extern __hidden int map_portable_signum_to_mips(int portable_signum);
-extern __hidden int map_mips_signum_to_portable(int mips_signum);
+extern __hidden int signum_pton(int portable_signum);
+extern __hidden int signum_ntop(int mips_signum);
+
 typedef int (*sigmask_fn)(int, const sigset_t *, sigset_t *);
-extern __hidden int sigmask_helper(int portable_how, const sigset_portable_t *portable_sigset, sigset_portable_t *portable_oldset, sigmask_fn fn, char *fname);
+
+extern __hidden int do_sigmask(int portable_how, const sigset_portable_t *portable_sigset,
+                               sigset_portable_t *portable_oldset, sigmask_fn fn);
 
 __END_DECLS
 

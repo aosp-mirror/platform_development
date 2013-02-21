@@ -17,8 +17,9 @@
 #ifndef _IOCTLS_PORTABLE_H_
 #define _IOCTLS_PORTABLE_H_
 
-/* Derived from development/ndk/platforms/android-3/include/asm-generic/ioctl.h */
-
+/*
+ * Derived from development/ndk/platforms/android-3/include/asm-generic/ioctl.h
+ */
 #define _IOC_NRBITS_PORTABLE 8
 #define _IOC_TYPEBITS_PORTABLE 8
 #define _IOC_SIZEBITS_PORTABLE 14
@@ -38,18 +39,37 @@
 #define _IOC_WRITE_PORTABLE 1U
 #define _IOC_READ_PORTABLE 2U
 
-#define _IOC_PORTABLE(dir,type,nr,size)   (((dir) << _IOC_DIRSHIFT_PORTABLE) |   ((type) << _IOC_TYPESHIFT_PORTABLE) |   ((nr) << _IOC_NRSHIFT_PORTABLE) |   ((size) << _IOC_SIZESHIFT_PORTABLE))
+#define _IOC_PORTABLE(dir, type, nr, size) (                                            \
+    ((dir) << _IOC_DIRSHIFT_PORTABLE)    |                                              \
+    ((type) << _IOC_TYPESHIFT_PORTABLE)  |                                              \
+    ((nr) << _IOC_NRSHIFT_PORTABLE)      |                                              \
+    ((size) << _IOC_SIZESHIFT_PORTABLE)                                                 \
+)
 
 extern unsigned int __invalid_size_argument_for_IOC;
-#define _IOC_TYPECHECK_PORTABLE(t)   ((sizeof(t) == sizeof(t[1]) &&   sizeof(t) < (1 << _IOC_SIZEBITS_PORTABLE)) ?   sizeof(t) : __invalid_size_argument_for_IOC)
 
-#define _IO_PORTABLE(type,nr) _IOC_PORTABLE(_IOC_NONE_PORTABLE,(type),(nr),0)
-#define _IOR_PORTABLE(type,nr,size) _IOC_PORTABLE(_IOC_READ_PORTABLE,(type),(nr),(_IOC_TYPECHECK_PORTABLE(size)))
-#define _IOW_PORTABLE(type,nr,size) _IOC_PORTABLE(_IOC_WRITE_PORTABLE,(type),(nr),(_IOC_TYPECHECK_PORTABLE(size)))
-#define _IOWR_PORTABLE(type,nr,size) _IOC_PORTABLE(_IOC_READ_PORTABLE|_IOC_WRITE_PORTABLE,(type),(nr),(_IOC_TYPECHECK_PORTABLE(size)))
+#define _IOC_TYPECHECK_PORTABLE(t) (                                                    \
+    (sizeof(t) == sizeof(t[1]) && sizeof(t) < (1 << _IOC_SIZEBITS_PORTABLE)) ?          \
+    sizeof(t) :                                                                         \
+    __invalid_size_argument_for_IOC                                                     \
+)
 
-/* Derived from development/ndk/platforms/android-3/arch-arm/include/asm/ioctls.h */
+#define _IO_PORTABLE(type, nr) _IOC_PORTABLE(_IOC_NONE_PORTABLE, (type), (nr), 0)
 
+#define _IOR_PORTABLE(type, nr, size)                                                    \
+    _IOC_PORTABLE(_IOC_READ_PORTABLE, (type), (nr), (_IOC_TYPECHECK_PORTABLE(size)))
+
+#define _IOW_PORTABLE(type, nr, size)                                                    \
+    _IOC_PORTABLE(_IOC_WRITE_PORTABLE, (type), (nr), (_IOC_TYPECHECK_PORTABLE(size)))
+
+#define _IOWR_PORTABLE(type, nr, size)                                                   \
+    IOC_PORTABLE(_IOC_READ_PORTABLE |                                                    \
+                 _IOC_WRITE_PORTABLE, (type), (nr), (IOC_TYPECHECK_PORTABLE(size)) )
+
+
+/*
+ * Derived from development/ndk/platforms/android-3/arch-arm/include/asm/ioctls.h
+ */
 #define TCGETS_PORTABLE     0x5401
 #define TCSETS_PORTABLE     0x5402
 #define TCSETSW_PORTABLE    0x5403
@@ -121,8 +141,9 @@ extern unsigned int __invalid_size_argument_for_IOC;
 
 #define TIOCSER_TEMT_PORTABLE   0x01
 
-/* Derived from development/ndk/platforms/android-3/include/sys/ioctl_compat.h */
-
+/*
+ * Derived from development/ndk/platforms/android-3/include/sys/ioctl_compat.h
+ */
 struct tchars_portable {
         char    t_intrc;        /* interrupt */
         char    t_quitc;        /* quit */
@@ -142,11 +163,11 @@ struct ltchars_portable {
 };
 
 struct sgttyb_portable {
-        char    sg_ispeed;              /* input speed */
-        char    sg_ospeed;              /* output speed */
-        char    sg_erase;               /* erase character */
-        char    sg_kill;                /* kill character */
-        short   sg_flags;               /* mode flags */
+        char    sg_ispeed;      /* input speed */
+        char    sg_ospeed;      /* output speed */
+        char    sg_erase;       /* erase character */
+        char    sg_kill;        /* kill character */
+        short   sg_flags;       /* mode flags */
 };
 
 #ifdef USE_OLD_TTY
@@ -156,23 +177,49 @@ struct sgttyb_portable {
 # define OTIOCGETD_PORTABLE  _IOR_PORTABLE('t', 0, int)       /* get line discipline */
 # define OTIOCSETD_PORTABLE  _IOW_PORTABLE('t', 1, int)       /* set line discipline */
 #endif
-#define TIOCHPCL_PORTABLE    _IO_PORTABLE('t', 2)             /* hang up on last close */
-#define TIOCGETP_PORTABLE    _IOR_PORTABLE('t', 8,struct sgttyb_portable)/* get parameters -- gtty */
-#define TIOCSETP_PORTABLE    _IOW_PORTABLE('t', 9,struct sgttyb_portable)/* set parameters -- stty */
-#define TIOCSETN_PORTABLE    _IOW_PORTABLE('t',10,struct sgttyb_portable)/* as above, but no flushtty*/
-#define TIOCSETC_PORTABLE    _IOW_PORTABLE('t',17,struct tchars_portable)/* set special characters */
-#define TIOCGETC_PORTABLE    _IOR_PORTABLE('t',18,struct tchars_portable)/* get special characters */
 
-#define TIOCLBIS_PORTABLE    _IOW_PORTABLE('t', 127, int)     /* bis local mode bits */
-#define TIOCLBIC_PORTABLE    _IOW_PORTABLE('t', 126, int)     /* bic local mode bits */
-#define TIOCLSET_PORTABLE    _IOW_PORTABLE('t', 125, int)     /* set entire local mode word */
-#define TIOCLGET_PORTABLE    _IOR_PORTABLE('t', 124, int)     /* get local modes */
-#define TIOCSLTC_PORTABLE    _IOW_PORTABLE('t',117,struct ltchars_portable)/* set local special chars*/
-#define TIOCGLTC_PORTABLE    _IOR_PORTABLE('t',116,struct ltchars_portable)/* get local special chars*/
-#define OTIOCCONS_PORTABLE   _IO_PORTABLE('t', 98)    /* for hp300 -- sans int arg */
+/* hang up on last close */
+#define TIOCHPCL_PORTABLE    _IO_PORTABLE('t', 2)
 
-/* Derived from development/ndk/platforms/android-3/arch-arm/include/asm/sockios.h */
+/* get parameters -- gtty */
+#define TIOCGETP_PORTABLE    _IOR_PORTABLE('t', 8,struct sgttyb_portable)
 
+/* set parameters -- stty */
+#define TIOCSETP_PORTABLE    _IOW_PORTABLE('t', 9,struct sgttyb_portable)
+
+/* as above, but no flushtty*/
+#define TIOCSETN_PORTABLE    _IOW_PORTABLE('t',10,struct sgttyb_portable)
+
+/* set special characters */
+#define TIOCSETC_PORTABLE    _IOW_PORTABLE('t',17,struct tchars_portable)
+
+/* get special characters */
+#define TIOCGETC_PORTABLE    _IOR_PORTABLE('t',18,struct tchars_portable)
+
+/* bis local mode bits */
+#define TIOCLBIS_PORTABLE    _IOW_PORTABLE('t', 127, int)
+
+/* bic local mode bits */
+#define TIOCLBIC_PORTABLE    _IOW_PORTABLE('t', 126, int)
+
+/* set entire local mode word */
+#define TIOCLSET_PORTABLE    _IOW_PORTABLE('t', 125, int)
+
+/* get local modes */
+#define TIOCLGET_PORTABLE    _IOR_PORTABLE('t', 124, int)
+
+/* set local special chars*/
+#define TIOCSLTC_PORTABLE    _IOW_PORTABLE('t',117,struct ltchars_portable)
+
+/* get local special chars*/
+#define TIOCGLTC_PORTABLE    _IOR_PORTABLE('t',116,struct ltchars_portable)
+
+ /* for hp300 -- sans int arg */
+#define OTIOCCONS_PORTABLE   _IO_PORTABLE('t', 98)
+
+/*
+ * Derived from development/ndk/platforms/android-3/arch-arm/include/asm/sockios.h
+ */
 #define FIOSETOWN_PORTABLE 0x8901
 #define SIOCSPGRP_PORTABLE 0x8902
 #define FIOGETOWN_PORTABLE 0x8903
