@@ -293,7 +293,7 @@ int pthread_sigmask_portable(int portable_how, const sigset_portable_t *portable
     ALOGV("%s(portable_how:%d portable_sigset:%p, portable_oldset:%p)", __func__,
               portable_how,   portable_sigset,    portable_oldset);
 
-    ret = do_sigmask(portable_how, portable_sigset, portable_oldset, pthread_sigmask);
+    ret = do_sigmask(portable_how, portable_sigset, portable_oldset, pthread_sigmask, NULL);
 
     portable_ret = errno_ntop(ret);
 

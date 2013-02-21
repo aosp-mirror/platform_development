@@ -34,6 +34,8 @@
 #include <sys/cdefs.h>
 #include <limits.h>             /* For LONG_BIT */
 #include <string.h>             /* For memset() */
+#include <signal.h>
+#include <time.h>
 #include <sys/types.h>
 #include <asm/signal_portable.h>
 #include <asm/sigcontext_portable.h>
@@ -137,6 +139,7 @@ extern int raise_portable(int);
 extern int kill_portable(pid_t, int);
 extern int killpg_portable(int pgrp, int sig);
 extern int sigaltstack_portable(const portable_stack_t *ss, portable_stack_t *oss);
+extern int timer_create_portable(clockid_t, struct sigevent *, timer_t *);
 
 
 extern __hidden char *map_portable_signum_to_name(int portable_signum);
@@ -145,9 +148,37 @@ extern __hidden int signum_pton(int portable_signum);
 extern __hidden int signum_ntop(int mips_signum);
 
 typedef int (*sigmask_fn)(int, const sigset_t *, sigset_t *);
+typedef int (*rt_sigmask_fn)(int, const sigset_t *, sigset_t *, size_t);
+typedef int (*sigaction_fn)(int, const struct sigaction *, struct sigaction *);
+typedef int (*rt_sigaction_fn)(int, const struct sigaction *, struct sigaction *, size_t);
 
 extern __hidden int do_sigmask(int portable_how, const sigset_portable_t *portable_sigset,
-                               sigset_portable_t *portable_oldset, sigmask_fn fn);
+                               sigset_portable_t *portable_oldset, sigmask_fn fn,
+                               rt_sigmask_fn rt_fn);
+
+
+/* These functions are called from syscall.c and experimental Bionic linker. */
+extern int __rt_sigaction_portable(int portable_signum,
+                                   const struct sigaction_portable *act,
+                                   struct sigaction_portable *oldact,
+                                   size_t sigsetsize);
+
+extern int __rt_sigprocmask_portable(int portable_how,
+                                     const sigset_portable_t *portable_sigset,
+                                     sigset_portable_t *portable_oldset,
+                                     size_t sigsetsize);
+
+extern int __rt_sigtimedwait_portable(const sigset_portable_t *portable_sigset,
+                                      siginfo_portable_t *portable_siginfo,
+                                      const struct timespec *timeout,
+                                      size_t portable_sigsetsize);
+
+
+/* These functions are only called from syscall.c; not experimental Bionic linker. */
+extern __hidden int rt_sigqueueinfo_portable(pid_t pid, int sig, siginfo_portable_t *uinfo);
+
+extern __hidden int rt_tgsigqueueinfo_portable(pid_t tgid, pid_t pid, int sig,
+                                               siginfo_portable_t *uinfo);
 
 __END_DECLS
 

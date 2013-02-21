@@ -238,7 +238,7 @@ __hidden int signum_pton(int portable_signum)
          * if so we mimic the test.
          *
          * If the signal is just outside the PORTABLE range
-         * we use a signal just outside the MIPS range.
+         * we use a signal just outside the Native/MIPS range.
          */
         if (portable_signum < 0) {
             mips_signum = portable_signum;
@@ -309,8 +309,8 @@ __hidden int signum_ntop(int mips_signum)
     case SIGALRM:                       /* 14 */
         return SIGALRM_PORTABLE;
 
-    case SIGTERM_PORTABLE:              /* 15 */
-        return SIGTERM;
+    case SIGTERM:                       /* 15 */
+        return SIGTERM_PORTABLE;
 
     case SIGEMT:                        /* 16 <--- 7 */
         return SIGSTKFLT_PORTABLE;      /* No native SIGSTKFLT exist ...
@@ -362,8 +362,8 @@ __hidden int signum_ntop(int mips_signum)
     case SIGSYS:                        /* 31 <-- 12 */
         return SIGSYS_PORTABLE;
 
-    case SIGRTMIN_PORTABLE:             /* 32 */
-        return SIGRTMIN;
+    case SIGRTMIN:                      /* 32 */
+        return SIGRTMIN_PORTABLE;
 
     default:
         ALOGE("%s: switch default: mips_signum:%d Not supported! return(0);", __func__,
@@ -374,6 +374,59 @@ __hidden int signum_ntop(int mips_signum)
         return 0;
     }
     return portable_ssignum;
+}
+
+
+/*
+ * Deal with siginfo structure being a bit different.
+ * Need to swap errno and code fields.
+ */
+static void siginfo_pton(siginfo_portable_t *portable_sip, siginfo_t *native_sip)
+{
+
+    ALOGV("%s(portable_sip:%p, native_sip:%p) {", __func__,
+              portable_sip,    native_sip);
+
+    ASSERT(sizeof(siginfo_portable_t) == sizeof(siginfo_t));
+
+    /*
+     * Default to the same structure members,
+     * code and errno are swapped between ARM and MIPS,
+     * and errno needs to be translated.
+     *
+     * The signal number isn't translated, as the kernel
+     * will fill it it when it delivers the signal.
+     */
+
+    *native_sip = *((siginfo_t *)portable_sip);
+    native_sip->si_signo = 0;
+    native_sip->si_code = portable_sip->si_code;
+    native_sip->si_errno = errno_pton(portable_sip->si_errno);
+
+    ALOGV("%s: return; }", __func__);
+}
+
+
+static void siginfo_ntop(siginfo_t *native_sip, siginfo_portable_t *portable_sip)
+{
+
+    ALOGV("%s(native_sip,:%p, portable_sip:%p) {", __func__,
+              native_sip,     portable_sip);
+
+    ASSERT(sizeof(siginfo_portable_t) == sizeof(siginfo_t));
+
+    /*
+     * Structure assignment to default to the same structure members,
+     * as only the code and errno are swapped in position between
+     * ARM and MIPS; errno and signal number also need to be translated.
+     */
+    *portable_sip = *((siginfo_portable_t *)native_sip);
+
+    portable_sip->si_signo = signum_ntop(native_sip->si_signo);
+    portable_sip->si_code = native_sip->si_code;
+    portable_sip->si_errno = errno_ntop(native_sip->si_errno);
+
+    ALOGV("%s: return; }", __func__);
 }
 
 
@@ -411,32 +464,10 @@ static void mips_sigaction_handler(int mips_signum, siginfo_t *sip, void *ucp)
     if (sip == NULL) {
         portable_sip = NULL;
     } else {
-        int portable_si_errno;
-        int portable_si_signo;
-        char *mips_si_signame;
-        char *portable_si_signame;
-
-        /*
-         * Map Structure members from MIPS to Portable.
-         */
-        portable_si_signo = signum_ntop(sip->si_signo);
-        portable_si_signame = map_portable_signum_to_name(portable_si_signo);
-        portable_si_errno = errno_ntop(sip->si_errno);
-
-        mips_si_signame = map_mips_signum_to_name(sip->si_signo);
-
-        /*
-         * Deal with siginfo structure being a bit different.
-         * Default to the same structure members.
-         */
-        ASSERT(sizeof(siginfo_portable_t) == sizeof(siginfo_t));
-        memcpy(&portable_si, sip, sizeof(portable_si));
-        portable_si.si_signo = portable_si_signo;
-        portable_si.si_code = sip->si_code;           /* code and errno are swapped and ... */
-        portable_si.si_errno = portable_si_errno;     /* ... errno needs to be translated. */
-
+        /* Map signinfo from native to portable format */
         portable_sip = &portable_si;
-    } /* if sip */
+        siginfo_ntop(sip, portable_sip);
+    }
 
     portable_sighandler(portable_signum, portable_sip, ucp);
 
@@ -888,11 +919,13 @@ int sigaction_flags_ntop(int mips_flags)
  * numbers.
  */
 static int do_sigaction_portable(int portable_signum, const struct sigaction_portable *act,
-                                 struct sigaction_portable *oldact)
+                                 struct sigaction_portable *oldact, sigaction_fn fn,
+                                 rt_sigaction_fn rt_fn)
 {
     int mips_signum;
     char *mips_signame;
     struct sigaction mips_act;
+    struct sigaction *mips_act_ptr;
     struct sigaction mips_oldact;
     sighandler_t mips_handler;
     sighandler_portable_t portable_handler;
@@ -900,9 +933,9 @@ static int do_sigaction_portable(int portable_signum, const struct sigaction_por
     char *portable_signame = map_portable_signum_to_name(portable_signum);
     int rv;
 
-    ALOGV("%s(portable_signum:%d:'%s', act:%p, oldact:%p) {", __func__,
+    ALOGV("%s(portable_signum:%d:'%s', act:%p, oldact:%p, fn:%p, rt_fn:%p) {", __func__,
               portable_signum,
-              portable_signame,        act,    oldact);
+              portable_signame,        act,    oldact,    fn,    rt_fn);
 
     mips_signum = signum_pton(portable_signum);
     mips_signame = map_mips_signum_to_name(mips_signum);
@@ -920,7 +953,7 @@ static int do_sigaction_portable(int portable_signum, const struct sigaction_por
     memset(&mips_act, 0, sizeof(mips_act));
 
     if (invalid_pointer((void *)act)) {
-        rv = sigaction(mips_signum, (struct sigaction *)act, &mips_oldact);
+        mips_act_ptr = (struct sigaction *)act;
     } else {
         /*
          * Make the MIPS version of sigaction, which has no sa_restorer function pointer.
@@ -964,7 +997,15 @@ static int do_sigaction_portable(int portable_signum, const struct sigaction_por
                 mips_act.sa_handler = mips_handler;
             }
         }
-        rv = sigaction(mips_signum, &mips_act, &mips_oldact);
+        mips_act_ptr = &mips_act;
+    }
+
+    if (fn != NULL) {
+        ASSERT(rt_fn == NULL);
+        rv = fn(mips_signum, mips_act_ptr, &mips_oldact);
+    } else {
+        ASSERT(rt_fn != NULL);
+        rv = rt_fn(mips_signum, mips_act_ptr, &mips_oldact, sizeof(sigset_t));
     }
 
     if (oldact) {
@@ -999,7 +1040,7 @@ int sigaction_portable(int portable_signum, const struct sigaction_portable *act
     ALOGV("%s(portable_signum:%d, act:%p, oldact:%p) {", __func__,
               portable_signum,    act,    oldact);
 
-    rv = do_sigaction_portable(portable_signum, act, oldact);
+    rv = do_sigaction_portable(portable_signum, act, oldact, sigaction, NULL);
 
     ALOGV("%s: return(rv:%d); }", __func__, rv);
     return rv;
@@ -1113,7 +1154,8 @@ int siginterrupt_portable(int portable_signum, int flag)
 
 
 __hidden int do_sigmask(int portable_how, const sigset_portable_t *portable_sigset,
-                        sigset_portable_t *portable_oldset, sigmask_fn fn)
+                        sigset_portable_t *portable_oldset, sigmask_fn fn,
+                        rt_sigmask_fn rt_fn)
 {
     int rv;
     int how;
@@ -1121,8 +1163,8 @@ __hidden int do_sigmask(int portable_how, const sigset_portable_t *portable_sigs
     sigset_t mips_sigset, *mips_sigset_p;
     sigset_t mips_oldset, *mips_oldset_p;
 
-    ALOGV("%s(portable_how:%d, portable_sigset:%p, portable_oldset:%p, fn:%p) {", __func__,
-              portable_how,    portable_sigset,    portable_oldset,    fn);
+    ALOGV("%s(portable_how:%d, portable_sigset:%p, portable_oldset:%p, fn:%p, rt_fn:%p) {",
+    __func__, portable_how,    portable_sigset,    portable_oldset,    fn,    rt_fn);
 
     switch(portable_how) {
     case SIG_BLOCK_PORTABLE:    how = SIG_BLOCK;        how_name = "SIG_BLOCK";         break;
@@ -1152,7 +1194,13 @@ __hidden int do_sigmask(int portable_how, const sigset_portable_t *portable_sigs
         sigemptyset(mips_oldset_p);
     }
 
-    rv = fn(how, mips_sigset_p, mips_oldset_p);
+    if (fn != NULL) {
+        ASSERT(rt_fn == NULL);
+        rv = fn(how, mips_sigset_p, mips_oldset_p);
+    } else {
+        ASSERT(rt_fn != NULL);
+        rv = rt_fn(how, mips_sigset_p, mips_oldset_p, sizeof(sigset_t));
+    }
 
     if (rv == 0 && !invalid_pointer(portable_oldset)) {
         /* Map returned mips_oldset to portable_oldset for return to caller */
@@ -1173,13 +1221,224 @@ int sigprocmask_portable(int portable_how, const sigset_portable_t *portable_sig
     ALOGV("%s(portable_how:%d, portable_sigset:%p, portable_oldset:%p) {", __func__,
               portable_how,    portable_sigset,    portable_oldset);
 
-    rv = do_sigmask(portable_how, portable_sigset, portable_oldset, sigprocmask);
+    rv = do_sigmask(portable_how, portable_sigset, portable_oldset, sigprocmask, NULL);
 
     ALOGV("%s: return(rv:%d); }", __func__, rv);
     return rv;
 }
 
 
+int __rt_sigaction_portable(int portable_signum, const struct sigaction_portable *act,
+                            struct sigaction_portable *oldact, size_t sigsetsize)
+{
+    extern int __rt_sigaction(int , const struct sigaction *, struct sigaction *, size_t);
+    int rv;
+
+    ALOGV(" ");
+    ALOGV("%s(portable_signum:%d, act:%p, oldset:%p, sigsetsize:%d) {", __func__,
+              portable_signum,    act,    oldact,    sigsetsize);
+
+    /* NOTE: ARM kernel is expecting sizeof(sigset_t) to be 8 bytes */
+    if (sigsetsize != (2* sizeof(long))) {
+        errno = EINVAL;
+        rv = -1;
+        goto done;
+    }
+    rv = do_sigaction_portable(portable_signum, act, oldact, NULL, __rt_sigaction);
+
+done:
+    ALOGV("%s: return(rv:%d); }", __func__, rv);
+    return rv;
+}
+
+int __rt_sigprocmask_portable(int portable_how,
+                              const sigset_portable_t *portable_sigset,
+                              sigset_portable_t *portable_oldset,
+                              size_t sigsetsize)
+{
+    extern int __rt_sigprocmask(int, const sigset_t *, sigset_t *, size_t);
+    int rv;
+
+    ALOGV(" ");
+    ALOGV("%s(portable_how:%d, portable_sigset:%p, portable_oldset:%p, sigsetsize:%d) {",
+    __func__, portable_how,    portable_sigset,    portable_oldset,    sigsetsize);
+
+    /* NOTE: ARM kernel is expecting sizeof(sigset_t) to be 8 bytes */
+    if (sigsetsize != (2* sizeof(long))) {
+        errno = EINVAL;
+        rv = -1;
+        goto done;
+    }
+    rv = do_sigmask(portable_how, portable_sigset, portable_oldset, NULL, __rt_sigprocmask);
+
+ done:
+    ALOGV("%s: return(rv:%d); }", __func__, rv);
+
+    return rv;
+}
+
+
+int __rt_sigtimedwait_portable(const sigset_portable_t *portable_sigset,
+                               siginfo_portable_t *portable_siginfo,
+                               const struct timespec *timeout,
+                               size_t portable_sigsetsize)
+{
+    extern int __rt_sigtimedwait(const sigset_t *, siginfo_t *, const struct timespec *, size_t);
+
+    sigset_t native_sigset_struct;
+    sigset_t *native_sigset = &native_sigset_struct;
+    siginfo_t native_siginfo_struct;
+    siginfo_t *native_siginfo;
+    int rv;
+
+    ALOGV(" ");
+    ALOGV("%s(portable_sigset:%p, portable_siginfo:%p, timeout:%p, portable_sigsetsize:%d) {",
+    __func__, portable_sigset,    portable_siginfo,    timeout,    portable_sigsetsize);
+
+    /* NOTE: ARM kernel is expecting sizeof(sigset_t) to be 8 bytes */
+    if (portable_sigsetsize != (2* sizeof(long))) {
+        errno = EINVAL;
+        rv = -1;
+        goto done;
+    }
+    if (portable_sigset == NULL) {
+        native_sigset = NULL;
+    } else {
+        sigset_pton((sigset_portable_t *)portable_sigset, native_sigset);
+    }
+    if (portable_siginfo == NULL) {
+        native_siginfo = NULL;
+    } else {
+        native_siginfo = &native_siginfo_struct;
+    }
+    rv = __rt_sigtimedwait(native_sigset, native_siginfo, timeout, sizeof(sigset_t));
+    if (rv == 0 && native_siginfo != NULL) {
+        /* Map siginfo struct from native to portable format. */
+        siginfo_ntop(native_siginfo, portable_siginfo);
+    }
+
+done:
+    ALOGV("%s: return(rv:%d); }", __func__, rv);
+    return rv;
+}
+
+
+#ifdef  __NR_rt_sigqueueinfo
+
+#if 0
+/*
+ * sigqueue():
+ *    This function became available in UNIX GLIBC after 1993.
+ *    It's not available in any versions of Android yet, and
+ *    it can't be called via syscall(). It's been useful for
+ *    testing with the LTP by the posix testsuite, and tests
+ *    show that it works fine.
+ *
+ * NOTE:
+ *    Android has in incorrect limit on the number of queueable signals
+ *    defined in libc/unistd/sysconf.c:
+ *
+ *        #define  SYSTEM_SIGQUEUE_MAX    32
+ *
+ *    sigqueue() must return EAGAIN if exceeded and we don't on Android.
+ */
+int sigqueue_portable(pid_t pid, int portable_sig, const union sigval value)
+{
+    siginfo_t native_siginfo;
+    siginfo_t *native_sip;
+    siginfo_portable_t portable_siginfo;
+    siginfo_portable_t *portable_sip;
+    int native_sig;
+    int rv;
+
+    ALOGV(" ");
+    ALOGV("%s(pid:%d, portable_sig:%d, value:%p) {", __func__,
+              pid,    portable_sig,    value.sival_ptr);
+
+    native_sig = signum_pton(portable_sig);
+    native_sip = &native_siginfo;
+
+    portable_sip = &portable_siginfo;
+    portable_sip->si_signo = 0;                 /* Filled in by the kernel */
+    portable_sip->si_code = SI_QUEUE;
+    portable_sip->si_pid = getpid();            /* Process ID of sender */
+    portable_sip->si_uid = getuid();            /* Real UID of sender */
+    portable_sip->si_value = value;             /* Last arg supplied */
+
+    siginfo_pton(portable_sip, native_sip);
+
+    /*
+     * man page says sigqueue() is implemented via rt_sigqueueinfo().
+     */
+    ALOGV("%s: calling syscall(__NR_rt_sigqueueinfo:%d, pid:%d, native_sig:%d, native_sip:%p);",
+           __func__,           __NR_rt_sigqueueinfo,    pid,    native_sig,    native_sip);
+
+    rv = syscall(__NR_rt_sigqueueinfo, pid, native_sig, native_sip);
+
+    ALOGV("%s: return(rv:%d); }", __func__, rv);
+    return rv;
+}
+#endif
+
+
+/*
+ * Real Time version of sigqueueinfo().
+ */
+int rt_sigqueueinfo_portable(pid_t pid, int portable_sig, siginfo_portable_t *portable_sip)
+{
+    int native_sig;
+    siginfo_t native_siginfo, *native_sip;
+    int rv;
+
+    ALOGV(" ");
+    ALOGV("%s(pid:%d, portable_sig:%d, portable_sip:%p) {", __func__,
+              pid,    portable_sig,    portable_sip);
+
+    native_sig = signum_pton(portable_sig);
+
+    if (portable_sip != NULL) {
+        native_sip = &native_siginfo;
+        siginfo_pton(portable_sip, native_sip);
+    } else {
+        native_sip = NULL;
+    }
+    rv = syscall(__NR_rt_sigqueueinfo, pid, native_sig, native_sip);
+
+    ALOGV("%s: return(rv:%d); }", __func__, rv);
+    return rv;
+}
+#endif /* __NR_rt_sigqueueinfo */
+
+
+#ifdef __NR_rt_tgsigqueueinfo
+/*
+ * Thread Group flavor of the real time version of sigqueueinfo().
+ */
+int rt_tgsigqueueinfo_portable(pid_t tgid, pid_t pid, int portable_sig,
+                               siginfo_portable_t *portable_sip)
+{
+    siginfo_t native_siginfo, *native_sip;
+    int native_sig;
+    int rv;
+
+    ALOGV(" ");
+    ALOGV("%s(tgid:%d, pid:%d, portable_sig:%d, portable_sip:%p) {", __func__,
+              tgid,    pid,    portable_sig,    portable_sip);
+
+    native_sig = signum_pton(portable_sig);
+
+    if (portable_sip != NULL) {
+        native_sip = &native_siginfo;
+        siginfo_pton(portable_sip, native_sip);
+    } else {
+        native_sip = NULL;
+    }
+    rv = syscall(__NR_rt_tgsigqueueinfo, pid, native_sig, native_sip);
+
+    ALOGV("%s: return(rv:%d); }", __func__, rv);
+    return rv;
+}
+#endif /* __NR_rt_tgsigqueueinfo */
 
 
 /*
@@ -1244,5 +1503,3 @@ int sigaltstack_portable(const portable_stack_t *ss, portable_stack_t *oss)
 
     return rv;
 }
-
-
