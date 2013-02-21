@@ -16,6 +16,8 @@
 
 package com.example.android.bitmapfun.util;
 
+import com.example.android.bitmapfun.BuildConfig;
+
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
@@ -24,11 +26,10 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.TransitionDrawable;
+import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.util.Log;
 import android.widget.ImageView;
-
-import com.example.android.bitmapfun.BuildConfig;
 
 import java.lang.ref.WeakReference;
 
@@ -62,11 +63,11 @@ public abstract class ImageWorker {
 
     /**
      * Load an image specified by the data parameter into an ImageView (override
-     * {@link ImageWorker#processBitmap(Object)} to define the processing logic). A memory and disk
-     * cache will be used if an {@link ImageCache} has been set using
-     * {@link ImageWorker#setImageCache(ImageCache)}. If the image is found in the memory cache, it
-     * is set immediately, otherwise an {@link AsyncTask} will be created to asynchronously load the
-     * bitmap.
+     * {@link ImageWorker#processBitmap(Object)} to define the processing logic). A memory and
+     * disk cache will be used if an {@link ImageCache} has been added using
+     * {@link ImageWorker#addImageCache(FragmentManager, ImageCache.ImageCacheParams)}. If the
+     * image is found in the memory cache, it is set immediately, otherwise an {@link AsyncTask}
+     * will be created to asynchronously load the bitmap.
      *
      * @param data The URL of the image to download.
      * @param imageView The ImageView to bind the downloaded image to.
@@ -117,28 +118,29 @@ public abstract class ImageWorker {
     }
 
     /**
-     * Adds an {@link ImageCache} to this worker in the background (to prevent disk access on UI
-     * thread).
+     * Adds an {@link ImageCache} to this {@link ImageWorker} to handle disk and memory bitmap
+     * caching.
      * @param fragmentManager
-     * @param cacheParams
+     * @param cacheParams The cache parameters to use for the image cache.
      */
     public void addImageCache(FragmentManager fragmentManager,
             ImageCache.ImageCacheParams cacheParams) {
         mImageCacheParams = cacheParams;
-        setImageCache(ImageCache.findOrCreateCache(fragmentManager, mImageCacheParams));
+        mImageCache = ImageCache.getInstance(fragmentManager, mImageCacheParams);
         new CacheAsyncTask().execute(MESSAGE_INIT_DISK_CACHE);
     }
 
     /**
-     * Sets the {@link ImageCache} object to use with this ImageWorker. Usually you will not need
-     * to call this directly, instead use {@link ImageWorker#addImageCache} which will create and
-     * add the {@link ImageCache} object in a background thread (to ensure no disk access on the
-     * main/UI thread).
-     *
-     * @param imageCache
+     * Adds an {@link ImageCache} to this {@link ImageWorker} to handle disk and memory bitmap
+     * caching.
+     * @param activity
+     * @param diskCacheDirectoryName See
+     * {@link ImageCache.ImageCacheParams#ImageCacheParams(Context, String)}.
      */
-    public void setImageCache(ImageCache imageCache) {
-        mImageCache = imageCache;
+    public void addImageCache(FragmentActivity activity, String diskCacheDirectoryName) {
+        mImageCacheParams = new ImageCache.ImageCacheParams(activity, diskCacheDirectoryName);
+        mImageCache = ImageCache.getInstance(activity.getSupportFragmentManager(), mImageCacheParams);
+        new CacheAsyncTask().execute(MESSAGE_INIT_DISK_CACHE);
     }
 
     /**
