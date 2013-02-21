@@ -94,6 +94,40 @@ __hidden char *map_portable_signum_to_name(int portable_signum)
     case SIGPWR_PORTABLE:       name = "SIGPWR_PORTABLE:30";            break;
     case SIGSYS_PORTABLE:       name = "SIGSYS_PORTABLE:31";            break;
     case SIGRTMIN_PORTABLE:     name = "SIGRTMIN_PORTABLE:32";          break;
+
+    case SIGRT_1_PORTABLE:      name = "SIGRT_1_PORTABLE:33";           break;
+    case SIGRT_2_PORTABLE:      name = "SIGRT_2_PORTABLE:34";           break;
+    case SIGRT_3_PORTABLE:      name = "SIGRT_3_PORTABLE:35";           break;
+    case SIGRT_4_PORTABLE:      name = "SIGRT_4_PORTABLE:36";           break;
+    case SIGRT_5_PORTABLE:      name = "SIGRT_5_PORTABLE:37";           break;
+    case SIGRT_6_PORTABLE:      name = "SIGRT_6_PORTABLE:38";           break;
+    case SIGRT_7_PORTABLE:      name = "SIGRT_7_PORTABLE:39";           break;
+    case SIGRT_8_PORTABLE:      name = "SIGRT_8_PORTABLE:40";           break;
+    case SIGRT_9_PORTABLE:      name = "SIGRT_9_PORTABLE:41";           break;
+    case SIGRT_10_PORTABLE:     name = "SIGRT_10_PORTABLE:42";          break;
+    case SIGRT_11_PORTABLE:     name = "SIGRT_11_PORTABLE:43";          break;
+    case SIGRT_12_PORTABLE:     name = "SIGRT_12_PORTABLE:44";          break;
+    case SIGRT_13_PORTABLE:     name = "SIGRT_13_PORTABLE:45";          break;
+    case SIGRT_14_PORTABLE:     name = "SIGRT_14_PORTABLE:46";          break;
+    case SIGRT_15_PORTABLE:     name = "SIGRT_15_PORTABLE:47";          break;
+    case SIGRT_16_PORTABLE:     name = "SIGRT_16_PORTABLE:48";          break;
+    case SIGRT_17_PORTABLE:     name = "SIGRT_17_PORTABLE:49";          break;
+    case SIGRT_18_PORTABLE:     name = "SIGRT_18_PORTABLE:50";          break;
+    case SIGRT_19_PORTABLE:     name = "SIGRT_19_PORTABLE:51";          break;
+    case SIGRT_20_PORTABLE:     name = "SIGRT_20_PORTABLE:52";          break;
+    case SIGRT_21_PORTABLE:     name = "SIGRT_21_PORTABLE:53";          break;
+    case SIGRT_22_PORTABLE:     name = "SIGRT_22_PORTABLE:54";          break;
+    case SIGRT_23_PORTABLE:     name = "SIGRT_23_PORTABLE:55";          break;
+    case SIGRT_24_PORTABLE:     name = "SIGRT_24_PORTABLE:56";          break;
+    case SIGRT_25_PORTABLE:     name = "SIGRT_25_PORTABLE:57";          break;
+    case SIGRT_26_PORTABLE:     name = "SIGRT_26_PORTABLE:58";          break;
+    case SIGRT_27_PORTABLE:     name = "SIGRT_27_PORTABLE:59";          break;
+    case SIGRT_28_PORTABLE:     name = "SIGRT_28_PORTABLE:60";          break;
+    case SIGRT_29_PORTABLE:     name = "SIGRT_29_PORTABLE:61";          break;
+    case SIGRT_30_PORTABLE:     name = "SIGRT_30_PORTABLE:62";          break;
+    case SIGRT_31_PORTABLE:     name = "SIGRT_31_PORTABLE:63";          break;
+    case SIGRTMAX_PORTABLE:     name = "SIGRTMAX_PORTABLE:64";          break;
+
     default:                    name = "<<UNKNOWN>>";                   break;
     }
     return name;
@@ -138,6 +172,42 @@ __hidden char *map_mips_signum_to_name(int mips_signum)
     case SIGXFSZ:       name = "SIGXFSZ:31";    break;
 
     case SIGRTMIN:      name = "SIGRTMIN:32";   break;
+    case SIGRT_1:       name = "SIGRT_1:33";    break;
+    case SIGRT_2:       name = "SIGRT_2:34";    break;
+    case SIGRT_3:       name = "SIGRT_3:35";    break;
+    case SIGRT_4:       name = "SIGRT_4:36";    break;
+    case SIGRT_5:       name = "SIGRT_5:37";    break;
+    case SIGRT_6:       name = "SIGRT_6:38";    break;
+    case SIGRT_7:       name = "SIGRT_7:39";    break;
+    case SIGRT_8:       name = "SIGRT_8:40";    break;
+    case SIGRT_9:       name = "SIGRT_9:41";    break;
+    case SIGRT_10:      name = "SIGRT_10:42";   break;
+    case SIGRT_11:      name = "SIGRT_11:43";   break;
+    case SIGRT_12:      name = "SIGRT_12:44";   break;
+    case SIGRT_13:      name = "SIGRT_13:45";   break;
+    case SIGRT_14:      name = "SIGRT_14:46";   break;
+    case SIGRT_15:      name = "SIGRT_15:47";   break;
+    case SIGRT_16:      name = "SIGRT_16:48";   break;
+    case SIGRT_17:      name = "SIGRT_17:49";   break;
+    case SIGRT_18:      name = "SIGRT_18:50";   break;
+    case SIGRT_19:      name = "SIGRT_19:51";   break;
+    case SIGRT_20:      name = "SIGRT_20:52";   break;
+    case SIGRT_21:      name = "SIGRT_21:53";   break;
+    case SIGRT_22:      name = "SIGRT_22:54";   break;
+    case SIGRT_23:      name = "SIGRT_23:55";   break;
+    case SIGRT_24:      name = "SIGRT_24:56";   break;
+    case SIGRT_25:      name = "SIGRT_25:57";   break;
+    case SIGRT_26:      name = "SIGRT_26:58";   break;
+    case SIGRT_27:      name = "SIGRT_27:59";   break;
+    case SIGRT_28:      name = "SIGRT_28:60";   break;
+    case SIGRT_29:      name = "SIGRT_29:61";   break;
+    case SIGRT_30:      name = "SIGRT_30:62";   break;
+    case SIGRT_31:      name = "SIGRT_31:63";   break;
+    case SIGRT_32:      name = "SIGRT_32:64";   break;
+
+    /* NOTE: SIGRT_33...SIGRTMAX-1 Not printed */
+
+    case SIGRTMAX:      name = "SIGRTMAX:128";  break;
     default:            name = "<<UNKNOWN>>";   break;
     }
     return name;
@@ -204,8 +274,8 @@ __hidden int signum_pton(int portable_signum)
     case SIGCHLD_PORTABLE:              /* 17 --> 18 */
         return SIGCHLD;
 
-    case SIGCONT_PORTABLE:
-        return SIGCONT;                 /* 18 --> 25 */
+    case SIGCONT_PORTABLE:              /* 18 --> 25 */
+        return SIGCONT;
 
     case SIGSTOP_PORTABLE:              /* 19 --> 23 */
         return SIGSTOP;
@@ -245,9 +315,14 @@ __hidden int signum_pton(int portable_signum)
 
     case SIGSYS_PORTABLE:               /* 31 --> 12 */
         return SIGSYS;
-
-    case SIGRTMIN_PORTABLE:             /* 32 */
-        return SIGRTMIN;
+    /*
+     * Mapping lower 32 Real Time signals to identical Native signal numbers.
+     * NOTE: SIGRTMAX_PORTABLE == 64 but SIGRTMAX == 128.
+     */
+    case SIGRTMIN_PORTABLE...SIGRTMAX_PORTABLE:         /* 32 ... 64 */
+        ASSERT(SIGRTMIN_PORTABLE == SIGRTMIN);
+        ASSERT(SIGRTMAX_PORTABLE <= SIGRTMAX);
+        return portable_signum;
 
     default:
         ALOGE("%s: switch default: NOTE portable_signum:%d Not supported. Just a Test?",
@@ -381,8 +456,31 @@ __hidden int signum_ntop(int mips_signum)
     case SIGSYS:                        /* 31 <-- 12 */
         return SIGSYS_PORTABLE;
 
-    case SIGRTMIN:                      /* 32 */
-        return SIGRTMIN_PORTABLE;
+    /*
+     * Mapping lower 32 Real Time signals to identical Portable signal numbers.
+     * NOTE: SIGRTMAX_PORTABLE == 64 but SIGRTMAX == 128.
+     */
+    case SIGRTMIN...SIGRTMAX_PORTABLE:              /* 32 ... 64 */
+        ASSERT(SIGRTMIN == SIGRTMIN_PORTABLE);
+        ASSERT(SIGRTMAX >= SIGRTMAX_PORTABLE);
+        return mips_signum;
+
+   /*
+    * Mapping upper 63 Native Real Time signals to the last Portable signal number.
+    * Shouldn't even be possible to be using these signals.
+    */
+    case (SIGRTMAX_PORTABLE+1)...SIGRTMAX:          /* 65 ... 128 */
+        ASSERT(SIGRTMIN == SIGRTMIN_PORTABLE);
+        ASSERT(SIGRTMAX >= SIGRTMAX_PORTABLE);
+
+        ALOGE("%s: mips_signum:%d Can't be mapped to a unique portable signal;", __func__,
+                   mips_signum);
+
+        ALOGE("%s: Mapping highest 63 Real Time Signals to the largest RT Portable SigNo.",
+                __func__);
+
+        return SIGRTMAX_PORTABLE;
+
 
     default:
         ALOGE("%s: switch default: mips_signum:%d Not supported! return(0);", __func__,
@@ -455,7 +553,7 @@ static void siginfo_ntop(siginfo_t *native_sip, siginfo_portable_t *portable_sip
  * to have our own handler to map the MIPS signal number to a
  * portable signal number.
  */
-sig3handler_portable_t mips_portable_sighandler[NSIG_PORTABLE] = { NULL };
+static sig3handler_portable_t mips_portable_sighandler[NSIG_PORTABLE + 1] = { NULL };
 
 static void mips_sigaction_handler(int mips_signum, siginfo_t *sip, void *ucp)
 {
@@ -475,10 +573,20 @@ static void mips_sigaction_handler(int mips_signum, siginfo_t *sip, void *ucp)
     portable_signame = map_portable_signum_to_name(portable_signum);
     portable_sighandler = mips_portable_sighandler[portable_signum];
 
+    if (invalid_pointer(portable_sighandler)) {
+        /*
+         * If a portable/ARM application tries to set signals in the signal mask > 32
+         * it results in a signal_handler being set to -1:SIG_ERR. Calling a function
+         * at location -1 doesn't produce very informative Android backtraces on MIPS.
+         */
+        ALOGE("%s: invalid_pointer(portable_sighandler:%p); Likely about to Trap or Bus Error!",
+                __func__,          portable_sighandler);
+
+        ALOGE("%s: HINT: Likely best to use gdbserver and look at sigaction arguments.", __func__);
+    }
     ASSERT(portable_sighandler != NULL);
     ASSERT(portable_sighandler != (sig3handler_portable_t) SIG_DFL);
     ASSERT(portable_sighandler != (sig3handler_portable_t) SIG_IGN);
-    ASSERT(portable_sighandler != (sig3handler_portable_t) SIG_ERR);
 
     if (sip == NULL) {
         portable_sip = NULL;
@@ -524,20 +632,29 @@ static sighandler_t sighandler_pton(sighandler_portable_t portable_handler, int 
     switch((int) portable_handler) {
     case (int) SIG_DFL:
     case (int) SIG_IGN:
-    case (int) SIG_ERR:
         mips_handler = portable_handler;
         break;
 
-    default:
+    default:    /* NOTE: Includes SIG_ERR:-1 */
+        if (invalid_pointer(portable_handler)) {
+            /*
+             * Calling sigaction() with a bogus signal handler doesn't fail,
+             * so we let the portable cases fail later as the native case would.
+             */
+            ALOGE("%s: invalid_pointer(portable_handler:%p)!", __func__, portable_handler);
+            ALOGE("%s: HINT: Likely to cause a BUS Error ....", __func__);
+            ALOGE("%s: HINT: ... when the signal handler is called!", __func__);
+        }
+
         /*
          * Signal Mapping can be disabled in the rare case of the clone
          * flags not being compatble for VM and file descriptors.
          */
         if (signal_handler_mapping_enabled) {
             if (sigaction)
-                mips_handler = (sighandler_t) mips_sighandler;
-            else
                 mips_handler = (sighandler_t) mips_sigaction_handler;
+            else
+                mips_handler = (sighandler_t) mips_sighandler;
         } else {
             mips_handler = portable_handler;        /* Don't MAP */
         }
@@ -982,7 +1099,7 @@ static int do_sigaction_portable(int portable_signum, const struct sigaction_por
         rv = 0;
         goto done;
     }
-    if (portable_signum >= 0 && portable_signum < NSIG_PORTABLE)
+    if (portable_signum > 0 && portable_signum <= NSIG_PORTABLE)
         prev_portable_handler = mips_portable_sighandler[portable_signum];
     else
         prev_portable_handler = NULL;
@@ -1006,21 +1123,26 @@ static int do_sigaction_portable(int portable_signum, const struct sigaction_por
             /*
              * Providing the three argument version of a signal handler.
              */
-            if (portable_signum >= 0 && portable_signum < NSIG_PORTABLE) {
-                mips_portable_sighandler[portable_signum] =
-                                (sig3handler_portable_t) act->sa_sigaction_portable;
-
-                mips_act.sa_sigaction = mips_sigaction_handler;
-            }
-            else {
-                mips_act.sa_sigaction = act->sa_sigaction_portable;
+            portable_handler = (sighandler_portable_t) act->sa_sigaction_portable;
+            if ((portable_signum <= 0) || (portable_signum > NSIG_PORTABLE)) {
+                /*
+                 * Let the kernel generate the proper return value and set errno.
+                 */
+                mips_act.sa_sigaction = (sig3handler_t) portable_handler;
+            } else {
+                mips_handler = sighandler_pton(portable_handler, 1);
+                if (mips_handler != portable_handler) {
+                    mips_portable_sighandler[portable_signum] =
+                                                       (sig3handler_portable_t) portable_handler;
+                }
+                mips_act.sa_sigaction = (sig3handler_t) mips_handler;
             }
         } else {
             /*
              * Providing the classic single argument version of a signal handler.
              */
             portable_handler = act->sa_handler_portable;
-            if ((portable_signum < 0) || (portable_signum > NSIG_PORTABLE)) {
+            if ((portable_signum <= 0) || (portable_signum > NSIG_PORTABLE)) {
                 /*
                  * Let the kernel generate the proper return value and set errno.
                  */
@@ -1045,7 +1167,7 @@ static int do_sigaction_portable(int portable_signum, const struct sigaction_por
         rv = rt_fn(mips_signum, mips_act_ptr, &mips_oldact, sizeof(sigset_t));
     }
 
-    if (oldact) {
+    if (rv == 0 && oldact) {
         if (mips_oldact.sa_sigaction == (__sigaction_handler_portable_t) mips_sigaction_handler ||
             mips_oldact.sa_sigaction == (__sigaction_handler_portable_t) mips_sighandler) {
 
