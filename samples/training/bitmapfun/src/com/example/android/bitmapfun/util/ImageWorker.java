@@ -165,6 +165,13 @@ public abstract class ImageWorker {
     protected abstract Bitmap processBitmap(Object data);
 
     /**
+     * @return The {@link ImageCache} object currently being used by this ImageWorker.
+     */
+    protected ImageCache getImageCache() {
+        return mImageCache;
+    }
+
+    /**
      * Cancels any pending work attached to the provided ImageView.
      * @param imageView
      */
