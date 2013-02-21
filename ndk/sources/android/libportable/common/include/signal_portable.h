@@ -138,6 +138,7 @@ extern int siginterrupt_portable(int  sig, int  flag);
 extern int raise_portable(int);
 extern int kill_portable(pid_t, int);
 extern int killpg_portable(int pgrp, int sig);
+extern int tkill_portable(int tid, int portable_signum);
 extern int sigaltstack_portable(const portable_stack_t *ss, portable_stack_t *oss);
 extern int timer_create_portable(clockid_t, struct sigevent *, timer_t *);
 
