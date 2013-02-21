@@ -61,7 +61,7 @@
         ALOGV(" ");                                             \
         ALOGV("%s" fmt, __func__, STRIP_PARENS(CALLARGS));      \
         rv = fn CALLARGS;                                       \
-        portable_rv = ntop_errno(rv);                           \
+        portable_rv = errno_ntop(rv);                           \
         ALOGV("%s: return(portable_rv:%d); rv:%d;", __func__,   \
                           portable_rv,     rv);                 \
         return portable_rv;                                     \
@@ -276,9 +276,9 @@ int pthread_kill_portable(pthread_t thread, int portable_signum)
                                         thread,     mips_signum);
         ret = pthread_kill(thread, mips_signum);
     }
-    portable_ret = ntop_errno(ret);
+    portable_ret = errno_ntop(ret);
 
-    ALOGV("%s: return portable_ret:%d; ret:%d;", __func__, \
+    ALOGV("%s: return portable_ret:%d; ret:%d;", __func__,
                       portable_ret,    ret);
 
     return portable_ret;
@@ -295,7 +295,7 @@ int pthread_sigmask_portable(int portable_how, const sigset_portable_t *portable
 
     ret = do_sigmask(portable_how, portable_sigset, portable_oldset, pthread_sigmask);
 
-    portable_ret = ntop_errno(ret);
+    portable_ret = errno_ntop(ret);
 
     ALOGV("%s: return portable_ret:%d; ret:%d;", __func__,
                       portable_ret,    ret);
@@ -311,4 +311,3 @@ PTHREAD_WRAPPER(pthread_once, (pthread_once_t *once_control, void (*init_routine
 
 PTHREAD_WRAPPER(pthread_setname_np, (pthread_t thid, const char *thname), (thid, thname),
                 "(thid:%lx, thname:\"%s\")");
-

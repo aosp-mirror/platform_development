@@ -20,6 +20,10 @@
 
 #include <socket_portable.h>
 #include <fcntl_portable.h>
+#include <portability.h>
+
+#define PORTABLE_TAG "socket_portable"
+#include <log_portable.h>
 
 
 #if SOCK_STREAM==SOCK_STREAM_PORTABLE
@@ -42,40 +46,116 @@
 # define SOCK_CLOEXEC O_CLOEXEC
 #endif
 
-static inline int mips_change_type(int type)
-{
-    int mipstype = 0;
 
-    if (type & SOCK_NONBLOCK_PORTABLE) {
-        mipstype |= SOCK_NONBLOCK;
-        type &= ~SOCK_NONBLOCK_PORTABLE;
+/*
+ * Portable to Native socktype mapper.
+ */
+static inline int socktype_pton(int portable_type)
+{
+    int native_type = 0;
+
+    ALOGV("%s(portable_type:0x%x) {", __func__, portable_type);
+
+    if (portable_type & SOCK_NONBLOCK_PORTABLE) {
+        native_type |= SOCK_NONBLOCK;
+        portable_type &= ~SOCK_NONBLOCK_PORTABLE;
     }
 
 #if defined(SOCK_CLOEXEC_PORTABLE) && defined(SOCK_CLOEXEC)
-    if (type & SOCK_CLOEXEC_PORTABLE) {
-        mipstype |= SOCK_CLOEXEC;
-        type &= ~SOCK_CLOEXEC_PORTABLE;
+    if (portable_type & SOCK_CLOEXEC_PORTABLE) {
+        native_type |= SOCK_CLOEXEC;
+        portable_type &= ~SOCK_CLOEXEC_PORTABLE;
     }
 #endif
 
-    switch (type) {
-    case SOCK_STREAM_PORTABLE: mipstype |= SOCK_STREAM; break;
-    case SOCK_DGRAM_PORTABLE: mipstype |= SOCK_DGRAM; break;
-    case SOCK_RAW_PORTABLE: mipstype |= SOCK_RAW; break;
-    case SOCK_RDM_PORTABLE: mipstype |= SOCK_RDM; break;
-    case SOCK_SEQPACKET_PORTABLE: mipstype |= SOCK_SEQPACKET; break;
-    case SOCK_PACKET_PORTABLE: mipstype |= SOCK_PACKET; break;
-    default: mipstype |= type;
+    switch (portable_type) {
+    case SOCK_STREAM_PORTABLE: native_type |= SOCK_STREAM; break;
+    case SOCK_DGRAM_PORTABLE: native_type |= SOCK_DGRAM; break;
+    case SOCK_RAW_PORTABLE: native_type |= SOCK_RAW; break;
+    case SOCK_RDM_PORTABLE: native_type |= SOCK_RDM; break;
+    case SOCK_SEQPACKET_PORTABLE: native_type |= SOCK_SEQPACKET; break;
+    case SOCK_PACKET_PORTABLE: native_type |= SOCK_PACKET; break;
+    default:
+        ALOGE("%s: case default: native_type:0x%x |= portable_type:0x%x:[UNKNOWN!];", __func__,
+                                 native_type,        portable_type);
+
+        native_type |= portable_type;
+        break;
     }
-    return mipstype;
+    ALOGV("%s: return(native_type:%d); }", __func__, native_type);
+    return native_type;
 }
+
+
+/*
+ * Native to Portable socktype mapper.
+ */
+static inline int socktype_ntop(int native_type)
+{
+    int portable_type = 0;
+
+    ALOGV("%s(native_type:0x%x) {", __func__, native_type);
+
+    if (native_type & SOCK_NONBLOCK) {
+        portable_type |= SOCK_NONBLOCK_PORTABLE;
+        native_type &= ~SOCK_NONBLOCK;
+    }
+
+#if defined(SOCK_CLOEXEC_PORTABLE) && defined(SOCK_CLOEXEC)
+    if (native_type & SOCK_CLOEXEC) {
+        portable_type |= SOCK_CLOEXEC_PORTABLE;
+        native_type &= ~SOCK_CLOEXEC;
+    }
+#endif
+
+    switch (native_type) {
+    case SOCK_STREAM: portable_type |= SOCK_STREAM_PORTABLE; break;
+    case SOCK_DGRAM: portable_type |= SOCK_DGRAM_PORTABLE; break;
+    case SOCK_RAW: portable_type |= SOCK_RAW_PORTABLE; break;
+    case SOCK_RDM: portable_type |= SOCK_RDM_PORTABLE; break;
+    case SOCK_SEQPACKET: portable_type |= SOCK_SEQPACKET_PORTABLE; break;
+    case SOCK_PACKET: portable_type |= SOCK_PACKET_PORTABLE; break;
+    default:
+        portable_type |= native_type;
+        ALOGE("%s: case default: portable_type:0x%x |= native_type:0x%x:[UNKNOWN!];", __func__,
+                                 portable_type,        native_type);
+    }
+    ALOGV("%s: return(portable_type:%d); }", __func__, portable_type);
+    return portable_type;
+}
+
 
 extern int socket(int, int, int);
 
 int socket_portable(int domain, int type, int protocol) {
-    return socket(domain, mips_change_type(type), protocol);
+    int rv;
+
+    ALOGV(" ");
+    ALOGV("%s(domain:%d, type:%d, protocol:%d) {", __func__,
+              domain,    type,    protocol);
+
+    rv = socket(domain, socktype_pton(type), protocol);
+
+    ALOGV("%s: return(rv:%d); }", __func__, rv);
+    return rv;
 }
 
+
 int socketpair_portable(int domain, int type, int protocol, int sv[2]) {
-    return socketpair(domain, mips_change_type(type), protocol, sv);
+    int rv;
+
+    ALOGV(" ");
+    ALOGV("%s(domain:%d, type:%d, protocol:%d, sv[2]:%p) {", __func__,
+              domain,    type,    protocol,    sv);
+
+    rv = socketpair(domain, socktype_pton(type), protocol, sv);
+
+    if ((rv != 0) || invalid_pointer(sv)) {
+        ALOGV("%s: return(rv:%d); }", __func__,
+                          rv);
+    } else {
+        ALOGV("%s: return(rv:%d); sv[0]:%d; sv[1]:%d;}", __func__,
+                          rv,     sv[0],    sv[1]);
+    }
+    return rv;
 }
