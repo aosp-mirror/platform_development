@@ -127,6 +127,7 @@
 #define EOWNERDEAD_PORTABLE 130
 #define ENOTRECOVERABLE_PORTABLE 131
 
-extern __hidden int ntop_errno(int native_errno);
+extern __hidden int errno_ntop(int native_errno);
+extern __hidden int errno_pton(int native_errno);
 
 #endif /* _ERRNO_PORTABLE_H */

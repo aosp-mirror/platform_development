@@ -15,6 +15,7 @@
  */
 
 #include <pthread.h>
+#include <string.h>
 #include <errno.h>
 #include <errno_portable.h>
 
@@ -25,7 +26,7 @@
 #error Bad build environment
 #endif
 
-__hidden int ntop_errno(int native_errno)
+__hidden int errno_ntop(int native_errno)
 {
     switch (native_errno) {
       case ENAMETOOLONG: return ENAMETOOLONG_PORTABLE;
@@ -128,7 +129,7 @@ __hidden int ntop_errno(int native_errno)
     return native_errno;
 }
 
-static inline int pton_errno(int portable_errno)
+__hidden int errno_pton(int portable_errno)
 {
     switch (portable_errno) {
       case ENAMETOOLONG_PORTABLE: return ENAMETOOLONG;
@@ -287,8 +288,9 @@ volatile int* __errno_portable()
 
     p = errno_key_data();
 
-    ALOGV("%s(): { save_errno:%d p=%p->{pshadow:%d perrno:%d}", __func__,
-                   save_errno,   p,  p->pshadow,p->perrno);
+    ALOGV(" ");
+    ALOGV("%s(): { save_errno = errno:%d, (p:%p)->{pshadow:%d, perrno:%d}", __func__,
+                   save_errno,             p,   p->pshadow, p->perrno);
 
     if (save_errno == 0 && p->pshadow != p->perrno) {
         /*
@@ -296,32 +298,32 @@ volatile int* __errno_portable()
          * - copy portable error back to native
          */
         p->pshadow = p->perrno;
-        save_errno = pton_errno(p->perrno);
+        save_errno = errno_pton(p->perrno);
     }
     else if (save_errno != 0 && p->pshadow == p->perrno) {
         /*
-         * native errno has changed but portable hasn't
-         * - copy native error to portable
+         * Native errno has changed but portable hasn't
+         * - copy native error to portable.
          */
-        p->pshadow = p->perrno = ntop_errno(save_errno);
+        p->pshadow = p->perrno = errno_ntop(save_errno);
         save_errno = 0;
     }
     else if (save_errno != 0 && p->pshadow != p->perrno) {
         /*
-         * both native and portable errno values have changed
+         * Both native and portable errno values have changed
          * so give priority to native errno
          * - copy native error to portable
          */
-        p->pshadow = p->perrno = ntop_errno(save_errno);
+        p->pshadow = p->perrno = errno_ntop(save_errno);
         save_errno = 0;
     }
 
-    ALOGV("%s: new save_errno=%d p=%p->{pshadow=%d perrno=%d}", __func__,
-                   save_errno,   p,  p->pshadow,p->perrno);
+    ALOGV("%s: new save_errno:%d p:%p->{pshadow:%d, perrno:%d}", __func__,
+                   save_errno,   p,  p->pshadow, p->perrno);
 
     errno = save_errno;
 
-    ALOGV("%s: return &p->perrno:%p; }", __func__, &p->perrno);
+    ALOGV("%s: return (&p->perrno):%p; }", __func__, &p->perrno);
 
     /* return pointer to the modifiable portable errno value */
     return &p->perrno;
@@ -339,17 +341,28 @@ void __set_errno_portable(int portable_errno)
 
     p = errno_key_data();
 
-    ALOGV("%s(): { save_errno:%d p=%p->{pshadow:%d perrno:%d}", __func__,
-                   save_errno,   p,  p->pshadow,p->perrno);
+    ALOGV("%s(): { save_errno = errno:%d, p:%p->{pshadow:%d, perrno:%d}", __func__,
+                   save_errno,            p,  p->pshadow, p->perrno);
 
     p->pshadow = p->perrno = portable_errno;
 
-    save_errno = pton_errno(portable_errno);
+    save_errno = errno_pton(portable_errno);
 
-    ALOGV("%s: new save_errno=%d p=%p->{pshadow=%d perrno=%d}", __func__,
-                   save_errno,   p,  p->pshadow,p->perrno);
+    ALOGV("%s: new save_errno:%d, p:%p->{pshadow:%d, perrno:%d}", __func__,
+                   save_errno,    p,  p->pshadow, p->perrno);
 
     errno = save_errno;
 
     ALOGV("%s: return; }", __func__);
+}
+
+char *strerror_portable(int errnum)
+{
+    return strerror(errno_pton(errnum));
+}
+
+/* BSD style strerror_r */
+int strerror_r_portable(int errnum, char *buf, size_t buflen)
+{
+    return strerror_r(errno_pton(errnum), buf, buflen);
 }
