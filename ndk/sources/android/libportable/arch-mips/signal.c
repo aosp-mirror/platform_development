@@ -78,6 +78,7 @@ __hidden char *map_portable_signum_to_name(int portable_signum)
     return name;
 }
 
+
 __hidden char *map_mips_signum_to_name(int mips_signum)
 {
     char *name;
@@ -121,7 +122,11 @@ __hidden char *map_mips_signum_to_name(int mips_signum)
     return name;
 }
 
-__hidden int map_portable_signum_to_mips(int portable_signum)
+
+/*
+ * Maps a signal number from portable to native.
+ */
+__hidden int signum_pton(int portable_signum)
 {
     int mips_signum = -1;
 
@@ -171,9 +176,9 @@ __hidden int map_portable_signum_to_mips(int portable_signum)
     case SIGTERM_PORTABLE:              /* 15 */
         return SIGTERM;
 
-    case SIGSTKFLT_PORTABLE:            /* 16 --> VOID:0  */
-        /* No MIPS SIGSTKFLT Exits; try mapping it to zero */
-        return 0;
+    case SIGSTKFLT_PORTABLE:            /* 16 --> 7 */
+        return SIGEMT;                  /* No native SIGSTKFLT exist  ...
+                                           ... mapping it to SIGEMT. */
 
     case SIGCHLD_PORTABLE:              /* 17 --> 18 */
         return SIGCHLD;
@@ -224,8 +229,8 @@ __hidden int map_portable_signum_to_mips(int portable_signum)
         return SIGRTMIN;
 
     default:
-        ALOGE("%s: switch default: NOTE portable_signum:%d not supported.", __func__,
-                                        portable_signum);
+        ALOGE("%s: switch default: NOTE portable_signum:%d Not supported. Just a Test?",
+              __func__,                 portable_signum);
         /*
          * User could be LTP testing with bogus signal numbers,
          * if so we mimic the test.
@@ -234,13 +239,14 @@ __hidden int map_portable_signum_to_mips(int portable_signum)
          * we use a signal just outside the MIPS range.
          */
         if (portable_signum < 0) {
-                mips_signum = portable_signum;
+            mips_signum = portable_signum;
         } else if (portable_signum > NSIG_PORTABLE) {
-                mips_signum = (portable_signum - NSIG_PORTABLE) +  NSIG;
+            mips_signum = (portable_signum - NSIG_PORTABLE) +  NSIG;
         } else {
-                ALOGE("%s: 0 <= portable_signum:%d <= NSIG_PORTABLE:%d; not supported, Return(0);", __func__,
-                                portable_signum,      NSIG_PORTABLE);
-                mips_signum = 0;
+            ALOGE("%s: 0 <= portable_signum:%d <= NSIG_PORTABLE:%d; Not supported, return(0);",
+                  __func__, portable_signum,      NSIG_PORTABLE);
+
+            mips_signum = 0;
         }
         break;
     }
@@ -251,7 +257,10 @@ __hidden int map_portable_signum_to_mips(int portable_signum)
 }
 
 
-__hidden int map_mips_signum_to_portable(int mips_signum)
+/*
+ * Maps a signal number from native to portable.
+ */
+__hidden int signum_ntop(int mips_signum)
 {
     int portable_ssignum = -1;
 
@@ -301,11 +310,10 @@ __hidden int map_mips_signum_to_portable(int mips_signum)
     case SIGTERM_PORTABLE:              /* 15 */
         return SIGTERM;
 
-#if defined(SIGSTKFLT)
-    case SIGSTKFLT:                     /* 16 <--- VOID; NOT SUPPORTED */
-        ASSERT(mips_signum != SIGSTKFLT_PORTABLE);
-        return -1;
-#endif
+    case SIGEMT:                        /* 16 <--- 7 */
+        return SIGSTKFLT_PORTABLE;      /* No native SIGSTKFLT exist ...
+                                           ... reverse mapping SIGEMT ...
+                                           ...  back to SIGSTKFLT. */
 
     case SIGCHLD:                       /* 17 <-- 18 */
         return SIGCHLD_PORTABLE;
@@ -356,7 +364,8 @@ __hidden int map_mips_signum_to_portable(int mips_signum)
         return SIGRTMIN;
 
     default:
-        ALOGE("%s: switch default: mips_signum:%d not supported! return(0);", __func__, mips_signum);
+        ALOGE("%s: switch default: mips_signum:%d Not supported! return(0);", __func__,
+                                   mips_signum);
 #if 0
         LOG_FATAL("%s: mips_signum:%d is not portable;", __func__, mips_signum);
 #endif
@@ -364,6 +373,7 @@ __hidden int map_mips_signum_to_portable(int mips_signum)
     }
     return portable_ssignum;
 }
+
 
 /*
  * Array of signal handlers as the portable users expects they
@@ -382,11 +392,12 @@ static void mips_sigaction_handler(int mips_signum, siginfo_t *sip, void *ucp)
     siginfo_portable_t portable_si;
     siginfo_portable_t *portable_sip;
 
+    ALOGV(" ");
     ALOGV("%s(mips_signum:%d:'%s', sip:%p, ucp:%p) {", __func__,
               mips_signum,
               mips_signame,        sip,    ucp);
 
-    portable_signum = map_mips_signum_to_portable(mips_signum);
+    portable_signum = signum_ntop(mips_signum);
     portable_signame = map_portable_signum_to_name(portable_signum);
     portable_sighandler = mips_portable_sighandler[portable_signum];
 
@@ -406,7 +417,7 @@ static void mips_sigaction_handler(int mips_signum, siginfo_t *sip, void *ucp)
         /*
          * Map Structure members from MIPS to Portable.
          */
-        portable_si_signo = map_mips_signum_to_portable(sip->si_signo);
+        portable_si_signo = signum_ntop(sip->si_signo);
         portable_si_signame = map_portable_signum_to_name(portable_si_signo);
         portable_si_errno = ntop_errno(sip->si_errno);
 
@@ -414,12 +425,13 @@ static void mips_sigaction_handler(int mips_signum, siginfo_t *sip, void *ucp)
 
         /*
          * Deal with siginfo structure being a bit different.
+         * Default to the same structure members.
          */
         ASSERT(sizeof(siginfo_portable_t) == sizeof(siginfo_t));
-        memcpy(&portable_si, sip, sizeof(portable_si)); /* Default to the same structure members */
+        memcpy(&portable_si, sip, sizeof(portable_si));
         portable_si.si_signo = portable_si_signo;
-        portable_si.si_code = sip->si_code;                     /* code and errno are swapped between ARM and MIPS ... */
-        portable_si.si_errno = portable_si_errno;               /* ... and errno needs to be translated. */
+        portable_si.si_code = sip->si_code;           /* code and errno are swapped and ... */
+        portable_si.si_errno = portable_si_errno;     /* ... errno needs to be translated. */
 
         portable_sip = &portable_si;
     } /* if sip */
@@ -429,6 +441,7 @@ static void mips_sigaction_handler(int mips_signum, siginfo_t *sip, void *ucp)
     ALOGV("%s: return; }", __func__);
 }
 
+
 static void mips_sighandler(int mips_signum)
 {
     int portable_signum;
@@ -436,6 +449,7 @@ static void mips_sighandler(int mips_signum)
     char *mips_signame = map_mips_signum_to_name(mips_signum);
     sig3handler_portable_t portable_sighandler;
 
+    ALOGV(" ");
     ALOGV("%s(mips_signum:%d:'%s') {", __func__, mips_signum, mips_signame);
 
     mips_sigaction_handler(mips_signum, NULL, NULL);
@@ -443,7 +457,8 @@ static void mips_sighandler(int mips_signum)
     ALOGV("%s: return; }", __func__);
 }
 
-static sighandler_t map_portable_sighandler_to_mips(sighandler_portable_t portable_handler, int sigaction)
+
+static sighandler_t sighandler_pton(sighandler_portable_t portable_handler, int sigaction)
 {
     sighandler_t mips_handler;
 
@@ -472,38 +487,39 @@ static sighandler_t map_portable_sighandler_to_mips(sighandler_portable_t portab
 
 /*
  * This function maps the signal number and calls one of the low level mips signal()
- * functions implemented in portable-jb/bionic/libc/unistd/signal.c:
+ * functions implemented in libc/unistd/signal.c:
  *              sysv_signal()
  *              bsd_signal()
  *
- * The last 2 parameters to this static function, mips_signal_fn*, specify which of these functions to call.
- * We intercept the above to functions, as well as signal(), and call the associated *_portable()
+ * The last 2 parameters to this static function, mips_signal_fn*, specify which of
+ * these functions to call.  We intercept the above to functions, as well as signal(),
  * functions below.
  *
- * In addition, we intercept the signal_handler with our own handlers that map the signal number from
- * the MIPS convention to the PORTABLE/ARM convention.
+ * In addition, we intercept the signal_handler with our own handlers that map the
+ * signal number from the MIPS convention to the PORTABLE/ARM convention.
  */
-static sighandler_portable_t _signal_portable(int portable_signum, sighandler_portable_t portable_handler,
-                                                __sighandler_t (mips_signal_fn)(int, __sighandler_t), char *mips_signal_fn_name)
+static sighandler_portable_t
+do_signal_portable(int portable_signum, sighandler_portable_t portable_handler,
+                   __sighandler_t (mips_signal_fn)(int, __sighandler_t))
 {
     char *portable_signame = map_portable_signum_to_name(portable_signum);
     int mips_signum;
     sighandler_t mips_handler;
-    sighandler_portable_t ret;
+    sighandler_portable_t rv;
     sighandler_portable_t prev_portable_handler;
 
-    ALOGV("%s(portable_signum:%d:%s, portable_handler:%p,  mips_signal_fn:%p, mips_signal_fn_name:'%s') {", __func__,
-              portable_signum, portable_signame,
-                                     portable_handler,     mips_signal_fn,    mips_signal_fn_name);
+    ALOGV("%s(portable_signum:%d:%s, portable_handler:%p,  mips_signal_fn:%p) {", __func__,
+              portable_signum,
+              portable_signame,      portable_handler,     mips_signal_fn);
 
-    mips_signum = map_portable_signum_to_mips(portable_signum);
+    mips_signum = signum_pton(portable_signum);
 
     if ((portable_signum != 0) && ((mips_signum <= 0) || (mips_signum > NSIG))) {
         /*
          * Invalid request; Let the kernel generate the proper return value and set errno.
          */
-        mips_handler = map_portable_sighandler_to_mips(portable_handler, 0);
-        ret = mips_signal_fn(mips_signum, mips_handler);
+        mips_handler = sighandler_pton(portable_handler, 0);
+        rv = mips_signal_fn(mips_signum, mips_handler);
     } else {
         /*
          * We have a usable signal number, redirect it to our signal handler
@@ -512,20 +528,23 @@ static sighandler_portable_t _signal_portable(int portable_signum, sighandler_po
          */
         prev_portable_handler = (sighandler_portable_t) mips_portable_sighandler[portable_signum];
 
-        mips_handler = map_portable_sighandler_to_mips(portable_handler, 0);
+        mips_handler = sighandler_pton(portable_handler, 0);
         if (mips_handler != portable_handler) {
             mips_portable_sighandler[portable_signum] = (sig3handler_portable_t) portable_handler;
         }
-        ret = mips_signal_fn(mips_signum, mips_handler);
+        rv = mips_signal_fn(mips_signum, mips_handler);
 
-        if ((ret == (sighandler_portable_t) mips_sighandler) ||
-            (ret == (sighandler_portable_t) mips_sigaction_handler)) {
-            ret = (sighandler_t) prev_portable_handler;
+        if ((rv == (sighandler_portable_t) mips_sighandler) ||
+            (rv == (sighandler_portable_t) mips_sigaction_handler)) {
+
+            rv = (sighandler_t) prev_portable_handler;
         }
     }
-    ALOGV("%s: return(ret:%p); }", __func__, ret);
-    return ret;
+
+    ALOGV("%s: return(rv:%p); }", __func__, rv);
+    return rv;
 }
+
 
 /*
  * signal() can't be called directly, due to an in-line function in signal.h which
@@ -534,80 +553,123 @@ static sighandler_portable_t _signal_portable(int portable_signum, sighandler_po
  */
 sighandler_portable_t signal_portable(int portable_signum, sighandler_portable_t handler)
 {
-    sighandler_portable_t ret;
-
-    ALOGV(" ");
-    ALOGV("%s(portable_signum:%d, handler:%p);", __func__,
-              portable_signum,    handler);
-
-    /* bsd does a SA_RESTART */
-    ret = _signal_portable(portable_signum, handler, bsd_signal, "bsd_signal");
-
-    ALOGV("%s: return(ret:%p); }", __func__, ret);
-    return ret;
-}
-
-sighandler_portable_t sysv_signal_portable(int portable_signum, sighandler_portable_t handler)
-{
-    sighandler_portable_t ret;
-
-    ALOGV(" ");
-    ALOGV("%s(portable_signum:%d, handler:%p);", __func__,
-              portable_signum,    handler);
-
-    /* sysv does a SA_RESETHAND */
-    ret = _signal_portable(portable_signum, handler, sysv_signal, "sysv_signal");
-
-    ALOGV("%s: return(ret:%p); }", __func__, ret);
-    return ret;
-}
-
-sighandler_portable_t bsd_signal_portable(int portable_signum, sighandler_portable_t handler)
-{
-    sighandler_portable_t ret;
+    sighandler_portable_t rv;
 
     ALOGV(" ");
     ALOGV("%s(portable_signum:%d, handler:%p) {", __func__,
               portable_signum,    handler);
 
     /* bsd does a SA_RESTART */
-    ret = _signal_portable(portable_signum, handler, bsd_signal, "bsd_signal");
+    rv = do_signal_portable(portable_signum, handler, bsd_signal);
 
-    ALOGV("%s: return(ret:%p); }", __func__, ret);
-    return ret;
+    ALOGV("%s: return(ret:%p); }", __func__, rv);
+    return rv;
 }
 
-static int kill_helper(int id, int portable_signum, int (*fn)(int, int), const char *name)
+
+sighandler_portable_t sysv_signal_portable(int portable_signum, sighandler_portable_t handler)
+{
+    sighandler_portable_t rv;
+
+    ALOGV(" ");
+    ALOGV("%s(portable_signum:%d, handler:%p) {", __func__,
+              portable_signum,    handler);
+
+    /* sysv does a SA_RESETHAND */
+    rv = do_signal_portable(portable_signum, handler, sysv_signal);
+
+    ALOGV("%s: return(ret:%p); }", __func__, rv);
+    return rv;
+}
+
+
+/*
+ * NOTE:
+ *    handler is either the Bionic
+ *      bsd_signal() signal handler
+ * or
+ *      the sysv_signal() signal handler.
+ */
+sighandler_portable_t bsd_signal_portable(int portable_signum, sighandler_portable_t handler)
+{
+    sighandler_portable_t rv;
+
+    ALOGV(" ");
+    ALOGV("%s(portable_signum:%d, handler:%p) {", __func__,
+              portable_signum,    handler);
+
+    /* bsd does a SA_RESTART */
+    rv = do_signal_portable(portable_signum, handler, bsd_signal);
+
+    ALOGV("%s: return(ret:%p); }", __func__, rv);
+    return rv;
+}
+
+
+static int do_kill(int id, int portable_signum, int (*fn)(int, int))
 {
     char *portable_signame = map_portable_signum_to_name(portable_signum);
     int mips_signum;
-    int ret;
+    int rv;
 
-    ALOGV("%s(id:%d, portable_signum:%d:'%s');", name,
-              id,    portable_signum, portable_signame);
+    ALOGV("%s(id:%d, portable_signum:%d:'%s', fn:%p) {", __func__,
+              id,    portable_signum,
+                     portable_signame,        fn);
 
-    mips_signum = map_portable_signum_to_mips(portable_signum);
+    mips_signum = signum_pton(portable_signum);
 
-    if ((portable_signum != 0) && (mips_signum == 0))
-        return 0;
-    return  fn(id, mips_signum);
+    rv =  fn(id, mips_signum);
+
+    ALOGV("%s: return(rv:%d); }", __func__, rv);
+    return rv;
 }
+
 
 int killpg_portable(int pgrp, int portable_signum)
 {
-    return kill_helper(pgrp, portable_signum, killpg, __func__);
+    int rv;
+
+    ALOGV(" ");
+    ALOGV("%s(pgrp:%d, portable_signum:%d) {", __func__,
+              pgrp,    portable_signum);
+
+    rv = do_kill(pgrp, portable_signum, killpg);
+
+    ALOGV("%s: return(rv:%d); }", __func__, rv);
+    return rv;
 }
+
 
 int kill_portable(pid_t pid, int portable_signum)
 {
-    return kill_helper(pid, portable_signum, kill, __func__);
+    int rv;
+
+    ALOGV(" ");
+    ALOGV("%s(pid:%d, portable_signum:%d) {", __func__,
+              pid,    portable_signum);
+
+    rv = do_kill(pid, portable_signum, kill);
+
+    ALOGV("%s: return(rv:%d); }", __func__, rv);
+    return rv;
 }
+
 
 int tkill_portable(int tid, int portable_signum)
 {
     extern int tkill(int, int);
-    return kill_helper(tid, portable_signum, tkill, __func__);
+    int rv;
+
+    ALOGV(" ");
+    ALOGV("%s(tid:%d, portable_signum:%d) {", __func__,
+              tid,    portable_signum);
+
+    rv = do_kill(tid, portable_signum, tkill);
+
+    ALOGV("%s: return(rv:%d); }", __func__, rv);
+    return rv;
 }
+
 
 /* tgkill is not exported from android-14 libc.so */
 #if 0
@@ -618,25 +680,26 @@ int tgkill_portable(int tgid, int tid, int portable_signum)
     int mips_signum;
     int rv;
 
-    ALOGV("%s(tgid:%d, tid:%d, portable_signum:%d:'%s');", __func__,
+    ALOGV("%s(tgid:%d, tid:%d, portable_signum:%d:'%s') {", __func__,
               tgid,    tid,    portable_signum, portable_signame);
 
-    mips_signum = map_portable_signum_to_mips(portable_signum);
+    mips_signum = signum_pton(portable_signum);
 
     if ((portable_signum != 0) && (mips_signum == 0))
         rv = 0;
     else
         rv = tgkill(tgid, tid, mips_signum);
 
-    ALOGV("%s: return rv:%d;", __func__, rv);
+    ALOGV("%s: return rv:%d; }", __func__, rv);
     return rv;
 }
 #endif
 
+
 int raise_portable(int portable_signum)
 {
     char *portable_signame = map_portable_signum_to_name(portable_signum);
-    int mips_signum = map_portable_signum_to_mips(portable_signum);
+    int mips_signum = signum_pton(portable_signum);
     int rv;
 
     ALOGV("%s(portable_signum:%d:'%s') {", __func__, portable_signum, portable_signame);
@@ -651,7 +714,7 @@ int raise_portable(int portable_signum)
 }
 
 
-void map_portable_sigset_to_mips(sigset_portable_t *portable_sigset, sigset_t *mips_sigset)
+void sigset_pton(sigset_portable_t *portable_sigset, sigset_t *mips_sigset)
 {
     int portable_signum;
 
@@ -671,17 +734,16 @@ void map_portable_sigset_to_mips(sigset_portable_t *portable_sigset, sigset_t *m
 
         if (sigismember_portable(portable_sigset, portable_signum)) {
             char *portable_signame = map_portable_signum_to_name(portable_signum);
-            int mips_signum = map_portable_signum_to_mips(portable_signum);
+            int mips_signum = signum_pton(portable_signum);
             char *mips_signame;
 
             if (mips_signum != 0) {
                 int err;
 
                 mips_signame = map_mips_signum_to_name(mips_signum);
-                ALOGV("%s: sigaddset(mips_sigset:%p, mips_signum:%d:'%s'); [portable_signum:%d:'%s']", __func__,
+                ALOGV("%s: sigaddset(mips_sigset:%p, mips_signum:%d:'%s');", __func__,
                                      mips_sigset,    mips_signum,
-                                                     mips_signame,          portable_signum,
-                                                                            portable_signame);
+                                                     mips_signame);
 
                 err = sigaddset(mips_sigset, mips_signum);
                 if (err == -1) {
@@ -697,7 +759,8 @@ done:
 }
 
 
-void map_mips_sigset_to_portable(const sigset_t *const_mips_sigset, sigset_portable_t *portable_sigset)
+void
+sigset_ntop(const sigset_t *const_mips_sigset, sigset_portable_t *portable_sigset)
 {
     int mips_signum;
     sigset_t *mips_sigset = (sigset_t *) const_mips_sigset;
@@ -716,7 +779,7 @@ void map_mips_sigset_to_portable(const sigset_t *const_mips_sigset, sigset_porta
 
     for(mips_signum = 1; mips_signum <= NSIG; mips_signum++) {
         if (sigismember(mips_sigset, mips_signum)) {
-            int portable_signum = map_mips_signum_to_portable(mips_signum);
+            int portable_signum = signum_ntop(mips_signum);
 
             if (portable_signum != 0)
                 sigaddset_portable(portable_sigset, portable_signum);
@@ -729,36 +792,37 @@ done:
 }
 
 
-static int map_portable_sigaction_flags_to_mips(int portable_flags)
+static int sigaction_flags_pton(int portable_flags)
 {
     int mips_flags = 0;
 
-    if (portable_flags & SA_NOCLDSTOP_PORTABLE)
+    if (portable_flags & SA_NOCLDSTOP_PORTABLE) {
         mips_flags |= SA_NOCLDSTOP;
-
-    if (portable_flags & SA_NOCLDWAIT_PORTABLE)
+    }
+    if (portable_flags & SA_NOCLDWAIT_PORTABLE) {
         mips_flags |= SA_NOCLDWAIT;
-
-    if (portable_flags & SA_SIGINFO_PORTABLE)
+    }
+    if (portable_flags & SA_SIGINFO_PORTABLE) {
         mips_flags |= SA_SIGINFO;
-
+    }
     if (portable_flags & SA_THIRTYTWO_PORTABLE) {
         ALOGV("%s: SA_THIRTYTWO_PORTABLE isn't SUPPORTED.", __func__);
     }
-    if (portable_flags & SA_RESTORER_PORTABLE)
+    if (portable_flags & SA_RESTORER_PORTABLE) {
         mips_flags |= SA_RESTORER;
-
-    if (portable_flags & SA_ONSTACK_PORTABLE)
+    }
+    if (portable_flags & SA_ONSTACK_PORTABLE) {
         mips_flags |= SA_ONSTACK;
-
-    if (portable_flags & SA_RESTART_PORTABLE)
+    }
+    if (portable_flags & SA_RESTART_PORTABLE) {
         mips_flags |= SA_RESTART;
-
-    if (portable_flags & SA_NODEFER_PORTABLE)
+    }
+    if (portable_flags & SA_NODEFER_PORTABLE) {
         mips_flags |= SA_NODEFER;
-
-    if (portable_flags & SA_RESETHAND_PORTABLE)
+    }
+    if (portable_flags & SA_RESETHAND_PORTABLE) {
         mips_flags |= SA_RESETHAND;
+    }
 
     ALOGV("%s(portable_flags:0x%x) return(mips_flags:0x%x);", __func__,
               portable_flags,             mips_flags);
@@ -766,7 +830,8 @@ static int map_portable_sigaction_flags_to_mips(int portable_flags)
     return mips_flags;
 }
 
-int map_mips_sigaction_flags_to_portable(int mips_flags)
+
+int sigaction_flags_ntop(int mips_flags)
 {
     int portable_flags = 0;
 
@@ -787,6 +852,7 @@ int map_mips_sigaction_flags_to_portable(int mips_flags)
 
     return portable_flags;
 }
+
 
 /*
  * Called by portable/ARM code, which we map and do MIPS system calls.
@@ -819,7 +885,8 @@ int map_mips_sigaction_flags_to_portable(int mips_flags)
  * a table of signal handlers that our intercepting handler can call after it converts the signal
  * numbers.
  */
-int sigaction_portable(int portable_signum, const struct sigaction_portable *act, struct sigaction_portable *oldact)
+static int do_sigaction_portable(int portable_signum, const struct sigaction_portable *act,
+                                 struct sigaction_portable *oldact)
 {
     int mips_signum;
     char *mips_signame;
@@ -831,13 +898,13 @@ int sigaction_portable(int portable_signum, const struct sigaction_portable *act
     char *portable_signame = map_portable_signum_to_name(portable_signum);
     int rv;
 
-    ALOGV(" ");
     ALOGV("%s(portable_signum:%d:'%s', act:%p, oldact:%p) {", __func__,
               portable_signum,
               portable_signame,        act,    oldact);
 
-    mips_signum = map_portable_signum_to_mips(portable_signum);
+    mips_signum = signum_pton(portable_signum);
     mips_signame = map_mips_signum_to_name(mips_signum);
+
     if ((portable_signum != 0) && (mips_signum == 0)) {
         /* We got a portable signum that we can't map; Ignore the request */
         rv = 0;
@@ -854,19 +921,22 @@ int sigaction_portable(int portable_signum, const struct sigaction_portable *act
         rv = sigaction(mips_signum, (struct sigaction *)act, &mips_oldact);
     } else {
         /*
-         * Make the MIPS version of sigaction, which has no sa_restorer function pointer. Also the handler
-         * will be called with a pointer to a to a sigcontext structure which is totally non-portable.
+         * Make the MIPS version of sigaction, which has no sa_restorer function pointer.
+         * Also the handler will be called with a pointer to a to a sigcontext structure
+         * which is totally non-portable.
          */
-        map_portable_sigset_to_mips(((sigset_portable_t *)&act->sa_mask), ((sigset_t *) &mips_act.sa_mask));
+        sigset_pton(((sigset_portable_t *)&act->sa_mask),
+                                    ((sigset_t *) &mips_act.sa_mask));
 
-        mips_act.sa_flags = map_portable_sigaction_flags_to_mips(act->sa_flags);
+        mips_act.sa_flags = sigaction_flags_pton(act->sa_flags);
 
         if (mips_act.sa_flags & SA_SIGINFO) {
             /*
              * Providing the three argument version of a signal handler.
              */
             if (portable_signum >= 0 && portable_signum < NSIG_PORTABLE) {
-                mips_portable_sighandler[portable_signum] = (sig3handler_portable_t) act->sa_sigaction_portable;
+                mips_portable_sighandler[portable_signum] =
+                                (sig3handler_portable_t) act->sa_sigaction_portable;
 
                 mips_act.sa_sigaction = mips_sigaction_handler;
             }
@@ -884,9 +954,10 @@ int sigaction_portable(int portable_signum, const struct sigaction_portable *act
                  */
                 mips_act.sa_handler = (sighandler_t) portable_handler;
             } else {
-                mips_handler = map_portable_sighandler_to_mips(portable_handler, 1);
+                mips_handler = sighandler_pton(portable_handler, 1);
                 if (mips_handler != portable_handler) {
-                        mips_portable_sighandler[portable_signum] = (sig3handler_portable_t) portable_handler;
+                    mips_portable_sighandler[portable_signum] =
+                                                       (sig3handler_portable_t) portable_handler;
                 }
                 mips_act.sa_handler = mips_handler;
             }
@@ -895,19 +966,39 @@ int sigaction_portable(int portable_signum, const struct sigaction_portable *act
     }
 
     if (oldact) {
-        if ((mips_oldact.sa_sigaction == (__sigaction_handler_portable_t) mips_sighandler) ||
-            (mips_oldact.sa_sigaction == (__sigaction_handler_portable_t) mips_sigaction_handler)) {
-                oldact->sa_sigaction_portable = (__sigaction_handler_portable_t) prev_portable_handler;
-        } else {
-                oldact->sa_sigaction_portable = (__sigaction_handler_portable_t) mips_oldact.sa_sigaction;
-        }
-        map_mips_sigset_to_portable((sigset_t *) &(mips_oldact.sa_mask), (sigset_portable_t *) &(oldact->sa_mask));
+        if (mips_oldact.sa_sigaction == (__sigaction_handler_portable_t) mips_sigaction_handler ||
+            mips_oldact.sa_sigaction == (__sigaction_handler_portable_t) mips_sighandler) {
 
-        oldact->sa_flags = map_mips_sigaction_flags_to_portable(mips_oldact.sa_flags);
+            oldact->sa_sigaction_portable =
+                                           (__sigaction_handler_portable_t) prev_portable_handler;
+        } else {
+            oldact->sa_sigaction_portable =
+                                        (__sigaction_handler_portable_t) mips_oldact.sa_sigaction;
+        }
+        sigset_ntop((sigset_t *) &(mips_oldact.sa_mask),
+                                    (sigset_portable_t *) &(oldact->sa_mask));
+
+        oldact->sa_flags = sigaction_flags_ntop(mips_oldact.sa_flags);
         oldact->sa_restorer = NULL;
     }
 
 done:
+    ALOGV("%s: return(rv:%d); }", __func__, rv);
+    return rv;
+}
+
+
+int sigaction_portable(int portable_signum, const struct sigaction_portable *act,
+                       struct sigaction_portable *oldact)
+{
+    int rv;
+
+    ALOGV(" ");
+    ALOGV("%s(portable_signum:%d, act:%p, oldact:%p) {", __func__,
+              portable_signum,    act,    oldact);
+
+    rv = do_sigaction_portable(portable_signum, act, oldact);
+
     ALOGV("%s: return(rv:%d); }", __func__, rv);
     return rv;
 }
@@ -922,7 +1013,7 @@ int signalfd_portable(int fd, const sigset_t *portable_sigmask, int flags)
 {
     sigset_t mips_sigmask;
 
-    map_portable_sigset_to_mips(portable_sigmask, &mips_sigmask);
+    sigset_pton(portable_sigmask, &mips_sigmask);
 
     return signalfd(fd, &mips_sigmask, flags);
 }
@@ -940,11 +1031,11 @@ int sigsuspend_portable(const sigset_portable_t *portable_sigmask)
         errno = EFAULT;
         rv = -1;
     } else {
-        map_portable_sigset_to_mips((sigset_portable_t *)portable_sigmask, &mips_sigmask);
+        sigset_pton((sigset_portable_t *)portable_sigmask, &mips_sigmask);
         rv = sigsuspend(&mips_sigmask);
     }
 
-    ALOGV("%s: return(rv:%d);", __func__, rv);
+    ALOGV("%s: return(rv:%d); }", __func__, rv);
     return rv;
 }
 
@@ -962,10 +1053,10 @@ int sigpending_portable(sigset_portable_t *portable_sigset)
         rv = -1;
     } else {
         rv = sigpending(&mips_sigset);
-        map_mips_sigset_to_portable(&mips_sigset, portable_sigset);
+        sigset_ntop(&mips_sigset, portable_sigset);
     }
 
-    ALOGV("%s: return(rv:%d);", __func__, rv);
+    ALOGV("%s: return(rv:%d); }", __func__, rv);
     return rv;
 }
 
@@ -984,14 +1075,14 @@ int sigwait_portable(const sigset_portable_t *portable_sigset, int *ptr_to_porta
         errno = EFAULT;
         rv = -1;
     } else {
-        map_portable_sigset_to_mips((sigset_portable_t *)portable_sigset, &mips_sigset);
+        sigset_pton((sigset_portable_t *)portable_sigset, &mips_sigset);
 
         rv = sigwait(&mips_sigset, &mips_sig);
 
-        portable_sig = map_mips_signum_to_portable(mips_sig);
+        portable_sig = signum_ntop(mips_sig);
         *ptr_to_portable_sig = portable_sig;
     }
-    ALOGV("%s: return(rv:%d);", __func__, rv);
+    ALOGV("%s: return(rv:%d); }", __func__, rv);
     return rv;
 }
 
@@ -1005,7 +1096,7 @@ int siginterrupt_portable(int portable_signum, int flag)
     ALOGV("%s(portable_signum:%d, flag:0x%x) {", __func__,
               portable_signum,    flag);
 
-    mips_signum = map_portable_signum_to_mips(portable_signum);
+    mips_signum = signum_pton(portable_signum);
 
     if ((portable_signum != 0) && (mips_signum == 0)) {
         ALOGE("%s: Unsupported portable_signum:%d; Ignoring.", __func__,
@@ -1014,11 +1105,13 @@ int siginterrupt_portable(int portable_signum, int flag)
     } else {
         rv = siginterrupt(mips_signum, flag);
     }
-    ALOGV("%s: return(rv:%d);", __func__, rv);
+    ALOGV("%s: return(rv:%d); }", __func__, rv);
     return rv;
 }
 
-__hidden int sigmask_helper(int portable_how, const sigset_portable_t *portable_sigset, sigset_portable_t *portable_oldset, sigmask_fn fn, char *fname)
+
+__hidden int do_sigmask(int portable_how, const sigset_portable_t *portable_sigset,
+                        sigset_portable_t *portable_oldset, sigmask_fn fn)
 {
     int rv;
     int how;
@@ -1026,16 +1119,15 @@ __hidden int sigmask_helper(int portable_how, const sigset_portable_t *portable_
     sigset_t mips_sigset, *mips_sigset_p;
     sigset_t mips_oldset, *mips_oldset_p;
 
-    ALOGV(" ");
-    ALOGV("%s(portable_how:%d, portable_sigset:%p, portable_oldset:%p) {", __func__,
-              portable_how,    portable_sigset,    portable_oldset);
+    ALOGV("%s(portable_how:%d, portable_sigset:%p, portable_oldset:%p, fn:%p) {", __func__,
+              portable_how,    portable_sigset,    portable_oldset,    fn);
 
-   switch(portable_how) {
-   case SIG_BLOCK_PORTABLE:     how = SIG_BLOCK;        how_name = "SIG_BLOCK";         break;
-   case SIG_UNBLOCK_PORTABLE:   how = SIG_UNBLOCK;      how_name = "SIG_UNBLOCK";       break;
-   case SIG_SETMASK_PORTABLE:   how = SIG_SETMASK;      how_name = "SIG_SETMASK";       break;
+    switch(portable_how) {
+    case SIG_BLOCK_PORTABLE:    how = SIG_BLOCK;        how_name = "SIG_BLOCK";         break;
+    case SIG_UNBLOCK_PORTABLE:  how = SIG_UNBLOCK;      how_name = "SIG_UNBLOCK";       break;
+    case SIG_SETMASK_PORTABLE:  how = SIG_SETMASK;      how_name = "SIG_SETMASK";       break;
 
-   default:
+    default:
         ALOGE("%s: portable_how:%d NOT SUPPORTED!", __func__, portable_how);
         how = -1;
         break;
@@ -1047,7 +1139,7 @@ __hidden int sigmask_helper(int portable_how, const sigset_portable_t *portable_
         mips_sigset_p = &mips_sigset;
         memset(mips_sigset_p, 0, sizeof(mips_sigset));
         sigemptyset(mips_sigset_p);
-        map_portable_sigset_to_mips((sigset_portable_t *)portable_sigset, &mips_sigset);
+        sigset_pton((sigset_portable_t *)portable_sigset, &mips_sigset);
     }
 
     if (invalid_pointer((void *)portable_oldset)) {
@@ -1062,19 +1154,31 @@ __hidden int sigmask_helper(int portable_how, const sigset_portable_t *portable_
 
     if (rv == 0 && !invalid_pointer(portable_oldset)) {
         /* Map returned mips_oldset to portable_oldset for return to caller */
-        map_mips_sigset_to_portable(mips_oldset_p, portable_oldset);
+        sigset_ntop(mips_oldset_p, portable_oldset);
     }
 
     ALOGV("%s: return(rv:%d); }", __func__, rv);
     return rv;
 }
 
-int sigprocmask_portable(int portable_how,
-                         const sigset_portable_t *portable_sigset,
+
+int sigprocmask_portable(int portable_how, const sigset_portable_t *portable_sigset,
                          sigset_portable_t *portable_oldset)
 {
-    return sigmask_helper(portable_how, portable_sigset, portable_oldset, sigprocmask, "sigprocmask");
+    int rv;
+
+    ALOGV(" ");
+    ALOGV("%s(portable_how:%d, portable_sigset:%p, portable_oldset:%p) {", __func__,
+              portable_how,    portable_sigset,    portable_oldset);
+
+    rv = do_sigmask(portable_how, portable_sigset, portable_oldset, sigprocmask);
+
+    ALOGV("%s: return(rv:%d); }", __func__, rv);
+    return rv;
 }
+
+
+
 
 /*
  * ss_flags and ss_size are located in different locations in stack_t structure:
@@ -1101,8 +1205,9 @@ int sigaltstack_portable(const portable_stack_t *ss, portable_stack_t *oss)
         mips_ss = NULL;
     } else {
         if (invalid_pointer((void *)ss)) {
-            ALOGE("%s: invalid_pointer(ss:%p): Let kernel set proper errno and set return value.", __func__,
-                                       ss);
+            ALOGE("%s: invalid_pointer(ss:%p): Let kernel set proper errno and set return value.",
+                   __func__,           ss);
+
             mips_ss = (stack_t *) ss;
         } else {
             memset(&new_stack, 0, sizeof(stack_t));
@@ -1116,8 +1221,9 @@ int sigaltstack_portable(const portable_stack_t *ss, portable_stack_t *oss)
         mips_oss = NULL;
     } else {
         if (invalid_pointer((void *)oss)) {
-            ALOGE("%s: invalid_pointer(oss:%p): Let kernel set proper errno and set return value.", __func__,
-                                       oss);
+            ALOGE("%s: invalid_pointer(oss:%p): Let kernel set proper errno and return value.",
+                   __func__,           oss);
+
             mips_oss = (stack_t *)oss;
         } else {
             memset(&old_stack, 0, sizeof(stack_t));
