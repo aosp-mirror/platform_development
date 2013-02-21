@@ -28,6 +28,9 @@ LOCAL_MODULE_CLASS := SHARED_LIBRARIES
 
 LOCAL_CFLAGS := -I $(LOCAL_PATH)/common/include
 
+# Uncomment the next line to easily enable Lib-Portable logging during development.
+# LOCAL_CFLAGS += -DLOG_NDEBUG=0
+
 ifeq ($(TARGET_ARCH),mips)
 libportable_arch_src_files += \
 			arch-mips/clone.c \

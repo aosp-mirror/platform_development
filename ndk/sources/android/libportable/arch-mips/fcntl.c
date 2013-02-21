@@ -61,7 +61,11 @@ static char *map_portable_cmd_to_name(int cmd)
     return name;
 }
 
-static int mips_change_cmd(int cmd)
+
+/*
+ * Maps a fcntl portable cmd to a native command.
+ */
+static int fcntl_cmd_pton(int cmd)
 {
     switch(cmd) {
     case F_DUPFD_PORTABLE:      /* 0 --> 0 */
@@ -225,7 +229,7 @@ int fcntl_portable(int fd, int portable_cmd, ...)
     int result = 0;
     struct flock flock;                                 /* Native MIPS structure */
     struct flock64 flock64;                             /* Native MIPS structure */
-    int mips_cmd = mips_change_cmd(portable_cmd);
+    int mips_cmd = fcntl_cmd_pton(portable_cmd);
     char *portable_cmd_name = map_portable_cmd_to_name(portable_cmd);
     struct flock_portable *flock_portable = NULL;
     struct flock64_portable *flock64_portable = NULL;
@@ -307,11 +311,11 @@ int fcntl_portable(int fd, int portable_cmd, ...)
 
     case F_SETFL:
         flags = mips_change_flags((int)arg);
-        result = __fcntl64(fd, mips_change_cmd(mips_cmd), (void *)flags);
+        result = __fcntl64(fd, fcntl_cmd_pton(mips_cmd), (void *)flags);
         break;
 
     case F_GETFL:
-        result = __fcntl64(fd, mips_change_cmd(mips_cmd), arg);
+        result = __fcntl64(fd, fcntl_cmd_pton(mips_cmd), arg);
         if (result != -1)
             result = portable_change_flags(result);
         break;
