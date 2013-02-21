@@ -63,7 +63,7 @@ int clone_portable(int (*fn)(void *), void *child_stack, int port_flags, void *a
     ALOGV("%s(fn:%p, child_stack:%p, port_flags:0x%x, arg:%p, ...) {", __func__,
               fn,    child_stack,    port_flags,      arg);
 
-    /* Extract optional parameters - they are cumulative */
+    /* Extract optional parameters - they are cumulative. */
     va_start(args, arg);
     if (port_flags & (CLONE_PARENT_SETTID|CLONE_SETTLS|CLONE_CHILD_SETTID)) {
         parent_tidptr = va_arg(args, int*);
