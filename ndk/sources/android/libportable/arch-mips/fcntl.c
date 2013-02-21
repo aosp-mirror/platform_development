@@ -217,7 +217,6 @@ extern int __fcntl64(int, int, void *);
  *        pid_t l_pid;            pid_t l_pid;
  *      }                       }
  */
-
 int fcntl_portable(int fd, int portable_cmd, ...)
 {
     va_list ap;
@@ -334,7 +333,10 @@ int fcntl_portable(int fd, int portable_cmd, ...)
         /*
          * This is likely a rare situation, abort() would hang fcntl13 LTP test.
          */
-        ALOGE("%s: mips_cmd:%d Doesn't appear to be supported; assume it doesn't need to be mapped!", __func__, mips_cmd);
+        ALOGE("%s: mips_cmd:%d doesn't appear to be supported;", __func__,
+                   mips_cmd);
+
+        ALOGV("%s: Assume it doesn't need to be mapped!", __func__);
 
         result = __fcntl64(fd, mips_cmd, arg);
     }

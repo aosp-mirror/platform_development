@@ -58,6 +58,7 @@
     {                                                           \
         int rv, portable_rv;                                    \
                                                                 \
+        ALOGV(" ");                                             \
         ALOGV("%s" fmt, __func__, STRIP_PARENS(CALLARGS));      \
         rv = fn CALLARGS;                                       \
         portable_rv = ntop_errno(rv);                           \
@@ -67,99 +68,194 @@
     }
 
 PTHREAD_WRAPPER(pthread_attr_init, (pthread_attr_t *attr), (attr), "(attr:%p)");
+
 PTHREAD_WRAPPER(pthread_attr_destroy, (pthread_attr_t *attr), (attr), "(attr:%p)");
 
-PTHREAD_WRAPPER(pthread_attr_setdetachstate, (pthread_attr_t *attr, int state), (attr, state), "(attr:%p, state:%d)");
-PTHREAD_WRAPPER(pthread_attr_getdetachstate, (pthread_attr_t const *attr, int *state), (attr, state), "(attr:%p, state:%p)");
+PTHREAD_WRAPPER(pthread_attr_setdetachstate, (pthread_attr_t *attr, int state), (attr, state),
+                "(attr:%p, state:%d)");
 
-PTHREAD_WRAPPER(pthread_attr_setschedpolicy, (pthread_attr_t *attr, int policy), (attr, policy), "(attr:%p, policy:%d)");
-PTHREAD_WRAPPER(pthread_attr_getschedpolicy, (pthread_attr_t const *attr, int *policy), (attr, policy), "(attr:%p, policy:%p)");
+PTHREAD_WRAPPER(pthread_attr_getdetachstate, (pthread_attr_t const *attr, int *state),
+                (attr, state), "(attr:%p, state:%p)");
 
-PTHREAD_WRAPPER(pthread_attr_setschedparam, (pthread_attr_t *attr, struct sched_param const *param), (attr, param), "(attr:%p, param:%p)");
-PTHREAD_WRAPPER(pthread_attr_getschedparam, (pthread_attr_t const *attr, struct sched_param *param), (attr, param), "(attr:%p, param:%p)");
+PTHREAD_WRAPPER(pthread_attr_setschedpolicy, (pthread_attr_t *attr, int policy), (attr, policy),
+                "(attr:%p, policy:%d)");
 
-PTHREAD_WRAPPER(pthread_attr_setstacksize, (pthread_attr_t *attr, size_t stack_size), (attr, stack_size), "(attr:%p, stack_size=%d)");
-PTHREAD_WRAPPER(pthread_attr_getstacksize, (pthread_attr_t const *attr, size_t *stack_size), (attr, stack_size), "(attr:%p, stach_size=%p)");
+PTHREAD_WRAPPER(pthread_attr_getschedpolicy, (pthread_attr_t const *attr, int *policy),
+                (attr, policy), "(attr:%p, policy:%p)");
 
-PTHREAD_WRAPPER(pthread_attr_setstack, (pthread_attr_t *attr, void *stackaddr, size_t stack_size), (attr, stackaddr, stack_size), "(attr:%p, stackaddr:%p stack_size:%d)");
-PTHREAD_WRAPPER(pthread_attr_getstack, (pthread_attr_t const *attr, void **stackaddr, size_t *stack_size), (attr, stackaddr, stack_size), "(attr:%p, stackaddr:%p stack_size:%p)");
+PTHREAD_WRAPPER(pthread_attr_setschedparam,
+                (pthread_attr_t *attr, struct sched_param const *param), (attr, param),
+                "(attr:%p, param:%p)");
 
-PTHREAD_WRAPPER(pthread_attr_setguardsize, (pthread_attr_t *attr, size_t guard_size), (attr, guard_size), "(attr:%p, guard_size:%d)");
-PTHREAD_WRAPPER(pthread_attr_getguardsize, (pthread_attr_t const *attr, size_t *guard_size), (attr, guard_size), "(attr:%p, guard_size:%p)");
+PTHREAD_WRAPPER(pthread_attr_getschedparam,
+                (pthread_attr_t const *attr, struct sched_param *param), (attr, param),
+                "(attr:%p, param:%p)");
 
-PTHREAD_WRAPPER(pthread_attr_setscope, (pthread_attr_t *attr, int scope), (attr, scope), "(attr:%p, scope:%d)");
+PTHREAD_WRAPPER(pthread_attr_setstacksize, (pthread_attr_t *attr, size_t stack_size),
+                (attr, stack_size), "(attr:%p, stack_size:%d)");
+
+PTHREAD_WRAPPER(pthread_attr_getstacksize, (pthread_attr_t const *attr, size_t *stack_size),
+                (attr, stack_size), "(attr:%p, stack_size:%p)");
+
+PTHREAD_WRAPPER(pthread_attr_setstack, (pthread_attr_t *attr, void *stackaddr, size_t stack_size),
+                (attr, stackaddr, stack_size), "(attr:%p, stackaddr:%p, stack_size:%d)");
+
+PTHREAD_WRAPPER(pthread_attr_getstack, (pthread_attr_t const *attr, void **stackaddr,
+                size_t *stack_size), (attr, stackaddr, stack_size),
+                "(attr:%p, stackaddr:%p stack_size:%p)");
+
+PTHREAD_WRAPPER(pthread_attr_setguardsize, (pthread_attr_t *attr, size_t guard_size),
+                (attr, guard_size), "(attr:%p, guard_size:%d)");
+
+PTHREAD_WRAPPER(pthread_attr_getguardsize, (pthread_attr_t const *attr, size_t *guard_size),
+                (attr, guard_size), "(attr:%p, guard_size:%p)");
+
+PTHREAD_WRAPPER(pthread_attr_setscope, (pthread_attr_t *attr, int scope), (attr, scope),
+                "(attr:%p, scope:%d)");
+
 PTHREAD_WRAPPER(pthread_attr_getscope, (pthread_attr_t const *attr), (attr), "(attr:%p)");
 
-PTHREAD_WRAPPER(pthread_getattr_np, (pthread_t thid, pthread_attr_t *attr), (thid, attr), "(thid:%lx, attr:%p)");
+PTHREAD_WRAPPER(pthread_getattr_np, (pthread_t thid, pthread_attr_t *attr), (thid, attr),
+                "(thid:%lx, attr:%p)");
 
-PTHREAD_WRAPPER(pthread_create, (pthread_t *thread, const pthread_attr_t *attr, void *(*start_routine) (void *), void *arg), (thread, attr, start_routine, arg), "(thread:%p attr:%p, start_routine:%p, arg:%p)");
+PTHREAD_WRAPPER(pthread_create, (pthread_t *thread, const pthread_attr_t *attr,
+                void *(*start_routine) (void *), void *arg),
+                (thread, attr, start_routine, arg),
+                "(thread:%p attr:%p, start_routine:%p, arg:%p)");
+
 // void pthread_exit(void * retval);
-PTHREAD_WRAPPER(pthread_join, (pthread_t thid, void **ret_val), (thid, ret_val), "(thid:%lx, ret_val:%p)");
+PTHREAD_WRAPPER(pthread_join, (pthread_t thid, void **ret_val), (thid, ret_val),
+                "(thid:%lx, ret_val:%p)");
+
 PTHREAD_WRAPPER(pthread_detach, (pthread_t thid), (thid), "(thid:%lx)");
 
 // pthread_t pthread_self(void);
 // int pthread_equal(pthread_t one, pthread_t two);
 
-PTHREAD_WRAPPER(pthread_getschedparam, (pthread_t thid, int *policy, struct sched_param *param), (thid, policy, param), "(thid:%lx, policy:%p, param:%p)");
-PTHREAD_WRAPPER(pthread_setschedparam, (pthread_t thid, int policy, struct sched_param const *param), (thid, policy, param), "(thid:%lx, policy:%d, param:%p)");
+PTHREAD_WRAPPER(pthread_getschedparam, (pthread_t thid, int *policy, struct sched_param *param),
+                (thid, policy, param), "(thid:%lx, policy:%p, param:%p)");
+
+PTHREAD_WRAPPER(pthread_setschedparam, (pthread_t thid, int policy,
+                struct sched_param const *param), (thid, policy, param),
+                "(thid:%lx, policy:%d, param:%p)");
 
 PTHREAD_WRAPPER(pthread_mutexattr_init, (pthread_mutexattr_t *attr), (attr), "(attr:%p)");
-PTHREAD_WRAPPER(pthread_mutexattr_destroy, (pthread_mutexattr_t *attr), (attr), "(attr:%p)");
-PTHREAD_WRAPPER(pthread_mutexattr_gettype, (const pthread_mutexattr_t *attr, int *type), (attr, type), "(attr:%p, type:%p)");
-PTHREAD_WRAPPER(pthread_mutexattr_settype, (pthread_mutexattr_t *attr, int type), (attr, type), "(attr:%p, type:%d)");
-PTHREAD_WRAPPER(pthread_mutexattr_setpshared, (pthread_mutexattr_t *attr, int pshared), (attr, pshared), "(attr:%p, pshared:%d)");
-PTHREAD_WRAPPER(pthread_mutexattr_getpshared, (pthread_mutexattr_t *attr, int *pshared), (attr, pshared), "(attr:%p, pshared:%p)");
 
-PTHREAD_WRAPPER(pthread_mutex_init, (pthread_mutex_t *mutex, const pthread_mutexattr_t *attr), (mutex, attr), "(mutex:%p, attr:%p)");
+PTHREAD_WRAPPER(pthread_mutexattr_destroy, (pthread_mutexattr_t *attr), (attr), "(attr:%p)");
+
+PTHREAD_WRAPPER(pthread_mutexattr_gettype, (const pthread_mutexattr_t *attr, int *type),
+                (attr, type), "(attr:%p, type:%p)");
+
+PTHREAD_WRAPPER(pthread_mutexattr_settype, (pthread_mutexattr_t *attr, int type), (attr, type),
+                "(attr:%p, type:%d)");
+
+PTHREAD_WRAPPER(pthread_mutexattr_setpshared, (pthread_mutexattr_t *attr, int pshared),
+                (attr, pshared), "(attr:%p, pshared:%d)");
+
+PTHREAD_WRAPPER(pthread_mutexattr_getpshared, (pthread_mutexattr_t *attr, int *pshared),
+                (attr, pshared), "(attr:%p, pshared:%p)");
+
+PTHREAD_WRAPPER(pthread_mutex_init, (pthread_mutex_t *mutex, const pthread_mutexattr_t *attr),
+                (mutex, attr), "(mutex:%p, attr:%p)");
+
 PTHREAD_WRAPPER(pthread_mutex_destroy, (pthread_mutex_t *mutex), (mutex), "(mutex:%p)");
+
 PTHREAD_WRAPPER(pthread_mutex_lock, (pthread_mutex_t *mutex), (mutex), "(mutex:%p)");
+
 PTHREAD_WRAPPER(pthread_mutex_unlock, (pthread_mutex_t *mutex), (mutex), "(mutex:%p)");
+
 PTHREAD_WRAPPER(pthread_mutex_trylock, (pthread_mutex_t *mutex), (mutex), "(mutex:%p)");
+
 #if 0 /* MISSING FROM BIONIC */
-PTHREAD_WRAPPER(pthread_mutex_timedlock, (pthread_mutex_t *mutex, struct timespec *ts), (mutex, ts), "(mutex:%p, ts:%p)");
+PTHREAD_WRAPPER(pthread_mutex_timedlock, (pthread_mutex_t *mutex, struct timespec *ts),
+                (mutex, ts), "(mutex:%p, ts:%p)");
 #endif /* MISSING */
 
 PTHREAD_WRAPPER(pthread_condattr_init, (pthread_condattr_t *attr), (attr), "(attr:%p)");
-PTHREAD_WRAPPER(pthread_condattr_getpshared, (pthread_condattr_t *attr, int *pshared), (attr, pshared), "(attr:%p, pshared:%p)");
-PTHREAD_WRAPPER(pthread_condattr_setpshared, (pthread_condattr_t* attr, int pshared), (attr, pshared), "(attr:%p, pshared:%d)");
+
+PTHREAD_WRAPPER(pthread_condattr_getpshared, (pthread_condattr_t *attr, int *pshared),
+                (attr, pshared), "(attr:%p, pshared:%p)");
+
+PTHREAD_WRAPPER(pthread_condattr_setpshared, (pthread_condattr_t* attr, int pshared),
+                (attr, pshared), "(attr:%p, pshared:%d)");
+
 PTHREAD_WRAPPER(pthread_condattr_destroy, (pthread_condattr_t *attr), (attr), "(attr:%p)");
 
-PTHREAD_WRAPPER(pthread_cond_init, (pthread_cond_t *cond, const pthread_condattr_t *attr), (cond, attr), "(cond:%p, attr:%p)");
+PTHREAD_WRAPPER(pthread_cond_init, (pthread_cond_t *cond, const pthread_condattr_t *attr),
+                (cond, attr), "(cond:%p, attr:%p)");
+
 PTHREAD_WRAPPER(pthread_cond_destroy, (pthread_cond_t *cond), (cond), "(cond:%p)");
+
 PTHREAD_WRAPPER(pthread_cond_broadcast, (pthread_cond_t *cond), (cond), "(cond:%p)");
+
 PTHREAD_WRAPPER(pthread_cond_signal, (pthread_cond_t *cond), (cond), "(cond:%p)");
-PTHREAD_WRAPPER(pthread_cond_wait, (pthread_cond_t *cond, pthread_mutex_t *mutex), (cond, mutex), "(cond:%p, mutex:%p)");
-PTHREAD_WRAPPER(pthread_cond_timedwait, (pthread_cond_t *cond, pthread_mutex_t *mutex, const struct timespec *abstime), (cond, mutex, abstime), "(cond:%p, mutex:%p, abstime:%p)");
 
-PTHREAD_WRAPPER(pthread_cond_timedwait_monotonic_np, (pthread_cond_t *cond, pthread_mutex_t *mutex, const struct timespec *abstime), (cond, mutex, abstime), "(cond:%p, mutex:%p, abstime:%p)");
-PTHREAD_WRAPPER(pthread_cond_timedwait_monotonic, (pthread_cond_t *cond, pthread_mutex_t *mutex, const struct timespec *abstime), (cond, mutex, abstime), "(cond:%p, mutex:%p, abstime:%p)");
-PTHREAD_WRAPPER(pthread_cond_timedwait_relative_np, (pthread_cond_t *cond, pthread_mutex_t *mutex, const struct timespec *reltime), (cond, mutex, reltime), "(cond:%p, mutex:%p, reltime:%p)");
+PTHREAD_WRAPPER(pthread_cond_wait, (pthread_cond_t *cond, pthread_mutex_t *mutex),
+                (cond, mutex), "(cond:%p, mutex:%p)");
 
-PTHREAD_WRAPPER(pthread_cond_timeout_np, (pthread_cond_t *cond, pthread_mutex_t *mutex, unsigned msecs), (cond, mutex, msecs), "(cond:%p, mutex:%p, msecs:%u)");
+PTHREAD_WRAPPER(pthread_cond_timedwait, (pthread_cond_t *cond, pthread_mutex_t *mutex,
+                const struct timespec *abstime), (cond, mutex, abstime),
+                "(cond:%p, mutex:%p, abstime:%p)");
 
-PTHREAD_WRAPPER(pthread_mutex_lock_timeout_np, (pthread_mutex_t *mutex, unsigned msecs), (mutex, msecs), "(mutex:%p, msecs:%u)");
+PTHREAD_WRAPPER(pthread_cond_timedwait_monotonic_np, (pthread_cond_t *cond,
+                pthread_mutex_t *mutex, const struct timespec *abstime),
+                (cond, mutex, abstime), "(cond:%p, mutex:%p, abstime:%p)");
+
+PTHREAD_WRAPPER(pthread_cond_timedwait_monotonic, (pthread_cond_t *cond, pthread_mutex_t
+                *mutex, const struct timespec *abstime),
+                (cond, mutex, abstime), "(cond:%p, mutex:%p, abstime:%p)");
+
+PTHREAD_WRAPPER(pthread_cond_timedwait_relative_np, (pthread_cond_t *cond, pthread_mutex_t *mutex,
+                const struct timespec *reltime), (cond, mutex, reltime),
+                "(cond:%p, mutex:%p, reltime:%p)");
+
+PTHREAD_WRAPPER(pthread_cond_timeout_np, (pthread_cond_t *cond, pthread_mutex_t *mutex,
+                unsigned msecs), (cond, mutex, msecs), "(cond:%p, mutex:%p, msecs:%u)");
+
+PTHREAD_WRAPPER(pthread_mutex_lock_timeout_np, (pthread_mutex_t *mutex, unsigned msecs),
+                (mutex, msecs), "(mutex:%p, msecs:%u)");
 
 PTHREAD_WRAPPER(pthread_rwlockattr_init, (pthread_rwlockattr_t *attr), (attr), "(attr:%p)");
-PTHREAD_WRAPPER(pthread_rwlockattr_destroy, (pthread_rwlockattr_t *attr), (attr), "(attr:%p)");
-PTHREAD_WRAPPER(pthread_rwlockattr_setpshared, (pthread_rwlockattr_t *attr, int  pshared), (attr, pshared), "(attr:%p, pshared:%d)");
-PTHREAD_WRAPPER(pthread_rwlockattr_getpshared, (pthread_rwlockattr_t *attr, int *pshared), (attr, pshared), "(attr:%p, pshared:%p)");
 
-PTHREAD_WRAPPER(pthread_rwlock_init, (pthread_rwlock_t *rwlock, const pthread_rwlockattr_t *attr), (rwlock, attr), "(rwlock:%p, attr:%p)");
+PTHREAD_WRAPPER(pthread_rwlockattr_destroy, (pthread_rwlockattr_t *attr), (attr), "(attr:%p)");
+
+PTHREAD_WRAPPER(pthread_rwlockattr_setpshared, (pthread_rwlockattr_t *attr, int  pshared),
+                (attr, pshared), "(attr:%p, pshared:%d)");
+
+PTHREAD_WRAPPER(pthread_rwlockattr_getpshared, (pthread_rwlockattr_t *attr, int *pshared),
+                (attr, pshared), "(attr:%p, pshared:%p)");
+
+PTHREAD_WRAPPER(pthread_rwlock_init, (pthread_rwlock_t *rwlock, const pthread_rwlockattr_t *attr),
+                (rwlock, attr), "(rwlock:%p, attr:%p)");
+
 PTHREAD_WRAPPER(pthread_rwlock_destroy, (pthread_rwlock_t *rwlock), (rwlock), "(rwlock:%p)");
 
 PTHREAD_WRAPPER(pthread_rwlock_rdlock, (pthread_rwlock_t *rwlock), (rwlock), "(rwlock:%p)");
+
 PTHREAD_WRAPPER(pthread_rwlock_tryrdlock, (pthread_rwlock_t *rwlock), (rwlock), "(rwlock:%p)");
-PTHREAD_WRAPPER(pthread_rwlock_timedrdlock, (pthread_rwlock_t *rwlock, const struct timespec *abs_timeout), (rwlock, abs_timeout), "(rwlock:%p, abs_timeout:%p)");
+
+PTHREAD_WRAPPER(pthread_rwlock_timedrdlock, (pthread_rwlock_t *rwlock,
+                const struct timespec *abs_timeout),
+                (rwlock, abs_timeout), "(rwlock:%p, abs_timeout:%p)");
 
 PTHREAD_WRAPPER(pthread_rwlock_wrlock, (pthread_rwlock_t *rwlock), (rwlock), "(rwlock:%p)");
+
 PTHREAD_WRAPPER(pthread_rwlock_trywrlock, (pthread_rwlock_t *rwlock), (rwlock), "(rwlock:%p)");
-PTHREAD_WRAPPER(pthread_rwlock_timedwrlock, (pthread_rwlock_t *rwlock, const struct timespec *abs_timeout), (rwlock, abs_timeout), "(rwlock:%p, abs_timeout:%p)");
+
+PTHREAD_WRAPPER(pthread_rwlock_timedwrlock, (pthread_rwlock_t *rwlock,
+                const struct timespec *abs_timeout), (rwlock, abs_timeout),
+                "(rwlock:%p, abs_timeout:%p)");
 
 PTHREAD_WRAPPER(pthread_rwlock_unlock, (pthread_rwlock_t *rwlock), (rwlock), "(rwlock:%p)");
 
-PTHREAD_WRAPPER(pthread_key_create, (pthread_key_t *key, void (*destructor_function)(void *)), (key, destructor_function), "(key:%p, destructor_function:%p)");
+PTHREAD_WRAPPER(pthread_key_create, (pthread_key_t *key, void (*destructor_function)(void *)),
+                (key, destructor_function), "(key:%p, destructor_function:%p)");
+
 PTHREAD_WRAPPER(pthread_key_delete , (pthread_key_t key), (key), "(key:%x)");
-PTHREAD_WRAPPER(pthread_setspecific, (pthread_key_t key, const void *value), (key, value), "(key:%x, value:%p)");
+
+PTHREAD_WRAPPER(pthread_setspecific, (pthread_key_t key, const void *value), (key, value),
+                "(key:%x, value:%p)");
+
 // void *pthread_getspecific(pthread_key_t key);
 
 int pthread_kill_portable(pthread_t thread, int portable_signum)
@@ -170,12 +266,14 @@ int pthread_kill_portable(pthread_t thread, int portable_signum)
 
     ALOGV("%s(thread:%lx, portable_signum:%d)", __func__, thread, portable_signum);
 
-    mips_signum = map_portable_signum_to_mips(portable_signum);
+    mips_signum = signum_pton(portable_signum);
 
     if ((portable_signum != 0) && (mips_signum == 0)) {
         /* A signal MIPS doesn't support; all we can do is ignore it. */
         ret = 0;
     } else {
+        ALOGV("%s: calling pthread_kill(thread:%lx, mips_signum:%d);", __func__,
+                                        thread,     mips_signum);
         ret = pthread_kill(thread, mips_signum);
     }
     portable_ret = ntop_errno(ret);
@@ -186,16 +284,17 @@ int pthread_kill_portable(pthread_t thread, int portable_signum)
     return portable_ret;
 }
 
-int pthread_sigmask_portable(int portable_how,
-                    const sigset_portable_t *portable_sigset,
-                    sigset_portable_t *portable_oldset)
+int pthread_sigmask_portable(int portable_how, const sigset_portable_t *portable_sigset,
+                             sigset_portable_t *portable_oldset)
 {
     int portable_ret, ret;
 
-    ALOGV("%s(portable_how:%d, portable_sigset:%p, portable_oldset:%p)", __func__,
-              portable_how,    portable_sigset,    portable_oldset);
+    ALOGV(" ");
+    ALOGV("%s(portable_how:%d portable_sigset:%p, portable_oldset:%p)", __func__,
+              portable_how,   portable_sigset,    portable_oldset);
 
-    ret = sigmask_helper(portable_how, portable_sigset, portable_oldset, pthread_sigmask, "pthread_sigmask");
+    ret = do_sigmask(portable_how, portable_sigset, portable_oldset, pthread_sigmask);
+
     portable_ret = ntop_errno(ret);
 
     ALOGV("%s: return portable_ret:%d; ret:%d;", __func__,
@@ -204,8 +303,12 @@ int pthread_sigmask_portable(int portable_how,
     return portable_ret;
 }
 
-PTHREAD_WRAPPER(pthread_getcpuclockid, (pthread_t tid, clockid_t *clockid), (tid, clockid), "(tid:%lx, clockid:%p)");
+PTHREAD_WRAPPER(pthread_getcpuclockid, (pthread_t tid, clockid_t *clockid), (tid, clockid),
+                "(tid:%lx, clockid:%p)");
 
-PTHREAD_WRAPPER(pthread_once, (pthread_once_t *once_control, void (*init_routine)(void)), (once_control, init_routine), "(once_control:%p, init_routine:%p)");
+PTHREAD_WRAPPER(pthread_once, (pthread_once_t *once_control, void (*init_routine)(void)),
+                (once_control, init_routine), "(once_control:%p, init_routine:%p)");
 
-PTHREAD_WRAPPER(pthread_setname_np, (pthread_t thid, const char *thname), (thid, thname), "(thid:%lx, thname:\"%s\")");
+PTHREAD_WRAPPER(pthread_setname_np, (pthread_t thid, const char *thname), (thid, thname),
+                "(thid:%lx, thname:\"%s\")");
+

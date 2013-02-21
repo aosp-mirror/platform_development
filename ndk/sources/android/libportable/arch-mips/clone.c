@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #define _GNU_SOURCE
 #include <sched.h>
 #include <stdarg.h>
@@ -83,7 +84,7 @@ int clone_portable(int (*fn)(void *), void *child_stack, int port_flags, void *a
         mips_flags = port_flags;
     } else {
         portable_term_signame = map_portable_signum_to_name(portable_term_signum);
-        mips_term_signum = map_portable_signum_to_mips(portable_term_signum);
+        mips_term_signum = signum_pton(portable_term_signum);
         mips_term_signame = map_mips_signum_to_name(mips_term_signum);
         mips_flags = (port_flags & ~0xFF) | (mips_term_signum & 0xFF);
     }
