@@ -36,11 +36,15 @@ libportable_arch_src_files += \
 			arch-mips/clone.c \
 			arch-mips/epoll.c \
 			arch-mips/errno.c \
+			arch-mips/eventfd.c \
 			arch-mips/fcntl.c \
+			arch-mips/filefd.c \
+			arch-mips/inotify.c \
 			arch-mips/ioctl.c \
 			arch-mips/mmap.c \
 			arch-mips/open.c \
 			arch-mips/poll.c \
+			arch-mips/pipe.c \
 			arch-mips/pthread.c \
 			arch-mips/resource.c \
 			arch-mips/signal.c \
@@ -50,6 +54,7 @@ libportable_arch_src_files += \
 			arch-mips/statfs.c \
 			arch-mips/syscall.c \
 			arch-mips/timer.c \
+			arch-mips/timerfd.c \
 			arch-mips/waitpid.c
 endif
 

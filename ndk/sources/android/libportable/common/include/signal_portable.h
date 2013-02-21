@@ -142,7 +142,14 @@ extern int tkill_portable(int tid, int portable_signum);
 extern int sigaltstack_portable(const portable_stack_t *ss, portable_stack_t *oss);
 extern int timer_create_portable(clockid_t, struct sigevent *, timer_t *);
 
+#if 0
+extern int signalfd_portable(int fd, const sigset_portable_t *portable_sigmask, int flags);
+#endif
 
+extern __hidden int do_signalfd4_portable(int fd, const sigset_portable_t *portable_sigmask,
+                                          int portable_sigsetsize, int flags);
+
+extern __hidden int read_signalfd_mapper(int fd, void *buf, size_t count);
 extern __hidden char *map_portable_signum_to_name(int portable_signum);
 extern __hidden char *map_mips_signum_to_name(int mips_signum);
 extern __hidden int signum_pton(int portable_signum);
@@ -152,6 +159,7 @@ typedef int (*sigmask_fn)(int, const sigset_t *, sigset_t *);
 typedef int (*rt_sigmask_fn)(int, const sigset_t *, sigset_t *, size_t);
 typedef int (*sigaction_fn)(int, const struct sigaction *, struct sigaction *);
 typedef int (*rt_sigaction_fn)(int, const struct sigaction *, struct sigaction *, size_t);
+
 
 extern __hidden int do_sigmask(int portable_how, const sigset_portable_t *portable_sigset,
                                sigset_portable_t *portable_oldset, sigmask_fn fn,
@@ -180,6 +188,10 @@ extern __hidden int rt_sigqueueinfo_portable(pid_t pid, int sig, siginfo_portabl
 
 extern __hidden int rt_tgsigqueueinfo_portable(pid_t tgid, pid_t pid, int sig,
                                                siginfo_portable_t *uinfo);
+
+
+/* Called by clone when memory and signal handlers aren't compatable. */
+extern __hidden void signal_disable_mapping(void);
 
 __END_DECLS
 

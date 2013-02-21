@@ -21,6 +21,10 @@
 #include <time.h>
 #include <errno.h>
 #include <errno_portable.h>
+#include <eventfd_portable.h>
+#include <filefd_portable.h>
+#include <inotify_portable.h>
+#include <timerfd_portable.h>
 #include <asm/unistd-portable.h>
 #include <asm/unistd.h>
 
@@ -35,6 +39,12 @@
  * Minimal syscall support for LTP testing.
  * These are the system calls that LTP references explicitly.
  * Not all of them are exported via bionic header so use #ifdef.
+ *
+ * TODO:
+ *    Add existing portable system calls currently redirected from
+ *    experimental Bionic linker code so that calls to them via
+ *    syscall() are also processed. For example, LTP only calls open()
+ *    directly and never does a syscall(__NR_open, ...).
  */
 
 
@@ -100,11 +110,47 @@ int syscall_portable(int portable_number, ...)
 #endif
 
 #ifdef __NR_eventfd_portable
-    case __NR_eventfd_portable: native_number = __NR_eventfd; break;
+    /*
+     * Prior to 2.6.27 we only had this system call,
+     * which didn't have a flags argument. The kernel
+     * just provides a zero for flags when this system
+     * call number is used.
+     */
+    case __NR_eventfd_portable: {
+        unsigned int initval;                        /* 64-bit counter initial value */
+        int flags = 0;
+
+        va_start(ap, portable_number);
+
+        initval  = va_arg(ap, int);
+
+        va_end(ap);
+
+        ret = eventfd_portable(initval, flags);      /* Android uses __NR_eventfd2 in eventfd() */
+        goto done;
+    }
 #endif
 
 #ifdef __NR_eventfd2_portable
-    case __NR_eventfd2_portable: native_number = __NR_eventfd2; break;
+    /*
+     * Starting with Linux 2.6.27 a flags argument was added.
+     * Both Bionic and glibc implement the eventfd() now with
+     * the additional flags argument.
+     */
+    case __NR_eventfd2_portable: {
+        unsigned int initval;                        /* 64-bit counter initial value */
+        int flags;
+
+        va_start(ap, portable_number);
+
+        initval  = va_arg(ap, int);
+        flags = va_arg(ap, int);
+
+        va_end(ap);
+
+        ret = eventfd_portable(initval, flags);      /* Android uses __NR_eventfd2 in eventfd() */
+        goto done;
+    }
 #endif
 
 #ifdef __NR_exit_group_portable
@@ -176,7 +222,16 @@ int syscall_portable(int portable_number, ...)
 #endif
 
 #ifdef __NR_inotify_init1_portable
-    case __NR_inotify_init1_portable: native_number = __NR_inotify_init1; break;
+    case __NR_inotify_init1_portable: {
+        int portable_flags;
+
+        va_start(ap, portable_number);
+        portable_flags = va_arg(ap, int);
+        va_end(ap);
+
+        ret = inotify_init1_portable(portable_flags);
+        goto done;
+    }
 #endif
 
 #ifdef __NR_keyctl_portable
@@ -204,7 +259,18 @@ int syscall_portable(int portable_number, ...)
 #endif
 
 #ifdef __NR_pipe2_portable
-    case __NR_pipe2_portable: native_number = __NR_pipe2; break;
+    case __NR_pipe2_portable: {
+        int *pipefd_ptr;
+        int portable_flags;
+
+        va_start(ap, portable_number);
+        pipefd_ptr = va_arg(ap, int *);
+        portable_flags = va_arg(ap, int);
+        va_end(ap);
+
+        ret = pipe2_portable(pipefd_ptr, portable_flags);
+        goto done;
+    }
 #endif
 
 #ifdef __NR_readahead_portable
@@ -312,7 +378,25 @@ int syscall_portable(int portable_number, ...)
 #endif
 
 #ifdef __NR_signalfd4_portable
-    case __NR_signalfd4_portable: native_number = __NR_signalfd4; break;
+    case __NR_signalfd4_portable: {
+        int fd;
+        sigset_portable_t *portable_sigmask;
+        int sigsetsize;
+        int flags;
+
+        va_start(ap, portable_number);
+
+        fd = va_arg(ap, int);
+        portable_sigmask = va_arg(ap, sigset_portable_t *);
+        sigsetsize = va_arg(ap, int);
+        flags = va_arg(ap, int);
+
+        va_end(ap);
+
+        ret = do_signalfd4_portable(fd, (const sigset_portable_t *) portable_sigmask, sigsetsize,
+                                    flags);
+        goto done;
+    }
 #endif
 
 #ifdef __NR_socketcall_portable
@@ -423,7 +507,18 @@ int syscall_portable(int portable_number, ...)
 #endif
 
 #ifdef __NR_timerfd_create_portable
-    case __NR_timerfd_create_portable: native_number = __NR_timerfd_create; break;
+    case __NR_timerfd_create_portable: {
+        int clockid;
+        int flags;
+
+        va_start(ap, portable_number);
+        clockid = va_arg(ap, int);              /* clockid is portable */
+        flags = va_arg(ap, int);                /* flags need to be mapped */
+        va_end(ap);
+
+        ret = timerfd_create_portable(clockid, flags);
+        goto done;
+    }
 #endif
 
 #ifdef __NR_timerfd_gettime_portable
