@@ -31,13 +31,13 @@ pid_t waitpid_portable(pid_t pid, int *status, int options)
     ret = waitpid(pid, status, options);
     if (status && ret > 0) {
         /*
-         * Status layout is identical so just the signal
+         * Status layout is identical, so just the signal
          * number needs to be changed.
          */
         if (WIFSIGNALED(*status))
-            *status = (*status & ~0x7f) | map_mips_signum_to_portable(WTERMSIG(*status));
+            *status = (*status & ~0x7f) | signum_ntop(WTERMSIG(*status));
         else if (WIFSTOPPED(*status))
-            *status = (*status & ~0xff00) | (map_mips_signum_to_portable(WSTOPSIG(*status)) << 8);
+            *status = (*status & ~0xff00) | (signum_ntop(WSTOPSIG(*status)) << 8);
     }
 
     return ret;

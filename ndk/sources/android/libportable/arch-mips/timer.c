@@ -28,9 +28,10 @@ int timer_create_portable(clockid_t clockid, struct sigevent *portable_evp,
     if (!invalid_pointer(portable_evp) &&
         (evp->sigev_notify == SIGEV_SIGNAL ||
          evp->sigev_notify == SIGEV_THREAD_ID)) {
+
         native_sigevent = *portable_evp;
         evp = &native_sigevent;
-        evp->sigev_signo = map_portable_signum_to_mips(evp->sigev_signo);
+        evp->sigev_signo = signum_pton(evp->sigev_signo);
     }
     return timer_create(clockid, evp, timerid);
 }
