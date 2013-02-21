@@ -17,9 +17,11 @@
 #include <unistd.h>
 #include <sys/socket.h>
 #include <fcntl.h>
+#include <netdb.h>
 
 #include <socket_portable.h>
 #include <fcntl_portable.h>
+#include <netdb_portable.h>
 #include <portability.h>
 
 #define PORTABLE_TAG "socket_portable"
@@ -158,4 +160,101 @@ int socketpair_portable(int domain, int type, int protocol, int sv[2]) {
                           rv,     sv[0],    sv[1]);
     }
     return rv;
+}
+
+#define PRINT_ADDRINFO(p) {                                                                      \
+    ALOGV("%s: p:%p->{ai_flags:%d, ai_family:%d, ai_socktype:%d, ai_protocol:%d, ...", __func__, \
+               p,  p->ai_flags, p->ai_family, p->ai_socktype, p->ai_protocol);                   \
+                                                                                                 \
+    ALOGV("%s: p:%p->{... ai_addrlen:%d, ai_addr:%p, ai_canonname:%p, p->ai_next:%p);", __func__,\
+               p,      p->ai_addrlen, p->ai_addr, p->ai_canonname, p->ai_next);                  \
+}
+
+/*
+ * Returns a list of portable addrinfo structures that are
+ * later made free with a call to the portable version of
+ * freeaddrinfo(); which is written below this function.
+ */
+int getaddrinfo_portable(const char *node, const char *service,
+                 struct addrinfo_portable *portable_hints,
+                 struct addrinfo_portable **portable_results)
+{
+    int rv;
+    struct addrinfo *native_hints;
+    struct addrinfo **native_results, *rp;
+    int saved_portable_socktype;
+
+    ALOGV(" ");
+    ALOGV("%s(node:%p, service:%p, portable_hints:%p, portable_results:%p) {", __func__,
+              node,    service,    portable_hints,    portable_results);
+
+    PRINT_ADDRINFO(portable_hints);
+
+    /*
+     * The only part of the addrinfo structure that needs to be modified
+     * between ARM and MIPS is the socktype;
+     */
+    ASSERT(sizeof(struct addrinfo_portable) == sizeof(struct addrinfo));
+    native_hints = ((struct addrinfo *) portable_hints);
+    if (native_hints != NULL) {
+        saved_portable_socktype = portable_hints->ai_socktype;
+        native_hints->ai_socktype = socktype_pton(saved_portable_socktype);
+    }
+    ASSERT(portable_results != NULL);
+    native_results = (struct addrinfo **) portable_results;
+
+    rv = getaddrinfo(node, service, native_hints, native_results);
+
+    if (native_hints != NULL) {
+        portable_hints->ai_socktype = saved_portable_socktype;
+    }
+
+
+    /*
+     * Map socktypes in the return list of addrinfo structures from native to portable.
+     * Assuming getaddrinfo() has left structure writeable and the list is generated
+     * on each call. This seems to be true when looking at the man page and the code
+     * at:
+     *          ./bionic/libc/netbsd/net/getaddrinfo.c
+     */
+    for (rp = *native_results; rp != NULL; rp = rp->ai_next) {
+        PRINT_ADDRINFO(rp);
+        rp->ai_socktype = socktype_ntop(rp->ai_socktype);
+    }
+    ALOGV("%s: return(rv:%d); }", __func__, rv);
+    return rv;
+}
+
+
+/*
+ * Free the results list returned from a previous call
+ * to the portable version of getaddrinfo().
+ */
+void freeaddrinfo_portable(struct addrinfo_portable *portable_results)
+{
+    struct addrinfo *native_results, *rp;
+
+    ALOGV(" ");
+    ALOGV("%s(portable_results:%p) {", __func__, portable_results);
+
+    PRINT_ADDRINFO(portable_results);
+
+    /*
+     * The only part of each addrinfo structure that needs to be modified
+     * between ARM and MIPS is the socktype;
+     *
+     * Map socktypes in the return list of iportable addrinfo structures back to native.
+     * Again, assuming getaddrinfo() has left structure writeable and the list is generated
+     * on each call. This seems to be true when looking at the man page and the code.
+     */
+    ASSERT(sizeof(struct addrinfo_portable) == sizeof(struct addrinfo));
+    native_results = ((struct addrinfo *) portable_results);
+    for (rp = native_results; rp != NULL; rp = rp->ai_next) {
+        PRINT_ADDRINFO(rp);
+        rp->ai_socktype = socktype_pton(rp->ai_socktype);       /* Likely not really necessary */
+    }
+    freeaddrinfo(native_results);
+
+    ALOGV("%s: return; }", __func__);
+    return;
 }
