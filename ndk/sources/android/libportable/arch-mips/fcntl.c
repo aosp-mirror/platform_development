@@ -20,7 +20,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
+#include <portability.h>
 #include <fcntl_portable.h>
+#include <filefd_portable.h>
 
 #include <portability.h>
 
@@ -331,6 +333,22 @@ int fcntl_portable(int fd, int portable_cmd, ...)
     case F_GETLEASE:
     case F_NOTIFY:
         result = __fcntl64(fd, mips_cmd, arg);
+        if (result < 0) {
+            ALOGV("%s: result = %d = __fcntl64(fd:%d, mips_cmd:0x%x, arg:%p);", __func__,
+                       result,                 fd,    mips_cmd,      arg);
+        } else {
+            if (mips_cmd == F_SETFD) {
+                /*
+                 * File descriptor flag bits got set or cleared.
+                 */
+                flags = (int)arg;
+                if (flags & FD_CLOEXEC) {
+                    filefd_CLOEXEC_enabled(fd);
+                } else {
+                    filefd_CLOEXEC_disabled(fd);
+                }
+            }
+        }
         break;
 
     default:
