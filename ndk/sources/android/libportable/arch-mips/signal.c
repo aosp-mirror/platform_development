@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include <unistd.h>
 #include <stdarg.h>
 #include <stdlib.h>
 #include <signal.h>
@@ -22,6 +23,8 @@
 #include <stdio.h>
 #include <errno.h>
 #include <errno_portable.h>
+#include <asm/unistd-portable.h>
+#include <asm/unistd.h>
 
 #define PORTABLE_TAG "signal_portable"
 #include <log_portable.h>
@@ -32,6 +35,7 @@
 #endif
 
 typedef void  (*sig3handler_t)(int, siginfo_t *, void *);
+extern int syscall(int, ...);
 
 /*
  * The next five hidden functions are not exposed in the
@@ -651,8 +655,14 @@ static int do_kill(int id, int portable_signum, int (*fn)(int, int))
 
     mips_signum = signum_pton(portable_signum);
 
-    rv =  fn(id, mips_signum);
+    if ((portable_signum != 0) && (mips_signum == 0)) {
+        rv = 0;
+    } else {
+        ALOGV("%s: Calling fn:%p(id:%d, mips_signum:%d);", __func__,
+                           fn,   id,    mips_signum);
 
+        rv =  fn(id, mips_signum);
+    }
     ALOGV("%s: return(rv:%d); }", __func__, rv);
     return rv;
 }
