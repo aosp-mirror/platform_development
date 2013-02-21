@@ -31,6 +31,8 @@
 #error Bad build environment
 #endif
 
+typedef void  (*sig3handler_t)(int, siginfo_t *, void *);
+
 /*
  * The next five hidden functions are not exposed in the
  * libportable shared object. They are used here and other
@@ -419,7 +421,7 @@ static void mips_sigaction_handler(int mips_signum, siginfo_t *sip, void *ucp)
          */
         portable_si_signo = signum_ntop(sip->si_signo);
         portable_si_signame = map_portable_signum_to_name(portable_si_signo);
-        portable_si_errno = ntop_errno(sip->si_errno);
+        portable_si_errno = errno_ntop(sip->si_errno);
 
         mips_si_signame = map_mips_signum_to_name(sip->si_signo);
 
