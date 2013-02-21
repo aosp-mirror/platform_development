@@ -39,6 +39,7 @@ libportable_arch_src_files += \
 			arch-mips/eventfd.c \
 			arch-mips/fcntl.c \
 			arch-mips/filefd.c \
+			arch-mips/flags.c \
 			arch-mips/inotify.c \
 			arch-mips/ioctl.c \
 			arch-mips/mmap.c \
