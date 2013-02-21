@@ -2,7 +2,7 @@
   Derived from gdk/platforms/android-14/arch-arm/usr/include/asm/signal.h
  ****************************************************************************
  ***
- ***   This header was ORIGINALLY automatically generated from a Linux kernel 
+ ***   This header was ORIGINALLY automatically generated from a Linux kernel
  ***   header of the same name, to make information necessary for userspace to
  ***   call into the kernel available to libc.  It contains only constants,
  ***   structures, and macros generated from the original header, and thus,
