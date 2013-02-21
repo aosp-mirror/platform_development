@@ -92,5 +92,5 @@ int clone_portable(int (*fn)(void *), void *child_stack, int port_flags, void *a
                 new_tls, child_tidptr);
 
     ALOGV("%s: return(ret:%d); }", __func__, ret);
-    return(ret);
+    return ret;
 }

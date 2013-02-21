@@ -52,14 +52,15 @@ int syscall_portable(int portable_number, ...)
     case __NR_add_key_portable: native_number = __NR_add_key; break;
 #endif
 #ifdef __NR_cacheflush_portable
-    case __NR_cacheflush_portable:
-    {
+    case __NR_cacheflush_portable: {
         long start, end, flags;
+
         va_start(ap, portable_number);
         start = va_arg(ap, long);
         end = va_arg(ap, long);
         flags = va_arg(ap, long);
         va_end(ap);
+
         return cacheflush(start, end, flags);
     }
 #endif
@@ -175,8 +176,7 @@ int syscall_portable(int portable_number, ...)
     case __NR_syslog_portable: native_number = __NR_syslog; break;
 #endif
 #ifdef __NR_timer_create_portable
-    case __NR_timer_create_portable:
-    {
+    case __NR_timer_create_portable: {
         extern int timer_create_portable(clockid_t, struct sigevent *, timer_t *);
         clockid_t clockid;
         struct sigevent *evp;
@@ -201,8 +201,7 @@ int syscall_portable(int portable_number, ...)
     case __NR_timer_gettime_portable: native_number = __NR_timer_gettime; break;
 #endif
 #ifdef __NR_tkill_portable
-    case __NR_tkill_portable:
-    {
+    case __NR_tkill_portable: {
         extern int tkill_portable(int, int);
         int tid, sig;
 
