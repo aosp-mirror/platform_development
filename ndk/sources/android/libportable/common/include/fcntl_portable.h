@@ -72,6 +72,15 @@
 #define O_NDELAY_PORTABLE   O_NONBLOCK_PORTABLE
 #endif
 
+/* From Bionic libc/kernel/common/asm-generic/fcntl.h */
+#ifndef O_CLOEXEC_PORTABLE
+#define O_CLOEXEC_PORTABLE 02000000
+#endif
+
+#ifndef __ARCH_FLOCK64_PAD
+#define __ARCH_FLOCK64_PAD
+#endif
+
 /*
  * For use with F_GETLK and F_SETLK
  */

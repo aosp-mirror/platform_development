@@ -19,6 +19,7 @@
 #include <stdarg.h>
 #include <portability.h>
 #include <fcntl_portable.h>
+#include <filefd_portable.h>
 
 #define PORTABLE_TAG "open_portable"
 #include <log_portable.h>
@@ -27,6 +28,7 @@
 #if O_CREAT_PORTABLE==O_CREAT
 #error Bad build environment
 #endif
+
 
 static inline int open_flags_pton(int flags)
 {
@@ -67,7 +69,9 @@ static inline int open_flags_pton(int flags)
     return mipsflags;
 }
 
+
 extern int  __open(const char*, int, int);
+
 int open_portable(const char *pathname, int flags, ...)
 {
     mode_t  mode = 0;
@@ -95,12 +99,20 @@ int open_portable(const char *pathname, int flags, ...)
         /* Can't print pathname as a string, might be bogus */
         ALOGV("%s: fd = %d = __open(pathname:%p, native_flags:0x%x, mode:0x%x);", __func__,
                    fd,              pathname,    native_flags,      mode);
+    } else {
+        if (flags & O_CLOEXEC) {
+            filefd_CLOEXEC_enabled(fd);
+        } else {
+            filefd_CLOEXEC_disabled(fd);
+        }
     }
     ALOGV("%s: return(fd:%d); }", __func__, fd);
     return fd;
 }
 
+
 extern int  __openat(int, const char*, int, int);
+
 int openat_portable(int dirfd, const char *pathname, int flags, ...)
 {
     mode_t  mode = 0;
@@ -128,6 +140,12 @@ int openat_portable(int dirfd, const char *pathname, int flags, ...)
     if (fd == -1) {
         ALOGV("%s: fd = %d = __open(pathname:0x%p, native_flags:0x%x, mode:0x%d);", __func__,
                    fd,              pathname,      native_flags,      mode);
+    } else {
+        if (flags & O_CLOEXEC) {
+            filefd_CLOEXEC_enabled(fd);
+        } else {
+            filefd_CLOEXEC_disabled(fd);
+        }
     }
     ALOGV("%s: return(fd:%d); }", __func__, fd);
     return fd;

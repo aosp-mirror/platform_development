@@ -25,6 +25,8 @@
 #include <errno_portable.h>
 #include <asm/unistd-portable.h>
 #include <asm/unistd.h>
+#include <signalfd_portable.h>
+#include <filefd_portable.h>
 
 #define PORTABLE_TAG "signal_portable"
 #include <log_portable.h>
@@ -35,7 +37,20 @@
 #endif
 
 typedef void  (*sig3handler_t)(int, siginfo_t *, void *);
+
+static volatile int signal_handler_mapping_enabled = 1;
+
 extern int syscall(int, ...);
+
+
+__hidden void signal_disable_mapping()
+{
+    ALOGV("%s(): signal_handler_mapping_enabled:%d = 0;", __func__,
+                 signal_handler_mapping_enabled);
+
+    signal_handler_mapping_enabled = 0;
+}
+
 
 /*
  * The next five hidden functions are not exposed in the
@@ -473,6 +488,10 @@ static void mips_sigaction_handler(int mips_signum, siginfo_t *sip, void *ucp)
         siginfo_ntop(sip, portable_sip);
     }
 
+
+    ALOGV("%s: Calling portable_sighandler:%p(portable_signum:%d, portable_sip:%p, ucp:%p);",
+          __func__,    portable_sighandler,   portable_signum,    portable_sip,    ucp);
+
     portable_sighandler(portable_signum, portable_sip, ucp);
 
     ALOGV("%s: return; }", __func__);
@@ -510,10 +529,18 @@ static sighandler_t sighandler_pton(sighandler_portable_t portable_handler, int 
         break;
 
     default:
-        if (sigaction)
-            mips_handler = (sighandler_t) mips_sighandler;
-        else
-            mips_handler = (sighandler_t) mips_sigaction_handler;
+        /*
+         * Signal Mapping can be disabled in the rare case of the clone
+         * flags not being compatble for VM and file descriptors.
+         */
+        if (signal_handler_mapping_enabled) {
+            if (sigaction)
+                mips_handler = (sighandler_t) mips_sighandler;
+            else
+                mips_handler = (sighandler_t) mips_sigaction_handler;
+        } else {
+            mips_handler = portable_handler;        /* Don't MAP */
+        }
         break;
     }
 
@@ -530,7 +557,7 @@ static sighandler_t sighandler_pton(sighandler_portable_t portable_handler, int 
  *
  * The last 2 parameters to this static function, mips_signal_fn*, specify which of
  * these functions to call.  We intercept the above to functions, as well as signal(),
- * functions below.
+ * and call the associated *_portable() functions below.
  *
  * In addition, we intercept the signal_handler with our own handlers that map the
  * signal number from the MIPS convention to the PORTABLE/ARM convention.
@@ -1057,20 +1084,123 @@ int sigaction_portable(int portable_signum, const struct sigaction_portable *act
 }
 
 
+/*
+ * Currently signalfd() isn't supported by bionic with
+ * only the portable syscall.c code using this code by
+ * intercepting the syscall(__NR_signalfd4, ...) in bionic.
+ */
+__hidden int do_signalfd4_portable(int fd, const sigset_portable_t *portable_sigmask,
+                                   int portable_sigsetsize, int portable_flags)
+{
+    sigset_t native_sigmask;
+    int native_sigsetsize = sizeof(native_sigmask);
+    int native_flags = 0;
+    int rv;
+
+    ALOGV("%s(fd:%d, portable_sigmask:%p, portable_sigsetsize:%d, portable_flags:0x%x) {",
+    __func__, fd,    portable_sigmask,    portable_sigsetsize,    portable_flags);
+
+    sigset_pton((sigset_portable_t *)portable_sigmask, &native_sigmask);
+
+    if (portable_flags & SFD_NONBLOCK_PORTABLE) {
+        native_flags |= SFD_NONBLOCK;
+    }
+    if (portable_flags & SFD_CLOEXEC_PORTABLE) {
+        native_flags |= SFD_CLOEXEC;
+    }
+    rv = syscall(__NR_signalfd4, fd, &native_sigmask, native_sigsetsize, native_flags);
+
+    if (rv >= 0) {
+        if (native_flags & SFD_CLOEXEC) {
+            filefd_CLOEXEC_enabled(rv);
+        }
+
+        /*
+         * Reads on this file descriptor must be mapped to be portable.
+         * The mapping should survive a fork and most clones naturally.
+         * For the system call to be completely portable it has to propagate
+         * these mapped files after an execve(). Environment variables have
+         * been added to do that. See filefd.c for details.
+         */
+        filefd_opened(rv, SIGNAL_FD_TYPE);
+    }
+
+    ALOGV("%s: return(rv:%d); }", __func__, rv);
+    return rv;
+}
+
+
 #if 0
 /*
- * So far it appears that signalfd() isn't supported by bionic
- * the kernel trap numbers are available.
+ * signalfd() isn't available in Bionic yet. When it is, it will be implemented like
+ * the glibc version where the sigsetsize is computed in the bionic code and passed
+ * down to the kernel with __NR_signalfd4.
+ *
+ * This function can't be called from bionic, so there isn't an entry in the experimental
+ * linker.cpp table for testing and this function.
  */
-int signalfd_portable(int fd, const sigset_t *portable_sigmask, int flags)
+int signalfd_portable(int fd, const sigset_portable_t *portable_sigmask, int portable_flags)
 {
-    sigset_t mips_sigmask;
+    int portable_sigsetsize = sizeof(sigset_portable_t);
+    int rv;
 
-    sigset_pton(portable_sigmask, &mips_sigmask);
+    ALOGV("%s(fd:%d, portable_sigmask:%p, portable_flags:0x%x) {", __func__,
+              fd,    portable_sigmask,    portable_flags);
 
-    return signalfd(fd, &mips_sigmask, flags);
+    rv = do_signalfd4_portable(fd, portable_sigsetsize, portable_sigmask, portable_flags);
+
+    ALOGV("%s: return(rv:%d); }", __func__, rv);
+    return rv;
 }
 #endif
+
+
+/*
+ * Called by read_portable() to do signalfd read() mapping.
+ */
+__hidden int read_signalfd_mapper(int fd, void *buf, size_t count)
+{
+    int rv;
+
+    ALOGV("%s(fd:%d, buf:0x%p, count:%d) {", __func__,
+              fd,    buf,      count);
+
+    rv = read(fd, buf, count);
+    if (rv > 0) {
+        int siginfos = rv/sizeof(struct signalfd_siginfo);
+        struct signalfd_siginfo *si = (struct signalfd_siginfo *) buf;
+        int i;
+
+        /* Read signalfd_siginfo structure(s) if read is large enough */
+        for (i = 0; i < siginfos; i++, si++) {
+            int ssi_signo;
+
+            ssi_signo = si->ssi_signo;
+            si->ssi_signo = signum_ntop(si->ssi_signo);
+            ALOGV("%s: si->ssi_signo:%d = signum_ntop(si->ssi_signo:%d); i:%d", __func__,
+                       si->ssi_signo,                     ssi_signo,     i);
+
+            si->ssi_errno = errno_ntop(si->ssi_errno);
+
+            /*
+             * The ssi_codes appear to be generic; defined in
+             * the kernel in include/asm-generic/siginfo.h
+             */
+            if (si->ssi_status > 0 && si->ssi_status <= NSIG) {
+                si->ssi_status = signum_ntop(si->ssi_status);
+            }
+
+            /*
+             * The rest of the struct members, like
+             *  ssi_trapno, ssi_int, ssi_ptr
+             * are not likely worth dealing with.
+             */
+        }
+    }
+
+    ALOGV("%s: return(rv:%d); }", __func__, rv);
+    return rv;
+}
 
 
 int sigsuspend_portable(const sigset_portable_t *portable_sigmask)
