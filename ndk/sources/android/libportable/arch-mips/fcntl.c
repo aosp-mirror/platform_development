@@ -67,59 +67,113 @@ static char *map_portable_cmd_to_name(int cmd)
 /*
  * Maps a fcntl portable cmd to a native command.
  */
-static int fcntl_cmd_pton(int cmd)
+static int fcntl_cmd_pton(int portable_cmd)
 {
-    switch(cmd) {
+    int native_cmd;
+    char *error_msg = NULL;
+
+    switch(portable_cmd) {
     case F_DUPFD_PORTABLE:      /* 0 --> 0 */
-        return F_DUPFD;
+        native_cmd =  F_DUPFD;
+        break;
+
     case F_GETFD_PORTABLE:      /* 1 --> 1 */
-        return F_GETFD;
+        native_cmd = F_GETFD;
+        break;
+
     case F_SETFD_PORTABLE:      /* 2 --> 2 */
-        return F_SETFD;
+        native_cmd = F_SETFD;
+        break;
+
     case F_GETFL_PORTABLE:      /* 3 --> 3 */
-        return F_GETFL;
+        native_cmd = F_GETFL;
+        break;
+
     case F_SETFL_PORTABLE:      /* 4 --> 4 */
-        return F_SETFL;
+        native_cmd = F_SETFL;
+        break;
+
     case F_GETLK_PORTABLE:      /* 5 --> 14 */
-        return F_GETLK;
+        native_cmd = F_GETLK;
+        break;
+
     case F_SETLK_PORTABLE:      /* 6 --> 6 */
-        return F_SETLK;
+        native_cmd = F_SETLK;
+        break;
+
     case F_SETLKW_PORTABLE:     /* 7 --> 7 */
-        return F_SETLKW;
+        native_cmd = F_SETLKW;
+        break;
+
     case F_SETOWN_PORTABLE:     /* 8 --> 24 */
-        return F_SETOWN;
+        native_cmd = F_SETOWN;
+        break;
+
     case F_GETOWN_PORTABLE:     /* 9 --> 23 */
-        return F_GETOWN;
+        native_cmd = F_GETOWN;
+        break;
+
     case F_SETSIG_PORTABLE:     /* 10 --> 10 */
-        return F_SETSIG;
+        native_cmd = F_SETSIG;
+        break;
+
     case F_GETSIG_PORTABLE:     /* 11 --> 11 */
-        return F_GETSIG;
+        native_cmd = F_GETSIG;
+        break;
+
     case F_GETLK64_PORTABLE:    /* 12 --> 33 */
-        return F_GETLK64;
+        native_cmd = F_GETLK64;
+        break;
+
     case F_SETLK64_PORTABLE:    /* 13 --> 34 */
-        return F_SETLK64;
+        native_cmd = F_SETLK64;
+        break;
+
     case F_SETLKW64_PORTABLE:   /* 14 --> 35 */
-        return F_SETLKW64;
+        native_cmd = F_SETLKW64;
+        break;
+
     case F_SETLEASE_PORTABLE:   /* 1024 --> 1024 */
-        return F_SETLEASE;
+        native_cmd =  F_SETLEASE;
+        break;
+
     case F_GETLEASE_PORTABLE:   /* 1025 --> 1025 */
-        return F_GETLEASE;
+        native_cmd = F_GETLEASE;
+        break;
+
     case F_NOTIFY_PORTABLE:      /* 1026 --> 1026 */
-        return F_NOTIFY;
+        native_cmd = F_NOTIFY;
+        break;
+
     case F_CANCELLK_PORTABLE:      /* 1029 --> void */
-        ALOGE("%s: case F_CANCELLK_PORTABLE: Not likely supported by MIPS.", __func__);
-        return cmd;
-    case F_DUPFD_CLOEXEC_PORTABLE: /* 1030 --> VOID */
-        ALOGE("%s: case F_DUPFD_CLOEXEC_PORTABLE: Not likely supported by MIPS.", __func__);
-        return cmd;
+        error_msg = "Case F_CANCELLK_PORTABLE: Not supported by MIPS. ";
+        native_cmd = portable_cmd;
+        break;
+
+    case F_DUPFD_CLOEXEC_PORTABLE: /* 1030 --> VOID; Not currently used by Bionic */
+        error_msg = "Case F_DUPFD_CLOEXEC_PORTABLE: Not supported by MIPS. ";
+        native_cmd = portable_cmd;
+        break;
+
     default:
-        ALOGE("%s: cmd:%d Not Supported", __func__, cmd);
-        /* Fall thru and default to the command being the same */
+        error_msg = "Case Default: Command Not Supported. ";
+        native_cmd = portable_cmd;
+        break;
     }
-    return cmd;
+
+done:
+    if (error_msg != NULL) {
+        ALOGE("%s(portable_cmd:%d:0x%x): %sreturn(native_cmd:%d:0x%x);", __func__,
+                  portable_cmd, portable_cmd, error_msg, native_cmd, native_cmd);
+    } else {
+        ALOGV("%s(portable_cmd:%d:0x%x): return(native_cmd:%d:0x%x);", __func__,
+                  portable_cmd, portable_cmd,   native_cmd, native_cmd);
+    }
+    return native_cmd;
 }
 
-static int mips_change_flags(int flags)
+
+static int fcntl_flags_pton(int flags)
 {
     int mipsflags = flags & O_ACCMODE_PORTABLE;
 
@@ -152,12 +206,16 @@ static int mips_change_flags(int flags)
     if (flags & O_NDELAY_PORTABLE)
         mipsflags |= O_NDELAY;
 
+    ALOGV("%s(flags:0x%x): return(mipsflags:0x%x);", __func__,
+              flags,              mipsflags);
+
     return mipsflags;
 }
 
-static int portable_change_flags(int flags)
+static int fcntl_flags_ntop(int flags)
 {
     int portableflags = flags & O_ACCMODE_PORTABLE;
+
     if (flags & O_CREAT)
         portableflags |= O_CREAT_PORTABLE;
     if (flags & O_EXCL)
@@ -187,13 +245,16 @@ static int portable_change_flags(int flags)
     if (flags & O_NDELAY)
         portableflags |= O_NDELAY_PORTABLE;
 
+    ALOGV("%s(flags:0x%x): return(portableflags:0x%x);", __func__,
+              flags,              portableflags);
+
     return portableflags;
 }
 
 extern int __fcntl64(int, int, void *);
 
 /*
- * For 32 bit flocks we are converting a portable/AMR struct flock to a MIPS struct flock:
+ * For 32 bit flocks we are converting a portable/ARM struct flock to a MIPS struct flock:
  *
  * MIPS:                        ARM:
  *     struct flock {           struct flock_portable {
@@ -225,26 +286,28 @@ extern int __fcntl64(int, int, void *);
  */
 int fcntl_portable(int fd, int portable_cmd, ...)
 {
-    va_list ap;
-    void * arg;
     int flags;
+    va_list ap;
+    void *arg;
+    int mips_cmd;
     int result = 0;
     struct flock flock;                                 /* Native MIPS structure */
     struct flock64 flock64;                             /* Native MIPS structure */
-    int mips_cmd = fcntl_cmd_pton(portable_cmd);
     char *portable_cmd_name = map_portable_cmd_to_name(portable_cmd);
     struct flock_portable *flock_portable = NULL;
     struct flock64_portable *flock64_portable = NULL;
 
     ALOGV(" ");
-    ALOGV("%s(fd:%d, portable_cmd:%d:'%s', ...): MAPPED mips_cmd = %d",  __func__,
+    ALOGV("%s(fd:%d, portable_cmd:%d:'%s', ...) {",  __func__,
               fd,    portable_cmd,
-                     portable_cmd_name,                 mips_cmd);
+                     portable_cmd_name);
+
 
     va_start(ap, portable_cmd);
     arg = va_arg(ap, void *);
     va_end(ap);
 
+    mips_cmd = fcntl_cmd_pton(portable_cmd);
     switch(mips_cmd) {
     case F_GETLK:
     case F_SETLK:
@@ -312,14 +375,14 @@ int fcntl_portable(int fd, int portable_cmd, ...)
         break;
 
     case F_SETFL:
-        flags = mips_change_flags((int)arg);
-        result = __fcntl64(fd, fcntl_cmd_pton(mips_cmd), (void *)flags);
+        flags = fcntl_flags_pton((int)arg);
+        result = __fcntl64(fd, mips_cmd, (void *)flags);
         break;
 
     case F_GETFL:
-        result = __fcntl64(fd, fcntl_cmd_pton(mips_cmd), arg);
+        result = __fcntl64(fd, mips_cmd, arg);
         if (result != -1)
-            result = portable_change_flags(result);
+            result = fcntl_flags_ntop(result);
         break;
 
     case F_DUPFD:
@@ -332,7 +395,11 @@ int fcntl_portable(int fd, int portable_cmd, ...)
     case F_SETLEASE:
     case F_GETLEASE:
     case F_NOTIFY:
+        ALOGV("%s: Calling __fcntl64(fd:%d, mips_cmd:0x%x, arg:%p);", __func__,
+                                     fd,    mips_cmd,      arg);
+
         result = __fcntl64(fd, mips_cmd, arg);
+
         if (result < 0) {
             ALOGV("%s: result = %d = __fcntl64(fd:%d, mips_cmd:0x%x, arg:%p);", __func__,
                        result,                 fd,    mips_cmd,      arg);
