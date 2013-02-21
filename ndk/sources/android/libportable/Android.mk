@@ -57,6 +57,12 @@ libportable_arch_src_files += \
 			arch-mips/timer.c \
 			arch-mips/timerfd.c \
 			arch-mips/waitpid.c
+
+libportable_arch_src_files += \
+			arch-mips/_setjmp.S \
+			arch-mips/setjmp.S \
+			arch-mips/sigsetjmp.S
+
 endif
 
 ifeq ($(TARGET_ARCH),arm)
