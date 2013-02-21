@@ -20,6 +20,7 @@
 #include <signal_portable.h>
 #include <time.h>
 #include <errno.h>
+#include <errno_portable.h>
 #include <asm/unistd-portable.h>
 #include <asm/unistd.h>
 
@@ -51,6 +52,7 @@ int syscall_portable(int portable_number, ...)
 #ifdef __NR_add_key_portable
     case __NR_add_key_portable: native_number = __NR_add_key; break;
 #endif
+
 #ifdef __NR_cacheflush_portable
     case __NR_cacheflush_portable: {
         long start, end, flags;
@@ -64,6 +66,7 @@ int syscall_portable(int portable_number, ...)
         return cacheflush(start, end, flags);
     }
 #endif
+
 #ifdef __NR_capget_portable
     case __NR_capget_portable: native_number = __NR_capget; break;
 #endif
@@ -121,15 +124,62 @@ int syscall_portable(int portable_number, ...)
 #ifdef __NR_pipe2_portable
     case __NR_pipe2_portable: native_number = __NR_pipe2; break;
 #endif
+
 #ifdef __NR_rt_sigaction_portable
-    case __NR_rt_sigaction_portable: native_number = __NR_rt_sigaction; break;
+    case __NR_rt_sigaction_portable: {
+        int sig;
+        struct sigaction_portable *act;
+        struct sigaction_portable *oact;
+        size_t sigsetsize;
+
+        va_start(ap, portable_number);
+        sig = va_arg(ap, int);
+        act = va_arg(ap, struct sigaction_portable *);
+        oact = va_arg(ap, struct sigaction_portable *);
+        sigsetsize = va_arg(ap, size_t);
+        va_end(ap);
+        return __rt_sigaction_portable(sig, act, oact, sigsetsize);
+    }
 #endif
+
 #ifdef __NR_rt_sigprocmask_portable
-    case __NR_rt_sigprocmask_portable: native_number = __NR_rt_sigprocmask; break;
+    case __NR_rt_sigprocmask_portable: {
+        int how;
+        const sigset_portable_t *set;
+        sigset_portable_t *oset;
+        size_t sigsetsize;
+
+        va_start(ap, portable_number);
+        how = va_arg(ap, int);
+        set = va_arg(ap, sigset_portable_t *);
+        oset = va_arg(ap, sigset_portable_t *);
+        sigsetsize = va_arg(ap, size_t);
+        va_end(ap);
+        return __rt_sigprocmask_portable(how, set, oset, sigsetsize);
+    }
 #endif
+
 #ifdef __NR_rt_sigtimedwait_portable
-    case __NR_rt_sigtimedwait_portable: native_number = __NR_rt_sigtimedwait; break;
+    case __NR_rt_sigtimedwait_portable: {
+        const sigset_portable_t *set;
+        siginfo_portable_t *info;
+        const struct timespec *timeout;
+        size_t sigsetsize;
+
+        va_start(ap, portable_number);
+        set = va_arg(ap, sigset_portable_t *);
+        info = va_arg(ap, siginfo_portable_t *);
+        timeout = va_arg(ap, struct timespec *);
+        sigsetsize = va_arg(ap, size_t);
+        va_end(ap);
+        return __rt_sigtimedwait_portable(set, info, timeout, sigsetsize);
+    }
 #endif
+
+#ifdef __NR_setgid_portable
+    case __NR_setgid_portable: native_number = __NR_setgid; break;
+#endif
+
 #ifdef __NR_set_mempolicy_portable
     case __NR_set_mempolicy_portable: native_number = __NR_set_mempolicy; break;
 #endif
@@ -175,9 +225,9 @@ int syscall_portable(int portable_number, ...)
 #ifdef __NR_syslog_portable
     case __NR_syslog_portable: native_number = __NR_syslog; break;
 #endif
+
 #ifdef __NR_timer_create_portable
     case __NR_timer_create_portable: {
-        extern int timer_create_portable(clockid_t, struct sigevent *, timer_t *);
         clockid_t clockid;
         struct sigevent *evp;
         timer_t *timerid;
@@ -191,6 +241,7 @@ int syscall_portable(int portable_number, ...)
         return timer_create_portable(clockid, evp, timerid);
     }
 #endif
+
 #ifdef __NR_timerfd_create_portable
     case __NR_timerfd_create_portable: native_number = __NR_timerfd_create; break;
 #endif
@@ -200,6 +251,26 @@ int syscall_portable(int portable_number, ...)
 #ifdef __NR_timer_gettime_portable
     case __NR_timer_gettime_portable: native_number = __NR_timer_gettime; break;
 #endif
+
+#ifdef __NR_rt_tgsigqueueinfo_portable
+    case __NR_rt_tgsigqueueinfo_portable: {
+        pid_t tgid;
+        pid_t pid;
+        int sig;
+        siginfo_portable_t *uinfo;
+
+        va_start(ap, portable_number);
+        tgid = va_arg(ap, pid_t);
+        pid = va_arg(ap, pid_t);
+        sig = va_arg(ap, int);
+        uinfo = va_arg(ap, siginfo_portable_t *);
+        va_end(ap);
+
+        ret = rt_tgsigqueueinfo_portable(tgid, pid, sig, uinfo);
+        goto done;
+    }
+#endif
+
 #ifdef __NR_tkill_portable
     case __NR_tkill_portable: {
         extern int tkill_portable(int, int);
@@ -213,6 +284,7 @@ int syscall_portable(int portable_number, ...)
         return tkill_portable(tid, sig);
     }
 #endif
+
     default:
         native_number = -1;
         break;
