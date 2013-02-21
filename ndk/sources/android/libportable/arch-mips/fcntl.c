@@ -58,7 +58,7 @@ static char *map_portable_cmd_to_name(int cmd)
     case F_DUPFD_CLOEXEC_PORTABLE:      name = "F_DUPFD_CLOEXEC_PORTABLE";      break;  /* 1030 */
     default:                            name = "<UNKNOWN>";                     break;
     }
-    return(name);
+    return name;
 }
 
 static int mips_change_cmd(int cmd)
@@ -102,15 +102,15 @@ static int mips_change_cmd(int cmd)
         return F_NOTIFY;
     case F_CANCELLK_PORTABLE:      /* 1029 --> void */
         ALOGE("%s: case F_CANCELLK_PORTABLE: Not likely supported by MIPS.", __func__);
-        return(cmd);
+        return cmd;
     case F_DUPFD_CLOEXEC_PORTABLE: /* 1030 --> VOID */
         ALOGE("%s: case F_DUPFD_CLOEXEC_PORTABLE: Not likely supported by MIPS.", __func__);
-        return(cmd);
+        return cmd;
     default:
         ALOGE("%s: cmd:%d Not Supported", __func__, cmd);
         /* Fall thru and default to the command being the same */
     }
-    return(cmd);
+    return cmd;
 }
 
 static int mips_change_flags(int flags)
@@ -341,6 +341,6 @@ int fcntl_portable(int fd, int portable_cmd, ...)
 
 done:
     ALOGV("%s: return(result:%d); }", __func__, result);
-    return(result);
+    return result;
 }
 

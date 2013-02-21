@@ -28,33 +28,33 @@ static inline int mips_change_flags(int flags)
 {
     int mipsflags = flags & O_ACCMODE_PORTABLE;
     if (flags & O_CREAT_PORTABLE)
-	mipsflags |= O_CREAT;
+        mipsflags |= O_CREAT;
     if (flags & O_EXCL_PORTABLE)
-	mipsflags |= O_EXCL;
+        mipsflags |= O_EXCL;
     if (flags & O_NOCTTY_PORTABLE)
-	mipsflags |= O_NOCTTY;
+        mipsflags |= O_NOCTTY;
     if (flags & O_TRUNC_PORTABLE)
-	mipsflags |= O_TRUNC;
+        mipsflags |= O_TRUNC;
     if (flags & O_APPEND_PORTABLE)
-	mipsflags |= O_APPEND;
+        mipsflags |= O_APPEND;
     if (flags & O_NONBLOCK_PORTABLE)
-	mipsflags |= O_NONBLOCK;
+        mipsflags |= O_NONBLOCK;
     if (flags & O_SYNC_PORTABLE)
-	mipsflags |= O_SYNC;
+        mipsflags |= O_SYNC;
     if (flags & FASYNC_PORTABLE)
-	mipsflags |= FASYNC;
+        mipsflags |= FASYNC;
     if (flags & O_DIRECT_PORTABLE)
-	mipsflags |= O_DIRECT;
+        mipsflags |= O_DIRECT;
     if (flags & O_LARGEFILE_PORTABLE)
-	mipsflags |= O_LARGEFILE;
+        mipsflags |= O_LARGEFILE;
     if (flags & O_DIRECTORY_PORTABLE)
-	mipsflags |= O_DIRECTORY;
+        mipsflags |= O_DIRECTORY;
     if (flags & O_NOFOLLOW_PORTABLE)
-	mipsflags |= O_NOFOLLOW;
+        mipsflags |= O_NOFOLLOW;
     if (flags & O_NOATIME_PORTABLE)
-	mipsflags |= O_NOATIME;
+        mipsflags |= O_NOATIME;
     if (flags & O_NDELAY_PORTABLE)
-	mipsflags |= O_NDELAY;
+        mipsflags |= O_NDELAY;
 
     return mipsflags;
 }
