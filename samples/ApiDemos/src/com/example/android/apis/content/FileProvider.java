@@ -26,9 +26,11 @@ import android.content.ContentValues;
 import android.content.ContentProvider.PipeDataWriter;
 import android.content.res.AssetFileDescriptor;
 import android.database.Cursor;
+import android.database.MatrixCursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.ParcelFileDescriptor;
+import android.provider.OpenableColumns;
 import android.util.Log;
 
 /**
@@ -45,8 +47,43 @@ public class FileProvider extends ContentProvider
     @Override
     public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs,
             String sortOrder) {
-        // Don't support queries.
-        return null;
+
+        // content providers that support open and openAssetFile should support queries for all
+        // android.provider.OpenableColumns.
+
+        int displayNameIndex = -1;
+        int sizeIndex = -1;
+
+        // If projection is null, return all columns.
+        if (projection == null) {
+            projection = new String[] {
+                    OpenableColumns.DISPLAY_NAME,
+                    OpenableColumns.SIZE};
+        }
+
+        for (int i = 0; i < projection.length; i++) {
+            if (OpenableColumns.DISPLAY_NAME.equals(projection[i])) {
+                displayNameIndex = i;
+            }
+            if (OpenableColumns.SIZE.equals(projection[i])) {
+                sizeIndex = i;
+            }
+        }
+
+        MatrixCursor cursor = new MatrixCursor(projection);
+        Object[] result = new Object[projection.length];
+
+        for (int i = 0; i < result.length; i++) {
+            if (i == displayNameIndex) {
+                result[i] = uri.getPath();
+            }
+            if (i == sizeIndex) {
+                result[i] = null; // Size is unknown, so null, if it was known, it would go here.
+            }
+        }
+
+        cursor.addRow(result);
+        return cursor;
     }
 
     @Override
