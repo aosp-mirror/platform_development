@@ -27,8 +27,8 @@ static inline int mips_change_level(int level)
 {
     switch (level) {
     case SOL_SOCKET_PORTABLE:
-	level = SOL_SOCKET;
-	break;
+        level = SOL_SOCKET;
+        break;
     }
     return level;
 }
@@ -38,71 +38,71 @@ static inline int mips_change_optname(int optname)
 {
     switch (optname) {
     case SO_DEBUG_PORTABLE:
-	return SO_DEBUG;
+        return SO_DEBUG;
     case SO_REUSEADDR_PORTABLE:
-	return SO_REUSEADDR;
+        return SO_REUSEADDR;
     case SO_TYPE_PORTABLE:
-	return SO_TYPE;
+        return SO_TYPE;
     case SO_ERROR_PORTABLE:
-	return SO_ERROR;
+        return SO_ERROR;
     case SO_DONTROUTE_PORTABLE:
-	return SO_DONTROUTE;
+        return SO_DONTROUTE;
     case SO_BROADCAST_PORTABLE:
-	return SO_BROADCAST;
+        return SO_BROADCAST;
     case SO_SNDBUF_PORTABLE:
-	return SO_SNDBUF;
+        return SO_SNDBUF;
     case SO_RCVBUF_PORTABLE:
-	return SO_RCVBUF;
+        return SO_RCVBUF;
     case SO_SNDBUFFORCE_PORTABLE:
-	return SO_SNDBUFFORCE;
+        return SO_SNDBUFFORCE;
     case SO_RCVBUFFORCE_PORTABLE:
-	return SO_RCVBUFFORCE;
+        return SO_RCVBUFFORCE;
     case SO_KEEPALIVE_PORTABLE:
-	return SO_KEEPALIVE;
+        return SO_KEEPALIVE;
     case SO_OOBINLINE_PORTABLE:
-	return SO_OOBINLINE;
+        return SO_OOBINLINE;
     case SO_NO_CHECK_PORTABLE:
-	return SO_NO_CHECK;
+        return SO_NO_CHECK;
     case SO_PRIORITY_PORTABLE:
-	return SO_PRIORITY;
+        return SO_PRIORITY;
     case SO_LINGER_PORTABLE:
-	return SO_LINGER;
+        return SO_LINGER;
     case SO_BSDCOMPAT_PORTABLE:
-	return SO_BSDCOMPAT;
+        return SO_BSDCOMPAT;
     case SO_PASSCRED_PORTABLE:
-	return SO_PASSCRED;
+        return SO_PASSCRED;
     case SO_PEERCRED_PORTABLE:
-	return SO_PEERCRED;
+        return SO_PEERCRED;
     case SO_RCVLOWAT_PORTABLE:
-	return SO_RCVLOWAT;
+        return SO_RCVLOWAT;
     case SO_SNDLOWAT_PORTABLE:
-	return SO_SNDLOWAT;
+        return SO_SNDLOWAT;
     case SO_RCVTIMEO_PORTABLE:
-	return SO_RCVTIMEO;
+        return SO_RCVTIMEO;
     case SO_SNDTIMEO_PORTABLE:
-	return SO_SNDTIMEO;
+        return SO_SNDTIMEO;
     case SO_SECURITY_AUTHENTICATION_PORTABLE:
-	return SO_SECURITY_AUTHENTICATION;
+        return SO_SECURITY_AUTHENTICATION;
     case SO_SECURITY_ENCRYPTION_TRANSPORT_PORTABLE:
-	return SO_SECURITY_ENCRYPTION_TRANSPORT;
+        return SO_SECURITY_ENCRYPTION_TRANSPORT;
     case SO_SECURITY_ENCRYPTION_NETWORK_PORTABLE:
-	return SO_SECURITY_ENCRYPTION_NETWORK;
+        return SO_SECURITY_ENCRYPTION_NETWORK;
     case SO_BINDTODEVICE_PORTABLE:
-	return SO_BINDTODEVICE;
+        return SO_BINDTODEVICE;
     case SO_ATTACH_FILTER_PORTABLE:
-	return SO_ATTACH_FILTER;
+        return SO_ATTACH_FILTER;
     case SO_DETACH_FILTER_PORTABLE:
-	return SO_DETACH_FILTER;
+        return SO_DETACH_FILTER;
     case SO_PEERNAME_PORTABLE:
-	return SO_PEERNAME;
+        return SO_PEERNAME;
     case SO_TIMESTAMP_PORTABLE:
-	return SO_TIMESTAMP;
+        return SO_TIMESTAMP;
     case SO_ACCEPTCONN_PORTABLE:
-	return SO_ACCEPTCONN;
+        return SO_ACCEPTCONN;
     case SO_PEERSEC_PORTABLE:
-	return SO_PEERSEC;
+        return SO_PEERSEC;
     case SO_PASSSEC_PORTABLE:
-	return SO_PASSSEC;
+        return SO_PASSSEC;
     }
     return optname;
 }

@@ -59,7 +59,7 @@ static inline char *portable_tag() {
         strncat(&my_portable_tag[0], ".", MAX_TAG_LEN - strlen(my_portable_tag));
         strncat(&my_portable_tag[0], PORTABLE_TAG, MAX_TAG_LEN - strlen(my_portable_tag));
     }
-    return(my_portable_tag);
+    return my_portable_tag;
 }
 #define LOG_TAG  portable_tag()
 #else /* !EXTENDED_LOGGING */
