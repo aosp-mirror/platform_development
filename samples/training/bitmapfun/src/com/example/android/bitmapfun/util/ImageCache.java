@@ -16,6 +16,8 @@
 
 package com.example.android.bitmapfun.util;
 
+import com.example.android.bitmapfun.BuildConfig;
+
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -30,8 +32,6 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.util.LruCache;
 import android.util.Log;
 
-import com.example.android.bitmapfun.BuildConfig;
-
 import java.io.File;
 import java.io.FileDescriptor;
 import java.io.FileInputStream;
@@ -45,7 +45,11 @@ import java.util.HashSet;
 import java.util.Iterator;
 
 /**
- * This class holds our bitmap caches (memory and disk).
+ * This class handles disk and memory caching of bitmaps in conjunction with the
+ * {@link ImageWorker} class and its subclasses. Use
+ * {@link ImageCache#getInstance(FragmentManager, ImageCacheParams)} to get an instance of this
+ * class, although usually a cache should be added directly to an {@link ImageWorker} by calling
+ * {@link ImageWorker#addImageCache(FragmentManager, ImageCacheParams)}.
  */
 public class ImageCache {
     private static final String TAG = "ImageCache";
@@ -64,7 +68,6 @@ public class ImageCache {
     // Constants to easily toggle various caches
     private static final boolean DEFAULT_MEM_CACHE_ENABLED = true;
     private static final boolean DEFAULT_DISK_CACHE_ENABLED = true;
-    private static final boolean DEFAULT_CLEAR_DISK_CACHE_ON_START = false;
     private static final boolean DEFAULT_INIT_DISK_CACHE_ON_CREATE = false;
 
     private DiskLruCache mDiskLruCache;
@@ -76,33 +79,26 @@ public class ImageCache {
     private HashSet<SoftReference<Bitmap>> mReusableBitmaps;
 
     /**
-     * Creating a new ImageCache object using the specified parameters.
+     * Create a new ImageCache object using the specified parameters. This should not be
+     * called directly by other classes, instead use
+     * {@link ImageCache#getInstance(FragmentManager, ImageCacheParams)} to fetch an ImageCache
+     * instance.
      *
      * @param cacheParams The cache parameters to use to initialize the cache
      */
-    public ImageCache(ImageCacheParams cacheParams) {
+    private ImageCache(ImageCacheParams cacheParams) {
         init(cacheParams);
     }
 
     /**
-     * Creating a new ImageCache object using the default parameters.
-     *
-     * @param context The context to use
-     * @param uniqueName A unique name that will be appended to the cache directory
-     */
-    public ImageCache(Context context, String uniqueName) {
-        init(new ImageCacheParams(context, uniqueName));
-    }
-
-    /**
-     * Find and return an existing ImageCache stored in a {@link RetainFragment}, if not found a new
-     * one is created using the supplied params and saved to a {@link RetainFragment}.
+     * Return an {@link ImageCache} instance. A {@link RetainFragment} is used to retain the
+     * ImageCache object across configuration changes such as a change in device orientation.
      *
      * @param fragmentManager The fragment manager to use when dealing with the retained fragment.
-     * @param cacheParams The cache parameters to use if creating the ImageCache
+     * @param cacheParams The cache parameters to use if the ImageCache needs instantiation.
      * @return An existing retained ImageCache object or a new one if one did not exist
      */
-    public static ImageCache findOrCreateCache(
+    public static ImageCache getInstance(
             FragmentManager fragmentManager, ImageCacheParams cacheParams) {
 
         // Search for, or create an instance of the non-UI RetainFragment
@@ -452,15 +448,19 @@ public class ImageCache {
         public int compressQuality = DEFAULT_COMPRESS_QUALITY;
         public boolean memoryCacheEnabled = DEFAULT_MEM_CACHE_ENABLED;
         public boolean diskCacheEnabled = DEFAULT_DISK_CACHE_ENABLED;
-        public boolean clearDiskCacheOnStart = DEFAULT_CLEAR_DISK_CACHE_ON_START;
         public boolean initDiskCacheOnCreate = DEFAULT_INIT_DISK_CACHE_ON_CREATE;
 
-        public ImageCacheParams(Context context, String uniqueName) {
-            diskCacheDir = getDiskCacheDir(context, uniqueName);
-        }
-
-        public ImageCacheParams(File diskCacheDir) {
-            this.diskCacheDir = diskCacheDir;
+        /**
+         * Create a set of image cache parameters that can be provided to
+         * {@link ImageCache#getInstance(FragmentManager, ImageCacheParams)} or
+         * {@link ImageWorker#addImageCache(FragmentManager, ImageCacheParams)}.
+         * @param context A context to use.
+         * @param diskCacheDirectoryName A unique subdirectory name that will be appended to the
+         *                               application cache directory. Usually "cache" or "images"
+         *                               is sufficient.
+         */
+        public ImageCacheParams(Context context, String diskCacheDirectoryName) {
+            diskCacheDir = getDiskCacheDir(context, diskCacheDirectoryName);
         }
 
         /**
@@ -616,7 +616,7 @@ public class ImageCache {
      * @return The existing instance of the Fragment or the new instance if just
      *         created.
      */
-    public static RetainFragment findOrCreateRetainFragment(FragmentManager fm) {
+    private static RetainFragment findOrCreateRetainFragment(FragmentManager fm) {
         // Check to see if we have retained the worker fragment.
         RetainFragment mRetainFragment = (RetainFragment) fm.findFragmentByTag(TAG);
 
