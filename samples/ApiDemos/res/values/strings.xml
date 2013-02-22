@@ -387,6 +387,8 @@
     <string name="reorder_four_text">This is the last in a sequence of four Activities.</string>
     <string name="reorder_second_to_front">Bring the second in front</string>
 
+    <string name ="activity_rotation_animation">App/Activity/Rotation Animation</string>
+
     <string name="menu_from_xml_title">App/Menu/Inflate from XML</string>
     <string name="menu_from_xml_instructions_press_menu">Select a menu resource and press the menu key.</string>
     <string name="menu_from_xml_instructions_go_back">If you want to choose another menu resource, go back and re-run this activity.</string>
@@ -1156,6 +1158,16 @@
     <string name="relative_layout_2_instructions">Type here:</string>
     <string name="relative_layout_2_ok">Ok</string>
     <string name="relative_layout_2_cancel">Cancel</string>
+    <string name="rotation_animation_description">
+            Change the default rotation animation from rotating to fade or jumpcut.
+            Only works if FLAG_FULLSCREEN is set and there are no dialogs up.
+            Try rotating with and without the Power Off dialog visible.
+    </string>
+    <string name="rotation_animation_fullscreen">FULLSCREEN</string>
+    <string name="rotation_animation_choices">Rotation Animation:</string>
+    <string name="rotation_animation_rotate">ROTATE</string>
+    <string name="rotation_animation_crossfade">XFADE</string>
+    <string name="rotation_animation_jumpcut">JUMPCUT</string>
     <string name="scroll_view_1_text_1">Text View 1</string>
     <string name="scroll_view_1_button_1">Button 1</string>
     <string name="scroll_view_1_text_2">Text View 2</string>
