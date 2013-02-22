@@ -47,6 +47,8 @@
             custom Theme.Dialog theme to make an activity that looks like a
             customized dialog, here with an ugly frame.</string>
 
+    <string name="activity_overscan">App/Activity/Overscan</string>
+
     <string name="quick_contacts_demo">App/Activity/QuickContactsDemo</string>
 
     <string name="activity_wallpaper">App/Activity/Wallpaper</string>

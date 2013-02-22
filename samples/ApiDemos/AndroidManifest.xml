@@ -93,6 +93,16 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".app.OverscanActivity"
+                android:label="@string/activity_overscan"
+                android:theme="@android:style/Theme.Holo.NoActionBar.Overscan"
+                android:enabled="@bool/atLeastJellyBeanMR2">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
        <activity android:name=".app.QuickContactsDemo"
                 android:label="@string/quick_contacts_demo">
             <intent-filter>

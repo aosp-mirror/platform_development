@@ -38,5 +38,10 @@
          API level.  The default value is false; an alternative value
          for JellyBean MR 1 is true. -->
     <bool name="atLeastJellyBeanMR1">false</bool>
-    
+
+    <!-- This resource is true if running under at least JellyBean MR2
+         API level.  The default value is false; an alternative value
+         for JellyBean MR 2 is true. -->
+    <bool name="atLeastJellyBeanMR2">false</bool>
+
 </resources>
