@@ -486,7 +486,7 @@ void GL2Encoder::s_glDrawElements(void *self, GLenum mode, GLsizei count, GLenum
             ctx->m_glBindBuffer_enc(self, GL_ELEMENT_ARRAY_BUFFER, 0);
             indices = (void*)((GLintptr)buf->m_fixedBuffer.ptr() + (GLintptr)indices);
         }
-    } 
+    }
     if (adjustIndices) {
         void *adjustedIndices = (void*)indices;
         int minIndex = 0, maxIndex = 0;
@@ -633,7 +633,7 @@ static bool replaceSamplerExternalWith2D(char* const str, ShaderData* const data
     return true;
 }
 
-void GL2Encoder::s_glShaderSource(void *self, GLuint shader, GLsizei count, const GLchar **string, const GLint *length)
+void GL2Encoder::s_glShaderSource(void *self, GLuint shader, GLsizei count, const GLchar *const *string, const GLint *length)
 {
     GL2Encoder* ctx = (GL2Encoder*)self;
     ShaderData* shaderData = ctx->m_shared->getShaderData(shader);
@@ -686,7 +686,7 @@ void GL2Encoder::s_glLinkProgram(void * self, GLuint program)
     GLchar *name = new GLchar[maxLength+1];
     GLint location;
     //for each active uniform, get its size and starting location.
-    for (GLint i=0 ; i<numUniforms ; ++i) 
+    for (GLint i=0 ; i<numUniforms ; ++i)
     {
         ctx->glGetActiveUniform(self, program, i, maxLength, NULL, &size, &type, name);
         location = ctx->m_glGetUniformLocation_enc(self, program, name);
@@ -784,7 +784,7 @@ int GL2Encoder::s_glGetUniformLocation(void *self, GLuint program, const GLchar 
             if (!brace || sscanf(brace+1,"%d",&arrIndex) != 1) {
                 return -1;
             }
-        
+
         }
     }
 

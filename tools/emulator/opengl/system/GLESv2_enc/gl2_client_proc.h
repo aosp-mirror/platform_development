@@ -7,7 +7,7 @@
 
 #include "gl2_types.h"
 #ifndef gl2_APIENTRY
-#define gl2_APIENTRY 
+#define gl2_APIENTRY
 #endif
 typedef void (gl2_APIENTRY *glActiveTexture_client_proc_t) (void * ctx, GLenum);
 typedef void (gl2_APIENTRY *glAttachShader_client_proc_t) (void * ctx, GLuint, GLuint);
@@ -107,7 +107,7 @@ typedef void (gl2_APIENTRY *glRenderbufferStorage_client_proc_t) (void * ctx, GL
 typedef void (gl2_APIENTRY *glSampleCoverage_client_proc_t) (void * ctx, GLclampf, GLboolean);
 typedef void (gl2_APIENTRY *glScissor_client_proc_t) (void * ctx, GLint, GLint, GLsizei, GLsizei);
 typedef void (gl2_APIENTRY *glShaderBinary_client_proc_t) (void * ctx, GLsizei, const GLuint*, GLenum, const GLvoid*, GLsizei);
-typedef void (gl2_APIENTRY *glShaderSource_client_proc_t) (void * ctx, GLuint, GLsizei, const GLchar**, const GLint*);
+typedef void (gl2_APIENTRY *glShaderSource_client_proc_t) (void * ctx, GLuint, GLsizei, const GLchar* const*, const GLint*);
 typedef void (gl2_APIENTRY *glStencilFunc_client_proc_t) (void * ctx, GLenum, GLint, GLuint);
 typedef void (gl2_APIENTRY *glStencilFuncSeparate_client_proc_t) (void * ctx, GLenum, GLenum, GLint, GLuint);
 typedef void (gl2_APIENTRY *glStencilMask_client_proc_t) (void * ctx, GLuint);
