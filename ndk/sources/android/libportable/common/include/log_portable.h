@@ -70,6 +70,17 @@ static inline char *portable_tag() {
 #define LOG_TAG PORTABLE_TAG
 #endif
 
+/*
+ * Override LOG_PRI() defined in ${AOSP}/system/core/include/cutils/log.h
+ * to preserve the value of errno while logging.
+ */
+#define LOG_PRI(priority, tag, ...) ({                      \
+    int _errno = errno;                                     \
+    int _rv = android_printLog(priority, tag, __VA_ARGS__); \
+    errno = _errno;                                         \
+    _rv;                   /* Returned to caller */         \
+})
+
 # include <cutils/log.h>
 
 # define PERROR(str)  {                                                                  \
