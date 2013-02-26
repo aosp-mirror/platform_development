@@ -27,12 +27,10 @@ import android.os.Bundle;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.view.ActionMode;
-import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.CheckBox;
@@ -51,10 +49,10 @@ import com.example.android.apis.R;
  * the system decor, in order to better focus the user's attention or use available screen real
  * estate on the task at hand.
  */
-public class OverscanActivity extends Activity
+public class SystemUIModes extends Activity
         implements OnQueryTextListener, ActionBar.TabListener {
     public static class IV extends ImageView implements View.OnSystemUiVisibilityChangeListener {
-        private OverscanActivity mActivity;
+        private SystemUIModes mActivity;
         private ActionMode mActionMode;
         public IV(Context context) {
             super(context);
@@ -62,7 +60,7 @@ public class OverscanActivity extends Activity
         public IV(Context context, AttributeSet attrs) {
             super(context, attrs);
         }
-        public void setActivity(OverscanActivity act) {
+        public void setActivity(SystemUIModes act) {
             setOnSystemUiVisibilityChangeListener(this);
             mActivity = act;
         }
@@ -161,7 +159,7 @@ public class OverscanActivity extends Activity
     };
     TextView mMetricsText;
 
-    public OverscanActivity() {
+    public SystemUIModes() {
     }
 
     @Override
@@ -170,7 +168,7 @@ public class OverscanActivity extends Activity
 
         getWindow().requestFeature(Window.FEATURE_ACTION_BAR_OVERLAY);
 
-        setContentView(R.layout.overscan);
+        setContentView(R.layout.system_ui_modes);
         mImage = (IV) findViewById(R.id.image);
         mImage.setActivity(this);
 

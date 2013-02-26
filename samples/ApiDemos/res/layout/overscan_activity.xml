@@ -14,11 +14,18 @@
      limitations under the License.
 -->
 
+<!-- BEGIN_INCLUDE(complete) -->
+<!-- This layout is designed for use with FLAG_LAYOUT_IN_OVERSCAN, so its window will
+     be placed into the overscan region of the display (if there is one).  Thus the contents
+     of the top-level view may be obscured around the edges by the display, leaving the
+     edge of the box background used here invisible. -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/box_white">
 
+    <!-- This is still in the same position as the top-level FrameLayout, so the contentx
+        of this TextView may also be obscured. -->
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -27,10 +34,16 @@
         android:textAppearance="?android:attr/textAppearanceMedium"
         android:text="Overscan" />
 
+    <!-- This FrameLayout uses android:fitsSystemWindows to have its padding adjusted so
+         that within that space its content is offset to not be obscured by the overscan
+         region (or also system decors that are covering its UI. -->
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:fitsSystemWindows="true">
+
+        <!-- Now that we are within the padding region of the parent FrameLayout, we can
+             safely place content that will be visible to the user. -->
         <ImageView
             android:layout_width="match_parent"
             android:layout_height="match_parent"
@@ -47,6 +60,8 @@
             android:layout_marginLeft="3dp"
             android:textAppearance="?android:attr/textAppearanceMedium"
             android:text="Content" />
+
     </FrameLayout>
 
 </FrameLayout>
+<!-- END_INCLUDE(complete) -->

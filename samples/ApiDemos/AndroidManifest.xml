@@ -2298,7 +2298,7 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".view.OverscanActivity"
+        <activity android:name=".view.SystemUIModes"
                 android:label="Views/System UI Visibility/System UI Modes"
                 android:uiOptions="splitActionBarWhenNarrow">
             <intent-filter>
