@@ -23,71 +23,106 @@
 #error Bad build environment
 #endif
 
-static inline int mips_change_prot(int prot)
+#define PORTABLE_TAG "mmap_portable"
+#include <log_portable.h>
+
+static inline int mmap_prot_pton(int portable_prot)
 {
+    int native_prot = portable_prot;
+
+    ALOGV("%s(portable_prot:0x%x) {", __func__, portable_prot);
+
     /* Only PROT_SEM is different */
-    if (prot & PROT_SEM_PORTABLE) {
-        prot &= ~PROT_SEM_PORTABLE;
-        prot |= PROT_SEM;
+    if (portable_prot & PROT_SEM_PORTABLE) {
+        native_prot &= ~PROT_SEM_PORTABLE;
+        native_prot |= PROT_SEM;
     }
 
-    return prot;
+    ALOGV("%s: return(native_prot:0x%x); }", __func__, native_prot);
+    return native_prot;
 }
 
-static inline int mips_change_flags(int flags)
+
+static inline int mmap_flags_pton(int portable_flags)
 {
-    int mipsflags = 0;
-    if (flags & MAP_SHARED_PORTABLE)
-       mipsflags |= MAP_SHARED;
-    if (flags & MAP_PRIVATE_PORTABLE)
-       mipsflags |= MAP_PRIVATE;
-    if (flags & MAP_FIXED_PORTABLE)
-       mipsflags |= MAP_FIXED;
-    if (flags & MAP_ANONYMOUS_PORTABLE)
-       mipsflags |= MAP_ANONYMOUS;
-    if (flags & MAP_GROWSDOWN_PORTABLE)
-       mipsflags |= MAP_GROWSDOWN;
-    if (flags & MAP_DENYWRITE_PORTABLE)
-       mipsflags |= MAP_DENYWRITE;
-    if (flags & MAP_EXECUTABLE_PORTABLE)
-       mipsflags |= MAP_EXECUTABLE;
-    if (flags & MAP_LOCKED_PORTABLE)
-       mipsflags |= MAP_LOCKED;
-    if (flags & MAP_NORESERVE_PORTABLE)
-       mipsflags |= MAP_NORESERVE;
-    if (flags & MAP_POPULATE_PORTABLE)
-       mipsflags |= MAP_POPULATE;
-    if (flags & MAP_NONBLOCK_PORTABLE)
-       mipsflags |= MAP_NONBLOCK;
+    int native_flags = 0;
 
-    return mipsflags;
-}
+    ALOGV("%s(portable_flags:0x%x) {", __func__, portable_flags);
 
-#define  MMAP2_SHIFT  12
-extern void *__mmap2(void *, size_t, int, int, int, size_t);
-void *mmap_portable(void *addr, size_t size, int prot, int flags, int fd, long offset)
-{
-    void *ret;
-    int mips_prot, mips_flags;
-
-    if (offset & ((1UL << MMAP2_SHIFT)-1)) {
-        errno = EINVAL;
-        return MAP_FAILED;
+    if (portable_flags & MAP_SHARED_PORTABLE) {
+       native_flags |= MAP_SHARED;
+    }
+    if (portable_flags & MAP_PRIVATE_PORTABLE) {
+       native_flags |= MAP_PRIVATE;
+    }
+    if (portable_flags & MAP_FIXED_PORTABLE) {
+       native_flags |= MAP_FIXED;
+    }
+    if (portable_flags & MAP_ANONYMOUS_PORTABLE) {
+       native_flags |= MAP_ANONYMOUS;
+    }
+    if (portable_flags & MAP_GROWSDOWN_PORTABLE) {
+       native_flags |= MAP_GROWSDOWN;
+    }
+    if (portable_flags & MAP_DENYWRITE_PORTABLE) {
+       native_flags |= MAP_DENYWRITE;
+    }
+    if (portable_flags & MAP_EXECUTABLE_PORTABLE) {
+       native_flags |= MAP_EXECUTABLE;
+    }
+    if (portable_flags & MAP_LOCKED_PORTABLE) {
+       native_flags |= MAP_LOCKED;
+    }
+    if (portable_flags & MAP_NORESERVE_PORTABLE) {
+       native_flags |= MAP_NORESERVE;
+    }
+    if (portable_flags & MAP_POPULATE_PORTABLE) {
+       native_flags |= MAP_POPULATE;
+    }
+    if (portable_flags & MAP_NONBLOCK_PORTABLE) {
+       native_flags |= MAP_NONBLOCK;
     }
 
-    mips_prot = mips_change_prot(prot);
-    mips_flags = mips_change_flags(flags);
-    ret = __mmap2(addr, size, mips_prot, mips_flags, fd,
-                  (size_t)offset >> MMAP2_SHIFT);
-
-    if (ret && (mips_flags & (MAP_PRIVATE | MAP_ANONYMOUS)))
-            madvise(ret, size, MADV_MERGEABLE);
-
-    return ret;
+    ALOGV("%s: return(native_flags:0x%x); }", __func__, native_flags);
+    return native_flags;
 }
 
-extern int    mprotect(const void *, size_t, int);
-int mprotect_portable(const void *addr, size_t size, int prot)
+
+void *mmap_portable(void *addr, size_t size, int prot, int flags, int fd, long byte_offset)
 {
-    return mprotect(addr, size, mips_change_prot(prot));
+    int native_prot, native_flags;
+    int saved_errno;
+    void *ret_addr;
+
+    ALOGV(" ");
+    ALOGV("%s(addr:%p, size:%d, prot:0x%x, flags:0x%x, fd:%d, byte_offset:0x%lx) {", __func__,
+              addr,    size,    prot,      flags,      fd,    byte_offset);
+
+    native_prot = mmap_prot_pton(prot);
+    native_flags = mmap_flags_pton(flags);
+
+    ret_addr = mmap(addr, size, native_prot, native_flags, fd, byte_offset);
+
+    ALOGV("%s: return(ret_addr:%p); }", __func__, ret_addr);
+    return ret_addr;
+}
+
+
+extern int mprotect(const void *, size_t, int);
+
+int mprotect_portable(const void *addr, size_t size, int portable_prot)
+{
+    int rv;
+    int native_prot;
+
+    ALOGV(" ");
+    ALOGV("%s(addr:%p, size:%d, portable_prot:0x%x); {", __func__,
+              addr,    size,    portable_prot);
+
+    native_prot = mmap_prot_pton(portable_prot);
+
+    rv = mprotect(addr, size, native_prot);
+
+    ALOGV("%s: return(rv:%d); }", __func__, rv);
+    return rv;
 }
