@@ -244,6 +244,14 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".app.RotationAnimation"
+                android:label="@string/activity_rotation_animation">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
         <activity android:name=".app.ReorderTwo" />
         <activity android:name=".app.ReorderThree" />
         <activity android:name=".app.ReorderFour" />
