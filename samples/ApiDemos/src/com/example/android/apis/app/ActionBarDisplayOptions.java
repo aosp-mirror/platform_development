@@ -46,6 +46,8 @@ public class ActionBarDisplayOptions extends Activity
         findViewById(R.id.toggle_show_custom).setOnClickListener(this);
         findViewById(R.id.toggle_navigation).setOnClickListener(this);
         findViewById(R.id.cycle_custom_gravity).setOnClickListener(this);
+        findViewById(R.id.toggle_visibility).setOnClickListener(this);
+        findViewById(R.id.toggle_system_ui).setOnClickListener(this);
 
         mCustomView = getLayoutInflater().inflate(R.layout.action_bar_display_options_custom, null);
         // Configure several action bar elements that will be toggled by display options.
@@ -106,6 +108,22 @@ public class ActionBarDisplayOptions extends Activity
                 }
                 lp.gravity = lp.gravity & ~Gravity.RELATIVE_HORIZONTAL_GRAVITY_MASK | newGravity;
                 bar.setCustomView(mCustomView, lp);
+                return;
+            case R.id.toggle_visibility:
+                if (bar.isShowing()) {
+                    bar.hide();
+                } else {
+                    bar.show();
+                }
+                return;
+            case R.id.toggle_system_ui:
+                if ((getWindow().getDecorView().getSystemUiVisibility()
+                        & View.SYSTEM_UI_FLAG_FULLSCREEN) != 0) {
+                    getWindow().getDecorView().setSystemUiVisibility(0);
+                } else {
+                    getWindow().getDecorView().setSystemUiVisibility(
+                            View.SYSTEM_UI_FLAG_FULLSCREEN);
+                }
                 return;
         }
 

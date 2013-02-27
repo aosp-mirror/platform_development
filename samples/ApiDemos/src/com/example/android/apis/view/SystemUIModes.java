@@ -166,8 +166,6 @@ public class SystemUIModes extends Activity
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        getWindow().requestFeature(Window.FEATURE_ACTION_BAR_OVERLAY);
-
         setContentView(R.layout.system_ui_modes);
         mImage = (IV) findViewById(R.id.image);
         mImage.setActivity(this);
