@@ -2308,7 +2308,18 @@
 
         <activity android:name=".view.SystemUIModes"
                 android:label="Views/System UI Visibility/System UI Modes"
-                android:uiOptions="splitActionBarWhenNarrow">
+                android:uiOptions="splitActionBarWhenNarrow"
+                android:enabled="@bool/atLeastJellyBeanMR2">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".view.SystemUIModesOverlay"
+                android:label="Views/System UI Visibility/System UI Modes Overlay"
+                android:uiOptions="splitActionBarWhenNarrow"
+                android:enabled="@bool/atLeastJellyBean">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -2318,7 +2329,8 @@
         <activity android:name=".view.ContentBrowserActivity"
                 android:label="Views/System UI Visibility/Content Browser"
                 android:theme="@android:style/Theme.Holo.Light.DarkActionBar"
-                android:uiOptions="splitActionBarWhenNarrow">
+                android:uiOptions="splitActionBarWhenNarrow"
+                android:enabled="@bool/atLeastJellyBean">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -2328,7 +2340,8 @@
         <activity android:name=".view.VideoPlayerActivity"
                 android:label="Views/System UI Visibility/Video Player"
                 android:theme="@android:style/Theme.Holo"
-                android:uiOptions="splitActionBarWhenNarrow">
+                android:uiOptions="splitActionBarWhenNarrow"
+                android:enabled="@bool/atLeastJellyBean">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
