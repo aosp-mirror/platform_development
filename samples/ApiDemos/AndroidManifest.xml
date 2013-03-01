@@ -1198,6 +1198,13 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".os.TriggerSensors" android:label="OS/TriggerSensors">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
         <activity android:name=".os.RotationVectorDemo" android:label="OS/Rotation Vector"  android:screenOrientation="nosensor">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
