@@ -29,7 +29,6 @@ ifdef cur_platform
 #LOCAL_SHARED_LIBRARIES := $(shared_libraries)
 #LOCAL_STATIC_LIBRARIES := $(static_libraries)
 #LOCAL_MODULE_PATH := $(TARGET_OUT_OPTIONAL_EXECUTABLES)
-#LOCAL_MODULE_TAGS := debug
 #LOCAL_LDLIBS +=
 #include $(BUILD_EXECUTABLE)
 

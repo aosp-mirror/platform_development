@@ -17,8 +17,6 @@
 # development.git/tools/emulator/. The following test is to ensure
 # smooth builds even if the tree contains both versions.
 #
-ifndef BUILD_EMULATOR_GPS_MODULE
-BUILD_EMULATOR_GPS_MODULE := true
 
 LOCAL_PATH := $(call my-dir)
 
@@ -35,7 +33,4 @@ LOCAL_MODULE := gps.vbox_x86
 else
 LOCAL_MODULE := gps.goldfish
 endif
-LOCAL_MODULE_TAGS := debug
 include $(BUILD_SHARED_LIBRARY)
-
-endif # BUILD_EMULATOR_GPS_MODULE

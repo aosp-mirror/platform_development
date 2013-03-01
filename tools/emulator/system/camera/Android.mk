@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ifndef BUILD_EMULATOR_CAMERA_HAL
-BUILD_EMULATOR_CAMERA_HAL := true
 
 LOCAL_PATH := $(call my-dir)
 
@@ -71,7 +69,4 @@ else
 LOCAL_MODULE := camera.goldfish
 endif
 
-LOCAL_MODULE_TAGS := debug
 include $(BUILD_SHARED_LIBRARY)
-
-endif # BUILD_EMULATOR_CAMERA_HAL
