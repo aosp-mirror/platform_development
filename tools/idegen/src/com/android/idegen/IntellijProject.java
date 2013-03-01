@@ -55,6 +55,11 @@ public class IntellijProject {
 
         // First pass, find all dependencies and cache them.
         Module module = cache.getAndCache(moduleName);
+        if (module == null) {
+            logger.info("Module '" + moduleName + "' not found." +
+                    " Module names are case senstive.");
+            return;
+        }
         projectIdeaDir = new File(module.getDir(), ".idea");
         projectIdeaDir.mkdir();
         copyTemplates();
