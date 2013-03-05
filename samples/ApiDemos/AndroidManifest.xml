@@ -2212,6 +2212,14 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".view.WindowFocusObserver"
+                  android:label="Views/Focus/6. Window Focus Observer">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
         <activity android:name=".view.DateWidgets1" android:label="Views/Date Widgets/1. Dialog">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
