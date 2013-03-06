@@ -71,7 +71,8 @@ libportable_arch_src_files += \
 			arch-arm/errno.c \
 			arch-arm/socket.c \
 			arch-arm/sockopt.c \
-			arch-arm/stat.c
+			arch-arm/stat.c \
+			arch-arm/unwind.c
 endif
 
 ifeq ($(TARGET_ARCH),x86)
