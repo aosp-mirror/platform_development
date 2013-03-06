@@ -33,6 +33,19 @@
         <attr name="textSize" format="dimension" />
     </declare-styleable>
 
+    <!-- These are the attributes that we want to retrieve for
+         view/CustomLayout.java -->
+<!-- BEGIN_INCLUDE(CustomLayout) -->
+    <declare-styleable name="CustomLayoutLP">
+        <attr name="android:layout_gravity" />
+        <attr name="layout_position">
+            <enum name="middle" value="0" />
+            <enum name="left" value="1" />
+            <enum name="right" value="2" />
+        </attr>
+    </declare-styleable>
+<!-- END_INCLUDE(CustomLayout) -->
+
     <!-- These are attributes used with 'DraggableDot' drawables in
          view/DragAndDropActivity.java and view/DraggableDot.java -->
     <declare-styleable name="DraggableDot">
