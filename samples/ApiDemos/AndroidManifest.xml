@@ -1390,76 +1390,93 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".view.LinearLayout1" android:label="Views/Layouts/LinearLayout/1. Vertical">
+        <activity android:name=".view.LinearLayout1"
+                  android:label="Views/Layouts/LinearLayout/01. Vertical">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
             </intent-filter>
         </activity>
 
-        <activity android:name=".view.LinearLayout2" android:label="Views/Layouts/LinearLayout/2. Vertical (Fill Screen)">
+        <activity android:name=".view.LinearLayout2"
+                  android:label="Views/Layouts/LinearLayout/02. Vertical (Fill Screen)">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
             </intent-filter>
         </activity>
 
-        <activity android:name=".view.LinearLayout3" android:label="Views/Layouts/LinearLayout/3. Vertical (Padded)">
+        <activity android:name=".view.LinearLayout3"
+                  android:label="Views/Layouts/LinearLayout/03. Vertical (Padded)">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
             </intent-filter>
         </activity>
 
-        <activity android:name=".view.LinearLayout4" android:label="Views/Layouts/LinearLayout/4. Horizontal">
+        <activity android:name=".view.LinearLayout4"
+                  android:label="Views/Layouts/LinearLayout/04. Horizontal">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
             </intent-filter>
         </activity>
 
-        <activity android:name=".view.LinearLayout5" android:label="Views/Layouts/LinearLayout/5. Simple Form">
+        <activity android:name=".view.LinearLayout5"
+                  android:label="Views/Layouts/LinearLayout/05. Simple Form">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
             </intent-filter>
         </activity>
 
-        <activity android:name=".view.LinearLayout6" android:label="Views/Layouts/LinearLayout/6. Uniform Size">
+        <activity android:name=".view.LinearLayout6"
+                  android:label="Views/Layouts/LinearLayout/06. Uniform Size">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
             </intent-filter>
         </activity>
 
-        <activity android:name=".view.LinearLayout7" android:label="Views/Layouts/LinearLayout/7. Fill Parent">
+        <activity android:name=".view.LinearLayout7"
+                  android:label="Views/Layouts/LinearLayout/07. Fill Parent">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
             </intent-filter>
         </activity>
 
-        <activity android:name=".view.LinearLayout8" android:label="Views/Layouts/LinearLayout/8. Gravity">
+        <activity android:name=".view.LinearLayout8"
+                  android:label="Views/Layouts/LinearLayout/08. Gravity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
             </intent-filter>
         </activity>
 
-        <activity android:name=".view.LinearLayout9" android:label="Views/Layouts/LinearLayout/9. Layout Weight">
+        <activity android:name=".view.LinearLayout9"
+                  android:label="Views/Layouts/LinearLayout/09. Layout Weight">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
             </intent-filter>
         </activity>
 
-        <activity android:name=".view.LinearLayout10" android:label="Views/Layouts/LinearLayout/10. Background Image">
+        <activity android:name=".view.LinearLayout10"
+                  android:label="Views/Layouts/LinearLayout/10. Background Image">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
             </intent-filter>
         </activity>
 
+        <activity android:name=".view.CustomLayoutActivity"
+                  android:label="Views/Layouts/CustomLayout">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
 
         <activity android:name=".view.RadioGroup1" android:label="Views/Radio Group">
             <intent-filter>
