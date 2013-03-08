@@ -13,16 +13,8 @@
 # limitations under the License.
 
 
-# We're moving the emulator-specific platform libs to
-# development.git/tools/emulator/. The following test is to ensure
-# smooth builds even if the tree contains both versions.
-#
-ifndef BUILD_EMULATOR_SENSORS_MODULE
-BUILD_EMULATOR_SENSORS_MODULE := true
-
 LOCAL_PATH := $(call my-dir)
 
-ifneq ($(TARGET_PRODUCT),sim)
 # HAL module implemenation stored in
 # hw/<SENSORS_HARDWARE_MODULE_ID>.<ro.hardware>.so
 include $(CLEAR_VARS)
@@ -35,8 +27,4 @@ LOCAL_MODULE := sensors.vbox_x86
 else
 LOCAL_MODULE := sensors.goldfish
 endif
-LOCAL_MODULE_TAGS := debug
 include $(BUILD_SHARED_LIBRARY)
-endif
-
-endif # BUILD_EMULATOR_SENSORS_MODULE
