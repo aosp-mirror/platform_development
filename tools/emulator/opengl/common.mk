@@ -31,7 +31,6 @@ _emugl_HOST_modules :=
 emugl-begin-module = \
     $(eval include $(CLEAR_VARS)) \
     $(eval LOCAL_MODULE := $1) \
-    $(eval LOCAL_MODULE_TAGS := debug) \
     $(eval LOCAL_MODULE_CLASS := $(patsubst HOST_%,%,$(patsubst %EXECUTABLE,%EXECUTABLES,$(patsubst %LIBRARY,%LIBRARIES,$2)))) \
     $(eval LOCAL_IS_HOST_MODULE := $(if $3,true,))\
     $(eval LOCAL_C_INCLUDES := $(EMUGL_COMMON_INCLUDES)) \
@@ -239,4 +238,3 @@ emugl-set-shared-library-subpath = \
     $(eval LOCAL_UNSTRIPPED_PATH := $(TARGET_OUT_SHARED_LIBRARIES_UNSTRIPPED)/$1)\
     $(eval _emugl.$(LOCAL_MODULE).moved := true)\
     $(call emugl-export-outer,ADDITIONAL_DEPENDENCIES,$(LOCAL_MODULE_PATH)/$(LOCAL_MODULE)$(TARGET_SHLIB_SUFFIX))
-
