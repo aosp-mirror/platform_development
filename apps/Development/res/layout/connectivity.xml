@@ -18,6 +18,10 @@
 */
 -->
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/connectivity_layout"
+    android:descendantFocusability="beforeDescendants"
+    android:focusableInTouchMode="true"
+    android:focusable="true"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
@@ -161,6 +165,45 @@
           android:layout_width="wrap_content"
           android:layout_height="wrap_content"
           android:minEms="15"/>
+    </LinearLayout>
+
+    <!-- divider line -->
+    <View android:background="#FFFFFFFF"
+      android:layout_width="match_parent"
+      android:layout_height="3dip" />
+
+    <LinearLayout
+      android:orientation="horizontal"
+      android:paddingTop="4dip"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content">
+        <Button android:id="@+id/startScan"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="@string/start_scan" />
+        <CheckBox android:id="@+id/scanDisconnect"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="@string/disconnect" />
+    </LinearLayout>
+
+    <LinearLayout
+      android:orientation="horizontal"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content">
+        <TextView
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:inputType="number"
+          android:text="@string/scan_cycles" />
+        <EditText android:id="@+id/sc_scan_cycles"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:minEms="5" />
+        <TextView android:id="@+id/sc_scan_results"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:layout_marginLeft="14.5sp" />
     </LinearLayout>
 
     <!-- divider line -->

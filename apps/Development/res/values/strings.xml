@@ -30,6 +30,9 @@
     <string name="stop_toggling">Stop Wifi Toggle</string>
     <string name="start_screen_toggling">Start Screen Toggle</string>
     <string name="stop_screen_toggling">Stop Screen Toggle</string>
+    <string name="start_scan">Start Scan</string>
+    <string name="scan_cycles">Scan Cycles: </string>
+    <string name="disconnect">Disconnect</string>
 
     <string name="start_mms">Start MMS</string>
     <string name="stop_mms">Stop MMS</string>

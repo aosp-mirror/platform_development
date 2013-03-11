@@ -30,6 +30,7 @@ import android.content.pm.PackageManager.NameNotFoundException;
 import android.net.ConnectivityManager;
 import android.net.NetworkUtils;
 import android.net.RouteInfo;
+import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
 import android.os.RemoteException;
 import android.os.Handler;
@@ -65,7 +66,9 @@ import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.http.client.HttpClient;
@@ -78,6 +81,11 @@ import org.apache.http.impl.client.DefaultHttpClient;
 
 public class Connectivity extends Activity {
     private static final String TAG = "DevTools - Connectivity";
+    private static final String GET_SCAN_RES = "Get Results";
+    private static final String START_SCAN = "Start Scan";
+    private static final String PROGRESS_SCAN = "In Progress";
+
+    private static final long SCAN_CYCLES = 15;
 
     private static final int EVENT_TOGGLE_WIFI = 1;
     private static final int EVENT_TOGGLE_SCREEN = 2;
@@ -98,10 +106,24 @@ public class Connectivity extends Activity {
 
     private boolean mDelayedCycleStarted = false;
 
+    private Button mScanButton;
+    private TextView mScanResults;
+    private EditText mScanCyclesEdit;
+    private CheckBox mScanDisconnect;
+    private long mScanCycles = SCAN_CYCLES;
+    private long mScanCur = -1;
+    private long mStartTime = -1;
+    private long mStopTime;
+    private long mTotalScanTime = 0;
+    private long mTotalScanCount = 0;
+
     private WifiManager mWm;
     private PowerManager mPm;
     private ConnectivityManager mCm;
     private INetworkManagementService mNetd;
+
+    private WifiScanReceiver mScanRecv;
+    IntentFilter mIntentFilter;
 
     private WakeLock mWakeLock = null;
     private WakeLock mScreenonWakeLock = null;
@@ -185,6 +207,42 @@ public class Connectivity extends Activity {
         }
     };
 
+   /**
+     * Wifi Scan Listener
+     */
+    private class WifiScanReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+
+            if (action.equals(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION)) {
+                mStopTime = SystemClock.elapsedRealtime();
+                if (mStartTime != -1) {
+                    mTotalScanTime += (mStopTime - mStartTime);
+                    mStartTime = -1;
+                }
+                Log.d(TAG, "Scan: READY " + mScanCur);
+
+                List<ScanResult> wifiScanResults = mWm.getScanResults();
+                if (wifiScanResults != null) {
+                    mTotalScanCount += wifiScanResults.size();
+                    Log.d(TAG, "Scan: Results = " + wifiScanResults.size());
+                }
+
+                mScanCur--;
+                mScanCyclesEdit.setText(Long.toString(mScanCur));
+                if (mScanCur == 0) {
+                    unregisterReceiver(mScanRecv);
+                    mScanButton.setText(GET_SCAN_RES);
+                } else {
+                    mStartTime = SystemClock.elapsedRealtime();
+                    mWm.startScan();
+                }
+            }
+        }
+    }
+
+
     @Override
     public void onCreate(Bundle icicle) {
         super.onCreate(icicle);
@@ -218,6 +276,19 @@ public class Connectivity extends Activity {
         mSCCycleCountView = (TextView)findViewById(R.id.sc_wifi_cycles_done);
         mSCCycleCountView.setText(Integer.toString(mSCCycleCount));
 
+        mScanButton = (Button)findViewById(R.id.startScan);
+        mScanButton.setOnClickListener(mClickListener);
+        mScanCyclesEdit = (EditText)findViewById(R.id.sc_scan_cycles);
+        mScanCyclesEdit.setText(Long.toString(mScanCycles));
+        mScanDisconnect = (CheckBox)findViewById(R.id.scanDisconnect);
+        mScanDisconnect.setChecked(true);
+        mScanResults = (TextView)findViewById(R.id.sc_scan_results);
+        mScanResults.setVisibility(View.INVISIBLE);
+
+        mScanRecv = new WifiScanReceiver();
+        mIntentFilter = new IntentFilter();
+        mIntentFilter.addAction(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION);
+
         findViewById(R.id.start_mms).setOnClickListener(mClickListener);
         findViewById(R.id.stop_mms).setOnClickListener(mClickListener);
         findViewById(R.id.start_hipri).setOnClickListener(mClickListener);
@@ -237,10 +308,10 @@ public class Connectivity extends Activity {
     }
 
 
-
     @Override
     public void onResume() {
         super.onResume();
+        findViewById(R.id.connectivity_layout).requestFocus();
     }
 
     private View.OnClickListener mClickListener = new View.OnClickListener() {
@@ -263,6 +334,9 @@ public class Connectivity extends Activity {
                     break;
                 case R.id.stopScreenCycle:
                     onStopScreenCycle();
+                    break;
+                case R.id.startScan:
+                    onStartScanCycle();
                     break;
                 case R.id.start_mms:
                     mCm.startUsingNetworkFeature(ConnectivityManager.TYPE_MOBILE,
@@ -373,6 +447,42 @@ public class Connectivity extends Activity {
         ConnectivityManager foo = null;
         foo.startUsingNetworkFeature(ConnectivityManager.TYPE_MOBILE,
                 Phone.FEATURE_ENABLE_MMS);
+    }
+
+    private void onStartScanCycle() {
+        if (mScanCur == -1) {
+            try {
+                mScanCur = Long.parseLong(mScanCyclesEdit.getText().toString());
+                mScanCycles = mScanCur;
+            } catch (Exception e) { };
+            if (mScanCur <= 0) {
+                mScanCur = -1;
+                mScanCycles = SCAN_CYCLES;
+                return;
+            }
+        }
+        if (mScanCur > 0) {
+            registerReceiver(mScanRecv, mIntentFilter);
+            mScanButton.setText(PROGRESS_SCAN);
+            mScanResults.setVisibility(View.INVISIBLE);
+            if (mScanDisconnect.isChecked())
+                mWm.disconnect();
+            mTotalScanTime = 0;
+            mTotalScanCount = 0;
+            mStartTime = SystemClock.elapsedRealtime();
+            mWm.startScan();
+        } else {
+            // Show results
+            mScanResults.setText("Average Scan Time = " +
+                Long.toString(mTotalScanTime / mScanCycles) + " ms ; Average Scan Amount = " +
+                Long.toString(mTotalScanCount / mScanCycles));
+            mScanResults.setVisibility(View.VISIBLE);
+            mScanButton.setText(START_SCAN);
+            mScanCur = -1;
+            mScanCyclesEdit.setText(Long.toString(mScanCycles));
+            if (mScanDisconnect.isChecked())
+                mWm.reassociate();
+        }
     }
 
     private void onAddDefaultRoute() {
