@@ -19,8 +19,10 @@
 <includepath>${ProjDirPath}/hardware/libhardware/include</includepath>
 <includepath>${ProjDirPath}/hardware/libhardware_legacy/include</includepath>
 <includepath>${ProjDirPath}/hardware/ril/include</includepath>
+<includepath>${ProjDirPath}/frameworks/av/include</includepath>
 <includepath>${ProjDirPath}/frameworks/base/include</includepath>
 <includepath>${ProjDirPath}/frameworks/native/include</includepath>
+<includepath>${ProjDirPath}/frameworks/native/include/media/openmax</includepath>
 <includepath>${ProjDirPath}/frameworks/native/opengl/include</includepath>
 <includepath>${ProjDirPath}/external/skia/include</includepath>
 <includepath>${ProjDirPath}/external/skia/include/core</includepath>
@@ -43,8 +45,10 @@
 <includepath>${ProjDirPath}/hardware/libhardware/include</includepath>
 <includepath>${ProjDirPath}/hardware/libhardware_legacy/include</includepath>
 <includepath>${ProjDirPath}/hardware/ril/include</includepath>
+<includepath>${ProjDirPath}/frameworks/av/include</includepath>
 <includepath>${ProjDirPath}/frameworks/base/include</includepath>
 <includepath>${ProjDirPath}/frameworks/native/include</includepath>
+<includepath>${ProjDirPath}/frameworks/native/include/media/openmax</includepath>
 <includepath>${ProjDirPath}/frameworks/native/opengl/include</includepath>
 <includepath>${ProjDirPath}/external/skia/include</includepath>
 <includepath>${ProjDirPath}/external/skia/include/core</includepath>
@@ -67,8 +71,10 @@
 <includepath>${ProjDirPath}/hardware/libhardware/include</includepath>
 <includepath>${ProjDirPath}/hardware/libhardware_legacy/include</includepath>
 <includepath>${ProjDirPath}/hardware/ril/include</includepath>
+<includepath>${ProjDirPath}/frameworks/av/include</includepath>
 <includepath>${ProjDirPath}/frameworks/base/include</includepath>
 <includepath>${ProjDirPath}/frameworks/native/include</includepath>
+<includepath>${ProjDirPath}/frameworks/native/include/media/openmax</includepath>
 <includepath>${ProjDirPath}/frameworks/native/opengl/include</includepath>
 <includepath>${ProjDirPath}/external/skia/include</includepath>
 <includepath>${ProjDirPath}/external/skia/include/core</includepath>
