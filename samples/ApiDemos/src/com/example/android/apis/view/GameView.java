@@ -209,7 +209,7 @@ public class GameView extends View {
 
         // Check that the event came from a joystick since a generic motion event
         // could be almost anything.
-        if ((event.getSource() & InputDevice.SOURCE_CLASS_JOYSTICK) != 0
+        if (event.isFromSource(InputDevice.SOURCE_CLASS_JOYSTICK)
                 && event.getAction() == MotionEvent.ACTION_MOVE) {
             // Cache the most recently obtained device information.
             // The device information may change over time but it can be
