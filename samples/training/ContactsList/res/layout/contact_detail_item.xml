@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Copyright (C) 2013 The Android Open Source Project
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+
+<!-- This layout is used to display a single mailing address for a contact. In the case of multiple
+     mailing addresses it could be inflated multiple times and displayed in a ScrollView container
+     to let the user more easily scroll over all addresses. -->
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="vertical"
+              android:paddingTop="@dimen/padding"
+              android:paddingLeft="@dimen/padding"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent">
+
+    <TextView
+            android:id="@+id/contact_detail_header"
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            style="@style/addressHeader"/>
+
+    <LinearLayout android:orientation="horizontal"
+                  android:layout_width="match_parent"
+                  android:layout_height="wrap_content"
+                  android:showDividers="middle"
+                  android:dividerPadding="12dp"
+                  android:minHeight="48dp"
+                  android:divider="?android:attr/listDivider">
+
+        <TextView
+                android:id="@+id/contact_detail_item"
+                android:layout_height="wrap_content"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:paddingRight="@dimen/padding"
+                android:layout_gravity="center"
+                style="@style/addressDetail"/>
+
+        <ImageButton
+            android:id="@+id/button_view_address"
+            android:src="@drawable/ic_action_map"
+            android:layout_height="match_parent"
+            android:layout_width="wrap_content"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"
+            android:layout_gravity="center"
+            android:contentDescription="@string/address_button_description"
+            style="@style/addressButton"/>
+
+    </LinearLayout>
+
+</LinearLayout>
