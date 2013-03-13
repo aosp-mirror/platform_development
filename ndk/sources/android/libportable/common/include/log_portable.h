@@ -81,7 +81,8 @@ static inline char *portable_tag() {
     _rv;                   /* Returned to caller */         \
 })
 
-# include <cutils/log.h>
+#if !defined(HAS_NO_LOG_H)
+#include <cutils/log.h>
 
 # define PERROR(str)  {                                                                  \
     ALOGE("%s: PERROR('%s'): errno:%d:'%s'", __func__, str, errno, strerror(errno));     \
@@ -89,4 +90,9 @@ static inline char *portable_tag() {
 
 # define ASSERT(cond) ALOG_ASSERT(cond, "assertion failed:(%s), file: %s, line: %d:%s",  \
                                  #cond, __FILE__, __LINE__, __func__);
+#else
 
+# define PERROR(str) fprintf(stderr, "%s: PERROR('%s'): errno:%d:'%s'", __func__, str, errno, strerror(errno))
+# define ASSERT(cond) assert(cond)
+
+#endif
