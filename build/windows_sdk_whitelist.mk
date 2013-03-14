@@ -13,11 +13,11 @@
 
 # Note that there are 2 flavors of this file:
 #
-# - The other file: sdk/build/sdk_only_whitelist.mk
+# - The other file: sdk/build/windows_sdk_whitelist.mk
 #   must list all projects that are that are NOT specific to a given platform.
 #   These binaries are the ones typically found in the SDK/tools directory.
 #
-# - This file: development/build/sdk_only_whitelist.mk
+# - This file: development/build/windows_sdk_whitelist.mk
 #   must list all projects that are specific to a given platform. These
 #   projects generate files that are generally locates in SDK/platform-tools,
 #   or SDK/platforms/, etc.
