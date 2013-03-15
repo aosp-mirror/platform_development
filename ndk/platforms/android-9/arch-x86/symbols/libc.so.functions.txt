@@ -761,8 +761,10 @@ sigaction
 sigaltstack
 sigblock
 siginterrupt
+siglongjmp
 sigpending
 sigprocmask
+sigsetjmp
 sigsetmask
 sigsuspend
 sigwait
