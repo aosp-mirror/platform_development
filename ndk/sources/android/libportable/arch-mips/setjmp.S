@@ -29,6 +29,7 @@
  *
  */
 
+#include <asm-generic/portability.h>
 #include <machine/asm.h>
 #include <machine/regnum.h>
 
@@ -57,10 +58,10 @@ RAOFF= FRAMESZ-1*REGSZ
 
 
 
-NON_LEAF(setjmp_portable, FRAMESZ, ra)
+NON_LEAF(WRAP(setjmp), FRAMESZ, ra)
         .mask   0x80000000, RAOFF
         PTR_SUBU sp, FRAMESZ                    # allocate stack frame
-        SETUP_GP64(GPOFF, setjmp_portable)
+        SETUP_GP64(GPOFF, WRAP(setjmp))
         SAVE_GP(GPOFF)
         .set    reorder
         REG_S   ra, RAOFF(sp)                   # save state
@@ -143,12 +144,12 @@ botch:
         jal     abort
         RESTORE_GP64
         PTR_ADDU sp, FRAMESZ
-END(setjmp_portable)
+END(WRAP(setjmp))
 
 
-LEAF(longjmp_portable, FRAMESZ)
+LEAF(WRAP(longjmp), FRAMESZ)
         PTR_SUBU sp, FRAMESZ
-        SETUP_GP64(GPOFF, longjmp_portable)
+        SETUP_GP64(GPOFF, WRAP(longjmp))
         SAVE_GP(GPOFF)
         .set    reorder
         sw      a1, A1OFF(sp)
@@ -214,4 +215,4 @@ LEAF(longjmp_portable, FRAMESZ)
         j       ra
          move   v0, a1
 
-END(longjmp_portable)
+END(WRAP(longjmp))

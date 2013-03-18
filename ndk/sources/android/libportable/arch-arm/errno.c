@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 
-extern volatile int*   __errno(void);
-volatile int* __errno_portable()
+#include <portability.h>
+
+extern volatile int*   REAL(__errno)(void);
+volatile int* WRAP(__errno)()
 {
-  return __errno();
+  return REAL(__errno)();
 }

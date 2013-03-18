@@ -15,6 +15,7 @@
  */
 
 #define _GNU_SOURCE             /* GLibc compatibility to declare pipe2(2) */
+#include <portability.h>
 #include <unistd.h>
 #include <fcntl.h>
 
@@ -59,7 +60,7 @@ static inline int tdf_flags_pton(int portable_flags)
 }
 
 
-int pipe2_portable(int pipefd[2], int portable_flags) {
+int WRAP(pipe2)(int pipefd[2], int portable_flags) {
     int native_flags;
     int rv;
 
@@ -69,7 +70,7 @@ int pipe2_portable(int pipefd[2], int portable_flags) {
 
     native_flags = tdf_flags_pton(portable_flags);
 
-    rv = pipe2(pipefd, native_flags);
+    rv = REAL(pipe2)(pipefd, native_flags);
     if (rv >= 0) {
         ALOGV("%s: pipe2() returned pipefd[0]:%d, pipefd[1]:%d", __func__,
                                     pipefd[0],    pipefd[1]);

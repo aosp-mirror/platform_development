@@ -14,32 +14,18 @@
  * limitations under the License.
  */
 
-#include <portability.h>
-#include <stdarg.h>
-#include <sys/ioctl.h>
-#include <ioctls_portable.h>
+#ifndef _ASM_PORTABILITY_H_
+#define _ASM_PORTABILITY_H_
 
-#if FIOQSIZE_PORTABLE == FIOQSIZE
-#error Bad build environment
+#if !defined(__HOST__)
+#define WRAP(f)     f ## _portable
+#define REAL(f)     f
+#else
+/* On host app link with libpportable.a with -Wl,--wrap=symbol, which resolve symbol symbol to __wrap_symbol,
+ * and __real_symbol refer to the original symbol
+ */
+#define WRAP(f)     __wrap_ ## f
+#define REAL(f)     __real_ ## f
 #endif
 
-static inline int x86_change_request(int request)
-{
-    if (request == FIOQSIZE_PORTABLE)
-        return FIOQSIZE;
-
-    return request;
-}
-
-extern int __ioctl(int, int, void *);
-int WRAP(ioctl)(int fd, int request, ...)
-{
-    va_list ap;
-    void * arg;
-
-    va_start(ap, request);
-    arg = va_arg(ap, void *);
-    va_end(ap);
-
-    return __ioctl(fd, x86_change_request(request), arg);
-}
+#endif /* _ASM_PORTABILITY_H_ */

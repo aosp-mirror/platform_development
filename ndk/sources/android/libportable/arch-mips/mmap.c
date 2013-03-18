@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include <portability.h>
 #include <unistd.h>
 #include <errno.h>
 #include <sys/mman.h>
@@ -87,8 +88,8 @@ static inline int mmap_flags_pton(int portable_flags)
     return native_flags;
 }
 
-
-void *mmap_portable(void *addr, size_t size, int prot, int flags, int fd, long byte_offset)
+extern void* REAL(mmap)(void *, size_t, int, int, int, off_t);
+void *WRAP(mmap)(void *addr, size_t size, int prot, int flags, int fd, long byte_offset)
 {
     int native_prot, native_flags;
     int saved_errno;
@@ -101,7 +102,7 @@ void *mmap_portable(void *addr, size_t size, int prot, int flags, int fd, long b
     native_prot = mmap_prot_pton(prot);
     native_flags = mmap_flags_pton(flags);
 
-    ret_addr = mmap(addr, size, native_prot, native_flags, fd, byte_offset);
+    ret_addr = REAL(mmap)(addr, size, native_prot, native_flags, fd, byte_offset);
 
     ALOGV("%s: return(ret_addr:%p); }", __func__, ret_addr);
     return ret_addr;
@@ -110,7 +111,7 @@ void *mmap_portable(void *addr, size_t size, int prot, int flags, int fd, long b
 
 extern int mprotect(const void *, size_t, int);
 
-int mprotect_portable(const void *addr, size_t size, int portable_prot)
+int WRAP(mprotect)(const void *addr, size_t size, int portable_prot)
 {
     int rv;
     int native_prot;
@@ -121,7 +122,7 @@ int mprotect_portable(const void *addr, size_t size, int portable_prot)
 
     native_prot = mmap_prot_pton(portable_prot);
 
-    rv = mprotect(addr, size, native_prot);
+    rv = REAL(mprotect)(addr, size, native_prot);
 
     ALOGV("%s: return(rv:%d); }", __func__, rv);
     return rv;

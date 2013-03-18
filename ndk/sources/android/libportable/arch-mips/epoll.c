@@ -14,15 +14,16 @@
  * limitations under the License.
  */
 
+#include <portability.h>
 #include <sys/epoll.h>
 
-int epoll_ctl_portable(int epfd, int op, int fd, struct epoll_event *event)
+int WRAP(epoll_ctl)(int epfd, int op, int fd, struct epoll_event *event)
 {
-    return epoll_ctl(epfd, op, fd, event);
+    return REAL(epoll_ctl)(epfd, op, fd, event);
 }
 
-int epoll_wait_portable(int epfd, struct epoll_event *events, int max, int timeout)
+int WRAP(epoll_wait)(int epfd, struct epoll_event *events, int max, int timeout)
 {
-    return epoll_wait(epfd, events, max, timeout);
+    return REAL(epoll_wait)(epfd, events, max, timeout);
 }
 

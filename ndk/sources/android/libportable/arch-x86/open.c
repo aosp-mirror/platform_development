@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include <portability.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <stdarg.h>
@@ -56,7 +57,7 @@ static inline int x86_change_flags(int flags)
 }
 
 extern int  __open(const char*, int, int);
-int open_portable(const char *pathname, int flags, ...)
+int WRAP(open)(const char *pathname, int flags, ...)
 {
     mode_t  mode = 0;
     flags |= O_LARGEFILE;
