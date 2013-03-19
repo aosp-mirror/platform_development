@@ -449,6 +449,14 @@ See test_defs.xsd for more information.
     runner="com.android.contacts.ContactsLaunchPerformance"
     description="Launch performance for Contacts." />
 
+<test name="dialer"
+    build_path="packages/apps/Dialer"
+    package="com.android.dialer.tests"
+    runner="android.test.InstrumentationTestRunner"
+    coverage_target="Dialer"
+    description="Tests for the Dialer app."
+    continuous="true" />
+
 <test name="downloadprovider"
     build_path="packages/providers/DownloadProvider/tests"
     package="com.android.providers.downloads.tests"

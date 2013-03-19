@@ -69,6 +69,8 @@
         type="APPS" />
     <coverage_target name="DeskClock" build_path="packages/apps/DeskClock"
         type="APPS" />
+    <coverage_target name="Dialer" build_path="packages/apps/Dialer"
+        type="APPS" />
     <coverage_target name="Email" build_path="packages/apps/Email"
         type="APPS" />
     <coverage_target name="Exchange" build_path="packages/apps/Exchange"
