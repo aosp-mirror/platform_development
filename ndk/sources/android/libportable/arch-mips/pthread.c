@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include <portability.h>
 #include <pthread.h>
 #include <time.h>
 #include <signal.h>
@@ -54,13 +55,13 @@
  * Call pthread function and convert return value (a native errno) to portable error number.
  */
 #define PTHREAD_WRAPPER(fn, DECLARGS, CALLARGS, fmt)            \
-    int fn##_portable DECLARGS                                  \
+    int WRAP(fn) DECLARGS                                       \
     {                                                           \
         int rv, portable_rv;                                    \
                                                                 \
         ALOGV(" ");                                             \
         ALOGV("%s" fmt, __func__, STRIP_PARENS(CALLARGS));      \
-        rv = fn CALLARGS;                                       \
+        rv = REAL(fn) CALLARGS;                                 \
         portable_rv = errno_ntop(rv);                           \
         ALOGV("%s: return(portable_rv:%d); rv:%d;", __func__,   \
                           portable_rv,     rv);                 \
@@ -258,7 +259,7 @@ PTHREAD_WRAPPER(pthread_setspecific, (pthread_key_t key, const void *value), (ke
 
 // void *pthread_getspecific(pthread_key_t key);
 
-int pthread_kill_portable(pthread_t thread, int portable_signum)
+int WRAP(pthread_kill)(pthread_t thread, int portable_signum)
 {
     char *portable_signame = map_portable_signum_to_name(portable_signum);
     int mips_signum;
@@ -274,7 +275,7 @@ int pthread_kill_portable(pthread_t thread, int portable_signum)
     } else {
         ALOGV("%s: calling pthread_kill(thread:%lx, mips_signum:%d);", __func__,
                                         thread,     mips_signum);
-        ret = pthread_kill(thread, mips_signum);
+        ret = REAL(pthread_kill)(thread, mips_signum);
     }
     portable_ret = errno_ntop(ret);
 
@@ -284,7 +285,7 @@ int pthread_kill_portable(pthread_t thread, int portable_signum)
     return portable_ret;
 }
 
-int pthread_sigmask_portable(int portable_how, const sigset_portable_t *portable_sigset,
+int WRAP(pthread_sigmask)(int portable_how, const sigset_portable_t *portable_sigset,
                              sigset_portable_t *portable_oldset)
 {
     int portable_ret, ret;

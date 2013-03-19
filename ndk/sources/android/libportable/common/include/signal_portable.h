@@ -64,7 +64,7 @@ typedef int sig_atomic_t;
 extern const char * const sys_siglist[];
 extern const char * const sys_signame[];
 
-static __inline__ int sigismember_portable(sigset_portable_t *set, int signum)
+static __inline__ int WRAP(sigismember)(sigset_portable_t *set, int signum)
 {
     unsigned long *local_set = (unsigned long *)set;
     signum--;
@@ -72,7 +72,7 @@ static __inline__ int sigismember_portable(sigset_portable_t *set, int signum)
 }
 
 
-static __inline__ int sigaddset_portable(sigset_portable_t *set, int signum)
+static __inline__ int WRAP(sigaddset)(sigset_portable_t *set, int signum)
 {
     unsigned long *local_set = (unsigned long *)set;
     signum--;
@@ -81,7 +81,7 @@ static __inline__ int sigaddset_portable(sigset_portable_t *set, int signum)
 }
 
 
-static __inline__ int sigdelset_portable(sigset_portable_t *set, int signum)
+static __inline__ int WRAP(sigdelset)(sigset_portable_t *set, int signum)
 {
     unsigned long *local_set = (unsigned long *)set;
     signum--;
@@ -90,13 +90,13 @@ static __inline__ int sigdelset_portable(sigset_portable_t *set, int signum)
 }
 
 
-static __inline__ int sigemptyset_portable(sigset_portable_t *set)
+static __inline__ int WRAP(sigemptyset)(sigset_portable_t *set)
 {
     memset(set, 0, sizeof *set);
     return 0;
 }
 
-static __inline__ int sigfillset_portable(sigset_portable_t *set)
+static __inline__ int WRAP(sigfillset)(sigset_portable_t *set)
 {
     memset(set, ~0, sizeof *set);
     return 0;
@@ -116,34 +116,34 @@ extern __sighandler_t bsd_signal(int, __sighandler_portable_t);
 
 #if 0
 /* the default is bsd */
-static __inline__ __sighandler_portable_t signal_portable(int s, sighandler_portable_t f)
+static __inline__ __sighandler_portable_t WRAP(signal)(int s, sighandler_portable_t f)
 {
     return bsd_signal(s,f);
 }
 #endif
 
 /* the portable mapped syscall itself */
-extern __sighandler_portable_t __signal_portable(int, __sighandler_portable_t);
+extern __sighandler_portable_t WRAP(__signal)(int, __sighandler_portable_t);
 
-extern int sigprocmask_portable(int, const sigset_portable_t *, sigset_portable_t *);
+extern int WRAP(sigprocmask)(int, const sigset_portable_t *, sigset_portable_t *);
 
-extern int sigaction_portable(int, const struct sigaction_portable *,
+extern int WRAP(sigaction)(int, const struct sigaction_portable *,
                               struct sigaction_portable *);
 
-extern int sigpending_portable(sigset_portable_t *);
-extern int sigsuspend_portable(const sigset_portable_t *);
-extern int sigwait_portable(const sigset_portable_t *set, int *sig);
-extern int siginterrupt_portable(int  sig, int  flag);
+extern int WRAP(sigpending)(sigset_portable_t *);
+extern int WRAP(sigsuspend)(const sigset_portable_t *);
+extern int WRAP(sigwait)(const sigset_portable_t *set, int *sig);
+extern int WRAP(siginterrupt)(int  sig, int  flag);
 
-extern int raise_portable(int);
-extern int kill_portable(pid_t, int);
-extern int killpg_portable(int pgrp, int sig);
-extern int tkill_portable(int tid, int portable_signum);
-extern int sigaltstack_portable(const portable_stack_t *ss, portable_stack_t *oss);
-extern int timer_create_portable(clockid_t, struct sigevent *, timer_t *);
+extern int WRAP(raise)(int);
+extern int WRAP(kill)(pid_t, int);
+extern int WRAP(killpg)(int pgrp, int sig);
+extern int WRAP(tkill)(int tid, int portable_signum);
+extern int WRAP(sigaltstack)(const portable_stack_t *ss, portable_stack_t *oss);
+extern int WRAP(timer_create)(clockid_t, struct sigevent *, timer_t *);
 
 #if 0
-extern int signalfd_portable(int fd, const sigset_portable_t *portable_sigmask, int flags);
+extern int WRAP(signalfd)(int fd, const sigset_portable_t *portable_sigmask, int flags);
 #endif
 
 extern __hidden int do_signalfd4_portable(int fd, const sigset_portable_t *portable_sigmask,
@@ -167,26 +167,26 @@ extern __hidden int do_sigmask(int portable_how, const sigset_portable_t *portab
 
 
 /* These functions are called from syscall.c and experimental Bionic linker. */
-extern int __rt_sigaction_portable(int portable_signum,
-                                   const struct sigaction_portable *act,
-                                   struct sigaction_portable *oldact,
-                                   size_t sigsetsize);
+extern int WRAP(__rt_sigaction)(int portable_signum,
+                                const struct sigaction_portable *act,
+                                struct sigaction_portable *oldact,
+                                size_t sigsetsize);
 
-extern int __rt_sigprocmask_portable(int portable_how,
-                                     const sigset_portable_t *portable_sigset,
-                                     sigset_portable_t *portable_oldset,
-                                     size_t sigsetsize);
+extern int WRAP(__rt_sigprocmask)(int portable_how,
+                                  const sigset_portable_t *portable_sigset,
+                                  sigset_portable_t *portable_oldset,
+                                  size_t sigsetsize);
 
-extern int __rt_sigtimedwait_portable(const sigset_portable_t *portable_sigset,
-                                      siginfo_portable_t *portable_siginfo,
-                                      const struct timespec *timeout,
-                                      size_t portable_sigsetsize);
+extern int WRAP(__rt_sigtimedwait)(const sigset_portable_t *portable_sigset,
+                                   siginfo_portable_t *portable_siginfo,
+                                   const struct timespec *timeout,
+                                   size_t portable_sigsetsize);
 
 
 /* These functions are only called from syscall.c; not experimental Bionic linker. */
-extern __hidden int rt_sigqueueinfo_portable(pid_t pid, int sig, siginfo_portable_t *uinfo);
+extern __hidden int WRAP(rt_sigqueueinfo)(pid_t pid, int sig, siginfo_portable_t *uinfo);
 
-extern __hidden int rt_tgsigqueueinfo_portable(pid_t tgid, pid_t pid, int sig,
+extern __hidden int WRAP(rt_tgsigqueueinfo)(pid_t tgid, pid_t pid, int sig,
                                                siginfo_portable_t *uinfo);
 
 

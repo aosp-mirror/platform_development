@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include <portability.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <stdarg.h>
@@ -72,7 +73,7 @@ static inline int open_flags_pton(int flags)
 
 extern int  __open(const char*, int, int);
 
-int open_portable(const char *pathname, int flags, ...)
+int WRAP(open)(const char *pathname, int flags, ...)
 {
     mode_t  mode = 0;
     int native_flags;
@@ -113,7 +114,7 @@ int open_portable(const char *pathname, int flags, ...)
 
 extern int  __openat(int, const char*, int, int);
 
-int openat_portable(int dirfd, const char *pathname, int flags, ...)
+int WRAP(openat)(int dirfd, const char *pathname, int flags, ...)
 {
     mode_t  mode = 0;
     int native_flags;

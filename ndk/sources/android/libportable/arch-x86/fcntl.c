@@ -14,13 +14,14 @@
  * limitations under the License.
  */
 
+#include <portability.h>
 #include <fcntl.h>
 #include <stdarg.h>
 #include <fcntl_portable.h>
 
 extern int __fcntl64(int, int, void *);
 
-int fcntl_portable(int fd, int cmd, ...)
+int WRAP(fcntl)(int fd, int cmd, ...)
 {
     va_list ap;
     void * arg;

@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include <portability.h>
 #include <stdint.h>
 
 struct _Unwind_Context;
@@ -55,25 +56,25 @@ _Unwind_VRS_Result _Unwind_VRS_Set(struct _Unwind_Context *context,
 #define UNWIND_STACK_REG    13
 #define UNWIND_IP_REG       15
 
-uint64_t _Unwind_GetGR_portable(struct _Unwind_Context* ctx, int index) {
+uint64_t WRAP(_Unwind_GetGR)(struct _Unwind_Context* ctx, int index) {
   uint32_t val;
   _Unwind_VRS_Get(ctx, _UVRSC_CORE, index, _UVRSD_UINT32, &val);
   return (uint64_t)val;
 }
 
-void _Unwind_SetGR_portable(struct _Unwind_Context* ctx, int index, uint64_t new_value) {
+void WRAP(_Unwind_SetGR)(struct _Unwind_Context* ctx, int index, uint64_t new_value) {
   uint32_t val = (uint32_t)new_value;
   _Unwind_VRS_Set(ctx, _UVRSC_CORE, index, _UVRSD_UINT32, &val);
 }
 
-uint64_t _Unwind_GetIP_portable(struct _Unwind_Context* ctx) {
-  return _Unwind_GetGR_portable(ctx, UNWIND_IP_REG) & ~1; // thumb bit
+uint64_t WRAP(_Unwind_GetIP)(struct _Unwind_Context* ctx) {
+  return WRAP(_Unwind_GetGR)(ctx, UNWIND_IP_REG) & ~1; // thumb bit
 }
 
-void _Unwind_SetIP_portable(struct _Unwind_Context* ctx, uintptr_t new_value) {
+void WRAP(_Unwind_SetIP)(struct _Unwind_Context* ctx, uintptr_t new_value) {
   uint32_t val = (uint32_t)new_value;
   // Propagate thumb bit to instruction pointer
-  uint32_t thumbState = _Unwind_GetGR_portable(ctx, UNWIND_IP_REG) & 1;
+  uint32_t thumbState = WRAP(_Unwind_GetGR)(ctx, UNWIND_IP_REG) & 1;
   uint64_t new_val = (uint64_t)(val | thumbState);
-  _Unwind_SetGR_portable(ctx, UNWIND_IP_REG, new_val);
+  WRAP(_Unwind_SetGR)(ctx, UNWIND_IP_REG, new_val);
 }

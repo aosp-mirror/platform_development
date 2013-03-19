@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include <portability.h>
 #include <stdarg.h>
 #include <stdlib.h>
 #include <signal.h>
@@ -24,11 +25,11 @@
 #define PORTABLE_TAG            "waitpid_portable"
 #include <log_portable.h>
 
-pid_t waitpid_portable(pid_t pid, int *status, int options)
+pid_t WRAP(waitpid)(pid_t pid, int *status, int options)
 {
     pid_t ret;
 
-    ret = waitpid(pid, status, options);
+    ret = REAL(waitpid)(pid, status, options);
     if (status && ret > 0) {
         /*
          * Status layout is identical, so just the signal

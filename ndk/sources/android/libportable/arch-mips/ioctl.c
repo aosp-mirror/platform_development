@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include <portability.h>
 #include <stdarg.h>
 #include <sys/ioctl.h>
 #include <ioctls_portable.h>
@@ -213,7 +214,7 @@ static inline int mips_change_request(int request)
 }
 
 extern int __ioctl(int, int, void *);
-int ioctl_portable(int fd, int request, ...)
+int WRAP(ioctl)(int fd, int request, ...)
 {
     va_list ap;
     void * arg;

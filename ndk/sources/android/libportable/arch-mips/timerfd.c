@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include <portability.h>
 #include <unistd.h>
 #include <fcntl.h>
 
@@ -57,7 +58,7 @@ static inline int tdf_flags_pton(int portable_flags)
 }
 
 
-int timerfd_create_portable(int clockid, int portable_flags) {
+int WRAP(timerfd_create)(int clockid, int portable_flags) {
     int rv;
     int native_flags;
 
@@ -67,7 +68,7 @@ int timerfd_create_portable(int clockid, int portable_flags) {
 
     native_flags = tdf_flags_pton(portable_flags);
 
-    rv = syscall(__NR_timerfd_create, clockid, native_flags);
+    rv = REAL(syscall)(__NR_timerfd_create, clockid, native_flags);
     if (rv >= 0) {
         if (native_flags & TFD_CLOEXEC) {
             filefd_CLOEXEC_enabled(rv);

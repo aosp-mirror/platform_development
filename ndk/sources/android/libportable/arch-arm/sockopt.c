@@ -14,17 +14,18 @@
  * limitations under the License.
  */
 
+#include <portability.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 
 extern int setsockopt(int, int, int, const void *, socklen_t);
-int setsockopt_portable(int s, int level, int optname, const void *optval, socklen_t optlen)
+int WRAP(setsockopt)(int s, int level, int optname, const void *optval, socklen_t optlen)
 {
-    return setsockopt(s, level, optname, optval, optlen);
+    return REAL(setsockopt)(s, level, optname, optval, optlen);
 }
 
 extern int getsockopt (int, int, int, void *, socklen_t *);
-int getsockopt_portable(int s, int level, int optname, void *optval, socklen_t *optlen)
+int WRAP(getsockopt)(int s, int level, int optname, void *optval, socklen_t *optlen)
 {
-    return getsockopt(s, level, optname, optval, optlen);
+    return REAL(getsockopt)(s, level, optname, optval, optlen);
 }

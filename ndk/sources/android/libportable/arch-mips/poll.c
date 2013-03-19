@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include <portability.h>
 #include <poll.h>
 #include <poll_portable.h>
 
@@ -105,7 +106,7 @@ static inline short change_mips_events(short mips_events)
 
 extern int poll(struct pollfd *, nfds_t, long);
 
-int poll_portable(struct pollfd *fds, nfds_t nfds, long timeout)
+int WRAP(poll)(struct pollfd *fds, nfds_t nfds, long timeout)
 {
   nfds_t i;
   int ret;
@@ -113,7 +114,7 @@ int poll_portable(struct pollfd *fds, nfds_t nfds, long timeout)
   for (i = 0; i < nfds; i++)
       fds->events = mips_change_portable_events(fds->events);
 
-  ret = poll(fds, nfds, timeout);
+  ret = REAL(poll)(fds, nfds, timeout);
 
   for (i = 0; i < nfds; i++) {
       fds->events = change_mips_events(fds->events);
