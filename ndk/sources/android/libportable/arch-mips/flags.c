@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include <portability.h>
 #include <stdio.h>
 #include <fcntl.h>
 #include <fcntl_portable.h>
@@ -26,7 +27,7 @@
 extern int __sflags(const char *, int *);
 
 int
-__sflags_portable(const char *mode, int *optr)
+WRAP(__sflags)(const char *mode, int *optr)
 {
     int rv;
     int nflags, pflags;

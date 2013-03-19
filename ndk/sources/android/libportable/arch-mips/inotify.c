@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include <portability.h>
 #include <unistd.h>
 #include <fcntl.h>
 
@@ -60,7 +61,7 @@ static inline int in_flags_pton(int portable_flags)
 }
 
 
-int inotify_init1_portable(int portable_flags) {
+int WRAP(inotify_init1)(int portable_flags) {
     int rv;
     int native_flags;
 

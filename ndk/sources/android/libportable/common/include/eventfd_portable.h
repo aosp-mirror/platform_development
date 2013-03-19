@@ -30,8 +30,8 @@
 #ifndef _SYS_EVENTFD_PORTABLE_H
 #define _SYS_EVENTFD_PORTABLE_H
 
-#include <sys/cdefs.h>
 #include <portability.h>
+#include <sys/cdefs.h>
 #include <fcntl_portable.h>
 
 __BEGIN_DECLS
@@ -50,7 +50,7 @@ __BEGIN_DECLS
 /* type of event counter */
 typedef uint64_t  eventfd_portable_t;
 
-extern int eventfd_portable(unsigned int initval, int flags);
+extern int WRAP(eventfd)(unsigned int initval, int flags);
 
 #if 0
 /* Compatibility with GLibc; libportable versions don't appear to be necessary */

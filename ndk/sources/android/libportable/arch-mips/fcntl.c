@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include <portability.h>
 #include <fcntl.h>
 #include <errno.h>
 #include <stdarg.h>
@@ -284,7 +285,7 @@ extern int __fcntl64(int, int, void *);
  *        pid_t l_pid;            pid_t l_pid;
  *      }                       }
  */
-int fcntl_portable(int fd, int portable_cmd, ...)
+int WRAP(fcntl)(int fd, int portable_cmd, ...)
 {
     int flags;
     va_list ap;

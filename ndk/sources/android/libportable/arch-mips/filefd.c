@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
+#include <portability.h>
 #include <unistd.h>
 #include <stdarg.h>
 #include <stdlib.h>
-#include <portability.h>
 #include <stdio.h>
 #include <errno.h>
 #include <errno_portable.h>
@@ -415,14 +415,14 @@ __hidden void filefd_disable_mapping()
 }
 
 
-int close_portable(int fd)
+int WRAP(close)(int fd)
 {
     int rv;
 
     ALOGV(" ");
     ALOGV("%s(fd:%d) {", __func__, fd);
 
-    rv = close(fd);
+    rv = REAL(close)(fd);
     filefd_closed(fd);
 
     ALOGV("%s: return(rv:%d); }", __func__, rv);
@@ -430,7 +430,7 @@ int close_portable(int fd)
 }
 
 
-int read_portable(int fd, void *buf, size_t count)
+int WRAP(read)(int fd, void *buf, size_t count)
 {
     int rv;
     enum filefd_type fd_type;
@@ -449,7 +449,7 @@ int read_portable(int fd, void *buf, size_t count)
     case EVENT_FD_TYPE:
     case INOTIFY_FD_TYPE:
     case TIMER_FD_TYPE:
-        rv = read(fd, buf, count);
+        rv = REAL(read)(fd, buf, count);
         break;
 
     /* The read() of a signalfd() file descriptor needs to be mapped. */
@@ -457,13 +457,13 @@ int read_portable(int fd, void *buf, size_t count)
         if (filefd_enabled) {
             rv = read_signalfd_mapper(fd, buf, count);
         } else {
-            rv = read(fd, buf, count);
+            rv = REAL(read)(fd, buf, count);
         }
         break;
 
     default:
         ALOGE("Unknown fd_type:%d!", fd_type);
-        rv = read(fd, buf, count);
+        rv = REAL(read)(fd, buf, count);
         break;
     }
 
@@ -477,7 +477,7 @@ int read_portable(int fd, void *buf, size_t count)
  * Tries a second time if it detects an extremely unlikely
  * race condition.
  */
-int execve_portable(const char *filename, char *const argv[],  char *const envp[])
+int WRAP(execve)(const char *filename, char *const argv[],  char *const envp[])
 {
     int rv;
     int mapped_files = filefd_mapped_files;
@@ -494,7 +494,7 @@ int execve_portable(const char *filename, char *const argv[],  char *const envp[
     }
     import_fd_env(verify_consistancy);          /* File type table consistancy verified. */
 
-    rv = execve(filename, argv, envp);
+    rv = REAL(execve)(filename, argv, envp);
 
     ALOGV("%s: return(rv:%d); }", __func__, rv);
     return rv;

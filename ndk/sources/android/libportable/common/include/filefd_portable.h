@@ -37,8 +37,8 @@ extern __hidden void filefd_CLOEXEC_enabled(int fd);
 extern __hidden void filefd_CLOEXEC_disabled(int fd);
 extern __hidden void filefd_disable_mapping(void);
 
-extern int close_portable(int fd);
-extern int read_portable(int fd, void *buf, size_t count);
-extern int pipe2_portable(int pipefd[2], int portable_flags);
+extern int WRAP(close)(int fd);
+extern int WRAP(read)(int fd, void *buf, size_t count);
+extern int WRAP(pipe2)(int pipefd[2], int portable_flags);
 
 #endif /* _FILEFD_PORTABLE_H_ */
