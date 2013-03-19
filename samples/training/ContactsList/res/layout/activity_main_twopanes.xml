@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Copyright (C) 2013 The Android Open Source Project
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+
+<!-- Main Activity two-pane layout. This layout has two panes, a ContactsListFragment on the left
+     and a ContactDetailFragment on the right. Tapping on a contact in the list loads the details
+     of that contact on the right. -->
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:orientation="horizontal"
+              android:showDividers="middle"
+              android:divider="?android:attr/listDivider"
+              android:weightSum="100"
+              android:baselineAligned="false">
+
+    <fragment class="com.example.android.contactslist.ui.ContactsListFragment"
+              android:id="@+id/contact_list"
+              android:layout_height="match_parent"
+              android:layout_width="0dp"
+              android:layout_weight="@integer/contact_list_percent"/>
+
+    <fragment class="com.example.android.contactslist.ui.ContactDetailFragment"
+              android:id="@+id/contact_detail"
+              android:layout_height="match_parent"
+              android:layout_width="0dp"
+              android:layout_weight="@integer/contact_detail_percent"/>
+
+</LinearLayout>
