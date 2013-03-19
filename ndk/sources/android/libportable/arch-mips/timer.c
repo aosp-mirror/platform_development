@@ -14,13 +14,12 @@
  * limitations under the License.
  */
 
+#include <portability.h>
 #include <signal.h>
 #include <signal_portable.h>
 #include <time.h>
 
-#include <portability.h>
-
-int timer_create_portable(clockid_t clockid, struct sigevent *portable_evp,
+int WRAP(timer_create)(clockid_t clockid, struct sigevent *portable_evp,
                           timer_t *timerid)
 {
     struct sigevent native_sigevent, *evp = portable_evp;
@@ -33,5 +32,5 @@ int timer_create_portable(clockid_t clockid, struct sigevent *portable_evp,
         evp = &native_sigevent;
         evp->sigev_signo = signum_pton(evp->sigev_signo);
     }
-    return timer_create(clockid, evp, timerid);
+    return REAL(timer_create)(clockid, evp, timerid);
 }

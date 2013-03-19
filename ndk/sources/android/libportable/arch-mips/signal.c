@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include <portability.h>
 #include <unistd.h>
 #include <stdarg.h>
 #include <stdlib.h>
@@ -732,7 +733,7 @@ do_signal_portable(int portable_signum, sighandler_portable_t portable_handler,
  * redirects the call to bsd_signal(). _signal() is a static function; not to be called
  * directly. This function isn't actually needed.
  */
-sighandler_portable_t signal_portable(int portable_signum, sighandler_portable_t handler)
+sighandler_portable_t WRAP(signal)(int portable_signum, sighandler_portable_t handler)
 {
     sighandler_portable_t rv;
 
@@ -748,7 +749,7 @@ sighandler_portable_t signal_portable(int portable_signum, sighandler_portable_t
 }
 
 
-sighandler_portable_t sysv_signal_portable(int portable_signum, sighandler_portable_t handler)
+sighandler_portable_t WRAP(sysv_signal)(int portable_signum, sighandler_portable_t handler)
 {
     sighandler_portable_t rv;
 
@@ -771,7 +772,8 @@ sighandler_portable_t sysv_signal_portable(int portable_signum, sighandler_porta
  * or
  *      the sysv_signal() signal handler.
  */
-sighandler_portable_t bsd_signal_portable(int portable_signum, sighandler_portable_t handler)
+
+sighandler_portable_t WRAP(bsd_signal)(int portable_signum, sighandler_portable_t handler)
 {
     sighandler_portable_t rv;
 
@@ -812,46 +814,48 @@ static int do_kill(int id, int portable_signum, int (*fn)(int, int))
 }
 
 
-int killpg_portable(int pgrp, int portable_signum)
+int WRAP(killpg)(int pgrp, int portable_signum)
 {
+    extern int REAL(killpg)(int pgrp, int sig);
     int rv;
 
     ALOGV(" ");
     ALOGV("%s(pgrp:%d, portable_signum:%d) {", __func__,
               pgrp,    portable_signum);
 
-    rv = do_kill(pgrp, portable_signum, killpg);
+    rv = do_kill(pgrp, portable_signum, REAL(killpg));
 
     ALOGV("%s: return(rv:%d); }", __func__, rv);
     return rv;
 }
 
 
-int kill_portable(pid_t pid, int portable_signum)
+int WRAP(kill)(pid_t pid, int portable_signum)
 {
+    extern int REAL(kill)(pid_t, int);
     int rv;
 
     ALOGV(" ");
     ALOGV("%s(pid:%d, portable_signum:%d) {", __func__,
               pid,    portable_signum);
 
-    rv = do_kill(pid, portable_signum, kill);
+    rv = do_kill(pid, portable_signum, REAL(kill));
 
     ALOGV("%s: return(rv:%d); }", __func__, rv);
     return rv;
 }
 
 
-int tkill_portable(int tid, int portable_signum)
+int WRAP(tkill)(int tid, int portable_signum)
 {
-    extern int tkill(int, int);
+    extern int REAL(tkill)(int, int);
     int rv;
 
     ALOGV(" ");
     ALOGV("%s(tid:%d, portable_signum:%d) {", __func__,
               tid,    portable_signum);
 
-    rv = do_kill(tid, portable_signum, tkill);
+    rv = do_kill(tid, portable_signum, REAL(tkill));
 
     ALOGV("%s: return(rv:%d); }", __func__, rv);
     return rv;
@@ -860,7 +864,7 @@ int tkill_portable(int tid, int portable_signum)
 
 /* tgkill is not exported from android-14 libc.so */
 #if 0
-int tgkill_portable(int tgid, int tid, int portable_signum)
+int WRAP(tgkill)(int tgid, int tid, int portable_signum)
 {
     extern int tgkill(int, int, int);
     char *portable_signame = map_portable_signum_to_name(portable_signum);
@@ -875,7 +879,7 @@ int tgkill_portable(int tgid, int tid, int portable_signum)
     if ((portable_signum != 0) && (mips_signum == 0))
         rv = 0;
     else
-        rv = tgkill(tgid, tid, mips_signum);
+        rv = REAL(tgkill)(tgid, tid, mips_signum);
 
     ALOGV("%s: return rv:%d; }", __func__, rv);
     return rv;
@@ -883,7 +887,7 @@ int tgkill_portable(int tgid, int tid, int portable_signum)
 #endif
 
 
-int raise_portable(int portable_signum)
+int WRAP(raise)(int portable_signum)
 {
     char *portable_signame = map_portable_signum_to_name(portable_signum);
     int mips_signum = signum_pton(portable_signum);
@@ -894,7 +898,7 @@ int raise_portable(int portable_signum)
     if ((portable_signum != 0) && (mips_signum == 0))
         rv = 0;
     else
-        rv = raise(mips_signum);
+        rv = REAL(raise)(mips_signum);
 
     ALOGV("%s: return(rv:%d); }", __func__, rv);
     return rv;
@@ -919,7 +923,7 @@ void sigset_pton(sigset_portable_t *portable_sigset, sigset_t *mips_sigset)
 
     for(portable_signum = 1; portable_signum <= NSIG_PORTABLE; portable_signum++) {
 
-        if (sigismember_portable(portable_sigset, portable_signum)) {
+        if (WRAP(sigismember)(portable_sigset, portable_signum)) {
             char *portable_signame = map_portable_signum_to_name(portable_signum);
             int mips_signum = signum_pton(portable_signum);
             char *mips_signame;
@@ -962,14 +966,14 @@ sigset_ntop(const sigset_t *const_mips_sigset, sigset_portable_t *portable_sigse
                    portable_sigset);
         goto done;
     }
-    sigemptyset_portable(portable_sigset);
+    WRAP(sigemptyset)(portable_sigset);
 
     for(mips_signum = 1; mips_signum <= NSIG; mips_signum++) {
         if (sigismember(mips_sigset, mips_signum)) {
             int portable_signum = signum_ntop(mips_signum);
 
             if (portable_signum != 0)
-                sigaddset_portable(portable_sigset, portable_signum);
+                WRAP(sigaddset)(portable_sigset, portable_signum);
         }
     }
 
@@ -1172,7 +1176,7 @@ static int do_sigaction_portable(int portable_signum, const struct sigaction_por
             mips_oldact.sa_sigaction == (__sigaction_handler_portable_t) mips_sighandler) {
 
             oldact->sa_sigaction_portable =
-                                           (__sigaction_handler_portable_t) prev_portable_handler;
+                                        (__sigaction_handler_portable_t) prev_portable_handler;
         } else {
             oldact->sa_sigaction_portable =
                                         (__sigaction_handler_portable_t) mips_oldact.sa_sigaction;
@@ -1190,16 +1194,17 @@ done:
 }
 
 
-int sigaction_portable(int portable_signum, const struct sigaction_portable *act,
+int WRAP(sigaction)(int portable_signum, const struct sigaction_portable *act,
                        struct sigaction_portable *oldact)
 {
+    extern int REAL(sigaction)(int, const struct sigaction *, struct sigaction *);
     int rv;
 
     ALOGV(" ");
     ALOGV("%s(portable_signum:%d, act:%p, oldact:%p) {", __func__,
               portable_signum,    act,    oldact);
 
-    rv = do_sigaction_portable(portable_signum, act, oldact, sigaction, NULL);
+    rv = do_sigaction_portable(portable_signum, act, oldact, REAL(sigaction), NULL);
 
     ALOGV("%s: return(rv:%d); }", __func__, rv);
     return rv;
@@ -1261,7 +1266,7 @@ __hidden int do_signalfd4_portable(int fd, const sigset_portable_t *portable_sig
  * This function can't be called from bionic, so there isn't an entry in the experimental
  * linker.cpp table for testing and this function.
  */
-int signalfd_portable(int fd, const sigset_portable_t *portable_sigmask, int portable_flags)
+int WRAP(signalfd)(int fd, const sigset_portable_t *portable_sigmask, int portable_flags)
 {
     int portable_sigsetsize = sizeof(sigset_portable_t);
     int rv;
@@ -1325,7 +1330,7 @@ __hidden int read_signalfd_mapper(int fd, void *buf, size_t count)
 }
 
 
-int sigsuspend_portable(const sigset_portable_t *portable_sigmask)
+int WRAP(sigsuspend)(const sigset_portable_t *portable_sigmask)
 {
     int rv;
     sigset_t mips_sigmask;
@@ -1337,7 +1342,7 @@ int sigsuspend_portable(const sigset_portable_t *portable_sigmask)
         rv = -1;
     } else {
         sigset_pton((sigset_portable_t *)portable_sigmask, &mips_sigmask);
-        rv = sigsuspend(&mips_sigmask);
+        rv = REAL(sigsuspend)(&mips_sigmask);
     }
 
     ALOGV("%s: return(rv:%d); }", __func__, rv);
@@ -1345,7 +1350,7 @@ int sigsuspend_portable(const sigset_portable_t *portable_sigmask)
 }
 
 
-int sigpending_portable(sigset_portable_t *portable_sigset)
+int WRAP(sigpending)(sigset_portable_t *portable_sigset)
 {
     int rv;
     sigset_t mips_sigset;
@@ -1357,7 +1362,7 @@ int sigpending_portable(sigset_portable_t *portable_sigset)
         errno = EFAULT;
         rv = -1;
     } else {
-        rv = sigpending(&mips_sigset);
+        rv = REAL(sigpending)(&mips_sigset);
         sigset_ntop(&mips_sigset, portable_sigset);
     }
 
@@ -1366,7 +1371,7 @@ int sigpending_portable(sigset_portable_t *portable_sigset)
 }
 
 
-int sigwait_portable(const sigset_portable_t *portable_sigset, int *ptr_to_portable_sig)
+int WRAP(sigwait)(const sigset_portable_t *portable_sigset, int *ptr_to_portable_sig)
 {
     int rv;
     sigset_t mips_sigset;
@@ -1382,7 +1387,7 @@ int sigwait_portable(const sigset_portable_t *portable_sigset, int *ptr_to_porta
     } else {
         sigset_pton((sigset_portable_t *)portable_sigset, &mips_sigset);
 
-        rv = sigwait(&mips_sigset, &mips_sig);
+        rv = REAL(sigwait)(&mips_sigset, &mips_sig);
 
         portable_sig = signum_ntop(mips_sig);
         *ptr_to_portable_sig = portable_sig;
@@ -1392,7 +1397,7 @@ int sigwait_portable(const sigset_portable_t *portable_sigset, int *ptr_to_porta
 }
 
 
-int siginterrupt_portable(int portable_signum, int flag)
+int WRAP(siginterrupt)(int portable_signum, int flag)
 
 {
     int rv;
@@ -1408,7 +1413,7 @@ int siginterrupt_portable(int portable_signum, int flag)
                                portable_signum);
         rv = 0;
     } else {
-        rv = siginterrupt(mips_signum, flag);
+        rv = REAL(siginterrupt)(mips_signum, flag);
     }
     ALOGV("%s: return(rv:%d); }", __func__, rv);
     return rv;
@@ -1474,26 +1479,27 @@ __hidden int do_sigmask(int portable_how, const sigset_portable_t *portable_sigs
 }
 
 
-int sigprocmask_portable(int portable_how, const sigset_portable_t *portable_sigset,
+int WRAP(sigprocmask)(int portable_how, const sigset_portable_t *portable_sigset,
                          sigset_portable_t *portable_oldset)
 {
+    extern int REAL(sigprocmask)(int, const sigset_t *, sigset_t *);
     int rv;
 
     ALOGV(" ");
     ALOGV("%s(portable_how:%d, portable_sigset:%p, portable_oldset:%p) {", __func__,
               portable_how,    portable_sigset,    portable_oldset);
 
-    rv = do_sigmask(portable_how, portable_sigset, portable_oldset, sigprocmask, NULL);
+    rv = do_sigmask(portable_how, portable_sigset, portable_oldset, REAL(sigprocmask), NULL);
 
     ALOGV("%s: return(rv:%d); }", __func__, rv);
     return rv;
 }
 
 
-int __rt_sigaction_portable(int portable_signum, const struct sigaction_portable *act,
+int WRAP(__rt_sigaction)(int portable_signum, const struct sigaction_portable *act,
                             struct sigaction_portable *oldact, size_t sigsetsize)
 {
-    extern int __rt_sigaction(int , const struct sigaction *, struct sigaction *, size_t);
+    extern int REAL(__rt_sigaction)(int , const struct sigaction *, struct sigaction *, size_t);
     int rv;
 
     ALOGV(" ");
@@ -1506,19 +1512,19 @@ int __rt_sigaction_portable(int portable_signum, const struct sigaction_portable
         rv = -1;
         goto done;
     }
-    rv = do_sigaction_portable(portable_signum, act, oldact, NULL, __rt_sigaction);
+    rv = do_sigaction_portable(portable_signum, act, oldact, NULL, REAL(__rt_sigaction));
 
 done:
     ALOGV("%s: return(rv:%d); }", __func__, rv);
     return rv;
 }
 
-int __rt_sigprocmask_portable(int portable_how,
+int WRAP(__rt_sigprocmask)(int portable_how,
                               const sigset_portable_t *portable_sigset,
                               sigset_portable_t *portable_oldset,
                               size_t sigsetsize)
 {
-    extern int __rt_sigprocmask(int, const sigset_t *, sigset_t *, size_t);
+    extern int REAL(__rt_sigprocmask)(int, const sigset_t *, sigset_t *, size_t);
     int rv;
 
     ALOGV(" ");
@@ -1531,7 +1537,7 @@ int __rt_sigprocmask_portable(int portable_how,
         rv = -1;
         goto done;
     }
-    rv = do_sigmask(portable_how, portable_sigset, portable_oldset, NULL, __rt_sigprocmask);
+    rv = do_sigmask(portable_how, portable_sigset, portable_oldset, NULL, REAL(__rt_sigprocmask));
 
  done:
     ALOGV("%s: return(rv:%d); }", __func__, rv);
@@ -1540,12 +1546,12 @@ int __rt_sigprocmask_portable(int portable_how,
 }
 
 
-int __rt_sigtimedwait_portable(const sigset_portable_t *portable_sigset,
+int WRAP(__rt_sigtimedwait)(const sigset_portable_t *portable_sigset,
                                siginfo_portable_t *portable_siginfo,
                                const struct timespec *timeout,
                                size_t portable_sigsetsize)
 {
-    extern int __rt_sigtimedwait(const sigset_t *, siginfo_t *, const struct timespec *, size_t);
+    extern int REAL(__rt_sigtimedwait)(const sigset_t *, siginfo_t *, const struct timespec *, size_t);
 
     sigset_t native_sigset_struct;
     sigset_t *native_sigset = &native_sigset_struct;
@@ -1573,7 +1579,7 @@ int __rt_sigtimedwait_portable(const sigset_portable_t *portable_sigset,
     } else {
         native_siginfo = &native_siginfo_struct;
     }
-    rv = __rt_sigtimedwait(native_sigset, native_siginfo, timeout, sizeof(sigset_t));
+    rv = REAL(__rt_sigtimedwait)(native_sigset, native_siginfo, timeout, sizeof(sigset_t));
     if (rv == 0 && native_siginfo != NULL) {
         /* Map siginfo struct from native to portable format. */
         siginfo_ntop(native_siginfo, portable_siginfo);
@@ -1604,7 +1610,7 @@ done:
  *
  *    sigqueue() must return EAGAIN if exceeded and we don't on Android.
  */
-int sigqueue_portable(pid_t pid, int portable_sig, const union sigval value)
+int WRAP(sigqueue)(pid_t pid, int portable_sig, const union sigval value)
 {
     siginfo_t native_siginfo;
     siginfo_t *native_sip;
@@ -1646,7 +1652,7 @@ int sigqueue_portable(pid_t pid, int portable_sig, const union sigval value)
 /*
  * Real Time version of sigqueueinfo().
  */
-int rt_sigqueueinfo_portable(pid_t pid, int portable_sig, siginfo_portable_t *portable_sip)
+int WRAP(rt_sigqueueinfo)(pid_t pid, int portable_sig, siginfo_portable_t *portable_sip)
 {
     int native_sig;
     siginfo_t native_siginfo, *native_sip;
@@ -1676,7 +1682,7 @@ int rt_sigqueueinfo_portable(pid_t pid, int portable_sig, siginfo_portable_t *po
 /*
  * Thread Group flavor of the real time version of sigqueueinfo().
  */
-int rt_tgsigqueueinfo_portable(pid_t tgid, pid_t pid, int portable_sig,
+int WRAP(rt_tgsigqueueinfo)(pid_t tgid, pid_t pid, int portable_sig,
                                siginfo_portable_t *portable_sip)
 {
     siginfo_t native_siginfo, *native_sip;
@@ -1715,7 +1721,7 @@ int rt_tgsigqueueinfo_portable(pid_t tgid, pid_t pid, int portable_sig,
  *    } stack_t;
  *
  */
-int sigaltstack_portable(const portable_stack_t *ss, portable_stack_t *oss)
+int WRAP(sigaltstack)(const portable_stack_t *ss, portable_stack_t *oss)
 {
     int rv;
     stack_t new_stack, *mips_ss;
@@ -1754,7 +1760,7 @@ int sigaltstack_portable(const portable_stack_t *ss, portable_stack_t *oss)
         }
     }
 
-    rv = sigaltstack(mips_ss, mips_oss);
+    rv = REAL(sigaltstack)(mips_ss, mips_oss);
 
     if (!invalid_pointer(oss)) {
         oss->ss_sp = old_stack.ss_sp;

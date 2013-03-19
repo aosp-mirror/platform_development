@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include <portability.h>
 #include <unistd.h>
 #include <fcntl.h>
 
@@ -71,7 +72,7 @@ static inline int efd_flags_pton(int portable_flags)
  * new eventfd2 system call number, so it likely best to just use
  * the Android eventfd() for both eventfd and eventfd2 system calls.
  */
-int eventfd_portable(unsigned int initval, int portable_flags) {
+int WRAP(eventfd)(unsigned int initval, int portable_flags) {
     int rv;
     int native_flags;
 
@@ -81,7 +82,7 @@ int eventfd_portable(unsigned int initval, int portable_flags) {
 
     native_flags = efd_flags_pton(portable_flags);
 
-    rv = eventfd(initval, native_flags);
+    rv = REAL(eventfd)(initval, native_flags);
     if (rv >= 0) {
         if (native_flags & EFD_CLOEXEC) {
             filefd_CLOEXEC_enabled(rv);

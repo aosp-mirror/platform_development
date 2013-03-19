@@ -17,6 +17,7 @@
 #ifndef _PORTABILITY_H_
 #define _PORTABILITY_H_
 
+#include "asm-generic/portability.h"
 /*
  * Common portability helper routines
  */
@@ -31,7 +32,7 @@
  */
 inline static int invalid_pointer(void *p)
 {
-    return p == NULL
+    return p == 0
         || p == (void *)-1
 #ifdef __mips__
         || (int)p < 0

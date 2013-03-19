@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
+#include <portability.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <socket_portable.h>
-
 
 #if SOL_SOCKET_PORTABLE==SOL_SOCKET
 #error Build environment
@@ -108,13 +108,13 @@ static inline int mips_change_optname(int optname)
 }
 
 extern int setsockopt(int, int, int, const void *, socklen_t);
-int setsockopt_portable(int s, int level, int optname, const void *optval, socklen_t optlen)
+int WRAP(setsockopt)(int s, int level, int optname, const void *optval, socklen_t optlen)
 {
-    return setsockopt(s, mips_change_level(level), mips_change_optname(optname), optval, optlen);
+    return REAL(setsockopt)(s, mips_change_level(level), mips_change_optname(optname), optval, optlen);
 }
 
 extern int getsockopt (int, int, int, void *, socklen_t *);
-int getsockopt_portable(int s, int level, int optname, void *optval, socklen_t *optlen)
+int WRAP(getsockopt)(int s, int level, int optname, void *optval, socklen_t *optlen)
 {
-    return getsockopt(s, mips_change_level(level), mips_change_optname(optname), optval, optlen);
+    return REAL(getsockopt)(s, mips_change_level(level), mips_change_optname(optname), optval, optlen);
 }
