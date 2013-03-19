@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Copyright (C) 2013 The Android Open Source Project
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+
+<!-- API Level 11 and above specific resource files. Some of these styles allow us to use new
+     system styles or attributes introduced in API Level 11 and others allow overriding already
+     defined style that are only suitable for older OS versions (such as quickContactBadgeStyle).-->
+
+<resources>
+
+    <style name="AppTheme" parent="@android:style/Theme.Holo.Light"/>
+
+    <style name="listViewActivatedStyle">
+        <item name="android:background">?android:attr/activatedBackgroundIndicator</item>
+    </style>
+
+    <style name="quickContactBadgeStyle"/>
+
+    <style name="addressHeader" parent="@android:style/TextAppearance.Small">
+        <item name="android:textAllCaps">true</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/holo_blue</item>
+    </style>
+
+    <style name="addressButton" parent="@android:style/Widget.Holo.Button.Borderless"/>
+
+</resources>
