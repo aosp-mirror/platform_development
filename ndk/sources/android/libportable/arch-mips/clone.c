@@ -15,6 +15,7 @@
  */
 
 #define _GNU_SOURCE
+#include <portability.h>
 #include <sched.h>
 #include <stdarg.h>
 #include <stdlib.h>
@@ -47,7 +48,7 @@
  * If no signal is specified, then the parent process is not
  * signaled when the child terminates.
  */
-int clone_portable(int (*fn)(void *), void *child_stack, int port_flags, void *arg, ...)
+int WRAP(clone)(int (*fn)(void *), void *child_stack, int port_flags, void *arg, ...)
 {
     va_list     args;
     int         ret;
@@ -117,7 +118,7 @@ int clone_portable(int (*fn)(void *), void *child_stack, int port_flags, void *a
     ALOGV("%s: clone(%p, %p, 0x%x, %p, %p, %p, %p);", __func__,
            fn, child_stack, mips_flags, arg, parent_tidptr, new_tls, child_tidptr);
 
-    ret = clone(fn, child_stack, mips_flags, arg, parent_tidptr,
+    ret = REAL(clone)(fn, child_stack, mips_flags, arg, parent_tidptr,
                 new_tls, child_tidptr);
 
     if (ret > 0) {

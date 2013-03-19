@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include <portability.h>
 #include <sys/resource.h>
 #include <resource_portable.h>
 
@@ -39,13 +40,13 @@ static inline int mips_change_resource(int resource)
 }
 
 extern int getrlimit(int resource, struct rlimit *rlp);
-int getrlimit_portable(int resource, struct rlimit *rlp)
+int WRAP(getrlimit)(int resource, struct rlimit *rlp)
 {
-    return getrlimit(mips_change_resource(resource), rlp);
+    return REAL(getrlimit)(mips_change_resource(resource), rlp);
 }
 
 extern int setrlimit(int resource, const struct rlimit *rlp);
-int setrlimit_portable(int resource, const struct rlimit *rlp)
+int WRAP(setrlimit)(int resource, const struct rlimit *rlp)
 {
-    return setrlimit(mips_change_resource(resource), rlp);
+    return REAL(setrlimit)(mips_change_resource(resource), rlp);
 }

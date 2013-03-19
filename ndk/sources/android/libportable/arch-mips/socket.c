@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include <portability.h>
 #include <unistd.h>
 #include <sys/socket.h>
 #include <fcntl.h>
@@ -127,30 +128,30 @@ static inline int socktype_ntop(int native_type)
 }
 
 
-extern int socket(int, int, int);
+extern int REAL(socket)(int, int, int);
 
-int socket_portable(int domain, int type, int protocol) {
+int WRAP(socket)(int domain, int type, int protocol) {
     int rv;
 
     ALOGV(" ");
     ALOGV("%s(domain:%d, type:%d, protocol:%d) {", __func__,
               domain,    type,    protocol);
 
-    rv = socket(domain, socktype_pton(type), protocol);
+    rv = REAL(socket)(domain, socktype_pton(type), protocol);
 
     ALOGV("%s: return(rv:%d); }", __func__, rv);
     return rv;
 }
 
 
-int socketpair_portable(int domain, int type, int protocol, int sv[2]) {
+int WRAP(socketpair)(int domain, int type, int protocol, int sv[2]) {
     int rv;
 
     ALOGV(" ");
     ALOGV("%s(domain:%d, type:%d, protocol:%d, sv[2]:%p) {", __func__,
               domain,    type,    protocol,    sv);
 
-    rv = socketpair(domain, socktype_pton(type), protocol, sv);
+    rv = REAL(socketpair)(domain, socktype_pton(type), protocol, sv);
 
     if ((rv != 0) || invalid_pointer(sv)) {
         ALOGV("%s: return(rv:%d); }", __func__,
@@ -175,7 +176,7 @@ int socketpair_portable(int domain, int type, int protocol, int sv[2]) {
  * later made free with a call to the portable version of
  * freeaddrinfo(); which is written below this function.
  */
-int getaddrinfo_portable(const char *node, const char *service,
+int WRAP(getaddrinfo)(const char *node, const char *service,
                  struct addrinfo_portable *portable_hints,
                  struct addrinfo_portable **portable_results)
 {
@@ -203,7 +204,7 @@ int getaddrinfo_portable(const char *node, const char *service,
     ASSERT(portable_results != NULL);
     native_results = (struct addrinfo **) portable_results;
 
-    rv = getaddrinfo(node, service, native_hints, native_results);
+    rv = REAL(getaddrinfo)(node, service, native_hints, native_results);
 
     if (native_hints != NULL) {
         portable_hints->ai_socktype = saved_portable_socktype;
@@ -230,7 +231,7 @@ int getaddrinfo_portable(const char *node, const char *service,
  * Free the results list returned from a previous call
  * to the portable version of getaddrinfo().
  */
-void freeaddrinfo_portable(struct addrinfo_portable *portable_results)
+void WRAP(freeaddrinfo)(struct addrinfo_portable *portable_results)
 {
     struct addrinfo *native_results, *rp;
 
@@ -253,7 +254,7 @@ void freeaddrinfo_portable(struct addrinfo_portable *portable_results)
         PRINT_ADDRINFO(rp);
         rp->ai_socktype = socktype_pton(rp->ai_socktype);       /* Likely not really necessary */
     }
-    freeaddrinfo(native_results);
+    REAL(freeaddrinfo)(native_results);
 
     ALOGV("%s: return; }", __func__);
     return;

@@ -31,8 +31,8 @@
 #ifndef _SYS_INOTIFY_PORTABLE_H
 #define _SYS_INOTIFY_PORTABLE_H
 
-#include <sys/cdefs.h>
 #include <portability.h>
+#include <sys/cdefs.h>
 #include <fcntl.h>
 #include <fcntl_portable.h>
 
@@ -44,7 +44,7 @@ __BEGIN_DECLS
 #define  IN_CLOEXEC_PORTABLE   O_CLOEXEC_PORTABLE
 #define  IN_NONBLOCK_PORTABLE  O_NONBLOCK_PORTABLE
 
-extern int inotify_init1_portable(int flags);
+extern int WRAP(inotify_init1)(int flags);
 
 __END_DECLS
 

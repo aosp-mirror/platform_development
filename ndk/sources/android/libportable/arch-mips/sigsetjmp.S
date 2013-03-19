@@ -31,6 +31,7 @@
  * SUCH DAMAGE.
  */
 
+#include <asm-generic/portability.h>
 #include <machine/asm.h>
 #include <machine/regnum.h>
 
@@ -42,7 +43,7 @@
 FRAMESZ= MKFSIZ(1,1)
 GPOFF= FRAMESZ-2*REGSZ
 
-LEAF(sigsetjmp_portable, FRAMESZ)
+LEAF(WRAP(sigsetjmp), FRAMESZ)
         PTR_SUBU sp, FRAMESZ
         SETUP_GP64(GPOFF, sigsetjmp)
         .set    reorder
@@ -53,15 +54,15 @@ LEAF(sigsetjmp_portable, FRAMESZ)
         PTR_ADDU sp, FRAMESZ
         jr t9
 
-1:      LA      t9, setjmp_portable
+1:      LA      t9, WRAP(setjmp)
         RESTORE_GP64
         PTR_ADDU sp, FRAMESZ
         jr t9
-END(sigsetjmp_portable)
+END(WRAP(sigsetjmp))
 
-LEAF(siglongjmp_portable, FRAMESZ)
+LEAF(WRAP(siglongjmp), FRAMESZ)
         PTR_SUBU sp, FRAMESZ
-        SETUP_GP64(GPOFF, siglongjmp_portable)
+        SETUP_GP64(GPOFF, WRAP(siglongjmp))
         .set    reorder
         REG_L   t0, JB_SAVEMASK(a0)             # get "savemask"
         bne     t0, 0x0, 1f                     # restore signal mask?
@@ -70,8 +71,8 @@ LEAF(siglongjmp_portable, FRAMESZ)
         PTR_ADDU sp, FRAMESZ
         jr      t9
 1:
-        LA      t9, longjmp_portable
+        LA      t9, WRAP(longjmp)
         RESTORE_GP64
         PTR_ADDU sp, FRAMESZ
         jr      t9
-END(siglongjmp_portable)
+END(WRAP(siglongjmp))

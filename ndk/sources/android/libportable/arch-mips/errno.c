@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include <portability.h>
 #include <pthread.h>
 #include <string.h>
 #include <errno.h>
@@ -278,7 +279,7 @@ static struct errno_state *errno_key_data(void)
  * This can be assigned to without affecting the native errno. If the key
  * allocation fails fall back to using the native errno location.
  */
-volatile int* __errno_portable()
+volatile int* WRAP(__errno)()
 {
     struct errno_state *p;
     int save_errno;
@@ -331,7 +332,7 @@ volatile int* __errno_portable()
 
 
 /* set portable errno */
-void __set_errno_portable(int portable_errno)
+void WRAP(__set_errno)(int portable_errno)
 {
     struct errno_state *p;
     int save_errno;
@@ -356,13 +357,14 @@ void __set_errno_portable(int portable_errno)
     ALOGV("%s: return; }", __func__);
 }
 
-char *strerror_portable(int errnum)
+extern char* REAL(strerror)(int);
+char *WRAP(strerror)(int errnum)
 {
-    return strerror(errno_pton(errnum));
+    return REAL(strerror)(errno_pton(errnum));
 }
 
 /* BSD style strerror_r */
-int strerror_r_portable(int errnum, char *buf, size_t buflen)
+int WRAP(strerror_r)(int errnum, char *buf, size_t buflen)
 {
-    return strerror_r(errno_pton(errnum), buf, buflen);
+    return REAL(strerror_r)(errno_pton(errnum), buf, buflen);
 }

@@ -31,8 +31,8 @@
 #ifndef _SYS_TIMERFD_PORTABLE_H
 #define _SYS_TIMERFD_PORTABLE_H
 
-#include <sys/cdefs.h>
 #include <portability.h>
+#include <sys/cdefs.h>
 #include <fcntl.h>
 #include <fcntl_portable.h>
 
@@ -44,7 +44,7 @@ __BEGIN_DECLS
 #define  TFD_CLOEXEC_PORTABLE   O_CLOEXEC_PORTABLE
 #define  TFD_NONBLOCK_PORTABLE  O_NONBLOCK_PORTABLE
 
-extern int timerfd_create_portable(int clockid, int flags);
+extern int WRAP(timerfd_create)(int clockid, int flags);
 
 __END_DECLS
 

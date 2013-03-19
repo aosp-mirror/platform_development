@@ -14,37 +14,38 @@
  * limitations under the License.
  */
 
+#include <portability.h>
 #include <stat_portable.h>
 
 /* Note: The Portable Header will define stat to stat_portable */
-int stat_portable(const char *path, struct stat_portable *s)
+int WRAP(stat)(const char *path, struct stat_portable *s)
 {
     struct stat x86_stat;
-    int ret = stat(path, &x86_stat);
+    int ret = REAL(stat)(path, &x86_stat);
     stat_ntop(&x86_stat, s);
     return ret;
 }
 
-int fstat_portable(int fd, struct stat_portable *s)
+int WRAP(fstat)(int fd, struct stat_portable *s)
 {
     struct stat x86_stat;
-    int ret = fstat(fd, &x86_stat);
+    int ret = REAL(fstat)(fd, &x86_stat);
     stat_ntop(&x86_stat, s);
     return ret;
 }   
 
-int lstat_portable(const char *path, struct stat_portable *s)
+int WRAP(lstat)(const char *path, struct stat_portable *s)
 {
     struct stat x86_stat;
-    int ret = lstat(path, &x86_stat);
+    int ret = REAL(lstat)(path, &x86_stat);
     stat_ntop(&x86_stat, s);
     return ret;
 }
 
-int fstatat_portable(int dirfd, const char *path, struct stat_portable *s, int flags)
+int WRAP(fstatat)(int dirfd, const char *path, struct stat_portable *s, int flags)
 {
     struct stat x86_stat;
-    int ret = fstatat(dirfd, path, &x86_stat, flags);
+    int ret = REAL(fstatat)(dirfd, path, &x86_stat, flags);
     stat_ntop(&x86_stat, s);
     return ret;
 }

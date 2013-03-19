@@ -232,10 +232,10 @@ void herror(const char *);
 const char      *hstrerror(int);
 #endif
 
-int getaddrinfo_portable(const char *, const char *, struct addrinfo_portable *,
+int WRAP(getaddrinfo)(const char *, const char *, struct addrinfo_portable *,
                          struct addrinfo_portable **);
 
-void freeaddrinfo_portable(struct addrinfo_portable *);
+void WRAP(freeaddrinfo)(struct addrinfo_portable *);
 
 #if 0 /* Not needed for addrinfo mapping */
 int getnameinfo(const struct sockaddr *, socklen_t, char *, size_t, char *, size_t, int);

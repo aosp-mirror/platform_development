@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include <portability.h>
 #include <unistd.h>
 #include <stdarg.h>
 #include <signal.h>
@@ -48,11 +49,11 @@
  */
 
 
-extern int syscall(int, ...);
+extern int REAL(syscall)(int, ...);
 
 #define MAXARGS 8
 
-int syscall_portable(int portable_number, ...)
+int WRAP(syscall)(int portable_number, ...)
 {
     va_list ap;
     int native_number, ret;
@@ -126,7 +127,7 @@ int syscall_portable(int portable_number, ...)
 
         va_end(ap);
 
-        ret = eventfd_portable(initval, flags);      /* Android uses __NR_eventfd2 in eventfd() */
+        ret = WRAP(eventfd)(initval, flags);      /* Android uses __NR_eventfd2 in eventfd() */
         goto done;
     }
 #endif
@@ -148,7 +149,7 @@ int syscall_portable(int portable_number, ...)
 
         va_end(ap);
 
-        ret = eventfd_portable(initval, flags);      /* Android uses __NR_eventfd2 in eventfd() */
+        ret = WRAP(eventfd)(initval, flags);      /* Android uses __NR_eventfd2 in eventfd() */
         goto done;
     }
 #endif
@@ -229,7 +230,7 @@ int syscall_portable(int portable_number, ...)
         portable_flags = va_arg(ap, int);
         va_end(ap);
 
-        ret = inotify_init1_portable(portable_flags);
+        ret = WRAP(inotify_init1)(portable_flags);
         goto done;
     }
 #endif
@@ -268,7 +269,7 @@ int syscall_portable(int portable_number, ...)
         portable_flags = va_arg(ap, int);
         va_end(ap);
 
-        ret = pipe2_portable(pipefd_ptr, portable_flags);
+        ret = WRAP(pipe2)(pipefd_ptr, portable_flags);
         goto done;
     }
 #endif
@@ -298,7 +299,7 @@ int syscall_portable(int portable_number, ...)
         oact = va_arg(ap, struct sigaction_portable *);
         sigsetsize = va_arg(ap, size_t);
         va_end(ap);
-        return __rt_sigaction_portable(sig, act, oact, sigsetsize);
+        return WRAP(__rt_sigaction)(sig, act, oact, sigsetsize);
     }
 #endif
 
@@ -316,7 +317,7 @@ int syscall_portable(int portable_number, ...)
         sigsetsize = va_arg(ap, size_t);
         va_end(ap);
 
-        ret = __rt_sigprocmask_portable(how, set, oset, sigsetsize);
+        ret = WRAP(__rt_sigprocmask)(how, set, oset, sigsetsize);
         goto done;
     }
 #endif
@@ -335,7 +336,7 @@ int syscall_portable(int portable_number, ...)
         sigsetsize = va_arg(ap, size_t);
         va_end(ap);
 
-        ret = __rt_sigtimedwait_portable(set, info, timeout, sigsetsize);
+        ret = WRAP(__rt_sigtimedwait)(set, info, timeout, sigsetsize);
         goto done;
     }
 #endif
@@ -352,7 +353,7 @@ int syscall_portable(int portable_number, ...)
         uinfo = va_arg(ap, siginfo_portable_t *);
         va_end(ap);
 
-        ret = rt_sigqueueinfo_portable(pid, sig, uinfo);
+        ret = WRAP(rt_sigqueueinfo)(pid, sig, uinfo);
         goto done;
     }
 #endif
@@ -465,7 +466,7 @@ int syscall_portable(int portable_number, ...)
               native_number, fd, align_fill, offset_low, offset_high,
               nbytes_low, nbytes_high, flags);
 
-        ret = syscall(native_number, fd, align_fill, offset_low, offset_high,
+        ret = REAL(syscall)(native_number, fd, align_fill, offset_low, offset_high,
                       nbytes_low, nbytes_high, flags);
 
         goto done;
@@ -501,7 +502,7 @@ int syscall_portable(int portable_number, ...)
         timerid = va_arg(ap, timer_t *);
         va_end(ap);
 
-        ret = timer_create_portable(clockid, evp, timerid);
+        ret = WRAP(timer_create)(clockid, evp, timerid);
         goto done;
     }
 #endif
@@ -516,7 +517,7 @@ int syscall_portable(int portable_number, ...)
         flags = va_arg(ap, int);                /* flags need to be mapped */
         va_end(ap);
 
-        ret = timerfd_create_portable(clockid, flags);
+        ret = WRAP(timerfd_create)(clockid, flags);
         goto done;
     }
 #endif
@@ -555,7 +556,7 @@ int syscall_portable(int portable_number, ...)
         uinfo = va_arg(ap, siginfo_portable_t *);
         va_end(ap);
 
-        ret = rt_tgsigqueueinfo_portable(tgid, pid, sig, uinfo);
+        ret = WRAP(rt_tgsigqueueinfo)(tgid, pid, sig, uinfo);
         goto done;
     }
 #endif
@@ -569,7 +570,7 @@ int syscall_portable(int portable_number, ...)
         sig = va_arg(ap, int);
         va_end(ap);
 
-        ret = tkill_portable(tid, sig);
+        ret = WRAP(tkill)(tid, sig);
         goto done;
     }
 #endif
@@ -627,7 +628,7 @@ int syscall_portable(int portable_number, ...)
           native_number, args[0], args[1], args[2], args[3], args[4],
           args[5], args[6], args[7]);
 
-    ret = syscall(native_number, args[0], args[1], args[2], args[3],
+    ret = REAL(syscall)(native_number, args[0], args[1], args[2], args[3],
                   args[4], args[5], args[6], args[7]);
 
 done:
