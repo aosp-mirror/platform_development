@@ -186,15 +186,18 @@ static void android_app_destroy(struct android_app* android_app) {
 
 static void process_input(struct android_app* app, struct android_poll_source* source) {
     AInputEvent* event = NULL;
-    if (AInputQueue_getEvent(app->inputQueue, &event) >= 0) {
+    int processed = 0;
+    while (AInputQueue_getEvent(app->inputQueue, &event) >= 0) {
         LOGV("New input event: type=%d\n", AInputEvent_getType(event));
         if (AInputQueue_preDispatchEvent(app->inputQueue, event)) {
-            return;
+            continue;
         }
         int32_t handled = 0;
         if (app->onInputEvent != NULL) handled = app->onInputEvent(app, event);
         AInputQueue_finishEvent(app->inputQueue, event, handled);
-    } else {
+        processed = 1;
+    }
+    if (processed == 0) {
         LOGE("Failure reading next input event: %s\n", strerror(errno));
     }
 }
