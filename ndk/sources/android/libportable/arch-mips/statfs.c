@@ -17,6 +17,7 @@
 #include <portability.h>
 #include <string.h>
 #include <errno.h>
+#include <errno_portable.h>
 #include <statfs_portable.h>
 
 static inline void statfs_ntop(struct statfs *n_statfs, struct statfs_portable *p_statfs)
@@ -40,7 +41,7 @@ int WRAP(statfs)(const char*  path, struct statfs_portable*  stat)
     int ret;
 
     if (invalid_pointer(stat)) {
-        errno = EFAULT;
+        *REAL(__errno)() = EFAULT;
         return -1;
     }
     ret = REAL(statfs)(path, &mips_stat);
@@ -54,7 +55,7 @@ int WRAP(fstatfs)(int fd, struct statfs_portable*  stat)
     int ret;
 
     if (invalid_pointer(stat)) {
-        errno = EFAULT;
+        *REAL(__errno)() = EFAULT;
         return -1;
     }
     ret = REAL(fstatfs)(fd, &mips_stat);
