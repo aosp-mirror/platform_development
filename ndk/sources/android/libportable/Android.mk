@@ -67,23 +67,15 @@ endif
 
 ifeq ($(TARGET_ARCH),arm)
 libportable_arch_src_files += \
-			arch-arm/epoll.c \
-			arch-arm/errno.c \
-			arch-arm/socket.c \
-			arch-arm/sockopt.c \
-			arch-arm/stat.c \
 			arch-arm/unwind.c
 endif
 
 ifeq ($(TARGET_ARCH),x86)
 libportable_arch_src_files += \
 			arch-x86/epoll.c \
-			arch-x86/errno.c \
 			arch-x86/fcntl.c \
 			arch-x86/ioctl.c \
 			arch-x86/open.c \
-			arch-x86/socket.c \
-			arch-x86/sockopt.c \
 			arch-x86/stat.c
 endif
 
