@@ -130,4 +130,6 @@
 extern __hidden int errno_ntop(int native_errno);
 extern __hidden int errno_pton(int native_errno);
 
+extern volatile int*   REAL(__errno)(void);
+
 #endif /* _ERRNO_PORTABLE_H */
