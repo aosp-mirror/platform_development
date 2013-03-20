@@ -1329,7 +1329,6 @@ __hidden int read_signalfd_mapper(int fd, void *buf, size_t count)
     return rv;
 }
 
-
 int WRAP(sigsuspend)(const sigset_portable_t *portable_sigmask)
 {
     int rv;
@@ -1338,7 +1337,7 @@ int WRAP(sigsuspend)(const sigset_portable_t *portable_sigmask)
     ALOGV("%s(portable_sigmask:%p) {", __func__, portable_sigmask);
 
     if (invalid_pointer((void *)portable_sigmask)) {
-        errno = EFAULT;
+        *REAL(__errno)() = EFAULT;
         rv = -1;
     } else {
         sigset_pton((sigset_portable_t *)portable_sigmask, &mips_sigmask);
@@ -1359,7 +1358,7 @@ int WRAP(sigpending)(sigset_portable_t *portable_sigset)
               portable_sigset);
 
     if (invalid_pointer((void *)portable_sigset)) {
-        errno = EFAULT;
+        *REAL(__errno)() = EFAULT;
         rv = -1;
     } else {
         rv = REAL(sigpending)(&mips_sigset);
@@ -1382,7 +1381,7 @@ int WRAP(sigwait)(const sigset_portable_t *portable_sigset, int *ptr_to_portable
               portable_sigset,    ptr_to_portable_sig);
 
     if (invalid_pointer((void *)portable_sigset)) {
-        errno = EFAULT;
+        *REAL(__errno)() = EFAULT;
         rv = -1;
     } else {
         sigset_pton((sigset_portable_t *)portable_sigset, &mips_sigset);
@@ -1508,7 +1507,7 @@ int WRAP(__rt_sigaction)(int portable_signum, const struct sigaction_portable *a
 
     /* NOTE: ARM kernel is expecting sizeof(sigset_t) to be 8 bytes */
     if (sigsetsize != (2* sizeof(long))) {
-        errno = EINVAL;
+        *REAL(__errno)() = EINVAL;
         rv = -1;
         goto done;
     }
@@ -1533,7 +1532,7 @@ int WRAP(__rt_sigprocmask)(int portable_how,
 
     /* NOTE: ARM kernel is expecting sizeof(sigset_t) to be 8 bytes */
     if (sigsetsize != (2* sizeof(long))) {
-        errno = EINVAL;
+        *REAL(__errno)() = EINVAL;
         rv = -1;
         goto done;
     }
@@ -1565,7 +1564,7 @@ int WRAP(__rt_sigtimedwait)(const sigset_portable_t *portable_sigset,
 
     /* NOTE: ARM kernel is expecting sizeof(sigset_t) to be 8 bytes */
     if (portable_sigsetsize != (2* sizeof(long))) {
-        errno = EINVAL;
+        *REAL(__errno)() = EINVAL;
         rv = -1;
         goto done;
     }
