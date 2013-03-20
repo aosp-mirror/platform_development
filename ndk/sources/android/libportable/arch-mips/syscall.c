@@ -597,7 +597,7 @@ int WRAP(syscall)(int portable_number, ...)
         ALOGV("%s: native_number:%d <= 0; ret = -1; [ERROR: FIX SYSTEM CALL]", __func__,
                    native_number);
 
-        errno = ENOSYS;
+        *REAL(__errno)() = ENOSYS;
         ret = -1;
         goto done;
     }
@@ -633,7 +633,7 @@ int WRAP(syscall)(int portable_number, ...)
 
 done:
     if (ret == -1) {
-        ALOGV("%s: ret == -1; errno:%d;", __func__, errno);
+        ALOGV("%s: ret == -1; errno:%d;", __func__, *REAL(__errno)());
     }
     ALOGV("%s: return(ret:%d); }", __func__, ret);
     return ret;

@@ -113,7 +113,7 @@ static int export_fd_env()
 
     ALOGV("%s:() {", __func__);
 
-    saved_errno = errno;
+    saved_errno = *REAL(__errno)();
 
     type_env_allocated = malloc(max_env_size);
     fd_env_allocated = malloc(max_env_size);
@@ -216,7 +216,7 @@ done:
     if (fd_env_allocated)
         free(fd_env_allocated);
 
-    errno = saved_errno;
+    *REAL(__errno)() = saved_errno;
 
     ALOGV("%s: return(rv:%d); }", __func__, rv);
     return rv;
@@ -239,7 +239,7 @@ static int import_fd_env(int verify)
 
     ALOGV("%s:(verify:%d) {", __func__, verify);
 
-    saved_errno = errno;
+    saved_errno = *REAL(__errno)();
 
     /*
      * get file descriptor environment pointer and make a
@@ -328,7 +328,7 @@ done:
     if (fd_env_allocated)
         free(fd_env_allocated);
 
-    errno = saved_errno;
+    *REAL(__errno)() = saved_errno;
 
     ALOGV("%s: return(rv:%d); }", __func__, rv);
     return rv;

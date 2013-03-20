@@ -21,6 +21,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
+#include <errno_portable.h>
 #include <portability.h>
 #include <fcntl_portable.h>
 #include <filefd_portable.h>
@@ -317,7 +318,7 @@ int WRAP(fcntl)(int fd, int portable_cmd, ...)
 
         if (invalid_pointer(flock_portable)) {
             ALOGE("%s: flock_portable:%p == {NULL||-1}", __func__, flock_portable);
-            errno = EFAULT;
+            *REAL(__errno)() = EFAULT;
             result = -1;
             goto done;
         }
@@ -350,7 +351,7 @@ int WRAP(fcntl)(int fd, int portable_cmd, ...)
 
         if (invalid_pointer(flock_portable)) {
             ALOGE("%s: flock_portable:%p == {NULL||-1}", __func__, flock_portable);
-            errno = EFAULT;
+            *REAL(__errno)() = EFAULT;
             result = -1;
             goto done;
         }

@@ -285,7 +285,7 @@ volatile int* WRAP(__errno)()
     int save_errno;
 
     /* pthread_* calls may modify errno so use a copy */
-    save_errno = errno;
+    save_errno = *REAL(__errno)();
 
     p = errno_key_data();
 
@@ -322,7 +322,7 @@ volatile int* WRAP(__errno)()
     ALOGV("%s: new save_errno:%d p:%p->{pshadow:%d, perrno:%d}", __func__,
                    save_errno,   p,  p->pshadow, p->perrno);
 
-    errno = save_errno;
+    *REAL(__errno)() = save_errno;
 
     ALOGV("%s: return (&p->perrno):%p; }", __func__, &p->perrno);
 
@@ -338,7 +338,7 @@ void WRAP(__set_errno)(int portable_errno)
     int save_errno;
 
     /* pthread_* calls may modify errno so use a copy */
-    save_errno = errno;
+    save_errno = *REAL(__errno)();
 
     p = errno_key_data();
 
@@ -352,7 +352,7 @@ void WRAP(__set_errno)(int portable_errno)
     ALOGV("%s: new save_errno:%d, p:%p->{pshadow:%d, perrno:%d}", __func__,
                    save_errno,    p,  p->pshadow, p->perrno);
 
-    errno = save_errno;
+    *REAL(__errno)() = save_errno;
 
     ALOGV("%s: return; }", __func__);
 }

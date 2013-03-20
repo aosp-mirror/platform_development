@@ -39,13 +39,13 @@ static inline int mips_change_resource(int resource)
     return resource;
 }
 
-extern int getrlimit(int resource, struct rlimit *rlp);
+extern int REAL(getrlimit)(int resource, struct rlimit *rlp);
 int WRAP(getrlimit)(int resource, struct rlimit *rlp)
 {
     return REAL(getrlimit)(mips_change_resource(resource), rlp);
 }
 
-extern int setrlimit(int resource, const struct rlimit *rlp);
+extern int REAL(setrlimit)(int resource, const struct rlimit *rlp);
 int WRAP(setrlimit)(int resource, const struct rlimit *rlp)
 {
     return REAL(setrlimit)(mips_change_resource(resource), rlp);

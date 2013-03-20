@@ -75,9 +75,9 @@ static inline char *portable_tag() {
  * to preserve the value of errno while logging.
  */
 #define LOG_PRI(priority, tag, ...) ({                      \
-    int _errno = errno;                                     \
+    int _errno = *REAL(__errno)();                          \
     int _rv = android_printLog(priority, tag, __VA_ARGS__); \
-    errno = _errno;                                         \
+    *REAL(__errno)() = _errno;                              \
     _rv;                   /* Returned to caller */         \
 })
 
@@ -85,14 +85,14 @@ static inline char *portable_tag() {
 #include <cutils/log.h>
 
 # define PERROR(str)  {                                                                  \
-    ALOGE("%s: PERROR('%s'): errno:%d:'%s'", __func__, str, errno, strerror(errno));     \
+    ALOGE("%s: PERROR('%s'): errno:%d:'%s'", __func__, str, *REAL(__errno)(), strerror(errno)); \
 }
 
 # define ASSERT(cond) ALOG_ASSERT(cond, "assertion failed:(%s), file: %s, line: %d:%s",  \
                                  #cond, __FILE__, __LINE__, __func__);
 #else
 #include <assert.h>
-# define PERROR(str) fprintf(stderr, "%s: PERROR('%s'): errno:%d:'%s'", __func__, str, errno, strerror(errno))
+# define PERROR(str) fprintf(stderr, "%s: PERROR('%s'): errno:%d:'%s'", __func__, str, *REAL(__errno)(), strerror(*REAL(__errno)()))
 # define ASSERT(cond) assert(cond)
 # define ALOGV(a,...)
 # define ALOGW(a,...)

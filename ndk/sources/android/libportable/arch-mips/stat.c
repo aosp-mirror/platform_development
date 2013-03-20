@@ -16,6 +16,7 @@
 
 #include <portability.h>
 #include <errno.h>
+#include <errno_portable.h>
 #include <stat_portable.h>
 
 /* Note: The Portable Header will define stat to stat_portable */
@@ -25,7 +26,7 @@ int WRAP(stat)(const char *path, struct stat_portable *s)
     int ret;
 
     if (invalid_pointer(s)) {
-        errno = EFAULT;
+        *REAL(__errno)() = EFAULT;
         return -1;
     }
     ret = REAL(stat)(path, &mips_stat);
@@ -39,7 +40,7 @@ int WRAP(fstat)(int fd, struct stat_portable *s)
     int ret;
 
     if (invalid_pointer(s)) {
-        errno = EFAULT;
+        *REAL(__errno)() = EFAULT;
         return -1;
     }
     ret = REAL(fstat)(fd, &mips_stat);
@@ -53,7 +54,7 @@ int WRAP(lstat)(const char *path, struct stat_portable *s)
     int ret;
 
     if (invalid_pointer(s)) {
-        errno = EFAULT;
+        *REAL(__errno)() = EFAULT;
         return -1;
     }
     ret = REAL(lstat)(path, &mips_stat);
@@ -67,7 +68,7 @@ int WRAP(fstatat)(int dirfd, const char *path, struct stat_portable *s, int flag
     int ret;
 
     if (invalid_pointer(s)) {
-        errno = EFAULT;
+        *REAL(__errno)() = EFAULT;
         return -1;
     }
     ret = REAL(fstatat)(dirfd, path, &mips_stat, flags);
