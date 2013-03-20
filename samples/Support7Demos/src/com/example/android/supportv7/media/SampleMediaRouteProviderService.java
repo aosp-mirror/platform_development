@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package com.example.android.supportv4.media;
+package com.example.android.supportv7.media;
 
-import android.support.v4.media.MediaRouteProvider;
-import android.support.v4.media.MediaRouteProviderService;
+import android.support.v7.media.MediaRouteProvider;
+import android.support.v7.media.MediaRouteProviderService;
 
 /**
  * Demonstrates how to register a custom media route provider service
