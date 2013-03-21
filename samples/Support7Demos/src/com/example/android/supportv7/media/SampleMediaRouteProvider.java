@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package com.example.android.supportv4.media;
+package com.example.android.supportv7.media;
 
-import com.example.android.supportv4.R;
+import com.example.android.supportv7.R;
 
 import android.content.Context;
 import android.content.Intent;
@@ -26,9 +26,9 @@ import android.content.res.Resources;
 import android.media.MediaRouter;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.v4.media.MediaControlIntent;
-import android.support.v4.media.MediaRouteProvider;
-import android.support.v4.media.MediaRouter.ControlRequestCallback;
+import android.support.v7.media.MediaControlIntent;
+import android.support.v7.media.MediaRouteProvider;
+import android.support.v7.media.MediaRouter.ControlRequestCallback;
 import android.util.Log;
 import android.widget.Toast;
 
