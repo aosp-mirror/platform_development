@@ -240,7 +240,7 @@ frameworks/support/v7/gridlayout/.classpath                                     
 frameworks/support/v7/gridlayout/AndroidManifest.xml                                              extras/android/support/v7/gridlayout/AndroidManifest.xml
 frameworks/support/v7/gridlayout/project.properties                                               extras/android/support/v7/gridlayout/project.properties
 frameworks/support/v7/gridlayout/res                                                              extras/android/support/v7/gridlayout/res
-frameworks/support/v7/gridlayout/readme                                                           extras/android/support/v7/gridlayout/src/.readme
+frameworks/support/v7/gridlayout/src/.readme                                                      extras/android/support/v7/gridlayout/src/.readme
 ${OUT_DIR}/target/common/obj/PACKAGING/android-support-v7-gridlayout_intermediates/android-support-v7-gridlayout.jar    extras/android/support/v7/gridlayout/libs/android-support-v7-gridlayout.jar
 
 frameworks/support/appcompat/README.txt                                                           extras/android/support/appcompat/README.txt
