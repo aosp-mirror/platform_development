@@ -118,6 +118,11 @@ $(eval _psm_build_module :=)
 $(eval _psm_packaging_target :=)
 endef
 
-ANDROID_SUPPORT_LIBRARIES := android-support-v4 android-support-v7-gridlayout android-support-v13 android-support-appcompat
+ANDROID_SUPPORT_LIBRARIES := \
+    android-support-v4 \
+    android-support-v7-gridlayout \
+    android-support-v7-appcompat \
+    android-support-v7-mediarouter \
+    android-support-v13
 
 $(foreach lib, $(ANDROID_SUPPORT_LIBRARIES), $(eval $(call _package_sdk_library,$(lib))))
