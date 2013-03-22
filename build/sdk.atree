@@ -37,6 +37,7 @@ frameworks/base/docs/docs-redirect.html documentation.html
 # Platform Tools Component
 ##############################################################################
 
+sdk/files/sdk_files_NOTICE.txt                platform-tools/NOTICE.txt
 development/sdk/plat_tools_source.properties  platform-tools/source.properties
 
 # host tools from out/host/$(HOST_OS)-$(HOST_ARCH)/
