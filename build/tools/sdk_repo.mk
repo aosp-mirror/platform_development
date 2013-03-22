@@ -154,16 +154,17 @@ endif
 # Pickup the most recent xml schema for repository and add-on
 
 SDK_REPO_XSD := \
-	$(lastword \
-	  $(wildcard \
-	    $(TOPDIR)prebuilts/devtools/repository/sdk-repository-*.xsd \
-	))
+    $(lastword \
+      $(wildcard \
+        $(TOPDIR)prebuilts/devtools/repository/sdk-repository-*.xsd \
+    ))
 
 SDK_ADDON_XSD := \
-	$(lastword \
-	  $(wildcard \
-	    $(TOPDIR)prebuilts/devtools/repository/sdk-addon-*.xsd \
-	))
+    $(lastword \
+      $(wildcard \
+        $(TOPDIR)prebuilts/devtools/repository/sdk-addon-*.xsd \
+    ))
+
 
 # -----------------------------------------------------------------
 # Rules for sdk addon
