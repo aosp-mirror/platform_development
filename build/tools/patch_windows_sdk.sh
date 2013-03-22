@@ -74,6 +74,7 @@ fi
 ${TOPDIR}out/host/linux-x86/bin/atree -f ${TOPDIR}development/build/sdk-windows-x86.atree \
       -I $WIN_OUT_DIR/host/windows-x86 \
       -I ${TOPDIR:-.} \
+      -v "PLATFORM_NAME=android-$PLATFORM_VERSION" \
       -o $TEMP_SDK_DIR
 
 # Fix EOL chars to make window users happy - fix all files at the top level
