@@ -31,10 +31,10 @@ define mk-sdk-repo-pkg-1
 $(call sdk-repo-pkg-zip,$(1),$(2),$(3)): $(2)
 	@echo "Building SDK repository package $(3) from $(notdir $(2))"
 	$(hide) cd $(basename $(2)) && \
-			zip -9rq ../$(notdir $(call sdk-repo-pkg-zip,$(1),$(2),$(3))) $(3)/*
+	        zip -9rq ../$(notdir $(call sdk-repo-pkg-zip,$(1),$(2),$(3))) $(3)/*
 $(call dist-for-goals, sdk_repo, $(call sdk-repo-pkg-zip,$(1),$(2),$(3)))
 SDK_REPO_XML_ARGS += $(3) $(1) \
-	$(call sdk-repo-pkg-zip,$(1),$(2),$(3)):$(notdir $(call sdk-repo-pkg-zip,$(1),$(2),$(3)))
+    $(call sdk-repo-pkg-zip,$(1),$(2),$(3)):$(notdir $(call sdk-repo-pkg-zip,$(1),$(2),$(3)))
 endef
 
 # Defines the rule to build an SDK repository package when the
@@ -52,10 +52,10 @@ define mk-sdk-repo-pkg-2
 $(call sdk-repo-pkg-zip,$(1),$(2),$(3)): $(2)
 	@echo "Building SDK repository package $(3) from $(notdir $(2))"
 	$(hide) cd $(basename $(2))/$(3) && \
-			zip -9rq ../../$(notdir $(call sdk-repo-pkg-zip,$(1),$(2),$(3))) *
+	        zip -9rq ../../$(notdir $(call sdk-repo-pkg-zip,$(1),$(2),$(3))) *
 $(call dist-for-goals, sdk_repo, $(call sdk-repo-pkg-zip,$(1),$(2),$(3)))
 SDK_REPO_XML_ARGS += $(3) $(1) \
-	$(call sdk-repo-pkg-zip,$(1),$(2),$(3)):$(notdir $(call sdk-repo-pkg-zip,$(1),$(2),$(3)))
+    $(call sdk-repo-pkg-zip,$(1),$(2),$(3)):$(notdir $(call sdk-repo-pkg-zip,$(1),$(2),$(3)))
 endef
 
 # Defines the rule to build an SDK repository package when the
@@ -77,10 +77,10 @@ define mk-sdk-repo-pkg-3
 $(call sdk-repo-pkg-zip,$(1),$(2),$(3)): $(2)
 	@echo "Building SDK repository package $(3) from $(notdir $(2))"
 	$(hide) cd $(basename $(2))/$(4) && \
-			zip -9rq ../../../$(notdir $(call sdk-repo-pkg-zip,$(1),$(2),$(3))) *
+	        zip -9rq ../../../$(notdir $(call sdk-repo-pkg-zip,$(1),$(2),$(3))) *
 $(call dist-for-goals, sdk_repo, $(call sdk-repo-pkg-zip,$(1),$(2),$(3)))
 SDK_REPO_XML_ARGS += $(3) $(1) \
-	$(call sdk-repo-pkg-zip,$(1),$(2),$(3)):$(notdir $(call sdk-repo-pkg-zip,$(1),$(2),$(3)))
+    $(call sdk-repo-pkg-zip,$(1),$(2),$(3)):$(notdir $(call sdk-repo-pkg-zip,$(1),$(2),$(3)))
 endef
 
 # Defines the rule to build an SDK sources package.
@@ -93,12 +93,12 @@ define mk-sdk-repo-sources
 $(call sdk-repo-pkg-zip,$(1),$(2),$(3)): $(2) $(HOST_OUT)/development/sdk/source_source.properties
 	@echo "Building SDK sources package"
 	$(hide) $(TOPDIR)development/build/tools/mk_sources_zip.py --exec-zip \
-			$(HOST_OUT)/development/sdk/source_source.properties \
-			$(call sdk-repo-pkg-zip,$(1),$(2),$(3)) \
-			$(TOPDIR).
+	            $(HOST_OUT)/development/sdk/source_source.properties \
+	            $(call sdk-repo-pkg-zip,$(1),$(2),$(3)) \
+	            $(TOPDIR).
 $(call dist-for-goals, sdk_repo, $(call sdk-repo-pkg-zip,$(1),$(2),$(3)))
 SDK_REPO_XML_ARGS += $(3) $(1) \
-	$(call sdk-repo-pkg-zip,$(1),$(2),$(3)):$(notdir $(call sdk-repo-pkg-zip,$(1),$(2),$(3)))
+    $(call sdk-repo-pkg-zip,$(1),$(2),$(3)):$(notdir $(call sdk-repo-pkg-zip,$(1),$(2),$(3)))
 endef
 
 # -----------------------------------------------------------------
@@ -113,10 +113,11 @@ SDK_EXTRAS_XML_ARGS := $(SDK_REPO_XML_ARGS)
 SDK_REPO_XML_ARGS   :=
 
 SDK_EXTRAS_DEPS += \
-		$(call sdk-repo-pkg-zip,$(HOST_OS),$(MAIN_SDK_ZIP),support)
+    $(call sdk-repo-pkg-zip,$(HOST_OS),$(MAIN_SDK_ZIP),support)
 
 
 $(eval $(call mk-sdk-repo-pkg-1,$(HOST_OS),$(MAIN_SDK_ZIP),tools))
+$(eval $(call mk-sdk-repo-pkg-2,$(HOST_OS),$(MAIN_SDK_ZIP),build-tools))
 $(eval $(call mk-sdk-repo-pkg-1,$(HOST_OS),$(MAIN_SDK_ZIP),platform-tools))
 $(eval $(call mk-sdk-repo-pkg-1,$(HOST_OS),$(MAIN_SDK_ZIP),docs))
 $(eval $(call mk-sdk-repo-pkg-2,$(HOST_OS),$(MAIN_SDK_ZIP),platforms))
@@ -125,13 +126,14 @@ $(eval $(call mk-sdk-repo-pkg-3,$(HOST_OS),$(MAIN_SDK_ZIP),system-images,system-
 $(eval $(call mk-sdk-repo-sources,$(HOST_OS),$(MAIN_SDK_ZIP),sources))
 
 SDK_REPO_DEPS += \
-		$(call sdk-repo-pkg-zip,$(HOST_OS),$(MAIN_SDK_ZIP),tools) \
-		$(call sdk-repo-pkg-zip,$(HOST_OS),$(MAIN_SDK_ZIP),platform-tools) \
-		$(call sdk-repo-pkg-zip,$(HOST_OS),$(MAIN_SDK_ZIP),docs) \
-		$(call sdk-repo-pkg-zip,$(HOST_OS),$(MAIN_SDK_ZIP),platforms) \
-		$(call sdk-repo-pkg-zip,$(HOST_OS),$(MAIN_SDK_ZIP),samples) \
-		$(call sdk-repo-pkg-zip,$(HOST_OS),$(MAIN_SDK_ZIP),system-images) \
-		$(call sdk-repo-pkg-zip,$(HOST_OS),$(MAIN_SDK_ZIP),sources)
+    $(call sdk-repo-pkg-zip,$(HOST_OS),$(MAIN_SDK_ZIP),tools) \
+    $(call sdk-repo-pkg-zip,$(HOST_OS),$(MAIN_SDK_ZIP),build-tools) \
+    $(call sdk-repo-pkg-zip,$(HOST_OS),$(MAIN_SDK_ZIP),platform-tools) \
+    $(call sdk-repo-pkg-zip,$(HOST_OS),$(MAIN_SDK_ZIP),docs) \
+    $(call sdk-repo-pkg-zip,$(HOST_OS),$(MAIN_SDK_ZIP),platforms) \
+    $(call sdk-repo-pkg-zip,$(HOST_OS),$(MAIN_SDK_ZIP),samples) \
+    $(call sdk-repo-pkg-zip,$(HOST_OS),$(MAIN_SDK_ZIP),system-images) \
+    $(call sdk-repo-pkg-zip,$(HOST_OS),$(MAIN_SDK_ZIP),sources)
 
 endif
 
@@ -142,11 +144,13 @@ ifneq ($(WIN_SDK_ZIP),)
 
 # docs, platforms and samples have nothing OS-dependent right now.
 $(eval $(call mk-sdk-repo-pkg-1,windows,$(WIN_SDK_ZIP),tools))
+$(eval $(call mk-sdk-repo-pkg-2,windows,$(WIN_SDK_ZIP),build-tools))
 $(eval $(call mk-sdk-repo-pkg-1,windows,$(WIN_SDK_ZIP),platform-tools))
 
 SDK_REPO_DEPS += \
-	$(call sdk-repo-pkg-zip,windows,$(WIN_SDK_ZIP),tools) \
-        $(call sdk-repo-pkg-zip,windows,$(WIN_SDK_ZIP),platform-tools)
+    $(call sdk-repo-pkg-zip,windows,$(WIN_SDK_ZIP),tools) \
+    $(call sdk-repo-pkg-zip,windows,$(WIN_SDK_ZIP),build-tools) \
+    $(call sdk-repo-pkg-zip,windows,$(WIN_SDK_ZIP),platform-tools)
 
 endif
 
@@ -184,7 +188,7 @@ SDK_ADDON_XML := $(dir $(ADDON_SDK_ZIP))/addon.xml
 
 $(SDK_ADDON_XML): $(ADDON_SDK_ZIP)
 	$(hide) $(TOPDIR)development/build/tools/mk_sdk_repo_xml.sh \
-		$(SDK_ADDON_XML) $(SDK_ADDON_XSD) add-on $(HOST_OS) $(RENAMED_ADDON_ZIP)
+	            $(SDK_ADDON_XML) $(SDK_ADDON_XSD) add-on $(HOST_OS) $(RENAMED_ADDON_ZIP)
 
 $(call dist-for-goals, sdk_repo, $(SDK_ADDON_XML))
 
@@ -200,7 +204,7 @@ ifneq ($(SDK_REPO_XML_ARGS),)
 
 $(SDK_REPO_XML): $(SDK_REPO_DEPS)
 	$(hide) $(TOPDIR)development/build/tools/mk_sdk_repo_xml.sh \
-		$(SDK_REPO_XML) $(SDK_REPO_XSD) $(SDK_REPO_XML_ARGS)
+	            $(SDK_REPO_XML) $(SDK_REPO_XSD) $(SDK_REPO_XML_ARGS)
 
 $(call dist-for-goals, sdk_repo, $(SDK_REPO_XML))
 
@@ -215,7 +219,7 @@ ifneq ($(SDK_EXTRAS_XML_ARGS),)
 
 $(SDK_EXTRAS_XML): $(SDK_EXTRAS_DEPS)
 	$(hide) $(TOPDIR)development/build/tools/mk_sdk_repo_xml.sh \
-		$(SDK_EXTRAS_XML) $(SDK_ADDON_XSD) $(SDK_EXTRAS_XML_ARGS)
+	            $(SDK_EXTRAS_XML) $(SDK_ADDON_XSD) $(SDK_EXTRAS_XML_ARGS)
 
 $(call dist-for-goals, sdk_repo, $(SDK_EXTRAS_XML))
 
