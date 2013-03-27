@@ -241,7 +241,6 @@ __rt_sigaction
 __rt_sigprocmask
 __rt_sigtimedwait
 __sclose
-__set_errno
 __set_syscall_errno
 __set_tls
 __sflags
