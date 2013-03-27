@@ -52,6 +52,7 @@ enum {
     AT_SECURE = 23
 };
 
+#include <stdint.h>
 #include <sys/exec_elf.h>
 
 typedef struct {
