@@ -258,8 +258,8 @@ public class PrefsFragment extends PreferenceFragment {
     }
 
     private void onPromptPermissionsClicked(String... permissions) {
-        Intent i = getActivity().getApplication()
-                .getPackageManager().buildPermissionRequestIntent(permissions);
+        Intent i = getActivity().getPackageManager()
+                .buildPermissionRequestIntent(permissions);
         startActivityForResult(i, REQUEST_CODE_PROMPT_PERMISSIONS);
     }
 
