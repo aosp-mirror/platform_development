@@ -27,7 +27,9 @@
 
 # Host tools and java libraries that are parts of the SDK.
 PRODUCT_PACKAGES += \
+	aapt \
 	adb \
+	aidl \
 	bios.bin \
 	commons-compress-1.0 \
 	dexdump \
@@ -43,10 +45,9 @@ PRODUCT_PACKAGES += \
 	jython \
 	layoutlib \
 	layoutlib-tests \
+	llvm-rs-cc \
 	org.eclipse.jface_3.6.2.M20110210-1200 \
 	org.eclipse.equinox.common_3.6.0.v20100503 \
 	org.eclipse.core.commands_3.6.0.I20100512-1500 \
 	osgi \
 	vgabios-cirrus.bin
-
-:qa!
