@@ -1,7 +1,10 @@
-6=javax
-5=java
-4=org
-3=net
-2=junit
+9=javax
+8=java
+7=org
+6=net
+5=libcore
+4=junit
+3=gov
+2=dalvik
 1=com
 0=android
