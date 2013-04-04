@@ -6,9 +6,6 @@
 </language>
 <language name="Assembly">
 <macro>
-<name>HAVE_ANDROID_OS</name><value>1</value>
-</macro>
-<macro>
 <name>NDEBUG</name><value>1</value>
 </macro>
 <macro>
@@ -21,24 +18,33 @@
 <name>__OPTIMIZE__</name><value>1</value>
 </macro>
 <macro>
-<name>HAVE_FUTEX</name><value>1</value>
-</macro>
-<macro>
-<name>HAVE_PTHREADS</name><value>1</value>
-</macro>
-<macro>
 <name>EGL_TRACE</name><value>1</value>
 </macro>
 <macro>
 <name>LOG_TAG</name><value>"tag"</value>
+</macro>
+<macro>
+<name>__STDC_HOSTED__</name><value>1</value>
+</macro>
+<macro>
+<name>USE_OPENGL_RENDERER</name><value>1</value>
+</macro>
+<macro>
+<name>__STDC__</name><value>1</value>
+</macro>
+<macro>
+<name>__ANDROID__</name><value>1</value>
+</macro>
+<macro>
+<name>__SIZE_TYPE__</name><value>unsigned int</value>
+</macro>
+<macro>
+<name>__PTRDIFF_TYPE__</name><value>int</value>
 </macro>
 
 </language>
 <language name="GNU C++">
 <macro>
-<name>HAVE_ANDROID_OS</name><value>1</value>
-</macro>
-<macro>
 <name>NDEBUG</name><value>1</value>
 </macro>
 <macro>
@@ -51,24 +57,33 @@
 <name>__OPTIMIZE__</name><value>1</value>
 </macro>
 <macro>
-<name>HAVE_FUTEX</name><value>1</value>
-</macro>
-<macro>
-<name>HAVE_PTHREADS</name><value>1</value>
-</macro>
-<macro>
 <name>EGL_TRACE</name><value>1</value>
 </macro>
 <macro>
 <name>LOG_TAG</name><value>"tag"</value>
+</macro>
+<macro>
+<name>__STDC_HOSTED__</name><value>1</value>
+</macro>
+<macro>
+<name>USE_OPENGL_RENDERER</name><value>1</value>
+</macro>
+<macro>
+<name>__STDC__</name><value>1</value>
+</macro>
+<macro>
+<name>__ANDROID__</name><value>1</value>
+</macro>
+<macro>
+<name>__SIZE_TYPE__</name><value>unsigned int</value>
+</macro>
+<macro>
+<name>__PTRDIFF_TYPE__</name><value>int</value>
 </macro>
 
 </language>
 <language name="GNU C">
 <macro>
-<name>HAVE_ANDROID_OS</name><value>1</value>
-</macro>
-<macro>
 <name>NDEBUG</name><value>1</value>
 </macro>
 <macro>
@@ -81,16 +96,28 @@
 <name>__OPTIMIZE__</name><value>1</value>
 </macro>
 <macro>
-<name>HAVE_FUTEX</name><value>1</value>
-</macro>
-<macro>
-<name>HAVE_PTHREADS</name><value>1</value>
-</macro>
-<macro>
 <name>EGL_TRACE</name><value>1</value>
 </macro>
 <macro>
 <name>LOG_TAG</name><value>"tag"</value>
+</macro>
+<macro>
+<name>__STDC_HOSTED__</name><value>1</value>
+</macro>
+<macro>
+<name>USE_OPENGL_RENDERER</name><value>1</value>
+</macro>
+<macro>
+<name>__STDC__</name><value>1</value>
+</macro>
+<macro>
+<name>__ANDROID__</name><value>1</value>
+</macro>
+<macro>
+<name>__SIZE_TYPE__</name><value>unsigned int</value>
+</macro>
+<macro>
+<name>__PTRDIFF_TYPE__</name><value>int</value>
 </macro>
 
 </language>

@@ -5,6 +5,7 @@
 
 </language>
 <language name="Assembly">
+<includepath>${ProjDirPath}/prebuilts/gcc/darwin-x86/arm/arm-eabi-4.7/lib/gcc/arm-eabi/4.7/include</includepath>
 <includepath>${ProjDirPath}/build/core/combo/include/arch/linux-arm</includepath>
 <includepath>${ProjDirPath}/system/core/include</includepath>
 <includepath>${ProjDirPath}/bionic/libc/arch-arm/include</includepath>
@@ -27,10 +28,13 @@
 <includepath>${ProjDirPath}/external/skia/include</includepath>
 <includepath>${ProjDirPath}/external/skia/include/core</includepath>
 <includepath>${ProjDirPath}/libnativehelper/include/nativehelper</includepath>
-<includepath>${ProjDirPath}/prebuilts/gcc/darwin-x86/arm/arm-linux-androideabi-4.6/lib/gcc/arm-linux-androideabi/4.6.x-google/include</includepath>
+<includepath>${ProjDirPath}/system/core/include/arch/linux-arm</includepath>
+<includepath>${ProjDirPath}/dalvik/libnativehelper/include</includepath>
+<includepath>${ProjDirPath}/dalvik/libnativehelper/include/nativehelper</includepath>
 
 </language>
 <language name="GNU C++">
+<includepath>${ProjDirPath}/prebuilts/gcc/darwin-x86/arm/arm-eabi-4.7/lib/gcc/arm-eabi/4.7/include</includepath>
 <includepath>${ProjDirPath}/build/core/combo/include/arch/linux-arm</includepath>
 <includepath>${ProjDirPath}/system/core/include</includepath>
 <includepath>${ProjDirPath}/bionic/libc/arch-arm/include</includepath>
@@ -53,10 +57,13 @@
 <includepath>${ProjDirPath}/external/skia/include</includepath>
 <includepath>${ProjDirPath}/external/skia/include/core</includepath>
 <includepath>${ProjDirPath}/libnativehelper/include/nativehelper</includepath>
-<includepath>${ProjDirPath}/prebuilts/gcc/darwin-x86/arm/arm-linux-androideabi-4.6/lib/gcc/arm-linux-androideabi/4.6.x-google/include</includepath>
+<includepath>${ProjDirPath}/system/core/include/arch/linux-arm</includepath>
+<includepath>${ProjDirPath}/dalvik/libnativehelper/include</includepath>
+<includepath>${ProjDirPath}/dalvik/libnativehelper/include/nativehelper</includepath>
 
 </language>
 <language name="GNU C">
+<includepath>${ProjDirPath}/prebuilts/gcc/darwin-x86/arm/arm-eabi-4.7/lib/gcc/arm-eabi/4.7/include</includepath>
 <includepath>${ProjDirPath}/build/core/combo/include/arch/linux-arm</includepath>
 <includepath>${ProjDirPath}/system/core/include</includepath>
 <includepath>${ProjDirPath}/bionic/libc/arch-arm/include</includepath>
@@ -79,7 +86,9 @@
 <includepath>${ProjDirPath}/external/skia/include</includepath>
 <includepath>${ProjDirPath}/external/skia/include/core</includepath>
 <includepath>${ProjDirPath}/libnativehelper/include/nativehelper</includepath>
-<includepath>${ProjDirPath}/prebuilts/gcc/darwin-x86/arm/arm-linux-androideabi-4.6/lib/gcc/arm-linux-androideabi/4.6.x-google/include</includepath>
+<includepath>${ProjDirPath}/system/core/include/arch/linux-arm</includepath>
+<includepath>${ProjDirPath}/dalvik/libnativehelper/include</includepath>
+<includepath>${ProjDirPath}/dalvik/libnativehelper/include/nativehelper</includepath>
 
 </language>
 </section>
