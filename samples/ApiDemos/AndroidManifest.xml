@@ -1168,6 +1168,13 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".content.ChangedContacts" android:label="@string/activity_changed_contact">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.SAMPLE_CODE"/>
+            </intent-filter>
+        </activity>
+
         <activity android:name=".content.InstallApk" android:label="@string/activity_install_apk"
                 android:enabled="@bool/atLeastHoneycombMR2">
             <intent-filter>
