@@ -450,6 +450,8 @@
     <string name="pick_phone">Pick a Phone</string>
     <string name="pick_address">Pick an Address</string>
 
+    <string name="activity_changed_contact">Content/Provider/Changed Contacts</string>
+
     <string name="activity_install_apk">Content/Packages/Install Apk</string>
 
     <!-- ============================== -->
