@@ -93,7 +93,10 @@ redirects:
   type: permanent
   comment: Redirect sdk reference to new location
 
-#new one works
+- src: /sdk/ndk/overview.html
+  dst: /tools/sdk/ndk/index.html
+  type: permanent
+
 - src: /sdk/ndk/
   dst: /tools/sdk/ndk/
   type: permanent
