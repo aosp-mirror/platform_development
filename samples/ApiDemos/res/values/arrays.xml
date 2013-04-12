@@ -121,6 +121,10 @@
         <item>REVERSE_LANDSCAPE</item>
         <item>REVERSE_PORTRAIT</item>
         <item>FULL_SENSOR</item>
+        <item>USER_LANDSCAPE</item>
+        <item>USER_PORTRAIT</item>
+        <item>FULL_USER</item>
+        <item>LOCKED</item>
     </string-array>
 
     <!-- Used in view/Secure View examples -->
