@@ -46,6 +46,10 @@ public class ScreenOrientation extends Activity {
         ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE,
         ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT,
         ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR,
+        ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE,
+        ActivityInfo.SCREEN_ORIENTATION_USER_PORTRAIT,
+        ActivityInfo.SCREEN_ORIENTATION_FULL_USER,
+        ActivityInfo.SCREEN_ORIENTATION_LOCKED,
     };
     
     @Override
