@@ -253,12 +253,17 @@ redirects:
   comment: Redirect to new location
 
 # new one
-- src: /guide/basics/what-is-android.html
+- src: /guide/basics/.*
   dst: /about/index.html
   type: permanent
   comment: Redirect to new location
 
 - src: /guide/topics/security/security.html
+  dst: /training/articles/security-tips.html
+  type: permanent
+  comment: Redirect to new location
+
+- src: /guide/topics/security/index.html
   dst: /training/articles/security-tips.html
   type: permanent
   comment: Redirect to new location
