@@ -32,6 +32,9 @@
 #include <sys/types.h>
 #include <sys/resource.h>
 #include <linux/wait.h>
+#include <asm/unistd.h>
+#include <sys/syscall.h>
+
 
 __BEGIN_DECLS
 
@@ -47,6 +50,10 @@ __BEGIN_DECLS
 extern pid_t  wait(int *);
 extern pid_t  waitpid(pid_t, int *, int);
 extern pid_t  wait3(int *, int, struct rusage *);
+static __inline__ pid_t wait4(pid_t pid, int *status, int options, struct rusage *rusage)
+{
+  return (pid_t)syscall(__NR_wait4, pid, status, options, rusage);
+}
 
 __END_DECLS
 
