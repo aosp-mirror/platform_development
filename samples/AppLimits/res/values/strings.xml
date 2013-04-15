@@ -21,7 +21,6 @@
     <string name="choice_entry_title">Test choice type</string>
     <string name="multi_entry_title">Test multi-select type</string>
 
-
     <string-array name="multi_entry_entries">
         <item>Ice Cream</item>
         <item>Jelly Bean</item>
