@@ -19,23 +19,21 @@ package com.example.android.weatherlistwidget;
 import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
-import android.content.ComponentName;
-import android.content.ContentResolver;
-import android.content.ContentUris;
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
-import android.database.ContentObserver;
+import android.content.ComponentName;
+import android.content.ContentValues;
+import android.content.ContentResolver;
+import android.content.ContentUris;
 import android.database.Cursor;
+import android.database.ContentObserver;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
-import android.util.Log;
 import android.widget.RemoteViews;
 import android.widget.Toast;
 
-import java.util.ArrayList;
 import java.util.Random;
 
 /**
@@ -75,6 +73,7 @@ public class WeatherWidgetProvider extends AppWidgetProvider {
     private static final int sMaxDegrees = 96;
 
     private boolean mIsLargeLayout = true;
+    private int mHeaderWeatherState = 0;
 
     public WeatherWidgetProvider() {
         // Start the worker thread
@@ -117,7 +116,6 @@ public class WeatherWidgetProvider extends AppWidgetProvider {
                     final Cursor c = r.query(WeatherDataProvider.CONTENT_URI, null, null, null, 
                             null);
                     final int count = c.getCount();
-                    c.close();
 
                     // We disable the data changed observer temporarily since each of the updates
                     // will trigger an onChange() in our data observer.
@@ -133,13 +131,12 @@ public class WeatherWidgetProvider extends AppWidgetProvider {
 
                     final AppWidgetManager mgr = AppWidgetManager.getInstance(context);
                     final ComponentName cn = new ComponentName(context, WeatherWidgetProvider.class);
-                    int[] appWidgetIds = mgr.getAppWidgetIds(cn);
-                    for (int i = 0; i < appWidgetIds.length; ++i) {
-                        RemoteViews layout = buildLayout(context, appWidgetIds[i], mIsLargeLayout);
-                        mgr.updateAppWidget(appWidgetIds[i], layout);
-                    }
+                    mgr.notifyAppWidgetViewDataChanged(mgr.getAppWidgetIds(cn), R.id.weather_list);
                 }
             });
+
+            final int appWidgetId = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID,
+                    AppWidgetManager.INVALID_APPWIDGET_ID);
         } else if (action.equals(CLICK_ACTION)) {
             // Show a toast
             final int appWidgetId = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID,
@@ -152,46 +149,16 @@ public class WeatherWidgetProvider extends AppWidgetProvider {
         super.onReceive(ctx, intent);
     }
 
-    private ArrayList<RemoteViews> getListOfCities(Context context) {
-        final String packageName = context.getPackageName();
-        ArrayList<RemoteViews> citiesList = new ArrayList<RemoteViews>();
-        Cursor c = context.getContentResolver().query(WeatherDataProvider.CONTENT_URI, null,
-                null, null, null);
-        final String itemFormatStr = context.getResources().getString(R.string.item_format_string);
-        while (c.moveToNext()) {
-            int tempColIndex = c.getColumnIndex(WeatherDataProvider.Columns.TEMPERATURE);
-            int temp = c.getInt(tempColIndex);
-            int dayColIndex = c.getColumnIndex(WeatherDataProvider.Columns.DAY);
-            String day = c.getString(dayColIndex);
-
-            RemoteViews rvRow = new RemoteViews(packageName, R.layout.widget_item);
-            rvRow.setTextViewText(R.id.widget_item, String.format(itemFormatStr, temp, day));
-
-            // Set the click intent so that we can handle it and show a toast message
-            final Intent fillInIntent = new Intent();
-            final Bundle extras = new Bundle();
-            extras.putString(WeatherWidgetProvider.EXTRA_DAY_ID, day);
-            fillInIntent.putExtras(extras);
-            rvRow.setOnClickFillInIntent(R.id.widget_item, fillInIntent);
-
-            citiesList.add(rvRow);
-        }
-        c.close();
-        return citiesList;
-    }
-
     private RemoteViews buildLayout(Context context, int appWidgetId, boolean largeLayout) {
-        final String packageName = context.getPackageName();
-
         RemoteViews rv;
         if (largeLayout) {
             // Specify the service to provide data for the collection widget.  Note that we need to
             // embed the appWidgetId via the data otherwise it will be ignored.
-            rv = new RemoteViews(packageName, R.layout.widget_layout);
-
-            // Set the list of RemoteViews
-            ArrayList<RemoteViews> citiesList = getListOfCities(context);
-            rv.setRemoteAdapter(R.id.weather_list, citiesList, 1);
+            final Intent intent = new Intent(context, WeatherWidgetService.class);
+            intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
+            intent.setData(Uri.parse(intent.toUri(Intent.URI_INTENT_SCHEME)));
+            rv = new RemoteViews(context.getPackageName(), R.layout.widget_layout);
+            rv.setRemoteAdapter(appWidgetId, R.id.weather_list, intent);
 
             // Set the empty view to be displayed if the collection is empty.  It must be a sibling
             // view of the collection view.
