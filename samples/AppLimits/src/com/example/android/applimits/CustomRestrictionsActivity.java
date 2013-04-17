@@ -16,15 +16,19 @@
 
 package com.example.android.applimits;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.RestrictionEntry;
 import android.os.Bundle;
+import android.os.UserManager;
 import android.preference.CheckBoxPreference;
 import android.preference.ListPreference;
 import android.preference.MultiSelectListPreference;
 import android.preference.Preference;
 import android.preference.Preference.OnPreferenceChangeListener;
 import android.preference.PreferenceActivity;
+
+import com.example.android.applimits.GetRestrictionsReceiver;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -39,6 +43,7 @@ public class CustomRestrictionsActivity extends PreferenceActivity
     private static final String KEY_MULTI_PREF = "multi";
 
     List<RestrictionEntry> mRestrictions;
+    private Bundle mRestrictionsBundle;
 
     CheckBoxPreference mCustomPref;
     ListPreference mChoicePref;
@@ -52,16 +57,20 @@ public class CustomRestrictionsActivity extends PreferenceActivity
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        mRestrictions = getIntent().getParcelableArrayListExtra(
-                Intent.EXTRA_RESTRICTIONS);
-
-        if (savedInstanceState != null
-                && savedInstanceState.containsKey(Intent.EXTRA_RESTRICTIONS)) {
-            mRestrictions = savedInstanceState.getParcelableArrayList(Intent.EXTRA_RESTRICTIONS);
+        mRestrictionsBundle = getIntent().getBundleExtra(Intent.EXTRA_RESTRICTIONS_BUNDLE);
+        if (mRestrictionsBundle == null) {
+            mRestrictionsBundle =
+                ((UserManager) getSystemService(Context.USER_SERVICE))
+                .getApplicationRestrictions(getPackageName());
+        }
+        if (mRestrictionsBundle == null) {
+            mRestrictionsBundle = new Bundle();
         }
 
-        if (mRestrictions == null) {
-            mRestrictions = new ArrayList<RestrictionEntry>(getApplicationRestrictions());
+        if (savedInstanceState != null
+                && savedInstanceState.containsKey(Intent.EXTRA_RESTRICTIONS_LIST)) {
+            mRestrictions = savedInstanceState.getParcelableArrayList(
+                    Intent.EXTRA_RESTRICTIONS_LIST);
         }
 
         this.addPreferencesFromResource(R.xml.custom_prefs);
@@ -89,10 +98,25 @@ public class CustomRestrictionsActivity extends PreferenceActivity
             }
         } else {
             mRestrictions = new ArrayList<RestrictionEntry>();
-            mCustomEntry = new RestrictionEntry(GetRestrictionsReceiver.KEY_CUSTOM, false);
-            mChoiceEntry = new RestrictionEntry(GetRestrictionsReceiver.KEY_CHOICE, (String) null);
+            mCustomEntry = new RestrictionEntry(GetRestrictionsReceiver.KEY_CUSTOM,
+                    mRestrictionsBundle.getBoolean(GetRestrictionsReceiver.KEY_CUSTOM, false));
+            mCustomEntry.setType(RestrictionEntry.TYPE_BOOLEAN);
+            mCustomPref.setChecked(mCustomEntry.getSelectedState());
+            mChoiceEntry = new RestrictionEntry(GetRestrictionsReceiver.KEY_CHOICE,
+                    mRestrictionsBundle.getString(GetRestrictionsReceiver.KEY_CHOICE));
+            mChoiceEntry.setType(RestrictionEntry.TYPE_CHOICE);
+            mChoicePref.setValue(mChoiceEntry.getSelectedString());
             mMultiEntry = new RestrictionEntry(GetRestrictionsReceiver.KEY_MULTI_SELECT,
-                    new String[0]);
+                    mRestrictionsBundle.getStringArray(GetRestrictionsReceiver.KEY_MULTI_SELECT));
+            mMultiEntry.setType(RestrictionEntry.TYPE_MULTI_SELECT);
+            if (mMultiEntry.getAllSelectedStrings() != null) {
+                HashSet<String> set = new HashSet<String>();
+                for (String value : mRestrictionsBundle.getStringArray(
+                        GetRestrictionsReceiver.KEY_MULTI_SELECT)) {
+                    set.add(value);
+                }
+                mMultiPref.setValues(set);
+            }
             mRestrictions.add(mCustomEntry);
             mRestrictions.add(mChoiceEntry);
             mRestrictions.add(mMultiEntry);
@@ -101,14 +125,14 @@ public class CustomRestrictionsActivity extends PreferenceActivity
         mChoicePref.setOnPreferenceChangeListener(this);
         mMultiPref.setOnPreferenceChangeListener(this);
         Intent intent = new Intent(getIntent());
-        intent.putParcelableArrayListExtra(Intent.EXTRA_RESTRICTIONS,
+        intent.putParcelableArrayListExtra(Intent.EXTRA_RESTRICTIONS_LIST,
                 new ArrayList<RestrictionEntry>(mRestrictions));
         setResult(RESULT_OK, intent);
     }
 
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putParcelableArrayList(Intent.EXTRA_RESTRICTIONS,
+        outState.putParcelableArrayList(Intent.EXTRA_RESTRICTIONS_LIST,
                 new ArrayList<RestrictionEntry>(mRestrictions));
     }
 
@@ -127,7 +151,7 @@ public class CustomRestrictionsActivity extends PreferenceActivity
             mMultiEntry.setAllSelectedStrings(selectedStrings);
         }
         Intent intent = new Intent(getIntent());
-        intent.putParcelableArrayListExtra(Intent.EXTRA_RESTRICTIONS,
+        intent.putParcelableArrayListExtra(Intent.EXTRA_RESTRICTIONS_LIST,
                 new ArrayList<RestrictionEntry>(mRestrictions));
         setResult(RESULT_OK, intent);
         return true;
