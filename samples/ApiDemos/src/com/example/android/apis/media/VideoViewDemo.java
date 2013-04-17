@@ -46,6 +46,5 @@ public class VideoViewDemo extends Activity {
                 "/" + R.raw.videoviewdemo));
         mVideoView.setMediaController(new MediaController(this));
         mVideoView.requestFocus();
-
     }
 }
