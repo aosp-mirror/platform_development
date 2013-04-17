@@ -39,8 +39,8 @@ public class GetRestrictionsReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(final Context context, Intent intent) {
         final PendingResult result = goAsync();
-        final ArrayList<RestrictionEntry> oldRestrictions =
-                intent.getParcelableArrayListExtra(Intent.EXTRA_RESTRICTIONS);
+        final Bundle oldRestrictions =
+                intent.getBundleExtra(Intent.EXTRA_RESTRICTIONS_BUNDLE);
         Log.i(TAG, "oldRestrictions = " + oldRestrictions);
         new Thread() {
             public void run() {
@@ -97,34 +97,32 @@ public class GetRestrictionsReceiver extends BroadcastReceiver {
         return newRestrictions;
     }
 
-    private void createRestrictions(Context context,
-            PendingResult result, ArrayList<RestrictionEntry> old) {
+    private void createRestrictions(Context context, PendingResult result, Bundle old) {
         Resources res = context.getResources();
 
         ArrayList<RestrictionEntry> newEntries = initRestrictions(context);
         // If this is the first time, create the default restrictions entries and return them.
         if (old == null) {
             Bundle extras = new Bundle();
-            extras.putParcelableArrayList(Intent.EXTRA_RESTRICTIONS, newEntries);
+            extras.putParcelableArrayList(Intent.EXTRA_RESTRICTIONS_LIST, newEntries);
             result.setResult(Activity.RESULT_OK, null, extras);
             result.finish();
             return;
         }
 
-        boolean custom = false;
-        for (RestrictionEntry entry : old) {
-            if (entry.getKey().equals(KEY_CUSTOM)) {
-                if (entry.getSelectedState()) {
-                    custom = true;
+        boolean custom = old.getBoolean(KEY_CUSTOM, false);
+        for (RestrictionEntry entry : newEntries) {
+            final String key = entry.getKey();
+            if (KEY_CUSTOM.equals(key)) {
+                entry.setSelectedState(custom);
+            } else if (KEY_CHOICE.equals(key)) {
+                if (old.containsKey(KEY_CHOICE)) {
+                    entry.setSelectedString(old.getString(KEY_CHOICE));
                 }
-                RestrictionEntry newEntry = find(newEntries, KEY_CUSTOM);
-                newEntry.setSelectedState(entry.getSelectedState());
-            } else if (entry.getKey().equals(KEY_CHOICE)) {
-                RestrictionEntry newEntry = find(newEntries, KEY_CHOICE);
-                newEntry.setSelectedString(entry.getSelectedString());
-            } else if (entry.getKey().equals(KEY_MULTI_SELECT)) {
-                RestrictionEntry newEntry = find(newEntries, KEY_MULTI_SELECT);
-                newEntry.setAllSelectedStrings(entry.getAllSelectedStrings());
+            } else if (KEY_MULTI_SELECT.equals(key)) {
+                if (old.containsKey(KEY_MULTI_SELECT)) {
+                    entry.setAllSelectedStrings(old.getStringArray(key));
+                }
             }
         }
 
@@ -134,17 +132,8 @@ public class GetRestrictionsReceiver extends BroadcastReceiver {
             customIntent.setClass(context, CustomRestrictionsActivity.class);
             extras.putParcelable(Intent.EXTRA_RESTRICTIONS_INTENT, customIntent);
         }
-        extras.putParcelableArrayList(Intent.EXTRA_RESTRICTIONS, newEntries);
+        extras.putParcelableArrayList(Intent.EXTRA_RESTRICTIONS_LIST, newEntries);
         result.setResult(Activity.RESULT_OK, null, extras);
         result.finish();
-    }
-
-    private RestrictionEntry find(ArrayList<RestrictionEntry> entries, String key) {
-        for (RestrictionEntry entry : entries) {
-            if (entry.getKey().equals(key)) {
-                return entry;
-            }
-        }
-        return null;
     }
 }
