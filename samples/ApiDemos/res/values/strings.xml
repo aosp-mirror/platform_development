@@ -1464,4 +1464,21 @@
     <string name="task_complete">is complete</string>
     <string name="task_not_complete">is not complete</string>
 
+    <!-- =========================== -->
+    <!--  Security API demo strings  -->
+    <!-- =========================== --> <skip />
+
+    <string name="keystore_entries_list">List of entries:</string>
+
+    <string name="keystore_key_ops_header">Key operations</string>
+    <string name="keystore_plaintext">Plaintext:</string>
+    <string name="keystore_ciphertext">Ciphertext:</string>
+    <string name="keystore_sign">Sign</string>
+    <string name="keystore_verify">Verify</string>
+    <string name="keystore_delete">Delete</string>
+
+    <string name="keystore_generating_header">Generating</string>
+    <string name="keystore_entry_alias">Entry alias:</string>
+    <string name="keystore_generate">Generate</string>
+    <string name="keystore_no_alias_error">Must supply an alias</string>
   </resources>
