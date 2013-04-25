@@ -1,6 +1,18 @@
 #!/usr/bin/python
 #
-# Copyright 2006 Google Inc. All Rights Reserved.
+# Copyright (C) 2013 The Android Open Source Project
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 """Module for looking up symbolic debugging information.
 
@@ -29,6 +41,10 @@ def FindSymbolsDir():
 
 SYMBOLS_DIR = FindSymbolsDir()
 
+ARCH = "arm"
+
+TOOLCHAIN_INFO = None
+
 def Uname():
   """'uname' for constructing prebuilt/<...> and out/host/<...> paths."""
   uname = os.uname()[0]
@@ -44,9 +60,9 @@ def Uname():
 def ToolPath(tool, toolchain_info=None):
   """Return a full qualified path to the specified tool"""
   if not toolchain_info:
-    toolchain_info = TOOLCHAIN_INFO
-  (label, target) = toolchain_info
-  return os.path.join(ANDROID_BUILD_TOP, "prebuilts", "gcc", Uname(), "arm", label, "bin",
+    toolchain_info = FindToolchain()
+  (label, platform, target) = toolchain_info
+  return os.path.join(ANDROID_BUILD_TOP, "prebuilts/gcc", Uname(), platform, label, "bin",
                      target + "-" + tool)
 
 def FindToolchain():
@@ -58,26 +74,31 @@ def FindToolchain():
   Returns:
     A pair of strings containing toolchain label and target prefix.
   """
+  global TOOLCHAIN_INFO
+  if TOOLCHAIN_INFO is not None:
+    return TOOLCHAIN_INFO
 
   ## Known toolchains, newer ones in the front.
-  known_toolchains = [
-    ("arm-eabi-4.6", "arm-eabi"),
-    ("arm-linux-androideabi-4.4.x", "arm-linux-androideabi"),
-    ("arm-eabi-4.4.3", "arm-eabi"),
-    ("arm-eabi-4.4.0", "arm-eabi"),
-    ("arm-eabi-4.3.1", "arm-eabi"),
-    ("arm-eabi-4.2.1", "arm-eabi")
-  ]
+  if ARCH == "arm":
+    gcc_version = os.environ["TARGET_GCC_VERSION"]
+    known_toolchains = [
+      ("arm-linux-androideabi-" + gcc_version, "arm", "arm-linux-androideabi"),
+    ]
+  elif ARCH =="x86":
+    known_toolchains = [
+      ("i686-android-linux-4.4.3", "x86", "i686-android-linux")
+    ]
+  else:
+    known_toolchains = []
 
   # Look for addr2line to check for valid toolchain path.
-  for (label, target) in known_toolchains:
-    toolchain_info = (label, target);
+  for (label, platform, target) in known_toolchains:
+    toolchain_info = (label, platform, target);
     if os.path.exists(ToolPath("addr2line", toolchain_info)):
+      TOOLCHAIN_INFO = toolchain_info
       return toolchain_info
 
   raise Exception("Could not find tool chain")
-
-TOOLCHAIN_INFO = FindToolchain()
 
 def SymbolInformation(lib, addr):
   """Look up symbol information about an address.
@@ -87,20 +108,19 @@ def SymbolInformation(lib, addr):
     addr: string hexidecimal address
 
   Returns:
-    For a given library and address, return tuple of: (source_symbol,
-    source_location, object_symbol_with_offset) the values may be None
-    if the information was unavailable.
+    A list of the form [(source_symbol, source_location,
+    object_symbol_with_offset)].
 
-    source_symbol may not be a prefix of object_symbol_with_offset if
-    the source function was inlined in the object code of another
-    function.
+    If the function has been inlined then the list may contain
+    more than one element with the symbols for the most deeply
+    nested inlined location appearing first.  The list is
+    always non-empty, even if no information is available.
 
-    usually you want to display the object_symbol_with_offset and
-    source_location, the source_symbol is only useful to show if the
-    address was from an inlined function.
+    Usually you want to display the source_location and
+    object_symbol_with_offset from the last element in the list.
   """
   info = SymbolInformationForSet(lib, set([addr]))
-  return (info and info.get(addr)) or (None, None, None)
+  return (info and info.get(addr)) or [(None, None, None)]
 
 
 def SymbolInformationForSet(lib, unique_addrs):
@@ -111,17 +131,17 @@ def SymbolInformationForSet(lib, unique_addrs):
     unique_addrs: set of hexidecimal addresses
 
   Returns:
-    For a given library and set of addresses, returns a dictionary of the form
-    {addr: (source_symbol, source_location, object_symbol_with_offset)}. The
-    values may be None if the information was unavailable.
+    A dictionary of the form {addr: [(source_symbol, source_location,
+    object_symbol_with_offset)]} where each address has a list of
+    associated symbols and locations.  The list is always non-empty.
 
-    For a given address, source_symbol may not be a prefix of
-    object_symbol_with_offset if the source function was inlined in the
-    object code of another function.
+    If the function has been inlined then the list may contain
+    more than one element with the symbols for the most deeply
+    nested inlined location appearing first.  The list is
+    always non-empty, even if no information is available.
 
-    Usually you want to display the object_symbol_with_offset and
-    source_location; the source_symbol is only useful to show if the
-    address was from an inlined function.
+    Usually you want to display the source_location and
+    object_symbol_with_offset from the last element in the list.
   """
   if not lib:
     return None
@@ -136,14 +156,17 @@ def SymbolInformationForSet(lib, unique_addrs):
 
   result = {}
   for addr in unique_addrs:
-    (source_symbol, source_location) = addr_to_line.get(addr, (None, None))
+    source_info = addr_to_line.get(addr)
+    if not source_info:
+      source_info = [(None, None)]
     if addr in addr_to_objdump:
       (object_symbol, object_offset) = addr_to_objdump.get(addr)
       object_symbol_with_offset = FormatSymbolWithOffset(object_symbol,
                                                          object_offset)
     else:
       object_symbol_with_offset = None
-    result[addr] = (source_symbol, source_location, object_symbol_with_offset)
+    result[addr] = [(source_symbol, source_location, object_symbol_with_offset)
+        for (source_symbol, source_location) in source_info]
 
   return result
 
@@ -156,8 +179,13 @@ def CallAddr2LineForSet(lib, unique_addrs):
     unique_addrs: set of string hexidecimal addresses look up.
 
   Returns:
-    A dictionary of the form {addr: (symbol, file:line)}. The values may
-    be (None, None) if the address could not be looked up.
+    A dictionary of the form {addr: [(symbol, file:line)]} where
+    each address has a list of associated symbols and locations
+    or an empty list if no symbol information was found.
+
+    If the function has been inlined then the list may contain
+    more than one element with the symbols for the most deeply
+    nested inlined location appearing first.
   """
   if not lib:
     return None
@@ -167,8 +195,9 @@ def CallAddr2LineForSet(lib, unique_addrs):
   if not os.path.exists(symbols):
     return None
 
-  (label, target) = TOOLCHAIN_INFO
-  cmd = [ToolPath("addr2line"), "--functions", "--demangle", "--exe=" + symbols]
+  (label, platform, target) = FindToolchain()
+  cmd = [ToolPath("addr2line"), "--functions", "--inlines",
+      "--demangle", "--exe=" + symbols]
   child = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
 
   result = {}
@@ -176,17 +205,44 @@ def CallAddr2LineForSet(lib, unique_addrs):
   for addr in addrs:
     child.stdin.write("0x%s\n" % addr)
     child.stdin.flush()
-    symbol = child.stdout.readline().strip()
-    if symbol == "??":
-      symbol = None
-    location = child.stdout.readline().strip()
-    if location == "??:0":
-      location = None
-    result[addr] = (symbol, location)
+    records = []
+    first = True
+    while True:
+      symbol = child.stdout.readline().strip()
+      if symbol == "??":
+        symbol = None
+      location = child.stdout.readline().strip()
+      if location == "??:0":
+        location = None
+      if symbol is None and location is None:
+        break
+      records.append((symbol, location))
+      if first:
+        # Write a blank line as a sentinel so we know when to stop
+        # reading inlines from the output.
+        # The blank line will cause addr2line to emit "??\n??:0\n".
+        child.stdin.write("\n")
+        first = False
+    result[addr] = records
   child.stdin.close()
   child.stdout.close()
   return result
 
+
+def StripPC(addr):
+  """Strips the Thumb bit a program counter address when appropriate.
+
+  Args:
+    addr: the program counter address
+
+  Returns:
+    The stripped program counter address.
+  """
+  global ARCH
+
+  if ARCH == "arm":
+    return addr & ~1
+  return addr
 
 def CallObjdumpForSet(lib, unique_addrs):
   """Use objdump to find out the names of the containing functions.
@@ -210,13 +266,13 @@ def CallObjdumpForSet(lib, unique_addrs):
     return None
 
   addrs = sorted(unique_addrs)
-  start_addr_hex = addrs[0]
-  stop_addr_dec = str(int(addrs[-1], 16) + 8)
+  start_addr_dec = str(StripPC(int(addrs[0], 16)))
+  stop_addr_dec = str(StripPC(int(addrs[-1], 16)) + 8)
   cmd = [ToolPath("objdump"),
          "--section=.text",
          "--demangle",
          "--disassemble",
-         "--start-address=0x" + start_addr_hex,
+         "--start-address=" + start_addr_dec,
          "--stop-address=" + stop_addr_dec,
          symbols]
 
@@ -261,7 +317,7 @@ def CallObjdumpForSet(lib, unique_addrs):
       addr = components.group(1)
       target_addr = addrs[addr_index]
       i_addr = int(addr, 16)
-      i_target = int(target_addr, 16)
+      i_target = StripPC(int(target_addr, 16))
       if i_addr == i_target:
         result[target_addr] = (current_symbol, i_target - current_symbol_addr)
         addr_index += 1
