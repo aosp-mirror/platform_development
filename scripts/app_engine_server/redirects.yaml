@@ -504,6 +504,9 @@ redirects:
   type: permanent
   comment: Syncing with App Engine was removed because it's obsolete.
 
+- src: /training/basics/location/
+  dst: /training/location/
+  type: permanent
 
 # -------------------- MISC ----------------------
 
