@@ -58,6 +58,14 @@ redirects:
   type: permanent
   comment: Redirect sdk reference to new location
 
+- src: /about/versions/index.html
+  dst: /about/index.html
+  type: permanent
+
+- src: /about/versions/api-levels.html
+  dst: /guide/topics/manifest/uses-sdk-element.html#ApiLevels
+  type: permanent
+
 # new one works
 - src: /sdk/oem-usb.html
   dst: /tools/extras/oem-usb.html
