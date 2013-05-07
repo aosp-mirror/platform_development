@@ -107,6 +107,10 @@ public class BadBehaviorActivity extends Activity {
         public int appNotResponding(String proc, int pid, String st) {
             return 0;
         }
+
+        public int systemNotResponding(String message) {
+            return 0;
+        }
     }
 
     @Override

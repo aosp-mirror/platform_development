@@ -134,6 +134,18 @@ public class Monkey {
 
     /**
      * This is set by the ActivityController thread to request a
+     * bugreport after a system watchdog report
+     */
+    private boolean mRequestWatchdogBugreport = false;
+
+    /**
+     * Synchronization for the ActivityController callback to block
+     * until we are done handling the reporting of the watchdog error.
+     */
+    private boolean mWatchdogWaiting = false;
+
+    /**
+     * This is set by the ActivityController thread to request a
      * bugreport after java application crash
      */
     private boolean mRequestAppCrashBugreport = false;
@@ -351,6 +363,31 @@ public class Monkey {
             if (!mIgnoreTimeouts) {
                 synchronized (Monkey.this) {
                     mAbort = true;
+                }
+            }
+            return (mKillProcessAfterError) ? -1 : 1;
+        }
+
+        public int systemNotResponding(String message) {
+            StrictMode.ThreadPolicy savedPolicy = StrictMode.allowThreadDiskWrites();
+            System.err.println("// WATCHDOG: " + message);
+            StrictMode.setThreadPolicy(savedPolicy);
+
+            synchronized (Monkey.this) {
+                if (!mIgnoreCrashes) {
+                    mAbort = true;
+                }
+                if (mRequestBugreport) {
+                    mRequestWatchdogBugreport = true;
+                }
+                mWatchdogWaiting = true;
+            }
+            synchronized (Monkey.this) {
+                while (mWatchdogWaiting) {
+                    try {
+                        Monkey.this.wait();
+                    } catch (InterruptedException e) {
+                    }
                 }
             }
             return (mKillProcessAfterError) ? -1 : 1;
@@ -635,6 +672,11 @@ public class Monkey {
                 getBugreport("anr_" + mReportProcessName + "_");
                 mRequestAnrBugreport = false;
             }
+            if (mRequestWatchdogBugreport) {
+                System.out.println("Print the watchdog report");
+                getBugreport("anr_watchdog_");
+                mRequestWatchdogBugreport = false;
+            }
             if (mRequestAppCrashBugreport){
                 getBugreport("app_crash" + mReportProcessName + "_");
                 mRequestAppCrashBugreport = false;
@@ -646,6 +688,10 @@ public class Monkey {
             if (mRequestPeriodicBugreport){
                 getBugreport("Bugreport_");
                 mRequestPeriodicBugreport = false;
+            }
+            if (mWatchdogWaiting) {
+                mWatchdogWaiting = false;
+                notifyAll();
             }
         }
 
@@ -1027,6 +1073,11 @@ public class Monkey {
                     getBugreport("anr_" + mReportProcessName + "_");
                     mRequestAnrBugreport = false;
                 }
+                if (mRequestWatchdogBugreport) {
+                    System.out.println("Print the watchdog report");
+                    getBugreport("anr_watchdog_");
+                    mRequestWatchdogBugreport = false;
+                }
                 if (mRequestAppCrashBugreport){
                     getBugreport("app_crash" + mReportProcessName + "_");
                     mRequestAppCrashBugreport = false;
@@ -1052,6 +1103,10 @@ public class Monkey {
                 }
                 if (mAbort) {
                     shouldAbort = true;
+                }
+                if (mWatchdogWaiting) {
+                    mWatchdogWaiting = false;
+                    notifyAll();
                 }
             }
 
