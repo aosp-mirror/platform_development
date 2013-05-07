@@ -110,7 +110,7 @@ class MemcachedZipHandler(webapp.RequestHandler):
   REDIRECT_TYPE_TEMP = 'temporary'  # Redirect 'type'string indicate a 302
                                     #   Redirect should be served
   intlString = 'intl/'
-  validLangs = ['en', 'de', 'es', 'fr','it','ja','ko','ru','zh-CN','zh-TW']
+  validLangs = ['en', 'de', 'es', 'fr','it','ja','ko','ru','zh-CN','zh-cn','zh-TW','zh-tw']
 
   def TrueGet(self, reqUri):
     """The top-level entry point to serving requests.
