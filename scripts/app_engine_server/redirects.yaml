@@ -543,9 +543,13 @@ redirects:
   type: permanent
   comment: Redirect to new location
 
+- src: /intl/zh-CN/...
+  dst: /intl/zh-cn/...
+  type: permanent
 
-
-
+- src: /intl/zh-TW/...
+  dst: /intl/zh-tw/...
+  type: permanent
 
 # -------------------- EASTER EGG REDIRECTS ----------------------
 
