@@ -75,19 +75,21 @@ public class MonkeySourceRandom implements MonkeyEventSource {
     public static final int FACTOR_TOUCH        = 0;
     public static final int FACTOR_MOTION       = 1;
     public static final int FACTOR_PINCHZOOM    = 2;
-    public static final int FACTOR_TRACKBALL    = 3;
-    public static final int FACTOR_ROTATION     = 4;
-    public static final int FACTOR_NAV          = 5;
-    public static final int FACTOR_MAJORNAV     = 6;
-    public static final int FACTOR_SYSOPS       = 7;
-    public static final int FACTOR_APPSWITCH    = 8;
-    public static final int FACTOR_FLIP         = 9;
-    public static final int FACTOR_ANYTHING     = 10;
-    public static final int FACTORZ_COUNT       = 11;    // should be last+1
+    public static final int FACTOR_FLING        = 3;
+    public static final int FACTOR_TRACKBALL    = 4;
+    public static final int FACTOR_ROTATION     = 5;
+    public static final int FACTOR_NAV          = 6;
+    public static final int FACTOR_MAJORNAV     = 7;
+    public static final int FACTOR_SYSOPS       = 8;
+    public static final int FACTOR_APPSWITCH    = 9;
+    public static final int FACTOR_FLIP         = 10;
+    public static final int FACTOR_ANYTHING     = 11;
+    public static final int FACTORZ_COUNT       = 12;    // should be last+1
 
     private static final int GESTURE_TAP = 0;
     private static final int GESTURE_DRAG = 1;
     private static final int GESTURE_PINCH_OR_ZOOM = 2;
+    private static final int GESTURE_FLING = 3;
 
     /** percentages for each type of event.  These will be remapped to working
      * values after we read any optional values.
@@ -132,8 +134,9 @@ public class MonkeySourceRandom implements MonkeyEventSource {
         mFactors[FACTOR_SYSOPS] = 2.0f;
         mFactors[FACTOR_APPSWITCH] = 2.0f;
         mFactors[FACTOR_FLIP] = 1.0f;
-        mFactors[FACTOR_ANYTHING] = 13.0f;
+        mFactors[FACTOR_ANYTHING] = 11.0f;
         mFactors[FACTOR_PINCHZOOM] = 2.0f;
+        mFactors[FACTOR_FLING] = 2.0f;
 
         mRandom = random;
         mMainApps = MainApps;
@@ -259,12 +262,37 @@ public class MonkeySourceRandom implements MonkeyEventSource {
      *
      */
     private void generatePointerEvent(Random random, int gesture) {
-        Display display = DisplayManagerGlobal.getInstance().getRealDisplay(Display.DEFAULT_DISPLAY);
+        Display display = DisplayManagerGlobal.getInstance().getRealDisplay(
+                Display.DEFAULT_DISPLAY);
 
-        PointF p1 = randomPoint(random, display);
-        PointF v1 = randomVector(random);
+        if (gesture == GESTURE_FLING) {
+            PointF start, end;
+            // 1 out of 10 is up-and-down fling and the rest are left-and-right flings.
+            if (random.nextInt(10) == 0) {
+                if (random.nextInt(2) == 0) {
+                    start = new PointF(display.getWidth()/2, display.getHeight());
+                    end = new PointF(display.getWidth()/2, 0);
+                } else {
+                    start = new PointF(display.getWidth()/2, 0);
+                    end = new PointF(display.getWidth()/2, display.getHeight());
+                }
+            } else {
+                if (random.nextInt(2) == 0) {
+                    start = new PointF(0, display.getHeight()/2);
+                    end = new PointF(display.getWidth(), display.getHeight()/2);
+                } else {
+                    start = new PointF(display.getWidth(), display.getHeight()/2);
+                    end = new PointF(0, display.getHeight()/2);
+                }
+            }
+
+            generateFlingEvents(start, end, mQ);
+            return;
+        }
 
         long downAt = SystemClock.uptimeMillis();
+        PointF p1 = randomPoint(random, display);
+        PointF v1 = randomVector(random);
 
         mQ.addLast(new MonkeyTouchEvent(MotionEvent.ACTION_DOWN)
                 .setDownTime(downAt)
@@ -336,6 +364,56 @@ public class MonkeySourceRandom implements MonkeyEventSource {
     }
 
     /**
+     * Generates a fling event. This method counts a down, move, and up as multiple events.
+     *
+     * @param start The starting point.
+     * @param end The ending point.
+     * @param q The event queue to hold the results.
+     *
+     */
+    static void generateFlingEvents(PointF start, PointF end, MonkeyEventQueue q) {
+        // Experiments showed 20 is a good step length while a random step between 0 and 50
+        // doesn't work well.
+        float step = 20.0f;
+        float xSpan = Math.abs(end.x - start.x);
+        float ySpan = Math.abs(end.y - start.y);
+        float segNum, xInc, yInc;
+        if (xSpan > ySpan) {
+            segNum = xSpan / step;
+            if (segNum < 1.0f) {
+                return;
+            }
+            xInc = end.x > start.x ? step : -step;
+            yInc = (end.y - start.y) / segNum;
+        } else {
+            segNum = ySpan / step;
+            if (segNum < 1.0f) {
+                return;
+            }
+            yInc = end.y > start.y ? step : -step;
+            xInc = (end.x - start.x) / segNum;
+        }
+        long downAt = SystemClock.uptimeMillis();
+        q.addLast(new MonkeyTouchEvent(MotionEvent.ACTION_DOWN)
+            .setDownTime(downAt)
+            .addPointer(0, start.x, start.y)
+            .setIntermediateNote(false));
+        PointF point = new PointF(start.x, start.y);
+        for (float i = 1.0f; i < segNum; i++) {
+            point.x += xInc;
+            point.y += yInc;
+            q.addLast(new MonkeyTouchEvent(MotionEvent.ACTION_MOVE)
+                .setDownTime(downAt)
+                .addPointer(0, point.x, point.y)
+                .setIntermediateNote(true));
+        }
+        q.addLast(new MonkeyTouchEvent(MotionEvent.ACTION_UP)
+            .setDownTime(downAt)
+            .addPointer(0, end.x, end.y)
+            .setIntermediateNote(false));
+    }
+
+    /**
      * Generates a random trackball event. This consists of a sequence of small moves, followed by
      * an optional single click.
      *
@@ -403,6 +481,9 @@ public class MonkeySourceRandom implements MonkeyEventSource {
             return;
         } else if (cls < mFactors[FACTOR_PINCHZOOM]) {
             generatePointerEvent(mRandom, GESTURE_PINCH_OR_ZOOM);
+            return;
+        } else if (cls < mFactors[FACTOR_FLING]) {
+            generatePointerEvent(mRandom, GESTURE_FLING);
             return;
         } else if (cls < mFactors[FACTOR_TRACKBALL]) {
             generateTrackballEvent(mRandom);

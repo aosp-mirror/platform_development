@@ -17,6 +17,7 @@
 package com.android.commands.monkey;
 
 import android.content.ComponentName;
+import android.graphics.PointF;
 import android.os.SystemClock;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
@@ -126,6 +127,8 @@ public class MonkeySourceScript implements MonkeyEventSource {
     private static final String EVENT_KEYWORD_DRAG = "Drag";
 
     private static final String EVENT_KEYWORD_PINCH_ZOOM = "PinchZoom";
+
+    private static final String EVENT_KEYWORD_FLING = "Fling";
 
     private static final String EVENT_KEYWORD_START_FRAMERATE_CAPTURE = "StartCaptureFramerate";
 
@@ -584,6 +587,17 @@ public class MonkeySourceScript implements MonkeyEventSource {
                         .setDownTime(downTime).setEventTime(eventTime).addPointer(0, x1, y1)
                         .addPointer(1, x2, y2));
             }
+        }
+
+        // Handle fling action
+        if ((s.indexOf(EVENT_KEYWORD_FLING) >= 0) && args.length == 4) {
+            float xStart = Float.parseFloat(args[0]);
+            float yStart = Float.parseFloat(args[1]);
+            float xEnd = Float.parseFloat(args[2]);
+            float yEnd = Float.parseFloat(args[3]);
+            PointF start = new PointF(xStart, yStart);
+            PointF end = new PointF(xEnd, yEnd);
+            MonkeySourceRandom.generateFlingEvents(start, end, mQ);
         }
 
         // Handle flip events
