@@ -613,3 +613,11 @@ redirects:
 - src: /deviceart
   dst: http://developer.android.com/distribute/promote/device-art.html
   type: permanent
+
+- src: /edu
+  dst: /distribute/googleplay/edu/index.html
+  type: permanent
+
+- src: /edu/signup
+  dst: https://services.google.com/fb/forms/playedu
+  type: permanent
