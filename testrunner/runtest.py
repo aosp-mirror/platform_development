@@ -301,6 +301,9 @@ class TestRunner(object):
     m = self._RE_MAKE_INSTALL_PATH.match(install_path)
     if m:
       remote_path = m.group(1)
+      remote_dir = os.path.dirname(remote_path)
+      logger.Log("adb shell mkdir -p %s" % remote_dir)
+      self._adb.SendShellCommand("mkdir -p %s" % remote_dir)
       abs_install_path = os.path.join(self._root_path, install_path)
       logger.Log("adb push %s %s" % (abs_install_path, remote_path))
       self._adb.Push(abs_install_path, remote_path)
