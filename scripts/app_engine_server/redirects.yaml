@@ -237,6 +237,26 @@ redirects:
   dst: /tools/adk/index.html
   type: permanent
 
+- src: /tools/workflow/publishing/versioning.html
+  dst: /tools/publishing/versioning.html
+  type: permanent
+
+- src: /tools/workflow/publishing/publishing.html
+  dst: /tools/publishing/publishing_overview.html
+  type: permanent
+
+- src: /tools/workflow/publishing_overview.html
+  dst: /tools/publishing/publishing_overview.html
+  type: permanent
+
+- src: /tools/workflow/publishing/publishing_overview.html
+  dst: /tools/publishing/publishing_overview.html
+  type: permanent
+
+- src: /tools/workflow/app-signing.html
+  dst: /tools/publishing/app-signing.html
+  type: permanent
+
 - src: /tools/adk/aoa.html
   dst: http://source.android.com/tech/accessories/aoap/aoa.html
   type: permanent
@@ -614,10 +634,10 @@ redirects:
   dst: http://developer.android.com/distribute/promote/device-art.html
   type: permanent
 
-- src: /edu
-  dst: /distribute/googleplay/edu/index.html
-  type: permanent
-
 - src: /edu/signup
   dst: https://services.google.com/fb/forms/playedu
+  type: permanent
+
+- src: /edu
+  dst: /distribute/googleplay/edu/index.html
   type: permanent
