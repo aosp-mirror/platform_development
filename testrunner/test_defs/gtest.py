@@ -89,7 +89,8 @@ class GTestFactory(test_suite.AbstractTestFactory):
       logger.SilentLog('Creating gtest suite for file %s' % test_file)
       suite = GTestSuite()
       suite.SetBuildPath(self.GetBuildPath())
-      suite.SetTargetExecPath(os.path.join(target_root_path, test_file))
+      # expect tests in /data/nativetest/test_file/test_file
+      suite.SetTargetExecPath(os.path.join(target_root_path, test_file, test_file))
       test_suites.append(suite)
     return test_suites
 
