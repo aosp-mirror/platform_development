@@ -110,6 +110,18 @@ redirects:
   type: permanent
   comment: Redirect sdk reference to new location
 
+- src: /tools/sdk/win-usb.html
+  dst: /sdk/win-usb.html
+  type: permanent
+
+- src: /tools/sdk/index.html
+  dst: /sdk/index.html
+  type: permanent
+
+- src: /tools/sdk/installing.html
+  dst: /sdk/installing/bundle.html
+  type: permanent
+
 #new one works
 - src: /sdk/requirements.html
   dst: /sdk/index.html
