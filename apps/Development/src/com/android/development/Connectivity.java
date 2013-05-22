@@ -235,6 +235,7 @@ public class Connectivity extends Activity {
                     unregisterReceiver(mScanRecv);
                     mScanButton.setText(GET_SCAN_RES);
                 } else {
+                    Log.d(TAG, "Scan: START " + mScanCur);
                     mStartTime = SystemClock.elapsedRealtime();
                     mWm.startScan();
                 }
@@ -469,6 +470,7 @@ public class Connectivity extends Activity {
                 mWm.disconnect();
             mTotalScanTime = 0;
             mTotalScanCount = 0;
+            Log.d(TAG, "Scan: START " + mScanCur);
             mStartTime = SystemClock.elapsedRealtime();
             mWm.startScan();
         } else {
