@@ -24,6 +24,8 @@ LOCAL_PACKAGE_NAME := ConnectivityTest
 
 LOCAL_SDK_VERSION := 4
 
+LOCAL_PROGUARD_ENABLED := disabled
+
 include $(BUILD_PACKAGE)
 
 # Use the following include to make our test apk.
