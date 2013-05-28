@@ -37,17 +37,6 @@ public class HelloActivity extends Activity {
         // in res/layout/hello_activity.xml
         View view = getLayoutInflater().inflate(R.layout.hello_activity, null);
         setContentView(view);
-
-        WindowManager.LayoutParams params = getWindow().getAttributes();
-        params.systemUiVisibility = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION;
-        getWindow().setAttributes(params);
-        view.setOnSystemUiVisibilityChangeListener(new View.OnSystemUiVisibilityChangeListener() {
-            @Override public void onSystemUiVisibilityChange(int visibility) {
-                WindowManager.LayoutParams params = getWindow().getAttributes();
-                params.systemUiVisibility = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION;
-                getWindow().setAttributes(params);
-            }
-        });
     }
 }
 
