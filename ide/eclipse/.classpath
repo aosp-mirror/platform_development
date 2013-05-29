@@ -95,6 +95,7 @@
 	<classpathentry kind="src" path="development/samples/Snake/src"/>
 	<classpathentry kind="src" path="development/samples/Snake/tests/src"/>
 	<classpathentry kind="src" path="libcore/dalvik/src/main/java"/>
+	<classpathentry kind="src" path="libcore/libdvm/src/main/java"/>
 	<classpathentry kind="src" path="libcore/json/src/main/java"/>
 	<classpathentry kind="src" path="libcore/luni/src/main/java"/>
 	<classpathentry kind="src" path="libcore/xml/src/main/java"/>
