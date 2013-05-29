@@ -643,6 +643,11 @@
             </intent-filter>
         </activity>
 
+        <!-- Stub for memory testing. -->
+
+        <receiver android:name=".app.DoNothing"
+                android:process=":empty" android:exported="true" />
+
         <!-- ============================ -->
         <!--  Accessibility examples      -->
         <!-- ============================ -->
