@@ -535,7 +535,7 @@ size_t AMotionEvent_getHistorySize(const AInputEvent* motion_event);
 
 /* Get the time that a historical movement occurred between this event and
  * the previous event, in the java.lang.System.nanoTime() time base. */
-int64_t AMotionEvent_getHistoricalEventTime(AInputEvent* motion_event,
+int64_t AMotionEvent_getHistoricalEventTime(const AInputEvent* motion_event,
         size_t history_index);
 
 /* Get the historical raw X coordinate of this event for the given pointer index that
@@ -562,14 +562,14 @@ float AMotionEvent_getHistoricalRawY(const AInputEvent* motion_event, size_t poi
  * occurred between this event and the previous motion event.
  * Whole numbers are pixels; the value may have a fraction for input devices
  * that are sub-pixel precise. */
-float AMotionEvent_getHistoricalX(AInputEvent* motion_event, size_t pointer_index,
+float AMotionEvent_getHistoricalX(const AInputEvent* motion_event, size_t pointer_index,
         size_t history_index);
 
 /* Get the historical Y coordinate of this event for the given pointer index that
  * occurred between this event and the previous motion event.
  * Whole numbers are pixels; the value may have a fraction for input devices
  * that are sub-pixel precise. */
-float AMotionEvent_getHistoricalY(AInputEvent* motion_event, size_t pointer_index,
+float AMotionEvent_getHistoricalY(const AInputEvent* motion_event, size_t pointer_index,
         size_t history_index);
 
 /* Get the historical pressure of this event for the given pointer index that
@@ -577,7 +577,7 @@ float AMotionEvent_getHistoricalY(AInputEvent* motion_event, size_t pointer_inde
  * The pressure generally ranges from 0 (no pressure at all) to 1 (normal pressure),
  * although values higher than 1 may be generated depending on the calibration of
  * the input device. */
-float AMotionEvent_getHistoricalPressure(AInputEvent* motion_event, size_t pointer_index,
+float AMotionEvent_getHistoricalPressure(const AInputEvent* motion_event, size_t pointer_index,
         size_t history_index);
 
 /* Get the current scaled value of the approximate size for the given pointer index that
@@ -587,7 +587,7 @@ float AMotionEvent_getHistoricalPressure(AInputEvent* motion_event, size_t point
  * touch is normalized with the device specific range of values
  * and scaled to a value between 0 and 1.  The value of size can be used to
  * determine fat touch events. */
-float AMotionEvent_getHistoricalSize(AInputEvent* motion_event, size_t pointer_index,
+float AMotionEvent_getHistoricalSize(const AInputEvent* motion_event, size_t pointer_index,
         size_t history_index);
 
 /* Get the historical length of the major axis of an ellipse that describes the touch area
