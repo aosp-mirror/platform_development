@@ -1,0 +1,187 @@
+<!-- Copyright (C) 2013 The Android Open Source Project
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+          http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+-->
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" >
+
+    <RelativeLayout 
+        android:id="@+id/container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clipChildren="false">
+    
+        <view
+            android:id="@+id/nameTV"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="120dp"
+            class="com.example.android.toongame.SkewableTextView"
+            android:text="Name?"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:textSize="@dimen/bigText" />
+    
+        <view
+            class="com.example.android.toongame.SkewableTextView"
+            android:id="@+id/ageTV"
+            android:visibility="gone"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="120dp"
+            android:text="Difficulty?"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:textSize="@dimen/bigText" />
+    
+        <view
+            class="com.example.android.toongame.SkewableTextView"
+            android:id="@+id/creditTV"
+            android:visibility="gone"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="120dp"
+            android:gravity="center"
+            android:text="Parent's Credit Card Number?"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:textSize="64sp" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_alignParentBottom="true"
+            android:visibility="gone"
+            android:id="@+id/nameButtons"
+            android:layout_marginBottom="132dp" >
+            
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="10dip"
+                android:padding="15dip"
+                android:background="@drawable/green_oval"
+                android:text="Bob"
+                android:textSize="36sp"
+                android:textColor="#fff"
+                android:textStyle="bold"
+                android:onClick="selectName"
+                android:id="@+id/bobButton"/>
+
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="10dip"
+                android:padding="15dip"
+                android:background="@drawable/blue_oval"
+                android:text="Jane"
+                android:textSize="36sp"
+                android:textColor="#fff"
+                android:textStyle="bold"
+                android:onClick="selectName"
+                android:id="@+id/janeButton"/>
+
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="10dip"
+                android:padding="15dip"
+                android:background="@drawable/magenta_oval"
+                android:text="Pat"
+                android:textSize="36sp"
+                android:textColor="#fff"
+                android:textStyle="bold"
+                 android:onClick="selectName"
+                android:id="@+id/patButton"/>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_alignParentBottom="true"
+            android:visibility="gone"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:id="@+id/difficultyButtons"
+            android:layout_marginBottom="50dp" >
+            
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="10dip"
+                android:padding="15dip"
+                android:background="@drawable/green_oval"
+                android:text="Easy"
+                android:textSize="36sp"
+                android:textColor="#fff"
+                android:textStyle="bold"
+                android:onClick="selectDifficulty"
+                android:id="@+id/easyButton"/>
+
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="10dip"
+                android:padding="15dip"
+                android:background="@drawable/blue_oval"
+                android:text="Hard"
+                android:textSize="36sp"
+                android:textColor="#fff"
+                android:textStyle="bold"
+                android:onClick="selectDifficulty"
+                android:id="@+id/hardButton"/>
+
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="10dip"
+                android:padding="15dip"
+                android:background="@drawable/red_oval"
+                android:text="Mega Hard"
+                android:textSize="36sp"
+                android:textColor="#000"
+                android:textStyle="bold|italic"
+                android:onClick="selectDifficulty"
+                android:id="@+id/megaHardButton"/>
+
+        </LinearLayout>
+        
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_alignParentBottom="true"
+            android:visibility="gone"
+            android:id="@+id/creditButtons1"
+            android:layout_marginBottom="132dp" />
+        
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_alignParentBottom="true"
+            android:visibility="gone"
+            android:id="@+id/creditButtons2"
+            android:layout_marginBottom="70dp" />
+        
+        
+    </RelativeLayout>
+</FrameLayout>
