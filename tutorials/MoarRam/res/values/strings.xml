@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">MoarRam</string>
+    <string name="action_settings">Settings</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="enter_num">Enter a number</string>
+    <string name="add_32">Add 32 bytes</string>
+    <string name="free_32">Free 32 bytes</string>
+    <string name="add_2m">Add 2M bytes</string>
+    <string name="free_2m">Free 2M bytes</string>
+    <string name="add_variable">Add 17 or 71 bytes</string>
+    <string name="free_variable">Free 17 or 71 bytes</string>
+    <string name="_17byte">17 bytes</string>
+    <string name="_71byte">71 bytes</string>
+</resources>
