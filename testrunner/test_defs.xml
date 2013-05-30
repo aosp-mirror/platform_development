@@ -85,10 +85,9 @@ See test_defs.xsd for more information.
     coverage_target="framework"
     continuous="true" />
 
-<test name="frameworks-support-v4"
-    build_path="frameworks/support/v4/tests"
-    package="android.support.v4.content.tests"
-    coverage_target="android-support-v4"
+<test name="frameworks-support"
+    build_path="frameworks/support/tests"
+    package="android.support.tests"
     continuous="true" />
 
 <test name="core"
