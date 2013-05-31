@@ -50,6 +50,7 @@
 	<classpathentry kind="src" path="frameworks/base/location/java"/>
 	<classpathentry kind="src" path="frameworks/base/location/lib/java"/>
 	<classpathentry kind="src" path="frameworks/base/media/java"/>
+	<classpathentry kind="src" path="frameworks/base/media/tests/MediaFrameworkTest/src"/>
 	<classpathentry kind="src" path="frameworks/base/media/mca/effect/java"/>
 	<classpathentry kind="src" path="frameworks/base/media/mca/filterfw/java"/>
 	<classpathentry kind="src" path="frameworks/base/media/mca/filterpacks/java"/>
