@@ -187,6 +187,13 @@ See test_defs.xsd for more information.
     runner=".MediaFrameworkUnitTestRunner"
     coverage_target="framework" />
 
+<test-native name="camera-client-native"
+    build_path="frameworks/av/camera/tests/"
+    description="Camera client native tests." />
+
+<test-native name="camera-hal2-native"
+    build_path="hardware/libhardware/tests/camera2"
+    description="Camera hal2 native tests." />
 <!--  end of media framework tests -->
 
 <!--  targeted framework tests -->
