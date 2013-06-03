@@ -187,6 +187,12 @@ See test_defs.xsd for more information.
     runner=".MediaFrameworkUnitTestRunner"
     coverage_target="framework" />
 
+<test name="mediaintegrationtest"
+    build_path="frameworks/base/media/tests/MediaFrameworkTest"
+    package="com.android.mediaframeworktest"
+    runner=".MediaFrameworkIntegrationTestRunner"
+    coverage_target="framework" />
+
 <test-native name="camera-client-native"
     build_path="frameworks/av/camera/tests/"
     description="Camera client native tests." />
