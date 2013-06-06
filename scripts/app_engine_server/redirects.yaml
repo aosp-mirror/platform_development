@@ -424,6 +424,23 @@ redirects:
   dst: /training/articles/perf-jni.html
   type: permanent
 
+# move ui docs to design
+
+- src: /guide/practices/ui_guidelines/index.html
+  dst: /design/index.html
+  type: permanent
+
+- src: /guide/practices/ui_guidelines/icon_design.*
+  dst: /design/style/iconography.html
+  type: permanent
+
+- src: /guide/practices/ui_guidelines/activity_task_design.html
+  dst: /design/patterns/app-structure.html
+  type: permanent
+
+- src: /guide/practices/ui_guidelines/menu_design.html
+  dst: /design/patterns/actionbar.html
+  type: permanent
 
 
 # new one
