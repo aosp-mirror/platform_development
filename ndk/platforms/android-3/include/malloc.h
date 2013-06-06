@@ -33,7 +33,7 @@ extern void*  realloc(void *, size_t);
 extern void   free(void *);
 
 extern void*  memalign(size_t  alignment, size_t  bytesize);
-extern size_t malloc_usable_size(void*);
+extern size_t malloc_usable_size(const void*);
 
 extern void*  valloc(size_t  bytesize);
 extern void*  pvalloc(size_t bytesize);
