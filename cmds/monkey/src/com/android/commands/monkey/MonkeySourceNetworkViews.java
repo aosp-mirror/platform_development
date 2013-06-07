@@ -139,7 +139,8 @@ public class MonkeySourceNetworkViews {
         int viewId = Integer.parseInt(viewString);
         int connectionId = sUiTestAutomationBridge.getConnectionId();
         AccessibilityInteractionClient client = AccessibilityInteractionClient.getInstance();
-        return client.findAccessibilityNodeInfoByAccessibilityId(connectionId, windowId, viewId, 0);
+        return client.findAccessibilityNodeInfoByAccessibilityId(connectionId, windowId, viewId,
+                false, 0);
     }
 
     private static AccessibilityNodeInfo getNodeByViewId(String viewId) throws MonkeyViewException {
