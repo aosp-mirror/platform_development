@@ -128,6 +128,7 @@
 	<classpathentry kind="src" path="external/bouncycastle/bcprov/src/main/java"/>
 	<classpathentry kind="src" path="external/guava/guava/src"/>
 	<classpathentry kind="src" path="external/libphonenumber/java/src"/>
+	<classpathentry kind="src" path="external/mockito/src"/>
 	<classpathentry kind="src" path="external/mp4parser/isoparser/src/main/java"/>
 	<classpathentry kind="src" path="external/nist-sip/java"/>
 	<classpathentry kind="src" path="external/tagsoup/src"/>
