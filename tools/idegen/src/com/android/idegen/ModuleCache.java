@@ -18,12 +18,10 @@ package com.android.idegen;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.Set;
 import java.util.logging.Logger;
 
 /**
@@ -37,7 +35,9 @@ public class ModuleCache {
 
     ModuleIndexes indexes;
 
-    HashMap<String, Module> modulesByName = Maps.newHashMap();
+    // Mapping of canonical module directory to module.  Use string instead of File since File
+    // does not provide equality based on canonical path.
+    HashMap<String, Module> modulesByPath = Maps.newHashMap();
 
     private ModuleCache() {
     }
@@ -51,57 +51,48 @@ public class ModuleCache {
         indexes.build();
     }
 
-    public Module getAndCache(String moduleName) throws IOException {
-        Preconditions.checkState(indexes != null, "You must call init() first.");
+    public Module getAndCacheByDir(File moduleDir) throws IOException {
+        Preconditions.checkNotNull(moduleDir);
 
-        Module module = modulesByName.get(moduleName);
-        if (module == null) {
-            String makeFile = indexes.getMakeFile(moduleName);
-            if (makeFile == null) {
-                logger.warning("Unable to find make file for module: " + moduleName);
-            } else {
-                module = new StandardModule(moduleName, makeFile);
+        if (moduleDir.exists()) {
+            Module module = getModule(moduleDir);
+            if (module == null) {
+                module = new Module(moduleDir);
+                // Must put module before building it.  Otherwise infinite loop.
+                putModule(moduleDir, module);
                 module.build();
-                modulesByName.put(moduleName, module);
             }
+            return module;
         }
-        return module;
+        return null;
     }
 
-    public void buildAndCacheAggregatedModule(String moduleName) throws IOException {
-        if (indexes.isPartOfAggregatedModule(moduleName)) {
-            Set<String> moduleNames = indexes.getAggregatedModules(moduleName);
-            Set<Module> modules = Sets.newHashSet();
-            for (String name : moduleNames) {
-                Module m = modulesByName.get(name);
-                if (m != null) {
-                    modules.add(m);
-                }
-            }
-            String aggregatedName = indexes.getAggregateName(moduleName);
-            AggregatedModule module = new AggregatedModule(aggregatedName, modules);
-            module.build();
-            modulesByName.put(aggregatedName, module);
+    public Module getAndCacheByName(String moduleName) throws IOException {
+        Preconditions.checkState(indexes != null, "You must call init() first.");
+        Preconditions.checkNotNull(moduleName);
+
+        String makeFile = indexes.getMakeFile(moduleName);
+        if (makeFile == null) {
+            logger.warning("Unable to find make file for module: " + moduleName);
+            return null;
         }
+        return getAndCacheByDir(new File(makeFile).getParentFile());
+    }
+
+    private void putModule(File moduleDir, Module module) throws IOException {
+        modulesByPath.put(moduleDir.getCanonicalPath(), module);
+    }
+
+    private Module getModule(File moduleDir) throws IOException {
+        return modulesByPath.get(moduleDir.getCanonicalPath());
     }
 
     public Iterable<Module> getModules() {
-        return modulesByName.values();
+        return modulesByPath.values();
     }
 
-    public String getMakeFile(String moduleName) {
-        return indexes.getMakeFile(moduleName);
-    }
-
-    public void put(StandardModule module) {
+    public void put(Module module) throws IOException {
         Preconditions.checkNotNull(module);
-        modulesByName.put(module.getName(), module);
-    }
-
-    public String getAggregateReplacementName(String moduleName) {
-        if (indexes.isPartOfAggregatedModule(moduleName)) {
-            return indexes.getAggregateName(moduleName);
-        }
-        return null;
+        putModule(module.getDir(), module);
     }
 }

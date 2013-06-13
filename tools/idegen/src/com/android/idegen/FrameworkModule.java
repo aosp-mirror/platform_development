@@ -16,33 +16,35 @@
 
 package com.android.idegen;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 import java.io.File;
+import java.io.IOException;
 
 /**
  * Special module used for framework to build one off resource directory.
  */
-public class FrameworkModule extends StandardModule {
+public class FrameworkModule extends Module {
 
     // Framework needs a special constant for it's intermediates because it does not follow
     // normal conventions.
     private static final String FRAMEWORK_INTERMEDIATES = "framework-res_intermediates";
 
-    public FrameworkModule(String moduleName, String makeFile) {
-        super(IntellijProject.FRAMEWORK_MODULE, makeFile, true);
+    public FrameworkModule(File moduleDir) throws IOException {
+        super(Preconditions.checkNotNull(moduleDir), false);
     }
 
     @Override
-    protected String buildIntermediates() {
+    protected String buildIntermediates() throws IOException {
         StringBuilder sb = new StringBuilder();
-        File intermediates = new File(repoRoot,
+        File intermediates = new File(DirectorySearch.getRepoRoot(),
                 REL_OUT_APP_DIR + File.separator +  FRAMEWORK_INTERMEDIATES);
         ImmutableList<File> intermediateSrcDirs = DirectorySearch.findSourceDirs(intermediates);
         sb.append("    <content url=\"file://").append(intermediates).append("\">\n");
         for (File src : intermediateSrcDirs) {
             sb.append("      <sourceFolder url=\"file://")
-                    .append(src.getAbsolutePath()).append("\" isTestSource=\"false\" />\n");
+                    .append(src.getCanonicalPath()).append("\" isTestSource=\"false\" />\n");
         }
         sb.append("    </content>\n");
         return sb.toString();

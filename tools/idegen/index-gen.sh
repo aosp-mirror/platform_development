@@ -38,8 +38,8 @@ if [ ! -e $root_dir/.repo ]; then
     exit 1
   fi
 fi
-tmp_file=tmp.txt
-dest_file=module-index.txt
+tmp_file=${root_dir}/tmp.txt
+dest_file=${root_dir}/module-index.txt
 
 echo "Generating index file $dest_file..."
 start=$(($(date +%s%N) / 1000000))
