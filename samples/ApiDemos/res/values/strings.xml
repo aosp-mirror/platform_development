@@ -1348,7 +1348,8 @@
     <string name="text_switcher_1_next_text">Next</string>
 
     <string name="date_widgets_example_dateDisplay_text"></string>
-    <string name="date_widgets_example_pickTime_text">change the time</string>
+    <string name="date_widgets_example_pickTime12_text">change the time (12 hour)</string>
+    <string name="date_widgets_example_pickTime24_text">change the time (24 hour)</string>
     <string name="date_widgets_example_pickDate_text">change the date</string>
 
     <string name="buttons_1_normal">Normal</string>
