@@ -1015,6 +1015,13 @@
         </receiver>
 <!-- END_INCLUDE(app_update_declaration) -->
 
+        <receiver android:name=".app.AppUpdateSspReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.PACKAGE_REPLACED" />
+                <data android:scheme="package" android:ssp="com.example.android.apis" />
+            </intent-filter>
+        </receiver>
+
         <!-- ************************************* -->
         <!--       PREFERENCE PACKAGE SAMPLES      -->
         <!-- ************************************* -->
