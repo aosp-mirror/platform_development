@@ -264,6 +264,7 @@ clock_getres
 clock_gettime
 clock_nanosleep
 clock_settime
+clone
 close
 closedir
 closelog
