@@ -71,8 +71,11 @@ typedef enum {
     WC_TYPE_MAX
 } wctype_t;
 
+#ifndef WCHAR_MAX
 #define  WCHAR_MAX   INT_MAX
 #define  WCHAR_MIN   INT_MIN
+#endif
+
 #define  WEOF        ((wint_t)(-1))
 
 extern wint_t            btowc(int);
