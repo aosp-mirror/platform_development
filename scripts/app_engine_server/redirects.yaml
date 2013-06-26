@@ -606,18 +606,18 @@ redirects:
   dst: http://www.youtube.com/user/androiddevelopers
   type: permanent
 
-- src: /playbadge
+- src: /playbadge/?$
   dst: http://developer.android.com/distribute/googleplay/promote/badges.html
   type: permanent
 
-- src: /deviceart
+- src: /deviceart/?$
   dst: http://developer.android.com/distribute/promote/device-art.html
   type: permanent
 
-- src: /edu
-  dst: /distribute/googleplay/edu/index.html
+- src: /edu/signup/?$
+  dst: https://services.google.com/fb/forms/playedu
   type: permanent
 
-- src: /edu/signup
-  dst: https://services.google.com/fb/forms/playedu
+- src: /edu/?$
+  dst: /distribute/googleplay/edu/index.html
   type: permanent
