@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright (C) 2013 The Android Open Source Project
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+    <LinearLayout android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_margin="20dp">
+
+        <TextView android:layout_width="match_parent"
+                  android:layout_height="wrap_content"
+                  android:layout_marginBottom="10dp"
+                  android:textSize="18sp"
+                  android:text="@string/sample_app_description"/>
+
+        <LinearLayout android:orientation="horizontal"
+                      android:layout_width="match_parent"
+                      android:layout_height="wrap_content"
+                      android:layout_marginBottom="15dp">
+            <CheckBox android:id="@+id/custom_app_limits"
+                      android:layout_width="wrap_content"
+                      android:layout_height="wrap_content"
+                      android:onClick="onCustomClicked"/>
+            <TextView android:layout_width="wrap_content"
+                      android:layout_height="wrap_content"
+                      android:textSize="18sp"
+                      android:text="@string/custom_description"
+                      android:onClick="onCustomClicked"
+                      android:layout_weight="1"/>
+        </LinearLayout>
+
+        <!-- Separator -->
+        <View android:layout_height="1dp"
+               android:background="@android:color/white"
+               android:layout_width="match_parent"
+               android:layout_margin="25dp"/>
+
+        <!-- Section to show app restriction settings under a restricted profile. -->
+        <TextView android:layout_width="wrap_content"
+                  android:layout_height="wrap_content"
+                  android:textSize="20sp"
+                  android:text="@string/current_app_limits_label"/>
+        <TextView android:layout_width="wrap_content"
+                  android:layout_height="wrap_content"
+                  android:textSize="18sp"
+                  android:layout_marginBottom="10dp"
+                  android:text="@string/current_app_limits_description"/>
+
+        <LinearLayout android:orientation="horizontal"
+                      android:layout_width="match_parent"
+                      android:layout_height="wrap_content"
+                      android:layout_marginLeft="20dp">
+            <TextView android:layout_width="210dp"
+                      android:layout_height="wrap_content"
+                      android:textSize="18sp"
+                      android:text="@string/boolean_entry_title"/>
+            <Space android:layout_height="1dp"
+                   android:layout_width="15dp"/>
+            <TextView android:id="@+id/boolean_entry_id"
+                      android:layout_width="wrap_content"
+                      android:layout_height="wrap_content"
+                      android:textSize="18sp"
+                      android:text="@string/boolean_entry_title"/>
+        </LinearLayout>
+
+        <LinearLayout android:orientation="horizontal"
+                      android:layout_width="match_parent"
+                      android:layout_height="wrap_content"
+                      android:layout_marginLeft="20dp">
+            <TextView android:layout_width="210dp"
+                      android:layout_height="wrap_content"
+                      android:textSize="18sp"
+                      android:text="@string/choice_entry_title"/>
+            <Space android:layout_height="1dp"
+                   android:layout_width="15dp"/>
+            <TextView android:id="@+id/choice_entry_id"
+                      android:layout_width="wrap_content"
+                      android:layout_height="wrap_content"
+                      android:textSize="18sp"
+                      android:text="@string/boolean_entry_title"/>
+        </LinearLayout>
+
+        <LinearLayout android:orientation="horizontal"
+                      android:layout_width="match_parent"
+                      android:layout_height="wrap_content"
+                      android:layout_marginLeft="20dp">
+            <TextView android:layout_width="210dp"
+                      android:layout_height="wrap_content"
+                      android:textSize="18sp"
+                      android:text="@string/multi_entry_title"/>
+            <Space android:layout_height="1dp"
+                   android:layout_width="15dp"/>
+            <TextView android:id="@+id/multi_entry_id"
+                      android:layout_width="wrap_content"
+                      android:layout_height="wrap_content"
+                      android:textSize="18sp"
+                      android:text="@string/multi_entry_title"/>
+        </LinearLayout>
+    </LinearLayout>
+</ScrollView>

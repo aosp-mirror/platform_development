@@ -14,12 +14,29 @@
      limitations under the License.
 -->
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
-    <string name="app_name">AppLimits Demo</string>
+    <string name="app_name">App Restrictions Demo</string>
     <string name="restrictions_activity_label">Custom app restrictions</string>
-    <string name="app_limits_main_label">App Limits</string>
-    <string name="custom_or_not_title">Test Custom Restrictions</string>
+    <string name="boolean_entry_title">Test boolean type</string>
     <string name="choice_entry_title">Test choice type</string>
     <string name="multi_entry_title">Test multi-select type</string>
+    <string name="custom_description">If checked, use a custom app restriction Activity.  Otherwise,
+        use standard restriction types.
+    </string>
+    <string name="sample_app_description">Note: This sample app requires the restricted profile
+        feature.\n\n
+        1. If this is the primary user, go to Settings &gt; Users.\n\n
+        2. Create a restricted profile, if one doesn\'t exist already.\n\n
+        3. Open the profile settings, locate the sample app, and tap the app restriction settings
+        icon. Configure app restrictions for the app.\n\n
+        4. In the lock screen, switch to the user\'s restricted profile, launch this sample app,
+        and see the configured app restrictions displayed.\n
+    </string>
+    <string name="settings_button_label">Go to Settings</string>
+    <string name="current_app_limits_label">Current app restriction settings:</string>
+    <string name="na">N/A</string>
+    <string name="current_app_limits_description">Your app can restrict its content based on these
+        settings, which can be configured through the primary user\'s Users Settings.
+    </string>
 
     <string-array name="multi_entry_entries">
         <item>Ice Cream</item>
