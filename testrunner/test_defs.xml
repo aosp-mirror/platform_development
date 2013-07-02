@@ -137,8 +137,12 @@ See test_defs.xsd for more information.
     description="Framework libutils unit tests." />
 
 <test-native name="libinput"
-    build_path="frameworks/base/services/input/tests"
+    build_path="frameworks/native/libs/input/tests"
     description="Framework libinput unit tests." />
+
+<test-native name="libinputservice"
+    build_path="frameworks/base/services/input/tests"
+    description="Framework libinputservice unit tests." />
 
 <test name="volley"
     build_path="frameworks/support/volley/tests"
