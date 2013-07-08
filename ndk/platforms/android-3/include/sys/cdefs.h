@@ -37,11 +37,36 @@
 #ifndef	_SYS_CDEFS_H_
 #define	_SYS_CDEFS_H_
 
-
-/* our implementation of wchar_t is only 8-bit - die die non-portable code */
+/* In previous NDK releases, wchar_t was defined as 'unsigned char'
+ * when targetting API level < 9 (i.e. Froyo or older).
+ *
+ * This is no longer the case, but you can define _WCHAR_IS_8BIT
+ * at compile time to restore the old behaviour.
+ *
+ * The reason for this redefine is purely historical. Until Android 2.3,
+ * i.e. API level 9, there was absolutely no official support for wchar_t
+ * in the C library, but compiling GCC and the GNU libstdc++ required a
+ * working <wchar.h>.
+ *
+ * To allow this while keeping the C library small, wchar_t was redefined
+ * explicitely as an 8-bit unsigned integer (which is perfectly allowed
+ * by the standard) and a very small set of wcs-xxx functions provided
+ * as wrappers around the corresponding str-xxx ones.
+ *
+ * Starting with API level 9, wchar_t is properly defined as a 32-bit
+ * type (as mandated by the compiler itself), and the lines below
+ * were removed (see $NDK/platforms/android-9/include/sys/cdefs.h).
+ *
+ * Note that this only affects C source compilation. For C++, wchar_t
+ * is a compiler keyboard that cannot be redefined and is always 32-bit.
+ *
+ * On the other hand, _WCHAR_IS_8BIT also affects the definition of
+ * WCHAR_MIN, WCHAR_MAX and WEOF (see <wchar.h> comments).
+ */
+#ifdef _WCHAR_IS_8BIT
 #undef  __WCHAR_TYPE__
 #define __WCHAR_TYPE__  unsigned char
-
+#endif
 
 /*
  * Macro to test if we're using a GNU C compiler of a specific vintage
