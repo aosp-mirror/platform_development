@@ -270,6 +270,17 @@ frameworks/support/v7/appcompat/res                                             
 frameworks/support/v7/appcompat/src/.readme                                                       extras/android/support/v7/appcompat/src/.readme
 ${OUT_DIR}/target/common/obj/PACKAGING/android-support-v7-appcompat_intermediates/android-support-v7-appcompat.jar    extras/android/support/v7/appcompat/libs/android-support-v7-appcompat.jar
 
+frameworks/support/v7/mediarouter/README.txt                                                       extras/android/support/v7/mediarouter/README.txt
+frameworks/support/v7/mediarouter/.project                                                         extras/android/support/v7/mediarouter/.project
+frameworks/support/v7/mediarouter/.classpath                                                       extras/android/support/v7/mediarouter/.classpath
+frameworks/support/v7/mediarouter/AndroidManifest.xml                                              extras/android/support/v7/mediarouter/AndroidManifest.xml
+frameworks/support/v7/mediarouter/project.properties                                               extras/android/support/v7/mediarouter/project.properties
+frameworks/support/v7/mediarouter/res                                                              extras/android/support/v7/mediarouter/res
+frameworks/support/v7/mediarouter/src/.readme                                                      extras/android/support/v7/mediarouter/src/.readme
+${OUT_DIR}/target/common/obj/PACKAGING/android-support-v7-mediarouter_intermediates/android-support-v7-mediarouter.jar    extras/android/support/v7/mediarouter/libs/android-support-v7-mediarouter.jar
+
+development/samples/Support7Demos                                                                 extras/android/support/samples/Support7Demos
+
 ##############################################################################
 # Tests Component
 ##############################################################################
