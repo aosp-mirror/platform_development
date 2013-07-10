@@ -6,7 +6,7 @@ Signature           = "$Windows NT$"
 Class               = AndroidUsbDeviceClass
 ClassGuid           = {3F966BD9-FA04-4ec5-991C-D326973B5128}
 Provider            = %ProviderName%
-DriverVer           = 08/27/2012,7.0.0000.00001
+DriverVer           = 07/09/2013,8.0.0000.00000
 CatalogFile.NTx86   = androidwinusb86.cat
 CatalogFile.NTamd64 = androidwinusba64.cat
 
@@ -38,8 +38,6 @@ HKR,,Icon,,-1
 
 ;Google Nexus 7
 %SingleBootLoaderInterface% = USB_Install, USB\VID_18D1&PID_4E40
-%SingleAdbInterface%        = USB_Install, USB\VID_18D1&PID_4E41
-%CompositeAdbInterface%     = USB_Install, USB\VID_18D1&PID_4E42
 %CompositeAdbInterface%     = USB_Install, USB\VID_18D1&PID_4E42&MI_01
 %CompositeAdbInterface%     = USB_Install, USB\VID_18D1&PID_4E44&MI_01
 
@@ -49,12 +47,8 @@ HKR,,Icon,,-1
 
 ;Google Nexus (generic)
 %SingleBootLoaderInterface% = USB_Install, USB\VID_18D1&PID_4EE0
-%SingleAdbInterface%        = USB_Install, USB\VID_18D1&PID_4EE1
-%CompositeAdbInterface%     = USB_Install, USB\VID_18D1&PID_4EE2
 %CompositeAdbInterface%     = USB_Install, USB\VID_18D1&PID_4EE2&MI_01
-%SingleAdbInterface%        = USB_Install, USB\VID_18D1&PID_4EE3
-%CompositeAdbInterface%     = USB_Install, USB\VID_18D1&PID_4EE4&MI_01
-%SingleAdbInterface%        = USB_Install, USB\VID_18D1&PID_4EE5
+%CompositeAdbInterface%     = USB_Install, USB\VID_18D1&PID_4EE4&MI_02
 %CompositeAdbInterface%     = USB_Install, USB\VID_18D1&PID_4EE6&MI_01
 
 
@@ -74,8 +68,6 @@ HKR,,Icon,,-1
 
 ;Google Nexus 7
 %SingleBootLoaderInterface% = USB_Install, USB\VID_18D1&PID_4E40
-%SingleAdbInterface%        = USB_Install, USB\VID_18D1&PID_4E41
-%CompositeAdbInterface%     = USB_Install, USB\VID_18D1&PID_4E42
 %CompositeAdbInterface%     = USB_Install, USB\VID_18D1&PID_4E42&MI_01
 %CompositeAdbInterface%     = USB_Install, USB\VID_18D1&PID_4E44&MI_01
 
@@ -85,12 +77,8 @@ HKR,,Icon,,-1
 
 ;Google Nexus (generic)
 %SingleBootLoaderInterface% = USB_Install, USB\VID_18D1&PID_4EE0
-%SingleAdbInterface%        = USB_Install, USB\VID_18D1&PID_4EE1
-%CompositeAdbInterface%     = USB_Install, USB\VID_18D1&PID_4EE2
 %CompositeAdbInterface%     = USB_Install, USB\VID_18D1&PID_4EE2&MI_01
-%SingleAdbInterface%        = USB_Install, USB\VID_18D1&PID_4EE3
-%CompositeAdbInterface%     = USB_Install, USB\VID_18D1&PID_4EE4&MI_01
-%SingleAdbInterface%        = USB_Install, USB\VID_18D1&PID_4EE5
+%CompositeAdbInterface%     = USB_Install, USB\VID_18D1&PID_4EE4&MI_02
 %CompositeAdbInterface%     = USB_Install, USB\VID_18D1&PID_4EE6&MI_01
 
 [USB_Install]
