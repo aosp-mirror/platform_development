@@ -29,8 +29,7 @@ import android.widget.Button;
  */
 public class LaunchActivityTest extends ActivityUnitTestCase<LaunchActivity> {
 
-    private LaunchActivity mLaunchActivity;
-    private Button mLaunchNextButton;
+    private Intent mLaunchIntent;
 
     public LaunchActivityTest() {
         super(LaunchActivity.class);
@@ -41,13 +40,8 @@ public class LaunchActivityTest extends ActivityUnitTestCase<LaunchActivity> {
     protected void setUp() throws Exception {
         super.setUp();
         //Create an intent to launch target Activity
-        final Intent intent = new Intent(getInstrumentation().getTargetContext(),
+        mLaunchIntent = new Intent(getInstrumentation().getTargetContext(),
                 LaunchActivity.class);
-
-        //Start the activity under test in isolation, without values for savedInstanceState and
-        //lastNonConfigurationInstance
-        mLaunchActivity = startActivity(intent, null, null);
-        mLaunchNextButton = (Button) mLaunchActivity.findViewById(R.id.launch_next_activity_button);
     }
 
     /**
@@ -55,29 +49,41 @@ public class LaunchActivityTest extends ActivityUnitTestCase<LaunchActivity> {
      */
     @MediumTest
     public void testPreconditions() {
-        assertNotNull("mLaunchActivity is null", mLaunchActivity);
-        assertNotNull("mLaunchNextButton is null", mLaunchNextButton);
+        //Start the activity under test in isolation, without values for savedInstanceState and
+        //lastNonConfigurationInstance
+        startActivity(mLaunchIntent, null, null);
+        final Button launchNextButton = (Button) getActivity().findViewById(R.id.launch_next_activity_button);
+
+        assertNotNull("mLaunchActivity is null", getActivity());
+        assertNotNull("mLaunchNextButton is null", launchNextButton);
     }
 
 
     @MediumTest
     public void testLaunchNextActivityButton_labelText() {
-        final String expectedButtonText = mLaunchActivity.getString(R.string.label_launch_next);
+        startActivity(mLaunchIntent, null, null);
+        final Button launchNextButton = (Button) getActivity().findViewById(R.id.launch_next_activity_button);
+
+        final String expectedButtonText = getActivity().getString(R.string.label_launch_next);
         assertEquals("Unexpected button label text", expectedButtonText,
-                mLaunchNextButton.getText());
+                launchNextButton.getText());
     }
 
     @MediumTest
     public void testNextActivityWasLaunchedWithIntent() {
-
+        startActivity(mLaunchIntent, null, null);
+        final Button launchNextButton = (Button) getActivity().findViewById(R.id.launch_next_activity_button);
         //Because this is an isolated ActivityUnitTestCase we have to directly click the
         //button from code
-        mLaunchNextButton.performClick();
+        launchNextButton.performClick();
 
         // Get the intent for the next started activity
         final Intent launchIntent = getStartedActivityIntent();
         //Verify the intent was not null.
         assertNotNull("Intent was null", launchIntent);
+        //Verify that LaunchActivity was finished after button click
+        assertTrue(isFinishCalled());
+
 
         final String payload = launchIntent.getStringExtra(NextActivity.EXTRAS_PAYLOAD_KEY);
         //Verify that payload data was added to the intent
