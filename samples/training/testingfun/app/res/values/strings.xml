@@ -1,0 +1,34 @@
+<!--
+  Copyright (C) 2013 The Android Open Source Project
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+  -->
+<resources>
+    <string name="app_name">Android Testing Fun</string>
+
+    <string name="my_first_test">My First Test</string>
+
+    <string name="click_fun">Click Fun Test</string>
+    <string name="label_click_me">Click me</string>
+
+    <string name="launch_next">Launch Activity</string>
+    <string name="next_activity">Next Activity</string>
+
+    <string name="sender_activity">Sender Activity</string>
+    <string name="receiver_activity">Receiver Activity</string>
+
+    <string name="info_text">Button clicked!</string>
+    <string name="label_launch_next">Launch Next</string>
+    <string name="label_send_message">Send</string>
+    <string name="message_input_hint_edit_text">Enter a message</string>
+</resources>
