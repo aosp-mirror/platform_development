@@ -48,6 +48,25 @@ def GetTop():
   return root_path
 
 
+def GetHostOutDir():
+  """Returns the full pathname of out/host/arch of the Android development tree.
+
+  Assumes build environment has been properly configured by envsetup &
+  lunch/choosecombo.
+
+  Returns:
+    the absolute file path of the Android host output directory.
+  Raises:
+    AbortError: if Android host output directory could not be found.
+  """
+  host_out_path = os.getenv("ANDROID_HOST_OUT")
+  if host_out_path is None:
+    logger.Log("Error: ANDROID_HOST_OUT not defined. Please run "
+               "envsetup.sh and lunch/choosecombo")
+    raise errors.AbortError
+  return host_out_path
+
+
 def GetHostOsArch():
   """Identify the host os and arch.
 
@@ -72,10 +91,25 @@ def GetHostOsArch():
   return (host_os, host_arch, "%s-%s" % (host_os, host_arch))
 
 
+def GetOutDir():
+  """Returns the full pathname of the "out" of the Android development tree.
+
+  Assumes build environment has been properly configured by envsetup &
+  lunch/choosecombo.
+
+  Returns:
+    the absolute file path of the Android build output directory.
+  """
+  root_path = os.getenv("OUT_DIR")
+  if root_path is None:
+    root_path = os.path.join(GetTop(), "out")
+  return root_path
+
+
 def GetHostBin():
   """Compute the full pathname to the host binary directory.
 
-  Typically $ANDROID_BUILD_TOP/out/host/linux-x86/bin.
+  Typically $ANDROID_HOST_OUT/bin.
 
   Assumes build environment has been properly configured by envsetup &
   lunch/choosecombo.
@@ -86,8 +120,7 @@ def GetHostBin():
   Raises:
     AbortError: if Android host binary directory could not be found.
   """
-  (_, _, os_arch) = GetHostOsArch()
-  path = os.path.join(GetTop(), "out", "host", os_arch, "bin")
+  path = os.path.join(GetHostOutDir(), "bin")
   if not os.path.exists(path):
     logger.Log("Error: Host bin path could not be found %s" % path)
     raise errors.AbortError
@@ -139,7 +172,7 @@ def GetTargetSystemBin():
 def GetHostLibraryPath():
   """Returns the full pathname to the host java library output directory.
 
-  Typically $ANDROID_BUILD_TOP/out/host/<host_os>/framework.
+  Typically $ANDROID_HOST_OUT/framework.
 
   Assumes build environment has been properly configured by envsetup &
   lunch/choosecombo.
@@ -150,8 +183,7 @@ def GetHostLibraryPath():
   Raises:
     AbortError: if Android host java library directory could not be found.
   """
-  (_, _, os_arch) = GetHostOsArch()
-  path = os.path.join(GetTop(), "out", "host", os_arch, "framework")
+  path = os.path.join(GetHostOutDir(), "framework")
   if not os.path.exists(path):
     logger.Log("Error: Host library path could not be found %s" % path)
     raise errors.AbortError

@@ -78,13 +78,15 @@ class TestRunner(object):
   # regular expression to match install: statements in make output
   _RE_MAKE_INSTALL = re.compile(r'Install:\s(.+)')
 
-  # regular expression to find remote device path from a file path relative
-  # to build root
-  _RE_MAKE_INSTALL_PATH = re.compile(r'out\/target\/product\/\w+\/(.+)$')
 
   def __init__(self):
     # disable logging of timestamp
     self._root_path = android_build.GetTop()
+    out_base_name = os.path.basename(android_build.GetOutDir())
+    # regular expression to find remote device path from a file path relative
+    # to build root
+    pattern = r'' + out_base_name + r'\/target\/product\/\w+\/(.+)$'
+    self._re_make_install_path = re.compile(pattern)
     logger.SetTimestampLogging(False)
     self._adb = None
     self._known_tests = None
@@ -298,7 +300,7 @@ class TestRunner(object):
           self._PushInstallFileToDevice(install_path)
 
   def _PushInstallFileToDevice(self, install_path):
-    m = self._RE_MAKE_INSTALL_PATH.match(install_path)
+    m = self._re_make_install_path.match(install_path)
     if m:
       remote_path = m.group(1)
       remote_dir = os.path.dirname(remote_path)
