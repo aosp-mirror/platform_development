@@ -288,13 +288,14 @@ int WRAP(pthread_kill)(pthread_t thread, int portable_signum)
 int WRAP(pthread_sigmask)(int portable_how, const sigset_portable_t *portable_sigset,
                              sigset_portable_t *portable_oldset)
 {
+    extern int REAL(pthread_sigmask)(int how, const sigset_t *set, sigset_t *oset);
     int portable_ret, ret;
 
     ALOGV(" ");
     ALOGV("%s(portable_how:%d portable_sigset:%p, portable_oldset:%p)", __func__,
               portable_how,   portable_sigset,    portable_oldset);
 
-    ret = do_sigmask(portable_how, portable_sigset, portable_oldset, pthread_sigmask, NULL);
+    ret = do_sigmask(portable_how, portable_sigset, portable_oldset, REAL(pthread_sigmask), NULL);
 
     portable_ret = errno_ntop(ret);
 
