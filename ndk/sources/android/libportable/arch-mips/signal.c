@@ -745,6 +745,7 @@ do_signal_portable(int portable_signum, sighandler_portable_t portable_handler,
  */
 sighandler_portable_t WRAP(signal)(int portable_signum, sighandler_portable_t handler)
 {
+    extern __sighandler_t REAL(bsd_signal)(int, __sighandler_t);
     sighandler_portable_t rv;
 
     ALOGV(" ");
@@ -752,7 +753,7 @@ sighandler_portable_t WRAP(signal)(int portable_signum, sighandler_portable_t ha
               portable_signum,    handler);
 
     /* bsd does a SA_RESTART */
-    rv = do_signal_portable(portable_signum, handler, bsd_signal);
+    rv = do_signal_portable(portable_signum, handler, REAL(bsd_signal));
 
     ALOGV("%s: return(ret:%p); }", __func__, rv);
     return rv;
@@ -761,6 +762,7 @@ sighandler_portable_t WRAP(signal)(int portable_signum, sighandler_portable_t ha
 
 sighandler_portable_t WRAP(sysv_signal)(int portable_signum, sighandler_portable_t handler)
 {
+    extern __sighandler_t REAL(sysv_signal)(int, __sighandler_t);
     sighandler_portable_t rv;
 
     ALOGV(" ");
@@ -768,7 +770,7 @@ sighandler_portable_t WRAP(sysv_signal)(int portable_signum, sighandler_portable
               portable_signum,    handler);
 
     /* sysv does a SA_RESETHAND */
-    rv = do_signal_portable(portable_signum, handler, sysv_signal);
+    rv = do_signal_portable(portable_signum, handler, REAL(sysv_signal));
 
     ALOGV("%s: return(ret:%p); }", __func__, rv);
     return rv;
@@ -785,6 +787,7 @@ sighandler_portable_t WRAP(sysv_signal)(int portable_signum, sighandler_portable
 
 sighandler_portable_t WRAP(bsd_signal)(int portable_signum, sighandler_portable_t handler)
 {
+    extern __sighandler_t REAL(bsd_signal)(int, __sighandler_t);
     sighandler_portable_t rv;
 
     ALOGV(" ");
@@ -792,7 +795,7 @@ sighandler_portable_t WRAP(bsd_signal)(int portable_signum, sighandler_portable_
               portable_signum,    handler);
 
     /* bsd does a SA_RESTART */
-    rv = do_signal_portable(portable_signum, handler, bsd_signal);
+    rv = do_signal_portable(portable_signum, handler, REAL(bsd_signal));
 
     ALOGV("%s: return(ret:%p); }", __func__, rv);
     return rv;
