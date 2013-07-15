@@ -41,6 +41,7 @@ public class LaunchActivity extends Activity {
             @Override
             public void onClick(View v) {
                 startActivity(NextActivity.makeIntent(LaunchActivity.this, STRING_PAYLOAD));
+                finish();
             }
         });
     }
