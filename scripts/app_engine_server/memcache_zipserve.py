@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 #
 # Copyright 2009 Google Inc.
 #
@@ -525,6 +526,10 @@ class MemcachedZipHandler(webapp.RequestHandler):
     """
     resp_data = None
     file_itr = iter(self.zipfilenames)
+
+    # decode any escape characters in the URI
+    # Note: We are currenty just looking for '@' (%40)
+    file_path = file_path.replace('%40', '@')
 
     # check the index, if we have one, to see what archive the file is in
     archive_name = self.MapFileToArchive(file_path)
