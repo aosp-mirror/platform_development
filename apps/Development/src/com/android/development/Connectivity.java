@@ -117,6 +117,8 @@ public class Connectivity extends Activity {
     private long mTotalScanTime = 0;
     private long mTotalScanCount = 0;
 
+    private String mTdlsAddr = null;
+
     private WifiManager mWm;
     private PowerManager mPm;
     private ConnectivityManager mCm;
@@ -290,6 +292,9 @@ public class Connectivity extends Activity {
         mIntentFilter = new IntentFilter();
         mIntentFilter.addAction(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION);
 
+        findViewById(R.id.startTdls).setOnClickListener(mClickListener);
+        findViewById(R.id.stopTdls).setOnClickListener(mClickListener);
+
         findViewById(R.id.start_mms).setOnClickListener(mClickListener);
         findViewById(R.id.stop_mms).setOnClickListener(mClickListener);
         findViewById(R.id.start_hipri).setOnClickListener(mClickListener);
@@ -338,6 +343,12 @@ public class Connectivity extends Activity {
                     break;
                 case R.id.startScan:
                     onStartScanCycle();
+                    break;
+                case R.id.startTdls:
+                    onStartTdls();
+                    break;
+                case R.id.stopTdls:
+                    onStopTdls();
                     break;
                 case R.id.start_mms:
                     mCm.startUsingNetworkFeature(ConnectivityManager.TYPE_MOBILE,
@@ -485,6 +496,18 @@ public class Connectivity extends Activity {
             if (mScanDisconnect.isChecked())
                 mWm.reassociate();
         }
+    }
+
+    private void onStartTdls() {
+        mTdlsAddr = ((EditText)findViewById(R.id.sc_ip_mac)).getText().toString();
+        Log.d(TAG, "TDLS: START " + mTdlsAddr);
+        mWm.enableTdlsWithMacAddress(mTdlsAddr, true);
+    }
+
+    private void onStopTdls() {
+        if (mTdlsAddr == null) return;
+        Log.d(TAG, "TDLS: STOP " + mTdlsAddr);
+        mWm.enableTdlsWithMacAddress(mTdlsAddr, false);
     }
 
     private void onAddDefaultRoute() {
