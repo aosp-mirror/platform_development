@@ -501,13 +501,25 @@ public class Connectivity extends Activity {
     private void onStartTdls() {
         mTdlsAddr = ((EditText)findViewById(R.id.sc_ip_mac)).getText().toString();
         Log.d(TAG, "TDLS: START " + mTdlsAddr);
-        mWm.enableTdlsWithMacAddress(mTdlsAddr, true);
+        InetAddress inetAddress = null;
+        try {
+            inetAddress = InetAddress.getByName(mTdlsAddr);
+            mWm.enableTdls(inetAddress, true);
+        } catch (Exception e) {
+            mWm.enableTdlsWithMacAddress(mTdlsAddr, true);
+        }
     }
 
     private void onStopTdls() {
         if (mTdlsAddr == null) return;
         Log.d(TAG, "TDLS: STOP " + mTdlsAddr);
-        mWm.enableTdlsWithMacAddress(mTdlsAddr, false);
+        InetAddress inetAddress = null;
+        try {
+            inetAddress = InetAddress.getByName(mTdlsAddr);
+            mWm.enableTdls(inetAddress, false);
+        } catch (Exception e) {
+            mWm.enableTdlsWithMacAddress(mTdlsAddr, false);
+        }
     }
 
     private void onAddDefaultRoute() {
