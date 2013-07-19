@@ -126,6 +126,7 @@
 	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/telephony-common_intermediates/src/src/java"/>
 	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/voip-common_intermediates/src/src/java"/>
 	<classpathentry kind="src" path="out/target/common/R"/>
+	<classpathentry kind="src" path="pdk/apps/TestingCamera2/src"/>
 	<classpathentry kind="src" path="external/apache-http/src"/>
 	<classpathentry kind="src" path="external/bouncycastle/bcprov/src/main/java"/>
 	<classpathentry kind="src" path="external/guava/guava/src"/>
