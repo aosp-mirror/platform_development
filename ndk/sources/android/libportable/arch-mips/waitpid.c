@@ -104,6 +104,11 @@ pid_t WRAP(wait3)(int *status, int options, struct rusage *rusage)
     return rv;
 }
 
+// FIXME: WORKAROUND after Android wait4 has been implemented
+pid_t REAL(wait4)(pid_t p, int *s, int o, struct rusage *r) {
+  extern pid_t  __wait4(pid_t, int *, int, struct rusage *);
+  return __wait4(p,s,o,r);
+}
 
 pid_t WRAP(wait4)(pid_t pid, int *status, int options, struct rusage *rusage)
 {
