@@ -41,13 +41,7 @@
 #include <malloc.h>
 
 #include <stddef.h>
-
-/* IMPORTANT: Any code that relies on wide character support is essentially
- *            non-portable and/or broken. the only reason this header exist
- *            is because I'm really a nice guy. However, I'm not nice enough
- *            to provide you with a real implementation. instead wchar_t == char
- *            and all wc functions are stubs to their "normal" equivalent...
- */
+#include <sys/_wchar_limits.h>
 
 __BEGIN_DECLS
 
@@ -70,11 +64,6 @@ typedef enum {
     WC_TYPE_XDIGIT,
     WC_TYPE_MAX
 } wctype_t;
-
-#ifndef WCHAR_MAX
-#define  WCHAR_MAX   INT_MAX
-#define  WCHAR_MIN   INT_MIN
-#endif
 
 #define  WEOF        ((wint_t)(-1))
 
