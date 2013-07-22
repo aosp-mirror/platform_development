@@ -24,16 +24,16 @@
     <application android:label="@string/app_name"
                  android:icon="@drawable/ic_launcher">
 
-        <activity android:name="CustomRestrictionsActivity"
-                  android:label="@string/restrictions_activity_label" />
         <activity android:name="MainActivity"
-                  android:icon="@drawable/ic_launcher"
                   android:label="@string/app_name" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity android:name="CustomRestrictionsActivity"
+                  android:label="@string/restrictions_activity_label" />
 
         <receiver android:name="GetRestrictionsReceiver">
             <intent-filter>
