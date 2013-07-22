@@ -234,11 +234,7 @@ typedef int64_t  intmax_t;
 
 /* Limits of wchar_t. */
 #ifdef __STDINT_LIMITS
-   /* Also possibly defined in <wchar.h> */
-#  ifndef WCHAR_MIN
-#    define WCHAR_MIN     INT32_MIN
-#    define WCHAR_MAX     INT32_MAX
-#  endif
+#include <sys/_wchar_limits.h>
 #endif
 
 /* Limits of wint_t. */
