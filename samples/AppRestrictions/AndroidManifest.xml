@@ -14,29 +14,31 @@
      limitations under the License.
 -->
 
-<manifest android:versionCode="1"
-        android:versionName="1"
-        xmlns:android="http://schemas.android.com/apk/res/android"
-        package="com.example.android.applimits">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          android:versionCode="1"
+          android:versionName="1"
+          package="com.example.android.apprestrictions">
+
+    <uses-sdk android:minSdkVersion="18" />
 
     <application android:label="@string/app_name"
-        android:requiredForAllUsers="true">
+                 android:icon="@drawable/ic_launcher">
 
         <activity android:name="CustomRestrictionsActivity"
-                android:exported="true"
-                android:label="@string/restrictions_activity_label">
+                  android:label="@string/restrictions_activity_label" />
+        <activity android:name="MainActivity"
+                  android:icon="@drawable/ic_launcher"
+                  android:label="@string/app_name" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
-        <receiver android:name="GetRestrictionsReceiver"
-                android:exported="true">
+        <receiver android:name="GetRestrictionsReceiver">
             <intent-filter>
                 <action android:name="android.intent.action.GET_RESTRICTION_ENTRIES" />
             </intent-filter>
         </receiver>
-
     </application>
 </manifest>
