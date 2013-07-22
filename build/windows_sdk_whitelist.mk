@@ -65,6 +65,7 @@ subdirs += \
 	libcore \
 	development/apps \
 	development/tools/mkstubs \
+	frameworks/compile/libbcc \
 	packages
 
 else
