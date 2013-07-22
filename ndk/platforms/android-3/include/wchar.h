@@ -40,6 +40,7 @@
 #include <malloc.h>
 
 #include <stddef.h>
+#include <sys/_wchar_limits.h>
 
 /* IMPORTANT: Any code that relies on wide character support is essentially
  *            non-portable and/or broken. the only reason this header exist
@@ -70,36 +71,10 @@ typedef enum {
     WC_TYPE_MAX
 } wctype_t;
 
-/* TECHNICAL NOTE: This is tricky!
- *
- * Due to the following inclusion chain:
- *   <wchar.h> -> <stdio.h> -> <sys/types.h> -> <stdint.h>
- *
- * WCHAR_MIN / WCHAR_MAX will already be defined to INT32_MIN / INT32_MAX
- * when reaching this line in the following cases:
- *    - Compiling C source code.
- *    - Compiling C++ source code AND having __STDC_LIMIT_MACROS defined.
- *
- * When _WCHAR_IS_8BIT is defined, it should emulate the old behaviour.
- * which was to (conditionally) set the values to 0 and 255, respectively.
- */
-#ifndef WCHAR_MAX
-# ifdef _WCHAR_IS_8BIT
-#   define WCHAR_MAX  255
-#   define WCHAR_MIN  0
-# else
-/* Same values as INT32_MIN/INT32_MAX, without including <stdint.h> */
-#   define WCHAR_MAX  (2147483647)
-#   define WCHAR_MIN  (-1-2147483647)
-# endif
-#endif
-
-/* Similarly, WEOF used to be defined as simply -1, which is
+/* WEOF used to be defined as simply -1, which is
  * invalid (the standard mandates that the expression must have wint_t
- * type). There is no difference in C, but there is one in C++!!
- *
- * Revert to the old broken behaviour is _WCHAR_IS_8BIT is defined.
- */
+ * type). Revert to the old broken behaviour is _WCHAR_IS_8BIT is defined.
+ * See http://b.android.com/57267 */
 #ifdef _WCHAR_IS_8BIT
 #define  WEOF        (-1)
 #else
