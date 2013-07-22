@@ -17,15 +17,15 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
         android:title="@string/restrictions_activity_label">
 
-    <CheckBoxPreference android:key="custom"
-        android:title="@string/custom_or_not_title" />
+    <CheckBoxPreference android:key="pref_boolean"
+        android:title="@string/boolean_entry_title" />
 
-    <ListPreference android:key="choice"
+    <ListPreference android:key="pref_choice"
         android:title="@string/choice_entry_title"
         android:entries="@array/choice_entry_entries"
         android:entryValues="@array/choice_entry_values" />
 
-    <MultiSelectListPreference android:key="multi"
+    <MultiSelectListPreference android:key="pref_multi"
         android:title="@string/multi_entry_title"
         android:entries="@array/multi_entry_entries"
         android:entryValues="@array/multi_entry_values" />

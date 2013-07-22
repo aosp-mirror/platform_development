@@ -179,6 +179,7 @@ development/samples/ActionBarCompat            samples/${PLATFORM_NAME}/ActionBa
 development/samples/AndroidBeamDemo            samples/${PLATFORM_NAME}/AndroidBeamDemo
 development/samples/ApiDemos                   samples/${PLATFORM_NAME}/ApiDemos
 development/samples/AppNavigation              samples/${PLATFORM_NAME}/AppNavigation
+development/samples/AppRestrictions            samples/${PLATFORM_NAME}/AppRestrictions
 development/samples/BackupRestore              samples/${PLATFORM_NAME}/BackupRestore
 development/samples/BasicGLSurfaceView         samples/${PLATFORM_NAME}/BasicGLSurfaceView
 development/samples/BluetoothChat              samples/${PLATFORM_NAME}/BluetoothChat
