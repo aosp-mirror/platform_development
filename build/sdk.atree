@@ -281,6 +281,7 @@ frameworks/support/v7/appcompat/project.properties                              
 frameworks/support/v7/appcompat/res                                                               extras/android/support/v7/appcompat/res
 frameworks/support/v7/appcompat/src/.readme                                                       extras/android/support/v7/appcompat/src/.readme
 ${OUT_DIR}/target/common/obj/PACKAGING/android-support-v7-appcompat_intermediates/android-support-v7-appcompat.jar    extras/android/support/v7/appcompat/libs/android-support-v7-appcompat.jar
+${OUT_DIR}/target/common/obj/PACKAGING/android-support-v4_intermediates/android-support-v4.jar                        extras/android/support/v7/appcompat/libs/android-support-v4.jar
 
 frameworks/support/v7/mediarouter/README.txt                                                       extras/android/support/v7/mediarouter/README.txt
 frameworks/support/v7/mediarouter/.project                                                         extras/android/support/v7/mediarouter/.project
