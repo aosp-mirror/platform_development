@@ -279,6 +279,11 @@ redirects:
   type: permanent
   comment: Open Accessory Protocol content has moved to source.android.com.
 
+- src: /tools/extras/support-library.html
+  dst: /tools/support-library/index.html
+  type: permanent
+  comment: moved Support Library doc to its own directory
+
 - src: /guide/topics/usb
   dst: /guide/topics/connectivity/usb
   type: permanent
