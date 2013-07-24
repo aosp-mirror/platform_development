@@ -180,61 +180,73 @@ frameworks/base/docs/docs-samples-redirect.html docs/samples/index.html
 #
 # the list here should match the list of samples that we generate docs for,
 # (see web_docs_sample_code_flags in frameworks/base/Android.mk)
-development/apps/GestureBuilder                samples/${PLATFORM_NAME}/GestureBuilder
+development/apps/GestureBuilder                samples/${PLATFORM_NAME}/legacy/GestureBuilder
 development/samples/samples_source.properties  samples/${PLATFORM_NAME}/source.properties
 #
 # PLEASE KEEP THE SAMPLES IN ALPHABETICAL ORDER.
 #
-development/samples/AccelerometerPlay          samples/${PLATFORM_NAME}/AccelerometerPlay
-development/samples/ActionBarCompat            samples/${PLATFORM_NAME}/ActionBarCompat
-development/samples/AndroidBeamDemo            samples/${PLATFORM_NAME}/AndroidBeamDemo
-development/samples/ApiDemos                   samples/${PLATFORM_NAME}/ApiDemos
-development/samples/AppNavigation              samples/${PLATFORM_NAME}/AppNavigation
-development/samples/AppRestrictions            samples/${PLATFORM_NAME}/AppRestrictions
-development/samples/BackupRestore              samples/${PLATFORM_NAME}/BackupRestore
-development/samples/BasicGLSurfaceView         samples/${PLATFORM_NAME}/BasicGLSurfaceView
-development/samples/BluetoothChat              samples/${PLATFORM_NAME}/BluetoothChat
-development/samples/BluetoothHDP               samples/${PLATFORM_NAME}/BluetoothHDP
-development/samples/BluetoothLeGatt            samples/${PLATFORM_NAME}/BluetoothLeGatt
-development/samples/ContactManager             samples/${PLATFORM_NAME}/ContactManager
-development/samples/CrossCompatibility         samples/${PLATFORM_NAME}/CrossCompatibility
-development/samples/CubeLiveWallpaper          samples/${PLATFORM_NAME}/CubeLiveWallpaper
-development/samples/HelloEffects               samples/${PLATFORM_NAME}/HelloEffects
-development/samples/Home                       samples/${PLATFORM_NAME}/Home
-development/samples/HoneycombGallery           samples/${PLATFORM_NAME}/HoneycombGallery
-development/samples/JetBoy                     samples/${PLATFORM_NAME}/JetBoy
-development/samples/KeyChainDemo               samples/${PLATFORM_NAME}/KeyChainDemo
-development/samples/LunarLander                samples/${PLATFORM_NAME}/LunarLander
-development/samples/MultiResolution            samples/${PLATFORM_NAME}/MultiResolution
-development/samples/NotePad                    samples/${PLATFORM_NAME}/NotePad
-development/samples/RandomMusicPlayer          samples/${PLATFORM_NAME}/RandomMusicPlayer
-development/samples/SpellChecker/SampleSpellCheckerService samples/${PLATFORM_NAME}/SpellChecker/SampleSpellCheckerService
-development/samples/SpellChecker/HelloSpellChecker         samples/${PLATFORM_NAME}/SpellChecker/HelloSpellChecker
-development/samples/SampleSyncAdapter          samples/${PLATFORM_NAME}/SampleSyncAdapter
-development/samples/SearchableDictionary       samples/${PLATFORM_NAME}/SearchableDictionary
-development/samples/SipDemo                    samples/${PLATFORM_NAME}/SipDemo
-development/samples/SkeletonApp                samples/${PLATFORM_NAME}/SkeletonApp
-development/samples/Snake                      samples/${PLATFORM_NAME}/Snake
-development/samples/SoftKeyboard               samples/${PLATFORM_NAME}/SoftKeyboard
-development/samples/Spinner                    samples/${PLATFORM_NAME}/Spinner
-development/samples/SpinnerTest                samples/${PLATFORM_NAME}/SpinnerTest
-development/samples/TicTacToeLib               samples/${PLATFORM_NAME}/TicTacToeLib
-development/samples/TicTacToeMain              samples/${PLATFORM_NAME}/TicTacToeMain
-development/samples/TtsEngine                  samples/${PLATFORM_NAME}/TtsEngine
-development/samples/ToyVpn                     samples/${PLATFORM_NAME}/ToyVpn
-development/samples/UiAutomator                samples/${PLATFORM_NAME}/UiAutomator
-development/samples/USB/MissileLauncher        samples/${PLATFORM_NAME}/USB/MissileLauncher
-development/samples/USB/AdbTest                samples/${PLATFORM_NAME}/USB/AdbTest
-development/samples/VoiceRecognitionService    samples/${PLATFORM_NAME}/VoiceRecognitionService
-development/samples/VoicemailProviderDemo      samples/${PLATFORM_NAME}/VoicemailProviderDemo
-development/samples/WeatherListWidget          samples/${PLATFORM_NAME}/WeatherListWidget
-development/apps/WidgetPreview                 samples/${PLATFORM_NAME}/WidgetPreview
-development/samples/WiFiDirectDemo             samples/${PLATFORM_NAME}/WiFiDirectDemo
-development/samples/WiFiDirectServiceDiscovery samples/${PLATFORM_NAME}/WiFiDirectServiceDiscovery
-development/samples/Wiktionary                 samples/${PLATFORM_NAME}/Wiktionary
-development/samples/WiktionarySimple           samples/${PLATFORM_NAME}/WiktionarySimple
-development/samples/XmlAdapters                samples/${PLATFORM_NAME}/XmlAdapters
-development/samples/RenderScript/HelloCompute  samples/${PLATFORM_NAME}/RenderScript/HelloCompute
+
+# New sample tree
+developers/samples/android/connectivity        samples/${PLATFORM_NAME}/connectivity
+developers/samples/android/content             samples/${PLATFORM_NAME}/content
+developers/samples/android/input               samples/${PLATFORM_NAME}/input
+developers/samples/android/legacy              samples/${PLATFORM_NAME}/legacy
+developers/samples/android/media               samples/${PLATFORM_NAME}/media
+developers/samples/android/security            samples/${PLATFORM_NAME}/security
+developers/samples/android/testing             samples/${PLATFORM_NAME}/testing
+developers/samples/android/ui                  samples/${PLATFORM_NAME}/ui
+
+# Old sample tree
+development/samples/AccelerometerPlay          samples/${PLATFORM_NAME}/legacy/AccelerometerPlay
+development/samples/ActionBarCompat            samples/${PLATFORM_NAME}/legacy/ActionBarCompat
+development/samples/AndroidBeamDemo            samples/${PLATFORM_NAME}/legacy/AndroidBeamDemo
+development/samples/ApiDemos                   samples/${PLATFORM_NAME}/legacy/ApiDemos
+development/samples/AppNavigation              samples/${PLATFORM_NAME}/legacy/AppNavigation
+development/samples/AppRestrictions            samples/${PLATFORM_NAME}/legacy/AppRestrictions
+development/samples/BackupRestore              samples/${PLATFORM_NAME}/legacy/BackupRestore
+development/samples/BasicGLSurfaceView         samples/${PLATFORM_NAME}/legacy/BasicGLSurfaceView
+development/samples/BluetoothChat              samples/${PLATFORM_NAME}/legacy/BluetoothChat
+development/samples/BluetoothHDP               samples/${PLATFORM_NAME}/legacy/BluetoothHDP
+development/samples/BluetoothLeGatt            samples/${PLATFORM_NAME}/legacy/BluetoothLeGatt
+development/samples/ContactManager             samples/${PLATFORM_NAME}/legacy/ContactManager
+development/samples/CrossCompatibility         samples/${PLATFORM_NAME}/legacy/CrossCompatibility
+development/samples/CubeLiveWallpaper          samples/${PLATFORM_NAME}/legacy/CubeLiveWallpaper
+development/samples/HelloEffects               samples/${PLATFORM_NAME}/legacy/HelloEffects
+development/samples/Home                       samples/${PLATFORM_NAME}/legacy/Home
+development/samples/HoneycombGallery           samples/${PLATFORM_NAME}/legacy/HoneycombGallery
+development/samples/JetBoy                     samples/${PLATFORM_NAME}/legacy/JetBoy
+development/samples/KeyChainDemo               samples/${PLATFORM_NAME}/legacy/KeyChainDemo
+development/samples/LunarLander                samples/${PLATFORM_NAME}/legacy/LunarLander
+development/samples/MultiResolution            samples/${PLATFORM_NAME}/legacy/MultiResolution
+development/samples/NotePad                    samples/${PLATFORM_NAME}/legacy/NotePad
+development/samples/RandomMusicPlayer          samples/${PLATFORM_NAME}/legacy/RandomMusicPlayer
+development/samples/SpellChecker/SampleSpellCheckerService samples/${PLATFORM_NAME}/legacy/SpellChecker/SampleSpellCheckerService
+development/samples/SpellChecker/HelloSpellChecker         samples/${PLATFORM_NAME}/legacy/SpellChecker/HelloSpellChecker
+development/samples/SampleSyncAdapter          samples/${PLATFORM_NAME}/legacy/SampleSyncAdapter
+development/samples/SearchableDictionary       samples/${PLATFORM_NAME}/legacy/SearchableDictionary
+development/samples/SipDemo                    samples/${PLATFORM_NAME}/legacy/SipDemo
+development/samples/SkeletonApp                samples/${PLATFORM_NAME}/legacy/SkeletonApp
+development/samples/Snake                      samples/${PLATFORM_NAME}/legacy/Snake
+development/samples/SoftKeyboard               samples/${PLATFORM_NAME}/legacy/SoftKeyboard
+development/samples/Spinner                    samples/${PLATFORM_NAME}/legacy/Spinner
+development/samples/SpinnerTest                samples/${PLATFORM_NAME}/legacy/SpinnerTest
+development/samples/TicTacToeLib               samples/${PLATFORM_NAME}/legacy/TicTacToeLib
+development/samples/TicTacToeMain              samples/${PLATFORM_NAME}/legacy/TicTacToeMain
+development/samples/TtsEngine                  samples/${PLATFORM_NAME}/legacy/TtsEngine
+development/samples/ToyVpn                     samples/${PLATFORM_NAME}/legacy/ToyVpn
+development/samples/UiAutomator                samples/${PLATFORM_NAME}/legacy/UiAutomator
+development/samples/USB/MissileLauncher        samples/${PLATFORM_NAME}/legacy/USB/MissileLauncher
+development/samples/USB/AdbTest                samples/${PLATFORM_NAME}/legacy/USB/AdbTest
+development/samples/VoiceRecognitionService    samples/${PLATFORM_NAME}/legacy/VoiceRecognitionService
+development/samples/VoicemailProviderDemo      samples/${PLATFORM_NAME}/legacy/VoicemailProviderDemo
+development/samples/WeatherListWidget          samples/${PLATFORM_NAME}/legacy/WeatherListWidget
+development/apps/WidgetPreview                 samples/${PLATFORM_NAME}/legacy/WidgetPreview
+development/samples/WiFiDirectDemo             samples/${PLATFORM_NAME}/legacy/WiFiDirectDemo
+development/samples/WiFiDirectServiceDiscovery samples/${PLATFORM_NAME}/legacy/WiFiDirectServiceDiscovery
+development/samples/Wiktionary                 samples/${PLATFORM_NAME}/legacy/Wiktionary
+development/samples/WiktionarySimple           samples/${PLATFORM_NAME}/legacy/WiktionarySimple
+development/samples/XmlAdapters                samples/${PLATFORM_NAME}/legacy/XmlAdapters
+development/samples/RenderScript/HelloCompute  samples/${PLATFORM_NAME}/legacy/RenderScript/HelloCompute
 
 # NOTICE files are copied by build/core/Makefile from sdk.git
 sdk/files/sdk_files_NOTICE.txt                 samples/${PLATFORM_NAME}/NOTICE.txt
