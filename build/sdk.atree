@@ -190,7 +190,6 @@ development/samples/samples_source.properties  samples/${PLATFORM_NAME}/source.p
 developers/samples/android/connectivity        samples/${PLATFORM_NAME}/connectivity
 developers/samples/android/content             samples/${PLATFORM_NAME}/content
 developers/samples/android/input               samples/${PLATFORM_NAME}/input
-developers/samples/android/legacy              samples/${PLATFORM_NAME}/legacy
 developers/samples/android/media               samples/${PLATFORM_NAME}/media
 developers/samples/android/security            samples/${PLATFORM_NAME}/security
 developers/samples/android/testing             samples/${PLATFORM_NAME}/testing
