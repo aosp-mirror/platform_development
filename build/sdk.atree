@@ -201,12 +201,10 @@ development/samples/ActionBarCompat            samples/${PLATFORM_NAME}/legacy/A
 development/samples/AndroidBeamDemo            samples/${PLATFORM_NAME}/legacy/AndroidBeamDemo
 development/samples/ApiDemos                   samples/${PLATFORM_NAME}/legacy/ApiDemos
 development/samples/AppNavigation              samples/${PLATFORM_NAME}/legacy/AppNavigation
-development/samples/AppRestrictions            samples/${PLATFORM_NAME}/legacy/AppRestrictions
 development/samples/BackupRestore              samples/${PLATFORM_NAME}/legacy/BackupRestore
 development/samples/BasicGLSurfaceView         samples/${PLATFORM_NAME}/legacy/BasicGLSurfaceView
 development/samples/BluetoothChat              samples/${PLATFORM_NAME}/legacy/BluetoothChat
 development/samples/BluetoothHDP               samples/${PLATFORM_NAME}/legacy/BluetoothHDP
-development/samples/BluetoothLeGatt            samples/${PLATFORM_NAME}/legacy/BluetoothLeGatt
 development/samples/ContactManager             samples/${PLATFORM_NAME}/legacy/ContactManager
 development/samples/CrossCompatibility         samples/${PLATFORM_NAME}/legacy/CrossCompatibility
 development/samples/CubeLiveWallpaper          samples/${PLATFORM_NAME}/legacy/CubeLiveWallpaper
