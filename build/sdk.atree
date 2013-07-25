@@ -73,11 +73,14 @@ development/sdk/build_tools_source.properties  build-tools/${PLATFORM_NAME}/sour
 # build tools from out/host/$(HOST_OS)-$(HOST_ARCH)/
 bin/aapt                                strip build-tools/${PLATFORM_NAME}/aapt
 bin/aidl                                strip build-tools/${PLATFORM_NAME}/aidl
+
 # renderscript (cc + headers)
 bin/llvm-rs-cc                          strip build-tools/${PLATFORM_NAME}/llvm-rs-cc
 frameworks/rs/scriptc                         build-tools/${PLATFORM_NAME}/renderscript/include
 external/clang/lib/Headers                    build-tools/${PLATFORM_NAME}/renderscript/clang-include
 external/clang/LICENSE.TXT                    build-tools/${PLATFORM_NAME}/renderscript/clang-include/LICENSE.TXT
+prebuilts/sdk/renderscript/lib                build-tools/${PLATFORM_NAME}/renderscript/lib
+
 # dx
 bin/dx                                        build-tools/${PLATFORM_NAME}/dx
 framework/dx.jar                              build-tools/${PLATFORM_NAME}/lib/dx.jar

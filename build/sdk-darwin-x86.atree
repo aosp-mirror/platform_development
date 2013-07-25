@@ -15,6 +15,19 @@
 #
 
 ##############################################################################
+# Build Tools Component
+##############################################################################
+# Note that the build-tools sub-folder uses the platform-name as a placeholder
+# at build-time. Packaging will later change that to the actual build-tools
+# revision as specified in the source.properties.
+
+
+lib/libLLVM.dylib                 build-tools/${PLATFORM_NAME}/libLLVM.dylib
+lib/libbcc.dylib                  build-tools/${PLATFORM_NAME}/libbcc.dylib
+lib/libbcinfo.dylib               build-tools/${PLATFORM_NAME}/libbcinfo.dylib
+lib/libclang.dylib                build-tools/${PLATFORM_NAME}/libclang.dylib
+
+##############################################################################
 # Docs Component
 ##############################################################################
 

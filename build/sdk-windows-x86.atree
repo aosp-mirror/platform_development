@@ -41,6 +41,9 @@ bin/AdbWinApi.dll                             platform-tools/AdbWinApi.dll
 ##############################################################################
 # Build Tools Component
 ##############################################################################
+# Note that the build-tools sub-folder uses the platform-name as a placeholder
+# at build-time. Packaging will later change that to the actual build-tools
+# revision as specified in the source.properties.
 
 rm build-tools/${PLATFORM_NAME}/aapt
 bin/aapt.exe                            strip build-tools/${PLATFORM_NAME}/aapt.exe
@@ -55,6 +58,12 @@ bin/dexdump.exe                         strip build-tools/${PLATFORM_NAME}/dexdu
 
 rm build-tools/${PLATFORM_NAME}/llvm-rs-cc
 bin/llvm-rs-cc.exe                      strip build-tools/${PLATFORM_NAME}/llvm-rs-cc.exe
+
+lib/libLLVM.dll                               build-tools/${PLATFORM_NAME}/libLLVM.dll
+lib/libclang.dll                              build-tools/${PLATFORM_NAME}/libclang.dll
+#bcc not yet compiled on windows
+#lib/libbcc.dll                                build-tools/${PLATFORM_NAME}/libbcc.dll
+#lib/libbcinfo.dll                             build-tools/${PLATFORM_NAME}/libbcinfo.dll
 
 
 
