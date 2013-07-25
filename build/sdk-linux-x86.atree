@@ -22,9 +22,9 @@
 # revision as specified in the source.properties.
 
 
-lib/libLLVM.so                 build-tools/${PLATFORM_NAME}/libLLVM.so
-lib/libbcc.so                  build-tools/${PLATFORM_NAME}/libbcc.so
-lib/libbcinfo.so               build-tools/${PLATFORM_NAME}/libbcinfo.so
-lib/libclang.so                build-tools/${PLATFORM_NAME}/libclang.so
+lib/libLLVM.so                 strip build-tools/${PLATFORM_NAME}/libLLVM.so
+lib/libbcc.so                  strip build-tools/${PLATFORM_NAME}/libbcc.so
+lib/libbcinfo.so               strip build-tools/${PLATFORM_NAME}/libbcinfo.so
+lib/libclang.so                strip build-tools/${PLATFORM_NAME}/libclang.so
 
 
