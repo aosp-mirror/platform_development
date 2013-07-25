@@ -59,10 +59,18 @@ bin/dexdump.exe                         strip build-tools/${PLATFORM_NAME}/dexdu
 rm build-tools/${PLATFORM_NAME}/llvm-rs-cc
 bin/llvm-rs-cc.exe                      strip build-tools/${PLATFORM_NAME}/llvm-rs-cc.exe
 
+rm build-tools/${PLATFORM_NAME}/libLLVM.so
 lib/libLLVM.dll                               build-tools/${PLATFORM_NAME}/libLLVM.dll
+
+rm build-tools/${PLATFORM_NAME}/libclang.so
 lib/libclang.dll                              build-tools/${PLATFORM_NAME}/libclang.dll
+
 #bcc not yet compiled on windows
+
+rm build-tools/${PLATFORM_NAME}/libbcc.so
 #lib/libbcc.dll                                build-tools/${PLATFORM_NAME}/libbcc.dll
+
+rm build-tools/${PLATFORM_NAME}/libbcinfo.so
 #lib/libbcinfo.dll                             build-tools/${PLATFORM_NAME}/libbcinfo.dll
 
 
