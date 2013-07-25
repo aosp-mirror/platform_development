@@ -14,4 +14,17 @@
 # limitations under the License.
 #
 
+##############################################################################
+# Build Tools Component
+##############################################################################
+# Note that the build-tools sub-folder uses the platform-name as a placeholder
+# at build-time. Packaging will later change that to the actual build-tools
+# revision as specified in the source.properties.
+
+
+lib/libLLVM.so                 build-tools/${PLATFORM_NAME}/libLLVM.so
+lib/libbcc.so                  build-tools/${PLATFORM_NAME}/libbcc.so
+lib/libbcinfo.so               build-tools/${PLATFORM_NAME}/libbcinfo.so
+lib/libclang.so                build-tools/${PLATFORM_NAME}/libclang.so
+
 
