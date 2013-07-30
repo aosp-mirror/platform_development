@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 The Android Open Source Project
+ * Copyright (C) 2012 The Android Open Source Project
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,24 +25,35 @@
  * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-/*
- * Contributed by: Intel Corporation
+
+extern void __cxa_finalize(void *);
+extern void *__dso_handle;
+
+__attribute__((visibility("hidden"),destructor))
+void __on_dlclose() {
+  __cxa_finalize(&__dso_handle);
+}
+
+/* CRT_LEGACY_WORKAROUND should only be defined when building
+ * this file as part of the platform's C library.
+ *
+ * The C library already defines a function named 'atexit()'
+ * for backwards compatibility with older NDK-generated binaries.
+ *
+ * For newer ones, 'atexit' is actually embedded in the C
+ * runtime objects that are linked into the final ELF
+ * binary (shared library or executable), and will call
+ * __cxa_atexit() in order to un-register any atexit()
+ * handler when a library is unloaded.
+ *
+ * This function must be global *and* hidden. Only the
+ * code inside the same ELF binary should be able to access it.
  */
 
-	.text
-	.p2align 4,,15
-	.globl	__stack_chk_fail_local
-	.hidden	__stack_chk_fail_local
-	.type	__stack_chk_fail_local, @function
-
-__stack_chk_fail_local:
-#ifdef __PIC__
-	pushl	%ebx
-	call	__x86.get_pc_thunk.bx
-	addl	$_GLOBAL_OFFSET_TABLE_, %ebx
-	call	__stack_chk_fail@PLT
-#else /* PIC */
-	jmp   __stack_chk_fail
-#endif /* not PIC */
-
-	.size	__stack_chk_fail_local, .-__stack_chk_fail_local
+#ifdef CRT_LEGACY_WORKAROUND
+#include "__dso_handle.h"
+#else
+#include "__dso_handle_so.h"
+#include "atexit.h"
+#include "__stack_chk_fail_local.h"
+#endif
