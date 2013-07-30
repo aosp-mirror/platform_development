@@ -68,11 +68,13 @@ lib/libclang.dll                        strip build-tools/${PLATFORM_NAME}/libcl
 #bcc not yet compiled on windows
 
 rm build-tools/${PLATFORM_NAME}/libbcc.so
-#lib/libbcc.dll                          strip build-tools/${PLATFORM_NAME}/libbcc.dll
+lib/libbcc.dll                          strip build-tools/${PLATFORM_NAME}/libbcc.dll
 
 rm build-tools/${PLATFORM_NAME}/libbcinfo.so
-#lib/libbcinfo.dll                       strip build-tools/${PLATFORM_NAME}/libbcinfo.dll
+lib/libbcinfo.dll                       strip build-tools/${PLATFORM_NAME}/libbcinfo.dll
 
+rm build-tools/${PLATFORM_NAME}/bcc_compat
+bin/bcc_compat.exe                      strip build-tools/${PLATFORM_NAME}/bcc_compat.exe
 
 
 ##############################################################################
