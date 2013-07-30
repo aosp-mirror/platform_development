@@ -1,0 +1,104 @@
+<!-- Copyright (C) 2013 The Android Open Source Project
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+          http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+-->
+
+<com.example.android.slidingfragments.FractionalLinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_marginLeft="@dimen/slide_fragment_horizontal_margin"
+    android:layout_marginRight="@dimen/slide_fragment_horizontal_margin"
+    android:orientation="vertical"
+    android:background="@color/white">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/bridge"
+        android:textColor="#000000"
+        android:textStyle="bold"
+        android:textSize="26sp"
+        android:layout_marginBottom="@dimen/text_vertical_margin"
+        android:layout_marginLeft="@dimen/text_horizontal_margin"
+        android:layout_marginRight="@dimen/text_horizontal_margin" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/summary"
+        android:textSize="18sp"
+        android:textColor="#000000"
+        android:layout_marginBottom="@dimen/text_vertical_margin"
+        android:layout_marginLeft="@dimen/text_horizontal_margin"
+        android:layout_marginRight="@dimen/text_horizontal_margin" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/length"
+        android:textColor="#000000"
+        android:layout_marginLeft="@dimen/text_horizontal_margin"
+        android:layout_marginRight="@dimen/text_horizontal_margin" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/span"
+        android:textColor="#000000"
+        android:layout_marginLeft="@dimen/text_horizontal_margin"
+        android:layout_marginRight="@dimen/text_horizontal_margin" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/construction"
+        android:textColor="#000000"
+        android:layout_marginLeft="@dimen/text_horizontal_margin"
+        android:layout_marginRight="@dimen/text_horizontal_margin" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/height"
+        android:textColor="#000000"
+        android:layout_marginLeft="@dimen/text_horizontal_margin"
+        android:layout_marginRight="@dimen/text_horizontal_margin" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/elevation"
+        android:textColor="#000000"
+        android:layout_marginLeft="@dimen/text_horizontal_margin"
+        android:layout_marginRight="@dimen/text_horizontal_margin" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/address"
+        android:textColor="#000000"
+        android:layout_marginLeft="@dimen/text_horizontal_margin"
+        android:layout_marginRight="@dimen/text_horizontal_margin" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/photo_credits"
+        android:textColor="#000000"
+        android:textSize="10sp"
+        android:layout_marginTop="@dimen/text_vertical_margin"
+        android:layout_marginLeft="@dimen/text_horizontal_margin"
+        android:layout_marginRight="@dimen/text_horizontal_margin" />
+
+</com.example.android.slidingfragments.FractionalLinearLayout>
