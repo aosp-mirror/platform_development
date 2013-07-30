@@ -1,0 +1,23 @@
+<!-- Copyright (C) 2013 The Android Open Source Project
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+          http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+-->
+
+<resources>
+
+    <string name="app_name">ExpandingCells</string>
+    <string name="short_lorem_ipsum">Lorem ipsum dolor sit amet, consectetur adipiscing elit</string>
+    <string name="medium_lorem_ipsum">"Pellentesque dictum sit amet sapien in faucibus. Curabitur fermentum, nulla quis placerat imperdiet, est nisi placerat arcu, non ornare erat justo at enim. Nam vitae porttitor sem. Quisque non quam nisi. Proin quis urna id elit ultrices cursus non tempus dolor"</string>
+    <string name="long_lorem_ipsum">"Mauris dapibus convallis massa, vitae ultrices est ultricies ut. Nam porttitor et metus ac bibendum. Nam at justo vitae felis lacinia ultrices laoreet ut arcu. Nam ac purus et turpis convallis mollis. Integer lorem eros, hendrerit imperdiet interdum vitae, sagittis eget ipsum. Donec dignissim tortor at felis fringilla, sed dignissim diam vulputate. Nam sit amet facilisis massa. Suspendisse posuere quam quis augue dapibus venenatis."</string>
+
+</resources>
