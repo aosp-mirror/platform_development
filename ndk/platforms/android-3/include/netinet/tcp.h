@@ -31,4 +31,22 @@
 #include <endian.h>		/* Include *before* linux/tcp.h */
 #include <linux/tcp.h>
 
+__BEGIN_DECLS
+
+enum {
+  TCP_ESTABLISHED = 1,
+  TCP_SYN_SENT,
+  TCP_SYN_RECV,
+  TCP_FIN_WAIT1,
+  TCP_FIN_WAIT2,
+  TCP_TIME_WAIT,
+  TCP_CLOSE,
+  TCP_CLOSE_WAIT,
+  TCP_LAST_ACK,
+  TCP_LISTEN,
+  TCP_CLOSING
+};
+
+__END_DECLS
+
 #endif /* _NETINET_TCP_H */
