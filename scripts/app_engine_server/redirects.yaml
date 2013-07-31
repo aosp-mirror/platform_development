@@ -562,6 +562,10 @@ redirects:
 
 # ------------------- TRAINING -------------------
 
+- src: /guide/topics/ui/layout/tabs.html
+  dst: /training/implementing-navigation/lateral.html
+  type: permanent
+
 - src: /training/cloudsync/aesync.html
   dst: /google/gcm/index.html
   type: permanent
