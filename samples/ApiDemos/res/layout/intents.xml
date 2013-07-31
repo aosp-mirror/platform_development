@@ -17,7 +17,8 @@
 <!-- Demonstrates launching various intents.
      See corresponding Java code com.example.android.apis.app.Intents.java. -->
 
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:orientation="vertical" android:padding="4dip"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:padding="4dip"
     android:gravity="center_horizontal"
     android:layout_width="match_parent" android:layout_height="match_parent">
 
@@ -29,8 +30,21 @@
 
     <Button android:id="@+id/get_music"
         android:layout_width="wrap_content" android:layout_height="wrap_content" 
-        android:text="@string/get_music">
+        android:text="@string/get_music"
+        android:onClick="onGetMusic">
         <requestFocus />
+    </Button>
+
+    <Button android:id="@+id/get_image"
+        android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:text="@string/get_image"
+        android:onClick="onGetImage">
+    </Button>
+
+    <Button android:id="@+id/get_stream"
+        android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:text="@string/get_stream"
+        android:onClick="onGetStream">
     </Button>
 
 </LinearLayout>

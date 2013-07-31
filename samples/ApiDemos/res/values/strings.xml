@@ -467,6 +467,8 @@
     <string name="activity_intents">App/Activity/Intents</string>
     <string name="intents">Example of launching various Intents.</string>
     <string name="get_music">Get Music</string>
+    <string name="get_image">Get Image</string>
+    <string name="get_stream">Get Stream</string>
 
     <!-- ============================== -->
     <!--  app/intents activity flags examples strings     -->
