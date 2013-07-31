@@ -77,11 +77,17 @@ redirects:
   type: permanent
   comment: Redirect sdk reference to new location
 
-# new one works
 - src: /sdk/compatibility-library.html
-  dst: /tools/extras/support-library.html
+  dst: /tools/support-library/index.html
   type: permanent
-  comment: Redirect sdk reference to new location
+
+- src: /tools/extras/support-library.html
+  dst: /tools/support-library/index.html
+  type: permanent
+
+- src: /training/basics/fragments/support-lib.html
+  dst: /tools/support-library/setup.html
+  type: permanent
 
 # new one works
 - src: /sdk/eclipse-adt.html
@@ -278,11 +284,6 @@ redirects:
   dst: http://source.android.com/tech/accessories/aoap/aoa2.html
   type: permanent
   comment: Open Accessory Protocol content has moved to source.android.com.
-
-- src: /tools/extras/support-library.html
-  dst: /tools/support-library/index.html
-  type: permanent
-  comment: moved Support Library doc to its own directory
 
 - src: /guide/topics/usb
   dst: /guide/topics/connectivity/usb
