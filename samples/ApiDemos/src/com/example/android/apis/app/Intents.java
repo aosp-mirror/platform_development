@@ -31,17 +31,23 @@ public class Intents extends Activity {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.intents);
-
-        // Watch for button clicks.
-        Button button = (Button)findViewById(R.id.get_music);
-        button.setOnClickListener(mGetMusicListener);
     }
 
-    private OnClickListener mGetMusicListener = new OnClickListener() {
-        public void onClick(View v) {
-            Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-            intent.setType("audio/*");
-            startActivity(Intent.createChooser(intent, "Select music"));
-        }
-    };
+    public void onGetMusic(View view) {
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+        intent.setType("audio/*");
+        startActivity(Intent.createChooser(intent, "Select music"));
+    }
+
+    public void onGetImage(View view) {
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+        intent.setType("image/*");
+        startActivity(Intent.createChooser(intent, "Select image"));
+    }
+
+    public void onGetStream(View view) {
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+        intent.setType("*/*");
+        startActivity(Intent.createChooser(intent, "Select stream"));
+    }
 }
