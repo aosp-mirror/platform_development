@@ -53,6 +53,7 @@ subdirs += \
 	system/core/liblog \
 	system/core/libsparse \
 	system/core/libzipfile \
+	system/core/libs/utils \
 	system/extras/ext4_utils
 
 # -----
