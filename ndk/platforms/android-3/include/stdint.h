@@ -191,8 +191,13 @@ typedef uint64_t      uint_fast64_t;
  * intptr_t & uintptr_t
  */
 
+#ifdef __LP64__
+typedef long          intptr_t;
+typedef unsigned long uintptr_t;
+#else
 typedef int           intptr_t;
 typedef unsigned int  uintptr_t;
+#endif
 
 #ifdef __STDINT_LIMITS
 #  define INTPTR_MIN    INT32_MIN
