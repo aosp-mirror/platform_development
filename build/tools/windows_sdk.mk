@@ -48,6 +48,7 @@ WIN_TARGETS := \
 # build prerequisites.
 WIN_BUILD_PREREQ := \
 	acp \
+	bcc_compat \
 	llvm-rs-cc \
 	$(WIN_SDK_BUILD_PREREQ)
 
