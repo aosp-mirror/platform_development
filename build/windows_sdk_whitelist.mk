@@ -47,6 +47,7 @@ subdirs += \
 	frameworks/base \
 	frameworks/compile \
 	frameworks/native \
+	frameworks/rs \
 	system/core/adb \
 	system/core/fastboot \
 	system/core/libcutils \
