@@ -30,6 +30,7 @@ PRODUCT_PACKAGES += \
 	aapt \
 	adb \
 	aidl \
+	bcc_compat \
 	bios.bin \
 	commons-compress-1.0 \
 	dexdump \
