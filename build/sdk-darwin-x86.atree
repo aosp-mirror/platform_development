@@ -22,10 +22,14 @@
 # revision as specified in the source.properties.
 
 
-lib/libLLVM.dylib            strip build-tools/${PLATFORM_NAME}/libLLVM.dylib
-lib/libbcc.dylib             strip build-tools/${PLATFORM_NAME}/libbcc.dylib
-lib/libbcinfo.dylib          strip build-tools/${PLATFORM_NAME}/libbcinfo.dylib
-lib/libclang.dylib           strip build-tools/${PLATFORM_NAME}/libclang.dylib
+lib/libLLVM.dylib                                     strip build-tools/${PLATFORM_NAME}/libLLVM.dylib
+lib/libbcc.dylib                                      strip build-tools/${PLATFORM_NAME}/libbcc.dylib
+lib/libbcinfo.dylib                                   strip build-tools/${PLATFORM_NAME}/libbcinfo.dylib
+lib/libclang.dylib                                    strip build-tools/${PLATFORM_NAME}/libclang.dylib
+
+prebuilts/sdk/tools/darwin/arm-linux-androideabi-ld   strip build-tools/${PLATFORM_NAME}/arm-linux-androideabi-ld
+prebuilts/sdk/tools/darwin/i686-linux-android-ld      strip build-tools/${PLATFORM_NAME}/i686-linux-android-ld
+prebuilts/sdk/tools/darwin/mipsel-linux-android-ld    strip build-tools/${PLATFORM_NAME}/mipsel-linux-android-ld
 
 ##############################################################################
 # Docs Component
