@@ -213,7 +213,11 @@ development/samples/samples_source.properties  samples/${PLATFORM_NAME}/source.p
 #
 
 # New sample tree
+# Note: Some samples reference a shared "common" directory. In the future
+# this will be copied in automatically via a templating system. For now,
+# we need to copy it in here as needed.
 developers/samples/android/connectivity        samples/${PLATFORM_NAME}/connectivity
+developers/samples/android/common              samples/${PLATFORM_NAME}/connectivity/sync/BasicSyncAdapter/BasicSyncAdapter/src/main/java/com/example/android/common
 developers/samples/android/content             samples/${PLATFORM_NAME}/content
 developers/samples/android/input               samples/${PLATFORM_NAME}/input
 developers/samples/android/media               samples/${PLATFORM_NAME}/media
