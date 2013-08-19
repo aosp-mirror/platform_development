@@ -504,9 +504,9 @@ public class Connectivity extends Activity {
         InetAddress inetAddress = null;
         try {
             inetAddress = InetAddress.getByName(mTdlsAddr);
-            mWm.enableTdls(inetAddress, true);
+            mWm.setTdlsEnabled(inetAddress, true);
         } catch (Exception e) {
-            mWm.enableTdlsWithMacAddress(mTdlsAddr, true);
+            mWm.setTdlsEnabledWithMacAddress(mTdlsAddr, true);
         }
     }
 
@@ -516,9 +516,9 @@ public class Connectivity extends Activity {
         InetAddress inetAddress = null;
         try {
             inetAddress = InetAddress.getByName(mTdlsAddr);
-            mWm.enableTdls(inetAddress, false);
+            mWm.setTdlsEnabled(inetAddress, false);
         } catch (Exception e) {
-            mWm.enableTdlsWithMacAddress(mTdlsAddr, false);
+            mWm.setTdlsEnabledWithMacAddress(mTdlsAddr, false);
         }
     }
 
