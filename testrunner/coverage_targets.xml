@@ -92,8 +92,6 @@
         type="APPS" />
 
    <!-- content providers -->
-    <coverage_target name="ApplicationsProvider"
-        build_path="packages/providers/ApplicationsProvider" type="APPS" />
     <coverage_target name="CalendarProvider"
         build_path="packages/providers/CalendarProvider" type="APPS" />
     <coverage_target name="ContactsProvider"
