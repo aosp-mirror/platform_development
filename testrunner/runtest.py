@@ -75,8 +75,8 @@ class TestRunner(object):
 
   _DALVIK_VERIFIER_OFF_PROP = "dalvik.vm.dexopt-flags = v=n"
 
-  # regular expression to match install: statements in make output
-  _RE_MAKE_INSTALL = re.compile(r'Install:\s(.+)')
+  # regular expression to match path to artifacts to install in make output
+  _RE_MAKE_INSTALL = re.compile(r'INSTALL-PATH:\s(.+)\s(.+)')
 
 
   def __init__(self):
@@ -272,12 +272,13 @@ class TestRunner(object):
 
       # mmm cannot be used from python, so perform a similar operation using
       # ONE_SHOT_MAKEFILE
-      cmd = 'ONE_SHOT_MAKEFILE="%s" make -j%s -C "%s" all_modules %s' % (
+      cmd = 'ONE_SHOT_MAKEFILE="%s" make -j%s -C "%s" GET-INSTALL-PATH all_modules %s' % (
           target_build_string, self._options.make_jobs, self._root_path,
           extra_args_string)
       logger.Log(cmd)
       if not self._options.preview:
         output = run_command.RunCommand(cmd, return_output=True, timeout_time=600)
+        logger.SilentLog(output)
         self._DoInstall(output)
 
   def _DoInstall(self, make_output):
@@ -291,7 +292,7 @@ class TestRunner(object):
     for line in make_output.split("\n"):
       m = self._RE_MAKE_INSTALL.match(line)
       if m:
-        install_path = m.group(1)
+        install_path = m.group(2)
         if install_path.endswith(".apk"):
           abs_install_path = os.path.join(self._root_path, install_path)
           logger.Log("adb install -r %s" % abs_install_path)
@@ -318,7 +319,8 @@ class TestRunner(object):
 
     # hack to build cts dependencies
     # TODO: remove this when cts dependencies are removed
-    if self._IsCtsTests(tests):
+    is_cts =  self._IsCtsTests(tests)
+    if is_cts:
       # need to use make since these fail building with ONE_SHOT_MAKEFILE
       extra_args_set.add('CtsTestStubs')
       extra_args_set.add('android.core.tests.runner')
@@ -340,8 +342,15 @@ class TestRunner(object):
         old_dir = os.getcwd()
         os.chdir(self._root_path)
         output = run_command.RunCommand(cmd, return_output=True)
+        logger.SilentLog(output)
         os.chdir(old_dir)
         self._DoInstall(output)
+        if is_cts:
+          # hack! hardcode install of CtsTestStubs
+          out = android_build.GetTestAppPath()
+          abs_install_path = os.path.join(out, "CtsTestStubs.apk")
+          logger.Log("adb install -r %s" % abs_install_path)
+          logger.Log(self._adb.Install(abs_install_path))
 
   def _AddBuildTarget(self, test_suite, target_tree, extra_args_set):
     if not test_suite.IsFullMake():
