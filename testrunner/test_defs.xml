@@ -413,12 +413,6 @@ See test_defs.xsd for more information.
     build_path="development/samples/ApiDemos"
     package="com.example.android.apis.tests" />
 
-<test name="applicationsprov"
-    build_path="packages/providers/ApplicationsProvider"
-    package="com.android.providers.applications.tests"
-    coverage_target="ApplicationsProvider"
-    continuous="true" />
-
 <test name="browser"
     build_path="packages/apps/Browser"
     package="com.android.browser.tests"
