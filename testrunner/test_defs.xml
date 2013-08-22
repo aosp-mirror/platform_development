@@ -346,7 +346,7 @@ See test_defs.xsd for more information.
 <test name="cts-net"
     build_path="cts/tests/tests/net"
     package="com.android.cts.net"
-    runner="android.test.InstrumentationTestRunner"
+    runner="android.test.InstrumentationCtsTestRunner"
     coverage_target="framework"
     suite="cts" />
 
