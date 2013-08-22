@@ -365,6 +365,15 @@ frameworks/support/v7/appcompat/src/.readme                                     
 ${OUT_DIR}/target/common/obj/PACKAGING/android-support-v7-appcompat_intermediates/android-support-v7-appcompat.jar    extras/android/support/v7/appcompat/libs/android-support-v7-appcompat.jar
 ${OUT_DIR}/target/common/obj/PACKAGING/android-support-v4_intermediates/android-support-v4.jar                        extras/android/support/v7/appcompat/libs/android-support-v4.jar
 
+frameworks/support/multidex/README.txt                                                            extras/android/support/multidex/README.txt
+frameworks/support/multidex/.project                                                              extras/android/support/multidex/.project
+frameworks/support/multidex/.classpath                                                            extras/android/support/multidex/.classpath
+frameworks/support/multidex/AndroidManifest.xml                                                   extras/android/support/multidex/AndroidManifest.xml
+frameworks/support/multidex/project.properties                                                    extras/android/support/multidex/project.properties
+frameworks/support/multidex/src/.readme                                                           extras/android/support/multidex/src/.readme
+${OUT_DIR}/target/common/obj/PACKAGING/android-support-multidex_intermediates/android-support-multidex.jar              extras/android/support/multidex/libs/android-support-multidex.jar
+${OUT_DIR}/target/common/obj/PACKAGING/android-support-v13_intermediates/android-support-v13.jar                        extras/android/support/multidex/libs/android-support-v13.jar
+
 frameworks/support/v7/mediarouter/README.txt                                                       extras/android/support/v7/mediarouter/README.txt
 frameworks/support/v7/mediarouter/.project                                                         extras/android/support/v7/mediarouter/.project
 frameworks/support/v7/mediarouter/.classpath                                                       extras/android/support/v7/mediarouter/.classpath
