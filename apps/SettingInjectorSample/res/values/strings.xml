@@ -20,5 +20,7 @@
 
     <string name="my_injected_setting_label">Injected setting</string>
     <string name="disabled_setting_label">Disabled injected setting</string>
+    <string name="slow_setting_label">Slow injected setting</string>
+    <string name="updating_setting_label">Updating injected setting</string>
 
 </resources>

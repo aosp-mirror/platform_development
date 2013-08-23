@@ -16,29 +16,29 @@
 
 package com.example.android.injector;
 
+import android.content.Intent;
 import android.location.SettingInjectorService;
 import android.util.Log;
 
 /**
- * Receiver that returns the status of the injected setting.
+ * Receiver that returns a constantly-updating status for an injected setting.
  */
-public class MyInjectorService extends SettingInjectorService {
+public class UpdatingInjectorService extends SettingInjectorService {
 
-    private static final String TAG = "MyInjectorService";
+    private static final String TAG = "UpdatingInjectorService";
 
-    public MyInjectorService() {
+    public UpdatingInjectorService() {
         super(TAG);
     }
 
     @Override
     protected Status getStatus() {
-        try {
-            // Simulate a delay while reading the setting from disk
-            Thread.sleep(500);
-        } catch (InterruptedException e) {
-            Log.e(TAG, "", e);
-        }
-
-        return new Status("Example status value", true);
+        // Every time it asks for our status, we tell it the setting has just changed. This will
+        // test the handling of races where we're getting many UPDATE_INTENT broadcasts in a short
+        // period of time
+        Intent intent = new Intent(UPDATE_INTENT);
+        sendBroadcast(intent);
+        Log.d(TAG, "Broadcasting: " + intent);
+        return new Status(String.valueOf(System.currentTimeMillis()), true);
     }
 }
