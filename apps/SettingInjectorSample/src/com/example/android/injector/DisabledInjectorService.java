@@ -20,13 +20,13 @@ import android.location.SettingInjectorService;
 import android.util.Log;
 
 /**
- * Receiver that returns the status of the injected setting.
+ * Receiver that returns the status disabled for an injected setting.
  */
-public class MyInjectorService extends SettingInjectorService {
+public class DisabledInjectorService extends SettingInjectorService {
 
-    private static final String TAG = "MyInjectorService";
+    private static final String TAG = "DisabledInjectorService";
 
-    public MyInjectorService() {
+    public DisabledInjectorService() {
         super(TAG);
     }
 
@@ -39,6 +39,6 @@ public class MyInjectorService extends SettingInjectorService {
             Log.e(TAG, "", e);
         }
 
-        return new Status("Example status value", true);
+        return new Status(null, false);
     }
 }

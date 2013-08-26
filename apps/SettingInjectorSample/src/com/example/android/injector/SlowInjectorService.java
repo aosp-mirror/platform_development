@@ -22,11 +22,11 @@ import android.util.Log;
 /**
  * Receiver that returns the status of the injected setting.
  */
-public class MyInjectorService extends SettingInjectorService {
+public class SlowInjectorService extends SettingInjectorService {
 
-    private static final String TAG = "MyInjectorService";
+    private static final String TAG = "SlowInjectorService";
 
-    public MyInjectorService() {
+    public SlowInjectorService() {
         super(TAG);
     }
 
@@ -34,11 +34,11 @@ public class MyInjectorService extends SettingInjectorService {
     protected Status getStatus() {
         try {
             // Simulate a delay while reading the setting from disk
-            Thread.sleep(500);
+            Thread.sleep(5000);
         } catch (InterruptedException e) {
             Log.e(TAG, "", e);
         }
 
-        return new Status("Example status value", true);
+        return new Status("Dang that took a long time!", true);
     }
 }

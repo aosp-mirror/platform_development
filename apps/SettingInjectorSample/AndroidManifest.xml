@@ -38,5 +38,36 @@
                 android:name="com.android.settings.InjectedLocationSetting"
                 android:resource="@xml/my_injected_location_setting" />
         </service>
+
+        <service android:name="com.example.android.injector.DisabledInjectorService" >
+            <intent-filter>
+                <action android:name="com.android.settings.InjectedLocationSetting" />
+            </intent-filter>
+
+            <meta-data
+                android:name="com.android.settings.InjectedLocationSetting"
+                android:resource="@xml/disabled_injected_location_setting" />
+        </service>
+
+        <service android:name="com.example.android.injector.SlowInjectorService" >
+            <intent-filter>
+                <action android:name="com.android.settings.InjectedLocationSetting" />
+            </intent-filter>
+
+            <meta-data
+                android:name="com.android.settings.InjectedLocationSetting"
+                android:resource="@xml/slow_injected_location_setting" />
+        </service>
+
+        <service android:name="com.example.android.injector.UpdatingInjectorService" >
+            <intent-filter>
+                <action android:name="com.android.settings.InjectedLocationSetting" />
+            </intent-filter>
+
+            <meta-data
+                android:name="com.android.settings.InjectedLocationSetting"
+                android:resource="@xml/updating_injected_location_setting" />
+        </service>
+
     </application>
 </manifest>
