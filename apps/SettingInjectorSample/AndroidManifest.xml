@@ -31,51 +31,51 @@
 
         <service android:name="com.example.android.injector.MyInjectorService" >
             <intent-filter>
-                <action android:name="com.android.settings.InjectedLocationSetting" />
+                <action android:name="android.location.SettingInjectorService" />
             </intent-filter>
 
             <meta-data
-                android:name="com.android.settings.InjectedLocationSetting"
+                android:name="android.location.SettingInjectorService"
                 android:resource="@xml/my_injected_location_setting" />
         </service>
 
         <service android:name="com.example.android.injector.DisabledInjectorService" >
             <intent-filter>
-                <action android:name="com.android.settings.InjectedLocationSetting" />
+                <action android:name="android.location.SettingInjectorService" />
             </intent-filter>
 
             <meta-data
-                android:name="com.android.settings.InjectedLocationSetting"
+                android:name="android.location.SettingInjectorService"
                 android:resource="@xml/disabled_injected_location_setting" />
         </service>
 
         <service android:name="com.example.android.injector.FailingInjectorService" >
             <intent-filter>
-                <action android:name="com.android.settings.InjectedLocationSetting" />
+                <action android:name="android.location.SettingInjectorService" />
             </intent-filter>
 
             <meta-data
-                android:name="com.android.settings.InjectedLocationSetting"
+                android:name="android.location.SettingInjectorService"
                 android:resource="@xml/failing_injected_location_setting" />
         </service>
 
         <service android:name="com.example.android.injector.SlowInjectorService" >
             <intent-filter>
-                <action android:name="com.android.settings.InjectedLocationSetting" />
+                <action android:name="android.location.SettingInjectorService" />
             </intent-filter>
 
             <meta-data
-                android:name="com.android.settings.InjectedLocationSetting"
+                android:name="android.location.SettingInjectorService"
                 android:resource="@xml/slow_injected_location_setting" />
         </service>
 
         <service android:name="com.example.android.injector.UpdatingInjectorService" >
             <intent-filter>
-                <action android:name="com.android.settings.InjectedLocationSetting" />
+                <action android:name="android.location.SettingInjectorService" />
             </intent-filter>
 
             <meta-data
-                android:name="com.android.settings.InjectedLocationSetting"
+                android:name="android.location.SettingInjectorService"
                 android:resource="@xml/updating_injected_location_setting" />
         </service>
 
