@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright (C) 2013 The Android Open Source Project
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+          http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+-->
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:id="@+id/container">
+
+    <View
+            android:layout_width="100dip"
+            android:layout_height="50dip"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentLeft="true"
+            android:background="#f00"
+            android:id="@+id/view1"/>
+
+    <View
+            android:layout_width="100dip"
+            android:layout_height="50dip"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentRight="true"
+            android:background="#0f0"
+            android:id="@+id/view2"/>
+
+    <View
+            android:layout_width="100dip"
+            android:layout_height="50dip"
+            android:background="#00f"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentLeft="true"
+            android:id="@+id/view3"/>
+
+    <View
+            android:layout_width="100dip"
+            android:layout_height="50dip"
+            android:background="#0ff"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentRight="true"
+            android:id="@+id/view4"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_centerVertical="true"
+        android:orientation="vertical"
+        android:id="@+id/grayscaleContainer">
+
+        <View
+                android:layout_width="match_parent"
+                android:layout_height="10dip"
+                android:background="#000"
+                android:id="@+id/gray1"/>
+        <View
+                android:layout_width="match_parent"
+                android:layout_height="10dip"
+                android:background="#222"
+                android:id="@+id/gray2"/>
+        <View
+                android:layout_width="match_parent"
+                android:layout_height="10dip"
+                android:background="#444"
+                android:id="@+id/gray3"/>
+        <View
+                android:layout_width="match_parent"
+                android:layout_height="10dip"
+                android:background="#666"
+                android:id="@+id/gray4"/>
+        <View
+                android:layout_width="match_parent"
+                android:layout_height="10dip"
+                android:background="#888"
+                android:id="@+id/gray5"/>
+        <View
+                android:layout_width="match_parent"
+                android:layout_height="10dip"
+                android:background="#aaa"
+                android:id="@+id/gray6"/>
+        <View
+                android:layout_width="match_parent"
+                android:layout_height="10dip"
+                android:background="#ccc"
+                android:id="@+id/gray7"/>
+        <View
+                android:layout_width="match_parent"
+                android:layout_height="10dip"
+                android:background="#fff"
+                android:id="@+id/gray8"/>
+
+    </LinearLayout>
+
+</RelativeLayout>
