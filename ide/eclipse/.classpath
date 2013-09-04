@@ -130,6 +130,7 @@
 	<classpathentry kind="src" path="external/apache-http/src"/>
 	<classpathentry kind="src" path="external/bouncycastle/bcprov/src/main/java"/>
 	<classpathentry kind="src" path="external/guava/guava/src"/>
+	<classpathentry kind="src" path="external/hamcrest/src"/>
 	<classpathentry kind="src" path="external/junit/src"/>
 	<classpathentry kind="src" path="external/libphonenumber/java/src"/>
 	<classpathentry kind="src" path="external/mockito/src"/>
