@@ -1358,8 +1358,17 @@
         </activity>
 
         <activity android:name=".animation.LayoutAnimationsByDefault"
-                android:label="Animation/Default Layout Animations"
-                android:enabled="@bool/atLeastHoneycomb">
+                  android:label="Animation/Default Layout Animations"
+                  android:enabled="@bool/atLeastHoneycomb">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".animation.Transitions"
+                  android:label="Animation/Simple Transitions"
+                  android:enabled="@bool/atLeastHoneycomb">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
