@@ -17,7 +17,7 @@
 package com.example.android.apis.content;
 
 import android.app.Activity;
-import android.content.UndoManager;
+//import android.content.UndoManager;
 import android.os.Parcelable;
 import android.view.View;
 import android.widget.Button;
@@ -30,12 +30,13 @@ import android.widget.TextView;
  * Simple example of using an UndoManager for editing text in a TextView.
  */
 public class TextUndoActivity extends Activity {
-    UndoManager mUndoManager;
+    //UndoManager mUndoManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        /*
         mUndoManager = new UndoManager();
         if (savedInstanceState != null) {
             Parcelable p = savedInstanceState.getParcelable("undo");
@@ -43,9 +44,11 @@ public class TextUndoActivity extends Activity {
                 mUndoManager.restoreInstanceState(p);
             }
         }
+        */
 
         setContentView(R.layout.text_undo);
 
+        /*
         ((TextView)findViewById(R.id.text)).setUndoManager(mUndoManager, "text");
         ((Button)findViewById(R.id.undo)).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -59,11 +62,12 @@ public class TextUndoActivity extends Activity {
                 mUndoManager.redo(null, 1);
             }
         });
+        */
      }
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putParcelable("undo", mUndoManager.saveInstanceState());
+        //outState.putParcelable("undo", mUndoManager.saveInstanceState());
     }
 }
