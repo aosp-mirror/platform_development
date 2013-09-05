@@ -1,6 +1,5 @@
-page.tags="Bluetooth", "HDP"
-sample.tags="Bluetooth", "Health"
-sample.group="Connectivity"
+page.tags="Bluetooth", "HDP", "Health"
+sample.group=Connectivity
 @jd:body
 
 <p>A sample application that demonstrates how to communicate with a Bluetooth Health Device Profile (HDP) device.  This feature is available on Android 4.0 (API level 14) or above platforms. The Android Bluetooth Health API lets you create
