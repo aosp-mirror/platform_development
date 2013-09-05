@@ -1,0 +1,7 @@
+page.tags="Sensor", "Accelerometer"
+sample.tags="Accelerometer", "Games"
+sample.groups="Sensors"
+@jd:body
+
+<p>Example code that shows how to use the device accelerometer in apps and games.</p>
+
