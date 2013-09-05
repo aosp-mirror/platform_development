@@ -24,6 +24,12 @@ import android.transition.TransitionInflater;
 import android.transition.TransitionManager;
 import com.example.android.apis.R;
 
+/**
+ * This application demonstrates some of the capabilities and uses of the
+ * {@link android.transition transitions} APIs. Scenes and a TransitionManager
+ * are loaded from resource files and transitions are run between those scenes
+ * as well as a dynamically-configured scene.
+ */
 public class Transitions extends Activity {
 
     Scene mScene1, mScene2, mScene3;
@@ -39,6 +45,11 @@ public class Transitions extends Activity {
 
         TransitionInflater inflater = TransitionInflater.from(this);
 
+        // Note that this is not the only way to create a Scene object, but that
+        // loading them from layout resources cooperates with the
+        // TransitionManager that we are also loading from resources, and which
+        // uses the same layout resource files to determine the scenes to transition
+        // from/to.
         mScene1 = Scene.getSceneForLayout(mSceneRoot, R.layout.transition_scene1, this);
         mScene2 = Scene.getSceneForLayout(mSceneRoot, R.layout.transition_scene2, this);
         mScene3 = Scene.getSceneForLayout(mSceneRoot, R.layout.transition_scene3, this);
@@ -58,7 +69,10 @@ public class Transitions extends Activity {
                 mTransitionManager.transitionTo(mScene3);
                 break;
             case R.id.scene4:
-                TransitionManager.beginDelayedTransition(mSceneRoot, null);
+                // scene4 is not an actual 'Scene', but rather a dynamic change in the UI,
+                // transitioned to using beginDelayedTransition() to tell the TransitionManager
+                // to get ready to run a transition at the next frame
+                TransitionManager.beginDelayedTransition(mSceneRoot);
                 setNewSize(R.id.view1, 150, 25);
                 setNewSize(R.id.view2, 150, 25);
                 setNewSize(R.id.view3, 150, 25);

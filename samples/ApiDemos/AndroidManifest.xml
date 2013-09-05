@@ -1254,7 +1254,6 @@
 
         <activity android:name=".animation.AnimationLoading"
                 android:label="Animation/Loading"
-                android:hardwareAccelerated="false"
                 android:enabled="@bool/atLeastHoneycomb">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -1264,7 +1263,6 @@
 
         <activity android:name=".animation.AnimationCloning"
                 android:label="Animation/Cloning"
-                android:hardwareAccelerated="false"
                 android:enabled="@bool/atLeastHoneycomb">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -1274,7 +1272,6 @@
 
         <activity android:name=".animation.AnimationSeeking"
                 android:label="Animation/Seeking"
-                android:hardwareAccelerated="false"
                 android:enabled="@bool/atLeastHoneycomb">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -1284,7 +1281,6 @@
 
         <activity android:name=".animation.AnimatorEvents"
                 android:label="Animation/Events"
-                android:hardwareAccelerated="false"
                 android:enabled="@bool/atLeastHoneycomb">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -1294,7 +1290,6 @@
 
         <activity android:name=".animation.BouncingBalls"
                 android:label="Animation/Bouncing Balls"
-                android:hardwareAccelerated="false"
                 android:enabled="@bool/atLeastHoneycomb">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -1304,7 +1299,6 @@
 
         <activity android:name=".animation.CustomEvaluator"
                 android:label="Animation/Custom Evaluator"
-                android:hardwareAccelerated="false"
                 android:enabled="@bool/atLeastHoneycomb">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -1323,7 +1317,6 @@
 
         <activity android:name=".animation.ReversingAnimation"
                 android:label="Animation/Reversing"
-                android:hardwareAccelerated="false"
                 android:enabled="@bool/atLeastHoneycomb">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -1333,7 +1326,6 @@
 
         <activity android:name=".animation.MultiPropertyAnimation"
                 android:label="Animation/Multiple Properties"
-                android:hardwareAccelerated="false"
                 android:enabled="@bool/atLeastHoneycomb">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
