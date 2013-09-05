@@ -31,14 +31,18 @@ public class MyInjectorService extends SettingInjectorService {
     }
 
     @Override
-    protected Status getStatus() {
+    protected String onGetSummary() {
         try {
             // Simulate a delay while reading the setting from disk
             Thread.sleep(500);
         } catch (InterruptedException e) {
             Log.e(TAG, "", e);
         }
+        return "Example status value";
+    }
 
-        return new Status("Example status value", true);
+    @Override
+    protected boolean onGetEnabled() {
+        return true;
     }
 }
