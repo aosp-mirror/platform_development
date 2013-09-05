@@ -32,13 +32,18 @@ public class UpdatingInjectorService extends SettingInjectorService {
     }
 
     @Override
-    protected Status getStatus() {
+    protected String onGetSummary() {
         // Every time it asks for our status, we tell it the setting has just changed. This will
         // test the handling of races where we're getting many UPDATE_INTENT broadcasts in a short
         // period of time
         Intent intent = new Intent(ACTION_INJECTED_SETTING_CHANGED);
         sendBroadcast(intent);
         Log.d(TAG, "Broadcasting: " + intent);
-        return new Status(String.valueOf(System.currentTimeMillis()), true);
+        return String.valueOf(System.currentTimeMillis());
+    }
+
+    @Override
+    protected boolean onGetEnabled() {
+        return true;
     }
 }

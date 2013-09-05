@@ -31,14 +31,18 @@ public class SlowInjectorService extends SettingInjectorService {
     }
 
     @Override
-    protected Status getStatus() {
+    protected String onGetSummary() {
         try {
             // Simulate a delay while reading the setting from disk
             Thread.sleep(5000);
         } catch (InterruptedException e) {
             Log.e(TAG, "", e);
         }
+        return "Dang that took a long time!";
+    }
 
-        return new Status("Dang that took a long time!", true);
+    @Override
+    protected boolean onGetEnabled() {
+        return true;
     }
 }

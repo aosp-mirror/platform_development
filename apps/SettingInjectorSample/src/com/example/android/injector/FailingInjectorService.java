@@ -26,12 +26,20 @@ public class FailingInjectorService extends SettingInjectorService {
 
     private static final String TAG = "FailingInjectorService";
 
+    /**
+     * Whether to actually throw an exception here. Pretty disruptive when true, because it causes
+     * a "Unfortunately, My Setting Activity! has stopped" dialog to appear and also blocks the
+     * update of other settings from this app. So only set true when need to test the handling
+     * of the exception.
+     */
+    private static final boolean ACTUALLY_THROW = false;
+
     public FailingInjectorService() {
         super(TAG);
     }
 
     @Override
-    protected Status getStatus() {
+    protected String onGetSummary() {
         try {
             // Simulate a delay while reading the setting from disk
             Thread.sleep(100);
@@ -39,6 +47,14 @@ public class FailingInjectorService extends SettingInjectorService {
             Log.e(TAG, "", e);
         }
 
-        throw new RuntimeException("Simulated failure reading setting");
+        if (ACTUALLY_THROW) {
+            throw new RuntimeException("Simulated failure reading setting");
+        }
+        return "Decided not to throw exception after all";
+    }
+
+    @Override
+    protected boolean onGetEnabled() {
+        return false;
     }
 }
