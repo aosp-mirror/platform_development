@@ -32,7 +32,7 @@
 
 #ifdef __LEADING_UNDERSCORE
 #define	_C_LABEL(x)	__CONCAT(_,x)
-#define _C_LABEL_STRING(x)	"_"x
+#define _C_LABEL_STRING(x)	"_" x
 #else
 #define	_C_LABEL(x)	x
 #define _C_LABEL_STRING(x)	x
