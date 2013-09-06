@@ -1,0 +1,138 @@
+diff -Naur a/include/asm/a.out.h b/include/asm/a.out.h
+--- a/include/asm/a.out.h	2013-06-10 08:16:13.496310000 +0800
++++ b/include/asm/a.out.h	2013-09-06 14:13:28.366275000 +0800
+@@ -33,7 +33,7 @@
+ #define N_DRSIZE(a) ((a).a_drsize)
+ #define N_SYMSIZE(a) ((a).a_syms)
+
+-#define M_MACHINE 103
++#define M_ARM 103
+
+ #ifndef LIBRARY_START_TEXT
+ #define LIBRARY_START_TEXT (0x00c00000)
+diff -Naur a/include/asm/byteorder.h b/include/asm/byteorder.h
+--- a/include/asm/byteorder.h	2013-09-03 12:33:37.353419000 +0800
++++ b/include/asm/byteorder.h	2013-08-30 17:41:09.234265000 +0800
+@@ -19,12 +19,6 @@
+ {
+  __u32 t;
+ 
+-#ifndef __thumb__
+- if (!__builtin_constant_p(x)) {
+-
+- __asm__ ("eor\t%0, %1, %1, ror #16" : "=r" (t) : "r" (x));
+- } else
+-#endif
+  t = x ^ ((x << 16) | (x >> 16));
+ 
+  x = (x << 24) | (x >> 8);
+diff -Naur a/include/asm/stat.h b/include/asm/stat.h
+--- a/include/asm/stat.h	2013-09-03 12:33:37.367418000 +0800
++++ b/include/asm/stat.h	2013-08-30 17:41:09.431302000 +0800
+@@ -29,23 +29,13 @@
+ #define STAT_HAVE_NSEC 
+ 
+ struct stat {
+-#ifdef __ARMEB__
+- unsigned short st_dev;
+- unsigned short __pad1;
+-#else
+  unsigned long st_dev;
+-#endif
+  unsigned long st_ino;
+  unsigned short st_mode;
+  unsigned short st_nlink;
+  unsigned short st_uid;
+  unsigned short st_gid;
+-#ifdef __ARMEB__
+- unsigned short st_rdev;
+- unsigned short __pad2;
+-#else
+  unsigned long st_rdev;
+-#endif
+  unsigned long st_size;
+  unsigned long st_blksize;
+  unsigned long st_blocks;
+diff -Naur a/include/asm/types.h b/include/asm/types.h
+--- a/include/asm/types.h	2013-09-03 12:33:37.313428000 +0800
++++ b/include/asm/types.h	2013-08-30 17:41:09.467274000 +0800
+@@ -25,7 +25,7 @@
+ typedef __signed__ int __s32;
+ typedef unsigned int __u32;
+ 
+-#ifdef __GNUC__
++#if defined(__GNUC__) && !defined(__STRICT_ANSI__)
+ typedef __signed__ long long __s64;
+ typedef unsigned long long __u64;
+ #endif
+diff -Naur a/include/asm/unaligned.h b/include/asm/unaligned.h
+--- a/include/asm/unaligned.h	2013-09-03 12:33:37.376422000 +0800
++++ b/include/asm/unaligned.h	2013-08-30 17:41:09.500316000 +0800
+@@ -28,11 +28,6 @@
+ 
+ #define __put_unaligned_le(val,ptr)   ({   switch (sizeof(*(ptr))) {   case 1:   *(ptr) = (val);   break;   case 2: __put_unaligned_2_le((val),(__u8 *)(ptr));   break;   case 4: __put_unaligned_4_le((val),(__u8 *)(ptr));   break;   case 8: __put_unaligned_8_le((val),(__u8 *)(ptr));   break;   default: __bug_unaligned_x(ptr);   break;   }   (void) 0;   })
+ #define __put_unaligned_be(val,ptr)   ({   switch (sizeof(*(ptr))) {   case 1:   *(ptr) = (val);   break;   case 2: __put_unaligned_2_be((val),(__u8 *)(ptr));   break;   case 4: __put_unaligned_4_be((val),(__u8 *)(ptr));   break;   case 8: __put_unaligned_8_be((val),(__u8 *)(ptr));   break;   default: __bug_unaligned_x(ptr);   break;   }   (void) 0;   })
+-#ifndef __ARMEB__
+ #define get_unaligned __get_unaligned_le
+ #define put_unaligned __put_unaligned_le
+-#else
+-#define get_unaligned __get_unaligned_be
+-#define put_unaligned __put_unaligned_be
+-#endif
+ #endif
+diff -Naur a/include/asm/unistd.h b/include/asm/unistd.h
+--- a/include/asm/unistd.h	2013-09-03 12:33:37.322427000 +0800
++++ b/include/asm/unistd.h	2013-08-30 17:41:09.506276000 +0800
+@@ -19,12 +19,7 @@
+ #ifndef __ASM_MACHINE_UNISTD_H
+ #define __ASM_MACHINE_UNISTD_H
+ #define __NR_OABI_SYSCALL_BASE 0x900000
+-#if defined(__thumb__) || defined(__ARM_EABI__)
+-/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+ #define __NR_SYSCALL_BASE 0
+-#else
+-#define __NR_SYSCALL_BASE __NR_OABI_SYSCALL_BASE
+-#endif
+ /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+ #define __NR_restart_syscall (__NR_SYSCALL_BASE+ 0)
+ #define __NR_exit (__NR_SYSCALL_BASE+ 1)
+diff -Naur a/include/asm/user.h b/include/asm/user.h
+--- a/include/asm/user.h	2013-09-03 12:33:37.118421000 +0800
++++ b/include/asm/user.h	2013-08-30 17:41:09.519301000 +0800
+@@ -58,15 +58,4 @@
+ #define HOST_TEXT_START_ADDR (u.start_code)
+ #define HOST_STACK_END_ADDR (u.start_stack + u.u_ssize * NBPG)
+ 
+-struct user_vfp {
+- unsigned long long fpregs[32];
+- unsigned long fpscr;
+-};
+-
+-struct user_vfp_exc {
+- unsigned long fpexc;
+- unsigned long fpinst;
+- unsigned long fpinst2;
+-};
+-
+ #endif
+diff -Naur a/include/machine/asm.h b/include/machine/asm.h
+--- a/include/machine/asm.h	2013-09-03 12:33:37.135419000 +0800
++++ b/include/machine/asm.h	2013-08-30 17:41:09.533294000 +0800
+@@ -78,17 +78,7 @@
+ 	.fnend; \
+ 	_ASM_SIZE(x)
+ 
+-#ifdef GPROF
+-# ifdef __ELF__
+-#  define _PROF_PROLOGUE	\
+-	mov ip, lr; bl __mcount
+-# else
+-#  define _PROF_PROLOGUE	\
+-	mov ip,lr; bl mcount
+-# endif
+-#else
+ # define _PROF_PROLOGUE
+-#endif
+ 
+ #define	ENTRY(y)	_ENTRY(_C_LABEL(y)); _PROF_PROLOGUE
+ #define	ENTRY_NP(y)	_ENTRY(_C_LABEL(y))
