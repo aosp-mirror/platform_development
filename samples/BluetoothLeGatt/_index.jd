@@ -1,6 +1,5 @@
 page.tags="Bluetooth", "LE", "SMART"
-sample.tags="Bluetooth", "LE"
-sample.group="Connectivity"
+sample.group=Connectivity
 @jd:body
 
 <p>A sample application that demonstrates how to communicate with
