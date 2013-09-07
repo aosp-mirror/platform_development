@@ -533,6 +533,13 @@ See test_defs.xsd for more information.
     continuous="true"
     description="SystemUI tests" />
 
+<test name="documentsui"
+    build_path="frameworks/base/packages/DocumentsUI/tests"
+    package="com.android.documentsui.tests"
+    coverage_target="DocumentsUI"
+    continuous="true"
+    description="DocumentsUI tests" />
+
 <!--  native tests  -->
 
 <!-- Bionic C++ -->
