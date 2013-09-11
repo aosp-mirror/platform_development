@@ -32,6 +32,7 @@
     <uses-permission android:name="android.permission.SEND_SMS" />
     <uses-permission android:name="android.permission.RECEIVE_SMS" />
     <uses-permission android:name="android.permission.NFC" />
+    <uses-permission android:name="android.permission.TRANSMIT_IR" />
 
     <!-- For android.media.audiofx.Visualizer -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
@@ -1198,6 +1199,17 @@
         <provider android:name=".content.FileProvider"
                   android:authorities="com.example.android.apis.content.FileProvider"
                   android:enabled="@bool/atLeastHoneycombMR2" />
+
+        <!-- ************************************* -->
+        <!--     HARDWARE PACKAGE SAMPLES          -->
+        <!-- ************************************* -->
+
+        <activity android:name=".hardware.ConsumerIr" android:label="Hardware/Consumer IR">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
 
         <!-- ************************************* -->
         <!--     OS PACKAGE SAMPLES                -->
