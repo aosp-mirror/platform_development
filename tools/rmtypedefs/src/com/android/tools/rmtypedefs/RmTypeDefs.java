@@ -48,7 +48,7 @@ public class RmTypeDefs {
     private boolean mQuiet;
     private boolean mVerbose;
     private boolean mHaveError;
-    private boolean mDryRun;
+    private boolean mDryRun = true;
 
     public static void main(String[] args) {
         new RmTypeDefs().run(args);
