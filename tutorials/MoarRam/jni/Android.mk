@@ -41,3 +41,12 @@ LOCAL_SRC_FILES := baz.c
 LOCAL_SHARED_LIBRARIES += liblog
 
 include $(BUILD_SHARED_LIBRARY)
+
+include $(CLEAR_VARS)
+
+LOCAL_MODULE_TAGS := optional
+LOCAL_MODULE    := libmoarram-doublefree
+LOCAL_SRC_FILES := df.c
+LOCAL_SHARED_LIBRARIES += liblog
+
+include $(BUILD_SHARED_LIBRARY)

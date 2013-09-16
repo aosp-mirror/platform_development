@@ -101,4 +101,19 @@
         android:layout_weight="1"
         android:onClick="freeVariableSizedBlocks" />
     </LinearLayout>
+
+    <LinearLayout
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:layout_weight="1"
+    android:orientation="horizontal">
+
+    <Button
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:text="@string/force_double_free"
+        android:layout_weight="1"
+        android:onClick="forceDoubleFree" />
+    </LinearLayout>
+
 </LinearLayout>
