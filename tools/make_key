@@ -17,12 +17,12 @@
 # Generates a public/private key pair suitable for use in signing
 # android .apks and OTA update packages.
 
-if [ "$#" -ne 2 ]; then
+if [ "$#" -lt 2 -o "$#" -gt 3 ]; then
   cat <<EOF
-Usage: $0 <name> <subject>
+Usage: $0 <name> <subject> [<keytype>]
 
 Creates <name>.pk8 key and <name>.x509.pem cert.  Cert contains the
-given <subject>.
+given <subject>. A keytype of "rsa" or "ec" is accepted.
 EOF
   exit 2
 fi
@@ -49,9 +49,18 @@ chmod 0600 ${one} ${two}
 read -p "Enter password for '$1' (blank for none; password will be visible): " \
   password
 
-( openssl genrsa -f4 2048 | tee ${one} > ${two} ) &
+if [ "${3}" = "rsa" -o "$#" -eq 2 ]; then
+  ( openssl genrsa -f4 2048 | tee ${one} > ${two} ) &
+  hash="-sha1"
+elif [ "${3}" = "ec" ]; then
+  ( openssl ecparam -name prime256v1 -genkey -noout | tee ${one} > ${two} ) &
+  hash="-sha256"
+else
+  echo "Only accepts RSA or EC keytypes."
+  exit 1
+fi
 
-openssl req -new -x509 -sha1 -key ${two} -out $1.x509.pem \
+openssl req -new -x509 ${hash} -key ${two} -out $1.x509.pem \
   -days 10000 -subj "$2" &
 
 if [ "${password}" == "" ]; then
