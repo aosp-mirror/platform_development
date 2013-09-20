@@ -70,6 +70,7 @@
 	<classpathentry kind="src" path="frameworks/base/test-runner/src"/>
 	<classpathentry kind="src" path="frameworks/base/wifi/java"/>
 	<classpathentry kind="src" path="frameworks/ex/carousel/java"/>
+	<classpathentry kind="src" path="frameworks/ex/camera2/public/src"/>
 	<classpathentry kind="src" path="frameworks/ex/chips/src"/>
 	<classpathentry kind="src" path="frameworks/ex/common/java"/>
 	<classpathentry kind="src" path="frameworks/ex/photoviewer/src"/>
