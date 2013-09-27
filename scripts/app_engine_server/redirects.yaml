@@ -89,6 +89,10 @@ redirects:
   dst: /tools/support-library/setup.html
   type: permanent
 
+- src: /training/id-auth/.*
+  dst: /google/play-services/auth.html
+  type: permanent
+
 # new one works
 - src: /sdk/eclipse-adt.html
   dst: /tools/sdk/eclipse-adt.html
