@@ -21,6 +21,8 @@
 #include <errno.h>
 
 #include <vector>
+#include <map>
+#include <string>
 
 #include <EGL/egl.h>
 #include <GLES/gl.h>
@@ -33,10 +35,24 @@
 
 #include "JNIHelper.h"
 
+/******************************************************************
+ * Shader compiler helper
+ *
+ * compileShader() with std::map helps patching on a shader on the fly.
+ * For a example,
+ * map : %KEY% -> %VALUE% replaces all %KEY% entries in the given shader code to %VALUE"
+ *
+ */
 class shader {
 public:
+    static bool    compileShader(GLuint *shader, const GLenum type,
+            std::vector<uint8_t>& data);
+    static bool    compileShader(GLuint *shader, const GLenum type,
+            const GLchar *source, const int32_t iSize);
     static bool compileShader(GLuint *shader, const GLenum type,
             const char *strFileName);
+    static bool compileShader(GLuint *shader, const GLenum type,
+            const char *strFileName, const std::map<std::string, std::string>& mapParameters);
     static bool linkProgram(const GLuint prog);
     static bool validateProgram(const GLuint prog);
 };
