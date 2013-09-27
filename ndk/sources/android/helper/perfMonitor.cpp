@@ -16,11 +16,14 @@
 
 #include "perfMonitor.h"
 
-perfMonitor::perfMonitor():_dLastTick(0.f), _tvLastSec(0), _tickindex(0), _ticksum(0)
+perfMonitor::perfMonitor():
+    _dLastTick(0.f),
+    _tvLastSec(0),
+    _tickindex(0),
+    _ticksum(0)
 {
     for(int32_t i = 0; i < NUM_SAMPLES; ++i )
         _ticklist[i] = 0;
-
 }
 
 perfMonitor::~perfMonitor() {
