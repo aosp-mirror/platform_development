@@ -139,6 +139,10 @@ ATTRS=(
 # Starting with XSD repo-7 and addon-5, some revision elements are no longer just
 # integers. Instead they are in major.minor.micro.preview format. This defines
 # which elements. This depends on the XSD root element and the XSD version.
+#
+# Note: addon extra revision can't take a preview number. We don't enforce
+# this in this script. Instead schema validation will fail if the extra
+# source.property declares an RC and it gets inserted in the addon.xml here.
 
 if [[ "$ROOT" == "sdk-repository" && "$XSD_VERSION" -ge 7 ]] ||
    [[ "$ROOT" == "sdk-addon"      && "$XSD_VERSION" -ge 5 ]]; then
@@ -146,6 +150,7 @@ FULL_REVISIONS=(
   tool          revision
   build-tool    revision
   platform-tool revision
+  extra         revision
   @             min-tools-rev
   @             min-platform-tools-rev
 )
@@ -177,7 +182,7 @@ function needs_full_revision() {
 }
 
 # Parses and print a full revision in the form "1.2.3 rc4".
-# Note that the format requires to have a # space before the
+# Note that the format requires to have 1 space before the
 # optional "rc" (e.g. '1 rc4', not '1rc4') and no space after
 # the rc (so not '1 rc 4' either)
 function write_full_revision() {
