@@ -15,7 +15,7 @@
   <option name="ALIGN_MULTILINE_PARAMETERS" value="false" />
   <option name="ALIGN_MULTILINE_FOR" value="false" />
   <option name="KEEP_BLANK_LINES_IN_CODE" value="1" />
-  <option name="BLANK_LINES_AROUND_FIELD" value="1" />
+  <option name="BLANK_LINES_AROUND_FIELD" value="0" />
   <option name="BLANK_LINES_AFTER_CLASS_HEADER" value="1" />
   <option name="FIELD_NAME_PREFIX" value="m" />
   <option name="STATIC_FIELD_NAME_PREFIX" value="m" />
