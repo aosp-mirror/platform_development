@@ -94,7 +94,7 @@ class MemcachedZipHandler(webapp.RequestHandler):
   source file again. It also uses considerably fewer CPU cycles.
   """
   zipfile_cache = {}                # class cache of source zip files
-  MAX_AGE = 600                     # max client-side cache lifetime
+  MAX_AGE = 43200                   # max client-side cache lifetime, in seconds
   PUBLIC = True                     # public cache setting
   CACHE_PREFIX = 'cache://'         # memcache key prefix for actual URLs
   NEG_CACHE_PREFIX = 'noncache://'  # memcache key prefix for non-existant URL
