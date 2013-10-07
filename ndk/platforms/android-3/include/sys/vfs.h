@@ -34,20 +34,42 @@
 
 __BEGIN_DECLS
 
-/* note: this corresponds to the kernel's statfs64 type */
+/* The kernel's __kernel_fsid_t has a 'val' member but glibc uses '__val'. */
+typedef struct { int __val[2]; } __fsid_t;
+
+/* Our struct statfs corresponds to the kernel's statfs64 type. */
+#ifdef __mips__
 struct statfs {
-    uint32_t        f_type;
-    uint32_t        f_bsize;
-    uint64_t        f_blocks;
-    uint64_t        f_bfree;
-    uint64_t        f_bavail;
-    uint64_t        f_files;
-    uint64_t        f_ffree;
-    __kernel_fsid_t f_fsid;
-    uint32_t        f_namelen;
-    uint32_t        f_frsize;
-    uint32_t        f_spare[5];
+    uint32_t f_type;
+    uint32_t f_bsize;
+    uint32_t f_frsize;
+    uint32_t __pad;
+    uint64_t f_blocks;
+    uint64_t f_bfree;
+    uint64_t f_files;
+    uint64_t f_ffree;
+    uint64_t f_bavail;
+    __fsid_t f_fsid;
+    uint32_t f_namelen;
+    uint32_t f_flags;
+    uint32_t f_spare[5];
 };
+#else
+struct statfs {
+    uint32_t f_type;
+    uint32_t f_bsize;
+    uint64_t f_blocks;
+    uint64_t f_bfree;
+    uint64_t f_bavail;
+    uint64_t f_files;
+    uint64_t f_ffree;
+    __fsid_t f_fsid;
+    uint32_t f_namelen;
+    uint32_t f_frsize;
+    uint32_t f_flags;
+    uint32_t f_spare[4];
+};
+#endif
 
 #define  ADFS_SUPER_MAGIC      0xadf5
 #define  AFFS_SUPER_MAGIC      0xADFF
