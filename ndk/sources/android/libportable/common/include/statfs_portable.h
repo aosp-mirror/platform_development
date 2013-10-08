@@ -31,6 +31,26 @@ struct statfs_portable {
     __fsid_t        f_fsid;
     uint32_t        f_namelen;
     uint32_t        f_frsize;
+    uint32_t        f_flags;
+    uint32_t        f_spare[4];
+};
+
+/*
+The MIPS Version is
+struct statfs {
+    uint32_t        f_type;
+    uint32_t        f_bsize;
+    uint32_t        f_frsize;
+    uint32_t        __pad;
+    uint64_t        f_blocks;
+    uint64_t        f_bfree;
+    uint64_t        f_files;
+    uint64_t        f_ffree;
+    uint64_t        f_bavail;
+    __fsid_t        f_fsid;
+    uint32_t        f_namelen;
+    uint32_t        f_flags;
     uint32_t        f_spare[5];
 };
+*/
 #endif /* _STATFS_PORTABLE_H_ */

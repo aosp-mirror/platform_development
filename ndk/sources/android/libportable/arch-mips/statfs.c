@@ -33,6 +33,7 @@ static inline void statfs_ntop(struct statfs *n_statfs, struct statfs_portable *
     p_statfs->f_fsid = n_statfs->f_fsid;
     p_statfs->f_namelen = n_statfs->f_namelen;
     p_statfs->f_frsize = n_statfs->f_frsize;
+    p_statfs->f_flags = n_statfs->f_flags;
 }
 
 int WRAP(statfs)(const char*  path, struct statfs_portable*  stat)
