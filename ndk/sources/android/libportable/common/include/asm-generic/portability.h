@@ -21,8 +21,8 @@
 #define WRAP(f)     f ## _portable
 #define REAL(f)     f
 #else
-/* On host app link with libpportable.a with -Wl,--wrap=symbol, which resolve symbol symbol to __wrap_symbol,
- * and __real_symbol refer to the original symbol
+/* On host app link with libpportable.a with -Wl,--wrap=symbol, which resolves undefined symbol to __wrap_symbol,
+ * and undefined __real_symbol to the original symbol
  */
 #define WRAP(f)     __wrap_ ## f
 #define REAL(f)     __real_ ## f
