@@ -152,7 +152,8 @@ class BionicSysincludes:
                 path_bionic = os.path.join(self.bionic_root, arch_root, 'include', root)
                 ## for every header that both in Bionic and sysroot ##
                 for include in pack[1]:
-                    if include in self.sysincludes[arch][root]:
+                    if (root in self.sysincludes[arch]) and \
+                    (include in self.sysincludes[arch][root]):
                         ## completing paths ##
                         platform = self.sysincludes[arch][root][include][0]
                         file_origin = os.path.join(path_bionic, include)
