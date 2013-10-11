@@ -136,6 +136,30 @@ public class SystemUIModes extends Activity
         win.setAttributes(winParams);
     }
 
+    private void setTranslucentStatus(boolean on) {
+        Window win = getWindow();
+        WindowManager.LayoutParams winParams = win.getAttributes();
+        final int bits = WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS;
+        if (on) {
+            winParams.flags |=  bits;
+        } else {
+            winParams.flags &= ~bits;
+        }
+        win.setAttributes(winParams);
+    }
+
+    private void setTranslucentNavigation(boolean on) {
+        Window win = getWindow();
+        WindowManager.LayoutParams winParams = win.getAttributes();
+        final int bits = WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION;
+        if (on) {
+            winParams.flags |=  bits;
+        } else {
+            winParams.flags &= ~bits;
+        }
+        win.setAttributes(winParams);
+    }
+
     private String getDisplaySize() {
         DisplayMetrics dm = getResources().getDisplayMetrics();
         return String.format("DisplayMetrics = (%d x %d)", dm.widthPixels, dm.heightPixels);
@@ -151,9 +175,10 @@ public class SystemUIModes extends Activity
 
     static int TOAST_LENGTH = 500;
     IV mImage;
-    CheckBox[] mCheckControls = new CheckBox[6];
+    CheckBox[] mCheckControls = new CheckBox[8];
     int[] mCheckFlags = new int[] { View.SYSTEM_UI_FLAG_LOW_PROFILE,
             View.SYSTEM_UI_FLAG_FULLSCREEN, View.SYSTEM_UI_FLAG_HIDE_NAVIGATION,
+            View.SYSTEM_UI_FLAG_IMMERSIVE, View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY,
             View.SYSTEM_UI_FLAG_LAYOUT_STABLE, View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN,
             View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
     };
@@ -179,9 +204,11 @@ public class SystemUIModes extends Activity
         mCheckControls[0] = (CheckBox) findViewById(R.id.modeLowProfile);
         mCheckControls[1] = (CheckBox) findViewById(R.id.modeFullscreen);
         mCheckControls[2] = (CheckBox) findViewById(R.id.modeHideNavigation);
-        mCheckControls[3] = (CheckBox) findViewById(R.id.layoutStable);
-        mCheckControls[4] = (CheckBox) findViewById(R.id.layoutFullscreen);
-        mCheckControls[5] = (CheckBox) findViewById(R.id.layoutHideNavigation);
+        mCheckControls[3] = (CheckBox) findViewById(R.id.modeImmersive);
+        mCheckControls[4] = (CheckBox) findViewById(R.id.modeImmersiveSticky);
+        mCheckControls[5] = (CheckBox) findViewById(R.id.layoutStable);
+        mCheckControls[6] = (CheckBox) findViewById(R.id.layoutFullscreen);
+        mCheckControls[7] = (CheckBox) findViewById(R.id.layoutHideNavigation);
         for (int i=0; i<mCheckControls.length; i++) {
             mCheckControls[i].setOnCheckedChangeListener(checkChangeListener);
         }
@@ -198,6 +225,22 @@ public class SystemUIModes extends Activity
                     @Override
                     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                         setOverscan(isChecked);
+                    }
+                }
+        );
+        ((CheckBox) findViewById(R.id.windowTranslucentStatus)).setOnCheckedChangeListener(
+                new CompoundButton.OnCheckedChangeListener() {
+                    @Override
+                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                        setTranslucentStatus(isChecked);
+                    }
+                }
+        );
+        ((CheckBox) findViewById(R.id.windowTranslucentNav)).setOnCheckedChangeListener(
+                new CompoundButton.OnCheckedChangeListener() {
+                    @Override
+                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                        setTranslucentNavigation(isChecked);
                     }
                 }
         );
