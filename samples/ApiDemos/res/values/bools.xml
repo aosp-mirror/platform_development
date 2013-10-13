@@ -44,4 +44,9 @@
          for JellyBean MR 2 is true. -->
     <bool name="atLeastJellyBeanMR2">false</bool>
 
+    <!-- This resource is true if running under at least KitKat
+         API level.  The default value is false; an alternative value
+         for KitKat is true. -->
+    <bool name="atLeastKitKat">false</bool>
+
 </resources>

@@ -2401,11 +2401,32 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".view.ContentBrowserNavActivity"
+                android:label="Views/System UI Visibility/Content Browser Nav Bar"
+                android:theme="@android:style/Theme.Holo.Light.DarkActionBar"
+                android:uiOptions="splitActionBarWhenNarrow"
+                android:enabled="@bool/atLeastKitKat">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
         <activity android:name=".view.VideoPlayerActivity"
                 android:label="Views/System UI Visibility/Video Player"
                 android:theme="@android:style/Theme.Holo"
                 android:uiOptions="splitActionBarWhenNarrow"
                 android:enabled="@bool/atLeastJellyBean">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".view.TranslucentBarsActivity"
+                android:label="Views/System UI Visibility/Translucent Bars"
+                android:theme="@android:style/Theme.Holo.NoActionBar.TranslucentDecor"
+                android:enabled="@bool/atLeastKitKat">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
