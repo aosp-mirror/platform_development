@@ -183,219 +183,219 @@ __BEGIN_DECLS
 /*
  * ANSI/POSIX
  */
-int	__fpclassifyd(double) __pure2;
-int	__fpclassifyf(float) __pure2;
-int	__fpclassifyl(long double) __pure2;
-int	__isfinitef(float) __pure2;
-int	__isfinite(double) __pure2;
-int	__isfinitel(long double) __pure2;
-int	__isinff(float) __pure2;
-int     __isinf(double) __pure2;
-int	__isinfl(long double) __pure2;
-int	__isnanl(long double) __pure2;
-int	__isnormalf(float) __pure2;
-int	__isnormal(double) __pure2;
-int	__isnormall(long double) __pure2;
-int	__signbit(double) __pure2;
-int	__signbitf(float) __pure2;
-int	__signbitl(long double) __pure2;
+int	__fpclassifyd(double) __NDK_FPABI_MATH__ __pure2;
+int	__fpclassifyf(float) __NDK_FPABI_MATH__ __pure2;
+int	__fpclassifyl(long double) __NDK_FPABI_MATH__ __pure2;
+int	__isfinitef(float) __NDK_FPABI_MATH__ __pure2;
+int	__isfinite(double) __NDK_FPABI_MATH__ __pure2;
+int	__isfinitel(long double) __NDK_FPABI_MATH__ __pure2;
+int	__isinff(float) __NDK_FPABI_MATH__ __pure2;
+int     __isinf(double) __NDK_FPABI_MATH__ __pure2;
+int	__isinfl(long double) __NDK_FPABI_MATH__ __pure2;
+int	__isnanl(long double) __NDK_FPABI_MATH__ __pure2;
+int	__isnormalf(float) __NDK_FPABI_MATH__ __pure2;
+int	__isnormal(double) __NDK_FPABI_MATH__ __pure2;
+int	__isnormall(long double) __NDK_FPABI_MATH__ __pure2;
+int	__signbit(double) __NDK_FPABI_MATH__ __pure2;
+int	__signbitf(float) __NDK_FPABI_MATH__ __pure2;
+int	__signbitl(long double) __NDK_FPABI_MATH__ __pure2;
 
-double	acos(double);
-double	asin(double);
-double	atan(double);
-double	atan2(double, double);
-double	cos(double);
-double	sin(double);
-double	tan(double);
+double	acos(double) __NDK_FPABI_MATH__;
+double	asin(double) __NDK_FPABI_MATH__;
+double	atan(double) __NDK_FPABI_MATH__;
+double	atan2(double, double) __NDK_FPABI_MATH__;
+double	cos(double) __NDK_FPABI_MATH__;
+double	sin(double) __NDK_FPABI_MATH__;
+double	tan(double) __NDK_FPABI_MATH__;
 
-double	cosh(double);
-double	sinh(double);
-double	tanh(double);
+double	cosh(double) __NDK_FPABI_MATH__;
+double	sinh(double) __NDK_FPABI_MATH__;
+double	tanh(double) __NDK_FPABI_MATH__;
 
-double	exp(double);
-double	frexp(double, int *);	/* fundamentally !__pure2 */
-double	ldexp(double, int);
-double	log(double);
-double	log10(double);
-double	modf(double, double *);	/* fundamentally !__pure2 */
+double	exp(double) __NDK_FPABI_MATH__;
+double	frexp(double, int *) __NDK_FPABI_MATH__;	/* fundamentally !__pure2 */
+double	ldexp(double, int) __NDK_FPABI_MATH__;
+double	log(double) __NDK_FPABI_MATH__;
+double	log10(double) __NDK_FPABI_MATH__;
+double	modf(double, double *) __NDK_FPABI_MATH__;	/* fundamentally !__pure2 */
 
-double	pow(double, double);
-double	sqrt(double);
+double	pow(double, double) __NDK_FPABI_MATH__;
+double	sqrt(double) __NDK_FPABI_MATH__;
 
-double	ceil(double);
-double	fabs(double) __pure2;
-double	floor(double);
-double	fmod(double, double);
+double	ceil(double) __NDK_FPABI_MATH__;
+double	fabs(double) __NDK_FPABI_MATH__ __pure2;
+double	floor(double) __NDK_FPABI_MATH__;
+double	fmod(double, double) __NDK_FPABI_MATH__;
 
 /*
  * These functions are not in C90.
  */
 /* #if __BSD_VISIBLE || __ISO_C_VISIBLE >= 1999 || __XSI_VISIBLE */
-double	acosh(double);
-double	asinh(double);
-double	atanh(double);
-double	cbrt(double);
-double	erf(double);
-double	erfc(double);
-double	exp2(double);
-double	expm1(double);
-double	fma(double, double, double);
-double	hypot(double, double);
-int	ilogb(double) __pure2;
-/* int	(isinf)(double) __pure2; */
-int	(isnan)(double) __pure2;
-double	lgamma(double);
-long long llrint(double);
-long long llround(double);
-double	log1p(double);
-double	logb(double);
-long	lrint(double);
-long	lround(double);
-double	nextafter(double, double);
-double	remainder(double, double);
-double	remquo(double, double, int *);
-double	rint(double);
+double	acosh(double) __NDK_FPABI_MATH__;
+double	asinh(double) __NDK_FPABI_MATH__;
+double	atanh(double) __NDK_FPABI_MATH__;
+double	cbrt(double) __NDK_FPABI_MATH__;
+double	erf(double) __NDK_FPABI_MATH__;
+double	erfc(double) __NDK_FPABI_MATH__;
+double	exp2(double) __NDK_FPABI_MATH__;
+double	expm1(double) __NDK_FPABI_MATH__;
+double	fma(double, double, double) __NDK_FPABI_MATH__;
+double	hypot(double, double) __NDK_FPABI_MATH__;
+int	ilogb(double) __NDK_FPABI_MATH__ __pure2;
+/* int	(isinf)(double) __NDK_FPABI_MATH__ __pure2; */
+int	(isnan)(double) __NDK_FPABI_MATH__ __pure2;
+double	lgamma(double) __NDK_FPABI_MATH__;
+long long llrint(double) __NDK_FPABI_MATH__;
+long long llround(double) __NDK_FPABI_MATH__;
+double	log1p(double) __NDK_FPABI_MATH__;
+double	logb(double) __NDK_FPABI_MATH__;
+long	lrint(double) __NDK_FPABI_MATH__;
+long	lround(double) __NDK_FPABI_MATH__;
+double	nextafter(double, double) __NDK_FPABI_MATH__;
+double	remainder(double, double) __NDK_FPABI_MATH__;
+double	remquo(double, double, int *) __NDK_FPABI_MATH__;
+double	rint(double) __NDK_FPABI_MATH__;
 /* #endif */ /* __BSD_VISIBLE || __ISO_C_VISIBLE >= 1999 || __XSI_VISIBLE */
 
 /* #if __BSD_VISIBLE || __XSI_VISIBLE */
-double	j0(double);
-double	j1(double);
-double	jn(int, double);
-double	scalb(double, double);
-double	y0(double);
-double	y1(double);
-double	yn(int, double);
+double	j0(double) __NDK_FPABI_MATH__;
+double	j1(double) __NDK_FPABI_MATH__;
+double	jn(int, double) __NDK_FPABI_MATH__;
+double	scalb(double, double) __NDK_FPABI_MATH__;
+double	y0(double) __NDK_FPABI_MATH__;
+double	y1(double) __NDK_FPABI_MATH__;
+double	yn(int, double) __NDK_FPABI_MATH__;
 
 /* #if __XSI_VISIBLE <= 500 || __BSD_VISIBLE */
-double	gamma(double);
+double	gamma(double) __NDK_FPABI_MATH__;
 /* #endif */
 /* #endif */ /* __BSD_VISIBLE || __XSI_VISIBLE */
 
 /* #if __BSD_VISIBLE || __ISO_C_VISIBLE >= 1999 */
-double	copysign(double, double) __pure2;
-double	fdim(double, double);
-double	fmax(double, double) __pure2;
-double	fmin(double, double) __pure2;
-double	nearbyint(double);
-double	round(double);
-double	scalbln(double, long);
-double	scalbn(double, int);
-double	tgamma(double);
-double	trunc(double);
+double	copysign(double, double) __NDK_FPABI_MATH__ __pure2;
+double	fdim(double, double) __NDK_FPABI_MATH__;
+double	fmax(double, double) __NDK_FPABI_MATH__ __pure2;
+double	fmin(double, double) __NDK_FPABI_MATH__ __pure2;
+double	nearbyint(double) __NDK_FPABI_MATH__;
+double	round(double) __NDK_FPABI_MATH__;
+double	scalbln(double, long) __NDK_FPABI_MATH__;
+double	scalbn(double, int) __NDK_FPABI_MATH__;
+double	tgamma(double) __NDK_FPABI_MATH__;
+double	trunc(double) __NDK_FPABI_MATH__;
 /* #endif */
 
 /*
  * BSD math library entry points
  */
 /* #if __BSD_VISIBLE */
-double	drem(double, double);
-int	finite(double) __pure2;
-int	isnanf(float) __pure2;
+double	drem(double, double) __NDK_FPABI_MATH__;
+int	finite(double) __NDK_FPABI_MATH__ __pure2;
+int	isnanf(float) __NDK_FPABI_MATH__ __pure2;
 
 /*
  * Reentrant version of gamma & lgamma; passes signgam back by reference
  * as the second argument; user must allocate space for signgam.
  */
-double	gamma_r(double, int *);
-double	lgamma_r(double, int *);
+double	gamma_r(double, int *) __NDK_FPABI_MATH__;
+double	lgamma_r(double, int *) __NDK_FPABI_MATH__;
 
 /*
  * IEEE Test Vector
  */
-double	significand(double);
+double	significand(double) __NDK_FPABI_MATH__;
 /* #endif */ /* __BSD_VISIBLE */
 
 /* float versions of ANSI/POSIX functions */
 /*#if __ISO_C_VISIBLE >= 1999 */
-float	acosf(float);
-float	asinf(float);
-float	atanf(float);
-float	atan2f(float, float);
-float	cosf(float);
-float	sinf(float);
-float	tanf(float);
+float	acosf(float) __NDK_FPABI_MATH__;
+float	asinf(float) __NDK_FPABI_MATH__;
+float	atanf(float) __NDK_FPABI_MATH__;
+float	atan2f(float, float) __NDK_FPABI_MATH__;
+float	cosf(float) __NDK_FPABI_MATH__;
+float	sinf(float) __NDK_FPABI_MATH__;
+float	tanf(float) __NDK_FPABI_MATH__;
 
-float	coshf(float);
-float	sinhf(float);
-float	tanhf(float);
+float	coshf(float) __NDK_FPABI_MATH__;
+float	sinhf(float) __NDK_FPABI_MATH__;
+float	tanhf(float) __NDK_FPABI_MATH__;
 
-float	exp2f(float);
-float	expf(float);
-float	expm1f(float);
-float	frexpf(float, int *);	/* fundamentally !__pure2 */
-int	ilogbf(float) __pure2;
-float	ldexpf(float, int);
-float	log10f(float);
-float	log1pf(float);
-float	logf(float);
-float	modff(float, float *);	/* fundamentally !__pure2 */
+float	exp2f(float) __NDK_FPABI_MATH__;
+float	expf(float) __NDK_FPABI_MATH__;
+float	expm1f(float) __NDK_FPABI_MATH__;
+float	frexpf(float, int *) __NDK_FPABI_MATH__;	/* fundamentally !__pure2 */
+int	ilogbf(float) __NDK_FPABI_MATH__ __pure2;
+float	ldexpf(float, int) __NDK_FPABI_MATH__;
+float	log10f(float) __NDK_FPABI_MATH__;
+float	log1pf(float) __NDK_FPABI_MATH__;
+float	logf(float) __NDK_FPABI_MATH__;
+float	modff(float, float *) __NDK_FPABI_MATH__;	/* fundamentally !__pure2 */
 
-float	powf(float, float);
-float	sqrtf(float);
+float	powf(float, float) __NDK_FPABI_MATH__;
+float	sqrtf(float) __NDK_FPABI_MATH__;
 
-float	ceilf(float);
-float	fabsf(float) __pure2;
-float	floorf(float);
-float	fmodf(float, float);
-float	roundf(float);
+float	ceilf(float) __NDK_FPABI_MATH__;
+float	fabsf(float) __NDK_FPABI_MATH__ __pure2;
+float	floorf(float) __NDK_FPABI_MATH__;
+float	fmodf(float, float) __NDK_FPABI_MATH__;
+float	roundf(float) __NDK_FPABI_MATH__;
 
-float	erff(float);
-float	erfcf(float);
-float	hypotf(float, float);
-float	lgammaf(float);
+float	erff(float) __NDK_FPABI_MATH__;
+float	erfcf(float) __NDK_FPABI_MATH__;
+float	hypotf(float, float) __NDK_FPABI_MATH__;
+float	lgammaf(float) __NDK_FPABI_MATH__;
 
-float	acoshf(float);
-float	asinhf(float);
-float	atanhf(float);
-float	cbrtf(float);
-float	logbf(float);
-float	copysignf(float, float) __pure2;
-long long llrintf(float);
-long long llroundf(float);
-long	lrintf(float);
-long	lroundf(float);
-float	nearbyintf(float);
-float	nextafterf(float, float);
-float	remainderf(float, float);
-float	remquof(float, float, int *);
-float	rintf(float);
-float	scalblnf(float, long);
-float	scalbnf(float, int);
-float	truncf(float);
+float	acoshf(float) __NDK_FPABI_MATH__;
+float	asinhf(float) __NDK_FPABI_MATH__;
+float	atanhf(float) __NDK_FPABI_MATH__;
+float	cbrtf(float) __NDK_FPABI_MATH__;
+float	logbf(float) __NDK_FPABI_MATH__;
+float	copysignf(float, float) __NDK_FPABI_MATH__ __pure2;
+long long llrintf(float) __NDK_FPABI_MATH__;
+long long llroundf(float) __NDK_FPABI_MATH__;
+long	lrintf(float) __NDK_FPABI_MATH__;
+long	lroundf(float) __NDK_FPABI_MATH__;
+float	nearbyintf(float) __NDK_FPABI_MATH__;
+float	nextafterf(float, float) __NDK_FPABI_MATH__;
+float	remainderf(float, float) __NDK_FPABI_MATH__;
+float	remquof(float, float, int *) __NDK_FPABI_MATH__;
+float	rintf(float) __NDK_FPABI_MATH__;
+float	scalblnf(float, long) __NDK_FPABI_MATH__;
+float	scalbnf(float, int) __NDK_FPABI_MATH__;
+float	truncf(float) __NDK_FPABI_MATH__;
 
-float	fdimf(float, float);
-float	fmaf(float, float, float);
-float	fmaxf(float, float) __pure2;
-float	fminf(float, float) __pure2;
+float	fdimf(float, float) __NDK_FPABI_MATH__;
+float	fmaf(float, float, float) __NDK_FPABI_MATH__;
+float	fmaxf(float, float) __NDK_FPABI_MATH__ __pure2;
+float	fminf(float, float) __NDK_FPABI_MATH__ __pure2;
 /* #endif */
 
 /*
  * float versions of BSD math library entry points
  */
 /* #if __BSD_VISIBLE */
-float	dremf(float, float);
-int	finitef(float) __pure2;
-float	gammaf(float);
-float	j0f(float);
-float	j1f(float);
-float	jnf(int, float);
-float	scalbf(float, float);
-float	y0f(float);
-float	y1f(float);
-float	ynf(int, float);
+float	dremf(float, float) __NDK_FPABI_MATH__;
+int	finitef(float) __NDK_FPABI_MATH__ __pure2;
+float	gammaf(float) __NDK_FPABI_MATH__;
+float	j0f(float) __NDK_FPABI_MATH__;
+float	j1f(float) __NDK_FPABI_MATH__;
+float	jnf(int, float) __NDK_FPABI_MATH__;
+float	scalbf(float, float) __NDK_FPABI_MATH__;
+float	y0f(float) __NDK_FPABI_MATH__;
+float	y1f(float) __NDK_FPABI_MATH__;
+float	ynf(int, float) __NDK_FPABI_MATH__;
 
 /*
  * Float versions of reentrant version of gamma & lgamma; passes
  * signgam back by reference as the second argument; user must
  * allocate space for signgam.
  */
-float	gammaf_r(float, int *);
-float	lgammaf_r(float, int *);
+float	gammaf_r(float, int *) __NDK_FPABI_MATH__;
+float	lgammaf_r(float, int *) __NDK_FPABI_MATH__;
 
 /*
  * float version of IEEE Test Vector
  */
-float	significandf(float);
+float	significandf(float) __NDK_FPABI_MATH__;
 /* #endif */	/* __BSD_VISIBLE */ 
 
 /*
@@ -403,82 +403,82 @@ float	significandf(float);
  */
 /* #if __ISO_C_VISIBLE >= 1999 */
 #if 0
-long double	acoshl(long double);
-long double	acosl(long double);
-long double	asinhl(long double);
-long double	asinl(long double);
-long double	atan2l(long double, long double);
-long double	atanhl(long double);
-long double	atanl(long double);
-long double	cbrtl(long double);
+long double	acoshl(long double) __NDK_FPABI_MATH__;
+long double	acosl(long double) __NDK_FPABI_MATH__;
+long double	asinhl(long double) __NDK_FPABI_MATH__;
+long double	asinl(long double) __NDK_FPABI_MATH__;
+long double	atan2l(long double, long double) __NDK_FPABI_MATH__;
+long double	atanhl(long double) __NDK_FPABI_MATH__;
+long double	atanl(long double) __NDK_FPABI_MATH__;
+long double	cbrtl(long double) __NDK_FPABI_MATH__;
 #endif
-long double	ceill(long double);
-long double	copysignl(long double, long double) __pure2;
+long double	ceill(long double) __NDK_FPABI_MATH__;
+long double	copysignl(long double, long double) __NDK_FPABI_MATH__ __pure2;
 #if 0
-long double	coshl(long double);
-long double	cosl(long double);
-long double	erfcl(long double);
-long double	erfl(long double);
-long double	exp2l(long double);
-long double	expl(long double);
-long double	expm1l(long double);
+long double	coshl(long double) __NDK_FPABI_MATH__;
+long double	cosl(long double) __NDK_FPABI_MATH__;
+long double	erfcl(long double) __NDK_FPABI_MATH__;
+long double	erfl(long double) __NDK_FPABI_MATH__;
+long double	exp2l(long double) __NDK_FPABI_MATH__;
+long double	expl(long double) __NDK_FPABI_MATH__;
+long double	expm1l(long double) __NDK_FPABI_MATH__;
 #endif
-long double	fabsl(long double) __pure2;
-long double	fdiml(long double, long double);
-long double	floorl(long double);
-long double	fmal(long double, long double, long double);
-long double	fmaxl(long double, long double) __pure2;
-long double	fminl(long double, long double) __pure2;
+long double	fabsl(long double) __NDK_FPABI_MATH__ __pure2;
+long double	fdiml(long double, long double) __NDK_FPABI_MATH__;
+long double	floorl(long double) __NDK_FPABI_MATH__;
+long double	fmal(long double, long double, long double) __NDK_FPABI_MATH__;
+long double	fmaxl(long double, long double) __NDK_FPABI_MATH__ __pure2;
+long double	fminl(long double, long double) __NDK_FPABI_MATH__ __pure2;
 #if 0
-long double	fmodl(long double, long double);
+long double	fmodl(long double, long double) __NDK_FPABI_MATH__;
 #endif
-long double	frexpl(long double value, int *); /* fundamentally !__pure2 */
+long double	frexpl(long double value, int *) __NDK_FPABI_MATH__; /* fundamentally !__pure2 */
 #if 0
-long double	hypotl(long double, long double);
+long double	hypotl(long double, long double) __NDK_FPABI_MATH__;
 #endif
-int		ilogbl(long double) __pure2;
-long double	ldexpl(long double, int);
+int		ilogbl(long double) __NDK_FPABI_MATH__ __pure2;
+long double	ldexpl(long double, int) __NDK_FPABI_MATH__;
 #if 0
-long double	lgammal(long double);
-long long	llrintl(long double);
+long double	lgammal(long double) __NDK_FPABI_MATH__;
+long long	llrintl(long double) __NDK_FPABI_MATH__;
 #endif
-long long	llroundl(long double);
+long long	llroundl(long double) __NDK_FPABI_MATH__;
 #if 0
-long double	log10l(long double);
-long double	log1pl(long double);
-long double	log2l(long double);
-long double	logbl(long double);
-long double	logl(long double);
-long		lrintl(long double);
+long double	log10l(long double) __NDK_FPABI_MATH__;
+long double	log1pl(long double) __NDK_FPABI_MATH__;
+long double	log2l(long double) __NDK_FPABI_MATH__;
+long double	logbl(long double) __NDK_FPABI_MATH__;
+long double	logl(long double) __NDK_FPABI_MATH__;
+long		lrintl(long double) __NDK_FPABI_MATH__;
 #endif
-long		lroundl(long double);
+long		lroundl(long double) __NDK_FPABI_MATH__;
 #if 0
-long double	modfl(long double, long double *); /* fundamentally !__pure2 */
-long double	nanl(const char *) __pure2;
-long double	nearbyintl(long double);
+long double	modfl(long double, long double *) __NDK_FPABI_MATH__; /* fundamentally !__pure2 */
+long double	nanl(const char *) __NDK_FPABI_MATH__ __pure2;
+long double	nearbyintl(long double) __NDK_FPABI_MATH__;
 #endif
-long double	nextafterl(long double, long double);
-double		nexttoward(double, long double);
-float		nexttowardf(float, long double);
-long double	nexttowardl(long double, long double);
+long double	nextafterl(long double, long double) __NDK_FPABI_MATH__;
+double		nexttoward(double, long double) __NDK_FPABI_MATH__;
+float		nexttowardf(float, long double) __NDK_FPABI_MATH__;
+long double	nexttowardl(long double, long double) __NDK_FPABI_MATH__;
 #if 0
-long double	powl(long double, long double);
-long double	remainderl(long double, long double);
-long double	remquol(long double, long double, int *);
-long double	rintl(long double);
+long double	powl(long double, long double) __NDK_FPABI_MATH__;
+long double	remainderl(long double, long double) __NDK_FPABI_MATH__;
+long double	remquol(long double, long double, int *) __NDK_FPABI_MATH__;
+long double	rintl(long double) __NDK_FPABI_MATH__;
 #endif
-long double	roundl(long double);
-long double	scalblnl(long double, long);
-long double	scalbnl(long double, int);
+long double	roundl(long double) __NDK_FPABI_MATH__;
+long double	scalblnl(long double, long) __NDK_FPABI_MATH__;
+long double	scalbnl(long double, int) __NDK_FPABI_MATH__;
 #if 0
-long double	sinhl(long double);
-long double	sinl(long double);
-long double	sqrtl(long double);
-long double	tanhl(long double);
-long double	tanl(long double);
-long double	tgammal(long double);
+long double	sinhl(long double) __NDK_FPABI_MATH__;
+long double	sinl(long double) __NDK_FPABI_MATH__;
+long double	sqrtl(long double) __NDK_FPABI_MATH__;
+long double	tanhl(long double) __NDK_FPABI_MATH__;
+long double	tanl(long double) __NDK_FPABI_MATH__;
+long double	tgammal(long double) __NDK_FPABI_MATH__;
 #endif
-long double	truncl(long double);
+long double	truncl(long double) __NDK_FPABI_MATH__;
 
 /* #endif */ /* __ISO_C_VISIBLE >= 1999 */
 __END_DECLS
