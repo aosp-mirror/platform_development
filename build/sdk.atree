@@ -365,22 +365,22 @@ frameworks/support/v7/appcompat/src/.readme                                     
 ${OUT_DIR}/target/common/obj/PACKAGING/android-support-v7-appcompat_intermediates/android-support-v7-appcompat.jar    extras/android/support/v7/appcompat/libs/android-support-v7-appcompat.jar
 ${OUT_DIR}/target/common/obj/PACKAGING/android-support-v4_intermediates/android-support-v4.jar                        extras/android/support/v7/appcompat/libs/android-support-v4.jar
 
-frameworks/support/multidex/library/README.txt                                                            extras/android/support/multidex/library/README.txt
-frameworks/support/multidex/library/.project                                                              extras/android/support/multidex/library/.project
-frameworks/support/multidex/library/.classpath                                                            extras/android/support/multidex/library/.classpath
-frameworks/support/multidex/library/AndroidManifest.xml                                                   extras/android/support/multidex/library/AndroidManifest.xml
-frameworks/support/multidex/library/project.properties                                                    extras/android/support/multidex/library/project.properties
-frameworks/support/multidex/library/src/.readme                                                           extras/android/support/multidex/library/src/.readme
-frameworks/support/multidex/library/res/.readme                                                           extras/android/support/multidex/library/res/.readme
+frameworks/multidex/library/README.txt                                                            extras/android/support/multidex/library/README.txt
+frameworks/multidex/library/.project                                                              extras/android/support/multidex/library/.project
+frameworks/multidex/library/.classpath                                                            extras/android/support/multidex/library/.classpath
+frameworks/multidex/library/AndroidManifest.xml                                                   extras/android/support/multidex/library/AndroidManifest.xml
+frameworks/multidex/library/project.properties                                                    extras/android/support/multidex/library/project.properties
+frameworks/multidex/library/src/.readme                                                           extras/android/support/multidex/library/src/.readme
+frameworks/multidex/library/res/.readme                                                           extras/android/support/multidex/library/res/.readme
 ${OUT_DIR}/target/common/obj/PACKAGING/android-support-multidex_intermediates/android-support-multidex.jar              extras/android/support/multidex/library/libs/android-support-multidex.jar
 
-frameworks/support/multidex/instrumentation/README.txt                                                         extras/android/support/multidex/instrumentation/README.txt
-frameworks/support/multidex/instrumentation/.project                                                           extras/android/support/multidex/instrumentation/.project
-frameworks/support/multidex/instrumentation/.classpath                                                         extras/android/support/multidex/instrumentation/.classpath
-frameworks/support/multidex/instrumentation/AndroidManifest.xml                                                extras/android/support/multidex/instrumentation/AndroidManifest.xml
-frameworks/support/multidex/instrumentation/project.properties                                                 extras/android/support/multidex/instrumentation/project.properties
-frameworks/support/multidex/instrumentation/src/.readme                                                        extras/android/support/multidex/instrumentation/src/.readme
-frameworks/support/multidex/instrumentation/res/.readme                                                        extras/android/support/multidex/instrumentation/res/.readme
+frameworks/multidex/instrumentation/README.txt                                                         extras/android/support/multidex/instrumentation/README.txt
+frameworks/multidex/instrumentation/.project                                                           extras/android/support/multidex/instrumentation/.project
+frameworks/multidex/instrumentation/.classpath                                                         extras/android/support/multidex/instrumentation/.classpath
+frameworks/multidex/instrumentation/AndroidManifest.xml                                                extras/android/support/multidex/instrumentation/AndroidManifest.xml
+frameworks/multidex/instrumentation/project.properties                                                 extras/android/support/multidex/instrumentation/project.properties
+frameworks/multidex/instrumentation/src/.readme                                                        extras/android/support/multidex/instrumentation/src/.readme
+frameworks/multidex/instrumentation/res/.readme                                                        extras/android/support/multidex/instrumentation/res/.readme
 ${OUT_DIR}/target/common/obj/PACKAGING/android-support-multidex-instrumentation_intermediates/android-support-multidex-instrumentation.jar      extras/android/support/multidex/instrumentation/libs/android-support-multidex-instrumentation.jar
 ${OUT_DIR}/target/common/obj/PACKAGING/android-support-multidex_intermediates/android-support-multidex.jar                                      extras/android/support/multidex/instrumentation/libs/android-support-multidex.jar
 
