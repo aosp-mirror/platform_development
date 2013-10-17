@@ -636,7 +636,7 @@ float AMotionEvent_getY(const AInputEvent* motion_event, size_t pointer_index);
 
 /* Get the current pressure of this event for the given pointer index.
  * The pressure generally ranges from 0 (no pressure at all) to 1 (normal pressure),
- * however values higher than 1 may be generated depending on the calibration of
+ * although values higher than 1 may be generated depending on the calibration of
  * the input device. */
 float AMotionEvent_getPressure(const AInputEvent* motion_event, size_t pointer_index);
 
@@ -730,7 +730,7 @@ float AMotionEvent_getHistoricalY(const AInputEvent* motion_event, size_t pointe
 /* Get the historical pressure of this event for the given pointer index that
  * occurred between this event and the previous motion event.
  * The pressure generally ranges from 0 (no pressure at all) to 1 (normal pressure),
- * however values higher than 1 may be generated depending on the calibration of
+ * although values higher than 1 may be generated depending on the calibration of
  * the input device. */
 float AMotionEvent_getHistoricalPressure(const AInputEvent* motion_event, size_t pointer_index,
         size_t history_index);
