@@ -1,6 +1,6 @@
-/*	$OpenBSD: _types.h,v 1.3 2006/02/14 18:12:58 miod Exp $	*/
+/*	$OpenBSD: _types.h,v 1.13 2013/07/05 19:46:27 guenther Exp $	*/
 
-/*-
+/*
  * Copyright (c) 1990, 1993
  *	The Regents of the University of California.  All rights reserved.
  *
@@ -32,8 +32,28 @@
  *	@(#)ansi.h	8.2 (Berkeley) 1/4/94
  */
 
-#ifndef _ARM__TYPES_H_
-#define _ARM__TYPES_H_
+#ifndef _MACHINE__TYPES_H_
+#define _MACHINE__TYPES_H_
+
+/*
+ * _ALIGN(p) rounds p (pointer or byte index) up to a correctly-aligned
+ * value for all data types (int, long, ...).   The result is an
+ * unsigned long and must be cast to any desired pointer type.
+ *
+ * _ALIGNED_POINTER is a boolean macro that checks whether an address
+ * is valid to fetch data elements of type t from on this architecture.
+ * This does not reflect the optimal alignment, just the possibility
+ * (within reasonable limits).
+ */
+#define	_ALIGNBYTES	(sizeof(long) - 1)
+#define	_ALIGN(p)	(((unsigned long)(p) + _ALIGNBYTES) &~_ALIGNBYTES)
+#define	_ALIGNED_POINTER(p,t)	1
+
+#if defined(_KERNEL)
+typedef struct label_t {
+	long val[8];
+} label_t;
+#endif
 
 /* 7.18.1.1 Exact-width integer types */
 typedef	__signed char		__int8_t;
@@ -66,17 +86,29 @@ typedef	__int32_t		__int_fast32_t;
 typedef	__uint32_t		__uint_fast32_t;
 typedef	__int64_t		__int_fast64_t;
 typedef	__uint64_t		__uint_fast64_t;
+#define	__INT_FAST8_MIN		INT32_MIN
+#define	__INT_FAST16_MIN	INT32_MIN
+#define	__INT_FAST32_MIN	INT32_MIN
+#define	__INT_FAST64_MIN	INT64_MIN
+#define	__INT_FAST8_MAX		INT32_MAX
+#define	__INT_FAST16_MAX	INT32_MAX
+#define	__INT_FAST32_MAX	INT32_MAX
+#define	__INT_FAST64_MAX	INT64_MAX
+#define	__UINT_FAST8_MAX	UINT32_MAX
+#define	__UINT_FAST16_MAX	UINT32_MAX
+#define	__UINT_FAST32_MAX	UINT32_MAX
+#define	__UINT_FAST64_MAX	UINT64_MAX
 
 /* 7.18.1.4 Integer types capable of holding object pointers */
-typedef	int 			__intptr_t;
-typedef	unsigned int 		__uintptr_t;
+typedef	long			__intptr_t;
+typedef	unsigned long		__uintptr_t;
 
 /* 7.18.1.5 Greatest-width integer types */
 typedef	__int64_t		__intmax_t;
 typedef	__uint64_t		__uintmax_t;
 
 /* Register size */
-typedef __int32_t		__register_t;
+typedef long			__register_t;
 
 /* VM system types */
 typedef unsigned long		__vaddr_t;
@@ -85,15 +117,14 @@ typedef unsigned long		__vsize_t;
 typedef unsigned long		__psize_t;
 
 /* Standard system types */
-typedef int			__clock_t;
-typedef int			__clockid_t;
+typedef	double			__double_t;
+typedef	float			__float_t;
 typedef long			__ptrdiff_t;
-typedef	int			__time_t;
-typedef int			__timer_t;
+typedef	long			__ssize_t;
 #if defined(__GNUC__) && __GNUC__ >= 3
 typedef	__builtin_va_list	__va_list;
 #else
-typedef	char *			__va_list;
+typedef char *			__va_list;
 #endif
 
 /* Wide character support types */
@@ -105,4 +136,4 @@ typedef	int			__rune_t;
 typedef	void *			__wctrans_t;
 typedef	void *			__wctype_t;
 
-#endif	/* _ARM__TYPES_H_ */
+#endif	/* _MACHINE__TYPES_H_ */

@@ -1,5 +1,4 @@
-/*	$OpenBSD: limits.h,v 1.3 2006/01/06 22:48:46 millert Exp $	*/
-/*	$NetBSD: limits.h,v 1.4 2003/04/28 23:16:18 bjh21 Exp $	*/
+/*	$OpenBSD: limits.h,v 1.5 2009/11/27 19:54:35 guenther Exp $	*/
 
 /*
  * Copyright (c) 1988 The Regents of the University of California.
@@ -29,25 +28,23 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	from: @(#)limits.h	7.2 (Berkeley) 6/28/90
+ *	@(#)limits.h	7.2 (Berkeley) 6/28/90
  */
 
-#ifndef	_ARM32_LIMITS_H_
-#define	_ARM32_LIMITS_H_
+#ifndef	_MACHINE_LIMITS_H_
+#define	_MACHINE_LIMITS_H_
 
 #include <sys/cdefs.h>
 
-#define	MB_LEN_MAX	1		/* no multibyte characters */
-
+#if __POSIX_VISIBLE || __XPG_VISIBLE
 #ifndef	SIZE_MAX
-#define	SIZE_MAX	UINT_MAX	/* max value for a size_t */
+#define SIZE_MAX	ULONG_MAX	/* max value for a size_t */
 #endif
-#ifndef SSIZE_MAX
-#define	SSIZE_MAX	INT_MAX		/* max value for a ssize_t */
+#define SSIZE_MAX	LONG_MAX	/* max value for a ssize_t */
 #endif
 
 #if __BSD_VISIBLE
-#define	SIZE_T_MAX	UINT_MAX	/* max value for a size_t (historic) */
+#define	SIZE_T_MAX	ULONG_MAX	/* max value for a size_t (historic) */
 
 #define	UQUAD_MAX	0xffffffffffffffffULL		/* max unsigned quad */
 #define	QUAD_MAX	0x7fffffffffffffffLL		/* max signed quad */
@@ -55,9 +52,4 @@
 
 #endif /* __BSD_VISIBLE */
 
-#define LONGLONG_BIT    64
-#define LONGLONG_MIN    (-9223372036854775807LL-1)
-#define LONGLONG_MAX    9223372036854775807LL
-#define ULONGLONG_MAX   18446744073709551615ULL
-
-#endif	/* _ARM32_LIMITS_H_ */
+#endif /* _MACHINE_LIMITS_H_ */
