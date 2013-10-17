@@ -1,7 +1,7 @@
-/*	$OpenBSD: endian.h,v 1.3 2005/12/13 00:35:23 millert Exp $	*/
+/*      $OpenBSD: endian.h,v 1.6 2011/11/08 17:06:51 deraadt Exp $      */
 
 /*
- * Copyright (C) 2010 The Android Open Source Project
+ * Copyright (C) 2013 The Android Open Source Project
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,62 +28,12 @@
  * SUCH DAMAGE.
  */
 
-#ifndef _ARM_ENDIAN_H_
-#define _ARM_ENDIAN_H_
+#ifndef __AARCH64_ENDIAN_H_
+#define __AARCH64_ENDIAN_H_
 
-#ifdef __GNUC__
-
-/*
- * REV and REV16 weren't available on ARM5 or ARM4.
- * We don't include <machine/cpu-features.h> because it pollutes the
- * namespace with macros like PLD.
- */
-#if !defined __ARM_ARCH_5__ && !defined __ARM_ARCH_5T__ && \
-    !defined __ARM_ARCH_5TE__ && !defined __ARM_ARCH_5TEJ__ && \
-    !defined __ARM_ARCH_4T__ && !defined __ARM_ARCH_4__
-
-/* According to RealView Assembler User's Guide, REV and REV16 are available
- * in Thumb code and 16-bit instructions when used in Thumb-2 code.
- *
- * REV Rd, Rm
- *   Rd and Rm must both be Lo registers.
- *
- * REV16 Rd, Rm
- *   Rd and Rm must both be Lo registers.
- *
- * The +l constraint takes care of this without constraining us in ARM mode.
- */
-#define __swap16md(x) ({                                        \
-    register u_int16_t _x = (x);                                \
-    __asm volatile ("rev16 %0, %0" : "+l" (_x));                \
-    _x;                                                         \
-})
-
-#define __swap32md(x) ({                                        \
-    register u_int32_t _x = (x);                                \
-    __asm volatile ("rev %0, %0" : "+l" (_x));                  \
-    _x;                                                         \
-})
-
-#define __swap64md(x) ({                                        \
-    u_int64_t _swap64md_x = (x);                                \
-    (u_int64_t) __swap32md(_swap64md_x >> 32) |                 \
-        (u_int64_t) __swap32md(_swap64md_x & 0xffffffff) << 32; \
-})
-
-/* Tell sys/endian.h we have MD variants of the swap macros.  */
-#define MD_SWAP
-
-#endif  /* __ARM_ARCH__ */
-#endif  /* __GNUC__ */
-
-#if defined(__ARMEB__)
-#define _BYTE_ORDER _BIG_ENDIAN
-#else
+/* FIXME - work in progress */
 #define _BYTE_ORDER _LITTLE_ENDIAN
-#endif
 #define __STRICT_ALIGNMENT
-#include <sys/types.h>
 #include <sys/endian.h>
 
-#endif  /* !_ARM_ENDIAN_H_ */
+#endif /* __AARCH64_ENDIAN_H_ */
