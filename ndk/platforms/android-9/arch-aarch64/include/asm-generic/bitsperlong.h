@@ -16,4 +16,10 @@
  ***
  ****************************************************************************
  ****************************************************************************/
-#include <asm-generic/posix_types.h>
+#ifndef _UAPI__ASM_GENERIC_BITS_PER_LONG
+#define _UAPI__ASM_GENERIC_BITS_PER_LONG
+#ifndef __BITS_PER_LONG
+#define __BITS_PER_LONG 32
+/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+#endif
+#endif

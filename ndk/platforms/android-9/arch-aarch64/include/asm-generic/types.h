@@ -16,4 +16,8 @@
  ***
  ****************************************************************************
  ****************************************************************************/
-#include <asm-generic/posix_types.h>
+#ifndef _ASM_GENERIC_TYPES_H
+#define _ASM_GENERIC_TYPES_H
+#include <asm-generic/int-ll64.h>
+#endif
+/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
