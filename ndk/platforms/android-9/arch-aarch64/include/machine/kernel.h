@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008 The Android Open Source Project
+ * Copyright (C) 2013 The Android Open Source Project
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,18 +25,19 @@
  * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-#ifndef _ARCH_ARM_KERNEL_H
-#define _ARCH_ARM_KERNEL_H
+
+#ifndef _ARCH_AARCH64_KERNEL_H
+#define _ARCH_AARCH64_KERNEL_H
 
 /* this file contains kernel-specific definitions that were optimized out of
    our processed kernel headers, but still useful nonetheless... */
 
-typedef unsigned long   __kernel_blkcnt_t;
-typedef unsigned long   __kernel_blksize_t;
+typedef __kernel_ulong_t __kernel_blkcnt_t;
+typedef __kernel_ulong_t __kernel_blksize_t;
 
 /* these aren't really defined by the kernel headers though... */
-typedef unsigned long   __kernel_fsblkcnt_t;
-typedef unsigned long   __kernel_fsfilcnt_t;
-typedef unsigned int    __kernel_id_t;
+typedef __kernel_ulong_t __kernel_fsblkcnt_t;
+typedef __kernel_ulong_t __kernel_fsfilcnt_t;
+typedef unsigned int __kernel_id_t;
 
-#endif /* _ARCH_ARM_KERNEL_H */
+#endif /* _ARCH_AARCH64_KERNEL_H */
