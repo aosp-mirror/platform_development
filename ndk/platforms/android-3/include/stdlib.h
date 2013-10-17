@@ -63,8 +63,9 @@ extern long strtol(const char *, char **, int);
 extern long long strtoll(const char *, char **, int);
 extern unsigned long strtoul(const char *, char **, int);
 extern unsigned long long strtoull(const char *, char **, int);
-extern double strtod(const char *nptr, char **endptr);
+extern double strtod(const char *nptr, char **endptr) __NDK_FPABI__;
 
+__NDK_FPABI__
 static __inline__ float strtof(const char *nptr, char **endptr)
 {
     return (float)strtod(nptr, endptr);
@@ -74,6 +75,7 @@ extern int atoi(const char *);
 extern long atol(const char *);
 extern long long atoll(const char *);
 
+ __NDK_FPABI__
 static __inline__ double atof(const char *nptr)
 {
     return (strtod(nptr, NULL));
@@ -105,8 +107,8 @@ extern long mrand48(void);
 extern long nrand48(unsigned short *);
 extern long lrand48(void);
 extern unsigned short *seed48(unsigned short*);
-extern double erand48(unsigned short xsubi[3]);
-extern double drand48(void);
+extern double erand48(unsigned short xsubi[3]) __NDK_FPABI__;
+extern double drand48(void) __NDK_FPABI__;
 extern void srand48(long);
 extern unsigned int arc4random(void);
 extern void arc4random_stir(void);
