@@ -100,7 +100,10 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
             public void onScrollStateChanged(AbsListView absListView, int scrollState) {
                 // Pause fetcher to ensure smoother scrolling when flinging
                 if (scrollState == AbsListView.OnScrollListener.SCROLL_STATE_FLING) {
-                    mImageFetcher.setPauseWork(true);
+                    // Before Honeycomb pause image loading on scroll to help with performance
+                    if (!Utils.hasHoneycomb()) {
+                        mImageFetcher.setPauseWork(true);
+                    }
                 } else {
                     mImageFetcher.setPauseWork(false);
                 }
