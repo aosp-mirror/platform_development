@@ -16,8 +16,6 @@
 
 package com.example.android.bitmapfun.util;
 
-import com.example.android.bitmapfun.BuildConfig;
-
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -31,6 +29,8 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.util.LruCache;
 import android.util.Log;
+
+import com.example.android.bitmapfun.BuildConfig;
 
 import java.io.File;
 import java.io.FileDescriptor;
