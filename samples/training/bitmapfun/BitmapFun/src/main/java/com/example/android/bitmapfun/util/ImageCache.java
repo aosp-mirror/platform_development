@@ -20,6 +20,7 @@ import android.annotation.TargetApi;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
+import android.graphics.Bitmap.Config;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
@@ -41,8 +42,10 @@ import java.io.OutputStream;
 import java.lang.ref.SoftReference;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
 
 /**
  * This class handles disk and memory caching of bitmaps in conjunction with the
@@ -76,7 +79,7 @@ public class ImageCache {
     private final Object mDiskCacheLock = new Object();
     private boolean mDiskCacheStarting = true;
 
-    private HashSet<SoftReference<Bitmap>> mReusableBitmaps;
+    private Set<SoftReference<Bitmap>> mReusableBitmaps;
 
     /**
      * Create a new ImageCache object using the specified parameters. This should not be
@@ -130,9 +133,18 @@ public class ImageCache {
                 Log.d(TAG, "Memory cache created (size = " + mCacheParams.memCacheSize + ")");
             }
 
-            // If we're running on Honeycomb or newer, then
+            // If we're running on Honeycomb or newer, create a set of reusable bitmaps that can be
+            // populated into the inBitmap field of BitmapFactory.Options. Note that the set is
+            // of SoftReferences which will actually not be very effective due to the garbage
+            // collector being aggressive clearing Soft/WeakReferences. A better approach
+            // would be to use a strongly references bitmaps, however this would require some
+            // balancing of memory usage between this set and the bitmap LruCache. It would also
+            // require knowledge of the expected size of the bitmaps. From Honeycomb to JellyBean
+            // the size would need to be precise, from KitKat onward the size would just need to
+            // be the upper bound (due to changes in how inBitmap can re-use bitmaps).
             if (Utils.hasHoneycomb()) {
-                mReusableBitmaps = new HashSet<SoftReference<Bitmap>>();
+                mReusableBitmaps =
+                        Collections.synchronizedSet(new HashSet<SoftReference<Bitmap>>());
             }
 
             mMemoryCache = new LruCache<String, BitmapDrawable>(mCacheParams.memCacheSize) {
@@ -152,7 +164,7 @@ public class ImageCache {
 
                         if (Utils.hasHoneycomb()) {
                             // We're running on Honeycomb or later, so add the bitmap
-                            // to a SoftRefrence set for possible use with inBitmap later
+                            // to a SoftReference set for possible use with inBitmap later
                             mReusableBitmaps.add(new SoftReference<Bitmap>(oldValue.getBitmap()));
                         }
                     }
@@ -466,7 +478,7 @@ public class ImageCache {
         /**
          * Sets the memory cache size based on a percentage of the max available VM memory.
          * Eg. setting percent to 0.2 would set the memory cache to one fifth of the available
-         * memory. Throws {@link IllegalArgumentException} if percent is < 0.05 or > .8.
+         * memory. Throws {@link IllegalArgumentException} if percent is < 0.01 or > .8.
          * memCacheSize is stored in kilobytes instead of bytes as this will eventually be passed
          * to construct a LruCache which takes an int in its constructor.
          *
@@ -477,9 +489,9 @@ public class ImageCache {
          * @param percent Percent of available app memory to use to size memory cache
          */
         public void setMemCacheSizePercent(float percent) {
-            if (percent < 0.05f || percent > 0.8f) {
+            if (percent < 0.01f || percent > 0.8f) {
                 throw new IllegalArgumentException("setMemCacheSizePercent - percent must be "
-                        + "between 0.05 and 0.8 (inclusive)");
+                        + "between 0.01 and 0.8 (inclusive)");
             }
             memCacheSize = Math.round(percent * Runtime.getRuntime().maxMemory() / 1024);
         }
@@ -493,10 +505,33 @@ public class ImageCache {
      */
     private static boolean canUseForInBitmap(
             Bitmap candidate, BitmapFactory.Options targetOptions) {
-        int width = targetOptions.outWidth / targetOptions.inSampleSize;
-        int height = targetOptions.outHeight / targetOptions.inSampleSize;
 
-        return candidate.getWidth() == width && candidate.getHeight() == height;
+        if (Utils.hasKitKat()) {
+            int width = targetOptions.outWidth / targetOptions.inSampleSize;
+            int height = targetOptions.outHeight / targetOptions.inSampleSize;
+            int byteCount = width * height * getBytesPerPixel(candidate.getConfig());
+            return byteCount <= candidate.getAllocationByteCount();
+        }
+
+        return candidate.getWidth() == targetOptions.outWidth
+                && candidate.getHeight() == targetOptions.outHeight
+                && targetOptions.inSampleSize <= 1;
+    }
+
+    /**
+     * Return the byte usage per pixel of a bitmap based on it's configuration.
+     * @param config The bitmap configuration.
+     * @return The byte usage per pixel.
+     */
+    private static int getBytesPerPixel(Config config) {
+        if (config == Config.ARGB_8888) {
+            return 4;
+        } else if (config == Config.RGB_565) {
+            return 2;
+        } else if (config == Config.ALPHA_8) {
+            return 1;
+        }
+        return 1;
     }
 
     /**
@@ -555,9 +590,16 @@ public class ImageCache {
     public static int getBitmapSize(BitmapDrawable value) {
         Bitmap bitmap = value.getBitmap();
 
+        // From KitKat onward use getAllocationByteCount() as allocated bytes can potentially be
+        // larger than bitmap byte count.
+        if (Utils.hasKitKat()) {
+            return bitmap.getAllocationByteCount();
+        }
+
         if (Utils.hasHoneycombMR1()) {
             return bitmap.getByteCount();
         }
+
         // Pre HC-MR1
         return bitmap.getRowBytes() * bitmap.getHeight();
     }

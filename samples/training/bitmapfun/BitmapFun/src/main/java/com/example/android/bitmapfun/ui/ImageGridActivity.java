@@ -16,12 +16,12 @@
 
 package com.example.android.bitmapfun.ui;
 
-import com.example.android.bitmapfun.BuildConfig;
-import com.example.android.bitmapfun.util.Utils;
-
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentTransaction;
+
+import com.example.android.bitmapfun.BuildConfig;
+import com.example.android.bitmapfun.util.Utils;
 
 /**
  * Simple FragmentActivity to hold the main {@link ImageGridFragment} and not much else.
