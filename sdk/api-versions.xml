@@ -277,6 +277,7 @@
 		<field name="addPrintersActivity" since="19" />
 		<field name="addStatesFromChildren" />
 		<field name="adjustViewBounds" />
+		<field name="advancedPrintOptionsActivity" since="19" />
 		<field name="alertDialogIcon" since="11" />
 		<field name="alertDialogStyle" />
 		<field name="alertDialogTheme" since="11" />
@@ -19020,6 +19021,16 @@
 		<field name="STATE_QUEUED" />
 		<field name="STATE_STARTED" />
 	</class>
+	<class name="android/print/PrintJobInfo$Builder" since="19">
+		<extends name="java/lang/Object" />
+		<method name="&lt;init>(Landroid/print/PrintJobInfo;)V" />
+		<method name="build()Landroid/print/PrintJobInfo;" />
+		<method name="putAdvancedOption(Ljava/lang/String;I)V" />
+		<method name="putAdvancedOption(Ljava/lang/String;Ljava/lang/String;)V" />
+		<method name="setAttributes(Landroid/print/PrintAttributes;)V" />
+		<method name="setCopies(I)V" />
+		<method name="setPages([Landroid/print/PageRange;)V" />
+	</class>
 	<class name="android/print/PrintManager" since="19">
 		<extends name="java/lang/Object" />
 		<method name="&lt;init>()V" />
@@ -19098,10 +19109,13 @@
 		<method name="cancel()Z" />
 		<method name="complete()Z" />
 		<method name="fail(Ljava/lang/String;)Z" />
+		<method name="getAdvancedIntOption(Ljava/lang/String;)I" />
+		<method name="getAdvancedStringOption(Ljava/lang/String;)Ljava/lang/String;" />
 		<method name="getDocument()Landroid/printservice/PrintDocument;" />
 		<method name="getId()Landroid/print/PrintJobId;" />
 		<method name="getInfo()Landroid/print/PrintJobInfo;" />
 		<method name="getTag()Ljava/lang/String;" />
+		<method name="hasAdvancedOption(Ljava/lang/String;)Z" />
 		<method name="isBlocked()Z" />
 		<method name="isCancelled()Z" />
 		<method name="isCompleted()Z" />
@@ -19121,6 +19135,7 @@
 		<method name="onDisconnected()V" />
 		<method name="onPrintJobQueued(Landroid/printservice/PrintJob;)V" />
 		<method name="onRequestCancelPrintJob(Landroid/printservice/PrintJob;)V" />
+		<field name="EXTRA_PRINT_JOB_INFO" />
 		<field name="SERVICE_INTERFACE" />
 		<field name="SERVICE_META_DATA" />
 	</class>
@@ -26041,6 +26056,7 @@
 		<method name="equals(Landroid/util/DisplayMetrics;)Z" since="17" />
 		<method name="setTo(Landroid/util/DisplayMetrics;)V" />
 		<method name="setToDefaults()V" />
+		<field name="DENSITY_400" since="19" />
 		<field name="DENSITY_DEFAULT" since="4" />
 		<field name="DENSITY_HIGH" since="4" />
 		<field name="DENSITY_LOW" since="4" />
