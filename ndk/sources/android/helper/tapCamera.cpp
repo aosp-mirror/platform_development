@@ -34,13 +34,34 @@ const float MOMENTUM_FACTOR_THRESHOLD = 0.001f;
 //----------------------------------------------------------
 //  Ctor
 //----------------------------------------------------------
-tapCamera::tapCamera():_bDragging(false), _bMomentum(false), _fBallRadius( 0.75f )
+tapCamera::tapCamera():
+        _bDragging(false),
+        _bPinching( false ),
+        _bMomentum(false),
+        _fBallRadius( 0.75f ),
+        _fPinchStartDistanceSQ( 0.f ),
+        _fRotation( 0.f ),
+        _fRotationStart( 0.f ),
+        _fRotationNow( 0.f ),
+        _fMomentumSteps( 0.f ),
+        _fFlipZ( 0.f )
 {
     //Init offset
     initParameters();
 
     _vFlip = vec2( 1.f, -1.f );
     _fFlipZ = -1.f;
+    _vPinchTransformFactor = vec3( 1.f, 1.f, 1.f );
+
+    _vBallCenter = vec2( 0, 0 );
+    _vBallNow = vec2( 0, 0 );
+    _vBallDown = vec2( 0, 0 );
+
+    _vecPinchStart = vec2( 0, 0 );
+    _vecPinchStartCenter = vec2( 0, 0 );
+
+    _vFlip = vec2( 0, 0 );
+
 }
 
 void tapCamera::initParameters()
@@ -49,8 +70,14 @@ void tapCamera::initParameters()
     _vecOffset = vec3();
     _vecOffsetNow = vec3();
 
-    _qBallNow = quaternion();
     _qBallRot = quaternion();
+    _qBallNow = quaternion();
+    _qBallNow.toMatrix(_mRotation);
+    _fRotation = 0.f;
+
+    _vDragDelta = vec2();
+    _vecOffsetDelta = vec3();
+
     _bMomentum = false;
 }
 
@@ -99,7 +126,8 @@ void tapCamera::update()
 
     vec3 vec = _vecOffset + _vecOffsetNow;
     vec3 vecTmp(TRANSFORM_FACTOR, -TRANSFORM_FACTOR, TRANSFORM_FACTORZ);
-    vec *= vecTmp;
+
+    vec *= vecTmp * _vPinchTransformFactor;
 
     _mTransform = mat4::translation(vec);
 }
@@ -117,6 +145,8 @@ mat4& tapCamera::getTransformMatrix()
 void tapCamera::reset(const bool bAnimate)
 {
     initParameters();
+    update();
+
 }
 
 //----------------------------------------------------------
@@ -207,7 +237,6 @@ void tapCamera::endPinch()
     _fRotationNow = 0;
 
     endDrag();
-
 }
 
 void tapCamera::pinch(const vec2& v1, const vec2& v2)
@@ -224,9 +253,16 @@ void tapCamera::pinch(const vec2& v1, const vec2& v2)
 
     float fDistanceSQ = fXDiff * fXDiff + fYDiff * fYDiff;
 
+    float f = _fPinchStartDistanceSQ / fDistanceSQ;
+    if( f < 1.f)
+        f = -1.f / f + 1.0f;
+    else
+        f = f - 1.f;
+    if( isnan(f) ) f = 0.f;
+
     vec = (v1 + v2) / 2.f - _vecPinchStartCenter;
     _vecOffsetNow = vec3( vec,
-            _fFlipZ * (_fPinchStartDistanceSQ / fDistanceSQ - 1.f) );
+            _fFlipZ * f );
 
     //Update momentum factor
     _vecOffsetDelta = _vecOffsetDelta * MOMENTUM_FACTOR + (_vecOffsetNow - _vecOffsetLast);
