@@ -16,6 +16,9 @@
 
 #include "JNIHelper.h"
 
+#define CLASS_NAME "android/app/NativeActivity"
+#define APPLICATION_CLASS_NAME "com/sample/helper/NDKHelper"
+
 //---------------------------------------------------------------------------
 //JNI Helper functions
 //---------------------------------------------------------------------------
@@ -23,6 +26,7 @@
 ANativeActivity* JNIHelper::_activity;
 jobject JNIHelper::_objJNIHelper;
 jclass JNIHelper::_clsJNIHelper;
+std::string JNIHelper::_appName;
 
 jclass retrieveClass(JNIEnv *jni, ANativeActivity* activity,
         const char* className) {
@@ -42,9 +46,32 @@ jclass retrieveClass(JNIEnv *jni, ANativeActivity* activity,
 }
 
 //---------------------------------------------------------------------------
+//Init
+//---------------------------------------------------------------------------
+void JNIHelper::init( ANativeActivity* activity )
+{
+    _activity = activity;
+
+    JNIEnv *env;
+    _activity->vm->AttachCurrentThread(&env, NULL);
+
+    //Retrieve app name
+    jclass android_content_Context = env->GetObjectClass(_activity->clazz);
+    jmethodID midGetPackageName = env->GetMethodID(android_content_Context, "getPackageName", "()Ljava/lang/String;");
+
+    jstring packageName= (jstring)env->CallObjectMethod(_activity->clazz, midGetPackageName);
+    const char* appname = env->GetStringUTFChars(packageName, NULL);
+    _appName = std::string(appname);
+
+    _activity->vm->DetachCurrentThread();
+
+};
+
+//---------------------------------------------------------------------------
 //readFile
 //---------------------------------------------------------------------------
-bool JNIHelper::readFile(const char* fileName, std::vector<uint8_t>& buffer) {
+bool JNIHelper::readFile(const char* fileName, std::vector<uint8_t>& buffer)
+{
     if (_activity == NULL) {
         return false;
     }
@@ -101,13 +128,13 @@ bool JNIHelper::readFile(const char* fileName, std::vector<uint8_t>& buffer) {
     }
 }
 
-jstring JNIHelper::getExternalFilesDir(JNIEnv *env) {
+jstring JNIHelper::getExternalFilesDir(JNIEnv *env)
+{
     if (_activity == NULL) {
         return NULL;
     }
-
     // getExternalFilesDir() - java
-    jclass cls_Env = env->FindClass("android/app/NativeActivity");
+    jclass cls_Env = env->FindClass(CLASS_NAME);
     jmethodID mid = env->GetMethodID(cls_Env, "getExternalFilesDir",
             "(Ljava/lang/String;)Ljava/io/File;");
     jobject obj_File = env->CallObjectMethod(_activity->clazz, mid, NULL);
@@ -118,7 +145,8 @@ jstring JNIHelper::getExternalFilesDir(JNIEnv *env) {
     return obj_Path;
 }
 
-uint32_t JNIHelper::loadTexture(const char* fileName) {
+uint32_t JNIHelper::loadTexture(const char* fileName)
+{
     if (_activity == NULL) {
         return 0;
     }
@@ -138,12 +166,12 @@ uint32_t JNIHelper::loadTexture(const char* fileName) {
         _objJNIHelper = env->NewGlobalRef(_objJNIHelper);
     }
 
-    /* Ask the PNG manager for a bitmap */
-    mid = env->GetMethodID(_clsJNIHelper, "openBitmap",
-            "(Ljava/lang/String;Z)Landroid/graphics/Bitmap;");
-
     jstring name = env->NewStringUTF(fileName);
 #if 0
+    /* Ask the PNG manager for a bitmap */
+    mid = env->GetMethodID(_clsJNIHelper, "openBitmap",
+        "(Ljava/lang/String;Z)Landroid/graphics/Bitmap;");
+
     jobject png = env->CallObjectMethod(_objJNIHelper, mid, name, true);
     env->DeleteLocalRef(name);
     env->NewGlobalRef(png);
@@ -208,3 +236,35 @@ uint32_t JNIHelper::loadTexture(const char* fileName) {
 
 }
 
+std::string JNIHelper::convertString( const char* str, const char* encode )
+{
+    if (_activity == NULL)
+    {
+        return std::string("");
+    }
+
+    JNIEnv *env;
+
+    _activity->vm->AttachCurrentThread(&env, NULL);
+
+    int32_t iLength = strlen( (const char*)str );
+
+    jbyteArray array = env->NewByteArray( iLength );
+    env->SetByteArrayRegion( array, 0, iLength, (const signed char*)str );
+
+    jstring strEncode = env->NewStringUTF( encode );
+
+    jclass cls = env->FindClass("java/lang/String");
+    jmethodID ctor = env->GetMethodID(cls, "<init>",
+            "([BLjava/lang/String;)V");
+    jstring object = (jstring)env->NewObject( cls, ctor, array, strEncode );
+
+    const char *cparam = env->GetStringUTFChars( object, NULL );
+
+    std::string s = std::string(cparam);
+
+    env->ReleaseStringUTFChars( object, cparam );
+    _activity->vm->DetachCurrentThread();
+
+    return s;
+}
