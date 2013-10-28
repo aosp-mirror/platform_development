@@ -20,16 +20,28 @@
 #include <math.h>
 #include "JNIHelper.h"
 
+/******************************************************************
+ * Helper class for vector math operations
+ * Currently all implementations are in pure C++.
+ * Each class is an opaque class so caller does not have a direct access
+ * to each element. This is for an ease of future optimization to use vector operations.
+ *
+ */
+
 class vec2;
 class vec3;
 class vec4;
 class mat4;
-//--------------------------------------------------------------------------------
-// vec2
-//--------------------------------------------------------------------------------
+
+/******************************************************************
+ * 2 elements vector class
+ *
+ */
 class vec2
 {
+private:
     float x,y;
+
 public:
     friend class vec3;
     friend class vec4;
@@ -220,12 +232,15 @@ public:
     }
 };
 
-//--------------------------------------------------------------------------------
-// vec3
-//--------------------------------------------------------------------------------
+/******************************************************************
+ * 3 elements vector class
+ *
+ */
 class vec3
 {
+private:
     float x,y,z;
+
 public:
     friend class vec4;
     friend class mat4;
@@ -450,12 +465,15 @@ public:
     }
 };
 
-//--------------------------------------------------------------------------------
-// vec4
-//--------------------------------------------------------------------------------
+/******************************************************************
+ * 4 elements vector class
+ *
+ */
 class vec4
 {
+private:
     float x,y,z,w;
+
 public:
     friend class vec3;
     friend class mat4;
@@ -690,12 +708,15 @@ public:
     }
 };
 
-//--------------------------------------------------------------------------------
-// mat4
-//--------------------------------------------------------------------------------
+/******************************************************************
+ * 4x4 matrix
+ *
+ */
 class mat4
 {
+private:
     float f[16];
+
 public:
     friend class vec3;
     friend class vec4;
@@ -862,7 +883,6 @@ public:
 
     void dump()
     {
-        int32_t i = 0;
         LOGI("%f %f %f %f", f[0], f[1], f[2], f[3]);
         LOGI("%f %f %f %f", f[4], f[5], f[6], f[7]);
         LOGI("%f %f %f %f", f[8], f[9], f[10], f[11]);
@@ -870,12 +890,15 @@ public:
     }
 };
 
-//--------------------------------------------------------------------------------
-// quaternion
-//--------------------------------------------------------------------------------
+/******************************************************************
+ * quaternion class
+ *
+ */
 class quaternion
 {
+private:
     float x,y,z,w;
+
 public:
     friend class vec3;
     friend class vec4;

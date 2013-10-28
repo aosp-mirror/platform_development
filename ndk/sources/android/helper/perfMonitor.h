@@ -24,7 +24,11 @@
 
 const int32_t NUM_SAMPLES = 100;
 
+/******************************************************************
+ * Helper class for a performance monitoring and get current tick time
+ */
 class perfMonitor {
+private:
     float _fCurrentFPS;
     time_t _tvLastSec;
 
@@ -39,6 +43,14 @@ public:
     virtual ~perfMonitor();
 
     bool update(float &fFPS);
+
+    static double getCurrentTime()
+    {
+        struct timeval Time;
+        gettimeofday( &Time, NULL );
+        double dTime = Time.tv_sec + Time.tv_usec * 1.0/1000000.0;
+        return dTime;
+    }
 };
 
 #endif /* PERFMONITOR_H_ */
