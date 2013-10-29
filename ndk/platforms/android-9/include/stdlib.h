@@ -57,6 +57,7 @@ extern int setenv(const char *, const char *, int);
 extern int unsetenv(const char *);
 extern int clearenv(void);
 
+extern char *mkdtemp(char *);
 extern char *mktemp (char *);
 extern int mkstemp (char *);
 
