@@ -56,6 +56,7 @@ extern int putenv(const char *);
 extern int setenv(const char *, const char *, int);
 extern int unsetenv(const char *);
 
+extern char *mkdtemp(char *);
 extern char *mktemp (char *);
 extern int mkstemp (char *);
 
