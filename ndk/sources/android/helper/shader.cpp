@@ -20,10 +20,8 @@
 #define DEBUG (1)
 
 bool shader::compileShader(GLuint *shader, const GLenum type,
-        const char *strFileName) {
-    GLint status;
-    const GLchar *source;
-
+            const char *strFileName, const std::map<std::string, std::string>& mapParameters)
+{
     std::vector<uint8_t> data;
     bool b = JNIHelper::readFile(strFileName, data);
     if (!b)
@@ -32,13 +30,31 @@ bool shader::compileShader(GLuint *shader, const GLenum type,
         return false;
     }
 
-    source = (GLchar *) &data[0];
-    if (!source) {
-        LOGI("Failed to load vertex shader:%s", strFileName);
-        return false;
+    //Fill-in parameters
+    std::string str(data.begin(), data.end());
+    std::map<std::string, std::string>::const_iterator it = mapParameters.begin();
+    std::map<std::string, std::string>::const_iterator itEnd = mapParameters.end();
+    while( it != itEnd )
+    {
+        size_t pos = 0;
+        while( (pos = str.find( it->first, pos )) != std::string::npos )
+        {
+           str.replace( pos, it->first.length(), it->second );
+           pos += it->second.length();
+        }
+        it++;
     }
 
-    int32_t iSize = data.size();
+    std::vector<uint8_t> v( str.begin(), str.end() );
+    str.clear();
+    return shader::compileShader( shader, type, v );
+}
+
+bool shader::compileShader(GLuint *shader, const GLenum type,
+        const GLchar *source, const int32_t iSize)
+{
+    if( source == NULL || iSize <= 0 )
+        return false;
 
     *shader = glCreateShader(type);
     glShaderSource(*shader, 1, &source, &iSize); //Not specifying 3rd parameter (size) could be troublesome..
@@ -56,14 +72,38 @@ bool shader::compileShader(GLuint *shader, const GLenum type,
     }
 #endif
 
+    GLint status;
     glGetShaderiv(*shader, GL_COMPILE_STATUS, &status);
     if (status == 0) {
         glDeleteShader(*shader);
         return false;
     }
 
-    data.clear();
     return true;
+}
+
+bool shader::compileShader(GLuint *shader, const GLenum type,
+        std::vector<uint8_t>& data)
+{
+    if( !data.size() )
+        return false;
+
+    const GLchar *source = (GLchar *) &data[0];
+    int32_t iSize = data.size();
+    return shader::compileShader( shader, type, source, iSize );
+}
+
+bool shader::compileShader(GLuint *shader, const GLenum type,
+        const char *strFileName) {
+    std::vector<uint8_t> data;
+    bool b = JNIHelper::readFile(strFileName, data);
+    if (!b)
+    {
+        LOGI("Can not open a file:%s", strFileName);
+        return false;
+    }
+
+    return shader::compileShader( shader, type, data );
 }
 
 bool shader::linkProgram(const GLuint prog) {
@@ -72,14 +112,14 @@ bool shader::linkProgram(const GLuint prog) {
     glLinkProgram(prog);
 
 #if defined(DEBUG)
-//  GLint logLength;
-//  glGetProgramiv(prog, GL_INFO_LOG_LENGTH, &logLength);
-//  if (logLength > 0) {
-//      GLchar *log = (GLchar *) malloc(logLength);
-//      glGetProgramInfoLog(prog, logLength, &logLength, log);
-//      LOGI("Program link log:\n%s", log);
-//      free(log);
-//  }
+    GLint logLength;
+    glGetProgramiv(prog, GL_INFO_LOG_LENGTH, &logLength);
+    if (logLength > 0) {
+        GLchar *log = (GLchar *) malloc(logLength);
+        glGetProgramInfoLog(prog, logLength, &logLength, log);
+        LOGI("Program link log:\n%s", log);
+        free(log);
+    }
 #endif
 
     glGetProgramiv(prog, GL_LINK_STATUS, &status);

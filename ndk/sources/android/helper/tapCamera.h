@@ -14,10 +14,6 @@
  * limitations under the License.
  */
 
-//----------------------------------------------------------
-//  tapCamera.h
-//  Camera control with tap
-//----------------------------------------------------------
 #pragma once
 #include <vector>
 #include <string>
@@ -25,14 +21,23 @@
 
 #include "JNIHelper.h"
 #include "vecmath.h"
+#include "interpolator.h"
 
+/******************************************************************
+ * Camera control helper class with a tap gesture
+ * This class is mainly used for 3D space camera control in samples.
+ *
+ */
 class tapCamera
 {
+private:
     //Trackball
     vec2 _vBallCenter;
     float _fBallRadius;
-    quaternion _qBallNow, _qBallDown;
-    vec2 _vBallNow, _vBallDown;
+    quaternion _qBallNow;
+    quaternion _qBallDown;
+    vec2 _vBallNow;
+    vec2 _vBallDown;
     quaternion _qBallRot;
 
     bool _bDragging;
@@ -69,6 +74,9 @@ class tapCamera
     vec3 pointOnSphere(vec2& point);
     void ballUpdate();
     void initParameters();
+
+    vec3 _vPinchTransformFactor;
+
 public:
     tapCamera();
     virtual ~tapCamera();
@@ -89,6 +97,12 @@ public:
         _vFlip = vec2( fX, fY );
         _fFlipZ = fZ;
     }
+
+    void setPinchTransformFactor(const float fX, const float fY, const float fZ)
+    {
+        _vPinchTransformFactor = vec3( fX, fY, fZ);
+    }
+
     void reset(const bool bAnimate);
 
 };
