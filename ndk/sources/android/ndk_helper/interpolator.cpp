@@ -18,62 +18,68 @@
 #include <math.h>
 #include "interpolator.h"
 
+namespace ndk_helper
+{
 
 //-------------------------------------------------
 //Ctor
 //-------------------------------------------------
-interpolator::interpolator()
+Interpolator::Interpolator()
 {
-    m_listParams.clear();
+    list_params_.clear();
 }
 
 //-------------------------------------------------
 //Dtor
 //-------------------------------------------------
-interpolator::~interpolator()
+Interpolator::~Interpolator()
 {
-    m_listParams.clear();
+    list_params_.clear();
 }
 
-void interpolator::clear()
+void Interpolator::Clear()
 {
-    m_listParams.clear();
+    list_params_.clear();
 }
 
-interpolator& interpolator::set(float start,float dest, INTERPOLATOR_TYPE type, double duration)
+Interpolator& Interpolator::Set( const float start,
+        const float dest,
+        const INTERPOLATOR_TYPE type,
+        const double duration )
 {
     //init the parameters for the interpolation process
-    _dStartTime  = perfMonitor::getCurrentTime();
-    _dDestTime   = _dStartTime + duration;
-    _type    = type;
+    start_time_ = PerfMonitor::GetCurrentTime();
+    dest_time_ = start_time_ + duration;
+    type_ = type;
 
-    _fStartValue = start;
-    _fDestValue  = dest;
+    start_value_ = start;
+    dest_value_ = dest;
     return *this;
 }
 
-interpolator& interpolator::add(const float dest,
-        INTERPOLATOR_TYPE type, double duration)
+Interpolator& Interpolator::Add( const float dest,
+        const INTERPOLATOR_TYPE type,
+        const double duration )
 {
-    interpolatorParam param;
-    param.fDestValue = dest;
-    param.type = type;
-    param.dDuration = duration;
-    m_listParams.push_back( param );
+    InterpolatorParams param;
+    param.dest_value_ = dest;
+    param.type_ = type;
+    param.duration_ = duration;
+    list_params_.push_back( param );
     return *this;
 }
 
-bool interpolator::update( const double currentTime, float& p )
+bool Interpolator::Update( const double current_time, float& p )
 {
     bool bContinue;
-    if( currentTime >= _dDestTime )
+    if( current_time >= dest_time_ )
     {
-        p = _fDestValue;
-        if( m_listParams.size () )
+        p = dest_value_;
+        if( list_params_.size() )
         {
-            interpolatorParam& item = m_listParams.front();
-            set(_fDestValue, item.fDestValue, item.type, item.dDuration );
-            m_listParams.pop_front();
+            InterpolatorParams& item = list_params_.front();
+            Set( dest_value_, item.dest_value_, item.type_, item.duration_ );
+            list_params_.pop_front();
 
             bContinue = true;
         }
@@ -84,18 +90,22 @@ bool interpolator::update( const double currentTime, float& p )
     }
     else
     {
-        float t = (float)(currentTime - _dStartTime);
-        float d = (float)(_dDestTime - _dStartTime);
-        float b = _fStartValue;
-        float c = _fDestValue - _fStartValue;
-        p = getFormula(_type, t, b, d, c);
+        float t = (float) (current_time - start_time_);
+        float d = (float) (dest_time_ - start_time_);
+        float b = start_value_;
+        float c = dest_value_ - start_value_;
+        p = GetFormula( type_, t, b, d, c );
 
         bContinue = true;
     }
     return bContinue;
 }
 
-float   interpolator::getFormula(INTERPOLATOR_TYPE type, float t, float b, float d, float c)
+float Interpolator::GetFormula( const INTERPOLATOR_TYPE type,
+        const float t,
+        const float b,
+        const float d,
+        const float c )
 {
     float t1;
     switch( type )
@@ -112,17 +122,17 @@ float   interpolator::getFormula(INTERPOLATOR_TYPE type, float t, float b, float
     case INTERPOLATOR_TYPE_EASEOUTQUAD:
         // quadratic (t^2) easing out - decelerating to zero velocity
         t1 = t / d;
-        return (-c * t1 * (t1-2) + b);
+        return (-c * t1 * (t1 - 2) + b);
 
     case INTERPOLATOR_TYPE_EASEINOUTQUAD:
         // quadratic easing in/out - acceleration until halfway, then deceleration
-         t1 = t / d / 2;
-        if (t1 < 1)
-            return ( c/2 * t1 * t1 + b);
+        t1 = t / d / 2;
+        if( t1 < 1 )
+            return (c / 2 * t1 * t1 + b);
         else
         {
-            t1 = t1 -1;
-            return (-c/2 * (t1 * (t1-2) - 1) + b);
+            t1 = t1 - 1;
+            return (-c / 2 * (t1 * (t1 - 2) - 1) + b);
         }
     case INTERPOLATOR_TYPE_EASEINCUBIC:
         // cubic easing in - accelerating from zero velocity
@@ -138,12 +148,12 @@ float   interpolator::getFormula(INTERPOLATOR_TYPE type, float t, float b, float
         // cubic easing in - accelerating from zero velocity
         t1 = t / d / 2;
 
-        if ( t1 < 1)
-            return (c/2 * t1 * t1 * t1 + b);
+        if( t1 < 1 )
+            return (c / 2 * t1 * t1 * t1 + b);
         else
         {
             t1 -= 2;
-            return (c/2 * (t1 * t1 * t1 + 2 ) + b);
+            return (c / 2 * (t1 * t1 * t1 + 2) + b);
         }
     case INTERPOLATOR_TYPE_EASEINQUART:
         // quartic easing in - accelerating from zero velocity
@@ -152,18 +162,20 @@ float   interpolator::getFormula(INTERPOLATOR_TYPE type, float t, float b, float
 
     case INTERPOLATOR_TYPE_EASEINEXPO:
         // exponential (2^t) easing in - accelerating from zero velocity
-        if (t==0)
+        if( t == 0 )
             return b;
         else
-            return (c*powf(2,(10*(t/d-1)))+b);
+            return (c * powf( 2, (10 * (t / d - 1)) ) + b);
 
     case INTERPOLATOR_TYPE_EASEOUTEXPO:
         // exponential (2^t) easing out - decelerating to zero velocity
-        if (t==d)
-            return (b+c);
+        if( t == d )
+            return (b + c);
         else
-            return (c * (-powf(2,-10*t/d)+1)+b);
+            return (c * (-powf( 2, -10 * t / d ) + 1) + b);
     default:
         return 0;
     }
 }
+
+}   //namespace ndkHelper

@@ -17,15 +17,17 @@
 //--------------------------------------------------------------------------------
 // glContext.h
 //--------------------------------------------------------------------------------
-
 #ifndef GLCONTEXT_H_
 #define GLCONTEXT_H_
 
-#include <android/sensor.h>
+#include <EGL/egl.h>
+#include <GLES2/gl2.h>
 #include <android/log.h>
-#include <android_native_app_glue.h>
-#include <android/native_window_jni.h>
+
 #include "JNIHelper.h"
+
+namespace ndk_helper
+{
 
 //--------------------------------------------------------------------------------
 // Constants
@@ -42,36 +44,44 @@
  *
  * Also the class initializes OpenGL ES3 when the compatible driver is installed in the device.
  * getGLVersion() returns 3.0~ when the device supports OpenGLES3.0
+ *
+ * Thread safety: OpenGL context is expecting used within dedicated single thread,
+ * thus GLContext class is not designed as a thread-safe
  */
 class GLContext
 {
 private:
-    //ELG configurations
-    ANativeWindow* _window;
-    EGLDisplay _display;
-    EGLSurface _surface;
-    EGLContext _context;
-    EGLConfig _config;
+    //EGL configurations
+    ANativeWindow* window_;
+    EGLDisplay display_;
+    EGLSurface surface_;
+    EGLContext context_;
+    EGLConfig config_;
 
     //Screen parameters
-    int32_t _iWidth;
-    int32_t _iHeight;
-    int32_t _iColorSize;
-    int32_t _iDepthSize;
+    int32_t screen_width_;
+    int32_t screen_height_;
+    int32_t color_size_;
+    int32_t depth_size_;
 
     //Flags
-    bool _bGLESInitialized;
-    bool _bEGLContextInitialized;
-    bool _bES3Support;
-    float _fGLVersion;
+    bool gles_initialized_;
+    bool egl_context_initialized_;
+    bool es3_supported_;
+    float gl_version_;
+    bool context_valid_;
 
-    void initGLES();
-    bool _bContextValid;
-    void terminate();
-    bool initEGLSurface();
-    bool initEGLContext();
+    void InitGLES();
+    void Terminate();
+    bool InitEGLSurface();
+    bool InitEGLContext();
+
+    GLContext( GLContext const& );
+    void operator=( GLContext const& );
+    GLContext();
+    virtual ~GLContext();
 public:
-    static GLContext* getInstance()
+    static GLContext* GetInstance()
     {
         //Singleton
         static GLContext instance;
@@ -79,26 +89,37 @@ public:
         return &instance;
     }
 
-    GLContext( GLContext const& );
-    void operator=( GLContext const& );
+    bool Init( ANativeWindow* window );
+    EGLint Swap();
+    bool Invalidate();
 
-    GLContext();
-    virtual ~GLContext();
+    void Suspend();
+    EGLint Resume( ANativeWindow* window );
 
-    bool init( ANativeWindow* window );
-    EGLint swap();
-    bool invalidate();
+    int32_t GetScreenWidth()
+    {
+        return screen_width_;
+    }
+    int32_t GetScreenHeight()
+    {
+        return screen_height_;
+    }
 
-    void suspend();
-    EGLint resume(ANativeWindow* window);
-
-    int32_t getScreenWidth() { return _iWidth; }
-    int32_t getScreenHeight() { return _iHeight; }
-
-    int32_t getBufferColorSize() { return _iColorSize; }
-    int32_t getBufferDepthSize() { return _iDepthSize; }
-    float getGLVersion() { return _fGLVersion; }
-    bool checkExtension( const char* extension );
+    int32_t GetBufferColorSize()
+    {
+        return color_size_;
+    }
+    int32_t GetBufferDepthSize()
+    {
+        return depth_size_;
+    }
+    float GetGLVersion()
+    {
+        return gl_version_;
+    }
+    bool CheckExtension( const char* extension );
 };
+
+}   //namespace ndkHelper
 
 #endif /* GLCONTEXT_H_ */
