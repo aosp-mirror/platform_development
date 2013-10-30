@@ -1,0 +1,7 @@
+This is an Android Studio project:
+http://developer.android.com/sdk/installing/studio.html
+
+To build you should first copy local.properties.sample to
+local.properties and set your SDK path.
+
+Then use Android Studio to import the project.
