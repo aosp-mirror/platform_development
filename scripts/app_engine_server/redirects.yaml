@@ -634,6 +634,10 @@ redirects:
   dst: /about/versions/android-4.0.html
   type: permanent
 
+- src: /(k|kk|kitkat)/?$
+  dst: /about/versions/kitkat.html
+  type: permanent
+
 - src: /(j|jb|jellybean)/?$
   dst: /about/versions/jelly-bean.html
   type: permanent
