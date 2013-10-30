@@ -12,6 +12,8 @@ LOCAL_SRC_FILES += \
 
 LOCAL_JAVA_LIBRARIES := telephony-common mms-common
 
+LOCAL_STATIC_JAVA_LIBRARIES = android-support-v4
+
 LOCAL_PACKAGE_NAME := ApiDemos
 
 LOCAL_SDK_VERSION := current
