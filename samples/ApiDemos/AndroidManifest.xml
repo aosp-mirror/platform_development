@@ -996,6 +996,15 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".app.PrintCustomContent"
+                android:label="@string/print_custom_content"
+                android:enabled="@bool/atLeastKitKat">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
         <!-- Application Updating Samples -->
 
 <!-- BEGIN_INCLUDE(app_update_declaration) -->
