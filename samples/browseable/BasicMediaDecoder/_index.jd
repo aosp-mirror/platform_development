@@ -1,0 +1,13 @@
+
+
+
+page.tags="BasicMediaDecoder"
+sample.group=Media
+@jd:body
+
+<p>
+            
+             This activity uses a TextureView to render the frames of a video decoded using the
+             MediaCodec API.
+            
+        </p>

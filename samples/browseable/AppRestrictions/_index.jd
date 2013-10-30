@@ -1,0 +1,17 @@
+
+
+
+page.tags="AppRestrictions"
+sample.group=Content
+@jd:body
+
+<p>
+            
+            This sample demonstrates the use of the App Restriction feature, which is available on
+            Android 4.3 and above tablet device with the multiuser feature.
+
+            When launched under the primary User account, you can toggle between standard app restriction
+            types and custom.  When launched under a restricted profile, this activity displays app
+            restriction settings, if available.
+            
+        </p>

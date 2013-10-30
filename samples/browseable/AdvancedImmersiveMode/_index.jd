@@ -1,0 +1,18 @@
+
+
+
+page.tags="AdvancedImmersiveMode"
+sample.group=UI
+@jd:body
+
+<p>
+            
+            \"Immersive Mode\" is a new UI mode which improves \"hide full screen\" and
+            \"hide nav bar\" modes, by letting users swipe the bars in and out.  This sample
+            lets the user experiment with immersive mode by enabling it and seeing how it interacts
+            with some of the other UI flags related to full-screen apps.
+            \n\nThis sample also lets the user choose between normal immersive mode and "sticky"
+            immersive mode, which removes the status bar and nav bar
+            a few seconds after the user has swiped them back in.
+            
+        </p>

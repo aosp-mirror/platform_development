@@ -1,0 +1,13 @@
+
+
+
+page.tags="HorizontalPaging"
+sample.group=UI
+@jd:body
+
+<p>
+            
+            This sample demonstrates how to implement horizontal paging between fragments in
+            applications that use ActionBar, using a ViewPager widget.
+            
+        </p>
