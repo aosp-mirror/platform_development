@@ -1,0 +1,13 @@
+
+
+
+page.tags="BasicGestureDetect"
+sample.group=Input
+@jd:body
+
+<p>
+            
+            Welcome to Basic Gesture Detect!
+            In order to try this sample out, try dragging or tapping this text to see what happens!
+            
+        </p>

@@ -1,0 +1,17 @@
+
+
+
+page.tags="BasicSyncAdapter"
+sample.group=Connectivity
+@jd:body
+
+<p>
+            
+            This sample demonstrates using SyncAdapter to fetch background data for an app that
+            doesn\'t require a user-visible account type or 2-way synchronization.
+
+            \n\nThis sample periodically downloads the feed from the Android Developer Blog and
+            caches the data in a content provider. At runtime, the cached feed data is displayed
+            inside a ListView.
+            
+        </p>
