@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ Copyright 2013 The Android Open Source Project
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+-->
+
+
+
+
+<resources>
+    <string name="donebaractivity_title">Done Bar</string>
+    <string name="donebaractivity_description">In this presentation, a done bar replaces the action bar entirely, providing
+            two direct actions to persist or dismiss changes. This is suitable for cases where no
+            additional view details or actions are needed in the action bar.</string>
+    <string name="donebuttonactivity_title">Done Button</string>
+    <string name="donebuttonactivity_description">In this presentation, a done button replaces the action bar\'s "Up" affordance
+            and app icon, while the cancel action is made available in the action overflow. This is
+            well-suited to scenarios where additional view details or
+            actions may be needed in the action bar.</string>
+</resources>

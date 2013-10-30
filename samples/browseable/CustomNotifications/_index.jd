@@ -1,0 +1,12 @@
+
+
+
+page.tags="CustomNotifications"
+sample.group=UI
+@jd:body
+
+<p>
+            
+            This sample demonstrates notifications with custom content views.
+            
+        </p>

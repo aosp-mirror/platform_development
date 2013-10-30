@@ -1,0 +1,14 @@
+
+
+
+page.tags="ImmersiveMode"
+sample.group=UI
+@jd:body
+
+<p>
+            
+            One of the features introduced in KitKat is "immersive mode". Immersive mode gives the
+            user the ability to show/hide the status bar and navigation bar with a swipe.  To try,
+            click the "Toggle immersive mode" button, then try swiping the bar in and out!
+            
+        </p>

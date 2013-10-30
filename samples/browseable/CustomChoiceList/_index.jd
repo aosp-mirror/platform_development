@@ -1,0 +1,13 @@
+
+
+
+page.tags="CustomChoiceList"
+sample.group=UI
+@jd:body
+
+<p>
+            
+                This sample demonstrates how to create custom checkable layouts, for use with ListView\'s choiceMode
+                attribute.
+            
+        </p>

@@ -1,0 +1,13 @@
+
+
+
+page.tags="TextLinkify"
+sample.group=Views
+@jd:body
+
+<p>
+            
+            This sample illustrates how links can be added to a TextView. This can be done either
+            automatically by setting the "autoLink" property or explicitly.
+            
+        </p>

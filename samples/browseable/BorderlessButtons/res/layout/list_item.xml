@@ -1,0 +1,87 @@
+<!--
+  Copyright 2013 The Android Open Source Project
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+  -->
+
+<!--
+    For list items that contain secondary actions (in this case, 'delete'),
+    it's important to use dividers to distinguish the primary touch target from
+    the secondary action. This is done using android:showDividers and its
+    related attributes.
+
+    The android:dividerPadding attribute insets the divider line by the given
+    amount on each side (in this case, top and bottom). Divider padding helps
+    establish visual hierarchy when several dividers are used in a screen. In
+    this case, the padding helps separate this vertical divider from horizontal
+    list item separators in the main ListView, and establishes a stronger
+    relationship between the delete action and the primary target to its left.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="horizontal"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:minHeight="?android:listPreferredItemHeight"
+    android:divider="?android:dividerVertical"
+    android:dividerPadding="8dp"
+    android:showDividers="middle">
+
+    <!--
+        Any view or view group can become interactive by simply setting the
+        android:clickable and android:focusable attributes to true.
+
+        When doing this, make sure to provide adequate touch feedback by also
+        setting the view background to ?android:selectableItemBackground. When
+        using the Holo theme, this drawable is transparent by default, but
+        changes to a translucent color overlay when the view is pressed or
+        focused.
+    -->
+    <LinearLayout android:id="@+id/primary_target"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:paddingLeft="?android:listPreferredItemPaddingLeft"
+        android:paddingRight="?android:listPreferredItemPaddingRight"
+        android:clickable="true"
+        android:focusable="true"
+        android:gravity="center_vertical"
+        android:background="?android:selectableItemBackground">
+
+        <TextView style="?android:textAppearanceListItemSmall"
+            android:id="@android:id/text1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/dummy_title" />
+
+        <TextView style="?android:textAppearanceSmall"
+            android:id="@android:id/text2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/dummy_subtitle" />
+
+    </LinearLayout>
+
+    <!--
+        When using the Holo theme, setting a Button or ImageButton to
+        ?android:borderlessButtonStyle removes its border and sets the
+        background to ?android:selectableItemBackground, as described above.
+    -->
+    <ImageButton android:id="@+id/secondary_action"
+        style="?android:borderlessButtonStyle"
+        android:layout_width="@dimen/standard_touch_target_size"
+        android:layout_height="match_parent"
+        android:src="@drawable/ic_action_delete"
+        android:contentDescription="@string/delete_content_description" />
+
+</LinearLayout>

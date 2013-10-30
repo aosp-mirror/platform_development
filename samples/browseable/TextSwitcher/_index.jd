@@ -1,0 +1,14 @@
+
+
+
+page.tags="TextSwitcher"
+sample.group=UI
+@jd:body
+
+<p>
+            
+                This sample illustrates the use of a TextSwitcher to display text.
+                \n\nClick the button below to set new text in the TextSwitcher and observe the
+                in and out fade animations.
+            
+        </p>

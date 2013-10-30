@@ -1,0 +1,87 @@
+<!--
+  Copyright 2013 The Android Open Source Project
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+  -->
+
+<!--
+    The top-level LinearLayout uses a horizontal divider to visually
+    distinguish the top description box, list, and bottom button bar.
+
+    android:showDividers="middle" draws dividers between each child view and
+    android:divider="?android:dividerHorizontal" indicates that the standard
+    horizontal system divider (set in the activity's theme) should be used to
+    draw the divider.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:divider="?android:dividerHorizontal"
+    android:showDividers="middle">
+
+    <TextView style="@style/Widget.DescriptionBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/intro_message" />
+
+    <!--
+        Remember to use padding on your ListViews to adhere to the standard
+        metrics described in the Android Design guidelines. When doing so,
+        you should set the android:scrollbarStyle such that the scrollbar
+        doesn'isn't inset.
+    -->
+    <ListView android:id="@android:id/list"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:paddingLeft="@dimen/page_margin"
+        android:paddingRight="@dimen/page_margin"
+        android:scrollbarStyle="outsideOverlay" />
+
+    <!--
+        When using the Holo theme (setting your activity or app theme to
+        Theme.Holo or one of its descendants), a LinearLayout with the
+        ?android:buttonBarStyle will draw dividers (with padding) between
+        buttons.
+    -->
+    <LinearLayout style="?android:buttonBarStyle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <!--
+            Make sure to apply the ?android:buttonBarStyle to each button
+            in the button bar.
+
+            In the Holo theme, this style is very similar to
+            ?android:borderlessButtonStyle, but designed for use specifically
+            in horizontal button bars.
+        -->
+        <Button style="?android:buttonBarButtonStyle"
+            android:id="@+id/cancel_button"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/cancel" />
+
+        <Button style="?android:buttonBarButtonStyle"
+            android:id="@+id/ok_button"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/ok" />
+
+    </LinearLayout>
+
+</LinearLayout>
