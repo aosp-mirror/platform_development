@@ -1,0 +1,14 @@
+
+
+
+page.tags="BasicNotifications"
+sample.group=UI
+@jd:body
+
+<p>
+            
+            This sample demonstrates how to display events in the system\'s notification bar. The
+            NotificationCompat API is used for compatibility with older devices, running Android
+            2.2 (Froyo) or newer.
+            
+        </p>

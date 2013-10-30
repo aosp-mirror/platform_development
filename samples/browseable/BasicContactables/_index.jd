@@ -1,0 +1,14 @@
+
+
+
+page.tags="BasicContactables"
+sample.group=Content
+@jd:body
+
+<p>
+            
+            This sample demonstrates how to use the Contactables table to search for contacts.
+            \n\nQuery strings sent to the Contactables table will match both contact names and phone numbers,
+            reducing the number of queries your application needs to use when searching the contacts database!
+            
+        </p>

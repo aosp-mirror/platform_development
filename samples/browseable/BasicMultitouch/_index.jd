@@ -1,0 +1,15 @@
+
+
+
+page.tags="BasicMultitouch"
+sample.group=Input
+@jd:body
+
+<p>
+            
+This samples demonstrates the use of MotionEvent properties to keep track of individual touches
+across multiple touch events.
+\n\nTouch the screen with multiple fingers to show that the pointer id
+(also represented by a colour) does not change as new touch events are received.</string>
+            
+        </p>
