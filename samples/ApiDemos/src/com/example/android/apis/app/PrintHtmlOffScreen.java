@@ -19,6 +19,11 @@ package com.example.android.apis.app;
 import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
+import android.os.CancellationSignal;
+import android.os.ParcelFileDescriptor;
+import android.print.PageRange;
+import android.print.PrintAttributes;
+import android.print.PrintDocumentAdapter;
 import android.print.PrintManager;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -74,16 +79,54 @@ public class PrintHtmlOffScreen extends Activity {
         mWebView.setWebViewClient(new WebViewClient() {
             @Override
             public void onPageFinished(WebView view, String url) {
-                // Get the print manager.
-                PrintManager printManager = (PrintManager) getSystemService(
-                        Context.PRINT_SERVICE);
-                // Pass in the ViewView's document adapter.
-                printManager.print("MotoGP stats", mWebView.createPrintDocumentAdapter(),
-                        null);
+              doPrint();
             }
         });
 
         // Load an HTML page.
         mWebView.loadUrl("file:///android_res/raw/motogp_stats.html");
+    }
+
+    private void doPrint() {
+        // Get the print manager.
+        PrintManager printManager = (PrintManager) getSystemService(
+                Context.PRINT_SERVICE);
+
+        // Create a wrapper PrintDocumentAdapter to clean up when done.
+        PrintDocumentAdapter adapter = new PrintDocumentAdapter() {
+            private final PrintDocumentAdapter mWrappedInstance =
+                    mWebView.createPrintDocumentAdapter();
+
+            @Override
+            public void onStart() {
+                mWrappedInstance.onStart();
+            }
+
+            @Override
+            public void onLayout(PrintAttributes oldAttributes, PrintAttributes newAttributes,
+                    CancellationSignal cancellationSignal, LayoutResultCallback callback,
+                    Bundle extras) {
+                mWrappedInstance.onLayout(oldAttributes, newAttributes, cancellationSignal,
+                        callback, extras);
+            }
+
+            @Override
+            public void onWrite(PageRange[] pages, ParcelFileDescriptor destination,
+                    CancellationSignal cancellationSignal, WriteResultCallback callback) {
+                mWrappedInstance.onWrite(pages, destination, cancellationSignal, callback);
+            }
+
+            @Override
+            public void onFinish() {
+                mWrappedInstance.onFinish();
+                // Intercept the finish call to know when printing is done
+                // and destroy the WebView as it is expensive to keep around.
+                mWebView.destroy();
+                mWebView = null;
+            }
+        };
+
+        // Pass in the ViewView's document adapter.
+        printManager.print("MotoGP stats", adapter, null);
     }
 }
