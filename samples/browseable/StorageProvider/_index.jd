@@ -1,4 +1,4 @@
-page.tags="StorageProvider"
+page.tags="Storage access framework", storage, documents
 sample.group=Content
 @jd:body
 

@@ -48,13 +48,13 @@ public class MyCloudFragment extends Fragment {
     @Override
     public void onPrepareOptionsMenu(Menu menu) {
         super.onPrepareOptionsMenu(menu);
-        MenuItem item = menu.findItem(R.id.action_toggle_login);
+        MenuItem item = menu.findItem(R.id.sample_action);
         item.setTitle(mLoggedIn ? R.string.log_out : R.string.log_in);
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == R.id.action_toggle_login) {
+        if (item.getItemId() == R.id.sample_action) {
             toggleLogin();
             item.setTitle(mLoggedIn ? R.string.log_out : R.string.log_in);
 
