@@ -106,7 +106,7 @@ static inline short change_mips_events(short mips_events)
 
 extern int poll(struct pollfd *, nfds_t, int);
 
-int WRAP(poll)(struct pollfd *fds, nfds_t nfds, long timeout)
+int WRAP(poll)(struct pollfd *fds, nfds_t nfds, int timeout)
 {
   nfds_t i;
   int ret;
