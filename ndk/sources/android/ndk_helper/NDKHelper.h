@@ -19,7 +19,13 @@
 
 /******************************************************************
  * NDK support helpers
+ * Utility module to provide misc functionalities that is used widely in native applications,
+ * such as gesture detection, jni bridge, openGL context etc.
  *
+ * The purpose of this module is,
+ * - Provide best practices using NDK
+ * - Provide handy utility functions for NDK development
+ * - Make NDK samples more simpler and readable
  */
 #include "gl3stub.h"            //GLES3 stubs
 #include "GLContext.h"          //EGL & OpenGL manager
@@ -30,5 +36,4 @@
 #include "gestureDetector.h"    //Tap/Doubletap/Pinch detector
 #include "perfMonitor.h"        //FPS counter
 #include "interpolator.h"       //Interpolator
-
 #endif
