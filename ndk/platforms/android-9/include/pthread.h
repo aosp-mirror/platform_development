@@ -142,7 +142,9 @@ int pthread_getattr_np(pthread_t thid, pthread_attr_t * attr);
 
 int pthread_create(pthread_t *thread, pthread_attr_t const * attr,
                    void *(*start_routine)(void *), void * arg);
-void pthread_exit(void * retval);
+
+__noreturn void pthread_exit(void * retval);
+
 int pthread_join(pthread_t thid, void ** ret_val);
 int pthread_detach(pthread_t  thid);
 
