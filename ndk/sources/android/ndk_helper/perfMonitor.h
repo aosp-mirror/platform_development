@@ -22,35 +22,40 @@
 #include <time.h>
 #include "JNIHelper.h"
 
+namespace ndk_helper
+{
+
 const int32_t NUM_SAMPLES = 100;
 
 /******************************************************************
  * Helper class for a performance monitoring and get current tick time
  */
-class perfMonitor {
+class PerfMonitor
+{
 private:
-    float _fCurrentFPS;
-    time_t _tvLastSec;
+    float current_FPS_;
+    time_t tv_last_sec_;
 
-    double _dLastTick;
-    int32_t  _tickindex;
-    double _ticksum;
-    double _ticklist[ NUM_SAMPLES ];
+    double last_tick_;
+    int32_t tickindex_;
+    double ticksum_;
+    double ticklist_[NUM_SAMPLES];
 
-    double updateTick(double currentTick);
+    double UpdateTick( double current_tick );
 public:
-    perfMonitor();
-    virtual ~perfMonitor();
+    PerfMonitor();
+    virtual ~PerfMonitor();
 
-    bool update(float &fFPS);
+    bool Update( float &fFPS );
 
-    static double getCurrentTime()
+    static double GetCurrentTime()
     {
-        struct timeval Time;
-        gettimeofday( &Time, NULL );
-        double dTime = Time.tv_sec + Time.tv_usec * 1.0/1000000.0;
-        return dTime;
+        struct timeval time;
+        gettimeofday( &time, NULL );
+        double ret = time.tv_sec + time.tv_usec * 1.0 / 1000000.0;
+        return ret;
     }
 };
 
+}   //namespace ndkHelper
 #endif /* PERFMONITOR_H_ */
