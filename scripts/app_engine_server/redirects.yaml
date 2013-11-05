@@ -488,6 +488,10 @@ redirects:
   type: permanent
   comment: Redirect to new location
 
+- src: /guide/webapps/overview.html
+  dst: /guide/webapps/index.html
+  type: permanent
+
 - src: /resources/tutorials/views/hello-webview.html
   dst: /guide/webapps/webview.html
   type: permanent
