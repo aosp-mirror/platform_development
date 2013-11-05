@@ -18,5 +18,15 @@
 
 
 <resources>
-        <string name="sample_action">Log in</string>
+    <string name="app_name">MyCloud</string>
+    <string name="intro_message">
+        <![CDATA[
+        
+            
+            \nA simple implementation of a documents provider using the storage access framework in
+            Android 4.4.
+            
+        
+        ]]>
+    </string>
 </resources>
