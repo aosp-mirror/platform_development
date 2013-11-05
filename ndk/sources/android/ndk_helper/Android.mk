@@ -2,7 +2,7 @@ LOCAL_PATH:= $(call my-dir)
 
 include $(CLEAR_VARS)
 
-LOCAL_MODULE:= helper
+LOCAL_MODULE:= ndk_helper
 LOCAL_SRC_FILES:= JNIHelper.cpp interpolator.cpp tapCamera.cpp gestureDetector.cpp perfMonitor.cpp vecmath.cpp GLContext.cpp shader.cpp gl3stub.c
 
 LOCAL_EXPORT_C_INCLUDES := $(LOCAL_PATH)
