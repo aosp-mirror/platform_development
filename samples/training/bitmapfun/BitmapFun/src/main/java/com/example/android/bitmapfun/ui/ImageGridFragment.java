@@ -20,6 +20,7 @@ import android.annotation.TargetApi;
 import android.app.ActivityOptions;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build.VERSION_CODES;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.util.Log;
@@ -134,6 +135,13 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
                                 if (BuildConfig.DEBUG) {
                                     Log.d(TAG, "onCreateView - numColumns set to " + numColumns);
                                 }
+                                if (Utils.hasJellyBean()) {
+                                    mGridView.getViewTreeObserver()
+                                            .removeOnGlobalLayoutListener(this);
+                                } else {
+                                    mGridView.getViewTreeObserver()
+                                            .removeGlobalOnLayoutListener(this);
+                                }
                             }
                         }
                     }
@@ -163,7 +171,7 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
         mImageFetcher.closeCache();
     }
 
-    @TargetApi(16)
+    @TargetApi(VERSION_CODES.JELLY_BEAN)
     @Override
     public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
         final Intent i = new Intent(getActivity(), ImageDetailActivity.class);
@@ -226,6 +234,11 @@ public class ImageGridFragment extends Fragment implements AdapterView.OnItemCli
 
         @Override
         public int getCount() {
+            // If columns have yet to be determined, return no items
+            if (getNumColumns() == 0) {
+                return 0;
+            }
+
             // Size + number of columns for top empty row
             return Images.imageThumbUrls.length + mNumColumns;
         }
