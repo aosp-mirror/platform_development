@@ -23,6 +23,7 @@ import android.graphics.Bitmap.CompressFormat;
 import android.graphics.Bitmap.Config;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
+import android.os.Build.VERSION_CODES;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.StatFs;
@@ -354,24 +355,26 @@ public class ImageCache {
         Bitmap bitmap = null;
 
         if (mReusableBitmaps != null && !mReusableBitmaps.isEmpty()) {
-            final Iterator<SoftReference<Bitmap>> iterator = mReusableBitmaps.iterator();
-            Bitmap item;
+            synchronized (mReusableBitmaps) {
+                final Iterator<SoftReference<Bitmap>> iterator = mReusableBitmaps.iterator();
+                Bitmap item;
 
-            while (iterator.hasNext()) {
-                item = iterator.next().get();
+                while (iterator.hasNext()) {
+                    item = iterator.next().get();
 
-                if (null != item && item.isMutable()) {
-                    // Check to see it the item can be used for inBitmap
-                    if (canUseForInBitmap(item, options)) {
-                        bitmap = item;
+                    if (null != item && item.isMutable()) {
+                        // Check to see it the item can be used for inBitmap
+                        if (canUseForInBitmap(item, options)) {
+                            bitmap = item;
 
-                        // Remove from reusable set so it can't be used again
+                            // Remove from reusable set so it can't be used again
+                            iterator.remove();
+                            break;
+                        }
+                    } else {
+                        // Remove from the set if the reference has been cleared.
                         iterator.remove();
-                        break;
                     }
-                } else {
-                    // Remove from the set if the reference has been cleared.
-                    iterator.remove();
                 }
             }
         }
@@ -503,6 +506,7 @@ public class ImageCache {
      * @return true if <code>candidate</code> can be used for inBitmap re-use with
      *      <code>targetOptions</code>
      */
+    @TargetApi(VERSION_CODES.KITKAT)
     private static boolean canUseForInBitmap(
             Bitmap candidate, BitmapFactory.Options targetOptions) {
 
@@ -594,7 +598,7 @@ public class ImageCache {
      * @param value
      * @return size in bytes
      */
-    @TargetApi(12)
+    @TargetApi(VERSION_CODES.KITKAT)
     public static int getBitmapSize(BitmapDrawable value) {
         Bitmap bitmap = value.getBitmap();
 
@@ -618,7 +622,7 @@ public class ImageCache {
      * @return True if external storage is removable (like an SD card), false
      *         otherwise.
      */
-    @TargetApi(9)
+    @TargetApi(VERSION_CODES.GINGERBREAD)
     public static boolean isExternalStorageRemovable() {
         if (Utils.hasGingerbread()) {
             return Environment.isExternalStorageRemovable();
@@ -632,7 +636,7 @@ public class ImageCache {
      * @param context The context to use
      * @return The external cache dir
      */
-    @TargetApi(8)
+    @TargetApi(VERSION_CODES.FROYO)
     public static File getExternalCacheDir(Context context) {
         if (Utils.hasFroyo()) {
             return context.getExternalCacheDir();
@@ -649,7 +653,7 @@ public class ImageCache {
      * @param path The path to check
      * @return The space available in bytes
      */
-    @TargetApi(9)
+    @TargetApi(VERSION_CODES.GINGERBREAD)
     public static long getUsableSpace(File path) {
         if (Utils.hasGingerbread()) {
             return path.getUsableSpace();
