@@ -16,12 +16,13 @@
 
 package com.example.android.bitmapfun.util;
 
-import com.example.android.bitmapfun.ui.ImageDetailActivity;
-import com.example.android.bitmapfun.ui.ImageGridActivity;
-
 import android.annotation.TargetApi;
 import android.os.Build;
+import android.os.Build.VERSION_CODES;
 import android.os.StrictMode;
+
+import com.example.android.bitmapfun.ui.ImageDetailActivity;
+import com.example.android.bitmapfun.ui.ImageGridActivity;
 
 /**
  * Class containing some static utility methods.
@@ -29,7 +30,8 @@ import android.os.StrictMode;
 public class Utils {
     private Utils() {};
 
-    @TargetApi(11)
+
+    @TargetApi(VERSION_CODES.HONEYCOMB)
     public static void enableStrictMode() {
         if (Utils.hasGingerbread()) {
             StrictMode.ThreadPolicy.Builder threadPolicyBuilder =
