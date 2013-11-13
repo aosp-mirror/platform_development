@@ -38,8 +38,6 @@ import android.provider.DocumentsProvider;
 import android.security.KeyChain;
 import android.util.Log;
 
-import com.android.vault.R;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
