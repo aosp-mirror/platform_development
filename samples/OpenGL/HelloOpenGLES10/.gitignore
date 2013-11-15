@@ -1,0 +1,9 @@
+# Files ignored for git source control
+#
+# Add this file to source control so the following files
+# are not tracked and added to git:
+.project
+.classpath
+project.properties
+bin/
+gen/
