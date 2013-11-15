@@ -105,8 +105,12 @@ extern int clock_nanosleep(clockid_t, int, const struct timespec *, struct times
 #define CLOCK_MONOTONIC            1
 #define CLOCK_PROCESS_CPUTIME_ID   2
 #define CLOCK_THREAD_CPUTIME_ID    3
-#define CLOCK_REALTIME_HR          4
-#define CLOCK_MONOTONIC_HR         5
+#define CLOCK_MONOTONIC_RAW        4
+#define CLOCK_REALTIME_COARSE      5
+#define CLOCK_MONOTONIC_COARSE     6
+#define CLOCK_BOOTTIME             7
+#define CLOCK_REALTIME_ALARM       8
+#define CLOCK_BOOTTIME_ALARM       9
 
 extern int  timer_create(int, struct sigevent*, timer_t*);
 extern int  timer_delete(timer_t);
