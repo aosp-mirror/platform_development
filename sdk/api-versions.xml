@@ -12869,6 +12869,7 @@
 		<field name="EFFECT_TYPE_BASS_BOOST" since="18" />
 		<field name="EFFECT_TYPE_ENV_REVERB" since="18" />
 		<field name="EFFECT_TYPE_EQUALIZER" since="18" />
+		<field name="EFFECT_TYPE_LOUDNESS_ENHANCER" since="19" />
 		<field name="EFFECT_TYPE_NS" since="18" />
 		<field name="EFFECT_TYPE_PRESET_REVERB" since="18" />
 		<field name="EFFECT_TYPE_VIRTUALIZER" since="18" />
@@ -13027,7 +13028,7 @@
 	</class>
 	<class name="android/media/audiofx/LoudnessEnhancer" since="19">
 		<extends name="android/media/audiofx/AudioEffect" />
-		<method name="&lt;init>()V" />
+		<method name="&lt;init>(I)V" />
 		<method name="getTargetGain()F" />
 		<method name="setTargetGain(I)V" />
 		<field name="PARAM_TARGET_GAIN_MB" />
@@ -25504,10 +25505,8 @@
 		<method name="&lt;init>()V" />
 		<method name="beginDelayedTransition(Landroid/view/ViewGroup;)V" />
 		<method name="beginDelayedTransition(Landroid/view/ViewGroup;Landroid/transition/Transition;)V" />
-		<method name="getDefaultTransition()Landroid/transition/Transition;" />
 		<method name="go(Landroid/transition/Scene;)V" />
 		<method name="go(Landroid/transition/Scene;Landroid/transition/Transition;)V" />
-		<method name="setDefaultTransition(Landroid/transition/Transition;)V" />
 		<method name="setTransition(Landroid/transition/Scene;Landroid/transition/Scene;Landroid/transition/Transition;)V" />
 		<method name="setTransition(Landroid/transition/Scene;Landroid/transition/Transition;)V" />
 		<method name="transitionTo(Landroid/transition/Scene;)V" />
