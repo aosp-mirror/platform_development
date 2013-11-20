@@ -1419,6 +1419,15 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".animation.PathAnimations"
+                  android:label="Animation/Path Animations"
+                  android:enabled="@bool/atLeastHoneycomb">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
         <!-- ************************************* -->
         <!--     ANIMATION PACKAGE SAMPLES         -->
         <!-- ************************************* -->
