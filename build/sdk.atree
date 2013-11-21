@@ -217,14 +217,38 @@ development/samples/samples_source.properties  samples/${PLATFORM_NAME}/source.p
 # Note: Some samples reference a shared "common" directory. In the future
 # this will be copied in automatically via a templating system. For now,
 # we need to copy it in here as needed.
-developers/samples/android/connectivity        samples/${PLATFORM_NAME}/connectivity
-developers/samples/android/common              samples/${PLATFORM_NAME}/connectivity/sync/BasicSyncAdapter/BasicSyncAdapter/src/main/java/com/example/android/common
-developers/samples/android/content             samples/${PLATFORM_NAME}/content
-developers/samples/android/input               samples/${PLATFORM_NAME}/input
-developers/samples/android/media               samples/${PLATFORM_NAME}/media
-developers/samples/android/security            samples/${PLATFORM_NAME}/security
-developers/samples/android/testing             samples/${PLATFORM_NAME}/testing
-developers/samples/android/ui                  samples/${PLATFORM_NAME}/ui
+developers/build/prebuilts/gradle/BasicAndroidKeyStore/                      samples/${PLATFORM_NAME}/security/BasicAndroidKeyStore
+developers/build/prebuilts/gradle/BasicSyncAdapter/                          samples/${PLATFORM_NAME}/connectivity/BasicSyncAdapter
+developers/build/prebuilts/gradle/NetworkConnect/                            samples/${PLATFORM_NAME}/connectivity/NetworkConnect
+developers/build/prebuilts/gradle/BasicNetworking/                           samples/${PLATFORM_NAME}/connectivity/BasicNetworking
+developers/build/prebuilts/gradle/BluetoothLeGatt/                           samples/${PLATFORM_NAME}/connectivity/BluetoothLeGatt
+developers/build/prebuilts/gradle/AppRestrictions/                           samples/${PLATFORM_NAME}/content/AppRestrictions
+developers/build/prebuilts/gradle/BasicContactables/                         samples/${PLATFORM_NAME}/content/BasicContactables
+developers/build/prebuilts/gradle/StorageClient/                             samples/${PLATFORM_NAME}/content/StorageClient
+developers/build/prebuilts/gradle/StorageProvider/                           samples/${PLATFORM_NAME}/content/StorageProvider
+developers/build/prebuilts/gradle/BasicGestureDetect/                        samples/${PLATFORM_NAME}/input/BasicGestureDetect
+developers/build/prebuilts/gradle/BasicMultitouch/                           samples/${PLATFORM_NAME}/input/BasicMultitouch
+developers/build/prebuilts/gradle/ActivityInstrumentation/                   samples/${PLATFORM_NAME}/testing/ActivityInstrumentation
+developers/build/prebuilts/gradle/MediaRecorder/                             samples/${PLATFORM_NAME}/media/MediaRecorder
+developers/build/prebuilts/gradle/BasicMediaRouter/                          samples/${PLATFORM_NAME}/media/BasicMediaRouter
+developers/build/prebuilts/gradle/BasicMediaDecoder/                         samples/${PLATFORM_NAME}/media/BasicMediaDecoder
+developers/build/prebuilts/gradle/BorderlessButtons/                         samples/${PLATFORM_NAME}/ui/BorderlessButtons
+developers/build/prebuilts/gradle/BasicAccessibility/                        samples/${PLATFORM_NAME}/ui/BasicAccessibility
+developers/build/prebuilts/gradle/CustomChoiceList/                          samples/${PLATFORM_NAME}/ui/CustomChoiceList
+developers/build/prebuilts/gradle/TextSwitcher/                              samples/${PLATFORM_NAME}/ui/TextSwitcher
+developers/build/prebuilts/gradle/HorizontalPaging/                          samples/${PLATFORM_NAME}/ui/HorizontalPaging
+developers/build/prebuilts/gradle/ActionBarCompat-Styled/                    samples/${PLATFORM_NAME}/ui/ActionBarCompat-Styled
+developers/build/prebuilts/gradle/ActionBarCompat-ListPopupMenu/             samples/${PLATFORM_NAME}/ui/ActionBarCompat-ListPopupMenu
+developers/build/prebuilts/gradle/ActionBarCompat-ShareActionProvider/       samples/${PLATFORM_NAME}/ui/ActionBarCompat-ShareActionProvider
+developers/build/prebuilts/gradle/ActionBarCompat-Basic/                     samples/${PLATFORM_NAME}/ui/ActionBarCompat-Basic
+developers/build/prebuilts/gradle/BasicNotifications/                        samples/${PLATFORM_NAME}/ui/BasicNotifications
+developers/build/prebuilts/gradle/CustomNotifications/                       samples/${PLATFORM_NAME}/ui/CustomNotifications
+developers/build/prebuilts/gradle/DoneBar/                                   samples/${PLATFORM_NAME}/ui/DoneBar
+developers/build/prebuilts/gradle/BasicImmersiveMode/                        samples/${PLATFORM_NAME}/ui/BasicImmersiveMode
+developers/build/prebuilts/gradle/AdvancedImmersiveMode/                     samples/${PLATFORM_NAME}/ui/AdvancedImmersiveMode
+developers/build/prebuilts/gradle/ImmersiveMode/                             samples/${PLATFORM_NAME}/ui/ImmersiveMode
+developers/build/prebuilts/gradle/RepeatingAlarm/                            samples/${PLATFORM_NAME}/background/RepeatingAlarm
+developers/build/prebuilts/gradle/TextLinkify/                               samples/${PLATFORM_NAME}/ui/TextLinkify
 
 # Old sample tree
 development/samples/AccelerometerPlay          samples/${PLATFORM_NAME}/legacy/AccelerometerPlay
