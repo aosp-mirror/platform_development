@@ -18,7 +18,7 @@
 
 
 <resources>
-    <string name="app_name">Styled</string>
+    <string name="app_name">ActionBarCompat-Styled</string>
     <string name="intro_message">
         <![CDATA[
         
