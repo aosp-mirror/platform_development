@@ -1027,7 +1027,7 @@ static int sigaction_flags_pton(int portable_flags)
         ALOGV("%s: SA_THIRTYTWO_PORTABLE isn't SUPPORTED.", __func__);
     }
     if (portable_flags & SA_RESTORER_PORTABLE) {
-        mips_flags |= SA_RESTORER;
+        ALOGV("%s: SA_RESTORER isn't SUPPORTED.", __func__);
     }
     if (portable_flags & SA_ONSTACK_PORTABLE) {
         mips_flags |= SA_ONSTACK;
@@ -1059,7 +1059,6 @@ int sigaction_flags_ntop(int mips_flags)
 #ifdef SA_THIRTYTWO
     if (mips_flags & SA_THIRTYTWO)      portable_flags |= SA_THIRTYTWO_PORTABLE;
 #endif
-    if (mips_flags & SA_RESTORER)       portable_flags |= SA_RESTORER_PORTABLE;
     if (mips_flags & SA_ONSTACK)        portable_flags |= SA_ONSTACK_PORTABLE;
     if (mips_flags & SA_RESTART)        portable_flags |= SA_RESTART_PORTABLE;
     if (mips_flags & SA_NODEFER)        portable_flags |= SA_NODEFER_PORTABLE;
