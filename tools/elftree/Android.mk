@@ -37,10 +37,10 @@ ifdef cur_platform
 include $(CLEAR_VARS)
 LOCAL_MODULE := elftree
 LOCAL_SRC_FILES := elftree.c
-LOCAL_C_INCLUDES := external/elfutils/libelf
+LOCAL_C_INCLUDES := external/elfutils/0.153/libelf
 # to fix compatibility issues in elf headers across different platforms
 LOCAL_CFLAGS += \
-	-include external/elfutils/host-$(HOST_OS)-fixup/AndroidFixup.h
+	-include external/elfutils/0.153/host-$(HOST_OS)-fixup/AndroidFixup.h
 LOCAL_STATIC_LIBRARIES := libelf
 include $(BUILD_HOST_EXECUTABLE)
 
