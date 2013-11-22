@@ -18,13 +18,15 @@
 
 
 <resources>
-    <string name="app_name">ListPopupMenu</string>
+    <string name="app_name">ActionBarCompat-Basic</string>
     <string name="intro_message">
         <![CDATA[
         
             
-            This sample shows you how to use {@link android.support.v7.widget.PopupMenu PopupMenu}
-            from ActionBarCompat to create a list, with each item having a dropdown menu.
+            This sample shows you how to use ActionBarCompat to create a basic Activity which
+            displays action items. It covers inflating items from a menu resource, as well as adding
+            an item in code. Items that are not shown as action items on the Action Bar are
+            displayed in the action bar overflow.
             
         
         ]]>

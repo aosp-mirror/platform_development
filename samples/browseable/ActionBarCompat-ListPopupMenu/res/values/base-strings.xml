@@ -18,13 +18,13 @@
 
 
 <resources>
-    <string name="app_name">ShareActionProvider</string>
+    <string name="app_name">ActionBarCompat-ListPopupMenu</string>
     <string name="intro_message">
         <![CDATA[
         
             
-            This sample shows you how a provide a context-sensitive ShareActionProvider with
-            ActionBarCompat, backwards compatible to API v7.
+            This sample shows you how to use {@link android.support.v7.widget.PopupMenu PopupMenu}
+            from ActionBarCompat to create a list, with each item having a dropdown menu.
             
         
         ]]>

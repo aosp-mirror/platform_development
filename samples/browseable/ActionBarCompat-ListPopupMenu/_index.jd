@@ -1,7 +1,7 @@
 
 
 
-page.tags="ListPopupMenu"
+page.tags="ActionBarCompat-ListPopupMenu"
 sample.group=UI
 @jd:body
 
