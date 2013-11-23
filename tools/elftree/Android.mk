@@ -14,7 +14,7 @@
 
 LOCAL_PATH := $(call my-dir)
 
-supported_platforms := linux-x86 darwin-x86
+supported_platforms := linux-x86
 cur_platform := $(filter $(HOST_OS)-$(HOST_ARCH),$(supported_platforms))
 
 ifdef cur_platform
