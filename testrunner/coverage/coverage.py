@@ -43,7 +43,7 @@ class CoverageGenerator(object):
   _EMMA_JAR = os.path.join("external", "emma", "lib", "emma.jar")
   _TEST_COVERAGE_EXT = "ec"
   # root path of generated coverage report files, relative to Android build root
-  _COVERAGE_REPORT_PATH = os.path.join("out", "emma")
+  _COVERAGE_REPORT_PATH = "emma"
   _TARGET_DEF_FILE = "coverage_targets.xml"
   _CORE_TARGET_PATH = os.path.join("development", "testrunner",
                                    _TARGET_DEF_FILE)
@@ -53,12 +53,13 @@ class CoverageGenerator(object):
                                      _TARGET_DEF_FILE)
 
   # path to root of target build intermediates
-  _TARGET_INTERMEDIATES_BASE_PATH = os.path.join("out", "target", "common",
+  _TARGET_INTERMEDIATES_BASE_PATH = os.path.join("target", "common",
                                                  "obj")
 
   def __init__(self, adb_interface):
     self._root_path = android_build.GetTop()
-    self._output_root_path = os.path.join(self._root_path,
+    self._out_path = android_build.GetOut()
+    self._output_root_path = os.path.join(self._out_path,
                                           self._COVERAGE_REPORT_PATH)
     self._emma_jar_path = os.path.join(self._root_path, self._EMMA_JAR)
     self._adb = adb_interface
@@ -78,7 +79,7 @@ class CoverageGenerator(object):
       target: the CoverageTarget to use as basis for coverage calculation
       device_coverage_path: location of coverage file on device
       output_path: path to place output files in. If None will use
-        <android_root_path>/<_COVERAGE_REPORT_PATH>/<target>/<test[-qualifier]>
+        <android_out_path>/<_COVERAGE_REPORT_PATH>/<target>/<test[-qualifier]>
       test_qualifier: designates mode test was run with. e.g size=small.
         If not None, this will be used to customize output_path as shown above.
 
@@ -89,7 +90,7 @@ class CoverageGenerator(object):
       report_name = test_suite_name
       if test_qualifier:
         report_name = report_name + "-" + test_qualifier
-      output_path = os.path.join(self._root_path,
+      output_path = os.path.join(self._out_path,
                                  self._COVERAGE_REPORT_PATH,
                                  target.GetName(),
                                  report_name)
@@ -153,7 +154,7 @@ class CoverageGenerator(object):
 
   def _GetBuildIntermediatePath(self, target):
     return os.path.join(
-        self._root_path, self._TARGET_INTERMEDIATES_BASE_PATH, target.GetType(),
+        self._out_path, self._TARGET_INTERMEDIATES_BASE_PATH, target.GetType(),
         "%s_intermediates" % target.GetName())
 
   def _GatherSrcs(self, targets):

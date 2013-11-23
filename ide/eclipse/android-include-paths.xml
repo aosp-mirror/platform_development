@@ -31,6 +31,7 @@
 <includepath>${ProjDirPath}/system/core/include/arch/linux-arm</includepath>
 <includepath>${ProjDirPath}/dalvik/libnativehelper/include</includepath>
 <includepath>${ProjDirPath}/dalvik/libnativehelper/include/nativehelper</includepath>
+<includepath>${ProjDirPath}/system/media/camera/include</includepath>
 
 </language>
 <language name="GNU C++">
@@ -60,6 +61,7 @@
 <includepath>${ProjDirPath}/system/core/include/arch/linux-arm</includepath>
 <includepath>${ProjDirPath}/dalvik/libnativehelper/include</includepath>
 <includepath>${ProjDirPath}/dalvik/libnativehelper/include/nativehelper</includepath>
+<includepath>${ProjDirPath}/system/media/camera/include</includepath>
 
 </language>
 <language name="GNU C">
@@ -89,6 +91,7 @@
 <includepath>${ProjDirPath}/system/core/include/arch/linux-arm</includepath>
 <includepath>${ProjDirPath}/dalvik/libnativehelper/include</includepath>
 <includepath>${ProjDirPath}/dalvik/libnativehelper/include/nativehelper</includepath>
+<includepath>${ProjDirPath}/system/media/camera/include</includepath>
 
 </language>
 </section>

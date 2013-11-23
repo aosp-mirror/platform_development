@@ -22,6 +22,7 @@ import com.google.common.io.Files;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Set;
 import java.util.logging.Logger;
@@ -31,9 +32,16 @@ import java.util.logging.Logger;
  */
 public class IntellijProject {
 
+    public static final String FRAMEWORK_MODULE = "framework";
+    public static final Charset CHARSET = Charset.forName("UTF-8");
+
     private static final Logger logger = Logger.getLogger(IntellijProject.class.getName());
 
+    private static final String MODULES_TEMPLATE_FILE_NAME = "modules.xml";
+    private static final String VCS_TEMPLATE_FILE_NAME = "vcs.xml";
+
     ModuleCache cache = ModuleCache.getInstance();
+
     File indexFile;
     File repoRoot;
     File projectIdeaDir;
@@ -55,6 +63,11 @@ public class IntellijProject {
 
         // First pass, find all dependencies and cache them.
         Module module = cache.getAndCache(moduleName);
+        if (module == null) {
+            logger.info("Module '" + moduleName + "' not found." +
+                    " Module names are case senstive.");
+            return;
+        }
         projectIdeaDir = new File(module.getDir(), ".idea");
         projectIdeaDir.mkdir();
         copyTemplates();
@@ -104,19 +117,27 @@ public class IntellijProject {
 
     /**
      * Framework module needs special handling due to one off resource path:
-     *   frameworks/base/Android.mk
+     * frameworks/base/Android.mk
      */
     private void buildFrameWorkModule() throws IOException {
-        String makeFile = cache.getMakeFile(Constants.FRAMEWORK_MODULE);
-        logger.info("makefile: " + makeFile);
-        StandardModule frameworkModule = new FrameworkModule(Constants.FRAMEWORK_MODULE, makeFile);
-        frameworkModule.build();
-        cache.put(frameworkModule);
+        String makeFile = cache.getMakeFile(FRAMEWORK_MODULE);
+        if (makeFile == null) {
+            logger.warning("Unable to find framework module: " + FRAMEWORK_MODULE +
+                    ". Skipping.");
+        } else {
+            logger.info("makefile: " + makeFile);
+            StandardModule frameworkModule = new FrameworkModule(FRAMEWORK_MODULE,
+                    makeFile);
+            frameworkModule.build();
+            cache.put(frameworkModule);
+        }
     }
 
     private void createModulesFile(Module module) throws IOException {
-        String modulesContent = Files.toString(new File(repoRoot, Constants.REL_MODULES_TEMPLATE),
-                Constants.CHARSET);
+        String modulesContent = Files.toString(
+                new File(DirectorySearch.findTemplateDir(),
+                        "idea" + File.separator + MODULES_TEMPLATE_FILE_NAME),
+                CHARSET);
         StringBuilder sb = new StringBuilder();
         File moduleIml = module.getImlFile();
         sb.append("      <module fileurl=\"file://").append(moduleIml.getAbsolutePath())
@@ -131,12 +152,14 @@ public class IntellijProject {
 
         File out = new File(projectIdeaDir, "modules.xml");
         logger.info("Creating " + out.getAbsolutePath());
-        Files.write(modulesContent, out, Constants.CHARSET);
+        Files.write(modulesContent, out, CHARSET);
     }
 
     private void createVcsFile(Module module) throws IOException {
-        String vcsTemplate = Files.toString(new File(module.getRepoRoot(),
-                Constants.REL_VCS_TEMPLATE), Constants.CHARSET);
+        String vcsTemplate = Files.toString(
+                new File(DirectorySearch.findTemplateDir(),
+                        "idea" + File.separator + VCS_TEMPLATE_FILE_NAME),
+                CHARSET);
 
         StringBuilder sb = new StringBuilder();
         for (String name : module.getAllDependencies()) {
@@ -149,18 +172,17 @@ public class IntellijProject {
             }
         }
         vcsTemplate = vcsTemplate.replace("@VCS@", sb.toString());
-        Files.write(vcsTemplate, new File(projectIdeaDir, "vcs.xml"), Constants.CHARSET);
+        Files.write(vcsTemplate, new File(projectIdeaDir, "vcs.xml"), CHARSET);
     }
 
     private void createNameFile(String name) throws IOException {
-        File out =  new File(projectIdeaDir, ".name");
-        Files.write(name, out, Constants.CHARSET);
+        File out = new File(projectIdeaDir, ".name");
+        Files.write(name, out, CHARSET);
     }
 
     private void copyTemplates() throws IOException {
-        File templateDir = new File(repoRoot,
-                Constants.REL_TEMPLATE_DIR + File.separatorChar + "idea");
-        copyTemplates(templateDir, projectIdeaDir);
+        File templateDir = DirectorySearch.findTemplateDir();
+        copyTemplates(new File(templateDir, "idea"), projectIdeaDir);
     }
 
     private void copyTemplates(File fromDir, File toDir) throws IOException {

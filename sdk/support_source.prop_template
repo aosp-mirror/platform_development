@@ -1,0 +1,8 @@
+Pkg.UserSrc=false
+Pkg.Revision=${PLATFORM_SDK_VERSION}
+Extra.Vendor=android
+Extra.VendorId=android
+Extra.VendorDisplay=Android
+Extra.NameDisplay=Android Support Library
+Extra.Path=support
+Extra.OldPaths=compatibility

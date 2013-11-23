@@ -32,6 +32,7 @@
     <uses-permission android:name="android.permission.SEND_SMS" />
     <uses-permission android:name="android.permission.RECEIVE_SMS" />
     <uses-permission android:name="android.permission.NFC" />
+    <uses-permission android:name="android.permission.TRANSMIT_IR" />
 
     <!-- For android.media.audiofx.Visualizer -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
@@ -643,6 +644,11 @@
             </intent-filter>
         </activity>
 
+        <!-- Stub for memory testing. -->
+
+        <receiver android:name=".app.DoNothing"
+                android:process=":empty" android:exported="true" />
+
         <!-- ============================ -->
         <!--  Accessibility examples      -->
         <!-- ============================ -->
@@ -990,16 +996,6 @@
             </intent-filter>
         </activity>
 
-        <!-- Accessibility Samples -->
-        <activity android:name=".accessibility.AccessibilityNodeProviderActivity"
-                android:label="@string/accessibility_node_provider"
-                android:enabled="@bool/atLeastIceCreamSandwich">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.SAMPLE_CODE" />
-            </intent-filter>
-        </activity>
-
         <!-- Application Updating Samples -->
 
 <!-- BEGIN_INCLUDE(app_update_declaration) -->
@@ -1009,6 +1005,13 @@
             </intent-filter>
         </receiver>
 <!-- END_INCLUDE(app_update_declaration) -->
+
+        <receiver android:name=".app.AppUpdateSspReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.PACKAGE_REPLACED" />
+                <data android:scheme="package" android:ssp="com.example.android.apis" />
+            </intent-filter>
+        </receiver>
 
         <!-- ************************************* -->
         <!--       PREFERENCE PACKAGE SAMPLES      -->
@@ -1117,6 +1120,16 @@
             </intent-filter>
         </activity>
 
+        <!--
+        <activity android:name=".content.TextUndoActivity" android:label="@string/activity_text_undo">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+                <category android:name="android.intent.category.EMBED" />
+            </intent-filter>
+        </activity>
+        -->
+
         <activity android:name=".content.ResourcesLayoutReference"
                 android:label="@string/activity_resources_layout_reference">
             <intent-filter>
@@ -1188,6 +1201,17 @@
                   android:enabled="@bool/atLeastHoneycombMR2" />
 
         <!-- ************************************* -->
+        <!--     HARDWARE PACKAGE SAMPLES          -->
+        <!-- ************************************* -->
+
+        <activity android:name=".hardware.ConsumerIr" android:label="Hardware/Consumer IR">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <!-- ************************************* -->
         <!--     OS PACKAGE SAMPLES                -->
         <!-- ************************************* -->
 
@@ -1242,7 +1266,6 @@
 
         <activity android:name=".animation.AnimationLoading"
                 android:label="Animation/Loading"
-                android:hardwareAccelerated="false"
                 android:enabled="@bool/atLeastHoneycomb">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -1252,7 +1275,6 @@
 
         <activity android:name=".animation.AnimationCloning"
                 android:label="Animation/Cloning"
-                android:hardwareAccelerated="false"
                 android:enabled="@bool/atLeastHoneycomb">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -1262,7 +1284,6 @@
 
         <activity android:name=".animation.AnimationSeeking"
                 android:label="Animation/Seeking"
-                android:hardwareAccelerated="false"
                 android:enabled="@bool/atLeastHoneycomb">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -1272,7 +1293,6 @@
 
         <activity android:name=".animation.AnimatorEvents"
                 android:label="Animation/Events"
-                android:hardwareAccelerated="false"
                 android:enabled="@bool/atLeastHoneycomb">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -1282,7 +1302,6 @@
 
         <activity android:name=".animation.BouncingBalls"
                 android:label="Animation/Bouncing Balls"
-                android:hardwareAccelerated="false"
                 android:enabled="@bool/atLeastHoneycomb">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -1292,7 +1311,6 @@
 
         <activity android:name=".animation.CustomEvaluator"
                 android:label="Animation/Custom Evaluator"
-                android:hardwareAccelerated="false"
                 android:enabled="@bool/atLeastHoneycomb">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -1311,7 +1329,6 @@
 
         <activity android:name=".animation.ReversingAnimation"
                 android:label="Animation/Reversing"
-                android:hardwareAccelerated="false"
                 android:enabled="@bool/atLeastHoneycomb">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -1321,7 +1338,6 @@
 
         <activity android:name=".animation.MultiPropertyAnimation"
                 android:label="Animation/Multiple Properties"
-                android:hardwareAccelerated="false"
                 android:enabled="@bool/atLeastHoneycomb">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -1348,8 +1364,17 @@
         </activity>
 
         <activity android:name=".animation.LayoutAnimationsByDefault"
-                android:label="Animation/Default Layout Animations"
-                android:enabled="@bool/atLeastHoneycomb">
+                  android:label="Animation/Default Layout Animations"
+                  android:enabled="@bool/atLeastHoneycomb">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".animation.Transitions"
+                  android:label="Animation/Simple Transitions"
+                  android:enabled="@bool/atLeastHoneycomb">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -2376,11 +2401,32 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".view.ContentBrowserNavActivity"
+                android:label="Views/System UI Visibility/Content Browser Nav Bar"
+                android:theme="@android:style/Theme.Holo.Light.DarkActionBar"
+                android:uiOptions="splitActionBarWhenNarrow"
+                android:enabled="@bool/atLeastKitKat">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
         <activity android:name=".view.VideoPlayerActivity"
                 android:label="Views/System UI Visibility/Video Player"
                 android:theme="@android:style/Theme.Holo"
                 android:uiOptions="splitActionBarWhenNarrow"
                 android:enabled="@bool/atLeastJellyBean">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".view.TranslucentBarsActivity"
+                android:label="Views/System UI Visibility/Translucent Bars"
+                android:theme="@android:style/Theme.Holo.NoActionBar.TranslucentDecor"
+                android:enabled="@bool/atLeastKitKat">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />

@@ -17,6 +17,7 @@
 package com.android.idegen;
 
 import com.google.common.base.Objects;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -45,10 +46,18 @@ import java.util.regex.Pattern;
  */
 public class StandardModule extends Module {
 
+    static final String REL_OUT_APP_DIR = "out/target/common/obj/APPS";
+
     private static final Logger logger = Logger.getLogger(StandardModule.class.getName());
 
     private static final Pattern SRC_PATTERN = Pattern.compile(
             ".*\\(call all-java-files-under, (.*)\\)");
+    private static final String[] AUTO_DEPENDENCIES = new String[]{
+            IntellijProject.FRAMEWORK_MODULE, "libcore"
+    };
+    private static final String[] DIRS_WITH_AUTO_DEPENDENCIES = new String[]{
+            "packages", "vendor", "frameworks/ex", "frameworks/opt", "frameworks/support"
+    };
 
     String moduleName;
     File makeFile;
@@ -66,7 +75,8 @@ public class StandardModule extends Module {
     }
 
     public StandardModule(String moduleName, String makeFile, boolean searchForSrc) {
-        this(moduleName, new File(makeFile), searchForSrc);
+        this(Preconditions.checkNotNull(moduleName), new File(Preconditions.checkNotNull(makeFile)),
+                searchForSrc);
     }
 
     public StandardModule(String moduleName, File makeFile, boolean searchForSrc) {
@@ -75,16 +85,16 @@ public class StandardModule extends Module {
         this.moduleRoot = makeFile.getParentFile();
         this.repoRoot = DirectorySearch.findRepoRoot(makeFile);
         this.intermediatesDir = new File(repoRoot.getAbsolutePath() + File.separator +
-                Constants.REL_OUT_APP_DIR + File.separator + getName() + "_intermediates" +
+                REL_OUT_APP_DIR + File.separator + getName() + "_intermediates" +
                 File.separator + "src");
         this.searchForSrc = searchForSrc;
 
         // TODO: auto-detect when framework dependency is needed instead of using coded list.
-        for (String dir : Constants.DIRS_WITH_AUTO_DEPENDENCIES) {
+        for (String dir : DIRS_WITH_AUTO_DEPENDENCIES) {
             // length + 2 to account for slash
             boolean isDir = makeFile.getAbsolutePath().startsWith(repoRoot + "/" + dir);
             if (isDir) {
-                for (String dependency : Constants.AUTO_DEPENDENCIES) {
+                for (String dependency : AUTO_DEPENDENCIES) {
                     this.directDependencies.add(dependency);
                 }
             }

@@ -22,6 +22,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.os.Bundle;
 import android.graphics.SurfaceTexture;
+import android.view.Surface;
 import android.renderscript.Allocation;
 import android.renderscript.Matrix3f;
 import android.renderscript.RenderScript;
@@ -211,18 +212,22 @@ public class LevelsRSActivity extends Activity
 
     @Override
     public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
-        mOutPixelsAllocation.setSurfaceTexture(surface);
+        if (surface != null) {
+            mOutPixelsAllocation.setSurface(new Surface(surface));
+        }
         filter();
     }
 
     @Override
     public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {
-        mOutPixelsAllocation.setSurfaceTexture(surface);
+        if (surface != null) {
+            mOutPixelsAllocation.setSurface(new Surface(surface));
+        }
     }
 
     @Override
     public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
-        mOutPixelsAllocation.setSurfaceTexture(null);
+        mOutPixelsAllocation.setSurface(null);
         return true;
     }
 

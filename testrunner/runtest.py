@@ -75,16 +75,18 @@ class TestRunner(object):
 
   _DALVIK_VERIFIER_OFF_PROP = "dalvik.vm.dexopt-flags = v=n"
 
-  # regular expression to match install: statements in make output
-  _RE_MAKE_INSTALL = re.compile(r'Install:\s(.+)')
+  # regular expression to match path to artifacts to install in make output
+  _RE_MAKE_INSTALL = re.compile(r'INSTALL-PATH:\s(.+)\s(.+)')
 
-  # regular expression to find remote device path from a file path relative
-  # to build root
-  _RE_MAKE_INSTALL_PATH = re.compile(r'out\/target\/product\/\w+\/(.+)$')
 
   def __init__(self):
     # disable logging of timestamp
     self._root_path = android_build.GetTop()
+    out_base_name = os.path.basename(android_build.GetOutDir())
+    # regular expression to find remote device path from a file path relative
+    # to build root
+    pattern = r'' + out_base_name + r'\/target\/product\/\w+\/(.+)$'
+    self._re_make_install_path = re.compile(pattern)
     logger.SetTimestampLogging(False)
     self._adb = None
     self._known_tests = None
@@ -270,12 +272,13 @@ class TestRunner(object):
 
       # mmm cannot be used from python, so perform a similar operation using
       # ONE_SHOT_MAKEFILE
-      cmd = 'ONE_SHOT_MAKEFILE="%s" make -j%s -C "%s" all_modules %s' % (
+      cmd = 'ONE_SHOT_MAKEFILE="%s" make -j%s -C "%s" GET-INSTALL-PATH all_modules %s' % (
           target_build_string, self._options.make_jobs, self._root_path,
           extra_args_string)
       logger.Log(cmd)
       if not self._options.preview:
         output = run_command.RunCommand(cmd, return_output=True, timeout_time=600)
+        logger.SilentLog(output)
         self._DoInstall(output)
 
   def _DoInstall(self, make_output):
@@ -289,7 +292,7 @@ class TestRunner(object):
     for line in make_output.split("\n"):
       m = self._RE_MAKE_INSTALL.match(line)
       if m:
-        install_path = m.group(1)
+        install_path = m.group(2)
         if install_path.endswith(".apk"):
           abs_install_path = os.path.join(self._root_path, install_path)
           logger.Log("adb install -r %s" % abs_install_path)
@@ -298,9 +301,12 @@ class TestRunner(object):
           self._PushInstallFileToDevice(install_path)
 
   def _PushInstallFileToDevice(self, install_path):
-    m = self._RE_MAKE_INSTALL_PATH.match(install_path)
+    m = self._re_make_install_path.match(install_path)
     if m:
       remote_path = m.group(1)
+      remote_dir = os.path.dirname(remote_path)
+      logger.Log("adb shell mkdir -p %s" % remote_dir)
+      self._adb.SendShellCommand("mkdir -p %s" % remote_dir)
       abs_install_path = os.path.join(self._root_path, install_path)
       logger.Log("adb push %s %s" % (abs_install_path, remote_path))
       self._adb.Push(abs_install_path, remote_path)
@@ -313,7 +319,8 @@ class TestRunner(object):
 
     # hack to build cts dependencies
     # TODO: remove this when cts dependencies are removed
-    if self._IsCtsTests(tests):
+    is_cts =  self._IsCtsTests(tests)
+    if is_cts:
       # need to use make since these fail building with ONE_SHOT_MAKEFILE
       extra_args_set.add('CtsTestStubs')
       extra_args_set.add('android.core.tests.runner')
@@ -335,8 +342,15 @@ class TestRunner(object):
         old_dir = os.getcwd()
         os.chdir(self._root_path)
         output = run_command.RunCommand(cmd, return_output=True)
+        logger.SilentLog(output)
         os.chdir(old_dir)
         self._DoInstall(output)
+        if is_cts:
+          # hack! hardcode install of CtsTestStubs
+          out = android_build.GetTestAppPath()
+          abs_install_path = os.path.join(out, "CtsTestStubs.apk")
+          logger.Log("adb install -r %s" % abs_install_path)
+          logger.Log(self._adb.Install(abs_install_path))
 
   def _AddBuildTarget(self, test_suite, target_tree, extra_args_set):
     if not test_suite.IsFullMake():

@@ -421,6 +421,12 @@
     <string name="styled_text">Plain, <b>bold</b>, <i>italic</i>, <b><i>bold-italic</i></b></string>
     <string name="styled_text_prog">Assigned programmatically:</string>
 
+    <string name="activity_text_undo">Content/Undo Manager/Text</string>
+    <string name="text_undo_msg">Demonstrates simple use of UndoManager with text editing
+            in a TextView.</string>
+    <string name="undo">Undo</string>
+    <string name="redo">Redo</string>
+
     <string name="activity_resources_layout_reference">Content/Resources/Layout Reference</string>
     <string name="resources_layout_reference_description">Shows how to write layout
         resource references, so that you can define multiple different configurations of
@@ -454,6 +460,9 @@
 
     <string name="activity_install_apk">Content/Packages/Install Apk</string>
 
+    <string name="ir_send">Send IR</string>
+    <string name="ir_get_freqs">Get Carrier Frequencies</string>
+
     <!-- ============================== -->
     <!--  app/intents examples strings     -->
     <!-- ============================== -->
@@ -461,6 +470,8 @@
     <string name="activity_intents">App/Activity/Intents</string>
     <string name="intents">Example of launching various Intents.</string>
     <string name="get_music">Get Music</string>
+    <string name="get_image">Get Image</string>
+    <string name="get_stream">Get Stream</string>
 
     <!-- ============================== -->
     <!--  app/intents activity flags examples strings     -->
@@ -1418,10 +1429,6 @@
     <!-- ============================ -->
     <!--  Accessibility examples strings  -->
     <!-- ============================ -->
-
-    <string name="accessibility_node_provider">Accessibility/Accessibility Node Provider</string>
-    <string name="accessibility_node_provider_instructions">Enable TalkBack and Explore-by-touch from accessibility
-        settings. Then touch the colored squares.</string>
 
     <string name="accessibility_service">Accessibility/Accessibility Service</string>
     <string name="accessibility_service_label">ClockBack</string>

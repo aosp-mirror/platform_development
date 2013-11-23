@@ -117,6 +117,8 @@ public class Connectivity extends Activity {
     private long mTotalScanTime = 0;
     private long mTotalScanCount = 0;
 
+    private String mTdlsAddr = null;
+
     private WifiManager mWm;
     private PowerManager mPm;
     private ConnectivityManager mCm;
@@ -235,6 +237,7 @@ public class Connectivity extends Activity {
                     unregisterReceiver(mScanRecv);
                     mScanButton.setText(GET_SCAN_RES);
                 } else {
+                    Log.d(TAG, "Scan: START " + mScanCur);
                     mStartTime = SystemClock.elapsedRealtime();
                     mWm.startScan();
                 }
@@ -289,6 +292,9 @@ public class Connectivity extends Activity {
         mIntentFilter = new IntentFilter();
         mIntentFilter.addAction(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION);
 
+        findViewById(R.id.startTdls).setOnClickListener(mClickListener);
+        findViewById(R.id.stopTdls).setOnClickListener(mClickListener);
+
         findViewById(R.id.start_mms).setOnClickListener(mClickListener);
         findViewById(R.id.stop_mms).setOnClickListener(mClickListener);
         findViewById(R.id.start_hipri).setOnClickListener(mClickListener);
@@ -337,6 +343,12 @@ public class Connectivity extends Activity {
                     break;
                 case R.id.startScan:
                     onStartScanCycle();
+                    break;
+                case R.id.startTdls:
+                    onStartTdls();
+                    break;
+                case R.id.stopTdls:
+                    onStopTdls();
                     break;
                 case R.id.start_mms:
                     mCm.startUsingNetworkFeature(ConnectivityManager.TYPE_MOBILE,
@@ -469,6 +481,7 @@ public class Connectivity extends Activity {
                 mWm.disconnect();
             mTotalScanTime = 0;
             mTotalScanCount = 0;
+            Log.d(TAG, "Scan: START " + mScanCur);
             mStartTime = SystemClock.elapsedRealtime();
             mWm.startScan();
         } else {
@@ -482,6 +495,30 @@ public class Connectivity extends Activity {
             mScanCyclesEdit.setText(Long.toString(mScanCycles));
             if (mScanDisconnect.isChecked())
                 mWm.reassociate();
+        }
+    }
+
+    private void onStartTdls() {
+        mTdlsAddr = ((EditText)findViewById(R.id.sc_ip_mac)).getText().toString();
+        Log.d(TAG, "TDLS: START " + mTdlsAddr);
+        InetAddress inetAddress = null;
+        try {
+            inetAddress = InetAddress.getByName(mTdlsAddr);
+            mWm.setTdlsEnabled(inetAddress, true);
+        } catch (Exception e) {
+            mWm.setTdlsEnabledWithMacAddress(mTdlsAddr, true);
+        }
+    }
+
+    private void onStopTdls() {
+        if (mTdlsAddr == null) return;
+        Log.d(TAG, "TDLS: STOP " + mTdlsAddr);
+        InetAddress inetAddress = null;
+        try {
+            inetAddress = InetAddress.getByName(mTdlsAddr);
+            mWm.setTdlsEnabled(inetAddress, false);
+        } catch (Exception e) {
+            mWm.setTdlsEnabledWithMacAddress(mTdlsAddr, false);
         }
     }
 

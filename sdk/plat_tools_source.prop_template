@@ -1,0 +1,3 @@
+Pkg.UserSrc=false
+Pkg.Revision=${PLATFORM_SDK_VERSION}.0.0
+

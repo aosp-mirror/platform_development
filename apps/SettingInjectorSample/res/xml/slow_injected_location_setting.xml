@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<injected-location-setting xmlns:android="http://schemas.android.com/apk/res/android"
+    android:title="@string/slow_setting_label"
+    android:icon="@drawable/ic_launcher"
+    android:settingsActivity="com.example.android.injector.MySettingActivity"
+/>

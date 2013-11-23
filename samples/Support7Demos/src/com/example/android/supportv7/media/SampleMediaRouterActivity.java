@@ -18,6 +18,7 @@ package com.example.android.supportv7.media;
 
 import com.example.android.supportv7.R;
 
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -26,7 +27,13 @@ import android.content.res.Resources;
 import android.content.DialogInterface;
 import android.app.PendingIntent;
 import android.app.Presentation;
+import android.media.AudioManager;
+import android.media.AudioManager.OnAudioFocusChangeListener;
+import android.media.MediaMetadataRetriever;
+import android.media.RemoteControlClient;
 import android.net.Uri;
+import android.os.Build;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Bundle;
 import android.os.SystemClock;
@@ -44,20 +51,19 @@ import android.support.v7.media.MediaRouteSelector;
 import android.support.v7.media.MediaItemStatus;
 import android.util.Log;
 import android.view.Gravity;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.view.Display;
-import android.view.Surface;
 import android.view.SurfaceView;
 import android.view.SurfaceHolder;
 import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -70,8 +76,6 @@ import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 
 
-import java.util.ArrayList;
-import java.util.List;
 import java.io.File;
 
 /**
@@ -131,7 +135,7 @@ public class SampleMediaRouterActivity extends ActionBarActivity {
 
         @Override
         public void onSizeChanged(int width, int height) {
-            mLocalPlayer.updateSize(width, height);
+            mPlayer.updateSize(width, height);
         }
 
         @Override
@@ -193,6 +197,7 @@ public class SampleMediaRouterActivity extends ActionBarActivity {
                 }
                 playerCB = mRemotePlayer;
                 mRemotePlayer.reset();
+
             } else {
                 // Local Playback:
                 //   Use local player and feed media player one item at a time
@@ -301,6 +306,24 @@ public class SampleMediaRouterActivity extends ActionBarActivity {
         }
     };
 
+    private RemoteControlClient mRemoteControlClient;
+    private ComponentName mEventReceiver;
+    private AudioManager mAudioManager;
+    private PendingIntent mMediaPendingIntent;
+    private final OnAudioFocusChangeListener mAfChangeListener =
+            new OnAudioFocusChangeListener() {
+        @Override
+        public void onAudioFocusChange(int focusChange) {
+            if (focusChange == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT) {
+                Log.d(TAG, "onAudioFocusChange: LOSS_TRANSIENT");
+            } else if (focusChange == AudioManager.AUDIOFOCUS_GAIN) {
+                Log.d(TAG, "onAudioFocusChange: AUDIOFOCUS_GAIN");
+            } else if (focusChange == AudioManager.AUDIOFOCUS_LOSS) {
+                Log.d(TAG, "onAudioFocusChange: AUDIOFOCUS_LOSS");
+            }
+        }
+    };
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         // Be sure to call the super class.
@@ -343,15 +366,18 @@ public class SampleMediaRouterActivity extends ActionBarActivity {
                     "[streaming] "+mediaNames[i], Uri.parse(mediaUris[i])));
         }
 
-        // Scan local /sdcard/ directory for media files.
-        String sdcard = "/sdcard/";
-        File file = new File(sdcard);
-        File list[] = file.listFiles();
-        for (int i = 0; i < list.length; i++) {
-            String filename = list[i].getName();
-            if (filename.matches(".*\\.(m4v|mp4)")) {
-                mLibraryItems.add(new MediaItem(
-                        "[local] "+filename, Uri.parse("file:///sdcard/" + filename)));
+        // Scan local external storage directory for media files.
+        File externalDir = Environment.getExternalStorageDirectory();
+        if (externalDir != null) {
+            File list[] = externalDir.listFiles();
+            if (list != null) {
+                for (int i = 0; i < list.length; i++) {
+                    String filename = list[i].getName();
+                    if (filename.matches(".*\\.(m4v|mp4)")) {
+                        mLibraryItems.add(new MediaItem("[local] " + filename,
+                                Uri.fromFile(list[i])));
+                    }
+                }
             }
         }
 
@@ -471,6 +497,100 @@ public class SampleMediaRouterActivity extends ActionBarActivity {
         IntentFilter filter = new IntentFilter();
         filter.addAction(SampleMediaRouterActivity.ACTION_STATUS_CHANGE);
         registerReceiver(mReceiver, filter);
+
+        // Build the PendingIntent for the remote control client
+        mAudioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        mEventReceiver = new ComponentName(getPackageName(),
+                SampleMediaButtonReceiver.class.getName());
+        Intent mediaButtonIntent = new Intent(Intent.ACTION_MEDIA_BUTTON);
+        mediaButtonIntent.setComponent(mEventReceiver);
+        mMediaPendingIntent = PendingIntent.getBroadcast(this, 0, mediaButtonIntent, 0);
+
+        // Create and register the remote control client
+        registerRCC();
+    }
+
+    private void registerRCC() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+            // Create the RCC and register with AudioManager and MediaRouter
+            mAudioManager.requestAudioFocus(mAfChangeListener,
+                    AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
+            mAudioManager.registerMediaButtonEventReceiver(mEventReceiver);
+            mRemoteControlClient = new RemoteControlClient(mMediaPendingIntent);
+            mAudioManager.registerRemoteControlClient(mRemoteControlClient);
+            mMediaRouter.addRemoteControlClient(mRemoteControlClient);
+            SampleMediaButtonReceiver.setActivity(SampleMediaRouterActivity.this);
+            mRemoteControlClient.setTransportControlFlags(
+                    RemoteControlClient.FLAG_KEY_MEDIA_PLAY_PAUSE);
+            mRemoteControlClient.setPlaybackState(
+                    RemoteControlClient.PLAYSTATE_PLAYING);
+        }
+    }
+
+    private void unregisterRCC() {
+        // Unregister the RCC with AudioManager and MediaRouter
+        if (mRemoteControlClient != null) {
+            mRemoteControlClient.setTransportControlFlags(0);
+            mAudioManager.abandonAudioFocus(mAfChangeListener);
+            mAudioManager.unregisterMediaButtonEventReceiver(mEventReceiver);
+            mAudioManager.unregisterRemoteControlClient(mRemoteControlClient);
+            mMediaRouter.removeRemoteControlClient(mRemoteControlClient);
+            SampleMediaButtonReceiver.setActivity(null);
+            mRemoteControlClient = null;
+        }
+    }
+
+    public boolean handleMediaKey(KeyEvent event) {
+        if (event.getAction() == KeyEvent.ACTION_DOWN && event.getRepeatCount() == 0) {
+            switch (event.getKeyCode()) {
+                case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:
+                {
+                    Log.d(TAG, "Received Play/Pause event from RemoteControlClient");
+                    if (!mPaused) {
+                        mPlayer.pause();
+                    } else {
+                        mPlayer.resume();
+                    }
+                    return true;
+                }
+                case KeyEvent.KEYCODE_MEDIA_PLAY:
+                {
+                    Log.d(TAG, "Received Play event from RemoteControlClient");
+                    if (mPaused) {
+                        mPlayer.resume();
+                    }
+                    return true;
+                }
+                case KeyEvent.KEYCODE_MEDIA_PAUSE:
+                {
+                    Log.d(TAG, "Received Pause event from RemoteControlClient");
+                    if (!mPaused) {
+                        mPlayer.pause();
+                    }
+                    return true;
+                }
+                case KeyEvent.KEYCODE_MEDIA_STOP:
+                {
+                    Log.d(TAG, "Received Stop event from RemoteControlClient");
+                    mPlayer.stop();
+                    clearContent();
+                    return true;
+                }
+                default:
+                    break;
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        return handleMediaKey(event) || super.onKeyDown(keyCode, event);
+    }
+
+    @Override
+    public boolean onKeyUp(int keyCode, KeyEvent event) {
+        return handleMediaKey(event) || super.onKeyUp(keyCode, event);
     }
 
     @Override
@@ -502,10 +622,14 @@ public class SampleMediaRouterActivity extends ActionBarActivity {
 
     @Override
     public void onDestroy() {
+        // Unregister the remote control client
+        unregisterRCC();
+
         // Unregister broadcast receiver
         unregisterReceiver(mReceiver);
         mPlayer.stop();
         mMediaPlayer.release();
+
         super.onDestroy();
     }
 
@@ -549,6 +673,10 @@ public class SampleMediaRouterActivity extends ActionBarActivity {
         // only enable seek bar when duration is known
         MediaQueueItem item = getCheckedMediaQueueItem();
         mSeekBar.setEnabled(item != null && item.getContentDuration() > 0);
+        if (mRemoteControlClient != null) {
+            mRemoteControlClient.setPlaybackState(mPaused ?
+                    RemoteControlClient.PLAYSTATE_PAUSED : RemoteControlClient.PLAYSTATE_PLAYING);
+        }
     }
 
     private void updateProgress(MediaQueueItem queueItem) {
@@ -646,19 +774,20 @@ public class SampleMediaRouterActivity extends ActionBarActivity {
         toast.show();
     }
 
-    private abstract class Player {
-        abstract void enqueue(final Uri uri, long pos);
-        abstract void remove(final MediaQueueItem item);
-        abstract void seek(String sid, String iid, long pos);
-        abstract void getStatus(final MediaQueueItem item, final boolean update);
-        abstract void pause();
-        abstract void resume();
-        abstract void stop();
-        abstract void showStatistics();
-        abstract void onFinish(boolean error);
+    private interface Player {
+        void enqueue(final Uri uri, long pos);
+        void remove(final MediaQueueItem item);
+        void seek(String sid, String iid, long pos);
+        void getStatus(final MediaQueueItem item, final boolean update);
+        void pause();
+        void resume();
+        void stop();
+        void showStatistics();
+        void onFinish(boolean error);
+        void updateSize(int width, int height);
     }
 
-    private class LocalPlayer extends Player implements SurfaceHolder.Callback {
+    private class LocalPlayer implements Player, SurfaceHolder.Callback {
         private final MediaSessionManager mSessionManager = new MediaSessionManager();
         private String mSessionId;
         // The presentation to show on the secondary display.
@@ -672,7 +801,8 @@ public class SampleMediaRouterActivity extends ActionBarActivity {
             mLayout = (FrameLayout)findViewById(R.id.player);
             mSurfaceView = (SurfaceView)findViewById(R.id.surface_view);
             SurfaceHolder holder = mSurfaceView.getHolder();
-            holder.addCallback(mLocalPlayer);
+            holder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
+            holder.addCallback(this);
         }
 
         public void setCallback(MediaSessionManager.Callback cb) {
@@ -684,6 +814,13 @@ public class SampleMediaRouterActivity extends ActionBarActivity {
             Log.d(TAG, "LocalPlayer: enqueue, uri=" + uri + ", pos=" + pos);
             MediaQueueItem playlistItem = mSessionManager.enqueue(mSessionId, uri, null);
             mSessionId = playlistItem.getSessionId();
+            // Set remote control client title
+            if (mPlayListItems.getCount() == 0 && mRemoteControlClient != null) {
+                RemoteControlClient.MetadataEditor ed = mRemoteControlClient.editMetadata(true);
+                ed.putString(MediaMetadataRetriever.METADATA_KEY_TITLE,
+                        playlistItem.toString());
+                ed.apply();
+            }
             mPlayListItems.add(playlistItem);
             if (pos > 0) {
                 // Seek to initial position if needed
@@ -764,7 +901,7 @@ public class SampleMediaRouterActivity extends ActionBarActivity {
         public void onFinish(boolean error) {
             MediaQueueItem item = mSessionManager.finish(error);
             updateUi();
-            if (error) {
+            if (error && item != null) {
                 showToast("Failed to play item " + item.getUri());
             }
         }
@@ -774,14 +911,14 @@ public class SampleMediaRouterActivity extends ActionBarActivity {
         public void surfaceChanged(SurfaceHolder holder, int format,
                 int width, int height) {
             Log.d(TAG, "surfaceChanged "+width+"x"+height);
-            mMediaPlayer.onWindowCreated(holder.getSurface());
+            mMediaPlayer.setSurface(holder);
         }
 
         @Override
         public void surfaceCreated(SurfaceHolder holder) {
             Log.d(TAG, "surfaceCreated");
-            mMediaPlayer.onWindowCreated(holder.getSurface());
-            mLocalPlayer.updateSize(mVideoWidth, mVideoHeight);
+            mMediaPlayer.setSurface(holder);
+            updateSize(mVideoWidth, mVideoHeight);
         }
 
         @Override
@@ -789,7 +926,8 @@ public class SampleMediaRouterActivity extends ActionBarActivity {
             Log.d(TAG, "surfaceDestroyed");
         }
 
-        private void updateSize(int width, int height) {
+        @Override
+        public void updateSize(int width, int height) {
             if (width > 0 && height > 0) {
                 if (mPresentation == null) {
                     int surfaceWidth = mLayout.getWidth();
@@ -851,6 +989,8 @@ public class SampleMediaRouterActivity extends ActionBarActivity {
 
             if (mPresentation != null || route.supportsControlCategory(
                     MediaControlIntent.CATEGORY_REMOTE_PLAYBACK)) {
+                mMediaPlayer.setSurface((SurfaceHolder)null);
+                mMediaPlayer.reset();
                 mSurfaceView.setVisibility(View.GONE);
                 mLayout.setVisibility(View.GONE);
             } else {
@@ -873,7 +1013,7 @@ public class SampleMediaRouterActivity extends ActionBarActivity {
         };
 
         private final class DemoPresentation extends Presentation {
-            private SurfaceView mSurfaceView;
+            private SurfaceView mPresentationSurfaceView;
 
             public DemoPresentation(Context context, Display display) {
                 super(context, display);
@@ -892,16 +1032,17 @@ public class SampleMediaRouterActivity extends ActionBarActivity {
                 // Inflate the layout.
                 setContentView(R.layout.sample_media_router_presentation);
 
-                // Set up the surface view for visual interest.
-                mSurfaceView = (SurfaceView)findViewById(R.id.surface_view);
-                SurfaceHolder holder = mSurfaceView.getHolder();
-                holder.addCallback(mLocalPlayer);
+                // Set up the surface view.
+                mPresentationSurfaceView = (SurfaceView)findViewById(R.id.surface_view);
+                SurfaceHolder holder = mPresentationSurfaceView.getHolder();
+                holder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
+                holder.addCallback(LocalPlayer.this);
             }
 
             public void updateSize(int width, int height) {
-                int surfaceHeight=getWindow().getDecorView().getHeight();
-                int surfaceWidth=getWindow().getDecorView().getWidth();
-                ViewGroup.LayoutParams lp = mSurfaceView.getLayoutParams();
+                int surfaceHeight = getWindow().getDecorView().getHeight();
+                int surfaceWidth = getWindow().getDecorView().getWidth();
+                ViewGroup.LayoutParams lp = mPresentationSurfaceView.getLayoutParams();
                 if (surfaceWidth * height < surfaceHeight * width) {
                     lp.width = surfaceWidth;
                     lp.height = surfaceWidth * height / width;
@@ -909,17 +1050,13 @@ public class SampleMediaRouterActivity extends ActionBarActivity {
                     lp.width = surfaceHeight * width / height;
                     lp.height = surfaceHeight;
                 }
-                Log.d(TAG, "video rect is "+lp.width+"x"+lp.height);
-                mSurfaceView.setLayoutParams(lp);
-            }
-
-            public void clearContent() {
-                //TO-DO: clear surface view
+                Log.d(TAG, "video rect is " + lp.width + "x" + lp.height);
+                mPresentationSurfaceView.setLayoutParams(lp);
             }
         }
     }
 
-    private class RemotePlayer extends Player implements MediaSessionManager.Callback {
+    private class RemotePlayer implements Player, MediaSessionManager.Callback {
         private MediaQueueItem mQueueItem;
         private MediaQueueItem mPlaylistItem;
         private String mSessionId;
@@ -1232,6 +1369,11 @@ public class SampleMediaRouterActivity extends ActionBarActivity {
         @Override
         public void onFinish(boolean error) {
             updateUi();
+        }
+
+        @Override
+        public void updateSize(int width, int height) {
+            // nothing to do
         }
 
         private void play(final Uri uri, boolean enqueue, final long pos) {

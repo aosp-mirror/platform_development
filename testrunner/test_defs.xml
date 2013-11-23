@@ -137,8 +137,12 @@ See test_defs.xsd for more information.
     description="Framework libutils unit tests." />
 
 <test-native name="libinput"
-    build_path="frameworks/base/services/input/tests"
+    build_path="frameworks/native/libs/input/tests"
     description="Framework libinput unit tests." />
+
+<test-native name="libinputservice"
+    build_path="frameworks/base/services/input/tests"
+    description="Framework libinputservice unit tests." />
 
 <test name="volley"
     build_path="frameworks/support/volley/tests"
@@ -185,6 +189,12 @@ See test_defs.xsd for more information.
     build_path="frameworks/base/media/tests/MediaFrameworkTest"
     package="com.android.mediaframeworktest"
     runner=".MediaFrameworkUnitTestRunner"
+    coverage_target="framework" />
+
+<test name="mediaintegrationtest"
+    build_path="frameworks/base/media/tests/MediaFrameworkTest"
+    package="com.android.mediaframeworktest"
+    runner=".MediaFrameworkIntegrationTestRunner"
     coverage_target="framework" />
 
 <test-native name="camera-client-native"
@@ -336,7 +346,7 @@ See test_defs.xsd for more information.
 <test name="cts-net"
     build_path="cts/tests/tests/net"
     package="com.android.cts.net"
-    runner="android.test.InstrumentationTestRunner"
+    runner="android.test.InstrumentationCtsTestRunner"
     coverage_target="framework"
     suite="cts" />
 
@@ -402,12 +412,6 @@ See test_defs.xsd for more information.
 <test name="apidemos"
     build_path="development/samples/ApiDemos"
     package="com.example.android.apis.tests" />
-
-<test name="applicationsprov"
-    build_path="packages/providers/ApplicationsProvider"
-    package="com.android.providers.applications.tests"
-    coverage_target="ApplicationsProvider"
-    continuous="true" />
 
 <test name="browser"
     build_path="packages/apps/Browser"
@@ -528,6 +532,13 @@ See test_defs.xsd for more information.
     coverage_target="SystemUI"
     continuous="true"
     description="SystemUI tests" />
+
+<test name="documentsui"
+    build_path="frameworks/base/packages/DocumentsUI/tests"
+    package="com.android.documentsui.tests"
+    coverage_target="DocumentsUI"
+    continuous="true"
+    description="DocumentsUI tests" />
 
 <!--  native tests  -->
 

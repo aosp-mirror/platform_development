@@ -1,0 +1,16 @@
+page.tags="Bluetooth", "HDP", "Health"
+sample.group=Connectivity
+@jd:body
+
+<p>A sample application that demonstrates how to communicate with a Bluetooth Health Device Profile (HDP) device.  This feature is available on Android 4.0 (API level 14) or above platforms. The Android Bluetooth Health API lets you create
+applications that use Bluetooth to communicate with health devices that support
+Bluetooth, such as heart-rate monitors, blood meters, thermometers, scales, and
+so on. For a list of supported devices and their corresponding device data
+specialization codes, refer to <strong>Bluetooth Assigned Numbers</strong> at <a
+href="http://www.bluetooth.org">www.bluetooth.org</a>. Note that these values
+are also referenced in the ISO/IEEE 11073-20601 [7] specification as
+MDC_DEV_SPEC_PROFILE_* in the Nomenclature Codes Annex.</p>
+
+<p>The application manages connection with Bluetooth HDP-enabled devices.  Possible device type include blood pressure monitor, glucose meter, thermometer, etc.  Upon connection, the application retrieves raw data sent from the device.  Note that in order to interpret the data, a parser that conforms to the IEEE 11073-xxxxx specifications would be required.</p>
+
+<img alt="" src="../images/BluetoothHDP.png" />

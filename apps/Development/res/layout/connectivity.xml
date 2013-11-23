@@ -213,6 +213,33 @@
 
     <LinearLayout
       android:orientation="horizontal"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content">
+        <Button android:id="@+id/startTdls"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="@string/start_tdls" />
+        <TextView
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="@string/mac_tdls" />
+        <EditText android:id="@+id/sc_ip_mac"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:minEms="10" />
+        <Button android:id="@+id/stopTdls"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="@string/stop_tdls" />
+    </LinearLayout>
+
+    <!-- divider line -->
+    <View android:background="#FFFFFFFF"
+      android:layout_width="match_parent"
+      android:layout_height="3dip" />
+
+    <LinearLayout
+      android:orientation="horizontal"
       android:paddingTop="4dip"
       android:layout_width="match_parent"
       android:layout_height="wrap_content">

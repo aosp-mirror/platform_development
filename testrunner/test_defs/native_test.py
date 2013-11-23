@@ -154,7 +154,7 @@ class NativeTestSuite(test_suite.AbstractTestSuite):
 
     Args:
       binary: basename of the file to be run. It is expected to be under
-            out/host/<os>-<arch>/bin.
+            $ANDROID_HOST_OUT/bin.
       valgrind: If True the command will be run under valgrind.
 
     Returns:

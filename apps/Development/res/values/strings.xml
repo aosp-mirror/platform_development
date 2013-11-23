@@ -34,6 +34,10 @@
     <string name="scan_cycles">Scan Cycles: </string>
     <string name="disconnect">Disconnect</string>
 
+    <string name="start_tdls">Start TDLS</string>
+    <string name="stop_tdls">Stop TDLS</string>
+    <string name="mac_tdls"> IP/MAC: </string>
+
     <string name="start_mms">Start MMS</string>
     <string name="stop_mms">Stop MMS</string>
     <string name="start_hipri">Start HiPri</string>
