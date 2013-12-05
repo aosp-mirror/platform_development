@@ -1138,7 +1138,7 @@ jint JNI_GetCreatedJavaVMs(JavaVM**, jsize, jsize*);
 
 #define JNIIMPORT
 #define JNIEXPORT  __attribute__ ((visibility ("default")))
-#define JNICALL
+#define JNICALL __NDK_FPABI__
 
 /*
  * Prototypes for functions exported by loadable shared libs.  These are
