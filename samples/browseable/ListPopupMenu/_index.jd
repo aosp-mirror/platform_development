@@ -1,0 +1,14 @@
+
+
+
+page.tags="ListPopupMenu"
+sample.group=UI
+@jd:body
+
+<p>This sample demonstrates how to use a backward compatible
+{@link android.support.v7.widget.PopupMenu PopupMenu} to create a list, where
+each list item contains a dropdown menu.</p>
+<p>The activity in this sample extends from
+{@link android.support.v7.app.ActionBarActivity}, which provides the
+functionality necessary to display a compatible action bar on devices
+running Android 2.1 and higher.</p>

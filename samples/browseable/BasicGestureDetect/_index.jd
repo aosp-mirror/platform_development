@@ -1,0 +1,12 @@
+
+
+
+page.tags="BasicGestureDetect"
+sample.group=Input
+@jd:body
+
+<p>This sample demonstrates how to use the {@link android.view.GestureDetector}
+API to detect simple dragging and tapping gestures.</p>
+<p>To learn more about detecting basic touch gestures such as scrolling,
+flinging, and double-tapping, see
+<a href="{@docRoot}training/gestures/detector.html">Detecting Common Gestures</a>.</p>

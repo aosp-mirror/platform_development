@@ -1,0 +1,12 @@
+
+
+
+page.tags="DoneBar"
+sample.group=UI
+@jd:body
+
+<p>This sample demonstrates a user interface design pattern for simple data
+entry from an {@link android.app.ActionBar}. The sample implements a custom
+<strong>Done/Cancel</strong> bar to provide users with an easy way to directly
+save or cancel their changes. This design pattern is suitable for scenarios
+where no additional view details or actions are needed in the action bar.</p>

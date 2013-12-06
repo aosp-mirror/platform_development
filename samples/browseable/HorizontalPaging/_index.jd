@@ -1,0 +1,10 @@
+
+
+
+page.tags="HorizontalPaging"
+sample.group=UI
+@jd:body
+
+<p>This sample demonstrates how to implement horizontal paging between
+fragments in an application that has an {@link android.app.ActionBar}, using a
+{@link android.support.v4.view.ViewPager} widget.</p>

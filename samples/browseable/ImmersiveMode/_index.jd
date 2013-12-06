@@ -1,0 +1,12 @@
+
+
+
+page.tags="ImmersiveMode"
+sample.group=UI
+@jd:body
+
+<p>Android 4.4 introduces a way for you to provide a more immersive screen
+experience in your app, by letting users show or hide the status bar and
+navigation bar with a swipe.</p>
+<p>This sample demonstrates how to enable toggling of this feature in a
+{@link android.support.v4.app.Fragment}.</p>

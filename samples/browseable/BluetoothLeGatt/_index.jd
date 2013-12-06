@@ -1,0 +1,12 @@
+
+
+
+page.tags="BluetoothLeGatt"
+sample.group=Connectivity
+@jd:body
+
+<p>This sample demonstrates how to use the Bluetooth Low Energy Generic
+Attribute Profile (GATT) to transmit arbitrary data between devices. For more
+information about using Android's suppport for Bluetooth Low Energy, see
+<a href="{@docRoot}guide/topics/connectivity/bluetooth-le.html">Bluetooth Low
+Energy</a>.</p>

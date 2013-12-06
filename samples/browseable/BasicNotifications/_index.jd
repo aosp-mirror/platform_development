@@ -1,0 +1,10 @@
+
+
+
+page.tags="BasicNotifications"
+sample.group=UI
+@jd:body
+
+<p>This sample demonstrates how to display events in the system's notification
+bar. The {@link android.support.v4.app.NotificationCompat} API is used for
+compatibility with devices running Android 2.2 or higher.</p>

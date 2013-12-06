@@ -488,6 +488,10 @@ redirects:
   type: permanent
   comment: Redirect to new location
 
+- src: /guide/webapps/overview.html
+  dst: /guide/webapps/index.html
+  type: permanent
+
 - src: /resources/tutorials/views/hello-webview.html
   dst: /guide/webapps/webview.html
   type: permanent
@@ -632,6 +636,10 @@ redirects:
 
 - src: /4.0
   dst: /about/versions/android-4.0.html
+  type: permanent
+
+- src: /(k|kk|kitkat)/?$
+  dst: /about/versions/kitkat.html
   type: permanent
 
 - src: /(j|jb|jellybean)/?$

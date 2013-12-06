@@ -22,13 +22,11 @@
 		<field name="BATTERY_STATS" />
 		<field name="BIND_ACCESSIBILITY_SERVICE" since="16" />
 		<field name="BIND_APPWIDGET" since="3" />
-		<field name="BIND_CALL_SERVICE" since="19" />
 		<field name="BIND_DEVICE_ADMIN" since="8" />
 		<field name="BIND_INPUT_METHOD" since="3" />
 		<field name="BIND_NFC_SERVICE" since="19" />
 		<field name="BIND_NOTIFICATION_LISTENER_SERVICE" since="18" />
 		<field name="BIND_PRINT_SERVICE" since="19" />
-		<field name="BIND_PRINT_SPOOLER_SERVICE" since="19" />
 		<field name="BIND_REMOTEVIEWS" since="11" />
 		<field name="BIND_TEXT_SERVICE" since="14" />
 		<field name="BIND_VPN_SERVICE" since="14" />
@@ -82,7 +80,6 @@
 		<field name="LOCATION_HARDWARE" since="18" />
 		<field name="MANAGE_ACCOUNTS" since="5" />
 		<field name="MANAGE_APP_TOKENS" />
-		<field name="MANAGE_DEVICE_ADMINS" since="19" />
 		<field name="MANAGE_DOCUMENTS" since="19" />
 		<field name="MASTER_CLEAR" />
 		<field name="MEDIA_CONTENT_CONTROL" since="19" />
@@ -277,6 +274,7 @@
 		<field name="addPrintersActivity" since="19" />
 		<field name="addStatesFromChildren" />
 		<field name="adjustViewBounds" />
+		<field name="advancedPrintOptionsActivity" since="19" />
 		<field name="alertDialogIcon" since="11" />
 		<field name="alertDialogStyle" />
 		<field name="alertDialogTheme" since="11" />
@@ -4298,6 +4296,8 @@
 		<method name="clear()V" />
 		<method name="clearWallpaperOffsets(Landroid/os/IBinder;)V" />
 		<method name="forgetLoadedWallpaper()V" since="14" />
+		<method name="getBuiltInDrawable()Landroid/graphics/drawable/Drawable;" since="19" />
+		<method name="getBuiltInDrawable(IIZFF)Landroid/graphics/drawable/Drawable;" since="19" />
 		<method name="getCropAndSetWallpaperIntent(Landroid/net/Uri;)Landroid/content/Intent;" since="19" />
 		<method name="getDesiredMinimumHeight()I" />
 		<method name="getDesiredMinimumWidth()I" />
@@ -5667,6 +5667,7 @@
 		<method name="getCurrentSyncs()Ljava/util/List;" since="11" />
 		<method name="getIsSyncable(Landroid/accounts/Account;Ljava/lang/String;)I" since="5" />
 		<method name="getMasterSyncAutomatically()Z" since="5" />
+		<method name="getOutgoingPersistedUriPermissions()Ljava/util/List;" since="19" />
 		<method name="getPeriodicSyncs(Landroid/accounts/Account;Ljava/lang/String;)Ljava/util/List;" since="8" />
 		<method name="getPersistedUriPermissions()Ljava/util/List;" since="19" />
 		<method name="getStreamTypes(Landroid/net/Uri;Ljava/lang/String;)[Ljava/lang/String;" since="11" />
@@ -5882,7 +5883,6 @@
 		<field name="BIND_NOT_FOREGROUND" since="8" />
 		<field name="BIND_WAIVE_PRIORITY" since="14" />
 		<field name="BLUETOOTH_SERVICE" since="18" />
-		<field name="CAMERA_SERVICE" since="19" />
 		<field name="CAPTIONING_SERVICE" since="19" />
 		<field name="CLIPBOARD_SERVICE" />
 		<field name="CONNECTIVITY_SERVICE" />
@@ -7125,6 +7125,8 @@
 		<field name="FEATURE_SENSOR_GYROSCOPE" since="9" />
 		<field name="FEATURE_SENSOR_LIGHT" since="7" />
 		<field name="FEATURE_SENSOR_PROXIMITY" since="7" />
+		<field name="FEATURE_SENSOR_STEP_COUNTER" since="19" />
+		<field name="FEATURE_SENSOR_STEP_DETECTOR" since="19" />
 		<field name="FEATURE_SIP" since="9" />
 		<field name="FEATURE_SIP_VOIP" since="9" />
 		<field name="FEATURE_TELEPHONY" since="7" />
@@ -7340,10 +7342,12 @@
 		<implements name="android/os/Parcelable" since="3" />
 		<implements name="java/io/Closeable" since="19" />
 		<method name="&lt;init>(Landroid/os/ParcelFileDescriptor;JJ)V" />
+		<method name="&lt;init>(Landroid/os/ParcelFileDescriptor;JJLandroid/os/Bundle;)V" since="19" />
 		<method name="close()V" />
 		<method name="createInputStream()Ljava/io/FileInputStream;" since="3" />
 		<method name="createOutputStream()Ljava/io/FileOutputStream;" since="3" />
 		<method name="getDeclaredLength()J" since="3" />
+		<method name="getExtras()Landroid/os/Bundle;" since="19" />
 		<method name="getFileDescriptor()Ljava/io/FileDescriptor;" />
 		<method name="getLength()J" />
 		<method name="getParcelFileDescriptor()Landroid/os/ParcelFileDescriptor;" />
@@ -8984,7 +8988,6 @@
 		<field name="JPEG" />
 		<field name="NV16" />
 		<field name="NV21" />
-		<field name="RAW_SENSOR" since="19" />
 		<field name="RGB_565" />
 		<field name="UNKNOWN" />
 		<field name="YUV_420_888" since="19" />
@@ -10358,10 +10361,6 @@
 		<method name="getMaxFrequency()I" />
 		<method name="getMinFrequency()I" />
 	</class>
-	<class name="android/hardware/FlushCompleteListener" since="19">
-		<extends name="java/lang/Object" />
-		<method name="onFlushCompleted(Landroid/hardware/Sensor;)V" />
-	</class>
 	<class name="android/hardware/GeomagneticField" since="3">
 		<extends name="java/lang/Object" />
 		<method name="&lt;init>(FFFJ)V" />
@@ -10421,6 +10420,11 @@
 		<method name="onAccuracyChanged(Landroid/hardware/Sensor;I)V" />
 		<method name="onSensorChanged(Landroid/hardware/SensorEvent;)V" />
 	</class>
+	<class name="android/hardware/SensorEventListener2" since="19">
+		<extends name="java/lang/Object" />
+		<implements name="android/hardware/SensorEventListener" />
+		<method name="onFlushCompleted(Landroid/hardware/Sensor;)V" />
+	</class>
 	<class name="android/hardware/SensorListener" since="1">
 		<extends name="java/lang/Object" />
 		<method name="onAccuracyChanged(II)V" />
@@ -10430,7 +10434,7 @@
 		<extends name="java/lang/Object" />
 		<method name="&lt;init>()V" />
 		<method name="cancelTriggerSensor(Landroid/hardware/TriggerEventListener;Landroid/hardware/Sensor;)Z" since="18" />
-		<method name="flush(Landroid/hardware/Sensor;)Z" since="19" />
+		<method name="flush(Landroid/hardware/SensorEventListener;)Z" since="19" />
 		<method name="getAltitude(FF)F" since="9" />
 		<method name="getAngleChange([F[F[F)V" since="9" />
 		<method name="getDefaultSensor(I)Landroid/hardware/Sensor;" since="3" />
@@ -10442,8 +10446,8 @@
 		<method name="getSensorList(I)Ljava/util/List;" since="3" />
 		<method name="getSensors()I" />
 		<method name="registerListener(Landroid/hardware/SensorEventListener;Landroid/hardware/Sensor;I)Z" since="3" />
-		<method name="registerListener(Landroid/hardware/SensorEventListener;Landroid/hardware/Sensor;IIILandroid/hardware/FlushCompleteListener;)Z" since="19" />
-		<method name="registerListener(Landroid/hardware/SensorEventListener;Landroid/hardware/Sensor;IIILandroid/os/Handler;Landroid/hardware/FlushCompleteListener;)Z" since="19" />
+		<method name="registerListener(Landroid/hardware/SensorEventListener;Landroid/hardware/Sensor;II)Z" since="19" />
+		<method name="registerListener(Landroid/hardware/SensorEventListener;Landroid/hardware/Sensor;IILandroid/os/Handler;)Z" since="19" />
 		<method name="registerListener(Landroid/hardware/SensorEventListener;Landroid/hardware/Sensor;ILandroid/os/Handler;)Z" since="3" />
 		<method name="registerListener(Landroid/hardware/SensorListener;I)Z" />
 		<method name="registerListener(Landroid/hardware/SensorListener;II)Z" />
@@ -10522,405 +10526,6 @@
 		<extends name="java/lang/Object" />
 		<method name="&lt;init>()V" />
 		<method name="onTrigger(Landroid/hardware/TriggerEvent;)V" />
-	</class>
-	<class name="android/hardware/camera2/CameraAccessException" since="19">
-		<extends name="android/util/AndroidException" />
-		<method name="&lt;init>(I)V" />
-		<method name="&lt;init>(ILjava/lang/String;)V" />
-		<method name="&lt;init>(ILjava/lang/String;Ljava/lang/Throwable;)V" />
-		<method name="&lt;init>(ILjava/lang/Throwable;)V" />
-		<method name="getReason()I" />
-		<field name="CAMERA_DISABLED" />
-		<field name="CAMERA_DISCONNECTED" />
-		<field name="CAMERA_ERROR" />
-	</class>
-	<class name="android/hardware/camera2/CameraCharacteristics" since="19">
-		<extends name="android/hardware/camera2/CameraMetadata" />
-		<method name="&lt;init>()V" />
-		<method name="getAvailableCaptureRequestKeys()Ljava/util/List;" />
-		<method name="getAvailableCaptureResultKeys()Ljava/util/List;" />
-		<field name="CONTROL_AE_AVAILABLE_ANTIBANDING_MODES" />
-		<field name="CONTROL_AE_AVAILABLE_TARGET_FPS_RANGES" />
-		<field name="CONTROL_AE_COMPENSATION_RANGE" />
-		<field name="CONTROL_AE_COMPENSATION_STEP" />
-		<field name="CONTROL_AF_AVAILABLE_MODES" />
-		<field name="CONTROL_AVAILABLE_EFFECTS" />
-		<field name="CONTROL_AVAILABLE_SCENE_MODES" />
-		<field name="CONTROL_AVAILABLE_VIDEO_STABILIZATION_MODES" />
-		<field name="CONTROL_AWB_AVAILABLE_MODES" />
-		<field name="CONTROL_MAX_REGIONS" />
-		<field name="FLASH_INFO_AVAILABLE" />
-		<field name="INFO_SUPPORTED_HARDWARE_LEVEL" />
-		<field name="JPEG_AVAILABLE_THUMBNAIL_SIZES" />
-		<field name="LENS_FACING" />
-		<field name="LENS_INFO_AVAILABLE_APERTURES" />
-		<field name="LENS_INFO_AVAILABLE_FILTER_DENSITIES" />
-		<field name="LENS_INFO_AVAILABLE_FOCAL_LENGTHS" />
-		<field name="LENS_INFO_AVAILABLE_OPTICAL_STABILIZATION" />
-		<field name="LENS_INFO_HYPERFOCAL_DISTANCE" />
-		<field name="LENS_INFO_MINIMUM_FOCUS_DISTANCE" />
-		<field name="LENS_INFO_SHADING_MAP_SIZE" />
-		<field name="REQUEST_MAX_NUM_OUTPUT_STREAMS" />
-		<field name="SCALER_AVAILABLE_FORMATS" />
-		<field name="SCALER_AVAILABLE_JPEG_MIN_DURATIONS" />
-		<field name="SCALER_AVAILABLE_JPEG_SIZES" />
-		<field name="SCALER_AVAILABLE_MAX_DIGITAL_ZOOM" />
-		<field name="SCALER_AVAILABLE_PROCESSED_MIN_DURATIONS" />
-		<field name="SCALER_AVAILABLE_PROCESSED_SIZES" />
-		<field name="SENSOR_BASE_GAIN_FACTOR" />
-		<field name="SENSOR_INFO_ACTIVE_ARRAY_SIZE" />
-		<field name="SENSOR_INFO_EXPOSURE_TIME_RANGE" />
-		<field name="SENSOR_INFO_MAX_FRAME_DURATION" />
-		<field name="SENSOR_INFO_PHYSICAL_SIZE" />
-		<field name="SENSOR_INFO_SENSITIVITY_RANGE" />
-		<field name="SENSOR_MAX_ANALOG_SENSITIVITY" />
-		<field name="SENSOR_ORIENTATION" />
-		<field name="STATISTICS_INFO_AVAILABLE_FACE_DETECT_MODES" />
-		<field name="STATISTICS_INFO_MAX_FACE_COUNT" />
-		<field name="TONEMAP_MAX_CURVE_POINTS" />
-	</class>
-	<class name="android/hardware/camera2/CameraDevice" since="19">
-		<extends name="java/lang/Object" />
-		<implements name="java/lang/AutoCloseable" />
-		<method name="capture(Landroid/hardware/camera2/CaptureRequest;Landroid/hardware/camera2/CameraDevice$CaptureListener;Landroid/os/Handler;)I" />
-		<method name="captureBurst(Ljava/util/List;Landroid/hardware/camera2/CameraDevice$CaptureListener;Landroid/os/Handler;)I" />
-		<method name="configureOutputs(Ljava/util/List;)V" />
-		<method name="createCaptureRequest(I)Landroid/hardware/camera2/CaptureRequest$Builder;" />
-		<method name="flush()V" />
-		<method name="getId()Ljava/lang/String;" />
-		<method name="setRepeatingBurst(Ljava/util/List;Landroid/hardware/camera2/CameraDevice$CaptureListener;Landroid/os/Handler;)I" />
-		<method name="setRepeatingRequest(Landroid/hardware/camera2/CaptureRequest;Landroid/hardware/camera2/CameraDevice$CaptureListener;Landroid/os/Handler;)I" />
-		<method name="stopRepeating()V" />
-		<method name="waitUntilIdle()V" />
-		<field name="TEMPLATE_PREVIEW" />
-		<field name="TEMPLATE_RECORD" />
-		<field name="TEMPLATE_STILL_CAPTURE" />
-		<field name="TEMPLATE_VIDEO_SNAPSHOT" />
-	</class>
-	<class name="android/hardware/camera2/CameraDevice$CaptureListener" since="19">
-		<extends name="java/lang/Object" />
-		<method name="&lt;init>()V" />
-		<method name="onCaptureCompleted(Landroid/hardware/camera2/CameraDevice;Landroid/hardware/camera2/CaptureRequest;Landroid/hardware/camera2/CaptureResult;)V" />
-		<method name="onCaptureFailed(Landroid/hardware/camera2/CameraDevice;Landroid/hardware/camera2/CaptureRequest;Landroid/hardware/camera2/CaptureFailure;)V" />
-		<method name="onCaptureSequenceCompleted(Landroid/hardware/camera2/CameraDevice;II)V" />
-		<method name="onCaptureStarted(Landroid/hardware/camera2/CameraDevice;Landroid/hardware/camera2/CaptureRequest;J)V" />
-	</class>
-	<class name="android/hardware/camera2/CameraDevice$StateListener" since="19">
-		<extends name="java/lang/Object" />
-		<method name="&lt;init>()V" />
-		<method name="onActive(Landroid/hardware/camera2/CameraDevice;)V" />
-		<method name="onBusy(Landroid/hardware/camera2/CameraDevice;)V" />
-		<method name="onClosed(Landroid/hardware/camera2/CameraDevice;)V" />
-		<method name="onDisconnected(Landroid/hardware/camera2/CameraDevice;)V" />
-		<method name="onError(Landroid/hardware/camera2/CameraDevice;I)V" />
-		<method name="onIdle(Landroid/hardware/camera2/CameraDevice;)V" />
-		<method name="onOpened(Landroid/hardware/camera2/CameraDevice;)V" />
-		<method name="onUnconfigured(Landroid/hardware/camera2/CameraDevice;)V" />
-		<field name="ERROR_CAMERA_DEVICE" />
-		<field name="ERROR_CAMERA_DISABLED" />
-		<field name="ERROR_CAMERA_IN_USE" />
-		<field name="ERROR_CAMERA_SERVICE" />
-		<field name="ERROR_MAX_CAMERAS_IN_USE" />
-	</class>
-	<class name="android/hardware/camera2/CameraManager" since="19">
-		<extends name="java/lang/Object" />
-		<method name="&lt;init>()V" />
-		<method name="addAvailabilityListener(Landroid/hardware/camera2/CameraManager$AvailabilityListener;Landroid/os/Handler;)V" />
-		<method name="getCameraCharacteristics(Ljava/lang/String;)Landroid/hardware/camera2/CameraCharacteristics;" />
-		<method name="getCameraIdList()[Ljava/lang/String;" />
-		<method name="openCamera(Ljava/lang/String;Landroid/hardware/camera2/CameraDevice$StateListener;Landroid/os/Handler;)V" />
-		<method name="removeAvailabilityListener(Landroid/hardware/camera2/CameraManager$AvailabilityListener;)V" />
-	</class>
-	<class name="android/hardware/camera2/CameraManager$AvailabilityListener" since="19">
-		<extends name="java/lang/Object" />
-		<method name="&lt;init>()V" />
-		<method name="onCameraAvailable(Ljava/lang/String;)V" />
-		<method name="onCameraUnavailable(Ljava/lang/String;)V" />
-	</class>
-	<class name="android/hardware/camera2/CameraMetadata" since="19">
-		<extends name="java/lang/Object" />
-		<method name="&lt;init>()V" />
-		<method name="get(Landroid/hardware/camera2/CameraMetadata$Key;)Ljava/lang/Object;" />
-		<method name="getKeys()Ljava/util/List;" />
-		<field name="COLOR_CORRECTION_MODE_FAST" />
-		<field name="COLOR_CORRECTION_MODE_HIGH_QUALITY" />
-		<field name="COLOR_CORRECTION_MODE_TRANSFORM_MATRIX" />
-		<field name="CONTROL_AE_ANTIBANDING_MODE_50HZ" />
-		<field name="CONTROL_AE_ANTIBANDING_MODE_60HZ" />
-		<field name="CONTROL_AE_ANTIBANDING_MODE_AUTO" />
-		<field name="CONTROL_AE_ANTIBANDING_MODE_OFF" />
-		<field name="CONTROL_AE_MODE_OFF" />
-		<field name="CONTROL_AE_MODE_ON" />
-		<field name="CONTROL_AE_MODE_ON_ALWAYS_FLASH" />
-		<field name="CONTROL_AE_MODE_ON_AUTO_FLASH" />
-		<field name="CONTROL_AE_MODE_ON_AUTO_FLASH_REDEYE" />
-		<field name="CONTROL_AE_PRECAPTURE_TRIGGER_IDLE" />
-		<field name="CONTROL_AE_PRECAPTURE_TRIGGER_START" />
-		<field name="CONTROL_AE_STATE_CONVERGED" />
-		<field name="CONTROL_AE_STATE_FLASH_REQUIRED" />
-		<field name="CONTROL_AE_STATE_INACTIVE" />
-		<field name="CONTROL_AE_STATE_LOCKED" />
-		<field name="CONTROL_AE_STATE_PRECAPTURE" />
-		<field name="CONTROL_AE_STATE_SEARCHING" />
-		<field name="CONTROL_AF_MODE_AUTO" />
-		<field name="CONTROL_AF_MODE_CONTINUOUS_PICTURE" />
-		<field name="CONTROL_AF_MODE_CONTINUOUS_VIDEO" />
-		<field name="CONTROL_AF_MODE_EDOF" />
-		<field name="CONTROL_AF_MODE_MACRO" />
-		<field name="CONTROL_AF_MODE_OFF" />
-		<field name="CONTROL_AF_STATE_ACTIVE_SCAN" />
-		<field name="CONTROL_AF_STATE_FOCUSED_LOCKED" />
-		<field name="CONTROL_AF_STATE_INACTIVE" />
-		<field name="CONTROL_AF_STATE_NOT_FOCUSED_LOCKED" />
-		<field name="CONTROL_AF_STATE_PASSIVE_FOCUSED" />
-		<field name="CONTROL_AF_STATE_PASSIVE_SCAN" />
-		<field name="CONTROL_AF_STATE_PASSIVE_UNFOCUSED" />
-		<field name="CONTROL_AF_TRIGGER_CANCEL" />
-		<field name="CONTROL_AF_TRIGGER_IDLE" />
-		<field name="CONTROL_AF_TRIGGER_START" />
-		<field name="CONTROL_AWB_MODE_AUTO" />
-		<field name="CONTROL_AWB_MODE_CLOUDY_DAYLIGHT" />
-		<field name="CONTROL_AWB_MODE_DAYLIGHT" />
-		<field name="CONTROL_AWB_MODE_FLUORESCENT" />
-		<field name="CONTROL_AWB_MODE_INCANDESCENT" />
-		<field name="CONTROL_AWB_MODE_OFF" />
-		<field name="CONTROL_AWB_MODE_SHADE" />
-		<field name="CONTROL_AWB_MODE_TWILIGHT" />
-		<field name="CONTROL_AWB_MODE_WARM_FLUORESCENT" />
-		<field name="CONTROL_AWB_STATE_CONVERGED" />
-		<field name="CONTROL_AWB_STATE_INACTIVE" />
-		<field name="CONTROL_AWB_STATE_LOCKED" />
-		<field name="CONTROL_AWB_STATE_SEARCHING" />
-		<field name="CONTROL_CAPTURE_INTENT_CUSTOM" />
-		<field name="CONTROL_CAPTURE_INTENT_PREVIEW" />
-		<field name="CONTROL_CAPTURE_INTENT_STILL_CAPTURE" />
-		<field name="CONTROL_CAPTURE_INTENT_VIDEO_RECORD" />
-		<field name="CONTROL_CAPTURE_INTENT_VIDEO_SNAPSHOT" />
-		<field name="CONTROL_CAPTURE_INTENT_ZERO_SHUTTER_LAG" />
-		<field name="CONTROL_EFFECT_MODE_AQUA" />
-		<field name="CONTROL_EFFECT_MODE_BLACKBOARD" />
-		<field name="CONTROL_EFFECT_MODE_MONO" />
-		<field name="CONTROL_EFFECT_MODE_NEGATIVE" />
-		<field name="CONTROL_EFFECT_MODE_OFF" />
-		<field name="CONTROL_EFFECT_MODE_POSTERIZE" />
-		<field name="CONTROL_EFFECT_MODE_SEPIA" />
-		<field name="CONTROL_EFFECT_MODE_SOLARIZE" />
-		<field name="CONTROL_EFFECT_MODE_WHITEBOARD" />
-		<field name="CONTROL_MODE_AUTO" />
-		<field name="CONTROL_MODE_OFF" />
-		<field name="CONTROL_MODE_USE_SCENE_MODE" />
-		<field name="CONTROL_SCENE_MODE_ACTION" />
-		<field name="CONTROL_SCENE_MODE_BARCODE" />
-		<field name="CONTROL_SCENE_MODE_BEACH" />
-		<field name="CONTROL_SCENE_MODE_CANDLELIGHT" />
-		<field name="CONTROL_SCENE_MODE_FACE_PRIORITY" />
-		<field name="CONTROL_SCENE_MODE_FIREWORKS" />
-		<field name="CONTROL_SCENE_MODE_LANDSCAPE" />
-		<field name="CONTROL_SCENE_MODE_NIGHT" />
-		<field name="CONTROL_SCENE_MODE_NIGHT_PORTRAIT" />
-		<field name="CONTROL_SCENE_MODE_PARTY" />
-		<field name="CONTROL_SCENE_MODE_PORTRAIT" />
-		<field name="CONTROL_SCENE_MODE_SNOW" />
-		<field name="CONTROL_SCENE_MODE_SPORTS" />
-		<field name="CONTROL_SCENE_MODE_STEADYPHOTO" />
-		<field name="CONTROL_SCENE_MODE_SUNSET" />
-		<field name="CONTROL_SCENE_MODE_THEATRE" />
-		<field name="CONTROL_SCENE_MODE_UNSUPPORTED" />
-		<field name="EDGE_MODE_FAST" />
-		<field name="EDGE_MODE_HIGH_QUALITY" />
-		<field name="EDGE_MODE_OFF" />
-		<field name="FLASH_MODE_OFF" />
-		<field name="FLASH_MODE_SINGLE" />
-		<field name="FLASH_MODE_TORCH" />
-		<field name="FLASH_STATE_CHARGING" />
-		<field name="FLASH_STATE_FIRED" />
-		<field name="FLASH_STATE_READY" />
-		<field name="FLASH_STATE_UNAVAILABLE" />
-		<field name="INFO_SUPPORTED_HARDWARE_LEVEL_FULL" />
-		<field name="INFO_SUPPORTED_HARDWARE_LEVEL_LIMITED" />
-		<field name="LENS_FACING_BACK" />
-		<field name="LENS_FACING_FRONT" />
-		<field name="LENS_OPTICAL_STABILIZATION_MODE_OFF" />
-		<field name="LENS_OPTICAL_STABILIZATION_MODE_ON" />
-		<field name="LENS_STATE_MOVING" />
-		<field name="LENS_STATE_STATIONARY" />
-		<field name="NOISE_REDUCTION_MODE_FAST" />
-		<field name="NOISE_REDUCTION_MODE_HIGH_QUALITY" />
-		<field name="NOISE_REDUCTION_MODE_OFF" />
-		<field name="STATISTICS_FACE_DETECT_MODE_FULL" />
-		<field name="STATISTICS_FACE_DETECT_MODE_OFF" />
-		<field name="STATISTICS_FACE_DETECT_MODE_SIMPLE" />
-		<field name="STATISTICS_LENS_SHADING_MAP_MODE_OFF" />
-		<field name="STATISTICS_LENS_SHADING_MAP_MODE_ON" />
-		<field name="STATISTICS_SCENE_FLICKER_50HZ" />
-		<field name="STATISTICS_SCENE_FLICKER_60HZ" />
-		<field name="STATISTICS_SCENE_FLICKER_NONE" />
-		<field name="TONEMAP_MODE_CONTRAST_CURVE" />
-		<field name="TONEMAP_MODE_FAST" />
-		<field name="TONEMAP_MODE_HIGH_QUALITY" />
-	</class>
-	<class name="android/hardware/camera2/CameraMetadata$Key" since="19">
-		<extends name="java/lang/Object" />
-		<method name="&lt;init>()V" />
-		<method name="getName()Ljava/lang/String;" />
-	</class>
-	<class name="android/hardware/camera2/CaptureFailure" since="19">
-		<extends name="java/lang/Object" />
-		<method name="&lt;init>()V" />
-		<method name="getFrameNumber()I" />
-		<method name="getReason()I" />
-		<method name="getRequest()Landroid/hardware/camera2/CaptureRequest;" />
-		<method name="getSequenceId()I" />
-		<method name="wasImageCaptured()Z" />
-		<field name="REASON_ERROR" />
-		<field name="REASON_FLUSHED" />
-	</class>
-	<class name="android/hardware/camera2/CaptureRequest" since="19">
-		<extends name="android/hardware/camera2/CameraMetadata" />
-		<implements name="android/os/Parcelable" />
-		<method name="&lt;init>()V" />
-		<method name="getTag()Ljava/lang/Object;" />
-		<field name="BLACK_LEVEL_LOCK" />
-		<field name="COLOR_CORRECTION_GAINS" />
-		<field name="COLOR_CORRECTION_MODE" />
-		<field name="COLOR_CORRECTION_TRANSFORM" />
-		<field name="CONTROL_AE_ANTIBANDING_MODE" />
-		<field name="CONTROL_AE_EXPOSURE_COMPENSATION" />
-		<field name="CONTROL_AE_LOCK" />
-		<field name="CONTROL_AE_MODE" />
-		<field name="CONTROL_AE_PRECAPTURE_TRIGGER" />
-		<field name="CONTROL_AE_REGIONS" />
-		<field name="CONTROL_AE_TARGET_FPS_RANGE" />
-		<field name="CONTROL_AF_MODE" />
-		<field name="CONTROL_AF_REGIONS" />
-		<field name="CONTROL_AF_TRIGGER" />
-		<field name="CONTROL_AWB_LOCK" />
-		<field name="CONTROL_AWB_MODE" />
-		<field name="CONTROL_AWB_REGIONS" />
-		<field name="CONTROL_CAPTURE_INTENT" />
-		<field name="CONTROL_EFFECT_MODE" />
-		<field name="CONTROL_MODE" />
-		<field name="CONTROL_SCENE_MODE" />
-		<field name="CONTROL_VIDEO_STABILIZATION_MODE" />
-		<field name="CREATOR" />
-		<field name="EDGE_MODE" />
-		<field name="FLASH_MODE" />
-		<field name="JPEG_GPS_COORDINATES" />
-		<field name="JPEG_GPS_PROCESSING_METHOD" />
-		<field name="JPEG_GPS_TIMESTAMP" />
-		<field name="JPEG_ORIENTATION" />
-		<field name="JPEG_QUALITY" />
-		<field name="JPEG_THUMBNAIL_QUALITY" />
-		<field name="JPEG_THUMBNAIL_SIZE" />
-		<field name="LENS_APERTURE" />
-		<field name="LENS_FILTER_DENSITY" />
-		<field name="LENS_FOCAL_LENGTH" />
-		<field name="LENS_FOCUS_DISTANCE" />
-		<field name="LENS_OPTICAL_STABILIZATION_MODE" />
-		<field name="NOISE_REDUCTION_MODE" />
-		<field name="SCALER_CROP_REGION" />
-		<field name="SENSOR_EXPOSURE_TIME" />
-		<field name="SENSOR_FRAME_DURATION" />
-		<field name="SENSOR_SENSITIVITY" />
-		<field name="STATISTICS_FACE_DETECT_MODE" />
-		<field name="STATISTICS_LENS_SHADING_MAP_MODE" />
-		<field name="TONEMAP_CURVE_BLUE" />
-		<field name="TONEMAP_CURVE_GREEN" />
-		<field name="TONEMAP_CURVE_RED" />
-		<field name="TONEMAP_MODE" />
-	</class>
-	<class name="android/hardware/camera2/CaptureRequest$Builder" since="19">
-		<extends name="java/lang/Object" />
-		<method name="&lt;init>()V" />
-		<method name="addTarget(Landroid/view/Surface;)V" />
-		<method name="build()Landroid/hardware/camera2/CaptureRequest;" />
-		<method name="get(Landroid/hardware/camera2/CameraMetadata$Key;)Ljava/lang/Object;" />
-		<method name="removeTarget(Landroid/view/Surface;)V" />
-		<method name="set(Landroid/hardware/camera2/CameraMetadata$Key;Ljava/lang/Object;)V" />
-		<method name="setTag(Ljava/lang/Object;)V" />
-	</class>
-	<class name="android/hardware/camera2/CaptureResult" since="19">
-		<extends name="android/hardware/camera2/CameraMetadata" />
-		<method name="&lt;init>()V" />
-		<method name="getFrameNumber()I" />
-		<method name="getRequest()Landroid/hardware/camera2/CaptureRequest;" />
-		<method name="getSequenceId()I" />
-		<field name="BLACK_LEVEL_LOCK" />
-		<field name="COLOR_CORRECTION_GAINS" />
-		<field name="COLOR_CORRECTION_TRANSFORM" />
-		<field name="CONTROL_AE_REGIONS" />
-		<field name="CONTROL_AE_STATE" />
-		<field name="CONTROL_AF_MODE" />
-		<field name="CONTROL_AF_REGIONS" />
-		<field name="CONTROL_AF_STATE" />
-		<field name="CONTROL_AWB_MODE" />
-		<field name="CONTROL_AWB_REGIONS" />
-		<field name="CONTROL_AWB_STATE" />
-		<field name="CONTROL_MODE" />
-		<field name="EDGE_MODE" />
-		<field name="FLASH_MODE" />
-		<field name="FLASH_STATE" />
-		<field name="JPEG_GPS_COORDINATES" />
-		<field name="JPEG_GPS_PROCESSING_METHOD" />
-		<field name="JPEG_GPS_TIMESTAMP" />
-		<field name="JPEG_ORIENTATION" />
-		<field name="JPEG_QUALITY" />
-		<field name="JPEG_THUMBNAIL_QUALITY" />
-		<field name="JPEG_THUMBNAIL_SIZE" />
-		<field name="LENS_APERTURE" />
-		<field name="LENS_FILTER_DENSITY" />
-		<field name="LENS_FOCAL_LENGTH" />
-		<field name="LENS_FOCUS_DISTANCE" />
-		<field name="LENS_FOCUS_RANGE" />
-		<field name="LENS_OPTICAL_STABILIZATION_MODE" />
-		<field name="LENS_STATE" />
-		<field name="NOISE_REDUCTION_MODE" />
-		<field name="REQUEST_FRAME_COUNT" />
-		<field name="SCALER_CROP_REGION" />
-		<field name="SENSOR_EXPOSURE_TIME" />
-		<field name="SENSOR_FRAME_DURATION" />
-		<field name="SENSOR_SENSITIVITY" />
-		<field name="SENSOR_TEMPERATURE" />
-		<field name="SENSOR_TIMESTAMP" />
-		<field name="STATISTICS_FACES" />
-		<field name="STATISTICS_FACE_DETECT_MODE" />
-		<field name="STATISTICS_FACE_IDS" />
-		<field name="STATISTICS_FACE_LANDMARKS" />
-		<field name="STATISTICS_FACE_RECTANGLES" />
-		<field name="STATISTICS_FACE_SCORES" />
-		<field name="STATISTICS_LENS_SHADING_MAP" />
-		<field name="STATISTICS_PREDICTED_COLOR_GAINS" />
-		<field name="STATISTICS_PREDICTED_COLOR_TRANSFORM" />
-		<field name="STATISTICS_SCENE_FLICKER" />
-		<field name="TONEMAP_CURVE_BLUE" />
-		<field name="TONEMAP_CURVE_GREEN" />
-		<field name="TONEMAP_CURVE_RED" />
-		<field name="TONEMAP_MODE" />
-	</class>
-	<class name="android/hardware/camera2/Face" since="19">
-		<extends name="java/lang/Object" />
-		<method name="&lt;init>()V" />
-		<method name="getBounds()Landroid/graphics/Rect;" />
-		<method name="getId()I" />
-		<method name="getLeftEyePosition()Landroid/graphics/Point;" />
-		<method name="getMouthPosition()Landroid/graphics/Point;" />
-		<method name="getRightEyePosition()Landroid/graphics/Point;" />
-		<method name="getScore()I" />
-		<field name="ID_UNSUPPORTED" />
-		<field name="SCORE_MAX" />
-		<field name="SCORE_MIN" />
-	</class>
-	<class name="android/hardware/camera2/Rational" since="19">
-		<extends name="java/lang/Object" />
-		<method name="&lt;init>(II)V" />
-		<method name="getDenominator()I" />
-		<method name="getNumerator()I" />
-	</class>
-	<class name="android/hardware/camera2/Size" since="19">
-		<extends name="java/lang/Object" />
-		<method name="&lt;init>(II)V" />
-		<method name="getHeight()I" />
-		<method name="getWidth()I" />
 	</class>
 	<class name="android/hardware/display/DisplayManager" since="17">
 		<extends name="java/lang/Object" />
@@ -19020,6 +18625,16 @@
 		<field name="STATE_QUEUED" />
 		<field name="STATE_STARTED" />
 	</class>
+	<class name="android/print/PrintJobInfo$Builder" since="19">
+		<extends name="java/lang/Object" />
+		<method name="&lt;init>(Landroid/print/PrintJobInfo;)V" />
+		<method name="build()Landroid/print/PrintJobInfo;" />
+		<method name="putAdvancedOption(Ljava/lang/String;I)V" />
+		<method name="putAdvancedOption(Ljava/lang/String;Ljava/lang/String;)V" />
+		<method name="setAttributes(Landroid/print/PrintAttributes;)V" />
+		<method name="setCopies(I)V" />
+		<method name="setPages([Landroid/print/PageRange;)V" />
+	</class>
 	<class name="android/print/PrintManager" since="19">
 		<extends name="java/lang/Object" />
 		<method name="&lt;init>()V" />
@@ -19098,10 +18713,13 @@
 		<method name="cancel()Z" />
 		<method name="complete()Z" />
 		<method name="fail(Ljava/lang/String;)Z" />
+		<method name="getAdvancedIntOption(Ljava/lang/String;)I" />
+		<method name="getAdvancedStringOption(Ljava/lang/String;)Ljava/lang/String;" />
 		<method name="getDocument()Landroid/printservice/PrintDocument;" />
 		<method name="getId()Landroid/print/PrintJobId;" />
 		<method name="getInfo()Landroid/print/PrintJobInfo;" />
 		<method name="getTag()Ljava/lang/String;" />
+		<method name="hasAdvancedOption(Ljava/lang/String;)Z" />
 		<method name="isBlocked()Z" />
 		<method name="isCancelled()Z" />
 		<method name="isCompleted()Z" />
@@ -19121,6 +18739,7 @@
 		<method name="onDisconnected()V" />
 		<method name="onPrintJobQueued(Landroid/printservice/PrintJob;)V" />
 		<method name="onRequestCancelPrintJob(Landroid/printservice/PrintJob;)V" />
+		<field name="EXTRA_PRINT_JOB_INFO" />
 		<field name="SERVICE_INTERFACE" />
 		<field name="SERVICE_META_DATA" />
 	</class>
@@ -26041,6 +25660,7 @@
 		<method name="equals(Landroid/util/DisplayMetrics;)Z" since="17" />
 		<method name="setTo(Landroid/util/DisplayMetrics;)V" />
 		<method name="setToDefaults()V" />
+		<field name="DENSITY_400" since="19" />
 		<field name="DENSITY_DEFAULT" since="4" />
 		<field name="DENSITY_HIGH" since="4" />
 		<field name="DENSITY_LOW" since="4" />
@@ -28296,6 +27916,7 @@
 		<field name="SYSTEM_UI_FLAG_FULLSCREEN" since="16" />
 		<field name="SYSTEM_UI_FLAG_HIDE_NAVIGATION" since="14" />
 		<field name="SYSTEM_UI_FLAG_IMMERSIVE" since="19" />
+		<field name="SYSTEM_UI_FLAG_IMMERSIVE_STICKY" since="19" />
 		<field name="SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN" since="16" />
 		<field name="SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION" since="16" />
 		<field name="SYSTEM_UI_FLAG_LAYOUT_STABLE" since="16" />
@@ -29216,6 +28837,7 @@
 		<extends name="java/lang/Object" />
 		<method name="&lt;init>()V" />
 		<method name="addAccessibilityStateChangeListener(Landroid/view/accessibility/AccessibilityManager$AccessibilityStateChangeListener;)Z" since="14" />
+		<method name="addTouchExplorationStateChangeListener(Landroid/view/accessibility/AccessibilityManager$TouchExplorationStateChangeListener;)Z" since="19" />
 		<method name="getAccessibilityServiceList()Ljava/util/List;" />
 		<method name="getEnabledAccessibilityServiceList(I)Ljava/util/List;" since="14" />
 		<method name="getInstalledAccessibilityServiceList()Ljava/util/List;" since="14" />
@@ -29223,11 +28845,16 @@
 		<method name="isEnabled()Z" />
 		<method name="isTouchExplorationEnabled()Z" since="14" />
 		<method name="removeAccessibilityStateChangeListener(Landroid/view/accessibility/AccessibilityManager$AccessibilityStateChangeListener;)Z" since="14" />
+		<method name="removeTouchExplorationStateChangeListener(Landroid/view/accessibility/AccessibilityManager$TouchExplorationStateChangeListener;)Z" since="19" />
 		<method name="sendAccessibilityEvent(Landroid/view/accessibility/AccessibilityEvent;)V" />
 	</class>
 	<class name="android/view/accessibility/AccessibilityManager$AccessibilityStateChangeListener" since="14">
 		<extends name="java/lang/Object" />
 		<method name="onAccessibilityStateChanged(Z)V" />
+	</class>
+	<class name="android/view/accessibility/AccessibilityManager$TouchExplorationStateChangeListener" since="19">
+		<extends name="java/lang/Object" />
+		<method name="onTouchExplorationStateChanged(Z)V" />
 	</class>
 	<class name="android/view/accessibility/AccessibilityNodeInfo" since="14">
 		<extends name="java/lang/Object" />

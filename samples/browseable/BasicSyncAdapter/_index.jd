@@ -1,0 +1,14 @@
+
+
+
+page.tags="BasicSyncAdapter"
+sample.group=Connectivity
+@jd:body
+
+<p>This sample demonstrates how to implement a sync adapter to fetch background
+data for an app that doesn't require a user-visible account type or two-way
+synchronization.</p>
+<p>The sample periodically downloads the feed from the <a href="http://android-developers.blogspot.com/">Android Developers Blog</a> and caches the data in a content provider. At runtime, the cached feed data is
+displayed inside a {@link android.widget.ListView}.</p>
+<p>To learn more about creating and using sync adapters, see
+<a href="{@docRoot}training/sync-adapters/index.html">Transferring Data Using Sync Adapters</a>.</p>

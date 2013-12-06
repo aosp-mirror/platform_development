@@ -1,0 +1,16 @@
+
+
+
+page.tags="TextLinkify"
+sample.group=Views
+@jd:body
+
+<p>This sample demonstrates how to add clickable links to a
+{@link android.widget.TextView}, by using these techniques:
+<ul>
+<li>Setting the {@link android.R.styleable#TextView_autoLink} property 
+to automatically convert the text to a link.</li>
+<li>Parsing a String as HTML</li>
+<li>Manually by constructing a {@link android.text.SpannableString}.</li>
+</ul>
+</p>

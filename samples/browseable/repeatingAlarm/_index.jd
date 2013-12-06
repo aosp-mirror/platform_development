@@ -1,0 +1,9 @@
+
+
+
+page.tags="RepeatingAlarm"
+sample.group=Background
+@jd:body
+
+<p>This sample demonstrates how to implement a repeating alarm using an
+{@link android.app.AlarmManager}.</p>

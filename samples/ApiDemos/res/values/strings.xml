@@ -871,6 +871,19 @@
     <string name="btn_toggle_tabs">Toggle tab mode</string>
     <string name="btn_remove_all_tabs">Remove all tabs</string>
 
+    <!-- ================================= -->
+    <!--  app/print print examples strings  -->
+    <!-- ================================= -->
+
+    <string name="print_bitmap">App/Print/Print Bitmap</string>
+    <string name="print_html_from_screen">App/Print/Print HTML from screen</string>
+    <string name="print_html_off_screen">App/Print/Print HTML off screen</string>
+    <string name="print_custom_content">App/Print/Print Custom Layout</string>
+    <string name="print">Print</string>
+    <string name="print_html_off_screen_msg">From the overflow menu you can print some
+        off screen content.</string>
+    <string name="android_logo">Android logo</string>
+
     <!-- ============================ -->
     <!--  graphics examples strings  -->
     <!-- ============================ -->

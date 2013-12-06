@@ -1,0 +1,12 @@
+
+
+
+page.tags="BasicMultitouch"
+sample.group=Input
+@jd:body
+
+<p>This samples demonstrates how to use the {@link android.view.MotionEvent}
+API to keep track of individual touches across multiple touch events.</p>
+<p>To see this in action, run the sample and touch the screen with multiple
+fingers to show that the pointer id (also represented by a colour) does not
+change as new touch events are received.</p>

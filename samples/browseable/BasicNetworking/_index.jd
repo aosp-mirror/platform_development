@@ -1,0 +1,10 @@
+
+
+
+page.tags="BasicNetworking"
+sample.group=Connectivity
+@jd:body
+
+<p>This sample demonstrates how to use the
+{@link android.net.ConnectivityManager} to determine if the device has an
+active network connection, and if so, retrieve the connection type.</p>

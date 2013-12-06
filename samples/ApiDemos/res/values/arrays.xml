@@ -154,4 +154,209 @@
         <item>No.</item>
         <item>Mmm... cheese.</item>
     </string-array>
+
+    <!-- Used in app/Print/Custom Layout example -->
+    <string-array name="motogp_years">
+        <item>2012</item>
+        <item>2011</item>
+        <item>2010</item>
+        <item>2009</item>
+        <item>2008</item>
+        <item>2007</item>
+        <item>2006</item>
+        <item>2005</item>
+        <item>2004</item>
+        <item>2003</item>
+        <item>2002</item>
+        <item>2001</item>
+        <item>2000</item>
+        <item>1999</item>
+        <item>1998</item>
+        <item>1997</item>
+        <item>1996</item>
+        <item>1995</item>
+        <item>1994</item>
+        <item>1993</item>
+        <item>1992</item>
+        <item>1991</item>
+        <item>1990</item>
+        <item>1989</item>
+        <item>1988</item>
+        <item>1987</item>
+        <item>1986</item>
+        <item>1985</item>
+        <item>1984</item>
+        <item>1983</item>
+        <item>1982</item>
+        <item>1981</item>
+        <item>1980</item>
+        <item>1979</item>
+        <item>1978</item>
+        <item>1977</item>
+        <item>1976</item>
+        <item>1975</item>
+        <item>1974</item>
+        <item>1973</item>
+        <item>1972</item>
+        <item>1971</item>
+        <item>1970</item>
+        <item>1969</item>
+        <item>1968</item>
+        <item>1967</item>
+        <item>1966</item>
+        <item>1965</item>
+        <item>1964</item>
+        <item>1963</item>
+        <item>1962</item>
+        <item>1961</item>
+        <item>1960</item>
+        <item>1959</item>
+        <item>1958</item>
+        <item>1957</item>
+        <item>1956</item>
+        <item>1955</item>
+        <item>1954</item>
+        <item>1953</item>
+        <item>1952</item>
+        <item>1951</item>
+        <item>1950</item>
+        <item>1949</item>
+    </string-array>
+
+    <!-- Used in app/Print/Custom Layout example -->
+    <string-array name="motogp_champions">
+        <item>Jorge Lorenzo</item>
+        <item>Casey Stoner</item>
+        <item>Jorge Lorenzo</item>
+        <item>Valentino Rossi</item>
+        <item>Valentino Rossi</item>
+        <item>Casey Stoner</item>
+        <item>Nicky Hayden</item>
+        <item>Valentino Rossi</item>
+        <item>Valentino Rossi</item>
+        <item>Valentino Rossi</item>
+        <item>Valentino Rossi</item>
+        <item>Valentino Rossi</item>
+        <item>Kenny Roberts, Jr.</item>
+        <item>Àlex Crivillé</item>
+        <item>Michael Doohan</item>
+        <item>Michael Doohan</item>
+        <item>Michael Doohan</item>
+        <item>Michael Doohan</item>
+        <item>Michael Doohan</item>
+        <item>Kevin Schwantz</item>
+        <item>Wayne Rainey</item>
+        <item>Wayne Rainey</item>
+        <item>Wayne Rainey</item>
+        <item>Eddie Lawson</item>
+        <item>Eddie Lawson</item>
+        <item>Wayne Gardner</item>
+        <item>Eddie Lawson</item>
+        <item>Freddie Spencer</item>
+        <item>Eddie Lawson</item>
+        <item>Freddie Spencer</item>
+        <item>Franco Uncini</item>
+        <item>Marco Lucchinelli</item>
+        <item>Kenny Roberts</item>
+        <item>Kenny Roberts</item>
+        <item>Kenny Roberts</item>
+        <item>Barry Sheene</item>
+        <item>Barry Sheene</item>
+        <item>Giacomo Agostini</item>
+        <item>Phil Read</item>
+        <item>Phil Read</item>
+        <item>Giacomo Agostini</item>
+        <item>Giacomo Agostini</item>
+        <item>Giacomo Agostini</item>
+        <item>Giacomo Agostini</item>
+        <item>Giacomo Agostini</item>
+        <item>Giacomo Agostini</item>
+        <item>Giacomo Agostini</item>
+        <item>Mike Hailwood</item>
+        <item>Mike Hailwood</item>
+        <item>Mike Hailwood</item>
+        <item>Mike Hailwood</item>
+        <item>Gary Hocking</item>
+        <item>John Surtees</item>
+        <item>John Surtees</item>
+        <item>John Surtees</item>
+        <item>Libero Liberati</item>
+        <item>John Surtees</item>
+        <item>Geoff Duke</item>
+        <item>Geoff Duke</item>
+        <item>Geoff Duke</item>
+        <item>Umberto Masetti</item>
+        <item>Geoff Duke</item>
+        <item>Umberto Masetti</item>
+        <item>Leslie Graham</item>
+    </string-array>
+
+    <!-- Used in app/Print/Custom Layout example -->
+    <string-array name="motogp_constructors">
+        <item>Yamaha</item>
+        <item>Honda</item>
+        <item>Yamaha</item>
+        <item>Yamaha</item>
+        <item>Yamaha</item>
+        <item>Ducati</item>
+        <item>Honda</item>
+        <item>Yamaha</item>
+        <item>Yamaha</item>
+        <item>Honda</item>
+        <item>Honda</item>
+        <item>Honda</item>
+        <item>Suzuki</item>
+        <item>Honda</item>
+        <item>Honda</item>
+        <item>Honda</item>
+        <item>Honda</item>
+        <item>Honda</item>
+        <item>Honda</item>
+        <item>Suzuki</item>
+        <item>Yamaha</item>
+        <item>Yamaha</item>
+        <item>Yamaha</item>
+        <item>Honda</item>
+        <item>Yamaha</item>
+        <item>Honda</item>
+        <item>Yamaha</item>
+        <item>Honda</item>
+        <item>Yamaha</item>
+        <item>Honda</item>
+        <item>Suzuki</item>
+        <item>Suzuki</item>
+        <item>Yamaha</item>
+        <item>Yamaha</item>
+        <item>Yamaha</item>
+        <item>Suzuki</item>
+        <item>Suzuki</item>
+        <item>Giacomo Agostini</item>
+        <item>Phil Read</item>
+        <item>Phil Read</item>
+        <item>Yamaha</item>
+        <item>MV Agusta</item>
+        <item>MV Agusta</item>
+        <item>MV Agusta</item>
+        <item>MV Agusta</item>
+        <item>MV Agusta</item>
+        <item>MV Agusta</item>
+        <item>MV Agusta</item>
+        <item>MV Agusta</item>
+        <item>MV Agusta</item>
+        <item>MV Agusta</item>
+        <item>MV Agusta</item>
+        <item>MV Agusta</item>
+        <item>MV Agusta</item>
+        <item>MV Agusta</item>
+        <item>Gilera</item>
+        <item>MV Agusta</item>
+        <item>Gilera</item>
+        <item>Gilera</item>
+        <item>Gilera</item>
+        <item>Gilera</item>
+        <item>Norton</item>
+        <item>Gilera</item>
+        <item>AJS</item>
+    </string-array>
+
 </resources>

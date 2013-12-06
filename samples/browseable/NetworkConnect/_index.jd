@@ -1,0 +1,10 @@
+
+
+
+page.tags="NetworkConnect"
+sample.group=Connectivity
+@jd:body
+
+<p>This sample demonstrates how to connect to the network and fetch raw HTML.
+The sample uses {@link android.os.AsyncTask} to perform the fetch on a
+background thread.</p>

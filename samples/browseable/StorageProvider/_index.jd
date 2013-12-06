@@ -1,0 +1,7 @@
+page.tags="Storage access framework", storage, documents
+sample.group=Content
+@jd:body
+
+<p>This sample demonstrates how to use the
+{@link android.provider.DocumentsProvider} API to manage documents and
+expose them to the Android system for sharing.</p>

@@ -1,0 +1,18 @@
+
+
+
+page.tags="BasicMediaRouter"
+sample.group=Media
+@jd:body
+
+<p>This sample demonstrates how to use the {@link android.media.MediaRouter}
+API to display content on a secondary display.</p>
+<p>To see this in action, run the sample and use the
+<strong>Media Route Action Item</strong> in the action bar to select an
+output device. If your device supports Miracast wireless displays, you may
+need to enable <strong>Wireless Display</strong> functionality in the
+system settings.</p>
+<p>You can also enable secondary screen simulation from the
+<em>Developer options</em> in the system Settings. Once
+connected, use the <strong>Change Color</strong> button to change the
+background color of the secondary screen.</p>

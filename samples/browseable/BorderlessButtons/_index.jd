@@ -1,0 +1,9 @@
+
+
+
+page.tags="BorderlessButtons"
+sample.group=UI
+@jd:body
+
+<p>This sample demonstrates how to apply borderless buttons, bottom button bars
+(OK and Cancel), and dividers to establish visual structure.</p>

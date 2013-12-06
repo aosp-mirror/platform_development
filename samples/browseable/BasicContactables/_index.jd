@@ -1,0 +1,13 @@
+
+
+
+page.tags="BasicContactables"
+sample.group=Content
+@jd:body
+
+<p>This sample demonstrates how to use the
+{@link android.provider.ContactsContract.Data} table to search for contacts.</p>
+<p>The sample sends consolidated query strings to the
+{@link android.provider.ContactsContract.Data} table to match both contact
+names and phone numbers. This approach helps to reduce the number of
+queries needed when searching the contacts database.</p>

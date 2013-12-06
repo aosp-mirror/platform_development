@@ -1,0 +1,12 @@
+
+
+
+page.tags="StorageClient"
+sample.group=Content
+@jd:body
+
+<p>This sample demonstrates how to use the
+{@link android.content.Intent#ACTION_OPEN_DOCUMENT} intent to let users
+choose a file via the system's file browser. This intent allows a client
+application to access a list of document providers on the device, and choose
+a file from any of them.</p>

@@ -1,0 +1,13 @@
+
+
+
+page.tags="ActivityInstrumentation"
+sample.group=Testing
+@jd:body
+
+<p>This sample demonstrates how to use an 
+{@link android.test.InstrumentationTestCase} to test the internal state of an 
+{@link android.app.Activity}.</p>
+<p>To learn more about using Android's custom testing framework, see
+<a href="{@docRoot}training/activity-testing/index.html">Testing Your
+Android Activity</a>.</p>

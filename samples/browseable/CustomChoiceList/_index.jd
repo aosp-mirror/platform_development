@@ -1,0 +1,9 @@
+
+
+
+page.tags="CustomChoiceList"
+sample.group=UI
+@jd:body
+
+<p>This sample demonstrates how to implement a custom single-choice or
+multi-choice {@link android.widget.ListView} user interface.</p>
