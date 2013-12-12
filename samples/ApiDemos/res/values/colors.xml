@@ -28,5 +28,6 @@
     <color name="solid_blue">#0000ff</color>
     <color name="solid_green">#f0f0</color>
     <color name="solid_yellow">#ffffff00</color>
+    <color name="purply">#ff884488</color>
 
 </resources>

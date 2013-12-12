@@ -1293,6 +1293,25 @@
         <!--     ANDROID.ANIMATION PACKAGE SAMPLES         -->
         <!-- ************************************* -->
 
+        <activity android:name=".animation.ActivityTransition"
+                android:label="Animation/Activity Transition"
+		android:enabled="@bool/atLeastHoneycomb"
+		android:theme="@style/ActivityTransitionTheme">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".animation.ActivityTransitionDetails"
+                android:label="Animation/Activity Transition Details"
+		android:enabled="@bool/atLeastHoneycomb"
+		android:theme="@style/ActivityTransitionTheme">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+            </intent-filter>
+        </activity>
+
         <activity android:name=".animation.AnimationLoading"
                 android:label="Animation/Loading"
                 android:enabled="@bool/atLeastHoneycomb">
