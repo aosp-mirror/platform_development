@@ -516,8 +516,14 @@ See test_defs.xsd for more information.
 
 <!-- Unit tests for the phone application. -->
 <test name="phone-unit"
-    build_path="packages/apps/Phone"
+    build_path="packages/services/Telephony"
     package="com.android.phone.tests"
+    continuous="true"
+    coverage_target="Phone" />
+
+<test name="telecomm-unit"
+    build_path="packages/services/Telecomm"
+    package="com.android.telecomm.tests"
     continuous="true"
     coverage_target="Phone" />
 
