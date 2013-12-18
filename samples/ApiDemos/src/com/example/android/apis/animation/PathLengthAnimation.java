@@ -17,7 +17,6 @@ package com.example.android.apis.animation;
 
 import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
-import android.annotation.Nullable;
 import android.app.Activity;
 import android.graphics.Paint;
 import android.graphics.Path;
@@ -56,7 +55,7 @@ public class PathLengthAnimation extends Activity {
     private float mTrimOffset = 0;
 
     @Override
-    protected void onCreate(@Nullable Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         ImageView view = new ImageView(this);
         setContentView(view);
