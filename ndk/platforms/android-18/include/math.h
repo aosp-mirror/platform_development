@@ -536,7 +536,7 @@ int	__builtin_ilogb(double) __NDK_FPABI_MATH__ __pure2;
 #if !defined(__clang__) || __clang_major__ > 3 || (__clang_major__ == 3 && __clang_minor__ >= 5)
 int	__builtin_isnan(double) __NDK_FPABI_MATH__ __pure2;
 #else
-/* clang < 3.4 has faulty prototype for __builtin_isnan */
+/* clang < 3.5 has faulty prototype for __builtin_isnan */
 #endif
 double	__builtin_lgamma(double) __NDK_FPABI_MATH__;
 long long __builtin_llrint(double) __NDK_FPABI_MATH__;
@@ -686,7 +686,7 @@ long double	__builtin_modfl(long double, long double *) __NDK_FPABI_MATH__; /* f
 long double	__builtin_nanl(const char *) __NDK_FPABI_MATH__ __pure2;
 long double	__builtin_nearbyintl(long double) __NDK_FPABI_MATH__;
 long double	__builtin_nextafterl(long double, long double) __NDK_FPABI_MATH__;
-#if !defined(__clang__) || __clang_major__ > 3 || (__clang_major__ == 3 && __clang_minor__ >= 5)
+#if !defined(__clang__) || __clang_major__ > 3 || (__clang_major__ == 3 && __clang_minor__ >= 4)
 double		__builtin_nexttoward(double, long double) __NDK_FPABI_MATH__;
 float		__builtin_nexttowardf(float, long double) __NDK_FPABI_MATH__;
 #else
