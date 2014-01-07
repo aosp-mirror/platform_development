@@ -82,25 +82,27 @@ external/clang/lib/Headers                    build-tools/${PLATFORM_NAME}/rende
 external/clang/LICENSE.TXT                    build-tools/${PLATFORM_NAME}/renderscript/clang-include/LICENSE.TXT
 
 prebuilts/sdk/renderscript/lib/javalib.jar            build-tools/${PLATFORM_NAME}/renderscript/lib/renderscript-v8.jar
-prebuilts/sdk/renderscript/lib/arm/libclcore.bc       build-tools/${PLATFORM_NAME}/renderscript/lib/libclcore.bc
 
 prebuilts/sdk/renderscript/lib/arm/libc.so            build-tools/${PLATFORM_NAME}/renderscript/lib/intermediates/armeabi-v7a/libc.so
 prebuilts/sdk/renderscript/lib/arm/libm.so            build-tools/${PLATFORM_NAME}/renderscript/lib/intermediates/armeabi-v7a/libm.so
 prebuilts/sdk/renderscript/lib/arm/libcompiler_rt.a   build-tools/${PLATFORM_NAME}/renderscript/lib/intermediates/armeabi-v7a/libcompiler_rt.a
 prebuilts/sdk/renderscript/lib/arm/libRSSupport.so    build-tools/${PLATFORM_NAME}/renderscript/lib/packaged/armeabi-v7a/libRSSupport.so
 prebuilts/sdk/renderscript/lib/arm/librsjni.so        build-tools/${PLATFORM_NAME}/renderscript/lib/packaged/armeabi-v7a/librsjni.so
+prebuilts/sdk/renderscript/lib/arm/libclcore.bc       build-tools/${PLATFORM_NAME}/renderscript/lib/bc/armeabi-v7a/libclcore.bc
 
 prebuilts/sdk/renderscript/lib/mips/libc.so            build-tools/${PLATFORM_NAME}/renderscript/lib/intermediates/mips/libc.so
 prebuilts/sdk/renderscript/lib/mips/libm.so            build-tools/${PLATFORM_NAME}/renderscript/lib/intermediates/mips/libm.so
 prebuilts/sdk/renderscript/lib/mips/libcompiler_rt.a   build-tools/${PLATFORM_NAME}/renderscript/lib/intermediates/mips/libcompiler_rt.a
 prebuilts/sdk/renderscript/lib/mips/libRSSupport.so    build-tools/${PLATFORM_NAME}/renderscript/lib/packaged/mips/libRSSupport.so
 prebuilts/sdk/renderscript/lib/mips/librsjni.so        build-tools/${PLATFORM_NAME}/renderscript/lib/packaged/mips/librsjni.so
+prebuilts/sdk/renderscript/lib/mips/libclcore.bc       build-tools/${PLATFORM_NAME}/renderscript/lib/bc/mips/libclcore.bc
 
 prebuilts/sdk/renderscript/lib/x86/libc.so            build-tools/${PLATFORM_NAME}/renderscript/lib/intermediates/x86/libc.so
 prebuilts/sdk/renderscript/lib/x86/libm.so            build-tools/${PLATFORM_NAME}/renderscript/lib/intermediates/x86/libm.so
 prebuilts/sdk/renderscript/lib/x86/libcompiler_rt.a   build-tools/${PLATFORM_NAME}/renderscript/lib/intermediates/x86/libcompiler_rt.a
 prebuilts/sdk/renderscript/lib/x86/libRSSupport.so    build-tools/${PLATFORM_NAME}/renderscript/lib/packaged/x86/libRSSupport.so
 prebuilts/sdk/renderscript/lib/x86/librsjni.so        build-tools/${PLATFORM_NAME}/renderscript/lib/packaged/x86/librsjni.so
+prebuilts/sdk/renderscript/lib/x86/libclcore.bc       build-tools/${PLATFORM_NAME}/renderscript/lib/bc/x86/libclcore.bc
 
 
 
