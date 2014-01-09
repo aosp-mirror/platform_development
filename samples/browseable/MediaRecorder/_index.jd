@@ -1,0 +1,7 @@
+page.tags="MediaRecorder"
+sample.group=Media
+@jd:body
+
+<p>This sample demonstrates how to use the {@link android.media.MediaRecorder}
+API to record video from a camera or camcorder, and display a preview of the
+recording.</p>
