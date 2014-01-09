@@ -871,6 +871,13 @@
     <string name="btn_toggle_tabs">Toggle tab mode</string>
     <string name="btn_remove_all_tabs">Remove all tabs</string>
 
+    <!-- ================================= -->
+    <!--  app/print print examples strings  -->
+    <!-- ================================= -->
+
+    <string name="print_custom_content">App/Print/Print Custom Layout</string>
+    <string name="print">Print</string>
+
     <!-- ============================ -->
     <!--  graphics examples strings  -->
     <!-- ============================ -->
