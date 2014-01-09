@@ -18,6 +18,7 @@ package com.example.android.bitmapfun.ui;
 
 import android.annotation.TargetApi;
 import android.app.ActionBar;
+import android.os.Build.VERSION_CODES;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
@@ -48,7 +49,7 @@ public class ImageDetailActivity extends FragmentActivity implements OnClickList
     private ImageFetcher mImageFetcher;
     private ViewPager mPager;
 
-    @TargetApi(11)
+    @TargetApi(VERSION_CODES.HONEYCOMB)
     @Override
     public void onCreate(Bundle savedInstanceState) {
         if (BuildConfig.DEBUG) {
@@ -199,7 +200,7 @@ public class ImageDetailActivity extends FragmentActivity implements OnClickList
      * Set on the ImageView in the ViewPager children fragments, to enable/disable low profile mode
      * when the ImageView is touched.
      */
-    @TargetApi(11)
+    @TargetApi(VERSION_CODES.HONEYCOMB)
     @Override
     public void onClick(View v) {
         final int vis = mPager.getSystemUiVisibility();
