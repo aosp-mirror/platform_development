@@ -17,7 +17,6 @@
 //--------------------------------------------------------------------------------
 // gestureDetector.h
 //--------------------------------------------------------------------------------
-
 #ifndef GESTUREDETECTOR_H_
 #define GESTUREDETECTOR_H_
 
@@ -30,6 +29,8 @@
 #include "JNIHelper.h"
 #include "vecmath.h"
 
+namespace ndk_helper
+{
 //--------------------------------------------------------------------------------
 // Constants
 //--------------------------------------------------------------------------------
@@ -38,11 +39,14 @@ const int32_t TAP_TIMEOUT = 180 * 1000000;
 const int32_t DOUBLE_TAP_SLOP = 100;
 const int32_t TOUCH_SLOP = 8;
 
-#define GESTURE_STATE_NONE (0)
-#define GESTURE_STATE_START (1)
-#define GESTURE_STATE_MOVE (2)
-#define GESTURE_STATE_END (4)
-#define GESTURE_STATE_ACTION (GESTURE_STATE_START | GESTURE_STATE_END)
+enum
+{
+    GESTURE_STATE_NONE = 0,
+    GESTURE_STATE_START = 1,
+    GESTURE_STATE_MOVE = 2,
+    GESTURE_STATE_END = 4,
+    GESTURE_STATE_ACTION = (GESTURE_STATE_START | GESTURE_STATE_END),
+};
 typedef int32_t GESTURE_STATE;
 
 /******************************************************************
@@ -55,13 +59,15 @@ typedef int32_t GESTURE_STATE;
 class GestureDetector
 {
 protected:
-    float _fDpFactor;
+    float dp_factor_;
 public:
     GestureDetector();
-    virtual ~GestureDetector() {}
-    virtual void setConfiguration(AConfiguration* config);
+    virtual ~GestureDetector()
+    {
+    }
+    virtual void SetConfiguration( AConfiguration* config );
 
-    virtual GESTURE_STATE detect(const AInputEvent* motion_event) = 0;
+    virtual GESTURE_STATE Detect( const AInputEvent* motion_event ) = 0;
 };
 
 /******************************************************************
@@ -69,16 +75,20 @@ public:
  * Returns GESTURE_STATE_ACTION when a tap gesture is detected
  *
  */
-class TapDetector : public GestureDetector
+class TapDetector: public GestureDetector
 {
 private:
-    int32_t _iDownPointerID;
-    float _fDownX;
-    float _fDownY;
+    int32_t down_pointer_id_;
+    float down_x_;
+    float down_y_;
 public:
-    TapDetector() {}
-    virtual ~TapDetector() {}
-    virtual GESTURE_STATE detect(const AInputEvent* motion_event);
+    TapDetector()
+    {
+    }
+    virtual ~TapDetector()
+    {
+    }
+    virtual GESTURE_STATE Detect( const AInputEvent* motion_event );
 };
 
 /******************************************************************
@@ -86,19 +96,23 @@ public:
  * Returns GESTURE_STATE_ACTION when a double-tap gesture is detected
  *
  */
-class DoubletapDetector : public GestureDetector
+class DoubletapDetector: public GestureDetector
 {
 private:
-    TapDetector _tapDetector;
-    int64_t _lastTapTime;
-    float _fLastTapX;
-    float _fLastTapY;
+    TapDetector tap_detector_;
+    int64_t last_tap_time_;
+    float last_tap_x_;
+    float last_tap_y_;
 
 public:
-    DoubletapDetector() {}
-    virtual ~DoubletapDetector() {}
-    virtual GESTURE_STATE detect(const AInputEvent* motion_event);
-    virtual void setConfiguration(AConfiguration* config);
+    DoubletapDetector()
+    {
+    }
+    virtual ~DoubletapDetector()
+    {
+    }
+    virtual GESTURE_STATE Detect( const AInputEvent* motion_event );
+    virtual void SetConfiguration( AConfiguration* config );
 };
 
 /******************************************************************
@@ -108,18 +122,22 @@ public:
  * When the finger 1,2,3 are tapped and then finger 1 is released,
  * the detector start new pinch gesture with finger 2 & 3.
  */
-class PinchDetector : public GestureDetector
+class PinchDetector: public GestureDetector
 {
 private:
-    int32_t findIndex( const AInputEvent* event, int32_t iID );
-    const AInputEvent* _event;
-    std::vector<int32_t> _vecPointers;
+    int32_t FindIndex( const AInputEvent* event, int32_t id );
+    const AInputEvent* event_;
+    std::vector<int32_t> vec_pointers_;
 
 public:
-    PinchDetector() {}
-    virtual ~PinchDetector() {}
-    virtual GESTURE_STATE detect(const AInputEvent* event);
-    bool getPointers( vec2& v1, vec2& v2 );
+    PinchDetector()
+    {
+    }
+    virtual ~PinchDetector()
+    {
+    }
+    virtual GESTURE_STATE Detect( const AInputEvent* event );
+    bool GetPointers( Vec2& v1, Vec2& v2 );
 };
 
 /******************************************************************
@@ -127,17 +145,22 @@ public:
  * Returns drag gesture state when a drag-tap gesture is detected
  *
  */
-class DragDetector : public GestureDetector
+class DragDetector: public GestureDetector
 {
 private:
-    int32_t findIndex( const AInputEvent* event, int32_t iID );
-    const AInputEvent* _event;
-    std::vector<int32_t> _vecPointers;
+    int32_t FindIndex( const AInputEvent* event, int32_t id );
+    const AInputEvent* event_;
+    std::vector<int32_t> vec_pointers_;
 public:
-    DragDetector() {}
-    virtual ~DragDetector() {}
-    virtual GESTURE_STATE detect(const AInputEvent* event);
-    bool getPointer( vec2& v );
+    DragDetector()
+    {
+    }
+    virtual ~DragDetector()
+    {
+    }
+    virtual GESTURE_STATE Detect( const AInputEvent* event );
+    bool GetPointer( Vec2& v );
 };
 
+}   //namespace ndkHelper
 #endif /* GESTUREDETECTOR_H_ */
