@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="NotificationContent" parent="@android:style/TextAppearance.StatusBar.EventContent">
+    </style>
+
+</resources>

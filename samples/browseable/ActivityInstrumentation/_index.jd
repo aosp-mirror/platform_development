@@ -1,0 +1,13 @@
+
+
+
+page.tags="ActivityInstrumentation"
+sample.group=Testing
+@jd:body
+
+<p>
+            
+            This sample provides a basic example of using an InstrumentationTest to probe the
+            internal state of an Activity.
+            
+        </p>

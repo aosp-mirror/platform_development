@@ -1,0 +1,206 @@
+<!--
+Copyright (C) 2013 The Android Open Source Project
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              xmlns:tools="http://schemas.android.com/tools"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:gravity="center_horizontal">
+    <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:fillViewport="false">
+        <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:paddingLeft="@dimen/activity_horizontal_margin"
+                android:paddingRight="@dimen/activity_horizontal_margin"
+                android:paddingTop="@dimen/activity_vertical_margin"
+                android:paddingBottom="@dimen/activity_vertical_margin"
+                tools:context=".MainActivity"
+                >
+
+            <!-- Notice the presence of nextFocusDown/nextFocusUp on the elements below. You can
+            also use nextFocusLeft/nextFocusRight. This tells the system in what order elements
+            should be navigated through. If not present, the system will make a guess based on
+            element location in the layout. -->
+            <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Buttons"
+                    android:id="@+id/buttonsLabel"
+                    android:layout_alignParentTop="true"
+                    android:layout_alignParentLeft="true"
+                    android:nextFocusDown="@+id/composeButton"/>
+
+            <!-- This is a regular, text-based button. No contentDescription is needed, since the
+                 text field sufficiently describes the action performed. -->
+            <Button
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/composeButtonLabel"
+                    android:id="@+id/composeButton"
+                    android:layout_below="@+id/buttonsLabel"
+                    android:layout_alignLeft="@+id/buttonsLabel"
+                    android:nextFocusUp="@+id/buttonsLabel"
+                    android:nextFocusDown="@+id/checkboxesLabel"
+                    />
+
+            <!-- The next two buttons are different types of image-based buttons. -->
+
+            <!-- BEGIN_INCLUDE (image_content_description) -->
+            <!-- Adding a contentDescription is needed for accessibility, since no text is present.
+            Since the contentDescription is read verbatim, you may want to be a bit more
+            descriptive than usual, such as adding "button" to the end of your description, if
+            appropriate. -->
+            <ImageButton
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/discardButton"
+                    android:layout_alignTop="@+id/composeButton"
+                    android:layout_toRightOf="@+id/composeButton"
+                    android:src="@drawable/ic_action_discard"
+                    android:layout_alignBottom="@+id/composeButton"
+                    android:contentDescription="@string/discardButtonDescription"
+                    android:scaleType="fitCenter"
+                    android:nextFocusUp="@+id/buttonsLabel"
+                    android:nextFocusDown="@+id/checkboxesLabel"
+                    />
+            <!-- END_INCLUDE (image_content_description) -->
+
+            <ImageButton
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/infoButton"
+                    android:layout_alignTop="@+id/discardButton"
+                    android:layout_toRightOf="@+id/discardButton"
+                    android:src="@drawable/ic_action_info"
+                    android:layout_alignBottom="@+id/discardButton"
+                    android:layout_alignRight="@+id/hyperspaceCheckbox"
+                    android:scaleType="fitCenter"
+                    android:background="?android:selectableItemBackground"
+                    android:padding="5dp"
+                    android:contentDescription="@string/infoButtonDescription"
+                    android:nextFocusUp="@+id/buttonsLabel"
+                    android:nextFocusDown="@+id/checkboxesLabel"
+            />
+
+            <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/checkboxesLabel"
+                    android:id="@+id/checkboxesLabel"
+                    android:layout_below="@+id/composeButton"
+                    android:layout_alignLeft="@+id/composeButton"
+                    android:nextFocusUp="@+id/composeButton"
+                    android:nextFocusDown="@+id/jetpackCheckbox"
+                    />
+
+            <!-- Like a text-based button, checkboxes with text will often work correctly as-is.
+                 If your checkboxes do not have a text attribute, you will need to add a
+                 contentDescriptoin. -->
+            <CheckBox
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/jetpackCheckboxLabel"
+                    android:id="@+id/jetpackCheckbox"
+                    android:layout_below="@+id/checkboxesLabel"
+                    android:layout_alignLeft="@+id/checkboxesLabel"
+                    android:checked="false"
+                    android:nextFocusUp="@+id/checkboxesLabel"
+                    android:nextFocusDown="@+id/hyperspaceCheckbox"
+                    />
+
+            <CheckBox
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/hyperspaceCheckboxLabel"
+                    android:id="@+id/hyperspaceCheckbox"
+                    android:layout_below="@+id/jetpackCheckbox"
+                    android:layout_alignLeft="@+id/jetpackCheckbox"
+                    android:checked="false"
+                    android:nextFocusUp="@+id/jetpackCheckbox"
+                    android:nextFocusDown="@+id/imagesAndTextLabel"
+                    />
+
+            <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/imagesAndTextLabel"
+                    android:id="@+id/imagesAndTextLabel"
+                    android:layout_below="@+id/hyperspaceCheckbox"
+                    android:layout_alignLeft="@+id/hyperspaceCheckbox"
+                    android:nextFocusUp="@+id/hyperspaceCheckbox"
+                    android:nextFocusDown="@+id/partlyCloudImage"
+                    />
+
+            <!-- Images should have a contentDescription if they convey any meaningful
+                 information. Images that are purely decorative may not need a contentDescription,
+                 however. -->
+            <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/partlyCloudyImage"
+                    android:layout_below="@+id/imagesAndTextLabel"
+                    android:layout_alignLeft="@+id/imagesAndTextLabel"
+                    android:src="@drawable/partly_cloudy"
+                    android:contentDescription="@string/partlyCloudyDescription"
+                    android:layout_alignRight="@+id/discardButton"
+                    android:nextFocusUp="@+id/imagesAndTextLabel"
+                    android:nextFocusDown="@+id/customViewLabel"
+                    />
+
+            <!-- TextViews are typically self describing, so do not need extra modifications. -->
+            <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="?android:attr/textAppearanceLarge"
+                    android:text="@string/temperature"
+                    android:textSize="60sp"
+                    android:id="@+id/temperatureText"
+                    android:layout_alignTop="@+id/partlyCloudyImage"
+                    android:layout_toRightOf="@+id/partlyCloudyImage"
+                    android:layout_alignBottom="@+id/partlyCloudyImage"
+                    android:gravity="center_vertical"
+                    android:nextFocusUp="@+id/imagesAndTextLabel"
+                    android:nextFocusDown="@+id/customViewLabel"
+                    />
+
+            <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/customViewLabel"
+                    android:id="@+id/customViewLabel"
+                    android:layout_below="@+id/partlyCloudyImage"
+                    android:layout_alignLeft="@+id/partlyCloudyImage"
+                    android:nextFocusUp="@+id/partlyCloudImage"
+                    android:nextFocusDown="@+id/dialView"
+                    />
+
+            <!-- Custom views require additonal code changes. See DialView.java for more
+                 details. -->
+            <com.example.android.basicaccessibility.DialView
+                    android:layout_width="200dp"
+                    android:layout_height="200dp"
+                    android:id="@+id/dialView"
+                    android:layout_below="@+id/customViewLabel"
+                    android:layout_alignLeft="@+id/partlyCloudyImage"
+                    android:nextFocusUp="@+id/customViewLabel"
+                    />
+
+        </RelativeLayout>
+    </ScrollView>
+</LinearLayout>

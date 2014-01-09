@@ -1,0 +1,9 @@
+<resources>
+    <string name="menu_present_to">Present to</string>
+    <string name="title_activity_main">MainActivity</string>
+    <string name="secondary_connected">Connected to:\n%s</string>
+    <string name="secondary_notconnected">No secondary display connected.</string>
+    <string name="change_color">Change Color</string>
+    <string name="display_name">This display is: %s</string>
+    <string name="display_color">Background color: #%X</string>
+</resources>

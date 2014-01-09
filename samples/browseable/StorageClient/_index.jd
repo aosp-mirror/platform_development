@@ -1,0 +1,15 @@
+
+
+
+page.tags="StorageClient"
+sample.group=Content
+@jd:body
+
+<p>
+            
+            Using the OPEN_DOCUMENT intent, a client app can access a list of Document Providers
+            on the device, and choose a file from any of them.
+            \n\nTo demonstrate this, click the button below to open up the Storage Access Framework
+            interface, and choose an image on your device.  It will be displayed in this app.
+            
+        </p>
