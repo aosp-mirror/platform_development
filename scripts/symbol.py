@@ -88,6 +88,11 @@ def FindToolchain():
     known_toolchains = [
       ("i686-android-linux-4.4.3", "x86", "i686-android-linux")
     ]
+  elif ARCH == "mips":
+    gcc_version = os.environ["TARGET_GCC_VERSION"]
+    known_toolchains = [
+      ("mipsel-linux-android-" + gcc_version, "mips", "mipsel-linux-android")
+    ]
   else:
     known_toolchains = []
 
