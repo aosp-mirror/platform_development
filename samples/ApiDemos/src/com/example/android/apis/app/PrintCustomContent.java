@@ -376,9 +376,9 @@ public class PrintCustomContent extends ListActivity {
 
                                 // Add the height but if the view crosses the page
                                 // boundary we will put it to the next one.
-                                pageContentHeight += view.getHeight();
+                                pageContentHeight += view.getMeasuredHeight();
                                 if (currentPage < 0 || pageContentHeight > mRenderPageHeight) {
-                                    pageContentHeight = view.getHeight();
+                                    pageContentHeight = view.getMeasuredHeight();
                                     currentPage++;
                                     // Done with the current page - finish it.
                                     if (page != null) {
