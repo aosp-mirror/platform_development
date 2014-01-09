@@ -131,8 +131,8 @@ bool JNIHelper::ReadFile( const char* fileName,
     s.append( fileName );
     std::ifstream f( s.c_str(), std::ios::binary );
 
-    env->DeleteLocalRef( str_path );
     env->ReleaseStringUTFChars( str_path, path );
+    env->DeleteLocalRef( str_path );
     activity_->vm->DetachCurrentThread();
 
     if( f )
@@ -197,8 +197,8 @@ std::string JNIHelper::GetExternalFilesDir()
     const char* path = env->GetStringUTFChars( strPath, NULL );
     std::string s( path );
 
-    env->DeleteLocalRef( strPath );
     env->ReleaseStringUTFChars( strPath, path );
+    env->DeleteLocalRef( strPath );
     activity_->vm->DetachCurrentThread();
 
     pthread_mutex_unlock( &mutex_ );
@@ -277,9 +277,9 @@ std::string JNIHelper::ConvertString( const char* str,
 
     std::string s = std::string( cparam );
 
+    env->ReleaseStringUTFChars( object, cparam );
     env->DeleteLocalRef( strEncode );
     env->DeleteLocalRef( object );
-    env->ReleaseStringUTFChars( object, cparam );
     activity_->vm->DetachCurrentThread();
     pthread_mutex_unlock( &mutex_ );
 
