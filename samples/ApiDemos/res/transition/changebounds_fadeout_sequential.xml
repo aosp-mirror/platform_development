@@ -14,7 +14,7 @@
      limitations under the License.
 -->
 <!-- BEGIN_INCLUDE(TransitionSet) -->
-<set xmlns:android="http://schemas.android.com/apk/res/android"
+<transitionSet xmlns:android="http://schemas.android.com/apk/res/android"
      android:transitionOrdering="sequential">
     <changeBounds/>
     <fade android:fadingMode="fade_out" >
@@ -22,5 +22,5 @@
             <target android:targetId="@id/grayscaleContainer" />
         </targets>
     </fade>
-</set>
+</transitionSet>
 <!-- END_INCLUDE(TransitionSet) -->
