@@ -207,12 +207,7 @@ public class ImageResizer extends ImageWorker {
             Bitmap inBitmap = cache.getBitmapFromReusableSet(options);
 
             if (inBitmap != null) {
-                if (BuildConfig.DEBUG) {
-                    Log.d(TAG, "Found bitmap to use for inBitmap");
-                }
                 options.inBitmap = inBitmap;
-            } else {
-                Log.d(TAG, "Did NOT find bitmap to use for inBitmap");
             }
         }
     }
