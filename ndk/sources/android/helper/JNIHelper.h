@@ -22,6 +22,7 @@
 #include <map>
 #include <fstream>
 #include <iostream>
+#include <string>
 
 #include <EGL/egl.h>
 #include <GLES2/gl2.h>
@@ -30,27 +31,29 @@
 #include <android/log.h>
 #include <android_native_app_glue.h>
 
-
-#define APP_NAME "native-activity"
-#define CLASS_NAME "android/app/NativeActivity"
-#define APPLICATION_CLASS_NAME "com/sample/mmdPlay/NDKSupport"
-
-
-#define LOGI(...) ((void)__android_log_print(ANDROID_LOG_INFO, APP_NAME, __VA_ARGS__))
-#define LOGW(...) ((void)__android_log_print(ANDROID_LOG_WARN, APP_NAME, __VA_ARGS__))
-#define LOGE(...) ((void)__android_log_print(ANDROID_LOG_ERROR, APP_NAME, __VA_ARGS__))
+#define LOGI(...) ((void)__android_log_print(ANDROID_LOG_INFO, JNIHelper::getAppName(), __VA_ARGS__))
+#define LOGW(...) ((void)__android_log_print(ANDROID_LOG_WARN, JNIHelper::getAppName(), __VA_ARGS__))
+#define LOGE(...) ((void)__android_log_print(ANDROID_LOG_ERROR, JNIHelper::getAppName(), __VA_ARGS__))
 
 jclass retrieveClass(JNIEnv *jni, ANativeActivity* activity, const char* className);
 
+/******************************************************************
+ * Helpers to invoke Java methods
+ * To use this class, add NDKHelper.java as a corresponding helpers in Java side
+ */
 class JNIHelper
 {
+private:
     static ANativeActivity* _activity;
     static jobject _objJNIHelper;
     static jclass _clsJNIHelper;
 
     static jstring getExternalFilesDir( JNIEnv *env );
+
+    static std::string _appName;
 public:
-    JNIHelper() {
+    JNIHelper()
+    {
     };
     ~JNIHelper() {
         JNIEnv *env;
@@ -62,14 +65,16 @@ public:
         _activity->vm->DetachCurrentThread();
 
     };
-    static void init( ANativeActivity* activity )
-    {
-        _activity = activity;
-
-    };
-
+    static void init( ANativeActivity* activity );
     static bool readFile( const char* fileName, std::vector<uint8_t>& buffer );
     static uint32_t loadTexture(const char* fileName );
+    static std::string convertString( const char* str, const char* encode );
+
+    static const char* getAppName() {
+        return _appName.c_str();
+    };
+
+
 
 
 };
