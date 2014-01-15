@@ -67,7 +67,12 @@
 	<classpathentry kind="src" path="frameworks/base/packages/SystemUI/src"/>
 	<classpathentry kind="src" path="frameworks/base/policy/src"/>
 	<classpathentry kind="src" path="frameworks/base/sax/java"/>
-	<classpathentry kind="src" path="frameworks/base/services/java"/>
+	<classpathentry kind="src" path="frameworks/base/services/core/java"/>
+	<classpathentry kind="src" path="frameworks/base/services/accessibility/java"/>
+	<classpathentry kind="src" path="frameworks/base/services/print/java"/>
+	<classpathentry kind="src" path="frameworks/base/services/backup/java"/>
+	<classpathentry kind="src" path="frameworks/base/services/devicepolicy/java"/>
+	<classpathentry kind="src" path="frameworks/base/services/appwidget/java"/>
 	<classpathentry kind="src" path="frameworks/base/telecomm/java"/>
 	<classpathentry kind="src" path="frameworks/base/telephony/java"/>
 	<classpathentry kind="src" path="frameworks/base/test-runner/src"/>
