@@ -3,6 +3,8 @@
 
 /* $Revision: 10965 $ on $Date:: 2010-04-09 02:11:29 -0700 #$ */
 
+#include <GLES/gl.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
