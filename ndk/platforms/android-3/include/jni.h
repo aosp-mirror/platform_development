@@ -1144,8 +1144,8 @@ jint JNI_GetCreatedJavaVMs(JavaVM**, jsize, jsize*);
  * Prototypes for functions exported by loadable shared libs.  These are
  * called by JNI, not provided by JNI.
  */
-JNIEXPORT jint JNI_OnLoad(JavaVM* vm, void* reserved);
-JNIEXPORT void JNI_OnUnload(JavaVM* vm, void* reserved);
+JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* vm, void* reserved);
+JNIEXPORT void JNICALL JNI_OnUnload(JavaVM* vm, void* reserved);
 
 #ifdef __cplusplus
 }
