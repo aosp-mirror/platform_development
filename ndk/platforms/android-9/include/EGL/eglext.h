@@ -28,7 +28,7 @@ extern "C" {
 ** MATERIALS OR THE USE OR OTHER DEALINGS IN THE MATERIALS.
 */
 
-#include <EGL/eglplatform.h>
+#include <EGL/egl.h>
 
 /*************************************************************/
 
