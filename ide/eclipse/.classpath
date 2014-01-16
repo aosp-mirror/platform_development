@@ -79,6 +79,7 @@
 	<classpathentry kind="src" path="frameworks/opt/telephony/src/java"/>
 	<classpathentry kind="src" path="frameworks/opt/mms/src/java"/>
 	<classpathentry kind="src" path="frameworks/opt/net/voip/src/java"/>
+	<classpathentry kind="src" path="frameworks/opt/net/wifi/service/java"/>
 	<classpathentry kind="src" path="frameworks/opt/vcard/java"/>
 	<classpathentry kind="src" path="frameworks/support/renderscript/v8/java/src"/>
 	<classpathentry kind="src" path="frameworks/support/v13/java"/>
