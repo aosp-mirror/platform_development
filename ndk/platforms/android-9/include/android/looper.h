@@ -148,7 +148,8 @@ enum {
 
 /**
  * For callback-based event loops, this is the prototype of the function
- * that is called.  It is given the file descriptor it is associated with,
+ * that is called when a file descriptor event occurs.
+ * It is given the file descriptor it is associated with,
  * a bitmask of the poll events that were triggered (typically ALOOPER_EVENT_INPUT),
  * and the data pointer that was originally supplied.
  *
@@ -252,4 +253,4 @@ int ALooper_removeFd(ALooper* looper, int fd);
 };
 #endif
 
-#endif // ANDROID_NATIVE_WINDOW_H
+#endif // ANDROID_LOOPER_H
