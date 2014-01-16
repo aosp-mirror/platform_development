@@ -29,6 +29,7 @@
 #define _SYS_PRCTL_H
 
 #include <linux/prctl.h>
+#include <sys/cdefs.h>
 
 __BEGIN_DECLS
 
