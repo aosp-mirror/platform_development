@@ -21,6 +21,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.view.Surface;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayDeque;
 import java.util.Queue;
@@ -136,7 +137,7 @@ public class MediaCodecWrapper {
      * @return
      */
     public static MediaCodecWrapper fromVideoFormat(final MediaFormat trackFormat,
-            Surface surface) {
+            Surface surface) throws IOException {
         MediaCodecWrapper result = null;
         MediaCodec videoCodec = null;
 
