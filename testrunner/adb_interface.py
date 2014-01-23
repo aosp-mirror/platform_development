@@ -506,3 +506,34 @@ class AdbInterface:
   def GetSerialNumber(self):
     """Returns the serial number of the targeted device."""
     return self.SendCommand("get-serialno").strip()
+
+  def RuntimeReset(self, disable_keyguard=False, retry_count=3, preview_only=False):
+    """
+    Resets the Android runtime (does *not* reboot the kernel).
+
+    Blocks until the reset is complete and the package manager
+    is available.
+
+    Args:
+      disable_keyguard: if True, presses the MENU key to disable
+        key guard, after reset is finished
+      retry_count: number of times to retry reset before failing
+
+    Raises:
+      WaitForResponseTimedOutError if package manager does not respond
+      AbortError if unrecoverable error occurred
+    """
+
+    logger.Log("adb shell stop")
+    logger.Log("adb shell start")
+
+    if not preview_only:
+      self.SendShellCommand("stop", retry_count=retry_count)
+      self.SendShellCommand("start", retry_count=retry_count)
+
+    self.WaitForDevicePm()
+
+    if disable_keyguard:
+      logger.Log("input keyevent 82 ## disable keyguard")
+      if not preview_only:
+        self.SendShellCommand("input keyevent 82", retry_count=retry_count)
