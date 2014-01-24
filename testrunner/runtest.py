@@ -114,6 +114,9 @@ class TestRunner(object):
     parser.add_option("-n", "--skip_execute", dest="preview", default=False,
                       action="store_true",
                       help="Do not execute, just preview commands")
+    parser.add_option("-i", "--build-install-only", dest="build_install_only", default=False,
+                      action="store_true",
+                      help="Do not execute, build tests and install to device only")
     parser.add_option("-r", "--raw-mode", dest="raw_mode", default=False,
                       action="store_true",
                       help="Raw mode (for output to other tools)")
@@ -500,6 +503,10 @@ class TestRunner(object):
 
       if not self._options.skip_build:
         self._DoBuild()
+
+      if self._options.build_install_only:
+        logger.Log("Skipping test execution (due to --build-install-only flag)")
+        return
 
       for test_suite in self._GetTestsToRun():
         try:
