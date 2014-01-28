@@ -2179,6 +2179,14 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".view.Controls7"
+                  android:label="Views/Controls/7. Default Theme">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
         <activity android:name=".view.Buttons1"
                 android:label="Views/Buttons">
             <intent-filter>
