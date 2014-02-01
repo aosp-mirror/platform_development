@@ -133,7 +133,11 @@ public class DeviceAdminSample extends PreferenceActivity {
 
     @Override
     protected boolean isValidFragment(String fragmentName) {
-        return GeneralFragment.class.getName().equals(fragmentName);
+        return GeneralFragment.class.getName().equals(fragmentName)
+                || QualityFragment.class.getName().equals(fragmentName)
+                || ExpirationFragment.class.getName().equals(fragmentName)
+                || LockWipeFragment.class.getName().equals(fragmentName)
+                || EncryptionFragment.class.getName().equals(fragmentName);
     }
 
     /**
@@ -437,6 +441,7 @@ public class DeviceAdminSample extends PreferenceActivity {
             DevicePolicyManager.PASSWORD_QUALITY_UNSPECIFIED,
             DevicePolicyManager.PASSWORD_QUALITY_SOMETHING,
             DevicePolicyManager.PASSWORD_QUALITY_NUMERIC,
+            DevicePolicyManager.PASSWORD_QUALITY_NUMERIC_COMPLEX,
             DevicePolicyManager.PASSWORD_QUALITY_ALPHABETIC,
             DevicePolicyManager.PASSWORD_QUALITY_ALPHANUMERIC,
             DevicePolicyManager.PASSWORD_QUALITY_COMPLEX
@@ -448,6 +453,7 @@ public class DeviceAdminSample extends PreferenceActivity {
             String.valueOf(DevicePolicyManager.PASSWORD_QUALITY_UNSPECIFIED),
             String.valueOf(DevicePolicyManager.PASSWORD_QUALITY_SOMETHING),
             String.valueOf(DevicePolicyManager.PASSWORD_QUALITY_NUMERIC),
+            String.valueOf(DevicePolicyManager.PASSWORD_QUALITY_NUMERIC_COMPLEX),
             String.valueOf(DevicePolicyManager.PASSWORD_QUALITY_ALPHABETIC),
             String.valueOf(DevicePolicyManager.PASSWORD_QUALITY_ALPHANUMERIC),
             String.valueOf(DevicePolicyManager.PASSWORD_QUALITY_COMPLEX)
