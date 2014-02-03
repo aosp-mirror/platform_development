@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="vertical"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent">
+    <ScrollView android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+        <RadioGroup android:orientation="horizontal"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/path_animation_type"
+                >
+            <RadioButton android:id="@+id/named_components"
+                         android:layout_width="wrap_content"
+                         android:layout_height="wrap_content"
+                         android:text="Named Components"/>
+            <RadioButton android:id="@+id/property_components"
+                         android:layout_width="wrap_content"
+                         android:layout_height="wrap_content"
+                         android:text="Property Components"/>
+            <RadioButton android:id="@+id/multi_int"
+                         android:layout_width="wrap_content"
+                         android:layout_height="wrap_content"
+                         android:text="Multi-int"/>
+            <RadioButton android:id="@+id/multi_float"
+                         android:layout_width="wrap_content"
+                         android:layout_height="wrap_content"
+                         android:text="Multi-float"/>
+            <RadioButton android:id="@+id/named_setter"
+                         android:layout_width="wrap_content"
+                         android:layout_height="wrap_content"
+                         android:text="Named Property"/>
+            <RadioButton android:id="@+id/property_setter"
+                         android:layout_width="wrap_content"
+                         android:layout_height="wrap_content"
+                         android:text="Property"/>
+        </RadioGroup>
+    </ScrollView>
+    <view class="com.example.android.apis.animation.PathAnimations$CanvasView"
+          android:id="@+id/canvas"
+          android:layout_width="match_parent"
+          android:layout_height="0px"
+          android:layout_weight="1">
+        <ImageView android:id="@+id/moved_item"
+                   android:layout_width="wrap_content"
+                   android:layout_height="wrap_content"
+                   android:src="@drawable/frog"/>
+    </view>
+</LinearLayout>
