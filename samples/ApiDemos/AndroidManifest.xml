@@ -1293,15 +1293,6 @@
         <!--     ANDROID.ANIMATION PACKAGE SAMPLES         -->
         <!-- ************************************* -->
 
-        <activity android:name=".animation.PathLengthAnimation"
-                android:label="Animation/Path Length Animation"
-                android:enabled="@bool/atLeastHoneycomb">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.SAMPLE_CODE" />
-            </intent-filter>
-        </activity>
-
         <activity android:name=".animation.AnimationLoading"
                 android:label="Animation/Loading"
                 android:enabled="@bool/atLeastHoneycomb">
