@@ -547,7 +547,11 @@ redirects:
   type: permanent
 
 - src: /resources/samples/.*
-  dst: /tools/samples/index.html
+  dst: /samples/index.html
+  type: permanent
+
+- src: /tools/samples/index.html
+  dst: /samples/index.html
   type: permanent
   comment: Redirect to new location
 
