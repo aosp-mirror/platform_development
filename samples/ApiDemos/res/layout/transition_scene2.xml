@@ -18,36 +18,40 @@
                 android:layout_height="match_parent"
                 android:id="@+id/container">
 
-    <View
-            android:layout_width="100dip"
-            android:layout_height="100dip"
+    <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:layout_alignParentTop="true"
             android:layout_alignParentRight="true"
             android:background="#f00"
+            android:text="Hello"
             android:id="@+id/view1"/>
 
-    <View
-            android:layout_width="100dip"
-            android:layout_height="100dip"
+    <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:layout_alignParentBottom="true"
             android:layout_alignParentLeft="true"
             android:background="#0f0"
+            android:text="World"
             android:id="@+id/view2"/>
 
-    <View
-            android:layout_width="100dip"
-            android:layout_height="100dip"
+    <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:background="#00f"
             android:layout_alignParentBottom="true"
             android:layout_alignParentRight="true"
+            android:text="Foo"
             android:id="@+id/view3"/>
 
-    <View
-            android:layout_width="100dip"
-            android:layout_height="100dip"
+    <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:background="#0ff"
             android:layout_alignParentTop="true"
             android:layout_alignParentLeft="true"
+            android:text="Bar"
             android:id="@+id/view4"/>
 
 </RelativeLayout>
