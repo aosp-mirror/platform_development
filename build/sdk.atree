@@ -169,6 +169,7 @@ docs/features.txt             platforms/${PLATFORM_NAME}/data/features.txt
 
 # fonts for layoutlib.
 frameworks/base/data/fonts    platforms/${PLATFORM_NAME}/data/fonts
+external/noto-fonts           platforms/${PLATFORM_NAME}/data/fonts
 
 # NOTICE files are copied by build/core/Makefile from sdk.git
 sdk/files/sdk_files_NOTICE.txt platforms/${PLATFORM_NAME}/templates/NOTICE.txt
