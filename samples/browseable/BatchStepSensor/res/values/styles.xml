@@ -1,0 +1,92 @@
+<resources>
+
+    <!-- Card Stream -->
+    <style name="CardStream">
+        <item name="android:paddingBottom">@dimen/card_stream_bottom_padding</item>
+        <item name="android:divider">@null</item>
+        <item name="android:orientation">vertical</item>
+    </style>
+
+    <!-- Main card -->
+    <style name="Card">
+        <item name="android:background">@drawable/card_bg</item>
+        <item name="android:layout_margin">@dimen/card_margin</item>
+    </style>
+
+    <style name="CardContentArea">
+        <item name="android:paddingBottom">@dimen/card_padding</item>
+    </style>
+
+    <style name="CardActionArea">
+        <item name="android:background">@color/card_action_bg</item>
+        <item name="android:orientation">vertical</item>
+        <item name="android:paddingBottom">@dimen/card_action_margin</item>
+    </style>
+
+    <style name="CardElement">
+        <item name="android:paddingLeft">@dimen/card_padding</item>
+        <item name="android:paddingRight">@dimen/card_padding</item>
+    </style>
+
+    <!-- Content of main card -->
+    <style name="CardTitleBase" parent="@style/CardElement">
+        <item name="android:paddingTop">@dimen/card_padding</item>
+        <item name="android:textSize">@dimen/card_content_title</item>
+    </style>
+
+    <style name="CardTitle" parent="@style/CardTitleBase">
+    </style>
+
+    <style name="CardContentBase" parent="@style/CardElement">
+        <item name="android:paddingTop">@dimen/card_padding</item>
+        <item name="android:textSize">@dimen/card_content_text</item>
+        <item name="android:textColor">@color/card_content_textcolor</item>
+    </style>
+
+    <style name="CardContent" parent="@style/CardContentBase">
+    </style>
+
+    <!-- Action Area Items -->
+    <style name="CardAction">
+        <item name="android:textSize">17sp</item>
+        <item name="android:layout_marginTop">@dimen/card_action_margin</item>
+        <item name="android:layout_marginLeft">@dimen/card_action_margin</item>
+        <item name="android:layout_marginRight">@dimen/card_action_margin</item>
+        <item name="android:paddingLeft">@dimen/card_action_padding</item>
+        <item name="android:drawablePadding">@dimen/card_action_padding</item>
+    </style>
+
+    <style name="CardActionNeutral" parent="@style/CardAction">
+        <item name="android:background">@drawable/card_action_bg</item>
+        <item name="android:drawableStart">@drawable/card_action_icon_neutral</item>
+        <item name="android:textColor">@drawable/card_action_text</item>
+    </style>
+
+    <style name="CardActionNegative" parent="@style/CardAction">
+        <item name="android:background">@drawable/card_action_bg_negative</item>
+        <item name="android:drawableStart">@drawable/card_action_icon_negative</item>
+        <item name="android:textColor">@drawable/card_action_text_negative</item>
+    </style>
+
+    <style name="CardActionPositive" parent="@style/CardAction">
+        <item name="android:background">@drawable/card_action_bg_positive</item>
+        <item name="android:drawableStart">@drawable/card_action_icon_positive</item>
+        <item name="android:textColor">@drawable/card_action_text_positive</item>
+    </style>
+
+    <!-- Card Action Progress -->
+    <style name="CardProgressLayout" parent="@style/CardAction">
+        <item name="android:layout_marginLeft">@dimen/card_action_margin</item>
+        <item name="android:layout_marginRight">@dimen/card_action_margin</item>
+        <item name="android:paddingLeft">@dimen/card_action_padding</item>
+        <item name="android:paddingRight">@dimen/card_action_padding</item>
+        <item name="android:background">#EEE</item>
+    </style>
+
+    <style name="CardProgressText" parent="@style/CardAction">
+        <item name="android:textColor">#77000000</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:paddingLeft">0dp</item>
+    </style>
+
+</resources>
