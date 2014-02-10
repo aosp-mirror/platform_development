@@ -252,6 +252,15 @@ developers/build/prebuilts/gradle/AdvancedImmersiveMode/                     sam
 developers/build/prebuilts/gradle/ImmersiveMode/                             samples/${PLATFORM_NAME}/ui/ImmersiveMode
 developers/build/prebuilts/gradle/RepeatingAlarm/                            samples/${PLATFORM_NAME}/background/RepeatingAlarm
 developers/build/prebuilts/gradle/TextLinkify/                               samples/${PLATFORM_NAME}/ui/TextLinkify
+developers/build/prebuilts/gradle/BasicRenderScript                          samples/${PLATFORM_NAME}/renderscript/BasicRenderScript
+developers/build/prebuilts/gradle/RenderScriptIntrinsic                      samples/${PLATFORM_NAME}/renderscript/RenderScriptIntrinsic
+developers/build/prebuilts/gradle/SlidingTabsBasic                           samples/${PLATFORM_NAME}/ui/SlidingTabsBasic
+developers/build/prebuilts/gradle/SlidingTabsColors                          samples/${PLATFORM_NAME}/ui/SlidingTabsColors
+developers/build/prebuilts/gradle/CardEmulation                              samples/${PLATFORM_NAME}/connectivity/CardEmulation
+developers/build/prebuilts/gradle/CardReader                                 samples/${PLATFORM_NAME}/connectivity/CardReader
+developers/build/prebuilts/gradle/BatchStepSensor                            samples/${PLATFORM_NAME}/sensors/BatchStepSensor
+
+
 
 # Old sample tree
 development/samples/AccelerometerPlay          samples/${PLATFORM_NAME}/legacy/AccelerometerPlay
