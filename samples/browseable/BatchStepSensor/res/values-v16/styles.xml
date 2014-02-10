@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="CardTitle" parent="@style/CardTitleBase">
+        <item name="android:fontFamily">sans-serif-condensed</item>
+    </style>
+
+    <style name="CardContent" parent="@style/CardContentBase">
+        <item name="android:fontFamily">sans-serif-light</item>
+    </style>
+</resources>

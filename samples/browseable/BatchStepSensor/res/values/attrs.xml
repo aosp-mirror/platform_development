@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <declare-styleable name="CardStream">
+        <attr name="animationDuration" format="enum">
+            <enum name="slow" value="1001"/>
+            <enum name="normal" value="1002"/>
+            <enum name="fast" value="1003"/>
+        </attr>
+        <attr name="animators" format="string"/>
+    </declare-styleable>
+
+
+</resources>
