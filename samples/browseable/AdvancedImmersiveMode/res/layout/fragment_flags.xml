@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <CheckBox
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/flag_enable_lowprof"
+        android:text="Enable Low Profile Mode" />
+
+    <CheckBox
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/flag_hide_navbar"
+        android:text="Hide Navigation bar" />
+
+    <CheckBox
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/flag_hide_statbar"
+        android:text="Hide Status Bar" />
+
+    <CheckBox
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/flag_enable_immersive"
+        android:text="Enable Immersive Mode" />
+
+    <CheckBox
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/flag_enable_immersive_sticky"
+        android:text="Enable Immersive Mode (Sticky)" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Do things!"
+        android:id="@+id/btn_changeFlags" />
+
+
+    <TextView
+        android:layout_marginTop="@dimen/margin_large"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Common flag presets"/>
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:orientation="horizontal" android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Immersive Mode"
+            android:id="@+id/btn_immersive" />
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Leanback Mode"
+            android:id="@+id/btn_leanback" />
+
+    </LinearLayout>
+
+
+
+</LinearLayout>
