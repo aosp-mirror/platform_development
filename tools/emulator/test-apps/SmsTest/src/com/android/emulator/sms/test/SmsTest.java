@@ -45,9 +45,10 @@ public class SmsTest {
     public Context mContext;
 
     /**
-     * Verify that an SMS has been recieved with the correct number and body
+     * Verify that an SMS has been received with the correct number and body
      */
-    public void testRecievedSms(){
+    @Test
+    public void testReceivedSms(){
         ContentResolver r = mContext.getContentResolver();
         Uri message = Uri.parse("content://sms/");
         Cursor c = r.query(message,null,null,null,null);
