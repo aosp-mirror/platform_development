@@ -129,14 +129,4 @@
 
         This is the group uri:</string>
 
-    <!-- The description for the view stream item -->
-    <string name="view_stream_item_description">This would now show the details of the stream item.
-
-        This is the uri of the stream item:</string>
-
-    <!-- The description for the view stream item photo -->
-    <string name="view_stream_item_photo_description">This would now show the details of the stream item photo.
-
-        This is the uri of the photo:</string>
-
 </resources>
