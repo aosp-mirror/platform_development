@@ -29,6 +29,7 @@
  *
  */
 
+#include <asm-generic/portability.h>
 #include <machine/asm.h>
 #include <machine/regnum.h>
 
