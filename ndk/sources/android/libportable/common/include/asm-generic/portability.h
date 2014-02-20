@@ -28,4 +28,8 @@
 #define REAL(f)     __real_ ## f
 #endif
 
+#if defined(__mips__) && !defined(END)
+#define END(f) .cfi_endproc; .end f
+#endif
+
 #endif /* _ASM_PORTABILITY_H_ */
