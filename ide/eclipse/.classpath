@@ -66,6 +66,7 @@
 	<classpathentry kind="src" path="frameworks/base/packages/SettingsProvider/src"/>
 	<classpathentry kind="src" path="frameworks/base/packages/SystemUI/src"/>
 	<classpathentry kind="src" path="frameworks/base/policy/src"/>
+	<classpathentry kind="src" path="frameworks/base/rs/java"/>
 	<classpathentry kind="src" path="frameworks/base/sax/java"/>
 	<classpathentry kind="src" path="frameworks/base/services/core/java"/>
 	<classpathentry kind="src" path="frameworks/base/services/accessibility/java"/>
