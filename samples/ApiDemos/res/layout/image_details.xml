@@ -4,15 +4,22 @@
              android:layout_width="match_parent"
              android:layout_height="match_parent"
              android:orientation="vertical"
+             android:clipChildren="false"
         >
-    <ImageView android:id="@+id/titleImage"
-               android:layout_height="0px"
-               android:layout_weight="1"
-               android:layout_width="match_parent"
-               android:scaleType="centerCrop"
-               android:onClick="clicked"
-               android:sharedElementName="hero"
-            />
+    <FrameLayout android:id="@+id/shared_element"
+                   android:layout_height="0px"
+                   android:layout_weight="1"
+                   android:layout_width="match_parent"
+                   android:sharedElementName="hero"
+                   android:onClick="clicked"
+                   android:clipChildren="false">
+        <ImageView android:id="@+id/titleImage"
+                   android:layout_height="wrap_content"
+                   android:layout_width="wrap_content"
+                   android:scaleType="center"
+                   android:layout_gravity="left|bottom"
+                />
+    </FrameLayout>
     <LinearLayout android:layout_height="0px"
                   android:layout_width="match_parent"
                   android:layout_weight="2"
