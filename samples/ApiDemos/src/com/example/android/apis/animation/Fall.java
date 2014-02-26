@@ -20,9 +20,11 @@ import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.animation.TimeInterpolator;
+import android.animation.ValueAnimator;
 import android.transition.Transition;
 import android.transition.TransitionValues;
 import android.transition.Visibility;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.AccelerateInterpolator;
@@ -37,7 +39,11 @@ public class Fall extends Visibility {
     private static final String TAG = "Fall";
     private static final String PROPNAME_SCREEN_LOCATION = "android:fade:screen_location";
 
-    private View mFocusElement;
+    private View mHero;
+
+    public void setHero(View hero) {
+        mHero = hero;
+    }
 
     private Animator createAnimation(final View view, long startDelay, final float startY,
             float endY, AnimatorListenerAdapter listener, TimeInterpolator interpolator) {
@@ -93,6 +99,7 @@ public class Fall extends Visibility {
             return null;
         }
         final View endView = endValues.view;
+        Log.v(TAG, "onAppear: " + endView.getId());
         final float endY = endView.getTranslationY();
         final float startY = endY + sceneRoot.getHeight();
 
@@ -129,9 +136,8 @@ public class Fall extends Visibility {
             }
         };
         addListener(transitionListener);
-        View sharedElement = getFocusElement(sceneRoot);
         int[] loc = (int[]) endValues.values.get(PROPNAME_SCREEN_LOCATION);
-        long startDelay = calculateRiseStartDelay(sceneRoot, sharedElement, endView, loc);
+        long startDelay = calculateRiseStartDelay(sceneRoot, endView, loc);
         return createAnimation(endView, startDelay, startY, endY, null, sDecelerate);
     }
 
@@ -184,13 +190,12 @@ public class Fall extends Visibility {
             }
         }
         final int finalVisibility = endVisibility;
-        View sharedElement = getFocusElement(sceneRoot);
 
         int[] loc = (int[]) startValues.values.get(PROPNAME_SCREEN_LOCATION);
         // TODO: add automatic facility to Visibility superclass for keeping views around
         if (overlayView != null) {
             // TODO: Need to do this for general case of adding to overlay
-            long startDelay = calculateFallStartDelay(sceneRoot, sharedElement, overlayView, loc);
+            long startDelay = calculateFallStartDelay(sceneRoot, overlayView, loc);
             int screenX = loc[0];
             int screenY = loc[1];
             loc = new int[2];
@@ -235,7 +240,7 @@ public class Fall extends Visibility {
             return createAnimation(view, startDelay, startY, endY, endListener, sAccelerate);
         }
         if (viewToKeep != null) {
-            long startDelay = calculateFallStartDelay(sceneRoot, sharedElement, viewToKeep, loc);
+            long startDelay = calculateFallStartDelay(sceneRoot, viewToKeep, loc);
             // TODO: find a different way to do this, like just changing the view to be
             // VISIBLE for the duration of the transition
             viewToKeep.setVisibility((View.VISIBLE));
@@ -294,73 +299,37 @@ public class Fall extends Visibility {
         return null;
     }
 
-    private View getFocusElement(ViewGroup sceneRoot) {
-        if (mFocusElement == null) {
-            mFocusElement = findFocusElement(sceneRoot);
-            if (mFocusElement == null) {
-                mFocusElement = sceneRoot;
-            }
-        }
-        return (mFocusElement == sceneRoot) ? null : mFocusElement;
-    }
-
-    private static View findFocusElement(ViewGroup viewGroup) {
-        int numChildren = viewGroup.getChildCount();
-        for (int i = 0; i < numChildren; i++) {
-            View child = viewGroup.getChildAt(i);
-            String sharedElementName = child.getSharedElementName();
-            if (sharedElementName != null && !sharedElementName.startsWith("android:")) {
-                return child;
-            }
-            if (child instanceof ViewGroup) {
-                View sharedElement = findFocusElement((ViewGroup) child);
-                if (sharedElement != null) {
-                    return sharedElement;
-                }
-            }
-        }
-        return null;
-    }
-
-    private long calculateFallStartDelay(ViewGroup sceneRoot, View shared, View view,
-            int[] viewLoc) {
+    private long calculateFallStartDelay(View sceneRoot, View view, int[] viewLoc) {
         int[] loc = new int[2];
         sceneRoot.getLocationOnScreen(loc);
         int bottom = loc[1] + sceneRoot.getHeight();
         float distance = bottom - viewLoc[1] + view.getTranslationY();
-        if (shared != null) {
-            shared.getLocationOnScreen(loc);
-            float heroX = loc[0] + shared.getTranslationX() + (shared.getWidth() / 2.0f);
+        if (mHero != null) {
+            mHero.getLocationOnScreen(loc);
+            float heroX = loc[0] + mHero.getTranslationX() + (mHero.getWidth() / 2.0f);
             float viewX = viewLoc[0] + view.getTranslationX() + (view.getWidth() / 2.0f);
             float distanceX = Math.abs(heroX - viewX);
             float distanceXRatio = distanceX / sceneRoot.getWidth();
-            distance += (1 - distanceXRatio) * shared.getHeight();
+            distance += (1 - distanceXRatio) * mHero.getHeight();
         }
         float distanceRatio = distance/sceneRoot.getHeight() / 3;
         return Math.max(0, Math.round(distanceRatio * getDuration()));
     }
 
-    private long calculateRiseStartDelay(View sceneRoot, View shared, View view, int[] viewLoc) {
+    private long calculateRiseStartDelay(View sceneRoot, View view, int[] viewLoc) {
         int[] loc = new int[2];
         sceneRoot.getLocationOnScreen(loc);
         int top = loc[1];
         float distance = viewLoc[1] + view.getTranslationY() - top;
-        if (shared != null) {
-            shared.getLocationOnScreen(loc);
-            float heroX = loc[0] + shared.getTranslationX() + (shared.getWidth() / 2.0f);
+        if (mHero != null) {
+            mHero.getLocationOnScreen(loc);
+            float heroX = loc[0] + mHero.getTranslationX() + (mHero.getWidth() / 2.0f);
             float viewX = viewLoc[0] + view.getTranslationX() + (view.getWidth() / 2.0f);
             float distanceX = Math.abs(heroX - viewX);
             float distanceXRatio = distanceX / sceneRoot.getWidth();
-            distance += distanceXRatio * shared.getHeight();
+            distance += distanceXRatio * mHero.getHeight();
         }
         float distanceRatio = distance/sceneRoot.getHeight() / 3;
         return Math.max(0, Math.round(distanceRatio * getDuration()));
-    }
-
-    @Override
-    public Transition clone() {
-        Fall transition = (Fall) super.clone();
-        transition.mFocusElement = null;
-        return transition;
     }
 }
