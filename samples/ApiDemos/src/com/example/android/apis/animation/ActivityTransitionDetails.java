@@ -26,13 +26,10 @@ import android.transition.ChangeBounds;
 import android.transition.Transition;
 import android.transition.TransitionManager;
 import android.transition.TransitionSet;
-import android.util.ArrayMap;
 import android.util.Pair;
 import android.view.View;
-import android.view.ViewTreeObserver;
 import android.view.Window;
 import android.widget.ImageView;
-import android.widget.SharedElementTarget;
 
 import java.util.Random;
 
