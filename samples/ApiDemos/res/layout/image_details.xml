@@ -4,22 +4,15 @@
              android:layout_width="match_parent"
              android:layout_height="match_parent"
              android:orientation="vertical"
-             android:clipChildren="false"
         >
-    <FrameLayout android:id="@+id/shared_element"
-                   android:layout_height="0px"
-                   android:layout_weight="1"
-                   android:layout_width="match_parent"
-                   android:sharedElementName="hero"
-                   android:onClick="clicked"
-                   android:clipChildren="false">
-        <ImageView android:id="@+id/titleImage"
-                   android:layout_height="wrap_content"
-                   android:layout_width="wrap_content"
-                   android:scaleType="center"
-                   android:layout_gravity="left|bottom"
-                />
-    </FrameLayout>
+    <ImageView android:id="@+id/titleImage"
+               android:layout_height="0px"
+               android:layout_weight="1"
+               android:layout_width="match_parent"
+               android:scaleType="centerCrop"
+               android:sharedElementName="hero"
+               android:onClick="clicked"
+            />
     <LinearLayout android:layout_height="0px"
                   android:layout_width="match_parent"
                   android:layout_weight="2"
@@ -32,6 +25,7 @@
                   android:layout_width="match_parent"
                   android:text="Ducky"
                   android:textSize="30sp"
+                  android:textColor="#FFF"
                 />
         <View android:layout_width="match_parent"
               android:layout_height="2dp"
@@ -40,6 +34,7 @@
                   android:layout_width="match_parent"
                   android:text="Woot!"
                   android:textSize="30sp"
+                  android:textColor="#FFF"
                 />
         <View android:layout_width="match_parent"
               android:layout_height="2dp"
@@ -48,6 +43,7 @@
                   android:layout_width="match_parent"
                   android:text="Ball"
                   android:textSize="30sp"
+                  android:textColor="#FFF"
                 />
         <View android:layout_width="match_parent"
               android:layout_height="2dp"
@@ -56,6 +52,7 @@
                   android:layout_width="match_parent"
                   android:text="Block"
                   android:textSize="30sp"
+                  android:textColor="#FFF"
                 />
         <View android:layout_width="match_parent"
               android:layout_height="2dp"
@@ -64,6 +61,7 @@
                   android:layout_width="match_parent"
                   android:text="Jelly Bean"
                   android:textSize="30sp"
+                  android:textColor="#FFF"
                 />
         <View android:layout_width="match_parent"
               android:layout_height="2dp"
@@ -72,6 +70,7 @@
                   android:layout_width="match_parent"
                   android:text="Mug"
                   android:textSize="30sp"
+                  android:textColor="#FFF"
                 />
         <View android:layout_width="match_parent"
               android:layout_height="2dp"
@@ -80,6 +79,7 @@
                   android:layout_width="match_parent"
                   android:text="Pencil"
                   android:textSize="30sp"
+                  android:textColor="#FFF"
                 />
         <View android:layout_width="match_parent"
               android:layout_height="2dp"
@@ -88,6 +88,7 @@
                   android:layout_width="match_parent"
                   android:text="Scissors"
                   android:textSize="30sp"
+                  android:textColor="#FFF"
                 />
 
     </LinearLayout>
