@@ -120,10 +120,14 @@
         <item name="android:layout_height">wrap_content</item>
     </style>
 
-    <style name="ActivityTransitionTheme" parent="android:style/Theme.Holo">
-        <item name="android:windowIsTranslucent">true</item>
-	      <item name="android:windowBackground">@android:color/transparent</item>
-        <item name="android:windowContentTransitionManager">@transition/activity_transition_mgr</item>
+    <style name="ActivityTransitionTheme" parent="android:Theme.Quantum">
+	<item name="android:windowEnterTransition">@transition/explode</item>
+	<item name="android:windowExitTransition">@transition/explode</item>
+	<item name="android:windowSharedElementEnterTransition">@transition/move_image</item>
+	<item name="android:windowSharedElementExitTransition">@transition/move_image</item>
+	<item name="android:windowAllowExitTransitionOverlap">true</item>
+	<item name="android:windowAllowEnterTransitionOverlap">false</item>
+        <item name="android:windowContentTransitions">true</item>
     </style>
 
 </resources>

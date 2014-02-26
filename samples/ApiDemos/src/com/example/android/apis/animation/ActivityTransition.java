@@ -22,16 +22,9 @@ import android.app.ActivityOptions;
 import android.content.Intent;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
-import android.transition.MoveImage;
-import android.transition.Slide;
-import android.transition.TransitionManager;
-import android.transition.TransitionSet;
-import android.util.ArrayMap;
+import android.util.Pair;
 import android.view.View;
-import android.view.Window;
 import android.widget.ImageView;
-
-import java.util.Random;
 
 /**
  *
@@ -41,8 +34,6 @@ public class ActivityTransition extends Activity {
     private static final String TAG = "ActivityTransition";
 
     private static final String KEY_ID = "ViewTransitionValues:id";
-
-    private Random mRandom = new Random();
 
     private ImageView mHero;
 
@@ -100,20 +91,9 @@ public class ActivityTransition extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        requestWindowFeature(Window.FEATURE_CONTENT_TRANSITIONS);
-        getWindow().setAllowOverlappingEnterTransition(true);
-        getWindow().setAllowOverlappingExitTransition(true);
         getWindow().setBackgroundDrawable(new ColorDrawable(randomColor()));
         setContentView(R.layout.image_block);
         setupHero();
-        TransitionManager transitionManager = getContentTransitionManager();
-        TransitionSet transitions = new TransitionSet();
-        Slide slide = new Slide();
-        slide.setDuration(600);
-        transitions.addTransition(slide);
-        transitions.addTransition(new MoveImage());
-        transitionManager.setTransition(getContentScene(), transitions);
-        transitionManager.setExitTransition(getContentScene(), transitions);
     }
 
     private void setupHero() {
@@ -121,9 +101,12 @@ public class ActivityTransition extends Activity {
         mHero = null;
         if (name != null) {
             mHero = (ImageView) findViewById(getIdForKey(name));
-            ArrayMap<String, String> sharedElementsMap = new ArrayMap<String, String>();
-            sharedElementsMap.put("hero", mHero.getSharedElementName());
-            getWindow().mapTransitionTargets(sharedElementsMap);
+            setActivityTransitionListener(new ActivityOptions.ActivityTransitionListener() {
+                @Override
+                public Pair<View, String>[] getSharedElementsMapping() {
+                    return new Pair[] { Pair.create((View)mHero, "hero") };
+                }
+            });
         }
     }
 
@@ -132,14 +115,14 @@ public class ActivityTransition extends Activity {
         Intent intent = new Intent(this, ActivityTransitionDetails.class);
         intent.putExtra(KEY_ID, v.getSharedElementName());
         ActivityOptions activityOptions
-                = ActivityOptions.makeSceneTransitionAnimation(mHero, "hero");
+                = ActivityOptions.makeSceneTransitionAnimation(getWindow(), mHero, "hero");
         startActivity(intent, activityOptions.toBundle());
     }
 
-    private int randomColor() {
-        int red = mRandom.nextInt(128);
-        int green = mRandom.nextInt(128);
-        int blue = mRandom.nextInt(128);
+    private static int randomColor() {
+        int red = (int)(Math.random() * 128);
+        int green = (int)(Math.random() * 128);
+        int blue = (int)(Math.random() * 128);
         return 0xFF000000 | (red << 16) | (green << 8) | blue;
     }
 }
