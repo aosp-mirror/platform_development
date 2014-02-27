@@ -149,6 +149,25 @@ def GetProductOut():
   return path
 
 
+def GetTargetNativeTestPath():
+  """Returns the full pathname to target/product data/nativetest/ directory.
+
+  Assumes build environment has been properly configured by envsetup &
+  lunch/choosecombo.
+
+  Returns:
+    The absolute file path of the Android target native test directory.
+
+  Raises:
+    AbortError: if Android target native test directory could not be found.
+  """
+  path = os.path.join(GetProductOut(), "data", "nativetest")
+  if not os.path.exists(path):
+    logger.Log("Error: Target native test path could not be found")
+    raise errors.AbortError
+  return path
+
+
 def GetTargetSystemBin():
   """Returns the full pathname to the target/product system/bin directory.
 
