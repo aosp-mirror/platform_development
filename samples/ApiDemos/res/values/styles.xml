@@ -26,23 +26,31 @@
     <!-- This is a theme that will adjust itself depending on the API version.
          The default definition is the safe one, using a theme that has always
          been defined.  Look at values-11/styles.xml for a variation that is
-         selected when the holographic theme is available. -->
-    <style name="ThemeHolo" parent="android:Theme">
+         selected when the holographic theme is available, or look at
+         values-XX/styles.xml for a variation that is selected when the quantum
+         theme is available. -->
+    <style name="ThemeCurrent" parent="android:Theme">
     </style>
 
     <!-- This is a theme that will adjust itself depending on the API version.
          The default definition is the safe one, using a theme that has always
          been defined.  Look at values-11/styles.xml for a variation that is
-         selected when the holographic theme is available. -->
-    <style name="ThemeHoloDialog" parent="android:Theme.Dialog">
+         selected when the holographic theme is available, or look at
+         values-XX/styles.xml for a variation that is selected when the quantum
+         theme is available. -->
+    <style name="ThemeCurrentDialog" parent="android:Theme.Dialog">
+    </style>
+
+    <!-- Older platforms don't have Theme.Holo.DialogWhenLarge; we will define
+         our own wrapper theme that uses it only when running on the appropriate
+         platform version.  On older platforms, we always use the generic
+         fullscreen theme, because they don't support some feature that help
+         in correctly laying out an activity as a dialog. -->
+    <style name="ThemeCurrentDialogWhenLarge" parent="android:style/Theme">
     </style>
 
     <!-- Base application theme is the default theme. -->
     <style name="Theme" parent="android:Theme">
-    </style>
-
-    <!-- Base application theme is the default theme. -->
-    <style name="BadTheme" parent="@android:style/Theme.Holo.Light.NoActionBar">
     </style>
 
     <!-- Variation on our application theme that forces a plain
@@ -91,14 +99,6 @@
         <item name="android:windowNoTitle">true</item>
         <item name="android:colorForeground">#fff</item>
     </style>
-    
-    <!-- Older platforms don't have Theme.Holo.DialogWhenLarge; we will define
-         our own wrapper theme that uses it only when running on the appropriate
-         platform version.  On older platforms, we always use the generic
-         fullscreen theme, because they don't support some feature that help
-         in correctly laying out an activity as a dialog. -->
-    <style name="ThemeDialogWhenLarge" parent="android:style/Theme">
-    </style>
 
     <style name="TextAppearance.Theme.PlainText" parent="android:TextAppearance.Theme">
         <item name="android:textStyle">normal</item>
@@ -124,9 +124,7 @@
 
     <style name="ActivityTransitionTheme" parent="android:style/Theme.Holo">
         <item name="android:windowIsTranslucent">true</item>
-	<item name="android:windowBackground">@android:color/transparent</item>
-	<!--
-	     -->
+	      <item name="android:windowBackground">@android:color/transparent</item>
         <item name="android:windowContentTransitionManager">@transition/activity_transition_mgr</item>
     </style>
 

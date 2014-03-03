@@ -37,7 +37,7 @@
     <!-- For android.media.audiofx.Visualizer -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
-    <uses-sdk android:minSdkVersion="4" android:targetSdkVersion="17" />
+    <uses-sdk android:minSdkVersion="4" android:targetSdkVersion="19" />
 
     <!-- We will request access to the camera, saying we require a camera
          of some sort but not one with autofocus capability. -->
@@ -48,6 +48,7 @@
     <application android:name="ApiDemosApplication"
             android:label="@string/activity_sample_code"
             android:icon="@drawable/app_sample_code"
+            android:theme="@style/ThemeCurrent"
             android:hardwareAccelerated="true"
             android:supportsRtl="true">
 
@@ -78,7 +79,7 @@
 
         <activity android:name=".app.DialogActivity"
                 android:label="@string/activity_dialog"
-                android:theme="@android:style/Theme.Holo.Dialog">
+                android:theme="@style/ThemeCurrentDialog">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -740,7 +741,7 @@
 <!-- BEGIN_INCLUDE(interstitial_affinity) -->
         <activity android:name=".app.IncomingMessageInterstitial"
                 android:label="You have messages"
-                android:theme="@style/ThemeHoloDialog"
+                android:theme="@style/ThemeCurrentDialog"
                 android:launchMode="singleTask"
                 android:taskAffinity=""
                 android:excludeFromRecents="true">
@@ -2181,8 +2182,9 @@
         </activity>
 
         <activity android:name=".view.Controls5"
-                  android:label="Views/Controls/5. Custom Theme"
-                  android:theme="@style/CustomTheme">
+                  android:label="Views/Controls/5. Quantum Light Theme"
+                  android:theme="@android:style/Theme.Quantum.Light"
+                  android:enabled="@bool/atLeastLRelease">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -2190,8 +2192,9 @@
         </activity>
 
         <activity android:name=".view.Controls6"
-                  android:label="Views/Controls/6. Holo or Old Theme"
-                  android:theme="@style/ThemeHolo">
+                  android:label="Views/Controls/6. Quantum Dark Theme"
+                  android:theme="@android:style/Theme.Quantum"
+                  android:enabled="@bool/atLeastLRelease">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -2199,7 +2202,25 @@
         </activity>
 
         <activity android:name=".view.Controls7"
-                  android:label="Views/Controls/7. Default Theme">
+                  android:label="Views/Controls/7. Custom Theme"
+                  android:theme="@style/CustomTheme">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".view.Controls8"
+                  android:label="Views/Controls/7. Current or Old Theme"
+                  android:theme="@style/ThemeCurrent">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".view.Controls9"
+                  android:label="Views/Controls/9. Default Theme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -2613,7 +2634,7 @@
 
         <activity android:name=".graphics.TriangleActivity"
                 android:label="Graphics/OpenGL ES/Textured Triangle"
-                android:theme="@android:style/Theme.Holo.Dialog"
+                android:theme="@style/ThemeCurrentDialog"
                 android:configChanges="keyboardHidden|orientation|screenLayout|screenSize|smallestScreenSize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

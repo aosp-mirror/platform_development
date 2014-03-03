@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Copyright (C) 2014 The Android Open Source Project
+<!-- Copyright (C) 2013 The Android Open Source Project
 
      Licensed under the Apache License, Version 2.0 (the "License");
      you may not use this file except in compliance with the License.
@@ -15,8 +15,8 @@
 -->
 
 <resources>
-    <!-- This resource is true if running under at least L-Release
+    <!-- This resource is true if running under at least KitKat
          API level.  The default value is false; an alternative value
-         for L-Release is true. -->
-    <bool name="atLeastLRelease">true</bool>
+         for KitKat is true. -->
+    <bool name="atLeastKitKat">true</bool>
 </resources>
