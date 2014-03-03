@@ -49,4 +49,9 @@
          for KitKat is true. -->
     <bool name="atLeastKitKat">false</bool>
 
+    <!-- This resource is true if running under at least L-Release
+         API level.  The default value is false; an alternative value
+         for L-Release is true. -->
+    <bool name="atLeastLRelease">false</bool>
+
 </resources>
