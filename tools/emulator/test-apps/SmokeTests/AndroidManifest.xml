@@ -14,11 +14,14 @@
      limitations under the License.
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-      package="com.android.emulator.sms.test">
+      package="com.android.emulator.smoketests">
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.READ_SMS" />
     <uses-sdk android:minSdkVersion="4" />
-    <instrumentation android:targetPackage="com.android.emulator.sms.test"
+    <instrumentation android:targetPackage="com.android.emulator.smoketests"
                      android:name="android.support.test.runner.AndroidJUnitRunner" />
-    <application  android:label="Sms Test">
+    <application  android:label="Emulator Smoke Tests">
     </application>
 </manifest>
