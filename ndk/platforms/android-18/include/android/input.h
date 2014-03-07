@@ -583,7 +583,7 @@ int64_t AMotionEvent_getEventTime(const AInputEvent* motion_event);
  * and views. */
 float AMotionEvent_getXOffset(const AInputEvent* motion_event);
 
-/* Get the precision of the Y coordinates being reported.
+/* Get the Y coordinate offset.
  * For touch events on the screen, this is the delta that was added to the raw
  * screen coordinates to adjust for the absolute position of the containing windows
  * and views. */
