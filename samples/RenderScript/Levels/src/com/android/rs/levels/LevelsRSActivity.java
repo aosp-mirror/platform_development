@@ -196,7 +196,7 @@ public class LevelsRSActivity extends Activity
 
     private void filter() {
         mScript.forEach_root(mInPixelsAllocation, mOutPixelsAllocation);
-        mOutPixelsAllocation.ioSendOutput();
+        mOutPixelsAllocation.ioSend();
         mRS.finish();
     }
 
