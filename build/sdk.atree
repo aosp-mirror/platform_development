@@ -256,6 +256,10 @@ developers/build/prebuilts/gradle/SlidingTabsColors                          sam
 developers/build/prebuilts/gradle/CardEmulation                              samples/${PLATFORM_NAME}/connectivity/CardEmulation
 developers/build/prebuilts/gradle/CardReader                                 samples/${PLATFORM_NAME}/connectivity/CardReader
 developers/build/prebuilts/gradle/BatchStepSensor                            samples/${PLATFORM_NAME}/sensors/BatchStepSensor
+developers/build/prebuilts/gradle/DisplayingBitmaps                          samples/${PLATFORM_NAME}/ui/DisplayingBitmaps
+developers/build/prebuilts/gradle/BasicTransition                            samples/${PLATFORM_NAME}/ui/BasicTransition
+developers/build/prebuilts/gradle/AdapterTransition                          samples/${PLATFORM_NAME}/ui/AdapterTransition
+developers/build/prebuilts/gradle/MediaRouter                                samples/${PLATFORM_NAME}/media/MediaRouter
 
 
 
