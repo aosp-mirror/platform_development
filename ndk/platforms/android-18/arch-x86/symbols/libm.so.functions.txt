@@ -171,6 +171,9 @@ roundf
 roundl
 scalb
 scalbf
+scalbln
+scalblnf
+scalblnl
 scalbn
 scalbnf
 scalbnl
