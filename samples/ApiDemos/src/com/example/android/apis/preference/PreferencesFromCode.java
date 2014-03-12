@@ -32,17 +32,18 @@ import android.preference.SwitchPreference;
 
 public class PreferencesFromCode extends PreferenceActivity {
 
+    private static final String PARENT_CHECKBOX_PREFERENCE = "parent_checkbox_preference";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        setPreferenceScreen(createPreferenceHierarchy());
+        PreferenceScreen root = getPreferenceManager().createPreferenceScreen(this);
+        setPreferenceScreen(root);
+        populatePreferenceHierarchy(root);
     }
 
-    private PreferenceScreen createPreferenceHierarchy() {
-        // Root
-        PreferenceScreen root = getPreferenceManager().createPreferenceScreen(this);
-
+    private void populatePreferenceHierarchy(PreferenceScreen root) {
         // Inline preferences
         PreferenceCategory inlinePrefCat = new PreferenceCategory(this);
         inlinePrefCat.setTitle(R.string.inline_preferences);
@@ -132,6 +133,7 @@ public class PreferencesFromCode extends PreferenceActivity {
         parentCheckBoxPref.setTitle(R.string.title_parent_preference);
         parentCheckBoxPref.setSummary(R.string.summary_parent_preference);
         prefAttrsCat.addPreference(parentCheckBoxPref);
+        parentCheckBoxPref.setKey(PARENT_CHECKBOX_PREFERENCE);
 
         // Visual child toggle preference
         // See res/values/attrs.xml for the <declare-styleable> that defines
@@ -144,8 +146,7 @@ public class PreferencesFromCode extends PreferenceActivity {
                 a.getResourceId(R.styleable.TogglePrefAttrs_android_preferenceLayoutChild,
                         0));
         prefAttrsCat.addPreference(childCheckBoxPref);
+        childCheckBoxPref.setDependency(PARENT_CHECKBOX_PREFERENCE);
         a.recycle();
-
-        return root;
     }
 }
