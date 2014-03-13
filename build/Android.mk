@@ -123,7 +123,9 @@ ANDROID_SUPPORT_LIBRARIES := \
     android-support-v7-gridlayout \
     android-support-v7-appcompat \
     android-support-v7-mediarouter \
+    android-support-v7-recyclerview \
     android-support-v13 \
+    android-support-v17-leanback \
     android-support-multidex \
     android-support-multidex-instrumentation
 
