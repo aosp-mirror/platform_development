@@ -60,8 +60,8 @@ class NativeTestSuite(test_suite.AbstractTestSuite):
     host_list = self._FilterOutMissing(android_build.GetHostBin(), source_list)
     logger.SilentLog("Host tests %s" % host_list)
 
-    # Target tests are under $ANDROID_PRODUCT_OUT/system/bin.
-    target_list = self._FilterOutMissing(android_build.GetTargetSystemBin(),
+    # Target tests are under $ANDROID_PRODUCT_OUT/data/nativetest.
+    target_list = self._FilterOutMissing(android_build.GetTargetNativeTestPath(),
                                          source_list)
     logger.SilentLog("Target tests %s" % target_list)
 
@@ -82,7 +82,7 @@ class NativeTestSuite(test_suite.AbstractTestSuite):
     # Run on the device
     logger.Log("\nRunning on target")
     for f in target_list:
-      full_path = os.path.join(os.sep, "system", "bin", f)
+      full_path = os.path.join(os.sep, "data", "nativetest", f)
 
       # Single quotes are needed to prevent the shell splitting it.
       output = adb.SendShellCommand("'%s 2>&1;echo -n exit code:$?'" %
@@ -132,16 +132,37 @@ class NativeTestSuite(test_suite.AbstractTestSuite):
       path: Where the binaries should be.
       sources: List of tests source path.
     Returns:
-      A list of test binaries built from the sources.
+      A list of relative paths to the test binaries built from the sources.
     """
     binaries = []
     for f in sources:
       binary = os.path.basename(f)
       binary = os.path.splitext(binary)[0]
-      full_path = os.path.join(path, binary)
-      if os.path.exists(full_path):
+      found = self._FindFileRecursively(path, binary)
+      if found:
+        binary = os.path.relpath(os.path.abspath(found),
+                                 os.path.abspath(path))
         binaries.append(binary)
     return binaries
+
+  def _FindFileRecursively(self, path, match):
+    """Finds the first executable binary in a given path that matches the name.
+
+    Args:
+      path: Where to search for binaries. Can be nested directories.
+      binary: Which binary to search for.
+    Returns:
+      first matched file in the path or None if none is found.
+    """
+    for root, dirs, files in os.walk(path):
+      for f in files:
+        if f == match:
+          return os.path.join(root, f)
+      for d in dirs:
+        found = self._FindFileRecursively(os.path.join(root, d), match)
+        if found:
+          return found
+    return None
 
   def _RunHostCommand(self, binary, valgrind=False):
     """Run a command on the host (opt using valgrind).
