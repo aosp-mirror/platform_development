@@ -6,5 +6,5 @@ sample.group=Media
 @jd:body
 
 <p>
-            Demonstrates how to create a custom media route provider.
+This sample demonstrates how to create a custom media route provider.
 </p>
