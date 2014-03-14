@@ -1,0 +1,16 @@
+application: androiddevdocs
+version: 1
+runtime: python
+api_version: 1
+
+handlers:
+- url: /gae_shell/static
+  static_dir: gae_shell/static
+  expiration: 1d
+
+- url: /gae_shell/.*
+  script: /gae_shell/shell.py
+  login: admin
+
+- url: .*
+  script: main.py
