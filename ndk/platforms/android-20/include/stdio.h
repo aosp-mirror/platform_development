@@ -253,10 +253,10 @@ int	 vprintf(const char * __restrict, __va_list)
 #ifndef __AUDIT__
 char* gets(char*) __warnattr("gets is very unsafe; consider using fgets");
 int sprintf(char* __restrict, const char* __restrict, ...)
-    __printflike(2, 3) __warnattr("sprintf is often misused; please use snprintf");
+    __printflike(2, 3); //__warnattr("sprintf is often misused; please use snprintf");
 char* tmpnam(char*) __warnattr("tmpnam possibly used unsafely; consider using mkstemp");
 int vsprintf(char* __restrict, const char* __restrict, __va_list)
-    __printflike(2, 0) __warnattr("vsprintf is often misused; please use vsnprintf");
+    __printflike(2, 0); //__warnattr("vsprintf is often misused; please use vsnprintf");
 #if __XPG_VISIBLE
 char* tempnam(const char*, const char*)
     __warnattr("tempnam possibly used unsafely; consider using mkstemp");
