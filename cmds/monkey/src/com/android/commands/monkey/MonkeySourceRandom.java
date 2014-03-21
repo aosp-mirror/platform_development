@@ -436,6 +436,7 @@ public class MonkeySourceRandom implements MonkeyEventSource {
 
             if (lastKey != KeyEvent.KEYCODE_POWER
                     && lastKey != KeyEvent.KEYCODE_ENDCALL
+                    && lastKey != KeyEvent.KEYCODE_SLEEP
                     && PHYSICAL_KEY_EXISTS[lastKey]) {
                 break;
             }
