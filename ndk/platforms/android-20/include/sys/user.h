@@ -30,6 +30,7 @@
 #define _SYS_USER_H_
 
 #include <sys/cdefs.h>
+#include <limits.h> /* For PAGE_SIZE. */
 
 __BEGIN_DECLS
 

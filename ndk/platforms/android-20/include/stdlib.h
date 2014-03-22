@@ -54,28 +54,23 @@ extern int clearenv(void);
 extern char* mkdtemp(char*);
 extern char* mktemp(char*) __warnattr("mktemp possibly used unsafely; consider using mkstemp");
 extern int mkstemp(char*);
+extern int mkstemp64(char*);
 
 extern long strtol(const char *, char **, int);
 extern long long strtoll(const char *, char **, int);
 extern unsigned long strtoul(const char *, char **, int);
 extern unsigned long long strtoull(const char *, char **, int);
-extern double strtod(const char *nptr, char **endptr);
 
 extern int posix_memalign(void **memptr, size_t alignment, size_t size);
 
-static __inline__ float strtof(const char *nptr, char **endptr)
-{
-    return (float)strtod(nptr, endptr);
-}
+extern double atof(const char*);
+extern double strtod(const char*, char**);
+extern float strtof(const char*, char**);
+extern long double strtold(const char*, char**);
 
-extern int atoi(const char *) __purefunc;
-extern long atol(const char *) __purefunc;
-extern long long atoll(const char *) __purefunc;
-
-static __inline__ double atof(const char *nptr)
-{
-    return (strtod(nptr, NULL));
-}
+extern int atoi(const char*) __purefunc;
+extern long atol(const char*) __purefunc;
+extern long long atoll(const char*) __purefunc;
 
 extern int abs(int) __pure2;
 extern long labs(long) __pure2;
@@ -151,6 +146,10 @@ typedef struct {
 } lldiv_t;
 
 extern lldiv_t   lldiv(long long, long long);
+
+/* BSD compatibility. */
+extern const char* getprogname(void);
+extern void setprogname(const char*);
 
 #if 1 /* MISSING FROM BIONIC - ENABLED FOR STLPort and libstdc++-v3 */
 /* make STLPort happy */
