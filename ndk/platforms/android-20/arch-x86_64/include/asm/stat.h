@@ -102,7 +102,7 @@ struct stat {
  long __linux_unused[3];
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
 };
-#define INIT_STRUCT_STAT_PADDING(st) do {   st.__pad0 = 0;   st.__unused[0] = 0;   st.__unused[1] = 0;   st.__unused[2] = 0;  } while (0)
+#define INIT_STRUCT_STAT_PADDING(st) do {   st.__pad0 = 0;   st.__linux_unused[0] = 0;   st.__linux_unused[1] = 0;   st.__linux_unused[2] = 0;  } while (0)
 #endif
 struct __old_kernel_stat {
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
