@@ -139,6 +139,14 @@ int __system_property_foreach_compat(
         void (*propfn)(const prop_info *pi, void *cookie),
         void *cookie);
 
+/* Initialize the system properties area in read only mode.
+ * Should be done by all processes that need to read system
+ * properties.
+ *
+ * Returns 0 on success, -1 otherwise.
+ */
+int __system_properties_init();
+
 __END_DECLS
 
 #endif

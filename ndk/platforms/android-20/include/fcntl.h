@@ -41,12 +41,19 @@ __BEGIN_DECLS
 #define O_ASYNC  FASYNC
 #endif
 
+#define SYNC_FILE_RANGE_WAIT_BEFORE 1
+#define SYNC_FILE_RANGE_WRITE 2
+#define SYNC_FILE_RANGE_WAIT_AFTER 4
+
 extern int creat(const char*, mode_t);
+extern int creat64(const char*, mode_t);
 extern int fallocate64(int, int, off64_t, off64_t);
 extern int fallocate(int, int, off_t, off_t);
 extern int fcntl(int, int, ...);
 extern int openat(int, const char*, int, ...);
+extern int openat64(int, const char*, int, ...);
 extern int open(const char*, int, ...);
+extern int open64(const char*, int, ...);
 extern int posix_fallocate64(int, off64_t, off64_t);
 extern int posix_fallocate(int, off_t, off_t);
 extern int unlinkat(int, const char*, int);

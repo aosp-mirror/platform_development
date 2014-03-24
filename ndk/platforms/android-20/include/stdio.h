@@ -359,83 +359,6 @@ __END_DECLS
 #define	fwopen(cookie, fn) funopen(cookie, 0, fn, 0, 0)
 #endif /* __BSD_VISIBLE */
 
-/*
- * Functions internal to the implementation.
- */
-__BEGIN_DECLS
-int	__srget(FILE *);
-int	__swbuf(int, FILE *);
-__END_DECLS
-
-/*
- * The __sfoo macros are here so that we can
- * define function versions in the C library.
- */
-#define	__sgetc(p) (--(p)->_r < 0 ? __srget(p) : (int)(*(p)->_p++))
-#if defined(__GNUC__)
-static __inline int __sputc(int _c, FILE *_p) {
-	if (--_p->_w >= 0 || (_p->_w >= _p->_lbfsize && (char)_c != '\n'))
-		return (*_p->_p++ = _c);
-	else
-		return (__swbuf(_c, _p));
-}
-#else
-/*
- * This has been tuned to generate reasonable code on the vax using pcc.
- */
-#define	__sputc(c, p) \
-	(--(p)->_w < 0 ? \
-		(p)->_w >= (p)->_lbfsize ? \
-			(*(p)->_p = (c)), *(p)->_p != '\n' ? \
-				(int)*(p)->_p++ : \
-				__swbuf('\n', p) : \
-			__swbuf((int)(c), p) : \
-		(*(p)->_p = (c), (int)*(p)->_p++))
-#endif
-
-#define	__sfeof(p)	(((p)->_flags & __SEOF) != 0)
-#define	__sferror(p)	(((p)->_flags & __SERR) != 0)
-#define	__sclearerr(p)	((void)((p)->_flags &= ~(__SERR|__SEOF)))
-#define	__sfileno(p)	((p)->_file)
-
-extern	int __isthreaded;
-
-#define	feof(p)		(!__isthreaded ? __sfeof(p) : (feof)(p))
-#define	ferror(p)	(!__isthreaded ? __sferror(p) : (ferror)(p))
-#define	clearerr(p)	(!__isthreaded ? __sclearerr(p) : (clearerr)(p))
-
-#if __POSIX_VISIBLE
-#define	fileno(p)	(!__isthreaded ? __sfileno(p) : (fileno)(p))
-#endif
-
-#define	getc(fp)	(!__isthreaded ? __sgetc(fp) : (getc)(fp))
-
-#if __BSD_VISIBLE
-/*
- * The macro implementations of putc and putc_unlocked are not
- * fully POSIX compliant; they do not set errno on failure
- */
-#define putc(x, fp)	(!__isthreaded ? __sputc(x, fp) : (putc)(x, fp))
-#endif /* __BSD_VISIBLE */
-
-#ifndef lint
-#if __POSIX_VISIBLE >= 199506
-#define	getc_unlocked(fp)	__sgetc(fp)
-/*
- * The macro implementations of putc and putc_unlocked are not
- * fully POSIX compliant; they do not set errno on failure
- */
-#if __BSD_VISIBLE
-#define putc_unlocked(x, fp)	__sputc(x, fp)
-#endif /* __BSD_VISIBLE */
-#endif /* __POSIX_VISIBLE >= 199506 */
-#endif /* lint */
-
-#define	getchar()	getc(stdin)
-#define	putchar(x)	putc(x, stdout)
-#define	getchar_unlocked()	getc_unlocked(stdin)
-#define	putchar_unlocked(c)	putc_unlocked(c, stdout)
-
 #ifdef _GNU_SOURCE
 /*
  * glibc defines dprintf(int, const char*, ...), which is poorly named
@@ -470,8 +393,10 @@ int vsprintf(char *dest, const char *format, __va_list ap)
 }
 
 #if defined(__clang__)
+#if !defined(WITH_SYNTAX_CHECK)
 #define __wrap_snprintf(dest, size, ...) __builtin___snprintf_chk(dest, size, 0, __bos(dest), __VA_ARGS__)
 #define snprintf(...) __wrap_snprintf(__VA_ARGS__)
+#endif
 #else
 __BIONIC_FORTIFY_INLINE
 __printflike(3, 4)
@@ -483,8 +408,10 @@ int snprintf(char *dest, size_t size, const char *format, ...)
 #endif
 
 #if defined(__clang__)
+#if !defined(WITH_SYNTAX_CHECK)
 #define __wrap_sprintf(dest, ...) __builtin___sprintf_chk(dest, 0, __bos(dest), __VA_ARGS__)
 #define sprintf(...) __wrap_sprintf(__VA_ARGS__)
+#endif
 #else
 __BIONIC_FORTIFY_INLINE
 __printflike(2, 3)

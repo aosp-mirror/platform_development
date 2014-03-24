@@ -42,13 +42,13 @@ extern void*  memcpy(void* __restrict, const void* __restrict, size_t);
 extern void*  memmove(void *, const void *, size_t);
 extern void*  memset(void *, int, size_t);
 extern void*  memmem(const void *, size_t, const void *, size_t) __purefunc;
-extern void   memswap(void *, void *, size_t);
 
 extern char*  index(const char *, int) __purefunc;
 extern char*  strchr(const char *, int) __purefunc;
 extern char* __strchr_chk(const char *, int, size_t);
 
 extern char*  strrchr(const char *, int) __purefunc;
+extern char* __strrchr_chk(const char *, int, size_t);
 
 extern size_t strlen(const char *) __purefunc;
 extern size_t __strlen_chk(const char *, size_t);
@@ -244,6 +244,7 @@ size_t strlen(const char *s) {
     return __strlen_chk(s, bos);
 }
 
+#if !defined(HAS_STRCHR)
 __BIONIC_FORTIFY_INLINE
 char* strchr(const char *s, int c) {
     size_t bos = __bos(s);
@@ -262,8 +263,7 @@ char* strchr(const char *s, int c) {
 
     return __strchr_chk(s, c, bos);
 }
-
-extern char* __strrchr_chk(const char *, int, size_t);
+#endif
 
 __BIONIC_FORTIFY_INLINE
 char* strrchr(const char *s, int c) {
