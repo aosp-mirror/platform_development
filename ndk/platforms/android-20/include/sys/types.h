@@ -35,28 +35,48 @@
 #include <linux/types.h>
 #include <linux/posix_types.h>
 
-/* __kernel_gid_t and __kernel_uid_t are 16 bit for legacy reasons.
- * Android uses __kernel_uid32_t and __kernel_gid32_t instead.
- */
-typedef __kernel_gid32_t gid_t;
-typedef __kernel_uid32_t uid_t;
+/* gids, uids, and pids are all 32-bit. */
+typedef __kernel_gid32_t __gid_t;
+typedef __gid_t gid_t;
+typedef __kernel_uid32_t __uid_t;
+typedef __uid_t uid_t;
+typedef __kernel_pid_t __pid_t;
+typedef __pid_t pid_t;
+typedef uint32_t __id_t;
+typedef __id_t id_t;
 
 typedef unsigned long blkcnt_t;
 typedef unsigned long blksize_t;
 typedef __kernel_caddr_t caddr_t;
 typedef __kernel_clock_t clock_t;
-typedef __kernel_clockid_t clockid_t;
+
+typedef __kernel_clockid_t __clockid_t;
+typedef __clockid_t clockid_t;
+
 typedef __kernel_daddr_t daddr_t;
 typedef unsigned long fsblkcnt_t;
 typedef unsigned long fsfilcnt_t;
-typedef __kernel_ino_t ino_t;
-typedef __kernel_key_t key_t;
-typedef __kernel_mode_t mode_t;
+
+typedef __kernel_mode_t __mode_t;
+typedef __mode_t mode_t;
+
+typedef __kernel_key_t __key_t;
+typedef __key_t key_t;
+
+typedef uint32_t __ino_t;
+typedef __ino_t ino_t;
+
+typedef uint32_t __nlink_t;
 typedef __nlink_t nlink_t;
-typedef __kernel_pid_t pid_t;
-typedef __kernel_suseconds_t suseconds_t;
-typedef __kernel_timer_t timer_t;
-typedef unsigned int useconds_t;
+
+typedef void* __timer_t;
+typedef __timer_t timer_t;
+
+typedef int32_t __suseconds_t;
+typedef __suseconds_t suseconds_t;
+
+typedef uint32_t __useconds_t;
+typedef __useconds_t useconds_t;
 
 #if !defined(__LP64__)
 /* This historical accident means that we had a 32-bit dev_t on 32-bit architectures. */
@@ -66,7 +86,8 @@ typedef uint64_t dev_t;
 #endif
 
 /* This historical accident means that we had a 32-bit time_t on 32-bit architectures. */
-typedef __kernel_time_t time_t;
+typedef __kernel_time_t __time_t;
+typedef __time_t time_t;
 
 /* This historical accident means that we had a 32-bit off_t on 32-bit architectures. */
 #ifndef _OFF_T_DEFINED_
@@ -75,9 +96,6 @@ typedef __kernel_off_t off_t;
 #endif
 typedef __kernel_loff_t loff_t;
 typedef loff_t off64_t;
-
-/* This one really is meant to be just 32 bits! */
-typedef uint32_t id_t;
 
 /* while POSIX wants these in <sys/types.h>, we
  * declare then in <pthread.h> instead */
@@ -92,6 +110,17 @@ typedef  .... pthread_rwlock_t;
 typedef  .... pthread_rwlock_attr_t;
 typedef  .... pthread_t;
 #endif
+
+#if !defined(__LP64__)
+/* This historical accident means that we had a signed socklen_t on 32-bit architectures. */
+typedef int32_t __socklen_t;
+#else
+/* LP64 still has a 32-bit socklen_t. */
+typedef uint32_t __socklen_t;
+#endif
+typedef __socklen_t socklen_t;
+
+typedef __builtin_va_list __va_list;
 
 #ifndef _SSIZE_T_DEFINED_
 #define _SSIZE_T_DEFINED_

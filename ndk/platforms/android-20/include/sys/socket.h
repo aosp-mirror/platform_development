@@ -43,8 +43,9 @@
 __BEGIN_DECLS
 
 #define sockaddr_storage __kernel_sockaddr_storage
-typedef __sa_family_t sa_family_t;
-typedef int socklen_t;
+typedef unsigned short sa_family_t;
+
+struct timespec;
 
 #ifdef __mips__
 #define SOCK_DGRAM      1
@@ -76,40 +77,45 @@ enum {
 };
 
 struct sockaddr {
- sa_family_t sa_family;
- char sa_data[14];
+  sa_family_t sa_family;
+  char sa_data[14];
 };
 
 struct linger {
- int l_onoff;
- int l_linger;
+  int l_onoff;
+  int l_linger;
 };
 
 struct msghdr {
- void * msg_name;
- int msg_namelen;
- struct iovec * msg_iov;
- __kernel_size_t msg_iovlen;
- void * msg_control;
- __kernel_size_t msg_controllen;
- unsigned msg_flags;
+  void* msg_name;
+  socklen_t msg_namelen;
+  struct iovec* msg_iov;
+  size_t msg_iovlen;
+  void* msg_control;
+  size_t msg_controllen;
+  int msg_flags;
+};
+
+struct mmsghdr {
+  struct msghdr msg_hdr;
+  unsigned int msg_len;
 };
 
 struct cmsghdr {
- __kernel_size_t cmsg_len;
- int cmsg_level;
- int cmsg_type;
+  size_t cmsg_len;
+  int cmsg_level;
+  int cmsg_type;
 };
 
 #define __CMSG_NXTHDR(ctl, len, cmsg) __cmsg_nxthdr((ctl),(len),(cmsg))
 #define CMSG_NXTHDR(mhdr, cmsg) cmsg_nxthdr((mhdr), (cmsg))
 #define CMSG_ALIGN(len) ( ((len)+sizeof(long)-1) & ~(sizeof(long)-1) )
-#define CMSG_DATA(cmsg) ((void *)((char *)(cmsg) + CMSG_ALIGN(sizeof(struct cmsghdr))))
+#define CMSG_DATA(cmsg) ((void*)((char*)(cmsg) + CMSG_ALIGN(sizeof(struct cmsghdr))))
 #define CMSG_SPACE(len) (CMSG_ALIGN(sizeof(struct cmsghdr)) + CMSG_ALIGN(len))
 #define CMSG_LEN(len) (CMSG_ALIGN(sizeof(struct cmsghdr)) + (len))
-#define __CMSG_FIRSTHDR(ctl,len) ((len) >= sizeof(struct cmsghdr) ?   (struct cmsghdr *)(ctl) :   (struct cmsghdr *)NULL)
+#define __CMSG_FIRSTHDR(ctl,len) ((len) >= sizeof(struct cmsghdr) ?   (struct cmsghdr*)(ctl) :   (struct cmsghdr*)NULL)
 #define CMSG_FIRSTHDR(msg) __CMSG_FIRSTHDR((msg)->msg_control, (msg)->msg_controllen)
-#define CMSG_OK(mhdr, cmsg) ((cmsg)->cmsg_len >= sizeof(struct cmsghdr) &&   (cmsg)->cmsg_len <= (unsigned long)   ((mhdr)->msg_controllen -   ((char *)(cmsg) - (char *)(mhdr)->msg_control)))
+#define CMSG_OK(mhdr, cmsg) ((cmsg)->cmsg_len >= sizeof(struct cmsghdr) &&   (cmsg)->cmsg_len <= (unsigned long)   ((mhdr)->msg_controllen -   ((char*)(cmsg) - (char*)(mhdr)->msg_control)))
 
 #ifdef __GNUC__
 #define __KINLINE static __inline__
@@ -119,16 +125,17 @@ struct cmsghdr {
 #define __KINLINE static
 #endif
 
-__KINLINE struct cmsghdr * __cmsg_nxthdr(void *__ctl, __kernel_size_t __size, struct cmsghdr *__cmsg) {
- struct cmsghdr * __ptr;
- __ptr = (struct cmsghdr*)(((unsigned char *) __cmsg) + CMSG_ALIGN(__cmsg->cmsg_len));
- if ((unsigned long)((char*)(__ptr+1) - (char *) __ctl) > __size)
- return (struct cmsghdr *)0;
- return __ptr;
+__KINLINE struct cmsghdr* __cmsg_nxthdr(void* __ctl, size_t __size, struct cmsghdr* __cmsg) {
+  struct cmsghdr* __ptr;
+  __ptr = (struct cmsghdr*)(((unsigned char*) __cmsg) + CMSG_ALIGN(__cmsg->cmsg_len));
+  if ((unsigned long)((char*)(__ptr+1) - (char*) __ctl) > __size) {
+    return NULL;
+  }
+  return __ptr;
 }
 
-__KINLINE struct cmsghdr * cmsg_nxthdr (struct msghdr *__msg, struct cmsghdr *__cmsg) {
- return __cmsg_nxthdr(__msg->msg_control, __msg->msg_controllen, __cmsg);
+__KINLINE struct cmsghdr* cmsg_nxthdr (struct msghdr* __msg, struct cmsghdr* __cmsg) {
+  return __cmsg_nxthdr(__msg->msg_control, __msg->msg_controllen, __cmsg);
 }
 
 #define SCM_RIGHTS 0x01
@@ -136,9 +143,9 @@ __KINLINE struct cmsghdr * cmsg_nxthdr (struct msghdr *__msg, struct cmsghdr *__
 #define SCM_SECURITY 0x03
 
 struct ucred {
- __u32 pid;
- __u32 uid;
- __u32 gid;
+  pid_t pid;
+  uid_t uid;
+  gid_t gid;
 };
 
 #define AF_UNSPEC 0
@@ -242,6 +249,9 @@ struct ucred {
 #define MSG_ERRQUEUE 0x2000
 #define MSG_NOSIGNAL 0x4000
 #define MSG_MORE 0x8000
+#define MSG_WAITFORONE 0x10000
+#define MSG_FASTOPEN 0x20000000
+#define MSG_CMSG_CLOEXEC 0x40000000
 #define MSG_EOF MSG_FIN
 #define MSG_CMSG_COMPAT 0
 
@@ -277,43 +287,45 @@ struct ucred {
 # define __socketcall extern
 #endif
 
-__socketcall int socket(int, int, int);
-__socketcall int bind(int, const struct sockaddr *, int);
-__socketcall int connect(int, const struct sockaddr *, socklen_t);
+__socketcall int accept(int, struct sockaddr*, socklen_t*);
+__socketcall int bind(int, const struct sockaddr*, int);
+__socketcall int connect(int, const struct sockaddr*, socklen_t);
+__socketcall int getpeername(int, struct sockaddr*, socklen_t*);
+__socketcall int getsockname(int, struct sockaddr*, socklen_t*);
+__socketcall int getsockopt(int, int, int, void*, socklen_t*);
 __socketcall int listen(int, int);
-__socketcall int accept(int, struct sockaddr *, socklen_t *);
-__socketcall int getsockname(int, struct sockaddr *, socklen_t *);
-__socketcall int getpeername(int, struct sockaddr *, socklen_t *);
-__socketcall int socketpair(int, int, int, int *);
+__socketcall int recvmmsg(int, struct mmsghdr*, unsigned int, int, const struct timespec*);
+__socketcall int recvmsg(int, struct msghdr*, int);
+__socketcall int sendmmsg(int, const struct mmsghdr*, unsigned int, int);
+__socketcall int sendmsg(int, const struct msghdr*, int);
+__socketcall int setsockopt(int, int, int, const void*, socklen_t);
 __socketcall int shutdown(int, int);
-__socketcall int setsockopt(int, int, int, const void *, socklen_t);
-__socketcall int getsockopt(int, int, int, void *, socklen_t *);
-__socketcall int sendmsg(int, const struct msghdr *, unsigned int);
-__socketcall int recvmsg(int, struct msghdr *, unsigned int);
+__socketcall int socket(int, int, int);
+__socketcall int socketpair(int, int, int, int*);
 
-extern  ssize_t  send(int, const void *, size_t, unsigned int);
-extern  ssize_t  recv(int, void *, size_t, unsigned int);
+extern ssize_t send(int, const void*, size_t, int);
+extern ssize_t recv(int, void*, size_t, int);
 
-__socketcall ssize_t sendto(int, const void *, size_t, int, const struct sockaddr *, socklen_t);
-__socketcall ssize_t recvfrom(int, void *, size_t, unsigned int, const struct sockaddr *, socklen_t *);
+__socketcall ssize_t sendto(int, const void*, size_t, int, const struct sockaddr*, socklen_t);
+__socketcall ssize_t recvfrom(int, void*, size_t, int, const struct sockaddr*, socklen_t*);
 
 #if defined(__BIONIC_FORTIFY)
 __errordecl(__recvfrom_error, "recvfrom called with size bigger than buffer");
-extern ssize_t __recvfrom_chk(int, void*, size_t, size_t, unsigned int, const struct sockaddr*, socklen_t *);
-extern ssize_t __recvfrom_real(int, void *, size_t, unsigned int, const struct sockaddr*, socklen_t*)
+extern ssize_t __recvfrom_chk(int, void*, size_t, size_t, int, const struct sockaddr*, socklen_t*);
+extern ssize_t __recvfrom_real(int, void*, size_t, int, const struct sockaddr*, socklen_t*)
     __asm__(__USER_LABEL_PREFIX__ "recvfrom");
 
 __BIONIC_FORTIFY_INLINE
-ssize_t recvfrom(int fd, void* buf, size_t len, unsigned int flags, const struct sockaddr* src_addr, socklen_t* addrlen) {
+ssize_t recvfrom(int fd, void* buf, size_t len, int flags, const struct sockaddr* src_addr, socklen_t* addr_len) {
   size_t bos = __bos0(buf);
 
 #if !defined(__clang__)
   if (bos == __BIONIC_FORTIFY_UNKNOWN_SIZE) {
-    return __recvfrom_real(fd, buf, len, flags, src_addr, addrlen);
+    return __recvfrom_real(fd, buf, len, flags, src_addr, addr_len);
   }
 
   if (__builtin_constant_p(len) && (len <= bos)) {
-    return __recvfrom_real(fd, buf, len, flags, src_addr, addrlen);
+    return __recvfrom_real(fd, buf, len, flags, src_addr, addr_len);
   }
 
   if (__builtin_constant_p(len) && (len > bos)) {
@@ -321,12 +333,12 @@ ssize_t recvfrom(int fd, void* buf, size_t len, unsigned int flags, const struct
   }
 #endif
 
-  return __recvfrom_chk(fd, buf, len, bos, flags, src_addr, addrlen);
+  return __recvfrom_chk(fd, buf, len, bos, flags, src_addr, addr_len);
 }
 
 __BIONIC_FORTIFY_INLINE
-ssize_t recv(int socket, void *buf, size_t buflen, unsigned int flags) {
-  return recvfrom(socket, buf, buflen, flags, NULL, 0);
+ssize_t recv(int socket, void* buf, size_t len, int flags) {
+  return recvfrom(socket, buf, len, flags, NULL, 0);
 }
 
 #endif /* __BIONIC_FORTIFY */

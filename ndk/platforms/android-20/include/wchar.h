@@ -147,6 +147,9 @@ extern wchar_t          *wmemset(wchar_t *, wchar_t, size_t);
 extern int               wprintf(const wchar_t *, ...);
 extern int               wscanf(const wchar_t *, ...);
 
+extern size_t wcslcat(wchar_t*, const wchar_t*, size_t);
+extern size_t wcslcpy(wchar_t*, const wchar_t*, size_t);
+
 /* No really supported.  These are just for making libstdc++-v3 happy.  */
 typedef void *wctrans_t;
 extern wint_t		 towctrans(wint_t, wctrans_t);

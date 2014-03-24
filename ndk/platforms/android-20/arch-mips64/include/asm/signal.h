@@ -19,10 +19,10 @@
 #ifndef _UAPI_ASM_SIGNAL_H
 #define _UAPI_ASM_SIGNAL_H
 #include <linux/types.h>
-#define _NSIG 128
+#define _KERNEL__NSIG 128
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
 #define _NSIG_BPW (sizeof(unsigned long) * 8)
-#define _NSIG_WORDS (_NSIG / _NSIG_BPW)
+#define _NSIG_WORDS (_KERNEL__NSIG / _NSIG_BPW)
 typedef struct {
  unsigned long sig[_NSIG_WORDS];
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
@@ -72,7 +72,7 @@ typedef unsigned long old_sigset_t;
 #define SIGXFSZ 31
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
 #define SIGRTMIN 32
-#define SIGRTMAX _NSIG
+#define SIGRTMAX _KERNEL__NSIG
 #define SA_ONSTACK 0x08000000
 #define SA_RESETHAND 0x80000000
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
