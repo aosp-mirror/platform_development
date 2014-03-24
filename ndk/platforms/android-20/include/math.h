@@ -18,7 +18,6 @@
 #define	_MATH_H_
 
 #include <sys/cdefs.h>
-#include <sys/_types.h>
 #include <limits.h>
 
 /*
@@ -124,8 +123,10 @@ extern const union __nan_un {
     : (sizeof (x) == sizeof (double)) ? __signbit(x)	\
     : __signbitl(x))
 
-typedef	__double_t	double_t;
-typedef	__float_t	float_t;
+typedef double __double_t;
+typedef __double_t double_t;
+typedef float __float_t;
+typedef __float_t float_t;
 #endif /* __ISO_C_VISIBLE >= 1999 */
 
 /*

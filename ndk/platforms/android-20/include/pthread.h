@@ -127,11 +127,13 @@ int pthread_attr_setschedparam(pthread_attr_t*, const struct sched_param*) __non
 int pthread_attr_setschedpolicy(pthread_attr_t*, int) __nonnull((1));
 int pthread_attr_setscope(pthread_attr_t*, int) __nonnull((1));
 int pthread_attr_setstack(pthread_attr_t*, void*, size_t) __nonnull((1));
-int pthread_attr_setstacksize(pthread_attr_t * attr, size_t stack_size) __nonnull((1));
+int pthread_attr_setstacksize(pthread_attr_t*, size_t stack_size) __nonnull((1));
 
 int pthread_condattr_destroy(pthread_condattr_t*) __nonnull((1));
+int pthread_condattr_getclock(const pthread_condattr_t*, clockid_t*) __nonnull((1, 2));
 int pthread_condattr_getpshared(const pthread_condattr_t*, int*) __nonnull((1, 2));
 int pthread_condattr_init(pthread_condattr_t*) __nonnull((1));
+int pthread_condattr_setclock(pthread_condattr_t*, clockid_t) __nonnull((1));
 int pthread_condattr_setpshared(pthread_condattr_t*, int) __nonnull((1));
 
 int pthread_cond_broadcast(pthread_cond_t*) __nonnull((1));
@@ -172,7 +174,7 @@ int pthread_mutexattr_settype(pthread_mutexattr_t*, int) __nonnull((1));
 int pthread_mutex_destroy(pthread_mutex_t*) __nonnull((1));
 int pthread_mutex_init(pthread_mutex_t*, const pthread_mutexattr_t*) __nonnull((1));
 int pthread_mutex_lock(pthread_mutex_t*) __nonnull((1));
-int pthread_mutex_timedlock(pthread_mutex_t*, struct timespec*) __nonnull((1, 2));
+int pthread_mutex_timedlock(pthread_mutex_t*, const struct timespec*) __nonnull((1, 2));
 int pthread_mutex_trylock(pthread_mutex_t*) __nonnull((1));
 int pthread_mutex_unlock(pthread_mutex_t*) __nonnull((1));
 
@@ -232,32 +234,17 @@ extern void __pthread_cleanup_pop(__pthread_cleanup_t*, int);
 
 #if !defined(__LP64__)
 
-/* Deprecated by POSIX. TODO: support for LP64 but add deprecated attribute instead? */
-int pthread_attr_getstackaddr(const pthread_attr_t*, void**) __nonnull((1, 2)); /* deprecated */
-int pthread_attr_setstackaddr(pthread_attr_t*, void*) __nonnull((1)); /* deprecated */
-
-/* Bionic additions that are deprecated even in the 32-bit ABI. */
+// Bionic additions that are deprecated even in the 32-bit ABI.
+//
+// TODO: Remove them once chromium_org / NFC have switched over.
 int pthread_cond_timedwait_monotonic_np(pthread_cond_t*, pthread_mutex_t*, const struct timespec*);
 int pthread_cond_timedwait_monotonic(pthread_cond_t*, pthread_mutex_t*, const struct timespec*);
-#define HAVE_PTHREAD_COND_TIMEDWAIT_MONOTONIC 1
 
-/*
- * Like pthread_cond_timedwait except 'reltime' is relative to the current time.
- * TODO: not like glibc; include in LP64?
- */
-int pthread_cond_timedwait_relative_np(pthread_cond_t*, pthread_mutex_t*, const struct timespec*);
-#define HAVE_PTHREAD_COND_TIMEDWAIT_RELATIVE 1
+int pthread_cond_timedwait_relative_np(pthread_cond_t*, pthread_mutex_t*, const struct timespec*) /* TODO: __attribute__((deprecated("use pthread_cond_timedwait instead")))*/;
+#define HAVE_PTHREAD_COND_TIMEDWAIT_RELATIVE 1 /* TODO: stop defining this to push LP32 off this API sooner. */
+int pthread_cond_timeout_np(pthread_cond_t*, pthread_mutex_t*, unsigned) /* TODO: __attribute__((deprecated("use pthread_cond_timedwait instead")))*/;
 
-/* TODO: not like glibc; include in LP64? */
-int pthread_cond_timeout_np(pthread_cond_t*, pthread_mutex_t*, unsigned);
-
-/* Like pthread_mutex_lock(), but will wait up to 'msecs' milli-seconds
- * before returning. Same return values as pthread_mutex_trylock though, i.e.
- * returns EBUSY if the lock could not be acquired after the timeout expired.
- *
- * TODO: replace with pthread_mutex_timedlock_np for LP64.
- */
-int pthread_mutex_lock_timeout_np(pthread_mutex_t*, unsigned);
+int pthread_mutex_lock_timeout_np(pthread_mutex_t*, unsigned) __attribute__((deprecated("use pthread_mutex_timedlock instead")));
 
 #endif /* !defined(__LP64__) */
 

@@ -24,7 +24,7 @@
 #include <linux/time.h>
 #include <linux/compiler.h>
 struct siginfo;
-#define NSIG 32
+#define _KERNEL_NSIG 32
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
 typedef unsigned long sigset_t;
 #endif
@@ -72,7 +72,7 @@ typedef unsigned long sigset_t;
 #define SIGUNUSED 31
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
 #define SIGRTMIN 32
-#define SIGRTMAX _NSIG
+#define SIGRTMAX _KERNEL__NSIG
 #define SA_NOCLDSTOP 0x00000001u
 #define SA_NOCLDWAIT 0x00000002u
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
