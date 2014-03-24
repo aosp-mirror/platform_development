@@ -37,27 +37,12 @@
 #ifndef _AMD64_ASM_H_
 #define _AMD64_ASM_H_
 
-#ifdef __x86_64__
-
 #ifdef __PIC__
 #define PIC_PLT(x)	x@PLT
 #define PIC_GOT(x)	x@GOTPCREL(%rip)
 #else
 #define PIC_PLT(x)	x
 #define PIC_GOT(x)	x
-#endif
-
-# define _C_LABEL(x)	x
-#define	_ASM_LABEL(x)	x
-
-#define CVAROFF(x,y)		(_C_LABEL(x)+y)(%rip)
-
-#ifdef __STDC__
-# define __CONCAT(x,y)	x ## y
-# define __STRING(x)	#x
-#else
-# define __CONCAT(x,y)	x/**/y
-# define __STRING(x)	"x"
 #endif
 
 /* let kernels and others override entrypoint alignment */
@@ -68,79 +53,5 @@
 #  define _ALIGN_TEXT .align 16
 # endif
 #endif
-
-#define _ENTRY(x) \
-	.text; _ALIGN_TEXT; .globl x; .type x,@function; x: .cfi_startproc;
-#define _LABEL(x) \
-	.globl x; x:
-
-#ifdef _KERNEL
-/* XXX Can't use __CONCAT() here, as it would be evaluated incorrectly. */
-#ifdef __STDC__
-#define	IDTVEC(name) \
-	ALIGN_TEXT; .globl X ## name; .type X ## name,@function; X ## name:
-#define	IDTVEC_END(name) \
-	.size X ## name, . - X ## name
-#else 
-#define	IDTVEC(name) \
-	ALIGN_TEXT; .globl X/**/name; .type X/**/name,@function; X/**/name:
-#define	IDTVEC_END(name) \
-	.size X/**/name, . - X/**/name
-#endif /* __STDC__ */ 
-#endif /* _KERNEL */
-
-#ifdef __STDC__
-#define CPUVAR(off)	%gs:CPU_INFO_ ## off
-#else
-#define CPUVAR(off)     %gs:CPU_INFO_/**/off
-#endif
-
-
-#ifdef GPROF
-# define _PROF_PROLOGUE	\
-	pushq %rbp; leaq (%rsp),%rbp; call PIC_PLT(__mcount); popq %rbp
-#else
-# define _PROF_PROLOGUE
-#endif
-
-#define	ENTRY(y)	_ENTRY(_C_LABEL(y)); _PROF_PROLOGUE
-#define	NENTRY(y)	_ENTRY(_C_LABEL(y))
-#define	ALTENTRY(x)	NENTRY(x)
-#define	ASENTRY(y)	_ENTRY(_ASM_LABEL(y)); _PROF_PROLOGUE
-#define	LABEL(y)	_LABEL(_C_LABEL(y))
-#define	END(y)		.cfi_endproc; .size y, . - y
-
-#define	ASMSTR		.asciz
-
-#define RCSID(x)	.pushsection ".ident"; .asciz x; .popsection
-
-#define	WEAK_ALIAS(alias,sym)						\
-	.weak alias;							\
-	alias = sym
-
-/*
- * STRONG_ALIAS: create a strong alias.
- */
-#define STRONG_ALIAS(alias,sym)						\
-	.globl alias;							\
-	alias = sym
-
-#ifdef __STDC__
-#define	WARN_REFERENCES(sym,msg)					\
-	.pushsection .gnu.warning. ## sym;				\
-	.ascii msg;							\
-	.popsection
-#else
-#define	WARN_REFERENCES(sym,msg)					\
-	.pushsection .gnu.warning./**/sym;				\
-	.ascii msg;							\
-	.popsection
-#endif /* __STDC__ */
-
-#else	/*	__x86_64__	*/
-
-#include <i386/asm.h>
-
-#endif	/*	__x86_64__	*/
 
 #endif /* !_AMD64_ASM_H_ */

@@ -25,6 +25,7 @@
  * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
+
 #ifndef _SYS_TIMES_H_
 #define _SYS_TIMES_H_
 
@@ -34,7 +35,7 @@
 
 __BEGIN_DECLS
 
-extern clock_t times(struct tms *);
+extern clock_t times(struct tms*);
 
 __END_DECLS
 

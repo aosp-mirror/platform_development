@@ -49,11 +49,13 @@ enum {
     LC_IDENTIFICATION = 12
 };
 
-extern char *setlocale(int category, const char *locale);
+extern char* setlocale(int, const char*);
 
-/* Make libstdc++-v3 happy.  */
+#if !defined(__LP64__)
+// TODO: LP32 had these bogus declarations but LP64 should have a real struct lconv and localeconv(3).
 struct lconv { };
-struct lconv *localeconv(void);
+struct lconv* localeconv(void);
+#endif
 
 __END_DECLS
 

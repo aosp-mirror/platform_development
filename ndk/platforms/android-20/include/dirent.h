@@ -46,27 +46,33 @@ __BEGIN_DECLS
 #define DT_WHT 14
 #endif
 
-struct dirent {
-  uint64_t         d_ino;
-  int64_t          d_off;
-  unsigned short   d_reclen;
-  unsigned char    d_type;
-  char             d_name[256];
-};
+#define __DIRENT64_BODY \
+    uint64_t         d_ino; \
+    int64_t          d_off; \
+    unsigned short   d_reclen; \
+    unsigned char    d_type; \
+    char             d_name[256]; \
+
+struct dirent { __DIRENT64_BODY };
+struct dirent64 { __DIRENT64_BODY };
+
 #define d_fileno d_ino
-#define dirent64 dirent
 
 typedef struct DIR DIR;
 
 extern DIR* opendir(const char*);
 extern DIR* fdopendir(int);
 extern struct dirent* readdir(DIR*);
+extern struct dirent64* readdir64(DIR*);
 extern int readdir_r(DIR*, struct dirent*, struct dirent**);
+extern int readdir64_r(DIR*, struct dirent64*, struct dirent64**);
 extern int closedir(DIR*);
 extern void rewinddir(DIR*);
 extern int dirfd(DIR*);
 extern int alphasort(const struct dirent**, const struct dirent**);
+extern int alphasort64(const struct dirent64**, const struct dirent64**);
 extern int scandir(const char*, struct dirent***, int (*)(const struct dirent*), int (*)(const struct dirent**, const struct dirent**));
+extern int scandir64(const char*, struct dirent64***, int (*)(const struct dirent64*), int (*)(const struct dirent64**, const struct dirent64**));
 extern int getdents(unsigned int, struct dirent*, unsigned int);
 
 __END_DECLS

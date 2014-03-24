@@ -64,6 +64,7 @@ extern pid_t  setsid(void);
 
 extern int execv(const char *, char * const *);
 extern int execvp(const char *, char * const *);
+extern int execvpe(const char *, char * const *, char * const *);
 extern int execve(const char *, char * const *, char * const *);
 extern int execl(const char *, const char *, ...);
 extern int execlp(const char *, const char *, ...);
@@ -185,14 +186,15 @@ extern int sysconf(int  name);
 
 extern int daemon(int, int);
 
-/* A special syscall that is only available on the ARM, not x86 function. */
-extern int cacheflush(long start, long end, long flags);
+#if defined(__arm__) || (defined(__mips__) && !defined(__LP64__))
+extern int cacheflush(long, long, long);
+    /* __attribute__((deprecated("use __builtin___clear_cache instead"))); */
+#endif
 
 extern pid_t tcgetpgrp(int fd);
 extern int   tcsetpgrp(int fd, pid_t _pid);
 
 #if 0 /* MISSING FROM BIONIC */
-extern int execvpe(const char *, char * const *, char * const *);
 extern int execlpe(const char *, const char *, ...);
 extern int getfsuid(uid_t);
 extern int setfsuid(uid_t);

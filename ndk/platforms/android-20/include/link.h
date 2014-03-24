@@ -33,7 +33,11 @@
 
 __BEGIN_DECLS
 
-#define ElfW(type) Elf_##type
+#if __LP64__
+#define ElfW(type) Elf64_ ## type
+#else
+#define ElfW(type) Elf32_ ## type
+#endif
 
 struct dl_phdr_info {
   ElfW(Addr) dlpi_addr;
@@ -42,12 +46,34 @@ struct dl_phdr_info {
   ElfW(Half) dlpi_phnum;
 };
 
-int dl_iterate_phdr(int (*cb)(struct dl_phdr_info*, size_t, void*), void*);
+int dl_iterate_phdr(int (*)(struct dl_phdr_info*, size_t, void*), void*);
 
 #ifdef __arm__
 typedef long unsigned int* _Unwind_Ptr;
-_Unwind_Ptr dl_unwind_find_exidx(_Unwind_Ptr pc, int* pcount);
+_Unwind_Ptr dl_unwind_find_exidx(_Unwind_Ptr, int*);
 #endif
+
+/* Used by the dynamic linker to communicate with the debugger. */
+struct link_map {
+  ElfW(Addr) l_addr;
+  char* l_name;
+  ElfW(Dyn)* l_ld;
+  struct link_map* l_next;
+  struct link_map* l_prev;
+};
+
+/* Used by the dynamic linker to communicate with the debugger. */
+struct r_debug {
+  int32_t r_version;
+  struct link_map* r_map;
+  ElfW(Addr) r_brk;
+  enum {
+    RT_CONSISTENT,
+    RT_ADD,
+    RT_DELETE
+  } r_state;
+  ElfW(Addr) r_ldbase;
+};
 
 __END_DECLS
 
