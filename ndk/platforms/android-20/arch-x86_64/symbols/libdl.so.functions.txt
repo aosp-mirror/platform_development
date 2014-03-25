@@ -1,0 +1,8 @@
+android_get_LD_LIBRARY_PATH
+android_update_LD_LIBRARY_PATH
+dladdr
+dlclose
+dlerror
+dl_iterate_phdr
+dlopen
+dlsym
