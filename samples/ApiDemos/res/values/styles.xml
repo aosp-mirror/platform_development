@@ -15,9 +15,6 @@
 -->
 
 <resources>
-    <!-- A custom theme that is a variation on the light them with a different
-         background color. -->
-    <color name="custom_theme_color">#b0b0ff</color>
     <style name="CustomTheme" parent="android:Theme.Light">
         <item name="android:windowBackground">@color/custom_theme_color</item>
         <item name="android:colorBackground">@color/custom_theme_color</item>
@@ -29,8 +26,12 @@
          selected when the holographic theme is available, or look at
          values-XX/styles.xml for a variation that is selected when the quantum
          theme is available. -->
-    <style name="ThemeCurrent" parent="android:Theme">
-    </style>
+    <style name="ThemeCurrent" parent="android:Theme" />
+
+    <!-- This is a theme that reflects the default theme used when no theme is
+         specified by an application or activity. In API 14 and above, this
+         refers to the DeviceDefault theme. -->
+    <style name="ThemeDefault" parent="android:Theme" />
 
     <!-- This is a theme that will adjust itself depending on the API version.
          The default definition is the safe one, using a theme that has always
@@ -38,20 +39,17 @@
          selected when the holographic theme is available, or look at
          values-XX/styles.xml for a variation that is selected when the quantum
          theme is available. -->
-    <style name="ThemeCurrentDialog" parent="android:Theme.Dialog">
-    </style>
+    <style name="ThemeCurrentDialog" parent="android:Theme.Dialog" />
 
     <!-- Older platforms don't have Theme.Holo.DialogWhenLarge; we will define
          our own wrapper theme that uses it only when running on the appropriate
          platform version.  On older platforms, we always use the generic
          fullscreen theme, because they don't support some feature that help
          in correctly laying out an activity as a dialog. -->
-    <style name="ThemeCurrentDialogWhenLarge" parent="android:style/Theme">
-    </style>
+    <style name="ThemeCurrentDialogWhenLarge" parent="android:style/Theme" />
 
     <!-- Base application theme is the default theme. -->
-    <style name="Theme" parent="android:Theme">
-    </style>
+    <style name="Theme" parent="android:Theme" />
 
     <!-- Variation on our application theme that forces a plain
         text style. -->
