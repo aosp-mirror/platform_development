@@ -1998,20 +1998,6 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".view.Gallery1" android:label="Views/Gallery/1. Photos">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.SAMPLE_CODE" />
-            </intent-filter>
-        </activity>
-
-        <activity android:name=".view.Gallery2" android:label="Views/Gallery/2. People">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.SAMPLE_CODE" />
-            </intent-filter>
-        </activity>
-
         <activity android:name=".view.Spinner1" android:label="Views/Spinner">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -2043,14 +2029,6 @@
 
         <activity android:name=".view.ImageView1"
                 android:label="Views/ImageView">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.SAMPLE_CODE" />
-            </intent-filter>
-        </activity>
-
-        <activity android:name=".view.ImageSwitcher1"
-                android:label="Views/ImageSwitcher">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
