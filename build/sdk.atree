@@ -335,6 +335,8 @@ development/sdk/support_source.properties                                       
 development/sdk/support_README.txt                                                                extras/android/support/README.txt
 sdk/files/sdk_files_NOTICE.txt                                                                    extras/android/support/NOTICE.txt
 
+${OUT_DIR}/target/common/obj/PACKAGING/android-support-annotations_intermediates/android-support-annotations.jar extras/android/support/annotations/android-support-annotations.jar
+
 ${OUT_DIR}/target/common/obj/PACKAGING/android-support-v4_intermediates/android-support-v4.jar    extras/android/support/v4/android-support-v4.jar
 frameworks/support/v4                                                                             extras/android/support/v4/src
 development/samples/Support4Demos                                                                 extras/android/support/samples/Support4Demos

@@ -119,6 +119,7 @@ $(eval _psm_packaging_target :=)
 endef
 
 ANDROID_SUPPORT_LIBRARIES := \
+    android-support-annotations \
     android-support-v4 \
     android-support-v7-gridlayout \
     android-support-v7-appcompat \
