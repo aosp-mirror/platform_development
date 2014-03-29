@@ -27,6 +27,7 @@ __FD_CLR_chk
 __FD_ISSET_chk
 __FD_SET_chk
 __arc4_getbyte
+__ashlti3
 __assert
 __assert2
 __b64_ntop
@@ -72,6 +73,9 @@ __libc_fini
 __libc_init
 __loc_aton
 __loc_ntoa
+__lshrti3
+__make_dp
+__make_tp
 __memcmp16
 __memcpy_chk
 __memmove_chk
@@ -121,6 +125,8 @@ __p_section
 __p_sockun
 __p_time
 __p_type
+__pack_d
+__pack_t
 __popcountdi2
 __pthread_cleanup_pop
 __pthread_cleanup_push
@@ -179,7 +185,6 @@ __sflags
 __sflush
 __sflush_locked
 __sfp
-__sfp_handle_exceptions
 __sinit
 __slbexpand
 __smakebuf
@@ -226,6 +231,8 @@ __system_property_update
 __system_property_wait_any
 __trunctfdf2
 __umask_chk
+__unpack_d
+__unpack_t
 __vfprintf
 __vsnprintf_chk
 __vsprintf_chk
@@ -233,6 +240,7 @@ _cache_get_nameserver_addr
 _cleanup
 _exit
 _exit_with_stack_teardown
+_flush_cache
 _fwalk
 _getlong
 _getshort
@@ -289,6 +297,7 @@ brk
 bsd_signal
 bsearch
 btowc
+bzero
 calloc
 capget
 capset
