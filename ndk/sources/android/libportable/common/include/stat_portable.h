@@ -20,6 +20,59 @@
 #include <sys/stat.h>
 #include <string.h>
 
+#ifdef __LP64__
+
+#define __STAT64_BODY_PORTABLE \
+  unsigned long st_dev; \
+  unsigned long st_ino; \
+  unsigned int st_mode; \
+  unsigned int st_nlink; \
+  uid_t st_uid; \
+  gid_t st_gid; \
+  unsigned long st_rdev; \
+  unsigned long __pad1; \
+  long st_size; \
+  int st_blksize; \
+  int __pad2; \
+  long st_blocks; \
+  long st_atime; \
+  unsigned long st_atime_nsec; \
+  long st_mtime; \
+  unsigned long st_mtime_nsec; \
+  long st_ctime; \
+  unsigned long st_ctime_nsec; \
+  unsigned int __unused4; \
+  unsigned int __unused5; \
+  unsigned long __unused_for_largest_size; \
+
+
+struct stat_portable { __STAT64_BODY_PORTABLE };
+struct stat64_portable { __STAT64_BODY_PORTABLE };
+
+static inline
+void stat_ntop(struct stat *n_stat, struct stat_portable *p_stat)
+{
+    memset(p_stat, '\0', sizeof(struct stat_portable));
+    p_stat->st_dev        = n_stat->st_dev;
+    p_stat->st_ino        = n_stat->st_ino;
+    p_stat->st_mode       = n_stat->st_mode;
+    p_stat->st_nlink      = n_stat->st_nlink;
+    p_stat->st_uid        = n_stat->st_uid;
+    p_stat->st_gid        = n_stat->st_gid;
+    p_stat->st_rdev       = n_stat->st_rdev;
+    p_stat->st_size       = n_stat->st_size;
+    p_stat->st_blksize    = n_stat->st_blksize;
+    p_stat->st_blocks     = n_stat->st_blocks;
+    p_stat->st_atime      = n_stat->st_atime;
+    p_stat->st_atime_nsec = n_stat->st_atime_nsec;
+    p_stat->st_mtime      = n_stat->st_mtime;
+    p_stat->st_mtime_nsec = n_stat->st_mtime_nsec;
+    p_stat->st_ctime      = n_stat->st_ctime;
+    p_stat->st_ctime_nsec = n_stat->st_ctime_nsec;
+}
+
+#else // ! __LP64__
+
 /* It's easy to change kernel to support stat */
 struct stat_portable {
     unsigned long long  st_dev;
@@ -147,5 +200,7 @@ static inline void stat_ntop(struct stat *n_stat, struct stat_portable *p_stat)
     p_stat->st_ctime_nsec = n_stat->st_ctime_nsec;
     p_stat->st_ino        = n_stat->st_ino;
 }
+
+#endif // __LP64__
 
 #endif /* _STAT_PORTABLE_H */
