@@ -73,6 +73,7 @@ development/sdk/build_tools_source.properties  build-tools/${PLATFORM_NAME}/sour
 # build tools from out/host/$(HOST_OS)-$(HOST_ARCH)/
 bin/aapt                                strip build-tools/${PLATFORM_NAME}/aapt
 bin/aidl                                strip build-tools/${PLATFORM_NAME}/aidl
+bin/zipalign                            strip build-tools/${PLATFORM_NAME}/zipalign
 
 # renderscript (cc + headers)
 bin/llvm-rs-cc                          strip build-tools/${PLATFORM_NAME}/llvm-rs-cc
