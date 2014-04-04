@@ -339,6 +339,5 @@ development/samples/Support7Demos                                               
 # Tests Component
 ##############################################################################
 framework/layoutlib-tests.jar tests/libtests/layoutlib-tests.jar
-system/app/ConnectivityTest.apk tests/emulator-test-apps/ConnectivityTest.apk
-system/app/GpsLocationTest.apk tests/emulator-test-apps/GpsLocationTest.apk
+system/app/EmulatorSmokeTests.apk tests/emulator-test-apps/EmulatorSmokeTests.apk
 
