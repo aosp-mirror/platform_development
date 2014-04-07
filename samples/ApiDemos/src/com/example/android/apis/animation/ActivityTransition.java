@@ -22,12 +22,11 @@ import android.app.ActivityOptions;
 import android.content.Intent;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
-import android.transition.ChangeBounds;
-import android.transition.Transition;
+import android.transition.MoveImage;
+import android.transition.Slide;
 import android.transition.TransitionManager;
 import android.transition.TransitionSet;
 import android.util.ArrayMap;
-import android.util.Pair;
 import android.view.View;
 import android.view.Window;
 import android.widget.ImageView;
@@ -47,30 +46,81 @@ public class ActivityTransition extends Activity {
 
     private ImageView mHero;
 
+    public static final int[] DRAWABLES = {
+            R.drawable.ball,
+            R.drawable.block,
+            R.drawable.ducky,
+            R.drawable.jellies,
+            R.drawable.mug,
+            R.drawable.pencil,
+            R.drawable.scissors,
+            R.drawable.woot,
+    };
+
+    public static final int[] IDS = {
+            R.id.ball,
+            R.id.block,
+            R.id.ducky,
+            R.id.jellies,
+            R.id.mug,
+            R.id.pencil,
+            R.id.scissors,
+            R.id.woot,
+    };
+
+    public static final String[] NAMES = {
+            "ball",
+            "block",
+            "ducky",
+            "jellies",
+            "mug",
+            "pencil",
+            "scissors",
+            "woot",
+    };
+
+    public static int getIdForKey(String id) {
+        return IDS[getIndexForKey(id)];
+    }
+
+    public static int getDrawableIdForKey(String id) {
+        return DRAWABLES[getIndexForKey(id)];
+    }
+
+    public static int getIndexForKey(String id) {
+        for (int i = 0; i < NAMES.length; i++) {
+            String name = NAMES[i];
+            if (name.equals(id)) {
+                return i;
+            }
+        }
+        return 2;
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         requestWindowFeature(Window.FEATURE_CONTENT_TRANSITIONS);
-        getWindow().setTriggerEarlyEnterTransition(true);
+        getWindow().setAllowOverlappingEnterTransition(true);
+        getWindow().setAllowOverlappingExitTransition(true);
         getWindow().setBackgroundDrawable(new ColorDrawable(randomColor()));
         setContentView(R.layout.image_block);
         setupHero();
         TransitionManager transitionManager = getContentTransitionManager();
         TransitionSet transitions = new TransitionSet();
-        Fall fall = new Fall();
-        fall.setDuration(600);
-        transitions.addTransition(fall);
-        transitions.addTransition(new ScaleTransition());
-        transitions.addTransition(new ChangeBounds());
-        transitions.addTransition(new Up());
+        Slide slide = new Slide();
+        slide.setDuration(600);
+        transitions.addTransition(slide);
+        transitions.addTransition(new MoveImage());
         transitionManager.setTransition(getContentScene(), transitions);
         transitionManager.setExitTransition(getContentScene(), transitions);
     }
 
     private void setupHero() {
-        int id = getIntent().getIntExtra(KEY_ID, 0);
-        mHero = (ImageView) findViewById(id);
-        if (mHero != null) {
+        String name = getIntent().getStringExtra(KEY_ID);
+        mHero = null;
+        if (name != null) {
+            mHero = (ImageView) findViewById(getIdForKey(name));
             ArrayMap<String, String> sharedElementsMap = new ArrayMap<String, String>();
             sharedElementsMap.put("hero", mHero.getSharedElementName());
             getWindow().mapTransitionTargets(sharedElementsMap);
@@ -80,7 +130,7 @@ public class ActivityTransition extends Activity {
     public void clicked(View v) {
         mHero = (ImageView) v;
         Intent intent = new Intent(this, ActivityTransitionDetails.class);
-        intent.putExtra(KEY_ID, v.getId());
+        intent.putExtra(KEY_ID, v.getSharedElementName());
         ActivityOptions activityOptions
                 = ActivityOptions.makeSceneTransitionAnimation(mHero, "hero");
         startActivity(intent, activityOptions.toBundle());
@@ -91,27 +141,5 @@ public class ActivityTransition extends Activity {
         int green = mRandom.nextInt(128);
         int blue = mRandom.nextInt(128);
         return 0xFF000000 | (red << 16) | (green << 8) | blue;
-    }
-
-    @Override
-    public void onCaptureSharedElementStart(Transition transition) {
-        int width = mHero.getWidth();
-        int newTop = mHero.getBottom() - width;
-        mHero.setTop(newTop);
-
-        int imageWidth = mHero.getDrawable().getIntrinsicWidth();
-        mHero.setPivotX(0);
-        mHero.setPivotY(0);
-        float scale = ((float)width)/imageWidth;
-        mHero.setScaleX(scale);
-        mHero.setScaleY(scale);
-    }
-
-    @Override
-    public void onCaptureSharedElementEnd() {
-        mHero.setPivotX(0);
-        mHero.setPivotY(0);
-        mHero.setScaleX(1);
-        mHero.setScaleY(1);
     }
 }
