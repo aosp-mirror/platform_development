@@ -463,6 +463,8 @@
     <string name="ir_send">Send IR</string>
     <string name="ir_get_freqs">Get Carrier Frequencies</string>
 
+    <string name="activity_documents">Content/Storage/Documents</string>
+
     <!-- ============================== -->
     <!--  app/intents examples strings     -->
     <!-- ============================== -->
