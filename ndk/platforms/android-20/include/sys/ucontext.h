@@ -86,6 +86,7 @@ typedef struct ucontext {
   struct ucontext *uc_link;
   stack_t uc_stack;
   sigset_t uc_sigmask;
+  char __padding[128 - sizeof(sigset_t)];
   mcontext_t uc_mcontext;
 } ucontext_t;
 
@@ -242,7 +243,7 @@ typedef struct user_i387_struct* fpregset_t;
 typedef struct {
   gregset_t gregs;
   fpregset_t fpregs;
-  /* TODO: reserved space? */
+  unsigned long __reserved1[8];
 } mcontext_t;
 
 typedef struct ucontext {

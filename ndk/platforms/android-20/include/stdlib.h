@@ -41,8 +41,9 @@ __BEGIN_DECLS
 #define EXIT_FAILURE 1
 #define EXIT_SUCCESS 0
 
-extern __noreturn void exit(int);
 extern __noreturn void abort(void);
+extern __noreturn void exit(int);
+extern __noreturn void _Exit(int);
 extern int atexit(void (*)(void));
 
 extern char *getenv(const char *);
@@ -151,7 +152,6 @@ extern lldiv_t   lldiv(long long, long long);
 extern const char* getprogname(void);
 extern void setprogname(const char*);
 
-#if 1 /* MISSING FROM BIONIC - ENABLED FOR STLPort and libstdc++-v3 */
 /* make STLPort happy */
 extern int      mblen(const char *, size_t);
 extern size_t   mbstowcs(wchar_t *, const char *, size_t);
@@ -160,7 +160,6 @@ extern int      mbtowc(wchar_t *, const char *, size_t);
 /* Likewise, make libstdc++-v3 happy.  */
 extern int	wctomb(char *, wchar_t);
 extern size_t	wcstombs(char *, const wchar_t *, size_t);
-#endif /* MISSING */
 
 #define MB_CUR_MAX 1
 

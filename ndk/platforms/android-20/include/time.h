@@ -61,8 +61,6 @@ struct tm {
 extern time_t time(time_t*);
 extern int nanosleep(const struct timespec*, struct timespec*);
 
-extern char* strtotimeval(const char*, struct timeval*);
-
 extern char* asctime(const struct tm*);
 extern char* asctime_r(const struct tm*, char*);
 
