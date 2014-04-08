@@ -2189,7 +2189,7 @@
         </activity>
 
         <activity android:name=".view.Controls8"
-                  android:label="Views/Controls/7. Current or Old Theme"
+                  android:label="Views/Controls/8. Current or Old Theme"
                   android:theme="@style/ThemeCurrent">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
