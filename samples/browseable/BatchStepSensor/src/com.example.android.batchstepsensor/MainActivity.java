@@ -26,6 +26,12 @@ import android.view.Menu;
 import com.example.android.common.activities.SampleActivityBase;
 import com.example.android.common.logger.Log;
 
+import com.example.android.batchstepsensor.cardstream.CardStream;
+import com.example.android.batchstepsensor.cardstream.CardStreamFragment;
+import com.example.android.batchstepsensor.cardstream.CardStreamState;
+import com.example.android.batchstepsensor.cardstream.OnCardClickListener;
+import com.example.android.batchstepsensor.cardstream.StreamRetentionFragment;
+
 public class MainActivity extends SampleActivityBase implements CardStream {
     public static final String TAG = "MainActivity";
     public static final String FRAGTAG = "BatchStepSensorFragment";

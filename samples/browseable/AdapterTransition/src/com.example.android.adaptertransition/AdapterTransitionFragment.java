@@ -33,6 +33,7 @@ import android.widget.AbsListView;
 import android.widget.FrameLayout;
 import android.widget.GridView;
 import android.widget.ListView;
+import android.widget.Toast;
 
 /**
  * Main screen for AdapterTransition sample.
@@ -44,6 +45,11 @@ public class AdapterTransitionFragment extends Fragment implements Transition.Tr
      * with IDs, we use this ID to mark the root view.
      */
     private static final int ROOT_ID = 1;
+
+    /**
+     * A tag for saving state whether the mAbsListView is ListView or GridView.
+     */
+    private static final String STATE_IS_LISTVIEW = "is_listview";
 
     /**
      * This is where we place our AdapterView (ListView / GridView).
@@ -80,11 +86,24 @@ public class AdapterTransitionFragment extends Fragment implements Transition.Tr
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        // We use a ListView at first
-        mAbsListView = (AbsListView) inflater.inflate(R.layout.fragment_meat_list, container, false);
-        mAdapter = new MeatAdapter(inflater, R.layout.item_meat_list);
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        // If savedInstanceState is available, we restore the state whether the list is a ListView
+        // or a GridView.
+        boolean isListView;
+        if (null == savedInstanceState) {
+            isListView = true;
+        } else {
+            isListView = savedInstanceState.getBoolean(STATE_IS_LISTVIEW, true);
+        }
+        inflateAbsList(inflater, container, isListView);
         return inflater.inflate(R.layout.fragment_adapter_transition, container, false);
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putBoolean(STATE_IS_LISTVIEW, mAbsListView instanceof ListView);
     }
 
     @Override
@@ -93,7 +112,6 @@ public class AdapterTransitionFragment extends Fragment implements Transition.Tr
         mContent = (FrameLayout) view.findViewById(R.id.content);
         mCover = (FrameLayout) view.findViewById(R.id.cover);
         // We are attaching the list to the screen here.
-        mAbsListView.setAdapter(mAdapter);
         mContent.addView(mAbsListView);
     }
 
@@ -109,8 +127,10 @@ public class AdapterTransitionFragment extends Fragment implements Transition.Tr
         if (null != item) {
             if (mAbsListView instanceof ListView) {
                 item.setIcon(R.drawable.ic_action_grid);
+                item.setTitle(R.string.show_as_grid);
             } else {
                 item.setIcon(R.drawable.ic_action_list);
+                item.setTitle(R.string.show_as_list);
             }
         }
     }
@@ -152,6 +172,29 @@ public class AdapterTransitionFragment extends Fragment implements Transition.Tr
     }
 
     /**
+     * Inflate a ListView or a GridView with a corresponding ListAdapter.
+     *
+     * @param inflater The LayoutInflater.
+     * @param container The ViewGroup that contains this AbsListView. The AbsListView won't be
+     *                  attached to it.
+     * @param inflateListView Pass true to inflate a ListView, or false to inflate a GridView.
+     */
+    private void inflateAbsList(LayoutInflater inflater, ViewGroup container,
+                                boolean inflateListView) {
+        if (inflateListView) {
+            mAbsListView = (AbsListView) inflater.inflate(R.layout.fragment_meat_list,
+                    container, false);
+            mAdapter = new MeatAdapter(inflater, R.layout.item_meat_list);
+        } else {
+            mAbsListView = (AbsListView) inflater.inflate(R.layout.fragment_meat_grid,
+                    container, false);
+            mAdapter = new MeatAdapter(inflater, R.layout.item_meat_grid);
+        }
+        mAbsListView.setAdapter(mAdapter);
+        mAbsListView.setOnItemClickListener(mAdapter);
+    }
+
+    /**
      * Toggle the UI between ListView and GridView.
      */
     private void toggle() {
@@ -190,15 +233,8 @@ public class AdapterTransitionFragment extends Fragment implements Transition.Tr
         // If the current list is a GridView, we replace it with a ListView. If it is a ListView,
         // a GridView.
         LayoutInflater inflater = LayoutInflater.from(getActivity());
-        if (mAbsListView instanceof GridView) {
-            mAbsListView = (AbsListView) inflater.inflate(
-                    R.layout.fragment_meat_list, (ViewGroup) mAbsListView.getParent(), false);
-            mAdapter = new MeatAdapter(inflater, R.layout.item_meat_list);
-        } else {
-            mAbsListView = (AbsListView) inflater.inflate(
-                    R.layout.fragment_meat_grid, (ViewGroup) mAbsListView.getParent(), false);
-            mAdapter = new MeatAdapter(inflater, R.layout.item_meat_grid);
-        }
+        inflateAbsList(inflater, (ViewGroup) mAbsListView.getParent(),
+                mAbsListView instanceof GridView);
         mAbsListView.setAdapter(mAdapter);
         // We restore the scrolling position here.
         mAbsListView.setSelection(first);
