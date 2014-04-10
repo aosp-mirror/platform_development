@@ -104,7 +104,7 @@
         </activity>
 
         <activity
-            android:name=".activites.InviteContactActivity"
+            android:name=".activities.InviteContactActivity"
             android:theme="@android:style/Theme.Dialog">
             <!--
                 We use the INVITE intent to add a raw contact to an existing contact.
@@ -133,34 +133,5 @@
             </intent-filter>
         </activity>
 
-        <activity
-            android:name=".activities.ViewStreamItemActivity"
-            android:theme="@android:style/Theme.Dialog">
-            <!--
-                We use the VIEW intent to view a stream item in our app.
-                It always comes with a lookup URI.
-            -->
-            <intent-filter>
-                <action
-                    android:name="android.intent.action.VIEW" />
-                <data
-                    android:mimeType="vnd.android.cursor.item/stream_item" />
-            </intent-filter>
-        </activity>
-
-        <activity
-            android:name=".activities.ViewStreamItemPhotoActivity"
-            android:theme="@android:style/Theme.Dialog">
-            <!--
-                We use the VIEW intent to view a stream item photo in our app.
-                It always comes with a lookup URI.
-            -->
-            <intent-filter>
-                <action
-                    android:name="android.intent.action.VIEW" />
-                <data
-                    android:mimeType="vnd.android.cursor.item/stream_item_photo" />
-            </intent-filter>
-        </activity>
     </application>
 </manifest>

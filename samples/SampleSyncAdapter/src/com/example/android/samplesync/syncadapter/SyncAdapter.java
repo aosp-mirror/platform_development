@@ -119,18 +119,6 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 
             ContactManager.updateStatusMessages(mContext, updatedContacts);
 
-            // This is a demo of how you can add stream items for contacts on
-            // the client. This probably won't apply to
-            // 2-way contact sync providers - it's more likely that one-way
-            // sync providers (IM clients, social networking apps, etc) would
-            // use this feature. This is only supported in ICS MR1 or above.
-
-            if (Build.VERSION.SDK_INT >=
-                    Build.VERSION_CODES.ICE_CREAM_SANDWICH_MR1) {
-                ContactManager.addStreamItems(mContext, updatedContacts,
-                    account.name, account.type);
-            }
-
             // Save off the new sync marker. On our next sync, we only want to receive
             // contacts that have changed since this sync...
             setServerSyncMarker(account, newSyncState);

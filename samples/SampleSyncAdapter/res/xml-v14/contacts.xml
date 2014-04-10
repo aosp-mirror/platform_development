@@ -24,8 +24,6 @@
     viewContactNotifyService="com.example.android.samplesync.notifier.NotifierService"
     viewGroupActivity="com.example.android.samplesync.activities.ViewGroupActivity"
     viewGroupActionLabel="@string/view_group_action_label"
-    viewStreamItemActivity="com.example.android.samplesync.activities.ViewStreamItemActivity"
-    viewStreamItemPhotoActivity="com.example.android.samplesync.activities.ViewStreamItemPhotoActivity"
 >
 
     <ContactsDataKind
