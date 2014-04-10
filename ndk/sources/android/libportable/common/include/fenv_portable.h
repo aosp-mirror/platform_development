@@ -19,6 +19,13 @@
 
 #include <sys/types.h>
 
+#ifdef __LP64__
+typedef struct {
+  unsigned char a[28];  // x86_64 largest size
+} fenv_t_portable;
+typedef __uint32_t fexcept_t_portable;
+#endif
+
 /* Exception flags. */
 #define FE_INVALID_PORTABLE    0x01
 #define FE_DIVBYZERO_PORTABLE  0x02
