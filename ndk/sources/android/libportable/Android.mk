@@ -34,7 +34,6 @@ LOCAL_C_INCLUDES := $(LOCAL_PATH)/common/include
 libportable_src_files = \
   $(patsubst $(LOCAL_PATH)/%,%,$(wildcard $(LOCAL_PATH)/arch-$(TARGET_ARCH)/*.c)) \
   $(patsubst $(LOCAL_PATH)/%,%,$(wildcard $(LOCAL_PATH)/arch-$(TARGET_ARCH)/*.S))
-$(info $(libportable_src_files))
 
 LOCAL_SRC_FILES := \
   $(libportable_src_files)
