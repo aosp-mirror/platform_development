@@ -36,13 +36,6 @@
 #include <time.h>
 #include <malloc.h>
 
-/* IMPORTANT: Any code that relies on wide character support is essentially
- *            non-portable and/or broken. the only reason this header exist
- *            is because I'm really a nice guy. However, I'm not nice enough
- *            to provide you with a real implementation. instead wchar_t == char
- *            and all wc functions are stubs to their "normal" equivalent...
- */
-
 __BEGIN_DECLS
 
 typedef __WINT_TYPE__           wint_t;
@@ -150,12 +143,11 @@ extern int               wscanf(const wchar_t *, ...);
 extern size_t wcslcat(wchar_t*, const wchar_t*, size_t);
 extern size_t wcslcpy(wchar_t*, const wchar_t*, size_t);
 
-/* No really supported.  These are just for making libstdc++-v3 happy.  */
 typedef void *wctrans_t;
-extern wint_t		 towctrans(wint_t, wctrans_t);
-extern wctrans_t	 wctrans (const char *);
+extern wint_t towctrans(wint_t, wctrans_t);
+extern wctrans_t wctrans(const char*);
 
-#if _XOPEN_SOURCE >= 700 || _POSIX_C_SOURCE >= 200809L
+#if __POSIX_VISIBLE >= 200809
 wchar_t* wcsdup(const wchar_t*);
 size_t wcsnlen(const wchar_t*, size_t);
 #endif

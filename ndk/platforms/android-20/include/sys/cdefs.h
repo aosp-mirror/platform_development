@@ -528,6 +528,13 @@
 #define  __BIONIC__   1
 #include <android/api-level.h>
 
+/* glibc compatibility. */
+#if __LP64__
+#define __WORDSIZE 64
+#else
+#define __WORDSIZE 32
+#endif
+
 /*
  * When _FORTIFY_SOURCE is defined, automatic bounds checking is
  * added to commonly used libc functions. If a buffer overrun is

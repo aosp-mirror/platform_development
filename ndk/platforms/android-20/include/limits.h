@@ -105,6 +105,15 @@
 #define ULONG_LONG_MAX  ULLONG_MAX
 #endif
 
+/* BSD compatibility definitions. */
+#if __BSD_VISIBLE
+#define SIZE_T_MAX ULONG_MAX
+#endif /* __BSD_VISIBLE */
+
+#define SSIZE_MAX LONG_MAX
+
+#define MB_LEN_MAX 1 /* No multibyte characters. */
+
 /* New code should use sysconf(_SC_PAGE_SIZE) instead. */
 #ifndef PAGE_SIZE
 #define PAGE_SIZE 4096
