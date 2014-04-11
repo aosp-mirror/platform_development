@@ -31,9 +31,6 @@
 
 /* Common definitions for limits.h. */
 
-/* Legacy */
-#include <machine/limits.h>
-
 #define	CHAR_BIT	8		/* number of bits in a char */
 
 #define	SCHAR_MAX	0x7f		/* max value for a signed char */

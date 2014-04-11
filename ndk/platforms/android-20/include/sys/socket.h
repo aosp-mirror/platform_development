@@ -107,36 +107,17 @@ struct cmsghdr {
   int cmsg_type;
 };
 
-#define __CMSG_NXTHDR(ctl, len, cmsg) __cmsg_nxthdr((ctl),(len),(cmsg))
 #define CMSG_NXTHDR(mhdr, cmsg) cmsg_nxthdr((mhdr), (cmsg))
 #define CMSG_ALIGN(len) ( ((len)+sizeof(long)-1) & ~(sizeof(long)-1) )
 #define CMSG_DATA(cmsg) ((void*)((char*)(cmsg) + CMSG_ALIGN(sizeof(struct cmsghdr))))
 #define CMSG_SPACE(len) (CMSG_ALIGN(sizeof(struct cmsghdr)) + CMSG_ALIGN(len))
 #define CMSG_LEN(len) (CMSG_ALIGN(sizeof(struct cmsghdr)) + (len))
-#define __CMSG_FIRSTHDR(ctl,len) ((len) >= sizeof(struct cmsghdr) ?   (struct cmsghdr*)(ctl) :   (struct cmsghdr*)NULL)
-#define CMSG_FIRSTHDR(msg) __CMSG_FIRSTHDR((msg)->msg_control, (msg)->msg_controllen)
+#define CMSG_FIRSTHDR(msg) \
+  ((msg)->msg_controllen >= sizeof(struct cmsghdr) \
+   ? (struct cmsghdr*) (msg)->msg_control : (struct cmsghdr*) NULL)
 #define CMSG_OK(mhdr, cmsg) ((cmsg)->cmsg_len >= sizeof(struct cmsghdr) &&   (cmsg)->cmsg_len <= (unsigned long)   ((mhdr)->msg_controllen -   ((char*)(cmsg) - (char*)(mhdr)->msg_control)))
 
-#ifdef __GNUC__
-#define __KINLINE static __inline__
-#elif defined(__cplusplus)
-#define __KINLINE static inline
-#else
-#define __KINLINE static
-#endif
-
-__KINLINE struct cmsghdr* __cmsg_nxthdr(void* __ctl, size_t __size, struct cmsghdr* __cmsg) {
-  struct cmsghdr* __ptr;
-  __ptr = (struct cmsghdr*)(((unsigned char*) __cmsg) + CMSG_ALIGN(__cmsg->cmsg_len));
-  if ((unsigned long)((char*)(__ptr+1) - (char*) __ctl) > __size) {
-    return NULL;
-  }
-  return __ptr;
-}
-
-__KINLINE struct cmsghdr* cmsg_nxthdr (struct msghdr* __msg, struct cmsghdr* __cmsg) {
-  return __cmsg_nxthdr(__msg->msg_control, __msg->msg_controllen, __cmsg);
-}
+struct cmsghdr* cmsg_nxthdr(struct msghdr*, struct cmsghdr*);
 
 #define SCM_RIGHTS 0x01
 #define SCM_CREDENTIALS 0x02
@@ -288,6 +269,7 @@ struct ucred {
 #endif
 
 __socketcall int accept(int, struct sockaddr*, socklen_t*);
+__socketcall int accept4(int, struct sockaddr*, socklen_t*, int);
 __socketcall int bind(int, const struct sockaddr*, int);
 __socketcall int connect(int, const struct sockaddr*, socklen_t);
 __socketcall int getpeername(int, struct sockaddr*, socklen_t*);
