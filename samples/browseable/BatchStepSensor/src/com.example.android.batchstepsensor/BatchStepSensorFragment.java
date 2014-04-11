@@ -26,6 +26,10 @@ import android.os.Bundle;
 import android.support.v4.app.Fragment;
 
 import com.example.android.common.logger.Log;
+import com.example.android.batchstepsensor.cardstream.Card;
+import com.example.android.batchstepsensor.cardstream.CardStream;
+import com.example.android.batchstepsensor.cardstream.CardStreamFragment;
+import com.example.android.batchstepsensor.cardstream.OnCardClickListener;
 
 public class BatchStepSensorFragment extends Fragment implements OnCardClickListener {
 

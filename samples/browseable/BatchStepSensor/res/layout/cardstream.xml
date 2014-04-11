@@ -22,10 +22,10 @@
     android:layout_height="match_parent"
     android:fillViewport="true">
 
-    <com.example.android.batchstepsensor.CardStreamLinearLayout
+    <com.example.android.batchstepsensor.cardstream.CardStreamLinearLayout
         style="@style/CardStream"
         android:id="@+id/card_stream"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
-    </com.example.android.batchstepsensor.CardStreamLinearLayout>
+        android:layout_height="match_parent"/>
+
 </ScrollView>
