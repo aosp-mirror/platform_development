@@ -34,16 +34,6 @@
 #define MAXPATHLEN  PATH_MAX
 #define MAXSYMLINKS 8
 
-#if __LP64__
-#define ALIGNBYTES 7
-#else
-#define ALIGNBYTES 3
-#endif
-
-#ifndef ALIGN
-#define ALIGN(p) (((uintptr_t)(p) + ALIGNBYTES) &~ ALIGNBYTES)
-#endif
-
 /* Macros for counting and rounding. */
 #ifndef howmany
 #define howmany(x, y)   (((x)+((y)-1))/(y))

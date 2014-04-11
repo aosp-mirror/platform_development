@@ -29,6 +29,7 @@
 #define _LOCALE_H_
 
 #include <sys/cdefs.h>
+#include <xlocale.h>
 
 __BEGIN_DECLS
 
@@ -43,15 +44,29 @@ enum {
     LC_PAPER     = 7,
     LC_NAME      = 8,
     LC_ADDRESS   = 9,
-
     LC_TELEPHONE      = 10,
     LC_MEASUREMENT    = 11,
     LC_IDENTIFICATION = 12
 };
 
-extern char* setlocale(int, const char*);
+#define LC_CTYPE_MASK          (1 << LC_CTYPE)
+#define LC_NUMERIC_MASK        (1 << LC_NUMERIC)
+#define LC_TIME_MASK           (1 << LC_TIME)
+#define LC_COLLATE_MASK        (1 << LC_COLLATE)
+#define LC_MONETARY_MASK       (1 << LC_MONETARY)
+#define LC_MESSAGES_MASK       (1 << LC_MESSAGES)
+#define LC_PAPER_MASK          (1 << LC_PAPER)
+#define LC_NAME_MASK           (1 << LC_NAME)
+#define LC_ADDRESS_MASK        (1 << LC_ADDRESS)
+#define LC_TELEPHONE_MASK      (1 << LC_TELEPHONE)
+#define LC_MEASUREMENT_MASK    (1 << LC_MEASUREMENT)
+#define LC_IDENTIFICATION_MASK (1 << LC_IDENTIFICATION)
 
-#if defined(__LP64__)
+#define LC_ALL_MASK (LC_CTYPE_MASK | LC_NUMERIC_MASK | LC_TIME_MASK | LC_COLLATE_MASK | \
+                     LC_MONETARY_MASK | LC_MESSAGES_MASK | LC_PAPER_MASK | LC_NAME_MASK | \
+                     LC_ADDRESS_MASK | LC_TELEPHONE_MASK | LC_MEASUREMENT_MASK | \
+                     LC_IDENTIFICATION_MASK)
+
 struct lconv {
     char* decimal_point;
     char* thousands_sep;
@@ -71,7 +86,6 @@ struct lconv {
     char  n_sep_by_space;
     char  p_sign_posn;
     char  n_sign_posn;
-    /* ISO-C99 */
     char  int_p_cs_precedes;
     char  int_p_sep_by_space;
     char  int_n_cs_precedes;
@@ -79,12 +93,16 @@ struct lconv {
     char  int_p_sign_posn;
     char  int_n_sign_posn;
 };
-#else
-// Keep old declaration for ILP32 for compatibility
-struct lconv { };
-#endif
 
 struct lconv* localeconv(void);
+
+locale_t duplocale(locale_t);
+void freelocale(locale_t);
+locale_t newlocale(int, const char*, locale_t);
+char* setlocale(int, const char*);
+locale_t uselocale(locale_t);
+
+#define LC_GLOBAL_LOCALE ((locale_t) -1L)
 
 __END_DECLS
 
