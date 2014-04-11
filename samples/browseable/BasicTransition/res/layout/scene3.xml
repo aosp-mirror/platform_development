@@ -48,7 +48,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
-        android:text="@string/this_is_scene_3"
+        android:text="@string/additional_message"
         android:textAppearance="?android:attr/textAppearanceLarge"/>
 
 </RelativeLayout>
