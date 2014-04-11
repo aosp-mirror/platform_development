@@ -264,6 +264,9 @@ developers/build/prebuilts/gradle/BasicTransition                            sam
 developers/build/prebuilts/gradle/AdapterTransition                          samples/${PLATFORM_NAME}/ui/AdapterTransition
 developers/build/prebuilts/gradle/CustomTransition                           samples/${PLATFORM_NAME}/ui/CustomTransition
 developers/build/prebuilts/gradle/FragmentTransition                         samples/${PLATFORM_NAME}/ui/FragmentTransition
+developers/build/prebuilts/gradle/SwipeRefreshLayoutBasic                    samples/${PLATFORM_NAME}/ui/SwipeRefreshLayoutBasic
+developers/build/prebuilts/gradle/SwipeRefreshListFragment                   samples/${PLATFORM_NAME}/ui/SwipeRefreshListFragment
+developers/build/prebuilts/gradle/SwipeRefreshMultipleViews                  samples/${PLATFORM_NAME}/ui/SwipeRefreshMultipleViews
 developers/build/prebuilts/gradle/MediaRouter                                samples/${PLATFORM_NAME}/media/MediaRouter
 
 # Old sample tree
