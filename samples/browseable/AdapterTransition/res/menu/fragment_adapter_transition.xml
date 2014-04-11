@@ -18,6 +18,6 @@ limitations under the License.
     <item
         android:id="@+id/action_toggle"
         android:icon="@drawable/ic_action_grid"
-        android:showAsAction="always"
-        android:title="Toggle view"/>
+        android:showAsAction="always|withText"
+        android:title="@string/show_as_grid"/>
 </menu>

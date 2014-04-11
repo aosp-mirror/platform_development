@@ -16,18 +16,22 @@
 
 package com.example.android.adaptertransition;
 
+import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AbsListView;
+import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 /**
  * This class provides data as Views. It is designed to support both ListView and GridView by
  * changing a layout resource file to inflate.
  */
-public class MeatAdapter extends BaseAdapter {
+public class MeatAdapter extends BaseAdapter implements AbsListView.OnItemClickListener {
 
     private final LayoutInflater mLayoutInflater;
     private final int mResourceId;
@@ -78,6 +82,16 @@ public class MeatAdapter extends BaseAdapter {
         holder.image.setImageResource(meat.resourceId);
         holder.title.setText(meat.title);
         return view;
+    }
+
+    @Override
+    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+        ViewHolder holder = (ViewHolder) view.getTag();
+        Context context = view.getContext();
+        if (null != holder && null != holder.title && null != context) {
+            Toast.makeText(context, context.getString(R.string.item_clicked,
+                    holder.title.getText()), Toast.LENGTH_SHORT).show();
+        }
     }
 
     private static class ViewHolder {
