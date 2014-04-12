@@ -66,6 +66,11 @@ def ConvertTrace(lines):
   thread_line = re.compile("(.*)(\-\-\- ){15}\-\-\-")
   dalvik_jni_thread_line = re.compile("(\".*\" prio=[0-9]+ tid=[0-9]+ NATIVE.*)")
   dalvik_native_thread_line = re.compile("(\".*\" sysTid=[0-9]+ nice=[0-9]+.*)")
+
+  width = "{8}"
+  if symbol.ARCH == "arm64" or symbol.ARCH == "x86_64":
+    width = "{16}"
+
   # Note that both trace and value line matching allow for variable amounts of
   # whitespace (e.g. \t). This is because the we want to allow for the stack
   # tool to operate on AndroidFeedback provided system logs. AndroidFeedback
@@ -77,13 +82,13 @@ def ConvertTrace(lines):
   # Or lines from AndroidFeedback crash report system logs like:
   #   03-25 00:51:05.520 I/DEBUG ( 65): #00 pc 001cf42e /data/data/com.my.project/lib/libmyproject.so
   # Please note the spacing differences.
-  trace_line = re.compile("(.*)\#([0-9]+)[ \t]+(..)[ \t]+([0-9a-f]{8})[ \t]+([^\r\n \t]*)( \((.*)\))?")  # pylint: disable-msg=C6310
+  trace_line = re.compile("(.*)\#([0-9]+)[ \t]+(..)[ \t]+([0-9a-f]" + width + ")[ \t]+([^\r\n \t]*)( \((.*)\))?")  # pylint: disable-msg=C6310
   # Examples of matched value lines include:
   #   bea4170c  8018e4e9  /data/data/com.my.project/lib/libmyproject.so
   #   bea4170c  8018e4e9  /data/data/com.my.project/lib/libmyproject.so (symbol)
   #   03-25 00:51:05.530 I/DEBUG ( 65): bea4170c 8018e4e9 /data/data/com.my.project/lib/libmyproject.so
   # Again, note the spacing differences.
-  value_line = re.compile("(.*)([0-9a-f]{8})[ \t]+([0-9a-f]{8})[ \t]+([^\r\n \t]*)( \((.*)\))?")
+  value_line = re.compile("(.*)([0-9a-f]" + width + ")[ \t]+([0-9a-f]" + width + ")[ \t]+([^\r\n \t]*)( \((.*)\))?")
   # Lines from 'code around' sections of the output will be matched before
   # value lines because otheriwse the 'code around' sections will be confused as
   # value lines.
@@ -91,7 +96,12 @@ def ConvertTrace(lines):
   # Examples include:
   #   801cf40c ffffc4cc 00b2f2c5 00b2f1c7 00c1e1a8
   #   03-25 00:51:05.530 I/DEBUG ( 65): 801cf40c ffffc4cc 00b2f2c5 00b2f1c7 00c1e1a8
-  code_line = re.compile("(.*)[ \t]*[a-f0-9]{8}[ \t]*[a-f0-9]{8}[ \t]*[a-f0-9]{8}[ \t]*[a-f0-9]{8}[ \t]*[a-f0-9]{8}[ \t]*[ \r\n]")  # pylint: disable-msg=C6310
+  code_line = re.compile("(.*)[ \t]*[a-f0-9]" + width +
+                         "[ \t]*[a-f0-9]" + width +
+                         "[ \t]*[a-f0-9]" + width +
+                         "[ \t]*[a-f0-9]" + width +
+                         "[ \t]*[a-f0-9]" + width +
+                         "[ \t]*[ \r\n]")  # pylint: disable-msg=C6310
 
   trace_lines = []
   value_lines = []
