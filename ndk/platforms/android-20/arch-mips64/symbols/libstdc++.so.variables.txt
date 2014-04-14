@@ -1,3 +1,2 @@
-_GLOBAL_OFFSET_TABLE_
 _ZSt7nothrow
 _ZTV9type_info
