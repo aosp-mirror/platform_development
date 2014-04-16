@@ -524,7 +524,8 @@ public class Connectivity extends Activity {
 
     private void onAddDefaultRoute() {
         try {
-            mNetd.addRoute("eth0", new RouteInfo(null,
+            int netId = Integer.valueOf(((TextView) findViewById(R.id.netid)).getText().toString());
+            mNetd.addRoute(netId, new RouteInfo(null,
                     NetworkUtils.numericToInetAddress("8.8.8.8")));
         } catch (Exception e) {
             Log.e(TAG, "onAddDefaultRoute got exception: " + e.toString());
@@ -533,7 +534,8 @@ public class Connectivity extends Activity {
 
     private void onRemoveDefaultRoute() {
         try {
-            mNetd.removeRoute("eth0", new RouteInfo(null,
+            int netId = Integer.valueOf(((TextView) findViewById(R.id.netid)).getText().toString());
+            mNetd.removeRoute(netId, new RouteInfo(null,
                     NetworkUtils.numericToInetAddress("8.8.8.8")));
         } catch (Exception e) {
             Log.e(TAG, "onRemoveDefaultRoute got exception: " + e.toString());
