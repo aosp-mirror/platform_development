@@ -23,15 +23,8 @@ import android.content.Intent;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
-import android.transition.MoveImage;
-import android.transition.Slide;
-import android.transition.TransitionManager;
-import android.transition.TransitionSet;
 import android.view.View;
-import android.view.Window;
 import android.widget.ImageView;
-
-import java.util.Random;
 
 /**
  *
@@ -42,8 +35,6 @@ public class ActivityTransitionDetails extends Activity {
 
     private static final String KEY_ID = "ViewTransitionValues:id";
 
-    private Random mRandom = new Random();
-
     private int mImageResourceId = R.drawable.ducky;
 
     private String mName = "ducky";
@@ -51,23 +42,10 @@ public class ActivityTransitionDetails extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        requestWindowFeature(Window.FEATURE_CONTENT_TRANSITIONS);
-        getWindow().setAllowOverlappingEnterTransition(false);
-        getWindow().setAllowOverlappingExitTransition(true);
         getWindow().setBackgroundDrawable(new ColorDrawable(randomColor()));
         setContentView(R.layout.image_details);
         ImageView titleImage = (ImageView) findViewById(R.id.titleImage);
         titleImage.setImageDrawable(getHeroDrawable());
-
-        TransitionManager transitionManager = getContentTransitionManager();
-        TransitionSet transitions = new TransitionSet();
-
-        Slide slide = new Slide();
-        slide.setDuration(600);
-        transitions.addTransition(slide);
-        transitions.addTransition(new MoveImage());
-        transitionManager.setTransition(getContentScene(), transitions);
-        transitionManager.setExitTransition(getContentScene(), transitions);
     }
 
     private Drawable getHeroDrawable() {
@@ -83,15 +61,15 @@ public class ActivityTransitionDetails extends Activity {
     public void clicked(View v) {
         Intent intent = new Intent(this, ActivityTransition.class);
         intent.putExtra(KEY_ID, mName);
-        ActivityOptions activityOptions = ActivityOptions.makeSceneTransitionAnimation(v, "hero");
+        ActivityOptions activityOptions = ActivityOptions.makeSceneTransitionAnimation(getWindow(),
+                v, "hero");
         startActivity(intent, activityOptions.toBundle());
     }
 
-    private int randomColor() {
-        int red = mRandom.nextInt(128);
-        int green = mRandom.nextInt(128);
-        int blue = mRandom.nextInt(128);
+    private static int randomColor() {
+        int red = (int)(Math.random() * 128);
+        int green = (int)(Math.random() * 128);
+        int blue = (int)(Math.random() * 128);
         return 0xFF000000 | (red << 16) | (green << 8) | blue;
     }
-
 }

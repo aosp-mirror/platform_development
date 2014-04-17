@@ -1295,7 +1295,7 @@
 
         <activity android:name=".animation.ActivityTransition"
                 android:label="Animation/Activity Transition"
-                android:enabled="@bool/atLeastHoneycomb"
+                android:enabled="@bool/atLeastLRelease"
                 android:theme="@style/ActivityTransitionTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -1305,7 +1305,7 @@
 
         <activity android:name=".animation.ActivityTransitionDetails"
                 android:label="Animation/Details of a specific thingy"
-                android:enabled="@bool/atLeastHoneycomb"
+                android:enabled="@bool/atLeastLRelease"
                 android:theme="@style/ActivityTransitionTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

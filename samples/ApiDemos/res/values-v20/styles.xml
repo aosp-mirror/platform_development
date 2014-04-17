@@ -26,10 +26,4 @@
     <!-- For API level XX or later, we can use the magical DialogWhenLarge theme. -->
     <style name="ThemeCurrentDialogWhenLarge" parent="android:style/Theme.Quantum.Light.DialogWhenLarge">
     </style>
-
-    <style name="ActivityTransitionTheme" parent="android:style/Theme.Quantum.Light">
-        <item name="android:windowIsTranslucent">true</item>
-        <item name="android:windowBackground">@android:color/transparent</item>
-        <item name="android:windowContentTransitionManager">@transition/activity_transition_mgr</item>
-    </style>
 </resources>
