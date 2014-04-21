@@ -68,6 +68,9 @@ public class DeviceAdminSample extends PreferenceActivity {
     // The following keys are used to find each preference item
     private static final String KEY_ENABLE_ADMIN = "key_enable_admin";
     private static final String KEY_DISABLE_CAMERA = "key_disable_camera";
+    private static final String KEY_DISABLE_NOTIFICATIONS = "key_disable_notifications";
+    private static final String KEY_DISABLE_UNREDACTED = "key_disable_unredacted";
+    private static final String KEY_DISABLE_TRUST_AGENTS = "key_disable_trust_agents";
     private static final String KEY_DISABLE_KEYGUARD_WIDGETS = "key_disable_keyguard_widgets";
     private static final String KEY_DISABLE_KEYGUARD_SECURE_CAMERA
             = "key_disable_keyguard_secure_camera";
@@ -126,6 +129,11 @@ public class DeviceAdminSample extends PreferenceActivity {
      */
     private boolean isActiveAdmin() {
         return mDPM.isAdminActive(mDeviceAdminSample);
+    }
+
+    @Override
+    protected boolean isValidFragment(String fragmentName) {
+        return GeneralFragment.class.getName().equals(fragmentName);
     }
 
     /**
@@ -250,6 +258,9 @@ public class DeviceAdminSample extends PreferenceActivity {
         private CheckBoxPreference mDisableCameraCheckbox;
         private CheckBoxPreference mDisableKeyguardWidgetsCheckbox;
         private CheckBoxPreference mDisableKeyguardSecureCameraCheckbox;
+        private CheckBoxPreference mDisableKeyguardNotificationCheckbox;
+        private CheckBoxPreference mDisableKeyguardTrustAgentCheckbox;
+        private CheckBoxPreference mDisableKeyguardUnredactedCheckbox;
 
         @Override
         public void onCreate(Bundle savedInstanceState) {
@@ -257,14 +268,29 @@ public class DeviceAdminSample extends PreferenceActivity {
             addPreferencesFromResource(R.xml.device_admin_general);
             mEnableCheckbox = (CheckBoxPreference) findPreference(KEY_ENABLE_ADMIN);
             mEnableCheckbox.setOnPreferenceChangeListener(this);
+
             mDisableCameraCheckbox = (CheckBoxPreference) findPreference(KEY_DISABLE_CAMERA);
             mDisableCameraCheckbox.setOnPreferenceChangeListener(this);
+
             mDisableKeyguardWidgetsCheckbox =
                 (CheckBoxPreference) findPreference(KEY_DISABLE_KEYGUARD_WIDGETS);
             mDisableKeyguardWidgetsCheckbox.setOnPreferenceChangeListener(this);
+
             mDisableKeyguardSecureCameraCheckbox =
                 (CheckBoxPreference) findPreference(KEY_DISABLE_KEYGUARD_SECURE_CAMERA);
             mDisableKeyguardSecureCameraCheckbox.setOnPreferenceChangeListener(this);
+
+            mDisableKeyguardNotificationCheckbox =
+                    (CheckBoxPreference) findPreference(KEY_DISABLE_NOTIFICATIONS);
+            mDisableKeyguardNotificationCheckbox.setOnPreferenceChangeListener(this);
+
+            mDisableKeyguardUnredactedCheckbox =
+                    (CheckBoxPreference) findPreference(KEY_DISABLE_UNREDACTED);
+            mDisableKeyguardUnredactedCheckbox.setOnPreferenceChangeListener(this);
+
+            mDisableKeyguardTrustAgentCheckbox =
+                    (CheckBoxPreference) findPreference(KEY_DISABLE_TRUST_AGENTS);
+            mDisableKeyguardTrustAgentCheckbox.setOnPreferenceChangeListener(this);
         }
 
         // At onResume time, reload UI with current values as required
@@ -287,6 +313,12 @@ public class DeviceAdminSample extends PreferenceActivity {
                     DevicePolicyManager.KEYGUARD_DISABLE_WIDGETS_ALL : 0;
             flags |= mDisableKeyguardSecureCameraCheckbox.isChecked() ?
                     DevicePolicyManager.KEYGUARD_DISABLE_SECURE_CAMERA : 0;
+            flags |= mDisableKeyguardNotificationCheckbox.isChecked() ?
+                    DevicePolicyManager.KEYGUARD_DISABLE_SECURE_NOTIFICATIONS : 0;
+            flags |= mDisableKeyguardUnredactedCheckbox.isChecked() ?
+                    DevicePolicyManager.KEYGUARD_DISABLE_UNREDACTED_NOTIFICATIONS : 0;
+            flags |= mDisableKeyguardTrustAgentCheckbox.isChecked() ?
+                    DevicePolicyManager.KEYGUARD_DISABLE_TRUST_AGENTS : 0;
             return flags;
         }
 
@@ -317,7 +349,10 @@ public class DeviceAdminSample extends PreferenceActivity {
                 mDPM.setCameraDisabled(mDeviceAdminSample, value);
                 reloadSummaries();
             } else if (preference == mDisableKeyguardWidgetsCheckbox
-                    || preference == mDisableKeyguardSecureCameraCheckbox) {
+                    || preference == mDisableKeyguardSecureCameraCheckbox
+                    || preference == mDisableKeyguardNotificationCheckbox
+                    || preference == mDisableKeyguardUnredactedCheckbox
+                    || preference == mDisableKeyguardTrustAgentCheckbox) {
                 mDPM.setKeyguardDisabledFeatures(mDeviceAdminSample, createKeyguardDisabledFlag());
                 reloadSummaries();
             }
@@ -342,6 +377,24 @@ public class DeviceAdminSample extends PreferenceActivity {
                 (disabled & DevicePolicyManager.KEYGUARD_DISABLE_SECURE_CAMERA) != 0 ?
                 R.string.keyguard_secure_camera_disabled : R.string.keyguard_secure_camera_enabled);
             mDisableKeyguardSecureCameraCheckbox.setSummary(keyguardSecureCameraSummary);
+
+            String keyguardSecureNotificationsSummary = getString(
+                    (disabled & DevicePolicyManager.KEYGUARD_DISABLE_SECURE_NOTIFICATIONS) != 0 ?
+                        R.string.keyguard_secure_notifications_disabled
+                        : R.string.keyguard_secure_notifications_enabled);
+            mDisableKeyguardNotificationCheckbox.setSummary(keyguardSecureNotificationsSummary);
+
+            String keyguardUnredactedSummary = getString(
+                    (disabled & DevicePolicyManager.KEYGUARD_DISABLE_UNREDACTED_NOTIFICATIONS) != 0
+                        ? R.string.keyguard_unredacted_notifications_disabled
+                        : R.string.keyguard_unredacted_notifications_enabled);
+            mDisableKeyguardUnredactedCheckbox.setSummary(keyguardUnredactedSummary);
+
+            String keyguardEnableTrustAgentSummary = getString(
+                    (disabled & DevicePolicyManager.KEYGUARD_DISABLE_TRUST_AGENTS) != 0 ?
+                        R.string.keyguard_trust_agents_disabled
+                        : R.string.keyguard_trust_agents_enabled);
+            mDisableKeyguardTrustAgentCheckbox.setSummary(keyguardEnableTrustAgentSummary);
         }
 
         /** Updates the device capabilities area (dis/enabling) as the admin is (de)activated */
@@ -349,6 +402,9 @@ public class DeviceAdminSample extends PreferenceActivity {
             mDisableCameraCheckbox.setEnabled(enabled);
             mDisableKeyguardWidgetsCheckbox.setEnabled(enabled);
             mDisableKeyguardSecureCameraCheckbox.setEnabled(enabled);
+            mDisableKeyguardNotificationCheckbox.setEnabled(enabled);
+            mDisableKeyguardUnredactedCheckbox.setEnabled(enabled);
+            mDisableKeyguardTrustAgentCheckbox.setEnabled(enabled);
         }
     }
 
