@@ -79,7 +79,12 @@ def FindToolchain():
     return TOOLCHAIN_INFO
 
   ## Known toolchains, newer ones in the front.
-  if ARCH == "arm":
+  if ARCH == "arm64":
+    gcc_version = os.environ["TARGET_GCC_VERSION"]
+    known_toolchains = [
+      ("aarch64-linux-android-" + gcc_version, "aarch64", "aarch64-linux-android")
+    ]
+  elif ARCH == "arm":
     gcc_version = os.environ["TARGET_GCC_VERSION"]
     known_toolchains = [
       ("arm-linux-androideabi-" + gcc_version, "arm", "arm-linux-androideabi"),
@@ -101,6 +106,7 @@ def FindToolchain():
     toolchain_info = (label, platform, target);
     if os.path.exists(ToolPath("addr2line", toolchain_info)):
       TOOLCHAIN_INFO = toolchain_info
+      print "Using toolchain from :" + ToolPath("", TOOLCHAIN_INFO)
       return toolchain_info
 
   raise Exception("Could not find tool chain")
