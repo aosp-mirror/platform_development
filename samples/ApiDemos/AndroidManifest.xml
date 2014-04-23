@@ -1232,6 +1232,15 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".content.DocumentsSample"
+                android:label="@string/activity_documents"
+                android:enabled="@bool/atLeastKitKat">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
         <provider android:name=".content.FileProvider"
                   android:authorities="com.example.android.apis.content.FileProvider"
                   android:enabled="@bool/atLeastHoneycombMR2" />
