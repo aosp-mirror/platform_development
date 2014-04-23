@@ -250,7 +250,9 @@ class TestRunner(object):
 
     tests = self._GetTestsToRun()
     # turn off dalvik verifier if necessary
-    self._TurnOffVerifier(tests)
+    # TODO: skip turning off verifier for now, since it puts device in bad
+    # state b/14088982
+    #self._TurnOffVerifier(tests)
     self._DoFullBuild(tests)
 
     target_tree = make_tree.MakeTree()
