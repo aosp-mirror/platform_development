@@ -71,83 +71,34 @@ static inline int open_flags_pton(int flags)
 }
 
 
-extern int  __open(const char*, int, int);
+extern int  __openat(int, const char*, int, int);
 
 int WRAP(open)(const char *pathname, int flags, ...)
 {
-    mode_t  mode = 0;
-    int native_flags;
-    int fd;
-
-    ALOGV(" ");
-    ALOGV("%s(pathname:%p, flags:0x%x, ...) {", __func__,
-              pathname,    flags);
-
-    flags |= O_LARGEFILE_PORTABLE;
-
-    if (flags & O_CREAT_PORTABLE) {
-        va_list  args;
-
+    mode_t mode = 0;
+    if ((flags & O_CREAT_PORTABLE) != 0) {
+        va_list args;
         va_start(args, flags);
         mode = (mode_t) va_arg(args, int);
         va_end(args);
     }
+    flags |= O_LARGEFILE_PORTABLE;
+    flags = open_flags_pton(flags);
 
-    native_flags = open_flags_pton(flags);
-
-    fd = __open(pathname, native_flags, mode);
-    if (fd == -1) {
-        /* Can't print pathname as a string, might be bogus */
-        ALOGV("%s: fd = %d = __open(pathname:%p, native_flags:0x%x, mode:0x%x);", __func__,
-                   fd,              pathname,    native_flags,      mode);
-    } else {
-        if (flags & O_CLOEXEC) {
-            filefd_CLOEXEC_enabled(fd);
-        } else {
-            filefd_CLOEXEC_disabled(fd);
-        }
-    }
-    ALOGV("%s: return(fd:%d); }", __func__, fd);
-    return fd;
+    return __openat(AT_FDCWD, pathname, flags, mode);
 }
-
-
-extern int  __openat(int, const char*, int, int);
 
 int WRAP(openat)(int dirfd, const char *pathname, int flags, ...)
 {
-    mode_t  mode = 0;
-    int native_flags;
-    int fd;
-
-    ALOGV(" ");
-    ALOGV("%s(dirfd:%d, pathname:0x%p, flags:0x%x, ...) {", __func__,
-              dirfd,    pathname,      flags);
-
-    flags |= O_LARGEFILE_PORTABLE;
-
-    if (flags & O_CREAT_PORTABLE) {
-        va_list  args;
-
+    mode_t mode = 0;
+    if ((flags & O_CREAT_PORTABLE) != 0) {
+        va_list args;
         va_start(args, flags);
         mode = (mode_t) va_arg(args, int);
         va_end(args);
     }
+    flags |= O_LARGEFILE_PORTABLE;
+    flags = open_flags_pton(flags);
 
-    native_flags = open_flags_pton(flags);
-
-    fd = __openat(dirfd, pathname, native_flags, mode);
-
-    if (fd == -1) {
-        ALOGV("%s: fd = %d = __open(pathname:0x%p, native_flags:0x%x, mode:0x%d);", __func__,
-                   fd,              pathname,      native_flags,      mode);
-    } else {
-        if (flags & O_CLOEXEC) {
-            filefd_CLOEXEC_enabled(fd);
-        } else {
-            filefd_CLOEXEC_disabled(fd);
-        }
-    }
-    ALOGV("%s: return(fd:%d); }", __func__, fd);
-    return fd;
+    return __openat(dirfd, pathname, flags, mode);
 }
