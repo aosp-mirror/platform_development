@@ -141,7 +141,8 @@ WRAP(feclearexcept)(int excepts)
 int
 WRAP(fetestexcept)(int excepts)
 {
-    return REAL(fetestexcept)(x86_change_except(excepts));
+    int ret = REAL(fetestexcept)(x86_change_except(excepts));
+    return x86_get_except(ret);
 }
 
 int
