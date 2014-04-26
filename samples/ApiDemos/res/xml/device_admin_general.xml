@@ -43,6 +43,18 @@
             android:key="key_disable_keyguard_secure_camera"
             android:title="@string/disable_keyguard_secure_camera" />
 
+        <CheckBoxPreference
+            android:key="key_disable_notifications"
+            android:title="@string/disable_keyguard_notifications" />
+
+        <CheckBoxPreference
+            android:key="key_disable_unredacted"
+            android:title="@string/disable_keyguard_unredacted_notifications" />
+
+        <CheckBoxPreference
+            android:key="key_disable_trust_agents"
+            android:title="@string/disable_keyguard_trust_agents" />
+
     </PreferenceCategory>
 
 </PreferenceScreen>
