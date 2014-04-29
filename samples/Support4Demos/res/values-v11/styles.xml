@@ -19,6 +19,10 @@
     <style name="ThemeHolo" parent="android:Theme.Holo">
     </style>
 
+    <!-- For API level 11 or later, the Holo theme is available and we prefer that. -->
+    <style name="ThemeHoloLight" parent="android:Theme.Holo.Light">
+    </style>
+
     <!-- For API level 11 or later, we can use the magical DialogWhenLarge theme. -->
     <style name="ThemeDialogWhenLarge" parent="android:style/Theme.Holo.DialogWhenLarge">
     </style>

@@ -1,0 +1,21 @@
+
+
+
+page.tags="DisplayingBitmaps"
+sample.group=UI
+@jd:body
+
+<p>This is a sample application for the 
+<a href="{@docRoot}training/displaying-bitmaps/index.html">Displaying
+Bitmaps Efficiently</a> Android Training class.</p>
+
+<p>
+The sample demonstrates:
+</p>
+<ul>
+<li>Loading large bitmaps efficiently outside the main UI thread.</li>
+<li>Caching bitmaps (both in memory and on disk).</li>
+<li>Managing bitmap memory.</li>
+<li>Displaying bitmaps in UI elements (such as {@link android.support.v4.view.ViewPager ViewPager},
+{@link android.widget.ListView ListView}, and {@link android.widget.GridView GridView}).</li>
+</ul>

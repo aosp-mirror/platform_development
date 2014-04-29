@@ -1,0 +1,15 @@
+
+
+
+page.tags="RenderScriptIntrinsic"
+sample.group=RenderScript
+@jd:body
+
+<p>
+  This sample demonstrates how to use <a href=
+  "http://android-developers.blogspot.com/2013/08/renderscript-intrinsics.html">
+  RenderScript intrinsics</a>. The app creates several RenderScript intrinsics
+  and shows a filtering result with various parameters. The sample also shows
+  how to extend {@link android.widget.RadioButton} with {@link
+  android.graphics.drawable.StateListDrawable}.
+</p>

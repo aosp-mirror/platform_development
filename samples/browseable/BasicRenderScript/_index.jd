@@ -1,0 +1,13 @@
+
+
+
+page.tags="BasicRenderScript"
+sample.group=RenderScript
+@jd:body
+
+<p>
+  This sample demonstrates the basic steps for using RenderScript. In this
+  example, the app uses <a href=
+  "{@docRoot}guide/topics/renderscript/compute.html">RenderScript</a> to
+  perform graphical filter operations on a image.
+</p>

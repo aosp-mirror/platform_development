@@ -1,0 +1,20 @@
+
+
+
+page.tags="CardReader"
+sample.group=Connectivity
+@jd:body
+
+<p>
+  This sample demonstrates how to implement a low-level NFC card reader, for
+  reading cards that do not contain NDEF or Android Beam data. This sample is
+  designed to read the virtual loyalty card implemented in the <a href=
+  "{@docRoot}samples/CardEmulation/index.html">CardEmulation</a> sample.
+</p>
+
+<p>
+  In particular, this sample demonstrates how to disable Android Beam, select
+  which AIDs the reader is interested in, and establish communication with the
+  card. See <a href="{@docRoot}guide/topics/connectivity/nfc/hce.html">Host-based
+  Card Emulation</a> for more information on the HCE APIs.
+</p>

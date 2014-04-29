@@ -1,0 +1,14 @@
+
+
+
+page.tags="SlidingTabsBasic"
+sample.group=UI
+@jd:body
+
+<p>
+  This sample shows how to use <code><a href=
+  "{@docRoot}samples/SlidingTabsBasic/src/com.example.android.common/view/SlidingTabLayout.html">
+  SlidingTabLayout</a></code> to display a custom {@link
+  android.support.v4.view.ViewPager ViewPager} title strip that gives
+  continuous feedback to the user when scrolling.
+</p>

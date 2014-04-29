@@ -1,0 +1,19 @@
+
+
+
+page.tags="CardEmulation"
+sample.group=Connectivity
+@jd:body
+
+<p>
+  This sample demonstrates how to emulate an NFC card, using the <a href=
+  "{@docRoot}guide/topics/connectivity/nfc/hce.html">Host Card Emulation</a>
+  feature added in Android 4.4. This sample makes the device appear as a
+  loyalty card whenever the screen is on and the user taps their device on an
+  appropriately configured NFC reader.
+</p>
+
+<p>
+  The <a href="{@docRoot}samples/CardReader/index.html">CardReader</a> sample
+  can be used to read the loyalty card implemented in this sample.
+</p>

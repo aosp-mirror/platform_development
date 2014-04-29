@@ -1,0 +1,12 @@
+
+
+
+page.tags="AdapterTransition"
+sample.group=UI
+@jd:body
+
+<p>
+{@link android.transition.Transition Transition} cannot be directly applied to 
+{@link android.widget.AdapterView AdapterView}s. This sample demonstrates how to 
+create a overlay layout and how to run a transition on it.
+</p>

@@ -303,6 +303,10 @@ redirects:
 - src: /guide/appendix/install-location.html
   dst: /guide/topics/data/install-location.html
   type: permanent
+
+- src: /guide/appendix/g-app-intents.html
+  dst: /guide/components/intents-common.html
+  type: permanent
   comment: Redirect to new location
 
 # new one
@@ -547,7 +551,11 @@ redirects:
   type: permanent
 
 - src: /resources/samples/.*
-  dst: /tools/samples/index.html
+  dst: /samples/index.html
+  type: permanent
+
+- src: /tools/samples/index.html
+  dst: /samples/index.html
   type: permanent
   comment: Redirect to new location
 
@@ -560,12 +568,6 @@ redirects:
   dst: /distribute/googleplay/promote/badges.html
   type: permanent
   comment: Redirect to new location
-
-- src: /guide/index.html
-  dst: /guide/components/index.html
-  type: permanent
-  comment: Redirect to new location
-
 
 
 # ------------------- TRAINING -------------------

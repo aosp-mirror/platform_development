@@ -1,0 +1,14 @@
+
+
+
+page.tags="SlidingTabsColors"
+sample.group=UI
+@jd:body
+
+<p>
+  This sample shows a more advanced example of how to use a <code><a href=
+  "{@docRoot}samples/SlidingTabsColors/src/com.example.android.common/view/SlidingTabLayout.html">
+  SlidingTabLayout</a></code> to display a custom {@link
+  android.support.v4.view.ViewPager ViewPager} title strip, with custom
+  coloring for each tab.
+</p>

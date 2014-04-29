@@ -1,0 +1,10 @@
+
+
+
+page.tags="MediaRouter"
+sample.group=Media
+@jd:body
+
+<p>
+This sample demonstrates how to create a custom media route provider.
+</p>

@@ -1,0 +1,12 @@
+
+
+
+page.tags="BasicTransition"
+sample.group=UI
+@jd:body
+
+<p>
+This sample demonstrates the basic use of the transition framework introduced in KitKat.
+Select each of the radio buttons to switch between the 
+{@link android.transition.Scene Scene}s.
+</p>

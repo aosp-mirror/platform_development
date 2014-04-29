@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+ Copyright 2014 The Android Open Source Project
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+-->
+
+<resources>
+    <string name="intro_title">Introduction</string>
+
+    <string name="batching_queue_title">Background sensor batching</string>
+    <string name="batching_queue_description">Batching allows the sensor to report sensor events at
+        a specified frequency.\n\nThe system delays calls to the SensorEventListener and deliver
+        them in intervals, based on the maximum report latency specified when the listener is
+        registered. Note that this only means that the call to onSensorChanged() is delayed, the
+        total number of calls is identical as if no batching was used. Sensors only deliver events
+        while the CPU is awake. If the CPU is asleep and a batched sensor event listener is still
+        registered, the sensor will continue to collect events until it runs out of memory and
+        overwrites old values. This use case is not covered by this sample. (The sensor event queue
+        should be flushed using a scheduled background thread.) \n\nIn this sample app data is only
+        collected while the app is running and the CPU is awake. In this case the sensor will
+        deliver events before the queue fills up.
+    </string>
+
+    <string name="explanation_description">The age of a sensor event describes the delay between
+        when it was recorded by the sensor until it was delivered to the SensorEventListener.
+    </string>
+
+    <string name="register_detector_title">Register step detector sensor</string>
+    <string name="register_detector_description">Register a listener for the STEP DETECTOR
+        sensor.\n\nThis sensor delivers an event when the user takes a step. One event is received
+        per step.
+    </string>
+
+    <string name="register_counter_title">Register step counter sensor</string>
+    <string name="register_counter_description">Register a listener for the STEP COUNTER
+        sensor.\n\nThis sensor triggers events when a step is detected, but applies algorithms to
+        filter out false positives. Events from this sensor have higher latency than the step
+        detector and contain the total number of steps taken since the sensor was first registered.
+    </string>
+
+    <string name="register_0">No batching (delay=0)</string>
+    <string name="register_5">5s batching (delay=5000ms)</string>
+    <string name="register_10">10s batching (delay=10000ms)</string>
+
+    <string name="counting_title">Total Steps: %1$d</string>
+    <string name="sensor_counter">Step Counter</string>
+    <string name="sensor_detector">Step Detector</string>
+    <string name="counting_description">Sensor: %1$s\nMax sensor event delay: %2$,d \u00B5s\nAge of
+        events in s:\n%3$s
+    </string>
+
+    <string name="error_title">Error</string>
+    <string name="error_nosensor">This sample requires at least Android KitKat (4.4) and a device
+        with the step sensor.\n\nThis device does not appear to meet these requirements, as an
+        alternative you may want to consider using the gyro sensor and implement your own step
+        recognition as a fallback.
+    </string>
+    <string name="warning_nobatching">The listener has been registered, but batch mode could not be
+        enabled.\n\nIt is likely that it is not supported by this device.\n\nSensor events will be
+        delivered in continuous mode.
+    </string>
+
+    <string name="action_notagain">Do not show again</string>
+</resources>
