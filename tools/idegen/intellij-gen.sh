@@ -32,13 +32,15 @@
 set -e
 
 progname=`basename $0`
-if [ $# -ne 1 ]
+if [ $# -lt 2 ]
 then
-    echo "Usage: $progname <module_name>"
+    echo "Usage: $progname project_dir module_dir <module_dir>..."
     exit 1
 fi
-module_name=$1
-
+project_dir=${PWD}/$1
+shift
+module_dirs=$@
+echo $module_dirs
 script_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 root_dir=$PWD
 if [ ! -e $root_dir/.repo ]; then
@@ -63,8 +65,8 @@ fi
 
 echo "Checking for $idegenjar"
 if [ -e "$idegenjar" ]; then
-  echo "Generating project files for $module_name"
-  cmd="java -cp $idegenjar com.android.idegen.IntellijProject $index_file $module_name"
+  echo "Generating project files for $module_dirs"
+  cmd="java -cp $idegenjar com.android.idegen.IntellijProject $index_file $project_dir $module_dirs"
   echo $cmd
   $cmd
 else
