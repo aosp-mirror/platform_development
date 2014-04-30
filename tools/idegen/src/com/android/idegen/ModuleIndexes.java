@@ -49,7 +49,7 @@ public class ModuleIndexes {
 
         moduleNameToMakeFileMap = Maps.newHashMap();
         makeFileToModuleNamesMap = Maps.newHashMap();
-        logger.info("Building index from " + indexFile.getAbsolutePath());
+        logger.info("Building index from " + indexFile.getCanonicalPath());
         Files.readLines(indexFile, Charset.forName("UTF-8"),
                 new LineProcessor<Object>() {
                     int count = 0;
@@ -84,7 +84,7 @@ public class ModuleIndexes {
             makeFileToModuleNamesMap.put(makeFile, moduleNames);
         } else {
             // Create a aggregate module place holder.
-            //moduleNameToMakeFileMap.put(getAggregateName(moduleName), makeFile);
+            //moduleNameToMakeFileMap.put(getAggregateName(moduleDir), makeFile);
         }
         moduleNames.add(moduleName);
     }
@@ -92,31 +92,7 @@ public class ModuleIndexes {
     public String getMakeFile(String moduleName) {
         Preconditions.checkState(moduleNameToMakeFileMap != null,
                 "Index not built. Call build() first.");
+
         return moduleNameToMakeFileMap.get(moduleName);
-    }
-
-    public Set<String> getAggregatedModules(String moduleName) {
-        Preconditions.checkState(makeFileToModuleNamesMap != null,
-                "Index not built. Call build() first.");
-        String makeFile = getMakeFile(moduleName);
-        return makeFileToModuleNamesMap.get(makeFile);
-    }
-
-    public boolean isPartOfAggregatedModule(String moduleName) {
-        String makeFile = getMakeFile(moduleName);
-        if (makeFile == null) {
-            return false;
-        }
-        Set<String> moduleNames = makeFileToModuleNamesMap.get(makeFile);
-        if (moduleNames == null) {
-            return false;
-        }
-        return moduleNames.size() > 1;
-    }
-
-    public String getAggregateName(String moduleName) {
-        String fileName = getMakeFile(moduleName);
-        File file = new File(fileName);
-        return file.getParentFile().getName() + "-aggregate";
     }
 }
