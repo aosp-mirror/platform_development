@@ -30,13 +30,16 @@ include $(TOPDIR)sdk/build/windows_sdk_tools.mk
 # This is the list of targets that we want to generate as
 # Windows executables. All the targets specified here are located in
 # the topdir/development directory and are somehow platform-dependent.
-###RM(2014-05-02) we want to temporarily stop building ALL windows tools to
-###work around a temporary libcutil breakage. However the dependency list can't
-###be empty, so we'll still build dexdump which doesn't depend on libcutils and
-###still builds.
 WIN_TARGETS := \
-	dexdump\
-
+	aapt adb aidl \
+	etc1tool \
+	dexdump dmtracedump \
+	fastboot \
+	hprof-conv \
+	prebuilt \
+	sqlite3 \
+	zipalign \
+	$(WIN_SDK_TARGETS)
 ###RM(2014-05-02) full list of WIN_TARGS, including bcc/rs that are temporarily deactivated
 ###WIN_TARGETS := \
 ###	aapt adb aidl \
@@ -50,7 +53,7 @@ WIN_TARGETS := \
 ###	sqlite3 \
 ###	zipalign \
 ###	$(WIN_SDK_TARGETS)
-
+###
 # This is the list of *Linux* build tools that we need
 # in order to be able to make the WIN_TARGETS. They are
 # build prerequisites.
@@ -96,14 +99,13 @@ $(WIN_SDK_ZIP): winsdk-tools sdk
 	$(hide) rm -rf $(WIN_SDK_DIR)
 	$(hide) mkdir -p $(WIN_SDK_DIR)
 	$(hide) cp -rf $(MAIN_SDK_DIR)/$(MAIN_SDK_NAME) $(WIN_SDK_DIR)/$(WIN_SDK_NAME)
-###RM(2014-05-02) we want to temporarily stop building ALL windows tools to
-###	$(hide) USB_DRIVER_HOOK=$(USB_DRIVER_HOOK) \
-###		PLATFORM_VERSION=$(PLATFORM_VERSION) \
-###		$(TOPDIR)development/build/tools/patch_windows_sdk.sh $(subst @,-q,$(hide)) \
-###		$(WIN_SDK_DIR)/$(WIN_SDK_NAME) $(OUT_DIR) $(TOPDIR)
-###	$(hide) PLATFORM_VERSION=$(PLATFORM_VERSION) \
-###		$(TOPDIR)sdk/build/patch_windows_sdk.sh $(subst @,-q,$(hide)) \
-###		$(WIN_SDK_DIR)/$(WIN_SDK_NAME) $(OUT_DIR) $(TOPDIR)
+	$(hide) USB_DRIVER_HOOK=$(USB_DRIVER_HOOK) \
+		PLATFORM_VERSION=$(PLATFORM_VERSION) \
+		$(TOPDIR)development/build/tools/patch_windows_sdk.sh $(subst @,-q,$(hide)) \
+		$(WIN_SDK_DIR)/$(WIN_SDK_NAME) $(OUT_DIR) $(TOPDIR)
+	$(hide) PLATFORM_VERSION=$(PLATFORM_VERSION) \
+		$(TOPDIR)sdk/build/patch_windows_sdk.sh $(subst @,-q,$(hide)) \
+		$(WIN_SDK_DIR)/$(WIN_SDK_NAME) $(OUT_DIR) $(TOPDIR)
 	$(hide) ( \
 		cd $(WIN_SDK_DIR) && \
 		rm -f $(WIN_SDK_NAME).zip && \
