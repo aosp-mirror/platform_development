@@ -116,7 +116,6 @@ SDK_EXTRAS_DEPS += \
     $(call sdk-repo-pkg-zip,$(HOST_OS),$(MAIN_SDK_ZIP),support)
 
 
-$(eval $(call mk-sdk-repo-pkg-1,$(HOST_OS),$(MAIN_SDK_ZIP),tools))
 $(eval $(call mk-sdk-repo-pkg-2,$(HOST_OS),$(MAIN_SDK_ZIP),build-tools))
 $(eval $(call mk-sdk-repo-pkg-1,$(HOST_OS),$(MAIN_SDK_ZIP),platform-tools))
 $(eval $(call mk-sdk-repo-pkg-1,$(HOST_OS),$(MAIN_SDK_ZIP),docs))
@@ -126,7 +125,6 @@ $(eval $(call mk-sdk-repo-pkg-3,$(HOST_OS),$(MAIN_SDK_ZIP),system-images,system-
 $(eval $(call mk-sdk-repo-sources,$(HOST_OS),$(MAIN_SDK_ZIP),sources))
 
 SDK_REPO_DEPS += \
-    $(call sdk-repo-pkg-zip,$(HOST_OS),$(MAIN_SDK_ZIP),tools) \
     $(call sdk-repo-pkg-zip,$(HOST_OS),$(MAIN_SDK_ZIP),build-tools) \
     $(call sdk-repo-pkg-zip,$(HOST_OS),$(MAIN_SDK_ZIP),platform-tools) \
     $(call sdk-repo-pkg-zip,$(HOST_OS),$(MAIN_SDK_ZIP),docs) \
@@ -143,12 +141,10 @@ endif
 ifneq ($(WIN_SDK_ZIP),)
 
 # docs, platforms and samples have nothing OS-dependent right now.
-$(eval $(call mk-sdk-repo-pkg-1,windows,$(WIN_SDK_ZIP),tools))
 $(eval $(call mk-sdk-repo-pkg-2,windows,$(WIN_SDK_ZIP),build-tools))
 $(eval $(call mk-sdk-repo-pkg-1,windows,$(WIN_SDK_ZIP),platform-tools))
 
 SDK_REPO_DEPS += \
-    $(call sdk-repo-pkg-zip,windows,$(WIN_SDK_ZIP),tools) \
     $(call sdk-repo-pkg-zip,windows,$(WIN_SDK_ZIP),build-tools) \
     $(call sdk-repo-pkg-zip,windows,$(WIN_SDK_ZIP),platform-tools)
 
