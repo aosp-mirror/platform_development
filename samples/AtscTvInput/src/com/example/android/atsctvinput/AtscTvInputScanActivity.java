@@ -60,6 +60,7 @@ public class AtscTvInputScanActivity extends Activity {
             @Override
             protected void onPostExecute(Void result) {
                 mProgressDialog.hide();
+                AtscTvInputScanActivity.this.setResult(Activity.RESULT_OK);
                 AtscTvInputScanActivity.this.finish();
             }
         }.execute();
