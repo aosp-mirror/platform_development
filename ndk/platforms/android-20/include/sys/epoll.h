@@ -67,7 +67,11 @@ typedef union epoll_data {
 struct epoll_event {
   uint32_t events;
   epoll_data_t data;
-};
+}
+#ifdef __x86_64__
+__packed
+#endif
+;
 
 int epoll_create(int);
 int epoll_create1(int);
