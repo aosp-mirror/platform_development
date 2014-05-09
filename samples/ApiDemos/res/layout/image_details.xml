@@ -10,7 +10,7 @@
                android:layout_weight="1"
                android:layout_width="match_parent"
                android:scaleType="centerCrop"
-               android:sharedElementName="hero"
+               android:viewName="hero"
                android:onClick="clicked"
             />
     <LinearLayout android:layout_height="0px"
