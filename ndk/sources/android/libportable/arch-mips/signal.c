@@ -32,6 +32,13 @@
 #define PORTABLE_TAG "signal_portable"
 #include <log_portable.h>
 
+/* for build against old platforms when SIGRT* defined instead of __SIGRT* */
+#ifndef __SIGRTMIN
+#define __SIGRTMIN SIGRTMIN
+#endif
+#ifndef __SIGRTMAX
+#define __SIGRTMAX SIGRTMAX
+#endif
 
 #if SIGBUS_PORTABLE == SIGBUS
 #error Bad build environment
