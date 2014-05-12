@@ -9,12 +9,16 @@ __arc4_getbyte
 __assert
 __assert2
 __atexit_register_cleanup
+__atomic_cmpxchg
+__atomic_dec
+__atomic_inc
+__atomic_swap
 __b64_ntop
 __b64_pton
 __brk
+__clone_thread_start
 __cxa_atexit
 __cxa_finalize
-__divdi3
 __dn_comp
 __dn_count_labels
 __dn_skipname
@@ -53,9 +57,6 @@ __getpriority
 __hostalias
 __init_tls
 __ioctl
-__libc_android_log_assert
-__libc_android_log_print
-__libc_android_log_vprint
 __libc_fini
 __libc_init
 __libc_init_common
@@ -63,8 +64,8 @@ __libc_preinit
 __llseek
 __loc_aton
 __loc_ntoa
+__memcmp16
 __mmap2
-__moddi3
 __ns_format_ttl
 __ns_get16
 __ns_get32
@@ -189,8 +190,6 @@ __timer_delete
 __timer_getoverrun
 __timer_gettime
 __timer_settime
-__udivdi3
-__umoddi3
 __wait4
 __waitid
 _cleanup
@@ -198,6 +197,7 @@ _dorand48
 _exit
 _exit_thread
 _exit_with_stack_teardown
+_flush_cache
 _fwalk
 _getlong
 _getshort
@@ -222,6 +222,7 @@ asctime64
 asctime64_r
 asctime_r
 asprintf
+atexit
 atoi
 atol
 atoll
@@ -235,6 +236,7 @@ bsd_signal
 bsearch
 btowc
 bzero
+cacheflush
 calloc
 capget
 capset
@@ -279,8 +281,6 @@ dlmalloc_max_footprint
 dlmalloc_stats
 dlmalloc_trim
 dlmalloc_usable_size
-dlmalloc_walk_free_pages
-dlmalloc_walk_heap
 dlmallopt
 dlmemalign
 dlpvalloc
@@ -324,6 +324,7 @@ fdprintf
 feof
 ferror
 fflush
+ffs
 fgetc
 fgetln
 fgetpos
@@ -851,8 +852,8 @@ unlockpt
 unsetenv
 usleep
 utime
-utimensat
 utimes
+utimensat
 utmpname
 valloc
 vasprintf
