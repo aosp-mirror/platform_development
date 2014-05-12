@@ -60,6 +60,12 @@ typedef int sig_atomic_t;
 #define _NSIG (_KERNEL__NSIG + 1)
 #define NSIG _NSIG
 
+/* We take a few real-time signals for ourselves. May as well use the same names as glibc. */
+#define SIGRTMIN (__libc_current_sigrtmin())
+#define SIGRTMAX (__libc_current_sigrtmax())
+extern int __libc_current_sigrtmin(void);
+extern int __libc_current_sigrtmax(void);
+
 extern const char* const sys_siglist[];
 extern const char* const sys_signame[]; /* BSD compatibility. */
 

@@ -32,7 +32,7 @@
 
 #ifdef __LEADING_UNDERSCORE
 #define	_C_LABEL(x)	__CONCAT(_,x)
-#define _C_LABEL_STRING(x)	"_"x
+#define _C_LABEL_STRING(x)	"_" x
 #else
 #define	_C_LABEL(x)	x
 #define _C_LABEL_STRING(x)	x
@@ -61,24 +61,11 @@
 #define	__SECTIONSTRING(_sec, _str)					\
 	__asm__(".section " #_sec "\n\t.asciz \"" _str "\"\n\t.previous")
 
-/* GCC visibility helper macro */
-/* This must be used to tag non-static functions that are private, i.e.
- * never exposed by the shared library. */
-#define __LIBC_HIDDEN__							\
-	__attribute__ ((visibility ("hidden")))
+/* Used to tag non-static symbols that are private and never exposed by the shared library. */
+#define __LIBC_HIDDEN__ __attribute__((visibility ("hidden")))
 
-/* This must be used to tag non-static functions that are public, i.e.
- * exposed by the shared library, and part of the stable NDK ABI */
-#define __LIBC_ABI_PUBLIC__ \
-        __attribute__ ((visibility ("default")))
-
-/* This must be used to tag non-static functions that must be exported
- * by the shared library, but whose implementation is private to the
- * platform. For now this is equivalent to __LIBC_ABI_PUBLIC__, but we
- * may want to change this later.
- */
-#define __LIBC_ABI_PRIVATE__ \
-        __attribute__ ((visibility ("default")))
+/* Used to tag non-static symbols that are public and exposed by the shared library. */
+#define __LIBC_ABI_PUBLIC__ __attribute__((visibility ("default")))
 
 #define	__IDSTRING(_n,_s)		__SECTIONSTRING(.ident,_s)
 

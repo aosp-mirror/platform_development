@@ -35,17 +35,26 @@
 #include <limits.h>
 #include <sys/types.h>
 
+#ifdef __LP64__
+  #define __RESERVED_INITIALIZER , {0}
+#else
+  #define __RESERVED_INITIALIZER
+#endif
+
 typedef struct {
   int volatile value;
+#ifdef __LP64__
+  char __reserved[36];
+#endif
 } pthread_mutex_t;
 
 #define  __PTHREAD_MUTEX_INIT_VALUE            0
 #define  __PTHREAD_RECURSIVE_MUTEX_INIT_VALUE  0x4000
 #define  __PTHREAD_ERRORCHECK_MUTEX_INIT_VALUE 0x8000
 
-#define  PTHREAD_MUTEX_INITIALIZER             {__PTHREAD_MUTEX_INIT_VALUE}
-#define  PTHREAD_RECURSIVE_MUTEX_INITIALIZER   {__PTHREAD_RECURSIVE_MUTEX_INIT_VALUE}
-#define  PTHREAD_ERRORCHECK_MUTEX_INITIALIZER  {__PTHREAD_ERRORCHECK_MUTEX_INIT_VALUE}
+#define  PTHREAD_MUTEX_INITIALIZER             {__PTHREAD_MUTEX_INIT_VALUE __RESERVED_INITIALIZER}
+#define  PTHREAD_RECURSIVE_MUTEX_INITIALIZER   {__PTHREAD_RECURSIVE_MUTEX_INIT_VALUE __RESERVED_INITIALIZER}
+#define  PTHREAD_ERRORCHECK_MUTEX_INITIALIZER  {__PTHREAD_ERRORCHECK_MUTEX_INIT_VALUE __RESERVED_INITIALIZER}
 
 enum {
     PTHREAD_MUTEX_NORMAL = 0,
@@ -60,9 +69,12 @@ enum {
 
 typedef struct {
   int volatile value;
+#ifdef __LP64__
+  char __reserved[44];
+#endif
 } pthread_cond_t;
 
-#define PTHREAD_COND_INITIALIZER  {0}
+#define PTHREAD_COND_INITIALIZER  {0 __RESERVED_INITIALIZER}
 
 typedef struct {
   uint32_t flags;
@@ -71,21 +83,24 @@ typedef struct {
   size_t guard_size;
   int32_t sched_policy;
   int32_t sched_priority;
+#ifdef __LP64__
+  char __reserved[16];
+#endif
 } pthread_attr_t;
 
 typedef long pthread_mutexattr_t;
 typedef long pthread_condattr_t;
 
-typedef int pthread_rwlockattr_t;
+typedef long pthread_rwlockattr_t;
 
 typedef struct {
-  pthread_mutex_t  lock;
-  pthread_cond_t   cond;
-  int              numLocks;
-  int              writerThreadId;
-  int              pendingReaders;
-  int              pendingWriters;
-  void*            reserved[4];  /* for future extensibility */
+  pthread_mutex_t lock;
+  pthread_cond_t cond;
+  int numLocks;
+  int writerThreadId;
+  int pendingReaders;
+  int pendingWriters;
+  void* __reserved[4];
 } pthread_rwlock_t;
 
 #define PTHREAD_RWLOCK_INITIALIZER  { PTHREAD_MUTEX_INITIALIZER, PTHREAD_COND_INITIALIZER, 0, 0, 0, 0, { NULL, NULL, NULL, NULL } }
@@ -95,7 +110,7 @@ typedef long pthread_t;
 
 typedef volatile int pthread_once_t;
 
-#define PTHREAD_ONCE_INIT    0
+#define PTHREAD_ONCE_INIT 0
 
 #define PTHREAD_STACK_MIN (2 * PAGE_SIZE)
 

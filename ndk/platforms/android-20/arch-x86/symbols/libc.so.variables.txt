@@ -12,6 +12,8 @@ __p_class_syms
 __p_key_syms
 __p_rcode_syms
 __p_type_syms
+__page_shift
+__page_size
 __popcount_tab
 __progname
 __rand48_add

@@ -46,10 +46,15 @@ extern __noreturn void exit(int);
 extern __noreturn void _Exit(int);
 extern int atexit(void (*)(void));
 
-extern char *getenv(const char *);
-extern int putenv(const char *);
-extern int setenv(const char *, const char *, int);
-extern int unsetenv(const char *);
+#if __ISO_C_VISIBLE >= 2011 || __cplusplus >= 201103L
+int at_quick_exit(void (*)(void));
+void quick_exit(int) __noreturn;
+#endif
+
+extern char* getenv(const char*);
+extern int putenv(char*);
+extern int setenv(const char*, const char*, int);
+extern int unsetenv(const char*);
 extern int clearenv(void);
 
 extern char* mkdtemp(char*);
@@ -65,9 +70,10 @@ extern unsigned long long strtoull(const char *, char **, int);
 extern int posix_memalign(void **memptr, size_t alignment, size_t size);
 
 extern double atof(const char*);
-extern double strtod(const char*, char**);
-extern float strtof(const char*, char**);
-extern long double strtold(const char*, char**);
+
+extern double strtod(const char*, char**) __LIBC_ABI_PUBLIC__;
+extern float strtof(const char*, char**) __LIBC_ABI_PUBLIC__;
+extern long double strtold(const char*, char**) __LIBC_ABI_PUBLIC__;
 
 extern int atoi(const char*) __purefunc;
 extern long atol(const char*) __purefunc;
