@@ -63,7 +63,7 @@ typedef __mode_t mode_t;
 typedef __kernel_key_t __key_t;
 typedef __key_t key_t;
 
-typedef uint32_t __ino_t;
+typedef __kernel_ino_t __ino_t;
 typedef __ino_t ino_t;
 
 typedef uint32_t __nlink_t;
@@ -72,9 +72,10 @@ typedef __nlink_t nlink_t;
 typedef void* __timer_t;
 typedef __timer_t timer_t;
 
-typedef int32_t __suseconds_t;
+typedef __kernel_suseconds_t __suseconds_t;
 typedef __suseconds_t suseconds_t;
 
+/* useconds_t is 32-bit on both LP32 and LP64. */
 typedef uint32_t __useconds_t;
 typedef __useconds_t useconds_t;
 

@@ -27,6 +27,7 @@ struct siginfo;
 #define __ARCH_SI_PREAMBLE_SIZE (3 * sizeof(int))
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
 #ifdef __LP64__
+#undef __ARCH_SI_PREAMBLE_SIZE
 #define __ARCH_SI_PREAMBLE_SIZE (4 * sizeof(int))
 #endif
 #include <asm-generic/siginfo.h>

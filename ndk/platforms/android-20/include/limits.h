@@ -112,7 +112,7 @@
 
 #define SSIZE_MAX LONG_MAX
 
-#define MB_LEN_MAX 1 /* No multibyte characters. */
+#define MB_LEN_MAX 6
 
 /* New code should use sysconf(_SC_PAGE_SIZE) instead. */
 #ifndef PAGE_SIZE
