@@ -4,6 +4,8 @@ _C_toupper_
 __atexit
 __atexit_invalid
 __bionic_brk
+__bionic_libgcc_compat_symbols
+__dso_handle
 __isthreaded
 __libc_malloc_default_dispatch
 __libc_malloc_dispatch
@@ -12,6 +14,8 @@ __p_class_syms
 __p_key_syms
 __p_rcode_syms
 __p_type_syms
+__page_shift
+__page_size
 __popcount_tab
 __progname
 __rand48_add
