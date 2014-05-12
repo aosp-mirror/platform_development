@@ -19,12 +19,15 @@ import com.example.android.apis.R;
 
 import android.app.Activity;
 import android.app.ActivityOptions;
+import android.app.SharedElementListener;
 import android.content.Intent;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
-import android.util.Pair;
 import android.view.View;
 import android.widget.ImageView;
+
+import java.util.List;
+import java.util.Map;
 
 /**
  *
@@ -101,10 +104,11 @@ public class ActivityTransition extends Activity {
         mHero = null;
         if (name != null) {
             mHero = (ImageView) findViewById(getIdForKey(name));
-            setActivityTransitionListener(new ActivityOptions.ActivityTransitionListener() {
+            setSharedElementListener(new SharedElementListener() {
                 @Override
-                public Pair<View, String>[] getSharedElementsMapping() {
-                    return new Pair[] { Pair.create((View)mHero, "hero") };
+                public void remapSharedElements(List<String> names,
+                        Map<String, View> sharedElements) {
+                    sharedElements.put("hero", mHero);
                 }
             });
         }
@@ -115,7 +119,7 @@ public class ActivityTransition extends Activity {
         Intent intent = new Intent(this, ActivityTransitionDetails.class);
         intent.putExtra(KEY_ID, v.getViewName());
         ActivityOptions activityOptions
-                = ActivityOptions.makeSceneTransitionAnimation(getWindow(), mHero, "hero");
+                = ActivityOptions.makeSceneTransitionAnimation(this, mHero, "hero");
         startActivity(intent, activityOptions.toBundle());
     }
 

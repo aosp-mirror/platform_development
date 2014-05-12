@@ -61,7 +61,7 @@ public class ActivityTransitionDetails extends Activity {
     public void clicked(View v) {
         Intent intent = new Intent(this, ActivityTransition.class);
         intent.putExtra(KEY_ID, mName);
-        ActivityOptions activityOptions = ActivityOptions.makeSceneTransitionAnimation(getWindow(),
+        ActivityOptions activityOptions = ActivityOptions.makeSceneTransitionAnimation(this,
                 v, "hero");
         startActivity(intent, activityOptions.toBundle());
     }
