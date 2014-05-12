@@ -36,4 +36,4 @@
  * This value comes from the mips machine/setjmp.h header
  * because it has the biggest jump buffer length.
  */
-#define _JBLEN  157
+#define _JBLEN  1024 /* 157 */
