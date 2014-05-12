@@ -36,7 +36,7 @@ __BEGIN_DECLS
 
 #if __i386__
 
-struct user_i387_struct {
+struct user_fpregs_struct {
   long cwd;
   long swd;
   long twd;
@@ -83,7 +83,7 @@ struct user_regs_struct {
 struct user {
   struct user_regs_struct regs;
   int u_fpvalid;
-  struct user_i387_struct i387;
+  struct user_fpregs_struct i387;
   unsigned long int u_tsize;
   unsigned long int u_dsize;
   unsigned long int u_ssize;
@@ -92,7 +92,7 @@ struct user {
   long int signal;
   int reserved;
   unsigned long u_ar0;
-  struct user_i387_struct* u_fpstate;
+  struct user_fpregs_struct* u_fpstate;
   unsigned long magic;
   char u_comm[32];
   int u_debugreg[8];
@@ -100,7 +100,7 @@ struct user {
 
 #elif defined(__x86_64__)
 
-struct user_i387_struct {
+struct user_fpregs_struct {
   unsigned short cwd;
   unsigned short swd;
   unsigned short twd;
@@ -146,7 +146,7 @@ struct user {
   struct user_regs_struct regs;
   int u_fpvalid;
   int pad0;
-  struct user_i387_struct i387;
+  struct user_fpregs_struct i387;
   unsigned long int u_tsize;
   unsigned long int u_dsize;
   unsigned long int u_ssize;
@@ -156,7 +156,7 @@ struct user {
   int reserved;
   int pad1;
   unsigned long u_ar0;
-  struct user_i387_struct* u_fpstate;
+  struct user_fpregs_struct* u_fpstate;
   unsigned long magic;
   char u_comm[32];
   unsigned long u_debugreg[8];

@@ -47,7 +47,8 @@ __BEGIN_DECLS
 #define SEEK_CUR 1
 #define SEEK_END 2
 
-extern char **environ;
+extern char** environ;
+
 extern __noreturn void _exit(int);
 
 extern pid_t  fork(void);
