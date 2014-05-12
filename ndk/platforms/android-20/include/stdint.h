@@ -30,6 +30,7 @@
 #define _STDINT_H
 
 #include <stddef.h>
+#include <machine/wchar_limits.h>
 
 typedef __signed char __int8_t;
 typedef unsigned char __uint8_t;
@@ -86,7 +87,7 @@ typedef uint8_t       uint_fast8_t;
 typedef int64_t       int_fast64_t;
 typedef uint64_t      uint_fast64_t;
 
-#ifdef __LP64__
+#if defined(__LP64__)
 typedef int64_t       int_fast16_t;
 typedef uint64_t      uint_fast16_t;
 typedef int64_t       int_fast32_t;
@@ -135,7 +136,7 @@ typedef int64_t       intmax_t;
 #define INTMAX_C(c)       INT64_C(c)
 #define UINTMAX_C(c)      UINT64_C(c)
 
-#ifdef __LP64__
+#if defined(__LP64__)
 #  define INT64_C(c)      c ## L
 #  define UINT64_C(c)     c ## UL
 #  define INTPTR_C(c)     INT64_C(c)
@@ -200,15 +201,15 @@ typedef int64_t       intmax_t;
 #define SIG_ATOMIC_MAX   INT32_MAX
 #define SIG_ATOMIC_MIN   INT32_MIN
 
-#ifndef WCHAR_MAX /* These might also have been defined by <wchar.h>. */
-#  define WCHAR_MAX      INT32_MAX
-#  define WCHAR_MIN      INT32_MIN
+#if defined(__WINT_UNSIGNED__)
+#  define WINT_MAX       UINT32_MAX
+#  define WINT_MIN       UINT32_MIN
+#else
+#  define WINT_MAX       INT32_MAX
+#  define WINT_MIN       INT32_MIN
 #endif
 
-#define WINT_MAX         INT32_MAX
-#define WINT_MIN         INT32_MIN
-
-#ifdef __LP64__
+#if defined(__LP64__)
 #  define INTPTR_MIN     INT64_MIN
 #  define INTPTR_MAX     INT64_MAX
 #  define UINTPTR_MAX    UINT64_MAX
