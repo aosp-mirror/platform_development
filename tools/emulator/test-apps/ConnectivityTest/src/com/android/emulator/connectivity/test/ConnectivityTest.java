@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.emulator.smoketests.connectivity;
+package com.android.emulator.connectivity.test;
 
 import java.io.IOException;
 import java.net.URL;
