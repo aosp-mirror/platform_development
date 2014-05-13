@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.emulator.sms.test;
+package com.android.emulator.smoketests.sms;
 
 import android.content.Context;
 import android.content.ContentResolver;
@@ -52,8 +52,10 @@ public class SmsTest {
     public void testReceivedSms() throws java.lang.InterruptedException {
         Cursor c = getSmsCursor();
         c.moveToFirst();
+
         String number = c.getString(c.getColumnIndexOrThrow("address"));
         String body = c.getString(c.getColumnIndexOrThrow("body"));
+
         c.close();
 
         assertEquals(NUMBER, number);

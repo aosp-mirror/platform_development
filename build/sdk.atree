@@ -417,7 +417,5 @@ ${OUT_DIR}/target/common/obj/PACKAGING/android-support-v17-leanback_intermediate
 # Tests Component
 ##############################################################################
 framework/layoutlib-tests.jar tests/libtests/layoutlib-tests.jar
-system/app/ConnectivityTest.apk tests/emulator-test-apps/ConnectivityTest.apk
-system/app/GpsLocationTest.apk tests/emulator-test-apps/GpsLocationTest.apk
-system/app/SmsTest.apk tests/emulator-test-apps/SmsTest.apk
+system/app/EmulatorSmokeTests.apk tests/emulator-test-apps/EmulatorSmokeTests.apk
 
