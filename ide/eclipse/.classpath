@@ -22,7 +22,6 @@
 	<classpathentry kind="src" path="packages/apps/Nfc/src"/>
 	<classpathentry kind="src" path="packages/apps/Nfc/nci/src"/>
 	<classpathentry kind="src" path="packages/apps/PackageInstaller/src"/>
-	<classpathentry kind="src" path="packages/apps/Phone/src"/>
 	<classpathentry kind="src" path="packages/apps/PhoneCommon/src"/>
 	<classpathentry kind="src" path="packages/apps/QuickSearchBox/src"/>
 	<classpathentry kind="src" path="packages/apps/Provision/src"/>
@@ -39,8 +38,11 @@
 	<classpathentry kind="src" path="packages/screensavers/Basic/src"/>
 	<classpathentry kind="src" path="packages/screensavers/PhotoTable/src"/>
 	<classpathentry kind="src" path="packages/screensavers/WebView/src"/>
+	<classpathentry kind="src" path="packages/services/Telecomm/src"/>
+	<classpathentry kind="src" path="packages/services/Telecomm/tests/src"/>
 	<classpathentry kind="src" path="packages/services/Telephony/src"/>
 	<classpathentry kind="src" path="packages/services/Telephony/common/src"/>
+	<classpathentry kind="src" path="packages/services/Telephony/tests/src"/>
 	<classpathentry kind="src" path="frameworks/base/cmds/am/src"/>
 	<classpathentry kind="src" path="frameworks/base/cmds/input/src"/>
 	<classpathentry kind="src" path="frameworks/base/cmds/pm/src"/>
@@ -67,11 +69,12 @@
 	<classpathentry kind="src" path="frameworks/base/rs/java"/>
 	<classpathentry kind="src" path="frameworks/base/sax/java"/>
 	<classpathentry kind="src" path="frameworks/base/services/core/java"/>
-        <classpathentry kind="src" path="frameworks/base/services/accessibility/java"/>
-        <classpathentry kind="src" path="frameworks/base/services/print/java"/>
-        <classpathentry kind="src" path="frameworks/base/services/backup/java"/>
-        <classpathentry kind="src" path="frameworks/base/services/devicepolicy/java"/>
-        <classpathentry kind="src" path="frameworks/base/services/appwidget/java"/>
+	<classpathentry kind="src" path="frameworks/base/services/accessibility/java"/>
+	<classpathentry kind="src" path="frameworks/base/services/print/java"/>
+	<classpathentry kind="src" path="frameworks/base/services/backup/java"/>
+	<classpathentry kind="src" path="frameworks/base/services/devicepolicy/java"/>
+	<classpathentry kind="src" path="frameworks/base/services/appwidget/java"/>
+	<classpathentry kind="src" path="frameworks/base/telecomm/java"/>
 	<classpathentry kind="src" path="frameworks/base/telephony/java"/>
 	<classpathentry kind="src" path="frameworks/base/test-runner/src"/>
 	<classpathentry kind="src" path="frameworks/base/wifi/java"/>
@@ -118,7 +121,6 @@
 	<classpathentry kind="src" path="out/target/common/obj/APPS/Gallery2_intermediates/src/renderscript/src"/>
 	<classpathentry kind="src" path="out/target/common/obj/APPS/MediaProvider_intermediates/src/src"/>
 	<classpathentry kind="src" path="out/target/common/obj/APPS/Music_intermediates/src/src"/>
-	<classpathentry kind="src" path="out/target/common/obj/APPS/Phone_intermediates/src/src"/>
 	<classpathentry kind="src" path="out/target/common/obj/APPS/QuickSearchBox_intermediates/src/src"/>
 	<classpathentry kind="src" path="out/target/common/obj/APPS/SystemUI_intermediates/src/src"/>
 	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/android-common-carousel_intermediates/src/renderscript/src"/>
@@ -127,6 +129,7 @@
 	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/framework-base_intermediates/src/keystore/java"/>
 	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/framework-base_intermediates/src/location/java"/>
 	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/framework-base_intermediates/src/media/java"/>
+	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/framework-base_intermediates/src/telecomm/java"/>
 	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/framework-base_intermediates/src/telephony/java"/>
 	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/framework-base_intermediates/src/wifi/java"/>
 	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/NfcLogTags_intermediates/src/src"/>
