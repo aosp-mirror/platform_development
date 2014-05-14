@@ -67,7 +67,7 @@ public class AtscTvInputScanActivity extends Activity {
     }
 
     private void clearChannels() {
-        String selection = TvContract.Channels.SERVICE_NAME + " = ?";
+        String selection = TvContract.Channels.COLUMN_SERVICE_NAME + " = ?";
         String[] selectionArgs = new String[] {
             AtscTvInputService.class.getName()
         };
@@ -92,11 +92,11 @@ public class AtscTvInputScanActivity extends Activity {
         Log.d(TAG, "Channel " + channel.getShortName() + " " + channel.getMajorChannelNumber()
                 + "-" + channel.getMinorChannelNumber() + " is detected.");
         ContentValues values = new ContentValues();
-        values.put(TvContract.Channels.SERVICE_NAME, AtscTvInputService.class.getName());
-        values.put(TvContract.Channels.DISPLAY_NUMBER,
+        values.put(TvContract.Channels.COLUMN_SERVICE_NAME, AtscTvInputService.class.getName());
+        values.put(TvContract.Channels.COLUMN_DISPLAY_NUMBER,
                 channel.getMajorChannelNumber() + "-" + channel.getMinorChannelNumber());
-        values.put(TvContract.Channels.DISPLAY_NAME, channel.getShortName());
-        values.put(TvContract.Channels.DATA, SampleTsStream.getTuneInfo(stream));
+        values.put(TvContract.Channels.COLUMN_DISPLAY_NAME, channel.getShortName());
+        values.put(TvContract.Channels.COLUMN_DATA, SampleTsStream.getTuneInfo(stream));
         getContentResolver().insert(TvContract.Channels.CONTENT_URI, values);
     }
 }

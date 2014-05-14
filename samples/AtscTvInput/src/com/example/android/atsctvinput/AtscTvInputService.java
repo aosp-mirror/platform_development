@@ -62,7 +62,7 @@ public class AtscTvInputService extends TvInputService {
 
 
     public TsStream getTsStreamForChannel(Uri channelUri) {
-        String[] projection = { TvContract.Channels.DATA };
+        String[] projection = { TvContract.Channels.COLUMN_DATA };
         if (channelUri == null) {
             return null;
         }
@@ -159,7 +159,7 @@ public class AtscTvInputService extends TvInputService {
         }
 
         private void clearPrograms(Uri channelUri) {
-            String selection = TvContract.Programs.CHANNEL_ID + " = ?";
+            String selection = TvContract.Programs.COLUMN_CHANNEL_ID + " = ?";
             String[] selectionArgs =
                     new String[] { Long.toString(ContentUris.parseId(channelUri)) };
             getContentResolver().delete(TvContract.Programs.CONTENT_URI, selection, selectionArgs);
@@ -168,11 +168,11 @@ public class AtscTvInputService extends TvInputService {
         private Uri insertProgram(Uri channelUri, EITItem event, long timeOffsetMs) {
             Log.d(TAG, "insertProgram " + event.getTitleText());
             ContentValues values = new ContentValues();
-            values.put(TvContract.Programs.CHANNEL_ID, ContentUris.parseId(channelUri));
-            values.put(TvContract.Programs.TITLE, event.getTitleText());
-            values.put(TvContract.Programs.START_TIME_UTC_MILLIS, timeOffsetMs
+            values.put(TvContract.Programs.COLUMN_CHANNEL_ID, ContentUris.parseId(channelUri));
+            values.put(TvContract.Programs.COLUMN_TITLE, event.getTitleText());
+            values.put(TvContract.Programs.COLUMN_START_TIME_UTC_MILLIS, timeOffsetMs
                     + event.getStartTime() * SEC_IN_MS);
-            values.put(TvContract.Programs.END_TIME_UTC_MILLIS, timeOffsetMs
+            values.put(TvContract.Programs.COLUMN_END_TIME_UTC_MILLIS, timeOffsetMs
                     + (event.getStartTime() + event.getLengthInSecond()) * SEC_IN_MS);
             return getContentResolver().insert(
                     TvContract.Programs.CONTENT_URI, values);
