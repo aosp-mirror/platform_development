@@ -205,6 +205,15 @@ public class DeviceAdminSample extends PreferenceActivity {
             }
         }
 
+        protected void postReloadSummaries() {
+            getView().post(new Runnable() {
+                @Override
+                public void run() {
+                    reloadSummaries();
+                }
+            });
+        }
+
         @Override
         public boolean onPreferenceClick(Preference preference) {
             if (mSetPassword != null && preference == mSetPassword) {
@@ -347,14 +356,22 @@ public class DeviceAdminSample extends PreferenceActivity {
                 }
             } else if (preference == mDisableCameraCheckbox) {
                 mDPM.setCameraDisabled(mDeviceAdminSample, value);
-                reloadSummaries();
+                // Delay update because the change is only applied after exiting this method.
+                postReloadSummaries();
             } else if (preference == mDisableKeyguardWidgetsCheckbox
                     || preference == mDisableKeyguardSecureCameraCheckbox
                     || preference == mDisableKeyguardNotificationCheckbox
                     || preference == mDisableKeyguardUnredactedCheckbox
                     || preference == mDisableKeyguardTrustAgentCheckbox) {
-                mDPM.setKeyguardDisabledFeatures(mDeviceAdminSample, createKeyguardDisabledFlag());
-                reloadSummaries();
+                // Delay update because the change is only applied after exiting this method.
+                getView().post(new Runnable() {
+                    @Override
+                    public void run() {
+                        mDPM.setKeyguardDisabledFeatures(mDeviceAdminSample,
+                                createKeyguardDisabledFlag());
+                    }
+                });
+                postReloadSummaries();
             }
             return true;
         }
@@ -549,7 +566,8 @@ public class DeviceAdminSample extends PreferenceActivity {
             } else if (preference == mMinNonLetter) {
                 mDPM.setPasswordMinimumNonLetter(mDeviceAdminSample, value);
             }
-            reloadSummaries();
+            // Delay update because the change is only applied after exiting this method.
+            postReloadSummaries();
             return true;
         }
 
@@ -639,7 +657,8 @@ public class DeviceAdminSample extends PreferenceActivity {
             } else if (preference == mExpirationTimeout) {
                 mDPM.setPasswordExpirationTimeout(mDeviceAdminSample, value * MS_PER_MINUTE);
             }
-            reloadSummaries();
+            // Delay update because the change is only applied after exiting this method.
+            postReloadSummaries();
             return true;
         }
 
@@ -777,7 +796,8 @@ public class DeviceAdminSample extends PreferenceActivity {
                 }
                 mDPM.setMaximumFailedPasswordsForWipe(mDeviceAdminSample, value);
             }
-            reloadSummaries();
+            // Delay update because the change is only applied after exiting this method.
+            postReloadSummaries();
             return true;
         }
 
@@ -895,7 +915,8 @@ public class DeviceAdminSample extends PreferenceActivity {
             if (preference == mRequireEncryption) {
                 boolean newActive = (Boolean) newValue;
                 mDPM.setStorageEncryption(mDeviceAdminSample, newActive);
-                reloadSummaries();
+                // Delay update because the change is only applied after exiting this method.
+                postReloadSummaries();
                 return true;
             }
             return true;
