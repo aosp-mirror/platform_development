@@ -41,15 +41,13 @@ __BEGIN_DECLS
 
 typedef __WINT_TYPE__  wint_t;
 typedef struct {
-#ifdef __LP32__
-  int dummy;
-#else
-  // 8 bytes should be enough to support at least UTF-8
-  char __reserved[8];
+  uint8_t __seq[4];
+#ifdef __LP64__
+  char __reserved[4];
 #endif
 } mbstate_t;
 
-typedef enum {
+enum {
     WC_TYPE_INVALID = 0,
     WC_TYPE_ALNUM,
     WC_TYPE_ALPHA,
@@ -64,7 +62,9 @@ typedef enum {
     WC_TYPE_UPPER,
     WC_TYPE_XDIGIT,
     WC_TYPE_MAX
-} wctype_t;
+};
+
+typedef long wctype_t;
 
 #define  WEOF        ((wint_t)(-1))
 
