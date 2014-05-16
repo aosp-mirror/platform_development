@@ -56,6 +56,8 @@ __BEGIN_DECLS
 struct dirent { __DIRENT64_BODY };
 struct dirent64 { __DIRENT64_BODY };
 
+#undef __DIRENT64_BODY
+
 #define d_fileno d_ino
 
 typedef struct DIR DIR;

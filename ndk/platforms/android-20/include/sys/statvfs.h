@@ -23,6 +23,12 @@
 
 __BEGIN_DECLS
 
+#ifdef __LP64__
+#define __STATVFS64_RESERVED uint32_t __f_reserved[6];
+#else
+#define __STATVFS64_RESERVED
+#endif
+
 #define __STATVFS64_BODY \
   unsigned long f_bsize; \
   unsigned long f_frsize; \
@@ -35,9 +41,13 @@ __BEGIN_DECLS
   unsigned long f_fsid; \
   unsigned long f_flag; \
   unsigned long f_namemax; \
+  __STATVFS64_RESERVED
 
 struct statvfs { __STATVFS64_BODY };
 struct statvfs64 { __STATVFS64_BODY };
+
+#undef __STATVFS64_BODY
+#undef __STATVFS64_RESERVED
 
 #define ST_RDONLY      0x0001
 #define ST_NOSUID      0x0002

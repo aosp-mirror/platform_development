@@ -36,19 +36,18 @@ __BEGIN_DECLS
 
 typedef uint32_t in_addr_t;
 
-extern uint32_t      inet_addr(const char *);
-
-extern int           inet_aton(const char *, struct in_addr *);
-extern char*         inet_ntoa(struct in_addr);
-
-extern int           inet_pton(int, const char *, void *);
-extern const char*   inet_ntop(int, const void *, char *, socklen_t);
-
-extern unsigned int  inet_nsap_addr(const char *, unsigned char *, int);
-extern char*         inet_nsap_ntoa(int, const unsigned char *, char *);
+in_addr_t inet_addr(const char*);
+int inet_aton(const char*, struct in_addr*);
+in_addr_t inet_lnaof(struct in_addr);
+struct in_addr inet_makeaddr(in_addr_t, in_addr_t);
+in_addr_t inet_netof(struct in_addr);
+in_addr_t inet_network(const char*);
+char* inet_ntoa(struct in_addr);
+const char* inet_ntop(int, const void*, char*, socklen_t);
+unsigned int inet_nsap_addr(const char*, unsigned char*, int);
+char* inet_nsap_ntoa(int, const unsigned char*, char*);
+int inet_pton(int, const char*, void*);
 
 __END_DECLS
 
 #endif /* _ARPA_INET_H_ */
-
-

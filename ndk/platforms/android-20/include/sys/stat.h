@@ -130,6 +130,8 @@ __BEGIN_DECLS
 struct stat { __STAT64_BODY };
 struct stat64 { __STAT64_BODY };
 
+#undef __STAT64_BODY
+
 #define st_atimensec st_atime_nsec
 #define st_mtimensec st_mtime_nsec
 #define st_ctimensec st_ctime_nsec

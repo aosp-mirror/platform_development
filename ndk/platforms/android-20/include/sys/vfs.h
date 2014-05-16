@@ -107,6 +107,8 @@ typedef __fsid_t fsid_t;
 struct statfs { __STATFS64_BODY };
 struct statfs64 { __STATFS64_BODY };
 
+#undef __STATFS64_BODY
+
 /* Declare that we have the f_namelen, f_frsize, and f_flags fields. */
 #define _STATFS_F_NAMELEN
 #define _STATFS_F_FRSIZE
