@@ -53,9 +53,6 @@ __getpriority
 __hostalias
 __init_tls
 __ioctl
-__libc_android_log_assert
-__libc_android_log_print
-__libc_android_log_vprint
 __libc_fini
 __libc_init
 __libc_init_common
@@ -279,8 +276,6 @@ dlmalloc_max_footprint
 dlmalloc_stats
 dlmalloc_trim
 dlmalloc_usable_size
-dlmalloc_walk_free_pages
-dlmalloc_walk_heap
 dlmallopt
 dlmemalign
 dlpvalloc

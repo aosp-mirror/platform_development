@@ -23,7 +23,6 @@ __dn_comp
 __dn_count_labels
 __dn_skipname
 __dorand48
-__dtoa
 __errno
 __evAddTime
 __evCmpTime
@@ -40,7 +39,6 @@ __findenv
 __fork
 __fp_nquery
 __fp_query
-__fremovelock
 __fstatfs64
 __futex_syscall3
 __futex_syscall4
@@ -108,7 +106,6 @@ __p_section
 __p_sockun
 __p_time
 __p_type
-__pread64
 __pthread_cleanup_pop
 __pthread_cleanup_push
 __pthread_clone
@@ -117,7 +114,6 @@ __pthread_cond_timedwait_relative
 __ptrace
 __putlong
 __putshort
-__pwrite64
 __reboot
 __res_close
 __res_dnok
@@ -143,7 +139,6 @@ __res_nquerydomain
 __res_nsearch
 __res_nsend
 __res_opt
-__res_ourserver_p
 __res_ownok
 __res_pquery
 __res_put_state
@@ -159,7 +154,6 @@ __rt_sigaction
 __rt_sigprocmask
 __rt_sigtimedwait
 __sclose
-__set_syscall_errno
 __set_thread_area
 __set_tls
 __setresuid
@@ -168,7 +162,6 @@ __setuid
 __sflags
 __sflush
 __sfp
-__sfvwrite
 __sigsuspend
 __sinit
 __slbexpand
@@ -200,27 +193,19 @@ __timer_delete
 __timer_getoverrun
 __timer_gettime
 __timer_settime
-__timer_table_start_stop
 __wait4
 __waitid
 _cleanup
 _dorand48
-_endhtent
 _exit
 _exit_thread
 _exit_with_stack_teardown
 _flush_cache
 _fwalk
-_gethtbyaddr
-_gethtbyname
-_gethtbyname2
-_gethtent
 _getlong
 _getshort
 _init_thread
 _longjmp
-_mktemp
-_sethtent
 _setjmp
 _thread_created_hook
 _waitpid
@@ -275,8 +260,6 @@ closedir
 closelog
 closelog_r
 connect
-copy_TM_to_tm
-copy_tm_to_TM
 cpuacct_add
 creat
 ctime
@@ -384,6 +367,7 @@ ftello
 ftime
 ftok
 ftruncate
+ftruncate64
 ftrylockfile
 fts_children
 fts_close
@@ -587,6 +571,7 @@ poll
 popen
 prctl
 pread
+pread64
 printf
 pselect
 pthread_attr_destroy
@@ -678,6 +663,7 @@ putw
 putwc
 putwchar
 pwrite
+pwrite64
 qsort
 raise
 read
@@ -700,7 +686,6 @@ rename
 renameat
 res_init
 res_mkquery
-res_need_init
 res_query
 res_search
 rewind
@@ -875,8 +860,6 @@ utime
 utimes
 utimensat
 utmpname
-valid_tm_mon
-valid_tm_wday
 valloc
 vasprintf
 verr

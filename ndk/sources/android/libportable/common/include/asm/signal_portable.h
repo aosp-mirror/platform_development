@@ -103,6 +103,14 @@ typedef unsigned long sigset_portable_t;
  *    lib-portable application can interact with. MIPS has
  *    an additional 63 signals.
  */
+
+#ifndef __SIGRTMIN
+#define __SIGRTMIN SIGRTMIN
+#endif
+#ifndef __SIGRTMAX
+#define __SIGRTMAX SIGRTMAX
+#endif
+
 #define SIGRT_1 (__SIGRTMIN + 1)
 #define SIGRT_2 (__SIGRTMIN + 2)
 #define SIGRT_3 (__SIGRTMIN + 3)

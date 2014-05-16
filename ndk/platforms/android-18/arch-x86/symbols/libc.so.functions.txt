@@ -43,7 +43,6 @@ __futex_wait_ex
 __futex_wake
 __futex_wake_ex
 __get_h_errno
-__get_res_cache
 __get_sp
 __get_stack_base
 __get_thread
@@ -53,13 +52,8 @@ __getpriority
 __hostalias
 __init_tls
 __ioctl
-__libc_android_log_assert
-__libc_android_log_print
-__libc_android_log_vprint
 __libc_fini
 __libc_init
-__libc_init_common
-__libc_preinit
 __llseek
 __loc_aton
 __loc_ntoa
@@ -279,8 +273,6 @@ dlmalloc_max_footprint
 dlmalloc_stats
 dlmalloc_trim
 dlmalloc_usable_size
-dlmalloc_walk_free_pages
-dlmalloc_walk_heap
 dlmallopt
 dlmemalign
 dlpvalloc
