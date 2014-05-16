@@ -5,3 +5,5 @@ AndroidVersion.ApiLevel=${PLATFORM_SDK_VERSION}
 AndroidVersion.CodeName=${PLATFORM_VERSION_CODENAME}
 SystemImage.Abi=armeabi-v7a
 SystemImage.GpuSupport=true
+SystemImage.TagId=default
+
