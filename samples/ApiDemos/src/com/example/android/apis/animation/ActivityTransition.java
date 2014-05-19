@@ -104,7 +104,7 @@ public class ActivityTransition extends Activity {
         mHero = null;
         if (name != null) {
             mHero = (ImageView) findViewById(getIdForKey(name));
-            setSharedElementListener(new SharedElementListener() {
+            setEnterSharedElementListener(new SharedElementListener() {
                 @Override
                 public void remapSharedElements(List<String> names,
                         Map<String, View> sharedElements) {
