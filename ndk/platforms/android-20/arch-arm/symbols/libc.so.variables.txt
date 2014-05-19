@@ -9,6 +9,7 @@ __dso_handle
 __isthreaded
 __libc_malloc_default_dispatch
 __libc_malloc_dispatch
+__netdClientDispatch
 __p_cert_syms
 __p_class_syms
 __p_key_syms
@@ -32,8 +33,10 @@ _tolower_tab_
 _toupper_tab_
 daylight
 environ
-gMallocDebugBacklog
-gMallocDebugLevel
+g_allocations_mutex
+g_hash_table
+g_malloc_debug_backlog
+g_malloc_debug_level
 h_errlist
 h_nerr
 optarg

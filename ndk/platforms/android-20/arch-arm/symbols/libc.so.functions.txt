@@ -29,6 +29,7 @@ ___Unwind_ForcedUnwind
 ___Unwind_RaiseException
 ___Unwind_Resume
 ___Unwind_Resume_or_Rethrow
+__accept
 __adddf3
 __addsf3
 __aeabi_atexit
@@ -98,17 +99,17 @@ __ashldi3
 __ashrdi3
 __assert
 __assert2
+__atexit_register_cleanup
 __atomic_cmpxchg
 __atomic_dec
 __atomic_inc
 __atomic_swap
 __b64_ntop
 __b64_pton
-__bionic_clone
-__bionic_clone_entry
 __bionic_name_mem
 __brk
 __cmpdf2
+__connect
 __cxa_atexit
 __cxa_finalize
 __divdf3
@@ -668,6 +669,7 @@ getitimer
 getline
 getlogin
 getmntent
+getmntent_r
 getnameinfo
 getnetbyaddr
 getnetbyname
@@ -716,6 +718,8 @@ gmtime64_r
 gmtime_r
 herror
 hstrerror
+htonl
+htons
 if_indextoname
 if_nametoindex
 imaxabs
@@ -723,6 +727,10 @@ imaxdiv
 index
 inet_addr
 inet_aton
+inet_lnaof
+inet_makeaddr
+inet_netof
+inet_network
 inet_nsap_addr
 inet_nsap_ntoa
 inet_ntoa
@@ -864,6 +872,8 @@ nftw64
 nice
 nrand48
 nsdispatch
+ntohl
+ntohs
 open
 open64
 openat

@@ -32,10 +32,9 @@ __arc4_getbyte
 __ashlti3
 __assert
 __assert2
+__atexit_register_cleanup
 __b64_ntop
 __b64_pton
-__bionic_clone
-__bionic_clone_entry
 __bionic_name_mem
 __cxa_atexit
 __cxa_finalize
@@ -199,7 +198,6 @@ __sched_cpualloc
 __sched_cpucount
 __sched_cpufree
 __sclose
-__set_tls
 __sflags
 __sflush
 __sflush_locked
@@ -516,6 +514,7 @@ getitimer
 getline
 getlogin
 getmntent
+getmntent_r
 getnameinfo
 getnetbyaddr
 getnetbyname
@@ -562,6 +561,8 @@ gmtime
 gmtime_r
 herror
 hstrerror
+htonl
+htons
 if_indextoname
 if_nametoindex
 imaxabs
@@ -569,6 +570,10 @@ imaxdiv
 index
 inet_addr
 inet_aton
+inet_lnaof
+inet_makeaddr
+inet_netof
+inet_network
 inet_nsap_addr
 inet_nsap_ntoa
 inet_ntoa
@@ -706,6 +711,8 @@ nftw64
 nice
 nrand48
 nsdispatch
+ntohl
+ntohs
 open
 open64
 openat
