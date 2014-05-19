@@ -39,6 +39,8 @@
 #include <sys/cdefs.h>
 #include <machine/endian.h>
 
+#include <stdint.h>
+
 #define _LITTLE_ENDIAN	1234
 #define _BIG_ENDIAN	4321
 #define _PDP_ENDIAN	3412
@@ -186,14 +188,22 @@
 #define letoh64(x) (x)
 #endif /* __BSD_VISIBLE */
 
-#define htons(x) __swap16(x)
+/* glibc compatibility. */
+__BEGIN_DECLS
+uint32_t htonl(uint32_t) __pure2;
+uint16_t htons(uint16_t) __pure2;
+uint32_t ntohl(uint32_t) __pure2;
+uint16_t ntohs(uint16_t) __pure2;
+__END_DECLS
+
 #define htonl(x) __swap32(x)
-#define ntohs(x) __swap16(x)
+#define htons(x) __swap16(x)
 #define ntohl(x) __swap32(x)
+#define ntohs(x) __swap16(x)
 
 /* Bionic additions */
-#define ntohq(x) __swap64(x)
 #define htonq(x) __swap64(x)
+#define ntohq(x) __swap64(x)
 
 #define __LITTLE_ENDIAN_BITFIELD
 

@@ -103,7 +103,7 @@ struct user {
 struct user_fpregs_struct {
   unsigned short cwd;
   unsigned short swd;
-  unsigned short twd;
+  unsigned short ftw;
   unsigned short fop;
   __u64 rip;
   __u64 rdp;

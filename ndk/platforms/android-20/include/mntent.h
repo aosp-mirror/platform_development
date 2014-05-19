@@ -35,23 +35,21 @@
 #define MOUNTED _PATH_MOUNTED
 #define MNTTYPE_IGNORE "ignore"
 
-struct mntent
-{
-    char* mnt_fsname;
-    char* mnt_dir;
-    char* mnt_type;
-    char* mnt_opts;
-    int mnt_freq;
-    int mnt_passno;
+struct mntent {
+  char* mnt_fsname;
+  char* mnt_dir;
+  char* mnt_type;
+  char* mnt_opts;
+  int mnt_freq;
+  int mnt_passno;
 };
-
 
 __BEGIN_DECLS
 
-
-struct mntent* getmntent(FILE*);
-FILE* setmntent(const char*, const char*);
 int endmntent(FILE*);
+struct mntent* getmntent(FILE*);
+struct mntent* getmntent_r(FILE*, struct mntent*, char*, int);
+FILE* setmntent(const char*, const char*);
 
 __END_DECLS
 
