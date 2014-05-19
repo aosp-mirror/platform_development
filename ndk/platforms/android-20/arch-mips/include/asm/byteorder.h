@@ -18,13 +18,6 @@
  ****************************************************************************/
 #ifndef _ASM_BYTEORDER_H
 #define _ASM_BYTEORDER_H
-#ifdef __MIPSEB__
-#include <linux/byteorder/big_endian.h>
-/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
-#elif defined(__MIPSEL__)
 #include <linux/byteorder/little_endian.h>
-#else
-#error "MIPS, but neither __MIPSEB__, nor __MIPSEL__???"
+#endif
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
-#endif
-#endif

@@ -27,14 +27,12 @@ _Unwind_SetIP
 __FD_CLR_chk
 __FD_ISSET_chk
 __FD_SET_chk
-__android_fatal
+__android_set_abort_message
 __arc4_getbyte
 __assert
 __assert2
 __b64_ntop
 __b64_pton
-__bionic_clone
-__bionic_clone_entry
 __bionic_name_mem
 __cxa_atexit
 __cxa_finalize
@@ -512,6 +510,7 @@ getitimer
 getline
 getlogin
 getmntent
+getmntent_r
 getnameinfo
 getnetbyaddr
 getnetbyname
@@ -558,6 +557,8 @@ gmtime
 gmtime_r
 herror
 hstrerror
+htonl
+htons
 if_indextoname
 if_nametoindex
 imaxabs
@@ -565,6 +566,10 @@ imaxdiv
 index
 inet_addr
 inet_aton
+inet_lnaof
+inet_makeaddr
+inet_netof
+inet_network
 inet_nsap_addr
 inet_nsap_ntoa
 inet_ntoa
@@ -702,6 +707,8 @@ nftw64
 nice
 nrand48
 nsdispatch
+ntohl
+ntohs
 open
 open64
 openat
