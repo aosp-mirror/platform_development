@@ -35,7 +35,7 @@
 #include <limits.h>
 #include <sys/types.h>
 
-#ifdef __LP64__
+#if defined(__LP64__)
   #define __RESERVED_INITIALIZER , {0}
 #else
   #define __RESERVED_INITIALIZER
@@ -112,7 +112,11 @@ typedef volatile int pthread_once_t;
 
 #define PTHREAD_ONCE_INIT 0
 
+#if defined(__LP64__)
+#define PTHREAD_STACK_MIN (4 * PAGE_SIZE)
+#else
 #define PTHREAD_STACK_MIN (2 * PAGE_SIZE)
+#endif
 
 #define PTHREAD_CREATE_DETACHED  0x00000001
 #define PTHREAD_CREATE_JOINABLE  0x00000000
