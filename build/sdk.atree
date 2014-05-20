@@ -38,7 +38,7 @@ frameworks/base/docs/docs-redirect.html documentation.html
 # Platform Tools Component
 ##############################################################################
 
-sdk/files/sdk_files_NOTICE.txt                platform-tools/NOTICE.txt
+development/sdk/sdk_files_NOTICE.txt          platform-tools/NOTICE.txt
 development/sdk/plat_tools_source.properties  platform-tools/source.properties
 
 # host tools from out/host/$(HOST_OS)-$(HOST_ARCH)/
@@ -67,7 +67,7 @@ external/chromium-trace/UPSTREAM_REVISION     platform-tools/systrace/UPSTREAM_R
 # at build-time. Packaging will later change that to the actual build-tools
 # revision as specified in the source.properties.
 
-sdk/files/sdk_files_NOTICE.txt                 build-tools/${PLATFORM_NAME}/NOTICE.txt
+development/sdk/sdk_files_NOTICE.txt           build-tools/${PLATFORM_NAME}/NOTICE.txt
 development/sdk/build_tools_source.properties  build-tools/${PLATFORM_NAME}/source.properties
 
 # build tools from out/host/$(HOST_OS)-$(HOST_ARCH)/
@@ -158,24 +158,24 @@ development/tools/templates/ic_launcher_hdpi.png            platforms/${PLATFORM
 development/tools/templates/ic_launcher_xhdpi.png           platforms/${PLATFORM_NAME}/templates/ic_launcher_xhdpi.png
 
 # Eclipse Editors support
-framework/layoutlib.jar       platforms/${PLATFORM_NAME}/data/layoutlib.jar
-framework/icu4j.jar           platforms/${PLATFORM_NAME}/data/icu4j.jar
-frameworks/base/core/res/res  platforms/${PLATFORM_NAME}/data/res
-docs/activity_actions.txt     platforms/${PLATFORM_NAME}/data/activity_actions.txt
-docs/broadcast_actions.txt    platforms/${PLATFORM_NAME}/data/broadcast_actions.txt
-docs/service_actions.txt      platforms/${PLATFORM_NAME}/data/service_actions.txt
-docs/categories.txt           platforms/${PLATFORM_NAME}/data/categories.txt
-docs/widgets.txt              platforms/${PLATFORM_NAME}/data/widgets.txt
-docs/features.txt             platforms/${PLATFORM_NAME}/data/features.txt
+framework/layoutlib.jar                   platforms/${PLATFORM_NAME}/data/layoutlib.jar
+framework/icu4j.jar                       platforms/${PLATFORM_NAME}/data/icu4j.jar
+frameworks/base/core/res/res              platforms/${PLATFORM_NAME}/data/res
+docs/activity_actions.txt                 platforms/${PLATFORM_NAME}/data/activity_actions.txt
+docs/broadcast_actions.txt                platforms/${PLATFORM_NAME}/data/broadcast_actions.txt
+docs/service_actions.txt                  platforms/${PLATFORM_NAME}/data/service_actions.txt
+docs/categories.txt                       platforms/${PLATFORM_NAME}/data/categories.txt
+docs/widgets.txt                          platforms/${PLATFORM_NAME}/data/widgets.txt
+docs/features.txt                         platforms/${PLATFORM_NAME}/data/features.txt
 
 # fonts for layoutlib.
-frameworks/base/data/fonts    platforms/${PLATFORM_NAME}/data/fonts
-external/noto-fonts           platforms/${PLATFORM_NAME}/data/fonts
+frameworks/base/data/fonts                platforms/${PLATFORM_NAME}/data/fonts
+external/noto-fonts                       platforms/${PLATFORM_NAME}/data/fonts
 
 # NOTICE files are copied by build/core/Makefile from sdk.git
-sdk/files/sdk_files_NOTICE.txt platforms/${PLATFORM_NAME}/templates/NOTICE.txt
-sdk/files/sdk_files_NOTICE.txt platforms/${PLATFORM_NAME}/data/NOTICE.txt
-sdk/files/sdk_files_NOTICE.txt platforms/${PLATFORM_NAME}/skins/NOTICE.txt
+development/sdk/sdk_files_NOTICE.txt      platforms/${PLATFORM_NAME}/templates/NOTICE.txt
+development/sdk/sdk_files_NOTICE.txt      platforms/${PLATFORM_NAME}/data/NOTICE.txt
+development/sdk/sdk_files_NOTICE.txt      platforms/${PLATFORM_NAME}/skins/NOTICE.txt
 
 
 ##############################################################################
@@ -318,7 +318,7 @@ development/samples/XmlAdapters                samples/${PLATFORM_NAME}/legacy/X
 development/samples/RenderScript/HelloCompute  samples/${PLATFORM_NAME}/legacy/RenderScript/HelloCompute
 
 # NOTICE files are copied by build/core/Makefile from sdk.git
-sdk/files/sdk_files_NOTICE.txt                 samples/${PLATFORM_NAME}/NOTICE.txt
+development/sdk/sdk_files_NOTICE.txt           samples/${PLATFORM_NAME}/NOTICE.txt
 
 ##############################################################################
 # Add-on Folder
@@ -334,7 +334,7 @@ sdk/files/README_add-ons.txt add-ons/README.txt
 
 development/sdk/support_source.properties                                                         extras/android/support/source.properties
 development/sdk/support_README.txt                                                                extras/android/support/README.txt
-sdk/files/sdk_files_NOTICE.txt                                                                    extras/android/support/NOTICE.txt
+development/sdk/sdk_files_NOTICE.txt                                                              extras/android/support/NOTICE.txt
 
 ${OUT_DIR}/target/common/obj/PACKAGING/android-support-v4_intermediates/android-support-v4.jar    extras/android/support/v4/android-support-v4.jar
 frameworks/support/v4                                                                             extras/android/support/v4/src
