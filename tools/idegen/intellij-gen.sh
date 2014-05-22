@@ -54,7 +54,11 @@ index_file=$root_dir/module-index.txt
 idegenjar=$script_dir/idegen.jar
 if [ ! -e $idegenjar ]; then
   # See if the jar is in the build directory.
-  idegenjar=$root_dir/out/host/linux-x86/framework/idegen.jar
+  platform="linux"
+  if [ "Darwin" = "$(uname)" ]; then
+    platform="darwin"
+  fi
+  idegenjar="$root_dir/out/host/$platform-x86/framework/idegen.jar"
 fi
 
 if [ ! -e "$index_file" ]; then
