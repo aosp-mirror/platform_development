@@ -48,6 +48,7 @@ public class DocumentsSample extends Activity {
     private static final int CODE_READ = 42;
     private static final int CODE_WRITE = 43;
     private static final int CODE_PICK = 44;
+    private static final int CODE_RENAME = 45;
 
     private TextView mResult;
 
@@ -216,6 +217,19 @@ public class DocumentsSample extends Activity {
         });
         view.addView(button);
 
+        button = new Button(context);
+        button.setText("OPEN_DOC */* for rename");
+        button.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+                intent.addCategory(Intent.CATEGORY_OPENABLE);
+                intent.setType("*/*");
+                startActivityForResult(intent, CODE_RENAME);
+            }
+        });
+        view.addView(button);
+
         final ScrollView scroll = new ScrollView(context);
         scroll.addView(view);
 
@@ -312,6 +326,19 @@ public class DocumentsSample extends Activity {
                 log("deleted untouched pic");
             } else {
                 log("FAILED TO DELETE PIC");
+            }
+        } else if (requestCode == CODE_RENAME) {
+            final Uri newUri = DocumentsContract.renameDocument(cr, uri, "MEOW.TEST");
+            log("rename result=" + newUri);
+
+            InputStream is = null;
+            try {
+                is = cr.openInputStream(newUri);
+                log("read length=" + readFullyNoClose(is).length);
+            } catch (Exception e) {
+                log("FAILED TO READ", e);
+            } finally {
+                closeQuietly(is);
             }
         }
     }
