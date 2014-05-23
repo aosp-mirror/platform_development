@@ -23,7 +23,6 @@
 #include <errno_portable.h>
 #include <filefd_portable.h>
 #include <signal_portable.h>
-#include <sys/atomics.h>
 
 #define PORTABLE_TAG "filefd_portable"
 #include <log_portable.h>
@@ -307,7 +306,7 @@ static int import_fd_env(int verify)
                 } else {
                     ASSERT(filefd_mapped_file[fd] == UNUSED_FD_TYPE);
 
-                    __atomic_inc(&filefd_mapped_files);
+                    __sync_fetch_and_add(&filefd_mapped_files, 1);
                     ALOGV("%s: ++filefd_mapped_files:%d;", __func__,
                                  filefd_mapped_files);
 
@@ -358,7 +357,7 @@ __hidden void filefd_opened(int fd, enum filefd_type fd_type)
 
     if (fd >= 0 && fd < __FD_SETSIZE) {
         if (filefd_mapped_file[fd] == UNUSED_FD_TYPE) {
-            __atomic_inc(&filefd_mapped_files);
+            __sync_fetch_and_add(&filefd_mapped_files, 1);
             filefd_mapped_file[fd] = fd_type;
         }
         ASSERT(filefd_mapped_file[fd] == fd_type);
@@ -375,7 +374,7 @@ __hidden void filefd_closed(int fd)
         if (filefd_mapped_file[fd] != UNUSED_FD_TYPE) {
             filefd_mapped_file[fd] = UNUSED_FD_TYPE;
             filefd_FD_CLOEXEC_file[fd] = 0;
-            __atomic_dec(&filefd_mapped_files);
+            __sync_fetch_and_sub(&filefd_mapped_files, 1);
         }
     }
     ALOGV("%s: }", __func__);

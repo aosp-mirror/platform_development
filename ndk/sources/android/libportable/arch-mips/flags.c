@@ -23,36 +23,3 @@
 #include <log_portable.h>
 
 
-/* __sflags is an internal bionic routine but the symbol is exported and there are callers... */
-extern int __sflags(const char *, int *);
-
-int
-WRAP(__sflags)(const char *mode, int *optr)
-{
-    int rv;
-    int nflags, pflags;
-
-    ALOGV(" ");
-    ALOGV("%s(mode:%p, optr:%p) {", __func__, mode, optr);
-
-    rv = __sflags(mode, &nflags);
-
-    /* error - no change to *optr */
-    if (rv == 0)
-        goto done;
-
-    pflags = nflags & O_ACCMODE;
-    if (nflags & O_CREAT)
-        pflags |= O_CREAT_PORTABLE;
-    if (nflags & O_TRUNC)
-        pflags |= O_TRUNC_PORTABLE;
-    if (nflags & O_APPEND)
-        pflags |= O_APPEND_PORTABLE;
-
-    /* Set *optr to portable flags */
-    *optr = pflags;
-
-done:
-    ALOGV("%s: return(rv:%d); }", __func__, rv);
-    return rv;
-}
