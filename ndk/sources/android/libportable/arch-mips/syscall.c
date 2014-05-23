@@ -561,20 +561,6 @@ int WRAP(syscall)(int portable_number, ...)
     }
 #endif
 
-#ifdef __NR_tkill_portable
-    case __NR_tkill_portable: {
-        int tid, sig;
-
-        va_start(ap, portable_number);
-        tid = va_arg(ap, int);
-        sig = va_arg(ap, int);
-        va_end(ap);
-
-        ret = WRAP(tkill)(tid, sig);
-        goto done;
-    }
-#endif
-
 #ifdef __NR_uname_portable
     case __NR_uname_portable: native_number = __NR_uname; break;
 #endif
