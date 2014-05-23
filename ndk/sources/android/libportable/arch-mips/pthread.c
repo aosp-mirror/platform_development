@@ -213,9 +213,6 @@ PTHREAD_WRAPPER(pthread_cond_timedwait_relative_np, (pthread_cond_t *cond, pthre
 PTHREAD_WRAPPER(pthread_cond_timeout_np, (pthread_cond_t *cond, pthread_mutex_t *mutex,
                 unsigned msecs), (cond, mutex, msecs), "(cond:%p, mutex:%p, msecs:%u)");
 
-PTHREAD_WRAPPER(pthread_mutex_lock_timeout_np, (pthread_mutex_t *mutex, unsigned msecs),
-                (mutex, msecs), "(mutex:%p, msecs:%u)");
-
 PTHREAD_WRAPPER(pthread_rwlockattr_init, (pthread_rwlockattr_t *attr), (attr), "(attr:%p)");
 
 PTHREAD_WRAPPER(pthread_rwlockattr_destroy, (pthread_rwlockattr_t *attr), (attr), "(attr:%p)");
