@@ -871,22 +871,6 @@ int WRAP(kill)(pid_t pid, int portable_signum)
 }
 
 
-int WRAP(tkill)(int tid, int portable_signum)
-{
-    extern int REAL(tkill)(int, int);
-    int rv;
-
-    ALOGV(" ");
-    ALOGV("%s(tid:%d, portable_signum:%d) {", __func__,
-              tid,    portable_signum);
-
-    rv = do_kill(tid, portable_signum, REAL(tkill));
-
-    ALOGV("%s: return(rv:%d); }", __func__, rv);
-    return rv;
-}
-
-
 /* tgkill is not exported from android-14 libc.so */
 #if 0
 int WRAP(tgkill)(int tgid, int tid, int portable_signum)
