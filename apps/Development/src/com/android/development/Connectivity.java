@@ -18,51 +18,46 @@
 package com.android.development;
 
 import android.app.Activity;
-import android.app.ActivityManagerNative;
 import android.app.AlarmManager;
+import android.app.AlertDialog;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.SharedPreferences;
-import android.content.pm.PackageManager.NameNotFoundException;
 import android.net.ConnectivityManager;
 import android.net.LinkAddress;
 import android.net.NetworkUtils;
 import android.net.RouteInfo;
+import android.net.Uri;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
+import android.net.wifi.WifiScanner;
+import android.net.wifi.passpoint.WifiPasspointInfo;
+import android.net.wifi.passpoint.WifiPasspointManager;
+import android.net.wifi.passpoint.WifiPasspointOsuProvider;
+import android.net.wifi.passpoint.WifiPasspointPolicy;
 import android.os.RemoteException;
 import android.os.Handler;
 import android.os.Message;
 import android.os.IBinder;
 import android.os.INetworkManagementService;
-import android.os.Parcel;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
 import android.os.ServiceManager;
-import android.os.ServiceManagerNative;
 import android.os.SystemClock;
-import android.provider.Settings;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.IWindowManager;
 import android.view.View;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
-import android.widget.CompoundButton;
 import android.widget.EditText;
-import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.widget.AdapterView.OnItemSelectedListener;
 
 import com.android.internal.telephony.Phone;
 
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
@@ -70,7 +65,6 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
@@ -121,9 +115,18 @@ public class Connectivity extends Activity {
     private String mTdlsAddr = null;
 
     private WifiManager mWm;
+    private WifiScanner mWs;
+    private WifiPasspointManager mPpm;
+    private WifiPasspointManager.Channel mPpmChannel;
     private PowerManager mPm;
     private ConnectivityManager mCm;
     private INetworkManagementService mNetd;
+
+    private List<ScanResult> mHs20ScanResult;
+    private List<WifiPasspointOsuProvider> mHs20OsuList = new ArrayList<WifiPasspointOsuProvider>();
+    Hs20AnqpEventHandler mHs20AnqpRecv;
+    Hs20OsuEventHandler mHs20OsuRecv;
+    Hs20RemEventHandler mHs20RemRecv;
 
     private WifiScanReceiver mScanRecv;
     IntentFilter mIntentFilter;
@@ -258,6 +261,10 @@ public class Connectivity extends Activity {
         setContentView(R.layout.connectivity);
 
         mWm = (WifiManager)getSystemService(Context.WIFI_SERVICE);
+        mWs = (WifiScanner)getSystemService(Context.WIFI_SCANNING_SERVICE);
+        mPpm = (WifiPasspointManager)getSystemService(Context.WIFI_PASSPOINT_SERVICE);
+        mPpmChannel = mPpm.initialize(getApplicationContext(), getMainLooper(), null);
+        if (mPpm == null || mPpmChannel == null) Log.d(TAG, "oops: null passpoint manager");
         mPm = (PowerManager)getSystemService(Context.POWER_SERVICE);
         mCm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         IBinder b = ServiceManager.getService(Context.NETWORKMANAGEMENT_SERVICE);
@@ -300,6 +307,9 @@ public class Connectivity extends Activity {
         findViewById(R.id.startTdls).setOnClickListener(mClickListener);
         findViewById(R.id.stopTdls).setOnClickListener(mClickListener);
 
+        findViewById(R.id.startBackgroundScan).setOnClickListener(mClickListener);
+        findViewById(R.id.stopBackgroundScan).setOnClickListener(mClickListener);
+
         findViewById(R.id.start_mms).setOnClickListener(mClickListener);
         findViewById(R.id.stop_mms).setOnClickListener(mClickListener);
         findViewById(R.id.start_hipri).setOnClickListener(mClickListener);
@@ -314,6 +324,17 @@ public class Connectivity extends Activity {
         findViewById(R.id.routed_socket_request).setOnClickListener(mClickListener);
         findViewById(R.id.default_request).setOnClickListener(mClickListener);
         findViewById(R.id.default_socket).setOnClickListener(mClickListener);
+
+        mHs20AnqpRecv = new Hs20AnqpEventHandler();
+        mHs20OsuRecv = new Hs20OsuEventHandler();
+        mHs20RemRecv = new Hs20RemEventHandler();
+
+        findViewById(R.id.hs20_state).setOnClickListener(mClickListener);
+        findViewById(R.id.hs20_scan).setOnClickListener(mClickListener);
+        findViewById(R.id.hs20_anqp).setOnClickListener(mClickListener);
+        findViewById(R.id.hs20_match).setOnClickListener(mClickListener);
+        findViewById(R.id.hs20_osu).setOnClickListener(mClickListener);
+        findViewById(R.id.hs20_rem).setOnClickListener(mClickListener);
 
         registerReceiver(mReceiver, new IntentFilter(CONNECTIVITY_TEST_ALARM));
     }
@@ -354,6 +375,12 @@ public class Connectivity extends Activity {
                     break;
                 case R.id.stopTdls:
                     onStopTdls();
+                    break;
+                case R.id.startBackgroundScan:
+                    onStartScan();
+                    break;
+                case R.id.stopBackgroundScan:
+                    onStopScan();
                     break;
                 case R.id.start_mms:
                     mCm.startUsingNetworkFeature(ConnectivityManager.TYPE_MOBILE,
@@ -398,10 +425,195 @@ public class Connectivity extends Activity {
                     mCm.stopUsingNetworkFeature(ConnectivityManager.TYPE_MOBILE,
                             Phone.FEATURE_ENABLE_HIPRI);
                     break;
+                case R.id.hs20_state:
+                    onHs20State();
+                    break;
+                case R.id.hs20_scan:
+                    onHs20Scan();
+                    break;
+                case R.id.hs20_anqp:
+                    onHs20Anqp();
+                    break;
+                case R.id.hs20_match:
+                    onHs20Match();
+                    break;
+                case R.id.hs20_osu:
+                    onHs20Osu();
+                    break;
+                case R.id.hs20_rem:
+                    onHs20Rem();
+                    break;
             }
         }
     };
 
+    private class ScanEventHandler implements WifiScanner.ScanListener {
+        @Override
+        public void onFailure(int reason, String description) {
+            Log.d(TAG, "Failed to start scan :" + reason + " - " + description);
+        }
+
+        @Override
+        public void onSuccess() {
+            Log.d(TAG, "Successfully started scan");
+        }
+
+        @Override
+        public void onPeriodChanged(int period) {
+            Log.d(TAG, "Period changed to " + period);
+        }
+
+        @Override
+        public void onResults(ScanResult[] results) {
+            Log.d(TAG, "Received " + results.length + " scan results");
+            for (int i = 0; i < results.length; i++) {
+                ScanResult result = results[i];
+                Log.d(TAG, "results[" + i + "] = " + result.SSID + "(" + result.BSSID + ")");
+            }
+        }
+
+        @Override
+        public void onFullResult(ScanResult fullScanResult) {
+            Log.d(TAG, "Full scan result event for SSID " + fullScanResult.SSID);
+
+            for (int i = 0; i < fullScanResult.informationElements.length; i++) {
+                ScanResult.InformationElement ie =  fullScanResult.informationElements[i];
+                String str = new String();
+                for (int j = 0; j < ie.bytes.length; i++) {
+                    str += ie.bytes.toString();
+                }
+                Log.d(TAG, "elem[" + i + "] = [" + ie.id + ", " + str + "]");
+            }
+        }
+    }
+
+    private class WifiChangeEventHandler implements WifiScanner.WifiChangeListener {
+        @Override
+        public void onFailure(int reason, String description) {
+            Log.d(TAG, "Failed to start tracking wifi change :" + reason + " - " + description);
+        }
+
+        @Override
+        public void onSuccess() {
+            Log.d(TAG, "Successfully started tracking wifi change");
+        }
+
+
+        @Override
+        public void onChanging(ScanResult[] results) {
+            Log.d(TAG, "onChanging event has " + results.length + " scan results");
+            for (int i = 0; i < results.length; i++) {
+                ScanResult result = results[i];
+                Log.d(TAG, "bssid = " + result.BSSID + ", rssi = " + result.level);
+            }
+        }
+
+        @Override
+        public void onQuiescence(ScanResult[] results) {
+            Log.d(TAG, "onQuiescence event has " + results.length + " scan results");
+            for (int i = 0; i < results.length; i++) {
+                ScanResult result = results[i];
+                Log.d(TAG, "bssid = " + result.BSSID + ", rssi = " + result.level);
+            }
+        }
+    }
+
+    private class HotspotEventHandler implements WifiScanner.HotspotListener {
+        @Override
+        public void onFailure(int reason, String description) {
+            Log.d(TAG, "Failed to start tracking hotspots :" + reason + " - " + description);
+        }
+
+        @Override
+        public void onSuccess() {
+            Log.d(TAG, "Successfully started tracking hotspots");
+        }
+
+        @Override
+        public void onFound(ScanResult[] results) {
+            Log.d(TAG, "onFound event has " + results.length + " scan results");
+            for (int i = 0; i < results.length; i++) {
+                ScanResult result = results[i];
+                Log.d(TAG, "bssid = " + result.BSSID + ", rssi = " + result.level);
+            }
+        }
+    }
+
+    ScanEventHandler mScanHandler1 = new ScanEventHandler();
+    ScanEventHandler mScanHandler2 = new ScanEventHandler();
+    WifiChangeEventHandler mWifiChangeHandler = new WifiChangeEventHandler();
+    HotspotEventHandler mHotspotHandler = new HotspotEventHandler();
+
+    private void onStartScan() {
+
+        WifiScanner.ScanSettings scanSettings = new WifiScanner.ScanSettings();
+        scanSettings.channels = new WifiScanner.ChannelSpec[] {
+                    new WifiScanner.ChannelSpec(2412),
+                    new WifiScanner.ChannelSpec(2437),
+                    new WifiScanner.ChannelSpec(2462),
+                };
+
+        scanSettings.periodInMs = 5000;
+        // scanSettings.reportEvents = WifiScanner.REPORT_EVENT_AFTER_BUFFER_FULL;
+        mWs.startBackgroundScan(scanSettings, mScanHandler1);
+
+        scanSettings = new WifiScanner.ScanSettings();
+        scanSettings.channels = new WifiScanner.ChannelSpec[] {
+                new WifiScanner.ChannelSpec(5180),
+                new WifiScanner.ChannelSpec(5200),
+                new WifiScanner.ChannelSpec(5220),
+                new WifiScanner.ChannelSpec(5745),
+                new WifiScanner.ChannelSpec(5765),
+                new WifiScanner.ChannelSpec(5785),
+                new WifiScanner.ChannelSpec(5805),
+                new WifiScanner.ChannelSpec(5825)
+        };
+
+        scanSettings.periodInMs = 10000;
+        mWs.startBackgroundScan(scanSettings, mScanHandler2);
+
+        WifiScanner.HotspotInfo hotspotInfo[] = new WifiScanner.HotspotInfo[3];
+        hotspotInfo[0] = new WifiScanner.HotspotInfo();
+        hotspotInfo[0].bssid = "60:a4:4c:20:51:48";
+        hotspotInfo[0].low = -90;
+        hotspotInfo[0].high = -10;
+        hotspotInfo[0].frequencyHint = 2412;
+        hotspotInfo[1] = new WifiScanner.HotspotInfo();
+        hotspotInfo[1].bssid = "c0:4a:00:b6:18:87";
+        hotspotInfo[1].low = -90;
+        hotspotInfo[1].high = -10;
+        hotspotInfo[1].frequencyHint = 2412;
+        hotspotInfo[2] = new WifiScanner.HotspotInfo();
+        hotspotInfo[2].bssid = "ac:22:0b:24:70:70";
+        hotspotInfo[2].low = -90;
+        hotspotInfo[2].high = -10;
+        hotspotInfo[2].frequencyHint = 2412;
+
+        mWs.startTrackingHotspots(hotspotInfo, 3, mHotspotHandler);
+
+        Log.d(TAG, "Starting to track changes");
+        mWs.startTrackingWifiChange(mWifiChangeHandler);
+
+        /*
+        mWs.configureWifiChange(
+                3,                          // rssiSampleSize
+                3,                          // lostApSampleSize
+                3,                          // unchangedSampleSize
+                3,                          // minApsBreachingThreshold
+                5000,                       // periodInMs
+                hotspotInfo);
+
+        */
+
+        Log.d(TAG, "Successfully started scan, waiting for events");
+    }
+
+    private void onStopScan() {
+        mWs.stopTrackingHotspots(mHotspotHandler);
+        mWs.stopTrackingWifiChange(mWifiChangeHandler);
+        mWs.stopBackgroundScan(mScanHandler2);
+        Log.d(TAG, "Successfully stopped all scans");
+    }
 
     private void onStartDelayedCycle() {
         if (!mDelayedCycleStarted) {
@@ -471,7 +683,7 @@ public class Connectivity extends Activity {
             try {
                 mScanCur = Long.parseLong(mScanCyclesEdit.getText().toString());
                 mScanCycles = mScanCur;
-            } catch (Exception e) { };
+            } catch (Exception e) { }
             if (mScanCur <= 0) {
                 mScanCur = -1;
                 mScanCycles = SCAN_CYCLES;
@@ -713,4 +925,137 @@ public class Connectivity extends Activity {
             return;
         }
     }
+
+    private void onHs20State() {
+        Log.d(TAG, "HS20 get passpoint state");
+        int state = mPpm.getPasspointState();
+        Log.d(TAG, "state=" + state);
+    }
+
+    private void onHs20Scan() {
+        Log.d(TAG, "HS20 start wifi scan");
+        mWm.startScan();
+    }
+
+    private void onHs20Anqp() {
+        Log.d(TAG, "HS20 request ANQP info");
+        mHs20ScanResult = mWm.getScanResults();
+        mPpm.requestAnqpInfo(mPpmChannel, mHs20ScanResult,
+                WifiPasspointInfo.PRESET_ALL, mHs20AnqpRecv);
+    }
+
+    private void onHs20Match() {
+        Log.d(TAG, "HS20 request credential match");
+        List<WifiPasspointPolicy> plist = mPpm.requestCredentialMatch(mHs20ScanResult);
+        if (plist == null) Log.d(TAG, "null policy list");
+        else Log.d(TAG, "policy list size=" + plist.size());
+    }
+
+    private void onHs20Osu() {
+        Log.d(TAG, "HS20 start OSU");
+        mHs20OsuList.clear();
+        if (mHs20ScanResult != null)
+            for (ScanResult sr : mHs20ScanResult)
+                if (sr.passpoint != null && sr.passpoint.osuProviderList != null)
+                    for (WifiPasspointOsuProvider osu : sr.passpoint.osuProviderList)
+                        mHs20OsuList.add(osu);
+        Log.d(TAG, "mHs20OsuList.size=" + mHs20OsuList.size());
+        if (mHs20OsuList.size() == 0) {
+            Log.d(TAG, "No OSUs found, please do ANQP again");
+            return;
+        }
+
+        String[] choice = new String[mHs20OsuList.size()];
+        for (int i = 0; i < mHs20OsuList.size(); i++) {
+            WifiPasspointOsuProvider osu = mHs20OsuList.get(i);
+            choice[i] = osu.friendlyName + " @ " + osu.ssid;
+        }
+        AlertDialog.Builder dialog = new AlertDialog.Builder(this);
+        dialog.setTitle("Select OSU");
+        dialog.setSingleChoiceItems(choice, -1, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+                WifiPasspointOsuProvider osu = mHs20OsuList.get(which);
+                mPpm.startOsu(mPpmChannel, osu, mHs20OsuRecv);
+            }
+        });
+        dialog.show();
+    }
+
+    private void onHs20Rem() {
+        Log.d(TAG, "HS20 start remediation");
+        mPpm.startRemediation(mPpmChannel, mHs20RemRecv);
+    }
+
+    private class Hs20AnqpEventHandler implements WifiPasspointManager.ActionListener {
+        @Override
+        public void onSuccess() {
+            Log.d(TAG, "Hs20AnqpEventHandler.onSuccess");
+            for (ScanResult sr : mHs20ScanResult) {
+                if (sr.passpoint != null)
+                    Log.d(TAG, sr.passpoint.toString());
+            }
+        }
+
+        @Override
+        public void onFailure(int reason) {
+            Log.d(TAG, "Hs20AnqpEventHandler.onFailure reason=" + reason);
+        }
+    }
+
+    private class Hs20OsuEventHandler implements WifiPasspointManager.OsuRemListener {
+        @Override
+        public void onSuccess() {
+            Log.d(TAG, "Hs20OsuEventHandler.onSuccess");
+        }
+
+        @Override
+        public void onFailure(int reason) {
+            Log.d(TAG, "Hs20OsuEventHandler.onFailure reason=" + reason);
+        }
+
+        @Override
+        public void onBrowserLaunch(String uri) {
+            Log.d(TAG, "Hs20OsuEventHandler.onBrowserLaunch uri=" + uri);
+            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(uri));
+            startActivity(browserIntent);
+        }
+
+        @Override
+        public void onBrowserDismiss() {
+            Log.d(TAG, "Hs20OsuEventHandler.onBrowserDismiss");
+            Toast.makeText(getApplicationContext(), "Please close your browser",
+                    Toast.LENGTH_LONG).show();
+        }
+
+    }
+
+    private class Hs20RemEventHandler implements WifiPasspointManager.OsuRemListener {
+        @Override
+        public void onSuccess() {
+            Log.d(TAG, "Hs20RemEventHandler.onSuccess");
+        }
+
+        @Override
+        public void onFailure(int reason) {
+            Log.d(TAG, "Hs20RemEventHandler.onFailure reason=" + reason);
+        }
+
+        @Override
+        public void onBrowserLaunch(String uri) {
+            Log.d(TAG, "Hs20RemEventHandler.onBrowserLaunch uri=" + uri);
+            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(uri));
+            startActivity(browserIntent);
+        }
+
+        @Override
+        public void onBrowserDismiss() {
+            Log.d(TAG, "Hs20RemEventHandler.onBrowserDismiss");
+            Toast.makeText(getApplicationContext(), "Please close your browser",
+                    Toast.LENGTH_LONG).show();
+        }
+
+    }
+
 }
