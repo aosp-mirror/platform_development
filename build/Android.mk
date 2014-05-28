@@ -18,18 +18,22 @@ ALL_SDK_FILES += $(patsubst \
 $(HOST_OUT)/development/sdk/%_source.properties : $(TOPDIR)development/sdk/%_source.prop_template
 	@echo Generate $@
 	$(hide) mkdir -p $(dir $@)
-	$(hide) sed -e 's/$${PLATFORM_VERSION}/$(PLATFORM_VERSION)/' \
-		 -e 's/$${PLATFORM_SDK_VERSION}/$(PLATFORM_SDK_VERSION)/' \
-		 -e 's/$${PLATFORM_VERSION_CODENAME}/$(subst REL,,$(PLATFORM_VERSION_CODENAME))/' \
-		 $< > $@ && sed -i -e '/^AndroidVersion.CodeName=\s*$$/d' $@
+	$(hide) sed \
+		-e 's/$${PLATFORM_VERSION}/$(PLATFORM_VERSION)/' \
+		-e 's/$${PLATFORM_SDK_VERSION}/$(PLATFORM_SDK_VERSION)/' \
+		-e 's/$${PLATFORM_VERSION_CODENAME}/$(subst REL,,$(PLATFORM_VERSION_CODENAME))/' \
+		-e 's/$${TARGET_ARCH}/$(TARGET_ARCH)/' \
+		-e 's/$${TARGET_CPU_ABI}/$(TARGET_CPU_ABI)/' \
+		$< > $@ && sed -i -e '/^AndroidVersion.CodeName=\s*$$/d' $@
 
 $(HOST_OUT)/development/samples/%_source.properties : $(TOPDIR)development/samples/%_source.prop_template
 	@echo Generate $@
 	$(hide) mkdir -p $(dir $@)
-	$(hide) sed -e 's/$${PLATFORM_VERSION}/$(PLATFORM_VERSION)/' \
-		 -e 's/$${PLATFORM_SDK_VERSION}/$(PLATFORM_SDK_VERSION)/' \
-		 -e 's/$${PLATFORM_VERSION_CODENAME}/$(subst REL,,$(PLATFORM_VERSION_CODENAME))/' \
-		 $< > $@ && sed -i -e '/^AndroidVersion.CodeName=\s*$$/d' $@
+	$(hide) sed\
+		-e 's/$${PLATFORM_VERSION}/$(PLATFORM_VERSION)/' \
+		-e 's/$${PLATFORM_SDK_VERSION}/$(PLATFORM_SDK_VERSION)/' \
+		-e 's/$${PLATFORM_VERSION_CODENAME}/$(subst REL,,$(PLATFORM_VERSION_CODENAME))/' \
+		$< > $@ && sed -i -e '/^AndroidVersion.CodeName=\s*$$/d' $@
 
 
 # ===== Android Support/Compatibility Library =====
