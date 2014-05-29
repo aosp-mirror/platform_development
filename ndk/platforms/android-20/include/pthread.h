@@ -94,16 +94,28 @@ typedef long pthread_condattr_t;
 typedef long pthread_rwlockattr_t;
 
 typedef struct {
-  pthread_mutex_t lock;
-  pthread_cond_t cond;
-  int numLocks;
-  int writerThreadId;
-  int pendingReaders;
-  int pendingWriters;
-  void* __reserved[4];
+#if !defined(__LP64__)
+  pthread_mutex_t __unused_lock;
+  pthread_cond_t __unused_cond;
+#endif
+  volatile int32_t state; // 0=unlock, -1=writer lock, +n=reader lock
+  volatile int32_t writer_thread_id;
+  volatile int32_t pending_readers;
+  volatile int32_t pending_writers;
+  int32_t attr;
+#ifdef __LP64__
+  char __reserved[36];
+#else
+  char __reserved[12];
+#endif
+
 } pthread_rwlock_t;
 
-#define PTHREAD_RWLOCK_INITIALIZER  { PTHREAD_MUTEX_INITIALIZER, PTHREAD_COND_INITIALIZER, 0, 0, 0, 0, { NULL, NULL, NULL, NULL } }
+#ifdef __LP64__
+  #define PTHREAD_RWLOCK_INITIALIZER  { 0, 0, 0, 0, 0, { 0 } }
+#else
+  #define PTHREAD_RWLOCK_INITIALIZER  { PTHREAD_MUTEX_INITIALIZER, PTHREAD_COND_INITIALIZER, 0, 0, 0, 0, 0, { 0 } }
+#endif
 
 typedef int pthread_key_t;
 typedef long pthread_t;

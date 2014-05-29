@@ -250,6 +250,9 @@ int	 vfprintf(FILE * __restrict, const char * __restrict, __va_list)
 int	 vprintf(const char * __restrict, __va_list)
 		__printflike(1, 0);
 
+int dprintf(int, const char * __restrict, ...) __printflike(2, 3);
+int vdprintf(int, const char * __restrict, __va_list) __printflike(2, 0);
+
 #ifndef __AUDIT__
 char* gets(char*) __warnattr("gets is very unsafe; consider using fgets");
 int sprintf(char* __restrict, const char* __restrict, ...)
@@ -358,21 +361,6 @@ __END_DECLS
 #define	fropen(cookie, fn) funopen(cookie, fn, 0, 0, 0)
 #define	fwopen(cookie, fn) funopen(cookie, 0, fn, 0, 0)
 #endif /* __BSD_VISIBLE */
-
-#ifdef _GNU_SOURCE
-/*
- * glibc defines dprintf(int, const char*, ...), which is poorly named
- * and likely to conflict with locally defined debugging printfs
- * fdprintf is a better name, and some programs that use fdprintf use a
- * #define fdprintf dprintf for compatibility
- */
-__BEGIN_DECLS
-int fdprintf(int, const char*, ...)
-		__printflike(2, 3);
-int vfdprintf(int, const char*, __va_list)
-		__printflike(2, 0);
-__END_DECLS
-#endif /* _GNU_SOURCE */
 
 #if defined(__BIONIC_FORTIFY)
 
