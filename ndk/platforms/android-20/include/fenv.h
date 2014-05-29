@@ -34,6 +34,7 @@
 #include <machine/fenv.h>
 
 __BEGIN_DECLS
+#pragma GCC visibility push(default)
 
 int feclearexcept(int);
 int fegetexceptflag(fexcept_t *, int);
@@ -64,6 +65,7 @@ int fegetexcept(void);
 extern const fenv_t __fe_dfl_env;
 #define FE_DFL_ENV  (&__fe_dfl_env)
 
+#pragma GCC visibility pop
 __END_DECLS
 
 #endif  /* ! _FENV_H_ */

@@ -38,6 +38,24 @@
 #define	_SYS_CDEFS_H_
 
 /*
+ * Testing against Clang-specific extensions.
+ */
+
+#ifndef __has_extension
+#define __has_extension         __has_feature
+#endif
+#ifndef __has_feature
+#define __has_feature(x)        0
+#endif
+#ifndef __has_include
+#define __has_include(x)        0
+#endif
+#ifndef __has_builtin
+#define __has_builtin(x)        0
+#endif
+
+
+/*
  * Macro to test if we're using a GNU C compiler of a specific vintage
  * or later, for e.g. features that appeared in a particular version
  * of GNU C.  Usage:
