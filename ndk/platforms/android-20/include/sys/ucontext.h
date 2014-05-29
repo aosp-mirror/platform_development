@@ -60,8 +60,6 @@ enum {
 typedef int greg_t;
 typedef greg_t gregset_t[NGREG];
 
-/* TODO: fpregset_t. */
-
 #include <asm/sigcontext.h>
 typedef struct sigcontext mcontext_t;
 
@@ -71,12 +69,11 @@ typedef struct ucontext {
   stack_t uc_stack;
   mcontext_t uc_mcontext;
   sigset_t uc_sigmask;
-  /* TODO: uc_regspace */
+  char __padding[128 - sizeof(sigset_t)];
+  unsigned long uc_regspace[128] __attribute__((__aligned__(8)));
 } ucontext_t;
 
 #elif defined(__aarch64__)
-
-/* TODO: gregset_t and fpregset_t. */
 
 #include <asm/sigcontext.h>
 typedef struct sigcontext mcontext_t;
@@ -201,6 +198,7 @@ typedef struct ucontext {
   stack_t uc_stack;
   mcontext_t uc_mcontext;
   sigset_t uc_sigmask;
+  char __padding[128 - sizeof(sigset_t)];
 } ucontext_t;
 
 #elif defined(__mips64__)
