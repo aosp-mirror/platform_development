@@ -20,6 +20,9 @@
 #include <sys/cdefs.h>
 #include <limits.h>
 
+__BEGIN_DECLS
+#pragma GCC visibility push(default)
+
 /*
  * ANSI/POSIX
  */
@@ -165,7 +168,7 @@ extern int signgam;
  * effect of raising floating-point exceptions, so they are not declared
  * as __pure2.  In C99, FENV_ACCESS affects the purity of these functions.
  */
-__BEGIN_DECLS
+
 /*
  * ANSI/POSIX
  */
@@ -282,6 +285,7 @@ double	trunc(double);
 double	drem(double, double);
 int	finite(double) __pure2;
 int	isnanf(float) __pure2;
+long double significandl(long double);
 
 /*
  * Reentrant version of gamma & lgamma; passes signgam back by reference
@@ -464,6 +468,7 @@ void sincosf(float, float*, float*);
 void sincosl(long double, long double*, long double*);
 #endif /* _GNU_SOURCE */
 
+#pragma GCC visibility pop
 __END_DECLS
 
 #endif /* !_MATH_H_ */
