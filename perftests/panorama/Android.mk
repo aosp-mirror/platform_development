@@ -46,6 +46,8 @@ LOCAL_MODULE_STEM_32 := panorama_bench
 
 LOCAL_MODULE_STEM_64 := panorama_bench64
 
+LOCAL_MULTILIB := both
+
 LOCAL_MODULE_PATH := $(local_target_dir)
 
 LOCAL_ADDITIONAL_DEPENDENCIES := $(LOCAL_PATH)/Android.mk
