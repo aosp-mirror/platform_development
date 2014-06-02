@@ -96,7 +96,8 @@ public class AtscTvInputScanActivity extends Activity {
         values.put(TvContract.Channels.COLUMN_DISPLAY_NUMBER,
                 channel.getMajorChannelNumber() + "-" + channel.getMinorChannelNumber());
         values.put(TvContract.Channels.COLUMN_DISPLAY_NAME, channel.getShortName());
-        values.put(TvContract.Channels.COLUMN_DATA, SampleTsStream.getTuneInfo(stream));
+        values.put(TvContract.Channels.COLUMN_INTERNAL_PROVIDER_DATA,
+                SampleTsStream.getTuneInfo(stream));
         getContentResolver().insert(TvContract.Channels.CONTENT_URI, values);
     }
 }
