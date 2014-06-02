@@ -21,10 +21,10 @@ import android.content.ContentValues;
 import android.content.res.AssetFileDescriptor;
 import android.database.Cursor;
 import android.media.MediaPlayer;
+import android.media.tv.TvContract;
+import android.media.tv.TvInputService;
 import android.net.Uri;
 import android.os.AsyncTask;
-import android.provider.TvContract;
-import android.tv.TvInputService;
 import android.util.Log;
 import android.util.Pair;
 import android.view.Surface;
@@ -159,10 +159,8 @@ public class AtscTvInputService extends TvInputService {
         }
 
         private void clearPrograms(Uri channelUri) {
-            String selection = TvContract.Programs.COLUMN_CHANNEL_ID + " = ?";
-            String[] selectionArgs =
-                    new String[] { Long.toString(ContentUris.parseId(channelUri)) };
-            getContentResolver().delete(TvContract.Programs.CONTENT_URI, selection, selectionArgs);
+            Uri uri = TvContract.buildProgramsUriForChannel(channelUri);
+            getContentResolver().delete(uri, null, null);
         }
 
         private Uri insertProgram(Uri channelUri, EITItem event, long timeOffsetMs) {
