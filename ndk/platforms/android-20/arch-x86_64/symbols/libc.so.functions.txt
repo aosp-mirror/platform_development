@@ -581,7 +581,6 @@ isnormalf
 isnormall
 isprint
 ispunct
-issetugid
 isspace
 isupper
 iswalnum
