@@ -62,7 +62,7 @@ public class AtscTvInputService extends TvInputService {
 
 
     public TsStream getTsStreamForChannel(Uri channelUri) {
-        String[] projection = { TvContract.Channels.COLUMN_DATA };
+        String[] projection = { TvContract.Channels.COLUMN_INTERNAL_PROVIDER_DATA };
         if (channelUri == null) {
             return null;
         }
