@@ -32,6 +32,7 @@ define mk-sdk-repo-pkg-1
 $(call sdk-repo-pkg-zip,$(2),$(3),$(4)): $(3)
 	@echo "Building SDK repository package $(4) from $(notdir $(3))"
 	$(hide) cd $(basename $(3)) && \
+	        rm  -f   ../$(notdir $(call sdk-repo-pkg-zip,$(2),$(3),$(4))) && \
 	        zip -9rq ../$(notdir $(call sdk-repo-pkg-zip,$(2),$(3),$(4))) $(4)/*
 $(call dist-for-goals, sdk_repo, $(call sdk-repo-pkg-zip,$(2),$(3),$(4)))
 $(1) += $(4) $(2) \
@@ -54,6 +55,7 @@ define mk-sdk-repo-pkg-2
 $(call sdk-repo-pkg-zip,$(2),$(3),$(4)): $(3)
 	@echo "Building SDK repository package $(4) from $(notdir $(3))"
 	$(hide) cd $(basename $(3))/$(4) && \
+	        rm  -f   ../../$(notdir $(call sdk-repo-pkg-zip,$(2),$(3),$(4))) && \
 	        zip -9rq ../../$(notdir $(call sdk-repo-pkg-zip,$(2),$(3),$(4))) *
 $(call dist-for-goals, sdk_repo, $(call sdk-repo-pkg-zip,$(2),$(3),$(4)))
 $(1) += $(4) $(2) \
@@ -80,6 +82,7 @@ define mk-sdk-repo-pkg-3
 $(call sdk-repo-pkg-zip,$(2),$(3),$(4)): $(3)
 	@echo "Building SDK repository package $(4) from $(notdir $(3))"
 	$(hide) cd $(basename $(3))/$(5) && \
+	        rm  -f   ../../../$(notdir $(call sdk-repo-pkg-zip,$(2),$(3),$(4))) && \
 	        zip -9rq ../../../$(notdir $(call sdk-repo-pkg-zip,$(2),$(3),$(4))) *
 $(call dist-for-goals, sdk_repo, $(call sdk-repo-pkg-zip,$(2),$(3),$(4)))
 $(1) += $(4) $(2) \
