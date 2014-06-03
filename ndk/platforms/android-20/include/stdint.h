@@ -180,6 +180,7 @@ typedef int64_t       intmax_t;
 #define INT_FAST32_MAX   INT32_MAX
 
 #define UINT32_MAX       (4294967295U)
+#define UINT32_MIN       (0)
 #define UINT_LEAST32_MAX UINT32_MAX
 #define UINT_FAST32_MAX  UINT32_MAX
 
