@@ -18,10 +18,12 @@ package com.example.android.atsctvinput;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.ComponentName;
 import android.content.ContentValues;
+import android.media.tv.TvContract;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.provider.TvContract;
 import android.util.Log;
 import android.util.Pair;
 
@@ -67,11 +69,9 @@ public class AtscTvInputScanActivity extends Activity {
     }
 
     private void clearChannels() {
-        String selection = TvContract.Channels.COLUMN_SERVICE_NAME + " = ?";
-        String[] selectionArgs = new String[] {
-            AtscTvInputService.class.getName()
-        };
-        getContentResolver().delete(TvContract.Channels.CONTENT_URI, selection, selectionArgs);
+        Uri uri = TvContract.buildChannelsUriForInput(
+                new ComponentName(this, AtscTvInputService.class));
+        getContentResolver().delete(uri, null, null);
     }
 
     private void doAutoScan() {

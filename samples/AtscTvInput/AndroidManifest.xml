@@ -26,14 +26,14 @@
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
-                <action android:name="android.tv.SetupActivity" />
+                <action android:name="android.media.tv.SetupActivity" />
             </intent-filter>
         </activity>
         <service android:name="com.example.android.atsctvinput.AtscTvInputService"
             android:permission="android.permission.BIND_TV_INPUT"
             android:process=":remoteAtscTvInput">
             <intent-filter>
-                <action android:name="android.tv.TvInputService" />
+                <action android:name="android.media.tv.TvInputService" />
             </intent-filter>
         </service>
     </application>
