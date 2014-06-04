@@ -69,6 +69,7 @@ external/chromium-trace/UPSTREAM_REVISION     platform-tools/systrace/UPSTREAM_R
 
 development/sdk/sdk_files_NOTICE.txt           build-tools/${PLATFORM_NAME}/NOTICE.txt
 development/sdk/build_tools_source.properties  build-tools/${PLATFORM_NAME}/source.properties
+development/sdk/build_tools_runtime.properties build-tools/${PLATFORM_NAME}/runtime.properties
 
 # build tools from out/host/$(HOST_OS)-$(HOST_ARCH)/
 bin/aapt                                strip build-tools/${PLATFORM_NAME}/aapt
