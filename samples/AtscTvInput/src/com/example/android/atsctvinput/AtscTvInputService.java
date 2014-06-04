@@ -46,7 +46,8 @@ public class AtscTvInputService extends TvInputService {
     public void onCreate() {
         super.onCreate();
         Log.d(TAG, "onCreate()");
-        setAvailable(true);
+        // TODO: Uncomment or remove when a new API design is locked down.
+        // setAvailable(true);
     }
 
     @Override
@@ -56,7 +57,7 @@ public class AtscTvInputService extends TvInputService {
     }
 
     @Override
-    public TvInputSessionImpl onCreateSession() {
+    public TvInputService.Session onCreateSession() {
         return new MyTvInputSessionImpl();
     }
 
@@ -81,7 +82,7 @@ public class AtscTvInputService extends TvInputService {
         return stream;
     }
 
-    private class MyTvInputSessionImpl extends TvInputSessionImpl {
+    private class MyTvInputSessionImpl extends TvInputService.Session {
         private MediaPlayer mPlayer;
 
         protected MyTvInputSessionImpl() {
@@ -104,8 +105,8 @@ public class AtscTvInputService extends TvInputService {
         }
 
         @Override
-        public void onSetVolume(float volume) {
-            Log.d(TAG, "onSetVolume(" + volume + ")");
+        public void onSetStreamVolume(float volume) {
+            Log.d(TAG, "onSetStreamVolume(" + volume + ")");
             mPlayer.setVolume(volume, volume);
         }
 
