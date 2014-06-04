@@ -8,14 +8,21 @@ ALL_SDK_FILES += $(patsubst \
                  $(patsubst \
                    $(TOPDIR)development/samples/%_source.prop_template, \
                    $(HOST_OUT)/development/samples/%_source.properties, \
-                   $(wildcard $(TOPDIR)development/samples/*_source.prop_template))
+                   $(wildcard $(TOPDIR)development/samples/*_source.prop_template)) \
+                 $(patsubst \
+                   $(TOPDIR)development/sys-img/%_source.prop_template, \
+                   $(HOST_OUT)/development/sys-img-$(TARGET_CPU_ABI)/%_source.properties, \
+                   $(wildcard $(TOPDIR)development/sys-img/*_source.prop_template))
 
 # Rule to convert a source.prop template into the desired source.property
+# This needs to vary based on the CPU ABI for the system-image files.
 # Rewritten variables:
 # - ${PLATFORM_VERSION}          e.g. "1.0"
 # - ${PLATFORM_SDK_VERSION}      e.g. "3", aka the API level
 # - ${PLATFORM_VERSION_CODENAME} e.g. "REL" (transformed into "") or "Cupcake"
-$(HOST_OUT)/development/sdk/%_source.properties : $(TOPDIR)development/sdk/%_source.prop_template
+# - ${TARGET_ARCH}               e.g. "arm", "x86", "mips" and their 64-bit variants.
+# - ${TARGET_CPU_ABI}            e.g. "armeabi", "x86", "mips" and their 64-bit variants.
+$(HOST_OUT)/development/sys-img-$(TARGET_CPU_ABI)/%_source.properties : $(TOPDIR)development/sys-img/%_source.prop_template
 	@echo Generate $@
 	$(hide) mkdir -p $(dir $@)
 	$(hide) sed \
@@ -24,6 +31,15 @@ $(HOST_OUT)/development/sdk/%_source.properties : $(TOPDIR)development/sdk/%_sou
 		-e 's/$${PLATFORM_VERSION_CODENAME}/$(subst REL,,$(PLATFORM_VERSION_CODENAME))/' \
 		-e 's/$${TARGET_ARCH}/$(TARGET_ARCH)/' \
 		-e 's/$${TARGET_CPU_ABI}/$(TARGET_CPU_ABI)/' \
+		$< > $@ && sed -i -e '/^AndroidVersion.CodeName=\s*$$/d' $@
+
+$(HOST_OUT)/development/sdk/%_source.properties : $(TOPDIR)development/sdk/%_source.prop_template
+	@echo Generate $@
+	$(hide) mkdir -p $(dir $@)
+	$(hide) sed \
+		-e 's/$${PLATFORM_VERSION}/$(PLATFORM_VERSION)/' \
+		-e 's/$${PLATFORM_SDK_VERSION}/$(PLATFORM_SDK_VERSION)/' \
+		-e 's/$${PLATFORM_VERSION_CODENAME}/$(subst REL,,$(PLATFORM_VERSION_CODENAME))/' \
 		$< > $@ && sed -i -e '/^AndroidVersion.CodeName=\s*$$/d' $@
 
 $(HOST_OUT)/development/samples/%_source.properties : $(TOPDIR)development/samples/%_source.prop_template
