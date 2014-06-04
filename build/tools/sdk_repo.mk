@@ -208,9 +208,9 @@ endif
 # -----------------------------------------------------------------
 # Rules for the SDK Repository XML
 
-SDK_REPO_XML   := $(HOST_OUT)/sdk/repository.xml
-SDK_EXTRAS_XML := $(HOST_OUT)/sdk/repo-extras.xml
-SDK_SYSIMG_XML := $(HOST_OUT)/sdk/repo-sys-img.xml
+SDK_REPO_XML   := $(MAIN_SDK_DIR)/repository.xml
+SDK_EXTRAS_XML := $(MAIN_SDK_DIR)/repo-extras.xml
+SDK_SYSIMG_XML := $(MAIN_SDK_DIR)/repo-sys-img.xml
 
 ifneq ($(SDK_REPO_XML_ARGS),)
 
