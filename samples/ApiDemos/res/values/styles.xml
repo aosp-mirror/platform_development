@@ -24,7 +24,7 @@
          The default definition is the safe one, using a theme that has always
          been defined.  Look at values-11/styles.xml for a variation that is
          selected when the holographic theme is available, or look at
-         values-XX/styles.xml for a variation that is selected when the quantum
+         values-XX/styles.xml for a variation that is selected when the material
          theme is available. -->
     <style name="ThemeCurrent" parent="android:Theme" />
 
@@ -37,7 +37,7 @@
          The default definition is the safe one, using a theme that has always
          been defined.  Look at values-11/styles.xml for a variation that is
          selected when the holographic theme is available, or look at
-         values-XX/styles.xml for a variation that is selected when the quantum
+         values-XX/styles.xml for a variation that is selected when the material
          theme is available. -->
     <style name="ThemeCurrentDialog" parent="android:Theme.Dialog" />
 
@@ -120,7 +120,7 @@
         <item name="android:layout_height">wrap_content</item>
     </style>
 
-    <style name="ActivityTransitionTheme" parent="android:Theme.Quantum">
+    <style name="ActivityTransitionTheme" parent="android:Theme.Material">
 	<item name="android:windowEnterTransition">@transition/explode</item>
 	<item name="android:windowExitTransition">@transition/explode</item>
 	<item name="android:windowSharedElementEnterTransition">@transition/move_image</item>
