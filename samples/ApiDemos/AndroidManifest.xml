@@ -2168,8 +2168,8 @@
         </activity>
 
         <activity android:name=".view.Controls5"
-                  android:label="Views/Controls/5. Quantum Light Theme"
-                  android:theme="@android:style/Theme.Quantum.Light"
+                  android:label="Views/Controls/5. Material Light Theme"
+                  android:theme="@android:style/Theme.Material.Light"
                   android:enabled="@bool/atLeastLRelease">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -2178,8 +2178,8 @@
         </activity>
 
         <activity android:name=".view.Controls6"
-                  android:label="Views/Controls/6. Quantum Dark Theme"
-                  android:theme="@android:style/Theme.Quantum"
+                  android:label="Views/Controls/6. Material Dark Theme"
+                  android:theme="@android:style/Theme.Material"
                   android:enabled="@bool/atLeastLRelease">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
