@@ -185,8 +185,6 @@ LEAF(_longjmp_portable, FRAMESZ)
          move   v0, a1
 
 botch:
-        jal     longjmperror
-        nop
         jal     abort
         nop
         RESTORE_GP64
