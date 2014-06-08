@@ -140,7 +140,6 @@ NON_LEAF(WRAP(setjmp), FRAMESZ, ra)
         j       ra
 
 botch:
-        jal     longjmperror
         jal     abort
         RESTORE_GP64
         PTR_ADDU sp, FRAMESZ
