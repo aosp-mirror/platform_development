@@ -46,7 +46,7 @@ bin/adb                                 strip platform-tools/adb
 bin/fastboot                            strip platform-tools/fastboot
 
 # API database for tools such as lint
-development/sdk/api-versions.xml              platform-tools/api/api-versions.xml
+development/sdk/generated-api-versions.xml    platform-tools/api/api-versions.xml
 
 # systrace
 external/chromium-trace/systrace.py           platform-tools/systrace/systrace.py
