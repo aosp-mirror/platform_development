@@ -16,6 +16,8 @@
 
 LOCAL_PATH := $(call my-dir)
 
+ifeq ($(BUILD_LIBPORTABLE_TOO),true)
+
 #=====================================================================
 # Device Shared Library libportable
 #=====================================================================
@@ -42,3 +44,5 @@ LOCAL_WHOLE_STATIC_LIBRARIES += cpufeatures
 LOCAL_SHARED_LIBRARIES += liblog libdl
 
 include $(BUILD_SHARED_LIBRARY)
+
+endif # BUILD_LIBPORTABLE_TOO
