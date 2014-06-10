@@ -47,7 +47,7 @@ public class DocumentsSample extends Activity {
 
     private static final int CODE_READ = 42;
     private static final int CODE_WRITE = 43;
-    private static final int CODE_PICK = 44;
+    private static final int CODE_TREE = 44;
     private static final int CODE_RENAME = 45;
 
     private TextView mResult;
@@ -204,15 +204,15 @@ public class DocumentsSample extends Activity {
         view.addView(button);
 
         button = new Button(context);
-        button.setText("PICK_DIRECTORY");
+        button.setText("OPEN_DOC_TREE");
         button.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(Intent.ACTION_PICK_DIRECTORY);
+                Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
                 if (localOnly.isChecked()) {
                     intent.putExtra(Intent.EXTRA_LOCAL_ONLY, true);
                 }
-                startActivityForResult(Intent.createChooser(intent, "Kittens!"), CODE_PICK);
+                startActivityForResult(Intent.createChooser(intent, "Kittens!"), CODE_TREE);
             }
         });
         view.addView(button);
@@ -284,12 +284,12 @@ public class DocumentsSample extends Activity {
             } finally {
                 closeQuietly(os);
             }
-        } else if (requestCode == CODE_PICK) {
+        } else if (requestCode == CODE_TREE) {
             // Find existing docs
-            Uri doc = DocumentsContract.buildDocumentViaUri(uri,
-                    DocumentsContract.getViaDocumentId(uri));
-            Uri child = DocumentsContract.buildChildDocumentsViaUri(uri,
-                    DocumentsContract.getViaDocumentId(uri));
+            Uri doc = DocumentsContract.buildDocumentUriUsingTree(uri,
+                    DocumentsContract.getTreeDocumentId(uri));
+            Uri child = DocumentsContract.buildChildDocumentsUriUsingTree(uri,
+                    DocumentsContract.getTreeDocumentId(uri));
             Cursor c = cr.query(child, new String[] {
                     Document.COLUMN_DISPLAY_NAME, Document.COLUMN_MIME_TYPE }, null, null, null);
             try {
