@@ -65,8 +65,8 @@ WIN_BUILD_PREREQ := \
 
 
 # MAIN_SDK_NAME/DIR is set in build/core/Makefile
-WIN_SDK_NAME := $(subst $(HOST_OS)-$(HOST_ARCH),windows,$(MAIN_SDK_NAME))
-WIN_SDK_DIR  := $(subst $(HOST_OS)-$(HOST_ARCH),windows,$(MAIN_SDK_DIR))
+WIN_SDK_NAME := $(subst $(HOST_OS)-$(SDK_HOST_ARCH),windows,$(MAIN_SDK_NAME))
+WIN_SDK_DIR  := $(subst $(HOST_OS)-$(SDK_HOST_ARCH),windows,$(MAIN_SDK_DIR))
 WIN_SDK_ZIP  := $(WIN_SDK_DIR)/$(WIN_SDK_NAME).zip
 
 $(call dist-for-goals, win_sdk, $(WIN_SDK_ZIP))
