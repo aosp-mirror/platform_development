@@ -380,20 +380,6 @@ ${OUT_DIR}/target/common/obj/PACKAGING/android-support-v7-mediarouter_intermedia
 
 development/samples/Support7Demos                                                                 extras/android/support/samples/Support7Demos
 
-# TODO: add .project, .classpath, etc.
-frameworks/support/v7/recyclerview/README.txt                                                     extras/android/support/v7/recyclerview/README.txt
-frameworks/support/v7/recyclerview/AndroidManifest.xml                                            extras/android/support/v7/recyclerview/AndroidManifest.xml
-${OUT_DIR}/target/common/obj/PACKAGING/android-support-v7-recyclerview_intermediates/android-support-v7-recyclerview.jar    extras/android/support/v7/recyclerview/libs/android-support-v7-recyclerview.jar
-
-frameworks/support/v17/leanback/README.txt                                                        extras/android/support/v17/leanback/README.txt
-frameworks/support/v17/leanback/.project                                                          extras/android/support/v17/leanback/.project
-frameworks/support/v17/leanback/.classpath                                                        extras/android/support/v17/leanback/.classpath
-frameworks/support/v17/leanback/AndroidManifest.xml                                               extras/android/support/v17/leanback/AndroidManifest.xml
-frameworks/support/v17/leanback/project.properties                                                extras/android/support/v17/leanback/project.properties
-frameworks/support/v17/leanback/res                                                               extras/android/support/v17/leanback/res
-frameworks/support/v17/leanback/src/.readme                                                       extras/android/support/v17/leanback/src/.readme
-${OUT_DIR}/target/common/obj/PACKAGING/android-support-v17-leanback_intermediates/android-support-v17-leanback.jar    extras/android/support/v17/leanback/libs/android-support-v17-leanback.jar
-
 ##############################################################################
 # Tests Component
 ##############################################################################
