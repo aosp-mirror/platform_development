@@ -225,10 +225,13 @@ public class Connectivity extends Activity {
                     mStartTime = -1;
                 }
                 Log.d(TAG, "Scan: READY " + mScanCur);
+                mScanResults.setVisibility(View.INVISIBLE);
 
                 List<ScanResult> wifiScanResults = mWm.getScanResults();
                 if (wifiScanResults != null) {
                     mTotalScanCount += wifiScanResults.size();
+                    mScanResults.setText("Current scan = " + Long.toString(wifiScanResults.size()));
+                    mScanResults.setVisibility(View.VISIBLE);
                     Log.d(TAG, "Scan: Results = " + wifiScanResults.size());
                 }
 
@@ -237,6 +240,7 @@ public class Connectivity extends Activity {
                 if (mScanCur == 0) {
                     unregisterReceiver(mScanRecv);
                     mScanButton.setText(GET_SCAN_RES);
+                    mScanResults.setVisibility(View.INVISIBLE);
                 } else {
                     Log.d(TAG, "Scan: START " + mScanCur);
                     mStartTime = SystemClock.elapsedRealtime();
