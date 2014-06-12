@@ -77,6 +77,14 @@ redirects:
   type: permanent
   comment: Redirect sdk reference to new location
 
+- src: /sdk/exploring.html
+  dst: /sdk/tools/help/sdk-manager.html
+  type: permanent
+
+- src: /sdk/installing/bundle.html
+  dst: /sdk/installing/index.html?pkg=adt
+  type: permanent
+
 - src: /sdk/compatibility-library.html
   dst: /tools/support-library/index.html
   type: permanent
