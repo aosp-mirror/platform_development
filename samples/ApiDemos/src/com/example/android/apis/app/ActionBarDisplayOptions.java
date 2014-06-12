@@ -26,12 +26,14 @@ import android.view.Gravity;
 import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup.LayoutParams;
+import android.widget.AdapterView;
+import android.widget.Spinner;
 
 /**
  * This demo shows how various action bar display option flags can be combined and their effects.
  */
 public class ActionBarDisplayOptions extends Activity
-        implements View.OnClickListener, ActionBar.TabListener {
+        implements View.OnClickListener, ActionBar.TabListener, Spinner.OnItemSelectedListener {
     private View mCustomView;
 
     @Override
@@ -44,10 +46,11 @@ public class ActionBarDisplayOptions extends Activity
         findViewById(R.id.toggle_use_logo).setOnClickListener(this);
         findViewById(R.id.toggle_show_title).setOnClickListener(this);
         findViewById(R.id.toggle_show_custom).setOnClickListener(this);
-        findViewById(R.id.toggle_navigation).setOnClickListener(this);
         findViewById(R.id.cycle_custom_gravity).setOnClickListener(this);
         findViewById(R.id.toggle_visibility).setOnClickListener(this);
         findViewById(R.id.toggle_system_ui).setOnClickListener(this);
+
+        ((Spinner) findViewById(R.id.toggle_navigation)).setOnItemSelectedListener(this);
 
         mCustomView = getLayoutInflater().inflate(R.layout.action_bar_display_options_custom, null);
         // Configure several action bar elements that will be toggled by display options.
@@ -66,6 +69,7 @@ public class ActionBarDisplayOptions extends Activity
         return true;
     }
 
+    @Override
     public void onClick(View v) {
         final ActionBar bar = getActionBar();
         int flags = 0;
@@ -85,13 +89,6 @@ public class ActionBarDisplayOptions extends Activity
             case R.id.toggle_show_custom:
                 flags = ActionBar.DISPLAY_SHOW_CUSTOM;
                 break;
-
-            case R.id.toggle_navigation:
-                bar.setNavigationMode(
-                        bar.getNavigationMode() == ActionBar.NAVIGATION_MODE_STANDARD
-                                ? ActionBar.NAVIGATION_MODE_TABS
-                                : ActionBar.NAVIGATION_MODE_STANDARD);
-                return;
             case R.id.cycle_custom_gravity:
                 ActionBar.LayoutParams lp = (ActionBar.LayoutParams) mCustomView.getLayoutParams();
                 int newGravity = 0;
@@ -131,12 +128,40 @@ public class ActionBarDisplayOptions extends Activity
         bar.setDisplayOptions(change, flags);
     }
 
+    @Override
     public void onTabSelected(Tab tab, FragmentTransaction ft) {
     }
 
+    @Override
     public void onTabUnselected(Tab tab, FragmentTransaction ft) {
     }
 
+    @Override
     public void onTabReselected(Tab tab, FragmentTransaction ft) {
+    }
+
+    @Override
+    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+        final ActionBar bar = getActionBar();
+        switch (parent.getId()) {
+            case R.id.toggle_navigation:
+                final int mode;
+                switch (position) {
+                    case 1:
+                        mode = ActionBar.NAVIGATION_MODE_TABS;
+                        break;
+                    case 2:
+                        mode = ActionBar.NAVIGATION_MODE_LIST;
+                        break;
+                    default:
+                        mode = ActionBar.NAVIGATION_MODE_STANDARD;
+                }
+                bar.setNavigationMode(mode);
+                return;
+        }
+    }
+
+    @Override
+    public void onNothingSelected(AdapterView<?> parent) {
     }
 }

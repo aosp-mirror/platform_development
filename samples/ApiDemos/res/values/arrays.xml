@@ -359,4 +359,11 @@
         <item>AJS</item>
     </string-array>
 
+    <!-- Used in App/ActionBarDisplayOptions.java -->
+    <string-array name="navigation_modes">
+        <item>NAVIGATION_MODE_STANDARD</item>
+        <item>NAVIGATION_MODE_TABS</item>
+        <item>NAVIGATION_MODE_LIST</item>
+    </string-array>
+
 </resources>
