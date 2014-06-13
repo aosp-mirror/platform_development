@@ -27,13 +27,15 @@ import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Spinner;
 
 /**
- * This demo shows how various action bar display option flags can be combined and their effects.
+ * This demo shows how various action bar display option flags can be combined
+ * and their effects.
  */
-public class ActionBarDisplayOptions extends Activity
-        implements View.OnClickListener, ActionBar.TabListener, Spinner.OnItemSelectedListener {
+public class ActionBarDisplayOptions extends Activity implements View.OnClickListener,
+        ActionBar.TabListener, Spinner.OnItemSelectedListener, ActionBar.OnNavigationListener {
     private View mCustomView;
 
     @Override
@@ -61,6 +63,13 @@ public class ActionBarDisplayOptions extends Activity
         bar.addTab(bar.newTab().setText("Tab 1").setTabListener(this));
         bar.addTab(bar.newTab().setText("Tab 2").setTabListener(this));
         bar.addTab(bar.newTab().setText("Tab 3").setTabListener(this));
+
+        final ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
+                android.R.layout.simple_list_item_1);
+        adapter.add("Item 1");
+        adapter.add("Item 2");
+        adapter.add("Item 3");
+        bar.setListNavigationCallbacks(adapter, this);
     }
 
     @Override
@@ -163,5 +172,10 @@ public class ActionBarDisplayOptions extends Activity
 
     @Override
     public void onNothingSelected(AdapterView<?> parent) {
+    }
+
+    @Override
+    public boolean onNavigationItemSelected(int itemPosition, long itemId) {
+        return false;
     }
 }
