@@ -26,7 +26,6 @@
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
-                <action android:name="android.media.tv.SetupActivity" />
             </intent-filter>
         </activity>
         <service android:name="com.example.android.atsctvinput.AtscTvInputService"
@@ -35,6 +34,8 @@
             <intent-filter>
                 <action android:name="android.media.tv.TvInputService" />
             </intent-filter>
+            <meta-data android:name="android.media.tv.input"
+                android:resource="@xml/atsctvinputservice" />
         </service>
     </application>
 </manifest>
