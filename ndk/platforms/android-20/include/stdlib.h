@@ -105,20 +105,21 @@ extern void arc4random_stir(void);
 extern void arc4random_addrandom(unsigned char *, int);
 
 #define RAND_MAX 0x7fffffff
-static __inline__ int rand(void) {
-    return (int)lrand48();
-}
-static __inline__ void srand(unsigned int __s) {
-    srand48(__s);
-}
-static __inline__ long random(void)
-{
-    return lrand48();
-}
-static __inline__ void srandom(unsigned int __s)
-{
-    srand48(__s);
-}
+
+/* Work around x86/x86-64 libvpx build breakage caused by postproc_x86.c. */
+#if (defined(__i386__) || defined(__x86_64__)) && defined(rand)
+#undef rand
+#define __rand lrand48
+#endif
+
+int rand(void);
+int rand_r(unsigned int*);
+void srand(unsigned int);
+
+char* initstate(unsigned int, char*, size_t);
+long random(void);
+char* setstate(char*);
+void srandom(unsigned int);
 
 /* Basic PTY functions.  These only work if devpts is mounted! */
 
@@ -138,21 +139,21 @@ typedef struct {
     int  rem;
 } div_t;
 
-extern div_t   div(int, int);
+extern div_t   div(int, int) __pure2;
 
 typedef struct {
     long int  quot;
     long int  rem;
 } ldiv_t;
 
-extern ldiv_t   ldiv(long, long);
+extern ldiv_t   ldiv(long, long) __pure2;
 
 typedef struct {
     long long int  quot;
     long long int  rem;
 } lldiv_t;
 
-extern lldiv_t   lldiv(long long, long long);
+extern lldiv_t   lldiv(long long, long long) __pure2;
 
 /* BSD compatibility. */
 extern const char* getprogname(void);
@@ -167,7 +168,7 @@ extern int      mbtowc(wchar_t *, const char *, size_t);
 extern int	wctomb(char *, wchar_t);
 extern size_t	wcstombs(char *, const wchar_t *, size_t);
 
-#define MB_CUR_MAX 1
+#define MB_CUR_MAX 4U
 
 #if 0 /* MISSING FROM BIONIC */
 extern int on_exit(void (*)(int, void *), void *);
