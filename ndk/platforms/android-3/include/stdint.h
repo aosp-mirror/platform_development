@@ -251,7 +251,7 @@ typedef int64_t  intmax_t;
 /* size_t is defined by the GCC-specific <stddef.h> */
 #ifndef _SSIZE_T_DEFINED_
 #define _SSIZE_T_DEFINED_
-typedef long int  ssize_t;
+typedef int  ssize_t;
 #endif
 
 #define _BITSIZE 32

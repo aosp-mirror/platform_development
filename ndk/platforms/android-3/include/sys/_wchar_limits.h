@@ -86,21 +86,14 @@
 #  else
   /* Otherwise, the value is derived from the toolchain configuration.
    * to avoid putting explicit CPU checks in this header. */
-#    ifndef __WCHAR_MAX__
-#      error "__WCHAR_MAX__ is not defined. Check your toolchain!"
+#    define WCHAR_MAX __WCHAR_MAX__
+
+  /* Clang does not define __WCHAR_MIN__ */
+#    if defined(__WCHAR_UNSIGNED__)
+#      define WCHAR_MIN L'\0'
+#    else
+#      define WCHAR_MIN (-(WCHAR_MAX) - 1)
 #    endif
-  /* Clang does define __WCHAR_MAX__, but not __WCHAR_MIN__ */
-#    ifndef __WCHAR_MIN__
-#      if __WCHAR_MAX__ == 4294967295
-#        define __WCHAR_MIN__  (0U)
-#      elif __WCHAR_MAX__ == 2147483647
-#        define __WCHAR_MIN__  (-2147483647 - 1)
-#      else
-#        error "Invalid __WCHAR_MAX__ value. Check your toolchain!"
-#      endif
-#    endif /* !__WCHAR_MIN__ */
-#    define WCHAR_MIN    __WCHAR_MIN__
-#    define WCHAR_MAX    __WCHAR_MAX__
 #  endif /* !_WCHAR_IS_ALWAYS_SIGNED */
 
 #endif /* !WCHAR_MIN */
