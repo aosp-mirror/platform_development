@@ -23,9 +23,12 @@ import symbol
 def PrintTraceLines(trace_lines):
   """Print back trace."""
   maxlen = max(map(lambda tl: len(tl[1]), trace_lines))
+  spacing = ""
+  if symbol.ARCH == "arm64" or symbol.ARCH == "mips64" or symbol.ARCH == "x86_64":
+    spacing = "        "
   print
   print "Stack Trace:"
-  print "  RELADDR   " + "FUNCTION".ljust(maxlen) + "  FILE:LINE"
+  print "  RELADDR   " + spacing + "FUNCTION".ljust(maxlen) + "  FILE:LINE"
   for tl in trace_lines:
     (addr, symbol_with_offset, location) = tl
     print "  %8s  %s  %s" % (addr, symbol_with_offset.ljust(maxlen), location)
@@ -58,18 +61,33 @@ def PrintDivider():
   print
   print "-----------------------------------------------------\n"
 
+def CleanLine(ln):
+  # AndroidFeedback adds zero width spaces into its crash reports. These
+  # should be removed or the regular expresssions will fail to match.
+  return unicode(ln, errors='ignore')
+
 def ConvertTrace(lines):
   """Convert strings containing native crash to a stack."""
+  lines = map(CleanLine, lines)
+
   process_info_line = re.compile("(pid: [0-9]+, tid: [0-9]+.*)")
+  abi_line = re.compile("(ABI: \'(.*)\')")
   signal_line = re.compile("(signal [0-9]+ \(.*\).*)")
-  register_line = re.compile("(([ ]*[0-9a-z]{2} [0-9a-f]{8}){4})")
   thread_line = re.compile("(.*)(\-\-\- ){15}\-\-\-")
   dalvik_jni_thread_line = re.compile("(\".*\" prio=[0-9]+ tid=[0-9]+ NATIVE.*)")
   dalvik_native_thread_line = re.compile("(\".*\" sysTid=[0-9]+ nice=[0-9]+.*)")
 
+  for line in lines:
+    abi_header = abi_line.search(line)
+    if abi_header:
+      symbol.ARCH = abi_header.group(2)
+      break
+
   width = "{8}"
-  if symbol.ARCH == "arm64" or symbol.ARCH == "x86_64":
+  if symbol.ARCH == "arm64" or symbol.ARCH == "mips64" or symbol.ARCH == "x86_64":
     width = "{16}"
+
+  register_line = re.compile("(([ ]*[0-9a-z]{2} +[0-9a-f]" + width + "){4})")
 
   # Note that both trace and value line matching allow for variable amounts of
   # whitespace (e.g. \t). This is because the we want to allow for the stack
@@ -107,17 +125,15 @@ def ConvertTrace(lines):
   value_lines = []
   last_frame = -1
 
-  for ln in lines:
-    # AndroidFeedback adds zero width spaces into its crash reports. These
-    # should be removed or the regular expresssions will fail to match.
-    line = unicode(ln, errors='ignore')
+  for line in lines:
     process_header = process_info_line.search(line)
     signal_header = signal_line.search(line)
-    register_header = register_line.search(line)
     thread_header = thread_line.search(line)
+    register_header = register_line.search(line)
+    abi_header = abi_line.search(line)
     dalvik_jni_thread_header = dalvik_jni_thread_line.search(line)
     dalvik_native_thread_header = dalvik_native_thread_line.search(line)
-    if process_header or signal_header or register_header or thread_header \
+    if process_header or signal_header or thread_header or abi_header or register_header\
         or dalvik_jni_thread_header or dalvik_native_thread_header:
       if trace_lines or value_lines:
         PrintOutput(trace_lines, value_lines)
@@ -137,6 +153,8 @@ def ConvertTrace(lines):
         print dalvik_jni_thread_header.group(1)
       if dalvik_native_thread_header:
         print dalvik_native_thread_header.group(1)
+      if abi_header:
+        print abi_header.group(1)
       continue
     if trace_line.match(line):
       match = trace_line.match(line)
