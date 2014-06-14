@@ -206,7 +206,7 @@ public class VaultProvider extends DocumentsProvider {
         final RowBuilder row = result.newRow();
         row.add(Root.COLUMN_ROOT_ID, DEFAULT_ROOT_ID);
         row.add(Root.COLUMN_FLAGS, Root.FLAG_SUPPORTS_CREATE | Root.FLAG_LOCAL_ONLY
-                | Root.FLAG_SUPPORTS_DIR_SELECTION);
+                | Root.FLAG_SUPPORTS_IS_CHILD);
         row.add(Root.COLUMN_TITLE, getContext().getString(R.string.app_label));
         row.add(Root.COLUMN_DOCUMENT_ID, DEFAULT_DOCUMENT_ID);
         row.add(Root.COLUMN_ICON, R.drawable.ic_lock_lock);
