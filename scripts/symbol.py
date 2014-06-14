@@ -78,20 +78,21 @@ def FindToolchain():
   if TOOLCHAIN_INFO is not None:
     return TOOLCHAIN_INFO
 
+  # TODO: TARGET_GCC_VERSION is the version for the primary architecture.
+  gcc_version = os.environ["TARGET_GCC_VERSION"]
+
   ## Known toolchains, newer ones in the front.
-  if ARCH == "arm64":
-    gcc_version = os.environ["TARGET_GCC_VERSION"]
-    known_toolchains = [
-      ("aarch64-linux-android-" + gcc_version, "aarch64", "aarch64-linux-android")
-    ]
-  elif ARCH == "arm":
-    gcc_version = os.environ["TARGET_GCC_VERSION"]
+  if ARCH == "arm":
     known_toolchains = [
       ("arm-linux-androideabi-" + gcc_version, "arm", "arm-linux-androideabi"),
     ]
-  elif ARCH =="x86":
+  elif ARCH == "arm64":
     known_toolchains = [
-      ("i686-android-linux-4.4.3", "x86", "i686-android-linux")
+      ("aarch64-linux-android-" + gcc_version, "aarch64", "aarch64-linux-android")
+    ]
+  elif ARCH =="x86" or ARCH == "x86_64":
+    known_toolchains = [
+      ("i686-android-linux" + gcc_version, "x86", "i686-android-linux")
     ]
   else:
     known_toolchains = []
@@ -101,10 +102,10 @@ def FindToolchain():
     toolchain_info = (label, platform, target);
     if os.path.exists(ToolPath("addr2line", toolchain_info)):
       TOOLCHAIN_INFO = toolchain_info
-      print "Using toolchain from :" + ToolPath("", TOOLCHAIN_INFO)
+      print "Using toolchain from: " + ToolPath("", TOOLCHAIN_INFO)
       return toolchain_info
 
-  raise Exception("Could not find tool chain")
+  raise Exception("Could not find tool chain for (%s, %s, %s)" % (label, platform, target))
 
 def SymbolInformation(lib, addr):
   """Look up symbol information about an address.
