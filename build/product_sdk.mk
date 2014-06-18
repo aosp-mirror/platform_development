@@ -43,4 +43,5 @@ PRODUCT_PACKAGES += \
 	layoutlib \
 	layoutlib-tests \
 	llvm-rs-cc \
+	sqlite3 \
 	vgabios-cirrus.bin
