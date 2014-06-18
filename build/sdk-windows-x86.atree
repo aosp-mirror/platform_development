@@ -37,6 +37,9 @@ bin/fastboot.exe                        strip platform-tools/fastboot.exe
 bin/AdbWinUsbApi.dll                          platform-tools/AdbWinUsbApi.dll
 bin/AdbWinApi.dll                             platform-tools/AdbWinApi.dll
 
+rm tools/sqlite3
+bin/sqlite3.exe                         strip platform-tools/sqlite3.exe
+
 
 ##############################################################################
 # Build Tools Component
