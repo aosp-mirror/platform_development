@@ -103,8 +103,9 @@ endef
 ANDROID_SUPPORT_LIBRARIES := \
     android-support-annotations \
     android-support-v4 \
-    android-support-v7-gridlayout \
     android-support-v7-appcompat \
+    android-support-v7-cardview \
+    android-support-v7-gridlayout \
     android-support-v7-mediarouter \
     android-support-v7-palette \
     android-support-v7-recyclerview \
