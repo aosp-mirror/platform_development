@@ -44,6 +44,8 @@ development/sdk/plat_tools_source.properties  platform-tools/source.properties
 # host tools from out/host/$(HOST_OS)-$(HOST_ARCH)/
 bin/adb                                 strip platform-tools/adb
 bin/fastboot                            strip platform-tools/fastboot
+bin/sqlite3                             strip platform-tools/sqlite3
+
 
 # API database for tools such as lint
 development/sdk/generated-api-versions.xml    platform-tools/api/api-versions.xml
