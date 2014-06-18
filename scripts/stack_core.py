@@ -73,6 +73,7 @@ def ConvertTrace(lines):
   process_info_line = re.compile("(pid: [0-9]+, tid: [0-9]+.*)")
   abi_line = re.compile("(ABI: \'(.*)\')")
   signal_line = re.compile("(signal [0-9]+ \(.*\).*)")
+  abort_message_line = re.compile("(Abort message: '.*')")
   thread_line = re.compile("(.*)(\-\-\- ){15}\-\-\-")
   dalvik_jni_thread_line = re.compile("(\".*\" prio=[0-9]+ tid=[0-9]+ NATIVE.*)")
   dalvik_native_thread_line = re.compile("(\".*\" sysTid=[0-9]+ nice=[0-9]+.*)")
@@ -128,13 +129,14 @@ def ConvertTrace(lines):
   for line in lines:
     process_header = process_info_line.search(line)
     signal_header = signal_line.search(line)
+    abort_message_header = abort_message_line.search(line)
     thread_header = thread_line.search(line)
     register_header = register_line.search(line)
     abi_header = abi_line.search(line)
     dalvik_jni_thread_header = dalvik_jni_thread_line.search(line)
     dalvik_native_thread_header = dalvik_native_thread_line.search(line)
-    if process_header or signal_header or thread_header or abi_header or register_header\
-        or dalvik_jni_thread_header or dalvik_native_thread_header:
+    if process_header or signal_header or abort_message_header or thread_header or abi_header or \
+        register_header or dalvik_jni_thread_header or dalvik_native_thread_header:
       if trace_lines or value_lines:
         PrintOutput(trace_lines, value_lines)
         PrintDivider()
@@ -145,6 +147,8 @@ def ConvertTrace(lines):
         print process_header.group(1)
       if signal_header:
         print signal_header.group(1)
+      if abort_message_header:
+        print abort_message_header.group(1)
       if register_header:
         print register_header.group(1)
       if thread_header:
