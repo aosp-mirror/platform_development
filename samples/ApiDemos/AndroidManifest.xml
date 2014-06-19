@@ -2685,6 +2685,24 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".graphics.ShadowCardStack"
+                  android:label="Graphics/Shadow Card Stack"
+                  android:theme="@android:style/Theme.Material.Light">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".graphics.ShadowCardDrag"
+                  android:label="Graphics/Shadow Card Drag"
+                  android:theme="@android:style/Theme.Material.Light">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
         <activity android:name=".graphics.WindowSurface"
                 android:label="Graphics/Surface Window">
             <intent-filter>
