@@ -271,6 +271,17 @@ developers/build/prebuilts/gradle/SwipeRefreshLayoutBasic                    sam
 developers/build/prebuilts/gradle/SwipeRefreshListFragment                   samples/${PLATFORM_NAME}/ui/SwipeRefreshListFragment
 developers/build/prebuilts/gradle/SwipeRefreshMultipleViews                  samples/${PLATFORM_NAME}/ui/SwipeRefreshMultipleViews
 developers/build/prebuilts/gradle/MediaRouter                                samples/${PLATFORM_NAME}/media/MediaRouter
+developers/build/prebuilts/gradle/BasicManagedProfile                        samples/${PLATFORM_NAME}/admin/BasicManagedProfile
+developers/build/prebuilts/gradle/Camera2Basic                               samples/${PLATFORM_NAME}/media/Camera2Basic
+developers/build/prebuilts/gradle/Camera2Video                               samples/${PLATFORM_NAME}/media/Camera2Video
+developers/build/prebuilts/gradle/ActivitySceneTransitionBasic               samples/${PLATFORM_NAME}/ui/activityscenetransition/ActivitySceneTransitionBasic
+developers/build/prebuilts/gradle/NavigationDrawer                           samples/${PLATFORM_NAME}/ui/views/NavigationDrawer
+developers/build/prebuilts/gradle/ElevationBasic                             samples/${PLATFORM_NAME}/ui/views/Elevation/ElevationBasic
+developers/build/prebuilts/gradle/ElevationDrag                              samples/${PLATFORM_NAME}/ui/views/Elevation/ElevationDrag
+developers/build/prebuilts/gradle/ClippingBasic                              samples/${PLATFORM_NAME}/ui/views/Clipping/ClippingBasic
+developers/build/prebuilts/gradle/JobScheduler                               samples/${PLATFORM_NAME}/ui/views/Clipping/ClippingBasic
+
+developers/build/prebuilts/androidtv                                         samples/${PLATFORM_NAME}/androidtv
 
 # Old sample tree
 development/samples/AccelerometerPlay          samples/${PLATFORM_NAME}/legacy/AccelerometerPlay
