@@ -706,3 +706,11 @@ redirects:
 - src: /edu/signup
   dst: https://services.google.com/fb/forms/playedu
   type: permanent
+
+- src: /distribute/googleplay/edu/faq.html
+  dst: https://developers.google.com/edu/faq
+  type: permanent
+
+- src: /distribute/essentials/gpfe-guidelines.html
+  dst: https://developers.google.com/edu/guidelines
+  type: permanent
