@@ -904,6 +904,11 @@
     <string name="density_title">Density: Unknown Screen</string>
     <string name="camera_alert">Device has only one camera!</string>
     <string name="switch_cam">Switch Camera</string>
+    <string name="draggable_card">Draggable Card</string>
+
+    <string name="enable_tilt">Enable Tilt</string>
+    <string name="enable_shading">Enable Shading</string>
+    <string name="select_shape">Select Shape</string>
 
     <!-- ============================ -->
     <!--  media examples strings  -->
