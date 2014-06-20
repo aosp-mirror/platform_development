@@ -1,0 +1,30 @@
+buildscript {
+    ext.topDir = file('../../../../../')
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:0.11.+'
+    }
+}
+
+List<String> samples = [
+    "Notifications"
+]
+
+List<String> taskNames = [
+    "clean",
+    "build",
+]
+
+taskNames.each { taskName ->
+    def task = project.hasProperty(taskName) ? project.tasks[taskName] : project.task(taskName)
+    samples.each { sample ->
+        File sampleDir = new File(sample)
+        task.dependsOn project.task([type: GradleBuild], "${sample}_${taskName}", {
+            buildFile = "${sample}/build.gradle"
+            dir = sample
+            tasks = [taskName]
+        })
+    }
+}
