@@ -45,6 +45,9 @@ development/sdk/plat_tools_source.properties  platform-tools/source.properties
 bin/adb                                 strip platform-tools/adb
 bin/fastboot                            strip platform-tools/fastboot
 bin/sqlite3                             strip platform-tools/sqlite3
+bin/dmtracedump                         strip platform-tools/dmtracedump
+bin/etc1tool                            strip platform-tools/etc1tool
+bin/hprof-conv                          strip platform-tools/hprof-conv
 
 
 # API database for tools such as lint
