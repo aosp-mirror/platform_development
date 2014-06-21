@@ -102,8 +102,6 @@ struct sigaction {
 extern int sigaction(int, const struct sigaction*, struct sigaction*);
 
 extern sighandler_t signal(int, sighandler_t);
-extern sighandler_t bsd_signal(int, sighandler_t);
-extern sighandler_t sysv_signal(int, sighandler_t);
 
 extern int siginterrupt(int, int);
 

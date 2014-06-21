@@ -226,7 +226,7 @@ int pthread_rwlock_trywrlock(pthread_rwlock_t*) __nonnull((1));
 int pthread_rwlock_unlock(pthread_rwlock_t *rwlock) __nonnull((1));
 int pthread_rwlock_wrlock(pthread_rwlock_t*) __nonnull((1));
 
-pthread_t pthread_self(void);
+pthread_t pthread_self(void) __pure2;
 
 int pthread_setname_np(pthread_t, const char*) __nonnull((2));
 

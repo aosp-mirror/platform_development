@@ -41,7 +41,7 @@ __BEGIN_DECLS
 #endif
 
 /* internal function returning the address of the thread-specific errno */
-extern volatile int*   __errno(void);
+extern volatile int* __errno(void) __pure2;
 
 /* a macro expanding to the errno l-value */
 #define  errno   (*__errno())

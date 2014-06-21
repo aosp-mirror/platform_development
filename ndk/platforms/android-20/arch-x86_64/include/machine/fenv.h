@@ -51,7 +51,6 @@ __BEGIN_DECLS
  */
 #define FE_ALL_EXCEPT   (FE_INVALID | FE_DENORMAL | FE_DIVBYZERO | \
                          FE_OVERFLOW | FE_UNDERFLOW | FE_INEXACT)
-#define _SSE_MASK_SHIFT 7
 
 /*
  * Each symbol representing the rounding direction, expands to an integer
@@ -63,14 +62,6 @@ __BEGIN_DECLS
 #define FE_DOWNWARD   0x400
 #define FE_UPWARD     0x800
 #define FE_TOWARDZERO 0xc00
-
-/*
- * The following symbol is simply the bitwise-inclusive OR of all floating-point
- * rounding direction constants defined above.
- */
-#define _X87_ROUND_MASK  (FE_TONEAREST | FE_DOWNWARD | FE_UPWARD | \
-                          FE_TOWARDZERO)
-#define _SSE_ROUND_SHIFT 3
 
 /*
  * fenv_t represents the entire floating-point environment.

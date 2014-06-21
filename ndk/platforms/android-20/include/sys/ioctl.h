@@ -38,6 +38,7 @@
 #include <asm/ioctls.h>
 #include <asm/termbits.h>
 #include <sys/ioctl_compat.h>
+#include <linux/tty.h>
 
 __BEGIN_DECLS
 
