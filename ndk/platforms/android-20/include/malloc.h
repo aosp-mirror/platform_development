@@ -35,9 +35,6 @@ extern void free(void* p);
 extern void* memalign(size_t alignment, size_t byte_count) __mallocfunc __wur __attribute__((alloc_size(2)));
 extern size_t malloc_usable_size(const void* p);
 
-extern void* valloc(size_t byte_count) __mallocfunc __wur __attribute__((alloc_size(1)));
-extern void* pvalloc(size_t byte_count) __mallocfunc __wur __attribute__((alloc_size(1)));
-
 #ifndef STRUCT_MALLINFO_DECLARED
 #define STRUCT_MALLINFO_DECLARED 1
 struct mallinfo {

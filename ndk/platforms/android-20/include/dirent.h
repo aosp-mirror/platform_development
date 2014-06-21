@@ -75,7 +75,6 @@ extern int alphasort(const struct dirent**, const struct dirent**);
 extern int alphasort64(const struct dirent64**, const struct dirent64**);
 extern int scandir(const char*, struct dirent***, int (*)(const struct dirent*), int (*)(const struct dirent**, const struct dirent**));
 extern int scandir64(const char*, struct dirent64***, int (*)(const struct dirent64*), int (*)(const struct dirent64**, const struct dirent64**));
-extern int getdents(unsigned int, struct dirent*, unsigned int);
 
 __END_DECLS
 

@@ -196,6 +196,8 @@ struct addrinfo {
 #define	SCOPE_DELIMITER	'%'
 
 __BEGIN_DECLS
+#pragma GCC visibility push(default)
+
 /* BIONIC-BEGIN */
 #define  h_errno   (*__get_h_errno())
 int*  __get_h_errno(void);
@@ -245,6 +247,7 @@ const char	*gai_strerror(int);
 void setnetgrent(const char *);
 void setservent(int);
 
+#pragma GCC visibility pop
 __END_DECLS
 
 #endif /* !_NETDB_H_ */

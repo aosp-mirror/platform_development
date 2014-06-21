@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008 The Android Open Source Project
+ * Copyright (C) 2014 The Android Open Source Project
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,23 +25,29 @@
  * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-#ifndef _SYS_TIMEB_H
-#define _SYS_TIMEB_H
+
+#ifndef _UCHAR_H_
+#define _UCHAR_H_
 
 #include <sys/cdefs.h>
-#include <sys/time.h>
+#include <wchar.h>
 
 __BEGIN_DECLS
 
-struct timeb {
-    time_t          time;
-    unsigned short  millitm;
-    short           timezone;
-    short           dstflag;
-};
+#define __STD_UTF_16__ 1
+#define __STD_UTF_32__ 1
 
-extern int  ftime(struct timeb*  timebuf);
+size_t c16rtomb(char* __restrict, char16_t, mbstate_t* __restrict);
+size_t c32rtomb(char* __restrict, char32_t, mbstate_t* __restrict);
+size_t mbrtoc16(char16_t* __restrict,
+                const char* __restrict,
+                size_t,
+                mbstate_t* __restrict);
+size_t mbrtoc32(char32_t* __restrict,
+                const char* __restrict,
+                size_t,
+                mbstate_t* __restrict);
 
 __END_DECLS
 
-#endif /* _SYS_TIMEB_H */
+#endif /* _UCHAR_H_ */

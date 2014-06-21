@@ -87,18 +87,11 @@ typedef __uint32_t fexcept_t;
 #define FE_ALL_EXCEPT (FE_DIVBYZERO | FE_INEXACT | \
                        FE_INVALID | FE_OVERFLOW | FE_UNDERFLOW)
 
-#define _FCSR_CAUSE_SHIFT 10
-#define _ENABLE_SHIFT     5
-#define _FCSR_ENABLE_MASK (FE_ALL_EXCEPT << _ENABLE_SHIFT)
-
 /* Rounding modes */
 #define FE_TONEAREST  0x0000
 #define FE_TOWARDZERO 0x0001
 #define FE_UPWARD     0x0002
 #define FE_DOWNWARD   0x0003
-
-#define _FCSR_RMODE_SHIFT 0
-#define _FCSR_RMASK       0x3
 
 __END_DECLS
 
