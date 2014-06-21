@@ -270,6 +270,9 @@ developers/build/prebuilts/gradle/SwipeRefreshListFragment                   sam
 developers/build/prebuilts/gradle/SwipeRefreshMultipleViews                  samples/${PLATFORM_NAME}/ui/SwipeRefreshMultipleViews
 developers/build/prebuilts/gradle/MediaRouter                                samples/${PLATFORM_NAME}/media/MediaRouter
 
+# Wearable sample tree
+development/samples/wearable/Notifications     samples/${PLATFORM_NAME}/wearable/Notifications
+
 # Old sample tree
 development/samples/AccelerometerPlay          samples/${PLATFORM_NAME}/legacy/AccelerometerPlay
 development/samples/ActionBarCompat            samples/${PLATFORM_NAME}/legacy/ActionBarCompat
