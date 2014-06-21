@@ -122,16 +122,13 @@ SDK_EXTRAS_DEPS += \
 # Similarly capture all sys-img.xml that are now split out of repository.xml
 $(eval $(call mk-sdk-repo-pkg-3,SDK_SYSIMG_XML_ARGS,$(HOST_OS),$(MAIN_SDK_ZIP),system-images,system-images/*))
 
-SDK_SYSIMG_DEPS += \
-    $(call sdk-repo-pkg-zip,$(HOST_OS),$(MAIN_SDK_ZIP),system-images) \
-
-# All these go in the main repository.xml
-$(eval $(call mk-sdk-repo-pkg-2,SDK_REPO_XML_ARGS,$(HOST_OS),$(MAIN_SDK_ZIP),build-tools))
-$(eval $(call mk-sdk-repo-pkg-1,SDK_REPO_XML_ARGS,$(HOST_OS),$(MAIN_SDK_ZIP),platform-tools))
-$(eval $(call mk-sdk-repo-pkg-1,SDK_REPO_XML_ARGS,$(HOST_OS),$(MAIN_SDK_ZIP),docs))
-$(eval $(call mk-sdk-repo-pkg-2,SDK_REPO_XML_ARGS,$(HOST_OS),$(MAIN_SDK_ZIP),platforms))
-$(eval $(call mk-sdk-repo-pkg-2,SDK_REPO_XML_ARGS,$(HOST_OS),$(MAIN_SDK_ZIP),samples))
-$(eval $(call mk-sdk-repo-sources,SDK_REPO_XML_ARGS,$(HOST_OS),$(MAIN_SDK_ZIP),sources))
+$(eval $(call mk-sdk-repo-pkg-2,$(HOST_OS),$(MAIN_SDK_ZIP),build-tools))
+$(eval $(call mk-sdk-repo-pkg-1,$(HOST_OS),$(MAIN_SDK_ZIP),platform-tools))
+$(eval $(call mk-sdk-repo-pkg-1,$(HOST_OS),$(MAIN_SDK_ZIP),docs))
+$(eval $(call mk-sdk-repo-pkg-2,$(HOST_OS),$(MAIN_SDK_ZIP),platforms))
+$(eval $(call mk-sdk-repo-pkg-2,$(HOST_OS),$(MAIN_SDK_ZIP),samples))
+$(eval $(call mk-sdk-repo-pkg-3,$(HOST_OS),$(MAIN_SDK_ZIP),system-images,system-images/*))
+$(eval $(call mk-sdk-repo-sources,$(HOST_OS),$(MAIN_SDK_ZIP),sources))
 
 SDK_REPO_DEPS += \
     $(call sdk-repo-pkg-zip,$(HOST_OS),$(MAIN_SDK_ZIP),build-tools) \
@@ -149,8 +146,8 @@ endif
 ifneq ($(WIN_SDK_ZIP),)
 
 # docs, platforms and samples have nothing OS-dependent right now.
-$(eval $(call mk-sdk-repo-pkg-2,SDK_REPO_XML_ARGS,windows,$(WIN_SDK_ZIP),build-tools))
-$(eval $(call mk-sdk-repo-pkg-1,SDK_REPO_XML_ARGS,windows,$(WIN_SDK_ZIP),platform-tools))
+$(eval $(call mk-sdk-repo-pkg-2,windows,$(WIN_SDK_ZIP),build-tools))
+$(eval $(call mk-sdk-repo-pkg-1,windows,$(WIN_SDK_ZIP),platform-tools))
 
 SDK_REPO_DEPS += \
     $(call sdk-repo-pkg-zip,windows,$(WIN_SDK_ZIP),build-tools) \
