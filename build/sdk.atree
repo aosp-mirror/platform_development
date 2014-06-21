@@ -283,6 +283,9 @@ developers/build/prebuilts/gradle/JobScheduler                               sam
 
 developers/build/prebuilts/androidtv                                         samples/${PLATFORM_NAME}/androidtv
 
+# Wearable sample tree
+development/samples/wearable/Notifications     samples/${PLATFORM_NAME}/wearable/Notifications
+
 # Old sample tree
 development/samples/AccelerometerPlay          samples/${PLATFORM_NAME}/legacy/AccelerometerPlay
 development/samples/ActionBarCompat            samples/${PLATFORM_NAME}/legacy/ActionBarCompat
