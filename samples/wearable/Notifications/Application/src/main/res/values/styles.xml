@@ -1,0 +1,13 @@
+<resources>
+
+    <!-- Base application theme. -->
+    <style name="AppTheme" parent="android:Theme.Holo">
+        <!-- Customize your theme here. -->
+    </style>
+
+    <style name="bg_picker">
+        <item name="android:layout_marginLeft">16dp</item>
+        <item name="android:background">@drawable/unselected_background</item>
+    </style>
+
+</resources>
