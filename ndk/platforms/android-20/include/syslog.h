@@ -25,6 +25,7 @@
  * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
+
 #ifndef _SYSLOG_H
 #define _SYSLOG_H
 
@@ -34,7 +35,6 @@
 
 __BEGIN_DECLS
 
-/* Alert levels */
 #define LOG_EMERG	0
 #define LOG_ALERT	1
 #define LOG_CRIT	2
@@ -47,8 +47,6 @@ __BEGIN_DECLS
 #define LOG_PRIMASK	7
 #define LOG_PRI(x)	((x) & LOG_PRIMASK)
 
-
-/* Facilities; not actually used */
 #define LOG_KERN	0000
 #define LOG_USER	0010
 #define LOG_MAIL	0020
@@ -73,30 +71,15 @@ __BEGIN_DECLS
 #define LOG_FACMASK	01770
 #define LOG_FAC(x)	(((x) >> 3) & (LOG_FACMASK >> 3))
 
-#define	LOG_MASK(pri)	(1 << (pri))		/* mask for one priority */
-#define	LOG_UPTO(pri)	((1 << ((pri)+1)) - 1)	/* all priorities through pri */
+#define LOG_MASK(pri) (1 << (pri))
+#define LOG_UPTO(pri) ((1 << ((pri)+1)) - 1)
 
-/* openlog() flags; only LOG_PID and LOG_PERROR supported */
-#define        LOG_PID         0x01    /* include pid with message */
-#define        LOG_CONS        0x02    /* write to console on logger error */
-#define        LOG_ODELAY      0x04    /* delay connection until syslog() */
-#define        LOG_NDELAY      0x08    /* open connection immediately */
-#define        LOG_NOWAIT      0x10    /* wait for child processes (unused on linux) */
-#define        LOG_PERROR      0x20    /* additional logging to stderr */
-
-/* BIONIC: the following definitions are from OpenBSD's sys/syslog.h
- */
-struct syslog_data {
-	int	log_file;
-        int	connected;
-        int	opened;
-        int	log_stat;
-        const char 	*log_tag;
-        int 	log_fac;
-        int 	log_mask;
-};
-
-#define SYSLOG_DATA_INIT {-1, 0, 0, 0, (const char *)0, LOG_USER, 0xff}
+#define LOG_PID    0x01    /* include pid with message */
+#define LOG_CONS   0x02    /* write to console on logger error */
+#define LOG_ODELAY 0x04    /* delay connection until syslog() */
+#define LOG_NDELAY 0x08    /* open connection immediately */
+#define LOG_NOWAIT 0x10    /* wait for child processes (unused on linux) */
+#define LOG_PERROR 0x20    /* additional logging to stderr */
 
 #define _PATH_LOG  "/dev/syslog"
 
@@ -105,11 +88,6 @@ extern void	openlog(const char *, int, int);
 extern int	setlogmask(int);
 extern void	syslog(int, const char *, ...) __printflike(2, 3);
 extern void	vsyslog(int, const char *, va_list) __printflike(2, 0);
-extern void	closelog_r(struct syslog_data *);
-extern void	openlog_r(const char *, int, int, struct syslog_data *);
-extern int	setlogmask_r(int, struct syslog_data *);
-extern void	syslog_r(int, struct syslog_data *, const char *, ...) __printflike(3, 4);
-extern void	vsyslog_r(int, struct syslog_data *, const char *, va_list) __printflike(3, 0);
 
 __END_DECLS
 
