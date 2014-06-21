@@ -38,7 +38,17 @@ bin/AdbWinUsbApi.dll                          platform-tools/AdbWinUsbApi.dll
 bin/AdbWinApi.dll                             platform-tools/AdbWinApi.dll
 
 rm platform-tools/sqlite3
-bin/sqlite3.exe                         strip platform-tools/sqlite3.exe
+bin/sqlite3.exe                        strip platform-tools/sqlite3.exe
+
+rm platform-tools/dmtracedump
+bin/dmtracedump.exe                    strip platform-tools/dmtracedump.exe
+
+rm platform-tools/hprof-conv
+bin/hprof-conv.exe                     strip platform-tools/hprof-conv.exe
+
+rm platform-tools/etc1tool
+bin/etc1tool.exe                       strip platform-tools/etc1tool.exe
+
 
 
 ##############################################################################
