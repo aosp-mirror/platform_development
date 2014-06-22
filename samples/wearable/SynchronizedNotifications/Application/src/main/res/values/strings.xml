@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Synchronized Notifications</string>
+    <string name="wear_only">Watch Only Notification</string>
+    <string name="phone_only">Phone Only Notification</string>
+    <string name="different_notifications">Different Notifications</string>
+    <string name="phone_both">Phone Notification</string>
+    <string name="watch_both">Watch Notification</string>
+
+</resources>
