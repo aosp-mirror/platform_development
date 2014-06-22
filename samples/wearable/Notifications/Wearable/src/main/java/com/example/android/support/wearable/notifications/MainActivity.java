@@ -1,11 +1,11 @@
 package com.example.android.support.wearable.notifications;
 
+import android.app.Activity;
 import android.app.Notification;
 import android.app.RemoteInput;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.NotificationManagerCompat;
-import android.support.wearable.activity.WatchActivity;
 import android.support.wearable.view.WearableListView;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
@@ -13,7 +13,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class MainActivity extends WatchActivity implements WearableListView.ClickListener {
+public class MainActivity extends Activity implements WearableListView.ClickListener {
     private static final int SAMPLE_NOTIFICATION_ID = 0;
     public static final String KEY_REPLY = "reply";
 

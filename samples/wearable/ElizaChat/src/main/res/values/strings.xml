@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">ElizaChat</string>
+    <string name="send_notification">Send notification!</string>
+    <string name="eliza">Eliza</string>
+    <string name="answer_eliza">Answer Eliza</string>
+    <string name="reply">Reply</string>
+    <string name="stop_service">End Chat Session</string>
+
+</resources>

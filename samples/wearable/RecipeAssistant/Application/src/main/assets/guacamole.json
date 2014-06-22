@@ -1,0 +1,36 @@
+{
+name: "guacamole.json",
+steps: [
+{
+text: "Use a spoon to scoop the flesh of the avocados into a bowl."
+},
+{
+text: "Mash with a fork until fairly smooth and creamy. Preserve some small solid chunks to add texture."
+},
+{
+text: "Add the juice of the lime. ",
+img: "step-3-lime.jpg"
+},
+{
+text: "Add the cilantro."
+},
+{
+text: "Mix thoroughly."
+}
+],
+summary: "Some guacamole recipes call for many ingredients and can be a pain to prepare. This super simple guac can be thrown together in a couple of minutes and tastes great.",
+title: "Super simple guacamole",
+img: "guacamole.jpg",
+serving: "",
+ingredients: [
+{
+text: "2 ripe avocados"
+},
+{
+text: "1 lime"
+},
+{
+text: "2 tbsp cilantro"
+}
+]
+}

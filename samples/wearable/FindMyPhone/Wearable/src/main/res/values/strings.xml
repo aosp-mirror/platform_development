@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Find My Phone</string>
+    <string name="left_phone_title">Forgetting something?</string>
+    <string name="left_phone_content">You may have left your phone behind.</string>
+    <string name="turn_alarm_on">Tap to sound an alarm on phone.</string>
+    <string name="turn_alarm_off">Tap to stop the alarm.</string>
+
+</resources>

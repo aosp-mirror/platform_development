@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <string name="app_name">Delayed Confirmation Sample App</string>
+    <string name="start_wearable_activity">Start Wearable Activity</string>
+    <string name="start">Start</string>
+
+    <string name="toast_timer_selected">Timer Selected</string>
+    <string name="toast_timer_finished">Timer Finished</string>
+</resources>

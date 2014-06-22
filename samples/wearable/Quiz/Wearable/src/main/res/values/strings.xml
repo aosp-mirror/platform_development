@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+
+    <string name="app_name">Quiz Sample Wearable App</string>
+
+    <string name="question">Question %d</string>
+
+    <string name="quiz_report">Quiz Report</string>
+    <string name="correct">correct</string>
+    <string name="incorrect">incorrect</string>
+    <string name="skipped">skipped</string>
+    <string name="reset_quiz">Reset Quiz</string>
+
+</resources>
