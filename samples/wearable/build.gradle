@@ -16,6 +16,7 @@ List<String> samples = [
     "FindMyPhone",
     "Flashlight",
     "Geofencing",
+    "GridViewPager",
     "JumpingJack",
     "Notifications",
     "Quiz",
