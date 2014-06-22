@@ -1,0 +1,91 @@
+{
+name: "beef-brisket-chili.json",
+steps: [
+{
+text: "Place the cinnamon stick, cumin, paprika and oregano in a pestle and mortar. Bash and grind until the cinnamon is in very small flakes. ",
+img: "step-1-grind-spices.jpg"
+},
+{
+text: "Score the beef and rub the spice mix into the cuts. ",
+img: "step-2-score-beef.jpg"
+},
+{
+text: "Season the beef and drizzle with olive oil. Brown in a hot pan. ",
+img: "step-3-brown-beef.jpg"
+},
+{
+text: "Finely slice the onion and fry in a little olive oil together with the chillies, finely sliced. You can control the heat of your chili by deseeding some of the chillies. ",
+img: "step-4-fry-onion.jpg"
+},
+{
+text: "Add the browned brisket to the pan with the onions and chillies and fry on a low heat."
+},
+{
+text: "Place the bell peppers, roughly sliced, the bay leaves and chopped tomatoes in a large covered pot. Bring to the boil and then add the beef, onions and chillies. ",
+img: "step-6-combine.jpg"
+},
+{
+text: "Bring back to the boil, cover and allow to simmer on a low heat for 4 hours."
+},
+{
+text: "Remove the brisket from the pot, place on a large plate and use two forks to pull the beef apart into individual pieces. ",
+img: "step-8-pull.jpg"
+},
+{
+text: "Remove the bay leaves and add the pulled beef and coriander back to the pot, together with the kidney beans."
+},
+{
+text: "Bring back to the boil and simmer gently for a further 15 - 20 mins."
+}
+],
+summary: "",
+title: "Beef brisket chili",
+img: "chili.jpg",
+serving: [
+"Serve with rice, yoghurt and fresh guacamole. Garnish with the remaining coriander."
+],
+ingredients: [
+{
+text: "3 lbs beef brisket"
+},
+{
+text: "2 red onions"
+},
+{
+text: "4 jalapeno chillies"
+},
+{
+text: "1 large cinnamon stick"
+},
+{
+text: "1 tbsp ground cumin"
+},
+{
+text: "1 tbsp paprika"
+},
+{
+text: "1 heaped tbsp dried oregano"
+},
+{
+text: "2 fresh bay leaves"
+},
+{
+text: "2 red bell peppers"
+},
+{
+text: "2 green bell peppers"
+},
+{
+text: "800g tin chopped tomatoes"
+},
+{
+text: "400g tin kidney beans"
+},
+{
+text: "400ml beef stock"
+},
+{
+text: "1/2 bunch coriander"
+}
+]
+}

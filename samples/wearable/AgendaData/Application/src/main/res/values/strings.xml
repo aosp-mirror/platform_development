@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <string name="app_name">Android Wear AgendaData Example Application</string>
+    <string name="get_events">Sync calendar events to wearable</string>
+    <string name="delete_events">Delete calendar events from wearable</string>
+    <string name="log">Log</string>
+</resources>

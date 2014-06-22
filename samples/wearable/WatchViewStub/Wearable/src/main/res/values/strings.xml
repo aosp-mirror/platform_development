@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">WatchViewStub Sample</string>
+    <string name="round_string">Your screen is round!</string>
+    <string name="rect_string">Your screen is rectangular!</string>
+
+</resources>

@@ -9,7 +9,20 @@ buildscript {
 }
 
 List<String> samples = [
-    "Notifications"
+    "AgendaData",
+    "DataLayer",
+    "DelayedConfirmation",
+    "ElizaChat",
+    "FindMyPhone",
+    "Flashlight",
+    "Geofencing",
+    "JumpingJack",
+    "Notifications",
+    "Quiz",
+    "RecipeAssistant",
+    "SkeletonWearableApp",
+    "Timer",
+    "WatchViewStub",
 ]
 
 List<String> taskNames = [

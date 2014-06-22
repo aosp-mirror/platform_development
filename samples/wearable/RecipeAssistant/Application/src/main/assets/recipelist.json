@@ -1,0 +1,23 @@
+{
+recipe_list:
+[
+{
+name: "guacamole.json",
+summary: "Some guacamole recipes call for many ingredients and can be a pain to prepare. This super simple guac can be thrown together in a couple of minutes and tastes great.",
+title: "Super simple guacamole",
+img: "guacamole.jpg"
+},
+{
+name: "northern-irish-vegetable-soup.json",
+summary: "This recipe is apparently unique to Northern Ireland and uses soup/herb celery which is hard to find outside the area, but regular table celery can be substituted (including the leaves).",
+title: "Northern irish vegetable soup",
+img: "irish-stew.jpg"
+},
+{
+name: "beef-brisket-chili.json",
+summary: "",
+title: "Beef brisket chili",
+img: "chili.jpg"
+}
+]
+}
