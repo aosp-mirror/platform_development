@@ -162,7 +162,7 @@ eval splitJvmOpts $DEFAULT_JVM_OPTS $JAVA_OPTS $GRADLE_OPTS
 JVM_OPTS[${#JVM_OPTS[*]}]="-Dorg.gradle.appname=$APP_BASE_NAME"
 
 # Change the project's .gradle to the android out dir.
-ANDROID_GRADLE_ROOT="$APP_HOME/../../../../out/host/gradle/tools/updater"
+ANDROID_GRADLE_ROOT="$APP_HOME/../../../out/host/gradle/tools/updater"
 if [[ -z "$ANDROID_CACHE_DIR" ]]; then
   ANDROID_CACHE_DIR="$ANDROID_GRADLE_ROOT/.gradle"
 fi

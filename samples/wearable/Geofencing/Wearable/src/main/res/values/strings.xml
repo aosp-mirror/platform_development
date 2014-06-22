@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <string name="app_name">Android Wear Geofencing Example Application</string>
+    <string name="android_building_title">Android Building</string>
+    <string name="yerba_buena_title">Yerba Buena Gardens</string>
+    <string name="check_in_prompt">Check in here?</string>
+    <string name="check_in_success">Checked In</string>
+</resources>

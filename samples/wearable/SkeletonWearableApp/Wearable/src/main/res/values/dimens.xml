@@ -1,0 +1,5 @@
+<resources>
+    <dimen name="circle_border_normal_width">10dp</dimen>
+    <dimen name="circle_padding">5dp</dimen>
+    <dimen name="circle_radius">50dp</dimen>
+</resources>

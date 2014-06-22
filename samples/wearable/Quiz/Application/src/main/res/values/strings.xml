@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Quiz</string>
+
+    <string name="read_from_file_button">Read quiz from file</string>
+
+    <string name="edit_question">Question</string>
+    <string name="edit_choice_a">Choice A</string>
+    <string name="edit_choice_b">Choice B</string>
+    <string name="edit_choice_c">Choice C</string>
+    <string name="edit_choice_d">Choice D</string>
+    <string name="add_question">Add Question</string>
+
+    <string name="quiz_status">Quiz Status</string>
+    <string name="question_placeholder">Question</string>
+    <string name="question_unanswered">This question has not yet been answered.</string>
+    <string name="question_incorrect">This question has been answered incorrectly.</string>
+    <string name="question_correct">This question has been answered correctly!</string>
+    <string name="question_left_blank">This question was left blank.</string>
+
+    <string name="reset_quiz">Reset Quiz</string>
+    <string name="new_quiz">New Quiz</string>
+
+</resources>

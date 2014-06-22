@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:id="@+id/round_layout"
+    android:background="@drawable/round_background"
+    android:onClick="onLayoutClicked">
+    <TextView
+        android:layout_width="@dimen/round_text_view_width"
+        android:layout_height="wrap_content"
+        android:text="@string/round_string"
+        android:textColor="@color/red"
+        android:textSize="@dimen/text_size"
+        android:gravity="center"
+        android:layout_centerInParent="true"/>
+</RelativeLayout>

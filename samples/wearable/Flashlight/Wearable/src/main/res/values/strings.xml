@@ -1,0 +1,5 @@
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <!-- Name of the wearable app [CHAR LIMIT=NONE] -->
+    <string name="app_name">Flashlight</string>
+
+</resources>

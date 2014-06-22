@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Delayed Confirmation</string>
+    <string name="start_timer">Start Timer (5 seconds)</string>
+
+    <string name="notification_title">DelayedConfirmation</string>
+    <string name="notification_timer_selected">Timer Selected</string>
+    <string name="notification_timer_finished">Timer Finished</string>
+</resources>
