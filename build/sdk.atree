@@ -274,6 +274,7 @@ development/samples/wearable/AgendaData                    samples/${PLATFORM_NA
 development/samples/wearable/DataLayer                     samples/${PLATFORM_NAME}/wearable/DataLayer
 development/samples/wearable/DelayedConfirmation           samples/${PLATFORM_NAME}/wearable/DelayedConfirmation
 development/samples/wearable/ElizaChat                     samples/${PLATFORM_NAME}/wearable/ElizaChat
+development/samples/wearable/EmbeddedApp                   samples/${PLATFORM_NAME}/wearable/EmbeddedApp
 development/samples/wearable/FindMyPhone                   samples/${PLATFORM_NAME}/wearable/FindMyPhone
 development/samples/wearable/Flashlight                    samples/${PLATFORM_NAME}/wearable/Flashlight
 development/samples/wearable/Geofencing                    samples/${PLATFORM_NAME}/wearable/Geofencing
