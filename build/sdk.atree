@@ -278,6 +278,7 @@ development/samples/wearable/ElizaChat               samples/${PLATFORM_NAME}/we
 development/samples/wearable/FindMyPhone             samples/${PLATFORM_NAME}/wearable/FindMyPhone
 development/samples/wearable/Flashlight              samples/${PLATFORM_NAME}/wearable/Flashlight
 development/samples/wearable/Geofencing              samples/${PLATFORM_NAME}/wearable/Geofencing
+development/samples/wearable/GridViewPager           samples/${PLATFORM_NAME}/wearable/GridViewPager
 development/samples/wearable/JumpingJack             samples/${PLATFORM_NAME}/wearable/JumpingJack
 development/samples/wearable/Notifications           samples/${PLATFORM_NAME}/wearable/Notifications
 development/samples/wearable/Quiz                    samples/${PLATFORM_NAME}/wearable/Quiz
