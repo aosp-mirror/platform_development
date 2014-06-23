@@ -442,7 +442,7 @@ ${OUT_DIR}/target/common/obj/PACKAGING/android-support-v7-palette_intermediates/
 frameworks/support/v7/cardview/AndroidManifest.xml                                              extras/android/support/v7/cardview/AndroidManifest.xml
 frameworks/support/v7/cardview/res                                                              extras/android/support/v7/cardview/res
 frameworks/support/v7/cardview/src/.readme                                                      extras/android/support/v7/cardview/src/.readme
-${OUT_DIR}/target/common/obj/PACKAGING/android-support-v7-cardview_intermediates/android-support-v7-cardview.jar    extras/android/support/v7/mediarouter/libs/android-support-v7-cardview.jar
+${OUT_DIR}/target/common/obj/PACKAGING/android-support-v7-cardview_intermediates/android-support-v7-cardview.jar    extras/android/support/v7/cardview/libs/android-support-v7-cardview.jar
 
 
 # TODO: add .project, .classpath, etc.
