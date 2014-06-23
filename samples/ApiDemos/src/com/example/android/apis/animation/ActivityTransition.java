@@ -117,7 +117,7 @@ public class ActivityTransition extends Activity {
     public void clicked(View v) {
         mHero = (ImageView) v;
         Intent intent = new Intent(this, ActivityTransitionDetails.class);
-        intent.putExtra(KEY_ID, v.getViewName());
+        intent.putExtra(KEY_ID, v.getTransitionName());
         ActivityOptions activityOptions
                 = ActivityOptions.makeSceneTransitionAnimation(this, mHero, "hero");
         startActivity(intent, activityOptions.toBundle());
