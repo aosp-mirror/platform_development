@@ -1,0 +1,25 @@
+<p><b>About:</b> This sample uses Google Play Services Wearable Data APIs to communicate between
+applications on a phone and a paired wearable device. Users can create quiz questions on the phone,
+each of which has an associated DataItem. These DataItems are then received on the wearable, which
+displays them as notifications. Each notification contains the question as the first page, followed
+by answers as actions. When an answer is selected, the corresponding question's DataItem is updated,
+which allows the phone application to update the status of the question (i.e. did the user answer it
+correctly or not) and prompt the next question.
+</p>
+<p>At the end of the quiz, the sample uses the Google Play Services Wearable Message APIs to create
+an end-of-quiz report notification on the wearable, with an option to reset the quiz (by sending a
+message back to the phone).</p>
+<p><b>How to run:</b> Install the Application APK on the companion, and the Wearable APK on the
+wearable. Start the sample by running the Quiz application on the companion.</p>
+<p><b>Wearable APIs used:</b> DataApi, MessageApi, NodeApi, WearableListenerService</p>
+<p><b>Screenshots:</b>
+    <figure>
+        <img src="screenshots/companion_quiz.png" alt="Quiz on companion" width="216" height="384">
+        <img src="screenshots/wearable_quiz.png" alt="Wearable Quiz" width="160" height="160">
+        <img src="screenshots/wearable_quiz_answer.png" alt="Answering..." width="160" height="160">
+        <img src="screenshots/companion_quiz_correct_status.png" alt="Quiz on companion" width="216"
+             height="384">
+        <img src="screenshots/wearable_quiz_report.png" alt="End report" width="160" height="160">
+        <figcaption>Sample quiz progression involving a clearly unbiased question.</figcaption>
+    </figure>
+</p>
