@@ -2,9 +2,8 @@ package com.example.android.wearable.delayedconfirmation;
 
 import android.app.Activity;
 import android.app.Notification;
+import android.app.NotificationManager;
 import android.os.Bundle;
-import android.support.v4.app.NotificationCompat;
-import android.support.v4.app.NotificationManagerCompat;
 import android.support.wearable.view.DelayedConfirmationView;
 import android.util.Log;
 import android.view.View;
@@ -70,12 +69,12 @@ public class MainActivity extends Activity implements
     @Override
     public void onTimerSelected(View v) {
         v.setPressed(true);
-        Notification notification = new NotificationCompat.Builder(this)
+        Notification notification = new Notification.Builder(this)
                 .setSmallIcon(R.drawable.ic_launcher)
                 .setContentTitle(getString(R.string.notification_title))
                 .setContentText(getString(R.string.notification_timer_selected))
                 .build();
-        NotificationManagerCompat.from(this).notify(0, notification);
+        ((NotificationManager) getSystemService(NOTIFICATION_SERVICE)).notify(0, notification);
         sendMessageToCompanion(TIMER_SELECTED_PATH);
         // Prevent onTimerFinished from being heard.
         ((DelayedConfirmationView) v).setListener(null);
@@ -84,12 +83,12 @@ public class MainActivity extends Activity implements
 
     @Override
     public void onTimerFinished(View v) {
-        Notification notification = new NotificationCompat.Builder(this)
+        Notification notification = new Notification.Builder(this)
                 .setSmallIcon(R.drawable.ic_launcher)
                 .setContentTitle(getString(R.string.notification_title))
                 .setContentText(getString(R.string.notification_timer_finished))
                 .build();
-        NotificationManagerCompat.from(this).notify(0, notification);
+        ((NotificationManager) getSystemService(NOTIFICATION_SERVICE)).notify(0, notification);
         sendMessageToCompanion(TIMER_FINISHED_PATH);
         finish();
     }

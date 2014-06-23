@@ -2,8 +2,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
         package="com.example.android.wearable.datalayer" >
 
-    <uses-sdk android:minSdkVersion="19" android:targetSdkVersion="19" />
-
     <application
             android:allowBackup="true"
             android:icon="@drawable/ic_launcher"
