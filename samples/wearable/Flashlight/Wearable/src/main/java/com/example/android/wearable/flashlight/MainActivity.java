@@ -77,7 +77,7 @@ public class MainActivity extends Activity {
         }
     }
 
-    static class WhiteLightFragment extends Fragment {
+    public static class WhiteLightFragment extends Fragment {
 
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -86,7 +86,7 @@ public class MainActivity extends Activity {
         }
     }
 
-    static class PartyLightFragment extends Fragment {
+    public static class PartyLightFragment extends Fragment {
 
         private PartyLightView mView;
 
