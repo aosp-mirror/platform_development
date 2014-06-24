@@ -19,27 +19,18 @@ package com.example.android.wearable.timer;
 import android.app.AlarmManager;
 import android.app.IntentService;
 import android.app.Notification;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
-import android.os.Bundle;
-import android.support.v4.app.NotificationCompat;
-import android.support.v4.app.NotificationManagerCompat;
 import android.util.Log;
 
 import com.example.android.wearable.timer.util.Constants;
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.wearable.Wearable;
-
-import java.util.concurrent.TimeUnit;
 
 /**
  * Service class that manages notifications of the timer.
  */
-public class TimerNotificationService extends IntentService
-        implements GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener {
+public class TimerNotificationService extends IntentService {
 
     public static final String TAG = "TimerNotificationSvc";
 
@@ -94,7 +85,8 @@ public class TimerNotificationService extends IntentService
     }
 
     private void cancelCountdownNotification() {
-        NotificationManagerCompat notifyMgr = NotificationManagerCompat.from(this);
+        NotificationManager notifyMgr =
+                ((NotificationManager) getSystemService(NOTIFICATION_SERVICE));
         notifyMgr.cancel(Constants.NOTIFICATION_TIMER_COUNTDOWN);
     }
 
@@ -109,8 +101,9 @@ public class TimerNotificationService extends IntentService
                 .getService(this, 0, restartIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
         // Create notification that timer has expired.
-        NotificationManagerCompat notifyMgr = NotificationManagerCompat.from(this);
-        Notification notif = new NotificationCompat.Builder(this)
+        NotificationManager notifyMgr =
+                ((NotificationManager) getSystemService(NOTIFICATION_SERVICE));
+        Notification notif = new Notification.Builder(this)
                 .setSmallIcon(R.drawable.ic_cc_alarm)
                 .setContentTitle(getString(R.string.timer_done))
                 .setContentText(getString(R.string.timer_done))
@@ -123,15 +116,4 @@ public class TimerNotificationService extends IntentService
         notifyMgr.notify(Constants.NOTIFICATION_TIMER_EXPIRED, notif);
     }
 
-    @Override
-    public void onConnected(Bundle connectionHint) {
-    }
-
-    @Override
-    public void onConnectionSuspended(int cause) {
-    }
-
-    @Override
-    public void onConnectionFailed(ConnectionResult result) {
-    }
 }

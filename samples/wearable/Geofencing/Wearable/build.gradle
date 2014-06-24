@@ -20,7 +20,6 @@ android {
 }
 
 dependencies {
-    compile 'com.google.android.gms:play-services:5.+@aar'
-    compile "com.android.support:support-v4:20.0.+"
+    compile 'com.google.android.gms:play-services-wearable:+'
     compile "com.google.android.support:wearable:1.0.+"
 }
