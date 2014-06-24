@@ -22,6 +22,7 @@ List<String> samples = [
     "Quiz",
     "RecipeAssistant",
     "SkeletonWearableApp",
+    "SynchronizedNotifications",
     "Timer",
     "WatchViewStub",
 ]
