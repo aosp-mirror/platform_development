@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">EmbeddedApp Sample</string>
+    <string name="welcome_message">
+        This wearable app should be automatically installed on wearable devices whenever the
+        release build of the corresponding phone app is installed.
+    </string>
+
+</resources>

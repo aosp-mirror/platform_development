@@ -13,6 +13,7 @@ List<String> samples = [
     "DataLayer",
     "DelayedConfirmation",
     "ElizaChat",
+    "EmbeddedApp",
     "FindMyPhone",
     "Flashlight",
     "Geofencing",
