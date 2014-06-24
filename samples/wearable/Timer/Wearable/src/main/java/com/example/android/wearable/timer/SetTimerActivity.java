@@ -19,14 +19,13 @@ package com.example.android.wearable.timer;
 import android.app.Activity;
 import android.app.AlarmManager;
 import android.app.Notification;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.os.Bundle;
 import android.provider.AlarmClock;
-import android.support.v4.app.NotificationCompat;
-import android.support.v4.app.NotificationManagerCompat;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
@@ -35,21 +34,15 @@ import android.widget.ListView;
 
 import com.example.android.wearable.timer.util.Constants;
 import com.example.android.wearable.timer.util.TimerFormat;
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.wearable.Wearable;
 
 /** This class sets a timer. */
-public class SetTimerActivity extends Activity
-        implements AdapterView.OnItemClickListener, GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener {
+public class SetTimerActivity extends Activity implements AdapterView.OnItemClickListener {
 
     public static final int NUMBER_OF_TIMES = 10;
     public static final String TAG = "SetTimerActivity";
 
     private ListViewItem[] mTimeOptions = new ListViewItem[NUMBER_OF_TIMES];
     private ListView mListView;
-    private GoogleApiClient mGoogleApiClient;
 
 
     @Override
@@ -82,24 +75,6 @@ public class SetTimerActivity extends Activity
                 android.R.layout.simple_list_item_1, mTimeOptions);
         mListView.setAdapter(arrayAdapter);
         mListView.setOnItemClickListener(this);
-
-        mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .addApi(Wearable.API)
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
-                .build();
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-        mGoogleApiClient.connect();
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        mGoogleApiClient.disconnect();
     }
 
     /**
@@ -107,7 +82,8 @@ public class SetTimerActivity extends Activity
      * milliseconds.
      */
     private void setupTimer(long duration) {
-        NotificationManagerCompat notifyMgr = NotificationManagerCompat.from(this);
+        NotificationManager notifyMgr =
+                ((NotificationManager) getSystemService(NOTIFICATION_SERVICE));
 
         // Delete dataItem and cancel a potential old countdown.
         cancelCountdown(notifyMgr);
@@ -165,7 +141,7 @@ public class SetTimerActivity extends Activity
                 .getService(this, 0, deleteIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
         // Create countdown notification using a chronometer style.
-        return new NotificationCompat.Builder(this)
+        return new Notification.Builder(this)
                 .setSmallIcon(R.drawable.ic_cc_alarm)
                 .setContentTitle(getString(R.string.timer_time_left))
                 .setContentText(TimerFormat.getTimeString(duration))
@@ -185,7 +161,7 @@ public class SetTimerActivity extends Activity
      *
      * @param notifyMgr the notification manager.
      */
-    private void cancelCountdown(NotificationManagerCompat notifyMgr) {
+    private void cancelCountdown(NotificationManager notifyMgr) {
         notifyMgr.cancel(Constants.NOTIFICATION_TIMER_EXPIRED);
     }
 
@@ -208,15 +184,4 @@ public class SetTimerActivity extends Activity
         }
     }
 
-    @Override
-    public void onConnected(Bundle connectionHint) {
-    }
-
-    @Override
-    public void onConnectionSuspended(int cause) {
-    }
-
-    @Override
-    public void onConnectionFailed(ConnectionResult result) {
-    }
 }

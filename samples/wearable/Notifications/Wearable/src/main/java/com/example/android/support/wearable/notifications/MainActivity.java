@@ -2,10 +2,10 @@ package com.example.android.support.wearable.notifications;
 
 import android.app.Activity;
 import android.app.Notification;
+import android.app.NotificationManager;
 import android.app.RemoteInput;
 import android.content.Context;
 import android.os.Bundle;
-import android.support.v4.app.NotificationManagerCompat;
 import android.support.wearable.view.WearableListView;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
@@ -46,7 +46,8 @@ public class MainActivity extends Activity implements WearableListView.ClickList
     private void updateNotification(int presetIndex) {
         NotificationPreset preset = NotificationPresets.PRESETS[presetIndex];
         Notification notif = preset.buildNotification(this);
-        NotificationManagerCompat.from(this).notify(SAMPLE_NOTIFICATION_ID, notif);
+        ((NotificationManager) getSystemService(NOTIFICATION_SERVICE))
+                .notify(SAMPLE_NOTIFICATION_ID, notif);
         finish();
     }
 

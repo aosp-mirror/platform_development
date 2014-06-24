@@ -18,5 +18,3 @@
 #-keepclassmembers class fqcn.of.javascript.interface.for.webview {
 #   public *;
 #}
--dontwarn android.support.wearable.view.DelayedConfirmationView
--dontwarn android.support.wearable.view.CircledImageView
