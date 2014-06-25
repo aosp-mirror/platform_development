@@ -13,6 +13,9 @@
      See the License for the specific language governing permissions and
      limitations under the License.
 -->
-<!-- BEGIN_INCLUDE(MoveImage) -->
-<moveImage/>
-<!-- END_INCLUDE(MoveImage) -->
+<!-- BEGIN_INCLUDE(ChangeImageTransform) -->
+<transitionSet>
+  <changeBounds/>
+  <changeImageTransform/>
+</transitionSet>
+<!-- END_INCLUDE(ChangeImageTransform) -->
