@@ -2,6 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
           package="com.example.android.wearable.jumpingjack">
 
+    <uses-feature android:name="android.hardware.type.watch" />
+
     <uses-permission android:name="android.permission.VIBRATE"/>
 
     <application
