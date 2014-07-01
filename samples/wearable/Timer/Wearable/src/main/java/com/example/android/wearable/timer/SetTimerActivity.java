@@ -26,23 +26,23 @@ import android.content.Intent;
 import android.content.res.Resources;
 import android.os.Bundle;
 import android.provider.AlarmClock;
+import android.support.wearable.view.WearableListView;
 import android.util.Log;
-import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.ListView;
+import android.view.LayoutInflater;
+import android.view.ViewGroup;
+import android.widget.TextView;
 
 import com.example.android.wearable.timer.util.Constants;
 import com.example.android.wearable.timer.util.TimerFormat;
 
 /** This class sets a timer. */
-public class SetTimerActivity extends Activity implements AdapterView.OnItemClickListener {
+public class SetTimerActivity extends Activity implements WearableListView.ClickListener {
 
     public static final int NUMBER_OF_TIMES = 10;
     public static final String TAG = "SetTimerActivity";
 
     private ListViewItem[] mTimeOptions = new ListViewItem[NUMBER_OF_TIMES];
-    private ListView mListView;
+    private WearableListView mWearableListView;
 
 
     @Override
@@ -70,11 +70,9 @@ public class SetTimerActivity extends Activity implements AdapterView.OnItemClic
         setContentView(R.layout.timer_set_timer);
 
         // Initialize a simple list of countdown time options.
-        mListView = (ListView) findViewById(R.id.times_list_view);
-        ArrayAdapter<ListViewItem> arrayAdapter = new ArrayAdapter<ListViewItem>(this,
-                android.R.layout.simple_list_item_1, mTimeOptions);
-        mListView.setAdapter(arrayAdapter);
-        mListView.setOnItemClickListener(this);
+        mWearableListView = (WearableListView) findViewById(R.id.times_list_view);
+        mWearableListView.setAdapter(new TimerWearableListViewAdapter(this));
+        mWearableListView.setClickListener(this);
     }
 
     /**
@@ -98,9 +96,13 @@ public class SetTimerActivity extends Activity implements AdapterView.OnItemClic
     }
 
     @Override
-    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        long duration = mTimeOptions[position].duration;
+    public void onClick(WearableListView.ViewHolder holder) {
+        long duration = mTimeOptions[holder.getPosition()].duration;
         setupTimer(duration);
+    }
+
+    @Override
+    public void onTopEmptyRegionClick() {
     }
 
     private void registerWithAlarmManager(long duration) {
@@ -181,6 +183,34 @@ public class SetTimerActivity extends Activity implements AdapterView.OnItemClic
         @Override
         public String toString() {
             return label;
+        }
+    }
+
+    private final class TimerWearableListViewAdapter extends WearableListView.Adapter {
+        private final Context mContext;
+        private final LayoutInflater mInflater;
+
+        private TimerWearableListViewAdapter(Context context) {
+            mContext = context;
+            mInflater = LayoutInflater.from(context);
+        }
+
+        @Override
+        public WearableListView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+            return new WearableListView.ViewHolder(
+                    mInflater.inflate(R.layout.timer_list_item, null));
+        }
+
+        @Override
+        public void onBindViewHolder(WearableListView.ViewHolder holder, int position) {
+            TextView view = (TextView) holder.itemView.findViewById(R.id.time_text);
+            view.setText(mTimeOptions[position].label);
+            holder.itemView.setTag(position);
+        }
+
+        @Override
+        public int getItemCount() {
+            return NUMBER_OF_TIMES;
         }
     }
 

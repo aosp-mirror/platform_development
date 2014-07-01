@@ -3,14 +3,12 @@ apply plugin: 'android'
 android {
     compileSdkVersion 20
     buildToolsVersion '20'
-
     defaultConfig {
         minSdkVersion 20
         targetSdkVersion 20
         versionCode 1
-        versionName "1.0"
+        versionName '1.0'
     }
-
     buildTypes {
         release {
             runProguard false
@@ -20,5 +18,5 @@ android {
 }
 
 dependencies {
-    compile "com.google.android.support:wearable:1.0.+"
+    compile 'com.google.android.support:wearable:+'
 }
