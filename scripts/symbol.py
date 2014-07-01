@@ -62,17 +62,19 @@ def FindToolchain():
   if TOOLCHAIN is not None:
     return TOOLCHAIN
 
-  # We say "arm64", GCC says "aarch64".
+  # We use slightly different names from GCC.
   gcc_arch = ARCH
   if gcc_arch == "arm64":
     gcc_arch = "aarch64"
+  elif gcc_arch == "mips":
+    gcc_arch = "mipsel"
 
   tc1 = os.environ["ANDROID_TOOLCHAIN"]
   tc2 = os.environ["ANDROID_TOOLCHAIN_2ND_ARCH"]
 
-  if (gcc_arch + "/" + gcc_arch + "-") in tc1:
+  if ("/" + gcc_arch + "-linux-") in tc1:
     toolchain = tc1
-  elif (gcc_arch + "/" + gcc_arch + "-") in tc2:
+  elif ("/" + gcc_arch + "-linux-") in tc2:
     toolchain = tc2
   else:
     raise Exception("Could not find tool chain for %s" % (gcc_arch))
