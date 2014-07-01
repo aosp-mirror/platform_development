@@ -69,7 +69,6 @@ def main():
   lines = f.readlines()
   f.close()
 
-  print "Reading symbols from", symbol.SYMBOLS_DIR
   stack_core.ConvertTrace(lines)
 
 if __name__ == "__main__":
