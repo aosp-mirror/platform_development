@@ -2,6 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
           package="com.example.android.wearable.flashlight" >
 
+    <uses-feature android:name="android.hardware.type.watch" />
+
     <application
             android:label="@string/app_name"
             android:icon="@drawable/ic_launcher"
