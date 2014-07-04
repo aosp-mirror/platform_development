@@ -36,4 +36,9 @@ public class SpellCheckerSettingsActivity extends PreferenceActivity {
         modIntent.putExtra(EXTRA_NO_HEADERS, true);
         return modIntent;
     }
+
+    @Override
+    protected boolean isValidFragment(String fragmentName) {
+        return SpellCheckerSettingsFragment.class.getName().equals(fragmentName);
+    }
 }
