@@ -34,6 +34,7 @@ ___Unwind_ForcedUnwind
 ___Unwind_RaiseException
 ___Unwind_Resume
 ___Unwind_Resume_or_Rethrow
+___mtctxres
 __accept4
 __adddf3
 __addsf3
@@ -112,6 +113,7 @@ __b64_pton
 __bionic_name_mem
 __brk
 __cmpdf2
+__cmsg_nxthdr
 __connect
 __cxa_atexit
 __cxa_finalize
@@ -160,6 +162,7 @@ __get_tls
 __getcpu
 __getcwd
 __getdents64
+__getpid
 __getpriority
 __gnu_Unwind_Backtrace
 __gnu_Unwind_Find_exidx
@@ -241,7 +244,9 @@ __read_chk
 __reboot
 __recvfrom_chk
 __res_close
+__res_disable_mt
 __res_dnok
+__res_enable_mt
 __res_hnok
 __res_hostalias
 __res_isourserver
@@ -334,6 +339,7 @@ _exit
 _getlong
 _getshort
 _longjmp
+_mktemp
 _resolv_flush_cache_for_net
 _resolv_set_nameservers_for_net
 _setjmp
@@ -353,9 +359,7 @@ android_getaddrinfofornet
 android_gethostbyaddrfornet
 android_gethostbynamefornet
 arc4random
-arc4random_addrandom
 arc4random_buf
-arc4random_stir
 arc4random_uniform
 asctime
 asctime64
@@ -629,6 +633,8 @@ inet_lnaof
 inet_makeaddr
 inet_netof
 inet_network
+inet_nsap_addr
+inet_nsap_ntoa
 inet_ntoa
 inet_ntop
 inet_pton
@@ -767,6 +773,7 @@ nftw
 nftw64
 nice
 nrand48
+nsdispatch
 ntohl
 ntohs
 open
@@ -1021,6 +1028,7 @@ sleep
 snprintf
 socket
 socketpair
+splice
 sprintf
 srand
 srand48
@@ -1105,6 +1113,7 @@ tcsetattr
 tcsetpgrp
 tdelete
 tdestroy
+tee
 tempnam
 tfind
 tgkill
@@ -1164,6 +1173,7 @@ vfprintf
 vfscanf
 vfwprintf
 vfwscanf
+vmsplice
 vprintf
 vscanf
 vsnprintf
