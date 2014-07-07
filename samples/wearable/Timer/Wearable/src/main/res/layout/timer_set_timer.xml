@@ -14,7 +14,10 @@
      limitations under the License.
 -->
 
-<ListView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="wrap_content"
+<android.support.wearable.view.WearableListView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/times_list_view"
+    android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:id="@+id/times_list_view" />
+    android:scrollbars="none"
+    android:dividerHeight="0dp" />
