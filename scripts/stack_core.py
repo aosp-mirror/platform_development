@@ -138,6 +138,7 @@ class TraceConverter:
     self.PrintOutput(self.trace_lines, self.value_lines)
 
   def ProcessLine(self, line):
+    ret = False
     process_header = self.process_info_line.search(line)
     signal_header = self.signal_line.search(line)
     abort_message_header = self.abort_message_line.search(line)
@@ -149,6 +150,7 @@ class TraceConverter:
     dalvik_native_thread_header = self.dalvik_native_thread_line.search(line)
     if process_header or signal_header or abort_message_header or thread_header or abi_header or \
         register_header or dalvik_jni_thread_header or dalvik_native_thread_header or revision_header:
+      ret = True
       if self.trace_lines or self.value_lines:
         self.PrintOutput(self.trace_lines, self.value_lines)
         self.PrintDivider()
@@ -175,8 +177,9 @@ class TraceConverter:
         print abi_header.group(1)
         symbol.ARCH = abi_header.group(2)
         self.UpdateAbiRegexes()
-      return
+      return ret
     if self.trace_line.match(line):
+      ret = True
       match = self.trace_line.match(line)
       (unused_0, frame, unused_1,
        code_addr, area, symbol_present, symbol_name) = match.groups()
@@ -218,8 +221,9 @@ class TraceConverter:
     if self.code_line.match(line):
       # Code lines should be ignored. If this were exluded the 'code around'
       # sections would trigger value_line matches.
-      return
+      return ret
     if self.value_line.match(line):
+      ret = True
       match = self.value_line.match(line)
       (unused_, addr, value, area, symbol_present, symbol_name) = match.groups()
       if area == "<unknown>" or area == "[heap]" or area == "[stack]" or not area:
@@ -241,7 +245,7 @@ class TraceConverter:
                             object_symbol_with_offset,
                             source_location))
 
-    #self.PrintOutput(self.trace_lines, self.value_lines)
+    return ret
 
 
 example_arm_crash = """
