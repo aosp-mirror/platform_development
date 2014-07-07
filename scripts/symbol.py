@@ -62,12 +62,15 @@ def FindToolchain():
   if TOOLCHAIN is not None:
     return TOOLCHAIN
 
-  # We use slightly different names from GCC.
+  # We use slightly different names from GCC, and there's only one toolchain
+  # for x86/x86_64.
   gcc_arch = ARCH
   if gcc_arch == "arm64":
     gcc_arch = "aarch64"
   elif gcc_arch == "mips":
     gcc_arch = "mipsel"
+  elif gcc_arch == "x86":
+    gcc_arch = "x86_64"
 
   tc1 = os.environ["ANDROID_TOOLCHAIN"]
   tc2 = os.environ["ANDROID_TOOLCHAIN_2ND_ARCH"]
