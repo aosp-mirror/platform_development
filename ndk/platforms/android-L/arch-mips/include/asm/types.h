@@ -18,11 +18,6 @@
  ****************************************************************************/
 #ifndef _UAPI_ASM_TYPES_H
 #define _UAPI_ASM_TYPES_H
-#if _MIPS_SZLONG == 64
-#include <asm-generic/int-l64.h>
-/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
-#else
 #include <asm-generic/int-ll64.h>
-#endif
 #endif
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */

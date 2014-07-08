@@ -21,21 +21,29 @@
 struct msqid64_ds {
  struct ipc64_perm msg_perm;
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
- unsigned long __unused1;
  __kernel_time_t msg_stime;
- unsigned long __unused2;
- __kernel_time_t msg_rtime;
+#ifdef _ABIO32
+ unsigned long __unused1;
+#endif
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
- unsigned long __unused3;
+ __kernel_time_t msg_rtime;
+#ifdef _ABIO32
+ unsigned long __unused2;
+#endif
+/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
  __kernel_time_t msg_ctime;
+#ifdef _ABIO32
+ unsigned long __unused3;
+#endif
+/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
  unsigned long msg_cbytes;
  unsigned long msg_qnum;
-/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
  unsigned long msg_qbytes;
  __kernel_pid_t msg_lspid;
+/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
  __kernel_pid_t msg_lrpid;
  unsigned long __unused4;
-/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
  unsigned long __unused5;
 };
+/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
 #endif

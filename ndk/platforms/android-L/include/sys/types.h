@@ -91,12 +91,17 @@ typedef __kernel_time_t __time_t;
 typedef __time_t time_t;
 
 /* This historical accident means that we had a 32-bit off_t on 32-bit architectures. */
-#ifndef _OFF_T_DEFINED_
-#define _OFF_T_DEFINED_
+#if !defined(__LP64__)
 typedef __kernel_off_t off_t;
-#endif
 typedef __kernel_loff_t loff_t;
 typedef loff_t off64_t;
+#else
+/* We could re-use the LP32 definitions, but that would mean that although off_t and loff_t/off64_t
+ * would be the same size, they wouldn't actually be the same type, which can lead to warnings. */
+typedef __kernel_off_t off_t;
+typedef off_t loff_t;
+typedef loff_t off64_t;
+#endif
 
 /* while POSIX wants these in <sys/types.h>, we
  * declare then in <pthread.h> instead */
