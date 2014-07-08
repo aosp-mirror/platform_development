@@ -1,4 +1,4 @@
-/*	$NetBSD: nsswitch.h,v 1.18 2005/11/29 03:12:58 christos Exp $	*/
+/*	$NetBSD: nsswitch.h,v 1.21 2011/07/17 20:54:34 joerg Exp $	*/
 
 /*-
  * Copyright (c) 1997, 1998, 1999, 2004 The NetBSD Foundation, Inc.
@@ -15,13 +15,6 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *        This product includes software developed by the NetBSD
- *        Foundation, Inc. and its contributors.
- * 4. Neither the name of The NetBSD Foundation nor the names of its
- *    contributors may be used to endorse or promote products derived
- *    from this software without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE NETBSD FOUNDATION, INC. AND CONTRIBUTORS
  * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
@@ -137,6 +130,7 @@ typedef struct {
 #else
 #   define NS_NIS_CB(F,C)
 #endif
+#define	NS_NULL_CB		{ .src = NULL },
 
 /*
  * ns_src - `nsswitch source'
@@ -149,7 +143,6 @@ typedef struct {
 } ns_src;
 
 
-#if 0
 /*
  * Default sourcelists (if nsswitch.conf is missing, corrupt,
  * or the requested database doesn't have an entry)
@@ -161,7 +154,7 @@ extern const ns_src __nsdefaultfiles[];
 extern const ns_src __nsdefaultfiles_forceall[];
 extern const ns_src __nsdefaultnis[];
 extern const ns_src __nsdefaultnis_forceall[];
-#endif
+
 
 /*
  * ns_mtab - `nsswitch method table'
@@ -222,7 +215,7 @@ typedef struct {
 
 __BEGIN_DECLS
 int	nsdispatch(void *, const ns_dtab [], const char *,
-			const char *, const ns_src [], ...);
+			const char *, const ns_src [], ...) __LIBC_ABI_PUBLIC__;
 
 #ifdef _NS_PRIVATE
 int		 _nsdbtaddsrc(ns_dbt *, const ns_src *);

@@ -33,6 +33,7 @@
 #include <sys/types.h>
 #include <linux/fadvise.h>
 #include <linux/fcntl.h>
+#include <linux/uio.h>
 #include <unistd.h>  /* this is not required, but makes client code much happier */
 
 __BEGIN_DECLS
@@ -51,9 +52,12 @@ struct flock64 {
 #define F_SETLKW64 F_SETLKW
 #endif
 
-#ifndef O_ASYNC
-#define O_ASYNC  FASYNC
-#endif
+#define O_ASYNC FASYNC
+
+#define SPLICE_F_MOVE 1
+#define SPLICE_F_NONBLOCK 2
+#define SPLICE_F_MORE 4
+#define SPLICE_F_GIFT 8
 
 #define SYNC_FILE_RANGE_WAIT_BEFORE 1
 #define SYNC_FILE_RANGE_WRITE 2
@@ -70,7 +74,10 @@ extern int open(const char*, int, ...);
 extern int open64(const char*, int, ...);
 extern int posix_fallocate64(int, off64_t, off64_t);
 extern int posix_fallocate(int, off_t, off_t);
+extern ssize_t splice(int, off64_t*, int, off64_t*, size_t, unsigned int);
+extern ssize_t tee(int, int, size_t, unsigned int);
 extern int unlinkat(int, const char*, int);
+extern ssize_t vmsplice(int, const struct iovec*, size_t, unsigned int);
 
 #if defined(__BIONIC_FORTIFY)
 
