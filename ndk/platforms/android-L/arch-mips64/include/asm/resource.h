@@ -24,7 +24,10 @@
 #define RLIMIT_RSS 7
 #define RLIMIT_NPROC 8
 #define RLIMIT_MEMLOCK 9
-#define RLIM_INFINITY 0x7fffffffUL
+#ifdef _ABIO32
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+#define RLIM_INFINITY 0x7fffffffUL
+#endif
 #include <asm-generic/resource.h>
 #endif
+/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
