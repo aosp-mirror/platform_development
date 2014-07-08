@@ -100,9 +100,10 @@ extern unsigned short *seed48(unsigned short*);
 extern double erand48(unsigned short xsubi[3]);
 extern double drand48(void);
 extern void srand48(long);
-extern unsigned int arc4random(void);
-extern void arc4random_stir(void);
-extern void arc4random_addrandom(unsigned char *, int);
+
+unsigned int arc4random(void);
+unsigned int arc4random_uniform(unsigned int);
+void arc4random_buf(void*, size_t);
 
 #define RAND_MAX 0x7fffffff
 

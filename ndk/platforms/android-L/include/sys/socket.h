@@ -107,7 +107,7 @@ struct cmsghdr {
   int cmsg_type;
 };
 
-#define CMSG_NXTHDR(mhdr, cmsg) cmsg_nxthdr((mhdr), (cmsg))
+#define CMSG_NXTHDR(mhdr, cmsg) __cmsg_nxthdr((mhdr), (cmsg))
 #define CMSG_ALIGN(len) ( ((len)+sizeof(long)-1) & ~(sizeof(long)-1) )
 #define CMSG_DATA(cmsg) ((void*)((char*)(cmsg) + CMSG_ALIGN(sizeof(struct cmsghdr))))
 #define CMSG_SPACE(len) (CMSG_ALIGN(sizeof(struct cmsghdr)) + CMSG_ALIGN(len))
@@ -117,7 +117,7 @@ struct cmsghdr {
    ? (struct cmsghdr*) (msg)->msg_control : (struct cmsghdr*) NULL)
 #define CMSG_OK(mhdr, cmsg) ((cmsg)->cmsg_len >= sizeof(struct cmsghdr) &&   (cmsg)->cmsg_len <= (unsigned long)   ((mhdr)->msg_controllen -   ((char*)(cmsg) - (char*)(mhdr)->msg_control)))
 
-struct cmsghdr* cmsg_nxthdr(struct msghdr*, struct cmsghdr*);
+struct cmsghdr* __cmsg_nxthdr(struct msghdr*, struct cmsghdr*);
 
 #define SCM_RIGHTS 0x01
 #define SCM_CREDENTIALS 0x02
