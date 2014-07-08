@@ -132,7 +132,7 @@ public class Configuration {
             String path = file.getPath().substring(2);
 
             // Keep track of source roots for .java files.
-            if (path.endsWith(".java")) {
+            if (path.endsWith(".java") && !file.isDirectory()) {
                 if (firstJavaFile) {
                     // Only parse one .java file per directory.
                     firstJavaFile = false;
