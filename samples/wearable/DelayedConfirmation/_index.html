@@ -1,0 +1,28 @@
+<p><b>About:</b> Demonstrates how to create a DelayedConfirmationView in your wearable app. In this
+sample, pressing a button on the phone app sends a message to the wearable to start a simple
+activity. This activity displays a DelayedConfirmationView that starts when the user presses "Start
+Timer." Then, callbacks are implemented on both the wearable and phone to show when the timer is
+selected or finishes. The activity on the wearable uses BoxInsetLayout to automatically apply
+appropriate margins based on whether the display is square or circular.</p>
+<p><b>How to run:</b> Install the Application APK on the companion, and the Wearable APK on the
+wearable. Start the sample by running the DelayedConfirmation application on the companion and
+pressing "Start".</p>
+<p><b>Wearable APIs used:</b> MessageApi, NodeApi, WearableListenerService, BoxInsetLayout,
+DelayedConfirmationView</p>
+<p><b>Screenshots:</b>
+    <figure>
+        <img src="screenshots/delayed_confirmation_box_inset_top.png" alt='DelayedConfirmation view
+            in BoxInsetLayout with layout_box="top"' width="160" height="160">
+        <img src="screenshots/delayed_confirmation_box_inset_all.png" alt='DelayedConfirmation view
+            in BoxInsetLayout with layout_box="all"' width="160" height="160">
+        <img src="screenshots/delayed_confirmation_notification.png" alt="DelayedConfirmationView
+            selected notification" width="140" height="140">
+        <img src="screenshots/companion_delayed_confirmation.png" alt="Timer Selected toast on
+            companion" width="216" height="384">
+        <figcaption>From left to right: DelayedConfirmationView in a BoxInsetLayout with
+            layout_box="top", the same view but with layout_box="all", the notification that shows
+            up on the wearable when you select the timer before it finishes, and the toast generated
+            on the phone at the same time. Note: normally you would make the circle's background the
+            same color as the box background so users won't see the box's edges.</figcaption>
+    </figure>
+</p>

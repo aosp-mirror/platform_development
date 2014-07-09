@@ -1,0 +1,76 @@
+<p><b>About:</b> This sample application provides a showcase of available notification styles and
+demonstrates various features of the Android Wear notifications API. Running the sample on your
+companion allows you to select between various notification styles and to see how these
+notifications are displayed, both in a phone's notification shade and on the wearable. The companion
+application allows you to create the following types of notifications:</p>
+<ul>
+    <li>Basic notification</li>
+    <li>"Inbox style" notification: multiple lines of text</li>
+    <li>"Big picture style" notification: a full-screen background image for the card on the
+        wearable</li>
+    <li>"Big text style" notification: a tall card that is collapsed and can be expanded with a
+        tap</li>
+    <li>"Big action style" notification: tapping anywhere on the card triggers the notification
+        content intent</li>
+    <li>Notification with multiple pages: swipe horizontally to view the second page</li>
+    <li>Bundled Notifications: a stack of cards that can be individually expanded</li>
+</ul>
+<p>This sample also allows you to toggle other attributes for each of these notification types,
+including whether a content intent or action are included, and whether the notification is marked as
+"local only," indicating that it should not be bridged between devices.</p>
+<p>You can also run a separate APK on your wearable for even more customizable notifications. The
+wearable notification styles include:</p>
+<ul>
+    <li>A notification drawn with a custom display Activity, using setDisplayIntent</li>
+    <li>A notification styled using SpannableStrings</li>
+    <li>A notification page with bottom-aligned text</li>
+    <li>A notification with a "content icon"</li>
+</ul>
+<p><b>How to run:</b> Install the Application APK on the companion, and/or the Wearable APK on the
+wearable. Start the sample by running the Wearable Notifications application on the companion, or
+by starting the Wearable Notifications application on the wearable. To do the latter, go to the
+voice menu - either by saying Ok Google or tapping the home screen - and select the "Start..."
+option. Then, select "Wearable Notifications" from the submenu.</p>
+<p><b>Wearable APIs used:</b> Notification.WearableExtender, Notification.BigTextStyle,
+Notification.BigPictureStyle (note that NotificationCompat, rather than Notification, is used on the
+companion side in order to be compatible with older versions of Android).</p>
+<p><b>Screenshots:</b>
+    <figure>
+        <img src="screenshots/companion-multiple-page.png" alt="Multiple page" width="216"
+             height="384">
+        <img src="screenshots/multiple-page1.png" alt="Page 1" width="140" height="140">
+        <img src="screenshots/multiple-page2.png" alt="Page 2" width="140" height="140">
+        <img src="screenshots/companion-bottom-aligned.png" alt="Bottom aligned - companion"
+             width="216" height="384">
+        <img src="screenshots/bottom-aligned.png" alt="Bottom aligned - wearable" width="140"
+             height="140">
+        <img src="screenshots/companion-content-action.png" alt="Content action - companion"
+             width="216" height="384">
+        <img src="screenshots/content-action.png" alt="Content action - wearable" width="140"
+             height="140">
+        <img src="screenshots/content-action2.png" alt="Content action 2 - wearable" width="140"
+             height="140">
+        <img src="screenshots/companion-bundle.png" alt="Bundle aligned - companion" width="216"
+             height="384">
+        <img src="screenshots/bundle.png" alt="Bundle - wearable" width="140" height="140">
+        <figcaption>Notifications selected from companion app.</figcaption>
+    </figure>
+    <figure>
+        <img src="screenshots/basic-menu.png" alt="Select 'Basic example'" width="140"
+             height="140">
+        <img src="screenshots/basic.png" alt="Basic example" width="140" height="140">
+        <img src="screenshots/content-icon-menu.png" alt="Select 'Content icon example'" width="140"
+             height="140">
+        <img src="screenshots/content-icon1.png" alt="Content icon 1" width="140" height="140">
+        <img src="screenshots/content-icon2.png" alt="Content icon 2" width="140" height="140">
+        <img src="screenshots/content-icon3.png" alt="Content icon 3" width="140" height="140">
+        <img src="screenshots/content-icon4.png" alt="Content icon 4" width="140" height="140">
+        <img src="screenshots/display-intent-menu.png" alt="Select 'Display intent example'"
+             width="140" height="140">
+        <img src="screenshots/display-intent.png" alt="Display intent" width="140" height="140">
+        <img src="screenshots/stylized-menu.png" alt="Select 'Stylized text example'" width="140"
+             height="140">
+        <img src="screenshots/stylized.png" alt="Stylized text example" width="140" height="140">
+        <figcaption>Notifications selected from wearable app.</figcaption>
+    </figure>
+</p>
