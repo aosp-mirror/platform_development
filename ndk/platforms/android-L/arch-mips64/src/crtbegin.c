@@ -49,6 +49,8 @@ __LIBC_HIDDEN__  void do_mips_start(void *raw_args) {
   __libc_init(raw_args, NULL, &main, &array);
 }
 
+#if defined(__LP64__)
+
 /*
  * This function prepares the return address with a branch-and-link
  * instruction (bal) and then uses a .cpsetup to compute the Global
@@ -89,6 +91,51 @@ __asm__ (
 "                                   \n"
 "       .set pop                    \n"
 );
+
+#else
+
+/*
+ * This function prepares the return address with a branch-and-link
+ * instruction (bal) and then uses a .cpload to compute the Global
+ * Offset Table (GOT) pointer ($gp). The $gp is then used to load
+ * the address of _do_start() into $t9 just before calling it.
+ * Terminating the stack with a NULL return address.
+ */
+__asm__ (
+"       .set push                   \n"
+"                                   \n"
+"       .text                       \n"
+"       .align  4                   \n"
+"       .type __start,@function     \n"
+"       .globl __start              \n"
+"       .globl  _start              \n"
+"                                   \n"
+"       .ent    __start             \n"
+"__start:                           \n"
+" _start:                           \n"
+"       .frame   $sp,32,$ra         \n"
+"       .mask   0x80000000,-4       \n"
+"                                   \n"
+"       .set noreorder              \n"
+"       bal     1f                  \n"
+"       nop                         \n"
+"1:                                 \n"
+"       .cpload $ra                 \n"
+"       .set reorder                \n"
+"                                   \n"
+"       move    $a0, $sp            \n"
+"       addiu   $sp, $sp, (-32)     \n"
+"       sw      $0, 28($sp)         \n"
+"       la      $t9, do_mips_start  \n"
+"       jalr    $t9                 \n"
+"                                   \n"
+"2:     b       2b                  \n"
+"       .end    __start             \n"
+"                                   \n"
+"       .set pop                    \n"
+);
+
+#endif
 
 #include "../../arch-common/bionic/__dso_handle.h"
 #include "atexit.h"
