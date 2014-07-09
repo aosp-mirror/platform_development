@@ -1,19 +1,33 @@
-<p>This sample is a phone application that provides a chat experience in which
-users can respond to messages with a quick voice response. New messages create
-a notification with a "Reply" action. The notification is bridged from phone
-to wearable, and selecting the "Reply" action on the wearable opens the voice
-transcription UI allowing the user to speak a response.</p>
+<p><b>About: </b>
+This sample is a phone application that provides a chat experience in which users can respond to
+messages with a quick voice response. New messages create a notification with a "Reply" action.
+The notification is bridged from phone to wearable, and selecting the "Reply" action on the
+wearable opens the voice transcription UI allowing the user to speak a response.</p>
 
-<p>To keep the example simple and self-contained, instead of a real chat
-application (which would require a server or a peer-to-peer connection), the
-conversation is conducted with an chat bot on the phone. Each time the bot
-responds, the phone app updates the notification and allows the user to write
-back. This sample is primarily intended to demonstrate the voice-reply
-capabilities provided by the Android Wear notification API.</p>
+<p>To keep the example simple and self-contained, instead of a real chat application (which would
+require a server or a peer-to-peer connection), the conversation is conducted with an chat bot on
+the phone. Each time the bot responds, the phone app updates the notification and allows the user
+to write back. This sample is primarily intended to demonstrate the voice-reply capabilities
+provided by the Android Wear notification API.</p>
 
-<p>When using the emulator you can type a response instead of speaking it
-aloud. To allow typed responses, ensure that your emulator image has the
-"hardware keyboard present" option enabled. After typing your message into
-the emulator window, hit the enter key and wait a few seconds for your
-message to be sent.</p>
+<p>When using the emulator you can type a response instead of speaking it aloud. To allow typed
+responses, ensure that your emulator image has the "hardware keyboard present" option enabled.
+After typing your message into the emulator window, hit the enter key and wait a few seconds for
+your message to be sent.</p>
 
+
+<p><b>How to run:</b> Install the Application APK on the companion and run it. A notification will
+automatically be bridged onto the wearable, with a "Reply" action.</p>
+<p><b>Screenshots:</b>
+    <figure>
+        <img src="screenshots/companion_eliza_chat.png" alt="Eliza chat when opened on companion"
+             width="216" height="384">
+        <img src="screenshots/wearable_eliza_notification.png" alt="Initial notification on
+            wearable" width="140" height="140">
+        <img src="screenshots/wearable_voice_reply.png" alt="Initial notification on
+            wearable" width="140" height="140">
+        <img src="screenshots/companion_eliza_chat_response.png" alt="Response received on
+            companion" width="216" height="384">
+        <figcaption>The progressing stages of a chat with Eliza.</figcaption>
+    </figure>
+</p>
