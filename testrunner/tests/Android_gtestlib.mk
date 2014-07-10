@@ -32,7 +32,7 @@ static_libraries := \
 
 c_includes := \
     external/zlib \
-    external/icu4c/common \
+    external/icu/icu4c/source/common \
     bionic \
     bionic/libstdc++/include \
     external/gtest/include \
