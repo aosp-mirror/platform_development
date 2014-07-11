@@ -47,6 +47,7 @@ subdirs += \
 	external/llvm \
 	external/sqlite/dist \
 	external/zlib \
+	external/zopfli \
 	frameworks/base \
 	frameworks/compile \
 	frameworks/native \
