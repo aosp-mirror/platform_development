@@ -133,6 +133,11 @@ public class AtscTvInputService extends TvInputService {
             mPlayer.start();
             return true;
         }
+
+        @Override
+        public void onSetCaptionEnabled(boolean enabled) {
+            Log.d(TAG, "onSetCaptionEnabled(" + enabled + ")");
+        }
     }
 
     private class ProgramUpdateTask extends AsyncTask<Object, Void, Void> {
