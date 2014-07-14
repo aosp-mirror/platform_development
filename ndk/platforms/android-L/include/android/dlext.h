@@ -49,18 +49,25 @@ enum {
    */
   ANDROID_DLEXT_USE_RELRO             = 0x8,
 
+  /* Instruct dlopen to use library_fd instead of opening file by name.
+   * The filename parameter is still used to identify the library.
+   */
+  ANDROID_DLEXT_USE_LIBRARY_FD        = 0x10,
+
   /* Mask of valid bits */
   ANDROID_DLEXT_VALID_FLAG_BITS       = ANDROID_DLEXT_RESERVED_ADDRESS |
                                         ANDROID_DLEXT_RESERVED_ADDRESS_HINT |
                                         ANDROID_DLEXT_WRITE_RELRO |
-                                        ANDROID_DLEXT_USE_RELRO,
+                                        ANDROID_DLEXT_USE_RELRO |
+                                        ANDROID_DLEXT_USE_LIBRARY_FD,
 };
 
 typedef struct {
-  int     flags;
+  uint64_t flags;
   void*   reserved_addr;
   size_t  reserved_size;
   int     relro_fd;
+  int     library_fd;
 } android_dlextinfo;
 
 extern void* android_dlopen_ext(const char* filename, int flag, const android_dlextinfo* extinfo);
