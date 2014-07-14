@@ -477,6 +477,7 @@ public class FoldingLayout extends ViewGroup {
             mShadowGradientMatrix.setScale(1, mFoldDrawHeight);
             mShadowLinearGradient.setLocalMatrix(mShadowGradientMatrix);
         }
+        mGradientShadow.setShader(mShadowLinearGradient);
 
         mGradientShadow.setAlpha(alpha);
     }
