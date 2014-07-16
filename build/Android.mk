@@ -144,3 +144,8 @@ include $(LOCAL_PATH)/build_android_stubs.mk
 
 .PHONY: android_system_stubs
 android_system_stubs: $(full_target)
+
+# Build and store the android_system.jar.
+ifeq ($(HOST-OS)-$(TARGET_PRODUCT),linux-sdk)
+$(call dist-for-goals,sdk,$(full_target):android_system.jar)
+endif
