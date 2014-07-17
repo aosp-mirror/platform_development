@@ -106,7 +106,7 @@ int AMediaExtractor_getSampleTrackIndex(AMediaExtractor*);
  * Returns the current sample's presentation time in microseconds.
  * or -1 if no more samples are available.
  */
-int64_t AMediaExtractor_getSampletime(AMediaExtractor*);
+int64_t AMediaExtractor_getSampleTime(AMediaExtractor*);
 
 /**
  * Advance to the next sample. Returns false if no more sample data
