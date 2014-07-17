@@ -45,7 +45,8 @@ class TraceConverter:
   last_frame = -1
   width = "{8}"
 
-  def __init__(self): pass
+  def __init__(self):
+    self.UpdateAbiRegexes()
 
   register_names = {
     "arm": "r0|r1|r2|r3|r4|r5|r6|r7|r8|r9|sl|fp|ip|sp|lr|pc|cpsr",
@@ -58,6 +59,8 @@ class TraceConverter:
   def UpdateAbiRegexes(self):
     if symbol.ARCH == "arm64" or symbol.ARCH == "mips64" or symbol.ARCH == "x86_64":
       self.width = "{16}"
+    else:
+      self.width = "{8}"
 
     self.register_line = re.compile("(([ ]*\\b(" + self.register_names[symbol.ARCH] + ")\\b +[0-9a-f]" + self.width + "){2,5})")
 
