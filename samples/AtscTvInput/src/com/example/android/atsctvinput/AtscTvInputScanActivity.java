@@ -69,8 +69,9 @@ public class AtscTvInputScanActivity extends Activity {
     }
 
     private void clearChannels() {
-        Uri uri = TvContract.buildChannelsUriForInput(
-                new ComponentName(this, AtscTvInputService.class));
+        //Uri uri = TvContract.buildChannelsUriForInput(
+        //        new ComponentName(this, AtscTvInputService.class));
+        Uri uri = null;
         getContentResolver().delete(uri, null, null);
     }
 
@@ -92,7 +93,6 @@ public class AtscTvInputScanActivity extends Activity {
         Log.d(TAG, "Channel " + channel.getShortName() + " " + channel.getMajorChannelNumber()
                 + "-" + channel.getMinorChannelNumber() + " is detected.");
         ContentValues values = new ContentValues();
-        values.put(TvContract.Channels.COLUMN_SERVICE_NAME, AtscTvInputService.class.getName());
         values.put(TvContract.Channels.COLUMN_DISPLAY_NUMBER,
                 channel.getMajorChannelNumber() + "-" + channel.getMinorChannelNumber());
         values.put(TvContract.Channels.COLUMN_DISPLAY_NAME, channel.getShortName());
