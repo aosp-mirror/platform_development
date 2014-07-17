@@ -19,28 +19,30 @@
 #ifndef _IPT_CLUSTERIP_H_target
 #define _IPT_CLUSTERIP_H_target
 #include <linux/types.h>
-enum clusterip_hashmode {
+#include <linux/if_ether.h>
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+enum clusterip_hashmode {
  CLUSTERIP_HASHMODE_SIP = 0,
  CLUSTERIP_HASHMODE_SIP_SPT,
  CLUSTERIP_HASHMODE_SIP_SPT_DPT,
-};
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+};
 #define CLUSTERIP_HASHMODE_MAX CLUSTERIP_HASHMODE_SIP_SPT_DPT
 #define CLUSTERIP_MAX_NODES 16
 #define CLUSTERIP_FLAG_NEW 0x00000001
-struct clusterip_config;
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+struct clusterip_config;
 struct ipt_clusterip_tgt_info {
  __u32 flags;
- __u8 clustermac[6];
- __u16 num_total_nodes;
+ __u8 clustermac[ETH_ALEN];
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+ __u16 num_total_nodes;
  __u16 num_local_nodes;
  __u16 local_nodes[CLUSTERIP_MAX_NODES];
  __u32 hash_mode;
- __u32 hash_initval;
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+ __u32 hash_initval;
  struct clusterip_config *config;
 };
 #endif
+/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */

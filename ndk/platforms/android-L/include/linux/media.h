@@ -92,35 +92,37 @@ struct media_entity_desc {
 #define MEDIA_PAD_FL_SINK (1 << 0)
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
 #define MEDIA_PAD_FL_SOURCE (1 << 1)
+#define MEDIA_PAD_FL_MUST_CONNECT (1 << 2)
 struct media_pad_desc {
  __u32 entity;
- __u16 index;
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+ __u16 index;
  __u32 flags;
  __u32 reserved[2];
 };
-#define MEDIA_LNK_FL_ENABLED (1 << 0)
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+#define MEDIA_LNK_FL_ENABLED (1 << 0)
 #define MEDIA_LNK_FL_IMMUTABLE (1 << 1)
 #define MEDIA_LNK_FL_DYNAMIC (1 << 2)
 struct media_link_desc {
- struct media_pad_desc source;
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+ struct media_pad_desc source;
  struct media_pad_desc sink;
  __u32 flags;
  __u32 reserved[2];
-};
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+};
 struct media_links_enum {
  __u32 entity;
  struct media_pad_desc __user *pads;
- struct media_link_desc __user *links;
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+ struct media_link_desc __user *links;
  __u32 reserved[4];
 };
 #define MEDIA_IOC_DEVICE_INFO _IOWR('|', 0x00, struct media_device_info)
-#define MEDIA_IOC_ENUM_ENTITIES _IOWR('|', 0x01, struct media_entity_desc)
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+#define MEDIA_IOC_ENUM_ENTITIES _IOWR('|', 0x01, struct media_entity_desc)
 #define MEDIA_IOC_ENUM_LINKS _IOWR('|', 0x02, struct media_links_enum)
 #define MEDIA_IOC_SETUP_LINK _IOWR('|', 0x03, struct media_link_desc)
 #endif
+/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */

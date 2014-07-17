@@ -36,8 +36,4 @@ struct rand_pool_info {
  __u32 buf[0];
 };
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
-struct rnd_state {
- __u32 s1, s2, s3;
-};
 #endif
-/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */

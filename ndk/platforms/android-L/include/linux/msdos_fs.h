@@ -101,7 +101,7 @@ struct __fat_dirent {
 #define FAT_IOCTL_GET_ATTRIBUTES _IOR('r', 0x10, __u32)
 #define FAT_IOCTL_SET_ATTRIBUTES _IOW('r', 0x11, __u32)
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
-#define VFAT_IOCTL_GET_VOLUME_ID _IOR('r', 0x12, __u32)
+#define FAT_IOCTL_GET_VOLUME_ID _IOR('r', 0x13, __u32)
 struct fat_boot_sector {
  __u8 ignored[3];
  __u8 system_id[8];
@@ -126,6 +126,11 @@ struct fat_boot_sector {
  __u8 drive_number;
  __u8 state;
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+ __u8 signature;
+ __u8 vol_id[4];
+ __u8 vol_label[11];
+ __u8 fs_type[8];
+/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
  } fat16;
  struct {
  __le32 length;
@@ -139,6 +144,11 @@ struct fat_boot_sector {
  __le16 reserved2[6];
  __u8 drive_number;
  __u8 state;
+ __u8 signature;
+/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+ __u8 vol_id[4];
+ __u8 vol_label[11];
+ __u8 fs_type[8];
  } fat32;
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
  };
@@ -153,44 +163,32 @@ struct fat_boot_fsinfo {
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
  __le32 reserved2[4];
 };
-struct fat_boot_bsx {
- __u8 drive;
-/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
- __u8 reserved1;
- __u8 signature;
- __u8 vol_id[4];
- __u8 vol_label[11];
-/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
- __u8 type[8];
-};
-#define FAT16_BSX_OFFSET 36
-#define FAT32_BSX_OFFSET 64
-/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
 struct msdos_dir_entry {
  __u8 name[MSDOS_NAME];
+/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
  __u8 attr;
  __u8 lcase;
-/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
  __u8 ctime_cs;
  __le16 ctime;
+/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
  __le16 cdate;
  __le16 adate;
-/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
  __le16 starthi;
  __le16 time,date,start;
+/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
  __le32 size;
 };
-/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
 struct msdos_dir_slot {
  __u8 id;
+/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
  __u8 name0_4[10];
  __u8 attr;
-/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
  __u8 reserved;
  __u8 alias_checksum;
+/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
  __u8 name5_10[12];
  __le16 start;
-/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
  __u8 name11_12[4];
 };
+/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
 #endif
