@@ -102,6 +102,7 @@
         <item>Unspecified</item>
         <item>Something</item>
         <item>Numeric</item>
+        <item>Numeric(Complex)</item>
         <item>Alphabetic</item>
         <item>Alphanumeric</item>
         <item>Complex</item>
