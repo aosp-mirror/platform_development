@@ -132,9 +132,8 @@ public class ShadowCardDrag extends Activity {
         }
 
         @Override
-        public boolean getOutline(Outline outline) {
+        public void getOutline(Outline outline) {
             outline.setConvexPath(mPath);
-            return true;
         }
     }
 
