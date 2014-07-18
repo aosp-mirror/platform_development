@@ -57,7 +57,7 @@ public class AtscTvInputService extends TvInputService {
     }
 
     @Override
-    public TvInputService.Session onCreateSession() {
+    public TvInputService.Session onCreateSession(String inputId) {
         return new MyTvInputSessionImpl();
     }
 
