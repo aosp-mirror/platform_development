@@ -21,6 +21,7 @@ import android.content.ContentValues;
 import android.content.res.AssetFileDescriptor;
 import android.database.Cursor;
 import android.media.MediaPlayer;
+import android.media.tv.TvContentRating;
 import android.media.tv.TvContract;
 import android.media.tv.TvInputService;
 import android.net.Uri;
@@ -108,6 +109,11 @@ public class AtscTvInputService extends TvInputService {
         public void onSetStreamVolume(float volume) {
             Log.d(TAG, "onSetStreamVolume(" + volume + ")");
             mPlayer.setVolume(volume, volume);
+        }
+
+        @Override
+        public void onContentUnblocked(TvContentRating rating) {
+            // Do nothing here.
         }
 
         @Override
