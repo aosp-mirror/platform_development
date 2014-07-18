@@ -147,5 +147,5 @@ android_system_stubs: $(full_target)
 
 # Build and store the android_system.jar.
 ifeq ($(HOST-OS)-$(TARGET_PRODUCT),linux-sdk)
-$(call dist-for-goals,sdk,$(full_target):android_system.jar)
+$(call dist-for-goals,dist_files,$(full_target):android_system.jar)
 endif
