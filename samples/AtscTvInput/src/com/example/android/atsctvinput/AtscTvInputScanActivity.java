@@ -69,9 +69,8 @@ public class AtscTvInputScanActivity extends Activity {
     }
 
     private void clearChannels() {
-        //Uri uri = TvContract.buildChannelsUriForInput(
-        //        new ComponentName(this, AtscTvInputService.class));
-        Uri uri = null;
+        String id = TvContract.buildInputId(new ComponentName(this, AtscTvInputService.class));
+        Uri uri = TvContract.buildChannelsUriForInput(id);
         getContentResolver().delete(uri, null, null);
     }
 
