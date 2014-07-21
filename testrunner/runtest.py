@@ -376,7 +376,7 @@ class TestRunner(object):
         if is_cts:
           # hack! hardcode install of CtsTestStubs
           out = android_build.GetTestAppPath()
-          abs_install_path = os.path.join(out, "CtsTestStubs.apk")
+          abs_install_path = os.path.join(out, "CtsTestStubs", "CtsTestStubs.apk")
           logger.Log("adb install -r %s" % abs_install_path)
           logger.Log(self._adb.Install(abs_install_path))
 
