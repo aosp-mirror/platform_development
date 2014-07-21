@@ -37,6 +37,8 @@ typedef int int32_t[sizeof(int) == 4];
 #define ABI_NOTETYPE	1
 #define ABI_ANDROID_API	PLATFORM_SDK_VERSION
 
+#define L 9999
+
 /*
  * Special ".note" entry to tag an Android binary and specify the ABI version.
  *
