@@ -33,50 +33,25 @@
  */
 
 #ifndef _ERR_H_
-#define	_ERR_H_
+#define _ERR_H_
 
 #include <sys/cdefs.h>
 #include <sys/types.h>
 
 __BEGIN_DECLS
 
-__noreturn void	err(int, const char *, ...)
-			__printflike(2, 3);
-__noreturn void	verr(int, const char *, __va_list)
-			__printflike(2, 0);
-__noreturn void	errx(int, const char *, ...)
-			__printflike(2, 3);
-__noreturn void	verrx(int, const char *, __va_list)
-			__printflike(2, 0);
-void		warn(const char *, ...)
-			__printflike(1, 2);
-void		vwarn(const char *, __va_list)
-			__printflike(1, 0);
-void		warnx(const char *, ...)
-			__printflike(1, 2);
-void		vwarnx(const char *, __va_list)
-			__printflike(1, 0);
+/* printf's format string isn't nullable; the err family's one is,
+ * so we can't use __errlike here. */
+#define __errlike(x, y) __attribute__((__format__(printf, x, y)))
 
-/*
- * The _* versions are for use in library functions so user-defined
- * versions of err*,warn* do not get used.
- */
-__noreturn void	_err(int, const char *, ...)
-			__printflike(2, 3);
-__noreturn void	_verr(int, const char *, __va_list)
-			__printflike(2, 0);
-__noreturn void	_errx(int, const char *, ...)
-			__printflike(2, 3);
-__noreturn void	_verrx(int, const char *, __va_list)
-			__printflike(2, 0);
-void		_warn(const char *, ...)
-			__printflike(1, 2);
-void		_vwarn(const char *, __va_list)
-			__printflike(1, 0);
-void		_warnx(const char *, ...)
-			__printflike(1, 2);
-void		_vwarnx(const char *, __va_list)
-			__printflike(1, 0);
+__noreturn void err(int, const char *, ...) __errlike(2, 3);
+__noreturn void verr(int, const char *, __va_list) __errlike(2, 0);
+__noreturn void errx(int, const char *, ...) __errlike(2, 3);
+__noreturn void verrx(int, const char *, __va_list) __errlike(2, 0);
+void warn(const char *, ...) __errlike(1, 2);
+void vwarn(const char *, __va_list) __errlike(1, 0);
+void warnx(const char *, ...) __errlike(1, 2);
+void vwarnx(const char *, __va_list) __errlike(1, 0);
 
 __END_DECLS
 

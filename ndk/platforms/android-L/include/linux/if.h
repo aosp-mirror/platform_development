@@ -77,134 +77,135 @@
 #define IFF_SUPP_NOFCS 0x80000
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
 #define IFF_LIVE_ADDR_CHANGE 0x100000
+#define IFF_MACVLAN 0x200000
 #define IF_GET_IFACE 0x0001
 #define IF_GET_PROTO 0x0002
-#define IF_IFACE_V35 0x1000
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+#define IF_IFACE_V35 0x1000
 #define IF_IFACE_V24 0x1001
 #define IF_IFACE_X21 0x1002
 #define IF_IFACE_T1 0x1003
-#define IF_IFACE_E1 0x1004
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+#define IF_IFACE_E1 0x1004
 #define IF_IFACE_SYNC_SERIAL 0x1005
 #define IF_IFACE_X21D 0x1006
 #define IF_PROTO_HDLC 0x2000
-#define IF_PROTO_PPP 0x2001
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+#define IF_PROTO_PPP 0x2001
 #define IF_PROTO_CISCO 0x2002
 #define IF_PROTO_FR 0x2003
 #define IF_PROTO_FR_ADD_PVC 0x2004
-#define IF_PROTO_FR_DEL_PVC 0x2005
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+#define IF_PROTO_FR_DEL_PVC 0x2005
 #define IF_PROTO_X25 0x2006
 #define IF_PROTO_HDLC_ETH 0x2007
 #define IF_PROTO_FR_ADD_ETH_PVC 0x2008
-#define IF_PROTO_FR_DEL_ETH_PVC 0x2009
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+#define IF_PROTO_FR_DEL_ETH_PVC 0x2009
 #define IF_PROTO_FR_PVC 0x200A
 #define IF_PROTO_FR_ETH_PVC 0x200B
 #define IF_PROTO_RAW 0x200C
-enum {
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+enum {
  IF_OPER_UNKNOWN,
  IF_OPER_NOTPRESENT,
  IF_OPER_DOWN,
- IF_OPER_LOWERLAYERDOWN,
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+ IF_OPER_LOWERLAYERDOWN,
  IF_OPER_TESTING,
  IF_OPER_DORMANT,
  IF_OPER_UP,
-};
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+};
 enum {
  IF_LINK_MODE_DEFAULT,
  IF_LINK_MODE_DORMANT,
-};
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+};
 struct ifmap {
  unsigned long mem_start;
  unsigned long mem_end;
- unsigned short base_addr;
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+ unsigned short base_addr;
  unsigned char irq;
  unsigned char dma;
  unsigned char port;
-};
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+};
 struct if_settings {
  unsigned int type;
  unsigned int size;
- union {
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+ union {
  raw_hdlc_proto __user *raw_hdlc;
  cisco_proto __user *cisco;
  fr_proto __user *fr;
- fr_proto_pvc __user *fr_pvc;
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+ fr_proto_pvc __user *fr_pvc;
  fr_proto_pvc_info __user *fr_pvc_info;
  sync_serial_settings __user *sync;
  te1_settings __user *te1;
- } ifs_ifsu;
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+ } ifs_ifsu;
 };
 struct ifreq {
 #define IFHWADDRLEN 6
- union
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+ union
  {
  char ifrn_name[IFNAMSIZ];
  } ifr_ifrn;
- union {
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+ union {
  struct sockaddr ifru_addr;
  struct sockaddr ifru_dstaddr;
  struct sockaddr ifru_broadaddr;
- struct sockaddr ifru_netmask;
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+ struct sockaddr ifru_netmask;
  struct sockaddr ifru_hwaddr;
  short ifru_flags;
  int ifru_ivalue;
- int ifru_mtu;
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+ int ifru_mtu;
  struct ifmap ifru_map;
  char ifru_slave[IFNAMSIZ];
  char ifru_newname[IFNAMSIZ];
- void __user * ifru_data;
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+ void __user * ifru_data;
  struct if_settings ifru_settings;
  } ifr_ifru;
 };
-#define ifr_name ifr_ifrn.ifrn_name
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+#define ifr_name ifr_ifrn.ifrn_name
 #define ifr_hwaddr ifr_ifru.ifru_hwaddr
 #define ifr_addr ifr_ifru.ifru_addr
 #define ifr_dstaddr ifr_ifru.ifru_dstaddr
-#define ifr_broadaddr ifr_ifru.ifru_broadaddr
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+#define ifr_broadaddr ifr_ifru.ifru_broadaddr
 #define ifr_netmask ifr_ifru.ifru_netmask
 #define ifr_flags ifr_ifru.ifru_flags
 #define ifr_metric ifr_ifru.ifru_ivalue
-#define ifr_mtu ifr_ifru.ifru_mtu
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+#define ifr_mtu ifr_ifru.ifru_mtu
 #define ifr_map ifr_ifru.ifru_map
 #define ifr_slave ifr_ifru.ifru_slave
 #define ifr_data ifr_ifru.ifru_data
-#define ifr_ifindex ifr_ifru.ifru_ivalue
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+#define ifr_ifindex ifr_ifru.ifru_ivalue
 #define ifr_bandwidth ifr_ifru.ifru_ivalue
 #define ifr_qlen ifr_ifru.ifru_ivalue
 #define ifr_newname ifr_ifru.ifru_newname
-#define ifr_settings ifr_ifru.ifru_settings
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+#define ifr_settings ifr_ifru.ifru_settings
 struct ifconf {
  int ifc_len;
  union {
- char __user *ifcu_buf;
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+ char __user *ifcu_buf;
  struct ifreq __user *ifcu_req;
  } ifc_ifcu;
 };
-#define ifc_buf ifc_ifcu.ifcu_buf
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+#define ifc_buf ifc_ifcu.ifcu_buf
 #define ifc_req ifc_ifcu.ifcu_req
 #endif

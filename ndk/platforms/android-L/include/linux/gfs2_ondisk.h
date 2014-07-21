@@ -274,83 +274,95 @@ struct gfs2_leaf {
  __be16 lf_entries;
  __be32 lf_dirent_format;
  __be64 lf_next;
- __u8 lf_reserved[64];
+ union {
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+ __u8 lf_reserved[64];
+ struct {
+ __be64 lf_inode;
+ __be32 lf_dist;
+/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+ __be32 lf_nsec;
+ __be64 lf_sec;
+ __u8 lf_reserved2[40];
+ };
+/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+ };
 };
 #define GFS2_EA_MAX_NAME_LEN 255
 #define GFS2_EA_MAX_DATA_LEN 65536
-#define GFS2_EATYPE_UNUSED 0
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+#define GFS2_EATYPE_UNUSED 0
 #define GFS2_EATYPE_USR 1
 #define GFS2_EATYPE_SYS 2
 #define GFS2_EATYPE_SECURITY 3
-#define GFS2_EATYPE_LAST 3
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+#define GFS2_EATYPE_LAST 3
 #define GFS2_EATYPE_VALID(x) ((x) <= GFS2_EATYPE_LAST)
 #define GFS2_EAFLAG_LAST 0x01
 struct gfs2_ea_header {
- __be32 ea_rec_len;
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+ __be32 ea_rec_len;
  __be32 ea_data_len;
  __u8 ea_name_len;
  __u8 ea_type;
- __u8 ea_flags;
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+ __u8 ea_flags;
  __u8 ea_num_ptrs;
  __u32 __pad;
 };
-#define GFS2_LOG_HEAD_UNMOUNT 0x00000001
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+#define GFS2_LOG_HEAD_UNMOUNT 0x00000001
 struct gfs2_log_header {
  struct gfs2_meta_header lh_header;
  __be64 lh_sequence;
- __be32 lh_flags;
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+ __be32 lh_flags;
  __be32 lh_tail;
  __be32 lh_blkno;
  __be32 lh_hash;
-};
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+};
 #define GFS2_LOG_DESC_METADATA 300
 #define GFS2_LOG_DESC_REVOKE 301
 #define GFS2_LOG_DESC_JDATA 302
-struct gfs2_log_descriptor {
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+struct gfs2_log_descriptor {
  struct gfs2_meta_header ld_header;
  __be32 ld_type;
  __be32 ld_length;
- __be32 ld_data1;
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+ __be32 ld_data1;
  __be32 ld_data2;
  __u8 ld_reserved[32];
 };
-#define GFS2_INUM_QUANTUM 1048576
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+#define GFS2_INUM_QUANTUM 1048576
 struct gfs2_inum_range {
  __be64 ir_start;
  __be64 ir_length;
-};
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+};
 struct gfs2_statfs_change {
  __be64 sc_total;
  __be64 sc_free;
- __be64 sc_dinodes;
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+ __be64 sc_dinodes;
 };
 #define GFS2_QCF_USER 0x00000001
 struct gfs2_quota_change {
- __be64 qc_change;
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+ __be64 qc_change;
  __be32 qc_flags;
  __be32 qc_id;
 };
-struct gfs2_quota_lvb {
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+struct gfs2_quota_lvb {
  __be32 qb_magic;
  __u32 __pad;
  __be64 qb_limit;
- __be64 qb_warn;
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+ __be64 qb_warn;
  __be64 qb_value;
 };
 #endif
+/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */

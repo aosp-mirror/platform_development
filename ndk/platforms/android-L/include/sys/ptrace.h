@@ -30,15 +30,15 @@
 
 #include <sys/cdefs.h>
 #include <sys/types.h>
-/* For all of the defines */
 #include <linux/ptrace.h>
 
 __BEGIN_DECLS
 
-#define PTRACE_POKEUSER     PTRACE_POKEUSR
-#define PTRACE_PEEKUSER     PTRACE_PEEKUSR
+/* glibc uses different names from the kernel for these two... */
+#define PTRACE_POKEUSER PTRACE_POKEUSR
+#define PTRACE_PEEKUSER PTRACE_PEEKUSR
 
-extern long ptrace(int request, pid_t pid, void *addr, void *data);
+extern long ptrace(int, ...);
 
 __END_DECLS
 

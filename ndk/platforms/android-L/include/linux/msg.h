@@ -47,7 +47,7 @@ struct msqid_ds {
 #include <asm/msgbuf.h>
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
 struct msgbuf {
- long mtype;
+ __kernel_long_t mtype;
  char mtext[1];
 };
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */

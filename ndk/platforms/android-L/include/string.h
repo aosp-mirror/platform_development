@@ -31,6 +31,7 @@
 #include <sys/cdefs.h>
 #include <stddef.h>
 #include <malloc.h>
+#include <xlocale.h>
 
 __BEGIN_DECLS
 
@@ -87,6 +88,9 @@ extern char*  strsignal(int  sig);
 
 extern int    strcoll(const char *, const char *) __purefunc;
 extern size_t strxfrm(char* __restrict, const char* __restrict, size_t);
+
+extern int    strcoll_l(const char *, const char *, locale_t) __purefunc;
+extern size_t strxfrm_l(char* __restrict, const char* __restrict, size_t, locale_t);
 
 #if defined(__BIONIC_FORTIFY)
 

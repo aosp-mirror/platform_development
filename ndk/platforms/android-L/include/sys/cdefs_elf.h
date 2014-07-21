@@ -64,6 +64,13 @@
 /* Used to tag non-static symbols that are private and never exposed by the shared library. */
 #define __LIBC_HIDDEN__ __attribute__((visibility ("hidden")))
 
+/* Like __LIBC_HIDDEN__, but preserves binary compatibility for LP32. */
+#ifdef __LP64__
+#define __LIBC64_HIDDEN__ __LIBC_HIDDEN__
+#else
+#define __LIBC64_HIDDEN__
+#endif
+
 /* Used to tag non-static symbols that are public and exposed by the shared library. */
 #define __LIBC_ABI_PUBLIC__ __attribute__((visibility ("default")))
 

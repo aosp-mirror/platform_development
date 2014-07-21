@@ -205,8 +205,10 @@ typedef _Atomic(long)			atomic_long;
 typedef _Atomic(unsigned long)		atomic_ulong;
 typedef _Atomic(long long)		atomic_llong;
 typedef _Atomic(unsigned long long)	atomic_ullong;
-typedef _Atomic(char16_t)		atomic_char16_t;
-typedef _Atomic(char32_t)		atomic_char32_t;
+#if __STDC_VERSION__ >= 201112L || __cplusplus >= 201103L
+  typedef _Atomic(char16_t)		atomic_char16_t;
+  typedef _Atomic(char32_t)		atomic_char32_t;
+#endif
 typedef _Atomic(wchar_t)		atomic_wchar_t;
 typedef _Atomic(int_least8_t)		atomic_int_least8_t;
 typedef _Atomic(uint_least8_t)	atomic_uint_least8_t;
