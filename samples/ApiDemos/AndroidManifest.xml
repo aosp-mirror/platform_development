@@ -2971,6 +2971,14 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".media.projection.MediaProjectionDemo"
+                android:label="Media/MediaProjection">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
         <!-- ************************************* -->
         <!--      APPWIDGET PACKAGE SAMPLES           -->
         <!-- ************************************* -->
