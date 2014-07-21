@@ -17,10 +17,13 @@
 package com.example.android.atsctvinput;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.ComponentName;
 import android.content.ContentValues;
+import android.content.DialogInterface;
 import android.media.tv.TvContract;
+import android.media.tv.TvInputInfo;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -42,9 +45,17 @@ public class AtscTvInputScanActivity extends Activity {
     private static final long FAKE_SCANTIME_PER_CHANNEL_MS = 1000;
     private ProgressDialog mProgressDialog;
 
+    private String mInputId;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        mInputId = getIntent().getStringExtra(TvInputInfo.EXTRA_INPUT_ID);
+        if (mInputId == null) {
+            showErrorDialog("Invalid Intent.");
+            return;
+        }
 
         mProgressDialog = new ProgressDialog(this);
         mProgressDialog.setMessage(getResources().getString(R.string.channel_scan_message));
@@ -68,9 +79,23 @@ public class AtscTvInputScanActivity extends Activity {
         }.execute();
     }
 
+    private void showErrorDialog(String message) {
+        new AlertDialog.Builder(this, AlertDialog.THEME_HOLO_DARK)
+                .setTitle("Error")
+                .setMessage(message)
+                .setCancelable(false)
+                .setPositiveButton("OK",
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int id) {
+                                finishAffinity();
+                            }
+                })
+                .show();
+    }
+
     private void clearChannels() {
-        String id = TvContract.buildInputId(new ComponentName(this, AtscTvInputService.class));
-        Uri uri = TvContract.buildChannelsUriForInput(id);
+        Uri uri = TvContract.buildChannelsUriForInput(mInputId);
         getContentResolver().delete(uri, null, null);
     }
 
@@ -92,6 +117,7 @@ public class AtscTvInputScanActivity extends Activity {
         Log.d(TAG, "Channel " + channel.getShortName() + " " + channel.getMajorChannelNumber()
                 + "-" + channel.getMinorChannelNumber() + " is detected.");
         ContentValues values = new ContentValues();
+        values.put(TvContract.Channels.COLUMN_INPUT_ID, mInputId);
         values.put(TvContract.Channels.COLUMN_DISPLAY_NUMBER,
                 channel.getMajorChannelNumber() + "-" + channel.getMinorChannelNumber());
         values.put(TvContract.Channels.COLUMN_DISPLAY_NAME, channel.getShortName());
