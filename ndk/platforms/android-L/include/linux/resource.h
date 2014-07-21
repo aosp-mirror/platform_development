@@ -29,29 +29,29 @@
 struct rusage {
  struct timeval ru_utime;
  struct timeval ru_stime;
- long ru_maxrss;
+ __kernel_long_t ru_maxrss;
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
- long ru_ixrss;
- long ru_idrss;
- long ru_isrss;
- long ru_minflt;
+ __kernel_long_t ru_ixrss;
+ __kernel_long_t ru_idrss;
+ __kernel_long_t ru_isrss;
+ __kernel_long_t ru_minflt;
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
- long ru_majflt;
- long ru_nswap;
- long ru_inblock;
- long ru_oublock;
+ __kernel_long_t ru_majflt;
+ __kernel_long_t ru_nswap;
+ __kernel_long_t ru_inblock;
+ __kernel_long_t ru_oublock;
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
- long ru_msgsnd;
- long ru_msgrcv;
- long ru_nsignals;
- long ru_nvcsw;
+ __kernel_long_t ru_msgsnd;
+ __kernel_long_t ru_msgrcv;
+ __kernel_long_t ru_nsignals;
+ __kernel_long_t ru_nvcsw;
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
- long ru_nivcsw;
+ __kernel_long_t ru_nivcsw;
 };
 struct rlimit {
- unsigned long rlim_cur;
+ __kernel_ulong_t rlim_cur;
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
- unsigned long rlim_max;
+ __kernel_ulong_t rlim_max;
 };
 #define RLIM64_INFINITY (~0ULL)
 struct rlimit64 {

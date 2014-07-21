@@ -26,24 +26,25 @@
 #define KEXEC_ARCH_DEFAULT ( 0 << 16)
 #define KEXEC_ARCH_386 ( 3 << 16)
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+#define KEXEC_ARCH_68K ( 4 << 16)
 #define KEXEC_ARCH_X86_64 (62 << 16)
 #define KEXEC_ARCH_PPC (20 << 16)
 #define KEXEC_ARCH_PPC64 (21 << 16)
-#define KEXEC_ARCH_IA_64 (50 << 16)
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+#define KEXEC_ARCH_IA_64 (50 << 16)
 #define KEXEC_ARCH_ARM (40 << 16)
 #define KEXEC_ARCH_S390 (22 << 16)
 #define KEXEC_ARCH_SH (42 << 16)
-#define KEXEC_ARCH_MIPS_LE (10 << 16)
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+#define KEXEC_ARCH_MIPS_LE (10 << 16)
 #define KEXEC_ARCH_MIPS ( 8 << 16)
 #define KEXEC_SEGMENT_MAX 16
 struct kexec_segment {
- const void *buf;
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+ const void *buf;
  size_t bufsz;
  const void *mem;
  size_t memsz;
-};
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+};
 #endif

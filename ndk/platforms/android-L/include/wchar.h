@@ -130,12 +130,12 @@ extern wchar_t          *wcsrchr(const wchar_t *, wchar_t);
 extern size_t wcsrtombs(char*, const wchar_t**, size_t, mbstate_t*);
 extern size_t            wcsspn(const wchar_t *, const wchar_t *);
 extern wchar_t          *wcsstr(const wchar_t *, const wchar_t *);
-extern double wcstod(const wchar_t*, wchar_t**);
-extern float wcstof(const wchar_t*, wchar_t**);
+extern double wcstod(const wchar_t*, wchar_t**) __NDK_FPABI__;
+extern float wcstof(const wchar_t*, wchar_t**) __NDK_FPABI__;
 extern wchar_t* wcstok(wchar_t*, const wchar_t*, wchar_t**);
 extern long wcstol(const wchar_t*, wchar_t**, int);
 extern long long wcstoll(const wchar_t*, wchar_t**, int);
-extern long double wcstold(const wchar_t*, wchar_t**);
+extern long double wcstold(const wchar_t*, wchar_t**) __NDK_FPABI__;
 extern unsigned long wcstoul(const wchar_t*, wchar_t**, int);
 extern unsigned long long wcstoull(const wchar_t*, wchar_t**, int);
 extern int               wcswidth(const wchar_t *, size_t);
@@ -150,6 +150,13 @@ extern wchar_t          *wmemmove(wchar_t *, const wchar_t *, size_t);
 extern wchar_t          *wmemset(wchar_t *, wchar_t, size_t);
 extern int               wprintf(const wchar_t *, ...);
 extern int               wscanf(const wchar_t *, ...);
+
+extern long long          wcstoll_l(const wchar_t *, wchar_t **, size_t, locale_t);
+extern unsigned long long wcstoull_l(const wchar_t *, wchar_t **, size_t, locale_t);
+extern long double        wcstold_l(const wchar_t *, wchar_t **, locale_t ) __NDK_FPABI__;
+
+extern int    wcscoll_l(const wchar_t *, const wchar_t *, locale_t);
+extern size_t wcsxfrm_l(wchar_t *, const wchar_t *, size_t, locale_t);
 
 extern size_t wcslcat(wchar_t*, const wchar_t*, size_t);
 extern size_t wcslcpy(wchar_t*, const wchar_t*, size_t);

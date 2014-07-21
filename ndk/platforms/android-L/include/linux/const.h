@@ -28,4 +28,7 @@
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
 #define _AT(T,X) ((T)(X))
 #endif
+#define _BITUL(x) (_AC(1,UL) << (x))
+#define _BITULL(x) (_AC(1,ULL) << (x))
+/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
 #endif

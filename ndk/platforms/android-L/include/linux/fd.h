@@ -127,127 +127,128 @@ enum {
  FD_UNUSED_BIT,
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
  FD_DISK_CHANGED_BIT,
- FD_DISK_WRITABLE_BIT
+ FD_DISK_WRITABLE_BIT,
+ FD_OPEN_SHOULD_FAIL_BIT
 };
-#define FDSETDRVPRM _IOW(2, 0x90, struct floppy_drive_params)
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+#define FDSETDRVPRM _IOW(2, 0x90, struct floppy_drive_params)
 #define FDGETDRVPRM _IOR(2, 0x11, struct floppy_drive_params)
 struct floppy_drive_struct {
  unsigned long flags;
-#define FD_NEED_TWADDLE (1 << FD_NEED_TWADDLE_BIT)
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+#define FD_NEED_TWADDLE (1 << FD_NEED_TWADDLE_BIT)
 #define FD_VERIFY (1 << FD_VERIFY_BIT)
 #define FD_DISK_NEWCHANGE (1 << FD_DISK_NEWCHANGE_BIT)
 #define FD_DISK_CHANGED (1 << FD_DISK_CHANGED_BIT)
-#define FD_DISK_WRITABLE (1 << FD_DISK_WRITABLE_BIT)
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+#define FD_DISK_WRITABLE (1 << FD_DISK_WRITABLE_BIT)
  unsigned long spinup_date;
  unsigned long select_date;
  unsigned long first_read_date;
- short probed_format;
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+ short probed_format;
  short track;
  short maxblock;
  short maxtrack;
- int generation;
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+ int generation;
  int keep_data;
  int fd_ref;
  int fd_device;
- unsigned long last_checked;
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+ unsigned long last_checked;
  char *dmabuf;
  int bufblocks;
 };
-#define FDGETDRVSTAT _IOR(2, 0x12, struct floppy_drive_struct)
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+#define FDGETDRVSTAT _IOR(2, 0x12, struct floppy_drive_struct)
 #define FDPOLLDRVSTAT _IOR(2, 0x13, struct floppy_drive_struct)
 enum reset_mode {
  FD_RESET_IF_NEEDED,
- FD_RESET_IF_RAWCMD,
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+ FD_RESET_IF_RAWCMD,
  FD_RESET_ALWAYS
 };
 #define FDRESET _IO(2, 0x54)
-struct floppy_fdc_state {
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+struct floppy_fdc_state {
  int spec1;
  int spec2;
  int dtr;
- unsigned char version;
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+ unsigned char version;
  unsigned char dor;
  unsigned long address;
  unsigned int rawcmd:2;
- unsigned int reset:1;
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+ unsigned int reset:1;
  unsigned int need_configure:1;
  unsigned int perp_mode:2;
  unsigned int has_fifo:1;
- unsigned int driver_version;
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+ unsigned int driver_version;
 #define FD_DRIVER_VERSION 0x100
  unsigned char track[4];
 };
-#define FDGETFDCSTAT _IOR(2, 0x15, struct floppy_fdc_state)
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+#define FDGETFDCSTAT _IOR(2, 0x15, struct floppy_fdc_state)
 struct floppy_write_errors {
  unsigned int write_errors;
  unsigned long first_error_sector;
- int first_error_generation;
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+ int first_error_generation;
  unsigned long last_error_sector;
  int last_error_generation;
  unsigned int badness;
-};
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+};
 #define FDWERRORCLR _IO(2, 0x56)
 #define FDWERRORGET _IOR(2, 0x17, struct floppy_write_errors)
 #define FDHAVEBATCHEDRAWCMD
-struct floppy_raw_cmd {
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+struct floppy_raw_cmd {
  unsigned int flags;
 #define FD_RAW_READ 1
 #define FD_RAW_WRITE 2
-#define FD_RAW_NO_MOTOR 4
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+#define FD_RAW_NO_MOTOR 4
 #define FD_RAW_DISK_CHANGE 4
 #define FD_RAW_INTR 8
 #define FD_RAW_SPIN 0x10
-#define FD_RAW_NO_MOTOR_AFTER 0x20
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+#define FD_RAW_NO_MOTOR_AFTER 0x20
 #define FD_RAW_NEED_DISK 0x40
 #define FD_RAW_NEED_SEEK 0x80
 #define FD_RAW_MORE 0x100
-#define FD_RAW_STOP_IF_FAILURE 0x200
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+#define FD_RAW_STOP_IF_FAILURE 0x200
 #define FD_RAW_STOP_IF_SUCCESS 0x400
 #define FD_RAW_SOFTFAILURE 0x800
 #define FD_RAW_FAILURE 0x10000
-#define FD_RAW_HARDFAILURE 0x20000
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+#define FD_RAW_HARDFAILURE 0x20000
  void __user *data;
  char *kernel_data;
  struct floppy_raw_cmd *next;
- long length;
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+ long length;
  long phys_length;
  int buffer_length;
  unsigned char rate;
- unsigned char cmd_count;
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+ unsigned char cmd_count;
  unsigned char cmd[16];
  unsigned char reply_count;
  unsigned char reply[16];
- int track;
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+ int track;
  int resultcode;
  int reserved1;
  int reserved2;
-};
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+};
 #define FDRAWCMD _IO(2, 0x58)
 #define FDTWADDLE _IO(2, 0x59)
 #define FDEJECT _IO(2, 0x5a)
-#endif
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+#endif

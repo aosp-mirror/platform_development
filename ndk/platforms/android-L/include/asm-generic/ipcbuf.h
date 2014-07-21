@@ -31,8 +31,8 @@ struct ipc64_perm {
  unsigned short seq;
  unsigned short __pad2;
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
- unsigned long __unused1;
- unsigned long __unused2;
+ __kernel_ulong_t __unused1;
+ __kernel_ulong_t __unused2;
 };
 #endif
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */

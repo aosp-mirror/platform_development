@@ -71,9 +71,6 @@ extern int execl(const char *, const char *, ...);
 extern int execlp(const char *, const char *, ...);
 extern int execle(const char *, const char *, ...);
 
-/* IMPORTANT: See comment under <sys/prctl.h> about this declaration */
-extern int prctl(int  option, ...);
-
 extern int nice(int);
 
 extern int setuid(uid_t);

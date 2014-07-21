@@ -53,7 +53,7 @@
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
 #define VIRTIO_NET_S_ANNOUNCE 2
 struct virtio_net_config {
- __u8 mac[6];
+ __u8 mac[ETH_ALEN];
  __u16 status;
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
  __u16 max_virtqueue_pairs;
