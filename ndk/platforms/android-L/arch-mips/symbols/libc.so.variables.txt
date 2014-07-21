@@ -1,6 +1,3 @@
-_C_ctype_
-_C_tolower_
-_C_toupper_
 _ZSt7nothrow
 __bionic_brk
 __isthreaded

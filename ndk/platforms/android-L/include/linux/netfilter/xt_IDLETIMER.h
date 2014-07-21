@@ -21,14 +21,9 @@
 #include <linux/types.h>
 #define MAX_IDLETIMER_LABEL_SIZE 28
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
-#define NLMSG_MAX_SIZE 64
-#define NL_EVENT_TYPE_INACTIVE 0
-#define NL_EVENT_TYPE_ACTIVE 1
 struct idletimer_tg_info {
-/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
  __u32 timeout;
  char label[MAX_IDLETIMER_LABEL_SIZE];
- __u8 send_nl_msg;
  struct idletimer_tg *timer __attribute__((aligned(8)));
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
 };
