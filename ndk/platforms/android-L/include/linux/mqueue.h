@@ -22,12 +22,12 @@
 #define MQ_BYTES_MAX 819200
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
 struct mq_attr {
- long mq_flags;
- long mq_maxmsg;
- long mq_msgsize;
+ __kernel_long_t mq_flags;
+ __kernel_long_t mq_maxmsg;
+ __kernel_long_t mq_msgsize;
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
- long mq_curmsgs;
- long __reserved[4];
+ __kernel_long_t mq_curmsgs;
+ __kernel_long_t __reserved[4];
 };
 #define NOTIFY_NONE 0
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */

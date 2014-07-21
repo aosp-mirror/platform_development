@@ -31,6 +31,7 @@
 
 #include <sys/cdefs.h>
 #include <sys/time.h>
+#include <xlocale.h>
 
 __BEGIN_DECLS
 
@@ -64,7 +65,7 @@ extern int nanosleep(const struct timespec*, struct timespec*) __LIBC_ABI_PUBLIC
 extern char* asctime(const struct tm*) __LIBC_ABI_PUBLIC__;
 extern char* asctime_r(const struct tm*, char*) __LIBC_ABI_PUBLIC__;
 
-extern double difftime(time_t, time_t) __LIBC_ABI_PUBLIC__;
+extern double difftime(time_t, time_t) __LIBC_ABI_PUBLIC__ __NDK_FPABI__;
 extern time_t mktime(struct tm*) __LIBC_ABI_PUBLIC__;
 
 extern struct tm* localtime(const time_t*) __LIBC_ABI_PUBLIC__;
@@ -75,6 +76,7 @@ extern struct tm* gmtime_r(const time_t*, struct tm*) __LIBC_ABI_PUBLIC__;
 
 extern char* strptime(const char*, const char*, struct tm*) __LIBC_ABI_PUBLIC__;
 extern size_t strftime(char*, size_t, const char*, const struct tm*) __LIBC_ABI_PUBLIC__;
+extern size_t strftime_l(char *, size_t, const char *, const struct tm *, locale_t) __LIBC_ABI_PUBLIC__;
 
 extern char* ctime(const time_t*) __LIBC_ABI_PUBLIC__;
 extern char* ctime_r(const time_t*, char*) __LIBC_ABI_PUBLIC__;

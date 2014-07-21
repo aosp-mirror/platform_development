@@ -452,4 +452,7 @@
 #define __NR_kcmp 349
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
 #define __NR_finit_module 350
+#define __NR_sched_setattr 351
+#define __NR_sched_getattr 352
 #endif
+/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */

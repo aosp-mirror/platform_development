@@ -117,90 +117,92 @@ enum {
 #define TCP_FASTOPEN 23
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
 #define TCP_TIMESTAMP 24
+#define TCP_NOTSENT_LOWAT 25
 struct tcp_repair_opt {
  __u32 opt_code;
- __u32 opt_val;
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+ __u32 opt_val;
 };
 enum {
  TCP_NO_QUEUE,
- TCP_RECV_QUEUE,
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+ TCP_RECV_QUEUE,
  TCP_SEND_QUEUE,
  TCP_QUEUES_NR,
 };
-#define TCPI_OPT_TIMESTAMPS 1
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+#define TCPI_OPT_TIMESTAMPS 1
 #define TCPI_OPT_SACK 2
 #define TCPI_OPT_WSCALE 4
 #define TCPI_OPT_ECN 8
-#define TCPI_OPT_ECN_SEEN 16
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+#define TCPI_OPT_ECN_SEEN 16
 #define TCPI_OPT_SYN_DATA 32
 enum tcp_ca_state {
  TCP_CA_Open = 0,
-#define TCPF_CA_Open (1<<TCP_CA_Open)
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+#define TCPF_CA_Open (1<<TCP_CA_Open)
  TCP_CA_Disorder = 1,
 #define TCPF_CA_Disorder (1<<TCP_CA_Disorder)
  TCP_CA_CWR = 2,
-#define TCPF_CA_CWR (1<<TCP_CA_CWR)
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+#define TCPF_CA_CWR (1<<TCP_CA_CWR)
  TCP_CA_Recovery = 3,
 #define TCPF_CA_Recovery (1<<TCP_CA_Recovery)
  TCP_CA_Loss = 4
-#define TCPF_CA_Loss (1<<TCP_CA_Loss)
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+#define TCPF_CA_Loss (1<<TCP_CA_Loss)
 };
 struct tcp_info {
  __u8 tcpi_state;
- __u8 tcpi_ca_state;
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+ __u8 tcpi_ca_state;
  __u8 tcpi_retransmits;
  __u8 tcpi_probes;
  __u8 tcpi_backoff;
- __u8 tcpi_options;
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+ __u8 tcpi_options;
  __u8 tcpi_snd_wscale : 4, tcpi_rcv_wscale : 4;
  __u32 tcpi_rto;
  __u32 tcpi_ato;
- __u32 tcpi_snd_mss;
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+ __u32 tcpi_snd_mss;
  __u32 tcpi_rcv_mss;
  __u32 tcpi_unacked;
  __u32 tcpi_sacked;
- __u32 tcpi_lost;
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+ __u32 tcpi_lost;
  __u32 tcpi_retrans;
  __u32 tcpi_fackets;
  __u32 tcpi_last_data_sent;
- __u32 tcpi_last_ack_sent;
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+ __u32 tcpi_last_ack_sent;
  __u32 tcpi_last_data_recv;
  __u32 tcpi_last_ack_recv;
  __u32 tcpi_pmtu;
- __u32 tcpi_rcv_ssthresh;
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+ __u32 tcpi_rcv_ssthresh;
  __u32 tcpi_rtt;
  __u32 tcpi_rttvar;
  __u32 tcpi_snd_ssthresh;
- __u32 tcpi_snd_cwnd;
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+ __u32 tcpi_snd_cwnd;
  __u32 tcpi_advmss;
  __u32 tcpi_reordering;
  __u32 tcpi_rcv_rtt;
- __u32 tcpi_rcv_space;
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+ __u32 tcpi_rcv_space;
  __u32 tcpi_total_retrans;
 };
 #define TCP_MD5SIG_MAXKEYLEN 80
-struct tcp_md5sig {
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+struct tcp_md5sig {
  struct __kernel_sockaddr_storage tcpm_addr;
  __u16 __tcpm_pad1;
  __u16 tcpm_keylen;
- __u32 __tcpm_pad2;
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+ __u32 __tcpm_pad2;
  __u8 tcpm_key[TCP_MD5SIG_MAXKEYLEN];
 };
 #endif
+/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
