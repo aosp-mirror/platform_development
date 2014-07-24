@@ -37,8 +37,6 @@
     <!-- For android.media.audiofx.Visualizer -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
-    <uses-sdk android:minSdkVersion="4" android:targetSdkVersion="20" />
-
     <!-- We will request access to the camera, saying we require a camera
          of some sort but not one with autofocus capability. -->
     <uses-permission android:name="android.permission.CAMERA" />
@@ -2206,8 +2204,7 @@
         </activity>
 
         <activity android:name=".view.Controls9"
-                  android:label="Views/Controls/9. Default Theme"
-                  android:theme="@style/ThemeDefault">
+                  android:label="Views/Controls/9. Default Theme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
