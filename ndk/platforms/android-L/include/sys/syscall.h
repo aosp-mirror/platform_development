@@ -37,7 +37,7 @@
 
 __BEGIN_DECLS
 
-int syscall(int number, ...);
+long syscall(long number, ...);
 
 __END_DECLS
 
