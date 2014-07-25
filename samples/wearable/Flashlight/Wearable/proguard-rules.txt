@@ -11,7 +11,7 @@
 
 -keep class android.support.wearable.view.WearableListView {
   private void setScrollAnimator(int);
-  private void setScrollVertically(int);
+  protected void setScrollVertically(int);
 }
 -keep class android.support.wearable.view.WearableListView.ViewHolder {
   private void setFocusPaddingTop(int);
