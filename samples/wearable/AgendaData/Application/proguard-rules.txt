@@ -23,6 +23,6 @@
 
 -keep class android.support.wearable.view.WearableListView {
   private void setScrollAnimator(int);
-  private void setScrollVertically(int);
+  protected void setScrollVertically(int);
 }
 
