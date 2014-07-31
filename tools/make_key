@@ -68,8 +68,10 @@ if [ "${password}" == "" ]; then
   openssl pkcs8 -in ${one} -topk8 -outform DER -out $1.pk8 -nocrypt
 else
   echo "creating ${1}.pk8 with password [${password}]"
-  echo $password | openssl pkcs8 -in ${one} -topk8 -outform DER -out $1.pk8 \
-    -passout stdin
+  export password
+  openssl pkcs8 -in ${one} -topk8 -outform DER -out $1.pk8 \
+    -passout env:password
+  unset password
 fi
 
 wait
