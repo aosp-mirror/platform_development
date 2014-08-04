@@ -29,6 +29,9 @@ typedef struct node {
 
 __BEGIN_DECLS
 
+void insque(void*, void*);
+void remque(void*);
+
 void* lfind(const void*, const void*, size_t*, size_t, int (*)(const void*, const void*));
 void* lsearch(const void*, void*, size_t*, size_t, int (*)(const void*, const void*));
 
