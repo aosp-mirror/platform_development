@@ -1,5 +1,9 @@
 _Exit
 _Z16__libc_init_vdsov
+_ZN11ScopedTraceC1EPKc
+_ZN11ScopedTraceC2EPKc
+_ZN11ScopedTraceD1Ev
+_ZN11ScopedTraceD2Ev
 _ZdaPv
 _ZdaPvRKSt9nothrow_t
 _ZdlPv
@@ -399,6 +403,7 @@ getwchar
 getxattr
 gmtime
 gmtime_r
+grantpt
 herror
 hstrerror
 htonl
@@ -425,6 +430,7 @@ inotify_add_watch
 inotify_init
 inotify_init1
 inotify_rm_watch
+insque
 ioctl
 isalnum
 isalnum_l
@@ -510,7 +516,6 @@ llistxattr
 localeconv
 localtime
 localtime_r
-localtime_tz
 longjmp
 lrand48
 lremovexattr
@@ -594,6 +599,7 @@ popen
 posix_fallocate
 posix_fallocate64
 posix_memalign
+posix_openpt
 ppoll
 prctl
 pread
@@ -718,6 +724,7 @@ regexec
 regfree
 remove
 removexattr
+remque
 rename
 renameat
 res_init
@@ -845,7 +852,6 @@ strerror
 strerror_r
 strftime
 strftime_l
-strftime_tz
 strlcat
 strlcpy
 strlen
@@ -935,6 +941,7 @@ truncate64
 tsearch
 ttyname
 ttyname_r
+twalk
 tzset
 umask
 umount

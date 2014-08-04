@@ -223,12 +223,6 @@ ssize_t	 getdelim(char ** __restrict, size_t * __restrict, int,
 	    FILE * __restrict);
 ssize_t	 getline(char ** __restrict, size_t * __restrict, FILE * __restrict);
 
-#if __BSD_VISIBLE && !defined(__SYS_ERRLIST)
-#define __SYS_ERRLIST
-extern int sys_nerr;			/* perror(3) external variables */
-extern char *sys_errlist[];
-#endif
-
 void	 perror(const char *);
 int	 printf(const char * __restrict, ...)
 		__printflike(1, 2);
@@ -300,9 +294,6 @@ __END_DECLS
 #define	L_ctermid	1024	/* size for ctermid(); PATH_MAX */
 
 __BEGIN_DECLS
-#if 0 /* MISSING FROM BIONIC */
-char	*ctermid(char *);
-#endif /* MISSING */
 FILE	*fdopen(int, const char *);
 int	 fileno(FILE *);
 
