@@ -31,11 +31,9 @@
     <string name="start_screen_toggling">Start Screen Toggle</string>
     <string name="stop_screen_toggling">Stop Screen Toggle</string>
     <string name="start_scan">Start Scan</string>
-    <string name="start_background_scan">Start Bkgnd Scan</string>
     <string name="scan_cycles">Scan Cycles: </string>
     <string name="disconnect">Disconnect</string>
 
-    <string name="stop_background_scan">Stop Bkgnd Scan</string>
     <string name="start_tdls">Start TDLS</string>
     <string name="stop_tdls">Stop TDLS</string>
     <string name="mac_tdls"> IP/MAC: </string>
@@ -55,17 +53,11 @@
     <string name="routed_http_request">Make routed http request</string>
     <string name="routed_socket_request">Make routed socket request</string>
 
-    <string name="hs20_state">HS20 State</string>
-    <string name="hs20_scan">HS20 Scan</string>
-    <string name="hs20_anqp">HS20 ANQP</string>
-    <string name="hs20_match">HS20 Match</string>
-    <string name="hs20_osu">HS20 OSU</string>
-    <string name="hs20_rem">HS20 Rem</string>
 
-    <string name="device_info_default">unknown</string>
-    <string name="device_info_uptime">Uptime</string>
-    <string name="device_info_awaketime">Awake Time</string>
-    <string name="device_info_asleeptime">Asleep Time</string>
+        <string name="device_info_default">unknown</string>
+        <string name="device_info_uptime">Uptime</string>
+        <string name="device_info_awaketime">Awake Time</string>
+        <string name="device_info_asleeptime">Asleep Time</string>
 
     <string name="build_id_label">Build ID</string>
     <string name="build_date_label">Build Date</string>
@@ -247,5 +239,4 @@
     <string name="scancard">Scan SD card</string>
     <string name="numsongs"># of albums</string>
     <string name="insertbutton">Insert %1s albums</string>
-
 </resources>

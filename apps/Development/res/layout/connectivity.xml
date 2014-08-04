@@ -29,7 +29,6 @@
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
-
     <LinearLayout
       android:orientation="horizontal"
       android:layout_width="match_parent"
@@ -209,25 +208,6 @@
 
     <!-- divider line -->
     <View android:background="#FFFFFFFF"
-          android:layout_width="match_parent"
-          android:layout_height="3dip" />
-
-    <LinearLayout
-      android:orientation="horizontal"
-      android:layout_width="match_parent"
-      android:layout_height="wrap_content">
-        <Button android:id="@+id/startBackgroundScan"
-          android:layout_width="wrap_content"
-          android:layout_height="wrap_content"
-          android:text="@string/start_background_scan" />
-        <Button android:id="@+id/stopBackgroundScan"
-          android:layout_width="wrap_content"
-          android:layout_height="wrap_content"
-          android:text="@string/stop_background_scan" />
-    </LinearLayout>
-
-    <!-- divider line -->
-    <View android:background="#FFFFFFFF"
       android:layout_width="match_parent"
       android:layout_height="3dip" />
 
@@ -359,46 +339,6 @@
           android:layout_width="wrap_content"
           android:layout_height="wrap_content"
           android:text="@string/routed_socket_request" />
-    </LinearLayout>
-
-    <!-- divider line -->
-    <View android:background="#FFFFFFFF"
-      android:layout_width="match_parent"
-      android:layout_height="3dip" />
-
-    <LinearLayout
-      android:orientation="horizontal"
-      android:layout_width="match_parent"
-      android:layout_height="wrap_content">
-        <Button android:id="@+id/hs20_state"
-          android:layout_width="wrap_content"
-          android:layout_height="wrap_content"
-          android:text="@string/hs20_state" />
-        <Button android:id="@+id/hs20_scan"
-          android:layout_width="wrap_content"
-          android:layout_height="wrap_content"
-          android:text="@string/hs20_scan" />
-        <Button android:id="@+id/hs20_anqp"
-          android:layout_width="wrap_content"
-          android:layout_height="wrap_content"
-          android:text="@string/hs20_anqp" />
-    </LinearLayout>
-    <LinearLayout
-      android:orientation="horizontal"
-      android:layout_width="match_parent"
-      android:layout_height="wrap_content">
-        <Button android:id="@+id/hs20_osu"
-          android:layout_width="wrap_content"
-          android:layout_height="wrap_content"
-          android:text="@string/hs20_osu" />
-        <Button android:id="@+id/hs20_rem"
-          android:layout_width="wrap_content"
-          android:layout_height="wrap_content"
-          android:text="@string/hs20_rem" />
-        <Button android:id="@+id/hs20_match"
-          android:layout_width="wrap_content"
-          android:layout_height="wrap_content"
-          android:text="@string/hs20_match" />
     </LinearLayout>
   </LinearLayout>
 </ScrollView>
