@@ -170,7 +170,7 @@ extern char *optarg;
 extern int optind, opterr, optopt;
 
 extern int isatty(int);
-extern char* ttyname(int);
+extern char* ttyname(int) __warnattr("ttyname is not thread-safe; use ttyname_r instead");
 extern int ttyname_r(int, char*, size_t);
 
 extern int  acct(const char*  filepath);
@@ -188,16 +188,6 @@ extern int cacheflush(long, long, long);
 
 extern pid_t tcgetpgrp(int fd);
 extern int   tcsetpgrp(int fd, pid_t _pid);
-
-#if 0 /* MISSING FROM BIONIC */
-extern int execlpe(const char *, const char *, ...);
-extern int getfsuid(uid_t);
-extern int setfsuid(uid_t);
-extern int getlogin_r(char* name, size_t namesize);
-extern int sethostname(const char *, size_t);
-extern int getdomainname(char *, size_t);
-extern int setdomainname(const char *, size_t);
-#endif /* MISSING */
 
 /* Used to retry syscalls that can return EINTR. */
 #define TEMP_FAILURE_RETRY(exp) ({         \

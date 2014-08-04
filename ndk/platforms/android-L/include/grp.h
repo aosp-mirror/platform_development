@@ -43,10 +43,6 @@
 #include <sys/cdefs.h>
 #include <sys/types.h>
 
-#if __BSD_VISIBLE
-#define	_PATH_GROUP		"/etc/group"
-#endif
-
 struct group {
 	char	*gr_name;		/* group name */
 	char	*gr_passwd;		/* group password */
@@ -57,7 +53,7 @@ struct group {
 __BEGIN_DECLS
 struct group	*getgrgid(gid_t);
 struct group	*getgrnam(const char *);
-#if __BSD_VISIBLE || __POSIX_VISIBLE >= 200112 || __XPG_VISIBLE
+#if __POSIX_VISIBLE >= 200112 || __XPG_VISIBLE
 struct group	*getgrent(void);
 void		 setgrent(void);
 void		 endgrent(void);
@@ -65,11 +61,6 @@ int		 getgrgid_r(gid_t, struct group *, char *,
 		    size_t, struct group **);
 int		 getgrnam_r(const char *, struct group *, char *,
 		    size_t, struct group **);
-#endif
-#if __BSD_VISIBLE
-void		 setgrfile(const char *);
-int		 setgroupent(int);
-char		*group_from_gid(gid_t, int);
 #endif
 
 int   getgrouplist (const char *user, gid_t group,
