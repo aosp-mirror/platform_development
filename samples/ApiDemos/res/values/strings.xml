@@ -918,6 +918,7 @@
     <string name="stream_video">Play Streaming Video</string>
     <string name="local_audio">Play Audio from Local File</string>
     <string name="res_audio">Play Audio from Resources</string>
+    <string name="screen_sharing_toggle">Toggle screen sharing</string>
 
     <!-- =========================== -->
     <!-- os examples strings    -->
