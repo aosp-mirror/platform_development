@@ -22,6 +22,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
+import android.hardware.display.DisplayManager;
 import android.hardware.display.VirtualDisplay;
 import android.media.projection.MediaProjection;
 import android.media.projection.MediaProjectionManager;
@@ -141,7 +142,8 @@ public class MediaProjectionDemo extends Activity {
     private VirtualDisplay createVirtualDisplay() {
         return mMediaProjection.createVirtualDisplay("ScreenSharingDemo",
                 mDisplayWidth, mDisplayHeight, mScreenDensity,
-                false /*isSecure*/, mSurface, null /*Callbacks*/, null /*Handler*/);
+                DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
+                mSurface, null /*Callbacks*/, null /*Handler*/);
     }
 
     private void resizeVirtualDisplay() {
