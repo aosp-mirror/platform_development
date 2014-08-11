@@ -43,6 +43,11 @@ public class MainActivity extends Activity {
                 int colMargin = res.getDimensionPixelOffset(round ?
                         R.dimen.page_column_margin_round : R.dimen.page_column_margin);
                 pager.setPageMargins(rowMargin, colMargin);
+
+                // GridViewPager relies on insets to properly handle
+                // layout for round displays. They must be explicitly
+                // applied since this listener has taken them over.
+                pager.onApplyWindowInsets(insets);
                 return insets;
             }
         });
