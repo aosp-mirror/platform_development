@@ -107,15 +107,15 @@
 	<classpathentry kind="src" path="out/target/common/obj/APPS/TeleService_intermediates/src/src"/>
 	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/com.android.emailcommon_intermediates/src/src"/>
 	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/com.android.services.telephony.common_intermediates/src/src"/>
-	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/framework-base_intermediates/src/core/java"/>
-	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/framework-base_intermediates/src/keystore/java"/>
-	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/framework-base_intermediates/src/location/java"/>
-	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/framework-base_intermediates/src/media/java"/>
-	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/framework-base_intermediates/src/packages/services/PacProcessor"/>
-	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/framework-base_intermediates/src/packages/services/Proxy"/>
-	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/framework-base_intermediates/src/telecomm/java"/>
-	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/framework-base_intermediates/src/telephony/java"/>
-	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/framework-base_intermediates/src/wifi/java"/>
+	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/framework_intermediates/src/core/java"/>
+	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/framework_intermediates/src/keystore/java"/>
+	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/framework_intermediates/src/location/java"/>
+	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/framework_intermediates/src/media/java"/>
+	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/framework_intermediates/src/packages/services/PacProcessor"/>
+	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/framework_intermediates/src/packages/services/Proxy"/>
+	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/framework_intermediates/src/telecomm/java"/>
+	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/framework_intermediates/src/telephony/java"/>
+	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/framework_intermediates/src/wifi/java"/>
 	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/ims-common_intermediates/src/src/java"/>
 	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/NfcLogTags_intermediates/src/src"/>
 	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/services.core_intermediates/src/java"/>
