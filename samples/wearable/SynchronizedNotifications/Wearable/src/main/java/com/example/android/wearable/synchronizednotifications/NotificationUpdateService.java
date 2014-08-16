@@ -107,7 +107,7 @@ public class NotificationUpdateService extends WearableListenerService
                 if (Constants.BOTH_PATH.equals(dataEvent.getDataItem().getUri().getPath())) {
                     // Dismiss the corresponding notification
                     ((NotificationManager) getSystemService(NOTIFICATION_SERVICE))
-                            .cancel(Constants.BOTH_ID);
+                            .cancel(Constants.WATCH_ONLY_ID);
                 }
             }
         }
