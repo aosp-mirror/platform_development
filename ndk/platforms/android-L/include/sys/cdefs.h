@@ -60,18 +60,18 @@
  * or later, for e.g. features that appeared in a particular version
  * of GNU C.  Usage:
  *
- *	#if __GNUC_PREREQ__(major, minor)
+ *	#if __GNUC_PREREQ(major, minor)
  *	...cool feature...
  *	#else
  *	...delete feature...
  *	#endif
  */
 #ifdef __GNUC__
-#define	__GNUC_PREREQ__(x, y)						\
+#define	__GNUC_PREREQ(x, y)						\
 	((__GNUC__ == (x) && __GNUC_MINOR__ >= (y)) ||			\
 	 (__GNUC__ > (x)))
 #else
-#define	__GNUC_PREREQ__(x, y)	0
+#define	__GNUC_PREREQ(x, y)	0
 #endif
 
 #include <sys/cdefs_elf.h>
@@ -163,7 +163,7 @@
  * GCC2 provides __extension__ to suppress warnings for various GNU C
  * language extensions under "-ansi -pedantic".
  */
-#if !__GNUC_PREREQ__(2, 0)
+#if !__GNUC_PREREQ(2, 0)
 #define	__extension__		/* delete __extension__ if non-gcc or gcc1 */
 #endif
 
@@ -175,7 +175,7 @@
  * these work for GNU C++ (modulo a slight glitch in the C++ grammar
  * in the distribution version of 2.5.5).
  */
-#if !__GNUC_PREREQ__(2, 5)
+#if !__GNUC_PREREQ(2, 5)
 #define	__attribute__(x)	/* delete __attribute__ if non-gcc or gcc1 */
 #if defined(__GNUC__) && !defined(__STRICT_ANSI__)
 #define	__dead		__volatile
@@ -189,7 +189,7 @@
 #define	__pure
 #endif
 
-#if __GNUC_PREREQ__(2, 7)
+#if __GNUC_PREREQ(2, 7)
 #define	__unused	__attribute__((__unused__))
 #else
 #define	__unused	/* delete */
@@ -197,13 +197,13 @@
 
 #define __pure2 __attribute__((__const__)) /* Android-added: used by FreeBSD libm */
 
-#if __GNUC_PREREQ__(3, 1)
+#if __GNUC_PREREQ(3, 1)
 #define	__used		__attribute__((__used__))
 #else
 #define	__used		/* delete */
 #endif
 
-#if __GNUC_PREREQ__(2, 7)
+#if __GNUC_PREREQ(2, 7)
 #define	__packed	__attribute__((__packed__))
 #define	__aligned(x)	__attribute__((__aligned__(x)))
 #define	__section(x)	__attribute__((__section__(x)))
@@ -217,11 +217,11 @@
 #define	__section(x)	error: no __section for this compiler
 #endif
 
-#if !__GNUC_PREREQ__(2, 8)
+#if !__GNUC_PREREQ(2, 8)
 #define	__extension__
 #endif
 
-#if __GNUC_PREREQ__(2, 8)
+#if __GNUC_PREREQ(2, 8)
 #define __statement(x)	__extension__(x)
 #elif defined(lint)
 #define __statement(x)	(0)
@@ -241,7 +241,7 @@
 #if defined(__STDC__VERSION__) && __STDC_VERSION__ >= 199901L
 #define	__restrict	restrict
 #else
-#if !__GNUC_PREREQ__(2, 92)
+#if !__GNUC_PREREQ(2, 92)
 #define	__restrict	/* delete __restrict when not supported */
 #endif
 #endif
@@ -251,9 +251,9 @@
  * in GCC 2.95.
  */
 #if !defined(__STDC_VERSION__) || !(__STDC_VERSION__ >= 199901L)
-#if __GNUC_PREREQ__(2, 6)
+#if __GNUC_PREREQ(2, 6)
 #define	__func__	__PRETTY_FUNCTION__
-#elif __GNUC_PREREQ__(2, 4)
+#elif __GNUC_PREREQ(2, 4)
 #define	__func__	__FUNCTION__
 #else
 #define	__func__	""
@@ -286,7 +286,7 @@
  * register values. This is gcc specific, the version is more or less
  * arbitrary, might work with older compilers.
  */
-#if __GNUC_PREREQ__(2, 95)
+#if __GNUC_PREREQ(2, 95)
 #define	__insn_barrier()	__asm __volatile("":::"memory")
 #else
 #define	__insn_barrier()	/* */
@@ -320,7 +320,7 @@
  *	  basic block reordering that this affects can often generate
  *	  larger code.
  */
-#if __GNUC_PREREQ__(2, 96)
+#if __GNUC_PREREQ(2, 96)
 #define	__predict_true(exp)	__builtin_expect((exp) != 0, 1)
 #define	__predict_false(exp)	__builtin_expect((exp) != 0, 0)
 #else
@@ -328,7 +328,7 @@
 #define	__predict_false(exp)	(exp)
 #endif
 
-#if __GNUC_PREREQ__(2, 96)
+#if __GNUC_PREREQ(2, 96)
 #define __noreturn    __attribute__((__noreturn__))
 #define __mallocfunc  __attribute__((malloc))
 #define __purefunc    __attribute__((pure))
@@ -338,19 +338,19 @@
 #define __purefunc
 #endif
 
-#if __GNUC_PREREQ__(3, 1)
+#if __GNUC_PREREQ(3, 1)
 #define __always_inline __attribute__((__always_inline__))
 #else
 #define __always_inline
 #endif
 
-#if __GNUC_PREREQ__(3, 4)
+#if __GNUC_PREREQ(3, 4)
 #define __wur __attribute__((__warn_unused_result__))
 #else
 #define __wur
 #endif
 
-#if __GNUC_PREREQ__(4, 3)
+#if __GNUC_PREREQ(4, 3)
 #define __errordecl(name, msg) extern void name(void) __attribute__((__error__(msg)))
 #define __warnattr(msg) __attribute__((__warning__(msg)))
 #else
