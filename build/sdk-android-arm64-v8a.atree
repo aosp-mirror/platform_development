@@ -14,9 +14,7 @@
 # limitations under the License.
 #
 
-# Copy the ARMv7 specific kernel image to .../kernel-qemu
-# TODO(RM) need a qemu-kernel/arm64? "arm" should be ${TARGET_ARCH}
-prebuilts/qemu-kernel/arm/kernel-qemu-armv7 system-images/${PLATFORM_NAME}/${TARGET_CPU_ABI}/kernel-qemu
+prebuilts/qemu-kernel/${TARGET_ARCH}/kernel-qemu system-images/${PLATFORM_NAME}/${TARGET_CPU_ABI}/kernel-qemu
 
 # version files for the SDK updater, from development.git
 ${HOST_OUT}/development/sys-img-${TARGET_CPU_ABI}/images_arm64-v8a_source.properties system-images/${PLATFORM_NAME}/${TARGET_CPU_ABI}/source.properties
