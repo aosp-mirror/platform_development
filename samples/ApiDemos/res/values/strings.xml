@@ -1522,4 +1522,22 @@
     <string name="keystore_entry_alias">Entry alias:</string>
     <string name="keystore_generate">Generate</string>
     <string name="keystore_no_alias_error">Must supply an alias</string>
-  </resources>
+
+    <!-- ============================ -->
+    <!--       MMS demo strings       -->
+    <!-- ============================ -->
+
+    <string name="mms_received_label">Last received message</string>
+    <string name="mms_recipients_label">Addresses</string>
+    <string name="mms_subject_label">Subject</string>
+    <string name="mms_text_label">Text</string>
+    <string name="mms_send_button_label">Send</string>
+
+    <string name="mms_status_sending">Sending</string>
+    <string name="mms_status_sent">Sent OK</string>
+    <string name="mms_status_downloaded">Downloaded</string>
+    <string name="mms_status_failed">Failed</string>
+    <string name="mms_status_downloading">Downloading</string>
+
+    <string name="mms_enable_receiver">Enable MMS broadcast receiver</string>
+</resources>
