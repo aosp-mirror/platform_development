@@ -62,7 +62,7 @@ public class HelloCompute extends Activity {
                                                      Allocation.MipmapControl.MIPMAP_NONE,
                                                      Allocation.USAGE_SCRIPT);
 
-        mScript = new ScriptC_mono(mRS, getResources(), R.raw.mono);
+        mScript = new ScriptC_mono(mRS);
 
         mScript.forEach_root(mInAllocation, mOutAllocation);
         mOutAllocation.copyTo(mBitmapOut);
