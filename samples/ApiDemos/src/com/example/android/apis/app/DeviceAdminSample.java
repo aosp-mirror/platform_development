@@ -1062,6 +1062,14 @@ public class DeviceAdminSample extends PreferenceActivity {
         }
 
         @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent.getAction() == ACTION_DEVICE_ADMIN_DISABLE_REQUESTED) {
+                abortBroadcast();
+            }
+            super.onReceive(context, intent);
+        }
+
+        @Override
         public void onEnabled(Context context, Intent intent) {
             showToast(context, context.getString(R.string.admin_receiver_status_enabled));
         }

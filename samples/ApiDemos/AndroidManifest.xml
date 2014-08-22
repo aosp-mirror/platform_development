@@ -998,6 +998,24 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".app.ActionBarNavigation"
+                android:label="@string/action_bar_navigation"
+                android:enabled="@bool/atLeastJellyBean"
+                android:taskAffinity=":bar_navigation"
+                android:launchMode="singleTask">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".app.ActionBarNavigationTarget"
+                android:label="@string/action_bar_navigation_target"
+                android:enabled="@bool/atLeastJellyBean"
+                android:parentActivityName=".app.ActionBarNavigation"
+                android:taskAffinity=":bar_navigation">
+        </activity>
+
         <activity android:name=".app.PrintBitmap"
                 android:label="@string/print_bitmap"
                 android:enabled="@bool/atLeastKitKat">
