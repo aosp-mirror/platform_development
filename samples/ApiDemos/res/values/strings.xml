@@ -886,6 +886,19 @@
     <string name="btn_toggle_tabs">Toggle tab mode</string>
     <string name="btn_remove_all_tabs">Remove all tabs</string>
 
+    <string name="action_bar_navigation">App/Action Bar/Action Bar Navigation</string>
+    <string name="action_bar_navigation_msg">Demonstrates various ways to navigate in
+            applications involving the action bar.  This activity has been launched as the
+            root of the app\'s task.</string>
+    <string name="btn_newactivity">New in-task activity</string>
+    <string name="btn_newdoc">New document</string>
+
+    <string name="action_bar_navigation_target">App Nav Child</string>
+    <string name="action_bar_navigation_target_msg">This is a sub-activity launched by the
+            application.  It may be in either the app\'s main task or another task.  Press
+            up on the action bar to navigate up in the app\'s hierarchy, regardless of where
+            this activity appears.</string>
+
     <!-- ================================= -->
     <!--  app/print print examples strings  -->
     <!-- ================================= -->
