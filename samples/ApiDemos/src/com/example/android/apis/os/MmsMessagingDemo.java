@@ -32,14 +32,18 @@ import com.google.android.mms.pdu.SendReq;
 
 import android.app.Activity;
 import android.app.PendingIntent;
+import android.app.PendingIntent.CanceledException;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.ParcelFileDescriptor;
 import android.telephony.PhoneNumberUtils;
 import android.telephony.SmsManager;
 import android.telephony.TelephonyManager;
@@ -53,6 +57,13 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 import com.example.android.apis.R;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.Random;
 
 public class MmsMessagingDemo extends Activity {
     private static final String TAG = "MmsMessagingDemo";
@@ -68,6 +79,9 @@ public class MmsMessagingDemo extends Activity {
     private EditText mTextInput;
     private TextView mSendStatusView;
     private Button mSendButton;
+    private File mSendFile;
+    private File mDownloadFile;
+    private Random mRandom = new Random();
 
     private BroadcastReceiver mSentReceiver = new BroadcastReceiver() {
         @Override
@@ -144,15 +158,49 @@ public class MmsMessagingDemo extends Activity {
         Log.d(TAG, "Sending");
         mSendStatusView.setText(getResources().getString(R.string.mms_status_sending));
         mSendButton.setEnabled(false);
+        final String fileName = "send." + String.valueOf(Math.abs(mRandom.nextLong())) + ".dat";
+        mSendFile = new File(getCacheDir(), fileName);
+
         // Making RPC call in non-UI thread
         AsyncTask.THREAD_POOL_EXECUTOR.execute(new Runnable() {
             @Override
             public void run() {
                 final byte[] pdu = buildPdu(MmsMessagingDemo.this, recipients, subject, text);
+                Uri writerUri = (new Uri.Builder())
+                       .authority("com.example.android.apis.os.MmsFileProvider")
+                       .path(fileName)
+                       .scheme(ContentResolver.SCHEME_CONTENT)
+                       .build();
                 final PendingIntent pendingIntent = PendingIntent.getBroadcast(
                         MmsMessagingDemo.this, 0, new Intent(ACTION_MMS_SENT), 0);
-                SmsManager.getDefault().sendMultimediaMessage(
-                        pdu, null/*locationUrl*/, null/*configOverrides*/, pendingIntent);
+                FileOutputStream writer = null;
+                Uri contentUri = null;
+                try {
+                    writer = new FileOutputStream(mSendFile);
+                    writer.write(pdu);
+                    contentUri = writerUri;
+                } catch (final IOException e) {
+                    Log.e(TAG, "Error writing send file", e);
+                } finally {
+                    if (writer != null) {
+                        try {
+                            writer.close();
+                        } catch (IOException e) {
+                        }
+                    }
+                }
+
+                if (contentUri != null) {
+                    SmsManager.getDefault().sendMultimediaMessage(contentUri,
+                            null/*locationUrl*/, null/*configOverrides*/, pendingIntent);
+                } else {
+                    Log.e(TAG, "Error writing sending Mms");
+                    try {
+                        pendingIntent.send(SmsManager.MMS_ERROR_IO_ERROR);
+                    } catch (CanceledException ex) {
+                        Log.e(TAG, "Mms pending intent cancelled?", ex);
+                    }
+                }
             }
         });
     }
@@ -164,19 +212,27 @@ public class MmsMessagingDemo extends Activity {
         mRecipientsInput.setText("");
         mSubjectInput.setText("");
         mTextInput.setText("");
+        final String fileName = "download." + String.valueOf(Math.abs(mRandom.nextLong())) + ".dat";
+        mDownloadFile = new File(getCacheDir(), fileName);
         // Making RPC call in non-UI thread
         AsyncTask.THREAD_POOL_EXECUTOR.execute(new Runnable() {
             @Override
             public void run() {
+                Uri contentUri = (new Uri.Builder())
+                        .authority("com.example.android.apis.os.MmsFileProvider")
+                        .path(fileName)
+                        .scheme(ContentResolver.SCHEME_CONTENT)
+                        .build();
                 final PendingIntent pendingIntent = PendingIntent.getBroadcast(
                         MmsMessagingDemo.this, 0, new Intent(ACTION_MMS_RECEIVED), 0);
-                SmsManager.getDefault().downloadMultimediaMessage(locationUrl,
+                SmsManager.getDefault().downloadMultimediaMessage(locationUrl, contentUri,
                         null/*configOverrides*/, pendingIntent);
             }
         });
     }
 
     private void handleSentResult(int code, Intent intent) {
+        mSendFile.delete();
         int status = R.string.mms_status_failed;
         if (code == Activity.RESULT_OK) {
             final byte[] response = intent.getByteArrayExtra(SmsManager.MMS_EXTRA_DATA);
@@ -198,6 +254,8 @@ public class MmsMessagingDemo extends Activity {
         } else {
             Log.e(TAG, "MMS not sent, error=" + code);
         }
+
+        mSendFile = null;
         mSendStatusView.setText(status);
         mSendButton.setEnabled(true);
     }
@@ -216,24 +274,36 @@ public class MmsMessagingDemo extends Activity {
     private void handleReceivedResult(Context context, int code, Intent intent) {
         int status = R.string.mms_status_failed;
         if (code == Activity.RESULT_OK) {
-            final byte[] response = intent.getByteArrayExtra(SmsManager.MMS_EXTRA_DATA);
-            if (response != null) {
-                final GenericPdu pdu = new PduParser(response).parse();
-                if (pdu instanceof RetrieveConf) {
-                    final RetrieveConf retrieveConf = (RetrieveConf) pdu;
-                    mRecipientsInput.setText(getRecipients(context, retrieveConf));
-                    mSubjectInput.setText(getSubject(retrieveConf));
-                    mTextInput.setText(getMessageText(retrieveConf));
-                    status = R.string.mms_status_downloaded;
+            try {
+                final int nBytes = (int) mDownloadFile.length();
+                FileInputStream reader = new FileInputStream(mDownloadFile);
+                final byte[] response = new byte[nBytes];
+                final int read = reader.read(response, 0, nBytes);
+                if (read == nBytes) {
+                    final GenericPdu pdu = new PduParser(response).parse();
+                    if (pdu instanceof RetrieveConf) {
+                        final RetrieveConf retrieveConf = (RetrieveConf) pdu;
+                        mRecipientsInput.setText(getRecipients(context, retrieveConf));
+                        mSubjectInput.setText(getSubject(retrieveConf));
+                        mTextInput.setText(getMessageText(retrieveConf));
+                        status = R.string.mms_status_downloaded;
+                    } else {
+                        Log.e(TAG, "MMS received, invalid response");
+                    }
                 } else {
-                    Log.e(TAG, "MMS received, invalid response");
+                    Log.e(TAG, "MMS received, empty response");
                 }
-            } else {
-                Log.e(TAG, "MMS received, empty response");
+            } catch (FileNotFoundException e) {
+                Log.e(TAG, "MMS received, file not found exception", e);
+            } catch (IOException e) {
+                Log.e(TAG, "MMS received, io exception", e);
+            } finally {
+                mDownloadFile.delete();
             }
         } else {
             Log.e(TAG, "MMS not received, error=" + code);
         }
+        mDownloadFile = null;
         mSendStatusView.setText(status);
         mSendButton.setEnabled(true);
     }
