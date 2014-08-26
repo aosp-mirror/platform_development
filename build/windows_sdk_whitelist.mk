@@ -45,6 +45,7 @@ subdirs += \
 	external/compiler-rt \
 	external/libpng \
 	external/llvm \
+	external/protobuf \
 	external/sqlite/dist \
 	external/zlib \
 	external/zopfli \
