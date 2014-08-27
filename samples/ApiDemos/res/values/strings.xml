@@ -787,10 +787,6 @@
     <string name="require_encryption">Require encryption</string>
     <string name="activate_encryption">Activate encryption</string>
 
-    <string name="trust_agent_category">Trust Agent Features</string>
-    <string name="set_trust_agent_component_name">Enabled Component Name</string>
-    <string name="set_trust_agent_feature_list">Enabled Features (comma-separated)</string>
-
     <!-- Strings used by DeviceAdminSample controller code -->
     <string name="password_sufficient">Current password meets policy requirements</string>
     <string name="password_insufficient">Current password does not meet policy requirements</string>

@@ -57,19 +57,4 @@
 
     </PreferenceCategory>
 
-    <PreferenceCategory
-        android:title="@string/trust_agent_category" >
-
-        <EditTextPreference
-            android:key="key_trust_agent_component"
-            android:title="@string/set_trust_agent_component_name"
-            android:dialogTitle="@string/set_trust_agent_component_name" />
-
-        <EditTextPreference
-            android:key="key_trust_agent_features"
-            android:title="@string/set_trust_agent_feature_list"
-            android:dialogTitle="@string/set_trust_agent_feature_list" />
-
-    </PreferenceCategory>
-
 </PreferenceScreen>

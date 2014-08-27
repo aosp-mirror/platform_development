@@ -26,7 +26,6 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.CheckBoxPreference;
 import android.preference.EditTextPreference;
@@ -42,8 +41,6 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.widget.Toast;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -74,8 +71,6 @@ public class DeviceAdminSample extends PreferenceActivity {
     private static final String KEY_DISABLE_NOTIFICATIONS = "key_disable_notifications";
     private static final String KEY_DISABLE_UNREDACTED = "key_disable_unredacted";
     private static final String KEY_DISABLE_TRUST_AGENTS = "key_disable_trust_agents";
-    private static final String KEY_TRUST_AGENT_COMPONENT = "key_trust_agent_component";
-    private static final String KEY_TRUST_AGENT_FEATURES = "key_trust_agent_features";
     private static final String KEY_DISABLE_KEYGUARD_WIDGETS = "key_disable_keyguard_widgets";
     private static final String KEY_DISABLE_KEYGUARD_SECURE_CAMERA
             = "key_disable_keyguard_secure_camera";
@@ -279,8 +274,6 @@ public class DeviceAdminSample extends PreferenceActivity {
         private CheckBoxPreference mDisableKeyguardNotificationCheckbox;
         private CheckBoxPreference mDisableKeyguardTrustAgentCheckbox;
         private CheckBoxPreference mDisableKeyguardUnredactedCheckbox;
-        private EditTextPreference mTrustAgentComponent;
-        private EditTextPreference mTrustAgentFeatures;
 
         @Override
         public void onCreate(Bundle savedInstanceState) {
@@ -311,14 +304,6 @@ public class DeviceAdminSample extends PreferenceActivity {
             mDisableKeyguardTrustAgentCheckbox =
                     (CheckBoxPreference) findPreference(KEY_DISABLE_TRUST_AGENTS);
             mDisableKeyguardTrustAgentCheckbox.setOnPreferenceChangeListener(this);
-
-            mTrustAgentComponent =
-                    (EditTextPreference) findPreference(KEY_TRUST_AGENT_COMPONENT);
-            mTrustAgentComponent.setOnPreferenceChangeListener(this);
-
-            mTrustAgentFeatures =
-                    (EditTextPreference) findPreference(KEY_TRUST_AGENT_FEATURES);
-            mTrustAgentFeatures.setOnPreferenceChangeListener(this);
         }
 
         // At onResume time, reload UI with current values as required
@@ -355,8 +340,8 @@ public class DeviceAdminSample extends PreferenceActivity {
             if (super.onPreferenceChange(preference, newValue)) {
                 return true;
             }
+            boolean value = (Boolean) newValue;
             if (preference == mEnableCheckbox) {
-                boolean value = (Boolean) newValue;
                 if (value != mAdminActive) {
                     if (value) {
                         // Launch the activity to have the user enable our admin.
@@ -374,7 +359,6 @@ public class DeviceAdminSample extends PreferenceActivity {
                     }
                 }
             } else if (preference == mDisableCameraCheckbox) {
-                boolean value = (Boolean) newValue;
                 mDPM.setCameraDisabled(mDeviceAdminSample, value);
                 // Delay update because the change is only applied after exiting this method.
                 postReloadSummaries();
@@ -382,37 +366,18 @@ public class DeviceAdminSample extends PreferenceActivity {
                     || preference == mDisableKeyguardSecureCameraCheckbox
                     || preference == mDisableKeyguardNotificationCheckbox
                     || preference == mDisableKeyguardUnredactedCheckbox
-                    || preference == mDisableKeyguardTrustAgentCheckbox
-                    || preference == mTrustAgentComponent
-                    || preference == mTrustAgentFeatures) {
-                postUpdateDpmDisableFeatures();
+                    || preference == mDisableKeyguardTrustAgentCheckbox) {
+                // Delay update because the change is only applied after exiting this method.
+                getView().post(new Runnable() {
+                    @Override
+                    public void run() {
+                        mDPM.setKeyguardDisabledFeatures(mDeviceAdminSample,
+                                createKeyguardDisabledFlag());
+                    }
+                });
                 postReloadSummaries();
             }
             return true;
-        }
-
-        private void postUpdateDpmDisableFeatures() {
-            getView().post(new Runnable() {
-                @Override
-                public void run() {
-                    mDPM.setKeyguardDisabledFeatures(mDeviceAdminSample,
-                            createKeyguardDisabledFlag());
-                    String component = mTrustAgentComponent.getText();
-                    if (component != null) {
-                        ComponentName agent = ComponentName.unflattenFromString(component);
-                        if (agent != null) {
-                            String featureString = mTrustAgentFeatures.getText();
-                            if (featureString != null) {
-                                List<String> features = Arrays.asList(featureString.split(","));
-                                mDPM.setTrustAgentFeaturesEnabled(mDeviceAdminSample, agent,
-                                        features);
-                            }
-                        } else {
-                            Log.w(TAG, "Invalid component: " + component);
-                        }
-                    }
-                }
-            });
         }
 
         @Override
@@ -451,17 +416,6 @@ public class DeviceAdminSample extends PreferenceActivity {
                         R.string.keyguard_trust_agents_disabled
                         : R.string.keyguard_trust_agents_enabled);
             mDisableKeyguardTrustAgentCheckbox.setSummary(keyguardEnableTrustAgentSummary);
-
-            final SharedPreferences prefs = getPreferenceManager().getSharedPreferences();
-            final boolean trustDisabled =
-                    (disabled & DevicePolicyManager.KEYGUARD_DISABLE_TRUST_AGENTS) != 0;
-            String component = prefs.getString(mTrustAgentComponent.getKey(), null);
-            mTrustAgentComponent.setSummary(component);
-            mTrustAgentComponent.setEnabled(trustDisabled);
-
-            String features = prefs.getString(mTrustAgentFeatures.getKey(), null);
-            mTrustAgentFeatures.setSummary(features);
-            mTrustAgentFeatures.setEnabled(trustDisabled);
         }
 
         /** Updates the device capabilities area (dis/enabling) as the admin is (de)activated */
@@ -472,8 +426,6 @@ public class DeviceAdminSample extends PreferenceActivity {
             mDisableKeyguardNotificationCheckbox.setEnabled(enabled);
             mDisableKeyguardUnredactedCheckbox.setEnabled(enabled);
             mDisableKeyguardTrustAgentCheckbox.setEnabled(enabled);
-            mTrustAgentComponent.setEnabled(enabled);
-            mTrustAgentFeatures.setEnabled(enabled);
         }
     }
 
