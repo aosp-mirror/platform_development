@@ -44,6 +44,7 @@ class TraceConverter:
   value_lines = []
   last_frame = -1
   width = "{8}"
+  spacing = ""
 
   def __init__(self):
     self.UpdateAbiRegexes()
@@ -59,8 +60,10 @@ class TraceConverter:
   def UpdateAbiRegexes(self):
     if symbol.ARCH == "arm64" or symbol.ARCH == "mips64" or symbol.ARCH == "x86_64":
       self.width = "{16}"
+      self.spacing = "        "
     else:
       self.width = "{8}"
+      self.spacing = ""
 
     self.register_line = re.compile("(([ ]*\\b(" + self.register_names[symbol.ARCH] + ")\\b +[0-9a-f]" + self.width + "){2,5})")
 
@@ -104,12 +107,9 @@ class TraceConverter:
   def PrintTraceLines(self, trace_lines):
     """Print back trace."""
     maxlen = max(map(lambda tl: len(tl[1]), trace_lines))
-    spacing = ""
-    if symbol.ARCH == "arm64" or symbol.ARCH == "mips64" or symbol.ARCH == "x86_64":
-      spacing = "        "
     print
     print "Stack Trace:"
-    print "  RELADDR   " + spacing + "FUNCTION".ljust(maxlen) + "  FILE:LINE"
+    print "  RELADDR   " + self.spacing + "FUNCTION".ljust(maxlen) + "  FILE:LINE"
     for tl in self.trace_lines:
       (addr, symbol_with_offset, location) = tl
       print "  %8s  %s  %s" % (addr, symbol_with_offset.ljust(maxlen), location)
@@ -120,7 +120,7 @@ class TraceConverter:
     maxlen = max(map(lambda tl: len(tl[2]), self.value_lines))
     print
     print "Stack Data:"
-    print "  ADDR      VALUE     " + "FUNCTION".ljust(maxlen) + "  FILE:LINE"
+    print "  ADDR      " + self.spacing + "VALUE     " + "FUNCTION".ljust(maxlen) + "  FILE:LINE"
     for vl in self.value_lines:
       (addr, value, symbol_with_offset, location) = vl
       print "  %8s  %8s  %s  %s" % (addr, value, symbol_with_offset.ljust(maxlen), location)
@@ -256,12 +256,12 @@ class TraceConverter:
 class RegisterPatternTests(unittest.TestCase):
   def assert_register_matches(self, abi, example_crash, stupid_pattern):
     tc = TraceConverter()
-    symbol.ARCH = abi
-    tc.UpdateAbiRegexes()
     for line in example_crash.split('\n'):
+      tc.ProcessLine(line)
       is_register = (re.search(stupid_pattern, line) is not None)
       matched = (tc.register_line.search(line) is not None)
       self.assertEquals(matched, is_register, line)
+    tc.PrintOutput(tc.trace_lines, tc.value_lines)
 
   def test_arm_registers(self):
     self.assert_register_matches("arm", example_crashes.arm, '\\b(r0|r4|r8|ip)\\b')
