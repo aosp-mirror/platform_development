@@ -56,5 +56,11 @@
         <Button android:id="@+id/two_buttons_holo_light"
             android:layout_width="match_parent" android:layout_height="wrap_content"
             android:text="@string/alert_dialog_two_buttons_holo_light"/>
+        <Button android:id="@+id/two_buttons_default_light"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:text="@string/alert_dialog_two_buttons_default_light"/>
+        <Button android:id="@+id/two_buttons_default_dark"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:text="@string/alert_dialog_two_buttons_default_dark"/>
     </LinearLayout>
 </ScrollView>

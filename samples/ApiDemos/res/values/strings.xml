@@ -522,6 +522,8 @@
     <string name="alert_dialog_two_buttons">OK Cancel dialog with a message</string>
     <string name="alert_dialog_two_buttons_old_school">OK Cancel dialog with traditional theme</string>
     <string name="alert_dialog_two_buttons_holo_light">OK Cancel dialog with Holo Light theme</string>
+    <string name="alert_dialog_two_buttons_default_light">OK Cancel dialog with DeviceDefault Light theme</string>
+    <string name="alert_dialog_two_buttons_default_dark">OK Cancel dialog with DeviceDefault theme</string>
     <string name="alert_dialog_two_buttons2">OK Cancel dialog with a long message</string>
     <string name="alert_dialog_two_buttons2ultra">OK Cancel dialog with ultra long message</string>
     <string name="alert_dialog_select_button">List dialog</string>

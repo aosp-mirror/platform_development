@@ -67,6 +67,8 @@ public class AlertDialogSamples extends Activity {
     private static final int DIALOG_YES_NO_ULTRA_LONG_MESSAGE = 9;
     private static final int DIALOG_YES_NO_OLD_SCHOOL_MESSAGE = 10;
     private static final int DIALOG_YES_NO_HOLO_LIGHT_MESSAGE = 11;
+    private static final int DIALOG_YES_NO_DEFAULT_LIGHT_MESSAGE = 12;
+    private static final int DIALOG_YES_NO_DEFAULT_DARK_MESSAGE = 13;
 
     private static final int MAX_PROGRESS = 100;
     
@@ -109,6 +111,32 @@ public class AlertDialogSamples extends Activity {
                 .create();
         case DIALOG_YES_NO_HOLO_LIGHT_MESSAGE:
             return new AlertDialog.Builder(AlertDialogSamples.this, AlertDialog.THEME_HOLO_LIGHT)
+                .setIconAttribute(android.R.attr.alertDialogIcon)
+                .setTitle(R.string.alert_dialog_two_buttons_title)
+                .setPositiveButton(R.string.alert_dialog_ok, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int whichButton) {
+                    }
+                })
+                .setNegativeButton(R.string.alert_dialog_cancel, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int whichButton) {
+                    }
+                })
+                .create();
+        case DIALOG_YES_NO_DEFAULT_LIGHT_MESSAGE:
+            return new AlertDialog.Builder(AlertDialogSamples.this, AlertDialog.THEME_DEVICE_DEFAULT_LIGHT)
+                .setIconAttribute(android.R.attr.alertDialogIcon)
+                .setTitle(R.string.alert_dialog_two_buttons_title)
+                .setPositiveButton(R.string.alert_dialog_ok, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int whichButton) {
+                    }
+                })
+                .setNegativeButton(R.string.alert_dialog_cancel, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int whichButton) {
+                    }
+                })
+                .create();
+        case DIALOG_YES_NO_DEFAULT_DARK_MESSAGE:
+            return new AlertDialog.Builder(AlertDialogSamples.this, AlertDialog.THEME_DEVICE_DEFAULT_DARK)
                 .setIconAttribute(android.R.attr.alertDialogIcon)
                 .setTitle(R.string.alert_dialog_two_buttons_title)
                 .setPositiveButton(R.string.alert_dialog_ok, new DialogInterface.OnClickListener() {
@@ -403,6 +431,22 @@ public class AlertDialogSamples extends Activity {
         twoButtonsHoloLightTitle.setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
                 showDialog(DIALOG_YES_NO_HOLO_LIGHT_MESSAGE);
+            }
+        });
+
+        /* Two points, in the light default theme */
+        Button twoButtonsDefaultLightTitle = (Button) findViewById(R.id.two_buttons_default_light);
+        twoButtonsDefaultLightTitle.setOnClickListener(new OnClickListener() {
+            public void onClick(View v) {
+                showDialog(DIALOG_YES_NO_DEFAULT_LIGHT_MESSAGE);
+            }
+        });
+
+        /* Two points, in the dark default theme */
+        Button twoButtonsDefaultDarkTitle = (Button) findViewById(R.id.two_buttons_default_dark);
+        twoButtonsDefaultDarkTitle.setOnClickListener(new OnClickListener() {
+            public void onClick(View v) {
+                showDialog(DIALOG_YES_NO_DEFAULT_DARK_MESSAGE);
             }
         });
         
