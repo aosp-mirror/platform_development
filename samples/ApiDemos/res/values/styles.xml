@@ -125,7 +125,7 @@
 	<item name="android:windowExitTransition">@transition/explode</item>
 	<item name="android:windowSharedElementEnterTransition">@transition/move_image</item>
 	<item name="android:windowSharedElementExitTransition">@transition/move_image</item>
-	<item name="android:windowAllowExitTransitionOverlap">true</item>
+	<item name="android:windowAllowReturnTransitionOverlap">true</item>
 	<item name="android:windowAllowEnterTransitionOverlap">false</item>
     </style>
 
