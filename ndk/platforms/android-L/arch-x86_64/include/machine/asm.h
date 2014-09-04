@@ -37,13 +37,8 @@
 #ifndef _AMD64_ASM_H_
 #define _AMD64_ASM_H_
 
-#ifdef __PIC__
 #define PIC_PLT(x)	x@PLT
 #define PIC_GOT(x)	x@GOTPCREL(%rip)
-#else
-#define PIC_PLT(x)	x
-#define PIC_GOT(x)	x
-#endif
 
 /* let kernels and others override entrypoint alignment */
 #ifndef _ALIGN_TEXT
