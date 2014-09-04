@@ -37,25 +37,17 @@
 #ifndef _I386_ASM_H_
 #define _I386_ASM_H_
 
-#ifdef PIC
 #define PIC_PROLOGUE	\
 	pushl	%ebx;	\
-	call	1f;	\
-1:			\
+	call	666f;	\
+666:			\
 	popl	%ebx;	\
-	addl	$_GLOBAL_OFFSET_TABLE_+[.-1b], %ebx
+	addl	$_GLOBAL_OFFSET_TABLE_+[.-666b], %ebx
 #define PIC_EPILOGUE	\
 	popl	%ebx
 #define PIC_PLT(x)	x@PLT
 #define PIC_GOT(x)	x@GOT(%ebx)
 #define PIC_GOTOFF(x)	x@GOTOFF(%ebx)
-#else
-#define PIC_PROLOGUE
-#define PIC_EPILOGUE
-#define PIC_PLT(x)	x
-#define PIC_GOT(x)	x
-#define PIC_GOTOFF(x)	x
-#endif
 
 /* let kernels and others override entrypoint alignment */
 #if !defined(_ALIGN_TEXT) && !defined(_KERNEL)
