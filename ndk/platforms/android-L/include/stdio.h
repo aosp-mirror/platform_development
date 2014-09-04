@@ -38,6 +38,14 @@
 #ifndef	_STDIO_H_
 #define	_STDIO_H_
 
+/*
+ * This file must contain a reference to __gnuc_va_list so that GCC's
+ * fixincludes knows that that's what's being used for va_list, and so
+ * to leave our <stdio.h> alone. (fixincludes gets in the way of pointing
+ * one toolchain at various different sets of platform headers.)
+ * If you alter this comment, be sure to keep "__gnuc_va_list" in it!
+ */
+
 #include <sys/cdefs.h>
 #include <sys/types.h>
 
