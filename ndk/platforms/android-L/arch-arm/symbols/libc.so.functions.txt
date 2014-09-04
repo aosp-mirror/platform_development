@@ -19,18 +19,6 @@ _Unwind_VRS_Get
 _Unwind_VRS_Pop
 _Unwind_VRS_Set
 _Z16__libc_init_vdsov
-_ZN11ScopedTraceC1EPKc
-_ZN11ScopedTraceC2EPKc
-_ZN11ScopedTraceD1Ev
-_ZN11ScopedTraceD2Ev
-_ZdaPv
-_ZdaPvRKSt9nothrow_t
-_ZdlPv
-_ZdlPvRKSt9nothrow_t
-_Znaj
-_ZnajRKSt9nothrow_t
-_Znwj
-_ZnwjRKSt9nothrow_t
 __FD_CLR_chk
 __FD_ISSET_chk
 __FD_SET_chk
@@ -39,7 +27,6 @@ ___Unwind_ForcedUnwind
 ___Unwind_RaiseException
 ___Unwind_Resume
 ___Unwind_Resume_or_Rethrow
-___mtctxres
 __accept4
 __adddf3
 __addsf3
@@ -104,7 +91,6 @@ __aeabi_uldivmod
 __aeabi_unwind_cpp_pr0
 __aeabi_unwind_cpp_pr1
 __aeabi_unwind_cpp_pr2
-__android_set_abort_message
 __ashldi3
 __ashrdi3
 __assert
@@ -119,12 +105,9 @@ __brk
 __cmpdf2
 __cmsg_nxthdr
 __connect
+__ctype_get_mb_cur_max
 __cxa_atexit
 __cxa_finalize
-__cxa_guard_abort
-__cxa_guard_acquire
-__cxa_guard_release
-__cxa_pure_virtual
 __divdf3
 __divdi3
 __divsf3
@@ -277,7 +260,6 @@ __sched_cpualloc
 __sched_cpucount
 __sched_cpufree
 __sched_getaffinity
-__set_errno
 __set_tid_address
 __set_tls
 __sigaction
@@ -340,6 +322,7 @@ _exit
 _getlong
 _getshort
 _longjmp
+_resolv_delete_cache_for_net
 _resolv_flush_cache_for_net
 _resolv_set_nameservers_for_net
 _setjmp
@@ -357,6 +340,7 @@ alphasort64
 android_getaddrinfofornet
 android_gethostbyaddrfornet
 android_gethostbynamefornet
+android_set_abort_message
 arc4random
 arc4random_buf
 arc4random_uniform
@@ -997,6 +981,8 @@ setbuffer
 setegid
 setenv
 seteuid
+setfsgid
+setfsuid
 setgid
 setgroups
 setitimer
