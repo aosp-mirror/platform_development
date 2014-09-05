@@ -235,7 +235,7 @@ public class MmsMessagingDemo extends Activity {
         mSendFile.delete();
         int status = R.string.mms_status_failed;
         if (code == Activity.RESULT_OK) {
-            final byte[] response = intent.getByteArrayExtra(SmsManager.MMS_EXTRA_DATA);
+            final byte[] response = intent.getByteArrayExtra(SmsManager.EXTRA_MMS_DATA);
             if (response != null) {
                 final GenericPdu pdu = new PduParser(response).parse();
                 if (pdu instanceof SendConf) {
