@@ -19,7 +19,7 @@ import com.example.android.apis.R;
 
 import android.app.Activity;
 import android.app.ActivityOptions;
-import android.app.SharedElementListener;
+import android.app.SharedElementCallback;
 import android.content.Intent;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
@@ -104,9 +104,9 @@ public class ActivityTransition extends Activity {
         mHero = null;
         if (name != null) {
             mHero = (ImageView) findViewById(getIdForKey(name));
-            setEnterSharedElementListener(new SharedElementListener() {
+            setEnterSharedElementCallback(new SharedElementCallback() {
                 @Override
-                public void remapSharedElements(List<String> names,
+                public void onMapSharedElements(List<String> names,
                         Map<String, View> sharedElements) {
                     sharedElements.put("hero", mHero);
                 }
