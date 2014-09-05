@@ -1369,7 +1369,7 @@
         <provider android:name=".os.MmsFileProvider"
                   android:authorities="com.example.android.apis.os.MmsFileProvider"
                   android:enabled="@bool/atLeastLRelease"
-                  android:permission="android.permission.READ_SMS"
+                  android:permission="android.permission.MODIFY_PHONE_STATE"
                   android:exported="true"/>
 
         <!-- ************************************* -->
