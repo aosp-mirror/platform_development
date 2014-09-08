@@ -38,7 +38,7 @@ __BEGIN_DECLS
 #define PTRACE_POKEUSER     PTRACE_POKEUSR
 #define PTRACE_PEEKUSER     PTRACE_PEEKUSR
 
-extern long ptrace(int request, pid_t pid, void *addr, void *data);
+extern long ptrace(int request, ...);
 
 __END_DECLS
 
