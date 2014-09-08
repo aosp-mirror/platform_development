@@ -125,7 +125,8 @@ public class MediaProjectionDemo extends Activity {
             return;
         }
         if (mMediaProjection == null) {
-            startActivityForResult(mProjectionManager.getScreenCaptureIntent(), PERMISSION_CODE);
+            startActivityForResult(mProjectionManager.createScreenCaptureIntent(),
+                    PERMISSION_CODE);
             return;
         }
         mVirtualDisplay = createVirtualDisplay();
