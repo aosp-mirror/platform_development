@@ -530,7 +530,8 @@
     <string name="alert_dialog_single_choice">Single choice list</string>
     <string name="alert_dialog_multi_choice">Repeat alarm</string>
     <string name="alert_dialog_multi_choice_cursor">Send Call to VoiceMail</string>
-    <string name="alert_dialog_progress_button">Progress dialog</string>
+    <string name="alert_dialog_progress_button">Progress bar dialog</string>
+    <string name="alert_dialog_progress_spinner_button">Progress spinner dialog</string>
     <string name="alert_dialog_text_entry">Text Entry dialog</string>
     <string name="alert_dialog_username">Name:</string>
     <string name="alert_dialog_password">Password:</string>
