@@ -38,6 +38,9 @@
         <Button android:id="@+id/progress_button"
             android:layout_width="match_parent" android:layout_height="wrap_content"
             android:text="@string/alert_dialog_progress_button"/>
+        <Button android:id="@+id/progress_spinner_button"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:text="@string/alert_dialog_progress_spinner_button"/>
         <Button android:id="@+id/radio_button"
             android:layout_width="match_parent" android:layout_height="wrap_content"
             android:text="@string/alert_dialog_single_choice"/>
