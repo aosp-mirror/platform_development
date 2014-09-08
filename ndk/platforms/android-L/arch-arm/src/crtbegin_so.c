@@ -1,0 +1,1 @@
+../../../android-3/arch-arm/src/crtbegin_so.c
