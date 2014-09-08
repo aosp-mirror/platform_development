@@ -128,7 +128,6 @@ __sched_getaffinity
 __set_thread_area
 __set_tid_address
 __sigaction
-__signalfd4
 __snprintf_chk
 __socket
 __sprintf_chk
