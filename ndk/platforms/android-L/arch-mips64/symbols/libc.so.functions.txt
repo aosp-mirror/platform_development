@@ -124,7 +124,6 @@ __umask_chk
 __vsnprintf_chk
 __vsprintf_chk
 _exit
-_flush_cache
 _getlong
 _getshort
 _longjmp
@@ -159,7 +158,6 @@ atoi
 atol
 atoll
 basename
-basename_r
 bind
 bindresvport
 brk
@@ -201,7 +199,6 @@ delete_module
 difftime
 dirfd
 dirname
-dirname_r
 div
 dn_expand
 dprintf
