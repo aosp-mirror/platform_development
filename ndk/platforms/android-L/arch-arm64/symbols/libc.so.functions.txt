@@ -158,7 +158,6 @@ atoi
 atol
 atoll
 basename
-basename_r
 bind
 bindresvport
 brk
@@ -200,7 +199,6 @@ delete_module
 difftime
 dirfd
 dirname
-dirname_r
 div
 dn_expand
 dprintf
