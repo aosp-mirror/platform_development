@@ -1,5 +1,5 @@
 /*
- * Copyright 2012, The Android Open Source Project
+ * Copyright 2014, The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,34 +17,22 @@
 #ifndef _PORTABILITY_H_
 #define _PORTABILITY_H_
 
-#include <stdint.h>
-#include "asm-generic/portability.h"
-/*
- * Common portability helper routines
- */
-
-/*
- * Check a portable pointer before we access it
- * Well behaved programs should not be passing bad pointers
- * to the kernel but this routine can be used to check a pointer
- * if we need to use it before calling the kernel
- *
- * It does not catch every possible case but it is sufficient for LTP
- */
-inline static int invalid_pointer(void *p)
-{
-    return p == 0
-        || p == (void *)-1
-#ifdef __mips__
-        || (intptr_t)p < 0
-#endif
-        ;
-}
-
 /*
  * Hidden functions are exposed while linking the libportable shared object
  * but are not exposed thereafter.
  */
 #define __hidden __attribute__((visibility("hidden")))
+
+#if !defined(__HOST__)
+#define WRAP(f)     f ## _portable
+#define REAL(f)     f
+#else
+/* On host app link with libpportable.a with -Wl,--wrap=symbol, which resolves undefined symbol to __wrap_symbol,
+ * and undefined __real_symbol to the original symbol
+ */
+#define WRAP(f)     __wrap_ ## f
+#define REAL(f)     __real_ ## f
+#endif
+
 
 #endif /* _PORTABILITY_H_ */
