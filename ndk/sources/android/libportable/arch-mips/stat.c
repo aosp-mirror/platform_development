@@ -1,5 +1,5 @@
 /*
- * Copyright 2012, The Android Open Source Project
+ * Copyright 2014, The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,64 +14,4 @@
  * limitations under the License.
  */
 
-#include <portability.h>
-#include <errno.h>
-#include <errno_portable.h>
 #include <stat_portable.h>
-
-/* Note: The Portable Header will define stat to stat_portable */
-int WRAP(stat)(const char *path, struct stat_portable *s)
-{
-    struct stat mips_stat;
-    int ret;
-
-    if (invalid_pointer(s)) {
-        *REAL(__errno)() = EFAULT;
-        return -1;
-    }
-    ret = REAL(stat)(path, &mips_stat);
-    stat_ntop(&mips_stat, s);
-    return ret;
-}
-
-int WRAP(fstat)(int fd, struct stat_portable *s)
-{
-    struct stat mips_stat;
-    int ret;
-
-    if (invalid_pointer(s)) {
-        *REAL(__errno)() = EFAULT;
-        return -1;
-    }
-    ret = REAL(fstat)(fd, &mips_stat);
-    stat_ntop(&mips_stat, s);
-    return ret;
-}   
-
-int WRAP(lstat)(const char *path, struct stat_portable *s)
-{
-    struct stat mips_stat;
-    int ret;
-
-    if (invalid_pointer(s)) {
-        *REAL(__errno)() = EFAULT;
-        return -1;
-    }
-    ret = REAL(lstat)(path, &mips_stat);
-    stat_ntop(&mips_stat, s);
-    return ret;
-}
-
-int WRAP(fstatat)(int dirfd, const char *path, struct stat_portable *s, int flags)
-{
-    struct stat mips_stat;
-    int ret;
-
-    if (invalid_pointer(s)) {
-        *REAL(__errno)() = EFAULT;
-        return -1;
-    }
-    ret = REAL(fstatat)(dirfd, path, &mips_stat, flags);
-    stat_ntop(&mips_stat, s);
-    return ret;
-}

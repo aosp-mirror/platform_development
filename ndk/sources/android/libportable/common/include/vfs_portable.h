@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-#ifndef _VFS_PORTABLE_H
-#define _VFS_PORTABLE_H
+#ifndef _VFS_PORTABLE_H_
+#define _VFS_PORTABLE_H_
 
+#include <portability.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <sys/vfs.h>
 
-/* The kernel's __kernel_fsid_t has a 'val' member but glibc uses '__val'. */
-typedef struct { int __val[2]; } __fsid_t_portable;
-typedef __fsid_t_portable fsid_t_portable;
+typedef __fsid_t fsid_t;
 
 #define __STATFS64_BODY_PORTABLE \
   uint64_t f_type; \
@@ -32,65 +32,63 @@ typedef __fsid_t_portable fsid_t_portable;
   uint64_t f_bavail; \
   uint64_t f_files; \
   uint64_t f_ffree; \
-  fsid_t_portable f_fsid; \
+  fsid_t f_fsid; \
   uint64_t f_namelen; \
   uint64_t f_frsize; \
   uint64_t f_flags; \
-  uint64_t f_spare[5]; \
+  uint64_t f_spare[5];
 
 
 struct statfs_portable { __STATFS64_BODY_PORTABLE };
-struct statfs64_portable { __STATFS64_BODY_PORTABLE };
+#define statfs64_portable statfs_portable
 
-static inline
-void statfs_ntop(struct statfs *n_statfs, struct statfs_portable *p_statfs) {
-  memset(p_statfs, 0, sizeof(struct statfs_portable));
-  p_statfs->f_type = n_statfs->f_type;
-  p_statfs->f_bsize = n_statfs->f_bsize;
-  p_statfs->f_blocks = n_statfs->f_blocks;
-  p_statfs->f_bfree = n_statfs->f_bfree;
-  p_statfs->f_bavail = n_statfs->f_bavail;
-  p_statfs->f_files = n_statfs->f_files;
-  p_statfs->f_ffree = n_statfs->f_ffree;
-  memcpy(&p_statfs->f_fsid, &n_statfs->f_fsid, sizeof(int)*2);
-  p_statfs->f_namelen = n_statfs->f_namelen;
-  p_statfs->f_frsize = n_statfs->f_frsize;
-  p_statfs->f_flags = n_statfs->f_flags;
+#undef __STATFS64_BODY_PORTABLE
+
+static void statfs_n2p(const struct statfs* pn, struct statfs_portable* pp)
+{
+  memset(pp, '\0', sizeof(struct statfs_portable));
+  pp->f_type    = pn->f_type;
+  pp->f_bsize   = pn->f_bsize;
+  pp->f_blocks  = pn->f_blocks;
+  pp->f_bfree   = pn->f_bfree;
+  pp->f_bavail  = pn->f_bavail;
+  pp->f_files   = pn->f_files;
+  pp->f_ffree   = pn->f_ffree;
+  memcpy(&pp->f_fsid, &pn->f_fsid, sizeof(int)*2);
+  pp->f_namelen = pn->f_namelen;
+  pp->f_frsize  = pn->f_frsize;
+  pp->f_flags   = pn->f_flags;
 #ifdef __mips__
-  memcpy(&p_statfs->f_spare, &n_statfs->f_spare, 4);
+  memcpy(&pp->f_spare, &pn->f_spare, 4);
 #else
-  memcpy(&p_statfs->f_spare, &n_statfs->f_spare, 5);
+  memcpy(&pp->f_spare, &pn->f_spare, 5);
 #endif
 }
 
-
-static inline
-int WRAP(statfs)(const char* path, struct statfs_portable* stat) {
-  struct statfs native_stat;
-
-  int ret = REAL(statfs)(path, &native_stat);
-  statfs_ntop(&native_stat, stat);
+int WRAP(statfs)(const char* path, struct statfs_portable* stat)
+{
+  struct statfs target_stat;
+  int ret = REAL(statfs)(path, &target_stat);
+  statfs_n2p(&target_stat, stat);
   return ret;
 }
 
-static inline
-int WRAP(statfs64)(const char* path, struct statfs64_portable* stat) {
-  return WRAP(statfs)(path, (struct statfs_portable*)stat);
+int WRAP(statfs64)(const char* path, struct statfs64_portable* stat)
+{
+  return WRAP(statfs)(path, stat);
 }
 
-
-static inline
-int WRAP(fstatfs)(int fd, struct statfs_portable* stat) {
-  struct statfs native_stat;
-
-  int ret = REAL(fstatfs)(fd, &native_stat);
-  statfs_ntop(&native_stat, stat);
+int WRAP(fstatfs)(int fd, struct statfs_portable* stat)
+{
+  struct statfs target_stat;
+  int ret = REAL(fstatfs)(fd, &target_stat);
+  statfs_n2p(&target_stat, stat);
   return ret;
 }
 
-static inline
-int WRAP(fstatfs64)(int fd, struct statfs64_portable* stat) {
-  return WRAP(fstatfs)(fd, (struct statfs_portable*)stat);
+int WRAP(fstatfs64)(int fd, struct statfs64_portable* stat)
+{
+  return WRAP(fstatfs)(fd, stat);
 }
 
-#endif
+#endif /* _VFS_PORTABLE_H */
