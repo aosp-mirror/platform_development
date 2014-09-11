@@ -231,20 +231,6 @@ public class AlertDialogSamples extends Activity {
             mProgressSpinnerDialog = new ProgressDialog(AlertDialogSamples.this);
             mProgressSpinnerDialog.setTitle(R.string.select_dialog);
             mProgressSpinnerDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-            mProgressSpinnerDialog.setButton(DialogInterface.BUTTON_POSITIVE,
-                    getText(R.string.alert_dialog_hide), new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int whichButton) {
-
-                /* User clicked Yes so do some stuff */
-                        }
-                    });
-            mProgressSpinnerDialog.setButton(DialogInterface.BUTTON_NEGATIVE,
-                    getText(R.string.alert_dialog_cancel), new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int whichButton) {
-
-                /* User clicked No so do some stuff */
-                        }
-                    });
             return mProgressSpinnerDialog;
         case DIALOG_SINGLE_CHOICE:
             return new AlertDialog.Builder(AlertDialogSamples.this)
@@ -399,7 +385,7 @@ public class AlertDialogSamples extends Activity {
 
         /* Display a custom progress bar */
         Button progressSpinnerButton = (Button) findViewById(R.id.progress_spinner_button);
-        progressButton.setOnClickListener(new OnClickListener() {
+        progressSpinnerButton.setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
                 showDialog(DIALOG_PROGRESS_SPINNER);
             }
