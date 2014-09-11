@@ -122,6 +122,8 @@ ATTRS=(
   SystemImage.Abi               abi                      r:3,s:1
   SystemImage.TagId             tag-id                   r:9,s:2
   SystemImage.TagDisplay        tag-display              r:9,s:2
+  Addon.VendorId                add-on/vendor-id         s:3
+  Addon.VendorDisplay           add-on/vendor-display    s:3
   # from addon manifest.ini for addon.xml packages
   # (note that vendor/name are mapped to different XML elements based on the XSD version)
   vendor-id                     vendor-id                4
