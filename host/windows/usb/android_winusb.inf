@@ -6,7 +6,7 @@ Signature           = "$Windows NT$"
 Class               = AndroidUsbDeviceClass
 ClassGuid           = {3F966BD9-FA04-4ec5-991C-D326973B5128}
 Provider            = %ProviderName%
-DriverVer           = 06/06/2014,10.0.0000.00000
+DriverVer           = 08/28/2014,11.0.0000.00000
 CatalogFile.NTx86   = androidwinusb86.cat
 CatalogFile.NTamd64 = androidwinusba64.cat
 
@@ -56,6 +56,13 @@ HKR,,Icon,,-1
 %SingleAdbInterface%        = USB_Install, USB\VID_18D1&PID_9001
 %CompositeAdbInterface%     = USB_Install, USB\VID_18D1&PID_9001&MI_01
 
+;Project Tango (generic)
+%SingleBootLoaderInterface% = USB_Install, USB\VID_18D1&PID_4D00
+%CompositeAdbInterface%     = USB_Install, USB\VID_18D1&PID_4D02&MI_01
+%CompositeAdbInterface%     = USB_Install, USB\VID_18D1&PID_4D04&MI_02
+%CompositeAdbInterface%     = USB_Install, USB\VID_18D1&PID_4D06&MI_01
+%CompositeAdbInterface%     = USB_Install, USB\VID_18D1&PID_4D07
+
 
 [Google.NTamd64]
 
@@ -90,6 +97,13 @@ HKR,,Icon,,-1
 ;Google Glass
 %SingleAdbInterface%        = USB_Install, USB\VID_18D1&PID_9001
 %CompositeAdbInterface%     = USB_Install, USB\VID_18D1&PID_9001&MI_01
+
+;Project Tango (generic)
+%SingleBootLoaderInterface% = USB_Install, USB\VID_18D1&PID_4D00
+%CompositeAdbInterface%     = USB_Install, USB\VID_18D1&PID_4D02&MI_01
+%CompositeAdbInterface%     = USB_Install, USB\VID_18D1&PID_4D04&MI_02
+%CompositeAdbInterface%     = USB_Install, USB\VID_18D1&PID_4D06&MI_01
+%CompositeAdbInterface%     = USB_Install, USB\VID_18D1&PID_4D07
 
 
 [USB_Install]
