@@ -191,8 +191,9 @@ public class MmsMessagingDemo extends Activity {
                 }
 
                 if (contentUri != null) {
-                    SmsManager.getDefault().sendMultimediaMessage(contentUri,
-                            null/*locationUrl*/, null/*configOverrides*/, pendingIntent);
+                    SmsManager.getDefault().sendMultimediaMessage(getApplicationContext(),
+                            contentUri, null/*locationUrl*/, null/*configOverrides*/,
+                            pendingIntent);
                 } else {
                     Log.e(TAG, "Error writing sending Mms");
                     try {
@@ -225,8 +226,8 @@ public class MmsMessagingDemo extends Activity {
                         .build();
                 final PendingIntent pendingIntent = PendingIntent.getBroadcast(
                         MmsMessagingDemo.this, 0, new Intent(ACTION_MMS_RECEIVED), 0);
-                SmsManager.getDefault().downloadMultimediaMessage(locationUrl, contentUri,
-                        null/*configOverrides*/, pendingIntent);
+                SmsManager.getDefault().downloadMultimediaMessage(getApplicationContext(),
+                        locationUrl, contentUri, null/*configOverrides*/, pendingIntent);
             }
         });
     }
