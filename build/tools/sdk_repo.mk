@@ -205,6 +205,26 @@ $(call dist-for-goals, sdk_repo, $(SDK_ADDON_XML))
 
 endif
 
+ifneq ($(ADDON_SDK_IMG_ZIP),)
+
+# Copy/rename the ADDON_SDK_IMG_ZIP file as an sdk-repo zip in the dist dir
+
+RENAMED_ADDON_IMG_ZIP := $(ADDON_SDK_IMG_ZIP):$(notdir $(call sdk-repo-pkg-zip,$(HOST_OS),$(ADDON_SDK_IMG_ZIP),system-images))
+
+$(call dist-for-goals, sdk_repo, $(RENAMED_ADDON_IMG_ZIP))
+
+# Generate the system-image XML for the addon sys-img
+
+SDK_ADDON_IMG_XML := $(dir $(ADDON_SDK_ZIP))/addon-sys-img.xml
+
+$(SDK_ADDON_IMG_XML): $(ADDON_SDK_IMG_ZIP)
+	$(hide) $(TOPDIR)development/build/tools/mk_sdk_repo_xml.sh \
+	            $(SDK_ADDON_IMG_XML) $(SDK_SYSIMG_XSD) system-image $(HOST_OS) $(RENAMED_ADDON_IMG_ZIP)
+
+$(call dist-for-goals, sdk_repo, $(SDK_ADDON_IMG_XML))
+
+endif
+
 # -----------------------------------------------------------------
 # Rules for the SDK Repository XML
 
