@@ -188,6 +188,8 @@ int pthread_getschedparam(pthread_t, int*, struct sched_param*) __nonnull((2, 3)
 
 void* pthread_getspecific(pthread_key_t);
 
+pid_t pthread_gettid_np(pthread_t);
+
 int pthread_join(pthread_t, void**);
 
 int pthread_key_create(pthread_key_t*, void (*)(void*)) __nonnull((1));
