@@ -519,7 +519,7 @@ See test_defs.xsd for more information.
 
 <test name="telecomm-unit"
     build_path="packages/services/Telecomm"
-    package="com.android.telecomm.tests"
+    package="com.android.server.telecom.tests"
     continuous="true"
     coverage_target="Phone" />
 
