@@ -91,6 +91,7 @@ __aeabi_uldivmod
 __aeabi_unwind_cpp_pr0
 __aeabi_unwind_cpp_pr1
 __aeabi_unwind_cpp_pr2
+__arm_fadvise64_64
 __ashldi3
 __ashrdi3
 __assert
@@ -144,6 +145,7 @@ __futex_wait
 __futex_wake
 __gedf2
 __get_h_errno
+__get_thread
 __get_tls
 __getcpu
 __getcwd
@@ -260,6 +262,7 @@ __sched_cpualloc
 __sched_cpucount
 __sched_cpufree
 __sched_getaffinity
+__set_errno
 __set_tid_address
 __set_tls
 __sigaction
@@ -286,6 +289,7 @@ __strrchr_chk
 __subdf3
 __subsf3
 __swbuf
+__swsetup
 __sym_ntop
 __sym_ntos
 __sym_ston
@@ -341,6 +345,7 @@ android_gethostbyaddrfornet
 android_gethostbynamefornet
 android_set_abort_message
 arc4random
+arc4random_addrandom
 arc4random_buf
 arc4random_stir
 arc4random_uniform
@@ -406,6 +411,7 @@ dirfd
 dirname
 dirname_r
 div
+dlmalloc_usable_size
 dn_expand
 dprintf
 drand48
@@ -796,6 +802,8 @@ pipe
 pipe2
 poll
 popen
+posix_fadvise
+posix_fadvise64
 posix_fallocate
 posix_fallocate64
 posix_memalign
@@ -852,6 +860,7 @@ pthread_getattr_np
 pthread_getcpuclockid
 pthread_getschedparam
 pthread_getspecific
+pthread_gettid_np
 pthread_join
 pthread_key_create
 pthread_key_delete
