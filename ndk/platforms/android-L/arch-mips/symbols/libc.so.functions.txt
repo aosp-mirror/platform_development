@@ -25,6 +25,7 @@ __dn_skipname
 __epoll_pwait
 __errno
 __exit
+__fadvise64
 __fcntl64
 __fgets_chk
 __fp_nquery
@@ -37,6 +38,7 @@ __fstatfs64
 __futex_wait
 __futex_wake
 __get_h_errno
+__get_thread
 __get_tls
 __getcpu
 __getcwd
@@ -125,6 +127,7 @@ __sched_cpualloc
 __sched_cpucount
 __sched_cpufree
 __sched_getaffinity
+__set_errno
 __set_tid_address
 __set_tls
 __sigaction
@@ -149,6 +152,7 @@ __strncpy_chk
 __strncpy_chk2
 __strrchr_chk
 __swbuf
+__swsetup
 __sym_ntop
 __sym_ntos
 __sym_ston
@@ -204,6 +208,7 @@ android_gethostbyaddrfornet
 android_gethostbynamefornet
 android_set_abort_message
 arc4random
+arc4random_addrandom
 arc4random_buf
 arc4random_stir
 arc4random_uniform
@@ -268,6 +273,7 @@ dirfd
 dirname
 dirname_r
 div
+dlmalloc_usable_size
 dn_expand
 dprintf
 drand48
@@ -658,6 +664,8 @@ pipe
 pipe2
 poll
 popen
+posix_fadvise
+posix_fadvise64
 posix_fallocate
 posix_fallocate64
 posix_memalign
@@ -714,6 +722,7 @@ pthread_getattr_np
 pthread_getcpuclockid
 pthread_getschedparam
 pthread_getspecific
+pthread_gettid_np
 pthread_join
 pthread_key_create
 pthread_key_delete
