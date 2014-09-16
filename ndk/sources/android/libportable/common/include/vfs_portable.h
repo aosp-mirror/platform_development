@@ -39,14 +39,14 @@ typedef __fsid_t fsid_t;
   uint64_t f_spare[5];
 
 
-struct statfs_portable { __STATFS64_BODY_PORTABLE };
-#define statfs64_portable statfs_portable
+struct StatfsPortable { __STATFS64_BODY_PORTABLE };
+typedef struct StatfsPortable Statfs64Portable;
 
 #undef __STATFS64_BODY_PORTABLE
 
-static void statfs_n2p(const struct statfs* pn, struct statfs_portable* pp)
+static void statfs_n2p(const struct statfs* pn, struct StatfsPortable* pp)
 {
-  memset(pp, '\0', sizeof(struct statfs_portable));
+  memset(pp, '\0', sizeof(struct StatfsPortable));
   pp->f_type    = pn->f_type;
   pp->f_bsize   = pn->f_bsize;
   pp->f_blocks  = pn->f_blocks;
@@ -65,7 +65,7 @@ static void statfs_n2p(const struct statfs* pn, struct statfs_portable* pp)
 #endif
 }
 
-int WRAP(statfs)(const char* path, struct statfs_portable* stat)
+int WRAP(statfs)(const char* path, struct StatfsPortable* stat)
 {
   struct statfs target_stat;
   int ret = REAL(statfs)(path, &target_stat);
@@ -73,12 +73,12 @@ int WRAP(statfs)(const char* path, struct statfs_portable* stat)
   return ret;
 }
 
-int WRAP(statfs64)(const char* path, struct statfs64_portable* stat)
+int WRAP(statfs64)(const char* path, Statfs64Portable* stat)
 {
   return WRAP(statfs)(path, stat);
 }
 
-int WRAP(fstatfs)(int fd, struct statfs_portable* stat)
+int WRAP(fstatfs)(int fd, struct StatfsPortable* stat)
 {
   struct statfs target_stat;
   int ret = REAL(fstatfs)(fd, &target_stat);
@@ -86,7 +86,7 @@ int WRAP(fstatfs)(int fd, struct statfs_portable* stat)
   return ret;
 }
 
-int WRAP(fstatfs64)(int fd, struct statfs64_portable* stat)
+int WRAP(fstatfs64)(int fd, Statfs64Portable* stat)
 {
   return WRAP(fstatfs)(fd, stat);
 }
