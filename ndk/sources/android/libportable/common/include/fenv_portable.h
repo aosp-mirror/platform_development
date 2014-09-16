@@ -169,7 +169,7 @@ int WRAP(fesetround)(int __round) {
 }
 
 int WRAP(feholdexcept)(fenv_t_portable* __envp) {
-  memset(__envp, '\0', sizeof(__envp));
+  memset(__envp, '\0', sizeof(fenv_t_portable));
   fenv_t env;
   int ret = REAL(feholdexcept)(&env);
   memcpy(__envp, &env, sizeof(env));
