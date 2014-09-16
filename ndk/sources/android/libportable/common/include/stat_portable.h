@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef _STAT_PORTABLE_H_
-#define _STAT_PORTABLE_H_
+#ifndef _StatPortable_H_
+#define _StatPortable_H_
 
 #include <portability.h>
 #include <stdint.h>
@@ -43,12 +43,12 @@
   unsigned long st_ctime_nsec; \
   unsigned char padding3[8];
 
-struct stat_portable { __STAT64_BODY_PORTABLE };
-#define stat64_portable stat_portable
+struct StatPortable { __STAT64_BODY_PORTABLE };
+typedef struct StatPortable Stat64Portable;
 
-static inline void stat_n2p(struct stat* pn, struct stat_portable* pp)
+static inline void stat_n2p(struct stat* pn, struct StatPortable* pp)
 {
-  memset(pp, '\0', sizeof(struct stat_portable));
+  memset(pp, '\0', sizeof(struct StatPortable));
   pp->st_dev        = pn->st_dev;
   pp->st_ino        = pn->st_ino;
   pp->st_mode       = pn->st_mode;
@@ -67,7 +67,7 @@ static inline void stat_n2p(struct stat* pn, struct stat_portable* pp)
   pp->st_ctime_nsec = pn->st_ctime_nsec;
 }
 
-int WRAP(fstat)(int a, struct stat_portable* p)
+int WRAP(fstat)(int a, struct StatPortable* p)
 {
   struct stat target_stat_obj;
   int ret = REAL(fstat)(a, &target_stat_obj);
@@ -75,12 +75,12 @@ int WRAP(fstat)(int a, struct stat_portable* p)
   return ret;
 }
 
-int WRAP(fstat64)(int a, struct stat64_portable* p)
+int WRAP(fstat64)(int a, Stat64Portable* p)
 {
   return WRAP(fstat)(a, p);
 }
 
-int WRAP(fstatat)(int a, const char* p1, struct stat_portable* p2, int b)
+int WRAP(fstatat)(int a, const char* p1, struct StatPortable* p2, int b)
 {
   struct stat target_stat_obj;
   int ret = REAL(fstatat)(a, p1, &target_stat_obj, b);
@@ -88,12 +88,12 @@ int WRAP(fstatat)(int a, const char* p1, struct stat_portable* p2, int b)
   return ret;
 }
 
-int WRAP(fstatat64)(int a, const char* b, struct stat64_portable* c, int d)
+int WRAP(fstatat64)(int a, const char* b, Stat64Portable* c, int d)
 {
   return WRAP(fstatat)(a, b, c, d);
 }
 
-int WRAP(lstat)(const char* a, struct stat_portable* p)
+int WRAP(lstat)(const char* a, struct StatPortable* p)
 {
   struct stat target_stat_obj;
   int ret = REAL(lstat)(a, &target_stat_obj);
@@ -101,12 +101,12 @@ int WRAP(lstat)(const char* a, struct stat_portable* p)
   return ret;
 }
 
-int WRAP(lstat64)(const char* a, struct stat64_portable* p)
+int WRAP(lstat64)(const char* a, Stat64Portable* p)
 {
   return WRAP(lstat)(a, p);
 }
 
-int WRAP(stat)(const char* a, struct stat_portable* p)
+int WRAP(stat)(const char* a, struct StatPortable* p)
 {
   struct stat target_stat_obj;
   int ret = REAL(stat)(a, &target_stat_obj);
@@ -114,9 +114,9 @@ int WRAP(stat)(const char* a, struct stat_portable* p)
   return ret;
 }
 
-int WRAP(stat64)(const char* a, struct stat64_portable* p)
+int WRAP(stat64)(const char* a, Stat64Portable* p)
 {
   return WRAP(stat)(a, p);
 }
 
-#endif /* _STAT_PORTABLE_H */
+#endif /* _StatPortable_H */
