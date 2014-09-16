@@ -578,6 +578,8 @@ pipe
 pipe2
 poll
 popen
+posix_fadvise
+posix_fadvise64
 posix_fallocate
 posix_fallocate64
 posix_memalign
@@ -629,6 +631,7 @@ pthread_getattr_np
 pthread_getcpuclockid
 pthread_getschedparam
 pthread_getspecific
+pthread_gettid_np
 pthread_join
 pthread_key_create
 pthread_key_delete
