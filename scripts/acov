@@ -30,7 +30,7 @@
 # it in your browser).
 #
 
-which lcov
+which lcov >/dev/null 2>/dev/null
 if [ $? -ne 0 ]; then
   echo 'lcov not found: running `sudo apt-get install lcov`'
   sudo apt-get install lcov
