@@ -32,28 +32,17 @@ include $(TOPDIR)sdk/build/windows_sdk_tools.mk
 # the topdir/development directory and are somehow platform-dependent.
 WIN_TARGETS := \
 	aapt adb aidl \
+	bcc_compat \
 	etc1tool \
 	dexdump dmtracedump \
 	fastboot \
 	hprof-conv \
+	llvm-rs-cc \
 	prebuilt \
 	sqlite3 \
 	zipalign \
 	$(WIN_SDK_TARGETS)
-###RM(2014-05-02) full list of WIN_TARGS, including bcc/rs that are temporarily deactivated
-###WIN_TARGETS := \
-###	aapt adb aidl \
-###	bcc_compat \
-###	etc1tool \
-###	dexdump dmtracedump \
-###	fastboot \
-###	hprof-conv \
-###	llvm-rs-cc \
-###	prebuilt \
-###	sqlite3 \
-###	zipalign \
-###	$(WIN_SDK_TARGETS)
-###
+
 # This is the list of *Linux* build tools that we need
 # in order to be able to make the WIN_TARGETS. They are
 # build prerequisites.
