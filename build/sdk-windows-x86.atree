@@ -72,39 +72,25 @@ dalvik/dx/etc/dx.bat                          build-tools/${PLATFORM_NAME}/dx.ba
 rm build-tools/${PLATFORM_NAME}/dexdump
 bin/dexdump.exe                         strip build-tools/${PLATFORM_NAME}/dexdump.exe
 
-# delete linux rs/bcc files
 rm build-tools/${PLATFORM_NAME}/llvm-rs-cc
+bin/llvm-rs-cc.exe                      strip build-tools/${PLATFORM_NAME}/llvm-rs-cc.exe
+
 rm build-tools/${PLATFORM_NAME}/libLLVM.so
+lib/libLLVM.dll                         strip build-tools/${PLATFORM_NAME}/libLLVM.dll
+
 rm build-tools/${PLATFORM_NAME}/libclang.so
+lib/libclang.dll                        strip build-tools/${PLATFORM_NAME}/libclang.dll
+
+#bcc not yet compiled on windows
+
 rm build-tools/${PLATFORM_NAME}/libbcc.so
+lib/libbcc.dll                          strip build-tools/${PLATFORM_NAME}/libbcc.dll
+
 rm build-tools/${PLATFORM_NAME}/libbcinfo.so
+lib/libbcinfo.dll                       strip build-tools/${PLATFORM_NAME}/libbcinfo.dll
+
 rm build-tools/${PLATFORM_NAME}/bcc_compat
-
-###RM(2014-05-02) Temporarily disable rs/bcc for the Windows SDK as we fix cross-compilation issues
-###bin/llvm-rs-cc.exe                      strip build-tools/${PLATFORM_NAME}/llvm-rs-cc.exe
-###
-###lib/libLLVM.dll                         strip build-tools/${PLATFORM_NAME}/libLLVM.dll
-###
-###lib/libclang.dll                        strip build-tools/${PLATFORM_NAME}/libclang.dll
-###
-####bcc not yet compiled on windows
-###
-###lib/libbcc.dll                          strip build-tools/${PLATFORM_NAME}/libbcc.dll
-###
-###lib/libbcinfo.dll                       strip build-tools/${PLATFORM_NAME}/libbcinfo.dll
-###
-###bin/bcc_compat.exe                      strip build-tools/${PLATFORM_NAME}/bcc_compat.exe
-
-
-###XAV(2014-06-17) Temporarily get rs/bcc from a prebuilt.
-prebuilts/misc/windows/renderscript/llvm-rs-cc.exe     build-tools/${PLATFORM_NAME}/llvm-rs-cc.exe
-prebuilts/misc/windows/renderscript/libLLVM.dll        build-tools/${PLATFORM_NAME}/libLLVM.dll
-prebuilts/misc/windows/renderscript/libclang.dll       build-tools/${PLATFORM_NAME}/libclang.dll
-prebuilts/misc/windows/renderscript/libbcc.dll         build-tools/${PLATFORM_NAME}/libbcc.dll
-prebuilts/misc/windows/renderscript/libbcinfo.dll      build-tools/${PLATFORM_NAME}/libbcinfo.dll
-prebuilts/misc/windows/renderscript/bcc_compat.exe     build-tools/${PLATFORM_NAME}/bcc_compat.exe
-###
-
+bin/bcc_compat.exe                      strip build-tools/${PLATFORM_NAME}/bcc_compat.exe
 
 rm build-tools/${PLATFORM_NAME}/arm-linux-androideabi-ld
 prebuilts/sdk/tools/windows/arm-linux-androideabi-ld.exe   strip build-tools/${PLATFORM_NAME}/arm-linux-androideabi-ld.exe
