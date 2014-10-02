@@ -345,13 +345,6 @@ class TestRunner(object):
     """If necessary, run a full 'make' command for the tests that need it."""
     extra_args_set = Set()
 
-    # hack to build cts dependencies
-    # TODO: remove this when cts dependencies are removed
-    is_cts =  self._IsCtsTests(tests)
-    if is_cts:
-      # need to use make since these fail building with ONE_SHOT_MAKEFILE
-      extra_args_set.add('CtsTestStubs')
-      extra_args_set.add('android.core.tests.runner')
     for test in tests:
       if test.IsFullMake():
         if test.GetExtraBuildArgs():
@@ -373,12 +366,6 @@ class TestRunner(object):
         logger.SilentLog(output)
         os.chdir(old_dir)
         self._DoInstall(output)
-        if is_cts:
-          # hack! hardcode install of CtsTestStubs
-          out = android_build.GetTestAppPath()
-          abs_install_path = os.path.join(out, "CtsTestStubs", "CtsTestStubs.apk")
-          logger.Log("adb install -r %s" % abs_install_path)
-          logger.Log(self._adb.Install(abs_install_path))
 
   def _AddBuildTarget(self, test_suite, target_tree, extra_args_set):
     if not test_suite.IsFullMake():
