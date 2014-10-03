@@ -26,6 +26,7 @@ lib/libLLVM.dylib                                     strip build-tools/${PLATFO
 lib/libbcc.dylib                                      strip build-tools/${PLATFORM_NAME}/libbcc.dylib
 lib/libbcinfo.dylib                                   strip build-tools/${PLATFORM_NAME}/libbcinfo.dylib
 lib/libclang.dylib                                    strip build-tools/${PLATFORM_NAME}/libclang.dylib
+lib/libc++.dylib                                      strip build-tools/${PLATFORM_NAME}/libc++.dylib
 
 prebuilts/sdk/tools/darwin/arm-linux-androideabi-ld   strip build-tools/${PLATFORM_NAME}/arm-linux-androideabi-ld
 prebuilts/sdk/tools/darwin/i686-linux-android-ld      strip build-tools/${PLATFORM_NAME}/i686-linux-android-ld
