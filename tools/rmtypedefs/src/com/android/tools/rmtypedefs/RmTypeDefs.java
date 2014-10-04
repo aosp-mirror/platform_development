@@ -16,17 +16,21 @@
 
 package com.android.tools.rmtypedefs;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.ClassWriter;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import static org.objectweb.asm.Opcodes.ASM4;
 
@@ -49,6 +53,10 @@ public class RmTypeDefs {
     private boolean mVerbose;
     private boolean mHaveError;
     private boolean mDryRun;
+
+    private Set<String> mAnnotationNames = Sets.newHashSet();
+    private List<File> mAnnotationClassFiles = Lists.newArrayList();
+    private Set<File> mAnnotationOuterClassFiles = Sets.newHashSet();
 
     public static void main(String[] args) {
         new RmTypeDefs().run(args);
@@ -93,19 +101,30 @@ public class RmTypeDefs {
             System.out.println("Deleting @IntDef and @StringDef annotation class files");
         }
 
+        // Record typedef annotation names and files
         for (File dir : dirs) {
-            find(dir);
+            checkFile(dir);
         }
+
+        // Rewrite the .class files for any classes that *contain* typedefs as innerclasses
+        rewriteOuterClasses();
+
+        // Removes the actual .class files for the typedef annotations
+        deleteAnnotationClasses();
 
         System.exit(mHaveError ? -1 : 0);
     }
 
-    private void find(File file) {
+    /**
+     * Visits the given directory tree recursively and calls {@link #checkClass(java.io.File)}
+     * for any .class files encountered
+     */
+    private void checkFile(File file) {
         if (file.isDirectory()) {
             File[] files = file.listFiles();
             if (files != null) {
                 for (File f : files) {
-                    find(f);
+                    checkFile(f);
                 }
             }
         } else if (file.isFile()) {
@@ -119,11 +138,15 @@ public class RmTypeDefs {
         }
     }
 
+    /**
+     * Checks the given .class file to see if it's a typedef annotation, and if so
+     * records that fact by calling {@link #addTypeDef(String, java.io.File)}
+     */
     private void checkClass(File file) {
         try {
             byte[] bytes = Files.toByteArray(file);
             ClassReader classReader = new ClassReader(bytes);
-            classReader.accept(new MyVisitor(file), 0);
+            classReader.accept(new TypeDefVisitor(file), 0);
         } catch (IOException e) {
             System.err.println("Could not read " + file + ": " + e.getLocalizedMessage());
             System.exit(1);
@@ -142,9 +165,100 @@ public class RmTypeDefs {
         out.println("  -q,--quiet                 quiet");
         out.println("  -v,--verbose               verbose");
         out.println("  -n,--dry-run               dry-run only, leaves files alone");
+        out.println("  --verify                   run extra diagnostics to verify file integrity");
     }
 
-    private class MyVisitor extends ClassVisitor {
+    /**
+     * Records the given class name (internal name) and class file path as corresponding to a
+     * typedef annotation
+     * */
+    private void addTypeDef(String name, File file) {
+        mAnnotationClassFiles.add(file);
+        mAnnotationNames.add(name);
+
+        String fileName = file.getName();
+        int index = fileName.lastIndexOf('$');
+        if (index != -1) {
+            File parentFile = file.getParentFile();
+            assert parentFile != null : file;
+            File container = new File(parentFile, fileName.substring(0, index) + ".class");
+            if (container.exists()) {
+                mAnnotationOuterClassFiles.add(file);
+            } else {
+                System.err.println("Warning: Could not find outer class " + container
+                        + " for typedef " + file);
+                mHaveError = true;
+            }
+        }
+    }
+
+    /**
+     * Rewrites the outer classes containing the typedefs such that they no longer refer to
+     * the (now removed) typedef annotation inner classes
+     */
+    private void rewriteOuterClasses() {
+        for (File file : mAnnotationOuterClassFiles) {
+            byte[] bytes;
+            try {
+                bytes = Files.toByteArray(file);
+            } catch (IOException e) {
+                System.err.println("Could not read " + file + ": " + e.getLocalizedMessage());
+                mHaveError = true;
+                continue;
+            }
+
+            ClassWriter classWriter = new ClassWriter(ASM4);
+            ClassVisitor classVisitor = new ClassVisitor(ASM4, classWriter) {
+                @Override
+                public void visitInnerClass(String name, String outerName, String innerName,
+                        int access) {
+                    if (!mAnnotationNames.contains(name)) {
+                        super.visitInnerClass(name, outerName, innerName, access);
+                    }
+                }
+            };
+            ClassReader reader = new ClassReader(bytes);
+            reader.accept(classVisitor, 0);
+            byte[] rewritten = classWriter.toByteArray();
+            try {
+                Files.write(rewritten, file);
+            } catch (IOException e) {
+                System.err.println("Could not write " + file + ": " + e.getLocalizedMessage());
+                mHaveError = true;
+                //noinspection UnnecessaryContinue
+                continue;
+            }
+        }
+    }
+
+    /**
+     * Performs the actual deletion (or display, if in dry-run mode) of the typedef annotation
+     * files
+     */
+    private void deleteAnnotationClasses() {
+        for (File mFile : mAnnotationClassFiles) {
+            if (mVerbose) {
+                if (mDryRun) {
+                    System.out.println("Would delete " + mFile);
+                } else {
+                    System.out.println("Deleting " + mFile);
+                }
+            }
+            if (!mDryRun) {
+                boolean deleted = mFile.delete();
+                if (!deleted) {
+                    System.err.println("Could not delete " + mFile);
+                    mHaveError = true;
+                }
+            }
+        }
+    }
+
+    /**
+     * Visitor which visits .class files and checks whether each class is a typedef annotation
+     * (and if so, calls {@link #addTypeDef(String, java.io.File)}
+     */
+    private class TypeDefVisitor extends ClassVisitor {
 
         /** Class file name */
         private File mFile;
@@ -161,7 +275,7 @@ public class RmTypeDefs {
         /** Does the annotation have source retention? Only applies if {@link #mAnnotation} */
         private boolean mSourceRetention;
 
-        public MyVisitor(File file) {
+        public TypeDefVisitor(File file) {
             super(ASM4);
             mFile = file;
         }
@@ -203,20 +317,8 @@ public class RmTypeDefs {
                             + "with @Retention(RetentionPolicy.SOURCE)");
                     mHaveError = true;
                 }
-                if (mVerbose) {
-                    if (mDryRun) {
-                        System.out.println("Would delete " + mFile);
-                    } else {
-                        System.out.println("Deleting " + mFile);
-                    }
-                }
-                if (!mDryRun) {
-                    boolean deleted = mFile.delete();
-                    if (!deleted) {
-                        System.err.println("Could not delete " + mFile);
-                        mHaveError = true;
-                    }
-                }
+
+                addTypeDef(mName, mFile);
             }
         }
     }
