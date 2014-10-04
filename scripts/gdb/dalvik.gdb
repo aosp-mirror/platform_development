@@ -71,6 +71,9 @@ define art-on
         set breakpoint pending auto
 
         printf "ART debugging mode is enabled.\n"
+        printf "If you are debugging a native only process, you need to\n"
+        printf "re-enable normal SIGSEGV handling using this command:\n"
+        printf "  handle SIGSEGV print stop\n"
         set $art_debug_enabled = 1
     else
         printf "ART debugging mode is already enabled.\n"
@@ -104,7 +107,3 @@ document art-off
 
     Use the command "art-on" to enable ART debugging mode.
 end
-
-# switch on ART debugging
-art-on
-
