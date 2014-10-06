@@ -5,6 +5,6 @@ Platform.CodeName=L
 Pkg.Revision=1
 AndroidVersion.ApiLevel=${PLATFORM_SDK_VERSION}
 AndroidVersion.CodeName=${PLATFORM_VERSION_CODENAME}
-Layoutlib.Api=10
+Layoutlib.Api=12
 Layoutlib.Revision=1
 Platform.MinToolsRev=22
