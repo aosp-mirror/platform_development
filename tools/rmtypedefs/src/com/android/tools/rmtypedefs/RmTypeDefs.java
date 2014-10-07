@@ -183,7 +183,7 @@ public class RmTypeDefs {
             assert parentFile != null : file;
             File container = new File(parentFile, fileName.substring(0, index) + ".class");
             if (container.exists()) {
-                mAnnotationOuterClassFiles.add(file);
+                mAnnotationOuterClassFiles.add(container);
             } else {
                 System.err.println("Warning: Could not find outer class " + container
                         + " for typedef " + file);
