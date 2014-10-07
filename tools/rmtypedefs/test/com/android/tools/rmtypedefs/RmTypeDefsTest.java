@@ -16,6 +16,9 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+import static com.google.common.base.Charsets.UTF_8;
+import static java.io.File.separatorChar;
+
 @SuppressWarnings("SpellCheckingInspection")
 public class RmTypeDefsTest extends TestCase {
     public void test() throws IOException {
@@ -169,8 +172,35 @@ public class RmTypeDefsTest extends TestCase {
                 + "            testDir/test/pkg/TestClass.java\n",
                 getDirectoryContents(dir));
 
+        // Make sure the Visibility symbol is completely gone from the outer class
+        assertDoesNotContainBytes(new File(dir,
+                "test/pkg/TestClass$StaticInnerClass.class".replace('/', separatorChar)),
+                "Visibility");
 
         deleteDir(dir);
+    }
+
+    private void assertDoesNotContainBytes(File file, String sub) throws IOException {
+        byte[] contents = Files.toByteArray(file);
+        // Like the strings command, look for 4 or more consecutive printable characters
+        for (int i = 0, n = contents.length; i < n; i++) {
+            if (Character.isJavaIdentifierStart(contents[i])) {
+                for (int j = i + 1; j < n; j++) {
+                    if (!Character.isJavaIdentifierPart(contents[j])) {
+                        if (j > i + 4) {
+                            int length = j - i - 1;
+                            if (length == sub.length()) {
+                                String symbol = new String(contents, i, length, UTF_8);
+                                assertFalse("Found " + sub + " in class file " + file,
+                                        sub.equals(symbol));
+                            }
+                        }
+                        i = j;
+                        break;
+                    }
+                }
+            }
+        }
     }
 
     String getDirectoryContents(File root) {
