@@ -448,7 +448,7 @@ public class GameView extends View implements InputDeviceListener {
     }
 
     private static float pythag(float x, float y) {
-        return (float) Math.sqrt(x * x + y * y);
+        return (float) Math.hypot(x, y);
     }
 
     private static int blend(float alpha, int from, int to) {
