@@ -355,38 +355,9 @@ __END_DECLS
 #endif /* __BSD_VISIBLE */
 
 /*
- * Functions internal to the implementation.
- */
-__BEGIN_DECLS
-int	__srget(FILE *);
-int	__swbuf(int, FILE *);
-__END_DECLS
-
-/*
  * The __sfoo macros are here so that we can
  * define function versions in the C library.
  */
-#define	__sgetc(p) (--(p)->_r < 0 ? __srget(p) : (int)(*(p)->_p++))
-#if defined(__GNUC__)
-static __inline int __sputc(int _c, FILE *_p) {
-	if (--_p->_w >= 0 || (_p->_w >= _p->_lbfsize && (char)_c != '\n'))
-		return (*_p->_p++ = _c);
-	else
-		return (__swbuf(_c, _p));
-}
-#else
-/*
- * This has been tuned to generate reasonable code on the vax using pcc.
- */
-#define	__sputc(c, p) \
-	(--(p)->_w < 0 ? \
-		(p)->_w >= (p)->_lbfsize ? \
-			(*(p)->_p = (c)), *(p)->_p != '\n' ? \
-				(int)*(p)->_p++ : \
-				__swbuf('\n', p) : \
-			__swbuf((int)(c), p) : \
-		(*(p)->_p = (c), (int)*(p)->_p++))
-#endif
 
 #define	__sfeof(p)	(((p)->_flags & __SEOF) != 0)
 #define	__sferror(p)	(((p)->_flags & __SERR) != 0)
@@ -403,23 +374,6 @@ static __inline int __sputc(int _c, FILE *_p) {
 #if __POSIX_VISIBLE
 #define	fileno(p)	__sfileno(p)
 #endif
-
-#ifndef lint
-#ifndef _POSIX_THREADS
-#define	getc(fp)	__sgetc(fp)
-#endif /* _POSIX_THREADS */
-#define	getc_unlocked(fp)	__sgetc(fp)
-/*
- * The macro implementations of putc and putc_unlocked are not
- * fully POSIX compliant; they do not set errno on failure
- */
-#if __BSD_VISIBLE
-#ifndef _POSIX_THREADS
-#define putc(x, fp)	__sputc(x, fp)
-#endif /* _POSIX_THREADS */
-#define putc_unlocked(x, fp)	__sputc(x, fp)
-#endif /* __BSD_VISIBLE */
-#endif /* lint */
 
 #define	getchar()	getc(stdin)
 #define	putchar(x)	putc(x, stdout)
