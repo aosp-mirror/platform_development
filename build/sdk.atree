@@ -274,6 +274,8 @@ developers/build/prebuilts/gradle/SwipeRefreshLayoutBasic                    sam
 developers/build/prebuilts/gradle/SwipeRefreshListFragment                   samples/${PLATFORM_NAME}/ui/SwipeRefreshListFragment
 developers/build/prebuilts/gradle/SwipeRefreshMultipleViews                  samples/${PLATFORM_NAME}/ui/SwipeRefreshMultipleViews
 developers/build/prebuilts/gradle/MediaRouter                                samples/${PLATFORM_NAME}/media/MediaRouter
+developers/build/prebuilts/gradle/BluetoothChat                              samples/${PLATFORM_NAME}/connectivity/bluetooth/BluetoothChat
+developers/build/prebuilts/gradle/MediaEffects                               samples/${PLATFORM_NAME}/media/MediaEffect
 developers/build/prebuilts/gradle/BasicManagedProfile                        samples/${PLATFORM_NAME}/admin/BasicManagedProfile
 developers/build/prebuilts/gradle/Camera2Basic                               samples/${PLATFORM_NAME}/media/Camera2Basic
 developers/build/prebuilts/gradle/Camera2Video                               samples/${PLATFORM_NAME}/media/Camera2Video
