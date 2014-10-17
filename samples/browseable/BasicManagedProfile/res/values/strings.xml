@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+ Copyright 2014 The Android Open Source Project
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+-->
+<resources>
+
+    <string name="set_up_profile">Set up profile</string>
+    <string name="enable_forwarding">Enable forwarding of Share Intent</string>
+    <string name="send_intent_text">Send a sample share Intent</string>
+    <string name="disable_forwarding">Disable forwarding</string>
+    <string name="setup_profile_message">This app is currently not a profile owner.</string>
+    <string name="main_message">The app is ready to control the managed profile.</string>
+    <string name="remove_profile">Remove managed profile</string>
+    <string name="all_done">Setup all done</string>
+    <string name="all_done_explanation">To manage the configuration in your managed profile, visit the badged version of this application.</string>
+    <string name="toggle_calculator">Calculator in this profile: </string>
+    <string name="toggle_chrome">Chrome in this profile:</string>
+    <string name="set_chrome_restrictions">Set Chrome restrictions</string>
+    <string name="clear_chrome_restrictions">Clear Chrome restrictions</string>
+    <string name="icon">Icon</string>
+    <string name="profile_name">Sample Managed Profile</string>
+    <string name="enabled">Enabled</string>
+    <string name="disabled">Disabled</string>
+    <string name="restrictions_set">Restrictions set.</string>
+    <string name="activity_not_found">No app can handle this intent.</string>
+    <string name="cleared">Cleared.</string>
+
+</resources>

@@ -1,0 +1,10 @@
+page.tags="Navigation Drawer"
+sample.group=UI
+@jd:body
+
+<p>
+            
+             This example illustrates a common usage of the DrawerLayout widget in the Android
+             support library.
+            
+        </p>

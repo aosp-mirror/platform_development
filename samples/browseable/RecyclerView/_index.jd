@@ -1,0 +1,9 @@
+page.tags="RecyclerView"
+sample.group=UI
+@jd:body
+
+<p>
+            
+            Demonstration of using RecyclerView with a LayoutManager to create a vertical ListView.
+            
+        </p>
