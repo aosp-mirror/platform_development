@@ -284,12 +284,20 @@ developers/build/prebuilts/gradle/NavigationDrawer                           sam
 developers/build/prebuilts/gradle/ElevationBasic                             samples/${PLATFORM_NAME}/ui/views/Elevation/ElevationBasic
 developers/build/prebuilts/gradle/ElevationDrag                              samples/${PLATFORM_NAME}/ui/views/Elevation/ElevationDrag
 developers/build/prebuilts/gradle/ClippingBasic                              samples/${PLATFORM_NAME}/ui/views/Clipping/ClippingBasic
-developers/build/prebuilts/gradle/JobScheduler                               samples/${PLATFORM_NAME}/ui/views/Clipping/ClippingBasic
+developers/build/prebuilts/gradle/JobScheduler                               samples/${PLATFORM_NAME}/ui/views/Clipping/JobScheduler
 developers/build/prebuilts/gradle/HdrViewfinder                              samples/${PLATFORM_NAME}/media/HdrViewfinder
 developers/build/prebuilts/gradle/DocumentCentricApps                        samples/${PLATFORM_NAME}/ui/activitytasks/DocumentCentricApps
 developers/build/prebuilts/gradle/DocumentCentricRelinquishIdentity          samples/${PLATFORM_NAME}/ui/activitytasks/DocumentCentricRelinquishIdentity
 developers/build/prebuilts/gradle/AppRestrictionEnforcer                     samples/${PLATFORM_NAME}/admin/AppRestrictionEnforcer
 developers/build/prebuilts/gradle/AppRestrictionSchema                       samples/${PLATFORM_NAME}/admin/AppRestrictionSchema
+developers/build/prebuilts/gradle/RecyclerView                               samples/${PLATFORM_NAME}/ui/views/RecyclerView
+developers/build/prebuilts/gradle/CardView                                   samples/${PLATFORM_NAME}/ui/views/CardView
+developers/build/prebuilts/gradle/LNotifications                             samples/${PLATFORM_NAME}/ui/notifications/LNotifications
+developers/build/prebuilts/gradle/DrawableTinting                            samples/${PLATFORM_NAME}/ui/DrawableTinting
+developers/build/prebuilts/gradle/Interpolator                               samples/${PLATFORM_NAME}/ui/Interpolator
+developers/build/prebuilts/gradle/PdfRendererBasic                           samples/${PLATFORM_NAME}/ui/graphics/PdfRendererBasic
+developers/build/prebuilts/gradle/FloatingActionButtonBasic                  samples/${PLATFORM_NAME}/ui/views/FloatingActionButton/FloatingActionButtonBasic
+developers/build/prebuilts/gradle/RevealEffectBasic                          samples/${PLATFORM_NAME}/ui/views/RevealEffect/RevealEffectBasic
 
 developers/build/prebuilts/androidtv                                         samples/${PLATFORM_NAME}/androidtv
 
