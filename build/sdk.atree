@@ -275,7 +275,7 @@ developers/build/prebuilts/gradle/SwipeRefreshListFragment                   sam
 developers/build/prebuilts/gradle/SwipeRefreshMultipleViews                  samples/${PLATFORM_NAME}/ui/SwipeRefreshMultipleViews
 developers/build/prebuilts/gradle/MediaRouter                                samples/${PLATFORM_NAME}/media/MediaRouter
 developers/build/prebuilts/gradle/BluetoothChat                              samples/${PLATFORM_NAME}/connectivity/bluetooth/BluetoothChat
-developers/build/prebuilts/gradle/MediaEffects                               samples/${PLATFORM_NAME}/media/MediaEffect
+developers/build/prebuilts/gradle/MediaEffects                               samples/${PLATFORM_NAME}/media/MediaEffects
 developers/build/prebuilts/gradle/BasicManagedProfile                        samples/${PLATFORM_NAME}/admin/BasicManagedProfile
 developers/build/prebuilts/gradle/Camera2Basic                               samples/${PLATFORM_NAME}/media/Camera2Basic
 developers/build/prebuilts/gradle/Camera2Video                               samples/${PLATFORM_NAME}/media/Camera2Video
@@ -315,7 +315,6 @@ development/samples/ApiDemos                   samples/${PLATFORM_NAME}/legacy/A
 development/samples/AppNavigation              samples/${PLATFORM_NAME}/legacy/AppNavigation
 development/samples/BackupRestore              samples/${PLATFORM_NAME}/legacy/BackupRestore
 development/samples/BasicGLSurfaceView         samples/${PLATFORM_NAME}/legacy/BasicGLSurfaceView
-development/samples/BluetoothChat              samples/${PLATFORM_NAME}/legacy/BluetoothChat
 development/samples/BluetoothHDP               samples/${PLATFORM_NAME}/legacy/BluetoothHDP
 development/samples/ContactManager             samples/${PLATFORM_NAME}/legacy/ContactManager
 development/samples/CrossCompatibility         samples/${PLATFORM_NAME}/legacy/CrossCompatibility
