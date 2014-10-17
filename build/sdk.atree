@@ -284,7 +284,7 @@ developers/build/prebuilts/gradle/NavigationDrawer                           sam
 developers/build/prebuilts/gradle/ElevationBasic                             samples/${PLATFORM_NAME}/ui/views/Elevation/ElevationBasic
 developers/build/prebuilts/gradle/ElevationDrag                              samples/${PLATFORM_NAME}/ui/views/Elevation/ElevationDrag
 developers/build/prebuilts/gradle/ClippingBasic                              samples/${PLATFORM_NAME}/ui/views/Clipping/ClippingBasic
-developers/build/prebuilts/gradle/JobScheduler                               samples/${PLATFORM_NAME}/ui/views/Clipping/JobScheduler
+developers/build/prebuilts/gradle/JobScheduler                               samples/${PLATFORM_NAME}/background/JobScheduler
 developers/build/prebuilts/gradle/HdrViewfinder                              samples/${PLATFORM_NAME}/media/HdrViewfinder
 developers/build/prebuilts/gradle/DocumentCentricApps                        samples/${PLATFORM_NAME}/ui/activitytasks/DocumentCentricApps
 developers/build/prebuilts/gradle/DocumentCentricRelinquishIdentity          samples/${PLATFORM_NAME}/ui/activitytasks/DocumentCentricRelinquishIdentity
