@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright 2014 The Android Open Source Project
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+ http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
+<resources>
+    <string name="action_settings">Settings</string>
+    <string name="heads_up_notification_description">This sample demonstrates options for displaying Heads-Up Notifications on Android.
+        \n\n
+    On Android L or above, you have options to display important information in front of the user (Heads-Up Notifications) which
+    does not obscure the entire viewport.\n</string>
+    <string name="notification_metadata_description">This sample demonstrates how to attach
+        metadata introduced in Android L, such as
+        priority data, notification category and person data.\n
+    </string>
+    <string name="visibility_metadata_description">
+        This sample demonstrates how to attach visibility metadata.\n
+        You need to have your lockscreen secured(PIN, Pattern, or Password) if you don\'t want to
+        show sensitive information on it.
+    </string>
+    <string name="visibility_public">Public</string>
+    <string name="visibility_private">Private</string>
+    <string name="visibility_secret">Secret</string>
+    <string name="title_lnotification_activity">Notification samples for L</string>
+    <string name="attach_person">Attach Person</string>
+    <string name="click_to_change">Click to Change</string>
+    <string name="show_notification">Show notification</string>
+    <string name="use_heads_up_notification_where_possible">Use Heads Up Notification when possible</string>
+    <string name="label_category">Category</string>
+    <string name="label_priority">Priority</string>
+</resources>

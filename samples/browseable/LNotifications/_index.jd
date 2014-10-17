@@ -1,0 +1,11 @@
+page.tags="LNotifications Sample"
+sample.group=UI
+@jd:body
+
+<p>
+            
+                This sample demonstrates how new features for notifications introduced in Android L
+                are used such as Heads-Up notifications, visibility, people, category and priority
+                metadata. (Priority metadata has been present since Jelly Bean, but actually unused).
+            
+        </p>

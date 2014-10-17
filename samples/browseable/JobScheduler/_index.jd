@@ -1,0 +1,10 @@
+page.tags="JobScheduler"
+sample.group=Background
+@jd:body
+
+<p>
+            
+            Demonstration of the JobScheduler API, which provides an interface for scheduling
+            background tasks when certain tasks apply.
+            
+        </p>
