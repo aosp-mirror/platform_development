@@ -1,0 +1,12 @@
+page.tags="DocumentCentricRecents"
+sample.group=UI
+@jd:body
+
+<p>
+            
+            This sample shows the basic usage of the new \"Document Centric Apps\" API.
+            It let\'s you create new documents in the system overview menu and persists its
+            state through reboots. If \"Task per document\" is checked a new task will be
+            created for every new document in the overview menu.
+            
+        </p>

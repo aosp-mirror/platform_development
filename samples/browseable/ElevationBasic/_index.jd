@@ -1,0 +1,11 @@
+page.tags="ElevationBasic"
+sample.group=UI
+@jd:body
+
+<p>
+            
+            This sample demonstrates two alternative ways to move a view in the z-axis. The
+            first view has a fixed elevation using XML and the second one is raised when the user
+            taps on it, using setTranslationZ().
+            
+        </p>

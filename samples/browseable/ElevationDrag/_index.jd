@@ -1,0 +1,11 @@
+page.tags="ElevationDrag"
+sample.group=UI
+@jd:body
+
+<p>
+            
+            This sample demonstrates a drag and drop action on different shapes. Elevation and
+            z-translation are used to render the shadows and the views are clipped using different
+            Outlines.
+            
+        </p>
