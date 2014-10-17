@@ -1,0 +1,12 @@
+page.tags="AppRestrictionSchema"
+sample.group=Admin
+@jd:body
+
+<p>
+            
+            This sample shows how to use app restrictions. This application has one boolean
+            restriction with a key \"can_say_hello\" that defines whether the only feature of this
+            app (press the button to show \"Hello\" message) is enabled or disabled. Use
+            AppRestrictionEnforcer sample to toggle the restriction.
+            
+        </p>

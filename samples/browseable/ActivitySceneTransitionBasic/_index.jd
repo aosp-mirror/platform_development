@@ -1,0 +1,12 @@
+page.tags="ActivitySceneTransitionBasic"
+sample.group=UI
+@jd:body
+
+<p>
+            
+            Demonstrates how to the use Activity scene transitions when transitions
+            from one Activity to another. Uses a combination of moveImage and changeBounds
+            to nicely transition a grid of images to an Activity with a large image and detail
+            text.
+            
+        </p>
