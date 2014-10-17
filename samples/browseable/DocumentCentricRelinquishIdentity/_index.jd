@@ -1,0 +1,9 @@
+page.tags="DocumentCentricRelinquishIdentity"
+sample.group=UI
+@jd:body
+
+<p>
+            
+            This sample shows how to relinquish identity to activities above it in the task stack.
+            
+        </p>

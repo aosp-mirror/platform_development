@@ -1,0 +1,9 @@
+page.tags="ClippingBasic"
+sample.group=UI
+@jd:body
+
+<p>
+            
+            Basic sample to demonstrate clipping on a View.
+            
+        </p>
