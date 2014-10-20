@@ -246,7 +246,7 @@ See test_defs.xsd for more information.
     suite="true" />
 
 <test name="cts-process"
-    build_path="cts/tests/tests/process"
+    build_path="cts/tests/ProcessTest"
     package="com.android.cts.process"
     coverage_target="framework"
     suite="cts" />
@@ -262,17 +262,6 @@ See test_defs.xsd for more information.
     package="android.accounts.cts"
     runner="android.support.test.runner.AndroidJUnitRunner"
     coverage_target="framework"
-    suite="cts" />
-
-<test name="cts-api-signature"
-    build_path="cts/tests/SignatureTest"
-    package="android.tests.sigtest"
-    runner="android.support.test.runner.AndroidJUnitRunner"
-    suite="cts" />
-
-<test name="cts-api-signature-func"
-    build_path="cts/tests/SignatureTest"
-    package="android.tests.sigtest.tests"
     suite="cts" />
 
 <test name="cts-app"
