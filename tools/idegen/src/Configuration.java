@@ -123,16 +123,27 @@ public class Configuration {
          */
 
         boolean firstJavaFile = true;
-	File[] files = directory.listFiles();
-	if (files == null) {
-	    return;
-	}
+        File[] files = directory.listFiles();
+        if (files == null) {
+            return;
+        }
         for (File file : files) {
             // Trim preceding "./" from path.
             String path = file.getPath().substring(2);
 
-            // Keep track of source roots for .java files.
-            if (path.endsWith(".java") && !file.isDirectory()) {
+            if (file.isDirectory()) {
+                // Traverse nested directories.
+                if (excludes.exclude(path)) {
+                    // Don't recurse into excluded dirs.
+                    Log.debug("Excluding: " + path);
+                    excludedDirs.add(file);
+                } else {
+                    traverse(file, sourceRoots, jarFiles, excludedDirs,
+                            excludes);
+                }
+            } else if (path.endsWith(".java")) {
+                // Keep track of source roots for .java files.
+                // Do not check excludes in this branch.
                 if (firstJavaFile) {
                     // Only parse one .java file per directory.
                     firstJavaFile = false;
@@ -142,30 +153,12 @@ public class Configuration {
                         sourceRoots.add(sourceRoot);
                     }
                 }
-                                
-                continue;
-            }
-
-            // Keep track of .jar files.
-            if (path.endsWith(".jar")) {
-                if (!excludes.exclude(path)) {
-                    jarFiles.add(file);
-                } else {
-                    Log.debug("Skipped: " + file);
-                }
-
-                continue;
-            }
-
-            // Traverse nested directories.
-            if (file.isDirectory()) {
+            } else if (path.endsWith(".jar")) {
+                // Keep track of .jar files.
                 if (excludes.exclude(path)) {
-                    // Don't recurse into excluded dirs.
-                    Log.debug("Excluding: " + path);
-                    excludedDirs.add(file);
+                    Log.debug("Skipped: " + file);
                 } else {
-                    traverse(file, sourceRoots, jarFiles, excludedDirs,
-                            excludes);
+                    jarFiles.add(file);
                 }
             }
         }
