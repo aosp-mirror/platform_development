@@ -1,0 +1,11 @@
+page.tags="DataLayer"
+sample.group=Wearable
+@jd:body
+
+<p>
+            
+            You can cause the wearable to start an activity by pressing a button in the
+            companion app UI. You can also take a picture on the companion device, which will be transmitted as
+            an Asset for display on the wearable.
+            
+        </p>
