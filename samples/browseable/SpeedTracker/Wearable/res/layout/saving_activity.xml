@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright (C) 2014 The Android Open Source Project
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+          http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+-->
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent" android:layout_height="match_parent">
+    <View
+        android:id="@+id/center"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_centerInParent="true"/>
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_above="@id/center"
+        android:layout_marginBottom="18dp"
+        android:fontFamily="sans-serif-light"
+        android:textSize="18sp"
+        android:text="@string/start_saving_gps"/>
+    <android.support.wearable.view.CircledImageView
+        android:id="@+id/cancelBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_below="@id/center"
+        android:layout_toLeftOf="@id/center"
+        android:layout_marginEnd="10dp"
+        android:src="@drawable/ic_cancel_80"
+        app:circle_color="@color/grey"
+        android:onClick="onClick"
+        app:circle_padding="@dimen/circle_padding"
+        app:circle_radius="@dimen/circle_radius"
+        app:circle_radius_pressed="@dimen/circle_radius_pressed" />
+    <android.support.wearable.view.CircledImageView
+        android:id="@+id/submitBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_below="@id/center"
+        android:layout_toRightOf="@id/center"
+        android:layout_marginStart="10dp"
+        android:src="@drawable/ic_confirmation_80"
+        app:circle_color="@color/blue"
+        android:onClick="onClick"
+        app:circle_padding="@dimen/circle_padding"
+        app:circle_radius="@dimen/circle_radius"
+        app:circle_radius_pressed="@dimen/circle_radius_pressed" />
+</RelativeLayout>

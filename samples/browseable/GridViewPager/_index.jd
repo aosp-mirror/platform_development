@@ -1,0 +1,9 @@
+page.tags="GridViewPager"
+sample.group=Wearable
+@jd:body
+
+<p>
+            
+            Demonstrates how to implement a GridViewPager in your wearable app.
+            
+        </p>

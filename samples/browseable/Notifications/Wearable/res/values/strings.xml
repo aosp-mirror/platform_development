@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright (C) 2014 The Android Open Source Project
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+          http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+-->
+
+<resources>
+
+    <string name="app_name">Wearable Notifications</string>
+    <string name="basic_example">Basic example</string>
+    <string name="stylized_text_example">Stylized text example</string>
+    <string name="display_intent_example">Display intent example</string>
+    <string name="multisize_display_intent_example">Multiple-sized display intent example</string>
+    <string name="animated_display_intent_example">Animated display intent example</string>
+    <string name="content_icon_example">Content icon example</string>
+
+    <string name="example_content_title">Example content title</string>
+    <string name="example_content_text">Example content text</string>
+
+    <string name="xsmall_sized_display">X-Small sized display</string>
+    <string name="small_sized_display">Small sized display</string>
+    <string name="medium_sized_display">Medium sized display</string>
+    <string name="large_sized_display">Large sized display</string>
+    <string name="full_screen_display">Full-Screen display</string>
+    <string name="dp256_height_display">256dp height display</string>
+    <string name="dp512_height_display">512dp height display</string>
+
+    <string name="action_a">Action A</string>
+    <string name="action_b">Action B</string>
+    <string name="action_c">Action C</string>
+    <string name="action_d">Action D</string>
+    <string name="reply">Reply</string>
+    <string name="reply_was">Reply was: </string>
+    <string name="third_page">Third page</string>
+    <string name="choice_1">Choice #1</string>
+</resources>
