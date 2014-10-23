@@ -1,0 +1,12 @@
+page.tags="SkeletonWearableApp"
+sample.group=Wearable
+@jd:body
+
+<p>
+            
+            This sample is a mostly empty wearable app that implements a fullscreen activity
+            conforming to Android Wear best practices. Included in the sample are examples of GridViewPager,
+            DelayedConfirmationView, and DismissOverlayView. Developers who require a fullscreen activity for
+            their wearable app can use this sample as a starting point.
+            
+        </p>

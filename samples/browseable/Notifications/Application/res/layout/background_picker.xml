@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright (C) 2014 The Android Open Source Project
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+          http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+-->
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <TextView
+        android:id="@+id/bg_picker_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="@dimen/editor_item_padding_top"
+        android:paddingTop="@dimen/editor_item_padding_top"
+        android:paddingBottom="@dimen/editor_item_padding_top"
+        android:text="@string/bg_picker_label"/>
+
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <LinearLayout
+            android:id="@+id/bg_picker_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+            <ImageView
+                android:id="@+id/bg_none"
+                android:background="@drawable/selected_background"
+                style="@style/bg_picker"
+                android:layout_width="@dimen/image_picker_item_side"
+                android:layout_height="@dimen/image_picker_item_side"
+                android:src="@android:color/background_light"/>
+            <ImageView
+                android:id="@+id/bg1"
+                style="@style/bg_picker"
+                android:layout_width="@dimen/image_picker_item_side"
+                android:layout_height="@dimen/image_picker_item_side"
+                android:tag="bg_1"
+                android:src="@drawable/bg_1"/>
+            <ImageView
+                android:id="@+id/bg2"
+                style="@style/bg_picker"
+                android:layout_width="@dimen/image_picker_item_side"
+                android:layout_height="@dimen/image_picker_item_side"
+                android:tag="bg_2"
+                android:src="@drawable/bg_2"/>
+            <ImageView
+                android:id="@+id/bg3"
+                style="@style/bg_picker"
+                android:layout_width="@dimen/image_picker_item_side"
+                android:layout_height="@dimen/image_picker_item_side"
+                android:tag="bg_3"
+                android:src="@drawable/bg_3"/>
+            <ImageView
+                android:id="@+id/bg4"
+                style="@style/bg_picker"
+                android:layout_width="@dimen/image_picker_item_side"
+                android:layout_height="@dimen/image_picker_item_side"
+                android:tag="bg_4"
+                android:src="@drawable/bg_4"/>
+            <ImageView
+                android:id="@+id/bg5"
+                style="@style/bg_picker"
+                android:layout_width="@dimen/image_picker_item_side"
+                android:layout_height="@dimen/image_picker_item_side"
+                android:tag="bg_5"
+                android:src="@drawable/bg_5"/>
+        </LinearLayout>
+
+    </HorizontalScrollView>
+
+</LinearLayout>

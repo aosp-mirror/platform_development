@@ -1,0 +1,9 @@
+page.tags="JumpingJack"
+sample.group=Wearable
+@jd:body
+
+<p>
+            
+            Uses the Gravity sensor to count how many jumping jacks you have performed.
+            
+        </p>
