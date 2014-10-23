@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ Copyright 2013 The Android Open Source Project
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+-->
+<resources>
+    <string name="app_name">AgendaData</string>
+    <string name="intro_message">
+        <![CDATA[
+        
+            
+            Syncs calendar events to your wearable at the press of a button, using the Wearable
+            DataApi to transmit data such as event time, description, and background image. The DataItems can be
+            deleted individually via an action on the event notifications, or all at once via a button on the
+            companion. When deleted using the notification action, a ConfirmationActivity is used to indicate
+            success or failure.
+            
+        
+        ]]>
+    </string>
+</resources>

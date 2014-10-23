@@ -1,0 +1,10 @@
+page.tags="SynchronizedNotifications"
+sample.group=Wearable
+@jd:body
+
+<p>
+            
+            This sample creates simple or synchronized notifications on a
+            device and an Android Wear watch.
+            
+        </p>

@@ -1,0 +1,14 @@
+page.tags="DelayedConfirmation"
+sample.group=Wearable
+@jd:body
+
+<p>
+            
+            Demonstrates how to create a DelayedConfirmationView in your wearable app. In this
+            sample, pressing a button on the phone app sends a message to the wearable to start a simple
+            activity. This activity displays a DelayedConfirmationView that starts when the user presses "Start
+            Timer." Then, callbacks are implemented on both the wearable and phone to show when the timer is
+            selected or finishes. The activity on the wearable uses BoxInsetLayout to automatically apply
+            appropriate margins based on whether the display is square or circular.
+            
+        </p>

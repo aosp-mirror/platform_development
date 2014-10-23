@@ -1,0 +1,9 @@
+page.tags="WatchViewStub"
+sample.group=Wearable
+@jd:body
+
+<p>
+            
+            This sample demonstrates how to specify different layouts for round and rectangular screens.
+            
+        </p>
