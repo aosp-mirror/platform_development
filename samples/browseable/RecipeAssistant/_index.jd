@@ -1,0 +1,14 @@
+page.tags="RecipeAssistant"
+sample.group=Wearable
+@jd:body
+
+<p>
+            
+            This phone application uses the enhanced notifications API to display recipe
+            instructions using paged notifications. After starting the application on your phone, you can browse
+            from a short list of recipes and select one to view. Each recipe is broken down into a number of
+            steps; when ready, you can click on the START action in the action bar to send the steps to the
+            wearable. On the wearable device, the steps are displayed as a multi-page notification, with one
+            page for each step in the recipe.
+            
+        </p>

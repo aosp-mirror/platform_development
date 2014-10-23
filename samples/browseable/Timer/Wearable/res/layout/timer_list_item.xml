@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.example.android.wearable.timer.WearableListItemLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:gravity="center_vertical"
+    android:layout_width="match_parent"
+    android:layout_height="80dp">
+    <ImageView
+        android:id="@+id/circle"
+        android:layout_height="20dp"
+        android:layout_margin="16dp"
+        android:layout_width="20dp"
+        android:src="@drawable/wl_circle"/>
+    <TextView
+        android:id="@+id/time_text"
+        android:gravity="center_vertical|left"
+        android:layout_width="wrap_content"
+        android:layout_marginRight="16dp"
+        android:layout_height="match_parent"
+        android:fontFamily="sans-serif-condensed-light"
+        android:lineSpacingExtra="-4sp"
+        android:textColor="@color/text_color"
+        android:textSize="16sp"/>
+</com.example.android.wearable.timer.WearableListItemLayout>

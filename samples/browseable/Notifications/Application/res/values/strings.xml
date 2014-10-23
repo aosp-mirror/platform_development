@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright (C) 2014 The Android Open Source Project
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+          http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+-->
+
+<resources>
+
+    <string name="properties">Properties</string>
+    <string name="preset">Preset</string>
+    <string name="text">Text</string>
+    <string name="title">Title</string>
+    <string name="priority">Priority</string>
+    <string name="actions">Actions</string>
+    <string name="include_large_icon">Include large icon</string>
+    <string name="local_only">Local only</string>
+    <string name="include_content_intent">Include content intent</string>
+    <string name="vibrate">Vibrate</string>
+
+    <string name="basic_example">Basic example</string>
+    <string name="stylized_text_example">Stylized text example</string>
+    <string name="inbox_example">Inbox example</string>
+    <string name="big_picture_example">Big picture example</string>
+    <string name="big_text_example">Big text example</string>
+    <string name="bottom_aligned_example">Bottom-aligned example</string>
+    <string name="gravity_example">Gravity example</string>
+    <string name="content_action_example">Content action example</string>
+    <string name="content_icon_example">Content icon example</string>
+    <string name="multiple_page_example">Multiple page example</string>
+    <string name="bundle_example">Bundle example</string>
+
+    <string name="min_priority">Min priority</string>
+    <string name="low_priority">Low priority</string>
+    <string name="default_priority">Default priority</string>
+    <string name="high_priority">High priority</string>
+    <string name="max_priority">Max priority</string>
+
+    <string name="no_actions">No actions</string>
+    <string name="single_action">Single action</string>
+    <string name="long_title_action">Single action with a long title</string>
+    <string name="reply_action">Reply action</string>
+    <string name="reply_action_with_choices">Reply action with choices</string>
+    <string name="different_actions_on_phone_and_wearable">Different on phone and wearable</string>
+
+    <string name="example_action">Example action</string>
+    <string name="example_action_long_title">Example action with a long title which wraps</string>
+    <string name="example_reply_action">Example reply action</string>
+    <string name="phone_action">Phone action</string>
+    <string name="wearable_action">Wearable action</string>
+
+    <string name="example_action_clicked">Example action clicked</string>
+    <string name="example_reply_action_clicked">Example reply action clicked</string>
+    <string name="phone_action_clicked">Phone action clicked</string>
+    <string name="wearable_action_clicked">Wearable action clicked</string>
+    <string name="second_child_action_clicked">Second child action clicked</string>
+    <string name="content_intent_clicked">Content intent clicked</string>
+    <string name="example_content_action_clicked">Example content action clicked</string>
+    <string name="example_content_action2_clicked">Example content action 2 clicked</string>
+    <string name="example_notification_deleted">Example notification deleted</string>
+
+    <string name="example_content_title">Basic example title</string>
+    <string name="example_content_text">Basic example text</string>
+
+    <string name="big_text_example_title">Big text example title</string>
+    <string name="big_text_example_summary_text">Big text example summary</string>
+    <string name="big_text_example_big_text">
+        Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor
+        incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud
+        exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure
+        dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+        Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit
+        anim id est laborum.
+
+        Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor
+        incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud
+        exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure
+        dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+        Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit
+        anim id est laborum.
+
+        Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor
+        incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud
+        exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure
+        dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+        Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit
+        anim id est laborum.
+
+        Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor
+        incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud
+        exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure
+        dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+        Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit
+        anim id est laborum.
+
+        Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor
+        incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud
+        exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure
+        dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+        Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit
+        anim id est laborum.
+
+        Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor
+        incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud
+        exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure
+        dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+        Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit
+        anim id est laborum.
+
+        Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor
+        incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud
+        exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure
+        dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+        Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit
+        anim id est laborum.
+
+        Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor
+        incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud
+        exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure
+        dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+        Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit
+        anim id est laborum.
+
+        Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor
+        incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud
+        exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure
+        dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+        Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit
+        anim id est laborum.
+
+        Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor
+        incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud
+        exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure
+        dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+        Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit
+        anim id est laborum.
+
+        Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor
+        incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud
+        exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure
+        dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+        Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit
+        anim id est laborum.
+    </string>
+
+    <string name="inbox_style_example_title">Inbox style example title</string>
+    <string name="inbox_style_example_summary_text">Inbox style example summary</string>
+    <string name="inbox_style_example_line1">Inbox style example line 1</string>
+    <string name="inbox_style_example_line2">Inbox style example line 2</string>
+    <string name="inbox_style_example_line3">Inbox style example line 3</string>
+
+    <string name="big_picture_style_example_title">Big picture style example title</string>
+    <string name="big_picture_style_example_summary_text">Big picture style example summary</string>
+
+    <string name="second_page_content_title">Second page title</string>
+    <string name="second_page_content_text">Second page text</string>
+
+    <string name="third_page_content_title">Third page title</string>
+    <string name="third_page_content_text">Third page text</string>
+
+    <string name="fourth_page_content_title">Fourth page title</string>
+    <string name="fourth_page_content_text">Fourth page text</string>
+
+    <string name="first_child_content_title">First child title</string>
+    <string name="first_child_content_text">
+        First child text. Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
+        tempor incididunt ut labore et dolore magna aliqua.</string>
+    <string name="second_child_content_title">Second child title</string>
+    <string name="second_child_content_text">
+        Second child text. Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
+        tempor incididunt ut labore et dolore magna aliqua.</string>
+    <string name="second_child_action">Second child action</string>
+
+    <string name="example_reply_label">Message?</string>
+
+    <string name="example_reply_answer_label">Answer?</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+    <string name="maybe">Maybe</string>
+
+    <string name="bg_picker_label">Page %s background: </string>
+
+</resources>

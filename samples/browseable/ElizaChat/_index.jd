@@ -1,0 +1,12 @@
+page.tags="ElizaChat"
+sample.group=Wearable
+@jd:body
+
+<p>
+            
+            This sample is a phone application that provides a chat experience in which users can respond to
+            messages with a quick voice response. New messages create a notification with a "Reply" action.
+            The notification is bridged from phone to wearable, and selecting the "Reply" action on the
+            wearable opens the voice transcription UI allowing the user to speak a response.
+            
+        </p>
