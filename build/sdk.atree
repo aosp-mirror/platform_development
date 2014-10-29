@@ -118,6 +118,11 @@ bin/dx                                        build-tools/${PLATFORM_NAME}/dx
 framework/dx.jar                              build-tools/${PLATFORM_NAME}/lib/dx.jar
 bin/dexdump                                   build-tools/${PLATFORM_NAME}/dexdump
 
+# multi-dex
+prebuilts/sdk/tools/lib/shrinkedAndroid.jar   build-tools/${PLATFORM_NAME}/multidex/shrinkedAndroid.jar
+prebuilts/sdk/tools/jack.jar                  build-tools/${PLATFORM_NAME}/jack.jar
+prebuilts/sdk/tools/jill.jar                  build-tools/${PLATFORM_NAME}/jill.jar
+
 
 ##############################################################################
 # Platform Component
