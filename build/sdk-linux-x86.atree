@@ -32,5 +32,5 @@ prebuilts/sdk/tools/linux/arm-linux-androideabi-ld   strip build-tools/${PLATFOR
 prebuilts/sdk/tools/linux/i686-linux-android-ld      strip build-tools/${PLATFORM_NAME}/i686-linux-android-ld
 prebuilts/sdk/tools/linux/mipsel-linux-android-ld    strip build-tools/${PLATFORM_NAME}/mipsel-linux-android-ld
 
-dalvik/dx/etc/mainDexClasses                               build-tools/${PLATFORM_NAME}/multidex/mainDexClasses
+dalvik/dx/etc/mainDexClasses                               build-tools/${PLATFORM_NAME}/mainDexClasses
 
