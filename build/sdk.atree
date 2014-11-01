@@ -119,10 +119,10 @@ framework/dx.jar                              build-tools/${PLATFORM_NAME}/lib/d
 bin/dexdump                                   build-tools/${PLATFORM_NAME}/dexdump
 
 # multi-dex
-prebuilts/sdk/tools/lib/shrinkedAndroid.jar   build-tools/${PLATFORM_NAME}/multidex/shrinkedAndroid.jar
+prebuilts/sdk/tools/lib/shrinkedAndroid.jar   build-tools/${PLATFORM_NAME}/lib/shrinkedAndroid.jar
 prebuilts/sdk/tools/jack.jar                  build-tools/${PLATFORM_NAME}/jack.jar
 prebuilts/sdk/tools/jill.jar                  build-tools/${PLATFORM_NAME}/jill.jar
-dalvik/dx/etc/mainDexClasses.rules            build-tools/${PLATFORM_NAME}/multidex/mainDexClasses.rules
+dalvik/dx/etc/mainDexClasses.rules            build-tools/${PLATFORM_NAME}/mainDexClasses.rules
 
 
 ##############################################################################
