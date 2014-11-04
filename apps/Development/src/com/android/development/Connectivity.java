@@ -318,6 +318,11 @@ public class Connectivity extends Activity {
         registerReceiver(mReceiver, new IntentFilter(CONNECTIVITY_TEST_ALARM));
     }
 
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        unregisterReceiver(mReceiver);
+    }
 
     @Override
     public void onResume() {
