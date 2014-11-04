@@ -41,6 +41,7 @@ WIN_TARGETS := \
 	prebuilt \
 	sqlite3 \
 	zipalign \
+	split-select \
 	$(WIN_SDK_TARGETS)
 
 # This is the list of *Linux* build tools that we need

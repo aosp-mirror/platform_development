@@ -61,6 +61,9 @@ bin/etc1tool.exe                       strip platform-tools/etc1tool.exe
 rm build-tools/${PLATFORM_NAME}/aapt
 bin/aapt.exe                            strip build-tools/${PLATFORM_NAME}/aapt.exe
 
+rm build-tools/${PLATFORM_NAME}/split-select
+bin/split-select.exe                    strip build-tools/${PLATFORM_NAME}/split-select.exe
+
 rm build-tools/${PLATFORM_NAME}/aidl
 bin/aidl.exe                            strip build-tools/${PLATFORM_NAME}/aidl.exe
 
