@@ -9740,6 +9740,7 @@ Notices for file(s):
 /bin/dexdump
 /bin/dx
 /bin/jasmin
+/bin/split-select
 /framework/android-mock-generatorlib.jar
 /framework/jasmin.jar
 /lib/lib64cutils.a

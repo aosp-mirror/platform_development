@@ -44,4 +44,5 @@ PRODUCT_PACKAGES += \
 	layoutlib-tests \
 	llvm-rs-cc \
 	sqlite3 \
-	vgabios-cirrus.bin
+	vgabios-cirrus.bin \
+	split-select

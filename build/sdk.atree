@@ -79,6 +79,7 @@ development/sdk/build_tools_runtime.properties build-tools/${PLATFORM_NAME}/runt
 # build tools from out/host/$(HOST_OS)-$(HOST_ARCH)/
 bin/aapt                                strip build-tools/${PLATFORM_NAME}/aapt
 bin/aidl                                strip build-tools/${PLATFORM_NAME}/aidl
+bin/split-select                        strip build-tools/${PLATFORM_NAME}/split-select
 bin/zipalign                            strip build-tools/${PLATFORM_NAME}/zipalign
 
 # renderscript (cc + headers)
