@@ -1,12 +1,12 @@
-
-
-
 page.tags="SwipeRefreshListFragment"
 sample.group=UI
 @jd:body
 
-<p>This sample demonstrates how to use {@link android.support.v4.widget.SwipeRefreshLayout} within
-{@link android.app.ListFragment} to add the <em>swipe-to-refresh</em> gesture to a
-{@link android.widget.ListView}, which enables you to trigger a refresh by swiping down on that
-view. This functionality is provided by the <code>SwipeRefreshListFragment</code> class, which you
-can reuse.</p>
+<p>
+            
+            A sample which shows how to use SwipeRefreshLayout within a ListFragment to add the
+            \'swipe-to-refresh\' gesture to a ListView, enabling the ability to trigger a refresh
+            from swiping down on that view. This is provided through the re-usable
+            SwipeRefreshListFragment class.
+            
+        </p>

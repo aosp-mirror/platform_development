@@ -14,9 +14,6 @@
 * limitations under the License.
 */
 
-
-
-
 package com.example.android.adaptertransition;
 
 import android.os.Bundle;
@@ -50,10 +47,12 @@ public class MainActivity extends SampleActivityBase {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-        AdapterTransitionFragment fragment = new AdapterTransitionFragment();
-        transaction.replace(R.id.sample_content_fragment, fragment);
-        transaction.commit();
+        if (savedInstanceState == null) {
+            FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+            AdapterTransitionFragment fragment = new AdapterTransitionFragment();
+            transaction.replace(R.id.sample_content_fragment, fragment);
+            transaction.commit();
+        }
     }
 
     @Override

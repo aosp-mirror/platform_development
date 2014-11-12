@@ -135,8 +135,8 @@ public class MainActivity extends Activity implements AdapterView.OnItemClickLis
              * As we're in an adapter we need to set each view's name dynamically, using the
              * item's ID so that the names are unique.
              */
-            image.setViewName("grid:image:" + item.getId());
-            name.setViewName("grid:name:" + item.getId());
+            image.setTransitionName("grid:image:" + item.getId());
+            name.setTransitionName("grid:name:" + item.getId());
             // END_INCLUDE(grid_set_view_name)
 
             return view;

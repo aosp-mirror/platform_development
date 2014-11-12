@@ -23,9 +23,7 @@
     android:versionName="1.0">
 
     <!-- SyncAdapters are available in API 5 and above. We use API 7 as a baseline for samples. -->
-    <uses-sdk
-        android:minSdkVersion="7"
-        android:targetSdkVersion="17" />
+    <!-- Min/target SDK versions (<uses-sdk>) managed by build.gradle -->
 
     <!-- Required for fetching feed data. -->
     <uses-permission android:name="android.permission.INTERNET"/>

@@ -1,15 +1,14 @@
-
-
-
 page.tags="BasicAndroidKeyStore"
 sample.group=Security
 @jd:body
 
-<p>This sample demonstrates how to use a {java.security.KeyStore} to
-safely create and store encryption keys that only your application can access.
-You can also sign data using those keys.</p>
-<p>To see this in action, run the sample application and click:</p>
-<ul>
-<li><strong>Create</strong> to create a new KeyPair.</li>
-<li><strong>Sign</strong> to sign some data using a KeyPair.</li>
-<li><strong>Verify</strong> to verify the data using the signature provided.</li>
+<p>
+            
+                Welcome to the <b>Basic Android Key Store</b> sample!\n\n
+                This sample demonstrates how to use the Android Key Store to safely create and store
+                encryption keys that only your application can access.  You can also sign data
+                using those keys.\n\n
+                To create a new KeyPair, click \"Create\".\n\n
+                To sign some data using a KeyPair, click \"Sign\".\n\n
+                To verify the data using the signature provided, click \"Verify\".\n\n            
+        </p>

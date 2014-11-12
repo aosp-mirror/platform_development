@@ -21,7 +21,7 @@
     android:versionName="1.0">
 
     <!-- Card emulation was introduced in API 19. -->
-    <uses-sdk android:minSdkVersion="19" android:targetSdkVersion="19" />
+    <!-- Min/target SDK versions (<uses-sdk>) managed by build.gradle -->
     <uses-feature android:name="android.hardware.nfc.hce" android:required="true" />
     <uses-permission android:name="android.permission.NFC" />
 
