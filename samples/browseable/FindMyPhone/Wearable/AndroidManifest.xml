@@ -15,7 +15,7 @@
 -->
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.android.findphone" >
+    package="com.example.android.wearable.findphone" >
 
     <uses-sdk android:minSdkVersion="20"
               android:targetSdkVersion="20" />
@@ -39,7 +39,7 @@
             </intent-filter>
         </service>
 
-        <service android:name="com.example.android.findphone.FindPhoneService"/>
+        <service android:name="com.example.android.wearable.findphone.FindPhoneService"/>
 
         <activity
                 android:name=".FindPhoneActivity"

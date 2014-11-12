@@ -22,7 +22,7 @@
     android:versionCode="1"
     android:versionName="1.0">
 
-    <uses-sdk android:minSdkVersion="14" android:targetSdkVersion="17" />
+    <!-- Min/target SDK versions (<uses-sdk>) managed by build.gradle -->
 
     <application android:label="@string/app_name"
         android:icon="@drawable/ic_launcher"
