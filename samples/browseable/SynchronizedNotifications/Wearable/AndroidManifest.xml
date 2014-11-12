@@ -17,7 +17,7 @@
 
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.android.synchronizednotifications">
+    package="com.example.android.wearable.synchronizednotifications">
 
     <uses-sdk android:minSdkVersion="20"
         android:targetSdkVersion="20" />
@@ -46,7 +46,7 @@
             </intent-filter>
             <intent-filter>
                 <action
-                    android:name="com.example.android.synchronizednotifications.DISMISS" />
+                    android:name="com.example.android.wearable.synchronizednotifications.DISMISS" />
             </intent-filter>
         </service>
 

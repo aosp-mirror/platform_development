@@ -15,7 +15,7 @@
 -->
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.android.quiz" >
+    package="com.example.android.wearable.quiz" >
 
 
     <uses-sdk android:minSdkVersion="20"

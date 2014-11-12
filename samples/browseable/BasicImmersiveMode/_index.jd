@@ -1,12 +1,11 @@
-
-
-
 page.tags="BasicImmersiveMode"
 sample.group=UI
 @jd:body
 
-<p>Android 4.4 introduces a way for you to provide a more immersive screen
-experience in your app, by letting users show or hide the status bar and
-navigation bar with a swipe.</p>
-<p>This sample demonstrates how to enable and disable this feature
-programmatically.</p>
+<p>
+            
+            \"Immersive Mode\" is a new UI mode which improves \"hide full screen\" and
+            \"hide nav bar\" modes, by letting users swipe the bars in and out.  This sample
+            demonstrates how to enable and disable immersive mode programmatically.
+            
+        </p>

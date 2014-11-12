@@ -14,19 +14,37 @@
   limitations under the License.
   -->
 
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    style="@style/Widget.SampleDashboard.Item"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:layout_height="wrap_content">
+    <!-- The CardView needs to be wrapped to ensure spacing is applied correctly. -->
 
-    <TextView android:id="@android:id/text1"
-        style="@style/Widget.SampleDashboard.Item.Title"
+    <android.support.v7.widget.CardView
+        style="@style/Widget.SampleDashboard.Card"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content">
 
-    <TextView android:id="@android:id/text2"
-        style="@style/Widget.SampleDashboard.Item.Description"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
-</LinearLayout>
+        <LinearLayout
+            style="@style/Widget.SampleDashboard.Item"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@android:id/text1"
+                style="@style/Widget.SampleDashboard.Item.Title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Hello world" />
+
+            <TextView
+                android:id="@android:id/text2"
+                style="@style/Widget.SampleDashboard.Item.Description"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+        </LinearLayout>
+
+    </android.support.v7.widget.CardView>
+
+</FrameLayout>
