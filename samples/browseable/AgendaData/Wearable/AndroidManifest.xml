@@ -15,7 +15,7 @@
 -->
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-        package="com.example.android.agendadata" >
+        package="com.example.android.wearable.agendadata" >
 
     <uses-sdk android:minSdkVersion="20"
         android:targetSdkVersion="20" />
@@ -32,13 +32,13 @@
                 android:value="@integer/google_play_services_version" />
 
         <service
-                android:name="com.example.android.agendadata.HomeListenerService" >
+                android:name="com.example.android.wearable.agendadata.HomeListenerService" >
             <intent-filter>
                 <action android:name="com.google.android.gms.wearable.BIND_LISTENER" />
             </intent-filter>
         </service>
 
-        <service android:name="com.example.android.agendadata.DeleteService"/>
+        <service android:name="com.example.android.wearable.agendadata.DeleteService"/>
 
         <activity android:name="android.support.wearable.activity.ConfirmationActivity"/>
 

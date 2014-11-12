@@ -16,7 +16,7 @@
 -->
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.android.elizachat.common">
+    package="com.example.android.wearable.elizachat.common">
 
     <application android:allowBackup="true"
         android:label="@string/app_name">

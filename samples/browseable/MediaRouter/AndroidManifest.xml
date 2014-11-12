@@ -28,9 +28,8 @@
          remote display using system alert window. -->
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
 
-    <uses-sdk android:targetSdkVersion="19"
-        android:minSdkVersion="7"/>
-
+    <!-- Min/target SDK versions (<uses-sdk>) managed by build.gradle -->
+    
     <!-- The smallest screen this app works on is a phone.  The app will
          scale its UI to larger screens but doesn't make good use of them
          so allow the compatibility mode button to be shown (mostly because

@@ -16,7 +16,7 @@
 -->
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.android.gridviewpager">
+    package="com.example.android.wearable.gridviewpager">
 
     <uses-sdk android:minSdkVersion="19"
               android:targetSdkVersion="19" />

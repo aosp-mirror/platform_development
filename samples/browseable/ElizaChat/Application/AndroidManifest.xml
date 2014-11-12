@@ -15,7 +15,7 @@
 -->
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.android.elizachat" >
+    package="com.example.android.wearable.elizachat" >
 
     <uses-sdk android:minSdkVersion="19"
               android:targetSdkVersion="19" />
@@ -36,8 +36,8 @@
         <service
             android:name=".ResponderService">
             <intent-filter>
-                <action android:name="com.example.android.elizachat.REPLY" />
-                <action android:name="com.example.android.elizachat.CONVERSATION" />
+                <action android:name="com.example.android.wearable.elizachat.REPLY" />
+                <action android:name="com.example.android.wearable.elizachat.CONVERSATION" />
             </intent-filter>
         </service>
     </application>

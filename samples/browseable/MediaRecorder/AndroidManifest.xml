@@ -22,9 +22,7 @@
     android:versionCode="1"
     android:versionName="1.0">
 
-    <uses-sdk
-        android:minSdkVersion="14"
-        android:targetSdkVersion="17" />
+    <!-- Min/target SDK versions (<uses-sdk>) managed by build.gradle -->
 
     <!-- This app records A/V content from camera and stores it to disk -->
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />

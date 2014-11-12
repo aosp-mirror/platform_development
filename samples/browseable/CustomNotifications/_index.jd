@@ -1,9 +1,9 @@
-
-
-
 page.tags="CustomNotifications"
-sample.group=UI
+sample.group=Notification
 @jd:body
 
-<p>This sample demonstrates how to implement expanded notifications that
-display custom views.</p>
+<p>
+            
+            This sample demonstrates notifications with custom content views.
+            
+        </p>
