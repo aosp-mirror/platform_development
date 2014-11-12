@@ -1,13 +1,10 @@
-
-
-
 page.tags="ActionBarCompat-Styled"
 sample.group=UI
 @jd:body
 
-<p>This sample demonstrates how to use a backward compatible
-{@link android.support.v7.app.ActionBar} with a customized theme.</p>
-<p>The activity in this sample extends from
-{@link android.support.v7.app.ActionBarActivity}, which provides the
-functionality necessary to display a compatible action bar on devices
-running Android 2.1 and higher.</p>
+<p>
+            
+            This sample shows you how to use ActionBarCompat with a customized theme. It utilizes a
+            split action bar when running on a device with a narrow display, and show three tabs.
+            
+        </p>

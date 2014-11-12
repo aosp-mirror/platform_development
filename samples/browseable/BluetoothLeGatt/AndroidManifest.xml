@@ -22,8 +22,8 @@
     android:versionCode="1"
     android:versionName="1.0">
 
-    <uses-sdk android:minSdkVersion="18"
-        android:targetSdkVersion="18"/>
+    <!-- Min/target SDK versions (<uses-sdk>) managed by build.gradle -->
+    
     <!-- Declare this required feature if you want to make the app available to BLE-capable
     devices only.  If you want to make your app available to devices that don't support BLE,
     you should omit this in the manifest.  Instead, determine BLE capability by using

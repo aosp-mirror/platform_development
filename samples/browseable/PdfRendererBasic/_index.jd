@@ -1,0 +1,9 @@
+page.tags="PdfRendererBasic"
+sample.group=UI
+@jd:body
+
+<p>
+            
+            This sample demonstrates how to use PdfRenderer to display PDF documents on the screen.
+            
+        </p>

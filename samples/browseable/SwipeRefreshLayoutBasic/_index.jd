@@ -1,11 +1,11 @@
-
-
-
 page.tags="SwipeRefreshLayoutBasic"
 sample.group=UI
 @jd:body
 
-<p>This sample demonstrates how to use {@link android.support.v4.widget.SwipeRefreshLayout} to add
-the <em>swipe-to-refresh</em> gesture to a {@link android.view.View}, which enables you to trigger
-a refresh by swiping down on the {@link android.view.View}. In this sample, the view that can
-be freshed is a {@link android.widget.ListView}.</p>
+<p>
+            
+            A basic sample which shows how to use SwipeRefreshLayout to add the \'swipe-to-refresh\'
+            gesture to a View, enabling the ability to trigger a refresh from swiping down on the view.
+            In this sample the View which can be refreshed is a ListView.
+            
+        </p>

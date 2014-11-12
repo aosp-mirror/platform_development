@@ -28,7 +28,7 @@
       This sample requires API 14 for use of theme attributes such as
       ?android:listPreferredItemPaddingLeft.
     -->
-    <uses-sdk android:minSdkVersion="14" android:targetSdkVersion="17" />
+    <!-- Min/target SDK versions (<uses-sdk>) managed by build.gradle -->
 
     <application android:label="@string/app_name"
         android:icon="@drawable/ic_launcher"
