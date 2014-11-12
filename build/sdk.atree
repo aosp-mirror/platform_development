@@ -241,6 +241,11 @@ developers/build/prebuilts/gradle/ActivityInstrumentation/                   sam
 developers/build/prebuilts/gradle/MediaRecorder/                             samples/${PLATFORM_NAME}/media/MediaRecorder
 developers/build/prebuilts/gradle/BasicMediaRouter/                          samples/${PLATFORM_NAME}/media/BasicMediaRouter
 developers/build/prebuilts/gradle/BasicMediaDecoder/                         samples/${PLATFORM_NAME}/media/BasicMediaDecoder
+developers/build/prebuilts/gradle/MediaBrowserService/                       samples/${PLATFORM_NAME}/media/MediaBrowserService
+developers/build/prebuilts/gradle/BasicNotifications/                        samples/${PLATFORM_NAME}/notification/BasicNotifications
+developers/build/prebuilts/gradle/CustomNotifications/                       samples/${PLATFORM_NAME}/notification/CustomNotifications
+developers/build/prebuilts/gradle/LNotifications/                            samples/${PLATFORM_NAME}/notification/LNotifications
+developers/build/prebuilts/gradle/MessagingService/                          samples/${PLATFORM_NAME}/notification/MessagingService
 developers/build/prebuilts/gradle/BorderlessButtons/                         samples/${PLATFORM_NAME}/ui/BorderlessButtons
 developers/build/prebuilts/gradle/BasicAccessibility/                        samples/${PLATFORM_NAME}/ui/BasicAccessibility
 developers/build/prebuilts/gradle/CustomChoiceList/                          samples/${PLATFORM_NAME}/ui/CustomChoiceList
@@ -250,8 +255,6 @@ developers/build/prebuilts/gradle/ActionBarCompat-Styled/                    sam
 developers/build/prebuilts/gradle/ActionBarCompat-ListPopupMenu/             samples/${PLATFORM_NAME}/ui/ActionBarCompat-ListPopupMenu
 developers/build/prebuilts/gradle/ActionBarCompat-ShareActionProvider/       samples/${PLATFORM_NAME}/ui/ActionBarCompat-ShareActionProvider
 developers/build/prebuilts/gradle/ActionBarCompat-Basic/                     samples/${PLATFORM_NAME}/ui/ActionBarCompat-Basic
-developers/build/prebuilts/gradle/BasicNotifications/                        samples/${PLATFORM_NAME}/ui/BasicNotifications
-developers/build/prebuilts/gradle/CustomNotifications/                       samples/${PLATFORM_NAME}/ui/CustomNotifications
 developers/build/prebuilts/gradle/DoneBar/                                   samples/${PLATFORM_NAME}/ui/DoneBar
 developers/build/prebuilts/gradle/BasicImmersiveMode/                        samples/${PLATFORM_NAME}/ui/BasicImmersiveMode
 developers/build/prebuilts/gradle/AdvancedImmersiveMode/                     samples/${PLATFORM_NAME}/ui/AdvancedImmersiveMode
@@ -292,7 +295,6 @@ developers/build/prebuilts/gradle/AppRestrictionEnforcer                     sam
 developers/build/prebuilts/gradle/AppRestrictionSchema                       samples/${PLATFORM_NAME}/admin/AppRestrictionSchema
 developers/build/prebuilts/gradle/RecyclerView                               samples/${PLATFORM_NAME}/ui/views/RecyclerView
 developers/build/prebuilts/gradle/CardView                                   samples/${PLATFORM_NAME}/ui/views/CardView
-developers/build/prebuilts/gradle/LNotifications                             samples/${PLATFORM_NAME}/ui/notifications/LNotifications
 developers/build/prebuilts/gradle/DrawableTinting                            samples/${PLATFORM_NAME}/ui/DrawableTinting
 developers/build/prebuilts/gradle/Interpolator                               samples/${PLATFORM_NAME}/ui/Interpolator
 developers/build/prebuilts/gradle/PdfRendererBasic                           samples/${PLATFORM_NAME}/ui/graphics/PdfRendererBasic
