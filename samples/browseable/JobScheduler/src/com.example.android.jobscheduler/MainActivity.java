@@ -140,9 +140,9 @@ public class MainActivity extends Activity {
         boolean requiresUnmetered = mWiFiConnectivityRadioButton.isChecked();
         boolean requiresAnyConnectivity = mAnyConnectivityRadioButton.isChecked();
         if (requiresUnmetered) {
-            builder.setRequiredNetworkCapabilities(JobInfo.NetworkType.UNMETERED);
+            builder.setRequiredNetworkType(JobInfo.NETWORK_TYPE_UNMETERED);
         } else if (requiresAnyConnectivity) {
-            builder.setRequiredNetworkCapabilities(JobInfo.NetworkType.ANY);
+            builder.setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY);
         }
         builder.setRequiresDeviceIdle(mRequiresIdleCheckbox.isChecked());
         builder.setRequiresCharging(mRequiresChargingCheckBox.isChecked());

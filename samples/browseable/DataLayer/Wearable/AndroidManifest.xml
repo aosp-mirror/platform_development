@@ -15,7 +15,7 @@
 -->
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-        package="com.example.android.datalayer" >
+        package="com.example.android.wearable.datalayer" >
 
     <uses-sdk android:minSdkVersion="20"
               android:targetSdkVersion="20" />
@@ -47,7 +47,7 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
             <intent-filter>
-                <action android:name="com.example.android.datalayer.EXAMPLE"/>
+                <action android:name="com.example.android.wearable.datalayer.EXAMPLE"/>
                 <category android:name="android.intent.category.DEFAULT"/>
             </intent-filter>
         </activity>

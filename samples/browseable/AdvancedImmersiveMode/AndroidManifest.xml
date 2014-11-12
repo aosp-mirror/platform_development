@@ -27,7 +27,7 @@
     <!-- This sample is to demonstrate features released in API 19.
          So while it would technically run on an earlier version of Android,
          there wouldn't be much point) -->
-    <uses-sdk android:minSdkVersion="19" android:targetSdkVersion="19" />
+    <!-- Min/target SDK versions (<uses-sdk>) managed by build.gradle -->
     <!-- allowBackup declares if the app can be part of device-wide backups such as "adb backup" -->
     <!-- theme is a way of applying UI decisions across your entire application.  You can also
          define it on a per-application basis. -->

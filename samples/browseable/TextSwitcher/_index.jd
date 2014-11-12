@@ -1,11 +1,11 @@
-
-
-
 page.tags="TextSwitcher"
 sample.group=UI
 @jd:body
 
-<p>This sample demonstrates how to use the {@link android.widget.TextSwitcher}
-view with animations. A {@link android.widget.TextSwitcher} is a type of
-{@link android.widget.ViewSwitcher} that animates text transitions on screen
-when {@link android.widget.TextSwitcher#setText(CharSequence)} is called.</p>
+<p>
+            
+                This sample illustrates the use of a TextSwitcher to display text.
+                \n\nClick the button below to set new text in the TextSwitcher and observe the
+                in and out fade animations.
+            
+        </p>

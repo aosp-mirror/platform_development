@@ -23,7 +23,7 @@
     android:versionName="1.0">
 
     <!-- This sample requires at least Android KitKat for sensor batching support -->
-    <uses-sdk android:minSdkVersion="19" android:targetSdkVersion="19" />
+    <!-- Min/target SDK versions (<uses-sdk>) managed by build.gradle -->
 
     <!-- Require the step counter and step detector sensors.
     See the method BatchStepSensorFragment#isKitkatWithStepSensor() for a programmatic check if

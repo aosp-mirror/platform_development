@@ -15,7 +15,7 @@
 -->
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-        package="com.example.android.notifications" >
+        package="com.example.android.support.wearable.notifications" >
 
 
     <uses-sdk android:minSdkVersion="19"
@@ -40,9 +40,9 @@
         <receiver android:name=".NotificationIntentReceiver"
                 android:exported="false">
             <intent-filter>
-                <action android:name="com.example.android.notifications.ACTION_EXAMPLE" />
-                <action android:name="com.example.android.notifications.ACTION_ENABLE_MESSAGES" />
-                <action android:name="com.example.android.notifications.ACTION_DISABLE_MESSAGES" />
+                <action android:name="com.example.android.support.wearable.notifications.ACTION_EXAMPLE" />
+                <action android:name="com.example.android.support.wearable.notifications.ACTION_ENABLE_MESSAGES" />
+                <action android:name="com.example.android.support.wearable.notifications.ACTION_DISABLE_MESSAGES" />
             </intent-filter>
         </receiver>
 
