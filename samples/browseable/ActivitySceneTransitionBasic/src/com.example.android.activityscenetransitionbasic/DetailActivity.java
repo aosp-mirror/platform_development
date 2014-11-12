@@ -65,8 +65,8 @@ public class DetailActivity extends Activity {
          * This could be done in the layout XML, but exposing it via static variables allows easy
          * querying from other Activities
          */
-        mHeaderImageView.setViewName(VIEW_NAME_HEADER_IMAGE);
-        mHeaderTitle.setViewName(VIEW_NAME_HEADER_TITLE);
+        mHeaderImageView.setTransitionName(VIEW_NAME_HEADER_IMAGE);
+        mHeaderTitle.setTransitionName(VIEW_NAME_HEADER_TITLE);
         // END_INCLUDE(detail_set_view_name)
 
         loadItem(item);

@@ -15,7 +15,7 @@
 -->
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.android.embeddedapp" >
+    package="com.example.android.wearable.embeddedapp" >
 
     <uses-sdk android:minSdkVersion="20"
               android:targetSdkVersion="20" />
