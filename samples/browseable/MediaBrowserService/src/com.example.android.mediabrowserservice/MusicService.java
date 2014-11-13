@@ -127,7 +127,7 @@ public class MusicService extends MediaBrowserService implements OnPreparedListe
     // The volume we set the media player when we have audio focus.
     public static final float VOLUME_NORMAL = 1.0f;
     public static final String ANDROID_AUTO_PACKAGE_NAME = "com.google.android.projection.gearhead";
-    public static final String ANDROID_AUTO_EMULATOR_PACKAGE_NAME = "com.google.android.mediasimulator";
+    public static final String ANDROID_AUTO_SIMULATOR_PACKAGE_NAME = "com.google.android.mediasimulator";
 
     // Music catalog manager
     private MusicProvider mMusicProvider;
@@ -259,7 +259,7 @@ public class MusicService extends MediaBrowserService implements OnPreparedListe
         // To ensure you are not allowing any arbitrary app to browse your app's contents, you
         // need to check the origin:
         if (!ANDROID_AUTO_PACKAGE_NAME.equals(clientPackageName) &&
-                !ANDROID_AUTO_EMULATOR_PACKAGE_NAME.equals(clientPackageName) &&
+                !ANDROID_AUTO_SIMULATOR_PACKAGE_NAME.equals(clientPackageName) &&
                 !getApplication().getPackageName().equals(clientPackageName)) {
             // If the request comes from an untrusted package, return null. No further calls will
             // be made to other media browsing methods.
