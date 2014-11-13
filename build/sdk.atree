@@ -311,25 +311,24 @@ developers/build/prebuilts/gradle/RevealEffectBasic                          sam
 developers/build/prebuilts/androidtv                                         samples/${PLATFORM_NAME}/androidtv
 
 # Wearable sample tree
-# Disabled for lmp (currently built for klp-modular only)
-# developers/build/prebuilts/gradle/AgendaData                    samples/${PLATFORM_NAME}/wearable/AgendaData
-# developers/build/prebuilts/gradle/DataLayer                     samples/${PLATFORM_NAME}/wearable/DataLayer
-# developers/build/prebuilts/gradle/DelayedConfirmation           samples/${PLATFORM_NAME}/wearable/DelayedConfirmation
-# developers/build/prebuilts/gradle/ElizaChat                     samples/${PLATFORM_NAME}/wearable/ElizaChat
-# developers/build/prebuilts/gradle/EmbeddedApp                   samples/${PLATFORM_NAME}/wearable/EmbeddedApp
-# developers/build/prebuilts/gradle/FindMyPhone                   samples/${PLATFORM_NAME}/wearable/FindMyPhone
-# developers/build/prebuilts/gradle/Flashlight                    samples/${PLATFORM_NAME}/wearable/Flashlight
-# developers/build/prebuilts/gradle/Geofencing                    samples/${PLATFORM_NAME}/wearable/Geofencing
-# developers/build/prebuilts/gradle/GridViewPager                 samples/${PLATFORM_NAME}/wearable/GridViewPager
-# developers/build/prebuilts/gradle/JumpingJack                   samples/${PLATFORM_NAME}/wearable/JumpingJack
-# developers/build/prebuilts/gradle/Notifications                 samples/${PLATFORM_NAME}/wearable/Notifications
-# developers/build/prebuilts/gradle/Quiz                          samples/${PLATFORM_NAME}/wearable/Quiz
-# developers/build/prebuilts/gradle/RecipeAssistant               samples/${PLATFORM_NAME}/wearable/RecipeAssistant
-# developers/build/prebuilts/gradle/SkeletonWearableApp           samples/${PLATFORM_NAME}/wearable/SkeletonWearableApp
-# developers/build/prebuilts/gradle/SpeedTracker                  samples/${PLATFORM_NAME}/wearable/SpeedTracker
-# developers/build/prebuilts/gradle/SynchronizedNotifications     samples/${PLATFORM_NAME}/wearable/SynchronizedNotifications
-# developers/build/prebuilts/gradle/Timer                         samples/${PLATFORM_NAME}/wearable/Timer
-# developers/build/prebuilts/gradle/WatchViewStub                 samples/${PLATFORM_NAME}/wearable/WatchViewStub
+developers/build/prebuilts/gradle/AgendaData                    samples/${PLATFORM_NAME}/wearable/AgendaData
+developers/build/prebuilts/gradle/DataLayer                     samples/${PLATFORM_NAME}/wearable/DataLayer
+developers/build/prebuilts/gradle/DelayedConfirmation           samples/${PLATFORM_NAME}/wearable/DelayedConfirmation
+developers/build/prebuilts/gradle/ElizaChat                     samples/${PLATFORM_NAME}/wearable/ElizaChat
+developers/build/prebuilts/gradle/EmbeddedApp                   samples/${PLATFORM_NAME}/wearable/EmbeddedApp
+developers/build/prebuilts/gradle/FindMyPhone                   samples/${PLATFORM_NAME}/wearable/FindMyPhone
+developers/build/prebuilts/gradle/Flashlight                    samples/${PLATFORM_NAME}/wearable/Flashlight
+developers/build/prebuilts/gradle/Geofencing                    samples/${PLATFORM_NAME}/wearable/Geofencing
+developers/build/prebuilts/gradle/GridViewPager                 samples/${PLATFORM_NAME}/wearable/GridViewPager
+developers/build/prebuilts/gradle/JumpingJack                   samples/${PLATFORM_NAME}/wearable/JumpingJack
+developers/build/prebuilts/gradle/Notifications                 samples/${PLATFORM_NAME}/wearable/Notifications
+developers/build/prebuilts/gradle/Quiz                          samples/${PLATFORM_NAME}/wearable/Quiz
+developers/build/prebuilts/gradle/RecipeAssistant               samples/${PLATFORM_NAME}/wearable/RecipeAssistant
+developers/build/prebuilts/gradle/SkeletonWearableApp           samples/${PLATFORM_NAME}/wearable/SkeletonWearableApp
+developers/build/prebuilts/gradle/SpeedTracker                  samples/${PLATFORM_NAME}/wearable/SpeedTracker
+developers/build/prebuilts/gradle/SynchronizedNotifications     samples/${PLATFORM_NAME}/wearable/SynchronizedNotifications
+developers/build/prebuilts/gradle/Timer                         samples/${PLATFORM_NAME}/wearable/Timer
+developers/build/prebuilts/gradle/WatchViewStub                 samples/${PLATFORM_NAME}/wearable/WatchViewStub
 
 # Old sample tree
 development/samples/AccelerometerPlay          samples/${PLATFORM_NAME}/legacy/AccelerometerPlay
