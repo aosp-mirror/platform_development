@@ -15,7 +15,7 @@
 -->
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          package="com.example.android.geofencing">
+          package="com.example.android.wearable.geofencing">
 
     <uses-sdk android:minSdkVersion="19"
               android:targetSdkVersion="19" />

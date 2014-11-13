@@ -15,7 +15,7 @@
 -->
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-        package="com.example.android.skeletonwearableapp" >
+        package="com.example.android.google.wearable.app" >
 
     <uses-sdk android:minSdkVersion="20"
               android:targetSdkVersion="20" />
@@ -42,7 +42,7 @@
         <activity
             android:name=".GridExampleActivity">
             <intent-filter>
-                <action android:name="com.example.android.skeletonwearableapp.GRID_ACTIVITY"/>
+                <action android:name="com.example.android.google.wearable.app.GRID_ACTIVITY"/>
                 <category android:name="android.intent.category.DEFAULT"/>
             </intent-filter>
         </activity>

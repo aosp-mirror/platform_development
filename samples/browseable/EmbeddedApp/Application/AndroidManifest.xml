@@ -15,8 +15,8 @@
 -->
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.android.embeddedapp" >
-    <uses-sdk android:minSdkVersion="18" android:targetSdkVersion="19" />
+    package="com.example.android.wearable.embeddedapp" >
+    <!-- Min/target SDK versions (<uses-sdk>) managed by build.gradle -->
     <application
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"

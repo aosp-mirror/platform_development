@@ -15,7 +15,7 @@
 -->
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          package="com.example.android.findphone">
+          package="com.example.android.wearable.findphone">
 
     <uses-sdk android:minSdkVersion="19"
               android:targetSdkVersion="19" />
@@ -32,7 +32,7 @@
                 android:value="@integer/google_play_services_version" />
 
         <service
-            android:name="com.example.android.findphone.SoundAlarmListenerService" >
+            android:name="com.example.android.wearable.findphone.SoundAlarmListenerService" >
             <intent-filter>
                 <action android:name="com.google.android.gms.wearable.BIND_LISTENER" />
             </intent-filter>

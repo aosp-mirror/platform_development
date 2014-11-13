@@ -21,9 +21,7 @@
           android:versionCode="1"
           android:versionName="1.0">
 
-    <uses-sdk
-        android:minSdkVersion="19"
-        android:targetSdkVersion="19"/>
+    <!-- Min/target SDK versions (<uses-sdk>) managed by build.gradle -->
 
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>

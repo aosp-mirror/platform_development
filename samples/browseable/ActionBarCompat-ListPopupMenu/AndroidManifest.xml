@@ -21,9 +21,7 @@
     android:versionName="1.0">
 
     <!-- ActionBarCompat provides an implementation of Popup Menu from API v7 onwards -->
-    <uses-sdk
-        android:minSdkVersion="7"
-        android:targetSdkVersion="17" />
+    <!-- Min/target SDK versions (<uses-sdk>) managed by build.gradle -->
 
     <application
         android:icon="@drawable/ic_launcher"

@@ -1,12 +1,9 @@
-
-
-
 page.tags="BasicAccessibility"
 sample.group=UI
 @jd:body
 
-<p>This sample demonstrates how to create applications that are accessible for
-users with visual or physical disabilities.</p>
-<p>To learn how to make the most of the accessibility features built into
-the Android framework, see
-<a href="{@docRoot}training/accessibility/index.html">Implementing Accessibility</a>.</p>
+<p>
+            
+            This sample demonstrates how to create an accessible application, using a mix of different widgets demonstrating different ways of adding accessibility markup to a UI.
+            
+        </p>

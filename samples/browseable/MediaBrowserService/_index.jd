@@ -1,0 +1,11 @@
+page.tags="MediaBrowserService"
+sample.group=Media
+@jd:body
+
+<p>
+            
+          This sample shows how to implement an audio media app that provides
+          media library metadata and playback controls through a standard
+          service.
+            
+        </p>
