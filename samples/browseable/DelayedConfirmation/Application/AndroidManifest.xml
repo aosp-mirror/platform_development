@@ -17,8 +17,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
         package="com.example.android.wearable.delayedconfirmation" >
 
-    <uses-sdk android:minSdkVersion="19"
-        android:targetSdkVersion="19" />
+    <uses-sdk android:minSdkVersion="18"
+        android:targetSdkVersion="20" />
 
     <application
             android:allowBackup="true"
