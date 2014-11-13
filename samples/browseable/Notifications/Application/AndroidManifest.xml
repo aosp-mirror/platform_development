@@ -18,8 +18,8 @@
         package="com.example.android.support.wearable.notifications" >
 
 
-    <uses-sdk android:minSdkVersion="18"
-              android:targetSdkVersion="20" />
+    <uses-sdk android:minSdkVersion="19"
+              android:targetSdkVersion="19" />
 
     <application
             android:allowBackup="true"
