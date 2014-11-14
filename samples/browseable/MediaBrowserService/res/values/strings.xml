@@ -16,7 +16,7 @@
   -->
 <resources>
 
-    <string name="app_name">Auto Music Demo</string>
+    <string name="app_name">MediaBrowserService Sample</string>
     <string name="favorite">Favorite</string>
     <string name="error_no_metadata">Unable to retrieve metadata.</string>
     <string name="browse_genres">Genres</string>
