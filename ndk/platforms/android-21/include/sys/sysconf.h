@@ -129,7 +129,7 @@ __BEGIN_DECLS
 #define _SC_AVPHYS_PAGES                0x0063
 #define _SC_MONOTONIC_CLOCK             0x0064
 
-extern int sysconf(int name);
+long sysconf(int name);
 
 __END_DECLS
 
