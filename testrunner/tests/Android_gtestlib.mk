@@ -24,7 +24,6 @@ shared_libraries := \
         liblog \
         libcutils \
         libutils \
-        libstlport
 
 static_libraries := \
         libgtest \
@@ -33,10 +32,7 @@ static_libraries := \
 c_includes := \
     external/zlib \
     external/icu/icu4c/source/common \
-    bionic \
-    bionic/libstdc++/include \
     external/gtest/include \
-    external/stlport/stlport
 
 module_tags := eng tests
 
