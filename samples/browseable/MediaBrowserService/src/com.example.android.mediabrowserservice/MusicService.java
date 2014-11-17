@@ -39,6 +39,7 @@ import android.os.PowerManager;
 import android.os.SystemClock;
 import android.service.media.MediaBrowserService;
 
+import com.example.android.mediabrowserservice.PackageValidator;
 import com.example.android.mediabrowserservice.model.MusicProvider;
 import com.example.android.mediabrowserservice.utils.LogHelper;
 import com.example.android.mediabrowserservice.utils.MediaIDHelper;
@@ -258,12 +259,11 @@ public class MusicService extends MediaBrowserService implements OnPreparedListe
                 "; clientUid=" + clientUid + " ; rootHints=", rootHints);
         // To ensure you are not allowing any arbitrary app to browse your app's contents, you
         // need to check the origin:
-        if (!ANDROID_AUTO_PACKAGE_NAME.equals(clientPackageName) &&
-                !ANDROID_AUTO_SIMULATOR_PACKAGE_NAME.equals(clientPackageName) &&
-                !getApplication().getPackageName().equals(clientPackageName)) {
+        if (!PackageValidator.isCallerAllowed(this, clientPackageName, clientUid)) {
             // If the request comes from an untrusted package, return null. No further calls will
             // be made to other media browsing methods.
-            LogHelper.w(TAG, "OnGetRoot: IGNORING request from untrusted package " + clientPackageName);
+            LogHelper.w(TAG, "OnGetRoot: IGNORING request from untrusted package "
+                    + clientPackageName);
             return null;
         }
         if (ANDROID_AUTO_PACKAGE_NAME.equals(clientPackageName)) {
