@@ -1,6 +1,8 @@
 #ifndef __gl2ext_h_
 #define __gl2ext_h_ 1
 
+#include <GLES2/gl2.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
