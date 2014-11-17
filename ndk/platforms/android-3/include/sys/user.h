@@ -31,6 +31,7 @@
 
 #include <sys/cdefs.h>
 #include <limits.h> /* For PAGE_SIZE. */
+#include <stddef.h> /* For size_t */
 
 __BEGIN_DECLS
 
