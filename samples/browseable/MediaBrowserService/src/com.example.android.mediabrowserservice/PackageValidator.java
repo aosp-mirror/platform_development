@@ -7,19 +7,21 @@ import java.util.Arrays;
 import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Process;
 import android.util.Base64;
 import android.util.Log;
 
 /**
- * Validates that the calling package is authorized to use this {@link MediaBrowserService}.
+ * Validates that the calling package is authorized to use this
+ * {@link android.service.media.MediaBrowserService}.
  */
 public class PackageValidator {
     public static final String TAG = "PackageValidator";
 
     // Replace with your package whitelist
     static final byte[][] VALID_PUBLIC_SIGNATURES = new byte[][]{
-        // Release Key gearhead-release.x509.pem
+        // Android Auto release public key
         extractKey(
         "\060\202\003\275\060\202\002\245\240\003\002\001\002\002\011\000\307\217\236\113" +
         "\223\101\060\006\060\015\006\011\052\206\110\206\367\015\001\001\005\005\000\060" +
@@ -71,7 +73,7 @@ public class PackageValidator {
         "\231\023\154\067\003\316\050\016\331\035\253\252\176\207\011\337\145\345\235\026" +
         "\041"),
 
-        // Debug Key gearhead.x509.pem
+        // Android Auto debug public key
         extractKey(
         "\060\202\003\275\060\202\002\245\240\003\002\001\002\002\011\000\347\344\006\360" +
         "\327\303\226\363\060\015\006\011\052\206\110\206\367\015\001\001\005\005\000\060" +
