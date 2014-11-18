@@ -16,17 +16,17 @@
 
 package com.example.android.apis.os;
 
-import com.google.android.mms.ContentType;
-import com.google.android.mms.pdu.GenericPdu;
-import com.google.android.mms.pdu.NotificationInd;
-import com.google.android.mms.pdu.PduHeaders;
-import com.google.android.mms.pdu.PduParser;
-
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.provider.Telephony;
 import android.util.Log;
+
+import com.google.android.mms.ContentType;
+import com.google.android.mms.pdu.GenericPdu;
+import com.google.android.mms.pdu.NotificationInd;
+import com.google.android.mms.pdu.PduHeaders;
+import com.google.android.mms.pdu.PduParser;
 
 /**
  * Receiver for MMS WAP push
@@ -39,7 +39,8 @@ public class MmsWapPushReceiver extends BroadcastReceiver {
         if (Telephony.Sms.Intents.WAP_PUSH_RECEIVED_ACTION.equals(intent.getAction())
                 && ContentType.MMS_MESSAGE.equals(intent.getType())) {
             final byte[] data = intent.getByteArrayExtra("data");
-            final PduParser parser = new PduParser(data);
+            final PduParser parser = new PduParser(
+                    data, PduParserUtil.shouldParseContentDisposition());
             GenericPdu pdu = null;
             try {
                 pdu = parser.parse();
