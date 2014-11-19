@@ -238,7 +238,8 @@ public class MmsMessagingDemo extends Activity {
         if (code == Activity.RESULT_OK) {
             final byte[] response = intent.getByteArrayExtra(SmsManager.EXTRA_MMS_DATA);
             if (response != null) {
-                final GenericPdu pdu = new PduParser(response).parse();
+                final GenericPdu pdu = new PduParser(
+                        response, PduParserUtil.shouldParseContentDisposition()).parse();
                 if (pdu instanceof SendConf) {
                     final SendConf sendConf = (SendConf) pdu;
                     if (sendConf.getResponseStatus() == PduHeaders.RESPONSE_STATUS_OK) {
@@ -281,7 +282,8 @@ public class MmsMessagingDemo extends Activity {
                 final byte[] response = new byte[nBytes];
                 final int read = reader.read(response, 0, nBytes);
                 if (read == nBytes) {
-                    final GenericPdu pdu = new PduParser(response).parse();
+                    final GenericPdu pdu = new PduParser(
+                            response, PduParserUtil.shouldParseContentDisposition()).parse();
                     if (pdu instanceof RetrieveConf) {
                         final RetrieveConf retrieveConf = (RetrieveConf) pdu;
                         mRecipientsInput.setText(getRecipients(context, retrieveConf));
