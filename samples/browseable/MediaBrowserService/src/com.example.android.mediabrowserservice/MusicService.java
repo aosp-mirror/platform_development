@@ -39,7 +39,6 @@ import android.os.PowerManager;
 import android.os.SystemClock;
 import android.service.media.MediaBrowserService;
 
-import com.example.android.mediabrowserservice.PackageValidator;
 import com.example.android.mediabrowserservice.model.MusicProvider;
 import com.example.android.mediabrowserservice.utils.LogHelper;
 import com.example.android.mediabrowserservice.utils.MediaIDHelper;
@@ -379,6 +378,11 @@ public class MusicService extends MediaBrowserService implements OnPreparedListe
         @Override
         public void onSkipToQueueItem(long queueId) {
             LogHelper.d(TAG, "OnSkipToQueueItem:" + queueId);
+
+            if (mState == PlaybackState.STATE_PAUSED) {
+                mState = PlaybackState.STATE_STOPPED;
+            }
+
             if (mPlayingQueue != null && !mPlayingQueue.isEmpty()) {
 
                 // set the current index on queue from the music Id:
@@ -393,6 +397,10 @@ public class MusicService extends MediaBrowserService implements OnPreparedListe
         public void onPlayFromMediaId(String mediaId, Bundle extras) {
             LogHelper.d(TAG, "playFromMediaId mediaId:", mediaId, "  extras=", extras);
 
+            if (mState == PlaybackState.STATE_PAUSED) {
+                mState = PlaybackState.STATE_STOPPED;
+            }
+
             // The mediaId used here is not the unique musicId. This one comes from the
             // MediaBrowser, and is actually a "hierarchy-aware mediaID": a concatenation of
             // the hierarchy in MediaBrowser and the actual unique musicID. This is necessary
@@ -406,6 +414,7 @@ public class MusicService extends MediaBrowserService implements OnPreparedListe
 
             if (mPlayingQueue != null && !mPlayingQueue.isEmpty()) {
                 String uniqueMusicID = MediaIDHelper.extractMusicIDFromMediaID(mediaId);
+
                 // set the current index on queue from the music Id:
                 mCurrentIndexOnQueue = QueueHelper.getMusicIndexOnQueue(
                         mPlayingQueue, uniqueMusicID);
@@ -435,7 +444,7 @@ public class MusicService extends MediaBrowserService implements OnPreparedListe
                 mCurrentIndexOnQueue = 0;
             }
             if (QueueHelper.isIndexPlayable(mCurrentIndexOnQueue, mPlayingQueue)) {
-                mState = PlaybackState.STATE_PLAYING;
+                mState = PlaybackState.STATE_STOPPED;
                 handlePlayRequest();
             } else {
                 LogHelper.e(TAG, "skipToNext: cannot skip to next. next Index=" +
@@ -448,7 +457,6 @@ public class MusicService extends MediaBrowserService implements OnPreparedListe
         @Override
         public void onSkipToPrevious() {
             LogHelper.d(TAG, "skipToPrevious");
-
             mCurrentIndexOnQueue--;
             if (mPlayingQueue != null && mCurrentIndexOnQueue < 0) {
                 // This sample's behavior: skipping to previous when in first song restarts the
@@ -456,7 +464,7 @@ public class MusicService extends MediaBrowserService implements OnPreparedListe
                 mCurrentIndexOnQueue = 0;
             }
             if (QueueHelper.isIndexPlayable(mCurrentIndexOnQueue, mPlayingQueue)) {
-                mState = PlaybackState.STATE_PLAYING;
+                mState = PlaybackState.STATE_STOPPED;
                 handlePlayRequest();
             } else {
                 LogHelper.e(TAG, "skipToPrevious: cannot skip to previous. previous Index=" +
@@ -486,12 +494,15 @@ public class MusicService extends MediaBrowserService implements OnPreparedListe
         public void onPlayFromSearch(String query, Bundle extras) {
             LogHelper.d(TAG, "playFromSearch  query=", query);
 
+            if (mState == PlaybackState.STATE_PAUSED) {
+                mState = PlaybackState.STATE_STOPPED;
+            }
+
             mPlayingQueue = QueueHelper.getPlayingQueueFromSearch(query, mMusicProvider);
             LogHelper.d(TAG, "playFromSearch  playqueue.length=" + mPlayingQueue.size());
             mSession.setQueue(mPlayingQueue);
 
             if (mPlayingQueue != null && !mPlayingQueue.isEmpty()) {
-
                 // start playing from the beginning of the queue
                 mCurrentIndexOnQueue = 0;
 
