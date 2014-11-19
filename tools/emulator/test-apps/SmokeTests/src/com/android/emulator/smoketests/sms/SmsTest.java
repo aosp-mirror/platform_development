@@ -21,7 +21,7 @@ import android.net.Uri;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.os.HandlerThread;
-import android.support.test.InjectContext;
+import android.support.test.InstrumentationRegistry;
 
 import org.junit.Assert;
 import static junit.framework.Assert.assertEquals;
@@ -42,8 +42,6 @@ public class SmsTest {
     public final static String BODY = "test sms";
     private final static int SMS_POLL_TIME_MS = 10 * 1000;
     private final static int SIXY_SECONDS_OF_LOOPS = 6;
-    @InjectContext
-    public Context mContext;
 
     /**
      * Verify that an SMS has been received with the correct number and body
@@ -63,7 +61,7 @@ public class SmsTest {
     }
 
     private Cursor getSmsCursor() throws java.lang.InterruptedException {
-        ContentResolver r = mContext.getContentResolver();
+        ContentResolver r = InstrumentationRegistry.getTargetContext().getContentResolver();
         Uri message = Uri.parse("content://sms/");
         Cursor c;
 
