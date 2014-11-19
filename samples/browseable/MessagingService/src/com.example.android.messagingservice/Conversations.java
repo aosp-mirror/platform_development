@@ -45,10 +45,10 @@ public class Conversations {
      * Senders of the said messages.
      */
     private static final String[] PARTICIPANTS = new String[]{
-            "John Rambo",
-            "Han Solo",
-            "Rocky Balboa",
-            "Lara Croft"
+            "John Smith",
+            "Robert Lawrence",
+            "James Smith",
+            "Jane Doe"
     };
 
     static class Conversation {
