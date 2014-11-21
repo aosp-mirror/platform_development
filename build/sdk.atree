@@ -183,6 +183,9 @@ docs/features.txt                         platforms/${PLATFORM_NAME}/data/featur
 # fonts for layoutlib.
 ${FONT_OUT}                       platforms/${PLATFORM_NAME}/data/fonts
 
+# timezone data for layoutlib
+bionic/libc/zoneinfo/tzdata       platforms/${PLATFORM_NAME}/data/tzdata
+
 # NOTICE files are copied by build/core/Makefile from sdk.git
 development/sdk/sdk_files_NOTICE.txt      platforms/${PLATFORM_NAME}/templates/NOTICE.txt
 development/sdk/sdk_files_NOTICE.txt      platforms/${PLATFORM_NAME}/data/NOTICE.txt
