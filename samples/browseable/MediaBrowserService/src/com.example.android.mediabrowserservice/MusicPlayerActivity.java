@@ -17,7 +17,6 @@ package com.example.android.mediabrowserservice;
 
 import android.app.Activity;
 import android.media.browse.MediaBrowser;
-import android.media.session.MediaController;
 import android.os.Bundle;
 
 /**
@@ -27,9 +26,6 @@ public class MusicPlayerActivity extends Activity
         implements BrowseFragment.FragmentDataHelper {
 
     private static final String TAG = MusicPlayerActivity.class.getSimpleName();
-
-    private MediaBrowser mMediaBrowser;
-    private MediaController mMediaController;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
