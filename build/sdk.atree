@@ -327,6 +327,7 @@ developers/build/prebuilts/gradle/SkeletonWearableApp           samples/${PLATFO
 developers/build/prebuilts/gradle/SpeedTracker                  samples/${PLATFORM_NAME}/wearable/SpeedTracker
 developers/build/prebuilts/gradle/SynchronizedNotifications     samples/${PLATFORM_NAME}/wearable/SynchronizedNotifications
 developers/build/prebuilts/gradle/Timer                         samples/${PLATFORM_NAME}/wearable/Timer
+developers/build/prebuilts/gradle/WatchFace                     samples/${PLATFORM_NAME}/wearable/WatchFace
 developers/build/prebuilts/gradle/WatchViewStub                 samples/${PLATFORM_NAME}/wearable/WatchViewStub
 
 # Old sample tree
