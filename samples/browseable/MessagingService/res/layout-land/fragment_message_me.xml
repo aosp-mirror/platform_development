@@ -61,7 +61,6 @@
             android:layout_above="@id/clear"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:maxLines="20"
             android:scrollbars="vertical"/>
     </RelativeLayout>
 </LinearLayout>
