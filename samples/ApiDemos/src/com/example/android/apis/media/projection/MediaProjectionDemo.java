@@ -64,6 +64,7 @@ public class MediaProjectionDemo extends Activity {
     private VirtualDisplay mVirtualDisplay;
     private Surface mSurface;
     private SurfaceView mSurfaceView;
+    private ToggleButton mToggle;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -85,6 +86,8 @@ public class MediaProjectionDemo extends Activity {
         s.setAdapter(arrayAdapter);
         s.setOnItemSelectedListener(new ResolutionSelector());
         s.setSelection(0);
+
+        mToggle = (ToggleButton) findViewById(R.id.screen_sharing_toggle);
     }
 
     @Override
@@ -108,6 +111,7 @@ public class MediaProjectionDemo extends Activity {
             return;
         }
         mMediaProjection = mProjectionManager.getMediaProjection(resultCode, data);
+        mMediaProjection.registerCallback(new MediaProjectionCallback(), null);
         mVirtualDisplay = createVirtualDisplay();
     }
 
@@ -133,11 +137,14 @@ public class MediaProjectionDemo extends Activity {
     }
 
     private void stopScreenSharing() {
-        mScreenSharing = false;
-        if (mVirtualDisplay == null) {
-            return;
+        if (mToggle.isChecked()) {
+            mToggle.setChecked(false);
         }
-        mVirtualDisplay.release();
+        mScreenSharing = false;
+        if (mVirtualDisplay != null) {
+            mVirtualDisplay.release();
+            mVirtualDisplay = null;
+        }
     }
 
     private VirtualDisplay createVirtualDisplay() {
