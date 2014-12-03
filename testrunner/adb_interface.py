@@ -51,7 +51,7 @@ class AdbInterface:
     """Direct all future commands to Android target with the given serial."""
     self._target_arg = "-s %s" % serial
 
-  def SendCommand(self, command_string, timeout_time=20, retry_count=3):
+  def SendCommand(self, command_string, timeout_time=60, retry_count=3):
     """Send a command via adb.
 
     Args:
