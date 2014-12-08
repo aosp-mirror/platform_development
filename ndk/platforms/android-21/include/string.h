@@ -189,13 +189,13 @@ size_t strlcpy(char* __restrict dest, const char* __restrict src, size_t size) {
     size_t bos = __bos(dest);
 
 #if !defined(__clang__)
-    // Compiler doesn't know destination size. Don't call __strlcpy_chk
+    // Compiler does not know destination size. Do not call __strlcpy_chk
     if (bos == __BIONIC_FORTIFY_UNKNOWN_SIZE) {
         return __strlcpy_real(dest, src, size);
     }
 
     // Compiler can prove, at compile time, that the passed in size
-    // is always <= the actual object size. Don't call __strlcpy_chk
+    // is always <= the actual object size. Do not call __strlcpy_chk
     if (__builtin_constant_p(size) && (size <= bos)) {
         return __strlcpy_real(dest, src, size);
     }
@@ -214,13 +214,13 @@ size_t strlcat(char* __restrict dest, const char* __restrict src, size_t size) {
     size_t bos = __bos(dest);
 
 #if !defined(__clang__)
-    // Compiler doesn't know destination size. Don't call __strlcat_chk
+    // Compiler does not know destination size. Do not call __strlcat_chk
     if (bos == __BIONIC_FORTIFY_UNKNOWN_SIZE) {
         return __strlcat_real(dest, src, size);
     }
 
     // Compiler can prove, at compile time, that the passed in size
-    // is always <= the actual object size. Don't call __strlcat_chk
+    // is always <= the actual object size. Do not call __strlcat_chk
     if (__builtin_constant_p(size) && (size <= bos)) {
         return __strlcat_real(dest, src, size);
     }
@@ -234,7 +234,7 @@ size_t strlen(const char *s) {
     size_t bos = __bos(s);
 
 #if !defined(__clang__)
-    // Compiler doesn't know destination size. Don't call __strlen_chk
+    // Compiler does not know destination size. Do not call __strlen_chk
     if (bos == __BIONIC_FORTIFY_UNKNOWN_SIZE) {
         return __builtin_strlen(s);
     }
@@ -253,7 +253,7 @@ char* strchr(const char *s, int c) {
     size_t bos = __bos(s);
 
 #if !defined(__clang__)
-    // Compiler doesn't know destination size. Don't call __strchr_chk
+    // Compiler does not know destination size. Do not call __strchr_chk
     if (bos == __BIONIC_FORTIFY_UNKNOWN_SIZE) {
         return __builtin_strchr(s, c);
     }
@@ -272,7 +272,7 @@ char* strrchr(const char *s, int c) {
     size_t bos = __bos(s);
 
 #if !defined(__clang__)
-    // Compiler doesn't know destination size. Don't call __strrchr_chk
+    // Compiler does not know destination size. Do not call __strrchr_chk
     if (bos == __BIONIC_FORTIFY_UNKNOWN_SIZE) {
         return __builtin_strrchr(s, c);
     }
