@@ -15,17 +15,16 @@
  limitations under the License.
 -->
 
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:orientation="vertical"
-              android:layout_margin="@dimen/margin_small"
-              android:layout_width="wrap_content"
-              android:layout_height="wrap_content">
-
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="@dimen/list_item_height"
+    android:layout_marginLeft="@dimen/margin_medium"
+    android:layout_marginRight="@dimen/margin_medium"
+    android:gravity="center_vertical">
 
     <TextView
+        android:id="@+id/textView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/element_text"
-        android:id="@+id/textView"
-        android:layout_gravity="center_horizontal"/>
-</LinearLayout>
+        android:text="@string/element_text"/>
+</FrameLayout>

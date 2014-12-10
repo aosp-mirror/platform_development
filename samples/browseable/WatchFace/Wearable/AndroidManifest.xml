@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright (C) 2014 The Android Open Source Project
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+          http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+-->
+
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+        package="com.example.android.wearable.watchface" >
+
+    <uses-sdk android:minSdkVersion="21"
+        android:targetSdkVersion="21" />
+
+    <uses-feature android:name="android.hardware.type.watch" />
+
+    <!-- Required to act as a custom watch face. -->
+    <uses-permission android:name="com.google.android.permission.PROVIDE_BACKGROUND" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+
+    <!-- Calendar permission used by CalendarWatchFaceService -->
+    <uses-permission android:name="android.permission.READ_CALENDAR" />
+
+    <application
+            android:allowBackup="true"
+            android:icon="@drawable/ic_launcher"
+            android:label="@string/app_name" >
+
+        <service
+                android:name=".AnalogWatchFaceService"
+                android:label="@string/analog_name"
+                android:allowEmbedded="true"
+                android:taskAffinity=""
+                android:permission="android.permission.BIND_WALLPAPER" >
+            <meta-data
+                    android:name="android.service.wallpaper"
+                    android:resource="@xml/watch_face" />
+            <meta-data
+                    android:name="com.google.android.wearable.watchface.preview"
+                    android:resource="@drawable/preview_analog" />
+            <meta-data
+                    android:name="com.google.android.clockwork.home.preview_circular"
+                    android:resource="@drawable/preview_analog_circular" />
+            <meta-data
+                    android:name="com.google.android.wearable.watchface.companionConfigurationAction"
+                    android:value="com.example.android.wearable.watchface.CONFIG_ANALOG" />
+            <intent-filter>
+                <action android:name="android.service.wallpaper.WallpaperService" />
+                <category android:name="com.google.android.wearable.watchface.category.WATCH_FACE" />
+            </intent-filter>
+        </service>
+
+        <service
+                android:name=".SweepWatchFaceService"
+                android:label="@string/sweep_name"
+                android:allowEmbedded="true"
+                android:taskAffinity=""
+                android:permission="android.permission.BIND_WALLPAPER" >
+            <meta-data
+                    android:name="android.service.wallpaper"
+                    android:resource="@xml/watch_face" />
+            <meta-data
+                    android:name="com.google.android.wearable.watchface.preview"
+                    android:resource="@drawable/preview_analog" />
+            <meta-data
+                    android:name="com.google.android.clockwork.home.preview_circular"
+                    android:resource="@drawable/preview_analog_circular" />
+            <intent-filter>
+                <action android:name="android.service.wallpaper.WallpaperService" />
+                <category android:name="com.google.android.wearable.watchface.category.WATCH_FACE" />
+            </intent-filter>
+        </service>
+
+        <service
+                android:name=".TiltWatchFaceService"
+                android:label="@string/tilt_name"
+                android:allowEmbedded="true"
+                android:taskAffinity=""
+                android:permission="android.permission.BIND_WALLPAPER" >
+            <meta-data
+                    android:name="android.service.wallpaper"
+                    android:resource="@xml/watch_face" />
+            <meta-data
+                    android:name="com.google.android.wearable.watchface.preview"
+                    android:resource="@drawable/preview_tilt" />
+            <meta-data
+                    android:name="com.google.android.clockwork.home.preview_circular"
+                    android:resource="@drawable/preview_tilt_circular" />
+            <meta-data
+                    android:name="com.google.android.wearable.watchface.companionConfigurationAction"
+                    android:value="com.example.android.wearable.watchface.CONFIG_TILT" />
+
+            <intent-filter>
+                <action android:name="android.service.wallpaper.WallpaperService" />
+                <category android:name="com.google.android.wearable.watchface.category.WATCH_FACE" />
+            </intent-filter>
+        </service>
+
+        <service
+                android:name=".CardBoundsWatchFaceService"
+                android:label="@string/card_bounds_name"
+                android:allowEmbedded="true"
+                android:taskAffinity=""
+                android:permission="android.permission.BIND_WALLPAPER" >
+            <meta-data
+                    android:name="android.service.wallpaper"
+                    android:resource="@xml/watch_face" />
+            <meta-data
+                    android:name="com.google.android.wearable.watchface.preview"
+                    android:resource="@drawable/preview_card_bounds" />
+            <meta-data
+                    android:name="com.google.android.clockwork.home.preview_circular"
+                    android:resource="@drawable/preview_card_bounds_circular" />
+            <meta-data
+                    android:name="com.google.android.wearable.watchface.companionConfigurationAction"
+                    android:value="com.example.android.wearable.watchface.CONFIG_CARD_BOUNDS" />
+            <intent-filter>
+                <action android:name="android.service.wallpaper.WallpaperService" />
+                <category android:name="com.google.android.wearable.watchface.category.WATCH_FACE" />
+            </intent-filter>
+        </service>
+
+        <service
+                android:name=".DigitalWatchFaceService"
+                android:label="@string/digital_name"
+                android:allowEmbedded="true"
+                android:taskAffinity=""
+                android:permission="android.permission.BIND_WALLPAPER" >
+            <meta-data
+                    android:name="android.service.wallpaper"
+                    android:resource="@xml/watch_face" />
+            <meta-data
+                    android:name="com.google.android.wearable.watchface.preview"
+                    android:resource="@drawable/preview_digital" />
+            <meta-data
+                    android:name="com.google.android.clockwork.home.preview_circular"
+                    android:resource="@drawable/preview_digital_circular" />
+            <meta-data
+                    android:name="com.google.android.wearable.watchface.companionConfigurationAction"
+                    android:value="com.example.android.wearable.watchface.CONFIG_DIGITAL" />
+            <meta-data
+                    android:name="com.google.android.wearable.watchface.wearableConfigurationAction"
+                    android:value="com.example.android.wearable.watchface.CONFIG_DIGITAL" />
+            <intent-filter>
+                <action android:name="android.service.wallpaper.WallpaperService" />
+                <category android:name="com.google.android.wearable.watchface.category.WATCH_FACE" />
+            </intent-filter>
+        </service>
+
+        <!-- All intent-filters for config actions must include the categories
+            com.google.android.wearable.watchface.category.WEARABLE_CONFIGURATION
+            and android.intent.category.DEFAULT. -->
+
+        <activity
+                android:name=".DigitalWatchFaceWearableConfigActivity"
+                android:label="@string/digital_config_name">
+            <intent-filter>
+                <action android:name="com.example.android.wearable.watchface.CONFIG_DIGITAL" />
+                <category android:name="com.google.android.wearable.watchface.category.WEARABLE_CONFIGURATION" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
+        <service
+                android:name=".CalendarWatchFaceService"
+                android:label="@string/calendar_name"
+                android:allowEmbedded="true"
+                android:taskAffinity=""
+                android:permission="android.permission.BIND_WALLPAPER" >
+            <meta-data
+                    android:name="android.service.wallpaper"
+                    android:resource="@xml/watch_face" />
+            <meta-data
+                    android:name="com.google.android.wearable.watchface.preview"
+                    android:resource="@drawable/preview_calendar" />
+            <meta-data
+                    android:name="com.google.android.clockwork.home.preview_circular"
+                    android:resource="@drawable/preview_calendar_circular" />
+            <intent-filter>
+                <action android:name="android.service.wallpaper.WallpaperService" />
+                <category android:name="com.google.android.wearable.watchface.category.WATCH_FACE" />
+            </intent-filter>
+        </service>
+
+        <service android:name=".DigitalWatchFaceConfigListenerService">
+            <intent-filter>
+                <action android:name="com.google.android.gms.wearable.BIND_LISTENER" />
+            </intent-filter>
+        </service>
+
+        <meta-data
+                android:name="com.google.android.gms.version"
+                android:value="@integer/google_play_services_version" />
+
+    </application>
+
+</manifest>

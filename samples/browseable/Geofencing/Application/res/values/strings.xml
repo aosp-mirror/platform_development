@@ -16,4 +16,6 @@
 
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <string name="start_geofence_service">Starting geofence transition service</string>
+    <string name="entering_geofence">Entering the GeoFence zone</string>
+    <string name="exiting_geofence">Exiting the GeoFence zone</string>
 </resources>
