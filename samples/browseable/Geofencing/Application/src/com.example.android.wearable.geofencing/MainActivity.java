@@ -39,17 +39,16 @@ import android.widget.Toast;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesClient.ConnectionCallbacks;
 import com.google.android.gms.common.GooglePlayServicesUtil;
+import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListener;
 import com.google.android.gms.location.Geofence;
-import com.google.android.gms.location.LocationClient;
-import com.google.android.gms.location.LocationClient.OnAddGeofencesResultListener;
-import com.google.android.gms.location.LocationStatusCodes;
+import com.google.android.gms.location.LocationServices;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends Activity implements ConnectionCallbacks,
-        OnConnectionFailedListener, OnAddGeofencesResultListener {
+        OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks {
 
     // Internal List of Geofence objects. In a real app, these might be provided by an API based on
     // locations within the user's proximity.
@@ -62,35 +61,39 @@ public class MainActivity extends Activity implements ConnectionCallbacks,
     // Persistent storage for geofences.
     private SimpleGeofenceStore mGeofenceStorage;
 
-    private LocationClient mLocationClient;
+    private LocationServices mLocationService;
     // Stores the PendingIntent used to request geofence monitoring.
     private PendingIntent mGeofenceRequestIntent;
+    private GoogleApiClient mApiClient;
 
     // Defines the allowable request types (in this example, we only add geofences).
     private enum REQUEST_TYPE {ADD}
     private REQUEST_TYPE mRequestType;
-    // Flag that indicates if a request is underway.
-    private boolean mInProgress;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         // Rather than displayng this activity, simply display a toast indicating that the geofence
         // service is being created. This should happen in less than a second.
-        Toast.makeText(this, getString(R.string.start_geofence_service), Toast.LENGTH_SHORT).show();
+        if (!isGooglePlayServicesAvailable()) {
+            Log.e(TAG, "Google Play services unavailable.");
+            finish();
+            return;
+        }
+
+        mApiClient = new GoogleApiClient.Builder(this)
+                .addApi(LocationServices.API)
+                .addConnectionCallbacks(this)
+                .addOnConnectionFailedListener(this)
+                .build();
+
+        mApiClient.connect();
 
         // Instantiate a new geofence storage area.
         mGeofenceStorage = new SimpleGeofenceStore(this);
         // Instantiate the current List of geofences.
         mGeofenceList = new ArrayList<Geofence>();
-        // Start with the request flag set to false.
-        mInProgress = false;
-
         createGeofences();
-        addGeofences();
-
-        finish();
     }
 
     /**
@@ -123,37 +126,9 @@ public class MainActivity extends Activity implements ConnectionCallbacks,
         mGeofenceList.add(mYerbaBuenaGeofence.toGeofence());
     }
 
-    /**
-     * Start a request for geofence monitoring by calling LocationClient.connect().
-     */
-    public void addGeofences() {
-        // Start a request to add geofences.
-        mRequestType = REQUEST_TYPE.ADD;
-        // Test for Google Play services after setting the request type.
-        if (!isGooglePlayServicesAvailable()) {
-            Log.e(TAG, "Unable to add geofences - Google Play services unavailable.");
-            return;
-        }
-        // Create a new location client object. Since this activity class implements
-        // ConnectionCallbacks and OnConnectionFailedListener, it can be used as the listener for
-        // both parameters.
-        mLocationClient = new LocationClient(this, this, this);
-        // If a request is not already underway.
-        if (!mInProgress) {
-            // Indicate that a request is underway.
-            mInProgress = true;
-            // Request a connection from the client to Location Services.
-            mLocationClient.connect();
-        // A request is already underway, so disconnect the client and retry the request.
-        } else {
-            mLocationClient.disconnect();
-            mLocationClient.connect();
-        }
-    }
 
     @Override
     public void onConnectionFailed(ConnectionResult connectionResult) {
-        mInProgress = false;
         // If the error has a resolution, start a Google Play services activity to resolve it.
         if (connectionResult.hasResolution()) {
             try {
@@ -168,15 +143,8 @@ public class MainActivity extends Activity implements ConnectionCallbacks,
         }
     }
 
-    /**
-     * Called by Location Services if the location client disconnects.
-     */
     @Override
     public void onDisconnected() {
-        // Turn off the request flag.
-        mInProgress = false;
-        // Destroy the current location client.
-        mLocationClient = null;
     }
 
     /**
@@ -184,32 +152,22 @@ public class MainActivity extends Activity implements ConnectionCallbacks,
      */
     @Override
     public void onConnected(Bundle connectionHint) {
-        // Use mRequestType to determine what action to take. Only ADD is used in this sample.
-        if (REQUEST_TYPE.ADD == mRequestType) {
-            // Get the PendingIntent for the geofence monitoring request.
-            mGeofenceRequestIntent = getGeofenceTransitionPendingIntent();
-            // Send a request to add the current geofences.
-            mLocationClient.addGeofences(mGeofenceList, mGeofenceRequestIntent, this);
+        // Get the PendingIntent for the geofence monitoring request.
+        // Send a request to add the current geofences.
+        mGeofenceRequestIntent = getGeofenceTransitionPendingIntent();
+        LocationServices.GeofencingApi.addGeofences(mApiClient, mGeofenceList,
+                mGeofenceRequestIntent);
+        Toast.makeText(this, getString(R.string.start_geofence_service), Toast.LENGTH_SHORT).show();
+        finish();
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+        if (null != mGeofenceRequestIntent) {
+            LocationServices.GeofencingApi.removeGeofences(mApiClient, mGeofenceRequestIntent);
         }
     }
 
-    /**
-     * Called when request to add geofences is complete, with a result status code.
-     */
-    @Override
-    public void onAddGeofencesResult(int statusCode, String[] geofenceRequestIds) {
-        // Log if adding the geofences was successful.
-        if (LocationStatusCodes.SUCCESS == statusCode) {
-            if (Log.isLoggable(TAG, Log.DEBUG)) {
-                Log.d(TAG, "Added geofences successfully.");
-            }
-        } else {
-            Log.e(TAG, "Failed to add geofences. Status code: " + statusCode);
-        }
-        // Turn off the in progress flag and disconnect the client.
-        mInProgress = false;
-        mLocationClient.disconnect();
-    }
 
     /**
      * Checks if Google Play services is available.

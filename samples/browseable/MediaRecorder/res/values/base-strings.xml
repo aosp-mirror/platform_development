@@ -19,11 +19,11 @@
     <string name="intro_message">
         <![CDATA[
         
-            
-            This sample uses the camera/camcorder as the A/V source for the MediaRecorder API.
-            A TextureView is used as the camera preview which limits the code to API 14+. This
-            can be easily replaced with a SurfaceView to run on older devices.
-            
+
+This sample uses the camera/camcorder as the A/V source for the MediaRecorder API.
+A TextureView is used as the camera preview which limits the code to API 14+. This
+can be easily replaced with a SurfaceView to run on older devices.
+
         
         ]]>
     </string>

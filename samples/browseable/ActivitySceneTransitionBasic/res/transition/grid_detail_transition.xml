@@ -16,33 +16,15 @@
 
 <!--
     The transitions which us used for the entrance and exit of shared elements. Here we declare
-    two different transitions which are targeting to specific views.
+    two different transitions which are targeting specific views.
 -->
 <transitionSet xmlns:android="http://schemas.android.com/apk/res/android">
 
     <!-- changeBounds is used for the TextViews which are shared -->
-    <changeBounds>
-        <!--
-            Set this transitions target IDs to be those which point to the TextViews in both the
-            starting and result Activities
-        -->
-        <targets>
-            <target android:targetId="@id/textview_name" />
-            <target android:targetId="@id/textview_title" />
-        </targets>
-    </changeBounds>
+    <changeBounds />
 
-    <!-- moveImage is used for the ImageViews which are shared -->
-    <moveImage>
-        <!--
-            Set this transitions target IDs to be those which point to the ImageViews in both the
-            starting and result Activities
-        -->
-        <targets>
-            <target android:targetId="@id/imageview_header" />
-            <target android:targetId="@id/imageview_item" />
-        </targets>
-    </moveImage>
+    <!-- changeImageTransform is used for the ImageViews which are shared -->
+    <changeImageTransform />
 
 </transitionSet>
 
