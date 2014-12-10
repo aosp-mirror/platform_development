@@ -31,22 +31,15 @@ import android.widget.Button;
  */
 public class SettingsFragment extends Fragment {
 
-    private Button mButton;
-    private MainActivity mMainActivity;
-
-    public SettingsFragment(MainActivity mainActivity) {
-        mMainActivity = mainActivity;
-    }
-
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
             Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.setting_layout, container, false);
-        mButton = (Button) view.findViewById(R.id.btn);
-        mButton.setOnClickListener(new View.OnClickListener() {
+        Button button = (Button) view.findViewById(R.id.btn);
+        button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mMainActivity.resetCounter();
+                ((MainActivity) getActivity()).resetCounter();
             }
         });
         return view;

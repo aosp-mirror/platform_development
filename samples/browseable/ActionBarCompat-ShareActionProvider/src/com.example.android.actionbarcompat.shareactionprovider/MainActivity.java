@@ -83,6 +83,10 @@ public class MainActivity extends ActionBarActivity {
         // Now get the ShareActionProvider from the item
         mShareActionProvider = (ShareActionProvider) MenuItemCompat.getActionProvider(shareItem);
 
+        // Get the ViewPager's current item position and set its ShareIntent.
+        int currentViewPagerItem = ((ViewPager) findViewById(R.id.viewpager)).getCurrentItem();
+        setShareIntent(currentViewPagerItem);
+
         return super.onCreateOptionsMenu(menu);
     }
     // END_INCLUDE(get_sap)
@@ -151,6 +155,19 @@ public class MainActivity extends ActionBarActivity {
         }
     };
 
+    private void setShareIntent(int position) {
+        // BEGIN_INCLUDE(update_sap)
+        if (mShareActionProvider != null) {
+            // Get the currently selected item, and retrieve it's share intent
+            ContentItem item = mItems.get(position);
+            Intent shareIntent = item.getShareIntent(MainActivity.this);
+
+            // Now update the ShareActionProvider with the new share intent
+            mShareActionProvider.setShareIntent(shareIntent);
+        }
+        // END_INCLUDE(update_sap)
+    }
+
     /**
      * A OnPageChangeListener used to update the ShareActionProvider's share intent when a new item
      * is selected in the ViewPager.
@@ -165,16 +182,7 @@ public class MainActivity extends ActionBarActivity {
 
         @Override
         public void onPageSelected(int position) {
-            // BEGIN_INCLUDE(update_sap)
-            if (mShareActionProvider != null) {
-                // Get the currently selected item, and retrieve it's share intent
-                ContentItem item = mItems.get(position);
-                Intent shareIntent = item.getShareIntent(MainActivity.this);
-
-                // Now update the ShareActionProvider with the new share intent
-                mShareActionProvider.setShareIntent(shareIntent);
-            }
-            // END_INCLUDE(update_sap)
+            setShareIntent(position);
         }
 
         @Override

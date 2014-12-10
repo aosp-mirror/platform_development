@@ -19,14 +19,15 @@
     <string name="intro_message">
         <![CDATA[
         
-            
-                Welcome to the <b>Basic Android Key Store</b> sample!\n\n
-                This sample demonstrates how to use the Android Key Store to safely create and store
-                encryption keys that only your application can access.  You can also sign data
-                using those keys.\n\n
-                To create a new KeyPair, click \"Create\".\n\n
-                To sign some data using a KeyPair, click \"Sign\".\n\n
-                To verify the data using the signature provided, click \"Verify\".\n\n            
+
+Welcome to the <b>Basic Android Key Store</b> sample!\n\n
+This sample demonstrates how to use the Android Key Store to safely create and store
+encryption keys that only your application can access.  You can also sign data
+using those keys.\n\n
+To create a new KeyPair, click \"Create\".\n\n
+To sign some data using a KeyPair, click \"Sign\".\n\n
+To verify the data using the signature provided, click \"Verify\".\n\n
+
         
         ]]>
     </string>

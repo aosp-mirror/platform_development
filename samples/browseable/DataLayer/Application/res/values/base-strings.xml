@@ -20,9 +20,9 @@
         <![CDATA[
         
             
-            You can cause the wearable to start an activity by pressing a button in the
-            companion app UI. You can also take a picture on the companion device, which will be transmitted as
-            an Asset for display on the wearable.
+            Sample demonstrating the usage of the GoogleApiClient in order to send data
+            from a handheld device to a wearable. The data transmitted is a picture taken by
+            the user of the sample.
             
         
         ]]>

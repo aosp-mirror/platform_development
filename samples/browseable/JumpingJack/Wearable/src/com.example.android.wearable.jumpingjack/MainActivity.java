@@ -99,7 +99,7 @@ public class MainActivity extends Activity
         mSecondIndicator = (ImageView) findViewById(R.id.indicator_1);
         final PagerAdapter adapter = new PagerAdapter(getFragmentManager());
         mCounterPage = new CounterFragment();
-        mSettingPage = new SettingsFragment(this);
+        mSettingPage = new SettingsFragment();
         adapter.addFragment(mCounterPage);
         adapter.addFragment(mSettingPage);
         setIndicator(0);

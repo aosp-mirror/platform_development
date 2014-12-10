@@ -16,20 +16,20 @@
 
 package com.example.android.activityscenetransitionbasic;
 
-import com.android.volley.toolbox.ImageLoader;
-import com.android.volley.toolbox.NetworkImageView;
-import com.android.volley.toolbox.Volley;
+import com.squareup.picasso.Picasso;
 
 import android.app.Activity;
-import android.app.ActivityOptions;
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Pair;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.ActivityOptionsCompat;
+import android.support.v4.util.Pair;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.GridView;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 /**
@@ -42,15 +42,10 @@ public class MainActivity extends Activity implements AdapterView.OnItemClickLis
     private GridView mGridView;
     private GridAdapter mAdapter;
 
-    private ImageLoader mImageLoader;
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.grid);
-
-        // Retrieve the ImageLoader we are going to use for NetworkImageView
-        mImageLoader = new ImageLoader(Volley.newRequestQueue(this), ImageMemoryCache.INSTANCE);
 
         // Setup the GridView and set the adapter
         mGridView = (GridView) findViewById(R.id.grid);
@@ -74,23 +69,21 @@ public class MainActivity extends Activity implements AdapterView.OnItemClickLis
         // BEGIN_INCLUDE(start_activity)
         /**
          * Now create an {@link android.app.ActivityOptions} instance using the
-         * {@link android.app.ActivityOptions#makeSceneTransitionAnimation(android.app.Activity, android.util.Pair[])} factory method.
+         * {@link ActivityOptionsCompat#makeSceneTransitionAnimation(Activity, Pair[])} factory
+         * method.
          */
-        ActivityOptions activityOptions = ActivityOptions.makeSceneTransitionAnimation(
+        ActivityOptionsCompat activityOptions = ActivityOptionsCompat.makeSceneTransitionAnimation(
                 this,
 
                 // Now we provide a list of Pair items which contain the view we can transitioning
                 // from, and the name of the view it is transitioning to, in the launched activity
-                new Pair<View, String>(
-                        view.findViewById(R.id.imageview_item),
+                new Pair<View, String>(view.findViewById(R.id.imageview_item),
                         DetailActivity.VIEW_NAME_HEADER_IMAGE),
-                new Pair<View, String>(
-                        view.findViewById(R.id.textview_name),
-                        DetailActivity.VIEW_NAME_HEADER_TITLE)
-        );
+                new Pair<View, String>(view.findViewById(R.id.textview_name),
+                        DetailActivity.VIEW_NAME_HEADER_TITLE));
 
         // Now we can start the Activity, providing the activity options as a bundle
-        startActivity(intent, activityOptions.toBundle());
+        ActivityCompat.startActivity(this, intent, activityOptions.toBundle());
         // END_INCLUDE(start_activity)
     }
 
@@ -123,21 +116,12 @@ public class MainActivity extends Activity implements AdapterView.OnItemClickLis
             final Item item = getItem(position);
 
             // Load the thumbnail image
-            NetworkImageView image = (NetworkImageView) view.findViewById(R.id.imageview_item);
-            image.setImageUrl(item.getThumbnailUrl(), mImageLoader);
+            ImageView image = (ImageView) view.findViewById(R.id.imageview_item);
+            Picasso.with(image.getContext()).load(item.getThumbnailUrl()).into(image);
 
             // Set the TextView's contents
             TextView name = (TextView) view.findViewById(R.id.textview_name);
             name.setText(item.getName());
-
-            // BEGIN_INCLUDE(grid_set_view_name)
-            /**
-             * As we're in an adapter we need to set each view's name dynamically, using the
-             * item's ID so that the names are unique.
-             */
-            image.setTransitionName("grid:image:" + item.getId());
-            name.setTransitionName("grid:name:" + item.getId());
-            // END_INCLUDE(grid_set_view_name)
 
             return view;
         }
