@@ -19,6 +19,8 @@ package com.example.android.basicandroidkeystore;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v4.app.FragmentTransaction;
+import android.text.Html;
+import android.widget.TextView;
 import android.view.Menu;
 
 import com.example.android.common.activities.SampleActivityBase;
@@ -41,6 +43,8 @@ public class MainActivity extends SampleActivityBase {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        TextView sampleOutput = (TextView) findViewById(R.id.sample_output);
+        sampleOutput.setText(Html.fromHtml(getString(R.string.intro_message)));
 
         FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
         BasicAndroidKeyStoreFragment fragment = new BasicAndroidKeyStoreFragment();

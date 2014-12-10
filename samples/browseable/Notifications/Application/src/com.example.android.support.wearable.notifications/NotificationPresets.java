@@ -50,6 +50,7 @@ public class NotificationPresets {
     public static final NotificationPreset CONTENT_ICON = new ContentIconNotificationPreset();
     public static final NotificationPreset MULTIPLE_PAGE = new MultiplePageNotificationPreset();
     public static final NotificationPreset BUNDLE = new NotificationBundlePreset();
+    public static final NotificationPreset BARCODE = new NotificationBarcodePreset();
 
     public static final NotificationPreset[] PRESETS = new NotificationPreset[] {
             BASIC,
@@ -62,7 +63,8 @@ public class NotificationPresets {
             CONTENT_ACTION,
             CONTENT_ICON,
             MULTIPLE_PAGE,
-            BUNDLE
+            BUNDLE,
+            BARCODE
     };
 
     private static NotificationCompat.Builder applyBasicOptions(Context context,
@@ -474,6 +476,35 @@ public class NotificationPresets {
 
             return new Notification[] { summaryBuilder.build(), childBuilder1.build(),
                     childBuilder2.build() };
+        }
+    }
+
+    private static class NotificationBarcodePreset extends NotificationPreset {
+        public NotificationBarcodePreset() {
+            super(R.string.barcode_example, R.string.barcode_content_title,
+                    R.string.barcode_content_text);
+        }
+
+        @Override
+        public Notification[] buildNotifications(Context context, BuildOptions options) {
+            NotificationCompat.Builder secondPageBuilder = new NotificationCompat.Builder(context)
+                    .extend(new NotificationCompat.WearableExtender()
+                            .setHintShowBackgroundOnly(true)
+                            .setBackground(BitmapFactory.decodeResource(context.getResources(),
+                                    R.drawable.qr_code))
+                            .setHintAvoidBackgroundClipping(true)
+                            .setHintScreenTimeout(
+                                    NotificationCompat.WearableExtender.SCREEN_TIMEOUT_LONG));
+
+            NotificationCompat.Builder firstPageBuilder = new NotificationCompat.Builder(context);
+            NotificationCompat.WearableExtender firstPageWearableOptions =
+                    new NotificationCompat.WearableExtender();
+            applyBasicOptions(context, firstPageBuilder, firstPageWearableOptions, options);
+
+            firstPageBuilder.extend(
+                    firstPageWearableOptions.addPage(secondPageBuilder.build()));
+
+            return new Notification[]{ firstPageBuilder.build() };
         }
     }
 }

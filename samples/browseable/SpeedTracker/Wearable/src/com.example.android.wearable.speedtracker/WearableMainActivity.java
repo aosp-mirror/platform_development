@@ -336,8 +336,8 @@ public class WearableMainActivity extends Activity implements GoogleApiClient.Co
 
     private void updateRecordingIcon() {
         mSaveGpsLocation = LocationSettingActivity.getGpsRecordingStatusFromPreferences(this);
-        mSaveImageView.setImageResource(mSaveGpsLocation ? R.drawable.ic_file_download_googblue_24dp
-                : R.drawable.ic_file_download_grey600_24dp);
+        mSaveImageView.setImageResource(mSaveGpsLocation ? R.drawable.ic_gps_saving_grey600_96dp
+                : R.drawable.ic_gps_not_saving_grey600_96dp);
     }
 
     /**

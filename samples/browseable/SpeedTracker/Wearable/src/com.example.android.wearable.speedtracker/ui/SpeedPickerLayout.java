@@ -30,13 +30,13 @@ import com.example.android.wearable.speedtracker.R;
  * A simple extension of the {@link android.widget.LinearLayout} to represent a single item in a
  * {@link android.support.wearable.view.WearableListView}.
  */
-public class SpeedPickerLayout extends LinearLayout implements WearableListView.Item {
+public class SpeedPickerLayout extends LinearLayout
+        implements WearableListView.OnCenterProximityListener {
 
     private final float mFadedTextAlpha;
     private final int mFadedCircleColor;
     private final int mChosenCircleColor;
     private ImageView mCircle;
-    private float mScale;
     private TextView mName;
 
     public SpeedPickerLayout(Context context) {
@@ -64,41 +64,16 @@ public class SpeedPickerLayout extends LinearLayout implements WearableListView.
         mName = (TextView) findViewById(R.id.name);
     }
 
-    // Provide scaling values for WearableListView animations
     @Override
-    public float getProximityMinValue() {
-        return 1f;
-    }
-
-    @Override
-    public float getProximityMaxValue() {
-        return 1.6f;
-    }
-
-    @Override
-    public float getCurrentProximityValue() {
-        return mScale;
-    }
-
-    // Scale the icon for WearableListView animations
-    @Override
-    public void setScalingAnimatorValue(float scale) {
-        mScale = scale;
-        mCircle.setScaleX(scale);
-        mCircle.setScaleY(scale);
-    }
-
-    // Change color of the icon, remove fading from the text
-    @Override
-    public void onScaleUpStart() {
+    public void onCenterPosition(boolean animate) {
         mName.setAlpha(1f);
         ((GradientDrawable) mCircle.getDrawable()).setColor(mChosenCircleColor);
     }
 
-    // Change the color of the icon, fade the text
     @Override
-    public void onScaleDownStart() {
+    public void onNonCenterPosition(boolean animate) {
         ((GradientDrawable) mCircle.getDrawable()).setColor(mFadedCircleColor);
         mName.setAlpha(mFadedTextAlpha);
+
     }
 }

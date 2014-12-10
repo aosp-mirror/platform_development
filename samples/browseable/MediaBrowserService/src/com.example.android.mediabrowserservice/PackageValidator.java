@@ -159,7 +159,14 @@ public class PackageValidator {
      */
     public static boolean isCallerAllowed(Context context, String callingPackage, int callingUid) {
         // Always allow calls from the framework or development environment.
-        if (Process.SYSTEM_UID == callingUid || !"user".equals(Build.TYPE)) {
+        if (Process.SYSTEM_UID == callingUid || Process.myUid() == callingUid) {
+            return true;
+        }
+        if (BuildConfig.DEBUG) {
+            // When your app is built in debug mode, any app is allowed to connect to it and browse
+            // its media library. If you want to test the behavior of your app when it gets
+            // released, either build a release version or remove this clause.
+            Log.i(TAG, "Allowing caller '"+callingPackage+" because app was built in debug mode.");
             return true;
         }
         PackageInfo packageInfo;

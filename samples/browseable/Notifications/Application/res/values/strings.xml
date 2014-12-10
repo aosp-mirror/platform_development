@@ -38,6 +38,7 @@
     <string name="content_icon_example">Content icon example</string>
     <string name="multiple_page_example">Multiple page example</string>
     <string name="bundle_example">Bundle example</string>
+    <string name="barcode_example">Barcode example</string>
 
     <string name="min_priority">Min priority</string>
     <string name="low_priority">Low priority</string>
@@ -160,6 +161,9 @@
 
     <string name="big_picture_style_example_title">Big picture style example title</string>
     <string name="big_picture_style_example_summary_text">Big picture style example summary</string>
+
+    <string name="barcode_content_title">Barcode example</string>
+    <string name="barcode_content_text">Swipe to view</string>
 
     <string name="second_page_content_title">Second page title</string>
     <string name="second_page_content_text">Second page text</string>

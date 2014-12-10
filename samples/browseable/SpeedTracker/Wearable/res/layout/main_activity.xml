@@ -83,7 +83,7 @@
     <ImageView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:src="@drawable/ic_file_download_grey600_24dp"
+        android:src="@drawable/ic_gps_not_saving_grey600_96dp"
         android:id="@+id/saving"
         android:layout_alignParentBottom="true"
         android:layout_alignParentLeft="true"
