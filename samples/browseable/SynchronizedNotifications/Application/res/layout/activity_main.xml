@@ -13,27 +13,31 @@
   See the License for the specific language governing permissions and
   limitations under the License.
   -->
-<LinearLayout
+<ScrollView
         xmlns:android="http://schemas.android.com/apk/res/android"
-        android:orientation="vertical"
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true"
         android:id="@+id/sample_main_layout">
-    <TextView android:id="@+id/sample_output"
-              style="@style/Widget.SampleMessage"
-              android:layout_weight="1"
-              android:layout_width="match_parent"
-              android:layout_height="match_parent"
-              android:text="@string/intro_message"
-              android:padding="16dp" />
-    <View
-            android:layout_width="fill_parent"
-            android:layout_height="1dp"
-            android:background="@android:color/darker_gray"/>
-    <fragment
-            android:name="com.example.android.common.logger.LogFragment"
-            android:id="@+id/log_fragment"
-            android:layout_weight="1"
+    <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent" />
-</LinearLayout>
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+        <TextView android:id="@+id/sample_output"
+                style="@style/Widget.SampleMessage"
+                android:layout_weight="1"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:padding="16dp" />
+        <View
+                android:layout_width="fill_parent"
+                android:layout_height="1dp"
+                android:background="@android:color/darker_gray"/>
+        <fragment
+                android:name="com.example.android.common.logger.LogFragment"
+                android:id="@+id/log_fragment"
+                android:layout_weight="1"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+    </LinearLayout>
+</ScrollView>

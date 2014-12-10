@@ -1,0 +1,12 @@
+page.tags="WatchFace"
+sample.group=Wearable
+@jd:body
+
+<p>
+            
+This sample demonstrates how to create watch faces for android wear and includes a phone app
+and a wearable app. The wearable app has a variety of watch faces including analog, digital,
+opengl, calendar, etc. It also includes a watch-side configuration example. The phone app
+includes a phone-side configuration example.
+            
+        </p>

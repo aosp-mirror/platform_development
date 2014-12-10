@@ -15,5 +15,5 @@
 -->
 
 <resources>
-    <color name="divider_text">@android:color/holo_blue_bright</color>
+    <color name="divider_text">@android:color/holo_blue_dark</color>
 </resources>

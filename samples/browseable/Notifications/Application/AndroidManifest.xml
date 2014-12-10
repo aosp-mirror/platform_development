@@ -17,9 +17,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
         package="com.example.android.support.wearable.notifications" >
 
+    <uses-sdk android:minSdkVersion="18"
+              android:targetSdkVersion="21" />
 
-    <uses-sdk android:minSdkVersion="19"
-              android:targetSdkVersion="19" />
+    <uses-permission android:name="android.permission.VIBRATE" />
 
     <application
             android:allowBackup="true"

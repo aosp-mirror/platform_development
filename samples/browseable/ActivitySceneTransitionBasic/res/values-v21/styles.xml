@@ -17,9 +17,6 @@
 <resources>
 
     <style name="Theme.Sample" parent="Theme.Base">
-        <!-- Set the windowContentTransitions flag to enable Activity scene transitions -->
-        <item name="android:windowContentTransitions">true</item>
-
         <!-- Set the transitions which are used for the entrance and exit of shared elements -->
         <item name="android:windowSharedElementEnterTransition">
             @transition/grid_detail_transition

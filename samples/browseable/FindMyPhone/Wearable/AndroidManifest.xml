@@ -18,7 +18,7 @@
     package="com.example.android.wearable.findphone" >
 
     <uses-sdk android:minSdkVersion="20"
-              android:targetSdkVersion="20" />
+              android:targetSdkVersion="21" />
 
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-feature android:name="android.hardware.type.watch" />
