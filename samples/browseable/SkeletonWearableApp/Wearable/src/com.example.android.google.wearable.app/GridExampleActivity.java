@@ -19,17 +19,21 @@ package com.example.android.google.wearable.app;
 import android.app.Activity;
 import android.app.Fragment;
 import android.app.FragmentManager;
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Point;
 import android.graphics.Typeface;
+import android.graphics.Paint.Align;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.wearable.view.CardFragment;
 import android.support.wearable.view.FragmentGridPagerAdapter;
 import android.support.wearable.view.GridViewPager;
-import android.support.wearable.view.ImageReference;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -46,16 +50,18 @@ public class GridExampleActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.grid_activity);
         mPager = (GridViewPager) findViewById(R.id.fragment_container);
-        mAdapter = new MainAdapter(getFragmentManager());
+        mAdapter = new MainAdapter(this, getFragmentManager());
         mPager.setAdapter(mAdapter);
 
     }
 
     private static class MainAdapter extends FragmentGridPagerAdapter{
-        Map<Point, ImageReference> mBackgrounds = new HashMap<Point, ImageReference>();
+        Map<Point, Drawable> mBackgrounds = new HashMap<Point, Drawable>();
+        private Context mContext;
 
-        public MainAdapter(FragmentManager fm) {
+        public MainAdapter(Context ctx, FragmentManager fm) {
             super(fm);
+            mContext = ctx;
         }
 
         @Override
@@ -74,10 +80,10 @@ public class GridExampleActivity extends Activity {
         }
 
         @Override
-        public ImageReference getBackground(int row, int column) {
+        public Drawable getBackgroundForPage(int row, int column) {
             Point pt = new Point(column, row);
-            ImageReference ref = mBackgrounds.get(pt);
-            if (ref == null) {
+            Drawable drawable = mBackgrounds.get(pt);
+            if (drawable == null) {
                 Bitmap bm = Bitmap.createBitmap(200, 200, Bitmap.Config.ARGB_8888);
                 Canvas c = new Canvas(bm);
                 Paint p = new Paint();
@@ -87,11 +93,12 @@ public class GridExampleActivity extends Activity {
                 p.setTypeface(Typeface.DEFAULT);
                 p.setTextSize(64);
                 p.setColor(Color.LTGRAY);
-                c.drawText(column+ "-" + row, 20, 100, p);
-                ref = ImageReference.forBitmap(bm);
-                mBackgrounds.put(pt, ref);
+                p.setTextAlign(Align.CENTER);
+                c.drawText(column+ "-" + row, 100, 100, p);
+                drawable = new BitmapDrawable(mContext.getResources(), bm);
+                mBackgrounds.put(pt, drawable);
             }
-            return ref;
+            return drawable;
         }
     }
 

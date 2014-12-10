@@ -170,12 +170,12 @@ public class MainActivity extends Activity implements Handler.Callback {
     }
 
     private void updateTextEditors(NotificationPreset preset) {
+        mTitleEditText.setText(getString(preset.titleResId));
+        mTextEditText.setText(getString(preset.textResId));
         if (preset == NotificationPresets.BASIC) {
             findViewById(R.id.title_edit_field).setVisibility(View.VISIBLE);
-            mTitleEditText.setText(getString(preset.titleResId));
             mTitleEditText.addTextChangedListener(mTextChangedListener);
             findViewById(R.id.text_edit_field).setVisibility(View.VISIBLE);
-            mTextEditText.setText(getString(preset.textResId));
             mTextEditText.addTextChangedListener(mTextChangedListener);
         } else {
             findViewById(R.id.title_edit_field).setVisibility(View.GONE);

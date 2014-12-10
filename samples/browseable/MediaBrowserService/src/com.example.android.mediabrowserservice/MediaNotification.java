@@ -37,7 +37,6 @@ import android.media.session.MediaSession;
 import android.media.session.PlaybackState;
 import android.os.AsyncTask;
 import android.util.LruCache;
-import android.util.SparseArray;
 
 import com.example.android.mediabrowserservice.utils.BitmapHelper;
 import com.example.android.mediabrowserservice.utils.LogHelper;
@@ -65,7 +64,6 @@ public class MediaNotification extends BroadcastReceiver {
     private MediaSession.Token mSessionToken;
     private MediaController mController;
     private MediaController.TransportControls mTransportControls;
-    private final SparseArray<PendingIntent> mIntents = new SparseArray<PendingIntent>();
     private final LruCache<String, Bitmap> mAlbumArtCache;
 
     private PlaybackState mPlaybackState;
@@ -74,6 +72,8 @@ public class MediaNotification extends BroadcastReceiver {
     private Notification.Builder mNotificationBuilder;
     private NotificationManager mNotificationManager;
     private Notification.Action mPlayPauseAction;
+
+    private PendingIntent mPauseIntent, mPlayIntent, mPreviousIntent, mNextIntent;
 
     private String mCurrentAlbumArt;
     private int mNotificationColor;
@@ -99,14 +99,14 @@ public class MediaNotification extends BroadcastReceiver {
                 .getSystemService(Context.NOTIFICATION_SERVICE);
 
         String pkg = mService.getPackageName();
-        mIntents.put(R.drawable.ic_pause_white_24dp, PendingIntent.getBroadcast(mService, 100,
-                new Intent(ACTION_PAUSE).setPackage(pkg), PendingIntent.FLAG_CANCEL_CURRENT));
-        mIntents.put(R.drawable.ic_play_arrow_white_24dp, PendingIntent.getBroadcast(mService, 100,
-                new Intent(ACTION_PLAY).setPackage(pkg), PendingIntent.FLAG_CANCEL_CURRENT));
-        mIntents.put(R.drawable.ic_skip_previous_white_24dp, PendingIntent.getBroadcast(mService, 100,
-                new Intent(ACTION_PREV).setPackage(pkg), PendingIntent.FLAG_CANCEL_CURRENT));
-        mIntents.put(R.drawable.ic_skip_next_white_24dp, PendingIntent.getBroadcast(mService, 100,
-                new Intent(ACTION_NEXT).setPackage(pkg), PendingIntent.FLAG_CANCEL_CURRENT));
+        mPauseIntent = PendingIntent.getBroadcast(mService, 100,
+                new Intent(ACTION_PAUSE).setPackage(pkg), PendingIntent.FLAG_CANCEL_CURRENT);
+        mPlayIntent = PendingIntent.getBroadcast(mService, 100,
+                new Intent(ACTION_PLAY).setPackage(pkg), PendingIntent.FLAG_CANCEL_CURRENT);
+        mPreviousIntent = PendingIntent.getBroadcast(mService, 100,
+                new Intent(ACTION_PREV).setPackage(pkg), PendingIntent.FLAG_CANCEL_CURRENT);
+        mNextIntent = PendingIntent.getBroadcast(mService, 100,
+                new Intent(ACTION_NEXT).setPackage(pkg), PendingIntent.FLAG_CANCEL_CURRENT);
     }
 
     protected int getNotificationColor() {
@@ -241,8 +241,7 @@ public class MediaNotification extends BroadcastReceiver {
         if ((mPlaybackState.getActions() & PlaybackState.ACTION_SKIP_TO_PREVIOUS) != 0) {
             mNotificationBuilder
                     .addAction(R.drawable.ic_skip_previous_white_24dp,
-                            mService.getString(R.string.label_previous),
-                            mIntents.get(R.drawable.ic_skip_previous_white_24dp));
+                            mService.getString(R.string.label_previous), mPreviousIntent);
             playPauseActionIndex = 1;
         }
 
@@ -251,8 +250,7 @@ public class MediaNotification extends BroadcastReceiver {
         // If skip to next action is enabled
         if ((mPlaybackState.getActions() & PlaybackState.ACTION_SKIP_TO_NEXT) != 0) {
             mNotificationBuilder.addAction(R.drawable.ic_skip_next_white_24dp,
-                    mService.getString(R.string.label_next),
-                    mIntents.get(R.drawable.ic_skip_next_white_24dp));
+                    mService.getString(R.string.label_next), mNextIntent);
         }
 
         MediaDescription description = mMetadata.getDescription();
@@ -294,22 +292,24 @@ public class MediaNotification extends BroadcastReceiver {
 
     private void updatePlayPauseAction() {
         LogHelper.d(TAG, "updatePlayPauseAction");
-        String playPauseLabel = "";
-        int playPauseIcon;
+        String label;
+        int icon;
+        PendingIntent intent;
         if (mPlaybackState.getState() == PlaybackState.STATE_PLAYING) {
-            playPauseLabel = mService.getString(R.string.label_pause);
-            playPauseIcon = R.drawable.ic_pause_white_24dp;
+            label = mService.getString(R.string.label_pause);
+            icon = R.drawable.ic_pause_white_24dp;
+            intent = mPauseIntent;
         } else {
-            playPauseLabel = mService.getString(R.string.label_play);
-            playPauseIcon = R.drawable.ic_play_arrow_white_24dp;
+            label = mService.getString(R.string.label_play);
+            icon = R.drawable.ic_play_arrow_white_24dp;
+            intent = mPlayIntent;
         }
         if (mPlayPauseAction == null) {
-            mPlayPauseAction = new Notification.Action(playPauseIcon, playPauseLabel,
-                    mIntents.get(playPauseIcon));
+            mPlayPauseAction = new Notification.Action(icon, label, intent);
         } else {
-            mPlayPauseAction.icon = playPauseIcon;
-            mPlayPauseAction.title = playPauseLabel;
-            mPlayPauseAction.actionIntent = mIntents.get(playPauseIcon);
+            mPlayPauseAction.icon = icon;
+            mPlayPauseAction.title = label;
+            mPlayPauseAction.actionIntent = intent;
         }
     }
 

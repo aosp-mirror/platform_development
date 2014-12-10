@@ -19,6 +19,7 @@ package com.example.android.wearable.gridviewpager;
 import android.app.Activity;
 import android.content.res.Resources;
 import android.os.Bundle;
+import android.support.wearable.view.DotsPageIndicator;
 import android.support.wearable.view.GridViewPager;
 import android.view.View;
 import android.view.View.OnApplyWindowInsetsListener;
@@ -52,5 +53,7 @@ public class MainActivity extends Activity {
             }
         });
         pager.setAdapter(new SampleGridPagerAdapter(this, getFragmentManager()));
+        DotsPageIndicator dotsPageIndicator = (DotsPageIndicator) findViewById(R.id.page_indicator);
+        dotsPageIndicator.setPager(pager);
     }
 }
