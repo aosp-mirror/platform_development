@@ -8,7 +8,7 @@ LOCAL_SRC_FILES := $(call all-java-files-under, src)
 
 LOCAL_PACKAGE_NAME := SampleSyncAdapter
 
-LOCAL_SDK_VERSION := current
+LOCAL_SDK_VERSION := 15
 
 include $(BUILD_PACKAGE)
 
