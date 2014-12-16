@@ -308,6 +308,10 @@ developers/build/prebuilts/gradle/Interpolator                               sam
 developers/build/prebuilts/gradle/PdfRendererBasic                           samples/${PLATFORM_NAME}/ui/graphics/PdfRendererBasic
 developers/build/prebuilts/gradle/FloatingActionButtonBasic                  samples/${PLATFORM_NAME}/ui/views/FloatingActionButton/FloatingActionButtonBasic
 developers/build/prebuilts/gradle/RevealEffectBasic                          samples/${PLATFORM_NAME}/ui/views/RevealEffect/RevealEffectBasic
+developers/build/prebuilts/gradle/PermissionRequest                          samples/${PLATFORM_NAME}/content/webview/PermissionRequest
+developers/build/prebuilts/gradle/DirectorySelection                         samples/${PLATFORM_NAME}/content/documentsUi/DirectorySelection
+developers/build/prebuilts/gradle/AppUsageStatistics                         samples/${PLATFORM_NAME}/system/AppUsageStatistics
+developers/build/prebuilts/gradle/ScreenCapture                              samples/${PLATFORM_NAME}/media/ScreenCapture
 
 developers/build/prebuilts/androidtv                                         samples/${PLATFORM_NAME}/androidtv
 
