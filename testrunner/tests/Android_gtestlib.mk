@@ -30,8 +30,6 @@ static_libraries := \
         libgtest_main
 
 c_includes := \
-    external/zlib \
-    external/icu/icu4c/source/common \
     external/gtest/include \
 
 module_tags := eng tests
