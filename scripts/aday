@@ -1,0 +1,21 @@
+#!/usr/bin/env python
+import datetime
+import sys
+
+
+def build_to_date(build):
+    letter = build[2]
+    day = int(build[3:5])
+
+    month = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.index(letter) * 3
+    year = 2009 + (month / 12)
+    month %= 12
+
+    return datetime.date(year, month + 1, 1) + datetime.timedelta(days=day - 1)
+
+
+if __name__ == '__main__':
+    if len(sys.argv) != 2:
+        sys.exit('usage: aday BUILD_NUMBER')
+
+    print build_to_date(sys.argv[1])
