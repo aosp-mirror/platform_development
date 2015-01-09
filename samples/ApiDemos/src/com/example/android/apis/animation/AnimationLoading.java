@@ -78,6 +78,9 @@ public class AnimationLoading extends Activity {
             addBall(200, 50);
             addBall(350, 50);
             addBall(500, 50, Color.GREEN);
+            addBall(650, 50);
+            addBall(800, 50);
+            addBall(950, 50);
         }
 
         private void createAnimation() {
@@ -106,8 +109,27 @@ public class AnimationLoading extends Activity {
                         loadAnimator(appContext, R.anim.color_animator);
                 colorizer.setTarget(balls.get(3));
 
+                ObjectAnimator animPvh = (ObjectAnimator) AnimatorInflater.
+                        loadAnimator(appContext, R.anim.object_animator_pvh);
+                animPvh.setTarget(balls.get(4));
+
+
+                ObjectAnimator animPvhKf = (ObjectAnimator) AnimatorInflater.
+                        loadAnimator(appContext, R.anim.object_animator_pvh_kf);
+                animPvhKf.setTarget(balls.get(5));
+
+                ValueAnimator faderKf = (ValueAnimator) AnimatorInflater.
+                        loadAnimator(appContext, R.anim.value_animator_pvh_kf);
+                faderKf.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+                    public void onAnimationUpdate(ValueAnimator animation) {
+                        balls.get(6).setAlpha((Float) animation.getAnimatedValue());
+                    }
+                });
+
                 animation = new AnimatorSet();
-                ((AnimatorSet) animation).playTogether(anim, fader, seq, colorizer);
+                ((AnimatorSet) animation).playTogether(anim, fader, seq, colorizer, animPvh,
+                        animPvhKf, faderKf);
+
             }
         }
 
