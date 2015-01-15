@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Copyright (C) 2010 The Android Open Source Project
+<!-- Copyright (C) 2015 The Android Open Source Project
 
      Licensed under the Apache License, Version 2.0 (the "License");
      you may not use this file except in compliance with the License.
@@ -14,12 +14,12 @@
      limitations under the License.
 -->
 
-<!-- BEGIN_INCLUDE(ValueAnimatorResources) -->
-<animator xmlns:android="http://schemas.android.com/apk/res/android"
-    android:duration="1000"
-    android:valueFrom="1"
-    android:valueTo="0"
-    android:valueType="floatType"
-    android:repeatCount="1"
-    android:repeatMode="reverse"/>
-<!-- END_INCLUDE(ValueAnimatorResources) -->
+<!-- BEGIN_INCLUDE(PropertyValuesHolderResources) -->
+<objectAnimator xmlns:android="http://schemas.android.com/apk/res/android"
+                android:duration="1000"
+                android:repeatCount="1"
+                android:repeatMode="reverse">
+    <propertyValuesHolder android:propertyName="x" android:valueTo="400"/>
+    <propertyValuesHolder android:propertyName="y" android:valueTo="200"/>
+</objectAnimator>
+<!-- END_INCLUDE(PropertyValuesHolderResources) -->
