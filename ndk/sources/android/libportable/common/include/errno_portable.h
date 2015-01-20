@@ -22,6 +22,8 @@
 #include <pthread.h>
 #include <string.h>
 
+#define ALOGV(...)
+
 #define EDEADLK_PORTABLE 35
 #define ENAMETOOLONG_PORTABLE 36
 #define ENOLCK_PORTABLE 37
@@ -461,7 +463,7 @@ void WRAP(__set_errno)(int portable_errno)
 extern char* REAL(strerror)(int);
 char *WRAP(strerror)(int errnum)
 {
-    return REAL(strerror)(errno_p2on(errnum));
+    return REAL(strerror)(errno_pton(errnum));
 }
 
 /* BSD style strerror_r */
