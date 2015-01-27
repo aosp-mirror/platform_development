@@ -50,8 +50,8 @@ WIN_TARGETS := \
 # build prerequisites.
 WIN_BUILD_PREREQ := \
 	acp \
-	bcc_compat \
-	llvm-rs-cc \
+	llvm-tblgen \
+	clang-tblgen \
 	$(WIN_SDK_BUILD_PREREQ)
 
 
