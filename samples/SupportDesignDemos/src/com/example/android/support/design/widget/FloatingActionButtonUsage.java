@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package com.example.android.supportv7.widget;
+package com.example.android.support.design.widget;
 
-import com.example.android.supportv7.R;
+import com.example.android.support.design.R;
 
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;

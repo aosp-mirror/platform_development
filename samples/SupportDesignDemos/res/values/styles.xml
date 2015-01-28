@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-     Copyright (C) 2014 The Android Open Source Project
+     Copyright (C) 2015 The Android Open Source Project
 
      Licensed under the Apache License, Version 2.0 (the "License");
      you may not use this file except in compliance with the License.
@@ -17,20 +17,17 @@
 
 <resources>
 
-    <style name="Theme.Custom" parent="Theme.AppCompat.Light.DarkActionBar">
-        <item name="colorPrimary">#ff00bcd4</item>
-        <item name="colorPrimaryDark">#00838f</item>
-        <item name="colorAccent">#ffff00</item>
+    <style name="Theme.Design" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="colorPrimary">#607D8B</item>
+        <item name="colorPrimaryDark">#455A64</item>
+        <item name="colorAccent">#FFAB40</item>
     </style>
 
-    <style name="Theme.Custom.NoActionBar" parent="Theme.AppCompat.Light.NoActionBar">
+
+    <style name="Theme.FAB" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="colorPrimary">#ff00bcd4</item>
         <item name="colorPrimaryDark">#00838f</item>
-        <item name="colorAccent">#ffff00</item>
-    </style>
-
-    <style name="SortedListItem" parent="@android:style/TextAppearance.Medium">
-        <item name="android:minHeight">35dp</item>
+        <item name="colorAccent">#ff0000</item>
     </style>
 
 </resources>
