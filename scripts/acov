@@ -50,9 +50,11 @@ fi
 
 HOST=false
 ANDROID_OUT=$ANDROID_PRODUCT_OUT
+EXTRA_ARGS="$@"
 if [ "$1" = "--host" ]; then
   HOST=true
   ANDROID_OUT=$ANDROID_HOST_OUT
+  EXTRA_ARGS="--gcov-tool=/usr/bin/gcov-4.6 ${@:2}"
 fi
 
 cd $ANDROID_BUILD_TOP
@@ -63,7 +65,7 @@ if [ "$HOST" = "false" ]; then
   adb pull /data/local/tmp/gcov
 fi
 
-lcov -c -d $ANDROID_OUT -o $DIR/$FILE
+lcov -c -d $ANDROID_OUT -o $DIR/$FILE $EXTRA_ARGS
 echo "Generating coverage report at $DIR"
 genhtml -q -o $DIR $DIR/$FILE
 xdg-open $DIR/index.html >/dev/null
