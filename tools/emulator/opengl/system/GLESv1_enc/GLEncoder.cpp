@@ -464,19 +464,19 @@ void GLEncoder::sendVertexData(unsigned int first, unsigned int count)
                 switch(i) {
                 case GLClientState::VERTEX_LOCATION:
                     this->glVertexPointerOffset(this, state->size, state->type, state->stride,
-                                                (GLuint)state->data + firstIndex);
+                                                (uintptr_t)state->data + firstIndex);
                     break;
                 case GLClientState::NORMAL_LOCATION:
                     this->glNormalPointerOffset(this, state->type, state->stride,
-                                                (GLuint) state->data + firstIndex);
+                                                (uintptr_t)state->data + firstIndex);
                     break;
                 case GLClientState::POINTSIZE_LOCATION:
                     this->glPointSizePointerOffset(this, state->type, state->stride,
-                                                   (GLuint) state->data + firstIndex);
+                                                   (uintptr_t)state->data + firstIndex);
                     break;
                 case GLClientState::COLOR_LOCATION:
                     this->glColorPointerOffset(this, state->size, state->type, state->stride,
-                                               (GLuint) state->data + firstIndex);
+                                               (uintptr_t)state->data + firstIndex);
                     break;
                 case GLClientState::TEXCOORD0_LOCATION:
                 case GLClientState::TEXCOORD1_LOCATION:
@@ -487,17 +487,17 @@ void GLEncoder::sendVertexData(unsigned int first, unsigned int count)
                 case GLClientState::TEXCOORD6_LOCATION:
                 case GLClientState::TEXCOORD7_LOCATION:
                     this->glTexCoordPointerOffset(this, state->size, state->type, state->stride,
-                                                  (GLuint) state->data + firstIndex);
+                                                  (uintptr_t)state->data + firstIndex);
                     break;
                 case GLClientState::WEIGHT_LOCATION:
                     this->glWeightPointerOffset(this,state->size,state->type,state->stride,
-                                                (GLuint)state->data+firstIndex);
+                                                (uintptr_t)state->data+firstIndex);
                     break;
                 case GLClientState::MATRIXINDEX_LOCATION:
                     this->glMatrixIndexPointerOffset(this,state->size,state->type,state->stride,
-                                              (GLuint)state->data+firstIndex);
+                                              (uintptr_t)state->data+firstIndex);
                     break;
-                }                
+                }
                 this->m_glBindBuffer_enc(this, GL_ARRAY_BUFFER, m_state->currentArrayVbo());
             }
         } else {
@@ -545,14 +545,14 @@ void GLEncoder::s_glDrawElements(void *self, GLenum mode, GLsizei count, GLenum 
         if (!has_immediate_arrays) {
             ctx->sendVertexData(0, count);
             ctx->m_glBindBuffer_enc(self, GL_ELEMENT_ARRAY_BUFFER, ctx->m_state->currentIndexVbo());
-            ctx->glDrawElementsOffset(ctx, mode, count, type, (GLuint)indices);
+            ctx->glDrawElementsOffset(ctx, mode, count, type, (uintptr_t)indices);
             adjustIndices = false;
         } else {
             BufferData * buf = ctx->m_shared->getBufferData(ctx->m_state->currentIndexVbo());
             ctx->m_glBindBuffer_enc(self, GL_ELEMENT_ARRAY_BUFFER, 0);
             indices = (void*)((GLintptr)buf->m_fixedBuffer.ptr() + (GLintptr)indices);
         }
-    } 
+    }
     if (adjustIndices) {
         void *adjustedIndices = (void*)indices;
         int minIndex = 0, maxIndex = 0;

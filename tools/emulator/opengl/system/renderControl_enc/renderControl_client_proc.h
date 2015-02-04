@@ -34,6 +34,7 @@ typedef void (renderControl_APIENTRY *rcBindRenderbuffer_client_proc_t) (void * 
 typedef EGLint (renderControl_APIENTRY *rcColorBufferCacheFlush_client_proc_t) (void * ctx, uint32_t, EGLint, int);
 typedef void (renderControl_APIENTRY *rcReadColorBuffer_client_proc_t) (void * ctx, uint32_t, GLint, GLint, GLint, GLint, GLenum, GLenum, void*);
 typedef int (renderControl_APIENTRY *rcUpdateColorBuffer_client_proc_t) (void * ctx, uint32_t, GLint, GLint, GLint, GLint, GLenum, GLenum, void*);
+typedef int (renderControl_APIENTRY *rcOpenColorBuffer2_client_proc_t) (void * ctx, uint32_t);
 
 
 #endif

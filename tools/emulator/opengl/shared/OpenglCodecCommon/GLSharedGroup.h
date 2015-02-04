@@ -110,6 +110,7 @@ private:
 public:
     GLSharedGroup();
     ~GLSharedGroup();
+    bool isObject(GLuint obj);
     BufferData * getBufferData(GLuint bufferId);
     void    addBufferData(GLuint bufferId, GLsizeiptr size, void * data);
     void    updateBufferData(GLuint bufferId, GLsizeiptr size, void * data);

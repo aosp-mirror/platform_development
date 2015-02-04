@@ -15,11 +15,7 @@
 */
 #include <string.h>
 #include <pthread.h>
-#ifdef HAVE_ANDROID_OS      // just want PAGE_SIZE define
-# include <asm/page.h>
-#else
-# include <sys/user.h>
-#endif
+#include <limits.h>
 #include <cutils/ashmem.h>
 #include <unistd.h>
 #include <errno.h>
@@ -154,6 +150,8 @@ static int gralloc_alloc(alloc_device_t* dev,
     bool hw_cam_read = usage & GRALLOC_USAGE_HW_CAMERA_READ;
     bool hw_vid_enc_read = usage & GRALLOC_USAGE_HW_VIDEO_ENCODER;
 
+    // Keep around original requested format for later validation
+    int frameworkFormat = format;
     // Pick the right concrete pixel format given the endpoints as encoded in
     // the usage bits.  Every end-point pair needs explicit listing here.
     if (format == HAL_PIXEL_FORMAT_IMPLEMENTATION_DEFINED) {
@@ -179,7 +177,6 @@ static int gralloc_alloc(alloc_device_t* dev,
             return -EINVAL;
         }
     }
-
     bool yuv_format = false;
 
     int ashmem_size = 0;
@@ -297,7 +294,8 @@ static int gralloc_alloc(alloc_device_t* dev,
     }
 
     cb_handle_t *cb = new cb_handle_t(fd, ashmem_size, usage,
-                                      w, h, format, glFormat, glType);
+                                      w, h, frameworkFormat, format,
+                                      glFormat, glType);
 
     if (ashmem_size > 0) {
         //
@@ -444,7 +442,7 @@ static int fb_post(struct framebuffer_device_t* dev, buffer_handle_t buffer)
     DEFINE_AND_VALIDATE_HOST_CONNECTION;
 
     // increment the post count of the buffer
-    uint32_t *postCountPtr = (uint32_t *)cb->ashmemBase;
+    intptr_t *postCountPtr = (intptr_t *)cb->ashmemBase;
     if (!postCountPtr) {
         // This should not happen
         return -EINVAL;
@@ -529,7 +527,7 @@ static int gralloc_register_buffer(gralloc_module_t const* module,
     if (cb->hostHandle != 0) {
         DEFINE_AND_VALIDATE_HOST_CONNECTION;
         D("Opening host ColorBuffer 0x%x\n", cb->hostHandle);
-        rcEnc->rcOpenColorBuffer(rcEnc, cb->hostHandle);
+        rcEnc->rcOpenColorBuffer2(rcEnc, cb->hostHandle);
     }
 
     //
@@ -580,7 +578,7 @@ static int gralloc_unregister_buffer(gralloc_module_t const* module,
             ERR("gralloc_unregister_buffer(%p): unmap failed", cb);
             return -EINVAL;
         }
-        cb->ashmemBase = NULL;
+        cb->ashmemBase = 0;
         cb->mappedPid = 0;
     }
 
@@ -630,7 +628,7 @@ static int gralloc_lock(gralloc_module_t const* module,
         return -EINVAL;
     }
 
-    EGLint postCount = 0;
+    intptr_t postCount = 0;
     void *cpu_addr = NULL;
 
     //
@@ -644,8 +642,8 @@ static int gralloc_lock(gralloc_module_t const* module,
         }
 
         if (cb->canBePosted()) {
-            postCount = *((int *)cb->ashmemBase);
-            cpu_addr = (void *)(cb->ashmemBase + sizeof(int));
+            postCount = *((intptr_t *)cb->ashmemBase);
+            cpu_addr = (void *)(cb->ashmemBase + sizeof(intptr_t));
         }
         else {
             cpu_addr = (void *)(cb->ashmemBase);
@@ -916,7 +914,11 @@ fallback_init(void)
         return;
     }
     ALOGD("Emulator without GPU emulation detected.");
+#if __LP64__
+    module = dlopen("/system/lib64/hw/gralloc.default.so", RTLD_LAZY|RTLD_LOCAL);
+#else
     module = dlopen("/system/lib/hw/gralloc.default.so", RTLD_LAZY|RTLD_LOCAL);
+#endif
     if (module != NULL) {
         sFallback = reinterpret_cast<gralloc_module_t*>(dlsym(module, HAL_MODULE_INFO_SYM_AS_STR));
         if (sFallback == NULL) {

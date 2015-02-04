@@ -84,9 +84,15 @@ bool eglDisplay::initialize(EGLClient_eglInterface *eglIface)
         //
         // load GLES client API
         //
+#if __LP64__
+        m_gles_iface = loadGLESClientAPI("/system/lib64/egl/libGLESv1_CM_emulation.so",
+                                         eglIface,
+                                         &s_gles_lib);
+#else
         m_gles_iface = loadGLESClientAPI("/system/lib/egl/libGLESv1_CM_emulation.so",
                                          eglIface,
                                          &s_gles_lib);
+#endif
         if (!m_gles_iface) {
             pthread_mutex_unlock(&m_lock);
             ALOGE("Failed to load gles1 iface");
@@ -94,9 +100,15 @@ bool eglDisplay::initialize(EGLClient_eglInterface *eglIface)
         }
 
 #ifdef WITH_GLES2
+#if __LP64__
+        m_gles2_iface = loadGLESClientAPI("/system/lib64/egl/libGLESv2_emulation.so",
+                                          eglIface,
+                                          &s_gles2_lib);
+#else
         m_gles2_iface = loadGLESClientAPI("/system/lib/egl/libGLESv2_emulation.so",
                                           eglIface,
                                           &s_gles2_lib);
+#endif
         // Note that if loading gles2 failed, we can still run with no
         // GLES2 support, having GLES2 is not mandatory.
 #endif
@@ -189,7 +201,7 @@ bool eglDisplay::initialize(EGLClient_eglInterface *eglIface)
 
 void eglDisplay::processConfigs()
 {
-    for (int i=0; i<m_numConfigs; i++) {
+    for (intptr_t i=0; i<m_numConfigs; i++) {
         EGLConfig config = (EGLConfig)i;
         //Setup the EGL_NATIVE_VISUAL_ID attribute
         PixelFormat format;
@@ -401,7 +413,7 @@ EGLBoolean eglDisplay::getAttribValue(EGLConfig config, EGLint attribIdx, EGLint
         ALOGE("[%s] Bad attribute idx\n", __FUNCTION__);
         return EGL_FALSE;
     }
-    *value = *(m_configs + (int)config*m_numConfigAttribs + attribIdx);
+    *value = *(m_configs + (intptr_t)config*m_numConfigAttribs + attribIdx);
     return EGL_TRUE;
 }
 
@@ -434,7 +446,7 @@ EGLBoolean eglDisplay::setAttribValue(EGLConfig config, EGLint attribIdx, EGLint
         ALOGE("[%s] Bad attribute idx\n", __FUNCTION__);
         return EGL_FALSE;
     }
-    *(m_configs + (int)config*m_numConfigAttribs + attribIdx) = value;
+    *(m_configs + (intptr_t)config*m_numConfigAttribs + attribIdx) = value;
     return EGL_TRUE;
 }
 
