@@ -47,6 +47,7 @@
 
     <application android:label="Dev Tools"
             android:icon="@mipmap/ic_launcher_devtools">
+        <uses-library android:name="org.apache.http.legacy" android:required="false" />
 
         <uses-library android:name="android.test.runner" />
 
