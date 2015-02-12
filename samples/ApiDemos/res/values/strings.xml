@@ -421,11 +421,14 @@
     <string name="styled_text">Plain, <b>bold</b>, <i>italic</i>, <b><i>bold-italic</i></b></string>
     <string name="styled_text_prog">Assigned programmatically:</string>
 
-    <string name="activity_text_undo">Content/Undo Manager/Text</string>
-    <string name="text_undo_msg">Demonstrates simple use of UndoManager with text editing
-            in a TextView.</string>
-    <string name="undo">Undo</string>
-    <string name="redo">Redo</string>
+    <string name="activity_text_undo">Content/Undo</string>
+    <string name="text_undo_default_edit_msg">TextView with the default Control-Z undo behavior.</string>
+    <string name="text_undo_set_text">SetText</string>
+    <string name="text_undo_append_text">Append</string>
+    <string name="text_undo_insert_text">Insert</string>
+    <string name="text_undo_undo_disabled_msg">TextView with undo disabled.</string>
+    <string name="text_undo_length_limit_msg">TextView with a length limit InputFilter.</string>
+    <string name="text_undo_credit_card_msg">Credit card input field with a TextWatcher.</string>
 
     <string name="activity_resources_layout_reference">Content/Resources/Layout Reference</string>
     <string name="resources_layout_reference_description">Shows how to write layout

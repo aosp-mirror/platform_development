@@ -1176,7 +1176,6 @@
             </intent-filter>
         </activity>
 
-        <!--
         <activity android:name=".content.TextUndoActivity" android:label="@string/activity_text_undo">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -1184,7 +1183,6 @@
                 <category android:name="android.intent.category.EMBED" />
             </intent-filter>
         </activity>
-        -->
 
         <activity android:name=".content.ResourcesLayoutReference"
                 android:label="@string/activity_resources_layout_reference">
