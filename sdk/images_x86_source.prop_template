@@ -1,6 +1,6 @@
 Pkg.Desc=Android SDK Platform ${PLATFORM_VERSION}
 Pkg.UserSrc=false
-Pkg.Revision=1
+Pkg.Revision=2
 AndroidVersion.ApiLevel=${PLATFORM_SDK_VERSION}
 AndroidVersion.CodeName=${PLATFORM_VERSION_CODENAME}
 SystemImage.Abi=x86
