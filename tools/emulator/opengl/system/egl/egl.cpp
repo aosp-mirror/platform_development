@@ -86,7 +86,7 @@ const char *  eglStrError(EGLint err)
 #endif //LOG_EGL_ERRORS
 
 #define VALIDATE_CONFIG(cfg,ret) \
-    if(((int)cfg<0)||((int)cfg>s_display.getNumConfigs())) { \
+    if(((intptr_t)cfg<0)||((intptr_t)cfg>s_display.getNumConfigs())) { \
         RETURN_ERROR(ret,EGL_BAD_CONFIG); \
     }
 
@@ -140,7 +140,9 @@ EGLContext_t::EGLContext_t(EGLDisplay dpy, EGLConfig config, EGLContext_t* share
     versionString(NULL),
     vendorString(NULL),
     rendererString(NULL),
-    extensionString(NULL)
+    shaderVersionString(NULL),
+    extensionString(NULL),
+    deletePending(0)
 {
     flags = 0;
     version = 1;
@@ -157,6 +159,7 @@ EGLContext_t::~EGLContext_t()
     delete [] versionString;
     delete [] vendorString;
     delete [] rendererString;
+    delete [] shaderVersionString;
     delete [] extensionString;
 }
 
@@ -268,7 +271,7 @@ EGLBoolean egl_window_surface_t::init()
     }
 
     DEFINE_AND_VALIDATE_HOST_CONNECTION(EGL_FALSE);
-    rcSurface = rcEnc->rcCreateWindowSurface(rcEnc, (uint32_t)config,
+    rcSurface = rcEnc->rcCreateWindowSurface(rcEnc, (uintptr_t)config,
             getWidth(), getHeight());
     if (!rcSurface) {
         ALOGE("rcCreateWindowSurface returned 0");
@@ -371,7 +374,7 @@ EGLBoolean egl_pbuffer_surface_t::init(GLenum pixelFormat)
 {
     DEFINE_AND_VALIDATE_HOST_CONNECTION(EGL_FALSE);
 
-    rcSurface = rcEnc->rcCreateWindowSurface(rcEnc, (uint32_t)config,
+    rcSurface = rcEnc->rcCreateWindowSurface(rcEnc, (uintptr_t)config,
             getWidth(), getHeight());
     if (!rcSurface) {
         ALOGE("rcCreateWindowSurface returned 0");
@@ -415,6 +418,7 @@ static const char *getGLString(int glEnum)
 #define GL_VENDOR                         0x1F00
 #define GL_RENDERER                       0x1F01
 #define GL_VERSION                        0x1F02
+#define GL_SHADING_LANGUAGE_VERSION       0x8B8C
 #define GL_EXTENSIONS                     0x1F03
 
     switch(glEnum) {
@@ -426,6 +430,9 @@ static const char *getGLString(int glEnum)
             break;
         case GL_RENDERER:
             strPtr = &tInfo->currentContext->rendererString;
+            break;
+        case GL_SHADING_LANGUAGE_VERSION:
+            strPtr = &tInfo->currentContext->shaderVersionString;
             break;
         case GL_EXTENSIONS:
             strPtr = &tInfo->currentContext->extensionString;
@@ -526,15 +533,6 @@ __eglMustCastToProperFunctionPointerType eglGetProcAddress(const char *procname)
         }
     }
 
-    //
-    // Make sure display is initialized before searching in client APIs
-    //
-    if (!s_display.initialized()) {
-        if (!s_display.initialize(&s_eglIface)) {
-            return NULL;
-        }
-    }
-
     // look in gles client api's extensions table
     return (__eglMustCastToProperFunctionPointerType)ClientAPIExts::getProcAddress(procname);
 
@@ -563,7 +561,7 @@ EGLBoolean eglGetConfigs(EGLDisplay dpy, EGLConfig *configs, EGLint config_size,
         return EGL_TRUE;
     }
 
-    int i=0;
+    uintptr_t i=0;
     for (i=0 ; i<numConfigs && i<config_size ; i++) {
         *configs++ = (EGLConfig)i;
     }
@@ -585,9 +583,18 @@ EGLBoolean eglChooseConfig(EGLDisplay dpy, const EGLint *attrib_list, EGLConfig 
         attribs_size++; //for the terminating EGL_NONE
     }
 
+    uint32_t* tempConfigs[config_size];
     DEFINE_AND_VALIDATE_HOST_CONNECTION(EGL_FALSE);
-    *num_config = rcEnc->rcChooseConfig(rcEnc, (EGLint*)attrib_list, attribs_size * sizeof(EGLint), (uint32_t*)configs, config_size);
+    *num_config = rcEnc->rcChooseConfig(rcEnc, (EGLint*)attrib_list, attribs_size * sizeof(EGLint), (uint32_t*)tempConfigs, config_size);
+    if (configs!=NULL) {
+        EGLint i=0;
+        for (i=0;i<(*num_config);i++) {
+             *((uintptr_t*)configs+i) = *((uint32_t*)tempConfigs+i);
+        }
+    }
 
+    if (*num_config <= 0)
+        return EGL_FALSE;
     return EGL_TRUE;
 }
 
@@ -873,7 +880,7 @@ EGLContext eglCreateContext(EGLDisplay dpy, EGLConfig config, EGLContext share_c
     }
 
     DEFINE_AND_VALIDATE_HOST_CONNECTION(EGL_NO_CONTEXT);
-    uint32_t rcContext = rcEnc->rcCreateContext(rcEnc, (uint32_t)config, rcShareCtx, version);
+    uint32_t rcContext = rcEnc->rcCreateContext(rcEnc, (uintptr_t)config, rcShareCtx, version);
     if (!rcContext) {
         ALOGE("rcCreateContext returned 0");
         setErrorReturn(EGL_BAD_ALLOC, EGL_NO_CONTEXT);
@@ -897,9 +904,11 @@ EGLBoolean eglDestroyContext(EGLDisplay dpy, EGLContext ctx)
 
     EGLContext_t * context = static_cast<EGLContext_t*>(ctx);
 
-    if (getEGLThreadInfo()->currentContext == context)
-    {
-        eglMakeCurrent(dpy, EGL_NO_CONTEXT, EGL_NO_SURFACE, EGL_NO_SURFACE);
+    if (!context) return EGL_TRUE;
+
+    if (getEGLThreadInfo()->currentContext == context) {
+        getEGLThreadInfo()->currentContext->deletePending = 1;
+        return EGL_TRUE;
     }
 
     if (context->rcContext) {
@@ -934,10 +943,19 @@ EGLBoolean eglMakeCurrent(EGLDisplay dpy, EGLSurface draw, EGLSurface read, EGLC
     // Nothing to do if no binding change has made
     //
     EGLThreadInfo *tInfo = getEGLThreadInfo();
+
     if (tInfo->currentContext == context &&
         (context == NULL ||
         (context && context->draw == draw && context->read == read))) {
         return EGL_TRUE;
+    }
+
+    if (tInfo->currentContext && tInfo->currentContext->deletePending) {
+        if (tInfo->currentContext != context) {
+            EGLContext_t * contextToDelete = tInfo->currentContext;
+            tInfo->currentContext = 0;
+            eglDestroyContext(dpy, contextToDelete);
+        }
     }
 
     if (context && (context->flags & EGLContext_t::IS_CURRENT) && (context != tInfo->currentContext)) {
@@ -966,7 +984,7 @@ EGLBoolean eglMakeCurrent(EGLDisplay dpy, EGLSurface draw, EGLSurface read, EGLC
             hostCon->glEncoder()->setSharedGroup(context->getSharedGroup());
         }
     } 
-    else {
+    else if (tInfo->currentContext) {
         //release ClientState & SharedGroup
         if (tInfo->currentContext->version == 2) {
             hostCon->gl2Encoder()->setClientState(NULL);

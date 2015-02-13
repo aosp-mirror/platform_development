@@ -31,6 +31,7 @@ extern "C" {
 	EGLint rcColorBufferCacheFlush(uint32_t colorbuffer, EGLint postCount, int forRead);
 	void rcReadColorBuffer(uint32_t colorbuffer, GLint x, GLint y, GLint width, GLint height, GLenum format, GLenum type, void* pixels);
 	int rcUpdateColorBuffer(uint32_t colorbuffer, GLint x, GLint y, GLint width, GLint height, GLenum format, GLenum type, void* pixels);
+	int rcOpenColorBuffer2(uint32_t colorbuffer);
 };
 
 #endif
@@ -188,5 +189,11 @@ int rcUpdateColorBuffer(uint32_t colorbuffer, GLint x, GLint y, GLint width, GLi
 {
 	GET_CONTEXT; 
 	 return ctx->rcUpdateColorBuffer(ctx, colorbuffer, x, y, width, height, format, type, pixels);
+}
+
+int rcOpenColorBuffer2(uint32_t colorbuffer)
+{
+	GET_CONTEXT; 
+	 return ctx->rcOpenColorBuffer2(ctx, colorbuffer);
 }
 

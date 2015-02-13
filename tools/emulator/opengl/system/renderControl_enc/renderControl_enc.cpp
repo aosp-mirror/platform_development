@@ -311,6 +311,8 @@ void rcCloseColorBuffer_enc(void *self , uint32_t colorbuffer)
 	memcpy(ptr, &packetSize, 4);  ptr += 4;
 
 		memcpy(ptr, &colorbuffer, 4); ptr += 4;
+
+	stream->flush();
 }
 
 void rcSetWindowColorBuffer_enc(void *self , uint32_t windowSurface, uint32_t colorBuffer)
@@ -503,6 +505,25 @@ int rcUpdateColorBuffer_enc(void *self , uint32_t colorbuffer, GLint x, GLint y,
 	return retval;
 }
 
+int rcOpenColorBuffer2_enc(void *self , uint32_t colorbuffer)
+{
+
+	renderControl_encoder_context_t *ctx = (renderControl_encoder_context_t *)self;
+	IOStream *stream = ctx->m_stream;
+
+	 unsigned char *ptr;
+	 const size_t packetSize = 8 + 4;
+	ptr = stream->alloc(packetSize);
+	int tmp = OP_rcOpenColorBuffer2;memcpy(ptr, &tmp, 4); ptr += 4;
+	memcpy(ptr, &packetSize, 4);  ptr += 4;
+
+		memcpy(ptr, &colorbuffer, 4); ptr += 4;
+
+	int retval;
+	stream->readback(&retval, 4);
+	return retval;
+}
+
 renderControl_encoder_context_t::renderControl_encoder_context_t(IOStream *stream)
 {
 	m_stream = stream;
@@ -532,5 +553,6 @@ renderControl_encoder_context_t::renderControl_encoder_context_t(IOStream *strea
 	set_rcColorBufferCacheFlush(rcColorBufferCacheFlush_enc);
 	set_rcReadColorBuffer(rcReadColorBuffer_enc);
 	set_rcUpdateColorBuffer(rcUpdateColorBuffer_enc);
+	set_rcOpenColorBuffer2(rcOpenColorBuffer2_enc);
 }
 

@@ -79,6 +79,11 @@ GL2Encoder::GL2Encoder(IOStream *stream) : gl2_encoder_context_t(stream)
     m_glDeleteShader_enc = set_glDeleteShader(s_glDeleteShader);
     m_glAttachShader_enc = set_glAttachShader(s_glAttachShader);
     m_glDetachShader_enc = set_glDetachShader(s_glDetachShader);
+    m_glGetAttachedShaders_enc = set_glGetAttachedShaders(s_glGetAttachedShaders);
+    m_glGetShaderSource_enc = set_glGetShaderSource(s_glGetShaderSource);
+    m_glGetShaderInfoLog_enc = set_glGetShaderInfoLog(s_glGetShaderInfoLog);
+    m_glGetProgramInfoLog_enc = set_glGetProgramInfoLog(s_glGetProgramInfoLog);
+
     m_glGetUniformLocation_enc = set_glGetUniformLocation(s_glGetUniformLocation);
     m_glUseProgram_enc = set_glUseProgram(s_glUseProgram);
 
@@ -111,6 +116,7 @@ GL2Encoder::GL2Encoder(IOStream *stream) : gl2_encoder_context_t(stream)
     m_glTexParameterfv_enc = set_glTexParameterfv(s_glTexParameterfv);
     m_glTexParameteri_enc = set_glTexParameteri(s_glTexParameteri);
     m_glTexParameteriv_enc = set_glTexParameteriv(s_glTexParameteriv);
+    m_glTexImage2D_enc = set_glTexImage2D(s_glTexImage2D);
 }
 
 GL2Encoder::~GL2Encoder()
@@ -179,6 +185,7 @@ void GL2Encoder::s_glBindBuffer(void *self, GLenum target, GLuint id)
 void GL2Encoder::s_glBufferData(void * self, GLenum target, GLsizeiptr size, const GLvoid * data, GLenum usage)
 {
     GL2Encoder *ctx = (GL2Encoder *) self;
+    SET_ERROR_IF(!(target == GL_ARRAY_BUFFER || target == GL_ELEMENT_ARRAY_BUFFER), GL_INVALID_ENUM);
     GLuint bufferId = ctx->m_state->getBuffer(target);
     SET_ERROR_IF(bufferId==0, GL_INVALID_OPERATION);
     SET_ERROR_IF(size<0, GL_INVALID_VALUE);
@@ -190,6 +197,7 @@ void GL2Encoder::s_glBufferData(void * self, GLenum target, GLsizeiptr size, con
 void GL2Encoder::s_glBufferSubData(void * self, GLenum target, GLintptr offset, GLsizeiptr size, const GLvoid * data)
 {
     GL2Encoder *ctx = (GL2Encoder *) self;
+    SET_ERROR_IF(!(target == GL_ARRAY_BUFFER || target == GL_ELEMENT_ARRAY_BUFFER), GL_INVALID_ENUM);
     GLuint bufferId = ctx->m_state->getBuffer(target);
     SET_ERROR_IF(bufferId==0, GL_INVALID_OPERATION);
 
@@ -205,6 +213,7 @@ void GL2Encoder::s_glDeleteBuffers(void * self, GLsizei n, const GLuint * buffer
     SET_ERROR_IF(n<0, GL_INVALID_VALUE);
     for (int i=0; i<n; i++) {
         ctx->m_shared->deleteBufferData(buffers[i]);
+        ctx->m_state->unBindBuffer(buffers[i]);
         ctx->m_glDeleteBuffers_enc(self,1,&buffers[i]);
     }
 }
@@ -348,6 +357,7 @@ void GL2Encoder::s_glGetBooleanv(void *self, GLenum param, GLboolean *ptr)
         if (!ctx->m_state->getClientStateParameter<GLboolean>(param, ptr)) {
             ctx->m_glGetBooleanv_enc(self, param, ptr);
         }
+        *ptr = (*ptr != 0) ? GL_TRUE : GL_FALSE;
         break;
     }
 }
@@ -424,15 +434,15 @@ void GL2Encoder::sendVertexAttributes(GLint first, GLsizei count)
             int stride = state->stride == 0 ? state->elementSize : state->stride;
             int firstIndex = stride * first;
 
+            this->m_glBindBuffer_enc(this, GL_ARRAY_BUFFER, state->bufferObject);
             if (state->bufferObject == 0) {
                 this->glVertexAttribPointerData(this, i, state->size, state->type, state->normalized, state->stride,
                                                 (unsigned char *)state->data + firstIndex, datalen);
             } else {
-                this->m_glBindBuffer_enc(this, GL_ARRAY_BUFFER, state->bufferObject);
                 this->glVertexAttribPointerOffset(this, i, state->size, state->type, state->normalized, state->stride,
-                                                  (GLuint) state->data + firstIndex);
-                this->m_glBindBuffer_enc(this, GL_ARRAY_BUFFER, m_state->currentArrayVbo());
+                                                  (uintptr_t) state->data + firstIndex);
             }
+            this->m_glBindBuffer_enc(this, GL_ARRAY_BUFFER, m_state->currentArrayVbo());
         } else {
             this->m_glDisableVertexAttribArray_enc(this, i);
         }
@@ -479,14 +489,14 @@ void GL2Encoder::s_glDrawElements(void *self, GLenum mode, GLsizei count, GLenum
         if (!has_immediate_arrays) {
             ctx->sendVertexAttributes(0, count);
             ctx->m_glBindBuffer_enc(self, GL_ELEMENT_ARRAY_BUFFER, ctx->m_state->currentIndexVbo());
-            ctx->glDrawElementsOffset(ctx, mode, count, type, (GLuint)indices);
+            ctx->glDrawElementsOffset(ctx, mode, count, type, (uintptr_t)indices);
             adjustIndices = false;
         } else {
             BufferData * buf = ctx->m_shared->getBufferData(ctx->m_state->currentIndexVbo());
             ctx->m_glBindBuffer_enc(self, GL_ELEMENT_ARRAY_BUFFER, 0);
             indices = (void*)((GLintptr)buf->m_fixedBuffer.ptr() + (GLintptr)indices);
         }
-    } 
+    }
     if (adjustIndices) {
         void *adjustedIndices = (void*)indices;
         int minIndex = 0, maxIndex = 0;
@@ -637,7 +647,9 @@ void GL2Encoder::s_glShaderSource(void *self, GLuint shader, GLsizei count, cons
 {
     GL2Encoder* ctx = (GL2Encoder*)self;
     ShaderData* shaderData = ctx->m_shared->getShaderData(shader);
-    SET_ERROR_IF(!shaderData, GL_INVALID_VALUE);
+    SET_ERROR_IF(!ctx->m_shared->isObject(shader), GL_INVALID_VALUE);
+    SET_ERROR_IF(!shaderData, GL_INVALID_OPERATION);
+    SET_ERROR_IF((count<0), GL_INVALID_VALUE);
 
     int len = glUtilsCalcShaderSourceLen((char**)string, (GLint*)length, count);
     char *str = new char[len + 1];
@@ -686,7 +698,7 @@ void GL2Encoder::s_glLinkProgram(void * self, GLuint program)
     GLchar *name = new GLchar[maxLength+1];
     GLint location;
     //for each active uniform, get its size and starting location.
-    for (GLint i=0 ; i<numUniforms ; ++i) 
+    for (GLint i=0 ; i<numUniforms ; ++i)
     {
         ctx->glGetActiveUniform(self, program, i, maxLength, NULL, &size, &type, name);
         location = ctx->m_glGetUniformLocation_enc(self, program, name);
@@ -746,6 +758,38 @@ GLuint GL2Encoder::s_glCreateShader(void *self, GLenum shaderType)
     return shader;
 }
 
+void GL2Encoder::s_glGetAttachedShaders(void *self, GLuint program, GLsizei maxCount,
+        GLsizei* count, GLuint* shaders)
+{
+    GL2Encoder *ctx = (GL2Encoder*)self;
+    SET_ERROR_IF(maxCount < 0, GL_INVALID_VALUE);
+    ctx->m_glGetAttachedShaders_enc(self, program, maxCount, count, shaders);
+}
+
+void GL2Encoder::s_glGetShaderSource(void *self, GLuint shader, GLsizei bufsize,
+            GLsizei* length, GLchar* source)
+{
+    GL2Encoder *ctx = (GL2Encoder*)self;
+    SET_ERROR_IF(bufsize < 0, GL_INVALID_VALUE);
+    ctx->m_glGetShaderSource_enc(self, shader, bufsize, length, source);
+}
+
+void GL2Encoder::s_glGetShaderInfoLog(void *self, GLuint shader, GLsizei bufsize,
+        GLsizei* length, GLchar* infolog)
+{
+    GL2Encoder *ctx = (GL2Encoder*)self;
+    SET_ERROR_IF(bufsize < 0, GL_INVALID_VALUE);
+    ctx->m_glGetShaderInfoLog_enc(self, shader, bufsize, length, infolog);
+}
+
+void GL2Encoder::s_glGetProgramInfoLog(void *self, GLuint program, GLsizei bufsize,
+        GLsizei* length, GLchar* infolog)
+{
+    GL2Encoder *ctx = (GL2Encoder*)self;
+    SET_ERROR_IF(bufsize < 0, GL_INVALID_VALUE);
+    ctx->m_glGetProgramInfoLog_enc(self, program, bufsize, length, infolog);
+}
+
 void GL2Encoder::s_glDeleteShader(void *self, GLenum shader)
 {
     GL2Encoder *ctx = (GL2Encoder*)self;
@@ -784,7 +828,7 @@ int GL2Encoder::s_glGetUniformLocation(void *self, GLuint program, const GLchar 
             if (!brace || sscanf(brace+1,"%d",&arrIndex) != 1) {
                 return -1;
             }
-        
+
         }
     }
 
@@ -1160,6 +1204,23 @@ void GL2Encoder::s_glTexParameteri(void* self,
         ctx->m_glTexParameteri_enc(ctx, target, pname, param);
     }
 }
+
+void GL2Encoder::s_glTexImage2D(void* self, GLenum target, GLint level,
+        GLint internalformat, GLsizei width, GLsizei height, GLint border,
+        GLenum format, GLenum type, const GLvoid* pixels)
+{
+    GL2Encoder* ctx = (GL2Encoder*)self;
+    if (target == GL_TEXTURE_2D || target == GL_TEXTURE_EXTERNAL_OES) {
+        ctx->override2DTextureTarget(target);
+        ctx->m_glTexImage2D_enc(ctx, target, level, internalformat, width,
+                height, border, format, type, pixels);
+        ctx->restore2DTextureTarget();
+    } else {
+        ctx->m_glTexImage2D_enc(ctx, target, level, internalformat, width,
+                height, border, format, type, pixels);
+    }
+}
+
 
 void GL2Encoder::s_glTexParameteriv(void* self,
         GLenum target, GLenum pname, const GLint* params)

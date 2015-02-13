@@ -74,7 +74,7 @@ private:
     glBindBuffer_client_proc_t m_glBindBuffer_enc;
     static void s_glBindBuffer(void *self, GLenum target, GLuint id);
 
-    
+
     glBufferData_client_proc_t m_glBufferData_enc;
     static void s_glBufferData(void *self, GLenum target, GLsizeiptr size, const GLvoid * data, GLenum usage);
     glBufferSubData_client_proc_t m_glBufferSubData_enc;
@@ -148,6 +148,22 @@ private:
     glDetachShader_client_proc_t m_glDetachShader_enc;
     static void s_glDetachShader(void *self, GLuint program, GLuint shader);
 
+    glGetAttachedShaders_client_proc_t m_glGetAttachedShaders_enc;
+    static void s_glGetAttachedShaders(void *self, GLuint program, GLsizei maxCount,
+            GLsizei* count, GLuint* shaders);
+
+    glGetShaderSource_client_proc_t m_glGetShaderSource_enc;
+    static void s_glGetShaderSource(void *self, GLuint shader, GLsizei bufsize,
+            GLsizei* length, GLchar* source);
+
+    glGetShaderInfoLog_client_proc_t m_glGetShaderInfoLog_enc;
+    static void s_glGetShaderInfoLog(void *self,GLuint shader,
+            GLsizei bufsize, GLsizei* length, GLchar* infolog);
+
+    glGetProgramInfoLog_client_proc_t m_glGetProgramInfoLog_enc;
+    static void s_glGetProgramInfoLog(void *self,GLuint program,
+            GLsizei bufsize, GLsizei* length, GLchar* infolog);
+
     glGetUniformLocation_client_proc_t m_glGetUniformLocation_enc;
     static int s_glGetUniformLocation(void *self, GLuint program, const GLchar *name);
     glUseProgram_client_proc_t m_glUseProgram_enc;
@@ -202,6 +218,7 @@ private:
     glTexParameterfv_client_proc_t m_glTexParameterfv_enc;
     glTexParameteri_client_proc_t m_glTexParameteri_enc;
     glTexParameteriv_client_proc_t m_glTexParameteriv_enc;
+    glTexImage2D_client_proc_t m_glTexImage2D_enc;
 
     static void s_glActiveTexture(void* self, GLenum texture);
     static void s_glBindTexture(void* self, GLenum target, GLuint texture);
@@ -212,5 +229,9 @@ private:
     static void s_glTexParameterfv(void* self, GLenum target, GLenum pname, const GLfloat* params);
     static void s_glTexParameteri(void* self, GLenum target, GLenum pname, GLint param);
     static void s_glTexParameteriv(void* self, GLenum target, GLenum pname, const GLint* params);
+    static void s_glTexImage2D(void* self, GLenum target, GLint level, GLint internalformat,
+            GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type,
+            const GLvoid* pixels);
+
 };
 #endif

@@ -40,10 +40,10 @@ EGLThreadInfo *slow_getEGLThreadInfo();
     // We have a dedicated TLS slot in bionic
     inline EGLThreadInfo* getEGLThreadInfo() {
         EGLThreadInfo *tInfo =
-             (EGLThreadInfo *)(((unsigned *)__get_tls())[TLS_SLOT_OPENGL]);
+             (EGLThreadInfo *)(((uintptr_t *)__get_tls())[TLS_SLOT_OPENGL]);
         if (!tInfo) {
             tInfo = slow_getEGLThreadInfo();
-            ((uint32_t *)__get_tls())[TLS_SLOT_OPENGL] = (uint32_t)tInfo;
+            ((uintptr_t *)__get_tls())[TLS_SLOT_OPENGL] = (uintptr_t)tInfo;
         }
         return tInfo;
     }
