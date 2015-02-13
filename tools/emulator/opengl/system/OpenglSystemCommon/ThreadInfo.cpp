@@ -24,6 +24,7 @@ static void tlsDestruct(void *ptr)
         EGLThreadInfo *ti = (EGLThreadInfo *)ptr;
         delete ti->hostConn;
         delete ti;
+        ((intptr_t *)__get_tls())[TLS_SLOT_OPENGL] = NULL;
     }
 }
 

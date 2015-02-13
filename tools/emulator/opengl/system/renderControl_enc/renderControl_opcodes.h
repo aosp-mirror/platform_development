@@ -28,7 +28,8 @@
 #define OP_rcColorBufferCacheFlush 					10022
 #define OP_rcReadColorBuffer 					10023
 #define OP_rcUpdateColorBuffer 					10024
-#define OP_last 					10025
+#define OP_rcOpenColorBuffer2 					10025
+#define OP_last 					10026
 
 
 #endif
