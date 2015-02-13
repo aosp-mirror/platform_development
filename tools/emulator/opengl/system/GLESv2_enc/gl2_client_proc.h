@@ -7,7 +7,7 @@
 
 #include "gl2_types.h"
 #ifndef gl2_APIENTRY
-#define gl2_APIENTRY 
+#define gl2_APIENTRY
 #endif
 typedef void (gl2_APIENTRY *glActiveTexture_client_proc_t) (void * ctx, GLenum);
 typedef void (gl2_APIENTRY *glAttachShader_client_proc_t) (void * ctx, GLuint, GLuint);

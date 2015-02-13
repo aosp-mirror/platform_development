@@ -30,13 +30,14 @@
 struct cb_handle_t : public native_handle {
 
     cb_handle_t(int p_fd, int p_ashmemSize, int p_usage,
-                int p_width, int p_height, int p_format,
-                int p_glFormat, int p_glType) :
+                int p_width, int p_height, int p_frameworkFormat,
+                int p_format, int p_glFormat, int p_glType) :
         fd(p_fd),
         magic(BUFFER_HANDLE_MAGIC),
         usage(p_usage),
         width(p_width),
         height(p_height),
+        frameworkFormat(p_frameworkFormat),
         format(p_format),
         glFormat(p_glFormat),
         glType(p_glType),
@@ -70,8 +71,8 @@ struct cb_handle_t : public native_handle {
         numInts = CB_HANDLE_NUM_INTS(numFds);
     }
 
-    static bool validate(cb_handle_t * hnd) {
-        return (hnd && 
+    static bool validate(const cb_handle_t* hnd) {
+        return (hnd &&
                 hnd->version == sizeof(native_handle) &&
                 hnd->magic == BUFFER_HANDLE_MAGIC &&
                 hnd->numInts == CB_HANDLE_NUM_INTS(hnd->numFds));
@@ -89,12 +90,17 @@ struct cb_handle_t : public native_handle {
     int usage;              // usage bits the buffer was created with
     int width;              // buffer width
     int height;             // buffer height
+    int frameworkFormat;    // format requested by the Android framework
     int format;             // real internal pixel format format
     int glFormat;           // OpenGL format enum used for host h/w color buffer
     int glType;             // OpenGL type enum used when uploading to host
     int ashmemSize;         // ashmem region size for the buffer (0 unless is HW_FB buffer or
                             //                                    s/w access is needed)
-    int ashmemBase;         // CPU address of the mapped ashmem region
+    union {
+        intptr_t ashmemBase;    // CPU address of the mapped ashmem region
+        uint64_t padding;       // enforce same size on 32-bit/64-bit
+    } __attribute__((aligned(8)));
+
     int ashmemBasePid;      // process id which mapped the ashmem region
     int mappedPid;          // process id which succeeded gralloc_register call
     int lockedLeft;         // region of buffer locked for s/w write

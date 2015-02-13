@@ -91,6 +91,12 @@ public:
     void setActiveTexture(int texUnit) {m_activeTexture = texUnit; };
     int getActiveTexture() const { return m_activeTexture; }
 
+    void unBindBuffer(GLuint id)
+    {
+        if (m_currentArrayVbo == id) m_currentArrayVbo = 0;
+        else if (m_currentIndexVbo == id) m_currentIndexVbo = 0;
+    }
+
     int bindBuffer(GLenum target, GLuint id)
     {
         int err = 0;

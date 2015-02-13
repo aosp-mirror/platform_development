@@ -35,6 +35,7 @@ GLClientState::GLClientState(int nLocations)
     for (int i = 0; i < m_nLocations; i++) {
         m_states[i].enabled = 0;
         m_states[i].enableDirty = false;
+        m_states[i].data = 0;
     }
     m_currentArrayVbo = 0;
     m_currentIndexVbo = 0;
@@ -224,6 +225,8 @@ int GLClientState::setPixelStore(GLenum param, GLint value)
 
 size_t GLClientState::pixelDataSize(GLsizei width, GLsizei height, GLenum format, GLenum type, int pack) const
 {
+    if (width <= 0 || height <= 0) return 0;
+
     int pixelsize = glUtilsPixelBitSize(format, type) >> 3;
 
     int alignment = pack ? m_pixelStore.pack_alignment : m_pixelStore.unpack_alignment;
