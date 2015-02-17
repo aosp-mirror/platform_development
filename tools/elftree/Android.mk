@@ -19,7 +19,6 @@ ifeq ($(HOST_OS),linux)
 include $(CLEAR_VARS)
 LOCAL_MODULE := elftree
 LOCAL_SRC_FILES := elftree.c
-LOCAL_C_INCLUDES := external/elfutils/0.153/libelf
 LOCAL_STATIC_LIBRARIES := libelf
 include $(BUILD_HOST_EXECUTABLE)
 
