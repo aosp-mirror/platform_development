@@ -14,34 +14,13 @@
 
 LOCAL_PATH := $(call my-dir)
 
-supported_platforms := linux
-cur_platform := $(filter $(HOST_OS),$(supported_platforms))
-
-ifdef cur_platform
-
-# Target executable
-# TODO: Requires libelf for target
-
-#include $(CLEAR_VARS)
-#LOCAL_MODULE := $(module)
-#LOCAL_SRC_FILES := $(src_files)
-#LOCAL_C_INCLUDES := $(c_includes)
-#LOCAL_SHARED_LIBRARIES := $(shared_libraries)
-#LOCAL_STATIC_LIBRARIES := $(static_libraries)
-#LOCAL_MODULE_PATH := $(TARGET_OUT_OPTIONAL_EXECUTABLES)
-#LOCAL_LDLIBS +=
-#include $(BUILD_EXECUTABLE)
-
-# Host executable
+ifeq ($(HOST_OS),linux)
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := elftree
 LOCAL_SRC_FILES := elftree.c
 LOCAL_C_INCLUDES := external/elfutils/0.153/libelf
-# to fix compatibility issues in elf headers across different platforms
-LOCAL_CFLAGS += \
-	-include external/elfutils/0.153/host-$(HOST_OS)-fixup/AndroidFixup.h
 LOCAL_STATIC_LIBRARIES := libelf
 include $(BUILD_HOST_EXECUTABLE)
 
-endif #cur_platform
+endif
