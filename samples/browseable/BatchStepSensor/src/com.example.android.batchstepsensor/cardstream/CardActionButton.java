@@ -14,12 +14,11 @@
 * limitations under the License.
 */
 
-
-
-
 package com.example.android.batchstepsensor.cardstream;
 
 import android.content.Context;
+import android.os.Build;
+import android.support.v4.view.ViewCompat;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.animation.BounceInterpolator;
@@ -46,20 +45,28 @@ public class CardActionButton extends Button {
     @Override
     public boolean onTouchEvent(MotionEvent event) {
 
-        switch(event.getAction()){
-            case MotionEvent.ACTION_DOWN:
+        switch (event.getAction()) {
+            case MotionEvent.ACTION_DOWN: {
                 setPressed(true);
-                animate().scaleX(0.98f).scaleY(0.98f).alpha(0.8f).setDuration(100).
-                        setInterpolator(new DecelerateInterpolator());
+                if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.KITKAT) {
+                    animate().scaleX(0.98f).scaleY(0.98f).setDuration(100)
+                        .setInterpolator(new DecelerateInterpolator());
+                } else {
+                    ViewCompat.setElevation(this, 8.f);
+                }
                 break;
+            }
             case MotionEvent.ACTION_UP:
-                animate().scaleX(1.0f).scaleY(1.f).alpha(1.0f).setDuration(50).
-                        setInterpolator(new BounceInterpolator());
+            case MotionEvent.ACTION_CANCEL: {
+                setPressed(false);
+                if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.KITKAT) {
+                    animate().scaleX(1.f).scaleY(1.f).setDuration(50)
+                        .setInterpolator(new BounceInterpolator());
+                } else {
+                    ViewCompat.setElevation(this, 0.f);
+                }
                 break;
-            case MotionEvent.ACTION_CANCEL:
-                animate().scaleX(1.0f).scaleY(1.f).alpha(1.0f).setDuration(50).
-                        setInterpolator(new BounceInterpolator());
-                break;
+            }
         }
 
         return super.onTouchEvent(event);

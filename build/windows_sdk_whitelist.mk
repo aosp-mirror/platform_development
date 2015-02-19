@@ -40,6 +40,7 @@ subdirs += \
 	external/clang \
 	external/easymock \
 	external/expat \
+	external/gtest \
 	external/libcxx \
 	external/libcxxabi \
 	external/compiler-rt \

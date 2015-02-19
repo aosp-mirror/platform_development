@@ -14,19 +14,16 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 -->
-
-
-
 <resources>
     <string name="app_name">BasicNetworking</string>
     <string name="intro_message">
         <![CDATA[
         
             
-                This sample demonstrates how to use the ConnectivityManager to determine if you have
-                a network connection, and if so, what type of connection it is.
-                \n\nA "NetworkInfo" object is retrieved from the ConnectivityManager, which contains information
-                on the active connection, and then the connection type is printed to an on-screen console.
+            This sample demonstrates how to use the ConnectivityManager to determine if you have
+            a network connection, and if so, what type of connection it is.
+            \n\nA "NetworkInfo" object is retrieved from the ConnectivityManager, which contains information
+            on the active connection, and then the connection type is printed to an on-screen console.
             
         
         ]]>

@@ -15,28 +15,28 @@
  */
 package com.example.android.supportv7.app;
 
+import com.example.android.supportv7.R;
+
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBar.Tab;
-import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.AppCompatActivity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
-import com.example.android.supportv7.R;
 
 /**
  * This demonstrates the use of action bar tabs and how they interact
  * with other action bar features.
  */
-public class ActionBarTabs extends ActionBarActivity {
+public class ActionBarTabs extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         setContentView(R.layout.action_bar_tabs);
     }
 
@@ -61,10 +61,8 @@ public class ActionBarTabs extends ActionBarActivity {
 
         if (bar.getNavigationMode() == ActionBar.NAVIGATION_MODE_TABS) {
             bar.setNavigationMode(ActionBar.NAVIGATION_MODE_STANDARD);
-            bar.setDisplayOptions(ActionBar.DISPLAY_SHOW_TITLE, ActionBar.DISPLAY_SHOW_TITLE);
         } else {
             bar.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
-            bar.setDisplayOptions(0, ActionBar.DISPLAY_SHOW_TITLE);
         }
     }
 

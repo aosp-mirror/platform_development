@@ -18,36 +18,34 @@ package com.example.android.supportv7.media;
 
 import com.example.android.supportv7.R;
 
+import android.app.PendingIntent;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.res.Resources;
-import android.app.PendingIntent;
 import android.media.AudioManager;
 import android.media.AudioManager.OnAudioFocusChangeListener;
-import android.media.MediaMetadataRetriever;
-import android.media.RemoteControlClient;
 import android.net.Uri;
-import android.os.Build;
+import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
-import android.os.Bundle;
 import android.os.SystemClock;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.view.MenuItemCompat;
-import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.app.MediaRouteActionProvider;
 import android.support.v7.app.MediaRouteControllerDialog;
 import android.support.v7.app.MediaRouteControllerDialogFragment;
-import android.support.v7.app.MediaRouteDiscoveryFragment;
 import android.support.v7.app.MediaRouteDialogFactory;
+import android.support.v7.app.MediaRouteDiscoveryFragment;
 import android.support.v7.media.MediaControlIntent;
+import android.support.v7.media.MediaItemStatus;
+import android.support.v7.media.MediaRouteSelector;
 import android.support.v7.media.MediaRouter;
 import android.support.v7.media.MediaRouter.Callback;
-import android.support.v7.media.MediaRouter.RouteInfo;
 import android.support.v7.media.MediaRouter.ProviderInfo;
-import android.support.v7.media.MediaRouteSelector;
-import android.support.v7.media.MediaItemStatus;
+import android.support.v7.media.MediaRouter.RouteInfo;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
@@ -60,12 +58,13 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
 import android.widget.ListView;
-import android.widget.TextView;
-import android.widget.TabHost;
-import android.widget.TabHost.TabSpec;
-import android.widget.TabHost.OnTabChangeListener;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
+import android.widget.TabHost;
+import android.widget.TabHost.OnTabChangeListener;
+import android.widget.TabHost.TabSpec;
+import android.widget.TextView;
+
 import java.io.File;
 
 /**
@@ -77,7 +76,7 @@ import java.io.File;
  * targets.
  * </p>
  */
-public class SampleMediaRouterActivity extends ActionBarActivity {
+public class SampleMediaRouterActivity extends AppCompatActivity {
     private static final String TAG = "SampleMediaRouterActivity";
     private static final String DISCOVERY_FRAGMENT_TAG = "DiscoveryFragment";
 
@@ -93,7 +92,6 @@ public class SampleMediaRouterActivity extends ActionBarActivity {
     private SeekBar mSeekBar;
     private boolean mNeedResume;
     private boolean mSeeking;
-    private SampleMediaRouteControllerDialog mControllerDialog;
 
     private final Handler mHandler = new Handler();
     private final Runnable mUpdateSeekRunnable = new Runnable() {
@@ -130,19 +128,18 @@ public class SampleMediaRouterActivity extends ActionBarActivity {
         public void onRouteSelected(MediaRouter router, RouteInfo route) {
             Log.d(TAG, "onRouteSelected: route=" + route);
 
-            mPlayer = Player.create(SampleMediaRouterActivity.this, route);
+            mPlayer = Player.create(SampleMediaRouterActivity.this, route, mMediaSession);
             mPlayer.updatePresentation();
             mSessionManager.setPlayer(mPlayer);
             mSessionManager.unsuspend();
 
-            registerRCC();
             updateUi();
         }
 
         @Override
         public void onRouteUnselected(MediaRouter router, RouteInfo route) {
             Log.d(TAG, "onRouteUnselected: route=" + route);
-            unregisterRCC();
+            mMediaSession.setActive(false);
 
             PlaylistItem item = getCheckedPlaylistItem();
             if (item != null) {
@@ -152,7 +149,6 @@ public class SampleMediaRouterActivity extends ActionBarActivity {
             }
             mPlayer.updatePresentation();
             mPlayer.release();
-            mControllerDialog = null;
         }
 
         @Override
@@ -183,7 +179,7 @@ public class SampleMediaRouterActivity extends ActionBarActivity {
         }
     };
 
-    private RemoteControlClient mRemoteControlClient;
+    private MediaSessionCompat mMediaSession;
     private ComponentName mEventReceiver;
     private AudioManager mAudioManager;
     private PendingIntent mMediaPendingIntent;
@@ -367,11 +363,13 @@ public class SampleMediaRouterActivity extends ActionBarActivity {
         mMediaPendingIntent = PendingIntent.getBroadcast(this, 0, mediaButtonIntent, 0);
 
         // Create and register the remote control client
-        registerRCC();
+        createMediaSession();
+        mMediaRouter.setMediaSessionCompat(mMediaSession);
 
         // Set up playback manager and player
         mPlayer = Player.create(SampleMediaRouterActivity.this,
-                mMediaRouter.getSelectedRoute());
+                mMediaRouter.getSelectedRoute(), mMediaSession);
+
         mSessionManager.setPlayer(mPlayer);
         mSessionManager.setCallback(new SessionManager.Callback() {
             @Override
@@ -387,40 +385,42 @@ public class SampleMediaRouterActivity extends ActionBarActivity {
         updateUi();
     }
 
-    private void registerRCC() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
-            // Create the RCC and register with AudioManager and MediaRouter
-            mAudioManager.requestAudioFocus(mAfChangeListener,
-                    AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
-            mAudioManager.registerMediaButtonEventReceiver(mEventReceiver);
-            mRemoteControlClient = new RemoteControlClient(mMediaPendingIntent);
-            mAudioManager.registerRemoteControlClient(mRemoteControlClient);
-            mMediaRouter.addRemoteControlClient(mRemoteControlClient);
-            SampleMediaButtonReceiver.setActivity(SampleMediaRouterActivity.this);
-            mRemoteControlClient.setTransportControlFlags(
-                    RemoteControlClient.FLAG_KEY_MEDIA_PLAY_PAUSE);
-            mRemoteControlClient.setPlaybackState(
-                    RemoteControlClient.PLAYSTATE_PLAYING);
-        }
-    }
+    private void createMediaSession() {
+        // Create the MediaSession
+        mMediaSession = new MediaSessionCompat(this, "SampleMediaRouter", mEventReceiver,
+                mMediaPendingIntent);
+        mMediaSession.setFlags(MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS
+                | MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS);
+        mMediaSession.setCallback(new MediaSessionCompat.Callback() {
+            @Override
+            public boolean onMediaButtonEvent(Intent mediaButtonEvent) {
+                if (mediaButtonEvent != null) {
+                    return handleMediaKey(
+                            (KeyEvent) mediaButtonEvent.getParcelableExtra(Intent.EXTRA_KEY_EVENT));
+                }
+                return super.onMediaButtonEvent(mediaButtonEvent);
+            }
 
-    private void unregisterRCC() {
-        // Unregister the RCC with AudioManager and MediaRouter
-        if (mRemoteControlClient != null) {
-            mRemoteControlClient.setTransportControlFlags(0);
-            mAudioManager.abandonAudioFocus(mAfChangeListener);
-            mAudioManager.unregisterMediaButtonEventReceiver(mEventReceiver);
-            mAudioManager.unregisterRemoteControlClient(mRemoteControlClient);
-            mMediaRouter.removeRemoteControlClient(mRemoteControlClient);
-            SampleMediaButtonReceiver.setActivity(null);
-            mRemoteControlClient = null;
-        }
+            @Override
+            public void onPlay() {
+                mSessionManager.resume();
+            }
+
+            @Override
+            public void onPause() {
+                mSessionManager.pause();
+            }
+        });
+
+        SampleMediaButtonReceiver.setActivity(SampleMediaRouterActivity.this);
     }
 
     public boolean handleMediaKey(KeyEvent event) {
-        if (event.getAction() == KeyEvent.ACTION_DOWN && event.getRepeatCount() == 0) {
+        if (event != null && event.getAction() == KeyEvent.ACTION_DOWN
+                && event.getRepeatCount() == 0) {
             switch (event.getKeyCode()) {
                 case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:
+                case KeyEvent.KEYCODE_HEADSETHOOK:
                 {
                     Log.d(TAG, "Received Play/Pause event from RemoteControlClient");
                     if (mSessionManager.isPaused()) {
@@ -497,11 +497,9 @@ public class SampleMediaRouterActivity extends ActionBarActivity {
 
     @Override
     public void onDestroy() {
-        // Unregister the remote control client
-        unregisterRCC();
-
         mSessionManager.stop();
         mPlayer.release();
+        mMediaSession.release();
         super.onDestroy();
     }
 
@@ -520,15 +518,7 @@ public class SampleMediaRouterActivity extends ActionBarActivity {
         mediaRouteActionProvider.setDialogFactory(new MediaRouteDialogFactory() {
             @Override
             public MediaRouteControllerDialogFragment onCreateControllerDialogFragment() {
-                return new MediaRouteControllerDialogFragment() {
-                    @Override
-                    public MediaRouteControllerDialog onCreateControllerDialog(
-                            Context context, Bundle savedInstanceState) {
-                        mControllerDialog = new SampleMediaRouteControllerDialog(
-                                context, mSessionManager, mPlayer);
-                        return mControllerDialog;
-                    }
-                };
+                return new ControllerDialogFragment(mPlayer);
             }
         });
 
@@ -564,8 +554,8 @@ public class SampleMediaRouterActivity extends ActionBarActivity {
         updatePlaylist();
         updateRouteDescription();
         updateButtons();
-        if (mControllerDialog != null) {
-            mControllerDialog.updateUi();
+        if (mPlayer != null) {
+            mPlayer.updateMetadata();
         }
     }
 
@@ -593,11 +583,6 @@ public class SampleMediaRouterActivity extends ActionBarActivity {
         // only enable seek bar when duration is known
         PlaylistItem item = getCheckedPlaylistItem();
         mSeekBar.setEnabled(item != null && item.getDuration() > 0);
-        if (mRemoteControlClient != null) {
-            mRemoteControlClient.setPlaybackState(mSessionManager.isPaused() ?
-                    RemoteControlClient.PLAYSTATE_PAUSED :
-                        RemoteControlClient.PLAYSTATE_PLAYING);
-        }
     }
 
     private PlaylistItem getCheckedPlaylistItem() {
@@ -744,5 +729,36 @@ public class SampleMediaRouterActivity extends ActionBarActivity {
      * same activity using a light theme with dark action bar instead of the dark theme.
      */
     public static class LightWithDarkActionBar extends SampleMediaRouterActivity {
+    }
+
+    public static class ControllerDialogFragment extends MediaRouteControllerDialogFragment {
+        private MediaRouteControllerDialog mControllerDialog;
+        private Player mPlayer;
+
+        public ControllerDialogFragment() {
+            super();
+        }
+
+        public ControllerDialogFragment(Player player) {
+            mPlayer = player;
+        }
+
+        @Override
+        public MediaRouteControllerDialog onCreateControllerDialog(
+                Context context, Bundle savedInstanceState) {
+            mControllerDialog = super.onCreateControllerDialog(context,
+                    savedInstanceState);
+            mControllerDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
+                @Override
+                public void onDismiss(DialogInterface dialog) {
+                    mControllerDialog = null;
+                }
+            });
+            return mControllerDialog;
+        }
+
+        public void setPlayer(Player player) {
+            mPlayer = player;
+        }
     }
 }

@@ -29,6 +29,7 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.net.ConnectivityManager;
 import android.net.LinkAddress;
+import android.net.Network;
 import android.net.NetworkUtils;
 import android.net.RouteInfo;
 import android.net.wifi.ScanResult;
@@ -304,6 +305,7 @@ public class Connectivity extends Activity {
         findViewById(R.id.stop_mms).setOnClickListener(mClickListener);
         findViewById(R.id.start_hipri).setOnClickListener(mClickListener);
         findViewById(R.id.stop_hipri).setOnClickListener(mClickListener);
+        findViewById(R.id.report_all_bad).setOnClickListener(mClickListener);
         findViewById(R.id.crash).setOnClickListener(mClickListener);
 
         findViewById(R.id.add_default_route).setOnClickListener(mClickListener);
@@ -318,6 +320,11 @@ public class Connectivity extends Activity {
         registerReceiver(mReceiver, new IntentFilter(CONNECTIVITY_TEST_ALARM));
     }
 
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        unregisterReceiver(mReceiver);
+    }
 
     @Override
     public void onResume() {
@@ -386,6 +393,9 @@ public class Connectivity extends Activity {
                     break;
                 case R.id.add_default_route:
                     onAddDefaultRoute();
+                    break;
+                case R.id.report_all_bad:
+                    onReportAllBad();
                     break;
                 case R.id.crash:
                     onCrash();
@@ -458,6 +468,13 @@ public class Connectivity extends Activity {
     }
 
     private void onStopScreenCycle() {
+    }
+
+    private void onReportAllBad() {
+        Network[] networks = mCm.getAllNetworks();
+        for (Network network : networks) {
+            mCm.reportBadNetwork(network);
+        }
     }
 
     private void onCrash() {

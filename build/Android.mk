@@ -112,7 +112,8 @@ ANDROID_SUPPORT_LIBRARIES := \
     android-support-v13 \
     android-support-v17-leanback \
     android-support-multidex \
-    android-support-multidex-instrumentation
+    android-support-multidex-instrumentation \
+    android-support-design
 
 $(foreach lib, $(ANDROID_SUPPORT_LIBRARIES), $(eval $(call _package_sdk_library,$(lib))))
 

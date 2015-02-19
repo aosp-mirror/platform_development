@@ -25,6 +25,7 @@ import android.view.ViewGroup;
 import android.widget.RadioGroup;
 import android.widget.SeekBar;
 import android.widget.TextView;
+
 import com.example.android.supportv7.R;
 
 public class CardViewActivity extends Activity {
@@ -84,7 +85,7 @@ public class CardViewActivity extends Activity {
             lp = setViewBounds(mInfoText);
         }
         mInfoText.setText("radius: " + mCornerRadiusSeekBar.getProgress()
-                +", alpha: " + mAlphaSeekBar.getProgress()
+                + ", alpha: " + mAlphaSeekBar.getProgress()
                 + "\n w: " + lp.width + "\nh: " + lp.height
                 + "\nelevation: " + mCardView.getCardElevation() + " of "
                 + mCardView.getMaxCardElevation());
@@ -143,15 +144,44 @@ public class CardViewActivity extends Activity {
             }
         });
 
-        update();
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
                 View content = findViewById(android.R.id.content);
+                mWidthSeekBar.setProgress(mCardView.getWidth());
+                mHeightSeekBar.setProgress(mCardView.getHeight());
                 mWidthSeekBar.setMax(content.getWidth());
                 mHeightSeekBar.setMax(content.getHeight());
+                update();
             }
         }, 100);
+
+        ((RadioGroup) findViewById(R.id.select_bg_color_radio))
+                .setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+                    @Override
+                    public void onCheckedChanged(RadioGroup group, int checkedId) {
+                        mCardView.setCardBackgroundColor(
+                                getResources().getColor(getColorId(checkedId)));
+                    }
+                });
     }
 
+    private int getColorId(int id) {
+        switch (id) {
+            case R.id.yellow:
+                return R.color.card_yellow;
+            case R.id.aquatic:
+                return R.color.card_aquatic;
+            case R.id.classic:
+                return R.color.card_classic;
+            case R.id.sunbrite:
+                return R.color.card_sunbrite;
+            case R.id.tropical:
+                return R.color.card_tropical;
+            case R.id.selector:
+                return R.color.card_selector;
+            default:
+                return R.color.cardview_light_background;
+        }
+    }
 }

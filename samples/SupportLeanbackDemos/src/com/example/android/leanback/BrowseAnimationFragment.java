@@ -23,6 +23,7 @@ import android.support.v17.leanback.widget.OnItemClickedListener;
 import android.support.v17.leanback.widget.Row;
 import android.util.Log;
 import android.view.View;
+import android.os.Handler;
 
 import java.util.Random;
 
@@ -76,13 +77,13 @@ public class BrowseAnimationFragment extends
         mRowsAdapter = new ArrayObjectAdapter(lrp);
         for (int i = 0; i < NUM_ROWS; ++i) {
             mRowsAdapter.add(
-                    createRandomRow(new HeaderItem(i, "Row " + i, null)));
+                    createRandomRow(new HeaderItem(i, "Row " + i)));
         }
         setAdapter(mRowsAdapter);
     }
 
     Item createRandomItem() {
-        switch (sRand.nextInt(13)) {
+        switch (sRand.nextInt(15)) {
         default:
         case 0:
             return new Item("Remove Item before", new OnItemClickedListener() {
@@ -198,7 +199,7 @@ public class BrowseAnimationFragment extends
                     if (index >= 0) {
                         int headerId = sRand.nextInt();
                         mRowsAdapter.add(index, createRandomRow(new HeaderItem(
-                                headerId, "Row " + headerId, null)));
+                                headerId, "Row " + headerId)));
                     }
                 }
             });
@@ -211,7 +212,7 @@ public class BrowseAnimationFragment extends
                         int headerId = sRand.nextInt();
                         mRowsAdapter.add(
                                 index + 1, createRandomRow(new HeaderItem(
-                                        headerId, "Row " + headerId, null)));
+                                        headerId, "Row " + headerId)));
                     }
                 }
             });
@@ -240,6 +241,35 @@ public class BrowseAnimationFragment extends
                     if (index < mRowsAdapter.size() - 1) {
                         mRowsAdapter.removeItems(index + 1, 1);
                     }
+                }
+            });
+        case 13:
+            return new Item("Replace Item before", new OnItemClickedListener() {
+                    @Override
+                public void onItemClicked(Object item, Row row) {
+                    ArrayObjectAdapter adapter = ((ArrayObjectAdapter) ((ListRow) row)
+                            .getAdapter());
+                    int index = adapter.indexOf(item);
+                    if (index >= 0) {
+                        if (index > 0)
+                            index--;
+                        adapter.replace(index, createRandomItem());
+                    }
+                }
+            });
+        case 14:
+            return new Item("Remove all then re-add", new OnItemClickedListener() {
+                    @Override
+                public void onItemClicked(Object item, Row row) {
+                    final ArrayObjectAdapter adapter = ((ArrayObjectAdapter) ((ListRow) row)
+                            .getAdapter());
+                   adapter.clear();
+                   new Handler().postDelayed(new Runnable() {
+                       @Override
+                       public void run() {
+                           adapter.add(0, createRandomItem());
+                       }
+                   }, 1000);
                 }
             });
         }

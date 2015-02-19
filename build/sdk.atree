@@ -79,6 +79,7 @@ development/sdk/build_tools_runtime.properties build-tools/${PLATFORM_NAME}/runt
 # build tools from out/host/$(HOST_OS)-$(HOST_ARCH)/
 bin/aapt                                strip build-tools/${PLATFORM_NAME}/aapt
 bin/aidl                                strip build-tools/${PLATFORM_NAME}/aidl
+bin/split-select                        strip build-tools/${PLATFORM_NAME}/split-select
 bin/zipalign                            strip build-tools/${PLATFORM_NAME}/zipalign
 
 # renderscript (cc + headers)
@@ -117,6 +118,12 @@ prebuilts/sdk/renderscript/lib/x86/libclcore.bc       build-tools/${PLATFORM_NAM
 bin/dx                                        build-tools/${PLATFORM_NAME}/dx
 framework/dx.jar                              build-tools/${PLATFORM_NAME}/lib/dx.jar
 bin/dexdump                                   build-tools/${PLATFORM_NAME}/dexdump
+
+# multi-dex
+prebuilts/sdk/tools/lib/shrinkedAndroid.jar   build-tools/${PLATFORM_NAME}/lib/shrinkedAndroid.jar
+prebuilts/sdk/tools/jack.jar                  build-tools/${PLATFORM_NAME}/jack.jar
+prebuilts/sdk/tools/jill.jar                  build-tools/${PLATFORM_NAME}/jill.jar
+dalvik/dx/etc/mainDexClasses.rules            build-tools/${PLATFORM_NAME}/mainDexClasses.rules
 
 
 ##############################################################################
@@ -176,6 +183,9 @@ docs/features.txt                         platforms/${PLATFORM_NAME}/data/featur
 
 # fonts for layoutlib.
 ${FONT_OUT}                       platforms/${PLATFORM_NAME}/data/fonts
+
+# timezone data for layoutlib
+bionic/libc/zoneinfo/tzdata       platforms/${PLATFORM_NAME}/data/tzdata
 
 # NOTICE files are copied by build/core/Makefile from sdk.git
 development/sdk/sdk_files_NOTICE.txt      platforms/${PLATFORM_NAME}/templates/NOTICE.txt
@@ -241,6 +251,11 @@ developers/build/prebuilts/gradle/ActivityInstrumentation/                   sam
 developers/build/prebuilts/gradle/MediaRecorder/                             samples/${PLATFORM_NAME}/media/MediaRecorder
 developers/build/prebuilts/gradle/BasicMediaRouter/                          samples/${PLATFORM_NAME}/media/BasicMediaRouter
 developers/build/prebuilts/gradle/BasicMediaDecoder/                         samples/${PLATFORM_NAME}/media/BasicMediaDecoder
+developers/build/prebuilts/gradle/MediaBrowserService/                       samples/${PLATFORM_NAME}/media/MediaBrowserService
+developers/build/prebuilts/gradle/BasicNotifications/                        samples/${PLATFORM_NAME}/notification/BasicNotifications
+developers/build/prebuilts/gradle/CustomNotifications/                       samples/${PLATFORM_NAME}/notification/CustomNotifications
+developers/build/prebuilts/gradle/LNotifications/                            samples/${PLATFORM_NAME}/notification/LNotifications
+developers/build/prebuilts/gradle/MessagingService/                          samples/${PLATFORM_NAME}/notification/MessagingService
 developers/build/prebuilts/gradle/BorderlessButtons/                         samples/${PLATFORM_NAME}/ui/BorderlessButtons
 developers/build/prebuilts/gradle/BasicAccessibility/                        samples/${PLATFORM_NAME}/ui/BasicAccessibility
 developers/build/prebuilts/gradle/CustomChoiceList/                          samples/${PLATFORM_NAME}/ui/CustomChoiceList
@@ -250,8 +265,6 @@ developers/build/prebuilts/gradle/ActionBarCompat-Styled/                    sam
 developers/build/prebuilts/gradle/ActionBarCompat-ListPopupMenu/             samples/${PLATFORM_NAME}/ui/ActionBarCompat-ListPopupMenu
 developers/build/prebuilts/gradle/ActionBarCompat-ShareActionProvider/       samples/${PLATFORM_NAME}/ui/ActionBarCompat-ShareActionProvider
 developers/build/prebuilts/gradle/ActionBarCompat-Basic/                     samples/${PLATFORM_NAME}/ui/ActionBarCompat-Basic
-developers/build/prebuilts/gradle/BasicNotifications/                        samples/${PLATFORM_NAME}/ui/BasicNotifications
-developers/build/prebuilts/gradle/CustomNotifications/                       samples/${PLATFORM_NAME}/ui/CustomNotifications
 developers/build/prebuilts/gradle/DoneBar/                                   samples/${PLATFORM_NAME}/ui/DoneBar
 developers/build/prebuilts/gradle/BasicImmersiveMode/                        samples/${PLATFORM_NAME}/ui/BasicImmersiveMode
 developers/build/prebuilts/gradle/AdvancedImmersiveMode/                     samples/${PLATFORM_NAME}/ui/AdvancedImmersiveMode
@@ -284,7 +297,7 @@ developers/build/prebuilts/gradle/NavigationDrawer                           sam
 developers/build/prebuilts/gradle/ElevationBasic                             samples/${PLATFORM_NAME}/ui/views/Elevation/ElevationBasic
 developers/build/prebuilts/gradle/ElevationDrag                              samples/${PLATFORM_NAME}/ui/views/Elevation/ElevationDrag
 developers/build/prebuilts/gradle/ClippingBasic                              samples/${PLATFORM_NAME}/ui/views/Clipping/ClippingBasic
-developers/build/prebuilts/gradle/JobScheduler                               samples/${PLATFORM_NAME}/ui/views/Clipping/JobScheduler
+developers/build/prebuilts/gradle/JobScheduler                               samples/${PLATFORM_NAME}/background/JobScheduler
 developers/build/prebuilts/gradle/HdrViewfinder                              samples/${PLATFORM_NAME}/media/HdrViewfinder
 developers/build/prebuilts/gradle/DocumentCentricApps                        samples/${PLATFORM_NAME}/ui/activitytasks/DocumentCentricApps
 developers/build/prebuilts/gradle/DocumentCentricRelinquishIdentity          samples/${PLATFORM_NAME}/ui/activitytasks/DocumentCentricRelinquishIdentity
@@ -292,33 +305,38 @@ developers/build/prebuilts/gradle/AppRestrictionEnforcer                     sam
 developers/build/prebuilts/gradle/AppRestrictionSchema                       samples/${PLATFORM_NAME}/admin/AppRestrictionSchema
 developers/build/prebuilts/gradle/RecyclerView                               samples/${PLATFORM_NAME}/ui/views/RecyclerView
 developers/build/prebuilts/gradle/CardView                                   samples/${PLATFORM_NAME}/ui/views/CardView
-developers/build/prebuilts/gradle/LNotifications                             samples/${PLATFORM_NAME}/ui/notifications/LNotifications
 developers/build/prebuilts/gradle/DrawableTinting                            samples/${PLATFORM_NAME}/ui/DrawableTinting
 developers/build/prebuilts/gradle/Interpolator                               samples/${PLATFORM_NAME}/ui/Interpolator
 developers/build/prebuilts/gradle/PdfRendererBasic                           samples/${PLATFORM_NAME}/ui/graphics/PdfRendererBasic
 developers/build/prebuilts/gradle/FloatingActionButtonBasic                  samples/${PLATFORM_NAME}/ui/views/FloatingActionButton/FloatingActionButtonBasic
 developers/build/prebuilts/gradle/RevealEffectBasic                          samples/${PLATFORM_NAME}/ui/views/RevealEffect/RevealEffectBasic
+developers/build/prebuilts/gradle/PermissionRequest                          samples/${PLATFORM_NAME}/content/webview/PermissionRequest
+developers/build/prebuilts/gradle/DirectorySelection                         samples/${PLATFORM_NAME}/content/documentsUi/DirectorySelection
+developers/build/prebuilts/gradle/AppUsageStatistics                         samples/${PLATFORM_NAME}/system/AppUsageStatistics
+developers/build/prebuilts/gradle/ScreenCapture                              samples/${PLATFORM_NAME}/media/ScreenCapture
 
 developers/build/prebuilts/androidtv                                         samples/${PLATFORM_NAME}/androidtv
 
 # Wearable sample tree
-development/samples/wearable/AgendaData                    samples/${PLATFORM_NAME}/wearable/AgendaData
-development/samples/wearable/DataLayer                     samples/${PLATFORM_NAME}/wearable/DataLayer
-development/samples/wearable/DelayedConfirmation           samples/${PLATFORM_NAME}/wearable/DelayedConfirmation
-development/samples/wearable/ElizaChat                     samples/${PLATFORM_NAME}/wearable/ElizaChat
-development/samples/wearable/EmbeddedApp                   samples/${PLATFORM_NAME}/wearable/EmbeddedApp
-development/samples/wearable/FindMyPhone                   samples/${PLATFORM_NAME}/wearable/FindMyPhone
-development/samples/wearable/Flashlight                    samples/${PLATFORM_NAME}/wearable/Flashlight
-development/samples/wearable/Geofencing                    samples/${PLATFORM_NAME}/wearable/Geofencing
-development/samples/wearable/GridViewPager                 samples/${PLATFORM_NAME}/wearable/GridViewPager
-development/samples/wearable/JumpingJack                   samples/${PLATFORM_NAME}/wearable/JumpingJack
-development/samples/wearable/Notifications                 samples/${PLATFORM_NAME}/wearable/Notifications
-development/samples/wearable/Quiz                          samples/${PLATFORM_NAME}/wearable/Quiz
-development/samples/wearable/RecipeAssistant               samples/${PLATFORM_NAME}/wearable/RecipeAssistant
-development/samples/wearable/SkeletonWearableApp           samples/${PLATFORM_NAME}/wearable/SkeletonWearableApp
-development/samples/wearable/SynchronizedNotifications     samples/${PLATFORM_NAME}/wearable/SynchronizedNotifications
-development/samples/wearable/Timer                         samples/${PLATFORM_NAME}/wearable/Timer
-development/samples/wearable/WatchViewStub                 samples/${PLATFORM_NAME}/wearable/WatchViewStub
+developers/build/prebuilts/gradle/AgendaData                    samples/${PLATFORM_NAME}/wearable/AgendaData
+developers/build/prebuilts/gradle/DataLayer                     samples/${PLATFORM_NAME}/wearable/DataLayer
+developers/build/prebuilts/gradle/DelayedConfirmation           samples/${PLATFORM_NAME}/wearable/DelayedConfirmation
+developers/build/prebuilts/gradle/ElizaChat                     samples/${PLATFORM_NAME}/wearable/ElizaChat
+developers/build/prebuilts/gradle/EmbeddedApp                   samples/${PLATFORM_NAME}/wearable/EmbeddedApp
+developers/build/prebuilts/gradle/FindMyPhone                   samples/${PLATFORM_NAME}/wearable/FindMyPhone
+developers/build/prebuilts/gradle/Flashlight                    samples/${PLATFORM_NAME}/wearable/Flashlight
+developers/build/prebuilts/gradle/Geofencing                    samples/${PLATFORM_NAME}/wearable/Geofencing
+developers/build/prebuilts/gradle/GridViewPager                 samples/${PLATFORM_NAME}/wearable/GridViewPager
+developers/build/prebuilts/gradle/JumpingJack                   samples/${PLATFORM_NAME}/wearable/JumpingJack
+developers/build/prebuilts/gradle/Notifications                 samples/${PLATFORM_NAME}/wearable/Notifications
+developers/build/prebuilts/gradle/Quiz                          samples/${PLATFORM_NAME}/wearable/Quiz
+developers/build/prebuilts/gradle/RecipeAssistant               samples/${PLATFORM_NAME}/wearable/RecipeAssistant
+developers/build/prebuilts/gradle/SkeletonWearableApp           samples/${PLATFORM_NAME}/wearable/SkeletonWearableApp
+developers/build/prebuilts/gradle/SpeedTracker                  samples/${PLATFORM_NAME}/wearable/SpeedTracker
+developers/build/prebuilts/gradle/SynchronizedNotifications     samples/${PLATFORM_NAME}/wearable/SynchronizedNotifications
+developers/build/prebuilts/gradle/Timer                         samples/${PLATFORM_NAME}/wearable/Timer
+developers/build/prebuilts/gradle/WatchFace                     samples/${PLATFORM_NAME}/wearable/WatchFace
+developers/build/prebuilts/gradle/WatchViewStub                 samples/${PLATFORM_NAME}/wearable/WatchViewStub
 
 # Old sample tree
 development/samples/AccelerometerPlay          samples/${PLATFORM_NAME}/legacy/AccelerometerPlay
@@ -474,6 +492,11 @@ frameworks/support/v17/leanback/project.properties                              
 frameworks/support/v17/leanback/res                                                               extras/android/support/v17/leanback/res
 frameworks/support/v17/leanback/src/.readme                                                       extras/android/support/v17/leanback/src/.readme
 ${OUT_DIR}/target/common/obj/PACKAGING/android-support-v17-leanback_intermediates/android-support-v17-leanback.jar    extras/android/support/v17/leanback/libs/android-support-v17-leanback.jar
+
+frameworks/support/design/AndroidManifest.xml                                                     extras/android/support/design/AndroidManifest.xml
+frameworks/support/design/res                                                                     extras/android/support/design/res
+frameworks/support/design/src/.readme                                                             extras/android/support/design/src/.readme
+${OUT_DIR}/target/common/obj/PACKAGING/android-support-design_intermediates/android-support-design.jar    extras/android/support/design/libs/android-support-design.jar
 
 ##############################################################################
 # Tests Component

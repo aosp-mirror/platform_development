@@ -25,6 +25,7 @@
     <string name="sample_media_router_text">This activity demonstrates how to
             use MediaRouter from the support library.  Select a route from the action bar.</string>
     <string name="media_route_menu_title">Play on...</string>
+    <string name="sample_media_route_settings_activity">Sample route settings</string>
 
     <string name="library_tab_text">Library</string>
     <string name="playlist_tab_text">Playlist</string>
@@ -55,6 +56,10 @@
     <string name="action_bar_settings_action_provider">AppCompat/Action Bar/Settings Action Provider</string>
     <string name="action_bar_settings_action_provider_no_handling">Handling in onOptionsItemSelected avoided</string>
     <string name="action_bar_with_navigation_drawer">AppCompat/Action Bar/Navigation Drawer Toggle</string>
+    <string name="action_bar_preferences">AppCompat/Action Bar/Preferences</string>
+    <string name="appcompat_widgets_buttons">AppCompat/Widgets/Buttons</string>
+    <string name="appcompat_widgets_spinners">AppCompat/Widgets/Spinners</string>
+    <string name="appcompat_widgets_text_input">AppCompat/Widgets/Text Input</string>
 
     <string name="action_bar_search">Search</string>
     <string name="action_bar_add">Add</string>
@@ -121,6 +126,13 @@
         necessary.
     </string>
 
+    <string name="toolbar_usage">AppCompat/Toolbar/Toolbar as Action Bar</string>
+    <string name="toolbar_display_options">AppCompat/Toolbar/Toolbar Display Options</string>
+    <string name="toolbar_fragment_pager">AppCompat/Toolbar/Toolbar Fragment ViewPager</string>
+
+    <string name="dialog_usage">AppCompat/Dialog/Dialog Usage</string>
+    <string name="dialog_title">My great dialog</string>
+    <string name="dialog_content">My great dialog is great</string>
 
     <string name="sample_media_route_provider_remote">Remote Playback (Simulated)</string>
     <string name="sample_media_route_activity_local">Local Playback</string>
@@ -147,14 +159,19 @@
     <string name="card_view_radius">Radius</string>
     <string name="card_view_width">Width</string>
     <string name="card_view_height">Height</string>
+    <string name="card_view_bg_color">Background</string>
     <string name="card_view_elevation">Elevation</string>
     <string name="card_view_max_elevation">Max Elevation</string>
     <string name="card_view_alpha">Alpha</string>
     <string name="card_view_sample_text">Sample text on right</string>
     <string name="card_view_resize_card_view">Resize CardView</string>
     <string name="card_view_resize_content">Resize Content</string>
+    <string name="cardview_background_selector_label">Selector</string>
 
     <string name="palette">Palette</string>
     <string name="palette_all_colors">Full color palette</string>
+    <string name="search_hint">Search...</string>
+    <string name="sorted_list_activity">Sorted List</string>
+    <string name="add_new_item">Add New Item</string>
 
 </resources>

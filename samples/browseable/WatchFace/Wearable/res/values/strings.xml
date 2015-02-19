@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright (C) 2014 The Android Open Source Project
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+-->
+<resources>
+    <string name="app_name">WatchFace</string>
+    <string name="tilt_name">Sample Tilt</string>
+    <string name="analog_name">Sample Analog</string>
+    <string name="sweep_name">Sample Sweep</string>
+    <string name="card_bounds_name">Sample Card Bounds</string>
+    <string name="digital_name">Sample Digital</string>
+    <string name="digital_background_color">Background color</string>
+    <string name="digital_config_name">Digital watch face configuration</string>
+    <string name="digital_am">AM</string>
+    <string name="digital_pm">PM</string>
+    <string name="calendar_name">Sample Calendar</string>
+    <plurals name="calendar_meetings">
+        <item quantity="one">&lt;br&gt;&lt;br&gt;&lt;br&gt;You have &lt;b&gt;%1$d&lt;/b&gt; meeting in the next 24 hours.</item>
+        <item quantity="other">&lt;br&gt;&lt;br&gt;&lt;br&gt;You have &lt;b&gt;%1$d&lt;/b&gt; meetings in the next 24 hours.</item>
+    </plurals>
+
+    <!-- TODO: this should be shared (needs covering all the samples with Gradle build model) -->
+    <string name="color_black">Black</string>
+    <string name="color_blue">Blue</string>
+    <string name="color_gray">Gray</string>
+    <string name="color_green">Green</string>
+    <string name="color_navy">Navy</string>
+    <string name="color_red">Red</string>
+    <string name="color_white">White</string>
+
+    <string-array name="color_array">
+        <item>@string/color_black</item>
+        <item>@string/color_blue</item>
+        <item>@string/color_gray</item>
+        <item>@string/color_green</item>
+        <item>@string/color_navy</item>
+        <item>@string/color_red</item>
+        <item>@string/color_white</item>
+    </string-array>
+</resources>

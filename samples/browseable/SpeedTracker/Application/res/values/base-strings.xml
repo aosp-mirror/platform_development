@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ Copyright 2013 The Android Open Source Project
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+-->
+<resources>
+    <string name="app_name">Speed Tracker</string>
+    <string name="intro_message">
+        <![CDATA[
+        
+            
+This sample uses the FusedLocation APIs of Google Play Services
+on those devices that have a hardware GPS built in. In those
+cases, this sample provides a simple screen that shows the
+current speed of the device on the watch. User can set a speed
+limit and if the speed approaches that limit, it changes the
+color to yellow and if it exceeds the limit, it turns red. User
+can also enable recording of coordinates and when it pairs back
+with the phone, this data will be synced with the phone
+component of the app and user can see a track made of those
+coordinates on a map on the phone.
+            
+        
+        ]]>
+    </string>
+</resources>

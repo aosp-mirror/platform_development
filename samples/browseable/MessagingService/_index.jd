@@ -1,0 +1,12 @@
+page.tags="MessagingService"
+sample.group=Notification
+@jd:body
+
+<p>
+            
+This sample shows a simple service that sends notifications using
+NotificationCompat. In addition to sending a notification, it also extends
+the notification with a CarExtender to make it compatible with Android Auto.
+Each unread conversation from a user is sent as a distinct notification.
+            
+        </p>

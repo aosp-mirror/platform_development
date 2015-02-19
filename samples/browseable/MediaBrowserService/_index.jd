@@ -1,0 +1,17 @@
+page.tags="MediaBrowserService"
+sample.group=Media
+@jd:body
+
+<p>
+            
+This sample shows how to implement an audio media app that provides
+media library metadata and playback controls through a standard
+service. It exposes a simple music library through the new
+MediaBrowserService and provides MediaSession callbacks. This allows
+it to be used in Android Auto, for example.
+When not connected to a car, the app has a very simple UI that browses
+the media library and provides simple playback controls. When
+connected to Android Auto, the same service provides data and callback
+to the Android Auto UI in the same manner as it provides them to the
+local UI.
+</p>

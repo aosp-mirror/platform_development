@@ -16,7 +16,7 @@
 
 <resources xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
-    <string name="appTitle" msgid="161410001913116606">"Nadomestna aplikacija"</string>
+    <string name="appTitle" msgid="161410001913116606">"Nadomestni program"</string>
     <string name="title" msgid="8156274565006125136">"Dejanje ni podprto."</string>
     <string name="error" msgid="6539615832923362301">"To dejanje trenutno še ni podprto."</string>
 </resources>

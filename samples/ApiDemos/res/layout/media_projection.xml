@@ -30,6 +30,7 @@
         android:orientation="horizontal"
         android:layout_alignParentBottom="true">
         <ToggleButton
+            android:id="@+id/screen_sharing_toggle"
             android:text="@string/screen_sharing_toggle"
             android:layout_width="0dp"
             android:layout_height="match_parent"
