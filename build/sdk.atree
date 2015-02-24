@@ -469,7 +469,7 @@ development/samples/Support7Demos                                               
 frameworks/support/v7/palette/README.txt                                                          extras/android/support/v7/palette/README.txt
 frameworks/support/v7/palette/.project                                                            extras/android/support/v7/palette/.project
 frameworks/support/v7/palette/.classpath                                                          extras/android/support/v7/palette/.classpath
-frameworks/support/v7/palette/AndroidManifest.xml                                                 extras/android/support/v7/palette/AndroidManifest.xml
+frameworks/support/v7/palette/src/main/AndroidManifest.xml                                        extras/android/support/v7/palette/AndroidManifest.xml
 frameworks/support/v7/palette/project.properties                                                  extras/android/support/v7/palette/project.properties
 ${OUT_DIR}/target/common/obj/PACKAGING/android-support-v7-palette_intermediates/android-support-v7-palette.jar    extras/android/support/v7/palette/libs/android-support-v7-palette.jar
 
