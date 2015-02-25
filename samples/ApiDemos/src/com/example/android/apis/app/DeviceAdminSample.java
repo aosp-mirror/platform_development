@@ -406,7 +406,8 @@ public class DeviceAdminSample extends PreferenceActivity {
                             if (featureString != null) {
                                 PersistableBundle bundle = new PersistableBundle();
                                 bundle.putStringArray("features", featureString.split(","));
-                                mDPM.setTrustAgentConfiguration(mDeviceAdminSample, agent, bundle);
+                                Log.w(TAG, "setTrustAgentConfigurat() is disabled");
+                                // mDPM.setTrustAgentConfiguration(mDeviceAdminSample, agent, bundle);
                             }
                         } else {
                             Log.w(TAG, "Invalid component: " + component);
