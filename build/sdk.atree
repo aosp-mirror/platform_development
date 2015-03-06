@@ -54,16 +54,15 @@ bin/hprof-conv                          strip platform-tools/hprof-conv
 development/sdk/generated-api-versions.xml    platform-tools/api/api-versions.xml
 
 # systrace
-external/chromium-trace/systrace.py           platform-tools/systrace/systrace.py
-external/chromium-trace/systrace-legacy.py    platform-tools/systrace/systrace-legacy.py
-external/chromium-trace/script.js             platform-tools/systrace/script.js
-external/chromium-trace/style.css             platform-tools/systrace/style.css
-external/chromium-trace/prefix.html           platform-tools/systrace/prefix.html
-external/chromium-trace/suffix.html           platform-tools/systrace/suffix.html
-external/chromium-trace/LICENSE               platform-tools/systrace/LICENSE
-external/chromium-trace/AUTHORS               platform-tools/systrace/AUTHORS
-external/chromium-trace/NOTICE                platform-tools/systrace/NOTICE
-external/chromium-trace/UPSTREAM_REVISION     platform-tools/systrace/UPSTREAM_REVISION
+external/chromium-trace/systrace.py                   platform-tools/systrace/systrace.py
+external/chromium-trace/systrace-legacy.py            platform-tools/systrace/systrace-legacy.py
+external/chromium-trace/systrace_trace_viewer.html    platform-tools/systrace/systrace_trace_viewer.html
+external/chromium-trace/prefix.html                   platform-tools/systrace/prefix.html
+external/chromium-trace/suffix.html                   platform-tools/systrace/suffix.html
+external/chromium-trace/LICENSE                       platform-tools/systrace/LICENSE
+external/chromium-trace/AUTHORS                       platform-tools/systrace/AUTHORS
+external/chromium-trace/NOTICE                        platform-tools/systrace/NOTICE
+external/chromium-trace/UPSTREAM_REVISION             platform-tools/systrace/UPSTREAM_REVISION
 
 ##############################################################################
 # Build Tools Component
