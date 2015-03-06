@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
+	<classpathentry kind="src" path="packages/apps/Bluetooth/lib/mapapi"/>
 	<classpathentry kind="src" path="packages/apps/Bluetooth/src"/>
 	<classpathentry kind="src" path="packages/apps/Browser/src"/>
 	<classpathentry kind="src" path="packages/apps/Calendar/src"/>
@@ -9,6 +10,7 @@
 	<classpathentry kind="src" path="packages/apps/Contacts/src"/>
 	<classpathentry kind="src" path="packages/apps/ContactsCommon/src"/>
 	<classpathentry kind="src" path="packages/apps/Dialer/src"/>
+	<classpathentry kind="src" path="packages/apps/Email/provider_src"/>
 	<classpathentry kind="src" path="packages/apps/Email/src"/>
 	<classpathentry kind="src" path="packages/apps/Email/emailcommon/src"/>
 	<classpathentry kind="src" path="packages/apps/HTMLViewer/src"/>
@@ -29,6 +31,7 @@
 	<classpathentry kind="src" path="packages/providers/TelephonyProvider/src"/>
 	<classpathentry kind="src" path="packages/services/Telecomm/src"/>
 	<classpathentry kind="src" path="packages/services/Telecomm/tests/src"/>
+	<classpathentry kind="src" path="packages/services/Telephony/sip/src"/>
 	<classpathentry kind="src" path="packages/services/Telephony/src"/>
 	<classpathentry kind="src" path="packages/services/Telephony/common/src"/>
 	<classpathentry kind="src" path="packages/services/Telephony/tests/src"/>
@@ -52,6 +55,7 @@
 	<classpathentry kind="src" path="frameworks/base/opengl/java"/>
 	<classpathentry kind="src" path="frameworks/base/packages/FusedLocation/src"/>
 	<classpathentry kind="src" path="frameworks/base/packages/Keyguard/src"/>
+	<classpathentry kind="src" path="frameworks/base/packages/SettingsLib/src"/>
 	<classpathentry kind="src" path="frameworks/base/packages/SettingsProvider/src"/>
 	<classpathentry kind="src" path="frameworks/base/packages/SystemUI/src"/>
 	<classpathentry kind="src" path="frameworks/base/phone/java"/>
@@ -71,6 +75,7 @@
 	<classpathentry kind="src" path="frameworks/ex/camera2/public/src"/>
 	<classpathentry kind="src" path="frameworks/ex/common/java"/>
 	<classpathentry kind="src" path="frameworks/ex/variablespeed/src"/>
+	<classpathentry kind="src" path="frameworks/opt/bitmap/src"/>
 	<classpathentry kind="src" path="frameworks/opt/calendar/src"/>
 	<classpathentry kind="src" path="frameworks/opt/chips/src"/>
 	<classpathentry kind="src" path="frameworks/opt/colorpicker/src"/>
@@ -85,10 +90,16 @@
 	<classpathentry kind="src" path="frameworks/opt/telephony/src/java"/>
 	<classpathentry kind="src" path="frameworks/opt/timezonepicker/src"/>
 	<classpathentry kind="src" path="frameworks/opt/vcard/java"/>
+	<classpathentry kind="src" path="frameworks/support/v7/appcompat/src"/>
+	<classpathentry kind="src" path="frameworks/support/v7/cardview/api21"/>
+	<classpathentry kind="src" path="frameworks/support/v7/cardview/base"/>
+	<classpathentry kind="src" path="frameworks/support/v7/cardview/eclair-mr1"/>
+	<classpathentry kind="src" path="frameworks/support/v7/cardview/jellybean-mr1"/>
+	<classpathentry kind="src" path="frameworks/support/v7/cardview/src"/>
+	<classpathentry kind="src" path="frameworks/support/v7/palette/src/main/java"/>
 	<classpathentry kind="src" path="frameworks/support/v13/java"/>
 	<classpathentry kind="src" path="frameworks/support/v13/ics"/>
 	<classpathentry kind="src" path="frameworks/support/v13/ics-mr1"/>
-	<classpathentry kind="src" path="frameworks/support/v7/palette/src"/>
 	<classpathentry kind="src" path="libcore/dalvik/src/main/java"/>
 	<classpathentry kind="src" path="libcore/dex/src/main/java"/>
 	<classpathentry kind="src" path="libcore/json/src/main/java"/>
@@ -103,6 +114,7 @@
 	<classpathentry kind="src" path="out/target/common/obj/APPS/PackageInstaller_intermediates/src/src"/>
 	<classpathentry kind="src" path="out/target/common/obj/APPS/QuickSearchBox_intermediates/src/src"/>
 	<classpathentry kind="src" path="out/target/common/obj/APPS/Settings_intermediates/src/src"/>
+	<classpathentry kind="src" path="out/target/common/obj/APPS/SettingsProvider_intermediates/src/src"/>
 	<classpathentry kind="src" path="out/target/common/obj/APPS/SystemUI_intermediates/src/src"/>
 	<classpathentry kind="src" path="out/target/common/obj/APPS/TeleService_intermediates/src/src"/>
 	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/com.android.emailcommon_intermediates/src/src"/>
@@ -122,6 +134,7 @@
 	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/telephony-common_intermediates/src/src/java"/>
 	<classpathentry kind="src" path="out/target/common/obj/JAVA_LIBRARIES/voip-common_intermediates/src/src/java"/>
 	<classpathentry kind="src" path="out/target/common/R"/>
+	<classpathentry kind="src" path="external/apache-http/android/src"/>
 	<classpathentry kind="src" path="external/apache-http/src"/>
 	<classpathentry kind="src" path="external/bouncycastle/bcprov/src/main/java"/>
 	<classpathentry kind="src" path="external/easymock/src"/>
@@ -131,7 +144,10 @@
 	<classpathentry kind="src" path="external/ksoap2/kobjects"/>
 	<classpathentry kind="src" path="external/ksoap2/ksoap2-base/src/main/java"/>
 	<classpathentry kind="src" path="external/ksoap2/ksoap2-j2se/src/main/java"/>
+	<classpathentry kind="src" path="external/libphonenumber/geocoder/src"/>
+	<classpathentry kind="src" path="external/libphonenumber/internal/prefixmapper/src"/>
 	<classpathentry kind="src" path="external/libphonenumber/java/src"/>
+	<classpathentry kind="src" path="external/libphonenumber/libphonenumber/src"/>
 	<classpathentry kind="src" path="external/mp4parser/isoparser/src/main/java"/>
 	<classpathentry kind="src" path="external/nist-sip/java"/>
 	<classpathentry kind="src" path="external/objenesis/main/src"/>
@@ -147,9 +163,8 @@
 	<classpathentry kind="lib" path="out/target/common/obj/JAVA_LIBRARIES/android-support-v13_intermediates/javalib.jar"/>
 	<classpathentry kind="lib" path="out/target/common/obj/JAVA_LIBRARIES/android-common_intermediates/javalib.jar"/>
 	<classpathentry kind="lib" path="out/target/common/obj/JAVA_LIBRARIES/guava_intermediates/javalib.jar"/>
-	<classpathentry kind="lib" path="packages/apps/ContactsCommon/libs/geocoder-2.9.jar"/>
-	<classpathentry kind="lib" path="packages/apps/ContactsCommon/libs/libphonenumber-5.8.jar"/>
 	<classpathentry kind="lib" path="packages/apps/Calculator/arity-2.1.2.jar"/>
 	<classpathentry kind="lib" path="out/target/common/obj/JAVA_LIBRARIES/junit-runner_intermediates/javalib.jar"/>
+	<classpathentry kind="lib" path="out/target/common/obj/JAVA_LIBRARIES/libphonenumber-platform_intermediates/javalib.jar"/>
 	<classpathentry kind="output" path="out/target/common/obj/JAVA_LIBRARIES/android_stubs_current_intermediates/classes"/>
 </classpath>
