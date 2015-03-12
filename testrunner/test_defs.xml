@@ -554,6 +554,11 @@ See test_defs.xsd for more information.
     build_path="external/android-clat"
     description="clatd unit tests." />
 
+<!-- dhcpcd -->
+<test-native name="dhcpcd"
+    build_path="external/dhcpcd"
+    description="dhcpcd unit tests." />
+
 <!-- Libjingle -->
 <test-native name="libjingle"
     build_path="vendor/google/libraries/libjingle"
