@@ -1237,6 +1237,13 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".content.ShareContent" android:label="@string/activity_share_content">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
         <activity android:name=".content.ChangedContacts" android:label="@string/activity_changed_contact">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
@@ -1263,6 +1270,8 @@
 
         <provider android:name=".content.FileProvider"
                   android:authorities="com.example.android.apis.content.FileProvider"
+                  android:grantUriPermissions="true"
+                  android:exported="false"
                   android:enabled="@bool/atLeastHoneycombMR2" />
 
         <!-- ************************************* -->
