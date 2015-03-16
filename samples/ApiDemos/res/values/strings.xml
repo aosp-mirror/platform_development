@@ -459,6 +459,11 @@
     <string name="pick_phone">Pick a Phone</string>
     <string name="pick_address">Pick an Address</string>
 
+    <string name="activity_share_content">Content/Provider/Share Content</string>
+    <string name="share_content_msg">Share private data of the app by granting access
+        to a specific URI in its content provider.</string>
+    <string name="share_image">Share Image</string>
+
     <string name="activity_changed_contact">Content/Provider/Changed Contacts</string>
 
     <string name="activity_install_apk">Content/Packages/Install Apk</string>
