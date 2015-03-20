@@ -14,17 +14,4 @@
  * limitations under the License.
  */
 
-#ifndef _STDARG_PORTABLE_H_
-#define _STDARG_PORTABLE_H_
-
-// The elements are not important. This struct should be interpreted
-// differently by all targets.
-typedef struct va_list_portable {
-  void *ptr1;
-  void *ptr2;
-  void *ptr3;
-  int offset1;
-  int offset2;
-} va_list_portable;
-
-#endif /* _STDARG_PORTABLE_H_ */
+#include <errno_portable.h>
