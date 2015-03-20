@@ -22,7 +22,7 @@
 #ifndef __statfs_word
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
 #if __BITS_PER_LONG == 64
-#define __statfs_word long
+#define __statfs_word __kernel_long_t
 #else
 #define __statfs_word __u32
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */

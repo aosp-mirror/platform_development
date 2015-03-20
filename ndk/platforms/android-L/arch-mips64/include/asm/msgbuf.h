@@ -22,17 +22,17 @@ struct msqid64_ds {
  struct ipc64_perm msg_perm;
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
  __kernel_time_t msg_stime;
-#ifdef _ABIO32
+#ifndef __mips64
  unsigned long __unused1;
 #endif
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
  __kernel_time_t msg_rtime;
-#ifdef _ABIO32
+#ifndef __mips64
  unsigned long __unused2;
 #endif
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
  __kernel_time_t msg_ctime;
-#ifdef _ABIO32
+#ifndef __mips64
  unsigned long __unused3;
 #endif
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */

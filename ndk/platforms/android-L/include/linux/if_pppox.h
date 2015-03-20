@@ -24,34 +24,29 @@
 #include <linux/socket.h>
 #include <linux/if_ether.h>
 #include <linux/if_pppol2tp.h>
-#include <linux/if_pppolac.h>
-/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
-#include <linux/if_pppopns.h>
 #ifndef AF_PPPOX
+/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
 #define AF_PPPOX 24
 #define PF_PPPOX AF_PPPOX
-/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
 #endif
 typedef __be16 sid_t;
+/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
 struct pppoe_addr {
  sid_t sid;
-/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
  unsigned char remote[ETH_ALEN];
  char dev[IFNAMSIZ];
+/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
 };
 struct pptp_addr {
-/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
- __be16 call_id;
+ __u16 call_id;
  struct in_addr sin_addr;
+/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
 };
 #define PX_PROTO_OE 0
-/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
 #define PX_PROTO_OL2TP 1
 #define PX_PROTO_PPTP 2
-#define PX_PROTO_OLAC 3
-#define PX_PROTO_OPNS 4
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
-#define PX_MAX_PROTO 5
+#define PX_MAX_PROTO 3
 struct sockaddr_pppox {
  __kernel_sa_family_t sa_family;
  unsigned int sa_protocol;
@@ -117,12 +112,12 @@ struct pppoe_tag {
 struct pppoe_hdr {
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
 #ifdef __LITTLE_ENDIAN_BITFIELD
- __u8 ver : 4;
  __u8 type : 4;
+ __u8 ver : 4;
 #elif defined(__BIG_ENDIAN_BITFIELD)
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
- __u8 type : 4;
  __u8 ver : 4;
+ __u8 type : 4;
 #else
 #error "Please fix <asm/byteorder.h>"
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */

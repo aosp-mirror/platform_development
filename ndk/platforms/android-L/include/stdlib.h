@@ -69,11 +69,15 @@ extern unsigned long long strtoull(const char *, char **, int);
 
 extern int posix_memalign(void **memptr, size_t alignment, size_t size);
 
-extern double atof(const char*);
+extern double atof(const char*) __NDK_FPABI__;
 
-extern double strtod(const char*, char**) __LIBC_ABI_PUBLIC__;
-extern float strtof(const char*, char**) __LIBC_ABI_PUBLIC__;
-extern long double strtold(const char*, char**) __LIBC_ABI_PUBLIC__;
+extern double strtod(const char*, char**) __LIBC_ABI_PUBLIC__ __NDK_FPABI__;
+extern float strtof(const char*, char**) __LIBC_ABI_PUBLIC__ __NDK_FPABI__;
+extern long double strtold(const char*, char**) __LIBC_ABI_PUBLIC__ __NDK_FPABI__;
+
+extern long double strtold_l(const char *, char **, locale_t) __LIBC_ABI_PUBLIC__ __NDK_FPABI__;
+extern long long strtoll_l(const char *, char **, size_t, locale_t) __LIBC_ABI_PUBLIC__;
+extern unsigned long long strtoull_l(const char *, char **, size_t, locale_t) __LIBC_ABI_PUBLIC__;
 
 extern int atoi(const char*) __purefunc;
 extern long atol(const char*) __purefunc;
@@ -97,8 +101,8 @@ extern long mrand48(void);
 extern long nrand48(unsigned short *);
 extern long lrand48(void);
 extern unsigned short *seed48(unsigned short*);
-extern double erand48(unsigned short xsubi[3]);
-extern double drand48(void);
+extern double erand48(unsigned short xsubi[3]) __NDK_FPABI__;
+extern double drand48(void) __NDK_FPABI__;
 extern void srand48(long);
 
 unsigned int arc4random(void);

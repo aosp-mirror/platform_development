@@ -21,31 +21,34 @@
 #include <linux/netfilter.h>
 #include <linux/netfilter/nf_conntrack_tuple_common.h>
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
-#define NF_NAT_RANGE_MAP_IPS 1
-#define NF_NAT_RANGE_PROTO_SPECIFIED 2
-#define NF_NAT_RANGE_PROTO_RANDOM 4
-#define NF_NAT_RANGE_PERSISTENT 8
+#define NF_NAT_RANGE_MAP_IPS (1 << 0)
+#define NF_NAT_RANGE_PROTO_SPECIFIED (1 << 1)
+#define NF_NAT_RANGE_PROTO_RANDOM (1 << 2)
+#define NF_NAT_RANGE_PERSISTENT (1 << 3)
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+#define NF_NAT_RANGE_PROTO_RANDOM_FULLY (1 << 4)
+#define NF_NAT_RANGE_PROTO_RANDOM_ALL   (NF_NAT_RANGE_PROTO_RANDOM | NF_NAT_RANGE_PROTO_RANDOM_FULLY)
 struct nf_nat_ipv4_range {
  unsigned int flags;
+/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
  __be32 min_ip;
  __be32 max_ip;
-/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
  union nf_conntrack_man_proto min;
  union nf_conntrack_man_proto max;
+/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
 };
 struct nf_nat_ipv4_multi_range_compat {
-/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
  unsigned int rangesize;
  struct nf_nat_ipv4_range range[1];
+/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
 };
 struct nf_nat_range {
-/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
  unsigned int flags;
  union nf_inet_addr min_addr;
+/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
  union nf_inet_addr max_addr;
  union nf_conntrack_man_proto min_proto;
-/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
  union nf_conntrack_man_proto max_proto;
 };
+/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
 #endif

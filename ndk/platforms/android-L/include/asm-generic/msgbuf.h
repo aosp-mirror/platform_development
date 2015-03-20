@@ -37,14 +37,14 @@ struct msqid64_ds {
  unsigned long __unused3;
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
 #endif
- unsigned long msg_cbytes;
- unsigned long msg_qnum;
- unsigned long msg_qbytes;
+ __kernel_ulong_t msg_cbytes;
+ __kernel_ulong_t msg_qnum;
+ __kernel_ulong_t msg_qbytes;
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
  __kernel_pid_t msg_lspid;
  __kernel_pid_t msg_lrpid;
- unsigned long __unused4;
- unsigned long __unused5;
+ __kernel_ulong_t __unused4;
+ __kernel_ulong_t __unused5;
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
 };
 #endif
