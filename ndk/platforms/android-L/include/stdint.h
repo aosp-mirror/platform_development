@@ -204,7 +204,7 @@ typedef int64_t       intmax_t;
 
 #if defined(__WINT_UNSIGNED__)
 #  define WINT_MAX       UINT32_MAX
-#  define WINT_MIN       UINT32_MIN
+#  define WINT_MIN       0
 #else
 #  define WINT_MAX       INT32_MAX
 #  define WINT_MIN       INT32_MIN

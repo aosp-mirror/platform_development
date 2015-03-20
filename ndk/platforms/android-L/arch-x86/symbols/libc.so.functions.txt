@@ -3,25 +3,11 @@ SHA1Init
 SHA1Transform
 SHA1Update
 _Exit
-_Unwind_Backtrace
-_Unwind_DeleteException
-_Unwind_FindEnclosingFunction
-_Unwind_Find_FDE
-_Unwind_ForcedUnwind
-_Unwind_GetCFA
-_Unwind_GetDataRelBase
-_Unwind_GetGR
-_Unwind_GetIP
-_Unwind_GetIPInfo
-_Unwind_GetLanguageSpecificData
-_Unwind_GetRegionStart
-_Unwind_GetTextRelBase
-_Unwind_RaiseException
-_Unwind_Resume
-_Unwind_Resume_or_Rethrow
-_Unwind_SetGR
-_Unwind_SetIP
 _Z16__libc_init_vdsov
+_ZN11ScopedTraceC1EPKc
+_ZN11ScopedTraceC2EPKc
+_ZN11ScopedTraceD1Ev
+_ZN11ScopedTraceD2Ev
 _ZdaPv
 _ZdaPvRKSt9nothrow_t
 _ZdlPv
@@ -49,9 +35,6 @@ __cxa_guard_abort
 __cxa_guard_acquire
 __cxa_guard_release
 __cxa_pure_virtual
-__deregister_frame
-__deregister_frame_info
-__deregister_frame_info_bases
 __divdi3
 __dn_comp
 __dn_count_labels
@@ -67,7 +50,6 @@ __fpclassify
 __fpclassifyd
 __fpclassifyf
 __fpclassifyl
-__frame_state_for
 __fstatfs64
 __futex_wait
 __futex_wake
@@ -130,12 +112,6 @@ __putshort
 __read_chk
 __reboot
 __recvfrom_chk
-__register_frame
-__register_frame_info
-__register_frame_info_bases
-__register_frame_info_table
-__register_frame_info_table_bases
-__register_frame_table
 __res_close
 __res_dnok
 __res_hnok
@@ -290,7 +266,6 @@ clone
 close
 closedir
 closelog
-closelog_r
 connect
 creat
 creat64
@@ -496,6 +471,7 @@ gmtime
 gmtime64
 gmtime64_r
 gmtime_r
+grantpt
 herror
 hstrerror
 htonl
@@ -523,6 +499,7 @@ inotify_add_watch
 inotify_init
 inotify_init1
 inotify_rm_watch
+insque
 ioctl
 isalnum
 isalnum_l
@@ -611,7 +588,6 @@ localtime
 localtime64
 localtime64_r
 localtime_r
-localtime_tz
 longjmp
 lrand48
 lremovexattr
@@ -685,7 +661,6 @@ openat
 openat64
 opendir
 openlog
-openlog_r
 pathconf
 pause
 pclose
@@ -698,6 +673,7 @@ popen
 posix_fallocate
 posix_fallocate64
 posix_memalign
+posix_openpt
 ppoll
 prctl
 pread
@@ -830,6 +806,7 @@ regexec
 regfree
 remove
 removexattr
+remque
 rename
 renameat
 res_init
@@ -884,7 +861,6 @@ setjmp
 setlinebuf
 setlocale
 setlogmask
-setlogmask_r
 setmntent
 setns
 setpgid
@@ -958,7 +934,6 @@ strerror
 strerror_r
 strftime
 strftime_l
-strftime_tz
 strlcat
 strlcpy
 strlen
@@ -1007,7 +982,6 @@ syscall
 sysconf
 sysinfo
 syslog
-syslog_r
 system
 sysv_signal
 tcdrain
@@ -1056,6 +1030,7 @@ truncate64
 tsearch
 ttyname
 ttyname_r
+twalk
 tzset
 umask
 umount
@@ -1094,7 +1069,6 @@ vsscanf
 vswprintf
 vswscanf
 vsyslog
-vsyslog_r
 vwarn
 vwarnx
 vwprintf

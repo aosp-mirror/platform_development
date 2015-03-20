@@ -27,6 +27,8 @@
 #ifndef _MACHINE_ENDIAN_H_
 #define _MACHINE_ENDIAN_H_
 
+#include <sys/types.h>
+
 #ifdef __GNUC__
 
 #define	__swap32md(x) __statement({					\
