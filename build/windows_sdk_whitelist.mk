@@ -56,6 +56,7 @@ subdirs += \
 	frameworks/rs \
 	frameworks/tools \
 	system/core/adb \
+	system/core/base \
 	system/core/fastboot \
 	system/core/libcutils \
 	system/core/liblog \
