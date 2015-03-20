@@ -26,11 +26,20 @@
  * SUCH DAMAGE.
  */
 
-extern void *__dso_handle;
-extern int __cxa_atexit(void (*func)(void *), void *arg, void *dso);
+#include <stddef.h>
+
+extern void* __dso_handle;
+
+extern int __cxa_atexit(void (*)(void*), void*, void*);
 
 __attribute__ ((visibility ("hidden")))
-int atexit(void (*func)(void))
-{
-  return (__cxa_atexit((void (*)(void *))func, (void *)0, &__dso_handle));
+void __atexit_handler_wrapper(void* func) {
+  if (func != NULL) {
+    (*(void (*)(void))func)();
+  }
+}
+
+__attribute__ ((visibility ("hidden")))
+int atexit(void (*func)(void)) {
+  return (__cxa_atexit(&__atexit_handler_wrapper, func, &__dso_handle));
 }
