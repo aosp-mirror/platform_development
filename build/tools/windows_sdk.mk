@@ -32,6 +32,7 @@ include $(TOPDIR)sdk/build/windows_sdk_tools.mk
 # the topdir/development directory and are somehow platform-dependent.
 WIN_TARGETS := \
 	aapt adb aidl \
+	aprotoc \
 	bcc_compat \
 	etc1tool \
 	dexdump dmtracedump \
