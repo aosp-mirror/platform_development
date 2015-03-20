@@ -58,10 +58,17 @@ typedef off_t fpos_t;		/* stdio file position type */
  */
 
 /* stdio buffers */
+#if defined(__LP64__)
+struct __sbuf {
+  unsigned char* _base;
+  size_t _size;
+};
+#else
 struct __sbuf {
 	unsigned char *_base;
 	int	_size;
 };
+#endif
 
 /*
  * stdio state variables.
@@ -94,8 +101,13 @@ typedef	struct __sFILE {
 	unsigned char *_p;	/* current position in (some) buffer */
 	int	_r;		/* read space left for getc() */
 	int	_w;		/* write space left for putc() */
+#if defined(__LP64__)
+	int	_flags;		/* flags, below; this FILE is free if 0 */
+	int	_file;		/* fileno, if Unix descriptor, else -1 */
+#else
 	short	_flags;		/* flags, below; this FILE is free if 0 */
 	short	_file;		/* fileno, if Unix descriptor, else -1 */
+#endif
 	struct	__sbuf _bf;	/* the buffer (at least 1 byte, if !NULL) */
 	int	_lbfsize;	/* 0 or -_bf._size, for inline putc */
 

@@ -1,7 +1,5 @@
-_ZSt7nothrow
 __bionic_brk
 __isthreaded
-__libc_malloc_dispatch
 __p_class_syms
 __p_type_syms
 __page_shift
