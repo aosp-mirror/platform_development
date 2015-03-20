@@ -23,6 +23,7 @@ import glob
 import os
 import re
 import subprocess
+import unittest
 
 ANDROID_BUILD_TOP = os.environ["ANDROID_BUILD_TOP"]
 if not ANDROID_BUILD_TOP:
@@ -44,7 +45,11 @@ SYMBOLS_DIR = FindSymbolsDir()
 
 ARCH = "arm"
 
-TOOLCHAIN = None
+
+# These are private. Do not access them from other modules.
+_CACHED_TOOLCHAIN = None
+_CACHED_TOOLCHAIN_ARCH = None
+
 
 def ToolPath(tool, toolchain=None):
   """Return a fully-qualified path to the specified tool"""
@@ -52,42 +57,38 @@ def ToolPath(tool, toolchain=None):
     toolchain = FindToolchain()
   return glob.glob(os.path.join(toolchain, "*-" + tool))[0]
 
+
 def FindToolchain():
-  """Returns the toolchain matching ARCH. Assumes that you're lunched
-  such that the necessary toolchain is either your primary or secondary.
-  TODO: we could make this 'just work' for most users by just globbing the
-  newest toolchains for every architecture out of prebuilts/, but other
-  parts of this tool assume you're lunched correctly anyway."""
-  global TOOLCHAIN
-  if TOOLCHAIN is not None:
-    return TOOLCHAIN
+  """Returns the toolchain matching ARCH."""
+  global _CACHED_TOOLCHAIN, _CACHED_TOOLCHAIN_ARCH
+  if _CACHED_TOOLCHAIN is not None and _CACHED_TOOLCHAIN_ARCH == ARCH:
+    return _CACHED_TOOLCHAIN
 
   # We use slightly different names from GCC, and there's only one toolchain
-  # for x86/x86_64.
-  gcc_arch = ARCH
-  if gcc_arch == "arm64":
-    gcc_arch = "aarch64"
-  elif gcc_arch == "mips":
-    gcc_arch = "mipsel"
-  elif gcc_arch == "x86":
-    gcc_arch = "x86_64"
+  # for x86/x86_64. Note that these are the names of the top-level directory
+  # rather than the _different_ names used lower down the directory hierarchy!
+  gcc_dir = ARCH
+  if gcc_dir == "arm64":
+    gcc_dir = "aarch64"
+  elif gcc_dir == "mips64":
+    gcc_dir = "mips"
+  elif gcc_dir == "x86_64":
+    gcc_dir = "x86"
 
-  tc1 = os.environ["ANDROID_TOOLCHAIN"]
-  tc2 = os.environ["ANDROID_TOOLCHAIN_2ND_ARCH"]
+  available_toolchains = glob.glob("%s/prebuilts/gcc/linux-x86/%s/*-linux-*/bin/" % (ANDROID_BUILD_TOP, gcc_dir))
+  if len(available_toolchains) == 0:
+    raise Exception("Could not find tool chain for %s" % (ARCH))
 
-  if ("/" + gcc_arch + "-linux-") in tc1:
-    toolchain = tc1
-  elif ("/" + gcc_arch + "-linux-") in tc2:
-    toolchain = tc2
-  else:
-    raise Exception("Could not find tool chain for %s" % (gcc_arch))
+  toolchain = sorted(available_toolchains)[-1]
 
   if not os.path.exists(ToolPath("addr2line", toolchain)):
     raise Exception("No addr2line for %s" % (toolchain))
 
-  TOOLCHAIN = toolchain
-  print "Using toolchain from: %s" % TOOLCHAIN
-  return TOOLCHAIN
+  _CACHED_TOOLCHAIN = toolchain
+  _CACHED_TOOLCHAIN_ARCH = ARCH
+  print "Using %s toolchain from: %s" % (_CACHED_TOOLCHAIN_ARCH, _CACHED_TOOLCHAIN)
+  return _CACHED_TOOLCHAIN
+
 
 def SymbolInformation(lib, addr):
   """Look up symbol information about an address.
@@ -179,7 +180,6 @@ def CallAddr2LineForSet(lib, unique_addrs):
   if not lib:
     return None
 
-
   symbols = SYMBOLS_DIR + lib
   if not os.path.exists(symbols):
     return None
@@ -227,10 +227,10 @@ def StripPC(addr):
     The stripped program counter address.
   """
   global ARCH
-
   if ARCH == "arm":
     return addr & ~1
   return addr
+
 
 def CallObjdumpForSet(lib, unique_addrs):
   """Use objdump to find out the names of the containing functions.
@@ -326,7 +326,27 @@ def CallCppFilt(mangled_symbol):
   process.stdout.close()
   return demangled_symbol
 
+
 def FormatSymbolWithOffset(symbol, offset):
   if offset == 0:
     return symbol
   return "%s+%d" % (symbol, offset)
+
+
+
+class FindToolchainTests(unittest.TestCase):
+  def assert_toolchain_found(self, abi):
+    global ARCH
+    ARCH = abi
+    FindToolchain() # Will throw on failure.
+
+  def test_toolchains_found(self):
+    self.assert_toolchain_found("arm")
+    self.assert_toolchain_found("arm64")
+    self.assert_toolchain_found("mips")
+    self.assert_toolchain_found("x86")
+    self.assert_toolchain_found("x86_64")
+
+
+if __name__ == '__main__':
+    unittest.main()
