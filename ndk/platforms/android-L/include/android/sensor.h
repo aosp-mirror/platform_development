@@ -41,6 +41,7 @@
  */
 
 #include <sys/types.h>
+#include <stdbool.h>
 
 #include <android/looper.h>
 
