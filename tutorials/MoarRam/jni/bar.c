@@ -16,6 +16,7 @@
  */
 
 #include <jni.h>
+#include <malloc.h>
 #include <cutils/log.h>
 
 #if defined(LOG_TAG)
