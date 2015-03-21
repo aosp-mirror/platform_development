@@ -555,6 +555,7 @@ pipe
 pipe2
 poll
 popen
+posix_memalign
 prctl
 pread
 pread64
