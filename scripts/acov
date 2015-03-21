@@ -30,6 +30,18 @@
 # it in your browser).
 #
 
+if [ "$1" = "--clean" ]; then
+  find $ANDROID_HOST_OUT \( -name '*.gcda' -o -name '*.gcno' \) -delete
+  find $ANDROID_PRODUCT_OUT \( -name '*.gcda' -o -name '*.gcno' \) -delete
+  exit 0
+fi
+
+if [ "$1" = "--prep" ]; then
+  find $ANDROID_HOST_OUT -name '*.gcda' -delete
+  find $ANDROID_PRODUCT_OUT -name '*.gcda' -delete
+  exit 0
+fi
+
 which lcov >/dev/null 2>/dev/null
 if [ $? -ne 0 ]; then
   echo 'lcov not found: running `sudo apt-get install lcov`'
