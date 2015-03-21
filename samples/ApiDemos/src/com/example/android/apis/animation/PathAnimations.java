@@ -29,7 +29,6 @@ import android.graphics.PointF;
 import android.graphics.RectF;
 import android.os.Bundle;
 import android.util.AttributeSet;
-import android.util.FloatMath;
 import android.util.Log;
 import android.util.Property;
 import android.view.View;
@@ -62,7 +61,7 @@ public class PathAnimations extends Activity implements
     };
 
     static {
-        float inverse_sqrt8 = FloatMath.sqrt(0.125f);
+        float inverse_sqrt8 = (float) Math.sqrt(0.125);
         RectF bounds = new RectF(1, 1, 3, 3);
         sTraversalPath.addArc(bounds, 45, 180);
         sTraversalPath.addArc(bounds, 225, 180);
