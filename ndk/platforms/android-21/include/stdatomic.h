@@ -33,7 +33,7 @@
 #include <sys/cdefs.h>
 
 
-#if defined(__cplusplus) && defined(_USING_LIBCXX)
+#if defined(__cplusplus) && __cplusplus >= 201103L && defined(_USING_LIBCXX)
 # ifdef __clang__
 #  if __has_feature(cxx_atomic)
 #   define _STDATOMIC_HAVE_ATOMIC
