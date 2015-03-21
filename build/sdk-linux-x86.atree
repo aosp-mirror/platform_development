@@ -22,11 +22,11 @@
 # revision as specified in the source.properties.
 
 
-lib/libLLVM.so                                       strip build-tools/${PLATFORM_NAME}/libLLVM.so
-lib/libbcc.so                                        strip build-tools/${PLATFORM_NAME}/libbcc.so
-lib/libbcinfo.so                                     strip build-tools/${PLATFORM_NAME}/libbcinfo.so
-lib/libclang.so                                      strip build-tools/${PLATFORM_NAME}/libclang.so
-lib/libc++.so                                        strip build-tools/${PLATFORM_NAME}/libc++.so
+lib/libLLVM.so                                       strip build-tools/${PLATFORM_NAME}/../lib/libLLVM.so
+lib/libbcc.so                                        strip build-tools/${PLATFORM_NAME}/../lib/libbcc.so
+lib/libbcinfo.so                                     strip build-tools/${PLATFORM_NAME}/../lib/libbcinfo.so
+lib/libclang.so                                      strip build-tools/${PLATFORM_NAME}/../lib/libclang.so
+lib/libc++.so                                        strip build-tools/${PLATFORM_NAME}/../lib/libc++.so
 
 prebuilts/sdk/tools/linux/arm-linux-androideabi-ld   strip build-tools/${PLATFORM_NAME}/arm-linux-androideabi-ld
 prebuilts/sdk/tools/linux/i686-linux-android-ld      strip build-tools/${PLATFORM_NAME}/i686-linux-android-ld
