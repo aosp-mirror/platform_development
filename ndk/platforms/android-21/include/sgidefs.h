@@ -29,6 +29,8 @@
 #ifndef _SGIDEFS_H_
 #define _SGIDEFS_H_
 
+#ifdef __mips__
 #include <asm/sgidefs.h>
+#endif
 
 #endif /* _SGIDEFS_H_ */
