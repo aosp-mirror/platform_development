@@ -4,5 +4,6 @@ Pkg.Revision=1
 AndroidVersion.ApiLevel=${PLATFORM_SDK_VERSION}
 AndroidVersion.CodeName=${PLATFORM_VERSION_CODENAME}
 SystemImage.Abi=mips
+SystemImage.GpuSupport=true
 SystemImage.TagId=default
 
