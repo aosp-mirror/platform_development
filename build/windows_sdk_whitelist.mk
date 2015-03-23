@@ -61,7 +61,6 @@ subdirs += \
 	system/core/liblog \
 	system/core/libsparse \
 	system/core/libziparchive \
-	system/core/libzipfile \
 	system/core/libutils \
 	system/extras/ext4_utils
 
