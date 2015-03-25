@@ -33,6 +33,7 @@ import android.net.Network;
 import android.net.NetworkUtils;
 import android.net.RouteInfo;
 import android.net.wifi.ScanResult;
+import android.net.wifi.WifiActivityEnergyInfo;
 import android.net.wifi.WifiManager;
 import android.os.RemoteException;
 import android.os.Handler;
@@ -118,6 +119,8 @@ public class Connectivity extends Activity {
     private long mStopTime;
     private long mTotalScanTime = 0;
     private long mTotalScanCount = 0;
+
+    private TextView mLinkStatsResults;
 
     private String mTdlsAddr = null;
 
@@ -316,8 +319,12 @@ public class Connectivity extends Activity {
         findViewById(R.id.routed_socket_request).setOnClickListener(mClickListener);
         findViewById(R.id.default_request).setOnClickListener(mClickListener);
         findViewById(R.id.default_socket).setOnClickListener(mClickListener);
+        findViewById(R.id.link_stats).setOnClickListener(mClickListener);
 
         registerReceiver(mReceiver, new IntentFilter(CONNECTIVITY_TEST_ALARM));
+
+        mLinkStatsResults = (TextView)findViewById(R.id.stats);
+        mLinkStatsResults.setVisibility(View.VISIBLE);
     }
 
     @Override
@@ -407,6 +414,9 @@ public class Connectivity extends Activity {
                 case R.id.stop_hipri:
                     mCm.stopUsingNetworkFeature(ConnectivityManager.TYPE_MOBILE,
                             Phone.FEATURE_ENABLE_HIPRI);
+                    break;
+                case R.id.link_stats:
+                    onLinkStats();
                     break;
             }
         }
@@ -543,6 +553,22 @@ public class Connectivity extends Activity {
             mWm.setTdlsEnabledWithMacAddress(mTdlsAddr, false);
         }
     }
+
+    private void onLinkStats() {
+        Log.e(TAG, "LINK STATS:  ");
+        try {
+            WifiActivityEnergyInfo info =
+                    mWm.getControllerActivityEnergyInfo(0);
+            if (info != null) {
+                mLinkStatsResults.setText(" power " + info.toString());
+            } else {
+                mLinkStatsResults.setText(" null! ");
+            }
+        } catch (Exception e) {
+            mLinkStatsResults.setText(" failed! " + e.toString());
+        }
+    }
+
 
     private void onAddDefaultRoute() {
         try {

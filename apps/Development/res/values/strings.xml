@@ -33,6 +33,8 @@
     <string name="start_scan">Start Scan</string>
     <string name="scan_cycles">Scan Cycles: </string>
     <string name="disconnect">Disconnect</string>
+    <string name="link_stats">Link Stats</string>
+    <string name="stats_results"> results </string>
 
     <string name="start_tdls">Start TDLS</string>
     <string name="stop_tdls">Stop TDLS</string>
