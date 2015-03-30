@@ -22,34 +22,34 @@ import android.content.Context;
 import android.content.RestrictionEntry;
 import android.content.RestrictionsManager;
 import android.content.SharedPreferences;
-import android.content.pm.ApplicationInfo;
-import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.text.Editable;
+import android.text.TextUtils;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.CompoundButton;
+import android.widget.EditText;
+import android.widget.LinearLayout;
+import android.widget.Spinner;
 import android.widget.Switch;
-import android.widget.TextView;
 import android.widget.Toast;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
  * This fragment provides UI and functionality to set restrictions on the AppRestrictionSchema
  * sample.
  */
-public class AppRestrictionEnforcerFragment extends Fragment implements View.OnClickListener,
-        CompoundButton.OnCheckedChangeListener {
-
-    /**
-     * Package name of the AppRestrictionSchema sample.
-     */
-    private static final String PACKAGE_NAME_APP_RESTRICTION_SCHEMA
-            = "com.example.android.apprestrictionschema";
+public class AppRestrictionEnforcerFragment extends Fragment implements
+        CompoundButton.OnCheckedChangeListener, AdapterView.OnItemSelectedListener {
 
     /**
      * Key for {@link SharedPreferences}
@@ -62,15 +62,38 @@ public class AppRestrictionEnforcerFragment extends Fragment implements View.OnC
     private static final String RESTRICTION_KEY_SAY_HELLO = "can_say_hello";
 
     /**
-     * Default boolean value for "can_say_hello" restriction. The actual value is loaded in
-     * {@link #loadRestrictions(android.app.Activity)}.
+     * Key for the string restriction in AppRestrictionSchema.
      */
-    private boolean mDefaultValueRestrictionSayHello;
+    private static final String RESTRICTION_KEY_MESSAGE = "message";
+
+    /**
+     * Key for the integer restriction in AppRestrictionSchema.
+     */
+    private static final String RESTRICTION_KEY_NUMBER = "number";
+
+    /**
+     * Key for the choice restriction in AppRestrictionSchema.
+     */
+    private static final String RESTRICTION_KEY_RANK = "rank";
+
+    /**
+     * Key for the multi-select restriction in AppRestrictionSchema.
+     */
+    private static final String RESTRICTION_KEY_APPROVALS = "approvals";
+
+    private static final String DELIMETER = ",";
+
+    /**
+     * Current status of the restrictions.
+     */
+    private Bundle mCurrentRestrictions = new Bundle();
 
     // UI Components
-    private TextView mTextStatus;
-    private Button mButtonUnhide;
     private Switch mSwitchSayHello;
+    private EditText mEditMessage;
+    private EditText mEditNumber;
+    private Spinner mSpinnerRank;
+    private LinearLayout mLayoutApprovals;
 
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container,
@@ -80,99 +103,72 @@ public class AppRestrictionEnforcerFragment extends Fragment implements View.OnC
 
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
-        mTextStatus = (TextView) view.findViewById(R.id.status);
-        mButtonUnhide = (Button) view.findViewById(R.id.unhide);
+        // Retain references for the UI elements
         mSwitchSayHello = (Switch) view.findViewById(R.id.say_hello);
-        mButtonUnhide.setOnClickListener(this);
-        mSwitchSayHello.setOnCheckedChangeListener(this);
+        mEditMessage = (EditText) view.findViewById(R.id.message);
+        mEditNumber = (EditText) view.findViewById(R.id.number);
+        mSpinnerRank = (Spinner) view.findViewById(R.id.rank);
+        mLayoutApprovals = (LinearLayout) view.findViewById(R.id.approvals);
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        updateUi(getActivity());
-    }
-
-    @Override
-    public void onClick(View view) {
-        switch (view.getId()) {
-            case R.id.unhide: {
-                unhideApp(getActivity());
-                break;
-            }
-        }
+        loadRestrictions(getActivity());
     }
 
     @Override
     public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
         switch (compoundButton.getId()) {
             case R.id.say_hello: {
-                allowSayHello(getActivity(), checked);
+                saveCanSayHello(getActivity(), checked);
+                break;
+            }
+            case R.id.approval: {
+                if (checked) {
+                    addApproval(getActivity(), (String) compoundButton.getTag());
+                } else {
+                    removeApproval(getActivity(), (String) compoundButton.getTag());
+                }
                 break;
             }
         }
     }
 
-    /**
-     * Updates the UI components according to the current status of AppRestrictionSchema and its
-     * restriction.
-     *
-     * @param activity The activity
-     */
-    private void updateUi(Activity activity) {
-        PackageManager packageManager = activity.getPackageManager();
-        try {
-            ApplicationInfo info = packageManager.getApplicationInfo(
-                    PACKAGE_NAME_APP_RESTRICTION_SCHEMA, PackageManager.GET_UNINSTALLED_PACKAGES);
-            DevicePolicyManager devicePolicyManager =
-                    (DevicePolicyManager) activity.getSystemService(Activity.DEVICE_POLICY_SERVICE);
-            if (0 < (info.flags & ApplicationInfo.FLAG_INSTALLED)) {
-                if (!devicePolicyManager.isApplicationHidden(
-                        EnforcerDeviceAdminReceiver.getComponentName(activity),
-                        PACKAGE_NAME_APP_RESTRICTION_SCHEMA)) {
-                    // The app is ready
-                    loadRestrictions(activity);
-                    mTextStatus.setVisibility(View.GONE);
-                    mButtonUnhide.setVisibility(View.GONE);
-                    mSwitchSayHello.setVisibility(View.VISIBLE);
-                    mSwitchSayHello.setOnCheckedChangeListener(null);
-                    mSwitchSayHello.setChecked(canSayHello(activity));
-                    mSwitchSayHello.setOnCheckedChangeListener(this);
-                } else {
-                    // The app is installed but hidden in this profile
-                    mTextStatus.setText(R.string.status_not_activated);
-                    mTextStatus.setVisibility(View.VISIBLE);
-                    mButtonUnhide.setVisibility(View.VISIBLE);
-                    mSwitchSayHello.setVisibility(View.GONE);
+    private TextWatcher mWatcherMessage = new EasyTextWatcher() {
+        @Override
+        public void afterTextChanged(Editable s) {
+            saveMessage(getActivity(), s.toString());
+        }
+    };
+
+    private TextWatcher mWatcherNumber = new EasyTextWatcher() {
+        @Override
+        public void afterTextChanged(Editable s) {
+            try {
+                String string = s.toString();
+                if (!TextUtils.isEmpty(string)) {
+                    saveNumber(getActivity(), Integer.parseInt(string));
                 }
-            } else {
-                // Need to reinstall the sample app
-                mTextStatus.setText(R.string.status_need_reinstall);
-                mTextStatus.setVisibility(View.VISIBLE);
-                mButtonUnhide.setVisibility(View.GONE);
-                mSwitchSayHello.setVisibility(View.GONE);
+            } catch (NumberFormatException e) {
+                Toast.makeText(getActivity(), "Not an integer!", Toast.LENGTH_SHORT).show();
             }
-        } catch (PackageManager.NameNotFoundException e) {
-            mTextStatus.setText(R.string.status_not_installed);
-            mTextStatus.setVisibility(View.VISIBLE);
-            mButtonUnhide.setVisibility(View.GONE);
-            mSwitchSayHello.setVisibility(View.GONE);
+        }
+    };
+
+    @Override
+    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+        switch (parent.getId()) {
+            case R.id.rank: {
+                saveRank(getActivity(), (String) parent.getAdapter().getItem(position));
+                break;
+            }
         }
     }
 
-    /**
-     * Unhides the AppRestrictionSchema sample in case it is hidden in this profile.
-     *
-     * @param activity The activity
-     */
-    private void unhideApp(Activity activity) {
-        DevicePolicyManager devicePolicyManager =
-                (DevicePolicyManager) activity.getSystemService(Activity.DEVICE_POLICY_SERVICE);
-        devicePolicyManager.setApplicationHidden(
-                EnforcerDeviceAdminReceiver.getComponentName(activity),
-                PACKAGE_NAME_APP_RESTRICTION_SCHEMA, false);
-        Toast.makeText(activity, "Enabled the app", Toast.LENGTH_SHORT).show();
-        updateUi(activity);
+    @Override
+    public void onNothingSelected(AdapterView<?> parent) {
+        // Nothing to do
     }
 
     /**
@@ -182,50 +178,187 @@ public class AppRestrictionEnforcerFragment extends Fragment implements View.OnC
      * @param activity The activity
      */
     private void loadRestrictions(Activity activity) {
-        RestrictionsManager restrictionsManager =
+        RestrictionsManager manager =
                 (RestrictionsManager) activity.getSystemService(Context.RESTRICTIONS_SERVICE);
         List<RestrictionEntry> restrictions =
-                restrictionsManager.getManifestRestrictions(PACKAGE_NAME_APP_RESTRICTION_SCHEMA);
+                manager.getManifestRestrictions(Constants.PACKAGE_NAME_APP_RESTRICTION_SCHEMA);
+        SharedPreferences prefs = activity.getSharedPreferences(PREFS_KEY, Context.MODE_PRIVATE);
         for (RestrictionEntry restriction : restrictions) {
-            if (RESTRICTION_KEY_SAY_HELLO.equals(restriction.getKey())) {
-                mDefaultValueRestrictionSayHello = restriction.getSelectedState();
+            String key = restriction.getKey();
+            if (RESTRICTION_KEY_SAY_HELLO.equals(key)) {
+                updateCanSayHello(prefs.getBoolean(RESTRICTION_KEY_SAY_HELLO,
+                        restriction.getSelectedState()));
+            } else if (RESTRICTION_KEY_MESSAGE.equals(key)) {
+                updateMessage(prefs.getString(RESTRICTION_KEY_MESSAGE,
+                        restriction.getSelectedString()));
+            } else if (RESTRICTION_KEY_NUMBER.equals(key)) {
+                updateNumber(prefs.getInt(RESTRICTION_KEY_NUMBER,
+                        restriction.getIntValue()));
+            } else if (RESTRICTION_KEY_RANK.equals(key)) {
+                updateRank(activity, restriction.getChoiceValues(),
+                        prefs.getString(RESTRICTION_KEY_RANK, restriction.getSelectedString()));
+            } else if (RESTRICTION_KEY_APPROVALS.equals(key)) {
+                updateApprovals(activity, restriction.getChoiceValues(),
+                        TextUtils.split(prefs.getString(RESTRICTION_KEY_APPROVALS,
+                                        TextUtils.join(DELIMETER,
+                                                restriction.getAllSelectedStrings())),
+                                DELIMETER));
             }
         }
     }
 
-    /**
-     * Returns whether the AppRestrictionSchema is currently allowed to say hello to its user. Note
-     * that a profile/device owner needs to remember each restriction value on its own.
-     *
-     * @param activity The activity
-     * @return True if the AppRestrictionSchema is allowed to say hello
-     */
-    private boolean canSayHello(Activity activity) {
-        SharedPreferences prefs = activity.getSharedPreferences(PREFS_KEY, Context.MODE_PRIVATE);
-        return prefs.getBoolean(RESTRICTION_KEY_SAY_HELLO, mDefaultValueRestrictionSayHello);
+    private void updateCanSayHello(boolean canSayHello) {
+        mCurrentRestrictions.putBoolean(RESTRICTION_KEY_SAY_HELLO, canSayHello);
+        mSwitchSayHello.setOnCheckedChangeListener(null);
+        mSwitchSayHello.setChecked(canSayHello);
+        mSwitchSayHello.setOnCheckedChangeListener(this);
+    }
+
+    private void updateMessage(String message) {
+        mCurrentRestrictions.putString(RESTRICTION_KEY_MESSAGE, message);
+        mEditMessage.removeTextChangedListener(mWatcherMessage);
+        mEditMessage.setText(message);
+        mEditMessage.addTextChangedListener(mWatcherMessage);
+    }
+
+    private void updateNumber(int number) {
+        mCurrentRestrictions.putInt(RESTRICTION_KEY_NUMBER, number);
+        mEditNumber.removeTextChangedListener(mWatcherNumber);
+        mEditNumber.setText(String.valueOf(number));
+        mEditNumber.addTextChangedListener(mWatcherNumber);
+    }
+
+    private void updateRank(Context context, String[] ranks, String selectedRank) {
+        mCurrentRestrictions.putString(RESTRICTION_KEY_RANK, selectedRank);
+        mSpinnerRank.setAdapter(new ArrayAdapter<>(context,
+                android.R.layout.simple_spinner_dropdown_item, ranks));
+        mSpinnerRank.setSelection(search(ranks, selectedRank));
+        mSpinnerRank.setOnItemSelectedListener(this);
+    }
+
+    private void updateApprovals(Context context, String[] approvals,
+                                 String[] selectedApprovals) {
+        mCurrentRestrictions.putStringArray(RESTRICTION_KEY_APPROVALS, selectedApprovals);
+        mLayoutApprovals.removeAllViews();
+        for (String approval : approvals) {
+            Switch sw = new Switch(context);
+            sw.setText(approval);
+            sw.setTag(approval);
+            sw.setChecked(Arrays.asList(selectedApprovals).contains(approval));
+            sw.setOnCheckedChangeListener(this);
+            sw.setId(R.id.approval);
+            mLayoutApprovals.addView(sw);
+        }
     }
 
     /**
-     * Sets the value for the "cay_say_hello" restriction of AppRestrictionSchema.
+     * Saves the value for the "cay_say_hello" restriction of AppRestrictionSchema.
      *
      * @param activity The activity
      * @param allow    The value to be set for the restriction.
      */
-    private void allowSayHello(Activity activity, boolean allow) {
+    private void saveCanSayHello(Activity activity, boolean allow) {
+        mCurrentRestrictions.putBoolean(RESTRICTION_KEY_SAY_HELLO, allow);
+        saveRestrictions(activity);
+        // Note that the owner app needs to remember the restrictions on its own.
+        editPreferences(activity).putBoolean(RESTRICTION_KEY_SAY_HELLO, allow).apply();
+    }
+
+    /**
+     * Saves the value for the "message" restriction of AppRestrictionSchema.
+     *
+     * @param activity The activity
+     * @param message  The value to be set for the restriction.
+     */
+    private void saveMessage(Activity activity, String message) {
+        mCurrentRestrictions.putString(RESTRICTION_KEY_MESSAGE, message);
+        saveRestrictions(activity);
+        editPreferences(activity).putString(RESTRICTION_KEY_MESSAGE, message).apply();
+    }
+
+    /**
+     * Saves the value for the "number" restriction of AppRestrictionSchema.
+     *
+     * @param activity The activity
+     * @param number   The value to be set for the restriction.
+     */
+    private void saveNumber(Activity activity, int number) {
+        mCurrentRestrictions.putInt(RESTRICTION_KEY_NUMBER, number);
+        saveRestrictions(activity);
+        editPreferences(activity).putInt(RESTRICTION_KEY_NUMBER, number).apply();
+    }
+
+    /**
+     * Saves the value for the "rank" restriction of AppRestrictionSchema.
+     *
+     * @param activity The activity
+     * @param rank     The value to be set for the restriction.
+     */
+    private void saveRank(Activity activity, String rank) {
+        mCurrentRestrictions.putString(RESTRICTION_KEY_RANK, rank);
+        saveRestrictions(activity);
+        editPreferences(activity).putString(RESTRICTION_KEY_RANK, rank).apply();
+    }
+
+    private void addApproval(Activity activity, String approval) {
+        List<String> approvals = new ArrayList<>(Arrays.asList(
+                mCurrentRestrictions.getStringArray(RESTRICTION_KEY_APPROVALS)));
+        if (approvals.contains(approval)) {
+            return;
+        }
+        approvals.add(approval);
+        saveApprovals(activity, approvals.toArray(new String[approvals.size()]));
+    }
+
+    private void removeApproval(Activity activity, String approval) {
+        List<String> approvals = new ArrayList<>(Arrays.asList(
+                mCurrentRestrictions.getStringArray(RESTRICTION_KEY_APPROVALS)));
+        if (!approval.contains(approval)) {
+            return;
+        }
+        approvals.remove(approval);
+        saveApprovals(activity, approvals.toArray(new String[approvals.size()]));
+    }
+
+    /**
+     * Saves the value for the "approvals" restriction of AppRestrictionSchema.
+     *
+     * @param activity  The activity
+     * @param approvals The value to be set for the restriction.
+     */
+    private void saveApprovals(Activity activity, String[] approvals) {
+        mCurrentRestrictions.putStringArray(RESTRICTION_KEY_APPROVALS, approvals);
+        saveRestrictions(activity);
+        editPreferences(activity).putString(RESTRICTION_KEY_APPROVALS,
+                TextUtils.join(DELIMETER, approvals)).apply();
+    }
+
+    private void saveRestrictions(Activity activity) {
         DevicePolicyManager devicePolicyManager
                 = (DevicePolicyManager) activity.getSystemService(Context.DEVICE_POLICY_SERVICE);
-        Bundle restrictions = new Bundle();
-        restrictions.putBoolean(RESTRICTION_KEY_SAY_HELLO, allow);
         devicePolicyManager.setApplicationRestrictions(
                 EnforcerDeviceAdminReceiver.getComponentName(activity),
-                PACKAGE_NAME_APP_RESTRICTION_SCHEMA, restrictions);
-        // The profile/device owner needs to remember the current state of restrictions on its own
-        activity.getSharedPreferences(PREFS_KEY, Context.MODE_PRIVATE)
-                .edit()
-                .putBoolean(RESTRICTION_KEY_SAY_HELLO, allow)
-                .apply();
-        Toast.makeText(activity, allow ? R.string.allowed : R.string.disallowed,
-                Toast.LENGTH_SHORT).show();
+                Constants.PACKAGE_NAME_APP_RESTRICTION_SCHEMA, mCurrentRestrictions);
+    }
+
+    private SharedPreferences.Editor editPreferences(Activity activity) {
+        return activity.getSharedPreferences(PREFS_KEY, Context.MODE_PRIVATE).edit();
+    }
+
+    /**
+     * Sequential search
+     *
+     * @param array The string array
+     * @param s     The string to search for
+     * @return Index if found. -1 if not found.
+     */
+    private int search(String[] array, String s) {
+        for (int i = 0; i < array.length; ++i) {
+            if (s.equals(array[i])) {
+                return i;
+            }
+        }
+        return -1;
     }
 
 }
