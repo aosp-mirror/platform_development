@@ -16,11 +16,14 @@ limitations under the License.
 -->
 <resources>
 
-    <string name="title_can_say_hello">Can say hello</string>
-    <string name="description_can_say_hello">Whether the app can say hello to the user</string>
     <string name="explanation_can_say_hello_true">I can say hello to you.</string>
     <string name="explanation_can_say_hello_false">I am restricted from saying hello to you.</string>
     <string name="action_can_say_hello">Say hello</string>
-    <string name="message_hello">Hello!</string>
+    <string name="message">All I can say is \"%s\".</string>
+
+    <string name="your_number">Your number: %d</string>
+    <string name="your_rank">Your rank: %s</string>
+    <string name="approvals_you_have">Approvals you have: %s</string>
+    <string name="none">none</string>
 
 </resources>

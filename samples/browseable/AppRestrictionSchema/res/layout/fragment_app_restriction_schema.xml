@@ -14,24 +14,60 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 -->
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="@dimen/margin_medium">
 
-    <TextView
-        android:id="@+id/say_hello_explanation"
+
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+            xmlns:tools="http://schemas.android.com/tools"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/explanation_can_say_hello_true"
-        android:textAppearance="?android:attr/textAppearanceMedium" />
+        android:orientation="vertical"
+        android:padding="@dimen/margin_medium">
 
-    <Button
-        android:id="@+id/say_hello"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/margin_medium"
-        android:text="@string/action_can_say_hello" />
+        <TextView
+            android:id="@+id/say_hello_explanation"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            tools:text="@string/explanation_can_say_hello_true"/>
 
-</LinearLayout>
+        <Button
+            android:id="@+id/say_hello"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/margin_medium"
+            android:text="@string/action_can_say_hello"/>
+
+        <include layout="@layout/separator"/>
+
+        <TextView
+            android:id="@+id/your_number"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            tools:text="@string/your_number"/>
+
+        <include layout="@layout/separator"/>
+
+        <TextView
+            android:id="@+id/your_rank"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            tools:text="@string/your_rank"/>
+
+        <include layout="@layout/separator"/>
+
+        <TextView
+            android:id="@+id/approvals_you_have"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            tools:text="@string/approvals_you_have"/>
+
+    </LinearLayout>
+
+</ScrollView>

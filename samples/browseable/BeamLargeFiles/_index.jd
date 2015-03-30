@@ -1,0 +1,16 @@
+page.tags="BeamLargeFiles"
+sample.group=Connectivity
+@jd:body
+
+<p>
+            
+            This sample demonstrates how to transfer large files via Android Beam. After the initial
+            handshake over NFC, file transfer will take place over a secondary high-speed
+            communication channel such as Bluetooth or WiFi Direct.
+
+            \n\nThis feature requires Android 4.1 (Jelly Bean) or above. Unlike traditional Beam,
+            your application will not receive an Intent on the receiving device. Instead, the system
+            will save the file to disk and display a notification that the user can select to open
+            the file using a standard ACTION_VIEW Intent.
+            
+        </p>

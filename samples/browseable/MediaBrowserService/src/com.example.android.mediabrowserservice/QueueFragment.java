@@ -38,7 +38,7 @@ import java.util.List;
  */
 public class QueueFragment extends Fragment {
 
-    private static final String TAG = QueueFragment.class.getSimpleName();
+    private static final String TAG = LogHelper.makeLogTag(QueueFragment.class.getSimpleName());
 
     private ImageButton mSkipNext;
     private ImageButton mSkipPrevious;
