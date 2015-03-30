@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright 2014 The Android Open Source Project
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+ http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+<resources>
+
+    <!-- Bool restriction -->
+    <string name="title_can_say_hello">Can say hello</string>
+    <string name="description_can_say_hello">Whether the app can say hello to the user</string>
+    <bool name="default_can_say_hello">false</bool>
+
+    <!-- String restriction -->
+    <string name="title_message">Message</string>
+    <string name="description_message">A message string to show</string>
+    <string name="default_message">Hello!</string>
+
+    <!-- Integer restriction -->
+    <string name="title_number">Number</string>
+    <string name="description_number">Sample integer value</string>
+    <integer name="default_number">32582657</integer>
+
+    <!-- Choice restriction -->
+    <string name="title_rank">Rank</string>
+    <string name="description_rank">Rank of the user</string>
+    <string-array name="entries_rank">
+        <item>Apprentice</item>
+        <item>Intermediate</item>
+        <item>Master</item>
+    </string-array>
+    <string name="entry_value_rank_apprentice">apprentice</string>
+    <string name="entry_value_rank_intermediate">intermediate</string>
+    <string name="entry_value_rank_master">master</string>
+    <string-array name="entry_values_rank">
+        <item>@string/entry_value_rank_apprentice</item>
+        <item>@string/entry_value_rank_intermediate</item>
+        <item>@string/entry_value_rank_master</item>
+    </string-array>
+    <string name="default_rank">@string/entry_value_rank_apprentice</string>
+
+    <!-- Multi-select restriction -->
+    <string name="title_approvals">Approvals</string>
+    <string name="description_approvals">Approvals</string>
+    <string-array name="entries_approvals">
+        <item>Read</item>
+        <item>Write</item>
+        <item>Execute</item>
+    </string-array>
+    <string name="entry_value_approvals_read">read</string>
+    <string name="entry_value_approvals_write">write</string>
+    <string name="entry_value_approvals_execute">execute</string>
+    <string-array name="entry_values_approvals">
+        <item>@string/entry_value_approvals_read</item>
+        <item>@string/entry_value_approvals_write</item>
+        <item>@string/entry_value_approvals_execute</item>
+    </string-array>
+    <string-array name="default_approvals">
+        <!-- Empty -->
+    </string-array>
+
+    <!-- Hidden restriction -->
+    <string name="title_secret_code">Secret code</string>
+    <string name="description_secret_code">This restriction is hidden and will not be shown to the administrator.</string>
+    <string name="default_secret_code">(Hidden restriction must have some default value)</string>
+
+</resources>

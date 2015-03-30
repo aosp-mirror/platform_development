@@ -23,8 +23,11 @@ import static com.example.android.wearable.geofencing.Constants.KEY_GEOFENCE_ID;
 import static com.example.android.wearable.geofencing.Constants.TAG;
 
 import android.app.IntentService;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -100,11 +103,23 @@ public class GeofenceTransitionsIntentService extends IntentService
                 // Delete the data item when leaving a geofence region.
                 mGoogleApiClient.blockingConnect(CONNECTION_TIME_OUT_MS, TimeUnit.MILLISECONDS);
                 Wearable.DataApi.deleteDataItems(mGoogleApiClient, GEOFENCE_DATA_ITEM_URI).await();
-                Toast.makeText(this, getString(R.string.exiting_geofence),
-                        Toast.LENGTH_SHORT).show();
+                showToast(this, R.string.exiting_geofence);
                 mGoogleApiClient.disconnect();
             }
         }
+    }
+
+    /**
+     * Showing a toast message, using the Main thread
+     */
+    private void showToast(final Context context, final int resourceId) {
+        Handler mainThread = new Handler(Looper.getMainLooper());
+        mainThread.post(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(context, context.getString(resourceId), Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     @Override

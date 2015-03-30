@@ -25,4 +25,8 @@
     <string name="allowed">Allowed</string>
     <string name="disallowed">Disallowed</string>
     <string name="profile_name">AppRestrictionEnforcer </string>
+    <string name="message">Message: </string>
+    <string name="number">Number: </string>
+    <string name="rank">Rank: </string>
+    <string name="approvals">Approvals: </string>
 </resources>

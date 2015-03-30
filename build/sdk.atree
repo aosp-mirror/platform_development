@@ -280,9 +280,7 @@ developers/build/prebuilts/gradle/CardReader                                 sam
 developers/build/prebuilts/gradle/BatchStepSensor                            samples/${PLATFORM_NAME}/sensors/BatchStepSensor
 developers/build/prebuilts/gradle/DisplayingBitmaps                          samples/${PLATFORM_NAME}/ui/DisplayingBitmaps
 developers/build/prebuilts/gradle/BasicTransition                            samples/${PLATFORM_NAME}/ui/BasicTransition
-developers/build/prebuilts/gradle/AdapterTransition                          samples/${PLATFORM_NAME}/ui/AdapterTransition
 developers/build/prebuilts/gradle/CustomTransition                           samples/${PLATFORM_NAME}/ui/CustomTransition
-developers/build/prebuilts/gradle/FragmentTransition                         samples/${PLATFORM_NAME}/ui/FragmentTransition
 developers/build/prebuilts/gradle/SwipeRefreshLayoutBasic                    samples/${PLATFORM_NAME}/ui/SwipeRefreshLayoutBasic
 developers/build/prebuilts/gradle/SwipeRefreshListFragment                   samples/${PLATFORM_NAME}/ui/SwipeRefreshListFragment
 developers/build/prebuilts/gradle/SwipeRefreshMultipleViews                  samples/${PLATFORM_NAME}/ui/SwipeRefreshMultipleViews
@@ -314,6 +312,8 @@ developers/build/prebuilts/gradle/PermissionRequest                          sam
 developers/build/prebuilts/gradle/DirectorySelection                         samples/${PLATFORM_NAME}/content/documentsUi/DirectorySelection
 developers/build/prebuilts/gradle/AppUsageStatistics                         samples/${PLATFORM_NAME}/system/AppUsageStatistics
 developers/build/prebuilts/gradle/ScreenCapture                              samples/${PLATFORM_NAME}/media/ScreenCapture
+developers/build/prebuilts/gradle/NfcProvisioning                            samples/${PLATFORM_NAME}/nfc/NfcProvisioning
+developers/build/prebuilts/gradle/DeviceOwner                                samples/${PLATFORM_NAME}/admin/DeviceOwner
 
 developers/build/prebuilts/androidtv                                         samples/${PLATFORM_NAME}/androidtv
 
@@ -322,7 +322,6 @@ developers/build/prebuilts/gradle/AgendaData                    samples/${PLATFO
 developers/build/prebuilts/gradle/DataLayer                     samples/${PLATFORM_NAME}/wearable/DataLayer
 developers/build/prebuilts/gradle/DelayedConfirmation           samples/${PLATFORM_NAME}/wearable/DelayedConfirmation
 developers/build/prebuilts/gradle/ElizaChat                     samples/${PLATFORM_NAME}/wearable/ElizaChat
-developers/build/prebuilts/gradle/EmbeddedApp                   samples/${PLATFORM_NAME}/wearable/EmbeddedApp
 developers/build/prebuilts/gradle/FindMyPhone                   samples/${PLATFORM_NAME}/wearable/FindMyPhone
 developers/build/prebuilts/gradle/Flashlight                    samples/${PLATFORM_NAME}/wearable/Flashlight
 developers/build/prebuilts/gradle/Geofencing                    samples/${PLATFORM_NAME}/wearable/Geofencing
@@ -337,6 +336,7 @@ developers/build/prebuilts/gradle/SynchronizedNotifications     samples/${PLATFO
 developers/build/prebuilts/gradle/Timer                         samples/${PLATFORM_NAME}/wearable/Timer
 developers/build/prebuilts/gradle/WatchFace                     samples/${PLATFORM_NAME}/wearable/WatchFace
 developers/build/prebuilts/gradle/WatchViewStub                 samples/${PLATFORM_NAME}/wearable/WatchViewStub
+developers/build/prebuilts/gradle/XYZTouristAttractions         samples/${PLATFORM_NAME}/wearable/XYZTouristAttractions
 
 # Old sample tree
 development/samples/AccelerometerPlay          samples/${PLATFORM_NAME}/legacy/AccelerometerPlay
@@ -498,4 +498,3 @@ ${OUT_DIR}/target/common/obj/PACKAGING/android-support-v17-leanback_intermediate
 ##############################################################################
 framework/layoutlib-tests.jar tests/libtests/layoutlib-tests.jar
 system/app/EmulatorSmokeTests/EmulatorSmokeTests.apk tests/emulator-test-apps/EmulatorSmokeTests.apk
-
