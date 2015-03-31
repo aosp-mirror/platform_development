@@ -1,9 +1,0 @@
-page.tags="FragmentTransition"
-sample.group=UI
-@jd:body
-
-<p>
-            
-	    This sample demonstrates how to start a transition right after a fragment transaction.
-            
-        </p>

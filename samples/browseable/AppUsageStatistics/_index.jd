@@ -1,0 +1,10 @@
+page.tags="AppUsageStatistics"
+sample.group=System
+@jd:body
+
+<p>
+            
+            This sample explains how to use App usage statistics API, which was introduced
+            in Android 5.0.
+            
+        </p>

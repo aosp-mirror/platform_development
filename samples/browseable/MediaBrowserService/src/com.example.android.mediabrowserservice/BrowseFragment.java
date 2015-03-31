@@ -47,7 +47,7 @@ import java.util.List;
  */
 public class BrowseFragment extends Fragment {
 
-    private static final String TAG = BrowseFragment.class.getSimpleName();
+    private static final String TAG = LogHelper.makeLogTag(BrowseFragment.class.getSimpleName());
 
     public static final String ARG_MEDIA_ID = "media_id";
 
