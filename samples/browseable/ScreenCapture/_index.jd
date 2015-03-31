@@ -1,0 +1,10 @@
+page.tags="ScreenCapture"
+sample.group=Media
+@jd:body
+
+<p>
+
+This sample demonstrates how to use Media Projection API introduced in Android 5.0 Lollipop. Press
+"Start" to start capturing the screen.
+
+        </p>

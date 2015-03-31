@@ -1,9 +1,0 @@
-page.tags="EmbeddedApp"
-sample.group=Wearable
-@jd:body
-
-<p>
-            
-            This simple app demonstrates how to embed a wearable app into a phone app.
-            
-        </p>

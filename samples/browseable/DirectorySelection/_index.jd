@@ -1,0 +1,10 @@
+page.tags="DirectorySelection"
+sample.group=Content
+@jd:body
+
+<p>
+            
+            This sample explains how to use Directory selection API, which was introduced
+            in Android 5.0.
+            
+        </p>
