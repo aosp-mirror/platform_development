@@ -30,12 +30,14 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 /**
  * Utility class to get a list of MusicTrack's based on a server-side JSON
@@ -43,56 +45,54 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 public class MusicProvider {
 
-    private static final String TAG = "MusicProvider";
+    private static final String TAG = LogHelper.makeLogTag(MusicProvider.class);
 
-    private static final String CATALOG_URL = "http://storage.googleapis.com/automotive-media/music.json";
+    private static final String CATALOG_URL =
+        "http://storage.googleapis.com/automotive-media/music.json";
 
     public static final String CUSTOM_METADATA_TRACK_SOURCE = "__SOURCE__";
 
-    private static String JSON_MUSIC = "music";
-    private static String JSON_TITLE = "title";
-    private static String JSON_ALBUM = "album";
-    private static String JSON_ARTIST = "artist";
-    private static String JSON_GENRE = "genre";
-    private static String JSON_SOURCE = "source";
-    private static String JSON_IMAGE = "image";
-    private static String JSON_TRACK_NUMBER = "trackNumber";
-    private static String JSON_TOTAL_TRACK_COUNT = "totalTrackCount";
-    private static String JSON_DURATION = "duration";
-
-    private final ReentrantLock initializationLock = new ReentrantLock();
+    private static final String JSON_MUSIC = "music";
+    private static final String JSON_TITLE = "title";
+    private static final String JSON_ALBUM = "album";
+    private static final String JSON_ARTIST = "artist";
+    private static final String JSON_GENRE = "genre";
+    private static final String JSON_SOURCE = "source";
+    private static final String JSON_IMAGE = "image";
+    private static final String JSON_TRACK_NUMBER = "trackNumber";
+    private static final String JSON_TOTAL_TRACK_COUNT = "totalTrackCount";
+    private static final String JSON_DURATION = "duration";
 
     // Categorized caches for music track data:
-    private final HashMap<String, List<MediaMetadata>> mMusicListByGenre;
-    private final HashMap<String, MediaMetadata> mMusicListById;
+    private ConcurrentMap<String, List<MediaMetadata>> mMusicListByGenre;
+    private final ConcurrentMap<String, MutableMediaMetadata> mMusicListById;
 
-    private final HashSet<String> mFavoriteTracks;
+    private final Set<String> mFavoriteTracks;
 
     enum State {
-        NON_INITIALIZED, INITIALIZING, INITIALIZED;
+        NON_INITIALIZED, INITIALIZING, INITIALIZED
     }
 
-    private State mCurrentState = State.NON_INITIALIZED;
-
+    private volatile State mCurrentState = State.NON_INITIALIZED;
 
     public interface Callback {
         void onMusicCatalogReady(boolean success);
     }
 
     public MusicProvider() {
-        mMusicListByGenre = new HashMap<>();
-        mMusicListById = new HashMap<>();
-        mFavoriteTracks = new HashSet<>();
+        mMusicListByGenre = new ConcurrentHashMap<>();
+        mMusicListById = new ConcurrentHashMap<>();
+        mFavoriteTracks = Collections.newSetFromMap(new ConcurrentHashMap<String, Boolean>());
     }
 
     /**
      * Get an iterator over the list of genres
      *
-     * @return
+     * @return genres
      */
     public Iterable<String> getGenres() {
         if (mCurrentState != State.INITIALIZED) {
-            return new ArrayList<String>(0);
+            return Collections.emptyList();
         }
         return mMusicListByGenre.keySet();
     }
@@ -100,11 +100,10 @@ public class MusicProvider {
     /**
      * Get music tracks of the given genre
      *
-     * @return
      */
     public Iterable<MediaMetadata> getMusicsByGenre(String genre) {
         if (mCurrentState != State.INITIALIZED || !mMusicListByGenre.containsKey(genre)) {
-            return new ArrayList<MediaMetadata>();
+            return Collections.emptyList();
         }
         return mMusicListByGenre.get(genre);
     }
@@ -113,32 +112,53 @@ public class MusicProvider {
      * Very basic implementation of a search that filter music tracks which title containing
      * the given query.
      *
-     * @return
      */
-    public Iterable<MediaMetadata> searchMusics(String titleQuery) {
-        ArrayList<MediaMetadata> result = new ArrayList<>();
+    public Iterable<MediaMetadata> searchMusic(String titleQuery) {
         if (mCurrentState != State.INITIALIZED) {
-            return result;
+            return Collections.emptyList();
         }
+        ArrayList<MediaMetadata> result = new ArrayList<>();
         titleQuery = titleQuery.toLowerCase();
-        for (MediaMetadata track: mMusicListById.values()) {
-            if (track.getString(MediaMetadata.METADATA_KEY_TITLE).toLowerCase()
+        for (MutableMediaMetadata track : mMusicListById.values()) {
+            if (track.metadata.getString(MediaMetadata.METADATA_KEY_TITLE).toLowerCase()
                     .contains(titleQuery)) {
-                result.add(track);
+                result.add(track.metadata);
             }
         }
         return result;
     }
 
-    public MediaMetadata getMusic(String mediaId) {
-        return mMusicListById.get(mediaId);
+    /**
+     * Return the MediaMetadata for the given musicID.
+     *
+     * @param musicId The unique, non-hierarchical music ID.
+     */
+    public MediaMetadata getMusic(String musicId) {
+        return mMusicListById.containsKey(musicId) ? mMusicListById.get(musicId).metadata : null;
     }
 
-    public void setFavorite(String mediaId, boolean favorite) {
+    public synchronized void updateMusic(String musicId, MediaMetadata metadata) {
+        MutableMediaMetadata track = mMusicListById.get(musicId);
+        if (track == null) {
+            return;
+        }
+
+        String oldGenre = track.metadata.getString(MediaMetadata.METADATA_KEY_GENRE);
+        String newGenre = metadata.getString(MediaMetadata.METADATA_KEY_GENRE);
+
+        track.metadata = metadata;
+
+        // if genre has changed, we need to rebuild the list by genre
+        if (!oldGenre.equals(newGenre)) {
+            buildListsByGenre();
+        }
+    }
+
+    public void setFavorite(String musicId, boolean favorite) {
         if (favorite) {
-            mFavoriteTracks.add(mediaId);
+            mFavoriteTracks.add(musicId);
         } else {
-            mFavoriteTracks.remove(mediaId);
+            mFavoriteTracks.remove(musicId);
         }
     }
 
@@ -152,12 +172,10 @@ public class MusicProvider {
 
     /**
      * Get the list of music tracks from a server and caches the track information
-     * for future reference, keying tracks by mediaId and grouping by genre.
-     *
-     * @return
+     * for future reference, keying tracks by musicId and grouping by genre.
      */
-    public void retrieveMedia(final Callback callback) {
-
+    public void retrieveMediaAsync(final Callback callback) {
+        LogHelper.d(TAG, "retrieveMediaAsync called");
         if (mCurrentState == State.INITIALIZED) {
             // Nothing to do, execute callback immediately
             callback.onMusicCatalogReady(true);
@@ -165,54 +183,66 @@ public class MusicProvider {
         }
 
         // Asynchronously load the music catalog in a separate thread
-        new AsyncTask() {
+        new AsyncTask<Void, Void, State>() {
             @Override
-            protected Object doInBackground(Object[] objects) {
-                retrieveMediaAsync(callback);
-                return null;
+            protected State doInBackground(Void... params) {
+                retrieveMedia();
+                return mCurrentState;
+            }
+
+            @Override
+            protected void onPostExecute(State current) {
+                if (callback != null) {
+                    callback.onMusicCatalogReady(current == State.INITIALIZED);
+                }
             }
         }.execute();
     }
 
-    private void retrieveMediaAsync(Callback callback) {
-        initializationLock.lock();
+    private synchronized void buildListsByGenre() {
+        ConcurrentMap<String, List<MediaMetadata>> newMusicListByGenre = new ConcurrentHashMap<>();
 
+        for (MutableMediaMetadata m : mMusicListById.values()) {
+            String genre = m.metadata.getString(MediaMetadata.METADATA_KEY_GENRE);
+            List<MediaMetadata> list = newMusicListByGenre.get(genre);
+            if (list == null) {
+                list = new ArrayList<>();
+                newMusicListByGenre.put(genre, list);
+            }
+            list.add(m.metadata);
+        }
+        mMusicListByGenre = newMusicListByGenre;
+    }
+
+    private synchronized void retrieveMedia() {
         try {
             if (mCurrentState == State.NON_INITIALIZED) {
                 mCurrentState = State.INITIALIZING;
 
                 int slashPos = CATALOG_URL.lastIndexOf('/');
                 String path = CATALOG_URL.substring(0, slashPos + 1);
-                JSONObject jsonObj = parseUrl(CATALOG_URL);
-
+                JSONObject jsonObj = fetchJSONFromUrl(CATALOG_URL);
+                if (jsonObj == null) {
+                    return;
+                }
                 JSONArray tracks = jsonObj.getJSONArray(JSON_MUSIC);
                 if (tracks != null) {
                     for (int j = 0; j < tracks.length(); j++) {
                         MediaMetadata item = buildFromJSON(tracks.getJSONObject(j), path);
-                        String genre = item.getString(MediaMetadata.METADATA_KEY_GENRE);
-                        List<MediaMetadata> list = mMusicListByGenre.get(genre);
-                        if (list == null) {
-                            list = new ArrayList<>();
-                        }
-                        list.add(item);
-                        mMusicListByGenre.put(genre, list);
-                        mMusicListById.put(item.getString(MediaMetadata.METADATA_KEY_MEDIA_ID),
-                                item);
+                        String musicId = item.getString(MediaMetadata.METADATA_KEY_MEDIA_ID);
+                        mMusicListById.put(musicId, new MutableMediaMetadata(musicId, item));
                     }
+                    buildListsByGenre();
                 }
                 mCurrentState = State.INITIALIZED;
             }
-        } catch (RuntimeException | JSONException e) {
+        } catch (JSONException e) {
             LogHelper.e(TAG, e, "Could not retrieve music list");
         } finally {
             if (mCurrentState != State.INITIALIZED) {
                 // Something bad happened, so we reset state to NON_INITIALIZED to allow
                 // retries (eg if the network connection is temporary unavailable)
                 mCurrentState = State.NON_INITIALIZED;
-            }
-            initializationLock.unlock();
-            if (callback != null) {
-                callback.onMusicCatalogReady(mCurrentState == State.INITIALIZED);
             }
         }
     }
@@ -263,19 +293,18 @@ public class MusicProvider {
      * Download a JSON file from a server, parse the content and return the JSON
      * object.
      *
-     * @param urlString
-     * @return
+     * @return result JSONObject containing the parsed representation.
      */
-    private JSONObject parseUrl(String urlString) {
+    private JSONObject fetchJSONFromUrl(String urlString) {
         InputStream is = null;
         try {
-            java.net.URL url = new java.net.URL(urlString);
+            URL url = new URL(urlString);
             URLConnection urlConnection = url.openConnection();
             is = new BufferedInputStream(urlConnection.getInputStream());
             BufferedReader reader = new BufferedReader(new InputStreamReader(
                     urlConnection.getInputStream(), "iso-8859-1"));
             StringBuilder sb = new StringBuilder();
-            String line = null;
+            String line;
             while ((line = reader.readLine()) != null) {
                 sb.append(line);
             }

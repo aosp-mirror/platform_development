@@ -20,8 +20,9 @@
         <![CDATA[
         
             
-            BasicRenderScript sample demonstrates basic steps how to use renderScript.
-			In the sample, it performs graphical filter operation on a image with renderScript.
+            This sample demonstrates using RenderScript to perform basic image manipulation. Specifically, it allows users
+            to dynamically adjust the saturation for an image using a slider. A custom RenderScript kernel performs the saturation
+            adjustment, running the computation on the device\'s GPU or other compute hardware as deemed appropriate by the system.
             
         
         ]]>

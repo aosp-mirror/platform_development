@@ -29,5 +29,6 @@
     <string name="skip_previous">Skip to previous</string>
     <string name="play_pause">play or pause</string>
     <string name="skip_next">Skip to next</string>
+    <string name="no_search_results">No search results.</string>
 
 </resources>

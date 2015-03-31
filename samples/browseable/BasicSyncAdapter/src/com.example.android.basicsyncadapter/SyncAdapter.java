@@ -250,9 +250,9 @@ class SyncAdapter extends AbstractThreadedSyncAdapter {
                     // Update existing record
                     Log.i(TAG, "Scheduling update: " + existingUri);
                     batch.add(ContentProviderOperation.newUpdate(existingUri)
-                            .withValue(FeedContract.Entry.COLUMN_NAME_TITLE, title)
-                            .withValue(FeedContract.Entry.COLUMN_NAME_LINK, link)
-                            .withValue(FeedContract.Entry.COLUMN_NAME_PUBLISHED, published)
+                            .withValue(FeedContract.Entry.COLUMN_NAME_TITLE, match.title)
+                            .withValue(FeedContract.Entry.COLUMN_NAME_LINK, match.link)
+                            .withValue(FeedContract.Entry.COLUMN_NAME_PUBLISHED, match.published)
                             .build());
                     syncResult.stats.numUpdates++;
                 } else {

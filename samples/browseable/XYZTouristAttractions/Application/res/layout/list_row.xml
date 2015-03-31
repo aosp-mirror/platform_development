@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+  Copyright 2015 Google Inc. All rights reserved.
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+  -->
+
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:foreground="?attr/selectableItemBackground"
+    android:layout_height="@dimen/image_size">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <ImageView
+            android:id="@android:id/icon"
+            android:layout_width="@dimen/image_size"
+            android:layout_height="match_parent"
+            android:src="@drawable/empty_photo"
+            android:scaleType="centerCrop"
+            android:transitionName="image" />
+
+        <TextView
+            android:id="@+id/overlaytext"
+            android:layout_width="@dimen/image_size"
+            android:layout_height="wrap_content"
+            android:layout_alignBottom="@android:id/icon"
+            android:gravity="center"
+            android:padding="@dimen/tiny_margin"
+            style="?android:textAppearanceSmallInverse"
+            android:background="@color/text_background"
+            tools:text="Overlay"/>
+
+        <TextView
+            android:id="@android:id/text1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_toRightOf="@android:id/icon"
+            android:paddingTop="@dimen/small_margin"
+            android:paddingLeft="@dimen/small_margin"
+            android:paddingRight="@dimen/small_margin"
+            android:maxLines="1"
+            android:ellipsize="end"
+            style="?android:textAppearanceMedium"
+            tools:text="Title 1"
+            android:transitionName="image" />
+
+        <TextView
+            android:id="@android:id/text2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_toRightOf="@android:id/icon"
+            android:layout_below="@android:id/text1"
+            android:padding="@dimen/small_margin"
+            android:ellipsize="end"
+            android:maxLines="4"
+            style="?android:textAppearanceSmall"
+            tools:text="Description goes here" />
+
+    </RelativeLayout>
+
+</FrameLayout>

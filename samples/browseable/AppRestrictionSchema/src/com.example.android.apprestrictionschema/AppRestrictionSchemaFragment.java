@@ -17,10 +17,12 @@
 package com.example.android.apprestrictionschema;
 
 import android.content.Context;
+import android.content.RestrictionEntry;
 import android.content.RestrictionsManager;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -29,6 +31,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.android.common.logger.Log;
+
+import java.util.List;
 
 /**
  * Pressing the button on this fragment pops up a simple Toast message. The button is enabled or
@@ -40,9 +44,21 @@ public class AppRestrictionSchemaFragment extends Fragment implements View.OnCli
     // Tag for the logger
     private static final String TAG = "AppRestrictionSchemaFragment";
 
+    private static final String KEY_CAN_SAY_HELLO = "can_say_hello";
+    private static final String KEY_MESSAGE = "message";
+    private static final String KEY_NUMBER = "number";
+    private static final String KEY_RANK = "rank";
+    private static final String KEY_APPROVALS = "approvals";
+
+    // Message to show when the button is clicked (String restriction)
+    private String mMessage;
+
     // UI Components
     private TextView mTextSayHello;
     private Button mButtonSayHello;
+    private TextView mTextNumber;
+    private TextView mTextRank;
+    private TextView mTextApprovals;
 
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container,
@@ -54,48 +70,103 @@ public class AppRestrictionSchemaFragment extends Fragment implements View.OnCli
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         mTextSayHello = (TextView) view.findViewById(R.id.say_hello_explanation);
         mButtonSayHello = (Button) view.findViewById(R.id.say_hello);
+        mTextNumber = (TextView) view.findViewById(R.id.your_number);
+        mTextRank = (TextView) view.findViewById(R.id.your_rank);
+        mTextApprovals = (TextView) view.findViewById(R.id.approvals_you_have);
         mButtonSayHello.setOnClickListener(this);
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        // Update the UI according to the configured restrictions
-        RestrictionsManager restrictionsManager =
-                (RestrictionsManager) getActivity().getSystemService(Context.RESTRICTIONS_SERVICE);
-        Bundle restrictions = restrictionsManager.getApplicationRestrictions();
-        updateUI(restrictions);
+        resolveRestrictions();
     }
 
-    private void updateUI(Bundle restrictions) {
-        if (canSayHello(restrictions)) {
-            mTextSayHello.setText(R.string.explanation_can_say_hello_true);
-            mButtonSayHello.setEnabled(true);
-        } else {
-            mTextSayHello.setText(R.string.explanation_can_say_hello_false);
-            mButtonSayHello.setEnabled(false);
+    private void resolveRestrictions() {
+        RestrictionsManager manager =
+                (RestrictionsManager) getActivity().getSystemService(Context.RESTRICTIONS_SERVICE);
+        Bundle restrictions = manager.getApplicationRestrictions();
+        List<RestrictionEntry> entries = manager.getManifestRestrictions(getActivity().getApplicationContext().getPackageName());
+        for (RestrictionEntry entry : entries) {
+            String key = entry.getKey();
+            Log.d(TAG, "key: " + key);
+            if (key.equals(KEY_CAN_SAY_HELLO)) {
+                updateCanSayHello(entry, restrictions);
+            } else if (key.equals(KEY_MESSAGE)) {
+                updateMessage(entry, restrictions);
+            } else if (key.equals(KEY_NUMBER)) {
+                updateNumber(entry, restrictions);
+            } else if (key.equals(KEY_RANK)) {
+                updateRank(entry, restrictions);
+            } else if (key.equals(KEY_APPROVALS)) {
+                updateApprovals(entry, restrictions);
+            }
         }
     }
 
-    /**
-     * Returns the current status of the restriction.
-     *
-     * @param restrictions The application restrictions
-     * @return True if the app is allowed to say hello
-     */
-    private boolean canSayHello(Bundle restrictions) {
-        final boolean defaultValue = false;
-        boolean canSayHello = restrictions == null ? defaultValue :
-                restrictions.getBoolean("can_say_hello", defaultValue);
-        Log.d(TAG, "canSayHello: " + canSayHello);
-        return canSayHello;
+    private void updateCanSayHello(RestrictionEntry entry, Bundle restrictions) {
+        boolean canSayHello;
+        if (restrictions == null || !restrictions.containsKey(KEY_CAN_SAY_HELLO)) {
+            canSayHello = entry.getSelectedState();
+        } else {
+            canSayHello = restrictions.getBoolean(KEY_CAN_SAY_HELLO);
+        }
+        mTextSayHello.setText(canSayHello ?
+                R.string.explanation_can_say_hello_true :
+                R.string.explanation_can_say_hello_false);
+        mButtonSayHello.setEnabled(canSayHello);
+    }
+
+    private void updateMessage(RestrictionEntry entry, Bundle restrictions) {
+        if (restrictions == null || !restrictions.containsKey(KEY_MESSAGE)) {
+            mMessage = entry.getSelectedString();
+        } else {
+            mMessage = restrictions.getString(KEY_MESSAGE);
+        }
+    }
+
+    private void updateNumber(RestrictionEntry entry, Bundle restrictions) {
+        int number;
+        if (restrictions == null || !restrictions.containsKey(KEY_NUMBER)) {
+            number = entry.getIntValue();
+        } else {
+            number = restrictions.getInt(KEY_NUMBER);
+        }
+        mTextNumber.setText(getString(R.string.your_number, number));
+    }
+
+    private void updateRank(RestrictionEntry entry, Bundle restrictions) {
+        String rank;
+        if (restrictions == null || !restrictions.containsKey(KEY_RANK)) {
+            rank = entry.getSelectedString();
+        } else {
+            rank = restrictions.getString(KEY_RANK);
+        }
+        mTextRank.setText(getString(R.string.your_rank, rank));
+    }
+
+    private void updateApprovals(RestrictionEntry entry, Bundle restrictions) {
+        String[] approvals;
+        if (restrictions == null || !restrictions.containsKey(KEY_APPROVALS)) {
+            approvals = entry.getAllSelectedStrings();
+        } else {
+            approvals = restrictions.getStringArray(KEY_APPROVALS);
+        }
+        String text;
+        if (approvals == null || approvals.length == 0) {
+            text = getString(R.string.none);
+        } else {
+            text = TextUtils.join(", ", approvals);
+        }
+        mTextApprovals.setText(getString(R.string.approvals_you_have, text));
     }
 
     @Override
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.say_hello: {
-                Toast.makeText(getActivity(), R.string.message_hello, Toast.LENGTH_SHORT).show();
+                Toast.makeText(getActivity(), getString(R.string.message, mMessage),
+                        Toast.LENGTH_SHORT).show();
                 break;
             }
         }

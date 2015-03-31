@@ -1,0 +1,12 @@
+page.tags="DeviceOwner"
+sample.group=Admin
+@jd:body
+
+<p>
+
+This app demonstrates how to use device owner features. Use the NfcProvisioning sample to set up
+this app as the device owner of your test device (This requires wiping out the device and resseting
+it as an unprovisioned device). As a device owner, this app can configure global settings, and
+enforce use of a specific launcher.
+
+        </p>

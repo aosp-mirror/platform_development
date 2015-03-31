@@ -1,0 +1,20 @@
+page.tags="XYZTouristAttractions"
+sample.group=Wearable
+@jd:body
+
+<p>
+
+This sample aims to be as close to a real world example of a mobile
+and Wear app combination as possible. It has a more refined design
+and also provides a practical example of how a mobile app would
+interact and communicate with its wear counterpart.
+
+The app itself is modeled after a hypothetical tourist attractions
+app that notifies the user when they are in close proximity to
+notable points of interest.
+
+The Wear component loads a full wearable app that shows images,
+summary information and provides quick actions for nearby tourist
+attractions in a GridViewPager UI component.
+
+        </p>
