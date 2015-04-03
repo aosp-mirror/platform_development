@@ -81,6 +81,7 @@ public class AnimationLoading extends Activity {
             addBall(650, 50);
             addBall(800, 50);
             addBall(950, 50);
+            addBall(800, 50, Color.YELLOW);
         }
 
         private void createAnimation() {
@@ -126,9 +127,19 @@ public class AnimationLoading extends Activity {
                     }
                 });
 
+                // This animation has an accelerate interpolator applied on each
+                // keyframe interval. In comparison, the animation defined in
+                // R.anim.object_animator_pvh_kf uses the default linear interpolator
+                // throughout the animation. As these two animations use the
+                // exact same path, the effect of the per-keyframe interpolator
+                // has been made obvious.
+                ObjectAnimator animPvhKfInterpolated = (ObjectAnimator) AnimatorInflater.
+                        loadAnimator(appContext, R.anim.object_animator_pvh_kf_interpolated);
+                animPvhKfInterpolated.setTarget(balls.get(7));
+
                 animation = new AnimatorSet();
                 ((AnimatorSet) animation).playTogether(anim, fader, seq, colorizer, animPvh,
-                        animPvhKf, faderKf);
+                        animPvhKf, faderKf, animPvhKfInterpolated);
 
             }
         }

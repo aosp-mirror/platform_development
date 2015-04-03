@@ -18,14 +18,23 @@
                 android:duration="1000"
                 android:repeatCount="1"
                 android:repeatMode="reverse">
+    <!-- BEGIN_INCLUDE(KeyframeResources) -->
     <propertyValuesHolder android:propertyName="x" >
         <keyframe android:fraction="0" android:value="800" />
-        <keyframe android:fraction=".2" android:value="1000" />
-        <keyframe android:fraction="1" android:value="400" />
+        <keyframe android:fraction=".2"
+                  android:interpolator="@android:anim/accelerate_interpolator"
+                  android:value="1000" />
+        <keyframe android:fraction="1"
+                  android:interpolator="@android:anim/accelerate_interpolator"
+                  android:value="400" />
     </propertyValuesHolder>
     <propertyValuesHolder android:propertyName="y" >
         <keyframe/>
-        <keyframe android:fraction=".2" android:value="300" />
-        <keyframe android:value="1000" />
+        <keyframe android:fraction=".2"
+                  android:interpolator="@android:anim/accelerate_interpolator"
+                  android:value="300"/>
+        <keyframe android:interpolator="@android:anim/accelerate_interpolator"
+                  android:value="1000" />
     </propertyValuesHolder>
+    <!-- END_INCLUDE(KeyframeResources) -->
 </objectAnimator>
