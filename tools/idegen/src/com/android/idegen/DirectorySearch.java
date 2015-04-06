@@ -17,6 +17,8 @@
 package com.android.idegen;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
+import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 
@@ -25,6 +27,7 @@ import java.io.FileNotFoundException;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -146,15 +149,26 @@ public class DirectorySearch {
                 // src/java
                 //   or
                 // java/src
+                //   or
+                // src/main/java/java
                 //
-                // In either of these cases, we don't want the parent.
+                // In first two cases, we don't want the parent.
+                // In third case we want the parent of the last "java", the last "java" is actually
+                // part of namespace.
                 ImmutableList<File> dirs = findSourceDirs(child);
-                if (dirs.isEmpty()) {
+                // filter out the third case.
+                Collection<File> filteredDirs = Collections2.filter(dirs, new Predicate<File>() {
+                    @Override
+                    public boolean apply(File input) {
+                        return !input.getAbsolutePath().endsWith("java/java");
+                    }
+                });
+                if (filteredDirs.isEmpty()) {
                     if (SOURCE_DIRS.contains(child.getName())) {
                         builder.add(child);
                     }
                 } else {
-                    builder.addAll(dirs);
+                    builder.addAll(filteredDirs);
                 }
             }
         }

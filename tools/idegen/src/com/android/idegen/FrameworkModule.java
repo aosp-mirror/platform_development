@@ -27,9 +27,17 @@ import java.io.IOException;
  */
 public class FrameworkModule extends Module {
 
+    private static final String REL_OUT_LIB_DIR = "out/target/common/obj/JAVA_LIBRARIES";
+
     // Framework needs a special constant for it's intermediates because it does not follow
     // normal conventions.
-    private static final String FRAMEWORK_INTERMEDIATES = "framework-res_intermediates";
+    private static final ImmutableList<String> FRAMEWORK_APP_INTERMEDIATES = ImmutableList.of(
+            "framework-res_intermediates"
+           );
+    private static final ImmutableList<String> FRAMEWORK_LIB_INTERMEDIATES = ImmutableList.of(
+            "framework_intermediates",
+            "services.core_intermediates"
+    );
 
     public FrameworkModule(File moduleDir) throws IOException {
         super(Preconditions.checkNotNull(moduleDir), false);
@@ -38,15 +46,26 @@ public class FrameworkModule extends Module {
     @Override
     protected String buildIntermediates() throws IOException {
         StringBuilder sb = new StringBuilder();
-        File intermediates = new File(DirectorySearch.getRepoRoot(),
-                REL_OUT_APP_DIR + File.separator +  FRAMEWORK_INTERMEDIATES);
+        for (String intermediate : FRAMEWORK_APP_INTERMEDIATES) {
+            appendContentRoot(sb, DirectorySearch.getRepoRoot() + File.separator +
+                    REL_OUT_APP_DIR + File.separator + intermediate);
+        }
+        for (String intermediate : FRAMEWORK_LIB_INTERMEDIATES) {
+            appendContentRoot(sb, DirectorySearch.getRepoRoot() + File.separator +
+                    REL_OUT_LIB_DIR + File.separator + intermediate);
+        }
+        return sb.toString();
+    }
+
+    private void appendContentRoot(StringBuilder stringBuilder, String rootPath)
+            throws IOException {
+        File intermediates = new File(rootPath);
         ImmutableList<File> intermediateSrcDirs = DirectorySearch.findSourceDirs(intermediates);
-        sb.append("    <content url=\"file://").append(intermediates).append("\">\n");
+        stringBuilder.append("    <content url=\"file://").append(intermediates).append("\">\n");
         for (File src : intermediateSrcDirs) {
-            sb.append("      <sourceFolder url=\"file://")
+            stringBuilder.append("      <sourceFolder url=\"file://")
                     .append(src.getCanonicalPath()).append("\" isTestSource=\"false\" />\n");
         }
-        sb.append("    </content>\n");
-        return sb.toString();
+        stringBuilder.append("    </content>\n");
     }
 }
