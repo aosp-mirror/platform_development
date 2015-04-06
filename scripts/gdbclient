@@ -127,19 +127,24 @@ function gdbclient() {
   local GDB=
   local GDB64=
   local CPU_ABI=`adb shell getprop ro.product.cpu.abilist | sed s/.$//`
+  # TODO: Derive this differently to correctly support multi-arch. We could try to parse
+  #       /proc/pid/exe. Right now, we prefer 64bit by checking those entries first.
+  # TODO: Correctly support native bridge, which makes parsing abilist very brittle.
+  # Note: Do NOT sort the entries alphabetically because of this. Fugu's abilist is
+  #       "x86,armeabi-v7a,armeabi", and we need to grab the "x86".
   # TODO: we assume these are available via $PATH
   if [[ $CPU_ABI =~ (^|,)arm64 ]]; then
     GDB=arm-linux-androideabi-gdb
     GDB64=aarch64-linux-android-gdb
-  elif [[ $CPU_ABI =~ (^|,)arm ]]; then
-    GDB=arm-linux-androideabi-gdb
   elif [[ $CPU_ABI =~ (^|,)x86_64 ]]; then
-    GDB=x86_64-linux-android-gdb
-  elif [[ $CPU_ABI =~ (^|,)x86 ]]; then
     GDB=x86_64-linux-android-gdb
   elif [[ $CPU_ABI =~ (^|,)mips64 ]]; then
     GDB=mipsel-linux-android-gdb
     GDB64=mips64el-linux-android-gdb
+  elif [[ $CPU_ABI =~ (^|,)x86 ]]; then    # See note above for order.
+    GDB=x86_64-linux-android-gdb
+  elif [[ $CPU_ABI =~ (^|,)arm ]]; then
+    GDB=arm-linux-androideabi-gdb
   elif [[ $CPU_ABI =~ (^|,)mips ]]; then
     GDB=mipsel-linux-android-gdb
   else
