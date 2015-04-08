@@ -1272,6 +1272,21 @@
                   android:exported="false"
                   android:enabled="@bool/atLeastHoneycombMR2" />
 
+        <activity android:name=".content.ProcessTextLauncher"
+                android:label="@string/process_text_title" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+        <activity android:name=".content.ProcessText" >
+            <intent-filter >
+                <action android:name="android.intent.action.PROCESS_TEXT"/>
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+        </activity>
+
         <!-- ************************************* -->
         <!--     HARDWARE PACKAGE SAMPLES          -->
         <!-- ************************************* -->
