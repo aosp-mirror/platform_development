@@ -492,6 +492,11 @@ frameworks/support/v17/leanback/res                                             
 frameworks/support/v17/leanback/src/.readme                                                       extras/android/support/v17/leanback/src/.readme
 ${OUT_DIR}/target/common/obj/PACKAGING/android-support-v17-leanback_intermediates/android-support-v17-leanback.jar    extras/android/support/v17/leanback/libs/android-support-v17-leanback.jar
 
+frameworks/support/design/AndroidManifest.xml                                                     extras/android/support/design/AndroidManifest.xml
+frameworks/support/design/res                                                                     extras/android/support/design/res
+frameworks/support/design/src/.readme                                                             extras/android/support/design/src/.readme
+${OUT_DIR}/target/common/obj/PACKAGING/android-support-design_intermediates/android-support-design.jar    extras/android/support/design/libs/android-support-design.jar
+
 ##############################################################################
 # Tests Component
 ##############################################################################
