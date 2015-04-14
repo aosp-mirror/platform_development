@@ -37,8 +37,14 @@ if [ "$1" = "--clean" ]; then
 fi
 
 if [ "$1" = "--prep" ]; then
-  find $ANDROID_HOST_OUT -name '*.gcda' -delete
-  find $ANDROID_PRODUCT_OUT -name '*.gcda' -delete
+  if [ -d "$ANDROID_HOST_OUT" ]; then
+    find $ANDROID_HOST_OUT -name '*.gcda' -delete
+  fi
+
+  if [ -d "$ANDROID_PRODUCT_OUT" ]; then
+    find $ANDROID_PRODUCT_OUT -name '*.gcda' -delete
+  fi
+
   exit 0
 fi
 
