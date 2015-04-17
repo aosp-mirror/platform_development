@@ -481,6 +481,7 @@ ${OUT_DIR}/target/common/obj/PACKAGING/android-support-v7-cardview_intermediates
 # TODO: add .project, .classpath, etc.
 frameworks/support/v7/recyclerview/README.txt                                                     extras/android/support/v7/recyclerview/README.txt
 frameworks/support/v7/recyclerview/AndroidManifest.xml                                            extras/android/support/v7/recyclerview/AndroidManifest.xml
+frameworks/support/v7/recyclerview/res                                                            extras/android/support/v7/recyclerview/res
 ${OUT_DIR}/target/common/obj/PACKAGING/android-support-v7-recyclerview_intermediates/android-support-v7-recyclerview.jar    extras/android/support/v7/recyclerview/libs/android-support-v7-recyclerview.jar
 
 frameworks/support/v17/leanback/README.txt                                                        extras/android/support/v17/leanback/README.txt
