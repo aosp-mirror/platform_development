@@ -138,6 +138,7 @@ sdk/sdk-build.prop                            platforms/${PLATFORM_NAME}/build.p
 # the uper-jar file that apps link against. This is the public API
 ${OUT_DIR}/target/common/obj/PACKAGING/android_jar_intermediates/android.jar              platforms/${PLATFORM_NAME}/android.jar
 ${OUT_DIR}/target/common/obj/JAVA_LIBRARIES/android_uiautomator_intermediates/javalib.jar platforms/${PLATFORM_NAME}/uiautomator.jar
+${OUT_DIR}/target/common/obj/JAVA_LIBRARIES/org.apache.http.legacy_intermediates/javalib.jar platforms/${PLATFORM_NAME}/optional/org.apache.http.legacy.jar
 
 # the aidl precompiled include
 obj/framework.aidl platforms/${PLATFORM_NAME}/framework.aidl
