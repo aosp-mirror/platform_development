@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resources xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <!-- no translation found for recovery_installing (7864047928003865598) -->
+    <skip />
+    <!-- no translation found for recovery_erasing (4612809744968710197) -->
+    <skip />
+    <!-- no translation found for recovery_no_command (1915703879031023455) -->
+    <skip />
+    <string name="recovery_error" msgid="4550265746256727080">"ਅਸ਼ੁੱਧੀ!"</string>
+</resources>
