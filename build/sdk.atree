@@ -130,18 +130,21 @@ dalvik/dx/etc/mainDexClasses.rules            build-tools/${PLATFORM_NAME}/mainD
 ##############################################################################
 
 # version files for the SDK updater, from development.git
-${HOST_OUT}/development/sdk/platform_source.properties platforms/${PLATFORM_NAME}/source.properties
+${HOST_OUT}/development/sdk/platform_source.properties                                       platforms/${PLATFORM_NAME}/source.properties
 
 # copy build prop from out/.../sdk/
-sdk/sdk-build.prop                            platforms/${PLATFORM_NAME}/build.prop
+sdk/sdk-build.prop                                                                           platforms/${PLATFORM_NAME}/build.prop
 
-# the uper-jar file that apps link against. This is the public API
-${OUT_DIR}/target/common/obj/PACKAGING/android_jar_intermediates/android.jar              platforms/${PLATFORM_NAME}/android.jar
-${OUT_DIR}/target/common/obj/JAVA_LIBRARIES/android_uiautomator_intermediates/javalib.jar platforms/${PLATFORM_NAME}/uiautomator.jar
+# Main Public API jar
+${OUT_DIR}/target/common/obj/PACKAGING/android_jar_intermediates/android.jar                 platforms/${PLATFORM_NAME}/android.jar
+# optional API files.
+development/build/optional.json                                                              platforms/${PLATFORM_NAME}/optional/optional.json
 ${OUT_DIR}/target/common/obj/JAVA_LIBRARIES/org.apache.http.legacy_intermediates/javalib.jar platforms/${PLATFORM_NAME}/optional/org.apache.http.legacy.jar
+# deprecated APIs
+${OUT_DIR}/target/common/obj/JAVA_LIBRARIES/android_uiautomator_intermediates/javalib.jar    platforms/${PLATFORM_NAME}/uiautomator.jar
 
 # the aidl precompiled include
-obj/framework.aidl platforms/${PLATFORM_NAME}/framework.aidl
+obj/framework.aidl                                                                           platforms/${PLATFORM_NAME}/framework.aidl
 
 # emulator skins from sdk.git
 development/tools/emulator/skins/QVGA          platforms/${PLATFORM_NAME}/skins/QVGA
