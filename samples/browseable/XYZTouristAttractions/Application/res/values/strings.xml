@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Copyright 2015 Google Inc. All rights reserved.
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+  -->
+
+<resources>
+
+    <string name="empty_list">No attractions found nearby!</string>
+    <string name="nearby_attraction">Nearby tourist attraction</string>
+    <string name="action_test_notification">Test Notification</string>
+    <string name="action_test_notification_dialog">
+<![CDATA[
+This will trigger a rich notification that is bridged over to the Wear device.
+\n\nNote that the first time this runs it can take 20-30 seconds to transfer
+the image data (in practice, users wouldn\'t notice this as the notification
+would be triggered automatically and only show up after the data was
+transferred).
+]]>
+    </string>
+    <string name="action_test_microapp">Test Micro App</string>
+    <string name="action_test_microapp_dialog">
+<![CDATA[
+This will trigger a notification on Wear that lets you open up the full
+wearable app. A few things to note:\n\n
+• Ensure you have the wearable APK installed on your Wear device (debug builds
+require you to install it manually)\n\n
+• The first time this runs it can take 20-30 seconds to transfer the image
+data (in practice, users wouldn\'t notice this as the notification would only
+be triggered after the data was transferred)\n\n
+• The notification priority is set to the recommended default value so it may
+appear further down your stream
+]]>
+    </string>
+    <string name="action_test_toggle_geofence">Toggle Geofence Trigger</string>
+    <string name="action_map">Show on Map</string>
+
+</resources>

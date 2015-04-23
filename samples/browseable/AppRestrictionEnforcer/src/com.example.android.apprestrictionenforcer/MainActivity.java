@@ -18,24 +18,44 @@ package com.example.android.apprestrictionenforcer;
 
 import android.app.admin.DevicePolicyManager;
 import android.content.Context;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 
-public class MainActivity extends FragmentActivity {
+public class MainActivity extends FragmentActivity implements StatusFragment.StatusUpdatedListener {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main_real);
         if (null == savedInstanceState) {
-            DevicePolicyManager manager = (DevicePolicyManager)
-                    getSystemService(Context.DEVICE_POLICY_SERVICE);
-            if (manager.isProfileOwnerApp(getApplicationContext().getPackageName())) {
-                // If the managed profile is already set up, we show the main screen.
-                showMainFragment();
-            } else {
-                // If not, we show the set up screen.
+            DevicePolicyManager devicePolicyManager =
+                    (DevicePolicyManager) getSystemService(Context.DEVICE_POLICY_SERVICE);
+            PackageManager packageManager = getPackageManager();
+            if (!devicePolicyManager.isProfileOwnerApp(getApplicationContext().getPackageName())) {
+                // If the managed profile is not yet set up, we show the setup screen.
                 showSetupProfile();
+            } else {
+                try {
+                    ApplicationInfo info = packageManager.getApplicationInfo(
+                            Constants.PACKAGE_NAME_APP_RESTRICTION_SCHEMA,
+                            PackageManager.GET_UNINSTALLED_PACKAGES);
+                    if (0 == (info.flags & ApplicationInfo.FLAG_INSTALLED)) {
+                        // Need to reinstall the sample app
+                        showStatusProfile();
+                    } else if (devicePolicyManager.isApplicationHidden(
+                            EnforcerDeviceAdminReceiver.getComponentName(this),
+                            Constants.PACKAGE_NAME_APP_RESTRICTION_SCHEMA)) {
+                        // The app is installed but hidden in this profile
+                        showStatusProfile();
+                    } else {
+                        // Everything is clear; show the main screen
+                        showMainFragment();
+                    }
+                } catch (PackageManager.NameNotFoundException e) {
+                    showStatusProfile();
+                }
             }
         }
     }
@@ -46,10 +66,21 @@ public class MainActivity extends FragmentActivity {
                 .commit();
     }
 
+    private void showStatusProfile() {
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.container, new StatusFragment())
+                .commit();
+    }
+
     private void showMainFragment() {
         getSupportFragmentManager().beginTransaction()
                 .replace(R.id.container, new AppRestrictionEnforcerFragment())
                 .commit();
+    }
+
+    @Override
+    public void onStatusUpdated() {
+        showMainFragment();
     }
 
 }

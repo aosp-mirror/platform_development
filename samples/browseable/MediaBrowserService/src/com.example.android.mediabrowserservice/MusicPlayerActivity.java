@@ -25,8 +25,6 @@ import android.os.Bundle;
 public class MusicPlayerActivity extends Activity
         implements BrowseFragment.FragmentDataHelper {
 
-    private static final String TAG = MusicPlayerActivity.class.getSimpleName();
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
