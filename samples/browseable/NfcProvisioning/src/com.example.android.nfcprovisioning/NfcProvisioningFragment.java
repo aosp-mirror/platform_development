@@ -123,6 +123,12 @@ public class NfcProvisioningFragment extends Fragment implements
                 properties.put(e.getKey(), value);
             }
         }
+        // Make sure to put local time in the properties. This is necessary on some devices to
+        // reliably download the device owner APK from an HTTPS connection.
+        if (!properties.contains(DevicePolicyManager.EXTRA_PROVISIONING_LOCAL_TIME)) {
+            properties.put(DevicePolicyManager.EXTRA_PROVISIONING_LOCAL_TIME,
+                    String.valueOf(System.currentTimeMillis()));
+        }
         try {
             properties.store(stream, getString(R.string.nfc_comment));
             NdefRecord record = NdefRecord.createMime(
