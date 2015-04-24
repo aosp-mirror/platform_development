@@ -129,6 +129,7 @@ public class KeyStoreUsage extends Activity {
         ListView lv = (ListView) findViewById(R.id.entries_list);
         mAdapter = new AliasAdapter(getApplicationContext());
         lv.setAdapter(mAdapter);
+        lv.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
         lv.setOnItemClickListener(new OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -250,6 +251,8 @@ public class KeyStoreUsage extends Activity {
      * enabled or disabled.
      */
     private void setKeyActionButtonsEnabled(boolean enabled) {
+        mPlainText.setEnabled(enabled);
+        mCipherText.setEnabled(enabled);
         mSignButton.setEnabled(enabled);
         mVerifyButton.setEnabled(enabled);
         mDeleteButton.setEnabled(enabled);
