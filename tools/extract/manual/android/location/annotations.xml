@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <item name="android.location.LocationManager void removeProximityAlert(android.app.PendingIntent)">
+    <annotation name="android.support.annotation.RequiresPermission">
+      <val name="anyOf" val="{&quot;android.permission.ACCESS_COARSE_LOCATION&quot;, &quot;android.permission.ACCESS_FINE_LOCATION&quot;}" />
+      <val name="apis" val="&quot;..22&quot;" />
+    </annotation>
+  </item>
+  <item name="android.location.LocationManager void removeUpdates(android.location.LocationListener)">
+    <annotation name="android.support.annotation.RequiresPermission">
+      <val name="anyOf" val="{&quot;android.permission.ACCESS_COARSE_LOCATION&quot;, &quot;android.permission.ACCESS_FINE_LOCATION&quot;}" />
+      <val name="apis" val="&quot;..22&quot;" />
+    </annotation>
+  </item>
+</root>
