@@ -1,0 +1,6 @@
+<resources>
+    <string-array name="android_wear_capabilities" translatable="false">
+        <!-- declaring that phone can handle confirmation messages -->
+        <item>confirmation_handler</item>
+    </string-array>
+</resources>

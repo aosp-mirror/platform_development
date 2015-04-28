@@ -64,6 +64,7 @@ import java.util.concurrent.TimeUnit;
  * When the quiz ends, this listener receives a message telling it to create an end-of-quiz report.
  */
 public class QuizListenerService extends WearableListenerService {
+
     private static final String TAG = "QuizSample";
     private static final int QUIZ_REPORT_NOTIF_ID = -1; // Never used by question notifications.
     private static final Map<Integer, Integer> questionNumToDrawableId;
