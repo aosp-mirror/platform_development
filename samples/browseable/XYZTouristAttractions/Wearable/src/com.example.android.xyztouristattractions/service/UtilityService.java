@@ -20,14 +20,19 @@ import android.app.IntentService;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
+import android.util.Log;
 
+import com.example.android.xyztouristattractions.R;
 import com.example.android.xyztouristattractions.common.Constants;
 import com.example.android.xyztouristattractions.common.Utils;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.wearable.CapabilityApi;
+import com.google.android.gms.wearable.Node;
 import com.google.android.gms.wearable.Wearable;
 
 import java.util.Iterator;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -35,6 +40,7 @@ import java.util.concurrent.TimeUnit;
  * operations that do not necessarily need to be tied to a UI.
  */
 public class UtilityService extends IntentService {
+
     private static final String TAG = UtilityService.class.getSimpleName();
 
     private static final String ACTION_CLEAR_NOTIFICATION = "clear_notification";
@@ -42,6 +48,7 @@ public class UtilityService extends IntentService {
     private static final String ACTION_START_DEVICE_ACTIVITY = "start_device_activity";
     private static final String EXTRA_START_PATH = "start_path";
     private static final String EXTRA_START_ACTIVITY_INFO = "start_activity_info";
+    private static final long GET_CAPABILITY_TIMEOUT_S = 10;
 
     public static void clearNotification(Context context) {
         Intent intent = new Intent(context, UtilityService.class);
@@ -131,7 +138,8 @@ public class UtilityService extends IntentService {
     }
 
     /**
-     * Sends the actual message to ask other devices to start an activity
+     * Sends the actual message to ask other devices that are capable of showing "details" to start
+     * the appropriate activity
      *
      * @param path the path to pass to the wearable message API
      * @param extraInfo extra info that varies based on the path being sent
@@ -145,14 +153,24 @@ public class UtilityService extends IntentService {
                 Constants.GOOGLE_API_CLIENT_TIMEOUT_S, TimeUnit.SECONDS);
 
         if (connectionResult.isSuccess() && googleApiClient.isConnected()) {
-            Iterator<String> itr = Utils.getNodes(googleApiClient).iterator();
-            while (itr.hasNext()) {
-                // Loop through all connected nodes
-                Wearable.MessageApi.sendMessage(
-                        googleApiClient, itr.next(), path, extraInfo.getBytes());
+            CapabilityApi.GetCapabilityResult result = Wearable.CapabilityApi.getCapability(
+                    googleApiClient,
+                    getApplicationContext().getString(R.string.show_detail_capability_name),
+                    CapabilityApi.FILTER_REACHABLE)
+                    .await(GET_CAPABILITY_TIMEOUT_S, TimeUnit.SECONDS);
+            if (result.getStatus().isSuccess()) {
+                Set<Node> nodes = result.getCapability().getNodes();
+                for (Node node : nodes) {
+                    Wearable.MessageApi.sendMessage(
+                            googleApiClient, node.getId(), path, extraInfo.getBytes());
+                }
+            } else {
+                Log.e(TAG, "startDeviceActivityInternal() Failed to get capabilities, status: "
+                        + result.getStatus().getStatusMessage());
             }
+
+            googleApiClient.disconnect();
         }
-        googleApiClient.disconnect();
     }
 
 }

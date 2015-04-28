@@ -45,8 +45,6 @@ public class DataLayerListenerService extends WearableListenerService {
     public static final String COUNT_PATH = "/count";
     public static final String IMAGE_PATH = "/image";
     public static final String IMAGE_KEY = "photo";
-    private static final String COUNT_KEY = "count";
-    private static final int MAX_LOG_TAG_LENGTH = 23;
     GoogleApiClient mGoogleApiClient;
 
     @Override
@@ -63,11 +61,12 @@ public class DataLayerListenerService extends WearableListenerService {
         LOGD(TAG, "onDataChanged: " + dataEvents);
         final List<DataEvent> events = FreezableUtils.freezeIterable(dataEvents);
         dataEvents.close();
-        if(!mGoogleApiClient.isConnected()) {
+        if (!mGoogleApiClient.isConnected() || !mGoogleApiClient.isConnecting()) {
             ConnectionResult connectionResult = mGoogleApiClient
                     .blockingConnect(30, TimeUnit.SECONDS);
             if (!connectionResult.isSuccess()) {
-                Log.e(TAG, "DataLayerListenerService failed to connect to GoogleApiClient.");
+                Log.e(TAG, "DataLayerListenerService failed to connect to GoogleApiClient, "
+                        + "error code: " + connectionResult.getErrorCode());
                 return;
             }
         }

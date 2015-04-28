@@ -22,4 +22,5 @@
     <string name="notification_title">DelayedConfirmation</string>
     <string name="notification_timer_selected">Timer Selected</string>
     <string name="notification_timer_finished">Timer Finished</string>
+    <string name="no_device_found">No device able to confirm was found</string>
 </resources>

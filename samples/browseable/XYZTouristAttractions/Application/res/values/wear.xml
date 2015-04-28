@@ -1,0 +1,7 @@
+<resources>
+    <string-array name="android_wear_capabilities" translatable="false">
+        <!-- declaring that phone has the capability to show details -->
+        <item>@string/show_detail_capability_name</item>
+    </string-array>
+</resources>
+
