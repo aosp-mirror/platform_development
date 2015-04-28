@@ -1,0 +1,7 @@
+<resources>
+    <string-array name="android_wear_capabilities">
+        <!-- declaring that phone provides find_me capability -->
+        <item>find_me</item>
+    </string-array>
+</resources>
+

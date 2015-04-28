@@ -23,19 +23,23 @@ import android.os.Bundle;
 import android.support.wearable.view.DelayedConfirmationView;
 import android.util.Log;
 import android.view.View;
+import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.wearable.CapabilityApi;
+import com.google.android.gms.wearable.CapabilityInfo;
 import com.google.android.gms.wearable.MessageApi;
 import com.google.android.gms.wearable.Node;
-import com.google.android.gms.wearable.NodeApi;
 import com.google.android.gms.wearable.Wearable;
 
+import java.util.Set;
 
 public class MainActivity extends Activity implements
         DelayedConfirmationView.DelayedConfirmationListener,
-        GoogleApiClient.OnConnectionFailedListener {
+        GoogleApiClient.OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks,
+        CapabilityApi.CapabilityListener {
 
     private static final String TAG = "DelayedConfirmation";
     private static final int NUM_SECONDS = 5;
@@ -43,8 +47,14 @@ public class MainActivity extends Activity implements
     private static final String TIMER_SELECTED_PATH = "/timer_selected";
     private static final String TIMER_FINISHED_PATH = "/timer_finished";
 
+    /* name of the capability that the phone side provides */
+    private static final String CONFIRMATION_HANDLER_CAPABILITY_NAME = "confirmation_handler";
+
     private DelayedConfirmationView delayedConfirmationView;
     private GoogleApiClient mGoogleApiClient;
+
+    /* the preferred note that can handle the confirmation capability */
+    private Node mConfirmationHandlerNode;
 
     @Override
     public void onCreate(Bundle b) {
@@ -55,6 +65,7 @@ public class MainActivity extends Activity implements
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addApi(Wearable.API)
                 .addOnConnectionFailedListener(this)
+                .addConnectionCallbacks(this)
                 .build();
     }
 
@@ -67,11 +78,13 @@ public class MainActivity extends Activity implements
     }
 
     @Override
-    protected void onDestroy() {
+    protected void onPause() {
         if (mGoogleApiClient.isConnected()) {
+            Wearable.CapabilityApi.removeCapabilityListener(mGoogleApiClient, this,
+                    CONFIRMATION_HANDLER_CAPABILITY_NAME);
             mGoogleApiClient.disconnect();
         }
-        super.onDestroy();
+        super.onPause();
     }
 
     /**
@@ -112,32 +125,94 @@ public class MainActivity extends Activity implements
     @Override
     public void onConnectionFailed(ConnectionResult connectionResult) {
         Log.e(TAG, "Failed to connect to Google Api Client");
+        mConfirmationHandlerNode = null;
     }
 
     private void sendMessageToCompanion(final String path) {
-        Wearable.NodeApi.getConnectedNodes(mGoogleApiClient).setResultCallback(
-                new ResultCallback<NodeApi.GetConnectedNodesResult>() {
-                    @Override
-                    public void onResult(NodeApi.GetConnectedNodesResult getConnectedNodesResult) {
-                        for (final Node node : getConnectedNodesResult.getNodes()) {
-                            Wearable.MessageApi.sendMessage(mGoogleApiClient, node.getId(), path,
-                                    new byte[0]).setResultCallback(getSendMessageResultCallback());
-                        }
-                    }
-                }
-        );
-
+        if (mConfirmationHandlerNode != null) {
+            Wearable.MessageApi.sendMessage(mGoogleApiClient, mConfirmationHandlerNode.getId(),
+                    path, new byte[0])
+                    .setResultCallback(getSendMessageResultCallback(mConfirmationHandlerNode));
+        } else {
+            Toast.makeText(this, R.string.no_device_found, Toast.LENGTH_SHORT).show();
+        }
     }
 
-    private ResultCallback<MessageApi.SendMessageResult> getSendMessageResultCallback() {
+    private ResultCallback<MessageApi.SendMessageResult> getSendMessageResultCallback(
+            final Node node) {
         return new ResultCallback<MessageApi.SendMessageResult>() {
             @Override
             public void onResult(MessageApi.SendMessageResult sendMessageResult) {
                 if (!sendMessageResult.getStatus().isSuccess()) {
-                    Log.e(TAG, "Failed to connect to Google Api Client with status "
+                    Log.e(TAG, "Failed to send message with status "
                             + sendMessageResult.getStatus());
+                } else {
+                    Log.d(TAG, "Sent confirmation message to node " + node.getDisplayName());
                 }
             }
         };
+    }
+
+    private void setupConfirmationHandlerNode() {
+        Wearable.CapabilityApi.addCapabilityListener(
+                mGoogleApiClient, this, CONFIRMATION_HANDLER_CAPABILITY_NAME);
+
+        Wearable.CapabilityApi.getCapability(
+                mGoogleApiClient, CONFIRMATION_HANDLER_CAPABILITY_NAME,
+                CapabilityApi.FILTER_REACHABLE).setResultCallback(
+                new ResultCallback<CapabilityApi.GetCapabilityResult>() {
+                    @Override
+                    public void onResult(CapabilityApi.GetCapabilityResult result) {
+                        if (!result.getStatus().isSuccess()) {
+                            Log.e(TAG, "setupConfirmationHandlerNode() Failed to get capabilities, "
+                                    + "status: " + result.getStatus().getStatusMessage());
+                            return;
+                        }
+                        updateConfirmationCapability(result.getCapability());
+                    }
+                });
+    }
+
+    private void updateConfirmationCapability(CapabilityInfo capabilityInfo) {
+        Set<Node> connectedNodes = capabilityInfo.getNodes();
+        if (connectedNodes.isEmpty()) {
+            mConfirmationHandlerNode = null;
+        } else {
+            mConfirmationHandlerNode = pickBestNode(connectedNodes);
+        }
+    }
+
+    /**
+     * We pick a node that is capabale of handling the confirmation. If there is more than one,
+     * then we would prefer the one that is directly connected to this device. In general,
+     * depending on the situation and requirements, the "best" node might be picked based on other
+     * criteria.
+     */
+    private Node pickBestNode(Set<Node> connectedNodes) {
+        Node best = null;
+        if (connectedNodes != null) {
+            for (Node node : connectedNodes) {
+                if (node.isNearby()) {
+                    return node;
+                }
+                best = node;
+            }
+        }
+        return best;
+    }
+
+    @Override
+    public void onConnected(Bundle bundle) {
+        setupConfirmationHandlerNode();
+    }
+
+    @Override
+    public void onConnectionSuspended(int cause) {
+        mConfirmationHandlerNode = null;
+    }
+
+    @Override
+    public void onCapabilityChanged(CapabilityInfo capabilityInfo) {
+        updateConfirmationCapability(capabilityInfo);
     }
 }

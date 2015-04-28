@@ -1,0 +1,7 @@
+<resources>
+    <string-array name="android_wear_capabilities">
+        <!-- declaring that phone provides reset_quiz capability -->
+        <item>reset_quiz</item>
+    </string-array>
+</resources>
+

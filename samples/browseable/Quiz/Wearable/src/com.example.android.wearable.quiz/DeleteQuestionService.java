@@ -16,6 +16,9 @@
 
 package com.example.android.wearable.quiz;
 
+import static com.example.android.wearable.quiz.Constants.CONNECT_TIMEOUT_MS;
+import static com.example.android.wearable.quiz.Constants.QUESTION_WAS_DELETED;
+
 import android.app.IntentService;
 import android.content.Intent;
 import android.net.Uri;
@@ -32,9 +35,6 @@ import com.google.android.gms.wearable.PutDataRequest;
 import com.google.android.gms.wearable.Wearable;
 
 import java.util.concurrent.TimeUnit;
-
-import static com.example.android.wearable.quiz.Constants.CONNECT_TIMEOUT_MS;
-import static com.example.android.wearable.quiz.Constants.QUESTION_WAS_DELETED;
 
 /**
  * Used to update quiz status on the phone when user dismisses a question on the watch.
