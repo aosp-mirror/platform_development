@@ -37,18 +37,18 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.GoogleApiClient.ConnectionCallbacks;
 import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListener;
+import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.data.FreezableUtils;
 import com.google.android.gms.wearable.Asset;
+import com.google.android.gms.wearable.DataApi;
 import com.google.android.gms.wearable.DataApi.DataItemResult;
 import com.google.android.gms.wearable.DataEvent;
 import com.google.android.gms.wearable.DataEventBuffer;
-import com.google.android.gms.wearable.MessageApi.SendMessageResult;
-import com.google.android.gms.wearable.DataApi;
 import com.google.android.gms.wearable.MessageApi;
+import com.google.android.gms.wearable.MessageApi.SendMessageResult;
 import com.google.android.gms.wearable.MessageEvent;
 import com.google.android.gms.wearable.Node;
 import com.google.android.gms.wearable.NodeApi;
@@ -69,8 +69,8 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Receives its own events using a listener API designed for foreground activities. Updates a data
- * item every second while it is open. Also allows user to take a photo and send that as an asset to
- * the paired wearable.
+ * item every second while it is open. Also allows user to take a photo and send that as an asset
+ * to the paired wearable.
  */
 public class MainActivity extends Activity implements DataApi.DataListener,
         MessageApi.MessageListener, NodeApi.NodeListener, ConnectionCallbacks,
@@ -78,7 +78,9 @@ public class MainActivity extends Activity implements DataApi.DataListener,
 
     private static final String TAG = "MainActivity";
 
-    /** Request code for launching the Intent to resolve Google Play services errors. */
+    /**
+     * Request code for launching the Intent to resolve Google Play services errors.
+     */
     private static final int REQUEST_RESOLVE_ERROR = 1000;
 
     private static final String START_ACTIVITY_PATH = "/start-activity";
@@ -92,7 +94,6 @@ public class MainActivity extends Activity implements DataApi.DataListener,
     private boolean mCameraSupported = false;
 
     private ListView mDataItemList;
-    private Button mTakePhotoBtn;
     private Button mSendPhotoBtn;
     private ImageView mThumbView;
     private Bitmap mImageBitmap;
@@ -320,7 +321,7 @@ public class MainActivity extends Activity implements DataApi.DataListener,
     }
 
     private Collection<String> getNodes() {
-        HashSet<String> results = new HashSet<String>();
+        HashSet<String> results = new HashSet<>();
         NodeApi.GetConnectedNodesResult nodes =
                 Wearable.NodeApi.getConnectedNodes(mGoogleApiClient).await();
 
@@ -358,7 +359,9 @@ public class MainActivity extends Activity implements DataApi.DataListener,
         }
     }
 
-    /** Sends an RPC to start a fullscreen Activity on the wearable. */
+    /**
+     * Sends an RPC to start a fullscreen Activity on the wearable.
+     */
     public void onStartWearableActivityClick(View view) {
         LOGD(TAG, "Generating RPC");
 
@@ -367,7 +370,9 @@ public class MainActivity extends Activity implements DataApi.DataListener,
         new StartWearableActivityTask().execute();
     }
 
-    /** Generates a DataItem based on an incrementing count. */
+    /**
+     * Generates a DataItem based on an incrementing count.
+     */
     private class DataItemGenerator implements Runnable {
 
         private int count = 0;
@@ -462,13 +467,9 @@ public class MainActivity extends Activity implements DataApi.DataListener,
      * Sets up UI components and their callback handlers.
      */
     private void setupViews() {
-        mTakePhotoBtn = (Button) findViewById(R.id.takePhoto);
         mSendPhotoBtn = (Button) findViewById(R.id.sendPhoto);
-
-        // Shows the image received from the handset
         mThumbView = (ImageView) findViewById(R.id.imageView);
         mDataItemList = (ListView) findViewById(R.id.data_item_list);
-
         mStartActivityBtn = findViewById(R.id.start_wearable_activity);
     }
 

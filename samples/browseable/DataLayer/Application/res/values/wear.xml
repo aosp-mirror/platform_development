@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Copyright (C) 2014 The Android Open Source Project
+<!-- Copyright (C) 2015 The Android Open Source Project
 
      Licensed under the Apache License, Version 2.0 (the "License");
      you may not use this file except in compliance with the License.
@@ -14,11 +14,10 @@
      limitations under the License.
 -->
 
-<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
-    <string name="app_name">Data Layer Sample Wearable App</string>
-    <string name="intro">Waiting for data to arrive\u2026</string>
-    <string name="capability_2_notification">Capability 2</string>
-    <string name="capabilities_1_and_2_notification">Capabilities 1 and 2</string>
-    <string name="no_device">No device provides the requested capabilities</string>
-    <string name="connected_nodes">Nodes: %1$s</string>
+<resources>
+    <string-array name="android_wear_capabilities" translatable="false">
+        <!-- declaring the provided capabilities -->
+        <item>capability_1</item>
+        <item>capability_2</item>
+    </string-array>
 </resources>

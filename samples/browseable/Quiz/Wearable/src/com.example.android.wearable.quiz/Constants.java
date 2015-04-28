@@ -38,4 +38,5 @@ public final class Constants {
     public static final String RESET_QUIZ_PATH = "/reset_quiz";
 
     public static final int CONNECT_TIMEOUT_MS = 100;
+    public static final int GET_CAPABILITIES_TIMEOUT_MS = 5000;
 }
