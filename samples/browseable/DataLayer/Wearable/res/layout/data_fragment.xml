@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Copyright (C) 2014 The Android Open Source Project
+<!-- Copyright (C) 2015 The Android Open Source Project
 
      Licensed under the Apache License, Version 2.0 (the "License");
      you may not use this file except in compliance with the License.
@@ -15,24 +15,26 @@
 -->
 
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:background="@color/white">
+    android:id="@+id/layout"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:background="@color/black">
 
-    <android.support.wearable.view.GridViewPager
-        android:id="@+id/pager"
+    <ListView
+        android:id="@+id/dataItem_list"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"
+        android:transcriptMode="alwaysScroll"/>
 
-    <android.support.wearable.view.DotsPageIndicator
-        android:id="@+id/page_indicator"
+    <TextView
+        android:id="@+id/intro"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginBottom="10dp"
-        android:padding="5dp"
-        android:background="@drawable/rounded_background">
-    </android.support.wearable.view.DotsPageIndicator>
-
+        android:layout_centerInParent="true"
+        android:textSize="20sp"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
+        android:gravity="center"
+        android:fontFamily="sans-serif-condensed-light"
+        android:text="@string/intro" />
 </RelativeLayout>

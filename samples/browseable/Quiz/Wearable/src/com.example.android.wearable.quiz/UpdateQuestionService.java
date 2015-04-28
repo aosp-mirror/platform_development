@@ -16,6 +16,10 @@
 
 package com.example.android.wearable.quiz;
 
+import static com.example.android.wearable.quiz.Constants.CHOSEN_ANSWER_CORRECT;
+import static com.example.android.wearable.quiz.Constants.QUESTION_INDEX;
+import static com.example.android.wearable.quiz.Constants.QUESTION_WAS_ANSWERED;
+
 import android.app.IntentService;
 import android.app.NotificationManager;
 import android.content.Intent;
@@ -34,15 +38,12 @@ import com.google.android.gms.wearable.Wearable;
 
 import java.util.concurrent.TimeUnit;
 
-import static com.example.android.wearable.quiz.Constants.CHOSEN_ANSWER_CORRECT;
-import static com.example.android.wearable.quiz.Constants.QUESTION_INDEX;
-import static com.example.android.wearable.quiz.Constants.QUESTION_WAS_ANSWERED;
-
 /**
  * Updates quiz status on the phone when user selects an answer to a question on the watch.
  */
 public class UpdateQuestionService extends IntentService
         implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
+
     public static final String EXTRA_QUESTION_CORRECT = "extra_question_correct";
     public static final String EXTRA_QUESTION_INDEX = "extra_question_index";
 
