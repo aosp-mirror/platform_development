@@ -25,6 +25,8 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.logging.Logger;
 
 /**
@@ -131,15 +133,25 @@ public class IntellijProject {
         String vcsTemplate = Files.toString(new File(DirectorySearch.findTemplateDir(),
                 "idea" + File.separator + VCS_TEMPLATE_FILE_NAME), CHARSET);
 
-        StringBuilder sb = new StringBuilder();
+        Set<String> gitRoots = new HashSet<>();
         for (Module mod : modules) {
             File dir = mod.getDir();
-            File gitRoot = new File(dir, ".git");
-            if (gitRoot.exists()) {
-                sb.append("    <mapping directory=\"").append(dir.getCanonicalPath()).append(
-                        "\" vcs=\"Git\" />\n");
+            // Look for git root in the module directory and its parents.
+            while (dir != null) {
+                File gitRoot = new File(dir, ".git");
+                if (gitRoot.exists()) {
+                    gitRoots.add(dir.getCanonicalPath());
+                    break;
+                } else {
+                    dir = dir.getParentFile();
+                }
             }
         }
+        StringBuilder sb = new StringBuilder();
+        for (String root : gitRoots) {
+            sb.append("    <mapping directory=\"").append(root).append("\" vcs=\"Git\" />\n");
+        }
+
         vcsTemplate = vcsTemplate.replace("@VCS@", sb.toString());
         Files.write(vcsTemplate, new File(ideaDir, "vcs.xml"), CHARSET);
     }
