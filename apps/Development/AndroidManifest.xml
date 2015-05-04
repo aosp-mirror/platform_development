@@ -87,8 +87,7 @@
             </intent-filter>
         </activity>
 
-        <activity android:name="SyncAdapterDriver" android:label="Sync Tester"
-                  android:theme="@android:style/Theme.Light">
+        <activity android:name="SyncAdapterDriver" android:label="Sync Tester">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.TEST" />
