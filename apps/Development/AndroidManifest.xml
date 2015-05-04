@@ -66,6 +66,8 @@
         </activity>
         <activity android:name="PackageSummary" android:label="Package Summary">
         </activity>
+        <activity android:name="ShowActivity" android:label="Activity Detail">
+        </activity>
         <activity android:name="AppPicker"
                 android:theme="@android:style/Theme.Dialog">
         </activity>
