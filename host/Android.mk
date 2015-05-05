@@ -15,7 +15,7 @@
 #
 LOCAL_PATH := $(my-dir)
 
-dir := $(wildcard $(LOCAL_PATH)/$(HOST_PREBUILT_TAG))
+dir := $(wildcard $(LOCAL_PATH)/$(HOST_OS))
 ifdef dir
   include $(call first-makefiles-under,$(dir))
 endif
