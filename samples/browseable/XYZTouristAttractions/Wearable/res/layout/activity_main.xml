@@ -41,9 +41,6 @@
         android:layout_height="wrap_content"
         android:layout_width="wrap_content"
         app:dotFadeWhenIdle="false"
-        app:dotFadeInDuration="0"
-        app:dotFadeOutDuration="0"
-        app:dotFadeOutDelay="0"
         android:visibility="gone" />
 
     <android.support.wearable.view.DismissOverlayView
