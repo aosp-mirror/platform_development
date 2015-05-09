@@ -318,6 +318,7 @@ developers/build/prebuilts/androidtv                                         sam
 
 # Wearable sample tree
 developers/build/prebuilts/gradle/AgendaData                    samples/${PLATFORM_NAME}/wearable/AgendaData
+developers/build/prebuilts/gradle/AlwaysOn                      samples/${PLATFORM_NAME}/wearable/AlwaysOn
 developers/build/prebuilts/gradle/DataLayer                     samples/${PLATFORM_NAME}/wearable/DataLayer
 developers/build/prebuilts/gradle/DelayedConfirmation           samples/${PLATFORM_NAME}/wearable/DelayedConfirmation
 developers/build/prebuilts/gradle/ElizaChat                     samples/${PLATFORM_NAME}/wearable/ElizaChat
