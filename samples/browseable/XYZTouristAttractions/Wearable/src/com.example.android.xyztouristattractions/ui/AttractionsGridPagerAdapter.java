@@ -25,11 +25,11 @@ import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Handler;
 import android.support.wearable.activity.ConfirmationActivity;
+import android.support.wearable.view.ActionPage;
 import android.support.wearable.view.CardFrame;
 import android.support.wearable.view.CardScrollView;
 import android.support.wearable.view.GridPagerAdapter;
 import android.support.wearable.view.GridViewPager;
-import android.support.wearable.view.WatchViewStub;
 import android.text.TextUtils;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -97,7 +97,7 @@ public class AttractionsGridPagerAdapter extends GridPagerAdapter
     }
 
     @Override
-    protected Object instantiateItem(ViewGroup container, int row, final int column) {
+    public Object instantiateItem(ViewGroup container, int row, final int column) {
         if (mAttractions != null && mAttractions.size() > 0) {
             final Attraction attraction = mAttractions.get(row);
             switch (column) {
@@ -150,48 +150,30 @@ public class AttractionsGridPagerAdapter extends GridPagerAdapter
                     return cardScrollView;
                 case PAGER_NAVIGATE_ACTION_COLUMN:
                     // The navigate action
-                    final WatchViewStub navStub = (WatchViewStub) mLayoutInflater.inflate(
+                    final ActionPage navActionPage = (ActionPage) mLayoutInflater.inflate(
                             R.layout.gridpager_action, container, false);
 
-                    navStub.setOnClickListener(getStartActionClickListener(
+                    navActionPage.setOnClickListener(getStartActionClickListener(
                             attraction, Constants.START_NAVIGATION_PATH,
                             ConfirmationActivity.SUCCESS_ANIMATION));
+                    navActionPage.setImageResource(R.drawable.ic_full_directions_walking);
+                    navActionPage.setText(mContext.getString(R.string.action_navigate));
 
-                    navStub.setOnLayoutInflatedListener(
-                            new WatchViewStub.OnLayoutInflatedListener() {
-                        @Override
-                        public void onLayoutInflated(WatchViewStub watchViewStub) {
-                            ImageView imageView = (ImageView) navStub.findViewById(R.id.imageView);
-                            imageView.setImageResource(R.drawable.ic_full_directions_walking);
-                            TextView textView = (TextView) navStub.findViewById(R.id.textView);
-                            textView.setText(R.string.action_navigate);
-                        }
-                    });
-
-                    container.addView(navStub);
-                    return navStub;
+                    container.addView(navActionPage);
+                    return navActionPage;
                 case PAGER_OPEN_ACTION_COLUMN:
                     // The "open on device" action
-                    final WatchViewStub openStub = (WatchViewStub) mLayoutInflater.inflate(
+                    final ActionPage openActionPage = (ActionPage) mLayoutInflater.inflate(
                             R.layout.gridpager_action, container, false);
 
-                    openStub.setOnClickListener(getStartActionClickListener(
+                    openActionPage.setOnClickListener(getStartActionClickListener(
                             attraction, Constants.START_ATTRACTION_PATH,
                             ConfirmationActivity.OPEN_ON_PHONE_ANIMATION));
+                    openActionPage.setImageResource(R.drawable.ic_full_openonphone);
+                    openActionPage.setText(mContext.getString(R.string.action_open));
 
-                    openStub.setOnLayoutInflatedListener(
-                            new WatchViewStub.OnLayoutInflatedListener() {
-                        @Override
-                        public void onLayoutInflated(WatchViewStub watchViewStub) {
-                            ImageView imageView = (ImageView) openStub.findViewById(R.id.imageView);
-                            imageView.setImageResource(R.drawable.ic_full_open_on_device);
-                            TextView textView = (TextView) openStub.findViewById(R.id.textView);
-                            textView.setText(R.string.action_open);
-                        }
-                    });
-
-                    container.addView(openStub);
-                    return openStub;
+                    container.addView(openActionPage);
+                    return openActionPage;
             }
         }
         return new View(mContext);
@@ -209,7 +191,7 @@ public class AttractionsGridPagerAdapter extends GridPagerAdapter
     }
 
     @Override
-    protected void destroyItem(ViewGroup viewGroup, int row, int column, Object object) {
+    public void destroyItem(ViewGroup viewGroup, int row, int column, Object object) {
         mDelayedHide.remove((View) object);
         viewGroup.removeView((View)object);
     }
@@ -242,6 +224,7 @@ public class AttractionsGridPagerAdapter extends GridPagerAdapter
     private void startAction(Attraction attraction, String pathName, int confirmAnimationType) {
         Intent intent = new Intent(mContext, ConfirmationActivity.class);
         intent.putExtra(ConfirmationActivity.EXTRA_ANIMATION_TYPE, confirmAnimationType);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
         mContext.startActivity(intent);
 
         UtilityService.clearNotification(mContext);
@@ -270,8 +253,8 @@ public class AttractionsGridPagerAdapter extends GridPagerAdapter
     }
 
     public interface OnChromeFadeListener {
-        abstract void onChromeFadeIn();
-        abstract void onChromeFadeOut();
+        void onChromeFadeIn();
+        void onChromeFadeOut();
     }
 
     /**

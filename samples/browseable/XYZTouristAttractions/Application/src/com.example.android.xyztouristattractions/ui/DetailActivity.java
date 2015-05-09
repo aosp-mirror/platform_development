@@ -24,7 +24,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.ActivityOptionsCompat;
-import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 
 import com.example.android.xyztouristattractions.R;
@@ -33,7 +33,7 @@ import com.example.android.xyztouristattractions.R;
  * The tourist attraction detail activity screen which contains the details of
  * a single attraction.
  */
-public class DetailActivity extends ActionBarActivity {
+public class DetailActivity extends AppCompatActivity {
 
     private static final String EXTRA_ATTRACTION = "attraction";
 
