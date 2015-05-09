@@ -16,11 +16,14 @@
   limitations under the License.
   -->
 
-<android.support.wearable.view.WatchViewStub
+<android.support.wearable.view.ActionPage
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/actionpage"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    app:rectLayout="@layout/gridpager_action_square"
-    app:roundLayout="@layout/gridpager_action_round"
-    android:clickable="true" />
+    android:src="@drawable/ic_full_openonphone"
+    android:text="@string/action_open"
+    android:maxLines="1"
+    android:color="@color/colorPrimary"
+    app:rippleColor="@color/colorAccent" />

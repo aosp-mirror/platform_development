@@ -84,6 +84,8 @@ public class AttractionsActivity extends Activity
         mAdapter = new AttractionsGridPagerAdapter(this, mAttractions);
         mAdapter.setOnChromeFadeListener(this);
         mGridViewPager.setAdapter(mAdapter);
+        mDotsPageIndicator.setPager(mGridViewPager);
+        mDotsPageIndicator.setOnPageChangeListener(mAdapter);
 
         topFrameLayout.setOnApplyWindowInsetsListener(new View.OnApplyWindowInsetsListener() {
             @Override
@@ -243,8 +245,6 @@ public class AttractionsActivity extends Activity
                 // Update UI based on the result of the background processing
                 mAdapter.setData(result);
                 mAdapter.notifyDataSetChanged();
-                mDotsPageIndicator.setPager(mGridViewPager);
-                mDotsPageIndicator.setOnPageChangeListener(mAdapter);
                 mProgressBar.setVisibility(View.GONE);
                 mDotsPageIndicator.setVisibility(View.VISIBLE);
                 mGridViewPager.setVisibility(View.VISIBLE);
