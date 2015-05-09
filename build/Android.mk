@@ -124,7 +124,7 @@ $(foreach lib, $(ANDROID_SUPPORT_LIBRARIES), $(eval $(call _package_sdk_library,
 
 ALL_SDK_FILES += $(HOST_OUT)/development/sdk/generated-api-versions.xml
 
-api_gen_jar := $(TOPDIR)prebuilts/tools/common/api-generator/api-generator-22.9.2.jar
+api_gen_jar := $(TOPDIR)prebuilts/tools/common/api-generator/api-generator-22.9.1.jar
 api_gen_deps := \
   $(TOPDIR)prebuilts/tools/common/kxml2-tools/kxml2-2.3.0.jar \
   $(TOPDIR)prebuilts/tools/common/asm-tools/asm-4.0.jar \
