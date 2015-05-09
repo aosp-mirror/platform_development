@@ -37,7 +37,7 @@ import android.util.Log;
 import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.GooglePlayServicesClient.ConnectionCallbacks;
+import com.google.android.gms.common.api.GoogleApiClient.ConnectionCallbacks;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListener;
@@ -48,7 +48,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends Activity implements ConnectionCallbacks,
-        OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks {
+        OnConnectionFailedListener {
 
     // Internal List of Geofence objects. In a real app, these might be provided by an API based on
     // locations within the user's proximity.
@@ -141,10 +141,6 @@ public class MainActivity extends Activity implements ConnectionCallbacks,
             int errorCode = connectionResult.getErrorCode();
             Log.e(TAG, "Connection to Google Play services failed with error code " + errorCode);
         }
-    }
-
-    @Override
-    public void onDisconnected() {
     }
 
     /**

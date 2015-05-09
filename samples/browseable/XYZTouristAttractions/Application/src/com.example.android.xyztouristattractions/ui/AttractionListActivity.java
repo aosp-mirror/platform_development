@@ -16,9 +16,9 @@
 
 package com.example.android.xyztouristattractions.ui;
 
-import android.app.AlertDialog;
 import android.os.Bundle;
-import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.AlertDialog;
+import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
@@ -31,7 +31,7 @@ import com.example.android.xyztouristattractions.service.UtilityService;
  * The main tourist attraction activity screen which contains a list of
  * attractions sorted by distance.
  */
-public class AttractionListActivity extends ActionBarActivity {
+public class AttractionListActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
