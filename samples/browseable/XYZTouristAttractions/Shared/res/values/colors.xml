@@ -17,8 +17,8 @@
 
 <resources>
 
-    <color name="text_background">#90000000</color>
-    <color name="transparent_actionbar_background">#22000000</color>
-    <color name="lighter_gray">#ddd</color>
+    <color name="colorPrimary">#4e6cef</color>
+    <color name="colorPrimaryDark">#2a36b1</color>
+    <color name="colorAccent">#ff7043</color>
 
 </resources>
