@@ -255,10 +255,15 @@ public class MainActivity extends WearableActivity {
         long timeMs = System.currentTimeMillis();
 
         if (isAmbient()) {
-            /** Prevents time drift while calculating trigger time (based on state). */
+            /** Calculate next trigger time (based on state). */
             long delayMs = AMBIENT_INTERVAL_MS - (timeMs % AMBIENT_INTERVAL_MS);
             long triggerTimeMs = timeMs + delayMs;
 
+            /**
+             * Note: Make sure you have set activity launchMode to singleInstance in the manifest.
+             * Otherwise, it is easy for the AlarmManager launch intent to open a new activity
+             * every time the Alarm is triggered rather than reusing this Activity.
+             */
             mAmbientStateAlarmManager.cancel(mAmbientStatePendingIntent);
             mAmbientStateAlarmManager.setExact(
                     AlarmManager.RTC_WAKEUP,
@@ -266,7 +271,7 @@ public class MainActivity extends WearableActivity {
                     mAmbientStatePendingIntent);
 
         } else {
-            /** Prevents time drift. */
+            /** Calculate next trigger time (based on state). */
             long delayMs = ACTIVE_INTERVAL_MS - (timeMs % ACTIVE_INTERVAL_MS);
 
             mActiveModeUpdateHandler.removeMessages(MSG_UPDATE_SCREEN);
