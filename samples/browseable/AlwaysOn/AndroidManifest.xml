@@ -30,6 +30,12 @@
         <!--If you want your app to run on pre-22, then set required to false -->
         <uses-library android:name="com.google.android.wearable" android:required="false" />
 
+        <!--
+            To update the screen more than once per minute in ambient mode, developers should set
+            the launch mode for the activity to single instance. Otherwise, the AlarmManager launch
+            intent will open a new activity every time the Alarm is triggered rather than reusing
+            the same (already active) Activity.
+        -->
         <activity android:name="com.example.android.wearable.wear.alwayson.MainActivity"
             android:label="@string/app_name"
             android:launchMode="singleInstance"
