@@ -175,7 +175,6 @@ development/tools/templates/ic_launcher_xhdpi.png           platforms/${PLATFORM
 
 # Eclipse Editors support
 framework/layoutlib.jar                   platforms/${PLATFORM_NAME}/data/layoutlib.jar
-framework/icu4j.jar                       platforms/${PLATFORM_NAME}/data/icu4j.jar
 frameworks/base/core/res/res              platforms/${PLATFORM_NAME}/data/res
 docs/activity_actions.txt                 platforms/${PLATFORM_NAME}/data/activity_actions.txt
 docs/broadcast_actions.txt                platforms/${PLATFORM_NAME}/data/broadcast_actions.txt
