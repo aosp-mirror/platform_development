@@ -498,6 +498,11 @@ frameworks/support/design/res                                                   
 frameworks/support/design/src/.readme                                                             extras/android/support/design/src/.readme
 ${OUT_DIR}/target/common/obj/PACKAGING/android-support-design_intermediates/android-support-design.jar    extras/android/support/design/libs/android-support-design.jar
 
+frameworks/support/percent/AndroidManifest.xml                                                     extras/android/support/percent/AndroidManifest.xml
+frameworks/support/percent/res                                                                     extras/android/support/percent/res
+frameworks/support/percent/src/.readme                                                             extras/android/support/percent/src/.readme
+${OUT_DIR}/target/common/obj/PACKAGING/android-support-percent_intermediates/android-support-percent.jar    extras/android/support/percent/libs/android-support-percent.jar
+
 ##############################################################################
 # Tests Component
 ##############################################################################
