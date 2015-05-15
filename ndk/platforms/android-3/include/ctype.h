@@ -59,7 +59,7 @@ extern const short	*_toupper_tab_;
 
 /* extern __inline is a GNU C extension */
 #ifdef __GNUC__
-#  if defined(__GNUC_STDC_INLINE__)
+#  if defined(__GNUC_STDC_INLINE__) || defined(__cplusplus) || defined(__cplusplus)
 #define	__CTYPE_INLINE	extern __inline __attribute__((__gnu_inline__))
 #  else
 #define	__CTYPE_INLINE	extern __inline
