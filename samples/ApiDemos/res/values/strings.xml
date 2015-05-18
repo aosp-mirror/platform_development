@@ -77,6 +77,7 @@
     <string name="activity_modern_animation_zoom">Modern zoom in</string>
     <string name="activity_scale_up_animation">Scale up</string>
     <string name="activity_zoom_thumbnail_animation">Thumbnail zoom</string>
+    <string name="activity_no_animation">No Animation</string>
 
     <string name="activity_save_restore">App/Activity/Save &amp; Restore State</string>
     <string name="save_restore_msg">Demonstration of saving and restoring activity state in onSaveInstanceState() and onCreate().</string>
