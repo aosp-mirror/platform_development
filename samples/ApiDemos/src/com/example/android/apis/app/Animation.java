@@ -26,6 +26,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
@@ -35,6 +36,8 @@ import android.widget.Button;
  * <p>Example of using a custom animation when transitioning between activities.</p>
  */
 public class Animation extends Activity {
+    private static final String TAG = "Animation";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -55,6 +58,8 @@ public class Animation extends Activity {
             button.setOnClickListener(mScaleUpListener);
             button = (Button)findViewById(R.id.zoom_thumbnail_animation);
             button.setOnClickListener(mZoomThumbnailListener);
+            button = (Button)findViewById(R.id.no_animation);
+            button.setOnClickListener(mNoAnimationListener);
         } else {
             findViewById(R.id.modern_fade_animation).setEnabled(false);
             findViewById(R.id.modern_zoom_animation).setEnabled(false);
@@ -63,8 +68,14 @@ public class Animation extends Activity {
         }
     }
 
+    @Override
+    public void onEnterAnimationComplete() {
+        Log.i(TAG, "onEnterAnimationComplete");
+    }
+
     private OnClickListener mFadeListener = new OnClickListener() {
         public void onClick(View v) {
+            Log.i(TAG, "Starting fade-in animation...");
             // Request the next activity transition (here starting a new one).
             startActivity(new Intent(Animation.this, AlertDialogSamples.class));
             // Supply a custom animation.  This one will just fade the new
@@ -77,6 +88,7 @@ public class Animation extends Activity {
 
     private OnClickListener mZoomListener = new OnClickListener() {
         public void onClick(View v) {
+            Log.i(TAG, "Starting zoom-in animation...");
             // Request the next activity transition (here starting a new one).
             startActivity(new Intent(Animation.this, AlertDialogSamples.class));
             // This is a more complicated animation, involving transformations
@@ -90,6 +102,7 @@ public class Animation extends Activity {
 
     private OnClickListener mModernFadeListener = new OnClickListener() {
         public void onClick(View v) {
+            Log.i(TAG, "Starting modern-fade-in animation...");
             // Create the desired custom animation, involving transformations
             // on both this (exit) and the new (enter) activity.  Note how for
             // the duration of the animation we force the exiting activity
@@ -104,6 +117,7 @@ public class Animation extends Activity {
 
     private OnClickListener mModernZoomListener = new OnClickListener() {
         public void onClick(View v) {
+            Log.i(TAG, "Starting modern-zoom-in animation...");
             // Create a more complicated animation, involving transformations
             // on both this (exit) and the new (enter) activity.  Note how for
             // the duration of the animation we force the exiting activity
@@ -118,6 +132,7 @@ public class Animation extends Activity {
 
     private OnClickListener mScaleUpListener = new OnClickListener() {
         public void onClick(View v) {
+            Log.i(TAG, "Starting scale-up animation...");
             // Create a scale-up animation that originates at the button
             // being pressed.
             ActivityOptions opts = ActivityOptions.makeScaleUpAnimation(
@@ -129,6 +144,7 @@ public class Animation extends Activity {
 
     private OnClickListener mZoomThumbnailListener = new OnClickListener() {
         public void onClick(View v) {
+            Log.i(TAG, "Starting thumbnail-zoom animation...");
             // Create a thumbnail animation.  We are going to build our thumbnail
             // just from the view that was pressed.  We make sure the view is
             // not selected, because by the time the animation starts we will
@@ -146,5 +162,13 @@ public class Animation extends Activity {
             v.setDrawingCacheEnabled(false);
         }
     };
-}
 
+    private OnClickListener mNoAnimationListener = new OnClickListener() {
+        public void onClick(View v) {
+            Log.i(TAG, "Starting no animation transition...");
+            // Request the next activity transition (here starting a new one).
+            startActivity(new Intent(Animation.this, AlertDialogSamples.class));
+            overridePendingTransition(0, 0);
+        }
+    };
+}

@@ -59,5 +59,9 @@
         android:text="@string/activity_zoom_thumbnail_animation">
     </Button>
 
+    <Button android:id="@+id/no_animation"
+        android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:text="@string/activity_no_animation">
+    </Button>
 </LinearLayout>
 
