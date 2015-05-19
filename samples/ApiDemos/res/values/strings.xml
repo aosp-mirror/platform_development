@@ -1572,5 +1572,5 @@
     <string name="process_text_no_text_received">No text received.</string>
     <string name="process_text_no_text_process_intent_received">Try selecting some text in another app and find this app\'s name in the list of options for its selection menu.</string>
     <string name="process_text_send_title">Select text to process</string>
-    <string name="process_text_send_description">Select a piece of text from this box to trigger the text selection action mode. In there, you will find \"Content/Process Text\". That is because this app declares it can handle text processing intents. Try selecting that action to send the selected text to that activity and retrieve processed text back.</string>
+    <string name="process_text_send_description">Select a piece of text from this box to trigger the text selection action mode. In there, you will find \"ApiDemos\". That is because this app declares it can handle text processing intents. Try selecting that action to send the selected text to that activity and retrieve processed text back.</string>
 </resources>
