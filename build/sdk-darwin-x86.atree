@@ -22,15 +22,15 @@
 # revision as specified in the source.properties.
 
 
-lib/libLLVM.dylib                                     strip build-tools/${PLATFORM_NAME}/../lib/libLLVM.dylib
-lib/libbcc.dylib                                      strip build-tools/${PLATFORM_NAME}/../lib/libbcc.dylib
-lib/libbcinfo.dylib                                   strip build-tools/${PLATFORM_NAME}/../lib/libbcinfo.dylib
-lib/libclang.dylib                                    strip build-tools/${PLATFORM_NAME}/../lib/libclang.dylib
-lib/libc++.dylib                                      strip build-tools/${PLATFORM_NAME}/../lib/libc++.dylib
+lib/libLLVM.dylib                                     strip build-tools/${PLATFORM_NAME}/lib/libLLVM.dylib
+lib/libbcc.dylib                                      strip build-tools/${PLATFORM_NAME}/lib/libbcc.dylib
+lib/libbcinfo.dylib                                   strip build-tools/${PLATFORM_NAME}/lib/libbcinfo.dylib
+lib/libclang.dylib                                    strip build-tools/${PLATFORM_NAME}/lib/libclang.dylib
+lib/libc++.dylib                                      strip build-tools/${PLATFORM_NAME}/lib/libc++.dylib
 
-prebuilts/sdk/tools/darwin/bin/arm-linux-androideabi-ld   strip build-tools/${PLATFORM_NAME}/arm-linux-androideabi-ld
-prebuilts/sdk/tools/darwin/bin/i686-linux-android-ld      strip build-tools/${PLATFORM_NAME}/i686-linux-android-ld
-prebuilts/sdk/tools/darwin/bin/mipsel-linux-android-ld    strip build-tools/${PLATFORM_NAME}/mipsel-linux-android-ld
+prebuilts/sdk/tools/darwin/bin/arm-linux-androideabi-ld   strip build-tools/${PLATFORM_NAME}/bin/arm-linux-androideabi-ld
+prebuilts/sdk/tools/darwin/bin/i686-linux-android-ld      strip build-tools/${PLATFORM_NAME}/bin/i686-linux-android-ld
+prebuilts/sdk/tools/darwin/bin/mipsel-linux-android-ld    strip build-tools/${PLATFORM_NAME}/bin/mipsel-linux-android-ld
 
 dalvik/dx/etc/mainDexClasses                                build-tools/${PLATFORM_NAME}/mainDexClasses
 
