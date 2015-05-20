@@ -53,6 +53,9 @@ bin/hprof-conv                          strip platform-tools/hprof-conv
 # API database for tools such as lint
 development/sdk/generated-api-versions.xml    platform-tools/api/api-versions.xml
 
+# API annotations database for lint
+prebuilts/sdk/sdk-annotations/annotations.zip   platform-tools/api/annotations.zip
+
 # systrace
 external/chromium-trace/systrace.py                   platform-tools/systrace/systrace.py
 external/chromium-trace/systrace-legacy.py            platform-tools/systrace/systrace-legacy.py
