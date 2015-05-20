@@ -58,50 +58,50 @@ bin/etc1tool.exe                       strip platform-tools/etc1tool.exe
 # at build-time. Packaging will later change that to the actual build-tools
 # revision as specified in the source.properties.
 
-rm build-tools/${PLATFORM_NAME}/aapt
+rm build-tools/${PLATFORM_NAME}/bin/aapt
 bin/aapt.exe                            strip build-tools/${PLATFORM_NAME}/bin/aapt.exe
 
-rm build-tools/${PLATFORM_NAME}/split-select
+rm build-tools/${PLATFORM_NAME}/bin/split-select
 bin/split-select.exe                    strip build-tools/${PLATFORM_NAME}/bin/split-select.exe
 
-rm build-tools/${PLATFORM_NAME}/aidl
+rm build-tools/${PLATFORM_NAME}/bin/aidl
 bin/aidl.exe                            strip build-tools/${PLATFORM_NAME}/bin/aidl.exe
 
-rm build-tools/${PLATFORM_NAME}/zipalign
+rm build-tools/${PLATFORM_NAME}/bin/zipalign
 bin/zipalign.exe                        strip build-tools/${PLATFORM_NAME}/bin/zipalign.exe
 
 rm build-tools/${PLATFORM_NAME}/dx
 dalvik/dx/etc/dx.bat                          build-tools/${PLATFORM_NAME}/dx.bat
-rm build-tools/${PLATFORM_NAME}/dexdump
+rm build-tools/${PLATFORM_NAME}/bin/dexdump
 bin/dexdump.exe                         strip build-tools/${PLATFORM_NAME}/bin/dexdump.exe
 
 rm build-tools/${PLATFORM_NAME}/llvm-rs-cc
 bin/llvm-rs-cc.exe                      strip build-tools/${PLATFORM_NAME}/bin/llvm-rs-cc.exe
 
-rm build-tools/${PLATFORM_NAME}/../lib/libLLVM.so
+rm build-tools/${PLATFORM_NAME}/lib/libLLVM.so
 lib/libLLVM.dll                         strip build-tools/${PLATFORM_NAME}/lib/libLLVM.dll
 
-rm build-tools/${PLATFORM_NAME}/../lib/libclang.so
+rm build-tools/${PLATFORM_NAME}/lib/libclang.so
 lib/libclang.dll                        strip build-tools/${PLATFORM_NAME}/lib/libclang.dll
 
 #bcc not yet compiled on windows
 
-rm build-tools/${PLATFORM_NAME}/../lib/libbcc.so
+rm build-tools/${PLATFORM_NAME}/lib/libbcc.so
 lib/libbcc.dll                          strip build-tools/${PLATFORM_NAME}/lib/libbcc.dll
 
-rm build-tools/${PLATFORM_NAME}/../lib/libbcinfo.so
+rm build-tools/${PLATFORM_NAME}/lib/libbcinfo.so
 lib/libbcinfo.dll                       strip build-tools/${PLATFORM_NAME}/lib/libbcinfo.dll
 
-rm build-tools/${PLATFORM_NAME}/bcc_compat
+rm build-tools/${PLATFORM_NAME}/bin/bcc_compat
 bin/bcc_compat.exe                      strip build-tools/${PLATFORM_NAME}/bin/bcc_compat.exe
 
-rm build-tools/${PLATFORM_NAME}/arm-linux-androideabi-ld
+rm build-tools/${PLATFORM_NAME}/bin/arm-linux-androideabi-ld
 prebuilts/sdk/tools/windows/bin/arm-linux-androideabi-ld.exe   strip build-tools/${PLATFORM_NAME}/bin/arm-linux-androideabi-ld.exe
 
-rm build-tools/${PLATFORM_NAME}/i686-linux-android-ld
+rm build-tools/${PLATFORM_NAME}/bin/i686-linux-android-ld
 prebuilts/sdk/tools/windows/bin/i686-linux-android-ld.exe      strip build-tools/${PLATFORM_NAME}/bin/i686-linux-android-ld.exe
 
-rm build-tools/${PLATFORM_NAME}/mipsel-linux-android-ld
+rm build-tools/${PLATFORM_NAME}/bin/mipsel-linux-android-ld
 prebuilts/sdk/tools/windows/bin/mipsel-linux-android-ld.exe    strip build-tools/${PLATFORM_NAME}/bin/mipsel-linux-android-ld.exe
 
 dalvik/dx/etc/mainDexClasses.bat             build-tools/${PLATFORM_NAME}/mainDexClasses.bat
