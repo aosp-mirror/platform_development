@@ -23,7 +23,8 @@ import android.content.Context;
 import android.database.DataSetObserver;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.security.KeyPairGeneratorSpec;
+import android.security.keystore.KeyGenParameterSpec;
+import android.security.keystore.KeyProperties;
 import android.util.Base64;
 import android.util.Log;
 import android.view.View;
@@ -55,8 +56,6 @@ import java.security.SignatureException;
 import java.security.UnrecoverableEntryException;
 import java.security.cert.CertificateException;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.Enumeration;
 import java.util.List;
 
@@ -305,24 +304,18 @@ public class KeyStoreUsage extends Activity {
             try {
 // BEGIN_INCLUDE(generate)
                 /*
-                 * Generate a new entry in the KeyStore by using the
-                 * KeyPairGenerator API. We have to specify the attributes for a
-                 * self-signed X.509 certificate here so the KeyStore can attach
-                 * the public key part to it. It can be replaced later with a
-                 * certificate signed by a Certificate Authority (CA) if needed.
+                 * Generate a new EC key pair entry in the Android Keystore by
+                 * using the KeyPairGenerator API. The private key can only be
+                 * used for signing or verification and only with SHA-256 or
+                 * SHA-512 as the message digest.
                  */
-                Calendar cal = Calendar.getInstance();
-                Date now = cal.getTime();
-                cal.add(Calendar.YEAR, 1);
-                Date end = cal.getTime();
-
-                KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA", "AndroidKeyStore");
-                kpg.initialize(new KeyPairGeneratorSpec.Builder(getApplicationContext())
-                        .setAlias(alias)
-                        .setStartDate(now)
-                        .setEndDate(end)
-                        .setSerialNumber(BigInteger.valueOf(1))
-                        .setSubject(new X500Principal("CN=test1"))
+                KeyPairGenerator kpg = KeyPairGenerator.getInstance(
+                        KeyProperties.KEY_ALGORITHM_EC, "AndroidKeyStore");
+                kpg.initialize(new KeyGenParameterSpec.Builder(
+                        alias,
+                        KeyProperties.PURPOSE_SIGN | KeyProperties.PURPOSE_VERIFY)
+                        .setDigests(KeyProperties.DIGEST_SHA256,
+                            KeyProperties.DIGEST_SHA512)
                         .build());
 
                 KeyPair kp = kpg.generateKeyPair();
@@ -371,7 +364,7 @@ public class KeyStoreUsage extends Activity {
                     Log.w(TAG, "Not an instance of a PrivateKeyEntry");
                     return null;
                 }
-                Signature s = Signature.getInstance("SHA256withRSA");
+                Signature s = Signature.getInstance("SHA256withECDSA");
                 s.initSign(((PrivateKeyEntry) entry).getPrivateKey());
                 s.update(data);
                 byte[] signature = s.sign();
@@ -442,7 +435,7 @@ public class KeyStoreUsage extends Activity {
                     Log.w(TAG, "Not an instance of a PrivateKeyEntry");
                     return false;
                 }
-                Signature s = Signature.getInstance("SHA256withRSA");
+                Signature s = Signature.getInstance("SHA256withECDSA");
                 s.initVerify(((PrivateKeyEntry) entry).getCertificate());
                 s.update(data);
                 boolean valid = s.verify(signature);
