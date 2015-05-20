@@ -1,54 +1,17 @@
-#  dump dalvik backtrace
-define dbt
-    if $argc == 1
-        set $FP = $arg0
-    else
-        set $FP = $r5
-    end
-
-    set $frame = 0
-    set $savedPC = 0
-    while $FP
-        set $stackSave = $FP - sizeof(StackSaveArea)
-        set $savedPC = ((StackSaveArea *)$stackSave)->savedPc
-        set $method = ((StackSaveArea *)$stackSave)->method
-        printf "#%d\n", $frame
-        printf "    FP = %#x\n", $FP
-        printf "    stack save = %#x\n", $stackSave
-        printf "    Curr pc = %#x\n", ((StackSaveArea *) $stackSave)->xtra.currentPc
-        printf "    FP prev = %#x\n", ((StackSaveArea *) $stackSave)->prevFrame
-        if $method != 0
-            printf "    returnAddr: 0x%x\n", \
-                   ((StackSaveArea *)$stackSave)->returnAddr
-            printf "    class = %s\n", ((Method *) $method)->clazz->descriptor
-            printf "    method = %s (%#08x)\n", ((Method *) $method)->name, $method
-            printf "    signature = %s\n", ((Method *) $method)->shorty
-            printf "    bytecode offset = 0x%x\n", (short *) (((StackSaveArea *) $stackSave)->xtra.currentPc) - (short *) (((Method *) $method)->insns)
-            set $regSize = ((Method *) $method)->registersSize
-            set $insSize = ((Method *) $method)->insSize
-            set $index = 0
-            while $index < $regSize
-                printf "    v%d = %d", $index, ((int *)$FP)[$index]
-                if $regSize - $index <= $insSize
-                    printf " (in%d)\n", $insSize - $regSize + $index
-                else
-                    printf " (local%d)\n", $index
-                end
-                set $index = $index + 1
-            end
-        else
-            printf "    break frame\n"
-        end
-        set $FP = (int) ((StackSaveArea *)$stackSave)->prevFrame
-        set $frame = $frame + 1
-    end
-end
-
-document dbt
-    Unwind Dalvik stack frames. Argument 0 is the frame address of the top
-    frame. If omitted r5 will be used as the default (as the case in the
-    interpreter and JIT'ed code).
-end
+#
+# Copyright (C) 2014 The Android Open Source Project
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 # ART debugging.  ART uses SIGSEGV signals for internal purposes.  To allow
 # gdb to debug programs using ART we need to treat this signal specially.  We
