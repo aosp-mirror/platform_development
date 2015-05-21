@@ -31,7 +31,7 @@ import android.os.Message;
 import android.support.wearable.watchface.CanvasWatchFaceService;
 import android.support.wearable.watchface.WatchFaceService;
 import android.support.wearable.watchface.WatchFaceStyle;
-import android.text.format.Time;
+import android.text.format.DateFormat;
 import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.WindowInsets;
@@ -46,6 +46,7 @@ import com.google.android.gms.wearable.DataMap;
 import com.google.android.gms.wearable.DataMapItem;
 import com.google.android.gms.wearable.Wearable;
 
+import java.util.Calendar;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
@@ -125,8 +126,8 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService {
         final BroadcastReceiver mTimeZoneReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                mTime.clear(intent.getStringExtra("time-zone"));
-                mTime.setToNow();
+                mCalendar.setTimeZone(TimeZone.getDefault());
+                invalidate();
             }
         };
         boolean mRegisteredTimeZoneReceiver = false;
@@ -139,7 +140,7 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService {
         Paint mColonPaint;
         float mColonWidth;
         boolean mMute;
-        Time mTime;
+        Calendar mCalendar;
         boolean mShouldDrawColons;
         float mXOffset;
         float mYOffset;
@@ -185,7 +186,7 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService {
             mAmPmPaint = createTextPaint(resources.getColor(R.color.digital_am_pm));
             mColonPaint = createTextPaint(resources.getColor(R.color.digital_colons));
 
-            mTime = new Time();
+            mCalendar = Calendar.getInstance();
         }
 
         @Override
@@ -219,8 +220,7 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService {
                 registerReceiver();
 
                 // Update time zone in case it changed while we weren't visible.
-                mTime.clear(TimeZone.getDefault().getID());
-                mTime.setToNow();
+                mCalendar.setTimeZone(TimeZone.getDefault());
             } else {
                 unregisterReceiver();
 
@@ -403,18 +403,14 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService {
             return String.format("%02d", hour);
         }
 
-        private int convertTo12Hour(int hour) {
-            int result = hour % 12;
-            return (result == 0) ? 12 : result;
-        }
-
-        private String getAmPmString(int hour) {
-            return (hour < 12) ? mAmString : mPmString;
+        private String getAmPmString(int amPm) {
+            return amPm == Calendar.AM ? mAmString : mPmString;
         }
 
         @Override
         public void onDraw(Canvas canvas, Rect bounds) {
-            mTime.setToNow();
+            mCalendar.setTimeInMillis(System.currentTimeMillis());
+            boolean is24Hour = DateFormat.is24HourFormat(DigitalWatchFaceService.this);
 
             // Show colons for the first half of each second so the colons blink on when the time
             // updates.
@@ -425,7 +421,19 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService {
 
             // Draw the hours.
             float x = mXOffset;
-            String hourString = String.valueOf(convertTo12Hour(mTime.hour));
+            String hourString;
+            if (is24Hour) {
+                hourString = formatTwoDigitNumber(mCalendar.get(Calendar.HOUR_OF_DAY));
+            } else {
+                int hour = mCalendar.get(Calendar.HOUR);
+                if (hour == 0) {
+                    hour = 12;
+                }
+                hourString = String.valueOf(hour);
+                if (hour < 10) {
+                    x += mHourPaint.measureText("0");
+                }
+            }
             canvas.drawText(hourString, x, mYOffset, mHourPaint);
             x += mHourPaint.measureText(hourString);
 
@@ -437,22 +445,23 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService {
             x += mColonWidth;
 
             // Draw the minutes.
-            String minuteString = formatTwoDigitNumber(mTime.minute);
+            String minuteString = formatTwoDigitNumber(mCalendar.get(Calendar.MINUTE));
             canvas.drawText(minuteString, x, mYOffset, mMinutePaint);
             x += mMinutePaint.measureText(minuteString);
 
-            // In ambient and mute modes, draw AM/PM. Otherwise, draw a second blinking
-            // colon followed by the seconds.
-            if (isInAmbientMode() || mMute) {
-                x += mColonWidth;
-                canvas.drawText(getAmPmString(mTime.hour), x, mYOffset, mAmPmPaint);
-            } else {
+            // In unmuted interactive mode, draw a second blinking colon followed by the seconds.
+            // Otherwise, if we're in 12-hour mode, draw AM/PM
+            if (!isInAmbientMode() && !mMute) {
                 if (mShouldDrawColons) {
                     canvas.drawText(COLON_STRING, x, mYOffset, mColonPaint);
                 }
                 x += mColonWidth;
-                canvas.drawText(formatTwoDigitNumber(mTime.second), x, mYOffset,
-                        mSecondPaint);
+                canvas.drawText(formatTwoDigitNumber(
+                        mCalendar.get(Calendar.SECOND)), x, mYOffset, mSecondPaint);
+            } else if (!is24Hour) {
+                x += mColonWidth;
+                canvas.drawText(getAmPmString(
+                        mCalendar.get(Calendar.AM_PM)), x, mYOffset, mAmPmPaint);
             }
         }
 
