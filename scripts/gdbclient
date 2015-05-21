@@ -13,16 +13,16 @@ fi
 source $ANDROID_BUILD_TOP/build/envsetup.sh
 
 function adb_get_product_device() {
-  local candidate=`adb shell getprop ro.product.device | sed s/.$//`
+  local candidate=`adb shell getprop ro.product.device | tr -d '\r\n'`
   if [ -z $candidate ]; then
-    candidate=`adb shell getprop ro.hardware | sed s/.$//`
+    candidate=`adb shell getprop ro.hardware | tr -d '\r\n'`
   fi
   echo $candidate
 }
 
 # returns 0 when process is not traced
 function adb_get_traced_by() {
-  echo `adb shell cat /proc/$1/status | grep -e "^TracerPid:" | sed "s/^TracerPid:\t//" | sed s/.$//`
+  echo `adb shell cat /proc/$1/status | grep -e "^TracerPid:" | sed "s/^TracerPid:\t//" | tr -d '\r\n'`
 }
 
 function get_symbols_directory()
@@ -95,7 +95,7 @@ function gdbclient() {
     fi
   fi
 
-  local EXE=`adb shell readlink /proc/$PID/exe | sed s/.$//`
+  local EXE=`adb shell readlink /proc/$PID/exe | tr -d '\r\n'`
 
   if [ -z "$EXE" ]; then
     echo "Error: no such pid=$PID - is process still alive?"
@@ -126,7 +126,7 @@ function gdbclient() {
 
   local GDB=
   local GDB64=
-  local CPU_ABI=`adb shell getprop ro.product.cpu.abilist | sed s/.$//`
+  local CPU_ABI=`adb shell getprop ro.product.cpu.abilist | tr -d '\r\n'`
   # TODO: Derive this differently to correctly support multi-arch. We could try to parse
   #       /proc/pid/exe. Right now, we prefer 64bit by checking those entries first.
   # TODO: Correctly support native bridge, which makes parsing abilist very brittle.
