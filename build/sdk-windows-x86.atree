@@ -75,7 +75,7 @@ dalvik/dx/etc/dx.bat                          build-tools/${PLATFORM_NAME}/dx.ba
 rm build-tools/${PLATFORM_NAME}/bin/dexdump
 bin/dexdump.exe                         strip build-tools/${PLATFORM_NAME}/bin/dexdump.exe
 
-rm build-tools/${PLATFORM_NAME}/llvm-rs-cc
+rm build-tools/${PLATFORM_NAME}/bin/llvm-rs-cc
 bin/llvm-rs-cc.exe                      strip build-tools/${PLATFORM_NAME}/bin/llvm-rs-cc.exe
 
 rm build-tools/${PLATFORM_NAME}/lib/libLLVM.so
