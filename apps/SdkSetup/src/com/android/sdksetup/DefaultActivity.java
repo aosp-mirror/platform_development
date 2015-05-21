@@ -32,19 +32,21 @@ import android.provider.Settings;
  *
  */
 public class DefaultActivity extends Activity {
-    
+
     @Override
     protected void onCreate(Bundle icicle) {
         super.onCreate(icicle);
-        
+
         // Add a persistent setting to allow other apps to know the device has been provisioned.
         Settings.Global.putInt(getContentResolver(), Settings.Global.DEVICE_PROVISIONED, 1);
+
+        Settings.Secure.putInt(getContentResolver(), Settings.Secure.USER_SETUP_COMPLETE, 1);
 
         // Enable the GPS.
         // Not needed since this SDK will contain the Settings app.
         Settings.Secure.putString(getContentResolver(), Settings.Secure.LOCATION_PROVIDERS_ALLOWED,
                 LocationManager.GPS_PROVIDER);
-        
+
         // enable install from non market
         Settings.Global.putInt(getContentResolver(), Settings.Global.INSTALL_NON_MARKET_APPS, 1);
 
