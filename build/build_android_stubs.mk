@@ -19,6 +19,7 @@
 # resource files here.
 intermediates := $(TARGET_OUT_COMMON_INTERMEDIATES)/JAVA_LIBRARIES/$(sdk_stub_name)_intermediates
 full_target := $(intermediates)/classes.jar
+jack_lib := $(intermediates)/classes.jack
 src_dir := $(intermediates)/src
 classes_dir := $(intermediates)/classes
 framework_res_package := $(call intermediates-dir-for,APPS,framework-res,,COMMON)/package-export.apk
@@ -49,3 +50,6 @@ $(full_target): $(stub_timestamp) $(framework_res_package)
 	$(hide) mkdir -p $(dir $@)
 	$(hide) jar -cf $@ -C $(PRIVATE_CLASS_INTERMEDIATES_DIR) .
 	$(hide) jar -u0f $@ -C $(PRIVATE_CLASS_INTERMEDIATES_DIR) resources.arsc
+
+$(jack_lib) : $(full_target) $(JILL_JAR) $(JACK_JAR)
+	$(transform-jar-to-jack)
