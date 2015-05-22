@@ -31,10 +31,10 @@ import android.os.Bundle;
 import android.support.wearable.watchface.CanvasWatchFaceService;
 import android.support.wearable.watchface.WatchFaceService;
 import android.support.wearable.watchface.WatchFaceStyle;
-import android.text.format.Time;
 import android.util.Log;
 import android.view.SurfaceHolder;
 
+import java.util.Calendar;
 import java.util.TimeZone;
 
 /**
@@ -53,18 +53,20 @@ public class SweepWatchFaceService extends CanvasWatchFaceService {
     }
 
     private class Engine extends CanvasWatchFaceService.Engine {
+        static final float TWO_PI = (float) Math.PI * 2f;
+
         Paint mHourPaint;
         Paint mMinutePaint;
         Paint mSecondPaint;
         Paint mTickPaint;
         boolean mMute;
-        Time mTime;
+        Calendar mCalendar;
 
         final BroadcastReceiver mTimeZoneReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                mTime.clear(intent.getStringExtra("time-zone"));
-                mTime.setToNow();
+                mCalendar.setTimeZone(TimeZone.getDefault());
+                invalidate();
             }
         };
         boolean mRegisteredTimeZoneReceiver = false;
@@ -92,7 +94,7 @@ public class SweepWatchFaceService extends CanvasWatchFaceService {
                     .build());
 
             Resources resources = SweepWatchFaceService.this.getResources();
-            Drawable backgroundDrawable = resources.getDrawable(R.drawable.bg);
+            Drawable backgroundDrawable = resources.getDrawable(R.drawable.bg, null /* theme */);
             mBackgroundBitmap = ((BitmapDrawable) backgroundDrawable).getBitmap();
 
             mHourPaint = new Paint();
@@ -118,7 +120,7 @@ public class SweepWatchFaceService extends CanvasWatchFaceService {
             mTickPaint.setStrokeWidth(2.f);
             mTickPaint.setAntiAlias(true);
 
-            mTime = new Time();
+            mCalendar = Calendar.getInstance();
         }
 
         @Override
@@ -174,8 +176,7 @@ public class SweepWatchFaceService extends CanvasWatchFaceService {
                 Log.v(TAG, "onDraw");
             }
             long now = System.currentTimeMillis();
-            mTime.set(now);
-            int milliseconds = (int) (now % 1000);
+            mCalendar.setTimeInMillis(now);
 
             int width = bounds.width();
             int height = bounds.height();
@@ -208,11 +209,13 @@ public class SweepWatchFaceService extends CanvasWatchFaceService {
                         centerX + outerX, centerY + outerY, mTickPaint);
             }
 
-            float seconds = mTime.second + milliseconds / 1000f;
-            float secRot = seconds / 30f * (float) Math.PI;
-            int minutes = mTime.minute;
-            float minRot = minutes / 30f * (float) Math.PI;
-            float hrRot = ((mTime.hour + (minutes / 60f)) / 6f ) * (float) Math.PI;
+            float seconds =
+                    mCalendar.get(Calendar.SECOND) + mCalendar.get(Calendar.MILLISECOND) / 1000f;
+            float secRot = seconds / 60f * TWO_PI;
+            float minutes = mCalendar.get(Calendar.MINUTE) + seconds / 60f;
+            float minRot = minutes / 60f * TWO_PI;
+            float hours = mCalendar.get(Calendar.HOUR) + minutes / 60f;
+            float hrRot = hours / 12f * TWO_PI;
 
             float secLength = centerX - 20;
             float minLength = centerX - 40;
@@ -246,8 +249,7 @@ public class SweepWatchFaceService extends CanvasWatchFaceService {
                 registerReceiver();
 
                 // Update time zone in case it changed while we weren't visible.
-                mTime.clear(TimeZone.getDefault().getID());
-                mTime.setToNow();
+                mCalendar.setTimeZone(TimeZone.getDefault());
 
                 invalidate();
             } else {

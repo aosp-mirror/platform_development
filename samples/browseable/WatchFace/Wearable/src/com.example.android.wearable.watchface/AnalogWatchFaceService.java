@@ -33,10 +33,10 @@ import android.os.Message;
 import android.support.wearable.watchface.CanvasWatchFaceService;
 import android.support.wearable.watchface.WatchFaceService;
 import android.support.wearable.watchface.WatchFaceStyle;
-import android.text.format.Time;
 import android.util.Log;
 import android.view.SurfaceHolder;
 
+import java.util.Calendar;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
@@ -64,12 +64,14 @@ public class AnalogWatchFaceService extends CanvasWatchFaceService {
     private class Engine extends CanvasWatchFaceService.Engine {
         static final int MSG_UPDATE_TIME = 0;
 
+        static final float TWO_PI = (float) Math.PI * 2f;
+
         Paint mHourPaint;
         Paint mMinutePaint;
         Paint mSecondPaint;
         Paint mTickPaint;
         boolean mMute;
-        Time mTime;
+        Calendar mCalendar;
 
         /** Handler to update the time once a second in interactive mode. */
         final Handler mUpdateTimeHandler = new Handler() {
@@ -95,8 +97,8 @@ public class AnalogWatchFaceService extends CanvasWatchFaceService {
         final BroadcastReceiver mTimeZoneReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                mTime.clear(intent.getStringExtra("time-zone"));
-                mTime.setToNow();
+                mCalendar.setTimeZone(TimeZone.getDefault());
+                invalidate();
             }
         };
         boolean mRegisteredTimeZoneReceiver = false;
@@ -124,7 +126,7 @@ public class AnalogWatchFaceService extends CanvasWatchFaceService {
                     .build());
 
             Resources resources = AnalogWatchFaceService.this.getResources();
-            Drawable backgroundDrawable = resources.getDrawable(R.drawable.bg);
+            Drawable backgroundDrawable = resources.getDrawable(R.drawable.bg, null /* theme */);
             mBackgroundBitmap = ((BitmapDrawable) backgroundDrawable).getBitmap();
 
             mHourPaint = new Paint();
@@ -150,7 +152,7 @@ public class AnalogWatchFaceService extends CanvasWatchFaceService {
             mTickPaint.setStrokeWidth(2.f);
             mTickPaint.setAntiAlias(true);
 
-            mTime = new Time();
+            mCalendar = Calendar.getInstance();
         }
 
         @Override
@@ -212,7 +214,7 @@ public class AnalogWatchFaceService extends CanvasWatchFaceService {
 
         @Override
         public void onDraw(Canvas canvas, Rect bounds) {
-            mTime.setToNow();
+            mCalendar.setTimeInMillis(System.currentTimeMillis());
 
             int width = bounds.width();
             int height = bounds.height();
@@ -236,7 +238,7 @@ public class AnalogWatchFaceService extends CanvasWatchFaceService {
             float innerTickRadius = centerX - 10;
             float outerTickRadius = centerX;
             for (int tickIndex = 0; tickIndex < 12; tickIndex++) {
-                float tickRot = (float) (tickIndex * Math.PI * 2 / 12);
+                float tickRot = tickIndex * TWO_PI / 12;
                 float innerX = (float) Math.sin(tickRot) * innerTickRadius;
                 float innerY = (float) -Math.cos(tickRot) * innerTickRadius;
                 float outerX = (float) Math.sin(tickRot) * outerTickRadius;
@@ -245,10 +247,13 @@ public class AnalogWatchFaceService extends CanvasWatchFaceService {
                         centerX + outerX, centerY + outerY, mTickPaint);
             }
 
-            float secRot = mTime.second / 30f * (float) Math.PI;
-            int minutes = mTime.minute;
-            float minRot = minutes / 30f * (float) Math.PI;
-            float hrRot = ((mTime.hour + (minutes / 60f)) / 6f ) * (float) Math.PI;
+            float seconds =
+                    mCalendar.get(Calendar.SECOND) + mCalendar.get(Calendar.MILLISECOND) / 1000f;
+            float secRot = seconds / 60f * TWO_PI;
+            float minutes = mCalendar.get(Calendar.MINUTE) + seconds / 60f;
+            float minRot = minutes / 60f * TWO_PI;
+            float hours = mCalendar.get(Calendar.HOUR) + minutes / 60f;
+            float hrRot = hours / 12f * TWO_PI;
 
             float secLength = centerX - 20;
             float minLength = centerX - 40;
@@ -280,8 +285,7 @@ public class AnalogWatchFaceService extends CanvasWatchFaceService {
                 registerReceiver();
 
                 // Update time zone in case it changed while we weren't visible.
-                mTime.clear(TimeZone.getDefault().getID());
-                mTime.setToNow();
+                mCalendar.setTimeZone(TimeZone.getDefault());
             } else {
                 unregisterReceiver();
             }

@@ -24,11 +24,11 @@ import android.opengl.GLES20;
 import android.opengl.Matrix;
 import android.support.wearable.watchface.Gles2WatchFaceService;
 import android.support.wearable.watchface.WatchFaceStyle;
-import android.text.format.Time;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.SurfaceHolder;
 
+import java.util.Calendar;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
@@ -43,6 +43,9 @@ public class TiltWatchFaceService extends Gles2WatchFaceService {
 
     /** Expected frame rate in interactive mode. */
     private static final long FPS = 60;
+
+    /** Z distance from the camera to the watchface. */
+    private static final float EYE_Z = 2.3f;
 
     /** How long each frame is displayed at expected frame rate. */
     private static final long FRAME_PERIOD_MS = TimeUnit.SECONDS.toMillis(1) / FPS;
@@ -107,7 +110,7 @@ public class TiltWatchFaceService extends Gles2WatchFaceService {
         /** Triangle for the hour hand. */
         private Gles2ColoredTriangleList mHourHandTriangle;
 
-        private Time mTime = new Time();
+        private Calendar mCalendar = Calendar.getInstance();
 
         /** Whether we've registered {@link #mTimeZoneReceiver}. */
         private boolean mRegisteredTimeZoneReceiver;
@@ -115,8 +118,8 @@ public class TiltWatchFaceService extends Gles2WatchFaceService {
         private final BroadcastReceiver mTimeZoneReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                mTime.clear(intent.getStringExtra("time-zone"));
-                mTime.setToNow();
+                mCalendar.setTimeZone(TimeZone.getDefault());
+                invalidate();
             }
         };
 
@@ -170,7 +173,7 @@ public class TiltWatchFaceService extends Gles2WatchFaceService {
             mMinuteHandTriangle = createHand(
                     triangleProgram,
                     0.06f /* width */,
-                    0.8f /* height */,
+                    1f /* height */,
                     new float[]{
                             0.7f /* red */,
                             0.7f /* green */,
@@ -181,7 +184,7 @@ public class TiltWatchFaceService extends Gles2WatchFaceService {
             mHourHandTriangle = createHand(
                     triangleProgram,
                     0.1f /* width */,
-                    0.5f /* height */,
+                    0.6f /* height */,
                     new float[]{
                             0.9f /* red */,
                             0.9f /* green */,
@@ -204,14 +207,14 @@ public class TiltWatchFaceService extends Gles2WatchFaceService {
                 final float eyeY = (float) Math.sin(cameraAngle);
                 Matrix.setLookAtM(mViewMatrices[i],
                         0, // dest index
-                        eyeX, eyeY, -3, // eye
+                        eyeX, eyeY, EYE_Z, // eye
                         0, 0, 0, // center
                         0, 1, 0); // up vector
             }
 
             Matrix.setLookAtM(mAmbientViewMatrix,
                     0, // dest index
-                    0, 0, -3, // eye
+                    0, 0, EYE_Z, // eye
                     0, 0, 0, // center
                     0, 1, 0); // up vector
         }
@@ -378,8 +381,7 @@ public class TiltWatchFaceService extends Gles2WatchFaceService {
                 registerReceiver();
 
                 // Update time zone in case it changed while we were detached.
-                mTime.clear(TimeZone.getDefault().getID());
-                mTime.setToNow();
+                mCalendar.setTimeZone(TimeZone.getDefault());
 
                 invalidate();
             } else {
@@ -436,26 +438,28 @@ public class TiltWatchFaceService extends Gles2WatchFaceService {
             GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
 
             // Compute angle indices for the three hands.
-            mTime.setToNow();
-            final int secIndex = mTime.second * 360 / 60;
-            final int minIndex = mTime.minute * 360 / 60;
-            final int hoursIndex = (mTime.hour % 12) * 360 / 12 + mTime.minute * 360 / 60 / 12;
+            mCalendar.setTimeInMillis(System.currentTimeMillis());
+            float seconds =
+                    mCalendar.get(Calendar.SECOND) + mCalendar.get(Calendar.MILLISECOND) / 1000f;
+            float minutes = mCalendar.get(Calendar.MINUTE) + seconds / 60f;
+            float hours = mCalendar.get(Calendar.HOUR) + minutes / 60f;
+            final int secIndex = (int) (seconds / 60f * 360f);
+            final int minIndex = (int) (minutes / 60f * 360f);
+            final int hoursIndex = (int) (hours / 12f * 360f);
 
             // Draw triangles from back to front. Don't draw the second hand in ambient mode.
-            {
-                // Combine the model matrix with the projection and camera view.
-                Matrix.multiplyMM(mMvpMatrix, 0, vpMatrix, 0, mModelMatrices[hoursIndex], 0);
 
-                // Draw the triangle.
-                mHourHandTriangle.draw(mMvpMatrix);
-            }
-            {
-                // Combine the model matrix with the projection and camera view.
-                Matrix.multiplyMM(mMvpMatrix, 0, vpMatrix, 0, mModelMatrices[minIndex], 0);
+            // Combine the model matrix with the projection and camera view.
+            Matrix.multiplyMM(mMvpMatrix, 0, vpMatrix, 0, mModelMatrices[hoursIndex], 0);
 
-                // Draw the triangle.
-                mMinuteHandTriangle.draw(mMvpMatrix);
-            }
+            // Draw the triangle.
+            mHourHandTriangle.draw(mMvpMatrix);
+
+            // Combine the model matrix with the projection and camera view.
+            Matrix.multiplyMM(mMvpMatrix, 0, vpMatrix, 0, mModelMatrices[minIndex], 0);
+
+            // Draw the triangle.
+            mMinuteHandTriangle.draw(mMvpMatrix);
             if (!isInAmbientMode()) {
                 // Combine the model matrix with the projection and camera view.
                 Matrix.multiplyMM(mMvpMatrix, 0, vpMatrix, 0, mModelMatrices[secIndex], 0);
@@ -463,11 +467,10 @@ public class TiltWatchFaceService extends Gles2WatchFaceService {
                 // Draw the triangle.
                 mSecondHandTriangle.draw(mMvpMatrix);
             }
-            {
-                // Draw the major and minor ticks.
-                mMajorTickTriangles.draw(vpMatrix);
-                mMinorTickTriangles.draw(vpMatrix);
-            }
+
+            // Draw the major and minor ticks.
+            mMajorTickTriangles.draw(vpMatrix);
+            mMinorTickTriangles.draw(vpMatrix);
 
             // Draw every frame as long as we're visible and in interactive mode.
             if (isVisible() && !isInAmbientMode()) {
