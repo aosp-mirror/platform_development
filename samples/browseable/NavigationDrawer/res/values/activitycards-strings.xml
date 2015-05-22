@@ -15,6 +15,7 @@
  limitations under the License.
 -->
 
+
 <resources>
     <string name="navigationdraweractivity_title">Navigation Drawer Example</string>
     <string name="navigationdraweractivity_description">This example illustrates a common usage of the DrawerLayout widget in the Android
