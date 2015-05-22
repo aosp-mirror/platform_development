@@ -12,7 +12,10 @@
 # License for the specific language governing permissions and limitations under
 # the License.
 
-application: samplesyncadapter2
+# Note the app name used to be "samplesyncadapter2", but it's now "samplesyncadapterhr" because
+# it's been migrated to HR.  But it's still accessible under the old URL,
+# http://samplesyncadapter2.appspot.com/
+application: samplesyncadapterhr
 version: 1
 runtime: python
 api_version: 1
