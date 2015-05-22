@@ -38,6 +38,7 @@
     <uses-permission android:name="android.permission.TRANSMIT_IR" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
 
+
     <!-- For android.media.audiofx.Visualizer -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
@@ -550,17 +551,7 @@
             </intent-filter>
         </activity>
 
-        <service android:name=".app.RemoteService" android:process=":remote">
-            <intent-filter>
-                <!-- These are the interfaces supported by the service, which
-                     you can bind to. -->
-                <action android:name="com.example.android.apis.app.IRemoteService" />
-                <action android:name="com.example.android.apis.app.ISecondary" />
-                <!-- This is an action code you can use to select the service
-                     without explicitly supplying the implementation class. -->
-                <action android:name="com.example.android.apis.app.REMOTE_SERVICE" />
-            </intent-filter>
-        </service>
+        <service android:name=".app.RemoteService" android:process=":remote" />
 
         <activity android:name=".app.RemoteService$Controller"
                 android:label="@string/activity_remote_service_controller"
