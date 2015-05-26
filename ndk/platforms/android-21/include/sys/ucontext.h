@@ -180,6 +180,25 @@ typedef struct fpregset {
   } fp_r;
 } fpregset_t;
 
+#ifdef __LP64__
+typedef struct {
+  gregset_t gregs;
+  fpregset_t fpregs;
+  greg_t mdhi;
+  greg_t hi1;
+  greg_t hi2;
+  greg_t hi3;
+  greg_t mdlo;
+  greg_t lo1;
+  greg_t lo2;
+  greg_t lo3;
+  greg_t pc;
+  uint32_t fpc_csr;
+  uint32_t used_math;
+  uint32_t dsp;
+  uint32_t reserved;
+} mcontext_t;
+#else
 typedef struct {
   unsigned regmask;
   unsigned status;
@@ -200,6 +219,7 @@ typedef struct {
   unsigned long hi3;
   unsigned long lo3;
 } mcontext_t;
+#endif
 
 typedef struct ucontext {
   unsigned long uc_flags;
@@ -208,10 +228,6 @@ typedef struct ucontext {
   mcontext_t uc_mcontext;
   sigset_t uc_sigmask;
 } ucontext_t;
-
-#elif defined(__mips64__)
-
-#error TODO
 
 #elif defined(__x86_64__)
 
