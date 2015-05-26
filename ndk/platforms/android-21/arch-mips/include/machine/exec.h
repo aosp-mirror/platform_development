@@ -91,6 +91,7 @@
 #define DT_MIPS_GOTSYM       0x70000013 /* First GOT entry in .dynsym */
 #define DT_MIPS_HIPAGENO     0x70000014 /* Number of GOT page table entries */
 #define DT_MIPS_RLD_MAP      0x70000016 /* Address of debug map pointer */
+#define DT_MIPS_RLD_MAP2     0x70000035 /* Address of run time loader map, used for debugging. */
 
 #define DT_PROCNUM (DT_MIPS_RLD_MAP - DT_LOPROC + 1)
 
