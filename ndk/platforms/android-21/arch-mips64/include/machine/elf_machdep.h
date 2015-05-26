@@ -121,6 +121,7 @@
 #define	DT_MIPS_GOTSYM		0x70000013	/* first dynamic sym in got */
 #define DT_MIPS_HIPAGENO	0x70000014
 #define	DT_MIPS_RLD_MAP		0x70000016	/* address of loader map */
+#define DT_MIPS_RLD_MAP2        0x70000035      /* Address of run time loader map, used for debugging. */
 
 /*
  * ELF Flags
