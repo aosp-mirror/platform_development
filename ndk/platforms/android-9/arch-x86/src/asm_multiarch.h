@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008 The Android Open Source Project
+ * Copyright (C) 2013 The Android Open Source Project
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,33 +26,11 @@
  * SUCH DAMAGE.
  */
 
-#include "asm_multiarch.h"
+#ifdef __LP64__
+# define ASM_PTR_SIZE(x) .quad x
+# define ASM_ALIGN_TO_PTR_SIZE .balign 8
+#else
+# define ASM_PTR_SIZE(x) .long x
+# define ASM_ALIGN_TO_PTR_SIZE .balign 4
+#endif
 
-	.section .preinit_array, "aw"
-	ASM_ALIGN_TO_PTR_SIZE
-	ASM_PTR_SIZE(0)
-
-	.section .init_array, "aw"
-	ASM_ALIGN_TO_PTR_SIZE
-	ASM_PTR_SIZE(0)
-
-	.section .fini_array, "aw"
-	ASM_ALIGN_TO_PTR_SIZE
-	ASM_PTR_SIZE(0)
-
-	.section .ctors, "aw"
-	.type __CTOR_END__, @object
-__CTOR_END__:
-	ASM_PTR_SIZE(0)
-
-	.section .dtors, "aw"
-	.type __DTOR_END__, @object
-__DTOR_END__:
-	ASM_PTR_SIZE(0)
-
-	.section	.eh_frame,"a",@progbits
-	.align 4
-	.type	__FRAME_END__, @object
-	.size	__FRAME_END__, 4
-__FRAME_END__:
-	.zero	4
