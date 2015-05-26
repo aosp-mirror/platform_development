@@ -1,11 +1,16 @@
+#include "asm_multiarch.h"
+
 	.section .preinit_array, "aw"
-	.long 0
+	ASM_ALIGN_TO_PTR_SIZE
+	ASM_PTR_SIZE(0)
 
 	.section .init_array, "aw"
-	.long 0
+	ASM_ALIGN_TO_PTR_SIZE
+	ASM_PTR_SIZE(0)
 
 	.section .fini_array, "aw"
-	.long 0
+	ASM_ALIGN_TO_PTR_SIZE
+	ASM_PTR_SIZE(0)
 
 	.section	.eh_frame,"a",@progbits
 	.align 4
