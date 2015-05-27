@@ -1,0 +1,11 @@
+
+page.tags="Camera2Raw"
+sample.group=Media
+@jd:body
+
+<p>
+            
+            This sample demonstrates how to use the Camera2 API to capture RAW
+            camera buffers and save them as DNG files.
+            
+        </p>
