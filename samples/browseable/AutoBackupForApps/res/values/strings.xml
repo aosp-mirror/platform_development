@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright (C) 2014 The Android Open Source Project
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+          http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+-->
+<resources>
+    <string name="action_add_file">Add File</string>
+    <string name="action_settings">Settings</string>
+    <string name="list_of_files">App Data:</string>
+    <string name="file_exists">Please specify a different name. A file with this name exists already.</string>
+    <string name="no_files_click_add_files_menu">Please click on Add File menu in order to create test files.</string>
+    <string name="file_size_is_invalid">Please specify a correct file size.</string>
+    <string name="external_storage_unavailable">The External storage is not available.</string>
+    <string-array name="file_size_array">
+        <item>Bytes</item>
+        <item>Kilobytes</item>
+        <item>Megabytes</item>
+    </string-array>
+    <string-array name="file_storage_array">
+        <item>Internal</item>
+        <item>External</item>
+        <item>Do not Backup</item>
+    </string-array>
+</resources>
