@@ -1,0 +1,13 @@
+
+page.tags="ActiveNotification"
+sample.group=Notification
+@jd:body
+
+<p>
+            
+The NotificationManager can tell you how many notifications your application is currently showing.
+This sample demonstrates how to use this API that has been introduced with Android M.
+To get started, press the "add a notification" button.
+When a notification is being canceled, the count gets updated via a PendingIntent.
+            
+        </p>

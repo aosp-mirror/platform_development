@@ -1,0 +1,6 @@
+<resources>
+    <string name="show_camera">Show camera preview</string>
+    <string name="camera_unavailable"><b>Camera could not be opened.</b>\nThis occurs when the camera is not available (for example it is already in use) or if the system has denied access (for example when camera access has been disabled).</string>
+    <string name="intro">This sample shows a basic implementation for requesting permissions at runtime.\nClick the button below to request the Camera permission and open a full-screen camera preview.</string>
+
+</resources>

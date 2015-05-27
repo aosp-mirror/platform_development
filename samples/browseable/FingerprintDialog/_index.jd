@@ -1,0 +1,11 @@
+
+page.tags="Fingerprint Dialog Sample"
+sample.group=security
+@jd:body
+
+<p>
+            
+This sample demonstrates how you can use registered fingerprints to authenticate the user
+before proceeding some actions such as purchasing an item.
+            
+        </p>

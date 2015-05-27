@@ -1,0 +1,12 @@
+
+page.tags="RuntimePermissions"
+sample.group=System
+@jd:body
+
+<p>
+            
+            This sample shows runtime permissions available in the Android M and above.
+            Display the log to follow the execution.
+            If executed on an Android M device, an additional option to access contacts is shown.
+            
+        </p>
