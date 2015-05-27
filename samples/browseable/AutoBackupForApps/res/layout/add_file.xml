@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright (C) 2014 The Android Open Source Project
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+          http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center_horizontal">
+
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="40dp">
+
+        <!-- File -->
+        <TextView
+            android:id="@+id/file_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="File"
+            android:textAlignment="center"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:layout_marginRight="20dp"
+            android:layout_alignBaseline="@+id/file_name"/>
+
+        <EditText
+            android:id="@+id/file_name"
+            android:layout_width="300sp"
+            android:layout_height="wrap_content"
+            android:layout_toRightOf="@+id/file_label"
+            android:layout_marginBottom="20dp"
+            android:inputType="text"
+            android:text="foo.txt" />
+
+        <!-- Size -->
+        <TextView
+            android:id="@+id/size_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/file_name"
+            android:layout_alignBaseline="@+id/file_size"
+            android:text="Size"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <EditText
+            android:id="@+id/file_size"
+            android:layout_width="100dp"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/file_name"
+            android:layout_alignStart="@+id/file_name"
+            android:layout_marginBottom="20dp"
+            android:inputType="numberDecimal"
+            android:text="10" />
+
+        <Spinner
+            android:id="@+id/file_size_spinner"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/file_name"
+            android:layout_toRightOf="@+id/file_size"
+            android:layout_alignEnd="@+id/file_name"
+            android:layout_marginBottom="20dp"
+            />
+
+        <!-- Storage -->
+        <TextView
+            android:id="@+id/storage_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/file_size_spinner"
+            android:layout_alignBaseline="@+id/storage_spinner"
+            android:paddingRight="20dp"
+            android:text="Storage"
+            android:textAlignment="center"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <Spinner
+            android:id="@+id/storage_spinner"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/file_size_spinner"
+            android:layout_toRightOf="@+id/file_size"
+            android:layout_alignEnd="@+id/file_name"/>
+
+        <Button
+            android:id="@+id/create_file_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/storage_spinner"
+            android:layout_centerInParent="true"
+            android:layout_marginTop="40dp"
+            android:paddingLeft="20dp"
+            android:paddingRight="20dp"
+            android:onClick="onCreateFileButtonClick"
+            android:text="Create" />
+
+    </RelativeLayout>
+</LinearLayout>
