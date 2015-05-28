@@ -264,7 +264,6 @@ public class MainActivity extends WearableActivity {
              * Otherwise, it is easy for the AlarmManager launch intent to open a new activity
              * every time the Alarm is triggered rather than reusing this Activity.
              */
-            mAmbientStateAlarmManager.cancel(mAmbientStatePendingIntent);
             mAmbientStateAlarmManager.setExact(
                     AlarmManager.RTC_WAKEUP,
                     triggerTimeMs,
