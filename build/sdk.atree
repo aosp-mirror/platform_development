@@ -313,6 +313,7 @@ developers/build/prebuilts/gradle/AppUsageStatistics                         sam
 developers/build/prebuilts/gradle/ScreenCapture                              samples/${PLATFORM_NAME}/media/ScreenCapture
 developers/build/prebuilts/gradle/NfcProvisioning                            samples/${PLATFORM_NAME}/nfc/NfcProvisioning
 developers/build/prebuilts/gradle/DeviceOwner                                samples/${PLATFORM_NAME}/admin/DeviceOwner
+developers/build/prebuilts/gradle/Camera2Raw                                 samples/${PLATFORM_NAME}/media/Camera2Raw
 
 developers/build/prebuilts/androidtv                                         samples/${PLATFORM_NAME}/androidtv
 
