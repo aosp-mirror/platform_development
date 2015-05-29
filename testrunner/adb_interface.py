@@ -131,16 +131,17 @@ class AdbInterface:
       logger.Log("ADB Pull Failed: Source file %s does not exist." % src)
       return False
 
-  def Install(self, apk_path):
+  def Install(self, apk_path, extra_flags):
     """Installs apk on device.
 
     Args:
       apk_path: file path to apk file on host
+      extra_flags: Additional flags to use with adb install
 
     Returns:
       output of install command
     """
-    return self.SendCommand("install -r %s" % apk_path)
+    return self.SendCommand("install -r %s %s" % (extra_flags, apk_path))
 
   def DoesFileExist(self, src):
     """Checks if the given path exists on device target.
