@@ -506,7 +506,7 @@ See test_defs.xsd for more information.
     continuous="true"
     coverage_target="Phone" />
 
-<test name="telecomm-unit"
+<test name="telecom-unit"
     build_path="packages/services/Telecomm"
     package="com.android.server.telecom.tests"
     continuous="true"

@@ -40,6 +40,7 @@ class XmlSuiteParser(object):
   _DESCRIPTION_ATTR = 'description'
   _EXTRA_BUILD_ARGS_ATTR = 'extra_build_args'
   _FULL_MAKE_ATTR = 'full_make'
+  _GRANTED_PERMISSIONS_ATTR = 'granted_permissions'
 
   def Parse(self, element):
     """Populates common suite attributes from given suite xml element.
@@ -72,6 +73,9 @@ class XmlSuiteParser(object):
     test_suite.SetContinuous(self._ParseAttribute(suite_element,
                                                   self._CONTINUOUS_ATTR,
                                                   False, default_value=False))
+    test_suite.SetIsGrantedPermissions(self._ParseAttribute(suite_element,
+                                                  self._GRANTED_PERMISSIONS_ATTR,
+                                                  False, default_value=True))
     test_suite.SetSuite(self._ParseAttribute(suite_element, self._SUITE_ATTR, False,
                                            default_value=None))
     test_suite.SetDescription(self._ParseAttribute(suite_element,
@@ -88,6 +92,8 @@ class XmlSuiteParser(object):
                       default_value=None):
     if suite_element.hasAttribute(attribute_name):
       value = suite_element.getAttribute(attribute_name)
+      if default_value in (True, False):
+        value = value.lower() == "true"
     elif mandatory:
       error_msg = ('Could not find attribute %s in %s' %
                    (attribute_name, self.TAG_NAME))
