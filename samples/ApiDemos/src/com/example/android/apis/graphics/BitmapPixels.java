@@ -57,7 +57,8 @@ public class BitmapPixels extends GraphicsActivity {
         private static short pack565(int r, int g, int b) {
             return (short)((r << 11) | ( g << 5) | (b << 0));
         }
-
+        
+        @Deprecated
         private static short pack4444(int r, int g, int b, int a) {
             return (short)((a << 0) | ( b << 4) | (g << 8) | (r << 12));
         }
@@ -85,7 +86,7 @@ public class BitmapPixels extends GraphicsActivity {
 
         private static void makeRamp(int from, int to, int n,
                                      int[] ramp8888, short[] ramp565,
-                                     short[] ramp4444) {
+                                     int[] ramp4444) {
             int r = getR32(from) << 23;
             int g = getG32(from) << 23;
             int b = getB32(from) << 23;
@@ -99,8 +100,8 @@ public class BitmapPixels extends GraphicsActivity {
             for (int i = 0; i < n; i++) {
                 ramp8888[i] = pack8888(r >> 23, g >> 23, b >> 23, a >> 23);
                 ramp565[i] = pack565(r >> (23+3), g >> (23+2), b >> (23+3));
-                ramp4444[i] = pack4444(r >> (23+4), g >> (23+4), b >> (23+4),
-                                       a >> (23+4));
+                // ARGB_4444 is deprecated.
+                ramp4444[i] = pack8888(r >> 23, g >> 23, b >> 23, a >> 23);
                 r += dr;
                 g += dg;
                 b += db;
@@ -133,14 +134,14 @@ public class BitmapPixels extends GraphicsActivity {
             final int N = 100;
             int[] data8888 = new int[N];
             short[] data565 = new short[N];
-            short[] data4444 = new short[N];
+            int[] data4444 = new int[N];
 
             makeRamp(premultiplyColor(Color.RED), premultiplyColor(Color.GREEN),
                      N, data8888, data565, data4444);
 
             mBitmap1 = Bitmap.createBitmap(N, N, Bitmap.Config.ARGB_8888);
             mBitmap2 = Bitmap.createBitmap(N, N, Bitmap.Config.RGB_565);
-            mBitmap3 = Bitmap.createBitmap(N, N, Bitmap.Config.ARGB_4444);
+            mBitmap3 = Bitmap.createBitmap(N, N, Bitmap.Config.ARGB_8888);
 
             mBitmap1.copyPixelsFromBuffer(makeBuffer(data8888, N));
             mBitmap2.copyPixelsFromBuffer(makeBuffer(data565, N));
