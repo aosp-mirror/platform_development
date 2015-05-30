@@ -18,6 +18,9 @@ package com.example.android.apis.view;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
+import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
@@ -39,10 +42,20 @@ public class SeekBar1 extends Activity implements SeekBar.OnSeekBarChangeListene
 
         setContentView(R.layout.seekbar_1);
         
-        mSeekBar = (SeekBar)findViewById(R.id.seek);
+        mSeekBar = (SeekBar) findViewById(R.id.seek);
         mSeekBar.setOnSeekBarChangeListener(this);
-        mProgressText = (TextView)findViewById(R.id.progress);
-        mTrackingText = (TextView)findViewById(R.id.tracking);
+        mProgressText = (TextView) findViewById(R.id.progress);
+        mTrackingText = (TextView) findViewById(R.id.tracking);
+
+        ((CheckBox) findViewById(R.id.enabled)).setOnCheckedChangeListener(
+                new OnCheckedChangeListener() {
+                    @Override
+                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                        findViewById(R.id.seekMin).setEnabled(isChecked);
+                        findViewById(R.id.seekMax).setEnabled(isChecked);
+                        mSeekBar.setEnabled(isChecked);
+                    }
+                });
     }
 
     public void onProgressChanged(SeekBar seekBar, int progress, boolean fromTouch) {
