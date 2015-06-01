@@ -33,6 +33,7 @@ class AbstractTestSuite(object):
     self._description = ''
     self._extra_build_args = ''
     self._is_full_make = False
+    self._is_granted_permissions = True
 
   def GetName(self):
     return self._name
@@ -64,6 +65,14 @@ class AbstractTestSuite(object):
   def SetContinuous(self, continuous):
     self._is_continuous = continuous
     return self._is_continuous
+
+  def IsGrantedPermissions(self):
+    """Return true if the test should be granted runtime permissions on install."""
+    return self._is_granted_permissions
+
+  def SetIsGrantedPermissions(self, is_granted_permissions):
+    self._is_granted_permissions = is_granted_permissions
+    return self._is_granted_permissions
 
   def GetSuite(self):
     """Returns the name of test' suite, or None."""
