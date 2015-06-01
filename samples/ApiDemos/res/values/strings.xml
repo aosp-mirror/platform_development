@@ -983,6 +983,8 @@
     <string name="seekbar_tracking_off">Tracking off</string>
     <string name="seekbar_from_touch">from touch</string>
 
+    <string name="enabled">Enabled</string>
+
     <string name="ratingbar_rating">Rating:</string>
 
     <string name="popup_menu_search">Search</string>
