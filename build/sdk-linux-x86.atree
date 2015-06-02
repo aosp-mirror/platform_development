@@ -15,6 +15,12 @@
 #
 
 ##############################################################################
+# Platform Tools Component
+##############################################################################
+
+lib/libc++.so                                        strip platform-tools/lib/libc++.so
+
+##############################################################################
 # Build Tools Component
 ##############################################################################
 # Note that the build-tools sub-folder uses the platform-name as a placeholder
@@ -28,9 +34,9 @@ lib/libbcinfo.so                                     strip build-tools/${PLATFOR
 lib/libclang.so                                      strip build-tools/${PLATFORM_NAME}/lib/libclang.so
 lib/libc++.so                                        strip build-tools/${PLATFORM_NAME}/lib/libc++.so
 
-prebuilts/sdk/tools/linux/bin/arm-linux-androideabi-ld   strip build-tools/${PLATFORM_NAME}/bin/arm-linux-androideabi-ld
-prebuilts/sdk/tools/linux/bin/i686-linux-android-ld      strip build-tools/${PLATFORM_NAME}/bin/i686-linux-android-ld
-prebuilts/sdk/tools/linux/bin/mipsel-linux-android-ld    strip build-tools/${PLATFORM_NAME}/bin/mipsel-linux-android-ld
+prebuilts/sdk/tools/linux/bin/arm-linux-androideabi-ld   strip build-tools/${PLATFORM_NAME}/arm-linux-androideabi-ld
+prebuilts/sdk/tools/linux/bin/i686-linux-android-ld      strip build-tools/${PLATFORM_NAME}/i686-linux-android-ld
+prebuilts/sdk/tools/linux/bin/mipsel-linux-android-ld    strip build-tools/${PLATFORM_NAME}/mipsel-linux-android-ld
 
 dalvik/dx/etc/mainDexClasses                               build-tools/${PLATFORM_NAME}/mainDexClasses
 
