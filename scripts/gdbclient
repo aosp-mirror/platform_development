@@ -136,17 +136,12 @@ function gdbclient() {
   if [[ $CPU_ABI =~ (^|,)arm64 ]]; then
     GDB=arm-linux-androideabi-gdb
     GDB64=aarch64-linux-android-gdb
-  elif [[ $CPU_ABI =~ (^|,)x86_64 ]]; then
+  elif [[ $CPU_ABI =~ (^|,)x86 ]]; then    # x86 (32-bit and 64-bit) is unified.
     GDB=x86_64-linux-android-gdb
-  elif [[ $CPU_ABI =~ (^|,)mips64 ]]; then
-    GDB=mipsel-linux-android-gdb
-    GDB64=mips64el-linux-android-gdb
-  elif [[ $CPU_ABI =~ (^|,)x86 ]]; then    # See note above for order.
-    GDB=x86_64-linux-android-gdb
-  elif [[ $CPU_ABI =~ (^|,)arm ]]; then
+  elif [[ $CPU_ABI =~ (^|,)mips ]]; then   # Mips (32-bit and 64-bit) is unified.
+    GDB=mips64el-linux-android-gdb
+  elif [[ $CPU_ABI =~ (^|,)arm ]]; then    # See note above for order.
     GDB=arm-linux-androideabi-gdb
-  elif [[ $CPU_ABI =~ (^|,)mips ]]; then
-    GDB=mipsel-linux-android-gdb
   else
     echo "Error: unrecognized cpu.abilist: $CPU_ABI"
     return -6
