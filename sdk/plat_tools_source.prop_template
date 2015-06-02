@@ -1,4 +1,4 @@
 Pkg.UserSrc=false
 // due to the codename this resolve to 22 instead of 23, so replace it with hardcoded version for now.
 //Pkg.Revision=${PLATFORM_SDK_VERSION}.0.0
-Pkg.Revision=23.0.0 rc1
+Pkg.Revision=23.0.0 rc2

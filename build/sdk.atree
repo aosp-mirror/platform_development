@@ -79,14 +79,14 @@ development/sdk/build_tools_source.properties  build-tools/${PLATFORM_NAME}/sour
 development/sdk/build_tools_runtime.properties build-tools/${PLATFORM_NAME}/runtime.properties
 
 # build tools from out/host/$(HOST_OS)-$(HOST_ARCH)/
-bin/aapt                                strip build-tools/${PLATFORM_NAME}/bin/aapt
-bin/aidl                                strip build-tools/${PLATFORM_NAME}/bin/aidl
-bin/split-select                        strip build-tools/${PLATFORM_NAME}/bin/split-select
-bin/zipalign                            strip build-tools/${PLATFORM_NAME}/bin/zipalign
+bin/aapt                                strip build-tools/${PLATFORM_NAME}/aapt
+bin/aidl                                strip build-tools/${PLATFORM_NAME}/aidl
+bin/split-select                        strip build-tools/${PLATFORM_NAME}/split-select
+bin/zipalign                            strip build-tools/${PLATFORM_NAME}/zipalign
 
 # renderscript (cc + headers)
-bin/llvm-rs-cc                          strip build-tools/${PLATFORM_NAME}/bin/llvm-rs-cc
-bin/bcc_compat                          strip build-tools/${PLATFORM_NAME}/bin/bcc_compat
+bin/llvm-rs-cc                          strip build-tools/${PLATFORM_NAME}/llvm-rs-cc
+bin/bcc_compat                          strip build-tools/${PLATFORM_NAME}/bcc_compat
 frameworks/rs/scriptc                         build-tools/${PLATFORM_NAME}/renderscript/include
 external/clang/lib/Headers                    build-tools/${PLATFORM_NAME}/renderscript/clang-include
 external/clang/LICENSE.TXT                    build-tools/${PLATFORM_NAME}/renderscript/clang-include/LICENSE.TXT
@@ -119,7 +119,7 @@ prebuilts/sdk/renderscript/lib/x86/libclcore.bc       build-tools/${PLATFORM_NAM
 # dx
 bin/dx                                        build-tools/${PLATFORM_NAME}/dx
 framework/dx.jar                              build-tools/${PLATFORM_NAME}/lib/dx.jar
-bin/dexdump                                   build-tools/${PLATFORM_NAME}/bin/dexdump
+bin/dexdump                                   build-tools/${PLATFORM_NAME}/dexdump
 
 # multi-dex
 prebuilts/sdk/tools/lib/shrinkedAndroid.jar   build-tools/${PLATFORM_NAME}/lib/shrinkedAndroid.jar
