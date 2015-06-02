@@ -273,6 +273,9 @@ class RegisterPatternTests(unittest.TestCase):
   def test_mips_registers(self):
     self.assert_register_matches("mips", example_crashes.mips, '\\b(zr|a0|t0|t4|s0|s4|t8|gp|hi)\\b')
 
+  def test_mips64_registers(self):
+    self.assert_register_matches("mips64", example_crashes.mips64, '\\b(zr|a0|a4|t0|s0|s4|t8|gp|hi)\\b')
+
   def test_x86_registers(self):
     self.assert_register_matches("x86", example_crashes.x86, '\\b(eax|esi|xcs|eip)\\b')
 
