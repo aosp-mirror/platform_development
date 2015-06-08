@@ -1549,12 +1549,6 @@
         <!--      VIEW/WIDGET PACKAGE SAMPLES      -->
         <!-- ************************************* -->
 
-        <activity android:name=".view.TextClockDemo" android:label="Views/TextClock">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.SAMPLE_CODE" />
-            </intent-filter>
-        </activity>
         <activity android:name=".view.ChronometerDemo" android:label="Views/Chronometer">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -2130,8 +2124,56 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".view.EditTextDemo"
+                  android:label="Views/Text/EditText">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".text.Link"
+                  android:label="Views/Text/Linkify">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".text.LogTextBox1"
+                  android:label="Views/Text/LogTextBox">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".text.Marquee"
+                  android:label="Views/Text/Marquee">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".view.TextClockDemo"
+                  android:label="Views/Text/TextClock">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
         <activity android:name=".view.TextSwitcher1"
-                android:label="Views/TextSwitcher">
+                android:label="Views/Text/TextSwitcher">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".view.TextViewDemo"
+                  android:label="Views/Text/TextView">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -3096,27 +3138,6 @@
         <!-- ************************************* -->
         <!--             OTHER SAMPLES             -->
         <!-- ************************************* -->
-
-        <activity android:name=".text.Link" android:label="Text/Linkify">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.SAMPLE_CODE" />
-            </intent-filter>
-        </activity>
-
-        <activity android:name=".text.Marquee" android:label="Text/Marquee">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.SAMPLE_CODE" />
-            </intent-filter>
-        </activity>
-
-        <activity android:name=".text.LogTextBox1" android:label="Text/LogTextBox">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.SAMPLE_CODE" />
-            </intent-filter>
-        </activity>
 
         <activity android:name=".nfc.ForegroundDispatch" android:label="NFC/ForegroundDispatch">
             <intent-filter>
