@@ -39,13 +39,17 @@ import android.view.Display;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.Spinner;
 import android.widget.TextView;
 
 //BEGIN_INCLUDE(activity)
@@ -74,7 +78,7 @@ import android.widget.TextView;
  * </p>
  */
 public class PresentationActivity extends Activity
-        implements OnCheckedChangeListener, OnClickListener {
+        implements OnCheckedChangeListener, OnClickListener, OnItemSelectedListener {
     private final String TAG = "PresentationActivity";
 
     // Key for storing saved instance state.
@@ -97,7 +101,7 @@ public class PresentationActivity extends Activity
     // List of presentation contents indexed by displayId.
     // This state persists so that we can restore the old presentation
     // contents when the activity is paused or resumed.
-    private SparseArray<PresentationContents> mSavedPresentationContents;
+    private SparseArray<DemoPresentationContents> mSavedPresentationContents;
 
     // List of all currently visible presentations indexed by display id.
     private final SparseArray<DemoPresentation> mActivePresentations =
@@ -118,7 +122,7 @@ public class PresentationActivity extends Activity
             mSavedPresentationContents =
                     savedInstanceState.getSparseParcelableArray(PRESENTATION_KEY);
         } else {
-            mSavedPresentationContents = new SparseArray<PresentationContents>();
+            mSavedPresentationContents = new SparseArray<DemoPresentationContents>();
         }
 
         // Get the display manager service.
@@ -151,7 +155,7 @@ public class PresentationActivity extends Activity
         final int numDisplays = mDisplayListAdapter.getCount();
         for (int i = 0; i < numDisplays; i++) {
             final Display display = mDisplayListAdapter.getItem(i);
-            final PresentationContents contents =
+            final DemoPresentationContents contents =
                     mSavedPresentationContents.get(display.getDisplayId());
             if (contents != null) {
                 showPresentation(display, contents);
@@ -192,7 +196,7 @@ public class PresentationActivity extends Activity
     /**
      * Shows a {@link Presentation} on the specified display.
      */
-    private void showPresentation(Display display, PresentationContents contents) {
+    private void showPresentation(Display display, DemoPresentationContents contents) {
         final int displayId = display.getDisplayId();
         if (mActivePresentations.get(displayId) != null) {
             return;
@@ -223,6 +227,20 @@ public class PresentationActivity extends Activity
         mActivePresentations.delete(displayId);
     }
 
+    /**
+     * Sets the display mode of the {@link Presentation} on the specified display
+     * if it is already shown.
+     */
+    private void setPresentationDisplayMode(Display display, int displayModeId) {
+        final int displayId = display.getDisplayId();
+        DemoPresentation presentation = mActivePresentations.get(displayId);
+        if (presentation == null) {
+            return;
+        }
+
+        presentation.setPreferredDisplayMode(displayModeId);
+    }
+
     private int getNextPhoto() {
         final int photo = mNextImageNumber;
         mNextImageNumber = (mNextImageNumber + 1) % PHOTOS.length;
@@ -242,11 +260,12 @@ public class PresentationActivity extends Activity
             // Display item checkbox was toggled.
             final Display display = (Display)buttonView.getTag();
             if (isChecked) {
-                PresentationContents contents = new PresentationContents(getNextPhoto());
+                DemoPresentationContents contents = new DemoPresentationContents(getNextPhoto());
                 showPresentation(display, contents);
             } else {
                 hidePresentation(display);
             }
+            mDisplayListAdapter.updateContents();
         }
     }
 
@@ -273,6 +292,26 @@ public class PresentationActivity extends Activity
                     })
                 .create();
         alert.show();
+    }
+
+    /**
+     * Called when a display mode has been selected.
+     */
+    @Override
+    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+        final Display display = (Display)parent.getTag();
+        final Display.Mode[] modes = display.getSupportedModes();
+        setPresentationDisplayMode(display, position >= 1 && position <= modes.length ?
+                modes[position - 1].getModeId() : 0);
+    }
+
+    /**
+     * Called when a display mode has been unselected.
+     */
+    @Override
+    public void onNothingSelected(AdapterView<?> parent) {
+        final Display display = (Display)parent.getTag();
+        setPresentationDisplayMode(display, 0);
     }
 
     /**
@@ -345,11 +384,17 @@ public class PresentationActivity extends Activity
             final Display display = getItem(position);
             final int displayId = display.getDisplayId();
 
+            DemoPresentation presentation = mActivePresentations.get(displayId);
+            DemoPresentationContents contents = presentation != null ?
+                    presentation.mContents : null;
+            if (contents == null) {
+                contents = mSavedPresentationContents.get(displayId);
+            }
+
             CheckBox cb = (CheckBox)v.findViewById(R.id.checkbox_presentation);
             cb.setTag(display);
             cb.setOnCheckedChangeListener(PresentationActivity.this);
-            cb.setChecked(mActivePresentations.indexOfKey(displayId) >= 0
-                    || mSavedPresentationContents.indexOfKey(displayId) >= 0);
+            cb.setChecked(contents != null);
 
             TextView tv = (TextView)v.findViewById(R.id.display_id);
             tv.setText(v.getContext().getResources().getString(
@@ -358,6 +403,32 @@ public class PresentationActivity extends Activity
             Button b = (Button)v.findViewById(R.id.info);
             b.setTag(display);
             b.setOnClickListener(PresentationActivity.this);
+
+            Spinner s = (Spinner)v.findViewById(R.id.modes);
+            Display.Mode[] modes = display.getSupportedModes();
+            if (contents == null || modes.length == 1) {
+                s.setVisibility(View.GONE);
+                s.setAdapter(null);
+            } else {
+                ArrayAdapter<String> modeAdapter = new ArrayAdapter<String>(mContext,
+                        android.R.layout.simple_list_item_1);
+                s.setVisibility(View.VISIBLE);
+                s.setAdapter(modeAdapter);
+                s.setTag(display);
+                s.setOnItemSelectedListener(PresentationActivity.this);
+
+                modeAdapter.add("<default mode>");
+
+                for (Display.Mode mode : modes) {
+                    modeAdapter.add(String.format("Mode %d: %dx%d/%.1ffps",
+                            mode.getModeId(),
+                            mode.getPhysicalWidth(), mode.getPhysicalHeight(),
+                            mode.getRefreshRate()));
+                    if (contents.displayModeId == mode.getModeId()) {
+                        s.setSelection(modeAdapter.getCount() - 1);
+                    }
+                }
+            }
 
             return v;
         }
@@ -394,11 +465,23 @@ public class PresentationActivity extends Activity
      */
     private final class DemoPresentation extends Presentation {
 
-        final PresentationContents mContents;
+        final DemoPresentationContents mContents;
 
-        public DemoPresentation(Context context, Display display, PresentationContents contents) {
+        public DemoPresentation(Context context, Display display,
+                DemoPresentationContents contents) {
             super(context, display);
             mContents = contents;
+        }
+
+        /**
+         * Sets the preferred display mode id for the presentation.
+         */
+        public void setPreferredDisplayMode(int modeId) {
+            mContents.displayModeId = modeId;
+
+            WindowManager.LayoutParams params = getWindow().getAttributes();
+            params.preferredDisplayModeId = modeId;
+            getWindow().setAttributes(params);
         }
 
         @Override
@@ -440,35 +523,37 @@ public class PresentationActivity extends Activity
     }
 
     /**
-     * Information about the content we want to show in a presentation.
+     * Information about the content we want to show in the presentation.
      */
-    private final static class PresentationContents implements Parcelable {
+    private final static class DemoPresentationContents implements Parcelable {
         final int photo;
         final int[] colors;
+        int displayModeId;
 
-        public static final Creator<PresentationContents> CREATOR =
-                new Creator<PresentationContents>() {
+        public static final Creator<DemoPresentationContents> CREATOR =
+                new Creator<DemoPresentationContents>() {
             @Override
-            public PresentationContents createFromParcel(Parcel in) {
-                return new PresentationContents(in);
+            public DemoPresentationContents createFromParcel(Parcel in) {
+                return new DemoPresentationContents(in);
             }
 
             @Override
-            public PresentationContents[] newArray(int size) {
-                return new PresentationContents[size];
+            public DemoPresentationContents[] newArray(int size) {
+                return new DemoPresentationContents[size];
             }
         };
 
-        public PresentationContents(int photo) {
+        public DemoPresentationContents(int photo) {
             this.photo = photo;
             colors = new int[] {
                     ((int) (Math.random() * Integer.MAX_VALUE)) | 0xFF000000,
                     ((int) (Math.random() * Integer.MAX_VALUE)) | 0xFF000000 };
         }
 
-        private PresentationContents(Parcel in) {
+        private DemoPresentationContents(Parcel in) {
             photo = in.readInt();
             colors = new int[] { in.readInt(), in.readInt() };
+            displayModeId = in.readInt();
         }
 
         @Override
@@ -481,6 +566,7 @@ public class PresentationActivity extends Activity
             dest.writeInt(photo);
             dest.writeInt(colors[0]);
             dest.writeInt(colors[1]);
+            dest.writeInt(displayModeId);
         }
     }
 }
