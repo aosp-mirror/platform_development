@@ -181,13 +181,6 @@ public class AlarmService extends Service {
         // Sets the text to use for the status bar and status list views.
         CharSequence notificationText = getText(R.string.alarm_service_started);
 
-        // Sets the icon, status bar text, and display time for the mNotification.
-        mNotification = new Notification(
-            R.drawable.stat_sample,  // the status icon
-            notificationText, // the status text
-            System.currentTimeMillis()  // the time stamp
-        );
-
         // Sets up the Intent that starts AlarmActivity
         mContentIntent = PendingIntent.getActivity(
             this,  // Start the Activity in the current context
@@ -196,14 +189,15 @@ public class AlarmService extends Service {
             0  // Use an existing activity instance if available
         );
 
-        // Creates a new content view for the mNotification. The view appears when the user
-        // shows the expanded status window.
-        mNotification.setLatestEventInfo(
-            this,  //  Put the content view in the current context
-            getText(R.string.alarm_service_label),  // The text to use as the label of the entry
-            notificationText,  // The text to use as the contents of the entry
-            mContentIntent  // The intent to send when the entry is clicked
-        );
+        // Build the notification object.
+        mNotification = new Notification.Builder(this)  //  The builder requires the context
+                .setSmallIcon(R.drawable.stat_sample)  // the status icon
+                .setTicker(notificationText)  // the status text
+                .setWhen(System.currentTimeMillis())  // the time stamp
+                .setContentTitle(getText(R.string.alarm_service_label))  // the label of the entry
+                .setContentText(notificationText)  // the contents of the entry
+                .setContentIntent(mContentIntent)  // The intent to send when the entry is clicked
+                .build();
 
         // Sets a unique ID for the notification and sends it to NotificationManager to be
         // displayed. The ID is the integer marker for the notification string, which is
