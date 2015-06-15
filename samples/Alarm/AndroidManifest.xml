@@ -29,6 +29,7 @@
     <!--
         Declares the application, its icon, and its visible label
      -->
+    <uses-sdk android:minSdkVersion="11" />
     <application
         android:icon="@drawable/icon"
         android:label="@string/app_name">

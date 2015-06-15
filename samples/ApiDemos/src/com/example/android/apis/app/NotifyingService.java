@@ -94,20 +94,23 @@ public class NotifyingService extends Service {
         // In this sample, we'll use the same text for the ticker and the expanded notification
         CharSequence text = getText(textId);
 
-        // Set the icon, scrolling text and timestamp.
-        // Note that in this example, we pass null for tickerText.  We update the icon enough that
-        // it is distracting to show the ticker text every time it changes.  We strongly suggest
-        // that you do this as well.  (Think of of the "New hardware found" or "Network connection
-        // changed" messages that always pop up)
-        Notification notification = new Notification(moodId, null, System.currentTimeMillis());
-
         // The PendingIntent to launch our activity if the user selects this notification
         PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
                 new Intent(this, NotifyingController.class), 0);
 
+        // Set the icon and timestamp.
+        // Note that in this example, we do not set the tickerText.  We update the icon enough that
+        // it is distracting to show the ticker text every time it changes.  We strongly suggest
+        // that you do this as well.  (Think of of the "New hardware found" or "Network connection
+        // changed" messages that always pop up)
         // Set the info for the views that show in the notification panel.
-        notification.setLatestEventInfo(this, getText(R.string.status_bar_notifications_mood_title),
-                       text, contentIntent);
+        Notification notification = new Notification.Builder(this)
+                .setSmallIcon(moodId)
+                .setWhen(System.currentTimeMillis())
+                .setContentTitle(getText(R.string.status_bar_notifications_mood_title))
+                .setContentText(text)  // the contents of the entry
+                .setContentIntent(contentIntent)  // The intent to send when the entry is clicked
+                .build();
 
         // Send the notification.
         // We use a layout id because it is a unique number.  We use it later to cancel.
