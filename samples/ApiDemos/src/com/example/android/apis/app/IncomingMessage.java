@@ -121,24 +121,26 @@ public class IncomingMessage extends Activity {
         // The ticker text, this uses a formatted string so our message could be localized
         String tickerText = getString(R.string.imcoming_message_ticker_text, message);
 
-        // construct the Notification object.
-        Notification notif = new Notification(R.drawable.stat_sample, tickerText,
-                System.currentTimeMillis());
-
         // Set the info for the views that show in the notification panel.
-        notif.setLatestEventInfo(this, from, message, contentIntent);
+        Notification.Builder notifBuilder = new Notification.Builder(this)
+                .setSmallIcon(R.drawable.stat_sample)  // the status icon
+                .setTicker(tickerText)  // the status text
+                .setWhen(System.currentTimeMillis())  // the time stamp
+                .setContentTitle(from)  // the label of the entry
+                .setContentText(message)  // the contents of the entry
+                .setContentIntent(contentIntent);  // The intent to send when the entry is clicked
 
         // We'll have this notification do the default sound, vibration, and led.
         // Note that if you want any of these behaviors, you should always have
         // a preference for the user to turn them off.
-        notif.defaults = Notification.DEFAULT_ALL;
+        notifBuilder.setDefaults(Notification.DEFAULT_ALL);
 
         // Note that we use R.layout.incoming_message_panel as the ID for
         // the notification.  It could be any integer you want, but we use
         // the convention of using a resource id for a string related to
         // the notification.  It will always be a unique number within your
         // application.
-        nm.notify(R.string.imcoming_message_ticker_text, notif);
+        nm.notify(R.string.imcoming_message_ticker_text, notifBuilder.build());
     }
 //END_INCLUDE(app_notification)
 
@@ -174,24 +176,26 @@ public class IncomingMessage extends Activity {
         // The ticker text, this uses a formatted string so our message could be localized
         String tickerText = getString(R.string.imcoming_message_ticker_text, message);
 
-        // construct the Notification object.
-        Notification notif = new Notification(R.drawable.stat_sample, tickerText,
-                System.currentTimeMillis());
-
         // Set the info for the views that show in the notification panel.
-        notif.setLatestEventInfo(this, from, message, contentIntent);
+        Notification.Builder notifBuilder = new Notification.Builder(this)
+                .setSmallIcon(R.drawable.stat_sample)  // the status icon
+                .setTicker(tickerText)  // the status text
+                .setWhen(System.currentTimeMillis())  // the time stamp
+                .setContentTitle(from)  // the label of the entry
+                .setContentText(message)  // the contents of the entry
+                .setContentIntent(contentIntent);  // The intent to send when the entry is clicked
 
         // We'll have this notification do the default sound, vibration, and led.
         // Note that if you want any of these behaviors, you should always have
         // a preference for the user to turn them off.
-        notif.defaults = Notification.DEFAULT_ALL;
+        notifBuilder.setDefaults(Notification.DEFAULT_ALL);
 
         // Note that we use R.layout.incoming_message_panel as the ID for
         // the notification.  It could be any integer you want, but we use
         // the convention of using a resource id for a string related to
         // the notification.  It will always be a unique number within your
         // application.
-        nm.notify(R.string.imcoming_message_ticker_text, notif);
+        nm.notify(R.string.imcoming_message_ticker_text, notifBuilder.build());
     }
 //END_INCLUDE(interstitial_notification)
 }
