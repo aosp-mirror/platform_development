@@ -59,6 +59,7 @@ enum {
 
 typedef int greg_t;
 typedef greg_t gregset_t[NGREG];
+typedef struct user_fpregs fpregset_t;
 
 #include <asm/sigcontext.h>
 typedef struct sigcontext mcontext_t;
@@ -81,6 +82,13 @@ typedef struct ucontext {
 #define NGREG 34 /* x0..x30 + sp + pc + pstate */
 typedef unsigned long greg_t;
 typedef greg_t gregset_t[NGREG];
+
+struct user_fpsimd_struct {
+  long double vregs[32];
+  uint32_t fpsr;
+  uint32_t fpcr;
+};
+typedef struct user_fpsimd_struct fpregset_t;
 
 #include <asm/sigcontext.h>
 typedef struct sigcontext mcontext_t;
