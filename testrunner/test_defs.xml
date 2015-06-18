@@ -356,6 +356,13 @@ See test_defs.xsd for more information.
     coverage_target="framework"
     suite="cts" />
 
+<test name="cts-telecom"
+    build_path="cts/tests/tests/telecom"
+    package="com.android.cts.telecom"
+    runner="android.support.test.runner.AndroidJUnitRunner"
+    coverage_target="framework"
+    suite="cts" />
+
 <test name="cts-telephony"
     build_path="cts/tests/tests/telephony"
     package="com.android.cts.telephony"
