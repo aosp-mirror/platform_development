@@ -30,7 +30,6 @@ import com.example.android.xyztouristattractions.common.Utils;
 import com.example.android.xyztouristattractions.ui.AttractionsActivity;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.data.FreezableUtils;
 import com.google.android.gms.wearable.DataEvent;
 import com.google.android.gms.wearable.DataEventBuffer;
 import com.google.android.gms.wearable.DataMap;
@@ -54,9 +53,7 @@ public class ListenerService extends WearableListenerService {
     public void onDataChanged(DataEventBuffer dataEvents) {
         Log.d(TAG, "onDataChanged: " + dataEvents);
 
-        final List<DataEvent> events = FreezableUtils.freezeIterable(dataEvents);
-
-        for (DataEvent event : events) {
+        for (DataEvent event : dataEvents) {
             if (event.getType() == DataEvent.TYPE_CHANGED
                     && event.getDataItem() != null
                     && Constants.ATTRACTION_PATH.equals(event.getDataItem().getUri().getPath())) {

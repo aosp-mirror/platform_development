@@ -171,6 +171,17 @@ public class SweepWatchFaceService extends CanvasWatchFaceService {
         }
 
         @Override
+        public void onSurfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+            if (mBackgroundScaledBitmap == null
+                    || mBackgroundScaledBitmap.getWidth() != width
+                    || mBackgroundScaledBitmap.getHeight() != height) {
+                mBackgroundScaledBitmap = Bitmap.createScaledBitmap(mBackgroundBitmap,
+                        width, height, true /* filter */);
+            }
+            super.onSurfaceChanged(holder, format, width, height);
+        }
+
+        @Override
         public void onDraw(Canvas canvas, Rect bounds) {
             if (Log.isLoggable(TAG, Log.VERBOSE)) {
                 Log.v(TAG, "onDraw");
@@ -182,12 +193,6 @@ public class SweepWatchFaceService extends CanvasWatchFaceService {
             int height = bounds.height();
 
             // Draw the background, scaled to fit.
-            if (mBackgroundScaledBitmap == null
-                    || mBackgroundScaledBitmap.getWidth() != width
-                    || mBackgroundScaledBitmap.getHeight() != height) {
-                mBackgroundScaledBitmap = Bitmap.createScaledBitmap(mBackgroundBitmap,
-                        width, height, true /* filter */);
-            }
             canvas.drawBitmap(mBackgroundScaledBitmap, 0, 0, null);
 
             // Find the center. Ignore the window insets so that, on round watches with a

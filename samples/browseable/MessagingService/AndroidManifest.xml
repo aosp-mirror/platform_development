@@ -37,13 +37,17 @@
         <service android:name=".MessagingService">
         </service>
 
-        <receiver android:name=".MessageReadReceiver">
+        <receiver
+            android:name=".MessageReadReceiver"
+            android:exported="false">
             <intent-filter>
                 <action android:name="com.example.android.messagingservice.ACTION_MESSAGE_READ"/>
             </intent-filter>
         </receiver>
 
-        <receiver android:name=".MessageReplyReceiver">
+        <receiver
+            android:name=".MessageReplyReceiver"
+            android:exported="false">
             <intent-filter>
                 <action android:name="com.example.android.messagingservice.ACTION_MESSAGE_REPLY"/>
             </intent-filter>

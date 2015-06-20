@@ -75,7 +75,6 @@ public class HomeListenerService extends WearableListenerService {
                 UpdateNotificationForDataItem(event.getDataItem());
             }
         }
-        dataEvents.close();
     }
 
     @Override
