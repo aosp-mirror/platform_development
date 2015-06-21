@@ -31,7 +31,8 @@ public abstract class MonkeyEvent {
     public static final int EVENT_TYPE_ACTIVITY = 4;
     public static final int EVENT_TYPE_FLIP = 5; // Keyboard flip
     public static final int EVENT_TYPE_THROTTLE = 6;
-    public static final int EVENT_TYPE_NOOP = 7;
+    public static final int EVENT_TYPE_PERMISSION = 7;
+    public static final int EVENT_TYPE_NOOP = 8;
 
     public static final int INJECT_SUCCESS = 1;
     public static final int INJECT_FAIL = 0;
