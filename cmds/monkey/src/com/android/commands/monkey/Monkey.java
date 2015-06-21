@@ -31,15 +31,12 @@ import android.os.RemoteException;
 import android.os.ServiceManager;
 import android.os.StrictMode;
 import android.os.SystemClock;
-import android.os.SystemProperties;
 import android.os.UserHandle;
 import android.view.IWindowManager;
 import android.view.Surface;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.ByteArrayInputStream;
-import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -47,12 +44,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Writer;
-import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 
 /**
  * Application that injects random key events and other actions into the system.
@@ -181,12 +178,6 @@ public class Monkey {
     /** Package whitelist file. */
     private String mPkgWhitelistFile;
 
-    /** Packages we are allowed to run, or empty if no restriction. */
-    private HashSet<String> mValidPackages = new HashSet<String>();
-
-    /** Packages we are not allowed to run. */
-    private HashSet<String> mInvalidPackages = new HashSet<String>();
-
     /** Categories we are allowed to launch **/
     private ArrayList<String> mMainCategories = new ArrayList<String>();
 
@@ -251,36 +242,20 @@ public class Monkey {
 
     private MonkeyNetworkMonitor mNetworkMonitor = new MonkeyNetworkMonitor();
 
+    private boolean mPermissionTargetSystem = false;
+
     // information on the current activity.
     public static Intent currentIntent;
 
     public static String currentPackage;
 
     /**
-     * Check whether we should run against the givn package.
-     *
-     * @param pkg The package name.
-     * @return Returns true if we should run against pkg.
-     */
-    private boolean checkEnteringPackage(String pkg) {
-        if (mInvalidPackages.size() > 0) {
-            if (mInvalidPackages.contains(pkg)) {
-                return false;
-            }
-        } else if (mValidPackages.size() > 0) {
-            if (!mValidPackages.contains(pkg)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    /**
      * Monitor operations happening in the system.
      */
     private class ActivityController extends IActivityController.Stub {
         public boolean activityStarting(Intent intent, String pkg) {
-            boolean allow = checkEnteringPackage(pkg) || (DEBUG_ALLOW_ANY_STARTS != 0);
+            boolean allow = MonkeyUtils.getPackageFilter().checkEnteringPackage(pkg)
+                    || (DEBUG_ALLOW_ANY_STARTS != 0);
             if (mVerbose > 0) {
                 // StrictMode's disk checks end up catching this on
                 // userdebug/eng builds due to PrintStream going to a
@@ -301,7 +276,8 @@ public class Monkey {
         public boolean activityResuming(String pkg) {
             StrictMode.ThreadPolicy savedPolicy = StrictMode.allowThreadDiskWrites();
             System.out.println("    // activityResuming(" + pkg + ")");
-            boolean allow = checkEnteringPackage(pkg) || (DEBUG_ALLOW_ANY_RESTARTS != 0);
+            boolean allow = MonkeyUtils.getPackageFilter().checkEnteringPackage(pkg)
+                    || (DEBUG_ALLOW_ANY_RESTARTS != 0);
             if (!allow) {
                 if (mVerbose > 0) {
                     System.out.println("    // " + (allow ? "Allowing" : "Rejecting")
@@ -559,18 +535,7 @@ public class Monkey {
 
         if (mVerbose > 0) {
             System.out.println(":Monkey: seed=" + mSeed + " count=" + mCount);
-            if (mValidPackages.size() > 0) {
-                Iterator<String> it = mValidPackages.iterator();
-                while (it.hasNext()) {
-                    System.out.println(":AllowPackage: " + it.next());
-                }
-            }
-            if (mInvalidPackages.size() > 0) {
-                Iterator<String> it = mInvalidPackages.iterator();
-                while (it.hasNext()) {
-                    System.out.println(":DisallowPackage: " + it.next());
-                }
-            }
+            MonkeyUtils.getPackageFilter().dump();
             if (mMainCategories.size() != 0) {
                 Iterator<String> it = mMainCategories.iterator();
                 while (it.hasNext()) {
@@ -626,7 +591,8 @@ public class Monkey {
             if (mVerbose >= 2) { // check seeding performance
                 System.out.println("// Seeded: " + mSeed);
             }
-            mEventSource = new MonkeySourceRandom(mRandom, mMainApps, mThrottle, mRandomizeThrottle);
+            mEventSource = new MonkeySourceRandom(mRandom, mMainApps,
+                    mThrottle, mRandomizeThrottle, mPermissionTargetSystem);
             mEventSource.setVerbose(mVerbose);
             // set any of the factors that has been set
             for (int i = 0; i < MonkeySourceRandom.FACTORZ_COUNT; i++) {
@@ -756,11 +722,12 @@ public class Monkey {
 
         try {
             String opt;
+            Set<String> validPackages = new HashSet<>();
             while ((opt = nextOption()) != null) {
                 if (opt.equals("-s")) {
                     mSeed = nextOptionLong("Seed");
                 } else if (opt.equals("-p")) {
-                    mValidPackages.add(nextOptionData());
+                    validPackages.add(nextOptionData());
                 } else if (opt.equals("-c")) {
                     mMainCategories.add(nextOptionData());
                 } else if (opt.equals("-v")) {
@@ -812,6 +779,9 @@ public class Monkey {
                 } else if (opt.equals("--pct-pinchzoom")) {
                     int i = MonkeySourceRandom.FACTOR_PINCHZOOM;
                     mFactors[i] = -nextOptionLong("pinch zoom events percentage");
+                } else if (opt.equals("--pct-permission")) {
+                    int i = MonkeySourceRandom.FACTOR_PERMISSION;
+                    mFactors[i] = -nextOptionLong("runtime permission toggle events percentage");
                 } else if (opt.equals("--pkg-blacklist-file")) {
                     mPkgBlacklistFile = nextOptionData();
                 } else if (opt.equals("--pkg-whitelist-file")) {
@@ -845,6 +815,8 @@ public class Monkey {
                 } else if (opt.equals("--periodic-bugreport")){
                     mGetPeriodicBugreport = true;
                     mBugreportFrequency = nextOptionLong("Number of iterations");
+                } else if (opt.equals("--permission-target-system")){
+                    mPermissionTargetSystem = true;
                 } else if (opt.equals("-h")) {
                     showUsage();
                     return false;
@@ -854,6 +826,7 @@ public class Monkey {
                     return false;
                 }
             }
+            MonkeyUtils.getPackageFilter().addValidPackages(validPackages);
         } catch (RuntimeException ex) {
             System.err.println("** Error: " + ex.toString());
             showUsage();
@@ -889,7 +862,7 @@ public class Monkey {
      * @param list The destination list.
      * @return Returns false if any error occurs.
      */
-    private static boolean loadPackageListFromFile(String fileName, HashSet<String> list) {
+    private static boolean loadPackageListFromFile(String fileName, Set<String> list) {
         BufferedReader reader = null;
         try {
             reader = new BufferedReader(new FileReader(fileName));
@@ -921,20 +894,24 @@ public class Monkey {
      * @return Returns false if any error occurs.
      */
     private boolean loadPackageLists() {
-        if (((mPkgWhitelistFile != null) || (mValidPackages.size() > 0))
+        if (((mPkgWhitelistFile != null) || (MonkeyUtils.getPackageFilter().hasValidPackages()))
                 && (mPkgBlacklistFile != null)) {
             System.err.println("** Error: you can not specify a package blacklist "
                     + "together with a whitelist or individual packages (via -p).");
             return false;
         }
+        Set<String> validPackages = new HashSet<>();
         if ((mPkgWhitelistFile != null)
-                && (!loadPackageListFromFile(mPkgWhitelistFile, mValidPackages))) {
+                && (!loadPackageListFromFile(mPkgWhitelistFile, validPackages))) {
             return false;
         }
+        MonkeyUtils.getPackageFilter().addValidPackages(validPackages);
+        Set<String> invalidPackages = new HashSet<>();
         if ((mPkgBlacklistFile != null)
-                && (!loadPackageListFromFile(mPkgBlacklistFile, mInvalidPackages))) {
+                && (!loadPackageListFromFile(mPkgBlacklistFile, invalidPackages))) {
             return false;
         }
+        MonkeyUtils.getPackageFilter().addInvalidPackages(invalidPackages);
         return true;
     }
 
@@ -1014,7 +991,7 @@ public class Monkey {
                 for (int a = 0; a < NA; a++) {
                     ResolveInfo r = mainApps.get(a);
                     String packageName = r.activityInfo.applicationInfo.packageName;
-                    if (checkEnteringPackage(packageName)) {
+                    if (MonkeyUtils.getPackageFilter().checkEnteringPackage(packageName)) {
                         if (mVerbose >= 2) { // very verbose
                             System.out.println("//   + Using main activity " + r.activityInfo.name
                                     + " (from package " + packageName + ")");
@@ -1352,6 +1329,7 @@ public class Monkey {
         usage.append("              [--pct-nav PERCENT] [--pct-majornav PERCENT]\n");
         usage.append("              [--pct-appswitch PERCENT] [--pct-flip PERCENT]\n");
         usage.append("              [--pct-anyevent PERCENT] [--pct-pinchzoom PERCENT]\n");
+        usage.append("              [--pct-permission PERCENT]\n");
         usage.append("              [--pkg-blacklist-file PACKAGE_BLACKLIST_FILE]\n");
         usage.append("              [--pkg-whitelist-file PACKAGE_WHITELIST_FILE]\n");
         usage.append("              [--wait-dbg] [--dbg-no-events]\n");
@@ -1365,6 +1343,7 @@ public class Monkey {
         usage.append("              [--script-log]\n");
         usage.append("              [--bugreport]\n");
         usage.append("              [--periodic-bugreport]\n");
+        usage.append("              [--permission-target-system]\n");
         usage.append("              COUNT\n");
         System.err.println(usage.toString());
     }

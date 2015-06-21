@@ -17,6 +17,9 @@
 package com.android.commands.monkey;
 
 import java.text.SimpleDateFormat;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
 
 /**
  * Misc utilities.
@@ -26,6 +29,7 @@ public abstract class MonkeyUtils {
     private static final java.util.Date DATE = new java.util.Date();
     private static final SimpleDateFormat DATE_FORMATTER = new SimpleDateFormat(
         "yyyy-MM-dd HH:mm:ss.SSS ");
+    private static PackageFilter sFilter;
 
     private MonkeyUtils() {
     }
@@ -38,4 +42,72 @@ public abstract class MonkeyUtils {
         return DATE_FORMATTER.format(DATE);
     }
 
+    public static PackageFilter getPackageFilter() {
+        if (sFilter == null) {
+            sFilter = new PackageFilter();
+        }
+        return sFilter;
+    }
+
+    public static class PackageFilter {
+        private Set<String> mValidPackages = new HashSet<>();
+        private Set<String> mInvalidPackages = new HashSet<>();
+
+        private PackageFilter() {
+        }
+
+        public void addValidPackages(Set<String> validPackages) {
+            mValidPackages.addAll(validPackages);
+        }
+
+        public void addInvalidPackages(Set<String> invalidPackages) {
+            mInvalidPackages.addAll(invalidPackages);
+        }
+
+        public boolean hasValidPackages() {
+            return mValidPackages.size() > 0;
+        }
+
+        public boolean isPackageValid(String pkg) {
+            return mValidPackages.contains(pkg);
+        }
+
+        public boolean isPackageInvalid(String pkg) {
+            return mInvalidPackages.contains(pkg);
+        }
+
+        /**
+         * Check whether we should run against the given package.
+         *
+         * @param pkg The package name.
+         * @return Returns true if we should run against pkg.
+         */
+        public boolean checkEnteringPackage(String pkg) {
+            if (mInvalidPackages.size() > 0) {
+                if (mInvalidPackages.contains(pkg)) {
+                    return false;
+                }
+            } else if (mValidPackages.size() > 0) {
+                if (!mValidPackages.contains(pkg)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        public void dump() {
+            if (mValidPackages.size() > 0) {
+                Iterator<String> it = mValidPackages.iterator();
+                while (it.hasNext()) {
+                    System.out.println(":AllowPackage: " + it.next());
+                }
+            }
+            if (mInvalidPackages.size() > 0) {
+                Iterator<String> it = mInvalidPackages.iterator();
+                while (it.hasNext()) {
+                    System.out.println(":DisallowPackage: " + it.next());
+                }
+            }
+        }
+    }
 }
