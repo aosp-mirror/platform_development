@@ -77,12 +77,12 @@ public class MonkeySourceRandom implements MonkeyEventSource {
     public static final int FACTOR_PINCHZOOM    = 2;
     public static final int FACTOR_TRACKBALL    = 3;
     public static final int FACTOR_ROTATION     = 4;
-    public static final int FACTOR_NAV          = 5;
-    public static final int FACTOR_MAJORNAV     = 6;
-    public static final int FACTOR_SYSOPS       = 7;
-    public static final int FACTOR_APPSWITCH    = 8;
-    public static final int FACTOR_FLIP         = 9;
-    public static final int FACTOR_PERMISSION   = 10;
+    public static final int FACTOR_PERMISSION   = 5;
+    public static final int FACTOR_NAV          = 6;
+    public static final int FACTOR_MAJORNAV     = 7;
+    public static final int FACTOR_SYSOPS       = 8;
+    public static final int FACTOR_APPSWITCH    = 9;
+    public static final int FACTOR_FLIP         = 10;
     public static final int FACTOR_ANYTHING     = 11;
     public static final int FACTORZ_COUNT       = 12;    // should be last+1
 
