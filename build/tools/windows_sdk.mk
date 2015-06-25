@@ -34,6 +34,7 @@ WIN_TARGETS := \
 	aapt adb aidl \
 	aprotoc \
 	bcc_compat \
+	clang \
 	etc1tool \
 	dexdump dmtracedump \
 	fastboot \
