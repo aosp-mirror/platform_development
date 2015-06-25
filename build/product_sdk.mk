@@ -33,7 +33,6 @@ PRODUCT_PACKAGES += \
 	zipalign \
 	bcc_compat \
 	bios.bin \
-	clang \
 	commons-compress-1.0 \
 	dexdump \
 	dmtracedump \
