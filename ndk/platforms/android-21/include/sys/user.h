@@ -47,7 +47,7 @@ struct user_fpregs_struct {
   long fos;
   long st_space[20];
 };
-struct user_fxsr_struct {
+struct user_fpxregs_struct {
   unsigned short cwd;
   unsigned short swd;
   unsigned short twd;
@@ -166,10 +166,6 @@ struct user {
 };
 
 #elif defined(__mips__)
-struct user_regs_struct
-{
-  unsigned long regs[180 / sizeof(unsigned long) + 64];
-};
 
 struct user {
   unsigned long regs[180 / sizeof(unsigned long) + 64];
