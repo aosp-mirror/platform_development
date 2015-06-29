@@ -16,6 +16,7 @@
 
 package com.example.android.smssample;
 
+import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
@@ -26,6 +27,7 @@ import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.widget.SimpleCursorAdapter;
+import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 import android.view.Menu;
 import android.view.View;
@@ -147,6 +149,14 @@ public class MainActivity extends FragmentActivity implements LoaderCallbacks<Cu
                 });
             }
         }
+        String phoneNumberToast = "Unable to obtain phone number (not default SMS app?)";
+        final TelephonyManager telephony =
+                (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
+        try {
+            phoneNumberToast = "Phone number: " + telephony.getLine1Number();
+        } catch (SecurityException e) {
+        }
+        Toast.makeText(this, phoneNumberToast, Toast.LENGTH_SHORT).show();
     }
 
     @Override
