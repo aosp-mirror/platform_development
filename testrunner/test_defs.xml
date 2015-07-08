@@ -271,6 +271,13 @@ See test_defs.xsd for more information.
     coverage_target="framework"
     suite="cts" />
 
+<test name="cts-calllog"
+    build_path="cts/tests/tests/calllog"
+    package="com.android.cts.calllog"
+    runner="android.support.test.runner.AndroidJUnitRunner"
+    coverage_target="Phone"
+    suite="cts" />
+
 <test name="cts-content"
     build_path="cts/tests/tests/content"
     package="com.android.cts.content"
