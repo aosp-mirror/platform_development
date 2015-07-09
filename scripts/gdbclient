@@ -12,6 +12,15 @@ fi
 # as well.
 source $ANDROID_BUILD_TOP/build/envsetup.sh
 
+function adb_get_product_device() {
+  local candidate=`adb shell getprop ro.hardware | tr -d '\r\n'`
+  if [[ "$candidate" =~ ^(goldfish|ranchu)$ ]]; then
+    # Emulator builds use product.device for OUT folder
+    candidate=`adb shell getprop ro.product.device | tr -d '\r\n'`
+  fi
+  echo $candidate
+}
+
 # returns 0 when process is not traced
 function adb_get_traced_by() {
   echo `adb shell cat /proc/$1/status | grep -e "^TracerPid:" | sed "s/^TracerPid:\t//" | tr -d '\r\n'`
@@ -37,7 +46,7 @@ function gdbclient() {
     echo "Usage: gdbclient <pid|processname> [port number]"
     return -1
   fi
-  local DEVICE=`adb shell getprop ro.hardware | tr -d '\r\n'`
+  local DEVICE=$(adb_get_product_device)
 
   if [ -z "$DEVICE" ]; then
     echo "Error: Unable to get device name. Please check if device is connected and ANDROID_SERIAL is set."
