@@ -513,6 +513,13 @@ See test_defs.xsd for more information.
     continuous="true"
     coverage_target="Phone" />
 
+<test name="carrierconfig-unit"
+    build_path="packages/apps/CarrierConfig"
+    package="com.android.carrierconfig.tests"
+    continuous="true"
+    coverage_target="Phone"
+    description="Tests for default carrier config app" />
+
 <test name="telecom-unit"
     build_path="packages/services/Telecomm"
     package="com.android.server.telecom.tests"
