@@ -437,7 +437,7 @@ public class MonkeySourceNetwork implements MonkeyEventSource {
         IPowerManager pm =
                 IPowerManager.Stub.asInterface(ServiceManager.getService(Context.POWER_SERVICE));
         try {
-            pm.wakeUp(SystemClock.uptimeMillis());
+            pm.wakeUp(SystemClock.uptimeMillis(), "Monkey", null);
         } catch (RemoteException e) {
             Log.e(TAG, "Got remote exception", e);
             return false;
