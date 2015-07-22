@@ -398,12 +398,6 @@ See test_defs.xsd for more information.
     build_path="development/samples/ApiDemos"
     package="com.example.android.apis.tests" />
 
-<test name="browser"
-    build_path="packages/apps/Browser"
-    package="com.android.browser.tests"
-    coverage_target="Browser"
-    continuous="true" />
-
 <test name="calculator"
     build_path="packages/apps/Calculator"
     package="com.android.calculator2.tests"
