@@ -43,8 +43,14 @@ public class FragmentHideShow extends Activity {
         // The content view embeds two fragments; now retrieve them and attach
         // their "hide" button.
         FragmentManager fm = getFragmentManager();
-        addShowHideListener(R.id.frag1hide, fm.findFragmentById(R.id.fragment1));
-        addShowHideListener(R.id.frag2hide, fm.findFragmentById(R.id.fragment2));
+        Fragment fragment1 = fm.findFragmentById(R.id.fragment1);
+        addShowHideListener(R.id.frag1hide, fragment1);
+        final Button button1 = (Button)findViewById(R.id.frag1hide);
+        button1.setText(fragment1.isHidden() ? "Show" : "Hide");
+        Fragment fragment2 = fm.findFragmentById(R.id.fragment2);
+        addShowHideListener(R.id.frag2hide, fragment2);
+        final Button button2 = (Button)findViewById(R.id.frag2hide);
+        button2.setText(fragment2.isHidden() ? "Show" : "Hide");
     }
 
     void addShowHideListener(int buttonId, final Fragment fragment) {
