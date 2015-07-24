@@ -57,8 +57,6 @@
    <!-- apps -->
     <coverage_target name="ApiDemos" build_path="development/samples/ApiDemos"
         type="APPS" />
-    <coverage_target name="Browser" build_path="packages/apps/Browser"
-        type="APPS" />
     <coverage_target name="Calculator" build_path="packages/apps/Calculator"
         type="APPS" />
     <coverage_target name="Calendar" build_path="packages/apps/Calendar"
