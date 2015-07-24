@@ -11,6 +11,7 @@ fi
 # shell, but not functions (like gettop), so we need to source envsetup in here
 # as well.
 source $ANDROID_BUILD_TOP/build/envsetup.sh
+echo
 
 function adb_get_product_device() {
   local candidate=`adb shell getprop ro.hardware | tr -d '\r\n'`
@@ -96,10 +97,15 @@ function gdbclient() {
     fi
   fi
 
-  local EXE=`adb shell readlink /proc/$PID/exe | tr -d '\r\n'`
+  local ID=`adb shell id -u`
+  if [ "$ID" != "0" ]; then
+    echo "Error: gdbclient only works if you've run 'adb root'"
+    return -4
+  fi
 
+  local EXE=`adb shell readlink /proc/$PID/exe | tr -d '\r\n'`
   if [ -z "$EXE" ]; then
-    echo "Error: no such pid=$PID - is process still alive?"
+    echo "Error: couldn't find executable for pid $PID --- is the process still alive?"
     return -4
   fi
 
