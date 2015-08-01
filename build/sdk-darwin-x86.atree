@@ -18,7 +18,7 @@
 # Platform Tools Component
 ##############################################################################
 
-lib/libc++.dylib                                      strip platform-tools/lib/libc++.dylib
+lib64/libc++.dylib                                      strip platform-tools/lib64/libc++.dylib
 
 ##############################################################################
 # Build Tools Component
@@ -28,11 +28,11 @@ lib/libc++.dylib                                      strip platform-tools/lib/l
 # revision as specified in the source.properties.
 
 
-lib/libLLVM.dylib                                     strip build-tools/${PLATFORM_NAME}/lib/libLLVM.dylib
-lib/libbcc.dylib                                      strip build-tools/${PLATFORM_NAME}/lib/libbcc.dylib
-lib/libbcinfo.dylib                                   strip build-tools/${PLATFORM_NAME}/lib/libbcinfo.dylib
-lib/libclang.dylib                                    strip build-tools/${PLATFORM_NAME}/lib/libclang.dylib
-lib/libc++.dylib                                      strip build-tools/${PLATFORM_NAME}/lib/libc++.dylib
+lib64/libLLVM.dylib                                     strip build-tools/${PLATFORM_NAME}/lib64/libLLVM.dylib
+lib64/libbcc.dylib                                      strip build-tools/${PLATFORM_NAME}/lib64/libbcc.dylib
+lib64/libbcinfo.dylib                                   strip build-tools/${PLATFORM_NAME}/lib64/libbcinfo.dylib
+lib64/libclang.dylib                                    strip build-tools/${PLATFORM_NAME}/lib64/libclang.dylib
+lib64/libc++.dylib                                      strip build-tools/${PLATFORM_NAME}/lib64/libc++.dylib
 
 prebuilts/sdk/tools/darwin/bin/arm-linux-androideabi-ld   strip build-tools/${PLATFORM_NAME}/arm-linux-androideabi-ld
 prebuilts/sdk/tools/darwin/bin/i686-linux-android-ld      strip build-tools/${PLATFORM_NAME}/i686-linux-android-ld
