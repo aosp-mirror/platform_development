@@ -16,30 +16,32 @@
 #
 # To use, run the following command from either your repo root or
 # development/tools/idegen:
-#   intellij-gen.sh <module name>
+#   intellij-gen.sh project_dir <module_dir>...
 #
-# where module name is the LOCAL_PACKAGE_NAME in Android.mk for the project.
+# if no module_dir is provided, we assume project_dir is also a module_dir.
 #
-# For example, to generate a project for Contacts, use:
-#   intellij-gen.sh Contacts
+# For example, to generate a project for framework/base, use:
+#   intellij-gen.sh framework/base
 #
-# The project directory (.idea) will be put in the root directory of
-# the module.  Sharable iml files will be put into each respective
-# module directory.
+# The project directory (.idea) will be put in the project_dir.  Sharable
+# iml files will be put into each respective module directory.
 #
 # Only tested on linux.  Should work for macs but have not tried.
 #
 set -e
 
 progname=`basename $0`
-if [ $# -lt 2 ]
-then
-    echo "Usage: $progname project_dir module_dir <module_dir>..."
-    exit 1
+if [ $# -lt 1 ]; then
+  echo "Usage: $progname project_dir <module_dir>..."
+  exit 1
 fi
-project_dir=${PWD}/$1
+project_dir=$1
 shift
-module_dirs=$@
+if [ -z $@ ]; then
+  module_dirs=${project_dir}
+else
+  module_dirs=$@
+fi
 echo $module_dirs
 script_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 root_dir=$PWD
