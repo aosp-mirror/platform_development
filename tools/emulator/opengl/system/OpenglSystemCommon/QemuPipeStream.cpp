@@ -122,12 +122,14 @@ const unsigned char *QemuPipeStream::readFully(void *buf, size_t len)
     //DBG(">> QemuPipeStream::readFully %d\n", len);
     if (!valid()) return NULL;
     if (!buf) {
-        if (len>0) ERR("QemuPipeStream::readFully failed, buf=NULL, len %d", len);
+        if (len > 0) {
+            ERR("QemuPipeStream::readFully failed, buf=NULL, len %zu", len);
+        }
         return NULL;  // do not allow NULL buf in that implementation
     }
     size_t res = len;
     while (res > 0) {
-        ssize_t stat = ::read(m_sock, (char *)(buf) + len - res, len);
+        ssize_t stat = ::read(m_sock, (char *)(buf) + len - res, res);
         if (stat == 0) {
             // client shutdown;
             return NULL;
@@ -135,8 +137,8 @@ const unsigned char *QemuPipeStream::readFully(void *buf, size_t len)
             if (errno == EINTR) {
                 continue;
             } else {
-                ERR("QemuPipeStream::readFully failed (buf %p): %s\n",
-                    buf, strerror(errno));
+                ERR("QemuPipeStream::readFully failed (buf %p, len %zu"
+                    ", res %zu): %s\n", buf, len, res, strerror(errno));
                 return NULL;
             }
         } else {
