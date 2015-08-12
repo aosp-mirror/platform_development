@@ -27,7 +27,8 @@ AdbWinUsbEndpointObject::AdbWinUsbEndpointObject(
     AdbWinUsbInterfaceObject* parent_interf,
     UCHAR endpoint_id,
     UCHAR endpoint_index)
-    : AdbEndpointObject(parent_interf, endpoint_id, endpoint_index) {
+    : AdbEndpointObject(parent_interf, endpoint_id, endpoint_index),
+    lock_(), is_closing_(false), pending_io_count_(0) {
 }
 
 AdbWinUsbEndpointObject::~AdbWinUsbEndpointObject() {
@@ -44,6 +45,54 @@ LONG AdbWinUsbEndpointObject::Release() {
   return ret;
 }
 
+bool AdbWinUsbEndpointObject::CloseHandle() {
+  // This method only returns once all pending IOs are aborted and after
+  // preventing future pending IOs. This means that once CloseHandle()
+  // returns, threads using this object won't be using
+  // parent_winusb_interface()->winusb_handle(), so it can then be safely
+  // released.
+  lock_.Lock();
+  if (!is_closing_) {
+    // Set flag to prevent new I/Os from starting up.
+    is_closing_ = true;
+  }
+
+  // While there are pending IOs, keep aborting the pipe. We have to do this
+  // repeatedly because pending_ios_ is incremented before the IO has actually
+  // started, and abort (probably) only works if the IO has been started.
+  while (pending_io_count_ > 0) {
+    lock_.Unlock();
+
+    // It has been noticed that on Windows 7, if you only call
+    // WinUsb_AbortPipe(), without first calling WinUsb_ResetPipe(), the call
+    // to WinUsb_AbortPipe() hangs.
+    if (!WinUsb_ResetPipe(parent_winusb_interface()->winusb_handle(),
+                          endpoint_id()) ||
+        !WinUsb_AbortPipe(parent_winusb_interface()->winusb_handle(),
+                          endpoint_id())) {
+      // Reset or Abort failed for unexpected reason. We might not be able to
+      // abort pending IOs, so we shouldn't keep polling pending_io_count_ or
+      // else we might hang forever waiting for the IOs to abort. In this
+      // situation it is preferable to risk a race condition (which may or may
+      // not crash) and just break now.
+      lock_.Lock();
+      break;
+    }
+
+    // Give the IO threads time to break out of I/O calls and decrement
+    // pending_io_count_. They should finish up pretty quick. The amount of time
+    // "wasted" here (as opposed to if we did synchronization with an event)
+    // doesn't really matter since this is an uncommon corner-case.
+    Sleep(16);  // 16 ms, old default OS scheduler granularity
+
+    lock_.Lock();
+  }
+
+  lock_.Unlock();
+
+  return AdbEndpointObject::CloseHandle();
+}
+
 ADBAPIHANDLE AdbWinUsbEndpointObject::CommonAsyncReadWrite(
     bool is_read,
     void* buffer,
@@ -51,6 +100,9 @@ ADBAPIHANDLE AdbWinUsbEndpointObject::CommonAsyncReadWrite(
     ULONG* bytes_transferred,
     HANDLE event_handle,
     ULONG time_out) {
+  // TODO: Do synchronization with is_closing_ and pending_io_count_ like
+  // CommonSyncReadWrite(). This is not yet implemented because there are no
+  // callers to Adb{Read,Write}EndpointAsync() in AOSP, and hence no testing.
   if (!SetTimeout(time_out))
     return false;
 
@@ -110,6 +162,24 @@ bool AdbWinUsbEndpointObject::CommonSyncReadWrite(bool is_read,
                                                   ULONG bytes_to_transfer,
                                                   ULONG* bytes_transferred,
                                                   ULONG time_out) {
+  lock_.Lock();
+  if (is_closing_) {
+    lock_.Unlock();
+    // AdbCloseHandle() is in progress, so don't start up any new IOs.
+    SetLastError(ERROR_HANDLES_CLOSED);
+    return false;
+  } else {
+    // Not closing down, so record the fact that we're doing IO. This will
+    // prevent CloseHandle() from returning until our IO completes or it aborts
+    // our IO.
+    ++pending_io_count_;
+    lock_.Unlock();
+  }
+
+  // Because we've incremented pending_ios_, do the matching decrement when this
+  // object goes out of scope.
+  DecrementPendingIO dec(this);
+
   if (!SetTimeout(time_out))
     return false;
 

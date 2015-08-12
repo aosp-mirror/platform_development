@@ -18,8 +18,13 @@ TARGETNAME = AdbWinUsbApi
 TARGETPATH = obj
 TARGETTYPE = DYNLINK
 
+_NT_TARGET_VERSION = $(_NT_TARGET_VERSION_VISTA)
+
 UMTYPE = windows
 DLLDEF = AdbWinUsbApi.def
+# Use the same load address as previous versions just to be conservative. This
+# really doesn't matter on newer OSes that use ASLR.
+DLLBASE = 0x400000
 
 # Use statically linked atl libraries:
 # - atls.lib for free build
@@ -32,6 +37,12 @@ USE_STL         = 1
 STL_VER         = 60
 # Use multithreaded libraries
 USE_LIBCMT      = 1
+
+!IF !$(FREEBUILD)
+# In checked build, ATL headers call APIs that are only in atlsd.lib. To use
+# atlsd.lib in checked build, set DEBUG_CRTS.
+DEBUG_CRTS=1
+!ENDIF
 
 # Include directories
 INCLUDES = $(DDK_INC_PATH);           \
@@ -54,14 +65,6 @@ TARGETLIBS = $(SDK_LIB_PATH)\ole32.lib    \
              $(SDK_LIB_PATH)\winusb.lib   \
              ..\api\obj$(BUILD_ALT_DIR)\i386\AdbWinApi.lib
 
-!IF "$(DDKBUILDENV)" == "fre"
-# Libraries for release (free) builds
-TARGETLIBS = $(TARGETLIBS) $(ATL_LIB_PATH)\atls.lib
-!ELSE
-# Libraries for debug (checked) builds
-TARGETLIBS = $(TARGETLIBS) $(ATL_LIB_PATH)\atlsd.lib
-!ENDIF
-
 # Common C defines
 C_DEFINES= $(C_DEFINES) -DADBWINUSB_EXPORTS -D_UNICODE \
            -DUNICODE -DWIN32 -D_WINDOWS -D_USRDLL -D_WINDLL
@@ -75,10 +78,13 @@ C_DEFINES = $(C_DEFINES) -D_DEBUG
 !ENDIF
 
 # Turn on all warnings, and treat warnings as errors
-MSC_WARNING_LEVEL = /W4 /Wp64 /WX
+MSC_WARNING_LEVEL = /W4 /WX
+
+# operator new throws C++ exceptions
+USE_NATIVE_EH=1
 
 # Common C defines
-USER_C_FLAGS = $(USER_C_FLAGS) /FD /EHsc /wd4100 /wd4200 /wd4702 /nologo
+USER_C_FLAGS = $(USER_C_FLAGS) /FD /wd4100 /wd4200 /wd4702 /nologo
 
 # Set precompiled header information
 PRECOMPILED_CXX = 1
