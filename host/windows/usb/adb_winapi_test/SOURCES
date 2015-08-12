@@ -18,11 +18,16 @@ TARGETNAME = adb_winapi_test
 TARGETPATH = obj
 TARGETTYPE = PROGRAM
 
+_NT_TARGET_VERSION = $(_NT_TARGET_VERSION_VISTA)
+
 UMTYPE  = console
 UMENTRY = main
 
 # Use statically linked atl libraries:
 USE_STATIC_ATL  = 1
+
+# Use STL, default version
+USE_STL         = 1
 
 # Use multithreaded libraries
 USE_LIBCMT      = 1
@@ -36,11 +41,17 @@ INCLUDES=$(DDK_INC_PATH)\;$(SDK_INC_PATH)\;$(CRT_INC_PATH)\;$(ATL_INC_PATH)\api
 # Common C defines
 USER_C_FLAGS = $(USER_C_FLAGS) /FD /wd4100 /nologo
 
-# Turn on all warnings, and treat warnings as errors
-MSC_WARNING_LEVEL = /W4 /Wp64 /WX
+# The STL uses C++ exception handling.
+USE_NATIVE_EH=1
 
-PRECOMPILED_CXX = 1
-PRECOMPILED_INCLUDE = stdafx.h
-PRECOMPILED_SOURCEFILE = stdafx.cpp
+# Turn on all warnings, and treat warnings as errors
+MSC_WARNING_LEVEL = /W4 /WX
+
+# Disable precompiled header to work-around compiler issue with interaction with
+# ASLR on Windows 7 and newer.
+# http://blogs.msdn.com/b/vcblog/archive/2009/11/12/visual-c-precompiled-header-errors-on-windows-7.aspx
+#PRECOMPILED_CXX = 1
+#PRECOMPILED_INCLUDE = stdafx.h
+#PRECOMPILED_SOURCEFILE = stdafx.cpp
 
 SOURCES = adb_winapi_test.cpp
