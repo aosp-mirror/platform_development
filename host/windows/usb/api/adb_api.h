@@ -91,28 +91,6 @@ typedef struct _AdbEndpointInformation {
 #define ANDROID_USB_CLASS_ID \
 {0xf72fe0d4, 0xcbcb, 0x407d, {0x88, 0x14, 0x9e, 0xd6, 0x73, 0xd0, 0xdd, 0x6b}};
 
-/// Defines vendor ID for HCT devices.
-#define DEVICE_VENDOR_ID                  0x0BB4
-
-/// Defines product ID for the device with single interface.
-#define DEVICE_SINGLE_PRODUCT_ID          0x0C01
-
-/// Defines product ID for the Dream composite device.
-#define DEVICE_COMPOSITE_PRODUCT_ID       0x0C02
-
-/// Defines product ID for the Magic composite device.
-#define DEVICE_MAGIC_COMPOSITE_PRODUCT_ID 0x0C03
-
-/// Defines interface ID for the device.
-#define DEVICE_INTERFACE_ID               0x01
-
-/// Defines vendor ID for the device
-#define DEVICE_EMULATOR_VENDOR_ID         0x18D1
-
-/// Defines product ID for a SoftUSB device simulator that is used to test
-/// the driver in isolation from hardware.
-#define DEVICE_EMULATOR_PROD_ID           0xDDDD
-
 // The following ifdef block is the standard way of creating macros which make
 // exporting  from a DLL simpler. All files within this DLL are compiled with
 // the ADBWIN_EXPORTS symbol defined on the command line. this symbol should

@@ -72,6 +72,17 @@ class AdbWinUsbEndpointObject : public AdbEndpointObject {
   */
   virtual LONG Release();
 
+    /** \brief This method is called when handle to this object gets closed.
+
+    In this call object is deleted from the AdbObjectHandleMap. We override
+    this method in order to abort pending IOs and to prevent new IOs from
+    starting up.
+    @return true on success or false if object is already closed. If
+            false is returned GetLastError() provides extended error
+            information.
+  */
+  virtual bool CloseHandle();
+
   //
   // Abstract overrides
   //
@@ -150,6 +161,32 @@ class AdbWinUsbEndpointObject : public AdbEndpointObject {
   WINUSB_INTERFACE_HANDLE winusb_handle() const {
     return parent_winusb_interface()->winusb_handle();
   }
+
+ protected:
+   /// Helper class whose destructor decrements pending_io_count_.
+   class DecrementPendingIO {
+   public:
+     DecrementPendingIO(AdbWinUsbEndpointObject* endpoint)
+       : endpoint_(endpoint) {}
+     ~DecrementPendingIO() {
+       endpoint_->lock_.Lock();
+       ATLASSERT(endpoint_->pending_io_count_ > 0);
+       --(endpoint_->pending_io_count_);
+       endpoint_->lock_.Unlock();
+     }
+   private:
+     AdbWinUsbEndpointObject* endpoint_;
+   };
+
+ protected:
+  /// Protects is_closing_ and pending_io_count_.
+  CComAutoCriticalSection lock_;
+
+  /// Once set, prevents new IOs from starting up.
+  bool is_closing_;
+
+  /// Count of pending IOs potentially blocked in WinUsb APIs.
+  ULONG pending_io_count_;
 };
 
 #endif  // ANDROID_USB_API_ADB_WINUSB_ENDPOINT_OBJECT_H__

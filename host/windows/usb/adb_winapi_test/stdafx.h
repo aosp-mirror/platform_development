@@ -49,6 +49,9 @@
 
 #include <windows.h>
 #include <atlbase.h>
+#include <algorithm>
+#include <map>
+#include <string>
 
 #include <initguid.h>
 
