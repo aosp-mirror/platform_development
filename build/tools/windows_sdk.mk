@@ -11,12 +11,9 @@
 # This way we avoid the headache of building a full SDK in MinGW mode, which is
 # made complicated by the fact the build system does not support cross-compilation.
 
-# We can only use this under Linux with the mingw32 package installed.
+# We can only use this under Linux
 ifneq ($(shell uname),Linux)
 $(error Linux is required to create a Windows SDK)
-endif
-ifeq ($(strip $(shell which i586-mingw32msvc-gcc 2>/dev/null)),)
-$(error MinGW is required to build a Windows SDK. Please 'apt-get install mingw32')
 endif
 ifeq ($(strip $(shell which unix2dos todos 2>/dev/null)),)
 $(error Need a unix2dos command. Please 'apt-get install tofrodos')
