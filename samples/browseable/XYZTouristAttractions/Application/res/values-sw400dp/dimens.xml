@@ -20,5 +20,6 @@
     <dimen name="small_margin">12dp</dimen>
     <dimen name="tiny_margin">8dp</dimen>
     <dimen name="image_size">140dp</dimen>
+    <dimen name="fab_margin">0dp</dimen>
 
 </resources>

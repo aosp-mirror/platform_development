@@ -78,7 +78,7 @@ public class CameraOps {
     }
 
     /**
-     * Open the first backfacing camera listed by the camera manager.
+     * Open the first back-facing camera listed by the camera manager.
      * Displays a dialog if it cannot open a camera.
      */
     public void openCamera(final String cameraId) {

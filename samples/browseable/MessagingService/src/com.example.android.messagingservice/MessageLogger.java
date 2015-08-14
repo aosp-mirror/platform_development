@@ -19,6 +19,7 @@ package com.example.android.messagingservice;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -27,13 +28,13 @@ import java.util.Date;
  * and replies. Don't use this in a real world application. This logger is only
  * used for displaying the messages in the text view.
  */
-public class MessageLogger {
+class MessageLogger {
 
     private static final String PREF_MESSAGE = "MESSAGE_LOGGER";
-    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    private static final DateFormat DATE_FORMAT = SimpleDateFormat.getDateTimeInstance();
+    private static final String LINE_BREAKS = "\n\n";
 
     public static final String LOG_KEY = "message_data";
-    public static final String LINE_BREAKS = "\n\n";
 
     public static void logMessage(Context context, String message) {
         SharedPreferences prefs = getPrefs(context);

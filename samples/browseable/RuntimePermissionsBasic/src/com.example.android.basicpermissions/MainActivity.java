@@ -86,34 +86,41 @@ public class MainActivity extends Activity {
 
     private void showCameraPreview() {
         // BEGIN_INCLUDE(startCamera)
-        if (isMNC()) {
-            // On Android M and above, need to check if permission has been granted at runtime.
-            if (checkSelfPermission(Manifest.permission.CAMERA)
-                    == PackageManager.PERMISSION_GRANTED) {
-                // Permission is available, start camera preview
-                startCamera();
-                Toast.makeText(this,
-                        "Camera permission has already been granted. Starting preview.",
-                        Toast.LENGTH_SHORT).show();
-            } else {
-                // Permission has not been granted and must be requested.
-                Toast.makeText(this,
-                        "Permission is not available. Requesting camera permission.",
-                        Toast.LENGTH_SHORT).show();
-                requestPermissions(new String[]{Manifest.permission.CAMERA},
-                        PERMISSION_REQUEST_CAMERA);
-            }
-        } else {
-            /*
-             Below Android M all permissions have already been grated at install time and do not
-             need to verified or requested.
-             If a permission has been disabled in the system settings, the API will return
-             unavailable or empty data instead. */
+        if (!isMNC()) {
+            // Below Android M there is no need to check for runtime permissions
             Toast.makeText(this,
                     "Requested permissions are granted at install time below M and are always "
                             + "available at runtime.",
                     Toast.LENGTH_SHORT).show();
             startCamera();
+            return;
+        }
+
+        // Check if the Camera permission has been granted
+        if (checkSelfPermission(Manifest.permission.CAMERA)
+                != PackageManager.PERMISSION_GRANTED) {
+            // Permission has not been granted and must be requested.
+
+            if (shouldShowRequestPermissionRationale(
+                    Manifest.permission.CAMERA)) {
+                // Provide an additional rationale to the user if the permission was not granted
+                // and the user would benefit from additional context for the use of the permission.
+                Toast.makeText(this, "Camera access is required to display a camera preview.",
+                        Toast.LENGTH_SHORT).show();
+            }
+            Toast.makeText(this,
+                    "Permission is not available. Requesting camera permission.",
+                    Toast.LENGTH_SHORT).show();
+
+            // Request the permission. The result will be received in onRequestPermissionResult()
+            requestPermissions(new String[]{Manifest.permission.CAMERA},
+                    PERMISSION_REQUEST_CAMERA);
+        } else {
+            // Permission is already available, start camera preview
+            startCamera();
+            Toast.makeText(this,
+                    "Camera permission is available. Starting preview.",
+                    Toast.LENGTH_SHORT).show();
         }
         // END_INCLUDE(startCamera)
     }

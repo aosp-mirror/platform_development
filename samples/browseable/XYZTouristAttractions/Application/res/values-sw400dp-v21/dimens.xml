@@ -17,9 +17,6 @@
 
 <resources>
 
-    <color name="colorPrimary">#4e6cef</color>
-    <color name="colorPrimaryDark">#2a36b1</color>
-    <color name="colorAccent">#ff7043</color>
-    <color name="colorFabRipple">#D84315</color>
+    <dimen name="fab_margin">12dp</dimen>
 
 </resources>
