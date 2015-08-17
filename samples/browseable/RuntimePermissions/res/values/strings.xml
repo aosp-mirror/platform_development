@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="ok">OK</string>
     <string name="contacts_string">Total number of contacts: %1$,d\nFirst contact:<b>%2$s</b></string>
     <string name="contacts_none">No contacts stored on device.</string>
     <string name="contacts_empty">Contacts not loaded.</string>
@@ -17,5 +18,5 @@
     <string name="permision_available_contacts">Contacts Permissions have been granted. Contacts screen can now be opened.</string>
     <string name="permissions_not_granted">Permissions were not granted.</string>
     <string name="permission_camera_rationale">Camera permission is needed to show the camera preview.</string>
-    <string name="permission_contacts_rationale">Contacts permissions are needed to demonstrate access to the contacts database.</string>
+    <string name="permission_contacts_rationale">Contacts permissions are needed to demonstrate access.</string>
 </resources>
