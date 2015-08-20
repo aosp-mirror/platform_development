@@ -18,7 +18,10 @@ package com.example.android.fingerprintdialog;
 
 import android.app.KeyguardManager;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.hardware.fingerprint.FingerprintManager;
+import android.preference.PreferenceManager;
+import android.security.keystore.KeyProperties;
 import android.view.inputmethod.InputMethodManager;
 
 import java.security.KeyStore;
@@ -75,7 +78,7 @@ public class FingerprintModule {
     @Provides
     public KeyGenerator providesKeyGenerator() {
         try {
-            return KeyGenerator.getInstance("AES", "AndroidKeyStore");
+            return KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, "AndroidKeyStore");
         } catch (NoSuchAlgorithmException | NoSuchProviderException e) {
             throw new RuntimeException("Failed to get an instance of KeyGenerator", e);
         }
@@ -84,7 +87,9 @@ public class FingerprintModule {
     @Provides
     public Cipher providesCipher(KeyStore keyStore) {
         try {
-            return Cipher.getInstance("AES/CBC/PKCS7Padding");
+            return Cipher.getInstance(KeyProperties.KEY_ALGORITHM_AES + "/"
+                    + KeyProperties.BLOCK_MODE_CBC + "/"
+                    + KeyProperties.ENCRYPTION_PADDING_PKCS7);
         } catch (NoSuchAlgorithmException | NoSuchPaddingException e) {
             throw new RuntimeException("Failed to get an instance of Cipher", e);
         }
@@ -93,5 +98,10 @@ public class FingerprintModule {
     @Provides
     public InputMethodManager providesInputMethodManager(Context context) {
         return (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
+    }
+
+    @Provides
+    public SharedPreferences providesSharedPreferences(Context context) {
+        return PreferenceManager.getDefaultSharedPreferences(context);
     }
 }

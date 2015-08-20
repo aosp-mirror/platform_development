@@ -82,7 +82,8 @@ public class FingerprintUiHelper extends FingerprintManager.AuthenticationCallba
         }
         mCancellationSignal = new CancellationSignal();
         mSelfCancelled = false;
-        mFingerprintManager.authenticate(cryptoObject, mCancellationSignal, this, 0 /* flags */);
+        mFingerprintManager
+                .authenticate(cryptoObject, mCancellationSignal, 0 /* flags */, this, null);
         mIcon.setImageResource(R.drawable.ic_fp_40px);
     }
 

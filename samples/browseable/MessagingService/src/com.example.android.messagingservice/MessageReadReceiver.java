@@ -16,7 +16,6 @@
 
 package com.example.android.messagingservice;
 
-import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -35,8 +34,8 @@ public class MessageReadReceiver extends BroadcastReceiver {
         if (conversationId != -1) {
             Log.d(TAG, "Conversation " + conversationId + " was read");
             MessageLogger.logMessage(context, "Conversation " + conversationId + " was read.");
-            NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
-            notificationManager.cancel(conversationId);
+            NotificationManagerCompat.from(context)
+                    .cancel(conversationId);
         }
     }
 }
