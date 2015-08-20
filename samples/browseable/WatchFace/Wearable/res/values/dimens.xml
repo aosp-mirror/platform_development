@@ -25,4 +25,11 @@
     <dimen name="digital_line_height">25dp</dimen>
     <dimen name="digital_config_color_picker_item_margin">32dp</dimen>
     <dimen name="content_padding_start">12dp</dimen>
+    <dimen name="interactive_text_size">20dp</dimen>
+    <dimen name="interactive_text_size_round">25dp</dimen>
+    <dimen name="interactive_x_offset">15dp</dimen>
+    <dimen name="interactive_x_offset_round">25dp</dimen>
+    <dimen name="interactive_y_offset">72dp</dimen>
+    <dimen name="interactive_y_offset_round">84dp</dimen>
+    <dimen name="interactive_line_height">25dp</dimen>
 </resources>

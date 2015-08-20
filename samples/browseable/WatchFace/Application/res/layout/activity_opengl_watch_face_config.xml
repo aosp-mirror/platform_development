@@ -20,7 +20,7 @@
 
     <TextView
         android:id="@+id/label"
-        android:text="@string/tilt_config_text"
+        android:text="@string/opengl_config_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
 
