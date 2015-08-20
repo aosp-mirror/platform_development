@@ -54,6 +54,10 @@ import android.widget.ViewAnimator;
  * {@link Activity#requestPermissions(String[], int)} and the return value checked in {@link
  * Activity#onRequestPermissionsResult(int, String[], int[])}.
  * <p>
+ * Before requesting permissions, {@link Activity#shouldShowRequestPermissionRationale(String)}
+ * should be called to provide the user with additional context for the use of permissions if they
+ * have been denied previously.
+ * <p>
  * If this sample is executed on a device running a platform version below M, all permissions
  * declared
  * in the Android manifest file are always granted at install time and cannot be requested at run
@@ -102,14 +106,26 @@ public class MainActivity extends SampleActivityBase {
         // BEGIN_INCLUDE(camera_permission)
         // Check if the Camera permission is already available.
         if (PermissionUtil.hasSelfPermission(this, Manifest.permission.CAMERA)) {
+            // Camera permissions is already available, show the camera preview.
             Log.i(TAG,
                     "CAMERA permission has already been granted. Displaying camera preview.");
-            // Camera permissions is already available, show the camera preview.
             showCameraPreview();
         } else {
+            // Camera permission has not been granted.
             Log.i(TAG, "CAMERA permission has NOT been granted. Requesting permission.");
-            // Camera permission has not been granted. Request it.
-            requestPermissions(new String[]{Manifest.permission.CAMERA}, REQUEST_CAMERA);
+
+            // Provide an additional rationale to the user if the permission was not granted
+            // and the user would benefit from additional context for the use of the permission.
+            if (shouldShowRequestPermissionRationale(Manifest.permission.CAMERA)) {
+                Log.i(TAG,
+                        "Displaying camera permission rationale to provide additional context.");
+                Toast.makeText(this, R.string.permission_camera_rationale, Toast.LENGTH_SHORT)
+                        .show();
+            }
+
+            // Request Camera permission
+            requestPermissions(new String[]{Manifest.permission.CAMERA},
+                    REQUEST_CAMERA);
         }
         // END_INCLUDE(camera_permission)
 
@@ -128,7 +144,18 @@ public class MainActivity extends SampleActivityBase {
             // Contact permissions have been granted. Show the contacts fragment.
             showContactDetails();
         } else {
+            // Contacts permissions have not been granted.
             Log.i(TAG, "Contact permissions has NOT been granted. Requesting permission.");
+
+            // Provide an additional rationale to the user if the permission was not granted
+            // and the user would benefit from additional context for the use of the permission.
+            if (shouldShowRequestPermissionRationale(Manifest.permission.CAMERA)) {
+                Log.i(TAG,
+                        "Displaying contacts permission rationale to provide additional context.");
+                Toast.makeText(this, R.string.permission_contacts_rationale, Toast.LENGTH_SHORT)
+                        .show();
+            }
+
             // contact permissions has not been granted (read and write contacts). Request them.
             requestPermissions(PERMISSIONS_CONTACT, REQUEST_CONTACTS);
         }

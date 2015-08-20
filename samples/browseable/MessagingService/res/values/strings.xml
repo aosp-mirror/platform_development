@@ -16,8 +16,6 @@
   -->
 <resources>
     <string name="app_name">Messaging Sample</string>
-    <string name="action_settings">Settings</string>
-    <string name="title">Messaging Sample</string>
     <string name="notification_reply">Reply by Voice</string>
     <string name="send_2_conversations">Send 2 conversations with 1 message</string>
     <string name="send_1_conversation">Send 1 conversation with 1 message</string>

@@ -17,6 +17,7 @@
 package com.example.android.fingerprintdialog;
 
 import android.app.DialogFragment;
+import android.content.SharedPreferences;
 import android.hardware.fingerprint.FingerprintManager;
 import android.os.Bundle;
 import android.view.KeyEvent;
@@ -26,6 +27,7 @@ import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -44,6 +46,9 @@ public class FingerprintAuthenticationDialogFragment extends DialogFragment
     private View mFingerprintContent;
     private View mBackupContent;
     private EditText mPassword;
+    private CheckBox mUseFingerprintFutureCheckBox;
+    private TextView mPasswordDescriptionTextView;
+    private TextView mNewFingerprintEnrolledTextView;
 
     private Stage mStage = Stage.FINGERPRINT;
 
@@ -52,6 +57,7 @@ public class FingerprintAuthenticationDialogFragment extends DialogFragment
 
     @Inject FingerprintUiHelper.FingerprintUiHelperBuilder mFingerprintUiHelperBuilder;
     @Inject InputMethodManager mInputMethodManager;
+    @Inject SharedPreferences mSharedPreferences;
 
     @Inject
     public FingerprintAuthenticationDialogFragment() {}
@@ -93,6 +99,11 @@ public class FingerprintAuthenticationDialogFragment extends DialogFragment
         mBackupContent = v.findViewById(R.id.backup_container);
         mPassword = (EditText) v.findViewById(R.id.password);
         mPassword.setOnEditorActionListener(this);
+        mPasswordDescriptionTextView = (TextView) v.findViewById(R.id.password_description);
+        mUseFingerprintFutureCheckBox = (CheckBox)
+                v.findViewById(R.id.use_fingerprint_in_future_check);
+        mNewFingerprintEnrolledTextView = (TextView)
+                v.findViewById(R.id.new_fingerprint_enrolled_description);
         mFingerprintUiHelper = mFingerprintUiHelperBuilder.build(
                 (ImageView) v.findViewById(R.id.fingerprint_icon),
                 (TextView) v.findViewById(R.id.fingerprint_status), this);
@@ -112,6 +123,10 @@ public class FingerprintAuthenticationDialogFragment extends DialogFragment
         if (mStage == Stage.FINGERPRINT) {
             mFingerprintUiHelper.startListening(mCryptoObject);
         }
+    }
+
+    public void setStage(Stage stage) {
+        mStage = stage;
     }
 
     @Override
@@ -149,12 +164,25 @@ public class FingerprintAuthenticationDialogFragment extends DialogFragment
      * let's the activity know about the result.
      */
     private void verifyPassword() {
-        if (checkPassword(mPassword.getText().toString())) {
-            ((MainActivity) getActivity()).onPurchased(false /* without Fingerprint */);
-            dismiss();
-        } else {
-            // assume the password is always correct.
+        if (!checkPassword(mPassword.getText().toString())) {
+            return;
         }
+        MainActivity activity = ((MainActivity) getActivity());
+        if (mStage == Stage.NEW_FINGERPRINT_ENROLLED) {
+            SharedPreferences.Editor editor = mSharedPreferences.edit();
+            editor.putBoolean(getString(R.string.use_fingerprint_to_authenticate_key),
+                    mUseFingerprintFutureCheckBox.isChecked());
+            editor.apply();
+
+            if (mUseFingerprintFutureCheckBox.isChecked()) {
+                // Re-create the key so that fingerprints including new ones are validated.
+                activity.createKey();
+                mStage = Stage.FINGERPRINT;
+            }
+        }
+        mPassword.setText("");
+        ((MainActivity) getActivity()).onPurchased(false /* without Fingerprint */);
+        dismiss();
     }
 
     /**
@@ -181,11 +209,18 @@ public class FingerprintAuthenticationDialogFragment extends DialogFragment
                 mFingerprintContent.setVisibility(View.VISIBLE);
                 mBackupContent.setVisibility(View.GONE);
                 break;
+            case NEW_FINGERPRINT_ENROLLED:
+                // Intentional fall through
             case PASSWORD:
                 mCancelButton.setText(R.string.cancel);
                 mSecondDialogButton.setText(R.string.ok);
                 mFingerprintContent.setVisibility(View.GONE);
                 mBackupContent.setVisibility(View.VISIBLE);
+                if (mStage == Stage.NEW_FINGERPRINT_ENROLLED) {
+                    mPasswordDescriptionTextView.setVisibility(View.GONE);
+                    mNewFingerprintEnrolledTextView.setVisibility(View.VISIBLE);
+                    mUseFingerprintFutureCheckBox.setVisibility(View.VISIBLE);
+                }
                 break;
         }
     }
@@ -215,8 +250,9 @@ public class FingerprintAuthenticationDialogFragment extends DialogFragment
     /**
      * Enumeration to indicate which authentication method the user is trying to authenticate with.
      */
-    private enum Stage {
+    public enum Stage {
         FINGERPRINT,
+        NEW_FINGERPRINT_ENROLLED,
         PASSWORD
     }
 }
