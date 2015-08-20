@@ -16,11 +16,11 @@
 
 package com.example.android.bluetoothadvertisements;
 
-import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.le.AdvertiseCallback;
-import android.bluetooth.le.AdvertiseData;
-import android.bluetooth.le.AdvertiseSettings;
-import android.bluetooth.le.BluetoothLeAdvertiser;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -32,67 +32,121 @@ import android.widget.Toast;
 /**
  * Allows user to start & stop Bluetooth LE Advertising of their device.
  */
-public class AdvertiserFragment extends Fragment {
+public class AdvertiserFragment extends Fragment implements View.OnClickListener {
 
-    private BluetoothAdapter mBluetoothAdapter;
-
-    private BluetoothLeAdvertiser mBluetoothLeAdvertiser;
-
-    private AdvertiseCallback mAdvertiseCallback;
-
+    /**
+     * Lets user toggle BLE Advertising.
+     */
     private Switch mSwitch;
 
     /**
-     * Must be called after object creation by MainActivity.
-     *
-     * @param btAdapter the local BluetoothAdapter
+     * Listens for notifications that the {@code AdvertiserService} has failed to start advertising.
+     * This Receiver deals with Fragment UI elements and only needs to be active when the Fragment
+     * is on-screen, so it's defined and registered in code instead of the Manifest.
      */
-    public void setBluetoothAdapter(BluetoothAdapter btAdapter) {
-        this.mBluetoothAdapter = btAdapter;
-        mBluetoothLeAdvertiser = mBluetoothAdapter.getBluetoothLeAdvertiser();
-    }
+    private BroadcastReceiver advertisingFailureReceiver;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setRetainInstance(true);
+
+        advertisingFailureReceiver = new BroadcastReceiver() {
+
+            /**
+             * Receives Advertising error codes from {@code AdvertiserService} and displays error messages
+             * to the user. Sets the advertising toggle to 'false.'
+             */
+            @Override
+            public void onReceive(Context context, Intent intent) {
+
+                int errorCode = intent.getIntExtra(AdvertiserService.ADVERTISING_FAILED_EXTRA_CODE, -1);
+
+                mSwitch.setChecked(false);
+
+                String errorMessage = getString(R.string.start_error_prefix);
+                switch (errorCode) {
+                    case AdvertiseCallback.ADVERTISE_FAILED_ALREADY_STARTED:
+                        errorMessage += " " + getString(R.string.start_error_already_started);
+                        break;
+                    case AdvertiseCallback.ADVERTISE_FAILED_DATA_TOO_LARGE:
+                        errorMessage += " " + getString(R.string.start_error_too_large);
+                        break;
+                    case AdvertiseCallback.ADVERTISE_FAILED_FEATURE_UNSUPPORTED:
+                        errorMessage += " " + getString(R.string.start_error_unsupported);
+                        break;
+                    case AdvertiseCallback.ADVERTISE_FAILED_INTERNAL_ERROR:
+                        errorMessage += " " + getString(R.string.start_error_internal);
+                        break;
+                    case AdvertiseCallback.ADVERTISE_FAILED_TOO_MANY_ADVERTISERS:
+                        errorMessage += " " + getString(R.string.start_error_too_many);
+                        break;
+                    case AdvertiserService.ADVERTISING_TIMED_OUT:
+                        errorMessage = " " + getString(R.string.advertising_timedout);
+                        break;
+                    default:
+                        errorMessage += " " + getString(R.string.start_error_unknown);
+                }
+
+                Toast.makeText(getActivity(), errorMessage, Toast.LENGTH_LONG).show();
+            }
+        };
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
-            Bundle savedInstanceState) {
+                             Bundle savedInstanceState) {
 
         View view = inflater.inflate(R.layout.fragment_advertiser, container, false);
 
         mSwitch = (Switch) view.findViewById(R.id.advertise_switch);
-        mSwitch.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                onSwitchClicked(v);
-            }
-        });
+        mSwitch.setOnClickListener(this);
 
         return view;
     }
 
+    /**
+     * When app comes on screen, check if BLE Advertisements are running, set switch accordingly,
+     * and register the Receiver to be notified if Advertising fails.
+     */
     @Override
-    public void onStop() {
-        super.onStop();
+    public void onResume() {
+        super.onResume();
 
-        if(mAdvertiseCallback != null){
-            stopAdvertising();
+        if (AdvertiserService.running) {
+            mSwitch.setChecked(true);
+        } else {
+            mSwitch.setChecked(false);
         }
+
+        IntentFilter failureFilter = new IntentFilter(AdvertiserService.ADVERTISING_FAILED);
+        getActivity().registerReceiver(advertisingFailureReceiver, failureFilter);
+
+    }
+
+    /**
+     * When app goes off screen, unregister the Advertising failure Receiver to stop memory leaks.
+     * (and because the app doesn't care if Advertising fails while the UI isn't active)
+     */
+    @Override
+    public void onPause() {
+        super.onPause();
+        getActivity().unregisterReceiver(advertisingFailureReceiver);
+    }
+
+    /**
+     * Returns Intent addressed to the {@code AdvertiserService} class.
+     */
+    private static Intent getServiceIntent(Context c) {
+        return new Intent(c, AdvertiserService.class);
     }
 
     /**
      * Called when switch is toggled - starts or stops advertising.
-     *
-     * @param view is the Switch View object
      */
-    public void onSwitchClicked(View view) {
-
+    @Override
+    public void onClick(View v) {
         // Is the toggle on?
-        boolean on = ((Switch) view).isChecked();
+        boolean on = ((Switch) v).isChecked();
 
         if (on) {
             startAdvertising();
@@ -102,105 +156,20 @@ public class AdvertiserFragment extends Fragment {
     }
 
     /**
-     * Starts BLE Advertising.
+     * Starts BLE Advertising by starting {@code AdvertiserService}.
      */
     private void startAdvertising() {
-
-        mAdvertiseCallback = new SampleAdvertiseCallback();
-
-        if (mBluetoothLeAdvertiser != null) {
-            mBluetoothLeAdvertiser.startAdvertising(buildAdvertiseSettings(), buildAdvertiseData(),
-                    mAdvertiseCallback);
-        } else {
-            mSwitch.setChecked(false);
-            Toast.makeText(getActivity(), getString(R.string.bt_null), Toast.LENGTH_LONG).show();
-        }
+        Context c = getActivity();
+        c.startService(getServiceIntent(c));
     }
 
     /**
-     * Stops BLE Advertising.
+     * Stops BLE Advertising by stopping {@code AdvertiserService}.
      */
     private void stopAdvertising() {
-
-        if (mBluetoothLeAdvertiser != null) {
-
-            mBluetoothLeAdvertiser.stopAdvertising(mAdvertiseCallback);
-            mAdvertiseCallback = null;
-
-        } else {
-            mSwitch.setChecked(false);
-            Toast.makeText(getActivity(), getString(R.string.bt_null), Toast.LENGTH_LONG).show();
-        }
-    }
-
-    /**
-     * Returns an AdvertiseData object which includes the Service UUID and Device Name.
-     */
-    private AdvertiseData buildAdvertiseData() {
-
-        // Note: There is a strict limit of 31 Bytes on packets sent over BLE Advertisements.
-        // This includes everything put into AdvertiseData including UUIDs, device info, &
-        // arbitrary service or manufacturer data.
-        // Attempting to send packets over this limit will result in a failure with error code
-        // AdvertiseCallback.ADVERTISE_FAILED_DATA_TOO_LARGE. Catch this error in the
-        // onStartFailure() method of an AdvertiseCallback implementation.
-
-        AdvertiseData.Builder dataBuilder = new AdvertiseData.Builder();
-        dataBuilder.addServiceUuid(Constants.Service_UUID);
-        dataBuilder.setIncludeDeviceName(true);
-
-        return dataBuilder.build();
-    }
-
-    /**
-     * Returns an AdvertiseSettings object set to use low power (to help preserve battery life).
-     */
-    private AdvertiseSettings buildAdvertiseSettings() {
-        AdvertiseSettings.Builder settingsBuilder = new AdvertiseSettings.Builder();
-        settingsBuilder.setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_POWER);
-
-        return settingsBuilder.build();
-    }
-
-    /**
-     * Custom callback after Advertising succeeds or fails to start.
-     */
-    private class SampleAdvertiseCallback extends AdvertiseCallback {
-
-        @Override
-        public void onStartFailure(int errorCode) {
-            super.onStartFailure(errorCode);
-
-            mSwitch.setChecked(false);
-
-            String errorMessage = getString(R.string.start_error_prefix);
-            switch (errorCode) {
-                case AdvertiseCallback.ADVERTISE_FAILED_ALREADY_STARTED:
-                    errorMessage += " " + getString(R.string.start_error_already_started);
-                    break;
-                case AdvertiseCallback.ADVERTISE_FAILED_DATA_TOO_LARGE:
-                    errorMessage += " " + getString(R.string.start_error_too_large);
-                    break;
-                case AdvertiseCallback.ADVERTISE_FAILED_FEATURE_UNSUPPORTED:
-                    errorMessage += " " + getString(R.string.start_error_unsupported);
-                    break;
-                case AdvertiseCallback.ADVERTISE_FAILED_INTERNAL_ERROR:
-                    errorMessage += " " + getString(R.string.start_error_internal);
-                    break;
-                case AdvertiseCallback.ADVERTISE_FAILED_TOO_MANY_ADVERTISERS:
-                    errorMessage += " " + getString(R.string.start_error_too_many);
-                    break;
-            }
-
-            Toast.makeText(getActivity(), errorMessage, Toast.LENGTH_LONG).show();
-
-        }
-
-        @Override
-        public void onStartSuccess(AdvertiseSettings settingsInEffect) {
-            super.onStartSuccess(settingsInEffect);
-            // Don't need to do anything here, advertising successfully started.
-        }
+        Context c = getActivity();
+        c.stopService(getServiceIntent(c));
+        mSwitch.setChecked(false);
     }
 
 }

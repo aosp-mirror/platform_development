@@ -18,7 +18,6 @@ package com.example.android.system.runtimepermissions;
 
 import android.app.Activity;
 import android.content.pm.PackageManager;
-import android.os.Build;
 
 /**
  * Utility class that wraps access to the runtime permissions API in M and provides basic helper
@@ -33,6 +32,11 @@ public abstract class PermissionUtil {
      * @see Activity#onRequestPermissionsResult(int, String[], int[])
      */
     public static boolean verifyPermissions(int[] grantResults) {
+        // At least one result must be checked.
+        if(grantResults.length < 1){
+            return false;
+        }
+
         // Verify that each required permission has been granted, otherwise return false.
         for (int result : grantResults) {
             if (result != PackageManager.PERMISSION_GRANTED) {
@@ -42,43 +46,4 @@ public abstract class PermissionUtil {
         return true;
     }
 
-    /**
-     * Returns true if the Activity has access to all given permissions.
-     * Always returns true on platforms below M.
-     *
-     * @see Activity#checkSelfPermission(String)
-     */
-    public static boolean hasSelfPermission(Activity activity, String[] permissions) {
-        // Below Android M all permissions are granted at install time and are already available.
-        if (!isMNC()) {
-            return true;
-        }
-
-        // Verify that all required permissions have been granted
-        for (String permission : permissions) {
-            if (activity.checkSelfPermission(permission) != PackageManager.PERMISSION_GRANTED) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    /**
-     * Returns true if the Activity has access to a given permission.
-     * Always returns true on platforms below M.
-     *
-     * @see Activity#checkSelfPermission(String)
-     */
-    public static boolean hasSelfPermission(Activity activity, String permission) {
-        // Below Android M all permissions are granted at install time and are already available.
-        if (!isMNC()) {
-            return true;
-        }
-
-        return activity.checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED;
-    }
-
-    public static boolean isMNC() {
-        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.M;
-    }
 }

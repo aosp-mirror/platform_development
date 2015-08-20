@@ -83,7 +83,7 @@ public class ScannerFragment extends ListFragment {
         // We could get a LayoutInflater from the ApplicationContext but it messes with the
         // default theme, so generate it from getActivity() and pass it in separately.
         mAdapter = new ScanResultAdapter(getActivity().getApplicationContext(),
-                                                    LayoutInflater.from(getActivity()));
+                LayoutInflater.from(getActivity()));
         mHandler = new Handler();
 
     }
@@ -180,6 +180,7 @@ public class ScannerFragment extends ListFragment {
         List<ScanFilter> scanFilters = new ArrayList<>();
 
         ScanFilter.Builder builder = new ScanFilter.Builder();
+        // Comment out the below line to see all BLE devices around you
         builder.setServiceUuid(Constants.Service_UUID);
         scanFilters.add(builder.build());
 
