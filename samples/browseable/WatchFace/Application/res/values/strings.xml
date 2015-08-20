@@ -16,7 +16,7 @@
 <resources>
     <string name="analog_config_text">This is the config activity for the Analog and Card Bounds watch faces</string>
     <string name="digital_config_text">Digital watch face configuration</string>
-    <string name="tilt_config_text">Tilt watch face configuration</string>
+    <string name="opengl_config_text">OpenGL watch face configuration</string>
     <string name="digital_config_background">Background</string>
     <string name="digital_config_hours">Hours</string>
     <string name="digital_config_minutes">Minutes</string>
