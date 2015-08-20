@@ -37,9 +37,9 @@ import java.util.concurrent.TimeUnit;
  * {@link Gles2ColoredTriangleList}s. The camera moves around in interactive mode and stops moving
  * when the watch enters ambient mode.
  */
-public class TiltWatchFaceService extends Gles2WatchFaceService {
+public class OpenGLWatchFaceService extends Gles2WatchFaceService {
 
-    private static final String TAG = "TiltWatchFaceService";
+    private static final String TAG = "OpenGLWatchFaceService";
 
     /** Expected frame rate in interactive mode. */
     private static final long FPS = 60;
@@ -129,7 +129,7 @@ public class TiltWatchFaceService extends Gles2WatchFaceService {
                 Log.d(TAG, "onCreate");
             }
             super.onCreate(surfaceHolder);
-            setWatchFaceStyle(new WatchFaceStyle.Builder(TiltWatchFaceService.this)
+            setWatchFaceStyle(new WatchFaceStyle.Builder(OpenGLWatchFaceService.this)
                     .setCardPeekMode(WatchFaceStyle.PEEK_MODE_SHORT)
                     .setBackgroundVisibility(WatchFaceStyle.BACKGROUND_VISIBILITY_INTERRUPTIVE)
                     .setStatusBarGravity(Gravity.RIGHT | Gravity.TOP)
@@ -395,7 +395,7 @@ public class TiltWatchFaceService extends Gles2WatchFaceService {
             }
             mRegisteredTimeZoneReceiver = true;
             IntentFilter filter = new IntentFilter(Intent.ACTION_TIMEZONE_CHANGED);
-            TiltWatchFaceService.this.registerReceiver(mTimeZoneReceiver, filter);
+            OpenGLWatchFaceService.this.registerReceiver(mTimeZoneReceiver, filter);
         }
 
         private void unregisterReceiver() {
@@ -403,7 +403,7 @@ public class TiltWatchFaceService extends Gles2WatchFaceService {
                 return;
             }
             mRegisteredTimeZoneReceiver = false;
-            TiltWatchFaceService.this.unregisterReceiver(mTimeZoneReceiver);
+            OpenGLWatchFaceService.this.unregisterReceiver(mTimeZoneReceiver);
         }
 
         @Override
