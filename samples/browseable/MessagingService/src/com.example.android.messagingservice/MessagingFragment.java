@@ -51,7 +51,7 @@ public class MessagingFragment extends Fragment implements View.OnClickListener 
     private Messenger mService;
     private boolean mBound;
 
-    private ServiceConnection mConnection = new ServiceConnection() {
+    private final ServiceConnection mConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName componentName, IBinder service) {
             mService = new Messenger(service);
@@ -67,7 +67,7 @@ public class MessagingFragment extends Fragment implements View.OnClickListener 
         }
     };
 
-    private SharedPreferences.OnSharedPreferenceChangeListener listener =
+    private final SharedPreferences.OnSharedPreferenceChangeListener listener =
             new SharedPreferences.OnSharedPreferenceChangeListener() {
         @Override
         public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {

@@ -22,7 +22,7 @@
 
     <uses-sdk
         android:minSdkVersion="21"
-        android:targetSdkVersion="21" />
+        android:targetSdkVersion="22" />
 
     <application
         android:allowBackup="true"
@@ -32,9 +32,6 @@
 
         <activity
             android:name=".ui.AttractionsActivity"
-            android:exported="true"
-            android:allowEmbedded="true"
-            android:taskAffinity=""
             android:label="@string/app_name" />
 
         <activity

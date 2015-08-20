@@ -216,7 +216,7 @@ public class AttractionListFragment extends Fragment {
 
         @Override
         public void onClick(View v) {
-            mItemClickListener.onItemClick(v, getPosition());
+            mItemClickListener.onItemClick(v, getAdapterPosition());
         }
     }
 

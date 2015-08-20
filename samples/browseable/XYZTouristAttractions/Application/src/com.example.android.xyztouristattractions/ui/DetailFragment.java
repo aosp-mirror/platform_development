@@ -21,12 +21,11 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.NavUtils;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
@@ -83,6 +82,7 @@ public class DetailFragment extends Fragment {
         TextView descTextView = (TextView) view.findViewById(R.id.descriptionTextView);
         TextView distanceTextView = (TextView) view.findViewById(R.id.distanceTextView);
         ImageView imageView = (ImageView) view.findViewById(R.id.imageView);
+        FloatingActionButton mapFab = (FloatingActionButton) view.findViewById(R.id.mapFab);
 
         LatLng location = Utils.getLocation(getActivity());
         String distance = Utils.formatDistanceBetween(location, mAttraction.location);
@@ -102,13 +102,18 @@ public class DetailFragment extends Fragment {
                 .placeholder(R.color.lighter_gray)
                 .override(imageSize, imageSize)
                 .into(imageView);
-        return view;
-    }
 
-    @Override
-    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        inflater.inflate(R.menu.detail, menu);
-        super.onCreateOptionsMenu(menu, inflater);
+        mapFab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(Intent.ACTION_VIEW);
+                intent.setData(Uri.parse(Constants.MAPS_INTENT_URI +
+                        Uri.encode(mAttraction.name + ", " + mAttraction.city)));
+                startActivity(intent);
+            }
+        });
+
+        return view;
     }
 
     @Override
@@ -139,12 +144,6 @@ public class DetailFragment extends Fragment {
 
                 // Otherwise let the system handle navigating "up"
                 return false;
-            case R.id.map:
-                Intent intent = new Intent(Intent.ACTION_VIEW);
-                intent.setData(Uri.parse(Constants.MAPS_INTENT_URI +
-                        Uri.encode(mAttraction.name + ", " + mAttraction.city)));
-                startActivity(intent);
-                return true;
         }
         return super.onOptionsItemSelected(item);
     }

@@ -45,7 +45,7 @@ public class TiltWatchFaceService extends Gles2WatchFaceService {
     private static final long FPS = 60;
 
     /** Z distance from the camera to the watchface. */
-    private static final float EYE_Z = 2.3f;
+    private static final float EYE_Z = -2.3f;
 
     /** How long each frame is displayed at expected frame rate. */
     private static final long FRAME_PERIOD_MS = TimeUnit.SECONDS.toMillis(1) / FPS;

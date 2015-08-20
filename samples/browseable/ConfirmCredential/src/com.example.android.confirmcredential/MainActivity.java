@@ -95,7 +95,7 @@ public class MainActivity extends Activity {
      * Tries to encrypt some data with the generated key in {@link #createKey} which is
      * only works if the user has just authenticated via device credentials.
      */
-    private void tryEncrypt() {
+    private boolean tryEncrypt() {
         try {
             KeyStore keyStore = KeyStore.getInstance("AndroidKeyStore");
             keyStore.load(null);
@@ -111,15 +111,18 @@ public class MainActivity extends Activity {
 
             // If the user has recently authenticated, you will reach here.
             showAlreadyAuthenticated();
+            return true;
         } catch (UserNotAuthenticatedException e) {
             // User is not authenticated, let's authenticate with device credentials.
             showAuthenticationScreen();
+            return false;
         } catch (KeyPermanentlyInvalidatedException e) {
             // This happens if the lock screen has been disabled or reset after the key was
             // generated after the key was generated.
             Toast.makeText(this, "Keys are invalidated after created. Retry the purchase\n"
                             + e.getMessage(),
                     Toast.LENGTH_LONG).show();
+            return false;
         } catch (BadPaddingException | IllegalBlockSizeException | KeyStoreException |
                 CertificateException | UnrecoverableKeyException | IOException
                 | NoSuchPaddingException | NoSuchAlgorithmException | InvalidKeyException e) {
@@ -172,7 +175,9 @@ public class MainActivity extends Activity {
         if (requestCode == REQUEST_CODE_CONFIRM_DEVICE_CREDENTIALS) {
             // Challenge completed, proceed with using cipher
             if (resultCode == RESULT_OK) {
-                showPurchaseConfirmation();
+                if (tryEncrypt()) {
+                    showPurchaseConfirmation();
+                }
             } else {
                 // The user canceled or didn’t complete the lock screen
                 // operation. Go to error/cancellation flow.
