@@ -55,11 +55,12 @@ public class MainActivity extends Activity {
             }
         };
         mHistoryView = (TextView) findViewById(R.id.history);
-        startResponderService();
+        startResponderService(ResponderService.ACTION_INCOMING);
     }
 
-    private void startResponderService() {
-        Intent serviceIntent = new Intent(ResponderService.ACTION_INCOMING);
+    private void startResponderService(String action) {
+        Intent serviceIntent = new Intent(this, ResponderService.class);
+        serviceIntent.setAction(action);
         startService(serviceIntent);
     }
 
@@ -69,9 +70,7 @@ public class MainActivity extends Activity {
         LocalBroadcastManager.getInstance(this).registerReceiver(mReceiver,
                 new IntentFilter(ACTION_NOTIFY));
         mHistoryView.setText("");
-        Intent serviceIntent = new Intent(ACTION_GET_CONVERSATION);
-        startService(serviceIntent);
-
+        startResponderService(ACTION_GET_CONVERSATION);
     }
 
     @Override

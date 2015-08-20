@@ -95,7 +95,6 @@ public class SoundAlarmListenerService extends WearableListenerService {
                 }
             }
         }
-        dataEvents.close();
     }
 
 }

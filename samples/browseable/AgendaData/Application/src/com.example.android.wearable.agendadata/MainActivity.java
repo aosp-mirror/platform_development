@@ -33,7 +33,6 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.GoogleApiClient.ConnectionCallbacks;
 import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListener;
 import com.google.android.gms.common.api.ResultCallback;
-import com.google.android.gms.common.data.FreezableUtils;
 import com.google.android.gms.wearable.DataApi;
 import com.google.android.gms.wearable.DataItem;
 import com.google.android.gms.wearable.DataItemBuffer;
@@ -96,28 +95,29 @@ public class MainActivity extends Activity implements NodeApi.NodeListener, Conn
                     .setResultCallback(new ResultCallback<DataItemBuffer>() {
                         @Override
                         public void onResult(DataItemBuffer result) {
-                            if (result.getStatus().isSuccess()) {
-                                deleteDataItems(result);
-                            } else {
-                                if (Log.isLoggable(TAG, Log.DEBUG)) {
-                                    Log.d(TAG, "onDeleteEventsClicked(): failed to get Data Items");
+                            try {
+                                if (result.getStatus().isSuccess()) {
+                                    deleteDataItems(result);
+                                } else {
+                                    if (Log.isLoggable(TAG, Log.DEBUG)) {
+                                        Log.d(TAG,"onDeleteEventsClicked(): failed to get Data "
+                                                + "Items");
+
+                                    }
                                 }
+                            } finally {
+                                result.release();
                             }
-                            result.close();
                         }
                     });
         } else {
             Log.e(TAG, "Failed to delete data items"
-                     + " - Client disconnected from Google Play Services");
+                    + " - Client disconnected from Google Play Services");
         }
     }
 
-    private void deleteDataItems(DataItemBuffer dataItems) {
+    private void deleteDataItems(final DataItemBuffer dataItemList) {
         if (mGoogleApiClient.isConnected()) {
-            // Store the DataItem URIs in a List and close the buffer. Then use these URIs
-            // to delete the DataItems.
-            final List<DataItem> dataItemList = FreezableUtils.freezeIterable(dataItems);
-            dataItems.close();
             for (final DataItem dataItem : dataItemList) {
                 final Uri dataItemUri = dataItem.getUri();
                 // In a real calendar application, this might delete the corresponding calendar

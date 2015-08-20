@@ -16,4 +16,6 @@
     <string name="permision_available_camera">Camera Permission has been granted. Preview can now be opened.</string>
     <string name="permision_available_contacts">Contacts Permissions have been granted. Contacts screen can now be opened.</string>
     <string name="permissions_not_granted">Permissions were not granted.</string>
+    <string name="permission_camera_rationale">Camera permission is needed to show the camera preview.</string>
+    <string name="permission_contacts_rationale">Contacts permissions are needed to demonstrate access to the contacts database.</string>
 </resources>

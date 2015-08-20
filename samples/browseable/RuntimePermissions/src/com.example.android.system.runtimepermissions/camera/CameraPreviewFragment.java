@@ -61,8 +61,13 @@ public class CameraPreviewFragment extends Fragment {
 
         // Open an instance of the first camera and retrieve its info.
         mCamera = getCameraInstance(CAMERA_ID);
-        Camera.CameraInfo cameraInfo = new Camera.CameraInfo();
-        Camera.getCameraInfo(CAMERA_ID, cameraInfo);
+        Camera.CameraInfo cameraInfo = null;
+
+        if (mCamera != null) {
+            // Get camera info only if the camera is available
+            cameraInfo = new Camera.CameraInfo();
+            Camera.getCameraInfo(CAMERA_ID, cameraInfo);
+        }
 
         if (mCamera == null || cameraInfo == null) {
             // Camera is not available, display error message
