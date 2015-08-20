@@ -176,7 +176,7 @@ class AdbInterface:
 
   def StartInstrumentationForPackage(
       self, package_name, runner_name, timeout_time=60*10,
-      no_window_animation=False, instrumentation_args={}):
+      no_window_animation=False, instrumentation_args={}, user=None):
     """Run instrumentation test for given package and runner.
 
     Equivalent to StartInstrumentation, except instrumentation path is
@@ -185,11 +185,12 @@ class AdbInterface:
     instrumentation_path = "%s/%s" % (package_name, runner_name)
     return self.StartInstrumentation(instrumentation_path, timeout_time=timeout_time,
                                      no_window_animation=no_window_animation,
-                                     instrumentation_args=instrumentation_args)
+                                     instrumentation_args=instrumentation_args,
+                                     user=user)
 
   def StartInstrumentation(
       self, instrumentation_path, timeout_time=60*10, no_window_animation=False,
-      profile=False, instrumentation_args={}):
+      profile=False, instrumentation_args={}, user=None):
 
     """Runs an instrumentation class on the target.
 
@@ -208,6 +209,7 @@ class AdbInterface:
       profile: If True, profiling will be turned on for the instrumentation.
       instrumentation_args: Dictionary of key value bundle arguments to pass to
       instrumentation.
+      user: The user id to start the instrumentation with.
 
     Returns:
       (test_results, inst_finished_bundle)
@@ -229,7 +231,8 @@ class AdbInterface:
     command_string = self._BuildInstrumentationCommandPath(
         instrumentation_path, no_window_animation=no_window_animation,
         profile=profile, raw_mode=True,
-        instrumentation_args=instrumentation_args)
+        instrumentation_args=instrumentation_args,
+        user=user)
     logger.Log(command_string)
     (test_results, inst_finished_bundle) = (
         am_instrument_parser.ParseAmInstrumentOutput(
@@ -255,7 +258,7 @@ class AdbInterface:
 
   def StartInstrumentationNoResults(
       self, package_name, runner_name, no_window_animation=False,
-      raw_mode=False, instrumentation_args={}):
+      raw_mode=False, instrumentation_args={}, user=None):
     """Runs instrumentation and dumps output to stdout.
 
     Equivalent to StartInstrumentation, but will dump instrumentation
@@ -264,17 +267,19 @@ class AdbInterface:
     """
     adb_command_string = self.PreviewInstrumentationCommand(
         package_name, runner_name, no_window_animation=no_window_animation,
-        raw_mode=raw_mode, instrumentation_args=instrumentation_args)
+        raw_mode=raw_mode, instrumentation_args=instrumentation_args,
+        user=user)
     logger.Log(adb_command_string)
     run_command.RunCommand(adb_command_string, return_output=False)
 
   def PreviewInstrumentationCommand(
       self, package_name, runner_name, no_window_animation=False,
-      raw_mode=False, instrumentation_args={}):
+      raw_mode=False, instrumentation_args={}, user=None):
     """Returns a string of adb command that will be executed."""
     inst_command_string = self._BuildInstrumentationCommand(
         package_name, runner_name, no_window_animation=no_window_animation,
-        raw_mode=raw_mode, instrumentation_args=instrumentation_args)
+        raw_mode=raw_mode, instrumentation_args=instrumentation_args,
+        user=user)
     return self.PreviewShellCommand(inst_command_string)
 
   def PreviewShellCommand(self, cmd):
@@ -282,18 +287,20 @@ class AdbInterface:
 
   def _BuildInstrumentationCommand(
       self, package, runner_name, no_window_animation=False, profile=False,
-      raw_mode=True, instrumentation_args={}):
+      raw_mode=True, instrumentation_args={}, user=None):
     instrumentation_path = "%s/%s" % (package, runner_name)
 
     return self._BuildInstrumentationCommandPath(
         instrumentation_path, no_window_animation=no_window_animation,
         profile=profile, raw_mode=raw_mode,
-        instrumentation_args=instrumentation_args)
+        instrumentation_args=instrumentation_args, user=user)
 
   def _BuildInstrumentationCommandPath(
       self, instrumentation_path, no_window_animation=False, profile=False,
-      raw_mode=True, instrumentation_args={}):
+      raw_mode=True, instrumentation_args={}, user=None):
     command_string = "am instrument"
+    if user:
+      command_string += " --user %s" % user
     if no_window_animation:
       command_string += " --no_window_animation"
     if profile:
