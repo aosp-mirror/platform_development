@@ -22,16 +22,21 @@ import android.os.Bundle;
 import android.support.wearable.companion.WatchFaceCompanion;
 import android.widget.TextView;
 
-public class TiltWatchFaceConfigActivity extends Activity {
+/**
+ * The phone-side config activity for {@code OpenGLWatchFaceService}. The
+ * activity ({@code OpenGLWatchFaceWearableConfigActivity}) doesn't offer any configurations, but
+ * provides a template to add your own.
+ */
+public class OpenGLWatchFaceConfigActivity extends Activity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_tilt_watch_face_config);
+        setContentView(R.layout.activity_opengl_watch_face_config);
 
         ComponentName name =
                 getIntent().getParcelableExtra(WatchFaceCompanion.EXTRA_WATCH_FACE_COMPONENT);
-        TextView label = (TextView)findViewById(R.id.label);
+        TextView label = (TextView) findViewById(R.id.label);
         label.setText(label.getText() + " (" + name.getClassName() + ")");
     }
 }

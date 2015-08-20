@@ -15,7 +15,8 @@
 -->
 <resources>
     <string name="app_name">WatchFace</string>
-    <string name="tilt_name">Sample Tilt</string>
+    <string name="opengl_name">Sample OpenGL</string>
+    <string name="interactive_name">Sample Interactive</string>
     <string name="analog_name">Sample Analog</string>
     <string name="sweep_name">Sample Sweep</string>
     <string name="card_bounds_name">Sample Card Bounds</string>

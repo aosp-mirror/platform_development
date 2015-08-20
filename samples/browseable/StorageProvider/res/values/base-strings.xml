@@ -16,7 +16,7 @@
 -->
 
 <resources>
-    <string name="app_name">MyCloud</string>
+    <string name="app_name">StorageProvider</string>
     <string name="intro_message">
         <![CDATA[
         
