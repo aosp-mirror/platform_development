@@ -14,27 +14,28 @@
  limitations under the License.
 -->
 
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              xmlns:tools="http://schemas.android.com/tools"
-              android:layout_width="match_parent"
-              android:layout_height="match_parent"
-              android:paddingLeft="@dimen/horizontal_page_margin"
-              android:paddingRight="@dimen/horizontal_page_margin"
-              android:paddingTop="@dimen/vertical_page_margin"
-              android:paddingBottom="@dimen/vertical_page_margin"
-              android:orientation="vertical"
-              tools:context=".MainActivity">
+<LinearLayout android:id="@+id/main_layout"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:paddingBottom="@dimen/vertical_page_margin"
+    android:paddingLeft="@dimen/horizontal_page_margin"
+    android:paddingRight="@dimen/horizontal_page_margin"
+    android:paddingTop="@dimen/vertical_page_margin"
+    tools:context=".MainActivity">
 
     <TextView
-            android:text="@string/intro"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="@dimen/horizontal_page_margin"/>
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="@dimen/horizontal_page_margin"
+        android:text="@string/intro" />
 
 
     <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Open Camera Preview"
-            android:id="@+id/button_open_camera"/>
+        android:id="@+id/button_open_camera"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Open Camera Preview" />
 </LinearLayout>

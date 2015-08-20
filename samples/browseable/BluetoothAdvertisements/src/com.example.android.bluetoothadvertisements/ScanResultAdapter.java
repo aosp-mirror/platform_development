@@ -75,7 +75,11 @@ public class ScanResultAdapter extends BaseAdapter {
 
         ScanResult scanResult = mArrayList.get(position);
 
-        deviceNameView.setText(scanResult.getDevice().getName());
+        String name = scanResult.getDevice().getName();
+        if (name == null) {
+            name = mContext.getResources().getString(R.string.no_name);
+        }
+        deviceNameView.setText(name);
         deviceAddressView.setText(scanResult.getDevice().getAddress());
         lastSeenView.setText(getTimeSinceString(mContext, scanResult.getTimestampNanos()));
 
