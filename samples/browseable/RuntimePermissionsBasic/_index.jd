@@ -5,7 +5,6 @@ sample.group=System
 
 <p>
             
-            This sample shows runtime permissions available in the Android M and above.
             This sample shows a basic implementation for requesting permissions at runtime. Click the button to request the Camera permission and open a full-screen camera preview.
 Note: The "RuntimePermissions" sample provides a more complete overview over the runtime permission features available.
             

@@ -26,5 +26,8 @@
     <string name="seconds">seconds.</string>
     <string name="scan_start_toast">Scanning for</string>
     <string name="already_scanning">Scanning already started.</string>
+    <string name="no_name">(no name)</string>
+    <string name="start_error_unknown">unknown error</string>
+    <string name="advertising_timedout">Advertising stopped due to timeout.</string>
 
 </resources>
