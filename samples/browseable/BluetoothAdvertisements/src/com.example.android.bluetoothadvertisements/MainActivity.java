@@ -39,7 +39,7 @@ public class MainActivity extends FragmentActivity {
         setContentView(R.layout.activity_main);
         setTitle(R.string.activity_main_title);
 
-        if (savedInstanceState == null ) {
+        if (savedInstanceState == null) {
 
             mBluetoothAdapter = ((BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE))
                     .getAdapter();
@@ -112,11 +112,11 @@ public class MainActivity extends FragmentActivity {
         FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
 
         ScannerFragment scannerFragment = new ScannerFragment();
+        // Fragments can't access system services directly, so pass it the BluetoothAdapter
         scannerFragment.setBluetoothAdapter(mBluetoothAdapter);
         transaction.replace(R.id.scanner_fragment_container, scannerFragment);
 
         AdvertiserFragment advertiserFragment = new AdvertiserFragment();
-        advertiserFragment.setBluetoothAdapter(mBluetoothAdapter);
         transaction.replace(R.id.advertiser_fragment_container, advertiserFragment);
 
         transaction.commit();
