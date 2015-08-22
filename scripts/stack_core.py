@@ -38,6 +38,7 @@ class TraceConverter:
   dalvik_native_thread_line = re.compile("(\".*\" sysTid=[0-9]+ nice=[0-9]+.*)")
   register_line = re.compile("$a")
   trace_line = re.compile("$a")
+  sanitizer_trace_line = re.compile("$a")
   value_line = re.compile("$a")
   code_line = re.compile("$a")
   trace_lines = []
@@ -79,7 +80,29 @@ class TraceConverter:
     # Or lines from AndroidFeedback crash report system logs like:
     #   03-25 00:51:05.520 I/DEBUG ( 65): #00 pc 001cf42e /data/data/com.my.project/lib/libmyproject.so
     # Please note the spacing differences.
-    self.trace_line = re.compile("(.*)\#([0-9]+)[ \t]+(..)[ \t]+([0-9a-f]" + self.width + ")[ \t]+([^\r\n \t]*)( \((.*)\))?")  # pylint: disable-msg=C6310
+    self.trace_line = re.compile(
+        ".*"                                                 # Random start stuff.
+        "\#(?P<frame>[0-9]+)"                                # Frame number.
+        "[ \t]+..[ \t]+"                                     # (space)pc(space).
+        "(?P<offset>[0-9a-f]" + self.width + ")[ \t]+"       # Offset (hex number given without
+                                                             #         0x prefix).
+        "(?P<dso>[^\r\n \t]*)"                               # Library name.
+        "(?P<symbolpresent> \((?P<symbol>.*)\))?")           # Is the symbol there?
+                                                             # pylint: disable-msg=C6310
+    # Sanitizer output. This is different from debuggerd output, and it is easier to handle this as
+    # its own regex. Example:
+    # 08-19 05:29:26.283   397   403 I         :     #0 0xb6a15237  (/system/lib/libclang_rt.asan-arm-android.so+0x4f237)
+    self.sanitizer_trace_line = re.compile(
+        ".*"                                                 # Random start stuff.
+        "\#(?P<frame>[0-9]+)"                                # Frame number.
+        "[ \t]+0x[0-9a-f]+[ \t]+"                            # PC, not interesting to us.
+        "\("                                                 # Opening paren.
+        "(?P<dso>[^+]+)"                                     # Library name.
+        "\+"                                                 # '+'
+        "0x(?P<offset>[0-9a-f]+)"                            # Offset (hex number given with
+                                                             #         0x prefix).
+        "\)")                                                # Closin paren.
+                                                             # pylint: disable-msg=C6310
     # Examples of matched value lines include:
     #   bea4170c  8018e4e9  /data/data/com.my.project/lib/libmyproject.so
     #   bea4170c  8018e4e9  /data/data/com.my.project/lib/libmyproject.so (symbol)
@@ -143,6 +166,23 @@ class TraceConverter:
       self.ProcessLine(line)
     self.PrintOutput(self.trace_lines, self.value_lines)
 
+  def MatchTraceLine(self, line):
+    if self.trace_line.match(line):
+      match = self.trace_line.match(line)
+      return {"frame": match.group("frame"),
+              "offset": match.group("offset"),
+              "dso": match.group("dso"),
+              "symbol_present": bool(match.group("symbolpresent")),
+              "symbol_name": match.group("symbol")}
+    if self.sanitizer_trace_line.match(line):
+      match = self.sanitizer_trace_line.match(line)
+      return {"frame": match.group("frame"),
+              "offset": match.group("offset"),
+              "dso": match.group("dso"),
+              "symbol_present": False,
+              "symbol_name": None}
+    return None
+
   def ProcessLine(self, line):
     ret = False
     process_header = self.process_info_line.search(line)
@@ -184,11 +224,14 @@ class TraceConverter:
         symbol.ARCH = abi_header.group(2)
         self.UpdateAbiRegexes()
       return ret
-    if self.trace_line.match(line):
+    trace_line_dict = self.MatchTraceLine(line)
+    if trace_line_dict is not None:
       ret = True
-      match = self.trace_line.match(line)
-      (unused_0, frame, unused_1,
-       code_addr, area, symbol_present, symbol_name) = match.groups()
+      frame = trace_line_dict["frame"]
+      code_addr = trace_line_dict["offset"]
+      area = trace_line_dict["dso"]
+      symbol_present = trace_line_dict["symbol_present"]
+      symbol_name = trace_line_dict["symbol_name"]
 
       if frame <= self.last_frame and (self.trace_lines or self.value_lines):
         self.PrintOutput(self.trace_lines, self.value_lines)
