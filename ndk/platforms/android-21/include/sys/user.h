@@ -30,10 +30,12 @@
 #define _SYS_USER_H_
 
 #include <sys/cdefs.h>
-#include <limits.h> /* For PAGE_SIZE. */
 #include <stddef.h> /* For size_t. */
 
 __BEGIN_DECLS
+
+#define PAGE_SIZE 4096
+#define PAGE_MASK (~(PAGE_SIZE - 1))
 
 #if __i386__
 
@@ -230,7 +232,17 @@ struct user {
 
 #elif defined(__aarch64__)
 
-// There are no user structures for 64 bit arm.
+struct user_regs_struct {
+  uint64_t regs[31];
+  uint64_t sp;
+  uint64_t pc;
+  uint64_t pstate;
+};
+struct user_fpsimd_struct {
+  __uint128_t vregs[32];
+  uint32_t fpsr;
+  uint32_t fpcr;
+};
 
 #else
 
