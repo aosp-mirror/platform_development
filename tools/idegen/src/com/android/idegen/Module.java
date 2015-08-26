@@ -234,7 +234,8 @@ public class Module {
         for (File src : srcDirs) {
             String relative = src.getCanonicalPath().substring(moduleDir.length());
             boolean isTestSource = false;
-            if (relative.startsWith("/test")) {
+            // This covers directories like .../test[s]/...
+            if (relative.matches(".*/tests?/.*")) {
                 isTestSource = true;
             }
             sourceDirectories.append("      <sourceFolder url=\"file://$MODULE_DIR$")
