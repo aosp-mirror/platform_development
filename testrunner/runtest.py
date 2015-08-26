@@ -172,6 +172,11 @@ class TestRunner(object):
     parser.add_option("--suite", dest="suite",
                       help="Run all tests defined as part of the "
                       "the given test suite")
+    parser.add_option("--user", dest="user",
+                      help="The user that test apks are installing to."
+                      " This is the integer user id, e.g. 0 or 10."
+                      " If no user is specified, apk will be installed with"
+                      " adb's default behavior, which is currently all users.")
     group = optparse.OptionGroup(
         parser, "Targets", "Use these options to direct tests to a specific "
         "Android target")
@@ -338,6 +343,8 @@ class TestRunner(object):
             extra_flags = ""
             if test_requires_permissions and not self._options.skip_permissions:
               extra_flags = "-g"
+            if self._options.user:
+              extra_flags += " --user " + self._options.user
             logger.Log("adb install -r %s %s" % (extra_flags, abs_install_path))
             logger.Log(self._adb.Install(abs_install_path, extra_flags))
           else:

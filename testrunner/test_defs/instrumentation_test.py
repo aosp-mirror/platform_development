@@ -154,7 +154,8 @@ class InstrumentationTestSuite(test_suite.AbstractTestSuite):
             package_name=self.GetPackageName(),
             runner_name=self.GetRunnerName(),
             timeout_time=60*60,
-            instrumentation_args=instrumentation_args)
+            instrumentation_args=instrumentation_args,
+            user=options.user)
       except errors.InstrumentationError, errors.DeviceUnresponsiveError:
         return
       self._PrintTestResults(test_results)
@@ -175,7 +176,8 @@ class InstrumentationTestSuite(test_suite.AbstractTestSuite):
                                         runner_name=self.GetRunnerName(),
                                         raw_mode=options.raw_mode,
                                         instrumentation_args=
-                                        instrumentation_args)
+                                        instrumentation_args,
+                                        user=options.user)
 
   def _CheckInstrumentationInstalled(self, adb):
     if not adb.IsInstrumentationInstalled(self.GetPackageName(),
