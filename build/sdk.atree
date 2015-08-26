@@ -519,6 +519,8 @@ frameworks/support/percent/res                                                  
 frameworks/support/percent/src/.readme                                                             extras/android/support/percent/src/.readme
 ${OUT_DIR}/target/common/obj/PACKAGING/android-support-percent_intermediates/android-support-percent.jar    extras/android/support/percent/libs/android-support-percent.jar
 
+frameworks/support/customtabs/AndroidManifest.xml                                                     extras/android/support/customtabs/AndroidManifest.xml
+${OUT_DIR}/target/common/obj/PACKAGING/android-support-customtabs_intermediates/android-support-customtabs.jar    extras/android/support/customtabs/libs/android-support-customtabs.jar
 ##############################################################################
 # Tests Component
 ##############################################################################
