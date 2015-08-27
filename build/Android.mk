@@ -117,7 +117,8 @@ ANDROID_SUPPORT_LIBRARIES := \
     android-support-multidex \
     android-support-multidex-instrumentation \
     android-support-design \
-    android-support-percent
+    android-support-percent \
+    android-support-customtabs
 
 $(foreach lib, $(ANDROID_SUPPORT_LIBRARIES), $(eval $(call _package_sdk_library,$(lib))))
 
