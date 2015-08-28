@@ -111,13 +111,17 @@ ANDROID_SUPPORT_LIBRARIES := \
     android-support-v7-gridlayout \
     android-support-v7-mediarouter \
     android-support-v7-palette \
+    android-support-v7-preference \
     android-support-v7-recyclerview \
     android-support-v13 \
+    android-support-v14-preference \
     android-support-v17-leanback \
+    android-support-v17-preference-leanback \
     android-support-multidex \
     android-support-multidex-instrumentation \
     android-support-design \
     android-support-percent \
+    android-support-recommendation \
     android-support-customtabs
 
 $(foreach lib, $(ANDROID_SUPPORT_LIBRARIES), $(eval $(call _package_sdk_library,$(lib))))

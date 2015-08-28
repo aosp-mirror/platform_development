@@ -519,6 +519,24 @@ frameworks/support/percent/res                                                  
 frameworks/support/percent/src/.readme                                                             extras/android/support/percent/src/.readme
 ${OUT_DIR}/target/common/obj/PACKAGING/android-support-percent_intermediates/android-support-percent.jar    extras/android/support/percent/libs/android-support-percent.jar
 
+frameworks/support/customtabs/AndroidManifest.xml                                                     extras/android/support/customtabs/AndroidManifest.xml
+${OUT_DIR}/target/common/obj/PACKAGING/android-support-customtabs_intermediates/android-support-customtabs.jar    extras/android/support/customtabs/libs/android-support-customtabs.jar
+
+frameworks/support/v7/preference/AndroidManifest.xml                                               extras/android/support/v7/preference/AndroidManifest.xml
+frameworks/support/v7/preference/res                                                               extras/android/support/v7/preference/res
+${OUT_DIR}/target/common/obj/PACKAGING/android-support-v7-preference_intermediates/android-support-v7-preference.jar    extras/android.support/v7/preference/libs/android-support-v7-preference.jar
+
+frameworks/support/v14/preference/AndroidManifest.xml                                              extras/android/support/v14/preference/AndroidManifest.xml
+frameworks/support/v14/preference/res                                                              extras/android/support/v14/preference/res
+${OUT_DIR}/target/common/obj/PACKAGING/android-support-v14-preference_intermediates/android-support-v14-preference.jar    extras/android.support/v14/preference/libs/android-support-v14-preference.jar
+
+frameworks/support/v17/preference-leanback/AndroidManifest.xml                                     extras/android/support/v17/preference-leanback/AndroidManifest.xml
+frameworks/support/v17/preference-leanback/res                                                     extras/android/support/v17/preference-leanback/res
+${OUT_DIR}/target/common/obj/PACKAGING/android-support-v17-preference-leanback_intermediates/android-support-v17-preference-leanback.jar    extras/android.support/v17/preference-leanback/libs/android-support-v17-preference-leanback.jar
+
+frameworks/support/recommendation/AndroidManifest.xml                                              extras/android/support/recommendation/AndroidManifest.xml
+${OUT_DIR}/target/common/obj/PACKAGING/android-support-recommendation_intermediates/android-support-recommendation.jar    extras/android.support/recommendation/libs/android-support-recommendation.jar
+
 ##############################################################################
 # Tests Component
 ##############################################################################
