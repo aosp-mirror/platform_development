@@ -27,7 +27,6 @@ import android.os.Bundle;
 import android.provider.DocumentsContract;
 import android.provider.DocumentsContract.Document;
 import android.support.v4.app.Fragment;
-import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -124,8 +123,7 @@ public class DirectorySelectionFragment extends Fragment {
             }
         });
         mRecyclerView = (RecyclerView) rootView.findViewById(R.id.recyclerview_directory_entries);
-        mLayoutManager = new LinearLayoutManager(getActivity());
-        mRecyclerView.setLayoutManager(mLayoutManager);
+        mLayoutManager = mRecyclerView.getLayoutManager();
         mRecyclerView.scrollToPosition(0);
         mAdapter = new DirectoryEntryAdapter(new ArrayList<DirectoryEntry>());
         mRecyclerView.setAdapter(mAdapter);

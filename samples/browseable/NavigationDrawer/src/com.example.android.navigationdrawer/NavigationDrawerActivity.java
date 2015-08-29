@@ -27,7 +27,6 @@ import android.os.Bundle;
 import android.support.v4.app.ActionBarDrawerToggle;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
-import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -89,7 +88,6 @@ public class NavigationDrawerActivity extends Activity implements PlanetAdapter.
         mDrawerLayout.setDrawerShadow(R.drawable.drawer_shadow, GravityCompat.START);
         // improve performance by indicating the list if fixed size.
         mDrawerList.setHasFixedSize(true);
-        mDrawerList.setLayoutManager(new LinearLayoutManager(this));
 
         // set up the drawer's list view with items and click listener
         mDrawerList.setAdapter(new PlanetAdapter(mPlanetTitles, this));

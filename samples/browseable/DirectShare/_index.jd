@@ -1,0 +1,11 @@
+
+page.tags="DirectShare"
+sample.group=Content
+@jd:body
+
+<p>
+            
+This sample demonstrates how to provide the Direct Share feature. The app shows some options
+directly in the list of share intent candidates.
+            
+        </p>

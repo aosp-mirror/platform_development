@@ -1,0 +1,11 @@
+
+page.tags="MidiSynth"
+sample.group=Media
+@jd:body
+
+<p>
+
+This sample demonstrates how to use the MIDI API to receive and play MIDI messages coming from an
+attached input device.
+
+        </p>

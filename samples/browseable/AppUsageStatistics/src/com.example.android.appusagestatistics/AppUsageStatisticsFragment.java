@@ -24,7 +24,6 @@ import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.support.v4.app.Fragment;
-import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -91,10 +90,9 @@ public class AppUsageStatisticsFragment extends Fragment {
     public void onViewCreated(View rootView, Bundle savedInstanceState) {
         super.onViewCreated(rootView, savedInstanceState);
 
-        mLayoutManager = new LinearLayoutManager(getActivity());
         mUsageListAdapter = new UsageListAdapter();
         mRecyclerView = (RecyclerView) rootView.findViewById(R.id.recyclerview_app_usage);
-        mRecyclerView.setLayoutManager(mLayoutManager);
+        mLayoutManager = mRecyclerView.getLayoutManager();
         mRecyclerView.scrollToPosition(0);
         mRecyclerView.setAdapter(mUsageListAdapter);
         mOpenUsageSettingButton = (Button) rootView.findViewById(R.id.button_open_usage_setting);

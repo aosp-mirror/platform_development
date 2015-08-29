@@ -23,7 +23,6 @@ import android.location.Location;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.LocalBroadcastManager;
-import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
@@ -79,8 +78,6 @@ public class AttractionListFragment extends Fragment {
                 (AttractionsRecyclerView) view.findViewById(android.R.id.list);
         recyclerView.setEmptyView(view.findViewById(android.R.id.empty));
         recyclerView.setHasFixedSize(true);
-        recyclerView.setLayoutManager(new GridLayoutManager(
-                getActivity(), getResources().getInteger(R.integer.list_columns)));
         recyclerView.setAdapter(mAdapter);
 
         return view;
