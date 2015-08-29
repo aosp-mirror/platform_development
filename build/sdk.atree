@@ -330,6 +330,9 @@ developers/build/prebuilts/gradle/RuntimePermissionsBasic                    sam
 developers/build/prebuilts/gradle/ActiveNotifications                        samples/${PLATFORM_NAME}/notification/ActiveNotifications
 developers/build/prebuilts/gradle/Camera2Raw                                 samples/${PLATFORM_NAME}/media/Camera2Raw
 developers/build/prebuilts/gradle/AutoBackupForApps                          samples/${PLATFORM_NAME}/content/AutoBackupForApps
+developers/build/prebuilts/gradle/DirectShare                                samples/${PLATFORM_NAME}/content/DirectShare
+developers/build/prebuilts/gradle/MidiScope                                  samples/${PLATFORM_NAME}/media/MidiScope
+developers/build/prebuilts/gradle/MidiSynth                                  samples/${PLATFORM_NAME}/media/MidiSynth
 
 developers/build/prebuilts/androidtv                                         samples/${PLATFORM_NAME}/androidtv
 
