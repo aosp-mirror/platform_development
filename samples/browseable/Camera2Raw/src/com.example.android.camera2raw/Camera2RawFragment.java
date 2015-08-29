@@ -16,6 +16,7 @@
 
 package com.example.android.camera2raw;
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -23,6 +24,7 @@ import android.app.DialogFragment;
 import android.app.Fragment;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.pm.PackageManager;
 import android.graphics.ImageFormat;
 import android.graphics.Matrix;
 import android.graphics.RectF;
@@ -52,6 +54,8 @@ import android.os.HandlerThread;
 import android.os.Looper;
 import android.os.Message;
 import android.os.SystemClock;
+import android.support.v13.app.FragmentCompat;
+import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 import android.util.Size;
 import android.util.SparseIntArray;
@@ -84,7 +88,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * A fragment that demonstrates use of the Camera2 API to capture RAW and JPEG photos.
- *
+ * <p/>
  * In this example, the lifecycle of a single request to take a photo is:
  * <ul>
  * <li>
@@ -113,7 +117,9 @@ import java.util.concurrent.atomic.AtomicInteger;
  * </li>
  * </ul>
  */
-public class Camera2RawFragment extends Fragment implements View.OnClickListener {
+public class Camera2RawFragment extends Fragment
+        implements View.OnClickListener, FragmentCompat.OnRequestPermissionsResultCallback {
+
     /**
      * Conversion from screen rotation to JPEG orientation.
      */
@@ -125,6 +131,20 @@ public class Camera2RawFragment extends Fragment implements View.OnClickListener
         ORIENTATIONS.append(Surface.ROTATION_180, 180);
         ORIENTATIONS.append(Surface.ROTATION_270, 270);
     }
+
+    /**
+     * Request code for camera permissions.
+     */
+    private static final int REQUEST_CAMERA_PERMISSIONS = 1;
+
+    /**
+     * Permissions required to take a picture.
+     */
+    private static final String[] CAMERA_PERMISSIONS = {
+            Manifest.permission.CAMERA,
+            Manifest.permission.READ_EXTERNAL_STORAGE,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE,
+    };
 
     /**
      * Timeout for the pre-capture sequence.
@@ -264,9 +284,9 @@ public class Camera2RawFragment extends Fragment implements View.OnClickListener
     private Handler mBackgroundHandler;
 
     /**
-     * A reference counted holder wrapping the {@link ImageReader} that handles JPEG image captures.
-     * This is used to allow us to clean up the {@link ImageReader} when all background tasks using
-     * its {@link Image}s have completed.
+     * A reference counted holder wrapping the {@link ImageReader} that handles JPEG image
+     * captures. This is used to allow us to clean up the {@link ImageReader} when all background
+     * tasks using its {@link Image}s have completed.
      */
     private RefCountedAutoCloseable<ImageReader> mJpegImageReader;
 
@@ -310,8 +330,8 @@ public class Camera2RawFragment extends Fragment implements View.OnClickListener
     private int mState = STATE_CLOSED;
 
     /**
-     * Timer to use with pre-capture sequence to ensure a timely capture if 3A convergence is taking
-     * too long.
+     * Timer to use with pre-capture sequence to ensure a timely capture if 3A convergence is
+     * taking too long.
      */
     private long mCaptureTimer;
 
@@ -352,7 +372,7 @@ public class Camera2RawFragment extends Fragment implements View.OnClickListener
         @Override
         public void onError(CameraDevice cameraDevice, int error) {
             Log.e(TAG, "Received camera device error: " + error);
-            synchronized(mCameraStateLock) {
+            synchronized (mCameraStateLock) {
                 mState = STATE_CLOSED;
                 mCameraOpenCloseLock.release();
                 cameraDevice.close();
@@ -402,7 +422,7 @@ public class Camera2RawFragment extends Fragment implements View.OnClickListener
             = new CameraCaptureSession.CaptureCallback() {
 
         private void process(CaptureResult result) {
-            synchronized(mCameraStateLock) {
+            synchronized (mCameraStateLock) {
                 switch (mState) {
                     case STATE_PREVIEW: {
                         // We have nothing to do when the camera preview is running normally.
@@ -416,7 +436,7 @@ public class Camera2RawFragment extends Fragment implements View.OnClickListener
                             // If auto-focus has reached locked state, we are ready to capture
                             readyToCapture =
                                     (afState == CaptureResult.CONTROL_AF_STATE_FOCUSED_LOCKED ||
-                                    afState == CaptureResult.CONTROL_AF_STATE_NOT_FOCUSED_LOCKED);
+                                            afState == CaptureResult.CONTROL_AF_STATE_NOT_FOCUSED_LOCKED);
                         }
 
                         // If we are running on an non-legacy device, we should also wait until
@@ -559,9 +579,7 @@ public class Camera2RawFragment extends Fragment implements View.OnClickListener
     };
 
     public static Camera2RawFragment newInstance() {
-        Camera2RawFragment fragment = new Camera2RawFragment();
-        fragment.setRetainInstance(true);
-        return fragment;
+        return new Camera2RawFragment();
     }
 
     @Override
@@ -621,6 +639,20 @@ public class Camera2RawFragment extends Fragment implements View.OnClickListener
     }
 
     @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        if (requestCode == REQUEST_CAMERA_PERMISSIONS) {
+            for (int result : grantResults) {
+                if (result != PackageManager.PERMISSION_GRANTED) {
+                    showMissingPermissionError();
+                    return;
+                }
+            }
+        } else {
+            super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        }
+    }
+
+    @Override
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.picture: {
@@ -659,7 +691,7 @@ public class Camera2RawFragment extends Fragment implements View.OnClickListener
 
                 // We only use a camera that supports RAW in this sample.
                 if (!contains(characteristics.get(
-                        CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES),
+                                CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES),
                         CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES_RAW)) {
                     continue;
                 }
@@ -676,14 +708,14 @@ public class Camera2RawFragment extends Fragment implements View.OnClickListener
                         Arrays.asList(map.getOutputSizes(ImageFormat.RAW_SENSOR)),
                         new CompareSizesByArea());
 
-                synchronized(mCameraStateLock) {
+                synchronized (mCameraStateLock) {
                     // Set up ImageReaders for JPEG and RAW outputs.  Place these in a reference
                     // counted wrapper to ensure they are only closed when all background tasks
                     // using them are finished.
                     if (mJpegImageReader == null || mJpegImageReader.getAndRetain() == null) {
                         mJpegImageReader = new RefCountedAutoCloseable<>(
                                 ImageReader.newInstance(largestJpeg.getWidth(),
-                                largestJpeg.getHeight(), ImageFormat.JPEG, /*maxImages*/5));
+                                        largestJpeg.getHeight(), ImageFormat.JPEG, /*maxImages*/5));
                     }
                     mJpegImageReader.get().setOnImageAvailableListener(
                             mOnJpegImageAvailableListener, mBackgroundHandler);
@@ -691,7 +723,7 @@ public class Camera2RawFragment extends Fragment implements View.OnClickListener
                     if (mRawImageReader == null || mRawImageReader.getAndRetain() == null) {
                         mRawImageReader = new RefCountedAutoCloseable<>(
                                 ImageReader.newInstance(largestRaw.getWidth(),
-                                largestRaw.getHeight(), ImageFormat.RAW_SENSOR, /*maxImages*/ 5));
+                                        largestRaw.getHeight(), ImageFormat.RAW_SENSOR, /*maxImages*/ 5));
                     }
                     mRawImageReader.get().setOnImageAvailableListener(
                             mOnRawImageAvailableListener, mBackgroundHandler);
@@ -716,6 +748,10 @@ public class Camera2RawFragment extends Fragment implements View.OnClickListener
      */
     private void openCamera() {
         if (!setUpCameraOutputs()) {
+            return;
+        }
+        if (!hasAllPermissionsGranted()) {
+            requestCameraPermissions();
             return;
         }
 
@@ -745,12 +781,63 @@ public class Camera2RawFragment extends Fragment implements View.OnClickListener
     }
 
     /**
+     * Requests permissions necessary to use camera and save pictures.
+     */
+    private void requestCameraPermissions() {
+        if (shouldShowRationale()) {
+            PermissionConfirmationDialog.newInstance().show(getChildFragmentManager(), "dialog");
+        } else {
+            FragmentCompat.requestPermissions(this, CAMERA_PERMISSIONS, REQUEST_CAMERA_PERMISSIONS);
+        }
+    }
+
+    /**
+     * Tells whether all the necessary permissions are granted to this app.
+     *
+     * @return True if all the required permissions are granted.
+     */
+    private boolean hasAllPermissionsGranted() {
+        for (String permission : CAMERA_PERMISSIONS) {
+            if (ActivityCompat.checkSelfPermission(getActivity(), permission)
+                    != PackageManager.PERMISSION_GRANTED) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Gets whether you should show UI with rationale for requesting the permissions.
+     *
+     * @return True if the UI should be shown.
+     */
+    private boolean shouldShowRationale() {
+        for (String permission : CAMERA_PERMISSIONS) {
+            if (FragmentCompat.shouldShowRequestPermissionRationale(this, permission)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Shows that this app really needs the permission and finishes the app.
+     */
+    private void showMissingPermissionError() {
+        Activity activity = getActivity();
+        if (activity != null) {
+            Toast.makeText(activity, R.string.request_permission, Toast.LENGTH_SHORT).show();
+            activity.finish();
+        }
+    }
+
+    /**
      * Closes the current {@link CameraDevice}.
      */
     private void closeCamera() {
         try {
             mCameraOpenCloseLock.acquire();
-            synchronized(mCameraStateLock) {
+            synchronized (mCameraStateLock) {
 
                 // Reset state and clean up resources used by the camera.
                 // Note: After calling this, the ImageReaders will be closed after any background
@@ -787,7 +874,7 @@ public class Camera2RawFragment extends Fragment implements View.OnClickListener
     private void startBackgroundThread() {
         mBackgroundThread = new HandlerThread("CameraBackground");
         mBackgroundThread.start();
-        synchronized(mCameraStateLock) {
+        synchronized (mCameraStateLock) {
             mBackgroundHandler = new Handler(mBackgroundThread.getLooper());
         }
     }
@@ -810,7 +897,7 @@ public class Camera2RawFragment extends Fragment implements View.OnClickListener
 
     /**
      * Creates a new {@link CameraCaptureSession} for camera preview.
-     *
+     * <p/>
      * Call this only with {@link #mCameraStateLock} held.
      */
     private void createCameraPreviewSessionLocked() {
@@ -829,8 +916,8 @@ public class Camera2RawFragment extends Fragment implements View.OnClickListener
 
             // Here, we create a CameraCaptureSession for camera preview.
             mCameraDevice.createCaptureSession(Arrays.asList(surface,
-                    mJpegImageReader.get().getSurface(),
-                    mRawImageReader.get().getSurface()), new CameraCaptureSession.StateCallback() {
+                            mJpegImageReader.get().getSurface(),
+                            mRawImageReader.get().getSurface()), new CameraCaptureSession.StateCallback() {
                         @Override
                         public void onConfigured(CameraCaptureSession cameraCaptureSession) {
                             synchronized (mCameraStateLock) {
@@ -846,7 +933,7 @@ public class Camera2RawFragment extends Fragment implements View.OnClickListener
                                             mPreviewRequestBuilder.build(),
                                             mPreCaptureCallback, mBackgroundHandler);
                                     mState = STATE_PREVIEW;
-                                } catch (CameraAccessException|IllegalStateException e) {
+                                } catch (CameraAccessException | IllegalStateException e) {
                                     e.printStackTrace();
                                     return;
                                 }
@@ -869,7 +956,7 @@ public class Camera2RawFragment extends Fragment implements View.OnClickListener
     /**
      * Configure the given {@link CaptureRequest.Builder} to use auto-focus, auto-exposure, and
      * auto-white-balance controls if available.
-     *
+     * <p/>
      * Call this only with {@link #mCameraStateLock} held.
      *
      * @param builder the builder to configure.
@@ -923,7 +1010,7 @@ public class Camera2RawFragment extends Fragment implements View.OnClickListener
     /**
      * Configure the necessary {@link android.graphics.Matrix} transformation to `mTextureView`,
      * and start/restart the preview capture session if necessary.
-     *
+     * <p/>
      * This method should be called after the camera state has been initialized in
      * setUpCameraOutputs.
      *
@@ -932,7 +1019,7 @@ public class Camera2RawFragment extends Fragment implements View.OnClickListener
      */
     private void configureTransform(int viewWidth, int viewHeight) {
         Activity activity = getActivity();
-        synchronized(mCameraStateLock) {
+        synchronized (mCameraStateLock) {
             if (null == mTextureView || null == activity) {
                 return;
             }
@@ -1027,14 +1114,14 @@ public class Camera2RawFragment extends Fragment implements View.OnClickListener
 
     /**
      * Initiate a still image capture.
-     *
+     * <p/>
      * This function sends a capture request that initiates a pre-capture sequence in our state
      * machine that waits for auto-focus to finish, ending in a "locked" state where the lens is no
      * longer moving, waits for auto-exposure to choose a good exposure value, and waits for
      * auto-white-balance to converge.
      */
     private void takePicture() {
-        synchronized(mCameraStateLock) {
+        synchronized (mCameraStateLock) {
             mPendingUserCaptures++;
 
             // If we already triggered a pre-capture sequence, or are in a state where we cannot
@@ -1078,7 +1165,7 @@ public class Camera2RawFragment extends Fragment implements View.OnClickListener
     /**
      * Send a capture request to the camera device that initiates a capture targeting the JPEG and
      * RAW outputs.
-     *
+     * <p/>
      * Call this only with {@link #mCameraStateLock} held.
      */
     private void captureStillPictureLocked() {
@@ -1127,7 +1214,7 @@ public class Camera2RawFragment extends Fragment implements View.OnClickListener
     /**
      * Called after a RAW/JPEG capture has completed; resets the AF trigger state for the
      * pre-capture sequence.
-     *
+     * <p/>
      * Call this only with {@link #mCameraStateLock} held.
      */
     private void finishedCaptureLocked() {
@@ -1156,8 +1243,8 @@ public class Camera2RawFragment extends Fragment implements View.OnClickListener
      * thread.
      *
      * @param pendingQueue the currently active requests.
-     * @param reader a reference counted wrapper containing an {@link ImageReader} from which to
-     *               acquire an image.
+     * @param reader       a reference counted wrapper containing an {@link ImageReader} from which
+     *                     to acquire an image.
      */
     private void dequeueAndSaveImage(TreeMap<Integer, ImageSaver.ImageSaverBuilder> pendingQueue,
                                      RefCountedAutoCloseable<ImageReader> reader) {
@@ -1195,7 +1282,7 @@ public class Camera2RawFragment extends Fragment implements View.OnClickListener
     /**
      * Runnable that saves an {@link Image} into the specified {@link File}, and updates
      * {@link android.provider.MediaStore} to include the resulting file.
-     *
+     * <p/>
      * This can be constructed through an {@link ImageSaverBuilder} as the necessary image and
      * result information becomes available.
      */
@@ -1231,8 +1318,8 @@ public class Camera2RawFragment extends Fragment implements View.OnClickListener
         private final RefCountedAutoCloseable<ImageReader> mReader;
 
         private ImageSaver(Image image, File file, CaptureResult result,
-                CameraCharacteristics characteristics, Context context,
-                RefCountedAutoCloseable<ImageReader> reader) {
+                           CameraCharacteristics characteristics, Context context,
+                           RefCountedAutoCloseable<ImageReader> reader) {
             mImage = image;
             mFile = file;
             mCaptureResult = result;
@@ -1245,7 +1332,7 @@ public class Camera2RawFragment extends Fragment implements View.OnClickListener
         public void run() {
             boolean success = false;
             int format = mImage.getFormat();
-            switch(format) {
+            switch (format) {
                 case ImageFormat.JPEG: {
                     ByteBuffer buffer = mImage.getPlanes()[0].getBuffer();
                     byte[] bytes = new byte[buffer.remaining()];
@@ -1289,7 +1376,7 @@ public class Camera2RawFragment extends Fragment implements View.OnClickListener
 
             // If saving the file succeeded, update MediaStore.
             if (success) {
-                MediaScannerConnection.scanFile(mContext, new String[] { mFile.getPath()},
+                MediaScannerConnection.scanFile(mContext, new String[]{mFile.getPath()},
                 /*mimeTypes*/null, new MediaScannerConnection.MediaScannerConnectionClient() {
                     @Override
                     public void onMediaScannerConnected() {
@@ -1307,7 +1394,7 @@ public class Camera2RawFragment extends Fragment implements View.OnClickListener
 
         /**
          * Builder class for constructing {@link ImageSaver}s.
-         *
+         * <p/>
          * This class is thread safe.
          */
         public static class ImageSaverBuilder {
@@ -1320,8 +1407,9 @@ public class Camera2RawFragment extends Fragment implements View.OnClickListener
 
             /**
              * Construct a new ImageSaverBuilder using the given {@link Context}.
+             *
              * @param context a {@link Context} to for accessing the
-             *                  {@link android.provider.MediaStore}.
+             *                {@link android.provider.MediaStore}.
              */
             public ImageSaverBuilder(final Context context) {
                 mContext = context;
@@ -1329,7 +1417,7 @@ public class Camera2RawFragment extends Fragment implements View.OnClickListener
 
             public synchronized ImageSaverBuilder setRefCountedReader(
                     RefCountedAutoCloseable<ImageReader> reader) {
-                if (reader == null ) throw new NullPointerException();
+                if (reader == null) throw new NullPointerException();
 
                 mReader = reader;
                 return this;
@@ -1440,6 +1528,7 @@ public class Camera2RawFragment extends Fragment implements View.OnClickListener
 
         /**
          * Wrap the given object.
+         *
          * @param object an object to wrap.
          */
         public RefCountedAutoCloseable(T object) {
@@ -1551,7 +1640,7 @@ public class Camera2RawFragment extends Fragment implements View.OnClickListener
      * Return true if the given array contains the given integer.
      *
      * @param modes array to check.
-     * @param mode integer to get for.
+     * @param mode  integer to get for.
      * @return true if the array contains the given integer, otherwise false.
      */
     private static boolean contains(int[] modes, int mode) {
@@ -1582,7 +1671,9 @@ public class Camera2RawFragment extends Fragment implements View.OnClickListener
     /**
      * Rotation need to transform from the camera sensor orientation to the device's current
      * orientation.
-     * @param c the {@link CameraCharacteristics} to query for the camera sensor orientation.
+     *
+     * @param c                 the {@link CameraCharacteristics} to query for the camera sensor
+     *                          orientation.
      * @param deviceOrientation the current device orientation relative to the native device
      *                          orientation.
      * @return the total rotation from the sensor orientation to the current device orientation.
@@ -1620,12 +1711,12 @@ public class Camera2RawFragment extends Fragment implements View.OnClickListener
      * If the given request has been completed, remove it from the queue of active requests and
      * send an {@link ImageSaver} with the results from this request to a background thread to
      * save a file.
-     *
+     * <p/>
      * Call this only with {@link #mCameraStateLock} held.
      *
      * @param requestId the ID of the {@link CaptureRequest} to handle.
-     * @param builder the {@link ImageSaver.ImageSaverBuilder} for this request.
-     * @param queue the queue to remove this request from, if completed.
+     * @param builder   the {@link ImageSaver.ImageSaverBuilder} for this request.
+     * @param queue     the queue to remove this request from, if completed.
      */
     private void handleCompletionLocked(int requestId, ImageSaver.ImageSaverBuilder builder,
                                         TreeMap<Integer, ImageSaver.ImageSaverBuilder> queue) {
@@ -1639,7 +1730,7 @@ public class Camera2RawFragment extends Fragment implements View.OnClickListener
 
     /**
      * Check if we are using a device that only supports the LEGACY hardware level.
-     *
+     * <p/>
      * Call this only with {@link #mCameraStateLock} held.
      *
      * @return true if this is a legacy device.
@@ -1651,7 +1742,7 @@ public class Camera2RawFragment extends Fragment implements View.OnClickListener
 
     /**
      * Start the timer for the pre-capture sequence.
-     *
+     * <p/>
      * Call this only with {@link #mCameraStateLock} held.
      */
     private void startTimerLocked() {
@@ -1660,7 +1751,7 @@ public class Camera2RawFragment extends Fragment implements View.OnClickListener
 
     /**
      * Check if the timer for the pre-capture sequence has been hit.
-     *
+     * <p/>
      * Call this only with {@link #mCameraStateLock} held.
      *
      * @return true if the timeout occurred.
@@ -1669,6 +1760,37 @@ public class Camera2RawFragment extends Fragment implements View.OnClickListener
         return (SystemClock.elapsedRealtime() - mCaptureTimer) > PRECAPTURE_TIMEOUT_MS;
     }
 
-    // *********************************************************************************************
+    /**
+     * A dialog that explains about the necessary permissions.
+     */
+    public static class PermissionConfirmationDialog extends DialogFragment {
+
+        public static PermissionConfirmationDialog newInstance() {
+            return new PermissionConfirmationDialog();
+        }
+
+        @Override
+        public Dialog onCreateDialog(Bundle savedInstanceState) {
+            final Fragment parent = getParentFragment();
+            return new AlertDialog.Builder(getActivity())
+                    .setMessage(R.string.request_permission)
+                    .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            FragmentCompat.requestPermissions(parent, CAMERA_PERMISSIONS,
+                                    REQUEST_CAMERA_PERMISSIONS);
+                        }
+                    })
+                    .setNegativeButton(android.R.string.cancel,
+                            new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    getActivity().finish();
+                                }
+                            })
+                    .create();
+        }
+
+    }
 
 }
