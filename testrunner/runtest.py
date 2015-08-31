@@ -177,6 +177,12 @@ class TestRunner(object):
                       " This is the integer user id, e.g. 0 or 10."
                       " If no user is specified, apk will be installed with"
                       " adb's default behavior, which is currently all users.")
+    parser.add_option("--install-filter", dest="filter_re",
+                      help="Regular expression which generated apks have to"
+                      " match to be installed to target device. Default is None"
+                      " and will install all packages built.  This is"
+                      " useful when the test path has a lot of apks but you"
+                      " only care about one.")
     group = optparse.OptionGroup(
         parser, "Targets", "Use these options to direct tests to a specific "
         "Android target")
@@ -318,9 +324,11 @@ class TestRunner(object):
           output = run_command.RunCommand(cmd, return_output=True, timeout_time=600)
         run_command.SetAbortOnError(False)
         logger.SilentLog(output)
-        self._DoInstall(output, test_requires_permissions)
+        filter_re = re.compile(self._options.filter_re) if self._options.filter_re else None
 
-  def _DoInstall(self, make_output, test_requires_permissions):
+        self._DoInstall(output, test_requires_permissions, filter_re=filter_re)
+
+  def _DoInstall(self, make_output, test_requires_permissions, filter_re=None):
     """Install artifacts from build onto device.
 
     Looks for 'install:' text from make output to find artifacts to install.
@@ -338,6 +346,8 @@ class TestRunner(object):
         # the remaining string is a space-separated list of build-generated files
         install_paths = m.group(2)
         for install_path in re.split(r'\s+', install_paths):
+          if filter_re and not filter_re.match(install_path):
+            continue
           if install_path.endswith(".apk"):
             abs_install_path = os.path.join(self._root_path, install_path)
             extra_flags = ""
