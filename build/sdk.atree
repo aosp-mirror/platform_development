@@ -54,19 +54,19 @@ bin/hprof-conv                          strip platform-tools/hprof-conv
 development/sdk/generated-api-versions.xml    platform-tools/api/api-versions.xml
 
 # systrace
-external/chromium-trace/agents/__init__.py            platform-tools/systrace/agents/__init__.py
-external/chromium-trace/agents/atrace_agent.py        platform-tools/systrace/agents/atrace_agent.py
-external/chromium-trace/systrace.py                   platform-tools/systrace/systrace.py
-external/chromium-trace/systrace-legacy.py            platform-tools/systrace/systrace-legacy.py
-external/chromium-trace/systrace_agent.py             platform-tools/systrace/systrace_agent.py
-external/chromium-trace/util.py                       platform-tools/systrace/util.py
-external/chromium-trace/systrace_trace_viewer.html    platform-tools/systrace/systrace_trace_viewer.html
-external/chromium-trace/prefix.html                   platform-tools/systrace/prefix.html
-external/chromium-trace/suffix.html                   platform-tools/systrace/suffix.html
-external/chromium-trace/LICENSE                       platform-tools/systrace/LICENSE
-external/chromium-trace/AUTHORS                       platform-tools/systrace/AUTHORS
-external/chromium-trace/NOTICE                        platform-tools/systrace/NOTICE
-external/chromium-trace/UPSTREAM_REVISION             platform-tools/systrace/UPSTREAM_REVISION
+external/chromium-trace/catapult/systrace/systrace/agents/__init__.py     platform-tools/systrace/agents/__init__.py
+external/chromium-trace/catapult/systrace/systrace/agents/atrace_agent.py platform-tools/systrace/agents/atrace_agent.py
+external/chromium-trace/catapult/systrace/systrace/systrace.py            platform-tools/systrace/systrace.py
+external/chromium-trace/catapult/systrace/systrace/systrace-legacy.py     platform-tools/systrace/systrace-legacy.py
+external/chromium-trace/catapult/systrace/systrace/systrace_agent.py      platform-tools/systrace/systrace_agent.py
+external/chromium-trace/catapult/systrace/systrace/util.py                platform-tools/systrace/util.py
+external/chromium-trace/catapult/systrace/systrace/prefix.html            platform-tools/systrace/prefix.html
+external/chromium-trace/catapult/systrace/systrace/suffix.html            platform-tools/systrace/suffix.html
+external/chromium-trace/catapult/systrace/systrace/LICENSE                platform-tools/systrace/LICENSE
+external/chromium-trace/catapult/systrace/systrace/AUTHORS                platform-tools/systrace/AUTHORS
+external/chromium-trace/systrace_trace_viewer.html                        platform-tools/systrace/systrace_trace_viewer.html
+external/chromium-trace/NOTICE                                            platform-tools/systrace/NOTICE
+external/chromium-trace/UPSTREAM_REVISION                                 platform-tools/systrace/UPSTREAM_REVISION
 
 ##############################################################################
 # Build Tools Component
