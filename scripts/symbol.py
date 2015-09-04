@@ -185,7 +185,9 @@ def CallAddr2LineForSet(lib, unique_addrs):
 
   symbols = SYMBOLS_DIR + lib
   if not os.path.exists(symbols):
-    return None
+    symbols = lib
+    if not os.path.exists(symbols):
+      return None
 
   cmd = [ToolPath("addr2line"), "--functions", "--inlines",
       "--demangle", "--exe=" + symbols]
@@ -203,7 +205,7 @@ def CallAddr2LineForSet(lib, unique_addrs):
       if symbol == "??":
         symbol = None
       location = child.stdout.readline().strip()
-      if location == "??:0":
+      if location == "??:0" or location == "??:?":
         location = None
       if symbol is None and location is None:
         break
@@ -250,11 +252,9 @@ def CallObjdumpForSet(lib, unique_addrs):
 
   symbols = SYMBOLS_DIR + lib
   if not os.path.exists(symbols):
-    return None
-
-  symbols = SYMBOLS_DIR + lib
-  if not os.path.exists(symbols):
-    return None
+    symbols = lib
+    if not os.path.exists(symbols):
+      return None
 
   addrs = sorted(unique_addrs)
   start_addr_dec = str(StripPC(int(addrs[0], 16)))
