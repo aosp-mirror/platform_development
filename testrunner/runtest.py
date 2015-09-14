@@ -439,13 +439,6 @@ class TestRunner(object):
       self._tests_to_run.append(test)
     return self._tests_to_run
 
-  def _IsCtsTests(self, test_list):
-    """Check if any cts tests are included in given list of tests to run."""
-    for test in test_list:
-      if test.GetSuite() == 'cts':
-        return True
-    return False
-
   def _TurnOffVerifier(self, test_list):
     """Turn off the dalvik verifier if needed by given tests.
 
