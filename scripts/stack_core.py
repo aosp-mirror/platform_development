@@ -195,6 +195,7 @@ class TraceConverter:
       match = self.sanitizer_trace_line.match(line)
       return {"frame": match.group("frame"),
               "offset": match.group("offset"),
+              "so_offset": None,
               "dso": match.group("dso"),
               "symbol_present": False,
               "symbol_name": None}
