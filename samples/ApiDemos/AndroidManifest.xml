@@ -2427,6 +2427,13 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".view.NumberPickerActivity" android:label="Views/Number Picker">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
         <activity android:name=".view.RatingBar1" android:label="Views/Rating Bar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
