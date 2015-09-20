@@ -45,7 +45,7 @@ OUT="$1"
 [[ -z "$OUT" ]] && error "Missing output.xml name."
 shift
 
-# Get the schema type. Must be either "repository" or "addon".
+# Get the schema filename. E.g. ".../.../sdk-repository-10.xsd". Can be relative or absolute.
 SCHEMA="$1"
 [[ ! -f "$SCHEMA" ]] && error "Invalid XML schema name: $SCHEMA."
 shift
@@ -106,7 +106,6 @@ ATTRS=(
   Platform.MinToolsRev          min-tools-rev            1
   Platform.MinPlatformToolsRev  min-platform-tools-rev   3
   Sample.MinApiLevel            min-api-level            2
-  SystemImage.Abi               abi                      5
   Layoutlib.Api                 layoutlib/api            4
   Layoutlib.Revision            layoutlib/revision       4
   # from source.properties for addon.xml packages
@@ -119,6 +118,12 @@ ATTRS=(
   Extra.Path                    path                     1
   Extra.OldPaths                old-paths                3
   Extra.MinApiLevel             min-api-level            2
+  # for system-image
+  SystemImage.Abi               abi                      r:3,s:1
+  SystemImage.TagId             tag-id                   r:9,s:2
+  SystemImage.TagDisplay        tag-display              r:9,s:2
+  Addon.VendorId                add-on/vendor-id         s:3
+  Addon.VendorDisplay           add-on/vendor-display    s:3
   # from addon manifest.ini for addon.xml packages
   # (note that vendor/name are mapped to different XML elements based on the XSD version)
   vendor-id                     vendor-id                4
@@ -133,6 +138,23 @@ ATTRS=(
   api                           api-level                1
   version                       revision                 1
   revision                      revision                 1
+)
+
+# Start with repo-10, addon-7 and sys-img-3, we don't encode the os/arch
+# in the <archive> attributes anymore. Instead we have separate elements.
+
+function uses_new_host_os() {
+  if [[ "$ROOT" == "sdk-repository" && "$XSD_VERSION" -ge "10" ]]; then return 0; fi
+  if [[ "$ROOT" == "sdk-addon"      && "$XSD_VERSION" -ge  "7" ]]; then return 0; fi
+  if [[ "$ROOT" == "sdk-sys-img"    && "$XSD_VERSION" -ge  "3" ]]; then return 0; fi
+  return 1
+}
+
+ATTRS_ARCHIVE=(
+  Archive.HostOs                host-os                   1
+  Archive.HostBits              host-bits                 1
+  Archive.JvmBits               jvm-bits                  1
+  Archive.MinJvmVers            min-jvm-version           1
 )
 
 
@@ -224,6 +246,13 @@ function parse_attributes() {
   local VALUE
   local REV
   local USED
+  local S
+
+  # Get the first letter of the schema name (e.g. sdk-repo => 'r')
+  # This can be r, a or s and would match the min-XSD per-schema value
+  # in the ATTRS list.
+  S=$(basename "$SCHEMA")
+  S="${S:4:1}"
 
   # $1 here is the ATTRS list above.
   while [[ "$1" ]]; do
@@ -234,7 +263,13 @@ function parse_attributes() {
     DST=$2
     REV=$3
 
-    if [[ $XSD_VERSION -ge $REV ]]; then
+    if [[ $REV =~ ([ras0-9:,]+,)?$S:([0-9])(,.*)? ]]; then
+      # Per-schema type min-XSD revision. Format is "[<type>:rev],*]
+      # where type is one of r, a or s matching $S above.
+      REV="${BASH_REMATCH[2]}"
+    fi
+
+    if [[ ( $REV =~ ^[0-9]+ && $XSD_VERSION -ge $REV ) || $XSD_VERSION == $REV ]]; then
       # Parse the property, if present. Any space is replaced by @
       VALUE=$( grep "^$SRC=" "$PROPS" | cut -d = -f 2 | tr ' ' '@' | tr -d '\r' )
       if [[ -n "$VALUE" ]]; then
@@ -390,13 +425,28 @@ while [[ -n "$1" ]]; do
     fi
     SHA1=$( sha1sum "$SRC" | cut -d " "  -f 1 )
 
+    if uses_new_host_os ; then
+      USE_HOST_OS=1
+    else
+      OLD_OS_ATTR=" os='$OS'"
+    fi
+
     cat >> "$OUT" <<EOFA
-            <sdk:archive os='$OS' arch='any'>
+            <sdk:archive$OLD_OS_ATTR>
                 <sdk:size>$SIZE</sdk:size>
                 <sdk:checksum type='sha1'>$SHA1</sdk:checksum>
                 <sdk:url>$DST</sdk:url>
-            </sdk:archive>
 EOFA
+    if [[ $USE_HOST_OS ]]; then
+      # parse the Archive.Host/Jvm info from the source.props if present
+      MAP=$(parse_attributes "$PROPS" ${ATTRS_ARCHIVE[@]})
+      # Always generate host-os if not present
+      if [[ "${MAP/ host-os /}" == "$MAP" ]]; then
+        MAP="$MAP host-os $OS"
+      fi
+      output_attributes "archive" "$OUT" $MAP
+    fi
+    echo "            </sdk:archive>" >> "$OUT"
 
     # Skip to next arch/zip entry.
     # If not a valid OS, close the archives/package nodes.

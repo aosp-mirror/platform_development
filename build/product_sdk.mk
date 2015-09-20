@@ -38,18 +38,11 @@ PRODUCT_PACKAGES += \
 	dmtracedump \
 	emmalib \
 	etc1tool \
-	groovy-all-1.7.0 \
-	guava-tools \
 	hprof-conv \
-	jcommon-1.0.12 \
-	jfreechart-1.0.9 \
-	jfreechart-1.0.9-swt \
 	jython \
 	layoutlib \
 	layoutlib-tests \
 	llvm-rs-cc \
-	org.eclipse.jface_3.6.2.M20110210-1200 \
-	org.eclipse.equinox.common_3.6.0.v20100503 \
-	org.eclipse.core.commands_3.6.0.I20100512-1500 \
-	osgi \
-	vgabios-cirrus.bin
+	sqlite3 \
+	vgabios-cirrus.bin \
+	split-select

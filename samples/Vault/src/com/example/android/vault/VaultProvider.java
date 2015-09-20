@@ -36,6 +36,7 @@ import android.provider.DocumentsContract.Document;
 import android.provider.DocumentsContract.Root;
 import android.provider.DocumentsProvider;
 import android.security.KeyChain;
+import android.text.TextUtils;
 import android.util.Log;
 
 import org.json.JSONArray;
@@ -204,7 +205,8 @@ public class VaultProvider extends DocumentsProvider {
         final MatrixCursor result = new MatrixCursor(resolveRootProjection(projection));
         final RowBuilder row = result.newRow();
         row.add(Root.COLUMN_ROOT_ID, DEFAULT_ROOT_ID);
-        row.add(Root.COLUMN_FLAGS, Root.FLAG_SUPPORTS_CREATE | Root.FLAG_LOCAL_ONLY);
+        row.add(Root.COLUMN_FLAGS, Root.FLAG_SUPPORTS_CREATE | Root.FLAG_LOCAL_ONLY
+                | Root.FLAG_SUPPORTS_IS_CHILD);
         row.add(Root.COLUMN_TITLE, getContext().getString(R.string.app_label));
         row.add(Root.COLUMN_DOCUMENT_ID, DEFAULT_DOCUMENT_ID);
         row.add(Root.COLUMN_ICON, R.drawable.ic_lock_lock);
@@ -242,6 +244,7 @@ public class VaultProvider extends DocumentsProvider {
         } else {
             flags |= Document.FLAG_SUPPORTS_WRITE;
         }
+        flags |= Document.FLAG_SUPPORTS_RENAME;
         flags |= Document.FLAG_SUPPORTS_DELETE;
 
         final RowBuilder row = result.newRow();
@@ -251,6 +254,39 @@ public class VaultProvider extends DocumentsProvider {
         row.add(Document.COLUMN_MIME_TYPE, mimeType);
         row.add(Document.COLUMN_FLAGS, flags);
         row.add(Document.COLUMN_LAST_MODIFIED, meta.optLong(Document.COLUMN_LAST_MODIFIED));
+    }
+
+    @Override
+    public boolean isChildDocument(String parentDocumentId, String documentId) {
+        if (TextUtils.equals(parentDocumentId, documentId)) {
+            return true;
+        }
+
+        try {
+            final long parentDocId = Long.parseLong(parentDocumentId);
+            final EncryptedDocument parentDoc = getDocument(parentDocId);
+
+            // Recursively search any children
+            // TODO: consider building an index to optimize this check
+            final JSONObject meta = parentDoc.readMetadata();
+            if (Document.MIME_TYPE_DIR.equals(meta.getString(Document.COLUMN_MIME_TYPE))) {
+                final JSONArray children = meta.getJSONArray(KEY_CHILDREN);
+                for (int i = 0; i < children.length(); i++) {
+                    final String childDocumentId = children.getString(i);
+                    if (isChildDocument(childDocumentId, documentId)) {
+                        return true;
+                    }
+                }
+            }
+        } catch (IOException e) {
+            throw new IllegalStateException(e);
+        } catch (GeneralSecurityException e) {
+            throw new IllegalStateException(e);
+        } catch (JSONException e) {
+            throw new IllegalStateException(e);
+        }
+
+        return false;
     }
 
     @Override
@@ -310,6 +346,29 @@ public class VaultProvider extends DocumentsProvider {
             doc.writeMetadataAndContent(meta, null);
         } catch (JSONException e) {
             throw new IOException(e);
+        }
+    }
+
+    @Override
+    public String renameDocument(String documentId, String displayName)
+            throws FileNotFoundException {
+        final long docId = Long.parseLong(documentId);
+
+        try {
+            final EncryptedDocument doc = getDocument(docId);
+            final JSONObject meta = doc.readMetadata();
+
+            meta.put(Document.COLUMN_DISPLAY_NAME, displayName);
+            doc.writeMetadataAndContent(meta, null);
+
+            return null;
+
+        } catch (IOException e) {
+            throw new IllegalStateException(e);
+        } catch (GeneralSecurityException e) {
+            throw new IllegalStateException(e);
+        } catch (JSONException e) {
+            throw new IllegalStateException(e);
         }
     }
 

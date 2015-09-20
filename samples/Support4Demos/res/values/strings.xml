@@ -160,7 +160,13 @@
 
     <string name="drawer_layout_summary">This activity illustrates the use of sliding drawers. The drawer may be pulled out from the starting edge, which is left on left-to-right locales, with an edge swipe. If this demo is running on Ice Cream Sandwich or newer you may tap the icon at the starting side of the action bar to open the drawer as well.</string>
 
+    <!-- Title of the navigation drawer, used by accessibility to announce state changes. -->
+    <string name="drawer_title">Navigation</string>
+
+    <!-- Description of the icon that opens the navigation drawer, used by accessibility. -->
     <string name="drawer_open">Open navigation drawer</string>
+
+    <!-- Description of the icon that closes the navigation drawer, used by accessibility. -->
     <string name="drawer_close">Close navigation drawer</string>
 
     <string name="sliding_pane_layout_support">Widget/Sliding pane layout</string>
@@ -175,5 +181,12 @@
 
     <!-- ContentLoadingProgressBar -->
     <string name="content_loading_progress_bar">Widget/Content Loading Progress Bar</string>
+
+    <!--  Swipe refresh -->
+    <string name="swipe">Widget/SwipeRefreshLayout</string>
+
+    <string name="nested_scroll">Widget/Nested Scrolling</string>
+
+    <string name="nested_scroll_long_text">This is some long text. It just keeps going. Look at it. Scroll it. Scroll the nested version of it. This is some long text. It just keeps going. Look at it. Scroll it. Scroll the nested version of it. This is some long text. It just keeps going. Look at it. Scroll it. Scroll the nested version of it. This is some long text. It just keeps going. Look at it. Scroll it. Scroll the nested version of it. This is some long text. It just keeps going. Look at it. Scroll it. Scroll the nested version of it. This is some long text. It just keeps going. Look at it. Scroll it. Scroll the nested version of it. This is some long text. It just keeps going. Look at it. Scroll it. Scroll the nested version of it. This is some long text. It just keeps going. Look at it. Scroll it. Scroll the nested version of it. This is some long text. It just keeps going. Look at it. Scroll it. Scroll the nested version of it. This is some long text. It just keeps going. Look at it. Scroll it. Scroll the nested version of it.</string>
 
 </resources>

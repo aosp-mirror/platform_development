@@ -545,7 +545,7 @@
                 ^
            a.i:564:6: note: previous declaration is here
  */
-#if defined(__ANDROID__) && !__LP64__ && defined( __arm__)
+#if defined(__ANDROID__) && !defined(__LP64__) && defined( __arm__)
 #define __NDK_FPABI__ __attribute__((pcs("aapcs")))
 #else
 #define __NDK_FPABI__

@@ -38,6 +38,9 @@
         <Button android:id="@+id/progress_button"
             android:layout_width="match_parent" android:layout_height="wrap_content"
             android:text="@string/alert_dialog_progress_button"/>
+        <Button android:id="@+id/progress_spinner_button"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:text="@string/alert_dialog_progress_spinner_button"/>
         <Button android:id="@+id/radio_button"
             android:layout_width="match_parent" android:layout_height="wrap_content"
             android:text="@string/alert_dialog_single_choice"/>
@@ -56,5 +59,11 @@
         <Button android:id="@+id/two_buttons_holo_light"
             android:layout_width="match_parent" android:layout_height="wrap_content"
             android:text="@string/alert_dialog_two_buttons_holo_light"/>
+        <Button android:id="@+id/two_buttons_default_light"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:text="@string/alert_dialog_two_buttons_default_light"/>
+        <Button android:id="@+id/two_buttons_default_dark"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:text="@string/alert_dialog_two_buttons_default_dark"/>
     </LinearLayout>
 </ScrollView>

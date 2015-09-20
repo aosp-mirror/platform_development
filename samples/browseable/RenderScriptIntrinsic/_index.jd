@@ -1,0 +1,11 @@
+page.tags="RenderScriptIntrinsic"
+sample.group=RenderScript
+@jd:body
+
+<p>
+            
+            RenderScriptIntrinsic sample that demonstrates how to use RenderScript intrinsics.
+            Creates several RenderScript intrinsics and shows a filtering result with various parameters.
+            Also shows how to extends RedioButton with StateListDrawable.
+            
+        </p>

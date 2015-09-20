@@ -167,7 +167,7 @@ public class ColorPickerDialog extends Dialog {
         public boolean onTouchEvent(MotionEvent event) {
             float x = event.getX() - CENTER_X;
             float y = event.getY() - CENTER_Y;
-            boolean inCenter = java.lang.Math.sqrt(x*x + y*y) <= CENTER_RADIUS;
+            boolean inCenter = java.lang.Math.hypot(x, y) <= CENTER_RADIUS;
 
             switch (event.getAction()) {
                 case MotionEvent.ACTION_DOWN:

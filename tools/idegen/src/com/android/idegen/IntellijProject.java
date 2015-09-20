@@ -17,14 +17,14 @@
 package com.android.idegen;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Sets;
+import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Set;
 import java.util.logging.Logger;
 
 /**
@@ -32,7 +32,7 @@ import java.util.logging.Logger;
  */
 public class IntellijProject {
 
-    public static final String FRAMEWORK_MODULE = "framework";
+    public static final String FRAMEWORK_MODULE_DIR = "frameworks/base";
     public static final Charset CHARSET = Charset.forName("UTF-8");
 
     private static final Logger logger = Logger.getLogger(IntellijProject.class.getName());
@@ -42,147 +42,116 @@ public class IntellijProject {
 
     ModuleCache cache = ModuleCache.getInstance();
 
+    boolean buildFramework;
     File indexFile;
-    File repoRoot;
-    File projectIdeaDir;
-    String moduleName;
+    File projectPath;
+    ArrayList<String> moduleDirs;
 
-    public IntellijProject(String indexFile, String moduleName) {
+    public IntellijProject(String indexFile, String projectPath, ArrayList<String> moduleDirs,
+            boolean buildFramework) {
         this.indexFile = new File(Preconditions.checkNotNull(indexFile));
-        this.moduleName = Preconditions.checkNotNull(moduleName);
-    }
-
-    private void init() throws IOException {
-        repoRoot = DirectorySearch.findRepoRoot(indexFile);
-        cache.init(indexFile);
+        this.projectPath = new File(Preconditions.checkNotNull(projectPath));
+        this.moduleDirs = Preconditions.checkNotNull(moduleDirs);
+        this.buildFramework = buildFramework;
+        DirectorySearch.findAndInitRepoRoot(this.indexFile);
     }
 
     public void build() throws IOException {
-        init();
-        buildFrameWorkModule();
-
-        // First pass, find all dependencies and cache them.
-        Module module = cache.getAndCache(moduleName);
-        if (module == null) {
-            logger.info("Module '" + moduleName + "' not found." +
-                    " Module names are case senstive.");
-            return;
-        }
-        projectIdeaDir = new File(module.getDir(), ".idea");
-        projectIdeaDir.mkdir();
-        copyTemplates();
-
-        // Second phase, build aggregate modules.
-        Set<String> deps = module.getAllDependencies();
-        for (String dep : deps) {
-            cache.buildAndCacheAggregatedModule(dep);
+        cache.init(indexFile);
+        File repoRoot = DirectorySearch.getRepoRoot();
+        if (buildFramework) {
+            File frameworkDir = new File(repoRoot, FRAMEWORK_MODULE_DIR);
+            // Some unbundled apps/branches do not include the framework.
+            if (frameworkDir.exists()) {
+                buildFrameWorkModule(new File(repoRoot, FRAMEWORK_MODULE_DIR));
+            }
         }
 
-        // Third phase, replace individual modules with aggregated modules
-        Iterable<Module> modules = cache.getModules();
-        for (Module mod : modules) {
-            replaceWithAggregate(mod);
+        for (String moduleDir : moduleDirs) {
+            // First pass, find all dependencies and cache them.
+            File dir = new File(repoRoot, moduleDir);
+            if (!dir.exists()) {
+                logger.info("Directory " + moduleDir + " does not exist in " + repoRoot +
+                        ". Are you sure the directory is correct?");
+                return;
+            }
+            Module module = cache.getAndCacheByDir(dir);
+            if (module == null) {
+                logger.info("Module '" + dir.getPath() + "' not found." +
+                        " Module names are case senstive.");
+                return;
+            }
         }
 
         // Finally create iml files for dependencies
+        Iterable<Module> modules = cache.getModules();
         for (Module mod : modules) {
             mod.buildImlFile();
         }
 
-        createModulesFile(module);
-        createVcsFile(module);
-        createNameFile(moduleName);
+        createProjectFiles();
     }
 
-    private void replaceWithAggregate(Module module) {
-        replaceWithAggregate(module.getDirectDependencies(), module.getName());
-        replaceWithAggregate(module.getAllDependencies(), module.getName());
-
-    }
-
-    private void replaceWithAggregate(Set<String> deps, String moduleName) {
-        for (String dep : Sets.newHashSet(deps)) {
-            String replacement = cache.getAggregateReplacementName(dep);
-            if (replacement != null) {
-
-                deps.remove(dep);
-                // There could be dependencies on self due to aggregation.
-                // Only add if the replacement is not self.
-                if (!replacement.equals(moduleName)) {
-                    deps.add(replacement);
-                }
-            }
-        }
+    private void createProjectFiles() throws IOException {
+        File ideaDir = new File(projectPath, ".idea");
+        ideaDir.mkdirs();
+        copyTemplates(ideaDir);
+        createModulesFile(ideaDir, cache.getModules());
+        createVcsFile(ideaDir, cache.getModules());
+        createNameFile(ideaDir, projectPath.getName());
     }
 
     /**
      * Framework module needs special handling due to one off resource path:
      * frameworks/base/Android.mk
      */
-    private void buildFrameWorkModule() throws IOException {
-        String makeFile = cache.getMakeFile(FRAMEWORK_MODULE);
-        if (makeFile == null) {
-            logger.warning("Unable to find framework module: " + FRAMEWORK_MODULE +
-                    ". Skipping.");
-        } else {
-            logger.info("makefile: " + makeFile);
-            StandardModule frameworkModule = new FrameworkModule(FRAMEWORK_MODULE,
-                    makeFile);
-            frameworkModule.build();
-            cache.put(frameworkModule);
-        }
+    private void buildFrameWorkModule(File frameworkModuleDir) throws IOException {
+        FrameworkModule frameworkModule = new FrameworkModule(frameworkModuleDir);
+        frameworkModule.build();
+        cache.put(frameworkModule);
     }
 
-    private void createModulesFile(Module module) throws IOException {
-        String modulesContent = Files.toString(
-                new File(DirectorySearch.findTemplateDir(),
-                        "idea" + File.separator + MODULES_TEMPLATE_FILE_NAME),
-                CHARSET);
+    private void createModulesFile(File ideaDir, Iterable<Module> modules) throws IOException {
+        String modulesContent = Files.toString(new File(DirectorySearch.findTemplateDir(),
+                "idea" + File.separator + MODULES_TEMPLATE_FILE_NAME), CHARSET);
         StringBuilder sb = new StringBuilder();
-        File moduleIml = module.getImlFile();
-        sb.append("      <module fileurl=\"file://").append(moduleIml.getAbsolutePath())
-                .append("\" filepath=\"").append(moduleIml.getAbsolutePath()).append("\" />\n");
-        for (String name : module.getAllDependencies()) {
-            Module mod = cache.getAndCache(name);
+        for (Module mod : modules) {
             File iml = mod.getImlFile();
-            sb.append("      <module fileurl=\"file://").append(iml.getAbsolutePath())
-                    .append("\" filepath=\"").append(iml.getAbsolutePath()).append("\" />\n");
+            sb.append("      <module fileurl=\"file://").append(iml.getCanonicalPath()).append(
+                    "\" filepath=\"").append(iml.getCanonicalPath()).append("\" />\n");
         }
         modulesContent = modulesContent.replace("@MODULES@", sb.toString());
 
-        File out = new File(projectIdeaDir, "modules.xml");
-        logger.info("Creating " + out.getAbsolutePath());
+        File out = new File(ideaDir, "modules.xml");
+        logger.info("Creating " + out.getCanonicalPath());
         Files.write(modulesContent, out, CHARSET);
     }
 
-    private void createVcsFile(Module module) throws IOException {
-        String vcsTemplate = Files.toString(
-                new File(DirectorySearch.findTemplateDir(),
-                        "idea" + File.separator + VCS_TEMPLATE_FILE_NAME),
-                CHARSET);
+    private void createVcsFile(File ideaDir, Iterable<Module> modules) throws IOException {
+        String vcsTemplate = Files.toString(new File(DirectorySearch.findTemplateDir(),
+                "idea" + File.separator + VCS_TEMPLATE_FILE_NAME), CHARSET);
 
         StringBuilder sb = new StringBuilder();
-        for (String name : module.getAllDependencies()) {
-            Module mod = cache.getAndCache(name);
+        for (Module mod : modules) {
             File dir = mod.getDir();
             File gitRoot = new File(dir, ".git");
             if (gitRoot.exists()) {
-                sb.append("    <mapping directory=\"").append(dir.getAbsolutePath())
-                        .append("\" vcs=\"Git\" />\n");
+                sb.append("    <mapping directory=\"").append(dir.getCanonicalPath()).append(
+                        "\" vcs=\"Git\" />\n");
             }
         }
         vcsTemplate = vcsTemplate.replace("@VCS@", sb.toString());
-        Files.write(vcsTemplate, new File(projectIdeaDir, "vcs.xml"), CHARSET);
+        Files.write(vcsTemplate, new File(ideaDir, "vcs.xml"), CHARSET);
     }
 
-    private void createNameFile(String name) throws IOException {
-        File out = new File(projectIdeaDir, ".name");
+    private void createNameFile(File ideaDir, String name) throws IOException {
+        File out = new File(ideaDir, ".name");
         Files.write(name, out, CHARSET);
     }
 
-    private void copyTemplates() throws IOException {
+    private void copyTemplates(File ideaDir) throws IOException {
         File templateDir = DirectorySearch.findTemplateDir();
-        copyTemplates(new File(templateDir, "idea"), projectIdeaDir);
+        copyTemplates(new File(templateDir, "idea"), ideaDir);
     }
 
     private void copyTemplates(File fromDir, File toDir) throws IOException {
@@ -191,11 +160,14 @@ public class IntellijProject {
         for (File file : files) {
             if (file.isDirectory()) {
                 File destDir = new File(toDir, file.getName());
+                if (!destDir.exists()) {
+                    destDir.mkdirs();
+                }
                 copyTemplates(file, destDir);
             } else {
                 File toFile = new File(toDir, file.getName());
-                logger.info("copying " + file.getAbsolutePath() + " to " +
-                        toFile.getAbsolutePath());
+                logger.info("copying " + file.getCanonicalPath() + " to " +
+                        toFile.getCanonicalPath());
                 Files.copy(file, toFile);
             }
         }
@@ -204,10 +176,32 @@ public class IntellijProject {
     public static void main(String[] args) {
         logger.info("Args: " + Arrays.toString(args));
 
-        String indexFile = args[0];
-        String module = args[1];
+        if (args.length < 3) {
+            logger.severe("Not enough input arguments. Aborting");
+            return;
+        }
 
-        IntellijProject intellij = new IntellijProject(indexFile, module);
+        boolean buildFramework = true;
+        int argIndex = 0;
+        String arg = args[argIndex];
+        while (arg.startsWith("--")) {
+            if  (arg.equals("--no-framework")) {
+                buildFramework = false;
+            }
+            argIndex++;
+            arg = args[argIndex];
+        }
+
+        String indexFile = args[argIndex++];
+        String projectPath = args[argIndex++];
+        // Remaining args are module directories
+        ArrayList<String> moduleDirs = Lists.newArrayList();
+        for (int i = argIndex; i < args.length; i++) {
+            moduleDirs.add(args[i]);
+        }
+
+        IntellijProject intellij = new IntellijProject(indexFile, projectPath, moduleDirs,
+                buildFramework);
         try {
             intellij.build();
         } catch (IOException e) {

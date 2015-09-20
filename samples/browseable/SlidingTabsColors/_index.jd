@@ -1,0 +1,10 @@
+page.tags="SlidingTabsColors"
+sample.group=UI
+@jd:body
+
+<p>
+            
+            A more advanced sample which shows how to use SlidingTabLayout to display a custom
+            ViewPager title strip, with custom coloring for each tab.
+            
+        </p>

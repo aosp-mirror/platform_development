@@ -26,6 +26,7 @@ import android.graphics.RectF;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.util.AttributeSet;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
@@ -87,9 +88,6 @@ public class TouchPaint extends GraphicsActivity {
     /** Is fading mode enabled? */
     boolean mFading;
 
-    /** The index of the current color to use. */
-    int mColorIndex;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -104,10 +102,10 @@ public class TouchPaint extends GraphicsActivity {
         // the contents of the bitmap.
         if (savedInstanceState != null) {
             mFading = savedInstanceState.getBoolean("fading", true);
-            mColorIndex = savedInstanceState.getInt("color", 0);
+            mView.mColorIndex = savedInstanceState.getInt("color", 0);
         } else {
             mFading = true;
-            mColorIndex = 0;
+            mView.mColorIndex = 0;
         }
     }
 
@@ -161,7 +159,7 @@ public class TouchPaint extends GraphicsActivity {
         // Save away the fading state to restore if needed later.  Note that
         // we do not currently save the contents of the display.
         outState.putBoolean("fading", mFading);
-        outState.putInt("color", mColorIndex);
+        outState.putInt("color", mView.mColorIndex);
     }
 
     @Override
@@ -225,9 +223,9 @@ public class TouchPaint extends GraphicsActivity {
      *
      * It handles all of the input events and drawing functions.
      */
-    class PaintView extends View {
+    public static class PaintView extends View {
         private static final int FADE_ALPHA = 0x06;
-        private static final int MAX_FADE_STEPS = 256 / FADE_ALPHA + 4;
+        private static final int MAX_FADE_STEPS = 256 / (FADE_ALPHA/2) + 4;
         private static final int TRACKBALL_SCALE = 10;
 
         private static final int SPLAT_VECTORS = 40;
@@ -235,21 +233,31 @@ public class TouchPaint extends GraphicsActivity {
         private final Random mRandom = new Random();
         private Bitmap mBitmap;
         private Canvas mCanvas;
-        private final Paint mPaint;
-        private final Paint mFadePaint;
+        private final Paint mPaint = new Paint();
+        private final Paint mFadePaint = new Paint();
         private float mCurX;
         private float mCurY;
         private int mOldButtonState;
         private int mFadeSteps = MAX_FADE_STEPS;
 
+        /** The index of the current color to use. */
+        int mColorIndex;
+
         public PaintView(Context c) {
             super(c);
+            init();
+        }
+
+        public PaintView(Context c, AttributeSet attrs) {
+            super(c, attrs);
+            init();
+        }
+
+        private void init() {
             setFocusable(true);
 
-            mPaint = new Paint();
             mPaint.setAntiAlias(true);
 
-            mFadePaint = new Paint();
             mFadePaint.setColor(BACKGROUND_COLOR);
             mFadePaint.setAlpha(FADE_ALPHA);
         }
@@ -270,6 +278,31 @@ public class TouchPaint extends GraphicsActivity {
                 invalidate();
 
                 mFadeSteps++;
+            }
+        }
+
+        public void text(String text) {
+            if (mBitmap != null) {
+                final int width = mBitmap.getWidth();
+                final int height = mBitmap.getHeight();
+                mPaint.setColor(COLORS[mColorIndex]);
+                mPaint.setAlpha(255);
+                int size = height;
+                mPaint.setTextSize(size);
+                Rect bounds = new Rect();
+                mPaint.getTextBounds(text, 0, text.length(), bounds);
+                int twidth = bounds.width();
+                twidth += (twidth/4);
+                if (twidth > width) {
+                    size = (size*width)/twidth;
+                    mPaint.setTextSize(size);
+                    mPaint.getTextBounds(text, 0, text.length(), bounds);
+                }
+                Paint.FontMetrics fm = mPaint.getFontMetrics();
+                mCanvas.drawText(text, (width-bounds.width())/2,
+                        ((height-size)/2) - fm.ascent, mPaint);
+                mFadeSteps = 0;
+                invalidate();
             }
         }
 

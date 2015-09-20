@@ -21,12 +21,6 @@
         <attr name="android:preferenceLayoutChild" />
     </declare-styleable>
     
-    <!-- These are the attributes that we want to retrieve from the theme
-         in view/Gallery1.java -->
-    <declare-styleable name="Gallery1">
-        <attr name="android:galleryItemBackground" />
-    </declare-styleable>
-    
      <declare-styleable name="LabelView">
         <attr name="text" format="string" />
         <attr name="textColor" format="color" />

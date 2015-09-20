@@ -1,0 +1,10 @@
+page.tags="ActionBarCompat-Styled"
+sample.group=UI
+@jd:body
+
+<p>
+            
+            This sample shows you how to use ActionBarCompat with a customized theme. It utilizes a
+            split action bar when running on a device with a narrow display, and show three tabs.
+            
+        </p>

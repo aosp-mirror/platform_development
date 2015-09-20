@@ -87,7 +87,7 @@ typedef  .... pthread_t;
 
 #ifndef _SSIZE_T_DEFINED_
 #define _SSIZE_T_DEFINED_
-typedef long int  ssize_t;
+typedef int  ssize_t;
 #endif
 
 typedef __kernel_suseconds_t  suseconds_t;

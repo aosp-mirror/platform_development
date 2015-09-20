@@ -173,7 +173,7 @@ static __inline__ int __getpageshift(void) {
   return __page_shift;
 }
 
-extern int sysconf(int  name);
+long sysconf(int);
 
 extern int daemon(int, int);
 

@@ -219,6 +219,15 @@
           android:layout_width="wrap_content"
           android:layout_height="wrap_content"
           android:text="@string/start_tdls" />
+        <Button android:id="@+id/stopTdls"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="@string/stop_tdls" />
+    </LinearLayout>
+    <LinearLayout
+      android:orientation="horizontal"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content">
         <TextView
           android:layout_width="wrap_content"
           android:layout_height="wrap_content"
@@ -227,10 +236,6 @@
           android:layout_width="wrap_content"
           android:layout_height="wrap_content"
           android:minEms="10" />
-        <Button android:id="@+id/stopTdls"
-          android:layout_width="wrap_content"
-          android:layout_height="wrap_content"
-          android:text="@string/stop_tdls" />
     </LinearLayout>
 
     <!-- divider line -->
@@ -269,6 +274,16 @@
       android:orientation="horizontal"
       android:layout_width="match_parent"
       android:layout_height="wrap_content">
+        <Button android:id="@+id/report_all_bad"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="@string/report_all_bad" />
+    </LinearLayout>
+
+    <LinearLayout
+      android:orientation="horizontal"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content">
         <Button android:id="@+id/crash"
           android:layout_width="wrap_content"
           android:layout_height="wrap_content"
@@ -279,6 +294,14 @@
       android:orientation="horizontal"
       android:layout_width="match_parent"
       android:layout_height="wrap_content">
+        <TextView
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="@string/netid" />
+        <EditText android:id="@+id/netid"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:minEms="5" />
         <Button android:id="@+id/add_default_route"
           android:layout_width="wrap_content"
           android:layout_height="wrap_content"

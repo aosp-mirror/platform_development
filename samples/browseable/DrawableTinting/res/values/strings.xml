@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright 2014 The Android Open Source Project
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+ http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
+<resources>
+    <string name="resource_tint_label">Button with tinting set by state color list as resource:</string>
+    <string name="resource_tint_button">Tinting set by StateDrawable</string>
+    <string name="prog_tint_label">View with tinting set programmatically:</string>
+    <string name="value_alpha">Alpha: %d\%</string>
+    <string name="value_red">Red: %d\%</string>
+    <string name="value_green">Green: %d\%</string>
+    <string name="value_blue">Blue: %d\%</string>
+    <string name="blend_mode_label">Blend Mode:</string>
+
+    <string-array name="blend_modes">
+        <item>Add</item>
+        <item>Clear</item>
+        <item>Darken</item>
+        <item>Destination (DST)</item>
+        <item>Destination atop (DST_ATOP)</item>
+        <item>Destination in (DST_IN)</item>
+        <item>Destination out (DST_OUT)</item>
+        <item>Destination over (DST_OVER)</item>
+        <item>Lighten</item>
+        <item>Multiply</item>
+        <item>Overlay</item>
+        <item>Screen</item>
+        <item>Source (SRC)</item>
+        <item>Source atop (SRC_ATOP)</item>
+        <item>Source in (SRC_IN)</item>
+        <item>Source out (SRC_OUT)</item>
+        <item>Source over (SRC_OVER)</item>
+        <item>XOR</item>
+    </string-array>
+
+</resources>

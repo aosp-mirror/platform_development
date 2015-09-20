@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="card_layout" type="id"/>
+    <item name="card_actionarea" type="id"/>
+    <item name="card_contentarea" type="id"/>
+    <item name="card_title" type="id"/>
+    <item name="card_content" type="id"/>
+    <item name="card_overlay" type="id"/>
+</resources>

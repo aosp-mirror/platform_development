@@ -232,7 +232,7 @@ See test_defs.xsd for more information.
 <test name="cts-permission"
     build_path="cts/tests/tests/permission"
     package="com.android.cts.permission"
-    runner="android.test.InstrumentationTestRunner"
+    runner="android.support.test.runner.AndroidJUnitRunner"
     coverage_target="framework"
     continuous="true"
     suite="cts" />
@@ -240,13 +240,13 @@ See test_defs.xsd for more information.
 <test name="cts-permission2"
     build_path="cts/tests/tests/permission2"
     package="com.android.cts.permission2"
-    runner="android.test.InstrumentationTestRunner"
+    runner="android.support.test.runner.AndroidJUnitRunner"
     coverage_target="framework"
     continuous="true"
     suite="true" />
 
 <test name="cts-process"
-    build_path="cts/tests/tests/process"
+    build_path="cts/tests/ProcessTest"
     package="com.android.cts.process"
     coverage_target="framework"
     suite="cts" />
@@ -254,73 +254,62 @@ See test_defs.xsd for more information.
 <test name="cts-security"
     build_path="cts/tests/tests/security"
     package="com.android.cts.security"
-    runner="android.test.InstrumentationCtsTestRunner"
+    runner="android.support.test.runner.AndroidJUnitRunner"
     suite="cts" />
 
 <test name="cts-accounts"
     build_path="cts/tests/tests/accounts"
     package="android.accounts.cts"
-    runner="android.test.InstrumentationTestRunner"
+    runner="android.support.test.runner.AndroidJUnitRunner"
     coverage_target="framework"
-    suite="cts" />
-
-<test name="cts-api-signature"
-    build_path="cts/tests/SignatureTest"
-    package="android.tests.sigtest"
-    runner=".InstrumentationRunner"
-    suite="cts" />
-
-<test name="cts-api-signature-func"
-    build_path="cts/tests/SignatureTest"
-    package="android.tests.sigtest.tests"
     suite="cts" />
 
 <test name="cts-app"
     build_path="cts/tests/tests/app"
     package="com.android.cts.app"
-    runner="android.test.InstrumentationCtsTestRunner"
+    runner="android.support.test.runner.AndroidJUnitRunner"
     coverage_target="framework"
     suite="cts" />
 
 <test name="cts-content"
     build_path="cts/tests/tests/content"
     package="com.android.cts.content"
-    runner="android.test.InstrumentationTestRunner"
+    runner="android.support.test.runner.AndroidJUnitRunner"
     coverage_target="framework"
     suite="cts" />
 
 <test name="cts-database"
     build_path="cts/tests/tests/database"
     package="com.android.cts.database"
-    runner="android.test.InstrumentationCtsTestRunner"
+    runner="android.support.test.runner.AndroidJUnitRunner"
     coverage_target="framework"
     suite="cts" />
 
 <test name="cts-dreams"
     build_path="cts/tests/tests/dreams"
     package="com.android.cts.dreams"
-    runner="android.test.InstrumentationCtsTestRunner"
+    runner="android.support.test.runner.AndroidJUnitRunner"
     coverage_target="framework"
     suite="cts" />
 
 <test name="cts-gesture"
     build_path="cts/tests/tests/gesture"
     package="com.android.cts.gesture"
-    runner="android.test.InstrumentationTestRunner"
+    runner="android.support.test.runner.AndroidJUnitRunner"
     coverage_target="framework"
     suite="cts" />
 
 <test name="cts-graphics"
     build_path="cts/tests/tests/graphics"
     package="com.android.cts.graphics"
-    runner="android.test.InstrumentationCtsTestRunner"
+    runner="android.support.test.runner.AndroidJUnitRunner"
     coverage_target="framework"
     suite="cts" />
 
 <test name="cts-hardware"
     build_path="cts/tests/tests/hardware"
     package="com.android.cts.hardware"
-    runner="android.test.InstrumentationCtsTestRunner"
+    runner="android.support.test.runner.AndroidJUnitRunner"
     coverage_target="framework"
     continuous="true"
     suite="cts" />
@@ -328,77 +317,77 @@ See test_defs.xsd for more information.
 <test name="cts-location"
     build_path="cts/tests/tests/location"
     package="com.android.cts.location"
-    runner="android.test.InstrumentationCtsTestRunner"
+    runner="android.support.test.runner.AndroidJUnitRunner"
     coverage_target="framework"
     suite="cts" />
 
 <test name="cts-media"
     build_path="cts/tests/tests/media"
     package="com.android.cts.media"
-    runner="android.test.InstrumentationCtsTestRunner"
+    runner="android.support.test.runner.AndroidJUnitRunner"
     coverage_target="framework"
     suite="cts" />
 
 <test name="cts-net"
     build_path="cts/tests/tests/net"
     package="com.android.cts.net"
-    runner="android.test.InstrumentationCtsTestRunner"
+    runner="android.support.test.runner.AndroidJUnitRunner"
     coverage_target="framework"
     suite="cts" />
 
 <test name="cts-os"
     build_path="cts/tests/tests/os"
     package="com.android.cts.os"
-    runner="android.test.InstrumentationCtsTestRunner"
+    runner="android.support.test.runner.AndroidJUnitRunner"
     coverage_target="framework"
     suite="cts" />
 
 <test name="cts-provider"
     build_path="cts/tests/tests/provider"
     package="com.android.cts.provider"
-    runner="android.test.InstrumentationCtsTestRunner"
+    runner="android.support.test.runner.AndroidJUnitRunner"
     coverage_target="framework"
     suite="cts" />
 
 <test name="cts-text"
     build_path="cts/tests/tests/text"
     package="com.android.cts.text"
-    runner="android.test.InstrumentationCtsTestRunner"
+    runner="android.support.test.runner.AndroidJUnitRunner"
     coverage_target="framework"
     suite="cts" />
 
 <test name="cts-telephony"
     build_path="cts/tests/tests/telephony"
     package="com.android.cts.telephony"
-    runner="android.test.InstrumentationCtsTestRunner"
+    runner="android.support.test.runner.AndroidJUnitRunner"
     coverage_target="framework"
     suite="cts" />
 
 <test name="cts-util"
     build_path="cts/tests/tests/util"
     package="com.android.cts.util"
-    runner="android.test.InstrumentationCtsTestRunner"
+    runner="android.support.test.runner.AndroidJUnitRunner"
     coverage_target="framework"
     suite="cts" />
 
 <test name="cts-view"
     build_path="cts/tests/tests/view"
     package="com.android.cts.view"
-    runner="android.test.InstrumentationCtsTestRunner"
+    runner="android.support.test.runner.AndroidJUnitRunner"
     coverage_target="framework"
     suite="cts" />
 
 <test name="cts-webkit"
     build_path="cts/tests/tests/webkit"
     package="com.android.cts.webkit"
-    runner="android.test.InstrumentationCtsTestRunner"
+    runner="android.support.test.runner.AndroidJUnitRunner"
     coverage_target="framework"
     suite="cts" />
 
 <test name="cts-widget"
     build_path="cts/tests/tests/widget"
     package="com.android.cts.widget"
-    runner="android.test.InstrumentationCtsTestRunner"
+    runner="android.support.test.runner.AndroidJUnitRunner"
     coverage_target="framework"
     suite="cts" />
 
@@ -408,12 +397,6 @@ See test_defs.xsd for more information.
 <test name="apidemos"
     build_path="development/samples/ApiDemos"
     package="com.example.android.apis.tests" />
-
-<test name="browser"
-    build_path="packages/apps/Browser"
-    package="com.android.browser.tests"
-    coverage_target="Browser"
-    continuous="true" />
 
 <test name="calculator"
     build_path="packages/apps/Calculator"
@@ -512,8 +495,14 @@ See test_defs.xsd for more information.
 
 <!-- Unit tests for the phone application. -->
 <test name="phone-unit"
-    build_path="packages/apps/Phone"
+    build_path="packages/services/Telephony"
     package="com.android.phone.tests"
+    continuous="true"
+    coverage_target="Phone" />
+
+<test name="telecomm-unit"
+    build_path="packages/services/Telecomm"
+    package="com.android.server.telecom.tests"
     continuous="true"
     coverage_target="Phone" />
 

@@ -1150,6 +1150,7 @@ public class Monkey {
             if (ev != null) {
                 int injectCode = ev.injectEvent(mWm, mAm, mVerbose);
                 if (injectCode == MonkeyEvent.INJECT_FAIL) {
+                    System.out.println("    // Injection Failed");
                     if (ev instanceof MonkeyKeyEvent) {
                         mDroppedKeyEvents++;
                     } else if (ev instanceof MonkeyMotionEvent) {

@@ -1,7 +1,10 @@
-page.tags="Storage access framework", storage, documents
+page.tags="MyCloud"
 sample.group=Content
 @jd:body
 
-<p>This sample demonstrates how to use the
-{@link android.provider.DocumentsProvider} API to manage documents and
-expose them to the Android system for sharing.</p>
+<p>
+            
+            \nA simple implementation of a documents provider using the storage access framework in
+            Android 4.4.
+            
+        </p>

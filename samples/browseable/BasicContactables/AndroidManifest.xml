@@ -23,9 +23,7 @@
     <!-- BEGIN_INCLUDE(contacts_permission) -->
     <uses-permission android:name="android.permission.READ_CONTACTS"/>
     <!-- END_INCLUDE(contacts_permission) -->
-    <uses-sdk
-        android:minSdkVersion="18"
-        android:targetSdkVersion="18" />
+    <!-- Min/target SDK versions (<uses-sdk>) managed by build.gradle -->
     <permission android:name="android"></permission>
 
     <application

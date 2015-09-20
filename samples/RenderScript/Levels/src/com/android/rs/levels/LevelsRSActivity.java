@@ -176,7 +176,7 @@ public class LevelsRSActivity extends Activity
                                                       Allocation.USAGE_IO_OUTPUT);
         mDisplayView.setSurfaceTextureListener(this);
 
-        mScript = new ScriptC_levels(mRS, getResources(), R.raw.levels);
+        mScript = new ScriptC_levels(mRS);
         mScript.set_gamma(mGamma);
 
         setSaturation();

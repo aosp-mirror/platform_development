@@ -14,6 +14,7 @@ public class MainActivity extends Activity {
         System.loadLibrary("moarram-32");
         System.loadLibrary("moarram-2M");
         System.loadLibrary("moarram-17_71");
+        System.loadLibrary("moarram-doublefree");
         setContentView(R.layout.activity_main);
     }
 
@@ -55,10 +56,15 @@ public class MainActivity extends Activity {
         freeVariableSizedBlocksNative(sizeId == R.id.radio17 ? 0 : 1);
     }
 
+    public void forceDoubleFree(View view) {
+        forceDoubleFreeNative();
+    }
+
     public native void add32ByteBlocksNative();
     public native void free32ByteBlocksNative();
     public native void add2MByteBlocksNative();
     public native void free2MByteBlocksNative();
     public native void addVariableSizedBlocksNative(int sizeId);
     public native void freeVariableSizedBlocksNative(int sizeId);
+    public native void forceDoubleFreeNative();
 }

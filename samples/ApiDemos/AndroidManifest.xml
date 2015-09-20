@@ -31,13 +31,15 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.SEND_SMS" />
     <uses-permission android:name="android.permission.RECEIVE_SMS" />
+    <uses-permission android:name="android.permission.RECEIVE_MMS"/>
+    <uses-permission android:name="android.permission.WRITE_SMS"/>
+    <uses-permission android:name="android.permission.READ_SMS"/>
     <uses-permission android:name="android.permission.NFC" />
     <uses-permission android:name="android.permission.TRANSMIT_IR" />
+    <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
 
     <!-- For android.media.audiofx.Visualizer -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
-
-    <uses-sdk android:minSdkVersion="4" android:targetSdkVersion="17" />
 
     <!-- We will request access to the camera, saying we require a camera
          of some sort but not one with autofocus capability. -->
@@ -78,7 +80,7 @@
 
         <activity android:name=".app.DialogActivity"
                 android:label="@string/activity_dialog"
-                android:theme="@android:style/Theme.Holo.Dialog">
+                android:theme="@style/ThemeCurrentDialog">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -740,7 +742,7 @@
 <!-- BEGIN_INCLUDE(interstitial_affinity) -->
         <activity android:name=".app.IncomingMessageInterstitial"
                 android:label="You have messages"
-                android:theme="@style/ThemeHoloDialog"
+                android:theme="@style/ThemeCurrentDialog"
                 android:launchMode="singleTask"
                 android:taskAffinity=""
                 android:excludeFromRecents="true">
@@ -996,6 +998,24 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".app.ActionBarNavigation"
+                android:label="@string/action_bar_navigation"
+                android:enabled="@bool/atLeastJellyBean"
+                android:taskAffinity=":bar_navigation"
+                android:launchMode="singleTask">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".app.ActionBarNavigationTarget"
+                android:label="@string/action_bar_navigation_target"
+                android:enabled="@bool/atLeastJellyBean"
+                android:parentActivityName=".app.ActionBarNavigation"
+                android:taskAffinity=":bar_navigation">
+        </activity>
+
         <activity android:name=".app.PrintBitmap"
                 android:label="@string/print_bitmap"
                 android:enabled="@bool/atLeastKitKat">
@@ -1232,6 +1252,15 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".content.DocumentsSample"
+                android:label="@string/activity_documents"
+                android:enabled="@bool/atLeastKitKat">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
         <provider android:name=".content.FileProvider"
                   android:authorities="com.example.android.apis.content.FileProvider"
                   android:enabled="@bool/atLeastHoneycombMR2" />
@@ -1258,13 +1287,6 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".os.Sensors" android:label="OS/Sensors">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.SAMPLE_CODE" />
-            </intent-filter>
-        </activity>
-
         <activity android:name=".os.TriggerSensors" android:label="OS/TriggerSensors">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -1284,21 +1306,94 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
             </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.SENDTO" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="sms" />
+                <data android:scheme="smsto" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".os.MmsMessagingDemo" android:label="OS/MMS Messaging">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.SENDTO" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="mms" />
+                <data android:scheme="mmsto" />
+            </intent-filter>
         </activity>
 
         <activity android:name=".os.SmsReceivedDialog"
                   android:theme="@android:style/Theme.Translucent.NoTitleBar"
                   android:launchMode="singleInstance" />
 
-        <receiver android:name=".os.SmsMessageReceiver" android:enabled="false">
+        <receiver android:name=".os.SmsMessageReceiver" android:enabled="false"
+                android:permission="android.permission.BROADCAST_SMS">
             <intent-filter>
                 <action android:name="android.provider.Telephony.SMS_RECEIVED" />
             </intent-filter>
+            <intent-filter>
+                <action android:name="android.provider.Telephony.SMS_DELIVER" />
+            </intent-filter>
         </receiver>
+
+        <receiver android:name=".os.MmsWapPushReceiver" android:enabled="false"
+                  android:permission="android.permission.BROADCAST_WAP_PUSH">
+            <intent-filter>
+                <action android:name="android.provider.Telephony.WAP_PUSH_RECEIVED" />
+                <data android:mimeType="application/vnd.wap.mms-message" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.provider.Telephony.WAP_PUSH_DELIVER" />
+                <data android:mimeType="application/vnd.wap.mms-message" />
+            </intent-filter>
+        </receiver>
+
+        <service android:name=".os.HeadlessSmsSendService"
+                 android:permission="android.permission.SEND_RESPOND_VIA_MESSAGE"
+                 android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.RESPOND_VIA_MESSAGE" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="sms" />
+                <data android:scheme="smsto" />
+                <data android:scheme="mms" />
+                <data android:scheme="mmsto" />
+            </intent-filter>
+        </service>
+
+        <provider android:name=".os.MmsFileProvider"
+                  android:authorities="com.example.android.apis.os.MmsFileProvider"
+                  android:enabled="@bool/atLeastLRelease"
+                  android:grantUriPermissions="true"
+                  android:exported="false" />
 
         <!-- ************************************* -->
         <!--     ANDROID.ANIMATION PACKAGE SAMPLES         -->
         <!-- ************************************* -->
+
+        <activity android:name=".animation.ActivityTransition"
+                android:label="Animation/Activity Transition"
+                android:enabled="@bool/atLeastLRelease"
+                android:theme="@style/ActivityTransitionTheme">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".animation.ActivityTransitionDetails"
+                android:label="Animation/Details of a specific thingy"
+                android:enabled="@bool/atLeastLRelease"
+                android:theme="@style/ActivityTransitionTheme">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+            </intent-filter>
+        </activity>
 
         <activity android:name=".animation.AnimationLoading"
                 android:label="Animation/Loading"
@@ -1410,6 +1505,15 @@
 
         <activity android:name=".animation.Transitions"
                   android:label="Animation/Simple Transitions"
+                  android:enabled="@bool/atLeastHoneycomb">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".animation.PathAnimations"
+                  android:label="Animation/Path Animations"
                   android:enabled="@bool/atLeastHoneycomb">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -1976,20 +2080,6 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".view.Gallery1" android:label="Views/Gallery/1. Photos">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.SAMPLE_CODE" />
-            </intent-filter>
-        </activity>
-
-        <activity android:name=".view.Gallery2" android:label="Views/Gallery/2. People">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.SAMPLE_CODE" />
-            </intent-filter>
-        </activity>
-
         <activity android:name=".view.Spinner1" android:label="Views/Spinner">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -2021,14 +2111,6 @@
 
         <activity android:name=".view.ImageView1"
                 android:label="Views/ImageView">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.SAMPLE_CODE" />
-            </intent-filter>
-        </activity>
-
-        <activity android:name=".view.ImageSwitcher1"
-                android:label="Views/ImageSwitcher">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -2160,8 +2242,9 @@
         </activity>
 
         <activity android:name=".view.Controls5"
-                  android:label="Views/Controls/5. Custom Theme"
-                  android:theme="@style/CustomTheme">
+                  android:label="Views/Controls/5. Material Light Theme"
+                  android:theme="@android:style/Theme.Material.Light"
+                  android:enabled="@bool/atLeastLRelease">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -2169,8 +2252,35 @@
         </activity>
 
         <activity android:name=".view.Controls6"
-                  android:label="Views/Controls/6. Holo or Old Theme"
-                  android:theme="@style/ThemeHolo">
+                  android:label="Views/Controls/6. Material Dark Theme"
+                  android:theme="@android:style/Theme.Material"
+                  android:enabled="@bool/atLeastLRelease">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".view.Controls7"
+                  android:label="Views/Controls/7. Custom Theme"
+                  android:theme="@style/CustomTheme">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".view.Controls8"
+                  android:label="Views/Controls/8. Current or Old Theme"
+                  android:theme="@style/ThemeCurrent">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".view.Controls9"
+                  android:label="Views/Controls/9. Default Theme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -2469,6 +2579,16 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".view.GameActivity"
+                android:label="Views/System UI Visibility/Game"
+                android:theme="@android:style/Theme.Holo.NoActionBar"
+                android:enabled="@bool/atLeastKitKat">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
         <activity android:name=".view.Switches" android:label="Views/Switches">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -2574,7 +2694,7 @@
 
         <activity android:name=".graphics.TriangleActivity"
                 android:label="Graphics/OpenGL ES/Textured Triangle"
-                android:theme="@android:style/Theme.Holo.Dialog"
+                android:theme="@style/ThemeCurrentDialog"
                 android:configChanges="keyboardHidden|orientation|screenLayout|screenSize|smallestScreenSize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -2632,6 +2752,24 @@
 
         <activity android:name=".graphics.SurfaceViewOverlay"
                 android:label="Graphics/SurfaceView Overlay">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".graphics.ShadowCardStack"
+                  android:label="Graphics/Shadow Card Stack"
+                  android:theme="@android:style/Theme.Material.Light">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".graphics.ShadowCardDrag"
+                  android:label="Graphics/Shadow Card Drag"
+                  android:theme="@android:style/Theme.Material.Light">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -2903,6 +3041,14 @@
         </activity>
 
         <activity android:name=".media.AudioFxDemo" android:label="Media/AudioFx">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".media.projection.MediaProjectionDemo"
+                android:label="Media/MediaProjection">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />

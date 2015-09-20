@@ -28,6 +28,7 @@
 #ifndef _ELF_H
 #define _ELF_H
 
+#if !defined(AT_NULL)
 /* these definitions are missing from the BSD sources */
 enum {
     AT_NULL = 0,
@@ -51,6 +52,7 @@ enum {
 
     AT_SECURE = 23
 };
+#endif
 
 #include <stdint.h>
 #include <sys/exec_elf.h>

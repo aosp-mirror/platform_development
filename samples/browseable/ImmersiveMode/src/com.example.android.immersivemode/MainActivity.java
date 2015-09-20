@@ -14,11 +14,9 @@
 * limitations under the License.
 */
 
-
-
-
 package com.example.android.immersivemode;
 
+import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v4.app.FragmentTransaction;
 import android.view.Menu;
@@ -74,6 +72,9 @@ public class MainActivity extends SampleActivityBase {
         LogFragment logFragment = (LogFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.log_fragment);
         msgFilter.setNext(logFragment.getLogView());
+        logFragment.getLogView().setTextAppearance(this, R.style.Log);
+        logFragment.getLogView().setBackgroundColor(Color.WHITE);
+
 
         Log.i(TAG, "Ready");
     }

@@ -43,6 +43,7 @@ public class NsdChatActivity extends Activity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Log.d(TAG, "Creating chat activity");
         setContentView(R.layout.main);
         mStatusView = (TextView) findViewById(R.id.status);
 
@@ -53,11 +54,6 @@ public class NsdChatActivity extends Activity {
                 addChatLine(chatLine);
             }
         };
-
-        mConnection = new ChatConnection(mUpdateHandler);
-
-        mNsdHelper = new NsdHelper(this);
-        mNsdHelper.initializeNsd();
 
     }
 
@@ -101,25 +97,58 @@ public class NsdChatActivity extends Activity {
     }
 
     @Override
+    protected void onStart() {
+        Log.d(TAG, "Starting.");
+        mConnection = new ChatConnection(mUpdateHandler);
+
+        mNsdHelper = new NsdHelper(this);
+        mNsdHelper.initializeNsd();
+        super.onStart();
+    }
+
+
+    @Override
     protected void onPause() {
+        Log.d(TAG, "Pausing.");
         if (mNsdHelper != null) {
             mNsdHelper.stopDiscovery();
         }
         super.onPause();
     }
-    
+
     @Override
     protected void onResume() {
+        Log.d(TAG, "Resuming.");
         super.onResume();
         if (mNsdHelper != null) {
             mNsdHelper.discoverServices();
         }
     }
-    
+
+
+    // For KitKat and earlier releases, it is necessary to remove the
+    // service registration when the application is stopped.  There's
+    // no guarantee that the onDestroy() method will be called (we're
+    // killable after onStop() returns) and the NSD service won't remove
+    // the registration for us if we're killed.
+
+    // In L and later, NsdService will automatically unregister us when
+    // our connection goes away when we're killed, so this step is
+    // optional (but recommended).
+
     @Override
-    protected void onDestroy() {
+    protected void onStop() {
+        Log.d(TAG, "Being stopped.");
         mNsdHelper.tearDown();
         mConnection.tearDown();
+        mNsdHelper = null;
+        mConnection = null;
+        super.onStop();
+    }
+
+    @Override
+    protected void onDestroy() {
+        Log.d(TAG, "Being destroyed.");
         super.onDestroy();
     }
 }

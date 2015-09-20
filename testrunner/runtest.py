@@ -73,11 +73,12 @@ class TestRunner(object):
   # default value for make -jX
   _DEFAULT_JOBS = 16
 
-  _DALVIK_VERIFIER_OFF_PROP = "dalvik.vm.dexopt-flags = v=n"
+  _DALVIK_VERIFIER_PROP = "dalvik.vm.dexopt-flags"
+  _DALVIK_VERIFIER_OFF_VALUE = "v=n"
+  _DALVIK_VERIFIER_OFF_PROP = "%s = %s" %(_DALVIK_VERIFIER_PROP, _DALVIK_VERIFIER_OFF_VALUE)
 
   # regular expression to match path to artifacts to install in make output
-  _RE_MAKE_INSTALL = re.compile(r'INSTALL-PATH:\s(.+)\s(.+)')
-
+  _RE_MAKE_INSTALL = re.compile(r'INSTALL-PATH:\s([^\s]+)\s(.*)$')
 
   def __init__(self):
     # disable logging of timestamp
@@ -113,6 +114,9 @@ class TestRunner(object):
     parser.add_option("-n", "--skip_execute", dest="preview", default=False,
                       action="store_true",
                       help="Do not execute, just preview commands")
+    parser.add_option("-i", "--build-install-only", dest="build_install_only", default=False,
+                      action="store_true",
+                      help="Do not execute, build tests and install to device only")
     parser.add_option("-r", "--raw-mode", dest="raw_mode", default=False,
                       action="store_true",
                       help="Raw mode (for output to other tools)")
@@ -193,7 +197,6 @@ class TestRunner(object):
       self._adb.SetDeviceTarget()
     elif self._options.serial is not None:
       self._adb.SetTargetSerial(self._options.serial)
-
     if self._options.verbose:
       logger.SetVerbose(True)
 
@@ -247,7 +250,9 @@ class TestRunner(object):
 
     tests = self._GetTestsToRun()
     # turn off dalvik verifier if necessary
-    self._TurnOffVerifier(tests)
+    # TODO: skip turning off verifier for now, since it puts device in bad
+    # state b/14088982
+    #self._TurnOffVerifier(tests)
     self._DoFullBuild(tests)
 
     target_tree = make_tree.MakeTree()
@@ -267,7 +272,9 @@ class TestRunner(object):
         target_tree.AddPath("external/emma")
 
       target_list = target_tree.GetPrunedMakeList()
+      target_dir_list = [re.sub(r'Android[.]mk$', r'', i) for i in target_list]
       target_build_string = " ".join(target_list)
+      target_dir_build_string = " ".join(target_dir_list)
       extra_args_string = " ".join(extra_args_set)
 
       # mmm cannot be used from python, so perform a similar operation using
@@ -275,9 +282,24 @@ class TestRunner(object):
       cmd = 'ONE_SHOT_MAKEFILE="%s" make -j%s -C "%s" GET-INSTALL-PATH all_modules %s' % (
           target_build_string, self._options.make_jobs, self._root_path,
           extra_args_string)
+      # mmma equivalent, used when regular mmm fails
+      alt_cmd = 'make -j%s -C "%s" -f build/core/main.mk %s all_modules BUILD_MODULES_IN_PATHS="%s"' % (
+              self._options.make_jobs, self._root_path, extra_args_string, target_dir_build_string)
+
       logger.Log(cmd)
       if not self._options.preview:
-        output = run_command.RunCommand(cmd, return_output=True, timeout_time=600)
+        run_command.SetAbortOnError()
+        try:
+          output = run_command.RunCommand(cmd, return_output=True, timeout_time=600)
+          ## Chances are this failed because it didn't build the dependencies
+        except errors.AbortError:
+          logger.Log("make failed. Trying to rebuild all dependencies.")
+          logger.Log("mmma -j%s %s" %(self._options.make_jobs, target_dir_build_string))
+          # Try again with mma equivalent, which will build the dependencies
+          run_command.RunCommand(alt_cmd, return_output=False, timeout_time=600)
+          # Run mmm again to get the install paths only
+          output = run_command.RunCommand(cmd, return_output=True, timeout_time=600)
+        run_command.SetAbortOnError(False)
         logger.SilentLog(output)
         self._DoInstall(output)
 
@@ -286,19 +308,25 @@ class TestRunner(object):
 
     Looks for 'install:' text from make output to find artifacts to install.
 
+    Files with the .apk extension get 'adb install'ed, all other files
+    get 'adb push'ed onto the device.
+
     Args:
       make_output: stdout from make command
     """
     for line in make_output.split("\n"):
       m = self._RE_MAKE_INSTALL.match(line)
       if m:
-        install_path = m.group(2)
-        if install_path.endswith(".apk"):
-          abs_install_path = os.path.join(self._root_path, install_path)
-          logger.Log("adb install -r %s" % abs_install_path)
-          logger.Log(self._adb.Install(abs_install_path))
-        else:
-          self._PushInstallFileToDevice(install_path)
+        # strip the 'INSTALL: <name>' from the left hand side
+        # the remaining string is a space-separated list of build-generated files
+        install_paths = m.group(2)
+        for install_path in re.split(r'\s+', install_paths):
+          if install_path.endswith(".apk"):
+            abs_install_path = os.path.join(self._root_path, install_path)
+            logger.Log("adb install -r %s" % abs_install_path)
+            logger.Log(self._adb.Install(abs_install_path))
+          else:
+            self._PushInstallFileToDevice(install_path)
 
   def _PushInstallFileToDevice(self, install_path):
     m = self._re_make_install_path.match(install_path)
@@ -317,13 +345,6 @@ class TestRunner(object):
     """If necessary, run a full 'make' command for the tests that need it."""
     extra_args_set = Set()
 
-    # hack to build cts dependencies
-    # TODO: remove this when cts dependencies are removed
-    is_cts =  self._IsCtsTests(tests)
-    if is_cts:
-      # need to use make since these fail building with ONE_SHOT_MAKEFILE
-      extra_args_set.add('CtsTestStubs')
-      extra_args_set.add('android.core.tests.runner')
     for test in tests:
       if test.IsFullMake():
         if test.GetExtraBuildArgs():
@@ -345,12 +366,6 @@ class TestRunner(object):
         logger.SilentLog(output)
         os.chdir(old_dir)
         self._DoInstall(output)
-        if is_cts:
-          # hack! hardcode install of CtsTestStubs
-          out = android_build.GetTestAppPath()
-          abs_install_path = os.path.join(out, "CtsTestStubs.apk")
-          logger.Log("adb install -r %s" % abs_install_path)
-          logger.Log(self._adb.Install(abs_install_path))
 
   def _AddBuildTarget(self, test_suite, target_tree, extra_args_set):
     if not test_suite.IsFullMake():
@@ -406,7 +421,7 @@ class TestRunner(object):
     turns off verifier and reboots device to allow change to take effect.
     """
     # hack to check if these are frameworks/base tests. If so, turn off verifier
-    # to allow framework tests to access package-private framework api
+    # to allow framework tests to access private/protected/package-private framework api
     framework_test = False
     for test in test_list:
       if os.path.commonprefix([test.GetBuildPath(), "frameworks/base"]):
@@ -416,35 +431,54 @@ class TestRunner(object):
       # necessary
       output = self._adb.SendShellCommand("cat /data/local.prop")
       if not self._DALVIK_VERIFIER_OFF_PROP in output:
+
+        # Read the existing dalvik verifier flags.
+        old_prop_value = self._adb.SendShellCommand("getprop %s" \
+            %(self._DALVIK_VERIFIER_PROP))
+        old_prop_value = old_prop_value.strip() if old_prop_value else ""
+
+        # Append our verifier flags to existing flags
+        new_prop_value = "%s %s" %(self._DALVIK_VERIFIER_OFF_VALUE, old_prop_value)
+
+        # Update property now, as /data/local.prop is not read until reboot
+        logger.Log("adb shell setprop %s '%s'" \
+            %(self._DALVIK_VERIFIER_PROP, new_prop_value))
+        if not self._options.preview:
+          self._adb.SendShellCommand("setprop %s '%s'" \
+            %(self._DALVIK_VERIFIER_PROP, new_prop_value))
+
+        # Write prop to /data/local.prop
+        # Every time device is booted, it will pick up this value
+        new_prop_assignment = "%s = %s" %(self._DALVIK_VERIFIER_PROP, new_prop_value)
         if self._options.preview:
           logger.Log("adb shell \"echo %s >> /data/local.prop\""
-                     % self._DALVIK_VERIFIER_OFF_PROP)
+                     % new_prop_assignment)
           logger.Log("adb shell chmod 644 /data/local.prop")
-          logger.Log("adb reboot")
-          logger.Log("adb wait-for-device")
         else:
           logger.Log("Turning off dalvik verifier and rebooting")
           self._adb.SendShellCommand("\"echo %s >> /data/local.prop\""
-                                     % self._DALVIK_VERIFIER_OFF_PROP)
+                                     % new_prop_assignment)
 
-          self._ChmodReboot()
+        # Reset runtime so that dalvik picks up new verifier flags from prop
+        self._ChmodRuntimeReset()
       elif not self._options.preview:
         # check the permissions on the file
         permout = self._adb.SendShellCommand("ls -l /data/local.prop")
         if not "-rw-r--r--" in permout:
           logger.Log("Fixing permissions on /data/local.prop and rebooting")
-          self._ChmodReboot()
+          self._ChmodRuntimeReset()
 
-  def _ChmodReboot(self):
-    """Perform a chmod of /data/local.prop and reboot.
+  def _ChmodRuntimeReset(self):
+    """Perform a chmod of /data/local.prop and reset the runtime.
     """
-    self._adb.SendShellCommand("chmod 644 /data/local.prop")
-    self._adb.SendCommand("reboot")
-    # wait for device to go offline
-    time.sleep(10)
-    self._adb.SendCommand("wait-for-device", timeout_time=60,
-                          retry_count=3)
-    self._adb.EnableAdbRoot()
+    logger.Log("adb shell chmod 644 /data/local.prop ## u+w,a+r")
+    if not self._options.preview:
+      self._adb.SendShellCommand("chmod 644 /data/local.prop")
+
+    self._adb.RuntimeReset(preview_only=self._options.preview)
+
+    if not self._options.preview:
+      self._adb.EnableAdbRoot()
 
 
   def RunTests(self):
@@ -458,6 +492,10 @@ class TestRunner(object):
 
       if not self._options.skip_build:
         self._DoBuild()
+
+      if self._options.build_install_only:
+        logger.Log("Skipping test execution (due to --build-install-only flag)")
+        return
 
       for test_suite in self._GetTestsToRun():
         try:

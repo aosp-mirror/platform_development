@@ -16,14 +16,17 @@
 
 package com.example.android.softkeyboard;
 
+import android.app.Dialog;
 import android.inputmethodservice.InputMethodService;
 import android.inputmethodservice.Keyboard;
 import android.inputmethodservice.KeyboardView;
+import android.os.IBinder;
 import android.text.InputType;
 import android.text.method.MetaKeyKeyListener;
 import android.view.KeyCharacterMap;
 import android.view.KeyEvent;
 import android.view.View;
+import android.view.Window;
 import android.view.inputmethod.CompletionInfo;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
@@ -114,8 +117,15 @@ public class SoftKeyboard extends InputMethodService
         mInputView = (LatinKeyboardView) getLayoutInflater().inflate(
                 R.layout.input, null);
         mInputView.setOnKeyboardActionListener(this);
-        mInputView.setKeyboard(mQwertyKeyboard);
+        setLatinKeyboard(mQwertyKeyboard);
         return mInputView;
+    }
+
+    private void setLatinKeyboard(LatinKeyboard nextKeyboard) {
+        final boolean shouldSupportLanguageSwitchKey =
+                mInputMethodManager.shouldOfferSwitchingToNextInputMethod(getToken());
+        nextKeyboard.setLanguageSwitchKeyVisibility(shouldSupportLanguageSwitchKey);
+        mInputView.setKeyboard(nextKeyboard);
     }
 
     /**
@@ -247,7 +257,7 @@ public class SoftKeyboard extends InputMethodService
     @Override public void onStartInputView(EditorInfo attribute, boolean restarting) {
         super.onStartInputView(attribute, restarting);
         // Apply the selected keyboard to the input view.
-        mInputView.setKeyboard(mCurKeyboard);
+        setLatinKeyboard(mCurKeyboard);
         mInputView.closing();
         final InputMethodSubtype subtype = mInputMethodManager.getCurrentInputMethodSubtype();
         mInputView.setSubtypeOnSpaceKey(subtype);
@@ -509,19 +519,19 @@ public class SoftKeyboard extends InputMethodService
         } else if (primaryCode == Keyboard.KEYCODE_CANCEL) {
             handleClose();
             return;
+        } else if (primaryCode == LatinKeyboardView.KEYCODE_LANGUAGE_SWITCH) {
+            handleLanguageSwitch();
+            return;
         } else if (primaryCode == LatinKeyboardView.KEYCODE_OPTIONS) {
             // Show a menu or somethin'
         } else if (primaryCode == Keyboard.KEYCODE_MODE_CHANGE
                 && mInputView != null) {
             Keyboard current = mInputView.getKeyboard();
             if (current == mSymbolsKeyboard || current == mSymbolsShiftedKeyboard) {
-                current = mQwertyKeyboard;
+                setLatinKeyboard(mQwertyKeyboard);
             } else {
-                current = mSymbolsKeyboard;
-            }
-            mInputView.setKeyboard(current);
-            if (current == mSymbolsKeyboard) {
-                current.setShifted(false);
+                setLatinKeyboard(mSymbolsKeyboard);
+                mSymbolsKeyboard.setShifted(false);
             }
         } else {
             handleCharacter(primaryCode, keyCodes);
@@ -597,11 +607,11 @@ public class SoftKeyboard extends InputMethodService
             mInputView.setShifted(mCapsLock || !mInputView.isShifted());
         } else if (currentKeyboard == mSymbolsKeyboard) {
             mSymbolsKeyboard.setShifted(true);
-            mInputView.setKeyboard(mSymbolsShiftedKeyboard);
+            setLatinKeyboard(mSymbolsShiftedKeyboard);
             mSymbolsShiftedKeyboard.setShifted(true);
         } else if (currentKeyboard == mSymbolsShiftedKeyboard) {
             mSymbolsShiftedKeyboard.setShifted(false);
-            mInputView.setKeyboard(mSymbolsKeyboard);
+            setLatinKeyboard(mSymbolsKeyboard);
             mSymbolsKeyboard.setShifted(false);
         }
     }
@@ -627,6 +637,22 @@ public class SoftKeyboard extends InputMethodService
         commitTyped(getCurrentInputConnection());
         requestHideSelf(0);
         mInputView.closing();
+    }
+
+    private IBinder getToken() {
+        final Dialog dialog = getWindow();
+        if (dialog == null) {
+            return null;
+        }
+        final Window window = dialog.getWindow();
+        if (window == null) {
+            return null;
+        }
+        return window.getAttributes().token;
+    }
+
+    private void handleLanguageSwitch() {
+        mInputMethodManager.switchToNextInputMethod(getToken(), false /* onlyCurrentIme */);
     }
 
     private void checkToggleCapsLock() {

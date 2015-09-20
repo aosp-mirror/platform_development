@@ -1,0 +1,10 @@
+page.tags="BasicRenderScript"
+sample.group=RenderScript
+@jd:body
+
+<p>
+            
+            BasicRenderScript sample demonstrates basic steps how to use renderScript.
+			In the sample, it performs graphical filter operation on a image with renderScript.
+            
+        </p>

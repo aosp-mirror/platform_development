@@ -43,6 +43,9 @@
     <string name="start_hipri">Start HiPri</string>
     <string name="stop_hipri">Stop HiPri</string>
     <string name="crash">CRASH</string>
+    <string name="report_all_bad">Report all bad</string>
+
+    <string name="netid">NetId</string>
     <string name="add_default_route">Add Default Route</string>
     <string name="remove_default_route">Remove Default Route</string>
     <string name="default_request">Make a http request</string>

@@ -42,7 +42,7 @@ public class GestureListener extends GestureDetector.SimpleOnGestureListener {
 
     @Override
     public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX,
-                            float distanceY) {
+    float distanceY) {
         // User attempted to scroll
         Log.i(TAG, "Scroll");
         return false;
@@ -50,7 +50,7 @@ public class GestureListener extends GestureDetector.SimpleOnGestureListener {
 
     @Override
     public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX,
-                           float velocityY) {
+    float velocityY) {
         // Fling event occurred.  Notification of this one happens after an "up" event.
         Log.i(TAG, "Fling");
         return false;

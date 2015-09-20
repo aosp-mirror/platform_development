@@ -13,4 +13,5 @@
     <string name="free_variable">Free 17 or 71 bytes</string>
     <string name="_17byte">17 bytes</string>
     <string name="_71byte">71 bytes</string>
+    <string name="force_double_free">Force a Double Free</string>
 </resources>

@@ -1,0 +1,13 @@
+page.tags="BasicManagedProfile"
+sample.group=Admin
+@jd:body
+
+<p>
+            
+            This sample demonstrates how to create a managed profile. You can also learn how to
+            enable or disable other apps and how to set restrictions to them. Intents can be
+            configured to be forwarded between primary account and managed profile. Finally, you can
+            wipe all the data associated with the profile.
+            Note that there can only be one managed profile on a device. 
+            
+        </p>

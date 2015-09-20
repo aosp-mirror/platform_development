@@ -463,6 +463,8 @@
     <string name="ir_send">Send IR</string>
     <string name="ir_get_freqs">Get Carrier Frequencies</string>
 
+    <string name="activity_documents">Content/Storage/Documents</string>
+
     <!-- ============================== -->
     <!--  app/intents examples strings     -->
     <!-- ============================== -->
@@ -520,13 +522,16 @@
     <string name="alert_dialog_two_buttons">OK Cancel dialog with a message</string>
     <string name="alert_dialog_two_buttons_old_school">OK Cancel dialog with traditional theme</string>
     <string name="alert_dialog_two_buttons_holo_light">OK Cancel dialog with Holo Light theme</string>
+    <string name="alert_dialog_two_buttons_default_light">OK Cancel dialog with DeviceDefault Light theme</string>
+    <string name="alert_dialog_two_buttons_default_dark">OK Cancel dialog with DeviceDefault theme</string>
     <string name="alert_dialog_two_buttons2">OK Cancel dialog with a long message</string>
     <string name="alert_dialog_two_buttons2ultra">OK Cancel dialog with ultra long message</string>
     <string name="alert_dialog_select_button">List dialog</string>
     <string name="alert_dialog_single_choice">Single choice list</string>
     <string name="alert_dialog_multi_choice">Repeat alarm</string>
     <string name="alert_dialog_multi_choice_cursor">Send Call to VoiceMail</string>
-    <string name="alert_dialog_progress_button">Progress dialog</string>
+    <string name="alert_dialog_progress_button">Progress bar dialog</string>
+    <string name="alert_dialog_progress_spinner_button">Progress spinner dialog</string>
     <string name="alert_dialog_text_entry">Text Entry dialog</string>
     <string name="alert_dialog_username">Name:</string>
     <string name="alert_dialog_password">Password:</string>
@@ -741,10 +746,19 @@
     <string name="disable_camera">Disable all device cameras</string>
     <string name="disable_keyguard_widgets">Disable keyguard widgets</string>
     <string name="disable_keyguard_secure_camera">Disable keyguard secure camera</string>
+    <string name="disable_keyguard_notifications">Disable keyguard notifications</string>
+    <string name="disable_keyguard_unredacted_notifications">Disable keyguard unredacted notifications</string>
+    <string name="disable_keyguard_trust_agents">Disable keyguard Trust Agents</string>
     <string name="keyguard_widgets_disabled">Keyguard widgets disabled</string>
     <string name="keyguard_widgets_enabled">Keyguard widgets enabled</string>
     <string name="keyguard_secure_camera_disabled">Keyguard secure camera disabled</string>
     <string name="keyguard_secure_camera_enabled">Keyguard secure camera enabled</string>
+    <string name="keyguard_secure_notifications_disabled">Keyguard notifications disabled</string>
+    <string name="keyguard_secure_notifications_enabled">Keyguard notifications enabled</string>
+    <string name="keyguard_unredacted_notifications_disabled">Keyguard unredacted notifications disabled</string>
+    <string name="keyguard_unredacted_notifications_enabled">Keyguard unredacted notifications enabled</string>
+    <string name="keyguard_trust_agents_disabled">Keyguard Trust Agents disabled</string>
+    <string name="keyguard_trust_agents_enabled">Keyguard Trust Agents enabled</string>
     <string name="camera_disabled">Device cameras disabled</string>
     <string name="camera_enabled">Device cameras enabled</string>
     <string name="password_controls_category">Password controls</string>
@@ -775,6 +789,10 @@
     <string name="encryption_category">Encryption</string>
     <string name="require_encryption">Require encryption</string>
     <string name="activate_encryption">Activate encryption</string>
+
+    <string name="trust_agent_category">Trust Agent Features</string>
+    <string name="set_trust_agent_component_name">Enabled Component Name</string>
+    <string name="set_trust_agent_feature_list">Enabled Features (comma-separated)</string>
 
     <!-- Strings used by DeviceAdminSample controller code -->
     <string name="password_sufficient">Current password meets policy requirements</string>
@@ -871,6 +889,19 @@
     <string name="btn_toggle_tabs">Toggle tab mode</string>
     <string name="btn_remove_all_tabs">Remove all tabs</string>
 
+    <string name="action_bar_navigation">App/Action Bar/Action Bar Navigation</string>
+    <string name="action_bar_navigation_msg">Demonstrates various ways to navigate in
+            applications involving the action bar.  This activity has been launched as the
+            root of the app\'s task.</string>
+    <string name="btn_newactivity">New in-task activity</string>
+    <string name="btn_newdoc">New document</string>
+
+    <string name="action_bar_navigation_target">App Nav Child</string>
+    <string name="action_bar_navigation_target_msg">This is a sub-activity launched by the
+            application.  It may be in either the app\'s main task or another task.  Press
+            up on the action bar to navigate up in the app\'s hierarchy, regardless of where
+            this activity appears.</string>
+
     <!-- ================================= -->
     <!--  app/print print examples strings  -->
     <!-- ================================= -->
@@ -893,6 +924,11 @@
     <string name="density_title">Density: Unknown Screen</string>
     <string name="camera_alert">Device has only one camera!</string>
     <string name="switch_cam">Switch Camera</string>
+    <string name="draggable_card">Draggable Card</string>
+
+    <string name="enable_tilt">Enable Tilt</string>
+    <string name="enable_shading">Enable Shading</string>
+    <string name="select_shape">Select Shape</string>
 
     <!-- ============================ -->
     <!--  media examples strings  -->
@@ -902,6 +938,7 @@
     <string name="stream_video">Play Streaming Video</string>
     <string name="local_audio">Play Audio from Local File</string>
     <string name="res_audio">Play Audio from Resources</string>
+    <string name="screen_sharing_toggle">Toggle screen sharing</string>
 
     <!-- =========================== -->
     <!-- os examples strings    -->
@@ -1116,7 +1153,6 @@
     <string name="focus_5_button3">3</string>
     <string name="focus_5_button4">4</string>
     <string name="focus_5_button5">5</string>
-    <string name="gallery_2_text">Testing</string>
     <string name="grid_layout_1_instructions">Type here:</string>
     <string name="grid_layout_1_ok">Ok</string>
     <string name="grid_layout_1_cancel">Cancel</string>
@@ -1502,4 +1538,22 @@
     <string name="keystore_entry_alias">Entry alias:</string>
     <string name="keystore_generate">Generate</string>
     <string name="keystore_no_alias_error">Must supply an alias</string>
-  </resources>
+
+    <!-- ============================ -->
+    <!--       MMS demo strings       -->
+    <!-- ============================ -->
+
+    <string name="mms_received_label">Last received message</string>
+    <string name="mms_recipients_label">Addresses</string>
+    <string name="mms_subject_label">Subject</string>
+    <string name="mms_text_label">Text</string>
+    <string name="mms_send_button_label">Send</string>
+
+    <string name="mms_status_sending">Sending</string>
+    <string name="mms_status_sent">Sent OK</string>
+    <string name="mms_status_downloaded">Downloaded</string>
+    <string name="mms_status_failed">Failed</string>
+    <string name="mms_status_downloading">Downloading</string>
+
+    <string name="mms_enable_receiver">Enable MMS broadcast receiver</string>
+</resources>

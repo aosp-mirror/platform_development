@@ -18,4 +18,7 @@
 prebuilts/qemu-kernel/${TARGET_ARCH}/kernel-qemu-armv7 system-images/${PLATFORM_NAME}/${TARGET_CPU_ABI}/kernel-qemu
 
 # version files for the SDK updater, from development.git
-${HOST_OUT}/development/sdk/images_armeabi-v7a_source.properties system-images/${PLATFORM_NAME}/${TARGET_CPU_ABI}/source.properties
+${HOST_OUT}/development/sys-img-${TARGET_CPU_ABI}/images_armeabi-v7a_source.properties system-images/${PLATFORM_NAME}/${TARGET_CPU_ABI}/source.properties
+
+# custom hardware.ini for 32 bit images
+development/sys-img/images_armeabi-v7a_hardware.ini    system-images/${PLATFORM_NAME}/${TARGET_CPU_ABI}/hardware.ini

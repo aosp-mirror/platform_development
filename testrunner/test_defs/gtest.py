@@ -73,6 +73,7 @@ class GTestFactory(test_suite.AbstractTestFactory):
       - test_*.[c|cc|cpp]
       - *_test.[c|cc|cpp]
       - *_unittest.[c|cc|cpp]
+      - *Tests.[cc|cpp]
 
     """
     if not sub_tests_path:
@@ -101,6 +102,7 @@ class GTestFactory(test_suite.AbstractTestFactory):
       - test_*.[cc|cpp]
       - *_test.[cc|cpp]
       - *_unittest.[cc|cpp]
+      - *Tests.[cc|cpp]
 
     This method is a callback for os.path.walk.
 
@@ -115,6 +117,6 @@ class GTestFactory(test_suite.AbstractTestFactory):
   def _EvaluateFile(self, test_list, file):
     (name, ext) = os.path.splitext(file)
     if ext == ".cc" or ext == ".cpp" or ext == ".c":
-      if re.search("_test$|_test_$|_unittest$|_unittest_$|^test_", name):
+      if re.search("_test$|_test_$|_unittest$|_unittest_$|^test_|Tests$", name):
         logger.SilentLog("Found native test file %s" % file)
         test_list.append(name)

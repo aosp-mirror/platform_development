@@ -1,0 +1,12 @@
+page.tags="Wearable Notifications"
+sample.group=Wearable
+@jd:body
+
+<p>
+            
+This sample application provides a showcase of available notification styles and
+demonstrates various features of the Android Wear notifications API. Running the sample on your
+companion allows you to select between various notification styles and to see how these
+notifications are displayed, both in a phone\'s notification shade and on the wearable.
+            
+        </p>

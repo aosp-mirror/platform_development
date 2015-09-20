@@ -634,7 +634,7 @@ class LunarView extends SurfaceView implements SurfaceHolder.Callback {
             canvas.drawRect(mScratchRect, mLinePaint);
 
             // Draw the speed gauge, with a two-tone effect
-            double speed = Math.sqrt(mDX * mDX + mDY * mDY);
+            double speed = Math.hypot(mDX, mDY);
             int speedWidth = (int) (UI_BAR * speed / PHYS_SPEED_MAX);
 
             if (speed <= mGoalSpeed) {
@@ -756,7 +756,7 @@ class LunarView extends SurfaceView implements SurfaceHolder.Callback {
                 int result = STATE_LOSE;
                 CharSequence message = "";
                 Resources res = mContext.getResources();
-                double speed = Math.sqrt(mDX * mDX + mDY * mDY);
+                double speed = Math.hypot(mDX, mDY);
                 boolean onGoal = (mGoalX <= mX - mLanderWidth / 2 && mX
                         + mLanderWidth / 2 <= mGoalX + mGoalWidth);
 

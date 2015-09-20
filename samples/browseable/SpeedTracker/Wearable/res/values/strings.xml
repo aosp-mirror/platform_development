@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright (C) 2014 The Android Open Source Project
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+          http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+-->
+
+<resources>
+    <string name="app_name">Speed Tracker</string>
+    <string name="lat_label">Latitude:</string>
+    <string name="not_available">Not Available</string>
+    <string name="lon_label">Longitude:</string>
+    <string name="speed_label">Speed:</string>
+    <string name="activity_label">Activity:</string>
+    <string name="timestamp_label">Time:</string>
+    <string name="speed_limit">Limit: %1$d mph</string>
+    <string name="acquiring_gps">Acquiring GPS Fix ...</string>
+    <string name="speed_for_list">%1$d mph</string>
+    <string name="start_saving_gps">Start Recording GPS?</string>
+    <string name="stop_saving_gps">Stop Recording GPS?</string>
+    <string name="mph">mph</string>
+    <string name="speed_limit_header">Speed Limit</string>
+    <string name="gps_not_available">GPS not available.</string>
+    <string name="ok">OK</string>
+    <string name="speed_format">%.0f</string>
+</resources>

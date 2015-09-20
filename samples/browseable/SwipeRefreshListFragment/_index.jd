@@ -1,0 +1,12 @@
+page.tags="SwipeRefreshListFragment"
+sample.group=UI
+@jd:body
+
+<p>
+            
+            A sample which shows how to use SwipeRefreshLayout within a ListFragment to add the
+            \'swipe-to-refresh\' gesture to a ListView, enabling the ability to trigger a refresh
+            from swiping down on that view. This is provided through the re-usable
+            SwipeRefreshListFragment class.
+            
+        </p>

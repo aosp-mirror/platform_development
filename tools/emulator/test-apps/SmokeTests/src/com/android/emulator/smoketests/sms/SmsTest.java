@@ -21,7 +21,7 @@ import android.net.Uri;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.os.HandlerThread;
-import com.android.test.InjectContext;
+import android.support.test.InjectContext;
 
 import org.junit.Assert;
 import static junit.framework.Assert.assertEquals;

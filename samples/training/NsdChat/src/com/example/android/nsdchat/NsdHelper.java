@@ -44,8 +44,6 @@ public class NsdHelper {
 
     public void initializeNsd() {
         initializeResolveListener();
-        initializeDiscoveryListener();
-        initializeRegistrationListener();
 
         //mNsdManager.init(mContext.getMainLooper(), this);
 
@@ -78,22 +76,20 @@ public class NsdHelper {
                     mService = null;
                 }
             }
-            
+
             @Override
             public void onDiscoveryStopped(String serviceType) {
-                Log.i(TAG, "Discovery stopped: " + serviceType);        
+                Log.i(TAG, "Discovery stopped: " + serviceType);
             }
 
             @Override
             public void onStartDiscoveryFailed(String serviceType, int errorCode) {
                 Log.e(TAG, "Discovery failed: Error code:" + errorCode);
-                mNsdManager.stopServiceDiscovery(this);
             }
 
             @Override
             public void onStopDiscoveryFailed(String serviceType, int errorCode) {
                 Log.e(TAG, "Discovery failed: Error code:" + errorCode);
-                mNsdManager.stopServiceDiscovery(this);
             }
         };
     }
@@ -125,48 +121,68 @@ public class NsdHelper {
             @Override
             public void onServiceRegistered(NsdServiceInfo NsdServiceInfo) {
                 mServiceName = NsdServiceInfo.getServiceName();
+                Log.d(TAG, "Service registered: " + mServiceName);
             }
-            
+
             @Override
             public void onRegistrationFailed(NsdServiceInfo arg0, int arg1) {
+                Log.d(TAG, "Service registration failed: " + arg1);
             }
 
             @Override
             public void onServiceUnregistered(NsdServiceInfo arg0) {
+                Log.d(TAG, "Service unregistered: " + arg0.getServiceName());
             }
-            
+
             @Override
             public void onUnregistrationFailed(NsdServiceInfo serviceInfo, int errorCode) {
+                Log.d(TAG, "Service unregistration failed: " + errorCode);
             }
-            
+
         };
     }
 
     public void registerService(int port) {
+        tearDown();  // Cancel any previous registration request
+        initializeRegistrationListener();
         NsdServiceInfo serviceInfo  = new NsdServiceInfo();
         serviceInfo.setPort(port);
         serviceInfo.setServiceName(mServiceName);
         serviceInfo.setServiceType(SERVICE_TYPE);
-        
+
         mNsdManager.registerService(
                 serviceInfo, NsdManager.PROTOCOL_DNS_SD, mRegistrationListener);
-        
+
     }
 
     public void discoverServices() {
+        stopDiscovery();  // Cancel any existing discovery request
+        initializeDiscoveryListener();
         mNsdManager.discoverServices(
                 SERVICE_TYPE, NsdManager.PROTOCOL_DNS_SD, mDiscoveryListener);
     }
-    
+
     public void stopDiscovery() {
-        mNsdManager.stopServiceDiscovery(mDiscoveryListener);
+        if (mDiscoveryListener != null) {
+            try {
+                mNsdManager.stopServiceDiscovery(mDiscoveryListener);
+            } finally {
+            }
+            mDiscoveryListener = null;
+        }
     }
 
     public NsdServiceInfo getChosenServiceInfo() {
         return mService;
     }
-    
+
     public void tearDown() {
-        mNsdManager.unregisterService(mRegistrationListener);
+        if (mRegistrationListener != null) {
+            try {
+                mNsdManager.unregisterService(mRegistrationListener);
+            } finally {
+            }
+            mRegistrationListener = null;
+        }
     }
 }

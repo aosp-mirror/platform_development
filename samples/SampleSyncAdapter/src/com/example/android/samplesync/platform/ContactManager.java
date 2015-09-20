@@ -24,10 +24,7 @@ import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
-import android.content.res.AssetFileDescriptor;
 import android.database.Cursor;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.provider.ContactsContract;
 import android.provider.ContactsContract.CommonDataKinds.Email;
@@ -41,14 +38,8 @@ import android.provider.ContactsContract.Groups;
 import android.provider.ContactsContract.RawContacts;
 import android.provider.ContactsContract.Settings;
 import android.provider.ContactsContract.StatusUpdates;
-import android.provider.ContactsContract.StreamItemPhotos;
-import android.provider.ContactsContract.StreamItems;
 import android.util.Log;
 
-import java.io.ByteArrayOutputStream;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -239,43 +230,6 @@ public class ContactManager {
         final BatchOperation batchOperation = new BatchOperation(context, resolver);
         for (RawContact rawContact : rawContacts) {
             updateContactStatus(context, rawContact, batchOperation);
-        }
-        batchOperation.execute();
-    }
-
-    /**
-     * Demonstrate how to add stream items and stream item photos to a raw
-     * contact. This just adds items for all of the contacts for this sync
-     * adapter with some locally created text and an image. You should check
-     * for stream items on the server that you are syncing with and use the
-     * text and photo data from there instead.
-     *
-     * @param context The context of Authenticator Activity
-     * @param rawContacts The list of users we want to update
-     */
-    public static void addStreamItems(Context context, List<RawContact> rawContacts,
-             String accountName, String accountType) {
-        final ContentResolver resolver = context.getContentResolver();
-        final BatchOperation batchOperation = new BatchOperation(context, resolver);
-        String text = "This is a test stream item!";
-        String message = "via SampleSyncAdapter";
-        for (RawContact rawContact : rawContacts) {
-           addContactStreamItem(context, lookupRawContact(resolver,
-                   rawContact.getServerContactId()), accountName, accountType,
-                   text, message, batchOperation );
-        }
-        List<Uri> streamItemUris = batchOperation.execute();
-
-        // Stream item photos are added after the stream items that they are
-        // associated with, using the stream item's ID as a reference.
-
-        for (Uri uri : streamItemUris){
-          // All you need is the ID of the stream item, which is the last index
-          // path segment returned by getPathSegments().
-          long streamItemId = Long.parseLong(uri.getPathSegments().get(
-                  uri.getPathSegments().size()-1));
-          addStreamItemPhoto(context, resolver, streamItemId, accountName,
-                  accountType, batchOperation);
         }
         batchOperation.execute();
     }
@@ -593,59 +547,6 @@ public class ContactManager {
             batchOperation.add(ContactOperations.newInsertCpo(StatusUpdates.CONTENT_URI,
                     false, true).withValues(values).build());
         }
-    }
-
-    /**
-     * Adds a stream item to a raw contact. The stream item is usually obtained
-     * from the server you are syncing with, but we create it here locally as an
-     * example.
-     *
-     * @param context the Authenticator Activity context
-     * @param rawContactId the raw contact ID that the stream item is associated with
-     * @param accountName the account name of the sync adapter
-     * @param accountType the account type of the sync adapter
-     * @param text the text of the stream item
-     * @param comments the comments for the stream item, such as where the stream item came from
-     * @param batchOperation allow us to batch together multiple operations
-     */
-    private static void addContactStreamItem(Context context, long rawContactId,
-        String accountName, String accountType, String text, String comments,
-        BatchOperation batchOperation) {
-
-        final ContentValues values = new ContentValues();
-        final ContentResolver resolver = context.getContentResolver();
-        if (rawContactId > 0){
-            values.put(StreamItems.RAW_CONTACT_ID, rawContactId);
-            values.put(StreamItems.TEXT, text);
-            values.put(StreamItems.TIMESTAMP, System.currentTimeMillis());
-            values.put(StreamItems.COMMENTS, comments);
-            values.put(StreamItems.ACCOUNT_NAME, accountName);
-            values.put(StreamItems.ACCOUNT_TYPE, accountType);
-
-            batchOperation.add(ContactOperations.newInsertCpo(
-                    StreamItems.CONTENT_URI, false, true).withValues(values).build());
-        }
-    }
-
-    private static void addStreamItemPhoto(Context context, ContentResolver
-        resolver, long streamItemId, String accountName, String accountType,
-        BatchOperation batchOperation){
-
-        ByteArrayOutputStream stream = new ByteArrayOutputStream();
-        Bitmap bitmap = BitmapFactory.decodeResource(context.getResources(),
-                R.raw.img1);
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 30, stream);
-        byte[] photoData = stream.toByteArray();
-
-        final ContentValues values = new ContentValues();
-        values.put(StreamItemPhotos.STREAM_ITEM_ID, streamItemId);
-        values.put(StreamItemPhotos.SORT_INDEX, 1);
-        values.put(StreamItemPhotos.PHOTO, photoData);
-        values.put(StreamItems.ACCOUNT_NAME, accountName);
-        values.put(StreamItems.ACCOUNT_TYPE, accountType);
-
-        batchOperation.add(ContactOperations.newInsertCpo(
-                StreamItems.CONTENT_PHOTO_URI, false, true).withValues(values).build());
     }
 
     /**

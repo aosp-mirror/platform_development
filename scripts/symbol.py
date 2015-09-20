@@ -19,9 +19,12 @@
 The information can include symbol names, offsets, and source locations.
 """
 
+import glob
 import os
+import platform
 import re
 import subprocess
+import unittest
 
 ANDROID_BUILD_TOP = os.environ["ANDROID_BUILD_TOP"]
 if not ANDROID_BUILD_TOP:
@@ -43,62 +46,52 @@ SYMBOLS_DIR = FindSymbolsDir()
 
 ARCH = "arm"
 
-TOOLCHAIN_INFO = None
 
-def Uname():
-  """'uname' for constructing prebuilt/<...> and out/host/<...> paths."""
-  uname = os.uname()[0]
-  if uname == "Darwin":
-    proc = os.uname()[-1]
-    if proc == "i386" or proc == "x86_64":
-      return "darwin-x86"
-    return "darwin-ppc"
-  if uname == "Linux":
-    return "linux-x86"
-  return uname
+# These are private. Do not access them from other modules.
+_CACHED_TOOLCHAIN = None
+_CACHED_TOOLCHAIN_ARCH = None
 
-def ToolPath(tool, toolchain_info=None):
-  """Return a full qualified path to the specified tool"""
-  if not toolchain_info:
-    toolchain_info = FindToolchain()
-  (label, platform, target) = toolchain_info
-  return os.path.join(ANDROID_BUILD_TOP, "prebuilts/gcc", Uname(), platform, label, "bin",
-                     target + "-" + tool)
+
+def ToolPath(tool, toolchain=None):
+  """Return a fully-qualified path to the specified tool"""
+  if not toolchain:
+    toolchain = FindToolchain()
+  return glob.glob(os.path.join(toolchain, "*-" + tool))[0]
+
 
 def FindToolchain():
-  """Look for the latest available toolchain
+  """Returns the toolchain matching ARCH."""
+  global _CACHED_TOOLCHAIN, _CACHED_TOOLCHAIN_ARCH
+  if _CACHED_TOOLCHAIN is not None and _CACHED_TOOLCHAIN_ARCH == ARCH:
+    return _CACHED_TOOLCHAIN
 
-  Args:
-    None
+  # We use slightly different names from GCC, and there's only one toolchain
+  # for x86/x86_64. Note that these are the names of the top-level directory
+  # rather than the _different_ names used lower down the directory hierarchy!
+  gcc_dir = ARCH
+  if gcc_dir == "arm64":
+    gcc_dir = "aarch64"
+  elif gcc_dir == "mips64":
+    gcc_dir = "mips"
+  elif gcc_dir == "x86_64":
+    gcc_dir = "x86"
 
-  Returns:
-    A pair of strings containing toolchain label and target prefix.
-  """
-  global TOOLCHAIN_INFO
-  if TOOLCHAIN_INFO is not None:
-    return TOOLCHAIN_INFO
+  os_name = platform.system().lower();
 
-  ## Known toolchains, newer ones in the front.
-  if ARCH == "arm":
-    gcc_version = os.environ["TARGET_GCC_VERSION"]
-    known_toolchains = [
-      ("arm-linux-androideabi-" + gcc_version, "arm", "arm-linux-androideabi"),
-    ]
-  elif ARCH =="x86":
-    known_toolchains = [
-      ("i686-android-linux-4.4.3", "x86", "i686-android-linux")
-    ]
-  else:
-    known_toolchains = []
+  available_toolchains = glob.glob("%s/prebuilts/gcc/%s-x86/%s/*-linux-*/bin/" % (ANDROID_BUILD_TOP, os_name, gcc_dir))
+  if len(available_toolchains) == 0:
+    raise Exception("Could not find tool chain for %s" % (ARCH))
 
-  # Look for addr2line to check for valid toolchain path.
-  for (label, platform, target) in known_toolchains:
-    toolchain_info = (label, platform, target);
-    if os.path.exists(ToolPath("addr2line", toolchain_info)):
-      TOOLCHAIN_INFO = toolchain_info
-      return toolchain_info
+  toolchain = sorted(available_toolchains)[-1]
 
-  raise Exception("Could not find tool chain")
+  if not os.path.exists(ToolPath("addr2line", toolchain)):
+    raise Exception("No addr2line for %s" % (toolchain))
+
+  _CACHED_TOOLCHAIN = toolchain
+  _CACHED_TOOLCHAIN_ARCH = ARCH
+  print "Using %s toolchain from: %s" % (_CACHED_TOOLCHAIN_ARCH, _CACHED_TOOLCHAIN)
+  return _CACHED_TOOLCHAIN
+
 
 def SymbolInformation(lib, addr):
   """Look up symbol information about an address.
@@ -190,12 +183,12 @@ def CallAddr2LineForSet(lib, unique_addrs):
   if not lib:
     return None
 
-
   symbols = SYMBOLS_DIR + lib
   if not os.path.exists(symbols):
-    return None
+    symbols = lib
+    if not os.path.exists(symbols):
+      return None
 
-  (label, platform, target) = FindToolchain()
   cmd = [ToolPath("addr2line"), "--functions", "--inlines",
       "--demangle", "--exe=" + symbols]
   child = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
@@ -212,7 +205,7 @@ def CallAddr2LineForSet(lib, unique_addrs):
       if symbol == "??":
         symbol = None
       location = child.stdout.readline().strip()
-      if location == "??:0":
+      if location == "??:0" or location == "??:?":
         location = None
       if symbol is None and location is None:
         break
@@ -239,10 +232,10 @@ def StripPC(addr):
     The stripped program counter address.
   """
   global ARCH
-
   if ARCH == "arm":
     return addr & ~1
   return addr
+
 
 def CallObjdumpForSet(lib, unique_addrs):
   """Use objdump to find out the names of the containing functions.
@@ -259,11 +252,9 @@ def CallObjdumpForSet(lib, unique_addrs):
 
   symbols = SYMBOLS_DIR + lib
   if not os.path.exists(symbols):
-    return None
-
-  symbols = SYMBOLS_DIR + lib
-  if not os.path.exists(symbols):
-    return None
+    symbols = lib
+    if not os.path.exists(symbols):
+      return None
 
   addrs = sorted(unique_addrs)
   start_addr_dec = str(StripPC(int(addrs[0], 16)))
@@ -338,7 +329,27 @@ def CallCppFilt(mangled_symbol):
   process.stdout.close()
   return demangled_symbol
 
+
 def FormatSymbolWithOffset(symbol, offset):
   if offset == 0:
     return symbol
   return "%s+%d" % (symbol, offset)
+
+
+
+class FindToolchainTests(unittest.TestCase):
+  def assert_toolchain_found(self, abi):
+    global ARCH
+    ARCH = abi
+    FindToolchain() # Will throw on failure.
+
+  def test_toolchains_found(self):
+    self.assert_toolchain_found("arm")
+    self.assert_toolchain_found("arm64")
+    self.assert_toolchain_found("mips")
+    self.assert_toolchain_found("x86")
+    self.assert_toolchain_found("x86_64")
+
+
+if __name__ == '__main__':
+    unittest.main()

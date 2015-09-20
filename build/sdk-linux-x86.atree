@@ -22,13 +22,15 @@
 # revision as specified in the source.properties.
 
 
-lib/libLLVM.so                                       strip build-tools/${PLATFORM_NAME}/libLLVM.so
-lib/libbcc.so                                        strip build-tools/${PLATFORM_NAME}/libbcc.so
-lib/libbcinfo.so                                     strip build-tools/${PLATFORM_NAME}/libbcinfo.so
-lib/libclang.so                                      strip build-tools/${PLATFORM_NAME}/libclang.so
+lib64/libLLVM.so                                       strip build-tools/${PLATFORM_NAME}/../lib64/libLLVM.so
+lib64/libbcc.so                                        strip build-tools/${PLATFORM_NAME}/../lib64/libbcc.so
+lib64/libbcinfo.so                                     strip build-tools/${PLATFORM_NAME}/../lib64/libbcinfo.so
+lib64/libclang.so                                      strip build-tools/${PLATFORM_NAME}/../lib64/libclang.so
+lib64/libc++.so                                        strip build-tools/${PLATFORM_NAME}/../lib64/libc++.so
 
-prebuilts/sdk/tools/linux/arm-linux-androideabi-ld   strip build-tools/${PLATFORM_NAME}/arm-linux-androideabi-ld
-prebuilts/sdk/tools/linux/i686-linux-android-ld      strip build-tools/${PLATFORM_NAME}/i686-linux-android-ld
-prebuilts/sdk/tools/linux/mipsel-linux-android-ld    strip build-tools/${PLATFORM_NAME}/mipsel-linux-android-ld
+prebuilts/sdk/tools/linux/bin/arm-linux-androideabi-ld   strip build-tools/${PLATFORM_NAME}/arm-linux-androideabi-ld
+prebuilts/sdk/tools/linux/bin/i686-linux-android-ld      strip build-tools/${PLATFORM_NAME}/i686-linux-android-ld
+prebuilts/sdk/tools/linux/bin/mipsel-linux-android-ld    strip build-tools/${PLATFORM_NAME}/mipsel-linux-android-ld
 
+dalvik/dx/etc/mainDexClasses                               build-tools/${PLATFORM_NAME}/mainDexClasses
 

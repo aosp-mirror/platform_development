@@ -1,0 +1,10 @@
+page.tags="FloatingActionButtonBasic"
+sample.group=UI
+@jd:body
+
+<p>
+            
+            This sample shows the two sizes of Floating Action Buttons and how to interact with
+            them.
+            
+        </p>

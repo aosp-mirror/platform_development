@@ -1,24 +1,31 @@
 LOCAL_PATH:= $(call my-dir)
 
 include $(CLEAR_VARS)
+LOCAL_IS_HOST_MODULE := true
+LOCAL_MODULE := AdbWinApi
+LOCAL_MODULE_CLASS := STATIC_LIBRARIES
+LOCAL_SRC_FILES_x86 := AdbWinApi.a
+LOCAL_MODULE_SUFFIX := .a
+LOCAL_MULTILIB := 32
+LOCAL_MODULE_HOST_OS := windows
+include $(BUILD_PREBUILT)
 
-LOCAL_PREBUILT_LIBS := \
-	AdbWinApi.a
+include $(CLEAR_VARS)
+LOCAL_IS_HOST_MODULE := true
+LOCAL_MODULE := AdbWinApi
+LOCAL_MODULE_CLASS := EXECUTABLES
+LOCAL_SRC_FILES_x86 := AdbWinApi.dll
+LOCAL_MODULE_SUFFIX := .dll
+LOCAL_MULTILIB := 32
+LOCAL_MODULE_HOST_OS := windows
+include $(BUILD_PREBUILT)
 
-LOCAL_PREBUILT_EXECUTABLES := \
-	AdbWinApi.dll  \
-	AdbWinUsbApi.dll
-	
-.PHONY : kill-adb
-	
-$(LOCAL_PATH)/AdbWinApi.dll : kill-adb
-
-kill-adb:
-	@echo "Killing adb server so we can replace AdbWinApi.dll"
-	@adb kill-server || echo "adb appears to be missing"
-
-# generate AdbWinApi stub library
-#$(LOCAL_PATH)/AdbWinApi.a: $(LOCAL_PATH)/AdbWinApi.def
-#	dlltool --def $(LOCAL_PATH)/AdbWinApi.def --dllname AdbWinApi.dll --output-lib $(LOCAL_PATH)/AdbWinApi.a
-
-include $(BUILD_HOST_PREBUILT)
+include $(CLEAR_VARS)
+LOCAL_IS_HOST_MODULE := true
+LOCAL_MODULE := AdbWinUsbApi
+LOCAL_MODULE_CLASS := EXECUTABLES
+LOCAL_SRC_FILES_x86 := AdbWinUsbApi.dll
+LOCAL_MODULE_SUFFIX := .dll
+LOCAL_MULTILIB := 32
+LOCAL_MODULE_HOST_OS := windows
+include $(BUILD_PREBUILT)

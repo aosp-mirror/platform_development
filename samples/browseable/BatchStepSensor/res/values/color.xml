@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <color name="card_action_inverted">@android:color/white</color>
+
+    <color name="card_content_textcolor">#444</color>
+
+    <color name="card_action_bg">#DDD</color>
+    <color name="card_action_item_bg">#F4F4F4</color>
+
+    <!-- Neutral Actions -->
+    <color name="card_action_focused">#FFE3F4FC</color>
+    <color name="card_action">#FF47B4EA</color>
+    <color name="card_action_ripple">#CC47B4EA</color>
+
+    <!-- Negative Actions -->
+    <color name="card_action_negative_focused">#FFFBCBCA</color>
+    <color name="card_action_negative">#FFF64940</color>
+    <color name="card_action_negative_ripple">#CCF64940</color>
+
+    <!-- Positive Actions -->
+    <color name="card_action_positive_focused">#FFE4F0AF</color>
+    <color name="card_action_positive">#FFA0CC00</color>
+    <color name="card_action_positive_ripple">#CCA0CC00</color>
+</resources>

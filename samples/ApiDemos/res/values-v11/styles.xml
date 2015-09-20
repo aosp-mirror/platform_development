@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Copyright (C) 2011 The Android Open Source Project
+<!--
+     Copyright (C) 2011 The Android Open Source Project
 
      Licensed under the Apache License, Version 2.0 (the "License");
      you may not use this file except in compliance with the License.
@@ -15,15 +16,17 @@
 -->
 
 <resources>
-    <!-- For API level 11 or later, the Holo theme is available and we prefer that. -->
-    <style name="ThemeHolo" parent="android:Theme.Holo">
-    </style>
 
     <!-- For API level 11 or later, the Holo theme is available and we prefer that. -->
-    <style name="ThemeHoloDialog" parent="android:Theme.Holo.Dialog">
-    </style>
+    <style name="ThemeCurrent" parent="@android:Theme.Holo" />
+
+    <!-- For API level 11 or later, the Holo theme is available and we prefer that. -->
+    <style name="ThemeCurrentDialog" parent="@android:Theme.Holo.Dialog" />
 
     <!-- For API level 11 or later, we can use the magical DialogWhenLarge theme. -->
-    <style name="ThemeDialogWhenLarge" parent="android:style/Theme.Holo.DialogWhenLarge">
-    </style>
+    <style name="ThemeDialogWhenLarge" parent="@android:style/Theme.Holo.DialogWhenLarge" />
+
+    <!-- For API level 11 or later, the Holo theme is available and we prefer that. -->
+    <style name="ThemeDefault" parent="@android:style/Theme.Holo" />
+
 </resources>

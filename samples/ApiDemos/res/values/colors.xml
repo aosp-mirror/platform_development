@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Copyright (C) 2007 The Android Open Source Project
+<!--
+     Copyright (C) 2007 The Android Open Source Project
 
      Licensed under the Apache License, Version 2.0 (the "License");
      you may not use this file except in compliance with the License.
@@ -15,12 +16,12 @@
 -->
 
 <resources>
+
     <drawable name="red">#7f00</drawable>
     <drawable name="blue">#770000ff</drawable>
     <drawable name="green">#7700ff00</drawable>
-	<drawable name="yellow">#77ffff00</drawable>
-	
-	<drawable name="screen_background_black">#ff000000</drawable>
+    <drawable name="yellow">#77ffff00</drawable>
+    <drawable name="screen_background_black">#ff000000</drawable>
     <drawable name="translucent_background">#e0000000</drawable>
     <drawable name="transparent_background">#00000000</drawable>
 
@@ -28,5 +29,10 @@
     <color name="solid_blue">#0000ff</color>
     <color name="solid_green">#f0f0</color>
     <color name="solid_yellow">#ffffff00</color>
+    <color name="purply">#ff884488</color>
+
+    <!-- A custom theme that is a variation on the light them with a different
+         background color. -->
+    <color name="custom_theme_color">#b0b0ff</color>
 
 </resources>

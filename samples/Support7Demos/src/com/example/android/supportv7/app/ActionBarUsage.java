@@ -20,7 +20,7 @@ import com.example.android.supportv7.R;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.v4.view.MenuItemCompat;
-import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.SearchView;
 import android.text.TextUtils;
 import android.view.Menu;
@@ -35,7 +35,7 @@ import android.widget.Toast;
  * menu data itself. If you'd like to see how these things work under the hood, see
  * ActionBarMechanics.
  */
-public class ActionBarUsage extends ActionBarActivity {
+public class ActionBarUsage extends AppCompatActivity {
     TextView mSearchText;
     int mSortMode = -1;
 
@@ -67,14 +67,19 @@ public class ActionBarUsage extends ActionBarActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_sort_alpha:
+            case R.id.action_sort_size:
+                onSort(item);
+                break;
+        }
+
         Toast.makeText(this, "Selected Item: " + item.getTitle(), Toast.LENGTH_SHORT).show();
+
         return true;
     }
 
-    // This method is specified as an onClick handler in the menu xml and will
-    // take precedence over the Activity's onOptionsItemSelected method.
-    // See res/menu/actions.xml for more info.
-    public void onSort(MenuItem item) {
+    private void onSort(MenuItem item) {
         mSortMode = item.getItemId();
         // Request a call to onPrepareOptionsMenu so we can change the sort icon
         supportInvalidateOptionsMenu();

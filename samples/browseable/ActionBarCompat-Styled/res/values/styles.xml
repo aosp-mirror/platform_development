@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Copyright 2013 The Android Open Source Project
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+
+<resources>
+
+    <!--
+        This is the styled theme.
+
+        It extends from Theme.AppCompat.Light, but it could extend from any of
+        the Theme.AppCompat themes depending on your color scheme. This theme can be applied to
+        your application or individual activities in the AndroidManifest.xml. In this sample it is
+        set on the application.
+
+        This differs from the version of this theme in 'res/values-v14', as not all of the
+        necessary attributes are available in the android: namespace on older versions of Android.
+        This means that for certain attributes we must set the attributes provided in
+        ActionBarCompat's namespace instead.
+    -->
+
+    <style name="Theme.Styled" parent="@style/Theme.AppCompat.Light">
+        <item name="actionBarItemBackground">@drawable/selectable_background</item>
+        <item name="actionBarTabStyle">@style/Widget.Styled.ActionBar.TabView</item>
+        <item name="actionBarStyle">@style/Widget.Styled.ActionBar</item>
+        <item name="actionDropDownStyle">@style/Widget.Styled.Spinner.DropDown.ActionBar</item>
+        <item name="dropDownListViewStyle">@style/Widget.Styled.ListView.DropDown</item>
+        <item name="popupMenuStyle">@style/Widget.Styled.PopupMenu</item>
+    </style>
+
+    <style name="Widget.Styled.ActionBar" parent="@style/Widget.AppCompat.Light.ActionBar.Solid">
+        <item name="background">@drawable/ab_solid_styled</item>
+        <item name="backgroundStacked">@drawable/ab_stacked_solid_styled</item>
+        <item name="backgroundSplit">@drawable/ab_bottom_solid_styled</item>
+        <item name="progressBarStyle">@style/Widget.Styled.ProgressBar.Horizontal</item>
+    </style>
+
+
+    <!--
+        For the following styles, the attributes are available in the android namespace which
+        means that we can set them here for all platforms (v7 through to the latest).
+    -->
+
+    <style name="Widget.Styled.ActionBar.TabView"
+           parent="@style/Widget.AppCompat.Light.ActionBar.TabView">
+        <item name="android:background">@drawable/tab_indicator_ab</item>
+    </style>
+
+    <style name="Widget.Styled.Spinner.DropDown.ActionBar"
+           parent="@style/Widget.AppCompat.Light.Spinner.DropDown.ActionBar">
+        <item name="android:background">@drawable/spinner_background_ab</item>
+        <item name="android:popupBackground">@drawable/menu_dropdown_panel_styled</item>
+        <item name="android:dropDownSelector">@drawable/selectable_background</item>
+    </style>
+
+    <style name="Widget.Styled.ProgressBar.Horizontal"
+           parent="@style/Widget.AppCompat.ProgressBar.Horizontal">
+        <item name="android:progressDrawable">@drawable/progress_horizontal</item>
+    </style>
+
+    <style name="Widget.Styled.PopupMenu" parent="@style/Widget.AppCompat.Light.PopupMenu">
+        <item name="android:popupBackground">@drawable/menu_dropdown_panel_styled</item>
+    </style>
+
+    <style name="Widget.Styled.ListView.DropDown"
+           parent="@style/Widget.AppCompat.Light.ListView.DropDown">
+        <item name="android:listSelector">@drawable/selectable_background</item>
+    </style>
+
+</resources>

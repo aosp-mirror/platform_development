@@ -15,9 +15,6 @@
 -->
 
 <resources>
-    <!-- A custom theme that is a variation on the light them with a different
-         background color. -->
-    <color name="custom_theme_color">#b0b0ff</color>
     <style name="CustomTheme" parent="android:Theme.Light">
         <item name="android:windowBackground">@color/custom_theme_color</item>
         <item name="android:colorBackground">@color/custom_theme_color</item>
@@ -26,24 +23,33 @@
     <!-- This is a theme that will adjust itself depending on the API version.
          The default definition is the safe one, using a theme that has always
          been defined.  Look at values-11/styles.xml for a variation that is
-         selected when the holographic theme is available. -->
-    <style name="ThemeHolo" parent="android:Theme">
-    </style>
+         selected when the holographic theme is available, or look at
+         values-XX/styles.xml for a variation that is selected when the material
+         theme is available. -->
+    <style name="ThemeCurrent" parent="android:Theme" />
+
+    <!-- This is a theme that reflects the default theme used when no theme is
+         specified by an application or activity. In API 14 and above, this
+         refers to the DeviceDefault theme. -->
+    <style name="ThemeDefault" parent="android:Theme" />
 
     <!-- This is a theme that will adjust itself depending on the API version.
          The default definition is the safe one, using a theme that has always
          been defined.  Look at values-11/styles.xml for a variation that is
-         selected when the holographic theme is available. -->
-    <style name="ThemeHoloDialog" parent="android:Theme.Dialog">
-    </style>
+         selected when the holographic theme is available, or look at
+         values-XX/styles.xml for a variation that is selected when the material
+         theme is available. -->
+    <style name="ThemeCurrentDialog" parent="android:Theme.Dialog" />
+
+    <!-- Older platforms don't have Theme.Holo.DialogWhenLarge; we will define
+         our own wrapper theme that uses it only when running on the appropriate
+         platform version.  On older platforms, we always use the generic
+         fullscreen theme, because they don't support some feature that help
+         in correctly laying out an activity as a dialog. -->
+    <style name="ThemeCurrentDialogWhenLarge" parent="android:style/Theme" />
 
     <!-- Base application theme is the default theme. -->
-    <style name="Theme" parent="android:Theme">
-    </style>
-
-    <!-- Base application theme is the default theme. -->
-    <style name="BadTheme" parent="@android:style/Theme.Holo.Light.NoActionBar">
-    </style>
+    <style name="Theme" parent="android:Theme" />
 
     <!-- Variation on our application theme that forces a plain
         text style. -->
@@ -91,14 +97,6 @@
         <item name="android:windowNoTitle">true</item>
         <item name="android:colorForeground">#fff</item>
     </style>
-    
-    <!-- Older platforms don't have Theme.Holo.DialogWhenLarge; we will define
-         our own wrapper theme that uses it only when running on the appropriate
-         platform version.  On older platforms, we always use the generic
-         fullscreen theme, because they don't support some feature that help
-         in correctly laying out an activity as a dialog. -->
-    <style name="ThemeDialogWhenLarge" parent="android:style/Theme">
-    </style>
 
     <style name="TextAppearance.Theme.PlainText" parent="android:TextAppearance.Theme">
         <item name="android:textStyle">normal</item>
@@ -121,4 +119,14 @@
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
     </style>
+
+    <style name="ActivityTransitionTheme" parent="android:Theme.Material">
+	<item name="android:windowEnterTransition">@transition/explode</item>
+	<item name="android:windowExitTransition">@transition/explode</item>
+	<item name="android:windowSharedElementEnterTransition">@transition/move_image</item>
+	<item name="android:windowSharedElementExitTransition">@transition/move_image</item>
+	<item name="android:windowAllowReturnTransitionOverlap">true</item>
+	<item name="android:windowAllowEnterTransitionOverlap">false</item>
+    </style>
+
 </resources>

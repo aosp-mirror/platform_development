@@ -38,27 +38,35 @@ frameworks/base/docs/docs-redirect.html documentation.html
 # Platform Tools Component
 ##############################################################################
 
-sdk/files/sdk_files_NOTICE.txt                platform-tools/NOTICE.txt
+development/sdk/sdk_files_NOTICE.txt          platform-tools/NOTICE.txt
 development/sdk/plat_tools_source.properties  platform-tools/source.properties
 
 # host tools from out/host/$(HOST_OS)-$(HOST_ARCH)/
 bin/adb                                 strip platform-tools/adb
 bin/fastboot                            strip platform-tools/fastboot
+bin/sqlite3                             strip platform-tools/sqlite3
+bin/dmtracedump                         strip platform-tools/dmtracedump
+bin/etc1tool                            strip platform-tools/etc1tool
+bin/hprof-conv                          strip platform-tools/hprof-conv
+
 
 # API database for tools such as lint
-development/sdk/api-versions.xml              platform-tools/api/api-versions.xml
+development/sdk/generated-api-versions.xml    platform-tools/api/api-versions.xml
 
 # systrace
-external/chromium-trace/systrace.py           platform-tools/systrace/systrace.py
-external/chromium-trace/systrace-legacy.py    platform-tools/systrace/systrace-legacy.py
-external/chromium-trace/script.js             platform-tools/systrace/script.js
-external/chromium-trace/style.css             platform-tools/systrace/style.css
-external/chromium-trace/prefix.html           platform-tools/systrace/prefix.html
-external/chromium-trace/suffix.html           platform-tools/systrace/suffix.html
-external/chromium-trace/LICENSE               platform-tools/systrace/LICENSE
-external/chromium-trace/AUTHORS               platform-tools/systrace/AUTHORS
-external/chromium-trace/NOTICE                platform-tools/systrace/NOTICE
-external/chromium-trace/UPSTREAM_REVISION     platform-tools/systrace/UPSTREAM_REVISION
+external/chromium-trace/catapult/systrace/systrace/agents/__init__.py     platform-tools/systrace/agents/__init__.py
+external/chromium-trace/catapult/systrace/systrace/agents/atrace_agent.py platform-tools/systrace/agents/atrace_agent.py
+external/chromium-trace/catapult/systrace/systrace/systrace.py            platform-tools/systrace/systrace.py
+external/chromium-trace/catapult/systrace/systrace/systrace-legacy.py     platform-tools/systrace/systrace-legacy.py
+external/chromium-trace/catapult/systrace/systrace/systrace_agent.py      platform-tools/systrace/systrace_agent.py
+external/chromium-trace/catapult/systrace/systrace/util.py                platform-tools/systrace/util.py
+external/chromium-trace/catapult/systrace/systrace/prefix.html            platform-tools/systrace/prefix.html
+external/chromium-trace/catapult/systrace/systrace/suffix.html            platform-tools/systrace/suffix.html
+external/chromium-trace/catapult/systrace/systrace/LICENSE                platform-tools/systrace/LICENSE
+external/chromium-trace/catapult/systrace/systrace/AUTHORS                platform-tools/systrace/AUTHORS
+external/chromium-trace/systrace_trace_viewer.html                        platform-tools/systrace/systrace_trace_viewer.html
+external/chromium-trace/NOTICE                                            platform-tools/systrace/NOTICE
+external/chromium-trace/UPSTREAM_REVISION                                 platform-tools/systrace/UPSTREAM_REVISION
 
 ##############################################################################
 # Build Tools Component
@@ -67,12 +75,14 @@ external/chromium-trace/UPSTREAM_REVISION     platform-tools/systrace/UPSTREAM_R
 # at build-time. Packaging will later change that to the actual build-tools
 # revision as specified in the source.properties.
 
-sdk/files/sdk_files_NOTICE.txt                 build-tools/${PLATFORM_NAME}/NOTICE.txt
+development/sdk/sdk_files_NOTICE.txt           build-tools/${PLATFORM_NAME}/NOTICE.txt
 development/sdk/build_tools_source.properties  build-tools/${PLATFORM_NAME}/source.properties
+development/sdk/build_tools_runtime.properties build-tools/${PLATFORM_NAME}/runtime.properties
 
 # build tools from out/host/$(HOST_OS)-$(HOST_ARCH)/
 bin/aapt                                strip build-tools/${PLATFORM_NAME}/aapt
 bin/aidl                                strip build-tools/${PLATFORM_NAME}/aidl
+bin/split-select                        strip build-tools/${PLATFORM_NAME}/split-select
 bin/zipalign                            strip build-tools/${PLATFORM_NAME}/zipalign
 
 # renderscript (cc + headers)
@@ -83,25 +93,27 @@ external/clang/lib/Headers                    build-tools/${PLATFORM_NAME}/rende
 external/clang/LICENSE.TXT                    build-tools/${PLATFORM_NAME}/renderscript/clang-include/LICENSE.TXT
 
 prebuilts/sdk/renderscript/lib/javalib.jar            build-tools/${PLATFORM_NAME}/renderscript/lib/renderscript-v8.jar
-prebuilts/sdk/renderscript/lib/arm/libclcore.bc       build-tools/${PLATFORM_NAME}/renderscript/lib/libclcore.bc
 
 prebuilts/sdk/renderscript/lib/arm/libc.so            build-tools/${PLATFORM_NAME}/renderscript/lib/intermediates/armeabi-v7a/libc.so
 prebuilts/sdk/renderscript/lib/arm/libm.so            build-tools/${PLATFORM_NAME}/renderscript/lib/intermediates/armeabi-v7a/libm.so
 prebuilts/sdk/renderscript/lib/arm/libcompiler_rt.a   build-tools/${PLATFORM_NAME}/renderscript/lib/intermediates/armeabi-v7a/libcompiler_rt.a
 prebuilts/sdk/renderscript/lib/arm/libRSSupport.so    build-tools/${PLATFORM_NAME}/renderscript/lib/packaged/armeabi-v7a/libRSSupport.so
 prebuilts/sdk/renderscript/lib/arm/librsjni.so        build-tools/${PLATFORM_NAME}/renderscript/lib/packaged/armeabi-v7a/librsjni.so
+prebuilts/sdk/renderscript/lib/arm/libclcore.bc       build-tools/${PLATFORM_NAME}/renderscript/lib/bc/armeabi-v7a/libclcore.bc
 
 prebuilts/sdk/renderscript/lib/mips/libc.so            build-tools/${PLATFORM_NAME}/renderscript/lib/intermediates/mips/libc.so
 prebuilts/sdk/renderscript/lib/mips/libm.so            build-tools/${PLATFORM_NAME}/renderscript/lib/intermediates/mips/libm.so
 prebuilts/sdk/renderscript/lib/mips/libcompiler_rt.a   build-tools/${PLATFORM_NAME}/renderscript/lib/intermediates/mips/libcompiler_rt.a
 prebuilts/sdk/renderscript/lib/mips/libRSSupport.so    build-tools/${PLATFORM_NAME}/renderscript/lib/packaged/mips/libRSSupport.so
 prebuilts/sdk/renderscript/lib/mips/librsjni.so        build-tools/${PLATFORM_NAME}/renderscript/lib/packaged/mips/librsjni.so
+prebuilts/sdk/renderscript/lib/mips/libclcore.bc       build-tools/${PLATFORM_NAME}/renderscript/lib/bc/mips/libclcore.bc
 
 prebuilts/sdk/renderscript/lib/x86/libc.so            build-tools/${PLATFORM_NAME}/renderscript/lib/intermediates/x86/libc.so
 prebuilts/sdk/renderscript/lib/x86/libm.so            build-tools/${PLATFORM_NAME}/renderscript/lib/intermediates/x86/libm.so
 prebuilts/sdk/renderscript/lib/x86/libcompiler_rt.a   build-tools/${PLATFORM_NAME}/renderscript/lib/intermediates/x86/libcompiler_rt.a
 prebuilts/sdk/renderscript/lib/x86/libRSSupport.so    build-tools/${PLATFORM_NAME}/renderscript/lib/packaged/x86/libRSSupport.so
 prebuilts/sdk/renderscript/lib/x86/librsjni.so        build-tools/${PLATFORM_NAME}/renderscript/lib/packaged/x86/librsjni.so
+prebuilts/sdk/renderscript/lib/x86/libclcore.bc       build-tools/${PLATFORM_NAME}/renderscript/lib/bc/x86/libclcore.bc
 
 
 
@@ -109,6 +121,14 @@ prebuilts/sdk/renderscript/lib/x86/librsjni.so        build-tools/${PLATFORM_NAM
 bin/dx                                        build-tools/${PLATFORM_NAME}/dx
 framework/dx.jar                              build-tools/${PLATFORM_NAME}/lib/dx.jar
 bin/dexdump                                   build-tools/${PLATFORM_NAME}/dexdump
+
+# multi-dex
+prebuilts/sdk/tools/lib/shrinkedAndroid.jar   build-tools/${PLATFORM_NAME}/lib/shrinkedAndroid.jar
+dalvik/dx/etc/mainDexClasses.rules            build-tools/${PLATFORM_NAME}/mainDexClasses.rules
+
+# Jack & Jill
+${HOST_OUT}/framework/jack.jar                build-tools/${PLATFORM_NAME}/jack.jar
+${HOST_OUT}/framework/jill.jar                build-tools/${PLATFORM_NAME}/jill.jar
 
 
 ##############################################################################
@@ -156,23 +176,26 @@ development/tools/templates/ic_launcher_hdpi.png            platforms/${PLATFORM
 development/tools/templates/ic_launcher_xhdpi.png           platforms/${PLATFORM_NAME}/templates/ic_launcher_xhdpi.png
 
 # Eclipse Editors support
-framework/layoutlib.jar       platforms/${PLATFORM_NAME}/data/layoutlib.jar
-framework/icu4j.jar           platforms/${PLATFORM_NAME}/data/icu4j.jar
-frameworks/base/core/res/res  platforms/${PLATFORM_NAME}/data/res
-docs/activity_actions.txt     platforms/${PLATFORM_NAME}/data/activity_actions.txt
-docs/broadcast_actions.txt    platforms/${PLATFORM_NAME}/data/broadcast_actions.txt
-docs/service_actions.txt      platforms/${PLATFORM_NAME}/data/service_actions.txt
-docs/categories.txt           platforms/${PLATFORM_NAME}/data/categories.txt
-docs/widgets.txt              platforms/${PLATFORM_NAME}/data/widgets.txt
-docs/features.txt             platforms/${PLATFORM_NAME}/data/features.txt
+framework/layoutlib.jar                   platforms/${PLATFORM_NAME}/data/layoutlib.jar
+framework/icu4j.jar                       platforms/${PLATFORM_NAME}/data/icu4j.jar
+frameworks/base/core/res/res              platforms/${PLATFORM_NAME}/data/res
+docs/activity_actions.txt                 platforms/${PLATFORM_NAME}/data/activity_actions.txt
+docs/broadcast_actions.txt                platforms/${PLATFORM_NAME}/data/broadcast_actions.txt
+docs/service_actions.txt                  platforms/${PLATFORM_NAME}/data/service_actions.txt
+docs/categories.txt                       platforms/${PLATFORM_NAME}/data/categories.txt
+docs/widgets.txt                          platforms/${PLATFORM_NAME}/data/widgets.txt
+docs/features.txt                         platforms/${PLATFORM_NAME}/data/features.txt
 
 # fonts for layoutlib.
-frameworks/base/data/fonts    platforms/${PLATFORM_NAME}/data/fonts
+${FONT_OUT}                       platforms/${PLATFORM_NAME}/data/fonts
+
+# timezone data for layoutlib
+bionic/libc/zoneinfo/tzdata       platforms/${PLATFORM_NAME}/data/tzdata
 
 # NOTICE files are copied by build/core/Makefile from sdk.git
-sdk/files/sdk_files_NOTICE.txt platforms/${PLATFORM_NAME}/templates/NOTICE.txt
-sdk/files/sdk_files_NOTICE.txt platforms/${PLATFORM_NAME}/data/NOTICE.txt
-sdk/files/sdk_files_NOTICE.txt platforms/${PLATFORM_NAME}/skins/NOTICE.txt
+development/sdk/sdk_files_NOTICE.txt      platforms/${PLATFORM_NAME}/templates/NOTICE.txt
+development/sdk/sdk_files_NOTICE.txt      platforms/${PLATFORM_NAME}/data/NOTICE.txt
+development/sdk/sdk_files_NOTICE.txt      platforms/${PLATFORM_NAME}/skins/NOTICE.txt
 
 
 ##############################################################################
@@ -218,14 +241,107 @@ development/samples/samples_source.properties  samples/${PLATFORM_NAME}/source.p
 # Note: Some samples reference a shared "common" directory. In the future
 # this will be copied in automatically via a templating system. For now,
 # we need to copy it in here as needed.
-developers/samples/android/connectivity        samples/${PLATFORM_NAME}/connectivity
-developers/samples/android/common              samples/${PLATFORM_NAME}/connectivity/sync/BasicSyncAdapter/BasicSyncAdapter/src/main/java/com/example/android/common
-developers/samples/android/content             samples/${PLATFORM_NAME}/content
-developers/samples/android/input               samples/${PLATFORM_NAME}/input
-developers/samples/android/media               samples/${PLATFORM_NAME}/media
-developers/samples/android/security            samples/${PLATFORM_NAME}/security
-developers/samples/android/testing             samples/${PLATFORM_NAME}/testing
-developers/samples/android/ui                  samples/${PLATFORM_NAME}/ui
+developers/build/prebuilts/gradle/BasicAndroidKeyStore/                      samples/${PLATFORM_NAME}/security/BasicAndroidKeyStore
+developers/build/prebuilts/gradle/BasicSyncAdapter/                          samples/${PLATFORM_NAME}/connectivity/BasicSyncAdapter
+developers/build/prebuilts/gradle/NetworkConnect/                            samples/${PLATFORM_NAME}/connectivity/NetworkConnect
+developers/build/prebuilts/gradle/BasicNetworking/                           samples/${PLATFORM_NAME}/connectivity/BasicNetworking
+developers/build/prebuilts/gradle/BluetoothLeGatt/                           samples/${PLATFORM_NAME}/connectivity/BluetoothLeGatt
+developers/build/prebuilts/gradle/AppRestrictions/                           samples/${PLATFORM_NAME}/content/AppRestrictions
+developers/build/prebuilts/gradle/BasicContactables/                         samples/${PLATFORM_NAME}/content/BasicContactables
+developers/build/prebuilts/gradle/StorageClient/                             samples/${PLATFORM_NAME}/content/StorageClient
+developers/build/prebuilts/gradle/StorageProvider/                           samples/${PLATFORM_NAME}/content/StorageProvider
+developers/build/prebuilts/gradle/BasicGestureDetect/                        samples/${PLATFORM_NAME}/input/BasicGestureDetect
+developers/build/prebuilts/gradle/BasicMultitouch/                           samples/${PLATFORM_NAME}/input/BasicMultitouch
+developers/build/prebuilts/gradle/ActivityInstrumentation/                   samples/${PLATFORM_NAME}/testing/ActivityInstrumentation
+developers/build/prebuilts/gradle/MediaRecorder/                             samples/${PLATFORM_NAME}/media/MediaRecorder
+developers/build/prebuilts/gradle/BasicMediaRouter/                          samples/${PLATFORM_NAME}/media/BasicMediaRouter
+developers/build/prebuilts/gradle/BasicMediaDecoder/                         samples/${PLATFORM_NAME}/media/BasicMediaDecoder
+developers/build/prebuilts/gradle/MediaBrowserService/                       samples/${PLATFORM_NAME}/media/MediaBrowserService
+developers/build/prebuilts/gradle/BasicNotifications/                        samples/${PLATFORM_NAME}/notification/BasicNotifications
+developers/build/prebuilts/gradle/CustomNotifications/                       samples/${PLATFORM_NAME}/notification/CustomNotifications
+developers/build/prebuilts/gradle/LNotifications/                            samples/${PLATFORM_NAME}/notification/LNotifications
+developers/build/prebuilts/gradle/MessagingService/                          samples/${PLATFORM_NAME}/notification/MessagingService
+developers/build/prebuilts/gradle/BorderlessButtons/                         samples/${PLATFORM_NAME}/ui/BorderlessButtons
+developers/build/prebuilts/gradle/BasicAccessibility/                        samples/${PLATFORM_NAME}/ui/BasicAccessibility
+developers/build/prebuilts/gradle/CustomChoiceList/                          samples/${PLATFORM_NAME}/ui/CustomChoiceList
+developers/build/prebuilts/gradle/TextSwitcher/                              samples/${PLATFORM_NAME}/ui/TextSwitcher
+developers/build/prebuilts/gradle/HorizontalPaging/                          samples/${PLATFORM_NAME}/ui/HorizontalPaging
+developers/build/prebuilts/gradle/ActionBarCompat-Styled/                    samples/${PLATFORM_NAME}/ui/ActionBarCompat-Styled
+developers/build/prebuilts/gradle/ActionBarCompat-ListPopupMenu/             samples/${PLATFORM_NAME}/ui/ActionBarCompat-ListPopupMenu
+developers/build/prebuilts/gradle/ActionBarCompat-ShareActionProvider/       samples/${PLATFORM_NAME}/ui/ActionBarCompat-ShareActionProvider
+developers/build/prebuilts/gradle/ActionBarCompat-Basic/                     samples/${PLATFORM_NAME}/ui/ActionBarCompat-Basic
+developers/build/prebuilts/gradle/DoneBar/                                   samples/${PLATFORM_NAME}/ui/DoneBar
+developers/build/prebuilts/gradle/BasicImmersiveMode/                        samples/${PLATFORM_NAME}/ui/BasicImmersiveMode
+developers/build/prebuilts/gradle/AdvancedImmersiveMode/                     samples/${PLATFORM_NAME}/ui/AdvancedImmersiveMode
+developers/build/prebuilts/gradle/ImmersiveMode/                             samples/${PLATFORM_NAME}/ui/ImmersiveMode
+developers/build/prebuilts/gradle/RepeatingAlarm/                            samples/${PLATFORM_NAME}/background/RepeatingAlarm
+developers/build/prebuilts/gradle/TextLinkify/                               samples/${PLATFORM_NAME}/ui/TextLinkify
+developers/build/prebuilts/gradle/BasicRenderScript                          samples/${PLATFORM_NAME}/renderscript/BasicRenderScript
+developers/build/prebuilts/gradle/RenderScriptIntrinsic                      samples/${PLATFORM_NAME}/renderscript/RenderScriptIntrinsic
+developers/build/prebuilts/gradle/SlidingTabsBasic                           samples/${PLATFORM_NAME}/ui/SlidingTabsBasic
+developers/build/prebuilts/gradle/SlidingTabsColors                          samples/${PLATFORM_NAME}/ui/SlidingTabsColors
+developers/build/prebuilts/gradle/CardEmulation                              samples/${PLATFORM_NAME}/connectivity/CardEmulation
+developers/build/prebuilts/gradle/CardReader                                 samples/${PLATFORM_NAME}/connectivity/CardReader
+developers/build/prebuilts/gradle/BatchStepSensor                            samples/${PLATFORM_NAME}/sensors/BatchStepSensor
+developers/build/prebuilts/gradle/DisplayingBitmaps                          samples/${PLATFORM_NAME}/ui/DisplayingBitmaps
+developers/build/prebuilts/gradle/BasicTransition                            samples/${PLATFORM_NAME}/ui/BasicTransition
+developers/build/prebuilts/gradle/AdapterTransition                          samples/${PLATFORM_NAME}/ui/AdapterTransition
+developers/build/prebuilts/gradle/CustomTransition                           samples/${PLATFORM_NAME}/ui/CustomTransition
+developers/build/prebuilts/gradle/FragmentTransition                         samples/${PLATFORM_NAME}/ui/FragmentTransition
+developers/build/prebuilts/gradle/SwipeRefreshLayoutBasic                    samples/${PLATFORM_NAME}/ui/SwipeRefreshLayoutBasic
+developers/build/prebuilts/gradle/SwipeRefreshListFragment                   samples/${PLATFORM_NAME}/ui/SwipeRefreshListFragment
+developers/build/prebuilts/gradle/SwipeRefreshMultipleViews                  samples/${PLATFORM_NAME}/ui/SwipeRefreshMultipleViews
+developers/build/prebuilts/gradle/MediaRouter                                samples/${PLATFORM_NAME}/media/MediaRouter
+developers/build/prebuilts/gradle/BluetoothChat                              samples/${PLATFORM_NAME}/connectivity/bluetooth/BluetoothChat
+developers/build/prebuilts/gradle/MediaEffects                               samples/${PLATFORM_NAME}/media/MediaEffects
+developers/build/prebuilts/gradle/BasicManagedProfile                        samples/${PLATFORM_NAME}/admin/BasicManagedProfile
+developers/build/prebuilts/gradle/Camera2Basic                               samples/${PLATFORM_NAME}/media/Camera2Basic
+developers/build/prebuilts/gradle/Camera2Video                               samples/${PLATFORM_NAME}/media/Camera2Video
+developers/build/prebuilts/gradle/ActivitySceneTransitionBasic               samples/${PLATFORM_NAME}/ui/activityscenetransition/ActivitySceneTransitionBasic
+developers/build/prebuilts/gradle/NavigationDrawer                           samples/${PLATFORM_NAME}/ui/views/NavigationDrawer
+developers/build/prebuilts/gradle/ElevationBasic                             samples/${PLATFORM_NAME}/ui/views/Elevation/ElevationBasic
+developers/build/prebuilts/gradle/ElevationDrag                              samples/${PLATFORM_NAME}/ui/views/Elevation/ElevationDrag
+developers/build/prebuilts/gradle/ClippingBasic                              samples/${PLATFORM_NAME}/ui/views/Clipping/ClippingBasic
+developers/build/prebuilts/gradle/JobScheduler                               samples/${PLATFORM_NAME}/background/JobScheduler
+developers/build/prebuilts/gradle/HdrViewfinder                              samples/${PLATFORM_NAME}/media/HdrViewfinder
+developers/build/prebuilts/gradle/DocumentCentricApps                        samples/${PLATFORM_NAME}/ui/activitytasks/DocumentCentricApps
+developers/build/prebuilts/gradle/DocumentCentricRelinquishIdentity          samples/${PLATFORM_NAME}/ui/activitytasks/DocumentCentricRelinquishIdentity
+developers/build/prebuilts/gradle/AppRestrictionEnforcer                     samples/${PLATFORM_NAME}/admin/AppRestrictionEnforcer
+developers/build/prebuilts/gradle/AppRestrictionSchema                       samples/${PLATFORM_NAME}/admin/AppRestrictionSchema
+developers/build/prebuilts/gradle/RecyclerView                               samples/${PLATFORM_NAME}/ui/views/RecyclerView
+developers/build/prebuilts/gradle/CardView                                   samples/${PLATFORM_NAME}/ui/views/CardView
+developers/build/prebuilts/gradle/DrawableTinting                            samples/${PLATFORM_NAME}/ui/DrawableTinting
+developers/build/prebuilts/gradle/Interpolator                               samples/${PLATFORM_NAME}/ui/Interpolator
+developers/build/prebuilts/gradle/PdfRendererBasic                           samples/${PLATFORM_NAME}/ui/graphics/PdfRendererBasic
+developers/build/prebuilts/gradle/FloatingActionButtonBasic                  samples/${PLATFORM_NAME}/ui/views/FloatingActionButton/FloatingActionButtonBasic
+developers/build/prebuilts/gradle/RevealEffectBasic                          samples/${PLATFORM_NAME}/ui/views/RevealEffect/RevealEffectBasic
+developers/build/prebuilts/gradle/PermissionRequest                          samples/${PLATFORM_NAME}/content/webview/PermissionRequest
+developers/build/prebuilts/gradle/DirectorySelection                         samples/${PLATFORM_NAME}/content/documentsUi/DirectorySelection
+developers/build/prebuilts/gradle/AppUsageStatistics                         samples/${PLATFORM_NAME}/system/AppUsageStatistics
+developers/build/prebuilts/gradle/ScreenCapture                              samples/${PLATFORM_NAME}/media/ScreenCapture
+
+developers/build/prebuilts/androidtv                                         samples/${PLATFORM_NAME}/androidtv
+
+# Wearable sample tree
+developers/build/prebuilts/gradle/AgendaData                    samples/${PLATFORM_NAME}/wearable/AgendaData
+developers/build/prebuilts/gradle/DataLayer                     samples/${PLATFORM_NAME}/wearable/DataLayer
+developers/build/prebuilts/gradle/DelayedConfirmation           samples/${PLATFORM_NAME}/wearable/DelayedConfirmation
+developers/build/prebuilts/gradle/ElizaChat                     samples/${PLATFORM_NAME}/wearable/ElizaChat
+developers/build/prebuilts/gradle/EmbeddedApp                   samples/${PLATFORM_NAME}/wearable/EmbeddedApp
+developers/build/prebuilts/gradle/FindMyPhone                   samples/${PLATFORM_NAME}/wearable/FindMyPhone
+developers/build/prebuilts/gradle/Flashlight                    samples/${PLATFORM_NAME}/wearable/Flashlight
+developers/build/prebuilts/gradle/Geofencing                    samples/${PLATFORM_NAME}/wearable/Geofencing
+developers/build/prebuilts/gradle/GridViewPager                 samples/${PLATFORM_NAME}/wearable/GridViewPager
+developers/build/prebuilts/gradle/JumpingJack                   samples/${PLATFORM_NAME}/wearable/JumpingJack
+developers/build/prebuilts/gradle/Notifications                 samples/${PLATFORM_NAME}/wearable/Notifications
+developers/build/prebuilts/gradle/Quiz                          samples/${PLATFORM_NAME}/wearable/Quiz
+developers/build/prebuilts/gradle/RecipeAssistant               samples/${PLATFORM_NAME}/wearable/RecipeAssistant
+developers/build/prebuilts/gradle/SkeletonWearableApp           samples/${PLATFORM_NAME}/wearable/SkeletonWearableApp
+developers/build/prebuilts/gradle/SpeedTracker                  samples/${PLATFORM_NAME}/wearable/SpeedTracker
+developers/build/prebuilts/gradle/SynchronizedNotifications     samples/${PLATFORM_NAME}/wearable/SynchronizedNotifications
+developers/build/prebuilts/gradle/Timer                         samples/${PLATFORM_NAME}/wearable/Timer
+developers/build/prebuilts/gradle/WatchFace                     samples/${PLATFORM_NAME}/wearable/WatchFace
+developers/build/prebuilts/gradle/WatchViewStub                 samples/${PLATFORM_NAME}/wearable/WatchViewStub
 
 # Old sample tree
 development/samples/AccelerometerPlay          samples/${PLATFORM_NAME}/legacy/AccelerometerPlay
@@ -235,7 +351,6 @@ development/samples/ApiDemos                   samples/${PLATFORM_NAME}/legacy/A
 development/samples/AppNavigation              samples/${PLATFORM_NAME}/legacy/AppNavigation
 development/samples/BackupRestore              samples/${PLATFORM_NAME}/legacy/BackupRestore
 development/samples/BasicGLSurfaceView         samples/${PLATFORM_NAME}/legacy/BasicGLSurfaceView
-development/samples/BluetoothChat              samples/${PLATFORM_NAME}/legacy/BluetoothChat
 development/samples/BluetoothHDP               samples/${PLATFORM_NAME}/legacy/BluetoothHDP
 development/samples/ContactManager             samples/${PLATFORM_NAME}/legacy/ContactManager
 development/samples/CrossCompatibility         samples/${PLATFORM_NAME}/legacy/CrossCompatibility
@@ -278,7 +393,7 @@ development/samples/XmlAdapters                samples/${PLATFORM_NAME}/legacy/X
 development/samples/RenderScript/HelloCompute  samples/${PLATFORM_NAME}/legacy/RenderScript/HelloCompute
 
 # NOTICE files are copied by build/core/Makefile from sdk.git
-sdk/files/sdk_files_NOTICE.txt                 samples/${PLATFORM_NAME}/NOTICE.txt
+development/sdk/sdk_files_NOTICE.txt           samples/${PLATFORM_NAME}/NOTICE.txt
 
 ##############################################################################
 # Add-on Folder
@@ -294,7 +409,9 @@ sdk/files/README_add-ons.txt add-ons/README.txt
 
 development/sdk/support_source.properties                                                         extras/android/support/source.properties
 development/sdk/support_README.txt                                                                extras/android/support/README.txt
-sdk/files/sdk_files_NOTICE.txt                                                                    extras/android/support/NOTICE.txt
+development/sdk/sdk_files_NOTICE.txt                                                              extras/android/support/NOTICE.txt
+
+${OUT_DIR}/target/common/obj/PACKAGING/android-support-annotations_intermediates/android-support-annotations.jar extras/android/support/annotations/android-support-annotations.jar
 
 ${OUT_DIR}/target/common/obj/PACKAGING/android-support-v4_intermediates/android-support-v4.jar    extras/android/support/v4/android-support-v4.jar
 frameworks/support/v4                                                                             extras/android/support/v4/src
@@ -324,6 +441,25 @@ frameworks/support/v7/appcompat/src/.readme                                     
 ${OUT_DIR}/target/common/obj/PACKAGING/android-support-v7-appcompat_intermediates/android-support-v7-appcompat.jar    extras/android/support/v7/appcompat/libs/android-support-v7-appcompat.jar
 ${OUT_DIR}/target/common/obj/PACKAGING/android-support-v4_intermediates/android-support-v4.jar                        extras/android/support/v7/appcompat/libs/android-support-v4.jar
 
+frameworks/multidex/library/README.txt                                                            extras/android/support/multidex/library/README.txt
+frameworks/multidex/library/.project                                                              extras/android/support/multidex/library/.project
+frameworks/multidex/library/.classpath                                                            extras/android/support/multidex/library/.classpath
+frameworks/multidex/library/AndroidManifest.xml                                                   extras/android/support/multidex/library/AndroidManifest.xml
+frameworks/multidex/library/project.properties                                                    extras/android/support/multidex/library/project.properties
+frameworks/multidex/library/src/.readme                                                           extras/android/support/multidex/library/src/.readme
+frameworks/multidex/library/res/.readme                                                           extras/android/support/multidex/library/res/.readme
+${OUT_DIR}/target/common/obj/PACKAGING/android-support-multidex_intermediates/android-support-multidex.jar              extras/android/support/multidex/library/libs/android-support-multidex.jar
+
+frameworks/multidex/instrumentation/README.txt                                                         extras/android/support/multidex/instrumentation/README.txt
+frameworks/multidex/instrumentation/.project                                                           extras/android/support/multidex/instrumentation/.project
+frameworks/multidex/instrumentation/.classpath                                                         extras/android/support/multidex/instrumentation/.classpath
+frameworks/multidex/instrumentation/AndroidManifest.xml                                                extras/android/support/multidex/instrumentation/AndroidManifest.xml
+frameworks/multidex/instrumentation/project.properties                                                 extras/android/support/multidex/instrumentation/project.properties
+frameworks/multidex/instrumentation/src/.readme                                                        extras/android/support/multidex/instrumentation/src/.readme
+frameworks/multidex/instrumentation/res/.readme                                                        extras/android/support/multidex/instrumentation/res/.readme
+${OUT_DIR}/target/common/obj/PACKAGING/android-support-multidex-instrumentation_intermediates/android-support-multidex-instrumentation.jar      extras/android/support/multidex/instrumentation/libs/android-support-multidex-instrumentation.jar
+${OUT_DIR}/target/common/obj/PACKAGING/android-support-multidex_intermediates/android-support-multidex.jar                                      extras/android/support/multidex/instrumentation/libs/android-support-multidex.jar
+
 frameworks/support/v7/mediarouter/README.txt                                                       extras/android/support/v7/mediarouter/README.txt
 frameworks/support/v7/mediarouter/.project                                                         extras/android/support/v7/mediarouter/.project
 frameworks/support/v7/mediarouter/.classpath                                                       extras/android/support/v7/mediarouter/.classpath
@@ -335,9 +471,41 @@ ${OUT_DIR}/target/common/obj/PACKAGING/android-support-v7-mediarouter_intermedia
 
 development/samples/Support7Demos                                                                 extras/android/support/samples/Support7Demos
 
+frameworks/support/v7/palette/README.txt                                                          extras/android/support/v7/palette/README.txt
+frameworks/support/v7/palette/.project                                                            extras/android/support/v7/palette/.project
+frameworks/support/v7/palette/.classpath                                                          extras/android/support/v7/palette/.classpath
+frameworks/support/v7/palette/AndroidManifest.xml                                                 extras/android/support/v7/palette/AndroidManifest.xml
+frameworks/support/v7/palette/project.properties                                                  extras/android/support/v7/palette/project.properties
+${OUT_DIR}/target/common/obj/PACKAGING/android-support-v7-palette_intermediates/android-support-v7-palette.jar    extras/android/support/v7/palette/libs/android-support-v7-palette.jar
+
+frameworks/support/v7/cardview/AndroidManifest.xml                                              extras/android/support/v7/cardview/AndroidManifest.xml
+frameworks/support/v7/cardview/res                                                              extras/android/support/v7/cardview/res
+frameworks/support/v7/cardview/src/.readme                                                      extras/android/support/v7/cardview/src/.readme
+${OUT_DIR}/target/common/obj/PACKAGING/android-support-v7-cardview_intermediates/android-support-v7-cardview.jar    extras/android/support/v7/cardview/libs/android-support-v7-cardview.jar
+
+
+# TODO: add .project, .classpath, etc.
+frameworks/support/v7/recyclerview/README.txt                                                     extras/android/support/v7/recyclerview/README.txt
+frameworks/support/v7/recyclerview/AndroidManifest.xml                                            extras/android/support/v7/recyclerview/AndroidManifest.xml
+${OUT_DIR}/target/common/obj/PACKAGING/android-support-v7-recyclerview_intermediates/android-support-v7-recyclerview.jar    extras/android/support/v7/recyclerview/libs/android-support-v7-recyclerview.jar
+
+frameworks/support/v17/leanback/README.txt                                                        extras/android/support/v17/leanback/README.txt
+frameworks/support/v17/leanback/.project                                                          extras/android/support/v17/leanback/.project
+frameworks/support/v17/leanback/.classpath                                                        extras/android/support/v17/leanback/.classpath
+frameworks/support/v17/leanback/AndroidManifest.xml                                               extras/android/support/v17/leanback/AndroidManifest.xml
+frameworks/support/v17/leanback/project.properties                                                extras/android/support/v17/leanback/project.properties
+frameworks/support/v17/leanback/res                                                               extras/android/support/v17/leanback/res
+frameworks/support/v17/leanback/src/.readme                                                       extras/android/support/v17/leanback/src/.readme
+${OUT_DIR}/target/common/obj/PACKAGING/android-support-v17-leanback_intermediates/android-support-v17-leanback.jar    extras/android/support/v17/leanback/libs/android-support-v17-leanback.jar
+
+frameworks/support/design/AndroidManifest.xml                                                     extras/android/support/design/AndroidManifest.xml
+frameworks/support/design/res                                                                     extras/android/support/design/res
+frameworks/support/design/src/.readme                                                             extras/android/support/design/src/.readme
+${OUT_DIR}/target/common/obj/PACKAGING/android-support-design_intermediates/android-support-design.jar    extras/android/support/design/libs/android-support-design.jar
+
 ##############################################################################
 # Tests Component
 ##############################################################################
 framework/layoutlib-tests.jar tests/libtests/layoutlib-tests.jar
-system/app/EmulatorSmokeTests.apk tests/emulator-test-apps/EmulatorSmokeTests.apk
+system/app/EmulatorSmokeTests/EmulatorSmokeTests.apk tests/emulator-test-apps/EmulatorSmokeTests.apk
 

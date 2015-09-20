@@ -12,3 +12,6 @@ unique paths to allocate heap chunks:
 
 Each allocation can be freed by clicking the corresponding free button in the
 UI.
+
+NOTE 09/16/2013
+A new feature is added to force a double free. Both debug libc and Valgrind can capture it.

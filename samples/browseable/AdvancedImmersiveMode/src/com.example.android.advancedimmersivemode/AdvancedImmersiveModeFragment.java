@@ -17,9 +17,10 @@ package com.example.android.advancedimmersivemode;
 
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.view.MenuItem;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.CheckBox;
 
 import com.example.android.common.logger.Log;
@@ -46,49 +47,136 @@ public class AdvancedImmersiveModeFragment extends Fragment {
     }
 
     @Override
-    public void onActivityCreated(Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle state) {
+        final View flagsView = inflater.inflate(R.layout.fragment_flags, container, false);
+        mLowProfileCheckBox = (CheckBox) flagsView.findViewById(R.id.flag_enable_lowprof);
+        mHideNavCheckbox = (CheckBox) flagsView.findViewById(R.id.flag_hide_navbar);
+        mHideStatusBarCheckBox = (CheckBox) flagsView.findViewById(R.id.flag_hide_statbar);
+        mImmersiveModeCheckBox = (CheckBox) flagsView.findViewById(R.id.flag_enable_immersive);
+        mImmersiveModeStickyCheckBox =
+                (CheckBox) flagsView.findViewById(R.id.flag_enable_immersive_sticky);
 
-        final View decorView = getActivity().getWindow().getDecorView();
-        ViewGroup parentView = (ViewGroup) getActivity().getWindow().getDecorView()
-                .findViewById(R.id.sample_main_layout);
+        Button toggleFlagsButton = (Button) flagsView.findViewById(R.id.btn_changeFlags);
+        toggleFlagsButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                toggleUiFlags();
+            }
+        });
 
-        mLowProfileCheckBox = new CheckBox(getActivity());
-        mLowProfileCheckBox.setText("Enable Low Profile mode.");
-        parentView.addView(mLowProfileCheckBox);
+        Button presetsImmersiveModeButton = (Button) flagsView.findViewById(R.id.btn_immersive);
+        presetsImmersiveModeButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
 
-        mHideNavCheckbox = new CheckBox(getActivity());
-        mHideNavCheckbox.setChecked(true);
-        mHideNavCheckbox.setText("Hide Navigation bar");
-        parentView.addView(mHideNavCheckbox);
+                // BEGIN_INCLUDE(immersive_presets)
+                // For immersive mode, the FULLSCREEN, HIDE_HAVIGATION and IMMERSIVE
+                // flags should be set (you can use IMMERSIVE_STICKY instead of IMMERSIVE
+                // as appropriate for your app).  The LOW_PROFILE flag should be cleared.
 
-        mHideStatusBarCheckBox = new CheckBox(getActivity());
-        mHideStatusBarCheckBox.setChecked(true);
-        mHideStatusBarCheckBox.setText("Hide Status Bar");
-        parentView.addView(mHideStatusBarCheckBox);
+                // Immersive mode is primarily for situations where the user will be
+                // interacting with the screen, like games or reading books.
+                int uiOptions = flagsView.getSystemUiVisibility();
+                uiOptions &= ~View.SYSTEM_UI_FLAG_LOW_PROFILE;
+                uiOptions |= View.SYSTEM_UI_FLAG_FULLSCREEN;
+                uiOptions |= View.SYSTEM_UI_FLAG_HIDE_NAVIGATION;
+                uiOptions |= View.SYSTEM_UI_FLAG_IMMERSIVE;
+                uiOptions &= ~View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
+                flagsView.setSystemUiVisibility(uiOptions);
+                // END_INCLUDE(immersive_presets)
 
-        mImmersiveModeCheckBox = new CheckBox(getActivity());
-        mImmersiveModeCheckBox.setText("Enable Immersive Mode.");
-        parentView.addView(mImmersiveModeCheckBox);
+                dumpFlagStateToLog(uiOptions);
 
-        mImmersiveModeStickyCheckBox = new CheckBox(getActivity());
-        mImmersiveModeStickyCheckBox.setText("Enable Immersive Mode (Sticky)");
-        parentView.addView(mImmersiveModeStickyCheckBox);
+                // The below code just updates the checkboxes to reflect which flags have been set.
+                mLowProfileCheckBox.setChecked(false);
+                mHideNavCheckbox.setChecked(true);
+                mHideStatusBarCheckBox.setChecked(true);
+                mImmersiveModeCheckBox.setChecked(true);
+                mImmersiveModeStickyCheckBox.setChecked(false);
+            }
+        });
 
+
+        Button presetsLeanbackModeButton = (Button) flagsView.findViewById(R.id.btn_leanback);
+        presetsLeanbackModeButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                // BEGIN_INCLUDE(leanback_presets)
+                // For leanback mode, only the HIDE_NAVE and HIDE_STATUSBAR flags
+                // should be checked.  In this case IMMERSIVE should *not* be set,
+                // since this mode is left as soon as the user touches the screen.
+                int uiOptions = flagsView.getSystemUiVisibility();
+                uiOptions &= ~View.SYSTEM_UI_FLAG_LOW_PROFILE;
+                uiOptions |= View.SYSTEM_UI_FLAG_FULLSCREEN;
+                uiOptions |= View.SYSTEM_UI_FLAG_HIDE_NAVIGATION;
+                uiOptions &= ~View.SYSTEM_UI_FLAG_IMMERSIVE;
+                uiOptions &= ~View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
+                flagsView.setSystemUiVisibility(uiOptions);
+                // END_INCLUDE(leanback_presets)
+
+                dumpFlagStateToLog(uiOptions);
+
+                // The below code just updates the checkboxes to reflect which flags have been set.
+                mLowProfileCheckBox.setChecked(false);
+                mHideNavCheckbox.setChecked(true);
+                mHideStatusBarCheckBox.setChecked(true);
+                mImmersiveModeCheckBox.setChecked(false);
+                mImmersiveModeStickyCheckBox.setChecked(false);
+            }
+        });
+
+        // Setting these flags makes the content appear under the navigation
+        // bars, so that showing/hiding the nav bars doesn't resize the content
+        // window, which can be jarring.
+        int uiOptions = flagsView.getSystemUiVisibility();
+        uiOptions |= View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION;
+        uiOptions |= View.SYSTEM_UI_FLAG_LAYOUT_STABLE;
+        uiOptions |= View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN;
+        flagsView.setSystemUiVisibility(uiOptions);
+
+        return flagsView;
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == R.id.sample_action) {
-            toggleImmersiveMode();
+    /**
+     * Helper method to dump flag state to the log.
+     * @param uiFlags Set of UI flags to inspect
+     */
+    public void dumpFlagStateToLog(int uiFlags) {
+        if ((uiFlags & View.SYSTEM_UI_FLAG_LOW_PROFILE) != 0) {
+            Log.i(TAG, "SYSTEM_UI_FLAG_LOW_PROFILE is set");
+        } else {
+            Log.i(TAG, "SYSTEM_UI_FLAG_LOW_PROFILE is unset");
         }
-        return true;
+
+        if ((uiFlags & View.SYSTEM_UI_FLAG_FULLSCREEN) != 0) {
+            Log.i(TAG, "SYSTEM_UI_FLAG_FULLSCREEN is set");
+        } else {
+            Log.i(TAG, "SYSTEM_UI_FLAG_FULLSCREEN is unset");
+        }
+
+        if ((uiFlags & View.SYSTEM_UI_FLAG_HIDE_NAVIGATION) != 0) {
+            Log.i(TAG, "SYSTEM_UI_FLAG_HIDE_NAVIGATION is set");
+        } else {
+            Log.i(TAG, "SYSTEM_UI_FLAG_HIDE_NAVIGATION is unset");
+        }
+
+        if ((uiFlags & View.SYSTEM_UI_FLAG_IMMERSIVE) != 0) {
+            Log.i(TAG, "SYSTEM_UI_FLAG_IMMERSIVE is set");
+        } else {
+            Log.i(TAG, "SYSTEM_UI_FLAG_IMMERSIVE is unset");
+        }
+
+        if ((uiFlags & View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY) != 0) {
+            Log.i(TAG, "SYSTEM_UI_FLAG_IMMERSIVE_STICKY is set");
+        } else {
+            Log.i(TAG, "SYSTEM_UI_FLAG_IMMERSIVE_STICKY is unset");
+        }
     }
 
     /**
      * Detects and toggles immersive mode (also known as "hidey bar" mode).
      */
-    public void toggleImmersiveMode() {
+    public void toggleUiFlags() {
 
         // BEGIN_INCLUDE (get_current_ui_flags)
         // The "Decor View" is the parent view of the Activity.  It's also conveniently the easiest
@@ -168,7 +256,8 @@ public class AdvancedImmersiveModeFragment extends Fragment {
         // BEGIN_INCLUDE (set_ui_flags)
         //Set the new UI flags.
         decorView.setSystemUiVisibility(newUiOptions);
-        Log.i(TAG, "Current height: " + decorView.getHeight() + ", width: " + decorView.getWidth());
         // END_INCLUDE (set_ui_flags)
+
+        dumpFlagStateToLog(uiOptions);
     }
 }

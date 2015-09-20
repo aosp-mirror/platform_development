@@ -1,0 +1,14 @@
+page.tags="CardReader"
+sample.group=Connectivity
+@jd:body
+
+<p>
+            
+            This sample demonstrates how to implement a low-level NFC card reader, for reading cards
+            that do not contain NDEF or Android Beam data. This sample is designed to read the virtual
+            loyalty card implemented in the "CardEmulation" sample.\n\n
+
+            In particular, this sample demonstrates how to disable Android Beam, select which AIDs the
+            reader is interested, and establish communication with the card
+            
+        </p>

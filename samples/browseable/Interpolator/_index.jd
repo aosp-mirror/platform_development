@@ -1,0 +1,11 @@
+page.tags="Interpolator"
+sample.group=UI
+@jd:body
+
+<p>
+            
+            This sample demonstrates the use of animation interpolators and path animations for
+            Material Design. It shows how an ObjectAnimator is used to animate two properties of a
+            view (scale X and Y) along a path.
+            
+        </p>

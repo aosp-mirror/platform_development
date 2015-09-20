@@ -23,6 +23,7 @@ import com.google.common.collect.Sets;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FilenameFilter;
+import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.HashSet;
 import java.util.logging.Level;
@@ -37,7 +38,8 @@ public class DirectorySearch {
 
     private static final Logger logger = Logger.getLogger(DirectorySearch.class.getName());
 
-    private static final HashSet<String> SOURCE_DIRS = Sets.newHashSet();
+    public static final HashSet<String> SOURCE_DIRS = Sets.newHashSet();
+
     static {
         SOURCE_DIRS.add("src");
         SOURCE_DIRS.add("java");
@@ -51,37 +53,71 @@ public class DirectorySearch {
             + REL_TEMPLATE_DIR;
 
     /**
+     * Returns the previously initialized repo root.
+     */
+    public static File getRepoRoot() {
+        Preconditions.checkNotNull(repoRoot, "repoRoot has not been initialized yet.  Call "
+                + "findAndInitRepoRoot() first.");
+        return repoRoot;
+    }
+
+    /**
      * Find the repo root.  This is the root branch directory of a full repo checkout.
      *
      * @param file any file inside the root.
      * @return the root directory.
      */
-    public static File findRepoRoot(File file) {
+    public static void findAndInitRepoRoot(File file) {
         Preconditions.checkNotNull(file);
         if (repoRoot != null) {
-            return repoRoot;
+            return;
         }
 
         if (file.isDirectory()) {
             File[] files = file.listFiles(new FilenameFilter() {
                 @Override
                 public boolean accept(File dir, String name) {
-                   if (".repo".equals(name)) {
-                       return true;
-                   }
-                   return false;
+                    return ".repo".equals(name);
                 }
             });
             if (files.length > 0) {
                 repoRoot = file;
-                return file;
             }
         }
         File parent = file.getParentFile();
         if (parent == null) {
-            return null;
+            throw new IllegalStateException("Repo root not found from starting point " +
+                    file.getPath());
         }
-        return findRepoRoot(parent);
+        findAndInitRepoRoot(parent);
+    }
+
+    /**
+     * Searches up the parent chain to find the closes module root directory. A module root is one
+     * with an Android.mk file in it. <p> For example, the module root for directory
+     * <code>package/apps/Contacts/src</code> is <code>packages/apps/Contacts</code>
+     *
+     * @return the module root.
+     * @throws IOException when module root is not found.
+     */
+    public static File findModuleRoot(File path) throws IOException {
+        Preconditions.checkNotNull(path);
+        File dir;
+        if (path.isFile()) {
+            dir = path.getParentFile();
+        } else {
+            dir = path;
+        }
+        while (dir != null) {
+            File makeFile = new File(dir, "Android.mk");
+            if (makeFile.exists()) {
+                return dir;
+            } else {
+                dir = dir.getParentFile();
+            }
+        }
+        // At this point, there are no parents and we have not found a module. Error.
+        throw new IOException("Module root not found for path " + path.getCanonicalPath());
     }
 
     /**
@@ -105,10 +141,19 @@ public class DirectorySearch {
         File[] children = file.listFiles();
         for (File child : children) {
             if (child.isDirectory()) {
-                if (SOURCE_DIRS.contains(child.getName())) {
-                    builder.add(child);
+                // Recurse further down the tree first to cover case of:
+                //
+                // src/java
+                //   or
+                // java/src
+                //
+                // In either of these cases, we don't want the parent.
+                ImmutableList<File> dirs = findSourceDirs(child);
+                if (dirs.isEmpty()) {
+                    if (SOURCE_DIRS.contains(child.getName())) {
+                        builder.add(child);
+                    }
                 } else {
-                    ImmutableList<File> dirs = findSourceDirs(child);
                     builder.addAll(dirs);
                 }
             }
@@ -151,20 +196,28 @@ public class DirectorySearch {
     private static File templateDirCurrent = null;
     private static File templateDirRoot = null;
 
-    public static File findTemplateDir() throws FileNotFoundException {
+    public static File findTemplateDir() throws IOException {
         // Cache optimization.
-        if (templateDirCurrent != null && templateDirCurrent.exists()) return templateDirCurrent;
-        if (templateDirRoot != null && templateDirRoot.exists()) return templateDirRoot;
+        if (templateDirCurrent != null && templateDirCurrent.exists()) {
+            return templateDirCurrent;
+        }
+        if (templateDirRoot != null && templateDirRoot.exists()) {
+            return templateDirRoot;
+        }
 
         File currentDir = null;
         try {
-            currentDir = new File(IntellijProject.class.getProtectionDomain().getCodeSource()
-                    .getLocation().toURI().getPath()).getParentFile();
+            currentDir = new File(
+                    IntellijProject.class.getProtectionDomain().getCodeSource().getLocation()
+                            .toURI().getPath()).getParentFile();
         } catch (URISyntaxException e) {
             logger.log(Level.SEVERE, "Could not get jar location.", e);
             return null;
         }
-
+        // Support for program execution in intellij.
+        if (currentDir.getPath().endsWith("out/production")) {
+            return new File(currentDir.getParentFile().getParentFile(), REL_TEMPLATE_DIR);
+        }
         // First check relative to current run directory.
         templateDirCurrent = new File(currentDir, REL_TEMPLATE_DIR);
         if (templateDirCurrent.exists()) {
@@ -178,7 +231,7 @@ public class DirectorySearch {
         }
         throw new FileNotFoundException(
                 "Unable to find template dir. Tried the following locations:\n" +
-                templateDirCurrent.getAbsolutePath() + "\n" +
-                templateDirRoot.getAbsolutePath());
+                        templateDirCurrent.getCanonicalPath() + "\n" +
+                        templateDirRoot.getCanonicalPath());
     }
 }

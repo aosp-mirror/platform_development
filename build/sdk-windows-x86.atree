@@ -37,6 +37,19 @@ bin/fastboot.exe                        strip platform-tools/fastboot.exe
 bin/AdbWinUsbApi.dll                          platform-tools/AdbWinUsbApi.dll
 bin/AdbWinApi.dll                             platform-tools/AdbWinApi.dll
 
+rm platform-tools/sqlite3
+bin/sqlite3.exe                        strip platform-tools/sqlite3.exe
+
+rm platform-tools/dmtracedump
+bin/dmtracedump.exe                    strip platform-tools/dmtracedump.exe
+
+rm platform-tools/hprof-conv
+bin/hprof-conv.exe                     strip platform-tools/hprof-conv.exe
+
+rm platform-tools/etc1tool
+bin/etc1tool.exe                       strip platform-tools/etc1tool.exe
+
+
 
 ##############################################################################
 # Build Tools Component
@@ -47,6 +60,9 @@ bin/AdbWinApi.dll                             platform-tools/AdbWinApi.dll
 
 rm build-tools/${PLATFORM_NAME}/aapt
 bin/aapt.exe                            strip build-tools/${PLATFORM_NAME}/aapt.exe
+
+rm build-tools/${PLATFORM_NAME}/split-select
+bin/split-select.exe                    strip build-tools/${PLATFORM_NAME}/split-select.exe
 
 rm build-tools/${PLATFORM_NAME}/aidl
 bin/aidl.exe                            strip build-tools/${PLATFORM_NAME}/aidl.exe
@@ -62,31 +78,33 @@ bin/dexdump.exe                         strip build-tools/${PLATFORM_NAME}/dexdu
 rm build-tools/${PLATFORM_NAME}/llvm-rs-cc
 bin/llvm-rs-cc.exe                      strip build-tools/${PLATFORM_NAME}/llvm-rs-cc.exe
 
-rm build-tools/${PLATFORM_NAME}/libLLVM.so
-lib/libLLVM.dll                         strip build-tools/${PLATFORM_NAME}/libLLVM.dll
+rm build-tools/${PLATFORM_NAME}/../lib64/libLLVM.so
+lib/libLLVM.dll                         strip build-tools/${PLATFORM_NAME}/../lib/libLLVM.dll
 
-rm build-tools/${PLATFORM_NAME}/libclang.so
-lib/libclang.dll                        strip build-tools/${PLATFORM_NAME}/libclang.dll
+rm build-tools/${PLATFORM_NAME}/../lib64/libclang.so
+lib/libclang.dll                        strip build-tools/${PLATFORM_NAME}/../lib/libclang.dll
 
 #bcc not yet compiled on windows
 
-rm build-tools/${PLATFORM_NAME}/libbcc.so
-lib/libbcc.dll                          strip build-tools/${PLATFORM_NAME}/libbcc.dll
+rm build-tools/${PLATFORM_NAME}/../lib64/libbcc.so
+lib/libbcc.dll                          strip build-tools/${PLATFORM_NAME}/../lib/libbcc.dll
 
-rm build-tools/${PLATFORM_NAME}/libbcinfo.so
-lib/libbcinfo.dll                       strip build-tools/${PLATFORM_NAME}/libbcinfo.dll
+rm build-tools/${PLATFORM_NAME}/../lib64/libbcinfo.so
+lib/libbcinfo.dll                       strip build-tools/${PLATFORM_NAME}/../lib/libbcinfo.dll
 
 rm build-tools/${PLATFORM_NAME}/bcc_compat
 bin/bcc_compat.exe                      strip build-tools/${PLATFORM_NAME}/bcc_compat.exe
 
 rm build-tools/${PLATFORM_NAME}/arm-linux-androideabi-ld
-prebuilts/sdk/tools/windows/arm-linux-androideabi-ld.exe   strip build-tools/${PLATFORM_NAME}/arm-linux-androideabi-ld.exe
+prebuilts/sdk/tools/windows/bin/arm-linux-androideabi-ld.exe   strip build-tools/${PLATFORM_NAME}/arm-linux-androideabi-ld.exe
 
 rm build-tools/${PLATFORM_NAME}/i686-linux-android-ld
-prebuilts/sdk/tools/windows/i686-linux-android-ld.exe      strip build-tools/${PLATFORM_NAME}/i686-linux-android-ld.exe
+prebuilts/sdk/tools/windows/bin/i686-linux-android-ld.exe      strip build-tools/${PLATFORM_NAME}/i686-linux-android-ld.exe
 
 rm build-tools/${PLATFORM_NAME}/mipsel-linux-android-ld
-prebuilts/sdk/tools/windows/mipsel-linux-android-ld.exe    strip build-tools/${PLATFORM_NAME}/mipsel-linux-android-ld.exe
+prebuilts/sdk/tools/windows/bin/mipsel-linux-android-ld.exe    strip build-tools/${PLATFORM_NAME}/mipsel-linux-android-ld.exe
+
+dalvik/dx/etc/mainDexClasses.bat             build-tools/${PLATFORM_NAME}/mainDexClasses.bat
 
 
 ##############################################################################

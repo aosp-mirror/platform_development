@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This file is used as part of the filter for incoming NFC TECH_DISCOVERED intents. -->
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Android's host card emulation feature only supports the IsoDep protocol. -->
+    <tech-list>
+        <tech>android.nfc.tech.IsoDep</tech>
+    </tech-list>
+</resources>

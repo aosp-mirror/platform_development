@@ -1,0 +1,12 @@
+page.tags="FindMyPhone"
+sample.group=Wearable
+@jd:body
+
+<p>
+            
+            This sample application notifies you when you may have left your phone behind
+            (specifically, when your companion and wearable disconnect). If you have misplaced your phone, but
+            it is still connected to your wearable, you can also start an activity on the wearable to sound an
+            alarm on your phone.
+            
+        </p>

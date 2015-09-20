@@ -1,0 +1,10 @@
+page.tags="Timer"
+sample.group=Wearable
+@jd:body
+
+<p>
+            
+            This simple wearable app allows the user to set a countdown timer. It runs
+            independently on the wearable with no phone connection.
+            
+        </p>

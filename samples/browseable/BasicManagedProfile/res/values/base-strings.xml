@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ Copyright 2013 The Android Open Source Project
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+-->
+<resources>
+    <string name="app_name">BasicManagedProfile</string>
+    <string name="intro_message">
+        <![CDATA[
+        
+            
+            This sample demonstrates how to create a managed profile. You can also learn how to
+            enable or disable other apps and how to set restrictions to them. Intents can be
+            configured to be forwarded between primary account and managed profile. Finally, you can
+            wipe all the data associated with the profile.
+            Note that there can only be one managed profile on a device. 
+            
+        
+        ]]>
+    </string>
+</resources>

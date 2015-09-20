@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ Copyright 2013 The Android Open Source Project
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+-->
+<resources>
+    <string name="app_name">BatchStepSensor</string>
+    <string name="intro_message">
+        <![CDATA[
+        
+            
+            <p>This sample demonstrates the use of the two step sensors (step detector and counter) and
+            sensor batching.</p>
+            <p>It shows how to register a SensorEventListener with and without
+            batching and shows how these events are received.</p>
+            <p>The Step Detector sensor fires an
+            event when a step is detected, while the step counter returns the total number of
+            steps since a listener was first registered for this sensor.
+            Both sensors only count steps while a listener is registered. This sample only covers the
+            basic case, where a listener is only registered while the app is running. Likewise,
+            batched sensors can be used in the background (when the CPU is suspended), which
+            requires manually flushing the sensor event queue before it overflows, which is not
+            covered in this sample.</p>
+            
+        
+        ]]>
+    </string>
+</resources>

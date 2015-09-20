@@ -483,7 +483,7 @@ public class GameView extends View {
     }
 
     static float pythag(float x, float y) {
-        return (float) Math.sqrt(x * x + y * y);
+        return (float) Math.hypot(x, y);
     }
 
     static int blend(float alpha, int from, int to) {
