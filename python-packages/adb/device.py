@@ -110,6 +110,46 @@ def get_device(serial=None, product=None):
 
     return _get_unique_device(product)
 
+
+def _get_device_by_type(flag):
+    with open(os.devnull, 'wb') as devnull:
+        subprocess.check_call(['adb', 'start-server'], stdout=devnull,
+                              stderr=devnull)
+    try:
+        serial = subprocess.check_output(['adb', flag, 'get-serialno']).strip()
+    except subprocess.CalledProcessError:
+        raise RuntimeError('adb unexpectedly returned nonzero')
+    if serial == 'unknown':
+        raise NoUniqueDeviceError()
+    return _get_device_by_serial(serial)
+
+
+def get_usb_device():
+    """Get the unique USB-connected AndroidDevice if it is available.
+
+    Raises:
+        NoUniqueDeviceError:
+            0 or multiple devices are connected via USB.
+
+    Returns:
+        An AndroidDevice associated with the unique USB-connected device.
+    """
+    return _get_device_by_type('-d')
+
+
+def get_emulator_device():
+    """Get the unique emulator AndroidDevice if it is available.
+
+    Raises:
+        NoUniqueDeviceError:
+            0 or multiple emulators are running.
+
+    Returns:
+        An AndroidDevice associated with the unique running emulator.
+    """
+    return _get_device_by_type('-e')
+
+
 # Call this instead of subprocess.check_output() to work-around issue in Python
 # 2's subprocess class on Windows where it doesn't support Unicode. This
 # writes the command line to a UTF-8 batch file that is properly interpreted
