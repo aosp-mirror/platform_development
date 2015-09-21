@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+import atexit
 import logging
 import os
 import re
@@ -303,6 +304,48 @@ class AndroidDevice(object):
         else:
             exit_code, stdout = self._parse_shell_output(stdout)
         return exit_code, stdout, stderr
+
+    def shell_popen(self, cmd, kill_atexit=True, preexec_fn=None,
+                    creationflags=0, **kwargs):
+        """Calls `adb shell` and returns a handle to the adb process.
+
+        This function provides direct access to the subprocess used to run the
+        command, without special return code handling. Users that need the
+        return value must retrieve it themselves.
+
+        Args:
+            cmd: Array of command arguments to execute.
+            kill_atexit: Whether to kill the process upon exiting.
+            preexec_fn: Argument forwarded to subprocess.Popen.
+            creationflags: Argument forwarded to subprocess.Popen.
+            **kwargs: Arguments forwarded to subprocess.Popen.
+
+        Returns:
+            subprocess.Popen handle to the adb shell instance
+        """
+
+        command = self.adb_cmd + ['shell'] + cmd
+
+        # Make sure a ctrl-c in the parent script doesn't kill gdbserver.
+        if os.name == 'nt':
+            creationflags |= subprocess.CREATE_NEW_PROCESS_GROUP
+        else:
+            if preexec_fn is None:
+                preexec_fn = os.setpgrp
+            elif preexec_fn is not os.setpgrp:
+                fn = preexec_fn
+                def _wrapper():
+                    fn()
+                    os.setpgrp()
+                preexec_fn = _wrapper
+
+        p = subprocess.Popen(command, creationflags=creationflags,
+                             preexec_fn=preexec_fn, **kwargs)
+
+        if kill_atexit:
+            atexit.register(p.kill)
+
+        return p
 
     def install(self, filename, replace=False):
         cmd = ['install']
