@@ -14,6 +14,7 @@
 # limitations under the License.
 #
 import atexit
+import contextlib
 import logging
 import os
 import re
@@ -151,36 +152,77 @@ def get_emulator_device():
     return _get_device_by_type('-e')
 
 
+@contextlib.contextmanager
+def _file_deleter(f):
+    yield
+    if f:
+        f.close()
+        os.remove(f.name)
+
+
+# Internal helper that may return a temporary file (containing a command line
+# in UTF-8) that should be executed with the help of _get_subprocess_args().
+def _get_windows_unicode_helper(args):
+    # Only do this slow work-around if Unicode is in the cmd line on Windows.
+    if (os.name != 'nt' or all(not isinstance(arg, unicode) for arg in args)):
+        return None
+
+    # cmd.exe requires a suffix to know that it is running a batch file.
+    # We can't use delete=True because that causes File Share Mode Delete to be
+    # used which prevents the file from being opened by other processes that
+    # don't use that File Share Mode. The caller must manually delete the file.
+    tf = tempfile.NamedTemporaryFile('wb', suffix='.cmd', delete=False)
+    # @ in batch suppresses echo of the current line.
+    # Change the codepage to 65001, the UTF-8 codepage.
+    tf.write('@chcp 65001 > nul\r\n')
+    tf.write('@')
+    # Properly quote all the arguments and encode in UTF-8.
+    tf.write(subprocess.list2cmdline(args).encode('utf-8'))
+    tf.close()
+    return tf
+
+
+# Let the caller know how to run the batch file. Takes subprocess.check_output()
+# or subprocess.Popen() args and returns a new tuple that should be passed
+# instead, or the original args if there is no file
+def _get_subprocess_args(args, helper_file):
+    if helper_file:
+        # Concatenate our new command line args with any other function args.
+        return (['cmd.exe', '/c', helper_file.name],) + args[1:]
+    else:
+        return args
+
+
 # Call this instead of subprocess.check_output() to work-around issue in Python
 # 2's subprocess class on Windows where it doesn't support Unicode. This
 # writes the command line to a UTF-8 batch file that is properly interpreted
 # by cmd.exe.
-def _subprocess_check_output(*popenargs, **kwargs):
-    # Only do this slow work-around if Unicode is in the cmd line.
-    if (os.name == 'nt' and
-            any(isinstance(arg, unicode) for arg in popenargs[0])):
-        # cmd.exe requires a suffix to know that it is running a batch file
-        tf = tempfile.NamedTemporaryFile('wb', suffix='.cmd', delete=False)
-        # @ in batch suppresses echo of the current line.
-        # Change the codepage to 65001, the UTF-8 codepage.
-        tf.write('@chcp 65001 > nul\r\n')
-        tf.write('@')
-        # Properly quote all the arguments and encode in UTF-8.
-        tf.write(subprocess.list2cmdline(popenargs[0]).encode('utf-8'))
-        tf.close()
-
+def _subprocess_check_output(*args, **kwargs):
+    helper = _get_windows_unicode_helper(args[0])
+    with _file_deleter(helper):
         try:
-            result = subprocess.check_output(['cmd.exe', '/c', tf.name],
-                                             **kwargs)
+            return subprocess.check_output(
+                    *_get_subprocess_args(args, helper), **kwargs)
         except subprocess.CalledProcessError as e:
             # Show real command line instead of the cmd.exe command line.
-            raise subprocess.CalledProcessError(e.returncode, popenargs[0],
+            raise subprocess.CalledProcessError(e.returncode, args[0],
                                                 output=e.output)
-        finally:
-            os.remove(tf.name)
-        return result
-    else:
-        return subprocess.check_output(*popenargs, **kwargs)
+
+
+# Call this instead of subprocess.Popen(). Like _subprocess_check_output().
+class _subprocess_Popen(subprocess.Popen):
+    def __init__(self, *args, **kwargs):
+        # Save reference to helper so that it can be deleted once it is no
+        # longer used.
+        self.helper = _get_windows_unicode_helper(args[0])
+        super(_subprocess_Popen, self).__init__(
+                *_get_subprocess_args(args, self.helper), **kwargs)
+
+    def __del__(self, *args, **kwargs):
+        super(_subprocess_Popen, self).__del__(*args, **kwargs)
+        if self.helper:
+            os.remove(self.helper.name)
+
 
 class AndroidDevice(object):
     # Delimiter string to indicate the start of the exit code.
@@ -296,7 +338,7 @@ class AndroidDevice(object):
         """
         cmd = self._make_shell_cmd(cmd)
         logging.info(' '.join(cmd))
-        p = subprocess.Popen(
+        p = _subprocess_Popen(
             cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdout, stderr = p.communicate()
         if self.SHELL_PROTOCOL_FEATURE in self.features:
@@ -339,8 +381,8 @@ class AndroidDevice(object):
                     os.setpgrp()
                 preexec_fn = _wrapper
 
-        p = subprocess.Popen(command, creationflags=creationflags,
-                             preexec_fn=preexec_fn, **kwargs)
+        p = _subprocess_Popen(command, creationflags=creationflags,
+                              preexec_fn=preexec_fn, **kwargs)
 
         if kill_atexit:
             atexit.register(p.kill)
