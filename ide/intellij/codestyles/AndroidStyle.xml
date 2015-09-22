@@ -18,6 +18,8 @@
   <option name="NAMES_COUNT_TO_USE_IMPORT_ON_DEMAND" value="9999" />
   <option name="IMPORT_LAYOUT_TABLE">
     <value>
+      <package name="android" withSubpackages="true" static="false" />
+      <emptyLine />
       <package name="com.google" withSubpackages="true" static="false" />
       <emptyLine />
       <package name="com" withSubpackages="true" static="false" />
@@ -27,8 +29,6 @@
       <package name="net" withSubpackages="true" static="false" />
       <emptyLine />
       <package name="org" withSubpackages="true" static="false" />
-      <emptyLine />
-      <package name="android" withSubpackages="true" static="false" />
       <emptyLine />
       <package name="java" withSubpackages="true" static="false" />
       <emptyLine />
@@ -82,6 +82,9 @@
     <option name="LABEL_INDENT_ABSOLUTE" value="false" />
     <option name="USE_RELATIVE_INDENTS" value="false" />
   </ADDITIONAL_INDENT_OPTIONS>
+  <XML>
+    <option name="XML_SPACE_INSIDE_EMPTY_TAG" value="true" />
+  </XML>
   <ADDITIONAL_INDENT_OPTIONS fileType="java">
     <option name="INDENT_SIZE" value="4" />
     <option name="CONTINUATION_INDENT_SIZE" value="8" />
@@ -170,5 +173,39 @@
     <option name="WHILE_BRACE_FORCE" value="3" />
     <option name="FOR_BRACE_FORCE" value="3" />
     <option name="PARENT_SETTINGS_INSTALLED" value="true" />
+  </codeStyleSettings>
+  <codeStyleSettings language="XML">
+    <arrangement>
+      <rules>
+        <section>
+          <rule>
+            <match>
+              <NAME>xmlns:.*</NAME>
+            </match>
+          </rule>
+        </section>
+        <section>
+          <rule>
+            <match>
+              <NAME>android:id</NAME>
+            </match>
+          </rule>
+        </section>
+        <section>
+          <rule>
+            <match>
+              <NAME>android:layout_width</NAME>
+            </match>
+          </rule>
+        </section>
+        <section>
+          <rule>
+            <match>
+              <NAME>android:layout_height</NAME>
+            </match>
+          </rule>
+        </section>
+      </rules>
+    </arrangement>
   </codeStyleSettings>
 </code_scheme>
