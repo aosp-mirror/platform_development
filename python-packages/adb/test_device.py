@@ -284,19 +284,20 @@ class ArgumentEscapingTest(DeviceTest):
 
     def test_install_argument_escaping(self):
         """Make sure that install argument escaping works."""
-        # http://b/20323053
-        tf = tempfile.NamedTemporaryFile('wb', suffix='-text;ls;1.apk',
-                                         delete=False)
-        tf.close()
-        self.assertIn("-text;ls;1.apk", self.device.install(tf.name))
-        os.remove(tf.name)
+        # http://b/20323053, http://b/3090932.
+        for file_suffix in ('-text;ls;1.apk', "-Live Hold'em.apk"):
+            tf = tempfile.NamedTemporaryFile('wb', suffix=file_suffix,
+                                             delete=False)
+            tf.close()
 
-        # http://b/3090932
-        tf = tempfile.NamedTemporaryFile('wb', suffix="-Live Hold'em.apk",
-                                         delete=False)
-        tf.close()
-        self.assertIn("-Live Hold'em.apk", self.device.install(tf.name))
-        os.remove(tf.name)
+            # Installing bogus .apks fails if the device supports exit codes.
+            try:
+                output = self.device.install(tf.name)
+            except subprocess.CalledProcessError as e:
+                output = e.output
+
+            self.assertIn(file_suffix, output)
+            os.remove(tf.name)
 
 
 class RootUnrootTest(DeviceTest):
