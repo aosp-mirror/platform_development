@@ -156,7 +156,7 @@ class AndroidDevice(object):
     # adb on Windows returns \r\n even if adbd returns \n.
     _RETURN_CODE_SEARCH_LENGTH = len('{0}255\r\n'.format(_RETURN_CODE_DELIMITER))
 
-    # Shell protocol feature string.
+    # Feature name strings.
     SHELL_PROTOCOL_FEATURE = 'shell_2'
 
     def __init__(self, serial, product=None):

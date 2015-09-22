@@ -112,6 +112,33 @@ class DeviceTest(unittest.TestCase):
 
 
 class ShellTest(DeviceTest):
+    def _interactive_shell(self, shell_args, input):
+        """Runs an interactive adb shell.
+
+        Args:
+          shell_args: List of string arguments to `adb shell`.
+          input: String input to send to the interactive shell.
+
+        Returns:
+          The remote exit code.
+
+        Raises:
+          unittest.SkipTest: The device doesn't support exit codes.
+        """
+        if self.device.SHELL_PROTOCOL_FEATURE not in self.device.features:
+            raise unittest.SkipTest('exit codes are unavailable on this device')
+
+        proc = subprocess.Popen(
+                self.device.adb_cmd + ['shell'] + shell_args,
+                stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE)
+        # Closing host-side stdin doesn't currently trigger the interactive
+        # shell to exit so we need to explicitly add an exit command to
+        # close the session from the device side, and append linesep to complete
+        # the interactive command.
+        proc.communicate('{}; exit{}'.format(input, self.device.linesep))
+        return proc.returncode
+
     def test_cat(self):
         """Check that we can at least cat a file."""
         out = self.device.shell(['cat', '/proc/uptime'])[0].strip()
@@ -155,30 +182,27 @@ class ShellTest(DeviceTest):
         output = self.device.shell(['uname'])[0]
         self.assertEqual(output, 'Linux' + self.device.linesep)
 
-    def test_pty_logic(self):
-        """Verify PTY logic for shells.
+    def test_default_pty_logic(self):
+        """Verify default PTY logic for shells.
 
         Interactive shells should use a PTY, non-interactive should not.
 
         Bug: http://b/21215503
         """
-        proc = subprocess.Popen(
-                self.device.adb_cmd + ['shell'], stdin=subprocess.PIPE,
-                stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         # [ -t 0 ] is used (rather than `tty`) to provide portability. This
         # gives an exit code of 0 iff stdin is connected to a terminal.
-        #
-        # Closing host-side stdin doesn't currently trigger the interactive
-        # shell to exit so we need to explicitly add an exit command to
-        # close the session from the device side, and append \n to complete
-        # the interactive command.
-        result = proc.communicate('[ -t 0 ]; echo x$?; exit 0\n')[0]
-        partition = result.rpartition('x')
-        self.assertEqual(partition[1], 'x')
-        self.assertEqual(int(partition[2]), 0)
+        self.assertEqual(0, self._interactive_shell([], '[ -t 0 ]'))
+        self.assertEqual(1, self.device.shell_nocheck(['[ -t 0 ]'])[0])
 
-        exit_code = self.device.shell_nocheck(['[ -t 0 ]'])[0]
-        self.assertEqual(exit_code, 1)
+    def test_pty_arguments(self):
+        """Tests the -T and -t arguments to manually control PTY."""
+        if self.device.SHELL_PROTOCOL_FEATURE not in self.device.features:
+            raise unittest.SkipTest('PTY arguments unsupported on this device')
+
+        self.assertEqual(0, self._interactive_shell(['-t'], '[ -t 0 ]'))
+        self.assertEqual(1, self._interactive_shell(['-T'], '[ -t 0 ]'))
+        self.assertEqual(0, self.device.shell_nocheck(['-t', '[ -t 0 ]'])[0])
+        self.assertEqual(1, self.device.shell_nocheck(['-T', '[ -t 0 ]'])[0])
 
     def test_shell_protocol(self):
         """Tests the shell protocol on the device.
@@ -190,9 +214,9 @@ class ShellTest(DeviceTest):
         """
         if self.device.SHELL_PROTOCOL_FEATURE not in self.device.features:
             raise unittest.SkipTest('shell protocol unsupported on this device')
+
         result = self.device.shell_nocheck(
                 shlex.split('echo foo; echo bar >&2; exit 17'))
-
         self.assertEqual(17, result[0])
         self.assertEqual('foo' + self.device.linesep, result[1])
         self.assertEqual('bar' + self.device.linesep, result[2])
