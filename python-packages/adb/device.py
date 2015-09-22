@@ -378,6 +378,9 @@ class AndroidDevice(object):
     def reboot(self):
         return self._simple_call(['reboot'])
 
+    def remount(self):
+        return self._simple_call(['remount'])
+
     def root(self):
         return self._simple_call(['root'])
 
