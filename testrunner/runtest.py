@@ -283,8 +283,15 @@ class TestRunner(object):
           target_build_string, self._options.make_jobs, self._root_path,
           extra_args_string)
       # mmma equivalent, used when regular mmm fails
-      alt_cmd = 'make -j%s -C "%s" -f build/core/main.mk %s all_modules BUILD_MODULES_IN_PATHS="%s"' % (
-              self._options.make_jobs, self._root_path, extra_args_string, target_dir_build_string)
+      mmma_goals = []
+      for d in target_dir_list:
+        if d.startswith("./"):
+          d = d[2:]
+        if d.endswith("/"):
+          d = d[:-1]
+        mmma_goals.append("MODULES-IN/" + d)
+      alt_cmd = 'make -j%s -C "%s" -f build/core/main.mk %s %s' % (
+              self._options.make_jobs, self._root_path, extra_args_string, " ".join(mmma_goals))
 
       logger.Log(cmd)
       if not self._options.preview:
