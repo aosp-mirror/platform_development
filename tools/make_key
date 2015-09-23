@@ -37,13 +37,14 @@ fi
 # and .pk8-creating programs, to avoid having the private key ever
 # touch the disk.
 
-tmpdir=$(mktemp -d)
+tmpdir=`mktemp -d 2>/dev/null || mktemp -d -t 'mytmpdir'`
+
 trap 'rm -rf ${tmpdir}; echo; exit 1' EXIT INT QUIT
 
 one=${tmpdir}/one
 two=${tmpdir}/two
-mknod ${one} p
-mknod ${two} p
+mknod ${one} p 2>/dev/null || mkfifo ${one}
+mknod ${two} p 2>/dev/null || mkfifo ${two}
 chmod 0600 ${one} ${two}
 
 read -p "Enter password for '$1' (blank for none; password will be visible): " \
