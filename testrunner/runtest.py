@@ -301,7 +301,7 @@ class TestRunner(object):
           d = d[2:]
         if d.endswith("/"):
           d = d[:-1]
-        mmma_goals.append("MODULES-IN/" + d)
+        mmma_goals.append("MODULES-IN-" + d.replace("/","-"))
       alt_cmd = 'make -j%s -C "%s" -f build/core/main.mk %s %s' % (
               self._options.make_jobs, self._root_path, extra_args_string, " ".join(mmma_goals))
 
