@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+import atexit
 import logging
 import os
 import re
@@ -109,6 +110,46 @@ def get_device(serial=None, product=None):
         return _get_device_by_serial(android_serial, product)
 
     return _get_unique_device(product)
+
+
+def _get_device_by_type(flag):
+    with open(os.devnull, 'wb') as devnull:
+        subprocess.check_call(['adb', 'start-server'], stdout=devnull,
+                              stderr=devnull)
+    try:
+        serial = subprocess.check_output(['adb', flag, 'get-serialno']).strip()
+    except subprocess.CalledProcessError:
+        raise RuntimeError('adb unexpectedly returned nonzero')
+    if serial == 'unknown':
+        raise NoUniqueDeviceError()
+    return _get_device_by_serial(serial)
+
+
+def get_usb_device():
+    """Get the unique USB-connected AndroidDevice if it is available.
+
+    Raises:
+        NoUniqueDeviceError:
+            0 or multiple devices are connected via USB.
+
+    Returns:
+        An AndroidDevice associated with the unique USB-connected device.
+    """
+    return _get_device_by_type('-d')
+
+
+def get_emulator_device():
+    """Get the unique emulator AndroidDevice if it is available.
+
+    Raises:
+        NoUniqueDeviceError:
+            0 or multiple emulators are running.
+
+    Returns:
+        An AndroidDevice associated with the unique running emulator.
+    """
+    return _get_device_by_type('-e')
+
 
 # Call this instead of subprocess.check_output() to work-around issue in Python
 # 2's subprocess class on Windows where it doesn't support Unicode. This
@@ -264,6 +305,48 @@ class AndroidDevice(object):
             exit_code, stdout = self._parse_shell_output(stdout)
         return exit_code, stdout, stderr
 
+    def shell_popen(self, cmd, kill_atexit=True, preexec_fn=None,
+                    creationflags=0, **kwargs):
+        """Calls `adb shell` and returns a handle to the adb process.
+
+        This function provides direct access to the subprocess used to run the
+        command, without special return code handling. Users that need the
+        return value must retrieve it themselves.
+
+        Args:
+            cmd: Array of command arguments to execute.
+            kill_atexit: Whether to kill the process upon exiting.
+            preexec_fn: Argument forwarded to subprocess.Popen.
+            creationflags: Argument forwarded to subprocess.Popen.
+            **kwargs: Arguments forwarded to subprocess.Popen.
+
+        Returns:
+            subprocess.Popen handle to the adb shell instance
+        """
+
+        command = self.adb_cmd + ['shell'] + cmd
+
+        # Make sure a ctrl-c in the parent script doesn't kill gdbserver.
+        if os.name == 'nt':
+            creationflags |= subprocess.CREATE_NEW_PROCESS_GROUP
+        else:
+            if preexec_fn is None:
+                preexec_fn = os.setpgrp
+            elif preexec_fn is not os.setpgrp:
+                fn = preexec_fn
+                def _wrapper():
+                    fn()
+                    os.setpgrp()
+                preexec_fn = _wrapper
+
+        p = subprocess.Popen(command, creationflags=creationflags,
+                             preexec_fn=preexec_fn, **kwargs)
+
+        if kill_atexit:
+            atexit.register(p.kill)
+
+        return p
+
     def install(self, filename, replace=False):
         cmd = ['install']
         if replace:
@@ -295,6 +378,9 @@ class AndroidDevice(object):
     def reboot(self):
         return self._simple_call(['reboot'])
 
+    def remount(self):
+        return self._simple_call(['remount'])
+
     def root(self):
         return self._simple_call(['root'])
 
@@ -324,6 +410,22 @@ class AndroidDevice(object):
 
     def wait(self):
         return self._simple_call(['wait-for-device'])
+
+    def get_props(self):
+        result = {}
+        output, _ = self.shell(['getprop'])
+        output = output.splitlines()
+        pattern = re.compile(r'^\[([^]]+)\]: \[(.*)\]')
+        for line in output:
+            match = pattern.match(line)
+            if match is None:
+                raise RuntimeError('invalid getprop line: "{}"'.format(line))
+            key = match.group(1)
+            value = match.group(2)
+            if key in result:
+                raise RuntimeError('duplicate getprop key: "{}"'.format(key))
+            result[key] = value
+        return result
 
     def get_prop(self, prop_name):
         output = self.shell(['getprop', prop_name])[0].splitlines()
