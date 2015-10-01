@@ -215,11 +215,23 @@ class ShellTest(DeviceTest):
         if self.device.SHELL_PROTOCOL_FEATURE not in self.device.features:
             raise unittest.SkipTest('shell protocol unsupported on this device')
 
+        # Shell protocol should be used by default.
         result = self.device.shell_nocheck(
                 shlex.split('echo foo; echo bar >&2; exit 17'))
         self.assertEqual(17, result[0])
         self.assertEqual('foo' + self.device.linesep, result[1])
         self.assertEqual('bar' + self.device.linesep, result[2])
+
+        self.assertEqual(17, self._interactive_shell([], 'exit 17'))
+
+        # -x flag should disable shell protocol.
+        result = self.device.shell_nocheck(
+                shlex.split('-x echo foo; echo bar >&2; exit 17'))
+        self.assertEqual(0, result[0])
+        self.assertEqual('foo{0}bar{0}'.format(self.device.linesep), result[1])
+        self.assertEqual('', result[2])
+
+        self.assertEqual(0, self._interactive_shell(['-x'], 'exit 17'))
 
     def test_non_interactive_sigint(self):
         """Tests that SIGINT in a non-interactive shell kills the process.
