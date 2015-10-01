@@ -198,7 +198,7 @@ class AndroidDevice(object):
     _RETURN_CODE_SEARCH_LENGTH = len('{0}255\r\n'.format(_RETURN_CODE_DELIMITER))
 
     # Feature name strings.
-    SHELL_PROTOCOL_FEATURE = 'shell_2'
+    SHELL_PROTOCOL_FEATURE = 'shell_v2'
 
     def __init__(self, serial, product=None):
         self.serial = serial
