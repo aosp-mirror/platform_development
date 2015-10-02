@@ -333,6 +333,7 @@ developers/build/prebuilts/gradle/AutoBackupForApps                          sam
 developers/build/prebuilts/gradle/DirectShare                                samples/${PLATFORM_NAME}/content/DirectShare
 developers/build/prebuilts/gradle/MidiScope                                  samples/${PLATFORM_NAME}/media/MidiScope
 developers/build/prebuilts/gradle/MidiSynth                                  samples/${PLATFORM_NAME}/media/MidiSynth
+developers/build/prebuilts/gradle/AsymmetricFingerprintDialog                samples/${PLATFORM_NAME}/security/AsymmetricFingerprintDialog
 
 developers/build/prebuilts/androidtv                                         samples/${PLATFORM_NAME}/androidtv
 
