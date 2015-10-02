@@ -18,7 +18,6 @@ package com.example.android.xyztouristattractions.provider;
 
 import android.net.Uri;
 
-import com.example.android.xyztouristattractions.BuildConfig;
 import com.example.android.xyztouristattractions.common.Attraction;
 import com.google.android.gms.location.Geofence;
 import com.google.android.gms.maps.model.LatLng;
@@ -126,11 +125,8 @@ public class TouristAttractions {
 
     public static String getClosestCity(LatLng curLatLng) {
         if (curLatLng == null) {
-            // In debug build still return a city so some data is displayed
-            if (BuildConfig.DEBUG) {
-                return TEST_CITY;
-            }
-            return null;
+            // If location is unknown return test city so some data is shown
+            return TEST_CITY;
         }
 
         double minDistance = 0;

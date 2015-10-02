@@ -18,16 +18,22 @@
           package="com.example.android.wearable.agendadata">
 
     <uses-sdk android:minSdkVersion="18"
-        android:targetSdkVersion="21" />
+        android:targetSdkVersion="23" />
 
+    <!-- BEGIN_INCLUDE(manifest) -->
+
+    <!-- Note that all required permissions are declared here in the Android manifest.
+         On Android M and above, use of these permissions is only requested at run time. -->
     <uses-permission android:name="android.permission.READ_CALENDAR" />
     <uses-permission android:name="android.permission.READ_CONTACTS" />
 
+    <!-- END_INCLUDE(manifest) -->
+
     <application
-            android:icon="@drawable/ic_launcher"
-            android:label="@string/app_name"
-            android:theme="@android:style/Theme.Holo.Light"
-            >
+        android:allowBackup="true"
+        android:icon="@drawable/ic_launcher"
+        android:label="@string/app_name"
+        android:theme="@style/Theme.AppCompat.Light">
 
         <meta-data
                 android:name="com.google.android.gms.version"

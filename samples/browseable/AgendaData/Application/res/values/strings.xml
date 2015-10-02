@@ -17,5 +17,9 @@
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <string name="get_events">Sync calendar events to wearable</string>
     <string name="delete_events">Delete calendar events from wearable</string>
-    <string name="log">Log</string>
+    <string name="log_label">Deletion Log:</string>
+    <string name="permisions_granted">Permissions granted. Send Calendar events to Wear device.</string>
+    <string name="permissions_denied">Permission requests were denied. Can\'t send calendar events.</string>
+    <string name="permissions_rationale"><![CDATA[Calendar & Contact permissions are required to push calendar to Wear device.]]></string>
+    <string name="ok">OK</string>
 </resources>

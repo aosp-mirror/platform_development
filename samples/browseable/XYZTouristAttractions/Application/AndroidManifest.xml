@@ -16,17 +16,21 @@
   -->
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.android.xyztouristattractions" >
+    xmlns:tools="http://schemas.android.com/tools"
+    package="com.example.android.xyztouristattractions">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" tools:node="remove" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" tools:node="remove" />
 
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
-        android:theme="@style/XYZAppTheme" >
+        android:theme="@style/XYZAppTheme"
+        android:fullBackupContent="true">
 
         <activity
             android:name=".ui.AttractionListActivity"

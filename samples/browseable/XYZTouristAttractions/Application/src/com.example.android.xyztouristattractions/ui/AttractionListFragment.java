@@ -59,6 +59,7 @@ public class AttractionListFragment extends Fragment {
     private AttractionAdapter mAdapter;
     private LatLng mLatestLocation;
     private int mImageSize;
+    private boolean mItemClicked;
 
     public AttractionListFragment() {}
 
@@ -86,6 +87,7 @@ public class AttractionListFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
+        mItemClicked = false;
         LocalBroadcastManager.getInstance(getActivity()).registerReceiver(
                 mBroadcastReceiver, UtilityService.getLocationUpdatedIntentFilter());
     }
@@ -186,9 +188,12 @@ public class AttractionListFragment extends Fragment {
 
         @Override
         public void onItemClick(View view, int position) {
-            View heroView = view.findViewById(android.R.id.icon);
-            DetailActivity.launch(
-                    getActivity(), mAdapter.mAttractionList.get(position).name, heroView);
+            if (!mItemClicked) {
+                mItemClicked = true;
+                View heroView = view.findViewById(android.R.id.icon);
+                DetailActivity.launch(
+                        getActivity(), mAdapter.mAttractionList.get(position).name, heroView);
+            }
         }
     }
 

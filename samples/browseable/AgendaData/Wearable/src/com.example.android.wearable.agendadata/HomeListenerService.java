@@ -72,7 +72,7 @@ public class HomeListenerService extends WearableListenerService {
             if (event.getType() == DataEvent.TYPE_DELETED) {
                 deleteDataItem(event.getDataItem());
             } else if (event.getType() == DataEvent.TYPE_CHANGED) {
-                UpdateNotificationForDataItem(event.getDataItem());
+                updateNotificationForDataItem(event.getDataItem());
             }
         }
     }
@@ -89,7 +89,7 @@ public class HomeListenerService extends WearableListenerService {
     /**
      * Posts a local notification to show calendar card.
      */
-    private void UpdateNotificationForDataItem(DataItem dataItem) {
+    private void updateNotificationForDataItem(DataItem dataItem) {
         DataMapItem mapDataItem = DataMapItem.fromDataItem(dataItem);
         DataMap data = mapDataItem.getDataMap();
 

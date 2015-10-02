@@ -17,11 +17,12 @@
 package com.example.android.xyztouristattractions.service;
 
 import android.app.Notification;
-import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.NotificationManagerCompat;
 import android.util.Log;
 
 import com.example.android.xyztouristattractions.R;
@@ -39,7 +40,6 @@ import com.google.android.gms.wearable.Wearable;
 import com.google.android.gms.wearable.WearableListenerService;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -106,21 +106,20 @@ public class ListenerService extends WearableListenerService {
         PendingIntent deletePendingIntent = PendingIntent.getService(
                 this, 0, UtilityService.getClearRemoteNotificationsIntent(this), 0);
 
-        Notification notification = new Notification.Builder(this)
+        Notification notification = new NotificationCompat.Builder(this)
                 .setContentText(getResources().getQuantityString(
                         R.plurals.attractions_found, count, count))
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .setDeleteIntent(deletePendingIntent)
-                .addAction(R.drawable.ic_full_explore,
+                .addAction(new NotificationCompat.Action.Builder(R.drawable.ic_full_explore,
                         getString(R.string.action_explore),
-                        pendingIntent)
-                .extend(new Notification.WearableExtender()
+                        pendingIntent).build())
+                .extend(new NotificationCompat.WearableExtender()
                         .setBackground(bitmap)
                 )
                 .build();
 
-        NotificationManager notificationManager =
-                (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(this);
         notificationManager.notify(Constants.WEAR_NOTIFICATION_ID, notification);
 
         googleApiClient.disconnect();

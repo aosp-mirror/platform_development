@@ -195,7 +195,7 @@ public class AppUsageStatisticsFragment extends Fragment {
 
         @Override
         public int compare(UsageStats left, UsageStats right) {
-            return (int) (right.getLastTimeUsed() - left.getLastTimeUsed());
+            return Long.compare(right.getLastTimeUsed(), left.getLastTimeUsed());
         }
     }
 

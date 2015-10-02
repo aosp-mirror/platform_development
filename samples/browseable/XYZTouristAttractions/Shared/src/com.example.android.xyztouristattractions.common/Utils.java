@@ -16,13 +16,16 @@
 
 package com.example.android.xyztouristattractions.common;
 
+import android.Manifest;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.preference.PreferenceManager;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.Display;
 
@@ -52,6 +55,15 @@ public class Utils {
     private static final String PREFERENCES_GEOFENCE_ENABLED = "geofence";
     private static final String DISTANCE_KM_POSTFIX = "km";
     private static final String DISTANCE_M_POSTFIX = "m";
+
+    /**
+     * Check if the app has access to fine location permission. On pre-M
+     * devices this will always return true.
+     */
+    public static boolean checkFineLocationPermission(Context context) {
+        return PackageManager.PERMISSION_GRANTED == ContextCompat.checkSelfPermission(
+                context, Manifest.permission.ACCESS_FINE_LOCATION);
+    }
 
     /**
      * Calculate distance between two LatLng points and format it nicely for
@@ -90,6 +102,10 @@ public class Utils {
      * Fetch the location from app preferences.
      */
     public static LatLng getLocation(Context context) {
+        if (!checkFineLocationPermission(context)) {
+            return null;
+        }
+
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         Long lat = prefs.getLong(PREFERENCES_LAT, Long.MAX_VALUE);
         Long lng = prefs.getLong(PREFERENCES_LNG, Long.MAX_VALUE);
