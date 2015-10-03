@@ -65,7 +65,7 @@ def dump_var(root, variable):
                  "{}/build/core/config.mk".format(root),
                  "dumpvar-{}".format(variable)]
 
-    make_output = subprocess.check_output(make_args)
+    make_output = subprocess.check_output(make_args, cwd=root)
     return make_output.splitlines()[0]
 
 
