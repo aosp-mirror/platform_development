@@ -140,7 +140,7 @@ def handle_switches(args):
 
     return (binary_file, pid, run_cmd)
 
-def generate_gdb_script(sysroot, binary_file, is64bit, port):
+def generate_gdb_script(sysroot, binary_file, is64bit, port, connect_timeout=5):
     # Generate a gdb script.
     # TODO: Detect the zygote and run 'art-on' automatically.
     root = os.environ["ANDROID_BUILD_TOP"]
@@ -167,7 +167,31 @@ def generate_gdb_script(sysroot, binary_file, is64bit, port):
     else:
         gdb_commands += "source {}\n".format(dalvik_gdb_script)
 
-    gdb_commands += "target remote :{}\n".format(port)
+    # Try to connect for a few seconds, sometimes the device gdbserver takes
+    # a little bit to come up, especially on emulators.
+    gdb_commands += """
+python
+
+def target_remote_with_retry(target, timeout_seconds):
+  import time
+  end_time = time.time() + timeout_seconds
+  while True:
+    try:
+      gdb.execute("target remote " + target)
+      return True
+    except gdb.error as e:
+      time_left = end_time - time.time()
+      if time_left < 0 or time_left > timeout_seconds:
+        print("Error: unable to connect to device.")
+        print(e)
+        return False
+      time.sleep(min(0.25, time_left))
+
+target_remote_with_retry(':{}', {})
+
+end
+""".format(port, connect_timeout)
+
     return gdb_commands
 
 
