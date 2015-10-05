@@ -65,7 +65,12 @@ def dump_var(root, variable):
                  "{}/build/core/config.mk".format(root),
                  "dumpvar-{}".format(variable)]
 
+    # subprocess cwd argument does not change the PWD shell variable, but
+    # dumpvar.mk uses PWD to create an absolute path, so we need to set it.
+    saved_pwd = os.environ['PWD']
+    os.environ['PWD'] = root
     make_output = subprocess.check_output(make_args, cwd=root)
+    os.environ['PWD'] = saved_pwd
     return make_output.splitlines()[0]
 
 
