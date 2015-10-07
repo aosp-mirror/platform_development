@@ -42,6 +42,7 @@ import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
+import java.security.SecureRandom;
 import java.security.Signature;
 import java.security.SignatureException;
 import java.security.cert.CertificateException;
@@ -217,7 +218,7 @@ public class FingerprintAuthenticationDialogFragment extends DialogFragment
      * the activity know about the result.
      */
     private void verifyPassword() {
-        Transaction transaction = new Transaction("user", 1);
+        Transaction transaction = new Transaction("user", 1, new SecureRandom().nextLong());
         if (!mStoreBackend.verify(transaction, mPassword.getText().toString())) {
             return;
         }
@@ -284,7 +285,10 @@ public class FingerprintAuthenticationDialogFragment extends DialogFragment
         // successful.
         mPassword.setText("");
         Signature signature = mCryptoObject.getSignature();
-        Transaction transaction = new Transaction("user", 1);
+        // Include a client nonce in the transaction so that the nonce is also signed by the private
+        // key and the backend can verify that the same nonce can't be used to prevent replay
+        // attacks.
+        Transaction transaction = new Transaction("user", 1, new SecureRandom().nextLong());
         try {
             signature.update(transaction.toByteArray());
             byte[] sigBytes = signature.sign();

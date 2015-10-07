@@ -23,6 +23,8 @@ import android.content.RestrictionEntry;
 import android.content.RestrictionsManager;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Parcelable;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.text.Editable;
@@ -33,23 +35,28 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.Switch;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * This fragment provides UI and functionality to set restrictions on the AppRestrictionSchema
  * sample.
  */
 public class AppRestrictionEnforcerFragment extends Fragment implements
-        CompoundButton.OnCheckedChangeListener, AdapterView.OnItemSelectedListener {
+        CompoundButton.OnCheckedChangeListener, AdapterView.OnItemSelectedListener,
+        View.OnClickListener, ItemAddFragment.OnItemAddedListener {
 
     /**
      * Key for {@link SharedPreferences}
@@ -81,7 +88,22 @@ public class AppRestrictionEnforcerFragment extends Fragment implements
      */
     private static final String RESTRICTION_KEY_APPROVALS = "approvals";
 
+    /**
+     * Key for the bundle restriction in AppRestrictionSchema.
+     */
+    private static final String RESTRICTION_KEY_PROFILE = "profile";
+    private static final String RESTRICTION_KEY_PROFILE_NAME = "name";
+    private static final String RESTRICTION_KEY_PROFILE_AGE = "age";
+
+    /**
+     * Key for the bundle array restriction in AppRestrictionSchema.
+     */
+    private static final String RESTRICTION_KEY_ITEMS = "items";
+    private static final String RESTRICTION_KEY_ITEM_KEY = "key";
+    private static final String RESTRICTION_KEY_ITEM_VALUE = "value";
+
     private static final String DELIMETER = ",";
+    private static final String SEPARATOR = ":";
 
     /**
      * Current status of the restrictions.
@@ -94,6 +116,9 @@ public class AppRestrictionEnforcerFragment extends Fragment implements
     private EditText mEditNumber;
     private Spinner mSpinnerRank;
     private LinearLayout mLayoutApprovals;
+    private EditText mEditProfileName;
+    private EditText mEditProfileAge;
+    private LinearLayout mLayoutItems;
 
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container,
@@ -109,6 +134,10 @@ public class AppRestrictionEnforcerFragment extends Fragment implements
         mEditNumber = (EditText) view.findViewById(R.id.number);
         mSpinnerRank = (Spinner) view.findViewById(R.id.rank);
         mLayoutApprovals = (LinearLayout) view.findViewById(R.id.approvals);
+        mEditProfileName = (EditText) view.findViewById(R.id.profile_name);
+        mEditProfileAge = (EditText) view.findViewById(R.id.profile_age);
+        mLayoutItems = (LinearLayout) view.findViewById(R.id.items);
+        view.findViewById(R.id.item_add).setOnClickListener(this);
     }
 
     @Override
@@ -156,6 +185,21 @@ public class AppRestrictionEnforcerFragment extends Fragment implements
         }
     };
 
+    private TextWatcher mWatcherProfile = new EasyTextWatcher() {
+        @Override
+        public void afterTextChanged(Editable s) {
+            try {
+                String name = mEditProfileName.getText().toString();
+                String ageString = mEditProfileAge.getText().toString();
+                if (!TextUtils.isEmpty(ageString)) {
+                    saveProfile(getActivity(), name, Integer.parseInt(ageString));
+                }
+            } catch (NumberFormatException e) {
+                Toast.makeText(getActivity(), "Not an integer!", Toast.LENGTH_SHORT).show();
+            }
+        }
+    };
+
     @Override
     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
         switch (parent.getId()) {
@@ -171,9 +215,42 @@ public class AppRestrictionEnforcerFragment extends Fragment implements
         // Nothing to do
     }
 
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case R.id.item_add:
+                new ItemAddFragment().show(getChildFragmentManager(), "dialog");
+                break;
+            case R.id.item_remove:
+                String key = (String) v.getTag();
+                removeItem(key);
+                mLayoutItems.removeView((View) v.getParent());
+                break;
+        }
+    }
+
+    @Override
+    public void onItemAdded(String key, String value) {
+        key = TextUtils.replace(key,
+                new String[]{DELIMETER, SEPARATOR}, new String[]{"", ""}).toString();
+        value = TextUtils.replace(value,
+                new String[]{DELIMETER, SEPARATOR}, new String[]{"", ""}).toString();
+        Parcelable[] parcelables = mCurrentRestrictions.getParcelableArray(RESTRICTION_KEY_ITEMS);
+        Map<String, String> items = new HashMap<>();
+        if (parcelables != null) {
+            for (Parcelable parcelable : parcelables) {
+                Bundle bundle = (Bundle) parcelable;
+                items.put(bundle.getString(RESTRICTION_KEY_ITEM_KEY),
+                        bundle.getString(RESTRICTION_KEY_ITEM_VALUE));
+            }
+        }
+        items.put(key, value);
+        insertItemRow(LayoutInflater.from(getActivity()), key, value);
+        saveItems(getActivity(), items);
+    }
+
     /**
-     * Loads the restrictions for the AppRestrictionSchema sample. In this implementation, we just
-     * read the default value for the "can_say_hello" restriction.
+     * Loads the restrictions for the AppRestrictionSchema sample.
      *
      * @param activity The activity
      */
@@ -203,6 +280,28 @@ public class AppRestrictionEnforcerFragment extends Fragment implements
                                         TextUtils.join(DELIMETER,
                                                 restriction.getAllSelectedStrings())),
                                 DELIMETER));
+            } else if (RESTRICTION_KEY_PROFILE.equals(key)) {
+                String name = null;
+                int age = 0;
+                for (RestrictionEntry entry : restriction.getRestrictions()) {
+                    String profileKey = entry.getKey();
+                    if (RESTRICTION_KEY_PROFILE_NAME.equals(profileKey)) {
+                        name = entry.getSelectedString();
+                    } else if (RESTRICTION_KEY_PROFILE_AGE.equals(profileKey)) {
+                        age = entry.getIntValue();
+                    }
+                }
+                name = prefs.getString(RESTRICTION_KEY_PROFILE_NAME, name);
+                age = prefs.getInt(RESTRICTION_KEY_PROFILE_AGE, age);
+                updateProfile(name, age);
+            } else if (RESTRICTION_KEY_ITEMS.equals(key)) {
+                String itemsString = prefs.getString(RESTRICTION_KEY_ITEMS, "");
+                HashMap<String, String> items = new HashMap<>();
+                for (String itemString : TextUtils.split(itemsString, DELIMETER)) {
+                    String[] strings = itemString.split(SEPARATOR, 2);
+                    items.put(strings[0], strings[1]);
+                }
+                updateItems(activity, items);
             }
         }
     }
@@ -248,6 +347,66 @@ public class AppRestrictionEnforcerFragment extends Fragment implements
             sw.setOnCheckedChangeListener(this);
             sw.setId(R.id.approval);
             mLayoutApprovals.addView(sw);
+        }
+    }
+
+    private void updateProfile(String name, int age) {
+        Bundle profile = new Bundle();
+        profile.putString(RESTRICTION_KEY_PROFILE_NAME, name);
+        profile.putInt(RESTRICTION_KEY_PROFILE_AGE, age);
+        mCurrentRestrictions.putBundle(RESTRICTION_KEY_PROFILE, profile);
+        mEditProfileName.removeTextChangedListener(mWatcherProfile);
+        mEditProfileName.setText(name);
+        mEditProfileName.addTextChangedListener(mWatcherProfile);
+        mEditProfileAge.removeTextChangedListener(mWatcherProfile);
+        mEditProfileAge.setText(String.valueOf(age));
+        mEditProfileAge.addTextChangedListener((mWatcherProfile));
+    }
+
+    private void updateItems(Context context, Map<String, String> items) {
+        mCurrentRestrictions.putParcelableArray(RESTRICTION_KEY_ITEMS, convertToBundles(items));
+        LayoutInflater inflater = LayoutInflater.from(context);
+        mLayoutItems.removeAllViews();
+        for (String key : items.keySet()) {
+            insertItemRow(inflater, key, items.get(key));
+        }
+    }
+
+    private void insertItemRow(LayoutInflater inflater, String key, String value) {
+        View view = inflater.inflate(R.layout.item, mLayoutItems, false);
+        TextView textView = (TextView) view.findViewById(R.id.item_text);
+        textView.setText(getString(R.string.item, key, value));
+        Button remove = (Button) view.findViewById(R.id.item_remove);
+        remove.setTag(key);
+        remove.setOnClickListener(this);
+        mLayoutItems.addView(view);
+    }
+
+    @NonNull
+    private Bundle[] convertToBundles(Map<String, String> items) {
+        Bundle[] bundles = new Bundle[items.size()];
+        int i = 0;
+        for (String key : items.keySet()) {
+            Bundle bundle = new Bundle();
+            bundle.putString(RESTRICTION_KEY_ITEM_KEY, key);
+            bundle.putString(RESTRICTION_KEY_ITEM_VALUE, items.get(key));
+            bundles[i++] = bundle;
+        }
+        return bundles;
+    }
+
+    private void removeItem(String key) {
+        Parcelable[] parcelables = mCurrentRestrictions.getParcelableArray(RESTRICTION_KEY_ITEMS);
+        if (parcelables != null) {
+            Map<String, String> items = new HashMap<>();
+            for (Parcelable parcelable : parcelables) {
+                Bundle bundle = (Bundle) parcelable;
+                if (!key.equals(bundle.getString(RESTRICTION_KEY_ITEM_KEY))) {
+                    items.put(bundle.getString(RESTRICTION_KEY_ITEM_KEY),
+                            bundle.getString(RESTRICTION_KEY_ITEM_VALUE));
+                }
+            }
+            saveItems(getActivity(), items);
         }
     }
 
@@ -333,6 +492,51 @@ public class AppRestrictionEnforcerFragment extends Fragment implements
                 TextUtils.join(DELIMETER, approvals)).apply();
     }
 
+    /**
+     * Saves the value for the "profile" restriction of AppRestrictionSchema.
+     *
+     * @param activity The activity
+     * @param name     The value to be set for the "name" field.
+     * @param age      The value to be set for the "age" field.
+     */
+    private void saveProfile(Activity activity, String name, int age) {
+        Bundle profile = new Bundle();
+        profile.putString(RESTRICTION_KEY_PROFILE_NAME, name);
+        profile.putInt(RESTRICTION_KEY_PROFILE_AGE, age);
+        mCurrentRestrictions.putBundle(RESTRICTION_KEY_PROFILE, profile);
+        saveRestrictions(activity);
+        editPreferences(activity).putString(RESTRICTION_KEY_PROFILE_NAME, name).apply();
+    }
+
+    /**
+     * Saves the value for the "items" restriction of AppRestrictionSchema.
+     *
+     * @param activity The activity.
+     * @param items    The values.
+     */
+    private void saveItems(Activity activity, Map<String, String> items) {
+        mCurrentRestrictions.putParcelableArray(RESTRICTION_KEY_ITEMS, convertToBundles(items));
+        saveRestrictions(activity);
+        StringBuilder builder = new StringBuilder();
+        boolean first = true;
+        for (String key : items.keySet()) {
+            if (first) {
+                first = false;
+            } else {
+                builder.append(DELIMETER);
+            }
+            builder.append(key);
+            builder.append(SEPARATOR);
+            builder.append(items.get(key));
+        }
+        editPreferences(activity).putString(RESTRICTION_KEY_ITEMS, builder.toString()).apply();
+    }
+
+    /**
+     * Saves all the restrictions.
+     *
+     * @param activity The activity.
+     */
     private void saveRestrictions(Activity activity) {
         DevicePolicyManager devicePolicyManager
                 = (DevicePolicyManager) activity.getSystemService(Context.DEVICE_POLICY_SERVICE);

@@ -74,4 +74,23 @@ limitations under the License.
     <string name="description_secret_code">This restriction is hidden and will not be shown to the administrator.</string>
     <string name="default_secret_code">(Hidden restriction must have some default value)</string>
 
+    <!-- Bundle restriction -->
+    <string name="description_profile">Sample profile</string>
+    <string name="title_profile">Profile</string>
+
+    <string name="default_profile_name">John</string>
+    <string name="description_profile_name">The name of this person</string>
+    <string name="title_profile_name">Name</string>
+
+    <integer name="default_profile_age">25</integer>
+    <string name="description_profile_age">The age of this person</string>
+    <string name="title_profile_age">Age</string>
+
+    <!-- Bundle array restriction -->
+    <string name="description_items">Sample items</string>
+    <string name="title_items">Items</string>
+    <string name="title_item">Item</string>
+    <string name="title_key">Key</string>
+    <string name="title_value">Value</string>
+
 </resources>

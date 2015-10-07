@@ -55,10 +55,7 @@ import javax.inject.Inject;
  */
 public class MainActivity extends Activity {
 
-    private static final String TAG = MainActivity.class.getSimpleName();
-
     private static final String DIALOG_FRAGMENT_TAG = "myFragment";
-    private static final String SECRET_MESSAGE = "Very secret message";
     /** Alias for our key in the Android Key Store */
     public static final String KEY_NAME = "my_key";
 

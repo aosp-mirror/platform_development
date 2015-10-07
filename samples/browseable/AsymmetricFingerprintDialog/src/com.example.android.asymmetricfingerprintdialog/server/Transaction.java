@@ -19,6 +19,7 @@ package com.example.android.asymmetricfingerprintdialog.server;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.util.Objects;
 
 /**
  * An entity that represents a single transaction (purchase) of an item.
@@ -31,9 +32,16 @@ public class Transaction {
     /** The unique user ID who made the transaction */
     private final String mUserId;
 
-    public Transaction(String userId, long itemId) {
+    /**
+     * The random long value that will be also signed by the private key and verified in the server
+     * that the same nonce can't be reused to prevent replay attacks.
+     */
+    private final Long mClientNonce;
+
+    public Transaction(String userId, long itemId, long clientNonce) {
         mItemId = itemId;
         mUserId = userId;
+        mClientNonce = clientNonce;
     }
 
     public String getUserId() {
@@ -47,6 +55,7 @@ public class Transaction {
             dataOutputStream = new DataOutputStream(byteArrayOutputStream);
             dataOutputStream.writeLong(mItemId);
             dataOutputStream.writeUTF(mUserId);
+            dataOutputStream.writeLong(mClientNonce);
             return byteArrayOutputStream.toByteArray();
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -62,5 +71,24 @@ public class Transaction {
             } catch (IOException ignore) {
             }
         }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        Transaction that = (Transaction) o;
+        return Objects.equals(mItemId, that.mItemId) && Objects.equals(mUserId, that.mUserId) &&
+                Objects.equals(mClientNonce, that.mClientNonce);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(mItemId, mUserId, mClientNonce);
     }
 }

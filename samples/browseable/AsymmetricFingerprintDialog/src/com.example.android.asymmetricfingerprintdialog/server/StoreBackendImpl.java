@@ -23,7 +23,9 @@ import java.security.PublicKey;
 import java.security.Signature;
 import java.security.SignatureException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * A fake backend implementation of {@link StoreBackend}.
@@ -31,10 +33,17 @@ import java.util.Map;
 public class StoreBackendImpl implements StoreBackend {
 
     private final Map<String, PublicKey> mPublicKeys = new HashMap<>();
+    private final Set<Transaction> mReceivedTransactions = new HashSet<>();
 
     @Override
     public boolean verify(Transaction transaction, byte[] transactionSignature) {
         try {
+            if (mReceivedTransactions.contains(transaction)) {
+                // It verifies the equality of the transaction including the client nonce
+                // So attackers can't do replay attacks.
+                return false;
+            }
+            mReceivedTransactions.add(transaction);
             PublicKey publicKey = mPublicKeys.get(transaction.getUserId());
             Signature verificationFunction = Signature.getInstance("SHA256withECDSA");
             verificationFunction.initVerify(publicKey);
@@ -65,5 +74,4 @@ public class StoreBackendImpl implements StoreBackend {
         // backend.
         return true;
     }
-
 }

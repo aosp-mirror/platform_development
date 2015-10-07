@@ -20,6 +20,7 @@ import android.content.Context;
 import android.content.RestrictionEntry;
 import android.content.RestrictionsManager;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.text.TextUtils;
@@ -49,6 +50,12 @@ public class AppRestrictionSchemaFragment extends Fragment implements View.OnCli
     private static final String KEY_NUMBER = "number";
     private static final String KEY_RANK = "rank";
     private static final String KEY_APPROVALS = "approvals";
+    private static final String KEY_PROFILE = "profile";
+    private static final String KEY_PROFILE_NAME = "name";
+    private static final String KEY_PROFILE_AGE = "age";
+    private static final String KEY_ITEMS = "items";
+    private static final String KEY_ITEM_KEY = "key";
+    private static final String KEY_ITEM_VALUE = "value";
 
     // Message to show when the button is clicked (String restriction)
     private String mMessage;
@@ -59,6 +66,8 @@ public class AppRestrictionSchemaFragment extends Fragment implements View.OnCli
     private TextView mTextNumber;
     private TextView mTextRank;
     private TextView mTextApprovals;
+    private TextView mTextProfile;
+    private TextView mTextItems;
 
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container,
@@ -73,6 +82,8 @@ public class AppRestrictionSchemaFragment extends Fragment implements View.OnCli
         mTextNumber = (TextView) view.findViewById(R.id.your_number);
         mTextRank = (TextView) view.findViewById(R.id.your_rank);
         mTextApprovals = (TextView) view.findViewById(R.id.approvals_you_have);
+        mTextProfile = (TextView) view.findViewById(R.id.your_profile);
+        mTextItems = (TextView) view.findViewById(R.id.your_items);
         mButtonSayHello.setOnClickListener(this);
     }
 
@@ -86,7 +97,8 @@ public class AppRestrictionSchemaFragment extends Fragment implements View.OnCli
         RestrictionsManager manager =
                 (RestrictionsManager) getActivity().getSystemService(Context.RESTRICTIONS_SERVICE);
         Bundle restrictions = manager.getApplicationRestrictions();
-        List<RestrictionEntry> entries = manager.getManifestRestrictions(getActivity().getApplicationContext().getPackageName());
+        List<RestrictionEntry> entries = manager.getManifestRestrictions(
+                getActivity().getApplicationContext().getPackageName());
         for (RestrictionEntry entry : entries) {
             String key = entry.getKey();
             Log.d(TAG, "key: " + key);
@@ -100,6 +112,10 @@ public class AppRestrictionSchemaFragment extends Fragment implements View.OnCli
                 updateRank(entry, restrictions);
             } else if (key.equals(KEY_APPROVALS)) {
                 updateApprovals(entry, restrictions);
+            } else if (key.equals(KEY_PROFILE)) {
+                updateProfile(entry, restrictions);
+            } else if (key.equals(KEY_ITEMS)) {
+                updateItems(entry, restrictions);
             }
         }
     }
@@ -159,6 +175,61 @@ public class AppRestrictionSchemaFragment extends Fragment implements View.OnCli
             text = TextUtils.join(", ", approvals);
         }
         mTextApprovals.setText(getString(R.string.approvals_you_have, text));
+    }
+
+    private void updateProfile(RestrictionEntry entry, Bundle restrictions) {
+        String name = null;
+        int age = 0;
+        if (restrictions == null || !restrictions.containsKey(KEY_PROFILE)) {
+            RestrictionEntry[] entries = entry.getRestrictions();
+            for (RestrictionEntry profileEntry : entries) {
+                String key = profileEntry.getKey();
+                if (key.equals(KEY_PROFILE_NAME)) {
+                    name = profileEntry.getSelectedString();
+                } else if (key.equals(KEY_PROFILE_AGE)) {
+                    age = profileEntry.getIntValue();
+                }
+            }
+        } else {
+            Bundle profile = restrictions.getBundle(KEY_PROFILE);
+            if (profile != null) {
+                name = profile.getString(KEY_PROFILE_NAME);
+                age = profile.getInt(KEY_PROFILE_AGE);
+            }
+        }
+        mTextProfile.setText(getString(R.string.your_profile, name, age));
+    }
+
+    private void updateItems(RestrictionEntry entry, Bundle restrictions) {
+        StringBuilder builder = new StringBuilder();
+        if (restrictions != null) {
+            Parcelable[] parcelables = restrictions.getParcelableArray(KEY_ITEMS);
+            if (parcelables != null && parcelables.length > 0) {
+                Bundle[] items = new Bundle[parcelables.length];
+                for (int i = 0; i < parcelables.length; i++) {
+                    items[i] = (Bundle) parcelables[i];
+                }
+                boolean first = true;
+                for (Bundle item : items) {
+                    if (!item.containsKey(KEY_ITEM_KEY) || !item.containsKey(KEY_ITEM_VALUE)) {
+                        continue;
+                    }
+                    if (first) {
+                        first = false;
+                    } else {
+                        builder.append(", ");
+                    }
+                    builder.append(item.getString(KEY_ITEM_KEY));
+                    builder.append(":");
+                    builder.append(item.getString(KEY_ITEM_VALUE));
+                }
+            } else {
+                builder.append(getString(R.string.none));
+            }
+        } else {
+            builder.append(getString(R.string.none));
+        }
+        mTextItems.setText(getString(R.string.your_items, builder));
     }
 
     @Override

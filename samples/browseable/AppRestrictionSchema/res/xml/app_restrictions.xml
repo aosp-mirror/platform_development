@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!--
+<?xml version="1.0" encoding="utf-8"?><!--
 Copyright 2014 The Android Open Source Project
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,6 +20,7 @@ limitations under the License.
     https://developer.android.com/reference/android/content/RestrictionsManager.html
     -->
 
+    <!-- Boolean restriction -->
     <restriction
         android:defaultValue="@bool/default_can_say_hello"
         android:description="@string/description_can_say_hello"
@@ -28,6 +28,7 @@ limitations under the License.
         android:restrictionType="bool"
         android:title="@string/title_can_say_hello"/>
 
+    <!-- String restriction -->
     <restriction
         android:defaultValue="@string/default_message"
         android:description="@string/description_message"
@@ -35,6 +36,7 @@ limitations under the License.
         android:restrictionType="string"
         android:title="@string/title_message"/>
 
+    <!-- Integer restriction -->
     <restriction
         android:defaultValue="@integer/default_number"
         android:description="@string/description_number"
@@ -42,6 +44,7 @@ limitations under the License.
         android:restrictionType="integer"
         android:title="@string/title_number"/>
 
+    <!-- Choice restriction -->
     <restriction
         android:defaultValue="@string/default_rank"
         android:description="@string/description_rank"
@@ -51,6 +54,7 @@ limitations under the License.
         android:restrictionType="choice"
         android:title="@string/title_rank"/>
 
+    <!-- Multi-select restriction -->
     <restriction
         android:defaultValue="@array/default_approvals"
         android:description="@string/description_approvals"
@@ -60,11 +64,54 @@ limitations under the License.
         android:restrictionType="multi-select"
         android:title="@string/title_approvals"/>
 
+    <!-- Hidden restriction -->
     <restriction
         android:defaultValue="@string/default_secret_code"
         android:description="@string/description_secret_code"
         android:key="secret_code"
         android:restrictionType="hidden"
         android:title="@string/title_secret_code"/>
+
+    <!-- Bundle restriction; useful for grouping restrictions -->
+    <restriction
+        android:description="@string/description_profile"
+        android:key="profile"
+        android:restrictionType="bundle"
+        android:title="@string/title_profile">
+        <restriction
+            android:defaultValue="@string/default_profile_name"
+            android:description="@string/description_profile_name"
+            android:key="name"
+            android:restrictionType="string"
+            android:title="@string/title_profile_name"/>
+        <restriction
+            android:defaultValue="@integer/default_profile_age"
+            android:description="@string/description_profile_age"
+            android:key="age"
+            android:restrictionType="integer"
+            android:title="@string/title_profile_age"/>
+    </restriction>
+
+    <!-- Bundle array restriction -->
+    <restriction
+        android:description="@string/description_items"
+        android:key="items"
+        android:restrictionType="bundle_array"
+        android:title="@string/title_items">
+        <!-- Bundle array must have one bundle restriction -->
+        <restriction
+            android:key="item"
+            android:restrictionType="bundle"
+            android:title="@string/title_item">
+            <restriction
+                android:key="key"
+                android:restrictionType="string"
+                android:title="@string/title_key"/>
+            <restriction
+                android:key="value"
+                android:restrictionType="string"
+                android:title="@string/title_value"/>
+        </restriction>
+    </restriction>
 
 </restrictions>

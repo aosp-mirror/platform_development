@@ -57,5 +57,4 @@ public interface StoreBackend {
      * @return true if the enrollment was successful, false otherwise
      */
     boolean enroll(String userId, String password, PublicKey publicKey);
-
 }
