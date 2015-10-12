@@ -383,7 +383,7 @@ def get_md5_prog(device):
     try:
         device.shell(['md5sum', '/proc/uptime'])
         return 'md5sum'
-    except subprocess.CalledProcessError:
+    except adb.ShellError:
         return 'md5'
 
 
