@@ -270,7 +270,7 @@ class AndroidDevice(object):
         """Calls `adb shell`
 
         Args:
-            cmd: string shell command to execute.
+            cmd: command to execute as a list of strings.
 
         Returns:
             A (stdout, stderr) tuple. Stderr may be combined into stdout
@@ -288,7 +288,7 @@ class AndroidDevice(object):
         """Calls `adb shell`
 
         Args:
-            cmd: string shell command to execute.
+            cmd: command to execute as a list of strings.
 
         Returns:
             An (exit_code, stdout, stderr) tuple. Stderr may be combined
