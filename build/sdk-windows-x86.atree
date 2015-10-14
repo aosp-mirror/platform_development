@@ -78,19 +78,22 @@ bin/dexdump.exe                         strip build-tools/${PLATFORM_NAME}/dexdu
 rm build-tools/${PLATFORM_NAME}/llvm-rs-cc
 bin/llvm-rs-cc.exe                      strip build-tools/${PLATFORM_NAME}/llvm-rs-cc.exe
 
+# libc++.so not needed on Windows.
+rm build-tools/${PLATFORM_NAME}/lib/libc++.so
+
 rm build-tools/${PLATFORM_NAME}/lib/libLLVM.so
-lib/libLLVM.dll                         strip build-tools/${PLATFORM_NAME}/lib/libLLVM.dll
+lib/libLLVM.dll                         strip build-tools/${PLATFORM_NAME}/libLLVM.dll
 
 rm build-tools/${PLATFORM_NAME}/lib/libclang.so
-lib/libclang.dll                        strip build-tools/${PLATFORM_NAME}/lib/libclang.dll
+lib/libclang.dll                        strip build-tools/${PLATFORM_NAME}/libclang.dll
 
 #bcc not yet compiled on windows
 
 rm build-tools/${PLATFORM_NAME}/lib/libbcc.so
-lib/libbcc.dll                          strip build-tools/${PLATFORM_NAME}/lib/libbcc.dll
+lib/libbcc.dll                          strip build-tools/${PLATFORM_NAME}/libbcc.dll
 
 rm build-tools/${PLATFORM_NAME}/lib/libbcinfo.so
-lib/libbcinfo.dll                       strip build-tools/${PLATFORM_NAME}/lib/libbcinfo.dll
+lib/libbcinfo.dll                       strip build-tools/${PLATFORM_NAME}/libbcinfo.dll
 
 rm build-tools/${PLATFORM_NAME}/bcc_compat
 bin/bcc_compat.exe                      strip build-tools/${PLATFORM_NAME}/bcc_compat.exe
