@@ -24,6 +24,7 @@ import random
 import shlex
 import shutil
 import signal
+import string
 import subprocess
 import tempfile
 import unittest
@@ -134,9 +135,9 @@ class ShellTest(DeviceTest):
                 stderr=subprocess.PIPE)
         # Closing host-side stdin doesn't currently trigger the interactive
         # shell to exit so we need to explicitly add an exit command to
-        # close the session from the device side, and append linesep to complete
+        # close the session from the device side, and append newline to complete
         # the interactive command.
-        proc.communicate('{}; exit{}'.format(input, self.device.linesep))
+        proc.communicate(input + '; exit\n')
         return proc.returncode
 
     def test_cat(self):
@@ -260,6 +261,26 @@ class ShellTest(DeviceTest):
         sleep_proc.communicate()
         self.assertEqual(1, self.device.shell_nocheck(proc_query)[0],
                          'subprocess failed to terminate')
+
+    def test_non_interactive_stdin(self):
+        """Tests that non-interactive shells send stdin."""
+        if self.device.SHELL_PROTOCOL_FEATURE not in self.device.features:
+            raise unittest.SkipTest('non-interactive stdin unsupported '
+                                    'on this device')
+
+        # Test both small and large inputs.
+        small_input = 'foo'
+        large_input = '\n'.join(c * 100 for c in (string.ascii_letters +
+                                                  string.digits))
+
+        for input in (small_input, large_input):
+            proc = subprocess.Popen(self.device.adb_cmd + ['shell', 'cat'],
+                                    stdin=subprocess.PIPE,
+                                    stdout=subprocess.PIPE,
+                                    stderr=subprocess.PIPE)
+            stdout, stderr = proc.communicate(input)
+            self.assertEqual(input.splitlines(), stdout.splitlines())
+            self.assertEqual('', stderr)
 
 
 class ArgumentEscapingTest(DeviceTest):
