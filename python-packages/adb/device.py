@@ -212,6 +212,12 @@ def _subprocess_check_output(*args, **kwargs):
 # Call this instead of subprocess.Popen(). Like _subprocess_check_output().
 class _subprocess_Popen(subprocess.Popen):
     def __init__(self, *args, **kwargs):
+        # __del__() can be called after global teardown has started, meaning
+        # the global references to _subprocess_Popen and the os module may
+        # no longer exist. We need to save local references to all global names
+        # used in __del__() to avoid this.
+        self.saved_class = _subprocess_Popen
+        self.saved_os = os
         # Save reference to helper so that it can be deleted once it is no
         # longer used.
         self.helper = _get_windows_unicode_helper(args[0])
@@ -219,9 +225,9 @@ class _subprocess_Popen(subprocess.Popen):
                 *_get_subprocess_args(args, self.helper), **kwargs)
 
     def __del__(self, *args, **kwargs):
-        super(_subprocess_Popen, self).__del__(*args, **kwargs)
+        super(self.saved_class, self).__del__(*args, **kwargs)
         if self.helper:
-            os.remove(self.helper.name)
+            self.saved_os.remove(self.helper.name)
 
 
 class AndroidDevice(object):
