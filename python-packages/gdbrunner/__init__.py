@@ -167,24 +167,65 @@ def start_gdbserver(device, gdbserver_local_path, gdbserver_remote_path,
                               stderr=gdbclient_output)
 
 
-def pull_file(device, path, user=None):
-    """Pull a file from a device as a user."""
+def find_file(device, executable_path, sysroot, user=None):
+    """Finds a device executable file.
 
-    file_name = "gdbclient-binary-{}".format(os.getppid())
-    remote_temp_path = "/data/local/tmp/{}".format(file_name)
-    local_temp_path = os.path.join(tempfile.gettempdir(), file_name)
-    cmd = get_run_as_cmd(user, ["cat", path, ">", remote_temp_path])
-    try:
-        device.shell(cmd)
-    except adb.ShellError:
-        raise RuntimeError("Failed to copy file to temporary folder on device")
-    device.pull(remote_temp_path, local_temp_path)
-    return open(local_temp_path, "r")
+    This function first attempts to find the local file which will
+    contain debug symbols. If that fails, it will fall back to
+    downloading the stripped file from the device.
+
+    Args:
+      device: the AndroidDevice object to use.
+      executable_path: absolute path to the executable or symlink.
+      sysroot: absolute path to the built symbol sysroot.
+      user: if necessary, the user to download the file as.
+
+    Returns:
+      A tuple containing (<open file object>, <was found locally>).
+
+    Raises:
+      RuntimeError: could not find the executable binary.
+      ValueError: |executable_path| is not absolute.
+    """
+    if not os.path.isabs(executable_path):
+        raise ValueError("'{}' is not an absolute path".format(executable_path))
+
+    def generate_files():
+        """Yields (<file name>, <found locally>) tuples."""
+        # First look locally to avoid shelling into the device if possible.
+        # os.path.join() doesn't combine absolute paths, use + instead.
+        yield (sysroot + executable_path, True)
+
+        # Next check if the path is a symlink.
+        try:
+            target = device.shell(['readlink', '-e', '-n', executable_path])[0]
+            yield (sysroot + target, True)
+        except adb.ShellError:
+            pass
+
+        # Last, download the stripped executable from the device if necessary.
+        file_name = "gdbclient-binary-{}".format(os.getppid())
+        remote_temp_path = "/data/local/tmp/{}".format(file_name)
+        local_path = os.path.join(tempfile.gettempdir(), file_name)
+        cmd = get_run_as_cmd(user,
+                             ["cat", executable_path, ">", remote_temp_path])
+        try:
+            device.shell(cmd)
+        except adb.ShellError:
+            raise RuntimeError("Failed to copy '{}' to temporary folder on "
+                               "device".format(executable_path))
+        device.pull(remote_temp_path, local_path)
+        yield (local_path, False)
+
+    for path, found_locally in generate_files():
+        if os.path.isfile(path):
+            return (open(path, "r"), found_locally)
+    raise RuntimeError('Could not find executable {}'.format(executable_path))
 
 
-def pull_binary(device, pid, user=None):
-    """Pull a running process's binary from a device as a user"""
-    return pull_file(device, "/proc/{}/exe".format(pid), user)
+def find_binary(device, pid, sysroot, user=None):
+    """Finds a device executable file corresponding to |pid|."""
+    return find_file(device, "/proc/{}/exe".format(pid), sysroot, user)
 
 
 def get_binary_arch(binary_file):
