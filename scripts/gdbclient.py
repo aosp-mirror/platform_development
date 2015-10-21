@@ -106,7 +106,7 @@ def ensure_linker(device, sysroot, is64bit):
         device.pull(remote_path, local_path)
 
 
-def handle_switches(args):
+def handle_switches(args, sysroot):
     """Fetch the targeted binary and determine how to attach gdb.
 
     Args:
@@ -135,13 +135,19 @@ def handle_switches(args):
         if not args.run_cmd[0].startswith("/"):
             sys.exit("commands passed to -r must use absolute paths")
         run_cmd = args.run_cmd
-        binary_file = gdbrunner.pull_file(device, run_cmd[0], user=args.user)
+        binary_file, local = gdbrunner.find_file(device, run_cmd[0], sysroot,
+                                                 user=args.user)
     if binary_file is None:
         assert pid is not None
         try:
-            binary_file = gdbrunner.pull_binary(device, pid=pid, user=args.user)
+            binary_file, local = gdbrunner.find_binary(device, pid, sysroot,
+                                                       user=args.user)
         except adb.ShellError:
             sys.exit("failed to pull binary for PID {}".format(pid))
+
+    if not local:
+        logging.warning("Couldn't find local unstripped executable in {},"
+                        " symbols may not be available.".format(sysroot))
 
     return (binary_file, pid, run_cmd)
 
@@ -216,7 +222,7 @@ def main():
     run_cmd = None
 
     # Fetch binary for -p, -n.
-    binary_file, pid, run_cmd = handle_switches(args)
+    binary_file, pid, run_cmd = handle_switches(args, sysroot)
 
     with binary_file:
         arch = gdbrunner.get_binary_arch(binary_file)
@@ -248,6 +254,9 @@ def main():
             sys.exit("Unknown platform: {}".format(sys.platform))
         gdb_path = os.path.join(root, "prebuilts", "gdb", platform_name, "bin",
                                 "gdb")
+
+        # Print a newline to separate our messages from the GDB session.
+        print("")
 
         # Start gdb.
         gdbrunner.start_gdb(gdb_path, gdb_commands)
