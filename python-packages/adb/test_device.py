@@ -26,6 +26,7 @@ import shutil
 import signal
 import string
 import subprocess
+import sys
 import tempfile
 import unittest
 
@@ -133,10 +134,9 @@ class ShellTest(DeviceTest):
                 self.device.adb_cmd + ['shell'] + shell_args,
                 stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE)
-        # Closing host-side stdin doesn't currently trigger the interactive
-        # shell to exit so we need to explicitly add an exit command to
-        # close the session from the device side, and append newline to complete
-        # the interactive command.
+        # Closing host-side stdin doesn't trigger a PTY shell to exit so we need
+        # to explicitly add an exit command to close the session from the device
+        # side, plus the necessary newline to complete the interactive command.
         proc.communicate(input + '; exit\n')
         return proc.returncode
 
@@ -183,27 +183,56 @@ class ShellTest(DeviceTest):
         output = self.device.shell(['uname'])[0]
         self.assertEqual(output, 'Linux' + self.device.linesep)
 
-    def test_default_pty_logic(self):
-        """Verify default PTY logic for shells.
+    def test_pty_logic(self):
+        """Tests that a PTY is allocated when it should be.
 
-        Interactive shells should use a PTY, non-interactive should not.
-
-        Bug: http://b/21215503
+        PTY allocation behavior should match ssh; some behavior requires
+        a terminal stdin to test so this test will be skipped if stdin
+        is not a terminal.
         """
-        # [ -t 0 ] is used (rather than `tty`) to provide portability. This
-        # gives an exit code of 0 iff stdin is connected to a terminal.
-        self.assertEqual(0, self._interactive_shell([], '[ -t 0 ]'))
-        self.assertEqual(1, self.device.shell_nocheck(['[ -t 0 ]'])[0])
-
-    def test_pty_arguments(self):
-        """Tests the -T and -t arguments to manually control PTY."""
         if self.device.SHELL_PROTOCOL_FEATURE not in self.device.features:
             raise unittest.SkipTest('PTY arguments unsupported on this device')
+        if not os.isatty(sys.stdin.fileno()):
+            raise unittest.SkipTest('PTY tests require stdin terminal')
 
-        self.assertEqual(0, self._interactive_shell(['-t'], '[ -t 0 ]'))
-        self.assertEqual(1, self._interactive_shell(['-T'], '[ -t 0 ]'))
-        self.assertEqual(0, self.device.shell_nocheck(['-t', '[ -t 0 ]'])[0])
-        self.assertEqual(1, self.device.shell_nocheck(['-T', '[ -t 0 ]'])[0])
+        def check_pty(args):
+            """Checks adb shell PTY allocation.
+
+            Tests |args| for terminal and non-terminal stdin.
+
+            Args:
+                args: -Tt args in a list (e.g. ['-t', '-t']).
+
+            Returns:
+                A tuple (<terminal>, <non-terminal>). True indicates
+                the corresponding shell allocated a remote PTY.
+            """
+            test_cmd = self.device.adb_cmd + ['shell'] + args + ['[ -t 0 ]']
+
+            terminal = subprocess.Popen(
+                    test_cmd, stdin=None,
+                    stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            terminal.communicate()
+
+            non_terminal = subprocess.Popen(
+                    test_cmd, stdin=subprocess.PIPE,
+                    stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            non_terminal.communicate()
+
+            return (terminal.returncode == 0, non_terminal.returncode == 0)
+
+        # -T: never allocate PTY.
+        self.assertEqual((False, False), check_pty(['-T']))
+
+        # No args: PTY only if stdin is a terminal and shell is interactive,
+        # which is difficult to reliably test from a script.
+        self.assertEqual((False, False), check_pty([]))
+
+        # -t: PTY if stdin is a terminal.
+        self.assertEqual((True, False), check_pty(['-t']))
+
+        # -t -t: always allocate PTY.
+        self.assertEqual((True, True), check_pty(['-t', '-t']))
 
     def test_shell_protocol(self):
         """Tests the shell protocol on the device.
