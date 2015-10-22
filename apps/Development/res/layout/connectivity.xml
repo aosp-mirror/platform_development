@@ -248,27 +248,27 @@
       android:paddingTop="4dip"
       android:layout_width="match_parent"
       android:layout_height="wrap_content">
-        <Button android:id="@+id/start_mms"
+        <Button android:id="@+id/request_mms"
           android:layout_width="wrap_content"
           android:layout_height="wrap_content"
-          android:text="@string/start_mms" />
-        <Button android:id="@+id/stop_mms"
+          android:text="@string/request_mms" />
+        <Button android:id="@+id/release_mms"
           android:layout_width="wrap_content"
           android:layout_height="wrap_content"
-          android:text="@string/stop_mms" />
+          android:text="@string/release_mms" />
     </LinearLayout>
     <LinearLayout
       android:orientation="horizontal"
       android:layout_width="match_parent"
       android:layout_height="wrap_content">
-        <Button android:id="@+id/start_hipri"
+        <Button android:id="@+id/request_cell"
           android:layout_width="wrap_content"
           android:layout_height="wrap_content"
-          android:text="@string/start_hipri" />
-        <Button android:id="@+id/stop_hipri"
+          android:text="@string/request_cell" />
+        <Button android:id="@+id/release_cell"
           android:layout_width="wrap_content"
           android:layout_height="wrap_content"
-          android:text="@string/stop_hipri" />
+          android:text="@string/release_cell" />
     </LinearLayout>
     <LinearLayout
       android:orientation="horizontal"
