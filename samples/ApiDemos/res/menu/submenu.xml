@@ -15,28 +15,137 @@
 -->
 
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:title="Apple"
+          android:showAsAction="always|withText" />
+
+    <item android:title="Orange"
+          android:showAsAction="always|withText">
+
+        <menu>
+
+            <item android:id="@+id/a"
+                  android:title="Aaaaaa"
+                  android:icon="@drawable/stat_happy" />
+
+            <item android:id="@+id/b"
+                  android:title="Bbbbbbb"
+                  android:icon="@drawable/stat_neutral" />
+
+            <item android:id="@+id/c"
+                  android:title="Ccccccc (More)">
+
+                <menu>
+                    <item android:id="@+id/d"
+                          android:title="Dddddd" />
+                    <item android:id="@+id/d"
+                          android:title="Eeeeee">
+                        <menu>
+                            <item android:title="Ffffff" />
+                        </menu>
+                    </item>
+
+                </menu>
+            </item>
+
+        </menu>
+    </item>
 
     <item android:title="Normal 1" />
 
     <item android:id="@+id/submenu"
-        android:title="Emotions">
+          android:title="Emotions">
 
-        <menu>        
+        <menu>
+
+
 
             <item android:id="@+id/happy"
-                android:title="Happy"
-                android:icon="@drawable/stat_happy" />
-        
+                  android:title="Happy"
+                  android:icon="@drawable/stat_happy" />
+
             <item android:id="@+id/neutral"
-                android:title="Neutral"
-                android:icon="@drawable/stat_neutral" />
-        
+                  android:title="Neutral"
+                  android:icon="@drawable/stat_neutral" />
+
             <item android:id="@+id/sad"
-                android:title="Sad"
-                android:icon="@drawable/stat_sad" />
-        
+                  android:title="Sad"
+                  android:icon="@drawable/stat_sad" />
+
+            <item android:id="@+id/happyA"
+                  android:title="Happy"
+                  android:icon="@drawable/stat_happy" />
+
+            <item android:id="@+id/neutralA"
+                  android:title="Neutral"
+                  android:icon="@drawable/stat_neutral" />
+
+            <item android:id="@+id/emotions2"
+                  android:title="More Emotions">
+
+                <menu>
+                    <item android:id="@+id/emotions3"
+                          android:title="More Emotions">
+
+                        <menu>
+
+                            <item android:id="@+id/angry2"
+                                  android:title="Very Angry" />
+
+                            <item android:id="@+id/neutral3"
+                                  android:title="Triple Neutral"
+                                  android:icon="@drawable/stat_neutral" />
+
+                        </menu>
+
+                    </item>
+
+                    <item android:id="@+id/angry"
+                          android:title="Angry" />
+
+                    <item android:id="@+id/neutral2"
+                          android:title="Double Neutral"
+                          android:icon="@drawable/stat_neutral" />
+
+                </menu>
+            </item>
+
+            <item android:id="@+id/sadA"
+                  android:title="Sad"
+                  android:icon="@drawable/stat_sad" />
+
+            <item android:id="@+id/happyB"
+                  android:title="Happy"
+                  android:icon="@drawable/stat_happy" />
+
+            <item android:id="@+id/neutralB"
+                  android:title="Neutral"
+                  android:icon="@drawable/stat_neutral" />
+
+            <item android:id="@+id/sadB"
+                  android:title="Sad"
+                  android:icon="@drawable/stat_sad" />
+
+            <item android:id="@+id/happyC"
+                  android:title="Happy"
+                  android:icon="@drawable/stat_happy" />
+
+            <item android:id="@+id/neutralC"
+                  android:title="Neutral"
+                  android:icon="@drawable/stat_neutral" />
+
+            <item android:id="@+id/sadC"
+                  android:title="Sad"
+                  android:icon="@drawable/stat_sad" />
+
+            <item android:id="@+id/happyD"
+                  android:title="Happy"
+                  android:icon="@drawable/stat_happy" />
+
+            <item android:id="@+id/neutralD"
+                  android:title="Neutral"
+                  android:icon="@drawable/stat_neutral" />
         </menu>
-    
+
     </item>
 
     <item android:title="Normal 2" />
