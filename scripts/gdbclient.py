@@ -161,6 +161,7 @@ def generate_gdb_script(sysroot, binary_file, is64bit, port, connect_timeout=5):
 
     gdb_commands = ""
     gdb_commands += "file '{}'\n".format(binary_file.name)
+    gdb_commands += "directory '{}'\n".format(root)
     gdb_commands += "set solib-absolute-prefix {}\n".format(sysroot)
     gdb_commands += "set solib-search-path {}\n".format(solib_search_path)
 
