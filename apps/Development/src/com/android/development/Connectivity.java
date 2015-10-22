@@ -287,6 +287,56 @@ public class Connectivity extends Activity {
     }
     private DevToolsNetworkCallback mCallback;
 
+    private class RequestableNetwork {
+        private final NetworkRequest mRequest;
+        private final int mRequestButton, mReleaseButton;
+        private NetworkCallback mCallback;
+
+        public RequestableNetwork(NetworkRequest request, int requestButton, int releaseButton) {
+            mRequest = request;
+            mRequestButton = requestButton;
+            mReleaseButton = releaseButton;
+        }
+
+        public void setRequested(boolean requested) {
+            findViewById(mRequestButton).setEnabled(!requested);
+            findViewById(mReleaseButton).setEnabled(requested);
+        }
+
+        public void request() {
+            if (mCallback == null) {
+                mCallback = new NetworkCallback();
+                mCm.requestNetwork(mRequest, mCallback);
+                setRequested(true);
+            }
+        }
+
+        public void release() {
+            if (mCallback != null) {
+                mCm.unregisterNetworkCallback(mCallback);
+                mCallback = null;
+                setRequested(false);
+            }
+        }
+    }
+
+    private final RequestableNetwork mMmsNetwork = new RequestableNetwork(
+            new NetworkRequest.Builder()
+                    .addCapability(NetworkCapabilities.NET_CAPABILITY_MMS)
+                    .build(),
+            R.id.request_mms,
+            R.id.release_mms);
+
+    private final RequestableNetwork mCellNetwork = new RequestableNetwork(
+            new NetworkRequest.Builder()
+                    .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                    .addTransportType(NetworkCapabilities.TRANSPORT_CELLULAR)
+                    .build(),
+            R.id.request_cell,
+            R.id.release_cell);
+
+    final NetworkRequest mEmptyRequest = new NetworkRequest.Builder().clearCapabilities().build();
+
     @Override
     public void onCreate(Bundle icicle) {
         super.onCreate(icicle);
@@ -336,10 +386,10 @@ public class Connectivity extends Activity {
         findViewById(R.id.startTdls).setOnClickListener(mClickListener);
         findViewById(R.id.stopTdls).setOnClickListener(mClickListener);
 
-        findViewById(R.id.start_mms).setOnClickListener(mClickListener);
-        findViewById(R.id.stop_mms).setOnClickListener(mClickListener);
-        findViewById(R.id.start_hipri).setOnClickListener(mClickListener);
-        findViewById(R.id.stop_hipri).setOnClickListener(mClickListener);
+        findViewById(R.id.request_mms).setOnClickListener(mClickListener);
+        findViewById(R.id.release_mms).setOnClickListener(mClickListener);
+        findViewById(R.id.request_cell).setOnClickListener(mClickListener);
+        findViewById(R.id.release_cell).setOnClickListener(mClickListener);
         findViewById(R.id.report_all_bad).setOnClickListener(mClickListener);
         findViewById(R.id.crash).setOnClickListener(mClickListener);
 
@@ -353,24 +403,25 @@ public class Connectivity extends Activity {
         findViewById(R.id.default_socket).setOnClickListener(mClickListener);
         findViewById(R.id.link_stats).setOnClickListener(mClickListener);
 
+        mCellNetwork.setRequested(false);
+        mMmsNetwork.setRequested(false);
+
         registerReceiver(mReceiver, new IntentFilter(CONNECTIVITY_TEST_ALARM));
 
         mLinkStatsResults = (TextView)findViewById(R.id.stats);
         mLinkStatsResults.setVisibility(View.VISIBLE);
 
-        NetworkRequest.Builder builder = new NetworkRequest.Builder();
-        for (int i = 0; i < 255; i++) {
-            try { builder.removeCapability(i); } catch (IllegalArgumentException e) {}
-        }
-        NetworkRequest request = builder.build();
         mCallback = new DevToolsNetworkCallback();
-        mCm.registerNetworkCallback(request, mCallback);
+        mCm.registerNetworkCallback(mEmptyRequest, mCallback);
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
+        mCellNetwork.release();
+        mMmsNetwork.release();
         mCm.unregisterNetworkCallback(mCallback);
+        mCallback = null;
         unregisterReceiver(mReceiver);
     }
 
@@ -410,13 +461,11 @@ public class Connectivity extends Activity {
                 case R.id.stopTdls:
                     onStopTdls();
                     break;
-                case R.id.start_mms:
-                    mCm.startUsingNetworkFeature(ConnectivityManager.TYPE_MOBILE,
-                            Phone.FEATURE_ENABLE_MMS);
+                case R.id.request_mms:
+                    mMmsNetwork.request();
                     break;
-                case R.id.stop_mms:
-                    mCm.stopUsingNetworkFeature(ConnectivityManager.TYPE_MOBILE,
-                            Phone.FEATURE_ENABLE_MMS);
+                case R.id.release_mms:
+                    mMmsNetwork.release();
                     break;
                 case R.id.default_socket:
                     onDefaultSocket();
@@ -448,13 +497,11 @@ public class Connectivity extends Activity {
                 case R.id.crash:
                     onCrash();
                     break;
-                case R.id.start_hipri:
-                    mCm.startUsingNetworkFeature(ConnectivityManager.TYPE_MOBILE,
-                            Phone.FEATURE_ENABLE_HIPRI);
+                case R.id.request_cell:
+                    mCellNetwork.request();
                     break;
-                case R.id.stop_hipri:
-                    mCm.stopUsingNetworkFeature(ConnectivityManager.TYPE_MOBILE,
-                            Phone.FEATURE_ENABLE_HIPRI);
+                case R.id.release_cell:
+                    mCellNetwork.release();
                     break;
                 case R.id.link_stats:
                     onLinkStats();
