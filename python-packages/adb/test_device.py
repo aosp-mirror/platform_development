@@ -54,6 +54,23 @@ def requires_root(func):
     return wrapper
 
 
+def requires_non_root(func):
+    def wrapper(self, *args):
+        was_root = self.device.shell(['id', '-un'])[0].strip() == 'root'
+        if was_root:
+            self.device.unroot()
+            self.device.wait()
+
+        try:
+            func(self, *args)
+        finally:
+            if was_root:
+                self.device.root()
+                self.device.wait()
+
+    return wrapper
+
+
 class GetDeviceTest(unittest.TestCase):
     def setUp(self):
         self.android_serial = os.getenv('ANDROID_SERIAL')
@@ -495,6 +512,20 @@ class FileOperationsTest(DeviceTest):
             host_md5 = compute_md5(host_contents)
         self.assertEqual(checksum, host_md5)
         os.remove(tmp_write.name)
+
+    @requires_non_root
+    def test_pull_error_reporting(self):
+        self.device.shell(['touch', self.DEVICE_TEMP_FILE])
+        self.device.shell(['chmod', 'a-rwx', self.DEVICE_TEMP_FILE])
+
+        try:
+            output = self.device.pull(remote=self.DEVICE_TEMP_FILE, local='x')
+        except subprocess.CalledProcessError as e:
+            output = e.output
+
+        self.assertIn('Permission denied', output)
+
+        self.device.shell(['rm', '-f', self.DEVICE_TEMP_FILE])
 
     def test_pull(self):
         """Pull a randomly generated file from specified device."""
