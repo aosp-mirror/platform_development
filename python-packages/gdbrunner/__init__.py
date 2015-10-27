@@ -144,7 +144,7 @@ def start_gdbserver(device, gdbserver_local_path, gdbserver_remote_path,
 
     Args:
         device: ADB device to start gdbserver on.
-        gdbserver_local_path: Host path to push gdbserver from.
+        gdbserver_local_path: Host path to push gdbserver from, can be None.
         gdbserver_remote_path: Device path to push gdbserver to.
         target_pid: PID of device process to attach to.
         run_cmd: Command to run on the device.
@@ -159,7 +159,8 @@ def start_gdbserver(device, gdbserver_local_path, gdbserver_remote_path,
     assert target_pid is None or run_cmd is None
 
     # Push gdbserver to the target.
-    device.push(gdbserver_local_path, gdbserver_remote_path)
+    if gdbserver_local_path is not None:
+        device.push(gdbserver_local_path, gdbserver_remote_path)
 
     # Run gdbserver.
     gdbserver_cmd = [gdbserver_remote_path, "--once",
