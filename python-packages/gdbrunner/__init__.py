@@ -63,14 +63,18 @@ class ArgumentParser(argparse.ArgumentParser):
                 msg += "\n       Try specifying its location with --adb."
             sys.exit(msg.format(adb_path))
 
-        if result.device == "-a":
-            result.device = adb.get_device(adb_path=adb_path)
-        elif result.device == "-d":
-            result.device = adb.get_usb_device(adb_path=adb_path)
-        elif result.device == "-e":
-            result.device = adb.get_emulator_device(adb_path=adb_path)
-        else:
-            result.device = adb.get_device(result.serial, adb_path=adb_path)
+        try:
+            if result.device == "-a":
+                result.device = adb.get_device(adb_path=adb_path)
+            elif result.device == "-d":
+                result.device = adb.get_usb_device(adb_path=adb_path)
+            elif result.device == "-e":
+                result.device = adb.get_emulator_device(adb_path=adb_path)
+            else:
+                result.device = adb.get_device(result.serial, adb_path=adb_path)
+        except (adb.DeviceNotFoundError, adb.NoUniqueDeviceError, RuntimeError):
+            # Don't error out if we can't find a device.
+            result.device = None
 
         return result
 
