@@ -21,49 +21,57 @@ import argparse
 import atexit
 import os
 import subprocess
+import sys
 import tempfile
 
 class ArgumentParser(argparse.ArgumentParser):
     """ArgumentParser subclass that provides adb device selection."""
 
-    class DeviceAction(argparse.Action):
-        def __call__(self, parser, namespace, values, option_string=None):
-            if option_string is None:
-                raise RuntimeError("DeviceAction called without option_string")
-            elif option_string == "-a":
-                # Handled in parse_args
-                return
-            elif option_string == "-d":
-                namespace.device = adb.get_usb_device()
-            elif option_string == "-e":
-                namespace.device = adb.get_emulator_device()
-            elif option_string == "-s":
-                namespace.device = adb.get_device(values[0])
-            else:
-                raise RuntimeError("Unexpected flag {}".format(option_string))
-
     def __init__(self):
         super(ArgumentParser, self).__init__()
+        self.add_argument(
+            "--adb", dest="adb_path",
+            help="Use specific adb command")
+
         group = self.add_argument_group(title="device selection")
         group = group.add_mutually_exclusive_group()
         group.add_argument(
-            "-a", nargs=0, action=self.DeviceAction,
+            "-a", action="store_const", dest="device", const="-a",
             help="directs commands to all interfaces")
         group.add_argument(
-            "-d", nargs=0, action=self.DeviceAction,
+            "-d", action="store_const", dest="device", const="-d",
             help="directs commands to the only connected USB device")
         group.add_argument(
-            "-e", nargs=0, action=self.DeviceAction,
+            "-e", action="store_const", dest="device", const="-e",
             help="directs commands to the only connected emulator")
         group.add_argument(
-            "-s", nargs=1, metavar="SERIAL", action=self.DeviceAction,
+            "-s", metavar="SERIAL", action="store", dest="serial",
             help="directs commands to device/emulator with the given serial")
 
     def parse_args(self, args=None, namespace=None):
         result = super(ArgumentParser, self).parse_args(args, namespace)
-        # Default to -a behavior if no flags are given.
-        if "device" not in result:
-            result.device = adb.get_device()
+
+        adb_path = result.adb_path or "adb"
+
+        # Try to run the specified adb command
+        try:
+            subprocess.check_output([adb_path, "version"],
+                                    stderr=subprocess.STDOUT)
+        except (OSError, subprocess.CalledProcessError):
+            msg = "ERROR: Unable to run adb executable (tried '{}')."
+            if not result.adb_path:
+                msg += "\n       Try specifying its location with --adb."
+            sys.exit(msg.format(adb_path))
+
+        if result.device == "-a":
+            result.device = adb.get_device(adb_path=adb_path)
+        elif result.device == "-d":
+            result.device = adb.get_usb_device(adb_path=adb_path)
+        elif result.device == "-e":
+            result.device = adb.get_emulator_device(adb_path=adb_path)
+        else:
+            result.device = adb.get_device(result.serial, adb_path=adb_path)
+
         return result
 
 
