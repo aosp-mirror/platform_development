@@ -21,49 +21,61 @@ import argparse
 import atexit
 import os
 import subprocess
+import sys
 import tempfile
 
 class ArgumentParser(argparse.ArgumentParser):
     """ArgumentParser subclass that provides adb device selection."""
 
-    class DeviceAction(argparse.Action):
-        def __call__(self, parser, namespace, values, option_string=None):
-            if option_string is None:
-                raise RuntimeError("DeviceAction called without option_string")
-            elif option_string == "-a":
-                # Handled in parse_args
-                return
-            elif option_string == "-d":
-                namespace.device = adb.get_usb_device()
-            elif option_string == "-e":
-                namespace.device = adb.get_emulator_device()
-            elif option_string == "-s":
-                namespace.device = adb.get_device(values[0])
-            else:
-                raise RuntimeError("Unexpected flag {}".format(option_string))
-
     def __init__(self):
         super(ArgumentParser, self).__init__()
+        self.add_argument(
+            "--adb", dest="adb_path",
+            help="Use specific adb command")
+
         group = self.add_argument_group(title="device selection")
         group = group.add_mutually_exclusive_group()
         group.add_argument(
-            "-a", nargs=0, action=self.DeviceAction,
+            "-a", action="store_const", dest="device", const="-a",
             help="directs commands to all interfaces")
         group.add_argument(
-            "-d", nargs=0, action=self.DeviceAction,
+            "-d", action="store_const", dest="device", const="-d",
             help="directs commands to the only connected USB device")
         group.add_argument(
-            "-e", nargs=0, action=self.DeviceAction,
+            "-e", action="store_const", dest="device", const="-e",
             help="directs commands to the only connected emulator")
         group.add_argument(
-            "-s", nargs=1, metavar="SERIAL", action=self.DeviceAction,
+            "-s", metavar="SERIAL", action="store", dest="serial",
             help="directs commands to device/emulator with the given serial")
 
     def parse_args(self, args=None, namespace=None):
         result = super(ArgumentParser, self).parse_args(args, namespace)
-        # Default to -a behavior if no flags are given.
-        if "device" not in result:
-            result.device = adb.get_device()
+
+        adb_path = result.adb_path or "adb"
+
+        # Try to run the specified adb command
+        try:
+            subprocess.check_output([adb_path, "version"],
+                                    stderr=subprocess.STDOUT)
+        except (OSError, subprocess.CalledProcessError):
+            msg = "ERROR: Unable to run adb executable (tried '{}')."
+            if not result.adb_path:
+                msg += "\n       Try specifying its location with --adb."
+            sys.exit(msg.format(adb_path))
+
+        try:
+            if result.device == "-a":
+                result.device = adb.get_device(adb_path=adb_path)
+            elif result.device == "-d":
+                result.device = adb.get_usb_device(adb_path=adb_path)
+            elif result.device == "-e":
+                result.device = adb.get_emulator_device(adb_path=adb_path)
+            else:
+                result.device = adb.get_device(result.serial, adb_path=adb_path)
+        except (adb.DeviceNotFoundError, adb.NoUniqueDeviceError, RuntimeError):
+            # Don't error out if we can't find a device.
+            result.device = None
+
         return result
 
 
@@ -121,13 +133,18 @@ def get_processes(device):
     return processes
 
 
+def get_pids(device, process_name):
+    processes = get_processes(device)
+    return processes.get(process_name, [])
+
+
 def start_gdbserver(device, gdbserver_local_path, gdbserver_remote_path,
                     target_pid, run_cmd, debug_socket, port, user=None):
     """Start gdbserver in the background and forward necessary ports.
 
     Args:
         device: ADB device to start gdbserver on.
-        gdbserver_local_path: Host path to push gdbserver from.
+        gdbserver_local_path: Host path to push gdbserver from, can be None.
         gdbserver_remote_path: Device path to push gdbserver to.
         target_pid: PID of device process to attach to.
         run_cmd: Command to run on the device.
@@ -142,7 +159,8 @@ def start_gdbserver(device, gdbserver_local_path, gdbserver_remote_path,
     assert target_pid is None or run_cmd is None
 
     # Push gdbserver to the target.
-    device.push(gdbserver_local_path, gdbserver_remote_path)
+    if gdbserver_local_path is not None:
+        device.push(gdbserver_local_path, gdbserver_remote_path)
 
     # Run gdbserver.
     gdbserver_cmd = [gdbserver_remote_path, "--once",
@@ -264,18 +282,19 @@ def get_binary_arch(binary_file):
         raise RuntimeError("unknown architecture: 0x{:x}".format(e_machine))
 
 
-def start_gdb(gdb_path, gdb_commands):
+def start_gdb(gdb_path, gdb_commands, gdb_flags=None):
     """Start gdb in the background and block until it finishes.
 
     Args:
         gdb_path: Path of the gdb binary.
         gdb_commands: Contents of GDB script to run.
+        gdb_flags: List of flags to append to gdb command.
     """
 
     with tempfile.NamedTemporaryFile() as gdb_script:
         gdb_script.write(gdb_commands)
         gdb_script.flush()
-        gdb_args = [gdb_path, "-x", gdb_script.name]
+        gdb_args = [gdb_path, "-x", gdb_script.name] + (gdb_flags or [])
         gdb_process = subprocess.Popen(gdb_args)
         while gdb_process.returncode is None:
             try:

@@ -210,6 +210,10 @@ end
 def main():
     args = parse_args()
     device = args.device
+
+    if device is None:
+        sys.exit("ERROR: Failed to find device.")
+
     props = device.get_props()
 
     root = os.environ["ANDROID_BUILD_TOP"]
