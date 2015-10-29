@@ -48,11 +48,11 @@ class ShellError(RuntimeError):
         self.exit_code = exit_code
 
 
-def get_devices():
+def get_devices(adb_path='adb'):
     with open(os.devnull, 'wb') as devnull:
-        subprocess.check_call(['adb', 'start-server'], stdout=devnull,
+        subprocess.check_call([adb_path, 'start-server'], stdout=devnull,
                               stderr=devnull)
-    out = subprocess.check_output(['adb', 'devices']).splitlines()
+    out = subprocess.check_output([adb_path, 'devices']).splitlines()
 
     # The first line of `adb devices` just says "List of attached devices", so
     # skip that.
@@ -68,21 +68,21 @@ def get_devices():
     return devices
 
 
-def _get_unique_device(product=None):
-    devices = get_devices()
+def _get_unique_device(product=None, adb_path='adb'):
+    devices = get_devices(adb_path=adb_path)
     if len(devices) != 1:
         raise NoUniqueDeviceError()
-    return AndroidDevice(devices[0], product)
+    return AndroidDevice(devices[0], product, adb_path)
 
 
-def _get_device_by_serial(serial, product=None):
-    for device in get_devices():
+def _get_device_by_serial(serial, product=None, adb_path='adb'):
+    for device in get_devices(adb_path=adb_path):
         if device == serial:
-            return AndroidDevice(serial, product)
+            return AndroidDevice(serial, product, adb_path)
     raise DeviceNotFoundError(serial)
 
 
-def get_device(serial=None, product=None):
+def get_device(serial=None, product=None, adb_path='adb'):
     """Get a uniquely identified AndroidDevice if one is available.
 
     Raises:
@@ -104,29 +104,29 @@ def get_device(serial=None, product=None):
         3) The single device connnected to the system.
     """
     if serial is not None:
-        return _get_device_by_serial(serial, product)
+        return _get_device_by_serial(serial, product, adb_path)
 
     android_serial = os.getenv('ANDROID_SERIAL')
     if android_serial is not None:
-        return _get_device_by_serial(android_serial, product)
+        return _get_device_by_serial(android_serial, product, adb_path)
 
-    return _get_unique_device(product)
+    return _get_unique_device(product, adb_path=adb_path)
 
 
-def _get_device_by_type(flag):
+def _get_device_by_type(flag, adb_path):
     with open(os.devnull, 'wb') as devnull:
-        subprocess.check_call(['adb', 'start-server'], stdout=devnull,
+        subprocess.check_call([adb_path, 'start-server'], stdout=devnull,
                               stderr=devnull)
     try:
-        serial = subprocess.check_output(['adb', flag, 'get-serialno']).strip()
+        serial = subprocess.check_output([adb_path, flag, 'get-serialno']).strip()
     except subprocess.CalledProcessError:
         raise RuntimeError('adb unexpectedly returned nonzero')
     if serial == 'unknown':
         raise NoUniqueDeviceError()
-    return _get_device_by_serial(serial)
+    return _get_device_by_serial(serial, adb_path=adb_path)
 
 
-def get_usb_device():
+def get_usb_device(adb_path='adb'):
     """Get the unique USB-connected AndroidDevice if it is available.
 
     Raises:
@@ -136,10 +136,10 @@ def get_usb_device():
     Returns:
         An AndroidDevice associated with the unique USB-connected device.
     """
-    return _get_device_by_type('-d')
+    return _get_device_by_type('-d', adb_path=adb_path)
 
 
-def get_emulator_device():
+def get_emulator_device(adb_path='adb'):
     """Get the unique emulator AndroidDevice if it is available.
 
     Raises:
@@ -149,7 +149,7 @@ def get_emulator_device():
     Returns:
         An AndroidDevice associated with the unique running emulator.
     """
-    return _get_device_by_type('-e')
+    return _get_device_by_type('-e', adb_path=adb_path)
 
 
 @contextlib.contextmanager
@@ -248,10 +248,11 @@ class AndroidDevice(object):
     # Feature name strings.
     SHELL_PROTOCOL_FEATURE = 'shell_v2'
 
-    def __init__(self, serial, product=None):
+    def __init__(self, serial, product=None, adb_path='adb'):
         self.serial = serial
         self.product = product
-        self.adb_cmd = ['adb']
+        self.adb_cmd = [adb_path]
+
         if self.serial is not None:
             self.adb_cmd.extend(['-s', serial])
         if self.product is not None:
