@@ -183,6 +183,7 @@ SDK_SYSIMG_XSD := \
 # -----------------------------------------------------------------
 # Rules for sdk addon
 
+ifneq ($(filter sdk_addon,$(MAKECMDGOALS)),)
 ifneq ($(ADDON_SDK_ZIP),)
 
 # ADDON_SDK_ZIP is defined in build/core/tasks/sdk-addon.sh and is
@@ -223,6 +224,7 @@ $(SDK_ADDON_IMG_XML): $(ADDON_SDK_IMG_ZIP)
 
 $(call dist-for-goals, sdk_repo, $(SDK_ADDON_IMG_XML))
 
+endif
 endif
 
 # -----------------------------------------------------------------

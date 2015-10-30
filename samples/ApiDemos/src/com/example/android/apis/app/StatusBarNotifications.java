@@ -194,20 +194,25 @@ public class StatusBarNotifications extends Activity {
         // In this sample, we'll use the same text for the ticker and the expanded notification
         CharSequence text = getText(textId);
 
-        // choose the ticker text
-        String tickerText = showTicker ? getString(textId) : null;
-
-        // Set the icon, scrolling text and timestamp
-        Notification notification = new Notification(moodId, tickerText,
-                System.currentTimeMillis());
+        // In this sample, we'll use this text for the title of the notification
+        CharSequence title = getText(R.string.status_bar_notifications_mood_title);
 
         // Set the info for the views that show in the notification panel.
-        notification.setLatestEventInfo(this, getText(R.string.status_bar_notifications_mood_title),
-                       text, makeMoodIntent(moodId));
+        Notification.Builder notifBuidler = new Notification.Builder(this) // the context to use
+                .setSmallIcon(moodId)  // the status icon
+                .setWhen(System.currentTimeMillis())  // the timestamp for the notification
+                .setContentTitle(title)  // the title for the notification
+                .setContentText(text)  // the details to display in the notification
+                .setContentIntent(makeMoodIntent(moodId));  // The intent to send clicked
+
+        if (showTicker) {
+            // include the ticker text
+            notifBuidler.setTicker(getString(textId));
+        }
 
         // Send the notification.
         // We use a layout id because it is a unique number.  We use it later to cancel.
-        mNotificationManager.notify(MOOD_NOTIFICATIONS, notification);
+        mNotificationManager.notify(MOOD_NOTIFICATIONS, notifBuidler.build());
     }
 
     private void setMoodView(int moodId, int textId) {
@@ -239,29 +244,27 @@ public class StatusBarNotifications extends Activity {
     }
     
     private void setDefault(int defaults) {
-        
-        // This method sets the defaults on the notification before posting it.
-        
+
         // This is who should be launched if the user selects our notification.
         PendingIntent contentIntent = makeDefaultIntent();
 
         // In this sample, we'll use the same text for the ticker and the expanded notification
         CharSequence text = getText(R.string.status_bar_notifications_happy_message);
 
-        final Notification notification = new Notification(
-                R.drawable.stat_happy,       // the icon for the status bar
-                text,                        // the text to display in the ticker
-                System.currentTimeMillis()); // the timestamp for the notification
+        // In this sample, we'll use this text for the title of the notification
+        CharSequence title = getText(R.string.status_bar_notifications_mood_title);
 
-        notification.setLatestEventInfo(
-                this,                        // the context to use
-                getText(R.string.status_bar_notifications_mood_title),
-                                             // the title for the notification
-                text,                        // the details to display in the notification
-                contentIntent);              // the contentIntent (see above)
+        // Set the info for the views that show in the notification panel.
+        Notification notification = new Notification.Builder(this) // the context to use
+                .setSmallIcon(R.drawable.stat_happy)  // the status icon
+                .setTicker(text)  // the text to display in the ticker
+                .setWhen(System.currentTimeMillis())  // the timestamp for the notification
+                .setContentTitle(title)  // the title for the notification
+                .setContentText(text)  // the details to display in the notification
+                .setContentIntent(contentIntent)  // The intent to send when the entry is clicked
+                .setDefaults(defaults)
+                .build();
 
-        notification.defaults = defaults;
-        
         mNotificationManager.notify(
                 MOOD_NOTIFICATIONS, // we use a string id because it is a unique
                                     // number.  we use it later to cancel the notification

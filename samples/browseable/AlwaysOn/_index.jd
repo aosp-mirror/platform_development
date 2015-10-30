@@ -1,0 +1,10 @@
+
+page.tags="AlwaysOn"
+sample.group=Wearable
+@jd:body
+
+<p>
+            
+            Demonstrates a native Android Wear app using ambient screen support.
+            >
+        </p>

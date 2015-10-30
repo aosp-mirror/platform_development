@@ -271,6 +271,13 @@ See test_defs.xsd for more information.
     coverage_target="framework"
     suite="cts" />
 
+<test name="cts-calllog"
+    build_path="cts/tests/tests/calllog"
+    package="com.android.cts.calllog"
+    runner="android.support.test.runner.AndroidJUnitRunner"
+    coverage_target="Phone"
+    suite="cts" />
+
 <test name="cts-content"
     build_path="cts/tests/tests/content"
     package="com.android.cts.content"
@@ -352,6 +359,13 @@ See test_defs.xsd for more information.
 <test name="cts-text"
     build_path="cts/tests/tests/text"
     package="com.android.cts.text"
+    runner="android.support.test.runner.AndroidJUnitRunner"
+    coverage_target="framework"
+    suite="cts" />
+
+<test name="cts-telecom"
+    build_path="cts/tests/tests/telecom"
+    package="com.android.cts.telecom"
     runner="android.support.test.runner.AndroidJUnitRunner"
     coverage_target="framework"
     suite="cts" />
@@ -500,7 +514,14 @@ See test_defs.xsd for more information.
     continuous="true"
     coverage_target="Phone" />
 
-<test name="telecomm-unit"
+<test name="carrierconfig-unit"
+    build_path="packages/apps/CarrierConfig"
+    package="com.android.carrierconfig.tests"
+    continuous="true"
+    coverage_target="Phone"
+    description="Tests for default carrier config app" />
+
+<test name="telecom-unit"
     build_path="packages/services/Telecomm"
     package="com.android.server.telecom.tests"
     continuous="true"
@@ -547,6 +568,11 @@ See test_defs.xsd for more information.
 <test-native name="clatd"
     build_path="external/android-clat"
     description="clatd unit tests." />
+
+<!-- dhcpcd -->
+<test-native name="dhcpcd"
+    build_path="external/dhcpcd"
+    description="dhcpcd unit tests." />
 
 <!-- Libjingle -->
 <test-native name="libjingle"

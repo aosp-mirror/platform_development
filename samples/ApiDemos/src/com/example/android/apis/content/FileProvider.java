@@ -111,14 +111,19 @@ public class FileProvider extends ContentProvider
     }
 
     @Override
-    public AssetFileDescriptor openAssetFile(Uri uri, String mode) throws FileNotFoundException {
+    public ParcelFileDescriptor openFile(Uri uri, String mode) throws FileNotFoundException {
         // Try to open an asset with the given name.
         try {
-            InputStream is = getContext().getAssets().open(uri.getPath());
-            // Start a new thread that pipes the stream data back to the caller.
-            return new AssetFileDescriptor(
-                    openPipeHelper(uri, null, null, is, this), 0,
-                    AssetFileDescriptor.UNKNOWN_LENGTH);
+            String path = uri.getPath();
+            int off = path.indexOf('/', 1);
+            if (off < 0 || off >= (path.length()-1)) {
+                throw new FileNotFoundException("Unable to open " + uri);
+            }
+            int cookie = Integer.parseInt(path.substring(1, off));
+            String assetPath = path.substring(off+1);
+            AssetFileDescriptor asset = getContext().getAssets().openNonAssetFd(cookie, assetPath);
+            return new ParcelFileDescriptor(openPipeHelper(uri, null, null,
+                    asset.createInputStream(), this));
         } catch (IOException e) {
             FileNotFoundException fnf = new FileNotFoundException("Unable to open " + uri);
             throw fnf;

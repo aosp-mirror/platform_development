@@ -1,9 +1,0 @@
-page.tags="AdapterTransition"
-sample.group=UI
-@jd:body
-
-<p>
-            
-	    Transition cannot be directly applied to AdapterViews. In this sample, we demonstrate how to create an overlay layout and run a Transition on it. Press the action bar button to toggle between ListView and GridView.
-            
-        </p>

@@ -18,9 +18,28 @@
     <string name="activity_sample_code">Support Design Demos</string>
 
     <string name="design_fab">Floating Action Button/Basic</string>
+    <string name="design_navigation">NavigationView/Usage</string>
     <string name="design_tabs_basic">TabLayout/Usage</string>
+    <string name="design_text_input">Text Input</string>
+
     <string name="fab_size_normal">Normal size</string>
     <string name="fab_size_mini">Mini size</string>
+
+    <string name="navigation_open">Open</string>
+    <string name="navigation_close">Close</string>
+    <string name="navigation_item_with_icon">Item with icon</string>
+    <string name="navigation_item_without_icon">Item without icon</string>
+    <string name="navigation_message">Clicked: \"%s\"</string>
+    <string name="navigation_header">Header</string>
+    <string name="navigation_item_1">Item 1</string>
+    <string name="navigation_item_2">Item 2</string>
+    <string name="navigation_item_3">Item 3</string>
+    <string name="navigation_item_4">Item 4 (disabled)</string>
+    <string name="navigation_1">1</string>
+    <string name="navigation_invisible">Invisible</string>
+    <string name="navigation_subheader">Subheader</string>
+    <string name="navigation_sub_item_1">Subitem 1</string>
+    <string name="navigation_sub_item_2">Subitem 2</string>
 
     <string name="tabs_fixed">Fixed</string>
     <string name="tabs_scrollable">Scrollable</string>
@@ -29,5 +48,34 @@
 
     <string name="add_tab">Add tab</string>
     <string name="remove_tab">Remove tab</string>
+
+    <string name="form_username">Username</string>
+    <string name="form_email">Email address</string>
+    <string name="show_error">Show error</string>
+    <string name="clear_error">Clear error</string>
+
+    <string name="design_snackbar_basic">Snackbar/Usage</string>
+    <string name="design_snackbar_fab">Snackbar/Coordinated with FAB</string>
+    <string name="design_snackbar_without_col">Snackbar/Usage without CoordinatorLayout</string>
+    <string name="snackbar_show_short">Snackbar (short message)</string>
+    <string name="snackbar_show_long">Snackbar (long message)</string>
+    <string name="snackbar_show_short_action">Show (short message + action)</string>
+    <string name="snackbar_show_long_action">Show (long message + action)</string>
+    <string name="snackbar_show_long_long_action">Show (long message + long action)</string>
+
+    <string name="design_appbar_toolbar_scroll_tabs_scroll">AppBar/Toolbar Scroll + Tabs Scroll</string>
+    <string name="design_appbar_toolbar_scroll_tabs_pin">AppBar/Toolbar Scroll + Tabs Pin</string>
+    <string name="design_appbar_toolbar_scroll_tabs_pin_with_swiperefresh">AppBar/Toolbar Scroll + Tabs Pin + Swipe Refresh</string>
+    <string name="design_appbar_collapsing_toolbar_pin">AppBar/Collapsing Toolbar (pinned)</string>
+    <string name="design_appbar_collapsing_toolbar_pin_fab">AppBar/Collapsing Toolbar (pinned with FAB)</string>
+    <string name="design_appbar_collapsing_toolbar_scroll">AppBar/Collapsing Toolbar (scroll off)</string>
+    <string name="design_appbar_collapsing_toolbar_with_image">AppBar/Collapsing Toolbar + Parallax Image</string>
+    <string name="design_appbar_collapsing_toolbar_with_image_insets">AppBar/Collapsing Toolbar + Parallax Image + Insets</string>
+    <string name="design_appbar_parallax_overlap">AppBar/Parallax Overlapping content</string>
+    <string name="scroll_top">Top</string>
+    <string name="scroll_bottom">Bottom</string>
+    <string name="menu_search">Search</string>
+    <string name="menu_settings">Settings</string>
+
 
 </resources>

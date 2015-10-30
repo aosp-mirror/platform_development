@@ -16,7 +16,9 @@
 
 package com.example.android.hdrviewfinder;
 
-import android.app.Activity;
+import android.Manifest;
+import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
 import android.hardware.camera2.CameraCharacteristics;
@@ -26,10 +28,16 @@ import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.CaptureResult;
 import android.hardware.camera2.TotalCaptureResult;
 import android.hardware.camera2.params.StreamConfigurationMap;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.provider.Settings;
 import android.renderscript.RenderScript;
+import android.support.annotation.NonNull;
+import android.support.design.widget.Snackbar;
+import android.support.v4.app.ActivityCompat;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.util.Size;
 import android.view.GestureDetector;
@@ -76,17 +84,24 @@ import java.util.List;
  * Android {@link android.view.Surface} class, which allows for zero-copy transport of large
  * buffers between processes and subsystems.</p>
  */
-public class HdrViewfinderActivity extends Activity implements
+public class HdrViewfinderActivity extends AppCompatActivity implements
         SurfaceHolder.Callback, CameraOps.ErrorDisplayer, CameraOps.CameraReadyListener {
 
     private static final String TAG = "HdrViewfinderDemo";
 
     private static final String FRAGMENT_DIALOG = "dialog";
 
+    private static final int REQUEST_PERMISSIONS_REQUEST_CODE = 34;
+
     /**
      * View for the camera preview.
      */
     private FixedAspectSurfaceView mPreviewView;
+
+    /**
+     * Root view of this activity.
+     */
+    private View rootView;
 
     /**
      * This shows the current mode of the app.
@@ -132,6 +147,8 @@ public class HdrViewfinderActivity extends Activity implements
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
 
+        rootView = findViewById(R.id.panels);
+
         mPreviewView = (FixedAspectSurfaceView) findViewById(R.id.preview);
         mPreviewView.getHolder().addCallback(this);
         mPreviewView.setGestureListener(this, mViewListener);
@@ -146,23 +163,20 @@ public class HdrViewfinderActivity extends Activity implements
 
         mUiHandler = new Handler(Looper.getMainLooper());
 
-        mCameraManager = (CameraManager) getSystemService(CAMERA_SERVICE);
-        mCameraOps = new CameraOps(mCameraManager,
-                /*errorDisplayer*/ this,
-                /*readyListener*/ this,
-                /*readyHandler*/ mUiHandler);
-
-        mHdrRequests.add(null);
-        mHdrRequests.add(null);
-
         mRS = RenderScript.create(this);
+
+        // When permissions are revoked the app is restarted so onCreate is sufficient to check for
+        // permissions core to the Activity's functionality.
+        if (!checkCameraPermissions()) {
+            requestCameraPermissions();
+        } else {
+            findAndOpenCamera();
+        }
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-
-        findAndOpenCamera();
     }
 
     @Override
@@ -170,7 +184,10 @@ public class HdrViewfinderActivity extends Activity implements
         super.onPause();
 
         // Wait until camera is closed to ensure the next application can open it
-        mCameraOps.closeCameraAndWait();
+        if (mCameraOps != null) {
+            mCameraOps.closeCameraAndWait();
+            mCameraOps = null;
+        }
     }
 
     @Override
@@ -232,7 +249,9 @@ public class HdrViewfinderActivity extends Activity implements
         }
     };
 
-    // Show help dialog
+    /**
+     * Show help dialogs.
+     */
     private View.OnClickListener mHelpButtonListener = new View.OnClickListener() {
         public void onClick(View v) {
             MessageDialogFragment.newInstance(R.string.help_text)
@@ -240,54 +259,176 @@ public class HdrViewfinderActivity extends Activity implements
         }
     };
 
+    /**
+     * Return the current state of the camera permissions.
+     */
+    private boolean checkCameraPermissions() {
+        int permissionState = ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA);
+
+        // Check if the Camera permission is already available.
+        if (permissionState != PackageManager.PERMISSION_GRANTED) {
+            // Camera permission has not been granted.
+            Log.i(TAG, "CAMERA permission has NOT been granted.");
+            return false;
+        } else {
+            // Camera permissions are available.
+            Log.i(TAG, "CAMERA permission has already been granted.");
+            return true;
+        }
+    }
+
+    /**
+     * Attempt to initialize the camera.
+     */
+    private void initializeCamera() {
+        mCameraManager = (CameraManager) getSystemService(CAMERA_SERVICE);
+        if (mCameraManager != null) {
+            mCameraOps = new CameraOps(mCameraManager,
+                /*errorDisplayer*/ this,
+                /*readyListener*/ this,
+                /*readyHandler*/ mUiHandler);
+
+            mHdrRequests.add(null);
+            mHdrRequests.add(null);
+        } else {
+            Log.e(TAG, "Couldn't initialize the camera");
+        }
+    }
+
+    private void requestCameraPermissions() {
+        boolean shouldProvideRationale =
+            ActivityCompat.shouldShowRequestPermissionRationale(this,
+                    Manifest.permission.CAMERA);
+
+        // Provide an additional rationale to the user. This would happen if the user denied the
+        // request previously, but didn't check the "Don't ask again" checkbox.
+        if (shouldProvideRationale) {
+            Log.i(TAG, "Displaying camera permission rationale to provide additional context.");
+            Snackbar.make(rootView, R.string.camera_permission_rationale, Snackbar
+                    .LENGTH_INDEFINITE)
+                    .setAction(R.string.ok, new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            // Request Camera permission
+                            ActivityCompat.requestPermissions(HdrViewfinderActivity.this,
+                                    new String[]{Manifest.permission.CAMERA},
+                                    REQUEST_PERMISSIONS_REQUEST_CODE);
+                        }
+                    })
+                    .show();
+        } else {
+            Log.i(TAG, "Requesting camera permission");
+            // Request Camera permission. It's possible this can be auto answered if device policy
+            // sets the permission in a given state or the user denied the permission
+            // previously and checked "Never ask again".
+            ActivityCompat.requestPermissions(HdrViewfinderActivity.this,
+                    new String[]{Manifest.permission.CAMERA},
+                    REQUEST_PERMISSIONS_REQUEST_CODE);
+        }
+    }
+
+    /**
+     * Callback received when a permissions request has been completed.
+     */
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+            @NonNull int[] grantResults) {
+        Log.i(TAG, "onRequestPermissionResult");
+        if (requestCode == REQUEST_PERMISSIONS_REQUEST_CODE) {
+            if (grantResults.length <= 0) {
+                // If user interaction was interrupted, the permission request is cancelled and you
+                // receive empty arrays.
+                Log.i(TAG, "User interaction was cancelled.");
+            } else if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // Permission was granted.
+                findAndOpenCamera();
+            } else {
+                // Permission denied.
+
+                // In this Activity we've chosen to notify the user that they
+                // have rejected a core permission for the app since it makes the Activity useless.
+                // We're communicating this message in a Snackbar since this is a sample app, but
+                // core permissions would typically be best requested during a welcome-screen flow.
+
+                // Additionally, it is important to remember that a permission might have been
+                // rejected without asking the user for permission (device policy or "Never ask
+                // again" prompts). Therefore, a user interface affordance is typically implemented
+                // when permissions are denied. Otherwise, your app could appear unresponsive to
+                // touches or interactions which have required permissions.
+                Snackbar.make(rootView, R.string.camera_permission_denied_explanation, Snackbar
+                        .LENGTH_INDEFINITE)
+                        .setAction(R.string.settings, new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                // Build intent that displays the App settings screen.
+                                Intent intent = new Intent();
+                                intent.setAction(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                                Uri uri = Uri.fromParts("package", BuildConfig.APPLICATION_ID, null);
+                                intent.setData(uri);
+                                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                startActivity(intent);
+                            }
+                        })
+                        .show();
+            }
+        }
+    }
+
     private void findAndOpenCamera() {
+        boolean cameraPermissions = checkCameraPermissions();
+        if (cameraPermissions) {
+            String errorMessage = "Unknown error";
+            boolean foundCamera = false;
+            initializeCamera();
+            if (cameraPermissions && mCameraOps != null) {
+                try {
+                    // Find first back-facing camera that has necessary capability.
+                    String[] cameraIds = mCameraManager.getCameraIdList();
+                    for (String id : cameraIds) {
+                        CameraCharacteristics info = mCameraManager.getCameraCharacteristics(id);
+                        int facing = info.get(CameraCharacteristics.LENS_FACING);
 
-        String errorMessage = "Unknown error";
-        boolean foundCamera = false;
-        try {
-            // Find first back-facing camera that has necessary capability
-            String[] cameraIds = mCameraManager.getCameraIdList();
-            for (String id : cameraIds) {
-                CameraCharacteristics info = mCameraManager.getCameraCharacteristics(id);
-                int facing = info.get(CameraCharacteristics.LENS_FACING);
+                        int level = info.get(CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL);
+                        boolean hasFullLevel
+                                = (level
+                                == CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_FULL);
 
-                int level = info.get(CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL);
-                boolean hasFullLevel
-                        = (level == CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_FULL);
+                        int[] capabilities = info
+                                .get(CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES);
+                        int syncLatency = info.get(CameraCharacteristics.SYNC_MAX_LATENCY);
+                        boolean hasManualControl = hasCapability(capabilities,
+                                CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES_MANUAL_SENSOR);
+                        boolean hasEnoughCapability = hasManualControl &&
+                                syncLatency
+                                        == CameraCharacteristics.SYNC_MAX_LATENCY_PER_FRAME_CONTROL;
 
-                int[] capabilities = info.get(CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES);
-                int syncLatency = info.get(CameraCharacteristics.SYNC_MAX_LATENCY);
-                boolean hasManualControl = hasCapability(capabilities,
-                        CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES_MANUAL_SENSOR);
-                boolean hasEnoughCapability = hasManualControl &&
-                        syncLatency == CameraCharacteristics.SYNC_MAX_LATENCY_PER_FRAME_CONTROL;
-
-                // All these are guaranteed by
-                // CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_FULL, but checking for only
-                // the things we care about expands range of devices we can run on
-                // We want:
-                //  - Back-facing camera
-                //  - Manual sensor control
-                //  - Per-frame synchronization (so that exposure can be changed every frame)
-                if (facing == CameraCharacteristics.LENS_FACING_BACK &&
-                        (hasFullLevel || hasEnoughCapability)) {
-                    // Found suitable camera - get info, open, and set up outputs
-                    mCameraInfo = info;
-                    mCameraOps.openCamera(id);
-                    configureSurfaces();
-                    foundCamera = true;
-                    break;
+                        // All these are guaranteed by
+                        // CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_FULL, but checking
+                        // for only the things we care about expands range of devices we can run on.
+                        // We want:
+                        //  - Back-facing camera
+                        //  - Manual sensor control
+                        //  - Per-frame synchronization (so that exposure can be changed every frame)
+                        if (facing == CameraCharacteristics.LENS_FACING_BACK &&
+                                (hasFullLevel || hasEnoughCapability)) {
+                            // Found suitable camera - get info, open, and set up outputs
+                            mCameraInfo = info;
+                            mCameraOps.openCamera(id);
+                            configureSurfaces();
+                            foundCamera = true;
+                            break;
+                        }
+                    }
+                    if (!foundCamera) {
+                        errorMessage = getString(R.string.camera_no_good);
+                    }
+                } catch (CameraAccessException e) {
+                    errorMessage = getErrorString(e);
+                }
+                if (!foundCamera) {
+                    showErrorDialog(errorMessage);
                 }
             }
-            if (!foundCamera) {
-                errorMessage = getString(R.string.camera_no_good);
-            }
-        } catch (CameraAccessException e) {
-            errorMessage = getErrorString(e);
-        }
-
-        if (!foundCamera) {
-            showErrorDialog(errorMessage);
         }
     }
 
@@ -299,23 +440,25 @@ public class HdrViewfinderActivity extends Activity implements
     }
 
     private void switchRenderMode(int direction) {
-        mRenderMode = (mRenderMode + direction) % 3;
+        if (mCameraOps != null) {
+            mRenderMode = (mRenderMode + direction) % 3;
 
-        mModeText.setText(getResources().getStringArray(R.array.mode_label_array)[mRenderMode]);
+            mModeText.setText(getResources().getStringArray(R.array.mode_label_array)[mRenderMode]);
 
-        if (mProcessor != null) {
-            mProcessor.setRenderMode(mRenderMode);
-        }
-        if (mRenderMode == ViewfinderProcessor.MODE_NORMAL) {
-            mCameraOps.setRepeatingRequest(mPreviewRequest,
-                    mCaptureCallback, mUiHandler);
-        } else {
-            setHdrBurst();
+            if (mProcessor != null) {
+                mProcessor.setRenderMode(mRenderMode);
+            }
+            if (mRenderMode == ViewfinderProcessor.MODE_NORMAL) {
+                mCameraOps.setRepeatingRequest(mPreviewRequest,
+                        mCaptureCallback, mUiHandler);
+            } else {
+                setHdrBurst();
+            }
         }
     }
 
     /**
-     * Configure the surfaceview and RS processing
+     * Configure the surfaceview and RS processing.
      */
     private void configureSurfaces() {
         // Find a good size for output - largest 16:9 aspect ratio that's less than 720p

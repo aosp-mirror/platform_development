@@ -58,9 +58,6 @@ public class DialogUsage extends AppCompatActivity {
                 showSimpleDialog();
                 break;
             case 1:
-                showSimpleDialogWithActionBar();
-                break;
-            case 2:
                 showButtonBarDialog();
                 break;
         }
@@ -68,15 +65,6 @@ public class DialogUsage extends AppCompatActivity {
 
     private void showSimpleDialog() {
         Dialog dialog = new AppCompatDialog(this);
-        dialog.setTitle(R.string.dialog_title);
-        dialog.setContentView(R.layout.dialog_content);
-        dialog.show();
-    }
-
-    private void showSimpleDialogWithActionBar() {
-        AppCompatDialog dialog = new MenuDialog(this);
-        // Request the support Action Bar window feature
-        dialog.supportRequestWindowFeature(WindowCompat.FEATURE_ACTION_BAR);
         dialog.setTitle(R.string.dialog_title);
         dialog.setContentView(R.layout.dialog_content);
         dialog.show();

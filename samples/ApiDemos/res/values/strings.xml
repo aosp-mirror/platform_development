@@ -77,6 +77,7 @@
     <string name="activity_modern_animation_zoom">Modern zoom in</string>
     <string name="activity_scale_up_animation">Scale up</string>
     <string name="activity_zoom_thumbnail_animation">Thumbnail zoom</string>
+    <string name="activity_no_animation">No Animation</string>
 
     <string name="activity_save_restore">App/Activity/Save &amp; Restore State</string>
     <string name="save_restore_msg">Demonstration of saving and restoring activity state in onSaveInstanceState() and onCreate().</string>
@@ -421,11 +422,14 @@
     <string name="styled_text">Plain, <b>bold</b>, <i>italic</i>, <b><i>bold-italic</i></b></string>
     <string name="styled_text_prog">Assigned programmatically:</string>
 
-    <string name="activity_text_undo">Content/Undo Manager/Text</string>
-    <string name="text_undo_msg">Demonstrates simple use of UndoManager with text editing
-            in a TextView.</string>
-    <string name="undo">Undo</string>
-    <string name="redo">Redo</string>
+    <string name="activity_text_undo">Content/Undo</string>
+    <string name="text_undo_default_edit_msg">TextView with the default Control-Z undo behavior.</string>
+    <string name="text_undo_set_text">SetText</string>
+    <string name="text_undo_append_text">Append</string>
+    <string name="text_undo_insert_text">Insert</string>
+    <string name="text_undo_undo_disabled_msg">TextView with undo disabled.</string>
+    <string name="text_undo_length_limit_msg">TextView with a length limit InputFilter.</string>
+    <string name="text_undo_credit_card_msg">Credit card input field with a TextWatcher.</string>
 
     <string name="activity_resources_layout_reference">Content/Resources/Layout Reference</string>
     <string name="resources_layout_reference_description">Shows how to write layout
@@ -455,6 +459,11 @@
     <string name="pick_person">Pick a Person</string>
     <string name="pick_phone">Pick a Phone</string>
     <string name="pick_address">Pick an Address</string>
+
+    <string name="activity_share_content">Content/Provider/Share Content</string>
+    <string name="share_content_msg">Share private data of the app by granting access
+        to a specific URI in its content provider.</string>
+    <string name="share_image">Share Image</string>
 
     <string name="activity_changed_contact">Content/Provider/Changed Contacts</string>
 
@@ -973,6 +982,8 @@
     <string name="seekbar_tracking_on">Tracking on</string>
     <string name="seekbar_tracking_off">Tracking off</string>
     <string name="seekbar_from_touch">from touch</string>
+
+    <string name="enabled">Enabled</string>
 
     <string name="ratingbar_rating">Rating:</string>
 
@@ -1556,4 +1567,13 @@
     <string name="mms_status_downloading">Downloading</string>
 
     <string name="mms_enable_receiver">Enable MMS broadcast receiver</string>
+
+    <string name="process_text_title">Content/Process Text Intent</string>
+    <string name="process_text_received_text_title">Received text selection</string>
+    <string name="process_text_finish_readonly">Finish</string>
+    <string name="process_text_finish">Replace</string>
+    <string name="process_text_no_text_received">No text received.</string>
+    <string name="process_text_no_text_process_intent_received">Try selecting some text in another app and find this app\'s name in the list of options for its selection menu.</string>
+    <string name="process_text_send_title">Select text to process</string>
+    <string name="process_text_send_description">Select a piece of text from this box to trigger the text selection action mode. In there, you will find \"ApiDemos\". That is because this app declares it can handle text processing intents. Try selecting that action to send the selected text to that activity and retrieve processed text back.</string>
 </resources>

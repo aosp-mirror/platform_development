@@ -37,8 +37,6 @@
         <service
                 android:name=".AnalogWatchFaceService"
                 android:label="@string/analog_name"
-                android:allowEmbedded="true"
-                android:taskAffinity=""
                 android:permission="android.permission.BIND_WALLPAPER" >
             <meta-data
                     android:name="android.service.wallpaper"
@@ -47,7 +45,7 @@
                     android:name="com.google.android.wearable.watchface.preview"
                     android:resource="@drawable/preview_analog" />
             <meta-data
-                    android:name="com.google.android.clockwork.home.preview_circular"
+                    android:name="com.google.android.wearable.watchface.preview_circular"
                     android:resource="@drawable/preview_analog_circular" />
             <meta-data
                     android:name="com.google.android.wearable.watchface.companionConfigurationAction"
@@ -61,8 +59,6 @@
         <service
                 android:name=".SweepWatchFaceService"
                 android:label="@string/sweep_name"
-                android:allowEmbedded="true"
-                android:taskAffinity=""
                 android:permission="android.permission.BIND_WALLPAPER" >
             <meta-data
                     android:name="android.service.wallpaper"
@@ -71,7 +67,7 @@
                     android:name="com.google.android.wearable.watchface.preview"
                     android:resource="@drawable/preview_analog" />
             <meta-data
-                    android:name="com.google.android.clockwork.home.preview_circular"
+                    android:name="com.google.android.wearable.watchface.preview_circular"
                     android:resource="@drawable/preview_analog_circular" />
             <intent-filter>
                 <action android:name="android.service.wallpaper.WallpaperService" />
@@ -80,23 +76,21 @@
         </service>
 
         <service
-                android:name=".TiltWatchFaceService"
-                android:label="@string/tilt_name"
-                android:allowEmbedded="true"
-                android:taskAffinity=""
+                android:name=".OpenGLWatchFaceService"
+                android:label="@string/opengl_name"
                 android:permission="android.permission.BIND_WALLPAPER" >
             <meta-data
                     android:name="android.service.wallpaper"
                     android:resource="@xml/watch_face" />
             <meta-data
                     android:name="com.google.android.wearable.watchface.preview"
-                    android:resource="@drawable/preview_tilt" />
+                    android:resource="@drawable/preview_opengl" />
             <meta-data
-                    android:name="com.google.android.clockwork.home.preview_circular"
-                    android:resource="@drawable/preview_tilt_circular" />
+                    android:name="com.google.android.wearable.watchface.preview_circular"
+                    android:resource="@drawable/preview_opengl_circular" />
             <meta-data
                     android:name="com.google.android.wearable.watchface.companionConfigurationAction"
-                    android:value="com.example.android.wearable.watchface.CONFIG_TILT" />
+                    android:value="com.example.android.wearable.watchface.CONFIG_OPENGL" />
 
             <intent-filter>
                 <action android:name="android.service.wallpaper.WallpaperService" />
@@ -107,8 +101,6 @@
         <service
                 android:name=".CardBoundsWatchFaceService"
                 android:label="@string/card_bounds_name"
-                android:allowEmbedded="true"
-                android:taskAffinity=""
                 android:permission="android.permission.BIND_WALLPAPER" >
             <meta-data
                     android:name="android.service.wallpaper"
@@ -117,7 +109,7 @@
                     android:name="com.google.android.wearable.watchface.preview"
                     android:resource="@drawable/preview_card_bounds" />
             <meta-data
-                    android:name="com.google.android.clockwork.home.preview_circular"
+                    android:name="com.google.android.wearable.watchface.preview_circular"
                     android:resource="@drawable/preview_card_bounds_circular" />
             <meta-data
                     android:name="com.google.android.wearable.watchface.companionConfigurationAction"
@@ -128,11 +120,30 @@
             </intent-filter>
         </service>
 
+
+        <service
+                android:name=".InteractiveWatchFaceService"
+                android:label="@string/interactive_name"
+                android:permission="android.permission.BIND_WALLPAPER" >
+            <meta-data
+                android:name="android.service.wallpaper"
+                android:resource="@xml/watch_face" />
+            <meta-data
+                android:name="com.google.android.wearable.watchface.preview"
+                android:resource="@drawable/preview_interactive" />
+            <meta-data
+                android:name="com.google.android.wearable.watchface.preview_circular"
+                android:resource="@drawable/preview_interactive_circular" />
+            <intent-filter>
+                <action android:name="android.service.wallpaper.WallpaperService" />
+                <category
+                    android:name="com.google.android.wearable.watchface.category.WATCH_FACE" />
+            </intent-filter>
+        </service>
+
         <service
                 android:name=".DigitalWatchFaceService"
                 android:label="@string/digital_name"
-                android:allowEmbedded="true"
-                android:taskAffinity=""
                 android:permission="android.permission.BIND_WALLPAPER" >
             <meta-data
                     android:name="android.service.wallpaper"
@@ -141,7 +152,7 @@
                     android:name="com.google.android.wearable.watchface.preview"
                     android:resource="@drawable/preview_digital" />
             <meta-data
-                    android:name="com.google.android.clockwork.home.preview_circular"
+                    android:name="com.google.android.wearable.watchface.preview_circular"
                     android:resource="@drawable/preview_digital_circular" />
             <meta-data
                     android:name="com.google.android.wearable.watchface.companionConfigurationAction"
@@ -172,8 +183,6 @@
         <service
                 android:name=".CalendarWatchFaceService"
                 android:label="@string/calendar_name"
-                android:allowEmbedded="true"
-                android:taskAffinity=""
                 android:permission="android.permission.BIND_WALLPAPER" >
             <meta-data
                     android:name="android.service.wallpaper"
@@ -182,7 +191,7 @@
                     android:name="com.google.android.wearable.watchface.preview"
                     android:resource="@drawable/preview_calendar" />
             <meta-data
-                    android:name="com.google.android.clockwork.home.preview_circular"
+                    android:name="com.google.android.wearable.watchface.preview_circular"
                     android:resource="@drawable/preview_calendar_circular" />
             <intent-filter>
                 <action android:name="android.service.wallpaper.WallpaperService" />

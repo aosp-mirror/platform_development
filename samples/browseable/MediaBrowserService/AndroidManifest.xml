@@ -36,7 +36,7 @@
             android:resource="@xml/automotive_app_desc"/>
 
 
-        <activity android:name="com.example.android.mediabrowserservice.MusicPlayerActivity"
+        <activity android:name=".MusicPlayerActivity"
                   android:label="@string/app_name">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -51,8 +51,17 @@
             android:name="com.google.android.gms.car.notification.SmallIcon"
             android:resource="@drawable/ic_notification" />
 
+        <!--
+             (OPTIONAL) use this meta data to override the theme from which Android Auto will
+             look for colors. If you don't set this, Android Auto will look
+             for color attributes in your application theme.
+        -->
+        <meta-data
+            android:name="com.google.android.gms.car.application.theme"
+            android:resource="@style/CarTheme" />
+
         <service
-            android:name="com.example.android.mediabrowserservice.MusicService"
+            android:name=".MusicService"
             android:exported="true"
             >
             <intent-filter>

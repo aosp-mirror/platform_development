@@ -78,6 +78,10 @@ public class AnimationLoading extends Activity {
             addBall(200, 50);
             addBall(350, 50);
             addBall(500, 50, Color.GREEN);
+            addBall(650, 50);
+            addBall(800, 50);
+            addBall(950, 50);
+            addBall(800, 50, Color.YELLOW);
         }
 
         private void createAnimation() {
@@ -106,8 +110,37 @@ public class AnimationLoading extends Activity {
                         loadAnimator(appContext, R.anim.color_animator);
                 colorizer.setTarget(balls.get(3));
 
+                ObjectAnimator animPvh = (ObjectAnimator) AnimatorInflater.
+                        loadAnimator(appContext, R.anim.object_animator_pvh);
+                animPvh.setTarget(balls.get(4));
+
+
+                ObjectAnimator animPvhKf = (ObjectAnimator) AnimatorInflater.
+                        loadAnimator(appContext, R.anim.object_animator_pvh_kf);
+                animPvhKf.setTarget(balls.get(5));
+
+                ValueAnimator faderKf = (ValueAnimator) AnimatorInflater.
+                        loadAnimator(appContext, R.anim.value_animator_pvh_kf);
+                faderKf.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+                    public void onAnimationUpdate(ValueAnimator animation) {
+                        balls.get(6).setAlpha((Float) animation.getAnimatedValue());
+                    }
+                });
+
+                // This animation has an accelerate interpolator applied on each
+                // keyframe interval. In comparison, the animation defined in
+                // R.anim.object_animator_pvh_kf uses the default linear interpolator
+                // throughout the animation. As these two animations use the
+                // exact same path, the effect of the per-keyframe interpolator
+                // has been made obvious.
+                ObjectAnimator animPvhKfInterpolated = (ObjectAnimator) AnimatorInflater.
+                        loadAnimator(appContext, R.anim.object_animator_pvh_kf_interpolated);
+                animPvhKfInterpolated.setTarget(balls.get(7));
+
                 animation = new AnimatorSet();
-                ((AnimatorSet) animation).playTogether(anim, fader, seq, colorizer);
+                ((AnimatorSet) animation).playTogether(anim, fader, seq, colorizer, animPvh,
+                        animPvhKf, faderKf, animPvhKfInterpolated);
+
             }
         }
 

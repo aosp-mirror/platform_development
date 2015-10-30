@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="bt_not_enabled_leaving">User declined to enable Bluetooth, exiting Bluetooth Advertisements.</string>
+    <string name="activity_main_title">Nearby Devices</string>
+    <string name="broadcast_device">Broadcast Device</string>
+
+    <string name="bt_not_supported">Bluetooth is not supported on this device.</string>
+    <string name="bt_ads_not_supported">Bluetooth Advertisements are not supported on this device.</string>
+
+    <string name="refresh">Refresh</string>
+    <string name="start_error_prefix">Start Advertising failed: </string>
+    <string name="start_error_already_started">already started.</string>
+    <string name="start_error_too_large">data packet exceeded 31 Byte limit.</string>
+    <string name="start_error_unsupported">not supported on this device.</string>
+    <string name="start_error_internal">internal error.</string>
+    <string name="start_error_too_many">too many advertisers.</string>
+    <string name="bt_null">Error: Bluetooth object null</string>
+    <string name="last_seen">Last Seen:</string>
+    <string name="just_now">just now</string>
+    <string name="minute_ago">minute ago</string>
+    <string name="hour_ago">hour ago</string>
+    <string name="seconds_ago">seconds ago</string>
+    <string name="minutes_ago">minutes ago</string>
+    <string name="hours_ago">hours ago</string>
+    <string name="empty_list">No devices found - refresh to try again.</string>
+    <string name="seconds">seconds.</string>
+    <string name="scan_start_toast">Scanning for</string>
+    <string name="already_scanning">Scanning already started.</string>
+    <string name="no_name">(no name)</string>
+    <string name="start_error_unknown">unknown error</string>
+    <string name="advertising_timedout">Advertising stopped due to timeout.</string>
+
+</resources>

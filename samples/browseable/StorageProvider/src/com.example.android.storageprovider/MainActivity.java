@@ -14,6 +14,7 @@
 * limitations under the License.
 */
 
+
 package com.example.android.storageprovider;
 
 import android.graphics.Color;
@@ -35,7 +36,7 @@ public class MainActivity extends SampleActivityBase {
 
     public static final String TAG = "MainActivity";
 
-    public static final String FRAGTAG = "MyCloudFragment";
+    public static final String FRAGTAG = "StorageProviderFragment";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,7 +45,7 @@ public class MainActivity extends SampleActivityBase {
 
         if (getSupportFragmentManager().findFragmentByTag(FRAGTAG) == null ) {
             FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-            MyCloudFragment fragment = new MyCloudFragment();
+            StorageProviderFragment fragment = new StorageProviderFragment();
             transaction.add(fragment, FRAGTAG);
             transaction.commit();
         }

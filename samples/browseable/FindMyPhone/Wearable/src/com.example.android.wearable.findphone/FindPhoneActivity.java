@@ -28,7 +28,6 @@ import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.style.RelativeSizeSpan;
 
-
 public class FindPhoneActivity extends Activity {
 
     private static final int FIND_PHONE_NOTIFICATION_ID = 2;

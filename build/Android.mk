@@ -90,6 +90,9 @@ ALL_SDK_FILES += $(HOST_OUT)/framework/jill.jar
 # The uiautomator stubs
 ALL_SDK_FILES += $(TARGET_OUT_COMMON_INTERMEDIATES)/JAVA_LIBRARIES/android_uiautomator_intermediates/javalib.jar
 
+# org.apache.http.legacy.jar stubs
+ALL_SDK_FILES += $(TARGET_OUT_COMMON_INTERMEDIATES)/JAVA_LIBRARIES/org.apache.http.legacy_intermediates/javalib.jar
+
 # $(1): the Java library name
 define _package_sdk_library
 $(eval _psm_build_module := $(TARGET_OUT_COMMON_INTERMEDIATES)/JAVA_LIBRARIES/$(1)_intermediates/javalib.jar)
@@ -117,7 +120,8 @@ ANDROID_SUPPORT_LIBRARIES := \
     android-support-v17-leanback \
     android-support-multidex \
     android-support-multidex-instrumentation \
-    android-support-design
+    android-support-design \
+    android-support-percent
 
 $(foreach lib, $(ANDROID_SUPPORT_LIBRARIES), $(eval $(call _package_sdk_library,$(lib))))
 
@@ -125,7 +129,7 @@ $(foreach lib, $(ANDROID_SUPPORT_LIBRARIES), $(eval $(call _package_sdk_library,
 
 ALL_SDK_FILES += $(HOST_OUT)/development/sdk/generated-api-versions.xml
 
-api_gen_jar := $(TOPDIR)prebuilts/tools/common/api-generator/api-generator-22.9.1.jar
+api_gen_jar := $(TOPDIR)prebuilts/tools/common/api-generator/api-generator-22.9.3.jar
 api_gen_deps := \
   $(TOPDIR)prebuilts/tools/common/kxml2-tools/kxml2-2.3.0.jar \
   $(TOPDIR)prebuilts/tools/common/asm-tools/asm-4.0.jar \
@@ -134,11 +138,14 @@ api_gen_deps := \
 api_gen_classpath := $(subst $(space),:,$(api_gen_jar) $(api_gen_deps))
 
 
-$(HOST_OUT)/development/sdk/generated-api-versions.xml :
+$(HOST_OUT)/development/sdk/generated-api-versions.xml: $(android_jar_full_target)
 	java -cp $(api_gen_classpath) \
 	  com.android.apigenerator.Main \
 	  --pattern $(TOPDIR)prebuilts/tools/common/api-versions/android-%/android.jar \
 	  --pattern $(TOPDIR)prebuilts/sdk/%/android.jar \
+	  --current-version $(PLATFORM_SDK_VERSION) \
+	  --current-codename $(PLATFORM_VERSION_CODENAME) \
+	  --current-jar $(android_jar_full_target) \
 	  $@
 
 

@@ -24,6 +24,7 @@ import android.content.DialogInterface;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -56,6 +57,7 @@ App/Dialog/Alert Dialog
  * </table> 
  */
 public class AlertDialogSamples extends Activity {
+    private static final String TAG = "AlertDialogSamples";
     private static final int DIALOG_YES_NO_MESSAGE = 1;
     private static final int DIALOG_YES_NO_LONG_MESSAGE = 2;
     private static final int DIALOG_LIST = 3;
@@ -468,5 +470,10 @@ public class AlertDialogSamples extends Activity {
                 }
             }
         };
+    }
+
+    @Override
+    public void onEnterAnimationComplete() {
+        Log.i(TAG, "onEnterAnimationComplete");
     }
 }

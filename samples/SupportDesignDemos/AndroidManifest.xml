@@ -26,7 +26,8 @@
 
     <application android:label="@string/activity_sample_code"
             android:supportsRtl="true"
-            android:icon="@drawable/app_sample_code">
+            android:icon="@drawable/app_sample_code"
+            android:theme="@style/Theme.FAB">
 
         <activity android:name="SupportDesignDemos">
             <intent-filter>
@@ -45,8 +46,134 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".widget.NavigationViewUsage"
+                  android:label="@string/design_navigation"
+                  android:theme="@style/Theme.Navigation">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="com.example.android.support.design.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
         <activity android:name=".widget.TabLayoutUsage"
                   android:label="@string/design_tabs_basic"
+                  android:theme="@style/Theme.Design">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="com.example.android.support.design.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".widget.TextInputLayoutUsage"
+                  android:label="@string/design_text_input"
+                  android:theme="@style/Theme.AppCompat.Light.DarkActionBar">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="com.example.android.support.design.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".widget.SnackbarUsage"
+                  android:label="@string/design_snackbar_basic"
+                  android:theme="@style/Theme.AppCompat.Light.DarkActionBar">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="com.example.android.support.design.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".widget.SnackbarWithFloatingActionButton"
+                  android:label="@string/design_snackbar_fab"
+                  android:theme="@style/Theme.AppCompat.Light.DarkActionBar">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="com.example.android.support.design.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".widget.SnackbarWithoutCoordinatorLayout"
+                  android:label="@string/design_snackbar_without_col"
+                  android:theme="@style/Theme.AppCompat.Light.DarkActionBar">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="com.example.android.support.design.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".widget.AppBarLayoutToolbarScrollTabsScroll"
+                  android:label="@string/design_appbar_toolbar_scroll_tabs_scroll"
+                  android:theme="@style/Theme.Design">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="com.example.android.support.design.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".widget.AppBarLayoutToolbarScrollTabsPin"
+                  android:label="@string/design_appbar_toolbar_scroll_tabs_pin"
+                  android:theme="@style/Theme.Design">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="com.example.android.support.design.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".widget.AppBarLayoutToolbarScrollTabsPinWithSwipeRefresh"
+                  android:label="@string/design_appbar_toolbar_scroll_tabs_pin_with_swiperefresh"
+                  android:theme="@style/Theme.Design">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="com.example.android.support.design.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".widget.AppBarLayoutToolbarCollapseThenPin"
+                  android:label="@string/design_appbar_collapsing_toolbar_pin"
+                  android:theme="@style/Theme.Design">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="com.example.android.support.design.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".widget.AppBarLayoutToolbarCollapseThenPinWithFab"
+                  android:label="@string/design_appbar_collapsing_toolbar_pin_fab"
+                  android:theme="@style/Theme.Design">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="com.example.android.support.design.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".widget.AppBarLayoutToolbarCollapseThenScroll"
+                  android:label="@string/design_appbar_collapsing_toolbar_scroll"
+                  android:theme="@style/Theme.Design">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="com.example.android.support.design.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".widget.AppBarLayoutToolbarCollapseWithImage"
+                  android:label="@string/design_appbar_collapsing_toolbar_with_image"
+                  android:theme="@style/Theme.Design">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="com.example.android.support.design.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".widget.AppBarLayoutToolbarCollapseWithImageWithInsets"
+                  android:label="@string/design_appbar_collapsing_toolbar_with_image_insets"
+                  android:theme="@style/Theme.Design.TransparentStatus">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="com.example.android.support.design.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".widget.AppBarLayoutToolbarParallaxOverlapContent"
+                  android:label="@string/design_appbar_parallax_overlap"
                   android:theme="@style/Theme.Design">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

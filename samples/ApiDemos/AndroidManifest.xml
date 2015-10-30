@@ -38,6 +38,7 @@
     <uses-permission android:name="android.permission.TRANSMIT_IR" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
 
+
     <!-- For android.media.audiofx.Visualizer -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
@@ -550,17 +551,7 @@
             </intent-filter>
         </activity>
 
-        <service android:name=".app.RemoteService" android:process=":remote">
-            <intent-filter>
-                <!-- These are the interfaces supported by the service, which
-                     you can bind to. -->
-                <action android:name="com.example.android.apis.app.IRemoteService" />
-                <action android:name="com.example.android.apis.app.ISecondary" />
-                <!-- This is an action code you can use to select the service
-                     without explicitly supplying the implementation class. -->
-                <action android:name="com.example.android.apis.app.REMOTE_SERVICE" />
-            </intent-filter>
-        </service>
+        <service android:name=".app.RemoteService" android:process=":remote" />
 
         <activity android:name=".app.RemoteService$Controller"
                 android:label="@string/activity_remote_service_controller"
@@ -1176,7 +1167,6 @@
             </intent-filter>
         </activity>
 
-        <!--
         <activity android:name=".content.TextUndoActivity" android:label="@string/activity_text_undo">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -1184,7 +1174,6 @@
                 <category android:name="android.intent.category.EMBED" />
             </intent-filter>
         </activity>
-        -->
 
         <activity android:name=".content.ResourcesLayoutReference"
                 android:label="@string/activity_resources_layout_reference">
@@ -1237,6 +1226,13 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".content.ShareContent" android:label="@string/activity_share_content">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
         <activity android:name=".content.ChangedContacts" android:label="@string/activity_changed_contact">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
@@ -1263,7 +1259,24 @@
 
         <provider android:name=".content.FileProvider"
                   android:authorities="com.example.android.apis.content.FileProvider"
+                  android:grantUriPermissions="true"
+                  android:exported="false"
                   android:enabled="@bool/atLeastHoneycombMR2" />
+
+        <activity android:name=".content.ProcessTextLauncher"
+                android:label="@string/process_text_title" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+        <activity android:name=".content.ProcessText" >
+            <intent-filter >
+                <action android:name="android.intent.action.PROCESS_TEXT"/>
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+        </activity>
 
         <!-- ************************************* -->
         <!--     HARDWARE PACKAGE SAMPLES          -->
@@ -1536,12 +1549,6 @@
         <!--      VIEW/WIDGET PACKAGE SAMPLES      -->
         <!-- ************************************* -->
 
-        <activity android:name=".view.TextClockDemo" android:label="Views/TextClock">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.SAMPLE_CODE" />
-            </intent-filter>
-        </activity>
         <activity android:name=".view.ChronometerDemo" android:label="Views/Chronometer">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -2117,8 +2124,56 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".view.EditTextDemo"
+                  android:label="Views/Text/EditText">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".text.Link"
+                  android:label="Views/Text/Linkify">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".text.LogTextBox1"
+                  android:label="Views/Text/LogTextBox">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".text.Marquee"
+                  android:label="Views/Text/Marquee">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".view.TextClockDemo"
+                  android:label="Views/Text/TextClock">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
         <activity android:name=".view.TextSwitcher1"
-                android:label="Views/TextSwitcher">
+                android:label="Views/Text/TextSwitcher">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".view.TextViewDemo"
+                  android:label="Views/Text/TextView">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -3083,27 +3138,6 @@
         <!-- ************************************* -->
         <!--             OTHER SAMPLES             -->
         <!-- ************************************* -->
-
-        <activity android:name=".text.Link" android:label="Text/Linkify">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.SAMPLE_CODE" />
-            </intent-filter>
-        </activity>
-
-        <activity android:name=".text.Marquee" android:label="Text/Marquee">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.SAMPLE_CODE" />
-            </intent-filter>
-        </activity>
-
-        <activity android:name=".text.LogTextBox1" android:label="Text/LogTextBox">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.SAMPLE_CODE" />
-            </intent-filter>
-        </activity>
 
         <activity android:name=".nfc.ForegroundDispatch" android:label="NFC/ForegroundDispatch">
             <intent-filter>

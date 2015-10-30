@@ -150,7 +150,7 @@ public class MusicService extends Service implements OnCompletionListener, OnPre
     AudioManager mAudioManager;
     NotificationManager mNotificationManager;
 
-    Notification mNotification = null;
+    Notification.Builder mNotificationBuilder = null;
 
     /**
      * Makes sure the media player exists and has been reset. This will create the media player
@@ -516,8 +516,9 @@ public class MusicService extends Service implements OnCompletionListener, OnPre
         PendingIntent pi = PendingIntent.getActivity(getApplicationContext(), 0,
                 new Intent(getApplicationContext(), MainActivity.class),
                 PendingIntent.FLAG_UPDATE_CURRENT);
-        mNotification.setLatestEventInfo(getApplicationContext(), "RandomMusicPlayer", text, pi);
-        mNotificationManager.notify(NOTIFICATION_ID, mNotification);
+        mNotificationBuilder.setContentText(text)
+                .setContentIntent(pi);
+        mNotificationManager.notify(NOTIFICATION_ID, mNotificationBuilder.build());
     }
 
     /**
@@ -529,13 +530,18 @@ public class MusicService extends Service implements OnCompletionListener, OnPre
         PendingIntent pi = PendingIntent.getActivity(getApplicationContext(), 0,
                 new Intent(getApplicationContext(), MainActivity.class),
                 PendingIntent.FLAG_UPDATE_CURRENT);
-        mNotification = new Notification();
-        mNotification.tickerText = text;
-        mNotification.icon = R.drawable.ic_stat_playing;
-        mNotification.flags |= Notification.FLAG_ONGOING_EVENT;
-        mNotification.setLatestEventInfo(getApplicationContext(), "RandomMusicPlayer",
-                text, pi);
-        startForeground(NOTIFICATION_ID, mNotification);
+
+        // Build the notification object.
+        mNotificationBuilder = new Notification.Builder(getApplicationContext())
+                .setSmallIcon(R.drawable.ic_stat_playing)
+                .setTicker(text)
+                .setWhen(System.currentTimeMillis())
+                .setContentTitle("RandomMusicPlayer")
+                .setContentText(text)
+                .setContentIntent(pi)
+                .setOngoing(true);
+
+        startForeground(NOTIFICATION_ID, mNotificationBuilder.build());
     }
 
     /**

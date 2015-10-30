@@ -28,11 +28,16 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.net.ConnectivityManager;
+import android.net.ConnectivityManager.NetworkCallback;
 import android.net.LinkAddress;
+import android.net.LinkProperties;
 import android.net.Network;
+import android.net.NetworkCapabilities;
+import android.net.NetworkRequest;
 import android.net.NetworkUtils;
 import android.net.RouteInfo;
 import android.net.wifi.ScanResult;
+import android.net.wifi.WifiActivityEnergyInfo;
 import android.net.wifi.WifiManager;
 import android.os.RemoteException;
 import android.os.Handler;
@@ -118,6 +123,8 @@ public class Connectivity extends Activity {
     private long mStopTime;
     private long mTotalScanTime = 0;
     private long mTotalScanCount = 0;
+
+    private TextView mLinkStatsResults;
 
     private String mTdlsAddr = null;
 
@@ -251,6 +258,34 @@ public class Connectivity extends Activity {
         }
     }
 
+    private static class DevToolsNetworkCallback extends NetworkCallback {
+        private static final String TAG = "DevToolsNetworkCallback";
+
+        public void onPreCheck(Network network) {
+            Log.d(TAG, "onPreCheck: " + network.netId);
+        }
+
+        public void onAvailable(Network network) {
+            Log.d(TAG, "onAvailable: " + network.netId);
+        }
+
+        public void onCapabilitiesChanged(Network network, NetworkCapabilities nc) {
+            Log.d(TAG, "onCapabilitiesChanged: " + network.netId + " " + nc.toString());
+        }
+
+        public void onLinkPropertiesChanged(Network network, LinkProperties lp) {
+            Log.d(TAG, "onLinkPropertiesChanged: " + network.netId + " " + lp.toString());
+        }
+
+        public void onLosing(Network network, int maxMsToLive) {
+            Log.d(TAG, "onLosing: " + network.netId + " " + maxMsToLive);
+        }
+
+        public void onLost(Network network) {
+            Log.d(TAG, "onLost: " + network.netId);
+        }
+    }
+    private DevToolsNetworkCallback mCallback;
 
     @Override
     public void onCreate(Bundle icicle) {
@@ -316,13 +351,26 @@ public class Connectivity extends Activity {
         findViewById(R.id.routed_socket_request).setOnClickListener(mClickListener);
         findViewById(R.id.default_request).setOnClickListener(mClickListener);
         findViewById(R.id.default_socket).setOnClickListener(mClickListener);
+        findViewById(R.id.link_stats).setOnClickListener(mClickListener);
 
         registerReceiver(mReceiver, new IntentFilter(CONNECTIVITY_TEST_ALARM));
+
+        mLinkStatsResults = (TextView)findViewById(R.id.stats);
+        mLinkStatsResults.setVisibility(View.VISIBLE);
+
+        NetworkRequest.Builder builder = new NetworkRequest.Builder();
+        for (int i = 0; i < 255; i++) {
+            try { builder.removeCapability(i); } catch (IllegalArgumentException e) {}
+        }
+        NetworkRequest request = builder.build();
+        mCallback = new DevToolsNetworkCallback();
+        mCm.registerNetworkCallback(request, mCallback);
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
+        mCm.unregisterNetworkCallback(mCallback);
         unregisterReceiver(mReceiver);
     }
 
@@ -407,6 +455,9 @@ public class Connectivity extends Activity {
                 case R.id.stop_hipri:
                     mCm.stopUsingNetworkFeature(ConnectivityManager.TYPE_MOBILE,
                             Phone.FEATURE_ENABLE_HIPRI);
+                    break;
+                case R.id.link_stats:
+                    onLinkStats();
                     break;
             }
         }
@@ -543,6 +594,22 @@ public class Connectivity extends Activity {
             mWm.setTdlsEnabledWithMacAddress(mTdlsAddr, false);
         }
     }
+
+    private void onLinkStats() {
+        Log.e(TAG, "LINK STATS:  ");
+        try {
+            WifiActivityEnergyInfo info =
+                    mWm.getControllerActivityEnergyInfo(0);
+            if (info != null) {
+                mLinkStatsResults.setText(" power " + info.toString());
+            } else {
+                mLinkStatsResults.setText(" null! ");
+            }
+        } catch (Exception e) {
+            mLinkStatsResults.setText(" failed! " + e.toString());
+        }
+    }
+
 
     private void onAddDefaultRoute() {
         try {

@@ -34,9 +34,21 @@ public class BrowseErrorActivity extends Activity
     public void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.main);
+        setContentView(R.layout.browse);
 
         testError();
+    }
+
+    @Override
+    public void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        BackgroundHelper.attach(this);
+    }
+
+    @Override
+    public void onStop() {
+        BackgroundHelper.release(this);
+        super.onStop();
     }
 
     private void testError() {

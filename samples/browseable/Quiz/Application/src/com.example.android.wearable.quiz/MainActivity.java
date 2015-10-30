@@ -210,6 +210,7 @@ public class MainActivity extends Activity implements DataApi.DataListener,
      * indexes. For example, question0 should come before question1.
      */
     private static class Question implements Comparable<Question> {
+
         private String question;
         private int questionIndex;
         private String[] answers;
@@ -253,6 +254,7 @@ public class MainActivity extends Activity implements DataApi.DataListener,
 
     /**
      * Create a quiz, as defined in Quiz.json, when the user clicks on "Read quiz from file."
+     *
      * @throws IOException
      */
     public void readQuizFromFile(View view) throws IOException, JSONException {
@@ -323,8 +325,8 @@ public class MainActivity extends Activity implements DataApi.DataListener,
 
     @Override
     public void onDataChanged(DataEventBuffer dataEvents) {
+        // Need to freeze the dataEvents so they will exist later on the UI thread
         final List<DataEvent> events = FreezableUtils.freezeIterable(dataEvents);
-        dataEvents.close();
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -411,17 +413,18 @@ public class MainActivity extends Activity implements DataApi.DataListener,
     private void sendMessageToWearable(final String path, final byte[] data) {
         Wearable.NodeApi.getConnectedNodes(mGoogleApiClient).setResultCallback(
                 new ResultCallback<NodeApi.GetConnectedNodesResult>() {
-            @Override
-            public void onResult(NodeApi.GetConnectedNodesResult nodes) {
-                for (Node node : nodes.getNodes()) {
-                    Wearable.MessageApi.sendMessage(mGoogleApiClient, node.getId(), path, data);
-                }
+                    @Override
+                    public void onResult(NodeApi.GetConnectedNodesResult nodes) {
+                        for (Node node : nodes.getNodes()) {
+                            Wearable.MessageApi
+                                    .sendMessage(mGoogleApiClient, node.getId(), path, data);
+                        }
 
-                if (path.equals(QUIZ_EXITED_PATH) && mGoogleApiClient.isConnected()) {
-                    mGoogleApiClient.disconnect();
-                }
-            }
-        });
+                        if (path.equals(QUIZ_EXITED_PATH) && mGoogleApiClient.isConnected()) {
+                            mGoogleApiClient.disconnect();
+                        }
+                    }
+                });
     }
 
     /**
@@ -429,7 +432,7 @@ public class MainActivity extends Activity implements DataApi.DataListener,
      */
     public void resetQuiz(View view) {
         // Reset quiz status in phone layout.
-        for(int i = 0; i < questionsContainer.getChildCount(); i++) {
+        for (int i = 0; i < questionsContainer.getChildCount(); i++) {
             LinearLayout questionStatusElement = (LinearLayout) questionsContainer.getChildAt(i);
             TextView questionText = (TextView) questionStatusElement.findViewById(R.id.question);
             TextView questionStatus = (TextView) questionStatusElement.findViewById(R.id.status);
@@ -442,16 +445,17 @@ public class MainActivity extends Activity implements DataApi.DataListener,
                     .setResultCallback(new ResultCallback<DataItemBuffer>() {
                         @Override
                         public void onResult(DataItemBuffer result) {
-                            if (result.getStatus().isSuccess()) {
-                                List<DataItem> dataItemList = FreezableUtils.freezeIterable(result);
-                                result.close();
-                                resetDataItems(dataItemList);
-                            } else {
-                                if (Log.isLoggable(TAG, Log.DEBUG)) {
-                                    Log.d(TAG, "Reset quiz: failed to get Data Items to reset");
+                            try {
+                                if (result.getStatus().isSuccess()) {
+                                    resetDataItems(result);
+                                } else {
+                                    if (Log.isLoggable(TAG, Log.DEBUG)) {
+                                        Log.d(TAG, "Reset quiz: failed to get Data Items to reset");
+                                    }
                                 }
+                            } finally {
+                                result.release();
                             }
-                            result.close();
                         }
                     });
         } else {
@@ -464,7 +468,7 @@ public class MainActivity extends Activity implements DataApi.DataListener,
         mNumSkipped = 0;
     }
 
-    private void resetDataItems(List<DataItem> dataItemList) {
+    private void resetDataItems(DataItemBuffer dataItemList) {
         if (mGoogleApiClient.isConnected()) {
             for (final DataItem dataItem : dataItemList) {
                 final Uri dataItemUri = dataItem.getUri();
@@ -481,11 +485,12 @@ public class MainActivity extends Activity implements DataApi.DataListener,
      * Callback that marks a DataItem, which represents a question, as unanswered and not deleted.
      */
     private class ResetDataItemCallback implements ResultCallback<DataApi.DataItemResult> {
+
         @Override
         public void onResult(DataApi.DataItemResult dataItemResult) {
             if (dataItemResult.getStatus().isSuccess()) {
                 PutDataMapRequest request = PutDataMapRequest.createFromDataMapItem(
-                                DataMapItem.fromDataItem(dataItemResult.getDataItem()));
+                        DataMapItem.fromDataItem(dataItemResult.getDataItem()));
                 DataMap dataMap = request.getDataMap();
                 dataMap.putBoolean(QUESTION_WAS_ANSWERED, false);
                 dataMap.putBoolean(QUESTION_WAS_DELETED, false);
@@ -517,19 +522,23 @@ public class MainActivity extends Activity implements DataApi.DataListener,
                     .setResultCallback(new ResultCallback<DataItemBuffer>() {
                         @Override
                         public void onResult(DataItemBuffer result) {
-                            if (result.getStatus().isSuccess()) {
-                                List<Uri> dataItemUriList = new ArrayList<Uri>();
-                                for (final DataItem dataItem : result) {
-                                    dataItemUriList.add(dataItem.getUri());
+                            try {
+                                if (result.getStatus().isSuccess()) {
+                                    List<Uri> dataItemUriList = new ArrayList<Uri>();
+                                    for (final DataItem dataItem : result) {
+                                        dataItemUriList.add(dataItem.getUri());
+                                    }
+                                    deleteDataItems(dataItemUriList);
+                                } else {
+                                    if (Log.isLoggable(TAG, Log.DEBUG)) {
+                                        Log.d(TAG, "Clear quiz: failed to get Data Items for "
+                                                + "deletion");
+
+                                    }
                                 }
-                                result.close();
-                                deleteDataItems(dataItemUriList);
-                            } else {
-                                if (Log.isLoggable(TAG, Log.DEBUG)) {
-                                    Log.d(TAG, "Clear quiz: failed to get Data Items for deletion");
-                                }
+                            } finally {
+                                result.release();
                             }
-                            result.close();
                         }
                     });
         } else {

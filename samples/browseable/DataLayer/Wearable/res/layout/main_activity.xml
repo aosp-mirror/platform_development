@@ -15,25 +15,24 @@
 -->
 
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/layout"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent">
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@color/white">
 
-    <ListView
-        android:id="@+id/dataItem_list"
+    <android.support.wearable.view.GridViewPager
+        android:id="@+id/pager"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:transcriptMode="alwaysScroll"/>
+        android:layout_height="match_parent" />
 
-    <TextView
-        android:id="@+id/intro"
+    <android.support.wearable.view.DotsPageIndicator
+        android:id="@+id/page_indicator"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
-        android:textSize="20sp"
-        android:layout_marginLeft="16dp"
-        android:layout_marginRight="16dp"
-        android:gravity="center"
-        android:fontFamily="sans-serif-condensed-light"
-        android:text="@string/intro" />
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="10dp"
+        android:padding="5dp"
+        android:background="@drawable/rounded_background">
+    </android.support.wearable.view.DotsPageIndicator>
+
 </RelativeLayout>

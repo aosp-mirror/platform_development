@@ -25,6 +25,7 @@ import com.google.android.gms.wearable.WearableListenerService;
  * Listens for a message telling it to start the Wearable MainActivity.
  */
 public class WearableMessageListenerService extends WearableListenerService {
+
     private static final String START_ACTIVITY_PATH = "/start-activity";
 
     @Override

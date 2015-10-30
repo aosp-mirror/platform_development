@@ -31,7 +31,7 @@ import android.os.Message;
 import android.support.wearable.watchface.CanvasWatchFaceService;
 import android.support.wearable.watchface.WatchFaceService;
 import android.support.wearable.watchface.WatchFaceStyle;
-import android.text.format.Time;
+import android.text.format.DateFormat;
 import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.WindowInsets;
@@ -46,6 +46,10 @@ import com.google.android.gms.wearable.DataMap;
 import com.google.android.gms.wearable.DataMapItem;
 import com.google.android.gms.wearable.Wearable;
 
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Locale;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
@@ -122,16 +126,26 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService {
                 .addApi(Wearable.API)
                 .build();
 
-        final BroadcastReceiver mTimeZoneReceiver = new BroadcastReceiver() {
+        /**
+         * Handles time zone and locale changes.
+         */
+        final BroadcastReceiver mReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                mTime.clear(intent.getStringExtra("time-zone"));
-                mTime.setToNow();
+                mCalendar.setTimeZone(TimeZone.getDefault());
+                initFormats();
+                invalidate();
             }
         };
-        boolean mRegisteredTimeZoneReceiver = false;
+
+        /**
+         * Unregistering an unregistered receiver throws an exception. Keep track of the
+         * registration state to prevent that.
+         */
+        boolean mRegisteredReceiver = false;
 
         Paint mBackgroundPaint;
+        Paint mDatePaint;
         Paint mHourPaint;
         Paint mMinutePaint;
         Paint mSecondPaint;
@@ -139,10 +153,16 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService {
         Paint mColonPaint;
         float mColonWidth;
         boolean mMute;
-        Time mTime;
+
+        Calendar mCalendar;
+        Date mDate;
+        SimpleDateFormat mDayOfWeekFormat;
+        java.text.DateFormat mDateFormat;
+
         boolean mShouldDrawColons;
         float mXOffset;
         float mYOffset;
+        float mLineHeight;
         String mAmString;
         String mPmString;
         int mInteractiveBackgroundColor =
@@ -174,18 +194,22 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService {
                     .build());
             Resources resources = DigitalWatchFaceService.this.getResources();
             mYOffset = resources.getDimension(R.dimen.digital_y_offset);
+            mLineHeight = resources.getDimension(R.dimen.digital_line_height);
             mAmString = resources.getString(R.string.digital_am);
             mPmString = resources.getString(R.string.digital_pm);
 
             mBackgroundPaint = new Paint();
             mBackgroundPaint.setColor(mInteractiveBackgroundColor);
+            mDatePaint = createTextPaint(resources.getColor(R.color.digital_date));
             mHourPaint = createTextPaint(mInteractiveHourDigitsColor, BOLD_TYPEFACE);
             mMinutePaint = createTextPaint(mInteractiveMinuteDigitsColor);
             mSecondPaint = createTextPaint(mInteractiveSecondDigitsColor);
             mAmPmPaint = createTextPaint(resources.getColor(R.color.digital_am_pm));
             mColonPaint = createTextPaint(resources.getColor(R.color.digital_colons));
 
-            mTime = new Time();
+            mCalendar = Calendar.getInstance();
+            mDate = new Date();
+            initFormats();
         }
 
         @Override
@@ -218,9 +242,9 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService {
 
                 registerReceiver();
 
-                // Update time zone in case it changed while we weren't visible.
-                mTime.clear(TimeZone.getDefault().getID());
-                mTime.setToNow();
+                // Update time zone and date formats, in case they changed while we weren't visible.
+                mCalendar.setTimeZone(TimeZone.getDefault());
+                initFormats();
             } else {
                 unregisterReceiver();
 
@@ -235,21 +259,29 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService {
             updateTimer();
         }
 
+        private void initFormats() {
+            mDayOfWeekFormat = new SimpleDateFormat("EEEE", Locale.getDefault());
+            mDayOfWeekFormat.setCalendar(mCalendar);
+            mDateFormat = DateFormat.getDateFormat(DigitalWatchFaceService.this);
+            mDateFormat.setCalendar(mCalendar);
+        }
+
         private void registerReceiver() {
-            if (mRegisteredTimeZoneReceiver) {
+            if (mRegisteredReceiver) {
                 return;
             }
-            mRegisteredTimeZoneReceiver = true;
+            mRegisteredReceiver = true;
             IntentFilter filter = new IntentFilter(Intent.ACTION_TIMEZONE_CHANGED);
-            DigitalWatchFaceService.this.registerReceiver(mTimeZoneReceiver, filter);
+            filter.addAction(Intent.ACTION_LOCALE_CHANGED);
+            DigitalWatchFaceService.this.registerReceiver(mReceiver, filter);
         }
 
         private void unregisterReceiver() {
-            if (!mRegisteredTimeZoneReceiver) {
+            if (!mRegisteredReceiver) {
                 return;
             }
-            mRegisteredTimeZoneReceiver = false;
-            DigitalWatchFaceService.this.unregisterReceiver(mTimeZoneReceiver);
+            mRegisteredReceiver = false;
+            DigitalWatchFaceService.this.unregisterReceiver(mReceiver);
         }
 
         @Override
@@ -269,6 +301,7 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService {
             float amPmSize = resources.getDimension(isRound
                     ? R.dimen.digital_am_pm_size_round : R.dimen.digital_am_pm_size);
 
+            mDatePaint.setTextSize(resources.getDimension(R.dimen.digital_date_text_size));
             mHourPaint.setTextSize(textSize);
             mMinutePaint.setTextSize(textSize);
             mSecondPaint.setTextSize(textSize);
@@ -321,6 +354,7 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService {
 
             if (mLowBitAmbient) {
                 boolean antiAlias = !inAmbientMode;
+                mDatePaint.setAntiAlias(antiAlias);
                 mHourPaint.setAntiAlias(antiAlias);
                 mMinutePaint.setAntiAlias(antiAlias);
                 mSecondPaint.setAntiAlias(antiAlias);
@@ -335,7 +369,7 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService {
         }
 
         private void adjustPaintColorToCurrentMode(Paint paint, int interactiveColor,
-                int ambientColor) {
+                                                   int ambientColor) {
             paint.setColor(isInAmbientMode() ? ambientColor : interactiveColor);
         }
 
@@ -353,6 +387,7 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService {
             if (mMute != inMuteMode) {
                 mMute = inMuteMode;
                 int alpha = inMuteMode ? MUTE_ALPHA : NORMAL_ALPHA;
+                mDatePaint.setAlpha(alpha);
                 mHourPaint.setAlpha(alpha);
                 mMinutePaint.setAlpha(alpha);
                 mColonPaint.setAlpha(alpha);
@@ -403,18 +438,16 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService {
             return String.format("%02d", hour);
         }
 
-        private int convertTo12Hour(int hour) {
-            int result = hour % 12;
-            return (result == 0) ? 12 : result;
-        }
-
-        private String getAmPmString(int hour) {
-            return (hour < 12) ? mAmString : mPmString;
+        private String getAmPmString(int amPm) {
+            return amPm == Calendar.AM ? mAmString : mPmString;
         }
 
         @Override
         public void onDraw(Canvas canvas, Rect bounds) {
-            mTime.setToNow();
+            long now = System.currentTimeMillis();
+            mCalendar.setTimeInMillis(now);
+            mDate.setTime(now);
+            boolean is24Hour = DateFormat.is24HourFormat(DigitalWatchFaceService.this);
 
             // Show colons for the first half of each second so the colons blink on when the time
             // updates.
@@ -425,7 +458,16 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService {
 
             // Draw the hours.
             float x = mXOffset;
-            String hourString = String.valueOf(convertTo12Hour(mTime.hour));
+            String hourString;
+            if (is24Hour) {
+                hourString = formatTwoDigitNumber(mCalendar.get(Calendar.HOUR_OF_DAY));
+            } else {
+                int hour = mCalendar.get(Calendar.HOUR);
+                if (hour == 0) {
+                    hour = 12;
+                }
+                hourString = String.valueOf(hour);
+            }
             canvas.drawText(hourString, x, mYOffset, mHourPaint);
             x += mHourPaint.measureText(hourString);
 
@@ -437,22 +479,36 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService {
             x += mColonWidth;
 
             // Draw the minutes.
-            String minuteString = formatTwoDigitNumber(mTime.minute);
+            String minuteString = formatTwoDigitNumber(mCalendar.get(Calendar.MINUTE));
             canvas.drawText(minuteString, x, mYOffset, mMinutePaint);
             x += mMinutePaint.measureText(minuteString);
 
-            // In ambient and mute modes, draw AM/PM. Otherwise, draw a second blinking
-            // colon followed by the seconds.
-            if (isInAmbientMode() || mMute) {
-                x += mColonWidth;
-                canvas.drawText(getAmPmString(mTime.hour), x, mYOffset, mAmPmPaint);
-            } else {
+            // In unmuted interactive mode, draw a second blinking colon followed by the seconds.
+            // Otherwise, if we're in 12-hour mode, draw AM/PM
+            if (!isInAmbientMode() && !mMute) {
                 if (mShouldDrawColons) {
                     canvas.drawText(COLON_STRING, x, mYOffset, mColonPaint);
                 }
                 x += mColonWidth;
-                canvas.drawText(formatTwoDigitNumber(mTime.second), x, mYOffset,
-                        mSecondPaint);
+                canvas.drawText(formatTwoDigitNumber(
+                        mCalendar.get(Calendar.SECOND)), x, mYOffset, mSecondPaint);
+            } else if (!is24Hour) {
+                x += mColonWidth;
+                canvas.drawText(getAmPmString(
+                        mCalendar.get(Calendar.AM_PM)), x, mYOffset, mAmPmPaint);
+            }
+
+            // Only render the day of week and date if there is no peek card, so they do not bleed
+            // into each other in ambient mode.
+            if (getPeekCardPosition().isEmpty()) {
+                // Day of week
+                canvas.drawText(
+                        mDayOfWeekFormat.format(mDate),
+                        mXOffset, mYOffset + mLineHeight, mDatePaint);
+                // Date
+                canvas.drawText(
+                        mDateFormat.format(mDate),
+                        mXOffset, mYOffset + mLineHeight * 2, mDatePaint);
             }
         }
 
@@ -513,27 +569,23 @@ public class DigitalWatchFaceService extends CanvasWatchFaceService {
 
         @Override // DataApi.DataListener
         public void onDataChanged(DataEventBuffer dataEvents) {
-            try {
-                for (DataEvent dataEvent : dataEvents) {
-                    if (dataEvent.getType() != DataEvent.TYPE_CHANGED) {
-                        continue;
-                    }
-
-                    DataItem dataItem = dataEvent.getDataItem();
-                    if (!dataItem.getUri().getPath().equals(
-                            DigitalWatchFaceUtil.PATH_WITH_FEATURE)) {
-                        continue;
-                    }
-
-                    DataMapItem dataMapItem = DataMapItem.fromDataItem(dataItem);
-                    DataMap config = dataMapItem.getDataMap();
-                    if (Log.isLoggable(TAG, Log.DEBUG)) {
-                        Log.d(TAG, "Config DataItem updated:" + config);
-                    }
-                    updateUiForConfigDataMap(config);
+            for (DataEvent dataEvent : dataEvents) {
+                if (dataEvent.getType() != DataEvent.TYPE_CHANGED) {
+                    continue;
                 }
-            } finally {
-                dataEvents.close();
+
+                DataItem dataItem = dataEvent.getDataItem();
+                if (!dataItem.getUri().getPath().equals(
+                        DigitalWatchFaceUtil.PATH_WITH_FEATURE)) {
+                    continue;
+                }
+
+                DataMapItem dataMapItem = DataMapItem.fromDataItem(dataItem);
+                DataMap config = dataMapItem.getDataMap();
+                if (Log.isLoggable(TAG, Log.DEBUG)) {
+                    Log.d(TAG, "Config DataItem updated:" + config);
+                }
+                updateUiForConfigDataMap(config);
             }
         }
 

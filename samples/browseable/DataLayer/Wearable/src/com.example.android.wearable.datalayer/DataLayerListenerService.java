@@ -22,7 +22,6 @@ import android.util.Log;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.data.FreezableUtils;
 import com.google.android.gms.wearable.DataEvent;
 import com.google.android.gms.wearable.DataEventBuffer;
 import com.google.android.gms.wearable.MessageEvent;
@@ -45,8 +44,6 @@ public class DataLayerListenerService extends WearableListenerService {
     public static final String COUNT_PATH = "/count";
     public static final String IMAGE_PATH = "/image";
     public static final String IMAGE_KEY = "photo";
-    private static final String COUNT_KEY = "count";
-    private static final int MAX_LOG_TAG_LENGTH = 23;
     GoogleApiClient mGoogleApiClient;
 
     @Override
@@ -61,19 +58,18 @@ public class DataLayerListenerService extends WearableListenerService {
     @Override
     public void onDataChanged(DataEventBuffer dataEvents) {
         LOGD(TAG, "onDataChanged: " + dataEvents);
-        final List<DataEvent> events = FreezableUtils.freezeIterable(dataEvents);
-        dataEvents.close();
-        if(!mGoogleApiClient.isConnected()) {
+        if (!mGoogleApiClient.isConnected() || !mGoogleApiClient.isConnecting()) {
             ConnectionResult connectionResult = mGoogleApiClient
                     .blockingConnect(30, TimeUnit.SECONDS);
             if (!connectionResult.isSuccess()) {
-                Log.e(TAG, "DataLayerListenerService failed to connect to GoogleApiClient.");
+                Log.e(TAG, "DataLayerListenerService failed to connect to GoogleApiClient, "
+                        + "error code: " + connectionResult.getErrorCode());
                 return;
             }
         }
 
         // Loop through the events and send a message back to the node that created the data item.
-        for (DataEvent event : events) {
+        for (DataEvent event : dataEvents) {
             Uri uri = event.getDataItem().getUri();
             String path = uri.getPath();
             if (COUNT_PATH.equals(path)) {

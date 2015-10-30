@@ -79,7 +79,6 @@ public class HomeListenerService extends WearableListenerService {
                 postNotificationForGeofenceId(geofenceId, event.getDataItem().getUri());
             }
         }
-        dataEvents.close();
     }
 
     /**

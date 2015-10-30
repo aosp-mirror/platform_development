@@ -73,24 +73,27 @@ public class FindPhoneService extends IntentService implements GoogleApiClient.C
             if (intent.getAction().equals(ACTION_TOGGLE_ALARM)) {
                 // Get current state of the alarm.
                 DataItemBuffer result = Wearable.DataApi.getDataItems(mGoogleApiClient).await();
-                if (result.getStatus().isSuccess()) {
-                    if (result.getCount() == 1) {
-                        alarmOn = DataMap.fromByteArray(result.get(0).getData())
-                                .getBoolean(FIELD_ALARM_ON, false);
-                    } else {
-                        Log.e(TAG, "Unexpected number of DataItems found.\n"
-                                 + "\tExpected: 1\n"
-                                 + "\tActual: " + result.getCount());
+                try {
+                    if (result.getStatus().isSuccess()) {
+                        if (result.getCount() == 1) {
+                            alarmOn = DataMap.fromByteArray(result.get(0).getData())
+                                    .getBoolean(FIELD_ALARM_ON, false);
+                        } else {
+                            Log.e(TAG, "Unexpected number of DataItems found.\n"
+                                    + "\tExpected: 1\n"
+                                    + "\tActual: " + result.getCount());
+                        }
+                    } else if (Log.isLoggable(TAG, Log.DEBUG)) {
+                        Log.d(TAG, "onHandleIntent: failed to get current alarm state");
                     }
-                } else if (Log.isLoggable(TAG, Log.DEBUG)) {
-                    Log.d(TAG, "onHandleIntent: failed to get current alarm state");
+                } finally {
+                    result.release();
                 }
-                result.close();
                 // Toggle alarm.
                 alarmOn = !alarmOn;
                 // Change notification text based on new value of alarmOn.
                 String notificationText = alarmOn ? getString(R.string.turn_alarm_off)
-                                                  : getString(R.string.turn_alarm_on);
+                        : getString(R.string.turn_alarm_on);
                 FindPhoneActivity.updateNotification(this, notificationText);
             }
             // Use alarmOn boolean to update the DataItem - phone will respond accordingly
@@ -101,7 +104,7 @@ public class FindPhoneService extends IntentService implements GoogleApiClient.C
                     .await();
         } else {
             Log.e(TAG, "Failed to toggle alarm on phone - Client disconnected from Google Play "
-                     + "Services");
+                    + "Services");
         }
         mGoogleApiClient.disconnect();
     }

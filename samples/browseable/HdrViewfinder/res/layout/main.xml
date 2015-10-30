@@ -15,13 +15,14 @@
      limitations under the License.
 -->
 <LinearLayout
-    android:id="@+id/panels"
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:custom="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/panels"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="horizontal">
+    android:orientation="horizontal"
+    tools:context="com.example.android.hdrviewfinder.HdrViewfinderActivity">
 
     <com.example.android.hdrviewfinder.FixedAspectSurfaceView
         android:id="@+id/preview"
@@ -36,7 +37,8 @@
         android:layout_width="0px"
         android:layout_height="match_parent"
         android:layout_weight="1"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:layout_margin="5dp">
 
         <Button
             android:id="@+id/help_button"

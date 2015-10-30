@@ -153,6 +153,10 @@ class TestRunner(object):
     parser.add_option("--coverage-target", dest="coverage_target_path",
                       default=None,
                       help="Path to app to collect code coverage target data for.")
+    parser.add_option("-k", "--skip-permissions", dest="skip_permissions",
+                      default=False, action="store_true",
+                      help="Do not grant runtime permissions during test package"
+                      " installation.")
     parser.add_option("-x", "--path", dest="test_path",
                       help="Run test(s) at given file system path")
     parser.add_option("-t", "--all-tests", dest="all_tests",
@@ -247,19 +251,27 @@ class TestRunner(object):
 
   def _DoBuild(self):
     logger.SilentLog("Building tests...")
-
     tests = self._GetTestsToRun()
+
+    # Build and install tests that do not get granted permissions
+    self._DoPermissionAwareBuild(tests, False)
+
+    # Build and install tests that require granted permissions
+    self._DoPermissionAwareBuild(tests, True)
+
+  def _DoPermissionAwareBuild(self, tests, test_requires_permissions):
     # turn off dalvik verifier if necessary
     # TODO: skip turning off verifier for now, since it puts device in bad
     # state b/14088982
     #self._TurnOffVerifier(tests)
-    self._DoFullBuild(tests)
+    self._DoFullBuild(tests, test_requires_permissions)
 
     target_tree = make_tree.MakeTree()
 
     extra_args_set = []
     for test_suite in tests:
-      self._AddBuildTarget(test_suite, target_tree, extra_args_set)
+      if test_suite.IsGrantedPermissions() == test_requires_permissions:
+        self._AddBuildTarget(test_suite, target_tree, extra_args_set)
 
     if not self._options.preview:
       self._adb.EnableAdbRoot()
@@ -283,8 +295,15 @@ class TestRunner(object):
           target_build_string, self._options.make_jobs, self._root_path,
           extra_args_string)
       # mmma equivalent, used when regular mmm fails
-      alt_cmd = 'make -j%s -C "%s" -f build/core/main.mk %s all_modules BUILD_MODULES_IN_PATHS="%s"' % (
-              self._options.make_jobs, self._root_path, extra_args_string, target_dir_build_string)
+      mmma_goals = []
+      for d in target_dir_list:
+        if d.startswith("./"):
+          d = d[2:]
+        if d.endswith("/"):
+          d = d[:-1]
+        mmma_goals.append("MODULES-IN-" + d.replace("/","-"))
+      alt_cmd = 'make -j%s -C "%s" -f build/core/main.mk %s %s' % (
+              self._options.make_jobs, self._root_path, extra_args_string, " ".join(mmma_goals))
 
       logger.Log(cmd)
       if not self._options.preview:
@@ -301,9 +320,9 @@ class TestRunner(object):
           output = run_command.RunCommand(cmd, return_output=True, timeout_time=600)
         run_command.SetAbortOnError(False)
         logger.SilentLog(output)
-        self._DoInstall(output)
+        self._DoInstall(output, test_requires_permissions)
 
-  def _DoInstall(self, make_output):
+  def _DoInstall(self, make_output, test_requires_permissions):
     """Install artifacts from build onto device.
 
     Looks for 'install:' text from make output to find artifacts to install.
@@ -323,8 +342,11 @@ class TestRunner(object):
         for install_path in re.split(r'\s+', install_paths):
           if install_path.endswith(".apk"):
             abs_install_path = os.path.join(self._root_path, install_path)
-            logger.Log("adb install -r %s" % abs_install_path)
-            logger.Log(self._adb.Install(abs_install_path))
+            extra_flags = ""
+            if test_requires_permissions and not self._options.skip_permissions:
+              extra_flags = "-g"
+            logger.Log("adb install -r %s %s" % (extra_flags, abs_install_path))
+            logger.Log(self._adb.Install(abs_install_path, extra_flags))
           else:
             self._PushInstallFileToDevice(install_path)
 
@@ -341,12 +363,12 @@ class TestRunner(object):
     else:
       logger.Log("Error: Failed to recognize path of file to install %s" % install_path)
 
-  def _DoFullBuild(self, tests):
+  def _DoFullBuild(self, tests, test_requires_permissions):
     """If necessary, run a full 'make' command for the tests that need it."""
     extra_args_set = Set()
 
     for test in tests:
-      if test.IsFullMake():
+      if test.IsFullMake() and test.IsGrantedPermissions() == test_requires_permissions:
         if test.GetExtraBuildArgs():
           # extra args contains the args to pass to 'make'
           extra_args_set.add(test.GetExtraBuildArgs())
@@ -365,7 +387,7 @@ class TestRunner(object):
         output = run_command.RunCommand(cmd, return_output=True)
         logger.SilentLog(output)
         os.chdir(old_dir)
-        self._DoInstall(output)
+        self._DoInstall(output, test_requires_permissions)
 
   def _AddBuildTarget(self, test_suite, target_tree, extra_args_set):
     if not test_suite.IsFullMake():

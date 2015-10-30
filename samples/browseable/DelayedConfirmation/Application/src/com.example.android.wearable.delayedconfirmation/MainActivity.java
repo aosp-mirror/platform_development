@@ -109,15 +109,15 @@ public class MainActivity extends Activity implements MessageApi.MessageListener
     public void onStartWearableActivityClick(View view) {
         Wearable.NodeApi.getConnectedNodes(mGoogleApiClient).setResultCallback(
                 new ResultCallback<NodeApi.GetConnectedNodesResult>() {
-            @Override
-            public void onResult(NodeApi.GetConnectedNodesResult getConnectedNodesResult) {
-                for (final Node node : getConnectedNodesResult.getNodes()) {
-                    Wearable.MessageApi.sendMessage(
-                            mGoogleApiClient, node.getId(), START_ACTIVITY_PATH, new byte[0])
-                            .setResultCallback(getSendMessageResultCallback());
-                }
-            }
-        });
+                    @Override
+                    public void onResult(NodeApi.GetConnectedNodesResult getConnectedNodesResult) {
+                        for (final Node node : getConnectedNodesResult.getNodes()) {
+                            Wearable.MessageApi.sendMessage(mGoogleApiClient, node.getId(),
+                                    START_ACTIVITY_PATH, new byte[0]).setResultCallback(
+                                    getSendMessageResultCallback());
+                        }
+                    }
+                });
     }
 
     private ResultCallback<MessageApi.SendMessageResult> getSendMessageResultCallback() {

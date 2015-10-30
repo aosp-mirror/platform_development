@@ -1,0 +1,11 @@
+
+page.tags="PermissionRequest"
+sample.group=Content
+@jd:body
+
+<p>
+            
+            This sample shows how to handle PermissionRequest coming from web apps inside of a
+            WebView.
+            
+        </p>

@@ -1,0 +1,11 @@
+
+page.tags="BluetoothAdvertisements"
+sample.group=Connectivity
+@jd:body
+
+<p>
+
+This samples demonstrates how to use the Bluetooth Low Power Advertisements API
+with a single device acting as both scanner and advertiser.
+
+        </p>

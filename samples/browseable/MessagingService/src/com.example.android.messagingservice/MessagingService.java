@@ -31,41 +31,24 @@ import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.app.RemoteInput;
 import android.util.Log;
 
+import java.lang.ref.WeakReference;
 import java.util.Iterator;
 
 public class MessagingService extends Service {
     private static final String TAG = MessagingService.class.getSimpleName();
-
-    public static final String READ_ACTION =
+    private static final String EOL = "\n";
+    private static final String READ_ACTION =
             "com.example.android.messagingservice.ACTION_MESSAGE_READ";
+
     public static final String REPLY_ACTION =
             "com.example.android.messagingservice.ACTION_MESSAGE_REPLY";
     public static final String CONVERSATION_ID = "conversation_id";
     public static final String EXTRA_VOICE_REPLY = "extra_voice_reply";
     public static final int MSG_SEND_NOTIFICATION = 1;
-    public static final String EOL = "\n";
 
     private NotificationManagerCompat mNotificationManager;
 
-    private final Messenger mMessenger = new Messenger(new IncomingHandler());
-
-    /**
-     * Handler of incoming messages from clients.
-     */
-    class IncomingHandler extends Handler {
-        @Override
-        public void handleMessage(Message msg) {
-            switch (msg.what) {
-                case MSG_SEND_NOTIFICATION:
-                    int howManyConversations = msg.arg1 <= 0 ? 1 : msg.arg1;
-                    int messagesPerConv = msg.arg2 <= 0 ? 1 : msg.arg2;
-                    sendNotification(howManyConversations, messagesPerConv);
-                    break;
-                default:
-                    super.handleMessage(msg);
-            }
-        }
-    }
+    private final Messenger mMessenger = new Messenger(new IncomingHandler(this));
 
     @Override
     public void onCreate() {
@@ -77,18 +60,6 @@ public class MessagingService extends Service {
     public IBinder onBind(Intent intent) {
         Log.d(TAG, "onBind");
         return mMessenger.getBinder();
-    }
-
-    @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.d(TAG, "onStartCommand");
-        return START_STICKY;
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        Log.d(TAG, "onDestroy");
     }
 
     // Creates an intent that will be triggered when a message is marked as read.
@@ -170,5 +141,32 @@ public class MessagingService extends Service {
                 + conversation.getConversationId() + " conversation: " + conversation);
 
         mNotificationManager.notify(conversation.getConversationId(), builder.build());
+    }
+
+    /**
+     * Handler for incoming messages from clients.
+     */
+    private static class IncomingHandler extends Handler {
+        private final WeakReference<MessagingService> mReference;
+
+        IncomingHandler(MessagingService service) {
+            mReference = new WeakReference<>(service);
+        }
+
+        @Override
+        public void handleMessage(Message msg) {
+            MessagingService service = mReference.get();
+            switch (msg.what) {
+                case MSG_SEND_NOTIFICATION:
+                    int howManyConversations = msg.arg1 <= 0 ? 1 : msg.arg1;
+                    int messagesPerConversation = msg.arg2 <= 0 ? 1 : msg.arg2;
+                    if (service != null) {
+                        service.sendNotification(howManyConversations, messagesPerConversation);
+                    }
+                    break;
+                default:
+                    super.handleMessage(msg);
+            }
+        }
     }
 }

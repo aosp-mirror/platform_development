@@ -57,6 +57,8 @@
     <string name="action_bar_settings_action_provider_no_handling">Handling in onOptionsItemSelected avoided</string>
     <string name="action_bar_with_navigation_drawer">AppCompat/Action Bar/Navigation Drawer Toggle</string>
     <string name="action_bar_preferences">AppCompat/Action Bar/Preferences</string>
+    <string name="action_bar_action_mode">AppCompat/Action Bar/Action Mode</string>
+    <string name="action_bar_hide_scroll">AppCompat/Action Bar/Hide on Scroll</string>
     <string name="appcompat_widgets_buttons">AppCompat/Widgets/Buttons</string>
     <string name="appcompat_widgets_spinners">AppCompat/Widgets/Spinners</string>
     <string name="appcompat_widgets_text_input">AppCompat/Widgets/Text Input</string>
@@ -129,10 +131,13 @@
     <string name="toolbar_usage">AppCompat/Toolbar/Toolbar as Action Bar</string>
     <string name="toolbar_display_options">AppCompat/Toolbar/Toolbar Display Options</string>
     <string name="toolbar_fragment_pager">AppCompat/Toolbar/Toolbar Fragment ViewPager</string>
+    <string name="toolbar_action_mode">AppCompat/Toolbar/Action Mode</string>
 
     <string name="dialog_usage">AppCompat/Dialog/Dialog Usage</string>
     <string name="dialog_title">My great dialog</string>
     <string name="dialog_content">My great dialog is great</string>
+    <string name="alert_dialog_usage">AppCompat/Dialog/AlertDialog Usage</string>
+    <string name="dialogfragment_usage">AppCompat/Dialog/DialogFragment Usage</string>
 
     <string name="sample_media_route_provider_remote">Remote Playback (Simulated)</string>
     <string name="sample_media_route_activity_local">Local Playback</string>
@@ -142,6 +147,8 @@
     <string name="animated_recycler_view">RecyclerView/AnimatedRecyclerView</string>
     <string name="linear_layout_manager">RecyclerView/Linear Layout Manager</string>
     <string name="grid_layout_manager">RecyclerView/Grid Layout Manager</string>
+    <string name="staggered_grid_layout_manager">RecyclerView/Staggered Grid Layout Manager</string>
+    <string name="async_list_util">RecyclerView/AsyncListUtil</string>
     <string name="checkbox_orientation">Horz.</string>
     <string name="checkbox_reverse">Rev.</string>
     <string name="checkbox_layout_dir">Layout Dir</string>
@@ -173,5 +180,19 @@
     <string name="search_hint">Search...</string>
     <string name="sorted_list_activity">Sorted List</string>
     <string name="add_new_item">Add New Item</string>
+    <string name="start_action_mode">Start Action Mode</string>
 
+    <string name="swipe_to_dismiss_activity">RecyclerView/ItemTouchHelper/Swipe To Dismiss</string>
+    <string name="drag_and_drop_activity">RecyclerView/ItemTouchHelper/Drag and Drop Activity</string>
+    <string name="swipe_start">start</string>
+    <string name="swipe_end">end</string>
+    <string name="pointer_swipe_enabled">pointer swipe</string>
+    <string name="custom_swipe_enabled">custom swipe</string>
+    <string name="drag_up">up</string>
+    <string name="drag_down">down</string>
+    <string name="long_press_drag">long press drag</string>
+    <string name="drag">drag me</string>
+    <string name="swipe">swipe me</string>
+    <string name="swiping">swiping</string>
+    <string name="vertical">vertical</string>
 </resources>

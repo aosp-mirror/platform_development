@@ -17,4 +17,8 @@
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <string name="app_name">Data Layer Sample Wearable App</string>
     <string name="intro">Waiting for data to arrive\u2026</string>
+    <string name="capability_2_notification">Capability 2</string>
+    <string name="capabilities_1_and_2_notification">Capabilities 1 and 2</string>
+    <string name="no_device">No device provides the requested capabilities</string>
+    <string name="connected_nodes">Nodes: %1$s</string>
 </resources>

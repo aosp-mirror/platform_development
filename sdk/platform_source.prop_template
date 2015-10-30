@@ -1,10 +1,10 @@
 Pkg.Desc=Android SDK Platform ${PLATFORM_VERSION}
 Pkg.UserSrc=false
 Platform.Version=${PLATFORM_VERSION}
-Platform.CodeName=LOLLIPOP
+Platform.CodeName=
 Pkg.Revision=1
 AndroidVersion.ApiLevel=${PLATFORM_SDK_VERSION}
 AndroidVersion.CodeName=${PLATFORM_VERSION_CODENAME}
-Layoutlib.Api=13
+Layoutlib.Api=15
 Layoutlib.Revision=1
 Platform.MinToolsRev=22

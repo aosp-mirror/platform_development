@@ -14,13 +14,16 @@
         android:theme="@style/Theme.Example.Leanback">
 
         <activity android:name="MainActivity"
-            android:label="@string/app_name"
-            android:theme="@style/Theme.Example.Leanback.Browse">
+            android:label="@string/app_name">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity android:name="BrowseActivity"
+            android:theme="@style/Theme.Example.Leanback.Browse"
+            android:exported="true" />
 
         <activity android:name="BrowseAnimationActivity"
             android:exported="true" >
@@ -28,6 +31,10 @@
 
         <activity android:name="DetailsActivity"
             android:theme="@style/Theme.Example.Leanback.Details"
+            android:exported="true" />
+
+        <activity android:name="SearchDetailsActivity"
+            android:theme="@style/Theme.Example.Leanback.SearchDetails"
             android:exported="true" />
 
         <activity android:name="RowsActivity"
@@ -44,9 +51,18 @@
             android:exported="true" />
 
         <activity android:name="BrowseErrorActivity"
-                  android:exported="true" />
+            android:exported="true" />
 
         <activity android:name="HorizontalGridTestActivity"
             android:exported="true" />
+
+        <activity android:name="GuidedStepActivity"
+            android:theme="@style/Theme.Example.Leanback.GuidedStep"
+            android:exported="true" />
+
+        <activity android:name="DetailsPresenterSelectionActivity"
+            android:theme="@style/Theme.Example.Leanback.GuidedStep"
+            android:exported="true" />
+
     </application>
 </manifest>

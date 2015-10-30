@@ -40,7 +40,6 @@ import android.util.Log;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.data.FreezableUtils;
 import com.google.android.gms.wearable.DataEvent;
 import com.google.android.gms.wearable.DataEventBuffer;
 import com.google.android.gms.wearable.DataItem;
@@ -64,6 +63,7 @@ import java.util.concurrent.TimeUnit;
  * When the quiz ends, this listener receives a message telling it to create an end-of-quiz report.
  */
 public class QuizListenerService extends WearableListenerService {
+
     private static final String TAG = "QuizSample";
     private static final int QUIZ_REPORT_NOTIF_ID = -1; // Never used by question notifications.
     private static final Map<Integer, Integer> questionNumToDrawableId;
@@ -79,9 +79,6 @@ public class QuizListenerService extends WearableListenerService {
 
     @Override
     public void onDataChanged(DataEventBuffer dataEvents) {
-        final List<DataEvent> events = FreezableUtils.freezeIterable(dataEvents);
-        dataEvents.close();
-
         GoogleApiClient googleApiClient = new GoogleApiClient.Builder(this)
                 .addApi(Wearable.API)
                 .build();
@@ -93,7 +90,7 @@ public class QuizListenerService extends WearableListenerService {
             return;
         }
 
-        for (DataEvent event : events) {
+        for (DataEvent event : dataEvents) {
             if (event.getType() == DataEvent.TYPE_CHANGED) {
                 DataItem dataItem = event.getDataItem();
                 DataMap dataMap = DataMapItem.fromDataItem(dataItem).getDataMap();
