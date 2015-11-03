@@ -2413,13 +2413,6 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".view.ProgressBar4" android:label="Views/Progress Bar/4. In Title Bar">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.SAMPLE_CODE" />
-            </intent-filter>
-        </activity>
-
         <activity android:name=".view.SeekBar1" android:label="Views/Seek Bar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
