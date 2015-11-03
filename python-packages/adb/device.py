@@ -415,9 +415,6 @@ class AndroidDevice(object):
             cmd.append(directory)
         return self._simple_call(cmd)
 
-    def forward(self, local, remote):
-        return self._simple_call(['forward', local, remote])
-
     def tcpip(self, port):
         return self._simple_call(['tcpip', port])
 
@@ -436,20 +433,29 @@ class AndroidDevice(object):
     def unroot(self):
         return self._simple_call(['unroot'])
 
-    def forward_remove(self, local):
-        return self._simple_call(['forward', '--remove', local])
-
-    def forward_remove_all(self):
-        return self._simple_call(['forward', '--remove-all'])
-
     def connect(self, host):
         return self._simple_call(['connect', host])
 
     def disconnect(self, host):
         return self._simple_call(['disconnect', host])
 
+    def forward(self, local, remote):
+        return self._simple_call(['forward', local, remote])
+
+    def forward_list(self):
+        return self._simple_call(['forward', '--list'])
+
+    def forward_remove(self, local):
+        return self._simple_call(['forward', '--remove', local])
+
+    def forward_remove_all(self):
+        return self._simple_call(['forward', '--remove-all'])
+
     def reverse(self, remote, local):
         return self._simple_call(['reverse', remote, local])
+
+    def reverse_list(self):
+        return self._simple_call(['reverse', '--list'])
 
     def reverse_remove_all(self):
         return self._simple_call(['reverse', '--remove-all'])
