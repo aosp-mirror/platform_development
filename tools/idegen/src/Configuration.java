@@ -131,6 +131,12 @@ public class Configuration {
             // Trim preceding "./" from path.
             String path = file.getPath().substring(2);
 
+            // Skip nonexistent files/diretories, e.g. broken symlinks.
+            if (!file.exists()) {
+                Log.debug("Skipped nonexistent: " + path);
+                continue;
+            }
+
             if (file.isDirectory()) {
                 // Traverse nested directories.
                 if (excludes.exclude(path)) {
