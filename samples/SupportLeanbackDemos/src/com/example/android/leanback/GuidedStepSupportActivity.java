@@ -29,6 +29,7 @@ import android.support.v17.leanback.app.GuidedStepSupportFragment;
 import android.support.v17.leanback.widget.GuidedAction;
 import android.support.v17.leanback.widget.GuidanceStylist;
 import android.support.v17.leanback.widget.GuidanceStylist.Guidance;
+import android.text.InputType;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.ViewGroup;
@@ -41,12 +42,12 @@ import java.util.List;
  */
 public class GuidedStepSupportActivity extends FragmentActivity {
 
-    private static final int CONTINUE = 1;
     private static final int BACK = 2;
 
     private static final int FIRST_NAME = 3;
     private static final int LAST_NAME = 4;
-    private static final int PAYMENT = 5;
+    private static final int PASSWORD = 5;
+    private static final int PAYMENT = 6;
 
     private static final int OPTION_CHECK_SET_ID = 10;
     private static final int DEFAULT_OPTION = 0;
@@ -111,6 +112,31 @@ public class GuidedStepSupportActivity extends FragmentActivity {
                 .build());
     }
 
+    private static void addEditableAction(List<GuidedAction> actions, long id, String title,
+            String editTitle, int editInputType, String desc, String editDesc) {
+        actions.add(new GuidedAction.Builder()
+                .id(id)
+                .title(title)
+                .editTitle(editTitle)
+                .editInputType(editInputType)
+                .description(desc)
+                .editDescription(editDesc)
+                .editable(true)
+                .build());
+    }
+
+    private static void addEditableDescriptionAction(List<GuidedAction> actions, long id,
+            String title, String desc, String editDescription, int descriptionEditInputType) {
+        actions.add(new GuidedAction.Builder()
+                .id(id)
+                .title(title)
+                .description(desc)
+                .editDescription(editDescription)
+                .descriptionEditInputType(descriptionEditInputType)
+                .descriptionEditable(true)
+                .build());
+    }
+
     private static void addCheckedAction(List<GuidedAction> actions, int iconResId, Context context,
             String title, String desc) {
         actions.add(new GuidedAction.Builder()
@@ -138,17 +164,21 @@ public class GuidedStepSupportActivity extends FragmentActivity {
 
         @Override
         public void onCreateActions(List<GuidedAction> actions, Bundle savedInstanceState) {
-            addAction(actions, CONTINUE, "Continue", "Let's do it");
-            addAction(actions, BACK, "Cancel", "Nevermind");
+            actions.add(new GuidedAction.Builder().constructContinue(getActivity())
+                    .description("Let's do it")
+                    .build());
+            actions.add(new GuidedAction.Builder().constructCancel(getActivity())
+                    .description("Never mind")
+                    .build());
         }
 
         @Override
         public void onGuidedActionClicked(GuidedAction action) {
             FragmentManager fm = getFragmentManager();
-            if (action.getId() == CONTINUE) {
+            if (action.getId() == GuidedAction.ACTION_ID_CONTINUE) {
                 GuidedStepSupportFragment.add(fm, new SecondStepFragment(), android.R.id.content);
-            } else {
-                getActivity().finish();
+            } else if (action.getId() == GuidedAction.ACTION_ID_CANCEL){
+                finishGuidedStepSupportFragments();
             }
         }
 
@@ -173,29 +203,71 @@ public class GuidedStepSupportActivity extends FragmentActivity {
         public void onCreateActions(List<GuidedAction> actions, Bundle savedInstanceState) {
             addEditableAction(actions, FIRST_NAME, "Pat", "Your first name");
             addEditableAction(actions, LAST_NAME, "Smith", "Your last name");
-            addEditableAction(actions, PAYMENT, "Payment", "", "Input credit card number");
-            addAction(actions, CONTINUE, "Continue", "Continue");
+            addEditableAction(actions, PAYMENT, "Payment", "", InputType.TYPE_CLASS_NUMBER,
+                    "Input credit card number", "Input credit card number");
+            addEditableDescriptionAction(actions, PASSWORD, "Password", "", "",
+                    InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+            actions.add(new GuidedAction.Builder().constructContinue(getActivity())
+                    .description("Continue")
+                    .build());
+            actions.get(actions.size() - 1).setEnabled(false);
         }
 
         @Override
         public void onGuidedActionClicked(GuidedAction action) {
-            if (action.getId() == CONTINUE) {
+            if (action.getId() == GuidedAction.ACTION_ID_CONTINUE) {
                 FragmentManager fm = getFragmentManager();
                 GuidedStepSupportFragment.add(fm, new ThirdStepFragment());
             }
         }
 
         @Override
-        public void onGuidedActionEdited(GuidedAction action) {
-            CharSequence editTitle = action.getEditTitle();
-            if (TextUtils.isDigitsOnly(editTitle) && editTitle.length() == 16) {
-                editTitle = editTitle.subSequence(editTitle.length() - 4, editTitle.length());
-                action.setDescription("Visa XXXX-XXXX-XXXX-"+editTitle);
-            } else if (editTitle.length() == 0){
-                action.setDescription("Input credit card number");
-            } else {
-                action.setDescription("Error credit card number");
+        public long onGuidedActionEditedAndProceed(GuidedAction action) {
+            if (action.getId() == PAYMENT) {
+                CharSequence editTitle = action.getEditTitle();
+                if (TextUtils.isDigitsOnly(editTitle) && editTitle.length() == 16) {
+                    editTitle = editTitle.subSequence(editTitle.length() - 4, editTitle.length());
+                    action.setDescription("Visa XXXX-XXXX-XXXX-"+editTitle);
+                    updateContinue(isPasswordValid());
+                    return GuidedAction.ACTION_ID_NEXT;
+                } else if (editTitle.length() == 0){
+                    action.setDescription("Input credit card number");
+                    updateContinue(false);
+                    return GuidedAction.ACTION_ID_CURRENT;
+                } else {
+                    action.setDescription("Error credit card number");
+                    updateContinue(false);
+                    return GuidedAction.ACTION_ID_CURRENT;
+                }
+            } else if (action.getId() == PASSWORD) {
+                CharSequence password = action.getEditDescription();
+                if (password.length() > 0) {
+                    if (isPaymentValid()) {
+                        updateContinue(true);
+                        return GuidedAction.ACTION_ID_NEXT;
+                    } else {
+                        updateContinue(false);
+                        return GuidedAction.ACTION_ID_CURRENT;
+                    }
+                } else {
+                    updateContinue(false);
+                    return GuidedAction.ACTION_ID_CURRENT;
+                }
             }
+            return GuidedAction.ACTION_ID_NEXT;
+        }
+
+        boolean isPaymentValid() {
+            return findActionById(PAYMENT).getDescription().subSequence(0, 4).toString().equals("Visa");
+        }
+
+        boolean isPasswordValid() {
+            return findActionById(PASSWORD).getEditDescription().length() > 0;
+        }
+
+        void updateContinue(boolean enabled) {
+            findActionById(GuidedAction.ACTION_ID_CONTINUE).setEnabled(enabled);
+            notifyActionChanged(findActionPositionById(GuidedAction.ACTION_ID_CONTINUE));
         }
     }
 
@@ -240,12 +312,13 @@ public class GuidedStepSupportActivity extends FragmentActivity {
                     actions.get(actions.size() -1).setChecked(true);
                 }
             }
-            addAction(actions, CONTINUE, "Continue", "");
+            actions.add(new GuidedAction.Builder().constructContinue(getActivity())
+                    .build());
         }
 
         @Override
         public void onGuidedActionClicked(GuidedAction action) {
-            if (action.getId() == CONTINUE) {
+            if (action.getId() == GuidedAction.ACTION_ID_CONTINUE) {
                 FragmentManager fm = getFragmentManager();
                 FourthStepFragment f = new FourthStepFragment();
                 Bundle arguments = new Bundle();
@@ -282,16 +355,20 @@ public class GuidedStepSupportActivity extends FragmentActivity {
 
         @Override
         public void onCreateActions(List<GuidedAction> actions, Bundle savedInstanceState) {
-            addAction(actions, CONTINUE, "Done", "All finished");
-            addAction(actions, BACK, "Back", "Forgot something...");
+            actions.add(new GuidedAction.Builder().constructFinish(getActivity())
+                    .description("All Done...")
+                    .build());
+            addAction(actions, BACK, "Start Over", "Let's try this again...");
         }
 
         @Override
         public void onGuidedActionClicked(GuidedAction action) {
-            if (action.getId() == CONTINUE) {
-                getActivity().finish();
-            } else {
-                getFragmentManager().popBackStack();
+            if (action.getId() == GuidedAction.ACTION_ID_FINISH) {
+                finishGuidedStepSupportFragments();
+            } else if (action.getId() == BACK) {
+                // pop 4, 3, 2
+                popBackStackToGuidedStepSupportFragment(SecondStepFragment.class,
+                        FragmentManager.POP_BACK_STACK_INCLUSIVE);
             }
         }
 
