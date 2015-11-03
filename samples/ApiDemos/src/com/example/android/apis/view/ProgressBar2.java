@@ -33,12 +33,6 @@ public class ProgressBar2 extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Request for the progress bar to be shown in the title
-        requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
-        
         setContentView(R.layout.progressbar_2);
-        
-        // Make sure the progress bar is visible
-        setProgressBarVisibility(true);
     }
 }
