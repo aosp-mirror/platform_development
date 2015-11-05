@@ -17,6 +17,7 @@
 #
 from __future__ import print_function
 
+import contextlib
 import hashlib
 import os
 import posixpath
@@ -25,6 +26,7 @@ import re
 import shlex
 import shutil
 import signal
+import socket
 import string
 import subprocess
 import sys
@@ -132,6 +134,44 @@ class DeviceTest(unittest.TestCase):
 
 
 class ForwardReverseTest(DeviceTest):
+    def _test_no_rebind(self, description, direction_list, direction,
+                       direction_no_rebind, direction_remove_all):
+        msg = direction_list()
+        self.assertEqual('', msg.strip(),
+                         description + ' list must be empty to run this test.')
+
+        # Use --no-rebind with no existing binding
+        direction_no_rebind('tcp:5566', 'tcp:6655')
+        msg = direction_list()
+        self.assertTrue(re.search(r'tcp:5566.+tcp:6655', msg))
+
+        # Use --no-rebind with existing binding
+        with self.assertRaises(subprocess.CalledProcessError):
+            direction_no_rebind('tcp:5566', 'tcp:6677')
+        msg = direction_list()
+        self.assertFalse(re.search(r'tcp:5566.+tcp:6677', msg))
+        self.assertTrue(re.search(r'tcp:5566.+tcp:6655', msg))
+
+        # Use the absence of --no-rebind with existing binding
+        direction('tcp:5566', 'tcp:6677')
+        msg = direction_list()
+        self.assertFalse(re.search(r'tcp:5566.+tcp:6655', msg))
+        self.assertTrue(re.search(r'tcp:5566.+tcp:6677', msg))
+
+        direction_remove_all()
+        msg = direction_list()
+        self.assertEqual('', msg.strip())
+
+    def test_forward_no_rebind(self):
+        self._test_no_rebind('forward', self.device.forward_list,
+                            self.device.forward, self.device.forward_no_rebind,
+                            self.device.forward_remove_all)
+
+    def test_reverse_no_rebind(self):
+        self._test_no_rebind('reverse', self.device.reverse_list,
+                            self.device.reverse, self.device.reverse_no_rebind,
+                            self.device.reverse_remove_all)
+
     def test_forward(self):
         msg = self.device.forward_list()
         self.assertEqual('', msg.strip(),
@@ -169,6 +209,60 @@ class ForwardReverseTest(DeviceTest):
         self.device.reverse_remove_all()
         msg = self.device.reverse_list()
         self.assertEqual('', msg.strip())
+
+    # Note: If you run this test when adb connect'd to a physical device over
+    # TCP, it will fail in adb reverse due to https://code.google.com/p/android/issues/detail?id=189821
+    def test_forward_reverse_echo(self):
+        """Send data through adb forward and read it back via adb reverse"""
+        forward_port = 12345
+        reverse_port = forward_port + 1
+        forward_spec = "tcp:" + str(forward_port)
+        reverse_spec = "tcp:" + str(reverse_port)
+        forward_setup = False
+        reverse_setup = False
+
+        try:
+            # listen on localhost:forward_port, connect to remote:forward_port
+            self.device.forward(forward_spec, forward_spec)
+            forward_setup = True
+            # listen on remote:forward_port, connect to localhost:reverse_port
+            self.device.reverse(forward_spec, reverse_spec)
+            reverse_setup = True
+
+            listener = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            with contextlib.closing(listener):
+                # Use SO_REUSEADDR so that subsequent runs of the test can grab
+                # the port even if it is in TIME_WAIT.
+                listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+
+                # Listen on localhost:reverse_port before connecting to
+                # localhost:forward_port because that will cause adb to connect
+                # back to localhost:reverse_port.
+                listener.bind(('127.0.0.1', reverse_port))
+                listener.listen(4)
+
+                client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                with contextlib.closing(client):
+                    # Connect to the listener.
+                    client.connect(('127.0.0.1', forward_port))
+
+                    # Accept the client connection.
+                    accepted_connection, addr = listener.accept()
+                    with contextlib.closing(accepted_connection) as server:
+                        data = 'hello'
+
+                        # Send data into the port setup by adb forward.
+                        client.sendall(data)
+                        # Explicitly close() so that server gets EOF.
+                        client.close()
+
+                        # Verify that the data came back via adb reverse.
+                        self.assertEqual(data, server.makefile().read())
+        finally:
+            if reverse_setup:
+                self.device.reverse_remove(forward_spec)
+            if forward_setup:
+                self.device.forward_remove(forward_spec)
 
 
 class ShellTest(DeviceTest):
