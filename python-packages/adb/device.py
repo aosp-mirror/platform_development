@@ -239,7 +239,7 @@ class AndroidDevice(object):
     #
     # The delimiter is needed because `printf 1; echo $?` would print
     # "10", and we wouldn't be able to distinguish the exit code.
-    _RETURN_CODE_PROBE_STRING = 'echo "{0}$?"'.format(_RETURN_CODE_DELIMITER)
+    _RETURN_CODE_PROBE = [';', 'echo', '{0}$?'.format(_RETURN_CODE_DELIMITER)]
 
     # Maximum search distance from the output end to find the delimiter.
     # adb on Windows returns \r\n even if adbd returns \n.
@@ -279,7 +279,7 @@ class AndroidDevice(object):
     def _make_shell_cmd(self, user_cmd):
         command = self.adb_cmd + ['shell'] + user_cmd
         if self.SHELL_PROTOCOL_FEATURE not in self.features:
-            command.append('; ' + self._RETURN_CODE_PROBE_STRING)
+            command += self._RETURN_CODE_PROBE
         return command
 
     def _parse_shell_output(self, out):
