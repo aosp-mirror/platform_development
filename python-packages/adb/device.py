@@ -445,6 +445,9 @@ class AndroidDevice(object):
     def forward_list(self):
         return self._simple_call(['forward', '--list'])
 
+    def forward_no_rebind(self, local, remote):
+        return self._simple_call(['forward', '--no-rebind', local, remote])
+
     def forward_remove(self, local):
         return self._simple_call(['forward', '--remove', local])
 
@@ -456,6 +459,9 @@ class AndroidDevice(object):
 
     def reverse_list(self):
         return self._simple_call(['reverse', '--list'])
+
+    def reverse_no_rebind(self, local, remote):
+        return self._simple_call(['reverse', '--no-rebind', local, remote])
 
     def reverse_remove_all(self):
         return self._simple_call(['reverse', '--remove-all'])
