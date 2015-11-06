@@ -164,3 +164,14 @@ android_system_stubs: $(full_target)
 
 # Build and store the android_system.jar.
 $(call dist-for-goals,sdk win_sdk,$(full_target):android_system.jar)
+
+# ============ Test SDK ============
+sdk_stub_name := android_test_stubs_current
+stub_timestamp := $(OUT_DOCS)/test-api-stubs-timestamp
+include $(LOCAL_PATH)/build_android_stubs.mk
+
+.PHONY: android_test_stubs
+android_test_stubs: $(full_target)
+
+# Build and store the android_test.jar.
+$(call dist-for-goals,sdk win_sdk,$(full_target):android_test.jar)
