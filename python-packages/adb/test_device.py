@@ -607,6 +607,32 @@ class FileOperationsTest(DeviceTest):
             if host_dir is not None:
                 shutil.rmtree(host_dir)
 
+    @unittest.expectedFailure # b/25566053
+    def test_push_empty(self):
+        """Push a directory containing an empty directory to the device."""
+        self.device.shell(['rm', '-rf', self.DEVICE_TEMP_DIR])
+        self.device.shell(['mkdir', self.DEVICE_TEMP_DIR])
+
+        try:
+            host_dir = tempfile.mkdtemp()
+
+            # Make sure the temp directory isn't setuid, or else adb will complain.
+            os.chmod(host_dir, 0o700)
+
+            # Create an empty directory.
+            os.mkdir(os.path.join(host_dir, 'empty'))
+
+            self.device.push(host_dir, self.DEVICE_TEMP_DIR)
+
+            test_empty_cmd = ['[', '-d',
+                              os.path.join(self.DEVICE_TEMP_DIR, 'empty')]
+            rc, _, _ = self.device.shell_nocheck(test_empty_cmd)
+            self.assertEqual(rc, 0)
+            self.device.shell(['rm', '-rf', self.DEVICE_TEMP_DIR])
+        finally:
+            if host_dir is not None:
+                shutil.rmtree(host_dir)
+
     def test_multiple_push(self):
         """Push multiple files to the device in one adb push command.
 
@@ -709,6 +735,20 @@ class FileOperationsTest(DeviceTest):
             if host_dir is not None:
                 shutil.rmtree(host_dir)
 
+    def test_pull_empty(self):
+        """Pull a directory containing an empty directory from the device."""
+        try:
+            host_dir = tempfile.mkdtemp()
+
+            remote_empty_path = posixpath.join(self.DEVICE_TEMP_DIR, 'empty')
+            self.device.shell(['rm', '-rf', self.DEVICE_TEMP_DIR])
+            self.device.shell(['mkdir', '-p', remote_empty_path])
+
+            self.device.pull(remote=self.DEVICE_TEMP_DIR, local=host_dir)
+            self.assertTrue(os.path.isdir(os.path.join(host_dir, 'empty')))
+        finally:
+            if host_dir is not None:
+                shutil.rmtree(host_dir)
 
     def test_multiple_pull(self):
         """Pull a randomly generated directory of files from the device."""
