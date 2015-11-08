@@ -690,10 +690,7 @@ class FileOperationsTest(DeviceTest):
 
             for temp_file in temp_files:
                 remote_path = posixpath.join(self.DEVICE_TEMP_DIR,
-                                             # BROKEN: http://b/25394682
-                                             # posixpath.dirname(
-                                             #     posixpath.dirname(
-                                             #      temp_file.full_path)),
+                                             os.path.basename(host_dir),
                                              temp_file.base_name)
                 self._verify_remote(temp_file.checksum, remote_path)
             self.device.shell(['rm', '-rf', self.DEVICE_TEMP_DIR])
@@ -838,7 +835,7 @@ class FileOperationsTest(DeviceTest):
             self.device.shell(['rm', '-rf', self.DEVICE_TEMP_DIR])
             self.device.shell(['mkdir', '-p', remote_empty_path])
 
-            self.device.pull(remote=self.DEVICE_TEMP_DIR, local=host_dir)
+            self.device.pull(remote=remote_empty_path, local=host_dir)
             self.assertTrue(os.path.isdir(os.path.join(host_dir, 'empty')))
         finally:
             if host_dir is not None:
@@ -871,8 +868,7 @@ class FileOperationsTest(DeviceTest):
 
             for subdir_temp_file in subdir_temp_files:
                 local_path = os.path.join(host_dir,
-                                          # BROKEN: http://b/25394682
-                                          # "subdir",
+                                          "subdir",
                                           subdir_temp_file.base_name)
                 self._verify_local(subdir_temp_file.checksum, local_path)
 
