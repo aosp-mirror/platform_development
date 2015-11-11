@@ -917,20 +917,24 @@ class FileOperationsTest(DeviceTest):
         """Ensure that we can support non-ASCII paths, even on Windows."""
         name = u'로보카 폴리'
 
+        self.device.shell(['rm', '-f', '/data/local/tmp/adb-test-*'])
+        remote_path = u'/data/local/tmp/adb-test-{}'.format(name)
+
         ## push.
         tf = tempfile.NamedTemporaryFile('wb', suffix=name, delete=False)
         tf.close()
-        self.device.push(tf.name, u'/data/local/tmp/adb-test-{}'.format(name))
+        self.device.push(tf.name, remote_path)
         os.remove(tf.name)
-        self.device.shell(['rm', '-f', '/data/local/tmp/adb-test-*'])
+        self.assertFalse(os.path.exists(tf.name))
+
+        # Verify that the device ended up with the expected UTF-8 path
+        output = self.device.shell(
+                ['ls', '/data/local/tmp/adb-test-*'])[0].strip()
+        self.assertEqual(remote_path.encode('utf-8'), output)
 
         # pull.
-        cmd = ['touch', u'"/data/local/tmp/adb-test-{}"'.format(name)]
-        self.device.shell(cmd)
-
-        tf = tempfile.NamedTemporaryFile('wb', suffix=name, delete=False)
-        tf.close()
-        self.device.pull(u'/data/local/tmp/adb-test-{}'.format(name), tf.name)
+        self.device.pull(remote_path, tf.name)
+        self.assertTrue(os.path.exists(tf.name))
         os.remove(tf.name)
         self.device.shell(['rm', '-f', '/data/local/tmp/adb-test-*'])
 
