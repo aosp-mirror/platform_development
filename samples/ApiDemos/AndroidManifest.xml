@@ -662,6 +662,16 @@
             </intent-filter>
         </service>
 
+        <service android:name=".accessibility.MagnificationService"
+                 android:label="@string/magnification_service_label"
+                 android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data android:name="android.accessibilityservice"
+                       android:resource="@xml/magnification_service" />
+        </service>
+
         <activity android:name=".accessibility.TaskListActivity"
                   android:label="@string/accessibility_query_window"
                   android:enabled="@bool/atLeastIceCreamSandwich">

@@ -1527,6 +1527,9 @@
     <string name="accessibility_custom_on">On</string>
     <string name="accessibility_custom_off">Off</string>
 
+    <string name="magnification_service_label">Magnification</string>
+    <string name="magnification_service_description">Allows the volume keys to control display magnification</string>
+
     <string name="task_name">Task</string>
     <string name="task_complete_template">Task %1$s %2$s</string>
     <string name="task_complete">is complete</string>
