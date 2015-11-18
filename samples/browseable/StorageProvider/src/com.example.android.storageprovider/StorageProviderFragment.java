@@ -31,9 +31,9 @@ import com.example.android.common.logger.Log;
  * Toggles the user's login status via a login menu option, and enables/disables the cloud storage
  * content provider.
  */
-public class MyCloudFragment extends Fragment {
+public class StorageProviderFragment extends Fragment {
 
-    private static final String TAG = "MyCloudFragment";
+    private static final String TAG = "StorageProviderFragment";
     private static final String AUTHORITY = "com.example.android.storageprovider.documents";
     private boolean mLoggedIn = false;
 

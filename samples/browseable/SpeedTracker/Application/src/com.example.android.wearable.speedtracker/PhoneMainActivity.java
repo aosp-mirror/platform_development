@@ -23,10 +23,10 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.PolylineOptions;
 
-import android.app.Activity;
 import android.app.DatePickerDialog;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.text.format.DateUtils;
 import android.util.Log;
 import android.view.View;
@@ -45,7 +45,8 @@ import java.util.List;
  * a map. This data is then saved into an internal database and the corresponding data items are
  * deleted.
  */
-public class PhoneMainActivity extends Activity implements DatePickerDialog.OnDateSetListener {
+public class PhoneMainActivity extends AppCompatActivity implements
+        DatePickerDialog.OnDateSetListener {
 
     private static final String TAG = "PhoneMainActivity";
     private static final int BOUNDING_BOX_PADDING_PX = 50;

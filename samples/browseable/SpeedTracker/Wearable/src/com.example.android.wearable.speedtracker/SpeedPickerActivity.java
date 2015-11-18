@@ -17,9 +17,8 @@
 package com.example.android.wearable.speedtracker;
 
 import android.app.Activity;
-import android.content.SharedPreferences;
+import android.content.Intent;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.wearable.view.WearableListView;
 import android.widget.TextView;
 
@@ -30,6 +29,9 @@ import com.example.android.wearable.speedtracker.ui.SpeedPickerListAdapter;
  * the current speed limit.
  */
 public class SpeedPickerActivity extends Activity implements WearableListView.ClickListener {
+
+    public static final String EXTRA_NEW_SPEED_LIMIT =
+            "com.example.android.wearable.speedtracker.extra.NEW_SPEED_LIMIT";
 
     /* Speeds, in mph, that will be shown on the list */
     private int[] speeds = {25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75};
@@ -75,9 +77,13 @@ public class SpeedPickerActivity extends Activity implements WearableListView.Cl
 
     @Override
     public void onClick(WearableListView.ViewHolder viewHolder) {
-        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(this);
-        pref.edit().putInt(WearableMainActivity.PREFS_SPEED_LIMIT_KEY,
-                speeds[viewHolder.getPosition()]).apply();
+
+        int newSpeedLimit = speeds[viewHolder.getPosition()];
+
+        Intent resultIntent = new Intent(Intent.ACTION_PICK);
+        resultIntent.putExtra(EXTRA_NEW_SPEED_LIMIT, newSpeedLimit);
+        setResult(RESULT_OK, resultIntent);
+
         finish();
     }
 

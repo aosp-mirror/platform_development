@@ -18,7 +18,7 @@
         package="com.example.android.wearable.delayedconfirmation" >
 
     <uses-sdk android:minSdkVersion="18"
-        android:targetSdkVersion="22" />
+        android:targetSdkVersion="23" />
 
     <application
             android:allowBackup="true"

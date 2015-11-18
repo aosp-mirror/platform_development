@@ -28,7 +28,7 @@ import com.google.android.gms.wearable.PutDataMapRequest;
 import com.google.android.gms.wearable.PutDataRequest;
 import com.google.android.gms.wearable.Wearable;
 
-import android.app.Activity;
+import android.Manifest;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -38,18 +38,19 @@ import android.location.Location;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
+import android.support.wearable.activity.WearableActivity;
 import android.util.Log;
 import android.view.View;
-import android.view.WindowManager;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.example.android.wearable.speedtracker.common.Constants;
 import com.example.android.wearable.speedtracker.common.LocationEntry;
-import com.example.android.wearable.speedtracker.ui.LocationSettingActivity;
 
 import java.util.Calendar;
+import java.util.concurrent.TimeUnit;
 
 /**
  * The main activity for the wearable app. User can pick a speed limit, and after this activity
@@ -58,33 +59,54 @@ import java.util.Calendar;
  * and if the user exceeds the speed limit, it will turn red. In order to show the user that GPS
  * location data is coming in, a small green dot keeps on blinking while GPS data is available.
  */
-public class WearableMainActivity extends Activity implements GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener, LocationListener {
+public class WearableMainActivity extends WearableActivity implements
+        GoogleApiClient.ConnectionCallbacks,
+        GoogleApiClient.OnConnectionFailedListener,
+        ActivityCompat.OnRequestPermissionsResultCallback,
+        LocationListener {
 
     private static final String TAG = "WearableActivity";
 
-    private static final long UPDATE_INTERVAL_MS = 5 * 1000;
-    private static final long FASTEST_INTERVAL_MS = 5 * 1000;
+    private static final long UPDATE_INTERVAL_MS = TimeUnit.SECONDS.toMillis(5);
+    private static final long FASTEST_INTERVAL_MS = TimeUnit.SECONDS.toMillis(5);
 
-    public static final float MPH_IN_METERS_PER_SECOND = 2.23694f;
+    private static final float MPH_IN_METERS_PER_SECOND = 2.23694f;
 
-    public static final String PREFS_SPEED_LIMIT_KEY = "speed_limit";
-    public static final int SPEED_LIMIT_DEFAULT_MPH = 45;
+    private static final int SPEED_LIMIT_DEFAULT_MPH = 45;
+
     private static final long INDICATOR_DOT_FADE_AWAY_MS = 500L;
 
-    private GoogleApiClient mGoogleApiClient;
-    private TextView mSpeedLimitText;
-    private TextView mCurrentSpeedText;
-    private ImageView mSaveImageView;
-    private TextView mAcquiringGps;
-    private TextView mCurrentSpeedMphText;
+    // Request codes for changing speed limit and location permissions.
+    private static final int REQUEST_PICK_SPEED_LIMIT = 0;
 
-    private int mCurrentSpeedLimit;
-    private float mCurrentSpeed;
-    private View mDot;
-    private Handler mHandler = new Handler();
+    // Id to identify Location permission request.
+    private static final int REQUEST_GPS_PERMISSION = 1;
+
+    // Shared Preferences for saving speed limit and location permission between app launches.
+    private static final String PREFS_SPEED_LIMIT_KEY = "SpeedLimit";
+
     private Calendar mCalendar;
-    private boolean mSaveGpsLocation;
+
+    private TextView mSpeedLimitTextView;
+    private TextView mSpeedTextView;
+    private ImageView mGpsPermissionImageView;
+    private TextView mCurrentSpeedMphTextView;
+    private TextView mGpsIssueTextView;
+    private View mBlinkingGpsStatusDotView;
+
+    private String mGpsPermissionNeededMessage;
+    private String mAcquiringGpsMessage;
+
+    private int mSpeedLimit;
+    private float mSpeed;
+
+    private boolean mGpsPermissionApproved;
+
+    private boolean mWaitingForGpsSignal;
+
+    private GoogleApiClient mGoogleApiClient;
+
+    private Handler mHandler = new Handler();
 
     private enum SpeedState {
         BELOW(R.color.speed_below), CLOSE(R.color.speed_close), ABOVE(R.color.speed_above);
@@ -104,20 +126,53 @@ public class WearableMainActivity extends Activity implements GoogleApiClient.Co
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        Log.d(TAG, "onCreate()");
+
+
         setContentView(R.layout.main_activity);
+
+        /*
+         * Enables Always-on, so our app doesn't shut down when the watch goes into ambient mode.
+         * Best practice is to override onEnterAmbient(), onUpdateAmbient(), and onExitAmbient() to
+         * optimize the display for ambient mode. However, for brevity, we aren't doing that here
+         * to focus on learning location and permissions. For more information on best practices
+         * in ambient mode, check this page:
+         * https://developer.android.com/training/wearables/apps/always-on.html
+         */
+        setAmbientEnabled();
+
+        mCalendar = Calendar.getInstance();
+
+        // Enables app to handle 23+ (M+) style permissions.
+        mGpsPermissionApproved =
+            ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                    == PackageManager.PERMISSION_GRANTED;
+
+        mGpsPermissionNeededMessage = getString(R.string.permission_rationale);
+        mAcquiringGpsMessage = getString(R.string.acquiring_gps);
+
+
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        mSpeedLimit = sharedPreferences.getInt(PREFS_SPEED_LIMIT_KEY, SPEED_LIMIT_DEFAULT_MPH);
+
+        mSpeed = 0;
+
+        mWaitingForGpsSignal = true;
+
+
+        /*
+         * If this hardware doesn't support GPS, we warn the user. Note that when such device is
+         * connected to a phone with GPS capabilities, the framework automatically routes the
+         * location requests from the phone. However, if the phone becomes disconnected and the
+         * wearable doesn't support GPS, no location is recorded until the phone is reconnected.
+         */
         if (!hasGps()) {
-            // If this hardware doesn't support GPS, we prefer to exit.
-            // Note that when such device is connected to a phone with GPS capabilities, the
-            // framework automatically routes the location requests to the phone. For this
-            // application, this would not be desirable so we exit the app but for some other
-            // applications, that might be a valid scenario.
-            Log.w(TAG, "This hardware doesn't have GPS, so we exit");
+            Log.w(TAG, "This hardware doesn't have GPS, so we warn user.");
             new AlertDialog.Builder(this)
                     .setMessage(getString(R.string.gps_not_available))
                     .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int id) {
-                            finish();
                             dialog.cancel();
                         }
                     })
@@ -125,7 +180,6 @@ public class WearableMainActivity extends Activity implements GoogleApiClient.Co
                         @Override
                         public void onDismiss(DialogInterface dialog) {
                             dialog.cancel();
-                            finish();
                         }
                     })
                     .setCancelable(false)
@@ -133,164 +187,216 @@ public class WearableMainActivity extends Activity implements GoogleApiClient.Co
                     .show();
         }
 
+
         setupViews();
-        updateSpeedVisibility(false);
-        setSpeedLimit();
+
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addApi(LocationServices.API)
                 .addApi(Wearable.API)
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
                 .build();
-        mGoogleApiClient.connect();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if ((mGoogleApiClient != null) && (mGoogleApiClient.isConnected()) &&
+                (mGoogleApiClient.isConnecting())) {
+            LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
+            mGoogleApiClient.disconnect();
+        }
+
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (mGoogleApiClient != null) {
+            mGoogleApiClient.connect();
+        }
     }
 
     private void setupViews() {
-        mSpeedLimitText = (TextView) findViewById(R.id.max_speed_text);
-        mCurrentSpeedText = (TextView) findViewById(R.id.current_speed_text);
-        mSaveImageView = (ImageView) findViewById(R.id.saving);
-        ImageButton settingButton = (ImageButton) findViewById(R.id.settings);
-        mAcquiringGps = (TextView) findViewById(R.id.acquiring_gps);
-        mCurrentSpeedMphText = (TextView) findViewById(R.id.current_speed_mph);
-        mDot = findViewById(R.id.dot);
+        mSpeedLimitTextView = (TextView) findViewById(R.id.max_speed_text);
+        mSpeedTextView = (TextView) findViewById(R.id.current_speed_text);
+        mCurrentSpeedMphTextView = (TextView) findViewById(R.id.current_speed_mph);
 
-        settingButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent speedIntent = new Intent(WearableMainActivity.this,
-                        SpeedPickerActivity.class);
-                startActivity(speedIntent);
-            }
-        });
+        mGpsPermissionImageView = (ImageView) findViewById(R.id.gps_permission);
+        mGpsIssueTextView = (TextView) findViewById(R.id.gps_issue_text);
+        mBlinkingGpsStatusDotView = findViewById(R.id.dot);
 
-        mSaveImageView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent savingIntent = new Intent(WearableMainActivity.this,
-                        LocationSettingActivity.class);
-                startActivity(savingIntent);
-            }
-        });
+        updateActivityViewsBasedOnLocationPermissions();
     }
 
-    private void setSpeedLimit(int speedLimit) {
-        mSpeedLimitText.setText(getString(R.string.speed_limit, speedLimit));
+    public void onSpeedLimitClick(View view) {
+        Intent speedIntent = new Intent(WearableMainActivity.this,
+                SpeedPickerActivity.class);
+        startActivityForResult(speedIntent, REQUEST_PICK_SPEED_LIMIT);
     }
 
-    private void setSpeedLimit() {
-        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(this);
-        mCurrentSpeedLimit = pref.getInt(PREFS_SPEED_LIMIT_KEY, SPEED_LIMIT_DEFAULT_MPH);
-        setSpeedLimit(mCurrentSpeedLimit);
-    }
+    public void onGpsPermissionClick(View view) {
 
-    private void setCurrentSpeed(float speed) {
-        mCurrentSpeed = speed;
-        mCurrentSpeedText.setText(String.format(getString(R.string.speed_format), speed));
-        adjustColor();
+        if (!mGpsPermissionApproved) {
+
+            Log.i(TAG, "Location permission has NOT been granted. Requesting permission.");
+
+            // On 23+ (M+) devices, GPS permission not granted. Request permission.
+            ActivityCompat.requestPermissions(
+                    this,
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                    REQUEST_GPS_PERMISSION);
+        }
     }
 
     /**
-     * Adjusts the color of the speed based on its value relative to the speed limit.
+     * Adjusts the visibility of views based on location permissions.
      */
-    private void adjustColor() {
-        SpeedState state = SpeedState.ABOVE;
-        if (mCurrentSpeed <= mCurrentSpeedLimit - 5) {
-            state = SpeedState.BELOW;
-        } else if (mCurrentSpeed <= mCurrentSpeedLimit) {
-            state = SpeedState.CLOSE;
-        }
+    private void updateActivityViewsBasedOnLocationPermissions() {
 
-        mCurrentSpeedText.setTextColor(getResources().getColor(state.getColor()));
+        /*
+         * If the user has approved location but we don't have a signal yet, we let the user know
+         * we are waiting on the GPS signal (this sometimes takes a little while). Otherwise, the
+         * user might think something is wrong.
+         */
+        if (mGpsPermissionApproved && mWaitingForGpsSignal) {
+
+            // We are getting a GPS signal w/ user permission.
+            mGpsIssueTextView.setText(mAcquiringGpsMessage);
+            mGpsIssueTextView.setVisibility(View.VISIBLE);
+            mGpsPermissionImageView.setImageResource(R.drawable.ic_gps_saving_grey600_96dp);
+
+            mSpeedTextView.setVisibility(View.GONE);
+            mSpeedLimitTextView.setVisibility(View.GONE);
+            mCurrentSpeedMphTextView.setVisibility(View.GONE);
+
+        } else if (mGpsPermissionApproved) {
+
+            mGpsIssueTextView.setVisibility(View.GONE);
+
+            mSpeedTextView.setVisibility(View.VISIBLE);
+            mSpeedLimitTextView.setVisibility(View.VISIBLE);
+            mCurrentSpeedMphTextView.setVisibility(View.VISIBLE);
+            mGpsPermissionImageView.setImageResource(R.drawable.ic_gps_saving_grey600_96dp);
+
+        } else {
+
+            // User needs to enable location for the app to work.
+            mGpsIssueTextView.setVisibility(View.VISIBLE);
+            mGpsIssueTextView.setText(mGpsPermissionNeededMessage);
+            mGpsPermissionImageView.setImageResource(R.drawable.ic_gps_not_saving_grey600_96dp);
+
+            mSpeedTextView.setVisibility(View.GONE);
+            mSpeedLimitTextView.setVisibility(View.GONE);
+            mCurrentSpeedMphTextView.setVisibility(View.GONE);
+        }
+    }
+
+    private void updateSpeedInViews() {
+
+        if (mGpsPermissionApproved) {
+
+            mSpeedLimitTextView.setText(getString(R.string.speed_limit, mSpeedLimit));
+            mSpeedTextView.setText(String.format(getString(R.string.speed_format), mSpeed));
+
+            // Adjusts the color of the speed based on its value relative to the speed limit.
+            SpeedState state = SpeedState.ABOVE;
+            if (mSpeed <= mSpeedLimit - 5) {
+                state = SpeedState.BELOW;
+            } else if (mSpeed <= mSpeedLimit) {
+                state = SpeedState.CLOSE;
+            }
+
+            mSpeedTextView.setTextColor(getResources().getColor(state.getColor()));
+
+            // Causes the (green) dot blinks when new GPS location data is acquired.
+            mHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    mBlinkingGpsStatusDotView.setVisibility(View.VISIBLE);
+                }
+            });
+            mBlinkingGpsStatusDotView.setVisibility(View.VISIBLE);
+            mHandler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    mBlinkingGpsStatusDotView.setVisibility(View.INVISIBLE);
+                }
+            }, INDICATOR_DOT_FADE_AWAY_MS);
+        }
     }
 
     @Override
     public void onConnected(Bundle bundle) {
-        LocationRequest locationRequest = LocationRequest.create()
-                .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
-                .setInterval(UPDATE_INTERVAL_MS)
-                .setFastestInterval(FASTEST_INTERVAL_MS);
 
-        LocationServices.FusedLocationApi
-                .requestLocationUpdates(mGoogleApiClient, locationRequest, this)
-                .setResultCallback(new ResultCallback<Status>() {
+        Log.d(TAG, "onConnected()");
 
-                    @Override
-                    public void onResult(Status status) {
-                        if (status.getStatus().isSuccess()) {
-                            if (Log.isLoggable(TAG, Log.DEBUG)) {
-                                Log.d(TAG, "Successfully requested location updates");
+        /*
+         * mGpsPermissionApproved covers 23+ (M+) style permissions. If that is already approved or
+         * the device is pre-23, the app uses mSaveGpsLocation to save the user's location
+         * preference.
+         */
+        if (mGpsPermissionApproved) {
+
+            LocationRequest locationRequest = LocationRequest.create()
+                    .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
+                    .setInterval(UPDATE_INTERVAL_MS)
+                    .setFastestInterval(FASTEST_INTERVAL_MS);
+
+            LocationServices.FusedLocationApi
+                    .requestLocationUpdates(mGoogleApiClient, locationRequest, this)
+                    .setResultCallback(new ResultCallback<Status>() {
+
+                        @Override
+                        public void onResult(Status status) {
+                            if (status.getStatus().isSuccess()) {
+                                if (Log.isLoggable(TAG, Log.DEBUG)) {
+                                    Log.d(TAG, "Successfully requested location updates");
+                                }
+                            } else {
+                                Log.e(TAG,
+                                        "Failed in requesting location updates, "
+                                                + "status code: "
+                                                + status.getStatusCode() + ", message: " + status
+                                                .getStatusMessage());
                             }
-                        } else {
-                            Log.e(TAG,
-                                    "Failed in requesting location updates, "
-                                            + "status code: "
-                                            + status.getStatusCode() + ", message: " + status
-                                            .getStatusMessage());
                         }
-                    }
-                });
+                    });
+        }
     }
 
     @Override
     public void onConnectionSuspended(int i) {
-        if (Log.isLoggable(TAG, Log.DEBUG)) {
-            Log.d(TAG, "onConnectionSuspended(): connection to location client suspended");
-        }
+        Log.d(TAG, "onConnectionSuspended(): connection to location client suspended");
+
         LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
     }
 
     @Override
     public void onConnectionFailed(ConnectionResult connectionResult) {
-        Log.e(TAG, "onConnectionFailed(): connection to location client failed");
+        Log.e(TAG, "onConnectionFailed(): " + connectionResult.getErrorMessage());
     }
 
     @Override
     public void onLocationChanged(Location location) {
-        updateSpeedVisibility(true);
-        setCurrentSpeed(location.getSpeed() * MPH_IN_METERS_PER_SECOND);
-        flashDot();
+        Log.d(TAG, "onLocationChanged() : " + location);
+
+
+        if (mWaitingForGpsSignal) {
+            mWaitingForGpsSignal = false;
+            updateActivityViewsBasedOnLocationPermissions();
+        }
+
+        mSpeed = location.getSpeed() * MPH_IN_METERS_PER_SECOND;
+        updateSpeedInViews();
         addLocationEntry(location.getLatitude(), location.getLongitude());
     }
 
-    /**
-     * Causes the (green) dot blinks when new GPS location data is acquired.
-     */
-    private void flashDot() {
-        mHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                mDot.setVisibility(View.VISIBLE);
-            }
-        });
-        mDot.setVisibility(View.VISIBLE);
-        mHandler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                mDot.setVisibility(View.INVISIBLE);
-            }
-        }, INDICATOR_DOT_FADE_AWAY_MS);
-    }
-
-    /**
-     * Adjusts the visibility of speed indicator based on the arrival of GPS data.
-     */
-    private void updateSpeedVisibility(boolean speedVisible) {
-        if (speedVisible) {
-            mAcquiringGps.setVisibility(View.GONE);
-            mCurrentSpeedText.setVisibility(View.VISIBLE);
-            mCurrentSpeedMphText.setVisibility(View.VISIBLE);
-        } else {
-            mAcquiringGps.setVisibility(View.VISIBLE);
-            mCurrentSpeedText.setVisibility(View.GONE);
-            mCurrentSpeedMphText.setVisibility(View.GONE);
-        }
-    }
-
-    /**
-     * Adds a data item to the data Layer storage
+    /*
+     * Adds a data item to the data Layer storage.
      */
     private void addLocationEntry(double latitude, double longitude) {
-        if (!mSaveGpsLocation || !mGoogleApiClient.isConnected()) {
+        if (!mGpsPermissionApproved || !mGoogleApiClient.isConnected()) {
             return;
         }
         mCalendar.setTimeInMillis(System.currentTimeMillis());
@@ -315,29 +421,56 @@ public class WearableMainActivity extends Activity implements GoogleApiClient.Co
                 });
     }
 
+    /**
+     * Handles user choices for both speed limit and location permissions (GPS tracking).
+     */
     @Override
-    protected void onStop() {
-        super.onStop();
-        if (mGoogleApiClient.isConnected()) {
-            LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+
+        if (requestCode == REQUEST_PICK_SPEED_LIMIT) {
+            if (resultCode == RESULT_OK) {
+                // The user updated the speed limit.
+                int newSpeedLimit =
+                        data.getIntExtra(SpeedPickerActivity.EXTRA_NEW_SPEED_LIMIT, mSpeedLimit);
+
+                SharedPreferences sharedPreferences =
+                        PreferenceManager.getDefaultSharedPreferences(this);
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+                editor.putInt(WearableMainActivity.PREFS_SPEED_LIMIT_KEY, newSpeedLimit);
+                editor.apply();
+
+                mSpeedLimit = newSpeedLimit;
+
+                updateSpeedInViews();
+            }
         }
-        mGoogleApiClient.disconnect();
     }
 
+    /**
+     * Callback received when a permissions request has been completed.
+     */
     @Override
-    protected void onResume() {
-        super.onResume();
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-        mCalendar = Calendar.getInstance();
-        setSpeedLimit();
-        adjustColor();
-        updateRecordingIcon();
-    }
+    public void onRequestPermissionsResult(
+            int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
 
-    private void updateRecordingIcon() {
-        mSaveGpsLocation = LocationSettingActivity.getGpsRecordingStatusFromPreferences(this);
-        mSaveImageView.setImageResource(mSaveGpsLocation ? R.drawable.ic_gps_saving_grey600_96dp
-                : R.drawable.ic_gps_not_saving_grey600_96dp);
+        Log.d(TAG, "onRequestPermissionsResult(): " + permissions);
+
+
+        if (requestCode == REQUEST_GPS_PERMISSION) {
+            Log.i(TAG, "Received response for GPS permission request.");
+
+            if ((grantResults.length == 1)
+                    && (grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
+                Log.i(TAG, "GPS permission granted.");
+                mGpsPermissionApproved = true;
+            } else {
+                Log.i(TAG, "GPS permission NOT granted.");
+                mGpsPermissionApproved = false;
+            }
+
+            updateActivityViewsBasedOnLocationPermissions();
+
+        }
     }
 
     /**

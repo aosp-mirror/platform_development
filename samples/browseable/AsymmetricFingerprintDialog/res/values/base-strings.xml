@@ -16,7 +16,7 @@
 -->
 
 <resources>
-    <string name="app_name">Asymmetric Fingerprint Dialog Sample</string>
+    <string name="app_name">AsymmetricFingerprintDialog</string>
     <string name="intro_message">
         <![CDATA[
         

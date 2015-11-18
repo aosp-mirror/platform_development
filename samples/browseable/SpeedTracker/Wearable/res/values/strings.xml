@@ -25,11 +25,16 @@
     <string name="speed_limit">Limit: %1$d mph</string>
     <string name="acquiring_gps">Acquiring GPS Fix ...</string>
     <string name="speed_for_list">%1$d mph</string>
-    <string name="start_saving_gps">Start Recording GPS?</string>
-    <string name="stop_saving_gps">Stop Recording GPS?</string>
+
+    <string name="enable_disable_gps_label">Enable Location Permission?</string>
+
     <string name="mph">mph</string>
     <string name="speed_limit_header">Speed Limit</string>
-    <string name="gps_not_available">GPS not available.</string>
+    <string name="gps_not_available">No GPS on device. Will use phone GPS when available.</string>
     <string name="ok">OK</string>
     <string name="speed_format">%.0f</string>
+
+    <string name="permission_rationale">App requires location permission to function, tap GPS icon.</string>
+
+
 </resources>

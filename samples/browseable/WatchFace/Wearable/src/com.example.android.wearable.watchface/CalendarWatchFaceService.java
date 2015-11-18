@@ -16,11 +16,13 @@
 
 package com.example.android.wearable.watchface;
 
+import android.Manifest;
 import android.content.BroadcastReceiver;
 import android.content.ContentUris;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -30,8 +32,10 @@ import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Message;
 import android.os.PowerManager;
+import android.support.v4.app.ActivityCompat;
 import android.support.wearable.provider.WearableCalendarContract;
 import android.support.wearable.watchface.CanvasWatchFaceService;
+import android.support.wearable.watchface.WatchFaceService;
 import android.support.wearable.watchface.WatchFaceStyle;
 import android.text.DynamicLayout;
 import android.text.Editable;
@@ -74,8 +78,12 @@ public class CalendarWatchFaceService extends CanvasWatchFaceService {
         final TextPaint mTextPaint = new TextPaint();
 
         int mNumMeetings;
+        private boolean mCalendarPermissionApproved;
+        private String mCalendarNotApprovedMessage;
 
         private AsyncTask<Void, Void, Integer> mLoadMeetingsTask;
+
+        private boolean mIsReceiverRegistered;
 
         /** Handler to load the meetings once a minute in interactive mode. */
         final Handler mLoadMeetingsHandler = new Handler() {
@@ -83,22 +91,24 @@ public class CalendarWatchFaceService extends CanvasWatchFaceService {
             public void handleMessage(Message message) {
                 switch (message.what) {
                     case MSG_LOAD_MEETINGS:
+
                         cancelLoadMeetingTask();
-                        mLoadMeetingsTask = new LoadMeetingsTask();
-                        mLoadMeetingsTask.execute();
+
+                        // Loads meetings.
+                        if (mCalendarPermissionApproved) {
+                            mLoadMeetingsTask = new LoadMeetingsTask();
+                            mLoadMeetingsTask.execute();
+                        }
                         break;
                 }
             }
         };
-
-        private boolean mIsReceiverRegistered;
 
         private BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
                 if (Intent.ACTION_PROVIDER_CHANGED.equals(intent.getAction())
                         && WearableCalendarContract.CONTENT_URI.equals(intent.getData())) {
-                    cancelLoadMeetingTask();
                     mLoadMeetingsHandler.sendEmptyMessage(MSG_LOAD_MEETINGS);
                 }
             }
@@ -106,27 +116,57 @@ public class CalendarWatchFaceService extends CanvasWatchFaceService {
 
         @Override
         public void onCreate(SurfaceHolder holder) {
-            if (Log.isLoggable(TAG, Log.DEBUG)) {
-                Log.d(TAG, "onCreate");
-            }
             super.onCreate(holder);
+            Log.d(TAG, "onCreate");
+
+            mCalendarNotApprovedMessage =
+                    getResources().getString(R.string.calendar_permission_not_approved);
+
+            /* Accepts tap events to allow permission changes by user. */
             setWatchFaceStyle(new WatchFaceStyle.Builder(CalendarWatchFaceService.this)
                     .setCardPeekMode(WatchFaceStyle.PEEK_MODE_VARIABLE)
                     .setBackgroundVisibility(WatchFaceStyle.BACKGROUND_VISIBILITY_INTERRUPTIVE)
                     .setShowSystemUiTime(false)
+                    .setAcceptsTapEvents(true)
                     .build());
 
             mTextPaint.setColor(FOREGROUND_COLOR);
             mTextPaint.setTextSize(TEXT_SIZE);
 
-            mLoadMeetingsHandler.sendEmptyMessage(MSG_LOAD_MEETINGS);
+            // Enables app to handle 23+ (M+) style permissions.
+            mCalendarPermissionApproved =
+                    ActivityCompat.checkSelfPermission(
+                            getApplicationContext(),
+                            Manifest.permission.READ_CALENDAR) == PackageManager.PERMISSION_GRANTED;
+
+            if (mCalendarPermissionApproved) {
+                mLoadMeetingsHandler.sendEmptyMessage(MSG_LOAD_MEETINGS);
+            }
         }
 
         @Override
         public void onDestroy() {
             mLoadMeetingsHandler.removeMessages(MSG_LOAD_MEETINGS);
-            cancelLoadMeetingTask();
             super.onDestroy();
+        }
+
+        /*
+         * Captures tap event (and tap type) and increments correct tap type total.
+         */
+        @Override
+        public void onTapCommand(int tapType, int x, int y, long eventTime) {
+            if (Log.isLoggable(TAG, Log.DEBUG)) {
+                Log.d(TAG, "Tap Command: " + tapType);
+            }
+
+            // Ignore lint error (fixed in wearable support library 1.4)
+            if (tapType == WatchFaceService.TAP_TYPE_TAP && !mCalendarPermissionApproved) {
+                Intent permissionIntent = new Intent(
+                        getApplicationContext(),
+                        CalendarWatchFacePermissionActivity.class);
+                permissionIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(permissionIntent);
+            }
         }
 
         @Override
@@ -141,8 +181,13 @@ public class CalendarWatchFaceService extends CanvasWatchFaceService {
 
             // Update the contents of mEditable.
             mEditable.clear();
-            mEditable.append(Html.fromHtml(getResources().getQuantityString(
-                    R.plurals.calendar_meetings, mNumMeetings, mNumMeetings)));
+
+            if (mCalendarPermissionApproved) {
+                mEditable.append(Html.fromHtml(getResources().getQuantityString(
+                        R.plurals.calendar_meetings, mNumMeetings, mNumMeetings)));
+            } else {
+                mEditable.append(Html.fromHtml(mCalendarNotApprovedMessage));
+            }
 
             // Draw the text on a solid background.
             canvas.drawColor(BACKGROUND_COLOR);
@@ -151,15 +196,24 @@ public class CalendarWatchFaceService extends CanvasWatchFaceService {
 
         @Override
         public void onVisibilityChanged(boolean visible) {
+            Log.d(TAG, "onVisibilityChanged()");
             super.onVisibilityChanged(visible);
             if (visible) {
-                IntentFilter filter = new IntentFilter(Intent.ACTION_PROVIDER_CHANGED);
-                filter.addDataScheme("content");
-                filter.addDataAuthority(WearableCalendarContract.AUTHORITY, null);
-                registerReceiver(mBroadcastReceiver, filter);
-                mIsReceiverRegistered = true;
 
-                mLoadMeetingsHandler.sendEmptyMessage(MSG_LOAD_MEETINGS);
+                // Enables app to handle 23+ (M+) style permissions.
+                mCalendarPermissionApproved = ActivityCompat.checkSelfPermission(
+                        getApplicationContext(),
+                        Manifest.permission.READ_CALENDAR) == PackageManager.PERMISSION_GRANTED;
+
+                if (mCalendarPermissionApproved) {
+                    IntentFilter filter = new IntentFilter(Intent.ACTION_PROVIDER_CHANGED);
+                    filter.addDataScheme("content");
+                    filter.addDataAuthority(WearableCalendarContract.AUTHORITY, null);
+                    registerReceiver(mBroadcastReceiver, filter);
+                    mIsReceiverRegistered = true;
+
+                    mLoadMeetingsHandler.sendEmptyMessage(MSG_LOAD_MEETINGS);
+                }
             } else {
                 if (mIsReceiverRegistered) {
                     unregisterReceiver(mBroadcastReceiver);
@@ -204,9 +258,9 @@ public class CalendarWatchFaceService extends CanvasWatchFaceService {
                 final Cursor cursor = getContentResolver().query(builder.build(),
                         null, null, null, null);
                 int numMeetings = cursor.getCount();
-                if (Log.isLoggable(TAG, Log.VERBOSE)) {
-                    Log.v(TAG, "Num meetings: " + numMeetings);
-                }
+
+                Log.d(TAG, "Num meetings: " + numMeetings);
+
                 return numMeetings;
             }
 

@@ -18,7 +18,7 @@
         package="com.example.android.google.wearable.watchviewstub" >
 
     <uses-sdk android:minSdkVersion="20"
-              android:targetSdkVersion="21" />
+              android:targetSdkVersion="22" />
 
     <uses-feature android:name="android.hardware.type.watch" />
 

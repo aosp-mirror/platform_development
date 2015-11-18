@@ -59,7 +59,7 @@ limitations under the License.
             android:textAppearance="?android:attr/textAppearanceMedium"
             tools:text="@string/your_rank"/>
 
-        <include layout="@layout/separator"/>
+        <include layout="@layout/separator" android:id="@+id/bundle_separator"/>
 
         <TextView
             android:id="@+id/approvals_you_have"
@@ -77,7 +77,7 @@ limitations under the License.
             android:textAppearance="?android:attr/textAppearanceMedium"
             tools:text="@string/your_profile"/>
 
-        <include layout="@layout/separator"/>
+        <include layout="@layout/separator" android:id="@+id/bundle_array_separator" />
 
         <TextView
             android:id="@+id/your_items"

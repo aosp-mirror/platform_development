@@ -22,6 +22,7 @@ import android.content.Context;
 import android.content.RestrictionEntry;
 import android.content.RestrictionsManager;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
@@ -105,6 +106,8 @@ public class AppRestrictionEnforcerFragment extends Fragment implements
     private static final String DELIMETER = ",";
     private static final String SEPARATOR = ":";
 
+    private static final boolean BUNDLE_SUPPORTED = Build.VERSION.SDK_INT >= 23;
+
     /**
      * Current status of the restrictions.
      */
@@ -138,6 +141,15 @@ public class AppRestrictionEnforcerFragment extends Fragment implements
         mEditProfileAge = (EditText) view.findViewById(R.id.profile_age);
         mLayoutItems = (LinearLayout) view.findViewById(R.id.items);
         view.findViewById(R.id.item_add).setOnClickListener(this);
+        View bundleLayout = view.findViewById(R.id.bundle_layout);
+        View bundleArrayLayout = view.findViewById(R.id.bundle_array_layout);
+        if (BUNDLE_SUPPORTED) {
+            bundleLayout.setVisibility(View.VISIBLE);
+            bundleArrayLayout.setVisibility(View.VISIBLE);
+        } else {
+            bundleLayout.setVisibility(View.GONE);
+            bundleArrayLayout.setVisibility(View.GONE);
+        }
     }
 
     @Override
@@ -280,7 +292,7 @@ public class AppRestrictionEnforcerFragment extends Fragment implements
                                         TextUtils.join(DELIMETER,
                                                 restriction.getAllSelectedStrings())),
                                 DELIMETER));
-            } else if (RESTRICTION_KEY_PROFILE.equals(key)) {
+            } else if (BUNDLE_SUPPORTED && RESTRICTION_KEY_PROFILE.equals(key)) {
                 String name = null;
                 int age = 0;
                 for (RestrictionEntry entry : restriction.getRestrictions()) {
@@ -294,7 +306,7 @@ public class AppRestrictionEnforcerFragment extends Fragment implements
                 name = prefs.getString(RESTRICTION_KEY_PROFILE_NAME, name);
                 age = prefs.getInt(RESTRICTION_KEY_PROFILE_AGE, age);
                 updateProfile(name, age);
-            } else if (RESTRICTION_KEY_ITEMS.equals(key)) {
+            } else if (BUNDLE_SUPPORTED && RESTRICTION_KEY_ITEMS.equals(key)) {
                 String itemsString = prefs.getString(RESTRICTION_KEY_ITEMS, "");
                 HashMap<String, String> items = new HashMap<>();
                 for (String itemString : TextUtils.split(itemsString, DELIMETER)) {
@@ -351,6 +363,9 @@ public class AppRestrictionEnforcerFragment extends Fragment implements
     }
 
     private void updateProfile(String name, int age) {
+        if (!BUNDLE_SUPPORTED) {
+            return;
+        }
         Bundle profile = new Bundle();
         profile.putString(RESTRICTION_KEY_PROFILE_NAME, name);
         profile.putInt(RESTRICTION_KEY_PROFILE_AGE, age);
@@ -364,6 +379,9 @@ public class AppRestrictionEnforcerFragment extends Fragment implements
     }
 
     private void updateItems(Context context, Map<String, String> items) {
+        if (!BUNDLE_SUPPORTED) {
+            return;
+        }
         mCurrentRestrictions.putParcelableArray(RESTRICTION_KEY_ITEMS, convertToBundles(items));
         LayoutInflater inflater = LayoutInflater.from(context);
         mLayoutItems.removeAllViews();
@@ -500,6 +518,9 @@ public class AppRestrictionEnforcerFragment extends Fragment implements
      * @param age      The value to be set for the "age" field.
      */
     private void saveProfile(Activity activity, String name, int age) {
+        if (!BUNDLE_SUPPORTED) {
+            return;
+        }
         Bundle profile = new Bundle();
         profile.putString(RESTRICTION_KEY_PROFILE_NAME, name);
         profile.putInt(RESTRICTION_KEY_PROFILE_AGE, age);
@@ -515,6 +536,9 @@ public class AppRestrictionEnforcerFragment extends Fragment implements
      * @param items    The values.
      */
     private void saveItems(Activity activity, Map<String, String> items) {
+        if (!BUNDLE_SUPPORTED) {
+            return;
+        }
         mCurrentRestrictions.putParcelableArray(RESTRICTION_KEY_ITEMS, convertToBundles(items));
         saveRestrictions(activity);
         StringBuilder builder = new StringBuilder();

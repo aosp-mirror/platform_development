@@ -16,7 +16,7 @@
 -->
 
 <resources>
-    <string name="app_name">Fingerprint Dialog Sample</string>
+    <string name="app_name">FingerprintDialog</string>
     <string name="intro_message">
         <![CDATA[
         

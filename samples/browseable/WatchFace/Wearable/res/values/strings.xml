@@ -25,11 +25,22 @@
     <string name="digital_config_name">Digital watch face configuration</string>
     <string name="digital_am">AM</string>
     <string name="digital_pm">PM</string>
+
+    <string name="fit_steps_name">Sample Fit Steps</string>
+    <string name="fit_distance_name">Sample Fit Distance</string>
+    <string name="fit_am">AM</string>
+    <string name="fit_pm">PM</string>
+    <string name="fit_steps">%1$d steps</string>
+    <string name="fit_distance">%1$,.2f meters</string>
+
     <string name="calendar_name">Sample Calendar</string>
+    <string name="calendar_permission_not_approved">&lt;br&gt;&lt;br&gt;&lt;br&gt;WatchFace requires Calendar permission. Click on this WatchFace or visit Settings &gt; Permissions to approve.</string>
     <plurals name="calendar_meetings">
         <item quantity="one">&lt;br&gt;&lt;br&gt;&lt;br&gt;You have &lt;b&gt;%1$d&lt;/b&gt; meeting in the next 24 hours.</item>
         <item quantity="other">&lt;br&gt;&lt;br&gt;&lt;br&gt;You have &lt;b&gt;%1$d&lt;/b&gt; meetings in the next 24 hours.</item>
     </plurals>
+    <string name="title_activity_calendar_watch_face_permission">Calendar Permission Activity</string>
+    <string name="calendar_permission_text">WatchFace requires Calendar access.</string>
 
     <!-- TODO: this should be shared (needs covering all the samples with Gradle build model) -->
     <string name="color_black">Black</string>

@@ -19,6 +19,7 @@ package com.example.android.apprestrictionschema;
 import android.content.Context;
 import android.content.RestrictionEntry;
 import android.content.RestrictionsManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.annotation.Nullable;
@@ -57,6 +58,8 @@ public class AppRestrictionSchemaFragment extends Fragment implements View.OnCli
     private static final String KEY_ITEM_KEY = "key";
     private static final String KEY_ITEM_VALUE = "value";
 
+    private static final boolean BUNDLE_SUPPORTED = Build.VERSION.SDK_INT >= 23;
+
     // Message to show when the button is clicked (String restriction)
     private String mMessage;
 
@@ -82,9 +85,22 @@ public class AppRestrictionSchemaFragment extends Fragment implements View.OnCli
         mTextNumber = (TextView) view.findViewById(R.id.your_number);
         mTextRank = (TextView) view.findViewById(R.id.your_rank);
         mTextApprovals = (TextView) view.findViewById(R.id.approvals_you_have);
+        View bundleSeparator = view.findViewById(R.id.bundle_separator);
         mTextProfile = (TextView) view.findViewById(R.id.your_profile);
+        View bundleArraySeparator = view.findViewById(R.id.bundle_array_separator);
         mTextItems = (TextView) view.findViewById(R.id.your_items);
         mButtonSayHello.setOnClickListener(this);
+        if (BUNDLE_SUPPORTED) {
+            bundleSeparator.setVisibility(View.VISIBLE);
+            mTextProfile.setVisibility(View.VISIBLE);
+            bundleArraySeparator.setVisibility(View.VISIBLE);
+            mTextItems.setVisibility(View.VISIBLE);
+        } else {
+            bundleSeparator.setVisibility(View.GONE);
+            mTextProfile.setVisibility(View.GONE);
+            bundleArraySeparator.setVisibility(View.GONE);
+            mTextItems.setVisibility(View.GONE);
+        }
     }
 
     @Override
@@ -178,6 +194,9 @@ public class AppRestrictionSchemaFragment extends Fragment implements View.OnCli
     }
 
     private void updateProfile(RestrictionEntry entry, Bundle restrictions) {
+        if (!BUNDLE_SUPPORTED) {
+            return;
+        }
         String name = null;
         int age = 0;
         if (restrictions == null || !restrictions.containsKey(KEY_PROFILE)) {
@@ -201,6 +220,9 @@ public class AppRestrictionSchemaFragment extends Fragment implements View.OnCli
     }
 
     private void updateItems(RestrictionEntry entry, Bundle restrictions) {
+        if (!BUNDLE_SUPPORTED) {
+            return;
+        }
         StringBuilder builder = new StringBuilder();
         if (restrictions != null) {
             Parcelable[] parcelables = restrictions.getParcelableArray(KEY_ITEMS);
