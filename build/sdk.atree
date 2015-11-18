@@ -356,6 +356,7 @@ developers/build/prebuilts/gradle/SynchronizedNotifications     samples/${PLATFO
 developers/build/prebuilts/gradle/Timer                         samples/${PLATFORM_NAME}/wearable/Timer
 developers/build/prebuilts/gradle/WatchFace                     samples/${PLATFORM_NAME}/wearable/WatchFace
 developers/build/prebuilts/gradle/WatchViewStub                 samples/${PLATFORM_NAME}/wearable/WatchViewStub
+developers/build/prebuilts/gradle/WearSpeakerSample             samples/${PLATFORM_NAME}/wearable/WearSpeakerSample
 developers/build/prebuilts/gradle/XYZTouristAttractions         samples/${PLATFORM_NAME}/wearable/XYZTouristAttractions
 
 # Old sample tree
