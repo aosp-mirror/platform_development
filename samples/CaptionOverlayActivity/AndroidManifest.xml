@@ -18,7 +18,8 @@
     package="com.example.android.captionoverlayactivity">
     <application android:label="Caption Overlay">
         <activity android:name=".CaptionOverlayActivity"
-                android:resizeableActivity="true">
+                android:resizeableActivity="true"
+                android:theme="@android:style/Theme.Holo.Light">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
