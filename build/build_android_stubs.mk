@@ -53,3 +53,5 @@ $(full_target): $(stub_timestamp) $(framework_res_package)
 
 $(jack_lib) : $(full_target) $(JILL_JAR) $(JACK)
 	$(transform-jar-to-jack)
+
+$(call define-jar-to-toc-rule, $(full_target))
