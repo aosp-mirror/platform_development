@@ -391,7 +391,6 @@ public class Connectivity extends Activity {
         findViewById(R.id.request_cell).setOnClickListener(mClickListener);
         findViewById(R.id.release_cell).setOnClickListener(mClickListener);
         findViewById(R.id.report_all_bad).setOnClickListener(mClickListener);
-        findViewById(R.id.crash).setOnClickListener(mClickListener);
 
         findViewById(R.id.add_default_route).setOnClickListener(mClickListener);
         findViewById(R.id.remove_default_route).setOnClickListener(mClickListener);
@@ -494,9 +493,6 @@ public class Connectivity extends Activity {
                 case R.id.report_all_bad:
                     onReportAllBad();
                     break;
-                case R.id.crash:
-                    onCrash();
-                    break;
                 case R.id.request_cell:
                     mCellNetwork.request();
                     break;
@@ -573,12 +569,6 @@ public class Connectivity extends Activity {
         for (Network network : networks) {
             mCm.reportBadNetwork(network);
         }
-    }
-
-    private void onCrash() {
-        ConnectivityManager foo = null;
-        foo.startUsingNetworkFeature(ConnectivityManager.TYPE_MOBILE,
-                Phone.FEATURE_ENABLE_MMS);
     }
 
     private void onStartScanCycle() {
