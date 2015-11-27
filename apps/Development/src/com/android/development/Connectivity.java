@@ -76,7 +76,6 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
@@ -85,6 +84,8 @@ import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.HttpParams;
 import org.apache.http.HttpResponse;
 import org.apache.http.impl.client.DefaultHttpClient;
+
+import static android.net.NetworkCapabilities.*;
 
 public class Connectivity extends Activity {
     private static final String TAG = "DevTools - Connectivity";
@@ -298,6 +299,21 @@ public class Connectivity extends Activity {
             mReleaseButton = releaseButton;
         }
 
+        public RequestableNetwork(int capability, int requestButton, int releaseButton) {
+            this(new NetworkRequest.Builder()
+                    .addTransportType(NetworkCapabilities.TRANSPORT_CELLULAR)
+                    .addCapability(capability)
+                    .build(),
+                    requestButton, releaseButton);
+        }
+
+        public void addOnClickListener() {
+            findViewById(mRequestButton).setOnClickListener(
+                    new View.OnClickListener() { public void onClick(View v) { request(); }});
+            findViewById(mReleaseButton).setOnClickListener(
+                    new View.OnClickListener() { public void onClick(View v) { release(); }});
+        }
+
         public void setRequested(boolean requested) {
             findViewById(mRequestButton).setEnabled(!requested);
             findViewById(mReleaseButton).setEnabled(requested);
@@ -320,20 +336,18 @@ public class Connectivity extends Activity {
         }
     }
 
-    private final RequestableNetwork mMmsNetwork = new RequestableNetwork(
-            new NetworkRequest.Builder()
-                    .addCapability(NetworkCapabilities.NET_CAPABILITY_MMS)
-                    .build(),
-            R.id.request_mms,
-            R.id.release_mms);
+    private final ArrayList<RequestableNetwork> mRequestableNetworks = new ArrayList<>();
 
-    private final RequestableNetwork mCellNetwork = new RequestableNetwork(
-            new NetworkRequest.Builder()
-                    .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-                    .addTransportType(NetworkCapabilities.TRANSPORT_CELLULAR)
-                    .build(),
-            R.id.request_cell,
-            R.id.release_cell);
+    private void addRequestableNetwork(int capability, int requestButton, int releaseButton) {
+        mRequestableNetworks.add(new RequestableNetwork(capability, requestButton, releaseButton));
+    }
+
+    public Connectivity() {
+        super();
+        addRequestableNetwork(NET_CAPABILITY_MMS, R.id.request_mms, R.id.release_mms);
+        addRequestableNetwork(NET_CAPABILITY_SUPL, R.id.request_supl, R.id.release_supl);
+        addRequestableNetwork(NET_CAPABILITY_INTERNET, R.id.request_cell, R.id.release_cell);
+    }
 
     final NetworkRequest mEmptyRequest = new NetworkRequest.Builder().clearCapabilities().build();
 
@@ -386,10 +400,6 @@ public class Connectivity extends Activity {
         findViewById(R.id.startTdls).setOnClickListener(mClickListener);
         findViewById(R.id.stopTdls).setOnClickListener(mClickListener);
 
-        findViewById(R.id.request_mms).setOnClickListener(mClickListener);
-        findViewById(R.id.release_mms).setOnClickListener(mClickListener);
-        findViewById(R.id.request_cell).setOnClickListener(mClickListener);
-        findViewById(R.id.release_cell).setOnClickListener(mClickListener);
         findViewById(R.id.report_all_bad).setOnClickListener(mClickListener);
 
         findViewById(R.id.add_default_route).setOnClickListener(mClickListener);
@@ -402,8 +412,10 @@ public class Connectivity extends Activity {
         findViewById(R.id.default_socket).setOnClickListener(mClickListener);
         findViewById(R.id.link_stats).setOnClickListener(mClickListener);
 
-        mCellNetwork.setRequested(false);
-        mMmsNetwork.setRequested(false);
+        for (RequestableNetwork network : mRequestableNetworks) {
+            network.setRequested(false);
+            network.addOnClickListener();
+        }
 
         registerReceiver(mReceiver, new IntentFilter(CONNECTIVITY_TEST_ALARM));
 
@@ -417,8 +429,9 @@ public class Connectivity extends Activity {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        mCellNetwork.release();
-        mMmsNetwork.release();
+        for (RequestableNetwork network : mRequestableNetworks) {
+            network.release();
+        }
         mCm.unregisterNetworkCallback(mCallback);
         mCallback = null;
         unregisterReceiver(mReceiver);
@@ -460,12 +473,6 @@ public class Connectivity extends Activity {
                 case R.id.stopTdls:
                     onStopTdls();
                     break;
-                case R.id.request_mms:
-                    mMmsNetwork.request();
-                    break;
-                case R.id.release_mms:
-                    mMmsNetwork.release();
-                    break;
                 case R.id.default_socket:
                     onDefaultSocket();
                     break;
@@ -492,12 +499,6 @@ public class Connectivity extends Activity {
                     break;
                 case R.id.report_all_bad:
                     onReportAllBad();
-                    break;
-                case R.id.request_cell:
-                    mCellNetwork.request();
-                    break;
-                case R.id.release_cell:
-                    mCellNetwork.release();
                     break;
                 case R.id.link_stats:
                     onLinkStats();

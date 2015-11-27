@@ -42,6 +42,8 @@
 
     <string name="request_mms">Request MMS</string>
     <string name="release_mms">Release MMS</string>
+    <string name="request_supl">Request SUPL</string>
+    <string name="release_supl">Release SUPL</string>
     <string name="request_cell">Request cell</string>
     <string name="release_cell">Release cell</string>
     <string name="report_all_bad">Report all bad</string>
