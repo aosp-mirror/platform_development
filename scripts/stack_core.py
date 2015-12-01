@@ -91,7 +91,7 @@ class TraceConverter:
         "[ \t]+..[ \t]+"                                     # (space)pc(space).
         "(?P<offset>[0-9a-f]" + self.width + ")[ \t]+"       # Offset (hex number given without
                                                              #         0x prefix).
-        "(?P<dso>[^\r\n \t]*)"                               # Library name.
+        "(?P<dso>\[[^\]]+\]|[^\r\n \t]*)"                    # Library name.
         "( \(offset (?P<so_offset>0x[0-9a-fA-F]+)\))?"       # Offset into the file to find the start of the shared so.
         "(?P<symbolpresent> \((?P<symbol>.*)\))?")           # Is the symbol there?
                                                              # pylint: disable-msg=C6310
