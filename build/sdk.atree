@@ -121,6 +121,9 @@ prebuilts/sdk/renderscript/lib/x86/librsjni.so        build-tools/${PLATFORM_NAM
 prebuilts/sdk/renderscript/lib/x86/libblasV8.so       build-tools/${PLATFORM_NAME}/renderscript/lib/packaged/x86/libblasV8.so
 prebuilts/sdk/renderscript/lib/x86/libclcore.bc       build-tools/${PLATFORM_NAME}/renderscript/lib/bc/x86/libclcore.bc
 
+prebuilts/sdk/renderscript/lib/arm64/libRSSupport.so    build-tools/${PLATFORM_NAME}/renderscript/lib/packaged/arm64-v8a/libRSSupport.so
+prebuilts/sdk/renderscript/lib/arm64/librsjni.so        build-tools/${PLATFORM_NAME}/renderscript/lib/packaged/arm64-v8a/librsjni.so
+
 
 # dx
 bin/dx                                        build-tools/${PLATFORM_NAME}/dx
