@@ -73,6 +73,13 @@ See test_defs.xsd for more information.
     coverage_target="framework"
     continuous="true" />
 
+<test name="frameworks-wifi"
+    build_path="frameworks/opt/net/wifi/tests/wifitests"
+    package="com.android.server.wifi.test"
+    runner="android.support.test.runner.AndroidJUnitRunner"
+    coverage_target="framework"
+    continuous="true" />
+
 <test name="frameworks-testrunner"
     build_path="frameworks/base/test-runner"
     package="com.android.frameworks.testrunner.tests"
