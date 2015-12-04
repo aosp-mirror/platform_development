@@ -48,44 +48,44 @@ _Static_assert(__generic(_Complex_I, float _Complex, 1, 0),
 
 __BEGIN_DECLS
 
-double		cabs(double complex) __NDK_FPABI__;
-float		cabsf(float complex) __NDK_FPABI__;
-long double	cabsl(long double complex) __NDK_FPABI__;
-double		carg(double complex) __NDK_FPABI__;
-float		cargf(float complex) __NDK_FPABI__;
-long double	cargl(long double complex) __NDK_FPABI__;
-double complex	ccos(double complex) __NDK_FPABI__;
-float complex	ccosf(float complex) __NDK_FPABI__;
-double complex	ccosh(double complex) __NDK_FPABI__;
-float complex	ccoshf(float complex) __NDK_FPABI__;
-double complex	cexp(double complex) __NDK_FPABI__;
-float complex	cexpf(float complex) __NDK_FPABI__;
-double		cimag(double complex) __pure2 __NDK_FPABI__;
-float		cimagf(float complex) __pure2 __NDK_FPABI__;
-long double	cimagl(long double complex) __pure2 __NDK_FPABI__;
-double complex	conj(double complex) __pure2 __NDK_FPABI__;
-float complex	conjf(float complex) __pure2 __NDK_FPABI__;
+double		cabs(double complex) __NDK_FPABI_MATH__;
+float		cabsf(float complex) __NDK_FPABI_MATH__;
+long double	cabsl(long double complex) __NDK_FPABI_MATH__;
+double		carg(double complex) __NDK_FPABI_MATH__;
+float		cargf(float complex) __NDK_FPABI_MATH__;
+long double	cargl(long double complex) __NDK_FPABI_MATH__;
+double complex	ccos(double complex) __NDK_FPABI_MATH__;
+float complex	ccosf(float complex) __NDK_FPABI_MATH__;
+double complex	ccosh(double complex) __NDK_FPABI_MATH__;
+float complex	ccoshf(float complex) __NDK_FPABI_MATH__;
+double complex	cexp(double complex) __NDK_FPABI_MATH__;
+float complex	cexpf(float complex) __NDK_FPABI_MATH__;
+double		cimag(double complex) __pure2 __NDK_FPABI_MATH__;
+float		cimagf(float complex) __pure2 __NDK_FPABI_MATH__;
+long double	cimagl(long double complex) __pure2 __NDK_FPABI_MATH__;
+double complex	conj(double complex) __pure2 __NDK_FPABI_MATH__;
+float complex	conjf(float complex) __pure2 __NDK_FPABI_MATH__;
 long double complex
-		conjl(long double complex) __pure2 __NDK_FPABI__;
-float complex	cprojf(float complex) __pure2 __NDK_FPABI__;
-double complex	cproj(double complex) __pure2 __NDK_FPABI__;
+		conjl(long double complex) __pure2 __NDK_FPABI_MATH__;
+float complex	cprojf(float complex) __pure2 __NDK_FPABI_MATH__;
+double complex	cproj(double complex) __pure2 __NDK_FPABI_MATH__;
 long double complex
-		cprojl(long double complex) __pure2 __NDK_FPABI__;
-double		creal(double complex) __pure2 __NDK_FPABI__;
-float		crealf(float complex) __pure2 __NDK_FPABI__;
-long double	creall(long double complex) __pure2 __NDK_FPABI__;
-double complex	csin(double complex) __NDK_FPABI__;
-float complex	csinf(float complex) __NDK_FPABI__;
-double complex	csinh(double complex) __NDK_FPABI__;
-float complex	csinhf(float complex) __NDK_FPABI__;
-double complex	csqrt(double complex) __NDK_FPABI__;
-float complex	csqrtf(float complex) __NDK_FPABI__;
+		cprojl(long double complex) __pure2 __NDK_FPABI_MATH__;
+double		creal(double complex) __pure2 __NDK_FPABI_MATH__;
+float		crealf(float complex) __pure2 __NDK_FPABI_MATH__;
+long double	creall(long double complex) __pure2 __NDK_FPABI_MATH__;
+double complex	csin(double complex) __NDK_FPABI_MATH__;
+float complex	csinf(float complex) __NDK_FPABI_MATH__;
+double complex	csinh(double complex) __NDK_FPABI_MATH__;
+float complex	csinhf(float complex) __NDK_FPABI_MATH__;
+double complex	csqrt(double complex) __NDK_FPABI_MATH__;
+float complex	csqrtf(float complex) __NDK_FPABI_MATH__;
 long double complex
-		csqrtl(long double complex) __NDK_FPABI__;
-double complex	ctan(double complex) __NDK_FPABI__;
-float complex	ctanf(float complex) __NDK_FPABI__;
-double complex	ctanh(double complex) __NDK_FPABI__;
-float complex	ctanhf(float complex) __NDK_FPABI__;
+		csqrtl(long double complex) __NDK_FPABI_MATH__;
+double complex	ctan(double complex) __NDK_FPABI_MATH__;
+float complex	ctanf(float complex) __NDK_FPABI_MATH__;
+double complex	ctanh(double complex) __NDK_FPABI_MATH__;
+float complex	ctanhf(float complex) __NDK_FPABI_MATH__;
 
 __END_DECLS
 
