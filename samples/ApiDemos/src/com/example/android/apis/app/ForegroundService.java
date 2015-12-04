@@ -23,7 +23,9 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.PowerManager;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -41,13 +43,15 @@ import com.example.android.apis.R;
  * run in the "foreground".  It shows how to code this to work well by using
  * the improved Android 2.0 APIs when available and otherwise falling back
  * to the original APIs.  Yes: you can take this exact code, compile it
- * against the Android 2.0 SDK, and it will against everything down to
+ * against the Android 2.0 SDK, and it will run against everything down to
  * Android 1.0.
  */
 public class ForegroundService extends Service {
     static final String ACTION_FOREGROUND = "com.example.android.apis.FOREGROUND";
+    static final String ACTION_FOREGROUND_WAKELOCK = "com.example.android.apis.FOREGROUND_WAKELOCK";
     static final String ACTION_BACKGROUND = "com.example.android.apis.BACKGROUND";
-    
+    static final String ACTION_BACKGROUND_WAKELOCK = "com.example.android.apis.BACKGROUND_WAKELOCK";
+
  // BEGIN_INCLUDE(foreground_compatibility)
     private static final Class<?>[] mSetForegroundSignature = new Class[] {
         boolean.class};
@@ -138,6 +142,7 @@ public class ForegroundService extends Service {
 
     @Override
     public void onDestroy() {
+        handleDestroy();
         // Make sure our notification is gone.
         stopForegroundCompat(R.string.foreground_service_started);
     }
@@ -161,8 +166,18 @@ public class ForegroundService extends Service {
     }
 // END_INCLUDE(start_compatibility)
 
+    private PowerManager.WakeLock mWakeLock;
+    private Handler mHandler = new Handler();
+    private Runnable mPulser = new Runnable() {
+        @Override public void run() {
+            Log.i("ForegroundService", "PULSE!");
+            mHandler.postDelayed(this, 5*1000);
+        }
+    };
+
     void handleCommand(Intent intent) {
-        if (ACTION_FOREGROUND.equals(intent.getAction())) {
+        if (ACTION_FOREGROUND.equals(intent.getAction())
+                || ACTION_FOREGROUND_WAKELOCK.equals(intent.getAction())) {
             // In this sample, we'll use the same text for the ticker and the expanded notification
             CharSequence text = getText(R.string.foreground_service_started);
 
@@ -181,11 +196,38 @@ public class ForegroundService extends Service {
 
             startForegroundCompat(R.string.foreground_service_started, notification);
             
-        } else if (ACTION_BACKGROUND.equals(intent.getAction())) {
+        } else if (ACTION_BACKGROUND.equals(intent.getAction())
+                || ACTION_BACKGROUND_WAKELOCK.equals(intent.getAction())) {
             stopForegroundCompat(R.string.foreground_service_started);
         }
+
+        if (ACTION_FOREGROUND_WAKELOCK.equals(intent.getAction())
+                || ACTION_BACKGROUND_WAKELOCK.equals(intent.getAction())) {
+            if (mWakeLock == null) {
+                mWakeLock = getSystemService(PowerManager.class).newWakeLock(
+                        PowerManager.PARTIAL_WAKE_LOCK, "wake-service");
+                mWakeLock.acquire();
+            } else {
+                releaseWakeLock();
+            }
+        }
+
+        mHandler.removeCallbacks(mPulser);
+        mPulser.run();
     }
-    
+
+    void releaseWakeLock() {
+        if (mWakeLock != null) {
+            mWakeLock.release();
+            mWakeLock = null;
+        }
+    }
+
+    void handleDestroy() {
+        releaseWakeLock();
+        mHandler.removeCallbacks(mPulser);
+    }
+
     @Override
     public IBinder onBind(Intent intent) {
         return null;
@@ -209,8 +251,12 @@ public class ForegroundService extends Service {
             // Watch for button clicks.
             Button button = (Button)findViewById(R.id.start_foreground);
             button.setOnClickListener(mForegroundListener);
+            button = (Button)findViewById(R.id.start_foreground_wakelock);
+            button.setOnClickListener(mForegroundWakelockListener);
             button = (Button)findViewById(R.id.start_background);
             button.setOnClickListener(mBackgroundListener);
+            button = (Button)findViewById(R.id.start_background_wakelock);
+            button.setOnClickListener(mBackgroundWakelockListener);
             button = (Button)findViewById(R.id.stop);
             button.setOnClickListener(mStopListener);
         }
@@ -223,9 +269,25 @@ public class ForegroundService extends Service {
             }
         };
 
+        private OnClickListener mForegroundWakelockListener = new OnClickListener() {
+            public void onClick(View v) {
+                Intent intent = new Intent(ForegroundService.ACTION_FOREGROUND_WAKELOCK);
+                intent.setClass(Controller.this, ForegroundService.class);
+                startService(intent);
+            }
+        };
+
         private OnClickListener mBackgroundListener = new OnClickListener() {
             public void onClick(View v) {
                 Intent intent = new Intent(ForegroundService.ACTION_BACKGROUND);
+                intent.setClass(Controller.this, ForegroundService.class);
+                startService(intent);
+            }
+        };
+
+        private OnClickListener mBackgroundWakelockListener = new OnClickListener() {
+            public void onClick(View v) {
+                Intent intent = new Intent(ForegroundService.ACTION_BACKGROUND_WAKELOCK);
                 intent.setClass(Controller.this, ForegroundService.class);
                 startService(intent);
             }
