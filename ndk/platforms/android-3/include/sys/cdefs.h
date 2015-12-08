@@ -37,54 +37,41 @@
 #ifndef	_SYS_CDEFS_H_
 #define	_SYS_CDEFS_H_
 
-/* In previous NDK releases, wchar_t was defined as 'unsigned char'
- * when targetting API level < 9 (i.e. Froyo or older).
- *
- * This is no longer the case, but you can define _WCHAR_IS_8BIT
- * at compile time to restore the old behaviour.
- *
- * The reason for this redefine is purely historical. Until Android 2.3,
- * i.e. API level 9, there was absolutely no official support for wchar_t
- * in the C library, but compiling GCC and the GNU libstdc++ required a
- * working <wchar.h>.
- *
- * To allow this while keeping the C library small, wchar_t was redefined
- * explicitely as an 8-bit unsigned integer (which is perfectly allowed
- * by the standard) and a very small set of wcs-xxx functions provided
- * as wrappers around the corresponding str-xxx ones.
- *
- * Starting with API level 9, wchar_t is properly defined as a 32-bit
- * type (as mandated by the compiler itself), and the lines below
- * were removed (see $NDK/platforms/android-9/include/sys/cdefs.h).
- *
- * Note that this only affects C source compilation. For C++, wchar_t
- * is a compiler keyboard that cannot be redefined and is always 32-bit.
- *
- * On the other hand, _WCHAR_IS_8BIT also affects the definition of
- * WCHAR_MIN, WCHAR_MAX and WEOF (see <wchar.h> comments).
+/*
+ * Testing against Clang-specific extensions.
  */
-#ifdef _WCHAR_IS_8BIT
-#undef  __WCHAR_TYPE__
-#define __WCHAR_TYPE__  unsigned char
+
+#ifndef __has_extension
+#define __has_extension         __has_feature
 #endif
+#ifndef __has_feature
+#define __has_feature(x)        0
+#endif
+#ifndef __has_include
+#define __has_include(x)        0
+#endif
+#ifndef __has_builtin
+#define __has_builtin(x)        0
+#endif
+
 
 /*
  * Macro to test if we're using a GNU C compiler of a specific vintage
  * or later, for e.g. features that appeared in a particular version
  * of GNU C.  Usage:
  *
- *	#if __GNUC_PREREQ__(major, minor)
+ *	#if __GNUC_PREREQ(major, minor)
  *	...cool feature...
  *	#else
  *	...delete feature...
  *	#endif
  */
 #ifdef __GNUC__
-#define	__GNUC_PREREQ__(x, y)						\
+#define	__GNUC_PREREQ(x, y)						\
 	((__GNUC__ == (x) && __GNUC_MINOR__ >= (y)) ||			\
 	 (__GNUC__ > (x)))
 #else
-#define	__GNUC_PREREQ__(x, y)	0
+#define	__GNUC_PREREQ(x, y)	0
 #endif
 
 #include <sys/cdefs_elf.h>
@@ -176,7 +163,7 @@
  * GCC2 provides __extension__ to suppress warnings for various GNU C
  * language extensions under "-ansi -pedantic".
  */
-#if !__GNUC_PREREQ__(2, 0)
+#if !__GNUC_PREREQ(2, 0)
 #define	__extension__		/* delete __extension__ if non-gcc or gcc1 */
 #endif
 
@@ -188,7 +175,7 @@
  * these work for GNU C++ (modulo a slight glitch in the C++ grammar
  * in the distribution version of 2.5.5).
  */
-#if !__GNUC_PREREQ__(2, 5)
+#if !__GNUC_PREREQ(2, 5)
 #define	__attribute__(x)	/* delete __attribute__ if non-gcc or gcc1 */
 #if defined(__GNUC__) && !defined(__STRICT_ANSI__)
 #define	__dead		__volatile
@@ -202,19 +189,21 @@
 #define	__pure
 #endif
 
-#if __GNUC_PREREQ__(2, 7)
+#if __GNUC_PREREQ(2, 7)
 #define	__unused	__attribute__((__unused__))
 #else
 #define	__unused	/* delete */
 #endif
 
-#if __GNUC_PREREQ__(3, 1)
+#define __pure2 __attribute__((__const__)) /* Android-added: used by FreeBSD libm */
+
+#if __GNUC_PREREQ(3, 1)
 #define	__used		__attribute__((__used__))
 #else
 #define	__used		/* delete */
 #endif
 
-#if __GNUC_PREREQ__(2, 7)
+#if __GNUC_PREREQ(2, 7)
 #define	__packed	__attribute__((__packed__))
 #define	__aligned(x)	__attribute__((__aligned__(x)))
 #define	__section(x)	__attribute__((__section__(x)))
@@ -228,17 +217,22 @@
 #define	__section(x)	error: no __section for this compiler
 #endif
 
-#if !__GNUC_PREREQ__(2, 8)
+#if !__GNUC_PREREQ(2, 8)
 #define	__extension__
 #endif
 
-#if __GNUC_PREREQ__(2, 8)
+#if __GNUC_PREREQ(2, 8)
 #define __statement(x)	__extension__(x)
 #elif defined(lint)
 #define __statement(x)	(0)
 #else
 #define __statement(x)	(x)
 #endif
+
+#define __nonnull(args) __attribute__((__nonnull__ args))
+
+#define __printflike(x, y) __attribute__((__format__(printf, x, y))) __nonnull((x))
+#define __scanflike(x, y) __attribute__((__format__(scanf, x, y))) __nonnull((x))
 
 /*
  * C99 defines the restrict type qualifier keyword, which was made available
@@ -247,7 +241,7 @@
 #if defined(__STDC__VERSION__) && __STDC_VERSION__ >= 199901L
 #define	__restrict	restrict
 #else
-#if !__GNUC_PREREQ__(2, 92)
+#if !__GNUC_PREREQ(2, 92)
 #define	__restrict	/* delete __restrict when not supported */
 #endif
 #endif
@@ -257,9 +251,9 @@
  * in GCC 2.95.
  */
 #if !defined(__STDC_VERSION__) || !(__STDC_VERSION__ >= 199901L)
-#if __GNUC_PREREQ__(2, 6)
+#if __GNUC_PREREQ(2, 6)
 #define	__func__	__PRETTY_FUNCTION__
-#elif __GNUC_PREREQ__(2, 4)
+#elif __GNUC_PREREQ(2, 4)
 #define	__func__	__FUNCTION__
 #else
 #define	__func__	""
@@ -292,7 +286,7 @@
  * register values. This is gcc specific, the version is more or less
  * arbitrary, might work with older compilers.
  */
-#if __GNUC_PREREQ__(2, 95)
+#if __GNUC_PREREQ(2, 95)
 #define	__insn_barrier()	__asm __volatile("":::"memory")
 #else
 #define	__insn_barrier()	/* */
@@ -326,7 +320,7 @@
  *	  basic block reordering that this affects can often generate
  *	  larger code.
  */
-#if __GNUC_PREREQ__(2, 96)
+#if __GNUC_PREREQ(2, 96)
 #define	__predict_true(exp)	__builtin_expect((exp) != 0, 1)
 #define	__predict_false(exp)	__builtin_expect((exp) != 0, 0)
 #else
@@ -334,12 +328,34 @@
 #define	__predict_false(exp)	(exp)
 #endif
 
-#if __GNUC_PREREQ__(2, 96)
+#if __GNUC_PREREQ(2, 96)
 #define __noreturn    __attribute__((__noreturn__))
 #define __mallocfunc  __attribute__((malloc))
+#define __purefunc    __attribute__((pure))
 #else
 #define __noreturn
 #define __mallocfunc
+#define __purefunc
+#endif
+
+#if __GNUC_PREREQ(3, 1)
+#define __always_inline __attribute__((__always_inline__))
+#else
+#define __always_inline
+#endif
+
+#if __GNUC_PREREQ(3, 4)
+#define __wur __attribute__((__warn_unused_result__))
+#else
+#define __wur
+#endif
+
+#if __GNUC_PREREQ(4, 3)
+#define __errordecl(name, msg) extern void name(void) __attribute__((__error__(msg)))
+#define __warnattr(msg) __attribute__((__warning__(msg)))
+#else
+#define __errordecl(name, msg) extern void name(void)
+#define __warnattr(msg)
 #endif
 
 /*
@@ -392,11 +408,11 @@
 #define	__link_set_entry(set, idx)	(__link_set_begin(set)[idx])
 
 /*
- * Some of the recend FreeBSD sources used in Bionic need this.
+ * Some of the FreeBSD sources used in Bionic need this.
  * Originally, this is used to embed the rcs versions of each source file
  * in the generated binary. We certainly don't want this in Bionic.
  */
-#define	__FBSDID(s)	struct __hack
+#define __FBSDID(s) /* nothing */
 
 /*-
  * The following definitions are an extension of the behavior originally
@@ -529,6 +545,37 @@
 
 #define  __BIONIC__   1
 #include <android/api-level.h>
+
+/* glibc compatibility. */
+#if __LP64__
+#define __WORDSIZE 64
+#else
+#define __WORDSIZE 32
+#endif
+
+/*
+ * When _FORTIFY_SOURCE is defined, automatic bounds checking is
+ * added to commonly used libc functions. If a buffer overrun is
+ * detected, the program is safely aborted.
+ *
+ * See
+ * http://gcc.gnu.org/onlinedocs/gcc/Object-Size-Checking.html for details.
+ */
+#if defined(_FORTIFY_SOURCE) && _FORTIFY_SOURCE > 0 && defined(__OPTIMIZE__) && __OPTIMIZE__ > 0
+#define __BIONIC_FORTIFY 1
+#if _FORTIFY_SOURCE == 2
+#define __bos(s) __builtin_object_size((s), 1)
+#else
+#define __bos(s) __builtin_object_size((s), 0)
+#endif
+#define __bos0(s) __builtin_object_size((s), 0)
+
+#define __BIONIC_FORTIFY_INLINE \
+    extern __inline__ \
+    __attribute__ ((always_inline)) \
+    __attribute__ ((gnu_inline))
+#endif
+#define __BIONIC_FORTIFY_UNKNOWN_SIZE ((size_t) -1)
 
 /* __NDK_FPABI__ or __NDK_FPABI_MATH__ are applied to APIs taking or returning float or
    [long] double, to ensure even at the presence of -mhard-float (which implies
