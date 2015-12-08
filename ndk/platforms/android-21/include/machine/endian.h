@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 The Android Open Source Project
+ * Copyright (C) 2014 The Android Open Source Project
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,33 +26,10 @@
  * SUCH DAMAGE.
  */
 
-#ifndef _AARCH64_ENDIAN_H_
-#define _AARCH64_ENDIAN_H_
+#ifndef _MACHINE_ENDIAN_H_
+#define _MACHINE_ENDIAN_H_
 
-#include <sys/types.h>
+/* This file is for BSD source compatibility only. Use <endian.h> or <sys/endian.h> instead. */
 #include <sys/endian.h>
 
-#ifdef __GNUC__
-
-#define __swap16md(x) ({                                        \
-    register u_int16_t _x = (x);                                \
-    __asm volatile ("rev16 %0, %0" : "+r" (_x));                \
-    _x;                                                         \
-})
-
-/* Use GCC builtins */
-#define __swap32md(x) __builtin_bswap32(x)
-#define __swap64md(x) __builtin_bswap64(x)
-
-/* Tell sys/endian.h we have MD variants of the swap macros.  */
-#define MD_SWAP
-
-#endif  /* __GNUC__ */
-
-#if defined(__AARCH64EB__)
-#define _BYTE_ORDER _BIG_ENDIAN
-#else
-#define _BYTE_ORDER _LITTLE_ENDIAN
-#endif
-
-#endif /* _AARCH64_ENDIAN_H_ */
+#endif /* _MACHINE_ENDIAN_H_ */
