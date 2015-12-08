@@ -14,12 +14,11 @@
 # limitations under the License.
 #
 import atexit
-import contextlib
+import base64
 import logging
 import os
 import re
 import subprocess
-import tempfile
 
 
 class FindDeviceError(RuntimeError):
@@ -152,82 +151,59 @@ def get_emulator_device(adb_path='adb'):
     return _get_device_by_type('-e', adb_path=adb_path)
 
 
-@contextlib.contextmanager
-def _file_deleter(f):
-    yield
-    if f:
-        f.close()
-        os.remove(f.name)
-
-
-# Internal helper that may return a temporary file (containing a command line
-# in UTF-8) that should be executed with the help of _get_subprocess_args().
-def _get_windows_unicode_helper(args):
-    # Only do this slow work-around if Unicode is in the cmd line on Windows.
-    if (os.name != 'nt' or all(not isinstance(arg, unicode) for arg in args)):
-        return None
-
-    # cmd.exe requires a suffix to know that it is running a batch file.
-    # We can't use delete=True because that causes File Share Mode Delete to be
-    # used which prevents the file from being opened by other processes that
-    # don't use that File Share Mode. The caller must manually delete the file.
-    tf = tempfile.NamedTemporaryFile('wb', suffix='.cmd', delete=False)
-    # @ in batch suppresses echo of the current line.
-    # Change the codepage to 65001, the UTF-8 codepage.
-    tf.write('@chcp 65001 > nul\r\n')
-    tf.write('@')
-    # Properly quote all the arguments and encode in UTF-8.
-    tf.write(subprocess.list2cmdline(args).encode('utf-8'))
-    tf.close()
-    return tf
-
-
-# Let the caller know how to run the batch file. Takes subprocess.check_output()
-# or subprocess.Popen() args and returns a new tuple that should be passed
-# instead, or the original args if there is no file
-def _get_subprocess_args(args, helper_file):
-    if helper_file:
-        # Concatenate our new command line args with any other function args.
-        return (['cmd.exe', '/c', helper_file.name],) + args[1:]
-    else:
+# If necessary, modifies subprocess.check_output() or subprocess.Popen() args to run the subprocess
+# via Windows PowerShell to work-around an issue in Python 2's subprocess class on Windows where it
+# doesn't support Unicode.
+def _get_subprocess_args(args):
+    # Only do this slow work-around if Unicode is in the cmd line on Windows. PowerShell takes
+    # 600-700ms to startup on a 2013-2014 machine, which is very slow.
+    if (os.name != 'nt' or all(not isinstance(arg, unicode) for arg in args[0])):
         return args
+
+    def escape_arg(arg):
+        # Escape for the parsing that the C Runtime does in Windows apps. In particular, this will
+        # take care of double-quotes.
+        arg = subprocess.list2cmdline([arg])
+        # Escape single-quote with another single-quote because we're about to...
+        arg = arg.replace(u"'", u"''")
+        # ...put the arg in a single-quoted string for PowerShell to parse.
+        arg = u"'" + arg + u"'"
+        return arg
+
+    # Escape command line args.
+    argv = map(escape_arg, args[0])
+    # Cause script errors (such as adb not found) to stop script immediately with an error.
+    ps_code = u'$ErrorActionPreference = "Stop"\r\n';
+    # Add current directory to the PATH var, to match cmd.exe/CreateProcess() behavior.
+    ps_code += u'$env:Path = ".;" + $env:Path\r\n';
+    # Precede by &, the PowerShell call operator, and separate args by space.
+    ps_code += u'& ' + u' '.join(argv)
+    # Make the PowerShell exit code the exit code of the subprocess.
+    ps_code += u'\r\nExit $LastExitCode'
+    # Encode as UTF-16LE (without Byte-Order-Mark) which Windows natively understands.
+    ps_code = ps_code.encode('utf-16le')
+
+    # Encode the PowerShell command as base64 and use the special -EncodedCommand option that base64
+    # decodes. Base64 is just plain ASCII, so it should have no problem passing through Win32
+    # CreateProcessA() (which python erroneously calls instead of CreateProcessW()).
+    return (['powershell.exe', '-NoProfile', '-NonInteractive', '-EncodedCommand',
+             base64.b64encode(ps_code)],) + args[1:]
 
 
 # Call this instead of subprocess.check_output() to work-around issue in Python
-# 2's subprocess class on Windows where it doesn't support Unicode. This
-# writes the command line to a UTF-8 batch file that is properly interpreted
-# by cmd.exe.
+# 2's subprocess class on Windows where it doesn't support Unicode.
 def _subprocess_check_output(*args, **kwargs):
-    helper = _get_windows_unicode_helper(args[0])
-    with _file_deleter(helper):
-        try:
-            return subprocess.check_output(
-                    *_get_subprocess_args(args, helper), **kwargs)
-        except subprocess.CalledProcessError as e:
-            # Show real command line instead of the cmd.exe command line.
-            raise subprocess.CalledProcessError(e.returncode, args[0],
-                                                output=e.output)
+    try:
+        return subprocess.check_output(*_get_subprocess_args(args), **kwargs)
+    except subprocess.CalledProcessError as e:
+        # Show real command line instead of the powershell.exe command line.
+        raise subprocess.CalledProcessError(e.returncode, args[0],
+                                            output=e.output)
 
 
 # Call this instead of subprocess.Popen(). Like _subprocess_check_output().
-class _subprocess_Popen(subprocess.Popen):
-    def __init__(self, *args, **kwargs):
-        # __del__() can be called after global teardown has started, meaning
-        # the global references to _subprocess_Popen and the os module may
-        # no longer exist. We need to save local references to all global names
-        # used in __del__() to avoid this.
-        self.saved_class = _subprocess_Popen
-        self.saved_os = os
-        # Save reference to helper so that it can be deleted once it is no
-        # longer used.
-        self.helper = _get_windows_unicode_helper(args[0])
-        super(_subprocess_Popen, self).__init__(
-                *_get_subprocess_args(args, self.helper), **kwargs)
-
-    def __del__(self, *args, **kwargs):
-        super(self.saved_class, self).__del__(*args, **kwargs)
-        if self.helper:
-            self.saved_os.remove(self.helper.name)
+def _subprocess_Popen(*args, **kwargs):
+    return subprocess.Popen(*_get_subprocess_args(args), **kwargs)
 
 
 class AndroidDevice(object):
