@@ -577,7 +577,21 @@
 #endif
 #define __BIONIC_FORTIFY_UNKNOWN_SIZE ((size_t) -1)
 
+/* __NDK_FPABI__ or __NDK_FPABI_MATH__ are applied to APIs taking or returning float or
+   [long] double, to ensure even at the presence of -mhard-float (which implies
+   -mfloat-abi=hard), calling to 32-bit Android native APIs still follow -mfloat-abi=softfp.
 
+   __NDK_FPABI_MATH__ is applied to APIs in math.h.  It normally equals to __NDK_FPABI__,
+   but allows use of customized libm.a compiled with -mhard-float by -D_NDK_MATH_NO_SOFTFP=1
+
+   NOTE: Disable for clang for now unless _NDK_MATH_NO_SOFTFP=1, because clang before 3.4 doesn't
+         allow change of calling convension for builtin and produces error message reads:
+
+           a.i:564:6: error: function declared 'aapcs' here was previously declared without calling convention
+           int  sin(double d) __attribute__((pcs("aapcs")));
+                ^
+           a.i:564:6: note: previous declaration is here
+ */
 #if defined(__ANDROID__) && !defined(__LP64__) && defined( __arm__)
 #define __NDK_FPABI__ __attribute__((pcs("aapcs")))
 #else
