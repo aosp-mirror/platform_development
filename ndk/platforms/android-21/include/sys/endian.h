@@ -1,5 +1,3 @@
-/*	$OpenBSD: endian.h,v 1.17 2006/01/06 18:53:05 millert Exp $	*/
-
 /*-
  * Copyright (c) 1997 Niklas Hallqvist.  All rights reserved.
  *
@@ -24,169 +22,30 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * Generic definitions for little- and big-endian systems.  Other endianesses
- * has to be dealt with in the specific machine/endian.h file for that port.
- *
- * This file is meant to be included from a little- or big-endian port's
- * machine/endian.h after setting _BYTE_ORDER to either 1234 for little endian
- * or 4321 for big..
- */
-
 #ifndef _SYS_ENDIAN_H_
 #define _SYS_ENDIAN_H_
 
 #include <sys/cdefs.h>
-#include <machine/endian.h>
 
 #include <stdint.h>
 
 #define _LITTLE_ENDIAN	1234
 #define _BIG_ENDIAN	4321
 #define _PDP_ENDIAN	3412
+#define _BYTE_ORDER _LITTLE_ENDIAN
+#define __LITTLE_ENDIAN_BITFIELD
 
-#if __BSD_VISIBLE
-#define LITTLE_ENDIAN	_LITTLE_ENDIAN
-#define BIG_ENDIAN	_BIG_ENDIAN
-#define PDP_ENDIAN	_PDP_ENDIAN
-#define BYTE_ORDER	_BYTE_ORDER
+#ifndef __LITTLE_ENDIAN
+#define __LITTLE_ENDIAN _LITTLE_ENDIAN
 #endif
-
-#ifdef __GNUC__
-
-#define __swap16gen(x) __statement({					\
-	__uint16_t __swap16gen_x = (x);					\
-									\
-	(__uint16_t)((__swap16gen_x & 0xff) << 8 |			\
-	    (__swap16gen_x & 0xff00) >> 8);				\
-})
-
-#define __swap32gen(x) __statement({					\
-	__uint32_t __swap32gen_x = (x);					\
-									\
-	(__uint32_t)((__swap32gen_x & 0xff) << 24 |			\
-	    (__swap32gen_x & 0xff00) << 8 |				\
-	    (__swap32gen_x & 0xff0000) >> 8 |				\
-	    (__swap32gen_x & 0xff000000) >> 24);			\
-})
-
-#define __swap64gen(x) __statement({					\
-	__uint64_t __swap64gen_x = (x);					\
-									\
-	(__uint64_t)((__swap64gen_x & 0xff) << 56 |			\
-	    (__swap64gen_x & 0xff00ULL) << 40 |				\
-	    (__swap64gen_x & 0xff0000ULL) << 24 |			\
-	    (__swap64gen_x & 0xff000000ULL) << 8 |			\
-	    (__swap64gen_x & 0xff00000000ULL) >> 8 |			\
-	    (__swap64gen_x & 0xff0000000000ULL) >> 24 |			\
-	    (__swap64gen_x & 0xff000000000000ULL) >> 40 |		\
-	    (__swap64gen_x & 0xff00000000000000ULL) >> 56);		\
-})
-
-#else /* __GNUC__ */
-
-/* Note that these macros evaluate their arguments several times.  */
-#define __swap16gen(x)							\
-    (__uint16_t)(((__uint16_t)(x) & 0xff) << 8 | ((__uint16_t)(x) & 0xff00) >> 8)
-
-#define __swap32gen(x)							\
-    (__uint32_t)(((__uint32_t)(x) & 0xff) << 24 |			\
-    ((__uint32_t)(x) & 0xff00) << 8 | ((__uint32_t)(x) & 0xff0000) >> 8 |\
-    ((__uint32_t)(x) & 0xff000000) >> 24)
-
-#define __swap64gen(x)							\
-	(__uint64_t)((((__uint64_t)(x) & 0xff) << 56) |			\
-	    ((__uint64_t)(x) & 0xff00ULL) << 40 |			\
-	    ((__uint64_t)(x) & 0xff0000ULL) << 24 |			\
-	    ((__uint64_t)(x) & 0xff000000ULL) << 8 |			\
-	    ((__uint64_t)(x) & 0xff00000000ULL) >> 8 |			\
-	    ((__uint64_t)(x) & 0xff0000000000ULL) >> 24 |		\
-	    ((__uint64_t)(x) & 0xff000000000000ULL) >> 40 |		\
-	    ((__uint64_t)(x) & 0xff00000000000000ULL) >> 56)
-
-#endif /* __GNUC__ */
-
-/*
- * Define MD_SWAP if you provide swap{16,32}md functions/macros that are
- * optimized for your architecture,  These will be used for swap{16,32}
- * unless the argument is a constant and we are using GCC, where we can
- * take advantage of the CSE phase much better by using the generic version.
- */
-#ifdef MD_SWAP
-#if __GNUC__
-
-#define __swap16(x) __statement({					\
-	__uint16_t __swap16_x = (x);					\
-									\
-	__builtin_constant_p(x) ? __swap16gen(__swap16_x) :		\
-	    __swap16md(__swap16_x);					\
-})
-
-#define __swap32(x) __statement({					\
-	__uint32_t __swap32_x = (x);					\
-									\
-	__builtin_constant_p(x) ? __swap32gen(__swap32_x) :		\
-	    __swap32md(__swap32_x);					\
-})
-
-#define __swap64(x) __statement({					\
-	__uint64_t __swap64_x = (x);					\
-									\
-	__builtin_constant_p(x) ? __swap64gen(__swap64_x) :		\
-	    __swap64md(__swap64_x);					\
-})
-
-#endif /* __GNUC__  */
-
-#else /* MD_SWAP */
-#define __swap16 __swap16gen
-#define __swap32 __swap32gen
-#define __swap64 __swap64gen
-#endif /* MD_SWAP */
-
-#define __swap16_multi(v, n) do {						\
-	__size_t __swap16_multi_n = (n);				\
-	__uint16_t *__swap16_multi_v = (v);				\
-									\
-	while (__swap16_multi_n) {					\
-		*__swap16_multi_v = swap16(*__swap16_multi_v);		\
-		__swap16_multi_v++;					\
-		__swap16_multi_n--;					\
-	}								\
-} while (0)
-
-#if __BSD_VISIBLE
-#define swap16 __swap16
-#define swap32 __swap32
-#define swap64 __swap64
-#define swap16_multi __swap16_multi
-#endif /* __BSD_VISIBLE */
-
-#if _BYTE_ORDER == _LITTLE_ENDIAN
-
-/* Can be overridden by machine/endian.h before inclusion of this file.  */
-#ifndef _QUAD_HIGHWORD
-#define _QUAD_HIGHWORD 1
+#ifndef __BIG_ENDIAN
+#define __BIG_ENDIAN _BIG_ENDIAN
 #endif
-#ifndef _QUAD_LOWWORD
-#define _QUAD_LOWWORD 0
-#endif
+#define __BYTE_ORDER _BYTE_ORDER
 
-#if __BSD_VISIBLE
-#define htobe16 __swap16
-#define htobe32 __swap32
-#define htobe64 __swap64
-#define betoh16 __swap16
-#define betoh32 __swap32
-#define betoh64 __swap64
-
-#define htole16(x) (x)
-#define htole32(x) (x)
-#define htole64(x) (x)
-#define letoh16(x) (x)
-#define letoh32(x) (x)
-#define letoh64(x) (x)
-#endif /* __BSD_VISIBLE */
+#define __swap16 __builtin_bswap16
+#define __swap32 __builtin_bswap32
+#define __swap64 __builtin_bswap64
 
 /* glibc compatibility. */
 __BEGIN_DECLS
@@ -205,67 +64,31 @@ __END_DECLS
 #define htonq(x) __swap64(x)
 #define ntohq(x) __swap64(x)
 
-#define __LITTLE_ENDIAN_BITFIELD
-
-#endif /* _BYTE_ORDER */
-
-#if _BYTE_ORDER == _BIG_ENDIAN
-
-/* Can be overridden by machine/endian.h before inclusion of this file.  */
-#ifndef _QUAD_HIGHWORD
-#define _QUAD_HIGHWORD 0
-#endif
-#ifndef _QUAD_LOWWORD
-#define _QUAD_LOWWORD 1
-#endif
-
 #if __BSD_VISIBLE
-#define htole16 __swap16
-#define htole32 __swap32
-#define htole64 __swap64
-#define letoh16 __swap16
-#define letoh32 __swap32
-#define letoh64 __swap64
+#define LITTLE_ENDIAN _LITTLE_ENDIAN
+#define BIG_ENDIAN _BIG_ENDIAN
+#define PDP_ENDIAN _PDP_ENDIAN
+#define BYTE_ORDER _BYTE_ORDER
 
-#define htobe16(x) (x)
-#define htobe32(x) (x)
-#define htobe64(x) (x)
-#define betoh16(x) (x)
-#define betoh32(x) (x)
-#define betoh64(x) (x)
-#endif /* __BSD_VISIBLE */
-
-#define htons(x) (x)
-#define htonl(x) (x)
-#define ntohs(x) (x)
-#define ntohl(x) (x)
-
-/* Bionic additions */
-#define ntohq(x) (x)
-#define htonq(x) (x)
-
-#define __BIG_ENDIAN_BITFIELD
-
-#endif /* _BYTE_ORDER */
-
-#if __BSD_VISIBLE
 #define	NTOHL(x) (x) = ntohl((u_int32_t)(x))
 #define	NTOHS(x) (x) = ntohs((u_int16_t)(x))
 #define	HTONL(x) (x) = htonl((u_int32_t)(x))
 #define	HTONS(x) (x) = htons((u_int16_t)(x))
-#endif
 
+#define htobe16 __swap16
+#define htobe32 __swap32
+#define htobe64 __swap64
+#define betoh16 __swap16
+#define betoh32 __swap32
+#define betoh64 __swap64
 
-#define  __BYTE_ORDER       _BYTE_ORDER
-#ifndef  __LITTLE_ENDIAN
-#define  __LITTLE_ENDIAN    _LITTLE_ENDIAN
-#endif
-#ifndef  __BIG_ENDIAN
-#define  __BIG_ENDIAN       _BIG_ENDIAN
-#endif
+#define htole16(x) (x)
+#define htole32(x) (x)
+#define htole64(x) (x)
+#define letoh16(x) (x)
+#define letoh32(x) (x)
+#define letoh64(x) (x)
 
-
-#ifdef __BSD_VISIBLE
 /*
  * glibc-compatible beXXtoh/leXXtoh synonyms for htobeXX/htoleXX.
  * The BSDs export both sets of names, bionic historically only
@@ -278,6 +101,6 @@ __END_DECLS
 #define le16toh(x) htole16(x)
 #define le32toh(x) htole32(x)
 #define le64toh(x) htole64(x)
-#endif
+#endif /* __BSD_VISIBLE */
 
 #endif /* _SYS_ENDIAN_H_ */
