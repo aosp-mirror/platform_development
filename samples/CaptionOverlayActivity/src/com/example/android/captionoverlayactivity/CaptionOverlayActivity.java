@@ -18,13 +18,21 @@ package com.example.android.captionoverlayactivity;
 
 import android.app.ActionBar;
 import android.app.Activity;
+import android.graphics.Color;
+import android.graphics.Rect;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
+import android.view.Window;
 
 /**
  * A minimal application that overlays caption on the content.
  */
-public class CaptionOverlayActivity extends Activity {
+public class CaptionOverlayActivity extends Activity
+        implements Window.RestrictedCaptionAreaListener {
+    private static final String TAG = "CaptionOverlayActivity";
+
     /**
      * Called with the activity is first created.
      */
@@ -34,16 +42,24 @@ public class CaptionOverlayActivity extends Activity {
         // Overlay the caption on the content.
         overlayWithDecorCaption(true);
         setContentView(R.layout.caption_overlay_layout);
+        getWindow().setRestrictedCaptionAreaListener(this);
+        getWindow().setResizingCaptionDrawable(new ColorDrawable(Color.BLACK));
+        getWindow().setDecorCaptionShade(Window.DECOR_CAPTION_SHADE_AUTO);
 
         View decorView = getWindow().getDecorView();
-        // Hide the status bar, because it likes to consume touch events.
+        //Hide the status bar, because it likes to consume touch events.
         int uiOptions = View.SYSTEM_UI_FLAG_FULLSCREEN;
         decorView.setSystemUiVisibility(uiOptions);
-        // Remember that you should never show the action bar if the
+        //Remember that you should never show the action bar if the
         // status bar is hidden, so hide that too if necessary.
         ActionBar actionBar = getActionBar();
         actionBar.hide();
 
+    }
+
+    @Override
+    public void onRestrictedCaptionAreaChanged(Rect rect) {
+        Log.d(TAG, "rect: " + rect);
     }
 }
 
