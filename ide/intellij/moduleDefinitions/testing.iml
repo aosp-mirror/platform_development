@@ -18,6 +18,7 @@
       <sourceFolder url="file://$MODULE_DIR$/../../../device/dalvik/libcore/junit/src/main/java" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/../../../device/dalvik/libcore/kxml2/src/main/java" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/../../../device/dalvik/libcore/luni-kernel/src/main/java" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/../../../device/dalvik/libcore/ojluni/src/main/java" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/../../../device/dalvik/libcore/luni/src/main/java" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/../../../device/dalvik/libcore/math/src/main/java" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/../../../device/dalvik/libcore/nio/src/main/java" isTestSource="false" />
