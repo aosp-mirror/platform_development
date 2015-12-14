@@ -15,11 +15,31 @@
 -->
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.android.captionoverlayactivity">
-    <application android:label="Caption Overlay">
+    package="com.example.android.multiwindow">
+    <application android:label="Multi Window">
         <activity android:name=".CaptionOverlayActivity"
+                android:label="Caption Overlay"
                 android:resizeableActivity="true"
                 android:theme="@android:style/Theme.Holo.Light">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".LaunchingToSideActivity"
+            android:label="Launch To Side"
+            android:resizeableActivity="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".MoveTaskToSideActivity"
+                android:label="Move to side"
+                android:resizeableActivity="true"
+                android:taskAffinity="">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
