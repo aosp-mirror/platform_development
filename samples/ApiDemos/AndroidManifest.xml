@@ -2137,6 +2137,14 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".inputmethod.ShowInputMethodAndSubtypeEnabler"
+                  android:label="Views/Input Method/ShowInputMethodAndSubtypeEnabler">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
         <activity android:name=".view.EditTextDemo"
                   android:label="Views/Text/EditText">
             <intent-filter>
