@@ -10,7 +10,7 @@ If you're using IntelliJ...
         in "IDEA_HOME/bin/idea.vmoptions" on Linux or
         "IntelliJ IDEA.app/Contents/Info.plist" on OS X.
 
-        Create a JDK configuration named "1.6 (No Libraries)" by adding a new
+        Create a JDK configuration named "1.7 (No Libraries)" by adding a new
         JDK like you normally would and then removing all of the jar entries
         under the "Classpath" tab. This will ensure that you only get access to
         Android's core libraries and not those from your desktop VM.
@@ -36,7 +36,7 @@ If you're using Eclipse...
         Edit eclipse.ini ("Eclipse.app/Contents/MacOS/eclipse.ini" on OS X) and
         add "-Xms748m -Xmx748m" to your VM options.
 
-        Configure a JRE named "1.5 (No Libraries)" under "Preferences -> Java ->
+        Configure a JRE named "1.7 (No Libraries)" under "Preferences -> Java ->
         Installed JREs". Remove all of the jar entries underneath "JRE system
         libraries". Eclipse will not let you save your configuration unless at
         least one jar is present, so include a random jar that won't get in the
