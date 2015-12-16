@@ -57,8 +57,9 @@ $(jack_lib) : $(full_target) $(JILL_JAR) $(JACK)
 
 $(call define-jar-to-toc-rule, $(full_target))
 
-# As we don't have .dex file for the SDK stub, we cannot use .toc
-# optimization for it. We update the timestamp of .toc file whenever
-# .jack is updated so dependents will be always rebuilt.
-$(dex_toc): $(jack_lib)
-	touch $@
+# As we don't have .dex file for the SDK stub, we cannot generate .toc
+# file from .dex file. Use .toc file generated from .jar instead.
+$(dex_toc): $(full_target).toc $(jack_lib)
+	$(hide) cp $< $@.tmp
+	$(call commit-change-for-toc, $@)
+.KATI_RESTAT: $(dex_toc)
