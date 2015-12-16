@@ -106,9 +106,9 @@ def _ParseAndFilterOutput(stdout, sha, last_commit_modified_files):
     file_name = os.path.relpath(file_name)
     errors = file_element.getElementsByTagName('error')
     for error in errors:
-      line = error.attributes['line'].value
-      if last_commit_modified_files and int(line) not in modified_lines:
-        if error.attributes['source'].value not in FORCED_RULES:
+      line = int(error.attributes['line'].value)
+      rule = error.attributes['source'].value
+      if last_commit_modified_files and _ShouldSkip(modified_lines, line, rule):
           continue
 
       column = ''
@@ -123,6 +123,12 @@ def _ParseAndFilterOutput(stdout, sha, last_commit_modified_files):
       elif severity == 'warning':
         result_warnings.append(result)
   return (result_errors, result_warnings)
+
+
+# Returns whether an error on a given line should be skipped
+# based on the modified_lines list and the rule.
+def _ShouldSkip(modified_lines, line, rule):
+  return modified_lines and line not in modified_lines and rule not in FORCED_RULES
 
 
 def _GetModifiedFiles():
