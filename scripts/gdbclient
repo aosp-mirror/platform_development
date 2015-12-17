@@ -131,28 +131,23 @@ function gdbclient() {
     adb pull /system/bin/linker$USE64BIT $SYMBOLS_DIR/system/bin/linker$USE64BIT
   fi
 
-  local GDB=
-  local GDB64=
+  local GDB
+  case $(uname -s) in
+    Darwin)
+      GDB=$ANDROID_BUILD_TOP/prebuilts/gdb/darwin-x86/bin/gdb
+      ;;
+
+    Linux)
+      GDB=$ANDROID_BUILD_TOP/prebuilts/gdb/linux-x86/bin/gdb
+      ;;
+
+    *)
+      echo "Error: Unknown platform '$(uname -s)'"
+      return 1
+      ;;
+  esac
+
   local CPU_ABI=`adb shell getprop ro.product.cpu.abilist | tr -d '\r\n'`
-  # TODO: Derive this differently to correctly support multi-arch. We could try to parse
-  #       /proc/pid/exe. Right now, we prefer 64bit by checking those entries first.
-  # TODO: Correctly support native bridge, which makes parsing abilist very brittle.
-  # Note: Do NOT sort the entries alphabetically because of this. Fugu's abilist is
-  #       "x86,armeabi-v7a,armeabi", and we need to grab the "x86".
-  # TODO: we assume these are available via $PATH
-  if [[ $CPU_ABI =~ (^|,)arm64 ]]; then
-    GDB=arm-linux-androideabi-gdb
-    GDB64=aarch64-linux-android-gdb
-  elif [[ $CPU_ABI =~ (^|,)x86 ]]; then    # x86 (32-bit and 64-bit) is unified.
-    GDB=x86_64-linux-android-gdb
-  elif [[ $CPU_ABI =~ (^|,)mips ]]; then   # Mips (32-bit and 64-bit) is unified.
-    GDB=mips64el-linux-android-gdb
-  elif [[ $CPU_ABI =~ (^|,)arm ]]; then    # See note above for order.
-    GDB=arm-linux-androideabi-gdb
-  else
-    echo "Error: unrecognized cpu.abilist: $CPU_ABI"
-    return -6
-  fi
 
   # TODO: check if tracing process is gdbserver and not some random strace...
   if [ "$(adb_get_traced_by $PID)" -eq 0 ]; then
@@ -201,13 +196,7 @@ function gdbclient() {
 
   echo >>"$OUT_ROOT/gdbclient.cmds" ""
 
-  local WHICH_GDB=$GDB
-
-  if [ -n "$USE64BIT" -a -n "$GDB64" ]; then
-    WHICH_GDB=$GDB64
-  fi
-
-  gdbwrapper $WHICH_GDB "$OUT_ROOT/gdbclient.cmds" "$LOCAL_EXE_PATH"
+  gdbwrapper $GDB "$OUT_ROOT/gdbclient.cmds" "$LOCAL_EXE_PATH"
 }
 
 gdbclient $*
