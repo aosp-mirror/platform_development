@@ -32,6 +32,8 @@ CHECKSTYLE_JAR = os.path.join(MAIN_DIRECTORY, 'checkstyle.jar')
 CHECKSTYLE_STYLE = os.path.join(MAIN_DIRECTORY, 'android-style.xml')
 FORCED_RULES = ['com.puppycrawl.tools.checkstyle.checks.imports.ImportOrderCheck',
                 'com.puppycrawl.tools.checkstyle.checks.imports.UnusedImportsCheck']
+ERROR_UNCOMMITTED = 'You need to commit all modified files before running Checkstyle\n'
+ERROR_UNTRACKED = 'You have untracked java files that are not being checked:\n'
 
 def RunCheckstyle(java_files):
   if not os.path.exists(CHECKSTYLE_STYLE):
@@ -131,15 +133,23 @@ def _ShouldSkip(modified_lines, line, rule):
   return modified_lines and line not in modified_lines and rule not in FORCED_RULES
 
 
-def _GetModifiedFiles():
+def _GetModifiedFiles(out = sys.stdout):
   root = git.repository_root()
   sha = git.last_commit()
-  working_files = git.modified_files(root)
-  if working_files:
-    print 'You need to commit all the files before running Checkstyle'
+  pending_files = git.modified_files(root, True)
+  if pending_files:
+    out.write(ERROR_UNCOMMITTED)
     sys.exit(1)
+  untracked_files = git.modified_files(root, False)
+  untracked_files = {f for f in untracked_files if f.endswith('.java')}
+  if untracked_files:
+    out.write(ERROR_UNTRACKED)
+    for untracked_file in untracked_files:
+      out.write(untracked_file + '\n')
+    out.write('\n')
+
   modified_files = git.modified_files(root, True, sha)
-  modified_files = {os.path.abspath(f): modified_files[f] for f
+  modified_files = {f: modified_files[f] for f
                     in modified_files if f.endswith('.java')}
   return (sha, modified_files)
 
