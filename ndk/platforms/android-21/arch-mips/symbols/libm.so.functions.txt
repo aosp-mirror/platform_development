@@ -1,7 +1,3 @@
-__fixdfdi
-__fixsfdi
-__fixunsdfdi
-__fixunssfdi
 __signbit
 __signbitf
 __signbitl
