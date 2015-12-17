@@ -8,6 +8,7 @@ __b64_ntop
 __b64_pton
 __cmsg_nxthdr
 __ctype_get_mb_cur_max
+__cxa_atexit
 __cxa_finalize
 __dn_comp
 __dn_count_labels
