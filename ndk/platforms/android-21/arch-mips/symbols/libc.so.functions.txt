@@ -107,7 +107,6 @@ __res_nsend
 __res_ownok
 __res_queriesmatch
 __res_querydomain
-__res_randomid
 __res_send
 __res_send_setqhook
 __res_send_setrhook
@@ -276,7 +275,6 @@ duplocale
 endmntent
 endpwent
 endservent
-endusershell
 endutent
 epoll_create
 epoll_create1
@@ -448,7 +446,6 @@ getsockopt
 gettid
 gettimeofday
 getuid
-getusershell
 getutent
 getwc
 getwchar
@@ -870,7 +867,6 @@ setsockopt
 setstate
 settimeofday
 setuid
-setusershell
 setutent
 setvbuf
 setxattr
