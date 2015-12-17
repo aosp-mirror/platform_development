@@ -1,6 +1,3 @@
-__bionic_brk
-__bionic_libgcc_compat_symbols
-__dso_handle
 __isthreaded
 __p_class_syms
 __p_type_syms

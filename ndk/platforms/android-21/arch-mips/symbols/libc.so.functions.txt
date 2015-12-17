@@ -1,13 +1,7 @@
-SHA1Final
-SHA1Init
-SHA1Transform
-SHA1Update
 _Exit
-_Z16__libc_init_vdsov
 __FD_CLR_chk
 __FD_ISSET_chk
 __FD_SET_chk
-__accept4
 __assert
 __assert2
 __b64_ntop
@@ -16,7 +10,6 @@ __brk
 __cmsg_nxthdr
 __connect
 __ctype_get_mb_cur_max
-__cxa_atexit
 __cxa_finalize
 __divdi3
 __dn_comp
@@ -114,7 +107,6 @@ __res_nsend
 __res_ownok
 __res_queriesmatch
 __res_querydomain
-__res_randomid
 __res_send
 __res_send_setqhook
 __res_send_setrhook
@@ -273,7 +265,6 @@ dirfd
 dirname
 dirname_r
 div
-dlmalloc_usable_size
 dn_expand
 dprintf
 drand48
@@ -284,7 +275,6 @@ duplocale
 endmntent
 endpwent
 endservent
-endusershell
 endutent
 epoll_create
 epoll_create1
@@ -456,7 +446,6 @@ getsockopt
 gettid
 gettimeofday
 getuid
-getusershell
 getutent
 getwc
 getwchar
@@ -878,7 +867,6 @@ setsockopt
 setstate
 settimeofday
 setuid
-setusershell
 setutent
 setvbuf
 setxattr
