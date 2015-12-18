@@ -33,6 +33,9 @@ __floatunsidf
 __floatunsisf
 __fp_nquery
 __fp_query
+__fpclassifyd
+__fpclassifyf
+__fpclassifyl
 __fstatfs64
 __futex_wait
 __futex_wake
@@ -46,6 +49,16 @@ __gnu_uldivmod_helper
 __gtdf2
 __hostalias
 __ioctl
+__isfinite
+__isfinitef
+__isfinitel
+__isinf
+__isinff
+__isinfl
+__isnanl
+__isnormal
+__isnormalf
+__isnormall
 __ledf2
 __libc_init
 __llseek
@@ -405,6 +418,8 @@ iscntrl
 isdigit
 isgraph
 islower
+isnan
+isnanf
 isprint
 ispunct
 issetugid
