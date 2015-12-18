@@ -10,6 +10,7 @@ __brk
 __cmsg_nxthdr
 __connect
 __ctype_get_mb_cur_max
+__cxa_atexit
 __cxa_finalize
 __divdi3
 __dn_comp
