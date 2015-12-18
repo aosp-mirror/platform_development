@@ -12,6 +12,9 @@ __errno
 __fcntl64
 __fp_nquery
 __fp_query
+__fpclassifyd
+__fpclassifyf
+__fpclassifyl
 __fstatfs64
 __futex_wait
 __futex_wake
@@ -22,6 +25,16 @@ __getcwd
 __getpriority
 __hostalias
 __ioctl
+__isfinite
+__isfinitef
+__isfinitel
+__isinf
+__isinff
+__isinfl
+__isnanl
+__isnormal
+__isnormalf
+__isnormall
 __libc_init
 __llseek
 __loc_aton
@@ -368,6 +381,8 @@ iscntrl
 isdigit
 isgraph
 islower
+isnan
+isnanf
 isprint
 ispunct
 issetugid

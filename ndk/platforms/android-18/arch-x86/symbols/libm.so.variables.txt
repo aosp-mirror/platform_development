@@ -1,3 +1,2 @@
 __fe_dfl_env
-__has_sse
 signgam
