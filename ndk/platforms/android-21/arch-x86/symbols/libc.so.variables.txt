@@ -3,7 +3,6 @@ __p_class_syms
 __p_type_syms
 __page_shift
 __page_size
-__popcount_tab
 __progname
 __sF
 __stack_chk_guard
