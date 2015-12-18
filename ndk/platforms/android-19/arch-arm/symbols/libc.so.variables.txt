@@ -3,7 +3,6 @@ _C_tolower_
 _C_toupper_
 __atexit
 __atexit_invalid
-__bionic_brk
 __isthreaded
 __libc_malloc_default_dispatch
 __libc_malloc_dispatch
