@@ -762,6 +762,7 @@ utime
 utimes
 utimensat
 utmpname
+utimensat
 valloc
 vasprintf
 verr
