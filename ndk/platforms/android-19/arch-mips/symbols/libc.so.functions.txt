@@ -1,10 +1,6 @@
 MD5_Final
 MD5_Init
 MD5_Update
-SHA1Final
-SHA1Init
-SHA1Transform
-SHA1Update
 __arc4_getbyte
 __assert
 __assert2
@@ -225,7 +221,6 @@ asctime64
 asctime64_r
 asctime_r
 asprintf
-atexit
 atoi
 atol
 atoll
@@ -278,12 +273,9 @@ dlfree
 dlindependent_calloc
 dlindependent_comalloc
 dlmallinfo
-dlmalloc
 dlmalloc_footprint
 dlmalloc_max_footprint
 dlmalloc_stats
-dlmalloc_trim
-dlmalloc_usable_size
 dlmalloc_walk_free_pages
 dlmalloc_walk_heap
 dlmallopt
