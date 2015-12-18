@@ -749,10 +749,9 @@ unlockpt
 unsetenv
 usleep
 utime
+utimensat
 utimes
-utimensat
 utmpname
-utimensat
 valloc
 vasprintf
 verr
