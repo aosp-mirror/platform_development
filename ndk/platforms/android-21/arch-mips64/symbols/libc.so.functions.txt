@@ -58,7 +58,6 @@ __p_time
 __p_type
 __pthread_cleanup_pop
 __pthread_cleanup_push
-__pthread_gettid
 __putlong
 __putshort
 __read_chk
@@ -206,7 +205,6 @@ dup2
 dup3
 duplocale
 endmntent
-endpwent
 endservent
 endutent
 epoll_create

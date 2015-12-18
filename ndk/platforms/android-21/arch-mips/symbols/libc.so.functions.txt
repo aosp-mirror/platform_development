@@ -179,8 +179,6 @@ _flush_cache
 _getlong
 _getshort
 _longjmp
-_memset16
-_memset32
 _resolv_delete_cache_for_net
 _resolv_flush_cache_for_net
 _resolv_set_nameservers_for_net
