@@ -12,11 +12,11 @@
       <property name="severity" value="info"/>
     </module>
     <module name="RedundantImport">
-      <message key="import.redundant" value="Redundant import: {0}. Use :JavaImportOrganize (ECLIM) or Ctrl+Shift+O (Eclipse) to sort imports"/>
+      <message key="import.redundant" value="Redundant import: {0}. Use Ctrl+Shift+O (Eclipse) or Ctrl+Alt+O (Intellij) to sort imports"/>
       <property name="severity" value="error"/>
     </module>
     <module name="UnusedImports">
-      <message key="import.unused" value="Unused import: {0}. Use :JavaImportOrganize (ECLIM) or Ctrl+Shift+O (Eclipse) to sort imports"/>
+      <message key="import.unused" value="Unused import: {0}. Use Ctrl+Shift+O (Eclipse) or Ctrl+Alt+O (Intellij) to sort imports"/>
       <property name="severity" value="error"/>
       <property name="processJavadoc" value="true"/>
     </module>
@@ -160,8 +160,8 @@
     </module>
     <module name="ImportOrder">
       <property name="severity" value="error"/>
-      <message key="import.ordering" value="Wrong order for {0} import. Use :JavaImportOrganize (ECLIM) or Ctrl+Shift+O (Eclipse) to sort imports"/>
-      <property name="groups" value="android, com, dalvik, gov, junit, libcore, net, org, java, javax"/>
+      <message key="import.ordering" value="Wrong order for {0} import. Use Ctrl+Shift+O (Eclipse) or Ctrl+Alt+O (Intellij) to sort imports"/>
+      <property name="groups" value="android, com.android, dalvik, com, gov, junit, libcore, net, org, java, javax"/>
       <property name="ordered" value="true"/>
       <property name="option" value="top"/>
       <property name="separated" value="true"/>
