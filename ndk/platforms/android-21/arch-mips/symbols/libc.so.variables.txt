@@ -1,8 +1,6 @@
 __isthreaded
 __p_class_syms
 __p_type_syms
-__page_shift
-__page_size
 __progname
 __sF
 __stack_chk_guard

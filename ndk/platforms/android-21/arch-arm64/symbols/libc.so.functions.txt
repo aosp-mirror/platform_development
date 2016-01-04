@@ -309,7 +309,6 @@ fwprintf
 fwrite
 fwscanf
 gai_strerror
-get_malloc_leak_info
 getaddrinfo
 getauxval
 getc
