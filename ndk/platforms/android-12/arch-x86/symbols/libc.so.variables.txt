@@ -3,7 +3,6 @@ _C_tolower_
 _C_toupper_
 __atexit
 __atexit_invalid
-__bionic_brk
 __isthreaded
 __libc_malloc_default_dispatch
 __libc_malloc_dispatch
@@ -12,15 +11,11 @@ __p_class_syms
 __p_key_syms
 __p_rcode_syms
 __p_type_syms
-__page_shift
-__page_size
 __progname
 __rand48_add
 __rand48_mult
 __rand48_seed
 __sF
-__sdidinit
-__sglue
 __stack_chk_guard
 __system_property_area__
 _ctype_

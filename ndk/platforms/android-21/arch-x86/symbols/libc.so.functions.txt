@@ -12,7 +12,6 @@ __connect
 __ctype_get_mb_cur_max
 __cxa_atexit
 __cxa_finalize
-__divdi3
 __dn_comp
 __dn_count_labels
 __dn_skipname
@@ -29,14 +28,9 @@ __fpclassifyd
 __fpclassifyf
 __fpclassifyl
 __fstatfs64
-__futex_wait
-__futex_wake
 __get_h_errno
-__get_thread
-__get_tls
 __getcpu
 __getcwd
-__getdents64
 __getpid
 __getpriority
 __hostalias
@@ -86,7 +80,6 @@ __ns_samename
 __ns_skiprr
 __ns_sprintrr
 __ns_sprintrrf
-__open
 __open_2
 __openat
 __openat_2
@@ -101,7 +94,6 @@ __p_rcode
 __p_secstodate
 __p_time
 __p_type
-__popcountsi2
 __ppoll
 __pselect6
 __pthread_cleanup_pop
@@ -149,8 +141,6 @@ __sigaction
 __snprintf_chk
 __socket
 __sprintf_chk
-__srefill
-__srget
 __stack_chk_fail
 __statfs64
 __stpcpy_chk
@@ -166,8 +156,6 @@ __strncat_chk
 __strncpy_chk
 __strncpy_chk2
 __strrchr_chk
-__swbuf
-__swsetup
 __sym_ntop
 __sym_ntos
 __sym_ston
@@ -189,12 +177,9 @@ __timer_delete
 __timer_getoverrun
 __timer_gettime
 __timer_settime
-__udivdi3
 __umask_chk
-__umoddi3
 __vsnprintf_chk
 __vsprintf_chk
-__wait4
 __waitid
 _exit
 _getlong
@@ -399,7 +384,6 @@ fwprintf
 fwrite
 fwscanf
 gai_strerror
-get_malloc_leak_info
 getaddrinfo
 getauxval
 getc
