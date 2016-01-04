@@ -5,7 +5,6 @@ __b64_pton
 __brk
 __cxa_atexit
 __cxa_finalize
-__divdi3
 __dn_comp
 __dn_count_labels
 __dn_skipname
@@ -17,11 +16,7 @@ __fpclassifyd
 __fpclassifyf
 __fpclassifyl
 __fstatfs64
-__futex_wait
-__futex_wake
 __get_h_errno
-__get_thread
-__get_tls
 __getcwd
 __getpriority
 __hostalias
@@ -64,7 +59,6 @@ __ns_samename
 __ns_skiprr
 __ns_sprintrr
 __ns_sprintrrf
-__open
 __openat
 __p_cdname
 __p_cdnname
@@ -107,12 +101,8 @@ __rt_sigaction
 __rt_sigprocmask
 __rt_sigtimedwait
 __set_thread_area
-__srefill
-__srget
 __stack_chk_fail
 __statfs64
-__swbuf
-__swsetup
 __sym_ntop
 __sym_ntos
 __sym_ston
@@ -126,9 +116,6 @@ __timer_delete
 __timer_getoverrun
 __timer_gettime
 __timer_settime
-__udivdi3
-__umoddi3
-__wait4
 __waitid
 _exit
 _getlong
@@ -283,7 +270,6 @@ fwprintf
 fwrite
 fwscanf
 gai_strerror
-get_malloc_leak_info
 getaddrinfo
 getc
 getc_unlocked
