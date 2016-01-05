@@ -28,7 +28,7 @@ int writePNGFile(const char* pOutput, png_uint_32 width, png_uint_32 height,
 const char* gpExeName;
 
 static
-void usage(char* message, ...) {
+void usage(const char* message, ...) {
     if (message) {
         va_list ap;
         va_start(ap, message);
@@ -97,11 +97,11 @@ int changeExtension(char* pPath, size_t pathCapacity, const char* pExtension) {
     return 0;
 }
 
-void PNGAPI user_error_fn(png_structp png_ptr, png_const_charp message) {
+void PNGAPI user_error_fn(png_structp /*png_ptr*/, png_const_charp message) {
     fprintf(stderr, "PNG error: %s\n", message);
 }
 
-void PNGAPI user_warning_fn(png_structp png_ptr, png_const_charp message) {
+void PNGAPI user_warning_fn(png_structp /*png_ptr*/, png_const_charp message) {
     fprintf(stderr, "PNG warning: %s\n", message);
 }
 
