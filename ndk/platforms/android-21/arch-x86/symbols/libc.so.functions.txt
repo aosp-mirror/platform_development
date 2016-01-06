@@ -222,7 +222,6 @@ bindresvport
 brk
 bsearch
 btowc
-bzero
 c16rtomb
 c32rtomb
 calloc
