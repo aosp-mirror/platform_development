@@ -162,7 +162,6 @@ bindresvport
 brk
 bsearch
 btowc
-bzero
 cacheflush
 calloc
 capget

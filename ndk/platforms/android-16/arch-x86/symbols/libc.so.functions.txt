@@ -200,7 +200,6 @@ bindresvport
 brk
 bsearch
 btowc
-bzero
 calloc
 capget
 capset
