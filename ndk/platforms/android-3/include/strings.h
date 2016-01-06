@@ -43,10 +43,10 @@
 #include <sys/cdefs.h>
 
 __BEGIN_DECLS
-void	 bcopy(const void *, void *, size_t);
-void	 bzero(void *, size_t);
+#define bcopy(b1, b2, len) (void)(__builtin_memmove((b2), (b1), (len)))
+#define bzero(b, len) (void)(__builtin_memset((b), '\0', (len)))
+
 int	 ffs(int);
-char	*index(const char *, int);
 int	 strcasecmp(const char *, const char *);
 int	 strncasecmp(const char *, const char *, size_t);
 #if 0 /* MISSING FROM BIONIC */
