@@ -203,9 +203,7 @@ acct
 alarm
 alphasort
 arc4random
-arc4random_addrandom
 arc4random_buf
-arc4random_stir
 arc4random_uniform
 asctime
 asctime64
@@ -217,11 +215,9 @@ atol
 atoll
 basename
 basename_r
-bcopy
 bind
 bindresvport
 brk
-bsd_signal
 bsearch
 btowc
 bzero
@@ -278,7 +274,6 @@ dn_expand
 drand48
 dup
 dup2
-endpwent
 endservent
 endusershell
 endutent
@@ -308,7 +303,6 @@ fcntl
 fdatasync
 fdopen
 fdopendir
-fdprintf
 feof
 ferror
 fflush
@@ -347,7 +341,6 @@ fstatfs
 fsync
 ftell
 ftello
-ftime
 ftok
 ftruncate
 ftruncate64
@@ -371,8 +364,6 @@ getc_unlocked
 getchar
 getchar_unlocked
 getcwd
-getdents
-getdtablesize
 getegid
 getenv
 geteuid
@@ -433,7 +424,6 @@ herror
 hstrerror
 if_indextoname
 if_nametoindex
-index
 inet_addr
 inet_aton
 inet_nsap_addr
@@ -460,7 +450,6 @@ isgraph
 islower
 isprint
 ispunct
-issetugid
 isspace
 isupper
 iswalnum
@@ -514,7 +503,6 @@ memmem
 memmove
 memrchr
 memset
-memswap
 mincore
 mkdir
 mkdirat
@@ -563,7 +551,6 @@ pthread_attr_getschedparam
 pthread_attr_getschedpolicy
 pthread_attr_getscope
 pthread_attr_getstack
-pthread_attr_getstackaddr
 pthread_attr_getstacksize
 pthread_attr_init
 pthread_attr_setdetachstate
@@ -572,7 +559,6 @@ pthread_attr_setschedparam
 pthread_attr_setschedpolicy
 pthread_attr_setscope
 pthread_attr_setstack
-pthread_attr_setstackaddr
 pthread_attr_setstacksize
 pthread_cond_broadcast
 pthread_cond_destroy
@@ -772,8 +758,6 @@ strncmp
 strncpy
 strndup
 strnlen
-strntoimax
-strntoumax
 strpbrk
 strptime
 strrchr
@@ -787,7 +771,6 @@ strtok
 strtok_r
 strtol
 strtoll
-strtotimeval
 strtoul
 strtoull
 strtoumax
@@ -802,7 +785,6 @@ sysinfo
 syslog
 syslog_r
 system
-sysv_signal
 tcgetpgrp
 tcsetpgrp
 tempnam
@@ -815,7 +797,6 @@ timer_getoverrun
 timer_gettime
 timer_settime
 times
-tkill
 tmpfile
 tmpnam
 toascii
@@ -846,7 +827,6 @@ valloc
 vasprintf
 verr
 verrx
-vfdprintf
 vfork
 vfprintf
 vfscanf
@@ -863,7 +843,6 @@ vwarn
 vwarnx
 vwprintf
 wait
-wait3
 waitid
 waitpid
 warn
@@ -898,7 +877,6 @@ wcstok
 wcstol
 wcstombs
 wcstoul
-wcswcs
 wcswidth
 wcsxfrm
 wctob

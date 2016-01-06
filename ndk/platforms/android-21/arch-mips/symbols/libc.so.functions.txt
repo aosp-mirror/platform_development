@@ -98,7 +98,6 @@ __ppoll
 __pselect6
 __pthread_cleanup_pop
 __pthread_cleanup_push
-__pthread_gettid
 __ptrace
 __putlong
 __putshort
@@ -134,7 +133,6 @@ __sched_cpualloc
 __sched_cpucount
 __sched_cpufree
 __sched_getaffinity
-__set_errno
 __set_tid_address
 __set_tls
 __sigaction
@@ -206,9 +204,7 @@ android_gethostbyaddrfornet
 android_gethostbynamefornet
 android_set_abort_message
 arc4random
-arc4random_addrandom
 arc4random_buf
-arc4random_stir
 arc4random_uniform
 asctime
 asctime64
@@ -222,11 +218,9 @@ atol
 atoll
 basename
 basename_r
-bcopy
 bind
 bindresvport
 brk
-bsd_signal
 bsearch
 btowc
 bzero
@@ -279,7 +273,6 @@ dup2
 dup3
 duplocale
 endmntent
-endpwent
 endservent
 endutent
 epoll_create
@@ -318,7 +311,6 @@ fcntl
 fdatasync
 fdopen
 fdopendir
-fdprintf
 feof
 ferror
 fflush
@@ -366,7 +358,6 @@ fstatvfs64
 fsync
 ftell
 ftello
-ftime
 ftok
 ftruncate
 ftruncate64
@@ -394,8 +385,6 @@ getchar
 getchar_unlocked
 getcwd
 getdelim
-getdents
-getdtablesize
 getegid
 getenv
 geteuid
@@ -468,7 +457,6 @@ if_indextoname
 if_nametoindex
 imaxabs
 imaxdiv
-index
 inet_addr
 inet_aton
 inet_lnaof
@@ -521,7 +509,6 @@ isprint
 isprint_l
 ispunct
 ispunct_l
-issetugid
 isspace
 isspace_l
 isupper
@@ -607,7 +594,6 @@ memmem
 memmove
 memrchr
 memset
-memswap
 mincore
 mkdir
 mkdirat
@@ -681,7 +667,6 @@ pthread_attr_getschedparam
 pthread_attr_getschedpolicy
 pthread_attr_getscope
 pthread_attr_getstack
-pthread_attr_getstackaddr
 pthread_attr_getstacksize
 pthread_attr_init
 pthread_attr_setdetachstate
@@ -690,7 +675,6 @@ pthread_attr_setschedparam
 pthread_attr_setschedpolicy
 pthread_attr_setscope
 pthread_attr_setstack
-pthread_attr_setstackaddr
 pthread_attr_setstacksize
 pthread_cond_broadcast
 pthread_cond_destroy
@@ -935,8 +919,6 @@ strncmp
 strncpy
 strndup
 strnlen
-strntoimax
-strntoumax
 strpbrk
 strptime
 strrchr
@@ -955,7 +937,6 @@ strtold_l
 strtoll
 strtoll_l
 strtoq
-strtotimeval
 strtoul
 strtoull
 strtoull_l
@@ -975,7 +956,6 @@ sysconf
 sysinfo
 syslog
 system
-sysv_signal
 tcdrain
 tcflow
 tcflush
@@ -1005,7 +985,6 @@ timerfd_create
 timerfd_gettime
 timerfd_settime
 times
-tkill
 tmpfile
 tmpnam
 toascii
@@ -1046,7 +1025,6 @@ vasprintf
 vdprintf
 verr
 verrx
-vfdprintf
 vfork
 vfprintf
 vfscanf
@@ -1066,7 +1044,6 @@ vwarnx
 vwprintf
 vwscanf
 wait
-wait3
 wait4
 waitid
 waitpid
@@ -1113,7 +1090,6 @@ wcstoul
 wcstoull
 wcstoull_l
 wcstoumax
-wcswcs
 wcswidth
 wcsxfrm
 wcsxfrm_l
