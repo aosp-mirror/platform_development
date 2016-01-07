@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 The Android Open Source Project
+ * Copyright (C) 2016 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,4 +16,15 @@
 
 package com.example.android.apis.view;
 
-public class Controls5 extends Controls1 {}
+import android.app.Activity;
+import android.os.Bundle;
+
+public class ControlsMaterialLight extends Activity {
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        setContentView(com.example.android.apis.R.layout.controls_material);
+    }
+}
