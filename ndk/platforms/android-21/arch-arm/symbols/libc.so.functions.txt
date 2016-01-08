@@ -49,6 +49,7 @@ __getcpu
 __getcwd
 __getpid
 __getpriority
+__gnu_Unwind_Find_exidx
 __hostalias
 __ioctl
 __isfinite
