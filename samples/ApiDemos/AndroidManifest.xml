@@ -2317,7 +2317,7 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".view.Controls5"
+        <activity android:name=".view.ControlsMaterialLight"
                   android:label="Views/Controls/5. Material Light Theme"
                   android:theme="@android:style/Theme.Material.Light"
                   android:enabled="@bool/atLeastLRelease">
@@ -2327,7 +2327,7 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".view.Controls6"
+        <activity android:name=".view.ControlsMaterialDark"
                   android:label="Views/Controls/6. Material Dark Theme"
                   android:theme="@android:style/Theme.Material"
                   android:enabled="@bool/atLeastLRelease">
