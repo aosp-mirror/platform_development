@@ -469,6 +469,8 @@
 
     <string name="activity_changed_contact">Content/Provider/Changed Contacts</string>
 
+    <string name="activity_media_content_observer">Content/Provider/Media Content Observer</string>
+
     <string name="activity_install_apk">Content/Packages/Install Apk</string>
 
     <string name="ir_send">Send IR</string>
