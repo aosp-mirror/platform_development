@@ -36,6 +36,7 @@ __fstatfs64
 __get_h_errno
 __getcwd
 __getpriority
+__gnu_Unwind_Find_exidx
 __hostalias
 __ioctl
 __isfinite
