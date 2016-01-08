@@ -52,6 +52,7 @@ __get_res_cache
 __get_stack_base
 __getcwd
 __getpriority
+__gnu_Unwind_Find_exidx
 __hostalias
 __init_tls
 __ioctl
