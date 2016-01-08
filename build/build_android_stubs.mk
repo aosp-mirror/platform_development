@@ -25,10 +25,11 @@ src_dir := $(intermediates)/src
 classes_dir := $(intermediates)/classes
 framework_res_package := $(call intermediates-dir-for,APPS,framework-res,,COMMON)/package-export.apk
 
-$(full_target): PRIVATE_SRC_DIR := $(src_dir)
-$(full_target): PRIVATE_INTERMEDIATES_DIR := $(intermediates)
+$(full_target) $(jack_lib): PRIVATE_SRC_DIR := $(src_dir)
+$(full_target) $(jack_lib): PRIVATE_INTERMEDIATES_DIR := $(intermediates)
+$(full_target) $(jack_lib): PRIVATE_FRAMEWORK_RES_PACKAGE := $(framework_res_package)
+
 $(full_target): PRIVATE_CLASS_INTERMEDIATES_DIR := $(classes_dir)
-$(full_target): PRIVATE_FRAMEWORK_RES_PACKAGE := $(framework_res_package)
 
 $(full_target): $(stub_timestamp) $(framework_res_package)
 	@echo Compiling SDK Stubs: $@
@@ -52,8 +53,25 @@ $(full_target): $(stub_timestamp) $(framework_res_package)
 	$(hide) jar -cf $@ -C $(PRIVATE_CLASS_INTERMEDIATES_DIR) .
 	$(hide) jar -u0f $@ -C $(PRIVATE_CLASS_INTERMEDIATES_DIR) resources.arsc
 
-$(jack_lib) : $(full_target) $(JILL_JAR) $(JACK) | setup-jack-server
-	$(transform-jar-to-jack)
+$(jack_lib) : $(stub_timestamp) $(framework_res_package) $(JACK) | setup-jack-server
+	@echo Compiling SDK Stubs with Jack: $@
+	rm -rf $(PRIVATE_INTERMEDIATES_DIR)/jack-rsc.tmp
+	$(hide) if [ ! -f $(PRIVATE_FRAMEWORK_RES_PACKAGE) ]; then \
+		echo Missing file $(PRIVATE_FRAMEWORK_RES_PACKAGE); \
+		rm -rf $(PRIVATE_CLASS_INTERMEDIATES_DIR); \
+		exit 1; \
+	fi;
+	mkdir -p $(PRIVATE_INTERMEDIATES_DIR)/jack-rsc.tmp
+	$(hide) unzip -qo $(PRIVATE_FRAMEWORK_RES_PACKAGE) -d $(PRIVATE_INTERMEDIATES_DIR)/jack-rsc.tmp
+	$(hide) mkdir -p $(dir $@)
+	$(hide) find $(PRIVATE_SRC_DIR) -name "*.java" > \
+		$(PRIVATE_INTERMEDIATES_DIR)/jack-rsc.java-source-list
+	$(call call-jack) \
+		--import-resource $(PRIVATE_INTERMEDIATES_DIR)/jack-rsc.tmp \
+		--output-jack $@ \
+		@$(PRIVATE_INTERMEDIATES_DIR)/jack-rsc.java-source-list \
+		|| ( rm -f $@ ; $(PRIVATE_INTERMEDIATES_DIR)/jack-rsc.tmp ; exit 41 )
+	$(hide) rm -rf $(PRIVATE_INTERMEDIATES_DIR)/jack-rsc.tmp
 
 $(call define-jar-to-toc-rule, $(full_target))
 
