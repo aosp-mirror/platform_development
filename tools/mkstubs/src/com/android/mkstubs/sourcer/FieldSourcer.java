@@ -16,10 +16,11 @@
 
 package com.android.mkstubs.sourcer;
 
+import com.android.mkstubs.Main;
+
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.Attribute;
 import org.objectweb.asm.FieldVisitor;
-import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.signature.SignatureReader;
 
@@ -35,7 +36,7 @@ class FieldSourcer extends FieldVisitor {
     private final String mSignature;
 
     public FieldSourcer(Output output, int access, String name, String desc, String signature) {
-        super(Opcodes.ASM4);
+        super(Main.ASM_VERSION);
         mOutput = output;
         mAccess = access;
         mName = name;

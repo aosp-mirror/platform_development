@@ -16,7 +16,8 @@
 
 package com.android.mkstubs.sourcer;
 
-import org.objectweb.asm.Opcodes;
+import com.android.mkstubs.Main;
+
 import org.objectweb.asm.Type;
 import org.objectweb.asm.signature.SignatureReader;
 import org.objectweb.asm.signature.SignatureVisitor;
@@ -83,7 +84,7 @@ class SignatureSourcer extends SignatureVisitor {
      * {@link SignatureSourcer}s for each parameters generated when parsing the method parameters
      * of <em>this</em> signature. Initially empty but not null.
      */
-    private ArrayList<SignatureSourcer> mParameters = new ArrayList<SignatureSourcer>();
+    private ArrayList<SignatureSourcer> mParameters = new ArrayList<>();
 
 
 
@@ -91,7 +92,7 @@ class SignatureSourcer extends SignatureVisitor {
      * Constructs a new {@link SignatureWriter} object.
      */
     public SignatureSourcer() {
-        super(Opcodes.ASM4);
+        super(Main.ASM_VERSION);
     }
 
     private StringBuilder getBuf() {

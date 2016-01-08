@@ -16,12 +16,13 @@
 
 package com.android.mkstubs.stubber;
 
+import com.android.mkstubs.Main;
+
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.Attribute;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Opcodes;
 
 /**
  * A class visitor that generates stubs for all methods of the visited class.
@@ -30,7 +31,7 @@ import org.objectweb.asm.Opcodes;
 public class ClassStubber extends ClassVisitor {
 
     public ClassStubber(ClassVisitor cv) {
-        super(Opcodes.ASM4, cv);
+        super(Main.ASM_VERSION, cv);
     }
 
     @Override

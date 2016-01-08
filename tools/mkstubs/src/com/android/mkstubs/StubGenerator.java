@@ -55,7 +55,7 @@ class StubGenerator {
             Map<String, ClassReader> classes,
             Filter filter) throws IOException {
 
-        TreeMap<String, byte[]> all = new TreeMap<String, byte[]>();
+        TreeMap<String, byte[]> all = new TreeMap<>();
 
         for (Entry<String, ClassReader> entry : classes.entrySet()) {
             ClassReader cr = entry.getValue();

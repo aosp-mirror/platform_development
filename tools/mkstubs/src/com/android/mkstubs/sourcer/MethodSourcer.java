@@ -16,11 +16,12 @@
 
 package com.android.mkstubs.sourcer;
 
+import com.android.mkstubs.Main;
+
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.Attribute;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.signature.SignatureReader;
 
@@ -43,7 +44,7 @@ class MethodSourcer extends MethodVisitor {
 
     public MethodSourcer(Output output, String className, int access, String name,
             String desc, String signature, String[] exceptions) {
-        super(Opcodes.ASM4);
+        super(Main.ASM_VERSION);
         mOutput = output;
         mClassName = className;
         mAccess = access;
@@ -223,7 +224,7 @@ class MethodSourcer extends MethodVisitor {
     }
 
     @Override
-    public void visitMethodInsn(int opcode, String owner, String name, String desc) {
+    public void visitMethodInsn(int opcode, String owner, String name, String desc, boolean itf) {
         // pass
     }
 

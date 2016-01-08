@@ -30,10 +30,10 @@ import java.util.TreeSet;
  * pattern to decide if it should be included.
  */
 class Filter {
-    private TreeSet<String> mIncludePrefix = new TreeSet<String>();
-    private TreeSet<String> mIncludeFull   = new TreeSet<String>();
-    private TreeSet<String> mExcludePrefix = new TreeSet<String>();
-    private TreeSet<String> mExcludeFull   = new TreeSet<String>();
+    private TreeSet<String> mIncludePrefix = new TreeSet<>();
+    private TreeSet<String> mIncludeFull   = new TreeSet<>();
+    private TreeSet<String> mExcludePrefix = new TreeSet<>();
+    private TreeSet<String> mExcludeFull   = new TreeSet<>();
 
     /**
      * Returns the set of all full patterns to be included.

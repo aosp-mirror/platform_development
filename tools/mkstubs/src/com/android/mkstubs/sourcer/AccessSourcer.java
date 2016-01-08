@@ -58,7 +58,7 @@ class AccessSourcer {
         private final int mValue;
         private final int mFilter;
 
-        private Flag(int value, int filter) {
+        Flag(int value, int filter) {
             mValue = value;
             mFilter = filter;
         }
