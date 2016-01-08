@@ -16,6 +16,8 @@
 
 package com.android.mkstubs.stubber;
 
+import com.android.mkstubs.Main;
+
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.Attribute;
 import org.objectweb.asm.Label;
@@ -35,7 +37,7 @@ public class MethodStubber extends MethodVisitor {
 
     public MethodStubber(MethodVisitor mw,
             int access, String name, String desc, String signature, String[] exceptions) {
-        super(Opcodes.ASM4, mw);
+        super(Main.ASM_VERSION, mw);
     }
 
     @Override
@@ -50,7 +52,8 @@ public class MethodStubber extends MethodVisitor {
                 Opcodes.INVOKESPECIAL,          // opcode
                 "java/lang/RuntimeException",   // owner
                 "<init>",                       // name
-                "(Ljava/lang/String;)V");       // desc
+                "(Ljava/lang/String;)V",        // desc
+                false);
         mv.visitInsn(Opcodes.ATHROW);
         Label l1 = new Label();
         mv.visitLabel(l1);
@@ -153,7 +156,7 @@ public class MethodStubber extends MethodVisitor {
     }
 
     @Override
-    public void visitMethodInsn(int opcode, String owner, String name, String desc) {
+    public void visitMethodInsn(int opcode, String owner, String name, String desc, boolean itf) {
         // skip
     }
 

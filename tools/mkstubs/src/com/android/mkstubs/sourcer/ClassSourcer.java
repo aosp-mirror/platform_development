@@ -16,6 +16,8 @@
 
 package com.android.mkstubs.sourcer;
 
+import com.android.mkstubs.Main;
+
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.Attribute;
 import org.objectweb.asm.ClassVisitor;
@@ -34,7 +36,7 @@ public class ClassSourcer extends ClassVisitor {
     private String mClassName;
 
     public ClassSourcer(Output output) {
-        super(Opcodes.ASM4);
+        super(Main.ASM_VERSION);
         mOutput = output;
         mAccessSourcer = new AccessSourcer(mOutput);
     }

@@ -36,7 +36,7 @@ class FilterClassAdapter extends ClassVisitor {
     private String mClassName;
 
     public FilterClassAdapter(ClassVisitor writer, Filter filter, Logger log) {
-        super(Opcodes.ASM4, writer);
+        super(Main.ASM_VERSION, writer);
         mFilter = filter;
         mLog = log;
     }

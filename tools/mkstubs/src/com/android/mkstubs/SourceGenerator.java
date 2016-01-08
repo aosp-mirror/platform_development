@@ -58,12 +58,8 @@ class SourceGenerator {
 
             String name = classNameToJavaPath(cr.getClassName());
 
-            FileWriter fw = null;
-            try {
-                fw = createWriter(baseDir, name);
+            try (FileWriter fw = createWriter(baseDir, name)) {
                 visitClassSource(fw, cr, filter);
-            } finally {
-                fw.close();
             }
         }
     }

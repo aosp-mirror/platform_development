@@ -33,7 +33,7 @@ import java.util.zip.ZipFile;
  * Analyzes an input Jar to get all the relevant classes according to the given filter.
  * <p/>
  * This is mostly a helper extracted for convenience. Callers will want to use
- * {@link #parseInputJar(String)} followed by {@link #filter(Map, Filter)}.
+ * {@link #parseInputJar(String)} followed by {@link #filter(Map, Filter, Logger)}.
  */
 class AsmAnalyzer {
 
@@ -42,7 +42,7 @@ class AsmAnalyzer {
      * class name => ASM ClassReader. Class names are in the form "android.view.View".
      */
     Map<String,ClassReader> parseInputJar(String inputJarPath) throws IOException {
-        TreeMap<String, ClassReader> classes = new TreeMap<String, ClassReader>();
+        TreeMap<String, ClassReader> classes = new TreeMap<>();
 
         ZipFile zip = new ZipFile(inputJarPath);
         Enumeration<? extends ZipEntry> entries = zip.entries();

@@ -16,8 +16,9 @@
 
 package com.android.mkstubs.sourcer;
 
+import com.android.mkstubs.Main;
+
 import org.objectweb.asm.AnnotationVisitor;
-import org.objectweb.asm.Opcodes;
 
 /**
  * An annotation visitor that generates Java source for an annotation.
@@ -34,7 +35,7 @@ class AnnotationSourcer extends AnnotationVisitor {
     }
 
     public AnnotationSourcer(Output output, boolean isArray) {
-        super(Opcodes.ASM4);
+        super(Main.ASM_VERSION);
         mOutput = output;
         mOpenChar = isArray ? "[" : "(";
         mCloseChar = isArray ? "]" : ")";

@@ -16,9 +16,8 @@
 
 package com.android.mkstubs;
 
-import com.android.mkstubs.Main.Params;
-
 import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.Opcodes;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -33,6 +32,8 @@ import java.util.Map;
  * For workflow details, see {@link #process(Params)}.
  */
 public class Main {
+
+    public static final int ASM_VERSION = Opcodes.ASM5;
 
     /**
      * A struct-like class to hold the various input values (e.g. command-line args)
