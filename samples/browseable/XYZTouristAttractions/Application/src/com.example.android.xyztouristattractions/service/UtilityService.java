@@ -476,6 +476,7 @@ public class UtilityService extends IntentService {
             dataMap.getDataMap().putDataMapArrayList(Constants.EXTRA_ATTRACTIONS, attractionsData);
             dataMap.getDataMap().putLong(Constants.EXTRA_TIMESTAMP, new Date().getTime());
             PutDataRequest request = dataMap.asPutDataRequest();
+            request.setUrgent();
 
             // Send the data over
             DataApi.DataItemResult result =

@@ -248,7 +248,9 @@ public class MainActivity extends Activity implements DataApi.DataListener,
             dataMap.putInt(QUESTION_INDEX, questionIndex);
             dataMap.putStringArray(ANSWERS, answers);
             dataMap.putInt(CORRECT_ANSWER_INDEX, correctAnswerIndex);
-            return request.asPutDataRequest();
+            PutDataRequest putDataRequest = request.asPutDataRequest();
+            putDataRequest.setUrgent();
+            return putDataRequest;
         }
     }
 
@@ -496,7 +498,10 @@ public class MainActivity extends Activity implements DataApi.DataListener,
                 dataMap.putBoolean(QUESTION_WAS_DELETED, false);
                 if (!mHasQuestionBeenAsked && dataMap.getInt(QUESTION_INDEX) == 0) {
                     // Ask the first question now.
-                    Wearable.DataApi.putDataItem(mGoogleApiClient, request.asPutDataRequest());
+                    PutDataRequest putDataRequest = request.asPutDataRequest();
+                    // Set to high priority in case it isn't already.
+                    putDataRequest.setUrgent();
+                    Wearable.DataApi.putDataItem(mGoogleApiClient, putDataRequest);
                     setHasQuestionBeenAsked(true);
                 } else {
                     // Enqueue future questions.

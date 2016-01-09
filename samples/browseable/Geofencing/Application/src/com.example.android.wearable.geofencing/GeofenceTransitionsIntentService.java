@@ -89,6 +89,7 @@ public class GeofenceTransitionsIntentService extends IntentService
                 final PutDataMapRequest putDataMapRequest =
                         PutDataMapRequest.create(GEOFENCE_DATA_ITEM_PATH);
                 putDataMapRequest.getDataMap().putString(KEY_GEOFENCE_ID, triggeredGeoFenceId);
+                putDataMapRequest.setUrgent();
                 if (mGoogleApiClient.isConnected()) {
                     Wearable.DataApi.putDataItem(
                             mGoogleApiClient, putDataMapRequest.asPutDataRequest()).await();

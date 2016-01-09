@@ -71,8 +71,9 @@ public abstract class ImageWorker {
      *
      * @param data The URL of the image to download.
      * @param imageView The ImageView to bind the downloaded image to.
+     * @param listener A listener that will be called back once the image has been loaded.
      */
-    public void loadImage(Object data, ImageView imageView) {
+    public void loadImage(Object data, ImageView imageView, OnImageLoadedListener listener) {
         if (data == null) {
             return;
         }
@@ -86,9 +87,12 @@ public abstract class ImageWorker {
         if (value != null) {
             // Bitmap found in memory cache
             imageView.setImageDrawable(value);
+            if (listener != null) {
+                listener.onImageLoaded(true);
+            }
         } else if (cancelPotentialWork(data, imageView)) {
             //BEGIN_INCLUDE(execute_background_task)
-            final BitmapWorkerTask task = new BitmapWorkerTask(data, imageView);
+            final BitmapWorkerTask task = new BitmapWorkerTask(data, imageView, listener);
             final AsyncDrawable asyncDrawable =
                     new AsyncDrawable(mResources, mLoadingBitmap, task);
             imageView.setImageDrawable(asyncDrawable);
@@ -99,6 +103,21 @@ public abstract class ImageWorker {
             task.executeOnExecutor(AsyncTask.DUAL_THREAD_EXECUTOR);
             //END_INCLUDE(execute_background_task)
         }
+    }
+
+    /**
+     * Load an image specified by the data parameter into an ImageView (override
+     * {@link ImageWorker#processBitmap(Object)} to define the processing logic). A memory and
+     * disk cache will be used if an {@link ImageCache} has been added using
+     * {@link ImageWorker#addImageCache(android.support.v4.app.FragmentManager, ImageCache.ImageCacheParams)}. If the
+     * image is found in the memory cache, it is set immediately, otherwise an {@link AsyncTask}
+     * will be created to asynchronously load the bitmap.
+     *
+     * @param data The URL of the image to download.
+     * @param imageView The ImageView to bind the downloaded image to.
+     */
+    public void loadImage(Object data, ImageView imageView) {
+        loadImage(data, imageView, null);
     }
 
     /**
@@ -238,10 +257,18 @@ public abstract class ImageWorker {
     private class BitmapWorkerTask extends AsyncTask<Void, Void, BitmapDrawable> {
         private Object mData;
         private final WeakReference<ImageView> imageViewReference;
+        private final OnImageLoadedListener mOnImageLoadedListener;
 
         public BitmapWorkerTask(Object data, ImageView imageView) {
             mData = data;
             imageViewReference = new WeakReference<ImageView>(imageView);
+            mOnImageLoadedListener = null;
+        }
+
+        public BitmapWorkerTask(Object data, ImageView imageView, OnImageLoadedListener listener) {
+            mData = data;
+            imageViewReference = new WeakReference<ImageView>(imageView);
+            mOnImageLoadedListener = listener;
         }
 
         /**
@@ -318,6 +345,7 @@ public abstract class ImageWorker {
         @Override
         protected void onPostExecute(BitmapDrawable value) {
             //BEGIN_INCLUDE(complete_background_work)
+            boolean success = false;
             // if cancel was called on this task or the "exit early" flag is set then we're done
             if (isCancelled() || mExitTasksEarly) {
                 value = null;
@@ -328,7 +356,11 @@ public abstract class ImageWorker {
                 if (BuildConfig.DEBUG) {
                     Log.d(TAG, "onPostExecute - setting bitmap");
                 }
+                success = true;
                 setImageDrawable(imageView, value);
+            }
+            if (mOnImageLoadedListener != null) {
+                mOnImageLoadedListener.onImageLoaded(success);
             }
             //END_INCLUDE(complete_background_work)
         }
@@ -355,6 +387,19 @@ public abstract class ImageWorker {
 
             return null;
         }
+    }
+
+    /**
+     * Interface definition for callback on image loaded successfully.
+     */
+    public interface OnImageLoadedListener {
+
+        /**
+         * Called once the image has been loaded.
+         * @param success True if the image was loaded successfully, false if
+         *                there was an error.
+         */
+        void onImageLoaded(boolean success);
     }
 
     /**

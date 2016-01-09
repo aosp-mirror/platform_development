@@ -18,6 +18,9 @@ package com.example.android.wearable.synchronizednotifications;
 import android.app.Activity;
 import android.os.Bundle;
 
+/**
+ * Empty Activity.
+ */
 public class WearableActivity extends Activity {
 
     @Override

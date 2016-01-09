@@ -78,7 +78,7 @@ public class SweepWatchFaceService extends CanvasWatchFaceService {
 
         /* Colors for all hands (hour, minute, seconds, ticks) based on photo loaded. */
         private int mWatchHandColor;
-        private int mWatchHandHightlightColor;
+        private int mWatchHandHighlightColor;
         private int mWatchHandShadowColor;
 
         private Paint mHourPaint;
@@ -123,7 +123,7 @@ public class SweepWatchFaceService extends CanvasWatchFaceService {
 
             /* Set defaults for colors */
             mWatchHandColor = Color.WHITE;
-            mWatchHandHightlightColor = Color.RED;
+            mWatchHandHighlightColor = Color.RED;
             mWatchHandShadowColor = Color.BLACK;
 
             mHourPaint = new Paint();
@@ -141,7 +141,7 @@ public class SweepWatchFaceService extends CanvasWatchFaceService {
             mMinutePaint.setShadowLayer(SHADOW_RADIUS, 0, 0, mWatchHandShadowColor);
 
             mSecondPaint = new Paint();
-            mSecondPaint.setColor(mWatchHandHightlightColor);
+            mSecondPaint.setColor(mWatchHandHighlightColor);
             mSecondPaint.setStrokeWidth(SECOND_TICK_STROKE_WIDTH);
             mSecondPaint.setAntiAlias(true);
             mSecondPaint.setStrokeCap(Paint.Cap.ROUND);
@@ -165,7 +165,7 @@ public class SweepWatchFaceService extends CanvasWatchFaceService {
                                     Log.d(TAG, "Palette: " + palette);
                                 }
 
-                                mWatchHandHightlightColor = palette.getVibrantColor(Color.RED);
+                                mWatchHandHighlightColor = palette.getVibrantColor(Color.RED);
                                 mWatchHandColor = palette.getLightVibrantColor(Color.WHITE);
                                 mWatchHandShadowColor = palette.getDarkMutedColor(Color.BLACK);
                                 updateWatchHandStyle();
@@ -226,7 +226,7 @@ public class SweepWatchFaceService extends CanvasWatchFaceService {
             } else {
                 mHourPaint.setColor(mWatchHandColor);
                 mMinutePaint.setColor(mWatchHandColor);
-                mSecondPaint.setColor(mWatchHandHightlightColor);
+                mSecondPaint.setColor(mWatchHandHighlightColor);
                 mTickAndCirclePaint.setColor(mWatchHandColor);
 
                 mHourPaint.setAntiAlias(true);

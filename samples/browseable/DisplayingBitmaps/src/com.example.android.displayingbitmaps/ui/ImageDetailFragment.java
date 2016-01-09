@@ -23,6 +23,7 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 
 import com.example.android.displayingbitmaps.R;
 import com.example.android.displayingbitmaps.util.ImageFetcher;
@@ -32,10 +33,11 @@ import com.example.android.displayingbitmaps.util.Utils;
 /**
  * This fragment will populate the children of the ViewPager from {@link ImageDetailActivity}.
  */
-public class ImageDetailFragment extends Fragment {
+public class ImageDetailFragment extends Fragment implements ImageWorker.OnImageLoadedListener {
     private static final String IMAGE_DATA_EXTRA = "extra_image_data";
     private String mImageUrl;
     private ImageView mImageView;
+    private ProgressBar mProgressBar;
     private ImageFetcher mImageFetcher;
 
     /**
@@ -75,6 +77,7 @@ public class ImageDetailFragment extends Fragment {
         // Inflate and locate the main ImageView
         final View v = inflater.inflate(R.layout.image_detail_fragment, container, false);
         mImageView = (ImageView) v.findViewById(R.id.imageView);
+        mProgressBar = (ProgressBar) v.findViewById(R.id.progressbar);
         return v;
     }
 
@@ -86,7 +89,7 @@ public class ImageDetailFragment extends Fragment {
         // cache can be used over all pages in the ViewPager
         if (ImageDetailActivity.class.isInstance(getActivity())) {
             mImageFetcher = ((ImageDetailActivity) getActivity()).getImageFetcher();
-            mImageFetcher.loadImage(mImageUrl, mImageView);
+            mImageFetcher.loadImage(mImageUrl, mImageView, this);
         }
 
         // Pass clicks on the ImageView to the parent activity to handle
@@ -103,5 +106,12 @@ public class ImageDetailFragment extends Fragment {
             ImageWorker.cancelWork(mImageView);
             mImageView.setImageDrawable(null);
         }
+    }
+
+    @Override
+    public void onImageLoaded(boolean success) {
+        // Set loading spinner to gone once image has loaded. Cloud also show
+        // an error view here if needed.
+        mProgressBar.setVisibility(View.GONE);
     }
 }

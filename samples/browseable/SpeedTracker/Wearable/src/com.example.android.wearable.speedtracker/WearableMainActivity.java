@@ -408,6 +408,7 @@ public class WearableMainActivity extends WearableActivity implements
         putDataMapRequest.getDataMap()
                 .putLong(Constants.KEY_TIME, entry.calendar.getTimeInMillis());
         PutDataRequest request = putDataMapRequest.asPutDataRequest();
+        request.setUrgent();
         Wearable.DataApi.putDataItem(mGoogleApiClient, request)
                 .setResultCallback(new ResultCallback<DataApi.DataItemResult>() {
                     @Override

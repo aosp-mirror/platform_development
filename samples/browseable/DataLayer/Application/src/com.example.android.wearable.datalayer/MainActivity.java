@@ -381,7 +381,9 @@ public class MainActivity extends Activity implements DataApi.DataListener,
         public void run() {
             PutDataMapRequest putDataMapRequest = PutDataMapRequest.create(COUNT_PATH);
             putDataMapRequest.getDataMap().putInt(COUNT_KEY, count++);
+            putDataMapRequest.setUrgent();
             PutDataRequest request = putDataMapRequest.asPutDataRequest();
+            request.setUrgent();
 
             LOGD(TAG, "Generating DataItem: " + request);
             if (!mGoogleApiClient.isConnected()) {
@@ -442,6 +444,8 @@ public class MainActivity extends Activity implements DataApi.DataListener,
         dataMap.getDataMap().putAsset(IMAGE_KEY, asset);
         dataMap.getDataMap().putLong("time", new Date().getTime());
         PutDataRequest request = dataMap.asPutDataRequest();
+        request.setUrgent();
+
         Wearable.DataApi.putDataItem(mGoogleApiClient, request)
                 .setResultCallback(new ResultCallback<DataItemResult>() {
                     @Override

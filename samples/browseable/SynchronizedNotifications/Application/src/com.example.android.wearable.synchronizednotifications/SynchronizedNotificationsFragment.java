@@ -19,17 +19,11 @@ package com.example.android.wearable.synchronizednotifications;
 import android.app.PendingIntent;
 import android.content.Intent;
 import android.support.v4.app.Fragment;
-import android.app.Activity;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.MenuItem;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.Toast;
 
 import com.example.android.wearable.synchronizednotifications.common.Constants;
 import com.google.android.gms.common.ConnectionResult;
@@ -61,7 +55,7 @@ import java.util.Locale;
 public class SynchronizedNotificationsFragment extends Fragment
         implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
 
-    private static final String TAG = "SynchronizedNotificationsFragment";
+    private static final String TAG = "SynchronizedFragment";
     private GoogleApiClient mGoogleApiClient;
 
     @Override
@@ -87,7 +81,8 @@ public class SynchronizedNotificationsFragment extends Fragment
                         Constants.WATCH_ONLY_PATH);
                 return true;
             case R.id.btn_different:
-                buildMirroredNotifications(getString(R.string.phone_both), getString(R.string.watch_both), now());
+                buildMirroredNotifications(
+                        getString(R.string.phone_both), getString(R.string.watch_both), now());
                 return true;
         }
         return false;
@@ -110,8 +105,12 @@ public class SynchronizedNotificationsFragment extends Fragment
         if (withDismissal) {
             Intent dismissIntent = new Intent(Constants.ACTION_DISMISS);
             dismissIntent.putExtra(Constants.KEY_NOTIFICATION_ID, Constants.BOTH_ID);
-            PendingIntent pendingIntent = PendingIntent
-                    .getService(this.getActivity(), 0, dismissIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+            PendingIntent pendingIntent =
+                    PendingIntent.getService(
+                            this.getActivity(),
+                            0,
+                            dismissIntent,
+                            PendingIntent.FLAG_UPDATE_CURRENT);
             builder.setDeleteIntent(pendingIntent);
         }
         NotificationManagerCompat.from(this.getActivity()).notify(notificationId, builder.build());
@@ -127,6 +126,7 @@ public class SynchronizedNotificationsFragment extends Fragment
             putDataMapRequest.getDataMap().putString(Constants.KEY_CONTENT, content);
             putDataMapRequest.getDataMap().putString(Constants.KEY_TITLE, title);
             PutDataRequest request = putDataMapRequest.asPutDataRequest();
+            request.setUrgent();
             Wearable.DataApi.putDataItem(mGoogleApiClient, request)
                     .setResultCallback(new ResultCallback<DataApi.DataItemResult>() {
                         @Override
