@@ -220,6 +220,7 @@ basename_r
 bind
 bindresvport
 brk
+bsd_signal
 bsearch
 btowc
 cacheflush
