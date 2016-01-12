@@ -204,6 +204,7 @@ basename_r
 bind
 bindresvport
 brk
+bsd_signal
 bsearch
 btowc
 cacheflush
@@ -806,8 +807,8 @@ unlockpt
 unsetenv
 usleep
 utime
-utimes
 utimensat
+utimes
 utmpname
 valloc
 vasprintf
