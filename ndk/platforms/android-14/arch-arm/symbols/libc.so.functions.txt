@@ -29,6 +29,9 @@ __errno
 __fcntl64
 __fp_nquery
 __fp_query
+__fpclassifyd
+__fpclassifyf
+__fpclassifyl
 __fstatfs64
 __get_h_errno
 __getcwd
@@ -36,6 +39,16 @@ __getpriority
 __gnu_Unwind_Find_exidx
 __hostalias
 __ioctl
+__isfinite
+__isfinitef
+__isfinitel
+__isinf
+__isinff
+__isinfl
+__isnanl
+__isnormal
+__isnormalf
+__isnormall
 __libc_init
 __llseek
 __loc_aton
@@ -354,6 +367,8 @@ iscntrl
 isdigit
 isgraph
 islower
+isnan
+isnanf
 isprint
 ispunct
 isspace
