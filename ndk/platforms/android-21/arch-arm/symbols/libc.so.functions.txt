@@ -621,7 +621,6 @@ mkstemps
 mktemp
 mktime
 mktime64
-mktime_tz
 mlock
 mlockall
 mmap
