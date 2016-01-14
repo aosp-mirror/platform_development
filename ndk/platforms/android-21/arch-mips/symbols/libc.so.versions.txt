@@ -620,7 +620,6 @@ LIBC {
     mktemp;
     mktime;
     mktime64; # arm x86 mips
-    mktime_tz;
     mlock;
     mlockall;
     mmap;
