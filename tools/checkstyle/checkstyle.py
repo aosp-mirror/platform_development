@@ -130,7 +130,10 @@ def _ParseAndFilterOutput(stdout, sha, last_commit_modified_files):
 # Returns whether an error on a given line should be skipped
 # based on the modified_lines list and the rule.
 def _ShouldSkip(modified_lines, line, rule):
-  return modified_lines and line not in modified_lines and rule not in FORCED_RULES
+  # None modified_lines means checked file is new and nothing should be skipped.
+  if modified_lines is None:
+    return False
+  return line not in modified_lines and rule not in FORCED_RULES
 
 
 def _GetModifiedFiles(out = sys.stdout):

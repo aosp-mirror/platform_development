@@ -77,7 +77,8 @@ class TestCheckstyle(unittest.TestCase):
     checkstyle.git.last_commit = mock_last_commit
 
   def test_ShouldSkip(self):
-    self.assertFalse(checkstyle._ShouldSkip([], 1, TEST_RULE))
+    self.assertFalse(checkstyle._ShouldSkip(None, 1, TEST_RULE))
+    self.assertTrue(checkstyle._ShouldSkip([], 1, TEST_RULE))
     self.assertFalse(checkstyle._ShouldSkip([1], 1, TEST_RULE))
     self.assertFalse(checkstyle._ShouldSkip([1, 2, 3], 1, TEST_RULE))
     self.assertTrue(checkstyle._ShouldSkip([1, 2, 3], 4, TEST_RULE))
