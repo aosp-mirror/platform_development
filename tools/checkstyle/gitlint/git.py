@@ -110,10 +110,7 @@ def modified_lines(filename, extra_data, commit=None):
       filename: the file to check.
       extra_data: is the extra_data returned by modified_files. Additionally, a
         value of None means that the file was not modified.
-      commit: the complete sha1 (40 chars) of the commit. Note that specifying
-        this value will only work (100%) when commit == last_commit (with
-        respect to the currently checked out revision), otherwise, we could miss
-        some lines.
+      commit: the complete sha1 (40 chars) of the commit.
 
     Returns: a list of lines that were modified, or None in case all lines are
       new.
@@ -129,7 +126,7 @@ def modified_lines(filename, extra_data, commit=None):
 
     # Split as bytes, as the output may have some non unicode characters.
     blame_lines = subprocess.check_output(
-        ['git', 'blame', '--porcelain', filename]).split(
+        ['git', 'blame', commit, '--porcelain', '--', filename]).split(
             os.linesep.encode('utf-8'))
     modified_line_numbers = utils.filter_lines(
         blame_lines,
