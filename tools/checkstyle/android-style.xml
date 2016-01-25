@@ -4,6 +4,11 @@
 <module name="Checker">
   <property name="severity" value="warning"/>
   <property name="charset" value="UTF-8"/>
+  <module name="SuppressionCommentFilter">
+    <property name="offCommentFormat" value="CHECKSTYLE:OFF IndentationCheck"/>
+    <property name="onCommentFormat" value="CHECKSTYLE:ON IndentationCheck"/>
+    <property name="checkFormat" value="IndentationCheck"/>
+  </module>
   <module name="TreeWalker">
     <module name="AvoidStarImport">
       <property name="severity" value="error"/>
@@ -192,6 +197,7 @@
       <property name="tokens" value="COMMA"/>
       <property name="option" value="EOL"/>
     </module>
+    <module name="FileContentsHolder"/>
   </module>
   <module name="FileTabCharacter">
     <property name="severity" value="error"/>
@@ -200,11 +206,9 @@
     <property name="severity" value="error"/>
     <property name="format" value="[ \t]+$"/>
     <property name="message" value="Trailing whitespace"/>
-    </module>
-<!--
+  </module>
   <module name="RegexpHeader">
     <property name="severity" value="error"/>
-    <property name="header" value="^/*$\n^ * Copyright (C) 2015 The Android Open Source Project" />
+    <property name="header" value="^/\*\n \* Copyright \(C\) [0-9]{4} The Android Open Source Project\n \*\n \* Licensed under the Apache License, Version 2\.0 \(the \&quot;License\&quot;\);\n \* you may not use this file except in compliance with the License.\n \* You may obtain a copy of the License at\n \*\n \*      http:\/\/www\.apache\.org\/licenses\/LICENSE-2\.0\n \*\n \* Unless required by applicable law or agreed to in writing, software\n \* distributed under the License is distributed on an &quot;AS IS&quot; BASIS,\n \* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied\.\n \* See the License for the specific language governing permissions and\n \* limitations under the License\.\n \*\/" />
   </module>
--->
 </module>
