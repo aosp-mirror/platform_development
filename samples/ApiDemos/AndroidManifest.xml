@@ -1253,6 +1253,17 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".content.MediaContentObserver"
+                android:label="@string/activity_media_content_observer">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.SAMPLE_CODE"/>
+            </intent-filter>
+        </activity>
+
+        <service android:name=".content.MediaContentJob"
+                android:permission="android.permission.BIND_JOB_SERVICE" />
+
         <activity android:name=".content.InstallApk" android:label="@string/activity_install_apk"
                 android:enabled="@bool/atLeastHoneycombMR2">
             <intent-filter>
