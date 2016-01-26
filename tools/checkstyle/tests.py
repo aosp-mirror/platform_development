@@ -89,37 +89,39 @@ class TestCheckstyle(unittest.TestCase):
   def test_GetModifiedFiles(self):
     checkstyle.git.modified_files = mock_modified_files_good
     out = StringIO()
-    sha, files = checkstyle._GetModifiedFiles(out)
+    files = checkstyle._GetModifiedFiles(mock_last_commit(), out=out)
     output = out.getvalue()
     self.assertEqual(output, '')
-    self.assertEqual(sha, TEST_SHA)
     self.assertEqual(files, {TEST_FILE1: FILE_MODIFIED, TEST_FILE2: FILE_ADDED})
-
-  def test_GetModifiedFilesUntracked(self):
-    checkstyle.git.modified_files = mock_modified_files_untracked
-    out = StringIO()
-    sha, files = checkstyle._GetModifiedFiles(out)
-    output = out.getvalue()
-    self.assertEqual(output, checkstyle.ERROR_UNTRACKED + TEST_FILE1 + '\n\n')
-    self.assertEqual(sha, TEST_SHA)
-    self.assertEqual(files, {TEST_FILE2: FILE_ADDED})
 
   def test_GetModifiedFilesUncommitted(self):
     checkstyle.git.modified_files = mock_modified_files_uncommitted
     with self.assertRaises(SystemExit):
       out = StringIO()
-      checkstyle._GetModifiedFiles(out)
+      checkstyle._GetModifiedFiles(mock_last_commit(), out=out)
     self.assertEqual(out.getvalue(), checkstyle.ERROR_UNCOMMITTED)
 
   def test_GetModifiedFilesNonJava(self):
     checkstyle.git.modified_files = mock_modified_files_non_java
     out = StringIO()
-    sha, files = checkstyle._GetModifiedFiles(out)
+    files = checkstyle._GetModifiedFiles(mock_last_commit(), out=out)
     output = out.getvalue()
     self.assertEqual(output, '')
-    self.assertEqual(sha, TEST_SHA)
     self.assertEqual(files, {TEST_FILE1: FILE_MODIFIED})
 
+  def test_WarnIfUntrackedFiles(self):
+    checkstyle.git.modified_files = mock_modified_files_untracked
+    out = StringIO()
+    checkstyle._WarnIfUntrackedFiles(out=out)
+    output = out.getvalue()
+    self.assertEqual(output, checkstyle.ERROR_UNTRACKED + TEST_FILE1 + '\n\n')
+
+  def test_WarnIfUntrackedFilesNoUntracked(self):
+    checkstyle.git.modified_files = mock_modified_files_good
+    out = StringIO()
+    checkstyle._WarnIfUntrackedFiles(out=out)
+    output = out.getvalue()
+    self.assertEqual(output, '')
 
 if __name__ == '__main__':
   unittest.main()
