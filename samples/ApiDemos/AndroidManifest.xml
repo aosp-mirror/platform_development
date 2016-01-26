@@ -2145,6 +2145,14 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".inputmethod.HintLocales"
+                  android:label="Views/Input Method/HintLocales">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
         <activity android:name=".view.EditTextDemo"
                   android:label="Views/Text/EditText">
             <intent-filter>
