@@ -11,6 +11,7 @@ LIBC {
     __ctype_get_mb_cur_max;
     __cxa_atexit;
     __cxa_finalize;
+    __cxa_thread_atexit_impl;
     __dn_comp;
     __dn_count_labels;
     __dn_skipname;
@@ -18,23 +19,32 @@ LIBC {
     __errno;
     __exit; # arm x86 mips
     __fadvise64; # x86 mips
+    __fbufsize;
     __fcntl64; # arm x86 mips
     __FD_CLR_chk;
     __FD_ISSET_chk;
     __FD_SET_chk;
     __fgets_chk;
+    __flbf;
     __fp_nquery;
     __fp_query;
     __fpclassify;
     __fpclassifyd;
     __fpclassifyf;
     __fpclassifyl;
+    __fpending;
+    __fpurge;
+    __freadable;
+    __fsetlocking;
     __fstatfs64; # arm x86 mips
+    __fwritable;
     __get_h_errno;
     __getcpu; # arm x86 mips
     __getcwd; # arm x86 mips
     __getpid; # arm x86 mips
     __getpriority; # arm x86 mips
+    __gnu_basename;
+    __gnu_strerror_r;
     __hostalias;
     __ioctl; # arm x86 mips
     __isfinite;
@@ -56,8 +66,10 @@ LIBC {
     __llseek; # arm x86 mips
     __loc_aton;
     __loc_ntoa;
+    __memchr_chk;
     __memcpy_chk;
     __memmove_chk;
+    __memrchr_chk;
     __memset_chk;
     __mmap2; # arm x86 mips
     __ns_format_ttl; # arm x86 mips
@@ -98,7 +110,11 @@ LIBC {
     __p_time;
     __p_type;
     __p_type_syms;
+    __poll_chk;
     __ppoll; # arm x86 mips
+    __ppoll_chk;
+    __pread64_chk;
+    __pread_chk;
     __progname;
     __pselect6; # arm x86 mips
     __pthread_cleanup_pop;
@@ -107,8 +123,11 @@ LIBC {
     __putlong;
     __putshort;
     __read_chk;
+    __readlink_chk;
+    __readlinkat_chk;
     __reboot; # arm x86 mips
     __recvfrom_chk;
+    __register_atfork;
     __res_close;
     __res_dnok;
     __res_hnok;
@@ -164,20 +183,21 @@ LIBC {
     __sym_ntop;
     __sym_ntos;
     __sym_ston;
-    __system_properties_init; # arm x86 mips
-    __system_property_add; # arm x86 mips
-    __system_property_area__; # arm x86 mips
-    __system_property_area_init; # arm x86 mips
-    __system_property_find; # arm x86 mips
-    __system_property_find_nth; # arm x86 mips
-    __system_property_foreach; # arm x86 mips
-    __system_property_get; # arm x86 mips
-    __system_property_read; # arm x86 mips
-    __system_property_serial; # arm x86 mips
-    __system_property_set; # arm x86 mips
-    __system_property_set_filename; # arm x86 mips
-    __system_property_update; # arm x86 mips
-    __system_property_wait_any; # arm x86 mips
+    __system_properties_init;
+    __system_property_add;
+    __system_property_area__;
+    __system_property_area_init;
+    __system_property_area_serial;
+    __system_property_find;
+    __system_property_find_nth;
+    __system_property_foreach;
+    __system_property_get;
+    __system_property_read;
+    __system_property_serial;
+    __system_property_set;
+    __system_property_set_filename;
+    __system_property_update;
+    __system_property_wait_any;
     __timer_create; # arm x86 mips
     __timer_delete; # arm x86 mips
     __timer_getoverrun; # arm x86 mips
@@ -190,6 +210,7 @@ LIBC {
     _ctype_;
     _Exit;
     _exit;
+    _flushlbf;
     _getlong;
     _getshort;
     _longjmp;
@@ -248,7 +269,9 @@ LIBC {
     chroot;
     clearenv;
     clearerr;
+    clearerr_unlocked;
     clock;
+    clock_getcpuclockid;
     clock_getres;
     clock_gettime;
     clock_nanosleep;
@@ -290,6 +313,11 @@ LIBC {
     epoll_wait;
     erand48;
     err;
+    error;
+    error_at_line;
+    error_message_count;
+    error_one_per_line;
+    error_print_progname;
     errx;
     ether_aton;
     ether_aton_r;
@@ -320,7 +348,9 @@ LIBC {
     fdopen;
     fdopendir;
     feof;
+    feof_unlocked;
     ferror;
+    ferror_unlocked;
     fflush;
     ffs;
     fgetc;
@@ -334,9 +364,11 @@ LIBC {
     flistxattr;
     flock;
     flockfile;
+    fmemopen;
     fnmatch;
     fopen;
     fork;
+    forkpty;
     fpathconf;
     fprintf;
     fpurge;
@@ -385,6 +417,10 @@ LIBC {
     fwrite;
     fwscanf;
     gai_strerror;
+    get_avphys_pages;
+    get_nprocs;
+    get_nprocs_conf;
+    get_phys_pages;
     getaddrinfo;
     getauxval;
     getc;
@@ -402,8 +438,10 @@ LIBC {
     getgrouplist;
     getgroups;
     gethostbyaddr;
+    gethostbyaddr_r;
     gethostbyname;
     gethostbyname2;
+    gethostbyname2_r;
     gethostbyname_r;
     gethostent;
     gethostname;
@@ -555,6 +593,7 @@ LIBC {
     klogctl;
     labs;
     lchown;
+    lcong48;
     ldexp;
     ldiv;
     lfind;
@@ -571,6 +610,7 @@ LIBC {
     localtime64; # arm x86 mips
     localtime64_r; # arm x86 mips
     localtime_r;
+    login_tty;
     longjmp;
     lrand48;
     lremovexattr;
@@ -583,6 +623,7 @@ LIBC {
     madvise;
     mallinfo;
     malloc;
+    malloc_info;
     malloc_usable_size;
     mbrlen;
     mbrtoc16;
@@ -600,6 +641,7 @@ LIBC {
     memcpy;
     memmem;
     memmove;
+    mempcpy;
     memrchr;
     memset;
     mincore;
@@ -607,11 +649,17 @@ LIBC {
     mkdirat;
     mkdtemp;
     mkfifo;
+    mkfifoat;
     mknod;
     mknodat;
+    mkostemp;
+    mkostemp64;
+    mkostemps;
+    mkostemps64;
     mkstemp;
     mkstemp64;
     mkstemps;
+    mkstemps64;
     mktemp;
     mktime;
     mktime64; # arm x86 mips
@@ -638,10 +686,13 @@ LIBC {
     ntohs;
     open;
     open64;
+    open_memstream;
+    open_wmemstream;
     openat;
     openat64;
     opendir;
     openlog;
+    openpty;
     optarg;
     opterr;
     optind;
@@ -660,6 +711,7 @@ LIBC {
     posix_fadvise64;
     posix_fallocate;
     posix_fallocate64;
+    posix_madvise;
     posix_memalign;
     posix_openpt;
     ppoll;
@@ -668,6 +720,8 @@ LIBC {
     pread64;
     printf;
     prlimit64;
+    process_vm_readv;
+    process_vm_writev;
     pselect;
     psiginfo;
     psignal;
@@ -741,8 +795,10 @@ LIBC {
     pthread_rwlock_unlock;
     pthread_rwlock_wrlock;
     pthread_rwlockattr_destroy;
+    pthread_rwlockattr_getkind_np;
     pthread_rwlockattr_getpshared;
     pthread_rwlockattr_init;
+    pthread_rwlockattr_setkind_np;
     pthread_rwlockattr_setpshared;
     pthread_self;
     pthread_setname_np;
@@ -819,6 +875,7 @@ LIBC {
     sched_setscheduler;
     sched_yield;
     seed48;
+    seekdir;
     select;
     sem_close;
     sem_destroy;
@@ -845,6 +902,7 @@ LIBC {
     setfsuid;
     setgid;
     setgroups;
+    sethostname;
     setitimer;
     setjmp;
     setlinebuf;
@@ -886,10 +944,13 @@ LIBC {
     signalfd;
     sigpending;
     sigprocmask;
+    sigqueue;
     sigsetjmp;
     sigsetmask;
     sigsuspend;
+    sigtimedwait;
     sigwait;
+    sigwaitinfo;
     sleep;
     snprintf;
     socket;
@@ -906,9 +967,13 @@ LIBC {
     statfs64;
     statvfs;
     statvfs64;
+    stderr;
+    stdin;
+    stdout;
     stpcpy;
     stpncpy;
     strcasecmp;
+    strcasecmp_l;
     strcasestr;
     strcat;
     strchr;
@@ -919,6 +984,7 @@ LIBC {
     strcspn;
     strdup;
     strerror;
+    strerror_l;
     strerror_r;
     strftime;
     strftime_l;
@@ -926,6 +992,7 @@ LIBC {
     strlcpy;
     strlen;
     strncasecmp;
+    strncasecmp_l;
     strncat;
     strncmp;
     strncpy;
@@ -982,6 +1049,7 @@ LIBC {
     tdelete;
     tdestroy;
     tee;
+    telldir;
     tempnam;
     tfind;
     tgkill;
@@ -1069,6 +1137,7 @@ LIBC {
     wcpncpy;
     wcrtomb;
     wcscasecmp;
+    wcscasecmp_l;
     wcscat;
     wcschr;
     wcscmp;
@@ -1082,6 +1151,7 @@ LIBC {
     wcslcpy;
     wcslen;
     wcsncasecmp;
+    wcsncasecmp_l;
     wcsncat;
     wcsncmp;
     wcsncpy;
@@ -1118,6 +1188,7 @@ LIBC {
     wmemcmp;
     wmemcpy;
     wmemmove;
+    wmempcpy;
     wmemset;
     wprintf;
     write;
