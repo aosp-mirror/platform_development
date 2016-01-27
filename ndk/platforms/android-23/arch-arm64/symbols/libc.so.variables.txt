@@ -7,11 +7,17 @@ __system_property_area__
 _ctype_
 daylight
 environ
+error_message_count
+error_one_per_line
+error_print_progname
 optarg
 opterr
 optind
 optopt
 optreset
+stderr
+stdin
+stdout
 sys_siglist
 sys_signame
 timezone
