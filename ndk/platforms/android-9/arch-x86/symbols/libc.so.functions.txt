@@ -36,7 +36,6 @@ __llseek
 __loc_aton
 __loc_ntoa
 __mmap2
-__moddi3
 __ns_format_ttl
 __ns_get16
 __ns_get32
