@@ -77,14 +77,35 @@ class TestCheckstyle(unittest.TestCase):
     checkstyle.git.last_commit = mock_last_commit
 
   def test_ShouldSkip(self):
-    self.assertFalse(checkstyle._ShouldSkip(None, 1, TEST_RULE))
-    self.assertTrue(checkstyle._ShouldSkip([], 1, TEST_RULE))
-    self.assertFalse(checkstyle._ShouldSkip([1], 1, TEST_RULE))
-    self.assertFalse(checkstyle._ShouldSkip([1, 2, 3], 1, TEST_RULE))
-    self.assertTrue(checkstyle._ShouldSkip([1, 2, 3], 4, TEST_RULE))
+    # Skip checks for explicit git commit.
+    self.assertFalse(checkstyle._ShouldSkip(True, None, 1, TEST_RULE))
+    self.assertTrue(checkstyle._ShouldSkip(True, [], 1, TEST_RULE))
+    self.assertFalse(checkstyle._ShouldSkip(True, [1], 1, TEST_RULE))
+    self.assertFalse(checkstyle._ShouldSkip(True, [1, 2, 3], 1, TEST_RULE))
+    self.assertTrue(checkstyle._ShouldSkip(True, [1, 2, 3], 4, TEST_RULE))
     for rule in checkstyle.FORCED_RULES:
-      self.assertFalse(checkstyle._ShouldSkip([1, 2, 3], 1, rule))
-      self.assertFalse(checkstyle._ShouldSkip([1, 2, 3], 4, rule))
+      self.assertFalse(checkstyle._ShouldSkip(True, [1, 2, 3], 1, rule))
+      self.assertFalse(checkstyle._ShouldSkip(True, [1, 2, 3], 4, rule))
+
+    # Skip checks for explicitly checked files.
+    self.assertFalse(checkstyle._ShouldSkip(False, None, 1, TEST_RULE))
+    self.assertFalse(checkstyle._ShouldSkip(False, [], 1, TEST_RULE))
+    self.assertFalse(checkstyle._ShouldSkip(False, [1], 1, TEST_RULE))
+    self.assertFalse(checkstyle._ShouldSkip(False, [1, 2, 3], 1, TEST_RULE))
+    self.assertFalse(checkstyle._ShouldSkip(False, [1, 2, 3], 4, TEST_RULE))
+    for rule in checkstyle.FORCED_RULES:
+      self.assertFalse(checkstyle._ShouldSkip(False, [1, 2, 3], 1, rule))
+      self.assertFalse(checkstyle._ShouldSkip(False, [1, 2, 3], 4, rule))
+
+    # Skip checks for test classes.
+    self.assertFalse(checkstyle._ShouldSkip(True, None, 1, TEST_RULE, True))
+    self.assertTrue(checkstyle._ShouldSkip(True, [], 1, TEST_RULE, True))
+    self.assertFalse(checkstyle._ShouldSkip(True, [1], 1, TEST_RULE, True))
+    self.assertFalse(checkstyle._ShouldSkip(True, [1, 2, 3], 1, TEST_RULE, True))
+    self.assertTrue(checkstyle._ShouldSkip(True, [1, 2, 3], 4, TEST_RULE, True))
+    for rule in checkstyle.SKIPPED_RULES_FOR_TEST_FILES:
+      self.assertTrue(checkstyle._ShouldSkip(True, [1, 2, 3], 1, rule, True))
+      self.assertTrue(checkstyle._ShouldSkip(True, [1, 2, 3], 4, rule, True))
 
   def test_GetModifiedFiles(self):
     checkstyle.git.modified_files = mock_modified_files_good
