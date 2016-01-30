@@ -34,7 +34,7 @@ public class LaunchingToSideActivity extends Activity implements View.OnClickLis
     public void onClick(View v) {
         if (v.getId() == R.id.launch_to_the_side) {
             Intent intent = new Intent("android.settings.SETTINGS");
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_LAUNCH_TO_SIDE);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_LAUNCH_ADJACENT);
             startActivity(intent);
         } else if (v.getId() == R.id.launch_new_task) {
             Intent intent = new Intent(this, MoveTaskToSideActivity.class);

@@ -16,7 +16,7 @@ public class MoveTaskToSideActivity extends Activity implements View.OnClickList
     @Override
     public void onClick(View v) {
         Intent intent = new Intent(this, LaunchingToSideActivity.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_LAUNCH_TO_SIDE);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_LAUNCH_ADJACENT);
         startActivity(intent);
     }
 }
