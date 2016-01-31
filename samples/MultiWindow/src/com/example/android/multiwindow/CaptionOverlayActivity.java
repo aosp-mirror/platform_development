@@ -30,7 +30,7 @@ import android.view.Window;
  * A minimal application that overlays caption on the content.
  */
 public class CaptionOverlayActivity extends Activity
-        implements Window.RestrictedCaptionAreaListener {
+        implements Window.OnRestrictedCaptionAreaChangedListener {
     private static final String TAG = "CaptionOverlayActivity";
 
     /**
