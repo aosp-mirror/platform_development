@@ -37,7 +37,7 @@ $(full_target): $(stub_timestamp) $(framework_res_package)
 	$(hide) mkdir -p $(PRIVATE_CLASS_INTERMEDIATES_DIR)
 	$(hide) find $(PRIVATE_SRC_DIR) -name "*.java" > \
         $(PRIVATE_INTERMEDIATES_DIR)/java-source-list
-	$(hide) $(TARGET_JAVAC) -encoding ascii -bootclasspath "" \
+	$(hide) $(TARGET_JAVAC) -source 1.7 -target 1.7 -encoding ascii -bootclasspath "" \
 			-g $(xlint_unchecked) \
 			-extdirs "" -d $(PRIVATE_CLASS_INTERMEDIATES_DIR) \
 			\@$(PRIVATE_INTERMEDIATES_DIR)/java-source-list \
@@ -67,6 +67,7 @@ $(jack_lib) : $(stub_timestamp) $(framework_res_package) $(JACK) | setup-jack-se
 	$(hide) find $(PRIVATE_SRC_DIR) -name "*.java" > \
 		$(PRIVATE_INTERMEDIATES_DIR)/jack-rsc.java-source-list
 	$(call call-jack) \
+		-D jack.java.source.version=1.7 \
 		--import-resource $(PRIVATE_INTERMEDIATES_DIR)/jack-rsc.tmp \
 		--output-jack $@ \
 		@$(PRIVATE_INTERMEDIATES_DIR)/jack-rsc.java-source-list \
