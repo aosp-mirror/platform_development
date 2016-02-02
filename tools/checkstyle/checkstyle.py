@@ -34,6 +34,8 @@ CHECKSTYLE_JAR = os.path.join(MAIN_DIRECTORY, 'checkstyle.jar')
 CHECKSTYLE_STYLE = os.path.join(MAIN_DIRECTORY, 'android-style.xml')
 FORCED_RULES = ['com.puppycrawl.tools.checkstyle.checks.imports.ImportOrderCheck',
                 'com.puppycrawl.tools.checkstyle.checks.imports.UnusedImportsCheck']
+SKIPPED_RULES_FOR_TEST_FILES = ['com.puppycrawl.tools.checkstyle.checks.javadoc.JavadocTypeCheck']
+SUBPATH_FOR_TEST_FILES = ['/tests/java/', '/tests/src/']
 ERROR_UNCOMMITTED = 'You need to commit all modified files before running Checkstyle\n'
 ERROR_UNTRACKED = 'You have untracked java files that are not being checked:\n'
 
@@ -157,16 +159,20 @@ def _ParseAndFilterOutput(stdout,
     file_name = file_element.attributes['name'].value
     if tmp_file_map:
       file_name = tmp_file_map[file_name]
+    modified_lines = None
     if commit_modified_files:
       modified_lines = git.modified_lines(file_name,
                                           commit_modified_files[file_name],
                                           sha)
+    test_class = any(substring in file_name for substring
+                     in SUBPATH_FOR_TEST_FILES)
     file_name = os.path.relpath(file_name)
     errors = file_element.getElementsByTagName('error')
     for error in errors:
       line = int(error.attributes['line'].value)
       rule = error.attributes['source'].value
-      if commit_modified_files and _ShouldSkip(modified_lines, line, rule):
+      if _ShouldSkip(commit_modified_files, modified_lines, line, rule,
+                     test_class):
         continue
 
       column = ''
@@ -183,18 +189,24 @@ def _ParseAndFilterOutput(stdout,
   return result_errors, result_warnings
 
 
-def _ShouldSkip(modified_lines, line, rule):
+def _ShouldSkip(commit_check, modified_lines, line, rule, test_class=False):
   """Returns whether an error on a given line should be skipped.
 
   Args:
+    commit_check: Whether Checkstyle is being run on a specific commit.
     modified_lines: A list of lines that has been modified.
     line: The line that has a rule violation.
     rule: The type of rule that a given line is violating.
+    test_class: Whether the file being checked is a test class.
 
   Returns:
     A boolean whether a given line should be skipped in the reporting.
   """
   # None modified_lines means checked file is new and nothing should be skipped.
+  if test_class and rule in SKIPPED_RULES_FOR_TEST_FILES:
+    return True
+  if not commit_check:
+    return False
   if modified_lines is None:
     return False
   return line not in modified_lines and rule not in FORCED_RULES
