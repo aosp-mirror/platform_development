@@ -1,4 +1,4 @@
-Pkg.Desc=Android SDK Platform ${PLATFORM_VERSION}
+Pkg.Desc=Android SDK System Image
 Pkg.UserSrc=false
 Pkg.Revision=2
 AndroidVersion.ApiLevel=${PLATFORM_SDK_VERSION}
@@ -6,4 +6,4 @@ AndroidVersion.CodeName=${PLATFORM_VERSION_CODENAME}
 SystemImage.Abi=armeabi
 SystemImage.GpuSupport=true
 SystemImage.TagId=default
-
+SystemImage.TagDisplay=Default Android System Image
