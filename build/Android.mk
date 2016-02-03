@@ -134,12 +134,12 @@ $(foreach lib, $(ANDROID_SUPPORT_LIBRARIES), $(eval $(call _package_sdk_library,
 
 ALL_SDK_FILES += $(HOST_OUT)/development/sdk/generated-api-versions.xml
 
-api_gen_jar := $(TOPDIR)prebuilts/tools/common/api-generator/api-generator-22.9.3.jar
+api_gen_jar := $(TOPDIR)prebuilts/tools/common/api-generator/api-generator-22.9.4.jar
 api_gen_deps := \
-  $(TOPDIR)prebuilts/tools/common/kxml2-tools/kxml2-2.3.0.jar \
-  $(TOPDIR)prebuilts/tools/common/asm-tools/asm-4.0.jar \
-  $(TOPDIR)prebuilts/tools/common/asm-tools/asm-tree-4.0.jar \
-  $(TOPDIR)prebuilts/devtools/tools/lib/common.jar
+  $(TOPDIR)prebuilts/tools/common/m2/repository/net/sf/kxml/kxml2/2.3.0/kxml2-2.3.0.jar \
+  $(TOPDIR)prebuilts/tools/common/m2/repository/org/ow2/asm/asm/5.0.4/asm-5.0.4.jar \
+  $(TOPDIR)prebuilts/tools/common/m2/repository/org/ow2/asm/asm-tree/5.0.4/asm-tree-5.0.4.jar \
+  $(TOPDIR)prebuilts/tools/common/m2/repository/com/google/guava/guava/17.0/guava-17.0.jar
 api_gen_classpath := $(subst $(space),:,$(api_gen_jar) $(api_gen_deps))
 
 
