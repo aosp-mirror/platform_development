@@ -88,4 +88,3 @@ AMediaMuxer_setOrientationHint
 AMediaMuxer_start
 AMediaMuxer_stop
 AMediaMuxer_writeSampleData
-__popcountdi2
