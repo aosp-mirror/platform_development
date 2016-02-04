@@ -189,15 +189,22 @@
               android:text="@string/pointer_shape_none"
               android:pointerShape="none" />
 
+          <Button
+              android:id="@+id/pointer_shape_view_custom"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:text="@string/pointer_shape_custom_resource"
+              android:pointerShape="@drawable/custom_pointer_icon" />
+
+          <com.example.android.apis.view.ResourcePointerIconButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/pointer_shape_custom_resource_code" />
+
           <com.example.android.apis.view.StaticPointerIconButton
               android:layout_width="wrap_content"
               android:layout_height="wrap_content"
               android:text="@string/pointer_shape_custom_static" />
-
-          <com.example.android.apis.view.ResourcePointerIconButton
-              android:layout_width="wrap_content"
-              android:layout_height="wrap_content"
-              android:text="@string/pointer_shape_custom_resource" />
 
           <com.example.android.apis.view.SystemPointerIconButton
               android:layout_width="wrap_content"

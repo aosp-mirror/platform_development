@@ -1107,10 +1107,11 @@
     <string name="pointer_shape_grab">grab</string>
     <string name="pointer_shape_grabbing">grabbing</string>
     <string name="pointer_shape_none">none (invisible)</string>
-    <string name="pointer_shape_custom_static">Custom (static)</string>
-    <string name="pointer_shape_custom_resource">Custom (resource icon)</string>
-    <string name="pointer_shape_custom_system">Custom (system icons)</string>
-    <string name="pointer_shape_custom_live">Custom (live)</string>
+    <string name="pointer_shape_custom_resource">Custom (defined in resource file)</string>
+    <string name="pointer_shape_custom_resource_code">Custom (resource loaded in code)</string>
+    <string name="pointer_shape_custom_static">Custom (static bitmap created in code)</string>
+    <string name="pointer_shape_custom_system">Custom (system icon picked in code)</string>
+    <string name="pointer_shape_custom_live">Custom (dynamic image created in code)</string>
 
     <!-- ============================== -->
     <!--  GoogleLogin examples strings  -->
