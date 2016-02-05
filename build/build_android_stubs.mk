@@ -35,6 +35,19 @@ $(full_target): $(stub_timestamp) $(framework_res_package)
 	@echo Compiling SDK Stubs: $@
 	$(hide) rm -rf $(PRIVATE_CLASS_INTERMEDIATES_DIR)
 	$(hide) mkdir -p $(PRIVATE_CLASS_INTERMEDIATES_DIR)
+	$(hide) mkdir -p $(PRIVATE_CLASS_INTERMEDIATES_DIR)/NOTICES
+	$(hide) if [ ! -f libcore/NOTICE ]; then \
+	echo "Missing notice file : libcore/NOTICE"; \
+	rm -rf $(PRIVATE_CLASS_INTERMEDIATES_DIR); \
+	exit 1; \
+	fi;
+	$(hide) if [ ! -f libcore/ojluni/NOTICE ]; then \
+	echo "Missing notice file : libcore/ojluni/NOTICE"; \
+	rm -rf $(PRIVATE_CLASS_INTERMEDIATES_DIR); \
+	exit 1; \
+	fi;
+	$(hide) $(ACP) libcore/NOTICE $(PRIVATE_CLASS_INTERMEDIATES_DIR)/NOTICES/libcore-NOTICE
+	$(hide) $(ACP) libcore/ojluni/NOTICE $(PRIVATE_CLASS_INTERMEDIATES_DIR)/NOTICES/ojluni-NOTICE
 	$(hide) find $(PRIVATE_SRC_DIR) -name "*.java" > \
         $(PRIVATE_INTERMEDIATES_DIR)/java-source-list
 	$(hide) $(TARGET_JAVAC) -source 1.8 -target 1.8 -encoding ascii -bootclasspath "" \
