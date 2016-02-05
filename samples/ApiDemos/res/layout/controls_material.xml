@@ -238,7 +238,7 @@
                 style="@android:style/TextAppearance.Material.Body1" />
 
             <SeekBar
-                android:id="@+id/edit"
+                android:id="@+id/seekbar"
                 android:layout_width="200dp"
                 android:layout_height="48dp" />
 
@@ -254,7 +254,7 @@
                 style="@android:style/TextAppearance.Material.Body1" />
 
             <SeekBar
-                android:id="@+id/edit"
+                android:id="@+id/seekbar_discrete"
                 android:layout_width="200dp"
                 android:layout_height="48dp"
                 android:max="7"
