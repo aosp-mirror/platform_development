@@ -32,8 +32,9 @@
       <message key="javadoc.missing" value="Public classes and interfaces require JavaDoc comments."/>
     </module>
     <module name="JavadocMethod">
-      <property name="severity" value="info"/>
+      <property name="severity" value="error"/>
       <property name="scope" value="public"/>
+      <property name="tokens" value="METHOD_DEF"/>
       <property name="allowMissingParamTags" value="true"/>
       <property name="allowMissingPropertyJavadoc" value="true"/>
       <property name="allowMissingReturnTag" value="true"/>
@@ -197,9 +198,30 @@
       <property name="tokens" value="COMMA"/>
       <property name="option" value="EOL"/>
     </module>
+    <module name="MissingDeprecated">
+      <property name="severity" value="error"/>
+    </module>
+    <module name="MissingOverride">
+      <property name="severity" value="error"/>
+    </module>
+    <module name="OneTopLevelClass">
+      <property name="severity" value="error"/>
+    </module>
+    <module name="StringLiteralEquality">
+      <property name="severity" value="error"/>
+    </module>
+    <module name="ArrayTypeStyle">
+      <property name="severity" value="error"/>
+    </module>
+    <module name="RedundantModifier">
+      <property name="severity" value="error"/>
+    </module>
     <module name="FileContentsHolder"/>
   </module>
   <module name="FileTabCharacter">
+    <property name="severity" value="error"/>
+  </module>
+  <module name="NewlineAtEndOfFile">
     <property name="severity" value="error"/>
   </module>
   <module name="RegexpSingleline">
