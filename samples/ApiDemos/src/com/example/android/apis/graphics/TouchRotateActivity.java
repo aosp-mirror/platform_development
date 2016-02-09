@@ -23,6 +23,8 @@ import android.app.Activity;
 import android.content.Context;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
+import android.view.InputDevice;
+import android.view.KeyEvent;
 import android.view.MotionEvent;
 
 /**
@@ -77,6 +79,15 @@ class TouchSurfaceView extends GLSurfaceView {
         setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
     }
 
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        // Release pointer capture on any key press.
+        if (event.getAction() == KeyEvent.ACTION_DOWN && hasPointerCapture()) {
+            releasePointerCapture();
+        }
+        return super.onKeyDown(keyCode, event);
+    }
+
     @Override public boolean onTrackballEvent(MotionEvent e) {
         mRenderer.mAngleX += e.getX() * TRACKBALL_SCALE_FACTOR;
         mRenderer.mAngleY += e.getY() * TRACKBALL_SCALE_FACTOR;
@@ -84,20 +95,54 @@ class TouchSurfaceView extends GLSurfaceView {
         return true;
     }
 
+    @Override public boolean onHoverEvent(MotionEvent e) {
+        if (hasPointerCapture()) {
+            switch (e.getAction()) {
+                case MotionEvent.ACTION_HOVER_MOVE:
+                case MotionEvent.ACTION_HOVER_EXIT:
+                case MotionEvent.ACTION_HOVER_ENTER:
+                    updateAngles(e);
+                    break;
+            }
+        }
+        return super.onHoverEvent(e);
+    }
+
     @Override public boolean onTouchEvent(MotionEvent e) {
-        float x = e.getX();
-        float y = e.getY();
         switch (e.getAction()) {
-        case MotionEvent.ACTION_MOVE:
-            float dx = x - mPreviousX;
-            float dy = y - mPreviousY;
+            case MotionEvent.ACTION_DOWN:
+                if (e.isFromSource(InputDevice.SOURCE_MOUSE)) {
+                    if (hasPointerCapture()) {
+                        releasePointerCapture();
+                    } else {
+                        setPointerCapture();
+                    }
+                }
+                break;
+
+            case MotionEvent.ACTION_MOVE:
+                updateAngles(e);
+                break;
+        }
+        mPreviousX = e.getX();
+        mPreviousY = e.getY();
+        return true;
+    }
+
+    private void updateAngles(MotionEvent e) {
+        float dx, dy;
+        if (e.isFromSource(InputDevice.SOURCE_MOUSE) && hasPointerCapture()) {
+            dx = e.getAxisValue(MotionEvent.AXIS_RELATIVE_X);
+            dy = e.getAxisValue(MotionEvent.AXIS_RELATIVE_Y);
+        } else {
+            dx = e.getX() - mPreviousX;
+            dy = e.getY() - mPreviousY;
+        }
+        if (dx != 0 && dy != 0) {
             mRenderer.mAngleX += dx * TOUCH_SCALE_FACTOR;
             mRenderer.mAngleY += dy * TOUCH_SCALE_FACTOR;
             requestRender();
         }
-        mPreviousX = x;
-        mPreviousY = y;
-        return true;
     }
 
     /**
@@ -180,5 +225,3 @@ class TouchSurfaceView extends GLSurfaceView {
     private float mPreviousX;
     private float mPreviousY;
 }
-
-
