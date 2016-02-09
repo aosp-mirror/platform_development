@@ -1,1 +1,4 @@
-include development/ndk/sources/android/native_app_glue/Android.mk
+#
+# This file is (otherwise) empty to deliberately prevent the build system
+# from building the samples below this point...
+#
