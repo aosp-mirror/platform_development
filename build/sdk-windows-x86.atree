@@ -101,6 +101,9 @@ bin/bcc_compat.exe                      strip build-tools/${PLATFORM_NAME}/bcc_c
 rm build-tools/${PLATFORM_NAME}/arm-linux-androideabi-ld
 prebuilts/sdk/tools/windows/bin/arm-linux-androideabi-ld.exe   strip build-tools/${PLATFORM_NAME}/arm-linux-androideabi-ld.exe
 
+rm build-tools/${PLATFORM_NAME}/aarch64-linux-android-ld
+prebuilts/sdk/tools/windows/bin/aarch64-linux-android-ld.exe   strip build-tools/${PLATFORM_NAME}/aarch64-linux-android-ld.exe
+
 rm build-tools/${PLATFORM_NAME}/i686-linux-android-ld
 prebuilts/sdk/tools/windows/bin/i686-linux-android-ld.exe      strip build-tools/${PLATFORM_NAME}/i686-linux-android-ld.exe
 
@@ -118,4 +121,3 @@ external/sonivox/docs/JET_Authoring_Guidelines.html   docs/JetCreator/JET_Author
 external/sonivox/docs/JET_Authoring_Guidelines_files  docs/JetCreator/JET_Authoring_Guidelines_files
 external/sonivox/docs/JET_Creator_User_Manual.html    docs/JetCreator/JET_Creator_User_Manual.html
 external/sonivox/docs/JET_Creator_User_Manual_files   docs/JetCreator/JET_Creator_User_Manual_files
-
