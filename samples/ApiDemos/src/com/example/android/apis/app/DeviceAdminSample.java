@@ -1114,4 +1114,7 @@ public class DeviceAdminSample extends PreferenceActivity {
             Log.v(TAG, message);
         }
     }
+
+    public static class DeviceAdminSampleReceiver2 extends DeviceAdminReceiver {
+    }
 }

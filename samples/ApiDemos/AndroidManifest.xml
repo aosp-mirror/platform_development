@@ -926,6 +926,16 @@
                 <action android:name="android.app.action.DEVICE_ADMIN_ENABLED" />
             </intent-filter>
         </receiver>
+        <receiver android:name=".app.DeviceAdminSample$DeviceAdminSampleReceiver2"
+            android:label="@string/sample_device_admin2"
+            android:description="@string/sample_device_admin_description2"
+            android:permission="android.permission.BIND_DEVICE_ADMIN">
+            <meta-data android:name="android.app.device_admin"
+                android:resource="@xml/device_admin_sample" />
+            <intent-filter>
+                <action android:name="android.app.action.DEVICE_ADMIN_ENABLED" />
+            </intent-filter>
+        </receiver>
 <!-- END_INCLUDE(device_admin_declaration) -->
 
         <!-- Voice Recognition Samples -->
