@@ -747,6 +747,9 @@
         for you to directly control what the DeviceAdmin does with the
         system.</string>
 
+    <string name="sample_device_admin2">Dummy Device Admin</string>
+    <string name="sample_device_admin_description2">Dummy device admin</string>
+
     <!-- Strings used in preference headers and preference definitions -->
     <string name="header_general">General</string>
     <string name="header_quality">Password quality</string>
