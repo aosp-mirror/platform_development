@@ -452,6 +452,7 @@ frameworks/support/v7/appcompat/.classpath                                      
 frameworks/support/v7/appcompat/AndroidManifest.xml                                               extras/android/support/v7/appcompat/AndroidManifest.xml
 frameworks/support/v7/appcompat/project.properties                                                extras/android/support/v7/appcompat/project.properties
 frameworks/support/v7/appcompat/res                                                               extras/android/support/v7/appcompat/res
+frameworks/support/v7/appcompat/res-public                                                        extras/android/support/v7/appcompat/res-public
 frameworks/support/v7/appcompat/src/.readme                                                       extras/android/support/v7/appcompat/src/.readme
 ${OUT_DIR}/target/common/obj/PACKAGING/android-support-v7-appcompat_intermediates/android-support-v7-appcompat.jar    extras/android/support/v7/appcompat/libs/android-support-v7-appcompat.jar
 ${OUT_DIR}/target/common/obj/PACKAGING/android-support-v4_intermediates/android-support-v4.jar                        extras/android/support/v7/appcompat/libs/android-support-v4.jar
@@ -516,6 +517,7 @@ ${OUT_DIR}/target/common/obj/PACKAGING/android-support-v17-leanback_intermediate
 
 frameworks/support/design/AndroidManifest.xml                                                     extras/android/support/design/AndroidManifest.xml
 frameworks/support/design/res                                                                     extras/android/support/design/res
+frameworks/support/design/res-public                                                              extras/android/support/design/res-public
 frameworks/support/design/src/.readme                                                             extras/android/support/design/src/.readme
 ${OUT_DIR}/target/common/obj/PACKAGING/android-support-design_intermediates/android-support-design.jar    extras/android/support/design/libs/android-support-design.jar
 
