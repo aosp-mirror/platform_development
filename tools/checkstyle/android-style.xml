@@ -216,6 +216,9 @@
     <module name="RedundantModifier">
       <property name="severity" value="error"/>
     </module>
+    <module name="OuterTypeFilename">
+      <property name="severity" value="error"/>
+    </module>
     <module name="FileContentsHolder"/>
   </module>
   <module name="FileTabCharacter">

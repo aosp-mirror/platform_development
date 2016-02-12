@@ -244,12 +244,16 @@ def _GetTempFilesForCommit(file_names, commit):
   tmp_dir_name = tempfile.mkdtemp()
   tmp_file_names = {}
   for file_name in file_names:
+    rel_path = os.path.relpath(file_name)
     content = subprocess.check_output(
-        ['git', 'show', commit + ':' + os.path.relpath(file_name)])
-    (fd, tmp_file_name) = tempfile.mkstemp(suffix='.java',
-                                           dir=tmp_dir_name,
-                                           text=True)
-    tmp_file = os.fdopen(fd, 'w')
+        ['git', 'show', commit + ':' + rel_path])
+
+    tmp_file_name = os.path.join(tmp_dir_name, rel_path)
+    # create directory for the file if it doesn't exist
+    if not os.path.exists(os.path.dirname(tmp_file_name)):
+      os.makedirs(os.path.dirname(tmp_file_name))
+
+    tmp_file = open(tmp_file_name, 'w')
     tmp_file.write(content)
     tmp_file.close()
     tmp_file_names[tmp_file_name] = file_name
