@@ -61,7 +61,7 @@ stub_timestamp := $(OUT_DOCS)/api-stubs-timestamp
 include $(LOCAL_PATH)/build_android_stubs.mk
 
 .PHONY: android_stubs
-android_stubs: $(full_target)
+android_stubs: $(full_target) $(full_src_target)
 
 # The real rules create a javalib.jar that contains a classes.dex file.  This
 # code is never going to be run anywhere, so just make a copy of the file.
@@ -73,13 +73,20 @@ $(dir $(full_target))javalib.jar: $(full_target)
 # android.jar is what we put in the SDK package.
 android_jar_intermediates := $(TARGET_OUT_COMMON_INTERMEDIATES)/PACKAGING/android_jar_intermediates
 android_jar_full_target := $(android_jar_intermediates)/android.jar
+android_jar_src_target := $(android_jar_intermediates)/android-stubs-src.jar
 
 $(android_jar_full_target): $(full_target)
 	@echo Package SDK Stubs: $@
 	$(hide)mkdir -p $(dir $@)
 	$(hide)$(ACP) $< $@
 
+$(android_jar_src_target): $(full_src_target)
+	@echo Package SDK Stubs Source: $@
+	$(hide)mkdir -p $(dir $@)
+	$(hide)$(ACP) $< $@
+
 ALL_SDK_FILES += $(android_jar_full_target)
+ALL_SDK_FILES += $(android_jar_src_target)
 
 # ====================================================
 

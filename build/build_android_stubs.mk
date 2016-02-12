@@ -21,15 +21,20 @@ intermediates := $(TARGET_OUT_COMMON_INTERMEDIATES)/JAVA_LIBRARIES/$(sdk_stub_na
 full_target := $(intermediates)/classes.jar
 jack_lib := $(intermediates)/classes.jack
 dex_toc := $(intermediates)/classes.dex.toc
+full_src_target = $(intermediates)/android-stubs-src.jar
 src_dir := $(intermediates)/src
 classes_dir := $(intermediates)/classes
 framework_res_package := $(call intermediates-dir-for,APPS,framework-res,,COMMON)/package-export.apk
 
-$(full_target) $(jack_lib): PRIVATE_SRC_DIR := $(src_dir)
-$(full_target) $(jack_lib): PRIVATE_INTERMEDIATES_DIR := $(intermediates)
+$(full_target) $(jack_lib) $(full_src_target): PRIVATE_SRC_DIR := $(src_dir)
+$(full_target) $(jack_lib) $(full_src_target): PRIVATE_INTERMEDIATES_DIR := $(intermediates)
 $(full_target) $(jack_lib): PRIVATE_FRAMEWORK_RES_PACKAGE := $(framework_res_package)
 
 $(full_target): PRIVATE_CLASS_INTERMEDIATES_DIR := $(classes_dir)
+
+$(full_src_target): $(stub_timestamp)
+	@echo Packaging SDK Stub sources: $@
+	$(hide) cd $(PRIVATE_INTERMEDIATES_DIR) && zip -rq $(notdir $@) $(notdir $(PRIVATE_SRC_DIR))
 
 $(full_target): $(stub_timestamp) $(framework_res_package)
 	@echo Compiling SDK Stubs: $@
