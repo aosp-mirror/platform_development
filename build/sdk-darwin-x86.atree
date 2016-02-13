@@ -35,6 +35,7 @@ lib/libclang.dylib                                    strip build-tools/${PLATFO
 lib/libc++.dylib                                      strip build-tools/${PLATFORM_NAME}/lib/libc++.dylib
 
 prebuilts/sdk/tools/darwin/bin/arm-linux-androideabi-ld   strip build-tools/${PLATFORM_NAME}/arm-linux-androideabi-ld
+prebuilts/sdk/tools/darwin/bin/aarch64-linux-android-ld   strip build-tools/${PLATFORM_NAME}/aarch64-linux-android-ld
 prebuilts/sdk/tools/darwin/bin/i686-linux-android-ld      strip build-tools/${PLATFORM_NAME}/i686-linux-android-ld
 prebuilts/sdk/tools/darwin/bin/mipsel-linux-android-ld    strip build-tools/${PLATFORM_NAME}/mipsel-linux-android-ld
 
