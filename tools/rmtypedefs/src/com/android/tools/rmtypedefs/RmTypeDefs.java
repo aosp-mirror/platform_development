@@ -32,7 +32,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import static org.objectweb.asm.Opcodes.ASM4;
+import static org.objectweb.asm.Opcodes.ASM5;
 
 /**
  * Finds and deletes typedef annotation classes (and also warns if their
@@ -207,8 +207,8 @@ public class RmTypeDefs {
                 continue;
             }
 
-            ClassWriter classWriter = new ClassWriter(ASM4);
-            ClassVisitor classVisitor = new ClassVisitor(ASM4, classWriter) {
+            ClassWriter classWriter = new ClassWriter(ASM5);
+            ClassVisitor classVisitor = new ClassVisitor(ASM5, classWriter) {
                 @Override
                 public void visitInnerClass(String name, String outerName, String innerName,
                         int access) {
@@ -276,7 +276,7 @@ public class RmTypeDefs {
         private boolean mSourceRetention;
 
         public TypeDefVisitor(File file) {
-            super(ASM4);
+            super(ASM5);
             mFile = file;
         }
 
@@ -299,7 +299,7 @@ public class RmTypeDefs {
         public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
             mTypedef = desc.equals(INT_DEF_DESC) || desc.equals(STRING_DEF_DESC);
             if (desc.equals(RETENTION_DESC)) {
-                return new AnnotationVisitor(ASM4) {
+                return new AnnotationVisitor(ASM5) {
                     public void visitEnum(String name, String desc, String value) {
                         if (desc.equals(RETENTION_POLICY_DESC)) {
                             mSourceRetention = SOURCE_RETENTION_VALUE.equals(value);
