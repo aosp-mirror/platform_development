@@ -22,7 +22,7 @@ include $(CLEAR_VARS)
 LOCAL_SRC_FILES := $(call all-subdir-java-files)
 LOCAL_JAR_MANIFEST := ../etc/manifest.txt
 LOCAL_STATIC_JAVA_LIBRARIES := \
-        asm-tools \
+        asm-5.0 \
         guava-tools
 
 LOCAL_MODULE:= rmtypedefs
