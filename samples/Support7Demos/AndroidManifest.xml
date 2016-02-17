@@ -197,16 +197,6 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".app.ActionBarWithDrawerLayout"
-                android:label="@string/action_bar_with_navigation_drawer"
-                android:theme="@style/Theme.AppCompat"
-                >
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
-                <category android:name="com.example.android.supportv7.SAMPLE_CODE"/>
-            </intent-filter>
-        </activity>
-
         <activity android:name=".app.ActionBarPreferences"
                   android:label="@string/action_bar_preferences"
                   android:theme="@style/Theme.AppCompat">
@@ -428,6 +418,16 @@
         </activity>
         <activity android:name=".widget.touch.DragAndDropActivity"
                   android:label="@string/drag_and_drop_activity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="com.example.android.supportv7.SAMPLE_CODE"/>
+            </intent-filter>
+        </activity>
+
+        <!-- DrawerLayout demo activity -->
+        <activity android:name=".widget.DrawerLayoutActivity"
+                  android:label="@string/drawer_layout_activity"
+                  android:theme="@style/Theme.SampleDrawerLayout">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="com.example.android.supportv7.SAMPLE_CODE"/>

@@ -156,18 +156,7 @@
 
     <string name="sample_transport_controller_activity">Media/TransportController</string>
 
-    <string name="drawer_layout_support">Widget/Drawer layout</string>
-
-    <string name="drawer_layout_summary">This activity illustrates the use of sliding drawers. The drawer may be pulled out from the starting edge, which is left on left-to-right locales, with an edge swipe. If this demo is running on Ice Cream Sandwich or newer you may tap the icon at the starting side of the action bar to open the drawer as well.</string>
-
-    <!-- Title of the navigation drawer, used by accessibility to announce state changes. -->
-    <string name="drawer_title">Navigation</string>
-
-    <!-- Description of the icon that opens the navigation drawer, used by accessibility. -->
-    <string name="drawer_open">Open navigation drawer</string>
-
-    <!-- Description of the icon that closes the navigation drawer, used by accessibility. -->
-    <string name="drawer_close">Close navigation drawer</string>
+    <string name="view_pager_layout_support">View/View pager</string>
 
     <string name="sliding_pane_layout_support">Widget/Sliding pane layout</string>
 
@@ -194,10 +183,4 @@
     <string name="drawable_compat_no_tint">Not tint</string>
     <string name="drawable_compat_color_tint">Color tint</string>
     <string name="drawable_compat_color_list_tint">Color state list</string>
-
-    <!-- ViewPager -->
-    <string name="view_pager_support">View/View pager</string>
-    <string name="view_pager_smooth_scroll">Smooth scroll</string>
-    <string name="view_pager_switch_tabs">Switch tabs</string>
-    <string name="view_pager_double_switch_tabs">Double-switch tabs</string>
 </resources>
