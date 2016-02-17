@@ -18,5 +18,5 @@
     xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <string name="appTitle" msgid="161410001913116606">"Alternativă"</string>
     <string name="title" msgid="8156274565006125136">"Acţiune neacceptată"</string>
-    <string name="error" msgid="6539615832923362301">"Această acţiune nu este acceptată în prezent."</string>
+    <string name="error" msgid="6539615832923362301">"Această acțiune nu este acceptată în prezent."</string>
 </resources>
