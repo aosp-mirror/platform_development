@@ -256,6 +256,9 @@
           android:layout_width="wrap_content"
           android:layout_height="wrap_content"
           android:text="@string/release_mms" />
+        <ProgressBar android:id="@+id/mms_progress"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content" />
     </LinearLayout>
     <LinearLayout
       android:orientation="horizontal"
@@ -269,6 +272,9 @@
           android:layout_width="wrap_content"
           android:layout_height="wrap_content"
           android:text="@string/release_supl" />
+        <ProgressBar android:id="@+id/supl_progress"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content" />
     </LinearLayout>
     <LinearLayout
       android:orientation="horizontal"
@@ -282,6 +288,9 @@
           android:layout_width="wrap_content"
           android:layout_height="wrap_content"
           android:text="@string/release_cell" />
+        <ProgressBar android:id="@+id/cell_progress"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content" />
     </LinearLayout>
     <LinearLayout
       android:orientation="horizontal"
@@ -295,6 +304,9 @@
           android:layout_width="wrap_content"
           android:layout_height="wrap_content"
           android:text="@string/release_wifi" />
+        <ProgressBar android:id="@+id/wifi_progress"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content" />
     </LinearLayout>
     <LinearLayout
       android:orientation="horizontal"
