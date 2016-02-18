@@ -11,6 +11,4 @@ LOCAL_SRC_FILES := $(call all-subdir-java-files) \
 LOCAL_PACKAGE_NAME := Development
 LOCAL_CERTIFICATE := platform
 
-LOCAL_JAVA_LANGUAGE_VERSION := 1.8
-
 include $(BUILD_PACKAGE)
