@@ -176,6 +176,29 @@
     <string name="source_uid_text">Source uid :  </string>
     <string name="shared_pkgs_text">Packages accessing via shared uid :  </string>
 
+    <!-- AccountsTester -->
+    <string name="accounts_tester_app_name">Accounts Tester</string>
+    <string name="accounts_tester_get_accounts_by_type">Get By Type</string>
+    <string name="accounts_tester_get_all_accounts">Get All</string>
+    <string name="accounts_tester_add_account">Add</string>
+    <string name="accounts_tester_select_account_type">Select Account Type</string>
+    <string name="accounts_tester_process_name_header">Process Name:</string>
+    <string name="accounts_tester_remove_account">Remove Account</string>
+    <string name="accounts_tester_get_auth_token">Get Auth Token</string>
+    <string name="accounts_tester_get_auth_token_by_type_and_feature">Get Auth Token By Type/Feature</string>
+    <string name="accounts_tester_test_has_features">Has Features</string>
+    <string name="accounts_tester_invalidate_auth_token">Invalidate Token</string>
+    <string name="accounts_tester_account_context_menu_title">account operations</string>
+    <string name="accounts_tester_ok_button">Ok</string>
+    <string name="accounts_tester_enter_auth_token_type">Enter the authtoken type:</string>
+    <string name="accounts_tester_enter_features">Enter the features separated by a space:</string>
+    <string name="accounts_tester_update_credentials">Update Credentials</string>
+    <string name="accounts_tester_confirm_credentials">Confirm Credentials</string>
+    <string name="accounts_tester_clear_password">Clear Password</string>
+    <string name="accounts_tester_edit_properties">Properties</string>
+    <string name="accounts_tester_desired_authtokentype_label">authtoken type:</string>
+    <string name="accounts_tester_desired_features_label">features:</string>
+
     <!-- SyncAdapterDriver -->
     <string name="bind_button">bind</string>
     <string name="unbind_button">unbind</string>
