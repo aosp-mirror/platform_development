@@ -360,6 +360,10 @@ public class Connectivity extends Activity {
     private final RequestableNetwork mBoundTestNetwork;
     private boolean mRequestRunning;
 
+    private void addRequestableNetwork(RequestableNetwork network) {
+        mRequestableNetworks.add(network);
+    }
+
     private void addRequestableNetwork(int capability, int requestButton, int releaseButton) {
         mRequestableNetworks.add(new RequestableNetwork(capability, requestButton, releaseButton));
     }
@@ -369,7 +373,15 @@ public class Connectivity extends Activity {
         addRequestableNetwork(NET_CAPABILITY_MMS, R.id.request_mms, R.id.release_mms);
         addRequestableNetwork(NET_CAPABILITY_SUPL, R.id.request_supl, R.id.release_supl);
         addRequestableNetwork(NET_CAPABILITY_INTERNET, R.id.request_cell, R.id.release_cell);
+
+        // Make bound requests use cell data.
         mBoundTestNetwork = mRequestableNetworks.get(mRequestableNetworks.size() - 1);
+
+        NetworkRequest wifiRequest = new NetworkRequest.Builder()
+            .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
+            .build();
+        addRequestableNetwork(new RequestableNetwork(wifiRequest,
+                R.id.request_wifi, R.id.release_wifi, R.id.wifi_progress));
     }
 
     final NetworkRequest mEmptyRequest = new NetworkRequest.Builder().clearCapabilities().build();

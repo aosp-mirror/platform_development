@@ -285,6 +285,19 @@
     </LinearLayout>
     <LinearLayout
       android:orientation="horizontal"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content">
+        <Button android:id="@+id/request_wifi"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="@string/request_wifi" />
+        <Button android:id="@+id/release_wifi"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="@string/release_wifi" />
+    </LinearLayout>
+    <LinearLayout
+      android:orientation="horizontal"
       android:paddingBottom="4dip"
       android:layout_width="match_parent"
       android:layout_height="wrap_content">
