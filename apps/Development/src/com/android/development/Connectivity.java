@@ -334,16 +334,7 @@ public class Connectivity extends Activity {
                     public void onAvailable(Network network) {
                         mNetwork = network;
                         onHttpRequestResults(null);
-// TODO: replace with:
-//                      runOnUiThread(() -> {
-//                            findViewById(mProgressBar).setVisibility(View.GONE);
-//                      });
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                findViewById(mProgressBar).setVisibility(View.GONE);
-                            }
-                        });
+                        runOnUiThread(() -> findViewById(mProgressBar).setVisibility(View.GONE));
                     }
                     @Override
                     public void onLost(Network network) {
