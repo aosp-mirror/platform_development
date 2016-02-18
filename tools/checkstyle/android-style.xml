@@ -29,6 +29,7 @@
       <property name="severity" value="warning"/>
       <property name="tokens" value="INTERFACE_DEF, CLASS_DEF"/>
       <property name="scope" value="public"/>
+      <property name="allowUnknownTags" value="true"/> <!-- Allows @hide tags in JavaDocs -->
       <message key="javadoc.missing" value="Public classes and interfaces require JavaDoc comments."/>
     </module>
     <module name="JavadocMethod">
