@@ -303,35 +303,10 @@
       android:orientation="horizontal"
       android:layout_width="match_parent"
       android:layout_height="wrap_content">
-        <TextView
-          android:layout_width="wrap_content"
-          android:layout_height="wrap_content"
-          android:text="@string/netid" />
-        <EditText android:id="@+id/netid"
-          android:layout_width="wrap_content"
-          android:layout_height="wrap_content"
-          android:minEms="5" />
-        <Button android:id="@+id/add_default_route"
-          android:layout_width="wrap_content"
-          android:layout_height="wrap_content"
-          android:text="@string/add_default_route" />
-        <Button android:id="@+id/remove_default_route"
-          android:layout_width="wrap_content"
-          android:layout_height="wrap_content"
-          android:text="@string/remove_default_route" />
-    </LinearLayout>
-    <LinearLayout
-      android:orientation="horizontal"
-      android:layout_width="match_parent"
-      android:layout_height="wrap_content">
         <Button android:id="@+id/default_request"
           android:layout_width="wrap_content"
           android:layout_height="wrap_content"
           android:text="@string/default_request" />
-        <Button android:id="@+id/default_socket"
-          android:layout_width="wrap_content"
-          android:layout_height="wrap_content"
-          android:text="@string/default_socket" />
     </LinearLayout>
     <LinearLayout
       android:orientation="horizontal"
@@ -346,19 +321,21 @@
           android:layout_height="wrap_content"
           android:text="@string/bound_socket_request" />
     </LinearLayout>
+
     <LinearLayout
-      android:orientation="horizontal"
-      android:layout_width="match_parent"
-      android:layout_height="wrap_content">
-        <Button android:id="@+id/routed_http_request"
-          android:layout_width="wrap_content"
-          android:layout_height="wrap_content"
-          android:text="@string/routed_http_request" />
-        <Button android:id="@+id/routed_socket_request"
-          android:layout_width="wrap_content"
-          android:layout_height="wrap_content"
-          android:text="@string/routed_socket_request" />
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <TextView
+            android:id="@+id/http_response"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
     </LinearLayout>
+
+    <!-- divider line -->
+    <View android:background="#FFFFFFFF"
+      android:layout_width="match_parent"
+      android:layout_height="3dip" />
 
     <!-- divider line -->
     <View android:background="#FFFFFFFF"
