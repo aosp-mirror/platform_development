@@ -25,10 +25,6 @@ LOCAL_IS_HOST_MODULE := true
 LOCAL_MODULE_CLASS := EXECUTABLES
 LOCAL_MODULE := rmtypedefs
 
-#LOCAL_STATIC_JAVA_LIBRARIES := \
-#        asm-tools \
-#        guavalib
-
 include $(BUILD_SYSTEM)/base_rules.mk
 
 $(LOCAL_BUILT_MODULE): $(HOST_OUT_JAVA_LIBRARIES)/rmtypedefs$(COMMON_JAVA_PACKAGE_SUFFIX)
