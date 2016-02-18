@@ -292,22 +292,25 @@ public class Connectivity extends Activity {
 
     private class RequestableNetwork {
         private final NetworkRequest mRequest;
-        private final int mRequestButton, mReleaseButton;
+        private final int mRequestButton, mReleaseButton, mProgressBar;
         private NetworkCallback mCallback;
         private Network mNetwork;
 
-        public RequestableNetwork(NetworkRequest request, int requestButton, int releaseButton) {
+        public RequestableNetwork(NetworkRequest request, int requestButton, int releaseButton,
+                int progressBar) {
             mRequest = request;
             mRequestButton = requestButton;
             mReleaseButton = releaseButton;
+            mProgressBar = progressBar;
         }
 
-        public RequestableNetwork(int capability, int requestButton, int releaseButton) {
+        public RequestableNetwork(int capability, int requestButton, int releaseButton,
+                int progressBar) {
             this(new NetworkRequest.Builder()
                     .addTransportType(NetworkCapabilities.TRANSPORT_CELLULAR)
                     .addCapability(capability)
                     .build(),
-                    requestButton, releaseButton);
+                    requestButton, releaseButton, progressBar);
         }
 
         public void addOnClickListener() {
@@ -320,6 +323,8 @@ public class Connectivity extends Activity {
         public void setRequested(boolean requested) {
             findViewById(mRequestButton).setEnabled(!requested);
             findViewById(mReleaseButton).setEnabled(requested);
+            findViewById(mProgressBar).setVisibility(
+                    requested ? View.VISIBLE : View.GONE);
         }
 
         public void request() {
@@ -329,6 +334,16 @@ public class Connectivity extends Activity {
                     public void onAvailable(Network network) {
                         mNetwork = network;
                         onHttpRequestResults(null);
+// TODO: replace with:
+//                      runOnUiThread(() -> {
+//                            findViewById(mProgressBar).setVisibility(View.GONE);
+//                      });
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                findViewById(mProgressBar).setVisibility(View.GONE);
+                            }
+                        });
                     }
                     @Override
                     public void onLost(Network network) {
@@ -364,15 +379,20 @@ public class Connectivity extends Activity {
         mRequestableNetworks.add(network);
     }
 
-    private void addRequestableNetwork(int capability, int requestButton, int releaseButton) {
-        mRequestableNetworks.add(new RequestableNetwork(capability, requestButton, releaseButton));
+    private void addRequestableNetwork(int capability, int requestButton, int releaseButton,
+            int progressBar) {
+        mRequestableNetworks.add(new RequestableNetwork(capability, requestButton, releaseButton,
+                progressBar));
     }
 
     public Connectivity() {
         super();
-        addRequestableNetwork(NET_CAPABILITY_MMS, R.id.request_mms, R.id.release_mms);
-        addRequestableNetwork(NET_CAPABILITY_SUPL, R.id.request_supl, R.id.release_supl);
-        addRequestableNetwork(NET_CAPABILITY_INTERNET, R.id.request_cell, R.id.release_cell);
+        addRequestableNetwork(NET_CAPABILITY_MMS, R.id.request_mms, R.id.release_mms,
+                R.id.mms_progress);
+        addRequestableNetwork(NET_CAPABILITY_SUPL, R.id.request_supl, R.id.release_supl,
+                R.id.supl_progress);
+        addRequestableNetwork(NET_CAPABILITY_INTERNET, R.id.request_cell, R.id.release_cell,
+                R.id.cell_progress);
 
         // Make bound requests use cell data.
         mBoundTestNetwork = mRequestableNetworks.get(mRequestableNetworks.size() - 1);
