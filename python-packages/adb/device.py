@@ -225,9 +225,10 @@ class AndroidDevice(object):
     _RETURN_CODE_PROBE = [';', 'echo', '{0}$?'.format(_RETURN_CODE_DELIMITER)]
 
     # Maximum search distance from the output end to find the delimiter.
-    # adb on Windows returns \r\n even if adbd returns \n.
+    # adb on Windows returns \r\n even if adbd returns \n. Some old devices
+    # seem to actually return \r\r\n.
     _RETURN_CODE_SEARCH_LENGTH = len(
-        '{0}255\r\n'.format(_RETURN_CODE_DELIMITER))
+        '{0}255\r\r\n'.format(_RETURN_CODE_DELIMITER))
 
     # Feature name strings.
     SHELL_PROTOCOL_FEATURE = 'shell_v2'
