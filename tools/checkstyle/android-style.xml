@@ -12,6 +12,7 @@
   <module name="TreeWalker">
     <module name="AvoidStarImport">
       <property name="severity" value="error"/>
+      <property name="excludes" value="org.junit.Assert,org.mockito.Mockito,org.hamcrest.Matchers"/>
     </module>
     <module name="IllegalCatch">
       <property name="severity" value="info"/>
