@@ -51,7 +51,7 @@ def get_devices(adb_path='adb'):
     with open(os.devnull, 'wb') as devnull:
         subprocess.check_call([adb_path, 'start-server'], stdout=devnull,
                               stderr=devnull)
-    out = subprocess.check_output([adb_path, 'devices']).splitlines()
+    out = _split_lines(subprocess.check_output([adb_path, 'devices']))
 
     # The first line of `adb devices` just says "List of attached devices", so
     # skip that.
@@ -213,6 +213,21 @@ def _subprocess_Popen(*args, **kwargs):
     return subprocess.Popen(*_get_subprocess_args(args), **kwargs)
 
 
+def _split_lines(s):
+    """Splits lines in a way that works even on Windows and old devices.
+
+    Windows will see \r\n instead of \n, old devices do the same, old devices
+    on Windows will see \r\r\n.
+    """
+    # rstrip is used here to workaround a difference between splineslines and
+    # re.split:
+    # >>> 'foo\n'.splitlines()
+    # ['foo']
+    # >>> re.split(r'\n', 'foo\n')
+    # ['foo', '']
+    return re.split(r'[\r\n]+', s.rstrip())
+
+
 class AndroidDevice(object):
     # Delimiter string to indicate the start of the exit code.
     _RETURN_CODE_DELIMITER = 'x'
@@ -256,7 +271,7 @@ class AndroidDevice(object):
     def features(self):
         if self._features is None:
             try:
-                self._features = self._simple_call(['features']).splitlines()
+                self._features = _split_lines(self._simple_call(['features']))
             except subprocess.CalledProcessError:
                 self._features = []
         return self._features
@@ -460,7 +475,7 @@ class AndroidDevice(object):
     def get_props(self):
         result = {}
         output, _ = self.shell(['getprop'])
-        output = output.splitlines()
+        output = _split_lines(output)
         pattern = re.compile(r'^\[([^]]+)\]: \[(.*)\]')
         for line in output:
             match = pattern.match(line)
@@ -474,7 +489,7 @@ class AndroidDevice(object):
         return result
 
     def get_prop(self, prop_name):
-        output = self.shell(['getprop', prop_name])[0].splitlines()
+        output = _split_lines(self.shell(['getprop', prop_name])[0])
         if len(output) != 1:
             raise RuntimeError('Too many lines in getprop output:\n' +
                                '\n'.join(output))
