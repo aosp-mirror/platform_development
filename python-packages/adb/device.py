@@ -40,7 +40,7 @@ class NoUniqueDeviceError(FindDeviceError):
 class ShellError(RuntimeError):
     def __init__(self, cmd, stdout, stderr, exit_code):
         super(ShellError, self).__init__(
-                '`{0}` exited with code {1}'.format(cmd, exit_code))
+            '`{0}` exited with code {1}'.format(cmd, exit_code))
         self.cmd = cmd
         self.stdout = stdout
         self.stderr = stderr
@@ -117,7 +117,8 @@ def _get_device_by_type(flag, adb_path):
         subprocess.check_call([adb_path, 'start-server'], stdout=devnull,
                               stderr=devnull)
     try:
-        serial = subprocess.check_output([adb_path, flag, 'get-serialno']).strip()
+        serial = subprocess.check_output(
+            [adb_path, flag, 'get-serialno']).strip()
     except subprocess.CalledProcessError:
         raise RuntimeError('adb unexpectedly returned nonzero')
     if serial == 'unknown':
@@ -151,20 +152,22 @@ def get_emulator_device(adb_path='adb'):
     return _get_device_by_type('-e', adb_path=adb_path)
 
 
-# If necessary, modifies subprocess.check_output() or subprocess.Popen() args to run the subprocess
-# via Windows PowerShell to work-around an issue in Python 2's subprocess class on Windows where it
-# doesn't support Unicode.
+# If necessary, modifies subprocess.check_output() or subprocess.Popen() args
+# to run the subprocess via Windows PowerShell to work-around an issue in
+# Python 2's subprocess class on Windows where it doesn't support Unicode.
 def _get_subprocess_args(args):
-    # Only do this slow work-around if Unicode is in the cmd line on Windows. PowerShell takes
-    # 600-700ms to startup on a 2013-2014 machine, which is very slow.
-    if (os.name != 'nt' or all(not isinstance(arg, unicode) for arg in args[0])):
+    # Only do this slow work-around if Unicode is in the cmd line on Windows.
+    # PowerShell takes 600-700ms to startup on a 2013-2014 machine, which is
+    # very slow.
+    if os.name != 'nt' or all(not isinstance(arg, unicode) for arg in args[0]):
         return args
 
     def escape_arg(arg):
-        # Escape for the parsing that the C Runtime does in Windows apps. In particular, this will
-        # take care of double-quotes.
+        # Escape for the parsing that the C Runtime does in Windows apps. In
+        # particular, this will take care of double-quotes.
         arg = subprocess.list2cmdline([arg])
-        # Escape single-quote with another single-quote because we're about to...
+        # Escape single-quote with another single-quote because we're about
+        # to...
         arg = arg.replace(u"'", u"''")
         # ...put the arg in a single-quoted string for PowerShell to parse.
         arg = u"'" + arg + u"'"
@@ -172,22 +175,26 @@ def _get_subprocess_args(args):
 
     # Escape command line args.
     argv = map(escape_arg, args[0])
-    # Cause script errors (such as adb not found) to stop script immediately with an error.
-    ps_code = u'$ErrorActionPreference = "Stop"\r\n';
-    # Add current directory to the PATH var, to match cmd.exe/CreateProcess() behavior.
-    ps_code += u'$env:Path = ".;" + $env:Path\r\n';
+    # Cause script errors (such as adb not found) to stop script immediately
+    # with an error.
+    ps_code = u'$ErrorActionPreference = "Stop"\r\n'
+    # Add current directory to the PATH var, to match cmd.exe/CreateProcess()
+    # behavior.
+    ps_code += u'$env:Path = ".;" + $env:Path\r\n'
     # Precede by &, the PowerShell call operator, and separate args by space.
     ps_code += u'& ' + u' '.join(argv)
     # Make the PowerShell exit code the exit code of the subprocess.
     ps_code += u'\r\nExit $LastExitCode'
-    # Encode as UTF-16LE (without Byte-Order-Mark) which Windows natively understands.
+    # Encode as UTF-16LE (without Byte-Order-Mark) which Windows natively
+    # understands.
     ps_code = ps_code.encode('utf-16le')
 
-    # Encode the PowerShell command as base64 and use the special -EncodedCommand option that base64
-    # decodes. Base64 is just plain ASCII, so it should have no problem passing through Win32
-    # CreateProcessA() (which python erroneously calls instead of CreateProcessW()).
-    return (['powershell.exe', '-NoProfile', '-NonInteractive', '-EncodedCommand',
-             base64.b64encode(ps_code)],) + args[1:]
+    # Encode the PowerShell command as base64 and use the special
+    # -EncodedCommand option that base64 decodes. Base64 is just plain ASCII,
+    # so it should have no problem passing through Win32 CreateProcessA()
+    # (which python erroneously calls instead of CreateProcessW()).
+    return (['powershell.exe', '-NoProfile', '-NonInteractive',
+             '-EncodedCommand', base64.b64encode(ps_code)],) + args[1:]
 
 
 # Call this instead of subprocess.check_output() to work-around issue in Python
@@ -219,7 +226,8 @@ class AndroidDevice(object):
 
     # Maximum search distance from the output end to find the delimiter.
     # adb on Windows returns \r\n even if adbd returns \n.
-    _RETURN_CODE_SEARCH_LENGTH = len('{0}255\r\n'.format(_RETURN_CODE_DELIMITER))
+    _RETURN_CODE_SEARCH_LENGTH = len(
+        '{0}255\r\n'.format(_RETURN_CODE_DELIMITER))
 
     # Feature name strings.
     SHELL_PROTOCOL_FEATURE = 'shell_v2'
@@ -281,8 +289,8 @@ class AndroidDevice(object):
         if partition[1] == '':
             raise RuntimeError('Could not find exit status in shell output.')
         result = int(partition[2])
-        # partition[0] won't contain the full text if search_text was truncated,
-        # pull from the original string instead.
+        # partition[0] won't contain the full text if search_text was
+        # truncated, pull from the original string instead.
         out = out[:-len(partition[1]) - len(partition[2])]
         return result, out
 
