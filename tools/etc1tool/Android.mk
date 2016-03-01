@@ -10,7 +10,6 @@ include $(CLEAR_VARS)
 LOCAL_SRC_FILES := etc1tool.cpp
 
 LOCAL_STATIC_LIBRARIES := \
-	libhost \
 	libexpat \
 	libpng \
 	libETC1
