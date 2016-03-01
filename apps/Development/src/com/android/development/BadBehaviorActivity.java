@@ -77,7 +77,7 @@ public class BadBehaviorActivity extends Activity {
 
         public boolean activityStarting(Intent intent, String pkg) {
             try {
-                ActivityManagerNative.getDefault().setActivityController(null);
+                ActivityManagerNative.getDefault().setActivityController(null, false);
             } catch (RemoteException e) {
                 Log.e(TAG, "Can't call IActivityManager.setActivityController", e);
             }
@@ -218,7 +218,7 @@ public class BadBehaviorActivity extends Activity {
                 Log.i(TAG, "ANR system pressed -- about to engage");
                 try {
                     ActivityManagerNative.getDefault().setActivityController(
-                        new BadController(20000));
+                        new BadController(20000), false);
                 } catch (RemoteException e) {
                     Log.e(TAG, "Can't call IActivityManager.setActivityController", e);
                 }
@@ -233,7 +233,7 @@ public class BadBehaviorActivity extends Activity {
                 Log.i(TAG, "Wedge system pressed -- about to engage");
                 try {
                     ActivityManagerNative.getDefault().setActivityController(
-                        new BadController(300000));
+                        new BadController(300000), false);
                 } catch (RemoteException e) {
                     Log.e(TAG, "Can't call IActivityManager.setActivityController", e);
                 }
