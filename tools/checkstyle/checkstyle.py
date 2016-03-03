@@ -32,8 +32,7 @@ import gitlint.git as git
 MAIN_DIRECTORY = os.path.normpath(os.path.dirname(__file__))
 CHECKSTYLE_JAR = os.path.join(MAIN_DIRECTORY, 'checkstyle.jar')
 CHECKSTYLE_STYLE = os.path.join(MAIN_DIRECTORY, 'android-style.xml')
-FORCED_RULES = ['com.puppycrawl.tools.checkstyle.checks.imports.ImportOrderCheck',
-                'com.puppycrawl.tools.checkstyle.checks.imports.UnusedImportsCheck']
+FORCED_RULES = []
 SKIPPED_RULES_FOR_TEST_FILES = ['com.puppycrawl.tools.checkstyle.checks.javadoc.JavadocTypeCheck']
 SUBPATH_FOR_TEST_FILES = ['/tests/java/', '/tests/src/']
 ERROR_UNCOMMITTED = 'You need to commit all modified files before running Checkstyle\n'
