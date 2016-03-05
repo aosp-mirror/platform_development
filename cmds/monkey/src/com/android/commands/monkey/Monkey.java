@@ -979,7 +979,7 @@ public class Monkey {
                     intent.addCategory(category);
                 }
                 List<ResolveInfo> mainApps = mPm.queryIntentActivities(intent, null, 0,
-                        UserHandle.myUserId());
+                        UserHandle.myUserId()).getList();
                 if (mainApps == null || mainApps.size() == 0) {
                     System.err.println("// Warning: no activities found for category " + category);
                     continue;
