@@ -122,7 +122,9 @@ ANDROID_SUPPORT_LIBRARIES := \
     android-support-design \
     android-support-percent \
     android-support-recommendation \
-    android-support-customtabs
+    android-support-customtabs \
+    android-support-vectordrawable \
+    android-support-animatedvectordrawable
 
 $(foreach lib, $(ANDROID_SUPPORT_LIBRARIES), $(eval $(call _package_sdk_library,$(lib))))
 
