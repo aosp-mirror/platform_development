@@ -16,6 +16,9 @@ AAsset_openFileDescriptor64
 AAsset_read
 AAsset_seek
 AAsset_seek64
+AChoreographer_getInstance
+AChoreographer_postFrameCallback
+AChoreographer_postFrameCallbackDelayed
 AConfiguration_copy
 AConfiguration_delete
 AConfiguration_diff
