@@ -16,20 +16,19 @@
 
 package com.example.android.apis.media;
 
+import android.content.ClipData;
+import android.media.MediaPlayer;
+import android.view.DragEvent;
+import android.view.View;
 import com.example.android.apis.R;
 import android.app.Activity;
 import android.net.Uri;
 import android.os.Bundle;
 import android.widget.MediaController;
-import android.widget.Toast;
 import android.widget.VideoView;
 
 public class VideoViewDemo extends Activity {
 
-    /**
-     * TODO: Set the path variable to a streaming video URL or a local media
-     * file path.
-     */
     private VideoView mVideoView;
 
     @Override
@@ -38,13 +37,43 @@ public class VideoViewDemo extends Activity {
         setContentView(R.layout.videoview);
         mVideoView = (VideoView) findViewById(R.id.surface_view);
 
-
-        /*
-         * Alternatively, you can use mVideoView.setVideoPath(<path>);
-         */
-        mVideoView.setVideoURI(Uri.parse("android.resource://" + getPackageName() +
+        initPlayer(Uri.parse("android.resource://" + getPackageName() +
                 "/" + R.raw.videoviewdemo));
+
+        mVideoView.setOnDragListener(mDragListener);
+    }
+
+    private void initPlayer(Uri uri) {
+        mVideoView.setVideoURI(uri);
         mVideoView.setMediaController(new MediaController(this));
         mVideoView.requestFocus();
     }
+
+    private View.OnDragListener mDragListener = new View.OnDragListener() {
+        @Override
+        public boolean onDrag(View v, DragEvent event) {
+            if (event.getAction() != DragEvent.ACTION_DROP) {
+                return true;
+            }
+            ClipData clipData = event.getClipData();
+            if (clipData.getItemCount() != 1) {
+                return false;
+            }
+            ClipData.Item item = clipData.getItemAt(0);
+            Uri uri = item.getUri();
+            if (uri == null) {
+                return false;
+            }
+            if (requestDropPermissions(event) == null) {
+                return false;
+            }
+            initPlayer(uri);
+            mVideoView.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+                public void onPrepared(MediaPlayer mediaPlayer) {
+                    mVideoView.start();
+                }
+            });
+            return true;
+        }
+    };
 }
