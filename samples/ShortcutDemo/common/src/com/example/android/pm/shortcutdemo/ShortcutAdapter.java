@@ -58,24 +58,24 @@ public abstract class ShortcutAdapter extends BaseAdapter implements OnClickList
     protected abstract int getText2Id();
     protected abstract int getImageId();
     protected abstract int getLaunchId();
-    protected abstract int getToggleId();
+    protected abstract int getAction2Id();
 
-    protected boolean showLaunch() {
+    protected boolean showLaunch(ShortcutInfo si) {
         return false;
     }
 
-    protected boolean showToggle() {
+    protected boolean showAction2(ShortcutInfo si) {
         return false;
     }
 
-    protected String getToggleText(ShortcutInfo si) {
-        return "Toggle";
+    protected String getAction2Text(ShortcutInfo si) {
+        return "Action2";
     }
 
     protected void onLaunchClicked(ShortcutInfo si) {
     }
 
-    protected void onToggleClicked(ShortcutInfo si) {
+    protected void onAction2Clicked(ShortcutInfo si) {
     }
 
     public void setShortcuts(List<ShortcutInfo> shortcuts) {
@@ -132,14 +132,22 @@ public abstract class ShortcutAdapter extends BaseAdapter implements OnClickList
     }
 
     public void bindView(View view, int position, ShortcutInfo si) {
-        if (showLaunch()) {
+        {
             final View v = view.findViewById(getLaunchId());
-            v.setOnClickListener(this);
+            v.setVisibility(View.GONE);
+            if (showLaunch(si)) {
+                v.setOnClickListener(this);
+                v.setVisibility(View.VISIBLE);
+            }
         }
-        if (showToggle()) {
-            final Button v = (Button) view.findViewById(getToggleId());
-            v.setOnClickListener(this);
-            v.setText(getToggleText(si));
+        {
+            final Button v = (Button) view.findViewById(getAction2Id());
+            v.setVisibility(View.GONE);
+            if (showAction2(si)) {
+                v.setOnClickListener(this);
+                v.setVisibility(View.VISIBLE);
+                v.setText(getAction2Text(si));
+            }
         }
 
         final TextView line1 = (TextView) view.findViewById(getText1Id());
@@ -197,8 +205,8 @@ public abstract class ShortcutAdapter extends BaseAdapter implements OnClickList
         final ShortcutInfo si = (ShortcutInfo)(((View) v.getParent()).getTag());
         if (v.getId() == getLaunchId()) {
             onLaunchClicked(si);
-        } else if (v.getId() == getToggleId()) {
-            onToggleClicked(si);
+        } else if (v.getId() == getAction2Id()) {
+            onAction2Clicked(si);
         }
     }
 }

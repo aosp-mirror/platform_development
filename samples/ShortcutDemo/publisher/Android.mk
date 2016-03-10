@@ -29,7 +29,7 @@ LOCAL_MANIFEST_FILE := manifest1/AndroidManifest.xml
 LOCAL_AAPT_FLAGS += --rename-manifest-package com.example.android.pm.shortcutdemo
 
 LOCAL_SRC_FILES := $(call all-java-files-under, src)
-#LOCAL_SRC_FILES += $(call all-java-files-under, ../common/src)
+LOCAL_SRC_FILES += $(call all-java-files-under, ../common/src)
 
 LOCAL_RESOURCE_DIR := $(LOCAL_PATH)/res
 LOCAL_RESOURCE_DIR += $(LOCAL_PATH)/../common/res
@@ -50,7 +50,7 @@ LOCAL_MANIFEST_FILE := manifest2/AndroidManifest.xml
 LOCAL_AAPT_FLAGS += --rename-manifest-package com.example.android.pm.shortcutdemo2
 
 LOCAL_SRC_FILES := $(call all-java-files-under, src)
-#LOCAL_SRC_FILES += $(call all-java-files-under, ../common/src)
+LOCAL_SRC_FILES += $(call all-java-files-under, ../common/src)
 
 LOCAL_RESOURCE_DIR := $(LOCAL_PATH)/res
 LOCAL_RESOURCE_DIR += $(LOCAL_PATH)/../common/res
