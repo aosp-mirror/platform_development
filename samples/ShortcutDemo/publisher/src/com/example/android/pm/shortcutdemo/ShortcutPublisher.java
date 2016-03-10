@@ -24,8 +24,10 @@ import android.graphics.BitmapFactory;
 import android.graphics.drawable.Icon;
 import android.net.Uri;
 import android.os.Bundle;
+import android.text.format.Time;
 import android.util.ArrayMap;
 import android.util.Log;
+import android.util.Pair;
 import android.view.View;
 import android.widget.ListView;
 import android.widget.Toast;
@@ -36,6 +38,8 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
+import java.util.function.BooleanSupplier;
 
 public class ShortcutPublisher extends Activity {
     public static final String TAG = "ShortcutDemo";
@@ -44,6 +48,8 @@ public class ShortcutPublisher extends Activity {
 
     private ListView mList;
     private MyAdapter mAdapter;
+
+    private final Random mRandom = new Random();
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -72,7 +78,7 @@ public class ShortcutPublisher extends Activity {
         super.onDestroy();
     }
 
-    private void refreshList() {
+    private List<ShortcutInfo> getAllShortcuts() {
         final Map<String, ShortcutInfo> map = new ArrayMap<>();
         for (ShortcutInfo si : mShortcutManager.getDynamicShortcuts()) {
             if (!map.containsKey(si.getId())) {
@@ -84,7 +90,11 @@ public class ShortcutPublisher extends Activity {
                 map.put(si.getId(), si);
             }
         }
-        final List<ShortcutInfo> list = new ArrayList<>(map.values());
+        return new ArrayList<>(map.values());
+    }
+
+    private void refreshList() {
+        final List<ShortcutInfo> list = getAllShortcuts();
         Collections.sort(list, mShortcutComparator);
         mAdapter.setShortcuts(list);
     }
@@ -93,9 +103,6 @@ public class ShortcutPublisher extends Activity {
             (ShortcutInfo s1, ShortcutInfo s2) -> {
                 int ret = 0;
                 ret = (s1.isDynamic() ? 0 : 1) - (s2.isDynamic() ? 0 : 1);
-                if (ret != 0) return ret;
-
-                ret = s1.getTitle().compareTo(s2.getTitle());
                 if (ret != 0) return ret;
 
                 ret = s1.getId().compareTo(s2.getId());
@@ -115,21 +122,50 @@ public class ShortcutPublisher extends Activity {
         }
     }
 
+    private void showToast(String message) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+    }
+
     private void showThrottledToast() {
-        Toast.makeText(this,
-                "Throttled, use \"adb shell cmd shortcut reset-throttling\" to reset counters",
-                Toast.LENGTH_SHORT).show();
+        showToast("Throttled, use \"adb shell cmd shortcut reset-throttling\" to reset counters");
+    }
+
+    private void callApi(BooleanSupplier call) {
+        try {
+            if (!call.getAsBoolean()) {
+                showThrottledToast();
+            }
+            refreshList();
+        } catch (RuntimeException r) {
+            Log.w(TAG, r.getMessage(), r);
+            showToast(r.getMessage());
+        }
+    }
+
+    private List<Pair<String, String>> mIntentList = Arrays.asList(
+            Pair.create("Google Search", "http://www.google.com"),
+            Pair.create("Google Mail", "http://mail.google.com"),
+            Pair.create("Google Maps", "http://maps.google.com"),
+            Pair.create("Google Drive", "http://drive.google.com"),
+            Pair.create("Google Photos", "http://photos.google.com"),
+            Pair.create("Google Hangouts", "http://hangouts.google.com"),
+            Pair.create("Google+", "http://plus.google.com")
+    );
+
+    public ShortcutInfo.Builder addRandomIntents(ShortcutInfo.Builder b) {
+        final int i = mRandom.nextInt(mIntentList.size());
+        b.setTitle(mIntentList.get(i).first);
+        b.setIntent(new Intent(Intent.ACTION_VIEW, Uri.parse(mIntentList.get(i).second)));
+        b.setIcon(Icon.createWithResource(this, R.drawable.icon2));
+        return b;
     }
 
     public void onPublishPressed(View view) {
         dumpCurrentShortcuts();
-        final Icon icon1 = Icon.createWithResource(this, R.drawable.icon_large_1);
         final Icon icon2 = Icon.createWithBitmap(BitmapFactory.decodeResource(getResources(),
                 R.drawable.icon_large_2));
         final Icon icon3 = Icon.createWithContentUri(
                 Uri.parse("content://" + getPackageName() + "/" + R.drawable.icon_large_3));
-
-        final Intent intent1 = new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.google.com/"));
 
         final Intent intent2 = new Intent(Intent.ACTION_VIEW);
         intent2.setClass(this, ShortcutPublisher.class);
@@ -140,13 +176,9 @@ public class ShortcutPublisher extends Activity {
         intent3.putExtra("nest", new Bundle());
         intent3.getBundleExtra("nest").putInt("int", 123);
 
-        final ShortcutInfo si1 = new ShortcutInfo.Builder(this)
+        final ShortcutInfo si1 = addRandomIntents(new ShortcutInfo.Builder(this)
                 .setId("shortcut1")
-                .setTitle("Google Search")
-                .setIcon(icon1)
-                .setWeight(10)
-                .setIntent(new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.google.com/")))
-                .build();
+                .setWeight(10)).build();
 
         final ShortcutInfo si2 = new ShortcutInfo.Builder(this)
                 .setId("shortcut2")
@@ -164,15 +196,56 @@ public class ShortcutPublisher extends Activity {
                 .setIntent(intent3)
                 .build();
 
-        if (!mShortcutManager.setDynamicShortcuts(Arrays.asList(si1, si2, si3))) {
-            showThrottledToast();
-        }
-        refreshList();
+        callApi(new BooleanSupplier() {
+            @Override
+            public boolean getAsBoolean() {
+                return mShortcutManager.setDynamicShortcuts(Arrays.asList(si1, si2, si3));
+            }
+        });
     }
 
     public void onDeleteAllPressed(View view) {
-        mShortcutManager.deleteAllDynamicShortcuts();
-        refreshList();
+        callApi(new BooleanSupplier() {
+            @Override
+            public boolean getAsBoolean() {
+                mShortcutManager.deleteAllDynamicShortcuts();
+                return true;
+            }
+        });
+    }
+
+    static String formatTime(long time) {
+        Time tobj = new Time();
+        tobj.set(time);
+        return tobj.format("%Y-%m-%d %H:%M:%S");
+    }
+
+    public void onAddPressed(View view) {
+        final ShortcutInfo si = addRandomIntents(new ShortcutInfo.Builder(this)
+                .setId("shortcut-" + formatTime(System.currentTimeMillis()))
+                .setWeight(10)).build();
+        callApi(new BooleanSupplier() {
+            @Override
+            public boolean getAsBoolean() {
+                return mShortcutManager.addDynamicShortcut(si);
+            }
+        });
+    }
+
+    public void onUpdatePressed(View view) {
+        final List updateList = new ArrayList<>();
+
+        for (ShortcutInfo si : getAllShortcuts()) {
+            updateList.add(addRandomIntents(new ShortcutInfo.Builder(this)
+                    .setId(si.getId()))
+                    .build());
+        }
+        callApi(new BooleanSupplier() {
+            @Override
+            public boolean getAsBoolean() {
+                return mShortcutManager.updateShortcuts(updateList);
+            }
+        });
     }
 
     void launch(ShortcutInfo si) {
@@ -231,7 +304,7 @@ public class ShortcutPublisher extends Activity {
 
         @Override
         protected String getAction2Text(ShortcutInfo si) {
-            return "Delete Dynamic";
+            return "Delete";
         }
 
         @Override

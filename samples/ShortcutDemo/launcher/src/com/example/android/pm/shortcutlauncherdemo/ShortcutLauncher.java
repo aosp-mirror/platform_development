@@ -129,9 +129,6 @@ public class ShortcutLauncher extends ListActivity {
                 ret = getAppLabel(s1.getPackageName()).compareTo(getAppLabel(s2.getPackageName()));
                 if (ret != 0) return ret;
 
-                ret = s1.getTitle().compareTo(s2.getTitle());
-                if (ret != 0) return ret;
-
                 ret = s1.getId().compareTo(s2.getId());
                 if (ret != 0) return ret;
 

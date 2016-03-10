@@ -18,6 +18,12 @@
     <add-resource type="string" name="publish"/>
     <string name="publish">Publish shortcuts</string>
 
+    <add-resource type="string" name="add_shortcut"/>
+    <string name="add_shortcut">Add shortcut</string>
+
+    <add-resource type="string" name="update_shortcuts"/>
+    <string name="update_shortcuts">Update shortcuts</string>
+
     <add-resource type="string" name="delete_all"/>
     <string name="delete_all">Delete all dynamic shortcuts</string>
 </resources>
