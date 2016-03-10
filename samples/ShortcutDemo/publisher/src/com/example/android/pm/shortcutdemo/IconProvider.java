@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.example.android.pm.shortcuts;
+package com.example.android.pm.shortcutdemo;
 
 import android.content.ContentProvider;
 import android.content.ContentProvider.PipeDataWriter;

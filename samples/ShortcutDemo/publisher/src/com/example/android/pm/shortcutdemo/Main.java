@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.example.android.pm.shortcuts;
+package com.example.android.pm.shortcutdemo;
 
 import android.app.Activity;
 import android.app.WallpaperManager;
@@ -42,10 +42,7 @@ import java.util.List;
 public class Main extends Activity {
     public static final String TAG = "ShortcutDemo";
 
-    private static final boolean USE_LAUNCHER_APIS = true;
-
     private ShortcutManager mShortcutManager;
-    private LauncherApps mLauncherApps;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -54,23 +51,10 @@ public class Main extends Activity {
         setContentView(R.layout.main);
 
         mShortcutManager = getSystemService(ShortcutManager.class);
-        mLauncherApps = getSystemService(LauncherApps.class);
-
-        // TODO This will break once LauncherApps implements permission checks.
-        if (USE_LAUNCHER_APIS) {
-            mLauncherApps.registerCallback(mLauncherCallback);
-        }
-
-        WallpaperManager wpm = this.getSystemService(WallpaperManager.class);
-        wpm.getWallpaperFile(WallpaperManager.FLAG_SET_LOCK);
     }
 
     @Override
     protected void onDestroy() {
-        if (USE_LAUNCHER_APIS) {
-            mLauncherApps.unregisterCallback(mLauncherCallback);
-        }
-
         super.onDestroy();
     }
 
@@ -139,62 +123,9 @@ public class Main extends Activity {
         if (!mShortcutManager.setDynamicShortcuts(Arrays.asList(si1, si2, si3))) {
             showThrottledToast();
         }
-        mLauncherApps.startShortcut(this.getPackageName(), "shortcut1", null, null, Process.myUserHandle());
     }
 
-    private final LauncherApps.Callback mLauncherCallback = new LauncherApps.Callback() {
-        @Override
-        public void onPackageRemoved(String packageName, UserHandle user) {
-        }
-
-        @Override
-        public void onPackageAdded(String packageName, UserHandle user) {
-        }
-
-        @Override
-        public void onPackageChanged(String packageName, UserHandle user) {
-        }
-
-        @Override
-        public void onPackagesAvailable(String[] packageNames, UserHandle user, boolean replacing) {
-        }
-
-        @Override
-        public void onPackagesUnavailable(String[] packageNames, UserHandle user,
-                boolean replacing) {
-        }
-
-        @Override
-        public void onShortcutsChanged(String packageName,
-                List<ShortcutInfo> shortcuts, UserHandle user) {
-            Log.w(TAG, "onShortcutsChanged: user=" + user + " package=" + packageName);
-            Log.d(TAG, "Updated shortcuts:");
-            for (ShortcutInfo si : shortcuts) {
-                Log.d(TAG, "  " + si.toString());
-                writeIconToFile(si);
-            }
-        }
-    };
-
-    private void writeIconToFile(ShortcutInfo si) {
-        if (!si.hasIconFile()){
-            return;
-        }
-        String filename = Environment.getExternalStorageDirectory() + "/" + si.getId() + ".png";
-        try (
-                ParcelFileDescriptor pfd = mLauncherApps.getShortcutIconFd(si,
-                    Process.myUserHandle());
-                FileInputStream in = new FileInputStream(pfd.getFileDescriptor());
-                FileOutputStream out = new FileOutputStream(filename)) {
-
-            byte[] buf = new byte[32 * 1024];
-            int len;
-            while ((len = in.read(buf)) >= 0) {
-                out.write(buf, 0, len);
-            }
-            Log.d(TAG, "wrote icon to " + filename);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    public void onDeleteAllPressed(View view) {
+        mShortcutManager.deleteAllDynamicShortcuts();
     }
 }
