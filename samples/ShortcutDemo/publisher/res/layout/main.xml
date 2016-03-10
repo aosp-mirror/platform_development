@@ -24,6 +24,18 @@
         android:layout_height="wrap_content"
         android:onClick="onPublishPressed"/>
     <Button
+        android:id="@+id/add_shortcut"
+        android:text="@string/add_shortcut"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:onClick="onAddPressed"/>
+    <Button
+        android:id="@+id/update_shortcuts"
+        android:text="@string/update_shortcuts"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:onClick="onUpdatePressed"/>
+    <Button
         android:id="@+id/delete_all"
         android:text="@string/delete_all"
         android:layout_width="fill_parent"
