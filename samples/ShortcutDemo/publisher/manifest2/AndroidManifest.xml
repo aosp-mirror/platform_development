@@ -24,7 +24,7 @@
 
     <application android:label="@string/app_title"
         android:resizeableActivity="true">
-        <activity android:name="Main">
+        <activity android:name="ShortcutPublisher">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.DEFAULT" />

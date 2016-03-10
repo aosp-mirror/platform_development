@@ -18,17 +18,24 @@
         android:layout_width="fill_parent"
         android:layout_height="fill_parent">
     <Button
-            android:id="@+id/publish"
-            android:text="@string/publish"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:onClick="onPublishPressed"/>
+        android:id="@+id/publish"
+        android:text="@string/publish"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:onClick="onPublishPressed"/>
     <Button
         android:id="@+id/delete_all"
         android:text="@string/delete_all"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:onClick="onDeleteAllPressed"/>
+    <ListView
+        android:id="@android:id/list"
+        android:layout_width="match_parent"
+        android:layout_height="0dip"
+        android:layout_weight="1"
+        android:enabled="true"
+    />
 </LinearLayout>
 
 
