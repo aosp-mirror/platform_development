@@ -54,13 +54,14 @@
         android:layout_height="match_parent"
         android:layout_gravity="center"
         android:gravity="center"
+        android:visibility="gone"
         style="@android:style/Widget.Material.Button.Borderless"/>
     <Button
-        android:id="@+id/toggle"
-        android:text="@string/toggle"
+        android:id="@+id/action2"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:layout_gravity="center"
         android:gravity="center"
+        android:visibility="gone"
         style="@android:style/Widget.Material.Button.Borderless"/>
 </LinearLayout>

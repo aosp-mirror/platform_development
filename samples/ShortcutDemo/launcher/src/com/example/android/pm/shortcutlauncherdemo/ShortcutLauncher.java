@@ -28,8 +28,6 @@ import android.os.Process;
 import android.os.UserHandle;
 import android.util.ArrayMap;
 import android.util.Log;
-import android.view.View;
-import android.widget.ListView;
 
 import com.example.android.pm.shortcutdemo.ShortcutAdapter;
 
@@ -38,7 +36,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-public class Main extends ListActivity {
+public class ShortcutLauncher extends ListActivity {
     public static final String TAG = "ShortcutLauncherDemo";
 
     private LauncherApps mLauncherApps;
@@ -201,22 +199,22 @@ public class Main extends ListActivity {
         }
 
         @Override
-        protected int getToggleId() {
-            return R.id.toggle;
+        protected int getAction2Id() {
+            return R.id.action2;
         }
 
         @Override
-        protected boolean showLaunch() {
+        protected boolean showLaunch(ShortcutInfo si) {
             return true;
         }
 
         @Override
-        protected boolean showToggle() {
+        protected boolean showAction2(ShortcutInfo si) {
             return true;
         }
 
         @Override
-        protected String getToggleText(ShortcutInfo si) {
+        protected String getAction2Text(ShortcutInfo si) {
             return si.isPinned() ? "Unpin" : "Pin";
         }
 
@@ -226,7 +224,7 @@ public class Main extends ListActivity {
         }
 
         @Override
-        protected void onToggleClicked(ShortcutInfo si) {
+        protected void onAction2Clicked(ShortcutInfo si) {
             togglePin(si);
         }
     }
