@@ -15,6 +15,5 @@
 -->
 
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
-    <string name="app_title">Shortcuts Demo</string>
-    <string name="publish">Publish shortcuts</string>
+    <string name="app_title">[P2] Shortcuts Demo</string>
 </resources>
