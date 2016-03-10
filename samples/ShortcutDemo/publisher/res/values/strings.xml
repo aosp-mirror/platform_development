@@ -13,16 +13,11 @@
      See the License for the specific language governing permissions and
      limitations under the License.
 -->
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-        android:orientation="vertical"
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent">
-    <Button
-            android:id="@+id/button1"
-            android:text="@string/publish"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:onClick="onPublishPressed"/>
-</LinearLayout>
 
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <add-resource type="string" name="publish"/>
+    <string name="publish">Publish shortcuts</string>
 
+    <add-resource type="string" name="delete_all"/>
+    <string name="delete_all">Delete all dynamic shortcuts</string>
+</resources>
