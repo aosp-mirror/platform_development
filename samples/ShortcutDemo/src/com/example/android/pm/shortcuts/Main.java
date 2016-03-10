@@ -16,6 +16,7 @@
 package com.example.android.pm.shortcuts;
 
 import android.app.Activity;
+import android.app.WallpaperManager;
 import android.content.Intent;
 import android.content.pm.LauncherApps;
 import android.content.pm.ShortcutInfo;
@@ -24,16 +25,24 @@ import android.graphics.BitmapFactory;
 import android.graphics.drawable.Icon;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
+import android.os.ParcelFileDescriptor;
 import android.os.UserHandle;
+import android.os.Process;
 import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
 public class Main extends Activity {
     public static final String TAG = "ShortcutDemo";
+
+    private static final boolean USE_LAUNCHER_APIS = true;
 
     private ShortcutManager mShortcutManager;
     private LauncherApps mLauncherApps;
@@ -48,7 +57,21 @@ public class Main extends Activity {
         mLauncherApps = getSystemService(LauncherApps.class);
 
         // TODO This will break once LauncherApps implements permission checks.
-        mLauncherApps.registerCallback(mLauncherCallback);
+        if (USE_LAUNCHER_APIS) {
+            mLauncherApps.registerCallback(mLauncherCallback);
+        }
+
+        WallpaperManager wpm = this.getSystemService(WallpaperManager.class);
+        wpm.getWallpaperFile(WallpaperManager.FLAG_SET_LOCK);
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (USE_LAUNCHER_APIS) {
+            mLauncherApps.unregisterCallback(mLauncherCallback);
+        }
+
+        super.onDestroy();
     }
 
     private void dumpCurrentShortcuts() {
@@ -94,7 +117,7 @@ public class Main extends Activity {
                 .setTitle("Title 1")
                 .setIcon(icon1)
                 .setWeight(10)
-                .setIntent(intent1)
+                .setIntent(new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.google.com/")))
                 .build();
 
         final ShortcutInfo si2 = new ShortcutInfo.Builder(this)
@@ -116,6 +139,7 @@ public class Main extends Activity {
         if (!mShortcutManager.setDynamicShortcuts(Arrays.asList(si1, si2, si3))) {
             showThrottledToast();
         }
+        mLauncherApps.startShortcut(this.getPackageName(), "shortcut1", null, null, Process.myUserHandle());
     }
 
     private final LauncherApps.Callback mLauncherCallback = new LauncherApps.Callback() {
@@ -147,7 +171,30 @@ public class Main extends Activity {
             Log.d(TAG, "Updated shortcuts:");
             for (ShortcutInfo si : shortcuts) {
                 Log.d(TAG, "  " + si.toString());
+                writeIconToFile(si);
             }
         }
     };
+
+    private void writeIconToFile(ShortcutInfo si) {
+        if (!si.hasIconFile()){
+            return;
+        }
+        String filename = Environment.getExternalStorageDirectory() + "/" + si.getId() + ".png";
+        try (
+                ParcelFileDescriptor pfd = mLauncherApps.getShortcutIconFd(si,
+                    Process.myUserHandle());
+                FileInputStream in = new FileInputStream(pfd.getFileDescriptor());
+                FileOutputStream out = new FileOutputStream(filename)) {
+
+            byte[] buf = new byte[32 * 1024];
+            int len;
+            while ((len = in.read(buf)) >= 0) {
+                out.write(buf, 0, len);
+            }
+            Log.d(TAG, "wrote icon to " + filename);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 }
