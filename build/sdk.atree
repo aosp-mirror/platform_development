@@ -548,6 +548,10 @@ ${OUT_DIR}/target/common/obj/PACKAGING/android-support-v17-preference-leanback_i
 frameworks/support/recommendation/AndroidManifest.xml                                              extras/android/support/recommendation/AndroidManifest.xml
 ${OUT_DIR}/target/common/obj/PACKAGING/android-support-recommendation_intermediates/android-support-recommendation.jar    extras/android/support/recommendation/libs/android-support-recommendation.jar
 
+${OUT_DIR}/target/common/obj/PACKAGING/android-support-vectordrawable_intermediates/android-support-vectordrawable.jar    extras/android/support/graphics/drawable/libs/android-support-vectordrawable.jar
+
+${OUT_DIR}/target/common/obj/PACKAGING/android-support-animatedvectordrawable_intermediates/android-support-animatedvectordrawable.jar    extras/android/support/graphics/drawable/libs/android-support-animatedvectordrawable.jar
+
 ##############################################################################
 # Tests Component
 ##############################################################################
