@@ -165,21 +165,26 @@ public abstract class ShortcutAdapter extends BaseAdapter implements OnClickList
 
         // TODO Do it on worker thread
         final ImageView image = (ImageView) view.findViewById(getImageId());
-        Bitmap icon = null;
-        if (si.hasIconResource()) {
-            try {
-                final Resources res = mContext.getPackageManager().getResourcesForApplication(
-                        si.getPackageName());
-                icon = BitmapFactory.decodeResource(res,
-                        mLauncherApps.getShortcutIconResId(si, Process.myUserHandle()));
+        if (!mLauncherApps.hasShortcutHostPermission()) {
+            image.setVisibility(View.GONE);
+        } else {
+            image.setVisibility(View.VISIBLE);
+            Bitmap icon = null;
+            if (si.hasIconResource()) {
+                try {
+                    final Resources res = mContext.getPackageManager().getResourcesForApplication(
+                            si.getPackageName());
+                    icon = BitmapFactory.decodeResource(res,
+                            mLauncherApps.getShortcutIconResId(si, Process.myUserHandle()));
 
-            } catch (NameNotFoundException e) {
-                Log.w(TAG, "Unable to load icon from " + si.getPackageName(), e);
+                } catch (NameNotFoundException e) {
+                    Log.w(TAG, "Unable to load icon from " + si.getPackageName(), e);
+                }
+            } else if (si.hasIconFile()) {
+                icon = pfdToBitmap(mLauncherApps.getShortcutIconFd(si, Process.myUserHandle()));
             }
-        } else if (si.hasIconFile()) {
-            icon = pfdToBitmap(mLauncherApps.getShortcutIconFd(si, Process.myUserHandle()));
+            image.setImageBitmap(icon);
         }
-        image.setImageBitmap(icon);
     }
 
     private Bitmap pfdToBitmap(ParcelFileDescriptor pfd) {
