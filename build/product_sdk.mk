@@ -28,6 +28,7 @@
 # Host tools and java libraries that are parts of the SDK.
 PRODUCT_PACKAGES += \
 	aapt \
+	aapt2 \
 	adb \
 	aidl \
 	zipalign \
