@@ -28,7 +28,10 @@ include $(TOPDIR)sdk/build/windows_sdk_tools.mk
 # Windows executables. All the targets specified here are located in
 # the topdir/development directory and are somehow platform-dependent.
 WIN_TARGETS := \
-	aapt adb aidl \
+	aapt \
+	aapt2 \
+	adb \
+	aidl \
 	aprotoc \
 	bcc_compat \
 	clang \
