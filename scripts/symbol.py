@@ -44,7 +44,7 @@ def FindSymbolsDir():
 
 SYMBOLS_DIR = FindSymbolsDir()
 
-ARCH = "arm"
+ARCH = None
 
 
 # These are private. Do not access them from other modules.
@@ -336,6 +336,61 @@ def FormatSymbolWithOffset(symbol, offset):
   return "%s+%d" % (symbol, offset)
 
 
+def GetAbiFromToolchain(toolchain_var, bits):
+  toolchain = os.environ.get(toolchain_var)
+  if not toolchain:
+    return None
+
+  toolchain_match = re.search("\/(aarch64|arm|mips|x86)\/", toolchain)
+  if toolchain_match:
+    abi = toolchain_match.group(1)
+    if abi == "aarch64":
+      return "arm64"
+    elif bits == 64:
+      if abi == "x86":
+        return "x86_64"
+      elif abi == "mips":
+        return "mips64"
+    return abi
+  return None
+
+
+def SetAbi(lines):
+  global ARCH
+
+  abi_line = re.compile("ABI: \'(.*)\'")
+  trace_line = re.compile("\#[0-9]+[ \t]+..[ \t]+([0-9a-f]{8}|[0-9a-f]{16})([ \t]+|$)")
+
+  ARCH = None
+  for line in lines:
+    abi_match = abi_line.search(line)
+    if abi_match:
+      ARCH = abi_match.group(1)
+      break
+    trace_match = trace_line.search(line)
+    if trace_match:
+      # Try to guess the arch, we know the bitness.
+      if len(trace_match.group(1)) == 16:
+        # 64 bit
+        # Check for ANDROID_TOOLCHAIN, if it is set, we can figure out the
+        # arch this way. If this is not set, then default to arm64.
+        ARCH = GetAbiFromToolchain("ANDROID_TOOLCHAIN", 64)
+        if not ARCH:
+          ARCH = "arm64"
+      else:
+        # 32 bit
+        # Check for ANDROID_TOOLCHAIN_2ND_ARCH first, if set, use that.
+        # If not try ANDROID_TOOLCHAIN to find the arch.
+        # If this is not set, then default to arm.
+        ARCH = GetAbiFromToolchain("ANDROID_TOOLCHAIN_2ND_ARCH", 32)
+        if not ARCH:
+          ARCH = GetAbiFromToolchain("ANDROID_TOOLCHAIN", 32)
+          if not ARCH:
+            ARCH = "arm"
+      break
+  if not ARCH:
+    raise Exception("Could not determine arch from input")
+
 
 class FindToolchainTests(unittest.TestCase):
   def assert_toolchain_found(self, abi):
@@ -350,6 +405,95 @@ class FindToolchainTests(unittest.TestCase):
     self.assert_toolchain_found("x86")
     self.assert_toolchain_found("x86_64")
 
+class SetArchTests(unittest.TestCase):
+  def test_abi_check(self):
+    global ARCH
+
+    SetAbi(["ABI: 'arm'"])
+    self.assertEqual(ARCH, "arm")
+    SetAbi(["ABI: 'arm64'"])
+    self.assertEqual(ARCH, "arm64")
+
+    SetAbi(["ABI: 'mips'"])
+    self.assertEqual(ARCH, "mips")
+    SetAbi(["ABI: 'mips64'"])
+    self.assertEqual(ARCH, "mips64")
+
+    SetAbi(["ABI: 'x86'"])
+    self.assertEqual(ARCH, "x86")
+    SetAbi(["ABI: 'x86_64'"])
+    self.assertEqual(ARCH, "x86_64")
+
+  def test_32bit_trace_line_toolchain(self):
+    global ARCH
+
+    os.environ.clear()
+    os.environ["ANDROID_TOOLCHAIN"] = "linux-x86/arm/arm-linux-androideabi-4.9/bin"
+    SetAbi(["#00 pc 000374e0"])
+    self.assertEqual(ARCH, "arm")
+
+    os.environ.clear()
+    os.environ["ANDROID_TOOLCHAIN"] = "linux-x86/mips/arm-linux-androideabi-4.9/bin"
+    SetAbi(["#00 pc 000374e0"])
+    self.assertEqual(ARCH, "mips")
+
+    os.environ.clear()
+    os.environ["ANDROID_TOOLCHAIN"] = "linux-x86/x86/arm-linux-androideabi-4.9/bin"
+    SetAbi(["#00 pc 000374e0"])
+    self.assertEqual(ARCH, "x86")
+
+  def test_32bit_trace_line_toolchain_2nd(self):
+    global ARCH
+
+    os.environ.clear()
+    os.environ["ANDROID_TOOLCHAIN_2ND_ARCH"] = "linux-x86/arm/arm-linux-androideabi-4.9/bin"
+    os.environ["ANDROID_TOOLCHAIN_ARCH"] = "linux-x86/aarch64/aarch64-linux-android-4.9/bin"
+    SetAbi(["#00 pc 000374e0"])
+    self.assertEqual(ARCH, "arm")
+
+    os.environ.clear()
+    os.environ["ANDROID_TOOLCHAIN_2ND_ARCH"] = "linux-x86/mips/mips-linux-androideabi-4.9/bin"
+    os.environ["ANDROID_TOOLCHAIN"] = "linux-x86/unknown/unknown-linux-androideabi-4.9/bin"
+    SetAbi(["#00 pc 000374e0"])
+    self.assertEqual(ARCH, "mips")
+
+    os.environ.clear()
+    os.environ["ANDROID_TOOLCHAIN_2ND_ARCH"] = "linux-x86/x86/x86-linux-androideabi-4.9/bin"
+    os.environ["ANDROID_TOOLCHAIN"] = "linux-x86/unknown/unknown-linux-androideabi-4.9/bin"
+    SetAbi(["#00 pc 000374e0"])
+    self.assertEqual(ARCH, "x86")
+
+  def test_64bit_trace_line_toolchain(self):
+    global ARCH
+
+    os.environ.clear()
+    os.environ["ANDROID_TOOLCHAIN"] = "linux-x86/aarch/aarch-linux-androideabi-4.9/bin"
+    SetAbi(["#00 pc 00000000000374e0"])
+    self.assertEqual(ARCH, "arm64")
+
+    os.environ.clear()
+    os.environ["ANDROID_TOOLCHAIN"] = "linux-x86/mips/arm-linux-androideabi-4.9/bin"
+    SetAbi(["#00 pc 00000000000374e0"])
+    self.assertEqual(ARCH, "mips64")
+
+    os.environ.clear()
+    os.environ["ANDROID_TOOLCHAIN"] = "linux-x86/x86/arm-linux-androideabi-4.9/bin"
+    SetAbi(["#00 pc 00000000000374e0"])
+    self.assertEqual(ARCH, "x86_64")
+
+  def test_default_abis(self):
+    global ARCH
+
+    os.environ.clear()
+    SetAbi(["#00 pc 000374e0"])
+    self.assertEqual(ARCH, "arm")
+    SetAbi(["#00 pc 00000000000374e0"])
+    self.assertEqual(ARCH, "arm64")
+
+  def test_no_abi(self):
+    global ARCH
+
+    self.assertRaisesRegexp(Exception, "Could not determine arch from input", SetAbi, [])
 
 if __name__ == '__main__':
     unittest.main()
