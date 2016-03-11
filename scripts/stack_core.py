@@ -32,7 +32,6 @@ def ConvertTrace(lines):
 
 class TraceConverter:
   process_info_line = re.compile("(pid: [0-9]+, tid: [0-9]+.*)")
-  abi_line = re.compile("(ABI: \'(.*)\')")
   revision_line = re.compile("(Revision: \'(.*)\')")
   signal_line = re.compile("(signal [0-9]+ \(.*\).*)")
   abort_message_line = re.compile("(Abort message: '.*')")
@@ -51,9 +50,6 @@ class TraceConverter:
   width = "{8}"
   spacing = ""
   apk_info = dict()
-
-  def __init__(self):
-    self.UpdateAbiRegexes()
 
   register_names = {
     "arm": "r0|r1|r2|r3|r4|r5|r6|r7|r8|r9|sl|fp|ip|sp|lr|pc|cpsr",
@@ -175,6 +171,9 @@ class TraceConverter:
   def ConvertTrace(self, lines):
     lines = map(self.CleanLine, lines)
     try:
+      if not symbol.ARCH:
+        symbol.SetAbi(lines)
+      self.UpdateAbiRegexes()
       for line in lines:
         self.ProcessLine(line)
       self.PrintOutput(self.trace_lines, self.value_lines)
@@ -281,13 +280,11 @@ class TraceConverter:
     abort_message_header = self.abort_message_line.search(line)
     thread_header = self.thread_line.search(line)
     register_header = self.register_line.search(line)
-    abi_header = self.abi_line.search(line)
     revision_header = self.revision_line.search(line)
     dalvik_jni_thread_header = self.dalvik_jni_thread_line.search(line)
     dalvik_native_thread_header = self.dalvik_native_thread_line.search(line)
-    if process_header or signal_header or abort_message_header or thread_header or abi_header or \
+    if process_header or signal_header or abort_message_header or thread_header or \
         register_header or dalvik_jni_thread_header or dalvik_native_thread_header or revision_header:
-      ret = True
       if self.trace_lines or self.value_lines:
         self.PrintOutput(self.trace_lines, self.value_lines)
         self.PrintDivider()
@@ -310,11 +307,7 @@ class TraceConverter:
         print dalvik_native_thread_header.group(1)
       if revision_header:
         print revision_header.group(1)
-      if abi_header:
-        print abi_header.group(1)
-        symbol.ARCH = abi_header.group(2)
-        self.UpdateAbiRegexes()
-      return ret
+      return True
     trace_line_dict = self.MatchTraceLine(line)
     if trace_line_dict is not None:
       ret = True
@@ -404,7 +397,10 @@ class TraceConverter:
 class RegisterPatternTests(unittest.TestCase):
   def assert_register_matches(self, abi, example_crash, stupid_pattern):
     tc = TraceConverter()
-    for line in example_crash.split('\n'):
+    lines = example_crash.split('\n')
+    symbol.SetAbi(lines)
+    tc.UpdateAbiRegexes()
+    for line in lines:
       tc.ProcessLine(line)
       is_register = (re.search(stupid_pattern, line) is not None)
       matched = (tc.register_line.search(line) is not None)

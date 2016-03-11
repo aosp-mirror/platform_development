@@ -29,7 +29,7 @@ def PrintUsage():
   print
   print "  usage: " + sys.argv[0] + " [options] [FILE]"
   print
-  print "  --arch=arm|x86"
+  print "  --arch=arm|arm64|mips|mips64|x86|x86_64"
   print "       the target architecture"
   print
   print "  FILE should contain a stack trace in it somewhere"
