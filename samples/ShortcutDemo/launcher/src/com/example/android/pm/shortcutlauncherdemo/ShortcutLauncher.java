@@ -28,6 +28,7 @@ import android.os.Process;
 import android.os.UserHandle;
 import android.util.ArrayMap;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.example.android.pm.shortcutdemo.ShortcutAdapter;
 
@@ -54,9 +55,18 @@ public class ShortcutLauncher extends ListActivity {
         mLauncherApps = getSystemService(LauncherApps.class);
         mLauncherApps.registerCallback(mLauncherCallback);
 
-        mAdapter = new MyAdapter(this);
+        if (mLauncherApps.hasShortcutHostPermission()) {
+            mAdapter = new MyAdapter(this);
 
-        setListAdapter(mAdapter);
+            setListAdapter(mAdapter);
+        } else {
+            showToast("Please make this app as the default launcher.");
+            finish();
+        }
+    }
+
+    private void showToast(String message) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
     }
 
     @Override
