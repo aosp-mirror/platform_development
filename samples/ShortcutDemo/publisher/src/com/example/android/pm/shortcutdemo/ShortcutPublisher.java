@@ -44,6 +44,8 @@ import java.util.function.BooleanSupplier;
 public class ShortcutPublisher extends Activity {
     public static final String TAG = "ShortcutDemo";
 
+    private static final String SETUP_SHORTCUT_ID = "setup";
+
     private ShortcutManager mShortcutManager;
 
     private ListView mList;
@@ -181,7 +183,7 @@ public class ShortcutPublisher extends Activity {
                 .setWeight(10)).build();
 
         final ShortcutInfo si2 = new ShortcutInfo.Builder(this)
-                .setId("shortcut2")
+                .setId(SETUP_SHORTCUT_ID)
                 .setTitle("Shortcut Demo Main")
                 .setIcon(icon2)
                 .setWeight(5)
@@ -236,6 +238,7 @@ public class ShortcutPublisher extends Activity {
         final List updateList = new ArrayList<>();
 
         for (ShortcutInfo si : getAllShortcuts()) {
+            if (SETUP_SHORTCUT_ID.equals(si.getId())) continue;
             updateList.add(addRandomIntents(new ShortcutInfo.Builder(this)
                     .setId(si.getId()))
                     .build());
