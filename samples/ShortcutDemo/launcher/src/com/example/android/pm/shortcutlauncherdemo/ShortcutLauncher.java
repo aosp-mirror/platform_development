@@ -171,6 +171,9 @@ public class ShortcutLauncher extends ListActivity {
         public void onShortcutsChanged(String packageName,
                 List<ShortcutInfo> shortcuts, UserHandle user) {
             Log.w(TAG, "onShortcutsChanged: user=" + user + " package=" + packageName);
+            for (ShortcutInfo si : shortcuts) {
+                Log.i(TAG, si.toString());
+            }
             refreshList();
         }
     };
