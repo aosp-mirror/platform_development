@@ -56,8 +56,7 @@ $(full_target): $(stub_timestamp) $(framework_res_package)
 	$(hide) find $(PRIVATE_SRC_DIR) -name "*.java" > \
         $(PRIVATE_INTERMEDIATES_DIR)/java-source-list
 	$(hide) $(TARGET_JAVAC) -source 1.8 -target 1.8 -encoding ascii -bootclasspath "" \
-			-g $(xlint_unchecked) \
-			-extdirs "" -d $(PRIVATE_CLASS_INTERMEDIATES_DIR) \
+			-g -extdirs "" -d $(PRIVATE_CLASS_INTERMEDIATES_DIR) \
 			\@$(PRIVATE_INTERMEDIATES_DIR)/java-source-list \
 		|| ( rm -rf $(PRIVATE_CLASS_INTERMEDIATES_DIR) ; exit 41 )
 	$(hide) if [ ! -f $(PRIVATE_FRAMEWORK_RES_PACKAGE) ]; then \
