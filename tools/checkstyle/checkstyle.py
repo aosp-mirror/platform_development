@@ -40,24 +40,25 @@ ERROR_UNCOMMITTED = 'You need to commit all modified files before running Checks
 ERROR_UNTRACKED = 'You have untracked java files that are not being checked:\n'
 
 
-def RunCheckstyleOnFiles(java_files):
+def RunCheckstyleOnFiles(java_files, config_xml=CHECKSTYLE_STYLE):
   """Runs Checkstyle checks on a given set of java_files.
 
   Args:
     java_files: A list of files to check.
+    config_xml: Path of the checkstyle XML configuration file.
 
   Returns:
     A tuple of errors and warnings.
   """
   print 'Running Checkstyle on inputted files'
   java_files = map(os.path.abspath, java_files)
-  stdout = _ExecuteCheckstyle(java_files)
+  stdout = _ExecuteCheckstyle(java_files, config_xml)
   (errors, warnings) = _ParseAndFilterOutput(stdout)
   _PrintErrorsAndWarnings(errors, warnings)
   return errors, warnings
 
 
-def RunCheckstyleOnACommit(commit):
+def RunCheckstyleOnACommit(commit, config_xml=CHECKSTYLE_STYLE):
   """Runs Checkstyle checks on a given commit.
 
   It will run Checkstyle on the changed Java files in a specified commit SHA-1
@@ -66,6 +67,7 @@ def RunCheckstyleOnACommit(commit):
 
   Args:
     commit: A full 40 character SHA-1 of a commit to check.
+    config_xml: Path of the checkstyle XML configuration file.
 
   Returns:
     A tuple of errors and warnings.
@@ -83,7 +85,7 @@ def RunCheckstyleOnACommit(commit):
       commit_modified_files.keys(), commit)
 
   java_files = tmp_file_map.keys()
-  stdout = _ExecuteCheckstyle(java_files)
+  stdout = _ExecuteCheckstyle(java_files, config_xml)
 
   # Remove all the temporary files.
   shutil.rmtree(tmp_dir)
@@ -118,11 +120,12 @@ def _PrintErrorsAndWarnings(errors, warnings):
     print '\n'.join(warnings)
 
 
-def _ExecuteCheckstyle(java_files):
+def _ExecuteCheckstyle(java_files, config_xml):
   """Runs Checkstyle to check give Java files for style errors.
 
   Args:
     java_files: A list of Java files that needs to be checked.
+    config_xml: Path of the checkstyle XML configuration file.
 
   Returns:
     Checkstyle output in XML format.
@@ -134,7 +137,7 @@ def _ExecuteCheckstyle(java_files):
     check = subprocess.Popen(['java', '-cp',
                               CHECKSTYLE_JAR,
                               'com.puppycrawl.tools.checkstyle.Main', '-c',
-                              CHECKSTYLE_STYLE, '-f', 'xml'] + java_files,
+                              config_xml, '-f', 'xml'] + java_files,
                              stdout=subprocess.PIPE, env=checkstyle_env)
     stdout, _ = check.communicate()
   except OSError as e:
@@ -271,17 +274,19 @@ def main(args=None):
   parser = argparse.ArgumentParser()
   parser.add_argument('--file', '-f', nargs='+')
   parser.add_argument('--sha', '-s')
+  parser.add_argument('--config_xml', '-c')
   args = parser.parse_args()
 
-  if not os.path.exists(CHECKSTYLE_STYLE):
+  config_xml = args.config_xml or CHECKSTYLE_STYLE
+  if not os.path.exists(config_xml):
     print 'Java checkstyle configuration file is missing'
     sys.exit(1)
 
   if args.file:
     # Files to check were specified via command line.
-    (errors, warnings) = RunCheckstyleOnFiles(args.file)
+    (errors, warnings) = RunCheckstyleOnFiles(args.file, config_xml)
   else:
-    (errors, warnings) = RunCheckstyleOnACommit(args.sha)
+    (errors, warnings) = RunCheckstyleOnACommit(args.sha, config_xml)
 
   if errors or warnings:
     sys.exit(1)
