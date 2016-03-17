@@ -84,8 +84,8 @@ ALL_SDK_FILES += $(android_jar_full_target)
 # ====================================================
 
 # The Jack & Jill compiler jars
-ALL_SDK_FILES += $(HOST_OUT)/framework/jack.jar
-ALL_SDK_FILES += $(HOST_OUT)/framework/jill.jar
+ALL_SDK_FILES += prebuilts/sdk/tools/jacks/jack-$(JACK_SDKTOOL_VERSION).jar
+ALL_SDK_FILES += prebuilts/sdk/tools/jills/jill-$(JACK_SDKTOOL_VERSION).jar
 
 # The uiautomator stubs
 ALL_SDK_FILES += $(TARGET_OUT_COMMON_INTERMEDIATES)/JAVA_LIBRARIES/android_uiautomator_intermediates/javalib.jar
