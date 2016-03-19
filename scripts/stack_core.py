@@ -43,7 +43,10 @@ class TraceConverter:
   sanitizer_trace_line = re.compile("$a")
   value_line = re.compile("$a")
   code_line = re.compile("$a")
-  unzip_line = re.compile("\s*(\d+)\s+\S+\s+\S+\s+(\S+)")
+  zipinfo_central_directory_line = re.compile("Central\s+directory\s+entry")
+  zipinfo_central_info_match = re.compile(
+      "^\s*(\S+)$\s*offset of local header from start of archive:\s*(\d+)"
+      ".*^\s*compressed size:\s+(\d+)", re.M | re.S)
   trace_lines = []
   value_lines = []
   last_frame = -1
@@ -163,10 +166,9 @@ class TraceConverter:
     print "-----------------------------------------------------\n"
 
   def DeleteApkTmpFiles(self):
-    for _, offset_list in self.apk_info.values():
-      for _, _, tmp_file in offset_list:
-        if tmp_file:
-          os.unlink(tmp_file)
+    for _, _, tmp_files in self.apk_info.values():
+      for tmp_file in tmp_files.values():
+        os.unlink(tmp_file)
 
   def ConvertTrace(self, lines):
     lines = map(self.CleanLine, lines)
@@ -216,20 +218,31 @@ class TraceConverter:
         os.unlink(tmp_file)
     return None
 
+  def ProcessCentralInfo(self, offset_list, central_info):
+    match = self.zipinfo_central_info_match.search(central_info)
+    if not match:
+      raise Exception("Cannot find all info from zipinfo\n" + central_info)
+    name = match.group(1)
+    start = int(match.group(2))
+    end = start + int(match.group(3))
+
+    offset_list.append([name, start, end])
+    return name, start, end
+
   def GetLibFromApk(self, apk, offset):
     # Convert the string to hex.
     offset = int(offset, 16)
 
     # Check if we already have information about this offset.
     if apk in self.apk_info:
-      apk_full_path, offset_list = self.apk_info[apk]
-      for current_offset, file_name, tmp_file in offset_list:
-        if offset <= current_offset:
-          if tmp_file:
-            return file_name, tmp_file
-          # This modifies the value in offset_list.
+      apk_full_path, offset_list, tmp_files = self.apk_info[apk]
+      for file_name, start, end in offset_list:
+        if offset >= start and offset < end:
+          if file_name in tmp_files:
+            return file_name, tmp_files[file_name]
           tmp_file = self.ExtractLibFromApk(apk_full_path, file_name)
           if tmp_file:
+            tmp_files[file_name] = tmp_file
             return file_name, tmp_file
           break
       return None, None
@@ -249,28 +262,38 @@ class TraceConverter:
       print "Cannot find apk " + apk;
       return None, None
 
-    cmd = subprocess.Popen(["unzip", "-lqq", apk_full_path], stdout=subprocess.PIPE)
-    current_offset = 0
-    file_entry = None
+    cmd = subprocess.Popen(["zipinfo", "-v", apk_full_path], stdout=subprocess.PIPE)
+    # Find the first central info marker.
+    for line in cmd.stdout:
+      if self.zipinfo_central_directory_line.search(line):
+        break
+
+    central_info = ""
+    file_name = None
     offset_list = []
     for line in cmd.stdout:
-      match = self.unzip_line.match(line)
+      match = self.zipinfo_central_directory_line.search(line)
       if match:
-        # Round the size up to a page boundary.
-        current_offset += (int(match.group(1), 10) + 0x1000) & ~0xfff
-        offset_entry = [current_offset - 1, match.group(2), None]
-        offset_list.append(offset_entry)
-        if offset < current_offset and not file_entry:
-          file_entry = offset_entry
+        cur_name, start, end = self.ProcessCentralInfo(offset_list, central_info)
+        if not file_name and offset >= start and offset < end:
+          file_name = cur_name
+        central_info = ""
+      else:
+        central_info += line
+    if central_info:
+      cur_name, start, end = self.ProcessCentralInfo(offset_list, central_info)
+      if not file_name and offset >= start and offset < end:
+        file_name = cur_name
 
     # Save the information from the zip.
-    self.apk_info[apk] = [apk_full_path, offset_list]
-    if not file_entry:
+    tmp_files = dict()
+    self.apk_info[apk] = [apk_full_path, offset_list, tmp_files]
+    if not file_name:
       return None, None
-    tmp_shared_lib = self.ExtractLibFromApk(apk_full_path, file_entry[1])
+    tmp_shared_lib = self.ExtractLibFromApk(apk_full_path, file_name)
     if tmp_shared_lib:
-      file_entry[2] = tmp_shared_lib
-      return file_entry[1], file_entry[2]
+      tmp_files[file_name] = tmp_shared_lib
+      return file_name, tmp_shared_lib
     return None, None
 
   def ProcessLine(self, line):
