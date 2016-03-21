@@ -1275,6 +1275,9 @@
         <service android:name=".content.MediaContentJob"
                 android:permission="android.permission.BIND_JOB_SERVICE" />
 
+        <service android:name=".content.PhotosContentJob"
+                android:permission="android.permission.BIND_JOB_SERVICE" />
+
         <activity android:name=".content.InstallApk" android:label="@string/activity_install_apk"
                 android:enabled="@bool/atLeastHoneycombMR2">
             <intent-filter>
