@@ -68,6 +68,7 @@ $(jack_lib) : $(stub_timestamp) $(framework_res_package) $(JACK) | setup-jack-se
 		$(PRIVATE_INTERMEDIATES_DIR)/jack-rsc.java-source-list
 	$(call call-jack) \
 		-D jack.java.source.version=1.8 \
+		-D jack.android.min-api-level=$(PLATFORM_JACK_MIN_SDK_VERSION) \
 		--import-resource $(PRIVATE_INTERMEDIATES_DIR)/jack-rsc.tmp \
 		--output-jack $@ \
 		@$(PRIVATE_INTERMEDIATES_DIR)/jack-rsc.java-source-list \
