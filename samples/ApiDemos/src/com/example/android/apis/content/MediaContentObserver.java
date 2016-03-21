@@ -29,8 +29,10 @@ import com.example.android.apis.R;
 
 public class MediaContentObserver extends Activity {
     ContentObserver mContentObserver;
-    View mScheduleJob;
-    View mCancelJob;
+    View mScheduleMediaJob;
+    View mCancelMediaJob;
+    View mSchedulePhotosJob;
+    View mCancelPhotosJob;
     TextView mDataText;
 
     @Override
@@ -49,21 +51,37 @@ public class MediaContentObserver extends Activity {
         // See res/any/layout/resources.xml for this view layout definition.
         setContentView(R.layout.media_content_observer);
 
-        mScheduleJob = findViewById(R.id.schedule_job);
-        mCancelJob = findViewById(R.id.cancel_job);
+        mScheduleMediaJob = findViewById(R.id.schedule_media_job);
+        mCancelMediaJob = findViewById(R.id.cancel_media_job);
+        mSchedulePhotosJob = findViewById(R.id.schedule_photos_job);
+        mCancelPhotosJob = findViewById(R.id.cancel_photos_job);
         mDataText = (TextView)findViewById(R.id.changes_text);
 
-        mScheduleJob.setOnClickListener(new View.OnClickListener() {
+        mScheduleMediaJob.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 MediaContentJob.scheduleJob(MediaContentObserver.this);
                 updateButtons();
             }
         });
-        mCancelJob.setOnClickListener(new View.OnClickListener() {
+        mCancelMediaJob.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 MediaContentJob.cancelJob(MediaContentObserver.this);
+                updateButtons();
+            }
+        });
+        mSchedulePhotosJob.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                PhotosContentJob.scheduleJob(MediaContentObserver.this);
+                updateButtons();
+            }
+        });
+        mCancelPhotosJob.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                PhotosContentJob.cancelJob(MediaContentObserver.this);
                 updateButtons();
             }
         });
@@ -75,11 +93,18 @@ public class MediaContentObserver extends Activity {
 
     void updateButtons() {
         if (MediaContentJob.isScheduled(this)) {
-            mScheduleJob.setEnabled(false);
-            mCancelJob.setEnabled(true);
+            mScheduleMediaJob.setEnabled(false);
+            mCancelMediaJob.setEnabled(true);
         } else {
-            mScheduleJob.setEnabled(true);
-            mCancelJob.setEnabled(false);
+            mScheduleMediaJob.setEnabled(true);
+            mCancelMediaJob.setEnabled(false);
+        }
+        if (PhotosContentJob.isScheduled(this)) {
+            mSchedulePhotosJob.setEnabled(false);
+            mCancelPhotosJob.setEnabled(true);
+        } else {
+            mSchedulePhotosJob.setEnabled(true);
+            mCancelPhotosJob.setEnabled(false);
         }
     }
 
