@@ -21,13 +21,25 @@
     <LinearLayout android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal">
-        <Button android:id="@+id/schedule_job"
+        <Button android:id="@+id/schedule_media_job"
             android:layout_width="wrap_content" android:layout_height="wrap_content"
-            android:text="Schedule job">
+            android:text="Schedule media job">
         </Button>
-        <Button android:id="@+id/cancel_job"
+        <Button android:id="@+id/cancel_media_job"
             android:layout_width="wrap_content" android:layout_height="wrap_content"
-            android:text="Cancel job">
+            android:text="Cancel media job">
+        </Button>
+    </LinearLayout>
+    <LinearLayout android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+        <Button android:id="@+id/schedule_photos_job"
+            android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="Schedule photos job">
+        </Button>
+        <Button android:id="@+id/cancel_photos_job"
+            android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="Cancel photos job">
         </Button>
     </LinearLayout>
 

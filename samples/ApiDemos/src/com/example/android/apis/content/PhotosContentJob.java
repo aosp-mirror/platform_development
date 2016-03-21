@@ -33,15 +33,13 @@ import com.example.android.apis.R;
 import java.util.List;
 
 /**
- * Stub job to execute when there is a change to any media: content URI.
+ * Stub job to execute when there is a change to photos in the media provider.
  */
-public class MediaContentJob extends JobService {
-    static final Uri MEDIA_URI = Uri.parse("content://" + MediaStore.AUTHORITY + "/");
-
+public class PhotosContentJob extends JobService {
     final Handler mHandler = new Handler();
     final Runnable mWorker = new Runnable() {
         @Override public void run() {
-            scheduleJob(MediaContentJob.this);
+            scheduleJob(PhotosContentJob.this);
             jobFinished(mRunningParams, false);
         }
     };
@@ -50,12 +48,13 @@ public class MediaContentJob extends JobService {
 
     public static void scheduleJob(Context context) {
         JobScheduler js = context.getSystemService(JobScheduler.class);
-        JobInfo.Builder builder = new JobInfo.Builder(R.id.schedule_media_job,
-                new ComponentName(context, MediaContentJob.class));
-        builder.addTriggerContentUri(new JobInfo.TriggerContentUri(MEDIA_URI,
+        JobInfo.Builder builder = new JobInfo.Builder(R.id.schedule_photos_job,
+                new ComponentName(context, PhotosContentJob.class));
+        builder.addTriggerContentUri(new JobInfo.TriggerContentUri(
+                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
                 JobInfo.TriggerContentUri.FLAG_NOTIFY_FOR_DESCENDANTS));
         js.schedule(builder.build());
-        Log.i("MediaContentJob", "JOB SCHEDULED!");
+        Log.i("PhotosContentJob", "JOB SCHEDULED!");
     }
 
     public static boolean isScheduled(Context context) {
@@ -65,7 +64,7 @@ public class MediaContentJob extends JobService {
             return false;
         }
         for (int i=0; i<jobs.size(); i++) {
-            if (jobs.get(i).getId() == R.id.schedule_media_job) {
+            if (jobs.get(i).getId() == R.id.schedule_photos_job) {
                 return true;
             }
         }
@@ -74,15 +73,15 @@ public class MediaContentJob extends JobService {
 
     public static void cancelJob(Context context) {
         JobScheduler js = context.getSystemService(JobScheduler.class);
-        js.cancel(R.id.schedule_media_job);
+        js.cancel(R.id.schedule_photos_job);
     }
 
     @Override
     public boolean onStartJob(JobParameters params) {
-        Log.i("MediaContentJob", "JOB STARTED!");
+        Log.i("PhotosContentJob", "JOB STARTED!");
         mRunningParams = params;
         StringBuilder sb = new StringBuilder();
-        sb.append("Media content has changed:\n");
+        sb.append("Photos content has changed:\n");
         if (params.getTriggeredContentAuthorities() != null) {
             sb.append("Authorities: ");
             boolean first = true;
