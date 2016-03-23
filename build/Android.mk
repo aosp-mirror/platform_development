@@ -68,7 +68,7 @@ android_stubs: $(full_target)
 # The package installation stuff doesn't know about this file, so nobody will
 # ever be able to write a rule that installs it to a device.
 $(dir $(full_target))javalib.jar: $(full_target)
-	$(hide)$(ACP) $< $@
+	$(copy-file-to-target)
 
 # android.jar is what we put in the SDK package.
 android_jar_intermediates := $(TARGET_OUT_COMMON_INTERMEDIATES)/PACKAGING/android_jar_intermediates
@@ -76,8 +76,7 @@ android_jar_full_target := $(android_jar_intermediates)/android.jar
 
 $(android_jar_full_target): $(full_target)
 	@echo Package SDK Stubs: $@
-	$(hide)mkdir -p $(dir $@)
-	$(hide)$(ACP) $< $@
+	$(copy-file-to-target)
 
 ALL_SDK_FILES += $(android_jar_full_target)
 
@@ -97,10 +96,9 @@ ALL_SDK_FILES += $(TARGET_OUT_COMMON_INTERMEDIATES)/JAVA_LIBRARIES/org.apache.ht
 define _package_sdk_library
 $(eval _psm_build_module := $(TARGET_OUT_COMMON_INTERMEDIATES)/JAVA_LIBRARIES/$(1)_intermediates/javalib.jar)
 $(eval _psm_packaging_target := $(TARGET_OUT_COMMON_INTERMEDIATES)/PACKAGING/$(1)_intermediates/$(1).jar)
-$(_psm_packaging_target) : $(_psm_build_module) | $(ACP)
+$(_psm_packaging_target) : $(_psm_build_module)
 	@echo "Package $(1).jar: $$@"
-	$(hide) mkdir -p $$(dir $$@)
-	$(hide) $(ACP) $$< $$@
+	$$(copy-file-to-target)
 
 ALL_SDK_FILES += $(_psm_packaging_target)
 $(eval _psm_build_module :=)
