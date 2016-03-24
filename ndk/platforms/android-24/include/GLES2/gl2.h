@@ -42,6 +42,10 @@ extern "C" {
 #define GL_APIENTRYP GL_APIENTRY*
 #endif
 
+#if !defined(GL_GLES_PROTOTYPES)
+#define GL_GLES_PROTOTYPES 1
+#endif
+
 /* Generated on date 20151015 */
 
 /* Generated C header for:
@@ -520,7 +524,7 @@ typedef void (GL_APIENTRYP PFNGLVERTEXATTRIB4FPROC) (GLuint index, GLfloat x, GL
 typedef void (GL_APIENTRYP PFNGLVERTEXATTRIB4FVPROC) (GLuint index, const GLfloat *v);
 typedef void (GL_APIENTRYP PFNGLVERTEXATTRIBPOINTERPROC) (GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const void *pointer);
 typedef void (GL_APIENTRYP PFNGLVIEWPORTPROC) (GLint x, GLint y, GLsizei width, GLsizei height);
-#ifdef GL_GLEXT_PROTOTYPES
+#if GL_GLES_PROTOTYPES
 GL_APICALL void GL_APIENTRY glActiveTexture (GLenum texture);
 GL_APICALL void GL_APIENTRY glAttachShader (GLuint program, GLuint shader);
 GL_APICALL void GL_APIENTRY glBindAttribLocation (GLuint program, GLuint index, const GLchar *name);
