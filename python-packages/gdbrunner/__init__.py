@@ -291,14 +291,22 @@ def start_gdb(gdb_path, gdb_commands, gdb_flags=None):
         gdb_flags: List of flags to append to gdb command.
     """
 
-    with tempfile.NamedTemporaryFile() as gdb_script:
-        gdb_script.write(gdb_commands)
-        gdb_script.flush()
-        gdb_args = [gdb_path, "-x", gdb_script.name] + (gdb_flags or [])
-        gdb_process = subprocess.Popen(gdb_args)
-        while gdb_process.returncode is None:
-            try:
-                gdb_process.communicate()
-            except KeyboardInterrupt:
-                pass
+    # Windows disallows opening the file while it's open for writing.
+    gdb_script_fd, gdb_script_path = tempfile.mkstemp()
+    os.write(gdb_script_fd, gdb_commands)
+    os.close(gdb_script_fd)
+    gdb_args = [gdb_path, "-x", gdb_script_path] + (gdb_flags or [])
+
+    kwargs = {}
+    if sys.platform.startswith("win"):
+        kwargs["creationflags"] = subprocess.CREATE_NEW_CONSOLE
+
+    gdb_process = subprocess.Popen(gdb_args, **kwargs)
+    while gdb_process.returncode is None:
+        try:
+            gdb_process.communicate()
+        except KeyboardInterrupt:
+            pass
+
+    os.unlink(gdb_script_path)
 
