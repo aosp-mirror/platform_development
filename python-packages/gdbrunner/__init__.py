@@ -176,13 +176,12 @@ def start_gdbserver(device, gdbserver_local_path, gdbserver_remote_path,
     atexit.register(lambda: device.forward_remove("tcp:{}".format(port)))
     gdbserver_cmd = get_run_as_cmd(user, gdbserver_cmd)
 
-    # Use ppid so that the file path stays the same.
-    gdbclient_output_path = os.path.join(tempfile.gettempdir(),
-                                         "gdbclient-{}".format(os.getppid()))
-    print "Redirecting gdbclient output to {}".format(gdbclient_output_path)
-    gdbclient_output = file(gdbclient_output_path, 'w')
-    return device.shell_popen(gdbserver_cmd, stdout=gdbclient_output,
-                              stderr=gdbclient_output)
+    gdbserver_output_path = os.path.join(tempfile.gettempdir(),
+                                         "gdbclient.log")
+    print("Redirecting gdbserver output to {}".format(gdbserver_output_path))
+    gdbserver_output = file(gdbserver_output_path, 'w')
+    return device.shell_popen(gdbserver_cmd, stdout=gdbserver_output,
+                              stderr=gdbserver_output)
 
 
 def find_file(device, executable_path, sysroot, user=None):
