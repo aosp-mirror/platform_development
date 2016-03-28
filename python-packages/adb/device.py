@@ -228,6 +228,17 @@ def split_lines(s):
     return re.split(r'[\r\n]+', s.rstrip())
 
 
+def version(adb_path='adb'):
+    """Get the version of adb (in terms of ADB_SERVER_VERSION)."""
+
+    version_output = subprocess.check_output([adb_path, 'version'])
+    pattern = r'^Android Debug Bridge version 1.0.(\d+)$'
+    result = re.match(pattern, version_output.splitlines()[0])
+    if not result:
+        return 0
+    return int(result.group(1))
+
+
 class AndroidDevice(object):
     # Delimiter string to indicate the start of the exit code.
     _RETURN_CODE_DELIMITER = 'x'
@@ -244,9 +255,6 @@ class AndroidDevice(object):
     # seem to actually return \r\r\n.
     _RETURN_CODE_SEARCH_LENGTH = len(
         '{0}255\r\r\n'.format(_RETURN_CODE_DELIMITER))
-
-    # Feature name strings.
-    SHELL_PROTOCOL_FEATURE = 'shell_v2'
 
     def __init__(self, serial, product=None, adb_path='adb'):
         self.serial = serial
@@ -276,9 +284,12 @@ class AndroidDevice(object):
                 self._features = []
         return self._features
 
+    def has_shell_protocol(self):
+        return version(self.adb_cmd) >= 35 and 'shell_v2' in self.features
+
     def _make_shell_cmd(self, user_cmd):
         command = self.adb_cmd + ['shell'] + user_cmd
-        if self.SHELL_PROTOCOL_FEATURE not in self.features:
+        if self.has_shell_protocol():
             command += self._RETURN_CODE_PROBE
         return command
 
@@ -348,7 +359,7 @@ class AndroidDevice(object):
         p = _subprocess_Popen(
             cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdout, stderr = p.communicate()
-        if self.SHELL_PROTOCOL_FEATURE in self.features:
+        if self.has_shell_protocol():
             exit_code = p.returncode
         else:
             exit_code, stdout = self._parse_shell_output(stdout)
