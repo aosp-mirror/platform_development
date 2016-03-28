@@ -40,7 +40,7 @@ class NoUniqueDeviceError(FindDeviceError):
 class ShellError(RuntimeError):
     def __init__(self, cmd, stdout, stderr, exit_code):
         super(ShellError, self).__init__(
-                '`{0}` exited with code {1}'.format(cmd, exit_code))
+            '`{0}` exited with code {1}'.format(cmd, exit_code))
         self.cmd = cmd
         self.stdout = stdout
         self.stderr = stderr
@@ -51,7 +51,7 @@ def get_devices(adb_path='adb'):
     with open(os.devnull, 'wb') as devnull:
         subprocess.check_call([adb_path, 'start-server'], stdout=devnull,
                               stderr=devnull)
-    out = subprocess.check_output([adb_path, 'devices']).splitlines()
+    out = split_lines(subprocess.check_output([adb_path, 'devices']))
 
     # The first line of `adb devices` just says "List of attached devices", so
     # skip that.
@@ -117,7 +117,8 @@ def _get_device_by_type(flag, adb_path):
         subprocess.check_call([adb_path, 'start-server'], stdout=devnull,
                               stderr=devnull)
     try:
-        serial = subprocess.check_output([adb_path, flag, 'get-serialno']).strip()
+        serial = subprocess.check_output(
+            [adb_path, flag, 'get-serialno']).strip()
     except subprocess.CalledProcessError:
         raise RuntimeError('adb unexpectedly returned nonzero')
     if serial == 'unknown':
@@ -151,20 +152,22 @@ def get_emulator_device(adb_path='adb'):
     return _get_device_by_type('-e', adb_path=adb_path)
 
 
-# If necessary, modifies subprocess.check_output() or subprocess.Popen() args to run the subprocess
-# via Windows PowerShell to work-around an issue in Python 2's subprocess class on Windows where it
-# doesn't support Unicode.
+# If necessary, modifies subprocess.check_output() or subprocess.Popen() args
+# to run the subprocess via Windows PowerShell to work-around an issue in
+# Python 2's subprocess class on Windows where it doesn't support Unicode.
 def _get_subprocess_args(args):
-    # Only do this slow work-around if Unicode is in the cmd line on Windows. PowerShell takes
-    # 600-700ms to startup on a 2013-2014 machine, which is very slow.
-    if (os.name != 'nt' or all(not isinstance(arg, unicode) for arg in args[0])):
+    # Only do this slow work-around if Unicode is in the cmd line on Windows.
+    # PowerShell takes 600-700ms to startup on a 2013-2014 machine, which is
+    # very slow.
+    if os.name != 'nt' or all(not isinstance(arg, unicode) for arg in args[0]):
         return args
 
     def escape_arg(arg):
-        # Escape for the parsing that the C Runtime does in Windows apps. In particular, this will
-        # take care of double-quotes.
+        # Escape for the parsing that the C Runtime does in Windows apps. In
+        # particular, this will take care of double-quotes.
         arg = subprocess.list2cmdline([arg])
-        # Escape single-quote with another single-quote because we're about to...
+        # Escape single-quote with another single-quote because we're about
+        # to...
         arg = arg.replace(u"'", u"''")
         # ...put the arg in a single-quoted string for PowerShell to parse.
         arg = u"'" + arg + u"'"
@@ -172,22 +175,26 @@ def _get_subprocess_args(args):
 
     # Escape command line args.
     argv = map(escape_arg, args[0])
-    # Cause script errors (such as adb not found) to stop script immediately with an error.
-    ps_code = u'$ErrorActionPreference = "Stop"\r\n';
-    # Add current directory to the PATH var, to match cmd.exe/CreateProcess() behavior.
-    ps_code += u'$env:Path = ".;" + $env:Path\r\n';
+    # Cause script errors (such as adb not found) to stop script immediately
+    # with an error.
+    ps_code = u'$ErrorActionPreference = "Stop"\r\n'
+    # Add current directory to the PATH var, to match cmd.exe/CreateProcess()
+    # behavior.
+    ps_code += u'$env:Path = ".;" + $env:Path\r\n'
     # Precede by &, the PowerShell call operator, and separate args by space.
     ps_code += u'& ' + u' '.join(argv)
     # Make the PowerShell exit code the exit code of the subprocess.
     ps_code += u'\r\nExit $LastExitCode'
-    # Encode as UTF-16LE (without Byte-Order-Mark) which Windows natively understands.
+    # Encode as UTF-16LE (without Byte-Order-Mark) which Windows natively
+    # understands.
     ps_code = ps_code.encode('utf-16le')
 
-    # Encode the PowerShell command as base64 and use the special -EncodedCommand option that base64
-    # decodes. Base64 is just plain ASCII, so it should have no problem passing through Win32
-    # CreateProcessA() (which python erroneously calls instead of CreateProcessW()).
-    return (['powershell.exe', '-NoProfile', '-NonInteractive', '-EncodedCommand',
-             base64.b64encode(ps_code)],) + args[1:]
+    # Encode the PowerShell command as base64 and use the special
+    # -EncodedCommand option that base64 decodes. Base64 is just plain ASCII,
+    # so it should have no problem passing through Win32 CreateProcessA()
+    # (which python erroneously calls instead of CreateProcessW()).
+    return (['powershell.exe', '-NoProfile', '-NonInteractive',
+             '-EncodedCommand', base64.b64encode(ps_code)],) + args[1:]
 
 
 # Call this instead of subprocess.check_output() to work-around issue in Python
@@ -206,6 +213,32 @@ def _subprocess_Popen(*args, **kwargs):
     return subprocess.Popen(*_get_subprocess_args(args), **kwargs)
 
 
+def split_lines(s):
+    """Splits lines in a way that works even on Windows and old devices.
+
+    Windows will see \r\n instead of \n, old devices do the same, old devices
+    on Windows will see \r\r\n.
+    """
+    # rstrip is used here to workaround a difference between splineslines and
+    # re.split:
+    # >>> 'foo\n'.splitlines()
+    # ['foo']
+    # >>> re.split(r'\n', 'foo\n')
+    # ['foo', '']
+    return re.split(r'[\r\n]+', s.rstrip())
+
+
+def version(adb_path='adb'):
+    """Get the version of adb (in terms of ADB_SERVER_VERSION)."""
+
+    version_output = subprocess.check_output([adb_path, 'version'])
+    pattern = r'^Android Debug Bridge version 1.0.(\d+)$'
+    result = re.match(pattern, version_output.splitlines()[0])
+    if not result:
+        return 0
+    return int(result.group(1))
+
+
 class AndroidDevice(object):
     # Delimiter string to indicate the start of the exit code.
     _RETURN_CODE_DELIMITER = 'x'
@@ -218,11 +251,10 @@ class AndroidDevice(object):
     _RETURN_CODE_PROBE = [';', 'echo', '{0}$?'.format(_RETURN_CODE_DELIMITER)]
 
     # Maximum search distance from the output end to find the delimiter.
-    # adb on Windows returns \r\n even if adbd returns \n.
-    _RETURN_CODE_SEARCH_LENGTH = len('{0}255\r\n'.format(_RETURN_CODE_DELIMITER))
-
-    # Feature name strings.
-    SHELL_PROTOCOL_FEATURE = 'shell_v2'
+    # adb on Windows returns \r\n even if adbd returns \n. Some old devices
+    # seem to actually return \r\r\n.
+    _RETURN_CODE_SEARCH_LENGTH = len(
+        '{0}255\r\r\n'.format(_RETURN_CODE_DELIMITER))
 
     def __init__(self, serial, product=None, adb_path='adb'):
         self.serial = serial
@@ -247,14 +279,17 @@ class AndroidDevice(object):
     def features(self):
         if self._features is None:
             try:
-                self._features = self._simple_call(['features']).splitlines()
+                self._features = split_lines(self._simple_call(['features']))
             except subprocess.CalledProcessError:
                 self._features = []
         return self._features
 
+    def has_shell_protocol(self):
+        return version(self.adb_cmd) >= 35 and 'shell_v2' in self.features
+
     def _make_shell_cmd(self, user_cmd):
         command = self.adb_cmd + ['shell'] + user_cmd
-        if self.SHELL_PROTOCOL_FEATURE not in self.features:
+        if self.has_shell_protocol():
             command += self._RETURN_CODE_PROBE
         return command
 
@@ -281,8 +316,8 @@ class AndroidDevice(object):
         if partition[1] == '':
             raise RuntimeError('Could not find exit status in shell output.')
         result = int(partition[2])
-        # partition[0] won't contain the full text if search_text was truncated,
-        # pull from the original string instead.
+        # partition[0] won't contain the full text if search_text was
+        # truncated, pull from the original string instead.
         out = out[:-len(partition[1]) - len(partition[2])]
         return result, out
 
@@ -324,7 +359,7 @@ class AndroidDevice(object):
         p = _subprocess_Popen(
             cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdout, stderr = p.communicate()
-        if self.SHELL_PROTOCOL_FEATURE in self.features:
+        if self.has_shell_protocol():
             exit_code = p.returncode
         else:
             exit_code, stdout = self._parse_shell_output(stdout)
@@ -451,7 +486,7 @@ class AndroidDevice(object):
     def get_props(self):
         result = {}
         output, _ = self.shell(['getprop'])
-        output = output.splitlines()
+        output = split_lines(output)
         pattern = re.compile(r'^\[([^]]+)\]: \[(.*)\]')
         for line in output:
             match = pattern.match(line)
@@ -465,7 +500,7 @@ class AndroidDevice(object):
         return result
 
     def get_prop(self, prop_name):
-        output = self.shell(['getprop', prop_name])[0].splitlines()
+        output = split_lines(self.shell(['getprop', prop_name])[0])
         if len(output) != 1:
             raise RuntimeError('Too many lines in getprop output:\n' +
                                '\n'.join(output))
