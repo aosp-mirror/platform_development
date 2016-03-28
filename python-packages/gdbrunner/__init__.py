@@ -115,7 +115,7 @@ def get_processes(device):
     output, _ = device.shell([ps_script])
 
     processes = dict()
-    output = output.replace("\r", "").splitlines()
+    output = adb.split_lines(output.replace("\r", ""))
     columns = output.pop(0).split()
     try:
         pid_column = columns.index("PID")
@@ -176,13 +176,12 @@ def start_gdbserver(device, gdbserver_local_path, gdbserver_remote_path,
     atexit.register(lambda: device.forward_remove("tcp:{}".format(port)))
     gdbserver_cmd = get_run_as_cmd(user, gdbserver_cmd)
 
-    # Use ppid so that the file path stays the same.
-    gdbclient_output_path = os.path.join(tempfile.gettempdir(),
-                                         "gdbclient-{}".format(os.getppid()))
-    print "Redirecting gdbclient output to {}".format(gdbclient_output_path)
-    gdbclient_output = file(gdbclient_output_path, 'w')
-    return device.shell_popen(gdbserver_cmd, stdout=gdbclient_output,
-                              stderr=gdbclient_output)
+    gdbserver_output_path = os.path.join(tempfile.gettempdir(),
+                                         "gdbclient.log")
+    print("Redirecting gdbserver output to {}".format(gdbserver_output_path))
+    gdbserver_output = file(gdbserver_output_path, 'w')
+    return device.shell_popen(gdbserver_cmd, stdout=gdbserver_output,
+                              stderr=gdbserver_output)
 
 
 def find_file(device, executable_path, sysroot, user=None):
@@ -291,14 +290,22 @@ def start_gdb(gdb_path, gdb_commands, gdb_flags=None):
         gdb_flags: List of flags to append to gdb command.
     """
 
-    with tempfile.NamedTemporaryFile() as gdb_script:
-        gdb_script.write(gdb_commands)
-        gdb_script.flush()
-        gdb_args = [gdb_path, "-x", gdb_script.name] + (gdb_flags or [])
-        gdb_process = subprocess.Popen(gdb_args)
-        while gdb_process.returncode is None:
-            try:
-                gdb_process.communicate()
-            except KeyboardInterrupt:
-                pass
+    # Windows disallows opening the file while it's open for writing.
+    gdb_script_fd, gdb_script_path = tempfile.mkstemp()
+    os.write(gdb_script_fd, gdb_commands)
+    os.close(gdb_script_fd)
+    gdb_args = [gdb_path, "-x", gdb_script_path] + (gdb_flags or [])
+
+    kwargs = {}
+    if sys.platform.startswith("win"):
+        kwargs["creationflags"] = subprocess.CREATE_NEW_CONSOLE
+
+    gdb_process = subprocess.Popen(gdb_args, **kwargs)
+    while gdb_process.returncode is None:
+        try:
+            gdb_process.communicate()
+        except KeyboardInterrupt:
+            pass
+
+    os.unlink(gdb_script_path)
 
