@@ -115,7 +115,7 @@ def get_processes(device):
     output, _ = device.shell([ps_script])
 
     processes = dict()
-    output = output.replace("\r", "").splitlines()
+    output = adb.split_lines(output.replace("\r", ""))
     columns = output.pop(0).split()
     try:
         pid_column = columns.index("PID")
