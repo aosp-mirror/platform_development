@@ -176,6 +176,15 @@ typedef EGLBoolean (EGLAPIENTRYP PFNEGLGETSYNCATTRIBKHRPROC) (EGLDisplay dpy, EG
 #define EGL_BITMAP_PIXEL_SIZE_KHR		0x3110
 #endif
 
+#ifndef EGL_KHR_partial_update
+#define EGL_KHR_partial_update 1
+#define EGL_BUFFER_AGE_KHR                0x313D
+typedef EGLBoolean (EGLAPIENTRYP PFNEGLSETDAMAGEREGIONKHRPROC) (EGLDisplay dpy, EGLSurface surface, EGLint *rects, EGLint n_rects);
+#ifdef EGL_EGLEXT_PROTOTYPES
+EGLAPI EGLBoolean EGLAPIENTRY eglSetDamageRegionKHR (EGLDisplay dpy, EGLSurface surface, EGLint *rects, EGLint n_rects);
+#endif
+#endif /* EGL_KHR_partial_update */
+
 #ifndef EGL_NV_coverage_sample
 #define EGL_NV_coverage_sample 1
 #define EGL_COVERAGE_BUFFERS_NV			0x30E0
@@ -435,10 +444,23 @@ typedef EGLBoolean (EGLAPIENTRYP PFNEGLQUERYSTREAMTIMEKHRPROC)(EGLDisplay dpy, E
 #define EGL_OPENGL_ES3_BIT_KHR				    0x00000040
 #endif
 
+#ifndef EGL_KHR_create_context_no_error
+#define EGL_KHR_create_context_no_error 1
+#define EGL_CONTEXT_OPENGL_NO_ERROR_KHR   0x31B3
+#endif /* EGL_KHR_create_context_no_error */
+
 #ifndef EGL_KHR_surfaceless_context
 #define EGL_KHR_surfaceless_context 1
 /* No tokens/entry points, just relaxes an error condition */
 #endif
+
+#ifndef EGL_KHR_swap_buffers_with_damage
+#define EGL_KHR_swap_buffers_with_damage 1
+typedef EGLBoolean (EGLAPIENTRYP PFNEGLSWAPBUFFERSWITHDAMAGEKHRPROC) (EGLDisplay dpy, EGLSurface surface, EGLint *rects, EGLint n_rects);
+#ifdef EGL_EGLEXT_PROTOTYPES
+EGLAPI EGLBoolean EGLAPIENTRY eglSwapBuffersWithDamageKHR (EGLDisplay dpy, EGLSurface surface, EGLint *rects, EGLint n_rects);
+#endif
+#endif /* EGL_KHR_swap_buffers_with_damage */
 
 #ifdef EGL_KHR_stream /* Requires KHR_stream extension */
 #ifndef EGL_KHR_stream_cross_process_fd
