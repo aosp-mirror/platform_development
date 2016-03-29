@@ -31,7 +31,7 @@ class ArgumentParser(argparse.ArgumentParser):
         super(ArgumentParser, self).__init__()
         self.add_argument(
             "--adb", dest="adb_path",
-            help="Use specific adb command")
+            help="use specific adb command")
 
         group = self.add_argument_group(title="device selection")
         group = group.add_mutually_exclusive_group()
