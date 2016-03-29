@@ -228,10 +228,11 @@ def split_lines(s):
     return re.split(r'[\r\n]+', s.rstrip())
 
 
-def version(adb_path='adb'):
+def version(adb_path=None):
     """Get the version of adb (in terms of ADB_SERVER_VERSION)."""
 
-    version_output = subprocess.check_output([adb_path, 'version'])
+    adb_path = adb_path if adb_path is not None else ['adb']
+    version_output = subprocess.check_output(adb_path + ['version'])
     pattern = r'^Android Debug Bridge version 1.0.(\d+)$'
     result = re.match(pattern, version_output.splitlines()[0])
     if not result:
@@ -289,7 +290,7 @@ class AndroidDevice(object):
 
     def _make_shell_cmd(self, user_cmd):
         command = self.adb_cmd + ['shell'] + user_cmd
-        if self.has_shell_protocol():
+        if not self.has_shell_protocol():
             command += self._RETURN_CODE_PROBE
         return command
 
