@@ -494,6 +494,14 @@ typedef EGLBoolean (EGLAPIENTRYP PFNEGLQUERYNATIVEPIXMAPNVPROC)(EGLDisplay dpy, 
 #define EGL_FRAMEBUFFER_TARGET_ANDROID		0x3147
 #endif
 
+#ifndef EGL_ANDROID_image_crop
+#define EGL_ANDROID_image_crop 1
+#define EGL_IMAGE_CROP_LEFT_ANDROID   0x3148
+#define EGL_IMAGE_CROP_TOP_ANDROID    0x3149
+#define EGL_IMAGE_CROP_RIGHT_ANDROID  0x314A
+#define EGL_IMAGE_CROP_BOTTOM_ANDROID 0x314B
+#endif
+
 #ifndef EGL_ANDROID_blob_cache
 #define EGL_ANDROID_blob_cache 1
 typedef khronos_ssize_t EGLsizeiANDROID;
