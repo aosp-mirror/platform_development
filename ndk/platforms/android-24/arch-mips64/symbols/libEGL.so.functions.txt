@@ -5,6 +5,7 @@ eglClientWaitSyncKHR
 eglCopyBuffers
 eglCreateContext
 eglCreateImageKHR
+eglCreateNativeClientBufferANDROID
 eglCreatePbufferFromClientBuffer
 eglCreatePbufferSurface
 eglCreatePixmapSurface
