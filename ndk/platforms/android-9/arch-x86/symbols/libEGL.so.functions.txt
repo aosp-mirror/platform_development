@@ -28,7 +28,6 @@ eglQueryString
 eglQuerySurface
 eglReleaseTexImage
 eglReleaseThread
-eglSetSwapRectangleANDROID
 eglSurfaceAttrib
 eglSwapBuffers
 eglSwapInterval
