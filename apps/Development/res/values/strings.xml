@@ -23,6 +23,8 @@
 
     <string name="enable_wifi">Enable Wifi</string>
     <string name="disable_wifi">Disable Wifi</string>
+    <string name="acquire_wifi_multicast_lock">Acquire Multicast Lock</string>
+    <string name="release_wifi_multicast_lock">Release Multicast Lock</string>
     <string name="wifi_on_duration">Wifi on (ms): </string>
     <string name="wifi_off_duration">Wifi off (ms): </string>
     <string name="wifi_cycles_done">Cycles done: </string>
