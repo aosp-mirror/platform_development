@@ -1,4 +1,4 @@
-/* //device/apps/Settings/src/com/android/settings/Keyguard.java
+/**
 **
 ** Copyright 2006, The Android Open Source Project
 **
@@ -132,6 +132,7 @@ public class Connectivity extends Activity {
     private String mTdlsAddr = null;
 
     private WifiManager mWm;
+    private WifiManager.MulticastLock mWml;
     private PowerManager mPm;
     private ConnectivityManager mCm;
     private INetworkManagementService mNetd;
@@ -404,6 +405,7 @@ public class Connectivity extends Activity {
         setContentView(R.layout.connectivity);
 
         mWm = (WifiManager)getSystemService(Context.WIFI_SERVICE);
+        mWml = mWm.createMulticastLock(TAG);
         mPm = (PowerManager)getSystemService(Context.POWER_SERVICE);
         mCm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         IBinder b = ServiceManager.getService(Context.NETWORKMANAGEMENT_SERVICE);
@@ -411,6 +413,9 @@ public class Connectivity extends Activity {
 
         findViewById(R.id.enableWifi).setOnClickListener(mClickListener);
         findViewById(R.id.disableWifi).setOnClickListener(mClickListener);
+        findViewById(R.id.acquireWifiMulticastLock).setOnClickListener(mClickListener);
+        findViewById(R.id.releaseWifiMulticastLock).setOnClickListener(mClickListener);
+        findViewById(R.id.releaseWifiMulticastLock).setEnabled(false);
 
         findViewById(R.id.startDelayedCycle).setOnClickListener(mClickListener);
         findViewById(R.id.stopDelayedCycle).setOnClickListener(mClickListener);
@@ -481,6 +486,7 @@ public class Connectivity extends Activity {
         mCm.unregisterNetworkCallback(mCallback);
         mCallback = null;
         unregisterReceiver(mReceiver);
+        mWml.release();
     }
 
     @Override
@@ -497,6 +503,10 @@ public class Connectivity extends Activity {
                     break;
                 case R.id.disableWifi:
                     mWm.setWifiEnabled(false);
+                    break;
+                case R.id.acquireWifiMulticastLock:
+                case R.id.releaseWifiMulticastLock:
+                    onWifiMulticastLock(v.getId() == R.id.acquireWifiMulticastLock);
                     break;
                 case R.id.startDelayedCycle:
                     onStartDelayedCycle();
@@ -783,5 +793,16 @@ public class Connectivity extends Activity {
             }
         };
         requestThread.start();
+    }
+
+    private void onWifiMulticastLock(boolean enable) {
+        Log.d(TAG, (enable ? "Acquiring" : "Releasing") + " wifi multicast lock");
+        if (enable) {
+            mWml.acquire();
+        } else {
+            mWml.release();
+        }
+        findViewById(R.id.acquireWifiMulticastLock).setEnabled(!enable);
+        findViewById(R.id.releaseWifiMulticastLock).setEnabled(enable);
     }
 }
