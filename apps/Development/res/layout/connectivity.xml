@@ -42,6 +42,19 @@
           android:layout_height="wrap_content"
           android:text="@string/disable_wifi" />
     </LinearLayout>
+    <LinearLayout
+      android:orientation="horizontal"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content">
+        <Button android:id="@+id/acquireWifiMulticastLock"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="@string/acquire_wifi_multicast_lock" />
+        <Button android:id="@+id/releaseWifiMulticastLock"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="@string/release_wifi_multicast_lock" />
+    </LinearLayout>
 
     <!-- divider line -->
     <View android:background="#FFFFFFFF"
