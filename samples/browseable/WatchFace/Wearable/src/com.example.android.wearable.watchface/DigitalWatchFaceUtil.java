@@ -165,6 +165,7 @@ public final class DigitalWatchFaceUtil {
      */
     public static void putConfigDataItem(GoogleApiClient googleApiClient, DataMap newConfig) {
         PutDataMapRequest putDataMapRequest = PutDataMapRequest.create(PATH_WITH_FEATURE);
+        putDataMapRequest.setUrgent();
         DataMap configToPut = putDataMapRequest.getDataMap();
         configToPut.putAll(newConfig);
         Wearable.DataApi.putDataItem(googleApiClient, putDataMapRequest.asPutDataRequest())

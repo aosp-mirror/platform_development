@@ -30,7 +30,7 @@ import android.view.SurfaceHolder;
 import android.view.WindowInsets;
 
 /**
- * Demostrates interactive watch face capabilities, i.e., touching the display and registering
+ * Demonstrates interactive watch face capabilities, i.e., touching the display and registering
  * three different events: touch, touch-cancel and tap. The watch face UI will show the count of
  * these events as they occur. See the {@code onTapCommand} below.
  */
