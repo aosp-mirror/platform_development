@@ -16,7 +16,9 @@
 
 package com.example.android.apis.content;
 
+import android.Manifest;
 import android.app.Activity;
+import android.content.pm.PackageManager;
 import android.database.ContentObserver;
 import android.net.Uri;
 import android.os.Bundle;
@@ -28,6 +30,8 @@ import android.widget.TextView;
 import com.example.android.apis.R;
 
 public class MediaContentObserver extends Activity {
+    public static final int REQ_PHOTOS_PERM = 1;
+
     ContentObserver mContentObserver;
     View mScheduleMediaJob;
     View mCancelMediaJob;
@@ -74,8 +78,14 @@ public class MediaContentObserver extends Activity {
         mSchedulePhotosJob.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                PhotosContentJob.scheduleJob(MediaContentObserver.this);
-                updateButtons();
+                if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE)
+                        != PackageManager.PERMISSION_GRANTED) {
+                    requestPermissions(new String[] { Manifest.permission.READ_EXTERNAL_STORAGE },
+                            REQ_PHOTOS_PERM);
+                } else {
+                    PhotosContentJob.scheduleJob(MediaContentObserver.this);
+                    updateButtons();
+                }
             }
         });
         mCancelPhotosJob.setOnClickListener(new View.OnClickListener() {
@@ -89,6 +99,17 @@ public class MediaContentObserver extends Activity {
 
         getContentResolver().registerContentObserver(MediaContentJob.MEDIA_URI, true,
                 mContentObserver);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            int[] grantResults) {
+        if (requestCode == REQ_PHOTOS_PERM) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                PhotosContentJob.scheduleJob(MediaContentObserver.this);
+                updateButtons();
+            }
+        }
     }
 
     void updateButtons() {
