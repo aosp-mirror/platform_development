@@ -19,6 +19,8 @@ eglGetCurrentSurface
 eglGetDisplay
 eglGetError
 eglGetProcAddress
+eglGetSystemTimeFrequencyNV
+eglGetSystemTimeNV
 eglInitialize
 eglLockSurfaceKHR
 eglMakeCurrent
