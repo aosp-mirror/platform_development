@@ -374,6 +374,7 @@ development/samples/Home                       samples/${PLATFORM_NAME}/legacy/H
 development/samples/HoneycombGallery           samples/${PLATFORM_NAME}/legacy/HoneycombGallery
 development/samples/JetBoy                     samples/${PLATFORM_NAME}/legacy/JetBoy
 development/samples/KeyChainDemo               samples/${PLATFORM_NAME}/legacy/KeyChainDemo
+development/samples/LceDemo                    samples/${PLATFORM_NAME}/legacy/LceDemo
 development/samples/LunarLander                samples/${PLATFORM_NAME}/legacy/LunarLander
 development/samples/MultiResolution            samples/${PLATFORM_NAME}/legacy/MultiResolution
 development/samples/NotePad                    samples/${PLATFORM_NAME}/legacy/NotePad
