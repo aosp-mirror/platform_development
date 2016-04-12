@@ -210,7 +210,7 @@ public class ShortcutPublisher extends Activity {
         callApi(new BooleanSupplier() {
             @Override
             public boolean getAsBoolean() {
-                mShortcutManager.deleteAllDynamicShortcuts();
+                mShortcutManager.removeAllDynamicShortcuts();
                 return true;
             }
         });
@@ -229,7 +229,7 @@ public class ShortcutPublisher extends Activity {
         callApi(new BooleanSupplier() {
             @Override
             public boolean getAsBoolean() {
-                return mShortcutManager.addDynamicShortcut(si);
+                return mShortcutManager.addDynamicShortcuts(Arrays.asList(si));
             }
         });
     }
@@ -256,7 +256,7 @@ public class ShortcutPublisher extends Activity {
     }
 
     void deleteDynamic(ShortcutInfo si) {
-        mShortcutManager.deleteDynamicShortcut(si.getId());
+        mShortcutManager.removeDynamicShortcuts(Arrays.asList(si.getId()));
         refreshList();
     }
 
