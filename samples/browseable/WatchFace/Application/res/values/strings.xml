@@ -22,6 +22,8 @@
     <string name="digital_config_minutes">Minutes</string>
     <string name="digital_config_seconds">Seconds</string>
 
+    <string name="fit_config_switch_text">Google Fit</string>
+
     <string name="title_no_device_connected">No wearable device is currently connected.</string>
     <string name="ok_no_device_connected">OK</string>
 

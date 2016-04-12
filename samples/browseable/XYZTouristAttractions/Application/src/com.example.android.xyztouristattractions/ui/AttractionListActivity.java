@@ -16,11 +16,16 @@
 
 package com.example.android.xyztouristattractions.ui;
 
+import android.Manifest;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.support.design.widget.Snackbar;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.Toast;
 
 import com.example.android.xyztouristattractions.R;
@@ -31,7 +36,10 @@ import com.example.android.xyztouristattractions.service.UtilityService;
  * The main tourist attraction activity screen which contains a list of
  * attractions sorted by distance.
  */
-public class AttractionListActivity extends AppCompatActivity {
+public class AttractionListActivity extends AppCompatActivity implements
+        ActivityCompat.OnRequestPermissionsResultCallback {
+
+    private static final int PERMISSION_REQ = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,7 +52,23 @@ public class AttractionListActivity extends AppCompatActivity {
                     .commit();
         }
 
-        UtilityService.addGeofences(this);
+        // Check fine location permission has been granted
+        if (!Utils.checkFineLocationPermission(this)) {
+            // See if user has denied permission in the past
+            if (ActivityCompat.shouldShowRequestPermissionRationale(
+                    this, Manifest.permission.ACCESS_FINE_LOCATION)) {
+                // Show a simple snackbar explaining the request instead
+                showPermissionSnackbar();
+            } else {
+                // Otherwise request permission from user
+                if (savedInstanceState == null) {
+                    requestFineLocationPermission();
+                }
+            }
+        } else {
+            // Otherwise permission is granted (which is always the case on pre-M devices)
+            fineLocationPermissionGranted();
+        }
     }
 
     @Override
@@ -85,6 +109,51 @@ public class AttractionListActivity extends AppCompatActivity {
                 return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    /**
+     * Permissions request result callback
+     */
+    @Override
+    public void onRequestPermissionsResult(
+            int requestCode, String[] permissions, int[] grantResults) {
+        switch (requestCode) {
+            case PERMISSION_REQ:
+                if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    fineLocationPermissionGranted();
+                }
+        }
+    }
+
+    /**
+     * Request the fine location permission from the user
+     */
+    private void requestFineLocationPermission() {
+        ActivityCompat.requestPermissions(this,
+                new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, PERMISSION_REQ);
+    }
+
+    /**
+     * Run when fine location permission has been granted
+     */
+    private void fineLocationPermissionGranted() {
+        UtilityService.addGeofences(this);
+        UtilityService.requestLocation(this);
+    }
+
+    /**
+     * Show a permission explanation snackbar
+     */
+    private void showPermissionSnackbar() {
+        Snackbar.make(
+                findViewById(R.id.container), R.string.permission_explanation, Snackbar.LENGTH_LONG)
+                .setAction(R.string.permission_explanation_action, new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        requestFineLocationPermission();
+                    }
+                })
+                .show();
     }
 
     /**

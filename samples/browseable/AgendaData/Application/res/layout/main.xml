@@ -15,10 +15,17 @@
 -->
 
 <LinearLayout
+    android:id="@+id/main_layout"
     xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:paddingBottom="@dimen/vertical_page_margin"
+    android:paddingLeft="@dimen/horizontal_page_margin"
+    android:paddingRight="@dimen/horizontal_page_margin"
+    android:paddingTop="@dimen/vertical_page_margin"
+    tools:context=".MainActivity">
 
     <Button
         android:layout_height="wrap_content"
@@ -37,7 +44,7 @@
         android:textAppearance="?android:textAppearanceLarge"
         android:layout_marginTop="6dp"
         android:padding="6dp"
-        android:text="@string/log"
+        android:text="@string/log_label"
         android:textAllCaps="true"
         android:textColor="@android:color/white"
         android:background="@android:color/black"/>

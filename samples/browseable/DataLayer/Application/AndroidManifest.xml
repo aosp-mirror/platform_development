@@ -18,7 +18,7 @@
         package="com.example.android.wearable.datalayer" >
 
     <uses-sdk android:minSdkVersion="18"
-              android:targetSdkVersion="22" />
+              android:targetSdkVersion="23" />
 
     <uses-feature android:name="android.hardware.camera" android:required="false" />
 

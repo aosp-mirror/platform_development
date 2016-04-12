@@ -156,7 +156,7 @@ public class BasicAndroidKeyStoreFragment extends Fragment {
         // generated.
         Calendar start = new GregorianCalendar();
         Calendar end = new GregorianCalendar();
-        end.add(1, Calendar.YEAR);
+        end.add(Calendar.YEAR, 1);
         //END_INCLUDE(create_valid_dates)
 
 
@@ -316,8 +316,7 @@ public class BasicAndroidKeyStoreFragment extends Fragment {
         // Verify the data.
         s.initVerify(((KeyStore.PrivateKeyEntry) entry).getCertificate());
         s.update(data);
-        boolean valid = s.verify(signature);
-        return valid;
+        return s.verify(signature);
         // END_INCLUDE(verify_data)
     }
 

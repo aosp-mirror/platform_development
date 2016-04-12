@@ -88,6 +88,7 @@ public class UpdateQuestionService extends IntentService
         dataMap.putBoolean(CHOSEN_ANSWER_CORRECT, chosenAnswerCorrect);
         dataMap.putBoolean(QUESTION_WAS_ANSWERED, true);
         PutDataRequest request = putDataMapRequest.asPutDataRequest();
+        request.setUrgent();
         Wearable.DataApi.putDataItem(mGoogleApiClient, request).await();
 
         // Remove this question notification.
