@@ -174,9 +174,7 @@ public abstract class ShortcutAdapter extends BaseAdapter implements OnClickList
                 try {
                     final Resources res = mContext.getPackageManager().getResourcesForApplication(
                             si.getPackageName());
-                    icon = BitmapFactory.decodeResource(res,
-                            mLauncherApps.getShortcutIconResId(si));
-
+                    icon = BitmapFactory.decodeResource(res, si.getIconResourceId());
                 } catch (NameNotFoundException e) {
                     Log.w(TAG, "Unable to load icon from " + si.getPackageName(), e);
                 }
