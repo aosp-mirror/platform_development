@@ -23,7 +23,6 @@ import android.location.Location;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.LocalBroadcastManager;
-import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
@@ -60,6 +59,7 @@ public class AttractionListFragment extends Fragment {
     private AttractionAdapter mAdapter;
     private LatLng mLatestLocation;
     private int mImageSize;
+    private boolean mItemClicked;
 
     public AttractionListFragment() {}
 
@@ -79,8 +79,6 @@ public class AttractionListFragment extends Fragment {
                 (AttractionsRecyclerView) view.findViewById(android.R.id.list);
         recyclerView.setEmptyView(view.findViewById(android.R.id.empty));
         recyclerView.setHasFixedSize(true);
-        recyclerView.setLayoutManager(new GridLayoutManager(
-                getActivity(), getResources().getInteger(R.integer.list_columns)));
         recyclerView.setAdapter(mAdapter);
 
         return view;
@@ -89,6 +87,7 @@ public class AttractionListFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
+        mItemClicked = false;
         LocalBroadcastManager.getInstance(getActivity()).registerReceiver(
                 mBroadcastReceiver, UtilityService.getLocationUpdatedIntentFilter());
     }
@@ -189,9 +188,12 @@ public class AttractionListFragment extends Fragment {
 
         @Override
         public void onItemClick(View view, int position) {
-            View heroView = view.findViewById(android.R.id.icon);
-            DetailActivity.launch(
-                    getActivity(), mAdapter.mAttractionList.get(position).name, heroView);
+            if (!mItemClicked) {
+                mItemClicked = true;
+                View heroView = view.findViewById(android.R.id.icon);
+                DetailActivity.launch(
+                        getActivity(), mAdapter.mAttractionList.get(position).name, heroView);
+            }
         }
     }
 

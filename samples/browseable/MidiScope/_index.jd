@@ -1,0 +1,11 @@
+
+page.tags="MidiScope"
+sample.group=Media
+@jd:body
+
+<p>
+            
+This sample demonstrates how to use the MIDI API to receive and process MIDI signals coming from an
+attached input device.
+            
+        </p>

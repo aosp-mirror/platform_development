@@ -76,6 +76,7 @@ public class DeleteQuestionService extends IntentService
         DataMap dataMap = putDataMapRequest.getDataMap();
         dataMap.putBoolean(QUESTION_WAS_DELETED, true);
         PutDataRequest request = putDataMapRequest.asPutDataRequest();
+        request.setUrgent();
         Wearable.DataApi.putDataItem(mGoogleApiClient, request).await();
         mGoogleApiClient.disconnect();
     }

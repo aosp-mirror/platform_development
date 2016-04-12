@@ -26,4 +26,4 @@
     android:text="@string/action_open"
     android:maxLines="1"
     android:color="@color/colorPrimary"
-    app:rippleColor="@color/colorAccent" />
+    app:buttonRippleColor="@color/colorAccent" />

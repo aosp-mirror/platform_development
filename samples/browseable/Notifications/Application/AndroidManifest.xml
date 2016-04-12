@@ -18,7 +18,7 @@
         package="com.example.android.support.wearable.notifications" >
 
     <uses-sdk android:minSdkVersion="18"
-              android:targetSdkVersion="21" />
+              android:targetSdkVersion="23" />
 
     <uses-permission android:name="android.permission.VIBRATE" />
 

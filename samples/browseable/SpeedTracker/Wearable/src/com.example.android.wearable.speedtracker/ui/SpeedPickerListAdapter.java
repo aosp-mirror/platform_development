@@ -41,6 +41,9 @@ public class SpeedPickerListAdapter extends WearableListView.Adapter {
         mDataSet = dataset;
     }
 
+    /**
+     * Displays all possible speed limit choices.
+     */
     public static class ItemViewHolder extends WearableListView.ViewHolder {
 
         private TextView mTextView;

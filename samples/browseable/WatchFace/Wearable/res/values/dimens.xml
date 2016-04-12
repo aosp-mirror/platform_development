@@ -32,4 +32,15 @@
     <dimen name="interactive_y_offset">72dp</dimen>
     <dimen name="interactive_y_offset_round">84dp</dimen>
     <dimen name="interactive_line_height">25dp</dimen>
+    <dimen name="fit_text_size">40dp</dimen>
+    <dimen name="fit_text_size_round">45dp</dimen>
+    <dimen name="fit_steps_or_distance_text_size">20dp</dimen>
+    <dimen name="fit_am_pm_size">25dp</dimen>
+    <dimen name="fit_am_pm_size_round">30dp</dimen>
+    <dimen name="fit_x_offset">15dp</dimen>
+    <dimen name="fit_x_offset_round">25dp</dimen>
+    <dimen name="fit_steps_or_distance_x_offset">20dp</dimen>
+    <dimen name="fit_steps_or_distance_x_offset_round">30dp</dimen>
+    <dimen name="fit_y_offset">80dp</dimen>
+    <dimen name="fit_line_height">25dp</dimen>
 </resources>

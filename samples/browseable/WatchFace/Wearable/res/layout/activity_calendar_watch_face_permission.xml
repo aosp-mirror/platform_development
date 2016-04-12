@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.wearable.view.BoxInsetLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:id="@+id/container"
+    android:background="@color/white"
+    android:paddingTop="32dp"
+    android:paddingLeft="36dp"
+    android:paddingRight="22dp"
+    tools:context="com.example.android.wearable.watchface.CalendarWatchFacePermissionActivity"
+    tools:deviceIds="wear">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:onClick="onClickEnablePermission"
+        android:orientation="vertical"
+        app:layout_box="all">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="16sp"
+            android:paddingBottom="18dp"
+            android:textColor="#000000"
+            android:text="@string/calendar_permission_text"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <android.support.wearable.view.CircledImageView
+                android:id="@+id/circle"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                app:circle_radius="20dp"
+                app:circle_color="#0086D4"
+                android:src="@drawable/ic_lock_open_white_24dp"/>
+
+            <android.support.v4.widget.Space
+                android:layout_width="8dp"
+                android:layout_height="8dp"/>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="16sp"
+                android:textColor="#0086D4"
+                android:text="Enable Permission"/>
+
+
+        </LinearLayout>
+
+    </LinearLayout>
+</android.support.wearable.view.BoxInsetLayout>

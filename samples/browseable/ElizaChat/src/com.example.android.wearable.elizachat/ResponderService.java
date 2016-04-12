@@ -96,7 +96,7 @@ public class ResponderService extends Service {
                 .setContentText(mLastResponse)
                 .setLargeIcon(BitmapFactory.decodeResource(getResources(), R.drawable.bg_eliza))
                 .setSmallIcon(R.drawable.bg_eliza)
-                .setPriority(NotificationCompat.PRIORITY_MIN);
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT);
 
         Intent intent = new Intent(ACTION_RESPONSE);
         PendingIntent pendingIntent = PendingIntent.getService(this, 0, intent,

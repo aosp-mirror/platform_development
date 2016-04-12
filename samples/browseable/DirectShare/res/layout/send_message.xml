@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+ Copyright 2015 The Android Open Source Project
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="@dimen/dialog_padding"
+        android:layout_marginStart="@dimen/dialog_padding"
+        android:layout_marginTop="@dimen/dialog_padding"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:gravity="center_vertical"
+            android:text="@string/to"
+            android:textAppearance="@android:style/TextAppearance.Material.Caption" />
+
+        <TextView
+            android:id="@+id/contact_name"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_weight="1"
+            android:drawablePadding="16dp"
+            android:gravity="center_vertical"
+            android:textAppearance="@android:style/TextAppearance.Material.Body1"
+            tools:drawableStart="@mipmap/logo_avatar"
+            tools:text="Taro" />
+
+    </LinearLayout>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="@dimen/dialog_padding"
+        android:layout_marginStart="@dimen/dialog_padding"
+        android:layout_marginTop="16dp"
+        android:gravity="center_vertical"
+        android:text="@string/body"
+        android:textAppearance="@android:style/TextAppearance.Material.Caption" />
+
+    <TextView
+        android:id="@+id/message_body"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="@dimen/dialog_padding"
+        android:layout_marginStart="@dimen/dialog_padding"
+        android:gravity="top"
+        android:hint="@string/hint_body"
+        android:padding="8dp"
+        android:textAppearance="@android:style/TextAppearance.Material.Body1"
+        tools:text="Hello, world!" />
+
+    <Button
+        android:id="@+id/send"
+        style="@android:style/Widget.Material.Button.Borderless.Colored"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end"
+        android:layout_marginBottom="@dimen/dialog_button_padding"
+        android:layout_marginEnd="@dimen/dialog_button_padding"
+        android:text="@string/send" />
+
+</LinearLayout>
