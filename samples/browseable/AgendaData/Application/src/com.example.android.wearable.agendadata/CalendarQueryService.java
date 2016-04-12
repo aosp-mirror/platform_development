@@ -250,6 +250,11 @@ public class CalendarQueryService extends IntentService
         public PutDataMapRequest toPutDataMapRequest(){
             final PutDataMapRequest putDataMapRequest = PutDataMapRequest.create(
                     makeDataItemPath(eventId, begin));
+            /* In most cases (as in this one), you don't need your DataItem appear instantly. By
+            default, delivery of normal DataItems to the Wear network might be delayed in order to
+            improve battery life for user devices. However, if you can't tolerate a delay in the
+            sync of your DataItems, you can mark them as urgent via setUrgent().
+             */
             DataMap data = putDataMapRequest.getDataMap();
             data.putString(DATA_ITEM_URI, putDataMapRequest.getUri().toString());
             data.putLong(ID, id);

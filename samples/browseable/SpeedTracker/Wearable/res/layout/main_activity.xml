@@ -29,11 +29,13 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
+        android:paddingLeft="16dp"
         android:fontFamily="sans-serif-light"
+        android:textAlignment="center"
         android:textSize="17sp"
         android:textStyle="italic"
-        android:id="@+id/acquiring_gps"
-        android:text="@string/acquiring_gps"/>
+        android:id="@+id/gps_issue_text"
+        android:text=""/>
 
     <TextView
         android:layout_width="wrap_content"
@@ -84,18 +86,20 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:src="@drawable/ic_gps_not_saving_grey600_96dp"
-        android:id="@+id/saving"
+        android:id="@+id/gps_permission"
+        android:onClick="onGpsPermissionClick"
         android:layout_alignParentBottom="true"
         android:layout_alignParentLeft="true"
         android:layout_marginBottom="20dp"
-        android:layout_marginLeft="60dp" />
+        android:layout_marginLeft="50dp" />
 
     <ImageButton
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/settings"
+        android:id="@+id/speed_limit_setting"
+        android:onClick="onSpeedLimitClick"
         android:background="@drawable/settings"
         android:layout_alignParentRight="true"
-        android:layout_alignBottom="@+id/saving"
-        android:layout_marginRight="60dp"/>
+        android:layout_alignBottom="@+id/gps_permission"
+        android:layout_marginRight="50dp"/>
 </RelativeLayout>

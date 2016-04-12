@@ -1,0 +1,11 @@
+
+page.tags="RuntimePermissionsWear"
+sample.group=Wearable
+@jd:body
+
+<p>
+
+A sample that shows how you can handle remote data that requires permissions both on
+a wearable device and a mobile device.
+
+        </p>

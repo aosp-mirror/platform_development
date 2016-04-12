@@ -1,0 +1,14 @@
+
+page.tags="WearSpeakerSample"
+sample.group=Wearable
+@jd:body
+
+<p>
+
+A sample that shows how you can record voice using the microphone on a wearable and
+play the recorded voice or an mp3 file, if the wearable device has a built-in speaker.
+
+This sample doesn't have any companion phone app so you need to install this directly
+on your watch (using "adb").
+
+        </p>

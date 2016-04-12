@@ -100,6 +100,7 @@ public class FindPhoneService extends IntentService implements GoogleApiClient.C
             // when it receives the change.
             PutDataMapRequest putDataMapRequest = PutDataMapRequest.create(PATH_SOUND_ALARM);
             putDataMapRequest.getDataMap().putBoolean(FIELD_ALARM_ON, alarmOn);
+            putDataMapRequest.setUrgent();
             Wearable.DataApi.putDataItem(mGoogleApiClient, putDataMapRequest.asPutDataRequest())
                     .await();
         } else {

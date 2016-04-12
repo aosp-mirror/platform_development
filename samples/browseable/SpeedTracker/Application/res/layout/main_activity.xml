@@ -21,7 +21,8 @@
     <RelativeLayout
         android:id="@+id/top_container"
         android:layout_width="fill_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp">
         <Button
             android:id="@+id/date_picker"
             android:layout_width="wrap_content"
