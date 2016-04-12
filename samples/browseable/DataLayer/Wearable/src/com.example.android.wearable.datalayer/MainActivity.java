@@ -23,6 +23,7 @@ import android.app.Fragment;
 import android.app.FragmentManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.wearable.view.DotsPageIndicator;
@@ -41,6 +42,7 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.GoogleApiClient.ConnectionCallbacks;
 import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListener;
+import com.google.android.gms.common.api.PendingResult;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.wearable.Asset;
 import com.google.android.gms.wearable.CapabilityApi;
@@ -85,7 +87,6 @@ public class MainActivity extends Activity implements ConnectionCallbacks,
     private static final String CAPABILITY_2_NAME = "capability_2";
 
     private GoogleApiClient mGoogleApiClient;
-    private Handler mHandler;
     private GridViewPager mPager;
     private DataFragment mDataFragment;
     private AssetFragment mAssetFragment;
@@ -93,7 +94,6 @@ public class MainActivity extends Activity implements ConnectionCallbacks,
     @Override
     public void onCreate(Bundle b) {
         super.onCreate(b);
-        mHandler = new Handler();
         setContentView(R.layout.main_activity);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         setupViews();
@@ -137,15 +137,6 @@ public class MainActivity extends Activity implements ConnectionCallbacks,
         Log.e(TAG, "onConnectionFailed(): Failed to connect, with result: " + result);
     }
 
-    private void generateEvent(final String title, final String text) {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                mDataFragment.appendItem(title, text);
-            }
-        });
-    }
-
     @Override
     public void onDataChanged(DataEventBuffer dataEvents) {
         LOGD(TAG, "onDataChanged(): " + dataEvents);
@@ -155,29 +146,22 @@ public class MainActivity extends Activity implements ConnectionCallbacks,
                 String path = event.getDataItem().getUri().getPath();
                 if (DataLayerListenerService.IMAGE_PATH.equals(path)) {
                     DataMapItem dataMapItem = DataMapItem.fromDataItem(event.getDataItem());
-                    Asset photo = dataMapItem.getDataMap()
+                    Asset photoAsset = dataMapItem.getDataMap()
                             .getAsset(DataLayerListenerService.IMAGE_KEY);
-                    final Bitmap bitmap = loadBitmapFromAsset(mGoogleApiClient, photo);
-                    mHandler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            Log.d(TAG, "Setting background image on second page..");
-                            moveToPage(1);
-                            mAssetFragment.setBackgroundImage(bitmap);
-                        }
-                    });
+                    // Loads image on background thread.
+                    new LoadBitmapAsyncTask().execute(photoAsset);
 
                 } else if (DataLayerListenerService.COUNT_PATH.equals(path)) {
                     LOGD(TAG, "Data Changed for COUNT_PATH");
-                    generateEvent("DataItem Changed", event.getDataItem().toString());
+                    mDataFragment.appendItem("DataItem Changed", event.getDataItem().toString());
                 } else {
                     LOGD(TAG, "Unrecognized path: " + path);
                 }
 
             } else if (event.getType() == DataEvent.TYPE_DELETED) {
-                generateEvent("DataItem Deleted", event.getDataItem().toString());
+                mDataFragment.appendItem("DataItem Deleted", event.getDataItem().toString());
             } else {
-                generateEvent("Unknown data event type", "Type = " + event.getType());
+                mDataFragment.appendItem("Unknown data event type", "Type = " + event.getType());
             }
         }
     }
@@ -199,20 +183,27 @@ public class MainActivity extends Activity implements ConnectionCallbacks,
      * Find the connected nodes that provide at least one of the given capabilities
      */
     private void showNodes(final String... capabilityNames) {
-        Wearable.CapabilityApi.getAllCapabilities(mGoogleApiClient,
-                CapabilityApi.FILTER_REACHABLE).setResultCallback(
 
+        PendingResult<CapabilityApi.GetAllCapabilitiesResult> pendingCapabilityResult =
+                Wearable.CapabilityApi.getAllCapabilities(
+                        mGoogleApiClient,
+                        CapabilityApi.FILTER_REACHABLE);
+
+        pendingCapabilityResult.setResultCallback(
                 new ResultCallback<CapabilityApi.GetAllCapabilitiesResult>() {
                     @Override
                     public void onResult(
                             CapabilityApi.GetAllCapabilitiesResult getAllCapabilitiesResult) {
+
                         if (!getAllCapabilitiesResult.getStatus().isSuccess()) {
                             Log.e(TAG, "Failed to get capabilities");
                             return;
                         }
-                        Map<String, CapabilityInfo>
-                                capabilitiesMap = getAllCapabilitiesResult.getAllCapabilities();
+
+                        Map<String, CapabilityInfo> capabilitiesMap =
+                                getAllCapabilitiesResult.getAllCapabilities();
                         Set<Node> nodes = new HashSet<>();
+
                         if (capabilitiesMap.isEmpty()) {
                             showDiscoveredNodes(nodes);
                             return;
@@ -231,7 +222,7 @@ public class MainActivity extends Activity implements ConnectionCallbacks,
                         for (Node node : nodes) {
                             nodesList.add(node.getDisplayName());
                         }
-                        Log.d(TAG, "Connected Nodes: " + (nodesList.isEmpty()
+                        LOGD(TAG, "Connected Nodes: " + (nodesList.isEmpty()
                                 ? "No connected device was found for the given capabilities"
                                 : TextUtils.join(",", nodesList)));
                         String msg;
@@ -246,39 +237,20 @@ public class MainActivity extends Activity implements ConnectionCallbacks,
                 });
     }
 
-    /**
-     * Extracts {@link android.graphics.Bitmap} data from the
-     * {@link com.google.android.gms.wearable.Asset}
-     */
-    private Bitmap loadBitmapFromAsset(GoogleApiClient apiClient, Asset asset) {
-        if (asset == null) {
-            throw new IllegalArgumentException("Asset must be non-null");
-        }
-
-        InputStream assetInputStream = Wearable.DataApi.getFdForAsset(
-                apiClient, asset).await().getInputStream();
-
-        if (assetInputStream == null) {
-            Log.w(TAG, "Requested an unknown Asset.");
-            return null;
-        }
-        return BitmapFactory.decodeStream(assetInputStream);
-    }
-
     @Override
     public void onMessageReceived(MessageEvent event) {
         LOGD(TAG, "onMessageReceived: " + event);
-        generateEvent("Message", event.toString());
+        mDataFragment.appendItem("Message", event.toString());
     }
 
     @Override
     public void onPeerConnected(Node node) {
-        generateEvent("Node Connected", node.getId());
+        mDataFragment.appendItem("Node Connected", node.getId());
     }
 
     @Override
     public void onPeerDisconnected(Node node) {
-        generateEvent("Node Disconnected", node.getId());
+        mDataFragment.appendItem("Node Disconnected", node.getId());
     }
 
     private void setupViews() {
@@ -329,5 +301,44 @@ public class MainActivity extends Activity implements ConnectionCallbacks,
             return mFragments.get(column);
         }
 
+    }
+
+    /*
+     * Extracts {@link android.graphics.Bitmap} data from the
+     * {@link com.google.android.gms.wearable.Asset}
+     */
+    private class LoadBitmapAsyncTask extends AsyncTask<Asset, Void, Bitmap> {
+
+        @Override
+        protected Bitmap doInBackground(Asset... params) {
+
+            if(params.length > 0) {
+
+                Asset asset = params[0];
+
+                InputStream assetInputStream = Wearable.DataApi.getFdForAsset(
+                        mGoogleApiClient, asset).await().getInputStream();
+
+                if (assetInputStream == null) {
+                    Log.w(TAG, "Requested an unknown Asset.");
+                    return null;
+                }
+                return BitmapFactory.decodeStream(assetInputStream);
+
+            } else {
+                Log.e(TAG, "Asset must be non-null");
+                return null;
+            }
+        }
+
+        @Override
+        protected void onPostExecute(Bitmap bitmap) {
+
+            if(bitmap != null) {
+                LOGD(TAG, "Setting background image on second page..");
+                moveToPage(1);
+                mAssetFragment.setBackgroundImage(bitmap);
+            }
+        }
     }
 }

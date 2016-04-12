@@ -150,6 +150,11 @@ public class UtilityService extends IntentService {
      */
     private void addGeofencesInternal() {
         Log.v(TAG, ACTION_ADD_GEOFENCES);
+
+        if (!Utils.checkFineLocationPermission(this)) {
+            return;
+        }
+
         GoogleApiClient googleApiClient = new GoogleApiClient.Builder(this)
                 .addApi(LocationServices.API)
                 .build();
@@ -202,6 +207,11 @@ public class UtilityService extends IntentService {
      */
     private void requestLocationInternal() {
         Log.v(TAG, ACTION_REQUEST_LOCATION);
+
+        if (!Utils.checkFineLocationPermission(this)) {
+            return;
+        }
+
         GoogleApiClient googleApiClient = new GoogleApiClient.Builder(this)
                 .addApi(LocationServices.API)
                 .build();
@@ -358,7 +368,7 @@ public class UtilityService extends IntentService {
                 .setSmallIcon(R.drawable.ic_stat_maps_pin_drop)
                 .setContentIntent(pendingIntent)
                 .setDeleteIntent(deletePendingIntent)
-                .setColor(getResources().getColor(R.color.colorPrimary))
+                .setColor(getResources().getColor(R.color.colorPrimary, getTheme()))
                 .setCategory(Notification.CATEGORY_RECOMMENDATION)
                 .setAutoCancel(true);
 
@@ -466,6 +476,7 @@ public class UtilityService extends IntentService {
             dataMap.getDataMap().putDataMapArrayList(Constants.EXTRA_ATTRACTIONS, attractionsData);
             dataMap.getDataMap().putLong(Constants.EXTRA_TIMESTAMP, new Date().getTime());
             PutDataRequest request = dataMap.asPutDataRequest();
+            request.setUrgent();
 
             // Send the data over
             DataApi.DataItemResult result =

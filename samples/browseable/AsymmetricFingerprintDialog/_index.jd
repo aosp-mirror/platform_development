@@ -1,0 +1,11 @@
+
+page.tags="AsymmetricFingerprintDialog"
+sample.group=Security
+@jd:body
+
+<p>
+            
+This sample demonstrates how you can use registered fingerprints to authenticate the user
+before proceeding some actions such as purchasing an item. This version uses asymmetric keys.
+            
+        </p>

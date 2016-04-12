@@ -51,7 +51,7 @@ import java.util.Set;
  * Manages documents and exposes them to the Android system for sharing.
  */
 public class MyCloudProvider extends DocumentsProvider {
-    private static final String TAG = MyCloudProvider.class.getSimpleName();
+    private static final String TAG = "MyCloudProvider";
 
     // Use these as the default columns to return information about a root if no specific
     // columns are requested in a query.
