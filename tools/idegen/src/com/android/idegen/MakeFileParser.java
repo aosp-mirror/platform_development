@@ -150,7 +150,7 @@ public class MakeFileParser {
                 lineBuffer.append(" ");
             }
             if (line.endsWith("\\")) {
-                lineBuffer.append(line.substring(0, line.length() - 2).trim());
+                lineBuffer.append(line.substring(0, line.length() - 1).trim());
             } else {
                 lineBuffer.append(line);
             }
