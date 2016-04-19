@@ -56,7 +56,8 @@
             android:label="@string/activity_sample_code"
             android:icon="@drawable/app_sample_code"
             android:hardwareAccelerated="true"
-            android:supportsRtl="true">
+            android:supportsRtl="true"
+            android:theme="@android:style/Theme.Material.Light.DarkActionBar">
 
         <!-- This is how we can request a library but still allow the app
              to be installed if it doesn't exist. -->
