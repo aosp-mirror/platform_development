@@ -25,4 +25,6 @@ LOCAL_PACKAGE_NAME := CubeLiveWallpapers
 
 LOCAL_SDK_VERSION := current
 
+LOCAL_DEX_PREOPT := false
+
 include $(BUILD_PACKAGE)

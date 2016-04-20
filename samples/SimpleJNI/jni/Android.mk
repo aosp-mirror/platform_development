@@ -28,20 +28,22 @@ LOCAL_MODULE:= libsimplejni
 
 # All of the source files that we will compile.
 LOCAL_SRC_FILES:= \
-  native.cpp
+    native.cpp
 
 # All of the shared libraries we link against.
 LOCAL_SHARED_LIBRARIES := \
-	libutils liblog
+    liblog
 
 # No static libraries.
 LOCAL_STATIC_LIBRARIES :=
 
 # Also need the JNI headers.
 LOCAL_C_INCLUDES += \
-	$(JNI_H_INCLUDE)
+    $(JNI_H_INCLUDE)
 
 # No special compiler flags.
 LOCAL_CFLAGS +=
+
+LOCAL_CXX_STL := none
 
 include $(BUILD_SHARED_LIBRARY)

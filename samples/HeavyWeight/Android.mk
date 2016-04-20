@@ -10,6 +10,8 @@ LOCAL_PACKAGE_NAME := HeavyWeight
 
 LOCAL_SDK_VERSION := current
 
+LOCAL_DEX_PREOPT := false
+
 # Currently doesn't build
 #include $(BUILD_PACKAGE)
 

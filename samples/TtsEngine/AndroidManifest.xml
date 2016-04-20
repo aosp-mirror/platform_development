@@ -17,9 +17,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.android.ttsengine">
 
-    <!-- TODO: Fix this when the API level for ICS is finalized. -->
-    <uses-sdk android:minSdkVersion="IceCreamSandwich"
-        android:targetSdkVersion="IceCreamSandwich" />
+    <uses-sdk android:minSdkVersion="14"
+        android:targetSdkVersion="14" />
 
     <uses-permission android:name="android.permission.INTERNET" />
 
