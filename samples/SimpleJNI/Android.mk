@@ -36,6 +36,8 @@ LOCAL_PROGUARD_ENABLED := disabled
 
 LOCAL_SDK_VERSION := current
 
+LOCAL_DEX_PREOPT := false
+
 include $(BUILD_PACKAGE)
 
 # ============================================================
