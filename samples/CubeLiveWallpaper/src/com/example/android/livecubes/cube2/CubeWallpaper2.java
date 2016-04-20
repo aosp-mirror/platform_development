@@ -138,8 +138,8 @@ public class CubeWallpaper2 extends WallpaperService {
             for (int i = 0; i < numlines; i++) {
                 mLines[i] = new ThreeDLine();
                 String [] idx = l[i].split(" ");
-                mLines[i].startPoint = Integer.valueOf(idx[0]);
-                mLines[i].endPoint = Integer.valueOf(idx[1]);
+                mLines[i].startPoint = Integer.parseInt(idx[0]);
+                mLines[i].endPoint = Integer.parseInt(idx[1]);
             }
         }
 
