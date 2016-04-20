@@ -26,6 +26,8 @@ LOCAL_PACKAGE_NAME := VoicemailProviderDemo
 
 LOCAL_SDK_VERSION := current
 
+LOCAL_DEX_PREOPT := false
+
 include $(BUILD_PACKAGE)
 
 # Use the following include to make our test apk.
