@@ -9,4 +9,6 @@ LOCAL_SDK_VERSION := current
 
 LOCAL_PACKAGE_NAME := SearchableDictionary
 
+LOCAL_DEX_PREOPT := false
+
 include $(BUILD_PACKAGE)

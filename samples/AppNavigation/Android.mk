@@ -9,6 +9,8 @@ LOCAL_PACKAGE_NAME := AppNavigation
 
 LOCAL_SDK_VERSION := current
 
+LOCAL_DEX_PREOPT := false
+
 include $(BUILD_PACKAGE)
 
 LOCAL_PROGUARD_FLAG_FILES := proguard.flags
