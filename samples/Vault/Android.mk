@@ -12,4 +12,6 @@ LOCAL_PROGUARD_ENABLED := disabled
 
 LOCAL_PACKAGE_NAME := Vault
 
+LOCAL_DEX_PREOPT := false
+
 include $(BUILD_PACKAGE)
