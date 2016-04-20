@@ -260,13 +260,13 @@ public class PolicySetupActivity extends Activity {
 
         int passwordLength = 0;
         try {
-            passwordLength = Integer.valueOf(mPasswordLengthInputField.getText().toString());
+            passwordLength = Integer.parseInt(mPasswordLengthInputField.getText().toString());
         } catch (NumberFormatException nfe) {}  // Defaults to 0.
 
         int passwordMinUppercase = 0;
         try {
             passwordMinUppercase =
-                    Integer.valueOf(mPasswordMinUppercaseInputField.getText().toString());
+                    Integer.parseInt(mPasswordMinUppercaseInputField.getText().toString());
         } catch (NumberFormatException nfe) {}  // Defaults to 0.
 
         mPolicy.saveToLocal(passwordQuality, passwordLength, passwordMinUppercase);
