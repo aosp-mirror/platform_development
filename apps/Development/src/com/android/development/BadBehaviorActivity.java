@@ -26,6 +26,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
 import android.os.IPowerManager;
 import android.os.Process;
@@ -37,6 +38,10 @@ import android.widget.Button;
 
 public class BadBehaviorActivity extends Activity {
     private static final String TAG = "BadBehaviorActivity";
+
+    private static final String BROADCAST_FLOOD = "com.android.development.BROADCAST_FLOOD";
+
+    private Handler mHandler = new Handler();
 
     private static class BadBehaviorException extends RuntimeException {
         BadBehaviorException() {
@@ -112,6 +117,25 @@ public class BadBehaviorActivity extends Activity {
             return 0;
         }
     }
+
+    int mFloodBroadcastsSent;
+    int mFloodBroadcastsReceived;
+
+    public class ExponentialReceiver extends BroadcastReceiver {
+        String name;
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            final int N = 5;
+            mFloodBroadcastsReceived++;
+            for (int i=0; i<N; i++) {
+                mFloodBroadcastsSent++;
+                Log.i(TAG, this.name + " sent=" + mFloodBroadcastsSent
+                        + " received=" + mFloodBroadcastsReceived);
+                context.sendBroadcast(new Intent(BROADCAST_FLOOD));
+            }
+        }
+    };
 
     @Override
     public void onCreate(Bundle icicle) {
@@ -238,6 +262,22 @@ public class BadBehaviorActivity extends Activity {
                     Log.e(TAG, "Can't call IActivityManager.setActivityController", e);
                 }
                 startActivity(intent.putExtra("dummy", true));
+            }
+        });
+
+        Button broadcast_flood = (Button) findViewById(R.id.bad_behavior_broadcast_flood);
+        broadcast_flood.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                // Let's create and register some broadcast receivers
+                IntentFilter filter = new IntentFilter(BROADCAST_FLOOD);
+                for (int i=0; i<30; i++) {
+                    ExponentialReceiver receiver = new ExponentialReceiver();
+                    receiver.name = "ExponentialReceiver " + i;
+                    registerReceiver(receiver, filter);
+                }
+                // Now open the floodgates
+                mFloodBroadcastsSent = 1;
+                sendBroadcast(new Intent(BROADCAST_FLOOD));
             }
         });
     }
