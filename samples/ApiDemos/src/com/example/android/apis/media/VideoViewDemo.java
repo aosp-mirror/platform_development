@@ -64,7 +64,7 @@ public class VideoViewDemo extends Activity {
             if (uri == null) {
                 return false;
             }
-            if (requestDropPermissions(event) == null) {
+            if (requestDragAndDropPermissions(event) == null) {
                 return false;
             }
             initPlayer(uri);
