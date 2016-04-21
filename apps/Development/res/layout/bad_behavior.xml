@@ -78,6 +78,11 @@
                 android:layout_height="wrap_content"
                 android:text="@string/bad_behavior_wedge_system_label" />
 
+        <Button android:id="@+id/bad_behavior_broadcast_flood"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/bad_behavior_broadcast_flood" />
+
     </LinearLayout>
 
 </ScrollView>
