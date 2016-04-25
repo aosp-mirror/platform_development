@@ -1,1 +1,0 @@
-../../../android-3/arch-arm/src/crtend_so.S
