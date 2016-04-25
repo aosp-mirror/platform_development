@@ -1,1 +1,0 @@
-crtbegin_dynamic.c
