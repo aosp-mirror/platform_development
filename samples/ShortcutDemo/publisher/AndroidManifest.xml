@@ -31,7 +31,10 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <provider android:authorities="com.example.android.pm.shortcutdemo2"
-            android:name="IconProvider"/>
+        <service android:name="ShortcutPublishingService">
+            <intent-filter>
+                <action android:name="com.example.android.pm.shortcutdemo.ADD" />
+            </intent-filter>
+        </service>
     </application>
 </manifest>
