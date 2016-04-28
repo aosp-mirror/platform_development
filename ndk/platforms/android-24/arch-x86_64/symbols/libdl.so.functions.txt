@@ -5,3 +5,4 @@ dlclose
 dlerror
 dlopen
 dlsym
+dlvsym

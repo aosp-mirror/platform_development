@@ -10,6 +10,8 @@ environ
 error_message_count
 error_one_per_line
 error_print_progname
+in6addr_any
+in6addr_loopback
 optarg
 opterr
 optind
