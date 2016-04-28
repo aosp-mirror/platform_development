@@ -24,7 +24,7 @@
     <application>
         <activity android:name="DefaultActivity"
                 android:excludeFromRecents="true">
-            <intent-filter android:priority="1">
+            <intent-filter android:priority="3">
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.HOME" />
                 <category android:name="android.intent.category.DEFAULT" />
