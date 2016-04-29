@@ -25,7 +25,6 @@ LOCAL_PACKAGE_NAME := ShortcutDemo
 
 LOCAL_MODULE_TAGS := samples tests
 
-LOCAL_MANIFEST_FILE := manifest1/AndroidManifest.xml
 LOCAL_AAPT_FLAGS += --rename-manifest-package com.example.android.pm.shortcutdemo
 
 LOCAL_SRC_FILES := $(call all-java-files-under, src)
@@ -46,7 +45,6 @@ LOCAL_PACKAGE_NAME := ShortcutDemo2
 
 LOCAL_MODULE_TAGS := samples tests
 
-LOCAL_MANIFEST_FILE := manifest2/AndroidManifest.xml
 LOCAL_AAPT_FLAGS += --rename-manifest-package com.example.android.pm.shortcutdemo2
 
 LOCAL_SRC_FILES := $(call all-java-files-under, src)
