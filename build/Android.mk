@@ -117,6 +117,7 @@ endef
 
 ANDROID_SUPPORT_LIBRARIES := \
     android-support-annotations \
+    android-support-compat \
     android-support-v4 \
     android-support-v7-appcompat \
     android-support-v7-cardview \
