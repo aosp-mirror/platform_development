@@ -100,20 +100,27 @@ def get_processes(device):
     # Perform the check for this on the device to avoid an adb roundtrip
     # Some devices might not have readlink or which, so we need to handle
     # this as well.
+    #
+    # Gracefully handle [ or readlink being missing by always using `ps` if
+    # readlink is missing. (API 18 has [, but not readlink).
 
     ps_script = """
-        if [ ! -x /system/bin/readlink -o ! -x /system/bin/which ]; then
+        if $(ls /system/bin/readlink >/dev/null 2>&1); then
+          if [ $(readlink /system/bin/ps) == "toolbox" ]; then
             ps;
-        elif [ $(readlink $(which ps)) == "toolbox" ]; then
-            ps;
-        else
+          else
             ps -w;
+          fi
+        else
+          ps;
         fi
     """
     ps_script = " ".join([line.strip() for line in ps_script.splitlines()])
 
     output, _ = device.shell([ps_script])
+    return parse_ps_output(output)
 
+def parse_ps_output(output):
     processes = dict()
     output = adb.split_lines(output.replace("\r", ""))
     columns = output.pop(0).split()
