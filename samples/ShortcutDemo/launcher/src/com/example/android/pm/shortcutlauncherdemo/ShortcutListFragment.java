@@ -15,19 +15,15 @@
  */
 package com.example.android.pm.shortcutlauncherdemo;
 
-import android.app.ListActivity;
+import android.content.ComponentName;
 import android.content.Context;
-import android.content.pm.ApplicationInfo;
 import android.content.pm.LauncherApps;
 import android.content.pm.LauncherApps.ShortcutQuery;
-import android.content.pm.PackageManager;
-import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.pm.ShortcutInfo;
 import android.os.Bundle;
-import android.os.Process;
 import android.os.UserHandle;
-import android.util.ArrayMap;
-import android.util.Log;
+import android.os.UserManager;
+import android.text.TextUtils;
 import android.widget.Toast;
 
 import com.example.android.pm.shortcutdemo.ShortcutAdapter;
@@ -37,50 +33,59 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-public class ShortcutLauncher extends ListActivity {
-    public static final String TAG = "ShortcutLauncherDemo";
+public class ShortcutListFragment extends MyBaseListFragment {
+    private static final String TAG = "ShortcutListFragment";
 
-    private LauncherApps mLauncherApps;
+    private static final String ARG_TARGET_PACKAGE = "target_package";
+    private static final String ARG_TARGET_ACTIVITY = "target_activity";
+    private static final String ARG_INCLUDE_DYNAMIC = "include_dynamic";
+    private static final String ARG_INCLUDE_PINNED = "include_pinned";
+    private static final String ARG_USER = "user";
+    private static final String ARG_SHOW_DETAILS = "show_details";
 
     private MyAdapter mAdapter;
 
-    private ArrayMap<String, String> mAppNames = new ArrayMap<>();
+    public ShortcutListFragment setArguments(String targetPackage, ComponentName targetActivity,
+            boolean includeDynamic,
+            boolean includePinned, UserHandle user, boolean showDetails) {
+        final Bundle b = new Bundle();
+        b.putString(ARG_TARGET_PACKAGE, targetPackage);
+        b.putParcelable(ARG_TARGET_ACTIVITY, targetActivity);
+        b.putBoolean(ARG_INCLUDE_DYNAMIC, includeDynamic);
+        b.putBoolean(ARG_INCLUDE_PINNED, includePinned);
+        b.putParcelable(ARG_USER, user);
+        b.putBoolean(ARG_SHOW_DETAILS, showDetails);
+
+        setArguments(b);
+
+        return this;
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        setContentView(R.layout.main);
-
-        mLauncherApps = getSystemService(LauncherApps.class);
-        mLauncherApps.registerCallback(mLauncherCallback);
-
-        if (mLauncherApps.hasShortcutHostPermission()) {
-            mAdapter = new MyAdapter(this);
+        mUserManager = getActivity().getSystemService(UserManager.class);
+        mLauncherApps = getActivity().getSystemService(LauncherApps.class);
+        if (!mLauncherApps.hasShortcutHostPermission()) {
+            Toast.makeText(getActivity(), "App doesn't have the shortcut permissions",
+                    Toast.LENGTH_LONG).show();
+        } else {
+            mAdapter = new MyAdapter(getActivity(), getArguments().getBoolean(ARG_SHOW_DETAILS));
 
             setListAdapter(mAdapter);
-        } else {
-            showToast("Please make this app as the default launcher.");
-            finish();
         }
     }
 
-    private void showToast(String message) {
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-
-        refreshList();
-    }
-
-    @Override
-    protected void onDestroy() {
-        mLauncherApps.unregisterCallback(mLauncherCallback);
-
-        super.onDestroy();
+    private List<UserHandle> getTargetUsers() {
+        final UserHandle arg = getArguments().getParcelable(ARG_USER);
+        if (arg == null) {
+            return mUserManager.getUserProfiles();
+        } else {
+            final List<UserHandle> ret = new ArrayList<>();
+            ret.add(arg);
+            return ret;
+        }
     }
 
     private void togglePin(ShortcutInfo selected) {
@@ -88,7 +93,9 @@ public class ShortcutLauncher extends ListActivity {
 
         final List<String> pinned = new ArrayList<>();
         for (ShortcutInfo si : mAdapter.getShortcuts()) {
-            if (si.isPinned() && si.getPackageName().equals(packageName)) {
+            if (si.isPinned()
+                    && si.getPackageName().equals(packageName)
+                    && si.getUserHandle().equals(selected.getUserHandle())) {
                 pinned.add(si.getId());
             }
         }
@@ -97,38 +104,33 @@ public class ShortcutLauncher extends ListActivity {
         } else {
             pinned.add(selected.getId());
         }
-        mLauncherApps.pinShortcuts(packageName, pinned, Process.myUserHandle());
+        mLauncherApps.pinShortcuts(packageName, pinned, selected.getUserHandle());
     }
 
     private void launch(ShortcutInfo si) {
         mLauncherApps.startShortcut(si.getPackageName(), si.getId(), null, null,
-                Process.myUserHandle());
+                si.getUserHandle());
     }
 
-    private String getAppLabel(String packageName) {
-        String name = mAppNames.get(packageName);
-        if (name != null) {
-            return name;
+    @Override
+    protected void refreshList() {
+        if (!mLauncherApps.hasShortcutHostPermission()) {
+            return;
         }
-        PackageManager pm = getPackageManager();
-        try {
-            final ApplicationInfo ai = pm.getApplicationInfo(packageName, 0);
-            return pm.getApplicationLabel(ai).toString();
-        } catch (NameNotFoundException e) {
-            return packageName;
+
+        final List<ShortcutInfo> list = new ArrayList<>();
+
+        for (UserHandle user : getTargetUsers()) {
+            final Bundle b = getArguments();
+            mQuery.setQueryFlags(
+                    (b.getBoolean(ARG_INCLUDE_DYNAMIC) ? ShortcutQuery.FLAG_GET_DYNAMIC : 0) |
+                    (b.getBoolean(ARG_INCLUDE_PINNED) ? ShortcutQuery.FLAG_GET_PINNED : 0));
+            mQuery.setPackage(b.getString(ARG_TARGET_PACKAGE));
+            mQuery.setActivity(b.getParcelable(ARG_TARGET_ACTIVITY));
+
+            list.addAll(mLauncherApps.getShortcuts(mQuery, user));
         }
-    }
-
-    private void refreshList() {
-        final ShortcutQuery q = new ShortcutQuery();
-        q.setQueryFlags(ShortcutQuery.FLAG_GET_DYNAMIC | ShortcutQuery.FLAG_GET_PINNED);
-
-        final List<ShortcutInfo> list = mLauncherApps.getShortcuts(q, Process.myUserHandle());
         Collections.sort(list, mShortcutComparator);
-        Log.i(TAG, "All shortcuts:");
-        for (ShortcutInfo si : list) {
-            Log.i(TAG, si.toString());
-        }
 
         mAdapter.setShortcuts(list);
     }
@@ -139,48 +141,21 @@ public class ShortcutLauncher extends ListActivity {
                 ret = getAppLabel(s1.getPackageName()).compareTo(getAppLabel(s2.getPackageName()));
                 if (ret != 0) return ret;
 
+                ret = s1.getUserHandle().hashCode() - s2.getUserHandle().hashCode();
+                if (ret != 0) return ret;
+
                 ret = s1.getId().compareTo(s2.getId());
                 if (ret != 0) return ret;
 
                 return 0;
             };
 
-    private final LauncherApps.Callback mLauncherCallback = new LauncherApps.Callback() {
-        @Override
-        public void onPackageRemoved(String packageName, UserHandle user) {
-        }
-
-        @Override
-        public void onPackageAdded(String packageName, UserHandle user) {
-        }
-
-        @Override
-        public void onPackageChanged(String packageName, UserHandle user) {
-        }
-
-        @Override
-        public void onPackagesAvailable(String[] packageNames, UserHandle user, boolean replacing) {
-        }
-
-        @Override
-        public void onPackagesUnavailable(String[] packageNames, UserHandle user,
-                boolean replacing) {
-        }
-
-        @Override
-        public void onShortcutsChanged(String packageName,
-                List<ShortcutInfo> shortcuts, UserHandle user) {
-            Log.w(TAG, "onShortcutsChanged: user=" + user + " package=" + packageName);
-            for (ShortcutInfo si : shortcuts) {
-                Log.i(TAG, si.toString());
-            }
-            refreshList();
-        }
-    };
-
     class MyAdapter extends ShortcutAdapter {
-        public MyAdapter(Context context) {
+        private final boolean mShowLine2;
+
+        public MyAdapter(Context context, boolean showLine2) {
             super(context);
+            mShowLine2 = showLine2;
         }
 
         @Override
@@ -236,6 +211,11 @@ public class ShortcutLauncher extends ListActivity {
         @Override
         protected void onAction2Clicked(ShortcutInfo si) {
             togglePin(si);
+        }
+
+        @Override
+        protected boolean showLine2() {
+            return mShowLine2;
         }
     }
 }
