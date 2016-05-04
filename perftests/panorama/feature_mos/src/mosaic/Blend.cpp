@@ -781,10 +781,10 @@ int Blend::PerformFinalBlending(YUVinfo &imgMos, MosaicRect &cropping_rect)
 
     for(int j=0; j<imgMos.Y.height; j++)
     {
-        delete b[j];
+        delete [] b[j];
     }
 
-    delete b;
+    delete [] b;
 
     return BLEND_RET_OK;
 }
