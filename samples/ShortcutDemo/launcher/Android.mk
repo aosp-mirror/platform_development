@@ -34,6 +34,8 @@ LOCAL_RESOURCE_DIR := $(LOCAL_PATH)/res
 LOCAL_RESOURCE_DIR += $(LOCAL_PATH)/../common/res
 LOCAL_RESOURCE_DIR += $(LOCAL_PATH)/res1
 
+LOCAL_STATIC_JAVA_LIBRARIES = android-support-v4 android-support-v13
+
 LOCAL_SDK_VERSION := current
 
 include $(BUILD_PACKAGE)
@@ -53,6 +55,8 @@ LOCAL_SRC_FILES += $(call all-java-files-under, ../common/src)
 LOCAL_RESOURCE_DIR := $(LOCAL_PATH)/res
 LOCAL_RESOURCE_DIR += $(LOCAL_PATH)/../common/res
 LOCAL_RESOURCE_DIR += $(LOCAL_PATH)/res2
+
+LOCAL_STATIC_JAVA_LIBRARIES = android-support-v4 android-support-v13
 
 LOCAL_SDK_VERSION := current
 
