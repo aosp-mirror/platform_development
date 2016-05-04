@@ -21,13 +21,16 @@
 
     <application android:label="@string/app_title"
         android:resizeableActivity="true">
-        <activity android:name="ShortcutLauncher">
+        <activity android:name="ShortcutLauncherMain">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.LAUNCHER" />
                 <category android:name="android.intent.category.HOME" />
             </intent-filter>
+        </activity>
+        <activity android:name="PackageShortcutActivity"
+            android:theme="@android:style/Theme.Holo.Light.Dialog">
         </activity>
     </application>
 </manifest>

@@ -39,6 +39,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BooleanSupplier;
 
 public class ShortcutPublisher extends Activity {
@@ -52,6 +53,8 @@ public class ShortcutPublisher extends Activity {
     private MyAdapter mAdapter;
 
     private static final Random sRandom = new Random();
+
+    private static final AtomicInteger sSequenceNumber = new AtomicInteger();
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -217,7 +220,8 @@ public class ShortcutPublisher extends Activity {
 
     public void onAddPressed(View view) {
         final ShortcutInfo si = addRandomIntents(this, new ShortcutInfo.Builder(this)
-                .setId("shortcut-" + formatTime(System.currentTimeMillis()))
+                .setId("shortcut-" + formatTime(System.currentTimeMillis()) + "-"
+                        + sSequenceNumber.getAndIncrement())
                 .setWeight(10)).build();
         callApi(this, () -> mShortcutManager.addDynamicShortcuts(Arrays.asList(si)));
         refreshList();
