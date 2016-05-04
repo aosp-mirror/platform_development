@@ -17,13 +17,15 @@ package com.example.android.pm.shortcutdemo;
 
 import android.content.Context;
 import android.content.pm.LauncherApps;
+import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.pm.ShortcutInfo;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.ParcelFileDescriptor;
-import android.os.Process;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -59,6 +61,10 @@ public abstract class ShortcutAdapter extends BaseAdapter implements OnClickList
     protected abstract int getImageId();
     protected abstract int getLaunchId();
     protected abstract int getAction2Id();
+
+    protected boolean showLine2() {
+        return true;
+    }
 
     protected boolean showLaunch(ShortcutInfo si) {
         return false;
@@ -156,10 +162,15 @@ public abstract class ShortcutAdapter extends BaseAdapter implements OnClickList
         view.setTag(si);
 
         line1.setText(si.getTitle());
-        line2.setText(
-                si.getId() + (si.isDynamic() ? " [dynamic]" : "")
-                        + (si.isPinned() ? " [pinned]" : "") + "\n"
-                + mAppLabelCache.getAppLabel(si.getPackageName()));
+        if (showLine2()) {
+            line2.setText(
+                    si.getId() + (si.isDynamic() ? " [dynamic]" : "")
+                            + (si.isPinned() ? " [pinned]" : "") + "\n"
+                            + mAppLabelCache.getAppLabel(si.getPackageName()));
+            line2.setVisibility(View.VISIBLE);
+        } else {
+            line2.setVisibility(View.GONE);
+        }
 
         // view.setBackgroundColor(si.isPinned() ? Color.rgb(255, 255, 192) : Color.WHITE);
 
@@ -169,20 +180,32 @@ public abstract class ShortcutAdapter extends BaseAdapter implements OnClickList
             image.setVisibility(View.GONE);
         } else {
             image.setVisibility(View.VISIBLE);
-            Bitmap icon = null;
-            if (si.hasIconResource()) {
-                try {
-                    final Resources res = mContext.getPackageManager().getResourcesForApplication(
-                            si.getPackageName());
-                    icon = BitmapFactory.decodeResource(res, si.getIconResourceId());
-                } catch (NameNotFoundException e) {
-                    Log.w(TAG, "Unable to load icon from " + si.getPackageName(), e);
-                }
-            } else if (si.hasIconFile()) {
-                icon = pfdToBitmap(mLauncherApps.getShortcutIconFd(si));
-            }
-            image.setImageBitmap(icon);
+            image.setImageDrawable(getShortcutIcon(si));
         }
+    }
+
+    /**
+     * Returns the icon of a shortcut, with the profile badge if necessary.
+     */
+    private Drawable getShortcutIcon(ShortcutInfo si) {
+        final PackageManager pm = mContext.getPackageManager();
+        final Bitmap bitmap;
+        if (si.hasIconResource()) {
+            try {
+                final Resources res = pm.getResourcesForApplication(
+                        si.getPackageName());
+                bitmap = BitmapFactory.decodeResource(res, si.getIconResourceId());
+            } catch (NameNotFoundException e) {
+                Log.w(TAG, "Unable to load icon from " + si.getPackageName(), e);
+                return null;
+            }
+        } else if (si.hasIconFile()) {
+            bitmap = pfdToBitmap(mLauncherApps.getShortcutIconFd(si));
+        } else {
+            return null;
+        }
+        return pm.getUserBadgedIcon(new BitmapDrawable(mContext.getResources(), bitmap),
+                si.getUserHandle());
     }
 
     private Bitmap pfdToBitmap(ParcelFileDescriptor pfd) {
