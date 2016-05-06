@@ -587,7 +587,7 @@ public class RemoteService extends Service {
                     mCurConnection = null;
                 }
                 ServiceConnection conn = new MyServiceConnection();
-                if (bindService(new Intent(IRemoteService.class.getName()),
+                if (bindService(mBindIntent,
                         conn, Context.BIND_AUTO_CREATE | Context.BIND_ABOVE_CLIENT)) {
                     mCurConnection = conn;
                 }
