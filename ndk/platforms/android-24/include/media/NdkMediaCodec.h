@@ -142,7 +142,8 @@ media_status_t AMediaCodec_queueSecureInputBuffer(AMediaCodec*,
 /**
  * Get the index of the next available buffer of processed data.
  */
-ssize_t AMediaCodec_dequeueOutputBuffer(AMediaCodec*, AMediaCodecBufferInfo *info, int64_t timeoutUs);
+ssize_t AMediaCodec_dequeueOutputBuffer(AMediaCodec*, AMediaCodecBufferInfo *info,
+        int64_t timeoutUs);
 AMediaFormat* AMediaCodec_getOutputFormat(AMediaCodec*);
 
 /**
@@ -151,6 +152,18 @@ AMediaFormat* AMediaCodec_getOutputFormat(AMediaCodec*);
  * video decoder you can optionally render the buffer.
  */
 media_status_t AMediaCodec_releaseOutputBuffer(AMediaCodec*, size_t idx, bool render);
+
+/**
+ * Dynamically sets the output surface of a codec.
+ *
+ *  This can only be used if the codec was configured with an output surface.  The
+ *  new output surface should have a compatible usage type to the original output surface.
+ *  E.g. codecs may not support switching from a SurfaceTexture (GPU readable) output
+ *  to ImageReader (software readable) output.
+ *
+ * For more details, see the Java documentation for MediaCodec.setOutputSurface.
+ */
+media_status_t AMediaCodec_setOutputSurface(AMediaCodec*, ANativeWindow* surface);
 
 /**
  * If you are done with a buffer, use this call to update its surface timestamp
@@ -163,11 +176,17 @@ media_status_t AMediaCodec_releaseOutputBuffer(AMediaCodec*, size_t idx, bool re
 media_status_t AMediaCodec_releaseOutputBufferAtTime(
         AMediaCodec *mData, size_t idx, int64_t timestampNs);
 
-
 typedef enum {
     AMEDIACODECRYPTOINFO_MODE_CLEAR = 0,
-    AMEDIACODECRYPTOINFO_MODE_AES_CTR = 1
+    AMEDIACODECRYPTOINFO_MODE_AES_CTR = 1,
+    AMEDIACODECRYPTOINFO_MODE_AES_WV = 2,
+    AMEDIACODECRYPTOINFO_MODE_AES_CBC = 3
 } cryptoinfo_mode_t;
+
+typedef struct {
+    int32_t encryptBlocks;
+    int32_t skipBlocks;
+} cryptoinfo_pattern_t;
 
 /**
  * Create an AMediaCodecCryptoInfo from scratch. Use this if you need to use custom
@@ -196,6 +215,13 @@ AMediaCodecCryptoInfo *AMediaCodecCryptoInfo_new(
  * obtained from AMediaExtractor
  */
 media_status_t AMediaCodecCryptoInfo_delete(AMediaCodecCryptoInfo*);
+
+/**
+ * Set the crypto pattern on an AMediaCryptoInfo object
+ */
+void AMediaCodecCryptoInfo_setPattern(
+        AMediaCodecCryptoInfo *info,
+        cryptoinfo_pattern_t *pattern);
 
 /**
  * The number of subsamples that make up the buffer's contents.
