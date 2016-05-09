@@ -28,6 +28,7 @@ import android.os.UserHandle;
 import android.support.v13.app.FragmentStatePagerAdapter;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
+import android.view.ViewGroup;
 
 public class ShortcutLauncherMain extends Activity {
     private LauncherApps mLauncherApps;
@@ -101,6 +102,13 @@ public class ShortcutLauncherMain extends Activity {
         @Override
         public int getCount() {
             return 2;
+        }
+
+        @Override
+        public void setPrimaryItem(ViewGroup container, int position, Object object) {
+            super.setPrimaryItem(container, position, object);
+
+            getActionBar().selectTab(getActionBar().getTabAt(position));
         }
     }
 }
