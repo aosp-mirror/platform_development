@@ -16,6 +16,7 @@
 package com.example.android.pm.shortcutdemo;
 
 import android.app.IntentService;
+import android.content.ComponentName;
 import android.content.Intent;
 import android.content.pm.ShortcutInfo;
 import android.content.pm.ShortcutManager;
@@ -49,8 +50,9 @@ public class ShortcutPublishingService extends IntentService {
     private void addShortcut() {
         final ShortcutInfo si1 = ShortcutPublisher.addRandomIntents(
                 this, new ShortcutInfo.Builder(this)
-                .setId("shortcut-" + System.currentTimeMillis())
-                .setWeight(10)).build();
+                .setId("shortcut-" + System.currentTimeMillis()))
+                .setActivityComponent(new ComponentName(this, ShortcutPublisher.class))
+                .build();
         ShortcutPublisher.callApi(this, () ->
             getSystemService(ShortcutManager.class).addDynamicShortcuts(Arrays.asList(si1)));
     }

@@ -16,6 +16,7 @@
 package com.example.android.pm.shortcutdemo;
 
 import android.app.Activity;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ShortcutInfo;
@@ -180,23 +181,26 @@ public class ShortcutPublisher extends Activity {
         intent3.putExtra("nest", new Bundle());
         intent3.getBundleExtra("nest").putInt("int", 123);
 
+        final ComponentName activity = new ComponentName(this, ShortcutPublisher.class);
+
         final ShortcutInfo si1 = addRandomIntents(this, new ShortcutInfo.Builder(this)
-                .setId("shortcut1")
-                .setWeight(10)).build();
+                .setId("shortcut1"))
+                .setActivityComponent(activity)
+                .build();
 
         final ShortcutInfo si2 = new ShortcutInfo.Builder(this)
                 .setId(SETUP_SHORTCUT_ID)
+                .setActivityComponent(activity)
                 .setTitle("Shortcut Demo Main")
                 .setIcon(icon2)
-                .setWeight(5)
                 .setIntent(intent2)
                 .build();
 
         final ShortcutInfo si3 = new ShortcutInfo.Builder(this)
                 .setId("shortcut3")
+                .setActivityComponent(activity)
                 .setTitle("Shortcut Demo Main with extras")
                 .setIcon(icon3)
-                .setWeight(15)
                 .setIntent(intent3)
                 .build();
 
@@ -221,8 +225,9 @@ public class ShortcutPublisher extends Activity {
     public void onAddPressed(View view) {
         final ShortcutInfo si = addRandomIntents(this, new ShortcutInfo.Builder(this)
                 .setId("shortcut-" + formatTime(System.currentTimeMillis()) + "-"
-                        + sSequenceNumber.getAndIncrement())
-                .setWeight(10)).build();
+                        + sSequenceNumber.getAndIncrement()))
+                .setActivityComponent(new ComponentName(this, ShortcutPublisher.class))
+                .build();
         callApi(this, () -> mShortcutManager.addDynamicShortcuts(Arrays.asList(si)));
         refreshList();
     }
