@@ -52,6 +52,14 @@
             android:title="@string/disable_keyguard_unredacted_notifications" />
 
         <CheckBoxPreference
+            android:key="key_disable_fingerprint"
+            android:title="@string/disable_keyguard_fingerprint" />
+
+        <CheckBoxPreference
+            android:key="key_disable_remote_input"
+            android:title="@string/disable_keyguard_remote_input" />
+
+        <CheckBoxPreference
             android:key="key_disable_trust_agents"
             android:title="@string/disable_keyguard_trust_agents" />
 

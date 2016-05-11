@@ -80,6 +80,8 @@ public class DeviceAdminSample extends PreferenceActivity {
     private static final String KEY_DISABLE_KEYGUARD_WIDGETS = "key_disable_keyguard_widgets";
     private static final String KEY_DISABLE_KEYGUARD_SECURE_CAMERA
             = "key_disable_keyguard_secure_camera";
+    private static final String KEY_DISABLE_FINGERPRINT = "key_disable_fingerprint";
+    private static final String KEY_DISABLE_REMOTE_INPUT = "key_disable_remote_input";
 
     private static final String KEY_CATEGORY_QUALITY = "key_category_quality";
     private static final String KEY_SET_PASSWORD = "key_set_password";
@@ -282,6 +284,8 @@ public class DeviceAdminSample extends PreferenceActivity {
         private CheckBoxPreference mDisableKeyguardUnredactedCheckbox;
         private EditTextPreference mTrustAgentComponent;
         private EditTextPreference mTrustAgentFeatures;
+        private CheckBoxPreference mDisableKeyguardFingerprintCheckbox;
+        private CheckBoxPreference mDisableKeyguardRemoteInputCheckbox;
 
         @Override
         public void onCreate(Bundle savedInstanceState) {
@@ -308,6 +312,14 @@ public class DeviceAdminSample extends PreferenceActivity {
             mDisableKeyguardUnredactedCheckbox =
                     (CheckBoxPreference) findPreference(KEY_DISABLE_UNREDACTED);
             mDisableKeyguardUnredactedCheckbox.setOnPreferenceChangeListener(this);
+
+            mDisableKeyguardFingerprintCheckbox =
+                    (CheckBoxPreference) findPreference(KEY_DISABLE_FINGERPRINT);
+            mDisableKeyguardFingerprintCheckbox.setOnPreferenceChangeListener(this);
+
+            mDisableKeyguardRemoteInputCheckbox =
+                    (CheckBoxPreference) findPreference(KEY_DISABLE_REMOTE_INPUT);
+            mDisableKeyguardRemoteInputCheckbox.setOnPreferenceChangeListener(this);
 
             mDisableKeyguardTrustAgentCheckbox =
                     (CheckBoxPreference) findPreference(KEY_DISABLE_TRUST_AGENTS);
@@ -348,6 +360,10 @@ public class DeviceAdminSample extends PreferenceActivity {
                     DevicePolicyManager.KEYGUARD_DISABLE_UNREDACTED_NOTIFICATIONS : 0;
             flags |= mDisableKeyguardTrustAgentCheckbox.isChecked() ?
                     DevicePolicyManager.KEYGUARD_DISABLE_TRUST_AGENTS : 0;
+            flags |= mDisableKeyguardFingerprintCheckbox.isChecked() ?
+                    DevicePolicyManager.KEYGUARD_DISABLE_FINGERPRINT : 0;
+            flags |= mDisableKeyguardRemoteInputCheckbox.isChecked() ?
+                    DevicePolicyManager.KEYGUARD_DISABLE_REMOTE_INPUT : 0;
             return flags;
         }
 
@@ -384,6 +400,8 @@ public class DeviceAdminSample extends PreferenceActivity {
                     || preference == mDisableKeyguardNotificationCheckbox
                     || preference == mDisableKeyguardUnredactedCheckbox
                     || preference == mDisableKeyguardTrustAgentCheckbox
+                    || preference == mDisableKeyguardFingerprintCheckbox
+                    || preference == mDisableKeyguardRemoteInputCheckbox
                     || preference == mTrustAgentComponent
                     || preference == mTrustAgentFeatures) {
                 postUpdateDpmDisableFeatures();
@@ -452,6 +470,18 @@ public class DeviceAdminSample extends PreferenceActivity {
                         R.string.keyguard_trust_agents_disabled
                         : R.string.keyguard_trust_agents_enabled);
             mDisableKeyguardTrustAgentCheckbox.setSummary(keyguardEnableTrustAgentSummary);
+
+            String keyguardEnableFingerprintSummary = getString(
+                    (disabled & DevicePolicyManager.KEYGUARD_DISABLE_FINGERPRINT) != 0 ?
+                        R.string.keyguard_fingerprint_disabled
+                        : R.string.keyguard_fingerprint_enabled);
+            mDisableKeyguardFingerprintCheckbox.setSummary(keyguardEnableFingerprintSummary);
+
+            String keyguardEnableRemoteInputSummary = getString(
+                    (disabled & DevicePolicyManager.KEYGUARD_DISABLE_REMOTE_INPUT) != 0 ?
+                        R.string.keyguard_remote_input_disabled
+                        : R.string.keyguard_remote_input_enabled);
+            mDisableKeyguardRemoteInputCheckbox.setSummary(keyguardEnableRemoteInputSummary);
 
             final SharedPreferences prefs = getPreferenceManager().getSharedPreferences();
             final boolean trustDisabled =
