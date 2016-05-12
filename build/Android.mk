@@ -109,6 +109,8 @@ $(eval _psm_packaging_target := $(TARGET_OUT_COMMON_INTERMEDIATES)/PACKAGING/$(1
 $(_psm_packaging_target) : $(_psm_build_module)
 	@echo "Package $(1).jar: $$@"
 	$$(copy-file-to-target)
+	@# Delete resource generated classes from the jar files.
+	$(hide) zip -d $$@ "*/R.class" "*/R\$$$$*.class" "*/Manifest.class" "*/Manifest\$$$$*.class" >/dev/null 2>&1 || true
 
 ALL_SDK_FILES += $(_psm_packaging_target)
 $(eval _psm_build_module :=)
