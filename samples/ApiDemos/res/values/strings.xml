@@ -765,6 +765,8 @@
     <string name="disable_keyguard_notifications">Disable keyguard notifications</string>
     <string name="disable_keyguard_unredacted_notifications">Disable keyguard unredacted notifications</string>
     <string name="disable_keyguard_trust_agents">Disable keyguard Trust Agents</string>
+    <string name="disable_keyguard_fingerprint">Disable keyguard Fingerprint</string>
+    <string name="disable_keyguard_remote_input">Disable keyguard Remote Input</string>
     <string name="keyguard_widgets_disabled">Keyguard widgets disabled</string>
     <string name="keyguard_widgets_enabled">Keyguard widgets enabled</string>
     <string name="keyguard_secure_camera_disabled">Keyguard secure camera disabled</string>
@@ -775,6 +777,10 @@
     <string name="keyguard_unredacted_notifications_enabled">Keyguard unredacted notifications enabled</string>
     <string name="keyguard_trust_agents_disabled">Keyguard Trust Agents disabled</string>
     <string name="keyguard_trust_agents_enabled">Keyguard Trust Agents enabled</string>
+    <string name="keyguard_fingerprint_disabled">Keyguard Fingerprint disabled</string>
+    <string name="keyguard_fingerprint_enabled">Keyguard Fingerprint enabled</string>
+    <string name="keyguard_remote_input_disabled">Keyguard Remote Input disabled</string>
+    <string name="keyguard_remote_input_enabled">Keyguard Remote Input enabled</string>
     <string name="camera_disabled">Device cameras disabled</string>
     <string name="camera_enabled">Device cameras enabled</string>
     <string name="password_controls_category">Password controls</string>
