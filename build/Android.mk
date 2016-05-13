@@ -123,7 +123,7 @@ ANDROID_SUPPORT_LIBRARIES := \
     android-support-media-compat \
     android-support-core-ui \
     android-support-fragment \
-    android-support-v4 \
+    android-support-core-utils \
     android-support-v7-appcompat \
     android-support-v7-cardview \
     android-support-v7-gridlayout \
