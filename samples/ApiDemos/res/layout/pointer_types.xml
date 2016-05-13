@@ -27,7 +27,7 @@
       <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/pointer_shape_description" />
+        android:text="@string/pointer_type_description" />
 
         <GridLayout
           android:columnCount="2"
@@ -36,185 +36,185 @@
           android:orientation="horizontal">
 
           <Button
-              android:id="@+id/pointer_shape_view_arrow"
+              android:id="@+id/pointer_type_view_arrow"
               android:layout_width="wrap_content"
               android:layout_height="wrap_content"
-              android:text="@string/pointer_shape_arrow"
-              android:pointerShape="arrow" />
+              android:text="@string/pointer_type_arrow"
+              android:pointerIcon="arrow" />
 
           <Button
-              android:id="@+id/pointer_shape_view_context_menu"
+              android:id="@+id/pointer_type_view_context_menu"
               android:layout_width="wrap_content"
               android:layout_height="wrap_content"
-              android:text="@string/pointer_shape_context_menu"
-              android:pointerShape="context_menu" />
+              android:text="@string/pointer_type_context_menu"
+              android:pointerIcon="context_menu" />
 
           <Button
-              android:id="@+id/pointer_shape_view_hand"
+              android:id="@+id/pointer_type_view_hand"
               android:layout_width="wrap_content"
               android:layout_height="wrap_content"
-              android:text="@string/pointer_shape_hand"
-              android:pointerShape="hand" />
+              android:text="@string/pointer_type_hand"
+              android:pointerIcon="hand" />
 
           <Button
-              android:id="@+id/pointer_shape_view_help"
+              android:id="@+id/pointer_type_view_help"
               android:layout_width="wrap_content"
               android:layout_height="wrap_content"
-              android:text="@string/pointer_shape_help"
-              android:pointerShape="help" />
+              android:text="@string/pointer_type_help"
+              android:pointerIcon="help" />
 
           <Button
-              android:id="@+id/pointer_shape_view_wait"
+              android:id="@+id/pointer_type_view_wait"
               android:layout_width="wrap_content"
               android:layout_height="wrap_content"
-              android:text="@string/pointer_shape_wait"
-              android:pointerShape="wait" />
+              android:text="@string/pointer_type_wait"
+              android:pointerIcon="wait" />
 
           <Button
-              android:id="@+id/pointer_shape_view_cell"
+              android:id="@+id/pointer_type_view_cell"
               android:layout_width="wrap_content"
               android:layout_height="wrap_content"
-              android:text="@string/pointer_shape_cell"
-              android:pointerShape="cell" />
+              android:text="@string/pointer_type_cell"
+              android:pointerIcon="cell" />
 
           <Button
-              android:id="@+id/pointer_shape_view_crosshair"
+              android:id="@+id/pointer_type_view_crosshair"
               android:layout_width="wrap_content"
               android:layout_height="wrap_content"
-              android:text="@string/pointer_shape_crosshair"
-              android:pointerShape="crosshair" />
+              android:text="@string/pointer_type_crosshair"
+              android:pointerIcon="crosshair" />
 
           <Button
-              android:id="@+id/pointer_shape_view_text"
+              android:id="@+id/pointer_type_view_text"
               android:layout_width="wrap_content"
               android:layout_height="wrap_content"
-              android:text="@string/pointer_shape_text"
-              android:pointerShape="text" />
+              android:text="@string/pointer_type_text"
+              android:pointerIcon="text" />
 
           <Button
-              android:id="@+id/pointer_shape_view_vertical_text"
+              android:id="@+id/pointer_type_view_vertical_text"
               android:layout_width="wrap_content"
               android:layout_height="wrap_content"
-              android:text="@string/pointer_shape_vertical_text"
-              android:pointerShape="vertical_text" />
+              android:text="@string/pointer_type_vertical_text"
+              android:pointerIcon="vertical_text" />
 
           <Button
-              android:id="@+id/pointer_shape_view_alias"
+              android:id="@+id/pointer_type_view_alias"
               android:layout_width="wrap_content"
               android:layout_height="wrap_content"
-              android:text="@string/pointer_shape_alias"
-              android:pointerShape="alias" />
+              android:text="@string/pointer_type_alias"
+              android:pointerIcon="alias" />
 
           <Button
-              android:id="@+id/pointer_shape_view_copy"
+              android:id="@+id/pointer_type_view_copy"
               android:layout_width="wrap_content"
               android:layout_height="wrap_content"
-              android:text="@string/pointer_shape_copy"
-              android:pointerShape="copy" />
+              android:text="@string/pointer_type_copy"
+              android:pointerIcon="copy" />
 
           <Button
-              android:id="@+id/pointer_shape_view_no_drop"
+              android:id="@+id/pointer_type_view_no_drop"
               android:layout_width="wrap_content"
               android:layout_height="wrap_content"
-              android:text="@string/pointer_shape_no_drop"
-              android:pointerShape="no_drop" />
+              android:text="@string/pointer_type_no_drop"
+              android:pointerIcon="no_drop" />
 
           <Button
-              android:id="@+id/pointer_shape_view_all_scroll"
+              android:id="@+id/pointer_type_view_all_scroll"
               android:layout_width="wrap_content"
               android:layout_height="wrap_content"
-              android:text="@string/pointer_shape_all_scroll"
-              android:pointerShape="all_scroll" />
+              android:text="@string/pointer_type_all_scroll"
+              android:pointerIcon="all_scroll" />
 
           <Button
-              android:id="@+id/pointer_shape_view_horizontal_double_arrow"
+              android:id="@+id/pointer_type_view_horizontal_double_arrow"
               android:layout_width="wrap_content"
               android:layout_height="wrap_content"
-              android:text="@string/pointer_shape_horizontal_double_arrow"
-              android:pointerShape="horizontal_double_arrow" />
+              android:text="@string/pointer_type_horizontal_double_arrow"
+              android:pointerIcon="horizontal_double_arrow" />
 
           <Button
-              android:id="@+id/pointer_shape_view_vertical_double_arrow"
+              android:id="@+id/pointer_type_view_vertical_double_arrow"
               android:layout_width="wrap_content"
               android:layout_height="wrap_content"
-              android:text="@string/pointer_shape_vertical_double_arrow"
-              android:pointerShape="vertical_double_arrow" />
+              android:text="@string/pointer_type_vertical_double_arrow"
+              android:pointerIcon="vertical_double_arrow" />
 
           <Button
-              android:id="@+id/pointer_shape_view_top_right_diagonal_double_arrow"
+              android:id="@+id/pointer_type_view_top_right_diagonal_double_arrow"
               android:layout_width="wrap_content"
               android:layout_height="wrap_content"
-              android:text="@string/pointer_shape_top_right_diagonal_double_arrow"
-              android:pointerShape="top_right_diagonal_double_arrow" />
+              android:text="@string/pointer_type_top_right_diagonal_double_arrow"
+              android:pointerIcon="top_right_diagonal_double_arrow" />
 
           <Button
-              android:id="@+id/pointer_shape_view_top_left_diagonal_double_arrow"
+              android:id="@+id/pointer_type_view_top_left_diagonal_double_arrow"
               android:layout_width="wrap_content"
               android:layout_height="wrap_content"
-              android:text="@string/pointer_shape_top_left_diagonal_double_arrow"
-              android:pointerShape="top_left_diagonal_double_arrow" />
+              android:text="@string/pointer_type_top_left_diagonal_double_arrow"
+              android:pointerIcon="top_left_diagonal_double_arrow" />
 
           <Button
-              android:id="@+id/pointer_shape_view_zoom_in"
+              android:id="@+id/pointer_type_view_zoom_in"
               android:layout_width="wrap_content"
               android:layout_height="wrap_content"
-              android:text="@string/pointer_shape_zoom_in"
-              android:pointerShape="zoom_in" />
+              android:text="@string/pointer_type_zoom_in"
+              android:pointerIcon="zoom_in" />
 
           <Button
-              android:id="@+id/pointer_shape_view_zoom_out"
+              android:id="@+id/pointer_type_view_zoom_out"
               android:layout_width="wrap_content"
               android:layout_height="wrap_content"
-              android:text="@string/pointer_shape_zoom_out"
-              android:pointerShape="zoom_out" />
+              android:text="@string/pointer_type_zoom_out"
+              android:pointerIcon="zoom_out" />
 
           <Button
-              android:id="@+id/pointer_shape_view_grab"
+              android:id="@+id/pointer_type_view_grab"
               android:layout_width="wrap_content"
               android:layout_height="wrap_content"
-              android:text="@string/pointer_shape_grab"
-              android:pointerShape="grab" />
+              android:text="@string/pointer_type_grab"
+              android:pointerIcon="grab" />
 
           <Button
-              android:id="@+id/pointer_shape_view_grabbing"
+              android:id="@+id/pointer_type_view_grabbing"
               android:layout_width="wrap_content"
               android:layout_height="wrap_content"
-              android:text="@string/pointer_shape_grabbing"
-              android:pointerShape="grabbing" />
+              android:text="@string/pointer_type_grabbing"
+              android:pointerIcon="grabbing" />
 
           <Button
-              android:id="@+id/pointer_shape_view_none"
+              android:id="@+id/pointer_type_view_none"
               android:layout_width="wrap_content"
               android:layout_height="wrap_content"
-              android:text="@string/pointer_shape_none"
-              android:pointerShape="none" />
+              android:text="@string/pointer_type_none"
+              android:pointerIcon="none" />
 
           <Button
-              android:id="@+id/pointer_shape_view_custom"
+              android:id="@+id/pointer_type_view_custom"
               android:layout_width="wrap_content"
               android:layout_height="wrap_content"
-              android:text="@string/pointer_shape_custom_resource"
-              android:pointerShape="@drawable/custom_pointer_icon" />
+              android:text="@string/pointer_type_custom_resource"
+              android:pointerIcon="@drawable/custom_pointer_icon" />
 
           <com.example.android.apis.view.ResourcePointerIconButton
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/pointer_shape_custom_resource_code" />
+            android:text="@string/pointer_type_custom_resource_code" />
 
           <com.example.android.apis.view.StaticPointerIconButton
               android:layout_width="wrap_content"
               android:layout_height="wrap_content"
-              android:text="@string/pointer_shape_custom_static" />
+              android:text="@string/pointer_type_custom_static" />
 
           <com.example.android.apis.view.SystemPointerIconButton
               android:layout_width="wrap_content"
               android:layout_height="wrap_content"
-              android:text="@string/pointer_shape_custom_system" />
+              android:text="@string/pointer_type_custom_system" />
 
           <com.example.android.apis.view.LivePointerIconButton
               android:layout_width="wrap_content"
               android:layout_height="wrap_content"
-              android:text="@string/pointer_shape_custom_live" />
+              android:text="@string/pointer_type_custom_live" />
 
         </GridLayout>
 
