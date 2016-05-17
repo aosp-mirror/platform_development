@@ -51,7 +51,7 @@ public class ShortcutPublishingService extends IntentService {
         final ShortcutInfo si1 = ShortcutPublisher.addRandomIntents(
                 this, new ShortcutInfo.Builder(this)
                 .setId("shortcut-" + System.currentTimeMillis()))
-                .setActivityComponent(new ComponentName(this, ShortcutPublisher.class))
+                .setActivity(new ComponentName(this, ShortcutPublisher.class))
                 .build();
         ShortcutPublisher.callApi(this, () ->
             getSystemService(ShortcutManager.class).addDynamicShortcuts(Arrays.asList(si1)));

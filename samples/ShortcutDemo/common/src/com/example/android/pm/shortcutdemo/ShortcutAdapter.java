@@ -165,8 +165,9 @@ public abstract class ShortcutAdapter extends BaseAdapter implements OnClickList
         if (showLine2()) {
             line2.setText(
                     si.getId() + (si.isDynamic() ? " [dynamic]" : "")
+                            + (si.isManifestShortcut() ? " [manifest]" : "")
                             + (si.isPinned() ? " [pinned]" : "") + "\n"
-                            + mAppLabelCache.getAppLabel(si.getPackageName()));
+                            + mAppLabelCache.getAppLabel(si.getPackage()));
             line2.setVisibility(View.VISIBLE);
         } else {
             line2.setVisibility(View.GONE);
@@ -193,10 +194,10 @@ public abstract class ShortcutAdapter extends BaseAdapter implements OnClickList
         if (si.hasIconResource()) {
             try {
                 final Resources res = pm.getResourcesForApplication(
-                        si.getPackageName());
+                        si.getPackage());
                 bitmap = BitmapFactory.decodeResource(res, si.getIconResourceId());
             } catch (NameNotFoundException e) {
-                Log.w(TAG, "Unable to load icon from " + si.getPackageName(), e);
+                Log.w(TAG, "Unable to load icon from " + si.getPackage(), e);
                 return null;
             }
         } else if (si.hasIconFile()) {
@@ -204,8 +205,12 @@ public abstract class ShortcutAdapter extends BaseAdapter implements OnClickList
         } else {
             return null;
         }
-        return pm.getUserBadgedIcon(new BitmapDrawable(mContext.getResources(), bitmap),
-                si.getUserHandle());
+        if (bitmap != null) {
+            return pm.getUserBadgedIcon(new BitmapDrawable(mContext.getResources(), bitmap),
+                    si.getUserHandle());
+        } else {
+            return null;
+        }
     }
 
     private Bitmap pfdToBitmap(ParcelFileDescriptor pfd) {

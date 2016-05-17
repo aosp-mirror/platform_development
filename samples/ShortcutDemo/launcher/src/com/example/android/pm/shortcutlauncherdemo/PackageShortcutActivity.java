@@ -54,6 +54,7 @@ public class PackageShortcutActivity extends Activity {
                 i.getStringExtra(KEY_TARGET_PACKAGE),
                 /* targetActivity=*/ i.getParcelableExtra(KEY_TARGET_ACTIVITY),
                 /*includeDynamic=*/ true,
+                /*includeManifest=*/ true,
                 /*includePinned=*/ true,
                 i.getParcelableExtra(KEY_TARGET_USER),
                 /* showDetails =*/ false
