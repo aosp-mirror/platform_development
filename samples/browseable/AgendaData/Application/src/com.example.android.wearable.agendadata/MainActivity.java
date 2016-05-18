@@ -41,8 +41,6 @@ import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.wearable.DataApi;
 import com.google.android.gms.wearable.DataItem;
 import com.google.android.gms.wearable.DataItemBuffer;
-import com.google.android.gms.wearable.Node;
-import com.google.android.gms.wearable.NodeApi;
 import com.google.android.gms.wearable.Wearable;
 
 /**
@@ -51,7 +49,6 @@ import com.google.android.gms.wearable.Wearable;
  * permissions as well.
  */
 public class MainActivity extends AppCompatActivity implements
-        NodeApi.NodeListener,
         ConnectionCallbacks,
         OnConnectionFailedListener,
         ActivityCompat.OnRequestPermissionsResultCallback {
@@ -66,10 +63,10 @@ public class MainActivity extends AppCompatActivity implements
     private GoogleApiClient mGoogleApiClient;
     private boolean mResolvingError = false;
 
-    private TextView mLogTextView;
-    ScrollView mScroller;
-
     private View mLayout;
+
+    private TextView mLogTextView;
+    private ScrollView mScroller;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -98,10 +95,10 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     protected void onStop() {
-        if (mGoogleApiClient.isConnected()) {
-            Wearable.NodeApi.removeListener(mGoogleApiClient, this);
+        if (mGoogleApiClient != null && mGoogleApiClient.isConnected()) {
+            mGoogleApiClient.disconnect();
         }
-        mGoogleApiClient.disconnect();
+
         super.onStop();
     }
 
@@ -130,10 +127,6 @@ public class MainActivity extends AppCompatActivity implements
         }
         // END_INCLUDE(calendar_and_contact_permissions)
 
-    }
-
-    private void pushCalendarToWear() {
-        startService(new Intent(this, CalendarQueryService.class));
     }
 
     /*
@@ -190,7 +183,9 @@ public class MainActivity extends AppCompatActivity implements
         // END_INCLUDE(calendar_and_contact_permissions_request)
     }
 
-
+    private void pushCalendarToWear() {
+        startService(new Intent(this, CalendarQueryService.class));
+    }
 
     public void onDeleteEventsClicked(View view) {
         if (mGoogleApiClient.isConnected()) {
@@ -246,27 +241,18 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     @Override
-    public void onPeerConnected(Node peer) {
-        appendLog("Device connected");
-    }
-
-    @Override
-    public void onPeerDisconnected(Node peer) {
-        appendLog("Device disconnected");
-    }
-
-    @Override
     public void onConnected(Bundle connectionHint) {
         if (Log.isLoggable(TAG, Log.DEBUG)) {
             Log.d(TAG, "Connected to Google Api Service.");
         }
         mResolvingError = false;
-        Wearable.NodeApi.addListener(mGoogleApiClient, this);
     }
 
     @Override
     public void onConnectionSuspended(int cause) {
-        // Ignore
+        if (Log.isLoggable(TAG, Log.DEBUG)) {
+            Log.d(TAG, "onConnectionSuspended(): Cause id: " + cause);
+        }
     }
 
     @Override
@@ -274,9 +260,7 @@ public class MainActivity extends AppCompatActivity implements
         if (Log.isLoggable(TAG, Log.DEBUG)) {
             Log.d(TAG, "Disconnected from Google Api Service");
         }
-        if (null != Wearable.NodeApi) {
-            Wearable.NodeApi.removeListener(mGoogleApiClient, this);
-        }
+
         if (mResolvingError) {
             // Already attempting to resolve an error.
             return;

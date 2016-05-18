@@ -41,8 +41,13 @@
         </activity>
         <service android:name=".NotificationUpdateService">
             <intent-filter>
-                <action
-                    android:name="com.google.android.gms.wearable.BIND_LISTENER" />
+                <!-- listeners receive events that match the action and data filters -->
+                <action android:name="com.google.android.gms.wearable.DATA_CHANGED" />
+
+                <!-- filters by Constants.BOTH_PATH ('/both') and
+                Constants.WATCH_ONLY_PATH ('/watch-only') -->
+                <data android:scheme="wear" android:host="*" android:pathPrefix="/both"/>
+                <data android:scheme="wear" android:host="*" android:pathPrefix="/watch-only"/>;
             </intent-filter>
             <intent-filter>
                 <action

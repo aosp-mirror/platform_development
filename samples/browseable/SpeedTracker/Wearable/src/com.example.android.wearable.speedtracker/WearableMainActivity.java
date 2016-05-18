@@ -330,6 +330,13 @@ public class WearableMainActivity extends WearableActivity implements
     public void onConnected(Bundle bundle) {
 
         Log.d(TAG, "onConnected()");
+        requestLocation();
+
+
+    }
+
+    private void requestLocation() {
+        Log.d(TAG, "requestLocation()");
 
         /*
          * mGpsPermissionApproved covers 23+ (M+) style permissions. If that is already approved or
@@ -464,6 +471,11 @@ public class WearableMainActivity extends WearableActivity implements
                     && (grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
                 Log.i(TAG, "GPS permission granted.");
                 mGpsPermissionApproved = true;
+
+                if(mGoogleApiClient != null && mGoogleApiClient.isConnected()) {
+                    requestLocation();
+                }
+
             } else {
                 Log.i(TAG, "GPS permission NOT granted.");
                 mGpsPermissionApproved = false;

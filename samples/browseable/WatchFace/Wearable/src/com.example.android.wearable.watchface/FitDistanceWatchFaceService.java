@@ -62,7 +62,10 @@ import java.util.concurrent.TimeUnit;
  *
  * Authentication IS a requirement to request distance from Google Fit on Wear. Otherwise, distance
  * will always come back as zero (or stay at whatever the distance was prior to you
- * de-authorizing watchface).
+ * de-authorizing watchface). To authenticate and communicate with Google Fit, you must create a
+ * project in the Google Developers Console, activate the Fitness API, create an OAuth 2.0
+ * client ID, and register the public certificate from your app's signed APK. More details can be
+ * found here: https://developers.google.com/fit/android/get-started#step_3_enable_the_fitness_api
  *
  * In ambient mode, the seconds are replaced with an AM/PM indicator.
  *
