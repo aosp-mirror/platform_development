@@ -18,7 +18,7 @@
           package="com.example.android.wearable.speedtracker">
 
     <uses-feature android:name="android.hardware.type.watch"/>
-    <uses-feature android:name="android.hardware.location.gps" android:required="true" />
+    <uses-feature android:name="android.hardware.location.gps" android:required="false" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <uses-permission android:name="android.permission.WAKE_LOCK" />
 

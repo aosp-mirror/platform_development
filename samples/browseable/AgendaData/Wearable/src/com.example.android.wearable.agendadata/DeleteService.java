@@ -16,15 +16,15 @@
 
 package com.example.android.wearable.agendadata;
 
-import static com.example.android.wearable.agendadata.Constants.TAG;
-import static com.example.android.wearable.agendadata.Constants.EXTRA_SILENT;
-
 import android.app.IntentService;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.wearable.activity.ConfirmationActivity;
 import android.util.Log;
+
+import static com.example.android.wearable.agendadata.Constants.TAG;
+import static com.example.android.wearable.agendadata.Constants.EXTRA_SILENT;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -105,14 +105,23 @@ public class DeleteService extends IntentService implements GoogleApiClient.Conn
 
     @Override
     public void onConnected(Bundle connectionHint) {
+        if (Log.isLoggable(TAG, Log.DEBUG)) {
+            Log.d(TAG, "onConnected: " + connectionHint);
+        }
     }
 
     @Override
     public void onConnectionSuspended(int cause) {
+        if (Log.isLoggable(TAG, Log.DEBUG)) {
+            Log.d(TAG, "onConnectionSuspended: " + cause);
+        }
     }
 
     @Override
     public void onConnectionFailed(ConnectionResult result) {
+        if (Log.isLoggable(TAG, Log.DEBUG)) {
+            Log.d(TAG, "onConnectionFailed: " + result);
+        }
     }
 
 }
