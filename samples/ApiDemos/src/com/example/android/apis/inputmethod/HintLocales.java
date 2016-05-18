@@ -18,9 +18,9 @@ package com.example.android.apis.inputmethod;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.os.LocaleList;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.util.LocaleList;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
