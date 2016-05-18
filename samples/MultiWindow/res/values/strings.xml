@@ -16,8 +16,6 @@
 
 <resources>
 
-    <string name="caption_overlay_activity_hello_text">Hello, World!</string>
-    <string name="caption_overlay_activity_fish_text">Thanks for All the Fish!</string>
     <string name="launch_settings_to_side">Launch settings to other side</string>
     <string name="launch_new_task">Launch new task</string>
 </resources>
