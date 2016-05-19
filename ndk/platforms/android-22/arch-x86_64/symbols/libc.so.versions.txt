@@ -561,6 +561,27 @@ LIBC {
     nftw64;
     nice;
     nrand48;
+    ns_format_ttl; # arm64 x86_64 mips64
+    ns_get16; # arm64 x86_64 mips64
+    ns_get32; # arm64 x86_64 mips64
+    ns_initparse; # arm64 x86_64 mips64
+    ns_makecanon; # arm64 x86_64 mips64
+    ns_msg_getflag; # arm64 x86_64 mips64
+    ns_name_compress; # arm64 x86_64 mips64
+    ns_name_ntol; # arm64 x86_64 mips64
+    ns_name_ntop; # arm64 x86_64 mips64
+    ns_name_pack; # arm64 x86_64 mips64
+    ns_name_rollback; # arm64 x86_64 mips64
+    ns_name_skip; # arm64 x86_64 mips64
+    ns_name_uncompress; # arm64 x86_64 mips64
+    ns_name_unpack; # arm64 x86_64 mips64
+    ns_parserr; # arm64 x86_64 mips64
+    ns_put16; # arm64 x86_64 mips64
+    ns_put32; # arm64 x86_64 mips64
+    ns_samename; # arm64 x86_64 mips64
+    ns_skiprr; # arm64 x86_64 mips64
+    ns_sprintrr; # arm64 x86_64 mips64
+    ns_sprintrrf; # arm64 x86_64 mips64
     nsdispatch;
     ntohl;
     ntohs;
