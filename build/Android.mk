@@ -142,6 +142,7 @@ ANDROID_SUPPORT_LIBRARIES := \
     android-support-percent \
     android-support-recommendation \
     android-support-customtabs \
+    android-support-documents-archive \
     android-support-vectordrawable \
     android-support-animatedvectordrawable
 
