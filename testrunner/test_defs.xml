@@ -64,6 +64,7 @@ See test_defs.xsd for more information.
 <test name="frameworks-services"
     build_path="frameworks/base/services/tests/servicestests"
     package="com.android.frameworks.servicestests"
+    runner="android.support.test.runner.AndroidJUnitRunner"
     coverage_target="framework"
     continuous="true" />
 
