@@ -45,7 +45,7 @@ public class LivePointerIconButton extends Button {
     }
 
     @Override
-    public PointerIcon getPointerIcon(MotionEvent event, float x, float y) {
+    public PointerIcon onResolvePointerIcon(MotionEvent event, int pointerIndex) {
         int cursorSize = getHeight();
 
         Bitmap bitmap = Bitmap.createBitmap(cursorSize, cursorSize, Bitmap.Config.ARGB_8888);
@@ -65,8 +65,8 @@ public class LivePointerIconButton extends Button {
 
         // Compute relative offset of the mouse pointer from the view center.
         // It should be between -0.5 and 0.5.
-        final float relativeX = (x / getWidth()) - 0.5f;
-        final float relativeY = (y / getHeight()) - 0.5f;
+        final float relativeX = (event.getX(pointerIndex) / getWidth()) - 0.5f;
+        final float relativeY = (event.getY(pointerIndex) / getHeight()) - 0.5f;
 
         // Draw a smaller circle inside the large circle, offset towards the center of the view.
         final int innerCenterX = (int) (cursorSize * (1 - relativeX) / 2);
@@ -80,6 +80,6 @@ public class LivePointerIconButton extends Button {
 
         final int hotSpotX = bitmap.getWidth() / 2;
         final int hotSpotY = bitmap.getHeight() / 2;
-        return PointerIcon.createCustomIcon(bitmap, hotSpotX, hotSpotY);
+        return PointerIcon.create(bitmap, hotSpotX, hotSpotY);
     }
 }
