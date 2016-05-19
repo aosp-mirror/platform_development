@@ -44,9 +44,9 @@ public class ResourcePointerIconButton extends Button {
     }
 
     @Override
-    public PointerIcon getPointerIcon(MotionEvent event, float x, float y) {
+    public PointerIcon onResolvePointerIcon(MotionEvent event, int pointerIndex) {
         if (mCustomIcon == null) {
-            mCustomIcon = PointerIcon.loadCustomIcon(getResources(), R.drawable.custom_pointer_icon);
+            mCustomIcon = PointerIcon.load(getResources(), R.drawable.custom_pointer_icon);
         }
         return mCustomIcon;
     }
