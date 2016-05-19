@@ -46,14 +46,13 @@ public class StaticPointerIconButton extends Button {
     }
 
     @Override
-    public PointerIcon getPointerIcon(MotionEvent event, float x, float y) {
+    public PointerIcon onResolvePointerIcon(MotionEvent event, int pointerIndex) {
         if (mCustomIcon == null) {
             Drawable d = getContext().getDrawable(R.drawable.smile);
             final BitmapDrawable bitmapDrawable = (BitmapDrawable) d;
             final int hotSpotX = d.getIntrinsicWidth() / 2;
             final int hotSpotY = d.getIntrinsicHeight() / 2;
-            mCustomIcon = PointerIcon.createCustomIcon(
-                    bitmapDrawable.getBitmap(), hotSpotX, hotSpotY);
+            mCustomIcon = PointerIcon.create(bitmapDrawable.getBitmap(), hotSpotX, hotSpotY);
         }
         return mCustomIcon;
     }

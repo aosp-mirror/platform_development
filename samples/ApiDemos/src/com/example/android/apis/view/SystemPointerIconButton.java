@@ -42,28 +42,30 @@ public class SystemPointerIconButton extends Button {
     }
 
     @Override
-    public PointerIcon getPointerIcon(MotionEvent event, float x, float y) {
+    public PointerIcon onResolvePointerIcon(MotionEvent event, int pointerIndex) {
         final int minX = getWidth() / 4;
         final int maxX = getWidth() - minX;
         final int minY = getHeight() / 4;
         final int maxY = getHeight() - minY;
-        int style;
+        final float x = event.getX(pointerIndex);
+        final float y = event.getY(pointerIndex);
+        int type;
         if ((x < minX && y < minY) || (x > maxX && y > maxY)) {
             // Top/left or bottom/right corner.
-            style = PointerIcon.STYLE_TOP_LEFT_DIAGONAL_DOUBLE_ARROW;
+            type = PointerIcon.TYPE_TOP_LEFT_DIAGONAL_DOUBLE_ARROW;
         } else if ((x < minX && y > maxY) || (x > maxX && y < minY)) {
             // Top/rightor bottom/left corner.
-            style = PointerIcon.STYLE_TOP_RIGHT_DIAGONAL_DOUBLE_ARROW;
+            type = PointerIcon.TYPE_TOP_RIGHT_DIAGONAL_DOUBLE_ARROW;
         } else if (x < minX || x > maxX) {
             // Left or right edge.
-            style = PointerIcon.STYLE_HORIZONTAL_DOUBLE_ARROW;
+            type = PointerIcon.TYPE_HORIZONTAL_DOUBLE_ARROW;
         } else if (y < minY || y > maxY) {
             // Top or bottom edge edge.
-            style = PointerIcon.STYLE_VERTICAL_DOUBLE_ARROW;
+            type = PointerIcon.TYPE_VERTICAL_DOUBLE_ARROW;
         } else {
             // Everything else (the middle).
-            style = PointerIcon.STYLE_ALL_SCROLL;
+            type = PointerIcon.TYPE_ALL_SCROLL;
         }
-        return PointerIcon.getSystemIcon(getContext(), style);
+        return PointerIcon.getSystemIcon(getContext(), type);
     }
 }
