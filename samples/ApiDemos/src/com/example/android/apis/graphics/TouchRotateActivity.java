@@ -115,7 +115,7 @@ class TouchSurfaceView extends GLSurfaceView {
                     if (hasPointerCapture()) {
                         releasePointerCapture();
                     } else {
-                        setPointerCapture();
+                        requestPointerCapture();
                     }
                 }
                 break;

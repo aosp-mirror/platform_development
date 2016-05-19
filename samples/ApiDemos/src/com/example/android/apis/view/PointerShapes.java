@@ -29,6 +29,6 @@ public class PointerShapes extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.pointer_shapes);
+        setContentView(R.layout.pointer_types);
     }
 }
