@@ -99,6 +99,10 @@ __res_send_setrhook
 __rt_sigaction
 __rt_sigprocmask
 __rt_sigtimedwait
+__sched_cpualloc
+__sched_cpucount
+__sched_cpufree
+__sched_getaffinity
 __set_tls
 __stack_chk_fail
 __statfs64
@@ -110,6 +114,7 @@ __system_property_find
 __system_property_find_nth
 __system_property_get
 __system_property_read
+__system_property_set
 __timer_create
 __timer_delete
 __timer_getoverrun
@@ -191,6 +196,10 @@ epoll_wait
 erand48
 err
 errx
+ether_aton
+ether_aton_r
+ether_ntoa
+ether_ntoa_r
 eventfd
 eventfd_read
 eventfd_write
@@ -445,6 +454,7 @@ pread
 pread64
 printf
 pselect
+pthread_atfork
 pthread_attr_destroy
 pthread_attr_getdetachstate
 pthread_attr_getguardsize
@@ -565,9 +575,12 @@ scandir
 scanf
 sched_get_priority_max
 sched_get_priority_min
+sched_getaffinity
+sched_getcpu
 sched_getparam
 sched_getscheduler
 sched_rr_get_interval
+sched_setaffinity
 sched_setparam
 sched_setscheduler
 sched_yield
@@ -686,7 +699,9 @@ tcgetpgrp
 tcsetpgrp
 tempnam
 time
+timegm
 timegm64
+timelocal
 timelocal64
 timer_create
 timer_delete
