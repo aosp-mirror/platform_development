@@ -24,6 +24,7 @@ LIBC {
     __fpclassifyl;
     __fstatfs64; # arm x86 mips
     __get_h_errno;
+    __getcpu; # arm x86 mips
     __getcwd; # arm x86 mips
     __getpriority; # arm x86 mips
     __hostalias;
@@ -110,6 +111,10 @@ LIBC {
     __rt_sigaction; # arm x86 mips
     __rt_sigprocmask; # arm x86 mips
     __rt_sigtimedwait; # arm x86 mips
+    __sched_cpualloc;
+    __sched_cpucount;
+    __sched_cpufree;
+    __sched_getaffinity; # arm x86 mips
     __set_tls; # arm mips
     __sF;
     __stack_chk_fail;
@@ -124,6 +129,7 @@ LIBC {
     __system_property_find_nth;
     __system_property_get;
     __system_property_read;
+    __system_property_set;
     __timer_create; # arm x86 mips
     __timer_delete; # arm x86 mips
     __timer_getoverrun; # arm x86 mips
@@ -208,6 +214,10 @@ LIBC {
     erand48;
     err;
     errx;
+    ether_aton;
+    ether_aton_r;
+    ether_ntoa;
+    ether_ntoa_r;
     eventfd;
     eventfd_read;
     eventfd_write;
@@ -467,6 +477,7 @@ LIBC {
     pread64;
     printf;
     pselect;
+    pthread_atfork;
     pthread_attr_destroy;
     pthread_attr_getdetachstate;
     pthread_attr_getguardsize;
@@ -587,9 +598,12 @@ LIBC {
     scanf;
     sched_get_priority_max;
     sched_get_priority_min;
+    sched_getaffinity;
+    sched_getcpu;
     sched_getparam;
     sched_getscheduler;
     sched_rr_get_interval;
+    sched_setaffinity;
     sched_setparam;
     sched_setscheduler;
     sched_yield;
@@ -710,7 +724,9 @@ LIBC {
     tcsetpgrp;
     tempnam;
     time;
+    timegm;
     timegm64; # arm x86 mips
+    timelocal;
     timelocal64; # arm x86 mips
     timer_create;
     timer_delete;
