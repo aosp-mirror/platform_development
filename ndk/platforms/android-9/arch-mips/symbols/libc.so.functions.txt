@@ -162,7 +162,6 @@ clock_getres
 clock_gettime
 clock_nanosleep
 clock_settime
-clone
 close
 closedir
 closelog
@@ -616,10 +615,8 @@ sigaction
 sigaltstack
 sigblock
 siginterrupt
-siglongjmp
 sigpending
 sigprocmask
-sigsetjmp
 sigsetmask
 sigsuspend
 sigwait
