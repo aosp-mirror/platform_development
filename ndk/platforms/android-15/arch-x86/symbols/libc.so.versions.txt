@@ -464,6 +464,7 @@ LIBC {
     pause;
     pclose;
     perror;
+    personality;
     pipe;
     pipe2;
     poll;
