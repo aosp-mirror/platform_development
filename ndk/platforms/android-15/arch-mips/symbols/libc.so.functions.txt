@@ -17,7 +17,6 @@ __fpclassifyf
 __fpclassifyl
 __fstatfs64
 __get_h_errno
-__getcpu
 __getcwd
 __getpriority
 __hostalias
@@ -104,7 +103,7 @@ __sched_cpualloc
 __sched_cpucount
 __sched_cpufree
 __sched_getaffinity
-__set_thread_area
+__set_tls
 __stack_chk_fail
 __statfs64
 __sym_ntop
@@ -123,6 +122,7 @@ __timer_gettime
 __timer_settime
 __waitid
 _exit
+_flush_cache
 _getlong
 _getshort
 _longjmp
@@ -152,6 +152,7 @@ brk
 bsd_signal
 bsearch
 btowc
+cacheflush
 calloc
 capget
 capset
@@ -222,6 +223,7 @@ fdopendir
 feof
 ferror
 fflush
+ffs
 fgetc
 fgetln
 fgetpos
@@ -445,6 +447,7 @@ pathconf
 pause
 pclose
 perror
+personality
 pipe
 pipe2
 poll
