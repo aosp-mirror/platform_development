@@ -327,7 +327,9 @@ LIBC {
     getprotobynumber;
     getpt;
     getpwnam;
+    getpwnam_r;
     getpwuid;
+    getpwuid_r;
     getresgid;
     getresuid;
     getrlimit;
