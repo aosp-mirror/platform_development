@@ -3,10 +3,6 @@ LIBC {
   global:
     __assert;
     __assert2;
-    __atomic_cmpxchg; # arm
-    __atomic_dec; # arm
-    __atomic_inc; # arm
-    __atomic_swap; # arm
     __b64_ntop;
     __b64_pton;
     __brk; # arm x86 mips
@@ -115,7 +111,7 @@ LIBC {
     __sched_cpucount;
     __sched_cpufree;
     __sched_getaffinity; # arm x86 mips
-    __set_tls; # arm mips
+    __set_thread_area; # x86
     __sF;
     __stack_chk_fail;
     __stack_chk_guard;
@@ -168,7 +164,6 @@ LIBC {
     brk;
     bsearch;
     btowc;
-    cacheflush; # arm mips
     calloc;
     capget;
     capset;
@@ -241,7 +236,6 @@ LIBC {
     feof;
     ferror;
     fflush;
-    ffs;
     fgetc;
     fgetln;
     fgetpos;
@@ -286,7 +280,6 @@ LIBC {
     fts_set;
     funlockfile;
     funopen;
-    futimens;
     fwide;
     fwprintf;
     fwrite;
@@ -476,7 +469,6 @@ LIBC {
     pipe2;
     poll;
     popen;
-    posix_memalign;
     prctl;
     pread;
     pread64;
@@ -786,7 +778,6 @@ LIBC {
     vwarnx;
     vwprintf;
     wait;
-    wait4;
     waitid;
     waitpid;
     warn;
