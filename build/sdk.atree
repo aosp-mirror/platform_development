@@ -123,6 +123,13 @@ prebuilts/sdk/renderscript/lib/arm64/libRSSupport.so      build-tools/${PLATFORM
 prebuilts/sdk/renderscript/lib/arm64/librsjni.so          build-tools/${PLATFORM_NAME}/renderscript/lib/packaged/arm64-v8a/librsjni.so
 prebuilts/sdk/renderscript/lib/arm64/librsrt_arm64.bc     build-tools/${PLATFORM_NAME}/renderscript/lib/bc/arm64-v8a/libclcore.bc
 
+prebuilts/sdk/renderscript/lib/x86_64/libc.so             build-tools/${PLATFORM_NAME}/renderscript/lib/intermediates/x86_64/libc.so
+prebuilts/sdk/renderscript/lib/x86_64/libm.so             build-tools/${PLATFORM_NAME}/renderscript/lib/intermediates/x86_64/libm.so
+prebuilts/sdk/renderscript/lib/x86_64/libcompiler_rt.a    build-tools/${PLATFORM_NAME}/renderscript/lib/intermediates/x86_64/libcompiler_rt.a
+prebuilts/sdk/renderscript/lib/x86_64/libRSSupport.so     build-tools/${PLATFORM_NAME}/renderscript/lib/packaged/x86_64/libRSSupport.so
+prebuilts/sdk/renderscript/lib/x86_64/librsjni.so         build-tools/${PLATFORM_NAME}/renderscript/lib/packaged/x86_64/librsjni.so
+prebuilts/sdk/renderscript/lib/x86_64/librsrt_x86_64.bc   build-tools/${PLATFORM_NAME}/renderscript/lib/bc/x86_64/libclcore.bc
+
 # dx
 bin/dx                                        build-tools/${PLATFORM_NAME}/dx
 framework/dx.jar                              build-tools/${PLATFORM_NAME}/lib/dx.jar
