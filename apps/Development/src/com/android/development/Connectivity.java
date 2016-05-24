@@ -486,7 +486,9 @@ public class Connectivity extends Activity {
         mCm.unregisterNetworkCallback(mCallback);
         mCallback = null;
         unregisterReceiver(mReceiver);
-        mWml.release();
+        if (mWml.isHeld()) {
+            mWml.release();
+        }
     }
 
     @Override
