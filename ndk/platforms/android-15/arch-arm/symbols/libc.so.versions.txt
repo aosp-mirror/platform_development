@@ -286,7 +286,6 @@ LIBC {
     fts_set;
     funlockfile;
     funopen;
-    futimens;
     fwide;
     fwprintf;
     fwrite;
@@ -476,7 +475,6 @@ LIBC {
     pipe2;
     poll;
     popen;
-    posix_memalign;
     prctl;
     pread;
     pread64;
@@ -786,7 +784,6 @@ LIBC {
     vwarnx;
     vwprintf;
     wait;
-    wait4;
     waitid;
     waitpid;
     warn;
