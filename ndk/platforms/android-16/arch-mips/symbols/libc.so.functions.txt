@@ -17,6 +17,7 @@ __fpclassifyf
 __fpclassifyl
 __fstatfs64
 __get_h_errno
+__getcpu
 __getcwd
 __getpriority
 __hostalias
@@ -210,6 +211,7 @@ execv
 execve
 execvp
 exit
+faccessat
 fchdir
 fchmod
 fchmodat
@@ -230,7 +232,9 @@ fgetpos
 fgets
 fgetwc
 fgetws
+fgetxattr
 fileno
+flistxattr
 flock
 flockfile
 fnmatch
@@ -246,11 +250,13 @@ fputws
 fread
 free
 freeaddrinfo
+fremovexattr
 freopen
 fscanf
 fseek
 fseeko
 fsetpos
+fsetxattr
 fstat
 fstatat
 fstatfs
@@ -331,6 +337,7 @@ getuid
 getutent
 getwc
 getwchar
+getxattr
 gmtime
 gmtime64
 gmtime64_r
@@ -387,17 +394,22 @@ klogctl
 lchown
 ldexp
 ldiv
+lgetxattr
 link
 listen
+listxattr
 lldiv
+llistxattr
 localtime
 localtime64
 localtime64_r
 localtime_r
 longjmp
 lrand48
+lremovexattr
 lseek
 lseek64
+lsetxattr
 lstat
 madvise
 mallinfo
@@ -550,6 +562,7 @@ pwrite64
 qsort
 raise
 read
+readahead
 readdir
 readdir_r
 readlink
@@ -565,6 +578,7 @@ regerror
 regexec
 regfree
 remove
+removexattr
 rename
 renameat
 res_init
@@ -631,6 +645,7 @@ settimeofday
 setuid
 setutent
 setvbuf
+setxattr
 shutdown
 sigaction
 sigaltstack
@@ -701,7 +716,11 @@ syslog
 system
 tcgetpgrp
 tcsetpgrp
+tdelete
+tdestroy
 tempnam
+tfind
+tgkill
 time
 timegm
 timegm64
@@ -721,6 +740,7 @@ toupper
 towlower
 towupper
 truncate
+tsearch
 ttyname
 ttyname_r
 tzset
