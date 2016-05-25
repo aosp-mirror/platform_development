@@ -10,6 +10,7 @@ __dn_count_labels
 __dn_skipname
 __errno
 __fcntl64
+__fgets_chk
 __fp_nquery
 __fp_query
 __fpclassifyd
@@ -36,6 +37,9 @@ __libc_init
 __llseek
 __loc_aton
 __loc_ntoa
+__memcpy_chk
+__memmove_chk
+__memset_chk
 __mmap2
 __ns_format_ttl
 __ns_get16
@@ -59,7 +63,9 @@ __ns_samename
 __ns_skiprr
 __ns_sprintrr
 __ns_sprintrrf
+__open_2
 __openat
+__openat_2
 __p_cdname
 __p_cdnname
 __p_class
@@ -105,8 +111,17 @@ __sched_cpucount
 __sched_cpufree
 __sched_getaffinity
 __set_thread_area
+__snprintf_chk
+__sprintf_chk
 __stack_chk_fail
 __statfs64
+__strcat_chk
+__strcpy_chk
+__strlcat_chk
+__strlcpy_chk
+__strlen_chk
+__strncat_chk
+__strncpy_chk
 __sym_ntop
 __sym_ntos
 __sym_ston
@@ -121,6 +136,8 @@ __timer_delete
 __timer_getoverrun
 __timer_gettime
 __timer_settime
+__vsnprintf_chk
+__vsprintf_chk
 __waitid
 _exit
 _getlong
@@ -269,6 +286,7 @@ fts_close
 fts_open
 fts_read
 fts_set
+ftw
 funlockfile
 funopen
 futimens
@@ -327,6 +345,7 @@ gets
 getservbyname
 getservbyport
 getservent
+getsid
 getsockname
 getsockopt
 gettid
@@ -412,6 +431,7 @@ lstat
 madvise
 mallinfo
 malloc
+malloc_usable_size
 mbrlen
 mbrtowc
 mbsinit
@@ -437,6 +457,7 @@ mktemp
 mktime
 mktime64
 mlock
+mlockall
 mmap
 mount
 mprotect
@@ -444,8 +465,10 @@ mrand48
 mremap
 msync
 munlock
+munlockall
 munmap
 nanosleep
+nftw
 nice
 nrand48
 nsdispatch
@@ -468,6 +491,8 @@ pread
 pread64
 printf
 pselect
+psiginfo
+psignal
 pthread_atfork
 pthread_attr_destroy
 pthread_attr_getdetachstate
@@ -555,6 +580,7 @@ pututline
 putw
 putwc
 putwchar
+pvalloc
 pwrite
 pwrite64
 qsort
@@ -752,6 +778,7 @@ unlink
 unlinkat
 unlockpt
 unsetenv
+unshare
 usleep
 utime
 utimensat
