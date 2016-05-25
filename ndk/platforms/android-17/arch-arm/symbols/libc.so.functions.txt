@@ -309,7 +309,6 @@ fts_set
 ftw
 funlockfile
 funopen
-futimens
 fwide
 fwprintf
 fwrite
@@ -823,7 +822,6 @@ vwarn
 vwarnx
 vwprintf
 wait
-wait4
 waitid
 waitpid
 warn

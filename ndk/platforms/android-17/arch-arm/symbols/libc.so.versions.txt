@@ -3,6 +3,10 @@ LIBC {
   global:
     __assert;
     __assert2;
+    __atomic_cmpxchg; # arm
+    __atomic_dec; # arm
+    __atomic_inc; # arm
+    __atomic_swap; # arm
     __b64_ntop;
     __b64_pton;
     __brk; # arm x86 mips
@@ -151,7 +155,6 @@ LIBC {
     __waitid; # arm x86 mips
     _ctype_;
     _exit;
-    _flush_cache; # mips
     _getlong;
     _getshort;
     _longjmp;
@@ -306,7 +309,6 @@ LIBC {
     ftw;
     funlockfile;
     funopen;
-    futimens;
     fwide;
     fwprintf;
     fwrite;
@@ -829,7 +831,6 @@ LIBC {
     vwarnx;
     vwprintf;
     wait;
-    wait4;
     waitid;
     waitpid;
     warn;
