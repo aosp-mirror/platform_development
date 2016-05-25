@@ -13,6 +13,7 @@ LIBC {
     __dn_skipname;
     __errno;
     __fcntl64; # arm x86 mips
+    __fgets_chk;
     __fp_nquery;
     __fp_query;
     __fpclassifyd;
@@ -40,6 +41,9 @@ LIBC {
     __llseek; # arm x86 mips
     __loc_aton;
     __loc_ntoa;
+    __memcpy_chk;
+    __memmove_chk;
+    __memset_chk;
     __mmap2; # arm x86 mips
     __ns_format_ttl; # arm x86 mips
     __ns_get16; # arm x86 mips
@@ -63,7 +67,9 @@ LIBC {
     __ns_skiprr; # arm x86 mips
     __ns_sprintrr; # arm x86 mips
     __ns_sprintrrf; # arm x86 mips
+    __open_2;
     __openat; # arm x86 mips
+    __openat_2;
     __p_cdname;
     __p_cdnname;
     __p_class;
@@ -113,9 +119,18 @@ LIBC {
     __sched_getaffinity; # arm x86 mips
     __set_tls; # arm mips
     __sF;
+    __snprintf_chk;
+    __sprintf_chk;
     __stack_chk_fail;
     __stack_chk_guard;
     __statfs64; # arm x86 mips
+    __strcat_chk;
+    __strcpy_chk;
+    __strlcat_chk;
+    __strlcpy_chk;
+    __strlen_chk;
+    __strncat_chk;
+    __strncpy_chk;
     __sym_ntop;
     __sym_ntos;
     __sym_ston;
@@ -131,6 +146,8 @@ LIBC {
     __timer_getoverrun; # arm x86 mips
     __timer_gettime; # arm x86 mips
     __timer_settime; # arm x86 mips
+    __vsnprintf_chk;
+    __vsprintf_chk;
     __waitid; # arm x86 mips
     _ctype_;
     _exit;
@@ -286,6 +303,7 @@ LIBC {
     fts_open;
     fts_read;
     fts_set;
+    ftw;
     funlockfile;
     funopen;
     fwide;
@@ -343,6 +361,7 @@ LIBC {
     getservbyname;
     getservbyport;
     getservent;
+    getsid;
     getsockname;
     getsockopt;
     gettid;
@@ -428,6 +447,7 @@ LIBC {
     madvise;
     mallinfo;
     malloc;
+    malloc_usable_size;
     mbrlen;
     mbrtowc;
     mbsinit;
@@ -453,6 +473,7 @@ LIBC {
     mktime;
     mktime64; # arm x86 mips
     mlock;
+    mlockall;
     mmap;
     mount;
     mprotect;
@@ -460,8 +481,10 @@ LIBC {
     mremap;
     msync;
     munlock;
+    munlockall;
     munmap;
     nanosleep;
+    nftw;
     nice;
     nrand48;
     nsdispatch;
@@ -489,6 +512,8 @@ LIBC {
     pread64;
     printf;
     pselect;
+    psiginfo;
+    psignal;
     pthread_atfork;
     pthread_attr_destroy;
     pthread_attr_getdetachstate;
@@ -576,6 +601,7 @@ LIBC {
     putw; # arm x86 mips
     putwc;
     putwchar;
+    pvalloc; # arm x86 mips
     pwrite;
     pwrite64;
     qsort;
@@ -777,6 +803,7 @@ LIBC {
     unlinkat;
     unlockpt;
     unsetenv;
+    unshare;
     usleep;
     utime;
     utimensat;
