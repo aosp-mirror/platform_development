@@ -309,7 +309,6 @@ LIBC {
     ftw;
     funlockfile;
     funopen;
-    futimens;
     fwide;
     fwprintf;
     fwrite;

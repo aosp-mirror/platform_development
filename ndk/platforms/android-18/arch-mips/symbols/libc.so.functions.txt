@@ -295,7 +295,6 @@ fts_set
 ftw
 funlockfile
 funopen
-futimens
 fwide
 fwprintf
 fwrite

@@ -110,7 +110,7 @@ __sched_cpualloc
 __sched_cpucount
 __sched_cpufree
 __sched_getaffinity
-__set_tls
+__set_thread_area
 __snprintf_chk
 __sprintf_chk
 __stack_chk_fail
@@ -143,7 +143,6 @@ __vsnprintf_chk
 __vsprintf_chk
 __waitid
 _exit
-_flush_cache
 _getlong
 _getshort
 _longjmp
@@ -173,7 +172,6 @@ brk
 bsd_signal
 bsearch
 btowc
-cacheflush
 calloc
 capget
 capset
@@ -295,7 +293,6 @@ fts_set
 ftw
 funlockfile
 funopen
-futimens
 fwide
 fwprintf
 fwrite

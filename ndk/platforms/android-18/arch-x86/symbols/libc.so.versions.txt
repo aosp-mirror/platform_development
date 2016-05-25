@@ -117,7 +117,7 @@ LIBC {
     __sched_cpucount;
     __sched_cpufree;
     __sched_getaffinity; # arm x86 mips
-    __set_tls; # arm mips
+    __set_thread_area; # x86
     __sF;
     __snprintf_chk;
     __sprintf_chk;
@@ -154,7 +154,6 @@ LIBC {
     __waitid; # arm x86 mips
     _ctype_;
     _exit;
-    _flush_cache; # mips
     _getlong;
     _getshort;
     _longjmp;
@@ -185,7 +184,6 @@ LIBC {
     brk;
     bsearch;
     btowc;
-    cacheflush; # arm mips
     calloc;
     capget;
     capset;
@@ -309,7 +307,6 @@ LIBC {
     ftw;
     funlockfile;
     funopen;
-    futimens;
     fwide;
     fwprintf;
     fwrite;
