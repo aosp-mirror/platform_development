@@ -1,22 +1,5 @@
-__aeabi_atexit
-__aeabi_memclr
-__aeabi_memclr4
-__aeabi_memclr8
-__aeabi_memcpy
-__aeabi_memcpy4
-__aeabi_memcpy8
-__aeabi_memmove
-__aeabi_memmove4
-__aeabi_memmove8
-__aeabi_memset
-__aeabi_memset4
-__aeabi_memset8
 __assert
 __assert2
-__atomic_cmpxchg
-__atomic_dec
-__atomic_inc
-__atomic_swap
 __b64_ntop
 __b64_pton
 __brk
@@ -38,7 +21,6 @@ __get_h_errno
 __getcpu
 __getcwd
 __getpriority
-__gnu_Unwind_Find_exidx
 __hostalias
 __ioctl
 __isfinite
@@ -128,7 +110,7 @@ __sched_cpualloc
 __sched_cpucount
 __sched_cpufree
 __sched_getaffinity
-__set_tls
+__set_thread_area
 __snprintf_chk
 __sprintf_chk
 __stack_chk_fail
@@ -187,7 +169,6 @@ brk
 bsd_signal
 bsearch
 btowc
-cacheflush
 calloc
 capget
 capset
@@ -259,7 +240,6 @@ fdopendir
 feof
 ferror
 fflush
-ffs
 fgetc
 fgetln
 fgetpos
@@ -309,7 +289,6 @@ fts_set
 ftw
 funlockfile
 funopen
-futimens
 fwide
 fwprintf
 fwrite
@@ -823,7 +802,6 @@ vwarn
 vwarnx
 vwprintf
 wait
-wait4
 waitid
 waitpid
 warn
