@@ -306,7 +306,6 @@ LIBC {
     ftw;
     funlockfile;
     funopen;
-    futimens;
     fwide;
     fwprintf;
     fwrite;
@@ -829,7 +828,6 @@ LIBC {
     vwarnx;
     vwprintf;
     wait;
-    wait4;
     waitid;
     waitpid;
     warn;
