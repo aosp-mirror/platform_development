@@ -137,6 +137,7 @@ prebuilts/sdk/tools/jills/jill-${JACK_SDKTOOL_VERSION}.jar                build-
 
 # The Jack reporter tool for code coverage
 prebuilts/sdk/tools/jack-jacoco-reporter.jar                              build-tools/${PLATFORM_NAME}/jack-jacoco-reporter.jar
+prebuilts/sdk/tools/jack-coverage-plugin.jar                              build-tools/${PLATFORM_NAME}/jack-coverage-plugin.jar
 
 
 ##############################################################################
