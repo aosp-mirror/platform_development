@@ -1,5 +1,22 @@
+__aeabi_atexit
+__aeabi_memclr
+__aeabi_memclr4
+__aeabi_memclr8
+__aeabi_memcpy
+__aeabi_memcpy4
+__aeabi_memcpy8
+__aeabi_memmove
+__aeabi_memmove4
+__aeabi_memmove8
+__aeabi_memset
+__aeabi_memset4
+__aeabi_memset8
 __assert
 __assert2
+__atomic_cmpxchg
+__atomic_dec
+__atomic_inc
+__atomic_swap
 __b64_ntop
 __b64_pton
 __brk
@@ -21,6 +38,7 @@ __get_h_errno
 __getcpu
 __getcwd
 __getpriority
+__gnu_Unwind_Find_exidx
 __hostalias
 __ioctl
 __isfinite
@@ -143,7 +161,6 @@ __vsnprintf_chk
 __vsprintf_chk
 __waitid
 _exit
-_flush_cache
 _getlong
 _getshort
 _longjmp
@@ -295,7 +312,6 @@ fts_set
 ftw
 funlockfile
 funopen
-futimens
 fwide
 fwprintf
 fwrite
