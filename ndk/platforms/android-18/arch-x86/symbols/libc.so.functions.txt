@@ -116,12 +116,14 @@ __sprintf_chk
 __stack_chk_fail
 __statfs64
 __strcat_chk
+__strchr_chk
 __strcpy_chk
 __strlcat_chk
 __strlcpy_chk
 __strlen_chk
 __strncat_chk
 __strncpy_chk
+__strrchr_chk
 __sym_ntop
 __sym_ntos
 __sym_ston
@@ -136,6 +138,7 @@ __timer_delete
 __timer_getoverrun
 __timer_gettime
 __timer_settime
+__umask_chk
 __vsnprintf_chk
 __vsprintf_chk
 __waitid
@@ -240,6 +243,7 @@ fdopendir
 feof
 ferror
 fflush
+ffs
 fgetc
 fgetln
 fgetpos
@@ -295,11 +299,13 @@ fwrite
 fwscanf
 gai_strerror
 getaddrinfo
+getauxval
 getc
 getc_unlocked
 getchar
 getchar_unlocked
 getcwd
+getdelim
 getegid
 getenv
 geteuid
@@ -315,6 +321,7 @@ gethostbyname_r
 gethostent
 gethostname
 getitimer
+getline
 getlogin
 getmntent
 getnameinfo
@@ -675,6 +682,7 @@ sigaltstack
 sigblock
 siginterrupt
 siglongjmp
+signalfd
 sigpending
 sigprocmask
 sigsetjmp
@@ -802,6 +810,7 @@ vwarn
 vwarnx
 vwprintf
 wait
+wait4
 waitid
 waitpid
 warn
