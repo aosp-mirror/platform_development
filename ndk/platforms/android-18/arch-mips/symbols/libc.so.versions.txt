@@ -125,12 +125,14 @@ LIBC {
     __stack_chk_guard;
     __statfs64; # arm x86 mips
     __strcat_chk;
+    __strchr_chk;
     __strcpy_chk;
     __strlcat_chk;
     __strlcpy_chk;
     __strlen_chk;
     __strncat_chk;
     __strncpy_chk;
+    __strrchr_chk;
     __sym_ntop;
     __sym_ntos;
     __sym_ston;
@@ -146,6 +148,7 @@ LIBC {
     __timer_getoverrun; # arm x86 mips
     __timer_gettime; # arm x86 mips
     __timer_settime; # arm x86 mips
+    __umask_chk;
     __vsnprintf_chk;
     __vsprintf_chk;
     __waitid; # arm x86 mips
@@ -312,11 +315,13 @@ LIBC {
     fwscanf;
     gai_strerror;
     getaddrinfo;
+    getauxval;
     getc;
     getc_unlocked;
     getchar;
     getchar_unlocked;
     getcwd;
+    getdelim;
     getegid;
     getenv;
     geteuid;
@@ -332,6 +337,7 @@ LIBC {
     gethostent;
     gethostname;
     getitimer;
+    getline;
     getlogin;
     getmntent;
     getnameinfo;
@@ -697,6 +703,7 @@ LIBC {
     sigblock;
     siginterrupt;
     siglongjmp;
+    signalfd;
     sigpending;
     sigprocmask;
     sigsetjmp;
@@ -828,6 +835,7 @@ LIBC {
     vwarnx;
     vwprintf;
     wait;
+    wait4;
     waitid;
     waitpid;
     warn;
