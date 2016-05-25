@@ -228,6 +228,7 @@ LIBC {
     execve;
     execvp;
     exit;
+    faccessat;
     fchdir;
     fchmod;
     fchmodat;
@@ -248,7 +249,9 @@ LIBC {
     fgets;
     fgetwc;
     fgetws;
+    fgetxattr;
     fileno;
+    flistxattr;
     flock;
     flockfile;
     fnmatch;
@@ -264,11 +267,13 @@ LIBC {
     fread;
     free;
     freeaddrinfo;
+    fremovexattr;
     freopen;
     fscanf;
     fseek;
     fseeko;
     fsetpos;
+    fsetxattr;
     fstat;
     fstatat;
     fstatfs;
@@ -350,6 +355,7 @@ LIBC {
     getutent;
     getwc;
     getwchar;
+    getxattr;
     gmtime;
     gmtime64; # arm x86 mips
     gmtime64_r; # arm x86 mips
@@ -406,17 +412,22 @@ LIBC {
     lchown;
     ldexp;
     ldiv;
+    lgetxattr;
     link;
     listen;
+    listxattr;
     lldiv;
+    llistxattr;
     localtime;
     localtime64; # arm x86 mips
     localtime64_r; # arm x86 mips
     localtime_r;
     longjmp;
     lrand48;
+    lremovexattr;
     lseek;
     lseek64;
+    lsetxattr;
     lstat;
     madvise;
     mallinfo;
@@ -574,6 +585,7 @@ LIBC {
     qsort;
     raise;
     read;
+    readahead;
     readdir;
     readdir_r;
     readlink;
@@ -589,6 +601,7 @@ LIBC {
     regexec;
     regfree;
     remove;
+    removexattr;
     rename;
     renameat;
     res_init;
@@ -655,6 +668,7 @@ LIBC {
     setuid;
     setutent;
     setvbuf;
+    setxattr;
     shutdown;
     sigaction;
     sigaltstack;
@@ -727,7 +741,11 @@ LIBC {
     system;
     tcgetpgrp;
     tcsetpgrp;
+    tdelete;
+    tdestroy;
     tempnam;
+    tfind;
+    tgkill;
     time;
     timegm;
     timegm64; # arm x86 mips
@@ -748,6 +766,7 @@ LIBC {
     towlower;
     towupper;
     truncate;
+    tsearch;
     ttyname;
     ttyname_r;
     tzname;
