@@ -137,12 +137,19 @@ LIBC {
     __sym_ntos;
     __sym_ston;
     __system_properties_init;
+    __system_property_add;
+    __system_property_area_init;
     __system_property_area__;
     __system_property_find;
     __system_property_find_nth;
+    __system_property_foreach;
     __system_property_get;
     __system_property_read;
+    __system_property_serial;
     __system_property_set;
+    __system_property_set_filename;
+    __system_property_update;
+    __system_property_wait_any;
     __timer_create; # arm x86 mips
     __timer_delete; # arm x86 mips
     __timer_getoverrun; # arm x86 mips
@@ -161,6 +168,7 @@ LIBC {
     _tolower_tab_; # arm x86 mips
     _toupper_tab_; # arm x86 mips
     abort;
+    abs;
     accept;
     access;
     acct;
@@ -193,6 +201,7 @@ LIBC {
     chroot;
     clearenv;
     clearerr;
+    clearerr_unlocked;
     clock;
     clock_getres;
     clock_gettime;
@@ -255,7 +264,9 @@ LIBC {
     fdopen;
     fdopendir;
     feof;
+    feof_unlocked;
     ferror;
+    ferror_unlocked;
     fflush;
     ffs;
     fgetc;
@@ -266,6 +277,7 @@ LIBC {
     fgetws;
     fgetxattr;
     fileno;
+    fileno_unlocked;
     flistxattr;
     flock;
     flockfile;
@@ -292,6 +304,7 @@ LIBC {
     fstat;
     fstatat;
     fstatfs;
+    fstatvfs;
     fsync;
     ftell;
     ftello;
@@ -384,6 +397,8 @@ LIBC {
     hstrerror;
     if_indextoname;
     if_nametoindex;
+    imaxabs;
+    imaxdiv;
     inet_addr;
     inet_aton;
     inet_nsap_addr;
@@ -429,6 +444,7 @@ LIBC {
     kill;
     killpg;
     klogctl;
+    labs;
     lchown;
     ldexp;
     ldiv;
@@ -436,6 +452,7 @@ LIBC {
     link;
     listen;
     listxattr;
+    llabs;
     lldiv;
     llistxattr;
     localtime;
@@ -718,6 +735,7 @@ LIBC {
     sscanf;
     stat;
     statfs;
+    statvfs;
     strcasecmp;
     strcasestr;
     strcat;
@@ -756,6 +774,8 @@ LIBC {
     strtoull;
     strtoumax;
     strxfrm;
+    swapoff;
+    swapon;
     swprintf;
     swscanf;
     symlink;
@@ -784,6 +804,9 @@ LIBC {
     timer_getoverrun;
     timer_gettime;
     timer_settime;
+    timerfd_create;
+    timerfd_gettime;
+    timerfd_settime;
     times;
     timezone;
     tmpfile;
