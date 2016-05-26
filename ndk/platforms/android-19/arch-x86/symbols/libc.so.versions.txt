@@ -201,7 +201,6 @@ LIBC {
     chroot;
     clearenv;
     clearerr;
-    clearerr_unlocked;
     clock;
     clock_getres;
     clock_gettime;
@@ -264,9 +263,7 @@ LIBC {
     fdopen;
     fdopendir;
     feof;
-    feof_unlocked;
     ferror;
-    ferror_unlocked;
     fflush;
     ffs;
     fgetc;
@@ -277,7 +274,6 @@ LIBC {
     fgetws;
     fgetxattr;
     fileno;
-    fileno_unlocked;
     flistxattr;
     flock;
     flockfile;
