@@ -128,11 +128,18 @@ __sym_ntop
 __sym_ntos
 __sym_ston
 __system_properties_init
+__system_property_add
+__system_property_area_init
 __system_property_find
 __system_property_find_nth
+__system_property_foreach
 __system_property_get
 __system_property_read
+__system_property_serial
 __system_property_set
+__system_property_set_filename
+__system_property_update
+__system_property_wait_any
 __timer_create
 __timer_delete
 __timer_getoverrun
@@ -148,6 +155,7 @@ _getshort
 _longjmp
 _setjmp
 abort
+abs
 accept
 access
 acct
@@ -181,6 +189,7 @@ chown
 chroot
 clearenv
 clearerr
+clearerr_unlocked
 clock
 clock_getres
 clock_gettime
@@ -241,7 +250,9 @@ fdatasync
 fdopen
 fdopendir
 feof
+feof_unlocked
 ferror
+ferror_unlocked
 fflush
 ffs
 fgetc
@@ -252,6 +263,7 @@ fgetwc
 fgetws
 fgetxattr
 fileno
+fileno_unlocked
 flistxattr
 flock
 flockfile
@@ -278,6 +290,7 @@ fsetxattr
 fstat
 fstatat
 fstatfs
+fstatvfs
 fsync
 ftell
 ftello
@@ -370,6 +383,8 @@ herror
 hstrerror
 if_indextoname
 if_nametoindex
+imaxabs
+imaxdiv
 inet_addr
 inet_aton
 inet_nsap_addr
@@ -415,6 +430,7 @@ jrand48
 kill
 killpg
 klogctl
+labs
 lchown
 ldexp
 ldiv
@@ -422,6 +438,7 @@ lgetxattr
 link
 listen
 listxattr
+llabs
 lldiv
 llistxattr
 localtime
@@ -699,6 +716,7 @@ srand48
 sscanf
 stat
 statfs
+statvfs
 strcasecmp
 strcasestr
 strcat
@@ -737,6 +755,8 @@ strtoul
 strtoull
 strtoumax
 strxfrm
+swapoff
+swapon
 swprintf
 swscanf
 symlink
@@ -763,6 +783,9 @@ timer_delete
 timer_getoverrun
 timer_gettime
 timer_settime
+timerfd_create
+timerfd_gettime
+timerfd_settime
 times
 tmpfile
 tmpnam
