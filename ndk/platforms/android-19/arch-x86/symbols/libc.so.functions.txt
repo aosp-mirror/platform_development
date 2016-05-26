@@ -189,7 +189,6 @@ chown
 chroot
 clearenv
 clearerr
-clearerr_unlocked
 clock
 clock_getres
 clock_gettime
@@ -250,9 +249,7 @@ fdatasync
 fdopen
 fdopendir
 feof
-feof_unlocked
 ferror
-ferror_unlocked
 fflush
 ffs
 fgetc
@@ -263,7 +260,6 @@ fgetwc
 fgetws
 fgetxattr
 fileno
-fileno_unlocked
 flistxattr
 flock
 flockfile
