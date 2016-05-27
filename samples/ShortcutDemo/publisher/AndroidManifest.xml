@@ -24,13 +24,16 @@
 
     <application android:label="@string/app_title"
         android:resizeableActivity="true">
+
         <activity android:name="ShortcutPublisher">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <meta-data android:name="android.pm.Shortcuts" android:resource="@xml/shortcuts"/>
         </activity>
+
         <service android:name="ShortcutPublishingService">
             <intent-filter>
                 <action android:name="com.example.android.pm.shortcutdemo.ADD" />

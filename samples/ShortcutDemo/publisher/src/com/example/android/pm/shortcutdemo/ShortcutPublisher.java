@@ -86,6 +86,11 @@ public class ShortcutPublisher extends Activity {
 
     private List<ShortcutInfo> getAllShortcuts() {
         final Map<String, ShortcutInfo> map = new ArrayMap<>();
+        for (ShortcutInfo si : mShortcutManager.getManifestShortcuts()) {
+            if (!map.containsKey(si.getId())) {
+                map.put(si.getId(), si);
+            }
+        }
         for (ShortcutInfo si : mShortcutManager.getDynamicShortcuts()) {
             if (!map.containsKey(si.getId())) {
                 map.put(si.getId(), si);
@@ -108,6 +113,9 @@ public class ShortcutPublisher extends Activity {
     private final Comparator<ShortcutInfo> mShortcutComparator =
             (ShortcutInfo s1, ShortcutInfo s2) -> {
                 int ret = 0;
+                ret = (s1.isManifestShortcut() ? 0 : 1) - (s2.isManifestShortcut() ? 0 : 1);
+                if (ret != 0) return ret;
+
                 ret = (s1.isDynamic() ? 0 : 1) - (s2.isDynamic() ? 0 : 1);
                 if (ret != 0) return ret;
 
@@ -185,12 +193,12 @@ public class ShortcutPublisher extends Activity {
 
         final ShortcutInfo si1 = addRandomIntents(this, new ShortcutInfo.Builder(this)
                 .setId("shortcut1"))
-                .setActivityComponent(activity)
+                .setActivity(activity)
                 .build();
 
         final ShortcutInfo si2 = new ShortcutInfo.Builder(this)
                 .setId(SETUP_SHORTCUT_ID)
-                .setActivityComponent(activity)
+                .setActivity(activity)
                 .setTitle("Shortcut Demo Main")
                 .setIcon(icon2)
                 .setIntent(intent2)
@@ -198,7 +206,7 @@ public class ShortcutPublisher extends Activity {
 
         final ShortcutInfo si3 = new ShortcutInfo.Builder(this)
                 .setId("shortcut3")
-                .setActivityComponent(activity)
+                .setActivity(activity)
                 .setTitle("Shortcut Demo Main with extras")
                 .setIcon(icon3)
                 .setIntent(intent3)
@@ -226,7 +234,7 @@ public class ShortcutPublisher extends Activity {
         final ShortcutInfo si = addRandomIntents(this, new ShortcutInfo.Builder(this)
                 .setId("shortcut-" + formatTime(System.currentTimeMillis()) + "-"
                         + sSequenceNumber.getAndIncrement()))
-                .setActivityComponent(new ComponentName(this, ShortcutPublisher.class))
+                .setActivity(new ComponentName(this, ShortcutPublisher.class))
                 .build();
         callApi(this, () -> mShortcutManager.addDynamicShortcuts(Arrays.asList(si)));
         refreshList();
@@ -296,7 +304,7 @@ public class ShortcutPublisher extends Activity {
 
         @Override
         protected boolean showAction2(ShortcutInfo si) {
-            return si.isDynamic();
+            return si.isDynamic(); // TODO Need disable too.
         }
 
         @Override

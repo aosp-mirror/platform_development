@@ -26,4 +26,22 @@
 
     <add-resource type="string" name="delete_all"/>
     <string name="delete_all">Delete all dynamic shortcuts</string>
+
+    <add-resource type="string" name="shortcut_title1"/>
+    <string name="shortcut_title1">Manifest Shortcut</string>
+
+    <add-resource type="string" name="shortcut_text1"/>
+    <string name="shortcut_text1">Subtext for manifest shortcut</string>
+
+    <add-resource type="string" name="shortcut_disabled_message1"/>
+    <string name="shortcut_disabled_message1">No longer exists</string>
+
+    <add-resource type="string" name="shortcut_title2"/>
+    <string name="shortcut_title2">Shortcut2</string>
+
+    <add-resource type="string" name="shortcut_text2"/>
+    <string name="shortcut_text2">Sample manifest shortcut 2</string>
+
+    <add-resource type="string" name="shortcut_disabled_message2"/>
+    <string name="shortcut_disabled_message2">Disabled</string>
 </resources>

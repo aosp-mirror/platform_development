@@ -1,0 +1,26 @@
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android" >
+    <shortcut
+        android:shortcutId="manifest-shortcut-1"
+        android:enabled="true"
+        android:shortcutRank="1"
+        android:shortcutIcon="@drawable/icon1"
+        android:shortcutTitle="@string/shortcut_title1"
+        android:shortcutText="@string/shortcut_text1"
+        android:shortcutDisabledMessage="@string/shortcut_disabled_message1"
+        android:shortcutCategories="android.shortcut.conversation:android.shortcut.media"
+        android:shortcutIntentAction="android.intent.action.VIEW"
+        android:shortcutIntentData="http://www.google.com/"
+        />
+    <shortcut
+        android:shortcutId="manifest-shortcut-2"
+        android:enabled="true"
+        android:shortcutRank="2"
+        android:shortcutIcon="@drawable/icon2"
+        android:shortcutTitle="@string/shortcut_title2"
+        android:shortcutText="@string/shortcut_text2"
+        android:shortcutDisabledMessage="@string/shortcut_disabled_message2"
+        android:shortcutCategories="android.shortcut.conversation"
+        android:shortcutIntentAction="android.intent.action.DIAL"
+        android:shortcutIntentData="tel:555"
+    />
+</shortcuts>

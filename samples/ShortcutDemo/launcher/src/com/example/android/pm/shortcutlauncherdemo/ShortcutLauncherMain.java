@@ -91,6 +91,7 @@ public class ShortcutLauncherMain extends Activity {
                             /* targetPackage =*/ null,
                             /* targetActivity =*/ null,
                             /* includeDynamic = */ false,
+                            /* includeManifest = */ false,
                             /* includePinned =*/ true,
                             null /* means "all profiles" of this user*/,
                             /* showDetails =*/ true
