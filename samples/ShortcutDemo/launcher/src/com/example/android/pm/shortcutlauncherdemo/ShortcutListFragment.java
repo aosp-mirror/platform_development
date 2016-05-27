@@ -39,6 +39,7 @@ public class ShortcutListFragment extends MyBaseListFragment {
     private static final String ARG_TARGET_PACKAGE = "target_package";
     private static final String ARG_TARGET_ACTIVITY = "target_activity";
     private static final String ARG_INCLUDE_DYNAMIC = "include_dynamic";
+    private static final String ARG_INCLUDE_MANIFEST = "include_manifest";
     private static final String ARG_INCLUDE_PINNED = "include_pinned";
     private static final String ARG_USER = "user";
     private static final String ARG_SHOW_DETAILS = "show_details";
@@ -46,12 +47,13 @@ public class ShortcutListFragment extends MyBaseListFragment {
     private MyAdapter mAdapter;
 
     public ShortcutListFragment setArguments(String targetPackage, ComponentName targetActivity,
-            boolean includeDynamic,
+            boolean includeDynamic, boolean includeManifest,
             boolean includePinned, UserHandle user, boolean showDetails) {
         final Bundle b = new Bundle();
         b.putString(ARG_TARGET_PACKAGE, targetPackage);
         b.putParcelable(ARG_TARGET_ACTIVITY, targetActivity);
         b.putBoolean(ARG_INCLUDE_DYNAMIC, includeDynamic);
+        b.putBoolean(ARG_INCLUDE_MANIFEST, includeManifest);
         b.putBoolean(ARG_INCLUDE_PINNED, includePinned);
         b.putParcelable(ARG_USER, user);
         b.putBoolean(ARG_SHOW_DETAILS, showDetails);
@@ -89,12 +91,12 @@ public class ShortcutListFragment extends MyBaseListFragment {
     }
 
     private void togglePin(ShortcutInfo selected) {
-        final String packageName = selected.getPackageName();
+        final String packageName = selected.getPackage();
 
         final List<String> pinned = new ArrayList<>();
         for (ShortcutInfo si : mAdapter.getShortcuts()) {
             if (si.isPinned()
-                    && si.getPackageName().equals(packageName)
+                    && si.getPackage().equals(packageName)
                     && si.getUserHandle().equals(selected.getUserHandle())) {
                 pinned.add(si.getId());
             }
@@ -108,7 +110,7 @@ public class ShortcutListFragment extends MyBaseListFragment {
     }
 
     private void launch(ShortcutInfo si) {
-        mLauncherApps.startShortcut(si.getPackageName(), si.getId(), null, null,
+        mLauncherApps.startShortcut(si.getPackage(), si.getId(), null, null,
                 si.getUserHandle());
     }
 
@@ -124,6 +126,7 @@ public class ShortcutListFragment extends MyBaseListFragment {
             final Bundle b = getArguments();
             mQuery.setQueryFlags(
                     (b.getBoolean(ARG_INCLUDE_DYNAMIC) ? ShortcutQuery.FLAG_GET_DYNAMIC : 0) |
+                    (b.getBoolean(ARG_INCLUDE_MANIFEST) ? ShortcutQuery.FLAG_GET_MANIFEST : 0) |
                     (b.getBoolean(ARG_INCLUDE_PINNED) ? ShortcutQuery.FLAG_GET_PINNED : 0));
             mQuery.setPackage(b.getString(ARG_TARGET_PACKAGE));
             mQuery.setActivity(b.getParcelable(ARG_TARGET_ACTIVITY));
@@ -138,7 +141,7 @@ public class ShortcutListFragment extends MyBaseListFragment {
     private final Comparator<ShortcutInfo> mShortcutComparator =
             (ShortcutInfo s1, ShortcutInfo s2) -> {
                 int ret = 0;
-                ret = getAppLabel(s1.getPackageName()).compareTo(getAppLabel(s2.getPackageName()));
+                ret = getAppLabel(s1.getPackage()).compareTo(getAppLabel(s2.getPackage()));
                 if (ret != 0) return ret;
 
                 ret = s1.getUserHandle().hashCode() - s2.getUserHandle().hashCode();
