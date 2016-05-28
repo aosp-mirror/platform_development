@@ -181,53 +181,8 @@ public abstract class ShortcutAdapter extends BaseAdapter implements OnClickList
             image.setVisibility(View.GONE);
         } else {
             image.setVisibility(View.VISIBLE);
-            image.setImageDrawable(getShortcutIcon(si));
-        }
-    }
-
-    /**
-     * Returns the icon of a shortcut, with the profile badge if necessary.
-     */
-    private Drawable getShortcutIcon(ShortcutInfo si) {
-        final PackageManager pm = mContext.getPackageManager();
-        final Bitmap bitmap;
-        if (si.hasIconResource()) {
-            try {
-                final Resources res = pm.getResourcesForApplication(
-                        si.getPackage());
-                bitmap = BitmapFactory.decodeResource(res, si.getIconResourceId());
-            } catch (NameNotFoundException e) {
-                Log.w(TAG, "Unable to load icon from " + si.getPackage(), e);
-                return null;
-            }
-        } else if (si.hasIconFile()) {
-            bitmap = pfdToBitmap(mLauncherApps.getShortcutIconFd(si));
-        } else {
-            return null;
-        }
-        if (bitmap != null) {
-            return pm.getUserBadgedIcon(new BitmapDrawable(mContext.getResources(), bitmap),
-                    si.getUserHandle());
-        } else {
-            return null;
-        }
-    }
-
-    private Bitmap pfdToBitmap(ParcelFileDescriptor pfd) {
-        if (pfd == null) {
-            return null;
-        }
-        try {
-            final Bitmap bmp = BitmapFactory.decodeFileDescriptor(pfd.getFileDescriptor());
-            if (bmp == null) {
-                Log.w(TAG, "Failed to decode icon");
-            }
-            return bmp;
-        } finally {
-            try {
-                pfd.close();
-            } catch (IOException e) {
-            }
+            image.setImageDrawable(mLauncherApps.getShortcutBadgedIconDrawable(si,
+                    mContext.getResources().getDisplayMetrics().densityDpi));
         }
     }
 
