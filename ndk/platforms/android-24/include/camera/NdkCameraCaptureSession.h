@@ -177,7 +177,8 @@ typedef void (*ACameraCaptureSession_captureCallback_start)(
  *                capture request sent by application, so the address is different to what
  *                application sent but the content will match. This request will be freed by
  *                framework immediately after this callback returns.
- * @param result The capture result metadata reported by camera device
+ * @param result The capture result metadata reported by camera device. The memory is managed by
+ *                camera framework. Do not access this pointer after this callback returns.
  */
 typedef void (*ACameraCaptureSession_captureCallback_result)(
         void* context, ACameraCaptureSession* session,
@@ -193,7 +194,9 @@ typedef void (*ACameraCaptureSession_captureCallback_result)(
  *                capture request sent by application, so the address is different to what
  *                application sent but the content will match. This request will be freed by
  *                framework immediately after this callback returns.
- * @param failure The {@link ACameraCaptureFailure} desribes the capture failure.
+ * @param failure The {@link ACameraCaptureFailure} desribes the capture failure. The memory is
+ *                managed by camera framework. Do not access this pointer after this callback
+ *                returns.
  */
 typedef void (*ACameraCaptureSession_captureCallback_failed)(
         void* context, ACameraCaptureSession* session,
