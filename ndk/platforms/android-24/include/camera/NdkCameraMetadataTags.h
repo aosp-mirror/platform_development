@@ -14,6 +14,15 @@
  * limitations under the License.
  */
 
+/**
+ * @addtogroup Camera
+ * @{
+ */
+
+/**
+ * @file NdkCameraMetadataTags.h
+ */
+
 /*
  * This file defines an NDK API.
  * Do not remove methods.
@@ -119,7 +128,7 @@ typedef enum acamera_metadata_tag {
      * FAST or HIGH_QUALITY will yield a picture with the same white point
      * as what was produced by the camera device in the earlier frame.</p>
      * <p>The expected processing pipeline is as follows:</p>
-     * <p><img alt="White balance processing pipeline" src="../../../../images/camera2/metadata/android.colorCorrection.mode/processing_pipeline.png" /></p>
+     * <p><img alt="White balance processing pipeline" src="../images/camera2/metadata/android.colorCorrection.mode/processing_pipeline.png" /></p>
      * <p>The white balance is encoded by two values, a 4-channel white-balance
      * gain vector (applied in the Bayer domain), and a 3x3 color transform
      * matrix (applied after demosaic).</p>
@@ -436,6 +445,10 @@ typedef enum acamera_metadata_tag {
      * Otherwise will always be present.</p>
      * <p>The maximum number of regions supported by the device is determined by the value
      * of android.control.maxRegionsAe.</p>
+     * <p>The data representation is int[5 * area_count].
+     * Every five elements represent a metering region of (xmin, ymin, xmax, ymax, weight).
+     * The rectangle is defined to be inclusive on xmin and ymin, but exclusive on xmax and
+     * ymax.</p>
      * <p>The coordinate system is based on the active pixel array,
      * with (0,0) being the top-left pixel in the active pixel array, and
      * (ACAMERA_SENSOR_INFO_ACTIVE_ARRAY_SIZE.width - 1,
@@ -586,6 +599,10 @@ typedef enum acamera_metadata_tag {
      * Otherwise will always be present.</p>
      * <p>The maximum number of focus areas supported by the device is determined by the value
      * of android.control.maxRegionsAf.</p>
+     * <p>The data representation is int[5 * area_count].
+     * Every five elements represent a metering region of (xmin, ymin, xmax, ymax, weight).
+     * The rectangle is defined to be inclusive on xmin and ymin, but exclusive on xmax and
+     * ymax.</p>
      * <p>The coordinate system is based on the active pixel array,
      * with (0,0) being the top-left pixel in the active pixel array, and
      * (ACAMERA_SENSOR_INFO_ACTIVE_ARRAY_SIZE.width - 1,
@@ -732,6 +749,10 @@ typedef enum acamera_metadata_tag {
      * Otherwise will always be present.</p>
      * <p>The maximum number of regions supported by the device is determined by the value
      * of android.control.maxRegionsAwb.</p>
+     * <p>The data representation is int[5 * area_count].
+     * Every five elements represent a metering region of (xmin, ymin, xmax, ymax, weight).
+     * The rectangle is defined to be inclusive on xmin and ymin, but exclusive on xmax and
+     * ymax.</p>
      * <p>The coordinate system is based on the active pixel array,
      * with (0,0) being the top-left pixel in the active pixel array, and
      * (ACAMERA_SENSOR_INFO_ACTIVE_ARRAY_SIZE.width - 1,
@@ -819,7 +840,8 @@ typedef enum acamera_metadata_tag {
      * ACAMERA_CONTROL_* are mostly disabled, and the camera device implements
      * one of the scene mode settings (such as ACTION, SUNSET, or PARTY)
      * as it wishes. The camera device scene mode 3A settings are provided by
-     * {@link android.hardware.camera2.CaptureResult capture results}.</p>
+     * capture results {@link ACameraMetadata} from
+     * {@link ACameraCaptureSession_captureCallback_result}.</p>
      * <p>When set to OFF_KEEP_STATE, it is similar to OFF mode, the only difference
      * is that this frame will not be used by camera device background 3A statistics
      * update, as if this frame is never captured. This mode can be used in the scenario
@@ -961,21 +983,23 @@ typedef enum acamera_metadata_tag {
      * <ul>
      * <li>
      * <p>For constant-framerate recording, for each normal
-     * {@link android.media.CamcorderProfile CamcorderProfile}, that is, a
-     * {@link android.media.CamcorderProfile CamcorderProfile} that has
-     * {@link android.media.CamcorderProfile#quality quality} in
-     * the range [{@link android.media.CamcorderProfile#QUALITY_LOW QUALITY_LOW},
-     * {@link android.media.CamcorderProfile#QUALITY_2160P QUALITY_2160P}], if the profile is
-     * supported by the device and has
-     * {@link android.media.CamcorderProfile#videoFrameRate videoFrameRate} <code>x</code>, this list will
-     * always include (<code>x</code>,<code>x</code>).</p>
+     * <a href="https://developer.android.com/reference/android/media/CamcorderProfile.html">CamcorderProfile</a>, that is, a
+     * <a href="https://developer.android.com/reference/android/media/CamcorderProfile.html">CamcorderProfile</a> that has
+     * <a href="https://developer.android.com/reference/android/media/CamcorderProfile.html#quality">quality</a>
+     * in the range [
+     * <a href="https://developer.android.com/reference/android/media/CamcorderProfile.html#QUALITY_LOW">QUALITY_LOW</a>,
+     * <a href="https://developer.android.com/reference/android/media/CamcorderProfile.html#QUALITY_2160P">QUALITY_2160P</a>],
+     * if the profile is supported by the device and has
+     * <a href="https://developer.android.com/reference/android/media/CamcorderProfile.html#videoFrameRate">videoFrameRate</a>
+     * <code>x</code>, this list will always include (<code>x</code>,<code>x</code>).</p>
      * </li>
      * <li>
      * <p>Also, a camera device must either not support any
-     * {@link android.media.CamcorderProfile CamcorderProfile},
+     * <a href="https://developer.android.com/reference/android/media/CamcorderProfile.html">CamcorderProfile</a>,
      * or support at least one
-     * normal {@link android.media.CamcorderProfile CamcorderProfile} that has
-     * {@link android.media.CamcorderProfile#videoFrameRate videoFrameRate} <code>x</code> &gt;= 24.</p>
+     * normal <a href="https://developer.android.com/reference/android/media/CamcorderProfile.html">CamcorderProfile</a>
+     * that has
+     * <a href="https://developer.android.com/reference/android/media/CamcorderProfile.html#videoFrameRate">videoFrameRate</a> <code>x</code> &gt;= 24.</p>
      * </li>
      * </ul>
      * <p>For devices at the LIMITED level or above:</p>
@@ -1181,205 +1205,45 @@ typedef enum acamera_metadata_tag {
      * AE state becomes CONVERGED, then the image data associated with this result should
      * be good to use.</p>
      * <p>Below are state transition tables for different AE modes.</p>
-     * <table>
-     * <thead>
-     * <tr>
-     * <th align="center">State</th>
-     * <th align="center">Transition Cause</th>
-     * <th align="center">New State</th>
-     * <th align="center">Notes</th>
-     * </tr>
-     * </thead>
-     * <tbody>
-     * <tr>
-     * <td align="center">INACTIVE</td>
-     * <td align="center"></td>
-     * <td align="center">INACTIVE</td>
-     * <td align="center">Camera device auto exposure algorithm is disabled</td>
-     * </tr>
-     * </tbody>
-     * </table>
+     * <p>State       | Transition Cause | New State | Notes
+     * :------------:|:----------------:|:---------:|:-----------------------:
+     * INACTIVE      |                  | INACTIVE  | Camera device auto exposure algorithm is disabled</p>
      * <p>When ACAMERA_CONTROL_AE_MODE is AE_MODE_ON_*:</p>
-     * <table>
-     * <thead>
-     * <tr>
-     * <th align="center">State</th>
-     * <th align="center">Transition Cause</th>
-     * <th align="center">New State</th>
-     * <th align="center">Notes</th>
-     * </tr>
-     * </thead>
-     * <tbody>
-     * <tr>
-     * <td align="center">INACTIVE</td>
-     * <td align="center">Camera device initiates AE scan</td>
-     * <td align="center">SEARCHING</td>
-     * <td align="center">Values changing</td>
-     * </tr>
-     * <tr>
-     * <td align="center">INACTIVE</td>
-     * <td align="center">ACAMERA_CONTROL_AE_LOCK is ON</td>
-     * <td align="center">LOCKED</td>
-     * <td align="center">Values locked</td>
-     * </tr>
-     * <tr>
-     * <td align="center">SEARCHING</td>
-     * <td align="center">Camera device finishes AE scan</td>
-     * <td align="center">CONVERGED</td>
-     * <td align="center">Good values, not changing</td>
-     * </tr>
-     * <tr>
-     * <td align="center">SEARCHING</td>
-     * <td align="center">Camera device finishes AE scan</td>
-     * <td align="center">FLASH_REQUIRED</td>
-     * <td align="center">Converged but too dark w/o flash</td>
-     * </tr>
-     * <tr>
-     * <td align="center">SEARCHING</td>
-     * <td align="center">ACAMERA_CONTROL_AE_LOCK is ON</td>
-     * <td align="center">LOCKED</td>
-     * <td align="center">Values locked</td>
-     * </tr>
-     * <tr>
-     * <td align="center">CONVERGED</td>
-     * <td align="center">Camera device initiates AE scan</td>
-     * <td align="center">SEARCHING</td>
-     * <td align="center">Values changing</td>
-     * </tr>
-     * <tr>
-     * <td align="center">CONVERGED</td>
-     * <td align="center">ACAMERA_CONTROL_AE_LOCK is ON</td>
-     * <td align="center">LOCKED</td>
-     * <td align="center">Values locked</td>
-     * </tr>
-     * <tr>
-     * <td align="center">FLASH_REQUIRED</td>
-     * <td align="center">Camera device initiates AE scan</td>
-     * <td align="center">SEARCHING</td>
-     * <td align="center">Values changing</td>
-     * </tr>
-     * <tr>
-     * <td align="center">FLASH_REQUIRED</td>
-     * <td align="center">ACAMERA_CONTROL_AE_LOCK is ON</td>
-     * <td align="center">LOCKED</td>
-     * <td align="center">Values locked</td>
-     * </tr>
-     * <tr>
-     * <td align="center">LOCKED</td>
-     * <td align="center">ACAMERA_CONTROL_AE_LOCK is OFF</td>
-     * <td align="center">SEARCHING</td>
-     * <td align="center">Values not good after unlock</td>
-     * </tr>
-     * <tr>
-     * <td align="center">LOCKED</td>
-     * <td align="center">ACAMERA_CONTROL_AE_LOCK is OFF</td>
-     * <td align="center">CONVERGED</td>
-     * <td align="center">Values good after unlock</td>
-     * </tr>
-     * <tr>
-     * <td align="center">LOCKED</td>
-     * <td align="center">ACAMERA_CONTROL_AE_LOCK is OFF</td>
-     * <td align="center">FLASH_REQUIRED</td>
-     * <td align="center">Exposure good, but too dark</td>
-     * </tr>
-     * <tr>
-     * <td align="center">PRECAPTURE</td>
-     * <td align="center">Sequence done. ACAMERA_CONTROL_AE_LOCK is OFF</td>
-     * <td align="center">CONVERGED</td>
-     * <td align="center">Ready for high-quality capture</td>
-     * </tr>
-     * <tr>
-     * <td align="center">PRECAPTURE</td>
-     * <td align="center">Sequence done. ACAMERA_CONTROL_AE_LOCK is ON</td>
-     * <td align="center">LOCKED</td>
-     * <td align="center">Ready for high-quality capture</td>
-     * </tr>
-     * <tr>
-     * <td align="center">LOCKED</td>
-     * <td align="center">aeLock is ON and aePrecaptureTrigger is START</td>
-     * <td align="center">LOCKED</td>
-     * <td align="center">Precapture trigger is ignored when AE is already locked</td>
-     * </tr>
-     * <tr>
-     * <td align="center">LOCKED</td>
-     * <td align="center">aeLock is ON and aePrecaptureTrigger is CANCEL</td>
-     * <td align="center">LOCKED</td>
-     * <td align="center">Precapture trigger is ignored when AE is already locked</td>
-     * </tr>
-     * <tr>
-     * <td align="center">Any state (excluding LOCKED)</td>
-     * <td align="center">ACAMERA_CONTROL_AE_PRECAPTURE_TRIGGER is START</td>
-     * <td align="center">PRECAPTURE</td>
-     * <td align="center">Start AE precapture metering sequence</td>
-     * </tr>
-     * <tr>
-     * <td align="center">Any state (excluding LOCKED)</td>
-     * <td align="center">ACAMERA_CONTROL_AE_PRECAPTURE_TRIGGER is CANCEL</td>
-     * <td align="center">INACTIVE</td>
-     * <td align="center">Currently active precapture metering sequence is canceled</td>
-     * </tr>
-     * </tbody>
-     * </table>
+     * <p>State        | Transition Cause                             | New State      | Notes
+     * :-------------:|:--------------------------------------------:|:--------------:|:-----------------:
+     * INACTIVE       | Camera device initiates AE scan              | SEARCHING      | Values changing
+     * INACTIVE       | ACAMERA_CONTROL_AE_LOCK is ON                 | LOCKED         | Values locked
+     * SEARCHING      | Camera device finishes AE scan               | CONVERGED      | Good values, not changing
+     * SEARCHING      | Camera device finishes AE scan               | FLASH_REQUIRED | Converged but too dark w/o flash
+     * SEARCHING      | ACAMERA_CONTROL_AE_LOCK is ON                 | LOCKED         | Values locked
+     * CONVERGED      | Camera device initiates AE scan              | SEARCHING      | Values changing
+     * CONVERGED      | ACAMERA_CONTROL_AE_LOCK is ON                 | LOCKED         | Values locked
+     * FLASH_REQUIRED | Camera device initiates AE scan              | SEARCHING      | Values changing
+     * FLASH_REQUIRED | ACAMERA_CONTROL_AE_LOCK is ON                 | LOCKED         | Values locked
+     * LOCKED         | ACAMERA_CONTROL_AE_LOCK is OFF                | SEARCHING      | Values not good after unlock
+     * LOCKED         | ACAMERA_CONTROL_AE_LOCK is OFF                | CONVERGED      | Values good after unlock
+     * LOCKED         | ACAMERA_CONTROL_AE_LOCK is OFF                | FLASH_REQUIRED | Exposure good, but too dark
+     * PRECAPTURE     | Sequence done. ACAMERA_CONTROL_AE_LOCK is OFF | CONVERGED      | Ready for high-quality capture
+     * PRECAPTURE     | Sequence done. ACAMERA_CONTROL_AE_LOCK is ON  | LOCKED         | Ready for high-quality capture
+     * LOCKED         | aeLock is ON and aePrecaptureTrigger is START | LOCKED        | Precapture trigger is ignored when AE is already locked
+     * LOCKED         | aeLock is ON and aePrecaptureTrigger is CANCEL| LOCKED        | Precapture trigger is ignored when AE is already locked
+     * Any state (excluding LOCKED) | ACAMERA_CONTROL_AE_PRECAPTURE_TRIGGER is START | PRECAPTURE     | Start AE precapture metering sequence
+     * Any state (excluding LOCKED) | ACAMERA_CONTROL_AE_PRECAPTURE_TRIGGER is CANCEL| INACTIVE       | Currently active precapture metering sequence is canceled</p>
      * <p>For the above table, the camera device may skip reporting any state changes that happen
      * without application intervention (i.e. mode switch, trigger, locking). Any state that
      * can be skipped in that manner is called a transient state.</p>
      * <p>For example, for above AE modes (AE_MODE_ON_*), in addition to the state transitions
      * listed in above table, it is also legal for the camera device to skip one or more
      * transient states between two results. See below table for examples:</p>
-     * <table>
-     * <thead>
-     * <tr>
-     * <th align="center">State</th>
-     * <th align="center">Transition Cause</th>
-     * <th align="center">New State</th>
-     * <th align="center">Notes</th>
-     * </tr>
-     * </thead>
-     * <tbody>
-     * <tr>
-     * <td align="center">INACTIVE</td>
-     * <td align="center">Camera device finished AE scan</td>
-     * <td align="center">CONVERGED</td>
-     * <td align="center">Values are already good, transient states are skipped by camera device.</td>
-     * </tr>
-     * <tr>
-     * <td align="center">Any state (excluding LOCKED)</td>
-     * <td align="center">ACAMERA_CONTROL_AE_PRECAPTURE_TRIGGER is START, sequence done</td>
-     * <td align="center">FLASH_REQUIRED</td>
-     * <td align="center">Converged but too dark w/o flash after a precapture sequence, transient states are skipped by camera device.</td>
-     * </tr>
-     * <tr>
-     * <td align="center">Any state (excluding LOCKED)</td>
-     * <td align="center">ACAMERA_CONTROL_AE_PRECAPTURE_TRIGGER is START, sequence done</td>
-     * <td align="center">CONVERGED</td>
-     * <td align="center">Converged after a precapture sequence, transient states are skipped by camera device.</td>
-     * </tr>
-     * <tr>
-     * <td align="center">Any state (excluding LOCKED)</td>
-     * <td align="center">ACAMERA_CONTROL_AE_PRECAPTURE_TRIGGER is CANCEL, converged</td>
-     * <td align="center">FLASH_REQUIRED</td>
-     * <td align="center">Converged but too dark w/o flash after a precapture sequence is canceled, transient states are skipped by camera device.</td>
-     * </tr>
-     * <tr>
-     * <td align="center">Any state (excluding LOCKED)</td>
-     * <td align="center">ACAMERA_CONTROL_AE_PRECAPTURE_TRIGGER is CANCEL, converged</td>
-     * <td align="center">CONVERGED</td>
-     * <td align="center">Converged after a precapture sequenceis canceled, transient states are skipped by camera device.</td>
-     * </tr>
-     * <tr>
-     * <td align="center">CONVERGED</td>
-     * <td align="center">Camera device finished AE scan</td>
-     * <td align="center">FLASH_REQUIRED</td>
-     * <td align="center">Converged but too dark w/o flash after a new scan, transient states are skipped by camera device.</td>
-     * </tr>
-     * <tr>
-     * <td align="center">FLASH_REQUIRED</td>
-     * <td align="center">Camera device finished AE scan</td>
-     * <td align="center">CONVERGED</td>
-     * <td align="center">Converged after a new scan, transient states are skipped by camera device.</td>
-     * </tr>
-     * </tbody>
-     * </table>
+     * <p>State        | Transition Cause                                            | New State      | Notes
+     * :-------------:|:-----------------------------------------------------------:|:--------------:|:-----------------:
+     * INACTIVE       | Camera device finished AE scan                              | CONVERGED      | Values are already good, transient states are skipped by camera device.
+     * Any state (excluding LOCKED) | ACAMERA_CONTROL_AE_PRECAPTURE_TRIGGER is START, sequence done | FLASH_REQUIRED | Converged but too dark w/o flash after a precapture sequence, transient states are skipped by camera device.
+     * Any state (excluding LOCKED) | ACAMERA_CONTROL_AE_PRECAPTURE_TRIGGER is START, sequence done | CONVERGED      | Converged after a precapture sequence, transient states are skipped by camera device.
+     * Any state (excluding LOCKED) | ACAMERA_CONTROL_AE_PRECAPTURE_TRIGGER is CANCEL, converged    | FLASH_REQUIRED | Converged but too dark w/o flash after a precapture sequence is canceled, transient states are skipped by camera device.
+     * Any state (excluding LOCKED) | ACAMERA_CONTROL_AE_PRECAPTURE_TRIGGER is CANCEL, converged    | CONVERGED      | Converged after a precapture sequenceis canceled, transient states are skipped by camera device.
+     * CONVERGED      | Camera device finished AE scan                              | FLASH_REQUIRED | Converged but too dark w/o flash after a new scan, transient states are skipped by camera device.
+     * FLASH_REQUIRED | Camera device finished AE scan                              | CONVERGED      | Converged after a new scan, transient states are skipped by camera device.</p>
      *
      * @see ACAMERA_CONTROL_AE_LOCK
      * @see ACAMERA_CONTROL_AE_MODE
@@ -1409,374 +1273,79 @@ typedef enum acamera_metadata_tag {
      * be sharp.</p>
      * <p>Below are state transition tables for different AF modes.</p>
      * <p>When ACAMERA_CONTROL_AF_MODE is AF_MODE_OFF or AF_MODE_EDOF:</p>
-     * <table>
-     * <thead>
-     * <tr>
-     * <th align="center">State</th>
-     * <th align="center">Transition Cause</th>
-     * <th align="center">New State</th>
-     * <th align="center">Notes</th>
-     * </tr>
-     * </thead>
-     * <tbody>
-     * <tr>
-     * <td align="center">INACTIVE</td>
-     * <td align="center"></td>
-     * <td align="center">INACTIVE</td>
-     * <td align="center">Never changes</td>
-     * </tr>
-     * </tbody>
-     * </table>
+     * <p>State       | Transition Cause | New State | Notes
+     * :------------:|:----------------:|:---------:|:-----------:
+     * INACTIVE      |                  | INACTIVE  | Never changes</p>
      * <p>When ACAMERA_CONTROL_AF_MODE is AF_MODE_AUTO or AF_MODE_MACRO:</p>
-     * <table>
-     * <thead>
-     * <tr>
-     * <th align="center">State</th>
-     * <th align="center">Transition Cause</th>
-     * <th align="center">New State</th>
-     * <th align="center">Notes</th>
-     * </tr>
-     * </thead>
-     * <tbody>
-     * <tr>
-     * <td align="center">INACTIVE</td>
-     * <td align="center">AF_TRIGGER</td>
-     * <td align="center">ACTIVE_SCAN</td>
-     * <td align="center">Start AF sweep, Lens now moving</td>
-     * </tr>
-     * <tr>
-     * <td align="center">ACTIVE_SCAN</td>
-     * <td align="center">AF sweep done</td>
-     * <td align="center">FOCUSED_LOCKED</td>
-     * <td align="center">Focused, Lens now locked</td>
-     * </tr>
-     * <tr>
-     * <td align="center">ACTIVE_SCAN</td>
-     * <td align="center">AF sweep done</td>
-     * <td align="center">NOT_FOCUSED_LOCKED</td>
-     * <td align="center">Not focused, Lens now locked</td>
-     * </tr>
-     * <tr>
-     * <td align="center">ACTIVE_SCAN</td>
-     * <td align="center">AF_CANCEL</td>
-     * <td align="center">INACTIVE</td>
-     * <td align="center">Cancel/reset AF, Lens now locked</td>
-     * </tr>
-     * <tr>
-     * <td align="center">FOCUSED_LOCKED</td>
-     * <td align="center">AF_CANCEL</td>
-     * <td align="center">INACTIVE</td>
-     * <td align="center">Cancel/reset AF</td>
-     * </tr>
-     * <tr>
-     * <td align="center">FOCUSED_LOCKED</td>
-     * <td align="center">AF_TRIGGER</td>
-     * <td align="center">ACTIVE_SCAN</td>
-     * <td align="center">Start new sweep, Lens now moving</td>
-     * </tr>
-     * <tr>
-     * <td align="center">NOT_FOCUSED_LOCKED</td>
-     * <td align="center">AF_CANCEL</td>
-     * <td align="center">INACTIVE</td>
-     * <td align="center">Cancel/reset AF</td>
-     * </tr>
-     * <tr>
-     * <td align="center">NOT_FOCUSED_LOCKED</td>
-     * <td align="center">AF_TRIGGER</td>
-     * <td align="center">ACTIVE_SCAN</td>
-     * <td align="center">Start new sweep, Lens now moving</td>
-     * </tr>
-     * <tr>
-     * <td align="center">Any state</td>
-     * <td align="center">Mode change</td>
-     * <td align="center">INACTIVE</td>
-     * <td align="center"></td>
-     * </tr>
-     * </tbody>
-     * </table>
+     * <p>State            | Transition Cause | New State          | Notes
+     * :-----------------:|:----------------:|:------------------:|:--------------:
+     * INACTIVE           | AF_TRIGGER       | ACTIVE_SCAN        | Start AF sweep, Lens now moving
+     * ACTIVE_SCAN        | AF sweep done    | FOCUSED_LOCKED     | Focused, Lens now locked
+     * ACTIVE_SCAN        | AF sweep done    | NOT_FOCUSED_LOCKED | Not focused, Lens now locked
+     * ACTIVE_SCAN        | AF_CANCEL        | INACTIVE           | Cancel/reset AF, Lens now locked
+     * FOCUSED_LOCKED     | AF_CANCEL        | INACTIVE           | Cancel/reset AF
+     * FOCUSED_LOCKED     | AF_TRIGGER       | ACTIVE_SCAN        | Start new sweep, Lens now moving
+     * NOT_FOCUSED_LOCKED | AF_CANCEL        | INACTIVE           | Cancel/reset AF
+     * NOT_FOCUSED_LOCKED | AF_TRIGGER       | ACTIVE_SCAN        | Start new sweep, Lens now moving
+     * Any state          | Mode change      | INACTIVE           |</p>
      * <p>For the above table, the camera device may skip reporting any state changes that happen
      * without application intervention (i.e. mode switch, trigger, locking). Any state that
      * can be skipped in that manner is called a transient state.</p>
      * <p>For example, for these AF modes (AF_MODE_AUTO and AF_MODE_MACRO), in addition to the
      * state transitions listed in above table, it is also legal for the camera device to skip
      * one or more transient states between two results. See below table for examples:</p>
-     * <table>
-     * <thead>
-     * <tr>
-     * <th align="center">State</th>
-     * <th align="center">Transition Cause</th>
-     * <th align="center">New State</th>
-     * <th align="center">Notes</th>
-     * </tr>
-     * </thead>
-     * <tbody>
-     * <tr>
-     * <td align="center">INACTIVE</td>
-     * <td align="center">AF_TRIGGER</td>
-     * <td align="center">FOCUSED_LOCKED</td>
-     * <td align="center">Focus is already good or good after a scan, lens is now locked.</td>
-     * </tr>
-     * <tr>
-     * <td align="center">INACTIVE</td>
-     * <td align="center">AF_TRIGGER</td>
-     * <td align="center">NOT_FOCUSED_LOCKED</td>
-     * <td align="center">Focus failed after a scan, lens is now locked.</td>
-     * </tr>
-     * <tr>
-     * <td align="center">FOCUSED_LOCKED</td>
-     * <td align="center">AF_TRIGGER</td>
-     * <td align="center">FOCUSED_LOCKED</td>
-     * <td align="center">Focus is already good or good after a scan, lens is now locked.</td>
-     * </tr>
-     * <tr>
-     * <td align="center">NOT_FOCUSED_LOCKED</td>
-     * <td align="center">AF_TRIGGER</td>
-     * <td align="center">FOCUSED_LOCKED</td>
-     * <td align="center">Focus is good after a scan, lens is not locked.</td>
-     * </tr>
-     * </tbody>
-     * </table>
+     * <p>State            | Transition Cause | New State          | Notes
+     * :-----------------:|:----------------:|:------------------:|:--------------:
+     * INACTIVE           | AF_TRIGGER       | FOCUSED_LOCKED     | Focus is already good or good after a scan, lens is now locked.
+     * INACTIVE           | AF_TRIGGER       | NOT_FOCUSED_LOCKED | Focus failed after a scan, lens is now locked.
+     * FOCUSED_LOCKED     | AF_TRIGGER       | FOCUSED_LOCKED     | Focus is already good or good after a scan, lens is now locked.
+     * NOT_FOCUSED_LOCKED | AF_TRIGGER       | FOCUSED_LOCKED     | Focus is good after a scan, lens is not locked.</p>
      * <p>When ACAMERA_CONTROL_AF_MODE is AF_MODE_CONTINUOUS_VIDEO:</p>
-     * <table>
-     * <thead>
-     * <tr>
-     * <th align="center">State</th>
-     * <th align="center">Transition Cause</th>
-     * <th align="center">New State</th>
-     * <th align="center">Notes</th>
-     * </tr>
-     * </thead>
-     * <tbody>
-     * <tr>
-     * <td align="center">INACTIVE</td>
-     * <td align="center">Camera device initiates new scan</td>
-     * <td align="center">PASSIVE_SCAN</td>
-     * <td align="center">Start AF scan, Lens now moving</td>
-     * </tr>
-     * <tr>
-     * <td align="center">INACTIVE</td>
-     * <td align="center">AF_TRIGGER</td>
-     * <td align="center">NOT_FOCUSED_LOCKED</td>
-     * <td align="center">AF state query, Lens now locked</td>
-     * </tr>
-     * <tr>
-     * <td align="center">PASSIVE_SCAN</td>
-     * <td align="center">Camera device completes current scan</td>
-     * <td align="center">PASSIVE_FOCUSED</td>
-     * <td align="center">End AF scan, Lens now locked</td>
-     * </tr>
-     * <tr>
-     * <td align="center">PASSIVE_SCAN</td>
-     * <td align="center">Camera device fails current scan</td>
-     * <td align="center">PASSIVE_UNFOCUSED</td>
-     * <td align="center">End AF scan, Lens now locked</td>
-     * </tr>
-     * <tr>
-     * <td align="center">PASSIVE_SCAN</td>
-     * <td align="center">AF_TRIGGER</td>
-     * <td align="center">FOCUSED_LOCKED</td>
-     * <td align="center">Immediate transition, if focus is good. Lens now locked</td>
-     * </tr>
-     * <tr>
-     * <td align="center">PASSIVE_SCAN</td>
-     * <td align="center">AF_TRIGGER</td>
-     * <td align="center">NOT_FOCUSED_LOCKED</td>
-     * <td align="center">Immediate transition, if focus is bad. Lens now locked</td>
-     * </tr>
-     * <tr>
-     * <td align="center">PASSIVE_SCAN</td>
-     * <td align="center">AF_CANCEL</td>
-     * <td align="center">INACTIVE</td>
-     * <td align="center">Reset lens position, Lens now locked</td>
-     * </tr>
-     * <tr>
-     * <td align="center">PASSIVE_FOCUSED</td>
-     * <td align="center">Camera device initiates new scan</td>
-     * <td align="center">PASSIVE_SCAN</td>
-     * <td align="center">Start AF scan, Lens now moving</td>
-     * </tr>
-     * <tr>
-     * <td align="center">PASSIVE_UNFOCUSED</td>
-     * <td align="center">Camera device initiates new scan</td>
-     * <td align="center">PASSIVE_SCAN</td>
-     * <td align="center">Start AF scan, Lens now moving</td>
-     * </tr>
-     * <tr>
-     * <td align="center">PASSIVE_FOCUSED</td>
-     * <td align="center">AF_TRIGGER</td>
-     * <td align="center">FOCUSED_LOCKED</td>
-     * <td align="center">Immediate transition, lens now locked</td>
-     * </tr>
-     * <tr>
-     * <td align="center">PASSIVE_UNFOCUSED</td>
-     * <td align="center">AF_TRIGGER</td>
-     * <td align="center">NOT_FOCUSED_LOCKED</td>
-     * <td align="center">Immediate transition, lens now locked</td>
-     * </tr>
-     * <tr>
-     * <td align="center">FOCUSED_LOCKED</td>
-     * <td align="center">AF_TRIGGER</td>
-     * <td align="center">FOCUSED_LOCKED</td>
-     * <td align="center">No effect</td>
-     * </tr>
-     * <tr>
-     * <td align="center">FOCUSED_LOCKED</td>
-     * <td align="center">AF_CANCEL</td>
-     * <td align="center">INACTIVE</td>
-     * <td align="center">Restart AF scan</td>
-     * </tr>
-     * <tr>
-     * <td align="center">NOT_FOCUSED_LOCKED</td>
-     * <td align="center">AF_TRIGGER</td>
-     * <td align="center">NOT_FOCUSED_LOCKED</td>
-     * <td align="center">No effect</td>
-     * </tr>
-     * <tr>
-     * <td align="center">NOT_FOCUSED_LOCKED</td>
-     * <td align="center">AF_CANCEL</td>
-     * <td align="center">INACTIVE</td>
-     * <td align="center">Restart AF scan</td>
-     * </tr>
-     * </tbody>
-     * </table>
+     * <p>State            | Transition Cause                    | New State          | Notes
+     * :-----------------:|:-----------------------------------:|:------------------:|:--------------:
+     * INACTIVE           | Camera device initiates new scan    | PASSIVE_SCAN       | Start AF scan, Lens now moving
+     * INACTIVE           | AF_TRIGGER                          | NOT_FOCUSED_LOCKED | AF state query, Lens now locked
+     * PASSIVE_SCAN       | Camera device completes current scan| PASSIVE_FOCUSED    | End AF scan, Lens now locked
+     * PASSIVE_SCAN       | Camera device fails current scan    | PASSIVE_UNFOCUSED  | End AF scan, Lens now locked
+     * PASSIVE_SCAN       | AF_TRIGGER                          | FOCUSED_LOCKED     | Immediate transition, if focus is good. Lens now locked
+     * PASSIVE_SCAN       | AF_TRIGGER                          | NOT_FOCUSED_LOCKED | Immediate transition, if focus is bad. Lens now locked
+     * PASSIVE_SCAN       | AF_CANCEL                           | INACTIVE           | Reset lens position, Lens now locked
+     * PASSIVE_FOCUSED    | Camera device initiates new scan    | PASSIVE_SCAN       | Start AF scan, Lens now moving
+     * PASSIVE_UNFOCUSED  | Camera device initiates new scan    | PASSIVE_SCAN       | Start AF scan, Lens now moving
+     * PASSIVE_FOCUSED    | AF_TRIGGER                          | FOCUSED_LOCKED     | Immediate transition, lens now locked
+     * PASSIVE_UNFOCUSED  | AF_TRIGGER                          | NOT_FOCUSED_LOCKED | Immediate transition, lens now locked
+     * FOCUSED_LOCKED     | AF_TRIGGER                          | FOCUSED_LOCKED     | No effect
+     * FOCUSED_LOCKED     | AF_CANCEL                           | INACTIVE           | Restart AF scan
+     * NOT_FOCUSED_LOCKED | AF_TRIGGER                          | NOT_FOCUSED_LOCKED | No effect
+     * NOT_FOCUSED_LOCKED | AF_CANCEL                           | INACTIVE           | Restart AF scan</p>
      * <p>When ACAMERA_CONTROL_AF_MODE is AF_MODE_CONTINUOUS_PICTURE:</p>
-     * <table>
-     * <thead>
-     * <tr>
-     * <th align="center">State</th>
-     * <th align="center">Transition Cause</th>
-     * <th align="center">New State</th>
-     * <th align="center">Notes</th>
-     * </tr>
-     * </thead>
-     * <tbody>
-     * <tr>
-     * <td align="center">INACTIVE</td>
-     * <td align="center">Camera device initiates new scan</td>
-     * <td align="center">PASSIVE_SCAN</td>
-     * <td align="center">Start AF scan, Lens now moving</td>
-     * </tr>
-     * <tr>
-     * <td align="center">INACTIVE</td>
-     * <td align="center">AF_TRIGGER</td>
-     * <td align="center">NOT_FOCUSED_LOCKED</td>
-     * <td align="center">AF state query, Lens now locked</td>
-     * </tr>
-     * <tr>
-     * <td align="center">PASSIVE_SCAN</td>
-     * <td align="center">Camera device completes current scan</td>
-     * <td align="center">PASSIVE_FOCUSED</td>
-     * <td align="center">End AF scan, Lens now locked</td>
-     * </tr>
-     * <tr>
-     * <td align="center">PASSIVE_SCAN</td>
-     * <td align="center">Camera device fails current scan</td>
-     * <td align="center">PASSIVE_UNFOCUSED</td>
-     * <td align="center">End AF scan, Lens now locked</td>
-     * </tr>
-     * <tr>
-     * <td align="center">PASSIVE_SCAN</td>
-     * <td align="center">AF_TRIGGER</td>
-     * <td align="center">FOCUSED_LOCKED</td>
-     * <td align="center">Eventual transition once the focus is good. Lens now locked</td>
-     * </tr>
-     * <tr>
-     * <td align="center">PASSIVE_SCAN</td>
-     * <td align="center">AF_TRIGGER</td>
-     * <td align="center">NOT_FOCUSED_LOCKED</td>
-     * <td align="center">Eventual transition if cannot find focus. Lens now locked</td>
-     * </tr>
-     * <tr>
-     * <td align="center">PASSIVE_SCAN</td>
-     * <td align="center">AF_CANCEL</td>
-     * <td align="center">INACTIVE</td>
-     * <td align="center">Reset lens position, Lens now locked</td>
-     * </tr>
-     * <tr>
-     * <td align="center">PASSIVE_FOCUSED</td>
-     * <td align="center">Camera device initiates new scan</td>
-     * <td align="center">PASSIVE_SCAN</td>
-     * <td align="center">Start AF scan, Lens now moving</td>
-     * </tr>
-     * <tr>
-     * <td align="center">PASSIVE_UNFOCUSED</td>
-     * <td align="center">Camera device initiates new scan</td>
-     * <td align="center">PASSIVE_SCAN</td>
-     * <td align="center">Start AF scan, Lens now moving</td>
-     * </tr>
-     * <tr>
-     * <td align="center">PASSIVE_FOCUSED</td>
-     * <td align="center">AF_TRIGGER</td>
-     * <td align="center">FOCUSED_LOCKED</td>
-     * <td align="center">Immediate trans. Lens now locked</td>
-     * </tr>
-     * <tr>
-     * <td align="center">PASSIVE_UNFOCUSED</td>
-     * <td align="center">AF_TRIGGER</td>
-     * <td align="center">NOT_FOCUSED_LOCKED</td>
-     * <td align="center">Immediate trans. Lens now locked</td>
-     * </tr>
-     * <tr>
-     * <td align="center">FOCUSED_LOCKED</td>
-     * <td align="center">AF_TRIGGER</td>
-     * <td align="center">FOCUSED_LOCKED</td>
-     * <td align="center">No effect</td>
-     * </tr>
-     * <tr>
-     * <td align="center">FOCUSED_LOCKED</td>
-     * <td align="center">AF_CANCEL</td>
-     * <td align="center">INACTIVE</td>
-     * <td align="center">Restart AF scan</td>
-     * </tr>
-     * <tr>
-     * <td align="center">NOT_FOCUSED_LOCKED</td>
-     * <td align="center">AF_TRIGGER</td>
-     * <td align="center">NOT_FOCUSED_LOCKED</td>
-     * <td align="center">No effect</td>
-     * </tr>
-     * <tr>
-     * <td align="center">NOT_FOCUSED_LOCKED</td>
-     * <td align="center">AF_CANCEL</td>
-     * <td align="center">INACTIVE</td>
-     * <td align="center">Restart AF scan</td>
-     * </tr>
-     * </tbody>
-     * </table>
+     * <p>State            | Transition Cause                     | New State          | Notes
+     * :-----------------:|:------------------------------------:|:------------------:|:--------------:
+     * INACTIVE           | Camera device initiates new scan     | PASSIVE_SCAN       | Start AF scan, Lens now moving
+     * INACTIVE           | AF_TRIGGER                           | NOT_FOCUSED_LOCKED | AF state query, Lens now locked
+     * PASSIVE_SCAN       | Camera device completes current scan | PASSIVE_FOCUSED    | End AF scan, Lens now locked
+     * PASSIVE_SCAN       | Camera device fails current scan     | PASSIVE_UNFOCUSED  | End AF scan, Lens now locked
+     * PASSIVE_SCAN       | AF_TRIGGER                           | FOCUSED_LOCKED     | Eventual transition once the focus is good. Lens now locked
+     * PASSIVE_SCAN       | AF_TRIGGER                           | NOT_FOCUSED_LOCKED | Eventual transition if cannot find focus. Lens now locked
+     * PASSIVE_SCAN       | AF_CANCEL                            | INACTIVE           | Reset lens position, Lens now locked
+     * PASSIVE_FOCUSED    | Camera device initiates new scan     | PASSIVE_SCAN       | Start AF scan, Lens now moving
+     * PASSIVE_UNFOCUSED  | Camera device initiates new scan     | PASSIVE_SCAN       | Start AF scan, Lens now moving
+     * PASSIVE_FOCUSED    | AF_TRIGGER                           | FOCUSED_LOCKED     | Immediate trans. Lens now locked
+     * PASSIVE_UNFOCUSED  | AF_TRIGGER                           | NOT_FOCUSED_LOCKED | Immediate trans. Lens now locked
+     * FOCUSED_LOCKED     | AF_TRIGGER                           | FOCUSED_LOCKED     | No effect
+     * FOCUSED_LOCKED     | AF_CANCEL                            | INACTIVE           | Restart AF scan
+     * NOT_FOCUSED_LOCKED | AF_TRIGGER                           | NOT_FOCUSED_LOCKED | No effect
+     * NOT_FOCUSED_LOCKED | AF_CANCEL                            | INACTIVE           | Restart AF scan</p>
      * <p>When switch between AF_MODE_CONTINUOUS_* (CAF modes) and AF_MODE_AUTO/AF_MODE_MACRO
      * (AUTO modes), the initial INACTIVE or PASSIVE_SCAN states may be skipped by the
      * camera device. When a trigger is included in a mode switch request, the trigger
      * will be evaluated in the context of the new mode in the request.
      * See below table for examples:</p>
-     * <table>
-     * <thead>
-     * <tr>
-     * <th align="center">State</th>
-     * <th align="center">Transition Cause</th>
-     * <th align="center">New State</th>
-     * <th align="center">Notes</th>
-     * </tr>
-     * </thead>
-     * <tbody>
-     * <tr>
-     * <td align="center">any state</td>
-     * <td align="center">CAF--&gt;AUTO mode switch</td>
-     * <td align="center">INACTIVE</td>
-     * <td align="center">Mode switch without trigger, initial state must be INACTIVE</td>
-     * </tr>
-     * <tr>
-     * <td align="center">any state</td>
-     * <td align="center">CAF--&gt;AUTO mode switch with AF_TRIGGER</td>
-     * <td align="center">trigger-reachable states from INACTIVE</td>
-     * <td align="center">Mode switch with trigger, INACTIVE is skipped</td>
-     * </tr>
-     * <tr>
-     * <td align="center">any state</td>
-     * <td align="center">AUTO--&gt;CAF mode switch</td>
-     * <td align="center">passively reachable states from INACTIVE</td>
-     * <td align="center">Mode switch without trigger, passive transient state is skipped</td>
-     * </tr>
-     * </tbody>
-     * </table>
+     * <p>State      | Transition Cause                       | New State                                | Notes
+     * :-----------:|:--------------------------------------:|:----------------------------------------:|:--------------:
+     * any state    | CAF--&gt;AUTO mode switch                 | INACTIVE                                 | Mode switch without trigger, initial state must be INACTIVE
+     * any state    | CAF--&gt;AUTO mode switch with AF_TRIGGER | trigger-reachable states from INACTIVE   | Mode switch with trigger, INACTIVE is skipped
+     * any state    | AUTO--&gt;CAF mode switch                 | passively reachable states from INACTIVE | Mode switch without trigger, passive transient state is skipped</p>
      *
      * @see ACAMERA_CONTROL_AF_MODE
      * @see ACAMERA_CONTROL_MODE
@@ -1804,109 +1373,29 @@ typedef enum acamera_metadata_tag {
      * be good to use.</p>
      * <p>Below are state transition tables for different AWB modes.</p>
      * <p>When <code>ACAMERA_CONTROL_AWB_MODE != AWB_MODE_AUTO</code>:</p>
-     * <table>
-     * <thead>
-     * <tr>
-     * <th align="center">State</th>
-     * <th align="center">Transition Cause</th>
-     * <th align="center">New State</th>
-     * <th align="center">Notes</th>
-     * </tr>
-     * </thead>
-     * <tbody>
-     * <tr>
-     * <td align="center">INACTIVE</td>
-     * <td align="center"></td>
-     * <td align="center">INACTIVE</td>
-     * <td align="center">Camera device auto white balance algorithm is disabled</td>
-     * </tr>
-     * </tbody>
-     * </table>
+     * <p>State       | Transition Cause | New State | Notes
+     * :------------:|:----------------:|:---------:|:-----------------------:
+     * INACTIVE      |                  |INACTIVE   |Camera device auto white balance algorithm is disabled</p>
      * <p>When ACAMERA_CONTROL_AWB_MODE is AWB_MODE_AUTO:</p>
-     * <table>
-     * <thead>
-     * <tr>
-     * <th align="center">State</th>
-     * <th align="center">Transition Cause</th>
-     * <th align="center">New State</th>
-     * <th align="center">Notes</th>
-     * </tr>
-     * </thead>
-     * <tbody>
-     * <tr>
-     * <td align="center">INACTIVE</td>
-     * <td align="center">Camera device initiates AWB scan</td>
-     * <td align="center">SEARCHING</td>
-     * <td align="center">Values changing</td>
-     * </tr>
-     * <tr>
-     * <td align="center">INACTIVE</td>
-     * <td align="center">ACAMERA_CONTROL_AWB_LOCK is ON</td>
-     * <td align="center">LOCKED</td>
-     * <td align="center">Values locked</td>
-     * </tr>
-     * <tr>
-     * <td align="center">SEARCHING</td>
-     * <td align="center">Camera device finishes AWB scan</td>
-     * <td align="center">CONVERGED</td>
-     * <td align="center">Good values, not changing</td>
-     * </tr>
-     * <tr>
-     * <td align="center">SEARCHING</td>
-     * <td align="center">ACAMERA_CONTROL_AWB_LOCK is ON</td>
-     * <td align="center">LOCKED</td>
-     * <td align="center">Values locked</td>
-     * </tr>
-     * <tr>
-     * <td align="center">CONVERGED</td>
-     * <td align="center">Camera device initiates AWB scan</td>
-     * <td align="center">SEARCHING</td>
-     * <td align="center">Values changing</td>
-     * </tr>
-     * <tr>
-     * <td align="center">CONVERGED</td>
-     * <td align="center">ACAMERA_CONTROL_AWB_LOCK is ON</td>
-     * <td align="center">LOCKED</td>
-     * <td align="center">Values locked</td>
-     * </tr>
-     * <tr>
-     * <td align="center">LOCKED</td>
-     * <td align="center">ACAMERA_CONTROL_AWB_LOCK is OFF</td>
-     * <td align="center">SEARCHING</td>
-     * <td align="center">Values not good after unlock</td>
-     * </tr>
-     * </tbody>
-     * </table>
+     * <p>State        | Transition Cause                 | New State     | Notes
+     * :-------------:|:--------------------------------:|:-------------:|:-----------------:
+     * INACTIVE       | Camera device initiates AWB scan | SEARCHING     | Values changing
+     * INACTIVE       | ACAMERA_CONTROL_AWB_LOCK is ON    | LOCKED        | Values locked
+     * SEARCHING      | Camera device finishes AWB scan  | CONVERGED     | Good values, not changing
+     * SEARCHING      | ACAMERA_CONTROL_AWB_LOCK is ON    | LOCKED        | Values locked
+     * CONVERGED      | Camera device initiates AWB scan | SEARCHING     | Values changing
+     * CONVERGED      | ACAMERA_CONTROL_AWB_LOCK is ON    | LOCKED        | Values locked
+     * LOCKED         | ACAMERA_CONTROL_AWB_LOCK is OFF   | SEARCHING     | Values not good after unlock</p>
      * <p>For the above table, the camera device may skip reporting any state changes that happen
      * without application intervention (i.e. mode switch, trigger, locking). Any state that
      * can be skipped in that manner is called a transient state.</p>
      * <p>For example, for this AWB mode (AWB_MODE_AUTO), in addition to the state transitions
      * listed in above table, it is also legal for the camera device to skip one or more
      * transient states between two results. See below table for examples:</p>
-     * <table>
-     * <thead>
-     * <tr>
-     * <th align="center">State</th>
-     * <th align="center">Transition Cause</th>
-     * <th align="center">New State</th>
-     * <th align="center">Notes</th>
-     * </tr>
-     * </thead>
-     * <tbody>
-     * <tr>
-     * <td align="center">INACTIVE</td>
-     * <td align="center">Camera device finished AWB scan</td>
-     * <td align="center">CONVERGED</td>
-     * <td align="center">Values are already good, transient states are skipped by camera device.</td>
-     * </tr>
-     * <tr>
-     * <td align="center">LOCKED</td>
-     * <td align="center">ACAMERA_CONTROL_AWB_LOCK is OFF</td>
-     * <td align="center">CONVERGED</td>
-     * <td align="center">Values good after unlock, transient states are skipped by camera device.</td>
-     * </tr>
-     * </tbody>
-     * </table>
+     * <p>State        | Transition Cause                 | New State     | Notes
+     * :-------------:|:--------------------------------:|:-------------:|:-----------------:
+     * INACTIVE       | Camera device finished AWB scan  | CONVERGED     | Values are already good, transient states are skipped by camera device.
+     * LOCKED         | ACAMERA_CONTROL_AWB_LOCK is OFF   | CONVERGED     | Values good after unlock, transient states are skipped by camera device.</p>
      *
      * @see ACAMERA_CONTROL_AWB_LOCK
      * @see ACAMERA_CONTROL_AWB_MODE
@@ -2317,14 +1806,14 @@ typedef enum acamera_metadata_tag {
      * <p>When an ACAMERA_JPEG_ORIENTATION of non-zero degree is requested,
      * the camera device will handle thumbnail rotation in one of the following ways:</p>
      * <ul>
-     * <li>Set the {@link android.media.ExifInterface#TAG_ORIENTATION EXIF orientation flag}
+     * <li>Set the
+     *   <a href="https://developer.android.com/reference/android/media/ExifInterface.html#TAG_ORIENTATION">EXIF orientation flag</a>
      *   and keep jpeg and thumbnail image data unrotated.</li>
      * <li>Rotate the jpeg and thumbnail image data and not set
-     *   {@link android.media.ExifInterface#TAG_ORIENTATION EXIF orientation flag}. In this
-     *   case, LIMITED or FULL hardware level devices will report rotated thumnail size in
-     *   capture result, so the width and height will be interchanged if 90 or 270 degree
-     *   orientation is requested. LEGACY device will always report unrotated thumbnail
-     *   size.</li>
+     *   <a href="https://developer.android.com/reference/android/media/ExifInterface.html#TAG_ORIENTATION">EXIF orientation flag</a>.
+     *   In this case, LIMITED or FULL hardware level devices will report rotated thumnail size
+     *   in capture result, so the width and height will be interchanged if 90 or 270 degree
+     *   orientation is requested. LEGACY device will always report unrotated thumbnail size.</li>
      * </ul>
      *
      * @see ACAMERA_JPEG_ORIENTATION
@@ -2559,9 +2048,9 @@ typedef enum acamera_metadata_tag {
      * <p>The position of the camera device's lens optical center,
      * as a three-dimensional vector <code>(x,y,z)</code>, relative to the
      * optical center of the largest camera device facing in the
-     * same direction as this camera, in the {@link
-     * android.hardware.SensorEvent Android sensor coordinate
-     * axes}. Note that only the axis definitions are shared with
+     * same direction as this camera, in the
+     * <a href="https://developer.android.com/reference/android/hardware/SensorEvent.html">Android sensor coordinate axes</a>.
+     * Note that only the axis definitions are shared with
      * the sensor coordinate system, but not the origin.</p>
      * <p>If this device is the largest or only camera device with a
      * given facing, then this position will be <code>(0, 0, 0)</code>; a
@@ -2973,43 +2462,17 @@ typedef enum acamera_metadata_tag {
      * into the 3 stream types as below:</p>
      * <ul>
      * <li>Processed (but stalling): any non-RAW format with a stallDurations &gt; 0.
-     *   Typically {@link android.graphics.ImageFormat#JPEG JPEG format}.</li>
-     * <li>Raw formats: {@link android.graphics.ImageFormat#RAW_SENSOR RAW_SENSOR}, {@link
-     *   android.graphics.ImageFormat#RAW10 RAW10}, or {@link android.graphics.ImageFormat#RAW12
-     *   RAW12}.</li>
+     *   Typically {@link AIMAGE_FORMAT_JPEG} format.</li>
+     * <li>Raw formats: {@link AIMAGE_FORMAT_RAW16}, {@link AIMAGE_FORMAT_RAW10}, or
+     *   {@link AIMAGE_FORMAT_RAW12}.</li>
      * <li>Processed (but not-stalling): any non-RAW format without a stall duration.
-     *   Typically {@link android.graphics.ImageFormat#YUV_420_888 YUV_420_888},
-     *   {@link android.graphics.ImageFormat#NV21 NV21}, or
-     *   {@link android.graphics.ImageFormat#YV12 YV12}.</li>
+     *   Typically {@link AIMAGE_FORMAT_YUV_420_888}.</li>
      * </ul>
      *
      * @see ACAMERA_SCALER_AVAILABLE_STREAM_CONFIGURATIONS
      */
     ACAMERA_REQUEST_MAX_NUM_OUTPUT_STREAMS =                    // int32[3]
             ACAMERA_REQUEST_START + 6,
-    /**
-     * <p>The maximum numbers of any type of input streams
-     * that can be configured and used simultaneously by a camera device.</p>
-     *
-     * <p>This tag may appear in:</p>
-     * <ul>
-     *   <li>ACameraMetadata from ACameraManager_getCameraCharacteristics</li>
-     * </ul>
-     *
-     * <p>When set to 0, it means no input stream is supported.</p>
-     * <p>The image format for a input stream can be any supported format returned by {@link
-     * android.hardware.camera2.params.StreamConfigurationMap#getInputFormats}. When using an
-     * input stream, there must be at least one output stream configured to to receive the
-     * reprocessed images.</p>
-     * <p>When an input stream and some output streams are used in a reprocessing request,
-     * only the input buffer will be used to produce these output stream buffers, and a
-     * new sensor image will not be captured.</p>
-     * <p>For example, for Zero Shutter Lag (ZSL) still capture use case, the input
-     * stream image format will be PRIVATE, the associated output stream image format
-     * should be JPEG.</p>
-     */
-    ACAMERA_REQUEST_MAX_NUM_INPUT_STREAMS =                     // int32
-            ACAMERA_REQUEST_START + 8,
     /**
      * <p>Specifies the number of pipeline stages the frame went
      * through from when it was exposed to when the final completed result
@@ -3116,7 +2579,7 @@ typedef enum acamera_metadata_tag {
             ACAMERA_REQUEST_START + 12,
     /**
      * <p>A list of all keys that the camera device has available
-     * to use with {@link android.hardware.camera2.CaptureRequest}.</p>
+     * to use with {@link ACaptureRequest}.</p>
      *
      * <p>This tag may appear in:</p>
      * <ul>
@@ -3137,7 +2600,8 @@ typedef enum acamera_metadata_tag {
             ACAMERA_REQUEST_START + 13,
     /**
      * <p>A list of all keys that the camera device has available
-     * to use with {@link android.hardware.camera2.CaptureResult}.</p>
+     * to query with {@link ACameraMetadata} from
+     * {@link ACameraCaptureSession_captureCallback_result}.</p>
      *
      * <p>This tag may appear in:</p>
      * <ul>
@@ -3167,7 +2631,8 @@ typedef enum acamera_metadata_tag {
             ACAMERA_REQUEST_START + 14,
     /**
      * <p>A list of all keys that the camera device has available
-     * to use with {@link android.hardware.camera2.CameraCharacteristics}.</p>
+     * to query with {@link ACameraMetadata} from
+     * {@link ACameraManager_getCameraCharacteristics}.</p>
      *
      * <p>This tag may appear in:</p>
      * <ul>
@@ -3195,6 +2660,7 @@ typedef enum acamera_metadata_tag {
      * </ul>
      *
      * <p>This control can be used to implement digital zoom.</p>
+     * <p>The data representation is int[4], which maps to (left, top, width, height).</p>
      * <p>The crop region coordinate system is based off
      * ACAMERA_SENSOR_INFO_ACTIVE_ARRAY_SIZE, with <code>(0, 0)</code> being the
      * top-left corner of the sensor active array.</p>
@@ -3277,66 +2743,16 @@ typedef enum acamera_metadata_tag {
      * <p>The following table describes the minimum required output stream
      * configurations based on the hardware level
      * (ACAMERA_INFO_SUPPORTED_HARDWARE_LEVEL):</p>
-     * <table>
-     * <thead>
-     * <tr>
-     * <th align="center">Format</th>
-     * <th align="center">Size</th>
-     * <th align="center">Hardware Level</th>
-     * <th align="center">Notes</th>
-     * </tr>
-     * </thead>
-     * <tbody>
-     * <tr>
-     * <td align="center">JPEG</td>
-     * <td align="center">ACAMERA_SENSOR_INFO_ACTIVE_ARRAY_SIZE</td>
-     * <td align="center">Any</td>
-     * <td align="center"></td>
-     * </tr>
-     * <tr>
-     * <td align="center">JPEG</td>
-     * <td align="center">1920x1080 (1080p)</td>
-     * <td align="center">Any</td>
-     * <td align="center">if 1080p &lt;= activeArraySize</td>
-     * </tr>
-     * <tr>
-     * <td align="center">JPEG</td>
-     * <td align="center">1280x720 (720)</td>
-     * <td align="center">Any</td>
-     * <td align="center">if 720p &lt;= activeArraySize</td>
-     * </tr>
-     * <tr>
-     * <td align="center">JPEG</td>
-     * <td align="center">640x480 (480p)</td>
-     * <td align="center">Any</td>
-     * <td align="center">if 480p &lt;= activeArraySize</td>
-     * </tr>
-     * <tr>
-     * <td align="center">JPEG</td>
-     * <td align="center">320x240 (240p)</td>
-     * <td align="center">Any</td>
-     * <td align="center">if 240p &lt;= activeArraySize</td>
-     * </tr>
-     * <tr>
-     * <td align="center">YUV_420_888</td>
-     * <td align="center">all output sizes available for JPEG</td>
-     * <td align="center">FULL</td>
-     * <td align="center"></td>
-     * </tr>
-     * <tr>
-     * <td align="center">YUV_420_888</td>
-     * <td align="center">all output sizes available for JPEG, up to the maximum video size</td>
-     * <td align="center">LIMITED</td>
-     * <td align="center"></td>
-     * </tr>
-     * <tr>
-     * <td align="center">IMPLEMENTATION_DEFINED</td>
-     * <td align="center">same as YUV_420_888</td>
-     * <td align="center">Any</td>
-     * <td align="center"></td>
-     * </tr>
-     * </tbody>
-     * </table>
+     * <p>Format         | Size                                         | Hardware Level | Notes
+     * :-------------:|:--------------------------------------------:|:--------------:|:--------------:
+     * JPEG           | ACAMERA_SENSOR_INFO_ACTIVE_ARRAY_SIZE          | Any            |
+     * JPEG           | 1920x1080 (1080p)                            | Any            | if 1080p &lt;= activeArraySize
+     * JPEG           | 1280x720 (720)                               | Any            | if 720p &lt;= activeArraySize
+     * JPEG           | 640x480 (480p)                               | Any            | if 480p &lt;= activeArraySize
+     * JPEG           | 320x240 (240p)                               | Any            | if 240p &lt;= activeArraySize
+     * YUV_420_888    | all output sizes available for JPEG          | FULL           |
+     * YUV_420_888    | all output sizes available for JPEG, up to the maximum video size | LIMITED        |
+     * IMPLEMENTATION_DEFINED | same as YUV_420_888                  | Any            |</p>
      * <p>Refer to ACAMERA_REQUEST_AVAILABLE_CAPABILITIES for additional
      * mandatory stream configurations on a per-capability basis.</p>
      *
@@ -3365,8 +2781,6 @@ typedef enum acamera_metadata_tag {
      * <p>See ACAMERA_SENSOR_FRAME_DURATION and
      * ACAMERA_SCALER_AVAILABLE_STALL_DURATIONS for more details about
      * calculating the max frame rate.</p>
-     * <p>(Keep in sync with
-     * {@link android.hardware.camera2.params.StreamConfigurationMap#getOutputMinFrameDuration})</p>
      *
      * @see ACAMERA_SCALER_AVAILABLE_STALL_DURATIONS
      * @see ACAMERA_SENSOR_FRAME_DURATION
@@ -3423,21 +2837,19 @@ typedef enum acamera_metadata_tag {
      * ignored).</p>
      * <p>The following formats may always have a stall duration:</p>
      * <ul>
-     * <li>{@link android.graphics.ImageFormat#JPEG}</li>
-     * <li>{@link android.graphics.ImageFormat#RAW_SENSOR}</li>
+     * <li>{@link AIMAGE_FORMAT_JPEG}</li>
+     * <li>{@link AIMAGE_FORMAT_RAW16}</li>
      * </ul>
      * <p>The following formats will never have a stall duration:</p>
      * <ul>
-     * <li>{@link android.graphics.ImageFormat#YUV_420_888}</li>
-     * <li>{@link android.graphics.ImageFormat#RAW10}</li>
+     * <li>{@link AIMAGE_FORMAT_YUV_420_888}</li>
+     * <li>{@link AIMAGE_FORMAT_RAW10}</li>
      * </ul>
      * <p>All other formats may or may not have an allowed stall duration on
      * a per-capability basis; refer to ACAMERA_REQUEST_AVAILABLE_CAPABILITIES
      * for more details.</p>
      * <p>See ACAMERA_SENSOR_FRAME_DURATION for more information about
      * calculating the max frame rate (absent stalls).</p>
-     * <p>(Keep up to date with
-     * {@link android.hardware.camera2.params.StreamConfigurationMap#getOutputStallDuration} )</p>
      *
      * @see ACAMERA_REQUEST_AVAILABLE_CAPABILITIES
      * @see ACAMERA_SENSOR_FRAME_DURATION
@@ -3536,8 +2948,8 @@ typedef enum acamera_metadata_tag {
      * cannot process more than 1 capture at a time.</li>
      * </ul>
      * <p>The necessary information for the application, given the model above,
-     * is provided via the android.scaler.streamConfigurationMap field using
-     * {@link android.hardware.camera2.params.StreamConfigurationMap#getOutputMinFrameDuration}.
+     * is provided via
+     * {@link ACAMERA_SCALER_AVAILABLE_MIN_FRAME_DURATIONS}.
      * These are used to determine the maximum frame rate / minimum frame
      * duration that is possible for a given stream configuration.</p>
      * <p>Specifically, the application can use the following rules to
@@ -3547,8 +2959,7 @@ typedef enum acamera_metadata_tag {
      * <li>Let the set of currently configured input/output streams
      * be called <code>S</code>.</li>
      * <li>Find the minimum frame durations for each stream in <code>S</code>, by looking
-     * it up in android.scaler.streamConfigurationMap using {@link
-     * android.hardware.camera2.params.StreamConfigurationMap#getOutputMinFrameDuration}
+     * it up in {@link ACAMERA_SCALER_AVAILABLE_MIN_FRAME_DURATIONS}
      * (with its respective size/format). Let this set of frame durations be
      * called <code>F</code>.</li>
      * <li>For any given request <code>R</code>, the minimum frame duration allowed
@@ -3556,7 +2967,7 @@ typedef enum acamera_metadata_tag {
      * used in <code>R</code> be called <code>S_r</code>.</li>
      * </ol>
      * <p>If none of the streams in <code>S_r</code> have a stall time (listed in {@link
-     * android.hardware.camera2.params.StreamConfigurationMap#getOutputStallDuration}
+     * ACAMERA_SCALER_AVAILABLE_STALL_DURATIONS}
      * using its respective size/format), then the frame duration in <code>F</code>
      * determines the steady state frame rate that the application will get
      * if it uses <code>R</code> as a repeating request. Let this special kind of
@@ -3568,7 +2979,7 @@ typedef enum acamera_metadata_tag {
      * if all buffers from the previous <code>Rstall</code> have already been
      * delivered.</p>
      * <p>For more details about stalling, see
-     * {@link android.hardware.camera2.params.StreamConfigurationMap#getOutputStallDuration}.</p>
+     * {@link ACAMERA_SCALER_AVAILABLE_STALL_DURATIONS}.</p>
      * <p>This control is only effective if ACAMERA_CONTROL_AE_MODE or ACAMERA_CONTROL_MODE is set to
      * OFF; otherwise the auto-exposure algorithm will override this value.</p>
      *
@@ -3900,8 +3311,9 @@ typedef enum acamera_metadata_tag {
      * timestamps for other captures from the same camera device, but are
      * not guaranteed to be comparable to any other time source.</p>
      * <p>When ACAMERA_SENSOR_INFO_TIMESTAMP_SOURCE <code>==</code> REALTIME, the
-     * timestamps measure time in the same timebase as {@link
-     * android.os.SystemClock#elapsedRealtimeNanos}, and they can
+     * timestamps measure time in the same timebase as
+     * <a href="https://developer.android.com/reference/android/os/SystemClock.html#elapsedRealtimeNanos">elapsedRealtimeNanos</a>
+     * (or CLOCK_BOOTTIME), and they can
      * be compared to other timestamps from other subsystems that
      * are using that base.</p>
      * <p>For reprocessing, the timestamp will match the start of exposure of
@@ -4091,6 +3503,7 @@ typedef enum acamera_metadata_tag {
      * optically shielded pixel areas. By blocking light, these pixels
      * provides a reliable black reference for black level compensation
      * in active array region.</p>
+     * <p>The data representation is int[4], which maps to (left, top, width, height).</p>
      * <p>This key provides a list of disjoint rectangles specifying the
      * regions of optically shielded (with metal shield) black pixel
      * regions if the camera device is capable of reading out these black
@@ -4140,7 +3553,7 @@ typedef enum acamera_metadata_tag {
      * color channel listed in the CFA.</p>
      * <p>This key will be available if ACAMERA_SENSOR_OPTICAL_BLACK_REGIONS is
      * available or the camera device advertises this key via
-     * {@link android.hardware.camera2.CameraCharacteristics#getAvailableCaptureResultKeys}.</p>
+     * {@link ACAMERA_REQUEST_AVAILABLE_RESULT_KEYS}.</p>
      *
      * @see ACAMERA_SENSOR_BLACK_LEVEL_PATTERN
      * @see ACAMERA_SENSOR_INFO_COLOR_FILTER_ARRANGEMENT
@@ -4164,7 +3577,7 @@ typedef enum acamera_metadata_tag {
      * estimated white level for each frame.</p>
      * <p>This key will be available if ACAMERA_SENSOR_OPTICAL_BLACK_REGIONS is
      * available or the camera device advertises this key via
-     * {@link android.hardware.camera2.CameraCharacteristics#getAvailableCaptureRequestKeys}.</p>
+     * {@link ACAMERA_REQUEST_AVAILABLE_RESULT_KEYS}.</p>
      *
      * @see ACAMERA_SENSOR_BLACK_LEVEL_PATTERN
      * @see ACAMERA_SENSOR_INFO_WHITE_LEVEL
@@ -4191,6 +3604,7 @@ typedef enum acamera_metadata_tag {
      * <p>This rectangle is defined relative to the full pixel array; (0,0) is the top-left of
      * the full pixel array, and the size of the full pixel array is given by
      * ACAMERA_SENSOR_INFO_PIXEL_ARRAY_SIZE.</p>
+     * <p>The data representation is int[4], which maps to (left, top, width, height).</p>
      * <p>The coordinate system for most other keys that list pixel coordinates, including
      * ACAMERA_SCALER_CROP_REGION, is defined relative to the active array rectangle given in
      * this field, with <code>(0, 0)</code> being the top-left of this rectangle.</p>
@@ -4263,7 +3677,7 @@ typedef enum acamera_metadata_tag {
      * duration being clipped to the maximum. See that control for a full definition of frame
      * durations.</p>
      * <p>Refer to {@link
-     * android.hardware.camera2.params.StreamConfigurationMap#getOutputMinFrameDuration}
+     * ACAMERA_SCALER_AVAILABLE_MIN_FRAME_DURATIONS}
      * for the minimum frame duration values.</p>
      */
     ACAMERA_SENSOR_INFO_MAX_FRAME_DURATION =                    // int64
@@ -4298,7 +3712,7 @@ typedef enum acamera_metadata_tag {
      * the raw buffers produced by this sensor.</p>
      * <p>If a camera device supports raw sensor formats, either this or
      * ACAMERA_SENSOR_INFO_PRE_CORRECTION_ACTIVE_ARRAY_SIZE is the maximum dimensions for the raw
-     * output formats listed in android.scaler.streamConfigurationMap (this depends on
+     * output formats listed in ACAMERA_SCALER_AVAILABLE_STREAM_CONFIGURATIONS (this depends on
      * whether or not the image sensor returns buffers containing pixels that are not
      * part of the active array region for blacklevel calibration or other purposes).</p>
      * <p>Some parts of the full pixel array may not receive light from the scene,
@@ -4382,6 +3796,7 @@ typedef enum acamera_metadata_tag {
      *   <li>ACameraMetadata from ACameraManager_getCameraCharacteristics</li>
      * </ul>
      *
+     * <p>The data representation is int[4], which maps to (left, top, width, height).</p>
      * <p>This is the rectangle representing the size of the active region of the sensor (i.e.
      * the region that actually receives light from the scene) before any geometric correction
      * has been applied, and should be treated as the active region rectangle for any of the
@@ -4578,6 +3993,7 @@ typedef enum acamera_metadata_tag {
      *   <li>ACameraMetadata from ACameraCaptureSession_captureCallback_result callbacks</li>
      * </ul>
      *
+     * <p>The data representation is int[4], which maps to (left, top, width, height).</p>
      * <p>The coordinate system is that of ACAMERA_SENSOR_INFO_ACTIVE_ARRAY_SIZE, with
      * <code>(0, 0)</code> being the top-left pixel of the active array.</p>
      * <p>Only available if ACAMERA_STATISTICS_FACE_DETECT_MODE != OFF</p>
@@ -4641,13 +4057,13 @@ typedef enum acamera_metadata_tag {
      * </code></pre>
      * <p>The low-resolution scaling map images for each channel are
      * (displayed using nearest-neighbor interpolation):</p>
-     * <p><img alt="Red lens shading map" src="../../../../images/camera2/metadata/android.statistics.lensShadingMap/red_shading.png" />
-     * <img alt="Green (even rows) lens shading map" src="../../../../images/camera2/metadata/android.statistics.lensShadingMap/green_e_shading.png" />
-     * <img alt="Green (odd rows) lens shading map" src="../../../../images/camera2/metadata/android.statistics.lensShadingMap/green_o_shading.png" />
-     * <img alt="Blue lens shading map" src="../../../../images/camera2/metadata/android.statistics.lensShadingMap/blue_shading.png" /></p>
+     * <p><img alt="Red lens shading map" src="../images/camera2/metadata/android.statistics.lensShadingMap/red_shading.png" />
+     * <img alt="Green (even rows) lens shading map" src="../images/camera2/metadata/android.statistics.lensShadingMap/green_e_shading.png" />
+     * <img alt="Green (odd rows) lens shading map" src="../images/camera2/metadata/android.statistics.lensShadingMap/green_o_shading.png" />
+     * <img alt="Blue lens shading map" src="../images/camera2/metadata/android.statistics.lensShadingMap/blue_shading.png" /></p>
      * <p>As a visualization only, inverting the full-color map to recover an
      * image of a gray wall (using bicubic interpolation for visual quality) as captured by the sensor gives:</p>
-     * <p><img alt="Image of a uniform white wall (inverse shading map)" src="../../../../images/camera2/metadata/android.statistics.lensShadingMap/inv_shading.png" /></p>
+     * <p><img alt="Image of a uniform white wall (inverse shading map)" src="../images/camera2/metadata/android.statistics.lensShadingMap/inv_shading.png" /></p>
      *
      * @see ACAMERA_COLOR_CORRECTION_MODE
      */
@@ -4703,14 +4119,14 @@ typedef enum acamera_metadata_tag {
      * </code></pre>
      * <p>The low-resolution scaling map images for each channel are
      * (displayed using nearest-neighbor interpolation):</p>
-     * <p><img alt="Red lens shading map" src="../../../../images/camera2/metadata/android.statistics.lensShadingMap/red_shading.png" />
-     * <img alt="Green (even rows) lens shading map" src="../../../../images/camera2/metadata/android.statistics.lensShadingMap/green_e_shading.png" />
-     * <img alt="Green (odd rows) lens shading map" src="../../../../images/camera2/metadata/android.statistics.lensShadingMap/green_o_shading.png" />
-     * <img alt="Blue lens shading map" src="../../../../images/camera2/metadata/android.statistics.lensShadingMap/blue_shading.png" /></p>
+     * <p><img alt="Red lens shading map" src="../images/camera2/metadata/android.statistics.lensShadingMap/red_shading.png" />
+     * <img alt="Green (even rows) lens shading map" src="../images/camera2/metadata/android.statistics.lensShadingMap/green_e_shading.png" />
+     * <img alt="Green (odd rows) lens shading map" src="../images/camera2/metadata/android.statistics.lensShadingMap/green_o_shading.png" />
+     * <img alt="Blue lens shading map" src="../images/camera2/metadata/android.statistics.lensShadingMap/blue_shading.png" /></p>
      * <p>As a visualization only, inverting the full-color map to recover an
      * image of a gray wall (using bicubic interpolation for visual quality)
      * as captured by the sensor gives:</p>
-     * <p><img alt="Image of a uniform white wall (inverse shading map)" src="../../../../images/camera2/metadata/android.statistics.lensShadingMap/inv_shading.png" /></p>
+     * <p><img alt="Image of a uniform white wall (inverse shading map)" src="../images/camera2/metadata/android.statistics.lensShadingMap/inv_shading.png" /></p>
      * <p>Note that the RAW image data might be subject to lens shading
      * correction not reported on this map. Query
      * ACAMERA_SENSOR_INFO_LENS_SHADING_APPLIED to see if RAW image data has subject
@@ -4935,11 +4351,11 @@ typedef enum acamera_metadata_tag {
      * <p>Linear mapping:</p>
      * <pre><code>ACAMERA_TONEMAP_CURVE_RED = [ 0, 0, 1.0, 1.0 ]
      * </code></pre>
-     * <p><img alt="Linear mapping curve" src="../../../../images/camera2/metadata/android.tonemap.curveRed/linear_tonemap.png" /></p>
+     * <p><img alt="Linear mapping curve" src="../images/camera2/metadata/android.tonemap.curveRed/linear_tonemap.png" /></p>
      * <p>Invert mapping:</p>
      * <pre><code>ACAMERA_TONEMAP_CURVE_RED = [ 0, 1.0, 1.0, 0 ]
      * </code></pre>
-     * <p><img alt="Inverting mapping curve" src="../../../../images/camera2/metadata/android.tonemap.curveRed/inverse_tonemap.png" /></p>
+     * <p><img alt="Inverting mapping curve" src="../images/camera2/metadata/android.tonemap.curveRed/inverse_tonemap.png" /></p>
      * <p>Gamma 1/2.2 mapping, with 16 control points:</p>
      * <pre><code>ACAMERA_TONEMAP_CURVE_RED = [
      *   0.0000, 0.0000, 0.0667, 0.2920, 0.1333, 0.4002, 0.2000, 0.4812,
@@ -4947,7 +4363,7 @@ typedef enum acamera_metadata_tag {
      *   0.5333, 0.7515, 0.6000, 0.7928, 0.6667, 0.8317, 0.7333, 0.8685,
      *   0.8000, 0.9035, 0.8667, 0.9370, 0.9333, 0.9691, 1.0000, 1.0000 ]
      * </code></pre>
-     * <p><img alt="Gamma = 1/2.2 tonemapping curve" src="../../../../images/camera2/metadata/android.tonemap.curveRed/gamma_tonemap.png" /></p>
+     * <p><img alt="Gamma = 1/2.2 tonemapping curve" src="../images/camera2/metadata/android.tonemap.curveRed/gamma_tonemap.png" /></p>
      * <p>Standard sRGB gamma mapping, per IEC 61966-2-1:1999, with 16 control points:</p>
      * <pre><code>ACAMERA_TONEMAP_CURVE_RED = [
      *   0.0000, 0.0000, 0.0667, 0.2864, 0.1333, 0.4007, 0.2000, 0.4845,
@@ -4955,7 +4371,7 @@ typedef enum acamera_metadata_tag {
      *   0.5333, 0.7569, 0.6000, 0.7977, 0.6667, 0.8360, 0.7333, 0.8721,
      *   0.8000, 0.9063, 0.8667, 0.9389, 0.9333, 0.9701, 1.0000, 1.0000 ]
      * </code></pre>
-     * <p><img alt="sRGB tonemapping curve" src="../../../../images/camera2/metadata/android.tonemap.curveRed/srgb_tonemap.png" /></p>
+     * <p><img alt="sRGB tonemapping curve" src="../images/camera2/metadata/android.tonemap.curveRed/srgb_tonemap.png" /></p>
      *
      * @see ACAMERA_TONEMAP_CURVE_RED
      * @see ACAMERA_TONEMAP_MAX_CURVE_POINTS
@@ -5072,9 +4488,9 @@ typedef enum acamera_metadata_tag {
      *
      * <p>The tonemap curve will be defined by specified standard.</p>
      * <p>sRGB (approximated by 16 control points):</p>
-     * <p><img alt="sRGB tonemapping curve" src="../../../../images/camera2/metadata/android.tonemap.curveRed/srgb_tonemap.png" /></p>
+     * <p><img alt="sRGB tonemapping curve" src="../images/camera2/metadata/android.tonemap.curveRed/srgb_tonemap.png" /></p>
      * <p>Rec. 709 (approximated by 16 control points):</p>
-     * <p><img alt="Rec. 709 tonemapping curve" src="../../../../images/camera2/metadata/android.tonemap.curveRed/rec709_tonemap.png" /></p>
+     * <p><img alt="Rec. 709 tonemapping curve" src="../images/camera2/metadata/android.tonemap.curveRed/rec709_tonemap.png" /></p>
      * <p>Note that above figures show a 16 control points approximation of preset
      * curves. Camera devices may apply a different approximation to the curve.</p>
      */
@@ -5122,7 +4538,7 @@ typedef enum acamera_metadata_tag {
      * <p>See the individual level enums for full descriptions of the supported capabilities.  The
      * ACAMERA_REQUEST_AVAILABLE_CAPABILITIES entry describes the device's capabilities at a
      * finer-grain level, if needed. In addition, many controls have their available settings or
-     * ranges defined in individual {@link android.hardware.camera2.CameraCharacteristics} entries.</p>
+     * ranges defined in individual metadata tag entries in this document.</p>
      * <p>Some features are not part of any particular hardware level or capability and must be
      * queried separately. These include:</p>
      * <ul>
@@ -5294,8 +4710,6 @@ typedef enum acamera_metadata_tag {
      * <p>See ACAMERA_SENSOR_FRAME_DURATION and
      * ACAMERA_SCALER_AVAILABLE_STALL_DURATIONS for more details about
      * calculating the max frame rate.</p>
-     * <p>(Keep in sync with {@link
-     * android.hardware.camera2.params.StreamConfigurationMap#getOutputMinFrameDuration})</p>
      *
      * @see ACAMERA_SCALER_AVAILABLE_STALL_DURATIONS
      * @see ACAMERA_SENSOR_FRAME_DURATION
@@ -6151,91 +5565,6 @@ typedef enum acamera_metadata_enum_acamera_control_scene_mode {
     ACAMERA_CONTROL_SCENE_MODE_BARCODE                               = 16,
 
     /**
-     * <p>This is deprecated, please use {@link
-     * android.hardware.camera2.CameraDevice#createConstrainedHighSpeedCaptureSession}
-     * and {@link
-     * android.hardware.camera2.CameraConstrainedHighSpeedCaptureSession#createHighSpeedRequestList}
-     * for high speed video recording.</p>
-     * <p>Optimized for high speed video recording (frame rate &gt;=60fps) use case.</p>
-     * <p>The supported high speed video sizes and fps ranges are specified in
-     * android.control.availableHighSpeedVideoConfigurations. To get desired
-     * output frame rates, the application is only allowed to select video size
-     * and fps range combinations listed in this static metadata. The fps range
-     * can be control via ACAMERA_CONTROL_AE_TARGET_FPS_RANGE.</p>
-     * <p>In this mode, the camera device will override aeMode, awbMode, and afMode to
-     * ON, ON, and CONTINUOUS_VIDEO, respectively. All post-processing block mode
-     * controls will be overridden to be FAST. Therefore, no manual control of capture
-     * and post-processing parameters is possible. All other controls operate the
-     * same as when ACAMERA_CONTROL_MODE == AUTO. This means that all other
-     * ACAMERA_CONTROL_* fields continue to work, such as</p>
-     * <ul>
-     * <li>ACAMERA_CONTROL_AE_TARGET_FPS_RANGE</li>
-     * <li>ACAMERA_CONTROL_AE_EXPOSURE_COMPENSATION</li>
-     * <li>ACAMERA_CONTROL_AE_LOCK</li>
-     * <li>ACAMERA_CONTROL_AWB_LOCK</li>
-     * <li>ACAMERA_CONTROL_EFFECT_MODE</li>
-     * <li>ACAMERA_CONTROL_AE_REGIONS</li>
-     * <li>ACAMERA_CONTROL_AF_REGIONS</li>
-     * <li>ACAMERA_CONTROL_AWB_REGIONS</li>
-     * <li>ACAMERA_CONTROL_AF_TRIGGER</li>
-     * <li>ACAMERA_CONTROL_AE_PRECAPTURE_TRIGGER</li>
-     * </ul>
-     * <p>Outside of ACAMERA_CONTROL_*, the following controls will work:</p>
-     * <ul>
-     * <li>ACAMERA_FLASH_MODE (automatic flash for still capture will not work since aeMode is ON)</li>
-     * <li>ACAMERA_LENS_OPTICAL_STABILIZATION_MODE (if it is supported)</li>
-     * <li>ACAMERA_SCALER_CROP_REGION</li>
-     * <li>ACAMERA_STATISTICS_FACE_DETECT_MODE</li>
-     * </ul>
-     * <p>For high speed recording use case, the actual maximum supported frame rate may
-     * be lower than what camera can output, depending on the destination Surfaces for
-     * the image data. For example, if the destination surface is from video encoder,
-     * the application need check if the video encoder is capable of supporting the
-     * high frame rate for a given video size, or it will end up with lower recording
-     * frame rate. If the destination surface is from preview window, the preview frame
-     * rate will be bounded by the screen refresh rate.</p>
-     * <p>The camera device will only support up to 2 output high speed streams
-     * (processed non-stalling format defined in ACAMERA_REQUEST_MAX_NUM_OUTPUT_STREAMS)
-     * in this mode. This control will be effective only if all of below conditions are true:</p>
-     * <ul>
-     * <li>The application created no more than maxNumHighSpeedStreams processed non-stalling
-     * format output streams, where maxNumHighSpeedStreams is calculated as
-     * min(2, ACAMERA_REQUEST_MAX_NUM_OUTPUT_STREAMS[Processed (but not-stalling)]).</li>
-     * <li>The stream sizes are selected from the sizes reported by
-     * android.control.availableHighSpeedVideoConfigurations.</li>
-     * <li>No processed non-stalling or raw streams are configured.</li>
-     * </ul>
-     * <p>When above conditions are NOT satistied, the controls of this mode and
-     * ACAMERA_CONTROL_AE_TARGET_FPS_RANGE will be ignored by the camera device,
-     * the camera device will fall back to ACAMERA_CONTROL_MODE <code>==</code> AUTO,
-     * and the returned capture result metadata will give the fps range choosen
-     * by the camera device.</p>
-     * <p>Switching into or out of this mode may trigger some camera ISP/sensor
-     * reconfigurations, which may introduce extra latency. It is recommended that
-     * the application avoids unnecessary scene mode switch as much as possible.</p>
-     *
-     * @see ACAMERA_CONTROL_AE_EXPOSURE_COMPENSATION
-     * @see ACAMERA_CONTROL_AE_LOCK
-     * @see ACAMERA_CONTROL_AE_PRECAPTURE_TRIGGER
-     * @see ACAMERA_CONTROL_AE_REGIONS
-     * @see ACAMERA_CONTROL_AE_TARGET_FPS_RANGE
-     * @see ACAMERA_CONTROL_AF_REGIONS
-     * @see ACAMERA_CONTROL_AF_TRIGGER
-     * @see ACAMERA_CONTROL_AWB_LOCK
-     * @see ACAMERA_CONTROL_AWB_REGIONS
-     * @see ACAMERA_CONTROL_EFFECT_MODE
-     * @see ACAMERA_CONTROL_MODE
-     * @see ACAMERA_FLASH_MODE
-     * @see ACAMERA_LENS_OPTICAL_STABILIZATION_MODE
-     * @see ACAMERA_REQUEST_MAX_NUM_OUTPUT_STREAMS
-     * @see ACAMERA_SCALER_CROP_REGION
-     * @see ACAMERA_STATISTICS_FACE_DETECT_MODE
-     *
-     * <b>Deprecated</b>: please refer to this API documentation to find the alternatives
-     */
-    ACAMERA_CONTROL_SCENE_MODE_HIGH_SPEED_VIDEO                      = 17,
-
-    /**
      * <p>Turn on a device-specific high dynamic range (HDR) mode.</p>
      * <p>In this scene mode, the camera device captures images
      * that keep a larger range of scene illumination levels
@@ -6502,7 +5831,7 @@ typedef enum acamera_metadata_enum_acamera_edge_mode {
     /**
      * <p>Edge enhancement is applied at different levels for different output streams,
      * based on resolution. Streams at maximum recording resolution (see {@link
-     * android.hardware.camera2.CameraDevice#createCaptureSession}) or below have
+     * ACameraDevice_createCaptureSession}) or below have
      * edge enhancement applied, while higher-resolution streams have no edge enhancement
      * applied. The level of edge enhancement for low-resolution streams is tuned so that
      * frame rate is not impacted, and the quality is equal to or better than FAST (since it
@@ -6756,7 +6085,7 @@ typedef enum acamera_metadata_enum_acamera_noise_reduction_mode {
     /**
      * <p>Noise reduction is applied at different levels for different output streams,
      * based on resolution. Streams at maximum recording resolution (see {@link
-     * android.hardware.camera2.CameraDevice#createCaptureSession}) or below have noise
+     * ACameraDevice_createCaptureSession}) or below have noise
      * reduction applied, while higher-resolution streams have MINIMAL (if supported) or no
      * noise reduction applied (if MINIMAL is not supported.) The degree of noise reduction
      * for low-resolution streams is tuned so that frame rate is not impacted, and the quality
@@ -6978,26 +6307,18 @@ typedef enum acamera_metadata_enum_acamera_request_available_capabilities {
      * to FAST. Additionally, maximum-resolution images can be captured at &gt;= 10 frames
      * per second.  Here, 'high resolution' means at least 8 megapixels, or the maximum
      * resolution of the device, whichever is smaller.</p>
-     * <p>More specifically, this means that a size matching the camera device's active array
-     * size is listed as a supported size for the {@link
-     * android.graphics.ImageFormat#YUV_420_888} format in either {@link
-     * android.hardware.camera2.params.StreamConfigurationMap#getOutputSizes} or {@link
-     * android.hardware.camera2.params.StreamConfigurationMap#getHighResolutionOutputSizes},
-     * with a minimum frame duration for that format and size of either &lt;= 1/20 s, or
-     * &lt;= 1/10 s, respectively; and the ACAMERA_CONTROL_AE_AVAILABLE_TARGET_FPS_RANGES entry
-     * lists at least one FPS range where the minimum FPS is &gt;= 1 / minimumFrameDuration
-     * for the maximum-size YUV_420_888 format.  If that maximum size is listed in {@link
-     * android.hardware.camera2.params.StreamConfigurationMap#getHighResolutionOutputSizes},
-     * then the list of resolutions for YUV_420_888 from {@link
-     * android.hardware.camera2.params.StreamConfigurationMap#getOutputSizes} contains at
-     * least one resolution &gt;= 8 megapixels, with a minimum frame duration of &lt;= 1/20
-     * s.</p>
-     * <p>If the device supports the {@link android.graphics.ImageFormat#RAW10}, {@link
-     * android.graphics.ImageFormat#RAW12}, then those can also be captured at the same rate
+     * <p>More specifically, this means that at least one output {@link
+     * AIMAGE_FORMAT_YUV_420_888} size listed in
+     * {@link ACAMERA_SCALER_AVAILABLE_STREAM_CONFIGURATIONS} is larger or equal to the
+     * 'high resolution' defined above, and can be captured at at least 20 fps.
+     * For the largest {@link AIMAGE_FORMAT_YUV_420_888} size listed in
+     * {@link ACAMERA_SCALER_AVAILABLE_STREAM_CONFIGURATIONS}, camera device can capture this
+     * size for at least 10 frames per second.
+     * Also the ACAMERA_CONTROL_AE_AVAILABLE_TARGET_FPS_RANGES entry lists at least one FPS range
+     * where the minimum FPS is &gt;= 1 / minimumFrameDuration for the largest YUV_420_888 size.</p>
+     * <p>If the device supports the {@link AIMAGE_FORMAT_RAW10}, {@link
+     * AIMAGE_FORMAT_RAW12}, then those can also be captured at the same rate
      * as the maximum-size YUV_420_888 resolution is.</p>
-     * <p>If the device supports the PRIVATE_REPROCESSING capability, then the same guarantees
-     * as for the YUV_420_888 format also apply to the {@link
-     * android.graphics.ImageFormat#PRIVATE} format.</p>
      * <p>In addition, the ACAMERA_SYNC_MAX_LATENCY field is guaranted to have a value between 0
      * and 4, inclusive. ACAMERA_CONTROL_AE_LOCK_AVAILABLE and ACAMERA_CONTROL_AWB_LOCK_AVAILABLE
      * are also guaranteed to be <code>true</code> so burst capture with these two locks ON yields
@@ -7014,13 +6335,13 @@ typedef enum acamera_metadata_enum_acamera_request_available_capabilities {
      * <p>The camera device can produce depth measurements from its field of view.</p>
      * <p>This capability requires the camera device to support the following:</p>
      * <ul>
-     * <li>{@link android.graphics.ImageFormat#DEPTH16} is supported as an output format.</li>
-     * <li>{@link android.graphics.ImageFormat#DEPTH_POINT_CLOUD} is optionally supported as an
+     * <li>{@link AIMAGE_FORMAT_DEPTH16} is supported as an output format.</li>
+     * <li>{@link AIMAGE_FORMAT_DEPTH_POINT_CLOUD} is optionally supported as an
      *   output format.</li>
      * <li>This camera device, and all camera devices with the same ACAMERA_LENS_FACING,
-     *   will list the following calibration entries in both
-     *   {@link android.hardware.camera2.CameraCharacteristics} and
-     *   {@link android.hardware.camera2.CaptureResult}:<ul>
+     *   will list the following calibration entries in {@link ACameraMetadata} from both
+     *   {@link ACameraManager_getCameraCharacteristics} and
+     *   {@link ACameraCaptureSession_captureCallback_result}:<ul>
      * <li>ACAMERA_LENS_POSE_TRANSLATION</li>
      * <li>ACAMERA_LENS_POSE_ROTATION</li>
      * <li>ACAMERA_LENS_INTRINSIC_CALIBRATION</li>
@@ -7035,7 +6356,7 @@ typedef enum acamera_metadata_enum_acamera_request_available_capabilities {
      * <p>Generally, depth output operates at a slower frame rate than standard color capture,
      * so the DEPTH16 and DEPTH_POINT_CLOUD formats will commonly have a stall duration that
      * should be accounted for (see
-     * {@link android.hardware.camera2.params.StreamConfigurationMap#getOutputStallDuration}).
+     * {@link ACAMERA_DEPTH_AVAILABLE_DEPTH_STALL_DURATIONS}).
      * On a device that supports both depth and color-based output, to enable smooth preview,
      * using a repeating burst is recommended, where a depth-output target is only included
      * once every N frames, where N is the ratio between preview output rate and depth output
@@ -7269,8 +6590,8 @@ typedef enum acamera_metadata_enum_acamera_sensor_info_timestamp_source {
 
     /**
      * <p>Timestamps from ACAMERA_SENSOR_TIMESTAMP are in the same timebase as
-     * {@link android.os.SystemClock#elapsedRealtimeNanos},
-     * and they can be compared to other timestamps using that base.</p>
+     * <a href="https://developer.android.com/reference/android/os/SystemClock.html#elapsedRealtimeNanos">elapsedRealtimeNanos</a>
+     * (or CLOCK_BOOTTIME), and they can be compared to other timestamps using that base.</p>
      *
      * @see ACAMERA_SENSOR_TIMESTAMP
      */
@@ -7455,8 +6776,7 @@ typedef enum acamera_metadata_enum_acamera_info_supported_hardware_level {
      * <p>This camera device does not have enough capabilities to qualify as a <code>FULL</code> device or
      * better.</p>
      * <p>Only the stream configurations listed in the <code>LEGACY</code> and <code>LIMITED</code> tables in the
-     * {@link android.hardware.camera2.CameraDevice#createCaptureSession
-     * createCaptureSession} documentation are guaranteed to be supported.</p>
+     * {@link ACameraDevice_createCaptureSession} documentation are guaranteed to be supported.</p>
      * <p>All <code>LIMITED</code> devices support the <code>BACKWARDS_COMPATIBLE</code> capability, indicating basic
      * support for color image capture. The only exception is that the device may
      * alternatively support only the <code>DEPTH_OUTPUT</code> capability, if it can only output depth
@@ -7482,8 +6802,7 @@ typedef enum acamera_metadata_enum_acamera_info_supported_hardware_level {
     /**
      * <p>This camera device is capable of supporting advanced imaging applications.</p>
      * <p>The stream configurations listed in the <code>FULL</code>, <code>LEGACY</code> and <code>LIMITED</code> tables in the
-     * {@link android.hardware.camera2.CameraDevice#createCaptureSession
-     * createCaptureSession} documentation are guaranteed to be supported.</p>
+     * {@link ACameraDevice_createCaptureSession} documentation are guaranteed to be supported.</p>
      * <p>A <code>FULL</code> device will support below capabilities:</p>
      * <ul>
      * <li><code>BURST_CAPTURE</code> capability (ACAMERA_REQUEST_AVAILABLE_CAPABILITIES contains
@@ -7511,8 +6830,7 @@ typedef enum acamera_metadata_enum_acamera_info_supported_hardware_level {
     /**
      * <p>This camera device is running in backward compatibility mode.</p>
      * <p>Only the stream configurations listed in the <code>LEGACY</code> table in the {@link
-     * android.hardware.camera2.CameraDevice#createCaptureSession createCaptureSession}
-     * documentation are supported.</p>
+     * ACameraDevice_createCaptureSession} documentation are supported.</p>
      * <p>A <code>LEGACY</code> device does not support per-frame control, manual sensor control, manual
      * post-processing, arbitrary cropping regions, and has relaxed performance constraints.
      * No additional capabilities beyond <code>BACKWARD_COMPATIBLE</code> will ever be listed by a
@@ -7534,7 +6852,7 @@ typedef enum acamera_metadata_enum_acamera_info_supported_hardware_level {
      * FULL-level capabilities.</p>
      * <p>The stream configurations listed in the <code>LEVEL_3</code>, <code>RAW</code>, <code>FULL</code>, <code>LEGACY</code> and
      * <code>LIMITED</code> tables in the {@link
-     * android.hardware.camera2.CameraDevice#createCaptureSession createCaptureSession}
+     * ACameraDevice_createCaptureSession}
      * documentation are guaranteed to be supported.</p>
      * <p>The following additional capabilities are guaranteed to be supported:</p>
      * <ul>
@@ -7637,3 +6955,5 @@ typedef enum acamera_metadata_enum_acamera_depth_depth_is_exclusive {
 
 
 #endif //_NDK_CAMERA_METADATA_TAGS_H
+
+/** @} */
