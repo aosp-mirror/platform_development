@@ -16,6 +16,9 @@
 
 package com.example.android.apis.content;
 
+import com.example.android.apis.R;
+
+//BEGIN_INCLUDE(job)
 import android.app.job.JobInfo;
 import android.app.job.JobParameters;
 import android.app.job.JobScheduler;
@@ -30,13 +33,11 @@ import android.provider.MediaStore;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.example.android.apis.R;
-
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Stub job to execute when there is a change to photos in the media provider.
+ * Example stub job to monitor when there is a change to photos in the media provider.
  */
 public class PhotosContentJob extends JobService {
     // The root URI of the media provider, to monitor for generic changes to its content.
@@ -61,7 +62,7 @@ public class PhotosContentJob extends JobService {
     static final JobInfo JOB_INFO;
 
     static {
-        JobInfo.Builder builder = new JobInfo.Builder(R.id.schedule_photos_job,
+        JobInfo.Builder builder = new JobInfo.Builder(JobIds.PHOTOS_CONTENT_JOB,
                 new ComponentName("com.example.android.apis", PhotosContentJob.class.getName()));
         // Look for specific changes to images in the provider.
         builder.addTriggerContentUri(new JobInfo.TriggerContentUri(
@@ -98,7 +99,7 @@ public class PhotosContentJob extends JobService {
             return false;
         }
         for (int i=0; i<jobs.size(); i++) {
-            if (jobs.get(i).getId() == R.id.schedule_photos_job) {
+            if (jobs.get(i).getId() == JobIds.PHOTOS_CONTENT_JOB) {
                 return true;
             }
         }
@@ -108,7 +109,7 @@ public class PhotosContentJob extends JobService {
     // Cancel this job, if currently scheduled.
     public static void cancelJob(Context context) {
         JobScheduler js = context.getSystemService(JobScheduler.class);
-        js.cancel(R.id.schedule_photos_job);
+        js.cancel(JobIds.PHOTOS_CONTENT_JOB);
     }
 
     @Override
@@ -209,3 +210,4 @@ public class PhotosContentJob extends JobService {
         return false;
     }
 }
+//END_INCLUDE(job)
