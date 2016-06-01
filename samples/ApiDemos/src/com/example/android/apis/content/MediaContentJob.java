@@ -33,7 +33,7 @@ import com.example.android.apis.R;
 import java.util.List;
 
 /**
- * Stub job to execute when there is a change to any media: content URI.
+ * Example stub job to monitor when there is a change to any media: content URI.
  */
 public class MediaContentJob extends JobService {
     static final Uri MEDIA_URI = Uri.parse("content://" + MediaStore.AUTHORITY + "/");
@@ -50,7 +50,7 @@ public class MediaContentJob extends JobService {
 
     public static void scheduleJob(Context context) {
         JobScheduler js = context.getSystemService(JobScheduler.class);
-        JobInfo.Builder builder = new JobInfo.Builder(R.id.schedule_media_job,
+        JobInfo.Builder builder = new JobInfo.Builder(JobIds.MEDIA_CONTENT_JOB,
                 new ComponentName(context, MediaContentJob.class));
         builder.addTriggerContentUri(new JobInfo.TriggerContentUri(MEDIA_URI,
                 JobInfo.TriggerContentUri.FLAG_NOTIFY_FOR_DESCENDANTS));
@@ -65,7 +65,7 @@ public class MediaContentJob extends JobService {
             return false;
         }
         for (int i=0; i<jobs.size(); i++) {
-            if (jobs.get(i).getId() == R.id.schedule_media_job) {
+            if (jobs.get(i).getId() == JobIds.MEDIA_CONTENT_JOB) {
                 return true;
             }
         }
@@ -74,7 +74,7 @@ public class MediaContentJob extends JobService {
 
     public static void cancelJob(Context context) {
         JobScheduler js = context.getSystemService(JobScheduler.class);
-        js.cancel(R.id.schedule_media_job);
+        js.cancel(JobIds.MEDIA_CONTENT_JOB);
     }
 
     @Override
