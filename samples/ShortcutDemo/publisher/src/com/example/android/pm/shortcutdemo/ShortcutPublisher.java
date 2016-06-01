@@ -168,7 +168,7 @@ public class ShortcutPublisher extends Activity {
 
     public static ShortcutInfo.Builder addRandomIntents(Context context, ShortcutInfo.Builder b) {
         final int i = sRandom.nextInt(sIntentList.size());
-        b.setTitle(sIntentList.get(i).first);
+        b.setShortLabel(sIntentList.get(i).first);
         b.setIntent(new Intent(Intent.ACTION_VIEW, Uri.parse(sIntentList.get(i).second)));
         b.setIcon(Icon.createWithResource(context, R.drawable.icon2));
         return b;
@@ -199,7 +199,7 @@ public class ShortcutPublisher extends Activity {
         final ShortcutInfo si2 = new ShortcutInfo.Builder(this)
                 .setId(SETUP_SHORTCUT_ID)
                 .setActivity(activity)
-                .setTitle("Shortcut Demo Main")
+                .setShortLabel("Shortcut Demo Main")
                 .setIcon(icon2)
                 .setIntent(intent2)
                 .build();
@@ -207,7 +207,7 @@ public class ShortcutPublisher extends Activity {
         final ShortcutInfo si3 = new ShortcutInfo.Builder(this)
                 .setId("shortcut3")
                 .setActivity(activity)
-                .setTitle("Shortcut Demo Main with extras")
+                .setShortLabel("Shortcut Demo Main with extras")
                 .setIcon(icon3)
                 .setIntent(intent3)
                 .build();
