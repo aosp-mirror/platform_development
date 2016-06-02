@@ -30,10 +30,15 @@
             android:layout_height="wrap_content"
             android:text="@string/launch_settings_adjacent" />
         <Button
-            android:id="@+id/launch_new_task"
+            android:id="@+id/launch_new_task_single"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/launch_new_task" />
+            android:text="@string/launch_new_task_single" />
+        <Button
+            android:id="@+id/launch_new_task_multiple"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/launch_new_task_multiple" />
         <Button
             android:id="@+id/launch_new_task_adjacent"
             android:layout_width="wrap_content"
