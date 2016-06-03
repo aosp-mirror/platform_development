@@ -23,7 +23,6 @@ __atomic_inc
 __atomic_swap
 __b64_ntop
 __b64_pton
-__brk
 __cmsg_nxthdr
 __connect
 __ctype_get_mb_cur_max
