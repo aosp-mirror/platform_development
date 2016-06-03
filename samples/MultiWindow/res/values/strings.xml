@@ -17,7 +17,8 @@
 <resources>
 
     <string name="launch_settings_adjacent">Launch settings adjacent</string>
-    <string name="launch_new_task">Launch new task</string>
+    <string name="launch_new_task_single">Launch new task, single allowed</string>
+    <string name="launch_new_task_multiple">Launch new task, multiple allowed</string>
     <string name="launch_new_task_adjacent">Launch new task adjacent</string>
     <string name="instance_number">Instance number:</string>
 </resources>
