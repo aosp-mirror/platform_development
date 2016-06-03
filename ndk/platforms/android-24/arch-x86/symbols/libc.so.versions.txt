@@ -5,7 +5,6 @@ LIBC {
     __assert2;
     __b64_ntop;
     __b64_pton;
-    __brk; # arm x86 mips
     __cmsg_nxthdr;
     __connect; # arm x86 mips
     __ctype_get_mb_cur_max;
