@@ -34,7 +34,8 @@ public class LaunchingAdjacentActivity extends Activity implements View.OnClickL
         super.onCreate(savedInstanceState);
         setContentView(R.layout.launching_adjacent_layout);
         findViewById(R.id.launch_settings_adjacent).setOnClickListener(this);
-        findViewById(R.id.launch_new_task).setOnClickListener(this);
+        findViewById(R.id.launch_new_task_single).setOnClickListener(this);
+        findViewById(R.id.launch_new_task_multiple).setOnClickListener(this);
         findViewById(R.id.launch_new_task_adjacent).setOnClickListener(this);
         if (savedInstanceState != null) {
             mInstanceNumber = savedInstanceState.getInt(INSTANCE_NUMBER_KEY);
@@ -47,20 +48,41 @@ public class LaunchingAdjacentActivity extends Activity implements View.OnClickL
 
     @Override
     public void onClick(View v) {
-        if (v.getId() == R.id.launch_settings_adjacent) {
-            Intent intent = new Intent("android.settings.SETTINGS");
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_LAUNCH_ADJACENT);
-            startActivity(intent);
-        } else if (v.getId() == R.id.launch_new_task) {
-            Intent intent = new Intent(this, LaunchingAdjacentActivity.class);
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(intent);
-        } else if (v.getId() == R.id.launch_new_task_adjacent) {
-            Intent intent = new Intent(this, LaunchingAdjacentActivity.class);
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_MULTIPLE_TASK
-                    | Intent.FLAG_ACTIVITY_LAUNCH_ADJACENT);
-            startActivity(intent);
+        switch (v.getId()) {
+            case R.id.launch_settings_adjacent: {
+                Intent intent = new Intent("android.settings.SETTINGS");
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK
+                        | Intent.FLAG_ACTIVITY_LAUNCH_ADJACENT);
+                startActivity(intent);
+            }
+            break;
+            case R.id.launch_new_task_single: {
+                Intent intent = newAdjacentActivityIntent();
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(intent);
+            }
+            break;
+            case R.id.launch_new_task_multiple: {
+                Intent intent = newAdjacentActivityIntent();
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
+                startActivity(intent);
+            }
+            break;
+            case R.id.launch_new_task_adjacent: {
+                Intent intent = newAdjacentActivityIntent();
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_MULTIPLE_TASK
+                        | Intent.FLAG_ACTIVITY_LAUNCH_ADJACENT);
+                startActivity(intent);
+            }
+            break;
         }
+    }
+
+    private Intent newAdjacentActivityIntent() {
+        Intent intent = new Intent(this, LaunchingAdjacentActivity.class);
+        intent.setAction(Intent.ACTION_MAIN);
+        intent.addCategory(Intent.CATEGORY_LAUNCHER);
+        return intent;
     }
 
     @Override
