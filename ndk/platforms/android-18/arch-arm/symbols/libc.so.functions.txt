@@ -19,7 +19,6 @@ __atomic_inc
 __atomic_swap
 __b64_ntop
 __b64_pton
-__brk
 __cxa_atexit
 __cxa_finalize
 __dn_comp
