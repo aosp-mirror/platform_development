@@ -9,7 +9,6 @@ LIBC {
     __atomic_swap; # arm
     __b64_ntop;
     __b64_pton;
-    __brk; # arm x86 mips
     __cxa_atexit;
     __cxa_finalize;
     __dn_comp;
