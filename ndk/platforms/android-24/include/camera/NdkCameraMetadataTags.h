@@ -3871,7 +3871,7 @@ typedef enum acamera_metadata_tag {
      * camera device, and an identity lens shading map data will be provided
      * if <code>ACAMERA_STATISTICS_LENS_SHADING_MAP_MODE == ON</code>. For example, for lens
      * shading map with size of <code>[ 4, 3 ]</code>,
-     * the output ACAMERA_STATISTICS_LENS_SHADING_CORRECTION_MAP for this case will be an identity
+     * the output android.statistics.lensShadingCorrectionMap for this case will be an identity
      * map shown below:</p>
      * <pre><code>[ 1.0, 1.0, 1.0, 1.0,  1.0, 1.0, 1.0, 1.0,
      *  1.0, 1.0, 1.0, 1.0,  1.0, 1.0, 1.0, 1.0,
@@ -3883,7 +3883,7 @@ typedef enum acamera_metadata_tag {
      * <p>When set to other modes, lens shading correction will be applied by the camera
      * device. Applications can request lens shading map data by setting
      * ACAMERA_STATISTICS_LENS_SHADING_MAP_MODE to ON, and then the camera device will provide lens
-     * shading map data in ACAMERA_STATISTICS_LENS_SHADING_CORRECTION_MAP; the returned shading map
+     * shading map data in android.statistics.lensShadingCorrectionMap; the returned shading map
      * data will be the one applied by the camera device for this capture request.</p>
      * <p>The shading map data may depend on the auto-exposure (AE) and AWB statistics, therefore
      * the reliability of the map data may be affected by the AE and AWB algorithms. When AE and
@@ -3893,7 +3893,6 @@ typedef enum acamera_metadata_tag {
      *
      * @see ACAMERA_CONTROL_AE_MODE
      * @see ACAMERA_CONTROL_AWB_MODE
-     * @see ACAMERA_STATISTICS_LENS_SHADING_CORRECTION_MAP
      * @see ACAMERA_STATISTICS_LENS_SHADING_MAP_MODE
      */
     ACAMERA_SHADING_MODE =                                      // byte (enum)
@@ -4020,57 +4019,6 @@ typedef enum acamera_metadata_tag {
             ACAMERA_STATISTICS_START + 7,
     /**
      * <p>The shading map is a low-resolution floating-point map
-     * that lists the coefficients used to correct for vignetting, for each
-     * Bayer color channel.</p>
-     *
-     * <p>This tag may appear in:</p>
-     * <ul>
-     *   <li>ACameraMetadata from ACameraCaptureSession_captureCallback_result callbacks</li>
-     * </ul>
-     *
-     * <p>The least shaded section of the image should have a gain factor
-     * of 1; all other sections should have gains above 1.</p>
-     * <p>When ACAMERA_COLOR_CORRECTION_MODE = TRANSFORM_MATRIX, the map
-     * must take into account the colorCorrection settings.</p>
-     * <p>The shading map is for the entire active pixel array, and is not
-     * affected by the crop region specified in the request. Each shading map
-     * entry is the value of the shading compensation map over a specific
-     * pixel on the sensor.  Specifically, with a (N x M) resolution shading
-     * map, and an active pixel array size (W x H), shading map entry
-     * (x,y) ϵ (0 ... N-1, 0 ... M-1) is the value of the shading map at
-     * pixel ( ((W-1)/(N-1)) * x, ((H-1)/(M-1)) * y) for the four color channels.
-     * The map is assumed to be bilinearly interpolated between the sample points.</p>
-     * <p>The channel order is [R, Geven, Godd, B], where Geven is the green
-     * channel for the even rows of a Bayer pattern, and Godd is the odd rows.
-     * The shading map is stored in a fully interleaved format.</p>
-     * <p>The shading map should have on the order of 30-40 rows and columns,
-     * and must be smaller than 64x64.</p>
-     * <p>As an example, given a very small map defined as:</p>
-     * <pre><code>width,height = [ 4, 3 ]
-     * values =
-     * [ 1.3, 1.2, 1.15, 1.2,  1.2, 1.2, 1.15, 1.2,
-     *     1.1, 1.2, 1.2, 1.2,  1.3, 1.2, 1.3, 1.3,
-     *   1.2, 1.2, 1.25, 1.1,  1.1, 1.1, 1.1, 1.0,
-     *     1.0, 1.0, 1.0, 1.0,  1.2, 1.3, 1.25, 1.2,
-     *   1.3, 1.2, 1.2, 1.3,   1.2, 1.15, 1.1, 1.2,
-     *     1.2, 1.1, 1.0, 1.2,  1.3, 1.15, 1.2, 1.3 ]
-     * </code></pre>
-     * <p>The low-resolution scaling map images for each channel are
-     * (displayed using nearest-neighbor interpolation):</p>
-     * <p><img alt="Red lens shading map" src="../images/camera2/metadata/android.statistics.lensShadingMap/red_shading.png" />
-     * <img alt="Green (even rows) lens shading map" src="../images/camera2/metadata/android.statistics.lensShadingMap/green_e_shading.png" />
-     * <img alt="Green (odd rows) lens shading map" src="../images/camera2/metadata/android.statistics.lensShadingMap/green_o_shading.png" />
-     * <img alt="Blue lens shading map" src="../images/camera2/metadata/android.statistics.lensShadingMap/blue_shading.png" /></p>
-     * <p>As a visualization only, inverting the full-color map to recover an
-     * image of a gray wall (using bicubic interpolation for visual quality) as captured by the sensor gives:</p>
-     * <p><img alt="Image of a uniform white wall (inverse shading map)" src="../images/camera2/metadata/android.statistics.lensShadingMap/inv_shading.png" /></p>
-     *
-     * @see ACAMERA_COLOR_CORRECTION_MODE
-     */
-    ACAMERA_STATISTICS_LENS_SHADING_CORRECTION_MAP =            // byte
-            ACAMERA_STATISTICS_START + 10,
-    /**
-     * <p>The shading map is a low-resolution floating-point map
      * that lists the coefficients used to correct for vignetting and color shading,
      * for each Bayer color channel of RAW image data.</p>
      *
@@ -4079,20 +4027,21 @@ typedef enum acamera_metadata_tag {
      *   <li>ACameraMetadata from ACameraCaptureSession_captureCallback_result callbacks</li>
      * </ul>
      *
-     * <p>The lens shading correction is defined as a full shading correction that
-     * corrects both color shading for the output non-RAW images. After the
-     * shading map is applied, the output non-RAW images will be flat-field images
-     * for flat scenes under uniform illumination.</p>
-     * <p>When there is no lens shading correction applied to RAW output images
-     * (ACAMERA_SENSOR_INFO_LENS_SHADING_APPLIED <code>==</code> false), this map is a full lens
-     * shading correction map; when there is some lens shading correction applied
-     * to the RAW output image (ACAMERA_SENSOR_INFO_LENS_SHADING_APPLIED <code>==</code> true),
-     * this map reports the remaining lens shading correction map that needs to be
-     * applied to get fully shading corrected images.</p>
-     * <p>For a full shading correction map, the least shaded section of the image
-     * should have a gain factor of 1; all other sections should have gains above 1.</p>
+     * <p>The map provided here is the same map that is used by the camera device to
+     * correct both color shading and vignetting for output non-RAW images.</p>
+     * <p>When there is no lens shading correction applied to RAW
+     * output images (ACAMERA_SENSOR_INFO_LENS_SHADING_APPLIED <code>==</code>
+     * false), this map is the complete lens shading correction
+     * map; when there is some lens shading correction applied to
+     * the RAW output image (ACAMERA_SENSOR_INFO_LENS_SHADING_APPLIED<code>==</code> true), this map reports the remaining lens shading
+     * correction map that needs to be applied to get shading
+     * corrected images that match the camera device's output for
+     * non-RAW formats.</p>
+     * <p>For a complete shading correction map, the least shaded
+     * section of the image will have a gain factor of 1; all
+     * other sections will have gains above 1.</p>
      * <p>When ACAMERA_COLOR_CORRECTION_MODE = TRANSFORM_MATRIX, the map
-     * must take into account the colorCorrection settings.</p>
+     * will take into account the colorCorrection settings.</p>
      * <p>The shading map is for the entire active pixel array, and is not
      * affected by the crop region specified in the request. Each shading map
      * entry is the value of the shading compensation map over a specific
@@ -4105,8 +4054,8 @@ typedef enum acamera_metadata_tag {
      * channel for the even rows of a Bayer pattern, and Godd is the odd rows.
      * The shading map is stored in a fully interleaved format, and its size
      * is provided in the camera static metadata by ACAMERA_LENS_INFO_SHADING_MAP_SIZE.</p>
-     * <p>The shading map should have on the order of 30-40 rows and columns,
-     * and must be smaller than 64x64.</p>
+     * <p>The shading map will generally have on the order of 30-40 rows and columns,
+     * and will be smaller than 64x64.</p>
      * <p>As an example, given a very small map defined as:</p>
      * <pre><code>ACAMERA_LENS_INFO_SHADING_MAP_SIZE = [ 4, 3 ]
      * ACAMERA_STATISTICS_LENS_SHADING_MAP =
