@@ -79,15 +79,6 @@ class TouchSurfaceView extends GLSurfaceView {
         setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
     }
 
-    @Override
-    public boolean onKeyDown(int keyCode, KeyEvent event) {
-        // Release pointer capture on any key press.
-        if (event.getAction() == KeyEvent.ACTION_DOWN && hasPointerCapture()) {
-            releasePointerCapture();
-        }
-        return super.onKeyDown(keyCode, event);
-    }
-
     @Override public boolean onTrackballEvent(MotionEvent e) {
         mRenderer.mAngleX += e.getX() * TRACKBALL_SCALE_FACTOR;
         mRenderer.mAngleY += e.getY() * TRACKBALL_SCALE_FACTOR;
@@ -95,34 +86,9 @@ class TouchSurfaceView extends GLSurfaceView {
         return true;
     }
 
-    @Override public boolean onHoverEvent(MotionEvent e) {
-        if (hasPointerCapture()) {
-            switch (e.getAction()) {
-                case MotionEvent.ACTION_HOVER_MOVE:
-                case MotionEvent.ACTION_HOVER_EXIT:
-                case MotionEvent.ACTION_HOVER_ENTER:
-                    updateAngles(e);
-                    break;
-            }
-        }
-        return super.onHoverEvent(e);
-    }
-
     @Override public boolean onTouchEvent(MotionEvent e) {
-        switch (e.getAction()) {
-            case MotionEvent.ACTION_DOWN:
-                if (e.isFromSource(InputDevice.SOURCE_MOUSE)) {
-                    if (hasPointerCapture()) {
-                        releasePointerCapture();
-                    } else {
-                        requestPointerCapture();
-                    }
-                }
-                break;
-
-            case MotionEvent.ACTION_MOVE:
-                updateAngles(e);
-                break;
+        if (e.getActionMasked() == MotionEvent.ACTION_MOVE) {
+            updateAngles(e);
         }
         mPreviousX = e.getX();
         mPreviousY = e.getY();
@@ -130,14 +96,8 @@ class TouchSurfaceView extends GLSurfaceView {
     }
 
     private void updateAngles(MotionEvent e) {
-        float dx, dy;
-        if (e.isFromSource(InputDevice.SOURCE_MOUSE) && hasPointerCapture()) {
-            dx = e.getAxisValue(MotionEvent.AXIS_RELATIVE_X);
-            dy = e.getAxisValue(MotionEvent.AXIS_RELATIVE_Y);
-        } else {
-            dx = e.getX() - mPreviousX;
-            dy = e.getY() - mPreviousY;
-        }
+        float dx = e.getX() - mPreviousX;
+        float dy = e.getY() - mPreviousY;
         if (dx != 0 && dy != 0) {
             mRenderer.mAngleX += dx * TOUCH_SCALE_FACTOR;
             mRenderer.mAngleY += dy * TOUCH_SCALE_FACTOR;
