@@ -85,17 +85,16 @@ public class MainActivity extends WearableActivity implements
         mWearableNavigationDrawer =
                 (WearableNavigationDrawer) findViewById(R.id.top_navigation_drawer);
         mWearableNavigationDrawer.setAdapter(new NavigationAdapter(this));
+
         // Peeks Navigation drawer on the top.
         mWearableDrawerLayout.peekDrawer(Gravity.TOP);
 
         // Bottom Action Drawer
         mWearableActionDrawer =
                 (WearableActionDrawer) findViewById(R.id.bottom_action_drawer);
-        // Populate Action Drawer Menu
-        Menu menu = mWearableActionDrawer.getMenu();
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.action_drawer_menu, menu);
+
         mWearableActionDrawer.setOnMenuItemClickListener(this);
+
         // Peeks action drawer on the bottom.
         mWearableDrawerLayout.peekDrawer(Gravity.BOTTOM);
 
