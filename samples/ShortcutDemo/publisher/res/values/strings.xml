@@ -44,4 +44,7 @@
 
     <add-resource type="string" name="shortcut_disabled_message2"/>
     <string name="shortcut_disabled_message2">Disabled</string>
+
+    <add-resource type="string" name="show_notification"/>
+    <string name="show_notification">Show notification</string>
 </resources>
