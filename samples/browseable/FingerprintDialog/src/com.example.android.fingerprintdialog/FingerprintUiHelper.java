@@ -16,22 +16,18 @@
 
 package com.example.android.fingerprintdialog;
 
-import com.google.common.annotations.VisibleForTesting;
-
 import android.hardware.fingerprint.FingerprintManager;
 import android.os.CancellationSignal;
 import android.widget.ImageView;
 import android.widget.TextView;
-
-import javax.inject.Inject;
 
 /**
  * Small helper class to manage text/icon around fingerprint authentication UI.
  */
 public class FingerprintUiHelper extends FingerprintManager.AuthenticationCallback {
 
-    @VisibleForTesting static final long ERROR_TIMEOUT_MILLIS = 1600;
-    @VisibleForTesting static final long SUCCESS_DELAY_MILLIS = 1300;
+    private static final long ERROR_TIMEOUT_MILLIS = 1600;
+    private static final long SUCCESS_DELAY_MILLIS = 1300;
 
     private final FingerprintManager mFingerprintManager;
     private final ImageView mIcon;
@@ -39,31 +35,12 @@ public class FingerprintUiHelper extends FingerprintManager.AuthenticationCallba
     private final Callback mCallback;
     private CancellationSignal mCancellationSignal;
 
-    @VisibleForTesting boolean mSelfCancelled;
+    private boolean mSelfCancelled;
 
     /**
-     * Builder class for {@link FingerprintUiHelper} in which injected fields from Dagger
-     * holds its fields and takes other arguments in the {@link #build} method.
+     * Constructor for {@link FingerprintUiHelper}.
      */
-    public static class FingerprintUiHelperBuilder {
-        private final FingerprintManager mFingerPrintManager;
-
-        @Inject
-        public FingerprintUiHelperBuilder(FingerprintManager fingerprintManager) {
-            mFingerPrintManager = fingerprintManager;
-        }
-
-        public FingerprintUiHelper build(ImageView icon, TextView errorTextView, Callback callback) {
-            return new FingerprintUiHelper(mFingerPrintManager, icon, errorTextView,
-                    callback);
-        }
-    }
-
-    /**
-     * Constructor for {@link FingerprintUiHelper}. This method is expected to be called from
-     * only the {@link FingerprintUiHelperBuilder} class.
-     */
-    private FingerprintUiHelper(FingerprintManager fingerprintManager,
+    FingerprintUiHelper(FingerprintManager fingerprintManager,
             ImageView icon, TextView errorTextView, Callback callback) {
         mFingerprintManager = fingerprintManager;
         mIcon = icon;
@@ -72,6 +49,8 @@ public class FingerprintUiHelper extends FingerprintManager.AuthenticationCallba
     }
 
     public boolean isFingerprintAuthAvailable() {
+        // The line below prevents the false positive inspection from Android Studio
+        // noinspection ResourceType
         return mFingerprintManager.isHardwareDetected()
                 && mFingerprintManager.hasEnrolledFingerprints();
     }
@@ -82,6 +61,8 @@ public class FingerprintUiHelper extends FingerprintManager.AuthenticationCallba
         }
         mCancellationSignal = new CancellationSignal();
         mSelfCancelled = false;
+        // The line below prevents the false positive inspection from Android Studio
+        // noinspection ResourceType
         mFingerprintManager
                 .authenticate(cryptoObject, mCancellationSignal, 0 /* flags */, this, null);
         mIcon.setImageResource(R.drawable.ic_fp_40px);
@@ -144,8 +125,7 @@ public class FingerprintUiHelper extends FingerprintManager.AuthenticationCallba
         mErrorTextView.postDelayed(mResetErrorTextRunnable, ERROR_TIMEOUT_MILLIS);
     }
 
-    @VisibleForTesting
-    Runnable mResetErrorTextRunnable = new Runnable() {
+    private Runnable mResetErrorTextRunnable = new Runnable() {
         @Override
         public void run() {
             mErrorTextView.setTextColor(

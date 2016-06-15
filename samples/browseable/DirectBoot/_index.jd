@@ -1,0 +1,13 @@
+
+page.tags="DirectBoot"
+sample.group=Android N Preview
+@jd:body
+
+<p>
+
+This sample demonstrates how to store/access data in a device protected storage
+which is always available while the device is booted.
+This sample works as a simple alarm clock. On > Android N devices, the scheduled alarms
+go off after reboot even before the user enters their credentials.
+
+        </p>

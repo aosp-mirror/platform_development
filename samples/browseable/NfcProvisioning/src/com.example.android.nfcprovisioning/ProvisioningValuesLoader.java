@@ -30,8 +30,12 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.StringWriter;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
 import java.util.TimeZone;
 
 /**
@@ -55,6 +59,7 @@ public class ProvisioningValuesLoader extends AsyncTaskLoader<Map<String, String
     public Map<String, String> loadInBackground() {
         HashMap<String, String> values = new HashMap<>();
         loadFromDisk(values);
+        gatherAdminExtras(values);
         loadSystemValues(values);
         return values;
     }
@@ -127,6 +132,29 @@ public class ProvisioningValuesLoader extends AsyncTaskLoader<Map<String, String
             if (reader != null) {
                 reader.close();
             }
+        }
+    }
+
+    private void gatherAdminExtras(HashMap<String, String> values) {
+        HashMap<String, String> newMap = new HashMap<String, String>();
+        Properties props = new Properties();
+        Set<String>keys = new HashSet(values.keySet());
+        for (String key : keys) {
+            if (key.startsWith("android.app.extra")) {
+                continue;
+            }
+            props.put(key, values.get(key));
+            values.remove(key);
+        }
+        StringWriter sw = new StringWriter();
+        try{
+            props.store(sw, "admin extras bundle");
+            values.put(DevicePolicyManager.EXTRA_PROVISIONING_ADMIN_EXTRAS_BUNDLE,
+                    sw.toString());
+            Log.d(TAG, "Admin extras bundle=" + values.get(
+                    DevicePolicyManager.EXTRA_PROVISIONING_ADMIN_EXTRAS_BUNDLE));
+        } catch (IOException e) {
+            Log.e(TAG, "Unable to build admin extras bundle");
         }
     }
 
