@@ -50,7 +50,7 @@ public class MainActivity extends SampleActivityBase {
 
         if (savedInstanceState == null) {
             FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-            ActiveNotificationFragment fragment = new ActiveNotificationFragment();
+            ActiveNotificationsFragment fragment = new ActiveNotificationsFragment();
             transaction.replace(R.id.sample_content_fragment, fragment);
             transaction.commit();
         }

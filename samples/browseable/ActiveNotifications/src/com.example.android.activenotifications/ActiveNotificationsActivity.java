@@ -23,9 +23,9 @@ import android.content.IntentFilter;
 import android.os.Bundle;
 import android.os.PersistableBundle;
 
-public class ActiveNotificationActivity extends MainActivity {
+public class ActiveNotificationsActivity extends MainActivity {
 
-    private ActiveNotificationFragment mFragment;
+    private ActiveNotificationsFragment mFragment;
 
     protected static final String ACTION_NOTIFICATION_DELETE
             = "com.example.android.activenotifications.delete";
@@ -48,7 +48,7 @@ public class ActiveNotificationActivity extends MainActivity {
     }
 
     private void findFragment() {
-        mFragment = (ActiveNotificationFragment) getSupportFragmentManager()
+        mFragment = (ActiveNotificationsFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.sample_content_fragment);
     }
 
