@@ -442,7 +442,10 @@ public class Camera2RawFragment extends Fragment
                     case STATE_WAITING_FOR_3A_CONVERGENCE: {
                         boolean readyToCapture = true;
                         if (!mNoAFRun) {
-                            int afState = result.get(CaptureResult.CONTROL_AF_STATE);
+                            Integer afState = result.get(CaptureResult.CONTROL_AF_STATE);
+                            if (afState == null) {
+                                break;
+                            }
 
                             // If auto-focus has reached locked state, we are ready to capture
                             readyToCapture =
@@ -454,8 +457,11 @@ public class Camera2RawFragment extends Fragment
                         // auto-exposure and auto-white-balance have converged as well before
                         // taking a picture.
                         if (!isLegacyLocked()) {
-                            int aeState = result.get(CaptureResult.CONTROL_AE_STATE);
-                            int awbState = result.get(CaptureResult.CONTROL_AWB_STATE);
+                            Integer aeState = result.get(CaptureResult.CONTROL_AE_STATE);
+                            Integer awbState = result.get(CaptureResult.CONTROL_AWB_STATE);
+                            if (aeState == null || awbState == null) {
+                                break;
+                            }
 
                             readyToCapture = readyToCapture &&
                                     aeState == CaptureResult.CONTROL_AE_STATE_CONVERGED &&

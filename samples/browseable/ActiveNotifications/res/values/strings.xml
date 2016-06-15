@@ -19,4 +19,5 @@
  <string name="active_notifications">Active Notifications: %1$s</string>
  <string name="update_notification_count">Update count</string>
  <string name="sample_notification_content">This is a sample notification.</string>
+ <string name="sample_notification_summary_content">There are %s ActiveNotifications.</string>
 </resources>
