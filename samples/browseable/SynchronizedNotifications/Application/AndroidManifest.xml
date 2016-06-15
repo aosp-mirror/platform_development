@@ -42,8 +42,10 @@
         </activity>
         <service android:name=".DismissListener">
             <intent-filter>
-                <action
-                    android:name="com.google.android.gms.wearable.BIND_LISTENER" />
+                <!-- listeners receive events that match the action and data filters -->
+                <action android:name="com.google.android.gms.wearable.DATA_CHANGED" />
+                <!-- filters by Constants.BOTH_PATH ('/both') -->
+                <data android:scheme="wear" android:host="*" android:pathPrefix="/both"/>
             </intent-filter>
             <intent-filter>
                 <action

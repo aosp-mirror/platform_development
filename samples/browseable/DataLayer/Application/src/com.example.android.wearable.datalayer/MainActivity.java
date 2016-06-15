@@ -22,9 +22,9 @@ import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Handler;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -41,8 +41,9 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.GoogleApiClient.ConnectionCallbacks;
 import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListener;
 import com.google.android.gms.common.api.ResultCallback;
-import com.google.android.gms.common.data.FreezableUtils;
 import com.google.android.gms.wearable.Asset;
+import com.google.android.gms.wearable.CapabilityApi;
+import com.google.android.gms.wearable.CapabilityInfo;
 import com.google.android.gms.wearable.DataApi;
 import com.google.android.gms.wearable.DataApi.DataItemResult;
 import com.google.android.gms.wearable.DataEvent;
@@ -61,7 +62,6 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -72,16 +72,19 @@ import java.util.concurrent.TimeUnit;
  * item every second while it is open. Also allows user to take a photo and send that as an asset
  * to the paired wearable.
  */
-public class MainActivity extends Activity implements DataApi.DataListener,
-        MessageApi.MessageListener, NodeApi.NodeListener, ConnectionCallbacks,
+public class MainActivity extends Activity implements
+        CapabilityApi.CapabilityListener,
+        MessageApi.MessageListener,
+        DataApi.DataListener,
+        ConnectionCallbacks,
         OnConnectionFailedListener {
 
     private static final String TAG = "MainActivity";
 
-    /**
-     * Request code for launching the Intent to resolve Google Play services errors.
-     */
+    //Request code for launching the Intent to resolve Google Play services errors.
     private static final int REQUEST_RESOLVE_ERROR = 1000;
+
+    private static final int REQUEST_IMAGE_CAPTURE = 1;
 
     private static final String START_ACTIVITY_PATH = "/start-activity";
     private static final String COUNT_PATH = "/count";
@@ -100,18 +103,14 @@ public class MainActivity extends Activity implements DataApi.DataListener,
     private View mStartActivityBtn;
 
     private DataItemAdapter mDataItemListAdapter;
-    private Handler mHandler;
 
     // Send DataItems.
     private ScheduledExecutorService mGeneratorExecutor;
     private ScheduledFuture<?> mDataItemGeneratorFuture;
 
-    static final int REQUEST_IMAGE_CAPTURE = 1;
-
     @Override
-    public void onCreate(Bundle b) {
-        super.onCreate(b);
-        mHandler = new Handler();
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
         LOGD(TAG, "onCreate");
         mCameraSupported = getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA);
         setContentView(R.layout.main_activity);
@@ -128,15 +127,6 @@ public class MainActivity extends Activity implements DataApi.DataListener,
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
                 .build();
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
-            Bundle extras = data.getExtras();
-            mImageBitmap = (Bitmap) extras.get("data");
-            mThumbView.setImageBitmap(mImageBitmap);
-        }
     }
 
     @Override
@@ -162,16 +152,25 @@ public class MainActivity extends Activity implements DataApi.DataListener,
 
     @Override
     protected void onStop() {
-        if (!mResolvingError) {
+        if (!mResolvingError && (mGoogleApiClient != null) && (mGoogleApiClient.isConnected())) {
             Wearable.DataApi.removeListener(mGoogleApiClient, this);
             Wearable.MessageApi.removeListener(mGoogleApiClient, this);
-            Wearable.NodeApi.removeListener(mGoogleApiClient, this);
+            Wearable.CapabilityApi.removeListener(mGoogleApiClient, this);
             mGoogleApiClient.disconnect();
         }
         super.onStop();
     }
 
-    @Override //ConnectionCallbacks
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
+            Bundle extras = data.getExtras();
+            mImageBitmap = (Bitmap) extras.get("data");
+            mThumbView.setImageBitmap(mImageBitmap);
+        }
+    }
+
+    @Override
     public void onConnected(Bundle connectionHint) {
         LOGD(TAG, "Google API Client was connected");
         mResolvingError = false;
@@ -179,157 +178,100 @@ public class MainActivity extends Activity implements DataApi.DataListener,
         mSendPhotoBtn.setEnabled(mCameraSupported);
         Wearable.DataApi.addListener(mGoogleApiClient, this);
         Wearable.MessageApi.addListener(mGoogleApiClient, this);
-        Wearable.NodeApi.addListener(mGoogleApiClient, this);
+        Wearable.CapabilityApi.addListener(
+                mGoogleApiClient, this, Uri.parse("wear://"), CapabilityApi.FILTER_REACHABLE);
     }
 
-    @Override //ConnectionCallbacks
+    @Override
     public void onConnectionSuspended(int cause) {
         LOGD(TAG, "Connection to Google API client was suspended");
         mStartActivityBtn.setEnabled(false);
         mSendPhotoBtn.setEnabled(false);
     }
 
-    @Override //OnConnectionFailedListener
+    @Override
     public void onConnectionFailed(ConnectionResult result) {
-        if (mResolvingError) {
-            // Already attempting to resolve an error.
-            return;
-        } else if (result.hasResolution()) {
-            try {
-                mResolvingError = true;
-                result.startResolutionForResult(this, REQUEST_RESOLVE_ERROR);
-            } catch (IntentSender.SendIntentException e) {
-                // There was an error with the resolution intent. Try again.
-                mGoogleApiClient.connect();
+        if (!mResolvingError) {
+
+            if (result.hasResolution()) {
+                try {
+                    mResolvingError = true;
+                    result.startResolutionForResult(this, REQUEST_RESOLVE_ERROR);
+                } catch (IntentSender.SendIntentException e) {
+                    // There was an error with the resolution intent. Try again.
+                    mGoogleApiClient.connect();
+                }
+            } else {
+                Log.e(TAG, "Connection to Google API client has failed");
+                mResolvingError = false;
+                mStartActivityBtn.setEnabled(false);
+                mSendPhotoBtn.setEnabled(false);
+                Wearable.DataApi.removeListener(mGoogleApiClient, this);
+                Wearable.MessageApi.removeListener(mGoogleApiClient, this);
+                Wearable.CapabilityApi.removeListener(mGoogleApiClient, this);
             }
-        } else {
-            Log.e(TAG, "Connection to Google API client has failed");
-            mResolvingError = false;
-            mStartActivityBtn.setEnabled(false);
-            mSendPhotoBtn.setEnabled(false);
-            Wearable.DataApi.removeListener(mGoogleApiClient, this);
-            Wearable.MessageApi.removeListener(mGoogleApiClient, this);
-            Wearable.NodeApi.removeListener(mGoogleApiClient, this);
         }
     }
 
-    @Override //DataListener
+    @Override
     public void onDataChanged(DataEventBuffer dataEvents) {
         LOGD(TAG, "onDataChanged: " + dataEvents);
-        // Need to freeze the dataEvents so they will exist later on the UI thread
-        final List<DataEvent> events = FreezableUtils.freezeIterable(dataEvents);
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                for (DataEvent event : events) {
-                    if (event.getType() == DataEvent.TYPE_CHANGED) {
-                        mDataItemListAdapter.add(
-                                new Event("DataItem Changed", event.getDataItem().toString()));
-                    } else if (event.getType() == DataEvent.TYPE_DELETED) {
-                        mDataItemListAdapter.add(
-                                new Event("DataItem Deleted", event.getDataItem().toString()));
-                    }
-                }
+
+        for (DataEvent event : dataEvents) {
+            if (event.getType() == DataEvent.TYPE_CHANGED) {
+                mDataItemListAdapter.add(
+                        new Event("DataItem Changed", event.getDataItem().toString()));
+            } else if (event.getType() == DataEvent.TYPE_DELETED) {
+                mDataItemListAdapter.add(
+                        new Event("DataItem Deleted", event.getDataItem().toString()));
             }
-        });
+        }
     }
 
-    @Override //MessageListener
+    @Override
     public void onMessageReceived(final MessageEvent messageEvent) {
-        LOGD(TAG, "onMessageReceived() A message from watch was received:" + messageEvent
-                .getRequestId() + " " + messageEvent.getPath());
-        mHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                mDataItemListAdapter.add(new Event("Message from watch", messageEvent.toString()));
-            }
-        });
+        LOGD(TAG, "onMessageReceived() A message from watch was received:"
+                + messageEvent.getRequestId() + " " + messageEvent.getPath());
 
+        mDataItemListAdapter.add(new Event("Message from watch", messageEvent.toString()));
     }
 
-    @Override //NodeListener
-    public void onPeerConnected(final Node peer) {
-        LOGD(TAG, "onPeerConnected: " + peer);
-        mHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                mDataItemListAdapter.add(new Event("Connected", peer.toString()));
-            }
-        });
+    @Override
+    public void onCapabilityChanged(final CapabilityInfo capabilityInfo) {
+        LOGD(TAG, "onCapabilityChanged: " + capabilityInfo);
 
-    }
-
-    @Override //NodeListener
-    public void onPeerDisconnected(final Node peer) {
-        LOGD(TAG, "onPeerDisconnected: " + peer);
-        mHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                mDataItemListAdapter.add(new Event("Disconnected", peer.toString()));
-            }
-        });
+        mDataItemListAdapter.add(new Event("onCapabilityChanged", capabilityInfo.toString()));
     }
 
     /**
-     * A View Adapter for presenting the Event objects in a list
+     * Sets up UI components and their callback handlers.
      */
-    private static class DataItemAdapter extends ArrayAdapter<Event> {
+    private void setupViews() {
+        mSendPhotoBtn = (Button) findViewById(R.id.sendPhoto);
+        mThumbView = (ImageView) findViewById(R.id.imageView);
+        mDataItemList = (ListView) findViewById(R.id.data_item_list);
+        mStartActivityBtn = findViewById(R.id.start_wearable_activity);
+    }
 
-        private final Context mContext;
+    public void onTakePhotoClick(View view) {
+        dispatchTakePictureIntent();
+    }
 
-        public DataItemAdapter(Context context, int unusedResource) {
-            super(context, unusedResource);
-            mContext = context;
-        }
-
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-            ViewHolder holder;
-            if (convertView == null) {
-                holder = new ViewHolder();
-                LayoutInflater inflater = (LayoutInflater) mContext.getSystemService(
-                        Context.LAYOUT_INFLATER_SERVICE);
-                convertView = inflater.inflate(android.R.layout.two_line_list_item, null);
-                convertView.setTag(holder);
-                holder.text1 = (TextView) convertView.findViewById(android.R.id.text1);
-                holder.text2 = (TextView) convertView.findViewById(android.R.id.text2);
-            } else {
-                holder = (ViewHolder) convertView.getTag();
-            }
-            Event event = getItem(position);
-            holder.text1.setText(event.title);
-            holder.text2.setText(event.text);
-            return convertView;
-        }
-
-        private class ViewHolder {
-
-            TextView text1;
-            TextView text2;
+    public void onSendPhotoClick(View view) {
+        if (null != mImageBitmap && mGoogleApiClient.isConnected()) {
+            sendPhoto(toAsset(mImageBitmap));
         }
     }
 
-    private class Event {
+    /**
+     * Sends an RPC to start a fullscreen Activity on the wearable.
+     */
+    public void onStartWearableActivityClick(View view) {
+        LOGD(TAG, "Generating RPC");
 
-        String title;
-        String text;
-
-        public Event(String title, String text) {
-            this.title = title;
-            this.text = text;
-        }
-    }
-
-    private Collection<String> getNodes() {
-        HashSet<String> results = new HashSet<>();
-        NodeApi.GetConnectedNodesResult nodes =
-                Wearable.NodeApi.getConnectedNodes(mGoogleApiClient).await();
-
-        for (Node node : nodes.getNodes()) {
-            results.add(node.getId());
-        }
-
-        return results;
+        // Trigger an AsyncTask that will query for a list of connected nodes and send a
+        // "start-activity" message to each connected node.
+        new StartWearableActivityTask().execute();
     }
 
     private void sendStartActivityMessage(String node) {
@@ -345,61 +287,6 @@ public class MainActivity extends Activity implements DataApi.DataListener,
                     }
                 }
         );
-    }
-
-    private class StartWearableActivityTask extends AsyncTask<Void, Void, Void> {
-
-        @Override
-        protected Void doInBackground(Void... args) {
-            Collection<String> nodes = getNodes();
-            for (String node : nodes) {
-                sendStartActivityMessage(node);
-            }
-            return null;
-        }
-    }
-
-    /**
-     * Sends an RPC to start a fullscreen Activity on the wearable.
-     */
-    public void onStartWearableActivityClick(View view) {
-        LOGD(TAG, "Generating RPC");
-
-        // Trigger an AsyncTask that will query for a list of connected nodes and send a
-        // "start-activity" message to each connected node.
-        new StartWearableActivityTask().execute();
-    }
-
-    /**
-     * Generates a DataItem based on an incrementing count.
-     */
-    private class DataItemGenerator implements Runnable {
-
-        private int count = 0;
-
-        @Override
-        public void run() {
-            PutDataMapRequest putDataMapRequest = PutDataMapRequest.create(COUNT_PATH);
-            putDataMapRequest.getDataMap().putInt(COUNT_KEY, count++);
-            putDataMapRequest.setUrgent();
-            PutDataRequest request = putDataMapRequest.asPutDataRequest();
-            request.setUrgent();
-
-            LOGD(TAG, "Generating DataItem: " + request);
-            if (!mGoogleApiClient.isConnected()) {
-                return;
-            }
-            Wearable.DataApi.putDataItem(mGoogleApiClient, request)
-                    .setResultCallback(new ResultCallback<DataItemResult>() {
-                        @Override
-                        public void onResult(DataItemResult dataItemResult) {
-                            if (!dataItemResult.getStatus().isSuccess()) {
-                                Log.e(TAG, "ERROR: failed to putDataItem, status code: "
-                                        + dataItemResult.getStatus().getStatusCode());
-                            }
-                        }
-                    });
-        }
     }
 
     /**
@@ -437,7 +324,7 @@ public class MainActivity extends Activity implements DataApi.DataListener,
     }
 
     /**
-     * Sends the asset that was created form the photo we took by adding it to the Data Item store.
+     * Sends the asset that was created from the photo we took by adding it to the Data Item store.
      */
     private void sendPhoto(Asset asset) {
         PutDataMapRequest dataMap = PutDataMapRequest.create(IMAGE_PATH);
@@ -454,27 +341,18 @@ public class MainActivity extends Activity implements DataApi.DataListener,
                                 .isSuccess());
                     }
                 });
-
     }
 
-    public void onTakePhotoClick(View view) {
-        dispatchTakePictureIntent();
-    }
+    private Collection<String> getNodes() {
+        HashSet<String> results = new HashSet<>();
+        NodeApi.GetConnectedNodesResult nodes =
+                Wearable.NodeApi.getConnectedNodes(mGoogleApiClient).await();
 
-    public void onSendPhotoClick(View view) {
-        if (null != mImageBitmap && mGoogleApiClient.isConnected()) {
-            sendPhoto(toAsset(mImageBitmap));
+        for (Node node : nodes.getNodes()) {
+            results.add(node.getId());
         }
-    }
 
-    /**
-     * Sets up UI components and their callback handlers.
-     */
-    private void setupViews() {
-        mSendPhotoBtn = (Button) findViewById(R.id.sendPhoto);
-        mThumbView = (ImageView) findViewById(R.id.imageView);
-        mDataItemList = (ListView) findViewById(R.id.data_item_list);
-        mStartActivityBtn = findViewById(R.id.start_wearable_activity);
+        return results;
     }
 
     /**
@@ -486,4 +364,96 @@ public class MainActivity extends Activity implements DataApi.DataListener,
         }
     }
 
+    /**
+     * A View Adapter for presenting the Event objects in a list
+     */
+    private static class DataItemAdapter extends ArrayAdapter<Event> {
+
+        private final Context mContext;
+
+        public DataItemAdapter(Context context, int unusedResource) {
+            super(context, unusedResource);
+            mContext = context;
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            ViewHolder holder;
+            if (convertView == null) {
+                holder = new ViewHolder();
+                LayoutInflater inflater = (LayoutInflater) mContext.getSystemService(
+                        Context.LAYOUT_INFLATER_SERVICE);
+                convertView = inflater.inflate(android.R.layout.two_line_list_item, null);
+                convertView.setTag(holder);
+                holder.text1 = (TextView) convertView.findViewById(android.R.id.text1);
+                holder.text2 = (TextView) convertView.findViewById(android.R.id.text2);
+            } else {
+                holder = (ViewHolder) convertView.getTag();
+            }
+            Event event = getItem(position);
+            holder.text1.setText(event.title);
+            holder.text2.setText(event.text);
+            return convertView;
+        }
+
+        private class ViewHolder {
+            TextView text1;
+            TextView text2;
+        }
+    }
+
+    private class Event {
+
+        String title;
+        String text;
+
+        public Event(String title, String text) {
+            this.title = title;
+            this.text = text;
+        }
+    }
+
+    private class StartWearableActivityTask extends AsyncTask<Void, Void, Void> {
+
+        @Override
+        protected Void doInBackground(Void... args) {
+            Collection<String> nodes = getNodes();
+            for (String node : nodes) {
+                sendStartActivityMessage(node);
+            }
+            return null;
+        }
+    }
+
+    /**
+     * Generates a DataItem based on an incrementing count.
+     */
+    private class DataItemGenerator implements Runnable {
+
+        private int count = 0;
+
+        @Override
+        public void run() {
+            PutDataMapRequest putDataMapRequest = PutDataMapRequest.create(COUNT_PATH);
+            putDataMapRequest.getDataMap().putInt(COUNT_KEY, count++);
+
+            PutDataRequest request = putDataMapRequest.asPutDataRequest();
+            request.setUrgent();
+
+            LOGD(TAG, "Generating DataItem: " + request);
+            if (!mGoogleApiClient.isConnected()) {
+                return;
+            }
+            Wearable.DataApi.putDataItem(mGoogleApiClient, request)
+                    .setResultCallback(new ResultCallback<DataItemResult>() {
+                        @Override
+                        public void onResult(DataItemResult dataItemResult) {
+                            if (!dataItemResult.getStatus().isSuccess()) {
+                                Log.e(TAG, "ERROR: failed to putDataItem, status code: "
+                                        + dataItemResult.getStatus().getStatusCode());
+                            }
+                        }
+                    });
+        }
+    }
 }
