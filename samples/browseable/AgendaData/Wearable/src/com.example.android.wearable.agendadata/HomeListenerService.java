@@ -16,16 +16,6 @@
 
 package com.example.android.wearable.agendadata;
 
-import static com.example.android.wearable.agendadata.Constants.TAG;
-import static com.example.android.wearable.agendadata.Constants.EXTRA_SILENT;
-
-import static com.example.android.wearable.agendadata.Constants.ALL_DAY;
-import static com.example.android.wearable.agendadata.Constants.BEGIN;
-import static com.example.android.wearable.agendadata.Constants.DESCRIPTION;
-import static com.example.android.wearable.agendadata.Constants.END;
-import static com.example.android.wearable.agendadata.Constants.PROFILE_PIC;
-import static com.example.android.wearable.agendadata.Constants.TITLE;
-
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -37,6 +27,15 @@ import android.text.TextUtils;
 import android.text.format.DateFormat;
 import android.util.Log;
 
+import static com.example.android.wearable.agendadata.Constants.ALL_DAY;
+import static com.example.android.wearable.agendadata.Constants.BEGIN;
+import static com.example.android.wearable.agendadata.Constants.DESCRIPTION;
+import static com.example.android.wearable.agendadata.Constants.EXTRA_SILENT;
+import static com.example.android.wearable.agendadata.Constants.END;
+import static com.example.android.wearable.agendadata.Constants.PROFILE_PIC;
+import static com.example.android.wearable.agendadata.Constants.TAG;
+import static com.example.android.wearable.agendadata.Constants.TITLE;
+
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.wearable.Asset;
 import com.google.android.gms.wearable.DataApi;
@@ -45,7 +44,6 @@ import com.google.android.gms.wearable.DataEventBuffer;
 import com.google.android.gms.wearable.DataItem;
 import com.google.android.gms.wearable.DataMap;
 import com.google.android.gms.wearable.DataMapItem;
-import com.google.android.gms.wearable.MessageEvent;
 import com.google.android.gms.wearable.Wearable;
 import com.google.android.gms.wearable.WearableListenerService;
 
@@ -64,11 +62,21 @@ public class HomeListenerService extends WearableListenerService {
     private GoogleApiClient mGoogleApiClient;
 
     @Override
+    public void onCreate() {
+        super.onCreate();
+        mGoogleApiClient = new GoogleApiClient.Builder(this.getApplicationContext())
+                .addApi(Wearable.API)
+                .build();
+        mGoogleApiClient.connect();
+    }
+
+    @Override
     public void onDataChanged(DataEventBuffer dataEvents) {
         if (Log.isLoggable(TAG, Log.DEBUG)) {
             Log.d(TAG, "onDataChanged: " + dataEvents + " for " + getPackageName());
         }
         for (DataEvent event : dataEvents) {
+
             if (event.getType() == DataEvent.TYPE_DELETED) {
                 deleteDataItem(event.getDataItem());
             } else if (event.getType() == DataEvent.TYPE_CHANGED) {
@@ -77,13 +85,17 @@ public class HomeListenerService extends WearableListenerService {
         }
     }
 
-    @Override
-    public void onCreate() {
-        super.onCreate();
-        mGoogleApiClient = new GoogleApiClient.Builder(this.getApplicationContext())
-                .addApi(Wearable.API)
-                .build();
-        mGoogleApiClient.connect();
+    /**
+     * Deletes the calendar card associated with the data item.
+     */
+    private void deleteDataItem(DataItem dataItem) {
+        if (Log.isLoggable(TAG, Log.VERBOSE)) {
+            Log.v(TAG, "onDataItemDeleted:DataItem=" + dataItem.getUri());
+        }
+        Integer notificationId = sNotificationIdByDataItemUri.remove(dataItem.getUri());
+        if (notificationId != null) {
+            ((NotificationManager) getSystemService(NOTIFICATION_SERVICE)).cancel(notificationId);
+        }
     }
 
     /**
@@ -154,26 +166,4 @@ public class HomeListenerService extends WearableListenerService {
 
         sNotificationIdByDataItemUri.put(dataItem.getUri(), sNotificationId++);
     }
-
-    /**
-     * Deletes the calendar card associated with the data item.
-     */
-    private void deleteDataItem(DataItem dataItem) {
-        if (Log.isLoggable(TAG, Log.VERBOSE)) {
-            Log.v(TAG, "onDataItemDeleted:DataItem=" + dataItem.getUri());
-        }
-        Integer notificationId = sNotificationIdByDataItemUri.remove(dataItem.getUri());
-        if (notificationId != null) {
-            ((NotificationManager) getSystemService(NOTIFICATION_SERVICE)).cancel(notificationId);
-        }
-    }
-
-    @Override
-    public void onMessageReceived(MessageEvent messageEvent) {
-        if (Log.isLoggable(TAG, Log.DEBUG)) {
-            Log.d(TAG, "onMessageReceived: " + messageEvent.getPath()
-                     + " " + messageEvent.getData() + " for " + getPackageName());
-        }
-    }
-
 }

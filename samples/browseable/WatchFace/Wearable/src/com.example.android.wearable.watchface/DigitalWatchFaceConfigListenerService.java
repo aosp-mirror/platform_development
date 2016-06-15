@@ -40,6 +40,11 @@ public class DigitalWatchFaceConfigListenerService extends WearableListenerServi
 
     @Override // WearableListenerService
     public void onMessageReceived(MessageEvent messageEvent) {
+
+        if (Log.isLoggable(TAG, Log.DEBUG)) {
+            Log.d(TAG, "onMessageReceived: " + messageEvent);
+        }
+
         if (!messageEvent.getPath().equals(DigitalWatchFaceUtil.PATH_WITH_FEATURE)) {
             return;
         }
