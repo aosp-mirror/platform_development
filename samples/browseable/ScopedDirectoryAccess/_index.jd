@@ -1,0 +1,12 @@
+
+page.tags="ScopedDirectoryAccess"
+sample.group=Android N Preview
+@jd:body
+
+<p>
+
+This sample demonstrates how to use the Scoped Directory Access API introduced in Android N
+to easily access to specific directories such as Pictures, Downloads instead of requesting
+READ_EXTERNAL_STORAGE or WRITE_EXTERNAL_STORAGE in your manifest.
+
+        </p>

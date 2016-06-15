@@ -1,0 +1,14 @@
+
+page.tags="MultiWindowPlayground"
+sample.group=Android N Preview
+@jd:body
+
+<p>
+            
+This sample demonstrates the use of the multi-window API available
+in Android N. It shows the use of new Intent flags and
+AndroidManifest properties to define the multi-window behavior.
+Switch the sample app into multi-window mode to see how it affects
+the lifecycle and behavior of the app.
+            
+        </p>

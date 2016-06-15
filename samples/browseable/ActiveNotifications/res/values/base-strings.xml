@@ -16,15 +16,19 @@
 -->
 
 <resources>
-    <string name="app_name">ActiveNotification</string>
+    <string name="app_name">ActiveNotifications</string>
     <string name="intro_message">
         <![CDATA[
         
             
-The NotificationManager can tell you how many notifications your application is currently showing.
-This sample demonstrates how to use this API that has been introduced with Android M.
-To get started, press the "add a notification" button.
-When a notification is being canceled, the count gets updated via a PendingIntent.
+Notifications can now be grouped in Android N. Since Android M, the
+NotificationManager can tell you how many notifications your application
+is currently showing. This sample demonstrates how to use these APIs
+together for a nicer user experience when an app may have multiple
+notifications. To get started, press the "add a notification" button.
+If you add more than one notification a notification summary will be
+added. When a notification is being canceled, the count gets updated
+via a PendingIntent.
             
         
         ]]>

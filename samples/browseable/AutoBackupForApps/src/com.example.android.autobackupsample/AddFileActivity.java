@@ -161,7 +161,7 @@ public class AddFileActivity extends Activity {
             return;
         }
 
-        long fileSize = Long.parseLong(fileSizeEditTextValue) * mSizeMultiplier;
+        long fileSize = Integer.parseInt(fileSizeEditTextValue) * mSizeMultiplier;
 
         if (mFileStorage == FileStorage.EXTERNAL && !Utils.isExternalStorageAvailable()) {
             Toast toast = Toast.makeText(this,
