@@ -15,6 +15,12 @@
   ~ limitations under the License
   -->
 <resources>
+    <!--
+      The similar strings app_name is added in the Application/template directory, but depending
+      on the template directory makes it hard for the sample buildable with Android.mk.
+      Thus defining the application_name with different name from the template.
+    -->
+    <string name="application_name">FingerprintDialog</string>
     <string name="action_settings">Settings</string>
     <string name="cancel">Cancel</string>
     <string name="use_password">Use password</string>

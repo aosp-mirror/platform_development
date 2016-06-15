@@ -39,11 +39,10 @@ public class MessagingService extends Service {
     private static final String EOL = "\n";
     private static final String READ_ACTION =
             "com.example.android.messagingservice.ACTION_MESSAGE_READ";
-
     public static final String REPLY_ACTION =
             "com.example.android.messagingservice.ACTION_MESSAGE_REPLY";
     public static final String CONVERSATION_ID = "conversation_id";
-    public static final String EXTRA_VOICE_REPLY = "extra_voice_reply";
+    public static final String EXTRA_REMOTE_REPLY = "extra_remote_reply";
     public static final int MSG_SEND_NOTIFICATION = 1;
 
     private NotificationManagerCompat mNotificationManager;
@@ -93,9 +92,10 @@ public class MessagingService extends Service {
                 getMessageReadIntent(conversation.getConversationId()),
                 PendingIntent.FLAG_UPDATE_CURRENT);
 
-        // Build a RemoteInput for receiving voice input in a Car Notification
-        RemoteInput remoteInput = new RemoteInput.Builder(EXTRA_VOICE_REPLY)
-                .setLabel(getApplicationContext().getString(R.string.notification_reply))
+        // Build a RemoteInput for receiving voice input in a Car Notification or text input on
+        // devices that support text input (like devices on Android N and above).
+        RemoteInput remoteInput = new RemoteInput.Builder(EXTRA_REMOTE_REPLY)
+                .setLabel(getString(R.string.reply))
                 .build();
 
         // Building a Pending Intent for the reply action to trigger
@@ -103,6 +103,12 @@ public class MessagingService extends Service {
                 conversation.getConversationId(),
                 getMessageReplyIntent(conversation.getConversationId()),
                 PendingIntent.FLAG_UPDATE_CURRENT);
+
+        // Build an Android N compatible Remote Input enabled action.
+        NotificationCompat.Action actionReplyByRemoteInput = new NotificationCompat.Action.Builder(
+                R.drawable.notification_icon, getString(R.string.reply), replyIntent)
+                .addRemoteInput(remoteInput)
+                .build();
 
         // Create the UnreadConversation and populate it with the participant name,
         // read and reply intents.
@@ -134,8 +140,9 @@ public class MessagingService extends Service {
                 .setContentIntent(readPendingIntent)
                 .extend(new CarExtender()
                         .setUnreadConversation(unreadConvBuilder.build())
-                        .setColor(getApplicationContext()
-                                .getResources().getColor(R.color.default_color_light)));
+                        .setColor(getApplicationContext().getResources()
+                                .getColor(R.color.default_color_light)))
+                .addAction(actionReplyByRemoteInput);
 
         MessageLogger.logMessage(getApplicationContext(), "Sending notification "
                 + conversation.getConversationId() + " conversation: " + conversation);
