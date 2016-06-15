@@ -1,0 +1,10 @@
+
+page.tags="WearDrawers"
+sample.group=Wearable
+@jd:body
+
+<p>
+            
+A simple sample that demonstrates Navigation and Action Drawers, part of Material Design for Wear.
+            
+        </p>
