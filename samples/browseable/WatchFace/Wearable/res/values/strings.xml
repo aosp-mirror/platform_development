@@ -18,6 +18,7 @@
     <string name="opengl_name">Sample OpenGL</string>
     <string name="interactive_name">Sample Interactive</string>
     <string name="analog_name">Sample Analog</string>
+    <string name="complication_simple">Sample Complication Simple</string>
     <string name="sweep_name">Sample Sweep</string>
     <string name="card_bounds_name">Sample Card Bounds</string>
     <string name="digital_name">Sample Digital</string>
@@ -41,6 +42,9 @@
     </plurals>
     <string name="title_activity_calendar_watch_face_permission">Calendar Permission Activity</string>
     <string name="calendar_permission_text">WatchFace requires Calendar access.</string>
+
+    <string name="complication_simple_config_name">Configuration</string>
+    <string name="complications_provider_random_number">Random Number</string>
 
     <!-- TODO: this should be shared (needs covering all the samples with Gradle build model) -->
     <string name="color_black">Black</string>

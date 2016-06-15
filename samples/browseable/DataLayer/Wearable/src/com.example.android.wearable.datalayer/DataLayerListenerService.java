@@ -25,11 +25,9 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.wearable.DataEvent;
 import com.google.android.gms.wearable.DataEventBuffer;
 import com.google.android.gms.wearable.MessageEvent;
-import com.google.android.gms.wearable.Node;
 import com.google.android.gms.wearable.Wearable;
 import com.google.android.gms.wearable.WearableListenerService;
 
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -37,7 +35,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class DataLayerListenerService extends WearableListenerService {
 
-    private static final String TAG = "DataLayerListenerServic";
+    private static final String TAG = "DataLayerService";
 
     private static final String START_ACTIVITY_PATH = "/start-activity";
     private static final String DATA_ITEM_RECEIVED_PATH = "/data-item-received";
@@ -96,16 +94,6 @@ public class DataLayerListenerService extends WearableListenerService {
             startIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(startIntent);
         }
-    }
-
-    @Override
-    public void onPeerConnected(Node peer) {
-        LOGD(TAG, "onPeerConnected: " + peer);
-    }
-
-    @Override
-    public void onPeerDisconnected(Node peer) {
-        LOGD(TAG, "onPeerDisconnected: " + peer);
     }
 
     public static void LOGD(final String tag, String message) {
