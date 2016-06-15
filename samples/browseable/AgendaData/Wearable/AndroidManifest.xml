@@ -18,7 +18,7 @@
         package="com.example.android.wearable.agendadata" >
 
     <uses-sdk android:minSdkVersion="20"
-        android:targetSdkVersion="22" />
+        android:targetSdkVersion="23" />
 
     <uses-feature android:name="android.hardware.type.watch" />
 
@@ -34,7 +34,8 @@
         <service
                 android:name="com.example.android.wearable.agendadata.HomeListenerService" >
             <intent-filter>
-                <action android:name="com.google.android.gms.wearable.BIND_LISTENER" />
+                <action android:name="com.google.android.gms.wearable.DATA_CHANGED" />
+                <data android:scheme="wear" android:host="*" android:pathPrefix="/"/>
             </intent-filter>
         </service>
 

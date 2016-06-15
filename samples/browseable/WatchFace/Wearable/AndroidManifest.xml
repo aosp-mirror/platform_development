@@ -132,6 +132,42 @@
                 <category android:name="com.google.android.wearable.watchface.category.WATCH_FACE" />
             </intent-filter>
         </service>
+
+        <service
+            android:name=".ComplicationSimpleWatchFaceService"
+            android:enabled="true"
+            android:label="@string/complication_simple"
+            android:permission="android.permission.BIND_WALLPAPER">
+            <meta-data
+                android:name="android.service.wallpaper"
+                android:resource="@xml/watch_face"/>
+            <meta-data
+                android:name="com.google.android.wearable.watchface.preview"
+                android:resource="@drawable/preview_complication_simple"/>
+            <meta-data
+                android:name="com.google.android.wearable.watchface.preview_circular"
+                android:resource="@drawable/preview_complication_simple"/>
+            <meta-data
+                android:name="com.google.android.wearable.watchface.wearableConfigurationAction"
+                android:value="com.example.android.wearable.watchface.CONFIG_COMPLICATION_SIMPLE"/>
+
+            <intent-filter>
+                <action android:name="android.service.wallpaper.WallpaperService"/>
+
+                <category android:name="com.google.android.wearable.watchface.category.WATCH_FACE"/>
+            </intent-filter>
+        </service>
+        <activity
+            android:name=".ComplicationSimpleConfigActivity"
+            android:label="@string/complication_simple">
+            <intent-filter>
+                <action android:name="com.example.android.wearable.watchface.CONFIG_COMPLICATION_SIMPLE"/>
+
+                <category android:name="com.google.android.wearable.watchface.category.WEARABLE_CONFIGURATION"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
+        </activity>
+
         <service
             android:name=".InteractiveWatchFaceService"
             android:label="@string/interactive_name"
@@ -218,7 +254,8 @@
         </service>
         <service android:name=".DigitalWatchFaceConfigListenerService" >
             <intent-filter>
-                <action android:name="com.google.android.gms.wearable.BIND_LISTENER" />
+                <action android:name="com.google.android.gms.wearable.MESSAGE_RECEIVED" />
+                <data android:scheme="wear" android:host="*" android:pathPrefix="/"/>
             </intent-filter>
         </service>
         <service
@@ -269,6 +306,35 @@
             android:name=".CalendarWatchFacePermissionActivity"
             android:label="@string/title_activity_calendar_watch_face_permission" >
         </activity>
+
+        <service
+            android:name=".provider.RandomNumberProviderService"
+            android:label="@string/complications_provider_random_number"
+            android:icon="@drawable/ic_launcher">
+
+            <intent-filter>
+                <action android:name="android.support.wearable.complications.ACTION_COMPLICATION_UPDATE_REQUEST"/>
+            </intent-filter>
+
+            <meta-data
+                android:name="android.support.wearable.complications.SUPPORTED_TYPES"
+                android:value="RANGED_VALUE,SHORT_TEXT,LONG_TEXT"/>
+            <!--
+            When your complication data provider is active, UPDATE_PERIOD_SECONDS specifies how
+            often you want the system to check for updates to the data. In this case, the time is
+            specified to a relatively short 120 seconds, so we can observe the result of this code
+            lab. In everyday use, developers should consider intervals in the order of minutes.
+            Also, remember that this is only a guidance for the system. Android Wear may update less
+            frequently.
+
+            If your app needs to push updates instead of updating on a regular schedule, you should
+            set this value to 0 and use ProviderUpdateRequester.requestUpdate() to trigger an update
+            request when you need one.
+            -->
+            <meta-data
+                android:name="android.support.wearable.complications.UPDATE_PERIOD_SECONDS"
+                android:value="120"/>
+        </service>
     </application>
 
 </manifest>

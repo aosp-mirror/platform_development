@@ -55,7 +55,16 @@
 
         <service android:name=".service.ListenerService">
             <intent-filter>
-                <action android:name="com.google.android.gms.wearable.BIND_LISTENER" />
+                <!-- listeners receive events that match the action and data filters -->
+                <action android:name="com.google.android.gms.wearable.MESSAGE_RECEIVED" />
+
+                <!-- filters by Constants.CLEAR_NOTIFICATIONS_PATH -->
+                <data android:scheme="wear" android:host="*" android:pathPrefix="/clear"/>
+
+                <!-- filters by Constants.START_PATH, the prefix for
+                Constants.START_ATTRACTION_PATH ('/start/attraction') and
+                Constants.START_NAVIGATION_PATH ('/start/navigation') -->
+                <data android:scheme="wear" android:host="*" android:pathPrefix="/start"/>
             </intent-filter>
         </service>
 
