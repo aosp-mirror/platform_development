@@ -31,7 +31,7 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-            <meta-data android:name="android.pm.Shortcuts" android:resource="@xml/shortcuts"/>
+            <meta-data android:name="android.app.shortcuts" android:resource="@xml/shortcuts"/>
         </activity>
 
         <service android:name="ShortcutPublishingService">
