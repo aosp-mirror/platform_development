@@ -23,9 +23,9 @@ import android.app.Fragment;
 import android.app.FragmentManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Handler;
 import android.support.wearable.view.DotsPageIndicator;
 import android.support.wearable.view.FragmentGridPagerAdapter;
 import android.support.wearable.view.GridViewPager;
@@ -54,7 +54,6 @@ import com.google.android.gms.wearable.DataMapItem;
 import com.google.android.gms.wearable.MessageApi;
 import com.google.android.gms.wearable.MessageEvent;
 import com.google.android.gms.wearable.Node;
-import com.google.android.gms.wearable.NodeApi;
 import com.google.android.gms.wearable.Wearable;
 
 import java.io.InputStream;
@@ -78,9 +77,12 @@ import java.util.Set;
  * </li>
  * </ul>
  */
-public class MainActivity extends Activity implements ConnectionCallbacks,
-        OnConnectionFailedListener, DataApi.DataListener, MessageApi.MessageListener,
-        NodeApi.NodeListener {
+public class MainActivity extends Activity implements
+        ConnectionCallbacks,
+        OnConnectionFailedListener,
+        DataApi.DataListener,
+        MessageApi.MessageListener,
+        CapabilityApi.CapabilityListener {
 
     private static final String TAG = "MainActivity";
     private static final String CAPABILITY_1_NAME = "capability_1";
@@ -92,8 +94,8 @@ public class MainActivity extends Activity implements ConnectionCallbacks,
     private AssetFragment mAssetFragment;
 
     @Override
-    public void onCreate(Bundle b) {
-        super.onCreate(b);
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
         setContentView(R.layout.main_activity);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         setupViews();
@@ -112,11 +114,14 @@ public class MainActivity extends Activity implements ConnectionCallbacks,
 
     @Override
     protected void onPause() {
+        if ((mGoogleApiClient != null) && mGoogleApiClient.isConnected()) {
+            Wearable.DataApi.removeListener(mGoogleApiClient, this);
+            Wearable.MessageApi.removeListener(mGoogleApiClient, this);
+            Wearable.CapabilityApi.removeListener(mGoogleApiClient, this);
+            mGoogleApiClient.disconnect();
+        }
+
         super.onPause();
-        Wearable.DataApi.removeListener(mGoogleApiClient, this);
-        Wearable.MessageApi.removeListener(mGoogleApiClient, this);
-        Wearable.NodeApi.removeListener(mGoogleApiClient, this);
-        mGoogleApiClient.disconnect();
     }
 
     @Override
@@ -124,7 +129,8 @@ public class MainActivity extends Activity implements ConnectionCallbacks,
         LOGD(TAG, "onConnected(): Successfully connected to Google API client");
         Wearable.DataApi.addListener(mGoogleApiClient, this);
         Wearable.MessageApi.addListener(mGoogleApiClient, this);
-        Wearable.NodeApi.addListener(mGoogleApiClient, this);
+        Wearable.CapabilityApi.addListener(
+                mGoogleApiClient, this, Uri.parse("wear://"), CapabilityApi.FILTER_REACHABLE);
     }
 
     @Override
@@ -244,13 +250,9 @@ public class MainActivity extends Activity implements ConnectionCallbacks,
     }
 
     @Override
-    public void onPeerConnected(Node node) {
-        mDataFragment.appendItem("Node Connected", node.getId());
-    }
-
-    @Override
-    public void onPeerDisconnected(Node node) {
-        mDataFragment.appendItem("Node Disconnected", node.getId());
+    public void onCapabilityChanged(CapabilityInfo capabilityInfo) {
+        LOGD(TAG, "onCapabilityChanged: " + capabilityInfo);
+        mDataFragment.appendItem("onCapabilityChanged", capabilityInfo.toString());
     }
 
     private void setupViews() {
@@ -312,7 +314,7 @@ public class MainActivity extends Activity implements ConnectionCallbacks,
         @Override
         protected Bitmap doInBackground(Asset... params) {
 
-            if(params.length > 0) {
+            if (params.length > 0) {
 
                 Asset asset = params[0];
 
@@ -334,7 +336,7 @@ public class MainActivity extends Activity implements ConnectionCallbacks,
         @Override
         protected void onPostExecute(Bitmap bitmap) {
 
-            if(bitmap != null) {
+            if (bitmap != null) {
                 LOGD(TAG, "Setting background image on second page..");
                 moveToPage(1);
                 mAssetFragment.setBackgroundImage(bitmap);
