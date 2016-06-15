@@ -1,13 +1,17 @@
 
 page.tags="MessagingService"
-sample.group=Notification
+sample.group=Android N Preview
 @jd:body
 
 <p>
             
 This sample shows a simple service that sends notifications using
-NotificationCompat. In addition to sending a notification, it also extends
-the notification with a CarExtender to make it compatible with Android Auto.
-Each unread conversation from a user is sent as a distinct notification.
+NotificationCompat. It also extends the notification with Remote
+Input to allow Android N devices to reply via text directly from
+the notification without having to open an app. The same Remote
+Input usage also allows Android Auto users to respond by voice
+when the notifications is presented in that experience.
+Note: Each unread conversation from a user is sent as a distinct
+notification.
             
         </p>

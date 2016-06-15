@@ -21,6 +21,7 @@ import android.app.DialogFragment;
 import android.content.SharedPreferences;
 import android.hardware.fingerprint.FingerprintManager;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -32,8 +33,6 @@ import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
-
-import javax.inject.Inject;
 
 /**
  * A dialog which uses fingerprint APIs to authenticate the user, and falls back to password
@@ -57,12 +56,8 @@ public class FingerprintAuthenticationDialogFragment extends DialogFragment
     private FingerprintUiHelper mFingerprintUiHelper;
     private MainActivity mActivity;
 
-    @Inject FingerprintUiHelper.FingerprintUiHelperBuilder mFingerprintUiHelperBuilder;
-    @Inject InputMethodManager mInputMethodManager;
-    @Inject SharedPreferences mSharedPreferences;
-
-    @Inject
-    public FingerprintAuthenticationDialogFragment() {}
+    private InputMethodManager mInputMethodManager;
+    private SharedPreferences mSharedPreferences;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -106,7 +101,8 @@ public class FingerprintAuthenticationDialogFragment extends DialogFragment
                 v.findViewById(R.id.use_fingerprint_in_future_check);
         mNewFingerprintEnrolledTextView = (TextView)
                 v.findViewById(R.id.new_fingerprint_enrolled_description);
-        mFingerprintUiHelper = mFingerprintUiHelperBuilder.build(
+        mFingerprintUiHelper = new FingerprintUiHelper(
+                mActivity.getSystemService(FingerprintManager.class),
                 (ImageView) v.findViewById(R.id.fingerprint_icon),
                 (TextView) v.findViewById(R.id.fingerprint_status), this);
         updateStage();
@@ -141,6 +137,8 @@ public class FingerprintAuthenticationDialogFragment extends DialogFragment
     public void onAttach(Activity activity) {
         super.onAttach(activity);
         mActivity = (MainActivity) activity;
+        mInputMethodManager = mActivity.getSystemService(InputMethodManager.class);
+        mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(mActivity);
     }
 
     /**
