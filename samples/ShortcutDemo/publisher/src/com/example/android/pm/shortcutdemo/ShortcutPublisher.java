@@ -16,6 +16,12 @@
 package com.example.android.pm.shortcutdemo;
 
 import android.app.Activity;
+import android.app.Notification;
+import android.app.Notification.Action;
+import android.app.Notification.Builder;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.app.RemoteInput;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -260,6 +266,23 @@ public class ShortcutPublisher extends Activity {
     void deleteDynamic(ShortcutInfo si) {
         mShortcutManager.removeDynamicShortcuts(Arrays.asList(si.getId()));
         refreshList();
+    }
+
+    public void onShowNotificationPressed(View v) {
+        final PendingIntent receiverIntent =
+                PendingIntent.getBroadcast(this, 0,
+                        new Intent().setComponent(new ComponentName(this, ShortcutReceiver.class)),
+                        PendingIntent.FLAG_UPDATE_CURRENT);
+        final RemoteInput ri = new RemoteInput.Builder("result").setLabel("Remote input").build();
+
+        final Notification.Builder nb = new Builder(this)
+                .setContentText("Test")
+                .setContentTitle(getPackageName())
+                .setSmallIcon(R.drawable.icon_large_2)
+                .addAction(new Action.Builder(0, "Remote input", receiverIntent)
+                        .addRemoteInput(ri)
+                        .build());
+        getSystemService(NotificationManager.class).notify(0, nb.build());
     }
 
     class MyAdapter extends ShortcutAdapter {
