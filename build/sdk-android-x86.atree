@@ -15,6 +15,7 @@
 #
 
 prebuilts/qemu-kernel/${TARGET_ARCH}/kernel-qemu system-images/${PLATFORM_NAME}/${TARGET_CPU_ABI}/kernel-qemu
+prebuilts/qemu-kernel/${TARGET_ARCH}/ranchu/kernel-qemu system-images/${PLATFORM_NAME}/${TARGET_CPU_ABI}/kernel-ranchu
 
 # version files for the SDK updater, from development.git
 ${HOST_OUT}/development/sys-img-${TARGET_CPU_ABI}/images_${TARGET_ARCH}_source.properties system-images/${PLATFORM_NAME}/${TARGET_CPU_ABI}/source.properties
