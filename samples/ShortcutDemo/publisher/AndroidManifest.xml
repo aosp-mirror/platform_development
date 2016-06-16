@@ -39,5 +39,6 @@
                 <action android:name="com.example.android.pm.shortcutdemo.ADD" />
             </intent-filter>
         </service>
+        <receiver android:name="ShortcutReceiver" />
     </application>
 </manifest>
