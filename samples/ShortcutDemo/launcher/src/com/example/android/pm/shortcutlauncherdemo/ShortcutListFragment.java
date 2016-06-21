@@ -125,9 +125,9 @@ public class ShortcutListFragment extends MyBaseListFragment {
         for (UserHandle user : getTargetUsers()) {
             final Bundle b = getArguments();
             mQuery.setQueryFlags(
-                    (b.getBoolean(ARG_INCLUDE_DYNAMIC) ? ShortcutQuery.FLAG_GET_DYNAMIC : 0) |
-                    (b.getBoolean(ARG_INCLUDE_MANIFEST) ? ShortcutQuery.FLAG_GET_MANIFEST : 0) |
-                    (b.getBoolean(ARG_INCLUDE_PINNED) ? ShortcutQuery.FLAG_GET_PINNED : 0));
+                    (b.getBoolean(ARG_INCLUDE_DYNAMIC) ? ShortcutQuery.FLAG_MATCH_DYNAMIC : 0) |
+                    (b.getBoolean(ARG_INCLUDE_MANIFEST) ? ShortcutQuery.FLAG_MATCH_MANIFEST : 0) |
+                    (b.getBoolean(ARG_INCLUDE_PINNED) ? ShortcutQuery.FLAG_MATCH_PINNED : 0));
             mQuery.setPackage(b.getString(ARG_TARGET_PACKAGE));
             mQuery.setActivity(b.getParcelable(ARG_TARGET_ACTIVITY));
 

@@ -119,7 +119,7 @@ public class ShortcutPublisher extends Activity {
     private final Comparator<ShortcutInfo> mShortcutComparator =
             (ShortcutInfo s1, ShortcutInfo s2) -> {
                 int ret = 0;
-                ret = (s1.isManifestShortcut() ? 0 : 1) - (s2.isManifestShortcut() ? 0 : 1);
+                ret = (s1.isDeclaredInManifest() ? 0 : 1) - (s2.isDeclaredInManifest() ? 0 : 1);
                 if (ret != 0) return ret;
 
                 ret = (s1.isDynamic() ? 0 : 1) - (s2.isDynamic() ? 0 : 1);
@@ -197,21 +197,18 @@ public class ShortcutPublisher extends Activity {
 
         final ComponentName activity = new ComponentName(this, ShortcutPublisher.class);
 
-        final ShortcutInfo si1 = addRandomIntents(this, new ShortcutInfo.Builder(this)
-                .setId("shortcut1"))
+        final ShortcutInfo si1 = addRandomIntents(this, new ShortcutInfo.Builder(this, "shortcut1"))
                 .setActivity(activity)
                 .build();
 
-        final ShortcutInfo si2 = new ShortcutInfo.Builder(this)
-                .setId(SETUP_SHORTCUT_ID)
+        final ShortcutInfo si2 = new ShortcutInfo.Builder(this, SETUP_SHORTCUT_ID)
                 .setActivity(activity)
                 .setShortLabel("Shortcut Demo Main")
                 .setIcon(icon2)
                 .setIntent(intent2)
                 .build();
 
-        final ShortcutInfo si3 = new ShortcutInfo.Builder(this)
-                .setId("shortcut3")
+        final ShortcutInfo si3 = new ShortcutInfo.Builder(this, "shortcut3")
                 .setActivity(activity)
                 .setShortLabel("Shortcut Demo Main with extras")
                 .setIcon(icon3)
@@ -237,8 +234,8 @@ public class ShortcutPublisher extends Activity {
     }
 
     public void onAddPressed(View view) {
-        final ShortcutInfo si = addRandomIntents(this, new ShortcutInfo.Builder(this)
-                .setId("shortcut-" + formatTime(System.currentTimeMillis()) + "-"
+        final ShortcutInfo si = addRandomIntents(this, new ShortcutInfo.Builder(this,
+                    "shortcut-" + formatTime(System.currentTimeMillis()) + "-"
                         + sSequenceNumber.getAndIncrement()))
                 .setActivity(new ComponentName(this, ShortcutPublisher.class))
                 .build();
@@ -251,8 +248,7 @@ public class ShortcutPublisher extends Activity {
 
         for (ShortcutInfo si : getAllShortcuts()) {
             if (SETUP_SHORTCUT_ID.equals(si.getId())) continue;
-            updateList.add(addRandomIntents(this, new ShortcutInfo.Builder(this)
-                    .setId(si.getId()))
+            updateList.add(addRandomIntents(this, new ShortcutInfo.Builder(this, si.getId()))
                     .build());
         }
         callApi(this, () -> mShortcutManager.updateShortcuts(updateList));
