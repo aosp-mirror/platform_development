@@ -165,7 +165,7 @@ public abstract class ShortcutAdapter extends BaseAdapter implements OnClickList
         if (showLine2()) {
             line2.setText(
                     si.getId() + (si.isDynamic() ? " [dynamic]" : "")
-                            + (si.isManifestShortcut() ? " [manifest]" : "")
+                            + (si.isDeclaredInManifest() ? " [manifest]" : "")
                             + (si.isPinned() ? " [pinned]" : "") + "\n"
                             + "Long label: " + si.getLongLabel() + "\n"
                             + "App: " + mAppLabelCache.getAppLabel(si.getPackage()));

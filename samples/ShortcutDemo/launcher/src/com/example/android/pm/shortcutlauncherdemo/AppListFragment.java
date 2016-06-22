@@ -161,9 +161,9 @@ public class AppListFragment extends MyBaseListFragment {
                 v.setVisibility(View.INVISIBLE);
                 if (mLauncherApps.hasShortcutHostPermission()) {
                     mQuery.setPackage(ai.getComponentName().getPackageName());
-                    mQuery.setQueryFlags(ShortcutQuery.FLAG_GET_DYNAMIC
-                            | ShortcutQuery.FLAG_GET_PINNED
-                            | ShortcutQuery.FLAG_GET_MANIFEST
+                    mQuery.setQueryFlags(ShortcutQuery.FLAG_MATCH_DYNAMIC
+                            | ShortcutQuery.FLAG_MATCH_PINNED
+                            | ShortcutQuery.FLAG_MATCH_MANIFEST
                             | ShortcutQuery.FLAG_GET_KEY_FIELDS_ONLY);
                     mQuery.setActivity(ai.getComponentName());
 
