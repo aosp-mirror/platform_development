@@ -34,6 +34,18 @@
             <meta-data android:name="android.app.shortcuts" android:resource="@xml/shortcuts"/>
         </activity>
 
+        <activity-alias android:name="ShortcutPublisherAlias"
+            android:targetActivity="ShortcutPublisher"
+            android:label="@string/activity_alias_label"
+            >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <meta-data android:name="android.app.shortcuts" android:resource="@xml/shortcuts2"/>
+        </activity-alias>
+
         <service android:name="ShortcutPublishingService">
             <intent-filter>
                 <action android:name="com.example.android.pm.shortcutdemo.ADD" />

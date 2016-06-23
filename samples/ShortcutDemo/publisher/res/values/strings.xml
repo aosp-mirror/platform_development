@@ -47,4 +47,5 @@
 
     <add-resource type="string" name="show_notification"/>
     <string name="show_notification">Show notification</string>
+
 </resources>
