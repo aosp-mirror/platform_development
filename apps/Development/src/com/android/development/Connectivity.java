@@ -406,6 +406,7 @@ public class Connectivity extends Activity {
 
         mWm = (WifiManager)getSystemService(Context.WIFI_SERVICE);
         mWml = mWm.createMulticastLock(TAG);
+        mWml.setReferenceCounted(false);
         mPm = (PowerManager)getSystemService(Context.POWER_SERVICE);
         mCm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         IBinder b = ServiceManager.getService(Context.NETWORKMANAGEMENT_SERVICE);
@@ -486,9 +487,7 @@ public class Connectivity extends Activity {
         mCm.unregisterNetworkCallback(mCallback);
         mCallback = null;
         unregisterReceiver(mReceiver);
-        if (mWml.isHeld()) {
-            mWml.release();
-        }
+        mWml.release();
     }
 
     @Override
