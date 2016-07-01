@@ -176,4 +176,10 @@ AStorageManager_isObbMounted
 AStorageManager_mountObb
 AStorageManager_new
 AStorageManager_unmountObb
+ATrace_beginSection
+ATrace_endSection
+ATrace_isEnabled
+android_getaddrinfofornetwork
+android_setprocnetwork
+android_setsocknetwork
 getTtsEngine
