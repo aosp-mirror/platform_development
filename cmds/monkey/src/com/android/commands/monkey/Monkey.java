@@ -44,6 +44,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Writer;
+import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -171,6 +172,9 @@ public class Monkey {
 
     /** Generate hprof reports before/after monkey runs */
     private boolean mGenerateHprof;
+
+    /** If set, only match error if this text appears in the description text. */
+    private String mMatchDescription;
 
     /** Package blacklist file. */
     private String mPkgBlacklistFile;
@@ -304,17 +308,22 @@ public class Monkey {
             System.err.println("// " + stackTrace.replace("\n", "\n// "));
             StrictMode.setThreadPolicy(savedPolicy);
 
-            if (!mIgnoreCrashes || mRequestBugreport) {
-                synchronized (Monkey.this) {
-                    if (!mIgnoreCrashes) {
-                        mAbort = true;
+            if (mMatchDescription == null
+                    || shortMsg.contains(mMatchDescription)
+                    || longMsg.contains(mMatchDescription)
+                    || stackTrace.contains(mMatchDescription)) {
+                if (!mIgnoreCrashes || mRequestBugreport) {
+                    synchronized (Monkey.this) {
+                        if (!mIgnoreCrashes) {
+                            mAbort = true;
+                        }
+                        if (mRequestBugreport){
+                            mRequestAppCrashBugreport = true;
+                            mReportProcessName = processName;
+                        }
                     }
-                    if (mRequestBugreport){
-                        mRequestAppCrashBugreport = true;
-                        mReportProcessName = processName;
-                    }
+                    return !mKillProcessAfterError;
                 }
-                return !mKillProcessAfterError;
             }
             return false;
         }
@@ -329,20 +338,23 @@ public class Monkey {
             System.err.println(processStats);
             StrictMode.setThreadPolicy(savedPolicy);
 
-            synchronized (Monkey.this) {
-                mRequestAnrTraces = true;
-                mRequestDumpsysMemInfo = true;
-                mRequestProcRank = true;
-                if (mRequestBugreport){
-                  mRequestAnrBugreport = true;
-                  mReportProcessName = processName;
-                }
-            }
-            if (!mIgnoreTimeouts) {
+            if (mMatchDescription == null || processStats.contains(mMatchDescription)) {
                 synchronized (Monkey.this) {
-                    mAbort = true;
+                    mRequestAnrTraces = true;
+                    mRequestDumpsysMemInfo = true;
+                    mRequestProcRank = true;
+                    if (mRequestBugreport) {
+                        mRequestAnrBugreport = true;
+                        mReportProcessName = processName;
+                    }
+                }
+                if (!mIgnoreTimeouts) {
+                    synchronized (Monkey.this) {
+                        mAbort = true;
+                    }
                 }
             }
+
             return (mKillProcessAfterError) ? -1 : 1;
         }
 
@@ -352,11 +364,13 @@ public class Monkey {
             StrictMode.setThreadPolicy(savedPolicy);
 
             synchronized (Monkey.this) {
-                if (!mIgnoreCrashes) {
-                    mAbort = true;
-                }
-                if (mRequestBugreport) {
-                    mRequestWatchdogBugreport = true;
+                if (mMatchDescription == null || message.contains(mMatchDescription)) {
+                    if (!mIgnoreCrashes) {
+                        mAbort = true;
+                    }
+                    if (mRequestBugreport) {
+                        mRequestWatchdogBugreport = true;
+                    }
                 }
                 mWatchdogWaiting = true;
             }
@@ -494,6 +508,7 @@ public class Monkey {
         // Set the process name showing in "ps" or "top"
         Process.setArgV0("com.android.commands.monkey");
 
+        System.err.println("args: " + Arrays.toString(args));
         int resultCode = (new Monkey()).run(args);
         System.exit(resultCode);
     }
@@ -520,6 +535,9 @@ public class Monkey {
 
         // prepare for command-line processing
         mArgs = args;
+        for (String a: args) {
+            System.err.println(" arg: \"" + a + "\"");
+        }
         mNextArg = 0;
 
         // set a positive value, indicating none of the factors is provided yet
@@ -758,6 +776,9 @@ public class Monkey {
                     mKillProcessAfterError = true;
                 } else if (opt.equals("--hprof")) {
                     mGenerateHprof = true;
+                } else if (opt.equals("--match-description")) {
+                    mMatchDescription = nextOptionData();
+                    System.err.println("mMathcDescription=" + mMatchDescription);
                 } else if (opt.equals("--pct-touch")) {
                     int i = MonkeySourceRandom.FACTOR_TOUCH;
                     mFactors[i] = -nextOptionLong("touch events percentage");
@@ -1281,6 +1302,9 @@ public class Monkey {
             }
         }
         mCurArgData = null;
+        System.err.println("arg=\"" + arg + "\" mCurArgData=\"" + mCurArgData + "\" mNextArg="
+                + mNextArg + " argwas=\"" + mArgs[mNextArg-1] + "\"" + " nextarg=\"" +
+                mArgs[mNextArg] + "\"");
         return arg;
     }
 
@@ -1297,6 +1321,7 @@ public class Monkey {
             return null;
         }
         String data = mArgs[mNextArg];
+        System.err.println("data=\"" + data + "\"");
         mNextArg++;
         return data;
     }
@@ -1344,6 +1369,7 @@ public class Monkey {
         usage.append("              [--ignore-security-exceptions]\n");
         usage.append("              [--monitor-native-crashes] [--ignore-native-crashes]\n");
         usage.append("              [--kill-process-after-error] [--hprof]\n");
+        usage.append("              [--match-description TEXT]\n");
         usage.append("              [--pct-touch PERCENT] [--pct-motion PERCENT]\n");
         usage.append("              [--pct-trackball PERCENT] [--pct-syskeys PERCENT]\n");
         usage.append("              [--pct-nav PERCENT] [--pct-majornav PERCENT]\n");
