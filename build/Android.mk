@@ -120,6 +120,11 @@ endef
 
 ANDROID_SUPPORT_LIBRARIES := \
     android-support-annotations \
+    android-support-compat \
+    android-support-media-compat \
+    android-support-core-ui \
+    android-support-fragment \
+    android-support-core-utils \
     android-support-v4 \
     android-support-v7-appcompat \
     android-support-v7-cardview \
