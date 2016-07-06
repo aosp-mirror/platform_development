@@ -1,0 +1,18 @@
+apply plugin:'application'
+apply plugin: 'java'
+
+
+mainClassName = "com.android.build.gradle.tasks.annotations.ExtractAnnotationsDriver"
+applicationDefaultJvmArgs = ["-ea", "-Xms1048m", "-Xmx2048m"]
+
+repositories {
+   jcenter()
+}
+
+sourceCompatibility = 1.8
+dependencies {
+    compile 'com.android.tools.build:gradle:2.2.0-beta1'
+    testCompile 'junit:junit:4.11'
+}
+
+defaultTasks 'installApp'
