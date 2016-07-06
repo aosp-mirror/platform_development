@@ -433,8 +433,18 @@ public class Monkey {
             String s;
             while ((s = inBuffer.readLine()) != null) {
                 if (mRequestBugreport) {
-                    logOutput.write(s);
-                    logOutput.write("\n");
+                    try {
+                        // When no space left on the device the write will
+                        // occurs an I/O exception, so we needed to catch it
+                        // and continue to read the data of the sync pipe to
+                        // aviod the bugreport hang forever.
+                        logOutput.write(s);
+                        logOutput.write("\n");
+                    } catch (IOException e) {
+                        while(inBuffer.readLine() != null) {}
+                        System.err.println(e.toString());
+                        break;
+                    }
                 } else {
                     System.err.println(s);
                 }
