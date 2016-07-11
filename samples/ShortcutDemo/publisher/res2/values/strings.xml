@@ -16,4 +16,5 @@
 
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <string name="app_title">[P2] Shortcuts Demo</string>
+    <string name="activity_alias_label">[P2] Shortcuts Demo Alias</string>
 </resources>
