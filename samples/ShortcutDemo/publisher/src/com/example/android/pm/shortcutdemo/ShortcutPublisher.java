@@ -63,6 +63,8 @@ public class ShortcutPublisher extends Activity {
 
     private static final AtomicInteger sSequenceNumber = new AtomicInteger();
 
+    private ComponentName mMyActivity;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -71,10 +73,16 @@ public class ShortcutPublisher extends Activity {
 
         mShortcutManager = getSystemService(ShortcutManager.class);
 
+        mMyActivity = getIntent().getComponent();
+        if (mMyActivity == null) {
+            mMyActivity = new ComponentName(this, ShortcutPublisher.class);
+        }
+
         mList = (ListView) findViewById(android.R.id.list);
         mAdapter = new MyAdapter(this);
         mList.setAdapter(mAdapter);
 
+        Log.d(TAG, "intent=" + getIntent());
         Log.d(TAG, "extras=" + getIntent().getExtras());
     }
 
@@ -93,16 +101,19 @@ public class ShortcutPublisher extends Activity {
     private List<ShortcutInfo> getAllShortcuts() {
         final Map<String, ShortcutInfo> map = new ArrayMap<>();
         for (ShortcutInfo si : mShortcutManager.getManifestShortcuts()) {
+            if (!si.getActivity().equals(mMyActivity)) continue;
             if (!map.containsKey(si.getId())) {
                 map.put(si.getId(), si);
             }
         }
         for (ShortcutInfo si : mShortcutManager.getDynamicShortcuts()) {
+            if (!si.getActivity().equals(mMyActivity)) continue;
             if (!map.containsKey(si.getId())) {
                 map.put(si.getId(), si);
             }
         }
         for (ShortcutInfo si : mShortcutManager.getPinnedShortcuts()) {
+            if (!si.getActivity().equals(mMyActivity)) continue;
             if (!map.containsKey(si.getId())) {
                 map.put(si.getId(), si);
             }
@@ -195,21 +206,19 @@ public class ShortcutPublisher extends Activity {
         intent3.putExtra("nest", new Bundle());
         intent3.getBundleExtra("nest").putInt("int", 123);
 
-        final ComponentName activity = new ComponentName(this, ShortcutPublisher.class);
-
         final ShortcutInfo si1 = addRandomIntents(this, new ShortcutInfo.Builder(this, "shortcut1"))
-                .setActivity(activity)
+                .setActivity(mMyActivity)
                 .build();
 
         final ShortcutInfo si2 = new ShortcutInfo.Builder(this, SETUP_SHORTCUT_ID)
-                .setActivity(activity)
+                .setActivity(mMyActivity)
                 .setShortLabel("Shortcut Demo Main")
                 .setIcon(icon2)
                 .setIntent(intent2)
                 .build();
 
         final ShortcutInfo si3 = new ShortcutInfo.Builder(this, "shortcut3")
-                .setActivity(activity)
+                .setActivity(mMyActivity)
                 .setShortLabel("Shortcut Demo Main with extras")
                 .setIcon(icon3)
                 .setIntent(intent3)
@@ -237,7 +246,7 @@ public class ShortcutPublisher extends Activity {
         final ShortcutInfo si = addRandomIntents(this, new ShortcutInfo.Builder(this,
                     "shortcut-" + formatTime(System.currentTimeMillis()) + "-"
                         + sSequenceNumber.getAndIncrement()))
-                .setActivity(new ComponentName(this, ShortcutPublisher.class))
+                .setActivity(mMyActivity)
                 .build();
         callApi(this, () -> mShortcutManager.addDynamicShortcuts(Arrays.asList(si)));
         refreshList();
@@ -248,6 +257,8 @@ public class ShortcutPublisher extends Activity {
 
         for (ShortcutInfo si : getAllShortcuts()) {
             if (SETUP_SHORTCUT_ID.equals(si.getId())) continue;
+            if (si.isImmutable()) continue;
+            if (!si.getActivity().equals(mMyActivity)) continue;
             updateList.add(addRandomIntents(this, new ShortcutInfo.Builder(this, si.getId()))
                     .build());
         }
