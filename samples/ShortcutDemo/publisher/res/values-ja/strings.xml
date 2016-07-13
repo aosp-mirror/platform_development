@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright (C) 2016 The Android Open Source Project
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+          http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+-->
+
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <add-resource type="string" name="publish"/>
+    <string name="publish">ショートカット生成</string>
+
+    <add-resource type="string" name="add_shortcut"/>
+    <string name="add_shortcut">ショートカット追加</string>
+
+    <add-resource type="string" name="update_shortcuts"/>
+    <string name="update_shortcuts">ショートカット更新</string>
+
+    <add-resource type="string" name="delete_all"/>
+    <string name="delete_all">全ダイナミックショートカット削除</string>
+
+    <add-resource type="string" name="shortcut_short_text1"/>
+    <string name="shortcut_short_text1">マニフェストショートカット</string>
+
+    <add-resource type="string" name="shortcut_long_text1"/>
+    <string name="shortcut_long_text1">[長いラベル] マニフェストショートカット</string>
+
+    <add-resource type="string" name="shortcut_disabled_message1"/>
+    <string name="shortcut_disabled_message1">ショートカットは使用不可</string>
+
+    <add-resource type="string" name="shortcut_short_text2"/>
+    <string name="shortcut_short_text2">ショートカット２</string>
+
+    <add-resource type="string" name="shortcut_long_text2"/>
+    <string name="shortcut_long_text2">[長いラベル] ショートカット２</string>
+
+    <add-resource type="string" name="shortcut_disabled_message2"/>
+    <string name="shortcut_disabled_message2">無効</string>
+
+    <add-resource type="string" name="show_notification"/>
+    <string name="show_notification">通知を表示</string>
+
+</resources>
