@@ -35,7 +35,7 @@ public class MonkeyNoopEvent extends MonkeyEvent {
     public int injectEvent(IWindowManager iwm, IActivityManager iam, int verbose) {
         // No real work to do
         if (verbose > 1) {
-            System.out.println("NOOP");
+            Logger.out.println("NOOP");
         }
         return MonkeyEvent.INJECT_SUCCESS;
     }

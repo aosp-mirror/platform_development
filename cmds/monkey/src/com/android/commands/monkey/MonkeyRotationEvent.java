@@ -44,7 +44,7 @@ public class MonkeyRotationEvent extends MonkeyEvent {
     @Override
     public int injectEvent(IWindowManager iwm, IActivityManager iam, int verbose) {
         if (verbose > 0) {
-            System.out.println(":Sending rotation degree=" + mRotationDegree +
+            Logger.out.println(":Sending rotation degree=" + mRotationDegree +
                                ", persist=" + mPersist);
         }
 
