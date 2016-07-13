@@ -87,7 +87,7 @@ public class LogcatParser {
                             + " text=" + ll.text);
                 }
             } else {
-                if (true) {
+                if (false) {
                     System.out.println("\nUNMATCHED: [" + text + "]");
                 }
             }

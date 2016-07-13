@@ -91,6 +91,7 @@ public class Inspector {
         markLogcatProcessesAndThreads();
         markAnrLogcatRegions();
         markBugreportRegions();
+        //trimLogcat();
 
         if (mBugreport.anr != null) {
             makeInterestingProcesses(mBugreport.anr.vmTraces);
@@ -563,6 +564,9 @@ public class Inspector {
     private void inventLogcatTimes() {
         inventLogcatTimes(mBugreport.systemLog.lines);
         inventLogcatTimes(mBugreport.eventLog.lines);
+        if (mBugreport.logcat != null) {
+            inventLogcatTimes(mBugreport.logcat.lines);
+        }
     }
 
     /**
@@ -604,6 +608,11 @@ public class Inspector {
      * Merge the system and event logs by timestamp.
      */
     private void mergeLogcat() {
+        // Only do this if they haven't already supplied a logcat.
+        if (mBugreport.logcat != null) {
+            return;
+        }
+
         // Renumber the logcat lines.  We mess up the other lists, but that
         // saves the work of making copies of the logcat lines.  If this
         // really becomes a problem, then it's not too much work to add
@@ -808,8 +817,8 @@ public class Inspector {
      * when the user saw the bug that caused them to take a bugreport.
      */
     private void markBugreportRegions() {
-        Calendar begin = mBugreport.startTime;
-        Calendar end = mBugreport.endTime;
+        final Calendar begin = mBugreport.startTime;
+        final Calendar end = mBugreport.endTime;
         for (LogLine line: mBugreport.logcat.lines) {
             if (line.time != null) {
                 if (line.time.compareTo(begin) >= 0
@@ -818,5 +827,44 @@ public class Inspector {
                 }
             }
         }
+    }
+
+    /**
+     * Trim the logcat to show no more than 3 seconds after the beginning of
+     * the bugreport, and no more than 5000 lines before the beginning of the bugreport.
+     */
+    private void trimLogcat() {
+        final Calendar end = (Calendar)mBugreport.startTime.clone();
+        end.add(Calendar.SECOND, 3);
+
+        final ArrayList<LogLine> lines = mBugreport.logcat.lines;
+        int i;
+
+        // Trim the ones at the end
+        int endIndex = lines.size() - 1;
+        for (i=lines.size()-1; i>=0; i--) {
+            final LogLine line = lines.get(i);
+            if (line.time != null) {
+                // If we've gotten to 3s after when the bugreport started getting taken, stop.
+                if (line.time.compareTo(end) > 0) {
+                    endIndex = i;
+                    break;
+                }
+            }
+        }
+
+        // Trim the ones at the beginning
+        int startIndex = 0;
+        int count = 0;
+        for (; i>=0; i--) {
+            final LogLine line = lines.get(i);
+            count++;
+            if (count >= 5000) {
+                startIndex = i;
+                break;
+            }
+        }
+
+        mBugreport.logcat.lines = new ArrayList<LogLine>(lines.subList(startIndex, endIndex));
     }
 }

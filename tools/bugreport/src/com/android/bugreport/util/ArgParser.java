@@ -61,4 +61,8 @@ public class ArgParser {
     public int remaining() {
         return mArgs.length - mPos;
     }
+
+    public int pos() {
+        return mPos;
+    }
 }

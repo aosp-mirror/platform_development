@@ -45,7 +45,7 @@ public class MonkeyLogParser {
      * Parses the monkey file, adding in what's there into an already
      * created bugreport.
      */
-    public void parse(Bugreport bugreport, BufferedReader in) throws IOException {
+    public void parse(Bugreport bugreport, Lines<? extends Line> in) throws IOException {
         // Get the lines
         final Lines<Line> lines = extractAnrLines(in);
         if (!lines.hasNext()) {
@@ -70,7 +70,7 @@ public class MonkeyLogParser {
     /**
      * Pull out the ANR lines from a monkey log.
      */
-    private static Lines<Line> extractAnrLines(BufferedReader in) throws IOException {
+    private static Lines<Line> extractAnrLines(Lines<? extends Line> lines) throws IOException {
         final int STATE_INITIAL = 0;
         final int STATE_ANR = 1;
         final int STATE_DONE = 2;
@@ -82,23 +82,23 @@ public class MonkeyLogParser {
 
         int state = STATE_INITIAL;
         int lineno = 0;
-        String line;
-        while (state != STATE_DONE && (line = in.readLine()) != null) {
+        while (state != STATE_DONE && lines.hasNext()) {
+            final Line line = lines.next();
             lineno++;
             switch (state) {
                 case STATE_INITIAL:
-                    anrStart.reset(line);
+                    anrStart.reset(line.text);
                     if (anrStart.matches()) {
                         state = STATE_ANR;
-                        list.add(new Line(lineno, line));
+                        list.add(new Line(lineno, line.text));
                     }
                     break;
                 case STATE_ANR:
-                    monkeyEnd.reset(line);
+                    monkeyEnd.reset(line.text);
                     if (monkeyEnd.matches()) {
                         state = STATE_DONE;
                     } else {
-                        list.add(new Line(lineno, line));
+                        list.add(new Line(lineno, line.text));
                     }
                     break;
                 default:

@@ -17,6 +17,8 @@
 package com.android.bugreport.util;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.regex.Pattern;
@@ -36,6 +38,37 @@ public class Lines<T extends Line> {
      */
     public int pos;
 
+    /**
+     * Read the whole file into a Lines object.
+     */
+    public static Lines<Line> readLines(File file) throws IOException {
+        BufferedReader reader = null;
+        try {
+            reader = new BufferedReader(new FileReader(file));
+            return Lines.readLines(reader);
+        } finally {
+            if (reader != null) {
+                reader.close();
+            }
+        }
+    }
+    
+    /**
+     * Read the whole file into a Lines object.
+     */
+    public static Lines<Line> readLines(BufferedReader in) throws IOException {
+        final ArrayList<Line> list = new ArrayList<Line>();
+
+        int lineno = 0;
+        String text;
+        while ((text = in.readLine()) != null) {
+            lineno++;
+            list.add(new Line(lineno, text));
+        }
+
+        return new Lines<Line>(list);
+    }
+    
     /**
      * Construct with a list of lines.
      */

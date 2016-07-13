@@ -90,15 +90,12 @@ public class BugreportParser {
     /**
      * Parse the input into a Bugreport object.
      */
-    public Bugreport parse(BufferedReader in) throws IOException {
+    public Bugreport parse(Lines<? extends Line> lines) {
         mBugreport = new Bugreport();
         Matcher m;
         int pos;
 
         mMetadataParser.setBugreport(mBugreport);
-
-        // Read the file into the lines structure.
-        final Lines<Line> lines = readLines(in);
 
         // Read and parse the preamble -- until the first section beginning
         pos = lines.pos;
@@ -153,22 +150,6 @@ public class BugreportParser {
         }
 
         return mBugreport;
-    }
-
-    /**
-     * Read the whole file into a Lines object.
-     */
-    private Lines<Line> readLines(BufferedReader in) throws IOException {
-        final ArrayList<Line> list = new ArrayList<Line>();
-
-        int lineno = 0;
-        String text;
-        while ((text = in.readLine()) != null) {
-            lineno++;
-            list.add(new Line(lineno, text));
-        }
-
-        return new Lines<Line>(list);
     }
 
     /**

@@ -116,7 +116,7 @@ public class ProcessSnapshotParser {
                 } else if (Utils.matches(endProcessRe, text)) {
                     break;
                 } else {
-                    if (true) {
+                    if (false) {
                         System.out.println("ProcessSnapshotParser STATE_THREADS Dropping: " + text);
                     }
                 }
