@@ -239,7 +239,7 @@ int ASensor_getType(ASensor const* sensor);
 /*
  * Returns this sensors's resolution
  */
-float ASensor_getResolution(ASensor const* sensor) __NDK_FPABI__;
+float ASensor_getResolution(ASensor const* sensor);
 
 /*
  * Returns the minimum delay allowed between events in microseconds.

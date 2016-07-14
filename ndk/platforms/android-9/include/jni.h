@@ -232,12 +232,12 @@ struct JNINativeInterface {
     jlong       (*CallLongMethod)(JNIEnv*, jobject, jmethodID, ...);
     jlong       (*CallLongMethodV)(JNIEnv*, jobject, jmethodID, va_list);
     jlong       (*CallLongMethodA)(JNIEnv*, jobject, jmethodID, jvalue*);
-    jfloat      (*CallFloatMethod)(JNIEnv*, jobject, jmethodID, ...) __NDK_FPABI__;
-    jfloat      (*CallFloatMethodV)(JNIEnv*, jobject, jmethodID, va_list) __NDK_FPABI__;
-    jfloat      (*CallFloatMethodA)(JNIEnv*, jobject, jmethodID, jvalue*) __NDK_FPABI__;
-    jdouble     (*CallDoubleMethod)(JNIEnv*, jobject, jmethodID, ...) __NDK_FPABI__;
-    jdouble     (*CallDoubleMethodV)(JNIEnv*, jobject, jmethodID, va_list) __NDK_FPABI__;
-    jdouble     (*CallDoubleMethodA)(JNIEnv*, jobject, jmethodID, jvalue*) __NDK_FPABI__;
+    jfloat      (*CallFloatMethod)(JNIEnv*, jobject, jmethodID, ...);
+    jfloat      (*CallFloatMethodV)(JNIEnv*, jobject, jmethodID, va_list);
+    jfloat      (*CallFloatMethodA)(JNIEnv*, jobject, jmethodID, jvalue*);
+    jdouble     (*CallDoubleMethod)(JNIEnv*, jobject, jmethodID, ...);
+    jdouble     (*CallDoubleMethodV)(JNIEnv*, jobject, jmethodID, va_list);
+    jdouble     (*CallDoubleMethodA)(JNIEnv*, jobject, jmethodID, jvalue*);
     void        (*CallVoidMethod)(JNIEnv*, jobject, jmethodID, ...);
     void        (*CallVoidMethodV)(JNIEnv*, jobject, jmethodID, va_list);
     void        (*CallVoidMethodA)(JNIEnv*, jobject, jmethodID, jvalue*);
@@ -285,17 +285,17 @@ struct JNINativeInterface {
     jlong       (*CallNonvirtualLongMethodA)(JNIEnv*, jobject, jclass,
                         jmethodID, jvalue*);
     jfloat      (*CallNonvirtualFloatMethod)(JNIEnv*, jobject, jclass,
-                        jmethodID, ...) __NDK_FPABI__;
+                        jmethodID, ...);
     jfloat      (*CallNonvirtualFloatMethodV)(JNIEnv*, jobject, jclass,
-                        jmethodID, va_list) __NDK_FPABI__;
+                        jmethodID, va_list);
     jfloat      (*CallNonvirtualFloatMethodA)(JNIEnv*, jobject, jclass,
-                        jmethodID, jvalue*) __NDK_FPABI__;
+                        jmethodID, jvalue*);
     jdouble     (*CallNonvirtualDoubleMethod)(JNIEnv*, jobject, jclass,
-                        jmethodID, ...) __NDK_FPABI__;
+                        jmethodID, ...);
     jdouble     (*CallNonvirtualDoubleMethodV)(JNIEnv*, jobject, jclass,
-                        jmethodID, va_list) __NDK_FPABI__;
+                        jmethodID, va_list);
     jdouble     (*CallNonvirtualDoubleMethodA)(JNIEnv*, jobject, jclass,
-                        jmethodID, jvalue*) __NDK_FPABI__;
+                        jmethodID, jvalue*);
     void        (*CallNonvirtualVoidMethod)(JNIEnv*, jobject, jclass,
                         jmethodID, ...);
     void        (*CallNonvirtualVoidMethodV)(JNIEnv*, jobject, jclass,
@@ -312,8 +312,8 @@ struct JNINativeInterface {
     jshort      (*GetShortField)(JNIEnv*, jobject, jfieldID);
     jint        (*GetIntField)(JNIEnv*, jobject, jfieldID);
     jlong       (*GetLongField)(JNIEnv*, jobject, jfieldID);
-    jfloat      (*GetFloatField)(JNIEnv*, jobject, jfieldID) __NDK_FPABI__;
-    jdouble     (*GetDoubleField)(JNIEnv*, jobject, jfieldID) __NDK_FPABI__;
+    jfloat      (*GetFloatField)(JNIEnv*, jobject, jfieldID);
+    jdouble     (*GetDoubleField)(JNIEnv*, jobject, jfieldID);
 
     void        (*SetObjectField)(JNIEnv*, jobject, jfieldID, jobject);
     void        (*SetBooleanField)(JNIEnv*, jobject, jfieldID, jboolean);
@@ -322,8 +322,8 @@ struct JNINativeInterface {
     void        (*SetShortField)(JNIEnv*, jobject, jfieldID, jshort);
     void        (*SetIntField)(JNIEnv*, jobject, jfieldID, jint);
     void        (*SetLongField)(JNIEnv*, jobject, jfieldID, jlong);
-    void        (*SetFloatField)(JNIEnv*, jobject, jfieldID, jfloat) __NDK_FPABI__;
-    void        (*SetDoubleField)(JNIEnv*, jobject, jfieldID, jdouble) __NDK_FPABI__;
+    void        (*SetFloatField)(JNIEnv*, jobject, jfieldID, jfloat);
+    void        (*SetDoubleField)(JNIEnv*, jobject, jfieldID, jdouble);
 
     jmethodID   (*GetStaticMethodID)(JNIEnv*, jclass, const char*, const char*);
 
@@ -350,12 +350,12 @@ struct JNINativeInterface {
     jlong       (*CallStaticLongMethod)(JNIEnv*, jclass, jmethodID, ...);
     jlong       (*CallStaticLongMethodV)(JNIEnv*, jclass, jmethodID, va_list);
     jlong       (*CallStaticLongMethodA)(JNIEnv*, jclass, jmethodID, jvalue*);
-    jfloat      (*CallStaticFloatMethod)(JNIEnv*, jclass, jmethodID, ...) __NDK_FPABI__;
-    jfloat      (*CallStaticFloatMethodV)(JNIEnv*, jclass, jmethodID, va_list) __NDK_FPABI__;
-    jfloat      (*CallStaticFloatMethodA)(JNIEnv*, jclass, jmethodID, jvalue*) __NDK_FPABI__;
-    jdouble     (*CallStaticDoubleMethod)(JNIEnv*, jclass, jmethodID, ...) __NDK_FPABI__;
-    jdouble     (*CallStaticDoubleMethodV)(JNIEnv*, jclass, jmethodID, va_list) __NDK_FPABI__;
-    jdouble     (*CallStaticDoubleMethodA)(JNIEnv*, jclass, jmethodID, jvalue*) __NDK_FPABI__;
+    jfloat      (*CallStaticFloatMethod)(JNIEnv*, jclass, jmethodID, ...);
+    jfloat      (*CallStaticFloatMethodV)(JNIEnv*, jclass, jmethodID, va_list);
+    jfloat      (*CallStaticFloatMethodA)(JNIEnv*, jclass, jmethodID, jvalue*);
+    jdouble     (*CallStaticDoubleMethod)(JNIEnv*, jclass, jmethodID, ...);
+    jdouble     (*CallStaticDoubleMethodV)(JNIEnv*, jclass, jmethodID, va_list);
+    jdouble     (*CallStaticDoubleMethodA)(JNIEnv*, jclass, jmethodID, jvalue*);
     void        (*CallStaticVoidMethod)(JNIEnv*, jclass, jmethodID, ...);
     void        (*CallStaticVoidMethodV)(JNIEnv*, jclass, jmethodID, va_list);
     void        (*CallStaticVoidMethodA)(JNIEnv*, jclass, jmethodID, jvalue*);
@@ -370,8 +370,8 @@ struct JNINativeInterface {
     jshort      (*GetStaticShortField)(JNIEnv*, jclass, jfieldID);
     jint        (*GetStaticIntField)(JNIEnv*, jclass, jfieldID);
     jlong       (*GetStaticLongField)(JNIEnv*, jclass, jfieldID);
-    jfloat      (*GetStaticFloatField)(JNIEnv*, jclass, jfieldID) __NDK_FPABI__;
-    jdouble     (*GetStaticDoubleField)(JNIEnv*, jclass, jfieldID) __NDK_FPABI__;
+    jfloat      (*GetStaticFloatField)(JNIEnv*, jclass, jfieldID);
+    jdouble     (*GetStaticDoubleField)(JNIEnv*, jclass, jfieldID);
 
     void        (*SetStaticObjectField)(JNIEnv*, jclass, jfieldID, jobject);
     void        (*SetStaticBooleanField)(JNIEnv*, jclass, jfieldID, jboolean);
@@ -380,8 +380,8 @@ struct JNINativeInterface {
     void        (*SetStaticShortField)(JNIEnv*, jclass, jfieldID, jshort);
     void        (*SetStaticIntField)(JNIEnv*, jclass, jfieldID, jint);
     void        (*SetStaticLongField)(JNIEnv*, jclass, jfieldID, jlong);
-    void        (*SetStaticFloatField)(JNIEnv*, jclass, jfieldID, jfloat) __NDK_FPABI__;
-    void        (*SetStaticDoubleField)(JNIEnv*, jclass, jfieldID, jdouble) __NDK_FPABI__;
+    void        (*SetStaticFloatField)(JNIEnv*, jclass, jfieldID, jfloat);
+    void        (*SetStaticDoubleField)(JNIEnv*, jclass, jfieldID, jdouble);
 
     jstring     (*NewString)(JNIEnv*, const jchar*, jsize);
     jsize       (*GetStringLength)(JNIEnv*, jstring);
@@ -606,7 +606,7 @@ struct _JNIEnv {
     { return functions->GetMethodID(this, clazz, name, sig); }
 
 #define CALL_TYPE_METHOD(_jtype, _jname)                                    \
-    __NDK_FPABI__                                                           \
+                                                              \
     _jtype Call##_jname##Method(jobject obj, jmethodID methodID, ...)       \
     {                                                                       \
         _jtype result;                                                      \
@@ -618,12 +618,12 @@ struct _JNIEnv {
         return result;                                                      \
     }
 #define CALL_TYPE_METHODV(_jtype, _jname)                                   \
-    __NDK_FPABI__                                                           \
+                                                              \
     _jtype Call##_jname##MethodV(jobject obj, jmethodID methodID,           \
         va_list args)                                                       \
     { return functions->Call##_jname##MethodV(this, obj, methodID, args); }
 #define CALL_TYPE_METHODA(_jtype, _jname)                                   \
-    __NDK_FPABI__                                                           \
+                                                              \
     _jtype Call##_jname##MethodA(jobject obj, jmethodID methodID,           \
         jvalue* args)                                                       \
     { return functions->Call##_jname##MethodA(this, obj, methodID, args); }
@@ -656,7 +656,7 @@ struct _JNIEnv {
     { functions->CallVoidMethodA(this, obj, methodID, args); }
 
 #define CALL_NONVIRT_TYPE_METHOD(_jtype, _jname)                            \
-    __NDK_FPABI__                                                           \
+                                                              \
     _jtype CallNonvirtual##_jname##Method(jobject obj, jclass clazz,        \
         jmethodID methodID, ...)                                            \
     {                                                                       \
@@ -669,13 +669,13 @@ struct _JNIEnv {
         return result;                                                      \
     }
 #define CALL_NONVIRT_TYPE_METHODV(_jtype, _jname)                           \
-    __NDK_FPABI__                                                           \
+                                                              \
     _jtype CallNonvirtual##_jname##MethodV(jobject obj, jclass clazz,       \
         jmethodID methodID, va_list args)                                   \
     { return functions->CallNonvirtual##_jname##MethodV(this, obj, clazz,   \
         methodID, args); }
 #define CALL_NONVIRT_TYPE_METHODA(_jtype, _jname)                           \
-    __NDK_FPABI__                                                           \
+                                                              \
     _jtype CallNonvirtual##_jname##MethodA(jobject obj, jclass clazz,       \
         jmethodID methodID, jvalue* args)                                   \
     { return functions->CallNonvirtual##_jname##MethodA(this, obj, clazz,   \
@@ -728,10 +728,10 @@ struct _JNIEnv {
     { return functions->GetIntField(this, obj, fieldID); }
     jlong GetLongField(jobject obj, jfieldID fieldID)
     { return functions->GetLongField(this, obj, fieldID); }
-    __NDK_FPABI__
+   
     jfloat GetFloatField(jobject obj, jfieldID fieldID)
     { return functions->GetFloatField(this, obj, fieldID); }
-    __NDK_FPABI__
+   
     jdouble GetDoubleField(jobject obj, jfieldID fieldID)
     { return functions->GetDoubleField(this, obj, fieldID); }
 
@@ -749,10 +749,10 @@ struct _JNIEnv {
     { functions->SetIntField(this, obj, fieldID, value); }
     void SetLongField(jobject obj, jfieldID fieldID, jlong value)
     { functions->SetLongField(this, obj, fieldID, value); }
-    __NDK_FPABI__
+   
     void SetFloatField(jobject obj, jfieldID fieldID, jfloat value)
     { functions->SetFloatField(this, obj, fieldID, value); }
-    __NDK_FPABI__
+   
     void SetDoubleField(jobject obj, jfieldID fieldID, jdouble value)
     { functions->SetDoubleField(this, obj, fieldID, value); }
 
@@ -760,7 +760,7 @@ struct _JNIEnv {
     { return functions->GetStaticMethodID(this, clazz, name, sig); }
 
 #define CALL_STATIC_TYPE_METHOD(_jtype, _jname)                             \
-    __NDK_FPABI__                                                           \
+                                                              \
     _jtype CallStatic##_jname##Method(jclass clazz, jmethodID methodID,     \
         ...)                                                                \
     {                                                                       \
@@ -773,13 +773,13 @@ struct _JNIEnv {
         return result;                                                      \
     }
 #define CALL_STATIC_TYPE_METHODV(_jtype, _jname)                            \
-    __NDK_FPABI__                                                           \
+                                                              \
     _jtype CallStatic##_jname##MethodV(jclass clazz, jmethodID methodID,    \
         va_list args)                                                       \
     { return functions->CallStatic##_jname##MethodV(this, clazz, methodID,  \
         args); }
 #define CALL_STATIC_TYPE_METHODA(_jtype, _jname)                            \
-    __NDK_FPABI__                                                           \
+                                                              \
     _jtype CallStatic##_jname##MethodA(jclass clazz, jmethodID methodID,    \
         jvalue* args)                                                       \
     { return functions->CallStatic##_jname##MethodA(this, clazz, methodID,  \
@@ -829,10 +829,10 @@ struct _JNIEnv {
     { return functions->GetStaticIntField(this, clazz, fieldID); }
     jlong GetStaticLongField(jclass clazz, jfieldID fieldID)
     { return functions->GetStaticLongField(this, clazz, fieldID); }
-    __NDK_FPABI__
+   
     jfloat GetStaticFloatField(jclass clazz, jfieldID fieldID)
     { return functions->GetStaticFloatField(this, clazz, fieldID); }
-    __NDK_FPABI__
+   
     jdouble GetStaticDoubleField(jclass clazz, jfieldID fieldID)
     { return functions->GetStaticDoubleField(this, clazz, fieldID); }
 
@@ -850,10 +850,10 @@ struct _JNIEnv {
     { functions->SetStaticIntField(this, clazz, fieldID, value); }
     void SetStaticLongField(jclass clazz, jfieldID fieldID, jlong value)
     { functions->SetStaticLongField(this, clazz, fieldID, value); }
-    __NDK_FPABI__
+   
     void SetStaticFloatField(jclass clazz, jfieldID fieldID, jfloat value)
     { functions->SetStaticFloatField(this, clazz, fieldID, value); }
-    __NDK_FPABI__
+   
     void SetStaticDoubleField(jclass clazz, jfieldID fieldID, jdouble value)
     { functions->SetStaticDoubleField(this, clazz, fieldID, value); }
 
@@ -1138,7 +1138,7 @@ jint JNI_GetCreatedJavaVMs(JavaVM**, jsize, jsize*);
 
 #define JNIIMPORT
 #define JNIEXPORT  __attribute__ ((visibility ("default")))
-#define JNICALL __NDK_FPABI__
+#define JNICALL
 
 /*
  * Prototypes for functions exported by loadable shared libs.  These are
