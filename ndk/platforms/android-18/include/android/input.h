@@ -581,23 +581,23 @@ int64_t AMotionEvent_getEventTime(const AInputEvent* motion_event);
  * For touch events on the screen, this is the delta that was added to the raw
  * screen coordinates to adjust for the absolute position of the containing windows
  * and views. */
-float AMotionEvent_getXOffset(const AInputEvent* motion_event) __NDK_FPABI__;
+float AMotionEvent_getXOffset(const AInputEvent* motion_event);
 
 /* Get the Y coordinate offset.
  * For touch events on the screen, this is the delta that was added to the raw
  * screen coordinates to adjust for the absolute position of the containing windows
  * and views. */
-float AMotionEvent_getYOffset(const AInputEvent* motion_event) __NDK_FPABI__;
+float AMotionEvent_getYOffset(const AInputEvent* motion_event);
 
 /* Get the precision of the X coordinates being reported.
  * You can multiply this number with an X coordinate sample to find the
  * actual hardware value of the X coordinate. */
-float AMotionEvent_getXPrecision(const AInputEvent* motion_event) __NDK_FPABI__;
+float AMotionEvent_getXPrecision(const AInputEvent* motion_event);
 
 /* Get the precision of the Y coordinates being reported.
  * You can multiply this number with a Y coordinate sample to find the
  * actual hardware value of the Y coordinate. */
-float AMotionEvent_getYPrecision(const AInputEvent* motion_event) __NDK_FPABI__;
+float AMotionEvent_getYPrecision(const AInputEvent* motion_event);
 
 /* Get the number of pointers of data contained in this event.
  * Always >= 1. */
@@ -618,29 +618,29 @@ int32_t AMotionEvent_getToolType(const AInputEvent* motion_event, size_t pointer
  * For touch events on the screen, this is the original location of the event
  * on the screen, before it had been adjusted for the containing window
  * and views. */
-float AMotionEvent_getRawX(const AInputEvent* motion_event, size_t pointer_index) __NDK_FPABI__;
+float AMotionEvent_getRawX(const AInputEvent* motion_event, size_t pointer_index);
 
 /* Get the original raw X coordinate of this event.
  * For touch events on the screen, this is the original location of the event
  * on the screen, before it had been adjusted for the containing window
  * and views. */
-float AMotionEvent_getRawY(const AInputEvent* motion_event, size_t pointer_index) __NDK_FPABI__;
+float AMotionEvent_getRawY(const AInputEvent* motion_event, size_t pointer_index);
 
 /* Get the current X coordinate of this event for the given pointer index.
  * Whole numbers are pixels; the value may have a fraction for input devices
  * that are sub-pixel precise. */
-float AMotionEvent_getX(const AInputEvent* motion_event, size_t pointer_index) __NDK_FPABI__;
+float AMotionEvent_getX(const AInputEvent* motion_event, size_t pointer_index);
 
 /* Get the current Y coordinate of this event for the given pointer index.
  * Whole numbers are pixels; the value may have a fraction for input devices
  * that are sub-pixel precise. */
-float AMotionEvent_getY(const AInputEvent* motion_event, size_t pointer_index) __NDK_FPABI__;
+float AMotionEvent_getY(const AInputEvent* motion_event, size_t pointer_index);
 
 /* Get the current pressure of this event for the given pointer index.
  * The pressure generally ranges from 0 (no pressure at all) to 1 (normal pressure),
  * although values higher than 1 may be generated depending on the calibration of
  * the input device. */
-float AMotionEvent_getPressure(const AInputEvent* motion_event, size_t pointer_index) __NDK_FPABI__;
+float AMotionEvent_getPressure(const AInputEvent* motion_event, size_t pointer_index);
 
 /* Get the current scaled value of the approximate size for the given pointer index.
  * This represents some approximation of the area of the screen being
@@ -648,27 +648,27 @@ float AMotionEvent_getPressure(const AInputEvent* motion_event, size_t pointer_i
  * touch is normalized with the device specific range of values
  * and scaled to a value between 0 and 1.  The value of size can be used to
  * determine fat touch events. */
-float AMotionEvent_getSize(const AInputEvent* motion_event, size_t pointer_index) __NDK_FPABI__;
+float AMotionEvent_getSize(const AInputEvent* motion_event, size_t pointer_index);
 
 /* Get the current length of the major axis of an ellipse that describes the touch area
  * at the point of contact for the given pointer index. */
-float AMotionEvent_getTouchMajor(const AInputEvent* motion_event, size_t pointer_index) __NDK_FPABI__;
+float AMotionEvent_getTouchMajor(const AInputEvent* motion_event, size_t pointer_index);
 
 /* Get the current length of the minor axis of an ellipse that describes the touch area
  * at the point of contact for the given pointer index. */
-float AMotionEvent_getTouchMinor(const AInputEvent* motion_event, size_t pointer_index) __NDK_FPABI__;
+float AMotionEvent_getTouchMinor(const AInputEvent* motion_event, size_t pointer_index);
 
 /* Get the current length of the major axis of an ellipse that describes the size
  * of the approaching tool for the given pointer index.
  * The tool area represents the estimated size of the finger or pen that is
  * touching the device independent of its actual touch area at the point of contact. */
-float AMotionEvent_getToolMajor(const AInputEvent* motion_event, size_t pointer_index) __NDK_FPABI__;
+float AMotionEvent_getToolMajor(const AInputEvent* motion_event, size_t pointer_index);
 
 /* Get the current length of the minor axis of an ellipse that describes the size
  * of the approaching tool for the given pointer index.
  * The tool area represents the estimated size of the finger or pen that is
  * touching the device independent of its actual touch area at the point of contact. */
-float AMotionEvent_getToolMinor(const AInputEvent* motion_event, size_t pointer_index) __NDK_FPABI__;
+float AMotionEvent_getToolMinor(const AInputEvent* motion_event, size_t pointer_index);
 
 /* Get the current orientation of the touch area and tool area in radians clockwise from
  * vertical for the given pointer index.
@@ -678,11 +678,11 @@ float AMotionEvent_getToolMinor(const AInputEvent* motion_event, size_t pointer_
  * indicates that the major axis of contact is oriented to the left.
  * The full range is from -PI/2 radians (finger pointing fully left) to PI/2 radians
  * (finger pointing fully right). */
-float AMotionEvent_getOrientation(const AInputEvent* motion_event, size_t pointer_index) __NDK_FPABI__;
+float AMotionEvent_getOrientation(const AInputEvent* motion_event, size_t pointer_index);
 
 /* Get the value of the request axis for the given pointer index. */
 float AMotionEvent_getAxisValue(const AInputEvent* motion_event,
-        int32_t axis, size_t pointer_index) __NDK_FPABI__;
+        int32_t axis, size_t pointer_index);
 
 /* Get the number of historical points in this event.  These are movements that
  * have occurred between this event and the previous event.  This only applies
@@ -703,7 +703,7 @@ int64_t AMotionEvent_getHistoricalEventTime(const AInputEvent* motion_event,
  * Whole numbers are pixels; the value may have a fraction for input devices
  * that are sub-pixel precise. */
 float AMotionEvent_getHistoricalRawX(const AInputEvent* motion_event, size_t pointer_index,
-        size_t history_index) __NDK_FPABI__;
+        size_t history_index);
 
 /* Get the historical raw Y coordinate of this event for the given pointer index that
  * occurred between this event and the previous motion event.
@@ -713,21 +713,21 @@ float AMotionEvent_getHistoricalRawX(const AInputEvent* motion_event, size_t poi
  * Whole numbers are pixels; the value may have a fraction for input devices
  * that are sub-pixel precise. */
 float AMotionEvent_getHistoricalRawY(const AInputEvent* motion_event, size_t pointer_index,
-        size_t history_index) __NDK_FPABI__;
+        size_t history_index);
 
 /* Get the historical X coordinate of this event for the given pointer index that
  * occurred between this event and the previous motion event.
  * Whole numbers are pixels; the value may have a fraction for input devices
  * that are sub-pixel precise. */
 float AMotionEvent_getHistoricalX(const AInputEvent* motion_event, size_t pointer_index,
-        size_t history_index) __NDK_FPABI__;
+        size_t history_index);
 
 /* Get the historical Y coordinate of this event for the given pointer index that
  * occurred between this event and the previous motion event.
  * Whole numbers are pixels; the value may have a fraction for input devices
  * that are sub-pixel precise. */
 float AMotionEvent_getHistoricalY(const AInputEvent* motion_event, size_t pointer_index,
-        size_t history_index) __NDK_FPABI__;
+        size_t history_index);
 
 /* Get the historical pressure of this event for the given pointer index that
  * occurred between this event and the previous motion event.
@@ -735,7 +735,7 @@ float AMotionEvent_getHistoricalY(const AInputEvent* motion_event, size_t pointe
  * although values higher than 1 may be generated depending on the calibration of
  * the input device. */
 float AMotionEvent_getHistoricalPressure(const AInputEvent* motion_event, size_t pointer_index,
-        size_t history_index) __NDK_FPABI__;
+        size_t history_index);
 
 /* Get the current scaled value of the approximate size for the given pointer index that
  * occurred between this event and the previous motion event.
@@ -745,19 +745,19 @@ float AMotionEvent_getHistoricalPressure(const AInputEvent* motion_event, size_t
  * and scaled to a value between 0 and 1.  The value of size can be used to
  * determine fat touch events. */
 float AMotionEvent_getHistoricalSize(const AInputEvent* motion_event, size_t pointer_index,
-        size_t history_index) __NDK_FPABI__;
+        size_t history_index);
 
 /* Get the historical length of the major axis of an ellipse that describes the touch area
  * at the point of contact for the given pointer index that
  * occurred between this event and the previous motion event. */
 float AMotionEvent_getHistoricalTouchMajor(const AInputEvent* motion_event, size_t pointer_index,
-        size_t history_index) __NDK_FPABI__;
+        size_t history_index);
 
 /* Get the historical length of the minor axis of an ellipse that describes the touch area
  * at the point of contact for the given pointer index that
  * occurred between this event and the previous motion event. */
 float AMotionEvent_getHistoricalTouchMinor(const AInputEvent* motion_event, size_t pointer_index,
-        size_t history_index) __NDK_FPABI__;
+        size_t history_index);
 
 /* Get the historical length of the major axis of an ellipse that describes the size
  * of the approaching tool for the given pointer index that
@@ -765,7 +765,7 @@ float AMotionEvent_getHistoricalTouchMinor(const AInputEvent* motion_event, size
  * The tool area represents the estimated size of the finger or pen that is
  * touching the device independent of its actual touch area at the point of contact. */
 float AMotionEvent_getHistoricalToolMajor(const AInputEvent* motion_event, size_t pointer_index,
-        size_t history_index) __NDK_FPABI__;
+        size_t history_index);
 
 /* Get the historical length of the minor axis of an ellipse that describes the size
  * of the approaching tool for the given pointer index that
@@ -773,7 +773,7 @@ float AMotionEvent_getHistoricalToolMajor(const AInputEvent* motion_event, size_
  * The tool area represents the estimated size of the finger or pen that is
  * touching the device independent of its actual touch area at the point of contact. */
 float AMotionEvent_getHistoricalToolMinor(const AInputEvent* motion_event, size_t pointer_index,
-        size_t history_index) __NDK_FPABI__;
+        size_t history_index);
 
 /* Get the historical orientation of the touch area and tool area in radians clockwise from
  * vertical for the given pointer index that
@@ -785,12 +785,12 @@ float AMotionEvent_getHistoricalToolMinor(const AInputEvent* motion_event, size_
  * The full range is from -PI/2 radians (finger pointing fully left) to PI/2 radians
  * (finger pointing fully right). */
 float AMotionEvent_getHistoricalOrientation(const AInputEvent* motion_event, size_t pointer_index,
-        size_t history_index) __NDK_FPABI__;
+        size_t history_index);
 
 /* Get the historical value of the request axis for the given pointer index
  * that occurred between this event and the previous motion event. */
 float AMotionEvent_getHistoricalAxisValue(const AInputEvent* motion_event,
-        int32_t axis, size_t pointer_index, size_t history_index) __NDK_FPABI__;
+        int32_t axis, size_t pointer_index, size_t history_index);
 
 
 /*
