@@ -448,7 +448,11 @@ development/sdk/sdk_files_NOTICE.txt                                            
 ${OUT_DIR}/target/common/obj/PACKAGING/android-support-annotations_intermediates/android-support-annotations.jar extras/android/support/annotations/android-support-annotations.jar
 
 ${OUT_DIR}/target/common/obj/PACKAGING/android-support-v4_intermediates/android-support-v4.jar    extras/android/support/v4/android-support-v4.jar
-frameworks/support/v4                                                                             extras/android/support/v4/src
+frameworks/support/compat                                                                         extras/android/support/compat/src
+frameworks/support/core-ui                                                                        extras/android/support/core-ui/src
+frameworks/support/core-utils                                                                     extras/android/support/core-utils/src
+frameworks/support/fragment                                                                       extras/android/support/fragment/src
+frameworks/support/media-compat                                                                   extras/android/support/media-compat/src
 frameworks/support/samples/Support4Demos                                                                 extras/android/support/samples/Support4Demos
 frameworks/support/samples/SupportAppNavigation                                                          extras/android/support/samples/SupportAppNavigation
 
