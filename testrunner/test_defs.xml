@@ -71,6 +71,7 @@ See test_defs.xsd for more information.
 <test name="frameworks-telephony"
     build_path="frameworks/opt/telephony/tests/telephonytests"
     package="com.android.frameworks.telephonytests"
+    runner="android.support.test.runner.AndroidJUnitRunner"
     coverage_target="framework"
     continuous="true" />
 
