@@ -467,13 +467,15 @@ class LibmemunreachablePatternTests(unittest.TestCase):
 
     tc.UpdateAbiRegexes()
     header_lines = 0
+    trace_lines = 0
     for line in lines:
       tc.ProcessLine(line)
       if re.search(tc.unreachable_line, line) is not None:
         header_lines += 1
-
+      if tc.MatchTraceLine(line) is not None:
+        trace_lines += 1
     self.assertEquals(header_lines, 3)
-    self.assertEquals(len(tc.trace_lines), 2)
+    self.assertEquals(trace_lines, 2)
     tc.PrintOutput(tc.trace_lines, tc.value_lines)
 
 if __name__ == '__main__':
