@@ -343,7 +343,7 @@ class TraceConverter:
     trace_line_dict = self.MatchTraceLine(line)
     if trace_line_dict is not None:
       ret = True
-      frame = trace_line_dict["frame"]
+      frame = int(trace_line_dict["frame"])
       code_addr = trace_line_dict["offset"]
       area = trace_line_dict["dso"]
       so_offset = trace_line_dict["so_offset"]
@@ -476,6 +476,27 @@ class LibmemunreachablePatternTests(unittest.TestCase):
         trace_lines += 1
     self.assertEquals(header_lines, 3)
     self.assertEquals(trace_lines, 2)
+    tc.PrintOutput(tc.trace_lines, tc.value_lines)
+
+class LongASANStackTests(unittest.TestCase):
+  # Test that a long ASAN-style (non-padded frame numbers) stack trace is not split into two
+  # when the frame number becomes two digits. This happened before as the frame number was
+  # handled as a string and not converted to an integral.
+  def test_long_asan_crash(self):
+    tc = TraceConverter()
+    lines = example_crashes.long_asan_crash.splitlines()
+    symbol.SetAbi(lines)
+    tc.UpdateAbiRegexes()
+    # Test by making sure trace_line_count is monotonically non-decreasing. If the stack trace
+    # is split, a separator is printed and trace_lines is flushed.
+    trace_line_count = 0
+    for line in lines:
+      tc.ProcessLine(line)
+      self.assertLessEqual(trace_line_count, len(tc.trace_lines))
+      trace_line_count = len(tc.trace_lines)
+    # The split happened at transition of frame #9 -> #10. Make sure we have parsed (and stored)
+    # more than ten frames.
+    self.assertGreater(trace_line_count, 10)
     tc.PrintOutput(tc.trace_lines, tc.value_lines)
 
 if __name__ == '__main__':
