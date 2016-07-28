@@ -1,14 +1,3 @@
-_ZN9type_infoC1ERKS_
-_ZN9type_infoC1Ev
-_ZN9type_infoC2ERKS_
-_ZN9type_infoC2Ev
-_ZN9type_infoD0Ev
-_ZN9type_infoD1Ev
-_ZN9type_infoD2Ev
-_ZNK9type_info4nameEv
-_ZNK9type_info6beforeERKS_
-_ZNK9type_infoeqERKS_
-_ZNK9type_infoneERKS_
 _ZdaPv
 _ZdaPvRKSt9nothrow_t
 _ZdlPv
