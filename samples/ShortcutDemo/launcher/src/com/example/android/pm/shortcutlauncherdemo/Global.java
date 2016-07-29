@@ -15,6 +15,13 @@
  */
 package com.example.android.pm.shortcutlauncherdemo;
 
+import android.content.Context;
+import android.widget.Toast;
+
 public class Global {
     public static final String TAG = "ShortcutLauncherDemo";
+
+    public static void showToast(Context context, String message) {
+        Toast.makeText(context, message, Toast.LENGTH_SHORT).show();
+    }
 }

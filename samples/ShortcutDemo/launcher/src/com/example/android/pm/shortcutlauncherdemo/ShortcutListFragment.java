@@ -24,6 +24,7 @@ import android.os.Bundle;
 import android.os.UserHandle;
 import android.os.UserManager;
 import android.text.TextUtils;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.example.android.pm.shortcutdemo.ShortcutAdapter;
@@ -93,49 +94,62 @@ public class ShortcutListFragment extends MyBaseListFragment {
     private void togglePin(ShortcutInfo selected) {
         final String packageName = selected.getPackage();
 
-        final List<String> pinned = new ArrayList<>();
-        for (ShortcutInfo si : mAdapter.getShortcuts()) {
-            if (si.isPinned()
-                    && si.getPackage().equals(packageName)
-                    && si.getUserHandle().equals(selected.getUserHandle())) {
+        try {
+            final ShortcutQuery q = new ShortcutQuery()
+                    .setPackage(packageName)
+                    .setQueryFlags(ShortcutQuery.FLAG_MATCH_PINNED)
+                    ;
+
+            final List<String> pinned = new ArrayList<>();
+            for (ShortcutInfo si : mLauncherApps.getShortcuts(q, android.os.Process.myUserHandle())) {
                 pinned.add(si.getId());
             }
+            if (selected.isPinned()) {
+                pinned.remove(selected.getId());
+            } else {
+                pinned.add(selected.getId());
+            }
+            mLauncherApps.pinShortcuts(packageName, pinned, selected.getUserHandle());
+        } catch (Exception e) {
+            Global.showToast(getContext(), e.getMessage());
         }
-        if (selected.isPinned()) {
-            pinned.remove(selected.getId());
-        } else {
-            pinned.add(selected.getId());
-        }
-        mLauncherApps.pinShortcuts(packageName, pinned, selected.getUserHandle());
     }
 
     private void launch(ShortcutInfo si) {
-        mLauncherApps.startShortcut(si.getPackage(), si.getId(), null, null,
-                si.getUserHandle());
+        try {
+            mLauncherApps.startShortcut(si.getPackage(), si.getId(), null, null,
+                    si.getUserHandle());
+        } catch (Exception e) {
+            Global.showToast(getContext(), e.getMessage());
+        }
     }
 
     @Override
     protected void refreshList() {
-        if (!mLauncherApps.hasShortcutHostPermission()) {
-            return;
+        try {
+            if (!mLauncherApps.hasShortcutHostPermission()) {
+                return;
+            }
+
+            final List<ShortcutInfo> list = new ArrayList<>();
+
+            for (UserHandle user : getTargetUsers()) {
+                final Bundle b = getArguments();
+                mQuery.setQueryFlags(
+                        (b.getBoolean(ARG_INCLUDE_DYNAMIC) ? ShortcutQuery.FLAG_MATCH_DYNAMIC : 0) |
+                        (b.getBoolean(ARG_INCLUDE_MANIFEST) ? ShortcutQuery.FLAG_MATCH_MANIFEST : 0) |
+                        (b.getBoolean(ARG_INCLUDE_PINNED) ? ShortcutQuery.FLAG_MATCH_PINNED : 0));
+                mQuery.setPackage(b.getString(ARG_TARGET_PACKAGE));
+                mQuery.setActivity(b.getParcelable(ARG_TARGET_ACTIVITY));
+
+                list.addAll(mLauncherApps.getShortcuts(mQuery, user));
+            }
+            Collections.sort(list, mShortcutComparator);
+
+            mAdapter.setShortcuts(list);
+        } catch (Exception e) {
+            Log.w(Global.TAG, "Caught exception", e);
         }
-
-        final List<ShortcutInfo> list = new ArrayList<>();
-
-        for (UserHandle user : getTargetUsers()) {
-            final Bundle b = getArguments();
-            mQuery.setQueryFlags(
-                    (b.getBoolean(ARG_INCLUDE_DYNAMIC) ? ShortcutQuery.FLAG_MATCH_DYNAMIC : 0) |
-                    (b.getBoolean(ARG_INCLUDE_MANIFEST) ? ShortcutQuery.FLAG_MATCH_MANIFEST : 0) |
-                    (b.getBoolean(ARG_INCLUDE_PINNED) ? ShortcutQuery.FLAG_MATCH_PINNED : 0));
-            mQuery.setPackage(b.getString(ARG_TARGET_PACKAGE));
-            mQuery.setActivity(b.getParcelable(ARG_TARGET_ACTIVITY));
-
-            list.addAll(mLauncherApps.getShortcuts(mQuery, user));
-        }
-        Collections.sort(list, mShortcutComparator);
-
-        mAdapter.setShortcuts(list);
     }
 
     private final Comparator<ShortcutInfo> mShortcutComparator =
