@@ -30,7 +30,6 @@ import android.support.v4.view.ViewPager;
 import android.view.ViewGroup;
 
 public class ShortcutLauncherMain extends Activity {
-    private LauncherApps mLauncherApps;
     private ViewPager mPager;
     private PagerAdapter mPagerAdapter;
 
@@ -39,8 +38,6 @@ public class ShortcutLauncherMain extends Activity {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.main);
-
-        mLauncherApps = getSystemService(LauncherApps.class);
 
         mPager = (ViewPager) findViewById(R.id.pager);
         mPager.setOffscreenPageLimit(2);

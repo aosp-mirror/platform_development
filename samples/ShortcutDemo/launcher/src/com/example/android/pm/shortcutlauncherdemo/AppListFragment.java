@@ -15,17 +15,14 @@
  */
 package com.example.android.pm.shortcutlauncherdemo;
 
-import android.app.ListFragment;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.LauncherActivityInfo;
 import android.content.pm.LauncherApps;
 import android.content.pm.LauncherApps.ShortcutQuery;
-import android.content.pm.ShortcutInfo;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.UserHandle;
-import android.os.UserManager;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -36,7 +33,6 @@ import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -159,19 +155,23 @@ public class AppListFragment extends MyBaseListFragment {
                 v.setTag(ai);
 
                 v.setVisibility(View.INVISIBLE);
-                if (mLauncherApps.hasShortcutHostPermission()) {
-                    mQuery.setPackage(ai.getComponentName().getPackageName());
-                    mQuery.setQueryFlags(ShortcutQuery.FLAG_MATCH_DYNAMIC
-                            | ShortcutQuery.FLAG_MATCH_PINNED
-                            | ShortcutQuery.FLAG_MATCH_MANIFEST
-                            | ShortcutQuery.FLAG_GET_KEY_FIELDS_ONLY);
-                    mQuery.setActivity(ai.getComponentName());
+                try {
+                    if (mLauncherApps.hasShortcutHostPermission()) {
+                        mQuery.setPackage(ai.getComponentName().getPackageName());
+                        mQuery.setQueryFlags(ShortcutQuery.FLAG_MATCH_DYNAMIC
+                                | ShortcutQuery.FLAG_MATCH_PINNED
+                                | ShortcutQuery.FLAG_MATCH_MANIFEST
+                                | ShortcutQuery.FLAG_GET_KEY_FIELDS_ONLY);
+                        mQuery.setActivity(ai.getComponentName());
 
-                    if (mLauncherApps.getShortcuts(mQuery, ai.getUser()).size() > 0) {
-                        v.setOnClickListener(this);
-                        v.setVisibility(View.VISIBLE);
-                        v.setText("Shortcuts");
+                        if (mLauncherApps.getShortcuts(mQuery, ai.getUser()).size() > 0) {
+                            v.setOnClickListener(this);
+                            v.setVisibility(View.VISIBLE);
+                            v.setText("Shortcuts");
+                        }
                     }
+                } catch (Exception e) {
+                    Log.w(Global.TAG, "Caught exception", e);
                 }
             }
 
@@ -191,8 +191,12 @@ public class AppListFragment extends MyBaseListFragment {
             final LauncherActivityInfo ai = (LauncherActivityInfo) v.getTag();
             switch (v.getId()) {
                 case R.id.launch:
-                    mLauncherApps.startMainActivity(ai.getComponentName(), ai.getUser(),
-                            null, null);
+                    try {
+                        mLauncherApps.startMainActivity(ai.getComponentName(), ai.getUser(),
+                                null, null);
+                    } catch (Exception e) {
+                        Global.showToast(getContext(), e.getMessage());
+                    }
                     return;
                 case R.id.action2:
                     showShortcutsForPackage(ai);
