@@ -23,6 +23,7 @@ import android.content.pm.LauncherApps.ShortcutQuery;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.UserHandle;
+import android.os.UserManager;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -82,12 +83,14 @@ public class AppListFragment extends MyBaseListFragment {
     public class AppAdapter extends BaseAdapter implements OnClickListener {
         private final Context mContext;
         private final LayoutInflater mInflater;
-        private LauncherApps mLauncherApps;
+        private final UserManager mUserManager;
+        private final LauncherApps mLauncherApps;
         private List<LauncherActivityInfo> mList;
 
         public AppAdapter(Context context) {
             mContext = context;
             mInflater = mContext.getSystemService(LayoutInflater.class);
+            mUserManager = mContext.getSystemService(UserManager.class);
             mLauncherApps = mContext.getSystemService(LauncherApps.class);
         }
 
@@ -156,7 +159,8 @@ public class AppListFragment extends MyBaseListFragment {
 
                 v.setVisibility(View.INVISIBLE);
                 try {
-                    if (mLauncherApps.hasShortcutHostPermission()) {
+                    if (mUserManager.isUserUnlocked(ai.getUser())
+                            && mLauncherApps.hasShortcutHostPermission()) {
                         mQuery.setPackage(ai.getComponentName().getPackageName());
                         mQuery.setQueryFlags(ShortcutQuery.FLAG_MATCH_DYNAMIC
                                 | ShortcutQuery.FLAG_MATCH_PINNED

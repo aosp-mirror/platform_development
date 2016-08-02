@@ -23,7 +23,6 @@ import android.content.pm.ShortcutInfo;
 import android.os.Bundle;
 import android.os.UserHandle;
 import android.os.UserManager;
-import android.text.TextUtils;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -93,6 +92,7 @@ public class ShortcutListFragment extends MyBaseListFragment {
 
     private void togglePin(ShortcutInfo selected) {
         final String packageName = selected.getPackage();
+        final UserHandle user = selected.getUserHandle();
 
         try {
             final ShortcutQuery q = new ShortcutQuery()
@@ -101,7 +101,7 @@ public class ShortcutListFragment extends MyBaseListFragment {
                     ;
 
             final List<String> pinned = new ArrayList<>();
-            for (ShortcutInfo si : mLauncherApps.getShortcuts(q, android.os.Process.myUserHandle())) {
+            for (ShortcutInfo si : mLauncherApps.getShortcuts(q, user)) {
                 pinned.add(si.getId());
             }
             if (selected.isPinned()) {
@@ -126,6 +126,7 @@ public class ShortcutListFragment extends MyBaseListFragment {
 
     @Override
     protected void refreshList() {
+        Log.i(TAG, "Refreshing shortcuts");
         try {
             if (!mLauncherApps.hasShortcutHostPermission()) {
                 return;
@@ -134,6 +135,25 @@ public class ShortcutListFragment extends MyBaseListFragment {
             final List<ShortcutInfo> list = new ArrayList<>();
 
             for (UserHandle user : getTargetUsers()) {
+                if (!mUserManager.isUserUnlocked(user)) {
+                    continue;
+                }
+
+                // To detect a race condition, first fetch all shortcuts and report if none found.
+                mQuery.setQueryFlags(
+                        ShortcutQuery.FLAG_MATCH_PINNED | ShortcutQuery.FLAG_MATCH_DYNAMIC
+                                | ShortcutQuery.FLAG_MATCH_MANIFEST
+                                | ShortcutQuery.FLAG_GET_KEY_FIELDS_ONLY);
+                mQuery.setPackage(null);
+                mQuery.setActivity(null);
+                mQuery.setChangedSince(0);
+                final int numShortcuts = mLauncherApps.getShortcuts(mQuery, user).size();
+                if (numShortcuts == 0) {
+                    final String message = "No shortcut found for " + user;
+                    Log.e(TAG, message);
+                    Global.showToast(getContext(), message);
+                }
+
                 final Bundle b = getArguments();
                 mQuery.setQueryFlags(
                         (b.getBoolean(ARG_INCLUDE_DYNAMIC) ? ShortcutQuery.FLAG_MATCH_DYNAMIC : 0) |
