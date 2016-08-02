@@ -595,6 +595,7 @@
         </activity>
 
         <service android:name=".app.ForegroundService" />
+        <service android:name=".app.ForegroundService2" />
 
         <activity android:name=".app.ForegroundService$Controller"
                 android:label="@string/activity_foreground_service_controller"
