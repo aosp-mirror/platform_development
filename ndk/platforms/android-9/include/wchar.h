@@ -121,7 +121,7 @@ extern wchar_t          *wcsrchr(const wchar_t *, wchar_t);
 extern size_t            wcsrtombs(char *, const wchar_t **, size_t, mbstate_t *);
 extern size_t            wcsspn(const wchar_t *, const wchar_t *);
 extern wchar_t          *wcsstr(const wchar_t *, const wchar_t *);
-extern double            wcstod(const wchar_t *, wchar_t **) __NDK_FPABI__;
+extern double            wcstod(const wchar_t *, wchar_t **);
 extern wchar_t          *wcstok(wchar_t *, const wchar_t *, wchar_t **);
 extern long int          wcstol(const wchar_t *, wchar_t **, int);
 extern size_t            wcstombs(char *, const wchar_t *, size_t);
