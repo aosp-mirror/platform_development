@@ -65,7 +65,7 @@ extern int nanosleep(const struct timespec*, struct timespec*) __LIBC_ABI_PUBLIC
 extern char* asctime(const struct tm*) __LIBC_ABI_PUBLIC__;
 extern char* asctime_r(const struct tm*, char*) __LIBC_ABI_PUBLIC__;
 
-extern double difftime(time_t, time_t) __LIBC_ABI_PUBLIC__ __NDK_FPABI__;
+extern double difftime(time_t, time_t) __LIBC_ABI_PUBLIC__;
 extern time_t mktime(struct tm*) __LIBC_ABI_PUBLIC__;
 
 extern struct tm* localtime(const time_t*) __LIBC_ABI_PUBLIC__;
