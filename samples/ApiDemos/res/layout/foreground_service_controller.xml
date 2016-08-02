@@ -37,24 +37,32 @@
     <Button android:id="@+id/start_foreground_wakelock"
         android:layout_width="wrap_content" android:layout_height="wrap_content"
         android:text="@string/start_service_foreground_wakelock">
-        <requestFocus />
     </Button>
 
     <Button android:id="@+id/start_background"
         android:layout_width="wrap_content" android:layout_height="wrap_content" 
         android:text="@string/start_service_background">
-        <requestFocus />
     </Button>
 
     <Button android:id="@+id/start_background_wakelock"
         android:layout_width="wrap_content" android:layout_height="wrap_content"
         android:text="@string/start_service_background_wakelock">
-        <requestFocus />
     </Button>
 
     <Button android:id="@+id/stop"
         android:layout_width="wrap_content" android:layout_height="wrap_content" 
         android:text="@string/stop_service">
+    </Button>
+
+    <Button android:id="@+id/start_foreground_2"
+            android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/start_service_foreground_2">
+    </Button>
+
+    <Button android:id="@+id/stop_2"
+            android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="@string/stop_service_2">
     </Button>
 
 </LinearLayout>
