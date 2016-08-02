@@ -259,6 +259,10 @@ public class ForegroundService extends Service {
             button.setOnClickListener(mBackgroundWakelockListener);
             button = (Button)findViewById(R.id.stop);
             button.setOnClickListener(mStopListener);
+            button = (Button)findViewById(R.id.start_foreground_2);
+            button.setOnClickListener(mForegroundListener2);
+            button = (Button)findViewById(R.id.stop_2);
+            button.setOnClickListener(mStopListener2);
         }
 
         private OnClickListener mForegroundListener = new OnClickListener() {
@@ -299,5 +303,21 @@ public class ForegroundService extends Service {
                         ForegroundService.class));
             }
         };
+
+        private OnClickListener mForegroundListener2 = new OnClickListener() {
+            public void onClick(View v) {
+                Intent intent = new Intent(ForegroundService.ACTION_FOREGROUND);
+                intent.setClass(Controller.this, ForegroundService2.class);
+                startService(intent);
+            }
+        };
+
+        private OnClickListener mStopListener2 = new OnClickListener() {
+            public void onClick(View v) {
+                stopService(new Intent(Controller.this,
+                        ForegroundService2.class));
+            }
+        };
+
     }
 }
