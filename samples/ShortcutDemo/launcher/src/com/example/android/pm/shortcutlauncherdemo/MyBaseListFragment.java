@@ -16,6 +16,10 @@
 package com.example.android.pm.shortcutlauncherdemo;
 
 import android.app.ListFragment;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.LauncherApps;
 import android.content.pm.LauncherApps.ShortcutQuery;
@@ -39,6 +43,23 @@ public abstract class MyBaseListFragment extends ListFragment {
 
     protected final ShortcutQuery mQuery = new ShortcutQuery();
 
+    public final static IntentFilter sProfileFilter = new IntentFilter();
+
+    static {
+        sProfileFilter.addAction(Intent.ACTION_MANAGED_PROFILE_ADDED);
+        sProfileFilter.addAction(Intent.ACTION_MANAGED_PROFILE_AVAILABLE);
+        sProfileFilter.addAction(Intent.ACTION_MANAGED_PROFILE_REMOVED);
+        sProfileFilter.addAction(Intent.ACTION_MANAGED_PROFILE_UNAVAILABLE);
+        sProfileFilter.addAction(Intent.ACTION_MANAGED_PROFILE_UNLOCKED);
+    }
+
+    private final BroadcastReceiver mProfileReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            refreshList();
+        }
+    };
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -49,19 +70,23 @@ public abstract class MyBaseListFragment extends ListFragment {
     }
 
     @Override
-    public void onStart() {
-        super.onStart();
-
-        Log.d(Global.TAG, "Started");
-
-        refreshList();
-    }
-
-    @Override
     public void onResume() {
         super.onResume();
 
+        Log.d(Global.TAG, "Resumed");
+
         showPermissionWarningToastWhenNeeded();
+
+        refreshList();
+
+        getActivity().registerReceiver(mProfileReceiver, sProfileFilter);
+    }
+
+    @Override
+    public void onPause() {
+        getActivity().unregisterReceiver(mProfileReceiver);
+
+        super.onPause();
     }
 
     @Override
