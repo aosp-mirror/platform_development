@@ -21,11 +21,13 @@ import android.app.KeyguardManager;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.hardware.fingerprint.FingerprintManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyPermanentlyInvalidatedException;
 import android.security.keystore.KeyProperties;
+import android.support.annotation.Nullable;
 import android.util.Base64;
 import android.util.Log;
 import android.view.Menu;
@@ -61,12 +63,11 @@ public class MainActivity extends Activity {
 
     private static final String DIALOG_FRAGMENT_TAG = "myFragment";
     private static final String SECRET_MESSAGE = "Very secret message";
-    /** Alias for our key in the Android Key Store */
-    private static final String KEY_NAME = "my_key";
+    private static final String KEY_NAME_NOT_INVALIDATED = "key_not_invalidated";
+    static final String DEFAULT_KEY_NAME = "default_key";
 
     private KeyStore mKeyStore;
     private KeyGenerator mKeyGenerator;
-    private Cipher mCipher;
     private SharedPreferences mSharedPreferences;
 
     @Override
@@ -85,8 +86,13 @@ public class MainActivity extends Activity {
         } catch (NoSuchAlgorithmException | NoSuchProviderException e) {
             throw new RuntimeException("Failed to get an instance of KeyGenerator", e);
         }
+        Cipher defaultCipher;
+        Cipher cipherNotInvalidated;
         try {
-            mCipher = Cipher.getInstance(KeyProperties.KEY_ALGORITHM_AES + "/"
+            defaultCipher = Cipher.getInstance(KeyProperties.KEY_ALGORITHM_AES + "/"
+                    + KeyProperties.BLOCK_MODE_CBC + "/"
+                    + KeyProperties.ENCRYPTION_PADDING_PKCS7);
+            cipherNotInvalidated = Cipher.getInstance(KeyProperties.KEY_ALGORITHM_AES + "/"
                     + KeyProperties.BLOCK_MODE_CBC + "/"
                     + KeyProperties.ENCRYPTION_PADDING_PKCS7);
         } catch (NoSuchAlgorithmException | NoSuchPaddingException e) {
@@ -97,6 +103,22 @@ public class MainActivity extends Activity {
         KeyguardManager keyguardManager = getSystemService(KeyguardManager.class);
         FingerprintManager fingerprintManager = getSystemService(FingerprintManager.class);
         Button purchaseButton = (Button) findViewById(R.id.purchase_button);
+        Button purchaseButtonNotInvalidated = (Button) findViewById(
+                R.id.purchase_button_not_invalidated);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            purchaseButtonNotInvalidated.setEnabled(true);
+            purchaseButtonNotInvalidated.setOnClickListener(
+                    new PurchaseButtonClickListener(cipherNotInvalidated,
+                            KEY_NAME_NOT_INVALIDATED));
+        } else {
+            // Hide the purchase button which uses a non-invalidated key
+            // if the app doesn't work on Android N preview
+            purchaseButtonNotInvalidated.setVisibility(View.GONE);
+            findViewById(R.id.purchase_button_not_invalidated_description)
+                    .setVisibility(View.GONE);
+        }
+
         if (!keyguardManager.isKeyguardSecure()) {
             // Show a message that the user hasn't set up a fingerprint or lock screen.
             Toast.makeText(this,
@@ -104,6 +126,7 @@ public class MainActivity extends Activity {
                             + "Go to 'Settings -> Security -> Fingerprint' to set up a fingerprint",
                     Toast.LENGTH_LONG).show();
             purchaseButton.setEnabled(false);
+            purchaseButtonNotInvalidated.setEnabled(false);
             return;
         }
 
@@ -119,62 +142,27 @@ public class MainActivity extends Activity {
                     Toast.LENGTH_LONG).show();
             return;
         }
-        createKey();
+        createKey(DEFAULT_KEY_NAME, true);
+        createKey(KEY_NAME_NOT_INVALIDATED, false);
         purchaseButton.setEnabled(true);
-        purchaseButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                findViewById(R.id.confirmation_message).setVisibility(View.GONE);
-                findViewById(R.id.encrypted_message).setVisibility(View.GONE);
-
-                // Set up the crypto object for later. The object will be authenticated by use
-                // of the fingerprint.
-                if (initCipher()) {
-                    // Show the fingerprint dialog. The user has the option to use the fingerprint
-                    // with crypto, or you can fall back to using a server-side verified password.
-                    FingerprintAuthenticationDialogFragment fragment
-                            = new FingerprintAuthenticationDialogFragment();
-                    fragment.setCryptoObject(new FingerprintManager.CryptoObject(mCipher));
-                    boolean useFingerprintPreference = mSharedPreferences
-                            .getBoolean(getString(R.string.use_fingerprint_to_authenticate_key),
-                                    true);
-                    if (useFingerprintPreference) {
-                        fragment.setStage(
-                                FingerprintAuthenticationDialogFragment.Stage.FINGERPRINT);
-                    } else {
-                        fragment.setStage(
-                                FingerprintAuthenticationDialogFragment.Stage.PASSWORD);
-                    }
-                    fragment.show(getFragmentManager(), DIALOG_FRAGMENT_TAG);
-                } else {
-                    // This happens if the lock screen has been disabled or or a fingerprint got
-                    // enrolled. Thus show the dialog to authenticate with their password first
-                    // and ask the user if they want to authenticate with fingerprints in the
-                    // future
-                    FingerprintAuthenticationDialogFragment fragment
-                            = new FingerprintAuthenticationDialogFragment();
-                    fragment.setCryptoObject(new FingerprintManager.CryptoObject(mCipher));
-                    fragment.setStage(
-                            FingerprintAuthenticationDialogFragment.Stage.NEW_FINGERPRINT_ENROLLED);
-                    fragment.show(getFragmentManager(), DIALOG_FRAGMENT_TAG);
-                }
-            }
-        });
+        purchaseButton.setOnClickListener(
+                new PurchaseButtonClickListener(defaultCipher, DEFAULT_KEY_NAME));
     }
 
     /**
-     * Initialize the {@link Cipher} instance with the created key in the {@link #createKey()}
-     * method.
+     * Initialize the {@link Cipher} instance with the created key in the
+     * {@link #createKey(String, boolean)} method.
      *
+     * @param keyName the key name to init the cipher
      * @return {@code true} if initialization is successful, {@code false} if the lock screen has
      * been disabled or reset after the key was generated, or if a fingerprint got enrolled after
      * the key was generated.
      */
-    private boolean initCipher() {
+    private boolean initCipher(Cipher cipher, String keyName) {
         try {
             mKeyStore.load(null);
-            SecretKey key = (SecretKey) mKeyStore.getKey(KEY_NAME, null);
-            mCipher.init(Cipher.ENCRYPT_MODE, key);
+            SecretKey key = (SecretKey) mKeyStore.getKey(keyName, null);
+            cipher.init(Cipher.ENCRYPT_MODE, key);
             return true;
         } catch (KeyPermanentlyInvalidatedException e) {
             return false;
@@ -184,11 +172,19 @@ public class MainActivity extends Activity {
         }
     }
 
-    public void onPurchased(boolean withFingerprint) {
+    /**
+     * Proceed the purchase operation
+     *
+     * @param withFingerprint {@code true} if the purchase was made by using a fingerprint
+     * @param cryptoObject the Crypto object
+     */
+    public void onPurchased(boolean withFingerprint,
+            @Nullable FingerprintManager.CryptoObject cryptoObject) {
         if (withFingerprint) {
             // If the user has authenticated with fingerprint, verify that using cryptography and
             // then show the confirmation message.
-            tryEncrypt();
+            assert cryptoObject != null;
+            tryEncrypt(cryptoObject.getCipher());
         } else {
             // Authentication happened with backup password. Just show the confirmation message.
             showConfirmation(null);
@@ -209,9 +205,9 @@ public class MainActivity extends Activity {
      * Tries to encrypt some data with the generated key in {@link #createKey} which is
      * only works if the user has just authenticated via fingerprint.
      */
-    private void tryEncrypt() {
+    private void tryEncrypt(Cipher cipher) {
         try {
-            byte[] encrypted = mCipher.doFinal(SECRET_MESSAGE.getBytes());
+            byte[] encrypted = cipher.doFinal(SECRET_MESSAGE.getBytes());
             showConfirmation(encrypted);
         } catch (BadPaddingException | IllegalBlockSizeException e) {
             Toast.makeText(this, "Failed to encrypt the data with the generated key. "
@@ -223,8 +219,18 @@ public class MainActivity extends Activity {
     /**
      * Creates a symmetric key in the Android Key Store which can only be used after the user has
      * authenticated with fingerprint.
+     *
+     * @param keyName the name of the key to be created
+     * @param invalidatedByBiometricEnrollment if {@code false} is passed, the created key will not
+     *                                         be invalidated even if a new fingerprint is enrolled.
+     *                                         The default value is {@code true}, so passing
+     *                                         {@code true} doesn't change the behavior
+     *                                         (the key will be invalidated if a new fingerprint is
+     *                                         enrolled.). Note that this parameter is only valid if
+     *                                         the app works on Android N developer preview.
+     *
      */
-    public void createKey() {
+    public void createKey(String keyName, boolean invalidatedByBiometricEnrollment) {
         // The enrolling flow for fingerprint. This is where you ask the user to set up fingerprint
         // for your flow. Use of keys is necessary if you need to know if the set of
         // enrolled fingerprints has changed.
@@ -232,15 +238,25 @@ public class MainActivity extends Activity {
             mKeyStore.load(null);
             // Set the alias of the entry in Android KeyStore where the key will appear
             // and the constrains (purposes) in the constructor of the Builder
-            mKeyGenerator.init(new KeyGenParameterSpec.Builder(KEY_NAME,
+
+            KeyGenParameterSpec.Builder builder = new KeyGenParameterSpec.Builder(keyName,
                     KeyProperties.PURPOSE_ENCRYPT |
                             KeyProperties.PURPOSE_DECRYPT)
                     .setBlockModes(KeyProperties.BLOCK_MODE_CBC)
                     // Require the user to authenticate with a fingerprint to authorize every use
                     // of the key
                     .setUserAuthenticationRequired(true)
-                    .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_PKCS7)
-                    .build());
+                    .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_PKCS7);
+
+            // This is a workaround to avoid crashes on devices whose API level is < 24
+            // because KeyGenParameterSpec.Builder#setInvalidatedByBiometricEnrollment is only
+            // visible on API level +24.
+            // Ideally there should be a compat library for KeyGenParameterSpec.Builder but
+            // which isn't available yet.
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                builder.setInvalidatedByBiometricEnrollment(invalidatedByBiometricEnrollment);
+            }
+            mKeyGenerator.init(builder.build());
             mKeyGenerator.generateKey();
         } catch (NoSuchAlgorithmException | InvalidAlgorithmParameterException
                 | CertificateException | IOException e) {
@@ -264,5 +280,55 @@ public class MainActivity extends Activity {
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private class PurchaseButtonClickListener implements View.OnClickListener {
+
+        Cipher mCipher;
+        String mKeyName;
+
+        PurchaseButtonClickListener(Cipher cipher, String keyName) {
+            mCipher = cipher;
+            mKeyName = keyName;
+        }
+
+        @Override
+        public void onClick(View view) {
+            findViewById(R.id.confirmation_message).setVisibility(View.GONE);
+            findViewById(R.id.encrypted_message).setVisibility(View.GONE);
+
+            // Set up the crypto object for later. The object will be authenticated by use
+            // of the fingerprint.
+            if (initCipher(mCipher, mKeyName)) {
+
+                // Show the fingerprint dialog. The user has the option to use the fingerprint with
+                // crypto, or you can fall back to using a server-side verified password.
+                FingerprintAuthenticationDialogFragment fragment
+                        = new FingerprintAuthenticationDialogFragment();
+                fragment.setCryptoObject(new FingerprintManager.CryptoObject(mCipher));
+                boolean useFingerprintPreference = mSharedPreferences
+                        .getBoolean(getString(R.string.use_fingerprint_to_authenticate_key),
+                                true);
+                if (useFingerprintPreference) {
+                    fragment.setStage(
+                            FingerprintAuthenticationDialogFragment.Stage.FINGERPRINT);
+                } else {
+                    fragment.setStage(
+                            FingerprintAuthenticationDialogFragment.Stage.PASSWORD);
+                }
+                fragment.show(getFragmentManager(), DIALOG_FRAGMENT_TAG);
+            } else {
+                // This happens if the lock screen has been disabled or or a fingerprint got
+                // enrolled. Thus show the dialog to authenticate with their password first
+                // and ask the user if they want to authenticate with fingerprints in the
+                // future
+                FingerprintAuthenticationDialogFragment fragment
+                        = new FingerprintAuthenticationDialogFragment();
+                fragment.setCryptoObject(new FingerprintManager.CryptoObject(mCipher));
+                fragment.setStage(
+                        FingerprintAuthenticationDialogFragment.Stage.NEW_FINGERPRINT_ENROLLED);
+                fragment.show(getFragmentManager(), DIALOG_FRAGMENT_TAG);
+            }
+        }
     }
 }
