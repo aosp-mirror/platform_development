@@ -21,6 +21,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/black"
     tools:context="com.example.android.wearable.wear.weardrawers.MainActivity"
     tools:deviceIds="wear">
 
@@ -33,7 +34,7 @@
         android:id="@+id/top_navigation_drawer"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/dark_grey" />
+        android:background="@color/grey" />
 
     <android.support.wearable.view.drawer.WearableActionDrawer
         android:id="@+id/bottom_action_drawer"

@@ -26,6 +26,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewOutlineProvider;
 
+import java.util.Locale;
+
 public class ElevationDragFragment extends Fragment {
 
     public static final String TAG = "ElevationDragFragment";
@@ -84,7 +86,7 @@ public class ElevationDragFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 mElevation += mElevationStep;
-                Log.d(TAG, String.format("Elevation: %.1f", mElevation));
+                Log.d(TAG, String.format(Locale.US, "Elevation: %.1f", mElevation));
                 floatingShape.setElevation(mElevation);
             }
         });
@@ -98,7 +100,7 @@ public class ElevationDragFragment extends Fragment {
                 if (mElevation < 0) {
                     mElevation = 0;
                 }
-                Log.d(TAG, String.format("Elevation: %.1f", mElevation));
+                Log.d(TAG, String.format(Locale.US, "Elevation: %.1f", mElevation));
                 floatingShape.setElevation(mElevation);
             }
         });
