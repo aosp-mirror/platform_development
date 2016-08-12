@@ -77,8 +77,27 @@
                 android:layout_gravity="end"
                 android:textColor="?android:attr/textColorPrimaryInverse"
                 android:text="@string/purchase"
-                android:id="@+id/purchase_button"
-                android:layout_alignParentEnd="true"/>
+                android:id="@+id/purchase_button" />
+
+        <Button style="@android:style/Widget.Material.Button.Colored"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="4dp"
+            android:layout_gravity="end"
+            android:textColor="?android:attr/textColorPrimaryInverse"
+            android:text="@string/purchase_not_invalidated"
+            android:id="@+id/purchase_button_not_invalidated" />
+
+        <TextView
+            android:id="@+id/purchase_button_not_invalidated_description"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="4dp"
+            android:gravity="end"
+            android:textAlignment="gravity"
+            android:text="@string/purchase_button_not_invalidated_description"
+            />
 
         <TextView
                 android:id="@+id/confirmation_message"
