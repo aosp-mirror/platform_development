@@ -15,7 +15,6 @@
  limitations under the License.
 -->
 <resources>
-    <string name="title_activity_card_view">CardViewActivity</string>
     <string name="cardview_contents">This is a CardView widget. CardView widgets can have
         shadows and rounded corners.
         \n\nTo create a card with a shadow, use the <font fgcolor="#FFFFFFFF">android:elevation</font>
