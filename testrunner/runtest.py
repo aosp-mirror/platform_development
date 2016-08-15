@@ -300,19 +300,21 @@ class TestRunner(object):
       target_dir_build_string = " ".join(target_dir_list)
       extra_args_string = " ".join(extra_args_set)
 
-      # mmm cannot be used from python, so perform a similar operation using
-      # ONE_SHOT_MAKEFILE
-      cmd = 'ONE_SHOT_MAKEFILE="%s" make -j%s -C "%s" GET-INSTALL-PATH all_modules %s' % (
-          target_build_string, self._options.make_jobs, self._root_path,
-          extra_args_string)
-      # mmma equivalent, used when regular mmm fails
+      install_path_goals = []
       mmma_goals = []
       for d in target_dir_list:
         if d.startswith("./"):
           d = d[2:]
         if d.endswith("/"):
           d = d[:-1]
+        install_path_goals.append("GET-INSTALL-PATH-IN-" + d.replace("/","-"))
         mmma_goals.append("MODULES-IN-" + d.replace("/","-"))
+      # mmm cannot be used from python, so perform a similar operation using
+      # ONE_SHOT_MAKEFILE
+      cmd = 'ONE_SHOT_MAKEFILE="%s" make -j%s -C "%s" %s %s %s' % (
+          target_build_string, self._options.make_jobs, self._root_path,
+          " ".join(install_path_goals), " ".join(mmma_goals), extra_args_string)
+      # mmma cannot be used from python, so perform a similar operation
       alt_cmd = 'make -j%s -C "%s" -f build/core/main.mk %s %s' % (
               self._options.make_jobs, self._root_path, extra_args_string, " ".join(mmma_goals))
 
