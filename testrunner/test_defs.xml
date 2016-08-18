@@ -301,6 +301,14 @@ See test_defs.xsd for more information.
     description="Tests for the Dialer app."
     continuous="true" />
 
+<test name="managed-provisioning"
+    build_path="packages/apps/ManagedProvisioning/tests"
+    package="com.android.managedprovisioning.tests"
+    runner="com.android.managedprovisioning.TestInstrumentationRunner"
+    coverage_target="ManagedProvisioning"
+    description="Tests for the ManagedProvisioning app."
+    continuous="true" />
+
 <test name="downloadprovider"
     build_path="packages/providers/DownloadProvider/tests"
     package="com.android.providers.downloads.tests"
