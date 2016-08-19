@@ -16,20 +16,17 @@
 package com.example.android.shortcutsample;
 
 import android.content.Context;
-import android.content.pm.ShortcutInfo;
-import android.os.AsyncTask;
-import android.os.PersistableBundle;
-import android.util.Log;
+import android.os.Handler;
+import android.os.Looper;
 import android.widget.Toast;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class Utils {
     private Utils() {
     }
 
     public static void showToast(Context context, String message) {
-        Toast.makeText(context, message, Toast.LENGTH_SHORT).show();
+        new Handler(Looper.getMainLooper()).post(() -> {
+            Toast.makeText(context, message, Toast.LENGTH_SHORT).show();
+        });
     }
 }
