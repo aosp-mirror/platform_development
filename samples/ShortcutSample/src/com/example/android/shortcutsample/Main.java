@@ -19,6 +19,7 @@ import android.app.AlertDialog;
 import android.app.ListActivity;
 import android.content.Context;
 import android.content.pm.ShortcutInfo;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -98,11 +99,25 @@ public class Main extends ListActivity implements OnClickListener {
                 .setPositiveButton("Add", (dialog, whichButton) -> {
                     final String url = editUri.getText().toString().trim();
                     if (url.length() > 0) {
-                        mHelper.addWebSiteShortcut(url);
-                        refreshList();
+                        addUriAsync(url);
                     }
                 })
                 .show();
+    }
+
+    private void addUriAsync(String uri) {
+        new AsyncTask<Void, Void, Void>() {
+            @Override
+            protected Void doInBackground(Void... params) {
+                mHelper.addWebSiteShortcut(uri);
+                return null;
+            }
+
+            @Override
+            protected void onPostExecute(Void aVoid) {
+                refreshList();
+            }
+        }.execute();
     }
 
     private void refreshList() {

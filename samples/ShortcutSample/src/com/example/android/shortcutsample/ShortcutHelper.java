@@ -19,12 +19,19 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ShortcutInfo;
 import android.content.pm.ShortcutManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.drawable.Icon;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.PersistableBundle;
 import android.util.Log;
 
+import java.io.BufferedInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -169,8 +176,12 @@ public class ShortcutHelper {
         b.setShortLabel(uri.getHost());
         b.setLongLabel(uri.toString());
 
-        // TODO Fetch the favicon from the URI and sets to the icon.
-        b.setIcon(Icon.createWithResource(mContext, R.drawable.link));
+        Bitmap bmp = fetchFavicon(uri);
+        if (bmp != null) {
+            b.setIcon(Icon.createWithBitmap(bmp));
+        } else {
+            b.setIcon(Icon.createWithResource(mContext, R.drawable.link));
+        }
 
         return b;
     }
@@ -208,5 +219,24 @@ public class ShortcutHelper {
 
     public void enableShortcut(ShortcutInfo shortcut) {
         mShortcutManager.enableShortcuts(Arrays.asList(shortcut.getId()));
+    }
+
+    private Bitmap fetchFavicon(Uri uri) {
+        final Uri iconUri = uri.buildUpon().path("favicon.ico").build();
+        Log.i(TAG, "Fetching favicon from: " + iconUri);
+
+        InputStream is = null;
+        BufferedInputStream bis = null;
+        try
+        {
+            URLConnection conn = new URL(iconUri.toString()).openConnection();
+            conn.connect();
+            is = conn.getInputStream();
+            bis = new BufferedInputStream(is, 8192);
+            return BitmapFactory.decodeStream(bis);
+        } catch (IOException e) {
+            Log.w(TAG, "Failed to fetch favicon from " + iconUri, e);
+            return null;
+        }
     }
 }
