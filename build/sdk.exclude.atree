@@ -20,7 +20,8 @@
 -.*.swp
 -.DS_Store
 -*~
--_*
+-_[!_]*
+-*.pyc
 -.*
 -OWNERS
 -MODULE_LICENSE_*
