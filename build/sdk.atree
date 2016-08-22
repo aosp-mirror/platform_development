@@ -57,17 +57,12 @@ development/sdk/generated-api-versions.xml    platform-tools/api/api-versions.xm
 prebuilts/sdk/sdk-annotations/annotations.zip   platform-tools/api/annotations.zip
 
 # systrace
-external/chromium-trace/catapult/systrace/systrace/agents/__init__.py     platform-tools/systrace/agents/__init__.py
-external/chromium-trace/catapult/systrace/systrace/agents/atrace_agent.py platform-tools/systrace/agents/atrace_agent.py
-external/chromium-trace/catapult/systrace/systrace/systrace.py            platform-tools/systrace/systrace.py
-external/chromium-trace/catapult/systrace/systrace/systrace-legacy.py     platform-tools/systrace/systrace-legacy.py
-external/chromium-trace/catapult/systrace/systrace/systrace_agent.py      platform-tools/systrace/systrace_agent.py
-external/chromium-trace/catapult/systrace/systrace/util.py                platform-tools/systrace/util.py
-external/chromium-trace/catapult/systrace/systrace/prefix.html            platform-tools/systrace/prefix.html
-external/chromium-trace/catapult/systrace/systrace/suffix.html            platform-tools/systrace/suffix.html
-external/chromium-trace/catapult/systrace/systrace/LICENSE                platform-tools/systrace/LICENSE
-external/chromium-trace/catapult/systrace/systrace/AUTHORS                platform-tools/systrace/AUTHORS
-external/chromium-trace/systrace_trace_viewer.html                        platform-tools/systrace/systrace_trace_viewer.html
+external/chromium-trace/catapult/catapult_base/                           platform-tools/systrace/catapult/catapult_base/
+external/chromium-trace/catapult/common/                                  platform-tools/systrace/catapult/common/
+external/chromium-trace/catapult/dependency_manager/                      platform-tools/systrace/catapult/dependency_manager/
+external/chromium-trace/catapult/devil/                                   platform-tools/systrace/catapult/devil/
+external/chromium-trace/catapult/systrace/                                platform-tools/systrace/catapult/systrace/
+external/chromium-trace/systrace.py                                       platform-tools/systrace/systrace.py
 external/chromium-trace/NOTICE                                            platform-tools/systrace/NOTICE
 external/chromium-trace/UPSTREAM_REVISION                                 platform-tools/systrace/UPSTREAM_REVISION
 
