@@ -160,6 +160,12 @@ See test_defs.xsd for more information.
     package="com.android.volley.tests"
     continuous="true" />
 
+<test name="networksecurityconfig"
+    build_path="frameworks/base/tests/NetworkSecurityConfigTest"
+    package="android.security.net.config"
+    coverage_target="framework"
+    description="Android network security config tests." />
+
 <!--  end of framework tests -->
 
 <!-- media framework tests -->
