@@ -370,8 +370,10 @@ public class SyncAdapterDriver extends Activity
                 final String settingsActivity =
                         sa.getString(com.android.internal.R.styleable
                                 .SyncAdapter_settingsActivity);
+                // TODO: Why is this using private API?
                 return new SyncAdapterType(authority, accountType, userVisible, supportsUploading,
-                        isAlwaysSyncable, allowParallelSyncs, settingsActivity);
+                        isAlwaysSyncable, allowParallelSyncs, settingsActivity,
+                        mContext.getPackageName());
             } finally {
                 sa.recycle();
             }
