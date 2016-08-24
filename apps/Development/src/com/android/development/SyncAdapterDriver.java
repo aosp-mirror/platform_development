@@ -371,7 +371,7 @@ public class SyncAdapterDriver extends Activity
                         sa.getString(com.android.internal.R.styleable
                                 .SyncAdapter_settingsActivity);
                 return new SyncAdapterType(authority, accountType, userVisible, supportsUploading,
-                        isAlwaysSyncable, allowParallelSyncs, settingsActivity);
+                        isAlwaysSyncable, allowParallelSyncs, settingsActivity, packageName);
             } finally {
                 sa.recycle();
             }
