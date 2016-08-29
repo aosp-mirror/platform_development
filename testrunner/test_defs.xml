@@ -376,9 +376,10 @@ See test_defs.xsd for more information.
     coverage_target="QuickSearchBox" />
 
 <test name="systemui"
-    build_path="frameworks/base/packages/SystemUI"
+    build_path="frameworks/base/packages/SystemUI/tests"
     package="com.android.systemui.tests"
     coverage_target="SystemUI"
+    runner="android.support.test.runner.AndroidJUnitRunner"
     continuous="true"
     description="SystemUI tests" />
 
