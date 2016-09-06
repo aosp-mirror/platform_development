@@ -354,12 +354,31 @@ def GetAbiFromToolchain(toolchain_var, bits):
     return abi
   return None
 
+def Get32BitArch():
+  # Check for ANDROID_TOOLCHAIN_2ND_ARCH first, if set, use that.
+  # If not try ANDROID_TOOLCHAIN to find the arch.
+  # If this is not set, then default to arm.
+  arch = GetAbiFromToolchain("ANDROID_TOOLCHAIN_2ND_ARCH", 32)
+  if not arch:
+    arch = GetAbiFromToolchain("ANDROID_TOOLCHAIN", 32)
+    if not arch:
+      return "arm"
+  return arch
+
+def Get64BitArch():
+  # Check for ANDROID_TOOLCHAIN, if it is set, we can figure out the
+  # arch this way. If this is not set, then default to arm64.
+  arch = GetAbiFromToolchain("ANDROID_TOOLCHAIN", 64)
+  if not arch:
+    return "arm64"
+  return arch
 
 def SetAbi(lines):
   global ARCH
 
   abi_line = re.compile("ABI: \'(.*)\'")
   trace_line = re.compile("\#[0-9]+[ \t]+..[ \t]+([0-9a-f]{8}|[0-9a-f]{16})([ \t]+|$)")
+  asan_trace_line = re.compile("\#[0-9]+[ \t]+0x([0-9a-f]+)[ \t]+")
 
   ARCH = None
   for line in lines:
@@ -371,25 +390,23 @@ def SetAbi(lines):
     if trace_match:
       # Try to guess the arch, we know the bitness.
       if len(trace_match.group(1)) == 16:
-        # 64 bit
-        # Check for ANDROID_TOOLCHAIN, if it is set, we can figure out the
-        # arch this way. If this is not set, then default to arm64.
-        ARCH = GetAbiFromToolchain("ANDROID_TOOLCHAIN", 64)
-        if not ARCH:
-          ARCH = "arm64"
+        ARCH = Get64BitArch()
       else:
-        # 32 bit
-        # Check for ANDROID_TOOLCHAIN_2ND_ARCH first, if set, use that.
-        # If not try ANDROID_TOOLCHAIN to find the arch.
-        # If this is not set, then default to arm.
-        ARCH = GetAbiFromToolchain("ANDROID_TOOLCHAIN_2ND_ARCH", 32)
-        if not ARCH:
-          ARCH = GetAbiFromToolchain("ANDROID_TOOLCHAIN", 32)
-          if not ARCH:
-            ARCH = "arm"
+        ARCH = Get32BitArch()
       break
+    asan_trace_match = asan_trace_line.search(line)
+    if asan_trace_match:
+      # We might be able to guess the bitness by the length of the address.
+      if len(asan_trace_match.group(1)) > 8:
+        ARCH = Get64BitArch()
+        # We know for a fact this is 64 bit, so we are done.
+        break
+      else:
+        ARCH = Get32BitArch()
+        # This might be 32 bit, or just a small address. Keep going in this
+        # case, but if we couldn't figure anything else out, go with 32 bit.
   if not ARCH:
-    raise Exception("Could not determine arch from input")
+    raise Exception("Could not determine arch from input, use --arch=XXX to specify it")
 
 
 class FindToolchainTests(unittest.TestCase):
@@ -481,7 +498,7 @@ class SetArchTests(unittest.TestCase):
     SetAbi(["#00 pc 00000000000374e0"])
     self.assertEqual(ARCH, "x86_64")
 
-  def test_default_abis(self):
+  def test_trace_default_abis(self):
     global ARCH
 
     os.environ.clear()
@@ -490,10 +507,85 @@ class SetArchTests(unittest.TestCase):
     SetAbi(["#00 pc 00000000000374e0"])
     self.assertEqual(ARCH, "arm64")
 
+  def test_32bit_asan_trace_line_toolchain(self):
+    global ARCH
+
+    os.environ.clear()
+    os.environ["ANDROID_TOOLCHAIN"] = "linux-x86/arm/arm-linux-androideabi-4.9/bin"
+    SetAbi(["#10 0xb5eeba5d  (/system/vendor/lib/egl/libGLESv1_CM_adreno.so+0xfa5d)"])
+    self.assertEqual(ARCH, "arm")
+
+    os.environ.clear()
+    os.environ["ANDROID_TOOLCHAIN"] = "linux-x86/mips/arm-linux-androideabi-4.9/bin"
+    SetAbi(["#10 0xb5eeba5d  (/system/vendor/lib/egl/libGLESv1_CM_adreno.so+0xfa5d)"])
+    self.assertEqual(ARCH, "mips")
+
+    os.environ.clear()
+    os.environ["ANDROID_TOOLCHAIN"] = "linux-x86/x86/arm-linux-androideabi-4.9/bin"
+    SetAbi(["#10 0xb5eeba5d  (/system/vendor/lib/egl/libGLESv1_CM_adreno.so+0xfa5d)"])
+    self.assertEqual(ARCH, "x86")
+
+  def test_32bit_asan_trace_line_toolchain_2nd(self):
+    global ARCH
+
+    os.environ.clear()
+    os.environ["ANDROID_TOOLCHAIN_2ND_ARCH"] = "linux-x86/arm/arm-linux-androideabi-4.9/bin"
+    os.environ["ANDROID_TOOLCHAIN_ARCH"] = "linux-x86/aarch64/aarch64-linux-android-4.9/bin"
+    SetAbi(["#3 0xae1725b5  (/system/vendor/lib/libllvm-glnext.so+0x6435b5)"])
+    self.assertEqual(ARCH, "arm")
+
+    os.environ.clear()
+    os.environ["ANDROID_TOOLCHAIN_2ND_ARCH"] = "linux-x86/mips/mips-linux-androideabi-4.9/bin"
+    os.environ["ANDROID_TOOLCHAIN"] = "linux-x86/unknown/unknown-linux-androideabi-4.9/bin"
+    SetAbi(["#3 0xae1725b5  (/system/vendor/lib/libllvm-glnext.so+0x6435b5)"])
+    self.assertEqual(ARCH, "mips")
+
+    os.environ.clear()
+    os.environ["ANDROID_TOOLCHAIN_2ND_ARCH"] = "linux-x86/x86/x86-linux-androideabi-4.9/bin"
+    os.environ["ANDROID_TOOLCHAIN"] = "linux-x86/unknown/unknown-linux-androideabi-4.9/bin"
+    SetAbi(["#3 0xae1725b5  (/system/vendor/lib/libllvm-glnext.so+0x6435b5)"])
+    self.assertEqual(ARCH, "x86")
+
+  def test_64bit_asan_trace_line_toolchain(self):
+    global ARCH
+
+    os.environ.clear()
+    os.environ["ANDROID_TOOLCHAIN"] = "linux-x86/aarch/aarch-linux-androideabi-4.9/bin"
+    SetAbi(["#0 0x11b35d33bf  (/system/lib/libclang_rt.asan-arm-android.so+0x823bf)"])
+    self.assertEqual(ARCH, "arm64")
+
+    os.environ.clear()
+    os.environ["ANDROID_TOOLCHAIN"] = "linux-x86/mips/arm-linux-androideabi-4.9/bin"
+    SetAbi(["#1 0x11b35d33bf  (/system/lib/libclang_rt.asan-arm-android.so+0x823bf)"])
+    self.assertEqual(ARCH, "mips64")
+
+    os.environ.clear()
+    os.environ["ANDROID_TOOLCHAIN"] = "linux-x86/x86/arm-linux-androideabi-4.9/bin"
+    SetAbi(["#12 0x11b35d33bf  (/system/lib/libclang_rt.asan-arm-android.so+0x823bf)"])
+    self.assertEqual(ARCH, "x86_64")
+
+    # Verify that if an address that might be 32 bit comes first, that
+    # encountering a 64 bit address returns a 64 bit abi.
+    ARCH = None
+    os.environ.clear()
+    os.environ["ANDROID_TOOLCHAIN"] = "linux-x86/x86/arm-linux-androideabi-4.9/bin"
+    SetAbi(["#12 0x5d33bf  (/system/lib/libclang_rt.asan-arm-android.so+0x823bf)",
+            "#12 0x11b35d33bf  (/system/lib/libclang_rt.asan-arm-android.so+0x823bf)"])
+    self.assertEqual(ARCH, "x86_64")
+
+  def test_asan_trace_default_abis(self):
+    global ARCH
+
+    os.environ.clear()
+    SetAbi(["#4 0x1234349ab  (/system/vendor/lib/libllvm-glnext.so+0x64fc4f)"])
+    self.assertEqual(ARCH, "arm64")
+    SetAbi(["#1 0xae17ec4f  (/system/vendor/lib/libllvm-glnext.so+0x64fc4f)"])
+    self.assertEqual(ARCH, "arm")
+
   def test_no_abi(self):
     global ARCH
 
-    self.assertRaisesRegexp(Exception, "Could not determine arch from input", SetAbi, [])
+    self.assertRaisesRegexp(Exception, "Could not determine arch from input, use --arch=XXX to specify it", SetAbi, [])
 
 if __name__ == '__main__':
     unittest.main()
