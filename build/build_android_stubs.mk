@@ -55,7 +55,7 @@ $(full_target): $(stub_timestamp) $(framework_res_package)
 	$(hide) $(ACP) libcore/ojluni/NOTICE $(PRIVATE_CLASS_INTERMEDIATES_DIR)/NOTICES/ojluni-NOTICE
 	$(hide) find $(PRIVATE_SRC_DIR) -name "*.java" > \
         $(PRIVATE_INTERMEDIATES_DIR)/java-source-list
-	$(hide) $(TARGET_JAVAC) -source 1.8 -target 1.8 -encoding ascii -bootclasspath "" \
+	$(hide) $(TARGET_JAVAC) -source 1.8 -target 1.8 -bootclasspath "" \
 			-g -extdirs "" -d $(PRIVATE_CLASS_INTERMEDIATES_DIR) \
 			\@$(PRIVATE_INTERMEDIATES_DIR)/java-source-list \
 		|| ( rm -rf $(PRIVATE_CLASS_INTERMEDIATES_DIR) ; exit 41 )
