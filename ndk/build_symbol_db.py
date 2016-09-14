@@ -111,7 +111,7 @@ def build_symbol_db(lib_name):
 
             vars_file_name = lib_name + '.so.variables.txt'
             vars_file = os.path.join(symbols_dir, vars_file_name)
-            if os.path.exists(funcs_file):
+            if os.path.exists(vars_file):
                 add_symbols(symbols, vars_file, version, arch, is_var='true')
     return symbols
 
