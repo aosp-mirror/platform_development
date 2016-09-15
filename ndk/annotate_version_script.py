@@ -151,9 +151,25 @@ def annotate_version_script(version_script, json_db, lines):
             version_script.write(line)
 
 
+def create_version_script(version_script, json_db):
+    """Creates a new version script based on an NDK library definition."""
+    version_script.write('LIB {\n')
+    version_script.write('  global:\n')
+    for symbol in json_db.keys():
+        line = annotate_symbol('    {};\n'.format(symbol), json_db)
+        version_script.write(line)
+    version_script.write('  local:\n')
+    version_script.write('    *;\n')
+    version_script.write('};')
+
+
 def parse_args():
     """Returns parsed command line arguments."""
     parser = argparse.ArgumentParser()
+
+    parser.add_argument(
+        '--create', action='store_true',
+        help='Create a new version script instead of annotating.')
 
     parser.add_argument(
         'data_file', metavar='DATA_FILE', type=os.path.realpath,
@@ -181,11 +197,15 @@ def main():
     with open(args.data_file) as json_db_file:
         json_db = json.load(json_db_file)
 
-    with open(args.version_script, 'r') as version_script:
-        file_data = version_script.readlines()
-    verify_version_script(file_data, json_db)
-    with open(args.version_script, 'w') as version_script:
-        annotate_version_script(version_script, json_db, file_data)
+    if args.create:
+        with open(args.version_script, 'w') as version_script:
+            create_version_script(version_script, json_db)
+    else:
+        with open(args.version_script, 'r') as version_script:
+            file_data = version_script.readlines()
+        verify_version_script(file_data, json_db)
+        with open(args.version_script, 'w') as version_script:
+            annotate_version_script(version_script, json_db, file_data)
 
 
 if __name__ == '__main__':
