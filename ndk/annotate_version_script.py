@@ -16,6 +16,7 @@
 #
 """Annotates an existing version script with data for the NDK."""
 import argparse
+import collections
 import json
 import logging
 import os
@@ -153,6 +154,8 @@ def annotate_version_script(version_script, json_db, lines):
 
 def create_version_script(version_script, json_db):
     """Creates a new version script based on an NDK library definition."""
+    json_db = collections.OrderedDict(sorted(json_db.items()))
+
     version_script.write('LIB {\n')
     version_script.write('  global:\n')
     for symbol in json_db.keys():
