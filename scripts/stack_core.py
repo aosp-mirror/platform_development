@@ -409,19 +409,21 @@ class TraceConverter:
       else:
         info = symbol.SymbolInformation(area, value)
         (source_symbol, source_location, object_symbol_with_offset) = info.pop()
-        if not source_symbol:
-          if symbol_present:
-            source_symbol = symbol.CallCppFilt(symbol_name)
-          else:
-            source_symbol = "<unknown>"
-        if not source_location:
-          source_location = area
-        if not object_symbol_with_offset:
-          object_symbol_with_offset = source_symbol
-        self.value_lines.append((addr,
-                            value,
-                            object_symbol_with_offset,
-                            source_location))
+        # If there is no information, skip this.
+        if source_symbol or source_location or object_symbol_with_offset:
+          if not source_symbol:
+            if symbol_present:
+              source_symbol = symbol.CallCppFilt(symbol_name)
+            else:
+              source_symbol = "<unknown>"
+          if not source_location:
+            source_location = area
+          if not object_symbol_with_offset:
+            object_symbol_with_offset = source_symbol
+          self.value_lines.append((addr,
+                                   value,
+                                   object_symbol_with_offset,
+                                   source_location))
 
     return ret
 
@@ -498,6 +500,14 @@ class LongASANStackTests(unittest.TestCase):
     # more than ten frames.
     self.assertGreater(trace_line_count, 10)
     tc.PrintOutput(tc.trace_lines, tc.value_lines)
+
+class ValueLinesTest(unittest.TestCase):
+  def test_value_line_skipped(self):
+    tc = TraceConverter()
+    symbol.SetAbi(["ABI: 'arm'"])
+    tc.UpdateAbiRegexes()
+    tc.ProcessLine("    12345678  00001000  .")
+    self.assertEqual([], tc.value_lines)
 
 if __name__ == '__main__':
     unittest.main()
