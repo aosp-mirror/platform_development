@@ -57,7 +57,6 @@ development/sdk/generated-api-versions.xml    platform-tools/api/api-versions.xm
 prebuilts/sdk/sdk-annotations/annotations.zip   platform-tools/api/annotations.zip
 
 # systrace
-external/chromium-trace/catapult/catapult_base/                           platform-tools/systrace/catapult/catapult_base/
 external/chromium-trace/catapult/common/                                  platform-tools/systrace/catapult/common/
 external/chromium-trace/catapult/dependency_manager/                      platform-tools/systrace/catapult/dependency_manager/
 external/chromium-trace/catapult/devil/                                   platform-tools/systrace/catapult/devil/
