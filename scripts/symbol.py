@@ -189,6 +189,10 @@ def CallAddr2LineForSet(lib, unique_addrs):
     if not os.path.exists(symbols):
       return None
 
+  # Make sure the symbols path is not a directory.
+  if os.path.isdir(symbols):
+    return None
+
   cmd = [ToolPath("addr2line"), "--functions", "--inlines",
       "--demangle", "--exe=" + symbols]
   child = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
