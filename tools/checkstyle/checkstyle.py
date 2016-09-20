@@ -73,11 +73,12 @@ def RunCheckstyleOnACommit(commit, config_xml=CHECKSTYLE_STYLE):
   Returns:
     A tuple of errors and warnings.
   """
-  if not commit:
+  explicit_commit = commit is not None
+  if not explicit_commit:
     _WarnIfUntrackedFiles()
     commit = git.last_commit()
   print 'Running Checkstyle on %s commit' % commit
-  commit_modified_files = _GetModifiedFiles(commit)
+  commit_modified_files = _GetModifiedFiles(commit, explicit_commit)
   if not commit_modified_files.keys():
     print 'No Java files to check'
     return [], []
@@ -216,10 +217,10 @@ def _ShouldSkip(commit_check, modified_lines, line, rule, test_class=False):
   return line not in modified_lines and rule not in FORCED_RULES
 
 
-def _GetModifiedFiles(commit, out=sys.stdout):
+def _GetModifiedFiles(commit, explicit_commit=False, out=sys.stdout):
   root = git.repository_root()
   pending_files = git.modified_files(root, True)
-  if pending_files:
+  if pending_files and not explicit_commit:
     out.write(ERROR_UNCOMMITTED)
     sys.exit(1)
 
