@@ -122,6 +122,14 @@ class TestCheckstyle(unittest.TestCase):
       checkstyle._GetModifiedFiles(mock_last_commit(), out=out)
     self.assertEqual(out.getvalue(), checkstyle.ERROR_UNCOMMITTED)
 
+  def test_GetModifiedFilesUncommittedExplicitCommit(self):
+    checkstyle.git.modified_files = mock_modified_files_uncommitted
+    out = StringIO()
+    files = checkstyle._GetModifiedFiles(mock_last_commit(), True, out=out)
+    output = out.getvalue()
+    self.assertEqual(output, '')
+    self.assertEqual(files, {TEST_FILE1: FILE_MODIFIED, TEST_FILE2: FILE_ADDED})
+
   def test_GetModifiedFilesNonJava(self):
     checkstyle.git.modified_files = mock_modified_files_non_java
     out = StringIO()
