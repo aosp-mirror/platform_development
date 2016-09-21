@@ -9,6 +9,10 @@
     <property name="onCommentFormat" value="CHECKSTYLE:ON IndentationCheck"/>
     <property name="checkFormat" value="IndentationCheck"/>
   </module>
+  <module name="SuppressionCommentFilter">
+    <property name="offCommentFormat" value="CHECKSTYLE:OFF Generated code"/>
+    <property name="onCommentFormat" value="CHECKSTYLE:ON Generated code"/>
+  </module>
   <module name="TreeWalker">
     <module name="AvoidStarImport">
       <property name="severity" value="error"/>
