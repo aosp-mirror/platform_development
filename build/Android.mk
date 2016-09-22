@@ -121,12 +121,21 @@ $(eval _psm_packaging_target :=)
 endef
 
 ANDROID_SUPPORT_LIBRARIES := \
+    android-support-animatedvectordrawable \
     android-support-annotations \
     android-support-compat \
-    android-support-media-compat \
     android-support-core-ui \
-    android-support-fragment \
     android-support-core-utils \
+    android-support-customtabs \
+    android-support-design \
+    android-support-documents-archive \
+    android-support-fragment \
+    android-support-media-compat \
+    android-support-multidex \
+    android-support-multidex-instrumentation \
+    android-support-percent \
+    android-support-recommendation \
+    android-support-transition \
     android-support-v4 \
     android-support-v7-appcompat \
     android-support-v7-cardview \
@@ -139,15 +148,7 @@ ANDROID_SUPPORT_LIBRARIES := \
     android-support-v14-preference \
     android-support-v17-leanback \
     android-support-v17-preference-leanback \
-    android-support-multidex \
-    android-support-multidex-instrumentation \
-    android-support-design \
-    android-support-percent \
-    android-support-recommendation \
-    android-support-customtabs \
-    android-support-documents-archive \
-    android-support-vectordrawable \
-    android-support-animatedvectordrawable
+    android-support-vectordrawable
 
 $(foreach lib, $(ANDROID_SUPPORT_LIBRARIES), $(eval $(call _package_sdk_library,$(lib))))
 
