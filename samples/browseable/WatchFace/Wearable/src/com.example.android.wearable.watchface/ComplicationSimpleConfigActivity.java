@@ -22,6 +22,8 @@ import android.content.Intent;
 import android.content.res.TypedArray;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.support.wearable.complications.ComplicationHelperActivity;
+import android.support.wearable.complications.ComplicationProviderInfo;
 import android.support.wearable.complications.ProviderChooserIntent;
 import android.support.wearable.view.WearableListView;
 import android.util.Log;
@@ -64,6 +66,13 @@ public class ComplicationSimpleConfigActivity extends Activity implements
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == PROVIDER_CHOOSER_REQUEST_CODE
                 && resultCode == RESULT_OK) {
+
+            // Retrieves information for selected Complication provider.
+            ComplicationProviderInfo complicationProviderInfo =
+                    data.getParcelableExtra(ProviderChooserIntent.EXTRA_PROVIDER_INFO);
+
+            Log.d(TAG, "Selected Provider: " + complicationProviderInfo);
+
             finish();
         }
     }
@@ -77,10 +86,16 @@ public class ComplicationSimpleConfigActivity extends Activity implements
         Integer tag = (Integer) viewHolder.itemView.getTag();
         ComplicationItem complicationItem = mAdapter.getItem(tag);
 
-        startActivityForResult(ProviderChooserIntent.createProviderChooserIntent(
-                complicationItem.watchFace,
-                complicationItem.complicationId,
-                complicationItem.supportedTypes), PROVIDER_CHOOSER_REQUEST_CODE);
+        // Note: If you were previously using ProviderChooserIntent.createProviderChooserIntent()
+        // (now deprecated), you will want to switch to
+        // ComplicationHelperActivity.createProviderChooserHelperIntent()
+        startActivityForResult(
+                ComplicationHelperActivity.createProviderChooserHelperIntent(
+                        getApplicationContext(),
+                        complicationItem.watchFace,
+                        complicationItem.complicationId,
+                        complicationItem.supportedTypes),
+                PROVIDER_CHOOSER_REQUEST_CODE);
     }
 
     private List<ComplicationItem> getComplicationItems() {
@@ -187,5 +202,4 @@ public class ComplicationSimpleConfigActivity extends Activity implements
             return mItems.get(position);
         }
     }
-
 }

@@ -1,0 +1,18 @@
+
+page.tags="DragAndDropAcrossApps-new"
+sample.group=ui
+@jd:body
+
+<p>
+
+This sample demonstrates how data can be moved between views within an 
+app or between different apps via drag and drop.
+This sample contains two separate Android applications: DragSource and
+DropTarget. DragSource contains images and text that can be dropped into the DropTarget
+app. Images are shared between the two apps through a URI for which the receiving app
+must request permission first, before it can be used.
+
+It also demonstrates the use of the DragStartHelper from the v13 support library to easily
+handle drag and drop events.
+
+        </p>
