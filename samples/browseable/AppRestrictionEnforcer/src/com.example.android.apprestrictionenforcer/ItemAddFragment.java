@@ -17,6 +17,7 @@
 package com.example.android.apprestrictionenforcer;
 
 import android.app.Activity;
+import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
@@ -42,10 +43,10 @@ public class ItemAddFragment extends DialogFragment implements View.OnClickListe
     private EditText mEditValue;
 
     @Override
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
+    public void onAttach(Context context) {
+        super.onAttach(context);
         Fragment parentFragment = getParentFragment();
-        mListener = (OnItemAddedListener) (parentFragment == null ? activity : parentFragment);
+        mListener = (OnItemAddedListener) (parentFragment == null ? context : parentFragment);
     }
 
     @Override

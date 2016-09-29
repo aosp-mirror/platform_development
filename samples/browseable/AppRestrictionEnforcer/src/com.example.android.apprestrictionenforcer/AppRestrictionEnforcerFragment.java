@@ -90,13 +90,6 @@ public class AppRestrictionEnforcerFragment extends Fragment implements
     private static final String RESTRICTION_KEY_APPROVALS = "approvals";
 
     /**
-     * Key for the bundle restriction in AppRestrictionSchema.
-     */
-    private static final String RESTRICTION_KEY_PROFILE = "profile";
-    private static final String RESTRICTION_KEY_PROFILE_NAME = "name";
-    private static final String RESTRICTION_KEY_PROFILE_AGE = "age";
-
-    /**
      * Key for the bundle array restriction in AppRestrictionSchema.
      */
     private static final String RESTRICTION_KEY_ITEMS = "items";
@@ -119,8 +112,6 @@ public class AppRestrictionEnforcerFragment extends Fragment implements
     private EditText mEditNumber;
     private Spinner mSpinnerRank;
     private LinearLayout mLayoutApprovals;
-    private EditText mEditProfileName;
-    private EditText mEditProfileAge;
     private LinearLayout mLayoutItems;
 
     @Override
@@ -137,17 +128,12 @@ public class AppRestrictionEnforcerFragment extends Fragment implements
         mEditNumber = (EditText) view.findViewById(R.id.number);
         mSpinnerRank = (Spinner) view.findViewById(R.id.rank);
         mLayoutApprovals = (LinearLayout) view.findViewById(R.id.approvals);
-        mEditProfileName = (EditText) view.findViewById(R.id.profile_name);
-        mEditProfileAge = (EditText) view.findViewById(R.id.profile_age);
         mLayoutItems = (LinearLayout) view.findViewById(R.id.items);
         view.findViewById(R.id.item_add).setOnClickListener(this);
-        View bundleLayout = view.findViewById(R.id.bundle_layout);
         View bundleArrayLayout = view.findViewById(R.id.bundle_array_layout);
         if (BUNDLE_SUPPORTED) {
-            bundleLayout.setVisibility(View.VISIBLE);
             bundleArrayLayout.setVisibility(View.VISIBLE);
         } else {
-            bundleLayout.setVisibility(View.GONE);
             bundleArrayLayout.setVisibility(View.GONE);
         }
     }
@@ -190,21 +176,6 @@ public class AppRestrictionEnforcerFragment extends Fragment implements
                 String string = s.toString();
                 if (!TextUtils.isEmpty(string)) {
                     saveNumber(getActivity(), Integer.parseInt(string));
-                }
-            } catch (NumberFormatException e) {
-                Toast.makeText(getActivity(), "Not an integer!", Toast.LENGTH_SHORT).show();
-            }
-        }
-    };
-
-    private TextWatcher mWatcherProfile = new EasyTextWatcher() {
-        @Override
-        public void afterTextChanged(Editable s) {
-            try {
-                String name = mEditProfileName.getText().toString();
-                String ageString = mEditProfileAge.getText().toString();
-                if (!TextUtils.isEmpty(ageString)) {
-                    saveProfile(getActivity(), name, Integer.parseInt(ageString));
                 }
             } catch (NumberFormatException e) {
                 Toast.makeText(getActivity(), "Not an integer!", Toast.LENGTH_SHORT).show();
@@ -292,20 +263,6 @@ public class AppRestrictionEnforcerFragment extends Fragment implements
                                         TextUtils.join(DELIMETER,
                                                 restriction.getAllSelectedStrings())),
                                 DELIMETER));
-            } else if (BUNDLE_SUPPORTED && RESTRICTION_KEY_PROFILE.equals(key)) {
-                String name = null;
-                int age = 0;
-                for (RestrictionEntry entry : restriction.getRestrictions()) {
-                    String profileKey = entry.getKey();
-                    if (RESTRICTION_KEY_PROFILE_NAME.equals(profileKey)) {
-                        name = entry.getSelectedString();
-                    } else if (RESTRICTION_KEY_PROFILE_AGE.equals(profileKey)) {
-                        age = entry.getIntValue();
-                    }
-                }
-                name = prefs.getString(RESTRICTION_KEY_PROFILE_NAME, name);
-                age = prefs.getInt(RESTRICTION_KEY_PROFILE_AGE, age);
-                updateProfile(name, age);
             } else if (BUNDLE_SUPPORTED && RESTRICTION_KEY_ITEMS.equals(key)) {
                 String itemsString = prefs.getString(RESTRICTION_KEY_ITEMS, "");
                 HashMap<String, String> items = new HashMap<>();
@@ -360,22 +317,6 @@ public class AppRestrictionEnforcerFragment extends Fragment implements
             sw.setId(R.id.approval);
             mLayoutApprovals.addView(sw);
         }
-    }
-
-    private void updateProfile(String name, int age) {
-        if (!BUNDLE_SUPPORTED) {
-            return;
-        }
-        Bundle profile = new Bundle();
-        profile.putString(RESTRICTION_KEY_PROFILE_NAME, name);
-        profile.putInt(RESTRICTION_KEY_PROFILE_AGE, age);
-        mCurrentRestrictions.putBundle(RESTRICTION_KEY_PROFILE, profile);
-        mEditProfileName.removeTextChangedListener(mWatcherProfile);
-        mEditProfileName.setText(name);
-        mEditProfileName.addTextChangedListener(mWatcherProfile);
-        mEditProfileAge.removeTextChangedListener(mWatcherProfile);
-        mEditProfileAge.setText(String.valueOf(age));
-        mEditProfileAge.addTextChangedListener((mWatcherProfile));
     }
 
     private void updateItems(Context context, Map<String, String> items) {
@@ -508,25 +449,6 @@ public class AppRestrictionEnforcerFragment extends Fragment implements
         saveRestrictions(activity);
         editPreferences(activity).putString(RESTRICTION_KEY_APPROVALS,
                 TextUtils.join(DELIMETER, approvals)).apply();
-    }
-
-    /**
-     * Saves the value for the "profile" restriction of AppRestrictionSchema.
-     *
-     * @param activity The activity
-     * @param name     The value to be set for the "name" field.
-     * @param age      The value to be set for the "age" field.
-     */
-    private void saveProfile(Activity activity, String name, int age) {
-        if (!BUNDLE_SUPPORTED) {
-            return;
-        }
-        Bundle profile = new Bundle();
-        profile.putString(RESTRICTION_KEY_PROFILE_NAME, name);
-        profile.putInt(RESTRICTION_KEY_PROFILE_AGE, age);
-        mCurrentRestrictions.putBundle(RESTRICTION_KEY_PROFILE, profile);
-        saveRestrictions(activity);
-        editPreferences(activity).putString(RESTRICTION_KEY_PROFILE_NAME, name).apply();
     }
 
     /**
