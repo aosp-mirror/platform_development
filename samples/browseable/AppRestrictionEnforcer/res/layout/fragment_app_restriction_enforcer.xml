@@ -119,34 +119,6 @@
 
         </LinearLayout>
 
-        <LinearLayout
-            android:id="@+id/bundle_layout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/profile"/>
-
-            <EditText
-                android:id="@+id/profile_name"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="0.75"
-                android:hint="@string/name"/>
-
-            <EditText
-                android:id="@+id/profile_age"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="0.25"
-                android:hint="@string/age"
-                android:inputType="number"/>
-
-        </LinearLayout>
-
         <RelativeLayout
             android:id="@+id/bundle_array_layout"
             android:layout_width="match_parent"
