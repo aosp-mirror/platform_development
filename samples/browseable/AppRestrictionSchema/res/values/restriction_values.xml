@@ -34,36 +34,36 @@ limitations under the License.
     <!-- Choice restriction -->
     <string name="title_rank">Rank</string>
     <string name="description_rank">Rank of the user</string>
+    <string name="entry_rank_apprentice">Apprentice</string>
+    <string name="entry_rank_intermediate">Intermediate</string>
+    <string name="entry_rank_master">Master</string>
     <string-array name="entries_rank">
-        <item>Apprentice</item>
-        <item>Intermediate</item>
-        <item>Master</item>
+        <item>@string/entry_rank_apprentice</item>
+        <item>@string/entry_rank_intermediate</item>
+        <item>@string/entry_rank_master</item>
     </string-array>
-    <string name="entry_value_rank_apprentice">apprentice</string>
-    <string name="entry_value_rank_intermediate">intermediate</string>
-    <string name="entry_value_rank_master">master</string>
     <string-array name="entry_values_rank">
-        <item>@string/entry_value_rank_apprentice</item>
-        <item>@string/entry_value_rank_intermediate</item>
-        <item>@string/entry_value_rank_master</item>
+        <item>apprentice</item>
+        <item>intermediate</item>
+        <item>master</item>
     </string-array>
-    <string name="default_rank">@string/entry_value_rank_apprentice</string>
+    <string name="default_rank">apprentice</string>
 
     <!-- Multi-select restriction -->
     <string name="title_approvals">Approvals</string>
     <string name="description_approvals">Approvals</string>
+    <string name="entry_approvals_read">Read</string>
+    <string name="entry_approvals_write">Write</string>
+    <string name="entry_approvals_execute">Execute</string>
     <string-array name="entries_approvals">
-        <item>Read</item>
-        <item>Write</item>
-        <item>Execute</item>
+        <item>@string/entry_approvals_read</item>
+        <item>@string/entry_approvals_write</item>
+        <item>@string/entry_approvals_execute</item>
     </string-array>
-    <string name="entry_value_approvals_read">read</string>
-    <string name="entry_value_approvals_write">write</string>
-    <string name="entry_value_approvals_execute">execute</string>
     <string-array name="entry_values_approvals">
-        <item>@string/entry_value_approvals_read</item>
-        <item>@string/entry_value_approvals_write</item>
-        <item>@string/entry_value_approvals_execute</item>
+        <item>read</item>
+        <item>write</item>
+        <item>execute</item>
     </string-array>
     <string-array name="default_approvals">
         <!-- Empty -->

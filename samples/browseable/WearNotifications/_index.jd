@@ -1,0 +1,14 @@
+
+page.tags="Wear Notifications"
+sample.group=Wearable
+@jd:body
+
+<p>
+            
+            Sample demonstrates best practices for Notification Styles that support Android
+            phone/tablets and Android Wear. The phone app demonstrates best practices if you do not
+            have a dedicated Android Wear app for Notifications. While the Android Wear app
+            demonstrates best practices for a standalone Wear Notification experience without
+            the Notifications showing on the phone/tablet.
+            
+        </p>
