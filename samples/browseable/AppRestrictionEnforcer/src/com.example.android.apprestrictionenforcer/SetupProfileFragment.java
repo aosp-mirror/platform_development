@@ -18,6 +18,7 @@ package com.example.android.apprestrictionenforcer;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -28,6 +29,7 @@ import android.widget.Toast;
 import static android.app.admin.DevicePolicyManager.ACTION_PROVISION_MANAGED_PROFILE;
 import static android.app.admin.DevicePolicyManager.EXTRA_DEVICE_ADMIN;
 import static android.app.admin.DevicePolicyManager.EXTRA_PROVISIONING_DEVICE_ADMIN_PACKAGE_NAME;
+import static android.app.admin.DevicePolicyManager.EXTRA_PROVISIONING_DEVICE_ADMIN_COMPONENT_NAME;
 
 /**
  * This {@link Fragment} handles initiation of managed profile provisioning.
@@ -74,9 +76,14 @@ public class SetupProfileFragment extends Fragment implements View.OnClickListen
             return;
         }
         Intent intent = new Intent(ACTION_PROVISION_MANAGED_PROFILE);
-        intent.putExtra(EXTRA_PROVISIONING_DEVICE_ADMIN_PACKAGE_NAME,
-                activity.getApplicationContext().getPackageName());
-        intent.putExtra(EXTRA_DEVICE_ADMIN, EnforcerDeviceAdminReceiver.getComponentName(activity));
+        if (Build.VERSION.SDK_INT >= 24) {
+            intent.putExtra(EXTRA_PROVISIONING_DEVICE_ADMIN_COMPONENT_NAME,
+                    EnforcerDeviceAdminReceiver.getComponentName(activity));
+        } else {
+            intent.putExtra(EXTRA_PROVISIONING_DEVICE_ADMIN_PACKAGE_NAME,
+                    activity.getApplicationContext().getPackageName());
+            intent.putExtra(EXTRA_DEVICE_ADMIN, EnforcerDeviceAdminReceiver.getComponentName(activity));
+        }
         if (intent.resolveActivity(activity.getPackageManager()) != null) {
             startActivityForResult(intent, REQUEST_PROVISION_MANAGED_PROFILE);
             activity.finish();

@@ -18,6 +18,7 @@ package com.example.android.wearable.watchface;
 
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -35,6 +36,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.support.v7.graphics.Palette;
 import android.support.wearable.complications.ComplicationData;
+import android.support.wearable.complications.ComplicationHelperActivity;
 import android.support.wearable.complications.ComplicationText;
 import android.support.wearable.watchface.CanvasWatchFaceService;
 import android.support.wearable.watchface.WatchFaceService;
@@ -362,16 +364,34 @@ public class ComplicationSimpleWatchFaceService extends CanvasWatchFaceService {
             if (Log.isLoggable(TAG, Log.DEBUG)) {
                 Log.d(TAG, "onComplicationTap()");
             }
+
             ComplicationData complicationData =
                     mActiveComplicationDataSparseArray.get(complicationId);
 
-            if ((complicationData != null) && (complicationData.getTapAction() != null)) {
-                try {
-                    complicationData.getTapAction().send();
-                } catch (PendingIntent.CanceledException e) {
-                    Log.e(TAG, "On complication tap action error " + e);
+            if (complicationData != null) {
+
+                if (complicationData.getTapAction() != null) {
+                    try {
+                        complicationData.getTapAction().send();
+                    } catch (PendingIntent.CanceledException e) {
+                        Log.e(TAG, "On complication tap action error " + e);
+                    }
+
+                } else if (complicationData.getType() == ComplicationData.TYPE_NO_PERMISSION) {
+
+                    // Watch face does not have permission to receive complication data, so launch
+                    // permission request.
+                    ComponentName componentName = new ComponentName(
+                            getApplicationContext(),
+                            ComplicationSimpleWatchFaceService.class);
+
+                    Intent permissionRequestIntent =
+                            ComplicationHelperActivity.createPermissionRequestHelperIntent(
+                                    getApplicationContext(), componentName);
+
+                    startActivity(permissionRequestIntent);
                 }
-                invalidate();
+
             } else {
                 if (Log.isLoggable(TAG, Log.DEBUG)) {
                     Log.d(TAG, "No PendingIntent for complication " + complicationId + ".");
@@ -551,50 +571,57 @@ public class ComplicationSimpleWatchFaceService extends CanvasWatchFaceService {
                 complicationData = mActiveComplicationDataSparseArray.get(COMPLICATION_IDS[i]);
 
                 if ((complicationData != null)
-                        && (complicationData.isActive(currentTimeMillis))
-                        && (complicationData.getType() == ComplicationData.TYPE_SHORT_TEXT)) {
+                        && (complicationData.isActive(currentTimeMillis))) {
 
-                    ComplicationText mainText = complicationData.getShortText();
-                    ComplicationText subText = complicationData.getShortTitle();
+                    // Both Short Text and No Permission Types can be rendered with the same code.
+                    // No Permission will display "--" with an Intent to launch a permission prompt.
+                    // If you want to support more types, just add a "else if" below with your
+                    // rendering code inside.
+                    if (complicationData.getType() == ComplicationData.TYPE_SHORT_TEXT
+                            || complicationData.getType() == ComplicationData.TYPE_NO_PERMISSION) {
 
-                    CharSequence complicationMessage =
-                            mainText.getText(getApplicationContext(), currentTimeMillis);
+                        ComplicationText mainText = complicationData.getShortText();
+                        ComplicationText subText = complicationData.getShortTitle();
 
-                    /* In most cases you would want the subText (Title) under the mainText (Text),
-                     * but to keep it simple for the code lab, we are concatenating them all on one
-                     * line.
-                     */
-                    if (subText != null) {
-                        complicationMessage = TextUtils.concat(
-                                complicationMessage,
-                                " ",
-                                subText.getText(getApplicationContext(), currentTimeMillis));
-                    }
+                        CharSequence complicationMessage =
+                                mainText.getText(getApplicationContext(), currentTimeMillis);
 
-                    //Log.d(TAG, "Comp id: " + COMPLICATION_IDS[i] + "\t" + complicationMessage);
-                    double textWidth =
-                            mComplicationPaint.measureText(
+                        /* In most cases you would want the subText (Title) under the
+                         * mainText (Text), but to keep it simple for the code lab, we are
+                         * concatenating them all on one line.
+                         */
+                        if (subText != null) {
+                            complicationMessage = TextUtils.concat(
                                     complicationMessage,
-                                    0,
-                                    complicationMessage.length());
+                                    " ",
+                                    subText.getText(getApplicationContext(), currentTimeMillis));
+                        }
 
-                    int complicationsX;
+                        //Log.d(TAG, "Com id: " + COMPLICATION_IDS[i] + "\t" + complicationMessage);
+                        double textWidth =
+                                mComplicationPaint.measureText(
+                                        complicationMessage,
+                                        0,
+                                        complicationMessage.length());
 
-                    if (COMPLICATION_IDS[i] == LEFT_DIAL_COMPLICATION) {
-                        complicationsX = (int) ((mWidth / 2) - textWidth) / 2;
-                    } else {
-                        // RIGHT_DIAL_COMPLICATION calculations
-                        int offset = (int) ((mWidth / 2) - textWidth) / 2;
-                        complicationsX = (mWidth / 2) + offset;
+                        int complicationsX;
+
+                        if (COMPLICATION_IDS[i] == LEFT_DIAL_COMPLICATION) {
+                            complicationsX = (int) ((mWidth / 2) - textWidth) / 2;
+                        } else {
+                            // RIGHT_DIAL_COMPLICATION calculations
+                            int offset = (int) ((mWidth / 2) - textWidth) / 2;
+                            complicationsX = (mWidth / 2) + offset;
+                        }
+
+                        canvas.drawText(
+                                complicationMessage,
+                                0,
+                                complicationMessage.length(),
+                                complicationsX,
+                                mComplicationsY,
+                                mComplicationPaint);
                     }
-
-                    canvas.drawText(
-                            complicationMessage,
-                            0,
-                            complicationMessage.length(),
-                            complicationsX,
-                            mComplicationsY,
-                            mComplicationPaint);
                 }
             }
         }

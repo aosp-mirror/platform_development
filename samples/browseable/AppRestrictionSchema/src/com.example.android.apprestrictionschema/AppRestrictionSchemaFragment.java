@@ -51,9 +51,6 @@ public class AppRestrictionSchemaFragment extends Fragment implements View.OnCli
     private static final String KEY_NUMBER = "number";
     private static final String KEY_RANK = "rank";
     private static final String KEY_APPROVALS = "approvals";
-    private static final String KEY_PROFILE = "profile";
-    private static final String KEY_PROFILE_NAME = "name";
-    private static final String KEY_PROFILE_AGE = "age";
     private static final String KEY_ITEMS = "items";
     private static final String KEY_ITEM_KEY = "key";
     private static final String KEY_ITEM_VALUE = "value";
@@ -69,7 +66,6 @@ public class AppRestrictionSchemaFragment extends Fragment implements View.OnCli
     private TextView mTextNumber;
     private TextView mTextRank;
     private TextView mTextApprovals;
-    private TextView mTextProfile;
     private TextView mTextItems;
 
     @Override
@@ -86,18 +82,15 @@ public class AppRestrictionSchemaFragment extends Fragment implements View.OnCli
         mTextRank = (TextView) view.findViewById(R.id.your_rank);
         mTextApprovals = (TextView) view.findViewById(R.id.approvals_you_have);
         View bundleSeparator = view.findViewById(R.id.bundle_separator);
-        mTextProfile = (TextView) view.findViewById(R.id.your_profile);
         View bundleArraySeparator = view.findViewById(R.id.bundle_array_separator);
         mTextItems = (TextView) view.findViewById(R.id.your_items);
         mButtonSayHello.setOnClickListener(this);
         if (BUNDLE_SUPPORTED) {
             bundleSeparator.setVisibility(View.VISIBLE);
-            mTextProfile.setVisibility(View.VISIBLE);
             bundleArraySeparator.setVisibility(View.VISIBLE);
             mTextItems.setVisibility(View.VISIBLE);
         } else {
             bundleSeparator.setVisibility(View.GONE);
-            mTextProfile.setVisibility(View.GONE);
             bundleArraySeparator.setVisibility(View.GONE);
             mTextItems.setVisibility(View.GONE);
         }
@@ -128,10 +121,8 @@ public class AppRestrictionSchemaFragment extends Fragment implements View.OnCli
                 updateRank(entry, restrictions);
             } else if (key.equals(KEY_APPROVALS)) {
                 updateApprovals(entry, restrictions);
-            } else if (key.equals(KEY_PROFILE)) {
-                updateProfile(entry, restrictions);
             } else if (key.equals(KEY_ITEMS)) {
-                updateItems(entry, restrictions);
+                updateItems(restrictions);
             }
         }
     }
@@ -193,33 +184,7 @@ public class AppRestrictionSchemaFragment extends Fragment implements View.OnCli
         mTextApprovals.setText(getString(R.string.approvals_you_have, text));
     }
 
-    private void updateProfile(RestrictionEntry entry, Bundle restrictions) {
-        if (!BUNDLE_SUPPORTED) {
-            return;
-        }
-        String name = null;
-        int age = 0;
-        if (restrictions == null || !restrictions.containsKey(KEY_PROFILE)) {
-            RestrictionEntry[] entries = entry.getRestrictions();
-            for (RestrictionEntry profileEntry : entries) {
-                String key = profileEntry.getKey();
-                if (key.equals(KEY_PROFILE_NAME)) {
-                    name = profileEntry.getSelectedString();
-                } else if (key.equals(KEY_PROFILE_AGE)) {
-                    age = profileEntry.getIntValue();
-                }
-            }
-        } else {
-            Bundle profile = restrictions.getBundle(KEY_PROFILE);
-            if (profile != null) {
-                name = profile.getString(KEY_PROFILE_NAME);
-                age = profile.getInt(KEY_PROFILE_AGE);
-            }
-        }
-        mTextProfile.setText(getString(R.string.your_profile, name, age));
-    }
-
-    private void updateItems(RestrictionEntry entry, Bundle restrictions) {
+    private void updateItems(Bundle restrictions) {
         if (!BUNDLE_SUPPORTED) {
             return;
         }
