@@ -21,8 +21,6 @@
 #include <sys/types.h>
 #include <limits.h>
 
-#define __pure2
-
 /*
  * ANSI/POSIX
  */
