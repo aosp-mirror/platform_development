@@ -29,9 +29,6 @@
     <string name="number">Number: </string>
     <string name="rank">Rank: </string>
     <string name="approvals">Approvals: </string>
-    <string name="profile">Profile: </string>
-    <string name="name">Name</string>
-    <string name="age">Age</string>
     <string name="items">Items: </string>
     <string name="add">Add</string>
     <string name="key">Key</string>

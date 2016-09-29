@@ -62,7 +62,7 @@ public class MainActivity extends FragmentActivity implements StatusFragment.Sta
 
     private void showSetupProfile() {
         getSupportFragmentManager().beginTransaction()
-                .replace(R.id.container, new SetupProfileFragment())
+                .replace(R.id.container, SetupProfileFragment.newInstance())
                 .commit();
     }
 

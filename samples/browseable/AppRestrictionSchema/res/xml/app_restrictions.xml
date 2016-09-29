@@ -72,26 +72,6 @@ limitations under the License.
         android:restrictionType="hidden"
         android:title="@string/title_secret_code"/>
 
-    <!-- Bundle restriction; useful for grouping restrictions -->
-    <restriction
-        android:description="@string/description_profile"
-        android:key="profile"
-        android:restrictionType="bundle"
-        android:title="@string/title_profile">
-        <restriction
-            android:defaultValue="@string/default_profile_name"
-            android:description="@string/description_profile_name"
-            android:key="name"
-            android:restrictionType="string"
-            android:title="@string/title_profile_name"/>
-        <restriction
-            android:defaultValue="@integer/default_profile_age"
-            android:description="@string/description_profile_age"
-            android:key="age"
-            android:restrictionType="integer"
-            android:title="@string/title_profile_age"/>
-    </restriction>
-
     <!-- Bundle array restriction -->
     <restriction
         android:description="@string/description_items"

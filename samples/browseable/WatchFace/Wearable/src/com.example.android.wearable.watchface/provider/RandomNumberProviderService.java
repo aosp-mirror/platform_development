@@ -1,5 +1,7 @@
 package com.example.android.wearable.watchface.provider;
 
+import android.app.PendingIntent;
+import android.content.Intent;
 import android.support.wearable.complications.ComplicationData;
 import android.support.wearable.complications.ComplicationManager;
 import android.support.wearable.complications.ComplicationProviderService;
@@ -42,7 +44,7 @@ public class RandomNumberProviderService extends ComplicationProviderService {
     @Override
     public void onComplicationUpdate(
             int complicationId, int dataType, ComplicationManager complicationManager) {
-        Log.d(TAG, "onComplicationUpdate()");
+        Log.d(TAG, "onComplicationUpdate() id: " + complicationId);
 
 
         // Retrieve your data, in this case, we simply create a random number to display.
@@ -50,6 +52,24 @@ public class RandomNumberProviderService extends ComplicationProviderService {
 
         String randomNumberText =
                 String.format(Locale.getDefault(), "%d!", randomNumber);
+
+        // Create Tap Action so that the user can trigger an update by tapping the complication.
+        Intent updateIntent =
+                new Intent(getApplicationContext(), UpdateComplicationDataService.class);
+        updateIntent.setAction(UpdateComplicationDataService.ACTION_UPDATE_COMPLICATION);
+        // We pass the complication id, so we can only update the specific complication tapped.
+        updateIntent.putExtra(UpdateComplicationDataService.EXTRA_COMPLICATION_ID, complicationId);
+
+        PendingIntent pendingIntent = PendingIntent.getService(
+                getApplicationContext(),
+                // Set the requestCode to the complication id. This ensures the system doesn't
+                // combine other PendingIntents with the same context with this one (basically it
+                // would then reuse the Extra you set in the initial PendingIntent). If you don't
+                // do this and multiple complications with your data are active, every PendingIntent
+                // assigned for tap, would use the same complication id (first one created).
+                complicationId,
+                updateIntent,
+                0);
 
         ComplicationData complicationData = null;
 
@@ -60,17 +80,20 @@ public class RandomNumberProviderService extends ComplicationProviderService {
                         .setMinValue(0)
                         .setMaxValue(10)
                         .setShortText(ComplicationText.plainText(randomNumberText))
+                        .setTapAction(pendingIntent)
                         .build();
                 break;
             case ComplicationData.TYPE_SHORT_TEXT:
                 complicationData = new ComplicationData.Builder(ComplicationData.TYPE_SHORT_TEXT)
                         .setShortText(ComplicationText.plainText(randomNumberText))
+                        .setTapAction(pendingIntent)
                         .build();
                 break;
             case ComplicationData.TYPE_LONG_TEXT:
                 complicationData = new ComplicationData.Builder(ComplicationData.TYPE_LONG_TEXT)
                         .setLongText(
                                 ComplicationText.plainText("Random Number: " + randomNumberText))
+                        .setTapAction(pendingIntent)
                         .build();
                 break;
             default:

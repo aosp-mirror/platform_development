@@ -68,15 +68,6 @@ limitations under the License.
             android:textAppearance="?android:attr/textAppearanceMedium"
             tools:text="@string/approvals_you_have"/>
 
-        <include layout="@layout/separator"/>
-
-        <TextView
-            android:id="@+id/your_profile"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            tools:text="@string/your_profile"/>
-
         <include layout="@layout/separator" android:id="@+id/bundle_array_separator" />
 
         <TextView
