@@ -389,6 +389,13 @@ See test_defs.xsd for more information.
     continuous="true"
     description="SystemUI tests" />
 
+<test name="systemui-jank"
+    build_path="platform_testing/tests/jank/UbSystemUiJankTests"
+    package="android.platform.systemui.tests.jank"
+    runner="android.test.InstrumentationTestRunner"
+    continuous="true"
+    description="SystemUI jank tests" />
+
 <test name="documentsui"
     build_path="frameworks/base/packages/DocumentsUI/tests"
     package="com.android.documentsui.tests"
