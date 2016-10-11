@@ -152,5 +152,16 @@ class TestCheckstyle(unittest.TestCase):
     output = out.getvalue()
     self.assertEqual(output, '')
 
+  def test_FilterFiles(self):
+    files = {TEST_FILE1: FILE_MODIFIED, TEST_FILE2: FILE_ADDED}
+    output = checkstyle._FilterFiles(files, None)
+    self.assertEqual(files, output)
+    output = checkstyle._FilterFiles(files, ['Blarg2'])
+    self.assertEqual({TEST_FILE2: FILE_ADDED}, output)
+    output = checkstyle._FilterFiles(files, ['Blarg'])
+    self.assertEqual(files, output)
+    output = checkstyle._FilterFiles(files, ['FunkyTown'])
+    self.assertEqual({}, output)
+
 if __name__ == '__main__':
   unittest.main()
