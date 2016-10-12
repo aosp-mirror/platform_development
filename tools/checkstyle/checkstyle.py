@@ -59,7 +59,9 @@ def RunCheckstyleOnFiles(java_files, config_xml=CHECKSTYLE_STYLE):
   return errors, warnings
 
 
-def RunCheckstyleOnACommit(commit, config_xml=CHECKSTYLE_STYLE):
+def RunCheckstyleOnACommit(commit,
+                           config_xml=CHECKSTYLE_STYLE,
+                           file_whitelist=None):
   """Runs Checkstyle checks on a given commit.
 
   It will run Checkstyle on the changed Java files in a specified commit SHA-1
@@ -69,6 +71,7 @@ def RunCheckstyleOnACommit(commit, config_xml=CHECKSTYLE_STYLE):
   Args:
     commit: A full 40 character SHA-1 of a commit to check.
     config_xml: Path of the checkstyle XML configuration file.
+    file_whitelist: A list of whitelisted file paths that should be checked.
 
   Returns:
     A tuple of errors and warnings.
@@ -79,6 +82,7 @@ def RunCheckstyleOnACommit(commit, config_xml=CHECKSTYLE_STYLE):
     commit = git.last_commit()
   print 'Running Checkstyle on %s commit' % commit
   commit_modified_files = _GetModifiedFiles(commit, explicit_commit)
+  commit_modified_files = _FilterFiles(commit_modified_files, file_whitelist)
   if not commit_modified_files.keys():
     print 'No Java files to check'
     return [], []
@@ -230,6 +234,13 @@ def _GetModifiedFiles(commit, explicit_commit=False, out=sys.stdout):
   return modified_files
 
 
+def _FilterFiles(files, file_whitelist):
+  if not file_whitelist:
+    return files
+  return {f: files[f] for f in files
+          for whitelist in file_whitelist if whitelist in f}
+
+
 def _GetTempFilesForCommit(file_names, commit):
   """Creates a temporary snapshot of the files in at a commit.
 
@@ -277,6 +288,7 @@ def main(args=None):
   parser.add_argument('--file', '-f', nargs='+')
   parser.add_argument('--sha', '-s')
   parser.add_argument('--config_xml', '-c')
+  parser.add_argument('--file_whitelist', '-fw', nargs='+')
   args = parser.parse_args()
 
   config_xml = args.config_xml or CHECKSTYLE_STYLE
@@ -288,7 +300,8 @@ def main(args=None):
     # Files to check were specified via command line.
     (errors, warnings) = RunCheckstyleOnFiles(args.file, config_xml)
   else:
-    (errors, warnings) = RunCheckstyleOnACommit(args.sha, config_xml)
+    (errors, warnings) = RunCheckstyleOnACommit(args.sha, config_xml,
+                                                args.file_whitelist)
 
   if errors or warnings:
     sys.exit(1)
