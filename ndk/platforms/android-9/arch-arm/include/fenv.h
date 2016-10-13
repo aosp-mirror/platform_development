@@ -36,28 +36,14 @@
 #ifndef _FENV_H_
 #define _FENV_H_
 
+#include <machine/fenv.h>
 #include <sys/types.h>
 
 __BEGIN_DECLS
 
-typedef __uint32_t fenv_t;
-typedef __uint32_t fexcept_t;
-
-/* Exception flags. */
-#define FE_INVALID    0x01
-#define FE_DIVBYZERO  0x02
-#define FE_OVERFLOW   0x04
-#define FE_UNDERFLOW  0x08
-#define FE_INEXACT    0x10
-#define FE_ALL_EXCEPT (FE_DIVBYZERO | FE_INEXACT | FE_INVALID | FE_OVERFLOW | FE_UNDERFLOW)
 #define _FPSCR_ENABLE_SHIFT 8
 #define _FPSCR_ENABLE_MASK (FE_ALL_EXCEPT << _FPSCR_ENABLE_SHIFT)
 
-/* Rounding modes. */
-#define FE_TONEAREST  0x0
-#define FE_UPWARD     0x1
-#define FE_DOWNWARD   0x2
-#define FE_TOWARDZERO 0x3
 #define _FPSCR_RMODE_SHIFT 22
 
 /* Default floating-point environment. */

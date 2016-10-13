@@ -71,32 +71,18 @@
 #ifndef _FENV_H_
 #define _FENV_H_
 
+#include <machine/fenv.h>
 #include <sys/types.h>
 
 __BEGIN_DECLS
 
-typedef __uint32_t    fenv_t;
-typedef __uint32_t    fexcept_t;
-
-/* Exception flags */
-#define FE_INVALID      0x40
-#define FE_DIVBYZERO    0x20
-#define FE_OVERFLOW     0x10
-#define FE_UNDERFLOW    0x08
-#define FE_INEXACT      0x04
-#define FE_ALL_EXCEPT   (FE_DIVBYZERO | FE_INEXACT | \
-                         FE_INVALID | FE_OVERFLOW | FE_UNDERFLOW)
 #define _FCSR_CAUSE_SHIFT  10
 #define _ENABLE_SHIFT 5
 #define _FCSR_ENABLE_MASK (FE_ALL_EXCEPT << _ENABLE_SHIFT)
 
-/* Rounding modes */
-#define FE_TONEAREST    0x0000
-#define FE_TOWARDZERO   0x0001
-#define FE_UPWARD       0x0002
-#define FE_DOWNWARD     0x0003
 #define _FCSR_RMODE_SHIFT 0
 #define _FCSR_RMASK       0x3
+
 /* Default floating-point environment */
 extern const fenv_t    __fe_dfl_env;
 #define FE_DFL_ENV    (&__fe_dfl_env)
