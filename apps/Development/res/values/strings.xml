@@ -108,23 +108,6 @@
     <string name="launch_singleInstance">Single Instance</string>
     <string name="launch_unknown">"(Unknown)"</string>
 
-    <string name="development_settings_show_cpu_text">Show CPU usage</string>
-    <string name="development_settings_always_finish_text">Immediately destroy activities</string>
-    <string name="development_settings_show_load_text">Show running processes</string>
-    <string name="development_settings_show_updates_text">Show screen updates</string>
-    <string name="development_settings_compatibility_mode_text">Disable compatibility mode</string>
-    <string name="development_settings_compatibility_mode_toast">Reboot required for
-            change to take effect.</string>
-    <string name="development_settings_enable_gl_text">Enable OpenGL ES (reboot needed)</string>
-    <string name="development_settings_allow_mock_location_text">Allow mock locations for testing</string>
-    <string name="development_settings_wait_for_debugger_text">Wait for debugger</string>
-    <string name="development_settings_show_background_text">Show background</string>
-    <string name="development_settings_show_xmpp_text">Show GTalk service connection status</string>
-    <string name="development_settings_debug_app_label_text">Debug App:</string>
-    <string name="development_settings_show_sleep_text">Show sleep state on LED</string>
-    <string name="development_settings_keep_screen_on_text">Keep screen on while plugged in</string>
-    <string name="development_settings_window_orientation_listener_log">Enable window orientation listener log</string>
-
     <string name="monkey_screen_initialActivity_text"></string>
     <string name="monkey_screen_number_of_events_label">Number of Events: </string>
     <string name="monkey_screen_start_text">Start</string>
