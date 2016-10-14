@@ -126,7 +126,6 @@ ANDROID_SUPPORT_LIBRARIES := \
     android-support-core-utils \
     android-support-customtabs \
     android-support-design \
-    android-support-documents-archive \
     android-support-fragment \
     android-support-media-compat \
     android-support-multidex \
