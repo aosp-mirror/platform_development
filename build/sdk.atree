@@ -351,6 +351,9 @@ developers/build/prebuilts/gradle/DirectShare                                sam
 developers/build/prebuilts/gradle/MidiScope                                  samples/${PLATFORM_NAME}/media/MidiScope
 developers/build/prebuilts/gradle/MidiSynth                                  samples/${PLATFORM_NAME}/media/MidiSynth
 developers/build/prebuilts/gradle/AsymmetricFingerprintDialog                samples/${PLATFORM_NAME}/security/AsymmetricFingerprintDialog
+developers/build/prebuilts/gradle/AppShortcuts                               samples/${PLATFORM_NAME}/system/AppShortcuts
+developers/build/prebuilts/gradle/CommitContentSampleApp                     samples/${PLATFORM_NAME}/input/keyboard/CommitContentSampleApp
+developers/build/prebuilts/gradle/CommitContentSampleIME                     samples/${PLATFORM_NAME}/input/keyboard/CommitContentSampleIME
 
 developers/build/prebuilts/androidtv                                         samples/${PLATFORM_NAME}/androidtv
 
