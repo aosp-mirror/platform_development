@@ -64,6 +64,9 @@ public class RotationAnimation extends Activity {
                         case R.id.jumpcut:
                             mRotationAnimation = LayoutParams.ROTATION_ANIMATION_JUMPCUT;
                             break;
+                        case R.id.seamless:
+                            mRotationAnimation = LayoutParams.ROTATION_ANIMATION_SEAMLESS;
+                            break;
                     }
                     setRotationAnimation(mRotationAnimation);
                 }

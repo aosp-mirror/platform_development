@@ -1308,6 +1308,7 @@
     <string name="rotation_animation_rotate">ROTATE</string>
     <string name="rotation_animation_crossfade">XFADE</string>
     <string name="rotation_animation_jumpcut">JUMPCUT</string>
+    <string name="rotation_animation_seamless">SEAMLESS</string>
     <string name="scroll_view_1_text_1">Text View 1</string>
     <string name="scroll_view_1_button_1">Button 1</string>
     <string name="scroll_view_1_text_2">Text View 2</string>
