@@ -245,6 +245,12 @@ See test_defs.xsd for more information.
     build_path="development/samples/ApiDemos"
     package="com.example.android.apis.tests" />
 
+<test name="bluetooth"
+    build_path="packages/apps/Bluetooth/tests"
+    package="com.android.bluetooth.tests"
+    runner="android.support.test.runner.AndroidJUnitRunner"
+    continuous="true" />
+
 <test name="calculator"
     build_path="packages/apps/Calculator"
     package="com.android.calculator2.tests"
