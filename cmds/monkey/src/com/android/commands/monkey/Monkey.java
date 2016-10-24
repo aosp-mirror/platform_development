@@ -234,7 +234,9 @@ public class Monkey {
 
     private static final File TOMBSTONES_PATH = new File("/data/tombstones");
 
-    private HashSet<String> mTombstones = null;
+    private static final String TOMBSTONE_PREFIX = "tombstone_";
+
+    private HashSet<Long> mTombstones = null;
 
     float[] mFactors = new float[MonkeySourceRandom.FACTORZ_COUNT];
 
@@ -1212,18 +1214,26 @@ public class Monkey {
 
         // shortcut path for usually empty directory, so we don't waste even
         // more objects
-        if ((tombstones == null) || (tombstones.length == 0)) {
+        if (tombstones == null || tombstones.length == 0) {
             mTombstones = null;
             return false;
         }
 
-        // use set logic to look for new files
-        HashSet<String> newStones = new HashSet<String>();
-        for (String x : tombstones) {
-            newStones.add(x);
-        }
+        boolean result = false;
 
-        boolean result = (mTombstones == null) || !mTombstones.containsAll(newStones);
+        // use set logic to look for new files
+        HashSet<Long> newStones = new HashSet<Long>();
+        for (String t : tombstones) {
+            if (t.startsWith(TOMBSTONE_PREFIX)) {
+                File f = new File(TOMBSTONES_PATH, t);
+                newStones.add(f.lastModified());
+                if (mTombstones == null || !mTombstones.contains(f.lastModified())) {
+                    result = true;
+                    System.out.println("** New tombstone found: " + f.getAbsolutePath()
+                                       + ", size: " + f.length());
+                }
+            }
+        }
 
         // keep the new list for the next time
         mTombstones = newStones;
