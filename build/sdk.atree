@@ -577,9 +577,6 @@ frameworks/support/transition/AndroidManifest.xml                               
 frameworks/support/transition/res                                                     extras/android/support/transition/res
 ${OUT_DIR}/target/common/obj/PACKAGING/android-support-transition_intermediates/android-support-transition.jar    extras/android/support/transition/libs/android-support-transition.jar
 
-frameworks/support/documents-archive/AndroidManifest.xml                                     extras/android/support/documents-archive/AndroidManifest.xml
-${OUT_DIR}/target/common/obj/PACKAGING/android-support-documents-archive_intermediates/android-support-documents-archive.jar    extras/android/support/documents-archive/libs/android-support-documents-archive.jar
-
 ##############################################################################
 # Tests Component
 ##############################################################################
