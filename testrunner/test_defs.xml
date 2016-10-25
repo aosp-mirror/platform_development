@@ -416,6 +416,13 @@ See test_defs.xsd for more information.
     continuous="true"
     description="SystemUI Notification tests" />
 
+<test name="systemui-functional-notification"
+    build_path="platform_testing/tests/functional/notificationtests"
+    package="com.android.notification.functional"
+    runner="android.support.test.runner.AndroidJUnitRunner"
+    continuous="true"
+    description="SystemUI functional notification tests" />
+
 <test name="apptransition-perf"
     build_path="platform_testing/tests/perf/PerfTransitionTest"
     package="com.android.apptransition.tests"
