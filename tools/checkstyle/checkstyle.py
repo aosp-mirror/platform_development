@@ -36,8 +36,7 @@ FORCED_RULES = ['com.puppycrawl.tools.checkstyle.checks.imports.ImportOrderCheck
                 'com.puppycrawl.tools.checkstyle.checks.imports.UnusedImportsCheck']
 SKIPPED_RULES_FOR_TEST_FILES = ['com.puppycrawl.tools.checkstyle.checks.javadoc.JavadocTypeCheck',
                                 'com.puppycrawl.tools.checkstyle.checks.javadoc.JavadocMethodCheck']
-SUBPATH_FOR_TEST_FILES = ['/tests/java/', '/tests/src/', '/tests/test-data/',
-                          '/test/java/', '/test/src/', '/test/test-data/']
+SUBPATH_FOR_TEST_FILES = ['/tests/java/', '/tests/src/', '/tests/test-data/', '/src/test/']
 ERROR_UNCOMMITTED = 'You need to commit all modified files before running Checkstyle\n'
 ERROR_UNTRACKED = 'You have untracked java files that are not being checked:\n'
 
