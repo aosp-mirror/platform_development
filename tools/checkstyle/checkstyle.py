@@ -188,7 +188,11 @@ def _ParseAndFilterOutput(stdout,
       if error.hasAttribute('column'):
         column = '%s:' % error.attributes['column'].value
       message = error.attributes['message'].value
-      result = '  %s:%s:%s %s' % (file_name, line, column, message)
+      project = ''
+      if os.environ.get('REPO_PROJECT'):
+        project = '[' + os.environ.get('REPO_PROJECT') + '] '
+
+      result = '  %s%s:%s:%s %s' % (project, file_name, line, column, message)
 
       severity = error.attributes['severity'].value
       if severity == 'error':
