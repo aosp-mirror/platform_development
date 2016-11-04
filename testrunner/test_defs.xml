@@ -402,6 +402,14 @@ See test_defs.xsd for more information.
     continuous="true"
     description="SystemUI tests" />
 
+<test name="systemui-google"
+    build_path="vendor/unbundled_google/packages/SystemUIGoogle/tests"
+    package="com.google.android.systemui.tests"
+    coverage_target="SystemUIGoogle"
+    runner="android.support.test.runner.AndroidJUnitRunner"
+    continuous="true"
+    description="SystemUIGoogle tests" />
+
 <test name="systemui-jank"
     build_path="platform_testing/tests/jank/UbSystemUiJankTests"
     package="android.platform.systemui.tests.jank"
