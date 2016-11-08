@@ -39,6 +39,7 @@ WIN_TARGETS := \
 	dexdump dmtracedump \
 	fastboot \
 	hprof-conv \
+	libaapt2_jni \
 	llvm-rs-cc \
 	sqlite3 \
 	zipalign \

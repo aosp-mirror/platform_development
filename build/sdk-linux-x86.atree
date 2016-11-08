@@ -33,6 +33,7 @@ lib64/libbcc.so                                        strip build-tools/${PLATF
 lib64/libbcinfo.so                                     strip build-tools/${PLATFORM_NAME}/lib64/libbcinfo.so
 lib64/libclang.so                                      strip build-tools/${PLATFORM_NAME}/lib64/libclang.so
 lib64/libc++.so                                        strip build-tools/${PLATFORM_NAME}/lib64/libc++.so
+lib64/libaapt2_jni.so                                  strip build-tools/${PLATFORM_NAME}/lib64/libaapt2_jni.so
 
 prebuilts/sdk/tools/linux/bin/arm-linux-androideabi-ld   strip build-tools/${PLATFORM_NAME}/arm-linux-androideabi-ld
 prebuilts/sdk/tools/linux/bin/aarch64-linux-android-ld   strip build-tools/${PLATFORM_NAME}/aarch64-linux-android-ld

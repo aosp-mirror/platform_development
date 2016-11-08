@@ -64,6 +64,9 @@ bin/aapt.exe                            strip build-tools/${PLATFORM_NAME}/aapt.
 rm build-tools/${PLATFORM_NAME}/aapt2
 bin/aapt2.exe                           strip build-tools/${PLATFORM_NAME}/aapt2.exe
 
+rm build-tools/${PLATFORM_NAME}/lib64/libaapt2_jni.so
+lib/libaapt2_jni.dll                    strip build-tools/${PLATFORM_NAME}/libaapt2_jni.dll
+
 rm build-tools/${PLATFORM_NAME}/split-select
 bin/split-select.exe                    strip build-tools/${PLATFORM_NAME}/split-select.exe
 
