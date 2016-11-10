@@ -36,7 +36,8 @@ FORCED_RULES = ['com.puppycrawl.tools.checkstyle.checks.imports.ImportOrderCheck
                 'com.puppycrawl.tools.checkstyle.checks.imports.UnusedImportsCheck']
 SKIPPED_RULES_FOR_TEST_FILES = ['com.puppycrawl.tools.checkstyle.checks.javadoc.JavadocTypeCheck',
                                 'com.puppycrawl.tools.checkstyle.checks.javadoc.JavadocMethodCheck']
-SUBPATH_FOR_TEST_FILES = ['/tests/java/', '/tests/src/', '/tests/test-data/', '/src/test/']
+SUBPATH_FOR_TEST_FILES = ['/tests/java/', '/tests/src/', '/src/test/']
+SUBPATH_FOR_TEST_DATA_FILES = ['src/tests/test-data/']
 ERROR_UNCOMMITTED = 'You need to commit all modified files before running Checkstyle\n'
 ERROR_UNTRACKED = 'You have untracked java files that are not being checked:\n'
 
@@ -175,13 +176,15 @@ def _ParseAndFilterOutput(stdout,
                                           sha)
     test_class = any(substring in file_name for substring
                      in SUBPATH_FOR_TEST_FILES)
+    test_data_class = any(substring in file_name for substring
+                          in SUBPATH_FOR_TEST_DATA_FILES)
     file_name = os.path.relpath(file_name)
     errors = file_element.getElementsByTagName('error')
     for error in errors:
       line = int(error.attributes['line'].value)
       rule = error.attributes['source'].value
       if _ShouldSkip(commit_modified_files, modified_lines, line, rule,
-                     test_class):
+                     test_class, test_data_class):
         continue
 
       column = ''
@@ -202,7 +205,8 @@ def _ParseAndFilterOutput(stdout,
   return result_errors, result_warnings
 
 
-def _ShouldSkip(commit_check, modified_lines, line, rule, test_class=False):
+def _ShouldSkip(commit_check, modified_lines, line, rule, test_class=False,
+                test_data_class=False):
   """Returns whether an error on a given line should be skipped.
 
   Args:
@@ -211,11 +215,14 @@ def _ShouldSkip(commit_check, modified_lines, line, rule, test_class=False):
     line: The line that has a rule violation.
     rule: The type of rule that a given line is violating.
     test_class: Whether the file being checked is a test class.
+    test_data_class: Whether the file being check is a class used as test data.
 
   Returns:
     A boolean whether a given line should be skipped in the reporting.
   """
   # None modified_lines means checked file is new and nothing should be skipped.
+  if test_data_class:
+    return True
   if test_class and rule in SKIPPED_RULES_FOR_TEST_FILES:
     return True
   if not commit_check:
