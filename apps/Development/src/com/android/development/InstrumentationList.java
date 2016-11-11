@@ -16,7 +16,7 @@
 
 package com.android.development;
 
-import android.app.ActivityManagerNative;
+import android.app.ActivityManager;
 import android.app.IInstrumentationWatcher;
 import android.app.ListActivity;
 import android.content.ComponentName;
@@ -154,7 +154,7 @@ public class InstrumentationList extends ListActivity
                 profilingFile = "/tmp/trace/" + className + ".dmtrace";
             }
             try {
-                ActivityManagerNative.getDefault().
+                ActivityManager.getService().
                     startInstrumentation(className, profilingFile, 0, null, mWatcher, null,
                             UserHandle.myUserId(), null);
             } catch (RemoteException ex) {
