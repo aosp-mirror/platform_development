@@ -16,15 +16,16 @@
 
 package com.example.android.notepad;
 
-import com.example.android.notepad.NotePad;
-
 import android.app.ListActivity;
+import android.app.LoaderManager;
 import android.content.ClipboardManager;
 import android.content.ClipData;
 import android.content.ComponentName;
 import android.content.ContentUris;
 import android.content.Context;
+import android.content.CursorLoader;
 import android.content.Intent;
+import android.content.Loader;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
@@ -36,6 +37,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.widget.AdapterView;
+import android.widget.CursorAdapter;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 
@@ -43,16 +45,13 @@ import android.widget.SimpleCursorAdapter;
  * Displays a list of notes. Will display notes from the {@link Uri}
  * provided in the incoming Intent if there is one, otherwise it defaults to displaying the
  * contents of the {@link NotePadProvider}.
- *
- * NOTE: Notice that the provider operations in this Activity are taking place on the UI thread.
- * This is not a good practice. It is only done here to make the code more readable. A real
- * application should use the {@link android.content.AsyncQueryHandler} or
- * {@link android.os.AsyncTask} object to perform operations asynchronously on a separate thread.
  */
-public class NotesList extends ListActivity {
+public class NotesList extends ListActivity implements LoaderManager.LoaderCallbacks<Cursor> {
 
     // For logging and debugging
     private static final String TAG = "NotesList";
+
+    private static final int LOADER_ID = 0;
 
     /**
      * The columns needed by the cursor adapter
@@ -64,6 +63,8 @@ public class NotesList extends ListActivity {
 
     /** The index of the title column */
     private static final int COLUMN_INDEX_TITLE = 1;
+
+    private SimpleCursorAdapter mAdapter;
 
     /**
      * onCreate is called when Android starts this Activity from scratch.
@@ -95,18 +96,6 @@ public class NotesList extends ListActivity {
          */
         getListView().setOnCreateContextMenuListener(this);
 
-        /* Performs a managed query. The Activity handles closing and requerying the cursor
-         * when needed.
-         *
-         * Please see the introductory note about performing provider operations on the UI thread.
-         */
-        Cursor cursor = managedQuery(
-            getIntent().getData(),            // Use the default content URI for the provider.
-            PROJECTION,                       // Return the note ID and title for each note.
-            null,                             // No where clause, return all records.
-            null,                             // No where clause, therefore no where column values.
-            NotePad.Notes.DEFAULT_SORT_ORDER  // Use the default sort order.
-        );
 
         /*
          * The following two arrays create a "map" between columns in the cursor and view IDs
@@ -124,17 +113,19 @@ public class NotesList extends ListActivity {
         int[] viewIDs = { android.R.id.text1 };
 
         // Creates the backing adapter for the ListView.
-        SimpleCursorAdapter adapter
-            = new SimpleCursorAdapter(
-                      this,                             // The Context for the ListView
-                      R.layout.noteslist_item,          // Points to the XML for a list item
-                      cursor,                           // The cursor to get items from
-                      dataColumns,
-                      viewIDs
-              );
+        mAdapter = new SimpleCursorAdapter(
+            this,                             // The Context for the ListView
+            R.layout.noteslist_item,          // Points to the XML for a list item
+            null,                             // The cursor is set by CursorLoader when loaded
+            dataColumns,
+            viewIDs,
+            CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER
+        );
 
         // Sets the ListView's adapter to be the cursor adapter that was just created.
-        setListAdapter(adapter);
+        setListAdapter(mAdapter);
+        // Initialize the LoaderManager and start the query
+        getLoaderManager().initLoader(LOADER_ID, null, this);
     }
 
     /**
@@ -463,5 +454,29 @@ public class NotesList extends ListActivity {
             // Intent's data is the note ID URI. The effect is to call NoteEdit.
             startActivity(new Intent(Intent.ACTION_EDIT, uri));
         }
+    }
+
+    // LoaderManager callbacks
+    @Override
+    public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
+        return new CursorLoader(
+            this,
+            getIntent().getData(),            // Use the default content URI for the provider.
+            PROJECTION,                       // Return the note ID and title for each note.
+            null,                             // No where clause, return all records.
+            null,                             // No where clause, therefore no where column values.
+            NotePad.Notes.DEFAULT_SORT_ORDER  // Use the default sort order.
+        );
+    }
+
+    @Override
+    public void onLoadFinished(Loader<Cursor> cursorLoader, Cursor cursor) {
+        mAdapter.changeCursor(cursor);
+    }
+
+    @Override
+    public void onLoaderReset(Loader<Cursor> cursorLoader) {
+        // Since the Loader is reset, this removes the cursor reference from the adapter.
+        mAdapter.changeCursor(null);
     }
 }

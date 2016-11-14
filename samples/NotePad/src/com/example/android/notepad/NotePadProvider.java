@@ -71,11 +71,6 @@ public class NotePadProvider extends ContentProvider implements PipeDataWriter<C
     private static HashMap<String, String> sNotesProjectionMap;
 
     /**
-     * A projection map used to select columns from the database
-     */
-    private static HashMap<String, String> sLiveFolderProjectionMap;
-
-    /**
      * Standard projection for the interesting columns of a normal note.
      */
     private static final String[] READ_NOTE_PROJECTION = new String[] {
@@ -95,9 +90,6 @@ public class NotePadProvider extends ContentProvider implements PipeDataWriter<C
 
     // The incoming URI matches the Note ID URI pattern
     private static final int NOTE_ID = 2;
-
-    // The incoming URI matches the Live Folder URI pattern
-    private static final int LIVE_FOLDER_NOTES = 3;
 
     /**
      * A UriMatcher instance
@@ -126,10 +118,6 @@ public class NotePadProvider extends ContentProvider implements PipeDataWriter<C
         // to a note ID operation
         sUriMatcher.addURI(NotePad.AUTHORITY, "notes/#", NOTE_ID);
 
-        // Add a pattern that routes URIs terminated with live_folders/notes to a
-        // live folder operation
-        sUriMatcher.addURI(NotePad.AUTHORITY, "live_folders/notes", LIVE_FOLDER_NOTES);
-
         /*
          * Creates and initializes a projection map that returns all columns
          */
@@ -155,20 +143,6 @@ public class NotePadProvider extends ContentProvider implements PipeDataWriter<C
         sNotesProjectionMap.put(
                 NotePad.Notes.COLUMN_NAME_MODIFICATION_DATE,
                 NotePad.Notes.COLUMN_NAME_MODIFICATION_DATE);
-
-        /*
-         * Creates an initializes a projection map for handling Live Folders
-         */
-
-        // Creates a new projection map instance
-        sLiveFolderProjectionMap = new HashMap<String, String>();
-
-        // Maps "_ID" to "_ID AS _ID" for a live folder
-        sLiveFolderProjectionMap.put(LiveFolders._ID, NotePad.Notes._ID + " AS " + LiveFolders._ID);
-
-        // Maps "NAME" to "title AS NAME"
-        sLiveFolderProjectionMap.put(LiveFolders.NAME, NotePad.Notes.COLUMN_NAME_TITLE + " AS " +
-            LiveFolders.NAME);
     }
 
     /**
@@ -278,11 +252,6 @@ public class NotePadProvider extends ContentProvider implements PipeDataWriter<C
                    uri.getPathSegments().get(NotePad.Notes.NOTE_ID_PATH_POSITION));
                break;
 
-           case LIVE_FOLDER_NOTES:
-               // If the incoming URI is from a live folder, chooses the live folder projection.
-               qb.setProjectionMap(sLiveFolderProjectionMap);
-               break;
-
            default:
                // If the URI doesn't match any of the known patterns, throw an exception.
                throw new IllegalArgumentException("Unknown URI " + uri);
@@ -339,7 +308,6 @@ public class NotePadProvider extends ContentProvider implements PipeDataWriter<C
 
            // If the pattern is for notes or live folders, returns the general content type.
            case NOTES:
-           case LIVE_FOLDER_NOTES:
                return NotePad.Notes.CONTENT_TYPE;
 
            // If the pattern is for note IDs, returns the note ID content type.
@@ -380,7 +348,6 @@ public class NotePadProvider extends ContentProvider implements PipeDataWriter<C
             // If the pattern is for notes or live folders, return null. Data streams are not
             // supported for this type of URI.
             case NOTES:
-            case LIVE_FOLDER_NOTES:
                 return null;
 
             // If the pattern is for note IDs and the MIME filter is text/plain, then return
@@ -635,7 +602,7 @@ public class NotePadProvider extends ContentProvider implements PipeDataWriter<C
                 throw new IllegalArgumentException("Unknown URI " + uri);
         }
 
-        /*Gets a handle to the content resolver object for the current context, and notifies it
+        /* Gets a handle to the content resolver object for the current context, and notifies it
          * that the incoming URI changed. The object passes this along to the resolver framework,
          * and observers that have registered themselves for the provider are notified.
          */
@@ -728,7 +695,7 @@ public class NotePadProvider extends ContentProvider implements PipeDataWriter<C
                 throw new IllegalArgumentException("Unknown URI " + uri);
         }
 
-        /*Gets a handle to the content resolver object for the current context, and notifies it
+        /* Gets a handle to the content resolver object for the current context, and notifies it
          * that the incoming URI changed. The object passes this along to the resolver framework,
          * and observers that have registered themselves for the provider are notified.
          */
