@@ -16,7 +16,7 @@
 
 package com.android.commands.monkey;
 
-import android.app.ActivityManagerNative;
+import android.app.ActivityManager;
 import android.app.IActivityController;
 import android.app.IActivityManager;
 import android.content.ComponentName;
@@ -942,7 +942,7 @@ public class Monkey {
      * @return Returns true if all system interfaces were available.
      */
     private boolean getSystemInterfaces() {
-        mAm = ActivityManagerNative.getDefault();
+        mAm = ActivityManager.getService();
         if (mAm == null) {
             System.err.println("** Error: Unable to connect to activity manager; is the system "
                     + "running?");
