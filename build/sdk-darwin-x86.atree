@@ -33,6 +33,7 @@ lib64/libbcc.dylib                                      strip build-tools/${PLAT
 lib64/libbcinfo.dylib                                   strip build-tools/${PLATFORM_NAME}/lib64/libbcinfo.dylib
 lib64/libclang.dylib                                    strip build-tools/${PLATFORM_NAME}/lib64/libclang.dylib
 lib64/libc++.dylib                                      strip build-tools/${PLATFORM_NAME}/lib64/libc++.dylib
+lib64/libaapt2_jni.dylib                                strip build-tools/${PLATFORM_NAME}/lib64/libaapt2_jni.dylib
 
 prebuilts/sdk/tools/darwin/bin/arm-linux-androideabi-ld   strip build-tools/${PLATFORM_NAME}/arm-linux-androideabi-ld
 prebuilts/sdk/tools/darwin/bin/aarch64-linux-android-ld   strip build-tools/${PLATFORM_NAME}/aarch64-linux-android-ld

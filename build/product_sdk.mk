@@ -43,6 +43,7 @@ PRODUCT_PACKAGES += \
 	jython \
 	layoutlib \
 	layoutlib-tests \
+	libaapt2_jni \
 	llvm-rs-cc \
 	sqlite3 \
 	vgabios-cirrus.bin \
