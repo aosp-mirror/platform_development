@@ -37,6 +37,7 @@ PRODUCT_PACKAGES += \
 	commons-compress-1.0 \
 	dexdump \
 	dmtracedump \
+	dx \
 	emmalib \
 	etc1tool \
 	hprof-conv \
