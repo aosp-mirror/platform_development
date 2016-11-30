@@ -21,8 +21,10 @@ import android.content.ContentValues;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.Toast;
 
 /**
  * This Activity allows the user to edit a note's title. It displays a floating window
@@ -49,14 +51,14 @@ public class TitleEditor extends Activity {
     // The position of the title column in a Cursor returned by the provider.
     private static final int COLUMN_INDEX_TITLE = 1;
 
-    // A Cursor object that will contain the results of querying the provider for a note.
-    private Cursor mCursor;
-
     // An EditText object for preserving the edited title.
     private EditText mText;
 
     // A URI object for the note whose title is being edited.
     private Uri mUri;
+
+    // The title that was last saved.
+    private String mSavedTitle;
 
     /**
      * This method is called by Android when the Activity is first started. From the incoming
@@ -68,6 +70,9 @@ public class TitleEditor extends Activity {
 
         // Set the View for this Activity object's UI.
         setContentView(R.layout.title_editor);
+
+        // Gets the View ID for the EditText box
+        mText = (EditText) this.findViewById(R.id.title);
 
         // Get the Intent that activated this Activity, and from it get the URI of the note whose
         // title we need to edit.
@@ -82,7 +87,7 @@ public class TitleEditor extends Activity {
          * android.content.AsyncQueryHandler or android.os.AsyncTask.
          */
 
-        mCursor = managedQuery(
+        Cursor cursor = getContentResolver().query(
             mUri,        // The URI for the note that is to be retrieved.
             PROJECTION,  // The columns to retrieve
             null,        // No selection criteria are used, so no where columns are needed.
@@ -90,8 +95,15 @@ public class TitleEditor extends Activity {
             null         // No sort order is needed.
         );
 
-        // Gets the View ID for the EditText box
-        mText = (EditText) this.findViewById(R.id.title);
+        if (cursor != null) {
+
+            // The Cursor was just retrieved, so its index is set to one record *before* the first
+            // record retrieved. This moves it to the first record.
+            cursor.moveToFirst();
+
+            // Displays the current title text in the EditText object.
+            mText.setText(cursor.getString(COLUMN_INDEX_TITLE));
+        }
     }
 
     /**
@@ -103,65 +115,83 @@ public class TitleEditor extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
-
-        // Verifies that the query made in onCreate() actually worked. If it worked, then the
-        // Cursor object is not null. If it is *empty*, then mCursor.getCount() == 0.
-        if (mCursor != null) {
-
-            // The Cursor was just retrieved, so its index is set to one record *before* the first
-            // record retrieved. This moves it to the first record.
-            mCursor.moveToFirst();
-
-            // Displays the current title text in the EditText object.
-            mText.setText(mCursor.getString(COLUMN_INDEX_TITLE));
-        }
     }
 
     /**
      * This method is called when the Activity loses focus.
      *
-     * For Activity objects that edit information, onPause() may be the one place where changes are
-     * saved. The Android application model is predicated on the idea that "save" and "exit" aren't
-     * required actions. When users navigate away from an Activity, they shouldn't have to go back
-     * to it to complete their work. The act of going away should save everything and leave the
-     * Activity in a state where Android can destroy it if necessary.
-     *
-     * Updates the note with the text currently in the text box.
+     * While there is no need to override this method in this app, it is shown here to highlight
+     * that we are not saving any state in onPause, but have moved app state saving to onStop
+     * callback.
+     * In earlier versions of this app and popular literature it had been shown that onPause is good
+     * place to persist any unsaved work, however, this is not really a good practice because of how
+     * application and process lifecycle behave.
+     * As a general guideline apps should have a way of saving their business logic that does not
+     * solely rely on Activity (or other component) lifecyle state transitions.
+     * As a backstop you should save any app state, not saved during lifetime of the Activity, in
+     * onStop().
+     * For a more detailed explanation of this recommendation please read
+     * <a href = "https://developer.android.com/guide/topics/processes/process-lifecycle.html">
+     * Processes and Application Life Cycle </a>.
+     * <a href="https://developer.android.com/training/basics/activity-lifecycle/pausing.html">
+     * Pausing and Resuming an Activity </a>.
      */
     @Override
     protected void onPause() {
         super.onPause();
+    }
 
-        // Verifies that the query made in onCreate() actually worked. If it worked, then the
-        // Cursor object is not null. If it is *empty*, then mCursor.getCount() == 0.
-
-        if (mCursor != null) {
-
-            // Creates a values map for updating the provider.
-            ContentValues values = new ContentValues();
-
-            // In the values map, sets the title to the current contents of the edit box.
-            values.put(NotePad.Notes.COLUMN_NAME_TITLE, mText.getText().toString());
-
-            /*
-             * Updates the provider with the note's new title.
-             *
-             * Note: This is being done on the UI thread. It will block the thread until the
-             * update completes. In a sample app, going against a simple provider based on a
-             * local database, the block will be momentary, but in a real app you should use
-             * android.content.AsyncQueryHandler or android.os.AsyncTask.
-             */
-            getContentResolver().update(
-                mUri,    // The URI for the note to update.
-                values,  // The values map containing the columns to update and the values to use.
-                null,    // No selection criteria is used, so no "where" columns are needed.
-                null     // No "where" columns are used, so no "where" values are needed.
-            );
-
-        }
+    /**
+     * This method is called when the Activity becomes invisible.
+     *
+     * For Activity objects that edit information, onStop() may be the one place where changes are
+     * saved.
+     * Updates the note with the text currently in the text box.
+     */
+    @Override
+    protected void onStop() {
+        super.onStop();
+        saveTitle();
     }
 
     public void onClickOk(View v) {
+        saveTitle();
         finish();
+    }
+
+    // Saves the title if required
+    private void saveTitle() {
+
+        if (!TextUtils.isEmpty(mText.getText())) {
+
+            String newTitle = mText.getText().toString();
+
+            if (!newTitle.equals(mSavedTitle)) {
+                // Creates a values map for updating the provider.
+                ContentValues values = new ContentValues();
+
+                // In the values map, sets the title to the current contents of the edit box.
+                values.put(NotePad.Notes.COLUMN_NAME_TITLE, newTitle);
+
+                /*
+                 * Updates the provider with the note's new title.
+                 *
+                 * Note: This is being done on the UI thread. It will block the thread until the
+                 * update completes. In a sample app, going against a simple provider based on a
+                 * local database, the block will be momentary, but in a real app you should use
+                 * android.content.AsyncQueryHandler or android.os.AsyncTask.
+                 */
+                getContentResolver().update(
+                    mUri,    // The URI for the note to update.
+                    values,
+                    // The values map containing the columns to update and the values to use.
+                    null,    // No selection criteria is used, so no "where" columns are needed.
+                    null     // No "where" columns are used, so no "where" values are needed.
+                );
+                mSavedTitle = newTitle;
+            }
+        } else {
+            Toast.makeText(this, R.string.title_blank, Toast.LENGTH_SHORT).show();
+        }
     }
 }
