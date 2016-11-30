@@ -89,6 +89,8 @@ ALL_SDK_FILES += $(android_jar_src_target)
 
 # ====================================================
 
+# multidex jack library
+ALL_SDK_FILES += $(call intermediates-dir-for, JAVA_LIBRARIES,android-support-multidex,,COMMON)/classes.jack
 # The Jack & Jill compiler jars
 ALL_SDK_FILES += prebuilts/sdk/tools/jacks/jack-$(JACK_SDKTOOL_VERSION).jar
 ALL_SDK_FILES += prebuilts/sdk/tools/jills/jill-$(JACK_SDKTOOL_VERSION).jar
