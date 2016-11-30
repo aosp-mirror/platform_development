@@ -17,13 +17,16 @@
 package com.example.android.notepad;
 
 import android.app.Activity;
+import android.app.LoaderManager;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.CursorLoader;
 import android.content.Intent;
+import android.content.Loader;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.graphics.Canvas;
@@ -37,19 +40,15 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.EditText;
+import com.example.android.notepad.NotePad.Notes;
 
 /**
  * This Activity handles "editing" a note, where editing is responding to
  * {@link Intent#ACTION_VIEW} (request to view data), edit a note
  * {@link Intent#ACTION_EDIT}, create a note {@link Intent#ACTION_INSERT}, or
  * create a new note from the current contents of the clipboard {@link Intent#ACTION_PASTE}.
- *
- * NOTE: Notice that the provider operations in this Activity are taking place on the UI thread.
- * This is not a good practice. It is only done here to make the code more readable. A real
- * application should use the {@link android.content.AsyncQueryHandler}
- * or {@link android.os.AsyncTask} object to perform operations asynchronously on a separate thread.
  */
-public class NoteEditor extends Activity {
+public class NoteEditor extends Activity implements LoaderManager.LoaderCallbacks<Cursor> {
     // For logging and debugging purposes
     private static final String TAG = "NoteEditor";
 
@@ -71,10 +70,11 @@ public class NoteEditor extends Activity {
     private static final int STATE_EDIT = 0;
     private static final int STATE_INSERT = 1;
 
+    private static final int LOADER_ID = 1;
+
     // Global mutable variables
     private int mState;
     private Uri mUri;
-    private Cursor mCursor;
     private EditText mText;
     private String mOriginalContent;
 
@@ -139,6 +139,11 @@ public class NoteEditor extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        // Recovering the instance state from a previously destroyed Activity instance
+        if (savedInstanceState != null) {
+            mOriginalContent = savedInstanceState.getString(ORIGINAL_CONTENT);
+        }
+
         /*
          * Creates an Intent to use when the Activity object's result is sent back to the
          * caller.
@@ -166,6 +171,8 @@ public class NoteEditor extends Activity {
             // Sets the Activity state to INSERT, gets the general note URI, and inserts an
             // empty record in the provider
             mState = STATE_INSERT;
+            setTitle(getText(R.string.title_create));
+
             mUri = getContentResolver().insert(intent.getData(), null);
 
             /*
@@ -197,24 +204,10 @@ public class NoteEditor extends Activity {
             return;
         }
 
-        /*
-         * Using the URI passed in with the triggering Intent, gets the note or notes in
-         * the provider.
-         * Note: This is being done on the UI thread. It will block the thread until the query
-         * completes. In a sample app, going against a simple provider based on a local database,
-         * the block will be momentary, but in a real app you should use
-         * android.content.AsyncQueryHandler or android.os.AsyncTask.
-         */
-        mCursor = managedQuery(
-            mUri,         // The URI that gets multiple notes from the provider.
-            PROJECTION,   // A projection that returns the note ID and note content for each note.
-            null,         // No "where" clause selection criteria.
-            null,         // No "where" clause selection values.
-            null          // Use the default sort order (modification date, descending)
-        );
+        // Initialize the LoaderManager and start the query
+        getLoaderManager().initLoader(LOADER_ID, null, this);
 
         // For a paste, initializes the data from clipboard.
-        // (Must be done after mCursor is initialized.)
         if (Intent.ACTION_PASTE.equals(action)) {
             // Does the paste
             performPaste();
@@ -227,87 +220,12 @@ public class NoteEditor extends Activity {
 
         // Gets a handle to the EditText in the the layout.
         mText = (EditText) findViewById(R.id.note);
-
-        /*
-         * If this Activity had stopped previously, its state was written the ORIGINAL_CONTENT
-         * location in the saved Instance state. This gets the state.
-         */
-        if (savedInstanceState != null) {
-            mOriginalContent = savedInstanceState.getString(ORIGINAL_CONTENT);
-        }
     }
 
-    /**
-     * This method is called when the Activity is about to come to the foreground. This happens
-     * when the Activity comes to the top of the task stack, OR when it is first starting.
-     *
-     * Moves to the first note in the list, sets an appropriate title for the action chosen by
-     * the user, puts the note contents into the TextView, and saves the original text as a
-     * backup.
-     */
-    @Override
-    protected void onResume() {
-        super.onResume();
-
-        /*
-         * mCursor is initialized, since onCreate() always precedes onResume for any running
-         * process. This tests that it's not null, since it should always contain data.
-         */
-        if (mCursor != null) {
-            // Requery in case something changed while paused (such as the title)
-            mCursor.requery();
-
-            /* Moves to the first record. Always call moveToFirst() before accessing data in
-             * a Cursor for the first time. The semantics of using a Cursor are that when it is
-             * created, its internal index is pointing to a "place" immediately before the first
-             * record.
-             */
-            mCursor.moveToFirst();
-
-            // Modifies the window title for the Activity according to the current Activity state.
-            if (mState == STATE_EDIT) {
-                // Set the title of the Activity to include the note title
-                int colTitleIndex = mCursor.getColumnIndex(NotePad.Notes.COLUMN_NAME_TITLE);
-                String title = mCursor.getString(colTitleIndex);
-                Resources res = getResources();
-                String text = String.format(res.getString(R.string.title_edit), title);
-                setTitle(text);
-            // Sets the title to "create" for inserts
-            } else if (mState == STATE_INSERT) {
-                setTitle(getText(R.string.title_create));
-            }
-
-            /*
-             * onResume() may have been called after the Activity lost focus (was paused).
-             * The user was either editing or creating a note when the Activity paused.
-             * The Activity should re-display the text that had been retrieved previously, but
-             * it should not move the cursor. This helps the user to continue editing or entering.
-             */
-
-            // Gets the note text from the Cursor and puts it in the TextView, but doesn't change
-            // the text cursor's position.
-            int colNoteIndex = mCursor.getColumnIndex(NotePad.Notes.COLUMN_NAME_NOTE);
-            String note = mCursor.getString(colNoteIndex);
-            mText.setTextKeepState(note);
-
-            // Stores the original note text, to allow the user to revert changes.
-            if (mOriginalContent == null) {
-                mOriginalContent = note;
-            }
-
-        /*
-         * Something is wrong. The Cursor should always contain data. Report an error in the
-         * note.
-         */
-        } else {
-            setTitle(getText(R.string.error_title));
-            mText.setText(getText(R.string.error_message));
-        }
-    }
 
     /**
-     * This method is called when an Activity loses focus during its normal operation, and is then
-     * later on killed. The Activity has a chance to save its state so that the system can restore
+     * This method is called when an Activity loses focus during its normal operation.
+     * The Activity has a chance to save its state so that the system can restore
      * it.
      *
      * Notice that this method isn't a normal part of the Activity lifecycle. It won't be called
@@ -316,37 +234,52 @@ public class NoteEditor extends Activity {
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         // Save away the original text, so we still have it if the activity
-        // needs to be killed while paused.
+        // needs to be re-created.
         outState.putString(ORIGINAL_CONTENT, mOriginalContent);
+        // Call the superclass to save the any view hierarchy state
+        super.onSaveInstanceState(outState);
     }
 
     /**
      * This method is called when the Activity loses focus.
      *
-     * For Activity objects that edit information, onPause() may be the one place where changes are
-     * saved. The Android application model is predicated on the idea that "save" and "exit" aren't
-     * required actions. When users navigate away from an Activity, they shouldn't have to go back
-     * to it to complete their work. The act of going away should save everything and leave the
-     * Activity in a state where Android can destroy it if necessary.
+     * While there is no need to override this method in this app, it is shown here to highlight
+     * that we are not saving any state in onPause, but have moved app state saving to onStop
+     * callback.
+     * In earlier versions of this app and popular literature it had been shown that onPause is good
+     * place to persist any unsaved work, however, this is not really a good practice because of how
+     * application and process lifecycle behave.
+     * As a general guideline apps should have a way of saving their business logic that does not
+     * solely rely on Activity (or other component) lifecyle state transitions.
+     * As a backstop you should save any app state, not saved during lifetime of the Activity, in
+     * onStop().
+     * For a more detailed explanation of this recommendation please read
+     * <a href = "https://developer.android.com/guide/topics/processes/process-lifecycle.html">
+     * Processes and Application Life Cycle </a>.
+     * <a href="https://developer.android.com/training/basics/activity-lifecycle/pausing.html">
+     * Pausing and Resuming an Activity </a>.
+     */
+    @Override
+    protected void onPause() {
+        super.onPause();
+    }
+
+    /**
+     * This method is called when the Activity becomes invisible.
+     *
+     * For Activity objects that edit information, onStop() may be the one place where changes maybe
+     * saved.
      *
      * If the user hasn't done anything, then this deletes or clears out the note, otherwise it
      * writes the user's work to the provider.
      */
     @Override
-    protected void onPause() {
-        super.onPause();
+    protected void onStop() {
+        super.onStop();
 
-        /*
-         * Tests to see that the query operation didn't fail (see onCreate()). The Cursor object
-         * will exist, even if no records were returned, unless the query failed because of some
-         * exception or error.
-         *
-         */
-        if (mCursor != null) {
-
-            // Get the current note text.
-            String text = mText.getText().toString();
-            int length = text.length();
+        // Get the current note text.
+        String text = mText.getText().toString();
+        int length = text.length();
 
             /*
              * If the Activity is in the midst of finishing and there is no text in the current
@@ -354,23 +287,22 @@ public class NoteEditor extends Activity {
              * even if the note was being edited, the assumption being that the user wanted to
              * "clear out" (delete) the note.
              */
-            if (isFinishing() && (length == 0)) {
-                setResult(RESULT_CANCELED);
-                deleteNote();
+        if (isFinishing() && (length == 0)) {
+            setResult(RESULT_CANCELED);
+            deleteNote();
 
                 /*
-                 * Writes the edits to the provider. The note has been edited if an existing note was
-                 * retrieved into the editor *or* if a new note was inserted. In the latter case,
-                 * onCreate() inserted a new empty note into the provider, and it is this new note
-                 * that is being edited.
+                 * Writes the edits to the provider. The note has been edited if an existing note
+                 * was retrieved into the editor *or* if a new note was inserted.
+                 * In the latter case, onCreate() inserted a new empty note into the provider,
+                 * and it is this new note that is being edited.
                  */
-            } else if (mState == STATE_EDIT) {
-                // Creates a map to contain the new values for the columns
-                updateNote(text, null);
-            } else if (mState == STATE_INSERT) {
-                updateNote(text, text);
-                mState = STATE_EDIT;
-          }
+        } else if (mState == STATE_EDIT) {
+            // Creates a map to contain the new values for the columns
+            updateNote(text, null);
+        } else if (mState == STATE_INSERT) {
+            updateNote(text, text);
+            mState = STATE_EDIT;
         }
     }
 
@@ -409,8 +341,16 @@ public class NoteEditor extends Activity {
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
         // Check if note has changed and enable/disable the revert option
-        int colNoteIndex = mCursor.getColumnIndex(NotePad.Notes.COLUMN_NAME_NOTE);
-        String savedNote = mCursor.getString(colNoteIndex);
+        Cursor cursor = getContentResolver().query(
+            mUri,        // The URI for the note that is to be retrieved.
+            PROJECTION,  // The columns to retrieve
+            null,        // No selection criteria are used, so no where columns are needed.
+            null,        // No where columns are used, so no where values are needed.
+            null         // No sort order is needed.
+        );
+        cursor.moveToFirst();
+        int colNoteIndex = cursor.getColumnIndex(Notes.COLUMN_NAME_NOTE);
+        String savedNote = cursor.getString(colNoteIndex);
         String currentNote = mText.getText().toString();
         if (savedNote.equals(currentNote)) {
             menu.findItem(R.id.menu_revert).setVisible(false);
@@ -493,8 +433,8 @@ public class NoteEditor extends Activity {
                 // (moveToFirst() returns true), then this gets the note data from it.
                 if (orig != null) {
                     if (orig.moveToFirst()) {
-                        int colNoteIndex = mCursor.getColumnIndex(NotePad.Notes.COLUMN_NAME_NOTE);
-                        int colTitleIndex = mCursor.getColumnIndex(NotePad.Notes.COLUMN_NAME_TITLE);
+                        int colNoteIndex = orig.getColumnIndex(NotePad.Notes.COLUMN_NAME_NOTE);
+                        int colTitleIndex = orig.getColumnIndex(NotePad.Notes.COLUMN_NAME_TITLE);
                         text = orig.getString(colNoteIndex);
                         title = orig.getString(colTitleIndex);
                     }
@@ -571,13 +511,11 @@ public class NoteEditor extends Activity {
          * android.content.AsyncQueryHandler or android.os.AsyncTask.
          */
         getContentResolver().update(
-                mUri,    // The URI for the record to update.
-                values,  // The map of column names and new values to apply to them.
-                null,    // No selection criteria are used, so no where columns are necessary.
-                null     // No where columns are used, so no where arguments are necessary.
-            );
-
-
+            mUri,    // The URI for the record to update.
+            values,  // The map of column names and new values to apply to them.
+            null,    // No selection criteria are used, so no where columns are necessary.
+            null     // No where columns are used, so no where arguments are necessary.
+        );
     }
 
     /**
@@ -585,19 +523,17 @@ public class NoteEditor extends Activity {
      * newly created, or reverts to the original text of the note i
      */
     private final void cancelNote() {
-        if (mCursor != null) {
-            if (mState == STATE_EDIT) {
-                // Put the original note text back into the database
-                mCursor.close();
-                mCursor = null;
-                ContentValues values = new ContentValues();
-                values.put(NotePad.Notes.COLUMN_NAME_NOTE, mOriginalContent);
-                getContentResolver().update(mUri, values, null, null);
-            } else if (mState == STATE_INSERT) {
-                // We inserted an empty note, make sure to delete it
-                deleteNote();
-            }
+
+        if (mState == STATE_EDIT) {
+            // Put the original note text back into the database
+            ContentValues values = new ContentValues();
+            values.put(NotePad.Notes.COLUMN_NAME_NOTE, mOriginalContent);
+            getContentResolver().update(mUri, values, null, null);
+        } else if (mState == STATE_INSERT) {
+            // We inserted an empty note, make sure to delete it
+            deleteNote();
         }
+
         setResult(RESULT_CANCELED);
         finish();
     }
@@ -606,11 +542,50 @@ public class NoteEditor extends Activity {
      * Take care of deleting a note.  Simply deletes the entry.
      */
     private final void deleteNote() {
-        if (mCursor != null) {
-            mCursor.close();
-            mCursor = null;
-            getContentResolver().delete(mUri, null, null);
-            mText.setText("");
+        getContentResolver().delete(mUri, null, null);
+        mText.setText("");
+    }
+
+    // LoaderManager callbacks
+    @Override
+    public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
+        return new CursorLoader(
+            this,
+            mUri,        // The URI for the note that is to be retrieved.
+            PROJECTION,  // The columns to retrieve
+            null,        // No selection criteria are used, so no where columns are needed.
+            null,        // No where columns are used, so no where values are needed.
+            null         // No sort order is needed.
+        );
+    }
+
+    @Override
+    public void onLoadFinished(Loader<Cursor> cursorLoader, Cursor cursor) {
+
+        // Modifies the window title for the Activity according to the current Activity state.
+        if (cursor != null && cursor.moveToFirst() && mState == STATE_EDIT) {
+            // Set the title of the Activity to include the note title
+            int colTitleIndex = cursor.getColumnIndex(NotePad.Notes.COLUMN_NAME_TITLE);
+            int colNoteIndex = cursor.getColumnIndex(NotePad.Notes.COLUMN_NAME_NOTE);
+
+            // Gets the title and sets it
+            String title = cursor.getString(colTitleIndex);
+            Resources res = getResources();
+            String text = String.format(res.getString(R.string.title_edit), title);
+            setTitle(text);
+
+            // Gets the note text from the Cursor and puts it in the TextView, but doesn't change
+            // the text cursor's position.
+
+            String note = cursor.getString(colNoteIndex);
+            mText.setTextKeepState(note);
+            // Stores the original note text, to allow the user to revert changes.
+            if (mOriginalContent == null) {
+                mOriginalContent = note;
+            }
         }
     }
+
+    @Override
+    public void onLoaderReset(Loader<Cursor> cursorLoader) {}
 }

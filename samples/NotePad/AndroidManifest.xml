@@ -107,14 +107,6 @@
             </intent-filter>
         </activity>
 
-        <activity android:name="NotesLiveFolder" android:label="@string/live_folder_name"
-            android:icon="@drawable/live_folder_notes">
-            <intent-filter>
-                <action android:name="android.intent.action.CREATE_LIVE_FOLDER" />
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
-        </activity>
-
     </application>
 
 </manifest>

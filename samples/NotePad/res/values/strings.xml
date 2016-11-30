@@ -40,4 +40,5 @@
     <string name="error_title">Error</string>
     <string name="error_message">Error loading note</string>
     <string name="nothing_to_save">There is nothing to save</string>
+    <string name="title_blank">Blank title not saved</string>
 </resources>
