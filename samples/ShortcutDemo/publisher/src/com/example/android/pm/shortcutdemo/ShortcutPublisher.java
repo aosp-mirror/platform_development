@@ -45,6 +45,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BooleanSupplier;
@@ -101,19 +102,19 @@ public class ShortcutPublisher extends Activity {
     private List<ShortcutInfo> getAllShortcuts() {
         final Map<String, ShortcutInfo> map = new ArrayMap<>();
         for (ShortcutInfo si : mShortcutManager.getManifestShortcuts()) {
-            if (!si.getActivity().equals(mMyActivity)) continue;
+            if (!Objects.equals(si.getActivity(), mMyActivity)) continue;
             if (!map.containsKey(si.getId())) {
                 map.put(si.getId(), si);
             }
         }
         for (ShortcutInfo si : mShortcutManager.getDynamicShortcuts()) {
-            if (!si.getActivity().equals(mMyActivity)) continue;
+            if (!Objects.equals(si.getActivity(), mMyActivity)) continue;
             if (!map.containsKey(si.getId())) {
                 map.put(si.getId(), si);
             }
         }
         for (ShortcutInfo si : mShortcutManager.getPinnedShortcuts()) {
-            if (!si.getActivity().equals(mMyActivity)) continue;
+            if (!Objects.equals(si.getActivity(), mMyActivity)) continue;
             if (!map.containsKey(si.getId())) {
                 map.put(si.getId(), si);
             }
@@ -258,7 +259,7 @@ public class ShortcutPublisher extends Activity {
         for (ShortcutInfo si : getAllShortcuts()) {
             if (SETUP_SHORTCUT_ID.equals(si.getId())) continue;
             if (si.isImmutable()) continue;
-            if (!si.getActivity().equals(mMyActivity)) continue;
+            if (!Objects.equals(si.getActivity(), mMyActivity)) continue;
             updateList.add(addRandomIntents(this, new ShortcutInfo.Builder(this, si.getId()))
                     .build());
         }
