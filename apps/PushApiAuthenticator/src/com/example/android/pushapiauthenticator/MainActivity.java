@@ -132,6 +132,8 @@ public class MainActivity extends Activity {
         selectOption.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                //TODO update Authenticator once AccountManager API is updated
+                /*
                 Account currentAccount = terraAccount;
                 int checkedAccount = accountChooser.getCheckedRadioButtonId();
                 int checkedOption = optionChooser.getCheckedRadioButtonId();
@@ -211,6 +213,7 @@ public class MainActivity extends Activity {
                         authStatus.setText("----");
                     }
                 }
+                */
             }
         });
     }

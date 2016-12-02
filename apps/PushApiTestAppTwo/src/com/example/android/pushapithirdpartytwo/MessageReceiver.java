@@ -20,12 +20,15 @@ import android.accounts.Account;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.util.Log;
 import android.widget.Toast;
 
 public class MessageReceiver extends BroadcastReceiver{
+    private static final String TAG = "PushApiTestAppTwo";
+
     public void onReceive(Context context, Intent intent) {
-        Account account = (Account) intent.getParcelableExtra("android.accounts.KEY_ACCOUNT");
-        Toast.makeText(context, "Account " + account.name + " received by Test App 2",
+        Toast.makeText(context, " android.accounts.VISIBLE_ACCOUNTS_CHANGED Broadcast received",
                 Toast.LENGTH_LONG).show();
+        Log.i(TAG, "android.accounts.VISIBLE_ACCOUNTS_CHANGED Broadcast received");
     }
 }

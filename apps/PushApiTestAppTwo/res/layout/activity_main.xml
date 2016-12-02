@@ -18,88 +18,74 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#ADE6B4"
+    android:background="#ADD8E6"
     android:orientation="vertical"
     android:fillViewport="false">
 
     <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:paddingBottom="16dp"
-        android:paddingLeft="16dp"
-        android:paddingRight="16dp"
-        android:paddingTop="16dp"
+        android:layout_height="wrap_content"
         android:id="@+id/relativelayout">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceSmall"
-            android:text="----"
-            android:id="@+id/logintypesregistered2"
-            android:layout_below="@+id/logintypesregisteredtext"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentStart="true" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceLarge"
-            android:text="Accounts Registered to Support:"
-            android:id="@+id/logintypesregisteredtext"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentStart="true"
-            android:layout_marginTop="34dp"
-            android:layout_below="@+id/placeholder" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceLarge"
-            android:text="Visible Accounts"
-            android:id="@+id/textView5"
-            android:layout_alignTop="@+id/getvisibleaccounts2"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentStart="true" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceSmall"
-            android:text="----"
-            android:id="@+id/visibleaccounts2"
-            android:layout_below="@+id/getvisibleaccounts2"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentStart="true" />
-
-        <EditText
-            android:layout_width="1dp"
-            android:layout_height="wrap_content"
-            android:id="@+id/placeholder"
-            android:layout_alignRight="@+id/logintypesregistered2"
-            android:layout_alignEnd="@+id/logintypesregistered2"
-            android:layout_below="@+id/visibleaccounts2" />
-
-        <Button
-            style="?android:attr/buttonStyleSmall"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Get!"
-            android:id="@+id/getvisibleaccounts2"
-            android:layout_below="@+id/textView"
-            android:layout_alignParentRight="true"
-            android:layout_alignParentEnd="true"
-            android:layout_marginTop="37dp" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceLarge"
             android:text="Test Application Two"
-            android:id="@+id/textView"
+            android:id="@+id/testapptext"
             android:layout_alignParentTop="true"
-            android:layout_centerHorizontal="true" />
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="27dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:text="Visible Accounts"
+            android:id="@+id/visibleaccountstext"
+            android:layout_marginTop="58dp"
+            android:layout_below="@+id/testapptext"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:text="----"
+            android:id="@+id/visibleaccounts"
+            android:layout_below="@+id/visibleaccountstext"
+            android:layout_alignLeft="@+id/visibleaccountstext"
+            android:layout_alignStart="@+id/visibleaccountstext" />
+
+        <Button
+            style="?android:attr/buttonStyleSmall"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Get!"
+            android:id="@+id/getvisibleaccounts"
+            android:layout_alignTop="@+id/visibleaccountstext"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:text="----"
+            android:id="@+id/logintypesregistered"
+            android:layout_below="@+id/logintypesregisteredtext"
+            android:layout_alignLeft="@+id/logintypesregisteredtext"
+            android:layout_alignStart="@+id/logintypesregisteredtext" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:text="Accounts Registered to Support"
+            android:id="@+id/logintypesregisteredtext"
+            android:layout_marginTop="58dp"
+            android:layout_below="@+id/getvisibleaccounts" />
 
     </RelativeLayout>
 

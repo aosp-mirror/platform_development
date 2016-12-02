@@ -72,7 +72,7 @@ public class MainActivity extends Activity {
             ApplicationInfo ai = getPackageManager().getApplicationInfo(getPackageName(),
                     PackageManager.GET_META_DATA);
             Bundle bundle = ai.metaData;
-            supportedPackages = bundle.getString("android.accounts.SupportedLoginTypes");
+            supportedPackages = bundle.getString("android.accounts.SupportedAccountTypes");
         } catch (PackageManager.NameNotFoundException e) {
             Log.e("PushApiTestAppOne", "Failed to load meta-data, NameNotFound: "
                     + e.getMessage());

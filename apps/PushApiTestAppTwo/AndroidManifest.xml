@@ -17,7 +17,7 @@
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.android.pushapithirdpartytwo">
-    <uses-permission android:name="android.permission.GET_ACCOUNTS"/>
+    <!-- <uses-permission android:name="android.permission.GET_ACCOUNTS"/> -->
     <application android:label="3P App 2" android:icon="@drawable/push">
         <activity android:name="MainActivity">
             <intent-filter>
@@ -27,11 +27,11 @@
         </activity>
         <receiver android:name="com.example.android.pushapithirdpartytwo.MessageReceiver">
             <intent-filter>
-                <action android:name="android.accounts.NEW_ACCOUNT_VISIBLE"/>
+                <action android:name="android.accounts.VISIBLE_ACCOUNTS_CHANGED"/>
             </intent-filter>
         </receiver>
         <meta-data
-            android:name="android.accounts.SupportedLoginTypes"
+            android:name="android.accounts.SupportedAccountTypes"
             android:value="com.google;com.whatsapp;com.example.android.pushapiauthenticator" />
     </application>
 </manifest>

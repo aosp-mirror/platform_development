@@ -52,9 +52,9 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         am = AccountManager.get(getApplicationContext());
-        final TextView loginTypesRegistered = (TextView) findViewById(R.id.logintypesregistered2);
-        final TextView visibleAccounts = (TextView) findViewById(R.id.visibleaccounts2);
-        final Button getVisibleAccounts = (Button) findViewById(R.id.getvisibleaccounts2);
+        final TextView loginTypesRegistered = (TextView) findViewById(R.id.logintypesregistered);
+        final TextView visibleAccounts = (TextView) findViewById(R.id.visibleaccounts);
+        final Button getVisibleAccounts = (Button) findViewById(R.id.getvisibleaccounts);
         final Toast notifOn = Toast.makeText(getApplicationContext(), "Notifs Turned On!",
                 Toast.LENGTH_SHORT);
         final Toast notifOff = Toast.makeText(getApplicationContext(), "Notifs Turned Off!",
@@ -77,7 +77,7 @@ public class MainActivity extends Activity {
             ApplicationInfo ai = getPackageManager().getApplicationInfo(getPackageName(),
                     PackageManager.GET_META_DATA);
             Bundle bundle = ai.metaData;
-            supportedPackages = bundle.getString("android.accounts.SupportedLoginTypes");
+            supportedPackages = bundle.getString("android.accounts.SupportedAccountTypes");
         } catch (PackageManager.NameNotFoundException e) {
             Log.e("PushApiTestAppTwo", "Failed to load meta-data, NameNotFound: "
                     + e.getMessage());
