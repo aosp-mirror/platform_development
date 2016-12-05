@@ -490,6 +490,7 @@ frameworks/multidex/library/project.properties                                  
 frameworks/multidex/library/src/.readme                                                           extras/android/support/multidex/library/src/.readme
 frameworks/multidex/library/res/.readme                                                           extras/android/support/multidex/library/res/.readme
 ${OUT_DIR}/target/common/obj/PACKAGING/android-support-multidex_intermediates/android-support-multidex.jar              extras/android/support/multidex/library/libs/android-support-multidex.jar
+${OUT_DIR}/target/common/obj/JAVA_LIBRARIES/android-support-multidex_intermediates/classes.jack                         extras/android/support/multidex/library/libs/android-support-multidex.jack
 
 frameworks/multidex/instrumentation/README.txt                                                         extras/android/support/multidex/instrumentation/README.txt
 frameworks/multidex/instrumentation/.project                                                           extras/android/support/multidex/instrumentation/.project
@@ -500,6 +501,7 @@ frameworks/multidex/instrumentation/src/.readme                                 
 frameworks/multidex/instrumentation/res/.readme                                                        extras/android/support/multidex/instrumentation/res/.readme
 ${OUT_DIR}/target/common/obj/PACKAGING/android-support-multidex-instrumentation_intermediates/android-support-multidex-instrumentation.jar      extras/android/support/multidex/instrumentation/libs/android-support-multidex-instrumentation.jar
 ${OUT_DIR}/target/common/obj/PACKAGING/android-support-multidex_intermediates/android-support-multidex.jar                                      extras/android/support/multidex/instrumentation/libs/android-support-multidex.jar
+${OUT_DIR}/target/common/obj/JAVA_LIBRARIES/android-support-multidex_intermediates/classes.jack                                                 extras/android/support/multidex/instrumentation/libs/android-support-multidex.jack
 
 frameworks/support/v7/mediarouter/README.txt                                                       extras/android/support/v7/mediarouter/README.txt
 frameworks/support/v7/mediarouter/.project                                                         extras/android/support/v7/mediarouter/.project
