@@ -22,4 +22,6 @@
     <string name="remove_shortcut">Remove</string>
     <string name="disable_shortcut">Disable</string>
     <string name="enable_shortcut">Enable</string>
+    <string name="request_new_pin_shortcut">Request new pin</string>
+    <string name="request_pin_shortcut">Req pin</string>
 </resources>
