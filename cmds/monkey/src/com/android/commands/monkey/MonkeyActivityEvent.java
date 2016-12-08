@@ -56,7 +56,7 @@ public class MonkeyActivityEvent extends MonkeyEvent {
     public int injectEvent(IWindowManager iwm, IActivityManager iam, int verbose) {
         Intent intent = getEvent();
         if (verbose > 0) {
-            System.out.println(":Switch: " + intent.toUri(0));
+            Logger.out.println(":Switch: " + intent.toUri(0));
         }
 
         if (mAlarmTime != 0){
@@ -69,11 +69,11 @@ public class MonkeyActivityEvent extends MonkeyEvent {
             iam.startActivity(null, null, intent, null, null, null, 0,
                     0, null, null);
         } catch (RemoteException e) {
-            System.err.println("** Failed talking with activity manager!");
+            Logger.err.println("** Failed talking with activity manager!");
             return MonkeyEvent.INJECT_ERROR_REMOTE_EXCEPTION;
         } catch (SecurityException e) {
             if (verbose > 0) {
-                System.out.println("** Permissions error starting activity "
+                Logger.out.println("** Permissions error starting activity "
                         + intent.toUri(0));
             }
             return MonkeyEvent.INJECT_ERROR_SECURITY_EXCEPTION;

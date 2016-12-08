@@ -182,7 +182,7 @@ public abstract class MonkeyMotionEvent extends MonkeyEvent {
                 msg.append(" ").append(me.getPointerId(i));
                 msg.append(":(").append(me.getX(i)).append(",").append(me.getY(i)).append(")");
             }
-            System.out.println(msg.toString());
+            Logger.out.println(msg.toString());
         }
         try {
             if (!InputManager.getInstance().injectInputEvent(me,

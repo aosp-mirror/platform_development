@@ -107,11 +107,11 @@ public class MonkeyKeyEvent extends MonkeyEvent {
             }
 
             try {
-                System.out.println(":Sending Key (" + note + "): "
+                Logger.out.println(":Sending Key (" + note + "): "
                         + mKeyCode + "    // "
                         + MonkeySourceRandom.getKeyName(mKeyCode));
             } catch (ArrayIndexOutOfBoundsException e) {
-                System.out.println(":Sending Key (" + note + "): "
+                Logger.out.println(":Sending Key (" + note + "): "
                         + mKeyCode + "    // Unknown key event");
             }
         }

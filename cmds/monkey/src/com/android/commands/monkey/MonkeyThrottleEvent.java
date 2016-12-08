@@ -37,12 +37,12 @@ public class MonkeyThrottleEvent extends MonkeyEvent {
     public int injectEvent(IWindowManager iwm, IActivityManager iam, int verbose) {
 
         if (verbose > 1) {
-            System.out.println("Sleeping for " + mThrottle + " milliseconds");
+            Logger.out.println("Sleeping for " + mThrottle + " milliseconds");
         }
         try {
             Thread.sleep(mThrottle);
         } catch (InterruptedException e1) {
-            System.out.println("** Monkey interrupted in sleep.");
+            Logger.out.println("** Monkey interrupted in sleep.");
             return MonkeyEvent.INJECT_FAIL;
         }
         

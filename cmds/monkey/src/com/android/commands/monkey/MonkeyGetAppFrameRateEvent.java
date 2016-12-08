@@ -128,7 +128,7 @@ public class MonkeyGetAppFrameRateEvent extends MonkeyEvent {
             p = Runtime.getRuntime().exec(cmd);
             int status = p.waitFor();
             if (status != 0) {
-                System.err.println(String.format("// Shell command %s status was %s",
+                Logger.err.println(String.format("// Shell command %s status was %s",
                         cmd, status));
             }
             result = new BufferedReader(new InputStreamReader(p.getInputStream()));
@@ -148,8 +148,8 @@ public class MonkeyGetAppFrameRateEvent extends MonkeyEvent {
                 }
             }
         } catch (Exception e) {
-            System.err.println("// Exception from " + cmd + ":");
-            System.err.println(e.toString());
+            Logger.err.println("// Exception from " + cmd + ":");
+            Logger.err.println(e.toString());
         } finally {
             try {
                 if (result != null) {
@@ -159,7 +159,7 @@ public class MonkeyGetAppFrameRateEvent extends MonkeyEvent {
                     p.destroy();
                 }
             } catch (IOException e) {
-                System.err.println(e.toString());
+                Logger.err.println(e.toString());
             }
         }
         return MonkeyEvent.INJECT_SUCCESS;

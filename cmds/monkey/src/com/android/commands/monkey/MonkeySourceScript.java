@@ -211,7 +211,7 @@ public class MonkeySourceScript implements MonkeyEventSource {
                     String value = line.substring(HEADER_COUNT.length() + 1).trim();
                     mEventCountInScript = Integer.parseInt(value);
                 } catch (NumberFormatException e) {
-                    System.err.println(e);
+                    Logger.err.println("" + e);
                     return false;
                 }
             } else if (line.indexOf(HEADER_SPEED) >= 0) {
@@ -219,7 +219,7 @@ public class MonkeySourceScript implements MonkeyEventSource {
                     String value = line.substring(HEADER_COUNT.length() + 1).trim();
                     mSpeed = Double.parseDouble(value);
                 } catch (NumberFormatException e) {
-                    System.err.println(e);
+                    Logger.err.println("" + e);
                     return false;
                 }
             } else if (line.indexOf(HEADER_LINE_BY_LINE) >= 0) {
@@ -280,7 +280,7 @@ public class MonkeySourceScript implements MonkeyEventSource {
         // Handle key event
         if (s.indexOf(EVENT_KEYWORD_KEY) >= 0 && args.length == 8) {
             try {
-                System.out.println(" old key\n");
+                Logger.out.println(" old key\n");
                 long downTime = Long.parseLong(args[0]);
                 long eventTime = Long.parseLong(args[1]);
                 int action = Integer.parseInt(args[2]);
@@ -292,10 +292,10 @@ public class MonkeySourceScript implements MonkeyEventSource {
 
                 MonkeyKeyEvent e = new MonkeyKeyEvent(downTime, eventTime, action, code, repeat,
                         metaState, device, scancode);
-                System.out.println(" Key code " + code + "\n");
+                Logger.out.println(" Key code " + code + "\n");
 
                 mQ.addLast(e);
-                System.out.println("Added key up \n");
+                Logger.out.println("Added key up \n");
             } catch (NumberFormatException e) {
             }
             return;
@@ -459,7 +459,7 @@ public class MonkeySourceScript implements MonkeyEventSource {
                         .addPointer(0, x, y, 1, 5);
                 mQ.addLast(e2);
             } catch (NumberFormatException e) {
-                System.err.println("// " + e.toString());
+                Logger.err.println("// " + e.toString());
             }
             return;
         }
@@ -488,7 +488,7 @@ public class MonkeySourceScript implements MonkeyEventSource {
                 mQ.addLast(e2);
 
             } catch (NumberFormatException e) {
-                System.err.println("// " + e.toString());
+                Logger.err.println("// " + e.toString());
             }
             return;
         }
@@ -605,7 +605,7 @@ public class MonkeySourceScript implements MonkeyEventSource {
                 try {
                     alarmTime = Long.parseLong(args[2]);
                 } catch (NumberFormatException e) {
-                    System.err.println("// " + e.toString());
+                    Logger.err.println("// " + e.toString());
                     return;
                 }
             }
@@ -821,7 +821,7 @@ public class MonkeySourceScript implements MonkeyEventSource {
         int linesRead = 0;
 
         if (THIS_DEBUG) {
-            System.out.println("readNextBatch(): reading next batch of events");
+            Logger.out.println("readNextBatch(): reading next batch of events");
         }
 
         if (!mFileOpened) {
@@ -872,7 +872,7 @@ public class MonkeySourceScript implements MonkeyEventSource {
         }
 
         if (mVerbose > 0) {
-            System.out.println("Replaying " + mEventCountInScript + " events with speed " + mSpeed);
+            Logger.out.println("Replaying " + mEventCountInScript + " events with speed " + mSpeed);
         }
         return validHeader;
     }

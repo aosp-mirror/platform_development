@@ -47,7 +47,7 @@ public class MonkeyInstrumentationEvent extends MonkeyEvent {
         try {
             iam.startInstrumentation(cn, null, 0, args, null, null, 0, null);
         } catch (RemoteException e) {
-            System.err.println("** Failed talking with activity manager!");
+            Logger.err.println("** Failed talking with activity manager!");
             return MonkeyEvent.INJECT_ERROR_REMOTE_EXCEPTION;
         }
         return MonkeyEvent.INJECT_SUCCESS;
