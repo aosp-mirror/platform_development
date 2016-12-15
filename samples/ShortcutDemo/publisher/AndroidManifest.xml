@@ -52,5 +52,8 @@
             </intent-filter>
         </service>
         <receiver android:name="ShortcutReceiver" />
+
+        <receiver android:name="RequestPinShortcutResultReceiver"
+            android:exported="false"/>
     </application>
 </manifest>

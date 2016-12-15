@@ -154,7 +154,7 @@ public class ShortcutPublisher extends Activity {
         }
     }
 
-    private static void showToast(Context context, String message) {
+    public static void showToast(Context context, String message) {
         Toast.makeText(context, message, Toast.LENGTH_SHORT).show();
     }
 
@@ -188,7 +188,13 @@ public class ShortcutPublisher extends Activity {
         final int i = sRandom.nextInt(sIntentList.size());
         b.setShortLabel(sIntentList.get(i).first);
         b.setIntent(new Intent(Intent.ACTION_VIEW, Uri.parse(sIntentList.get(i).second)));
-        b.setIcon(Icon.createWithResource(context, R.drawable.icon2));
+
+        if (sRandom.nextBoolean()) {
+            b.setIcon(Icon.createWithResource(context, R.drawable.icon2));
+        } else {
+            b.setIcon(Icon.createWithBitmap(BitmapFactory.decodeResource(context.getResources(),
+                    R.drawable.icon_large_2)));
+        }
         return b;
     }
 
@@ -291,6 +297,31 @@ public class ShortcutPublisher extends Activity {
                         .addRemoteInput(ri)
                         .build());
         getSystemService(NotificationManager.class).notify(0, nb.build());
+    }
+
+    // event handler
+    public void onRequestPinPressed(View v) {
+        requestPinShortcut(this);
+    }
+
+    public static void requestPinShortcut(Context context) {
+        if (!context.getSystemService(ShortcutManager.class).isRequestPinShortcutSupported()) {
+            showToast(context, "requestPinShortcut() is not supported by launcher");
+            return;
+        }
+        final ShortcutInfo si = addRandomIntents(
+                context, new ShortcutInfo.Builder(context,
+                        "shortcut-" + System.currentTimeMillis()))
+                .build();
+        final PendingIntent resultIntent = PendingIntent.getBroadcast(context, 0,
+                new Intent(context, RequestPinShortcutResultReceiver.class),
+                PendingIntent.FLAG_UPDATE_CURRENT);
+
+        ShortcutPublisher.callApi(context, () -> {
+            context.getSystemService(ShortcutManager.class).requestPinShortcut(
+                    si, resultIntent.getIntentSender());
+            return true;
+        });
     }
 
     class MyAdapter extends ShortcutAdapter {
