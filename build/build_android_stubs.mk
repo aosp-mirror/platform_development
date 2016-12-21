@@ -75,7 +75,6 @@ $(jack_lib) : $(stub_timestamp) $(framework_res_package) $(JACK_DEFAULT_ARGS) $(
 	rm -rf $(PRIVATE_INTERMEDIATES_DIR)/jack-rsc.tmp
 	$(hide) if [ ! -f $(PRIVATE_FRAMEWORK_RES_PACKAGE) ]; then \
 		echo Missing file $(PRIVATE_FRAMEWORK_RES_PACKAGE); \
-		rm -rf $(PRIVATE_CLASS_INTERMEDIATES_DIR); \
 		exit 1; \
 	fi;
 	mkdir -p $(PRIVATE_INTERMEDIATES_DIR)/jack-rsc.tmp
