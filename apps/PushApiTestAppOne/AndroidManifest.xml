@@ -18,6 +18,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.android.pushapithirdpartyone">
     <uses-permission android:name="android.permission.GET_ACCOUNTS" />
+    <uses-sdk android:minSdkVersion="1"
+          android:targetSdkVersion="10001"
+          android:maxSdkVersion="11000" />
     <application android:label="3P App 1" android:icon="@drawable/push">
         <activity android:name="MainActivity">
             <intent-filter>
@@ -27,11 +30,11 @@
         </activity>
         <receiver android:name="com.example.android.pushapithirdpartyone.MessageReceiver">
             <intent-filter>
-                <action android:name="android.accounts.NEW_ACCOUNT_VISIBLE"/>
+                <action android:name="android.accounts.action.VISIBLE_ACCOUNTS_CHANGED"/>
             </intent-filter>
         </receiver>
         <meta-data
             android:name="android.accounts.SupportedAccountTypes"
-            android:value="com.google;com.whatsapp;com.example.android.pushapiauthenticator" />
+            android:value="com.google;com.whatsapp;com.example.android.pushapiauthenticator"/>
     </application>
 </manifest>

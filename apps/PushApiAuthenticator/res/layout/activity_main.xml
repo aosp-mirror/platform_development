@@ -146,7 +146,7 @@
 
         <RadioGroup
             android:layout_width="match_parent"
-            android:layout_height="220dp"
+            android:layout_height="280dp"
             android:id="@+id/optionsGroup"
             android:layout_below="@+id/textView11"
             android:layout_alignParentLeft="true">
@@ -154,15 +154,22 @@
             <RadioButton
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="ADD VISIBILITY"
-                android:id="@+id/addButton"
+                android:text="SET VISIBLE (MANAGED)"
+                android:id="@+id/visibleButton"
                 android:checked="false" />
 
             <RadioButton
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="REMOVE VISIBILITY"
-                android:id="@+id/removeButton"
+                android:text="SET NOT_VISIBLE (MANAGED)"
+                android:id="@+id/notVisibleButton"
+                android:checked="false" />
+
+            <RadioButton
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="SET NOT_VISIBLE"
+                android:id="@+id/forcedNotVisibleButton"
                 android:checked="false" />
 
             <RadioButton
@@ -184,6 +191,13 @@
                 android:layout_height="wrap_content"
                 android:text="ADD ACCOUNT EXPLICITLY w/ UID"
                 android:id="@+id/addAccountButtonWithUid"
+                android:checked="false" />
+
+            <RadioButton
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="RENAME ACCOUNT"
+                android:id="@+id/renameAccount"
                 android:checked="false" />
 
             <RadioButton
