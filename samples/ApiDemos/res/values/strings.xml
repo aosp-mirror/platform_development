@@ -1129,9 +1129,9 @@
     <string name="tooltips_resource_label">Set in resource</string>
     <string name="tooltips_resource_tooltip">This tooltip is set in resource</string>
     <string name="tooltips_long_label">Long tooltip</string>
-    <string name="tooltips_long_tooltip">An overly long tooltip will be truncated. An overly long tooltip will be truncated. An overly long tooltip will be truncated. An overly long tooltip will be truncated</string>
+    <string name="tooltips_long_tooltip">An overly long tooltip will be truncated (3 lines max). An overly long tooltip will be truncated (3 lines max). An overly long tooltip will be truncated (3 lines max). An overly long tooltip will be truncated (3 lines max)</string>
     <string name="tooltips_edge_label">Near the edge</string>
-    <string name="tooltips_edge_tooltip">A tooltip is always fits inside the app window</string>
+    <string name="tooltips_edge_tooltip">A tooltip always fits inside the app window</string>
     <string name="tooltips_above_label">Above placement</string>
     <string name="tooltips_above_tooltip">When there is not enough room below, the tooltip goes above</string>
     <string name="tooltips_wide_label">Wide widget</string>
@@ -1139,7 +1139,7 @@
     <string name="tooltips_tall_label">Tall\nwidget</string>
     <string name="tooltips_tall_tooltip">Tall widget gets a tooltip vertically aligned to the pointer position</string>
     <string name="tooltips_large_label">Large widget</string>
-    <string name="tooltips_large_tooltip">Vertically large widget gets a tooltip aligned to the pointer position</string>
+    <string name="tooltips_large_tooltip">Tall and wide widget gets a tooltip aligned to the pointer position</string>
 
     <!-- ============================== -->
     <!--  GoogleLogin examples strings  -->
