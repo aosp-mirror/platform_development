@@ -83,7 +83,7 @@ bin/zipalign                            strip build-tools/${PLATFORM_NAME}/zipal
 # renderscript (cc + headers)
 bin/llvm-rs-cc                          strip build-tools/${PLATFORM_NAME}/llvm-rs-cc
 bin/bcc_compat                          strip build-tools/${PLATFORM_NAME}/bcc_compat
-frameworks/rs/scriptc                         build-tools/${PLATFORM_NAME}/renderscript/include
+frameworks/rs/script_api/include              build-tools/${PLATFORM_NAME}/renderscript/include
 external/clang/lib/Headers                    build-tools/${PLATFORM_NAME}/renderscript/clang-include
 external/clang/LICENSE.TXT                    build-tools/${PLATFORM_NAME}/renderscript/clang-include/LICENSE.TXT
 
