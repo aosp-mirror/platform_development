@@ -286,7 +286,7 @@ developers/build/prebuilts/gradle/TextSwitcher/                              sam
 developers/build/prebuilts/gradle/HorizontalPaging/                          samples/${PLATFORM_NAME}/ui/HorizontalPaging
 developers/build/prebuilts/gradle/ActionBarCompat-Styled/                    samples/${PLATFORM_NAME}/ui/ActionBarCompat-Styled
 developers/build/prebuilts/gradle/ActionBarCompat-ListPopupMenu/             samples/${PLATFORM_NAME}/ui/ActionBarCompat-ListPopupMenu
-developers/build/prebuilts/gradle/ActionBarCompat-ShareActionProvider/       samples/${PLATFORM_NAME}/ui/ActionBarCompat-ShareActionProvider
+developers/build/prebuilts/gradle/ShareActionProvider/                       samples/${PLATFORM_NAME}/ui/ShareActionProvider
 developers/build/prebuilts/gradle/ActionBarCompat-Basic/                     samples/${PLATFORM_NAME}/ui/ActionBarCompat-Basic
 developers/build/prebuilts/gradle/BasicNotifications/                        samples/${PLATFORM_NAME}/ui/BasicNotifications
 developers/build/prebuilts/gradle/CustomNotifications/                       samples/${PLATFORM_NAME}/ui/CustomNotifications
