@@ -16,4 +16,5 @@
 
 subdirs = [
     "abides",
+    "header-checker",
 ]
