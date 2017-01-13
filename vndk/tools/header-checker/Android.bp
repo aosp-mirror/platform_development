@@ -77,14 +77,14 @@ cc_defaults {
 }
 
 cc_binary_host {
-    name: "header-checker",
+    name: "header-abi-dumper",
 
     defaults: [
         "header-checker-defaults",
         "header-checker-lib-debug-defaults",
     ],
 
-    srcs: ["src/*.cpp"],
+    srcs: ["header-abi-dumper/src/*.cpp"],
 
     target: {
         windows: {
