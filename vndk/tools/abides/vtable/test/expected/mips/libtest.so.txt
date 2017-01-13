@@ -1,0 +1,21 @@
+vtable for Alpha
+_ZTV5Alpha: 3 entries
+8    (int (*)(...)) Alpha::getData(int*, int*, int)
+12    (int (*)(...)) Alpha::~Alpha()
+16    (int (*)(...)) Alpha::~Alpha()
+
+
+vtable for Beta
+_ZTV4Beta: 3 entries
+8    (int (*)(...)) Beta::getData(int*, int*, int)
+12    (int (*)(...)) Beta::~Beta()
+16    (int (*)(...)) Beta::~Beta()
+
+
+vtable for Gamma
+_ZTV5Gamma: 3 entries
+8    (int (*)(...)) Gamma::getData(int*, int*, int)
+12    (int (*)(...)) Gamma::~Gamma()
+16    (int (*)(...)) Gamma::~Gamma()
+
+
