@@ -1,17 +1,15 @@
 /*
  * Copyright (C) 2016 The Android Open Source Project
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
  */
 
 package com.example.android.pushapiauthenticator;
@@ -35,6 +33,8 @@ import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import java.util.HashMap;
 
 public class MainActivity extends Activity {
 
@@ -67,14 +67,14 @@ public class MainActivity extends Activity {
         final Button selectOption = (Button) findViewById(R.id.selectoptionbutton);
         final TextView authStatus = (TextView) findViewById(R.id.authenticatorstatus);
 
-        final Toast hitGet = Toast.makeText(getApplicationContext(),
-                "Hit the GET Button!", Toast.LENGTH_SHORT);
-        final Toast enterUidWarning = Toast.makeText(getApplicationContext(),
-                "Enter a UID!", Toast.LENGTH_SHORT);
-        final Toast chooseAccountWarning = Toast.makeText(getApplicationContext(),
-                "Choose an Account!", Toast.LENGTH_SHORT);
-        final Toast chooseOptionWarning = Toast.makeText(getApplicationContext(),
-                "Choose an Option!", Toast.LENGTH_SHORT);
+        final Toast hitGet =
+                Toast.makeText(getApplicationContext(), "Hit the GET Button!", Toast.LENGTH_SHORT);
+        final Toast enterUidWarning =
+                Toast.makeText(getApplicationContext(), "Enter a UID!", Toast.LENGTH_SHORT);
+        final Toast chooseAccountWarning =
+                Toast.makeText(getApplicationContext(), "Choose an Account!", Toast.LENGTH_SHORT);
+        final Toast chooseOptionWarning =
+                Toast.makeText(getApplicationContext(), "Choose an Option!", Toast.LENGTH_SHORT);
 
         final String ACCOUNT_PASSWORD = "some password";
         final Bundle ACCOUNT_BUNDLE = new Bundle();
@@ -85,15 +85,15 @@ public class MainActivity extends Activity {
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setMessage("Welcome to Auth App. \nPlease make sure you have: \n\n1. Test App 1\n"
-                +"\n2. Test App 2 \n\ninstalled for the demo. These applications" +
-                " together provide tests, use cases, and proof of concept of Push API!\n")
+                + "\n2. Test App 2 \n\ninstalled for the demo. These applications"
+                + " together provide tests, use cases, and proof of concept of Push API!\n")
                 .setTitle("WELCOME")
                 .setPositiveButton("Okay", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                //do nothing
-            }
-        });
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        // do nothing
+                    }
+                });
 
         AlertDialog dialog = builder.create();
         dialog.show();
@@ -101,16 +101,16 @@ public class MainActivity extends Activity {
         getAllRequestingApps.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                int[] allRequestedUids = am.getRequestingUidsForType(getApplicationContext()
-                        .getPackageName());
+                int[] allRequestedUids = null;
+                        // TODO remove uid part
+                        // am.getRequestingUidsForType(getApplicationContext().getPackageName());
                 if (allRequestedUids != null) {
                     StringBuilder uidMasterString = new StringBuilder();
                     StringBuilder packageMasterString = new StringBuilder();
-                    for (int i = 0 ; i < allRequestedUids.length ; i++) {
+                    for (int i = 0; i < allRequestedUids.length; i++) {
                         uidMasterString.append(allRequestedUids[i] + ",\n\n");
-                        packageMasterString.append(getPackageManager().
-                                getNameForUid(allRequestedUids[i])
-                                + ",\n\n");
+                        packageMasterString.append(
+                                getPackageManager().getNameForUid(allRequestedUids[i]) + ",\n\n");
                     }
                     if (uidMasterString.length() > 0) {
                         getAllRequesting3pUids.setText(uidMasterString);
@@ -123,8 +123,8 @@ public class MainActivity extends Activity {
                         getAllRequesting3pPackages.setText("----");
                     }
                 } else {
-                        getAllRequesting3pPackages.setText("----");
-                        getAllRequesting3pUids.setText("----");
+                    getAllRequesting3pPackages.setText("----");
+                    getAllRequesting3pUids.setText("----");
                 }
             }
         });
@@ -132,9 +132,7 @@ public class MainActivity extends Activity {
         selectOption.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                //TODO update Authenticator once AccountManager API is updated
-                /*
-                Account currentAccount = terraAccount;
+                /*Account currentAccount = terraAccount;
                 int checkedAccount = accountChooser.getCheckedRadioButtonId();
                 int checkedOption = optionChooser.getCheckedRadioButtonId();
                 if (uidChooser.getText().length() == 0) {
@@ -144,7 +142,7 @@ public class MainActivity extends Activity {
                 } else if (checkedOption == -1) {
                     chooseOptionWarning.show();
                 } else {
-                    //all conditions satisfied
+                    // all conditions satisfied
                     if (checkedAccount == R.id.terrabutton) {
                         currentAccount = terraAccount;
                     } else if (checkedAccount == R.id.aquabutton) {
@@ -154,53 +152,83 @@ public class MainActivity extends Activity {
                     }
                     String uidstr = uidChooser.getText().toString();
                     int uid = Integer.parseInt(uidstr);
-                    if (checkedOption == R.id.addButton) {
-                        am.makeAccountVisible(currentAccount, uid);
-                        Toast.makeText(getApplicationContext(), "Giving Visibility of " +
-                                currentAccount.name + " to " +
-                                getPackageManager().getNameForUid(uid),
+                    if (checkedOption == R.id.visibleButton) {
+                        am.setAccountVisibility(currentAccount, uid,
+                                AccountManager.VISIBILITY_USER_MANAGED_VISIBLE);
+                        Toast.makeText(getApplicationContext(),
+                                "Giving visibility of " + currentAccount.name + " to "
+                                        + getPackageManager().getNameForUid(uid),
                                 Toast.LENGTH_SHORT).show();
-                    } else if (checkedOption == R.id.removeButton) {
-                        am.removeAccountVisibility(currentAccount, uid);
-                        Toast.makeText(getApplicationContext(), "Removing Visibility of " +
-                                currentAccount.name + " to " +
-                                getPackageManager().getNameForUid(uid),
+                    } else if (checkedOption == R.id.notVisibleButton) {
+                        am.setAccountVisibility(currentAccount, uid,
+                                AccountManager.VISIBILITY_USER_MANAGED_NOT_VISIBLE);
+                        Toast.makeText(getApplicationContext(),
+                                "Removing visibility of " + currentAccount.name + " to "
+                                        + getPackageManager().getNameForUid(uid),
                                 Toast.LENGTH_SHORT).show();
-
+                    } else if (checkedOption == R.id.forcedNotVisibleButton) {
+                        am.setAccountVisibility(currentAccount, uid,
+                                AccountManager.VISIBILITY_NOT_VISIBLE);
+                        Toast.makeText(getApplicationContext(),
+                                "Removing visibility (not managed) of " + currentAccount.name
+                                        + " to " + getPackageManager().getNameForUid(uid),
+                                Toast.LENGTH_SHORT).show();
                     } else if (checkedOption == R.id.getButton) {
-                        Toast.makeText(getApplicationContext(), "Is " + currentAccount.name +
-                                " visible to " + getPackageManager().getNameForUid(uid) + "?\n" +
-                                am.isAccountVisible(currentAccount, uid), Toast.LENGTH_SHORT)
-                               .show();
+                        Toast.makeText(getApplicationContext(),
+                                "Is " + currentAccount.name + " visible to "
+                                        + getPackageManager().getNameForUid(uid) + "?\n"
+                                        + am.getAccountVisibility(currentAccount, uid),
+                                Toast.LENGTH_SHORT).show();
                     } else if (checkedOption == R.id.addAccountButton) {
-                        Toast.makeText(getApplicationContext(), "Adding account explicitly!"
-                                + am.addAccountExplicitly(currentAccount, null, null),
+                        Toast.makeText(getApplicationContext(),
+                                "Adding account explicitly!"
+                                        + am.addAccountExplicitly(currentAccount, null, null),
                                 Toast.LENGTH_SHORT).show();
                     } else if (checkedOption == R.id.addAccountButtonWithUid) {
-                        int[] uidsToAdd = new int[] {uid};
-                        Toast.makeText(getApplicationContext(), "Adding account explicitly!"
-                                + am.addAccountExplicitly(currentAccount, null, null, uidsToAdd)
-                                + " TO: " + getPackageManager().getNameForUid(uid) + "!",
+                        HashMap<Integer, Integer> uidsAndVisibility = new HashMap<>();
+                        uidsAndVisibility.put(uid, AccountManager.VISIBILITY_USER_MANAGED_VISIBLE);
+                        Toast.makeText(getApplicationContext(),
+                                "Adding account explicitly!"
+                                        + am.addAccountExplicitly(currentAccount, null, null,
+                                                uidsAndVisibility)
+                                        + " TO: " + getPackageManager().getNameForUid(uid) + "!",
                                 Toast.LENGTH_SHORT).show();
                     } else if (checkedOption == R.id.removeAccount) {
-                        Toast.makeText(getApplicationContext(), "Removing account explicitly!"
-                                + am.removeAccountExplicitly(currentAccount),
+                        Toast.makeText(getApplicationContext(),
+                                "Removing account explicitly!"
+                                        + am.removeAccountExplicitly(currentAccount),
                                 Toast.LENGTH_SHORT).show();
+                    } else if (checkedOption == R.id.renameAccount) {
+                        try {
+                            AccountManagerFuture<Account> accountRenameFuture = am.renameAccount(
+                                    currentAccount, currentAccount.name + "1", null, null);
+                            Account renamedAccount = accountRenameFuture.getResult();
+                            Toast.makeText(getApplicationContext(),
+                                    "New account name " + renamedAccount, Toast.LENGTH_SHORT)
+                                    .show();
+                        } catch (Exception e) {
+                            Toast.makeText(getApplicationContext(),
+                                    "Exception" + e, Toast.LENGTH_SHORT)
+                                    .show();
+                        }
                     }
                     StringBuilder masterString = new StringBuilder();
                     String uidMasterString = getAllRequesting3pUids.getText().toString();
-                    int[] allUids = am.getRequestingUidsForType(getApplicationContext().
-                            getPackageName());
+                    int[] allUids = null;
+                            //am.getRequestingUidsForType(getApplicationContext().getPackageName());
                     if (allUids != null) {
-                        for (int i = 0 ; i < allUids.length ; i++) {
+                        for (int i = 0; i < allUids.length; i++) {
                             masterString.append(allUids[i] + "\n");
-                            if (am.isAccountVisible(terraAccount, allUids[i])) {
+                            if (am.getAccountVisibility(terraAccount,
+                                    allUids[i]) == AccountManager.VISIBILITY_USER_MANAGED_VISIBLE) {
                                 masterString.append(terraAccount.name + ",");
                             }
-                            if (am.isAccountVisible(aquaAccount, allUids[i])) {
+                            if (am.getAccountVisibility(aquaAccount,
+                                    allUids[i]) == AccountManager.VISIBILITY_USER_MANAGED_VISIBLE) {
                                 masterString.append(aquaAccount.name + ",");
                             }
-                            if (am.isAccountVisible(ventusAccount, allUids[i])) {
+                            if (am.getAccountVisibility(ventusAccount,
+                                    allUids[i]) == AccountManager.VISIBILITY_USER_MANAGED_VISIBLE) {
                                 masterString.append(ventusAccount.name);
                             }
                             masterString.append("\n");
@@ -208,13 +236,10 @@ public class MainActivity extends Activity {
                     }
                     if (masterString.length() > 0) {
                         authStatus.setText(masterString);
-                    }
-                    else {
+                    } else {
                         authStatus.setText("----");
                     }
-                }
-                */
+                }*/
             }
         });
-    }
-}
+}}

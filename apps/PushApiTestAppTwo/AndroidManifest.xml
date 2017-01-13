@@ -17,7 +17,10 @@
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.android.pushapithirdpartytwo">
-    <!-- <uses-permission android:name="android.permission.GET_ACCOUNTS"/> -->
+    <uses-permission android:name="android.permission.GET_ACCOUNTS"/>
+    <uses-sdk android:minSdkVersion="1"
+          android:targetSdkVersion="1001"
+          android:maxSdkVersion="11000" />
     <application android:label="3P App 2" android:icon="@drawable/push">
         <activity android:name="MainActivity">
             <intent-filter>
@@ -27,7 +30,7 @@
         </activity>
         <receiver android:name="com.example.android.pushapithirdpartytwo.MessageReceiver">
             <intent-filter>
-                <action android:name="android.accounts.VISIBLE_ACCOUNTS_CHANGED"/>
+                <action android:name="android.accounts.action.VISIBLE_ACCOUNTS_CHANGED"/>
             </intent-filter>
         </receiver>
         <meta-data

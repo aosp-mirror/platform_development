@@ -12,6 +12,8 @@ LOCAL_SDK_VERSION := current
 
 LOCAL_DEX_PREOPT := false
 
+LOCAL_CERTIFICATE := $(LOCAL_PATH)/cert
+
 include $(BUILD_PACKAGE)
 
 # Use the following include to make our test apk.

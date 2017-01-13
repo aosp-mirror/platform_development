@@ -41,6 +41,7 @@ import android.widget.ToggleButton;
 public class MainActivity extends Activity {
 
     private static AccountManager am;
+    private static final int REQUEST_CODE_PICK_ACCOUNT = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,63 +51,82 @@ public class MainActivity extends Activity {
         final TextView loginTypesRegistered = (TextView) findViewById(R.id.logintypesregistered);
         final TextView visibleAccounts = (TextView) findViewById(R.id.visibleaccounts);
         final Button getVisibleAccounts = (Button) findViewById(R.id.getvisibleaccounts);
-        final Toast notifOn = Toast.makeText(getApplicationContext(), "Notifs Turned On!",
-                Toast.LENGTH_SHORT);
-        final Toast notifOff = Toast.makeText(getApplicationContext(), "Notifs Turned Off!",
-                Toast.LENGTH_SHORT);
+        final Toast notifOn =
+                Toast.makeText(getApplicationContext(), "Notifs Turned On!", Toast.LENGTH_SHORT);
+        final Toast notifOff =
+                Toast.makeText(getApplicationContext(), "Notifs Turned Off!", Toast.LENGTH_SHORT);
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setMessage("Welcome to Test App 1.\nPlease make sure you have:\n\n1. Test App 2\n"
-                + "\n2. Auth App \n\ninstalled for the demo. These applications together provide" +
-                " tests, use cases, and proof of concept of Push API!\n")
-                .setTitle("WELCOME")
+                + "\n2. Auth App \n\ninstalled for the demo. These applications together provide"
+                + " tests, use cases, and proof of concept of Push API!\n").setTitle("WELCOME")
                 .setPositiveButton("Okay", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                //do nothing
-            }
-        });
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        // do nothing
+                    }
+                });
         AlertDialog dialog = builder.create();
         dialog.show();
         String supportedPackages = "";
-        try{
+        try {
             ApplicationInfo ai = getPackageManager().getApplicationInfo(getPackageName(),
                     PackageManager.GET_META_DATA);
             Bundle bundle = ai.metaData;
             supportedPackages = bundle.getString("android.accounts.SupportedAccountTypes");
         } catch (PackageManager.NameNotFoundException e) {
-            Log.e("PushApiTestAppOne", "Failed to load meta-data, NameNotFound: "
-                    + e.getMessage());
+            Log.e("PushApiTestAppOne", "Failed to load meta-data, NameNotFound: " + e.getMessage());
         } catch (NullPointerException e) {
             Log.e("PushApiTestAppOne", "Failed to load meta-data, NullPointer: " + e.getMessage());
         }
         String[] manifestSupportedAccountTypes = supportedPackages.split(";");
         final StringBuilder masterString = new StringBuilder();
-        for (int i = 0 ; i < manifestSupportedAccountTypes.length ; i++) {
+        for (int i = 0; i < manifestSupportedAccountTypes.length; i++) {
             masterString.append(manifestSupportedAccountTypes[i] + "\n");
         }
         if (masterString.length() > 0) {
             loginTypesRegistered.setText(masterString);
-        }
-        else {
+        } else {
             loginTypesRegistered.setText("----");
         }
 
         getVisibleAccounts.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                //int result = ContextCompat.checkSelfPermission(this, Manifest.permission.GET_ACCOUNTS);
+                //if (result != PackageManager.PERMISSION_GRANTED) { 
+                //    ActivityCompat.requestPermissions(this, 
+                //          new String[]{Manifest.permission.GET_ACCOUNTS}, 101);
+                //}
                 Account[] accountsAccessedByAuthApp = am.getAccounts();
                 StringBuilder masterString = new StringBuilder();
-                for (int i = 0 ; i < accountsAccessedByAuthApp.length ; i++) {
-                    masterString.append(accountsAccessedByAuthApp[i].name + ", " +
-                            accountsAccessedByAuthApp[i].type + "\n");
+                for (int i = 0; i < accountsAccessedByAuthApp.length; i++) {
+                    masterString.append(accountsAccessedByAuthApp[i].name + ", "
+                            + accountsAccessedByAuthApp[i].type + "\n");
                 }
                 if (masterString.length() > 0) {
                     visibleAccounts.setText(masterString);
-                }
-                else {
+                } else {
                     visibleAccounts.setText("----");
                 }
+
+                Intent intent = AccountManager.newChooseAccountIntent(null, null, null, null, null,
+                        null, null); // Show all accounts
+                startActivityForResult(intent, REQUEST_CODE_PICK_ACCOUNT);
             }
         });
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == REQUEST_CODE_PICK_ACCOUNT) {
+            // Receiving a result from the AccountPicker
+            if (resultCode == RESULT_OK) {
+                Toast.makeText(this, data.getStringExtra(AccountManager.KEY_ACCOUNT_TYPE),
+                        Toast.LENGTH_LONG).show();
+                // data.getStringExtra(AccountManager.KEY_ACCOUNT_NAME);
+            } else if (resultCode == RESULT_CANCELED) {
+                Toast.makeText(this, "No account was chosen", Toast.LENGTH_LONG).show();
+            }
+        }
     }
 }
