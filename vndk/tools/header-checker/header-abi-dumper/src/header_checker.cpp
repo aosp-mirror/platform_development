@@ -34,14 +34,9 @@ static llvm::cl::opt<std::string> header_file(
     llvm::cl::Positional, llvm::cl::desc("<header>"), llvm::cl::Required,
     llvm::cl::cat(header_checker_category));
 
-static llvm::cl::opt<std::string> ref_dump(
-    "r", llvm::cl::value_desc("refdump"), llvm::cl::Required,
+static llvm::cl::opt<std::string> out_dump(
+    "o", llvm::cl::value_desc("out_dump"), llvm::cl::Required,
     llvm::cl::desc("Specify the reference dump file name"),
-    llvm::cl::cat(header_checker_category));
-
-static llvm::cl::opt<bool> gen_ref_dump(
-    "g", llvm::cl::init(false),
-    llvm::cl::desc("Generate reference dump for header file"),
     llvm::cl::cat(header_checker_category));
 
 // Hide irrelevant command line options defined in LLVM libraries.
@@ -75,11 +70,6 @@ int main(int argc, const char **argv) {
     ::exit(1);
   }
 
-  if (!gen_ref_dump && !llvm::sys::fs::exists(ref_dump)) {
-    llvm::errs() << "ERROR: Reference file \"" << ref_dump << "\" not found\n";
-    ::exit(1);
-  }
-
   // Check the availability of clang compilation options.
   if (!compilations) {
     llvm::errs() << "ERROR: Clang compilation options not specified.\n";
@@ -92,7 +82,7 @@ int main(int argc, const char **argv) {
   clang::tooling::ClangTool tool(*compilations, header_files);
 
   std::unique_ptr<clang::tooling::FrontendActionFactory> factory(
-      new HeaderCheckerFrontendActionFactory(ref_dump, gen_ref_dump));
+      new HeaderCheckerFrontendActionFactory(out_dump));
 
   return tool.run(factory.get());
 }
