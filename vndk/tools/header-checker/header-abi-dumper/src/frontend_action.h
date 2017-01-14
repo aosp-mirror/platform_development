@@ -12,22 +12,30 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef FRONTEND_ACTION_FACTORY_H_
-#define FRONTEND_ACTION_FACTORY_H_
+#ifndef FRONTEND_ACTION_H_
+#define FRONTEND_ACTION_H_
 
-#include <clang/Tooling/Tooling.h>
+#include <clang/Frontend/FrontendAction.h>
+#include <llvm/ADT/StringRef.h>
 
-class HeaderCheckerFrontendActionFactory
-    : public clang::tooling::FrontendActionFactory {
+#include <memory>
+#include <string>
+
+namespace clang {
+  class ASTConsumer;
+  class CompilerInstance;
+}  // namespace clang
+
+class HeaderCheckerFrontendAction : public clang::ASTFrontendAction {
  private:
-  std::string ref_dump_name_;
-  bool should_generate_ref_dump_;
+  std::string dump_name_;
 
  public:
-  HeaderCheckerFrontendActionFactory(const std::string &ref_dump_name,
-                                     bool should_generate_ref_dump);
+  HeaderCheckerFrontendAction(const std::string &dump_name);
 
-  clang::FrontendAction *create() override;
+ protected:
+  std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(
+      clang::CompilerInstance &ci, llvm::StringRef header_file) override;
 };
 
-#endif  // FRONTEND_ACTION_FACTORY_H_
+#endif  // FRONTEND_ACTION_H_

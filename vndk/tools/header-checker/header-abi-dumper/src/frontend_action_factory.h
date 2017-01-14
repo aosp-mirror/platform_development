@@ -12,18 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "frontend_action_factory.h"
+#ifndef FRONTEND_ACTION_FACTORY_H_
+#define FRONTEND_ACTION_FACTORY_H_
 
-#include "frontend_action.h"
+#include <clang/Tooling/Tooling.h>
 
-#include <clang/Frontend/FrontendActions.h>
+class HeaderCheckerFrontendActionFactory
+    : public clang::tooling::FrontendActionFactory {
+ private:
+  std::string dump_name_;
 
-HeaderCheckerFrontendActionFactory::HeaderCheckerFrontendActionFactory(
-    const std::string &ref_dump_name, bool should_generate_ref_dump)
-  : ref_dump_name_(ref_dump_name),
-    should_generate_ref_dump_(should_generate_ref_dump) { }
+ public:
+  HeaderCheckerFrontendActionFactory(const std::string &ref_dump_name);
 
-clang::FrontendAction *HeaderCheckerFrontendActionFactory::create() {
-  return new HeaderCheckerFrontendAction(ref_dump_name_,
-                                         should_generate_ref_dump_);
-}
+  clang::FrontendAction *create() override;
+};
+
+#endif  // FRONTEND_ACTION_FACTORY_H_
