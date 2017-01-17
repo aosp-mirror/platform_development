@@ -25,7 +25,14 @@ cc_defaults {
         "-Wall",
         "-Werror",
         "-std=c++11",
+        "-DGOOGLE_PROTOBUF_NO_RTTI",
     ],
+
+    target: {
+        windows: {
+            enabled: false
+        }
+    }
 }
 
 cc_defaults {
@@ -34,6 +41,7 @@ cc_defaults {
     shared_libs: [
         "libclang",
         "libLLVM",
+        "libprotobuf-cpp-full",
     ],
 }
 
@@ -42,6 +50,7 @@ cc_defaults {
 
     static_libs: [
         "libclangTooling",
+        "libclangToolingCore",
         "libclangFrontendTool",
         "libclangFrontend",
         "libclangDriver",
@@ -74,6 +83,30 @@ cc_defaults {
         "libLLVMMCDisassembler",
         "libLLVMSupport",
     ],
+
+    shared_libs: [
+        "libprotobuf-cpp-full",
+    ],
+}
+
+cc_library_static {
+    name: "libheader-checker-proto",
+    host_supported: true,
+    export_include_dirs: ["."],
+
+    srcs: [
+        "proto/abi_dump.proto",
+    ],
+
+    proto: {
+        export_proto_headers: true,
+    },
+
+    cflags: [
+        "-Wcast-qual",
+        "-Wno-long-long",
+        "-Wno-unused-parameter",
+    ],
 }
 
 cc_binary_host {
@@ -84,20 +117,15 @@ cc_binary_host {
         "header-checker-lib-debug-defaults",
     ],
 
-    srcs: ["header-abi-dumper/src/*.cpp"],
+    srcs: [
+        "header-abi-dumper/src/*.cpp",
+    ],
+
+    static_libs: [
+        "libheader-checker-proto",
+    ],
 
     target: {
-        windows: {
-            host_ldlibs: [
-                "-limagehlp",
-                "-lole32",
-                "-lversion",
-            ],
-            cflags: [
-                // Skip missing-field-initializer warnings for mingw.
-                "-Wno-error=missing-field-initializers",
-            ],
-        },
         linux: {
             host_ldlibs: [
                 "-ldl",
@@ -109,12 +137,6 @@ cc_binary_host {
                 "-ldl",
                 "-lpthread",
             ],
-        },
-    },
-
-    product_variables: {
-        unbundled_build: {
-            enabled: false,
         },
     },
 }
