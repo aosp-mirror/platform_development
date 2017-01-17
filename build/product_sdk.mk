@@ -42,8 +42,7 @@ PRODUCT_PACKAGES += \
 	etc1tool \
 	hprof-conv \
 	jython \
-	layoutlib \
-	layoutlib-tests \
+	layoutlib-legacy \
 	libaapt2_jni \
 	llvm-rs-cc \
 	sqlite3 \
