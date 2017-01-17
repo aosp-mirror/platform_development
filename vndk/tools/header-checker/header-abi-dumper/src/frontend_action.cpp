@@ -13,16 +13,13 @@
 // limitations under the License.
 
 #include "frontend_action.h"
+
 #include "ast_processing.h"
 
-#include <clang/AST/AST.h>
 #include <clang/AST/ASTConsumer.h>
 #include <clang/Frontend/CompilerInstance.h>
-#include <clang/Frontend/MultiplexConsumer.h>
-#include <clang/Lex/Token.h>
-#include <clang/Serialization/ASTWriter.h>
+#include <clang/Lex/Preprocessor.h>
 #include <llvm/ADT/STLExtras.h>
-#include <llvm/Support/raw_ostream.h>
 
 #include <memory>
 #include <string>
@@ -39,9 +36,5 @@ HeaderCheckerFrontendAction::CreateASTConsumer(clang::CompilerInstance &ci,
   pp.addPPCallbacks(llvm::make_unique<HeaderASTPPCallbacks>());
 
   // Create AST consumers.
-  std::vector<std::unique_ptr<clang::ASTConsumer>> consumers;
-  consumers.push_back(llvm::make_unique<HeaderASTConsumer>());
-  // Still have a MultiplexConsumer in case other consumers need to be
-  // added later.
-  return llvm::make_unique<clang::MultiplexConsumer>(std::move(consumers));
+  return llvm::make_unique<HeaderASTConsumer>(header_file, &ci, dump_name_);
 }
