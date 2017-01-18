@@ -34,20 +34,28 @@ class HeaderASTVisitor
   HeaderASTVisitor(abi_dump::TranslationUnit *tu_ptr,
                    clang::MangleContext *mangle_contextp,
                    const clang::ASTContext *ast_contextp,
-                   const clang::CompilerInstance *compiler_instance_p);
+                   const clang::CompilerInstance *compiler_instance_p,
+                   const std::string &current_file_name);
 
-  bool VisitRecordDecl(const clang::RecordDecl *decl);
+  bool VisitCXXRecordDecl(const clang::CXXRecordDecl *decl);
 
   bool VisitFunctionDecl(const clang::FunctionDecl *decl);
 
  private:
   bool SetupFunction(abi_dump::FunctionDecl *methodp,
-                     const clang::FunctionDecl *decl);
+                     const clang::FunctionDecl *decl,
+                     const std::string &source_file);
 
   bool SetupClassFields(abi_dump::RecordDecl *classp,
-                        const clang::RecordDecl *decl);
+                        const clang::CXXRecordDecl *decl,
+                        const std::string &source_file);
+
+ bool SetupClassBases(abi_dump::RecordDecl *classp,
+                      const clang::CXXRecordDecl *decl);
 
   std::string GetDeclSourceFile(const clang::NamedDecl *decl);
+
+  std::string AccessToString(const clang::AccessSpecifier sp);
 
   std::string GetMangledNameDecl(const clang::NamedDecl *decl);
 
@@ -56,6 +64,7 @@ class HeaderASTVisitor
   clang::MangleContext *mangle_contextp_;
   const clang::ASTContext *ast_contextp_;
   const clang::CompilerInstance *cip_;
+  const std::string current_file_name_;
 };
 
 class HeaderASTConsumer : public clang::ASTConsumer {
