@@ -24,6 +24,7 @@ LOCAL_MODULE_TAGS := optional
 LOCAL_MODULE := uiautomator.samples
 
 LOCAL_JAVA_LIBRARIES := uiautomator.core
+LOCAL_STATIC_JAVA_LIBRARIES := junit
 
 LOCAL_MODULE_PATH := $(local_target_dir)
 
