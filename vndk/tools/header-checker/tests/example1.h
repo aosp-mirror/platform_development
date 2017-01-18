@@ -1,6 +1,8 @@
 #ifndef EXAMPLE1_H_
 #define EXAMPLE1_H_
 
+#include "example2.h"
+
 #if defined(__cplusplus)
 extern "C" {
 #endif
@@ -13,6 +15,14 @@ struct Hello {
 #if defined(__cplusplus)
 }  // extern "C"
 #endif
+using namespace test2;
+using namespace test3;
+typedef float float_type;
+typedef const float_type cfloat_type;
+struct CPPHello : private HelloAgain, public ByeAgain<float_type> {
+  const int cpp_foo;
+  cfloat_type cpp_bar;
+};
 
 template<typename T>
 struct StackNode {
@@ -46,5 +56,7 @@ public:
     return res;
   }
 };
+
+const volatile int Global_Foo(int global_bar);
 
 #endif  // EXAMPLE1_H_
