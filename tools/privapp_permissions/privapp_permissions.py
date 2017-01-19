@@ -29,8 +29,6 @@
 """
 
 import os
-import sys
-import time
 import re
 import subprocess
 from xml.dom import minidom
@@ -43,12 +41,10 @@ except KeyError as e:
 BASE_XML_FNAME = "privapp-permissions-platform.xml"
 
 def main():
-    # Parse base XML file, permissions listed in it don't have to be re-added
+    # Parse base XML files in /etc dir, permissions listed there don't have to be re-added
     base_permissions = {}
-    base_xml = os.path.join(ANDROID_PRODUCT_OUT,
-        'system/etc/permissions', BASE_XML_FNAME)
-    if os.path.exists(base_xml):
-        base_permissions = parse_base_xml(base_xml)
+    for xml_file in list_config_xml_files():
+        parse_config_xml(xml_file, base_permissions)
 
     # Extract signature|privileged permissions available in the platform
     framework_apk = os.path.join(ANDROID_PRODUCT_OUT, 'system/framework/framework-res.apk')
@@ -84,7 +80,7 @@ def print_xml(results, apps_redefine_base):
             print '    <!-- Additional permissions on top of %s -->' % BASE_XML_FNAME
         print '    <privapp-permissions package="%s">' % package_name
         for p in results[package_name]:
-            print '        <permission name="%s"/>' % p;
+            print '        <permission name="%s"/>' % p
         print '    </privapp-permissions>'
         print
 
@@ -112,10 +108,26 @@ def list_privapps():
     for dirName, subdirList, fileList in os.walk(priv_app_dir):
         for fname in fileList:
             if fname.endswith(".apk"):
-                file_path = os.path.join(dirName, fname);
+                file_path = os.path.join(dirName, fname)
                 apks.append(file_path)
 
     return apks
+
+def list_config_xml_files():
+    """
+    Extract package name and requested permissions.
+    """
+    perm_dir = os.path.join(ANDROID_PRODUCT_OUT, 'system/etc/permissions')
+    conf_dir = os.path.join(ANDROID_PRODUCT_OUT, 'system/etc/sysconfig')
+
+    xml_files = []
+    for root_dir in [perm_dir, conf_dir]:
+        for dirName, subdirList, fileList in os.walk(root_dir):
+            for fname in fileList:
+                if fname.endswith(".xml"):
+                    file_path = os.path.join(dirName, fname);
+                    xml_files.append(file_path)
+    return xml_files
 
 
 def extract_pkg_and_requested_permissions(apk_path):
@@ -151,10 +163,10 @@ def extract_priv_permissions(apk_path):
     txt = aapt(aapt_args)
     rawLines = txt.split('\n')
     n = len(rawLines)
-    i = 0;
+    i = 0
     permissions_list = []
     while i<n:
-        line = rawLines[i];
+        line = rawLines[i]
         if line.find("E: permission (") != -1:
             i+=1
             name = None
@@ -183,17 +195,18 @@ def extract_priv_permissions(apk_path):
 
     return permissions_list
 
-def parse_base_xml(base_xml):
+def parse_config_xml(base_xml, results):
     """
     Parse an XML file that will be used as base.
     """
     dom = minidom.parse(base_xml)
     nodes =  dom.getElementsByTagName("privapp-permissions")
-    results = {}
     for node in nodes:
         permissions = node.getElementsByTagName("permission")
         package_name = node.getAttribute('package');
         plist = []
+        if package_name in results:
+            plist = results[package_name]
         for p in permissions:
             perm_name = p.getAttribute('name')
             if perm_name:
