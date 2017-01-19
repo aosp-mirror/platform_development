@@ -25,7 +25,7 @@
             android:layout_weight="0.5"
             android:gravity="center_horizontal"
             android:orientation="vertical"
-            android:tooltip="@string/tooltips_container_tooltip">
+            android:tooltipText="@string/tooltips_container_tooltip">
 
         <TextView
                 android:layout_width="wrap_content"
@@ -52,7 +52,7 @@
                 android:padding="10dp"
                 android:textSize="16sp"
                 android:text="@string/tooltips_resource_label"
-                android:tooltip="@string/tooltips_resource_tooltip" />
+                android:tooltipText="@string/tooltips_resource_tooltip" />
 
         <TextView
                 android:background="#ccc"
@@ -62,7 +62,7 @@
                 android:padding="10dp"
                 android:textSize="16sp"
                 android:text="@string/tooltips_long_label"
-                android:tooltip="@string/tooltips_long_tooltip" />
+                android:tooltipText="@string/tooltips_long_tooltip" />
 
         <TextView
                 android:background="#ccc"
@@ -73,7 +73,7 @@
                 android:padding="10dp"
                 android:textSize="16sp"
                 android:text="@string/tooltips_edge_label"
-                android:tooltip="@string/tooltips_edge_tooltip" />
+                android:tooltipText="@string/tooltips_edge_tooltip" />
 
         <View
                 android:layout_width="1dp"
@@ -88,7 +88,7 @@
                 android:padding="10dp"
                 android:textSize="16sp"
                 android:text="@string/tooltips_above_label"
-                android:tooltip="@string/tooltips_above_tooltip" />
+                android:tooltipText="@string/tooltips_above_tooltip" />
     </LinearLayout>
 
     <LinearLayout
@@ -106,7 +106,7 @@
                 android:gravity="center"
                 android:textSize="16sp"
                 android:text="@string/tooltips_wide_label"
-                android:tooltip="@string/tooltips_wide_tooltip" />
+                android:tooltipText="@string/tooltips_wide_tooltip" />
 
         <LinearLayout
                 android:layout_width="match_parent"
@@ -123,7 +123,7 @@
                     android:gravity="center"
                     android:textSize="16sp"
                     android:text="@string/tooltips_tall_label"
-                    android:tooltip="@string/tooltips_tall_tooltip" />
+                    android:tooltipText="@string/tooltips_tall_tooltip" />
 
             <TextView
                     android:background="#ccc"
@@ -135,7 +135,7 @@
                     android:gravity="center"
                     android:textSize="16sp"
                     android:text="@string/tooltips_large_label"
-                    android:tooltip="@string/tooltips_large_tooltip" />
+                    android:tooltipText="@string/tooltips_large_tooltip" />
         </LinearLayout>
     </LinearLayout>
 </LinearLayout>

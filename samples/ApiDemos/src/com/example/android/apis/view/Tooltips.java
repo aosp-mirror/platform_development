@@ -31,6 +31,6 @@ public class Tooltips extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.tooltips);
 
-        findViewById(R.id.tooltips_code).setTooltip("This tooltip is set in code");
+        findViewById(R.id.tooltips_code).setTooltipText("This tooltip is set in code");
     }
 }
