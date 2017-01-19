@@ -15,12 +15,24 @@ message FunctionDecl {
   repeated FieldDecl parameters = 6;
   required string return_type = 7 [default = "VOID"];
   required string access = 8 [default = "public"];
+  required uint32 template_kind = 9 [default = 0];
+  required TemplateInfo template_info = 10;
 }
 
 message FieldDecl {
   required string field_name = 1 [default = "NONE"];
   required string field_type = 2 [default = "VOID"];
   required string access = 3 [default = "public"];
+  required bool default_arg = 4 [default = false];
+}
+
+message EnumField {
+  required string enum_field_name = 1 [default = "NONE"];
+  required int64 enum_field_value = 2 [default = 0]; // assumption: fits int64
+}
+
+message TemplateInfo {
+  repeated FieldDecl template_parameters = 1;
 }
 
 message CXXBaseSpecifier {
@@ -38,9 +50,21 @@ message RecordDecl {
   required string entity_type = 7 [default = "NONE"];
   required string source_file = 9 [default = "NONE"];
   required bool is_c_struct = 10 [default = false];
+  required string template_kind = 11 [default = "NONE"];
+  required TemplateInfo template_info = 12;
+  required string access = 13 [default = "public"];
+}
+
+message EnumDecl {
+  required string enum_name = 1 [default = "NONE"];
+  required string access = 2 [default = "public"];
+  required string enum_type = 3 [default = "int"];
+  repeated EnumField enum_fields = 4;
+  required string source_file = 5 [default = "NONE"];
 }
 
 message TranslationUnit {
   repeated RecordDecl classes = 1;
   repeated FunctionDecl functions = 2;
+  repeated EnumDecl enums = 3;
 }
