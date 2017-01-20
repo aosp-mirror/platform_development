@@ -47,6 +47,7 @@ public class ShortcutLauncherMain extends Activity {
         ab.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
         ab.addTab(ab.newTab().setText("App list").setTabListener(mTabListener));
         ab.addTab(ab.newTab().setText("Pinned shortcuts").setTabListener(mTabListener));
+        ab.addTab(ab.newTab().setText("Create shortcuts").setTabListener(mTabListener));
     }
 
     @Override
@@ -91,13 +92,15 @@ public class ShortcutLauncherMain extends Activity {
                             null /* means "all profiles" of this user*/,
                             /* showDetails =*/ true
                             );
+                case 2:
+                    return new ShortcutTemplateListFragment();
             }
             return null;
         }
 
         @Override
         public int getCount() {
-            return 2;
+            return 3;
         }
 
         @Override

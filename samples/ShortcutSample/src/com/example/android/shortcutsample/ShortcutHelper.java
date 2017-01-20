@@ -156,8 +156,9 @@ public class ShortcutHelper {
         }.execute();
     }
 
-    private ShortcutInfo createShortcutForUrl(String urlAsString) {
+    public ShortcutInfo createShortcutForUrl(String urlAsString) {
         Log.i(TAG, "createShortcutForUrl: " + urlAsString);
+        urlAsString = normalizeUrl(urlAsString);
 
         final ShortcutInfo.Builder b = new ShortcutInfo.Builder(mContext, urlAsString);
 
@@ -202,8 +203,7 @@ public class ShortcutHelper {
     }
 
     public void addWebSiteShortcut(String urlAsString, boolean forPin) {
-        final String uriFinal = urlAsString;
-        final ShortcutInfo shortcut = createShortcutForUrl(normalizeUrl(uriFinal));
+        final ShortcutInfo shortcut = createShortcutForUrl(urlAsString);
 
         if (forPin) {
             callShortcutManager(() -> mShortcutManager.requestPinShortcut(

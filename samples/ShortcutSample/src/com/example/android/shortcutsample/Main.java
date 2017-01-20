@@ -15,6 +15,7 @@
  */
 package com.example.android.shortcutsample;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ListActivity;
 import android.content.Context;
@@ -70,7 +71,9 @@ public class Main extends ListActivity implements OnClickListener {
 
         if (ACTION_ADD_WEBSITE.equals(getIntent().getAction())) {
             // Invoked via the manifest shortcut.
-            addWebSite(/* forPin=*/ false);
+            addWebSite(/* forPin=*/ false, /* forResult= */ false);
+        } else if (Intent.ACTION_CREATE_SHORTCUT.equals(getIntent().getAction())) {
+            addWebSite(/* forPin=*/ true, /* forResult= */ true);
         }
 
         mAdapter = new MyAdapter(this.getApplicationContext());
@@ -100,17 +103,17 @@ public class Main extends ListActivity implements OnClickListener {
      * Handle the add button.
      */
     public void onAddPressed(View v) {
-        addWebSite(/* forPin=*/ false);
+        addWebSite(/* forPin=*/ false, /* forResult= */ false);
     }
 
     /**
      * Handle the add button.
      */
     public void onRequestNewPinPressed(View v) {
-        addWebSite(/* forPin=*/ true);
+        addWebSite(/* forPin=*/ true, /* forResult= */ false);
     }
 
-    private void addWebSite(boolean forPin) {
+    private void addWebSite(boolean forPin, boolean forResult) {
         Log.i(TAG, "addWebSite forPin=" + forPin);
 
         // This is important.  This allows the launcher to build a prediction model.
@@ -128,25 +131,49 @@ public class Main extends ListActivity implements OnClickListener {
                 .setPositiveButton("Add", (dialog, whichButton) -> {
                     final String url = editUri.getText().toString().trim();
                     if (url.length() > 0) {
-                        addUriAsync(url, forPin);
+                        if (forResult) {
+                            addUriAsync(url, forPin, forResult);
+                        }
+                    }
+                })
+                .setOnCancelListener((dialog) -> {
+                    if (forResult) {
+                        setResult(Activity.RESULT_CANCELED);
+                        finish();
                     }
                 })
                 .show();
     }
 
-    private void addUriAsync(String uri, boolean forPin) {
-        new AsyncTask<Void, Void, Void>() {
-            @Override
-            protected Void doInBackground(Void... params) {
-                mHelper.addWebSiteShortcut(uri, forPin);
-                return null;
-            }
+    private void addUriAsync(String uri, boolean forPin, boolean forResult) {
+        if (forResult) {
+            new AsyncTask<Void, Void, ShortcutInfo>() {
+                @Override
+                protected ShortcutInfo doInBackground(Void... params) {
+                    return mHelper.createShortcutForUrl(uri);
+                }
 
-            @Override
-            protected void onPostExecute(Void aVoid) {
-                refreshList();
-            }
-        }.execute();
+                @Override
+                protected void onPostExecute(ShortcutInfo shortcut) {
+                    setResult(Activity.RESULT_OK,
+                            mShortcutManager.createShortcutResultIntent(shortcut));
+                    finish();
+                }
+            }.execute();
+        } else {
+            new AsyncTask<Void, Void, Void>() {
+                @Override
+                protected Void doInBackground(Void... params) {
+                    mHelper.addWebSiteShortcut(uri, forPin);
+                    return null;
+                }
+
+                @Override
+                protected void onPostExecute(Void aVoid) {
+                    refreshList();
+                }
+            }.execute();
+        }
     }
 
     private void refreshList() {
