@@ -57,7 +57,7 @@ public class AppListFragment extends MyBaseListFragment {
 
         final List<LauncherActivityInfo> apps = new ArrayList<>();
 
-        for (UserHandle user : mUserManager.getUserProfiles()) {
+        for (UserHandle user : mLauncherApps.getProfiles()) {
             apps.addAll(mLauncherApps.getActivityList(null, user));
         }
         Collections.sort(apps, sLauncherIconComparator);
