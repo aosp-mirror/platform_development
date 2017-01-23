@@ -131,9 +131,7 @@ public class Main extends ListActivity implements OnClickListener {
                 .setPositiveButton("Add", (dialog, whichButton) -> {
                     final String url = editUri.getText().toString().trim();
                     if (url.length() > 0) {
-                        if (forResult) {
-                            addUriAsync(url, forPin, forResult);
-                        }
+                        addUriAsync(url, forPin, forResult);
                     }
                 })
                 .setOnCancelListener((dialog) -> {
