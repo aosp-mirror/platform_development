@@ -582,5 +582,4 @@ ${OUT_DIR}/target/common/obj/PACKAGING/android-support-transition_intermediates/
 ##############################################################################
 # Tests Component
 ##############################################################################
-framework/layoutlib-tests.jar tests/libtests/layoutlib-tests.jar
 system/app/EmulatorSmokeTests/EmulatorSmokeTests.apk tests/emulator-test-apps/EmulatorSmokeTests.apk
