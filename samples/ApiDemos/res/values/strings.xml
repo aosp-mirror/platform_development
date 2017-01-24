@@ -375,6 +375,12 @@
     <string name="notifying_service_controller">This service will update a status bar notification
                   every 5 seconds for a minute</string>
 
+    <string name="notification_background_service">This shows how you can use a notification to
+        send a broadcast and allow you to start a service even if your app is in the
+        background.</string>
+    <string name="notify_bg">Post notification</string>
+    <string name="notification_background_label">Notification to background</string>
+
     <string name="activity_custom_title">App/Activity/Custom Title</string>
     <string name="custom_title_left">Left is best</string>
     <string name="custom_title_right">Right is always right</string>
