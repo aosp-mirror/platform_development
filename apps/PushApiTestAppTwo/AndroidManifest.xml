@@ -30,11 +30,8 @@
         </activity>
         <receiver android:name="com.example.android.pushapithirdpartytwo.MessageReceiver">
             <intent-filter>
-                <action android:name="android.accounts.action.VISIBLE_ACCOUNTS_CHANGED"/>
+                <action android:name="android.accounts.LOGIN_ACCOUNTS_CHANGED"/>
             </intent-filter>
         </receiver>
-        <meta-data
-            android:name="android.accounts.SupportedAccountTypes"
-            android:value="com.google;com.whatsapp;com.example.android.pushapiauthenticator" />
     </application>
 </manifest>

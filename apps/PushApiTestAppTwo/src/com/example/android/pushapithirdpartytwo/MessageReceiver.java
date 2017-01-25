@@ -21,15 +21,11 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
-import android.widget.Toast;
 
 public class MessageReceiver extends BroadcastReceiver {
     private static final String TAG = "PushApiTestAppTwo";
 
     public void onReceive(Context context, Intent intent) {
-        Toast.makeText(context,
-                "android.accounts.action.VISIBLE_ACCOUNTS_CHANGED Broadcast received",
-                Toast.LENGTH_LONG).show();
-        Log.i(TAG, "android.accounts.action.VISIBLE_ACCOUNTS_CHANGED Broadcast received");
+        Log.i(TAG, "LOGIN_ACCOUNTS_CHANGED Broadcast received");
     }
 }

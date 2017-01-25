@@ -21,6 +21,7 @@ import android.accounts.AccountManager;
 import android.accounts.AccountManagerCallback;
 import android.accounts.AccountManagerFuture;
 import android.accounts.AuthenticatorDescription;
+import android.accounts.OnAccountsUpdateListener;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
@@ -40,15 +41,29 @@ import android.widget.ToggleButton;
 
 public class MainActivity extends Activity {
 
-    private static AccountManager am;
     private static final int REQUEST_CODE_PICK_ACCOUNT = 0;
+    private static final String TAG = "PushApiTestAppOne";
+    private static AccountManager am;
+    private static OnAccountsUpdateListener mListener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         am = AccountManager.get(getApplicationContext());
-        final TextView loginTypesRegistered = (TextView) findViewById(R.id.logintypesregistered);
+        mListener = new OnAccountsUpdateListener() {
+            @Override
+            public void onAccountsUpdated(Account[] accounts) {
+                Log.i(TAG, "onAccountsUpdated is called:");
+                if (accounts != null) {
+                    for (Account account : accounts) {
+                        Log.i(TAG, "visible account: " + account);
+                    }
+                }
+            }
+        };
+        am.addOnAccountsUpdatedListener(mListener, null, false,
+                new String[] {"com.example.android.pushapiauthenticator", "com.google"});
         final TextView visibleAccounts = (TextView) findViewById(R.id.visibleaccounts);
         final Button getVisibleAccounts = (Button) findViewById(R.id.getvisibleaccounts);
         final Toast notifOn =
@@ -58,7 +73,8 @@ public class MainActivity extends Activity {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setMessage("Welcome to Test App 1.\nPlease make sure you have:\n\n1. Test App 2\n"
                 + "\n2. Auth App \n\ninstalled for the demo. These applications together provide"
-                + " tests, use cases, and proof of concept of Push API!\n").setTitle("WELCOME")
+                + " tests, use cases, and proof of concept of Account Discovery API!\n")
+                .setTitle("WELCOME")
                 .setPositiveButton("Okay", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
@@ -67,36 +83,9 @@ public class MainActivity extends Activity {
                 });
         AlertDialog dialog = builder.create();
         dialog.show();
-        String supportedPackages = "";
-        try {
-            ApplicationInfo ai = getPackageManager().getApplicationInfo(getPackageName(),
-                    PackageManager.GET_META_DATA);
-            Bundle bundle = ai.metaData;
-            supportedPackages = bundle.getString("android.accounts.SupportedAccountTypes");
-        } catch (PackageManager.NameNotFoundException e) {
-            Log.e("PushApiTestAppOne", "Failed to load meta-data, NameNotFound: " + e.getMessage());
-        } catch (NullPointerException e) {
-            Log.e("PushApiTestAppOne", "Failed to load meta-data, NullPointer: " + e.getMessage());
-        }
-        String[] manifestSupportedAccountTypes = supportedPackages.split(";");
-        final StringBuilder masterString = new StringBuilder();
-        for (int i = 0; i < manifestSupportedAccountTypes.length; i++) {
-            masterString.append(manifestSupportedAccountTypes[i] + "\n");
-        }
-        if (masterString.length() > 0) {
-            loginTypesRegistered.setText(masterString);
-        } else {
-            loginTypesRegistered.setText("----");
-        }
-
         getVisibleAccounts.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                //int result = ContextCompat.checkSelfPermission(this, Manifest.permission.GET_ACCOUNTS);
-                //if (result != PackageManager.PERMISSION_GRANTED) { 
-                //    ActivityCompat.requestPermissions(this, 
-                //          new String[]{Manifest.permission.GET_ACCOUNTS}, 101);
-                //}
                 Account[] accountsAccessedByAuthApp = am.getAccounts();
                 StringBuilder masterString = new StringBuilder();
                 for (int i = 0; i < accountsAccessedByAuthApp.length; i++) {
@@ -117,13 +106,18 @@ public class MainActivity extends Activity {
     }
 
     @Override
+    protected void onDestroy() {
+        am.removeOnAccountsUpdatedListener(mListener);
+        super.onDestroy();
+    }
+
+    @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == REQUEST_CODE_PICK_ACCOUNT) {
             // Receiving a result from the AccountPicker
             if (resultCode == RESULT_OK) {
                 Toast.makeText(this, data.getStringExtra(AccountManager.KEY_ACCOUNT_TYPE),
                         Toast.LENGTH_LONG).show();
-                // data.getStringExtra(AccountManager.KEY_ACCOUNT_NAME);
             } else if (resultCode == RESULT_CANCELED) {
                 Toast.makeText(this, "No account was chosen", Toast.LENGTH_LONG).show();
             }
