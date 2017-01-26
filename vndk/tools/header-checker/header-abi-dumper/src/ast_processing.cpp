@@ -33,12 +33,14 @@ HeaderASTVisitor::HeaderASTVisitor(
     clang::MangleContext *mangle_contextp,
     const clang::ASTContext *ast_contextp,
     const clang::CompilerInstance *compiler_instance_p,
-    const std::string &current_file_name)
+    const std::string &current_file_name,
+    const std::set<std::string> &exported_headers)
   : tu_ptr_(tu_ptr),
     mangle_contextp_(mangle_contextp),
     ast_contextp_(ast_contextp),
     cip_(compiler_instance_p),
-    current_file_name_(current_file_name) { }
+    current_file_name_(current_file_name),
+    exported_headers_(exported_headers) { }
 
 bool HeaderASTVisitor::VisitRecordDecl(const clang::RecordDecl *decl) {
   // Forward declaration
@@ -50,7 +52,7 @@ bool HeaderASTVisitor::VisitRecordDecl(const clang::RecordDecl *decl) {
   // TODO: Optimize source file initial check by preferably moving this into
   // TraverseTranslationUnitDecl.
   std::string source_file = record_decl_wrapper.GetDeclSourceFile(decl);
-  if (source_file != current_file_name_) {
+  if (exported_headers_.find(source_file) == exported_headers_.end()) {
     return true;
   }
   std::unique_ptr<abi_dump::RecordDecl> wrapped_record_decl =
@@ -59,7 +61,7 @@ bool HeaderASTVisitor::VisitRecordDecl(const clang::RecordDecl *decl) {
     llvm::errs() << "Getting Record Decl failed\n";
     return false;
   }
-  abi_dump::RecordDecl *record_declp = tu_ptr_->add_classes();
+  abi_dump::RecordDecl *record_declp = tu_ptr_->add_records();
   if (!record_declp) {
     return false;
   }
@@ -74,7 +76,7 @@ bool HeaderASTVisitor::VisitEnumDecl(const clang::EnumDecl *decl) {
   EnumDeclWrapper enum_decl_wrapper(
       mangle_contextp_, ast_contextp_, cip_, decl);
   std::string source_file = enum_decl_wrapper.GetDeclSourceFile(decl);
-  if (source_file != current_file_name_) {
+  if (exported_headers_.find(source_file) == exported_headers_.end()) {
     return true;
   }
   std::unique_ptr<abi_dump::EnumDecl> wrapped_enum_decl =
@@ -97,7 +99,7 @@ bool HeaderASTVisitor::VisitFunctionDecl(const clang::FunctionDecl *decl) {
   // TODO: Optimize source file initial check by preferably moving this into
   // TraverseTranslationUnitDecl.
   std::string source_file = function_decl_wrapper.GetDeclSourceFile(decl);
-  if (source_file != current_file_name_) {
+  if (exported_headers_.find(source_file) == exported_headers_.end()) {
     return true;
   }
   std::unique_ptr<abi_dump::FunctionDecl> wrapped_function_decl =
@@ -117,28 +119,34 @@ bool HeaderASTVisitor::VisitFunctionDecl(const clang::FunctionDecl *decl) {
 HeaderASTConsumer::HeaderASTConsumer(
     const std::string &file_name,
     clang::CompilerInstance *compiler_instancep,
-    const std::string &out_dump_name)
+    const std::string &out_dump_name,
+    const std::set<std::string> &exported_headers)
   : file_name_(file_name),
     cip_(compiler_instancep),
-    out_dump_name_(out_dump_name) { }
+    out_dump_name_(out_dump_name),
+    exported_headers_(exported_headers) { }
 
 void HeaderASTConsumer::HandleTranslationUnit(clang::ASTContext &ctx) {
-  clang::TranslationUnitDecl* translation_unit = ctx.getTranslationUnitDecl();
-  std::unique_ptr<clang::MangleContext> mangle_contextp(
-      ctx.createMangleContext());
-  abi_dump::TranslationUnit tu;
-  HeaderASTVisitor v(&tu, mangle_contextp.get(), &ctx, cip_, file_name_);
-  v.TraverseDecl(translation_unit);
+  GOOGLE_PROTOBUF_VERIFY_VERSION;
   std::ofstream text_output(out_dump_name_ + ".txt");
   std::fstream binary_output(
       out_dump_name_,
       std::ios::out | std::ios::trunc | std::ios::binary);
+
+  clang::TranslationUnitDecl* translation_unit = ctx.getTranslationUnitDecl();
+  std::unique_ptr<clang::MangleContext> mangle_contextp(
+      ctx.createMangleContext());
+  abi_dump::TranslationUnit tu;
   std::string str_out;
-  google::protobuf::TextFormat::PrintToString(tu, &str_out);
-  text_output << str_out;
-  if (!tu.SerializeToOstream(&binary_output)) {
+  HeaderASTVisitor v(&tu, mangle_contextp.get(), &ctx, cip_, file_name_,
+                     exported_headers_);
+  if (!v.TraverseDecl(translation_unit) ||
+      !google::protobuf::TextFormat::PrintToString(tu, &str_out) ||
+      !tu.SerializeToOstream(&binary_output)) {
     llvm::errs() << "Serialization to ostream failed\n";
+    ::exit(1);
   }
+  text_output << str_out;
 }
 
 void HeaderASTConsumer::HandleVTable(clang::CXXRecordDecl *crd) {

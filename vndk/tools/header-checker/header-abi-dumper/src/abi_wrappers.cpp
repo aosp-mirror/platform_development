@@ -32,7 +32,11 @@ std::string ABIWrapper::GetDeclSourceFile(const clang::NamedDecl *decl) const {
   clang::SourceManager &sm = cip_->getSourceManager();
   clang::SourceLocation location = decl->getLocation();
   llvm::StringRef file_name = sm.getFilename(location);
-  return file_name.str();
+  llvm::SmallString<128> abs_path(file_name.str());
+  if (llvm::sys::fs::make_absolute(abs_path)) {
+    return "";
+  }
+  return abs_path.str();
 }
 
 std::string ABIWrapper::AccessToString(const clang::AccessSpecifier sp) const {
@@ -82,12 +86,25 @@ bool ABIWrapper::SetupTemplateParamNames(
   return true;
 }
 
+std::string ABIWrapper::GetTagDeclQualifiedName(
+    const clang::TagDecl *decl) const {
+  if (decl->getTypedefNameForAnonDecl()) {
+    return decl->getTypedefNameForAnonDecl()->getQualifiedNameAsString();
+  }
+
+  return decl->getQualifiedNameAsString();
+}
+
 bool ABIWrapper::SetupTemplateArguments(
     abi_dump::TemplateInfo *tinfo,
     const clang::TemplateArgumentList *tl) const {
   for (int i = 0; i < tl->size(); i++) {
     const clang::TemplateArgument &arg = (*tl)[i];
-    std::string type = QualTypeToString(arg.getAsType());
+    //TODO: More comprehensive checking needed.
+    std::string type = " ";
+    if(arg.getKind() == clang::TemplateArgument::Type) {
+      type = QualTypeToString(arg.getAsType());
+    }
     abi_dump::FieldDecl *template_parameterp =
         tinfo->add_template_parameters();
     if (!template_parameterp) {
@@ -100,7 +117,7 @@ bool ABIWrapper::SetupTemplateArguments(
 
 std::string ABIWrapper::QualTypeToString(
     const clang::QualType &sweet_qt) const {
-  const clang::QualType salty_qt = sweet_qt.getDesugaredType(*ast_contextp_);
+  const clang::QualType salty_qt = sweet_qt.getCanonicalType();
   return clang::TypeName::getFullyQualifiedName(salty_qt, *ast_contextp_);
 }
 
@@ -116,8 +133,10 @@ bool FunctionDeclWrapper::SetupFunction(abi_dump::FunctionDecl *functionp,
                                         const std::string &source_file) const {
   // Go through all the parameters in the method and add them to the fields.
   // Also get the fully qualfied name and mangled name and store them.
+  std::string mangled_name = GetMangledNameDecl(function_decl_);
   functionp->set_function_name(function_decl_->getQualifiedNameAsString());
-  functionp->set_mangled_function_name(GetMangledNameDecl(function_decl_));
+  functionp->set_mangled_function_name(mangled_name);
+  functionp->set_linker_set_key(mangled_name);
   functionp->set_source_file(source_file);
   functionp->set_return_type(QualTypeToString(function_decl_->getReturnType()));
 
@@ -239,7 +258,8 @@ bool RecordDeclWrapper::SetupCXXBases(abi_dump::RecordDecl *cxxp) const {
   return true;
 }
 
-bool RecordDeclWrapper::SetupTemplateInfo(abi_dump::RecordDecl *record_declp) const {
+bool RecordDeclWrapper::SetupTemplateInfo(
+    abi_dump::RecordDecl *record_declp) const {
  const clang::CXXRecordDecl *cxx_record_decl =
       clang::dyn_cast<clang::CXXRecordDecl>(record_decl_);
   if (!cxx_record_decl) {
@@ -277,8 +297,10 @@ bool RecordDeclWrapper::SetupTemplateInfo(abi_dump::RecordDecl *record_declp) co
 
 void RecordDeclWrapper::SetupRecordInfo(abi_dump::RecordDecl *record_declp,
                                         const std::string &source_file) const {
-  record_declp->set_fully_qualified_name(
-      record_decl_->getQualifiedNameAsString());
+  std::string qualified_name = GetTagDeclQualifiedName(record_decl_);
+  record_declp->set_fully_qualified_name(qualified_name);
+  //TODO: Add Template Information
+  record_declp->set_linker_set_key(qualified_name);
   record_declp->set_source_file(source_file);
   record_declp->set_access(AccessToString(record_decl_->getAccess()));
 }
@@ -310,13 +332,15 @@ EnumDeclWrapper::EnumDeclWrapper(
 bool EnumDeclWrapper::SetupEnum(abi_dump::EnumDecl *enump,
                                 const std::string &source_file) const {
   // Enum's name.
-  enump->set_enum_name(enum_decl_->getQualifiedNameAsString());
+  std::string enum_name = GetTagDeclQualifiedName(enum_decl_);
+  std::string enum_type = QualTypeToString(enum_decl_->getIntegerType());
+  enump->set_enum_name(enum_name);
   // Enum's base integer type.
-  enump->set_enum_type(QualTypeToString(enum_decl_->getIntegerType()));
-
+  enump->set_enum_type(enum_type);
+  enump->set_linker_set_key(enum_name + enum_type);
   clang::EnumDecl::enumerator_iterator enum_it = enum_decl_->enumerator_begin();
   while (enum_it != enum_decl_->enumerator_end()) {
-    abi_dump::EnumField *enum_fieldp = enump->add_enum_fields();
+    abi_dump::EnumFieldDecl *enum_fieldp = enump->add_enum_fields();
     if (!enum_fieldp) {
       return false;
     }

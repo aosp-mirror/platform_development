@@ -1,6 +1,7 @@
 #ifndef EXAMPLE2_H_
 #define EXAMPLE2_H_
 #include <memory>
+#include "example3.h"
 
 namespace test2 {
 struct HelloAgain {
