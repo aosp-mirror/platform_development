@@ -1,0 +1,17 @@
+EI_CLASS	64
+EI_DATA		Little-Endian
+E_MACHINE	EM_AARCH64
+DT_NEEDED	libdl.so
+DT_NEEDED	libc.so
+DT_NEEDED	libstdc++.so
+SYMBOL		__FINI_ARRAY__
+SYMBOL		__INIT_ARRAY__
+SYMBOL		__PREINIT_ARRAY__
+SYMBOL		__bss_end__
+SYMBOL		__bss_start
+SYMBOL		__bss_start__
+SYMBOL		__end__
+SYMBOL		_bss_end__
+SYMBOL		_edata
+SYMBOL		_end
+SYMBOL		main

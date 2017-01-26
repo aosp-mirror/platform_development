@@ -1,0 +1,9 @@
+EI_CLASS	64
+EI_DATA		Little-Endian
+E_MACHINE	EM_X86_64
+DT_RUNPATH	$ORIGIN/../lib
+DT_NEEDED	libc.so
+SYMBOL		__bss_start
+SYMBOL		_edata
+SYMBOL		_end
+SYMBOL		test
