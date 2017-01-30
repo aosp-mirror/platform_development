@@ -28,8 +28,6 @@
                 <action android:name="android.bluetooth.headset.action.STATE_CHANGED" />
                 <action android:name="android.bluetooth.headset.action.AUDIO_STATE_CHANGED" />
 
-                <action android:name="android.bluetooth.a2dp.action.SINK_STATE_CHANGED" />
-
                 <action android:name="android.bluetooth.devicepicker.action.LAUNCH" />
                 <action android:name="android.bluetooth.devicepicker.action.DEVICE_SELECTED" />
             </intent-filter>
