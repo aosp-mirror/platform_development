@@ -24,7 +24,7 @@ function adb_get_product_device() {
 
 # returns 0 when process is not traced
 function adb_get_traced_by() {
-  echo `adb shell cat /proc/$1/status | grep -e "^TracerPid:" | sed "s/^TracerPid:\t//" | tr -d '\r\n'`
+  echo `adb shell cat /proc/$1/status | grep -e "^TracerPid:" | sed "s/^TracerPid:[[:blank:]]//" | tr -d '\r\n'`
 }
 
 function get_symbols_directory()
