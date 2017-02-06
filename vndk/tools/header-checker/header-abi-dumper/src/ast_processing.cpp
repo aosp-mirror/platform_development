@@ -40,20 +40,19 @@ HeaderASTVisitor::HeaderASTVisitor(
     cip_(compiler_instance_p),
     current_file_name_(current_file_name) { }
 
-// TODO: optimize source file initial check by preferably moving this into
-// TraverseTranslationUnitDecl.
 bool HeaderASTVisitor::VisitRecordDecl(const clang::RecordDecl *decl) {
-  //forward declaration
+  // Forward declaration
   if (!decl->isThisDeclarationADefinition()) {
     return true;
   }
-  RecordDeclWrapper record_decl_wrapper(mangle_contextp_,
-                                        ast_contextp_,
-                                        cip_,
-                                        decl);
+  RecordDeclWrapper record_decl_wrapper(
+      mangle_contextp_, ast_contextp_, cip_, decl);
+  // TODO: Optimize source file initial check by preferably moving this into
+  // TraverseTranslationUnitDecl.
   std::string source_file = record_decl_wrapper.GetDeclSourceFile(decl);
-  if (source_file != current_file_name_)
+  if (source_file != current_file_name_) {
     return true;
+  }
   std::unique_ptr<abi_dump::RecordDecl> wrapped_record_decl =
       record_decl_wrapper.GetRecordDecl();
   if (!wrapped_record_decl) {
@@ -72,13 +71,12 @@ bool HeaderASTVisitor::VisitEnumDecl(const clang::EnumDecl *decl) {
   if (!decl->isThisDeclarationADefinition()) {
     return true;
   }
-  EnumDeclWrapper enum_decl_wrapper(mangle_contextp_,
-                                    ast_contextp_,
-                                    cip_,
-                                    decl);
+  EnumDeclWrapper enum_decl_wrapper(
+      mangle_contextp_, ast_contextp_, cip_, decl);
   std::string source_file = enum_decl_wrapper.GetDeclSourceFile(decl);
-  if (source_file != current_file_name_)
+  if (source_file != current_file_name_) {
     return true;
+  }
   std::unique_ptr<abi_dump::EnumDecl> wrapped_enum_decl =
       enum_decl_wrapper.GetEnumDecl();
   if (!wrapped_enum_decl) {
@@ -94,13 +92,14 @@ bool HeaderASTVisitor::VisitEnumDecl(const clang::EnumDecl *decl) {
 }
 
 bool HeaderASTVisitor::VisitFunctionDecl(const clang::FunctionDecl *decl) {
-  FunctionDeclWrapper function_decl_wrapper(mangle_contextp_,
-                                            ast_contextp_,
-                                            cip_,
-                                            decl);
+  FunctionDeclWrapper function_decl_wrapper(
+      mangle_contextp_, ast_contextp_, cip_, decl);
+  // TODO: Optimize source file initial check by preferably moving this into
+  // TraverseTranslationUnitDecl.
   std::string source_file = function_decl_wrapper.GetDeclSourceFile(decl);
-  if (source_file != current_file_name_)
+  if (source_file != current_file_name_) {
     return true;
+  }
   std::unique_ptr<abi_dump::FunctionDecl> wrapped_function_decl =
       function_decl_wrapper.GetFunctionDecl();
   if (!wrapped_function_decl) {
@@ -108,8 +107,9 @@ bool HeaderASTVisitor::VisitFunctionDecl(const clang::FunctionDecl *decl) {
     return false;
   }
   abi_dump::FunctionDecl *function_declp = tu_ptr_->add_functions();
-  if (!function_declp)
+  if (!function_declp) {
     return false;
+  }
   *function_declp = *wrapped_function_decl;
   return true;
 }
@@ -131,7 +131,7 @@ void HeaderASTConsumer::HandleTranslationUnit(clang::ASTContext &ctx) {
   v.TraverseDecl(translation_unit);
   std::ofstream text_output(out_dump_name_ + ".txt");
   std::fstream binary_output(
-      (out_dump_name_).c_str(),
+      out_dump_name_,
       std::ios::out | std::ios::trunc | std::ios::binary);
   std::string str_out;
   google::protobuf::TextFormat::PrintToString(tu, &str_out);
