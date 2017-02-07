@@ -43,7 +43,7 @@ class HeaderASTVisitor
 
   bool VisitEnumDecl(const clang::EnumDecl *decl);
 
-  //Enable recursive traversal of template instantiations.
+  // Enable recursive traversal of template instantiations.
   bool shouldVisitTemplateInstantiations() const {
     return true;
   }
