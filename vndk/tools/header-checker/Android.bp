@@ -38,16 +38,6 @@ cc_defaults {
 cc_defaults {
     name: "header-checker-lib-defaults",
 
-    shared_libs: [
-        "libclang",
-        "libLLVM",
-        "libprotobuf-cpp-full",
-    ],
-}
-
-cc_defaults {
-    name: "header-checker-lib-debug-defaults",
-
     static_libs: [
         "libclangTooling",
         "libclangToolingCore",
@@ -114,7 +104,7 @@ cc_binary_host {
 
     defaults: [
         "header-checker-defaults",
-        "header-checker-lib-debug-defaults",
+        "header-checker-lib-defaults",
     ],
 
     srcs: [
