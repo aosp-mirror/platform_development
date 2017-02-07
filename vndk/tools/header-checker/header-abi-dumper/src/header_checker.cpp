@@ -65,13 +65,14 @@ int main(int argc, const char **argv) {
   // Parse the command line options.
   llvm::cl::ParseCommandLineOptions(argc, argv, "header-checker");
 
-  // Check the availability of input header file and reference dump file.
+  // Input header file existential check.
   if (!llvm::sys::fs::exists(header_file)) {
     llvm::errs() << "ERROR: Header file \"" << header_file << "\" not found\n";
     ::exit(1);
   }
 
-  // Check the availability of clang compilation options.
+  // Check whether we can create compilation database and deduce compiler
+  // options from command line options.
   if (!compilations) {
     llvm::errs() << "ERROR: Clang compilation options not specified.\n";
     ::exit(1);
