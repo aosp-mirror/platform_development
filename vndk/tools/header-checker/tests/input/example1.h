@@ -22,6 +22,8 @@ typedef const float_type cfloat_type;
 struct CPPHello : private HelloAgain, public ByeAgain<float_type> {
   const int cpp_foo;
   cfloat_type cpp_bar;
+
+  CPPHello() : cpp_foo(20), cpp_bar(1.234) { }
 };
 
 template<typename T>
