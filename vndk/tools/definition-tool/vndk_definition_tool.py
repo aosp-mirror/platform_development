@@ -379,9 +379,27 @@ def _is_ndk_lib(path):
     return lib_name in NDK_LOW_LEVEL or lib_name in NDK_HIGH_LEVEL
 
 
-BANNED_LIBS = {
-    'libbinder.so',
-}
+BannedLib = collections.namedtuple(
+        'BannedLib', ('name', 'reason', 'action',))
+
+BA_WARN  = 0
+BA_EXCLUDE = 1
+
+class BannedLibDict(object):
+    def __init__(self):
+        self.banned_libs = dict()
+
+    def add(self, name, reason, action):
+        self.banned_libs[name] = BannedLib(name, reason, action)
+
+    def get(self, name):
+        return self.banned_libs.get(name, None)
+
+    @staticmethod
+    def create_default():
+        d = BannedLibDict()
+        d.add('libbinder.so', 'un-versioned IPC', BA_WARN)
+        return d
 
 
 def is_accessible(path):
@@ -766,10 +784,12 @@ class VNDKCommand(ELFGraphCommand):
     def _warn_banned_vendor_lib_deps(self, graph, banned_libs):
         for lib in graph.lib_pt[PT_VENDOR].values():
             for dep in lib.deps:
-                dep_name = os.path.basename(dep.path)
-                if dep_name in banned_libs:
-                    print('warning: {}: Vendor binary depends on banned {}.'
-                            .format(lib.path, dep.path), file=sys.stderr)
+                banned = banned_libs.get(os.path.basename(dep.path))
+                if banned:
+                    print('warning: {}: Vendor binary depends on banned {} '
+                          '(reason: {})'.format(
+                              lib.path, dep.path, banned.reason),
+                          file=sys.stderr)
 
     def _check_ndk_extensions(self, graph, generic_refs):
         for lib_set in (graph.lib32, graph.lib64):
@@ -799,9 +819,11 @@ class VNDKCommand(ELFGraphCommand):
 
         if args.warn_banned_vendor_lib_deps:
             if args.ban_vendor_lib_dep:
-                banned_libs = set(args.ban_vendor_lib_dep)
+                banned_libs = BannedLibDict()
+                for name in args.ban_vendor_lib_dep:
+                    banned_libs.add(name, 'user-banned', BA_WARN)
             else:
-                banned_libs = BANNED_LIBS
+                banned_libs = BannedLibDict.create_default()
             self._warn_banned_vendor_lib_deps(graph, banned_libs)
 
         for lib in sorted_lib_path_list(vndk_core):
