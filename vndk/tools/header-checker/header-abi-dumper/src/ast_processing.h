@@ -28,6 +28,8 @@
 #include <clang/Frontend/CompilerInstance.h>
 #include <clang/Lex/PPCallbacks.h>
 
+#include <set>
+
 class HeaderASTVisitor
     : public clang::RecursiveASTVisitor<HeaderASTVisitor> {
  public:
@@ -35,7 +37,8 @@ class HeaderASTVisitor
                    clang::MangleContext *mangle_contextp,
                    const clang::ASTContext *ast_contextp,
                    const clang::CompilerInstance *compiler_instance_p,
-                   const std::string &current_file_name);
+                   const std::string &current_file_name,
+                   const std::set<std::string> &exported_headers);
 
   bool VisitRecordDecl(const clang::RecordDecl *decl);
 
@@ -54,13 +57,15 @@ class HeaderASTVisitor
   const clang::ASTContext *ast_contextp_;
   const clang::CompilerInstance *cip_;
   const std::string current_file_name_;
+  const std::set<std::string> &exported_headers_;
 };
 
 class HeaderASTConsumer : public clang::ASTConsumer {
  public:
   HeaderASTConsumer(const std::string &file_name,
                     clang::CompilerInstance *compiler_instancep,
-                    const std::string &out_dump_name);
+                    const std::string &out_dump_name,
+                    const std::set<std::string> &exported_headers);
 
   void HandleTranslationUnit(clang::ASTContext &ctx) override;
 
@@ -70,6 +75,7 @@ class HeaderASTConsumer : public clang::ASTConsumer {
   std::string file_name_;
   clang::CompilerInstance *cip_;
   std::string out_dump_name_;
+  std::set<std::string> exported_headers_;
 };
 
 class HeaderASTPPCallbacks : public clang::PPCallbacks {
