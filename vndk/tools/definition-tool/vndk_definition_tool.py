@@ -399,6 +399,7 @@ class BannedLibDict(object):
     def create_default():
         d = BannedLibDict()
         d.add('libbinder.so', 'un-versioned IPC', BA_WARN)
+        d.add('libselinux.so', 'policydb might be incompatible', BA_WARN)
         return d
 
 
