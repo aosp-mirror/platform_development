@@ -79,6 +79,18 @@ cc_defaults {
     ],
 }
 
+cc_defaults {
+    name: "header-abi-linker-lib-defaults",
+
+    static_libs: [
+        "libLLVMSupport",
+    ],
+
+    shared_libs: [
+        "libprotobuf-cpp-full",
+    ],
+}
+
 cc_library_static {
     name: "libheader-checker-proto",
     host_supported: true,
@@ -109,6 +121,38 @@ cc_binary_host {
 
     srcs: [
         "header-abi-dumper/src/*.cpp",
+    ],
+
+    static_libs: [
+        "libheader-checker-proto",
+    ],
+
+    target: {
+        linux: {
+            host_ldlibs: [
+                "-ldl",
+                "-lpthread",
+            ],
+        },
+        darwin: {
+            host_ldlibs: [
+                "-ldl",
+                "-lpthread",
+            ],
+        },
+    },
+}
+
+cc_binary_host {
+    name: "header-abi-linker",
+
+    defaults: [
+        "header-checker-defaults",
+        "header-abi-linker-lib-defaults",
+    ],
+
+    srcs: [
+        "header-abi-linker/src/*.cpp",
     ],
 
     static_libs: [

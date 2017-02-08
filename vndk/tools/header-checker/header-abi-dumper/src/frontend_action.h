@@ -19,7 +19,9 @@
 #include <llvm/ADT/StringRef.h>
 
 #include <memory>
+#include <set>
 #include <string>
+#include <vector>
 
 namespace clang {
   class ASTConsumer;
@@ -29,13 +31,21 @@ namespace clang {
 class HeaderCheckerFrontendAction : public clang::ASTFrontendAction {
  private:
   std::string dump_name_;
+  const std::vector<std::string> &export_header_dirs_;
 
  public:
-  HeaderCheckerFrontendAction(const std::string &dump_name);
+  HeaderCheckerFrontendAction(
+      const std::string &dump_name,
+      const std::vector<std::string> &export_header_dirs);
 
  protected:
   std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(
       clang::CompilerInstance &ci, llvm::StringRef header_file) override;
+
+ private:
+  bool CollectExportedHeaderSet(
+      const std::string &dir_name,
+      std::set<std::string> *eh);
 };
 
 #endif  // FRONTEND_ACTION_H_

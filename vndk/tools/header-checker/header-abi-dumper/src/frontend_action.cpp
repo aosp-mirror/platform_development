@@ -20,13 +20,12 @@
 #include <clang/Frontend/CompilerInstance.h>
 #include <clang/Lex/Preprocessor.h>
 #include <llvm/ADT/STLExtras.h>
-
-#include <memory>
-#include <string>
+#include <llvm/Support/FileSystem.h>
+#include <llvm/Support/Path.h>
 
 HeaderCheckerFrontendAction::HeaderCheckerFrontendAction(
-    const std::string &dump_name)
-  : dump_name_(dump_name) {}
+    const std::string &dump_name, const std::vector<std::string> &exports)
+  : dump_name_(dump_name), export_header_dirs_(exports) { }
 
 std::unique_ptr<clang::ASTConsumer>
 HeaderCheckerFrontendAction::CreateASTConsumer(clang::CompilerInstance &ci,
@@ -34,7 +33,59 @@ HeaderCheckerFrontendAction::CreateASTConsumer(clang::CompilerInstance &ci,
   // Add preprocessor callbacks.
   clang::Preprocessor &pp = ci.getPreprocessor();
   pp.addPPCallbacks(llvm::make_unique<HeaderASTPPCallbacks>());
-
+  std::set<std::string> exported_headers;
+  for (auto &&dir_name : export_header_dirs_) {
+    if (!CollectExportedHeaderSet(dir_name, &exported_headers)) {
+         return nullptr;
+    }
+  }
   // Create AST consumers.
-  return llvm::make_unique<HeaderASTConsumer>(header_file, &ci, dump_name_);
+  return llvm::make_unique<HeaderASTConsumer>(header_file,
+                                              &ci, dump_name_,
+                                              exported_headers);
+}
+
+bool HeaderCheckerFrontendAction::CollectExportedHeaderSet(
+    const std::string &dir_name,
+    std::set<std::string> *exported_headers) {
+  std::error_code ec;
+  llvm::sys::fs::recursive_directory_iterator walker(dir_name, ec);
+  // Default construction - end of directory.
+  llvm::sys::fs::recursive_directory_iterator end;
+  llvm::sys::fs::file_status status;
+  for ( ; walker != end; walker.increment(ec)) {
+    if (ec) {
+      llvm::errs() << "Failed to walk dir : " << dir_name << "\n";
+      return false;
+    }
+
+    const std::string &file_path = walker->path();
+
+    llvm::StringRef file_name(llvm::sys::path::filename(file_path));
+    // Ignore swap files and hidden files / dirs. Do not recurse into them too.
+    if (file_name.empty() || file_name.startswith(".") ||
+        file_name.endswith(".swp") || file_name.endswith(".swo") ||
+        file_name.endswith("#")) {
+      walker.no_push();
+      continue;
+    }
+
+    if (walker->status(status)) {
+      llvm::errs() << "Failed to stat file : " << file_path << "\n";
+      return false;
+    }
+
+    if (!llvm::sys::fs::is_regular_file(status)) {
+      // Ignore non regular files. eg: soft links.
+      continue;
+    }
+
+    llvm::SmallString<128> abs_path(file_path);
+    if (llvm::sys::fs::make_absolute(abs_path)) {
+      llvm::errs() << "Failed to get absolute path for : " << file_name << "\n";
+      return false;
+    }
+    exported_headers->insert(abs_path.str());
+  }
+  return true;
 }
