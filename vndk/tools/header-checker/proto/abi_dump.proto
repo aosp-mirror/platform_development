@@ -4,31 +4,32 @@ package abi_dump;
 
 message FunctionDecl {
   // Fully Qualified Name.
-  required string function_name = 1 [default = "NONE"];
+  optional string function_name = 1 [default = "NONE"];
 
   // Mangled name.
-  required string mangled_function_name = 2 [default = "NONE"];
+  optional string mangled_function_name = 2 [default = "NONE"];
 
-  required string source_file = 3;
-  required string parent_name = 4 [default = "NONE"];
+  optional string source_file = 3;
+  optional string parent_name = 4 [default = "NONE"];
   repeated string template_arguments = 5 ;
   repeated FieldDecl parameters = 6;
-  required string return_type = 7 [default = "VOID"];
-  required string access = 8 [default = "public"];
-  required uint32 template_kind = 9 [default = 0];
-  required TemplateInfo template_info = 10;
+  optional string return_type = 7 [default = "VOID"];
+  optional string access = 8 [default = "public"];
+  optional uint32 template_kind = 9 [default = 0];
+  optional TemplateInfo template_info = 10;
+  optional string linker_set_key = 11 [default = "NONE"];
 }
 
 message FieldDecl {
-  required string field_name = 1 [default = "NONE"];
-  required string field_type = 2 [default = "VOID"];
-  required string access = 3 [default = "public"];
-  required bool default_arg = 4 [default = false];
+  optional string field_name = 1 [default = "NONE"];
+  optional string field_type = 2 [default = "VOID"];
+  optional string access = 3 [default = "public"];
+  optional bool default_arg = 4 [default = false];
 }
 
-message EnumField {
-  required string enum_field_name = 1 [default = "NONE"];
-  required int64 enum_field_value = 2 [default = 0]; // assumption: fits int64
+message EnumFieldDecl {
+  optional string enum_field_name = 1 [default = "NONE"];
+  optional int64 enum_field_value = 2 [default = 0]; // assumption: fits int64
 }
 
 message TemplateInfo {
@@ -36,35 +37,35 @@ message TemplateInfo {
 }
 
 message CXXBaseSpecifier {
-  required string fully_qualified_name = 1 [default = "NONE"];
-  required string access = 2 [default = "public"];
-  required bool is_virtual = 3 [default = false];
+  optional string fully_qualified_name = 1 [default = "NONE"];
+  optional string access = 2 [default = "public"];
+  optional bool is_virtual = 3 [default = false];
 }
 
 message RecordDecl {
   repeated FieldDecl fields = 2;
   repeated string inner_classes = 3;
   repeated CXXBaseSpecifier base_specifiers = 4;
-  required string fully_qualified_name = 5 [default = "NONE"];
-  required int64 id = 6 [default = 0];
-  required string entity_type = 7 [default = "NONE"];
-  required string source_file = 9 [default = "NONE"];
-  required bool is_c_struct = 10 [default = false];
-  required string template_kind = 11 [default = "NONE"];
-  required TemplateInfo template_info = 12;
-  required string access = 13 [default = "public"];
+  optional string fully_qualified_name = 5 [default = "NONE"];
+  optional int64 id = 6 [default = 0];
+  optional string source_file = 9 [default = "NONE"];
+  optional string template_kind = 11 [default = "NONE"];
+  optional TemplateInfo template_info = 12;
+  optional string access = 13 [default = "public"];
+  optional string linker_set_key = 14 [default = "NONE"];
 }
 
 message EnumDecl {
-  required string enum_name = 1 [default = "NONE"];
-  required string access = 2 [default = "public"];
-  required string enum_type = 3 [default = "int"];
-  repeated EnumField enum_fields = 4;
-  required string source_file = 5 [default = "NONE"];
+  optional string enum_name = 1 [default = "NONE"];
+  optional string access = 2 [default = "public"];
+  optional string enum_type = 3 [default = "int"];
+  repeated EnumFieldDecl enum_fields = 4;
+  optional string source_file = 5 [default = "NONE"];
+  optional string linker_set_key = 6 [default = "NONE"];
 }
 
 message TranslationUnit {
-  repeated RecordDecl classes = 1;
+  repeated RecordDecl records = 1;
   repeated FunctionDecl functions = 2;
   repeated EnumDecl enums = 3;
 }
