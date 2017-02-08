@@ -48,6 +48,7 @@ class ABIWrapper {
 
   std::string QualTypeToString(const clang::QualType &sweet_qt) const;
 
+  std::string GetTagDeclQualifiedName(const clang::TagDecl *decl) const;
  private:
   clang::MangleContext *mangle_contextp_;
   const clang::ASTContext *ast_contextp_;

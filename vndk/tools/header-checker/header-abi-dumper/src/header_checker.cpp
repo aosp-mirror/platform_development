@@ -32,12 +32,16 @@ static llvm::cl::OptionCategory header_checker_category(
     "header-checker options");
 
 static llvm::cl::opt<std::string> header_file(
-    llvm::cl::Positional, llvm::cl::desc("<header>"), llvm::cl::Required,
+    llvm::cl::Positional, llvm::cl::desc("<source.cpp>"), llvm::cl::Required,
     llvm::cl::cat(header_checker_category));
 
 static llvm::cl::opt<std::string> out_dump(
     "o", llvm::cl::value_desc("out_dump"), llvm::cl::Required,
     llvm::cl::desc("Specify the reference dump file name"),
+    llvm::cl::cat(header_checker_category));
+
+static llvm::cl::list<std::string> exported_header_dirs(
+    "I", llvm::cl::desc("<export_include_dirs>"), llvm::cl::OneOrMore,
     llvm::cl::cat(header_checker_category));
 
 // Hide irrelevant command line options defined in LLVM libraries.
@@ -71,6 +75,14 @@ int main(int argc, const char **argv) {
     ::exit(1);
   }
 
+  //Existential checks for exported dirs.
+  for (auto &&dir : exported_header_dirs) {
+    if (!llvm::sys::fs::exists(dir)) {
+      llvm::errs() << "ERROR: exported dir \"" << dir << "\" not found\n";
+      ::exit(1);
+    }
+  }
+
   // Check whether we can create compilation database and deduce compiler
   // options from command line options.
   if (!compilations) {
@@ -82,9 +94,8 @@ int main(int argc, const char **argv) {
   std::vector<std::string> header_files{ header_file };
 
   clang::tooling::ClangTool tool(*compilations, header_files);
-
   std::unique_ptr<clang::tooling::FrontendActionFactory> factory(
-      new HeaderCheckerFrontendActionFactory(out_dump));
+      new HeaderCheckerFrontendActionFactory(out_dump, exported_header_dirs));
 
   return tool.run(factory.get());
 }
