@@ -518,7 +518,7 @@ class Graph(object):
         self._resolve_deps_lib_set(self.lib64, '/system/lib64',
                                    '/vendor/lib64')
 
-    def compute_vndk_libs(self, generic_refs):
+    def compute_vndk_libs(self, generic_refs, banned_libs):
         vndk_core = set()
         vndk_ext = set()
 
@@ -537,9 +537,12 @@ class Graph(object):
         collect_lib_with_partition_user(
                 vndk_ext, self.lib_pt[PT_VENDOR], PT_SYSTEM)
 
-        # Remove NDK libraries.
+        # Remove NDK libraries and banned libraries.
+        def must_not_be_vndk(lib):
+            return lib.is_ndk or banned_libs.get(os.path.basename(lib.path))
+
         def remove_ndk_libs(libs):
-            return set(lib for lib in libs if not lib.is_ndk)
+            return set(lib for lib in libs if not must_not_be_vndk(lib))
 
         vndk_core = remove_ndk_libs(vndk_core)
         vndk_ext = remove_ndk_libs(vndk_ext)
@@ -551,7 +554,7 @@ class Graph(object):
             while stack:
                 lib = stack.pop()
                 for dep in lib.deps:
-                    if dep.is_ndk:
+                    if must_not_be_vndk(dep):
                         continue
                     if dep not in closure and dep not in boundary:
                         closure.add(dep)
@@ -580,8 +583,8 @@ class Graph(object):
                 # Move the library from vndk_core to vndk_ext.
                 vndk_ext.add(lib)
                 for dep in lib.deps:
-                    # Skip all NDK dependencies. They are not VNDK.
-                    if dep.is_ndk:
+                    # Skip NDK or banned libraries.
+                    if must_not_be_vndk(dep):
                         continue
                     # Skip vndk_ext and possibly vndk_core.
                     if dep in vndk_ext or dep in stacked:
@@ -800,31 +803,35 @@ class VNDKCommand(ELFGraphCommand):
                             .format(lib.path), file=sys.stderr)
 
     def main(self, args):
+        # Link ELF objects.
         graph = Graph.create(args.system, args.system_dir_as_vendor,
                              args.vendor, args.vendor_dir_as_system,
                              args.load_extra_deps)
 
+        # Load the generic reference.
         generic_refs = None
         if args.load_generic_refs:
             generic_refs = GenericRefs.create_from_dir(args.load_generic_refs)
             self._check_ndk_extensions(graph, generic_refs)
 
+        # Create banned libraries.
+        if not args.ban_vendor_lib_dep:
+            banned_libs = BannedLibDict.create_default()
+        else:
+            banned_libs = BannedLibDict()
+            for name in args.ban_vendor_lib_dep:
+                banned_libs.add(name, 'user-banned', BA_WARN)
+
         if args.warn_incorrect_partition:
             self._warn_incorrect_partition(graph)
 
         vndk_core, vndk_indirect, vndk_ext = \
-                graph.compute_vndk_libs(generic_refs)
+                graph.compute_vndk_libs(generic_refs, banned_libs)
 
         if args.warn_high_level_ndk_deps:
             self._warn_high_level_ndk_deps((vndk_core, vndk_indirect, vndk_ext))
 
         if args.warn_banned_vendor_lib_deps:
-            if args.ban_vendor_lib_dep:
-                banned_libs = BannedLibDict()
-                for name in args.ban_vendor_lib_dep:
-                    banned_libs.add(name, 'user-banned', BA_WARN)
-            else:
-                banned_libs = BannedLibDict.create_default()
             self._warn_banned_vendor_lib_deps(graph, banned_libs)
 
         for lib in sorted_lib_path_list(vndk_core):
