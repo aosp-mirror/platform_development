@@ -19,9 +19,10 @@
 #include <clang/Frontend/FrontendActions.h>
 
 HeaderCheckerFrontendActionFactory::HeaderCheckerFrontendActionFactory(
-    const std::string &dump_name)
-  : dump_name_(dump_name) {}
+    const std::string &dump_name,
+    const std::vector<std::string> &export_header_dirs)
+  : dump_name_(dump_name), export_header_dirs_(export_header_dirs) { }
 
 clang::FrontendAction *HeaderCheckerFrontendActionFactory::create() {
-  return new HeaderCheckerFrontendAction(dump_name_);
+  return new HeaderCheckerFrontendAction(dump_name_, export_header_dirs_);
 }
