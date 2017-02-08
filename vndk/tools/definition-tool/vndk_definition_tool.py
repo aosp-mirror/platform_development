@@ -463,7 +463,7 @@ class Graph(object):
     @staticmethod
     def _compile_path_matcher(root, subdirs):
         dirs = [os.path.normpath(os.path.join(root, i)) for i in subdirs]
-        patts = ['(?:' + re.escape(i) + ')' for i in dirs]
+        patts = ['(?:' + re.escape(i) + os.sep + ')' for i in dirs]
         return re.compile('|'.join(patts))
 
     def add_executables_in_dir(self, partition_name, partition, root,
