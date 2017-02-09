@@ -1,5 +1,0 @@
-_dist_code
-_length_code
-deflate_copyright
-inflate_copyright
-z_errmsg
