@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "llvm_elf_handling.h"
+#include "elf_handling.h"
 
 using llvm::Expected;
 using llvm::StringRef;
@@ -26,7 +26,7 @@ using llvm::outs;
 int main (int argc, char **argv)
 {
     if (argc != 2) {
-        outs() << "usage: figure-out-vtables path \n";
+        outs() << "usage: vndk-vtable-dumper path \n";
         return 1;
     }
     Expected<OwningBinary<ObjectFile>> Binary =
