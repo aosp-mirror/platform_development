@@ -20,6 +20,7 @@ import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Bundle;
 import android.util.Log;
 
 import java.util.Calendar;
@@ -45,7 +46,9 @@ public class AlarmUtil {
      */
     public void scheduleAlarm(Alarm alarm) {
         Intent intent = new Intent(mContext, AlarmIntentService.class);
-        intent.putExtra(AlarmIntentService.ALARM_KEY, alarm);
+        Bundle extras = writeAlarm(alarm);
+        intent.putExtras(extras);
+
         PendingIntent pendingIntent = PendingIntent
                 .getService(mContext, alarm.id, intent, PendingIntent.FLAG_UPDATE_CURRENT);
         Calendar alarmTime = Calendar.getInstance();
@@ -71,7 +74,6 @@ public class AlarmUtil {
      */
     public void cancelAlarm(Alarm alarm) {
         Intent intent = new Intent(mContext, AlarmIntentService.class);
-        intent.putExtra(AlarmIntentService.ALARM_KEY, alarm);
         PendingIntent pendingIntent = PendingIntent
                 .getService(mContext, alarm.id, intent, PendingIntent.FLAG_UPDATE_CURRENT);
         mAlarmManager.cancel(pendingIntent);
@@ -93,5 +95,26 @@ public class AlarmUtil {
             alarmTime.add(Calendar.DATE, 1);
         }
         return alarmTime;
+    }
+
+    public static Alarm readAlarm(Bundle extras) {
+        int id = extras.getInt(AlarmIntentService.KEY_ALARM_ID);
+        int month = extras.getInt(AlarmIntentService.KEY_ALARM_MONTH);
+        int date = extras.getInt(AlarmIntentService.KEY_ALARM_DATE);
+        int hour = extras.getInt(AlarmIntentService.KEY_ALARM_HOUR);
+        int minute = extras.getInt(AlarmIntentService.KEY_ALARM_MINUTE);
+
+        return new Alarm(id, month, date, hour, minute);
+    }
+
+    public static Bundle writeAlarm(Alarm alarm){
+        Bundle extras = new Bundle();
+        extras.putInt(AlarmIntentService.KEY_ALARM_ID, alarm.id);
+        extras.putInt(AlarmIntentService.KEY_ALARM_MONTH, alarm.month);
+        extras.putInt(AlarmIntentService.KEY_ALARM_DATE, alarm.date);
+        extras.putInt(AlarmIntentService.KEY_ALARM_HOUR, alarm.hour);
+        extras.putInt(AlarmIntentService.KEY_ALARM_MINUTE, alarm.minute);
+
+        return extras;
     }
 }

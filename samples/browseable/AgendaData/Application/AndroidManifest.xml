@@ -18,7 +18,7 @@
           package="com.example.android.wearable.agendadata">
 
     <uses-sdk android:minSdkVersion="18"
-        android:targetSdkVersion="23" />
+        android:targetSdkVersion="25" />
 
     <!-- BEGIN_INCLUDE(manifest) -->
 
