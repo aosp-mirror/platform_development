@@ -1,3 +1,0 @@
-deflate_copyright
-inflate_copyright
-z_errmsg
