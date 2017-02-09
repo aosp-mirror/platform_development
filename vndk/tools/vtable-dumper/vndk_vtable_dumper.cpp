@@ -16,21 +16,57 @@
 
 #include "elf_handling.h"
 
+#include <llvm/Support/CommandLine.h>
+
 using llvm::Expected;
-using llvm::StringRef;
+using llvm::StringMapEntry;
+using llvm::cl::Hidden;
+using llvm::cl::Option;
+using llvm::cl::OptionCategory;
+using llvm::cl::ParseCommandLineOptions;
+using llvm::cl::Positional;
+using llvm::cl::Required;
+using llvm::cl::SetVersionPrinter;
+using llvm::cl::cat;
+using llvm::cl::desc;
+using llvm::cl::getRegisteredOptions;
+using llvm::cl::opt;
 using llvm::dyn_cast;
 using llvm::object::ObjectFile;
 using llvm::object::OwningBinary;
 using llvm::outs;
 
-int main (int argc, char **argv)
-{
-    if (argc != 2) {
-        outs() << "usage: vndk-vtable-dumper path \n";
-        return 1;
+OptionCategory VTableDumperCategory("vndk-vtable-dumper options");
+
+opt<std::string> FilePath(
+        Positional, Required, cat(VTableDumperCategory),
+        desc("shared_library.so"));
+
+static void HideIrrelevantCommandLineOptions() {
+    for (StringMapEntry<Option *> &P : getRegisteredOptions()) {
+        if (P.second->Category == &VTableDumperCategory) {
+            continue;
+        }
+        if (P.first().startswith("help")) {
+            continue;
+        }
+        P.second->setHiddenFlag(Hidden);
     }
+}
+
+static void PrintCommandVersion() {
+    outs() << "vndk-vtable-dumper 0.1\n";
+}
+
+int main(int argc, char **argv) {
+    // Parse command line options.
+    HideIrrelevantCommandLineOptions();
+    SetVersionPrinter(PrintCommandVersion);
+    ParseCommandLineOptions(argc, argv);
+
+    // Load ELF shared object file and print the vtables.
     Expected<OwningBinary<ObjectFile>> Binary =
-            ObjectFile::createObjectFile(StringRef(argv[1]));
+            ObjectFile::createObjectFile(FilePath);
     if (!Binary) {
         outs() << "Couldn't create object File \n";
         return 1;
