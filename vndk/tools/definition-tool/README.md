@@ -148,6 +148,23 @@ We can run this against latest Android build:
         --vendor ${ANDROID_PRODUCT_OUT}/vendor
 
 
+## Same-Process HAL
+
+VNDK Definition Tool supports the same-process HAL definition as well.  To find
+same-process HALs, run `sp-hal` subcommand:
+
+    $ python3 vndk_definition_tool.py sp-hal \
+        --system ${ANDROID_PRODUCT_OUT}/system \
+        --vendor ${ANDROID_PRODUCT_OUT}/vendor
+
+To find the dependencies of same-process HALs, add `--closure` option:
+
+    $ python3 vndk_definition_tool.py sp-hal \
+        --system ${ANDROID_PRODUCT_OUT}/system \
+        --vendor ${ANDROID_PRODUCT_OUT}/vendor
+        --closure
+
+
 ## Python 2 Support
 
 Since `vndk_definition_tool.py` runs 3x faster with Python 3, the shebang is
