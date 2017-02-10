@@ -13,13 +13,13 @@ repositories {
  * The build server will copy the contents of DIST_DIR to somewhere and make it available.
  */
 if (System.env.DIST_DIR != null && System.env.OUT_DIR != null) {
-    buildDir = new File(System.env.OUT_DIR + '/gradle/checkstyle').getCanonicalFile()
+    buildDir = new File(System.env.OUT_DIR + '/gradle/checkcolor').getCanonicalFile()
     project.ext.distDir = new File(System.env.DIST_DIR).getCanonicalFile()
 
     // the build server does not pass the build number so we infer it from the last folder of the dist path.
     ext.buildNumber = project.ext.distDir.getName()
 } else {
-    buildDir = file("${project.rootDir}/../../../out/host/gradle/checkstyle")
+    buildDir = file("${project.rootDir}/../../../out/host/gradle/checkcolor")
     project.ext.distDir = file("${project.rootDir}/../../../out/dist")
 }
 
