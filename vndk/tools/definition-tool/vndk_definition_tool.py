@@ -460,6 +460,23 @@ class Graph(object):
             if src and dst:
                 src.add_dep(dst)
 
+    def map_path_to_lib(self, path):
+        for lib_set in (self.lib32, self.lib64):
+            lib = lib_set.get(path)
+            if lib:
+                return lib
+        return None
+
+    def map_paths_to_libs(self, paths, report_error):
+        result = set()
+        for path in paths:
+            lib = self.map_path_to_lib(path)
+            if not lib:
+                report_error(path)
+                continue
+            result.add(lib)
+        return result
+
     @staticmethod
     def _compile_path_matcher(root, subdirs):
         dirs = [os.path.normpath(os.path.join(root, i)) for i in subdirs]
@@ -538,31 +555,25 @@ class Graph(object):
                 vndk_ext, self.lib_pt[PT_VENDOR], PT_SYSTEM)
 
         # Remove NDK libraries and banned libraries.
-        def must_not_be_vndk(lib):
+        def is_not_vndk(lib):
             return lib.is_ndk or banned_libs.get(os.path.basename(lib.path))
 
         def remove_ndk_libs(libs):
-            return set(lib for lib in libs if not must_not_be_vndk(lib))
+            return set(lib for lib in libs if not is_not_vndk(lib))
 
         vndk_core = remove_ndk_libs(vndk_core)
         vndk_ext = remove_ndk_libs(vndk_ext)
 
         # Compute transitive closure.
-        def get_transitive_closure(root, boundary):
-            closure = set(root)
-            stack = list(root)
-            while stack:
-                lib = stack.pop()
-                for dep in lib.deps:
-                    if must_not_be_vndk(dep):
-                        continue
-                    if dep not in closure and dep not in boundary:
-                        closure.add(dep)
-                        stack.append(dep)
-            return closure
+        def is_not_vndk_indirect(lib):
+            return is_not_vndk(lib) or lib in vndk_ext
 
-        vndk_indirect = get_transitive_closure(vndk_core, vndk_ext) - vndk_core
-        vndk_ext = get_transitive_closure(vndk_ext, vndk_core)
+        def is_not_vndk_ext(lib):
+            return is_not_vndk(lib) or lib in vndk_core
+
+        vndk_indirect = self.compute_closure(vndk_core, is_not_vndk_indirect)
+        vndk_indirect -= vndk_core
+        vndk_ext = self.compute_closure(vndk_ext, is_not_vndk_ext)
 
         # Move extended libraries from vndk_core to vndk_ext.
         if generic_refs:
@@ -584,7 +595,7 @@ class Graph(object):
                 vndk_ext.add(lib)
                 for dep in lib.deps:
                     # Skip NDK or banned libraries.
-                    if must_not_be_vndk(dep):
+                    if is_not_vndk(dep):
                         continue
                     # Skip vndk_ext and possibly vndk_core.
                     if dep in vndk_ext or dep in stacked:
@@ -596,6 +607,20 @@ class Graph(object):
                     stacked.add(dep)
 
         return (vndk_core, vndk_indirect, vndk_ext)
+
+    @staticmethod
+    def compute_closure(root_set, is_excluded):
+        closure = set(root_set)
+        stack = list(root_set)
+        while stack:
+            lib = stack.pop()
+            for dep in lib.deps:
+                if is_excluded(dep):
+                    continue
+                if dep not in closure:
+                    closure.add(dep)
+                    stack.append(dep)
+        return closure
 
     @staticmethod
     def create(system_dirs=None, system_dirs_as_vendor=None, vendor_dirs=None,
@@ -883,6 +908,97 @@ class DepsCommand(ELFGraphCommand):
                     print('\t' + dep)
         return 0
 
+
+class DepsClosureCommand(ELFGraphCommand):
+    def __init__(self):
+        super(DepsClosureCommand, self).__init__(
+                'deps-closure', help='Find transitive closure of dependencies')
+
+    def add_argparser_options(self, parser):
+        super(DepsClosureCommand, self).add_argparser_options(parser)
+
+        parser.add_argument('lib', nargs='+',
+                            help='root set of the shared libraries')
+
+        parser.add_argument('--exclude-lib', action='append', default=[],
+                            help='libraries to be excluded')
+
+        parser.add_argument('--exclude-ndk', action='store_true',
+                            help='exclude ndk libraries')
+
+    def main(self, args):
+        graph = Graph.create(args.system, args.system_dir_as_vendor,
+                             args.vendor, args.vendor_dir_as_system,
+                             args.load_extra_deps)
+
+        # Find root/excluded libraries by their paths.
+        def report_error(path):
+            print('error: no such lib: {}'.format(path), file=sys.stderr)
+        root_libs = graph.map_paths_to_libs(args.lib, report_error)
+        excluded_libs = graph.map_paths_to_libs(args.exclude_lib, report_error)
+
+        # Compute and print the closure.
+        if args.exclude_ndk:
+            def is_excluded_libs(lib):
+                return lib.is_ndk or lib in excluded_libs
+        else:
+            def is_excluded_libs(lib):
+                return lib in excluded_libs
+
+        closure = graph.compute_closure(root_libs, is_excluded_libs)
+        for lib in sorted_lib_path_list(closure):
+            print(lib)
+        return 0
+
+
+class SpHalCommand(ELFGraphCommand):
+    def __init__(self):
+        super(SpHalCommand, self).__init__(
+                'sp-hal', help='Find transitive closure of same-process HALs')
+
+    def add_argparser_options(self, parser):
+        super(SpHalCommand, self).add_argparser_options(parser)
+
+        parser.add_argument('--closure', action='store_true',
+                            help='show the closure')
+
+    def main(self, args):
+        graph = Graph.create(args.system, args.system_dir_as_vendor,
+                             args.vendor, args.vendor_dir_as_system,
+                             args.load_extra_deps)
+
+        # Find SP HALs.
+        name_patterns = (
+            '^/vendor/.*/libEGL_.*\\.so$',
+            '^/vendor/.*/libGLESv1_CM_.*\\.so$',
+            '^/vendor/.*/libGLESv2_.*\\.so$',
+            '^/vendor/.*/libGLESv3_.*\\.so$',
+            '^/vendor/.*/vulkan.*\\.so$',
+            '^/vendor/.*/libRSDriver.*\\.so$',
+            '^/vendor/.*/libPVRRS\\.so$',  # libRSDriver
+            '^/vendor/.*/gralloc-mapper@\\d+.\\d+-impl\\.so$',
+        )
+
+        patt = re.compile('|'.join('(?:' + p + ')' for p in name_patterns))
+
+        # Find root/excluded libraries by their paths.
+        sp_hals = set()
+        for lib in graph.lib_pt[PT_VENDOR].values():
+            if patt.match(lib.path):
+                sp_hals.add(lib)
+
+        # Compute the closure (if specified).
+        if args.closure:
+            def is_excluded_libs(lib):
+                return lib.is_ndk
+            sp_hals = graph.compute_closure(sp_hals, is_excluded_libs)
+
+        # Print the result.
+        for lib in sorted_lib_path_list(sp_hals):
+            print(lib)
+        return 0
+
+
 def main():
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers(dest='subcmd')
@@ -897,6 +1013,8 @@ def main():
     register_subcmd(CreateGenericRefCommand())
     register_subcmd(VNDKCommand())
     register_subcmd(DepsCommand())
+    register_subcmd(DepsClosureCommand())
+    register_subcmd(SpHalCommand())
 
     args = parser.parse_args()
     if not args.subcmd:
