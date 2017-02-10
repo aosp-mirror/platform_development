@@ -15,6 +15,6 @@
 //
 
 subdirs = [
-    "abides",
     "header-checker",
+    "vtable-dumper",
 ]

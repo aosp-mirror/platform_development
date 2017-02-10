@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "llvm_elf_handling.h"
+#include "elf_handling.h"
 
 #include <cxxabi.h>
 

@@ -28,7 +28,7 @@ NDK_VERSION = 'r11'
 API_LEVEL = 'android-24'
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-VNDK_VTABLE_DUMP = os.path.join('llvm-figure-out-vtables')
+VNDK_VTABLE_DUMPER = 'vndk-vtable-dumper'
 
 def get_dirnames(path, n):
     """Get directory, n directories before path"""
@@ -77,7 +77,7 @@ def run_output(cmd, verbose=False):
 
 def run_vtable_dump(path, verbose=False):
     """Run vndk vtable dumper"""
-    return run_output([VNDK_VTABLE_DUMP, path], verbose)
+    return run_output([VNDK_VTABLE_DUMPER, path], verbose)
 
 
 class Target(object):
@@ -235,7 +235,7 @@ def main():
     if args.android_build_top:
         android_build_top = args.android_build_top
     else:
-        android_build_top = get_dirnames(SCRIPT_DIR, 6)
+        android_build_top = get_dirnames(SCRIPT_DIR, 5)
 
     # Find expected output directory.
     if args.expected_dir:

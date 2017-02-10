@@ -14,15 +14,16 @@
 // limitations under the License.
 //
 
-cc_defaults {
-    name: "vndk-vtable-defaults",
+cc_binary_host {
+    name: "vndk-vtable-dumper",
 
     defaults: [
         "clang-defaults",
     ],
 
-    shared_libs: [
-        "libLLVM",
+    srcs: [
+        "elf_handling.cpp",
+        "vndk_vtable_dumper.cpp",
     ],
 
     cflags: [
@@ -30,16 +31,8 @@ cc_defaults {
         "-Werror",
         "-std=c++11",
     ],
-}
 
-cc_binary_host {
-    name: "llvm-figure-out-vtables",
-
-    defaults: [
-        "vndk-vtable-defaults"
+    shared_libs: [
+        "libLLVM",
     ],
-
-    srcs: [
-				"llvm_elf_handling.cpp",
-        "llvm_vtable_dump.cpp"],
 }
