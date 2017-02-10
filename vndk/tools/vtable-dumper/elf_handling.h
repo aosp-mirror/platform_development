@@ -167,4 +167,3 @@ static inline T UnWrap(llvm::Expected<T> ValueOrError) {
 
 
 #endif  // ELF_HANDLING_H_
-
