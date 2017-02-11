@@ -18,7 +18,7 @@
         package="com.example.android.wearable.watchface" >
 
     <uses-sdk android:minSdkVersion="18"
-              android:targetSdkVersion="23" />
+              android:targetSdkVersion="25" />
 
     <!-- Permissions required by the wearable app -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />

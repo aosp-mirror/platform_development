@@ -20,17 +20,32 @@
     <string name="intro_message">
         <![CDATA[
         
-            
+
 This sample demonstrates how to create watch faces for android wear and includes a phone app
 and a wearable app. The wearable app has a variety of watch faces including analog, digital,
 opengl, calendar, steps, interactive, etc. It also includes a watch-side configuration example.
 The phone app includes a phone-side configuration example.
 
-Additional note on Steps WatchFace Sample, if the user has not installed or setup the Google Fit app
-on their phone and their Wear device has not configured the Google Fit Wear App, then you may get
-zero steps until one of the two is setup. Please note, many Wear devices configure the Google Fit
-Wear App beforehand.
-            
+Because watch face apps do not have a default Activity in their project, you will need to set your
+Configurations to "Do not launch Activity" for both the Wear and Application modules. If you are
+unsure how to do this, please review the "Run Starter project" section in the
+[Google Watch Face Code Lab][1].
+
+For the Fit Distance related watch face, authentication IS a requirement to request distance from
+Google Fit on Wear. Otherwise, distance will always come back as zero (or stay at whatever the
+distance was prior to you de-authorizing the watch face).
+
+To authenticate and communicate with Google Fit, you must create a project in the Google Developers
+Console, activate the Fitness API, create an OAuth 2.0 client ID, and register the public
+certificate from your signed APK. More details can be found [here][2].
+
+If the user has not installed or setup the Google Fit app on their phone and their Wear device has
+not configured the Google Fit Wear App, then you may get zero steps until one of the two is setup.
+Please note, many Wear devices configure the Google Fit Wear App beforehand.
+
+[1]: https://codelabs.developers.google.com/codelabs/watchface/index.html
+[2]: https://developers.google.com/fit/android/get-started#step_3_enable_the_fitness_api
+
         
         ]]>
     </string>

@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 The Android Open Source Project
+ * Copyright 2016 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -87,22 +87,17 @@ public class SwipeRefreshMultipleViewsFragment extends Fragment {
             Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_sample, container, false);
 
-        // Retrieve the SwipeRefreshLayout and GridView instances
         mSwipeRefreshLayout = (MultiSwipeRefreshLayout) view.findViewById(R.id.swiperefresh);
 
         // BEGIN_INCLUDE (change_colors)
         // Set the color scheme of the SwipeRefreshLayout by providing 4 color resource ids
-        mSwipeRefreshLayout.setColorScheme(
+        mSwipeRefreshLayout.setColorSchemeResources(
                 R.color.swipe_color_1, R.color.swipe_color_2,
                 R.color.swipe_color_3, R.color.swipe_color_4);
         // END_INCLUDE (change_colors)
 
-        // Retrieve the GridView
         mGridView = (GridView) view.findViewById(android.R.id.list);
-
-        // Retrieve the empty view
         mEmptyView = view.findViewById(android.R.id.empty);
-
         return view;
     }
     // END_INCLUDE (inflate_view)
@@ -116,7 +111,7 @@ public class SwipeRefreshMultipleViewsFragment extends Fragment {
          * Create an ArrayAdapter to contain the data for the GridView. Each item in the GridView
          * uses the system-defined simple_list_item_1 layout that contains one TextView. Initially
          */
-        mListAdapter = new ArrayAdapter<String>(
+        mListAdapter = new ArrayAdapter<>(
                 getActivity(),
                 android.R.layout.simple_list_item_1,
                 android.R.id.text1);

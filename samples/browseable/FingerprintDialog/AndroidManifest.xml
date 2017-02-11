@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!--
+<?xml version="1.0" encoding="UTF-8"?><!--
  Copyright 2015 The Android Open Source Project
 
  Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,24 +13,28 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 -->
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          package="com.example.android.fingerprintdialog"
-          android:versionCode="1"
-          android:versionName="1.0">
+<manifest package="com.example.android.fingerprintdialog"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:versionCode="1"
+    android:versionName="1.0">
 
-    <uses-permission android:name="android.permission.USE_FINGERPRINT"/>
+    <uses-permission android:name="android.permission.USE_FINGERPRINT" />
 
     <application
-            android:allowBackup="true"
-            android:label="@string/application_name"
-            android:icon="@mipmap/ic_launcher"
-            android:theme="@style/Theme.AppCompat.Light">
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/application_name"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.AppCompat.Light"
+        tools:ignore="GoogleAppIndexingWarning">
 
-        <activity android:name=".MainActivity"
-                  android:label="@string/application_name">
+        <activity
+            android:name=".MainActivity"
+            android:label="@string/application_name">
             <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
-                <category android:name="android.intent.category.LAUNCHER"/>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 

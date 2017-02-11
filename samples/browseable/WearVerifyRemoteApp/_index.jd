@@ -1,0 +1,12 @@
+
+page.tags="WearVerifyRemoteApp"
+sample.group=Wearable
+@jd:body
+
+<p>
+
+Sample demonstrates best practices for checking if the remote version of your app is installed on a
+connected device. This enables standalone Android Wear apps to check if the phone app is installed
+and the other way around.
+
+        </p>

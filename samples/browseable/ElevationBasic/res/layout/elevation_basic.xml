@@ -16,14 +16,13 @@
 -->
 
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-             xmlns:tools="http://schemas.android.com/tools"
              android:layout_width="match_parent"
              android:layout_height="match_parent">
     <View
             android:id="@+id/floating_shape"
             android:layout_width="80dp"
             android:layout_height="80dp"
-            android:layout_marginRight="40dp"
+            android:layout_marginEnd="40dp"
             android:background="@drawable/shape"
             android:elevation="30dp"
             android:layout_gravity="center"/>
@@ -31,7 +30,7 @@
             android:id="@+id/floating_shape_2"
             android:layout_width="80dp"
             android:layout_height="80dp"
-            android:layout_marginLeft="25dp"
+            android:layout_marginStart="25dp"
             android:background="@drawable/shape2"
             android:layout_gravity="center"/>
 </FrameLayout>
