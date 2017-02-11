@@ -98,6 +98,7 @@ cc_library_static {
 
     srcs: [
         "proto/abi_dump.proto",
+        "proto/abi_diff.proto",
     ],
 
     proto: {
@@ -153,6 +154,38 @@ cc_binary_host {
 
     srcs: [
         "header-abi-linker/src/*.cpp",
+    ],
+
+    static_libs: [
+        "libheader-checker-proto",
+    ],
+
+    target: {
+        linux: {
+            host_ldlibs: [
+                "-ldl",
+                "-lpthread",
+            ],
+        },
+        darwin: {
+            host_ldlibs: [
+                "-ldl",
+                "-lpthread",
+            ],
+        },
+    },
+}
+
+cc_binary_host {
+    name: "header-abi-diff",
+
+    defaults: [
+        "header-checker-defaults",
+        "header-abi-linker-lib-defaults",
+    ],
+
+    srcs: [
+        "header-abi-diff/src/*.cpp",
     ],
 
     static_libs: [

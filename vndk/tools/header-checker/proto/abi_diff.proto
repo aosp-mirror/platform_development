@@ -1,0 +1,55 @@
+syntax = "proto2";
+
+import "development/vndk/tools/header-checker/proto/abi_dump.proto";
+
+package abi_diff;
+
+message FieldDeclDiff {
+  optional abi_dump.FieldDecl old = 1;
+  optional abi_dump.FieldDecl new = 2;
+  required uint32 index = 3;
+}
+
+message EnumFieldDeclDiff {
+  optional abi_dump.EnumFieldDecl old = 1;
+  optional abi_dump.EnumFieldDecl new = 2;
+  required uint32 index = 3;
+}
+
+message CXXBaseSpecifierDiff {
+  optional abi_dump.CXXBaseSpecifier old = 1;
+  optional abi_dump.CXXBaseSpecifier new = 2;
+  required uint32 index = 3;
+}
+
+message AccessDiff {
+  required string old = 1;
+  required string new = 2;
+}
+
+message RecordDeclDiff {
+  repeated FieldDeclDiff field_diffs = 1;
+  repeated CXXBaseSpecifierDiff base_diffs = 2;
+  required AccessDiff access_diff = 3;
+  required string name = 4;
+}
+
+message EnumDeclDiff {
+  repeated EnumFieldDeclDiff field_diffs = 1;
+  optional AccessDiff access_diff = 2;
+  required string name = 3;
+}
+
+message TranslationUnitDiff {
+  // Differing Elements.
+  repeated RecordDeclDiff records_diff = 1;
+  repeated EnumDeclDiff enums_diff = 3;
+  // Removed Elements.
+  repeated abi_dump.RecordDecl records_removed = 4;
+  repeated abi_dump.FunctionDecl functions_removed = 5;
+  repeated abi_dump.EnumDecl enums_removed = 6;
+  // Added Elements.
+  repeated abi_dump.RecordDecl records_added = 7;
+  repeated abi_dump.FunctionDecl functions_added = 8;
+  repeated abi_dump.EnumDecl enums_added = 9;
+}
