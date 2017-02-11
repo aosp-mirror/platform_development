@@ -13,6 +13,10 @@
         android:supportsRtl="true"
         android:theme="@android:style/Theme.DeviceDefault">
 
+        <meta-data
+            android:name="com.google.android.wearable.standalone"
+            android:value="true" />
+
         <!--If you want your app to run on pre-22, then set required to false -->
         <uses-library android:name="com.google.android.wearable" android:required="false" />
 

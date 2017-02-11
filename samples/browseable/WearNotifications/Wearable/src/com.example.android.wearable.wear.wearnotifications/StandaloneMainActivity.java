@@ -1,17 +1,17 @@
 /*
-Copyright 2016 The Android Open Source Project
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+ * Copyright (C) 2016 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package com.example.android.wearable.wear.wearnotifications;
 
@@ -30,12 +30,10 @@ import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.app.RemoteInput;
 import android.support.v7.app.NotificationCompat;
 import android.support.wearable.activity.WearableActivity;
+import android.support.wearable.view.WearableRecyclerView;
 import android.util.Log;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.RelativeLayout;
-import android.widget.Spinner;
+import android.widget.FrameLayout;
 
 import com.example.android.wearable.wear.wearnotifications.handlers.BigPictureSocialIntentService;
 import com.example.android.wearable.wear.wearnotifications.handlers.BigPictureSocialMainActivity;
@@ -47,34 +45,39 @@ import com.example.android.wearable.wear.wearnotifications.handlers.MessagingMai
 import com.example.android.wearable.wear.wearnotifications.mock.MockDatabase;
 
 /**
- * Demonstrates best practice for Notifications created by local standalone Android Wear apps. All
- * Notification examples use Notification Styles.
+ * Demonstrates best practice for {@link NotificationCompat} Notifications created by local
+ * standalone Android Wear apps. All {@link NotificationCompat} examples use
+ * {@link NotificationCompat.Style}.
  */
-public class StandaloneMainActivity extends WearableActivity
-        implements AdapterView.OnItemSelectedListener {
+public class StandaloneMainActivity extends WearableActivity {
 
     private static final String TAG = "StandaloneMainActivity";
 
     public static final int NOTIFICATION_ID = 888;
 
-    // Used for Notification Style array and switch statement for Spinner selection
+    /*
+     * Used to represent each major {@link NotificationCompat.Style} in the
+     * {@link WearableRecyclerView}. These constants are also used in a switch statement when one
+     * of the items is selected to create the appropriate {@link Notification}.
+     */
     private static final String BIG_TEXT_STYLE = "BIG_TEXT_STYLE";
     private static final String BIG_PICTURE_STYLE = "BIG_PICTURE_STYLE";
     private static final String INBOX_STYLE = "INBOX_STYLE";
     private static final String MESSAGING_STYLE = "MESSAGING_STYLE";
 
-    // Collection of notification styles to back ArrayAdapter for Spinner
+    /*
+    Collection of major {@link NotificationCompat.Style} to create {@link CustomRecyclerAdapter}
+    for {@link WearableRecyclerView}.
+    */
     private static final String[] NOTIFICATION_STYLES =
             {BIG_TEXT_STYLE, BIG_PICTURE_STYLE, INBOX_STYLE, MESSAGING_STYLE};
 
     private NotificationManagerCompat mNotificationManagerCompat;
 
-    private int mSelectedNotification = 0;
-
-    // RelativeLayout is needed for SnackBars to alert users when Notifications are disabled for app
-    private RelativeLayout mMainRelativeLayout;
-    // TODO (jewalker): convert Spinner to WearableRecyclerView
-    private Spinner mSpinner;
+    // Needed for {@link SnackBar} to alert users when {@link Notification} are disabled for app.
+    private FrameLayout mMainFrameLayout;
+    private WearableRecyclerView mWearableRecyclerView;
+    private CustomRecyclerAdapter mCustomRecyclerAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -84,53 +87,49 @@ public class StandaloneMainActivity extends WearableActivity
         setContentView(R.layout.activity_main);
         setAmbientEnabled();
 
-
-        mMainRelativeLayout = (RelativeLayout) findViewById(R.id.mainRelativeLayout);
-        mSpinner = (Spinner) findViewById(R.id.spinner);
-
         mNotificationManagerCompat = NotificationManagerCompat.from(getApplicationContext());
 
-        // Create an ArrayAdapter using the string array and a default spinner layout
-        ArrayAdapter<CharSequence> adapter =
-                new ArrayAdapter(
-                        this,
-                        android.R.layout.simple_spinner_item,
-                        NOTIFICATION_STYLES);
-        // Specify the layout to use when the list of choices appears
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        // Apply the adapter to the spinner
-        mSpinner.setAdapter(adapter);
-        mSpinner.setOnItemSelectedListener(this);
+        mMainFrameLayout = (FrameLayout) findViewById(R.id.mainFrameLayout);
+        mWearableRecyclerView = (WearableRecyclerView) findViewById(R.id.recycler_view);
 
+        // Aligns the first and last items on the list vertically centered on the screen.
+        mWearableRecyclerView.setCenterEdgeItems(true);
+
+        // Customizes scrolling (zoom) and offsets of WearableRecyclerView's items
+        ScalingOffsettingHelper scalingOffsettingHelper = new ScalingOffsettingHelper();
+        mWearableRecyclerView.setOffsettingHelper(scalingOffsettingHelper);
+
+        // Improves performance because we know changes in content do not change the layout size of
+        // the RecyclerView.
+        mWearableRecyclerView.setHasFixedSize(true);
+
+        // Specifies an adapter (see also next example).
+        mCustomRecyclerAdapter = new CustomRecyclerAdapter(
+                NOTIFICATION_STYLES,
+                // Controller passes selected data from the Adapter out to this Activity to trigger
+                // updates in the UI/Notifications.
+                new Controller(this));
+
+        mWearableRecyclerView.setAdapter(mCustomRecyclerAdapter);
     }
 
-    @Override
-    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-        Log.d(TAG, "onItemSelected(): position: " + position + " id: " + id);
+    // Called by WearableRecyclerView when an item is selected (check onCreate() for initialization)
+    public void itemSelected(String data) {
 
-        mSelectedNotification = position;
-    }
-    @Override
-    public void onNothingSelected(AdapterView<?> parent) {
-        // Required
-    }
-
-    public void onClick(View view) {
-
-        Log.d(TAG, "onClick()");
+        Log.d(TAG, "itemSelected()");
 
         boolean areNotificationsEnabled = mNotificationManagerCompat.areNotificationsEnabled();
 
-        // TODO (jewalker): Verify this is required, can't find way to disable in Wear 2.0.
+        // If notifications are disabled, allow user to enable.
         if (!areNotificationsEnabled) {
             // Because the user took an action to create a notification, we create a prompt to let
             // the user re-enable notifications for this application again.
             Snackbar snackbar = Snackbar
                     .make(
-                            mMainRelativeLayout,
-                            "You need to enable notifications for this app",
+                            mMainFrameLayout,
+                            "", // Not enough space for both text and action text
                             Snackbar.LENGTH_LONG)
-                    .setAction("ENABLE", new View.OnClickListener() {
+                    .setAction("Enable Notifications", new View.OnClickListener() {
                         @Override
                         public void onClick(View view) {
                             // Links to this app's notification settings
@@ -141,7 +140,7 @@ public class StandaloneMainActivity extends WearableActivity
             return;
         }
 
-        String notificationStyle = NOTIFICATION_STYLES[mSelectedNotification];
+        String notificationStyle = data;
 
         switch (notificationStyle) {
             case BIG_TEXT_STYLE:
