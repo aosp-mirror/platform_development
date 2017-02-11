@@ -80,6 +80,7 @@ public class SetupProfileFragment extends Fragment implements View.OnClickListen
             intent.putExtra(EXTRA_PROVISIONING_DEVICE_ADMIN_COMPONENT_NAME,
                     EnforcerDeviceAdminReceiver.getComponentName(activity));
         } else {
+            //noinspection deprecation
             intent.putExtra(EXTRA_PROVISIONING_DEVICE_ADMIN_PACKAGE_NAME,
                     activity.getApplicationContext().getPackageName());
             intent.putExtra(EXTRA_DEVICE_ADMIN, EnforcerDeviceAdminReceiver.getComponentName(activity));

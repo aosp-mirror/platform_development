@@ -18,7 +18,8 @@ package com.example.android.wearable.speedtracker;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.MapFragment;
+import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.PolylineOptions;
@@ -46,19 +47,21 @@ import java.util.List;
  * deleted.
  */
 public class PhoneMainActivity extends AppCompatActivity implements
-        DatePickerDialog.OnDateSetListener {
+        DatePickerDialog.OnDateSetListener, OnMapReadyCallback {
 
     private static final String TAG = "PhoneMainActivity";
     private static final int BOUNDING_BOX_PADDING_PX = 50;
     private TextView mSelectedDateText;
     private GoogleMap mMap;
+    private SupportMapFragment mMapFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main_activity);
         mSelectedDateText = (TextView) findViewById(R.id.selected_date);
-        mMap = ((MapFragment) getFragmentManager().findFragmentById(R.id.map)).getMap();
+        mMapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
+        mMapFragment.getMapAsync(this);
     }
 
     public void onClick(View view) {
@@ -131,5 +134,10 @@ public class PhoneMainActivity extends AppCompatActivity implements
             }
 
         }.execute(calendar);
+    }
+
+    @Override
+    public void onMapReady(GoogleMap googleMap) {
+        mMap = googleMap;
     }
 }

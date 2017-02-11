@@ -27,11 +27,10 @@ import android.support.wearable.view.drawer.WearableNavigationDrawer;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.widget.ImageView;
 import android.widget.Toast;
 
@@ -86,17 +85,22 @@ public class MainActivity extends WearableActivity implements
                 (WearableNavigationDrawer) findViewById(R.id.top_navigation_drawer);
         mWearableNavigationDrawer.setAdapter(new NavigationAdapter(this));
 
-        // Peeks Navigation drawer on the top.
-        mWearableDrawerLayout.peekDrawer(Gravity.TOP);
-
         // Bottom Action Drawer
         mWearableActionDrawer =
                 (WearableActionDrawer) findViewById(R.id.bottom_action_drawer);
 
         mWearableActionDrawer.setOnMenuItemClickListener(this);
 
-        // Peeks action drawer on the bottom.
-        mWearableDrawerLayout.peekDrawer(Gravity.BOTTOM);
+        // Temporarily peeks the navigation and action drawers to ensure the user is aware of them.
+        ViewTreeObserver observer = mWearableDrawerLayout.getViewTreeObserver();
+        observer.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+                mWearableDrawerLayout.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                mWearableDrawerLayout.peekDrawer(Gravity.TOP);
+                mWearableDrawerLayout.peekDrawer(Gravity.BOTTOM);
+            }
+        });
 
         /* Action Drawer Tip: If you only have a single action for your Action Drawer, you can use a
          * (custom) View to peek on top of the content by calling

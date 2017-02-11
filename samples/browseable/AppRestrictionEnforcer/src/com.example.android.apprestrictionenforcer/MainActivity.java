@@ -20,6 +20,7 @@ import android.app.admin.DevicePolicyManager;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 
@@ -38,9 +39,16 @@ public class MainActivity extends FragmentActivity implements StatusFragment.Sta
                 showSetupProfile();
             } else {
                 try {
+                    int packageFlags;
+                    if (Build.VERSION.SDK_INT < 24) {
+                        //noinspection deprecation
+                        packageFlags = PackageManager.GET_UNINSTALLED_PACKAGES;
+                    } else {
+                        packageFlags = PackageManager.MATCH_UNINSTALLED_PACKAGES;
+                    }
                     ApplicationInfo info = packageManager.getApplicationInfo(
                             Constants.PACKAGE_NAME_APP_RESTRICTION_SCHEMA,
-                            PackageManager.GET_UNINSTALLED_PACKAGES);
+                            packageFlags);
                     if (0 == (info.flags & ApplicationInfo.FLAG_INSTALLED)) {
                         // Need to reinstall the sample app
                         showStatusProfile();

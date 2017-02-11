@@ -30,7 +30,10 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * This fragment has a big {@ImageView} that shows PDF pages, and 2 {@link android.widget.Button}s to move between
@@ -42,6 +45,11 @@ public class PdfRendererBasicFragment extends Fragment implements View.OnClickLi
      * Key string for saving the state of current page index.
      */
     private static final String STATE_CURRENT_PAGE_INDEX = "current_page_index";
+
+    /**
+     * The filename of the PDF.
+     */
+    private static final String FILENAME = "sample.pdf";
 
     /**
      * File descriptor of the PDF.
@@ -136,7 +144,21 @@ public class PdfRendererBasicFragment extends Fragment implements View.OnClickLi
      */
     private void openRenderer(Context context) throws IOException {
         // In this sample, we read a PDF from the assets directory.
-        mFileDescriptor = context.getAssets().openFd("sample.pdf").getParcelFileDescriptor();
+        File file = new File(context.getCacheDir(), FILENAME);
+        if (!file.exists()) {
+            // Since PdfRenderer cannot handle the compressed asset file directly, we copy it into
+            // the cache directory.
+            InputStream asset = context.getAssets().open(FILENAME);
+            FileOutputStream output = new FileOutputStream(file);
+            final byte[] buffer = new byte[1024];
+            int size;
+            while ((size = asset.read(buffer)) != -1) {
+                output.write(buffer, 0, size);
+            }
+            asset.close();
+            output.close();
+        }
+        mFileDescriptor = ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY);
         // This is the PdfRenderer we use to render the PDF.
         mPdfRenderer = new PdfRenderer(mFileDescriptor);
     }

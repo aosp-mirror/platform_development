@@ -18,7 +18,7 @@
           package="com.example.android.wearable.jumpingjack">
 
    <uses-sdk android:minSdkVersion="20"
-             android:targetSdkVersion="22" />
+             android:targetSdkVersion="25" />
 
     <uses-feature android:name="android.hardware.type.watch" />
 
@@ -29,6 +29,11 @@
             android:icon="@drawable/ic_launcher"
             android:label="@string/app_name"
             android:theme="@android:style/Theme.DeviceDefault.Light">
+
+        <meta-data
+            android:name="com.google.android.wearable.standalone"
+            android:value="true" />
+
         <activity
                 android:name=".MainActivity"
                 android:label="@string/app_name">

@@ -16,8 +16,8 @@
 
 package com.example.android.fingerprintdialog;
 
-import android.app.Activity;
 import android.app.DialogFragment;
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.hardware.fingerprint.FingerprintManager;
 import android.os.Bundle;
@@ -134,11 +134,11 @@ public class FingerprintAuthenticationDialogFragment extends DialogFragment
     }
 
     @Override
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
-        mActivity = (MainActivity) activity;
-        mInputMethodManager = mActivity.getSystemService(InputMethodManager.class);
-        mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(mActivity);
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        mActivity = (MainActivity) getActivity();
+        mInputMethodManager = context.getSystemService(InputMethodManager.class);
+        mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
     }
 
     /**
