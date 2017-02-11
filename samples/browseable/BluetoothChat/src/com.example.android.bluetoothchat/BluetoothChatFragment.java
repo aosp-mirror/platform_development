@@ -188,7 +188,7 @@ public class BluetoothChatFragment extends Fragment {
     }
 
     /**
-     * Makes this device discoverable.
+     * Makes this device discoverable for 300 seconds (5 minutes).
      */
     private void ensureDiscoverable() {
         if (mBluetoothAdapter.getScanMode() !=
@@ -355,7 +355,7 @@ public class BluetoothChatFragment extends Fragment {
     }
 
     /**
-     * Establish connection with other divice
+     * Establish connection with other device
      *
      * @param data   An {@link Intent} with {@link DeviceListActivity#EXTRA_DEVICE_ADDRESS} extra.
      * @param secure Socket Security type - Secure (true) , Insecure (false)

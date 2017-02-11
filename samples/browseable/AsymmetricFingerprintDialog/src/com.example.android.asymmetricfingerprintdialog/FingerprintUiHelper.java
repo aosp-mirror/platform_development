@@ -27,7 +27,11 @@ import javax.inject.Inject;
 
 /**
  * Small helper class to manage text/icon around fingerprint authentication UI.
+ * This class assumes that the {@link android.Manifest.permission#USE_FINGERPRINT}
+ * permission has already been granted. (As of API 23 this permission is normal instead of dangerous
+ * and is granted at install time.)
  */
+@SuppressWarnings("MissingPermission")
 public class FingerprintUiHelper extends FingerprintManager.AuthenticationCallback {
 
     @VisibleForTesting static final long ERROR_TIMEOUT_MILLIS = 1600;

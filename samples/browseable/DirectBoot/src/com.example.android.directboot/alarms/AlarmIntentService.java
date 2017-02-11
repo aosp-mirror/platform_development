@@ -34,7 +34,17 @@ public class AlarmIntentService extends IntentService {
 
     public static final String ALARM_WENT_OFF_ACTION = AlarmIntentService.class.getName()
             + ".ALARM_WENT_OFF";
-    public static final String ALARM_KEY = "alarm_instance";
+
+
+    public static final String KEY_ALARM_ID = "alarm_id";
+
+    public static final String KEY_ALARM_MONTH = "alarm_month";
+
+    public static final String KEY_ALARM_DATE = "alarm_date";
+
+    public static final String KEY_ALARM_HOUR = "alarm_hour";
+
+    public static final String KEY_ALARM_MINUTE = "alarm_minute";
 
     public AlarmIntentService() {
         super(AlarmIntentService.class.getName());
@@ -43,7 +53,7 @@ public class AlarmIntentService extends IntentService {
     @Override
     protected void onHandleIntent(Intent intent) {
         Context context = getApplicationContext();
-        Alarm alarm = intent.getParcelableExtra(ALARM_KEY);
+        Alarm alarm = AlarmUtil.readAlarm(intent.getExtras());
 
         NotificationManager notificationManager = context
                 .getSystemService(NotificationManager.class);
@@ -59,7 +69,7 @@ public class AlarmIntentService extends IntentService {
         AlarmStorage alarmStorage = new AlarmStorage(context);
         alarmStorage.deleteAlarm(alarm);
         Intent wentOffIntent = new Intent(ALARM_WENT_OFF_ACTION);
-        wentOffIntent.putExtra(ALARM_KEY, alarm);
+        wentOffIntent.putExtras(AlarmUtil.writeAlarm(alarm));
         LocalBroadcastManager.getInstance(context).sendBroadcast(wentOffIntent);
     }
 }

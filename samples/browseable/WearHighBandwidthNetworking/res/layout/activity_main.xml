@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Copyright 2016 Google Inc.
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~      http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              xmlns:tools="http://schemas.android.com/tools"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              xmlns:app="http://schemas.android.com/apk/res-auto"
+              android:orientation="vertical"
+              tools:context="com.example.android.wearable.wear.wearhighbandwidthnetworking.MainActivity">
+
+    <RelativeLayout
+        android:id="@+id/connectivity_indicator"
+        android:layout_height="56dp"
+        android:layout_width="match_parent"
+        android:paddingTop="12dp"
+        style="@style/connectivity_indicator">
+
+        <ImageView
+            android:id="@+id/connectivity_icon"
+            android:layout_centerHorizontal="true"
+            android:src="@drawable/ic_cloud_disconnected"
+            style="@style/connectivity_indicator_icon" />
+
+        <TextView
+            android:id="@+id/connectivity_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/connectivity_icon"
+            android:layout_centerHorizontal="true"
+            android:text="@string/network_disconnected"
+            style="@style/connectivity_indicator_text" />
+
+    </RelativeLayout>
+
+    <android.support.wearable.view.BoxInsetLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:layout_box="left|right">
+
+            <TextView
+                android:id="@+id/info_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="10dp"
+                android:paddingBottom="10dp"
+                android:text="@string/info_request_network"
+                android:textAlignment="center" />
+
+            <RelativeLayout
+                android:id="@+id/button"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/info_text"
+                android:focusable="true"
+                android:onClick="onButtonClick">
+
+                <ImageView
+                    android:id="@+id/button_icon"
+                    android:src="@drawable/ic_fast_network"
+                    style="@style/action_button" />
+
+                <TextView
+                    android:id="@+id/button_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="8dp"
+                    android:layout_toRightOf="@id/button_icon"
+                    android:layout_centerVertical="true"
+                    android:text="@string/button_request_network" />
+
+            </RelativeLayout>
+
+            <ProgressBar
+                android:id="@+id/progress_bar"
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                android:layout_centerInParent="true"
+                android:indeterminate="true"
+                android:visibility="gone" />
+
+        </RelativeLayout>
+    </android.support.wearable.view.BoxInsetLayout>
+</LinearLayout>

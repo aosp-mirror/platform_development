@@ -49,7 +49,7 @@ import java.io.OutputStream;
 public class ImageKeyboard extends InputMethodService {
 
     private static final String TAG = "ImageKeyboard";
-    private static final String AUTHORITY = "com.example.android.supportv13.sampleime.inputcontent";
+    private static final String AUTHORITY = "com.example.android.commitcontent.ime.inputcontent";
     private static final String MIME_TYPE_GIF = "image/gif";
     private static final String MIME_TYPE_PNG = "image/png";
     private static final String MIME_TYPE_WEBP = "image/webp";

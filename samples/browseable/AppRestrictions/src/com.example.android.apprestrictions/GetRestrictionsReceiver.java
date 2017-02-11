@@ -88,7 +88,7 @@ public class GetRestrictionsReceiver extends BroadcastReceiver {
     // Demonstrates the creation of standard app restriction types: boolean, single choice, and
     // multi-select.
     private ArrayList<RestrictionEntry> initRestrictions(Context context) {
-        ArrayList<RestrictionEntry> newRestrictions = new ArrayList<RestrictionEntry>();
+        ArrayList<RestrictionEntry> newRestrictions = new ArrayList<>();
         Resources res = context.getResources();
 
         RestrictionEntry reBoolean = new RestrictionEntry(KEY_BOOLEAN, false);

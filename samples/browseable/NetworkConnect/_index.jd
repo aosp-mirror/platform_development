@@ -6,6 +6,6 @@ sample.group=Connectivity
 <p>
             
             This sample demonstrates how to connect to the network and fetch raw HTML using
-            HttpURLConnection. AsyncTask is used to perform the fetch on a background thread.
+            HttpsURLConnection. AsyncTask is used to perform the fetch on a background thread.
             
         </p>

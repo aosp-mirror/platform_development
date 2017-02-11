@@ -18,7 +18,7 @@ limitations under the License.
             android:layout_height="match_parent">
     <LinearLayout android:orientation="vertical"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:layout_margin="20dp">
 
         <TextView android:layout_width="match_parent"
@@ -35,7 +35,7 @@ limitations under the License.
                       android:layout_width="wrap_content"
                       android:layout_height="wrap_content"
                       android:onClick="onCustomClicked"/>
-            <TextView android:layout_width="wrap_content"
+            <TextView android:layout_width="0dp"
                       android:layout_height="wrap_content"
                       android:textSize="18sp"
                       android:text="@string/custom_description"
@@ -63,7 +63,7 @@ limitations under the License.
         <LinearLayout android:orientation="horizontal"
                       android:layout_width="match_parent"
                       android:layout_height="wrap_content"
-                      android:layout_marginLeft="20dp">
+                      android:layout_marginStart="20dp">
             <TextView android:layout_width="210dp"
                       android:layout_height="wrap_content"
                       android:textSize="18sp"
@@ -80,7 +80,7 @@ limitations under the License.
         <LinearLayout android:orientation="horizontal"
                       android:layout_width="match_parent"
                       android:layout_height="wrap_content"
-                      android:layout_marginLeft="20dp">
+                      android:layout_marginStart="20dp">
             <TextView android:layout_width="210dp"
                       android:layout_height="wrap_content"
                       android:textSize="18sp"
@@ -97,7 +97,7 @@ limitations under the License.
         <LinearLayout android:orientation="horizontal"
                       android:layout_width="match_parent"
                       android:layout_height="wrap_content"
-                      android:layout_marginLeft="20dp">
+                      android:layout_marginStart="20dp">
             <TextView android:layout_width="210dp"
                       android:layout_height="wrap_content"
                       android:textSize="18sp"
