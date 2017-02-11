@@ -14,8 +14,9 @@
   limitations under the License.
   -->
 
-<menu xmlns:android="http://schemas.android.com/apk/res/android">
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
     <item android:id="@+id/sample_action"
-          android:showAsAction="ifRoom|withText"
+          app:showAsAction="ifRoom|withText"
           android:title="@string/sample_action" />
 </menu>

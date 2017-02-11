@@ -31,7 +31,8 @@
                 android:layout_marginBottom="32dp"
                 android:layout_gravity="center_horizontal"
                 android:scaleType="fitCenter"
-                android:src="@drawable/android_robot"/>
+                android:src="@drawable/android_robot"
+                android:contentDescription="@string/description_bugdroid_icon"/>
 
         <LinearLayout
                 android:layout_width="match_parent"

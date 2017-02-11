@@ -6,6 +6,6 @@ sample.group=Admin
 <p>
             
 	    This sample demonstrates how to set restrictions to other apps as a profile owner.
-	    Use AppRestrictionSchema sample as a app with available restrictions.
+	    Use the AppRestrictionSchema sample to set restrictions.
             
         </p>

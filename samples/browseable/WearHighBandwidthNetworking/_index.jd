@@ -1,0 +1,13 @@
+
+page.tags="WearHighBandwidthNetworking"
+sample.group=Wearable
+@jd:body
+
+<p>
+
+Sample demonstrates how to determine if a high-bandwidth network is available for use cases that
+require a minimum network bandwidth, such as streaming media or downloading large files. In
+addition, the sample demonstrates best practices for asking a user to add a new Wi-Fi network for
+high-bandwidth network operations if the bandwidth of currently available networks is inadequate.
+
+        </p>
