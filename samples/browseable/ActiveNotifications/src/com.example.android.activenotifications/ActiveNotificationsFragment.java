@@ -129,23 +129,12 @@ public class ActiveNotificationsFragment extends Fragment {
      * Adds/updates/removes the notification summary as necessary.
      */
     protected void updateNotificationSummary() {
-        final StatusBarNotification[] activeNotifications = mNotificationManager
-                .getActiveNotifications();
-
-        int numberOfNotifications = activeNotifications.length;
-        // Since the notifications might include a summary notification remove it from the count if
-        // it is present.
-        for (StatusBarNotification notification : activeNotifications) {
-          if (notification.getId() == NOTIFICATION_GROUP_SUMMARY_ID) {
-            numberOfNotifications--;
-            break;
-          }
-        }
+        int numberOfNotifications = getNumberOfNotifications();
 
         if (numberOfNotifications > 1) {
             // Add/update the notification summary.
             String notificationContent = getString(R.string.sample_notification_summary_content,
-                    "" + numberOfNotifications);
+                    numberOfNotifications);
             final NotificationCompat.Builder builder = new NotificationCompat.Builder(getActivity())
                     .setSmallIcon(R.mipmap.ic_notification)
                     .setStyle(new NotificationCompat.BigTextStyle()
@@ -165,12 +154,7 @@ public class ActiveNotificationsFragment extends Fragment {
      * display them to the user.
      */
     protected void updateNumberOfNotifications() {
-        // [BEGIN get_active_notifications]
-        // Query the currently displayed notifications.
-        final StatusBarNotification[] activeNotifications = mNotificationManager
-                .getActiveNotifications();
-        // [END get_active_notifications]
-        final int numberOfNotifications = activeNotifications.length;
+        final int numberOfNotifications = getNumberOfNotifications();
         mNumberOfNotifications.setText(getString(R.string.active_notifications,
                 numberOfNotifications));
         Log.i(TAG, getString(R.string.active_notifications, numberOfNotifications));
@@ -189,5 +173,22 @@ public class ActiveNotificationsFragment extends Fragment {
             notificationId = sNotificationId++;
         }
         return notificationId;
+    }
+
+    private int getNumberOfNotifications() {
+        // [BEGIN get_active_notifications]
+        // Query the currently displayed notifications.
+        final StatusBarNotification[] activeNotifications = mNotificationManager
+                .getActiveNotifications();
+        // [END get_active_notifications]
+
+        // Since the notifications might include a summary notification remove it from the count if
+        // it is present.
+        for (StatusBarNotification notification : activeNotifications) {
+            if (notification.getId() == NOTIFICATION_GROUP_SUMMARY_ID) {
+                return activeNotifications.length - 1;
+            }
+        }
+        return activeNotifications.length;
     }
 }

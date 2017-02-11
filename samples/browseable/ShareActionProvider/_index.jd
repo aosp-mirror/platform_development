@@ -1,0 +1,10 @@
+
+page.tags="ShareActionProvider"
+sample.group=UI
+@jd:body
+
+<p>
+            
+            This sample shows you how a provide a context-sensitive ShareActionProvider.
+            
+        </p>

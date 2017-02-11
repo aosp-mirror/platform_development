@@ -1,13 +1,12 @@
 
-page.tags="Speed Tracker"
+page.tags="SpeedTracker"
 sample.group=Wearable
 @jd:body
 
 <p>
             
 This sample uses the FusedLocation APIs of Google Play Services
-on those devices that have a hardware GPS built in. In those
-cases, this sample provides a simple screen that shows the
+to gather location and speed. The sample provides a simple screen that shows the
 current speed of the device on the watch. User can set a speed
 limit and if the speed approaches that limit, it changes the
 color to yellow and if it exceeds the limit, it turns red. User

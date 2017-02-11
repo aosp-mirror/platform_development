@@ -17,7 +17,6 @@
 package com.example.android.lnotifications;
 
 import android.app.Activity;
-import android.app.Fragment;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.content.Context;
@@ -30,6 +29,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.provider.MediaStore;
+import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -42,7 +42,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.IOException;
-import java.util.Random;
 
 /**
  * Fragment that demonstrates how to attach metadata introduced in Android L, such as
@@ -58,10 +57,10 @@ public class OtherMetadataFragment extends Fragment {
     public static final int REQUEST_CODE_PICK_CONTACT = 1;
 
     /**
-     * Incremental Integer used for ID for notifications so that each notification will be
+     * Incremental int used for ID for notifications so that each notification will be
      * treated differently.
      */
-    private Integer mIncrementalNotificationId = Integer.valueOf(0);
+    private int mIncrementalNotificationId = 0;
 
     private NotificationManager mNotificationManager;
 
@@ -85,8 +84,7 @@ public class OtherMetadataFragment extends Fragment {
     /**
      * Holds a URI for the person to be attached to the notification.
      */
-    //@VisibleForTesting
-    Uri mContactUri;
+    private Uri mContactUri;
 
     /**
      * Use this factory method to create a new instance of
@@ -177,8 +175,7 @@ public class OtherMetadataFragment extends Fragment {
      *
      * @return A Notification instance.
      */
-    //@VisibleForTesting
-    Notification createNotification(Priority priority, Category category, Uri contactUri) {
+    private Notification createNotification(Priority priority, Category category, Uri contactUri) {
         Notification.Builder notificationBuilder = new Notification.Builder(getActivity())
                 .setContentTitle("Notification with other metadata")
                 .setSmallIcon(R.drawable.ic_launcher_notification)
@@ -207,7 +204,7 @@ public class OtherMetadataFragment extends Fragment {
     private void showNotificationClicked(Priority priority, Category category, Uri contactUri) {
         // Assigns a unique (incremented) notification ID in order to treat each notification as a
         // different one. This helps demonstrate how a priority flag affects ordering.
-        mIncrementalNotificationId = new Integer(mIncrementalNotificationId + 1);
+        mIncrementalNotificationId++;
         mNotificationManager.notify(mIncrementalNotificationId, createNotification(priority,
                 category, contactUri));
         Toast.makeText(getActivity(), "Show Notification clicked", Toast.LENGTH_SHORT).show();
@@ -295,8 +292,7 @@ public class OtherMetadataFragment extends Fragment {
      * Enum indicating possible categories in {@link Notification} used from
      * {@link #mCategorySpinner}.
      */
-    //@VisibleForTesting
-    static enum Category {
+    private enum Category {
         ALARM("alarm"),
         CALL("call"),
         EMAIL("email"),
@@ -328,8 +324,7 @@ public class OtherMetadataFragment extends Fragment {
      * Enum indicating possible priorities in {@link Notification} used from
      * {@link #mPrioritySpinner}.
      */
-    //@VisibleForTesting
-    static enum Priority {
+    private enum Priority {
         DEFAULT(Notification.PRIORITY_DEFAULT),
         MAX(Notification.PRIORITY_MAX),
         HIGH(Notification.PRIORITY_HIGH),

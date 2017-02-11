@@ -29,6 +29,7 @@ import android.preference.Preference;
 import android.preference.PreferenceFragment;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -123,16 +124,14 @@ public class CustomRestrictionsFragment extends PreferenceFragment
                     mChoicePref.setValue(entry.getSelectedString());
                     mChoiceEntry = entry;
                 } else if (entry.getKey().equals(GetRestrictionsReceiver.KEY_MULTI_SELECT)) {
-                    HashSet<String> set = new HashSet<String>();
-                    for (String value : entry.getAllSelectedStrings()) {
-                        set.add(value);
-                    }
+                    HashSet<String> set = new HashSet<>();
+                    Collections.addAll(set, entry.getAllSelectedStrings());
                     mMultiPref.setValues(set);
                     mMultiEntry = entry;
                 }
             }
         } else {
-            mRestrictions = new ArrayList<RestrictionEntry>();
+            mRestrictions = new ArrayList<>();
 
             // Initializes the boolean restriction entry and updates its corresponding shared
             // preference value.
@@ -155,13 +154,11 @@ public class CustomRestrictionsFragment extends PreferenceFragment
                             GetRestrictionsReceiver.KEY_MULTI_SELECT));
             mMultiEntry.setType(RestrictionEntry.TYPE_MULTI_SELECT);
             if (mMultiEntry.getAllSelectedStrings() != null) {
-                HashSet<String> set = new HashSet<String>();
+                HashSet<String> set = new HashSet<>();
                 final String[] values = mRestrictionsBundle.getStringArray(
                         GetRestrictionsReceiver.KEY_MULTI_SELECT);
                 if (values != null) {
-                    for (String value : values) {
-                        set.add(value);
-                    }
+                    Collections.addAll(set, values);
                 }
                 mMultiPref.setValues(set);
             }
@@ -173,7 +170,7 @@ public class CustomRestrictionsFragment extends PreferenceFragment
         // activity finishes.
         Intent intent = new Intent(getActivity().getIntent());
         intent.putParcelableArrayListExtra(Intent.EXTRA_RESTRICTIONS_LIST,
-                new ArrayList<RestrictionEntry>(mRestrictions));
+                new ArrayList<>(mRestrictions));
         getActivity().setResult(Activity.RESULT_OK, intent);
     }
 
@@ -183,9 +180,12 @@ public class CustomRestrictionsFragment extends PreferenceFragment
             mBooleanEntry.setSelectedState((Boolean) newValue);
         } else if (preference == mChoicePref) {
             mChoiceEntry.setSelectedString((String) newValue);
-        } else if (preference == mMultiPref) {
-            String[] selectedStrings = new String[((Set<String>)newValue).size()];
+        } else if (preference == mMultiPref && newValue instanceof Set) {
+            // newValue is a Set<String>, skip the lint warning.
+            //noinspection unchecked
+            String[] selectedStrings = new String[((Set<String>) newValue).size()];
             int i = 0;
+            //noinspection unchecked
             for (String value : (Set<String>) newValue) {
                 selectedStrings[i++] = value;
             }
@@ -195,7 +195,7 @@ public class CustomRestrictionsFragment extends PreferenceFragment
         // Saves all the app restriction configuration changes from the custom activity.
         Intent intent = new Intent(getActivity().getIntent());
         intent.putParcelableArrayListExtra(Intent.EXTRA_RESTRICTIONS_LIST,
-                new ArrayList<RestrictionEntry>(mRestrictions));
+                new ArrayList<>(mRestrictions));
         getActivity().setResult(Activity.RESULT_OK, intent);
         return true;
     }

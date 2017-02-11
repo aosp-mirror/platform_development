@@ -90,6 +90,10 @@ public class SimpleWebServer implements Runnable {
         }
     }
 
+    public int getPort() {
+        return mPort;
+    }
+
     @Override
     public void run() {
         try {
