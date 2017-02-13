@@ -1007,23 +1007,29 @@ class SpHalCommand(ELFGraphCommand):
 
         # Find SP HALs.
         name_patterns = (
+            # OpenGL-related
             '^/vendor/.*/libEGL_.*\\.so$',
             '^/vendor/.*/libGLESv1_CM_.*\\.so$',
             '^/vendor/.*/libGLESv2_.*\\.so$',
             '^/vendor/.*/libGLESv3_.*\\.so$',
+            # Vulkan
             '^/vendor/.*/vulkan.*\\.so$',
+            # libRSDriver
             '^/vendor/.*/libRSDriver.*\\.so$',
-            '^/vendor/.*/libPVRRS\\.so$',  # libRSDriver
-            '^/vendor/.*/gralloc-mapper@\\d+.\\d+-impl\\.so$',
+            '^/vendor/.*/libPVRRS\\.so$',
+            # Gralloc mapper
+            '^.*/gralloc\\..*\\.so$',
+            '^.*/android\\.hardware\\.graphics\\.mapper@\\d+\\.\\d+-impl\\.so$',
         )
 
         patt = re.compile('|'.join('(?:' + p + ')' for p in name_patterns))
 
         # Find root/excluded libraries by their paths.
         sp_hals = set()
-        for lib in graph.lib_pt[PT_VENDOR].values():
-            if patt.match(lib.path):
-                sp_hals.add(lib)
+        for lib_set in graph.lib_pt:
+            for lib in lib_set.values():
+                if patt.match(lib.path):
+                    sp_hals.add(lib)
 
         # Compute the closure (if specified).
         if args.closure:
