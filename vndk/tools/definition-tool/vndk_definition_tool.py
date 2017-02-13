@@ -4,13 +4,16 @@ from __future__ import print_function
 
 import argparse
 import collections
-import mmap
 import os
 import re
 import stat
 import struct
 import sys
 
+
+#------------------------------------------------------------------------------
+# Python 2 and 3 Compatibility Layer
+#------------------------------------------------------------------------------
 
 if sys.version_info >= (3, 0):
     from os import makedirs
@@ -38,128 +41,60 @@ else:
 
     FileNotFoundError = OSError
 
-
 try:
     from sys import intern
 except ImportError:
     pass
 
 
-EI_CLASS = 4
-EI_DATA = 5
-
-ELFCLASSNONE = 0
-ELFCLASS32 = 1
-ELFCLASS64 = 2
-
-ELFDATANONE = 0
-ELFDATA2LSB = 1
-ELFDATA2MSB = 2
-
-DT_NEEDED = 1
-DT_RPATH = 15
-DT_RUNPATH = 29
-
-SHN_UNDEF = 0
-
-STB_LOCAL = 0
-STB_GLOBAL = 1
-STB_WEAK = 2
-
+#------------------------------------------------------------------------------
+# ELF Parser
+#------------------------------------------------------------------------------
 
 Elf_Hdr = collections.namedtuple(
         'Elf_Hdr',
-        'ei_class ei_data ei_version ei_osabi e_type e_machine e_version ' +
-        'e_entry e_phoff e_shoff e_flags e_ehsize e_phentsize e_phnum ' +
+        'ei_class ei_data ei_version ei_osabi e_type e_machine e_version '
+        'e_entry e_phoff e_shoff e_flags e_ehsize e_phentsize e_phnum '
         'e_shentsize e_shnum e_shstridx')
 
 
 Elf_Shdr = collections.namedtuple(
         'Elf_Shdr',
-        'sh_name sh_type sh_flags sh_addr sh_offset sh_size sh_link sh_info ' +
+        'sh_name sh_type sh_flags sh_addr sh_offset sh_size sh_link sh_info '
         'sh_addralign sh_entsize')
 
 
 Elf_Dyn = collections.namedtuple('Elf_Dyn', 'd_tag d_val')
 
 
-class Elf_Sym(object):
-    __slots__ = (
-        'st_name', 'st_value', 'st_size', 'st_info', 'st_other', 'st_shndx'
-    )
+class Elf_Sym(collections.namedtuple(
+    'ELF_Sym', 'st_name st_value st_size st_info st_other st_shndx')):
 
-    def __init__(self, st_name, st_value, st_size, st_info, st_other, st_shndx):
-        self.st_name = st_name
-        self.st_value = st_value
-        self.st_size = st_size
-        self.st_info = st_info
-        self.st_other = st_other
-        self.st_shndx = st_shndx
+    STB_LOCAL = 0
+    STB_GLOBAL = 1
+    STB_WEAK = 2
 
-    def __str__(self):
-        return ('Elf_Sym(' +
-                'st_name=' + repr(self.st_name) + ', '
-                'st_value=' + repr(self.st_value) + ', '
-                'st_size=' + repr(self.st_size) + ', '
-                'st_info=' + repr(self.st_info) + ', '
-                'st_other=' + repr(self.st_other) + ', '
-                'st_shndx=' + repr(self.st_shndx) + ')')
-
-    @staticmethod
-    def _make(p):
-        return Elf_Sym(*p)
+    SHN_UNDEF = 0
 
     @property
     def st_bind(self):
         return (self.st_info >> 4)
 
+    @property
+    def is_local(self):
+        return self.st_bind == Elf_Sym.STB_LOCAL
 
-def _get_elf_class_name(ei_class):
-    if ei_class == ELFCLASS32:
-        return '32'
-    if ei_class == ELFCLASS64:
-        return '64'
-    return 'None'
+    @property
+    def is_global(self):
+        return self.st_bind == Elf_Sym.STB_GLOBAL
 
+    @property
+    def is_weak(self):
+        return self.st_bind == Elf_Sym.STB_WEAK
 
-def _get_elf_data_name(ei_data):
-    if ei_data == ELFDATA2LSB:
-        return 'Little-Endian'
-    if ei_data == ELFDATA2MSB:
-        return 'Big-Endian'
-    return 'None'
-
-
-_ELF_MACHINE_ID_TABLE = {
-    0: 'EM_NONE',
-    3: 'EM_386',
-    8: 'EM_MIPS',
-    40: 'EM_ARM',
-    62: 'EM_X86_64',
-    183: 'EM_AARCH64',
-}
-
-
-def _get_elf_machine_name(e_machine):
-    return _ELF_MACHINE_ID_TABLE.get(e_machine, str(e_machine))
-
-
-def _extract_zero_end_slice(buf, offset):
-    end = offset
-    try:
-        while buf[end] != 0:
-            end += 1
-    except IndexError:
-        pass
-    return buf[offset:end]
-
-
-if sys.version_info >= (3, 0):
-    def _extract_zero_end_str(buf, offset):
-        return intern(_extract_zero_end_slice(buf, offset).decode('utf-8'))
-else:
-    def _extract_zero_end_str(buf, offset):
-        return intern(_extract_zero_end_slice(buf, offset))
+    @property
+    def is_undef(self):
+        return self.st_shndx == Elf_Sym.SHN_UNDEF
 
 
 class ELFError(ValueError):
@@ -167,6 +102,44 @@ class ELFError(ValueError):
 
 
 class ELF(object):
+    # ELF file format constants.
+    ELF_MAGIC = b'\x7fELF'
+
+    EI_CLASS = 4
+    EI_DATA = 5
+
+    ELFCLASSNONE = 0
+    ELFCLASS32 = 1
+    ELFCLASS64 = 2
+
+    ELFDATANONE = 0
+    ELFDATA2LSB = 1
+    ELFDATA2MSB = 2
+
+    DT_NEEDED = 1
+    DT_RPATH = 15
+    DT_RUNPATH = 29
+
+    _ELF_CLASS_NAMES = {
+        ELFCLASS32: '32',
+        ELFCLASS64: '64',
+    }
+
+    _ELF_DATA_NAMES = {
+        ELFDATA2LSB: 'Little-Endian',
+        ELFDATA2MSB: 'Big-Endian',
+    }
+
+    _ELF_MACHINE_IDS = {
+        0: 'EM_NONE',
+        3: 'EM_386',
+        8: 'EM_MIPS',
+        40: 'EM_ARM',
+        62: 'EM_X86_64',
+        183: 'EM_AARCH64',
+    }
+
+
     def __init__(self, ei_class=ELFCLASSNONE, ei_data=ELFDATANONE, e_machine=0,
                  dt_rpath=None, dt_runpath=None, dt_needed=None,
                  exported_symbols=None):
@@ -188,12 +161,33 @@ class ELF(object):
                 'dt_runpath=' + repr(self.dt_runpath) + ', ' +
                 'dt_needed=' + repr(self.dt_needed) + ')')
 
+    @property
+    def elf_class_name(self):
+        return self._ELF_CLASS_NAMES.get(self.ei_class, 'None')
+
+    @property
+    def elf_data_name(self):
+        return self._ELF_DATA_NAMES.get(self.ei_data, 'None')
+
+    @property
+    def elf_machine_name(self):
+        return self._ELF_MACHINE_IDS.get(self.e_machine, str(self.e_machine))
+
+    @property
+    def is_32bit(self):
+        return self.ei_class == ELF.ELFCLASS32
+
+    @property
+    def is_64bit(self):
+        return self.ei_class == ELF.ELFCLASS64
+
     def dump(self, file=None):
+        """Print parsed ELF information to the file"""
         file = file if file is not None else sys.stdout
 
-        print('EI_CLASS\t' + _get_elf_class_name(self.ei_class), file=file)
-        print('EI_DATA\t\t' + _get_elf_data_name(self.ei_data), file=file)
-        print('E_MACHINE\t' + _get_elf_machine_name(self.e_machine), file=file)
+        print('EI_CLASS\t' + self.elf_class_name, file=file)
+        print('EI_DATA\t\t' + self.elf_data_name, file=file)
+        print('E_MACHINE\t' + self.elf_machine_name, file=file)
         if self.dt_rpath:
             print('DT_RPATH\t' + self.dt_rpath, file=file)
         if self.dt_runpath:
@@ -204,31 +198,55 @@ class ELF(object):
             print('SYMBOL\t\t' + symbol, file=file)
 
     def dump_exported_symbols(self, file=None):
+        """Print exported symbols to the file"""
         file = file if file is not None else sys.stdout
-
         for symbol in self.exported_symbols:
             print(symbol, file=file)
 
+    # Extract zero-terminated buffer slice.
+    def _extract_zero_terminated_buf_slice(self, buf, offset):
+        """Extract a zero-terminated buffer slice from the given offset"""
+        end = offset
+        try:
+            while buf[end] != 0:
+                end += 1
+        except IndexError:
+            pass
+        return buf[offset:end]
+
+    # Extract c-style interned string from the buffer.
+    if sys.version_info >= (3, 0):
+        def _extract_zero_terminated_str(self, buf, offset):
+            """Extract a c-style string from the given buffer and offset"""
+            buf_slice = self._extract_zero_terminated_buf_slice(buf, offset)
+            return intern(buf_slice.decode('utf-8'))
+    else:
+        def _extract_zero_terminated_str(self, buf, offset):
+            """Extract a c-style string from the given buffer and offset"""
+            return intern(self._extract_zero_terminated_buf_slice(buf, offset))
+
     def _parse_from_buf_internal(self, buf):
+        """Parse ELF image resides in the buffer"""
+
         # Check ELF ident.
         if buf.size() < 8:
             raise ELFError('bad ident')
 
-        if buf[0:4] != b'\x7fELF':
+        if buf[0:4] != ELF.ELF_MAGIC:
             raise ELFError('bad magic')
 
-        self.ei_class = buf[EI_CLASS]
-        if self.ei_class != ELFCLASS32 and self.ei_class != ELFCLASS64:
+        self.ei_class = buf[ELF.EI_CLASS]
+        if self.ei_class not in (ELF.ELFCLASS32, ELF.ELFCLASS64):
             raise ELFError('unknown word size')
 
-        self.ei_data = buf[EI_DATA]
-        if self.ei_data != ELFDATA2LSB and self.ei_data != ELFDATA2MSB:
+        self.ei_data = buf[ELF.EI_DATA]
+        if self.ei_data not in (ELF.ELFDATA2LSB, ELF.ELFDATA2MSB):
             raise ELFError('unknown endianness')
 
         # ELF structure definitions.
-        endian_fmt = '<' if self.ei_data == ELFDATA2LSB else '>'
+        endian_fmt = '<' if self.ei_data == ELF.ELFDATA2LSB else '>'
 
-        if self.ei_class == ELFCLASS32:
+        if self.is_32bit:
             elf_hdr_fmt = endian_fmt + '4x4B8xHHLLLLLHHHHHH'
             elf_shdr_fmt = endian_fmt + 'LLLLLLLLLL'
             elf_dyn_fmt = endian_fmt + 'lL'
@@ -256,7 +274,7 @@ class ELF(object):
             return parse_struct(Elf_Dyn, elf_dyn_fmt, offset,
                                 'bad .dynamic entry')
 
-        if self.ei_class == ELFCLASS32:
+        if self.is_32bit:
             def parse_elf_sym(offset):
                 return parse_struct(Elf_Sym, elf_sym_fmt, offset, 'bad elf sym')
         else:
@@ -268,7 +286,7 @@ class ELF(object):
                     raise ELFError('bad elf sym')
 
         def extract_str(offset):
-            return _extract_zero_end_str(buf, offset)
+            return self._extract_zero_terminated_str(buf, offset)
 
         # Parse ELF header.
         header = parse_elf_hdr(0)
@@ -309,11 +327,11 @@ class ELF(object):
         dynamic_end = dynamic_off + dynamic_shdr.sh_size
         for ent_off in range(dynamic_off, dynamic_end, dynamic_shdr.sh_entsize):
             ent = parse_elf_dyn(ent_off)
-            if ent.d_tag == DT_NEEDED:
+            if ent.d_tag == ELF.DT_NEEDED:
                 self.dt_needed.append(extract_str(dynstr_off + ent.d_val))
-            elif ent.d_tag == DT_RPATH:
+            elif ent.d_tag == ELF.DT_RPATH:
                 self.dt_rpath = extract_str(dynstr_off + ent.d_val)
-            elif ent.d_tag == DT_RUNPATH:
+            elif ent.d_tag == ELF.DT_RUNPATH:
                 self.dt_runpath = extract_str(dynstr_off + ent.d_val)
 
         # Parse exported symbols in .dynsym section.
@@ -325,19 +343,21 @@ class ELF(object):
             dynsym_entsize = dynsym_shdr.sh_entsize
             for ent_off in range(dynsym_off, dynsym_end, dynsym_entsize):
                 ent = parse_elf_sym(ent_off)
-                if ent.st_bind != STB_LOCAL and ent.st_shndx != SHN_UNDEF:
+                if not ent.is_local and not ent.is_undef:
                     exported_symbols.append(
                             extract_str(dynstr_off + ent.st_name))
             exported_symbols.sort()
             self.exported_symbols = exported_symbols
 
     def _parse_from_buf(self, buf):
+        """Parse ELF image resides in the buffer"""
         try:
             self._parse_from_buf_internal(buf)
         except IndexError:
             raise ELFError('bad offset')
 
     def _parse_from_file(self, path):
+        """Parse ELF image from the file path"""
         with open(path, 'rb') as f:
             st = os.fstat(f.fileno())
             if not st.st_size:
@@ -347,21 +367,22 @@ class ELF(object):
 
     @staticmethod
     def load(path):
+        """Create an ELF instance from the file path"""
         elf = ELF()
         elf._parse_from_file(path)
         return elf
 
     @staticmethod
     def loads(buf):
+        """Create an ELF instance from the buffer"""
         elf = ELF()
         elf._parse_from_buf(buf)
         return elf
 
 
-PT_SYSTEM = 0
-PT_VENDOR = 1
-NUM_PARTITIONS = 2
-
+#------------------------------------------------------------------------------
+# NDK and Banned Libraries
+#------------------------------------------------------------------------------
 
 NDK_LOW_LEVEL = {
     'libc.so', 'libstdc++.so', 'libdl.so', 'liblog.so', 'libm.so', 'libz.so',
@@ -403,6 +424,10 @@ class BannedLibDict(object):
         return d
 
 
+#------------------------------------------------------------------------------
+# ELF Linker
+#------------------------------------------------------------------------------
+
 def is_accessible(path):
     try:
         mode = os.stat(path).st_mode
@@ -417,6 +442,11 @@ def scan_executables(root):
             path = os.path.join(base, filename)
             if is_accessible(path):
                 yield path
+
+
+PT_SYSTEM = 0
+PT_VENDOR = 1
+NUM_PARTITIONS = 2
 
 
 class GraphNode(object):
@@ -447,7 +477,7 @@ class Graph(object):
 
     def add(self, partition, path, elf):
         node = GraphNode(partition, path, elf)
-        if elf.ei_class == ELFCLASS32:
+        if elf.is_32bit:
             self.lib32[path] = node
         else:
             self.lib64[path] = node
@@ -646,6 +676,10 @@ class Graph(object):
         return graph
 
 
+#------------------------------------------------------------------------------
+# Generic Reference
+#------------------------------------------------------------------------------
+
 class GenericRefs(object):
     def __init__(self):
         self.refs = dict()
@@ -671,6 +705,10 @@ class GenericRefs(object):
     def is_equivalent_lib(self, lib):
         return self.refs.get(lib.path) == lib.elf.exported_symbols
 
+
+#------------------------------------------------------------------------------
+# Commands
+#------------------------------------------------------------------------------
 
 class Command(object):
     def __init__(self, name, help):
