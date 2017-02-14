@@ -10,45 +10,16 @@ import subprocess
 import sys
 import unittest
 
+from compat import TemporaryDirectory, makedirs
 import targets
 
-try:
-    from tempfile import TemporaryDirectory
-except ImportError:
-    import shutil
-    import tempfile
-
-    class TemporaryDirectory(object):
-        def __init__(self, suffix='', prefix='tmp', dir=None):
-            self.name = tempfile.mkdtemp(suffix, prefix, dir)
-
-        def __del__(self):
-            self.cleanup()
-
-        def __enter__(self):
-            return self.name
-
-        def __exit__(self, exc, value, tb):
-            self.cleanup()
-
-        def cleanup(self):
-            if self.name:
-                shutil.rmtree(self.name)
-                self.name = None
-
-if sys.version_info >= (3, 0):
-    from os import makedirs
-else:
-    def makedirs(path, exist_ok):
-        if exist_ok and os.path.exists(path):
-            return
-        return os.makedirs(path)
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 VNDK_DEF_TOOL = os.path.join(SCRIPT_DIR, '..', 'vndk_definition_tool.py')
 
 expected_dir = os.path.join(SCRIPT_DIR, 'expected')
 test_dir_base = None
+
 
 def run_elf_dump(path):
     cmd = [sys.executable, VNDK_DEF_TOOL, 'elfdump', path]
@@ -60,21 +31,57 @@ class ELFDumpTest(unittest.TestCase):
     def setUpClass(cls):
         cls.targets = targets.create_targets()
 
-    def setUp(self):
         if test_dir_base:
-            self.test_dir_base = test_dir_base
+            cls.test_dir_base = test_dir_base
         else:
-            self.tmp_dir = TemporaryDirectory()
-            self.test_dir_base = self.tmp_dir.name
+            cls.tmp_dir = TemporaryDirectory()
+            cls.test_dir_base = cls.tmp_dir.name
 
-    def tearDown(self):
+        cls._build_fixtures(cls.target_name)
+
+    @classmethod
+    def tearDownClass(cls):
         if not test_dir_base:
-            self.tmp_dir.cleanup()
+            cls.tmp_dir.cleanup()
 
-    def _prepare_dir(self, target_name):
-        self.expected_dir = os.path.join(expected_dir, target_name)
-        self.test_dir = os.path.join(self.test_dir_base, target_name)
-        makedirs(self.test_dir, exist_ok=True)
+    @classmethod
+    def _build_fixtures(cls, target_name):
+        target = cls.targets[target_name]
+
+        cls.expected_dir = os.path.join(expected_dir, target_name)
+        cls.test_dir = os.path.join(cls.test_dir_base, target_name)
+        input_dir = os.path.join(SCRIPT_DIR, 'input')
+
+        makedirs(cls.test_dir, exist_ok=True)
+
+        # Compile main.o.
+        src_file = os.path.join(input_dir, 'main.c')
+        obj_file = os.path.join(cls.test_dir, 'main.o')
+        target.compile(obj_file, src_file, [])
+
+        # Link main.out.
+        out_file = os.path.join(cls.test_dir, 'main.out')
+        target.link(out_file, [obj_file], ['-ldl', '-lc', '-lstdc++'])
+
+        # Compile test.o.
+        src_file = os.path.join(input_dir, 'test.c')
+        obj_file = os.path.join(cls.test_dir, 'test.o')
+        target.compile(obj_file, src_file, [])
+
+        # Link libtest.so.
+        out_file = os.path.join(cls.test_dir, 'libtest.so')
+        target.link(out_file, [obj_file], ['-shared', '-lc'])
+
+        # Link libtest-rpath.so.
+        out_file = os.path.join(cls.test_dir, 'libtest-rpath.so')
+        target.link(out_file, [obj_file],
+                    ['-shared', '-lc', '-Wl,-rpath,$ORIGIN/../lib'])
+
+        # Link libtest-runpath.so.
+        out_file = os.path.join(cls.test_dir, 'libtest-runpath.so')
+        target.link(out_file, [obj_file],
+                    ['-shared', '-lc', '-Wl,-rpath,$ORIGIN/../lib',
+                     '-Wl,--enable-new-dtags'])
 
     def _assert_equal_to_file(self, expected_file_name, actual):
         actual = actual.splitlines(True)
@@ -83,47 +90,31 @@ class ELFDumpTest(unittest.TestCase):
             expected = f.readlines()
         self.assertEqual(expected, actual)
 
-    def _test_main_out(self, target):
-        self._prepare_dir(target.name)
-
-        src_file = os.path.join(SCRIPT_DIR, 'input', 'main.c')
-        obj_file = os.path.join(self.test_dir, 'main.o')
-        target.compile(obj_file, src_file, [])
-
+    def _test_main_out(self):
         out_file = os.path.join(self.test_dir, 'main.out')
-        target.link(out_file, [obj_file], ['-ldl', '-lc', '-lstdc++'])
         self._assert_equal_to_file('main.out.txt', run_elf_dump(out_file))
 
-    def _test_libtest(self, target, ldflags, output_name, expected_file_name):
-        self._prepare_dir(target.name)
-
-        src_file = os.path.join(SCRIPT_DIR, 'input', 'test.c')
-        obj_file = os.path.join(self.test_dir, 'test.o')
-        target.compile(obj_file, src_file, [])
-
-        out_file = os.path.join(self.test_dir, output_name)
-        target.link(out_file, [obj_file], ['-shared', '-lc'] + ldflags)
-        self._assert_equal_to_file(expected_file_name, run_elf_dump(out_file))
+    def _test_libtest(self, ldflags, expected_file_name, lib_name):
+        lib_file = os.path.join(self.test_dir, lib_name)
+        self._assert_equal_to_file(expected_file_name, run_elf_dump(lib_file))
 
 
 def create_target_test(target_name):
     def test_main(self):
-        self._test_main_out(self.targets[target_name])
+        self._test_main_out()
 
     def test_libtest(self):
-        self._test_libtest(
-                self.targets[target_name], [], 'libtest.so', 'libtest.so.txt')
+        self._test_libtest([], 'libtest.so.txt', 'libtest.so')
 
     def test_libtest_rpath(self):
         self._test_libtest(
-                self.targets[target_name], ['-Wl,-rpath,$ORIGIN/../lib'],
-                'libtest-rpath.so', 'libtest-rpath.so.txt')
+                ['-Wl,-rpath,$ORIGIN/../lib'],
+                'libtest-rpath.so.txt', 'libtest-rpath.so')
 
     def test_libtest_runpath(self):
         self._test_libtest(
-                self.targets[target_name],
                 ['-Wl,-rpath,$ORIGIN/../lib', '-Wl,--enable-new-dtags'],
-                'libtest-runpath.so', 'libtest-runpath.so.txt')
+                'libtest-runpath.so.txt', 'libtest-runpath.so')
 
     class_name = 'ELFDumpTest_' + target_name
     globals()[class_name] = type(
@@ -131,7 +122,8 @@ def create_target_test(target_name):
             dict(test_main=test_main,
                  test_libtest=test_libtest,
                  test_libtest_rpath=test_libtest_rpath,
-                 test_libtest_runpath=test_libtest_runpath))
+                 test_libtest_runpath=test_libtest_runpath,
+                 target_name=target_name))
 
 
 for target in ('arm', 'arm64', 'mips', 'mips64', 'x86', 'x86_64'):
@@ -141,8 +133,7 @@ for target in ('arm', 'arm64', 'mips', 'mips64', 'x86', 'x86_64'):
 def main():
     # Parse command line arguments.
     parser = argparse.ArgumentParser()
-    parser.add_argument('--test-dir',
-                        help='directory for temporary files')
+    parser.add_argument('--test-dir', help='directory for temporary files')
     parser.add_argument('--expected-dir', help='directory with expected output')
     args, unittest_args = parser.parse_known_args()
 
@@ -154,10 +145,9 @@ def main():
         expected_dir = args.expected_dir
     if args.test_dir:
         test_dir_base = args.test_dir
-        makedirs(test_dir_base, exist_ok=True)
 
     # Run unit test.
     unittest.main(argv=[sys.argv[0]] + unittest_args)
 
 if __name__ == '__main__':
-    sys.exit(main())
+    main()
