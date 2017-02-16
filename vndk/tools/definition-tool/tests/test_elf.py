@@ -87,7 +87,7 @@ class ELFTest(unittest.TestCase):
 
     def test_dump(self):
         elf = ELF(ELF.ELFCLASS32, ELF.ELFDATA2LSB, 183, 'a', 'b',
-                  ['libc.so', 'libm.so'], {'hello', 'world'})
+                  ['libc.so', 'libm.so'], {'hello', 'world'}, {'d', 'e'})
 
         with StringIO() as f:
             elf.dump(f)
@@ -100,8 +100,10 @@ class ELFTest(unittest.TestCase):
                          'DT_RUNPATH\tb\n'
                          'DT_NEEDED\tlibc.so\n'
                          'DT_NEEDED\tlibm.so\n'
-                         'SYMBOL\t\thello\n'
-                         'SYMBOL\t\tworld\n',
+                         'EXP_SYMBOL\thello\n'
+                         'EXP_SYMBOL\tworld\n'
+                         'IMP_SYMBOL\td\n'
+                         'IMP_SYMBOL\te\n',
                          actual_output)
 
     def test_dump_exported_symbols(self):

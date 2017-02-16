@@ -141,12 +141,12 @@ class ELF(object):
 
 
     __slots__ = ('ei_class', 'ei_data', 'e_machine', 'dt_rpath', 'dt_runpath',
-                 'dt_needed', 'exported_symbols',)
+                 'dt_needed', 'exported_symbols', 'imported_symbols',)
 
 
     def __init__(self, ei_class=ELFCLASSNONE, ei_data=ELFDATANONE, e_machine=0,
                  dt_rpath=None, dt_runpath=None, dt_needed=None,
-                 exported_symbols=None):
+                 exported_symbols=None, imported_symbols=None):
         self.ei_class = ei_class
         self.ei_data = ei_data
         self.e_machine = e_machine
@@ -155,6 +155,8 @@ class ELF(object):
         self.dt_needed = dt_needed if dt_needed is not None else []
         self.exported_symbols = \
                 exported_symbols if exported_symbols is not None else set()
+        self.imported_symbols = \
+                imported_symbols if imported_symbols is not None else set()
 
     def __repr__(self):
         args = (a + '=' + repr(getattr(self, a)) for a in self.__slots__)
@@ -187,6 +189,10 @@ class ELF(object):
     def sorted_exported_symbols(self):
         return sorted(list(self.exported_symbols))
 
+    @property
+    def sorted_imported_symbols(self):
+        return sorted(list(self.imported_symbols))
+
     def dump(self, file=None):
         """Print parsed ELF information to the file"""
         file = file if file is not None else sys.stdout
@@ -201,7 +207,9 @@ class ELF(object):
         for dt_needed in self.dt_needed:
             print('DT_NEEDED\t' + dt_needed, file=file)
         for symbol in self.sorted_exported_symbols:
-            print('SYMBOL\t\t' + symbol, file=file)
+            print('EXP_SYMBOL\t' + symbol, file=file)
+        for symbol in self.sorted_imported_symbols:
+            print('IMP_SYMBOL\t' + symbol, file=file)
 
     def dump_exported_symbols(self, file=None):
         """Print exported symbols to the file"""
@@ -343,15 +351,23 @@ class ELF(object):
         # Parse exported symbols in .dynsym section.
         dynsym_shdr = sections.get('.dynsym')
         if dynsym_shdr:
-            exported_symbols = self.exported_symbols
+            exp_symbols = self.exported_symbols
+            imp_symbols = self.imported_symbols
+
             dynsym_off = dynsym_shdr.sh_offset
             dynsym_end = dynsym_off + dynsym_shdr.sh_size
             dynsym_entsize = dynsym_shdr.sh_entsize
+
+            # Skip first symbol entry (null symbol).
+            dynsym_off += dynsym_entsize
+
             for ent_off in range(dynsym_off, dynsym_end, dynsym_entsize):
                 ent = parse_elf_sym(ent_off)
-                if not ent.is_local and not ent.is_undef:
-                    exported_symbols.add(
-                            extract_str(dynstr_off + ent.st_name))
+                symbol_name = extract_str(dynstr_off + ent.st_name)
+                if ent.is_undef:
+                    imp_symbols.add(symbol_name)
+                elif not ent.is_local:
+                    exp_symbols.add(symbol_name)
 
     def _parse_from_buf(self, buf):
         """Parse ELF image resides in the buffer"""
