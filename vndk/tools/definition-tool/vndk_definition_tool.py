@@ -140,6 +140,10 @@ class ELF(object):
     }
 
 
+    __slots__ = ('ei_class', 'ei_data', 'e_machine', 'dt_rpath', 'dt_runpath',
+                 'dt_needed', 'exported_symbols',)
+
+
     def __init__(self, ei_class=ELFCLASSNONE, ei_data=ELFDATANONE, e_machine=0,
                  dt_rpath=None, dt_runpath=None, dt_needed=None,
                  exported_symbols=None):
@@ -150,16 +154,14 @@ class ELF(object):
         self.dt_runpath = dt_runpath
         self.dt_needed = dt_needed if dt_needed is not None else []
         self.exported_symbols = \
-                exported_symbols if exported_symbols is not None else []
+                exported_symbols if exported_symbols is not None else set()
 
-    def __str__(self):
-        return ('ELF(' +
-                'ei_class=' + repr(self.ei_class) + ', ' +
-                'ei_data=' + repr(self.ei_data) + ', ' +
-                'e_machine=' + repr(self.e_machine) + ', ' +
-                'dt_rpath=' + repr(self.dt_rpath) + ', ' +
-                'dt_runpath=' + repr(self.dt_runpath) + ', ' +
-                'dt_needed=' + repr(self.dt_needed) + ')')
+    def __repr__(self):
+        args = (a + '=' + repr(getattr(self, a)) for a in self.__slots__)
+        return 'ELF(' + ', '.join(args) + ')'
+
+    def __eq__(self, rhs):
+        return all(getattr(self, a) == getattr(rhs, a) for a in self.__slots__)
 
     @property
     def elf_class_name(self):
@@ -181,6 +183,10 @@ class ELF(object):
     def is_64bit(self):
         return self.ei_class == ELF.ELFCLASS64
 
+    @property
+    def sorted_exported_symbols(self):
+        return sorted(list(self.exported_symbols))
+
     def dump(self, file=None):
         """Print parsed ELF information to the file"""
         file = file if file is not None else sys.stdout
@@ -194,13 +200,13 @@ class ELF(object):
             print('DT_RUNPATH\t' + self.dt_runpath, file=file)
         for dt_needed in self.dt_needed:
             print('DT_NEEDED\t' + dt_needed, file=file)
-        for symbol in self.exported_symbols:
+        for symbol in self.sorted_exported_symbols:
             print('SYMBOL\t\t' + symbol, file=file)
 
     def dump_exported_symbols(self, file=None):
         """Print exported symbols to the file"""
         file = file if file is not None else sys.stdout
-        for symbol in self.exported_symbols:
+        for symbol in self.sorted_exported_symbols:
             print(symbol, file=file)
 
     # Extract zero-terminated buffer slice.
@@ -337,17 +343,15 @@ class ELF(object):
         # Parse exported symbols in .dynsym section.
         dynsym_shdr = sections.get('.dynsym')
         if dynsym_shdr:
-            exported_symbols = []
+            exported_symbols = self.exported_symbols
             dynsym_off = dynsym_shdr.sh_offset
             dynsym_end = dynsym_off + dynsym_shdr.sh_size
             dynsym_entsize = dynsym_shdr.sh_entsize
             for ent_off in range(dynsym_off, dynsym_end, dynsym_entsize):
                 ent = parse_elf_sym(ent_off)
                 if not ent.is_local and not ent.is_undef:
-                    exported_symbols.append(
+                    exported_symbols.add(
                             extract_str(dynstr_off + ent.st_name))
-            exported_symbols.sort()
-            self.exported_symbols = exported_symbols
 
     def _parse_from_buf(self, buf):
         """Parse ELF image resides in the buffer"""
@@ -694,7 +698,7 @@ class GenericRefs(object):
                 path = os.path.join(base, filename)
                 lib_name = '/' + path[prefix_len:-4]
                 with open(path, 'r') as f:
-                    self.refs[lib_name] = [line.strip() for line in f]
+                    self.refs[lib_name] = set(line.strip() for line in f)
 
     @staticmethod
     def create_from_dir(root):

@@ -39,6 +39,15 @@ class ElfSymTest(unittest.TestCase):
 
 
 class ELFTest(unittest.TestCase):
+    def test_repr(self):
+        elf = ELF()
+        self.assertEqual(elf, eval(repr(elf)))
+
+        elf = ELF(ei_class=ELF.ELFCLASS32, ei_data=ELF.ELFDATA2LSB,
+                  e_machine=183, dt_rpath='a', dt_runpath='b',
+                  dt_needed=['c', 'd'], exported_symbols={'e', 'f', 'g'})
+        self.assertEqual(elf, eval(repr(elf)))
+
     def test_class_name(self):
         self.assertEqual('None', ELF().elf_class_name)
 
@@ -78,7 +87,7 @@ class ELFTest(unittest.TestCase):
 
     def test_dump(self):
         elf = ELF(ELF.ELFCLASS32, ELF.ELFDATA2LSB, 183, 'a', 'b',
-                  ['libc.so', 'libm.so'], ['hello', 'world'])
+                  ['libc.so', 'libm.so'], {'hello', 'world'})
 
         with StringIO() as f:
             elf.dump(f)
@@ -97,7 +106,7 @@ class ELFTest(unittest.TestCase):
 
     def test_dump_exported_symbols(self):
         elf = ELF(ELF.ELFCLASS32, ELF.ELFDATA2LSB, 183, 'a', 'b',
-                  ['libc.so', 'libm.so'], ['hello', 'world'])
+                  ['libc.so', 'libm.so'], {'hello', 'world'})
 
         with StringIO() as f:
             elf.dump_exported_symbols(f)

@@ -16,21 +16,21 @@ class GraphTest(unittest.TestCase):
         # 32-bit libraries on the system partition.
         self.elf_libdl_32 = ELF(
                 ELF.ELFCLASS32, ELF.ELFDATA2LSB,
-                exported_symbols=['dlclose', 'dlopen', 'dlsym'])
+                exported_symbols={'dlclose', 'dlopen', 'dlsym'})
 
         self.elf_libm_32 = ELF(
                 ELF.ELFCLASS32, ELF.ELFDATA2LSB,
-                exported_symbols=['cos', 'sin'])
+                exported_symbols={'cos', 'sin'})
 
         self.elf_libc_32 = ELF(
                 ELF.ELFCLASS32, ELF.ELFDATA2LSB,
                 dt_needed=['libdl.so', 'libm.so'],
-                exported_symbols=['fclose', 'fopen', 'fread'])
+                exported_symbols={'fclose', 'fopen', 'fread'})
 
         self.elf_libRS_32 = ELF(
                 ELF.ELFCLASS32, ELF.ELFDATA2LSB,
                 dt_needed=['libdl.so'],
-                exported_symbols=['rsContextCreate'])
+                exported_symbols={'rsContextCreate'})
 
         self.elf_libcutils_32 = ELF(
                 ELF.ELFCLASS32, ELF.ELFDATA2LSB,
@@ -39,21 +39,21 @@ class GraphTest(unittest.TestCase):
         # 64-bit libraries on the system partition.
         self.elf_libdl_64 = ELF(
                 ELF.ELFCLASS64, ELF.ELFDATA2LSB,
-                exported_symbols=['dlclose', 'dlopen', 'dlsym'])
+                exported_symbols={'dlclose', 'dlopen', 'dlsym'})
 
         self.elf_libm_64 = ELF(
                 ELF.ELFCLASS64, ELF.ELFDATA2LSB,
-                exported_symbols=['cos', 'sin'])
+                exported_symbols={'cos', 'sin'})
 
         self.elf_libc_64 = ELF(
                 ELF.ELFCLASS64, ELF.ELFDATA2LSB,
                 dt_needed=['libdl.so', 'libm.so'],
-                exported_symbols=['fclose', 'fopen', 'fread'])
+                exported_symbols={'fclose', 'fopen', 'fread'})
 
         self.elf_libRS_64 = ELF(
                 ELF.ELFCLASS64, ELF.ELFDATA2LSB,
                 dt_needed=['libdl.so'],
-                exported_symbols=['rsContextCreate'])
+                exported_symbols={'rsContextCreate'})
 
         self.elf_libcutils_64 = ELF(
                 ELF.ELFCLASS64, ELF.ELFDATA2LSB,
@@ -63,13 +63,13 @@ class GraphTest(unittest.TestCase):
         self.elf_libEGL_32 = ELF(
                 ELF.ELFCLASS32, ELF.ELFDATA2LSB,
                 dt_needed=['libc.so', 'libcutils.so', 'libdl.so'],
-                exported_symbols=['eglGetDisplay'])
+                exported_symbols={'eglGetDisplay'})
 
         # 64-bit libraries on the vendor partition.
         self.elf_libEGL_64 = ELF(
                 ELF.ELFCLASS64, ELF.ELFDATA2LSB,
                 dt_needed=['libc.so', 'libcutils.so', 'libdl.so'],
-                exported_symbols=['eglGetDisplay'])
+                exported_symbols={'eglGetDisplay'})
 
         # Build the linker.
         g = Graph()
