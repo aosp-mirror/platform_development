@@ -225,9 +225,13 @@ bool RecordDeclWrapper::SetupRecordFields(
                    << " to reference dump\n";
       return false;
     }
-    record_fieldp->set_field_name(field->getName());
-    record_fieldp->set_field_type(QualTypeToString(field->getType()));
-    record_fieldp->set_access(AccessToString(field->getAccess()));
+    std::string name = field->getName();
+    std::string type = QualTypeToString(field->getType());
+    std::string access = AccessToString(field->getAccess());
+    record_fieldp->set_field_name(name);
+    record_fieldp->set_field_type(type);
+    record_fieldp->set_access(access);
+    record_fieldp->set_linker_set_key(name + type + access);
     field++;
   }
   return true;
@@ -248,11 +252,14 @@ bool RecordDeclWrapper::SetupCXXBases(abi_dump::RecordDecl *cxxp) const {
       llvm::errs() << " Couldn't add base specifier to reference dump\n";
       return false;
     }
-    base_specifierp->set_fully_qualified_name(
-        QualTypeToString(base_class->getType()));
-    base_specifierp->set_is_virtual(base_class->isVirtual());
-    base_specifierp->set_access(
-        AccessToString(base_class->getAccessSpecifier()));
+    std::string name = QualTypeToString(base_class->getType());
+    bool is_virtual = base_class->isVirtual();
+    char is_virtual_c = is_virtual ? 't' : 'f';
+    std::string access = AccessToString(base_class->getAccessSpecifier());
+    base_specifierp->set_fully_qualified_name(name);
+    base_specifierp->set_is_virtual(is_virtual);
+    base_specifierp->set_access(access);
+    base_specifierp->set_linker_set_key(name + is_virtual_c + access);
     base_class++;
   }
   return true;
@@ -298,9 +305,11 @@ bool RecordDeclWrapper::SetupTemplateInfo(
 void RecordDeclWrapper::SetupRecordInfo(abi_dump::RecordDecl *record_declp,
                                         const std::string &source_file) const {
   std::string qualified_name = GetTagDeclQualifiedName(record_decl_);
+  std::string mangled_name = GetMangledNameDecl(record_decl_);
+  std::string linker_key = (mangled_name == "") ? qualified_name : mangled_name;
   record_declp->set_fully_qualified_name(qualified_name);
-  //TODO: Add Template Information
-  record_declp->set_linker_set_key(qualified_name);
+  record_declp->set_mangled_record_name(mangled_name);
+  record_declp->set_linker_set_key(linker_key);
   record_declp->set_source_file(source_file);
   record_declp->set_access(AccessToString(record_decl_->getAccess()));
 }

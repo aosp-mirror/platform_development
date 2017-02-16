@@ -19,6 +19,7 @@
 #include <clang/Tooling/Core/QualTypeNames.h>
 
 #include <google/protobuf/text_format.h>
+#include <google/protobuf/io/zero_copy_stream_impl.h>
 
 #include <fstream>
 #include <iostream>
@@ -128,11 +129,8 @@ HeaderASTConsumer::HeaderASTConsumer(
 
 void HeaderASTConsumer::HandleTranslationUnit(clang::ASTContext &ctx) {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
-  std::ofstream text_output(out_dump_name_ + ".txt");
-  std::fstream binary_output(
-      out_dump_name_,
-      std::ios::out | std::ios::trunc | std::ios::binary);
-
+  std::ofstream text_output(out_dump_name_);
+  google::protobuf::io::OstreamOutputStream text_os(&text_output);
   clang::TranslationUnitDecl* translation_unit = ctx.getTranslationUnitDecl();
   std::unique_ptr<clang::MangleContext> mangle_contextp(
       ctx.createMangleContext());
@@ -141,12 +139,10 @@ void HeaderASTConsumer::HandleTranslationUnit(clang::ASTContext &ctx) {
   HeaderASTVisitor v(&tu, mangle_contextp.get(), &ctx, cip_, file_name_,
                      exported_headers_);
   if (!v.TraverseDecl(translation_unit) ||
-      !google::protobuf::TextFormat::PrintToString(tu, &str_out) ||
-      !tu.SerializeToOstream(&binary_output)) {
+      !google::protobuf::TextFormat::Print(tu, &text_os)) {
     llvm::errs() << "Serialization to ostream failed\n";
     ::exit(1);
   }
-  text_output << str_out;
 }
 
 void HeaderASTConsumer::HandleVTable(clang::CXXRecordDecl *crd) {

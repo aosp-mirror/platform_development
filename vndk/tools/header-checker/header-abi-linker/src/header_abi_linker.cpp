@@ -23,6 +23,7 @@
 
 
 #include <google/protobuf/text_format.h>
+#include <google/protobuf/io/zero_copy_stream_impl.h>
 
 #include <memory>
 #include <fstream>
@@ -78,15 +79,13 @@ class HeaderAbiLinker {
 
 bool HeaderAbiLinker::LinkAndDump() {
   abi_dump::TranslationUnit linked_tu;
-  std::string str_out;
-  std::ofstream text_output(out_dump_name_ + ".txt");
-  std::fstream binary_output(
-      out_dump_name_,
-      std::ios::out | std::ios::trunc | std::ios::binary);
+  std::ofstream text_output(out_dump_name_);
+  google::protobuf::io::OstreamOutputStream text_os(&text_output);
   for (auto &&i : dump_files_) {
     abi_dump::TranslationUnit dump_tu;
-    std::fstream input(i, std::ios::binary | std::ios::in);
-    if (!dump_tu.ParseFromIstream(&input) ||
+    std::ifstream input(i);
+    google::protobuf::io::IstreamInputStream text_is(&input);
+    if (!google::protobuf::TextFormat::Parse(&text_is, &dump_tu) ||
         !LinkRecords(dump_tu, &linked_tu) ||
         !LinkFunctions(dump_tu, &linked_tu) ||
         !LinkEnums(dump_tu, &linked_tu)) {
@@ -95,13 +94,10 @@ bool HeaderAbiLinker::LinkAndDump() {
     }
   }
 
-  if (!google::protobuf::TextFormat::PrintToString(linked_tu, &str_out) ||
-      !linked_tu.SerializeToOstream(&binary_output)) {
+  if (!google::protobuf::TextFormat::Print(linked_tu, &text_os)) {
     llvm::errs() << "Serialization to ostream failed\n";
     return false;
   }
-  text_output << str_out;
-
   return true;
 }
 
