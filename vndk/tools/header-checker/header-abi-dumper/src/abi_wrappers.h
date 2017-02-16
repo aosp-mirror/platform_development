@@ -71,7 +71,7 @@ class RecordDeclWrapper : public ABIWrapper {
   void SetupRecordInfo(abi_dump::RecordDecl *record_declp,
                        const std::string &source_file) const;
 
-  bool SetupRecordFields(abi_dump::RecordDecl *recordp,
+  bool SetupRecordFields(abi_dump::RecordDecl *record_declp,
                         const std::string &source_file) const;
 
   bool SetupCXXBases(abi_dump::RecordDecl *cxxp) const;

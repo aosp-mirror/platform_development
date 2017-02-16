@@ -25,11 +25,13 @@ message FieldDecl {
   optional string field_type = 2 [default = "VOID"];
   optional string access = 3 [default = "public"];
   optional bool default_arg = 4 [default = false];
+  optional string linker_set_key = 5 [default = "NONE"];
 }
 
 message EnumFieldDecl {
   optional string enum_field_name = 1 [default = "NONE"];
   optional int64 enum_field_value = 2 [default = 0]; // assumption: fits int64
+  optional string linker_set_key = 3 [default = "NONE"];
 }
 
 message TemplateInfo {
@@ -40,19 +42,19 @@ message CXXBaseSpecifier {
   optional string fully_qualified_name = 1 [default = "NONE"];
   optional string access = 2 [default = "public"];
   optional bool is_virtual = 3 [default = false];
+  optional string linker_set_key = 4 [default = "NONE"];
 }
 
 message RecordDecl {
-  repeated FieldDecl fields = 2;
-  repeated string inner_classes = 3;
-  repeated CXXBaseSpecifier base_specifiers = 4;
-  optional string fully_qualified_name = 5 [default = "NONE"];
-  optional int64 id = 6 [default = 0];
-  optional string source_file = 9 [default = "NONE"];
-  optional string template_kind = 11 [default = "NONE"];
-  optional TemplateInfo template_info = 12;
-  optional string access = 13 [default = "public"];
-  optional string linker_set_key = 14 [default = "NONE"];
+  repeated FieldDecl fields = 1;
+  repeated CXXBaseSpecifier base_specifiers = 2;
+  optional string fully_qualified_name = 3 [default = "NONE"];
+  optional string source_file = 4 [default = "NONE"];
+  optional uint32 template_kind = 5 [default = 0];
+  optional TemplateInfo template_info = 6;
+  optional string access = 7 [default = "public"];
+  optional string linker_set_key = 8 [default = "NONE"];
+  optional string mangled_record_name = 9 [default = "NONE"];
 }
 
 message EnumDecl {
