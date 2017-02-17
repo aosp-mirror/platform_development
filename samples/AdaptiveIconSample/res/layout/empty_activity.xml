@@ -20,5 +20,5 @@
     android:textSize="18sp"
     android:autoText="true"
     android:capitalize="sentences"
-    android:text="Did you enjoy the maskable icon?" />
+    android:text="Did you enjoy the adaptive icon?" />
 

@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package com.example.android.maskableicon;
+package com.example.android.adaptiveicon;
 
 import android.app.Activity;
 import android.os.Bundle;
 import android.view.View;
 
-public class Activity2 extends Activity {
+public class Activity1 extends Activity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

@@ -13,9 +13,11 @@
      See the License for the specific language governing permissions and
      limitations under the License.
 -->
-<maskable-icon xmlns:android="http://schemas.android.com/apk/res/android">
-    <background android:drawable="@color/background" />
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background>
+        <bitmap android:src="@drawable/icon_back_2"/>
+    </background>
     <foreground>
-       <bitmap android:src="@mipmap/icon_fore_3"/>
+        <bitmap android:src="@drawable/icon_fore_2"/>
     </foreground>
-</maskable-icon>
+</adaptive-icon>
