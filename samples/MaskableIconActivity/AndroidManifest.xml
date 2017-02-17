@@ -21,11 +21,12 @@
      to come from a domain that you own or have control over. -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.android.maskableicon">
+    <uses-sdk android:targetSdkVersion="25" android:minSdkVersion="21"/>
     <application android:label="MaskableIconActivity!">
         <activity
             android:name="Activity1"
-            android:icon="@drawable/ic_launcher_maskable1"
-            android:label="maskable icon 1">
+            android:icon="@drawable/ic_launcher1"
+            android:label="Icon 1">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
@@ -33,8 +34,8 @@
         </activity>
         <activity
             android:name="Activity2"
-            android:icon="@drawable/ic_launcher_maskable2"
-            android:label="maskable icon 2">
+            android:icon="@drawable/ic_launcher2"
+            android:label="Icon 2">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
@@ -42,8 +43,8 @@
         </activity>
         <activity
             android:name="Activity3"
-            android:icon="@drawable/ic_launcher_maskable3"
-            android:label="maskable icon 3">
+            android:icon="@drawable/ic_launcher3"
+            android:label="Icon 3">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
