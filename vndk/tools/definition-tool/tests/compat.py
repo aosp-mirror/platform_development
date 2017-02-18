@@ -35,7 +35,7 @@ else:
             return
         return os.makedirs(path)
 
-try:
+if sys.version_info >= (3, 0):
     from io import StringIO
-except ImportError:
+else:
     from StringIO import StringIO

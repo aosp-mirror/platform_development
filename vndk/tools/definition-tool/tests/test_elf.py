@@ -89,9 +89,9 @@ class ELFTest(unittest.TestCase):
         elf = ELF(ELF.ELFCLASS32, ELF.ELFDATA2LSB, 183, ['a'], ['b'],
                   ['libc.so', 'libm.so'], {'hello', 'world'}, {'d', 'e'})
 
-        with StringIO() as f:
-            elf.dump(f)
-            actual_output = f.getvalue()
+        f = StringIO()
+        elf.dump(f)
+        actual_output = f.getvalue()
 
         self.assertEqual('EI_CLASS\t32\n'
                          'EI_DATA\t\tLittle-Endian\n'
@@ -110,9 +110,9 @@ class ELFTest(unittest.TestCase):
         elf = ELF(ELF.ELFCLASS32, ELF.ELFDATA2LSB, 183, ['a'], ['b'],
                   ['libc.so', 'libm.so'], {'hello', 'world'})
 
-        with StringIO() as f:
-            elf.dump_exported_symbols(f)
-            actual_output = f.getvalue()
+        f = StringIO()
+        elf.dump_exported_symbols(f)
+        actual_output = f.getvalue()
 
         self.assertEqual('hello\nworld\n', actual_output)
 
