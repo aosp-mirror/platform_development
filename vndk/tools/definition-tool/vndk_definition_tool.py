@@ -453,7 +453,7 @@ PT_VENDOR = 1
 NUM_PARTITIONS = 2
 
 
-class GraphNode(object):
+class ELFLinkData(object):
     def __init__(self, partition, path, elf):
         self.partition = partition
         self.path = path
@@ -473,14 +473,14 @@ def sorted_lib_path_list(libs):
     return libs
 
 
-class Graph(object):
+class ELFLinker(object):
     def __init__(self):
         self.lib32 = dict()
         self.lib64 = dict()
         self.lib_pt = [dict() for i in range(NUM_PARTITIONS)]
 
     def add(self, partition, path, elf):
-        node = GraphNode(partition, path, elf)
+        node = ELFLinkData(partition, path, elf)
         if elf.is_32bit:
             self.lib32[path] = node
         else:
@@ -523,7 +523,7 @@ class Graph(object):
         prefix_len = len(root) + 1
 
         if alter_subdirs:
-            alter_patt = Graph._compile_path_matcher(root, alter_subdirs)
+            alter_patt = ELFLinker._compile_path_matcher(root, alter_subdirs)
 
         for path in scan_executables(root):
             try:
@@ -659,7 +659,7 @@ class Graph(object):
     @staticmethod
     def create(system_dirs=None, system_dirs_as_vendor=None, vendor_dirs=None,
                vendor_dirs_as_system=None, extra_deps=None):
-        graph = Graph()
+        graph = ELFLinker()
 
         if system_dirs:
             for path in system_dirs:
@@ -871,9 +871,9 @@ class VNDKCommand(ELFGraphCommand):
 
     def main(self, args):
         # Link ELF objects.
-        graph = Graph.create(args.system, args.system_dir_as_vendor,
-                             args.vendor, args.vendor_dir_as_system,
-                             args.load_extra_deps)
+        graph = ELFLinker.create(args.system, args.system_dir_as_vendor,
+                                 args.vendor, args.vendor_dir_as_system,
+                                 args.load_extra_deps)
 
         # Load the generic reference.
         generic_refs = None
@@ -928,9 +928,9 @@ class DepsCommand(ELFGraphCommand):
                 help='print binaries without dependencies or usages')
 
     def main(self, args):
-        graph = Graph.create(args.system, args.system_dir_as_vendor,
-                             args.vendor, args.vendor_dir_as_system,
-                             args.load_extra_deps)
+        graph = ELFLinker.create(args.system, args.system_dir_as_vendor,
+                                 args.vendor, args.vendor_dir_as_system,
+                                 args.load_extra_deps)
 
         results = []
         for partition in range(NUM_PARTITIONS):
@@ -969,9 +969,9 @@ class DepsClosureCommand(ELFGraphCommand):
                             help='exclude ndk libraries')
 
     def main(self, args):
-        graph = Graph.create(args.system, args.system_dir_as_vendor,
-                             args.vendor, args.vendor_dir_as_system,
-                             args.load_extra_deps)
+        graph = ELFLinker.create(args.system, args.system_dir_as_vendor,
+                                 args.vendor, args.vendor_dir_as_system,
+                                 args.load_extra_deps)
 
         # Find root/excluded libraries by their paths.
         def report_error(path):
@@ -1005,9 +1005,9 @@ class SpHalCommand(ELFGraphCommand):
                             help='show the closure')
 
     def main(self, args):
-        graph = Graph.create(args.system, args.system_dir_as_vendor,
-                             args.vendor, args.vendor_dir_as_system,
-                             args.load_extra_deps)
+        graph = ELFLinker.create(args.system, args.system_dir_as_vendor,
+                                 args.vendor, args.vendor_dir_as_system,
+                                 args.load_extra_deps)
 
         # Find SP HALs.
         name_patterns = (

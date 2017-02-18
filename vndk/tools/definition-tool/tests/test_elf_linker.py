@@ -9,96 +9,62 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import unittest
 
 from compat import StringIO
-from vndk_definition_tool import ELF, Graph, PT_SYSTEM, PT_VENDOR
+from vndk_definition_tool import ELF, ELFLinker, PT_SYSTEM, PT_VENDOR
 
-class GraphTest(unittest.TestCase):
+class ELFLinkerTest(unittest.TestCase):
+    _PARTITION_NAMES = {
+        PT_SYSTEM: 'system',
+        PT_VENDOR: 'vendor',
+    }
+
+    _LIB_DIRS = {
+        ELF.ELFCLASS32: 'lib',
+        ELF.ELFCLASS64: 'lib64',
+    }
+
+    def _create_elf(self, partition, klass, name, dt_needed, exported_symbols):
+        elf = ELF(klass, ELF.ELFDATA2LSB, dt_needed=dt_needed,
+                  exported_symbols=exported_symbols)
+        setattr(self, 'elf' + elf.elf_class_name + '_' + name, elf)
+
+        path = os.path.join('/', self._PARTITION_NAMES[partition],
+                            self._LIB_DIRS[klass], name + '.so')
+        self.graph.add(partition, path, elf)
+
+    def _create_elfs(self, partition, name, dt_needed, exported_symbols):
+        for klass in (ELF.ELFCLASS32, ELF.ELFCLASS64):
+            self._create_elf(partition, klass, name, dt_needed,
+                             exported_symbols)
+
     def setUp(self):
-        # 32-bit libraries on the system partition.
-        self.elf_libdl_32 = ELF(
-                ELF.ELFCLASS32, ELF.ELFDATA2LSB,
-                exported_symbols={'dlclose', 'dlopen', 'dlsym'})
-
-        self.elf_libm_32 = ELF(
-                ELF.ELFCLASS32, ELF.ELFDATA2LSB,
-                exported_symbols={'cos', 'sin'})
-
-        self.elf_libc_32 = ELF(
-                ELF.ELFCLASS32, ELF.ELFDATA2LSB,
-                dt_needed=['libdl.so', 'libm.so'],
-                exported_symbols={'fclose', 'fopen', 'fread'})
-
-        self.elf_libRS_32 = ELF(
-                ELF.ELFCLASS32, ELF.ELFDATA2LSB,
-                dt_needed=['libdl.so'],
-                exported_symbols={'rsContextCreate'})
-
-        self.elf_libcutils_32 = ELF(
-                ELF.ELFCLASS32, ELF.ELFDATA2LSB,
-                dt_needed=['libc.so', 'libdl.so'])
-
-        # 64-bit libraries on the system partition.
-        self.elf_libdl_64 = ELF(
-                ELF.ELFCLASS64, ELF.ELFDATA2LSB,
-                exported_symbols={'dlclose', 'dlopen', 'dlsym'})
-
-        self.elf_libm_64 = ELF(
-                ELF.ELFCLASS64, ELF.ELFDATA2LSB,
-                exported_symbols={'cos', 'sin'})
-
-        self.elf_libc_64 = ELF(
-                ELF.ELFCLASS64, ELF.ELFDATA2LSB,
-                dt_needed=['libdl.so', 'libm.so'],
-                exported_symbols={'fclose', 'fopen', 'fread'})
-
-        self.elf_libRS_64 = ELF(
-                ELF.ELFCLASS64, ELF.ELFDATA2LSB,
-                dt_needed=['libdl.so'],
-                exported_symbols={'rsContextCreate'})
-
-        self.elf_libcutils_64 = ELF(
-                ELF.ELFCLASS64, ELF.ELFDATA2LSB,
-                dt_needed=['libc.so', 'libdl.so'])
-
-        # 32-bit libraries on the vendor partition.
-        self.elf_libEGL_32 = ELF(
-                ELF.ELFCLASS32, ELF.ELFDATA2LSB,
-                dt_needed=['libc.so', 'libcutils.so', 'libdl.so'],
-                exported_symbols={'eglGetDisplay'})
-
-        # 64-bit libraries on the vendor partition.
-        self.elf_libEGL_64 = ELF(
-                ELF.ELFCLASS64, ELF.ELFDATA2LSB,
-                dt_needed=['libc.so', 'libcutils.so', 'libdl.so'],
-                exported_symbols={'eglGetDisplay'})
-
-        # Build the linker.
-        g = Graph()
-        g.add(PT_SYSTEM, '/system/lib/libc.so', self.elf_libc_32)
-        g.add(PT_SYSTEM, '/system/lib/libcutils.so', self.elf_libcutils_32)
-        g.add(PT_SYSTEM, '/system/lib/libdl.so', self.elf_libdl_32)
-        g.add(PT_SYSTEM, '/system/lib/libm.so', self.elf_libm_32)
-        g.add(PT_SYSTEM, '/system/lib/libRS.so', self.elf_libRS_32)
-        g.add(PT_SYSTEM, '/system/lib64/libc.so', self.elf_libc_64)
-        g.add(PT_SYSTEM, '/system/lib64/libcutils.so', self.elf_libcutils_64)
-        g.add(PT_SYSTEM, '/system/lib64/libdl.so', self.elf_libdl_64)
-        g.add(PT_SYSTEM, '/system/lib64/libm.so', self.elf_libm_64)
-        g.add(PT_SYSTEM, '/system/lib64/libRS.so', self.elf_libRS_64)
-        g.add(PT_VENDOR, '/vendor/lib/libEGL.so', self.elf_libEGL_32)
-        g.add(PT_VENDOR, '/vendor/lib64/libEGL.so', self.elf_libEGL_64)
-        g.resolve_deps()
-        self.graph = g
+        self.graph = ELFLinker()
+        self._create_elfs(PT_SYSTEM, 'libdl', dt_needed=[],
+                          exported_symbols={'dlclose', 'dlopen', 'dlsym'})
+        self._create_elfs(PT_SYSTEM, 'libm', dt_needed=[],
+                          exported_symbols={'cos', 'sin'})
+        self._create_elfs(PT_SYSTEM, 'libc', dt_needed=['libdl.so', 'libm.so'],
+                          exported_symbols={'fclose', 'fopen', 'fread'})
+        self._create_elfs(PT_SYSTEM, 'libRS', dt_needed=['libdl.so'],
+                          exported_symbols={'rsContextCreate'})
+        self._create_elfs(PT_SYSTEM, 'libcutils',
+                          dt_needed=['libc.so', 'libdl.so'],
+                          exported_symbols={})
+        self._create_elfs(PT_VENDOR, 'libEGL',
+                          dt_needed=['libc.so', 'libcutils.so', 'libdl.so'],
+                          exported_symbols={'eglGetDisplay'})
+        self.graph.resolve_deps()
 
     def test_map_path_to_lib(self):
         node = self.graph.map_path_to_lib('/system/lib/libc.so')
-        self.assertEqual(self.elf_libc_32, node.elf)
+        self.assertEqual(self.elf32_libc, node.elf)
         self.assertEqual('/system/lib/libc.so', node.path)
 
         node = self.graph.map_path_to_lib('/system/lib64/libdl.so')
-        self.assertEqual(self.elf_libdl_64, node.elf)
+        self.assertEqual(self.elf64_libdl, node.elf)
         self.assertEqual('/system/lib64/libdl.so', node.path)
 
         node = self.graph.map_path_to_lib('/vendor/lib64/libEGL.so')
-        self.assertEqual(self.elf_libEGL_64, node.elf)
+        self.assertEqual(self.elf64_libEGL, node.elf)
         self.assertEqual('/vendor/lib64/libEGL.so', node.path)
 
         self.assertEqual(None, self.graph.map_path_to_lib('/no/such/path.so'))
