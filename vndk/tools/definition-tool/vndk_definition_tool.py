@@ -150,8 +150,8 @@ class ELF(object):
         self.ei_class = ei_class
         self.ei_data = ei_data
         self.e_machine = e_machine
-        self.dt_rpath = dt_rpath
-        self.dt_runpath = dt_runpath
+        self.dt_rpath = dt_rpath if dt_rpath is not None else []
+        self.dt_runpath = dt_runpath if dt_runpath is not None else []
         self.dt_needed = dt_needed if dt_needed is not None else []
         self.exported_symbols = \
                 exported_symbols if exported_symbols is not None else set()
@@ -200,10 +200,10 @@ class ELF(object):
         print('EI_CLASS\t' + self.elf_class_name, file=file)
         print('EI_DATA\t\t' + self.elf_data_name, file=file)
         print('E_MACHINE\t' + self.elf_machine_name, file=file)
-        if self.dt_rpath:
-            print('DT_RPATH\t' + self.dt_rpath, file=file)
-        if self.dt_runpath:
-            print('DT_RUNPATH\t' + self.dt_runpath, file=file)
+        for dt_rpath in self.dt_rpath:
+            print('DT_RPATH\t' + dt_rpath, file=file)
+        for dt_runpath in self.dt_runpath:
+            print('DT_RUNPATH\t' + dt_runpath, file=file)
         for dt_needed in self.dt_needed:
             print('DT_NEEDED\t' + dt_needed, file=file)
         for symbol in self.sorted_exported_symbols:
@@ -344,9 +344,11 @@ class ELF(object):
             if ent.d_tag == ELF.DT_NEEDED:
                 self.dt_needed.append(extract_str(dynstr_off + ent.d_val))
             elif ent.d_tag == ELF.DT_RPATH:
-                self.dt_rpath = extract_str(dynstr_off + ent.d_val)
+                self.dt_rpath.extend(
+                        extract_str(dynstr_off + ent.d_val).split(':'))
             elif ent.d_tag == ELF.DT_RUNPATH:
-                self.dt_runpath = extract_str(dynstr_off + ent.d_val)
+                self.dt_runpath.extend(
+                        extract_str(dynstr_off + ent.d_val).split(':'))
 
         # Parse exported symbols in .dynsym section.
         dynsym_shdr = sections.get('.dynsym')

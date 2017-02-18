@@ -44,7 +44,7 @@ class ELFTest(unittest.TestCase):
         self.assertEqual(elf, eval(repr(elf)))
 
         elf = ELF(ei_class=ELF.ELFCLASS32, ei_data=ELF.ELFDATA2LSB,
-                  e_machine=183, dt_rpath='a', dt_runpath='b',
+                  e_machine=183, dt_rpath=['a'], dt_runpath=['b'],
                   dt_needed=['c', 'd'], exported_symbols={'e', 'f', 'g'})
         self.assertEqual(elf, eval(repr(elf)))
 
@@ -78,15 +78,15 @@ class ELFTest(unittest.TestCase):
 
     def test_dt_rpath_runpath(self):
         elf = ELF()
-        self.assertEqual(None, elf.dt_rpath)
-        self.assertEqual(None, elf.dt_runpath)
+        self.assertEqual([], elf.dt_rpath)
+        self.assertEqual([], elf.dt_runpath)
 
-        elf = ELF(None, None, 0, 'a', 'b')
-        self.assertEqual('a', elf.dt_rpath)
-        self.assertEqual('b', elf.dt_runpath)
+        elf = ELF(None, None, 0, ['a'], ['b'])
+        self.assertEqual(['a'], elf.dt_rpath)
+        self.assertEqual(['b'], elf.dt_runpath)
 
     def test_dump(self):
-        elf = ELF(ELF.ELFCLASS32, ELF.ELFDATA2LSB, 183, 'a', 'b',
+        elf = ELF(ELF.ELFCLASS32, ELF.ELFDATA2LSB, 183, ['a'], ['b'],
                   ['libc.so', 'libm.so'], {'hello', 'world'}, {'d', 'e'})
 
         with StringIO() as f:
@@ -107,7 +107,7 @@ class ELFTest(unittest.TestCase):
                          actual_output)
 
     def test_dump_exported_symbols(self):
-        elf = ELF(ELF.ELFCLASS32, ELF.ELFDATA2LSB, 183, 'a', 'b',
+        elf = ELF(ELF.ELFCLASS32, ELF.ELFDATA2LSB, 183, ['a'], ['b'],
                   ['libc.so', 'libm.so'], {'hello', 'world'})
 
         with StringIO() as f:
