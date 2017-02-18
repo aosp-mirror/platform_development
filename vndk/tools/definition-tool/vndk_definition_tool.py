@@ -864,8 +864,16 @@ class ELFLinker(object):
 #------------------------------------------------------------------------------
 
 class GenericRefs(object):
+    NEW_LIB = 0
+    EXPORT_EQUAL = 1
+    EXPORT_SUPER_SET = 2
+    MODIFIED = 3
+
     def __init__(self):
         self.refs = dict()
+
+    def add(self, name, symbols):
+        self.refs[name] = symbols
 
     def _load_from_dir(self, root):
         root = os.path.abspath(root)
@@ -877,7 +885,7 @@ class GenericRefs(object):
                 path = os.path.join(base, filename)
                 lib_name = '/' + path[prefix_len:-4]
                 with open(path, 'r') as f:
-                    self.refs[lib_name] = set(line.strip() for line in f)
+                    self.add(lib_name, set(line.strip() for line in f))
 
     @staticmethod
     def create_from_dir(root):
@@ -885,8 +893,19 @@ class GenericRefs(object):
         result._load_from_dir(root)
         return result
 
+    def classify_lib(self, lib):
+        ref_lib_symbols = self.refs.get(lib.path)
+        if not ref_lib_symbols:
+            return GenericRefs.NEW_LIB
+        exported_symbols = lib.elf.exported_symbols
+        if exported_symbols == ref_lib_symbols:
+            return GenericRefs.EXPORT_EQUAL
+        if exported_symbols > ref_lib_symbols:
+            return GenericRefs.EXPORT_SUPER_SET
+        return GenericRefs.MODIFIED
+
     def is_equivalent_lib(self, lib):
-        return self.refs.get(lib.path) == lib.elf.exported_symbols
+        return self.classify_lib(lib) == GenericRefs.EXPORT_EQUAL
 
 
 #------------------------------------------------------------------------------
