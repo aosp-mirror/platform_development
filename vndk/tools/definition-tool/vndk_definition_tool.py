@@ -471,6 +471,30 @@ PT_VENDOR = 1
 NUM_PARTITIONS = 2
 
 
+class ELFResolver(object):
+    def __init__(self, lib_set, default_search_path):
+        self.lib_set = lib_set
+        self.default_search_path = default_search_path
+
+    def get_candidates(self, name, dt_rpath=None, dt_runpath=None):
+        if dt_rpath:
+            for d in dt_rpath:
+                yield os.path.join(d, name)
+        if dt_runpath:
+            for d in dt_runpath:
+                yield os.path.join(d, name)
+        for d in self.default_search_path:
+            yield os.path.join(d, name)
+
+    def resolve(self, name, dt_rpath=None, dt_runpath=None):
+        for path in self.get_candidates(name, dt_rpath, dt_runpath):
+            try:
+                return self.lib_set[path]
+            except KeyError:
+                continue
+        return None
+
+
 class ELFLinkData(object):
     def __init__(self, partition, path, elf):
         self.partition = partition
@@ -563,29 +587,33 @@ class ELFLinker(object):
                 if match:
                     self.add_dep(match.group(1), match.group(2))
 
-    def _resolve_deps_lib_set(self, lib_set, system_lib, vendor_lib):
+    def _resolve_lib_dt_needed(self, lib, resolver):
+        for dt_needed in lib.elf.dt_needed:
+            dep = resolver.resolve(dt_needed, lib.elf.dt_rpath,
+                                   lib.elf.dt_runpath)
+            if not dep:
+                candidates = list(resolver.get_candidates(
+                    dt_needed, lib.elf.dt_rpath, lib.elf.dt_runpath))
+                print('warning: {}: Missing needed library: {}  Tried: {}'
+                      .format(lib.path, dt_needed, candidates), file=sys.stderr)
+                continue
+            lib.add_dep(dep)
+
+    def _resolve_lib_deps(self, lib, resolver):
+        self._resolve_lib_dt_needed(lib, resolver)
+
+    def _resolve_lib_set_deps(self, lib_set, resolver):
         for lib in lib_set.values():
-            for dt_needed in lib.elf.dt_needed:
-                candidates = [
-                    dt_needed,
-                    os.path.join(system_lib, dt_needed),
-                    os.path.join(vendor_lib, dt_needed),
-                ]
-                for candidate in candidates:
-                    dep = lib_set.get(candidate)
-                    if dep:
-                        break
-                if not dep:
-                    print('warning: {}: Missing needed library: {}  Tried: {}'
-                          .format(lib.path, dt_needed, candidates),
-                          file=sys.stderr)
-                    continue
-                lib.add_dep(dep)
+            self._resolve_lib_deps(lib, resolver)
 
     def resolve_deps(self):
-        self._resolve_deps_lib_set(self.lib32, '/system/lib', '/vendor/lib')
-        self._resolve_deps_lib_set(self.lib64, '/system/lib64',
-                                   '/vendor/lib64')
+        self._resolve_lib_set_deps(
+                self.lib32,
+                ELFResolver(self.lib32, ['/system/lib', '/vendor/lib']))
+
+        self._resolve_lib_set_deps(
+                self.lib64,
+                ELFResolver(self.lib64, ['/system/lib64', '/vendor/lib64']))
 
     def compute_vndk_libs(self, generic_refs, banned_libs):
         vndk_core = set()
