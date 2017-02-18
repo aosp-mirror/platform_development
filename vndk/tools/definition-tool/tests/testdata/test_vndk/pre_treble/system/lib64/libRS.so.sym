@@ -1,0 +1,8 @@
+EI_CLASS	64
+EI_DATA		Little-Endian
+E_MACHINE	EM_AARCH64
+DT_NEEDED	libdl.so
+EXP_SYMBOL	rsContextCreate
+IMP_SYMBOL	dlclose
+IMP_SYMBOL	dlopen
+IMP_SYMBOL	dlsym
