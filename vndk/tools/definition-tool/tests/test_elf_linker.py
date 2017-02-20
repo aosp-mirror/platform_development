@@ -163,6 +163,56 @@ class ELFLinkerTest(unittest.TestCase):
                           '/system/lib64/libdl.so'],
                          self._get_paths_from_nodes(node.deps))
 
+    def test_linked_symbols(self):
+        gb = self._create_normal_graph()
+        graph = gb.graph
+
+        # Check the unresolved symbols.
+        for lib_set in (graph.lib32, graph.lib64):
+            for lib in lib_set.values():
+                self.assertEqual(set(), lib.unresolved_symbols)
+
+        # Check the linked symbols.
+        for lib in ('lib', 'lib64'):
+            libdl = graph.map_path_to_lib('/system/' + lib + '/libdl.so')
+            libm = graph.map_path_to_lib('/system/' + lib + '/libm.so')
+            libc = graph.map_path_to_lib('/system/' + lib + '/libc.so')
+            libRS = graph.map_path_to_lib('/system/' + lib + '/libRS.so')
+            libcutils = \
+                    graph.map_path_to_lib('/system/' + lib + '/libcutils.so')
+            libEGL = graph.map_path_to_lib('/vendor/' + lib + '/libEGL.so')
+
+            # Check the linked symbols for libc.so.
+            self.assertIs(libdl, libc.linked_symbols['dlclose'])
+            self.assertIs(libdl, libc.linked_symbols['dlopen'])
+            self.assertIs(libm, libc.linked_symbols['cos'])
+            self.assertIs(libm, libc.linked_symbols['sin'])
+
+            # Check the linked symbols for libRS.so.
+            self.assertIs(libdl, libRS.linked_symbols['dlclose'])
+            self.assertIs(libdl, libRS.linked_symbols['dlopen'])
+            self.assertIs(libdl, libRS.linked_symbols['dlsym'])
+
+            # Check the linked symbols for libcutils.so.
+            self.assertIs(libdl, libcutils.linked_symbols['dlclose'])
+            self.assertIs(libdl, libcutils.linked_symbols['dlopen'])
+            self.assertIs(libc, libcutils.linked_symbols['fclose'])
+            self.assertIs(libc, libcutils.linked_symbols['fopen'])
+
+            # Check the linked symbols for libEGL.so.
+            self.assertIs(libc, libEGL.linked_symbols['fclose'])
+            self.assertIs(libc, libEGL.linked_symbols['fopen'])
+
+    def test_unresolved_symbols(self):
+        gb = GraphBuilder()
+        gb.add_lib(PT_SYSTEM, ELF.ELFCLASS64, 'libfoo', dt_needed=[],
+                   exported_symbols={'foo', 'bar'},
+                   imported_symbols={'__does_not_exist'})
+        gb.resolve()
+
+        lib = gb.graph.map_path_to_lib('/system/lib64/libfoo.so')
+        self.assertEqual({'__does_not_exist'}, lib.unresolved_symbols)
+
     def test_users(self):
         gb = self._create_normal_graph()
         graph = gb.graph

@@ -546,6 +546,8 @@ class ELFLinkData(object):
         self.deps = set()
         self.users = set()
         self.is_ndk = NDK_LIBS.is_ndk(path)
+        self.unresolved_symbols = set()
+        self.linked_symbols = dict()
 
     def add_dep(self, dst):
         self.deps.add(dst)
@@ -631,7 +633,24 @@ class ELFLinker(object):
                 if match:
                     self.add_dep(match.group(1), match.group(2))
 
+    def _find_exported_symbol(self, symbol, libs):
+        """Find the shared library with the exported symbol."""
+        for lib in libs:
+            if symbol in lib.elf.exported_symbols:
+                return lib
+        return None
+
+    def _resolve_lib_imported_symbols(self, lib, imported_libs):
+        """Resolve the imported symbols in a library."""
+        for symbol in lib.elf.imported_symbols:
+            imported_lib = self._find_exported_symbol(symbol, imported_libs)
+            if imported_lib:
+                lib.linked_symbols[symbol] = imported_lib
+            else:
+                lib.unresolved_symbols.add(symbol)
+
     def _resolve_lib_dt_needed(self, lib, resolver):
+        imported_libs = []
         for dt_needed in lib.elf.dt_needed:
             dep = resolver.resolve(dt_needed, lib.elf.dt_rpath,
                                    lib.elf.dt_runpath)
@@ -642,9 +661,12 @@ class ELFLinker(object):
                       .format(lib.path, dt_needed, candidates), file=sys.stderr)
                 continue
             lib.add_dep(dep)
+            imported_libs.append(dep)
+        return imported_libs
 
     def _resolve_lib_deps(self, lib, resolver):
-        self._resolve_lib_dt_needed(lib, resolver)
+        imported_libs = self._resolve_lib_dt_needed(lib, resolver)
+        self._resolve_lib_imported_symbols(lib, imported_libs)
 
     def _resolve_lib_set_deps(self, lib_set, resolver):
         for lib in lib_set.values():
