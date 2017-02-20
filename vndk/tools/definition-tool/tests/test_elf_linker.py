@@ -203,6 +203,62 @@ class ELFLinkerTest(unittest.TestCase):
         self.assertEqual([], self._get_paths_from_nodes(vndk_indirect))
         self.assertEqual([], self._get_paths_from_nodes(vndk_ext))
 
+    def test_compute_vndk_stable(self):
+        gb = GraphBuilder()
+
+        # HIDL libraries.
+        gb.add_multilib(PT_SYSTEM, 'libhidlbase', extra_dir='vndk-stable')
+        gb.add_multilib(PT_SYSTEM, 'libhidltransport', extra_dir='vndk-stable')
+        gb.add_multilib(PT_SYSTEM, 'libhidlmemory', extra_dir='vndk-stable')
+        gb.add_multilib(PT_SYSTEM, 'libfmp', extra_dir='vndk-stable')
+        gb.add_multilib(PT_SYSTEM, 'libhwbinder', extra_dir='vndk-stable')
+
+        # UI libraries.
+        # TODO: Add libui.so here.
+
+        gb.resolve()
+
+        # Compute VNDK-stable.
+        vndk_stable = set(
+                lib.path for lib in gb.graph.compute_vndk_stable(False))
+
+        for lib in ('lib', 'lib64'):
+            # Check HIDL libraries.
+            self.assertIn('/system/' + lib + '/vndk-stable/libhidlbase.so',
+                          vndk_stable)
+            self.assertIn('/system/' + lib + '/vndk-stable/libhidltransport.so',
+                          vndk_stable)
+            self.assertIn('/system/' + lib + '/vndk-stable/libhidlmemory.so',
+                          vndk_stable)
+            self.assertIn('/system/' + lib + '/vndk-stable/libfmp.so',
+                          vndk_stable)
+            self.assertIn('/system/' + lib + '/vndk-stable/libhwbinder.so',
+                          vndk_stable)
+
+            # TODO: Check libui.so here.
+
+    def test_compute_vndk_stable_closure(self):
+        gb = GraphBuilder()
+
+        libc = gb.add_lib(PT_SYSTEM, ELF.ELFCLASS64, 'libc')
+
+        libhidlbase = gb.add_lib(PT_SYSTEM, ELF.ELFCLASS64, 'libhidlbase',
+                                 dt_needed=['libfoo.so'],
+                                 extra_dir='vndk-stable')
+
+        libfoo = gb.add_lib(PT_SYSTEM, ELF.ELFCLASS64, 'libfoo')
+
+        gb.resolve()
+
+        # Compute VNDK-stable.
+        vndk_stable = gb.graph.compute_vndk_stable(False)
+        vndk_stable_closure = gb.graph.compute_vndk_stable(True)
+
+        self.assertSetEqual({libhidlbase}, vndk_stable)
+        self.assertSetEqual({libhidlbase, libfoo}, vndk_stable_closure)
+        self.assertNotIn(libc, vndk_stable)
+        self.assertNotIn(libc, vndk_stable_closure)
+
     def test_compute_sp_hal(self):
         gb = GraphBuilder()
 
@@ -239,7 +295,7 @@ class ELFLinkerTest(unittest.TestCase):
         gb.resolve()
 
         # Compute SP-HAL.
-        sp_hals = set(lib.path for lib in gb.graph.compute_sp_hal(False))
+        sp_hals = set(lib.path for lib in gb.graph.compute_sp_hal(set(), False))
 
         for lib in ('lib', 'lib64'):
             # Check HIDL SP-HAL implementation.

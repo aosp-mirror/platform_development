@@ -679,7 +679,29 @@ class ELFLinker(object):
 
         return libs
 
-    def compute_sp_hal(self, closure):
+    def compute_vndk_stable(self, closure):
+        """Find all vndk stable libraries."""
+
+        path_patterns = (
+            # HIDL libraries used by android.hardware.graphics.mapper@2.0-impl.
+            '^.*/libhidlbase\\.so$',
+            '^.*/libhidltransport\\.so$',
+            '^.*/libhidlmemory\\.so$',
+            '^.*/libfmp\\.so$',
+            '^.*/libhwbinder\\.so$',
+
+            # UI libraries used by libEGL.
+            #'^.*/libui\\.so$',
+            #'^.*/libnativewindow\\.so$',
+        )
+
+        def is_excluded_libs(lib):
+            return lib.is_ndk
+
+        return self.compute_matched_libs(path_patterns, closure,
+                                         is_excluded_libs)
+
+    def compute_sp_hal(self, vndk_stable, closure):
         """Find all same-process HALs."""
 
         path_patterns = (
@@ -699,7 +721,7 @@ class ELFLinker(object):
         )
 
         def is_excluded_libs(lib):
-            return lib.is_ndk
+            return lib.is_ndk or lib in vndk_stable
 
         return self.compute_matched_libs(path_patterns, closure,
                                          is_excluded_libs)
@@ -1127,6 +1149,28 @@ class DepsClosureCommand(ELFGraphCommand):
         return 0
 
 
+class VNDKStableCommand(ELFGraphCommand):
+    def __init__(self):
+        super(VNDKStableCommand, self).__init__(
+                'vndk-stable', help='Find transitive closure of VNDK stable')
+
+    def add_argparser_options(self, parser):
+        super(VNDKStableCommand, self).add_argparser_options(parser)
+
+        parser.add_argument('--closure', action='store_true',
+                            help='show the closure')
+
+    def main(self, args):
+        graph = ELFLinker.create(args.system, args.system_dir_as_vendor,
+                                 args.vendor, args.vendor_dir_as_system,
+                                 args.load_extra_deps)
+
+        vndk_stable = graph.compute_vndk_stable(closure=args.closure)
+        for lib in sorted_lib_path_list(vndk_stable):
+            print(lib)
+        return 0
+
+
 class SpHalCommand(ELFGraphCommand):
     def __init__(self):
         super(SpHalCommand, self).__init__(
@@ -1143,7 +1187,8 @@ class SpHalCommand(ELFGraphCommand):
                                  args.vendor, args.vendor_dir_as_system,
                                  args.load_extra_deps)
 
-        sp_hals = graph.compute_sp_hal(closure=args.closure)
+        vndk_stable = graph.compute_vndk_stable(closure=True)
+        sp_hals = graph.compute_sp_hal(vndk_stable, closure=args.closure)
         for lib in sorted_lib_path_list(sp_hals):
             print(lib)
         return 0
@@ -1165,6 +1210,7 @@ def main():
     register_subcmd(DepsCommand())
     register_subcmd(DepsClosureCommand())
     register_subcmd(SpHalCommand())
+    register_subcmd(VNDKStableCommand())
 
     args = parser.parse_args()
     if not args.subcmd:
