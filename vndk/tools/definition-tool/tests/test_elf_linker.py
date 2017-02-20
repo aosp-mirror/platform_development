@@ -11,7 +11,8 @@ import unittest
 from compat import StringIO
 from vndk_definition_tool import ELF, ELFLinker, PT_SYSTEM, PT_VENDOR
 
-class ELFLinkerTest(unittest.TestCase):
+
+class GraphBuilder(object):
     _PARTITION_NAMES = {
         PT_SYSTEM: 'system',
         PT_VENDOR: 'vendor',
@@ -22,60 +23,96 @@ class ELFLinkerTest(unittest.TestCase):
         ELF.ELFCLASS64: 'lib64',
     }
 
-    def _create_elf(self, partition, klass, name, dt_needed, exported_symbols):
+    def __init__(self):
+        self.graph = ELFLinker()
+
+    def add_lib(self, partition, klass, name, dt_needed, exported_symbols,
+                imported_symbols):
+        """Create and add a shared library to ELFLinker."""
+
         elf = ELF(klass, ELF.ELFDATA2LSB, dt_needed=dt_needed,
-                  exported_symbols=exported_symbols)
+                  exported_symbols=exported_symbols,
+                  imported_symbols=imported_symbols)
         setattr(self, 'elf' + elf.elf_class_name + '_' + name, elf)
 
         path = os.path.join('/', self._PARTITION_NAMES[partition],
                             self._LIB_DIRS[klass], name + '.so')
         self.graph.add(partition, path, elf)
 
-    def _create_elfs(self, partition, name, dt_needed, exported_symbols):
-        for klass in (ELF.ELFCLASS32, ELF.ELFCLASS64):
-            self._create_elf(partition, klass, name, dt_needed,
-                             exported_symbols)
+    def add_multilib(self, partition, name, dt_needed, exported_symbols,
+                     imported_symbols):
+        """Add 32-bit / 64-bit shared libraries to ELFLinker."""
 
-    def setUp(self):
-        self.graph = ELFLinker()
-        self._create_elfs(PT_SYSTEM, 'libdl', dt_needed=[],
-                          exported_symbols={'dlclose', 'dlopen', 'dlsym'})
-        self._create_elfs(PT_SYSTEM, 'libm', dt_needed=[],
-                          exported_symbols={'cos', 'sin'})
-        self._create_elfs(PT_SYSTEM, 'libc', dt_needed=['libdl.so', 'libm.so'],
-                          exported_symbols={'fclose', 'fopen', 'fread'})
-        self._create_elfs(PT_SYSTEM, 'libRS', dt_needed=['libdl.so'],
-                          exported_symbols={'rsContextCreate'})
-        self._create_elfs(PT_SYSTEM, 'libcutils',
-                          dt_needed=['libc.so', 'libdl.so'],
-                          exported_symbols={})
-        self._create_elfs(PT_VENDOR, 'libEGL',
-                          dt_needed=['libc.so', 'libcutils.so', 'libdl.so'],
-                          exported_symbols={'eglGetDisplay'})
+        for klass in (ELF.ELFCLASS32, ELF.ELFCLASS64):
+            self.add_lib(partition, klass, name, dt_needed,
+                         exported_symbols, imported_symbols)
+
+    def resolve(self):
         self.graph.resolve_deps()
 
-    def test_map_path_to_lib(self):
-        node = self.graph.map_path_to_lib('/system/lib/libc.so')
-        self.assertEqual(self.elf32_libc, node.elf)
-        self.assertEqual('/system/lib/libc.so', node.path)
 
-        node = self.graph.map_path_to_lib('/system/lib64/libdl.so')
-        self.assertEqual(self.elf64_libdl, node.elf)
-        self.assertEqual('/system/lib64/libdl.so', node.path)
+class ELFLinkerTest(unittest.TestCase):
+    def _create_normal_graph(self):
+        gb = GraphBuilder()
 
-        node = self.graph.map_path_to_lib('/vendor/lib64/libEGL.so')
-        self.assertEqual(self.elf64_libEGL, node.elf)
-        self.assertEqual('/vendor/lib64/libEGL.so', node.path)
+        gb.add_multilib(PT_SYSTEM, 'libdl', dt_needed=[],
+                        exported_symbols={'dlclose', 'dlopen', 'dlsym'},
+                        imported_symbols={})
 
-        self.assertEqual(None, self.graph.map_path_to_lib('/no/such/path.so'))
+        gb.add_multilib(PT_SYSTEM, 'libm', dt_needed=[],
+                        exported_symbols={'cos', 'sin'},
+                        imported_symbols={})
+
+        gb.add_multilib(PT_SYSTEM, 'libc', dt_needed=['libdl.so', 'libm.so'],
+                        exported_symbols={'fclose', 'fopen', 'fread'},
+                        imported_symbols={'dlclose', 'dlopen', 'cos', 'sin'})
+
+        gb.add_multilib(PT_SYSTEM, 'libRS', dt_needed=['libdl.so'],
+                        exported_symbols={'rsContextCreate'},
+                        imported_symbols={'dlclose', 'dlopen', 'dlsym'})
+
+        gb.add_multilib(PT_SYSTEM, 'libcutils',
+                        dt_needed=['libc.so', 'libdl.so'],
+                        exported_symbols={},
+                        imported_symbols={'dlclose', 'dlopen', 'fclose',
+                                          'fopen'})
+
+        gb.add_multilib(PT_VENDOR, 'libEGL',
+                        dt_needed=['libc.so', 'libcutils.so', 'libdl.so'],
+                        exported_symbols={'eglGetDisplay'},
+                        imported_symbols={'fclose', 'fopen'})
+
+        gb.resolve()
+        return gb
 
     def _get_paths_from_nodes(self, nodes):
         return sorted([node.path for node in nodes])
 
+    def test_map_path_to_lib(self):
+        gb = self._create_normal_graph()
+        graph = gb.graph
+
+        node = graph.map_path_to_lib('/system/lib/libc.so')
+        self.assertEqual(gb.elf32_libc, node.elf)
+        self.assertEqual('/system/lib/libc.so', node.path)
+
+        node = graph.map_path_to_lib('/system/lib64/libdl.so')
+        self.assertEqual(gb.elf64_libdl, node.elf)
+        self.assertEqual('/system/lib64/libdl.so', node.path)
+
+        node = graph.map_path_to_lib('/vendor/lib64/libEGL.so')
+        self.assertEqual(gb.elf64_libEGL, node.elf)
+        self.assertEqual('/vendor/lib64/libEGL.so', node.path)
+
+        self.assertEqual(None, graph.map_path_to_lib('/no/such/path.so'))
+
     def test_map_paths_to_libs(self):
+        gb = self._create_normal_graph()
+        graph = gb.graph
+
         bad = []
         paths = ['/system/lib/libc.so', '/system/lib/libdl.so']
-        nodes = self.graph.map_paths_to_libs(paths,  lambda x: bad.append(x))
+        nodes = graph.map_paths_to_libs(paths, bad.append)
 
         self.assertEqual([], bad)
         self.assertEqual(2, len(nodes))
@@ -83,56 +120,76 @@ class ELFLinkerTest(unittest.TestCase):
 
         bad = []
         paths = ['/no/such/path.so', '/system/lib64/libdl.so']
-        nodes = self.graph.map_paths_to_libs(paths, lambda x: bad.append(x))
+        nodes = graph.map_paths_to_libs(paths, bad.append)
         self.assertEqual(['/no/such/path.so'], bad)
         self.assertEqual(['/system/lib64/libdl.so'],
                          self._get_paths_from_nodes(nodes))
 
     def test_elf_class(self):
-        self.assertEqual(6, len(self.graph.lib32))
-        self.assertEqual(6, len(self.graph.lib64))
+        gb = self._create_normal_graph()
+        graph = gb.graph
+        self.assertEqual(6, len(graph.lib32))
+        self.assertEqual(6, len(graph.lib64))
 
     def test_partitions(self):
-        self.assertEqual(10, len(self.graph.lib_pt[PT_SYSTEM]))
-        self.assertEqual(2, len(self.graph.lib_pt[PT_VENDOR]))
+        gb = self._create_normal_graph()
+        graph = gb.graph
+        self.assertEqual(10, len(gb.graph.lib_pt[PT_SYSTEM]))
+        self.assertEqual(2, len(gb.graph.lib_pt[PT_VENDOR]))
 
     def test_deps(self):
-        libc_32 = self.graph.map_path_to_lib('/system/lib/libc.so')
+        gb = self._create_normal_graph()
+        graph = gb.graph
+
+        # Check the dependencies of libc.so.
+        node = gb.graph.map_path_to_lib('/system/lib/libc.so')
         self.assertEqual(['/system/lib/libdl.so', '/system/lib/libm.so'],
-                         self._get_paths_from_nodes(libc_32.deps))
+                         self._get_paths_from_nodes(node.deps))
 
-        libRS_64 = self.graph.map_path_to_lib('/system/lib64/libRS.so')
+        # Check the dependencies of libRS.so.
+        node = gb.graph.map_path_to_lib('/system/lib64/libRS.so')
         self.assertEqual(['/system/lib64/libdl.so'],
-                         self._get_paths_from_nodes(libRS_64.deps))
+                         self._get_paths_from_nodes(node.deps))
 
-        libEGL_64 = self.graph.map_path_to_lib('/vendor/lib64/libEGL.so')
+        # Check the dependencies of libEGL.so.
+        node = gb.graph.map_path_to_lib('/vendor/lib64/libEGL.so')
         self.assertEqual(['/system/lib64/libc.so', '/system/lib64/libcutils.so',
                           '/system/lib64/libdl.so'],
-                         self._get_paths_from_nodes(libEGL_64.deps))
+                         self._get_paths_from_nodes(node.deps))
 
     def test_users(self):
-        libc_32 = self.graph.map_path_to_lib('/system/lib/libc.so')
-        self.assertEqual(['/system/lib/libcutils.so', '/vendor/lib/libEGL.so'],
-                         self._get_paths_from_nodes(libc_32.users))
+        gb = self._create_normal_graph()
+        graph = gb.graph
 
-        libdl_32 = self.graph.map_path_to_lib('/system/lib/libdl.so')
+        # Check the users of libc.so.
+        node = graph.map_path_to_lib('/system/lib/libc.so')
+        self.assertEqual(['/system/lib/libcutils.so', '/vendor/lib/libEGL.so'],
+                         self._get_paths_from_nodes(node.users))
+
+        # Check the users of libdl.so.
+        node = graph.map_path_to_lib('/system/lib/libdl.so')
         self.assertEqual(['/system/lib/libRS.so', '/system/lib/libc.so',
                           '/system/lib/libcutils.so', '/vendor/lib/libEGL.so'],
-                         self._get_paths_from_nodes(libdl_32.users))
+                         self._get_paths_from_nodes(node.users))
 
-        libRS_64 = self.graph.map_path_to_lib('/system/lib64/libRS.so')
-        self.assertEqual([], self._get_paths_from_nodes(libRS_64.users))
+        # Check the users of libRS.so.
+        node = graph.map_path_to_lib('/system/lib64/libRS.so')
+        self.assertEqual([], self._get_paths_from_nodes(node.users))
 
-        libEGL_64 = self.graph.map_path_to_lib('/vendor/lib64/libEGL.so')
-        self.assertEqual([], self._get_paths_from_nodes(libEGL_64.users))
+        # Check the users of libEGL.so.
+        node = graph.map_path_to_lib('/vendor/lib64/libEGL.so')
+        self.assertEqual([], self._get_paths_from_nodes(node.users))
 
     def test_compute_vndk_libs(self):
+        gb = self._create_normal_graph()
+        graph = gb.graph
+
         class MockBannedLibs(object):
             def get(self, name):
                 return None
 
         vndk_core, vndk_indirect, vndk_ext = \
-                self.graph.compute_vndk_libs(None, MockBannedLibs())
+                graph.compute_vndk_libs(None, MockBannedLibs())
 
         self.assertEqual(['/system/lib/libcutils.so',
                           '/system/lib64/libcutils.so'],
