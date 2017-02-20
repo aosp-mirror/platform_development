@@ -26,12 +26,16 @@ class GraphBuilder(object):
     def __init__(self):
         self.graph = ELFLinker()
 
-    def add_lib(self, partition, klass, name, dt_needed, exported_symbols,
-                imported_symbols):
+    def add_lib(self, partition, klass, name, dt_needed=[],
+                exported_symbols=set(), imported_symbols=set(),
+                extra_dir=None):
         """Create and add a shared library to ELFLinker."""
 
         lib_dir = os.path.join('/', self._PARTITION_NAMES[partition],
                                self._LIB_DIRS[klass])
+        if extra_dir:
+            lib_dir = os.path.join(lib_dir, extra_dir)
+
         path = os.path.join(lib_dir, name + '.so')
 
         elf = ELF(klass, ELF.ELFDATA2LSB, dt_needed=dt_needed,
@@ -42,14 +46,15 @@ class GraphBuilder(object):
         setattr(self, name + '_' + elf.elf_class_name, node)
         return node
 
-    def add_multilib(self, partition, name, dt_needed, exported_symbols,
-                     imported_symbols):
+    def add_multilib(self, partition, name, dt_needed=[],
+                     exported_symbols=set(), imported_symbols=set(),
+                     extra_dir=None):
         """Add 32-bit / 64-bit shared libraries to ELFLinker."""
         return (
             self.add_lib(partition, ELF.ELFCLASS32, name, dt_needed,
-                         exported_symbols, imported_symbols),
+                         exported_symbols, imported_symbols, extra_dir),
             self.add_lib(partition, ELF.ELFCLASS64, name, dt_needed,
-                         exported_symbols, imported_symbols)
+                         exported_symbols, imported_symbols, extra_dir)
         )
 
     def resolve(self):
@@ -60,13 +65,10 @@ class ELFLinkerTest(unittest.TestCase):
     def _create_normal_graph(self):
         gb = GraphBuilder()
 
-        gb.add_multilib(PT_SYSTEM, 'libdl', dt_needed=[],
-                        exported_symbols={'dlclose', 'dlopen', 'dlsym'},
-                        imported_symbols={})
+        gb.add_multilib(PT_SYSTEM, 'libdl',
+                        exported_symbols={'dlclose', 'dlopen', 'dlsym'})
 
-        gb.add_multilib(PT_SYSTEM, 'libm', dt_needed=[],
-                        exported_symbols={'cos', 'sin'},
-                        imported_symbols={})
+        gb.add_multilib(PT_SYSTEM, 'libm', exported_symbols={'cos', 'sin'})
 
         gb.add_multilib(PT_SYSTEM, 'libc', dt_needed=['libdl.so', 'libm.so'],
                         exported_symbols={'fclose', 'fopen', 'fread'},
@@ -78,7 +80,6 @@ class ELFLinkerTest(unittest.TestCase):
 
         gb.add_multilib(PT_SYSTEM, 'libcutils',
                         dt_needed=['libc.so', 'libdl.so'],
-                        exported_symbols={},
                         imported_symbols={'dlclose', 'dlopen', 'fclose',
                                           'fopen'})
 
@@ -201,6 +202,113 @@ class ELFLinkerTest(unittest.TestCase):
                          self._get_paths_from_nodes(vndk_core))
         self.assertEqual([], self._get_paths_from_nodes(vndk_indirect))
         self.assertEqual([], self._get_paths_from_nodes(vndk_ext))
+
+    def test_compute_sp_hal(self):
+        gb = GraphBuilder()
+
+        # HIDL SP-HAL implementation.
+        gb.add_multilib(PT_SYSTEM, 'gralloc.default', extra_dir='hw')
+        gb.add_multilib(PT_SYSTEM, 'gralloc.chipset', extra_dir='hw')
+        gb.add_multilib(PT_SYSTEM, 'android.hardware.graphics.mapper@2.0-impl',
+                        extra_dir='hw')
+
+        # NDK loader libraries should not be considered as SP-HALs.
+        gb.add_multilib(PT_SYSTEM, 'libvulkan')
+        gb.add_multilib(PT_SYSTEM, 'libEGL')
+        gb.add_multilib(PT_SYSTEM, 'libGLESv1_CM')
+        gb.add_multilib(PT_SYSTEM, 'libGLESv2')
+        gb.add_multilib(PT_SYSTEM, 'libGLESv3')
+
+        # OpenGL implementation.
+        gb.add_multilib(PT_VENDOR, 'libEGL_chipset', extra_dir='egl')
+        gb.add_multilib(PT_VENDOR, 'libGLESv1_CM_chipset', extra_dir='egl')
+        gb.add_multilib(PT_VENDOR, 'libGLESv2_chipset', extra_dir='egl')
+        gb.add_multilib(PT_VENDOR, 'libGLESv3_chipset', extra_dir='egl')
+
+        # Renderscript implementation.
+        gb.add_multilib(PT_VENDOR, 'libRSDriver_chipset')
+        gb.add_multilib(PT_VENDOR, 'libPVRRS')
+
+        # Vulkan implementation.
+        gb.add_multilib(PT_VENDOR, 'vulkan.chipset', extra_dir='hw')
+
+        # Some un-related libraries.
+        gb.add_multilib(PT_SYSTEM, 'libfoo')
+        gb.add_multilib(PT_VENDOR, 'libfoo')
+
+        gb.resolve()
+
+        # Compute SP-HAL.
+        sp_hals = set(lib.path for lib in gb.graph.compute_sp_hal(False))
+
+        for lib in ('lib', 'lib64'):
+            # Check HIDL SP-HAL implementation.
+            self.assertIn('/system/' + lib + '/hw/gralloc.default.so', sp_hals)
+            self.assertIn('/system/' + lib + '/hw/gralloc.chipset.so', sp_hals)
+            self.assertIn('/system/' + lib + '/hw/'
+                          'android.hardware.graphics.mapper@2.0-impl.so',
+                          sp_hals)
+
+
+            # Check that NDK loaders are not SP-HALs.
+            self.assertNotIn('/system/' + lib + '/libvulkan.so', sp_hals)
+            self.assertNotIn('/system/' + lib + '/libEGL.so', sp_hals)
+            self.assertNotIn('/system/' + lib + '/libGLESv1_CM.so', sp_hals)
+            self.assertNotIn('/system/' + lib + '/libGLESv2.so', sp_hals)
+            self.assertNotIn('/system/' + lib + '/libGLESv3.so', sp_hals)
+
+            # Check that OpenGL implementations are SP-HALs.
+            self.assertIn('/vendor/' + lib + '/egl/libEGL_chipset.so', sp_hals)
+            self.assertIn('/vendor/' + lib + '/egl/libGLESv1_CM_chipset.so',
+                          sp_hals)
+            self.assertIn('/vendor/' + lib + '/egl/libGLESv2_chipset.so',
+                          sp_hals)
+            self.assertIn('/vendor/' + lib + '/egl/libGLESv3_chipset.so',
+                          sp_hals)
+
+            # Check that Renderscript implementations are SP-HALs.
+            self.assertIn('/vendor/' + lib + '/libRSDriver_chipset.so', sp_hals)
+            self.assertIn('/vendor/' + lib + '/libPVRRS.so', sp_hals)
+
+            # Check that vulkan implementation are SP-HALs.
+            self.assertIn('/vendor/' + lib + '/libPVRRS.so', sp_hals)
+
+            # Check that un-related libraries are not SP-HALs.
+            self.assertNotIn('/system/' + lib + '/libfoo.so', sp_hals)
+            self.assertNotIn('/vendor/' + lib + '/libfoo.so', sp_hals)
+
+    def test_compute_sp_hal_closure(self):
+        gb = GraphBuilder()
+
+        libc = gb.add_lib(PT_SYSTEM, ELF.ELFCLASS64, 'libc')
+
+        libhidlbase = gb.add_lib(PT_SYSTEM, ELF.ELFCLASS64, 'libhidlbase')
+
+        libhidltransport = gb.add_lib(PT_SYSTEM, ELF.ELFCLASS64,
+                                      'libhidltransport')
+
+        gralloc_mapper = gb.add_lib(
+                PT_VENDOR, ELF.ELFCLASS64,
+                name='android.hardware.graphics.mapper@2.0-impl',
+                dt_needed=['libhidlbase.so', 'libhidltransport.so',
+                           'libc.so', 'gralloc_vnd.so'],
+                extra_dir='sameprocess')
+
+        gralloc_vnd = gb.add_lib(PT_VENDOR, ELF.ELFCLASS64, 'gralloc_vnd')
+
+        gb.resolve()
+
+        vndk_stable = {libhidlbase, libhidltransport}
+
+        sp_hal = gb.graph.compute_sp_hal(vndk_stable, closure=False)
+        sp_hal_closure = gb.graph.compute_sp_hal(vndk_stable, closure=True)
+
+        self.assertSetEqual({gralloc_mapper}, sp_hal)
+
+        self.assertSetEqual({gralloc_mapper, gralloc_vnd}, sp_hal_closure)
+        self.assertNotIn(libhidlbase, sp_hal_closure)
+        self.assertNotIn(libhidltransport, sp_hal_closure)
+        self.assertNotIn(libc, sp_hal_closure)
 
 
 if __name__ == '__main__':

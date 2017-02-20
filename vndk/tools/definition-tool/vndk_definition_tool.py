@@ -659,6 +659,51 @@ class ELFLinker(object):
                 self.lib64,
                 ELFResolver(self.lib64, ['/system/lib64', '/vendor/lib64']))
 
+    def compute_matched_libs(self, path_patterns, closure=False,
+                             is_excluded_libs=None):
+        patt = re.compile('|'.join('(?:' + p + ')' for p in path_patterns))
+
+        # Find libraries with matching paths.
+        libs = set()
+        for lib_set in self.lib_pt:
+            for lib in lib_set.values():
+                if patt.match(lib.path):
+                    libs.add(lib)
+
+        if closure:
+            # Compute transitive closure.
+            if not is_excluded_libs:
+                def is_excluded_libs(lib):
+                    return False
+            libs = self.compute_closure(libs, is_excluded_libs)
+
+        return libs
+
+    def compute_sp_hal(self, closure):
+        """Find all same-process HALs."""
+
+        path_patterns = (
+            # OpenGL-related
+            '^/vendor/.*/libEGL_.*\\.so$',
+            '^/vendor/.*/libGLESv1_CM_.*\\.so$',
+            '^/vendor/.*/libGLESv2_.*\\.so$',
+            '^/vendor/.*/libGLESv3_.*\\.so$',
+            # Vulkan
+            '^/vendor/.*/vulkan.*\\.so$',
+            # libRSDriver
+            '^/vendor/.*/libRSDriver.*\\.so$',
+            '^/vendor/.*/libPVRRS\\.so$',
+            # Gralloc mapper
+            '^.*/gralloc\\..*\\.so$',
+            '^.*/android\\.hardware\\.graphics\\.mapper@\\d+\\.\\d+-impl\\.so$',
+        )
+
+        def is_excluded_libs(lib):
+            return lib.is_ndk
+
+        return self.compute_matched_libs(path_patterns, closure,
+                                         is_excluded_libs)
+
     def compute_vndk_libs(self, generic_refs, banned_libs):
         vndk_core = set()
         vndk_ext = set()
@@ -1098,39 +1143,7 @@ class SpHalCommand(ELFGraphCommand):
                                  args.vendor, args.vendor_dir_as_system,
                                  args.load_extra_deps)
 
-        # Find SP HALs.
-        name_patterns = (
-            # OpenGL-related
-            '^/vendor/.*/libEGL_.*\\.so$',
-            '^/vendor/.*/libGLESv1_CM_.*\\.so$',
-            '^/vendor/.*/libGLESv2_.*\\.so$',
-            '^/vendor/.*/libGLESv3_.*\\.so$',
-            # Vulkan
-            '^/vendor/.*/vulkan.*\\.so$',
-            # libRSDriver
-            '^/vendor/.*/libRSDriver.*\\.so$',
-            '^/vendor/.*/libPVRRS\\.so$',
-            # Gralloc mapper
-            '^.*/gralloc\\..*\\.so$',
-            '^.*/android\\.hardware\\.graphics\\.mapper@\\d+\\.\\d+-impl\\.so$',
-        )
-
-        patt = re.compile('|'.join('(?:' + p + ')' for p in name_patterns))
-
-        # Find root/excluded libraries by their paths.
-        sp_hals = set()
-        for lib_set in graph.lib_pt:
-            for lib in lib_set.values():
-                if patt.match(lib.path):
-                    sp_hals.add(lib)
-
-        # Compute the closure (if specified).
-        if args.closure:
-            def is_excluded_libs(lib):
-                return lib.is_ndk
-            sp_hals = graph.compute_closure(sp_hals, is_excluded_libs)
-
-        # Print the result.
+        sp_hals = graph.compute_sp_hal(closure=args.closure)
         for lib in sorted_lib_path_list(sp_hals):
             print(lib)
         return 0
