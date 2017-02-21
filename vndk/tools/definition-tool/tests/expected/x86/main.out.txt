@@ -4,6 +4,13 @@ E_MACHINE	EM_386
 DT_NEEDED	libdl.so
 DT_NEEDED	libc.so
 DT_NEEDED	libstdc++.so
-SYMBOL		__bss_start
-SYMBOL		_edata
-SYMBOL		_end
+EXP_SYMBOL	__bss_start
+EXP_SYMBOL	_edata
+EXP_SYMBOL	_end
+IMP_SYMBOL	__cxa_atexit
+IMP_SYMBOL	__libc_init
+IMP_SYMBOL	__stack_chk_fail
+IMP_SYMBOL	dlclose
+IMP_SYMBOL	dlopen
+IMP_SYMBOL	dlsym
+IMP_SYMBOL	puts

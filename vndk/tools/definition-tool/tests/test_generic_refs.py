@@ -57,14 +57,14 @@ class GenericRefsTest(unittest.TestCase):
         self.assertIn('/system/lib64/libc.so', g.refs)
         self.assertIn('/system/lib64/libm.so', g.refs)
 
-        self.assertEqual(['fclose', 'fopen', 'fread', 'fwrite'],
+        self.assertEqual({'fclose', 'fopen', 'fread', 'fwrite'},
                          g.refs['/system/lib/libc.so'])
-        self.assertEqual(['fclose', 'fopen', 'fread', 'fwrite'],
+        self.assertEqual({'fclose', 'fopen', 'fread', 'fwrite'},
                          g.refs['/system/lib64/libc.so'])
 
-        self.assertEqual(['cos', 'sin', 'tan'],
+        self.assertEqual({'cos', 'sin', 'tan'},
                          g.refs['/system/lib/libm.so'])
-        self.assertEqual(['cos', 'sin', 'tan'],
+        self.assertEqual({'cos', 'sin', 'tan'},
                          g.refs['/system/lib64/libm.so'])
 
 
@@ -80,11 +80,11 @@ class GenericRefsTest(unittest.TestCase):
                 self.path = path
                 self.elf = MockELF(exported_symbols)
 
-        libc_sub = MockLib('/system/lib/libc.so', ['fclose', 'fopen', 'fread'])
+        libc_sub = MockLib('/system/lib/libc.so', {'fclose', 'fopen', 'fread'})
         libc_sup = MockLib('/system/lib/libc.so',
-                           ['fclose', 'fopen', 'fread', 'fwrite', 'open'])
+                           {'fclose', 'fopen', 'fread', 'fwrite', 'open'})
         libc_eq = MockLib('/system/lib/libc.so',
-                          ['fclose', 'fopen', 'fread', 'fwrite'])
+                          {'fclose', 'fopen', 'fread', 'fwrite'})
 
         self.assertFalse(g.is_equivalent_lib(libc_sub))
         self.assertFalse(g.is_equivalent_lib(libc_sup))

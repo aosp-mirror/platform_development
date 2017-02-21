@@ -1,7 +1,8 @@
 EI_CLASS	64
 EI_DATA		Little-Endian
 E_MACHINE	EM_AARCH64
-DT_RPATH	$ORIGIN/../lib
+DT_RUNPATH	/system/lib
+DT_RUNPATH	/vendor/lib
 DT_NEEDED	libc.so
 EXP_SYMBOL	__bss_end__
 EXP_SYMBOL	__bss_start

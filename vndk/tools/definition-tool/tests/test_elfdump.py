@@ -77,10 +77,21 @@ class ELFDumpTest(unittest.TestCase):
         target.link(out_file, [obj_file],
                     ['-shared', '-lc', '-Wl,-rpath,$ORIGIN/../lib'])
 
+        # Link libtest-rpath-multi.so.
+        out_file = os.path.join(cls.test_dir, 'libtest-rpath-multi.so')
+        target.link(out_file, [obj_file],
+                    ['-shared', '-lc', '-Wl,-rpath,/system/lib:/vendor/lib'])
+
         # Link libtest-runpath.so.
         out_file = os.path.join(cls.test_dir, 'libtest-runpath.so')
         target.link(out_file, [obj_file],
                     ['-shared', '-lc', '-Wl,-rpath,$ORIGIN/../lib',
+                     '-Wl,--enable-new-dtags'])
+
+        # Link libtest-runpath-multi.so.
+        out_file = os.path.join(cls.test_dir, 'libtest-runpath-multi.so')
+        target.link(out_file, [obj_file],
+                    ['-shared', '-lc', '-Wl,-rpath,/system/lib:/vendor/lib',
                      '-Wl,--enable-new-dtags'])
 
     def _assert_equal_to_file(self, expected_file_name, actual):
@@ -94,7 +105,7 @@ class ELFDumpTest(unittest.TestCase):
         out_file = os.path.join(self.test_dir, 'main.out')
         self._assert_equal_to_file('main.out.txt', run_elf_dump(out_file))
 
-    def _test_libtest(self, ldflags, expected_file_name, lib_name):
+    def _test_libtest(self, expected_file_name, lib_name):
         lib_file = os.path.join(self.test_dir, lib_name)
         self._assert_equal_to_file(expected_file_name, run_elf_dump(lib_file))
 
@@ -104,17 +115,21 @@ def create_target_test(target_name):
         self._test_main_out()
 
     def test_libtest(self):
-        self._test_libtest([], 'libtest.so.txt', 'libtest.so')
+        self._test_libtest('libtest.so.txt', 'libtest.so')
 
     def test_libtest_rpath(self):
-        self._test_libtest(
-                ['-Wl,-rpath,$ORIGIN/../lib'],
-                'libtest-rpath.so.txt', 'libtest-rpath.so')
+        self._test_libtest('libtest-rpath.so.txt', 'libtest-rpath.so')
+
+    def test_libtest_rpath_multi(self):
+        self._test_libtest('libtest-rpath-multi.so.txt',
+                           'libtest-rpath-multi.so')
 
     def test_libtest_runpath(self):
-        self._test_libtest(
-                ['-Wl,-rpath,$ORIGIN/../lib', '-Wl,--enable-new-dtags'],
-                'libtest-runpath.so.txt', 'libtest-runpath.so')
+        self._test_libtest('libtest-runpath.so.txt', 'libtest-runpath.so')
+
+    def test_libtest_runpath_multi(self):
+        self._test_libtest('libtest-runpath-multi.so.txt',
+                           'libtest-runpath-multi.so')
 
     class_name = 'ELFDumpTest_' + target_name
     globals()[class_name] = type(
@@ -122,7 +137,9 @@ def create_target_test(target_name):
             dict(test_main=test_main,
                  test_libtest=test_libtest,
                  test_libtest_rpath=test_libtest_rpath,
+                 test_libtest_rpath_multi=test_libtest_rpath_multi,
                  test_libtest_runpath=test_libtest_runpath,
+                 test_libtest_runpath_multi=test_libtest_runpath_multi,
                  target_name=target_name))
 
 
