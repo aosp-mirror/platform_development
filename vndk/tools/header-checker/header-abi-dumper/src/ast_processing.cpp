@@ -29,11 +29,12 @@ using abi_wrapper::ABIWrapper;
 using abi_wrapper::FunctionDeclWrapper;
 using abi_wrapper::RecordDeclWrapper;
 using abi_wrapper::EnumDeclWrapper;
+using abi_wrapper::GlobalVarDeclWrapper;
 
 HeaderASTVisitor::HeaderASTVisitor(
     abi_dump::TranslationUnit *tu_ptr,
     clang::MangleContext *mangle_contextp,
-    const clang::ASTContext *ast_contextp,
+    clang::ASTContext *ast_contextp,
     const clang::CompilerInstance *compiler_instance_p,
     const std::string &current_file_name,
     const std::set<std::string> &exported_headers,
@@ -47,7 +48,7 @@ HeaderASTVisitor::HeaderASTVisitor(
     tu_decl_(tu_decl) { }
 
 bool HeaderASTVisitor::VisitRecordDecl(const clang::RecordDecl *decl) {
-  // Forward declaration
+  // Skip forward declaration.
   if (!decl->isThisDeclarationADefinition()) {
     return true;
   }
@@ -59,11 +60,11 @@ bool HeaderASTVisitor::VisitRecordDecl(const clang::RecordDecl *decl) {
     llvm::errs() << "Getting Record Decl failed\n";
     return false;
   }
-  abi_dump::RecordDecl *record_declp = tu_ptr_->add_records();
-  if (!record_declp) {
+  abi_dump::RecordDecl *added_record_declp = tu_ptr_->add_records();
+  if (!added_record_declp) {
     return false;
   }
-  *record_declp = *wrapped_record_decl;
+  *added_record_declp = *wrapped_record_decl;
   return true;
 }
 
@@ -79,35 +80,57 @@ bool HeaderASTVisitor::VisitEnumDecl(const clang::EnumDecl *decl) {
     llvm::errs() << "Getting Enum Decl failed\n";
     return false;
   }
-  abi_dump::EnumDecl *enum_declp = tu_ptr_->add_enums();
-  if (!enum_declp) {
+  abi_dump::EnumDecl *added_enum_declp = tu_ptr_->add_enums();
+  if (!added_enum_declp) {
     return false;
   }
-  *enum_declp = *wrapped_enum_decl;
+  *added_enum_declp = *wrapped_enum_decl;
   return true;
 }
 
 bool HeaderASTVisitor::VisitFunctionDecl(const clang::FunctionDecl *decl) {
-  FunctionDeclWrapper function_decl_wrapper(
-      mangle_contextp_, ast_contextp_, cip_, decl);
+  FunctionDeclWrapper function_decl_wrapper(mangle_contextp_, ast_contextp_,
+                                            cip_, decl);
   std::unique_ptr<abi_dump::FunctionDecl> wrapped_function_decl =
       function_decl_wrapper.GetFunctionDecl();
   if (!wrapped_function_decl) {
     llvm::errs() << "Getting Function Decl failed\n";
     return false;
   }
-  abi_dump::FunctionDecl *function_declp = tu_ptr_->add_functions();
-  if (!function_declp) {
+  abi_dump::FunctionDecl *added_function_declp = tu_ptr_->add_functions();
+  if (!added_function_declp) {
     return false;
   }
-  *function_declp = *wrapped_function_decl;
+  *added_function_declp = *wrapped_function_decl;
+  return true;
+}
+
+bool HeaderASTVisitor::VisitVarDecl(const clang::VarDecl *decl) {
+  if(!decl->hasGlobalStorage()) {
+    // Non global / static variable declarations don't need to be dumped.
+    return true;
+  }
+  GlobalVarDeclWrapper global_var_decl_wrapper(mangle_contextp_, ast_contextp_,
+                                               cip_, decl);
+  std::unique_ptr<abi_dump::GlobalVarDecl> wrapped_global_var_decl =
+      global_var_decl_wrapper.GetGlobalVarDecl();
+  if (!wrapped_global_var_decl) {
+    llvm::errs() << "Getting Global Var Decl failed\n";
+    return false;
+  }
+  abi_dump::GlobalVarDecl *added_global_var_declp = tu_ptr_->add_global_vars();
+  if (!added_global_var_declp) {
+    return false;
+  }
+  *added_global_var_declp = *wrapped_global_var_decl;
   return true;
 }
 
 // We don't need to recurse into Declarations which are not exported.
 bool HeaderASTVisitor::TraverseDecl(clang::Decl *decl) {
-  if (!decl)
+  if (!decl) {
     return true;
+  }
   std::string source_file = ABIWrapper::GetDeclSourceFile(decl, cip_);
   if ((decl != tu_decl_) &&
       (exported_headers_.find(source_file) == exported_headers_.end())) {
@@ -150,5 +173,5 @@ void HeaderASTConsumer::HandleVTable(clang::CXXRecordDecl *crd) {
 
 void HeaderASTPPCallbacks::MacroDefined(const clang::Token &macro_name_tok,
                                         const clang::MacroDirective *) {
-  assert(macro_name_tok.isAnyIdentifier());
+  assert(macro_name_tok.getLength() != 0);
 }

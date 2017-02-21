@@ -2,72 +2,114 @@ syntax = "proto2";
 
 package abi_dump;
 
-message FunctionDecl {
-  // Fully Qualified Name.
-  optional string function_name = 1 [default = "NONE"];
-
-  // Mangled name.
-  optional string mangled_function_name = 2 [default = "NONE"];
-
-  optional string source_file = 3;
-  optional string parent_name = 4 [default = "NONE"];
-  repeated string template_arguments = 5 ;
-  repeated FieldDecl parameters = 6;
-  optional string return_type = 7 [default = "VOID"];
-  optional string access = 8 [default = "public"];
-  optional uint32 template_kind = 9 [default = 0];
-  optional TemplateInfo template_info = 10;
-  optional string linker_set_key = 11 [default = "NONE"];
+message BasicTypeAbi {
+  // The type's name. for eg : a record field's type.
+  required string name = 1;
+  // Optional since templated types will not have this information.
+  optional uint64 size = 2 [default = 0];
+  optional uint32 alignment = 3 [default = 0];
 }
 
-message FieldDecl {
-  optional string field_name = 1 [default = "NONE"];
-  optional string field_type = 2 [default = "VOID"];
-  optional string access = 3 [default = "public"];
-  optional bool default_arg = 4 [default = false];
-  optional string linker_set_key = 5 [default = "NONE"];
+enum AccessSpecifier {
+  public_access = 1;
+  private_access = 2;
+  protected_access = 3;
+}
+
+message BasicNamedAndTypedDecl {
+  required BasicTypeAbi type_abi = 1;
+  // The TypedDecl's name.
+  required string name = 2;
+  required AccessSpecifier access = 3;
+  optional string linker_set_key = 4;
+}
+
+message FunctionDecl {
+  required BasicNamedAndTypedDecl basic_abi = 1;
+  // Mangled name.
+  required string mangled_function_name = 2;
+  required string source_file = 3;
+  repeated ParamDecl parameters = 4;
+  optional TemplateInfo template_info = 5;
+}
+
+message ParamDecl {
+  required BasicNamedAndTypedDecl basic_abi = 1;
+  required bool default_arg = 2;
+}
+
+message RecordFieldDecl {
+  // For future additions.
+  required BasicNamedAndTypedDecl basic_abi = 1;
 }
 
 message EnumFieldDecl {
-  optional string enum_field_name = 1 [default = "NONE"];
-  optional int64 enum_field_value = 2 [default = 0]; // assumption: fits int64
-  optional string linker_set_key = 3 [default = "NONE"];
+  required BasicNamedAndTypedDecl basic_abi = 1;
+  required int64 enum_field_value = 2; // assumption: fits int64
 }
 
 message TemplateInfo {
-  repeated FieldDecl template_parameters = 1;
+  repeated TemplateElement elements = 1;
+}
+
+message TemplateElement {
+  required BasicTemplateElementAbi basic_abi = 1;
+  message BasicTemplateElementAbi {
+    optional BasicTypeAbi type_abi = 1;
+    optional string name = 2;
+    required string linker_set_key = 3;
+  }
 }
 
 message CXXBaseSpecifier {
-  optional string fully_qualified_name = 1 [default = "NONE"];
-  optional string access = 2 [default = "public"];
-  optional bool is_virtual = 3 [default = false];
-  optional string linker_set_key = 4 [default = "NONE"];
+  required BasicNamedAndTypedDecl basic_abi = 1;
+  required bool is_virtual = 2;
+}
+
+message VTableComponent {
+  enum Kind {
+    VCallOffset = 0;
+    VBaseOffset = 1;
+    OffsetToTop = 2;
+    RTTI = 3;
+    FunctionPointer = 4;
+    CompleteDtorPointer = 5;
+    DeletingDtorPointer = 6;
+    UnusedFunctionPointer = 7;
+  }
+  required Kind kind = 1;
+  optional string mangled_component_name = 2 [default = ""];
+  optional uint64 value = 3 [default = 0];
+}
+
+message VTableLayout {
+  repeated VTableComponent vtable_components = 1;
 }
 
 message RecordDecl {
-  repeated FieldDecl fields = 1;
-  repeated CXXBaseSpecifier base_specifiers = 2;
-  optional string fully_qualified_name = 3 [default = "NONE"];
-  optional string source_file = 4 [default = "NONE"];
-  optional uint32 template_kind = 5 [default = 0];
-  optional TemplateInfo template_info = 6;
-  optional string access = 7 [default = "public"];
-  optional string linker_set_key = 8 [default = "NONE"];
-  optional string mangled_record_name = 9 [default = "NONE"];
+  required BasicNamedAndTypedDecl basic_abi = 1;
+  repeated RecordFieldDecl fields = 2;
+  repeated CXXBaseSpecifier base_specifiers = 3;
+  required string source_file = 4;
+  optional TemplateInfo template_info = 5;
+  required string mangled_record_name = 6;
+  optional VTableLayout vtable_layout = 7;
 }
 
 message EnumDecl {
-  optional string enum_name = 1 [default = "NONE"];
-  optional string access = 2 [default = "public"];
-  optional string enum_type = 3 [default = "int"];
-  repeated EnumFieldDecl enum_fields = 4;
-  optional string source_file = 5 [default = "NONE"];
-  optional string linker_set_key = 6 [default = "NONE"];
+  required BasicNamedAndTypedDecl basic_abi = 1;
+  repeated EnumFieldDecl enum_fields = 2;
+  required string source_file = 3;
+}
+
+message GlobalVarDecl {
+  required BasicNamedAndTypedDecl basic_abi = 1;
+  required string source_file = 2;
 }
 
 message TranslationUnit {
   repeated RecordDecl records = 1;
   repeated FunctionDecl functions = 2;
   repeated EnumDecl enums = 3;
+  repeated GlobalVarDecl global_vars = 4;
 }
