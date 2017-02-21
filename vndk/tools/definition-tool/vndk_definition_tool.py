@@ -140,26 +140,30 @@ class ELF(object):
     }
 
 
+    __slots__ = ('ei_class', 'ei_data', 'e_machine', 'dt_rpath', 'dt_runpath',
+                 'dt_needed', 'exported_symbols', 'imported_symbols',)
+
+
     def __init__(self, ei_class=ELFCLASSNONE, ei_data=ELFDATANONE, e_machine=0,
                  dt_rpath=None, dt_runpath=None, dt_needed=None,
-                 exported_symbols=None):
+                 exported_symbols=None, imported_symbols=None):
         self.ei_class = ei_class
         self.ei_data = ei_data
         self.e_machine = e_machine
-        self.dt_rpath = dt_rpath
-        self.dt_runpath = dt_runpath
+        self.dt_rpath = dt_rpath if dt_rpath is not None else []
+        self.dt_runpath = dt_runpath if dt_runpath is not None else []
         self.dt_needed = dt_needed if dt_needed is not None else []
         self.exported_symbols = \
-                exported_symbols if exported_symbols is not None else []
+                exported_symbols if exported_symbols is not None else set()
+        self.imported_symbols = \
+                imported_symbols if imported_symbols is not None else set()
 
-    def __str__(self):
-        return ('ELF(' +
-                'ei_class=' + repr(self.ei_class) + ', ' +
-                'ei_data=' + repr(self.ei_data) + ', ' +
-                'e_machine=' + repr(self.e_machine) + ', ' +
-                'dt_rpath=' + repr(self.dt_rpath) + ', ' +
-                'dt_runpath=' + repr(self.dt_runpath) + ', ' +
-                'dt_needed=' + repr(self.dt_needed) + ')')
+    def __repr__(self):
+        args = (a + '=' + repr(getattr(self, a)) for a in self.__slots__)
+        return 'ELF(' + ', '.join(args) + ')'
+
+    def __eq__(self, rhs):
+        return all(getattr(self, a) == getattr(rhs, a) for a in self.__slots__)
 
     @property
     def elf_class_name(self):
@@ -181,6 +185,14 @@ class ELF(object):
     def is_64bit(self):
         return self.ei_class == ELF.ELFCLASS64
 
+    @property
+    def sorted_exported_symbols(self):
+        return sorted(list(self.exported_symbols))
+
+    @property
+    def sorted_imported_symbols(self):
+        return sorted(list(self.imported_symbols))
+
     def dump(self, file=None):
         """Print parsed ELF information to the file"""
         file = file if file is not None else sys.stdout
@@ -188,19 +200,21 @@ class ELF(object):
         print('EI_CLASS\t' + self.elf_class_name, file=file)
         print('EI_DATA\t\t' + self.elf_data_name, file=file)
         print('E_MACHINE\t' + self.elf_machine_name, file=file)
-        if self.dt_rpath:
-            print('DT_RPATH\t' + self.dt_rpath, file=file)
-        if self.dt_runpath:
-            print('DT_RUNPATH\t' + self.dt_runpath, file=file)
+        for dt_rpath in self.dt_rpath:
+            print('DT_RPATH\t' + dt_rpath, file=file)
+        for dt_runpath in self.dt_runpath:
+            print('DT_RUNPATH\t' + dt_runpath, file=file)
         for dt_needed in self.dt_needed:
             print('DT_NEEDED\t' + dt_needed, file=file)
-        for symbol in self.exported_symbols:
-            print('SYMBOL\t\t' + symbol, file=file)
+        for symbol in self.sorted_exported_symbols:
+            print('EXP_SYMBOL\t' + symbol, file=file)
+        for symbol in self.sorted_imported_symbols:
+            print('IMP_SYMBOL\t' + symbol, file=file)
 
     def dump_exported_symbols(self, file=None):
         """Print exported symbols to the file"""
         file = file if file is not None else sys.stdout
-        for symbol in self.exported_symbols:
+        for symbol in self.sorted_exported_symbols:
             print(symbol, file=file)
 
     # Extract zero-terminated buffer slice.
@@ -330,24 +344,32 @@ class ELF(object):
             if ent.d_tag == ELF.DT_NEEDED:
                 self.dt_needed.append(extract_str(dynstr_off + ent.d_val))
             elif ent.d_tag == ELF.DT_RPATH:
-                self.dt_rpath = extract_str(dynstr_off + ent.d_val)
+                self.dt_rpath.extend(
+                        extract_str(dynstr_off + ent.d_val).split(':'))
             elif ent.d_tag == ELF.DT_RUNPATH:
-                self.dt_runpath = extract_str(dynstr_off + ent.d_val)
+                self.dt_runpath.extend(
+                        extract_str(dynstr_off + ent.d_val).split(':'))
 
         # Parse exported symbols in .dynsym section.
         dynsym_shdr = sections.get('.dynsym')
         if dynsym_shdr:
-            exported_symbols = []
+            exp_symbols = self.exported_symbols
+            imp_symbols = self.imported_symbols
+
             dynsym_off = dynsym_shdr.sh_offset
             dynsym_end = dynsym_off + dynsym_shdr.sh_size
             dynsym_entsize = dynsym_shdr.sh_entsize
+
+            # Skip first symbol entry (null symbol).
+            dynsym_off += dynsym_entsize
+
             for ent_off in range(dynsym_off, dynsym_end, dynsym_entsize):
                 ent = parse_elf_sym(ent_off)
-                if not ent.is_local and not ent.is_undef:
-                    exported_symbols.append(
-                            extract_str(dynstr_off + ent.st_name))
-            exported_symbols.sort()
-            self.exported_symbols = exported_symbols
+                symbol_name = extract_str(dynstr_off + ent.st_name)
+                if ent.is_undef:
+                    imp_symbols.add(symbol_name)
+                elif not ent.is_local:
+                    exp_symbols.add(symbol_name)
 
     def _parse_from_buf(self, buf):
         """Parse ELF image resides in the buffer"""
@@ -449,7 +471,31 @@ PT_VENDOR = 1
 NUM_PARTITIONS = 2
 
 
-class GraphNode(object):
+class ELFResolver(object):
+    def __init__(self, lib_set, default_search_path):
+        self.lib_set = lib_set
+        self.default_search_path = default_search_path
+
+    def get_candidates(self, name, dt_rpath=None, dt_runpath=None):
+        if dt_rpath:
+            for d in dt_rpath:
+                yield os.path.join(d, name)
+        if dt_runpath:
+            for d in dt_runpath:
+                yield os.path.join(d, name)
+        for d in self.default_search_path:
+            yield os.path.join(d, name)
+
+    def resolve(self, name, dt_rpath=None, dt_runpath=None):
+        for path in self.get_candidates(name, dt_rpath, dt_runpath):
+            try:
+                return self.lib_set[path]
+            except KeyError:
+                continue
+        return None
+
+
+class ELFLinkData(object):
     def __init__(self, partition, path, elf):
         self.partition = partition
         self.path = path
@@ -469,14 +515,14 @@ def sorted_lib_path_list(libs):
     return libs
 
 
-class Graph(object):
+class ELFLinker(object):
     def __init__(self):
         self.lib32 = dict()
         self.lib64 = dict()
         self.lib_pt = [dict() for i in range(NUM_PARTITIONS)]
 
     def add(self, partition, path, elf):
-        node = GraphNode(partition, path, elf)
+        node = ELFLinkData(partition, path, elf)
         if elf.is_32bit:
             self.lib32[path] = node
         else:
@@ -519,7 +565,7 @@ class Graph(object):
         prefix_len = len(root) + 1
 
         if alter_subdirs:
-            alter_patt = Graph._compile_path_matcher(root, alter_subdirs)
+            alter_patt = ELFLinker._compile_path_matcher(root, alter_subdirs)
 
         for path in scan_executables(root):
             try:
@@ -541,29 +587,33 @@ class Graph(object):
                 if match:
                     self.add_dep(match.group(1), match.group(2))
 
-    def _resolve_deps_lib_set(self, lib_set, system_lib, vendor_lib):
+    def _resolve_lib_dt_needed(self, lib, resolver):
+        for dt_needed in lib.elf.dt_needed:
+            dep = resolver.resolve(dt_needed, lib.elf.dt_rpath,
+                                   lib.elf.dt_runpath)
+            if not dep:
+                candidates = list(resolver.get_candidates(
+                    dt_needed, lib.elf.dt_rpath, lib.elf.dt_runpath))
+                print('warning: {}: Missing needed library: {}  Tried: {}'
+                      .format(lib.path, dt_needed, candidates), file=sys.stderr)
+                continue
+            lib.add_dep(dep)
+
+    def _resolve_lib_deps(self, lib, resolver):
+        self._resolve_lib_dt_needed(lib, resolver)
+
+    def _resolve_lib_set_deps(self, lib_set, resolver):
         for lib in lib_set.values():
-            for dt_needed in lib.elf.dt_needed:
-                candidates = [
-                    dt_needed,
-                    os.path.join(system_lib, dt_needed),
-                    os.path.join(vendor_lib, dt_needed),
-                ]
-                for candidate in candidates:
-                    dep = lib_set.get(candidate)
-                    if dep:
-                        break
-                if not dep:
-                    print('warning: {}: Missing needed library: {}  Tried: {}'
-                          .format(lib.path, dt_needed, candidates),
-                          file=sys.stderr)
-                    continue
-                lib.add_dep(dep)
+            self._resolve_lib_deps(lib, resolver)
 
     def resolve_deps(self):
-        self._resolve_deps_lib_set(self.lib32, '/system/lib', '/vendor/lib')
-        self._resolve_deps_lib_set(self.lib64, '/system/lib64',
-                                   '/vendor/lib64')
+        self._resolve_lib_set_deps(
+                self.lib32,
+                ELFResolver(self.lib32, ['/system/lib', '/vendor/lib']))
+
+        self._resolve_lib_set_deps(
+                self.lib64,
+                ELFResolver(self.lib64, ['/system/lib64', '/vendor/lib64']))
 
     def compute_vndk_libs(self, generic_refs, banned_libs):
         vndk_core = set()
@@ -655,7 +705,7 @@ class Graph(object):
     @staticmethod
     def create(system_dirs=None, system_dirs_as_vendor=None, vendor_dirs=None,
                vendor_dirs_as_system=None, extra_deps=None):
-        graph = Graph()
+        graph = ELFLinker()
 
         if system_dirs:
             for path in system_dirs:
@@ -694,7 +744,7 @@ class GenericRefs(object):
                 path = os.path.join(base, filename)
                 lib_name = '/' + path[prefix_len:-4]
                 with open(path, 'r') as f:
-                    self.refs[lib_name] = [line.strip() for line in f]
+                    self.refs[lib_name] = set(line.strip() for line in f)
 
     @staticmethod
     def create_from_dir(root):
@@ -867,9 +917,9 @@ class VNDKCommand(ELFGraphCommand):
 
     def main(self, args):
         # Link ELF objects.
-        graph = Graph.create(args.system, args.system_dir_as_vendor,
-                             args.vendor, args.vendor_dir_as_system,
-                             args.load_extra_deps)
+        graph = ELFLinker.create(args.system, args.system_dir_as_vendor,
+                                 args.vendor, args.vendor_dir_as_system,
+                                 args.load_extra_deps)
 
         # Load the generic reference.
         generic_refs = None
@@ -924,9 +974,9 @@ class DepsCommand(ELFGraphCommand):
                 help='print binaries without dependencies or usages')
 
     def main(self, args):
-        graph = Graph.create(args.system, args.system_dir_as_vendor,
-                             args.vendor, args.vendor_dir_as_system,
-                             args.load_extra_deps)
+        graph = ELFLinker.create(args.system, args.system_dir_as_vendor,
+                                 args.vendor, args.vendor_dir_as_system,
+                                 args.load_extra_deps)
 
         results = []
         for partition in range(NUM_PARTITIONS):
@@ -965,9 +1015,9 @@ class DepsClosureCommand(ELFGraphCommand):
                             help='exclude ndk libraries')
 
     def main(self, args):
-        graph = Graph.create(args.system, args.system_dir_as_vendor,
-                             args.vendor, args.vendor_dir_as_system,
-                             args.load_extra_deps)
+        graph = ELFLinker.create(args.system, args.system_dir_as_vendor,
+                                 args.vendor, args.vendor_dir_as_system,
+                                 args.load_extra_deps)
 
         # Find root/excluded libraries by their paths.
         def report_error(path):
@@ -1001,9 +1051,9 @@ class SpHalCommand(ELFGraphCommand):
                             help='show the closure')
 
     def main(self, args):
-        graph = Graph.create(args.system, args.system_dir_as_vendor,
-                             args.vendor, args.vendor_dir_as_system,
-                             args.load_extra_deps)
+        graph = ELFLinker.create(args.system, args.system_dir_as_vendor,
+                                 args.vendor, args.vendor_dir_as_system,
+                                 args.load_extra_deps)
 
         # Find SP HALs.
         name_patterns = (
