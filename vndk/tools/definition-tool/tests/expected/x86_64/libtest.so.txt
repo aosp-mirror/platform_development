@@ -2,7 +2,10 @@ EI_CLASS	64
 EI_DATA		Little-Endian
 E_MACHINE	EM_X86_64
 DT_NEEDED	libc.so
-SYMBOL		__bss_start
-SYMBOL		_edata
-SYMBOL		_end
-SYMBOL		test
+EXP_SYMBOL	__bss_start
+EXP_SYMBOL	_edata
+EXP_SYMBOL	_end
+EXP_SYMBOL	test
+IMP_SYMBOL	__cxa_atexit
+IMP_SYMBOL	__cxa_finalize
+IMP_SYMBOL	puts
