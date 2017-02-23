@@ -108,6 +108,18 @@ static __inline__ void cfmakeraw(struct termios *s)
     s->c_cflag |= CS8;
 }
 
+static __inline int cfsetspeed(struct termios* s, speed_t speed) {
+  // TODO: check 'speed' is valid.
+  s->c_cflag = (s->c_cflag & ~CBAUD) | (speed & CBAUD);
+  return 0;
+}
+
+static __inline int tcdrain(int fd) {
+  // A non-zero argument to TCSBRK means "don't send a break".
+  // The drain is a side-effect of the ioctl!
+  return ioctl(fd, TCSBRK, __BIONIC_CAST(static_cast, unsigned long, 1));
+}
+
 __END_DECLS
 
 #endif /* _TERMIOS_H_ */
