@@ -86,6 +86,12 @@
 #define	__static_cast(x,y)	(x)y
 #endif
 
+#if defined(__cplusplus)
+#define __BIONIC_CAST(_k,_t,_v) (_k<_t>(_v))
+#else
+#define __BIONIC_CAST(_k,_t,_v) ((_t) (_v))
+#endif
+
 /*
  * The __CONCAT macro is used to concatenate parts of symbol names, e.g.
  * with "#define OLD(foo) __CONCAT(old,foo)", OLD(foo) produces oldfoo.
