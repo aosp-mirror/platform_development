@@ -25,6 +25,7 @@
 #include <iostream>
 #include <string>
 
+using abi_wrapper::ABIWrapper;
 using abi_wrapper::FunctionDeclWrapper;
 using abi_wrapper::RecordDeclWrapper;
 using abi_wrapper::EnumDeclWrapper;
@@ -35,13 +36,15 @@ HeaderASTVisitor::HeaderASTVisitor(
     const clang::ASTContext *ast_contextp,
     const clang::CompilerInstance *compiler_instance_p,
     const std::string &current_file_name,
-    const std::set<std::string> &exported_headers)
+    const std::set<std::string> &exported_headers,
+    const clang::Decl *tu_decl)
   : tu_ptr_(tu_ptr),
     mangle_contextp_(mangle_contextp),
     ast_contextp_(ast_contextp),
     cip_(compiler_instance_p),
     current_file_name_(current_file_name),
-    exported_headers_(exported_headers) { }
+    exported_headers_(exported_headers),
+    tu_decl_(tu_decl) { }
 
 bool HeaderASTVisitor::VisitRecordDecl(const clang::RecordDecl *decl) {
   // Forward declaration
@@ -50,12 +53,6 @@ bool HeaderASTVisitor::VisitRecordDecl(const clang::RecordDecl *decl) {
   }
   RecordDeclWrapper record_decl_wrapper(
       mangle_contextp_, ast_contextp_, cip_, decl);
-  // TODO: Optimize source file initial check by preferably moving this into
-  // TraverseTranslationUnitDecl.
-  std::string source_file = record_decl_wrapper.GetDeclSourceFile(decl);
-  if (exported_headers_.find(source_file) == exported_headers_.end()) {
-    return true;
-  }
   std::unique_ptr<abi_dump::RecordDecl> wrapped_record_decl =
       record_decl_wrapper.GetRecordDecl();
   if (!wrapped_record_decl) {
@@ -76,10 +73,6 @@ bool HeaderASTVisitor::VisitEnumDecl(const clang::EnumDecl *decl) {
   }
   EnumDeclWrapper enum_decl_wrapper(
       mangle_contextp_, ast_contextp_, cip_, decl);
-  std::string source_file = enum_decl_wrapper.GetDeclSourceFile(decl);
-  if (exported_headers_.find(source_file) == exported_headers_.end()) {
-    return true;
-  }
   std::unique_ptr<abi_dump::EnumDecl> wrapped_enum_decl =
       enum_decl_wrapper.GetEnumDecl();
   if (!wrapped_enum_decl) {
@@ -97,12 +90,6 @@ bool HeaderASTVisitor::VisitEnumDecl(const clang::EnumDecl *decl) {
 bool HeaderASTVisitor::VisitFunctionDecl(const clang::FunctionDecl *decl) {
   FunctionDeclWrapper function_decl_wrapper(
       mangle_contextp_, ast_contextp_, cip_, decl);
-  // TODO: Optimize source file initial check by preferably moving this into
-  // TraverseTranslationUnitDecl.
-  std::string source_file = function_decl_wrapper.GetDeclSourceFile(decl);
-  if (exported_headers_.find(source_file) == exported_headers_.end()) {
-    return true;
-  }
   std::unique_ptr<abi_dump::FunctionDecl> wrapped_function_decl =
       function_decl_wrapper.GetFunctionDecl();
   if (!wrapped_function_decl) {
@@ -115,6 +102,18 @@ bool HeaderASTVisitor::VisitFunctionDecl(const clang::FunctionDecl *decl) {
   }
   *function_declp = *wrapped_function_decl;
   return true;
+}
+
+// We don't need to recurse into Declarations which are not exported.
+bool HeaderASTVisitor::TraverseDecl(clang::Decl *decl) {
+  if (!decl)
+    return true;
+  std::string source_file = ABIWrapper::GetDeclSourceFile(decl, cip_);
+  if ((decl != tu_decl_) &&
+      (exported_headers_.find(source_file) == exported_headers_.end())) {
+    return true;
+  }
+  return RecursiveASTVisitor<HeaderASTVisitor>::TraverseDecl(decl);
 }
 
 HeaderASTConsumer::HeaderASTConsumer(
@@ -131,13 +130,13 @@ void HeaderASTConsumer::HandleTranslationUnit(clang::ASTContext &ctx) {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
   std::ofstream text_output(out_dump_name_);
   google::protobuf::io::OstreamOutputStream text_os(&text_output);
-  clang::TranslationUnitDecl* translation_unit = ctx.getTranslationUnitDecl();
+  clang::TranslationUnitDecl *translation_unit = ctx.getTranslationUnitDecl();
   std::unique_ptr<clang::MangleContext> mangle_contextp(
       ctx.createMangleContext());
   abi_dump::TranslationUnit tu;
   std::string str_out;
   HeaderASTVisitor v(&tu, mangle_contextp.get(), &ctx, cip_, file_name_,
-                     exported_headers_);
+                     exported_headers_, translation_unit);
   if (!v.TraverseDecl(translation_unit) ||
       !google::protobuf::TextFormat::Print(tu, &text_os)) {
     llvm::errs() << "Serialization to ostream failed\n";

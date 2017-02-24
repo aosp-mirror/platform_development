@@ -38,13 +38,16 @@ class HeaderASTVisitor
                    const clang::ASTContext *ast_contextp,
                    const clang::CompilerInstance *compiler_instance_p,
                    const std::string &current_file_name,
-                   const std::set<std::string> &exported_headers);
+                   const std::set<std::string> &exported_headers,
+                   const clang::Decl *tu_decl);
 
   bool VisitRecordDecl(const clang::RecordDecl *decl);
 
   bool VisitFunctionDecl(const clang::FunctionDecl *decl);
 
   bool VisitEnumDecl(const clang::EnumDecl *decl);
+
+  bool TraverseDecl(clang::Decl *decl);
 
   // Enable recursive traversal of template instantiations.
   bool shouldVisitTemplateInstantiations() const {
@@ -58,6 +61,8 @@ class HeaderASTVisitor
   const clang::CompilerInstance *cip_;
   const std::string current_file_name_;
   const std::set<std::string> &exported_headers_;
+  // To optimize recursion into only exported abi.
+  const clang::Decl *tu_decl_;
 };
 
 class HeaderASTConsumer : public clang::ASTConsumer {

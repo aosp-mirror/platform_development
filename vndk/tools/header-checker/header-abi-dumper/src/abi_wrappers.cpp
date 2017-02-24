@@ -23,13 +23,14 @@ using namespace abi_wrapper;
 ABIWrapper::ABIWrapper(
     clang::MangleContext *mangle_contextp,
     const clang::ASTContext *ast_contextp,
-    const clang::CompilerInstance *compiler_instance_p)
-  : mangle_contextp_(mangle_contextp),
-    ast_contextp_(ast_contextp),
-    cip_(compiler_instance_p) { }
+    const clang::CompilerInstance *cip)
+  : cip_(cip),
+    mangle_contextp_(mangle_contextp),
+    ast_contextp_(ast_contextp) { }
 
-std::string ABIWrapper::GetDeclSourceFile(const clang::NamedDecl *decl) const {
-  clang::SourceManager &sm = cip_->getSourceManager();
+std::string ABIWrapper::GetDeclSourceFile(const clang::Decl *decl,
+                                          const clang::CompilerInstance *cip) {
+  clang::SourceManager &sm = cip->getSourceManager();
   clang::SourceLocation location = decl->getLocation();
   llvm::StringRef file_name = sm.getFilename(location);
   llvm::SmallString<128> abs_path(file_name.str());
@@ -199,7 +200,7 @@ std::unique_ptr<abi_dump::FunctionDecl>
 FunctionDeclWrapper::GetFunctionDecl() const {
   std::unique_ptr<abi_dump::FunctionDecl> abi_decl(
       new abi_dump::FunctionDecl());
-  std::string source_file = GetDeclSourceFile(function_decl_);
+  std::string source_file = GetDeclSourceFile(function_decl_, cip_);
   if (!SetupFunction(abi_decl.get(), source_file)) {
     return nullptr;
   }
@@ -316,7 +317,7 @@ void RecordDeclWrapper::SetupRecordInfo(abi_dump::RecordDecl *record_declp,
 
 std::unique_ptr<abi_dump::RecordDecl> RecordDeclWrapper::GetRecordDecl() const {
   std::unique_ptr<abi_dump::RecordDecl> abi_decl(new abi_dump::RecordDecl());
-  std::string source_file = GetDeclSourceFile(record_decl_);
+  std::string source_file = GetDeclSourceFile(record_decl_, cip_);
   SetupRecordInfo(abi_decl.get(), source_file);
   if (!SetupRecordFields(abi_decl.get(), source_file)) {
     llvm::errs() << "Setting up Record Fields failed\n";
@@ -362,7 +363,7 @@ bool EnumDeclWrapper::SetupEnum(abi_dump::EnumDecl *enump,
 
 std::unique_ptr<abi_dump::EnumDecl> EnumDeclWrapper::GetEnumDecl() const {
   std::unique_ptr<abi_dump::EnumDecl> abi_decl(new abi_dump::EnumDecl());
-  std::string source_file = GetDeclSourceFile(enum_decl_);
+  std::string source_file = GetDeclSourceFile(enum_decl_, cip_);
 
   if (!SetupEnum(abi_decl.get(), source_file)) {
     llvm::errs() << "Setting up Enum fields failed\n";
