@@ -68,25 +68,6 @@
             android:layout_alignParentRight="true"
             android:layout_alignParentEnd="true" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceSmall"
-            android:text="----"
-            android:id="@+id/logintypesregistered"
-            android:layout_below="@+id/logintypesregisteredtext"
-            android:layout_alignLeft="@+id/logintypesregisteredtext"
-            android:layout_alignStart="@+id/logintypesregisteredtext" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceLarge"
-            android:text="Accounts Registered to Support"
-            android:id="@+id/logintypesregisteredtext"
-            android:layout_marginTop="58dp"
-            android:layout_below="@+id/getvisibleaccounts" />
-
     </RelativeLayout>
 
 </ScrollView>
