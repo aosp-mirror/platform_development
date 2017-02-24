@@ -31,9 +31,10 @@ class ABIWrapper {
  public:
   ABIWrapper(clang::MangleContext *mangle_contextp,
              const clang::ASTContext *ast_contextp,
-             const clang::CompilerInstance *compiler_instance_p);
+             const clang::CompilerInstance *cip);
 
-  std::string GetDeclSourceFile(const clang::NamedDecl *decl) const;
+  static std::string GetDeclSourceFile(const clang::Decl *decl,
+                                       const clang::CompilerInstance *cip);
 
  protected:
   std::string AccessToString(const clang::AccessSpecifier sp) const;
@@ -49,10 +50,13 @@ class ABIWrapper {
   std::string QualTypeToString(const clang::QualType &sweet_qt) const;
 
   std::string GetTagDeclQualifiedName(const clang::TagDecl *decl) const;
+
+ protected:
+  const clang::CompilerInstance *cip_;
+
  private:
   clang::MangleContext *mangle_contextp_;
   const clang::ASTContext *ast_contextp_;
-  const clang::CompilerInstance *cip_;
 };
 
 class RecordDeclWrapper : public ABIWrapper {
