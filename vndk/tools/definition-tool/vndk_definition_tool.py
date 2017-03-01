@@ -406,20 +406,60 @@ class ELF(object):
 # NDK and Banned Libraries
 #------------------------------------------------------------------------------
 
-NDK_LOW_LEVEL = {
-    'libc.so', 'libstdc++.so', 'libdl.so', 'liblog.so', 'libm.so', 'libz.so',
-}
+class NDKLibDict(object):
+    LLNDK_LIB_NAMES = (
+        'libc.so',
+        'libdl.so',
+        'liblog.so',
+        'libm.so',
+        'libstdc++.so',
+        'libz.so',
+    )
 
+    SPNDK_LIB_NAMES = (
+        'libEGL.so',
+        'libGLESv1_CM.so',
+        'libGLESv2.so',
+        'libGLESv3.so',
+    )
 
-NDK_HIGH_LEVEL = {
-    'libandroid.so', 'libcamera2ndk.so', 'libEGL.so', 'libGLESv1_CM.so',
-    'libGLESv2.so', 'libGLESv3.so', 'libjnigraphics.so', 'libmediandk.so',
-    'libOpenMAXAL.so', 'libOpenSLES.so', 'libvulkan.so',
-}
+    HLNDK_LIB_NAMES = (
+        'libOpenMAXAL.so',
+        'libOpenSLES.so',
+        'libandroid.so',
+        'libcamera2ndk.so',
+        'libjnigraphics.so',
+        'libmediandk.so',
+        'libvulkan.so',
+    )
 
-def _is_ndk_lib(path):
-    lib_name = os.path.basename(path)
-    return lib_name in NDK_LOW_LEVEL or lib_name in NDK_HIGH_LEVEL
+    @staticmethod
+    def _compile_path_matcher(names):
+        patts = '|'.join('(?:^\\/system\\/lib(?:64)?\\/' + re.escape(i) + '$)'
+                         for i in names)
+        return re.compile(patts)
+
+    def __init__(self):
+        self.llndk_patterns = self._compile_path_matcher(self.LLNDK_LIB_NAMES)
+        self.spndk_patterns = self._compile_path_matcher(self.SPNDK_LIB_NAMES)
+        self.hlndk_patterns = self._compile_path_matcher(self.HLNDK_LIB_NAMES)
+        self.ndk_patterns = self._compile_path_matcher(
+                self.LLNDK_LIB_NAMES + self.SPNDK_LIB_NAMES +
+                self.HLNDK_LIB_NAMES)
+
+    def is_ndk(self, path):
+        return self.ndk_patterns.match(path)
+
+    def is_llndk(self, path):
+        return self.llndk_patterns.match(path)
+
+    def is_spndk(self, path):
+        return self.spndk_patterns.match(path)
+
+    def is_hlndk(self, path):
+        return self.hlndk_patterns.match(path)
+
+NDK_LIBS = NDKLibDict()
 
 
 BannedLib = collections.namedtuple(
@@ -502,7 +542,7 @@ class ELFLinkData(object):
         self.elf = elf
         self.deps = set()
         self.users = set()
-        self.is_ndk = _is_ndk_lib(path)
+        self.is_ndk = NDK_LIBS.is_ndk(path)
 
     def add_dep(self, dst):
         self.deps.add(dst)
@@ -893,8 +933,7 @@ class VNDKCommand(ELFGraphCommand):
         for lib_set in lib_sets:
             for lib in lib_set:
                 for dep in lib.deps:
-                    dep_name = os.path.basename(dep.path)
-                    if dep_name in NDK_HIGH_LEVEL:
+                    if NDK_LIBS.is_hlndk(dep.path):
                         print('warning: {}: VNDK is using high-level NDK {}.'
                                 .format(lib.path, dep.path), file=sys.stderr)
 
