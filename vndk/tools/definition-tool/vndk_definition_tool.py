@@ -465,7 +465,7 @@ NDK_LIBS = NDKLibDict()
 BannedLib = collections.namedtuple(
         'BannedLib', ('name', 'reason', 'action',))
 
-BA_WARN  = 0
+BA_WARN = 0
 BA_EXCLUDE = 1
 
 class BannedLibDict(object):
@@ -476,7 +476,10 @@ class BannedLibDict(object):
         self.banned_libs[name] = BannedLib(name, reason, action)
 
     def get(self, name):
-        return self.banned_libs.get(name, None)
+        return self.banned_libs.get(name)
+
+    def is_banned(self, path):
+        return self.get(os.path.basename(path))
 
     @staticmethod
     def create_default():
@@ -676,7 +679,7 @@ class ELFLinker(object):
 
         # Remove NDK libraries and banned libraries.
         def is_not_vndk(lib):
-            return lib.is_ndk or banned_libs.get(os.path.basename(lib.path))
+            return lib.is_ndk or banned_libs.is_banned(lib.path)
 
         def remove_ndk_libs(libs):
             return set(lib for lib in libs if not is_not_vndk(lib))
@@ -940,7 +943,7 @@ class VNDKCommand(ELFGraphCommand):
     def _warn_banned_vendor_lib_deps(self, graph, banned_libs):
         for lib in graph.lib_pt[PT_VENDOR].values():
             for dep in lib.deps:
-                banned = banned_libs.get(os.path.basename(dep.path))
+                banned = banned_libs.is_banned(dep.path)
                 if banned:
                     print('warning: {}: Vendor binary depends on banned {} '
                           '(reason: {})'.format(

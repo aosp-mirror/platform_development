@@ -185,8 +185,8 @@ class ELFLinkerTest(unittest.TestCase):
         graph = gb.graph
 
         class MockBannedLibs(object):
-            def get(self, name):
-                return None
+            def is_banned(self, name):
+                return False
 
         vndk_core, vndk_indirect, vndk_ext = \
                 graph.compute_vndk_libs(None, MockBannedLibs())
