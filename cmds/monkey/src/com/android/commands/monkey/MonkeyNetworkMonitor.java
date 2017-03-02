@@ -85,7 +85,7 @@ public class MonkeyNetworkMonitor extends IIntentReceiver.Stub {
 
     public void register(IActivityManager am) throws RemoteException {
         if (LDEBUG) Logger.out.println("registering Receiver");
-        am.registerReceiver(null, null, this, filter, null, UserHandle.USER_ALL);
+        am.registerReceiver(null, null, this, filter, null, UserHandle.USER_ALL, false);
     }
     
     public void unregister(IActivityManager am) throws RemoteException {
