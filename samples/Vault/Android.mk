@@ -6,6 +6,8 @@ LOCAL_MODULE_PATH := $(TARGET_OUT_DATA_APPS)
 
 LOCAL_SRC_FILES := $(call all-subdir-java-files)
 
+LOCAL_STATIC_JAVA_LIBRARIES := legacy-android-test junit
+
 LOCAL_SDK_VERSION := current
 
 LOCAL_PROGUARD_ENABLED := disabled
