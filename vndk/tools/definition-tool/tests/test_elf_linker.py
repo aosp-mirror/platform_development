@@ -30,22 +30,27 @@ class GraphBuilder(object):
                 imported_symbols):
         """Create and add a shared library to ELFLinker."""
 
+        lib_dir = os.path.join('/', self._PARTITION_NAMES[partition],
+                               self._LIB_DIRS[klass])
+        path = os.path.join(lib_dir, name + '.so')
+
         elf = ELF(klass, ELF.ELFDATA2LSB, dt_needed=dt_needed,
                   exported_symbols=exported_symbols,
                   imported_symbols=imported_symbols)
-        setattr(self, 'elf' + elf.elf_class_name + '_' + name, elf)
 
-        path = os.path.join('/', self._PARTITION_NAMES[partition],
-                            self._LIB_DIRS[klass], name + '.so')
-        self.graph.add(partition, path, elf)
+        node = self.graph.add(partition, path, elf)
+        setattr(self, name + '_' + elf.elf_class_name, node)
+        return node
 
     def add_multilib(self, partition, name, dt_needed, exported_symbols,
                      imported_symbols):
         """Add 32-bit / 64-bit shared libraries to ELFLinker."""
-
-        for klass in (ELF.ELFCLASS32, ELF.ELFCLASS64):
-            self.add_lib(partition, klass, name, dt_needed,
+        return (
+            self.add_lib(partition, ELF.ELFCLASS32, name, dt_needed,
+                         exported_symbols, imported_symbols),
+            self.add_lib(partition, ELF.ELFCLASS64, name, dt_needed,
                          exported_symbols, imported_symbols)
+        )
 
     def resolve(self):
         self.graph.resolve_deps()
@@ -93,15 +98,15 @@ class ELFLinkerTest(unittest.TestCase):
         graph = gb.graph
 
         node = graph.map_path_to_lib('/system/lib/libc.so')
-        self.assertEqual(gb.elf32_libc, node.elf)
+        self.assertEqual(gb.libc_32, node)
         self.assertEqual('/system/lib/libc.so', node.path)
 
         node = graph.map_path_to_lib('/system/lib64/libdl.so')
-        self.assertEqual(gb.elf64_libdl, node.elf)
+        self.assertEqual(gb.libdl_64, node)
         self.assertEqual('/system/lib64/libdl.so', node.path)
 
         node = graph.map_path_to_lib('/vendor/lib64/libEGL.so')
-        self.assertEqual(gb.elf64_libEGL, node.elf)
+        self.assertEqual(gb.libEGL_64, node)
         self.assertEqual('/vendor/lib64/libEGL.so', node.path)
 
         self.assertEqual(None, graph.map_path_to_lib('/no/such/path.so'))

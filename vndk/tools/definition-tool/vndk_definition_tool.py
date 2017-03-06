@@ -571,6 +571,7 @@ class ELFLinker(object):
         else:
             self.lib64[path] = node
         self.lib_pt[partition][path] = node
+        return node
 
     def add_dep(self, src_path, dst_path):
         for lib_set in (self.lib32, self.lib64):
