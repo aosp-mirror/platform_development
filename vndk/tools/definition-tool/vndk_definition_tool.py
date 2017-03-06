@@ -634,6 +634,9 @@ class ELFLinker(object):
             dst = lib_set.get(dst_path)
             if src and dst:
                 src.add_dep(dst, ty)
+                return
+        print('error: cannot add dependency from {} to {}.'
+              .format(src_path, dst_path), file=sys.stderr)
 
     def map_path_to_lib(self, path):
         for lib_set in (self.lib32, self.lib64):
