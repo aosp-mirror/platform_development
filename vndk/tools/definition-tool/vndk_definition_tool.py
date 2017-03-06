@@ -4,6 +4,7 @@ from __future__ import print_function
 
 import argparse
 import collections
+import itertools
 import os
 import re
 import stat
@@ -539,19 +540,71 @@ class ELFResolver(object):
 
 
 class ELFLinkData(object):
+    NEEDED = 0  # Dependencies recorded in DT_NEEDED entries.
+    DLOPEN = 1  # Dependencies introduced by dlopen().
+
     def __init__(self, partition, path, elf):
         self.partition = partition
         self.path = path
         self.elf = elf
-        self.deps = set()
-        self.users = set()
+        self._deps = (set(), set())
+        self._users = (set(), set())
         self.is_ndk = NDK_LIBS.is_ndk(path)
         self.unresolved_symbols = set()
         self.linked_symbols = dict()
 
-    def add_dep(self, dst):
-        self.deps.add(dst)
-        dst.users.add(self)
+    def add_dep(self, dst, ty):
+        self._deps[ty].add(dst)
+        dst._users[ty].add(self)
+
+    def remove_dep(self, dst, ty):
+        self._deps[ty].remove(dst)
+        dst._users[ty].remove(self)
+
+    @property
+    def num_deps(self):
+        """Get the number of dependencies.  If a library is linked by both
+        NEEDED and DLOPEN relationship, then it will be counted twice."""
+        return sum(len(deps) for deps in self._deps)
+
+    @property
+    def deps(self):
+        return itertools.chain.from_iterable(self._deps)
+
+    @property
+    def dt_deps(self):
+        return self._deps[self.NEEDED]
+
+    @property
+    def dl_deps(self):
+        return self._deps[self.DLOPEN]
+
+    @property
+    def num_users(self):
+        """Get the number of users.  If a library is linked by both NEEDED and
+        DLOPEN relationship, then it will be counted twice."""
+        return sum(len(users) for users in self._users)
+
+    @property
+    def users(self):
+        return itertools.chain.from_iterable(self._users)
+
+    @property
+    def dt_users(self):
+        return self._users[self.NEEDED]
+
+    @property
+    def dl_users(self):
+        return self._users[self.DLOPEN]
+
+    def has_dep(self, dst):
+        return any(dst in deps for deps in self._deps)
+
+    def has_user(self, dst):
+        return any(dst in users for users in self._users)
+
+    def is_system_lib(self):
+        return self.partition == PT_SYSTEM
 
 
 def sorted_lib_path_list(libs):
@@ -575,12 +628,12 @@ class ELFLinker(object):
         self.lib_pt[partition][path] = node
         return node
 
-    def add_dep(self, src_path, dst_path):
+    def add_dep(self, src_path, dst_path, ty):
         for lib_set in (self.lib32, self.lib64):
             src = lib_set.get(src_path)
             dst = lib_set.get(dst_path)
             if src and dst:
-                src.add_dep(dst)
+                src.add_dep(dst, ty)
 
     def map_path_to_lib(self, path):
         for lib_set in (self.lib32, self.lib64):
@@ -631,7 +684,8 @@ class ELFLinker(object):
             for line in f:
                 match = patt.match(line)
                 if match:
-                    self.add_dep(match.group(1), match.group(2))
+                    self.add_dep(match.group(1), match.group(2),
+                                 ELFLinkData.DLOPEN)
 
     def _find_exported_symbol(self, symbol, libs):
         """Find the shared library with the exported symbol."""
@@ -660,7 +714,7 @@ class ELFLinker(object):
                 print('warning: {}: Missing needed library: {}  Tried: {}'
                       .format(lib.path, dt_needed, candidates), file=sys.stderr)
                 continue
-            lib.add_dep(dep)
+            lib.add_dep(dep, ELFLinkData.NEEDED)
             imported_libs.append(dep)
         return imported_libs
 
@@ -1025,7 +1079,7 @@ class VNDKCommand(ELFGraphCommand):
 
     def _warn_incorrect_partition_lib_set(self, lib_set, partition, error_msg):
         for lib in lib_set.values():
-            if not lib.users:
+            if not lib.num_users:
                 continue
             if all((user.partition != partition for user in lib.users)):
                 print(error_msg.format(lib.path), file=sys.stderr)
