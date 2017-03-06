@@ -147,7 +147,8 @@ ANDROID_SUPPORT_LIBRARIES := \
     android-support-v14-preference \
     android-support-v17-leanback \
     android-support-v17-preference-leanback \
-    android-support-vectordrawable
+    android-support-vectordrawable \
+    android-support-dynamic-animation
 
 $(foreach lib, $(ANDROID_SUPPORT_LIBRARIES), $(eval $(call _package_sdk_library,$(lib))))
 
