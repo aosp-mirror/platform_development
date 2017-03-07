@@ -125,16 +125,6 @@ class ELFTest(unittest.TestCase):
                          'IMP_SYMBOL\te\n',
                          actual_output)
 
-    def test_dump_exported_symbols(self):
-        elf = ELF(ELF.ELFCLASS32, ELF.ELFDATA2LSB, 183, ['a'], ['b'],
-                  ['libc.so', 'libm.so'], {'hello', 'world'})
-
-        f = StringIO()
-        elf.dump_exported_symbols(f)
-        actual_output = f.getvalue()
-
-        self.assertEqual('hello\nworld\n', actual_output)
-
     def test_parse_dump_file(self):
         data = ('EI_CLASS\t64\n'
                 'EI_DATA\t\tLittle-Endian\n'

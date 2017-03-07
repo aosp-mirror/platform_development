@@ -232,12 +232,6 @@ class ELF(object):
         for symbol in self.sorted_imported_symbols:
             print('IMP_SYMBOL\t' + symbol, file=file)
 
-    def dump_exported_symbols(self, file=None):
-        """Print exported symbols to the file"""
-        file = file if file is not None else sys.stdout
-        for symbol in self.sorted_exported_symbols:
-            print(symbol, file=file)
-
     # Extract zero-terminated buffer slice.
     def _extract_zero_terminated_buf_slice(self, buf, offset):
         """Extract a zero-terminated buffer slice from the given offset"""
@@ -813,6 +807,27 @@ class ELFLinker(object):
                 self.lib64,
                 ELFResolver(self.lib64, ['/system/lib64', '/vendor/lib64']))
 
+    def _resolve_lib_extended_symbol_users(self, generic_refs, lib):
+        """Resolve the users of the extended exported symbols of a library."""
+        try:
+            ref_lib = generic_refs.refs[lib.path]
+        except KeyError:
+            lib.extended_symbol_users = lib.users
+            return
+
+        for user in lib.users:
+            for symbol, imp_lib in user.linked_symbols.items():
+                if imp_lib is not lib:
+                    continue
+                if symbol not in ref_lib.exported_symbols:
+                    lib.extended_symbol_users.add(user)
+
+    def resolve_extended_symbol_users(self, generic_refs):
+        """Resolve the users of the extended exported symbols."""
+        for lib_set in self.lib_pt:
+            for lib in lib_set.values():
+                self._resolve_lib_extended_symbol_users(generic_refs, lib)
+
     def compute_matched_libs(self, path_patterns, closure=False,
                              is_excluded_libs=None):
         patt = re.compile('|'.join('(?:' + p + ')' for p in path_patterns))
@@ -1004,8 +1019,8 @@ class GenericRefs(object):
     def __init__(self):
         self.refs = dict()
 
-    def add(self, name, symbols):
-        self.refs[name] = symbols
+    def add(self, name, elf):
+        self.refs[name] = elf
 
     def _load_from_dir(self, root):
         root = os.path.abspath(root)
@@ -1017,7 +1032,7 @@ class GenericRefs(object):
                 path = os.path.join(base, filename)
                 lib_name = '/' + path[prefix_len:-4]
                 with open(path, 'r') as f:
-                    self.add(lib_name, set(line.strip() for line in f))
+                    self.add(lib_name, ELF.load_dump(path))
 
     @staticmethod
     def create_from_dir(root):
@@ -1026,13 +1041,13 @@ class GenericRefs(object):
         return result
 
     def classify_lib(self, lib):
-        ref_lib_symbols = self.refs.get(lib.path)
-        if not ref_lib_symbols:
+        ref_lib = self.refs.get(lib.path)
+        if not ref_lib:
             return GenericRefs.NEW_LIB
         exported_symbols = lib.elf.exported_symbols
-        if exported_symbols == ref_lib_symbols:
+        if exported_symbols == ref_lib.exported_symbols:
             return GenericRefs.EXPORT_EQUAL
-        if exported_symbols > ref_lib_symbols:
+        if exported_symbols > ref_lib.exported_symbols:
             return GenericRefs.EXPORT_SUPER_SET
         return GenericRefs.MODIFIED
 
@@ -1098,7 +1113,7 @@ class CreateGenericRefCommand(Command):
                 out = os.path.join(args.output, name) + '.sym'
                 makedirs(os.path.dirname(out), exist_ok=True)
                 with open(out, 'w') as f:
-                    elf.dump_exported_symbols(f)
+                    elf.dump(f)
             except ELFError:
                 pass
         return 0
