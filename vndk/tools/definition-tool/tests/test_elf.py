@@ -6,6 +6,7 @@ import os
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+import tempfile
 import unittest
 
 from compat import StringIO
@@ -39,6 +40,24 @@ class ElfSymTest(unittest.TestCase):
 
 
 class ELFTest(unittest.TestCase):
+    def test_get_ei_class_from_name(self):
+        self.assertEqual(ELF.ELFCLASS32, ELF.get_ei_class_from_name('32'))
+        self.assertEqual(ELF.ELFCLASS64, ELF.get_ei_class_from_name('64'))
+
+    def test_get_ei_data_from_name(self):
+        self.assertEqual(ELF.ELFDATA2LSB,
+                         ELF.get_ei_data_from_name('Little-Endian'))
+        self.assertEqual(ELF.ELFDATA2MSB,
+                         ELF.get_ei_data_from_name('Big-Endian'))
+
+    def test_get_e_machine_from_name(self):
+        self.assertEqual(0, ELF.get_e_machine_from_name('EM_NONE'))
+        self.assertEqual(3, ELF.get_e_machine_from_name('EM_386'))
+        self.assertEqual(8, ELF.get_e_machine_from_name('EM_MIPS'))
+        self.assertEqual(40, ELF.get_e_machine_from_name('EM_ARM'))
+        self.assertEqual(62, ELF.get_e_machine_from_name('EM_X86_64'))
+        self.assertEqual(183, ELF.get_e_machine_from_name('EM_AARCH64'))
+
     def test_repr(self):
         elf = ELF()
         self.assertEqual(elf, eval(repr(elf)))
@@ -115,6 +134,45 @@ class ELFTest(unittest.TestCase):
         actual_output = f.getvalue()
 
         self.assertEqual('hello\nworld\n', actual_output)
+
+    def test_parse_dump_file(self):
+        data = ('EI_CLASS\t64\n'
+                'EI_DATA\t\tLittle-Endian\n'
+                'E_MACHINE\tEM_AARCH64\n'
+                'DT_RPATH\trpath_1\n'
+                'DT_RPATH\trpath_2\n'
+                'DT_RUNPATH\trunpath_1\n'
+                'DT_RUNPATH\trunpath_2\n'
+                'DT_NEEDED\tlibc.so\n'
+                'DT_NEEDED\tlibm.so\n'
+                'EXP_SYMBOL\texported_1\n'
+                'EXP_SYMBOL\texported_2\n'
+                'IMP_SYMBOL\timported_1\n'
+                'IMP_SYMBOL\timported_2\n')
+
+        def check_parse_dump_file_result(res):
+            self.assertEqual(ELF.ELFCLASS64, res.ei_class)
+            self.assertEqual(ELF.ELFDATA2LSB, res.ei_data)
+            self.assertEqual(183, res.e_machine)
+            self.assertEqual(['rpath_1', 'rpath_2'], res.dt_rpath)
+            self.assertEqual(['runpath_1', 'runpath_2'], res.dt_runpath)
+            self.assertEqual(['libc.so', 'libm.so'], res.dt_needed)
+            self.assertSetEqual({'exported_1', 'exported_2'},
+                                res.exported_symbols)
+            self.assertSetEqual({'imported_1', 'imported_2'},
+                                res.imported_symbols)
+
+        # Parse ELF dump from the string buffer.
+        check_parse_dump_file_result(ELF.load_dumps(data))
+
+        # Parse ELF dump from the given file path.
+        with tempfile.NamedTemporaryFile('w+') as f:
+            f.write(data)
+            f.flush()
+            f.seek(0)
+
+            check_parse_dump_file_result(ELF.load_dump(f.name))
+
 
 if __name__ == '__main__':
     unittest.main()

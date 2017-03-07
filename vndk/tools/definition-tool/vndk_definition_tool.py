@@ -141,6 +141,26 @@ class ELF(object):
     }
 
 
+    @staticmethod
+    def _dict_find_key_by_value(d, dst):
+        for key, value in d.items():
+            if value == dst:
+                return key
+        raise KeyError(dst)
+
+    @staticmethod
+    def get_ei_class_from_name(name):
+        return ELF._dict_find_key_by_value(ELF._ELF_CLASS_NAMES, name)
+
+    @staticmethod
+    def get_ei_data_from_name(name):
+        return ELF._dict_find_key_by_value(ELF._ELF_DATA_NAMES, name)
+
+    @staticmethod
+    def get_e_machine_from_name(name):
+        return ELF._dict_find_key_by_value(ELF._ELF_MACHINE_IDS, name)
+
+
     __slots__ = ('ei_class', 'ei_data', 'e_machine', 'dt_rpath', 'dt_runpath',
                  'dt_needed', 'exported_symbols', 'imported_symbols',)
 
@@ -388,6 +408,47 @@ class ELF(object):
             with mmap(f.fileno(), st.st_size, access=ACCESS_READ) as image:
                 self._parse_from_buf(image)
 
+    def _parse_from_dump_lines(self, path, lines):
+        patt = re.compile('^([A-Za-z_]+)\t+(.*)$')
+        for line_no, line in enumerate(lines):
+            match = patt.match(line)
+            if not match:
+                print('error: {}: {}: failed to parse'
+                        .format(path, line_no + 1), file=sys.stderr)
+                continue
+            key = match.group(1)
+            value = match.group(2)
+
+            if key == 'EI_CLASS':
+                self.ei_class = ELF.get_ei_class_from_name(value)
+            elif key == 'EI_DATA':
+                self.ei_data = ELF.get_ei_data_from_name(value)
+            elif key == 'E_MACHINE':
+                self.e_machine = ELF.get_e_machine_from_name(value)
+            elif key == 'DT_RPATH':
+                self.dt_rpath.append(intern(value))
+            elif key == 'DT_RUNPATH':
+                self.dt_runpath.append(intern(value))
+            elif key == 'DT_NEEDED':
+                self.dt_needed.append(intern(value))
+            elif key == 'EXP_SYMBOL':
+                self.exported_symbols.add(intern(value))
+            elif key == 'IMP_SYMBOL':
+                self.imported_symbols.add(intern(value))
+            else:
+                print('error: {}: {}: unknown tag name: {}'
+                        .format(path, line_no + 1, key), file=sys.stderr)
+
+    def _parse_from_dump_file(self, path):
+        """Load information from ELF dump file."""
+        with open(path, 'r') as f:
+            self._parse_from_dump_lines(path, f)
+
+    def _parse_from_dump_buf(self, buf):
+        """Load information from ELF dump buffer."""
+        self._parse_from_dump_lines('<str:0x{:x}>'.format(id(buf)),
+                                    buf.splitlines())
+
     @staticmethod
     def load(path):
         """Create an ELF instance from the file path"""
@@ -400,6 +461,20 @@ class ELF(object):
         """Create an ELF instance from the buffer"""
         elf = ELF()
         elf._parse_from_buf(buf)
+        return elf
+
+    @staticmethod
+    def load_dump(path):
+        """Create an ELF instance from a dump file path"""
+        elf = ELF()
+        elf._parse_from_dump_file(path)
+        return elf
+
+    @staticmethod
+    def load_dumps(buf):
+        """Create an ELF instance from a dump file buffer"""
+        elf = ELF()
+        elf._parse_from_dump_buf(buf)
         return elf
 
 
