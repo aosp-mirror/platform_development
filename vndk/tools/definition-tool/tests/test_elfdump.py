@@ -17,7 +17,8 @@ import targets
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 VNDK_DEF_TOOL = os.path.join(SCRIPT_DIR, '..', 'vndk_definition_tool.py')
 
-expected_dir = os.path.join(SCRIPT_DIR, 'expected')
+INPUT_DIR = os.path.join(SCRIPT_DIR ,'testdata', 'test_elfdump', 'input')
+EXPECTED_DIR = os.path.join(SCRIPT_DIR, 'testdata', 'test_elfdump', 'expected')
 test_dir_base = None
 
 
@@ -48,14 +49,13 @@ class ELFDumpTest(unittest.TestCase):
     def _build_fixtures(cls, target_name):
         target = cls.targets[target_name]
 
-        cls.expected_dir = os.path.join(expected_dir, target_name)
+        cls.expected_dir = os.path.join(EXPECTED_DIR, target_name)
         cls.test_dir = os.path.join(cls.test_dir_base, target_name)
-        input_dir = os.path.join(SCRIPT_DIR, 'input')
 
         makedirs(cls.test_dir, exist_ok=True)
 
         # Compile main.o.
-        src_file = os.path.join(input_dir, 'main.c')
+        src_file = os.path.join(INPUT_DIR, 'main.c')
         obj_file = os.path.join(cls.test_dir, 'main.o')
         target.compile(obj_file, src_file, [])
 
@@ -64,7 +64,7 @@ class ELFDumpTest(unittest.TestCase):
         target.link(out_file, [obj_file], ['-ldl', '-lc', '-lstdc++'])
 
         # Compile test.o.
-        src_file = os.path.join(input_dir, 'test.c')
+        src_file = os.path.join(INPUT_DIR, 'test.c')
         obj_file = os.path.join(cls.test_dir, 'test.o')
         target.compile(obj_file, src_file, [])
 
