@@ -406,26 +406,66 @@ class ELF(object):
 # NDK and Banned Libraries
 #------------------------------------------------------------------------------
 
-NDK_LOW_LEVEL = {
-    'libc.so', 'libstdc++.so', 'libdl.so', 'liblog.so', 'libm.so', 'libz.so',
-}
+class NDKLibDict(object):
+    LLNDK_LIB_NAMES = (
+        'libc.so',
+        'libdl.so',
+        'liblog.so',
+        'libm.so',
+        'libstdc++.so',
+        'libz.so',
+    )
 
+    SPNDK_LIB_NAMES = (
+        'libEGL.so',
+        'libGLESv1_CM.so',
+        'libGLESv2.so',
+        'libGLESv3.so',
+    )
 
-NDK_HIGH_LEVEL = {
-    'libandroid.so', 'libcamera2ndk.so', 'libEGL.so', 'libGLESv1_CM.so',
-    'libGLESv2.so', 'libGLESv3.so', 'libjnigraphics.so', 'libmediandk.so',
-    'libOpenMAXAL.so', 'libOpenSLES.so', 'libvulkan.so',
-}
+    HLNDK_LIB_NAMES = (
+        'libOpenMAXAL.so',
+        'libOpenSLES.so',
+        'libandroid.so',
+        'libcamera2ndk.so',
+        'libjnigraphics.so',
+        'libmediandk.so',
+        'libvulkan.so',
+    )
 
-def _is_ndk_lib(path):
-    lib_name = os.path.basename(path)
-    return lib_name in NDK_LOW_LEVEL or lib_name in NDK_HIGH_LEVEL
+    @staticmethod
+    def _compile_path_matcher(names):
+        patts = '|'.join('(?:^\\/system\\/lib(?:64)?\\/' + re.escape(i) + '$)'
+                         for i in names)
+        return re.compile(patts)
+
+    def __init__(self):
+        self.llndk_patterns = self._compile_path_matcher(self.LLNDK_LIB_NAMES)
+        self.spndk_patterns = self._compile_path_matcher(self.SPNDK_LIB_NAMES)
+        self.hlndk_patterns = self._compile_path_matcher(self.HLNDK_LIB_NAMES)
+        self.ndk_patterns = self._compile_path_matcher(
+                self.LLNDK_LIB_NAMES + self.SPNDK_LIB_NAMES +
+                self.HLNDK_LIB_NAMES)
+
+    def is_ndk(self, path):
+        return self.ndk_patterns.match(path)
+
+    def is_llndk(self, path):
+        return self.llndk_patterns.match(path)
+
+    def is_spndk(self, path):
+        return self.spndk_patterns.match(path)
+
+    def is_hlndk(self, path):
+        return self.hlndk_patterns.match(path)
+
+NDK_LIBS = NDKLibDict()
 
 
 BannedLib = collections.namedtuple(
         'BannedLib', ('name', 'reason', 'action',))
 
-BA_WARN  = 0
+BA_WARN = 0
 BA_EXCLUDE = 1
 
 class BannedLibDict(object):
@@ -436,7 +476,10 @@ class BannedLibDict(object):
         self.banned_libs[name] = BannedLib(name, reason, action)
 
     def get(self, name):
-        return self.banned_libs.get(name, None)
+        return self.banned_libs.get(name)
+
+    def is_banned(self, path):
+        return self.get(os.path.basename(path))
 
     @staticmethod
     def create_default():
@@ -502,7 +545,9 @@ class ELFLinkData(object):
         self.elf = elf
         self.deps = set()
         self.users = set()
-        self.is_ndk = _is_ndk_lib(path)
+        self.is_ndk = NDK_LIBS.is_ndk(path)
+        self.unresolved_symbols = set()
+        self.linked_symbols = dict()
 
     def add_dep(self, dst):
         self.deps.add(dst)
@@ -528,6 +573,7 @@ class ELFLinker(object):
         else:
             self.lib64[path] = node
         self.lib_pt[partition][path] = node
+        return node
 
     def add_dep(self, src_path, dst_path):
         for lib_set in (self.lib32, self.lib64):
@@ -587,7 +633,24 @@ class ELFLinker(object):
                 if match:
                     self.add_dep(match.group(1), match.group(2))
 
+    def _find_exported_symbol(self, symbol, libs):
+        """Find the shared library with the exported symbol."""
+        for lib in libs:
+            if symbol in lib.elf.exported_symbols:
+                return lib
+        return None
+
+    def _resolve_lib_imported_symbols(self, lib, imported_libs):
+        """Resolve the imported symbols in a library."""
+        for symbol in lib.elf.imported_symbols:
+            imported_lib = self._find_exported_symbol(symbol, imported_libs)
+            if imported_lib:
+                lib.linked_symbols[symbol] = imported_lib
+            else:
+                lib.unresolved_symbols.add(symbol)
+
     def _resolve_lib_dt_needed(self, lib, resolver):
+        imported_libs = []
         for dt_needed in lib.elf.dt_needed:
             dep = resolver.resolve(dt_needed, lib.elf.dt_rpath,
                                    lib.elf.dt_runpath)
@@ -598,9 +661,12 @@ class ELFLinker(object):
                       .format(lib.path, dt_needed, candidates), file=sys.stderr)
                 continue
             lib.add_dep(dep)
+            imported_libs.append(dep)
+        return imported_libs
 
     def _resolve_lib_deps(self, lib, resolver):
-        self._resolve_lib_dt_needed(lib, resolver)
+        imported_libs = self._resolve_lib_dt_needed(lib, resolver)
+        self._resolve_lib_imported_symbols(lib, imported_libs)
 
     def _resolve_lib_set_deps(self, lib_set, resolver):
         for lib in lib_set.values():
@@ -614,6 +680,73 @@ class ELFLinker(object):
         self._resolve_lib_set_deps(
                 self.lib64,
                 ELFResolver(self.lib64, ['/system/lib64', '/vendor/lib64']))
+
+    def compute_matched_libs(self, path_patterns, closure=False,
+                             is_excluded_libs=None):
+        patt = re.compile('|'.join('(?:' + p + ')' for p in path_patterns))
+
+        # Find libraries with matching paths.
+        libs = set()
+        for lib_set in self.lib_pt:
+            for lib in lib_set.values():
+                if patt.match(lib.path):
+                    libs.add(lib)
+
+        if closure:
+            # Compute transitive closure.
+            if not is_excluded_libs:
+                def is_excluded_libs(lib):
+                    return False
+            libs = self.compute_closure(libs, is_excluded_libs)
+
+        return libs
+
+    def compute_vndk_stable(self, closure):
+        """Find all vndk stable libraries."""
+
+        path_patterns = (
+            # HIDL libraries used by android.hardware.graphics.mapper@2.0-impl.
+            '^.*/libhidlbase\\.so$',
+            '^.*/libhidltransport\\.so$',
+            '^.*/libhidlmemory\\.so$',
+            '^.*/libfmp\\.so$',
+            '^.*/libhwbinder\\.so$',
+
+            # UI libraries used by libEGL.
+            #'^.*/libui\\.so$',
+            #'^.*/libnativewindow\\.so$',
+        )
+
+        def is_excluded_libs(lib):
+            return lib.is_ndk
+
+        return self.compute_matched_libs(path_patterns, closure,
+                                         is_excluded_libs)
+
+    def compute_sp_hal(self, vndk_stable, closure):
+        """Find all same-process HALs."""
+
+        path_patterns = (
+            # OpenGL-related
+            '^/vendor/.*/libEGL_.*\\.so$',
+            '^/vendor/.*/libGLESv1_CM_.*\\.so$',
+            '^/vendor/.*/libGLESv2_.*\\.so$',
+            '^/vendor/.*/libGLESv3_.*\\.so$',
+            # Vulkan
+            '^/vendor/.*/vulkan.*\\.so$',
+            # libRSDriver
+            '^/vendor/.*/libRSDriver.*\\.so$',
+            '^/vendor/.*/libPVRRS\\.so$',
+            # Gralloc mapper
+            '^.*/gralloc\\..*\\.so$',
+            '^.*/android\\.hardware\\.graphics\\.mapper@\\d+\\.\\d+-impl\\.so$',
+        )
+
+        def is_excluded_libs(lib):
+            return lib.is_ndk or lib in vndk_stable
+
+        return self.compute_matched_libs(path_patterns, closure,
+                                         is_excluded_libs)
 
     def compute_vndk_libs(self, generic_refs, banned_libs):
         vndk_core = set()
@@ -636,7 +769,7 @@ class ELFLinker(object):
 
         # Remove NDK libraries and banned libraries.
         def is_not_vndk(lib):
-            return lib.is_ndk or banned_libs.get(os.path.basename(lib.path))
+            return lib.is_ndk or banned_libs.is_banned(lib.path)
 
         def remove_ndk_libs(libs):
             return set(lib for lib in libs if not is_not_vndk(lib))
@@ -731,8 +864,16 @@ class ELFLinker(object):
 #------------------------------------------------------------------------------
 
 class GenericRefs(object):
+    NEW_LIB = 0
+    EXPORT_EQUAL = 1
+    EXPORT_SUPER_SET = 2
+    MODIFIED = 3
+
     def __init__(self):
         self.refs = dict()
+
+    def add(self, name, symbols):
+        self.refs[name] = symbols
 
     def _load_from_dir(self, root):
         root = os.path.abspath(root)
@@ -744,7 +885,7 @@ class GenericRefs(object):
                 path = os.path.join(base, filename)
                 lib_name = '/' + path[prefix_len:-4]
                 with open(path, 'r') as f:
-                    self.refs[lib_name] = set(line.strip() for line in f)
+                    self.add(lib_name, set(line.strip() for line in f))
 
     @staticmethod
     def create_from_dir(root):
@@ -752,8 +893,19 @@ class GenericRefs(object):
         result._load_from_dir(root)
         return result
 
+    def classify_lib(self, lib):
+        ref_lib_symbols = self.refs.get(lib.path)
+        if not ref_lib_symbols:
+            return GenericRefs.NEW_LIB
+        exported_symbols = lib.elf.exported_symbols
+        if exported_symbols == ref_lib_symbols:
+            return GenericRefs.EXPORT_EQUAL
+        if exported_symbols > ref_lib_symbols:
+            return GenericRefs.EXPORT_SUPER_SET
+        return GenericRefs.MODIFIED
+
     def is_equivalent_lib(self, lib):
-        return self.refs.get(lib.path) == lib.elf.exported_symbols
+        return self.classify_lib(lib) == GenericRefs.EXPORT_EQUAL
 
 
 #------------------------------------------------------------------------------
@@ -893,15 +1045,14 @@ class VNDKCommand(ELFGraphCommand):
         for lib_set in lib_sets:
             for lib in lib_set:
                 for dep in lib.deps:
-                    dep_name = os.path.basename(dep.path)
-                    if dep_name in NDK_HIGH_LEVEL:
+                    if NDK_LIBS.is_hlndk(dep.path):
                         print('warning: {}: VNDK is using high-level NDK {}.'
                                 .format(lib.path, dep.path), file=sys.stderr)
 
     def _warn_banned_vendor_lib_deps(self, graph, banned_libs):
         for lib in graph.lib_pt[PT_VENDOR].values():
             for dep in lib.deps:
-                banned = banned_libs.get(os.path.basename(dep.path))
+                banned = banned_libs.is_banned(dep.path)
                 if banned:
                     print('warning: {}: Vendor binary depends on banned {} '
                           '(reason: {})'.format(
@@ -1039,6 +1190,28 @@ class DepsClosureCommand(ELFGraphCommand):
         return 0
 
 
+class VNDKStableCommand(ELFGraphCommand):
+    def __init__(self):
+        super(VNDKStableCommand, self).__init__(
+                'vndk-stable', help='Find transitive closure of VNDK stable')
+
+    def add_argparser_options(self, parser):
+        super(VNDKStableCommand, self).add_argparser_options(parser)
+
+        parser.add_argument('--closure', action='store_true',
+                            help='show the closure')
+
+    def main(self, args):
+        graph = ELFLinker.create(args.system, args.system_dir_as_vendor,
+                                 args.vendor, args.vendor_dir_as_system,
+                                 args.load_extra_deps)
+
+        vndk_stable = graph.compute_vndk_stable(closure=args.closure)
+        for lib in sorted_lib_path_list(vndk_stable):
+            print(lib)
+        return 0
+
+
 class SpHalCommand(ELFGraphCommand):
     def __init__(self):
         super(SpHalCommand, self).__init__(
@@ -1055,39 +1228,8 @@ class SpHalCommand(ELFGraphCommand):
                                  args.vendor, args.vendor_dir_as_system,
                                  args.load_extra_deps)
 
-        # Find SP HALs.
-        name_patterns = (
-            # OpenGL-related
-            '^/vendor/.*/libEGL_.*\\.so$',
-            '^/vendor/.*/libGLESv1_CM_.*\\.so$',
-            '^/vendor/.*/libGLESv2_.*\\.so$',
-            '^/vendor/.*/libGLESv3_.*\\.so$',
-            # Vulkan
-            '^/vendor/.*/vulkan.*\\.so$',
-            # libRSDriver
-            '^/vendor/.*/libRSDriver.*\\.so$',
-            '^/vendor/.*/libPVRRS\\.so$',
-            # Gralloc mapper
-            '^.*/gralloc\\..*\\.so$',
-            '^.*/android\\.hardware\\.graphics\\.mapper@\\d+\\.\\d+-impl\\.so$',
-        )
-
-        patt = re.compile('|'.join('(?:' + p + ')' for p in name_patterns))
-
-        # Find root/excluded libraries by their paths.
-        sp_hals = set()
-        for lib_set in graph.lib_pt:
-            for lib in lib_set.values():
-                if patt.match(lib.path):
-                    sp_hals.add(lib)
-
-        # Compute the closure (if specified).
-        if args.closure:
-            def is_excluded_libs(lib):
-                return lib.is_ndk
-            sp_hals = graph.compute_closure(sp_hals, is_excluded_libs)
-
-        # Print the result.
+        vndk_stable = graph.compute_vndk_stable(closure=True)
+        sp_hals = graph.compute_sp_hal(vndk_stable, closure=args.closure)
         for lib in sorted_lib_path_list(sp_hals):
             print(lib)
         return 0
@@ -1109,6 +1251,7 @@ def main():
     register_subcmd(DepsCommand())
     register_subcmd(DepsClosureCommand())
     register_subcmd(SpHalCommand())
+    register_subcmd(VNDKStableCommand())
 
     args = parser.parse_args()
     if not args.subcmd:
