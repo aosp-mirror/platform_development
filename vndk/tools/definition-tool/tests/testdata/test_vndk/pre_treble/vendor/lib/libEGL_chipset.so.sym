@@ -1,0 +1,9 @@
+EI_CLASS	32
+EI_DATA		Little-Endian
+E_MACHINE	EM_ARM
+DT_NEEDED	libc.so
+DT_NEEDED	libcutils.so
+DT_NEEDED	libdl.so
+EXP_SYMBOL	eglGetDisplay
+IMP_SYMBOL	fclose
+IMP_SYMBOL	fopen

@@ -236,23 +236,6 @@ class ELFLinkerTest(unittest.TestCase):
         node = graph.map_path_to_lib('/vendor/lib64/libEGL.so')
         self.assertEqual([], self._get_paths_from_nodes(node.users))
 
-    def test_compute_vndk_libs(self):
-        gb = self._create_normal_graph()
-        graph = gb.graph
-
-        class MockBannedLibs(object):
-            def is_banned(self, name):
-                return False
-
-        vndk_core, vndk_indirect, vndk_ext = \
-                graph.compute_vndk_libs(None, MockBannedLibs())
-
-        self.assertEqual(['/system/lib/libcutils.so',
-                          '/system/lib64/libcutils.so'],
-                         self._get_paths_from_nodes(vndk_core))
-        self.assertEqual([], self._get_paths_from_nodes(vndk_indirect))
-        self.assertEqual([], self._get_paths_from_nodes(vndk_ext))
-
     def test_compute_vndk_stable(self):
         gb = GraphBuilder()
 
@@ -415,6 +398,58 @@ class ELFLinkerTest(unittest.TestCase):
         self.assertNotIn(libhidlbase, sp_hal_closure)
         self.assertNotIn(libhidltransport, sp_hal_closure)
         self.assertNotIn(libc, sp_hal_closure)
+
+    def test_find_existing_vndk(self):
+        gb = GraphBuilder()
+
+        libpng32_core, libpng64_core = \
+                gb.add_multilib(PT_SYSTEM, 'libpng', extra_dir='vndk-26')
+        libpng32_fwk, libpng64_fwk = \
+                gb.add_multilib(PT_SYSTEM, 'libpng', extra_dir='vndk-26-ext')
+
+        libjpeg32_core, libjpeg64_core = \
+                gb.add_multilib(PT_SYSTEM, 'libjpeg', extra_dir='vndk-26')
+        libjpeg32_vnd, libjpeg64_vnd = \
+                gb.add_multilib(PT_VENDOR, 'libjpeg', extra_dir='vndk-26-ext')
+
+        gb.resolve()
+
+        vndk_core, vndk_fwk_ext, vndk_vnd_ext = gb.graph.find_existing_vndk()
+
+        expected_vndk_core = {
+                libpng32_core, libpng64_core, libjpeg32_core, libjpeg64_core}
+        expected_vndk_fwk_ext = {libpng32_fwk, libpng64_fwk}
+        expected_vndk_vnd_ext = {libjpeg32_vnd, libjpeg64_vnd}
+
+        self.assertSetEqual(expected_vndk_core, vndk_core)
+        self.assertSetEqual(expected_vndk_fwk_ext, vndk_fwk_ext)
+        self.assertSetEqual(expected_vndk_vnd_ext, vndk_vnd_ext)
+
+    def test_find_existing_vndk_without_version(self):
+        gb = GraphBuilder()
+
+        libpng32_core, libpng64_core = \
+                gb.add_multilib(PT_SYSTEM, 'libpng', extra_dir='vndk')
+        libpng32_fwk, libpng64_fwk = \
+                gb.add_multilib(PT_SYSTEM, 'libpng', extra_dir='vndk-ext')
+
+        libjpeg32_core, libjpeg64_core = \
+                gb.add_multilib(PT_SYSTEM, 'libjpeg', extra_dir='vndk')
+        libjpeg32_vnd, libjpeg64_vnd = \
+                gb.add_multilib(PT_VENDOR, 'libjpeg', extra_dir='vndk-ext')
+
+        gb.resolve()
+
+        vndk_core, vndk_fwk_ext, vndk_vnd_ext = gb.graph.find_existing_vndk()
+
+        expected_vndk_core = {
+                libpng32_core, libpng64_core, libjpeg32_core, libjpeg64_core}
+        expected_vndk_fwk_ext = {libpng32_fwk, libpng64_fwk}
+        expected_vndk_vnd_ext = {libjpeg32_vnd, libjpeg64_vnd}
+
+        self.assertSetEqual(expected_vndk_core, vndk_core)
+        self.assertSetEqual(expected_vndk_fwk_ext, vndk_fwk_ext)
+        self.assertSetEqual(expected_vndk_vnd_ext, vndk_vnd_ext)
 
 
 if __name__ == '__main__':
