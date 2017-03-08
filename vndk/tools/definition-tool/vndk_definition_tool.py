@@ -4,6 +4,7 @@ from __future__ import print_function
 
 import argparse
 import collections
+import itertools
 import os
 import re
 import stat
@@ -140,6 +141,26 @@ class ELF(object):
     }
 
 
+    @staticmethod
+    def _dict_find_key_by_value(d, dst):
+        for key, value in d.items():
+            if value == dst:
+                return key
+        raise KeyError(dst)
+
+    @staticmethod
+    def get_ei_class_from_name(name):
+        return ELF._dict_find_key_by_value(ELF._ELF_CLASS_NAMES, name)
+
+    @staticmethod
+    def get_ei_data_from_name(name):
+        return ELF._dict_find_key_by_value(ELF._ELF_DATA_NAMES, name)
+
+    @staticmethod
+    def get_e_machine_from_name(name):
+        return ELF._dict_find_key_by_value(ELF._ELF_MACHINE_IDS, name)
+
+
     __slots__ = ('ei_class', 'ei_data', 'e_machine', 'dt_rpath', 'dt_runpath',
                  'dt_needed', 'exported_symbols', 'imported_symbols',)
 
@@ -210,12 +231,6 @@ class ELF(object):
             print('EXP_SYMBOL\t' + symbol, file=file)
         for symbol in self.sorted_imported_symbols:
             print('IMP_SYMBOL\t' + symbol, file=file)
-
-    def dump_exported_symbols(self, file=None):
-        """Print exported symbols to the file"""
-        file = file if file is not None else sys.stdout
-        for symbol in self.sorted_exported_symbols:
-            print(symbol, file=file)
 
     # Extract zero-terminated buffer slice.
     def _extract_zero_terminated_buf_slice(self, buf, offset):
@@ -387,6 +402,47 @@ class ELF(object):
             with mmap(f.fileno(), st.st_size, access=ACCESS_READ) as image:
                 self._parse_from_buf(image)
 
+    def _parse_from_dump_lines(self, path, lines):
+        patt = re.compile('^([A-Za-z_]+)\t+(.*)$')
+        for line_no, line in enumerate(lines):
+            match = patt.match(line)
+            if not match:
+                print('error: {}: {}: failed to parse'
+                        .format(path, line_no + 1), file=sys.stderr)
+                continue
+            key = match.group(1)
+            value = match.group(2)
+
+            if key == 'EI_CLASS':
+                self.ei_class = ELF.get_ei_class_from_name(value)
+            elif key == 'EI_DATA':
+                self.ei_data = ELF.get_ei_data_from_name(value)
+            elif key == 'E_MACHINE':
+                self.e_machine = ELF.get_e_machine_from_name(value)
+            elif key == 'DT_RPATH':
+                self.dt_rpath.append(intern(value))
+            elif key == 'DT_RUNPATH':
+                self.dt_runpath.append(intern(value))
+            elif key == 'DT_NEEDED':
+                self.dt_needed.append(intern(value))
+            elif key == 'EXP_SYMBOL':
+                self.exported_symbols.add(intern(value))
+            elif key == 'IMP_SYMBOL':
+                self.imported_symbols.add(intern(value))
+            else:
+                print('error: {}: {}: unknown tag name: {}'
+                        .format(path, line_no + 1, key), file=sys.stderr)
+
+    def _parse_from_dump_file(self, path):
+        """Load information from ELF dump file."""
+        with open(path, 'r') as f:
+            self._parse_from_dump_lines(path, f)
+
+    def _parse_from_dump_buf(self, buf):
+        """Load information from ELF dump buffer."""
+        self._parse_from_dump_lines('<str:0x{:x}>'.format(id(buf)),
+                                    buf.splitlines())
+
     @staticmethod
     def load(path):
         """Create an ELF instance from the file path"""
@@ -399,6 +455,20 @@ class ELF(object):
         """Create an ELF instance from the buffer"""
         elf = ELF()
         elf._parse_from_buf(buf)
+        return elf
+
+    @staticmethod
+    def load_dump(path):
+        """Create an ELF instance from a dump file path"""
+        elf = ELF()
+        elf._parse_from_dump_file(path)
+        return elf
+
+    @staticmethod
+    def load_dumps(buf):
+        """Create an ELF instance from a dump file buffer"""
+        elf = ELF()
+        elf._parse_from_dump_buf(buf)
         return elf
 
 
@@ -539,19 +609,71 @@ class ELFResolver(object):
 
 
 class ELFLinkData(object):
+    NEEDED = 0  # Dependencies recorded in DT_NEEDED entries.
+    DLOPEN = 1  # Dependencies introduced by dlopen().
+
     def __init__(self, partition, path, elf):
         self.partition = partition
         self.path = path
         self.elf = elf
-        self.deps = set()
-        self.users = set()
+        self._deps = (set(), set())
+        self._users = (set(), set())
         self.is_ndk = NDK_LIBS.is_ndk(path)
         self.unresolved_symbols = set()
         self.linked_symbols = dict()
 
-    def add_dep(self, dst):
-        self.deps.add(dst)
-        dst.users.add(self)
+    def add_dep(self, dst, ty):
+        self._deps[ty].add(dst)
+        dst._users[ty].add(self)
+
+    def remove_dep(self, dst, ty):
+        self._deps[ty].remove(dst)
+        dst._users[ty].remove(self)
+
+    @property
+    def num_deps(self):
+        """Get the number of dependencies.  If a library is linked by both
+        NEEDED and DLOPEN relationship, then it will be counted twice."""
+        return sum(len(deps) for deps in self._deps)
+
+    @property
+    def deps(self):
+        return itertools.chain.from_iterable(self._deps)
+
+    @property
+    def dt_deps(self):
+        return self._deps[self.NEEDED]
+
+    @property
+    def dl_deps(self):
+        return self._deps[self.DLOPEN]
+
+    @property
+    def num_users(self):
+        """Get the number of users.  If a library is linked by both NEEDED and
+        DLOPEN relationship, then it will be counted twice."""
+        return sum(len(users) for users in self._users)
+
+    @property
+    def users(self):
+        return itertools.chain.from_iterable(self._users)
+
+    @property
+    def dt_users(self):
+        return self._users[self.NEEDED]
+
+    @property
+    def dl_users(self):
+        return self._users[self.DLOPEN]
+
+    def has_dep(self, dst):
+        return any(dst in deps for deps in self._deps)
+
+    def has_user(self, dst):
+        return any(dst in users for users in self._users)
+
+    def is_system_lib(self):
+        return self.partition == PT_SYSTEM
 
 
 def sorted_lib_path_list(libs):
@@ -575,12 +697,15 @@ class ELFLinker(object):
         self.lib_pt[partition][path] = node
         return node
 
-    def add_dep(self, src_path, dst_path):
+    def add_dep(self, src_path, dst_path, ty):
         for lib_set in (self.lib32, self.lib64):
             src = lib_set.get(src_path)
             dst = lib_set.get(dst_path)
             if src and dst:
-                src.add_dep(dst)
+                src.add_dep(dst, ty)
+                return
+        print('error: cannot add dependency from {} to {}.'
+              .format(src_path, dst_path), file=sys.stderr)
 
     def map_path_to_lib(self, path):
         for lib_set in (self.lib32, self.lib64):
@@ -631,7 +756,8 @@ class ELFLinker(object):
             for line in f:
                 match = patt.match(line)
                 if match:
-                    self.add_dep(match.group(1), match.group(2))
+                    self.add_dep(match.group(1), match.group(2),
+                                 ELFLinkData.DLOPEN)
 
     def _find_exported_symbol(self, symbol, libs):
         """Find the shared library with the exported symbol."""
@@ -660,7 +786,7 @@ class ELFLinker(object):
                 print('warning: {}: Missing needed library: {}  Tried: {}'
                       .format(lib.path, dt_needed, candidates), file=sys.stderr)
                 continue
-            lib.add_dep(dep)
+            lib.add_dep(dep, ELFLinkData.NEEDED)
             imported_libs.append(dep)
         return imported_libs
 
@@ -680,6 +806,27 @@ class ELFLinker(object):
         self._resolve_lib_set_deps(
                 self.lib64,
                 ELFResolver(self.lib64, ['/system/lib64', '/vendor/lib64']))
+
+    def _resolve_lib_extended_symbol_users(self, generic_refs, lib):
+        """Resolve the users of the extended exported symbols of a library."""
+        try:
+            ref_lib = generic_refs.refs[lib.path]
+        except KeyError:
+            lib.extended_symbol_users = lib.users
+            return
+
+        for user in lib.users:
+            for symbol, imp_lib in user.linked_symbols.items():
+                if imp_lib is not lib:
+                    continue
+                if symbol not in ref_lib.exported_symbols:
+                    lib.extended_symbol_users.add(user)
+
+    def resolve_extended_symbol_users(self, generic_refs):
+        """Resolve the users of the extended exported symbols."""
+        for lib_set in self.lib_pt:
+            for lib in lib_set.values():
+                self._resolve_lib_extended_symbol_users(generic_refs, lib)
 
     def compute_matched_libs(self, path_patterns, closure=False,
                              is_excluded_libs=None):
@@ -872,8 +1019,8 @@ class GenericRefs(object):
     def __init__(self):
         self.refs = dict()
 
-    def add(self, name, symbols):
-        self.refs[name] = symbols
+    def add(self, name, elf):
+        self.refs[name] = elf
 
     def _load_from_dir(self, root):
         root = os.path.abspath(root)
@@ -885,7 +1032,7 @@ class GenericRefs(object):
                 path = os.path.join(base, filename)
                 lib_name = '/' + path[prefix_len:-4]
                 with open(path, 'r') as f:
-                    self.add(lib_name, set(line.strip() for line in f))
+                    self.add(lib_name, ELF.load_dump(path))
 
     @staticmethod
     def create_from_dir(root):
@@ -894,13 +1041,13 @@ class GenericRefs(object):
         return result
 
     def classify_lib(self, lib):
-        ref_lib_symbols = self.refs.get(lib.path)
-        if not ref_lib_symbols:
+        ref_lib = self.refs.get(lib.path)
+        if not ref_lib:
             return GenericRefs.NEW_LIB
         exported_symbols = lib.elf.exported_symbols
-        if exported_symbols == ref_lib_symbols:
+        if exported_symbols == ref_lib.exported_symbols:
             return GenericRefs.EXPORT_EQUAL
-        if exported_symbols > ref_lib_symbols:
+        if exported_symbols > ref_lib.exported_symbols:
             return GenericRefs.EXPORT_SUPER_SET
         return GenericRefs.MODIFIED
 
@@ -966,7 +1113,7 @@ class CreateGenericRefCommand(Command):
                 out = os.path.join(args.output, name) + '.sym'
                 makedirs(os.path.dirname(out), exist_ok=True)
                 with open(out, 'w') as f:
-                    elf.dump_exported_symbols(f)
+                    elf.dump(f)
             except ELFError:
                 pass
         return 0
@@ -1025,7 +1172,7 @@ class VNDKCommand(ELFGraphCommand):
 
     def _warn_incorrect_partition_lib_set(self, lib_set, partition, error_msg):
         for lib in lib_set.values():
-            if not lib.users:
+            if not lib.num_users:
                 continue
             if all((user.partition != partition for user in lib.users)):
                 print(error_msg.format(lib.path), file=sys.stderr)
