@@ -1,0 +1,7 @@
+EI_CLASS	64
+EI_DATA		Little-Endian
+E_MACHINE	EM_AARCH64
+EXP_SYMBOL	fclose
+EXP_SYMBOL	fopen
+EXP_SYMBOL	fread
+EXP_SYMBOL	fwrite
