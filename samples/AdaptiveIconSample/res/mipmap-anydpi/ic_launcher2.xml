@@ -15,7 +15,5 @@
 -->
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
     <background android:drawable="@color/background" />
-    <foreground>
-       <bitmap android:src="@mipmap/icon_fore_3"/>
-    </foreground>
+    <foreground android:drawable="@mipmap/icon_fore_1"/>
 </adaptive-icon>
