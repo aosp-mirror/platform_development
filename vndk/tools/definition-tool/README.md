@@ -16,17 +16,67 @@ Run the VNDK definition tool with:
         --vendor ${ANDROID_PRODUCT_OUT}/vendor \
         --load-generic-refs generic_arm64
 
-This command will give you three different lists:
+This command will print 7 different lists:
 
-- vndk-core: VNDK libraries that are both used by frameworks and HALs.  This
-  set will be installed on system partition.
+* **vndk-stable**
 
-- vndk-indirect: VNDK libraries that are indirectly used by vndk-core but
-  not directly used by vendors.  This set will be installed on system partition.
+  - This list contains the pre-defined vndk-stable libraries.
 
-- vndk-ext: VNDK libraries that are both used by frameworks and HALs.  This set
-  is for the libraries that do not have an functionally-equivalent AOSP
-  counterpart.  This set will be installed on vendor partition.
+  - The libraries with long-term API/ABI stability/compatibility commitment.
+
+  - The libraries will be installed to /system/lib[64]/vndk-stable
+
+* **sp-hal**
+
+  - This list contains the pre-defined SP-HAL libraries and their dependencies.
+
+  - The libraries will be installed to /vendor/lib[64]/sameprocess
+
+* **vndk-core**
+
+  - This list contains the shared libraries used by both the framework and
+    vendor code.
+
+  - The libraries must be either intact or inward-customized.
+
+  - The libraries will be installed to /system/lib[64]/vndk-$FWK
+
+* **vndk-indirect**
+
+  - This list contains the shared libraries which are indirectly used by
+    aforementioned vndk-core but not directly used by vendor code.
+
+  - The libraries must be either intact or inward-customized.
+
+  - The libraries will be installed to /system/lib[64]/vndk-$FWK
+
+* **vndk-fwd-ext**
+
+  - This list contains the vndk-core/vndk-indirect overlays for *the framework*.
+
+  - The libraries must be either outward-customized or extended.  In other
+    words, the libraries in this list might use or define non-AOSP APIs.
+
+  - The libraries will be installed to /system/lib[64]/vndk-$FWK-ext
+
+* **vndk-vnd-ext**
+
+  - This list contains the vndk-core overlays for *vendor code*.
+
+  - The libraries must be either outward-customized or extended.  In other
+    words, the libraries in this list might use or define non-AOSP APIs.
+
+  - The libraries will be installed to /vendor/lib[64]/vndk-$VND-ext
+
+- **extra-vendor**
+
+  - This list contains the extra libraries that have to be copied from
+    /system/lib[64] to /vendor/lib[64].
+
+  - The libraries in this list are usually the non-AOSP dependencies of
+    vndk-vnd-ext or other vendor code.
+
+  - The libraries will be installed to /vendor/lib[64]
 
 
 # Sub Directory Tagging
@@ -75,6 +125,28 @@ And then, run VNDK definition tool with:
         --vendor ${ANDROID_PRODUCT_OUT}/vendor \
         --load-generic-refs generic_arm64 \
         --load-extra-deps dlopen.dep
+
+
+# Partition for VNDK with Outward Customization
+An outward-customized VNDK library can be put on both system and vendor
+partition.  VNDK definition tool will assume such library will be installed
+into /system/lib[64]/vndk-$FWK-ext by default.  Use following options to change
+the default behavior.
+
+* `--outward-customization-default-partition=[system*|vendor|both]`
+
+  This option specifies the default destination for outward-customized VNDK
+  libraries.  The default value is the system partition.
+
+* `--outward-customization-for-system=[lib]`
+
+  This option specifies the library that should be installed to the system
+  partition if it is an outward-customized VNDK library.
+
+* `--outward-customization-for-vendor=[lib]`
+
+  This option specifies the library that should be installed to the vendor
+  partition if it is an outward-customized VNDK library.
 
 
 ## Warnings
