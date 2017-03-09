@@ -1043,8 +1043,6 @@ class ELFLinker(object):
         # Collect existing VNDK libraries.
         vndk_core, vndk_fwk_ext, vndk_vnd_ext = self.find_existing_vndk()
 
-        assert not vndk_core, "debug: no existing vndk core"
-
         # Collect VNDK candidates.
         def is_not_vndk(lib):
             return (lib.is_ndk or banned_libs.is_banned(lib.path) or
@@ -1283,6 +1281,43 @@ class ELFLinker(object):
         return VNDKHeuristics(
                 extra_system_libs, extra_vendor_libs, extra_vndk_core,
                 vndk_core, vndk_indirect, vndk_fwk_ext, vndk_vnd_ext)
+
+    def compute_vndk_cap(self, banned_libs):
+        # ELF files on vendor partitions are banned unconditionally.  ELF files
+        # on the system partition are banned if their file extensions are not
+        # '.so' or their file names are listed in banned_libs.  LL-NDK and
+        # SP-NDK libraries are treated as a special case which will not be
+        # considered as banned libraries at the moment.
+        def is_banned(lib):
+            if lib.is_ndk:
+                return NDK_LIBS.is_hlndk(lib.path)
+            return (banned_libs.is_banned(lib.path) or
+                    not lib.is_system_lib() or
+                    not lib.path.endswith('.so'))
+
+        # Find all libraries that are banned.
+        banned_set = set()
+        for lib_set in self.lib_pt:
+            for lib in lib_set.values():
+                if is_banned(lib):
+                    banned_set.add(lib)
+
+        # Find the transitive closure of the banned libraries.
+        stack = list(banned_set)
+        while stack:
+            lib = stack.pop()
+            for user in lib.users:
+                if not user.is_ndk and user not in banned_set:
+                    banned_set.add(user)
+                    stack.append(user)
+
+        # Find the non-NDK non-banned libraries.
+        vndk_cap = set()
+        for lib in self.lib_pt[PT_SYSTEM].values():
+            if not lib.is_ndk and lib not in banned_set:
+                vndk_cap.add(lib)
+
+        return vndk_cap
 
     @staticmethod
     def compute_closure(root_set, is_excluded):
@@ -1650,6 +1685,27 @@ class VNDKCommand(ELFGraphCommand):
         return 0
 
 
+class VNDKCapCommand(ELFGraphCommand):
+    def __init__(self):
+        super(VNDKCapCommand, self).__init__(
+                'vndk-cap', help='Compute VNDK set upper bound')
+
+    def add_argparser_options(self, parser):
+        super(VNDKCapCommand, self).add_argparser_options(parser)
+
+    def main(self, args):
+        graph = ELFLinker.create(args.system, args.system_dir_as_vendor,
+                                 args.vendor, args.vendor_dir_as_system,
+                                 args.load_extra_deps)
+
+        banned_libs = BannedLibDict.create_default()
+
+        vndk_cap = graph.compute_vndk_cap(banned_libs)
+
+        for lib in sorted_lib_path_list(vndk_cap):
+            print(lib)
+
+
 class DepsCommand(ELFGraphCommand):
     def __init__(self):
         super(DepsCommand, self).__init__(
@@ -1790,6 +1846,7 @@ def main():
     register_subcmd(ELFDumpCommand())
     register_subcmd(CreateGenericRefCommand())
     register_subcmd(VNDKCommand())
+    register_subcmd(VNDKCapCommand())
     register_subcmd(DepsCommand())
     register_subcmd(DepsClosureCommand())
     register_subcmd(SpHalCommand())
