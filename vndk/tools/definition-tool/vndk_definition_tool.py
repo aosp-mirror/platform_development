@@ -1043,8 +1043,6 @@ class ELFLinker(object):
         # Collect existing VNDK libraries.
         vndk_core, vndk_fwk_ext, vndk_vnd_ext = self.find_existing_vndk()
 
-        assert not vndk_core, "debug: no existing vndk core"
-
         # Collect VNDK candidates.
         def is_not_vndk(lib):
             return (lib.is_ndk or banned_libs.is_banned(lib.path) or
