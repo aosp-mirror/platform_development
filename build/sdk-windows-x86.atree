@@ -36,6 +36,7 @@ bin/adb.exe                             strip platform-tools/adb.exe
 bin/fastboot.exe                        strip platform-tools/fastboot.exe
 bin/AdbWinUsbApi.dll                          platform-tools/AdbWinUsbApi.dll
 bin/AdbWinApi.dll                             platform-tools/AdbWinApi.dll
+prebuilts/gcc/linux-x86/host/x86_64-w64-mingw32-4.8/x86_64-w64-mingw32/lib32/libwinpthread-1.dll platform-tools/libwinpthread-1.dll
 
 rm platform-tools/sqlite3
 bin/sqlite3.exe                        strip platform-tools/sqlite3.exe
