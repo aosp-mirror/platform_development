@@ -811,7 +811,7 @@ class ELFLinker(object):
                 if generic_refs:
                     ref_lib = generic_refs.refs.get(imported_lib.path)
                     if not ref_lib or not symbol in ref_lib.exported_symbols:
-                        lib.imported_ext_symbols[ref_lib].add(symbol)
+                        lib.imported_ext_symbols[imported_lib].add(symbol)
 
     def _resolve_lib_dt_needed(self, lib, resolver):
         imported_libs = []
