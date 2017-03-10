@@ -601,8 +601,7 @@ NUM_PARTITIONS = 2
 
 VNDKHeuristics = collections.namedtuple(
         'VNDKHeuristics',
-        'extra_system_libs extra_vendor_libs extra_vndk_core '
-        'vndk_core vndk_indirect vndk_fwk_ext vndk_vnd_ext')
+        'extra_vendor_libs vndk_core vndk_indirect vndk_fwk_ext vndk_vnd_ext')
 
 
 class ELFResolver(object):
@@ -1063,8 +1062,6 @@ class ELFLinker(object):
         vndk_visited = set(vndk_candidates)
 
         # Sets for missing libraries.
-        extra_vndk_core = set()
-        extra_system_libs = set()
         extra_vendor_libs = set()
 
         def get_vndk_core_lib_name(lib):
@@ -1160,7 +1157,6 @@ class ELFLinker(object):
                 for lib in prev_vndk_candidates:
                     category = generic_refs.classify_lib(lib)
                     if category == GenericRefs.NEW_LIB:
-                        extra_system_libs.add(lib)
                         extra_vendor_libs.add(lib)
                         add_deps_to_vndk_candidate(lib)
                     elif category == GenericRefs.EXPORT_EQUAL:
@@ -1278,9 +1274,8 @@ class ELFLinker(object):
             else:
                 vndk_indirect.add(lib)
 
-        return VNDKHeuristics(
-                extra_system_libs, extra_vendor_libs, extra_vndk_core,
-                vndk_core, vndk_indirect, vndk_fwk_ext, vndk_vnd_ext)
+        return VNDKHeuristics(extra_vendor_libs, vndk_core, vndk_indirect,
+                              vndk_fwk_ext, vndk_vnd_ext)
 
     def compute_vndk_cap(self, banned_libs):
         # ELF files on vendor partitions are banned unconditionally.  ELF files
@@ -1658,8 +1653,8 @@ class VNDKCommand(ELFGraphCommand):
 
         if args.warn_high_level_ndk_deps:
             self._warn_high_level_ndk_deps(
-                    (vndk.extra_vndk_core, vndk.vndk_core, vndk.vndk_indirect,
-                     vndk.vndk_fwk_ext, vndk.vndk_vnd_ext))
+                    (vndk.vndk_core, vndk.vndk_indirect, vndk.vndk_fwk_ext,
+                     vndk.vndk_vnd_ext))
 
         for lib in sorted_lib_path_list(sp_hals_closure):
             print('sp-hals:', lib)
