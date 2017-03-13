@@ -61,13 +61,23 @@ static void HideIrrelevantCommandLineOptions() {
 int main(int argc, const char **argv) {
   HideIrrelevantCommandLineOptions();
 
+  // FIXME: Clang FORTIFY requires a version of clang at least as new as
+  // clang-3688880 (r285906). Since external/clang is currently r275480, we need
+  // to disable FORTIFY for this tool to function correctly.
+  std::vector<const char *> fixedArgv(argv, argv + argc);
+  fixedArgv.push_back("-U_FORTIFY_SOURCE");
+  int fixedArgc = fixedArgv.size();
+
   // Create compilation database from command line arguments after "--".
   std::unique_ptr<clang::tooling::CompilationDatabase> compilations(
       clang::tooling::FixedCompilationDatabase::loadFromCommandLine(
-          argc, argv));
+          fixedArgc, fixedArgv.data()));
 
   // Parse the command line options.
-  llvm::cl::ParseCommandLineOptions(argc, argv, "header-checker");
+  // Note that loadFromCommandLine may alter fixedArgc, so we can't use
+  // fixedArgv.size() here.
+  llvm::cl::ParseCommandLineOptions(fixedArgc, fixedArgv.data(),
+      "header-checker");
 
   // Input header file existential check.
   if (!llvm::sys::fs::exists(header_file)) {
