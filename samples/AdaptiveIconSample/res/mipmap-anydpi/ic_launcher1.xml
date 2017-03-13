@@ -13,6 +13,9 @@
      See the License for the specific language governing permissions and
      limitations under the License.
 -->
-<bitmap
-  xmlns:android="http://schemas.android.com/apk/res/android"
-  android:src="@mipmap/ic_launcher1" />
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@mipmap/icon_back_1"/>
+    <foreground>
+        <bitmap android:src="@mipmap/icon_fore_1"/>
+    </foreground>
+</adaptive-icon>

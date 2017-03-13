@@ -25,7 +25,7 @@
     <application android:label="AdaptiveIconSample">
         <activity
             android:name="Activity1"
-            android:icon="@drawable/ic_launcher1"
+            android:icon="@mipmap/ic_launcher1"
             android:label="Icon 1">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
@@ -34,17 +34,8 @@
         </activity>
         <activity
             android:name="Activity2"
-            android:icon="@drawable/ic_launcher2"
+            android:icon="@mipmap/ic_launcher2"
             android:label="Icon 2">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
-                <category android:name="android.intent.category.LAUNCHER"/>
-            </intent-filter>
-        </activity>
-        <activity
-            android:name="Activity3"
-            android:icon="@drawable/ic_launcher3"
-            android:label="Icon 3">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
