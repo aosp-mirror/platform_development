@@ -996,14 +996,14 @@ class ELFLinker(object):
                               'vendor lib {}.  Assume such dependency does '
                               'not exist.'.format(lib.path, dep.path),
                               file=sys.stderr)
-                    lib.remove_dep(dep, ELFLinkData.NEEDED)
+                        lib.remove_dep(dep, ELFLinkData.NEEDED)
                 for dep in list(lib.dl_deps):
                     if not is_system_lib_or_sp_hal(dep):
                         print('error: {}: system exe/lib must not dlopen() '
                               'vendor lib {}.  Assume such dependency does '
                               'not exist.'.format(lib.path, dep.path),
                               file=sys.stderr)
-                    lib.remove_dep(dep, ELFLinkData.DLOPEN)
+                        lib.remove_dep(dep, ELFLinkData.DLOPEN)
             else:
                 # If lib is not in AOSP generic reference, then we assume that
                 # lib must be moved to vendor partition.
@@ -1717,6 +1717,10 @@ class DepsCommand(ELFGraphCommand):
                 '--leaf', action='store_true',
                 help='print binaries without dependencies or usages')
 
+        parser.add_argument(
+                '--symbols', action='store_true',
+                help='print symbols')
+
     def main(self, args):
         graph = ELFLinker.create(args.system, args.system_dir_as_vendor,
                                  args.vendor, args.vendor_dir_as_system,
@@ -1725,8 +1729,27 @@ class DepsCommand(ELFGraphCommand):
         results = []
         for partition in range(NUM_PARTITIONS):
             for name, lib in graph.lib_pt[partition].items():
-                assoc_libs = lib.users if args.revert else lib.deps
-                results.append((name, sorted_lib_path_list(assoc_libs)))
+                if not args.symbols:
+                    def collect_symbols(user, definer):
+                        return ()
+                else:
+                    def collect_symbols(user, definer):
+                        symbols = set()
+                        for symbol, exp_lib in user.linked_symbols.items():
+                            if exp_lib == definer:
+                                symbols.add(symbol)
+                        return sorted(symbols)
+
+                data = []
+                if args.revert:
+                    for assoc_lib in sorted(lib.users, key=lambda x: x.path):
+                        data.append((assoc_lib.path,
+                                     collect_symbols(assoc_lib, lib)))
+                else:
+                    for assoc_lib in sorted(lib.deps, key=lambda x: x.path):
+                        data.append((assoc_lib.path,
+                                     collect_symbols(lib, assoc_lib)))
+                results.append((name, data))
         results.sort()
 
         if args.leaf:
@@ -1734,10 +1757,12 @@ class DepsCommand(ELFGraphCommand):
                 if not deps:
                     print(name)
         else:
-            for name, deps in results:
+            for name, assoc_libs in results:
                 print(name)
-                for dep in deps:
-                    print('\t' + dep)
+                for assoc_lib, symbols in assoc_libs:
+                    print('\t' + assoc_lib)
+                    for symbol in symbols:
+                        print('\t\t' + symbol)
         return 0
 
 
