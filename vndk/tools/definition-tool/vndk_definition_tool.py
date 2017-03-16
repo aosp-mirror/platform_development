@@ -1598,7 +1598,8 @@ class VNDKCommand(ELFGraphCommand):
                                  generic_refs=generic_refs)
 
         # Check the API extensions to NDK libraries.
-        self._check_ndk_extensions(graph, generic_refs)
+        if generic_refs:
+            self._check_ndk_extensions(graph, generic_refs)
 
         # Create banned libraries.
         if not args.ban_vendor_lib_dep:
