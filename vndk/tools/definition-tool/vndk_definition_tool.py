@@ -996,14 +996,14 @@ class ELFLinker(object):
                               'vendor lib {}.  Assume such dependency does '
                               'not exist.'.format(lib.path, dep.path),
                               file=sys.stderr)
-                    lib.remove_dep(dep, ELFLinkData.NEEDED)
+                        lib.remove_dep(dep, ELFLinkData.NEEDED)
                 for dep in list(lib.dl_deps):
                     if not is_system_lib_or_sp_hal(dep):
                         print('error: {}: system exe/lib must not dlopen() '
                               'vendor lib {}.  Assume such dependency does '
                               'not exist.'.format(lib.path, dep.path),
                               file=sys.stderr)
-                    lib.remove_dep(dep, ELFLinkData.DLOPEN)
+                        lib.remove_dep(dep, ELFLinkData.DLOPEN)
             else:
                 # If lib is not in AOSP generic reference, then we assume that
                 # lib must be moved to vendor partition.
