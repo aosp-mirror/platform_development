@@ -46,4 +46,15 @@ public abstract class Logger {
     public static boolean logcat = true;
 
     public abstract void println(String s);
+
+    /**
+     * Log an exception (throwable) at the ERROR level with an accompanying message.
+     *
+     * @param msg The message accompanying the exception.
+     * @param t The exception (throwable) to log.
+     */
+    public static void error(String msg, Throwable t) {
+        err.println(msg);
+        err.println(Log.getStackTraceString(t));
+    }
 }

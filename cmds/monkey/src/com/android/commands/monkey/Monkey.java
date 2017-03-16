@@ -1062,140 +1062,144 @@ public class Monkey {
         boolean shouldAbort = false;
         boolean systemCrashed = false;
 
-        // TO DO : The count should apply to each of the script file.
-        while (!systemCrashed && cycleCounter < mCount) {
-            synchronized (this) {
-                if (mRequestProcRank) {
-                    reportProcRank();
-                    mRequestProcRank = false;
-                }
-                if (mRequestAnrTraces) {
-                    mRequestAnrTraces = false;
-                    shouldReportAnrTraces = true;
-                }
-                if (mRequestAnrBugreport){
-                    getBugreport("anr_" + mReportProcessName + "_");
-                    mRequestAnrBugreport = false;
-                }
-                if (mRequestWatchdogBugreport) {
-                    Logger.out.println("Print the watchdog report");
-                    getBugreport("anr_watchdog_");
-                    mRequestWatchdogBugreport = false;
-                }
-                if (mRequestAppCrashBugreport){
-                    getBugreport("app_crash" + mReportProcessName + "_");
-                    mRequestAppCrashBugreport = false;
-                }
-                if (mRequestPeriodicBugreport){
-                    getBugreport("Bugreport_");
-                    mRequestPeriodicBugreport = false;
-                }
-                if (mRequestDumpsysMemInfo) {
-                    mRequestDumpsysMemInfo = false;
-                    shouldReportDumpsysMemInfo = true;
-                }
-                if (mMonitorNativeCrashes) {
-                    // first time through, when eventCounter == 0, just set up
-                    // the watcher (ignore the error)
-                    if (checkNativeCrashes() && (eventCounter > 0)) {
-                        Logger.out.println("** New native crash detected.");
-                        if (mRequestBugreport) {
-                            getBugreport("native_crash_");
+        try {
+            // TO DO : The count should apply to each of the script file.
+            while (!systemCrashed && cycleCounter < mCount) {
+                synchronized (this) {
+                    if (mRequestProcRank) {
+                        reportProcRank();
+                        mRequestProcRank = false;
+                    }
+                    if (mRequestAnrTraces) {
+                        mRequestAnrTraces = false;
+                        shouldReportAnrTraces = true;
+                    }
+                    if (mRequestAnrBugreport){
+                        getBugreport("anr_" + mReportProcessName + "_");
+                        mRequestAnrBugreport = false;
+                    }
+                    if (mRequestWatchdogBugreport) {
+                        Logger.out.println("Print the watchdog report");
+                        getBugreport("anr_watchdog_");
+                        mRequestWatchdogBugreport = false;
+                    }
+                    if (mRequestAppCrashBugreport){
+                        getBugreport("app_crash" + mReportProcessName + "_");
+                        mRequestAppCrashBugreport = false;
+                    }
+                    if (mRequestPeriodicBugreport){
+                        getBugreport("Bugreport_");
+                        mRequestPeriodicBugreport = false;
+                    }
+                    if (mRequestDumpsysMemInfo) {
+                        mRequestDumpsysMemInfo = false;
+                        shouldReportDumpsysMemInfo = true;
+                    }
+                    if (mMonitorNativeCrashes) {
+                        // first time through, when eventCounter == 0, just set up
+                        // the watcher (ignore the error)
+                        if (checkNativeCrashes() && (eventCounter > 0)) {
+                            Logger.out.println("** New native crash detected.");
+                            if (mRequestBugreport) {
+                                getBugreport("native_crash_");
+                            }
+                            mAbort = mAbort || !mIgnoreNativeCrashes || mKillProcessAfterError;
                         }
-                        mAbort = mAbort || !mIgnoreNativeCrashes || mKillProcessAfterError;
                     }
-                }
-                if (mAbort) {
-                    shouldAbort = true;
-                }
-                if (mWatchdogWaiting) {
-                    mWatchdogWaiting = false;
-                    notifyAll();
-                }
-            }
-
-            // Report ANR, dumpsys after releasing lock on this.
-            // This ensures the availability of the lock to Activity controller's appNotResponding
-            if (shouldReportAnrTraces) {
-               shouldReportAnrTraces = false;
-               reportAnrTraces();
-            }
-
-            if (shouldReportDumpsysMemInfo) {
-               shouldReportDumpsysMemInfo = false;
-               reportDumpsysMemInfo();
-            }
-
-            if (shouldAbort) {
-               shouldAbort = false;
-               Logger.out.println("** Monkey aborted due to error.");
-               Logger.out.println("Events injected: " + eventCounter);
-               return eventCounter;
-            }
-
-            // In this debugging mode, we never send any events. This is
-            // primarily here so you can manually test the package or category
-            // limits, while manually exercising the system.
-            if (mSendNoEvents) {
-                eventCounter++;
-                cycleCounter++;
-                continue;
-            }
-
-            if ((mVerbose > 0) && (eventCounter % 100) == 0 && eventCounter != 0) {
-                String calendarTime = MonkeyUtils.toCalendarTime(System.currentTimeMillis());
-                long systemUpTime = SystemClock.elapsedRealtime();
-                Logger.out.println("    //[calendar_time:" + calendarTime + " system_uptime:"
-                                   + systemUpTime + "]");
-                Logger.out.println("    // Sending event #" + eventCounter);
-            }
-
-            MonkeyEvent ev = mEventSource.getNextEvent();
-            if (ev != null) {
-                int injectCode = ev.injectEvent(mWm, mAm, mVerbose);
-                if (injectCode == MonkeyEvent.INJECT_FAIL) {
-                    Logger.out.println("    // Injection Failed");
-                    if (ev instanceof MonkeyKeyEvent) {
-                        mDroppedKeyEvents++;
-                    } else if (ev instanceof MonkeyMotionEvent) {
-                        mDroppedPointerEvents++;
-                    } else if (ev instanceof MonkeyFlipEvent) {
-                        mDroppedFlipEvents++;
-                    } else if (ev instanceof MonkeyRotationEvent) {
-                        mDroppedRotationEvents++;
+                    if (mAbort) {
+                        shouldAbort = true;
                     }
-                } else if (injectCode == MonkeyEvent.INJECT_ERROR_REMOTE_EXCEPTION) {
-                    systemCrashed = true;
-                    Logger.err.println("** Error: RemoteException while injecting event.");
-                } else if (injectCode == MonkeyEvent.INJECT_ERROR_SECURITY_EXCEPTION) {
-                    systemCrashed = !mIgnoreSecurityExceptions;
-                    if (systemCrashed) {
-                        Logger.err.println("** Error: SecurityException while injecting event.");
+                    if (mWatchdogWaiting) {
+                        mWatchdogWaiting = false;
+                        notifyAll();
                     }
                 }
 
-                // Don't count throttling as an event.
-                if (!(ev instanceof MonkeyThrottleEvent)) {
+                // Report ANR, dumpsys after releasing lock on this.
+                // This ensures the availability of the lock to Activity controller's appNotResponding
+                if (shouldReportAnrTraces) {
+                    shouldReportAnrTraces = false;
+                    reportAnrTraces();
+                }
+
+                if (shouldReportDumpsysMemInfo) {
+                    shouldReportDumpsysMemInfo = false;
+                    reportDumpsysMemInfo();
+                }
+
+                if (shouldAbort) {
+                    shouldAbort = false;
+                    Logger.out.println("** Monkey aborted due to error.");
+                    Logger.out.println("Events injected: " + eventCounter);
+                    return eventCounter;
+                }
+
+                // In this debugging mode, we never send any events. This is
+                // primarily here so you can manually test the package or category
+                // limits, while manually exercising the system.
+                if (mSendNoEvents) {
                     eventCounter++;
-                    if (mCountEvents) {
-                        cycleCounter++;
-                    }
-                }
-            } else {
-                if (!mCountEvents) {
                     cycleCounter++;
-                    writeScriptLog(cycleCounter);
-                    //Capture the bugreport after n iteration
-                    if (mGetPeriodicBugreport) {
-                        if ((cycleCounter % mBugreportFrequency) == 0) {
-                            mRequestPeriodicBugreport = true;
+                    continue;
+                }
+
+                if ((mVerbose > 0) && (eventCounter % 100) == 0 && eventCounter != 0) {
+                    String calendarTime = MonkeyUtils.toCalendarTime(System.currentTimeMillis());
+                    long systemUpTime = SystemClock.elapsedRealtime();
+                    Logger.out.println("    //[calendar_time:" + calendarTime + " system_uptime:"
+                            + systemUpTime + "]");
+                    Logger.out.println("    // Sending event #" + eventCounter);
+                }
+
+                MonkeyEvent ev = mEventSource.getNextEvent();
+                if (ev != null) {
+                    int injectCode = ev.injectEvent(mWm, mAm, mVerbose);
+                    if (injectCode == MonkeyEvent.INJECT_FAIL) {
+                        Logger.out.println("    // Injection Failed");
+                        if (ev instanceof MonkeyKeyEvent) {
+                            mDroppedKeyEvents++;
+                        } else if (ev instanceof MonkeyMotionEvent) {
+                            mDroppedPointerEvents++;
+                        } else if (ev instanceof MonkeyFlipEvent) {
+                            mDroppedFlipEvents++;
+                        } else if (ev instanceof MonkeyRotationEvent) {
+                            mDroppedRotationEvents++;
+                        }
+                    } else if (injectCode == MonkeyEvent.INJECT_ERROR_REMOTE_EXCEPTION) {
+                        systemCrashed = true;
+                        Logger.err.println("** Error: RemoteException while injecting event.");
+                    } else if (injectCode == MonkeyEvent.INJECT_ERROR_SECURITY_EXCEPTION) {
+                        systemCrashed = !mIgnoreSecurityExceptions;
+                        if (systemCrashed) {
+                            Logger.err.println("** Error: SecurityException while injecting event.");
+                        }
+                    }
+
+                    // Don't count throttling as an event.
+                    if (!(ev instanceof MonkeyThrottleEvent)) {
+                        eventCounter++;
+                        if (mCountEvents) {
+                            cycleCounter++;
                         }
                     }
                 } else {
-                    // Event Source has signaled that we have no more events to process
-                    break;
+                    if (!mCountEvents) {
+                        cycleCounter++;
+                        writeScriptLog(cycleCounter);
+                        //Capture the bugreport after n iteration
+                        if (mGetPeriodicBugreport) {
+                            if ((cycleCounter % mBugreportFrequency) == 0) {
+                                mRequestPeriodicBugreport = true;
+                            }
+                        }
+                    } else {
+                        // Event Source has signaled that we have no more events to process
+                        break;
+                    }
                 }
             }
+        } catch (RuntimeException e) {
+            Logger.error("** Error: A RuntimeException occurred:", e);
         }
         Logger.out.println("Events injected: " + eventCounter);
         return eventCounter;
