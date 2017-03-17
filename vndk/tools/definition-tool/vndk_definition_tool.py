@@ -829,7 +829,18 @@ class ELFLinker(object):
         return imported_libs
 
     def _resolve_lib_deps(self, lib, resolver, generic_refs):
+        # Resolve DT_NEEDED entries.
         imported_libs = self._resolve_lib_dt_needed(lib, resolver)
+
+        if generic_refs:
+            for imported_lib in imported_libs:
+                if imported_lib.path not in generic_refs.refs:
+                    # Add imported_lib to imported_ext_symbols to make sure
+                    # non-AOSP libraries are in the imported_ext_symbols key
+                    # set.
+                    lib.imported_ext_symbols[imported_lib].update()
+
+        # Resolve imported symbols.
         self._resolve_lib_imported_symbols(lib, imported_libs, generic_refs)
 
     def _resolve_lib_set_deps(self, lib_set, resolver, generic_refs):
