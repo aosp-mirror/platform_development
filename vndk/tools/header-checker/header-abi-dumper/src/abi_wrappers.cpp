@@ -22,7 +22,7 @@ using namespace abi_wrapper;
 
 ABIWrapper::ABIWrapper(
     clang::MangleContext *mangle_contextp,
-    const clang::ASTContext *ast_contextp,
+    clang::ASTContext *ast_contextp,
     const clang::CompilerInstance *cip)
   : cip_(cip),
     mangle_contextp_(mangle_contextp),
@@ -40,26 +40,66 @@ std::string ABIWrapper::GetDeclSourceFile(const clang::Decl *decl,
   return abs_path.str();
 }
 
-std::string ABIWrapper::AccessToString(const clang::AccessSpecifier sp) const {
-  std::string str = "public";
+abi_dump::AccessSpecifier ABIWrapper::AccessClangToDump(
+    const clang::AccessSpecifier sp) const {
   switch (sp) {
     case clang::AS_private: {
-      str = "private";
+      return abi_dump::AccessSpecifier::private_access;
       break;
     }
     case clang::AS_protected: {
-      str = "protected";
+      return abi_dump::AccessSpecifier::protected_access;
       break;
     }
     default: {
+      return abi_dump::AccessSpecifier::public_access;
       break;
     }
   }
-  return str;
+}
+
+bool ABIWrapper::SetupBasicTypeAbi(abi_dump::BasicTypeAbi *type_abi,
+                                   const clang::QualType type) const {
+  if (!type_abi) {
+    return false;
+  }
+  type_abi->set_name(QualTypeToString(type));
+  // Cannot determine the size and alignment for template parameter dependent
+  // types as well as incomplete types.
+  const clang::Type *base_type = type.getTypePtr();
+  if (base_type && !(base_type->isDependentType()) &&
+      !(base_type->isIncompleteType())) {
+    std::pair<clang::CharUnits, clang::CharUnits> size_and_alignment =
+    ast_contextp_->getTypeInfoInChars(type);
+    int64_t size = size_and_alignment.first.getQuantity();
+    int64_t alignment = size_and_alignment.second.getQuantity();
+    type_abi->set_size(size);
+    type_abi->set_alignment(alignment);
+  }
+  return true;
+}
+
+bool ABIWrapper::SetupBasicNamedAndTypedDecl(
+    abi_dump::BasicNamedAndTypedDecl *basic_named_and_typed_decl,
+    const clang::QualType type, const std::string &name,
+    const clang::AccessSpecifier &access, std::string key) const {
+  if (!basic_named_and_typed_decl) {
+    return false;
+  }
+  abi_dump::AccessSpecifier access_dump = AccessClangToDump(access);
+  basic_named_and_typed_decl->set_name(name);
+  basic_named_and_typed_decl->set_access(access_dump);
+  if (key != "") {
+    basic_named_and_typed_decl->set_linker_set_key(key);
+  }
+  return SetupBasicTypeAbi(basic_named_and_typed_decl->mutable_type_abi(),
+                           type);
 }
 
 std::string ABIWrapper::GetMangledNameDecl(const clang::NamedDecl *decl) const {
-  std::string mangled_or_demangled_name = decl->getName();
+  clang::IdentifierInfo *identifier = decl->getIdentifier();
+  std::string mangled_or_demangled_name =
+      identifier ? identifier->getName() : "";
   if (mangle_contextp_->shouldMangleDeclName(decl)) {
     llvm::raw_string_ostream ostream(mangled_or_demangled_name);
     mangle_contextp_->mangleName(decl, ostream);
@@ -71,17 +111,26 @@ std::string ABIWrapper::GetMangledNameDecl(const clang::NamedDecl *decl) const {
 bool ABIWrapper::SetupTemplateParamNames(
     abi_dump::TemplateInfo *tinfo,
     clang::TemplateParameterList *pl) const {
-  if (tinfo->template_parameters_size() > 0) {
+  if (tinfo->elements_size() > 0) {
     return true;
   }
 
   clang::TemplateParameterList::iterator template_it = pl->begin();
   while (template_it != pl->end()) {
-    abi_dump::FieldDecl *template_parameterp = tinfo->add_template_parameters();
+    abi_dump::TemplateElement *template_parameterp =
+        tinfo->add_elements();
     if (!template_parameterp) {
       return false;
     }
-    template_parameterp->set_field_name((*template_it)->getName());
+    abi_dump::TemplateElement::BasicTemplateElementAbi *basic_abi =
+        template_parameterp->mutable_basic_abi();
+    if (!basic_abi) {
+      return false;
+    }
+    std::string name = (*template_it)->getName();
+    basic_abi->set_name(name);
+    // TODO : Default arg ?
+    basic_abi->set_linker_set_key(name);
     template_it++;
   }
   return true;
@@ -92,7 +141,6 @@ std::string ABIWrapper::GetTagDeclQualifiedName(
   if (decl->getTypedefNameForAnonDecl()) {
     return decl->getTypedefNameForAnonDecl()->getQualifiedNameAsString();
   }
-
   return decl->getQualifiedNameAsString();
 }
 
@@ -102,16 +150,22 @@ bool ABIWrapper::SetupTemplateArguments(
   for (int i = 0; i < tl->size(); i++) {
     const clang::TemplateArgument &arg = (*tl)[i];
     //TODO: More comprehensive checking needed.
-    std::string type = " ";
-    if(arg.getKind() == clang::TemplateArgument::Type) {
-      type = QualTypeToString(arg.getAsType());
+    if (arg.getKind() != clang::TemplateArgument::Type) {
+      continue;
     }
-    abi_dump::FieldDecl *template_parameterp =
-        tinfo->add_template_parameters();
+    clang::QualType type = arg.getAsType();
+    abi_dump::TemplateElement *template_parameterp =
+        tinfo->add_elements();
     if (!template_parameterp) {
       return false;
     }
-    template_parameterp->set_field_type((type));
+    abi_dump::TemplateElement::BasicTemplateElementAbi *basic_abi =
+        template_parameterp->mutable_basic_abi();
+    if (!basic_abi || !SetupBasicTypeAbi(basic_abi->mutable_type_abi(), type)) {
+      return false;
+    }
+    // TODO : default arg
+    basic_abi->set_linker_set_key(QualTypeToString(type));
   }
   return true;
 }
@@ -124,42 +178,51 @@ std::string ABIWrapper::QualTypeToString(
 
 FunctionDeclWrapper::FunctionDeclWrapper(
     clang::MangleContext *mangle_contextp,
-    const clang::ASTContext *ast_contextp,
+    clang::ASTContext *ast_contextp,
     const clang::CompilerInstance *compiler_instance_p,
     const clang::FunctionDecl *decl)
   : ABIWrapper(mangle_contextp, ast_contextp, compiler_instance_p),
     function_decl_(decl) { }
+
+bool FunctionDeclWrapper::SetupFunctionParameters(
+    abi_dump::FunctionDecl *functionp) const {
+  clang::FunctionDecl::param_const_iterator param_it =
+      function_decl_->param_begin();
+  while (param_it != function_decl_->param_end()) {
+    abi_dump::ParamDecl *function_fieldp = functionp->add_parameters();
+    if (!function_fieldp) {
+      llvm::errs() << "Couldn't add parameter to method. Aborting\n";
+      return false;
+    }
+    // The linker set key is blank since that shows up in the mangled name.
+    bool has_default_arg = (*param_it)->hasDefaultArg();
+    if (!SetupBasicNamedAndTypedDecl(
+        function_fieldp->mutable_basic_abi(),
+        (*param_it)->getType(), (*param_it)->getName(),
+        (*param_it)->getAccess(), has_default_arg ? "true" : "false")) {
+      return false;
+    }
+    function_fieldp->set_default_arg(has_default_arg);
+    param_it++;
+  }
+  return true;
+}
 
 bool FunctionDeclWrapper::SetupFunction(abi_dump::FunctionDecl *functionp,
                                         const std::string &source_file) const {
   // Go through all the parameters in the method and add them to the fields.
   // Also get the fully qualfied name and mangled name and store them.
   std::string mangled_name = GetMangledNameDecl(function_decl_);
-  functionp->set_function_name(function_decl_->getQualifiedNameAsString());
   functionp->set_mangled_function_name(mangled_name);
-  functionp->set_linker_set_key(mangled_name);
   functionp->set_source_file(source_file);
-  functionp->set_return_type(QualTypeToString(function_decl_->getReturnType()));
 
-  clang::FunctionDecl::param_const_iterator param_it =
-      function_decl_->param_begin();
-  while (param_it != function_decl_->param_end()) {
-    abi_dump::FieldDecl *function_fieldp = functionp->add_parameters();
-    if (!function_fieldp) {
-      llvm::errs() << "Couldn't add parameter to method. Aborting\n";
-      return false;
-    }
-    function_fieldp->set_field_name((*param_it)->getName());
-    function_fieldp->set_default_arg((*param_it)->hasDefaultArg());
-    function_fieldp->set_field_type(QualTypeToString((*param_it)->getType()));
-    param_it++;
-  }
-  functionp->set_access(AccessToString(function_decl_->getAccess()));
-  functionp->set_template_kind(function_decl_->getTemplatedKind());
-  if(!SetupTemplateInfo(functionp)) {
-    return false;
-  }
-  return true;
+  // Combine the function name and return type to form a NamedAndTypedDecl
+  return SetupBasicNamedAndTypedDecl(
+      functionp->mutable_basic_abi(),
+      function_decl_->getReturnType(),
+      function_decl_->getQualifiedNameAsString(),
+      function_decl_->getAccess(), mangled_name) &&
+      SetupTemplateInfo(functionp) && SetupFunctionParameters(functionp);
 }
 
 bool FunctionDeclWrapper::SetupTemplateInfo(
@@ -209,42 +272,35 @@ FunctionDeclWrapper::GetFunctionDecl() const {
 
 RecordDeclWrapper::RecordDeclWrapper(
     clang::MangleContext *mangle_contextp,
-    const clang::ASTContext *ast_contextp,
+    clang::ASTContext *ast_contextp,
     const clang::CompilerInstance *compiler_instance_p,
     const clang::RecordDecl *decl)
   : ABIWrapper(mangle_contextp, ast_contextp, compiler_instance_p),
     record_decl_(decl) { }
 
-bool RecordDeclWrapper::SetupRecordFields(
-    abi_dump::RecordDecl *recordp,
-    const std::string &source_file) const {
+bool RecordDeclWrapper::SetupRecordFields(abi_dump::RecordDecl *recordp) const {
   clang::RecordDecl::field_iterator field = record_decl_->field_begin();
   while (field != record_decl_->field_end()) {
-    abi_dump::FieldDecl *record_fieldp = recordp->add_fields();
+    abi_dump::RecordFieldDecl *record_fieldp = recordp->add_fields();
     if (!record_fieldp) {
       llvm::errs() << " Couldn't add record field: " << field->getName()
                    << " to reference dump\n";
       return false;
     }
-    std::string name = field->getName();
-    std::string type = QualTypeToString(field->getType());
-    std::string access = AccessToString(field->getAccess());
-    record_fieldp->set_field_name(name);
-    record_fieldp->set_field_type(type);
-    record_fieldp->set_access(access);
-    record_fieldp->set_linker_set_key(name + type + access);
+    if (!SetupBasicNamedAndTypedDecl(record_fieldp->mutable_basic_abi(),
+                                     field->getType(), field->getName(),
+                                     field->getAccess(), "")) {
+      return false;
+    }
     field++;
   }
   return true;
 }
 
-bool RecordDeclWrapper::SetupCXXBases(abi_dump::RecordDecl *cxxp) const {
-  const clang::CXXRecordDecl *cxx_record_decl =
-      clang::dyn_cast<clang::CXXRecordDecl>(record_decl_);
-  if (!cxx_record_decl) {
-    return true;
-  }
-
+bool RecordDeclWrapper::SetupCXXBases(
+    abi_dump::RecordDecl *cxxp,
+    const clang::CXXRecordDecl *cxx_record_decl) const {
+  assert(cxx_record_decl != nullptr);
   clang::CXXRecordDecl::base_class_const_iterator base_class =
       cxx_record_decl->bases_begin();
   while (base_class != cxx_record_decl->bases_end()) {
@@ -255,25 +311,121 @@ bool RecordDeclWrapper::SetupCXXBases(abi_dump::RecordDecl *cxxp) const {
     }
     std::string name = QualTypeToString(base_class->getType());
     bool is_virtual = base_class->isVirtual();
-    char is_virtual_c = is_virtual ? 't' : 'f';
-    std::string access = AccessToString(base_class->getAccessSpecifier());
-    base_specifierp->set_fully_qualified_name(name);
+    if (!SetupBasicNamedAndTypedDecl(base_specifierp->mutable_basic_abi(),
+                                     base_class->getType(),
+                                     "", base_class->getAccessSpecifier(),
+                                     "")) {
+      return false;
+    }
     base_specifierp->set_is_virtual(is_virtual);
-    base_specifierp->set_access(access);
-    base_specifierp->set_linker_set_key(name + is_virtual_c + access);
     base_class++;
   }
   return true;
 }
 
-bool RecordDeclWrapper::SetupTemplateInfo(
-    abi_dump::RecordDecl *record_declp) const {
- const clang::CXXRecordDecl *cxx_record_decl =
-      clang::dyn_cast<clang::CXXRecordDecl>(record_decl_);
-  if (!cxx_record_decl) {
+bool RecordDeclWrapper::SetupRecordVTable(
+    abi_dump::RecordDecl *record_declp,
+    const clang::CXXRecordDecl *cxx_record_decl) const {
+  assert(cxx_record_decl != nullptr);
+  clang::VTableContextBase *base_vtable_contextp =
+      ast_contextp_->getVTableContext();
+  const clang::Type *typep = cxx_record_decl->getTypeForDecl();
+  if (!base_vtable_contextp || !typep) {
+    return false;
+  }
+  // Skip Microsoft ABI.
+  clang::ItaniumVTableContext *itanium_vtable_contextp =
+        llvm::dyn_cast<clang::ItaniumVTableContext>(base_vtable_contextp);
+  if (!itanium_vtable_contextp || !cxx_record_decl->isPolymorphic() ||
+      typep->isDependentType() || typep->isIncompleteType()) {
     return true;
   }
+  const clang::VTableLayout &vtable_layout =
+      itanium_vtable_contextp->getVTableLayout(cxx_record_decl);
+  abi_dump::VTableLayout *vtablep = record_declp->mutable_vtable_layout();
+  if (!vtablep) {
+    return false;
+  }
+  for (const auto &vtable_component : vtable_layout.vtable_components()) {
+    abi_dump::VTableComponent *added_vtable_component =
+        vtablep->add_vtable_components();
+    if (!added_vtable_component ||
+        !SetupRecordVTableComponent(added_vtable_component, vtable_component)) {
+      return false;
+    }
+  }
+  return true;
+}
 
+bool RecordDeclWrapper::SetupRecordVTableComponent(
+    abi_dump::VTableComponent *added_vtable_component,
+    const clang::VTableComponent &vtable_component) const {
+  assert(added_vtable_component != nullptr);
+  abi_dump::VTableComponent_Kind kind = abi_dump::VTableComponent_Kind_RTTI;
+  std::string mangled_component_name = "";
+  uint64_t value = 0;
+  clang::VTableComponent::Kind clang_component_kind =
+      vtable_component.getKind();
+    switch (clang_component_kind) {
+      case clang::VTableComponent::CK_VCallOffset:
+        kind =  abi_dump::VTableComponent_Kind_VCallOffset;
+        value = vtable_component.getVCallOffset().getQuantity();
+        break;
+      case clang::VTableComponent::CK_VBaseOffset:
+        kind =  abi_dump::VTableComponent_Kind_VBaseOffset;
+        value = vtable_component.getVBaseOffset().getQuantity();
+        break;
+      case clang::VTableComponent::CK_OffsetToTop:
+        kind =  abi_dump::VTableComponent_Kind_OffsetToTop;
+        value = vtable_component.getOffsetToTop().getQuantity();
+        break;
+      case clang::VTableComponent::CK_RTTI:
+        {
+          kind =  abi_dump::VTableComponent_Kind_RTTI;
+          const clang::CXXRecordDecl *rtti_decl =
+              vtable_component.getRTTIDecl();
+          assert(rtti_decl != nullptr);
+          mangled_component_name = GetMangledNameDecl(rtti_decl);
+        }
+        break;
+      case clang::VTableComponent::CK_FunctionPointer:
+      case clang::VTableComponent::CK_CompleteDtorPointer:
+      case clang::VTableComponent::CK_DeletingDtorPointer:
+      case clang::VTableComponent::CK_UnusedFunctionPointer:
+        {
+          const clang::CXXMethodDecl *method_decl =
+              vtable_component.getFunctionDecl();
+          assert(method_decl != nullptr);
+          mangled_component_name = GetMangledNameDecl(method_decl);
+          switch (clang_component_kind) {
+            case clang::VTableComponent::CK_FunctionPointer:
+              kind =  abi_dump::VTableComponent_Kind_FunctionPointer;
+              break;
+            case clang::VTableComponent::CK_CompleteDtorPointer:
+              kind =  abi_dump::VTableComponent_Kind_CompleteDtorPointer;
+              break;
+            case clang::VTableComponent::CK_DeletingDtorPointer:
+              kind =  abi_dump::VTableComponent_Kind_DeletingDtorPointer;
+            case clang::VTableComponent::CK_UnusedFunctionPointer:
+              kind =  abi_dump::VTableComponent_Kind_UnusedFunctionPointer;
+            default:
+              break;
+          }
+        }
+        break;
+      default:
+        return false;
+    }
+  added_vtable_component->set_kind(kind);
+  added_vtable_component->set_value(value);
+  added_vtable_component->set_mangled_component_name(mangled_component_name);
+  return true;
+}
+
+bool RecordDeclWrapper::SetupTemplateInfo(
+    abi_dump::RecordDecl *record_declp,
+    const clang::CXXRecordDecl *cxx_record_decl) const {
+  assert(cxx_record_decl != nullptr);
   if (cxx_record_decl->isTemplateDecl()) {
     clang::ClassTemplateDecl *template_decl =
         cxx_record_decl->getDescribedClassTemplate();
@@ -303,28 +455,45 @@ bool RecordDeclWrapper::SetupTemplateInfo(
   return true;
 }
 
-void RecordDeclWrapper::SetupRecordInfo(abi_dump::RecordDecl *record_declp,
+bool RecordDeclWrapper::SetupRecordInfo(abi_dump::RecordDecl *record_declp,
                                         const std::string &source_file) const {
   std::string qualified_name = GetTagDeclQualifiedName(record_decl_);
   std::string mangled_name = GetMangledNameDecl(record_decl_);
+  const clang::Type *basic_type = nullptr;
+  if (!(basic_type = record_decl_->getTypeForDecl())) {
+    return false;
+  }
+  clang::QualType type = basic_type->getCanonicalTypeInternal();
   std::string linker_key = (mangled_name == "") ? qualified_name : mangled_name;
-  record_declp->set_fully_qualified_name(qualified_name);
+  if (!SetupBasicNamedAndTypedDecl(record_declp->mutable_basic_abi(),
+                                   type, qualified_name,
+                                   record_decl_->getAccess(), linker_key)) {
+    return false;
+  }
   record_declp->set_mangled_record_name(mangled_name);
-  record_declp->set_linker_set_key(linker_key);
   record_declp->set_source_file(source_file);
-  record_declp->set_access(AccessToString(record_decl_->getAccess()));
+  return true;
+}
+
+bool RecordDeclWrapper::SetupCXXRecordInfo(
+    abi_dump::RecordDecl *record_declp) const {
+  const clang::CXXRecordDecl *cxx_record_decl =
+      clang::dyn_cast<clang::CXXRecordDecl>(record_decl_);
+  if (!cxx_record_decl) {
+    return true;
+  }
+  return SetupTemplateInfo(record_declp, cxx_record_decl) &&
+      SetupCXXBases(record_declp, cxx_record_decl) &&
+      SetupRecordVTable(record_declp, cxx_record_decl);
 }
 
 std::unique_ptr<abi_dump::RecordDecl> RecordDeclWrapper::GetRecordDecl() const {
   std::unique_ptr<abi_dump::RecordDecl> abi_decl(new abi_dump::RecordDecl());
   std::string source_file = GetDeclSourceFile(record_decl_, cip_);
-  SetupRecordInfo(abi_decl.get(), source_file);
-  if (!SetupRecordFields(abi_decl.get(), source_file)) {
-    llvm::errs() << "Setting up Record Fields failed\n";
-    return nullptr;
-  }
-
-  if (!SetupCXXBases(abi_decl.get()) || !SetupTemplateInfo(abi_decl.get())) {
+  abi_dump::RecordDecl *record_declp = abi_decl.get();
+  if (!SetupRecordInfo(record_declp, source_file) ||
+      !SetupRecordFields(record_declp) ||
+      !SetupCXXRecordInfo(abi_decl.get())) {
     llvm::errs() << "Setting up CXX Bases / Template Info failed\n";
     return nullptr;
   }
@@ -333,31 +502,43 @@ std::unique_ptr<abi_dump::RecordDecl> RecordDeclWrapper::GetRecordDecl() const {
 
 EnumDeclWrapper::EnumDeclWrapper(
     clang::MangleContext *mangle_contextp,
-    const clang::ASTContext *ast_contextp,
+    clang::ASTContext *ast_contextp,
     const clang::CompilerInstance *compiler_instance_p,
     const clang::EnumDecl *decl)
   : ABIWrapper(mangle_contextp, ast_contextp, compiler_instance_p),
     enum_decl_(decl) { }
 
-bool EnumDeclWrapper::SetupEnum(abi_dump::EnumDecl *enump,
-                                const std::string &source_file) const {
-  // Enum's name.
-  std::string enum_name = GetTagDeclQualifiedName(enum_decl_);
-  std::string enum_type = QualTypeToString(enum_decl_->getIntegerType());
-  enump->set_enum_name(enum_name);
-  // Enum's base integer type.
-  enump->set_enum_type(enum_type);
-  enump->set_linker_set_key(enum_name + enum_type);
+bool EnumDeclWrapper::SetupEnumFields(abi_dump::EnumDecl *enump) const {
   clang::EnumDecl::enumerator_iterator enum_it = enum_decl_->enumerator_begin();
   while (enum_it != enum_decl_->enumerator_end()) {
     abi_dump::EnumFieldDecl *enum_fieldp = enump->add_enum_fields();
-    if (!enum_fieldp) {
+    std::string name = enum_it->getQualifiedNameAsString();
+    uint64_t field_value = enum_it->getInitVal().getExtValue();
+    if (!enum_fieldp ||
+        !SetupBasicNamedAndTypedDecl(enum_fieldp->mutable_basic_abi(),
+                                     enum_it->getType(), name,
+                                     enum_it->getAccess(),
+                                     std::to_string(field_value))) {
       return false;
     }
-    enum_fieldp->set_enum_field_name(enum_it->getQualifiedNameAsString());
-    enum_fieldp->set_enum_field_value(enum_it->getInitVal().getExtValue());
+    enum_fieldp->set_enum_field_value(field_value);
     enum_it++;
   }
+  return true;
+}
+
+bool EnumDeclWrapper::SetupEnum(abi_dump::EnumDecl *enump,
+                                const std::string &source_file) const {
+  std::string enum_name = GetTagDeclQualifiedName(enum_decl_);
+  std::string enum_mangled_name = GetMangledNameDecl(enum_decl_);
+  clang::QualType enum_type = enum_decl_->getIntegerType();
+  if (!SetupBasicNamedAndTypedDecl(enump->mutable_basic_abi(), enum_type,
+                                   enum_name, enum_decl_->getAccess(),
+                                   enum_mangled_name) ||
+      !SetupEnumFields(enump)) {
+    return false;
+  }
+  enump->set_source_file(source_file);
   return true;
 }
 
@@ -367,6 +548,38 @@ std::unique_ptr<abi_dump::EnumDecl> EnumDeclWrapper::GetEnumDecl() const {
 
   if (!SetupEnum(abi_decl.get(), source_file)) {
     llvm::errs() << "Setting up Enum fields failed\n";
+    return nullptr;
+  }
+  return abi_decl;
+}
+
+GlobalVarDeclWrapper::GlobalVarDeclWrapper(
+    clang::MangleContext *mangle_contextp,
+    clang::ASTContext *ast_contextp,
+    const clang::CompilerInstance *compiler_instance_p,
+    const clang::VarDecl *decl)
+  : ABIWrapper(mangle_contextp, ast_contextp, compiler_instance_p),
+    global_var_decl_(decl) { }
+
+bool GlobalVarDeclWrapper::SetupGlobalVar(
+    abi_dump::GlobalVarDecl *global_varp,
+    const std::string &source_file) const {
+  if (!SetupBasicNamedAndTypedDecl(
+      global_varp->mutable_basic_abi(),global_var_decl_->getType(),
+      global_var_decl_->getQualifiedNameAsString(),
+      global_var_decl_->getAccess(), GetMangledNameDecl(global_var_decl_))) {
+    return false;
+  }
+  global_varp->set_source_file(source_file);
+  return true;
+}
+
+std::unique_ptr<abi_dump::GlobalVarDecl>
+GlobalVarDeclWrapper::GetGlobalVarDecl() const {
+  std::unique_ptr<abi_dump::GlobalVarDecl>
+      abi_decl(new abi_dump::GlobalVarDecl);
+  std::string source_file = GetDeclSourceFile(global_var_decl_, cip_);
+  if (!SetupGlobalVar(abi_decl.get(), source_file)) {
     return nullptr;
   }
   return abi_decl;

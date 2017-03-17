@@ -35,17 +35,24 @@ static llvm::cl::opt<std::string> old_dump(
 int main(int argc, const char **argv) {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
   llvm::cl::ParseCommandLineOptions(argc, argv, "header-checker");
+  uint8_t extension_or_incompatible = 0;
   HeaderAbiDiff judge(old_dump, new_dump, compatibility_report);
   switch (judge.GenerateCompatibilityReport()) {
     case HeaderAbiDiff::COMPATIBLE:
+      break;
     case HeaderAbiDiff::EXTENSION:
-      return 0;
+      extension_or_incompatible = 1;
+      break;
     default:
-      llvm::errs() << "******************************************************\n"
-                   << "VNDK Abi Compliance breakage:"
-                   << " Please check compatiblity report at : "
-                   << compatibility_report << "\n"
-                   << "*****************************************************\n";
-      return 1;
+      extension_or_incompatible = 2;
+      break;
   }
+  if (extension_or_incompatible) {
+    llvm::errs() << "******************************************************\n"
+                 << "VNDK Abi Compliance breakage:"
+                 << " Please check compatiblity report at : "
+                 << compatibility_report << "\n"
+                 << "*****************************************************\n";
+  }
+  return extension_or_incompatible;
 }

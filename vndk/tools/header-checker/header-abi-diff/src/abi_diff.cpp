@@ -45,95 +45,76 @@ Status HeaderAbiDiff::GenerateCompatibilityReport() {
 
 Status HeaderAbiDiff::CompareTUs(const abi_dump::TranslationUnit &old_tu,
                                  const abi_dump::TranslationUnit &new_tu) {
-  abi_diff::TranslationUnitDiff diff_tu;
-  Status record_Status = CollectRecords(&diff_tu, old_tu, new_tu);
-  Status function_Status = CollectFunctions(&diff_tu, old_tu, new_tu);
-  Status enum_Status = CollectEnums(&diff_tu, old_tu, new_tu);
+  std::unique_ptr<abi_diff::TranslationUnitDiff> diff_tu(
+      new abi_diff::TranslationUnitDiff);
 
-  Status combined_Status = record_Status | function_Status | enum_Status;
+  Status record_status = Collect<abi_dump::RecordDecl>(
+      diff_tu->mutable_records_added(), diff_tu->mutable_records_removed(),
+      diff_tu->mutable_records_diff(), old_tu.records(), new_tu.records());
+
+  Status function_status = Collect<abi_dump::FunctionDecl>(
+      diff_tu->mutable_functions_added(), diff_tu->mutable_functions_removed(),
+      diff_tu->mutable_functions_diff(), old_tu.functions(),
+      new_tu.functions());
+
+  Status enum_status = Collect<abi_dump::EnumDecl>(
+      diff_tu->mutable_enums_added(), diff_tu->mutable_enums_removed(),
+      diff_tu->mutable_enums_diff(), old_tu.enums(), new_tu.enums());
+
+  Status global_var_status = Collect<abi_dump::GlobalVarDecl>(
+      diff_tu->mutable_global_vars_added(),
+      diff_tu->mutable_global_vars_removed(),
+      diff_tu->mutable_global_vars_diff(), old_tu.global_vars(),
+      new_tu.global_vars());
+
+  Status combined_status =
+      record_status | function_status | enum_status | global_var_status;
 
   std::ofstream text_output(cr_);
   google::protobuf::io::OstreamOutputStream text_os(&text_output);
 
-  if(!google::protobuf::TextFormat::Print(diff_tu, &text_os)) {
+  if(!google::protobuf::TextFormat::Print(*diff_tu, &text_os)) {
     llvm::errs() << "Unable to dump report\n";
     ::exit(1);
   }
-  if (combined_Status & INCOMPATIBLE) {
+  if (combined_status & INCOMPATIBLE) {
     return INCOMPATIBLE;
   }
-  if (combined_Status & EXTENSION) {
+  if (combined_status & EXTENSION) {
     return EXTENSION;
   }
   return COMPATIBLE;
 }
 
-Status HeaderAbiDiff::CollectRecords(abi_diff::TranslationUnitDiff *diff_tu,
-                                     const abi_dump::TranslationUnit &old_tu,
-                                     const abi_dump::TranslationUnit &new_tu) {
-  AddToMap(&old_dump_records_, old_tu.records());
-  AddToMap(&new_dump_records_, new_tu.records());
+template <typename T, typename TDiff>
+Status HeaderAbiDiff::Collect(
+    google::protobuf::RepeatedPtrField<T> *elements_added,
+    google::protobuf::RepeatedPtrField<T> *elements_removed,
+    google::protobuf::RepeatedPtrField<TDiff> *elements_diff,
+    const google::protobuf::RepeatedPtrField<T> &old_srcs,
+    const google::protobuf::RepeatedPtrField<T> &new_srcs) {
+  assert(elements_added != nullptr);
+  assert(elements_removed != nullptr);
+  assert(elements_diff != nullptr);
 
-  if (!PopulateRemovedElements(diff_tu->mutable_records_removed(),
-                               old_dump_records_, new_dump_records_) ||
-      !PopulateRemovedElements(diff_tu->mutable_records_removed(),
-                               new_dump_records_, old_dump_records_) ||
-      !PopulateCommonElements(diff_tu->mutable_records_diff(),old_dump_records_,
-                              new_dump_records_)) {
-    llvm::errs() << "Populating records in report failed\n";
-    ::exit(1);
-  }
-  if (diff_tu->records_diff().size() || diff_tu->records_removed().size()) {
-    return INCOMPATIBLE;
-  }
-  if (diff_tu->records_added().size()) {
-    return EXTENSION;
-  }
-  return COMPATIBLE;
-}
+  std::map<std::string, const T*> old_elements_map;
+  std::map<std::string, const T*> new_elements_map;
+  AddToMap(&old_elements_map, old_srcs);
+  AddToMap(&new_elements_map, new_srcs);
 
-Status HeaderAbiDiff::CollectFunctions(
-    abi_diff::TranslationUnitDiff *diff_tu,
-    const abi_dump::TranslationUnit &old_tu,
-    const abi_dump::TranslationUnit &new_tu) {
-  AddToMap(&old_dump_functions_, old_tu.functions());
-  AddToMap(&new_dump_functions_, new_tu.functions());
-
-  if (!PopulateRemovedElements(diff_tu->mutable_functions_removed(),
-                               old_dump_functions_, new_dump_functions_) ||
-      !PopulateRemovedElements(diff_tu->mutable_functions_added(),
-                               new_dump_functions_, old_dump_functions_)) {
+  if (!PopulateRemovedElements(elements_removed, old_elements_map,
+                               new_elements_map) ||
+      !PopulateRemovedElements(elements_added, new_elements_map,
+                               old_elements_map) ||
+      !PopulateCommonElements(elements_diff, old_elements_map,
+                              new_elements_map)) {
     llvm::errs() << "Populating functions in report failed\n";
     ::exit(1);
   }
-  if (diff_tu->functions_removed().size()) {
+  if (elements_diff->size() || elements_removed->size()) {
     return INCOMPATIBLE;
   }
-  if (diff_tu->functions_added().size()) {
-    return EXTENSION;
-  }
-  return COMPATIBLE;
-}
-
-Status HeaderAbiDiff::CollectEnums(abi_diff::TranslationUnitDiff *diff_tu,
-                                   const abi_dump::TranslationUnit &old_tu,
-                                   const abi_dump::TranslationUnit &new_tu) {
-  AddToMap(&old_dump_enums_, old_tu.enums());
-  AddToMap(&new_dump_enums_, new_tu.enums());
-
-  if (!PopulateRemovedElements(diff_tu->mutable_enums_removed(),
-                               old_dump_enums_, new_dump_enums_) ||
-      !PopulateRemovedElements(diff_tu->mutable_enums_added(), new_dump_enums_,
-                               old_dump_enums_) ||
-      !PopulateCommonElements(diff_tu->mutable_enums_diff(),old_dump_enums_,
-                              new_dump_enums_)) {
-    llvm::errs() << "Populating enums in report failed\n";
-    ::exit(1);
-  }
-  if (diff_tu->enums_removed().size() || diff_tu->enums_diff().size()) {
-    return INCOMPATIBLE;
-  }
-  if (diff_tu->enums_added().size()) {
+  if (elements_added->size()) {
     return EXTENSION;
   }
   return COMPATIBLE;
@@ -143,12 +124,13 @@ template <typename T>
 bool HeaderAbiDiff::PopulateRemovedElements(
     google::protobuf::RepeatedPtrField<T> *dst,
     const std::map<std::string, const T*> &old_elements_map,
-    const std::map<std::string, const T*> &new_elements_map) const {
+    const std::map<std::string, const T*> &new_elements_map) {
 
   std::vector<const T *> removed_elements;
   for (auto &&map_element : old_elements_map) {
       const T *element = map_element.second;
-      auto new_element = new_elements_map.find(element->linker_set_key());
+      auto new_element =
+          new_elements_map.find(element->basic_abi().linker_set_key());
       if (new_element == new_elements_map.end()) {
         removed_elements.emplace_back(element);
       }
@@ -164,7 +146,7 @@ template <typename T, typename TDiff>
 bool HeaderAbiDiff::PopulateCommonElements(
     google::protobuf::RepeatedPtrField<TDiff> *dst,
     const std::map<std::string, const T *> &old_elements_map,
-    const std::map<std::string, const T *> &new_elements_map) const {
+    const std::map<std::string, const T *> &new_elements_map) {
   std::vector<std::pair<const T *, const T *>> common_elements;
   typename std::map<std::string, const T *>::const_iterator old_element =
       old_elements_map.begin();
@@ -194,7 +176,7 @@ bool HeaderAbiDiff::PopulateCommonElements(
 
 template <typename T>
 bool HeaderAbiDiff::DumpLoneElements(google::protobuf::RepeatedPtrField<T> *dst,
-                                     std::vector<const T *> &elements) const {
+                                     std::vector<const T *> &elements) {
   for (auto &&element : elements) {
     T *added_element = dst->Add();
     if (!added_element) {
@@ -209,7 +191,7 @@ bool HeaderAbiDiff::DumpLoneElements(google::protobuf::RepeatedPtrField<T> *dst,
 template <typename T, typename TDiff>
 bool HeaderAbiDiff::DumpDiffElements(
     google::protobuf::RepeatedPtrField<TDiff>  *dst,
-    std::vector<std::pair<const T *,const T *>> &pairs) const {
+    std::vector<std::pair<const T *,const T *>> &pairs) {
   for (auto &&pair : pairs) {
     const T *old_element = pair.first;
     const T *new_element = pair.second;
