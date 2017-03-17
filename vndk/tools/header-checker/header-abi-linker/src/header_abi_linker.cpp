@@ -63,6 +63,9 @@ class HeaderAbiLinker {
   bool LinkEnums(const abi_dump::TranslationUnit &dump_tu,
                  abi_dump::TranslationUnit *linked_tu);
 
+  bool LinkGlobalVars(const abi_dump::TranslationUnit &dump_tu,
+                      abi_dump::TranslationUnit *linked_tu);
+
   template <typename T>
   static inline bool LinkDecl(
     google::protobuf::RepeatedPtrField<T> *dst,
@@ -75,6 +78,7 @@ class HeaderAbiLinker {
   std::set<std::string> record_decl_set_;
   std::set<std::string> function_decl_set_;
   std::set<std::string> enum_decl_set_;
+  std::set<std::string> globvar_decl_set_;
 };
 
 bool HeaderAbiLinker::LinkAndDump() {
@@ -88,7 +92,8 @@ bool HeaderAbiLinker::LinkAndDump() {
     if (!google::protobuf::TextFormat::Parse(&text_is, &dump_tu) ||
         !LinkRecords(dump_tu, &linked_tu) ||
         !LinkFunctions(dump_tu, &linked_tu) ||
-        !LinkEnums(dump_tu, &linked_tu)) {
+        !LinkEnums(dump_tu, &linked_tu) ||
+        !LinkGlobalVars(dump_tu, &linked_tu)) {
       llvm::errs() << "Failed to link elements\n";
       return false;
     }
@@ -110,7 +115,7 @@ inline bool HeaderAbiLinker::LinkDecl(
   assert(link_set != nullptr);
   for (auto &&element : src) {
     // The element already exists in the linked dump. Skip.
-    if (!link_set->insert(element.linker_set_key()).second) {
+    if (!link_set->insert(element.basic_abi().linker_set_key()).second) {
       continue;
     }
     T *added_element = dst->Add();
@@ -142,6 +147,13 @@ bool HeaderAbiLinker::LinkEnums(const abi_dump::TranslationUnit &dump_tu,
   assert(linked_tu != nullptr);
   return LinkDecl(linked_tu->mutable_enums(), &enum_decl_set_,
                   dump_tu.enums());
+}
+
+bool HeaderAbiLinker::LinkGlobalVars(const abi_dump::TranslationUnit &dump_tu,
+                                     abi_dump::TranslationUnit *linked_tu) {
+  assert(linked_tu != nullptr);
+  return LinkDecl(linked_tu->mutable_global_vars(), &globvar_decl_set_,
+                  dump_tu.global_vars());
 }
 
 int main(int argc, const char **argv) {
