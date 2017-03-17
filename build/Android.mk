@@ -128,14 +128,19 @@ ANDROID_SUPPORT_LIBRARIES := \
     android-support-core-utils \
     android-support-customtabs \
     android-support-design \
+    android-support-dynamic-animation \
+    android-support-emoji \
+    android-support-emoji-appcompat \
+    android-support-emoji-typeface \
     android-support-fragment \
+    android-support-instantvideo \
     android-support-media-compat \
     android-support-multidex \
     android-support-multidex-instrumentation \
     android-support-percent \
     android-support-recommendation \
     android-support-transition \
-    android-support-v4 \
+    android-support-tv-provider \
     android-support-v7-appcompat \
     android-support-v7-cardview \
     android-support-v7-gridlayout \
@@ -148,7 +153,7 @@ ANDROID_SUPPORT_LIBRARIES := \
     android-support-v17-leanback \
     android-support-v17-preference-leanback \
     android-support-vectordrawable \
-    android-support-dynamic-animation
+    android-support-wearable
 
 $(foreach lib, $(ANDROID_SUPPORT_LIBRARIES), $(eval $(call _package_sdk_library,$(lib))))
 

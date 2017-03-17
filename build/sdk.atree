@@ -568,12 +568,32 @@ ${OUT_DIR}/target/common/obj/PACKAGING/android-support-vectordrawable_intermedia
 
 ${OUT_DIR}/target/common/obj/PACKAGING/android-support-animatedvectordrawable_intermediates/android-support-animatedvectordrawable.jar    extras/android/support/graphics/drawable/libs/android-support-animatedvectordrawable.jar
 
-frameworks/support/transition/AndroidManifest.xml                                     extras/android/support/transition/AndroidManifest.xml
-frameworks/support/transition/res                                                     extras/android/support/transition/res
+frameworks/support/transition/AndroidManifest.xml                                                  extras/android/support/transition/AndroidManifest.xml
+frameworks/support/transition/res                                                                  extras/android/support/transition/res
 ${OUT_DIR}/target/common/obj/PACKAGING/android-support-transition_intermediates/android-support-transition.jar    extras/android/support/transition/libs/android-support-transition.jar
 
-frameworks/support/dynamic-animation/AndroidManifest.xml                                     extras/android/support/dynamic-animation/AndroidManifest.xml
+frameworks/support/dynamic-animation/AndroidManifest.xml                                           extras/android/support/dynamic-animation/AndroidManifest.xml
 ${OUT_DIR}/target/common/obj/PACKAGING/android-support-dynamic-animation_intermediates/android-support-dynamic-animation.jar    extras/android/support/dynamic-animation/libs/android-support-dynamic-animation.jar
+
+frameworks/support/emoji/core/AndroidManifest.xml                                                  extras/android/support/emoji/AndroidManifest.xml
+${OUT_DIR}/target/common/obj/PACKAGING/android-support-emoji_intermediates/android-support-emoji.jar    extras/android/support/emoji/libs/android-support-emoji.jar
+
+frameworks/support/emoji/appcompat/AndroidManifest.xml                                             extras/android/support/emoji-appcompat/AndroidManifest.xml
+${OUT_DIR}/target/common/obj/PACKAGING/android-support-emoji-appcompat_intermediates/android-support-emoji-appcompat.jar    extras/android/support/emoji-appcompat/libs/android-support-emoji-appcompat.jar
+
+frameworks/support/emoji/bundled-typeface/AndroidManifest.xml                                      extras/android/support/emoji-typeface/AndroidManifest.xml
+${OUT_DIR}/target/common/obj/PACKAGING/android-support-dynamic-animation_intermediates/android-support-emoji-typeface.jar    extras/android/support/emoji-typeface/libs/android-support-emoji-typeface.jar
+
+frameworks/support/instantvideo/AndroidManifest.xml                                                extras/android/support/instantvideo/AndroidManifest.xml
+${OUT_DIR}/target/common/obj/PACKAGING/android-support-instantvideo_intermediates/android-support-instantvideo.jar    extras/android/support/instantvideo/libs/android-support-instantvideo.jar
+
+frameworks/support/tv-provider/AndroidManifest.xml                                                extras/android/support/tv-provider/AndroidManifest.xml
+${OUT_DIR}/target/common/obj/PACKAGING/android-support-tv-provider_intermediates/android-support-tv-provider.jar    extras/android/support/tv-provider/libs/android-support-tv-provider.jar
+
+frameworks/support/wearable/AndroidManifest.xml                                                     extras/android/support/wearable/AndroidManifest.xml
+frameworks/support/wearable/res                                                                     extras/android/support/wearable/res
+frameworks/support/wearable/res-public                                                              extras/android/support/wearable/res-public
+${OUT_DIR}/target/common/obj/PACKAGING/android-support-wearable_intermediates/android-support-wearable.jar    extras/android/support/wearable/libs/android-support-wearable.jar
 
 ##############################################################################
 # Tests Component
