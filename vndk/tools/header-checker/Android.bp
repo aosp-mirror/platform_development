@@ -26,6 +26,7 @@ cc_defaults {
         "-Werror",
         "-std=c++11",
         "-DGOOGLE_PROTOBUF_NO_RTTI",
+        "-UNDEBUG"
     ],
 
     target: {

@@ -47,58 +47,43 @@ class HeaderAbiDiff {
   Status CompareTUs(const abi_dump::TranslationUnit &old_tu,
                     const abi_dump::TranslationUnit &new_tu);
   // Collect* methods fill in the diff_tu.
-  Status CollectRecords(abi_diff::TranslationUnitDiff *abi_diff,
-                        const abi_dump::TranslationUnit &old_tu,
-                        const abi_dump::TranslationUnit &new_tu);
-
-  Status CollectFunctions(abi_diff::TranslationUnitDiff *abi_diff,
-                          const abi_dump::TranslationUnit &old_tu,
-                          const abi_dump::TranslationUnit &new_tu);
-
-  Status CollectEnums(abi_diff::TranslationUnitDiff *abi_diff,
-                      const abi_dump::TranslationUnit &old_tu,
-                      const abi_dump::TranslationUnit &new_tu);
-
+  template <typename T, typename TDiff>
+  static Status Collect(
+      google::protobuf::RepeatedPtrField<T> *elements_added,
+      google::protobuf::RepeatedPtrField<T> *elements_removed,
+      google::protobuf::RepeatedPtrField<TDiff> *elements_diff,
+      const google::protobuf::RepeatedPtrField<T> &old_srcs,
+      const google::protobuf::RepeatedPtrField<T> &new_srcs);
 
   template <typename T>
-  inline void AddToMap(std::map<std::string, const T *> *dst,
-                       const google::protobuf::RepeatedPtrField<T> &src);
+  static inline void AddToMap(std::map<std::string, const T *> *dst,
+                              const google::protobuf::RepeatedPtrField<T> &src);
 
   template <typename T>
-  bool PopulateRemovedElements(
+  static bool PopulateRemovedElements(
       google::protobuf::RepeatedPtrField<T> *dst,
       const std::map<std::string, const T *> &old_elements_map,
-      const std::map<std::string, const T *> &new_elements_map) const;
+      const std::map<std::string, const T *> &new_elements_map);
 
   template <typename T, typename TDiff>
-  bool PopulateCommonElements(
+  static bool PopulateCommonElements(
       google::protobuf::RepeatedPtrField<TDiff> *dst,
       const std::map<std::string, const T *> &old_elements_map,
-      const std::map<std::string, const T *> &new_elements_map) const;
+      const std::map<std::string, const T *> &new_elements_map);
 
   template <typename T, typename TDiff>
-  bool DumpDiffElements(
+  static bool DumpDiffElements(
       google::protobuf::RepeatedPtrField<TDiff> *dst,
-      std::vector<std::pair<const T *, const T *>> &pairs) const;
+      std::vector<std::pair<const T *, const T *>> &pairs);
 
   template <typename T>
-  bool DumpLoneElements(google::protobuf::RepeatedPtrField<T> *dst,
-                        std::vector<const T *> &elements) const;
+  static bool DumpLoneElements(google::protobuf::RepeatedPtrField<T> *dst,
+                               std::vector<const T *> &elements);
 
  private:
   const std::string &old_dump_;
   const std::string &new_dump_;
   const std::string &cr_;
-
-  // HashMaps for the old tu abis
-  std::map<std::string, const abi_dump::RecordDecl *> old_dump_records_;
-  std::map<std::string, const abi_dump::FunctionDecl *> old_dump_functions_;
-  std::map<std::string, const abi_dump::EnumDecl *> old_dump_enums_;
-
-  // HashMaps for the new tu abis
-  std::map<std::string, const abi_dump::RecordDecl *> new_dump_records_;
-  std::map<std::string, const abi_dump::FunctionDecl *> new_dump_functions_;
-  std::map<std::string, const abi_dump::EnumDecl *> new_dump_enums_;
 };
 
 typedef HeaderAbiDiff::Status Status;
@@ -108,7 +93,7 @@ inline void HeaderAbiDiff::AddToMap(
     std::map<std::string, const T *> *dst,
     const google::protobuf::RepeatedPtrField<T> &src) {
   for (auto &&element : src) {
-    dst->insert(std::make_pair(element.linker_set_key(), &element));
+    dst->insert(std::make_pair(element.basic_abi().linker_set_key(), &element));
   }
 }
 

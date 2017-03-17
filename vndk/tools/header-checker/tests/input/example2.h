@@ -1,12 +1,16 @@
 #ifndef EXAMPLE2_H_
 #define EXAMPLE2_H_
 #include <memory>
+#include <vector>
+#include <string>
 #include "example3.h"
 
 namespace test2 {
 struct HelloAgain {
-  std::unique_ptr<HelloAgain> foo_again;
+  std::vector<HelloAgain *> foo_again;
   int bar_again;
+  static int hello_forever;
+  virtual int again();
 };
 struct NowWeCrash;
 } // namespace test2
@@ -15,6 +19,7 @@ enum Foo_s {
   foosball = 10,
   foosbat
 };
+
 
 namespace test3 {
 template <typename T>
@@ -27,6 +32,7 @@ struct ByeAgain {
 template<>
 struct ByeAgain<float> {
   float foo_again;
+  static int foo_forever;
   float bar_Again;
   float method_foo(int);
 };
@@ -34,12 +40,11 @@ struct ByeAgain<float> {
 ByeAgain<double> double_bye;
 
 template <typename T1, typename T2>
-bool Begin(T1 arg1, T2 arg2);
-template <>
-bool Begin<int, float>(int a, float b);
+bool Begin( T1 arg1, T2 arg2, int c);
+
 bool End ( float arg = 2.0) {
-  bool ret = Begin(arg, 2);
-  return ret;
+  bool ret = Begin(arg, 2, 2);
+  return true;
 }
 
 
@@ -57,6 +62,7 @@ class Outer {
   };
 };
 
+std::vector<int *> Dummy(int t);
 
 } // namespace test3
 

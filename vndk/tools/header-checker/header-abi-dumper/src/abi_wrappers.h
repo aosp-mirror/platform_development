@@ -24,20 +24,22 @@
 #include <clang/AST/AST.h>
 #include <clang/AST/ASTConsumer.h>
 #include <clang/AST/Mangle.h>
+#include <clang/AST/VTableBuilder.h>
 #include <clang/Frontend/CompilerInstance.h>
 
 namespace abi_wrapper {
 class ABIWrapper {
  public:
   ABIWrapper(clang::MangleContext *mangle_contextp,
-             const clang::ASTContext *ast_contextp,
+             clang::ASTContext *ast_contextp,
              const clang::CompilerInstance *cip);
 
   static std::string GetDeclSourceFile(const clang::Decl *decl,
                                        const clang::CompilerInstance *cip);
 
  protected:
-  std::string AccessToString(const clang::AccessSpecifier sp) const;
+  abi_dump::AccessSpecifier AccessClangToDump(
+      const clang::AccessSpecifier sp) const;
 
   std::string GetMangledNameDecl(const clang::NamedDecl *decl) const;
 
@@ -51,18 +53,24 @@ class ABIWrapper {
 
   std::string GetTagDeclQualifiedName(const clang::TagDecl *decl) const;
 
- protected:
-  const clang::CompilerInstance *cip_;
+  bool SetupBasicTypeAbi(abi_dump::BasicTypeAbi *type_abi,
+                         const clang::QualType type) const;
 
- private:
+  bool SetupBasicNamedAndTypedDecl(
+      abi_dump::BasicNamedAndTypedDecl *basic_named_and_typed_decl,
+      const clang::QualType type, const std::string &name,
+      const clang::AccessSpecifier &access, std::string key) const;
+
+protected:
+  const clang::CompilerInstance *cip_;
   clang::MangleContext *mangle_contextp_;
-  const clang::ASTContext *ast_contextp_;
+  clang::ASTContext *ast_contextp_;
 };
 
 class RecordDeclWrapper : public ABIWrapper {
  public:
   RecordDeclWrapper(clang::MangleContext *mangle_contextp,
-                    const clang::ASTContext *ast_contextp,
+                    clang::ASTContext *ast_contextp,
                     const clang::CompilerInstance *compiler_instance_p,
                     const clang::RecordDecl *decl);
 
@@ -72,21 +80,30 @@ class RecordDeclWrapper : public ABIWrapper {
   const clang::RecordDecl *record_decl_;
 
  private:
-  void SetupRecordInfo(abi_dump::RecordDecl *record_declp,
+  bool SetupRecordInfo(abi_dump::RecordDecl *record_declp,
                        const std::string &source_file) const;
 
-  bool SetupRecordFields(abi_dump::RecordDecl *record_declp,
-                        const std::string &source_file) const;
+  bool SetupRecordFields(abi_dump::RecordDecl *record_declp) const;
 
-  bool SetupCXXBases(abi_dump::RecordDecl *cxxp) const;
+  bool SetupCXXBases(abi_dump::RecordDecl *cxxp,
+                     const clang::CXXRecordDecl *cxx_record_decl) const;
 
-  bool SetupTemplateInfo(abi_dump::RecordDecl *record_declp) const;
+  bool SetupTemplateInfo(abi_dump::RecordDecl *record_declp,
+                         const clang::CXXRecordDecl *cxx_record_decl) const;
+
+  bool SetupRecordVTable(abi_dump::RecordDecl *record_declp,
+                         const clang::CXXRecordDecl *cxx_record_decl) const;
+  bool SetupRecordVTableComponent(
+      abi_dump::VTableComponent *added_vtable_component,
+      const clang::VTableComponent &vtable_component) const;
+
+  bool SetupCXXRecordInfo(abi_dump::RecordDecl *record_declp) const;
 };
 
 class FunctionDeclWrapper : public ABIWrapper {
  public:
   FunctionDeclWrapper(clang::MangleContext *mangle_contextp,
-                      const clang::ASTContext *ast_contextp,
+                      clang::ASTContext *ast_contextp,
                       const clang::CompilerInstance *compiler_instance_p,
                       const clang::FunctionDecl *decl);
 
@@ -100,12 +117,14 @@ class FunctionDeclWrapper : public ABIWrapper {
                      const std::string &source_file) const;
 
   bool SetupTemplateInfo(abi_dump::FunctionDecl *functionp) const;
+
+  bool SetupFunctionParameters(abi_dump::FunctionDecl *functionp) const;
 };
 
 class EnumDeclWrapper : public ABIWrapper {
  public:
   EnumDeclWrapper(clang::MangleContext *mangle_contextp,
-                  const clang::ASTContext *ast_contextp,
+                  clang::ASTContext *ast_contextp,
                   const clang::CompilerInstance *compiler_instance_p,
                   const clang::EnumDecl *decl);
 
@@ -117,6 +136,23 @@ class EnumDeclWrapper : public ABIWrapper {
  private:
   bool SetupEnum(abi_dump::EnumDecl *enump,
                  const std::string &source_file) const;
+  bool SetupEnumFields(abi_dump::EnumDecl *enump) const;
+};
+
+class GlobalVarDeclWrapper : public ABIWrapper {
+ public:
+  GlobalVarDeclWrapper(clang::MangleContext *mangle_contextp,
+                  clang::ASTContext *ast_contextp,
+                  const clang::CompilerInstance *compiler_instance_p,
+                  const clang::VarDecl *decl);
+
+  std::unique_ptr<abi_dump::GlobalVarDecl> GetGlobalVarDecl() const;
+
+ private:
+  const clang::VarDecl *global_var_decl_;
+ private:
+  bool SetupGlobalVar(abi_dump::GlobalVarDecl *global_varp,
+                      const std::string &source_file) const;
 };
 
 } //end namespace abi_wrapper
