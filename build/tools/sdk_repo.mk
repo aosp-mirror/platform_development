@@ -113,12 +113,6 @@ endef
 
 ifneq ($(filter sdk win_sdk,$(MAKECMDGOALS)),)
 
-# Extras are now located in addon.xml, not in repository.xml.
-$(eval $(call mk-sdk-repo-pkg-3,SDK_EXTRAS_XML_ARGS,$(HOST_OS),$(MAIN_SDK_ZIP),support,extras/android))
-
-SDK_EXTRAS_DEPS += \
-    $(call sdk-repo-pkg-zip,$(HOST_OS),$(MAIN_SDK_ZIP),support)
-
 # Similarly capture all sys-img.xml that are now split out of repository.xml
 $(eval $(call mk-sdk-repo-pkg-3,SDK_SYSIMG_XML_ARGS,$(HOST_OS),$(MAIN_SDK_ZIP),system-images,system-images/*))
 
