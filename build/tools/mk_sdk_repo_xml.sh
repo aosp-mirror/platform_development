@@ -6,7 +6,7 @@ set -e
 
 PROG_DIR=$(dirname $0)
 
-TYPES="tool platform-tool build-tool platform sample doc add-on system-image source support"
+TYPES="tool platform-tool build-tool platform sample doc add-on system-image source"
 OSES="linux macosx windows any linux-x86 darwin"
 
 TMP_DIR=$(mktemp -d -t sdkrepo.tmp.XXXXXXXX)
@@ -333,8 +333,6 @@ while [[ -n "$1" ]]; do
   shift
 
   ELEMENT="$TYPE"
-  # The element name is different for extras:
-  [[ "$TYPE" == "support" ]] && ELEMENT="extra"
 
   MAP=""
   FIRST="1"
