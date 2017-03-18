@@ -89,6 +89,8 @@ ALL_SDK_FILES += $(android_jar_src_target)
 
 # ====================================================
 
+# multidex jack library
+ALL_SDK_FILES += $(call intermediates-dir-for, JAVA_LIBRARIES,android-support-multidex,,COMMON)/classes.jack
 # The Jack & Jill compiler jars
 ALL_SDK_FILES += prebuilts/sdk/tools/jacks/jack-$(JACK_SDKTOOL_VERSION).jar
 ALL_SDK_FILES += prebuilts/sdk/tools/jills/jill-$(JACK_SDKTOOL_VERSION).jar
@@ -117,6 +119,43 @@ ALL_SDK_FILES += $(_psm_packaging_target)
 $(eval _psm_build_module :=)
 $(eval _psm_packaging_target :=)
 endef
+
+ANDROID_SUPPORT_LIBRARIES := \
+    android-support-animatedvectordrawable \
+    android-support-annotations \
+    android-support-compat \
+    android-support-core-ui \
+    android-support-core-utils \
+    android-support-customtabs \
+    android-support-design \
+    android-support-dynamic-animation \
+    android-support-emoji \
+    android-support-emoji-appcompat \
+    android-support-emoji-typeface \
+    android-support-fragment \
+    android-support-instantvideo \
+    android-support-media-compat \
+    android-support-multidex \
+    android-support-multidex-instrumentation \
+    android-support-percent \
+    android-support-recommendation \
+    android-support-transition \
+    android-support-tv-provider \
+    android-support-v7-appcompat \
+    android-support-v7-cardview \
+    android-support-v7-gridlayout \
+    android-support-v7-mediarouter \
+    android-support-v7-palette \
+    android-support-v7-preference \
+    android-support-v7-recyclerview \
+    android-support-v13 \
+    android-support-v14-preference \
+    android-support-v17-leanback \
+    android-support-v17-preference-leanback \
+    android-support-vectordrawable \
+    android-support-wearable
+
+$(foreach lib, $(ANDROID_SUPPORT_LIBRARIES), $(eval $(call _package_sdk_library,$(lib))))
 
 # ======= Lint API XML ===========
 
