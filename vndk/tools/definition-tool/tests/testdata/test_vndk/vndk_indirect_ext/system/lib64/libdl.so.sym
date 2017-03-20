@@ -1,0 +1,6 @@
+EI_CLASS	64
+EI_DATA		Little-Endian
+E_MACHINE	EM_AARCH64
+EXP_SYMBOL	dlclose
+EXP_SYMBOL	dlopen
+EXP_SYMBOL	dlsym

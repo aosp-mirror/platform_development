@@ -160,6 +160,56 @@ class ELFLinkerVNDKTest(unittest.TestCase):
         self.assertEqual([], self._get_paths_from_nodes(vndk.vndk_fwk_ext))
         self.assertEqual([], self._get_paths_from_nodes(vndk.vndk_vnd_ext))
 
+    def test_compute_vndk_indirect_ext(self):
+        class MockBannedLibs(object):
+            def is_banned(self, name):
+                return False
+
+        # This test case reveals a corner case that will break vndk-indirect
+        # computation.  To reproduce the case, the following condition must be
+        # satisfied:
+        #
+        # 1. libA depends on libB.
+        # 2. libA is a vndk-fwk-ext.
+        # 3. libB is an outward-customized vndk which depends on non-AOSP libC.
+        #
+        # Both AOSP libA and libB will be added to vndk-core.  But,
+        # unfortunately, libA will be resolved to libB in vndk-fwk-ext and this
+        # will break the vndk-indirect computation because libC is not in
+        # generic references.
+
+        generic_refs_dir = os.path.join(TESTDATA_DIR, 'vndk_indirect_ext_gr')
+
+        generic_refs = GenericRefs.create_from_dir(generic_refs_dir)
+
+        input_dir = os.path.join(TESTDATA_DIR, 'vndk_indirect_ext')
+
+        graph = ELFLinker.create_from_dump(
+                system_dirs=[os.path.join(input_dir, 'system')],
+                vendor_dirs=[os.path.join(input_dir, 'vendor')],
+                generic_refs=generic_refs)
+
+        vndk = graph.compute_vndk(sp_hals=set(), vndk_stable=set(),
+                                  vndk_customized_for_system=set(),
+                                  vndk_customized_for_vendor=set(),
+                                  generic_refs=generic_refs,
+                                  banned_libs=MockBannedLibs())
+
+        self.assertEqual(['/system/lib/vndk/libRS.so',
+                          '/system/lib/vndk/libcutils.so',
+                          '/system/lib64/vndk/libRS.so',
+                          '/system/lib64/vndk/libcutils.so'],
+                         self._get_paths_from_nodes(vndk.vndk_core))
+
+        self.assertEqual(['/system/lib/vndk/libRS_internal.so',
+                          '/system/lib64/vndk/libRS_internal.so'],
+                         self._get_paths_from_nodes(vndk.vndk_indirect))
+
+        self.assertEqual(['/system/lib/vndk-ext/libRS_internal.so',
+                          '/system/lib64/vndk-ext/libRS_internal.so'],
+                         self._get_paths_from_nodes(vndk.vndk_fwk_ext))
+
+
 
 if __name__ == '__main__':
     unittest.main()

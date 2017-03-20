@@ -1,0 +1,5 @@
+EI_CLASS	64
+EI_DATA		Little-Endian
+E_MACHINE	EM_AARCH64
+DT_NEEDED	libdl.so
+DT_NEEDED	libRS_internal_vendor.so
