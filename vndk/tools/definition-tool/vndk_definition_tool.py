@@ -1210,7 +1210,9 @@ class ELFLinker(object):
                 for lib in vndk_customized_candidates:
                     if not lib.imported_ext_symbols:
                         # Inward-customized VNDK-core libraries.
-                        add_to_vndk_core(lib)
+                        self.rename_lib(lib, PT_SYSTEM,
+                                        get_vndk_core_lib_name(lib))
+                        vndk_core.add(lib)
                     else:
                         # Outward-customized VNDK libraries.
 
@@ -1259,15 +1261,19 @@ class ELFLinker(object):
             vndk_lib_path = get_vndk_core_lib_name(lib)
             if vndk_lib_path in vndk_core_paths:
                 continue
+
             vndk_core_paths.add(vndk_lib_path)
 
-            if lib.imported_ext_symbols or \
-                    (generic_refs and not generic_refs.is_equivalent_lib(lib)):
-                vndk_fwk_ext.add(lib)
-            if generic_refs:
-                add_to_vndk_core(lib)
-            else:
+            if not generic_refs:
                 vndk_core.add(lib)
+            else:
+                if lib.imported_ext_symbols or \
+                        not generic_refs.is_equivalent_lib(lib):
+                    vndk_fwk_ext.add(lib)
+                    add_to_vndk_core(lib)
+                else:
+                    self.rename_lib(lib, PT_SYSTEM, vndk_lib_path)
+                    vndk_core.add(lib)
 
         # Truncate all vendor libs and resolve it again.
         VENDOR_SEARCH_PATH32 = (

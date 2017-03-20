@@ -48,7 +48,7 @@ class ELFLinkerVNDKTest(unittest.TestCase):
             def is_banned(self, name):
                 return False
 
-        generic_refs_dir = os.path.join(TESTDATA_DIR, 'vndk_ext_ref')
+        generic_refs_dir = os.path.join(TESTDATA_DIR, 'vndk_gr')
 
         generic_refs = GenericRefs.create_from_dir(generic_refs_dir)
 
@@ -80,7 +80,7 @@ class ELFLinkerVNDKTest(unittest.TestCase):
             def is_banned(self, name):
                 return False
 
-        generic_refs_dir = os.path.join(TESTDATA_DIR, 'vndk_ext_ref')
+        generic_refs_dir = os.path.join(TESTDATA_DIR, 'vndk_gr')
 
         generic_refs = GenericRefs.create_from_dir(generic_refs_dir)
 
@@ -106,6 +106,59 @@ class ELFLinkerVNDKTest(unittest.TestCase):
         self.assertEqual(['/vendor/lib/vndk-ext/libRS.so',
                           '/vendor/lib64/vndk-ext/libRS.so'],
                          self._get_paths_from_nodes(vndk.vndk_vnd_ext))
+
+    def test_compute_vndk_inward_customization(self):
+        class MockBannedLibs(object):
+            def is_banned(self, name):
+                return False
+
+        generic_refs_dir = os.path.join(TESTDATA_DIR, 'vndk_gr')
+
+        generic_refs = GenericRefs.create_from_dir(generic_refs_dir)
+
+        input_dir = os.path.join(TESTDATA_DIR, 'vndk_inward_customization')
+
+        graph = ELFLinker.create_from_dump(
+                system_dirs=[os.path.join(input_dir, 'system')],
+                vendor_dirs=[os.path.join(input_dir, 'vendor')],
+                generic_refs=generic_refs)
+
+        # Make sure libjpeg.so was loaded from the input dir.
+        libjpeg_32 = graph.get_lib('/system/lib/libjpeg.so')
+        self.assertIsNotNone(libjpeg_32)
+        libjpeg_64 = graph.get_lib('/system/lib64/libjpeg.so')
+        self.assertIsNotNone(libjpeg_64)
+
+        # Compute vndk sets and move libraries to the correct directories.
+        vndk = graph.compute_vndk(sp_hals=set(), vndk_stable=set(),
+                                  vndk_customized_for_system=set(),
+                                  vndk_customized_for_vendor=set(),
+                                  generic_refs=generic_refs,
+                                  banned_libs=MockBannedLibs())
+
+        # Check vndk-core libraries.
+        self.assertEqual(['/system/lib/vndk/libRS.so',
+                          '/system/lib/vndk/libcutils.so',
+                          '/system/lib64/vndk/libRS.so',
+                          '/system/lib64/vndk/libcutils.so'],
+                         self._get_paths_from_nodes(vndk.vndk_core))
+
+        # Check vndk-indirect libraries.
+        self.assertEqual(['/system/lib/vndk/libjpeg.so',
+                          '/system/lib64/vndk/libjpeg.so'],
+                         self._get_paths_from_nodes(vndk.vndk_indirect))
+
+        # Check libjpeg.so (inward-customization) has been renamed.
+        self.assertIsNone(graph.get_lib('/system/lib/libjpeg.so'))
+        self.assertIsNone(graph.get_lib('/system/lib64/libjpeg.so'))
+        self.assertIs(libjpeg_32,
+                      graph.get_lib('/system/lib/vndk/libjpeg.so'))
+        self.assertIs(libjpeg_64,
+                      graph.get_lib('/system/lib64/vndk/libjpeg.so'))
+
+        # Check the absence of vndk-ext libraries.
+        self.assertEqual([], self._get_paths_from_nodes(vndk.vndk_fwk_ext))
+        self.assertEqual([], self._get_paths_from_nodes(vndk.vndk_vnd_ext))
 
 
 if __name__ == '__main__':
