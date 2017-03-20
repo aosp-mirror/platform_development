@@ -43,7 +43,7 @@ class GraphBuilder(object):
                   exported_symbols=exported_symbols,
                   imported_symbols=imported_symbols)
 
-        node = self.graph.add(partition, path, elf)
+        node = self.graph.add_lib(partition, path, elf)
         setattr(self, name + '_' + elf.elf_class_name, node)
         return node
 

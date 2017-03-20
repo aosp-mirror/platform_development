@@ -727,7 +727,7 @@ class ELFLinker(object):
         self.lib32_resolver = ELFResolver(self.lib32, self.LIB32_SEARCH_PATH)
         self.lib64_resolver = ELFResolver(self.lib64, self.LIB64_SEARCH_PATH)
 
-    def add(self, partition, path, elf):
+    def add_lib(self, partition, path, elf):
         node = ELFLinkData(partition, path, elf)
         if elf.is_32bit:
             self.lib32[path] = node
@@ -780,9 +780,9 @@ class ELFLinker(object):
         for path, elf in scan_elf_files(root):
             short_path = os.path.join('/', partition_name, path[prefix_len:])
             if alter_subdirs and alter_patt.match(path):
-                self.add(alter_partition, short_path, elf)
+                self.add_lib(alter_partition, short_path, elf)
             else:
-                self.add(partition, short_path, elf)
+                self.add_lib(partition, short_path, elf)
 
     def load_extra_deps(self, path):
         patt = re.compile('([^:]*):\\s*(.*)')
@@ -1086,7 +1086,7 @@ class ELFLinker(object):
 
             # Create new vndk-core lib from generic reference.
             vndk_lib_path = get_vndk_core_lib_name(lib)
-            vndk_lib = self.add(PT_SYSTEM, vndk_lib_path, elf)
+            vndk_lib = self.add_lib(PT_SYSTEM, vndk_lib_path, elf)
 
             # Resovle the library dependencies.
             resolver = self.lib32_resolver if lib.elf.is_32bit else \
@@ -1131,7 +1131,7 @@ class ELFLinker(object):
                     path = lib.path
 
                     # Clone lib object for vndk-vnd-ext.
-                    cloned_lib = self.add(PT_VENDOR, path, lib.elf)
+                    cloned_lib = self.add_lib(PT_VENDOR, path, lib.elf)
 
                     # Update the usages.
                     for user in list(lib.dt_users):
