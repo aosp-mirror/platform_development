@@ -746,17 +746,17 @@ class ELFLinker(object):
         print('error: cannot add dependency from {} to {}.'
               .format(src_path, dst_path), file=sys.stderr)
 
-    def map_path_to_lib(self, path):
+    def get_lib(self, path):
         for lib_set in (self.lib32, self.lib64):
             lib = lib_set.get(path)
             if lib:
                 return lib
         return None
 
-    def map_paths_to_libs(self, paths, report_error):
+    def get_libs(self, paths, report_error):
         result = set()
         for path in paths:
-            lib = self.map_path_to_lib(path)
+            lib = self.get_lib(path)
             if not lib:
                 report_error(path)
                 continue
@@ -1650,12 +1650,12 @@ class VNDKCommand(ELFGraphCommand):
 
         if args.outward_customization_for_system:
             vndk_customized_for_system.update(
-                    graph.map_paths_to_libs(
+                    graph.get_libs(
                         args.outward_customization_for_system, lambda x: None))
 
         if args.outward_customization_for_vendor:
             vndk_customized_for_vendor.update(
-                    graph.map_paths_to_libs(
+                    graph.get_libs(
                         args.outward_customization_for_vendor, lambda x: None))
 
         # Compute vndk heuristics.
@@ -1803,8 +1803,8 @@ class DepsClosureCommand(ELFGraphCommand):
         # Find root/excluded libraries by their paths.
         def report_error(path):
             print('error: no such lib: {}'.format(path), file=sys.stderr)
-        root_libs = graph.map_paths_to_libs(args.lib, report_error)
-        excluded_libs = graph.map_paths_to_libs(args.exclude_lib, report_error)
+        root_libs = graph.get_libs(args.lib, report_error)
+        excluded_libs = graph.get_libs(args.exclude_lib, report_error)
 
         # Compute and print the closure.
         if args.exclude_ndk:
