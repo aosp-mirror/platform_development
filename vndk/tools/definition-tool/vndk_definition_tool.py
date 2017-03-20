@@ -727,14 +727,30 @@ class ELFLinker(object):
         self.lib32_resolver = ELFResolver(self.lib32, self.LIB32_SEARCH_PATH)
         self.lib64_resolver = ELFResolver(self.lib64, self.LIB64_SEARCH_PATH)
 
-    def add_lib(self, partition, path, elf):
-        node = ELFLinkData(partition, path, elf)
-        if elf.is_32bit:
-            self.lib32[path] = node
+    def _add_lib_to_lookup_dict(self, lib):
+        if lib.elf.is_32bit:
+            self.lib32[lib.path] = lib
         else:
-            self.lib64[path] = node
-        self.lib_pt[partition][path] = node
-        return node
+            self.lib64[lib.path] = lib
+        self.lib_pt[lib.partition][lib.path] = lib
+
+    def _remove_lib_from_lookup_dict(self, lib):
+        if lib.elf.is_32bit:
+            del self.lib32[lib.path]
+        else:
+            del self.lib64[lib.path]
+        del self.lib_pt[lib.partition][lib.path]
+
+    def add_lib(self, partition, path, elf):
+        lib = ELFLinkData(partition, path, elf)
+        self._add_lib_to_lookup_dict(lib)
+        return lib
+
+    def rename_lib(self, lib, new_partition, new_path):
+        self._remove_lib_from_lookup_dict(lib)
+        lib.path = new_path
+        lib.partition = new_partition
+        self._add_lib_to_lookup_dict(lib)
 
     def add_dep(self, src_path, dst_path, ty):
         for lib_set in (self.lib32, self.lib64):
@@ -1080,6 +1096,16 @@ class ELFLinker(object):
             lib_dir_name = 'lib' if lib.elf.is_32bit else 'lib64'
             return os.path.join('/system', lib_dir_name, 'vndk', lib_name)
 
+        def get_vndk_fwk_ext_lib_name(lib):
+            lib_name = os.path.basename(lib.path)
+            lib_dir_name = 'lib' if lib.elf.is_32bit else 'lib64'
+            return os.path.join('/system', lib_dir_name, 'vndk-ext', lib_name)
+
+        def get_vndk_vnd_ext_lib_name(lib):
+            lib_name = os.path.basename(lib.path)
+            lib_dir_name = 'lib' if lib.elf.is_32bit else 'lib64'
+            return os.path.join('/vendor', lib_dir_name, 'vndk-ext', lib_name)
+
         def add_to_vndk_core(lib):
             """Add a library to vndk-core."""
             elf = generic_refs.refs[lib.path]
@@ -1124,11 +1150,13 @@ class ELFLinker(object):
                 vndk_candidates = set()
 
                 def add_to_vndk_fwk_ext(lib):
+                    self.rename_lib(lib, PT_SYSTEM,
+                                    get_vndk_fwk_ext_lib_name(lib))
                     vndk_fwk_ext.add(lib)
 
                 def add_to_vndk_vnd_ext(lib):
                     """Add a library to vndk-vnd-ext."""
-                    path = lib.path
+                    path = get_vndk_vnd_ext_lib_name(lib)
 
                     # Clone lib object for vndk-vnd-ext.
                     cloned_lib = self.add_lib(PT_VENDOR, path, lib.elf)

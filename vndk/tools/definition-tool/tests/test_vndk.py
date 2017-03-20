@@ -70,8 +70,8 @@ class ELFLinkerVNDKTest(unittest.TestCase):
                           '/system/lib64/vndk/libRS.so',
                           '/system/lib64/vndk/libcutils.so'],
                          self._get_paths_from_nodes(vndk.vndk_core))
-        self.assertEqual(['/system/lib/libRS.so',
-                          '/system/lib64/libRS.so'],
+        self.assertEqual(['/system/lib/vndk-ext/libRS.so',
+                          '/system/lib64/vndk-ext/libRS.so'],
                          self._get_paths_from_nodes(vndk.vndk_fwk_ext))
         self.assertEqual([], self._get_paths_from_nodes(vndk.vndk_vnd_ext))
 
@@ -103,7 +103,8 @@ class ELFLinkerVNDKTest(unittest.TestCase):
                           '/system/lib64/vndk/libcutils.so'],
                          self._get_paths_from_nodes(vndk.vndk_core))
         self.assertEqual([], self._get_paths_from_nodes(vndk.vndk_fwk_ext))
-        self.assertEqual(['/system/lib/libRS.so', '/system/lib64/libRS.so'],
+        self.assertEqual(['/vendor/lib/vndk-ext/libRS.so',
+                          '/vendor/lib64/vndk-ext/libRS.so'],
                          self._get_paths_from_nodes(vndk.vndk_vnd_ext))
 
 
