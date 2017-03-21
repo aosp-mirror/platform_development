@@ -43,7 +43,7 @@ class GraphBuilder(object):
                   exported_symbols=exported_symbols,
                   imported_symbols=imported_symbols)
 
-        node = self.graph.add(partition, path, elf)
+        node = self.graph.add_lib(partition, path, elf)
         setattr(self, name + '_' + elf.elf_class_name, node)
         return node
 
@@ -95,23 +95,23 @@ class ELFLinkerTest(unittest.TestCase):
     def _get_paths_from_nodes(self, nodes):
         return sorted([node.path for node in nodes])
 
-    def test_map_path_to_lib(self):
+    def test_get_lib(self):
         gb = self._create_normal_graph()
         graph = gb.graph
 
-        node = graph.map_path_to_lib('/system/lib/libc.so')
+        node = graph.get_lib('/system/lib/libc.so')
         self.assertEqual(gb.libc_32, node)
         self.assertEqual('/system/lib/libc.so', node.path)
 
-        node = graph.map_path_to_lib('/system/lib64/libdl.so')
+        node = graph.get_lib('/system/lib64/libdl.so')
         self.assertEqual(gb.libdl_64, node)
         self.assertEqual('/system/lib64/libdl.so', node.path)
 
-        node = graph.map_path_to_lib('/vendor/lib64/libEGL.so')
+        node = graph.get_lib('/vendor/lib64/libEGL.so')
         self.assertEqual(gb.libEGL_64, node)
         self.assertEqual('/vendor/lib64/libEGL.so', node.path)
 
-        self.assertEqual(None, graph.map_path_to_lib('/no/such/path.so'))
+        self.assertEqual(None, graph.get_lib('/no/such/path.so'))
 
     def test_map_paths_to_libs(self):
         gb = self._create_normal_graph()
@@ -119,7 +119,7 @@ class ELFLinkerTest(unittest.TestCase):
 
         bad = []
         paths = ['/system/lib/libc.so', '/system/lib/libdl.so']
-        nodes = graph.map_paths_to_libs(paths, bad.append)
+        nodes = graph.get_libs(paths, bad.append)
 
         self.assertEqual([], bad)
         self.assertEqual(2, len(nodes))
@@ -127,7 +127,7 @@ class ELFLinkerTest(unittest.TestCase):
 
         bad = []
         paths = ['/no/such/path.so', '/system/lib64/libdl.so']
-        nodes = graph.map_paths_to_libs(paths, bad.append)
+        nodes = graph.get_libs(paths, bad.append)
         self.assertEqual(['/no/such/path.so'], bad)
         self.assertEqual(['/system/lib64/libdl.so'],
                          self._get_paths_from_nodes(nodes))
@@ -149,17 +149,17 @@ class ELFLinkerTest(unittest.TestCase):
         graph = gb.graph
 
         # Check the dependencies of libc.so.
-        node = gb.graph.map_path_to_lib('/system/lib/libc.so')
+        node = gb.graph.get_lib('/system/lib/libc.so')
         self.assertEqual(['/system/lib/libdl.so', '/system/lib/libm.so'],
                          self._get_paths_from_nodes(node.deps))
 
         # Check the dependencies of libRS.so.
-        node = gb.graph.map_path_to_lib('/system/lib64/libRS.so')
+        node = gb.graph.get_lib('/system/lib64/libRS.so')
         self.assertEqual(['/system/lib64/libdl.so'],
                          self._get_paths_from_nodes(node.deps))
 
         # Check the dependencies of libEGL.so.
-        node = gb.graph.map_path_to_lib('/vendor/lib64/libEGL.so')
+        node = gb.graph.get_lib('/vendor/lib64/libEGL.so')
         self.assertEqual(['/system/lib64/libc.so', '/system/lib64/libcutils.so',
                           '/system/lib64/libdl.so'],
                          self._get_paths_from_nodes(node.deps))
@@ -175,13 +175,13 @@ class ELFLinkerTest(unittest.TestCase):
 
         # Check the linked symbols.
         for lib in ('lib', 'lib64'):
-            libdl = graph.map_path_to_lib('/system/' + lib + '/libdl.so')
-            libm = graph.map_path_to_lib('/system/' + lib + '/libm.so')
-            libc = graph.map_path_to_lib('/system/' + lib + '/libc.so')
-            libRS = graph.map_path_to_lib('/system/' + lib + '/libRS.so')
+            libdl = graph.get_lib('/system/' + lib + '/libdl.so')
+            libm = graph.get_lib('/system/' + lib + '/libm.so')
+            libc = graph.get_lib('/system/' + lib + '/libc.so')
+            libRS = graph.get_lib('/system/' + lib + '/libRS.so')
             libcutils = \
-                    graph.map_path_to_lib('/system/' + lib + '/libcutils.so')
-            libEGL = graph.map_path_to_lib('/vendor/' + lib + '/libEGL.so')
+                    graph.get_lib('/system/' + lib + '/libcutils.so')
+            libEGL = graph.get_lib('/vendor/' + lib + '/libEGL.so')
 
             # Check the linked symbols for libc.so.
             self.assertIs(libdl, libc.linked_symbols['dlclose'])
@@ -211,7 +211,7 @@ class ELFLinkerTest(unittest.TestCase):
                    imported_symbols={'__does_not_exist'})
         gb.resolve()
 
-        lib = gb.graph.map_path_to_lib('/system/lib64/libfoo.so')
+        lib = gb.graph.get_lib('/system/lib64/libfoo.so')
         self.assertEqual({'__does_not_exist'}, lib.unresolved_symbols)
 
     def test_users(self):
@@ -219,22 +219,22 @@ class ELFLinkerTest(unittest.TestCase):
         graph = gb.graph
 
         # Check the users of libc.so.
-        node = graph.map_path_to_lib('/system/lib/libc.so')
+        node = graph.get_lib('/system/lib/libc.so')
         self.assertEqual(['/system/lib/libcutils.so', '/vendor/lib/libEGL.so'],
                          self._get_paths_from_nodes(node.users))
 
         # Check the users of libdl.so.
-        node = graph.map_path_to_lib('/system/lib/libdl.so')
+        node = graph.get_lib('/system/lib/libdl.so')
         self.assertEqual(['/system/lib/libRS.so', '/system/lib/libc.so',
                           '/system/lib/libcutils.so', '/vendor/lib/libEGL.so'],
                          self._get_paths_from_nodes(node.users))
 
         # Check the users of libRS.so.
-        node = graph.map_path_to_lib('/system/lib64/libRS.so')
+        node = graph.get_lib('/system/lib64/libRS.so')
         self.assertEqual([], self._get_paths_from_nodes(node.users))
 
         # Check the users of libEGL.so.
-        node = graph.map_path_to_lib('/vendor/lib64/libEGL.so')
+        node = graph.get_lib('/vendor/lib64/libEGL.so')
         self.assertEqual([], self._get_paths_from_nodes(node.users))
 
     def test_compute_vndk_stable(self):
