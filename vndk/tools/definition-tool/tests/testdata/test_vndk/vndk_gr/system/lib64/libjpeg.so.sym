@@ -1,0 +1,8 @@
+EI_CLASS	64
+EI_DATA		Little-Endian
+E_MACHINE	EM_AARCH64
+DT_NEEDED	libdl.so
+DT_NEEDED	libc.so
+DT_NEEDED	libm.so
+EXP_SYMBOL	jpeg_CreateCompress
+EXP_SYMBOL	jpeg_CreateDecompress
