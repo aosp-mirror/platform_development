@@ -63,9 +63,12 @@ bool HeaderCheckerFrontendAction::CollectExportedHeaderSet(
 
     llvm::StringRef file_name(llvm::sys::path::filename(file_path));
     // Ignore swap files and hidden files / dirs. Do not recurse into them too.
+    // We should also not look at source files. Many projects include source
+    // files in their exports.
     if (file_name.empty() || file_name.startswith(".") ||
         file_name.endswith(".swp") || file_name.endswith(".swo") ||
-        file_name.endswith("#")) {
+        file_name.endswith("#") || file_name.endswith(".cpp") ||
+        file_name.endswith(".cc") || file_name.endswith(".c")) {
       walker.no_push();
       continue;
     }
