@@ -18,6 +18,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.android.pushapithirdpartyone">
     <uses-permission android:name="android.permission.GET_ACCOUNTS" />
+    <uses-permission android:name="android.permission.READ_CONTACTS" />
     <uses-sdk android:minSdkVersion="1"
           android:targetSdkVersion="10001"
           android:maxSdkVersion="11000" />
