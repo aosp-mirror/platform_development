@@ -35,11 +35,13 @@ class NDKLibDictTest(unittest.TestCase):
         self.assertTrue(NDK_LIBS.is_spndk('/system/lib/libGLESv1_CM.so'))
         self.assertTrue(NDK_LIBS.is_spndk('/system/lib/libGLESv2.so'))
         self.assertTrue(NDK_LIBS.is_spndk('/system/lib/libGLESv3.so'))
+        self.assertTrue(NDK_LIBS.is_spndk('/system/lib/libvulkan.so'))
 
         self.assertTrue(NDK_LIBS.is_spndk('/system/lib64/libEGL.so'))
         self.assertTrue(NDK_LIBS.is_spndk('/system/lib64/libGLESv1_CM.so'))
         self.assertTrue(NDK_LIBS.is_spndk('/system/lib64/libGLESv2.so'))
         self.assertTrue(NDK_LIBS.is_spndk('/system/lib64/libGLESv3.so'))
+        self.assertTrue(NDK_LIBS.is_spndk('/system/lib64/libvulkan.so'))
 
         # Vendor libraries with the same name are still not SP-NDK.
         self.assertFalse(NDK_LIBS.is_spndk('/vendor/lib64/libEGL.so'))
@@ -52,6 +54,9 @@ class NDKLibDictTest(unittest.TestCase):
         self.assertFalse(NDK_LIBS.is_spndk('/vendor/lib64/egl/libGLESv2.so'))
         self.assertFalse(NDK_LIBS.is_spndk('/vendor/lib64/egl/libGLESv3.so'))
 
+        self.assertFalse(NDK_LIBS.is_spndk('/vendor/lib64/libvulkan.so'))
+        self.assertFalse(NDK_LIBS.is_spndk('/vendor/lib64/vulkan.so'))
+
         # LL-NDK is not SP-NDK.
         self.assertFalse(NDK_LIBS.is_spndk('/system/lib/libc.so'))
 
@@ -62,7 +67,6 @@ class NDKLibDictTest(unittest.TestCase):
         self.assertTrue(NDK_LIBS.is_hlndk('/system/lib/libcamera2ndk.so'))
         self.assertTrue(NDK_LIBS.is_hlndk('/system/lib/libjnigraphics.so'))
         self.assertTrue(NDK_LIBS.is_hlndk('/system/lib/libmediandk.so'))
-        self.assertTrue(NDK_LIBS.is_hlndk('/system/lib/libvulkan.so'))
 
         self.assertTrue(NDK_LIBS.is_hlndk('/system/lib64/libOpenMAXAL.so'))
         self.assertTrue(NDK_LIBS.is_hlndk('/system/lib64/libOpenSLES.so'))
@@ -70,7 +74,6 @@ class NDKLibDictTest(unittest.TestCase):
         self.assertTrue(NDK_LIBS.is_hlndk('/system/lib64/libcamera2ndk.so'))
         self.assertTrue(NDK_LIBS.is_hlndk('/system/lib64/libjnigraphics.so'))
         self.assertTrue(NDK_LIBS.is_hlndk('/system/lib64/libmediandk.so'))
-        self.assertTrue(NDK_LIBS.is_hlndk('/system/lib64/libvulkan.so'))
 
         # LL-NDK and SP-NDK are not HL-NDK.
         self.assertFalse(NDK_LIBS.is_hlndk('/system/lib/libc.so'))
@@ -78,6 +81,14 @@ class NDKLibDictTest(unittest.TestCase):
         self.assertFalse(NDK_LIBS.is_hlndk('/system/lib/libGLESv1_CM.so'))
         self.assertFalse(NDK_LIBS.is_hlndk('/system/lib/libGLESv2.so'))
         self.assertFalse(NDK_LIBS.is_hlndk('/system/lib/libGLESv3.so'))
+        self.assertFalse(NDK_LIBS.is_hlndk('/system/lib/libvulkan.so'))
+
+        self.assertFalse(NDK_LIBS.is_hlndk('/system/lib64/libc.so'))
+        self.assertFalse(NDK_LIBS.is_hlndk('/system/lib64/libEGL.so'))
+        self.assertFalse(NDK_LIBS.is_hlndk('/system/lib64/libGLESv1_CM.so'))
+        self.assertFalse(NDK_LIBS.is_hlndk('/system/lib64/libGLESv2.so'))
+        self.assertFalse(NDK_LIBS.is_hlndk('/system/lib64/libGLESv3.so'))
+        self.assertFalse(NDK_LIBS.is_hlndk('/system/lib64/libvulkan.so'))
 
     def test_is_ndk(self):
         # LL-NDK
