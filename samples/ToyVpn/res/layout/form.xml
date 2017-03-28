@@ -26,12 +26,13 @@
         <EditText style="@style/item" android:id="@+id/address"/>
 
         <TextView style="@style/item" android:text="@string/port"/>
-        <EditText style="@style/item" android:id="@+id/port"/>
+        <EditText style="@style/item" android:id="@+id/port" android:inputType="number"/>
 
         <TextView style="@style/item" android:text="@string/secret"/>
         <EditText style="@style/item" android:id="@+id/secret" android:password="true"/>
 
         <Button style="@style/item" android:id="@+id/connect" android:text="@string/connect"/>
+        <Button style="@style/item" android:id="@+id/disconnect" android:text="@string/disconnect"/>
 
     </LinearLayout>
 </ScrollView>
