@@ -491,6 +491,7 @@ class NDKLibDict(object):
         'libGLESv1_CM.so',
         'libGLESv2.so',
         'libGLESv3.so',
+        'libvulkan.so',
     )
 
     HLNDK_LIB_NAMES = (
@@ -500,7 +501,6 @@ class NDKLibDict(object):
         'libcamera2ndk.so',
         'libjnigraphics.so',
         'libmediandk.so',
-        'libvulkan.so',
     )
 
     @staticmethod
