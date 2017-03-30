@@ -59,6 +59,9 @@ bin/etc1tool.exe                       strip platform-tools/etc1tool.exe
 # at build-time. Packaging will later change that to the actual build-tools
 # revision as specified in the source.properties.
 
+# Needed by all binaries compiled by mingw32-64
+prebuilts/gcc/linux-x86/host/x86_64-w64-mingw32-4.8/x86_64-w64-mingw32/lib32/libwinpthread-1.dll strip build-tools/${PLATFORM_NAME}/libwinpthread-1.dll
+
 rm build-tools/${PLATFORM_NAME}/aapt
 bin/aapt.exe                            strip build-tools/${PLATFORM_NAME}/aapt.exe
 
