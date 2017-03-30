@@ -477,7 +477,12 @@ class ELF(object):
 #------------------------------------------------------------------------------
 
 class NDKLibDict(object):
-    LLNDK_LIB_NAMES = (
+    NOT_NDK = 0
+    LL_NDK = 1
+    SP_NDK = 2
+    HL_NDK = 3
+
+    LL_NDK_LIB_NAMES = (
         'libc.so',
         'libdl.so',
         'liblog.so',
@@ -486,7 +491,7 @@ class NDKLibDict(object):
         'libz.so',
     )
 
-    SPNDK_LIB_NAMES = (
+    SP_NDK_LIB_NAMES = (
         'libEGL.so',
         'libGLESv1_CM.so',
         'libGLESv2.so',
@@ -494,7 +499,7 @@ class NDKLibDict(object):
         'libvulkan.so',
     )
 
-    HLNDK_LIB_NAMES = (
+    HL_NDK_LIB_NAMES = (
         'libOpenMAXAL.so',
         'libOpenSLES.so',
         'libandroid.so',
@@ -504,30 +509,45 @@ class NDKLibDict(object):
     )
 
     @staticmethod
+    def _create_pattern(names):
+        return '|'.join('(?:^\\/system\\/lib(?:64)?\\/' + re.escape(i) + '$)'
+                        for i in names)
+
+    @staticmethod
     def _compile_path_matcher(names):
-        patts = '|'.join('(?:^\\/system\\/lib(?:64)?\\/' + re.escape(i) + '$)'
-                         for i in names)
-        return re.compile(patts)
+        return re.compile(NDKLibDict._create_pattern(names))
+
+    @staticmethod
+    def _compile_multi_path_matcher(name_lists):
+        patt = '|'.join('(' + NDKLibDict._create_pattern(names) + ')'
+                        for names in name_lists)
+        return re.compile(patt)
 
     def __init__(self):
-        self.llndk_patterns = self._compile_path_matcher(self.LLNDK_LIB_NAMES)
-        self.spndk_patterns = self._compile_path_matcher(self.SPNDK_LIB_NAMES)
-        self.hlndk_patterns = self._compile_path_matcher(self.HLNDK_LIB_NAMES)
-        self.ndk_patterns = self._compile_path_matcher(
-                self.LLNDK_LIB_NAMES + self.SPNDK_LIB_NAMES +
-                self.HLNDK_LIB_NAMES)
+        self.ll_ndk_patterns = self._compile_path_matcher(self.LL_NDK_LIB_NAMES)
+        self.sp_ndk_patterns = self._compile_path_matcher(self.SP_NDK_LIB_NAMES)
+        self.hl_ndk_patterns = self._compile_path_matcher(self.HL_NDK_LIB_NAMES)
+        self.ndk_patterns = self._compile_multi_path_matcher(
+                (self.LL_NDK_LIB_NAMES, self.SP_NDK_LIB_NAMES,
+                 self.HL_NDK_LIB_NAMES))
+
+    def is_ll_ndk(self, path):
+        return self.ll_ndk_patterns.match(path)
+
+    def is_sp_ndk(self, path):
+        return self.sp_ndk_patterns.match(path)
+
+    def is_hl_ndk(self, path):
+        return self.hl_ndk_patterns.match(path)
 
     def is_ndk(self, path):
         return self.ndk_patterns.match(path)
 
-    def is_llndk(self, path):
-        return self.llndk_patterns.match(path)
-
-    def is_spndk(self, path):
-        return self.spndk_patterns.match(path)
-
-    def is_hlndk(self, path):
-        return self.hlndk_patterns.match(path)
+    def classify(self, path):
+        match = self.ndk_patterns.match(path)
+        if not match:
+            return 0
+        return match.lastindex
 
 NDK_LIBS = NDKLibDict()
 
@@ -1404,7 +1424,7 @@ class ELFLinker(object):
         # considered as banned libraries at the moment.
         def is_banned(lib):
             if lib.is_ndk:
-                return NDK_LIBS.is_hlndk(lib.path)
+                return NDK_LIBS.is_hl_ndk(lib.path)
             return (banned_libs.is_banned(lib.path) or
                     not lib.is_system_lib() or
                     not lib.path.endswith('.so'))
@@ -1683,7 +1703,7 @@ class VNDKCommand(ELFGraphCommand):
         for lib_set in lib_sets:
             for lib in lib_set:
                 for dep in lib.deps:
-                    if NDK_LIBS.is_hlndk(dep.path):
+                    if NDK_LIBS.is_hl_ndk(dep.path):
                         print('warning: {}: VNDK is using high-level NDK {}.'
                                 .format(lib.path, dep.path), file=sys.stderr)
 
