@@ -3,7 +3,18 @@
 #include <memory>
 #include <vector>
 #include <string>
+#include <tuple>
 #include "example3.h"
+
+template <typename T, int size>
+class fooray {
+  T foor[size];
+};
+
+template <class _T1, class _T2>
+struct __find_exactly_one_check {
+    static constexpr bool __matches[] = {std::is_same<_T1, _T2>::value};
+};
 
 namespace test2 {
 struct HelloAgain {
@@ -20,6 +31,7 @@ enum Foo_s {
   foosbat
 };
 
+static constexpr bool __test_var[] = {true, false};
 
 namespace test3 {
 template <typename T>
