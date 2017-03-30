@@ -659,9 +659,25 @@ class ELFLinkData(object):
         self._deps = (set(), set())
         self._users = (set(), set())
         self.imported_ext_symbols = collections.defaultdict(set)
-        self.is_ndk = NDK_LIBS.is_ndk(path)
+        self._ndk_classification = NDK_LIBS.classify(path)
         self.unresolved_symbols = set()
         self.linked_symbols = dict()
+
+    @property
+    def is_ndk(self):
+        return self._ndk_classification != NDKLibDict.NOT_NDK
+
+    @property
+    def is_ll_ndk(self):
+        return self._ndk_classification == NDKLibDict.LL_NDK
+
+    @property
+    def is_sp_ndk(self):
+        return self._ndk_classification == NDKLibDict.SP_NDK
+
+    @property
+    def is_hl_ndk(self):
+        return self._ndk_classification == NDKLibDict.HL_NDK
 
     def add_dep(self, dst, ty):
         self._deps[ty].add(dst)
@@ -1424,7 +1440,7 @@ class ELFLinker(object):
         # considered as banned libraries at the moment.
         def is_banned(lib):
             if lib.is_ndk:
-                return NDK_LIBS.is_hl_ndk(lib.path)
+                return lib.is_hl_ndk
             return (banned_libs.is_banned(lib.path) or
                     not lib.is_system_lib() or
                     not lib.path.endswith('.so'))
@@ -1703,7 +1719,7 @@ class VNDKCommand(ELFGraphCommand):
         for lib_set in lib_sets:
             for lib in lib_set:
                 for dep in lib.deps:
-                    if NDK_LIBS.is_hl_ndk(dep.path):
+                    if dep.is_hl_ndk:
                         print('warning: {}: VNDK is using high-level NDK {}.'
                                 .format(lib.path, dep.path), file=sys.stderr)
 
