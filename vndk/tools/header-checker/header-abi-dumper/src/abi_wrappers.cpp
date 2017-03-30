@@ -63,14 +63,17 @@ bool ABIWrapper::SetupBasicTypeAbi(abi_dump::BasicTypeAbi *type_abi,
   if (!type_abi) {
     return false;
   }
-  type_abi->set_name(QualTypeToString(type));
+  const clang::QualType canonical_type = type.getCanonicalType();
+  type_abi->set_name(QualTypeToString(canonical_type));
   // Cannot determine the size and alignment for template parameter dependent
   // types as well as incomplete types.
-  const clang::Type *base_type = type.getTypePtr();
+  const clang::Type *base_type = canonical_type.getTypePtr();
+  clang::Type::TypeClass type_class = base_type->getTypeClass();
+  // Temporary Hack for auto type sizes. Not determinable.
   if (base_type && !(base_type->isDependentType()) &&
-      !(base_type->isIncompleteType())) {
+      !(base_type->isIncompleteType()) && (type_class != clang::Type::Auto)) {
     std::pair<clang::CharUnits, clang::CharUnits> size_and_alignment =
-    ast_contextp_->getTypeInfoInChars(type);
+    ast_contextp_->getTypeInfoInChars(canonical_type);
     int64_t size = size_and_alignment.first.getQuantity();
     int64_t alignment = size_and_alignment.second.getQuantity();
     type_abi->set_size(size);
@@ -101,6 +104,7 @@ std::string ABIWrapper::GetMangledNameDecl(const clang::NamedDecl *decl) const {
   std::string mangled_or_demangled_name =
       identifier ? identifier->getName() : "";
   if (mangle_contextp_->shouldMangleDeclName(decl)) {
+    assert(&(mangle_contextp_->getASTContext()) == ast_contextp_);
     llvm::raw_string_ostream ostream(mangled_or_demangled_name);
     mangle_contextp_->mangleName(decl, ostream);
     ostream.flush();
@@ -215,7 +219,6 @@ bool FunctionDeclWrapper::SetupFunction(abi_dump::FunctionDecl *functionp,
   std::string mangled_name = GetMangledNameDecl(function_decl_);
   functionp->set_mangled_function_name(mangled_name);
   functionp->set_source_file(source_file);
-
   // Combine the function name and return type to form a NamedAndTypedDecl
   return SetupBasicNamedAndTypedDecl(
       functionp->mutable_basic_abi(),
@@ -564,10 +567,16 @@ GlobalVarDeclWrapper::GlobalVarDeclWrapper(
 bool GlobalVarDeclWrapper::SetupGlobalVar(
     abi_dump::GlobalVarDecl *global_varp,
     const std::string &source_file) const {
+  // Temporary fix : clang segfaults on trying to mangle global variable which
+  // is a dependent sized array type.
+  std::string qualified_name = global_var_decl_->getQualifiedNameAsString();
+  std::string mangled_or_qualified_name =
+      global_var_decl_->getType()->isDependentSizedArrayType() ?
+      qualified_name : GetMangledNameDecl(global_var_decl_);
   if (!SetupBasicNamedAndTypedDecl(
       global_varp->mutable_basic_abi(),global_var_decl_->getType(),
-      global_var_decl_->getQualifiedNameAsString(),
-      global_var_decl_->getAccess(), GetMangledNameDecl(global_var_decl_))) {
+      qualified_name, global_var_decl_->getAccess(),
+      mangled_or_qualified_name)) {
     return false;
   }
   global_varp->set_source_file(source_file);
