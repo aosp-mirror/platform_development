@@ -237,61 +237,73 @@ class ELFLinkerTest(unittest.TestCase):
         node = graph.get_lib('/vendor/lib64/libEGL.so')
         self.assertEqual([], self._get_paths_from_nodes(node.users))
 
-    def test_compute_vndk_stable(self):
+    def test_compute_predefined_vndk_stable(self):
+        lib_names = (
+            # SP-HAL VNDK-stable
+            'libhidlmemory',
+
+            # HIDL interfaces.
+            'android.hardware.graphics.allocator@2.0',
+            'android.hardware.graphics.common@1.0',
+            'android.hardware.graphics.mapper@2.0',
+            'android.hidl.base@1.0',
+
+            # SP-NDK VNDK-stable (HIDL related)
+            'libhidl-gen-utils',
+            'libhidlbase',
+            'libhidltransport',
+            'libhwbinder',
+
+            # SP-NDK VNDK-stable (HIDL related)
+            'libcutils',
+            'liblzma',
+
+            # SP-NDK VNDK-stable (should be removed)
+            'libbacktrace',
+            'libbase',
+            'libc++',
+            'libunwind',
+            'libziparchive',
+
+            # Bad VNDK-stable (must be removed)
+            'libhardware',
+            'libnativeloader',
+            'libvintf',
+
+            # SP-NDK VNDK-stable (UI-related)
+            'libnativewindow',
+            'libsync',
+
+            # SP-NDK dependencies (SP-NDK only)
+            'libui',
+            'libutils',
+        )
+
+        # Add VNDK-stable libraries.
         gb = GraphBuilder()
+        for name in lib_names:
+            gb.add_multilib(PT_SYSTEM, name, extra_dir='vndk-stable')
 
-        # HIDL libraries.
-        gb.add_multilib(PT_SYSTEM, 'libhidlbase', extra_dir='vndk-stable')
-        gb.add_multilib(PT_SYSTEM, 'libhidltransport', extra_dir='vndk-stable')
-        gb.add_multilib(PT_SYSTEM, 'libhidlmemory', extra_dir='vndk-stable')
-        gb.add_multilib(PT_SYSTEM, 'libfmp', extra_dir='vndk-stable')
-        gb.add_multilib(PT_SYSTEM, 'libhwbinder', extra_dir='vndk-stable')
-
-        # UI libraries.
-        # TODO: Add libui.so here.
+        # Add some unrelated libraries.
+        gb.add_multilib(PT_SYSTEM, 'libfoo')
+        gb.add_multilib(PT_SYSTEM, 'libbar', extra_dir='vndk-stable')
 
         gb.resolve()
 
-        # Compute VNDK-stable.
+        # Compute VNDK-stable and check the result.
         vndk_stable = set(
-                lib.path for lib in gb.graph.compute_vndk_stable(False))
+                lib.path for lib in gb.graph.compute_predefined_vndk_stable())
 
-        for lib in ('lib', 'lib64'):
-            # Check HIDL libraries.
-            self.assertIn('/system/' + lib + '/vndk-stable/libhidlbase.so',
-                          vndk_stable)
-            self.assertIn('/system/' + lib + '/vndk-stable/libhidltransport.so',
-                          vndk_stable)
-            self.assertIn('/system/' + lib + '/vndk-stable/libhidlmemory.so',
-                          vndk_stable)
-            self.assertIn('/system/' + lib + '/vndk-stable/libfmp.so',
-                          vndk_stable)
-            self.assertIn('/system/' + lib + '/vndk-stable/libhwbinder.so',
-                          vndk_stable)
+        for lib_dir_name in ('lib', 'lib64'):
+            lib_dir = '/system/' + lib_dir_name + '/vndk-stable'
+            for name in lib_names:
+                self.assertIn(os.path.join(lib_dir, name + '.so'), vndk_stable)
 
-            # TODO: Check libui.so here.
+        self.assertNotIn('/system/lib/libfoo.so', vndk_stable)
+        self.assertNotIn('/system/lib64/libfoo.so', vndk_stable)
 
-    def test_compute_vndk_stable_closure(self):
-        gb = GraphBuilder()
-
-        libc = gb.add_lib(PT_SYSTEM, ELF.ELFCLASS64, 'libc')
-
-        libhidlbase = gb.add_lib(PT_SYSTEM, ELF.ELFCLASS64, 'libhidlbase',
-                                 dt_needed=['libfoo.so'],
-                                 extra_dir='vndk-stable')
-
-        libfoo = gb.add_lib(PT_SYSTEM, ELF.ELFCLASS64, 'libfoo')
-
-        gb.resolve()
-
-        # Compute VNDK-stable.
-        vndk_stable = gb.graph.compute_vndk_stable(False)
-        vndk_stable_closure = gb.graph.compute_vndk_stable(True)
-
-        self.assertSetEqual({libhidlbase}, vndk_stable)
-        self.assertSetEqual({libhidlbase, libfoo}, vndk_stable_closure)
-        self.assertNotIn(libc, vndk_stable)
-        self.assertNotIn(libc, vndk_stable_closure)
+        self.assertNotIn('/system/lib/vndk-stable/libbar.so', vndk_stable)
+        self.assertNotIn('/system/lib64/vndk-stable/libbar.so', vndk_stable)
 
     def test_compute_sp_hal(self):
         gb = GraphBuilder()
