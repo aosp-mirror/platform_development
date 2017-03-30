@@ -69,13 +69,13 @@ public class ShortcutListFragment extends MyBaseListFragment {
 
         mUserManager = getActivity().getSystemService(UserManager.class);
         mLauncherApps = getActivity().getSystemService(LauncherApps.class);
+
+        mAdapter = new MyAdapter(getActivity(), getArguments().getBoolean(ARG_SHOW_DETAILS));
+        setListAdapter(mAdapter);
+
         if (!mLauncherApps.hasShortcutHostPermission()) {
             Toast.makeText(getActivity(), "App doesn't have the shortcut permissions",
                     Toast.LENGTH_LONG).show();
-        } else {
-            mAdapter = new MyAdapter(getActivity(), getArguments().getBoolean(ARG_SHOW_DETAILS));
-
-            setListAdapter(mAdapter);
         }
     }
 
