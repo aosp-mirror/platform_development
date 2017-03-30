@@ -917,25 +917,14 @@ class ELFLinker(object):
         self._resolve_lib_set_deps(
                 self.lib64, self.lib64_resolver, generic_refs)
 
-    def compute_matched_libs(self, path_patterns, closure=False,
-                             is_excluded_libs=None):
-        patt = re.compile('|'.join('(?:' + p + ')' for p in path_patterns))
-
-        # Find libraries with matching paths.
-        libs = set()
+    def all_lib(self):
         for lib_set in self.lib_pt:
             for lib in lib_set.values():
-                if patt.match(lib.path):
-                    libs.add(lib)
+                yield lib
 
-        if closure:
-            # Compute transitive closure.
-            if not is_excluded_libs:
-                def is_excluded_libs(lib):
-                    return False
-            libs = self.compute_closure(libs, is_excluded_libs)
-
-        return libs
+    def compute_path_matched_lib(self, path_patterns):
+        patt = re.compile('|'.join('(?:' + p + ')' for p in path_patterns))
+        return set(lib for lib in self.all_lib() if patt.match(lib.path))
 
     def compute_predefined_vndk_stable(self):
         """Find all vndk stable libraries."""
@@ -975,13 +964,9 @@ class ELFLinker(object):
             '^.*/libvintf\\.so$',
         )
 
-        def is_excluded_libs(lib):
-            return lib.is_ndk
+        return self.compute_path_matched_lib(path_patterns)
 
-        return self.compute_matched_libs(path_patterns, False,
-                                         is_excluded_libs)
-
-    def compute_sp_hal(self, vndk_stable, closure):
+    def compute_predefined_sp_hal(self):
         """Find all same-process HALs."""
 
         path_patterns = (
@@ -1000,11 +985,39 @@ class ELFLinker(object):
             '^.*/android\\.hardware\\.graphics\\.mapper@\\d+\\.\\d+-impl\\.so$',
         )
 
-        def is_excluded_libs(lib):
-            return lib.is_ndk or lib in vndk_stable
+        return self.compute_path_matched_lib(path_patterns)
 
-        return self.compute_matched_libs(path_patterns, closure,
-                                         is_excluded_libs)
+    def compute_sp_ndk(self):
+        """Find all SP-NDK libraries."""
+        return set(lib for lib in self.all_lib() if lib.is_sp_ndk)
+
+    def compute_sp_lib(self, generic_refs):
+        def is_ndk(lib):
+            return lib.is_ndk
+
+        sp_ndk = self.compute_sp_ndk()
+        sp_ndk_closure = self.compute_closure(sp_ndk, is_ndk)
+
+        sp_hal = self.compute_predefined_sp_hal()
+        sp_hal_closure = self.compute_closure(sp_hal, is_ndk)
+
+        def is_aosp_lib(lib):
+            return (not generic_refs or \
+                    generic_refs.classify_lib(lib) != GenericRefs.NEW_LIB)
+
+        sp_hal_vndk_stable = set()
+        sp_hal_dep = set()
+        for lib in sp_hal_closure - sp_hal:
+            if is_aosp_lib(lib):
+                sp_hal_vndk_stable.add(lib)
+            else:
+                sp_hal_dep.add(lib)
+
+        sp_ndk_vndk_stable = sp_ndk_closure - sp_ndk
+        sp_hal_vndk_stable = sp_hal_vndk_stable - sp_ndk - sp_ndk_vndk_stable
+
+        return (sp_hal, sp_hal_dep, sp_hal_vndk_stable, sp_ndk, \
+                sp_ndk_vndk_stable)
 
     def _po_component_sorted(self, lib_set, get_successors,
                              get_strong_successors):
@@ -1771,14 +1784,16 @@ class VNDKCommand(ELFGraphCommand):
             self._warn_banned_vendor_lib_deps(graph, banned_libs)
 
         # Compute sp-hal and vndk-stable.
-        vndk_stable = graph.compute_predefined_vndk_stable()
-        sp_hals = graph.compute_sp_hal(vndk_stable, closure=False)
-        sp_hals_closure = graph.compute_sp_hal(vndk_stable, closure=True)
+        sp_hal, sp_hal_dep, sp_hal_vndk_stable, sp_ndk, sp_ndk_vndk_stable = \
+                graph.compute_sp_lib(generic_refs)
+
+        vndk_stable = sp_hal_vndk_stable | sp_ndk_vndk_stable
+        sp_hal_closure = sp_hal | sp_hal_dep
 
         # Normalize partition tags.  We expect many violations from the
         # pre-Treble world.  Guess a resolution for the incorrect partition
         # tag.
-        graph.normalize_partition_tags(sp_hals, generic_refs)
+        graph.normalize_partition_tags(sp_hal, generic_refs)
 
         # User may specify the partition for outward-customized vndk libs.  The
         # following code converts the path into ELFLinkData.
@@ -1804,7 +1819,7 @@ class VNDKCommand(ELFGraphCommand):
 
         # Compute vndk heuristics.
         vndk = graph.compute_vndk(
-                sp_hals_closure, vndk_stable, vndk_customized_for_system,
+                sp_hal_closure, vndk_stable, vndk_customized_for_system,
                 vndk_customized_for_vendor, generic_refs, banned_libs)
 
         if args.warn_high_level_ndk_deps:
@@ -1812,8 +1827,11 @@ class VNDKCommand(ELFGraphCommand):
                     (vndk.vndk_core, vndk.vndk_indirect, vndk.vndk_fwk_ext,
                      vndk.vndk_vnd_ext))
 
-        for lib in sorted_lib_path_list(sp_hals_closure):
-            print('sp-hals:', lib)
+        for lib in sorted_lib_path_list(sp_hal):
+            print('sp-hal:', lib)
+
+        for lib in sorted_lib_path_list(sp_hal_dep):
+            print('sp-hal-dep:', lib)
 
         for lib in sorted_lib_path_list(vndk_stable):
             print('vndk-stable:', lib)
@@ -1983,26 +2001,42 @@ class VNDKStableCommand(ELFGraphCommand):
         return 0
 
 
-class SpHalCommand(ELFGraphCommand):
+class SpLibCommand(ELFGraphCommand):
     def __init__(self):
-        super(SpHalCommand, self).__init__(
-                'sp-hal', help='Find transitive closure of same-process HALs')
+        super(SpLibCommand, self).__init__(
+                'sp-lib', help='Define sp-ndk, sp-hal, and vndk-stable')
 
     def add_argparser_options(self, parser):
-        super(SpHalCommand, self).add_argparser_options(parser)
+        super(SpLibCommand, self).add_argparser_options(parser)
 
-        parser.add_argument('--closure', action='store_true',
-                            help='show the closure')
+        parser.add_argument(
+                '--load-generic-refs',
+                help='compare with generic reference symbols')
 
     def main(self, args):
+        generic_refs = None
+        if args.load_generic_refs:
+            generic_refs = GenericRefs.create_from_dir(args.load_generic_refs)
+
         graph = ELFLinker.create(args.system, args.system_dir_as_vendor,
                                  args.vendor, args.vendor_dir_as_system,
                                  args.load_extra_deps)
 
-        vndk_stable = graph.compute_predefined_vndk_stable()
-        sp_hals = graph.compute_sp_hal(vndk_stable, closure=args.closure)
-        for lib in sorted_lib_path_list(sp_hals):
-            print(lib)
+        sp_hal, sp_hal_dep, sp_hal_vndk_stable, sp_ndk, sp_ndk_vndk_stable = \
+                graph.compute_sp_lib(generic_refs)
+
+        for lib in sorted_lib_path_list(sp_hal):
+            print('sp-hal:', lib)
+        for lib in sorted_lib_path_list(sp_hal_dep):
+            print('sp-hal-dep:', lib)
+        for lib in sorted_lib_path_list(sp_hal_vndk_stable):
+            print('sp-hal-vndk-stable:', lib)
+
+        for lib in sorted_lib_path_list(sp_ndk):
+            print('sp-ndk:', lib)
+        for lib in sorted_lib_path_list(sp_ndk_vndk_stable):
+            print('sp-ndk-vndk-stable:', lib)
+
         return 0
 
 
@@ -2022,7 +2056,7 @@ def main():
     register_subcmd(VNDKCapCommand())
     register_subcmd(DepsCommand())
     register_subcmd(DepsClosureCommand())
-    register_subcmd(SpHalCommand())
+    register_subcmd(SpLibCommand())
     register_subcmd(VNDKStableCommand())
 
     args = parser.parse_args()
