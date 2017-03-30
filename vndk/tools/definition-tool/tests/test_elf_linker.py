@@ -323,6 +323,7 @@ class ELFLinkerTest(unittest.TestCase):
 
         # OpenGL implementation.
         gb.add_multilib(PT_VENDOR, 'libEGL_chipset', extra_dir='egl')
+        gb.add_multilib(PT_VENDOR, 'libGLES_chipset', extra_dir='egl')
         gb.add_multilib(PT_VENDOR, 'libGLESv1_CM_chipset', extra_dir='egl')
         gb.add_multilib(PT_VENDOR, 'libGLESv2_chipset', extra_dir='egl')
         gb.add_multilib(PT_VENDOR, 'libGLESv3_chipset', extra_dir='egl')
@@ -361,6 +362,8 @@ class ELFLinkerTest(unittest.TestCase):
 
             # Check that OpenGL implementations are SP-HALs.
             self.assertIn('/vendor/' + lib + '/egl/libEGL_chipset.so', sp_hals)
+            self.assertIn('/vendor/' + lib + '/egl/libGLES_chipset.so',
+                          sp_hals)
             self.assertIn('/vendor/' + lib + '/egl/libGLESv1_CM_chipset.so',
                           sp_hals)
             self.assertIn('/vendor/' + lib + '/egl/libGLESv2_chipset.so',

@@ -972,6 +972,7 @@ class ELFLinker(object):
         path_patterns = (
             # OpenGL-related
             '^/vendor/.*/libEGL_.*\\.so$',
+            '^/vendor/.*/libGLES.*\\.so$',
             '^/vendor/.*/libGLESv1_CM_.*\\.so$',
             '^/vendor/.*/libGLESv2_.*\\.so$',
             '^/vendor/.*/libGLESv3_.*\\.so$',
