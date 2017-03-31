@@ -192,6 +192,43 @@ class ELFLinkerVNDKTest(unittest.TestCase):
                           '/system/lib64/vndk-ext/libRS_internal.so'],
                          self._get_paths_from_nodes(vndk.vndk_fwk_ext))
 
+    def test_compute_vndk_ext_deps(self):
+        # This test case reveals a bug in the vndk-core dependencies assertion.
+        # This will happen when libA and libB are added to both vndk-fwk-ext and
+        # vndk-vnd-ext in the first round, libA depends libC, libC depends
+        # libB.
+
+        generic_refs_dir = os.path.join(TESTDATA_DIR, 'vndk_ext_dep_gr')
+
+        generic_refs = GenericRefs.create_from_dir(generic_refs_dir)
+
+        input_dir = os.path.join(TESTDATA_DIR, 'vndk_ext_dep')
+
+        graph = ELFLinker.create_from_dump(
+                system_dirs=[os.path.join(input_dir, 'system')],
+                vendor_dirs=[os.path.join(input_dir, 'vendor')],
+                generic_refs=generic_refs)
+
+        vndk = graph.compute_vndk(sp_hals=set(), vndk_stable=set(),
+                                  vndk_customized_for_system=set(),
+                                  vndk_customized_for_vendor=set(),
+                                  generic_refs=generic_refs,
+                                  banned_libs=MockBannedLibs())
+
+        self.assertEqual(['/system/lib/vndk/libA.so',
+                          '/system/lib/vndk/libB.so',
+                          '/system/lib/vndk/libC.so'],
+                         self._get_paths_from_nodes(vndk.vndk_core))
+
+        self.assertEqual(['/system/lib/vndk-ext/libA.so',
+                          '/system/lib/vndk-ext/libB.so',
+                          '/system/lib/vndk-ext/libC.so'],
+                         self._get_paths_from_nodes(vndk.vndk_fwk_ext))
+
+        self.assertEqual(['/vendor/lib/vndk-ext/libA.so',
+                          '/vendor/lib/vndk-ext/libB.so',
+                          '/vendor/lib/vndk-ext/libC.so'],
+                         self._get_paths_from_nodes(vndk.vndk_vnd_ext))
 
 
 if __name__ == '__main__':

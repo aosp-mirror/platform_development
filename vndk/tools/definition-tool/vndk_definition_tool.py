@@ -1234,19 +1234,20 @@ class ELFLinker(object):
             elf = generic_refs.refs[lib.path]
 
             # Create new vndk-core lib from generic reference.
-            vndk_lib_path = get_vndk_core_lib_name(lib)
-            vndk_lib = self.add_lib(PT_SYSTEM, vndk_lib_path, elf)
+            vndk_core_lib_path = get_vndk_core_lib_name(lib)
+            vndk_core_lib = self.add_lib(PT_SYSTEM, vndk_core_lib_path, elf)
 
             # Resovle the library dependencies.
             resolver = vndk_core_resolver32 if lib.elf.is_32bit else \
                        vndk_core_resolver64
-            self._resolve_lib_deps(vndk_lib, resolver, generic_refs)
+            self._resolve_lib_deps(vndk_core_lib, resolver, generic_refs)
 
-            assert all(is_valid_vndk_core_dep(dep.path) for dep in lib.deps)
+            assert all(is_valid_vndk_core_dep(dep.path)
+                       for dep in vndk_core_lib.deps)
 
             # Add vndk-core to the set.
-            vndk_core.add(vndk_lib)
-            return vndk_lib
+            vndk_core.add(vndk_core_lib)
+            return vndk_core_lib
 
         # Compute vndk-core, vndk-fwk-ext and vndk-vnd-ext.
         if not generic_refs:
