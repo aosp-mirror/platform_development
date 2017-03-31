@@ -220,21 +220,30 @@ We can run this against latest Android build:
         --vendor ${ANDROID_PRODUCT_OUT}/vendor
 
 
-## Same-Process HAL
+## Same-Process NDK, Same-Process HAL, and VNDK-stable
 
-VNDK Definition Tool supports the same-process HAL definition as well.  To find
-same-process HALs, run `sp-hal` subcommand:
+VNDK Definition Tool can define the same-process HAL as well.  To find SP-NDK,
+SP-HAL, and VNDK-stable, run `sp-lib` subcommand:
 
-    $ python3 vndk_definition_tool.py sp-hal \
+    $ python3 vndk_definition_tool.py sp-lib \
         --system ${ANDROID_PRODUCT_OUT}/system \
         --vendor ${ANDROID_PRODUCT_OUT}/vendor
 
-To find the dependencies of same-process HALs, add `--closure` option:
+The output consists of following categories:
 
-    $ python3 vndk_definition_tool.py sp-hal \
-        --system ${ANDROID_PRODUCT_OUT}/system \
-        --vendor ${ANDROID_PRODUCT_OUT}/vendor
-        --closure
+* **sp-hal** -- Pre-defined same-process HALs.
+
+* **sp-hal-dep** -- Shared libraries that are used by SP-HALs.  These libraries
+  have to be installed into /vendor/lib[64]/sameprocess as well.
+
+* **sp-hal-vndk-stable** -- VNDK stable libraries that are used by SP-HAL.
+
+* **sp-ndk** -- Pre-defined same-process NDK libraries.
+
+* **sp-ndk-vndk-stable** -- Shared libraries that are used by SP-NDKs.
+
+**vndk-stable** is the union set of **sp-hal-vndk-stable** and
+**sp-ndk-vndk-stable**.
 
 
 ## Python 2 Support
