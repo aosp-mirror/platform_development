@@ -901,26 +901,48 @@ class ELFLinker(object):
 
         return libs
 
-    def compute_vndk_stable(self, closure):
+    def compute_predefined_vndk_stable(self):
         """Find all vndk stable libraries."""
 
         path_patterns = (
-            # HIDL libraries used by android.hardware.graphics.mapper@2.0-impl.
+            # SP-HAL VNDK-stable
+            '^.*/libhidlmemory\\.so$',
+
+            # SP-NDK VNDK-stable
+            '^.*/android\\.hardware\\.graphics\\.allocator@2\\.0\\.so$',
+            '^.*/android\\.hardware\\.graphics\\.common@1\\.0\\.so$',
+            '^.*/android\\.hardware\\.graphics\\.mapper@2\\.0\\.so$',
+            '^.*/android\\.hidl\\.base@1\\.0\\.so$',
+            '^.*/libcutils\\.so$',
+            '^.*/libhidl-gen-utils\\.so$',
             '^.*/libhidlbase\\.so$',
             '^.*/libhidltransport\\.so$',
-            '^.*/libhidlmemory\\.so$',
-            '^.*/libfmp\\.so$',
             '^.*/libhwbinder\\.so$',
+            '^.*/liblzma\\.so$',
+            '^.*/libnativewindow\\.so$',
+            '^.*/libsync\\.so$',
 
-            # UI libraries used by libEGL.
-            #'^.*/libui\\.so$',
-            #'^.*/libnativewindow\\.so$',
+            # SP-NDK VNDK-stable (should to be removed)
+            '^.*/libbacktrace\\.so$',
+            '^.*/libbase\\.so$',
+            '^.*/libc\\+\\+\\.so$',
+            '^.*/libunwind\\.so$',
+            '^.*/libziparchive\\.so$',
+
+            # SP-NDK dependencies (SP-NDK only)
+            '^.*/libui\\.so$',
+            '^.*/libutils\\.so$',
+
+            # Bad vndk-stable (must be removed)
+            '^.*/libhardware\\.so$',
+            '^.*/libnativeloader\\.so$',
+            '^.*/libvintf\\.so$',
         )
 
         def is_excluded_libs(lib):
             return lib.is_ndk
 
-        return self.compute_matched_libs(path_patterns, closure,
+        return self.compute_matched_libs(path_patterns, False,
                                          is_excluded_libs)
 
     def compute_sp_hal(self, vndk_stable, closure):
@@ -1713,7 +1735,7 @@ class VNDKCommand(ELFGraphCommand):
             self._warn_banned_vendor_lib_deps(graph, banned_libs)
 
         # Compute sp-hal and vndk-stable.
-        vndk_stable = graph.compute_vndk_stable(closure=True)
+        vndk_stable = graph.compute_predefined_vndk_stable()
         sp_hals = graph.compute_sp_hal(vndk_stable, closure=False)
         sp_hals_closure = graph.compute_sp_hal(vndk_stable, closure=True)
 
@@ -1909,20 +1931,17 @@ class DepsClosureCommand(ELFGraphCommand):
 class VNDKStableCommand(ELFGraphCommand):
     def __init__(self):
         super(VNDKStableCommand, self).__init__(
-                'vndk-stable', help='Find transitive closure of VNDK stable')
+                'vndk-stable', help='List pre-defined VNDK stable')
 
     def add_argparser_options(self, parser):
         super(VNDKStableCommand, self).add_argparser_options(parser)
-
-        parser.add_argument('--closure', action='store_true',
-                            help='show the closure')
 
     def main(self, args):
         graph = ELFLinker.create(args.system, args.system_dir_as_vendor,
                                  args.vendor, args.vendor_dir_as_system,
                                  args.load_extra_deps)
 
-        vndk_stable = graph.compute_vndk_stable(closure=args.closure)
+        vndk_stable = graph.compute_predefined_vndk_stable()
         for lib in sorted_lib_path_list(vndk_stable):
             print(lib)
         return 0
@@ -1944,7 +1963,7 @@ class SpHalCommand(ELFGraphCommand):
                                  args.vendor, args.vendor_dir_as_system,
                                  args.load_extra_deps)
 
-        vndk_stable = graph.compute_vndk_stable(closure=True)
+        vndk_stable = graph.compute_predefined_vndk_stable()
         sp_hals = graph.compute_sp_hal(vndk_stable, closure=args.closure)
         for lib in sorted_lib_path_list(sp_hals):
             print(lib)
