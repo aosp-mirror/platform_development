@@ -1,0 +1,72 @@
+#!/bin/bash
+
+# The intents to launch
+INTENTS="\
+     com.google.android.googlequicksearchbox/.SearchActivity \
+     com.android.settings/.Settings \
+     com.google.android.apps.messaging/.ui.ConversationListActivity \
+     com.google.android.calculator/com.android.calculator2.Calculator \
+     com.google.android.deskclock/com.android.deskclock.DeskClock \
+     com.google.android.contacts/com.android.contacts.activities.PeopleActivity \
+     com.google.android.talk/.SigningInActivity \
+     com.google.android.vr.home/com.google.android.apps.vr.home.app.MainActivity \
+     com.android.documentsui/.Launcher \
+     com.google.android.apps.nexuslauncher/.NexusLauncherActivity \
+  "
+#     com.google.android.GoogleCamera/com.android.camera.CameraActivity \
+
+# The files to save output to.
+RAWLOGS_FILE=app-switch-rawlogs.txt
+ANALYSIS_FILE=app-switch-analysis.txt
+
+
+# Turn on the screen and unlock the device
+# TODO: Power on
+adb shell wm dismiss-keyguard
+adb logcat -P ""
+
+# Turn on airplane mode (to reduce background noise caught by other tests)
+airplane_mode_was_on=$(adb shell settings get global airplane_mode_on)
+if [ $airplane_mode_was_on != 1 ] ; then
+    adb shell settings put global airplane_mode_on 1 > /dev/null
+    adb shell am broadcast -a android.intent.action.AIRPLANE_MODE > /dev/null
+    sleep 15
+fi
+
+# Start the analysis process
+$TOP/development/tools/logblame/analyze_logs.py --duration=10m --clear --rawlogs $RAWLOGS_FILE \
+    | tee $ANALYSIS_FILE &
+analyze_pid=$!
+
+# Launch the intents with a 3s gap between them
+for intent in $INTENTS
+do
+    echo Starting: $intent
+    adb shell am start -a android.intent.action.MAIN $intent
+    sleep 4
+done
+
+# Turn the screen off and on
+adb shell input keyevent 26
+adb shell input keyevent 26
+adb shell wm dismiss-keyguard
+
+echo
+echo
+
+# Kill adb to disconnect logcat
+adb kill-server
+
+# Wait for the pyton process to exit
+wait $analyze_pid
+
+# Turn airplane mode back off
+if [ $airplane_mode_was_on == 0 ] ; then
+    adb shell settings put global airplane_mode_on 0 > /dev/null
+    adb shell am broadcast -a android.intent.action.AIRPLANE_MODE > /dev/null
+fi
+
+echo "Wrote raw logs to $RAWLOGS_FILE"
+echo "Wrote analysis to $ANALYSIS_FILE"
+
+
