@@ -32,6 +32,10 @@ static llvm::cl::opt<std::string> old_dump(
     "old", llvm::cl::desc("<old dump>"), llvm::cl::Required,
     llvm::cl::cat(header_checker_category));
 
+static llvm::cl::opt<bool> advice_only(
+    "advice-only", llvm::cl::desc("Advisory mode only"), llvm::cl::Optional,
+    llvm::cl::cat(header_checker_category));
+
 int main(int argc, const char **argv) {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
   llvm::cl::ParseCommandLineOptions(argc, argv, "header-checker");
@@ -53,6 +57,9 @@ int main(int argc, const char **argv) {
                  << " Please check compatiblity report at : "
                  << compatibility_report << "\n"
                  << "*****************************************************\n";
+    if (!advice_only) {
+      return extension_or_incompatible;
+    }
   }
-  return extension_or_incompatible;
+  return 0;
 }

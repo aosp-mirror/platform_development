@@ -18,9 +18,10 @@
 #include "proto/abi_dump.pb.h"
 #pragma clang diagnostic pop
 
+#include <header_abi_util.h>
+
 #include <llvm/Support/CommandLine.h>
 #include <llvm/Support/raw_ostream.h>
-
 
 #include <google/protobuf/text_format.h>
 #include <google/protobuf/io/zero_copy_stream_impl.h>
@@ -33,23 +34,45 @@
 
 #include <stdlib.h>
 
-static llvm::cl::OptionCategory header_checker_category(
+static llvm::cl::OptionCategory header_linker_category(
     "header-abi-linker options");
 
 static llvm::cl::list<std::string> dump_files(
     llvm::cl::Positional, llvm::cl::desc("<dump-files>"), llvm::cl::Required,
-    llvm::cl::cat(header_checker_category), llvm::cl::OneOrMore);
+    llvm::cl::cat(header_linker_category), llvm::cl::OneOrMore);
 
 static llvm::cl::opt<std::string> linked_dump(
     "o", llvm::cl::desc("<linked dump>"), llvm::cl::Required,
-    llvm::cl::cat(header_checker_category));
+    llvm::cl::cat(header_linker_category));
+
+static llvm::cl::list<std::string> exported_header_dirs(
+    "I", llvm::cl::desc("<export_include_dirs>"), llvm::cl::ZeroOrMore,
+    llvm::cl::cat(header_linker_category));
+
+static llvm::cl::opt<std::string> version_script(
+    "v", llvm::cl::desc("<version_script>"), llvm::cl::Optional,
+    llvm::cl::cat(header_linker_category));
+
+static llvm::cl::opt<std::string> api(
+    "api", llvm::cl::desc("<api>"), llvm::cl::Optional,
+    llvm::cl::cat(header_linker_category));
+
+static llvm::cl::opt<std::string> arch(
+    "arch", llvm::cl::desc("<arch>"), llvm::cl::Optional,
+    llvm::cl::cat(header_linker_category));
 
 class HeaderAbiLinker {
  public:
   HeaderAbiLinker(
-      const std::vector<std::string> &files,
-      const std::string &linked_dump)
-    : dump_files_(files), out_dump_name_(linked_dump) {};
+      const std::vector<std::string> &dump_files,
+      const std::vector<std::string> &exported_header_dirs,
+      const std::string &version_script,
+      const std::string &linked_dump,
+      const std::string &arch,
+      const std::string &api)
+    : dump_files_(dump_files), exported_header_dirs_(exported_header_dirs),
+    version_script_(version_script), out_dump_name_(linked_dump), arch_(arch),
+    api_(api) {};
 
   bool LinkAndDump();
 
@@ -67,14 +90,21 @@ class HeaderAbiLinker {
                       abi_dump::TranslationUnit *linked_tu);
 
   template <typename T>
-  static inline bool LinkDecl(
-    google::protobuf::RepeatedPtrField<T> *dst,
-    std::set<std::string> *link_set,
-    const google::protobuf::RepeatedPtrField<T> &src);
+  inline bool LinkDecl(google::protobuf::RepeatedPtrField<T> *dst,
+                       std::set<std::string> *link_set,
+                       const google::protobuf::RepeatedPtrField<T> &src,
+                       bool use_version_script);
+
+  bool ParseVersionScriptFiles();
 
  private:
   const std::vector<std::string> &dump_files_;
+  const std::vector<std::string> &exported_header_dirs_;
+  const std::string &version_script_;
   const std::string &out_dump_name_;
+  const std::string &arch_;
+  const std::string &api_;
+  std::set<std::string> exported_headers_;
   std::set<std::string> record_decl_set_;
   std::set<std::string> function_decl_set_;
   std::set<std::string> enum_decl_set_;
@@ -85,6 +115,16 @@ bool HeaderAbiLinker::LinkAndDump() {
   abi_dump::TranslationUnit linked_tu;
   std::ofstream text_output(out_dump_name_);
   google::protobuf::io::OstreamOutputStream text_os(&text_output);
+  if (!version_script_.empty() && !ParseVersionScriptFiles()) {
+    llvm::errs() << "Failed to parse stub files for exported symbols\n";
+    return false;
+  }
+  for (auto &&dir : exported_header_dirs_) {
+    if (!abi_util::CollectExportedHeaderSet(dir, &exported_headers_)) {
+      llvm::errs() << "Couldn't collect exported headers\n";
+      return false;
+    }
+  }
   for (auto &&i : dump_files_) {
     abi_dump::TranslationUnit dump_tu;
     std::ifstream input(i);
@@ -106,17 +146,50 @@ bool HeaderAbiLinker::LinkAndDump() {
   return true;
 }
 
+static std::string GetSymbol(const abi_dump::RecordDecl &element) {
+  return element.mangled_record_name();
+}
+
+static std::string GetSymbol(const abi_dump::FunctionDecl &element) {
+  return element.mangled_function_name();
+}
+
+static std::string GetSymbol(const abi_dump::EnumDecl &element) {
+  return element.basic_abi().linker_set_key();
+}
+
+static std::string GetSymbol(const abi_dump::GlobalVarDecl &element) {
+  return element.basic_abi().linker_set_key();
+}
+
 template <typename T>
 inline bool HeaderAbiLinker::LinkDecl(
     google::protobuf::RepeatedPtrField<T> *dst,
     std::set<std::string> *link_set,
-    const google::protobuf::RepeatedPtrField<T> &src) {
+    const google::protobuf::RepeatedPtrField<T> &src,
+    bool use_version_script) {
   assert(dst != nullptr);
   assert(link_set != nullptr);
   for (auto &&element : src) {
-    // The element already exists in the linked dump. Skip.
-    if (!link_set->insert(element.basic_abi().linker_set_key()).second) {
+    // If exported headers are available, filter out unexported abi.
+    if (!exported_headers_.empty() &&
+        exported_headers_.find(element.source_file()) ==
+        exported_headers_.end()) {
       continue;
+    }
+    // Check for the existence of the element in linked dump / symbol file.
+    if (!use_version_script) {
+        if (!link_set->insert(element.basic_abi().linker_set_key()).second) {
+        continue;
+        }
+    } else {
+      std::set<std::string>::iterator it =
+          link_set->find(GetSymbol(element));
+      if (it == link_set->end()) {
+        continue;
+      } else {
+        link_set->erase(*it); // Avoid multiple instances of the same symbol.
+      }
     }
     T *added_element = dst->Add();
     if (!added_element) {
@@ -131,38 +204,57 @@ inline bool HeaderAbiLinker::LinkDecl(
 bool HeaderAbiLinker::LinkRecords(const abi_dump::TranslationUnit &dump_tu,
                                   abi_dump::TranslationUnit *linked_tu) {
   assert(linked_tu != nullptr);
+  if (!version_script_.empty()) {
+    // version scripts do not have record tags.
+    return true;
+  }
   return LinkDecl(linked_tu->mutable_records(), &record_decl_set_,
-                  dump_tu.records());
+                  dump_tu.records(), false);
 }
 
 bool HeaderAbiLinker::LinkFunctions(const abi_dump::TranslationUnit &dump_tu,
                                     abi_dump::TranslationUnit *linked_tu) {
   assert(linked_tu != nullptr);
   return LinkDecl(linked_tu->mutable_functions(), &function_decl_set_,
-                  dump_tu.functions());
+                  dump_tu.functions(), (!version_script_.empty()));
 }
 
 bool HeaderAbiLinker::LinkEnums(const abi_dump::TranslationUnit &dump_tu,
                                 abi_dump::TranslationUnit *linked_tu) {
   assert(linked_tu != nullptr);
+  if (!version_script.empty()) {
+    // version scripts do not have enum tags.
+    return true;
+  }
   return LinkDecl(linked_tu->mutable_enums(), &enum_decl_set_,
-                  dump_tu.enums());
+                  dump_tu.enums(), false);
 }
 
 bool HeaderAbiLinker::LinkGlobalVars(const abi_dump::TranslationUnit &dump_tu,
                                      abi_dump::TranslationUnit *linked_tu) {
   assert(linked_tu != nullptr);
   return LinkDecl(linked_tu->mutable_global_vars(), &globvar_decl_set_,
-                  dump_tu.global_vars());
+                  dump_tu.global_vars(), (!version_script.empty()));
+}
+
+bool HeaderAbiLinker::ParseVersionScriptFiles() {
+  abi_util::VersionScriptParser version_script_parser(version_script_, arch_,
+                                                      api_);
+  if (!version_script_parser.Parse()) {
+    return false;
+  }
+  function_decl_set_ = version_script_parser.GetFunctions();
+  globvar_decl_set_ = version_script_parser.GetGlobVars();
+  return true;
 }
 
 int main(int argc, const char **argv) {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
-  llvm::cl::ParseCommandLineOptions(argc, argv, "header-checker");
-  HeaderAbiLinker Linker(dump_files, linked_dump);
+  llvm::cl::ParseCommandLineOptions(argc, argv, "header-linker");
+  HeaderAbiLinker Linker(dump_files, exported_header_dirs,
+                         version_script, linked_dump, arch, api);
   if (!Linker.LinkAndDump()) {
     return -1;
   }
-
   return 0;
 }
