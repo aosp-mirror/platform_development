@@ -45,6 +45,13 @@ HeaderCheckerFrontendAction::CreateASTConsumer(clang::CompilerInstance &ci,
                                               exported_headers);
 }
 
+static bool ShouldSkipFile(llvm::StringRef &file_name) {
+  return (file_name.empty() || file_name.startswith(".") ||
+          file_name.endswith(".swp") || file_name.endswith(".swo") ||
+          file_name.endswith("#") || file_name.endswith(".cpp") ||
+          file_name.endswith(".cc") || file_name.endswith(".c"));
+}
+
 bool HeaderCheckerFrontendAction::CollectExportedHeaderSet(
     const std::string &dir_name,
     std::set<std::string> *exported_headers) {
@@ -65,10 +72,7 @@ bool HeaderCheckerFrontendAction::CollectExportedHeaderSet(
     // Ignore swap files and hidden files / dirs. Do not recurse into them too.
     // We should also not look at source files. Many projects include source
     // files in their exports.
-    if (file_name.empty() || file_name.startswith(".") ||
-        file_name.endswith(".swp") || file_name.endswith(".swo") ||
-        file_name.endswith("#") || file_name.endswith(".cpp") ||
-        file_name.endswith(".cc") || file_name.endswith(".c")) {
+    if (ShouldSkipFile(file_name)) {
       walker.no_push();
       continue;
     }
