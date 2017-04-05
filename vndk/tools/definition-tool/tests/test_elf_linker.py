@@ -382,7 +382,7 @@ class ELFLinkerTest(unittest.TestCase):
             self.assertNotIn('/system/' + lib + '/libfoo.so', sp_hals)
             self.assertNotIn('/vendor/' + lib + '/libfoo.so', sp_hals)
 
-    def test_copmute_sp_lib(self):
+    def test_compute_sp_lib(self):
         # Create graph.
         gb = GraphBuilder()
 
