@@ -1,0 +1,8 @@
+EI_CLASS	32
+EI_DATA		Little-Endian
+E_MACHINE	EM_ARM
+DT_NEEDED	libC.so
+EXP_SYMBOL	extended_a
+EXP_SYMBOL	generic_a
+IMP_SYMBOL	extended_c
+IMP_SYMBOL	generic_c
