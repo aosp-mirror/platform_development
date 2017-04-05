@@ -1755,7 +1755,22 @@ class VNDKCommand(ELFGraphCommand):
                     print('warning: {}: NDK library should not be extended.'
                             .format(lib.path), file=sys.stderr)
 
+    def _check_arg_dir_exists(self, arg_name, dirs):
+        for path in dirs:
+            if not os.path.exists(path):
+                print('error: Failed to find the directory "{}" specified in {}'
+                        .format(path, arg_name), file=sys.stderr)
+                sys.exit(1)
+            if not os.path.isdir(path):
+                print('error: Path "{}" specified in {} is not a directory'
+                        .format(path, arg_name), file=sys.stderr)
+                sys.exit(1)
+
     def main(self, args):
+        # Check the command line options.
+        self._check_arg_dir_exists('--system', args.system)
+        self._check_arg_dir_exists('--vendor', args.vendor)
+
         # Load the generic reference.
         generic_refs = None
         if args.load_generic_refs:
