@@ -20,6 +20,8 @@ LOCAL_SDK_VERSION := current
 
 LOCAL_DEX_PREOPT := false
 
+LOCAL_COMPATIBILITY_SUITE := device-tests
+
 include $(BUILD_PACKAGE)
 
 # Use the folloing include to make our test apk.
