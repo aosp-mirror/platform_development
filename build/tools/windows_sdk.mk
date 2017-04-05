@@ -55,6 +55,12 @@ WIN_SDK_ZIP  := $(WIN_SDK_DIR)/$(WIN_SDK_NAME).zip
 
 $(call dist-for-goals, win_sdk, $(WIN_SDK_ZIP))
 
+# b/36697262 - we want the 64-bit libaapt2_jni and its dependencies
+ifdef HOST_CROSS_2ND_ARCH
+$(call dist-for-goals,win_sdk,$(ALL_MODULES.host_cross_libaapt2_jni$(HOST_CROSS_2ND_ARCH_MODULE_SUFFIX).BUILT):lib64/libaapt2_jni.dll)
+$(call dist-for-goals, win_sdk, prebuilts/gcc/linux-x86/host/x86_64-w64-mingw32-4.8/x86_64-w64-mingw32/bin/libwinpthread-1.dll:lib64/libwinpthread-1.dll)
+endif
+
 .PHONY: win_sdk winsdk-tools
 
 define winsdk-banner
