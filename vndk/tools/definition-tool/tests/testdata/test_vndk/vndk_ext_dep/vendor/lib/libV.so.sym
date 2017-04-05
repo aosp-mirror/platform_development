@@ -1,0 +1,9 @@
+EI_CLASS	32
+EI_DATA		Little-Endian
+E_MACHINE	EM_ARM
+DT_NEEDED	libA.so
+DT_NEEDED	libB.so
+IMP_SYMBOL	extended_a
+IMP_SYMBOL	extended_b
+IMP_SYMBOL	generic_a
+IMP_SYMBOL	generic_b
