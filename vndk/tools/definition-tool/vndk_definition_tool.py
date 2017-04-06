@@ -1844,27 +1844,31 @@ class VNDKCommand(ELFGraphCommand):
                     (vndk.vndk_core, vndk.vndk_indirect, vndk.vndk_fwk_ext,
                      vndk.vndk_vnd_ext))
 
+        # SP-NDK
+        for lib in sorted_lib_path_list(sp_ndk):
+            print('sp-ndk:', lib)
+        for lib in sorted_lib_path_list(sp_ndk_vndk_stable):
+            print('sp-ndk-vndk-stable:', lib)
+
+        # SP-HAL
         for lib in sorted_lib_path_list(sp_hal):
             print('sp-hal:', lib)
-
         for lib in sorted_lib_path_list(sp_hal_dep):
             print('sp-hal-dep:', lib)
+        for lib in sorted_lib_path_list(sp_hal_vndk_stable):
+            print('sp-hal-vndk-stable:', lib)
 
-        for lib in sorted_lib_path_list(vndk_stable):
-            print('vndk-stable:', lib)
-
+        # VNDK (framework)
         for lib in sorted_lib_path_list(vndk.vndk_core):
             print('vndk-core:', lib)
-
         for lib in sorted_lib_path_list(vndk.vndk_indirect):
             print('vndk-indirect:', lib)
-
         for lib in sorted_lib_path_list(vndk.vndk_fwk_ext):
             print('vndk-fwk-ext:', lib)
 
+        # VNDK (vendor)
         for lib in sorted_lib_path_list(vndk.vndk_vnd_ext):
             print('vndk-vnd-ext:', lib)
-
         for lib in sorted_lib_path_list(vndk.extra_vendor_libs):
             print('extra-vendor-lib:', lib)
 
@@ -2042,17 +2046,19 @@ class SpLibCommand(ELFGraphCommand):
         sp_hal, sp_hal_dep, sp_hal_vndk_stable, sp_ndk, sp_ndk_vndk_stable = \
                 graph.compute_sp_lib(generic_refs)
 
+        # SP-NDK
+        for lib in sorted_lib_path_list(sp_ndk):
+            print('sp-ndk:', lib)
+        for lib in sorted_lib_path_list(sp_ndk_vndk_stable):
+            print('sp-ndk-vndk-stable:', lib)
+
+        # SP-HAL
         for lib in sorted_lib_path_list(sp_hal):
             print('sp-hal:', lib)
         for lib in sorted_lib_path_list(sp_hal_dep):
             print('sp-hal-dep:', lib)
         for lib in sorted_lib_path_list(sp_hal_vndk_stable):
             print('sp-hal-vndk-stable:', lib)
-
-        for lib in sorted_lib_path_list(sp_ndk):
-            print('sp-ndk:', lib)
-        for lib in sorted_lib_path_list(sp_ndk_vndk_stable):
-            print('sp-ndk-vndk-stable:', lib)
 
         return 0
 
