@@ -147,7 +147,8 @@ And then, run VNDK definition tool with:
         --load-extra-deps dlopen.dep
 
 
-# Partition for VNDK with Outward Customization
+## Partition for VNDK with Outward Customization
+
 An outward-customized VNDK library can be put on both system and vendor
 partition.  VNDK definition tool will assume such library will be installed
 into /system/lib[64]/vndk-$FWK-ext by default.  Use following options to change
@@ -192,19 +193,6 @@ These warnings suggest that `libtinyxml.so` might be better to move to vendor
 partition.
 
 
-### VNDK Extension
-
-If you specify `--load-generic-refs`, then you may see some warnings:
-
-    warning: /system/lib/libhardware_legacy.so: This is a VNDK extension and
-    must be moved to vendor partition.
-
-This warning indicates that the library is not in the generic reference or the
-library contains some symbols that are not available in generic build.  It must
-be installed into vendor partition instead.  As the result, it will be included
-in vndk-ext.
-
-
 ## Example
 
 We can run this against Nexus 6p Factory Image:
@@ -240,10 +228,10 @@ We can run this against latest Android build:
         --vendor ${ANDROID_PRODUCT_OUT}/vendor
 
 
-## Same-Process NDK, Same-Process HAL, and VNDK-stable
+## Find SP-NDK and SP-HAL Dependencies
 
 VNDK Definition Tool can define the same-process HAL as well.  To find SP-NDK,
-SP-HAL, and VNDK-stable, run `sp-lib` subcommand:
+SP-HAL, SP-HAL-DEP, and VNDK-stable, run `sp-lib` subcommand:
 
     $ python3 vndk_definition_tool.py sp-lib \
         --system ${ANDROID_PRODUCT_OUT}/system \
