@@ -621,7 +621,26 @@ NUM_PARTITIONS = 2
 
 VNDKResult = collections.namedtuple(
         'VNDKResult',
-        'extra_vendor_libs vndk_core vndk_indirect vndk_fwk_ext vndk_vnd_ext')
+        'sp_hal sp_hal_dep sp_hal_vndk_stable sp_ndk sp_ndk_vndk_stable '
+        'extra_vendor_lib vndk_core vndk_indirect vndk_fwk_ext vndk_vnd_ext')
+
+def print_vndk_lib(vndk_lib, file=sys.stdout):
+    # SP-NDK and SP-HAL
+    print_sp_lib(vndk_lib, file=file)
+
+    # VNDK (framework)
+    for lib in sorted_lib_path_list(vndk_lib.vndk_core):
+        print('vndk-core:', lib, file=file)
+    for lib in sorted_lib_path_list(vndk_lib.vndk_indirect):
+        print('vndk-indirect:', lib, file=file)
+    for lib in sorted_lib_path_list(vndk_lib.vndk_fwk_ext):
+        print('vndk-fwk-ext:', lib, file=file)
+
+    # VNDK (vendor)
+    for lib in sorted_lib_path_list(vndk_lib.vndk_vnd_ext):
+        print('vndk-vnd-ext:', lib, file=file)
+    for lib in sorted_lib_path_list(vndk_lib.extra_vendor_lib):
+        print('extra-vendor-lib:', lib, file=file)
 
 
 SPLibResult = collections.namedtuple(
@@ -1168,8 +1187,23 @@ class ELFLinker(object):
 
         return (vndk_core, vndk_fwk_ext, vndk_vnd_ext)
 
-    def compute_vndk(self, sp_hals, vndk_stable, vndk_customized_for_system,
+    def compute_vndk(self, vndk_customized_for_system,
                      vndk_customized_for_vendor, generic_refs, banned_libs):
+        return self._compute_vndk(
+                self.compute_sp_lib(generic_refs), vndk_customized_for_system,
+                vndk_customized_for_vendor, generic_refs, banned_libs)
+
+    def _compute_vndk(self, sp_lib, vndk_customized_for_system,
+                      vndk_customized_for_vendor, generic_refs, banned_libs):
+        # Compute sp-hal and vndk-stable.
+        vndk_stable = sp_lib.sp_hal_vndk_stable | sp_lib.sp_ndk_vndk_stable
+        sp_hal_closure = sp_lib.sp_hal | sp_lib.sp_hal_dep
+
+        # Normalize partition tags.  We expect many violations from the
+        # pre-Treble world.  Guess a resolution for the incorrect partition
+        # tag.
+        self.normalize_partition_tags(sp_lib.sp_hal, generic_refs)
+
         # ELF resolvers.
         VNDK_CORE_SEARCH_PATH32 = (
             '/system/lib/vndk',
@@ -1210,7 +1244,7 @@ class ELFLinker(object):
         # Collect VNDK candidates.
         def is_not_vndk(lib):
             return (lib.is_ndk or banned_libs.is_banned(lib.path) or
-                    (lib in sp_hals) or (lib in vndk_stable))
+                    (lib in sp_hal_closure) or (lib in vndk_stable))
 
         def collect_libs_with_partition_user(lib_set, partition):
             result = set()
@@ -1227,7 +1261,7 @@ class ELFLinker(object):
         vndk_visited = set(vndk_candidates)
 
         # Sets for missing libraries.
-        extra_vendor_libs = set()
+        extra_vendor_lib = set()
 
         def get_vndk_core_lib_name(lib):
             lib_name = os.path.basename(lib.path)
@@ -1364,7 +1398,7 @@ class ELFLinker(object):
                 for lib in prev_vndk_candidates:
                     category = generic_refs.classify_lib(lib)
                     if category == GenericRefs.NEW_LIB:
-                        extra_vendor_libs.add(lib)
+                        extra_vendor_lib.add(lib)
                         add_deps_to_vndk_candidate(lib)
                     elif category == GenericRefs.EXPORT_EQUAL:
                         vndk_customized_candidates.add(lib)
@@ -1464,8 +1498,11 @@ class ELFLinker(object):
             else:
                 vndk_indirect.add(lib)
 
-        return VNDKResult(extra_vendor_libs, vndk_core, vndk_indirect,
-                          vndk_fwk_ext, vndk_vnd_ext)
+        return VNDKResult(
+                sp_lib.sp_hal, sp_lib.sp_hal_dep, sp_lib.sp_hal_vndk_stable,
+                sp_lib.sp_ndk, sp_lib.sp_ndk_vndk_stable,
+                extra_vendor_lib, vndk_core, vndk_indirect,
+                vndk_fwk_ext, vndk_vnd_ext)
 
     def compute_vndk_cap(self, banned_libs):
         # ELF files on vendor partitions are banned unconditionally.  ELF files
@@ -1820,17 +1857,6 @@ class VNDKCommand(ELFGraphCommand):
         if args.warn_banned_vendor_lib_deps:
             self._warn_banned_vendor_lib_deps(graph, banned_libs)
 
-        # Compute sp-hal and vndk-stable.
-        sp_lib = graph.compute_sp_lib(generic_refs)
-
-        vndk_stable = sp_lib.sp_hal_vndk_stable | sp_lib.sp_ndk_vndk_stable
-        sp_hal_closure = sp_lib.sp_hal | sp_lib.sp_hal_dep
-
-        # Normalize partition tags.  We expect many violations from the
-        # pre-Treble world.  Guess a resolution for the incorrect partition
-        # tag.
-        graph.normalize_partition_tags(sp_lib.sp_hal, generic_refs)
-
         # User may specify the partition for outward-customized vndk libs.  The
         # following code converts the path into ELFLinkData.
         vndk_customized_for_system = set()
@@ -1854,32 +1880,17 @@ class VNDKCommand(ELFGraphCommand):
                         args.outward_customization_for_vendor, lambda x: None))
 
         # Compute vndk heuristics.
-        vndk = graph.compute_vndk(
-                sp_hal_closure, vndk_stable, vndk_customized_for_system,
-                vndk_customized_for_vendor, generic_refs, banned_libs)
+        vndk_lib = graph.compute_vndk(vndk_customized_for_system,
+                                      vndk_customized_for_vendor, generic_refs,
+                                      banned_libs)
 
         if args.warn_high_level_ndk_deps:
             self._warn_high_level_ndk_deps(
-                    (vndk.vndk_core, vndk.vndk_indirect, vndk.vndk_fwk_ext,
-                     vndk.vndk_vnd_ext))
+                    (vndk_lib.vndk_core, vndk_lib.vndk_indirect,
+                     vndk_lib.vndk_fwk_ext, vndk_lib.vndk_vnd_ext))
 
-        # SP-NDK and SP-HAL
-        print_sp_lib(sp_lib)
-
-        # VNDK (framework)
-        for lib in sorted_lib_path_list(vndk.vndk_core):
-            print('vndk-core:', lib)
-        for lib in sorted_lib_path_list(vndk.vndk_indirect):
-            print('vndk-indirect:', lib)
-        for lib in sorted_lib_path_list(vndk.vndk_fwk_ext):
-            print('vndk-fwk-ext:', lib)
-
-        # VNDK (vendor)
-        for lib in sorted_lib_path_list(vndk.vndk_vnd_ext):
-            print('vndk-vnd-ext:', lib)
-        for lib in sorted_lib_path_list(vndk.extra_vendor_libs):
-            print('extra-vendor-lib:', lib)
-
+        # Print results.
+        print_vndk_lib(vndk_lib)
         return 0
 
 

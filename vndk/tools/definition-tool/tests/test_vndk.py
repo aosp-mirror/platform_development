@@ -10,7 +10,7 @@ import unittest
 
 from compat import StringIO
 from vndk_definition_tool import (ELF, ELFLinker, PT_SYSTEM, PT_VENDOR,
-                                  GenericRefs)
+                                  GenericRefs, SPLibResult)
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 TESTDATA_DIR = os.path.join(SCRIPT_DIR ,'testdata', 'test_vndk')
@@ -42,9 +42,8 @@ class ELFLinkerVNDKTest(unittest.TestCase):
     def _create_graph_vndk(self, input_dir, generic_refs_dir):
         graph, generic_refs = self._create_graph_gr(input_dir, generic_refs_dir)
 
-        vndk = graph.compute_vndk(
-                sp_hals=set(),
-                vndk_stable=set(),
+        vndk = graph._compute_vndk(
+                sp_lib=SPLibResult(set(), set(), set(), set(), set()),
                 vndk_customized_for_system=set(),
                 vndk_customized_for_vendor=set(),
                 generic_refs=generic_refs,
@@ -98,9 +97,8 @@ class ELFLinkerVNDKTest(unittest.TestCase):
         self.assertIsNotNone(libjpeg_64)
 
         # Compute vndk sets and move libraries to the correct directories.
-        vndk = graph.compute_vndk(
-                sp_hals=set(),
-                vndk_stable=set(),
+        vndk = graph._compute_vndk(
+                sp_lib=SPLibResult(set(), set(), set(), set(), set()),
                 vndk_customized_for_system=set(),
                 vndk_customized_for_vendor=set(),
                 generic_refs=generic_refs,
