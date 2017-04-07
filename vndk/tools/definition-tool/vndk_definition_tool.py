@@ -622,6 +622,7 @@ NUM_PARTITIONS = 2
 VNDKResult = collections.namedtuple(
         'VNDKResult',
         'sp_hal sp_hal_dep sp_hal_vndk_stable sp_ndk sp_ndk_vndk_stable '
+        'sp_both_vndk_stable '
         'extra_vendor_lib vndk_core vndk_indirect vndk_fwk_ext vndk_vnd_ext')
 
 def print_vndk_lib(vndk_lib, file=sys.stdout):
@@ -645,7 +646,8 @@ def print_vndk_lib(vndk_lib, file=sys.stdout):
 
 SPLibResult = collections.namedtuple(
         'SPLibResult',
-        'sp_hal sp_hal_dep sp_hal_vndk_stable sp_ndk sp_ndk_vndk_stable')
+        'sp_hal sp_hal_dep sp_hal_vndk_stable sp_ndk sp_ndk_vndk_stable '
+        'sp_both_vndk_stable')
 
 def print_sp_lib(sp_lib, file=sys.stdout):
     # SP-NDK
@@ -661,6 +663,10 @@ def print_sp_lib(sp_lib, file=sys.stdout):
         print('sp-hal-dep:', lib, file=file)
     for lib in sorted_lib_path_list(sp_lib.sp_hal_vndk_stable):
         print('sp-hal-vndk-stable:', lib, file=file)
+
+    # SP-both
+    for lib in sorted_lib_path_list(sp_lib.sp_both_vndk_stable):
+        print('sp-both-vndk-stable:', lib, file=file)
 
 
 class ELFResolver(object):
@@ -1037,6 +1043,7 @@ class ELFLinker(object):
 
         sp_ndk = self.compute_sp_ndk()
         sp_ndk_closure = self.compute_closure(sp_ndk, is_ndk)
+        sp_ndk_vndk_stable = sp_ndk_closure - sp_ndk
 
         sp_hal = self.compute_predefined_sp_hal()
         sp_hal_closure = self.compute_closure(sp_hal, is_ndk)
@@ -1053,11 +1060,12 @@ class ELFLinker(object):
             else:
                 sp_hal_dep.add(lib)
 
-        sp_ndk_vndk_stable = sp_ndk_closure - sp_ndk
-        sp_hal_vndk_stable = sp_hal_vndk_stable - sp_ndk - sp_ndk_vndk_stable
+        sp_both_vndk_stable = sp_ndk_vndk_stable & sp_hal_vndk_stable
+        sp_ndk_vndk_stable -= sp_both_vndk_stable
+        sp_hal_vndk_stable -= sp_both_vndk_stable
 
         return SPLibResult(sp_hal, sp_hal_dep, sp_hal_vndk_stable, sp_ndk,
-                           sp_ndk_vndk_stable)
+                           sp_ndk_vndk_stable, sp_both_vndk_stable)
 
     def _po_component_sorted(self, lib_set, get_successors,
                              get_strong_successors):
@@ -1196,7 +1204,8 @@ class ELFLinker(object):
     def _compute_vndk(self, sp_lib, vndk_customized_for_system,
                       vndk_customized_for_vendor, generic_refs, banned_libs):
         # Compute sp-hal and vndk-stable.
-        vndk_stable = sp_lib.sp_hal_vndk_stable | sp_lib.sp_ndk_vndk_stable
+        vndk_stable = sp_lib.sp_hal_vndk_stable | sp_lib.sp_ndk_vndk_stable | \
+                      sp_lib.sp_both_vndk_stable
         sp_hal_closure = sp_lib.sp_hal | sp_lib.sp_hal_dep
 
         # Normalize partition tags.  We expect many violations from the
@@ -1501,6 +1510,7 @@ class ELFLinker(object):
         return VNDKResult(
                 sp_lib.sp_hal, sp_lib.sp_hal_dep, sp_lib.sp_hal_vndk_stable,
                 sp_lib.sp_ndk, sp_lib.sp_ndk_vndk_stable,
+                sp_lib.sp_both_vndk_stable,
                 extra_vendor_lib, vndk_core, vndk_indirect,
                 vndk_fwk_ext, vndk_vnd_ext)
 
