@@ -624,6 +624,26 @@ VNDKHeuristics = collections.namedtuple(
         'extra_vendor_libs vndk_core vndk_indirect vndk_fwk_ext vndk_vnd_ext')
 
 
+SPLibResult = collections.namedtuple(
+        'SPLibResult',
+        'sp_hal sp_hal_dep sp_hal_vndk_stable sp_ndk sp_ndk_vndk_stable')
+
+def print_sp_lib(sp_lib, file=sys.stdout):
+    # SP-NDK
+    for lib in sorted_lib_path_list(sp_lib.sp_ndk):
+        print('sp-ndk:', lib, file=file)
+    for lib in sorted_lib_path_list(sp_lib.sp_ndk_vndk_stable):
+        print('sp-ndk-vndk-stable:', lib, file=file)
+
+    # SP-HAL
+    for lib in sorted_lib_path_list(sp_lib.sp_hal):
+        print('sp-hal:', lib, file=file)
+    for lib in sorted_lib_path_list(sp_lib.sp_hal_dep):
+        print('sp-hal-dep:', lib, file=file)
+    for lib in sorted_lib_path_list(sp_lib.sp_hal_vndk_stable):
+        print('sp-hal-vndk-stable:', lib, file=file)
+
+
 class ELFResolver(object):
     def __init__(self, lib_set, default_search_path):
         self.lib_set = lib_set
@@ -1017,8 +1037,8 @@ class ELFLinker(object):
         sp_ndk_vndk_stable = sp_ndk_closure - sp_ndk
         sp_hal_vndk_stable = sp_hal_vndk_stable - sp_ndk - sp_ndk_vndk_stable
 
-        return (sp_hal, sp_hal_dep, sp_hal_vndk_stable, sp_ndk, \
-                sp_ndk_vndk_stable)
+        return SPLibResult(sp_hal, sp_hal_dep, sp_hal_vndk_stable, sp_ndk,
+                           sp_ndk_vndk_stable)
 
     def _po_component_sorted(self, lib_set, get_successors,
                              get_strong_successors):
@@ -1801,16 +1821,15 @@ class VNDKCommand(ELFGraphCommand):
             self._warn_banned_vendor_lib_deps(graph, banned_libs)
 
         # Compute sp-hal and vndk-stable.
-        sp_hal, sp_hal_dep, sp_hal_vndk_stable, sp_ndk, sp_ndk_vndk_stable = \
-                graph.compute_sp_lib(generic_refs)
+        sp_lib = graph.compute_sp_lib(generic_refs)
 
-        vndk_stable = sp_hal_vndk_stable | sp_ndk_vndk_stable
-        sp_hal_closure = sp_hal | sp_hal_dep
+        vndk_stable = sp_lib.sp_hal_vndk_stable | sp_lib.sp_ndk_vndk_stable
+        sp_hal_closure = sp_lib.sp_hal | sp_lib.sp_hal_dep
 
         # Normalize partition tags.  We expect many violations from the
         # pre-Treble world.  Guess a resolution for the incorrect partition
         # tag.
-        graph.normalize_partition_tags(sp_hal, generic_refs)
+        graph.normalize_partition_tags(sp_lib.sp_hal, generic_refs)
 
         # User may specify the partition for outward-customized vndk libs.  The
         # following code converts the path into ELFLinkData.
@@ -1844,19 +1863,8 @@ class VNDKCommand(ELFGraphCommand):
                     (vndk.vndk_core, vndk.vndk_indirect, vndk.vndk_fwk_ext,
                      vndk.vndk_vnd_ext))
 
-        # SP-NDK
-        for lib in sorted_lib_path_list(sp_ndk):
-            print('sp-ndk:', lib)
-        for lib in sorted_lib_path_list(sp_ndk_vndk_stable):
-            print('sp-ndk-vndk-stable:', lib)
-
-        # SP-HAL
-        for lib in sorted_lib_path_list(sp_hal):
-            print('sp-hal:', lib)
-        for lib in sorted_lib_path_list(sp_hal_dep):
-            print('sp-hal-dep:', lib)
-        for lib in sorted_lib_path_list(sp_hal_vndk_stable):
-            print('sp-hal-vndk-stable:', lib)
+        # SP-NDK and SP-HAL
+        print_sp_lib(sp_lib)
 
         # VNDK (framework)
         for lib in sorted_lib_path_list(vndk.vndk_core):
@@ -2043,23 +2051,7 @@ class SpLibCommand(ELFGraphCommand):
                                  args.vendor, args.vendor_dir_as_system,
                                  args.load_extra_deps)
 
-        sp_hal, sp_hal_dep, sp_hal_vndk_stable, sp_ndk, sp_ndk_vndk_stable = \
-                graph.compute_sp_lib(generic_refs)
-
-        # SP-NDK
-        for lib in sorted_lib_path_list(sp_ndk):
-            print('sp-ndk:', lib)
-        for lib in sorted_lib_path_list(sp_ndk_vndk_stable):
-            print('sp-ndk-vndk-stable:', lib)
-
-        # SP-HAL
-        for lib in sorted_lib_path_list(sp_hal):
-            print('sp-hal:', lib)
-        for lib in sorted_lib_path_list(sp_hal_dep):
-            print('sp-hal-dep:', lib)
-        for lib in sorted_lib_path_list(sp_hal_vndk_stable):
-            print('sp-hal-vndk-stable:', lib)
-
+        print_sp_lib(graph.compute_sp_lib(generic_refs))
         return 0
 
 
