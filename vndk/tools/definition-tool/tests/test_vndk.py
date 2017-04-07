@@ -43,7 +43,7 @@ class ELFLinkerVNDKTest(unittest.TestCase):
         graph, generic_refs = self._create_graph_gr(input_dir, generic_refs_dir)
 
         vndk = graph._compute_vndk(
-                sp_lib=SPLibResult(set(), set(), set(), set(), set()),
+                sp_lib=SPLibResult(set(), set(), set(), set(), set(), set()),
                 vndk_customized_for_system=set(),
                 vndk_customized_for_vendor=set(),
                 generic_refs=generic_refs,
@@ -98,7 +98,7 @@ class ELFLinkerVNDKTest(unittest.TestCase):
 
         # Compute vndk sets and move libraries to the correct directories.
         vndk = graph._compute_vndk(
-                sp_lib=SPLibResult(set(), set(), set(), set(), set()),
+                sp_lib=SPLibResult(set(), set(), set(), set(), set(), set()),
                 vndk_customized_for_system=set(),
                 vndk_customized_for_vendor=set(),
                 generic_refs=generic_refs,
