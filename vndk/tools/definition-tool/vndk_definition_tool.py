@@ -619,8 +619,8 @@ PT_VENDOR = 1
 NUM_PARTITIONS = 2
 
 
-VNDKHeuristics = collections.namedtuple(
-        'VNDKHeuristics',
+VNDKResult = collections.namedtuple(
+        'VNDKResult',
         'extra_vendor_libs vndk_core vndk_indirect vndk_fwk_ext vndk_vnd_ext')
 
 
@@ -1464,8 +1464,8 @@ class ELFLinker(object):
             else:
                 vndk_indirect.add(lib)
 
-        return VNDKHeuristics(extra_vendor_libs, vndk_core, vndk_indirect,
-                              vndk_fwk_ext, vndk_vnd_ext)
+        return VNDKResult(extra_vendor_libs, vndk_core, vndk_indirect,
+                          vndk_fwk_ext, vndk_vnd_ext)
 
     def compute_vndk_cap(self, banned_libs):
         # ELF files on vendor partitions are banned unconditionally.  ELF files
