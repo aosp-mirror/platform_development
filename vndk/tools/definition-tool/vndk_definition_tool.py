@@ -1314,9 +1314,14 @@ class ELFLinker(object):
             vndk_core.add(vndk_core_lib)
             return vndk_core_lib
 
+        def add_to_vndk_core(lib):
+            self.rename_lib(lib, PT_SYSTEM, get_vndk_core_lib_name(lib))
+            vndk_core.add(lib)
+
         # Compute vndk-core, vndk-fwk-ext and vndk-vnd-ext.
         if not generic_refs:
-            vndk_core.update(vndk_candidates)
+            for lib in vndk_candidates:
+                add_to_vndk_core(lib)
         else:
             while vndk_candidates:
                 if __debug__:
@@ -1352,10 +1357,6 @@ class ELFLinker(object):
                     for user, dep_type in list(lib.users_with_type):
                         if lib not in user.imported_ext_symbols:
                             replace_linked_lib(user, lib, generic_lib, dep_type)
-
-                def add_to_vndk_core(lib):
-                    self.rename_lib(lib, PT_SYSTEM, get_vndk_core_lib_name(lib))
-                    vndk_core.add(lib)
 
                 def add_to_vndk_fwk_ext(lib, generic_lib):
                     self.rename_lib(lib, PT_SYSTEM,
