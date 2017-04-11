@@ -10,7 +10,7 @@ import unittest
 
 from compat import StringIO
 from vndk_definition_tool import (ELF, ELFLinker, PT_SYSTEM, PT_VENDOR,
-                                  GenericRefs)
+                                  GenericRefs, SPLibResult)
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 TESTDATA_DIR = os.path.join(SCRIPT_DIR ,'testdata', 'test_vndk')
@@ -23,42 +23,55 @@ class ELFLinkerVNDKTest(unittest.TestCase):
     def _get_paths_from_nodes(self, nodes):
         return sorted([node.path for node in nodes])
 
-    def test_compute_vndk(self):
-        input_dir = os.path.join(TESTDATA_DIR, 'pre_treble')
+    def _create_graph_gr(self, input_dir, generic_refs_dir):
+        if not generic_refs_dir:
+            generic_refs = None
+        else:
+            generic_refs_dir = os.path.join(TESTDATA_DIR, generic_refs_dir)
+            generic_refs = GenericRefs.create_from_dir(generic_refs_dir)
 
-        graph = ELFLinker.create_from_dump(
-                system_dirs=[os.path.join(input_dir, 'system')],
-                vendor_dirs=[os.path.join(input_dir, 'vendor')])
-
-        vndk = graph.compute_vndk(sp_hals=set(), vndk_stable=set(),
-                                  vndk_customized_for_system=set(),
-                                  vndk_customized_for_vendor=set(),
-                                  generic_refs=None,
-                                  banned_libs=MockBannedLibs())
-
-        self.assertEqual(['/system/lib/libcutils.so',
-                          '/system/lib64/libcutils.so'],
-                         self._get_paths_from_nodes(vndk.vndk_core))
-        self.assertEqual([], self._get_paths_from_nodes(vndk.vndk_fwk_ext))
-        self.assertEqual([], self._get_paths_from_nodes(vndk.vndk_vnd_ext))
-
-    def test_compute_vndk_fwk_ext(self):
-        generic_refs_dir = os.path.join(TESTDATA_DIR, 'vndk_gr')
-
-        generic_refs = GenericRefs.create_from_dir(generic_refs_dir)
-
-        input_dir = os.path.join(TESTDATA_DIR, 'vndk_fwk_ext')
+        input_dir = os.path.join(TESTDATA_DIR, input_dir)
 
         graph = ELFLinker.create_from_dump(
                 system_dirs=[os.path.join(input_dir, 'system')],
                 vendor_dirs=[os.path.join(input_dir, 'vendor')],
                 generic_refs=generic_refs)
 
-        vndk = graph.compute_vndk(sp_hals=set(), vndk_stable=set(),
-                                  vndk_customized_for_system=set(),
-                                  vndk_customized_for_vendor=set(),
-                                  generic_refs=generic_refs,
-                                  banned_libs=MockBannedLibs())
+        return (graph, generic_refs)
+
+    def _create_graph_vndk(self, input_dir, generic_refs_dir):
+        graph, generic_refs = self._create_graph_gr(input_dir, generic_refs_dir)
+
+        vndk = graph._compute_vndk(
+                sp_lib=SPLibResult(set(), set(), set(), set(), set(), set()),
+                vndk_customized_for_system=set(),
+                vndk_customized_for_vendor=set(),
+                generic_refs=generic_refs,
+                banned_libs=MockBannedLibs())
+
+        return (graph, vndk)
+
+    def test_compute_vndk(self):
+        graph, vndk = self._create_graph_vndk('pre_treble', None)
+
+        self.assertEqual(['/system/lib/vndk/libcutils.so',
+                          '/system/lib64/vndk/libcutils.so'],
+                         self._get_paths_from_nodes(vndk.vndk_core))
+        self.assertEqual([], self._get_paths_from_nodes(vndk.vndk_fwk_ext))
+        self.assertEqual([], self._get_paths_from_nodes(vndk.vndk_vnd_ext))
+
+    def test_compute_vndk_indirect_no_gr(self):
+        graph, vndk = self._create_graph_vndk('vndk_indirect', None)
+
+        self.assertEqual(['/system/lib/vndk/libcutils.so',
+                          '/system/lib64/vndk/libcutils.so'],
+                         self._get_paths_from_nodes(vndk.vndk_core))
+        self.assertEqual(['/system/lib/vndk/libcutils_dep.so',
+                          '/system/lib64/vndk/libcutils_dep.so'],
+                         self._get_paths_from_nodes(vndk.vndk_indirect))
+
+    def test_compute_vndk_fwk_ext(self):
+        graph, vndk = self._create_graph_vndk('vndk_fwk_ext', 'vndk_gr')
 
         self.assertEqual(['/system/lib/vndk/libRS.so',
                           '/system/lib/vndk/libcutils.so',
@@ -71,22 +84,7 @@ class ELFLinkerVNDKTest(unittest.TestCase):
         self.assertEqual([], self._get_paths_from_nodes(vndk.vndk_vnd_ext))
 
     def test_compute_vndk_vnd_ext(self):
-        generic_refs_dir = os.path.join(TESTDATA_DIR, 'vndk_gr')
-
-        generic_refs = GenericRefs.create_from_dir(generic_refs_dir)
-
-        input_dir = os.path.join(TESTDATA_DIR, 'vndk_vnd_ext')
-
-        graph = ELFLinker.create_from_dump(
-                system_dirs=[os.path.join(input_dir, 'system')],
-                vendor_dirs=[os.path.join(input_dir, 'vendor')],
-                generic_refs=generic_refs)
-
-        vndk = graph.compute_vndk(sp_hals=set(), vndk_stable=set(),
-                                  vndk_customized_for_system=set(),
-                                  vndk_customized_for_vendor=set(),
-                                  generic_refs=generic_refs,
-                                  banned_libs=MockBannedLibs())
+        graph, vndk = self._create_graph_vndk('vndk_vnd_ext', 'vndk_gr')
 
         self.assertEqual(['/system/lib/vndk/libRS.so',
                           '/system/lib/vndk/libcutils.so',
@@ -99,16 +97,8 @@ class ELFLinkerVNDKTest(unittest.TestCase):
                          self._get_paths_from_nodes(vndk.vndk_vnd_ext))
 
     def test_compute_vndk_inward_customization(self):
-        generic_refs_dir = os.path.join(TESTDATA_DIR, 'vndk_gr')
-
-        generic_refs = GenericRefs.create_from_dir(generic_refs_dir)
-
-        input_dir = os.path.join(TESTDATA_DIR, 'vndk_inward_customization')
-
-        graph = ELFLinker.create_from_dump(
-                system_dirs=[os.path.join(input_dir, 'system')],
-                vendor_dirs=[os.path.join(input_dir, 'vendor')],
-                generic_refs=generic_refs)
+        graph, generic_refs = self._create_graph_gr(
+                'vndk_inward_customization', 'vndk_gr')
 
         # Make sure libjpeg.so was loaded from the input dir.
         libjpeg_32 = graph.get_lib('/system/lib/libjpeg.so')
@@ -117,11 +107,12 @@ class ELFLinkerVNDKTest(unittest.TestCase):
         self.assertIsNotNone(libjpeg_64)
 
         # Compute vndk sets and move libraries to the correct directories.
-        vndk = graph.compute_vndk(sp_hals=set(), vndk_stable=set(),
-                                  vndk_customized_for_system=set(),
-                                  vndk_customized_for_vendor=set(),
-                                  generic_refs=generic_refs,
-                                  banned_libs=MockBannedLibs())
+        vndk = graph._compute_vndk(
+                sp_lib=SPLibResult(set(), set(), set(), set(), set(), set()),
+                vndk_customized_for_system=set(),
+                vndk_customized_for_vendor=set(),
+                generic_refs=generic_refs,
+                banned_libs=MockBannedLibs())
 
         # Check vndk-core libraries.
         self.assertEqual(['/system/lib/vndk/libRS.so',
@@ -161,22 +152,8 @@ class ELFLinkerVNDKTest(unittest.TestCase):
         # will break the vndk-indirect computation because libC is not in
         # generic references.
 
-        generic_refs_dir = os.path.join(TESTDATA_DIR, 'vndk_indirect_ext_gr')
-
-        generic_refs = GenericRefs.create_from_dir(generic_refs_dir)
-
-        input_dir = os.path.join(TESTDATA_DIR, 'vndk_indirect_ext')
-
-        graph = ELFLinker.create_from_dump(
-                system_dirs=[os.path.join(input_dir, 'system')],
-                vendor_dirs=[os.path.join(input_dir, 'vendor')],
-                generic_refs=generic_refs)
-
-        vndk = graph.compute_vndk(sp_hals=set(), vndk_stable=set(),
-                                  vndk_customized_for_system=set(),
-                                  vndk_customized_for_vendor=set(),
-                                  generic_refs=generic_refs,
-                                  banned_libs=MockBannedLibs())
+        graph, vndk = self._create_graph_vndk('vndk_indirect_ext',
+                                              'vndk_indirect_ext_gr')
 
         self.assertEqual(['/system/lib/vndk/libRS.so',
                           '/system/lib/vndk/libcutils.so',
@@ -198,22 +175,7 @@ class ELFLinkerVNDKTest(unittest.TestCase):
         # vndk-vnd-ext in the first round, libA depends libC, libC depends
         # libB.
 
-        generic_refs_dir = os.path.join(TESTDATA_DIR, 'vndk_ext_dep_gr')
-
-        generic_refs = GenericRefs.create_from_dir(generic_refs_dir)
-
-        input_dir = os.path.join(TESTDATA_DIR, 'vndk_ext_dep')
-
-        graph = ELFLinker.create_from_dump(
-                system_dirs=[os.path.join(input_dir, 'system')],
-                vendor_dirs=[os.path.join(input_dir, 'vendor')],
-                generic_refs=generic_refs)
-
-        vndk = graph.compute_vndk(sp_hals=set(), vndk_stable=set(),
-                                  vndk_customized_for_system=set(),
-                                  vndk_customized_for_vendor=set(),
-                                  generic_refs=generic_refs,
-                                  banned_libs=MockBannedLibs())
+        graph, vndk = self._create_graph_vndk('vndk_ext_dep', 'vndk_ext_dep_gr')
 
         self.assertEqual(['/system/lib/vndk/libA.so',
                           '/system/lib/vndk/libB.so',
