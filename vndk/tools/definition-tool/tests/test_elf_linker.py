@@ -389,10 +389,14 @@ class ELFLinkerTest(unittest.TestCase):
         # LL-NDK (should be excluded from result)
         gb.add_multilib(PT_SYSTEM, 'libc')
 
+        # SP-Both VNDK-stable
+        gb.add_multilib(PT_SYSTEM, 'libsp_both_vs')
+
         # SP-NDK VNDK-stable
         gb.add_multilib(PT_SYSTEM, 'libcutils_dep', dt_needed=['libc.so'])
         gb.add_multilib(PT_SYSTEM, 'libcutils',
-                        dt_needed=['libc.so', 'libcutils_dep.so'])
+                        dt_needed=['libc.so', 'libcutils_dep.so',
+                                   'libsp_both_vs.so'])
 
         # SP-NDK dependencies
         gb.add_multilib(PT_SYSTEM, 'libutils',
@@ -410,7 +414,7 @@ class ELFLinkerTest(unittest.TestCase):
         # SP-HAL VNDK-stable
         gb.add_multilib(PT_SYSTEM, 'libhidlbase')
         gb.add_multilib(PT_SYSTEM, 'libhidlmemory',
-                        dt_needed=['libhidlbase.so'])
+                        dt_needed=['libhidlbase.so', 'libsp_both_vs.so'])
 
         # SP-HAL
         gb.add_multilib(PT_VENDOR, 'libEGL_chipset', extra_dir='egl',
@@ -426,22 +430,32 @@ class ELFLinkerTest(unittest.TestCase):
                     return GenericRefs.NEW_LIB
                 return GenericRefs.EXPORT_EQUAL
 
-        sp_hal, sp_hal_dep, sp_hal_vndk_stable, sp_ndk, sp_ndk_vndk_stable = \
-                gb.graph.compute_sp_lib(MockGenericRefs())
+        sp_lib = gb.graph.compute_sp_lib(MockGenericRefs())
 
-        self.assertEqual(2 * 1, len(sp_hal))
-        self.assertEqual(2 * 2, len(sp_hal_dep))
-        self.assertEqual(2 * 2, len(sp_hal_vndk_stable))
-        self.assertEqual(2 * 1, len(sp_ndk))
-        self.assertEqual(2 * 3, len(sp_ndk_vndk_stable))
+        self.assertEqual(2 * 1, len(sp_lib.sp_hal))
+        self.assertEqual(2 * 2, len(sp_lib.sp_hal_dep))
+        self.assertEqual(2 * 2, len(sp_lib.sp_hal_vndk_stable))
+        self.assertEqual(2 * 1, len(sp_lib.sp_ndk))
+        self.assertEqual(2 * 3, len(sp_lib.sp_ndk_vndk_stable))
+        self.assertEqual(2 * 1, len(sp_lib.sp_both_vndk_stable))
 
-        sp_hal = self._get_paths_from_nodes(sp_hal)
-        sp_hal_dep = self._get_paths_from_nodes(sp_hal_dep)
-        sp_hal_vndk_stable = self._get_paths_from_nodes(sp_hal_vndk_stable)
-        sp_ndk = self._get_paths_from_nodes(sp_ndk)
-        sp_ndk_vndk_stable = self._get_paths_from_nodes(sp_ndk_vndk_stable)
+        sp_hal = self._get_paths_from_nodes(sp_lib.sp_hal)
+        sp_hal_dep = self._get_paths_from_nodes(sp_lib.sp_hal_dep)
+        sp_hal_vndk_stable = self._get_paths_from_nodes(
+                sp_lib.sp_hal_vndk_stable)
+
+        sp_ndk = self._get_paths_from_nodes(sp_lib.sp_ndk)
+        sp_ndk_vndk_stable = self._get_paths_from_nodes(
+                sp_lib.sp_ndk_vndk_stable)
+
+        sp_both_vndk_stable = self._get_paths_from_nodes(
+                sp_lib.sp_both_vndk_stable)
 
         for lib_dir in ('lib', 'lib64'):
+            # SP-Both
+            self.assertIn('/system/{}/libsp_both_vs.so'.format(lib_dir),
+                          sp_both_vndk_stable)
+
             # SP-NDK dependencies
             self.assertIn('/system/{}/libcutils.so'.format(lib_dir),
                           sp_ndk_vndk_stable)
