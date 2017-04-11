@@ -88,7 +88,7 @@ This command will print shared libraries that belong to the following sets:
 
     - The libraries will be installed to `/vendor/lib[64]/vndk-$VND-ext`
 
-10. **extra-vendor**
+10. **extra-vendor-lib**
 
     - This contains the extra libraries that have to be copied from
       `/system/lib[64]` to `/vendor/lib[64]`.
