@@ -54,11 +54,21 @@ class ELFLinkerVNDKTest(unittest.TestCase):
     def test_compute_vndk(self):
         graph, vndk = self._create_graph_vndk('pre_treble', None)
 
-        self.assertEqual(['/system/lib/libcutils.so',
-                          '/system/lib64/libcutils.so'],
+        self.assertEqual(['/system/lib/vndk/libcutils.so',
+                          '/system/lib64/vndk/libcutils.so'],
                          self._get_paths_from_nodes(vndk.vndk_core))
         self.assertEqual([], self._get_paths_from_nodes(vndk.vndk_fwk_ext))
         self.assertEqual([], self._get_paths_from_nodes(vndk.vndk_vnd_ext))
+
+    def test_compute_vndk_indirect_no_gr(self):
+        graph, vndk = self._create_graph_vndk('vndk_indirect', None)
+
+        self.assertEqual(['/system/lib/vndk/libcutils.so',
+                          '/system/lib64/vndk/libcutils.so'],
+                         self._get_paths_from_nodes(vndk.vndk_core))
+        self.assertEqual(['/system/lib/vndk/libcutils_dep.so',
+                          '/system/lib64/vndk/libcutils_dep.so'],
+                         self._get_paths_from_nodes(vndk.vndk_indirect))
 
     def test_compute_vndk_fwk_ext(self):
         graph, vndk = self._create_graph_vndk('vndk_fwk_ext', 'vndk_gr')
