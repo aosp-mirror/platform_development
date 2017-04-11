@@ -100,16 +100,16 @@ bool ABIWrapper::SetupBasicNamedAndTypedDecl(
 }
 
 std::string ABIWrapper::GetMangledNameDecl(const clang::NamedDecl *decl) const {
-  clang::IdentifierInfo *identifier = decl->getIdentifier();
-  std::string mangled_or_demangled_name =
-      identifier ? identifier->getName() : "";
-  if (mangle_contextp_->shouldMangleDeclName(decl)) {
-    assert(&(mangle_contextp_->getASTContext()) == ast_contextp_);
-    llvm::raw_string_ostream ostream(mangled_or_demangled_name);
-    mangle_contextp_->mangleName(decl, ostream);
-    ostream.flush();
+  assert(&(mangle_contextp_->getASTContext()) == ast_contextp_);
+  if (!mangle_contextp_->shouldMangleDeclName(decl)) {
+    clang::IdentifierInfo *identifier = decl->getIdentifier();
+    return identifier ? identifier->getName() : "";
   }
-  return mangled_or_demangled_name;
+  std::string mangled_name;
+  llvm::raw_string_ostream ostream(mangled_name);
+  mangle_contextp_->mangleName(decl, ostream);
+  ostream.flush();
+  return mangled_name;
 }
 
 bool ABIWrapper::SetupTemplateParamNames(
