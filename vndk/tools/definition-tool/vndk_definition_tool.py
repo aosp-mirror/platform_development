@@ -4,6 +4,7 @@ from __future__ import print_function
 
 import argparse
 import collections
+import csv
 import itertools
 import json
 import os
@@ -2180,6 +2181,127 @@ class DepsClosureCommand(ELFGraphCommand):
         return 0
 
 
+TAGGED_LIB_DICT_FIELDS = ('ll_ndk', 'sp_ndk', 'sp_ndk_indirect', 'hl_ndk',
+                          'vndk_sp', 'vndk', 'vndk_indirect', 'fwk_only')
+
+TaggedLibDict = collections.namedtuple('TaggedLibDict', TAGGED_LIB_DICT_FIELDS)
+
+class CheckDepCommand(ELFGraphCommand):
+    def __init__(self):
+        super(CheckDepCommand, self).__init__(
+                'check-dep', help='Check the eligible dependencies')
+
+    def add_argparser_options(self, parser):
+        super(CheckDepCommand, self).add_argparser_options(parser)
+
+        parser.add_argument('--tag-file', required=True)
+
+    def _load_tag_file(self, tag_file_path):
+        res = TaggedLibDict(set(), set(), set(), set(), set(), set(), set(),
+                            set())
+
+        mapping = {
+            'll-ndk': res.ll_ndk,
+            'sp-ndk': res.sp_ndk,
+            'sp-ndk-indirect': res.sp_ndk_indirect,
+            'hl-ndk': res.hl_ndk,
+            'vndk-sp-hal': res.vndk_sp,
+            'vndk-sp-both': res.vndk_sp,
+            'vndk': res.vndk,
+            'vndk-indirect': res.vndk_indirect,
+            'fwk-only': res.fwk_only,
+            'remove': res.fwk_only,
+        }
+
+        with open(tag_file_path, 'r') as tag_file:
+            csv_reader = csv.reader(tag_file)
+            for lib_name, tag in csv_reader:
+                mapping[tag.lower()].add(lib_name)
+
+        return res
+
+    def _get_tagged_libs(self, graph, tags):
+        res = TaggedLibDict(set(), set(), set(), set(), set(), set(), set(),
+                            set())
+        for lib in graph.lib_pt[PT_SYSTEM].values():
+            lib_name = os.path.basename(lib.path)
+            for i, lib_set in enumerate(tags):
+                if lib_name in lib_set:
+                    res[i].add(lib)
+        return res
+
+    def _check_eligible_vndk_dep(self, graph, tagged_libs):
+        """Check whether eligible sets are self-contained."""
+        num_errors = 0
+
+        indirect_libs = (tagged_libs.sp_ndk_indirect)
+
+        eligible_libs = (tagged_libs.ll_ndk | tagged_libs.sp_ndk | \
+                         tagged_libs.vndk_sp | \
+                         tagged_libs.vndk | tagged_libs.vndk_indirect)
+
+        # Check eligible vndk is self-contained.
+        for lib in eligible_libs:
+            for dep in lib.deps:
+                if dep not in eligible_libs and dep not in indirect_libs:
+                    print('error: eligible-lib: {}: eligible lib "{}" should '
+                          'not depend on non-eligible lib "{}".'
+                          .format(lib.path, lib.path, dep.path),
+                          file=sys.stderr)
+                    num_errors += 1
+
+        # Check the libbinder dependencies.
+        for lib in eligible_libs:
+            for dep in lib.deps:
+                if os.path.basename(dep.path) == 'libbinder.so':
+                    print('error: eligible-lib: {}: eligible lib "{}" should '
+                          'not depend on libbinder.so.'
+                          .format(lib.path, lib.path),
+                          file=sys.stderr)
+                    num_errors += 1
+
+        return num_errors
+
+    def _check_vendor_dep(self, graph, tagged_libs):
+        """Check whether vendor libs are depending on non-eligible libs."""
+        num_errors = 0
+
+        vendor_libs = graph.lib_pt[PT_VENDOR].values()
+        for lib in vendor_libs:
+            print('debug1:', lib.path)
+
+        eligible_libs = (tagged_libs.ll_ndk | tagged_libs.sp_ndk | \
+                         tagged_libs.vndk_sp | \
+                         tagged_libs.vndk | tagged_libs.vndk_indirect)
+
+        for lib in eligible_libs:
+            print('debug:', lib.path)
+
+        for lib in vendor_libs:
+            for dep in lib.deps:
+                if dep not in vendor_libs and dep not in eligible_libs:
+                    print('error: vendor-lib: {}: vendor lib "{}" depends on '
+                          'non-eligible lib "{}".'
+                          .format(lib.path, lib.path, dep.path),
+                          file=sys.stderr)
+                    num_errors += 1
+
+        return num_errors
+
+    def main(self, args):
+        graph = ELFLinker.create(args.system, args.system_dir_as_vendor,
+                                 args.vendor, args.vendor_dir_as_system,
+                                 args.load_extra_deps)
+
+        tags = self._load_tag_file(args.tag_file)
+        tagged_libs = self._get_tagged_libs(graph, tags)
+
+        num_errors = self._check_eligible_vndk_dep(graph, tagged_libs)
+        num_errors += self._check_vendor_dep(graph, tagged_libs)
+
+        return 0 if num_errors == 0 else 1
+
+
 class VNDKStableCommand(ELFGraphCommand):
     def __init__(self):
         super(VNDKStableCommand, self).__init__(
@@ -2241,6 +2363,7 @@ def main():
     register_subcmd(DepsCommand())
     register_subcmd(DepsClosureCommand())
     register_subcmd(DepsInsightCommand())
+    register_subcmd(CheckDepCommand())
     register_subcmd(SpLibCommand())
     register_subcmd(VNDKStableCommand())
 
