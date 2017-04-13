@@ -2267,15 +2267,10 @@ class CheckDepCommand(ELFGraphCommand):
         num_errors = 0
 
         vendor_libs = graph.lib_pt[PT_VENDOR].values()
-        for lib in vendor_libs:
-            print('debug1:', lib.path)
 
         eligible_libs = (tagged_libs.ll_ndk | tagged_libs.sp_ndk | \
                          tagged_libs.vndk_sp | \
                          tagged_libs.vndk | tagged_libs.vndk_indirect)
-
-        for lib in eligible_libs:
-            print('debug:', lib.path)
 
         for lib in vendor_libs:
             for dep in lib.deps:
