@@ -76,8 +76,6 @@ class HeaderASTConsumer : public clang::ASTConsumer {
 
   void HandleTranslationUnit(clang::ASTContext &ctx) override;
 
-  void HandleVTable(clang::CXXRecordDecl *crd) override;
-
  private:
   std::string file_name_;
   clang::CompilerInstance *cip_;
