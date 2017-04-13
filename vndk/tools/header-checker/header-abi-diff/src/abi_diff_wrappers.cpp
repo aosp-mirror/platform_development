@@ -84,7 +84,7 @@ static bool Diff(const T &old_element, const T &new_element) {
 
 template <>
 bool Diff<EnumFieldDecl>(const EnumFieldDecl &old_element,
-                                const EnumFieldDecl &new_element) {
+                         const EnumFieldDecl &new_element) {
   // Can be specialized for future changes in the format.
   return DiffBasicTypeAbi(old_element.basic_abi().type_abi(),
                           new_element.basic_abi().type_abi()) ||
