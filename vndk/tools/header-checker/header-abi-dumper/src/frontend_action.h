@@ -41,11 +41,6 @@ class HeaderCheckerFrontendAction : public clang::ASTFrontendAction {
  protected:
   std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(
       clang::CompilerInstance &ci, llvm::StringRef header_file) override;
-
- private:
-  bool CollectExportedHeaderSet(
-      const std::string &dir_name,
-      std::set<std::string> *eh);
 };
 
 #endif  // FRONTEND_ACTION_H_

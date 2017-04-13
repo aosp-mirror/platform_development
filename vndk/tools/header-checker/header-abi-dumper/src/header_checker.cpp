@@ -41,7 +41,7 @@ static llvm::cl::opt<std::string> out_dump(
     llvm::cl::cat(header_checker_category));
 
 static llvm::cl::list<std::string> exported_header_dirs(
-    "I", llvm::cl::desc("<export_include_dirs>"), llvm::cl::OneOrMore,
+    "I", llvm::cl::desc("<export_include_dirs>"), llvm::cl::ZeroOrMore,
     llvm::cl::cat(header_checker_category));
 
 // Hide irrelevant command line options defined in LLVM libraries.

@@ -89,6 +89,7 @@ cc_defaults {
 
     shared_libs: [
         "libprotobuf-cpp-full",
+        "libheader-abi-util",
     ],
 }
 
@@ -127,6 +128,10 @@ cc_binary_host {
 
     static_libs: [
         "libheader-checker-proto",
+    ],
+
+		shared_libs: [
+        "libheader-abi-util",
     ],
 
     target: {
@@ -207,4 +212,26 @@ cc_binary_host {
             ],
         },
     },
+}
+
+cc_library_shared {
+    name: "libheader-abi-util",
+    defaults: [
+        "header-checker-defaults",
+    ],
+    host_supported: true,
+    export_include_dirs: ["header-abi-util/include"],
+    local_include_dirs: ["header-abi-util/include"],
+
+    srcs: [
+        "header-abi-util/src/*.cpp"
+    ],
+    static_libs: [
+        "libLLVMSupport",
+    ],
+    cflags: [
+        "-Wcast-qual",
+        "-Wno-long-long",
+        "-Wno-unused-parameter",
+    ],
 }
