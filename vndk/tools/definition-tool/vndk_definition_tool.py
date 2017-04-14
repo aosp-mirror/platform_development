@@ -792,6 +792,13 @@ class ELFLinkData(object):
     def is_system_lib(self):
         return self.partition == PT_SYSTEM
 
+    def get_dep_linked_symbols(self, dep):
+        symbols = set()
+        for symbol, exp_lib in self.linked_symbols.items():
+            if exp_lib == dep:
+                symbols.add(symbol)
+        return sorted(symbols)
+
 
 def sorted_lib_path_list(libs):
     libs = [lib.path for lib in libs]
@@ -2102,16 +2109,12 @@ class DepsCommand(ELFGraphCommand):
         results = []
         for partition in range(NUM_PARTITIONS):
             for name, lib in graph.lib_pt[partition].items():
-                if not args.symbols:
+                if args.symbols:
                     def collect_symbols(user, definer):
-                        return ()
+                        return user.get_dep_linked_symbols(definer)
                 else:
                     def collect_symbols(user, definer):
-                        symbols = set()
-                        for symbol, exp_lib in user.linked_symbols.items():
-                            if exp_lib == definer:
-                                symbols.add(symbol)
-                        return sorted(symbols)
+                        return ()
 
                 data = []
                 if args.revert:
@@ -2186,6 +2189,21 @@ TAGGED_LIB_DICT_FIELDS = ('ll_ndk', 'sp_ndk', 'sp_ndk_indirect', 'hl_ndk',
 
 TaggedLibDict = collections.namedtuple('TaggedLibDict', TAGGED_LIB_DICT_FIELDS)
 
+class ModuleInfo(object):
+    def __init__(self, module_info_path=None):
+        if not module_info_path:
+            self.json = dict()
+        else:
+            with open(module_info_path, 'r') as f:
+                self.json = json.load(f)
+
+    def get_module_path(self, installed_path):
+        for name, module in  self.json.items():
+            if any(path.endswith(installed_path)
+                   for path in module['installed']):
+                return module['path']
+        return []
+
 class CheckDepCommand(ELFGraphCommand):
     def __init__(self):
         super(CheckDepCommand, self).__init__(
@@ -2195,6 +2213,8 @@ class CheckDepCommand(ELFGraphCommand):
         super(CheckDepCommand, self).add_argparser_options(parser)
 
         parser.add_argument('--tag-file', required=True)
+
+        parser.add_argument('--module-info')
 
     def _load_tag_file(self, tag_file_path):
         res = TaggedLibDict(set(), set(), set(), set(), set(), set(), set(),
@@ -2230,7 +2250,17 @@ class CheckDepCommand(ELFGraphCommand):
                     res[i].add(lib)
         return res
 
-    def _check_eligible_vndk_dep(self, graph, tagged_libs):
+    @staticmethod
+    def _dump_dep(lib, bad_deps, module_info):
+        print(lib.path)
+        for module_path in module_info.get_module_path(lib.path):
+            print('\tMODULE_PATH:', module_path)
+        for dep in bad_deps:
+            print('\t' + dep.path)
+            for symbol in lib.get_dep_linked_symbols(dep):
+                print('\t\t' + symbol)
+
+    def _check_eligible_vndk_dep(self, graph, tagged_libs, module_info):
         """Check whether eligible sets are self-contained."""
         num_errors = 0
 
@@ -2242,27 +2272,32 @@ class CheckDepCommand(ELFGraphCommand):
 
         # Check eligible vndk is self-contained.
         for lib in eligible_libs:
+            bad_deps = []
             for dep in lib.deps:
                 if dep not in eligible_libs and dep not in indirect_libs:
-                    print('error: eligible-lib: {}: eligible lib "{}" should '
-                          'not depend on non-eligible lib "{}".'
-                          .format(lib.path, lib.path, dep.path),
+                    print('error: eligible lib "{}" should not depend on '
+                          'non-eligible lib "{}".'.format(lib.path, dep.path),
                           file=sys.stderr)
+                    bad_deps.append(dep)
                     num_errors += 1
+            if bad_deps:
+                self._dump_dep(lib, bad_deps, module_info)
 
         # Check the libbinder dependencies.
         for lib in eligible_libs:
+            bad_deps = []
             for dep in lib.deps:
                 if os.path.basename(dep.path) == 'libbinder.so':
-                    print('error: eligible-lib: {}: eligible lib "{}" should '
-                          'not depend on libbinder.so.'
-                          .format(lib.path, lib.path),
-                          file=sys.stderr)
+                    print('error: eligible lib "{}" should not depend on '
+                          'libbinder.so.'.format(lib.path), file=sys.stderr)
+                    bad_deps.append(dep)
                     num_errors += 1
+            if bad_deps:
+                self._dump_dep(lib, bad_deps, module_info)
 
         return num_errors
 
-    def _check_vendor_dep(self, graph, tagged_libs):
+    def _check_vendor_dep(self, graph, tagged_libs, module_info):
         """Check whether vendor libs are depending on non-eligible libs."""
         num_errors = 0
 
@@ -2273,13 +2308,16 @@ class CheckDepCommand(ELFGraphCommand):
                          tagged_libs.vndk | tagged_libs.vndk_indirect)
 
         for lib in vendor_libs:
+            bad_deps = []
             for dep in lib.deps:
                 if dep not in vendor_libs and dep not in eligible_libs:
-                    print('error: vendor-lib: {}: vendor lib "{}" depends on '
-                          'non-eligible lib "{}".'
-                          .format(lib.path, lib.path, dep.path),
+                    print('error: vendor lib "{}" depends on non-eligible '
+                          'lib "{}".'.format(lib.path, dep.path),
                           file=sys.stderr)
+                    bad_deps.append(dep)
                     num_errors += 1
+            if bad_deps:
+                self._dump_dep(lib, bad_deps, module_info)
 
         return num_errors
 
@@ -2291,8 +2329,11 @@ class CheckDepCommand(ELFGraphCommand):
         tags = self._load_tag_file(args.tag_file)
         tagged_libs = self._get_tagged_libs(graph, tags)
 
-        num_errors = self._check_eligible_vndk_dep(graph, tagged_libs)
-        num_errors += self._check_vendor_dep(graph, tagged_libs)
+        module_info = ModuleInfo(args.module_info)
+
+        num_errors = self._check_eligible_vndk_dep(graph, tagged_libs,
+                                                   module_info)
+        num_errors += self._check_vendor_dep(graph, tagged_libs, module_info)
 
         return 0 if num_errors == 0 else 1
 
