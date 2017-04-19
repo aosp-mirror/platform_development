@@ -83,6 +83,22 @@ class ELFLinkDataTest(unittest.TestCase):
         self.assertTrue(self.x.is_system_lib())
         self.assertFalse(self.v.is_system_lib())
 
+    def test_get_dep_linked_symbols(self):
+        self.x.linked_symbols['c'] = self.y
+        self.x.linked_symbols['b'] = self.y
+        self.x.linked_symbols['a'] = self.y
+
+        self.x.linked_symbols['w'] = self.z
+        self.x.linked_symbols['z'] = self.z
+        self.x.linked_symbols['y'] = self.z
+        self.x.linked_symbols['x'] = self.z
+
+        self.assertEqual(['a', 'b', 'c'],
+                         self.x.get_dep_linked_symbols(self.y))
+
+        self.assertEqual(['w', 'x', 'y', 'z'],
+                         self.x.get_dep_linked_symbols(self.z))
+
 
 if __name__ == '__main__':
     unittest.main()
