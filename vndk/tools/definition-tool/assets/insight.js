@@ -11,7 +11,7 @@
 
     let document;
     let strsData, mods, tagIds;
-    let domPathInput;
+    let domPathInput, domFuzzyMatch;
     let domTBody;
 
     //--------------------------------------------------------------------------
@@ -279,6 +279,16 @@
         domBtn.value = 'Add';
         domForm.appendChild(domBtn);
 
+        domFuzzyMatch = domNewElem('input');
+        domFuzzyMatch.setAttribute('id', 'fuzzy_match');
+        domFuzzyMatch.setAttribute('type', 'checkbox');
+        domFuzzyMatch.setAttribute('checked', 'checked');
+        domForm.appendChild(domFuzzyMatch);
+
+        let domFuzzyMatchLabel = domNewElem('label', 'Fuzzy Match');
+        domFuzzyMatchLabel.setAttribute('for', 'fuzzy_match');
+        domForm.appendChild(domFuzzyMatchLabel);
+
         let domTr = domNewElem('tr',
                                createControlLabelTdDom('Add by Path:'),
                                domNewElem('td', domForm));
@@ -343,11 +353,14 @@
     }
 
     function showModulesByFilter(pred) {
+        let numMatched = 0;
         for (let mod of mods) {
             if (pred(mod)) {
                 mod.showDom();
+                ++numMatched;
             }
         }
+        return numMatched;
     }
 
     function showModulesByTagId(tagId) {
@@ -367,13 +380,33 @@
         let path = domPathInput.value;
         domPathInput.value = '';
 
-        for (let mod of mods) {
-            if (mod.path == path) {
-                mod.showDom();
-                return;
-            }
+        function escapeRegExp(pattern) {
+            return pattern.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, '\\$1');
         }
-        alert('Path not found: ' + path);
+
+        function createFuzzyMatcher() {
+            let parts = path.split(/\/+/g);
+            let pattern = '';
+            for (let part of parts) {
+                pattern += escapeRegExp(part) + '(?:/[^\/]*)*';
+            }
+            pattern = RegExp(pattern);
+
+            return function (mod) {
+                return pattern.test(mod.path);
+            };
+        }
+
+        function exactMatcher(mod) {
+            return mod.path == path;
+        }
+
+        let numMatched = showModulesByFilter(
+            domFuzzyMatch.checked ? createFuzzyMatcher() : exactMatcher);
+
+        if (numMatched == 0) {
+            alert('No matching modules: ' + path);
+        }
     }
 
     function onAddAll(evt) {
