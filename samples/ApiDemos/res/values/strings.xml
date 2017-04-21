@@ -302,6 +302,19 @@
     <string name="service_created">Service created.</string>
     <string name="service_destroyed">Service destroyed.</string>
 
+    <string name="job_work_service_label">Job Work Service</string>
+
+    <string name="activity_job_work_service">App/Job/Job Work Service Controller</string>
+    <string name="job_work_service_controller">This demonstrates how
+        work can be enqueued and executed by a job, running work in the job until
+        everything is complete.
+    </string>
+    <string name="enqueue1_job">Enqueue \"One\"</string>
+    <string name="enqueue2_job">Enqueue \"Two\"</string>
+    <string name="enqueue3_job">Enqueue \"Three\"</string>
+    <string name="job_service_created">JobService created.</string>
+    <string name="job_service_destroyed">JobService destroyed.</string>
+
     <string name="foreground_service_started">Service is in the foreground</string>
     <string name="foreground_service_label">Sample Foreground Service</string>
 
