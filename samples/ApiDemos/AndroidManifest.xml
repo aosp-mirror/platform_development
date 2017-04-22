@@ -595,6 +595,18 @@
             </intent-filter>
         </activity>
 
+        <service android:name=".app.JobWorkService"
+            android:permission="android.permission.BIND_JOB_SERVICE"/>
+
+        <activity android:name=".app.JobWorkServiceActivity"
+            android:label="@string/activity_job_work_service"
+            android:launchMode="singleTop">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
         <service android:name=".app.ForegroundService" />
         <service android:name=".app.ForegroundService2" />
 
