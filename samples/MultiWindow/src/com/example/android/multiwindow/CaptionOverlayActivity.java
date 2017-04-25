@@ -40,7 +40,7 @@ public class CaptionOverlayActivity extends Activity
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         // Overlay the caption on the content.
-        setOverlayWithDecorCaptionEnabled(true);
+        //setOverlayWithDecorCaptionEnabled(true);
         setContentView(R.layout.caption_overlay_layout);
         getWindow().setRestrictedCaptionAreaListener(this);
         getWindow().setResizingCaptionDrawable(new ColorDrawable(Color.BLACK));
