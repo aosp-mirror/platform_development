@@ -16,7 +16,9 @@ $TOP/development/tools/logblame/analyze_logs.py --duration=10m --clear --rawlogs
 analyze_pid=$!
 
 sleep 5
-for i in {0..10..1}; do
+for i in {0..5..1}; do
+    adb shell input keyevent KEYCODE_POWER
+    sleep 5
     adb shell input keyevent KEYCODE_POWER
     sleep 5
     adb shell wm dismiss-keyguard
