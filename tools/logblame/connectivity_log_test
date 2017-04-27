@@ -1,0 +1,58 @@
+#!/bin/bash
+
+# The files to save output to.
+RAWLOGS_FILE=connectivity-rawlogs.txt
+ANALYSIS_FILE=connectivity-analysis.txt
+
+# Turn on the screen and unlock the device
+# TODO: Power on
+adb shell wm dismiss-keyguard
+adb logcat -P ""
+
+airplane_mode_was_on=$(adb shell settings get global airplane_mode_on)
+if [ $airplane_mode_was_on == 1 ] ; then
+    adb shell settings put global airplane_mode_on 0 > /dev/null
+    adb shell am broadcast -a android.intent.action.AIRPLANE_MODE > /dev/null
+    sleep 30
+fi
+
+# Start the analysis process
+$TOP/development/tools/logblame/analyze_logs.py --duration=10m --clear --rawlogs $RAWLOGS_FILE \
+    | tee $ANALYSIS_FILE &
+analyze_pid=$!
+
+# Turn on airplane mode and wait for it to settle
+echo "Turning on airplane mode."
+adb shell settings put global airplane_mode_on 1 > /dev/null
+adb shell am broadcast -a android.intent.action.AIRPLANE_MODE > /dev/null
+sleep 15
+
+# Turn off airplane mode and wait for it to settle
+echo "Turning off airplane mode."
+adb shell settings put global airplane_mode_on 0 > /dev/null
+adb shell am broadcast -a android.intent.action.AIRPLANE_MODE > /dev/null
+sleep 45
+
+# Turn off wifi and then back on
+echo "Turning wifi off"
+adb shell svc wifi disable
+sleep 15
+
+echo "Turning wifi on"
+adb shell svc wifi enable
+sleep 15
+
+
+echo
+echo
+
+# Kill adb to disconnect logcat
+adb kill-server
+
+# Wait for the pyton process to exit
+wait $analyze_pid
+
+echo "Wrote raw logs to $RAWLOGS_FILE"
+echo "Wrote analysis to $ANALYSIS_FILE"
+
+
