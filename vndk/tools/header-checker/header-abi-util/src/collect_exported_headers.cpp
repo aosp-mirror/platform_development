@@ -81,4 +81,16 @@ bool CollectExportedHeaderSet(const std::string &dir_name,
   return true;
 }
 
+std::set<std::string> CollectAllExportedHeaders(
+    const std::vector<std::string> &exported_header_dirs) {
+  std::set<std::string> exported_headers;
+  for (auto &&dir : exported_header_dirs) {
+    if (!abi_util::CollectExportedHeaderSet(dir, &exported_headers)) {
+      llvm::errs() << "Couldn't collect exported headers\n";
+      ::exit(1);
+    }
+  }
+  return exported_headers;
+}
+
 } // namespace abi_util

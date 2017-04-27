@@ -28,22 +28,22 @@ message CXXVTableDiff {
   required uint32 index = 3;
 }
 
-message AccessDiff {
-  required abi_dump.AccessSpecifier old = 1;
-  required abi_dump.AccessSpecifier new = 2;
+message BasicNamedAndTypedDeclDiff {
+  required abi_dump.BasicNamedAndTypedDecl old = 1;
+  required abi_dump.BasicNamedAndTypedDecl new = 2;
 }
 
 message RecordDeclDiff {
   repeated RecordFieldDeclDiff field_diffs = 1;
   repeated CXXBaseSpecifierDiff base_diffs = 2;
   repeated CXXVTableDiff vtable_diffs = 3;
-  required AccessDiff access_diff = 4;
+  optional BasicNamedAndTypedDeclDiff type_diff = 4;
   required string name = 5;
 }
 
 message EnumDeclDiff {
   repeated EnumFieldDeclDiff field_diffs = 1;
-  optional AccessDiff access_diff = 2;
+  optional BasicNamedAndTypedDeclDiff type_diff = 2;
   required string name = 3;
 }
 
@@ -52,13 +52,19 @@ message ReturnTypeDiff {
   required abi_dump.BasicNamedAndTypedDecl new = 2;
 }
 
+message ParamDeclDiff {
+  optional abi_dump.ParamDecl old = 1;
+  optional abi_dump.ParamDecl new = 2;
+  required uint32 index = 3;
+}
+
 message FunctionDeclDiff {
   required ReturnTypeDiff return_type_diffs = 1;
+  repeated ParamDeclDiff param_diffs = 2;
 }
 
 message GlobalVarDeclDiff {
-  required abi_dump.BasicNamedAndTypedDecl old = 1;
-  required abi_dump.BasicNamedAndTypedDecl new = 2;
+  optional BasicNamedAndTypedDeclDiff type_diff = 1;
 }
 
 message TranslationUnitDiff {
