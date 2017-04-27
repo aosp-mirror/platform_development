@@ -88,10 +88,9 @@ bool VersionScriptParser::SymbolInArchAndApiVersion(const std::string &line,
     LineSatisfiesArch(line, arch)) {
     matched_api = std::stoi(matcher2.str(1));
   }
-  if ( matched_api > 0 && api >= matched_api) {
-    return true;
-  }
-  return false;
+  // If the arch specific tag / version specific tag was found and the api level
+  // required was greater than the api level offered.
+  return (matched_api <=0 || api >= matched_api);
 }
 
 bool VersionScriptParser::SymbolExported(const std::string &line,
