@@ -85,14 +85,6 @@ int main(int argc, const char **argv) {
     ::exit(1);
   }
 
-  //Existential checks for exported dirs.
-  for (auto &&dir : exported_header_dirs) {
-    if (!llvm::sys::fs::exists(dir)) {
-      llvm::errs() << "ERROR: exported dir \"" << dir << "\" not found\n";
-      ::exit(1);
-    }
-  }
-
   // Check whether we can create compilation database and deduce compiler
   // options from command line options.
   if (!compilations) {
