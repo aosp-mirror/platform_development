@@ -130,14 +130,13 @@ api_gen_deps := \
   $(TOPDIR)prebuilts/tools/common/m2/repository/com/google/guava/guava/17.0/guava-17.0.jar
 api_gen_classpath := $(subst $(space),:,$(api_gen_jar) $(api_gen_deps))
 
-
+# TODO: Pass '--current-codename $(PLATFORM_VERSION_CODENAME)' to bump PLATFORM_SDK_VERSION.
 $(HOST_OUT)/development/sdk/generated-api-versions.xml: $(android_jar_full_target)
 	java -cp $(api_gen_classpath) \
 	  com.android.apigenerator.Main \
 	  --pattern $(TOPDIR)prebuilts/tools/common/api-versions/android-%/android.jar \
 	  --pattern $(TOPDIR)prebuilts/sdk/%/android.jar \
 	  --current-version $(PLATFORM_SDK_VERSION) \
-	  --current-codename $(PLATFORM_VERSION_CODENAME) \
 	  --current-jar $(android_jar_full_target) \
 	  $@
 
