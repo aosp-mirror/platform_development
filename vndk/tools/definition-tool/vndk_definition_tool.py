@@ -491,7 +491,6 @@ class NDKLibDict(object):
         'liblog.so',
         'libm.so',
         'libstdc++.so',
-        'libz.so',
     )
 
     SP_NDK_LIB_NAMES = (
@@ -499,6 +498,8 @@ class NDKLibDict(object):
         'libGLESv1_CM.so',
         'libGLESv2.so',
         'libGLESv3.so',
+        'libnativewindow.so',
+        'libsync.so',
         'libvulkan.so',
     )
 
@@ -999,8 +1000,6 @@ class ELFLinker(object):
             '^.*/libhidltransport\\.so$',
             '^.*/libhwbinder\\.so$',
             '^.*/liblzma\\.so$',
-            '^.*/libnativewindow\\.so$',
-            '^.*/libsync\\.so$',
 
             # SP-NDK VNDK-stable (should to be removed)
             '^.*/libbacktrace\\.so$',
@@ -1017,6 +1016,9 @@ class ELFLinker(object):
             '^.*/libhardware\\.so$',
             '^.*/libnativeloader\\.so$',
             '^.*/libvintf\\.so$',
+
+            # Other libraries.
+            '^.*/libz\\.so$',
         )
 
         return self.compute_path_matched_lib(path_patterns)
