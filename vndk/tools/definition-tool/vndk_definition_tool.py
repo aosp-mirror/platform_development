@@ -238,12 +238,9 @@ class ELF(object):
     # Extract zero-terminated buffer slice.
     def _extract_zero_terminated_buf_slice(self, buf, offset):
         """Extract a zero-terminated buffer slice from the given offset"""
-        end = offset
-        try:
-            while buf[end] != 0:
-                end += 1
-        except IndexError:
-            pass
+        end = buf.find(b'\0', offset)
+        if end == -1:
+            return buf[offset:]
         return buf[offset:end]
 
     # Extract c-style interned string from the buffer.
