@@ -2185,7 +2185,7 @@ class DepsClosureCommand(ELFGraphCommand):
         return 0
 
 
-TAGGED_LIB_DICT_FIELDS = ('ll_ndk', 'sp_ndk', 'sp_ndk_indirect', 'hl_ndk',
+TAGGED_LIB_DICT_FIELDS = ('ll_ndk', 'sp_ndk', 'hl_ndk', 'ndk_indirect',
                           'vndk_sp', 'vndk', 'vndk_indirect', 'fwk_only')
 
 TaggedLibDict = collections.namedtuple('TaggedLibDict', TAGGED_LIB_DICT_FIELDS)
@@ -2223,11 +2223,13 @@ class CheckDepCommand(ELFGraphCommand):
 
         mapping = {
             'll-ndk': res.ll_ndk,
+            'll-ndk-indirect': res.ndk_indirect,
             'sp-ndk': res.sp_ndk,
-            'sp-ndk-indirect': res.sp_ndk_indirect,
+            'sp-ndk-indirect': res.ndk_indirect,
             'hl-ndk': res.hl_ndk,
             'vndk-sp-hal': res.vndk_sp,
             'vndk-sp-both': res.vndk_sp,
+            'vndk-sp-indirect': res.vndk,  # Visible to non-SP-HAL
             'vndk': res.vndk,
             'vndk-indirect': res.vndk_indirect,
             'fwk-only': res.fwk_only,
@@ -2265,7 +2267,7 @@ class CheckDepCommand(ELFGraphCommand):
         """Check whether eligible sets are self-contained."""
         num_errors = 0
 
-        indirect_libs = (tagged_libs.sp_ndk_indirect)
+        indirect_libs = tagged_libs.ndk_indirect
 
         eligible_libs = (tagged_libs.ll_ndk | tagged_libs.sp_ndk | \
                          tagged_libs.vndk_sp | \
