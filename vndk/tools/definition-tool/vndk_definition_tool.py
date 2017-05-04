@@ -797,6 +797,9 @@ class ELFLinkData(object):
                 symbols.add(symbol)
         return sorted(symbols)
 
+    def __lt__(self, rhs):
+        return self.path < rhs.path
+
 
 def sorted_lib_path_list(libs):
     libs = [lib.path for lib in libs]
@@ -1975,8 +1978,7 @@ class DepsInsightCommand(VNDKCommandBase):
                 return idx
 
         def collect_path_sorted_lib_idxs(libs):
-            libs = sorted(libs, key=lambda lib: lib.path)
-            return [libs_dict[lib] for lib in libs]
+            return [libs_dict[lib] for lib in sorted(libs)]
 
         def collect_deps(lib):
             queue = list(lib.deps)
@@ -2117,11 +2119,11 @@ class DepsCommand(ELFGraphCommand):
 
                 data = []
                 if args.revert:
-                    for assoc_lib in sorted(lib.users, key=lambda x: x.path):
+                    for assoc_lib in sorted(lib.users):
                         data.append((assoc_lib.path,
                                      collect_symbols(assoc_lib, lib)))
                 else:
-                    for assoc_lib in sorted(lib.deps, key=lambda x: x.path):
+                    for assoc_lib in sorted(lib.deps):
                         data.append((assoc_lib.path,
                                      collect_symbols(lib, assoc_lib)))
                 results.append((name, data))
@@ -2252,9 +2254,9 @@ class CheckDepCommand(ELFGraphCommand):
     @staticmethod
     def _dump_dep(lib, bad_deps, module_info):
         print(lib.path)
-        for module_path in module_info.get_module_path(lib.path):
+        for module_path in sorted(module_info.get_module_path(lib.path)):
             print('\tMODULE_PATH:', module_path)
-        for dep in bad_deps:
+        for dep in sorted(bad_deps):
             print('\t' + dep.path)
             for symbol in lib.get_dep_linked_symbols(dep):
                 print('\t\t' + symbol)
@@ -2270,7 +2272,7 @@ class CheckDepCommand(ELFGraphCommand):
                          tagged_libs.vndk | tagged_libs.vndk_indirect)
 
         # Check eligible vndk is self-contained.
-        for lib in eligible_libs:
+        for lib in sorted(eligible_libs):
             bad_deps = []
             for dep in lib.deps:
                 if dep not in eligible_libs and dep not in indirect_libs:
@@ -2283,7 +2285,7 @@ class CheckDepCommand(ELFGraphCommand):
                 self._dump_dep(lib, bad_deps, module_info)
 
         # Check the libbinder dependencies.
-        for lib in eligible_libs:
+        for lib in sorted(eligible_libs):
             bad_deps = []
             for dep in lib.deps:
                 if os.path.basename(dep.path) == 'libbinder.so':
@@ -2306,7 +2308,7 @@ class CheckDepCommand(ELFGraphCommand):
                          tagged_libs.vndk_sp | \
                          tagged_libs.vndk | tagged_libs.vndk_indirect)
 
-        for lib in vendor_libs:
+        for lib in sorted(vendor_libs):
             bad_deps = []
             for dep in lib.deps:
                 if dep not in vendor_libs and dep not in eligible_libs:
