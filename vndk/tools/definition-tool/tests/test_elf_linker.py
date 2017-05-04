@@ -246,7 +246,6 @@ class ELFLinkerTest(unittest.TestCase):
             'android.hardware.graphics.allocator@2.0',
             'android.hardware.graphics.common@1.0',
             'android.hardware.graphics.mapper@2.0',
-            'android.hidl.base@1.0',
 
             # SP-NDK VNDK-stable (HIDL related)
             'libhidl-gen-utils',
