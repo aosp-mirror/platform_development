@@ -622,8 +622,8 @@ NUM_PARTITIONS = 2
 
 VNDKResult = collections.namedtuple(
         'VNDKResult',
-        'sp_hal sp_hal_dep sp_hal_vndk_stable sp_ndk sp_ndk_vndk_stable '
-        'sp_both_vndk_stable '
+        'sp_hal sp_hal_dep vndk_sp_hal sp_ndk sp_ndk_indirect '
+        'vndk_sp_both '
         'extra_vendor_lib vndk_core vndk_indirect vndk_fwk_ext vndk_vnd_ext')
 
 def print_vndk_lib(vndk_lib, file=sys.stdout):
@@ -647,27 +647,27 @@ def print_vndk_lib(vndk_lib, file=sys.stdout):
 
 SPLibResult = collections.namedtuple(
         'SPLibResult',
-        'sp_hal sp_hal_dep sp_hal_vndk_stable sp_ndk sp_ndk_vndk_stable '
-        'sp_both_vndk_stable')
+        'sp_hal sp_hal_dep vndk_sp_hal sp_ndk sp_ndk_indirect '
+        'vndk_sp_both')
 
 def print_sp_lib(sp_lib, file=sys.stdout):
     # SP-NDK
     for lib in sorted_lib_path_list(sp_lib.sp_ndk):
         print('sp-ndk:', lib, file=file)
-    for lib in sorted_lib_path_list(sp_lib.sp_ndk_vndk_stable):
-        print('sp-ndk-vndk-stable:', lib, file=file)
+    for lib in sorted_lib_path_list(sp_lib.sp_ndk_indirect):
+        print('sp-ndk-indirect:', lib, file=file)
 
     # SP-HAL
     for lib in sorted_lib_path_list(sp_lib.sp_hal):
         print('sp-hal:', lib, file=file)
     for lib in sorted_lib_path_list(sp_lib.sp_hal_dep):
         print('sp-hal-dep:', lib, file=file)
-    for lib in sorted_lib_path_list(sp_lib.sp_hal_vndk_stable):
-        print('sp-hal-vndk-stable:', lib, file=file)
+    for lib in sorted_lib_path_list(sp_lib.vndk_sp_hal):
+        print('vndk-sp-hal:', lib, file=file)
 
     # SP-both
-    for lib in sorted_lib_path_list(sp_lib.sp_both_vndk_stable):
-        print('sp-both-vndk-stable:', lib, file=file)
+    for lib in sorted_lib_path_list(sp_lib.vndk_sp_both):
+        print('vndk-sp-both:', lib, file=file)
 
 
 class ELFResolver(object):
@@ -982,8 +982,8 @@ class ELFLinker(object):
         patt = re.compile('|'.join('(?:' + p + ')' for p in path_patterns))
         return set(lib for lib in self.all_lib() if patt.match(lib.path))
 
-    def compute_predefined_vndk_stable(self):
-        """Find all vndk stable libraries."""
+    def compute_predefined_vndk_sp(self):
+        """Find all vndk-sp libraries."""
 
         path_patterns = (
             # SP-HAL VNDK-stable
@@ -1012,7 +1012,7 @@ class ELFLinker(object):
             '^.*/libui\\.so$',
             '^.*/libutils\\.so$',
 
-            # Bad vndk-stable (must be removed)
+            # Bad vndk-sp (must be removed)
             '^.*/libhardware\\.so$',
             '^.*/libnativeloader\\.so$',
             '^.*/libvintf\\.so$',
@@ -1055,7 +1055,7 @@ class ELFLinker(object):
 
         sp_ndk = self.compute_sp_ndk()
         sp_ndk_closure = self.compute_closure(sp_ndk, is_ndk)
-        sp_ndk_vndk_stable = sp_ndk_closure - sp_ndk
+        sp_ndk_indirect = sp_ndk_closure - sp_ndk
 
         sp_hal = self.compute_predefined_sp_hal()
         sp_hal_closure = self.compute_closure(sp_hal, is_ndk)
@@ -1064,20 +1064,20 @@ class ELFLinker(object):
             return (not generic_refs or \
                     generic_refs.classify_lib(lib) != GenericRefs.NEW_LIB)
 
-        sp_hal_vndk_stable = set()
+        vndk_sp_hal = set()
         sp_hal_dep = set()
         for lib in sp_hal_closure - sp_hal:
             if is_aosp_lib(lib):
-                sp_hal_vndk_stable.add(lib)
+                vndk_sp_hal.add(lib)
             else:
                 sp_hal_dep.add(lib)
 
-        sp_both_vndk_stable = sp_ndk_vndk_stable & sp_hal_vndk_stable
-        sp_ndk_vndk_stable -= sp_both_vndk_stable
-        sp_hal_vndk_stable -= sp_both_vndk_stable
+        vndk_sp_both = sp_ndk_indirect & vndk_sp_hal
+        sp_ndk_indirect -= vndk_sp_both
+        vndk_sp_hal -= vndk_sp_both
 
-        return SPLibResult(sp_hal, sp_hal_dep, sp_hal_vndk_stable, sp_ndk,
-                           sp_ndk_vndk_stable, sp_both_vndk_stable)
+        return SPLibResult(sp_hal, sp_hal_dep, vndk_sp_hal, sp_ndk,
+                           sp_ndk_indirect, vndk_sp_both)
 
     def _po_component_sorted(self, lib_set, get_successors,
                              get_strong_successors):
@@ -1215,9 +1215,9 @@ class ELFLinker(object):
 
     def _compute_vndk(self, sp_lib, vndk_customized_for_system,
                       vndk_customized_for_vendor, generic_refs, banned_libs):
-        # Compute sp-hal and vndk-stable.
-        vndk_stable = sp_lib.sp_hal_vndk_stable | sp_lib.sp_ndk_vndk_stable | \
-                      sp_lib.sp_both_vndk_stable
+        # Compute sp-hal and vndk-sp.
+        vndk_sp = sp_lib.vndk_sp_hal | sp_lib.sp_ndk_indirect | \
+                  sp_lib.vndk_sp_both
         sp_hal_closure = sp_lib.sp_hal | sp_lib.sp_hal_dep
 
         # Normalize partition tags.  We expect many violations from the
@@ -1240,8 +1240,7 @@ class ELFLinker(object):
             '/system/lib/vndk',
             '/vendor/lib',
 
-            # FIXME: Remove following line after we fixed vndk-stable
-            # resolution.
+            # FIXME: Remove following line after we fixed vndk-sp resolution.
             '/system/lib',
         )
 
@@ -1249,8 +1248,7 @@ class ELFLinker(object):
             '/system/lib64/vndk',
             '/vendor/lib64',
 
-            # FIXME: Remove following line after we fixed vndk-stable
-            # resolution.
+            # FIXME: Remove following line after we fixed vndk-sp resolution.
             '/system/lib64',
         )
 
@@ -1265,7 +1263,7 @@ class ELFLinker(object):
         # Collect VNDK candidates.
         def is_not_vndk(lib):
             return (lib.is_ndk or banned_libs.is_banned(lib.path) or
-                    (lib in sp_hal_closure) or (lib in vndk_stable))
+                    (lib in sp_hal_closure) or (lib in vndk_sp))
 
         def collect_libs_with_partition_user(lib_set, partition):
             result = set()
@@ -1521,9 +1519,9 @@ class ELFLinker(object):
                 vndk_indirect.add(lib)
 
         return VNDKResult(
-                sp_lib.sp_hal, sp_lib.sp_hal_dep, sp_lib.sp_hal_vndk_stable,
-                sp_lib.sp_ndk, sp_lib.sp_ndk_vndk_stable,
-                sp_lib.sp_both_vndk_stable,
+                sp_lib.sp_hal, sp_lib.sp_hal_dep, sp_lib.vndk_sp_hal,
+                sp_lib.sp_ndk, sp_lib.sp_ndk_indirect,
+                sp_lib.vndk_sp_both,
                 extra_vendor_lib, vndk_core, vndk_indirect,
                 vndk_fwk_ext, vndk_vnd_ext)
 
@@ -2016,13 +2014,13 @@ class DepsInsightCommand(VNDKCommandBase):
                 tags.append(get_str_idx('sp-hal'))
             if lib in vndk_lib.sp_hal_dep:
                 tags.append(get_str_idx('sp-hal-dep'))
-            if lib in vndk_lib.sp_hal_vndk_stable:
-                tags.append(get_str_idx('sp-hal-vndk-stable'))
+            if lib in vndk_lib.vndk_sp_hal:
+                tags.append(get_str_idx('vndk-sp-hal'))
 
-            if lib in vndk_lib.sp_ndk_vndk_stable:
-                tags.append(get_str_idx('sp-ndk-vndk-stable'))
-            if lib in vndk_lib.sp_both_vndk_stable:
-                tags.append(get_str_idx('sp-both-vndk-stable'))
+            if lib in vndk_lib.sp_ndk_indirect:
+                tags.append(get_str_idx('sp-ndk-indirect'))
+            if lib in vndk_lib.vndk_sp_both:
+                tags.append(get_str_idx('vndk-sp-both'))
 
             if lib in vndk_lib.vndk_core:
                 tags.append(get_str_idx('vndk-core'))
@@ -2341,21 +2339,21 @@ class CheckDepCommand(ELFGraphCommand):
         return 0 if num_errors == 0 else 1
 
 
-class VNDKStableCommand(ELFGraphCommand):
+class VNDKSPCommand(ELFGraphCommand):
     def __init__(self):
-        super(VNDKStableCommand, self).__init__(
-                'vndk-stable', help='List pre-defined VNDK stable')
+        super(VNDKSPCommand, self).__init__(
+                'vndk-sp', help='List pre-defined VNDK-SP')
 
     def add_argparser_options(self, parser):
-        super(VNDKStableCommand, self).add_argparser_options(parser)
+        super(VNDKSPCommand, self).add_argparser_options(parser)
 
     def main(self, args):
         graph = ELFLinker.create(args.system, args.system_dir_as_vendor,
                                  args.vendor, args.vendor_dir_as_system,
                                  args.load_extra_deps)
 
-        vndk_stable = graph.compute_predefined_vndk_stable()
-        for lib in sorted_lib_path_list(vndk_stable):
+        vndk_sp = graph.compute_predefined_vndk_sp()
+        for lib in sorted_lib_path_list(vndk_sp):
             print(lib)
         return 0
 
@@ -2363,7 +2361,7 @@ class VNDKStableCommand(ELFGraphCommand):
 class SpLibCommand(ELFGraphCommand):
     def __init__(self):
         super(SpLibCommand, self).__init__(
-                'sp-lib', help='Define sp-ndk, sp-hal, and vndk-stable')
+                'sp-lib', help='Define sp-ndk, sp-hal, and vndk-sp')
 
     def add_argparser_options(self, parser):
         super(SpLibCommand, self).add_argparser_options(parser)
@@ -2404,7 +2402,7 @@ def main():
     register_subcmd(DepsInsightCommand())
     register_subcmd(CheckDepCommand())
     register_subcmd(SpLibCommand())
-    register_subcmd(VNDKStableCommand())
+    register_subcmd(VNDKSPCommand())
 
     args = parser.parse_args()
     if not args.subcmd:
