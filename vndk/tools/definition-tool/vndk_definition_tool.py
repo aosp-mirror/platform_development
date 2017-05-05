@@ -238,12 +238,9 @@ class ELF(object):
     # Extract zero-terminated buffer slice.
     def _extract_zero_terminated_buf_slice(self, buf, offset):
         """Extract a zero-terminated buffer slice from the given offset"""
-        end = offset
-        try:
-            while buf[end] != 0:
-                end += 1
-        except IndexError:
-            pass
+        end = buf.find(b'\0', offset)
+        if end == -1:
+            return buf[offset:]
         return buf[offset:end]
 
     # Extract c-style interned string from the buffer.
@@ -799,6 +796,9 @@ class ELFLinkData(object):
             if exp_lib == dep:
                 symbols.add(symbol)
         return sorted(symbols)
+
+    def __lt__(self, rhs):
+        return self.path < rhs.path
 
 
 def sorted_lib_path_list(libs):
@@ -1978,8 +1978,7 @@ class DepsInsightCommand(VNDKCommandBase):
                 return idx
 
         def collect_path_sorted_lib_idxs(libs):
-            libs = sorted(libs, key=lambda lib: lib.path)
-            return [libs_dict[lib] for lib in libs]
+            return [libs_dict[lib] for lib in sorted(libs)]
 
         def collect_deps(lib):
             queue = list(lib.deps)
@@ -2120,11 +2119,11 @@ class DepsCommand(ELFGraphCommand):
 
                 data = []
                 if args.revert:
-                    for assoc_lib in sorted(lib.users, key=lambda x: x.path):
+                    for assoc_lib in sorted(lib.users):
                         data.append((assoc_lib.path,
                                      collect_symbols(assoc_lib, lib)))
                 else:
-                    for assoc_lib in sorted(lib.deps, key=lambda x: x.path):
+                    for assoc_lib in sorted(lib.deps):
                         data.append((assoc_lib.path,
                                      collect_symbols(lib, assoc_lib)))
                 results.append((name, data))
@@ -2186,7 +2185,7 @@ class DepsClosureCommand(ELFGraphCommand):
         return 0
 
 
-TAGGED_LIB_DICT_FIELDS = ('ll_ndk', 'sp_ndk', 'sp_ndk_indirect', 'hl_ndk',
+TAGGED_LIB_DICT_FIELDS = ('ll_ndk', 'sp_ndk', 'hl_ndk', 'ndk_indirect',
                           'vndk_sp', 'vndk', 'vndk_indirect', 'fwk_only')
 
 TaggedLibDict = collections.namedtuple('TaggedLibDict', TAGGED_LIB_DICT_FIELDS)
@@ -2224,11 +2223,13 @@ class CheckDepCommand(ELFGraphCommand):
 
         mapping = {
             'll-ndk': res.ll_ndk,
+            'll-ndk-indirect': res.ndk_indirect,
             'sp-ndk': res.sp_ndk,
-            'sp-ndk-indirect': res.sp_ndk_indirect,
+            'sp-ndk-indirect': res.ndk_indirect,
             'hl-ndk': res.hl_ndk,
             'vndk-sp-hal': res.vndk_sp,
             'vndk-sp-both': res.vndk_sp,
+            'vndk-sp-indirect': res.vndk,  # Visible to non-SP-HAL
             'vndk': res.vndk,
             'vndk-indirect': res.vndk_indirect,
             'fwk-only': res.fwk_only,
@@ -2255,9 +2256,9 @@ class CheckDepCommand(ELFGraphCommand):
     @staticmethod
     def _dump_dep(lib, bad_deps, module_info):
         print(lib.path)
-        for module_path in module_info.get_module_path(lib.path):
+        for module_path in sorted(module_info.get_module_path(lib.path)):
             print('\tMODULE_PATH:', module_path)
-        for dep in bad_deps:
+        for dep in sorted(bad_deps):
             print('\t' + dep.path)
             for symbol in lib.get_dep_linked_symbols(dep):
                 print('\t\t' + symbol)
@@ -2266,14 +2267,14 @@ class CheckDepCommand(ELFGraphCommand):
         """Check whether eligible sets are self-contained."""
         num_errors = 0
 
-        indirect_libs = (tagged_libs.sp_ndk_indirect)
+        indirect_libs = tagged_libs.ndk_indirect
 
         eligible_libs = (tagged_libs.ll_ndk | tagged_libs.sp_ndk | \
                          tagged_libs.vndk_sp | \
                          tagged_libs.vndk | tagged_libs.vndk_indirect)
 
         # Check eligible vndk is self-contained.
-        for lib in eligible_libs:
+        for lib in sorted(eligible_libs):
             bad_deps = []
             for dep in lib.deps:
                 if dep not in eligible_libs and dep not in indirect_libs:
@@ -2286,7 +2287,7 @@ class CheckDepCommand(ELFGraphCommand):
                 self._dump_dep(lib, bad_deps, module_info)
 
         # Check the libbinder dependencies.
-        for lib in eligible_libs:
+        for lib in sorted(eligible_libs):
             bad_deps = []
             for dep in lib.deps:
                 if os.path.basename(dep.path) == 'libbinder.so':
@@ -2309,7 +2310,7 @@ class CheckDepCommand(ELFGraphCommand):
                          tagged_libs.vndk_sp | \
                          tagged_libs.vndk | tagged_libs.vndk_indirect)
 
-        for lib in vendor_libs:
+        for lib in sorted(vendor_libs):
             bad_deps = []
             for dep in lib.deps:
                 if dep not in vendor_libs and dep not in eligible_libs:
