@@ -14,6 +14,8 @@
 
 #include "abi_diff_wrappers.h"
 
+#include<header_abi_util.h>
+
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-parameter"
 #pragma clang diagnostic ignored "-Wnested-anon-types"
@@ -29,6 +31,7 @@ using abi_diff::CXXBaseSpecifierDiff;
 using abi_diff::CXXVTableDiff;
 using abi_diff::EnumDeclDiff;
 using abi_diff::ReturnTypeDiff;
+using abi_diff::ParamDeclDiff;
 using abi_diff::FunctionDeclDiff;
 using abi_diff::EnumDeclDiff;
 using abi_diff::EnumFieldDeclDiff;
@@ -42,6 +45,7 @@ using abi_dump::ParamDecl;
 using abi_dump::VTableComponent;
 using abi_dump::CXXBaseSpecifier;
 using abi_dump::GlobalVarDecl;
+using abi_dump::BasicNamedAndTypedDecl;
 
 namespace abi_diff_wrappers {
 
@@ -65,9 +69,32 @@ static bool IsAccessDownGraded(abi_dump::AccessSpecifier old_access,
   return access_downgraded;
 }
 
+static std::string CpptoCAdjustment(const std::string &type) {
+  std::string adjusted_type_name =
+      abi_util::FindAndReplace(type, "\\bstruct ", "");
+
+  return adjusted_type_name;
+}
+
+static bool CompareTypeNames(const abi_dump::BasicTypeAbi &old_abi,
+                             const abi_dump::BasicTypeAbi &new_abi) {
+  // Strip of leading 'struct' keyword from type names
+  std::string old_type = old_abi.name();
+  std::string new_type = new_abi.name();
+  old_type = CpptoCAdjustment(old_type);
+  new_type = CpptoCAdjustment(new_type);
+  // TODO: Add checks for C++ built-in types vs C corresponding types.
+  return old_type != new_type;
+}
+
 static bool DiffBasicTypeAbi(const abi_dump::BasicTypeAbi &old_abi,
                              const abi_dump::BasicTypeAbi &new_abi) {
-  bool name_comparison = (old_abi.name() != new_abi.name());
+  // We need to add a layer of indirection to account for issues when C and C++
+  // are mixed. For example some types like wchar_t are in-built types for C++
+  // but not for C. Another example would be clang reporting C structures
+  // without the leading "struct" keyword when headers defining them are
+  // included in C++ files.
+  bool name_comparison = CompareTypeNames(old_abi, new_abi);
   bool size_comparison = (old_abi.size() != new_abi.size());
   bool alignment_comparison = (old_abi.alignment() != new_abi.alignment());
   return name_comparison || size_comparison || alignment_comparison;
@@ -78,6 +105,7 @@ static bool Diff(const T &old_element, const T &new_element) {
   // Can be specialized for future changes in the format.
   return DiffBasicTypeAbi(old_element.basic_abi().type_abi(),
                           new_element.basic_abi().type_abi()) ||
+      (old_element.basic_abi().name() != new_element.basic_abi().name()) ||
       IsAccessDownGraded(old_element.basic_abi().access(),
                          new_element.basic_abi().access());
 }
@@ -88,7 +116,16 @@ bool Diff<EnumFieldDecl>(const EnumFieldDecl &old_element,
   // Can be specialized for future changes in the format.
   return DiffBasicTypeAbi(old_element.basic_abi().type_abi(),
                           new_element.basic_abi().type_abi()) ||
-      (old_element.enum_field_value() != new_element.enum_field_value());
+      (old_element.enum_field_value() != new_element.enum_field_value()) ||
+      (old_element.basic_abi().name() != new_element.basic_abi().name());
+}
+
+template <>
+bool Diff<ParamDecl>(const ParamDecl &old_element,
+                     const ParamDecl &new_element) {
+  // Can be specialized for future changes in the format.
+  return DiffBasicTypeAbi(old_element.basic_abi().type_abi(),
+                          new_element.basic_abi().type_abi());
 }
 
 template <>
@@ -185,10 +222,27 @@ void DiffWrapperBase<T, TDiff>::GetExtraElementDiffs(
  }
 }
 
+static bool DiffBasicNamedAndTypedDecl(BasicNamedAndTypedDecl *type_diff_old,
+                                       BasicNamedAndTypedDecl *type_diff_new,
+                                       const BasicNamedAndTypedDecl &old,
+                                       const BasicNamedAndTypedDecl &new_) {
+  assert(type_diff_old != nullptr);
+  assert(type_diff_new != nullptr);
+  if (DiffBasicTypeAbi(old.type_abi(), new_.type_abi()) ||
+      IsAccessDownGraded(old.access(), new_.access())) {
+    *(type_diff_old) = old;
+    *(type_diff_new) = new_;
+    return true;
+  }
+  return false;
+}
+
 template <>
-std::unique_ptr<RecordDeclDiff> DiffWrapper<RecordDecl, RecordDeclDiff>::Get() {
+std::unique_ptr<RecordDeclDiff>
+DiffWrapper<RecordDecl, RecordDeclDiff>::Get() {
   std::unique_ptr<RecordDeclDiff> record_diff(new RecordDeclDiff());
-  assert(oldp_->basic_abi().name() == newp_->basic_abi().name());
+  assert(oldp_->mangled_record_name() ==
+         newp_->mangled_record_name());
   record_diff->set_name(oldp_->basic_abi().name());
   google::protobuf::RepeatedPtrField<RecordFieldDeclDiff> *fdiffs =
       record_diff->mutable_field_diffs();
@@ -203,20 +257,30 @@ std::unique_ptr<RecordDeclDiff> DiffWrapper<RecordDecl, RecordDeclDiff>::Get() {
       GetElementDiffs(bdiffs, oldp_->base_specifiers(),
                       newp_->base_specifiers()) ||
       GetElementDiffs(vtdiffs, oldp_->vtable_layout().vtable_components(),
-                      newp_->vtable_layout().vtable_components())) {
+                      newp_->vtable_layout().vtable_components()) ||
+      DiffBasicNamedAndTypedDecl(
+          record_diff->mutable_type_diff()->mutable_old(),
+          record_diff->mutable_type_diff()->mutable_new_(),
+          oldp_->basic_abi(), newp_->basic_abi())) {
     return record_diff;
   }
   return nullptr;
 }
 
 template <>
-std::unique_ptr<EnumDeclDiff> DiffWrapper<EnumDecl, EnumDeclDiff>::Get() {
+std::unique_ptr<EnumDeclDiff>
+DiffWrapper<EnumDecl, EnumDeclDiff>::Get() {
   std::unique_ptr<EnumDeclDiff> enum_diff(new EnumDeclDiff());
-  assert(oldp_->basic_abi().name() == newp_->basic_abi().name());
+  assert(oldp_->basic_abi().linker_set_key() ==
+         newp_->basic_abi().linker_set_key());
   google::protobuf::RepeatedPtrField<EnumFieldDeclDiff> *fdiffs =
       enum_diff->mutable_field_diffs();
   assert(fdiffs != nullptr);
-  if (GetElementDiffs(fdiffs, oldp_->enum_fields(), newp_->enum_fields())) {
+  if (GetElementDiffs(fdiffs, oldp_->enum_fields(), newp_->enum_fields()) ||
+      DiffBasicNamedAndTypedDecl(
+          enum_diff->mutable_type_diff()->mutable_old(),
+          enum_diff->mutable_type_diff()->mutable_new_(),
+          oldp_->basic_abi(), newp_->basic_abi())) {
     return enum_diff;
   }
   return nullptr;
@@ -226,17 +290,14 @@ template <>
 std::unique_ptr<FunctionDeclDiff>
 DiffWrapper<FunctionDecl, FunctionDeclDiff>::Get() {
   std::unique_ptr<FunctionDeclDiff> func_diff(new FunctionDeclDiff());
-  if (DiffBasicTypeAbi(oldp_->basic_abi().type_abi(),
-                       newp_->basic_abi().type_abi()) ||
-      IsAccessDownGraded(oldp_->basic_abi().access(),
-                         newp_->basic_abi().access())) {
-    assert(func_diff->mutable_return_type_diffs() != nullptr &&
-           func_diff->mutable_return_type_diffs()->mutable_old() != nullptr &&
-           func_diff->mutable_return_type_diffs()->mutable_new_() != nullptr);
-    *(func_diff->mutable_return_type_diffs()->mutable_old()) =
-        oldp_->basic_abi();
-    *(func_diff->mutable_return_type_diffs()->mutable_new_()) =
-        newp_->basic_abi();
+  google::protobuf::RepeatedPtrField<ParamDeclDiff> *pdiffs =
+      func_diff->mutable_param_diffs();
+  assert(func_diff->mutable_return_type_diffs() != nullptr);
+  if (DiffBasicNamedAndTypedDecl(
+          func_diff->mutable_return_type_diffs()->mutable_old(),
+          func_diff->mutable_return_type_diffs()->mutable_new_(),
+          oldp_->basic_abi(), newp_->basic_abi()) ||
+      GetElementDiffs(pdiffs, oldp_->parameters(), newp_->parameters())) {
     return func_diff;
   }
   return nullptr;
@@ -246,14 +307,11 @@ template <>
 std::unique_ptr<GlobalVarDeclDiff>
 DiffWrapper<GlobalVarDecl, GlobalVarDeclDiff>::Get() {
   std::unique_ptr<GlobalVarDeclDiff> global_var_diff(new GlobalVarDeclDiff());
-  if (DiffBasicTypeAbi(oldp_->basic_abi().type_abi(),
-                       newp_->basic_abi().type_abi()) ||
-      IsAccessDownGraded(oldp_->basic_abi().access(),
-                         newp_->basic_abi().access())) {
-    assert(global_var_diff->mutable_old() != nullptr);
-    assert(global_var_diff->mutable_new_() != nullptr);
-    *(global_var_diff->mutable_old()) = oldp_->basic_abi();
-    *(global_var_diff->mutable_new_()) = newp_->basic_abi();
+  assert(global_var_diff->mutable_type_diff() != nullptr);
+  if (DiffBasicNamedAndTypedDecl(
+          global_var_diff->mutable_type_diff()->mutable_old(),
+          global_var_diff->mutable_type_diff()->mutable_new_(),
+          oldp_->basic_abi(), newp_->basic_abi())) {
     return global_var_diff;
   }
   return nullptr;

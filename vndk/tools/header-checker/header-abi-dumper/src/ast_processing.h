@@ -83,10 +83,4 @@ class HeaderASTConsumer : public clang::ASTConsumer {
   std::set<std::string> exported_headers_;
 };
 
-class HeaderASTPPCallbacks : public clang::PPCallbacks {
- public:
-  void MacroDefined(const clang::Token &macro_name_tok,
-                    const clang::MacroDirective *) override;
-};
-
 #endif  // AST_PROCESSING_H_
