@@ -15,6 +15,7 @@
 #include "abi_diff.h"
 
 #include <llvm/Support/CommandLine.h>
+#include <llvm/Support/FileSystem.h>
 #include <llvm/Support/raw_ostream.h>
 
 static llvm::cl::OptionCategory header_checker_category(
@@ -36,11 +37,34 @@ static llvm::cl::opt<bool> advice_only(
     "advice-only", llvm::cl::desc("Advisory mode only"), llvm::cl::Optional,
     llvm::cl::cat(header_checker_category));
 
+static llvm::cl::opt<std::string> ignore_symbol_list(
+    "ignore-symbols", llvm::cl::desc("ignore symbols"), llvm::cl::Optional,
+    llvm::cl::cat(header_checker_category));
+
+static std::set<std::string> LoadIgnoredSymbols(std::string &symbol_list_path) {
+  std::ifstream symbol_ifstream(symbol_list_path);
+  std::set<std::string> ignored_symbols;
+  if (!symbol_ifstream) {
+    llvm::errs() << "Failed to open file containing symbols to ignore\n";
+    ::exit(1);
+  }
+  std::string line = "";
+  while (std::getline(symbol_ifstream, line)) {
+    ignored_symbols.insert(line);
+  }
+  return ignored_symbols;
+}
+
 int main(int argc, const char **argv) {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
   llvm::cl::ParseCommandLineOptions(argc, argv, "header-checker");
   uint8_t extension_or_incompatible = 0;
-  HeaderAbiDiff judge(old_dump, new_dump, compatibility_report);
+  std::set<std::string> ignored_symbols;
+  if (llvm::sys::fs::exists(ignore_symbol_list)) {
+    ignored_symbols = LoadIgnoredSymbols(ignore_symbol_list);
+  }
+  HeaderAbiDiff judge(old_dump, new_dump, compatibility_report,
+                      ignored_symbols);
   switch (judge.GenerateCompatibilityReport()) {
     case HeaderAbiDiff::COMPATIBLE:
       break;
