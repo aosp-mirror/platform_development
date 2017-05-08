@@ -50,22 +50,24 @@ Status HeaderAbiDiff::CompareTUs(const abi_dump::TranslationUnit &old_tu,
 
   Status record_status = Collect<abi_dump::RecordDecl>(
       diff_tu->mutable_records_added(), diff_tu->mutable_records_removed(),
-      diff_tu->mutable_records_diff(), old_tu.records(), new_tu.records());
+      diff_tu->mutable_records_diff(), old_tu.records(), new_tu.records(),
+      ignored_symbols_);
 
   Status function_status = Collect<abi_dump::FunctionDecl>(
       diff_tu->mutable_functions_added(), diff_tu->mutable_functions_removed(),
       diff_tu->mutable_functions_diff(), old_tu.functions(),
-      new_tu.functions());
+      new_tu.functions(), ignored_symbols_);
 
   Status enum_status = Collect<abi_dump::EnumDecl>(
       diff_tu->mutable_enums_added(), diff_tu->mutable_enums_removed(),
-      diff_tu->mutable_enums_diff(), old_tu.enums(), new_tu.enums());
+      diff_tu->mutable_enums_diff(), old_tu.enums(), new_tu.enums(),
+      ignored_symbols_);
 
   Status global_var_status = Collect<abi_dump::GlobalVarDecl>(
       diff_tu->mutable_global_vars_added(),
       diff_tu->mutable_global_vars_removed(),
       diff_tu->mutable_global_vars_diff(), old_tu.global_vars(),
-      new_tu.global_vars());
+      new_tu.global_vars(), ignored_symbols_);
 
   Status combined_status =
       record_status | function_status | enum_status | global_var_status;
@@ -92,7 +94,8 @@ Status HeaderAbiDiff::Collect(
     google::protobuf::RepeatedPtrField<T> *elements_removed,
     google::protobuf::RepeatedPtrField<TDiff> *elements_diff,
     const google::protobuf::RepeatedPtrField<T> &old_srcs,
-    const google::protobuf::RepeatedPtrField<T> &new_srcs) {
+    const google::protobuf::RepeatedPtrField<T> &new_srcs,
+    const std::set<std::string> &ignored_symbols) {
   assert(elements_added != nullptr);
   assert(elements_removed != nullptr);
   assert(elements_diff != nullptr);
@@ -103,11 +106,11 @@ Status HeaderAbiDiff::Collect(
   AddToMap(&new_elements_map, new_srcs);
 
   if (!PopulateRemovedElements(elements_removed, old_elements_map,
-                               new_elements_map) ||
+                               new_elements_map, ignored_symbols) ||
       !PopulateRemovedElements(elements_added, new_elements_map,
-                               old_elements_map) ||
+                               old_elements_map, ignored_symbols) ||
       !PopulateCommonElements(elements_diff, old_elements_map,
-                              new_elements_map)) {
+                              new_elements_map, ignored_symbols)) {
     llvm::errs() << "Populating functions in report failed\n";
     ::exit(1);
   }
@@ -124,7 +127,8 @@ template <typename T>
 bool HeaderAbiDiff::PopulateRemovedElements(
     google::protobuf::RepeatedPtrField<T> *dst,
     const std::map<std::string, const T*> &old_elements_map,
-    const std::map<std::string, const T*> &new_elements_map) {
+    const std::map<std::string, const T*> &new_elements_map,
+    const std::set<std::string> &ignored_symbols) {
 
   std::vector<const T *> removed_elements;
   for (auto &&map_element : old_elements_map) {
@@ -135,7 +139,7 @@ bool HeaderAbiDiff::PopulateRemovedElements(
         removed_elements.emplace_back(element);
       }
   }
-  if (!DumpLoneElements(dst, removed_elements)) {
+  if (!DumpLoneElements(dst, removed_elements, ignored_symbols)) {
     llvm::errs() << "Dumping added / removed element to report failed\n";
     return false;
   }
@@ -146,7 +150,8 @@ template <typename T, typename TDiff>
 bool HeaderAbiDiff::PopulateCommonElements(
     google::protobuf::RepeatedPtrField<TDiff> *dst,
     const std::map<std::string, const T *> &old_elements_map,
-    const std::map<std::string, const T *> &new_elements_map) {
+    const std::map<std::string, const T *> &new_elements_map,
+    const std::set<std::string> &ignored_symbols) {
   std::vector<std::pair<const T *, const T *>> common_elements;
   typename std::map<std::string, const T *>::const_iterator old_element =
       old_elements_map.begin();
@@ -167,7 +172,7 @@ bool HeaderAbiDiff::PopulateCommonElements(
       new_element++;
     }
   }
-  if (!DumpDiffElements(dst, common_elements)) {
+  if (!DumpDiffElements(dst, common_elements, ignored_symbols)) {
     llvm::errs() << "Dumping difference in common element to report failed\n";
     return false;
   }
@@ -175,9 +180,14 @@ bool HeaderAbiDiff::PopulateCommonElements(
 }
 
 template <typename T>
-bool HeaderAbiDiff::DumpLoneElements(google::protobuf::RepeatedPtrField<T> *dst,
-                                     std::vector<const T *> &elements) {
+bool HeaderAbiDiff::DumpLoneElements(
+    google::protobuf::RepeatedPtrField<T> *dst,
+    std::vector<const T *> &elements,
+    const std::set<std::string> &ignored_symbols) {
   for (auto &&element : elements) {
+    if (abi_diff_wrappers::IgnoreSymbol<T>(element, ignored_symbols)) {
+      continue;
+    }
     T *added_element = dst->Add();
     if (!added_element) {
       llvm::errs() << "Adding element diff failed\n";
@@ -191,12 +201,16 @@ bool HeaderAbiDiff::DumpLoneElements(google::protobuf::RepeatedPtrField<T> *dst,
 template <typename T, typename TDiff>
 bool HeaderAbiDiff::DumpDiffElements(
     google::protobuf::RepeatedPtrField<TDiff>  *dst,
-    std::vector<std::pair<const T *,const T *>> &pairs) {
+    std::vector<std::pair<const T *,const T *>> &pairs,
+    const std::set<std::string> &ignored_symbols) {
   for (auto &&pair : pairs) {
     const T *old_element = pair.first;
     const T *new_element = pair.second;
     // Not having inheritance from protobuf messages makes this
     // restrictive code.
+    if (abi_diff_wrappers::IgnoreSymbol<T>(old_element, ignored_symbols)) {
+      continue;
+    }
     abi_diff_wrappers::DiffWrapper<T, TDiff> diff_wrapper(old_element,
                                                           new_element);
     std::unique_ptr<TDiff> decl_diff_ptr = diff_wrapper.Get();

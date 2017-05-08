@@ -31,7 +31,7 @@ namespace clang {
 class HeaderCheckerFrontendAction : public clang::ASTFrontendAction {
  private:
   std::string dump_name_;
-  const std::vector<std::string> &export_header_dirs_;
+  const std::vector<std::string> &exported_header_dirs_;
 
  public:
   HeaderCheckerFrontendAction(
