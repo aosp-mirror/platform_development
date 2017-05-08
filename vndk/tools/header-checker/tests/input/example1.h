@@ -59,6 +59,35 @@ public:
   }
 };
 
-const volatile int Global_Foo(int global_bar);
+// Replicated from libsysutils.
+template<typename T>
+class List
+{
+protected:
+    /*
+     * One element in the list.
+     */
+    class _Node {
+    public:
+        explicit _Node(const T& val) : mVal(val) {}
+        ~_Node() {}
+        inline T& getRef() { return mVal; }
+        inline const T& getRef() const { return mVal; }
+    private:
+        friend class List;
+        friend class _ListIterator;
+        T           mVal;
+        _Node*      mpPrev;
+        _Node*      mpNext;
+    };
+    _Node *middle;
+};
+
+typedef List<float> float_list;
+float_list float_list_test;
+
+
+typedef List<int> int_list;
+int_list int_list_test;
 
 #endif  // EXAMPLE1_H_

@@ -46,8 +46,8 @@ static llvm::cl::opt<std::string> linked_dump(
     llvm::cl::cat(header_linker_category));
 
 static llvm::cl::list<std::string> exported_header_dirs(
-    "I", llvm::cl::desc("<export_include_dirs>"), llvm::cl::ZeroOrMore,
-    llvm::cl::cat(header_linker_category));
+    "I", llvm::cl::desc("<export_include_dirs>"), llvm::cl::Prefix,
+    llvm::cl::ZeroOrMore, llvm::cl::cat(header_linker_category));
 
 static llvm::cl::opt<std::string> version_script(
     "v", llvm::cl::desc("<version_script>"), llvm::cl::Optional,
@@ -109,22 +109,23 @@ class HeaderAbiLinker {
   std::set<std::string> function_decl_set_;
   std::set<std::string> enum_decl_set_;
   std::set<std::string> globvar_decl_set_;
+  // Version Script regex matched link set.
+  std::set<std::string> vs_regex_matched_link_set_;
 };
 
 bool HeaderAbiLinker::LinkAndDump() {
   abi_dump::TranslationUnit linked_tu;
   std::ofstream text_output(out_dump_name_);
   google::protobuf::io::OstreamOutputStream text_os(&text_output);
-  if (!version_script_.empty() && !ParseVersionScriptFiles()) {
+  // If a version script is available, we use that as a filter.
+  if (version_script.empty()) {
+    exported_headers_ =
+        abi_util::CollectAllExportedHeaders(exported_header_dirs_);
+  } else if (!ParseVersionScriptFiles()) {
     llvm::errs() << "Failed to parse stub files for exported symbols\n";
     return false;
   }
-  for (auto &&dir : exported_header_dirs_) {
-    if (!abi_util::CollectExportedHeaderSet(dir, &exported_headers_)) {
-      llvm::errs() << "Couldn't collect exported headers\n";
-      return false;
-    }
-  }
+
   for (auto &&i : dump_files_) {
     abi_dump::TranslationUnit dump_tu;
     std::ifstream input(i);
@@ -162,6 +163,27 @@ static std::string GetSymbol(const abi_dump::GlobalVarDecl &element) {
   return element.basic_abi().linker_set_key();
 }
 
+static bool QueryRegexMatches(std::set<std::string> *regex_matched_link_set,
+                              const std::set<std::string> &link_set,
+                              const std::string &symbol) {
+  if (regex_matched_link_set->find(symbol) != regex_matched_link_set->end()) {
+    return false;
+  }
+  // Go through each element in link_set, if there is a regex match, add the
+  // symbol to regex_matched_link_set and return true;
+  for (auto &&regex_match_str : link_set) {
+    std::smatch matcher;
+    std::string regex_match_str_find_glob =
+        abi_util::FindAndReplace(regex_match_str, "\\*", ".*");
+    std::regex match_clause("\\b" + regex_match_str_find_glob + "\\b");
+    if (std::regex_search(symbol, matcher, match_clause)) {
+      regex_matched_link_set->insert(symbol);
+      return true;
+    }
+  }
+  return false;
+}
+
 template <typename T>
 inline bool HeaderAbiLinker::LinkDecl(
     google::protobuf::RepeatedPtrField<T> *dst,
@@ -171,7 +193,8 @@ inline bool HeaderAbiLinker::LinkDecl(
   assert(dst != nullptr);
   assert(link_set != nullptr);
   for (auto &&element : src) {
-    // If exported headers are available, filter out unexported abi.
+    // If we are not using a version script and exported headers are available,
+    // filter out unexported abi.
     if (!exported_headers_.empty() &&
         exported_headers_.find(element.source_file()) ==
         exported_headers_.end()) {
@@ -183,11 +206,16 @@ inline bool HeaderAbiLinker::LinkDecl(
         continue;
         }
     } else {
+      std::string element_str = GetSymbol(element);
       std::set<std::string>::iterator it =
-          link_set->find(GetSymbol(element));
+          link_set->find(element_str);
       if (it == link_set->end()) {
-        continue;
+        if (!QueryRegexMatches(&vs_regex_matched_link_set_, *link_set,
+                               element_str)) {
+          continue;
+        }
       } else {
+        // We get a pre-filled link name set while using version script.
         link_set->erase(*it); // Avoid multiple instances of the same symbol.
       }
     }
@@ -204,10 +232,8 @@ inline bool HeaderAbiLinker::LinkDecl(
 bool HeaderAbiLinker::LinkRecords(const abi_dump::TranslationUnit &dump_tu,
                                   abi_dump::TranslationUnit *linked_tu) {
   assert(linked_tu != nullptr);
-  if (!version_script_.empty()) {
-    // version scripts do not have record tags.
-    return true;
-  }
+  // Even if version scripts are available we take in records, since the symbols
+  // in the version script might reference a record exposed by the library.
   return LinkDecl(linked_tu->mutable_records(), &record_decl_set_,
                   dump_tu.records(), false);
 }
@@ -222,10 +248,8 @@ bool HeaderAbiLinker::LinkFunctions(const abi_dump::TranslationUnit &dump_tu,
 bool HeaderAbiLinker::LinkEnums(const abi_dump::TranslationUnit &dump_tu,
                                 abi_dump::TranslationUnit *linked_tu) {
   assert(linked_tu != nullptr);
-  if (!version_script.empty()) {
-    // version scripts do not have enum tags.
-    return true;
-  }
+  // Even if version scripts are available we take in records, since the symbols
+  // in the version script might reference an enum exposed by the library.
   return LinkDecl(linked_tu->mutable_enums(), &enum_decl_set_,
                   dump_tu.enums(), false);
 }
