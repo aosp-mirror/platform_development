@@ -276,6 +276,7 @@ DiffWrapper<EnumDecl, EnumDeclDiff>::Get() {
   google::protobuf::RepeatedPtrField<EnumFieldDeclDiff> *fdiffs =
       enum_diff->mutable_field_diffs();
   assert(fdiffs != nullptr);
+  enum_diff->set_name(oldp_->basic_abi().name());
   if (GetElementDiffs(fdiffs, oldp_->enum_fields(), newp_->enum_fields()) ||
       DiffBasicNamedAndTypedDecl(
           enum_diff->mutable_type_diff()->mutable_old(),
