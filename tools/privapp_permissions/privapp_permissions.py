@@ -24,13 +24,14 @@
   . build/envsetup.sh
   lunch product_name
   m -j32
-  development/tools/privapp_permissions/privapp_permissions.py
+  development/tools/privapp_permissions/privapp_permissions.py [package_name]
 
 """
 
 import os
 import re
 import subprocess
+import sys
 from xml.dom import minidom
 
 try:
@@ -50,7 +51,7 @@ def main():
     framework_apk = os.path.join(ANDROID_PRODUCT_OUT, 'system/framework/framework-res.apk')
     platform_priv_permissions = extract_priv_permissions(framework_apk)
 
-    priv_apps = list_privapps()
+    priv_apps = [sys.argv[1]] if len(sys.argv) > 1 else list_privapps()
     apps_redefine_base = []
     results = {}
     for priv_app in priv_apps:
