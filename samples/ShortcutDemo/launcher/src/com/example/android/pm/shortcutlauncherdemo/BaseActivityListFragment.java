@@ -56,7 +56,7 @@ public abstract class BaseActivityListFragment extends MyBaseListFragment {
         final List<LauncherActivityInfo> apps = new ArrayList<>();
 
         try {
-            for (UserHandle user : mLauncherApps.getProfiles()) {
+            for (UserHandle user : Compat.getProfiles(getActivity())) {
                 if (mUserManager.isUserUnlocked(user)) {
                     apps.addAll(getActivities(user));
                 }

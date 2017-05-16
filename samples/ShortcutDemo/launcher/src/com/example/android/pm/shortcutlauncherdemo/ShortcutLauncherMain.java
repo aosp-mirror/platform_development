@@ -24,6 +24,7 @@ import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.os.Bundle;
 import android.support.v13.app.FragmentStatePagerAdapter;
+import android.support.v4.os.BuildCompat;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.view.ViewGroup;
@@ -32,11 +33,15 @@ public class ShortcutLauncherMain extends Activity {
     private ViewPager mPager;
     private PagerAdapter mPagerAdapter;
 
+    private int mNumTabs;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.main);
+
+        mNumTabs = BuildCompat.isAtLeastO() ? 3 : 2;
 
         mPager = (ViewPager) findViewById(R.id.pager);
         mPager.setOffscreenPageLimit(2);
@@ -47,7 +52,9 @@ public class ShortcutLauncherMain extends Activity {
         ab.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
         ab.addTab(ab.newTab().setText("App list").setTabListener(mTabListener));
         ab.addTab(ab.newTab().setText("Pinned shortcuts").setTabListener(mTabListener));
-        ab.addTab(ab.newTab().setText("Create shortcuts").setTabListener(mTabListener));
+        if (mNumTabs > 2) {
+            ab.addTab(ab.newTab().setText("Create shortcuts").setTabListener(mTabListener));
+        }
     }
 
     @Override
@@ -100,7 +107,7 @@ public class ShortcutLauncherMain extends Activity {
 
         @Override
         public int getCount() {
-            return 3;
+            return mNumTabs;
         }
 
         @Override
