@@ -82,7 +82,7 @@ public class ShortcutListFragment extends MyBaseListFragment {
     private List<UserHandle> getTargetUsers() {
         final UserHandle arg = getArguments().getParcelable(ARG_USER);
         if (arg == null) {
-            return mLauncherApps.getProfiles();
+            return Compat.getProfiles(getActivity());
         } else {
             final List<UserHandle> ret = new ArrayList<>();
             ret.add(arg);
