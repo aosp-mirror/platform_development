@@ -246,7 +246,6 @@ class ELFLinkerTest(unittest.TestCase):
             'android.hardware.graphics.allocator@2.0',
             'android.hardware.graphics.common@1.0',
             'android.hardware.graphics.mapper@2.0',
-            'android.hidl.base@1.0',
 
             # SP-NDK VNDK-stable (HIDL related)
             'libhidl-gen-utils',
@@ -269,10 +268,6 @@ class ELFLinkerTest(unittest.TestCase):
             'libhardware',
             'libnativeloader',
             'libvintf',
-
-            # SP-NDK VNDK-stable (UI-related)
-            'libnativewindow',
-            'libsync',
 
             # SP-NDK dependencies (SP-NDK only)
             'libui',
@@ -553,7 +548,6 @@ class ELFLinkerTest(unittest.TestCase):
         gb.add_multilib(PT_SYSTEM, 'liblog')
         gb.add_multilib(PT_SYSTEM, 'libm')
         gb.add_multilib(PT_SYSTEM, 'libstdc++')
-        gb.add_multilib(PT_SYSTEM, 'libz')
 
         # Add SP-NDK libraries.
         gb.add_multilib(PT_SYSTEM, 'libEGL')
@@ -620,7 +614,6 @@ class ELFLinkerTest(unittest.TestCase):
         self.assertNotIn('/system/lib/liblog.so', vndk_cap)
         self.assertNotIn('/system/lib/libm.so', vndk_cap)
         self.assertNotIn('/system/lib/libstdc++.so', vndk_cap)
-        self.assertNotIn('/system/lib/libz.so', vndk_cap)
 
         self.assertNotIn('/system/lib64/libEGL.so', vndk_cap)
         self.assertNotIn('/system/lib64/libOpenGLES_v2.so', vndk_cap)
@@ -629,7 +622,6 @@ class ELFLinkerTest(unittest.TestCase):
         self.assertNotIn('/system/lib64/liblog.so', vndk_cap)
         self.assertNotIn('/system/lib64/libm.so', vndk_cap)
         self.assertNotIn('/system/lib64/libstdc++.so', vndk_cap)
-        self.assertNotIn('/system/lib64/libz.so', vndk_cap)
 
 if __name__ == '__main__':
     unittest.main()
