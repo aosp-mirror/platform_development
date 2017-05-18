@@ -51,6 +51,11 @@ ARCH = None
 _CACHED_TOOLCHAIN = None
 _CACHED_TOOLCHAIN_ARCH = None
 
+# Caches for symbolized information.
+_SYMBOL_INFORMATION_ADDR2LINE_CACHE = {}
+_SYMBOL_INFORMATION_OBJDUMP_CACHE = {}
+_SYMBOL_DEMANGLING_CACHE = {}
+
 
 def ToolPath(tool, toolchain=None):
   """Return a fully-qualified path to the specified tool"""
@@ -183,6 +188,28 @@ def CallAddr2LineForSet(lib, unique_addrs):
   if not lib:
     return None
 
+  result = {}
+  addrs = sorted(unique_addrs)
+
+  if lib in _SYMBOL_INFORMATION_ADDR2LINE_CACHE:
+    addr_cache = _SYMBOL_INFORMATION_ADDR2LINE_CACHE[lib]
+
+    # Go through and handle all known addresses.
+    for x in range(len(addrs)):
+      next_addr = addrs.pop(0)
+      if next_addr in addr_cache:
+        result[next_addr] = addr_cache[next_addr]
+      else:
+        # Re-add, needs to be symbolized.
+        addrs.append(next_addr)
+
+    if not addrs:
+      # Everything was cached, we're done.
+      return result
+  else:
+    addr_cache = {}
+    _SYMBOL_INFORMATION_ADDR2LINE_CACHE[lib] = addr_cache
+
   symbols = SYMBOLS_DIR + lib
   if not os.path.exists(symbols):
     symbols = lib
@@ -197,8 +224,6 @@ def CallAddr2LineForSet(lib, unique_addrs):
       "--demangle", "--exe=" + symbols]
   child = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
 
-  result = {}
-  addrs = sorted(unique_addrs)
   for addr in addrs:
     child.stdin.write("0x%s\n" % addr)
     child.stdin.flush()
@@ -221,6 +246,7 @@ def CallAddr2LineForSet(lib, unique_addrs):
         child.stdin.write("\n")
         first = False
     result[addr] = records
+    addr_cache[addr] = records
   child.stdin.close()
   child.stdout.close()
   return result
@@ -254,13 +280,35 @@ def CallObjdumpForSet(lib, unique_addrs):
   if not lib:
     return None
 
+  result = {}
+  addrs = sorted(unique_addrs)
+
+  addr_cache = None
+  if lib in _SYMBOL_INFORMATION_OBJDUMP_CACHE:
+    addr_cache = _SYMBOL_INFORMATION_OBJDUMP_CACHE[lib]
+
+    # Go through and handle all known addresses.
+    for x in range(len(addrs)):
+      next_addr = addrs.pop(0)
+      if next_addr in addr_cache:
+        result[next_addr] = addr_cache[next_addr]
+      else:
+        # Re-add, needs to be symbolized.
+        addrs.append(next_addr)
+
+    if not addrs:
+      # Everything was cached, we're done.
+      return result
+  else:
+    addr_cache = {}
+    _SYMBOL_INFORMATION_OBJDUMP_CACHE[lib] = addr_cache
+
   symbols = SYMBOLS_DIR + lib
   if not os.path.exists(symbols):
     symbols = lib
     if not os.path.exists(symbols):
       return None
 
-  addrs = sorted(unique_addrs)
   start_addr_dec = str(StripPC(int(addrs[0], 16)))
   stop_addr_dec = str(StripPC(int(addrs[-1], 16)) + 8)
   cmd = [ToolPath("objdump"),
@@ -287,7 +335,6 @@ def CallObjdumpForSet(lib, unique_addrs):
   addr_index = 0  # The address that we are currently looking for.
 
   stream = subprocess.Popen(cmd, stdout=subprocess.PIPE).stdout
-  result = {}
   for line in stream:
     # Is it a function line like:
     #   000177b0 <android::IBinder::~IBinder()>:
@@ -315,6 +362,7 @@ def CallObjdumpForSet(lib, unique_addrs):
       i_target = StripPC(int(target_addr, 16))
       if i_addr == i_target:
         result[target_addr] = (current_symbol, i_target - current_symbol_addr)
+        addr_cache[target_addr] = result[target_addr]
         addr_index += 1
         if addr_index >= len(addrs):
           break
@@ -324,6 +372,9 @@ def CallObjdumpForSet(lib, unique_addrs):
 
 
 def CallCppFilt(mangled_symbol):
+  if mangled_symbol in _SYMBOL_DEMANGLING_CACHE:
+    return _SYMBOL_DEMANGLING_CACHE[mangled_symbol]
+
   cmd = [ToolPath("c++filt")]
   process = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
   process.stdin.write(mangled_symbol)
@@ -331,6 +382,9 @@ def CallCppFilt(mangled_symbol):
   process.stdin.close()
   demangled_symbol = process.stdout.readline().strip()
   process.stdout.close()
+
+  _SYMBOL_DEMANGLING_CACHE[mangled_symbol] = demangled_symbol
+
   return demangled_symbol
 
 
