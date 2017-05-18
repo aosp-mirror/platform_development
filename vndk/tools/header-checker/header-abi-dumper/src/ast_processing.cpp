@@ -127,7 +127,7 @@ bool HeaderASTVisitor::VisitVarDecl(const clang::VarDecl *decl) {
 }
 
 static bool AreHeadersExported(const std::set<std::string> &exported_headers) {
-  return exported_headers.empty();
+  return !exported_headers.empty();
 }
 
 // We don't need to recurse into Declarations which are not exported.
@@ -137,7 +137,7 @@ bool HeaderASTVisitor::TraverseDecl(clang::Decl *decl) {
   }
   std::string source_file = ABIWrapper::GetDeclSourceFile(decl, cip_);
   // If no exported headers are specified we assume the whole AST is exported.
-  if ((decl != tu_decl_) && !AreHeadersExported(exported_headers_) &&
+  if ((decl != tu_decl_) && AreHeadersExported(exported_headers_) &&
       (exported_headers_.find(source_file) == exported_headers_.end())) {
     return true;
   }
@@ -170,9 +170,4 @@ void HeaderASTConsumer::HandleTranslationUnit(clang::ASTContext &ctx) {
     llvm::errs() << "Serialization to ostream failed\n";
     ::exit(1);
   }
-}
-
-void HeaderASTPPCallbacks::MacroDefined(const clang::Token &macro_name_tok,
-                                        const clang::MacroDirective *) {
-  assert(macro_name_tok.getLength() != 0);
 }
