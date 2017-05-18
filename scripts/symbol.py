@@ -19,10 +19,12 @@
 The information can include symbol names, offsets, and source locations.
 """
 
+import atexit
 import glob
 import os
 import platform
 import re
+import signal
 import subprocess
 import unittest
 
@@ -55,6 +57,78 @@ _CACHED_TOOLCHAIN_ARCH = None
 _SYMBOL_INFORMATION_ADDR2LINE_CACHE = {}
 _SYMBOL_INFORMATION_OBJDUMP_CACHE = {}
 _SYMBOL_DEMANGLING_CACHE = {}
+
+# Caches for pipes to subprocesses.
+
+class ProcessCache:
+  _cmd2pipe = {}
+  _lru = []
+
+  # Max number of open pipes.
+  _PIPE_MAX_OPEN = 10
+
+  def GetProcess(self, cmd):
+    cmd_tuple = tuple(cmd)  # Need to use a tuple as lists can't be dict keys.
+    # Pipe already available?
+    if cmd_tuple in self._cmd2pipe:
+      pipe = self._cmd2pipe[cmd_tuple]
+      # Update LRU.
+      self._lru = [(cmd_tuple, pipe)] + [i for i in self._lru if i[0] != cmd_tuple]
+      return pipe
+
+    # Not cached, yet. Open a new one.
+
+    # Check if too many are open, close the old ones.
+    while len(self._lru) >= self._PIPE_MAX_OPEN:
+      open_cmd, open_pipe = self._lru.pop()
+      del self._cmd2pipe[open_cmd]
+      self.TerminateProcess(open_pipe)
+
+    # Create and put into cache.
+    pipe = self.SpawnProcess(cmd)
+    self._cmd2pipe[cmd_tuple] = pipe
+    self._lru = [(cmd_tuple, pipe)] + self._lru
+    return pipe
+
+  def SpawnProcess(self, cmd):
+     return subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+
+  def TerminateProcess(self, pipe):
+    pipe.stdin.close()
+    pipe.stdout.close()
+    pipe.terminate()
+    pipe.wait()
+
+  def KillAllProcesses(self):
+    for _, open_pipe in self._lru:
+      self.TerminateProcess(open_pipe)
+    _cmd2pipe = {}
+    _lru = []
+
+
+_PIPE_ADDR2LINE_CACHE = ProcessCache()
+_PIPE_CPPFILT_CACHE = ProcessCache()
+
+
+# Process cache cleanup on shutdown.
+
+def CloseAllPipes():
+  _PIPE_ADDR2LINE_CACHE.KillAllProcesses()
+  _PIPE_CPPFILT_CACHE.KillAllProcesses()
+
+
+atexit.register(CloseAllPipes)
+
+
+def PipeTermHandler(signum, frame):
+  CloseAllPipes()
+  os._exit(0)
+
+
+for sig in (signal.SIGABRT, signal.SIGINT, signal.SIGTERM):
+  signal.signal(sig, PipeTermHandler)
+
+
 
 
 def ToolPath(tool, toolchain=None):
@@ -222,7 +296,7 @@ def CallAddr2LineForSet(lib, unique_addrs):
 
   cmd = [ToolPath("addr2line"), "--functions", "--inlines",
       "--demangle", "--exe=" + symbols]
-  child = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+  child = _PIPE_ADDR2LINE_CACHE.GetProcess(cmd)
 
   for addr in addrs:
     child.stdin.write("0x%s\n" % addr)
@@ -247,8 +321,6 @@ def CallAddr2LineForSet(lib, unique_addrs):
         first = False
     result[addr] = records
     addr_cache[addr] = records
-  child.stdin.close()
-  child.stdout.close()
   return result
 
 
@@ -376,12 +448,12 @@ def CallCppFilt(mangled_symbol):
     return _SYMBOL_DEMANGLING_CACHE[mangled_symbol]
 
   cmd = [ToolPath("c++filt")]
-  process = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+  process = _PIPE_CPPFILT_CACHE.GetProcess(cmd)
   process.stdin.write(mangled_symbol)
   process.stdin.write("\n")
-  process.stdin.close()
+  process.stdin.flush()
+
   demangled_symbol = process.stdout.readline().strip()
-  process.stdout.close()
 
   _SYMBOL_DEMANGLING_CACHE[mangled_symbol] = demangled_symbol
 
