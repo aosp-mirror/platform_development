@@ -25,6 +25,14 @@ static llvm::cl::opt<std::string> compatibility_report(
     "o", llvm::cl::desc("<compatibility report>"), llvm::cl::Required,
     llvm::cl::cat(header_checker_category));
 
+static llvm::cl::opt<std::string> lib_name(
+    "lib", llvm::cl::desc("<lib name>"), llvm::cl::Required,
+    llvm::cl::cat(header_checker_category));
+
+static llvm::cl::opt<std::string> arch(
+    "arch", llvm::cl::desc("<arch>"), llvm::cl::Required,
+    llvm::cl::cat(header_checker_category));
+
 static llvm::cl::opt<std::string> new_dump(
     "new", llvm::cl::desc("<new dump>"), llvm::cl::Required,
     llvm::cl::cat(header_checker_category));
@@ -33,13 +41,18 @@ static llvm::cl::opt<std::string> old_dump(
     "old", llvm::cl::desc("<old dump>"), llvm::cl::Required,
     llvm::cl::cat(header_checker_category));
 
+static llvm::cl::opt<std::string> ignore_symbol_list(
+    "ignore-symbols", llvm::cl::desc("ignore symbols"), llvm::cl::Optional,
+    llvm::cl::cat(header_checker_category));
+
 static llvm::cl::opt<bool> advice_only(
     "advice-only", llvm::cl::desc("Advisory mode only"), llvm::cl::Optional,
     llvm::cl::cat(header_checker_category));
 
-static llvm::cl::opt<std::string> ignore_symbol_list(
-    "ignore-symbols", llvm::cl::desc("ignore symbols"), llvm::cl::Optional,
-    llvm::cl::cat(header_checker_category));
+static llvm::cl::opt<bool> allow_extensions(
+    "allow-extensions",
+    llvm::cl::desc("Do not return a non zero status on extensions"),
+    llvm::cl::Optional, llvm::cl::cat(header_checker_category));
 
 static std::set<std::string> LoadIgnoredSymbols(std::string &symbol_list_path) {
   std::ifstream symbol_ifstream(symbol_list_path);
@@ -58,32 +71,21 @@ static std::set<std::string> LoadIgnoredSymbols(std::string &symbol_list_path) {
 int main(int argc, const char **argv) {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
   llvm::cl::ParseCommandLineOptions(argc, argv, "header-checker");
-  uint8_t extension_or_incompatible = 0;
   std::set<std::string> ignored_symbols;
   if (llvm::sys::fs::exists(ignore_symbol_list)) {
     ignored_symbols = LoadIgnoredSymbols(ignore_symbol_list);
   }
-  HeaderAbiDiff judge(old_dump, new_dump, compatibility_report,
+  HeaderAbiDiff judge(lib_name, arch, old_dump, new_dump, compatibility_report,
                       ignored_symbols);
-  switch (judge.GenerateCompatibilityReport()) {
-    case HeaderAbiDiff::COMPATIBLE:
-      break;
-    case HeaderAbiDiff::EXTENSION:
-      extension_or_incompatible = 1;
-      break;
-    default:
-      extension_or_incompatible = 2;
-      break;
+
+  CompatibilityStatus status  = judge.GenerateCompatibilityReport();
+
+  if (advice_only) {
+    return CompatibilityStatus::COMPATIBLE;
   }
-  if (extension_or_incompatible) {
-    llvm::errs() << "******************************************************\n"
-                 << "VNDK Abi Compliance breakage:"
-                 << " Please check compatiblity report at : "
-                 << compatibility_report << "\n"
-                 << "*****************************************************\n";
-    if (!advice_only) {
-      return extension_or_incompatible;
-    }
+
+  if (allow_extensions && status == CompatibilityStatus::EXTENSION) {
+    return CompatibilityStatus::COMPATIBLE;
   }
-  return 0;
+  return status;
 }
