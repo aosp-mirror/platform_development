@@ -102,6 +102,22 @@ bool VersionScriptParser::SymbolExported(const std::string &line,
   return false;
 }
 
+void VersionScriptParser::AddToVars(std::string &symbol) {
+  if (symbol.find("*") != std::string::npos) {
+    globvar_regexs_.insert(symbol);
+  } else {
+    globvars_.insert(symbol);
+  }
+}
+
+void VersionScriptParser::AddToFunctions(std::string &symbol) {
+  if (symbol.find("*") != std::string::npos) {
+    function_regexs_.insert(symbol);
+  } else {
+    functions_.insert(symbol);
+  }
+}
+
 bool VersionScriptParser::ParseSymbolLine(const std::string &line) {
   //The symbol lies before the ; and the tags are after ;
   std::string::size_type pos = line.find(";");
@@ -115,9 +131,9 @@ bool VersionScriptParser::ParseSymbolLine(const std::string &line) {
   std::string tags = line.substr(pos + 1);
   if (SymbolExported(tags, arch_, api_)) {
     if (StringContains(tags, "var")) {
-      globvars_.insert(symbol);
+      AddToVars(symbol);
     } else {
-      functions_.insert(symbol);
+      AddToFunctions(symbol);
     }
   }
   return true;
@@ -159,6 +175,14 @@ const std::set<std::string> &VersionScriptParser::GetFunctions() {
 
 const std::set<std::string> &VersionScriptParser::GetGlobVars() {
   return globvars_;
+}
+
+const std::set<std::string> &VersionScriptParser::GetFunctionRegexs() {
+  return function_regexs_;
+}
+
+const std::set<std::string> &VersionScriptParser::GetGlobVarRegexs() {
+  return globvar_regexs_;
 }
 
 bool VersionScriptParser::Parse() {
