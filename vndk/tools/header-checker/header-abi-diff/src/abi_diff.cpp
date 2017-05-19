@@ -27,7 +27,7 @@
 
 #include <stdlib.h>
 
-Status HeaderAbiDiff::GenerateCompatibilityReport() {
+CompatibilityStatus HeaderAbiDiff::GenerateCompatibilityReport() {
   abi_dump::TranslationUnit old_tu;
   abi_dump::TranslationUnit new_tu;
   std::ifstream old_input(old_dump_);
@@ -37,41 +37,51 @@ Status HeaderAbiDiff::GenerateCompatibilityReport() {
 
   if (!google::protobuf::TextFormat::Parse(&text_iso, &old_tu) ||
       !google::protobuf::TextFormat::Parse(&text_isn, &new_tu)) {
-    llvm::errs() << "Failed to Parse Input\n";
+    llvm::errs() << "Failed to generate compatibility report\n";
     ::exit(1);
   }
-   return CompareTUs(old_tu, new_tu);
+  return CompareTUs(old_tu, new_tu);
 }
 
-Status HeaderAbiDiff::CompareTUs(const abi_dump::TranslationUnit &old_tu,
-                                 const abi_dump::TranslationUnit &new_tu) {
+CompatibilityStatus HeaderAbiDiff::CompareTUs(
+    const abi_dump::TranslationUnit &old_tu,
+    const abi_dump::TranslationUnit &new_tu) {
   std::unique_ptr<abi_diff::TranslationUnitDiff> diff_tu(
       new abi_diff::TranslationUnitDiff);
-
-  Status record_status = Collect<abi_dump::RecordDecl>(
+  CompatibilityStatus record_status = Collect<abi_dump::RecordDecl>(
       diff_tu->mutable_records_added(), diff_tu->mutable_records_removed(),
       diff_tu->mutable_records_diff(), old_tu.records(), new_tu.records(),
       ignored_symbols_);
 
-  Status function_status = Collect<abi_dump::FunctionDecl>(
+  CompatibilityStatus function_status = Collect<abi_dump::FunctionDecl>(
       diff_tu->mutable_functions_added(), diff_tu->mutable_functions_removed(),
       diff_tu->mutable_functions_diff(), old_tu.functions(),
       new_tu.functions(), ignored_symbols_);
 
-  Status enum_status = Collect<abi_dump::EnumDecl>(
+  CompatibilityStatus enum_status = Collect<abi_dump::EnumDecl>(
       diff_tu->mutable_enums_added(), diff_tu->mutable_enums_removed(),
       diff_tu->mutable_enums_diff(), old_tu.enums(), new_tu.enums(),
       ignored_symbols_);
 
-  Status global_var_status = Collect<abi_dump::GlobalVarDecl>(
+  CompatibilityStatus global_var_status = Collect<abi_dump::GlobalVarDecl>(
       diff_tu->mutable_global_vars_added(),
       diff_tu->mutable_global_vars_removed(),
       diff_tu->mutable_global_vars_diff(), old_tu.global_vars(),
       new_tu.global_vars(), ignored_symbols_);
 
-  Status combined_status =
+  CompatibilityStatus combined_status =
       record_status | function_status | enum_status | global_var_status;
 
+  if (combined_status & CompatibilityStatus::INCOMPATIBLE) {
+    combined_status = CompatibilityStatus::INCOMPATIBLE;
+  } else if (combined_status & CompatibilityStatus::EXTENSION) {
+    combined_status = CompatibilityStatus::EXTENSION;
+  } else {
+    combined_status = CompatibilityStatus::COMPATIBLE;
+  }
+  diff_tu->set_compatibility_status(combined_status);
+  diff_tu->set_lib_name(lib_name_);
+  diff_tu->set_arch(arch_);
   std::ofstream text_output(cr_);
   google::protobuf::io::OstreamOutputStream text_os(&text_output);
 
@@ -79,17 +89,11 @@ Status HeaderAbiDiff::CompareTUs(const abi_dump::TranslationUnit &old_tu,
     llvm::errs() << "Unable to dump report\n";
     ::exit(1);
   }
-  if (combined_status & INCOMPATIBLE) {
-    return INCOMPATIBLE;
-  }
-  if (combined_status & EXTENSION) {
-    return EXTENSION;
-  }
-  return COMPATIBLE;
+  return combined_status;
 }
 
 template <typename T, typename TDiff>
-Status HeaderAbiDiff::Collect(
+abi_diff::CompatibilityStatus HeaderAbiDiff::Collect(
     google::protobuf::RepeatedPtrField<T> *elements_added,
     google::protobuf::RepeatedPtrField<T> *elements_removed,
     google::protobuf::RepeatedPtrField<TDiff> *elements_diff,
@@ -115,12 +119,12 @@ Status HeaderAbiDiff::Collect(
     ::exit(1);
   }
   if (elements_diff->size() || elements_removed->size()) {
-    return INCOMPATIBLE;
+    return CompatibilityStatus::INCOMPATIBLE;
   }
   if (elements_added->size()) {
-    return EXTENSION;
+    return CompatibilityStatus::EXTENSION;
   }
-  return COMPATIBLE;
+  return CompatibilityStatus::COMPATIBLE;
 }
 
 template <typename T>
