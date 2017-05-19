@@ -17,11 +17,11 @@
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.android.pushapithirdpartyone">
-    <uses-permission android:name="android.permission.GET_ACCOUNTS" />
-    <uses-permission android:name="android.permission.READ_CONTACTS" />
+    <uses-permission android:name="android.permission.GET_ACCOUNTS"/>
+    <uses-permission android:name="android.permission.READ_CONTACTS"/>
+    <!-- Should target O API level(26) or above to test GET_ACCOUNTS account visibility logic -->
     <uses-sdk android:minSdkVersion="1"
-          android:targetSdkVersion="10001"
-          android:maxSdkVersion="11000" />
+          android:targetSdkVersion="26"/>
     <application android:label="3P App 1" android:icon="@drawable/push">
         <activity android:name="MainActivity">
             <intent-filter>
