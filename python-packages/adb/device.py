@@ -415,8 +415,23 @@ class AndroidDevice(object):
         cmd.append(filename)
         return self._simple_call(cmd)
 
-    def push(self, local, remote):
-        return self._simple_call(['push', local, remote])
+    def push(self, local, remote, sync=False):
+        """Transfer a local file or directory to the device.
+
+        Args:
+            local: The local file or directory to transfer.
+            remote: The remote path to which local should be transferred.
+            sync: If True, only transfers files that are newer on the host than
+                  those on the device. If False, transfers all files.
+
+        Returns:
+            Exit status of the push command.
+        """
+        cmd = ['push']
+        if sync:
+            cmd.append('--sync')
+        cmd.extend([local, remote])
+        return self._simple_call(cmd)
 
     def pull(self, remote, local):
         return self._simple_call(['pull', remote, local])
