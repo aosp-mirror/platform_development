@@ -19,10 +19,12 @@
 The information can include symbol names, offsets, and source locations.
 """
 
+import atexit
 import glob
 import os
 import platform
 import re
+import signal
 import subprocess
 import unittest
 
@@ -50,6 +52,83 @@ ARCH = None
 # These are private. Do not access them from other modules.
 _CACHED_TOOLCHAIN = None
 _CACHED_TOOLCHAIN_ARCH = None
+
+# Caches for symbolized information.
+_SYMBOL_INFORMATION_ADDR2LINE_CACHE = {}
+_SYMBOL_INFORMATION_OBJDUMP_CACHE = {}
+_SYMBOL_DEMANGLING_CACHE = {}
+
+# Caches for pipes to subprocesses.
+
+class ProcessCache:
+  _cmd2pipe = {}
+  _lru = []
+
+  # Max number of open pipes.
+  _PIPE_MAX_OPEN = 10
+
+  def GetProcess(self, cmd):
+    cmd_tuple = tuple(cmd)  # Need to use a tuple as lists can't be dict keys.
+    # Pipe already available?
+    if cmd_tuple in self._cmd2pipe:
+      pipe = self._cmd2pipe[cmd_tuple]
+      # Update LRU.
+      self._lru = [(cmd_tuple, pipe)] + [i for i in self._lru if i[0] != cmd_tuple]
+      return pipe
+
+    # Not cached, yet. Open a new one.
+
+    # Check if too many are open, close the old ones.
+    while len(self._lru) >= self._PIPE_MAX_OPEN:
+      open_cmd, open_pipe = self._lru.pop()
+      del self._cmd2pipe[open_cmd]
+      self.TerminateProcess(open_pipe)
+
+    # Create and put into cache.
+    pipe = self.SpawnProcess(cmd)
+    self._cmd2pipe[cmd_tuple] = pipe
+    self._lru = [(cmd_tuple, pipe)] + self._lru
+    return pipe
+
+  def SpawnProcess(self, cmd):
+     return subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+
+  def TerminateProcess(self, pipe):
+    pipe.stdin.close()
+    pipe.stdout.close()
+    pipe.terminate()
+    pipe.wait()
+
+  def KillAllProcesses(self):
+    for _, open_pipe in self._lru:
+      self.TerminateProcess(open_pipe)
+    _cmd2pipe = {}
+    _lru = []
+
+
+_PIPE_ADDR2LINE_CACHE = ProcessCache()
+_PIPE_CPPFILT_CACHE = ProcessCache()
+
+
+# Process cache cleanup on shutdown.
+
+def CloseAllPipes():
+  _PIPE_ADDR2LINE_CACHE.KillAllProcesses()
+  _PIPE_CPPFILT_CACHE.KillAllProcesses()
+
+
+atexit.register(CloseAllPipes)
+
+
+def PipeTermHandler(signum, frame):
+  CloseAllPipes()
+  os._exit(0)
+
+
+for sig in (signal.SIGABRT, signal.SIGINT, signal.SIGTERM):
+  signal.signal(sig, PipeTermHandler)
+
+
 
 
 def ToolPath(tool, toolchain=None):
@@ -183,6 +262,28 @@ def CallAddr2LineForSet(lib, unique_addrs):
   if not lib:
     return None
 
+  result = {}
+  addrs = sorted(unique_addrs)
+
+  if lib in _SYMBOL_INFORMATION_ADDR2LINE_CACHE:
+    addr_cache = _SYMBOL_INFORMATION_ADDR2LINE_CACHE[lib]
+
+    # Go through and handle all known addresses.
+    for x in range(len(addrs)):
+      next_addr = addrs.pop(0)
+      if next_addr in addr_cache:
+        result[next_addr] = addr_cache[next_addr]
+      else:
+        # Re-add, needs to be symbolized.
+        addrs.append(next_addr)
+
+    if not addrs:
+      # Everything was cached, we're done.
+      return result
+  else:
+    addr_cache = {}
+    _SYMBOL_INFORMATION_ADDR2LINE_CACHE[lib] = addr_cache
+
   symbols = SYMBOLS_DIR + lib
   if not os.path.exists(symbols):
     symbols = lib
@@ -195,10 +296,8 @@ def CallAddr2LineForSet(lib, unique_addrs):
 
   cmd = [ToolPath("addr2line"), "--functions", "--inlines",
       "--demangle", "--exe=" + symbols]
-  child = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+  child = _PIPE_ADDR2LINE_CACHE.GetProcess(cmd)
 
-  result = {}
-  addrs = sorted(unique_addrs)
   for addr in addrs:
     child.stdin.write("0x%s\n" % addr)
     child.stdin.flush()
@@ -221,8 +320,7 @@ def CallAddr2LineForSet(lib, unique_addrs):
         child.stdin.write("\n")
         first = False
     result[addr] = records
-  child.stdin.close()
-  child.stdout.close()
+    addr_cache[addr] = records
   return result
 
 
@@ -254,13 +352,35 @@ def CallObjdumpForSet(lib, unique_addrs):
   if not lib:
     return None
 
+  result = {}
+  addrs = sorted(unique_addrs)
+
+  addr_cache = None
+  if lib in _SYMBOL_INFORMATION_OBJDUMP_CACHE:
+    addr_cache = _SYMBOL_INFORMATION_OBJDUMP_CACHE[lib]
+
+    # Go through and handle all known addresses.
+    for x in range(len(addrs)):
+      next_addr = addrs.pop(0)
+      if next_addr in addr_cache:
+        result[next_addr] = addr_cache[next_addr]
+      else:
+        # Re-add, needs to be symbolized.
+        addrs.append(next_addr)
+
+    if not addrs:
+      # Everything was cached, we're done.
+      return result
+  else:
+    addr_cache = {}
+    _SYMBOL_INFORMATION_OBJDUMP_CACHE[lib] = addr_cache
+
   symbols = SYMBOLS_DIR + lib
   if not os.path.exists(symbols):
     symbols = lib
     if not os.path.exists(symbols):
       return None
 
-  addrs = sorted(unique_addrs)
   start_addr_dec = str(StripPC(int(addrs[0], 16)))
   stop_addr_dec = str(StripPC(int(addrs[-1], 16)) + 8)
   cmd = [ToolPath("objdump"),
@@ -287,7 +407,6 @@ def CallObjdumpForSet(lib, unique_addrs):
   addr_index = 0  # The address that we are currently looking for.
 
   stream = subprocess.Popen(cmd, stdout=subprocess.PIPE).stdout
-  result = {}
   for line in stream:
     # Is it a function line like:
     #   000177b0 <android::IBinder::~IBinder()>:
@@ -315,6 +434,7 @@ def CallObjdumpForSet(lib, unique_addrs):
       i_target = StripPC(int(target_addr, 16))
       if i_addr == i_target:
         result[target_addr] = (current_symbol, i_target - current_symbol_addr)
+        addr_cache[target_addr] = result[target_addr]
         addr_index += 1
         if addr_index >= len(addrs):
           break
@@ -324,13 +444,19 @@ def CallObjdumpForSet(lib, unique_addrs):
 
 
 def CallCppFilt(mangled_symbol):
+  if mangled_symbol in _SYMBOL_DEMANGLING_CACHE:
+    return _SYMBOL_DEMANGLING_CACHE[mangled_symbol]
+
   cmd = [ToolPath("c++filt")]
-  process = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+  process = _PIPE_CPPFILT_CACHE.GetProcess(cmd)
   process.stdin.write(mangled_symbol)
   process.stdin.write("\n")
-  process.stdin.close()
+  process.stdin.flush()
+
   demangled_symbol = process.stdout.readline().strip()
-  process.stdout.close()
+
+  _SYMBOL_DEMANGLING_CACHE[mangled_symbol] = demangled_symbol
+
   return demangled_symbol
 
 

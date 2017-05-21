@@ -92,6 +92,8 @@ class HeaderAbiLinker {
   template <typename T>
   inline bool LinkDecl(google::protobuf::RepeatedPtrField<T> *dst,
                        std::set<std::string> *link_set,
+                       std::set<std::string> *regex_matched_link_set,
+                       const std::regex *vs_regex,
                        const google::protobuf::RepeatedPtrField<T> &src,
                        bool use_version_script);
 
@@ -104,13 +106,18 @@ class HeaderAbiLinker {
   const std::string &out_dump_name_;
   const std::string &arch_;
   const std::string &api_;
+  // TODO: Add to a map of std::sets instead.
   std::set<std::string> exported_headers_;
   std::set<std::string> record_decl_set_;
   std::set<std::string> function_decl_set_;
   std::set<std::string> enum_decl_set_;
   std::set<std::string> globvar_decl_set_;
-  // Version Script regex matched link set.
-  std::set<std::string> vs_regex_matched_link_set_;
+  // Version Script Regex Matching.
+  std::set<std::string> functions_regex_matched_set;
+  std::regex functions_vs_regex_;
+  // Version Script Regex Matching.
+  std::set<std::string> globvars_regex_matched_set;
+  std::regex globvars_vs_regex_;
 };
 
 bool HeaderAbiLinker::LinkAndDump() {
@@ -164,32 +171,44 @@ static std::string GetSymbol(const abi_dump::GlobalVarDecl &element) {
 }
 
 static bool QueryRegexMatches(std::set<std::string> *regex_matched_link_set,
-                              const std::set<std::string> &link_set,
+                              const std::regex *vs_regex,
                               const std::string &symbol) {
+  assert(regex_matched_link_set != nullptr);
+  assert(vs_regex != nullptr);
   if (regex_matched_link_set->find(symbol) != regex_matched_link_set->end()) {
     return false;
   }
-  // Go through each element in link_set, if there is a regex match, add the
-  // symbol to regex_matched_link_set and return true;
-  for (auto &&regex_match_str : link_set) {
-    std::smatch matcher;
-    std::string regex_match_str_find_glob =
-        abi_util::FindAndReplace(regex_match_str, "\\*", ".*");
-    std::regex match_clause("\\b" + regex_match_str_find_glob + "\\b");
-    if (std::regex_search(symbol, matcher, match_clause)) {
-      regex_matched_link_set->insert(symbol);
-      return true;
-    }
+  if (std::regex_search(symbol, *vs_regex)) {
+    regex_matched_link_set->insert(symbol);
+    return true;
   }
   return false;
+}
+
+static std::regex CreateRegexMatchExprFromSet(
+    const std::set<std::string> &link_set) {
+  std::string all_regex_match_str = "";
+  std::set<std::string>::iterator it = link_set.begin();
+  while (it != link_set.end()) {
+    std::string regex_match_str_find_glob =
+      abi_util::FindAndReplace(*it, "\\*", ".*");
+    all_regex_match_str += "(\\b" + regex_match_str_find_glob + "\\b)";
+    if (++it != link_set.end()) {
+      all_regex_match_str += "|";
+    }
+  }
+  if (all_regex_match_str == "") {
+    return std::regex();
+  }
+  return std::regex(all_regex_match_str);
 }
 
 template <typename T>
 inline bool HeaderAbiLinker::LinkDecl(
     google::protobuf::RepeatedPtrField<T> *dst,
     std::set<std::string> *link_set,
-    const google::protobuf::RepeatedPtrField<T> &src,
-    bool use_version_script) {
+    std::set<std::string> *regex_matched_link_set, const std::regex *vs_regex,
+    const google::protobuf::RepeatedPtrField<T> &src, bool use_version_script) {
   assert(dst != nullptr);
   assert(link_set != nullptr);
   for (auto &&element : src) {
@@ -210,8 +229,7 @@ inline bool HeaderAbiLinker::LinkDecl(
       std::set<std::string>::iterator it =
           link_set->find(element_str);
       if (it == link_set->end()) {
-        if (!QueryRegexMatches(&vs_regex_matched_link_set_, *link_set,
-                               element_str)) {
+        if (!QueryRegexMatches(regex_matched_link_set, vs_regex, element_str)) {
           continue;
         }
       } else {
@@ -234,14 +252,15 @@ bool HeaderAbiLinker::LinkRecords(const abi_dump::TranslationUnit &dump_tu,
   assert(linked_tu != nullptr);
   // Even if version scripts are available we take in records, since the symbols
   // in the version script might reference a record exposed by the library.
-  return LinkDecl(linked_tu->mutable_records(), &record_decl_set_,
-                  dump_tu.records(), false);
+  return LinkDecl(linked_tu->mutable_records(), &record_decl_set_, nullptr,
+                  nullptr, dump_tu.records(), false);
 }
 
 bool HeaderAbiLinker::LinkFunctions(const abi_dump::TranslationUnit &dump_tu,
                                     abi_dump::TranslationUnit *linked_tu) {
   assert(linked_tu != nullptr);
   return LinkDecl(linked_tu->mutable_functions(), &function_decl_set_,
+                  &functions_regex_matched_set, &functions_vs_regex_,
                   dump_tu.functions(), (!version_script_.empty()));
 }
 
@@ -250,14 +269,15 @@ bool HeaderAbiLinker::LinkEnums(const abi_dump::TranslationUnit &dump_tu,
   assert(linked_tu != nullptr);
   // Even if version scripts are available we take in records, since the symbols
   // in the version script might reference an enum exposed by the library.
-  return LinkDecl(linked_tu->mutable_enums(), &enum_decl_set_,
-                  dump_tu.enums(), false);
+  return LinkDecl(linked_tu->mutable_enums(), &enum_decl_set_, nullptr,
+                  nullptr, dump_tu.enums(), false);
 }
 
 bool HeaderAbiLinker::LinkGlobalVars(const abi_dump::TranslationUnit &dump_tu,
                                      abi_dump::TranslationUnit *linked_tu) {
   assert(linked_tu != nullptr);
   return LinkDecl(linked_tu->mutable_global_vars(), &globvar_decl_set_,
+                  &globvars_regex_matched_set, &globvars_vs_regex_,
                   dump_tu.global_vars(), (!version_script.empty()));
 }
 
@@ -269,6 +289,12 @@ bool HeaderAbiLinker::ParseVersionScriptFiles() {
   }
   function_decl_set_ = version_script_parser.GetFunctions();
   globvar_decl_set_ = version_script_parser.GetGlobVars();
+  std::set<std::string> function_regexs =
+      version_script_parser.GetFunctionRegexs();
+  std::set<std::string> globvar_regexs =
+      version_script_parser.GetGlobVarRegexs();
+  functions_vs_regex_ = CreateRegexMatchExprFromSet(function_regexs);
+  globvars_vs_regex_ = CreateRegexMatchExprFromSet(globvar_regexs);
   return true;
 }
 
