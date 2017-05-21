@@ -38,8 +38,10 @@ class HeaderAbiDiff {
 
 
   HeaderAbiDiff(const std::string &old_dump, const std::string &new_dump,
-                const std::string &compatibility_report)
-      : old_dump_(old_dump), new_dump_(new_dump), cr_(compatibility_report) { }
+                const std::string &compatibility_report,
+                const std::set<std::string> &ignored_symbols)
+      : old_dump_(old_dump), new_dump_(new_dump), cr_(compatibility_report),
+        ignored_symbols_(ignored_symbols) { }
 
   Status GenerateCompatibilityReport();
 
@@ -53,7 +55,8 @@ class HeaderAbiDiff {
       google::protobuf::RepeatedPtrField<T> *elements_removed,
       google::protobuf::RepeatedPtrField<TDiff> *elements_diff,
       const google::protobuf::RepeatedPtrField<T> &old_srcs,
-      const google::protobuf::RepeatedPtrField<T> &new_srcs);
+      const google::protobuf::RepeatedPtrField<T> &new_srcs,
+      const std::set<std::string> &ignored_symbols);
 
   template <typename T>
   static inline void AddToMap(std::map<std::string, const T *> *dst,
@@ -63,27 +66,32 @@ class HeaderAbiDiff {
   static bool PopulateRemovedElements(
       google::protobuf::RepeatedPtrField<T> *dst,
       const std::map<std::string, const T *> &old_elements_map,
-      const std::map<std::string, const T *> &new_elements_map);
+      const std::map<std::string, const T *> &new_elements_map,
+      const std::set<std::string> &ignored_symbols);
 
   template <typename T, typename TDiff>
   static bool PopulateCommonElements(
       google::protobuf::RepeatedPtrField<TDiff> *dst,
       const std::map<std::string, const T *> &old_elements_map,
-      const std::map<std::string, const T *> &new_elements_map);
+      const std::map<std::string, const T *> &new_elements_map,
+      const std::set<std::string> &ignored_symbols);
 
   template <typename T, typename TDiff>
   static bool DumpDiffElements(
       google::protobuf::RepeatedPtrField<TDiff> *dst,
-      std::vector<std::pair<const T *, const T *>> &pairs);
+      std::vector<std::pair<const T *, const T *>> &pairs,
+      const std::set<std::string> &ignored_symbols);
 
   template <typename T>
   static bool DumpLoneElements(google::protobuf::RepeatedPtrField<T> *dst,
-                               std::vector<const T *> &elements);
+                               std::vector<const T *> &elements,
+                               const std::set<std::string> &ignored_symbols);
 
  private:
   const std::string &old_dump_;
   const std::string &new_dump_;
   const std::string &cr_;
+  const std::set<std::string> &ignored_symbols_;
 };
 
 typedef HeaderAbiDiff::Status Status;
