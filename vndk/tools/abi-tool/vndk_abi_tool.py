@@ -57,7 +57,7 @@ SCRIPT_DIR = os.path.abspath(os.path.dirname(__file__))
 AOSP_DIR = os.path.abspath(os.path.join(SCRIPT_DIR, *['..'] * 4))
 ABI_DUMPER = os.path.join(AOSP_DIR, 'external', 'abi-dumper', 'abi-dumper.pl')
 VTABLE_DUMPER = 'vndk-vtable-dumper'
-BINARY_ABI_DUMP_EXT = '.bdump'
+BINARY_ABI_DUMP_EXT = '.dump'
 STRIP_DEUBG_INFO = os.path.join(SCRIPT_DIR, 'strip_debug_info.pl')
 
 
