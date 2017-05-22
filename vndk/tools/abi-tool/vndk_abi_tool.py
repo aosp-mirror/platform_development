@@ -58,6 +58,7 @@ AOSP_DIR = os.path.abspath(os.path.join(SCRIPT_DIR, *['..'] * 4))
 ABI_DUMPER = os.path.join(AOSP_DIR, 'external', 'abi-dumper', 'abi-dumper.pl')
 VTABLE_DUMPER = 'vndk-vtable-dumper'
 BINARY_ABI_DUMP_EXT = '.bdump'
+STRIP_DEUBG_INFO = os.path.join(SCRIPT_DIR, 'strip_debug_info.pl')
 
 
 # Compilation targets.
@@ -213,8 +214,13 @@ def create_vndk_lib_name_filter(file_list_path):
         return patt.match(name)
     return accept_matched_filenames
 
+def run_cmd(cmd, show_commands):
+    if show_commands:
+        print(' '.join(cmd))
+    check_silent_call(cmd)
+
 def create_abi_reference_dump(out_dir, symbols_dir, api_level, show_commands,
-                              target, is_vndk_lib_name):
+                              target, is_vndk_lib_name, strip_debug_info):
     # Check command line tools.
     readelf = target.get_exe('readelf')
     objdump = target.get_exe('objdump')
@@ -251,11 +257,10 @@ def create_abi_reference_dump(out_dir, symbols_dir, api_level, show_commands,
 
             makedirs(os.path.dirname(out_path), exist_ok=True)
             cmd = cmd_base + [path, '-o', out_path]
-            if show_commands:
-                print('run:', ' '.join(cmd))
-            else:
-                print('process:', path)
-            check_silent_call(cmd)
+            print('# FILE:', path)
+            run_cmd(cmd, show_commands)
+            if strip_debug_info:
+                run_cmd([STRIP_DEUBG_INFO, out_path], show_commands)
             num_processed += 1
 
     return num_processed
@@ -304,7 +309,9 @@ def main():
     parser.add_argument('--target-build-variant', help='target build variant')
     parser.add_argument('--symbols-dir', help='unstripped symbols directory')
     parser.add_argument('--show-commands', action='store_true',
-                        help='Show the abi-dumper command')
+                        help='Show commands')
+    parser.add_argument('--strip-debug-info', action='store_true',
+                        help='Remove debug information from ABI dump files')
     args = parser.parse_args()
 
     # Check the symbols directory.
@@ -356,7 +363,8 @@ def main():
     for target in targets:
         num_processed += create_abi_reference_dump(
                 out_dir, symbols_dir, args.api_level, args.show_commands,
-                target, create_vndk_lib_name_filter(args.vndk_list))
+                target, create_vndk_lib_name_filter(args.vndk_list),
+                args.strip_debug_info)
 
     # Print a summary at the end.
     _TERM_WIDTH = 79
