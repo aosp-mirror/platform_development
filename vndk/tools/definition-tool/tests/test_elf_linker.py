@@ -237,9 +237,9 @@ class ELFLinkerTest(unittest.TestCase):
         node = graph.get_lib('/vendor/lib64/libEGL.so')
         self.assertEqual([], self._get_paths_from_nodes(node.users))
 
-    def test_compute_predefined_vndk_stable(self):
+    def test_compute_predefined_vndk_sp(self):
         lib_names = (
-            # SP-HAL VNDK-stable
+            # SP-HAL VNDK-SP
             'libhidlmemory',
 
             # HIDL interfaces.
@@ -247,24 +247,24 @@ class ELFLinkerTest(unittest.TestCase):
             'android.hardware.graphics.common@1.0',
             'android.hardware.graphics.mapper@2.0',
 
-            # SP-NDK VNDK-stable (HIDL related)
+            # SP-NDK VNDK-SP (HIDL related)
             'libhidl-gen-utils',
             'libhidlbase',
             'libhidltransport',
             'libhwbinder',
 
-            # SP-NDK VNDK-stable (HIDL related)
+            # SP-NDK VNDK-SP (HIDL related)
             'libcutils',
             'liblzma',
 
-            # SP-NDK VNDK-stable (should be removed)
+            # SP-NDK VNDK-SP (should be removed)
             'libbacktrace',
             'libbase',
             'libc++',
             'libunwind',
             'libziparchive',
 
-            # Bad VNDK-stable (must be removed)
+            # Bad VNDK-SP (must be removed)
             'libhardware',
             'libnativeloader',
             'libvintf',
@@ -274,31 +274,30 @@ class ELFLinkerTest(unittest.TestCase):
             'libutils',
         )
 
-        # Add VNDK-stable libraries.
+        # Add VNDK-SP libraries.
         gb = GraphBuilder()
         for name in lib_names:
-            gb.add_multilib(PT_SYSTEM, name, extra_dir='vndk-stable')
+            gb.add_multilib(PT_SYSTEM, name, extra_dir='vndk-sp')
 
         # Add some unrelated libraries.
         gb.add_multilib(PT_SYSTEM, 'libfoo')
-        gb.add_multilib(PT_SYSTEM, 'libbar', extra_dir='vndk-stable')
+        gb.add_multilib(PT_SYSTEM, 'libbar', extra_dir='vndk-sp')
 
         gb.resolve()
 
-        # Compute VNDK-stable and check the result.
-        vndk_stable = set(
-                lib.path for lib in gb.graph.compute_predefined_vndk_stable())
+        # Compute VNDK-SP and check the result.
+        vndk_sp = set(lib.path for lib in gb.graph.compute_predefined_vndk_sp())
 
         for lib_dir_name in ('lib', 'lib64'):
-            lib_dir = '/system/' + lib_dir_name + '/vndk-stable'
+            lib_dir = '/system/' + lib_dir_name + '/vndk-sp'
             for name in lib_names:
-                self.assertIn(os.path.join(lib_dir, name + '.so'), vndk_stable)
+                self.assertIn(os.path.join(lib_dir, name + '.so'), vndk_sp)
 
-        self.assertNotIn('/system/lib/libfoo.so', vndk_stable)
-        self.assertNotIn('/system/lib64/libfoo.so', vndk_stable)
+        self.assertNotIn('/system/lib/libfoo.so', vndk_sp)
+        self.assertNotIn('/system/lib64/libfoo.so', vndk_sp)
 
-        self.assertNotIn('/system/lib/vndk-stable/libbar.so', vndk_stable)
-        self.assertNotIn('/system/lib64/vndk-stable/libbar.so', vndk_stable)
+        self.assertNotIn('/system/lib/vndk-sp/libbar.so', vndk_sp)
+        self.assertNotIn('/system/lib64/vndk-sp/libbar.so', vndk_sp)
 
     def test_compute_predefined_sp_hal(self):
         gb = GraphBuilder()
@@ -384,10 +383,10 @@ class ELFLinkerTest(unittest.TestCase):
         # LL-NDK (should be excluded from result)
         gb.add_multilib(PT_SYSTEM, 'libc')
 
-        # SP-Both VNDK-stable
+        # SP-Both VNDK-SP
         gb.add_multilib(PT_SYSTEM, 'libsp_both_vs')
 
-        # SP-NDK VNDK-stable
+        # SP-NDK VNDK-SP
         gb.add_multilib(PT_SYSTEM, 'libcutils_dep', dt_needed=['libc.so'])
         gb.add_multilib(PT_SYSTEM, 'libcutils',
                         dt_needed=['libc.so', 'libcutils_dep.so',
@@ -406,7 +405,7 @@ class ELFLinkerTest(unittest.TestCase):
         gb.add_multilib(PT_VENDOR, 'libllvm_vendor',
                         dt_needed=['libc.so', 'libllvm_vendor_dep.so'])
 
-        # SP-HAL VNDK-stable
+        # SP-HAL VNDK-SP
         gb.add_multilib(PT_SYSTEM, 'libhidlbase')
         gb.add_multilib(PT_SYSTEM, 'libhidlmemory',
                         dt_needed=['libhidlbase.so', 'libsp_both_vs.so'])
@@ -429,35 +428,32 @@ class ELFLinkerTest(unittest.TestCase):
 
         self.assertEqual(2 * 1, len(sp_lib.sp_hal))
         self.assertEqual(2 * 2, len(sp_lib.sp_hal_dep))
-        self.assertEqual(2 * 2, len(sp_lib.sp_hal_vndk_stable))
+        self.assertEqual(2 * 2, len(sp_lib.vndk_sp_hal))
         self.assertEqual(2 * 1, len(sp_lib.sp_ndk))
-        self.assertEqual(2 * 3, len(sp_lib.sp_ndk_vndk_stable))
-        self.assertEqual(2 * 1, len(sp_lib.sp_both_vndk_stable))
+        self.assertEqual(2 * 3, len(sp_lib.sp_ndk_indirect))
+        self.assertEqual(2 * 1, len(sp_lib.vndk_sp_both))
 
         sp_hal = self._get_paths_from_nodes(sp_lib.sp_hal)
         sp_hal_dep = self._get_paths_from_nodes(sp_lib.sp_hal_dep)
-        sp_hal_vndk_stable = self._get_paths_from_nodes(
-                sp_lib.sp_hal_vndk_stable)
+        vndk_sp_hal = self._get_paths_from_nodes(sp_lib.vndk_sp_hal)
 
         sp_ndk = self._get_paths_from_nodes(sp_lib.sp_ndk)
-        sp_ndk_vndk_stable = self._get_paths_from_nodes(
-                sp_lib.sp_ndk_vndk_stable)
+        sp_ndk_indirect = self._get_paths_from_nodes(sp_lib.sp_ndk_indirect)
 
-        sp_both_vndk_stable = self._get_paths_from_nodes(
-                sp_lib.sp_both_vndk_stable)
+        vndk_sp_both = self._get_paths_from_nodes(sp_lib.vndk_sp_both)
 
         for lib_dir in ('lib', 'lib64'):
             # SP-Both
             self.assertIn('/system/{}/libsp_both_vs.so'.format(lib_dir),
-                          sp_both_vndk_stable)
+                          vndk_sp_both)
 
             # SP-NDK dependencies
             self.assertIn('/system/{}/libcutils.so'.format(lib_dir),
-                          sp_ndk_vndk_stable)
+                          sp_ndk_indirect)
             self.assertIn('/system/{}/libcutils_dep.so'.format(lib_dir),
-                          sp_ndk_vndk_stable)
+                          sp_ndk_indirect)
             self.assertIn('/system/{}/libutils.so'.format(lib_dir),
-                          sp_ndk_vndk_stable)
+                          sp_ndk_indirect)
 
             # SP-NDK
             self.assertIn('/system/{}/libEGL.so'.format(lib_dir), sp_ndk)
@@ -468,11 +464,11 @@ class ELFLinkerTest(unittest.TestCase):
             self.assertIn('/vendor/{}/libllvm_vendor_dep.so'.format(lib_dir),
                           sp_hal_dep)
 
-            # SP-HAL VNDK-stable
+            # SP-HAL VNDK-SP
             self.assertIn('/system/{}/libhidlbase.so'.format(lib_dir),
-                          sp_hal_vndk_stable)
+                          vndk_sp_hal)
             self.assertIn('/system/{}/libhidlmemory.so'.format(lib_dir),
-                          sp_hal_vndk_stable)
+                          vndk_sp_hal)
 
             # SP-HAL
             self.assertIn('/vendor/{}/egl/libEGL_chipset.so'.format(lib_dir),
@@ -482,9 +478,9 @@ class ELFLinkerTest(unittest.TestCase):
             libc_path = '/system/{}/libc.so'.format(lib_dir)
             self.assertNotIn(libc_path, sp_hal)
             self.assertNotIn(libc_path, sp_hal_dep)
-            self.assertNotIn(libc_path, sp_hal_vndk_stable)
+            self.assertNotIn(libc_path, vndk_sp_hal)
             self.assertNotIn(libc_path, sp_ndk)
-            self.assertNotIn(libc_path, sp_ndk_vndk_stable)
+            self.assertNotIn(libc_path, sp_ndk_indirect)
 
 
     def test_find_existing_vndk(self):
