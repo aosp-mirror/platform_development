@@ -49,6 +49,10 @@ static llvm::cl::opt<bool> advice_only(
     "advice-only", llvm::cl::desc("Advisory mode only"), llvm::cl::Optional,
     llvm::cl::cat(header_checker_category));
 
+static llvm::cl::opt<bool> suppress_local_warnings(
+    "suppress_local_warnings", llvm::cl::desc("suppress local warnings"),
+    llvm::cl::Optional, llvm::cl::cat(header_checker_category));
+
 static llvm::cl::opt<bool> allow_extensions(
     "allow-extensions",
     llvm::cl::desc("Do not return a non zero status on extensions"),
@@ -79,6 +83,28 @@ int main(int argc, const char **argv) {
                       ignored_symbols);
 
   CompatibilityStatus status  = judge.GenerateCompatibilityReport();
+
+  std::string status_str = "";
+  switch (status) {
+    case CompatibilityStatus::INCOMPATIBLE:
+      status_str = "broken";
+      break;
+    case CompatibilityStatus::EXTENSION:
+      status_str = "extended";
+      break;
+    default:
+      break;
+  }
+
+  if (!suppress_local_warnings && status) {
+    llvm::errs() << "******************************************************\n"
+                 << "VNDK Abi "
+                 << status_str
+                 << ":"
+                 << " Please check compatiblity report at : "
+                 << compatibility_report << "\n"
+                 << "*****************************************************\n";
+  }
 
   if (advice_only) {
     return CompatibilityStatus::COMPATIBLE;
