@@ -2339,6 +2339,130 @@ class CheckDepCommand(ELFGraphCommand):
         return 0 if num_errors == 0 else 1
 
 
+class DepGraphCommand(ELFGraphCommand):
+    def __init__(self):
+        super(DepGraphCommand, self).__init__(
+                'dep-graph', help='Show the eligible dependencies graph')
+
+    def add_argparser_options(self, parser):
+        super(DepGraphCommand, self).add_argparser_options(parser)
+
+        parser.add_argument('--tag-file', required=True)
+        parser.add_argument(
+                '--output', '-o', help='output directory')
+
+    def _load_tag_file(self, tag_file_path):
+        res = TaggedLibDict(set(), set(), set(), set(), set(), set(), set(),
+                            set())
+
+        mapping = {
+            'll-ndk': res.ll_ndk,
+            'll-ndk-indirect': res.ndk_indirect,
+            'sp-ndk': res.sp_ndk,
+            'sp-ndk-indirect': res.ndk_indirect,
+            'hl-ndk': res.hl_ndk,
+            'vndk-sp-hal': res.vndk_sp,
+            'vndk-sp-both': res.vndk_sp,
+            'vndk-sp-indirect': res.vndk,  # Visible to non-SP-HAL
+            'vndk': res.vndk,
+            'vndk-indirect': res.vndk_indirect,
+            'fwk-only': res.fwk_only,
+            'remove': set(),  # Drop from system lib. Tag as vendor lib.
+        }
+
+        with open(tag_file_path, 'r') as tag_file:
+            csv_reader = csv.reader(tag_file)
+            for lib_name, tag in csv_reader:
+                mapping[tag.lower()].add(os.path.basename(lib_name))
+
+        return res
+
+    def _get_tag_from_lib(self, lib, tags):
+        # Tempororily add the TAG_DEP_TABLE to show permission
+        TAG_DEP_TABLE = {
+            'vendor': ('ll_ndk', 'sp_ndk', 'vndk_sp', 'vndk', 'vndk_indirect'),
+        }
+
+        tag_hierarchy = []
+        eligible_for_vendor = TAG_DEP_TABLE['vendor']
+        for tag in TAGGED_LIB_DICT_FIELDS:
+            if tag == 'vendor':
+                tag_hierarchy.append('vendor.private.bin')
+            else:
+                pub = 'public' if tag in eligible_for_vendor else 'private'
+                tag_hierarchy.append('system.{}.{}'.format(pub, tag))
+        lib_name = os.path.basename(lib.path)
+        if lib.partition == PT_SYSTEM:
+            for i, lib_set in enumerate(tags):
+                if lib_name in lib_set:
+                    return tag_hierarchy[i]
+            return 'system.private.bin'
+        else:
+            return 'vendor.private.bin'
+
+    def _check_if_allowed(self, my_tag, other_tag):
+        my = my_tag.split('.')
+        other = other_tag.split('.')
+        if my[0] == 'system' and other[0] == 'vendor':
+            return False
+        if my[0] == 'vendor' and other[0] == 'system' \
+                             and other[1] == 'private':
+            return False
+        return True
+
+    def _get_dep_graph(self, graph, tags):
+        data = []
+        violate_libs = dict()
+        system_libs = graph.lib_pt[PT_SYSTEM].values()
+        vendor_libs = graph.lib_pt[PT_VENDOR].values()
+        for lib in itertools.chain(system_libs, vendor_libs):
+            tag = self._get_tag_from_lib(lib, tags)
+            violate_count = 0
+            lib_item = {
+                'name': lib.path,
+                'tag': tag,
+                'depends': [],
+                'violates': [],
+            }
+            for dep in lib.deps:
+                if self._check_if_allowed(tag,
+                        self._get_tag_from_lib(dep, tags)):
+                    lib_item['depends'].append(dep.path)
+                else:
+                    lib_item['violates'].append(dep.path)
+                    violate_count += 1;
+            lib_item['violate_count'] = violate_count
+            if violate_count > 0:
+                if not tag in violate_libs:
+                    violate_libs[tag] = []
+                violate_libs[tag].append((lib.path, violate_count))
+            data.append(lib_item)
+        return data, violate_libs
+
+    def main(self, args):
+        graph = ELFLinker.create(args.system, args.system_dir_as_vendor,
+                                 args.vendor, args.vendor_dir_as_system,
+                                 args.load_extra_deps)
+
+        tags = self._load_tag_file(args.tag_file)
+        data, violate_libs = self._get_dep_graph(graph, tags)
+        data.sort(key=lambda lib_item: (lib_item['tag'],
+                                        lib_item['violate_count']))
+        for libs in violate_libs.values():
+            libs.sort(key=lambda libs: libs[1], reverse=True)
+
+        makedirs(args.output, exist_ok=True)
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        for name in ('index.html', 'dep-graph.js', 'dep-graph.css'):
+            shutil.copyfile(os.path.join(script_dir, 'assets/visual', name),
+                            os.path.join(args.output, name))
+        with open(os.path.join(args.output, 'dep-data.js'), 'w') as f:
+            f.write('var violatedLibs = ' + json.dumps(violate_libs) +
+                    '\nvar depData = ' + json.dumps(data) + ';')
+
+        return 0
+
+
 class VNDKSPCommand(ELFGraphCommand):
     def __init__(self):
         super(VNDKSPCommand, self).__init__(
@@ -2401,6 +2525,7 @@ def main():
     register_subcmd(DepsClosureCommand())
     register_subcmd(DepsInsightCommand())
     register_subcmd(CheckDepCommand())
+    register_subcmd(DepGraphCommand())
     register_subcmd(SpLibCommand())
     register_subcmd(VNDKSPCommand())
 
