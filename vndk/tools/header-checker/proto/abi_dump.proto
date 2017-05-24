@@ -4,7 +4,7 @@ package abi_dump;
 
 message BasicTypeAbi {
   // The type's name. for eg : a record field's type.
-  required string name = 1;
+  optional string name = 1;
   // Optional since templated types will not have this information.
   optional uint64 size = 2 [default = 0];
   optional uint32 alignment = 3 [default = 0];
@@ -17,35 +17,35 @@ enum AccessSpecifier {
 }
 
 message BasicNamedAndTypedDecl {
-  required BasicTypeAbi type_abi = 1;
+  optional BasicTypeAbi type_abi = 1;
   // The TypedDecl's name.
-  required string name = 2;
-  required AccessSpecifier access = 3;
+  optional string name = 2;
+  optional AccessSpecifier access = 3;
   optional string linker_set_key = 4;
 }
 
 message FunctionDecl {
-  required BasicNamedAndTypedDecl basic_abi = 1;
+  optional BasicNamedAndTypedDecl basic_abi = 1;
   // Mangled name.
-  required string mangled_function_name = 2;
-  required string source_file = 3;
+  optional string mangled_function_name = 2;
+  optional string source_file = 3;
   repeated ParamDecl parameters = 4;
   optional TemplateInfo template_info = 5;
 }
 
 message ParamDecl {
-  required BasicNamedAndTypedDecl basic_abi = 1;
-  required bool default_arg = 2;
+  optional BasicNamedAndTypedDecl basic_abi = 1;
+  optional bool default_arg = 2;
 }
 
 message RecordFieldDecl {
   // For future additions.
-  required BasicNamedAndTypedDecl basic_abi = 1;
+  optional BasicNamedAndTypedDecl basic_abi = 1;
 }
 
 message EnumFieldDecl {
-  required BasicNamedAndTypedDecl basic_abi = 1;
-  required int64 enum_field_value = 2; // assumption: fits int64
+  optional BasicNamedAndTypedDecl basic_abi = 1;
+  optional int64 enum_field_value = 2; // assumption: fits int64
 }
 
 message TemplateInfo {
@@ -53,17 +53,17 @@ message TemplateInfo {
 }
 
 message TemplateElement {
-  required BasicTemplateElementAbi basic_abi = 1;
+  optional BasicTemplateElementAbi basic_abi = 1;
   message BasicTemplateElementAbi {
     optional BasicTypeAbi type_abi = 1;
     optional string name = 2;
-    required string linker_set_key = 3;
+    optional string linker_set_key = 3;
   }
 }
 
 message CXXBaseSpecifier {
-  required BasicNamedAndTypedDecl basic_abi = 1;
-  required bool is_virtual = 2;
+  optional BasicNamedAndTypedDecl basic_abi = 1;
+  optional bool is_virtual = 2;
 }
 
 message VTableComponent {
@@ -77,7 +77,7 @@ message VTableComponent {
     DeletingDtorPointer = 6;
     UnusedFunctionPointer = 7;
   }
-  required Kind kind = 1;
+  optional Kind kind = 1;
   optional string mangled_component_name = 2 [default = ""];
   optional uint64 value = 3 [default = 0];
 }
@@ -87,24 +87,24 @@ message VTableLayout {
 }
 
 message RecordDecl {
-  required BasicNamedAndTypedDecl basic_abi = 1;
+  optional BasicNamedAndTypedDecl basic_abi = 1;
   repeated RecordFieldDecl fields = 2;
   repeated CXXBaseSpecifier base_specifiers = 3;
-  required string source_file = 4;
+  optional string source_file = 4;
   optional TemplateInfo template_info = 5;
-  required string mangled_record_name = 6;
+  optional string mangled_record_name = 6;
   optional VTableLayout vtable_layout = 7;
 }
 
 message EnumDecl {
-  required BasicNamedAndTypedDecl basic_abi = 1;
+  optional BasicNamedAndTypedDecl basic_abi = 1;
   repeated EnumFieldDecl enum_fields = 2;
-  required string source_file = 3;
+  optional string source_file = 3;
 }
 
 message GlobalVarDecl {
-  required BasicNamedAndTypedDecl basic_abi = 1;
-  required string source_file = 2;
+  optional BasicNamedAndTypedDecl basic_abi = 1;
+  optional string source_file = 2;
 }
 
 message TranslationUnit {
