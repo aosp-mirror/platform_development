@@ -39,10 +39,10 @@ class GenericRefsTest(unittest.TestCase):
         self.ref.add('/system/lib64/libm.so',
                      MockELF({'cos', 'sin', 'tan'}))
 
-    def test_create_from_dir(self):
+    def test_create_from_sym_dir(self):
         input_dir = os.path.join(SCRIPT_DIR, 'testdata', 'test_generic_refs')
 
-        g = GenericRefs.create_from_dir(input_dir)
+        g = GenericRefs.create_from_sym_dir(input_dir)
         self.assertEqual(4, len(g.refs))
 
         self.assertIn('/system/lib/libc.so', g.refs)
