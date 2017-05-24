@@ -1590,7 +1590,7 @@ class GenericRefs(object):
     def add(self, name, elf):
         self.refs[name] = elf
 
-    def _load_from_dir(self, root):
+    def _load_from_sym_dir(self, root):
         root = os.path.abspath(root)
         prefix_len = len(root) + 1
         for base, dirnames, filenames in os.walk(root):
@@ -1603,9 +1603,21 @@ class GenericRefs(object):
                     self.add(lib_name, ELF.load_dump(path))
 
     @staticmethod
-    def create_from_dir(root):
+    def create_from_sym_dir(root):
         result = GenericRefs()
-        result._load_from_dir(root)
+        result._load_from_sym_dir(root)
+        return result
+
+    def _load_from_image_dir(self, root, prefix):
+        root = os.path.abspath(root)
+        root_len = len(root) + 1
+        for path, elf in scan_elf_files(root):
+            self.add(os.path.join(prefix, path[root_len:]), elf)
+
+    @staticmethod
+    def create_from_image_dir(root, prefix):
+        result = GenericRefs()
+        result._load_from_image_dir(root, prefix)
         return result
 
     def classify_lib(self, lib):
@@ -1705,14 +1717,26 @@ class ELFGraphCommand(Command):
                 '--vendor-dir-as-system', action='append',
                 help='sub directory of vendor partition that has system files')
 
+        parser.add_argument(
+                '--load-generic-refs',
+                help='compare with generic reference symbols')
+
+        parser.add_argument(
+                '--aosp-system',
+                help='compare with AOSP generic system image directory')
+
+    def get_generic_refs_from_args(self, args):
+        if args.load_generic_refs:
+            return GenericRefs.create_from_sym_dir(args.load_generic_refs)
+        if args.aosp_system:
+            return GenericRefs.create_from_image_dir(args.aosp_system,
+                                                     '/system')
+        return None
+
 
 class VNDKCommandBase(ELFGraphCommand):
     def add_argparser_options(self, parser):
         super(VNDKCommandBase, self).add_argparser_options(parser)
-
-        parser.add_argument(
-                '--load-generic-refs',
-                help='compare with generic reference symbols')
 
         parser.add_argument(
                 '--ban-vendor-lib-dep', action='append',
@@ -1744,11 +1768,6 @@ class VNDKCommandBase(ELFGraphCommand):
     def check_dirs_from_args(self, args):
         self._check_arg_dir_exists('--system', args.system)
         self._check_arg_dir_exists('--vendor', args.vendor)
-
-    def _get_generic_refs_from_args(self, args):
-        if not args.load_generic_refs:
-            return None
-        return GenericRefs.create_from_dir(args.load_generic_refs)
 
     def _get_banned_libs_from_args(self, args):
         if not args.ban_vendor_lib_dep:
@@ -1786,7 +1805,7 @@ class VNDKCommandBase(ELFGraphCommand):
 
         self.check_dirs_from_args(args)
 
-        generic_refs = self._get_generic_refs_from_args(args)
+        generic_refs = self.get_generic_refs_from_args(args)
         banned_libs = self._get_banned_libs_from_args(args)
 
         graph = ELFLinker.create(args.system, args.system_dir_as_vendor,
@@ -2446,14 +2465,8 @@ class SpLibCommand(ELFGraphCommand):
     def add_argparser_options(self, parser):
         super(SpLibCommand, self).add_argparser_options(parser)
 
-        parser.add_argument(
-                '--load-generic-refs',
-                help='compare with generic reference symbols')
-
     def main(self, args):
-        generic_refs = None
-        if args.load_generic_refs:
-            generic_refs = GenericRefs.create_from_dir(args.load_generic_refs)
+        generic_refs = self.get_generic_refs_from_args(args)
 
         graph = ELFLinker.create(args.system, args.system_dir_as_vendor,
                                  args.vendor, args.vendor_dir_as_system,
