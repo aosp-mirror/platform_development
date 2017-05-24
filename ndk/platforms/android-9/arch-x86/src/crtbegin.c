@@ -60,5 +60,5 @@ void _start() {
 #include "__dso_handle.h"
 #include "atexit.h"
 #ifdef __i386__
-# include "../../arch-x86/bionic/__stack_chk_fail_local.h"
+# include "__stack_chk_fail_local.h"
 #endif
