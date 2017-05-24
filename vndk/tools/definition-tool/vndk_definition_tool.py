@@ -1079,50 +1079,6 @@ class ELFLinker(object):
         return SPLibResult(sp_hal, sp_hal_dep, vndk_sp_hal, sp_ndk,
                            sp_ndk_indirect, vndk_sp_both)
 
-    def _po_component_sorted(self, lib_set, get_successors,
-                             get_strong_successors):
-        result = []
-
-        idx_dict = {}
-        idx_counter = 0
-        has_scc = set()
-
-        s = []
-        p = []
-
-        def traverse(v):
-            idx_dict[v] = len(idx_dict)
-
-            s.append(v)
-            p.append(v)
-
-            for succ in get_successors(v):
-                if succ not in lib_set:
-                    continue
-                succ_idx = idx_dict.get(succ)
-                if succ_idx is None:
-                    traverse(succ)
-                elif succ not in has_scc:
-                    while idx_dict[p[-1]] > succ_idx:
-                        p.pop()
-
-            if p[-1] is v:
-                scc = set()
-                while True:
-                    w = s.pop()
-                    scc.add(w)
-                    has_scc.add(w)
-                    if w is v:
-                        break
-                p.pop()
-                result.append(self._po_sorted(scc, get_strong_successors))
-
-        for v in lib_set:
-            if v not in idx_dict:
-                traverse(v)
-
-        return result
-
     def _po_sorted(self, lib_set, get_successors):
         result = []
         visited = set()
