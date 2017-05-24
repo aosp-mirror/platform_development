@@ -1832,15 +1832,6 @@ class VNDKCommand(VNDKCommandBase):
                 '--warn-incorrect-partition', action='store_true',
                 help='warn about libraries only have cross partition linkages')
 
-        parser.add_argument(
-                '--warn-high-level-ndk-deps', action='store_true',
-                help='warn about VNDK depends on high-level NDK')
-
-        parser.add_argument(
-                '--warn-banned-vendor-lib-deps', action='store_true',
-                help='warn when a vendor binaries depends on banned lib')
-
-
     def _warn_incorrect_partition_lib_set(self, lib_set, partition, error_msg):
         for lib in lib_set.values():
             if not lib.num_users:
@@ -1858,24 +1849,6 @@ class VNDKCommand(VNDKCommandBase):
                 graph.lib_pt[PT_SYSTEM], PT_SYSTEM,
                 'warning: {}: This is a framework library with vendor-only '
                 'usages.')
-
-    def _warn_high_level_ndk_deps(self, lib_sets):
-        for lib_set in lib_sets:
-            for lib in lib_set:
-                for dep in lib.deps:
-                    if dep.is_hl_ndk:
-                        print('warning: {}: VNDK is using high-level NDK {}.'
-                                .format(lib.path, dep.path), file=sys.stderr)
-
-    def _warn_banned_vendor_lib_deps(self, graph, banned_libs):
-        for lib in graph.lib_pt[PT_VENDOR].values():
-            for dep in lib.deps:
-                banned = banned_libs.is_banned(dep.path)
-                if banned:
-                    print('warning: {}: Vendor binary depends on banned {} '
-                          '(reason: {})'.format(
-                              lib.path, dep.path, banned.reason),
-                          file=sys.stderr)
 
     def _check_ndk_extensions(self, graph, generic_refs):
         for lib_set in (graph.lib32, graph.lib64):
@@ -1895,18 +1868,10 @@ class VNDKCommand(VNDKCommandBase):
         if args.warn_incorrect_partition:
             self._warn_incorrect_partition(graph)
 
-        if args.warn_banned_vendor_lib_deps:
-            self._warn_banned_vendor_lib_deps(graph, banned_libs)
-
         # Compute vndk heuristics.
         vndk_lib = graph.compute_vndk(vndk_customized_for_system,
                                       vndk_customized_for_vendor, generic_refs,
                                       banned_libs)
-
-        if args.warn_high_level_ndk_deps:
-            self._warn_high_level_ndk_deps(
-                    (vndk_lib.vndk_core, vndk_lib.vndk_indirect,
-                     vndk_lib.vndk_fwk_ext, vndk_lib.vndk_vnd_ext))
 
         # Print results.
         print_vndk_lib(vndk_lib)
