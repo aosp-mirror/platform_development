@@ -61,6 +61,10 @@ static llvm::cl::opt<std::string> arch(
     "arch", llvm::cl::desc("<arch>"), llvm::cl::Optional,
     llvm::cl::cat(header_linker_category));
 
+static llvm::cl::opt<bool> no_filter(
+    "no-filter", llvm::cl::desc("Do not filter any abi"), llvm::cl::Optional,
+    llvm::cl::cat(header_linker_category));
+
 class HeaderAbiLinker {
  public:
   HeaderAbiLinker(
@@ -301,6 +305,9 @@ bool HeaderAbiLinker::ParseVersionScriptFiles() {
 int main(int argc, const char **argv) {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
   llvm::cl::ParseCommandLineOptions(argc, argv, "header-linker");
+  if (no_filter) {
+    static_cast<std::vector<std::string> &>(exported_header_dirs).clear();
+  }
   HeaderAbiLinker Linker(dump_files, exported_header_dirs,
                          version_script, linked_dump, arch, api);
   if (!Linker.LinkAndDump()) {
