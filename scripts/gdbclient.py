@@ -123,6 +123,8 @@ def handle_switches(args, sysroot):
     pid = None
     run_cmd = None
 
+    args.su_cmd = ["su", args.user] if args.user else []
+
     if args.target_pid:
         # Fetch the binary using the PID later.
         pid = args.target_pid
@@ -136,12 +138,12 @@ def handle_switches(args, sysroot):
             sys.exit("commands passed to -r must use absolute paths")
         run_cmd = args.run_cmd
         binary_file, local = gdbrunner.find_file(device, run_cmd[0], sysroot,
-                                                 user=args.user)
+                                                 run_as_cmd=args.su_cmd)
     if binary_file is None:
         assert pid is not None
         try:
             binary_file, local = gdbrunner.find_binary(device, pid, sysroot,
-                                                       user=args.user)
+                                                       run_as_cmd=args.su_cmd)
         except adb.ShellError:
             sys.exit("failed to pull binary for PID {}".format(pid))
 
@@ -242,7 +244,7 @@ def main():
         gdbrunner.start_gdbserver(
             device, gdbserver_local_path, gdbserver_remote_path,
             target_pid=pid, run_cmd=run_cmd, debug_socket=debug_socket,
-            port=args.port, user=args.user)
+            port=args.port, run_as_cmd=args.su_cmd)
 
         # Generate a gdb script.
         gdb_commands = generate_gdb_script(sysroot=sysroot,
