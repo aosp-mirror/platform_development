@@ -488,6 +488,7 @@ class NDKLibDict(object):
         'liblog.so',
         'libm.so',
         'libstdc++.so',
+        'libvndksupport.so',
     )
 
     SP_NDK_LIB_NAMES = (
