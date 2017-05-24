@@ -239,39 +239,24 @@ class ELFLinkerTest(unittest.TestCase):
 
     def test_compute_predefined_vndk_sp(self):
         lib_names = (
-            # SP-HAL VNDK-SP
-            'libhidlmemory',
-
-            # HIDL interfaces.
             'android.hardware.graphics.allocator@2.0',
             'android.hardware.graphics.common@1.0',
             'android.hardware.graphics.mapper@2.0',
-
-            # SP-NDK VNDK-SP (HIDL related)
-            'libhidl-gen-utils',
+            'android.hardware.renderscript@1.0',
+            'libRSCpuRef',
+            'libRSDriver',
+            'libRS_internal',
+            'libbase',
+            'libbcinfo',
+            'libc++',
+            'libcompiler_rt',
+            'libcutils',
+            'libhardware',
             'libhidlbase',
             'libhidltransport',
             'libhwbinder',
-
-            # SP-NDK VNDK-SP (HIDL related)
-            'libcutils',
-            'liblzma',
-
-            # SP-NDK VNDK-SP (should be removed)
-            'libbacktrace',
-            'libbase',
-            'libc++',
-            'libunwind',
-            'libziparchive',
-
-            # Bad VNDK-SP (must be removed)
-            'libhardware',
-            'libnativeloader',
-            'libvintf',
-
-            # SP-NDK dependencies (SP-NDK only)
-            'libui',
             'libutils',
+            'libz',
         )
 
         # Add VNDK-SP libraries.
@@ -298,6 +283,43 @@ class ELFLinkerTest(unittest.TestCase):
 
         self.assertNotIn('/system/lib/vndk-sp/libbar.so', vndk_sp)
         self.assertNotIn('/system/lib64/vndk-sp/libbar.so', vndk_sp)
+
+    def test_compute_predefined_vndk_sp_indirect(self):
+        lib_names = (
+            'libbacktrace',
+            'libblas',
+            'libft2',
+            'liblzma',
+            'libpng',
+            'libunwind',
+        )
+
+        # Add VNDK-SP-Indirect libraries.
+        gb = GraphBuilder()
+        for name in lib_names:
+            gb.add_multilib(PT_SYSTEM, name, extra_dir='vndk-sp')
+
+        # Add some unrelated libraries.
+        gb.add_multilib(PT_SYSTEM, 'libfoo')
+        gb.add_multilib(PT_SYSTEM, 'libbar', extra_dir='vndk-sp')
+
+        gb.resolve()
+
+        # Compute VNDK-SP-Indirect and check the result.
+        vndk_sp_indirect = gb.graph.compute_predefined_vndk_sp_indirect()
+        vndk_sp_indirect = set(lib.path for lib in vndk_sp_indirect)
+
+        for lib_dir_name in ('lib', 'lib64'):
+            lib_dir = '/system/' + lib_dir_name + '/vndk-sp'
+            for name in lib_names:
+                self.assertIn(os.path.join(lib_dir, name + '.so'),
+                              vndk_sp_indirect)
+
+        self.assertNotIn('/system/lib/libfoo.so', vndk_sp_indirect)
+        self.assertNotIn('/system/lib64/libfoo.so', vndk_sp_indirect)
+
+        self.assertNotIn('/system/lib/vndk-sp/libbar.so', vndk_sp_indirect)
+        self.assertNotIn('/system/lib64/vndk-sp/libbar.so', vndk_sp_indirect)
 
     def test_compute_predefined_sp_hal(self):
         gb = GraphBuilder()

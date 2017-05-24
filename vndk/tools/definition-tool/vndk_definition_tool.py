@@ -986,63 +986,64 @@ class ELFLinker(object):
         """Find all vndk-sp libraries."""
 
         path_patterns = (
-            # SP-HAL VNDK-stable
-            '^.*/libhidlmemory\\.so$',
-
-            # SP-NDK VNDK-stable
+            # Visible to SP-HALs
             '^.*/android\\.hardware\\.graphics\\.allocator@2\\.0\\.so$',
             '^.*/android\\.hardware\\.graphics\\.common@1\\.0\\.so$',
             '^.*/android\\.hardware\\.graphics\\.mapper@2\\.0\\.so$',
-            '^.*/android\\.hidl\\.base@1\\.0\\.so$',
+            '^.*/android\\.hardware\\.renderscript@1\\.0\\.so$',
+            '^.*/libRSCpuRef\\.so$',
+            '^.*/libRSDriver\\.so$',
+            '^.*/libRS_internal\\.so$',
+            '^.*/libbase\\.so$',
+            '^.*/libbcinfo\\.so$',
+            '^.*/libc\\+\\+\\.so$',
+            '^.*/libcompiler_rt\\.so$',
             '^.*/libcutils\\.so$',
-            '^.*/libhidl-gen-utils\\.so$',
+            '^.*/libhardware\\.so$',
             '^.*/libhidlbase\\.so$',
             '^.*/libhidltransport\\.so$',
             '^.*/libhwbinder\\.so$',
-            '^.*/liblzma\\.so$',
-
-            # SP-NDK VNDK-stable (should to be removed)
-            '^.*/libbacktrace\\.so$',
-            '^.*/libbase\\.so$',
-            '^.*/libc\\+\\+\\.so$',
-            '^.*/libunwind\\.so$',
-            '^.*/libziparchive\\.so$',
-
-            # SP-NDK dependencies (SP-NDK only)
-            '^.*/libui\\.so$',
             '^.*/libutils\\.so$',
-
-            # Bad vndk-sp (must be removed)
-            '^.*/libhardware\\.so$',
-            '^.*/libnativeloader\\.so$',
-            '^.*/libvintf\\.so$',
-
-            # Other libraries.
             '^.*/libz\\.so$',
-        )
 
+            # Only for o-release
+            '^.*/android\\.hidl\\.base@1\\.0\\.so$',
+        )
+        return self.compute_path_matched_lib(path_patterns)
+
+
+    def compute_predefined_vndk_sp_indirect(self):
+        """Find all vndk-sp-indirect libraries."""
+        path_patterns = (
+            # Invisible to SP-HALs
+            '^.*/libbacktrace\\.so$',
+            '^.*/libblas\\.so$',
+            '^.*/libft2\\.so$',
+            '^.*/liblzma\\.so$',
+            '^.*/libpng\\.so$',
+            '^.*/libunwind\\.so$',
+        )
         return self.compute_path_matched_lib(path_patterns)
 
     def compute_predefined_sp_hal(self):
         """Find all same-process HALs."""
-
         path_patterns = (
             # OpenGL-related
             '^/vendor/.*/libEGL_.*\\.so$',
-            '^/vendor/.*/libGLES.*\\.so$',
+            '^/vendor/.*/libGLES_.*\\.so$',
             '^/vendor/.*/libGLESv1_CM_.*\\.so$',
             '^/vendor/.*/libGLESv2_.*\\.so$',
             '^/vendor/.*/libGLESv3_.*\\.so$',
             # Vulkan
             '^/vendor/.*/vulkan.*\\.so$',
             # libRSDriver
-            '^/vendor/.*/libRSDriver.*\\.so$',
+            '^.*/android\\.hardware\\.renderscript@1\\.0-impl\\.so$',
             '^/vendor/.*/libPVRRS\\.so$',
+            '^/vendor/.*/libRSDriver.*\\.so$',
             # Gralloc mapper
             '^.*/gralloc\\..*\\.so$',
             '^.*/android\\.hardware\\.graphics\\.mapper@\\d+\\.\\d+-impl\\.so$',
         )
-
         return self.compute_path_matched_lib(path_patterns)
 
     def compute_sp_ndk(self):
@@ -2418,7 +2419,10 @@ class VNDKSPCommand(ELFGraphCommand):
 
         vndk_sp = graph.compute_predefined_vndk_sp()
         for lib in sorted_lib_path_list(vndk_sp):
-            print(lib)
+            print('vndk-sp:', lib)
+        vndk_sp_indirect = graph.compute_predefined_vndk_sp_indirect()
+        for lib in sorted_lib_path_list(vndk_sp_indirect):
+            print('vndk-sp-indirect:', lib)
         return 0
 
 
