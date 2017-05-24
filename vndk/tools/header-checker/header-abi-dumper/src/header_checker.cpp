@@ -44,6 +44,10 @@ static llvm::cl::list<std::string> exported_header_dirs(
     "I", llvm::cl::desc("<export_include_dirs>"), llvm::cl::Prefix,
     llvm::cl::ZeroOrMore, llvm::cl::cat(header_checker_category));
 
+static llvm::cl::opt<bool> no_filter(
+    "no-filter", llvm::cl::desc("Do not filter any abi"), llvm::cl::Optional,
+    llvm::cl::cat(header_checker_category));
+
 // Hide irrelevant command line options defined in LLVM libraries.
 static void HideIrrelevantCommandLineOptions() {
   llvm::StringMap<llvm::cl::Option *> &map = llvm::cl::getRegisteredOptions();
@@ -90,6 +94,10 @@ int main(int argc, const char **argv) {
   if (!compilations) {
     llvm::errs() << "ERROR: Clang compilation options not specified.\n";
     ::exit(1);
+  }
+
+  if (no_filter) {
+    static_cast<std::vector<std::string> &>(exported_header_dirs).clear();
   }
 
   // Initialize clang tools and run front-end action.
