@@ -99,11 +99,11 @@ def FormateTimeDelta(td):
   if seconds >= 3600:
     hours = int(seconds / 3600)
     seconds -= hours * 3600
-    result += "%dd" % hours
+    result += "%dh" % hours
   if seconds >= 60:
     minutes = int(seconds / 60)
     seconds -= minutes * 60
-    result += "%dh" % minutes
+    result += "%dm" % minutes
   if seconds > 0:
     result += "%ds" % seconds
   return result
