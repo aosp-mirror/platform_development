@@ -24,12 +24,15 @@ use Data::Dumper;
     "TypeInfo",
     # in SymbolInfo
     "Class",
+    "Const",
     "Header",
     "Line",
+    "NameSpace",
     "Param",
     "Return",
     "Source",
-    "SourceLine"
+    "SourceLine",
+    "TParam"
 );
 
 sub StripDebug {

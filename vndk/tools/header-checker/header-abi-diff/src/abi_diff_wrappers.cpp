@@ -294,6 +294,7 @@ DiffWrapper<FunctionDecl, FunctionDeclDiff>::Get() {
   google::protobuf::RepeatedPtrField<ParamDeclDiff> *pdiffs =
       func_diff->mutable_param_diffs();
   assert(func_diff->mutable_return_type_diffs() != nullptr);
+  func_diff->set_name(oldp_->basic_abi().linker_set_key());
   if (DiffBasicNamedAndTypedDecl(
           func_diff->mutable_return_type_diffs()->mutable_old(),
           func_diff->mutable_return_type_diffs()->mutable_new_(),
