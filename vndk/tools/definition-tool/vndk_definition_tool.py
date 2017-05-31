@@ -2125,10 +2125,165 @@ class DepsClosureCommand(ELFGraphCommand):
         return 0
 
 
-TAGGED_LIB_DICT_FIELDS = ('ll_ndk', 'sp_ndk', 'hl_ndk', 'ndk_indirect',
-                          'vndk_sp', 'vndk', 'vndk_indirect', 'fwk_only')
+class TaggedDict(object):
+    TAGS = {
+        'll_ndk', 'll_ndk_indirect', 'sp_ndk', 'sp_ndk_indirect',
+        'vndk_sp', 'vndk_sp_indirect', 'vndk_sp_indirect_private',
+        'vndk',
+        'fwk_only', 'fwk_only_rs',
+        'sp_hal', 'sp_hal_dep',
+        'vnd_only',
+        'remove',
+    }
 
-TaggedLibDict = collections.namedtuple('TaggedLibDict', TAGGED_LIB_DICT_FIELDS)
+    _TAG_ALIASES = {
+        'hl_ndk': 'fwk_only',  # Treat HL-NDK as FWK-ONLY.
+        'vndk_indirect': 'vndk',  # Legacy
+        'vndk_sp_hal': 'vndk_sp',  # Legacy
+        'vndk_sp_both': 'vndk_sp',  # Legacy
+    }
+
+    @classmethod
+    def _normalize_tag(cls, tag):
+        tag = tag.lower().replace('-', '_')
+        tag = cls._TAG_ALIASES.get(tag, tag)
+        if tag not in cls.TAGS:
+            raise ValueError('unknown lib tag ' + tag)
+        return tag
+
+    _LL_NDK_VIS = {'ll_ndk', 'll_ndk_indirect'}
+    _SP_NDK_VIS = {'ll_ndk', 'll_ndk_indirect', 'sp_ndk', 'sp_ndk_indirect'}
+    _VNDK_SP_VIS = {'ll_ndk', 'sp_ndk', 'vndk_sp', 'vndk_sp_indirect',
+                    'vndk_sp_indirect_private', 'fwk_only_rs'}
+    _FWK_ONLY_VIS = {'ll_ndk', 'll_ndk_indirect', 'sp_ndk', 'sp_ndk_indirect',
+                     'vndk_sp', 'vndk_sp_indirect', 'vndk_sp_indirect_private',
+                     'vndk', 'fwk_only', 'fwk_only_rs', 'sp_hal'}
+    _SP_HAL_VIS = {'ll_ndk', 'sp_ndk', 'vndk_sp', 'sp_hal', 'sp_hal_dep'}
+
+    _TAG_VISIBILITY = {
+        'll_ndk': _LL_NDK_VIS,
+        'll_ndk_indirect': _LL_NDK_VIS,
+        'sp_ndk': _SP_NDK_VIS,
+        'sp_ndk_indirect': _SP_NDK_VIS,
+
+        'vndk_sp': _VNDK_SP_VIS,
+        'vndk_sp_indirect': _VNDK_SP_VIS,
+        'vndk_sp_indirect_private': _VNDK_SP_VIS,
+
+        'vndk': {'ll_ndk', 'sp_ndk', 'vndk_sp', 'vndk_sp_indirect', 'vndk'},
+
+        'fwk_only': _FWK_ONLY_VIS,
+        'fwk_only_rs': _FWK_ONLY_VIS,
+
+        'sp_hal': _SP_HAL_VIS,
+        'sp_hal_dep': _SP_HAL_VIS,
+
+        'vnd_only': {'ll_ndk', 'sp_ndk', 'vndk_sp', 'vndk_sp_indirect',
+                     'vndk', 'sp_hal', 'sp_hal_dep', 'vnd_only'},
+
+        'remove': set(),
+    }
+
+    del _LL_NDK_VIS, _SP_NDK_VIS, _VNDK_SP_VIS, _FWK_ONLY_VIS, _SP_HAL_VIS
+
+    @classmethod
+    def is_tag_visible(cls, from_tag, to_tag):
+        return to_tag in cls._TAG_VISIBILITY[from_tag]
+
+    def __init__(self):
+        self._path_tag = dict()
+        for tag in self.TAGS:
+            setattr(self, tag, set())
+
+    def add(self, tag, lib):
+        lib_set = getattr(self, tag)
+        lib_set.add(lib)
+        self._path_tag[lib] = tag
+
+    def get_path_tag(self, lib):
+        try:
+            return self._path_tag[lib]
+        except KeyError:
+            return self.get_path_tag_default(lib)
+
+    def get_path_tag_default(self, lib):
+        raise NotImplementedError()
+
+    def is_path_visible(self, from_lib, to_lib):
+        return self.is_tag_visible(self.get_path_tag(from_lib),
+                                   self.get_path_tag(to_lib))
+
+
+class TaggedPathDict(TaggedDict):
+    def load_from_csv(self, fp):
+        reader = csv.reader(fp)
+
+        # Read first row and check the existence of the header.
+        try:
+            row = next(reader)
+        except StopIteration:
+            return
+
+        try:
+            path_col = row.index('Path')
+            tag_col = row.index('Tag')
+        except ValueError:
+            path_col = 0
+            tag_col = 1
+            self.add(self._normalize_tag(row[tag_col]), row[path_col])
+
+        # Read the rest of rows.
+        for row in reader:
+            self.add(self._normalize_tag(row[tag_col]), row[path_col])
+
+    @staticmethod
+    def create_from_csv(fp):
+        d = TaggedPathDict()
+        d.load_from_csv(fp)
+        return d
+
+    @staticmethod
+    def create_from_csv_path(path):
+        with open(path, 'r') as fp:
+            return TaggedPathDict.create_from_csv(fp)
+
+    @staticmethod
+    def _enumerate_paths(pattern):
+        if '${LIB}' in pattern:
+            yield pattern.replace('${LIB}', 'lib')
+            yield pattern.replace('${LIB}', 'lib64')
+        else:
+            yield pattern
+
+    def add(self, tag, path):
+        for path in self._enumerate_paths(path):
+            super(TaggedPathDict, self).add(tag, path)
+
+    def get_path_tag_default(self, path):
+        return 'vnd_only' if path.startswith('/vendor') else 'fwk_only'
+
+
+class TaggedLibDict(TaggedDict):
+    @staticmethod
+    def create_from_graph(graph, tagged_paths, generic_refs=None):
+        d = TaggedLibDict()
+
+        for lib in graph.lib_pt[PT_SYSTEM].values():
+            d.add(tagged_paths.get_path_tag(lib.path), lib)
+
+        sp_lib = graph.compute_sp_lib(generic_refs)
+        for lib in graph.lib_pt[PT_VENDOR].values():
+            if lib in sp_lib.sp_hal:
+                d.add('sp_hal', lib)
+            elif lib in sp_lib.sp_hal_dep:
+                d.add('sp_hal_dep', lib)
+            else:
+                d.add('vnd_only', lib)
+        return d
+
+    def get_path_tag_default(self, lib):
+        return 'vnd_only' if lib.path.startswith('/vendor') else 'fwk_only'
+
 
 class ModuleInfo(object):
     def __init__(self, module_info_path=None):
@@ -2145,6 +2300,7 @@ class ModuleInfo(object):
                 return module['path']
         return []
 
+
 class CheckDepCommand(ELFGraphCommand):
     def __init__(self):
         super(CheckDepCommand, self).__init__(
@@ -2156,42 +2312,6 @@ class CheckDepCommand(ELFGraphCommand):
         parser.add_argument('--tag-file', required=True)
 
         parser.add_argument('--module-info')
-
-    def _load_tag_file(self, tag_file_path):
-        res = TaggedLibDict(set(), set(), set(), set(), set(), set(), set(),
-                            set())
-
-        mapping = {
-            'll-ndk': res.ll_ndk,
-            'll-ndk-indirect': res.ndk_indirect,
-            'sp-ndk': res.sp_ndk,
-            'sp-ndk-indirect': res.ndk_indirect,
-            'hl-ndk': res.hl_ndk,
-            'vndk-sp-hal': res.vndk_sp,
-            'vndk-sp-both': res.vndk_sp,
-            'vndk-sp-indirect': res.vndk,  # Visible to non-SP-HAL
-            'vndk': res.vndk,
-            'vndk-indirect': res.vndk_indirect,
-            'fwk-only': res.fwk_only,
-            'remove': res.fwk_only,
-        }
-
-        with open(tag_file_path, 'r') as tag_file:
-            csv_reader = csv.reader(tag_file)
-            for lib_name, tag in csv_reader:
-                mapping[tag.lower()].add(lib_name)
-
-        return res
-
-    def _get_tagged_libs(self, graph, tags):
-        res = TaggedLibDict(set(), set(), set(), set(), set(), set(), set(),
-                            set())
-        for lib in graph.lib_pt[PT_SYSTEM].values():
-            lib_name = os.path.basename(lib.path)
-            for i, lib_set in enumerate(tags):
-                if lib_name in lib_set:
-                    res[i].add(lib)
-        return res
 
     @staticmethod
     def _dump_dep(lib, bad_deps, module_info):
@@ -2207,11 +2327,14 @@ class CheckDepCommand(ELFGraphCommand):
         """Check whether eligible sets are self-contained."""
         num_errors = 0
 
-        indirect_libs = tagged_libs.ndk_indirect
+        indirect_libs = (tagged_libs.ll_ndk_indirect | \
+                         tagged_libs.sp_ndk_indirect | \
+                         tagged_libs.vndk_sp_indirect_private | \
+                         tagged_libs.fwk_only_rs)
 
         eligible_libs = (tagged_libs.ll_ndk | tagged_libs.sp_ndk | \
-                         tagged_libs.vndk_sp | \
-                         tagged_libs.vndk | tagged_libs.vndk_indirect)
+                         tagged_libs.vndk_sp | tagged_libs.vndk_sp_indirect | \
+                         tagged_libs.vndk)
 
         # Check eligible vndk is self-contained.
         for lib in sorted(eligible_libs):
@@ -2247,8 +2370,8 @@ class CheckDepCommand(ELFGraphCommand):
         vendor_libs = graph.lib_pt[PT_VENDOR].values()
 
         eligible_libs = (tagged_libs.ll_ndk | tagged_libs.sp_ndk | \
-                         tagged_libs.vndk_sp | \
-                         tagged_libs.vndk | tagged_libs.vndk_indirect)
+                         tagged_libs.vndk_sp | tagged_libs.vndk_sp_indirect | \
+                         tagged_libs.vndk)
 
         for lib in sorted(vendor_libs):
             bad_deps = []
@@ -2269,8 +2392,8 @@ class CheckDepCommand(ELFGraphCommand):
                                  args.vendor, args.vendor_dir_as_system,
                                  args.load_extra_deps)
 
-        tags = self._load_tag_file(args.tag_file)
-        tagged_libs = self._get_tagged_libs(graph, tags)
+        tagged_paths = TaggedPathDict.create_from_csv_path(args.tag_file)
+        tagged_libs = TaggedLibDict.create_from_graph(graph, tagged_paths)
 
         module_info = ModuleInfo(args.module_info)
 
@@ -2290,57 +2413,19 @@ class DepGraphCommand(ELFGraphCommand):
         super(DepGraphCommand, self).add_argparser_options(parser)
 
         parser.add_argument('--tag-file', required=True)
-        parser.add_argument(
-                '--output', '-o', help='output directory')
+        parser.add_argument('--output', '-o', help='output directory')
 
-    def _load_tag_file(self, tag_file_path):
-        res = TaggedLibDict(set(), set(), set(), set(), set(), set(), set(),
-                            set())
-
-        mapping = {
-            'll-ndk': res.ll_ndk,
-            'll-ndk-indirect': res.ndk_indirect,
-            'sp-ndk': res.sp_ndk,
-            'sp-ndk-indirect': res.ndk_indirect,
-            'hl-ndk': res.hl_ndk,
-            'vndk-sp-hal': res.vndk_sp,
-            'vndk-sp-both': res.vndk_sp,
-            'vndk-sp-indirect': res.vndk,  # Visible to non-SP-HAL
-            'vndk': res.vndk,
-            'vndk-indirect': res.vndk_indirect,
-            'fwk-only': res.fwk_only,
-            'remove': set(),  # Drop from system lib. Tag as vendor lib.
-        }
-
-        with open(tag_file_path, 'r') as tag_file:
-            csv_reader = csv.reader(tag_file)
-            for lib_name, tag in csv_reader:
-                mapping[tag.lower()].add(os.path.basename(lib_name))
-
-        return res
-
-    def _get_tag_from_lib(self, lib, tags):
-        # Tempororily add the TAG_DEP_TABLE to show permission
-        TAG_DEP_TABLE = {
-            'vendor': ('ll_ndk', 'sp_ndk', 'vndk_sp', 'vndk', 'vndk_indirect'),
-        }
-
-        tag_hierarchy = []
-        eligible_for_vendor = TAG_DEP_TABLE['vendor']
-        for tag in TAGGED_LIB_DICT_FIELDS:
-            if tag == 'vendor':
-                tag_hierarchy.append('vendor.private.bin')
+    def _get_tag_from_lib(self, lib, tagged_paths):
+        tag_hierarchy = dict()
+        for tag in TaggedPathDict.TAGS:
+            if tag in {'sp_hal', 'sp_hal_dep', 'vnd_only'}:
+                tag_hierarchy[tag] = 'vendor.private.{}'.format(tag)
             else:
-                pub = 'public' if tag in eligible_for_vendor else 'private'
-                tag_hierarchy.append('system.{}.{}'.format(pub, tag))
-        lib_name = os.path.basename(lib.path)
-        if lib.partition == PT_SYSTEM:
-            for i, lib_set in enumerate(tags):
-                if lib_name in lib_set:
-                    return tag_hierarchy[i]
-            return 'system.private.bin'
-        else:
-            return 'vendor.private.bin'
+                vendor_visible = TaggedPathDict.is_tag_visible('vnd_only', tag)
+                pub = 'public' if vendor_visible else 'private'
+                tag_hierarchy[tag] = 'system.{}.{}'.format(pub, tag)
+
+        return tag_hierarchy[tagged_paths.get_path_tag(lib.path)]
 
     def _check_if_allowed(self, my_tag, other_tag):
         my = my_tag.split('.')
@@ -2352,13 +2437,13 @@ class DepGraphCommand(ELFGraphCommand):
             return False
         return True
 
-    def _get_dep_graph(self, graph, tags):
+    def _get_dep_graph(self, graph, tagged_paths):
         data = []
         violate_libs = dict()
         system_libs = graph.lib_pt[PT_SYSTEM].values()
         vendor_libs = graph.lib_pt[PT_VENDOR].values()
         for lib in itertools.chain(system_libs, vendor_libs):
-            tag = self._get_tag_from_lib(lib, tags)
+            tag = self._get_tag_from_lib(lib, tagged_paths)
             violate_count = 0
             lib_item = {
                 'name': lib.path,
@@ -2368,7 +2453,7 @@ class DepGraphCommand(ELFGraphCommand):
             }
             for dep in lib.deps:
                 if self._check_if_allowed(tag,
-                        self._get_tag_from_lib(dep, tags)):
+                        self._get_tag_from_lib(dep, tagged_paths)):
                     lib_item['depends'].append(dep.path)
                 else:
                     lib_item['violates'].append(dep.path)
@@ -2386,8 +2471,8 @@ class DepGraphCommand(ELFGraphCommand):
                                  args.vendor, args.vendor_dir_as_system,
                                  args.load_extra_deps)
 
-        tags = self._load_tag_file(args.tag_file)
-        data, violate_libs = self._get_dep_graph(graph, tags)
+        tagged_paths = TaggedPathDict.create_from_csv_path(args.tag_file)
+        data, violate_libs = self._get_dep_graph(graph, tagged_paths)
         data.sort(key=lambda lib_item: (lib_item['tag'],
                                         lib_item['violate_count']))
         for libs in violate_libs.values():
