@@ -18,10 +18,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.android.pushapithirdpartytwo">
     <uses-permission android:name="android.permission.GET_ACCOUNTS"/>
-    <uses-permission android:name="android.permission.READ_CONTACTS" />
+    <uses-permission android:name="android.permission.READ_CONTACTS"/>
+    <!-- Should target pre O API level -->
     <uses-sdk android:minSdkVersion="1"
-          android:targetSdkVersion="1001"
-          android:maxSdkVersion="11000" />
+          android:targetSdkVersion="25"/>
     <application android:label="3P App 2" android:icon="@drawable/push">
         <activity android:name="MainActivity">
             <intent-filter>
