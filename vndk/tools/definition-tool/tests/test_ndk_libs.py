@@ -18,12 +18,14 @@ class NDKLibDictTest(unittest.TestCase):
         self.assertTrue(NDK_LIBS.is_ll_ndk('/system/lib/liblog.so'))
         self.assertTrue(NDK_LIBS.is_ll_ndk('/system/lib/libm.so'))
         self.assertTrue(NDK_LIBS.is_ll_ndk('/system/lib/libstdc++.so'))
+        self.assertTrue(NDK_LIBS.is_ll_ndk('/system/lib/libvndksupport.so'))
 
         self.assertTrue(NDK_LIBS.is_ll_ndk('/system/lib64/libc.so'))
         self.assertTrue(NDK_LIBS.is_ll_ndk('/system/lib64/libdl.so'))
         self.assertTrue(NDK_LIBS.is_ll_ndk('/system/lib64/liblog.so'))
         self.assertTrue(NDK_LIBS.is_ll_ndk('/system/lib64/libm.so'))
         self.assertTrue(NDK_LIBS.is_ll_ndk('/system/lib64/libstdc++.so'))
+        self.assertTrue(NDK_LIBS.is_ll_ndk('/system/lib64/libvndksupport.so'))
 
         self.assertFalse(NDK_LIBS.is_ll_ndk('/system/lib/libm'))
 
