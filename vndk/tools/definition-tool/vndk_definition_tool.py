@@ -488,6 +488,7 @@ class NDKLibDict(object):
         'liblog.so',
         'libm.so',
         'libstdc++.so',
+        'libvndksupport.so',
     )
 
     SP_NDK_LIB_NAMES = (
@@ -986,63 +987,64 @@ class ELFLinker(object):
         """Find all vndk-sp libraries."""
 
         path_patterns = (
-            # SP-HAL VNDK-stable
-            '^.*/libhidlmemory\\.so$',
-
-            # SP-NDK VNDK-stable
+            # Visible to SP-HALs
             '^.*/android\\.hardware\\.graphics\\.allocator@2\\.0\\.so$',
             '^.*/android\\.hardware\\.graphics\\.common@1\\.0\\.so$',
             '^.*/android\\.hardware\\.graphics\\.mapper@2\\.0\\.so$',
-            '^.*/android\\.hidl\\.base@1\\.0\\.so$',
+            '^.*/android\\.hardware\\.renderscript@1\\.0\\.so$',
+            '^.*/libRSCpuRef\\.so$',
+            '^.*/libRSDriver\\.so$',
+            '^.*/libRS_internal\\.so$',
+            '^.*/libbase\\.so$',
+            '^.*/libbcinfo\\.so$',
+            '^.*/libc\\+\\+\\.so$',
+            '^.*/libcompiler_rt\\.so$',
             '^.*/libcutils\\.so$',
-            '^.*/libhidl-gen-utils\\.so$',
+            '^.*/libhardware\\.so$',
             '^.*/libhidlbase\\.so$',
             '^.*/libhidltransport\\.so$',
             '^.*/libhwbinder\\.so$',
-            '^.*/liblzma\\.so$',
-
-            # SP-NDK VNDK-stable (should to be removed)
-            '^.*/libbacktrace\\.so$',
-            '^.*/libbase\\.so$',
-            '^.*/libc\\+\\+\\.so$',
-            '^.*/libunwind\\.so$',
-            '^.*/libziparchive\\.so$',
-
-            # SP-NDK dependencies (SP-NDK only)
-            '^.*/libui\\.so$',
             '^.*/libutils\\.so$',
-
-            # Bad vndk-sp (must be removed)
-            '^.*/libhardware\\.so$',
-            '^.*/libnativeloader\\.so$',
-            '^.*/libvintf\\.so$',
-
-            # Other libraries.
             '^.*/libz\\.so$',
-        )
 
+            # Only for o-release
+            '^.*/android\\.hidl\\.base@1\\.0\\.so$',
+        )
+        return self.compute_path_matched_lib(path_patterns)
+
+
+    def compute_predefined_vndk_sp_indirect(self):
+        """Find all vndk-sp-indirect libraries."""
+        path_patterns = (
+            # Invisible to SP-HALs
+            '^.*/libbacktrace\\.so$',
+            '^.*/libblas\\.so$',
+            '^.*/libft2\\.so$',
+            '^.*/liblzma\\.so$',
+            '^.*/libpng\\.so$',
+            '^.*/libunwind\\.so$',
+        )
         return self.compute_path_matched_lib(path_patterns)
 
     def compute_predefined_sp_hal(self):
         """Find all same-process HALs."""
-
         path_patterns = (
             # OpenGL-related
             '^/vendor/.*/libEGL_.*\\.so$',
-            '^/vendor/.*/libGLES.*\\.so$',
+            '^/vendor/.*/libGLES_.*\\.so$',
             '^/vendor/.*/libGLESv1_CM_.*\\.so$',
             '^/vendor/.*/libGLESv2_.*\\.so$',
             '^/vendor/.*/libGLESv3_.*\\.so$',
             # Vulkan
             '^/vendor/.*/vulkan.*\\.so$',
             # libRSDriver
-            '^/vendor/.*/libRSDriver.*\\.so$',
+            '^.*/android\\.hardware\\.renderscript@1\\.0-impl\\.so$',
             '^/vendor/.*/libPVRRS\\.so$',
+            '^/vendor/.*/libRSDriver.*\\.so$',
             # Gralloc mapper
             '^.*/gralloc\\..*\\.so$',
             '^.*/android\\.hardware\\.graphics\\.mapper@\\d+\\.\\d+-impl\\.so$',
         )
-
         return self.compute_path_matched_lib(path_patterns)
 
     def compute_sp_ndk(self):
@@ -1078,50 +1080,6 @@ class ELFLinker(object):
 
         return SPLibResult(sp_hal, sp_hal_dep, vndk_sp_hal, sp_ndk,
                            sp_ndk_indirect, vndk_sp_both)
-
-    def _po_component_sorted(self, lib_set, get_successors,
-                             get_strong_successors):
-        result = []
-
-        idx_dict = {}
-        idx_counter = 0
-        has_scc = set()
-
-        s = []
-        p = []
-
-        def traverse(v):
-            idx_dict[v] = len(idx_dict)
-
-            s.append(v)
-            p.append(v)
-
-            for succ in get_successors(v):
-                if succ not in lib_set:
-                    continue
-                succ_idx = idx_dict.get(succ)
-                if succ_idx is None:
-                    traverse(succ)
-                elif succ not in has_scc:
-                    while idx_dict[p[-1]] > succ_idx:
-                        p.pop()
-
-            if p[-1] is v:
-                scc = set()
-                while True:
-                    w = s.pop()
-                    scc.add(w)
-                    has_scc.add(w)
-                    if w is v:
-                        break
-                p.pop()
-                result.append(self._po_sorted(scc, get_strong_successors))
-
-        for v in lib_set:
-            if v not in idx_dict:
-                traverse(v)
-
-        return result
 
     def _po_sorted(self, lib_set, get_successors):
         result = []
@@ -1634,7 +1592,7 @@ class GenericRefs(object):
     def add(self, name, elf):
         self.refs[name] = elf
 
-    def _load_from_dir(self, root):
+    def _load_from_sym_dir(self, root):
         root = os.path.abspath(root)
         prefix_len = len(root) + 1
         for base, dirnames, filenames in os.walk(root):
@@ -1647,9 +1605,21 @@ class GenericRefs(object):
                     self.add(lib_name, ELF.load_dump(path))
 
     @staticmethod
-    def create_from_dir(root):
+    def create_from_sym_dir(root):
         result = GenericRefs()
-        result._load_from_dir(root)
+        result._load_from_sym_dir(root)
+        return result
+
+    def _load_from_image_dir(self, root, prefix):
+        root = os.path.abspath(root)
+        root_len = len(root) + 1
+        for path, elf in scan_elf_files(root):
+            self.add(os.path.join(prefix, path[root_len:]), elf)
+
+    @staticmethod
+    def create_from_image_dir(root, prefix):
+        result = GenericRefs()
+        result._load_from_image_dir(root, prefix)
         return result
 
     def classify_lib(self, lib):
@@ -1749,14 +1719,26 @@ class ELFGraphCommand(Command):
                 '--vendor-dir-as-system', action='append',
                 help='sub directory of vendor partition that has system files')
 
+        parser.add_argument(
+                '--load-generic-refs',
+                help='compare with generic reference symbols')
+
+        parser.add_argument(
+                '--aosp-system',
+                help='compare with AOSP generic system image directory')
+
+    def get_generic_refs_from_args(self, args):
+        if args.load_generic_refs:
+            return GenericRefs.create_from_sym_dir(args.load_generic_refs)
+        if args.aosp_system:
+            return GenericRefs.create_from_image_dir(args.aosp_system,
+                                                     '/system')
+        return None
+
 
 class VNDKCommandBase(ELFGraphCommand):
     def add_argparser_options(self, parser):
         super(VNDKCommandBase, self).add_argparser_options(parser)
-
-        parser.add_argument(
-                '--load-generic-refs',
-                help='compare with generic reference symbols')
 
         parser.add_argument(
                 '--ban-vendor-lib-dep', action='append',
@@ -1788,11 +1770,6 @@ class VNDKCommandBase(ELFGraphCommand):
     def check_dirs_from_args(self, args):
         self._check_arg_dir_exists('--system', args.system)
         self._check_arg_dir_exists('--vendor', args.vendor)
-
-    def _get_generic_refs_from_args(self, args):
-        if not args.load_generic_refs:
-            return None
-        return GenericRefs.create_from_dir(args.load_generic_refs)
 
     def _get_banned_libs_from_args(self, args):
         if not args.ban_vendor_lib_dep:
@@ -1830,7 +1807,7 @@ class VNDKCommandBase(ELFGraphCommand):
 
         self.check_dirs_from_args(args)
 
-        generic_refs = self._get_generic_refs_from_args(args)
+        generic_refs = self.get_generic_refs_from_args(args)
         banned_libs = self._get_banned_libs_from_args(args)
 
         graph = ELFLinker.create(args.system, args.system_dir_as_vendor,
@@ -1857,15 +1834,6 @@ class VNDKCommand(VNDKCommandBase):
                 '--warn-incorrect-partition', action='store_true',
                 help='warn about libraries only have cross partition linkages')
 
-        parser.add_argument(
-                '--warn-high-level-ndk-deps', action='store_true',
-                help='warn about VNDK depends on high-level NDK')
-
-        parser.add_argument(
-                '--warn-banned-vendor-lib-deps', action='store_true',
-                help='warn when a vendor binaries depends on banned lib')
-
-
     def _warn_incorrect_partition_lib_set(self, lib_set, partition, error_msg):
         for lib in lib_set.values():
             if not lib.num_users:
@@ -1883,24 +1851,6 @@ class VNDKCommand(VNDKCommandBase):
                 graph.lib_pt[PT_SYSTEM], PT_SYSTEM,
                 'warning: {}: This is a framework library with vendor-only '
                 'usages.')
-
-    def _warn_high_level_ndk_deps(self, lib_sets):
-        for lib_set in lib_sets:
-            for lib in lib_set:
-                for dep in lib.deps:
-                    if dep.is_hl_ndk:
-                        print('warning: {}: VNDK is using high-level NDK {}.'
-                                .format(lib.path, dep.path), file=sys.stderr)
-
-    def _warn_banned_vendor_lib_deps(self, graph, banned_libs):
-        for lib in graph.lib_pt[PT_VENDOR].values():
-            for dep in lib.deps:
-                banned = banned_libs.is_banned(dep.path)
-                if banned:
-                    print('warning: {}: Vendor binary depends on banned {} '
-                          '(reason: {})'.format(
-                              lib.path, dep.path, banned.reason),
-                          file=sys.stderr)
 
     def _check_ndk_extensions(self, graph, generic_refs):
         for lib_set in (graph.lib32, graph.lib64):
@@ -1920,18 +1870,10 @@ class VNDKCommand(VNDKCommandBase):
         if args.warn_incorrect_partition:
             self._warn_incorrect_partition(graph)
 
-        if args.warn_banned_vendor_lib_deps:
-            self._warn_banned_vendor_lib_deps(graph, banned_libs)
-
         # Compute vndk heuristics.
         vndk_lib = graph.compute_vndk(vndk_customized_for_system,
                                       vndk_customized_for_vendor, generic_refs,
                                       banned_libs)
-
-        if args.warn_high_level_ndk_deps:
-            self._warn_high_level_ndk_deps(
-                    (vndk_lib.vndk_core, vndk_lib.vndk_indirect,
-                     vndk_lib.vndk_fwk_ext, vndk_lib.vndk_vnd_ext))
 
         # Print results.
         print_vndk_lib(vndk_lib)
@@ -2478,7 +2420,10 @@ class VNDKSPCommand(ELFGraphCommand):
 
         vndk_sp = graph.compute_predefined_vndk_sp()
         for lib in sorted_lib_path_list(vndk_sp):
-            print(lib)
+            print('vndk-sp:', lib)
+        vndk_sp_indirect = graph.compute_predefined_vndk_sp_indirect()
+        for lib in sorted_lib_path_list(vndk_sp_indirect):
+            print('vndk-sp-indirect:', lib)
         return 0
 
 
@@ -2490,14 +2435,8 @@ class SpLibCommand(ELFGraphCommand):
     def add_argparser_options(self, parser):
         super(SpLibCommand, self).add_argparser_options(parser)
 
-        parser.add_argument(
-                '--load-generic-refs',
-                help='compare with generic reference symbols')
-
     def main(self, args):
-        generic_refs = None
-        if args.load_generic_refs:
-            generic_refs = GenericRefs.create_from_dir(args.load_generic_refs)
+        generic_refs = self.get_generic_refs_from_args(args)
 
         graph = ELFLinker.create(args.system, args.system_dir_as_vendor,
                                  args.vendor, args.vendor_dir_as_system,
