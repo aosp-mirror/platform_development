@@ -28,7 +28,7 @@ class ELFLinkerVNDKTest(unittest.TestCase):
             generic_refs = None
         else:
             generic_refs_dir = os.path.join(TESTDATA_DIR, generic_refs_dir)
-            generic_refs = GenericRefs.create_from_dir(generic_refs_dir)
+            generic_refs = GenericRefs.create_from_sym_dir(generic_refs_dir)
 
         input_dir = os.path.join(TESTDATA_DIR, input_dir)
 
