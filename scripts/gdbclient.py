@@ -74,8 +74,8 @@ def dump_var(root, variable):
     return make_output.splitlines()[0]
 
 
-def verify_device(root, props):
-    names = set([props["ro.build.product"], props["ro.product.device"]])
+def verify_device(root, device):
+    names = set([device.get_prop("ro.build.product"), device.get_prop("ro.product.device")])
     target_device = dump_var(root, "TARGET_DEVICE")
     if target_device not in names:
         msg = "TARGET_DEVICE ({}) does not match attached device ({})"
@@ -216,13 +216,11 @@ def main():
     if device is None:
         sys.exit("ERROR: Failed to find device.")
 
-    props = device.get_props()
-
     root = os.environ["ANDROID_BUILD_TOP"]
     sysroot = dump_var(root, "abs-TARGET_OUT_UNSTRIPPED")
 
     # Make sure the environment matches the attached device.
-    verify_device(root, props)
+    verify_device(root, device)
 
     debug_socket = "/data/local/tmp/debug_socket"
     pid = None
