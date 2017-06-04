@@ -138,7 +138,7 @@ public class MusicService extends Service implements OnCompletionListener, OnPre
 
     // our RemoteControlClient object, which will use remote control APIs available in
     // SDK level >= 14, if they're available.
-    RemoteControlClientCompat mRemoteControlClientCompat;
+    IRemoteControlClientCompat mRemoteControlClientCompat;
 
     // Dummy album art we will pass to the remote control (if the APIs are available).
     Bitmap mDummyAlbumArt;
@@ -449,11 +449,9 @@ public class MusicService extends Service implements OnCompletionListener, OnPre
             if (mRemoteControlClientCompat == null) {
                 Intent intent = new Intent(Intent.ACTION_MEDIA_BUTTON);
                 intent.setComponent(mMediaButtonReceiverComponent);
-                mRemoteControlClientCompat = new RemoteControlClientCompat(
+                mRemoteControlClientCompat = RemoteControlHelper.registerRemoteControlClient(mAudioManager,
                         PendingIntent.getBroadcast(this /*context*/,
                                 0 /*requestCode, ignored*/, intent /*intent*/, 0 /*flags*/));
-                RemoteControlHelper.registerRemoteControlClient(mAudioManager,
-                        mRemoteControlClientCompat);
             }
 
             mRemoteControlClientCompat.setPlaybackState(
@@ -474,7 +472,7 @@ public class MusicService extends Service implements OnCompletionListener, OnPre
                             playingItem.getDuration())
                     // TODO: fetch real item artwork
                     .putBitmap(
-                            RemoteControlClientCompat.MetadataEditorCompat.METADATA_KEY_ARTWORK,
+                            IRemoteControlClientCompat.IMetadataEditorCompat.METADATA_KEY_ARTWORK,
                             mDummyAlbumArt)
                     .apply();
 
