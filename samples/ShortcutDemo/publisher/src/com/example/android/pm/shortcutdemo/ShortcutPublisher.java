@@ -31,6 +31,9 @@ import android.graphics.BitmapFactory;
 import android.graphics.drawable.Icon;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.v4.content.pm.ShortcutInfoCompat;
+import android.support.v4.content.pm.ShortcutManagerCompat;
+import android.support.v4.graphics.drawable.IconCompat;
 import android.text.format.Time;
 import android.util.ArrayMap;
 import android.util.Log;
@@ -198,6 +201,21 @@ public class ShortcutPublisher extends Activity {
         return b;
     }
 
+    public static ShortcutInfoCompat.Builder addRandomIntents(Context context,
+            ShortcutInfoCompat.Builder b) {
+        final int i = sRandom.nextInt(sIntentList.size());
+        b.setShortLabel(sIntentList.get(i).first);
+        b.setIntent(new Intent(Intent.ACTION_VIEW, Uri.parse(sIntentList.get(i).second)));
+
+        if (sRandom.nextBoolean()) {
+            b.setIcon(IconCompat.createWithResource(context, R.drawable.icon2));
+        } else {
+            b.setIcon(IconCompat.createWithBitmap(
+                    BitmapFactory.decodeResource(context.getResources(), R.drawable.icon_large_2)));
+        }
+        return b;
+    }
+
     public void onPublishPressed(View view) {
         dumpCurrentShortcuts();
         final Icon icon2 = Icon.createWithBitmap(BitmapFactory.decodeResource(getResources(),
@@ -305,12 +323,12 @@ public class ShortcutPublisher extends Activity {
     }
 
     public static void requestPinShortcut(Context context) {
-        if (!context.getSystemService(ShortcutManager.class).isRequestPinShortcutSupported()) {
+        if (!ShortcutManagerCompat.isRequestPinShortcutSupported(context)) {
             showToast(context, "requestPinShortcut() is not supported by launcher");
             return;
         }
-        final ShortcutInfo si = addRandomIntents(
-                context, new ShortcutInfo.Builder(context,
+        final ShortcutInfoCompat si = addRandomIntents(
+                context, new ShortcutInfoCompat.Builder(context,
                         "shortcut-" + System.currentTimeMillis()))
                 .build();
         final PendingIntent resultIntent = PendingIntent.getBroadcast(context, 0,
@@ -318,7 +336,7 @@ public class ShortcutPublisher extends Activity {
                 PendingIntent.FLAG_UPDATE_CURRENT);
 
         ShortcutPublisher.callApi(context, () -> {
-            context.getSystemService(ShortcutManager.class).requestPinShortcut(
+            ShortcutManagerCompat.requestPinShortcut(context,
                     si, resultIntent.getIntentSender());
             return true;
         });
