@@ -24,6 +24,7 @@ import android.content.pm.ShortcutInfo;
 import android.content.pm.ShortcutManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.v4.content.pm.ShortcutManagerCompat;
 import android.util.ArraySet;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -88,7 +89,8 @@ public class Main extends ListActivity implements OnClickListener {
             sVisibleInstances.add(this);
         }
         findViewById(R.id.request_new_pin_shortcut).setVisibility(
-                mShortcutManager.isRequestPinShortcutSupported() ? View.VISIBLE : View.GONE);
+                ShortcutManagerCompat.isRequestPinShortcutSupported(this)
+                        ? View.VISIBLE : View.GONE);
     }
 
     @Override
@@ -309,7 +311,8 @@ public class Main extends ListActivity implements OnClickListener {
             remove.setVisibility(shortcut.isImmutable() ? View.GONE : View.VISIBLE);
             disable.setVisibility(shortcut.isImmutable() ? View.GONE : View.VISIBLE);
             requestPin.setVisibility(
-                    mShortcutManager.isRequestPinShortcutSupported() ? View.VISIBLE : View.GONE);
+                    ShortcutManagerCompat.isRequestPinShortcutSupported(mContext)
+                            ? View.VISIBLE : View.GONE);
 
             remove.setOnClickListener(Main.this);
             disable.setOnClickListener(Main.this);
