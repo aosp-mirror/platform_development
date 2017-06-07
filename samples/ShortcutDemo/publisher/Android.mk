@@ -23,6 +23,8 @@ include $(CLEAR_VARS)
 
 LOCAL_PACKAGE_NAME := ShortcutDemo
 
+LOCAL_STATIC_JAVA_LIBRARIES = android-support-v4
+
 LOCAL_MODULE_TAGS := samples tests
 
 LOCAL_AAPT_FLAGS += --rename-manifest-package com.example.android.pm.shortcutdemo
@@ -42,6 +44,8 @@ include $(BUILD_PACKAGE)
 include $(CLEAR_VARS)
 
 LOCAL_PACKAGE_NAME := ShortcutDemo2
+
+LOCAL_STATIC_JAVA_LIBRARIES = android-support-v4
 
 LOCAL_MODULE_TAGS := samples tests
 
