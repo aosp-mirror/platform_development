@@ -61,6 +61,19 @@ their `device.mk`.  For example, in the example mentioned above, following
     PRODUCT_PACKAGES += libexample4.vndk-ext
 
 
+## Ignore Subdirectories
+
+Some devices keep their vendor modules in `/system/vendor`.  To run VNDK
+definition tool for those devices, we have to skip `/system/vendor` and specify
+it with `--vendor` option.  For example:
+
+    python3 vndk_definition_tool.py vndk \
+        --system ${ANDROID_PRODUCT_OUT}/system \
+        --system-dir-igored vendor \
+        --vendor ${ANDROID_PRODUCT_OUT}/system/vendor \
+        # ...
+
+
 ## Implicit Dependencies
 
 If there are implicit dependencies, such as `dlopen()`, we can specify them in

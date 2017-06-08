@@ -948,15 +948,20 @@ class ELFLinker(object):
         return re.compile('|'.join(patts))
 
     def add_executables_in_dir(self, partition_name, partition, root,
-                               alter_partition, alter_subdirs, scan_elf_files):
+                               alter_partition, alter_subdirs, ignored_subdirs,
+                               scan_elf_files):
         root = os.path.abspath(root)
         prefix_len = len(root) + 1
 
         if alter_subdirs:
             alter_patt = ELFLinker._compile_path_matcher(root, alter_subdirs)
+        if ignored_subdirs:
+            ignored_patt = ELFLinker._compile_path_matcher(root, ignored_subdirs)
 
         for path, elf in scan_elf_files(root):
             short_path = os.path.join('/', partition_name, path[prefix_len:])
+            if ignored_subdirs and ignored_patt.match(path):
+                continue
             if alter_subdirs and alter_patt.match(path):
                 self.add_lib(alter_partition, short_path, elf)
             else:
@@ -1488,20 +1493,23 @@ class ELFLinker(object):
 
     @staticmethod
     def _create_internal(scan_elf_files, system_dirs, system_dirs_as_vendor,
-                         vendor_dirs, vendor_dirs_as_system, extra_deps,
-                         generic_refs):
+                         system_dirs_ignored, vendor_dirs,
+                         vendor_dirs_as_system, vendor_dirs_ignored,
+                         extra_deps, generic_refs):
         graph = ELFLinker()
 
         if system_dirs:
             for path in system_dirs:
                 graph.add_executables_in_dir('system', PT_SYSTEM, path,
                                              PT_VENDOR, system_dirs_as_vendor,
+                                             system_dirs_ignored,
                                              scan_elf_files)
 
         if vendor_dirs:
             for path in vendor_dirs:
                 graph.add_executables_in_dir('vendor', PT_VENDOR, path,
                                              PT_SYSTEM, vendor_dirs_as_system,
+                                             vendor_dirs_ignored,
                                              scan_elf_files)
 
         if extra_deps:
@@ -1513,11 +1521,14 @@ class ELFLinker(object):
         return graph
 
     @staticmethod
-    def create(system_dirs=None, system_dirs_as_vendor=None, vendor_dirs=None,
-               vendor_dirs_as_system=None, extra_deps=None, generic_refs=None):
+    def create(system_dirs=None, system_dirs_as_vendor=None,
+               system_dirs_ignored=None, vendor_dirs=None,
+               vendor_dirs_as_system=None, vendor_dirs_ignored=None,
+               extra_deps=None, generic_refs=None):
         return ELFLinker._create_internal(
-                scan_elf_files, system_dirs, system_dirs_as_vendor, vendor_dirs,
-                vendor_dirs_as_system, extra_deps, generic_refs)
+                scan_elf_files, system_dirs, system_dirs_as_vendor,
+                system_dirs_ignored, vendor_dirs, vendor_dirs_as_system,
+                vendor_dirs_ignored, extra_deps, generic_refs)
 
     @staticmethod
     def create_from_dump(system_dirs=None, system_dirs_as_vendor=None,
@@ -1673,8 +1684,16 @@ class ELFGraphCommand(Command):
                 help='sub directory of system partition that has vendor files')
 
         parser.add_argument(
+                '--system-dir-ignored', action='append',
+                help='sub directory of system partition that must be ignored')
+
+        parser.add_argument(
                 '--vendor-dir-as-system', action='append',
                 help='sub directory of vendor partition that has system files')
+
+        parser.add_argument(
+                '--vendor-dir-ignored', action='append',
+                help='sub directory of vendor partition that must be ignored')
 
         parser.add_argument(
                 '--load-generic-refs',
@@ -1692,14 +1711,6 @@ class ELFGraphCommand(Command):
                                                      '/system')
         return None
 
-
-class VNDKCommandBase(ELFGraphCommand):
-    def add_argparser_options(self, parser):
-        super(VNDKCommandBase, self).add_argparser_options(parser)
-
-        parser.add_argument('--no-default-dlopen-deps', action='store_true',
-                help='do not add default dlopen dependencies')
-
     def _check_arg_dir_exists(self, arg_name, dirs):
         for path in dirs:
             if not os.path.exists(path):
@@ -1716,16 +1727,32 @@ class VNDKCommandBase(ELFGraphCommand):
         self._check_arg_dir_exists('--vendor', args.vendor)
 
     def create_from_args(self, args):
-        """Create all essential data structures for VNDK computation."""
-
         self.check_dirs_from_args(args)
 
         generic_refs = self.get_generic_refs_from_args(args)
 
         graph = ELFLinker.create(args.system, args.system_dir_as_vendor,
+                                 args.system_dir_ignored,
                                  args.vendor, args.vendor_dir_as_system,
+                                 args.vendor_dir_ignored,
                                  args.load_extra_deps,
                                  generic_refs=generic_refs)
+
+        return (generic_refs, graph)
+
+
+class VNDKCommandBase(ELFGraphCommand):
+    def add_argparser_options(self, parser):
+        super(VNDKCommandBase, self).add_argparser_options(parser)
+
+        parser.add_argument('--no-default-dlopen-deps', action='store_true',
+                help='do not add default dlopen dependencies')
+
+    def create_from_args(self, args):
+        """Create all essential data structures for VNDK computation."""
+
+        generic_refs, graph = \
+                super(VNDKCommandBase, self).create_from_args(args)
 
         if not args.no_default_dlopen_deps:
             script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -1921,9 +1948,7 @@ class VNDKCapCommand(ELFGraphCommand):
         super(VNDKCapCommand, self).add_argparser_options(parser)
 
     def main(self, args):
-        graph = ELFLinker.create(args.system, args.system_dir_as_vendor,
-                                 args.vendor, args.vendor_dir_as_system,
-                                 args.load_extra_deps)
+        generic_refs, graph = self.create_from_args(args)
 
         banned_libs = BannedLibDict.create_default()
 
@@ -1954,9 +1979,7 @@ class DepsCommand(ELFGraphCommand):
                 help='print symbols')
 
     def main(self, args):
-        graph = ELFLinker.create(args.system, args.system_dir_as_vendor,
-                                 args.vendor, args.vendor_dir_as_system,
-                                 args.load_extra_deps)
+        generic_refs, graph = self.create_from_args(args)
 
         results = []
         for partition in range(NUM_PARTITIONS):
@@ -2012,9 +2035,7 @@ class DepsClosureCommand(ELFGraphCommand):
                             help='exclude ndk libraries')
 
     def main(self, args):
-        graph = ELFLinker.create(args.system, args.system_dir_as_vendor,
-                                 args.vendor, args.vendor_dir_as_system,
-                                 args.load_extra_deps)
+        generic_refs, graph = self.create_from_args(args)
 
         # Find root/excluded libraries by their paths.
         def report_error(path):
@@ -2299,9 +2320,7 @@ class CheckDepCommand(ELFGraphCommand):
         return num_errors
 
     def main(self, args):
-        graph = ELFLinker.create(args.system, args.system_dir_as_vendor,
-                                 args.vendor, args.vendor_dir_as_system,
-                                 args.load_extra_deps)
+        generic_refs, graph = self.create_from_args(args)
 
         tagged_paths = TaggedPathDict.create_from_csv_path(args.tag_file)
         tagged_libs = TaggedLibDict.create_from_graph(graph, tagged_paths)
@@ -2378,9 +2397,7 @@ class DepGraphCommand(ELFGraphCommand):
         return data, violate_libs
 
     def main(self, args):
-        graph = ELFLinker.create(args.system, args.system_dir_as_vendor,
-                                 args.vendor, args.vendor_dir_as_system,
-                                 args.load_extra_deps)
+        generic_refs, graph = self.create_from_args(args)
 
         tagged_paths = TaggedPathDict.create_from_csv_path(args.tag_file)
         data, violate_libs = self._get_dep_graph(graph, tagged_paths)
@@ -2410,9 +2427,7 @@ class VNDKSPCommand(ELFGraphCommand):
         super(VNDKSPCommand, self).add_argparser_options(parser)
 
     def main(self, args):
-        graph = ELFLinker.create(args.system, args.system_dir_as_vendor,
-                                 args.vendor, args.vendor_dir_as_system,
-                                 args.load_extra_deps)
+        generic_refs, graph = self.create_from_args(args)
 
         vndk_sp = graph.compute_predefined_vndk_sp()
         for lib in sorted_lib_path_list(vndk_sp):
@@ -2432,12 +2447,7 @@ class SpLibCommand(ELFGraphCommand):
         super(SpLibCommand, self).add_argparser_options(parser)
 
     def main(self, args):
-        generic_refs = self.get_generic_refs_from_args(args)
-
-        graph = ELFLinker.create(args.system, args.system_dir_as_vendor,
-                                 args.vendor, args.vendor_dir_as_system,
-                                 args.load_extra_deps)
-
+        generic_refs, graph = self.create_from_args(args)
         print_sp_lib(graph.compute_sp_lib(generic_refs))
         return 0
 
