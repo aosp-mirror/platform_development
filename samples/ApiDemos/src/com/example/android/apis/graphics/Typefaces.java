@@ -17,7 +17,10 @@
 package com.example.android.apis.graphics;
 
 import android.content.Context;
-import android.graphics.*;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.view.View;
 
@@ -30,25 +33,26 @@ public class Typefaces extends GraphicsActivity {
     }
 
     private static class SampleView extends View {
-        private Paint    mPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        private Paint mPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         private Typeface mFace;
 
         public SampleView(Context context) {
             super(context);
 
-            mFace = Typeface.createFromAsset(getContext().getAssets(),
-                                             "fonts/samplefont.ttf");
-
+            mFace = Typeface.createFromAsset(getContext().getAssets(), "fonts/samplefont.ttf");
             mPaint.setTextSize(64);
         }
 
-        @Override protected void onDraw(Canvas canvas) {
+        @Override
+        protected void onDraw(Canvas canvas) {
             canvas.drawColor(Color.WHITE);
-
             mPaint.setTypeface(null);
-            canvas.drawText("Default", 10, 100, mPaint);
+            canvas.drawText("Draw with Default:", 10, 100, mPaint);
+            canvas.drawText("  SAMPLE TEXT", 10, 200, mPaint);
+            canvas.drawText("Draw with Custom Font", 10, 400, mPaint);
+            canvas.drawText("(Custom Font draws 'A' with solid triangle.)", 10, 500, mPaint);
             mPaint.setTypeface(mFace);
-            canvas.drawText("Custom", 10, 200, mPaint);
+            canvas.drawText("  SAMPLE TEXT", 10, 600, mPaint);
         }
     }
 }

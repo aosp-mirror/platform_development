@@ -39,10 +39,10 @@ class GenericRefsTest(unittest.TestCase):
         self.ref.add('/system/lib64/libm.so',
                      MockELF({'cos', 'sin', 'tan'}))
 
-    def test_create_from_dir(self):
+    def test_create_from_sym_dir(self):
         input_dir = os.path.join(SCRIPT_DIR, 'testdata', 'test_generic_refs')
 
-        g = GenericRefs.create_from_dir(input_dir)
+        g = GenericRefs.create_from_sym_dir(input_dir)
         self.assertEqual(4, len(g.refs))
 
         self.assertIn('/system/lib/libc.so', g.refs)
@@ -86,6 +86,12 @@ class GenericRefsTest(unittest.TestCase):
         self.assertFalse(self.ref.is_equivalent_lib(libc_sup))
 
         self.assertTrue(self.ref.is_equivalent_lib(libc_eq))
+
+    def test_has_same_name_lib(self):
+        self.assertTrue(self.ref.has_same_name_lib(
+            MockLib('/vendor/lib/libc.so', {})))
+        self.assertFalse(self.ref.has_same_name_lib(
+            MockLib('/vendor/lib/lib_does_not_exist.so', {})))
 
 
 if __name__ == '__main__':
