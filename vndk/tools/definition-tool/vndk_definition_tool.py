@@ -1261,6 +1261,21 @@ class ELFLinker(object):
                 new_path = lib.path.replace('/system/', '/vendor/')
                 self.rename_lib(lib, PT_VENDOR, new_path)
 
+    @staticmethod
+    def _parse_action_on_ineligible_lib(arg):
+        follow = False
+        warn = False
+        for flag in arg.split(','):
+            if flag == 'follow':
+                follow = True
+            elif flag == 'warn':
+                warn = True
+            elif flag == 'ignore':
+                continue
+            else:
+                raise ValueError('unknown action \"{}\"'.format(flag))
+        return (follow, warn)
+
     def compute_degenerated_vndk(self, sp_lib, generic_refs,
                                  tagged_paths=None,
                                  action_ineligible_vndk_sp='follow,warn',
@@ -1310,7 +1325,8 @@ class ELFLinker(object):
             return lib.is_ll_ndk or lib.is_sp_ndk or lib in sp_hal or \
                    lib in sp_hal_dep
 
-        action_ineligible_vndk_sp = set(action_ineligible_vndk_sp.split(','))
+        follow_ineligible_vndk_sp, warn_ineligible_vndk_sp = \
+                self._parse_action_on_ineligible_lib(action_ineligible_vndk_sp)
         predefined_vndk_sp = self.compute_predefined_vndk_sp()
         vndk_sp = set()
         for lib in itertools.chain(sp_hal, sp_hal_dep):
@@ -1320,11 +1336,11 @@ class ELFLinker(object):
                 if dep in predefined_vndk_sp:
                     vndk_sp.add(dep)
                     continue
-                if 'warn' in action_ineligible_vndk_sp:
+                if warn_ineligible_vndk_sp:
                     print('error: SP-HAL {} depends on non vndk-sp '
                           'library {}.'.format(lib.path, dep.path),
                           file=sys.stderr)
-                if 'follow' in action_ineligible_vndk_sp:
+                if follow_ineligible_vndk_sp:
                     vndk_sp.add(dep)
 
         # Add other predefined VNDK-SP even if they are not actually used by
@@ -1380,7 +1396,8 @@ class ELFLinker(object):
                 return False
             return not generic_refs.has_same_name_lib(lib)
 
-        action_ineligible_vndk = set(action_ineligible_vndk.split(','))
+        follow_ineligible_vndk, warn_ineligible_vndk = \
+                self._parse_action_on_ineligible_lib(action_ineligible_vndk)
         vndk = set()
         for lib in self.lib_pt[PT_VENDOR].values():
             for dep in lib.deps:
@@ -1390,11 +1407,11 @@ class ELFLinker(object):
                         tagged_paths.is_path_visible(lib.path, dep.path):
                     vndk.add(dep)
                     continue
-                if 'warn' in action_ineligible_vndk:
+                if warn_ineligible_vndk:
                     print('warning: vendor lib/exe {} depends on ineligible '
                           'framework shared lib {}.'
                           .format(lib.path, dep.path), file=sys.stderr)
-                if 'follow' in action_ineligible_vndk:
+                if follow_ineligible_vndk:
                     vndk.add(dep)
 
         vndk_indirect = self.compute_closure(vndk, is_not_vndk)
