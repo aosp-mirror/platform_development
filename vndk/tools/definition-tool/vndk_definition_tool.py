@@ -1098,8 +1098,8 @@ class ELFLinker(object):
     def compute_predefined_fwk_only_rs(self):
         """Find all fwk-only-rs libraries."""
         path_patterns = (
-            '^/system/lib(?:64)?/libft2\\.so$',
-            '^/system/lib(?:64)?/libmediandk\\.so',
+            '^/system/lib(?:64)?/(?:vndk-sp/)?libft2\\.so$',
+            '^/system/lib(?:64)?/(?:vndk-sp/)?libmediandk\\.so',
         )
         return self.compute_path_matched_lib(path_patterns)
 
