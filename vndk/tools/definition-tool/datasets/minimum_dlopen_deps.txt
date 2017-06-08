@@ -1,0 +1,12 @@
+/system/lib/libEGL.so:/system/lib/libEGL.so
+/system/lib/libEGL.so:/system/lib/libGLESv1_CM.so
+/system/lib/libEGL.so:/system/lib/libGLESv2.so
+/system/lib/libc.so:/system/lib/libc_malloc_debug.so
+/system/lib/libc.so:/system/lib/libicuuc.so
+/system/lib/libc.so:/system/lib/libnetd_client.so
+/system/lib64/libEGL.so:/system/lib64/libEGL.so
+/system/lib64/libEGL.so:/system/lib64/libGLESv1_CM.so
+/system/lib64/libEGL.so:/system/lib64/libGLESv2.so
+/system/lib64/libc.so:/system/lib64/libc_malloc_debug.so
+/system/lib64/libc.so:/system/lib64/libicuuc.so
+/system/lib64/libc.so:/system/lib64/libnetd_client.so
