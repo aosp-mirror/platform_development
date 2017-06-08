@@ -542,6 +542,7 @@ class NDKLibDict(object):
         'libm.so',
         'libstdc++.so',
         'libvndksupport.so',
+        'libandroid_net.so',
     )
 
     SP_NDK_LIB_NAMES = (
