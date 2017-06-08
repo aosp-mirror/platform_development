@@ -132,17 +132,13 @@ class ELFLinkerTest(unittest.TestCase):
         self.assertEqual(['/system/lib64/libdl.so'],
                          self._get_paths_from_nodes(nodes))
 
-    def test_elf_class(self):
+    def test_elf_class_and_partitions(self):
         gb = self._create_normal_graph()
         graph = gb.graph
-        self.assertEqual(6, len(graph.lib32))
-        self.assertEqual(6, len(graph.lib64))
-
-    def test_partitions(self):
-        gb = self._create_normal_graph()
-        graph = gb.graph
-        self.assertEqual(10, len(gb.graph.lib_pt[PT_SYSTEM]))
-        self.assertEqual(2, len(gb.graph.lib_pt[PT_VENDOR]))
+        self.assertEqual(5, len(graph.lib_pt[PT_SYSTEM].lib32))
+        self.assertEqual(5, len(graph.lib_pt[PT_SYSTEM].lib64))
+        self.assertEqual(1, len(graph.lib_pt[PT_VENDOR].lib32))
+        self.assertEqual(1, len(graph.lib_pt[PT_VENDOR].lib64))
 
     def test_deps(self):
         gb = self._create_normal_graph()
@@ -169,7 +165,7 @@ class ELFLinkerTest(unittest.TestCase):
         graph = gb.graph
 
         # Check the unresolved symbols.
-        for lib_set in (graph.lib32, graph.lib64):
+        for lib_set in graph.lib_pt:
             for lib in lib_set.values():
                 self.assertEqual(set(), lib.unresolved_symbols)
 
@@ -237,6 +233,27 @@ class ELFLinkerTest(unittest.TestCase):
         node = graph.get_lib('/vendor/lib64/libEGL.so')
         self.assertEqual([], self._get_paths_from_nodes(node.users))
 
+    def test_compute_predefined_fwk_only_rs(self):
+        lib_names = (
+            'libft2',
+            'libmediandk',
+        )
+
+        # Add VNDK-SP libraries.
+        gb = GraphBuilder()
+        for name in lib_names:
+            gb.add_multilib(PT_SYSTEM, name)
+        gb.resolve()
+
+        # Compute FWK-ONLY-RS and check the result.
+        fwk_only_rs = gb.graph.compute_predefined_fwk_only_rs()
+        fwk_only_rs = set(lib.path for lib in fwk_only_rs)
+
+        for lib_dir_name in ('lib', 'lib64'):
+            lib_dir = '/system/' + lib_dir_name
+            for name in lib_names:
+                self.assertIn(os.path.join(lib_dir, name + '.so'), fwk_only_rs)
+
     def test_compute_predefined_vndk_sp(self):
         lib_names = (
             'android.hardware.graphics.allocator@2.0',
@@ -288,7 +305,6 @@ class ELFLinkerTest(unittest.TestCase):
         lib_names = (
             'libbacktrace',
             'libblas',
-            'libft2',
             'liblzma',
             'libpng',
             'libunwind',
@@ -504,58 +520,6 @@ class ELFLinkerTest(unittest.TestCase):
             self.assertNotIn(libc_path, sp_ndk)
             self.assertNotIn(libc_path, sp_ndk_indirect)
 
-
-    def test_find_existing_vndk(self):
-        gb = GraphBuilder()
-
-        libpng32_core, libpng64_core = \
-                gb.add_multilib(PT_SYSTEM, 'libpng', extra_dir='vndk-26')
-        libpng32_fwk, libpng64_fwk = \
-                gb.add_multilib(PT_SYSTEM, 'libpng', extra_dir='vndk-26-ext')
-
-        libjpeg32_core, libjpeg64_core = \
-                gb.add_multilib(PT_SYSTEM, 'libjpeg', extra_dir='vndk-26')
-        libjpeg32_vnd, libjpeg64_vnd = \
-                gb.add_multilib(PT_VENDOR, 'libjpeg', extra_dir='vndk-26-ext')
-
-        gb.resolve()
-
-        vndk_core, vndk_fwk_ext, vndk_vnd_ext = gb.graph.find_existing_vndk()
-
-        expected_vndk_core = {
-                libpng32_core, libpng64_core, libjpeg32_core, libjpeg64_core}
-        expected_vndk_fwk_ext = {libpng32_fwk, libpng64_fwk}
-        expected_vndk_vnd_ext = {libjpeg32_vnd, libjpeg64_vnd}
-
-        self.assertSetEqual(expected_vndk_core, vndk_core)
-        self.assertSetEqual(expected_vndk_fwk_ext, vndk_fwk_ext)
-        self.assertSetEqual(expected_vndk_vnd_ext, vndk_vnd_ext)
-
-    def test_find_existing_vndk_without_version(self):
-        gb = GraphBuilder()
-
-        libpng32_core, libpng64_core = \
-                gb.add_multilib(PT_SYSTEM, 'libpng', extra_dir='vndk')
-        libpng32_fwk, libpng64_fwk = \
-                gb.add_multilib(PT_SYSTEM, 'libpng', extra_dir='vndk-ext')
-
-        libjpeg32_core, libjpeg64_core = \
-                gb.add_multilib(PT_SYSTEM, 'libjpeg', extra_dir='vndk')
-        libjpeg32_vnd, libjpeg64_vnd = \
-                gb.add_multilib(PT_VENDOR, 'libjpeg', extra_dir='vndk-ext')
-
-        gb.resolve()
-
-        vndk_core, vndk_fwk_ext, vndk_vnd_ext = gb.graph.find_existing_vndk()
-
-        expected_vndk_core = {
-                libpng32_core, libpng64_core, libjpeg32_core, libjpeg64_core}
-        expected_vndk_fwk_ext = {libpng32_fwk, libpng64_fwk}
-        expected_vndk_vnd_ext = {libjpeg32_vnd, libjpeg64_vnd}
-
-        self.assertSetEqual(expected_vndk_core, vndk_core)
-        self.assertSetEqual(expected_vndk_fwk_ext, vndk_fwk_ext)
-        self.assertSetEqual(expected_vndk_vnd_ext, vndk_vnd_ext)
 
     def test_compute_vndk_cap(self):
         gb = GraphBuilder()

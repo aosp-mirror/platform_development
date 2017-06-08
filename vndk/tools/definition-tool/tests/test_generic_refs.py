@@ -87,6 +87,12 @@ class GenericRefsTest(unittest.TestCase):
 
         self.assertTrue(self.ref.is_equivalent_lib(libc_eq))
 
+    def test_has_same_name_lib(self):
+        self.assertTrue(self.ref.has_same_name_lib(
+            MockLib('/vendor/lib/libc.so', {})))
+        self.assertFalse(self.ref.has_same_name_lib(
+            MockLib('/vendor/lib/lib_does_not_exist.so', {})))
+
 
 if __name__ == '__main__':
     unittest.main()
