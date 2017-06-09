@@ -1283,8 +1283,7 @@ class ELFLinker(object):
                 raise ValueError('unknown action \"{}\"'.format(flag))
         return (follow, warn)
 
-    def compute_degenerated_vndk(self, sp_lib, generic_refs,
-                                 tagged_paths=None,
+    def compute_degenerated_vndk(self, generic_refs, tagged_paths=None,
                                  action_ineligible_vndk_sp='warn',
                                  action_ineligible_vndk='warn'):
         # Find LL-NDK and SP-NDK libs.
@@ -1862,6 +1861,18 @@ class VNDKCommandBase(ELFGraphCommand):
         parser.add_argument('--no-default-dlopen-deps', action='store_true',
                 help='do not add default dlopen dependencies')
 
+        parser.add_argument('--tag-file', help='lib tag file')
+
+        parser.add_argument(
+                '--action-ineligible-vndk-sp', default='warn',
+                help='action when a sp-hal uses non-vndk-sp libs '
+                     '(option: follow,warn,ignore)')
+
+        parser.add_argument(
+                '--action-ineligible-vndk', default='warn',
+                help='action when a vendor lib/exe uses fwk-only libs '
+                     '(option: follow,warn,ignore)')
+
     def create_from_args(self, args):
         """Create all essential data structures for VNDK computation."""
 
@@ -1874,7 +1885,12 @@ class VNDKCommandBase(ELFGraphCommand):
                                                'minimum_dlopen_deps.txt')
             graph.load_extra_deps(minimum_dlopen_deps)
 
-        return (generic_refs, graph)
+        if args.tag_file:
+            tagged_paths = TaggedPathDict.create_from_csv_path(args.tag_file)
+        else:
+            tagged_paths = None
+
+        return (generic_refs, graph, tagged_paths)
 
 
 class VNDKCommand(VNDKCommandBase):
@@ -1892,18 +1908,6 @@ class VNDKCommand(VNDKCommandBase):
         parser.add_argument(
                 '--full', action='store_true',
                 help='print all classification')
-
-        parser.add_argument('--tag-file', help='lib tag file')
-
-        parser.add_argument(
-                '--action-ineligible-vndk-sp', default='warn',
-                help='action when a sp-hal uses non-vndk-sp libs '
-                     '(option: follow,warn,ignore)')
-
-        parser.add_argument(
-                '--action-ineligible-vndk', default='warn',
-                help='action when a vendor lib/exe uses fwk-only libs '
-                     '(option: follow,warn,ignore)')
 
         parser.add_argument(
                 '--output-format', default='tag',
@@ -2001,7 +2005,7 @@ class VNDKCommand(VNDKCommandBase):
         file.write(template)
 
     def main(self, args):
-        generic_refs, graph = self.create_from_args(args)
+        generic_refs, graph, tagged_paths = self.create_from_args(args)
 
         # Check the API extensions to NDK libraries.
         if generic_refs:
@@ -2010,16 +2014,10 @@ class VNDKCommand(VNDKCommandBase):
         if args.warn_incorrect_partition:
             self._warn_incorrect_partition(graph)
 
-        if args.tag_file:
-            tagged_paths = TaggedPathDict.create_from_csv_path(args.tag_file)
-        else:
-            tagged_paths = None
-
         # Compute vndk heuristics.
-        sp_lib = graph.compute_sp_lib(generic_refs)
         vndk_lib = graph.compute_degenerated_vndk(
-                sp_lib, generic_refs, tagged_paths,
-                args.action_ineligible_vndk_sp, args.action_ineligible_vndk)
+                generic_refs, tagged_paths, args.action_ineligible_vndk_sp,
+                args.action_ineligible_vndk)
 
         # Print results.
         if args.output_format == 'make':
@@ -2042,11 +2040,12 @@ class DepsInsightCommand(VNDKCommandBase):
                 '--output', '-o', help='output directory')
 
     def main(self, args):
-        generic_refs, graph = self.create_from_args(args)
+        generic_refs, graph, tagged_paths = self.create_from_args(args)
 
         # Compute vndk heuristics.
-        sp_lib = graph.compute_sp_lib(generic_refs)
-        vndk_lib = graph.compute_degenerated_vndk(sp_lib, generic_refs)
+        vndk_lib = graph.compute_degenerated_vndk(
+                generic_refs, tagged_paths, args.action_ineligible_vndk_sp,
+                args.action_ineligible_vndk)
 
         # Serialize data.
         strs = []
