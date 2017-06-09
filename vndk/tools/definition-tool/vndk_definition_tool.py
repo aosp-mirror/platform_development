@@ -1905,6 +1905,10 @@ class VNDKCommand(VNDKCommandBase):
                 help='action when a vendor lib/exe uses fwk-only libs '
                      '(option: follow,warn,ignore)')
 
+        parser.add_argument(
+                '--output-format', default='tag',
+                help='output format for vndk classification')
+
     def _warn_incorrect_partition_lib_set(self, lib_set, partition, error_msg):
         for lib in lib_set.values():
             if not lib.num_users:
@@ -1950,6 +1954,52 @@ class VNDKCommand(VNDKCommandBase):
             getattr(results, tag).update(getattr(vndk_result, field_name))
         return results
 
+    def _print_tags(self, vndk_lib, full, file=sys.stdout):
+        if full:
+            result_tags = _VNDK_RESULT_FIELD_NAMES
+            results = vndk_lib
+        else:
+            # Simplified VNDK output with only three sets.
+            result_tags = _SIMPLE_VNDK_RESULT_FIELD_NAMES
+            results = self._extract_simple_vndk_result(vndk_lib)
+
+        for tag in result_tags:
+            libs = getattr(results, tag)
+            tag += ':'
+            for lib in sorted_lib_path_list(libs):
+                print(tag, lib, file=file)
+
+    def _print_make(self, vndk_lib, file=sys.stdout):
+        def get_module_name(path):
+            name = os.path.basename(path)
+            root, ext = os.path.splitext(name)
+            return root
+
+        def get_module_names(lib_set):
+            return sorted({ get_module_name(lib.path) for lib in lib_set })
+
+        results = self._extract_simple_vndk_result(vndk_lib)
+        vndk_sp = get_module_names(results.vndk_sp)
+        vndk_sp_ext = get_module_names(results.vndk_sp_ext)
+        extra_vendor_libs= get_module_names(results.extra_vendor_libs)
+
+        def format_module_names(module_names):
+            return '\\\n    ' +  ' \\\n    '.join(module_names)
+
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        template_path = os.path.join(script_dir, 'templates', 'vndk.txt')
+        with open(template_path, 'r') as f:
+            template = f.read()
+
+        template = template.replace('##_VNDK_SP_##',
+                                    format_module_names(vndk_sp))
+        template = template.replace('##_VNDK_SP_EXT_##',
+                                    format_module_names(vndk_sp_ext))
+        template = template.replace('##_EXTRA_VENDOR_LIBS_##',
+                                    format_module_names(extra_vendor_libs))
+
+        file.write(template)
+
     def main(self, args):
         generic_refs, graph = self.create_from_args(args)
 
@@ -1972,19 +2022,10 @@ class VNDKCommand(VNDKCommandBase):
                 args.action_ineligible_vndk_sp, args.action_ineligible_vndk)
 
         # Print results.
-        if args.full:
-            result_tags = _VNDK_RESULT_FIELD_NAMES
-            results = vndk_lib
+        if args.output_format == 'make':
+            self._print_make(vndk_lib)
         else:
-            # Simplified VNDK output with only three sets.
-            result_tags = _SIMPLE_VNDK_RESULT_FIELD_NAMES
-            results = self._extract_simple_vndk_result(vndk_lib)
-
-        for tag in result_tags:
-            libs = getattr(results, tag)
-            tag += ':'
-            for lib in sorted_lib_path_list(libs):
-                print(tag, lib)
+            self._print_tags(vndk_lib, args.full)
 
         return 0
 
