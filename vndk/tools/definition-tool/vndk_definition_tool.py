@@ -1282,20 +1282,7 @@ class ELFLinker(object):
                                  action_ineligible_vndk='follow,warn'):
         # Find LL-NDK and SP-NDK libs.
         ll_ndk = set(lib for lib in self.all_libs() if lib.is_ll_ndk)
-
-        def is_not_ll_ndk_indirect(lib):
-            return lib.is_ll_ndk
-
-        ll_ndk_indirect = self.compute_closure(ll_ndk, is_not_ll_ndk_indirect)
-        ll_ndk_indirect -= ll_ndk
-
         sp_ndk = set(lib for lib in self.all_libs() if lib.is_sp_ndk)
-
-        def is_not_sp_ndk_indirect(lib):
-            return lib.is_ll_ndk or lib.is_sp_ndk or lib in ll_ndk_indirect
-
-        sp_ndk_indirect = self.compute_closure(sp_ndk, is_not_sp_ndk_indirect)
-        sp_ndk_indirect -= sp_ndk
 
         # Find SP-HAL libs.
         sp_hal = self.compute_predefined_sp_hal()
@@ -1383,6 +1370,12 @@ class ELFLinker(object):
         extra_vndk_sp_indirect = vndk_sp - predefined_vndk_sp - \
                                  predefined_vndk_sp_indirect
 
+        def is_vndk_sp(lib):
+            return lib in vndk_sp or lib in vndk_sp_unused or \
+                   lib in vndk_sp_indirect or \
+                   lib in vndk_sp_indirect_unused or \
+                   lib in vndk_sp_indirect_private
+
         # Find VNDK libs (a.k.a. system shared libs directly used by vendor
         # partition.)
         def is_not_vndk(lib):
@@ -1417,6 +1410,9 @@ class ELFLinker(object):
         vndk_indirect = self.compute_closure(vndk, is_not_vndk)
         vndk_indirect -= vndk
 
+        def is_vndk(lib):
+            return lib in vndk or lib in vndk_indirect
+
         # Compute the extended usages from vendor partition.
         # FIXME: DAUX libraries won't be found by the following algorithm.
         vndk_ext = set()
@@ -1435,6 +1431,21 @@ class ELFLinker(object):
             vndk_ext |= candidates
             candidates = collect_vndk_ext(candidates)
 
+        # Compute LL-NDK-Indirect and SP-NDK-Indirect.
+        def is_not_ll_ndk_indirect(lib):
+            return lib.is_ll_ndk or is_vndk_sp(lib) or is_vndk(lib)
+
+        ll_ndk_indirect = self.compute_closure(ll_ndk, is_not_ll_ndk_indirect)
+        ll_ndk_indirect -= ll_ndk
+
+        def is_not_sp_ndk_indirect(lib):
+            return lib.is_ll_ndk or lib.is_sp_ndk or lib in ll_ndk_indirect or \
+                   is_vndk_sp(lib) or is_vndk(lib)
+
+        sp_ndk_indirect = self.compute_closure(sp_ndk, is_not_sp_ndk_indirect)
+        sp_ndk_indirect -= sp_ndk
+
+        # Return the VNDK classifications.
         return VNDKResult(
                 ll_ndk=ll_ndk,
                 ll_ndk_indirect=ll_ndk_indirect,
