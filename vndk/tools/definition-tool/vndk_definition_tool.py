@@ -1369,19 +1369,41 @@ class ELFLinker(object):
                 vndk_sp_ext, is_not_vndk_sp_indirect_ext)
         vndk_sp_indirect_ext -= vndk_sp_ext
 
-        extra_vndk_sp_indirect = vndk_sp - predefined_vndk_sp - \
+        vndk_sp_closure = vndk_sp | vndk_sp_indirect
+        extra_vndk_sp_indirect = vndk_sp_closure - predefined_vndk_sp - \
                                  predefined_vndk_sp_indirect
 
-        def is_vndk_sp(lib):
+        def is_vndk_sp_public(lib):
             return lib in vndk_sp or lib in vndk_sp_unused or \
                    lib in vndk_sp_indirect or \
-                   lib in vndk_sp_indirect_unused or \
-                   lib in vndk_sp_indirect_private
+                   lib in vndk_sp_indirect_unused
+
+        def is_vndk_sp(lib):
+            return is_vndk_sp_public(lib) or lib in vndk_sp_indirect_private
+
+        def is_vndk_sp_unused(lib):
+            return lib in vndk_sp_unused or lib in vndk_sp_indirect_unused
+
+        def relabel_vndk_sp_as_used(lib):
+            assert is_vndk_sp_unused(lib)
+
+            if lib in vndk_sp_unused:
+                vndk_sp_unused.remove(lib)
+                vndk_sp.add(lib)
+            else:
+                vndk_sp_indirect_unused.remove(lib)
+                vndk_sp_indirect.add(lib)
+
+            closure = self.compute_closure({lib}, is_not_vndk_sp_indirect)
+            closure -= vndk_sp
+            vndk_sp_indirect_unused.difference_update(closure)
+            vndk_sp_indirect.update(closure)
 
         # Find VNDK libs (a.k.a. system shared libs directly used by vendor
         # partition.)
         def is_not_vndk(lib):
-            if lib.is_ll_ndk or lib.is_sp_ndk or lib in vndk_sp:
+            if lib.is_ll_ndk or lib.is_sp_ndk or is_vndk_sp_public(lib) or \
+               lib in fwk_only_rs:
                 return True
             if lib.partition != PT_SYSTEM:
                 return True
@@ -1396,6 +1418,9 @@ class ELFLinker(object):
         vndk = set()
         for lib in self.lib_pt[PT_VENDOR].values():
             for dep in lib.deps:
+                if is_vndk_sp_unused(dep):
+                    relabel_vndk_sp_as_used(dep)
+                    continue
                 if is_not_vndk(dep):
                     continue
                 if not tagged_paths or \
