@@ -1359,24 +1359,7 @@ class ELFLinker(object):
         # TODO: Compute VNDK-SP-Indirect-Private.
         vndk_sp_indirect_private = set()
 
-        predefined_vndk_sp_indirect = self.compute_predefined_vndk_sp_indirect()
-
-        # TODO: Compute VNDK-SP-Ext and VNDK-SP-Indirect-Ext.
-        vndk_sp_ext = set()
-
-        def is_not_vndk_sp_indirect_ext(lib):
-            return lib.is_ll_ndk or lib.is_sp_ndk or lib in vndk_sp_ext or \
-                   lib in predefined_vndk_sp or \
-                   lib in predefined_vndk_sp_indirect
-
-        vndk_sp_indirect_ext = self.compute_closure(
-                vndk_sp_ext, is_not_vndk_sp_indirect_ext)
-        vndk_sp_indirect_ext -= vndk_sp_ext
-
-        vndk_sp_closure = vndk_sp | vndk_sp_indirect
-        extra_vndk_sp_indirect = vndk_sp_closure - predefined_vndk_sp - \
-                                 predefined_vndk_sp_indirect
-
+        # Define helper functions for vndk_sp sets.
         def is_vndk_sp_public(lib):
             return lib in vndk_sp or lib in vndk_sp_unused or \
                    lib in vndk_sp_indirect or \
@@ -1402,6 +1385,55 @@ class ELFLinker(object):
             closure -= vndk_sp
             vndk_sp_indirect_unused.difference_update(closure)
             vndk_sp_indirect.update(closure)
+
+        # Find VNDK-SP-Ext libs.
+        vndk_sp_ext = set()
+        def collect_vndk_ext(libs):
+            result = set()
+            for lib in libs:
+                for dep in lib.imported_ext_symbols:
+                    if dep in vndk_sp and dep not in vndk_sp_ext:
+                        result.add(dep)
+            return result
+
+        candidates = collect_vndk_ext(self.lib_pt[PT_VENDOR].values())
+        while candidates:
+            vndk_sp_ext |= candidates
+            candidates = collect_vndk_ext(candidates)
+
+        # Find VNDK-SP-Indirect-Ext libs.
+        predefined_vndk_sp_indirect = self.compute_predefined_vndk_sp_indirect()
+        vndk_sp_indirect_ext = set()
+        def collect_vndk_sp_indirect_ext(libs):
+            result = set()
+            for lib in libs:
+                exts = set(lib.imported_ext_symbols.keys())
+                for dep in lib.deps:
+                    if not is_vndk_sp_public(dep):
+                        continue
+                    if dep in vndk_sp_ext or dep in vndk_sp_indirect_ext:
+                        continue
+                    # If lib is using extended definition from deps, then we
+                    # have to make a copy of dep.
+                    if dep in exts:
+                        result.add(dep)
+                        continue
+                    # If lib is using non-predefined VNDK-SP-Indirect, then we
+                    # have to make a copy of dep.
+                    if dep not in predefined_vndk_sp and \
+                            dep not in predefined_vndk_sp_indirect:
+                        result.add(dep)
+                        continue
+            return result
+
+        def is_not_vndk_sp_indirect(lib):
+            return lib.is_ll_ndk or lib.is_sp_ndk or lib in vndk_sp or \
+                   lib in fwk_only_rs
+
+        candidates = collect_vndk_sp_indirect_ext(vndk_sp_ext)
+        while candidates:
+            vndk_sp_indirect_ext |= candidates
+            candidates = collect_vndk_sp_indirect_ext(candidates)
 
         # Find VNDK libs (a.k.a. system shared libs directly used by vendor
         # partition.)
@@ -1513,7 +1545,7 @@ class ELFLinker(object):
                 vndk_ext=vndk_ext | extra_vendor_libs,
                 # vndk_sp_ext=vndk_sp_ext,
                 # vndk_sp_indirect_ext=vndk_sp_indirect_ext,
-                extra_vndk_sp_indirect=extra_vndk_sp_indirect)
+                extra_vndk_sp_indirect=vndk_sp_ext | vndk_sp_indirect_ext)
 
     def compute_vndk_cap(self, banned_libs):
         # ELF files on vendor partitions are banned unconditionally.  ELF files
