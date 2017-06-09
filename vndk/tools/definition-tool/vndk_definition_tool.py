@@ -1330,11 +1330,6 @@ class ELFLinker(object):
                 if follow_ineligible_vndk_sp:
                     vndk_sp.add(dep)
 
-        # Add other predefined VNDK-SP even if they are not actually used by
-        # SP-HAL libs.
-        vndk_sp_unused = set(lib for lib in predefined_vndk_sp
-                             if self._is_in_vndk_sp_dir(lib.path)) - vndk_sp
-
         # Find VNDK-SP-Indirect libs.
         def is_not_vndk_sp_indirect(lib):
             return lib.is_ll_ndk or lib.is_sp_ndk or lib in vndk_sp or \
@@ -1344,6 +1339,13 @@ class ELFLinker(object):
                 vndk_sp, is_not_vndk_sp_indirect)
         vndk_sp_indirect -= vndk_sp
 
+        # Find unused predefined VNDK-SP libs.
+        vndk_sp_unused = set(lib for lib in predefined_vndk_sp
+                             if self._is_in_vndk_sp_dir(lib.path))
+        vndk_sp_unused -= vndk_sp
+        vndk_sp_unused -= vndk_sp_indirect
+
+        # Find dependencies of unused predefined VNDK-SP libs.
         def is_not_vndk_sp_indirect_unused(lib):
             return is_not_vndk_sp_indirect(lib) or lib in vndk_sp_indirect
         vndk_sp_indirect_unused = self.compute_closure(
