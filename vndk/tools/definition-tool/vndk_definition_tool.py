@@ -1279,8 +1279,8 @@ class ELFLinker(object):
 
     def compute_degenerated_vndk(self, sp_lib, generic_refs,
                                  tagged_paths=None,
-                                 action_ineligible_vndk_sp='follow,warn',
-                                 action_ineligible_vndk='follow,warn'):
+                                 action_ineligible_vndk_sp='warn',
+                                 action_ineligible_vndk='warn'):
         # Find LL-NDK and SP-NDK libs.
         ll_ndk = set(lib for lib in self.all_libs() if lib.is_ll_ndk)
         sp_ndk = set(lib for lib in self.all_libs() if lib.is_sp_ndk)
@@ -1890,12 +1890,14 @@ class VNDKCommand(VNDKCommandBase):
         parser.add_argument('--tag-file', help='lib tag file')
 
         parser.add_argument(
-                '--action-ineligible-vndk-sp', default='warn,follow',
-                help='action when a sp-hal uses non-vndk-sp libs')
+                '--action-ineligible-vndk-sp', default='warn',
+                help='action when a sp-hal uses non-vndk-sp libs '
+                     '(option: follow,warn,ignore)')
 
         parser.add_argument(
-                '--action-ineligible-vndk', default='warn,follow',
-                help='action when a vendor lib/exe uses fwk-only libs')
+                '--action-ineligible-vndk', default='warn',
+                help='action when a vendor lib/exe uses fwk-only libs '
+                     '(option: follow,warn,ignore)')
 
     def _warn_incorrect_partition_lib_set(self, lib_set, partition, error_msg):
         for lib in lib_set.values():
