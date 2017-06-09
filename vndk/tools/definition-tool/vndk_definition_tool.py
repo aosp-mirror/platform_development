@@ -1293,13 +1293,17 @@ class ELFLinker(object):
         self.normalize_partition_tags(sp_hal, generic_refs)
 
         # Find SP-HAL-Dep libs.
+        def is_aosp_lib(lib):
+            if not generic_refs:
+                # If generic reference is not available, then assume all system
+                # libs are AOSP libs.
+                return lib.partition == PT_SYSTEM
+            return generic_refs.has_same_name_lib(lib)
+
         def is_not_sp_hal_dep(lib):
             if lib.is_ll_ndk or lib.is_sp_ndk or lib in sp_hal:
                 return True
-            if not generic_refs:
-                # Use simple heuristic when generic reference is not available.
-                return lib.partition == PT_SYSTEM
-            return generic_refs.has_same_name_lib(lib)
+            return is_aosp_lib(lib)
 
         sp_hal_dep = self.compute_closure(sp_hal, is_not_sp_hal_dep)
         sp_hal_dep -= sp_hal
@@ -1405,34 +1409,46 @@ class ELFLinker(object):
             if lib.is_ll_ndk or lib.is_sp_ndk or is_vndk_sp_public(lib) or \
                lib in fwk_only_rs:
                 return True
-            if lib.partition != PT_SYSTEM:
-                return True
-            if not generic_refs:
-                # If generic reference is not available, we assume all system
-                # libs are eligible vndk.
-                return False
-            return not generic_refs.has_same_name_lib(lib)
+            return lib.partition != PT_SYSTEM
+
+        def is_eligible_lib_access(lib, dep):
+            return not tagged_paths or \
+                    tagged_paths.is_path_visible(lib.path, dep.path)
 
         follow_ineligible_vndk, warn_ineligible_vndk = \
                 self._parse_action_on_ineligible_lib(action_ineligible_vndk)
         vndk = set()
-        for lib in self.lib_pt[PT_VENDOR].values():
-            for dep in lib.deps:
-                if is_vndk_sp_unused(dep):
-                    relabel_vndk_sp_as_used(dep)
-                    continue
-                if is_not_vndk(dep):
-                    continue
-                if not tagged_paths or \
-                        tagged_paths.is_path_visible(lib.path, dep.path):
-                    vndk.add(dep)
-                    continue
-                if warn_ineligible_vndk:
-                    print('warning: vendor lib/exe {} depends on ineligible '
-                          'framework shared lib {}.'
-                          .format(lib.path, dep.path), file=sys.stderr)
-                if follow_ineligible_vndk:
-                    vndk.add(dep)
+        extra_vendor_libs = set()
+        def collect_vndk(vendor_libs):
+            next_vendor_libs = set()
+            for lib in vendor_libs:
+                for dep in lib.deps:
+                    if is_vndk_sp_unused(dep):
+                        relabel_vndk_sp_as_used(dep)
+                        continue
+                    if is_not_vndk(dep):
+                        continue
+                    if not is_aosp_lib(dep):
+                        # The dependency should be copied into vendor partition
+                        # as an extra vendor lib.
+                        if dep not in extra_vendor_libs:
+                            next_vendor_libs.add(dep)
+                            extra_vendor_libs.add(dep)
+                        continue
+                    if is_eligible_lib_access(lib, dep):
+                        vndk.add(dep)
+                        continue
+                    if warn_ineligible_vndk:
+                        print('warning: vendor lib/exe {} depends on '
+                              'ineligible framework shared lib {}.'
+                              .format(lib.path, dep.path), file=sys.stderr)
+                    if follow_ineligible_vndk:
+                        vndk.add(dep)
+            return next_vendor_libs
+
+        candidates = collect_vndk(self.lib_pt[PT_VENDOR].values())
+        while candidates:
+            candidates = collect_vndk(candidates)
 
         vndk_indirect = self.compute_closure(vndk, is_not_vndk)
         vndk_indirect -= vndk
@@ -1440,7 +1456,10 @@ class ELFLinker(object):
         def is_vndk(lib):
             return lib in vndk or lib in vndk_indirect
 
-        # Compute the extended usages from vendor partition.
+        # Find VNDK-EXT libs (VNDK libs with extended definitions and the
+        # extended definitions are used by the vendor modules (including
+        # extra_vendor_libs).
+
         # FIXME: DAUX libraries won't be found by the following algorithm.
         vndk_ext = set()
 
@@ -1453,6 +1472,7 @@ class ELFLinker(object):
             return result
 
         candidates = collect_vndk_ext(self.lib_pt[PT_VENDOR].values())
+        candidates |= collect_vndk_ext(extra_vendor_libs)
 
         while candidates:
             vndk_ext |= candidates
@@ -1490,7 +1510,7 @@ class ELFLinker(object):
                 sp_hal=sp_hal,
                 sp_hal_dep=sp_hal_dep,
                 # vnd_only=vnd_only,
-                vndk_ext=vndk_ext,
+                vndk_ext=vndk_ext | extra_vendor_libs,
                 # vndk_sp_ext=vndk_sp_ext,
                 # vndk_sp_indirect_ext=vndk_sp_indirect_ext,
                 extra_vndk_sp_indirect=extra_vndk_sp_indirect)
