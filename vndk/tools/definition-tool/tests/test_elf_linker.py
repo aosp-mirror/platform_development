@@ -273,7 +273,6 @@ class ELFLinkerTest(unittest.TestCase):
             'libhidltransport',
             'libhwbinder',
             'libutils',
-            'libz',
         )
 
         # Add VNDK-SP libraries.
