@@ -20,6 +20,7 @@ class NDKLibDictTest(unittest.TestCase):
         self.assertTrue(NDK_LIBS.is_ll_ndk('/system/lib/libstdc++.so'))
         self.assertTrue(NDK_LIBS.is_ll_ndk('/system/lib/libvndksupport.so'))
         self.assertTrue(NDK_LIBS.is_ll_ndk('/system/lib/libandroid_net.so'))
+        self.assertTrue(NDK_LIBS.is_ll_ndk('/system/lib/libz.so'))
 
         self.assertTrue(NDK_LIBS.is_ll_ndk('/system/lib64/libc.so'))
         self.assertTrue(NDK_LIBS.is_ll_ndk('/system/lib64/libdl.so'))
@@ -28,12 +29,9 @@ class NDKLibDictTest(unittest.TestCase):
         self.assertTrue(NDK_LIBS.is_ll_ndk('/system/lib64/libstdc++.so'))
         self.assertTrue(NDK_LIBS.is_ll_ndk('/system/lib64/libvndksupport.so'))
         self.assertTrue(NDK_LIBS.is_ll_ndk('/system/lib64/libandroid_net.so'))
+        self.assertTrue(NDK_LIBS.is_ll_ndk('/system/lib64/libz.so'))
 
         self.assertFalse(NDK_LIBS.is_ll_ndk('/system/lib/libm'))
-
-        # libz.so is not LL-NDK anymore.
-        self.assertFalse(NDK_LIBS.is_ll_ndk('/system/lib/libz.so'))
-        self.assertFalse(NDK_LIBS.is_ll_ndk('/system/lib64/libz.so'))
 
     def test_is_sp_ndk(self):
         self.assertTrue(NDK_LIBS.is_sp_ndk('/system/lib/libEGL.so'))
@@ -108,6 +106,7 @@ class NDKLibDictTest(unittest.TestCase):
         self.assertTrue(NDK_LIBS.is_ndk('/system/lib/libstdc++.so'))
         self.assertTrue(NDK_LIBS.is_ndk('/system/lib/libvndksupport.so'))
         self.assertTrue(NDK_LIBS.is_ndk('/system/lib/libandroid_net.so'))
+        self.assertTrue(NDK_LIBS.is_ndk('/system/lib/libz.so'))
 
         self.assertTrue(NDK_LIBS.is_ndk('/system/lib64/libc.so'))
         self.assertTrue(NDK_LIBS.is_ndk('/system/lib64/libdl.so'))
@@ -116,6 +115,7 @@ class NDKLibDictTest(unittest.TestCase):
         self.assertTrue(NDK_LIBS.is_ndk('/system/lib64/libstdc++.so'))
         self.assertTrue(NDK_LIBS.is_ndk('/system/lib64/libvndksupport.so'))
         self.assertTrue(NDK_LIBS.is_ndk('/system/lib64/libandroid_net.so'))
+        self.assertTrue(NDK_LIBS.is_ndk('/system/lib64/libz.so'))
 
         # SP-NDK
         self.assertTrue(NDK_LIBS.is_ndk('/system/lib/libEGL.so'))
@@ -144,10 +144,6 @@ class NDKLibDictTest(unittest.TestCase):
         self.assertTrue(NDK_LIBS.is_ndk('/system/lib64/libjnigraphics.so'))
         self.assertTrue(NDK_LIBS.is_ndk('/system/lib64/libmediandk.so'))
         self.assertTrue(NDK_LIBS.is_ndk('/system/lib64/libvulkan.so'))
-
-        # libz.so is not NDK anymore.
-        self.assertFalse(NDK_LIBS.is_ndk('/system/lib/libz.so'))
-        self.assertFalse(NDK_LIBS.is_ndk('/system/lib64/libz.so'))
 
     def test_classify(self):
         self.assertEqual(NDK_LIBS.NOT_NDK,

@@ -543,6 +543,7 @@ class NDKLibDict(object):
         'libstdc++.so',
         'libvndksupport.so',
         'libandroid_net.so',
+        'libz.so',
     )
 
     SP_NDK_LIB_NAMES = (
@@ -1125,7 +1126,6 @@ class ELFLinker(object):
             '^.*/libhidltransport\\.so$',
             '^.*/libhwbinder\\.so$',
             '^.*/libutils\\.so$',
-            '^.*/libz\\.so$',
 
             # Only for o-release
             '^.*/android\\.hidl\\.base@1\\.0\\.so$',
