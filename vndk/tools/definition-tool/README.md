@@ -23,42 +23,48 @@ The high-level overview of the command line usage is:
 
 This command will print several lines such as:
 
-    extra_vndk_sp_indirect: libexample1.so
-    extra_vndk_sp_indirect: libexample2.so
-    vndk_ext: libexample3.so
-    vndk_ext: libexample4.so
+    vndk-sp: libexample1.so
+    vndk-sp-ext: libexample2.so
+    extra-vendor-libs: libexample3.so
 
-This output implies:
+The output implies:
 
-1. `libexample1.so` and `libexample2.so` should be copied into
-   `/vendor/lib[64]/vndk-sp`.
-
-2. `libexample3.so` and `libexample4.so` should be copied into
-   `/vendor/lib[64]`.
+1. `libexample1.so` should be copied to `/system/lib[64]/vndk-sp`.
+2. `libexample2.so` should be copied to `/vendor/lib[64]/vndk-sp`.
+3. `libexample3.so` should be copied to `/vendor/lib[64]`.
 
 
-# Boilerplates
+# Makefile Boilerplates
 
 There are some boilerplates in `templates` directory that can automate the
-process to copy shared libraries.
+process to copy shared libraries.  Please copy a boilerplate, rename it as
+`Android.mk`, and replace the placeholders with corresponding values:
 
-If the output tagged some shared libraries with `extra_vndk_sp_indirect`, then
-copy `templates/extra_vndk_sp_indirect.txt` to an Android.mk and substitute
-`##_EXTRA_VNDK_SP_INDIRECT_##` with library names (without `.so`).
+* `##_VNDK_SP_##` should be replaced by library names tagged with `vndk_sp`.
 
-If the output tagged some shared libraries with `vndk_ext`, then copy
-`templates/vndk_ext.txt` to an Android.mk and substitute `##_VNDK_EXT_##` with
-library names (without `.so`).
+* `##_VNDK_SP_EXT_##` should be replaced by library names tagged with
+  `vndk_sp_ext`.
+
+* `##_EXTRA_VENDOR_LIBS_##` should be replaced by library names tagged with
+  `extra_vendor_libs`.
+
+* `$(YOUR_DEVICE_NAME)` has to be replaced by your own device product name.
+
+VNDK definition tool can fill in the library names and generate an `Android.mk`
+when the `--output-format=make` is specified:
+
+    $ python3 ./vndk_definition_tool.py vndk \
+        --system "/path/to/your/product_out/system" \
+        --vendor "/path/to/your/product_out/vendor" \
+        --aosp-system "/path/to/aosp/generic/system" \
+        --tag-file "eligible-list-v3.0.csv" \
+        --output-format=make
 
 These boilerplates only define the modules to copy shared libraries.
-Developers have to add those modules to the `PRODUCT_PACKAGES` variable in
-their `device.mk`.  For example, in the example mentioned above, following
-`PRODUCT_PACKAGES` changes are necessary for that target:
+Developers have to add the phony package name to `PRODUCT_PACKAGES` variable in
+the `device.mk` for their devices.
 
-    PRODUCT_PACKAGES += libexample1.vndk-sp-ext
-    PRODUCT_PACKAGES += libexample2.vndk-sp-ext
-    PRODUCT_PACKAGES += libexample3.vndk-ext
-    PRODUCT_PACKAGES += libexample4.vndk-ext
+    PRODUCT_PACKAGES += $(YOUR_DEVICE_NAME)-vndk
 
 
 ## Ignore Subdirectories
