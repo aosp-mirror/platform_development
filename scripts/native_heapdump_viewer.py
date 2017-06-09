@@ -225,7 +225,13 @@ app = AddrInfo("APP")
 
 def display(indent, total, parent_total, node):
     fd = addr2line(node.addr)
-    print "%9d %6.2f%% %6.2f%% %8d %s%s %s %s %s" % (node.size, 100*node.size/float(total), 100*node.size/float(parent_total), node.number, indent, node.addr, fd.library, fd.function, fd.location)
+    total_percent = 0
+    if total != 0:
+      total_percent = 100 * node.size / float(total)
+    parent_percent = 0
+    if parent_total != 0:
+      parent_percent = 100 * node.size / float(parent_total)
+    print "%9d %6.2f%% %6.2f%% %8d %s%s %s %s %s" % (node.size, total_percent, parent_percent, node.number, indent, node.addr, fd.library, fd.function, fd.location)
     children = sorted(node.children.values(), key=lambda x: x.size, reverse=True)
     for child in children:
         display(indent + "  ", total, node.size, child)
