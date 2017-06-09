@@ -1398,7 +1398,7 @@ class ELFLinker(object):
                     vndk.add(dep)
 
         vndk_indirect = self.compute_closure(vndk, is_not_vndk)
-        vndk_indirect -= vndk_indirect
+        vndk_indirect -= vndk
 
         # Compute the extended usages from vendor partition.
         # FIXME: DAUX libraries won't be found by the following algorithm.
