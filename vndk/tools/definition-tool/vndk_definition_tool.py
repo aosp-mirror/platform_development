@@ -843,9 +843,15 @@ _VNDK_RESULT_FIELD_NAMES = (
         'vndk_sp_indirect_unused', 'vndk_sp_indirect_private', 'vndk',
         'vndk_indirect', 'fwk_only', 'fwk_only_rs', 'sp_hal', 'sp_hal_dep',
         'vnd_only', 'vndk_ext', 'vndk_sp_ext', 'vndk_sp_indirect_ext',
-        'extra_vndk_sp_indirect')
+        'extra_vendor_libs')
 
 VNDKResult = defaultnamedtuple('VNDKResult', _VNDK_RESULT_FIELD_NAMES, set())
+
+_SIMPLE_VNDK_RESULT_FIELD_NAMES = (
+        'vndk_sp', 'vndk_sp_ext', 'extra_vendor_libs')
+
+SimpleVNDKResult = defaultnamedtuple(
+        'SimpleVNDKResult', _SIMPLE_VNDK_RESULT_FIELD_NAMES, set())
 
 
 class ELFLibDict(defaultnamedtuple('ELFLibDict', ('lib32', 'lib64'), {})):
@@ -1543,10 +1549,10 @@ class ELFLinker(object):
                 sp_hal=sp_hal,
                 sp_hal_dep=sp_hal_dep,
                 # vnd_only=vnd_only,
-                vndk_ext=vndk_ext | extra_vendor_libs,
-                # vndk_sp_ext=vndk_sp_ext,
-                # vndk_sp_indirect_ext=vndk_sp_indirect_ext,
-                extra_vndk_sp_indirect=vndk_sp_ext | vndk_sp_indirect_ext)
+                vndk_ext=vndk_ext,
+                vndk_sp_ext=vndk_sp_ext,
+                vndk_sp_indirect_ext=vndk_sp_indirect_ext,
+                extra_vendor_libs=extra_vendor_libs)
 
     def compute_vndk_cap(self, banned_libs):
         # ELF files on vendor partitions are banned unconditionally.  ELF files
@@ -1924,6 +1930,26 @@ class VNDKCommand(VNDKCommandBase):
                     print('warning: {}: NDK library should not be extended.'
                             .format(lib.path), file=sys.stderr)
 
+    @staticmethod
+    def _extract_simple_vndk_result(vndk_result):
+        field_name_tags = [
+            ('vndk_sp', 'vndk_sp'),
+            ('vndk_sp_unused', 'vndk_sp'),
+            ('vndk_sp_indirect', 'vndk_sp'),
+            ('vndk_sp_indirect_unused', 'vndk_sp'),
+            ('vndk_sp_indirect_private', 'vndk_sp'),
+
+            ('vndk_sp_ext', 'vndk_sp_ext'),
+            ('vndk_sp_indirect_ext', 'vndk_sp_ext'),
+
+            ('vndk_ext', 'extra_vendor_libs'),
+            ('extra_vendor_libs', 'extra_vendor_libs'),
+        ]
+        results = SimpleVNDKResult()
+        for field_name, tag in field_name_tags:
+            getattr(results, tag).update(getattr(vndk_result, field_name))
+        return results
+
     def main(self, args):
         generic_refs, graph = self.create_from_args(args)
 
@@ -1946,13 +1972,20 @@ class VNDKCommand(VNDKCommandBase):
                 args.action_ineligible_vndk_sp, args.action_ineligible_vndk)
 
         # Print results.
-        field_names = ['extra_vndk_sp_indirect', 'vndk_ext']
         if args.full:
-            field_names = _VNDK_RESULT_FIELD_NAMES
-        for field_name in field_names:
-            tag = field_name + ':'
-            for lib in sorted_lib_path_list(getattr(vndk_lib, field_name)):
+            result_tags = _VNDK_RESULT_FIELD_NAMES
+            results = vndk_lib
+        else:
+            # Simplified VNDK output with only three sets.
+            result_tags = _SIMPLE_VNDK_RESULT_FIELD_NAMES
+            results = self._extract_simple_vndk_result(vndk_lib)
+
+        for tag in result_tags:
+            libs = getattr(results, tag)
+            tag += ':'
+            for lib in sorted_lib_path_list(libs):
                 print(tag, lib)
+
         return 0
 
 
