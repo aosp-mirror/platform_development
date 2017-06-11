@@ -241,9 +241,9 @@ def find_file(device, executable_path, sysroot, run_as_cmd=None):
     raise RuntimeError('Could not find executable {}'.format(executable_path))
 
 
-def find_binary(device, pid, sysroot, user=None):
+def find_binary(device, pid, sysroot, run_as_cmd=None):
     """Finds a device executable file corresponding to |pid|."""
-    return find_file(device, "/proc/{}/exe".format(pid), sysroot, user)
+    return find_file(device, "/proc/{}/exe".format(pid), sysroot, run_as_cmd)
 
 
 def get_binary_arch(binary_file):
@@ -309,4 +309,3 @@ def start_gdb(gdb_path, gdb_commands, gdb_flags=None):
             pass
 
     os.unlink(gdb_script_path)
-

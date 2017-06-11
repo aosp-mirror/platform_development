@@ -37,7 +37,7 @@ ALL_LIBS=(${ADD_TO_HEADER_LIBS[@]} ${ADD_TO_SHARED_LIBS[@]})
 
 for lib in "${ALL_LIBS[@]}"; do
   echo "Parsing log.error for $lib"
-  cat log.error | grep -B1 "error: '$lib\/" | grep FAILED | awk 'BEGIN{FS="_int"}{print $1}' | awk 'BEGIN{FS="S/";}{print $2}' | sort | uniq > log.$lib
+  cat log.error | grep -B1 "error: '$lib\/" | grep FAILED | awk 'BEGIN{FS="_intermediates"}{print $1}' | awk 'BEGIN{FS="S/";}{print $2}' | sort | uniq > log.$lib
 
   echo "Parsing log.$lib"
   for module in `cat log.$lib`; do find . -name Android.\* | xargs grep -w -H $module | grep "LOCAL_MODULE\|name:"; done > log.$lib.paths
@@ -46,6 +46,17 @@ for lib in "${ALL_LIBS[@]}"; do
   echo "Also remove duplicate makefile paths, even if they have different module names."
   echo "Then press Enter"
   read enter
+  if [ -s "log.$lib.paths" ]; then
+    not_vendor_list=`cat log.$lib.paths | awk 'BEGIN{FS=":"}{print $1}' | xargs grep -L 'LOCAL_PROPRIETARY_MODULE\|LOCAL_VENDOR_MODULE'`
+  else
+    not_vendor_list=
+  fi
+  if [ ! -z "$not_vendor_list" ]; then
+    echo "These modules do NOT have proprietary or vendor flag set."
+    printf "%s\n" $not_vendor_list
+    echo "Please check the makefile and update log."$lib".paths, then press Enter"
+    read enter
+  fi
 done
 
 for lib in "${ADD_TO_HEADER_LIBS[@]}"; do
