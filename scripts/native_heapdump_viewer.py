@@ -244,7 +244,10 @@ def display_html(total, node, extra):
         lib = fd.library
     else:
         lib = os.path.basename(fd.library)
-    label = "%d %6.2f%% %6d %s%s %s %s" % (node.size, 100*node.size/float(total), node.number, extra, lib, fd.function, fd.location)
+    total_percent = 0
+    if total != 0:
+        total_percent = 100 * node.size / float(total)
+    label = "%d %6.2f%% %6d %s%s %s %s" % (node.size, total_percent, node.number, extra, lib, fd.function, fd.location)
     label = label.replace("&", "&amp;")
     label = label.replace("'", "&apos;")
     label = label.replace('"', "&quot;")
