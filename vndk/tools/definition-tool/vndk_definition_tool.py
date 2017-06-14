@@ -2482,7 +2482,7 @@ class CheckDepCommand(ELFGraphCommand):
         """Check whether vendor libs are depending on non-eligible libs."""
         num_errors = 0
 
-        vendor_libs = graph.lib_pt[PT_VENDOR].values()
+        vendor_libs = set(graph.lib_pt[PT_VENDOR].values())
 
         eligible_libs = (tagged_libs.ll_ndk | tagged_libs.sp_ndk | \
                          tagged_libs.vndk_sp | tagged_libs.vndk_sp_indirect | \
