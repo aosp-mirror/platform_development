@@ -1591,18 +1591,28 @@ class ELFLinker(object):
         return vndk_cap
 
     @staticmethod
-    def compute_closure(root_set, is_excluded):
+    def _compute_closure(root_set, is_excluded, get_successors):
         closure = set(root_set)
         stack = list(root_set)
         while stack:
             lib = stack.pop()
-            for dep in lib.deps:
-                if is_excluded(dep):
+            for succ in get_successors(lib):
+                if is_excluded(succ):
                     continue
-                if dep not in closure:
-                    closure.add(dep)
-                    stack.append(dep)
+                if succ not in closure:
+                    closure.add(succ)
+                    stack.append(succ)
         return closure
+
+    @classmethod
+    def compute_deps_closure(cls, root_set, is_excluded):
+        return cls._compute_closure(root_set, is_excluded, lambda x: x.deps)
+
+    compute_closure = compute_deps_closure
+
+    @classmethod
+    def compute_users_closure(cls, root_set, is_excluded):
+        return cls._compute_closure(root_set, is_excluded, lambda x: x.users)
 
     @staticmethod
     def _create_internal(scan_elf_files, system_dirs, system_dirs_as_vendor,
@@ -2217,6 +2227,9 @@ class DepsClosureCommand(ELFGraphCommand):
         parser.add_argument('--exclude-ndk', action='store_true',
                             help='exclude ndk libraries')
 
+        parser.add_argument('--revert', action='store_true',
+                            help='print usage dependency')
+
     def main(self, args):
         generic_refs, graph = self.create_from_args(args)
 
@@ -2234,7 +2247,11 @@ class DepsClosureCommand(ELFGraphCommand):
             def is_excluded_libs(lib):
                 return lib in excluded_libs
 
-        closure = graph.compute_closure(root_libs, is_excluded_libs)
+        if args.revert:
+            closure = graph.compute_users_closure(root_libs, is_excluded_libs)
+        else:
+            closure = graph.compute_deps_closure(root_libs, is_excluded_libs)
+
         for lib in sorted_lib_path_list(closure):
             print(lib)
         return 0
