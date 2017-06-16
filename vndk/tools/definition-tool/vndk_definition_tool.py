@@ -2218,7 +2218,7 @@ class DepsClosureCommand(ELFGraphCommand):
     def add_argparser_options(self, parser):
         super(DepsClosureCommand, self).add_argparser_options(parser)
 
-        parser.add_argument('lib', nargs='+',
+        parser.add_argument('lib', nargs='*',
                             help='root set of the shared libraries')
 
         parser.add_argument('--exclude-lib', action='append', default=[],
@@ -2230,6 +2230,20 @@ class DepsClosureCommand(ELFGraphCommand):
         parser.add_argument('--revert', action='store_true',
                             help='print usage dependency')
 
+        parser.add_argument('--enumerate', action='store_true',
+                            help='print closure for each lib instead of union')
+
+    def print_deps_closure(self, root_libs, graph, is_excluded_libs,
+                           is_reverted, indent):
+        if is_reverted:
+            closure = graph.compute_users_closure(root_libs, is_excluded_libs)
+        else:
+            closure = graph.compute_deps_closure(root_libs, is_excluded_libs)
+
+        for lib in sorted_lib_path_list(closure):
+            print(indent + lib)
+
+
     def main(self, args):
         generic_refs, graph = self.create_from_args(args)
 
@@ -2239,7 +2253,7 @@ class DepsClosureCommand(ELFGraphCommand):
         root_libs = graph.get_libs(args.lib, report_error)
         excluded_libs = graph.get_libs(args.exclude_lib, report_error)
 
-        # Compute and print the closure.
+        # Define the exclusion filter.
         if args.exclude_ndk:
             def is_excluded_libs(lib):
                 return lib.is_ndk or lib in excluded_libs
@@ -2247,13 +2261,16 @@ class DepsClosureCommand(ELFGraphCommand):
             def is_excluded_libs(lib):
                 return lib in excluded_libs
 
-        if args.revert:
-            closure = graph.compute_users_closure(root_libs, is_excluded_libs)
+        if not args.enumerate:
+            self.print_deps_closure(root_libs, graph, is_excluded_libs,
+                                    args.revert, '')
         else:
-            closure = graph.compute_deps_closure(root_libs, is_excluded_libs)
-
-        for lib in sorted_lib_path_list(closure):
-            print(lib)
+            if not root_libs:
+                root_libs = list(graph.all_libs())
+            for lib in sorted(root_libs):
+                print(lib.path)
+                self.print_deps_closure({lib}, graph, is_excluded_libs,
+                                        args.revert, '\t')
         return 0
 
 
