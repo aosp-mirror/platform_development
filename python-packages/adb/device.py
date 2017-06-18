@@ -499,22 +499,6 @@ class AndroidDevice(object):
     def wait(self):
         return self._simple_call(['wait-for-device'])
 
-    def get_props(self):
-        result = {}
-        output, _ = self.shell(['getprop'])
-        output = split_lines(output)
-        pattern = re.compile(r'^\[([^]]+)\]: \[(.*)\]')
-        for line in output:
-            match = pattern.match(line)
-            if match is None:
-                raise RuntimeError('invalid getprop line: "{}"'.format(line))
-            key = match.group(1)
-            value = match.group(2)
-            if key in result:
-                raise RuntimeError('duplicate getprop key: "{}"'.format(key))
-            result[key] = value
-        return result
-
     def get_prop(self, prop_name):
         output = split_lines(self.shell(['getprop', prop_name])[0])
         if len(output) != 1:
