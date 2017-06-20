@@ -143,6 +143,12 @@ See test_defs.xsd for more information.
     coverage_target="framework"
     continuous="true" />
 
+<test name="android-common-ex"
+    build_path="frameworks/ex/common/tests"
+    package="com.android.common.tests"
+    coverage_target="framework"
+    continuous="true" />
+
 <test name="ex-variablespeed"
     build_path="frameworks/ex/variablespeed/tests"
     package="com.android.ex.variablespeed.tests"
