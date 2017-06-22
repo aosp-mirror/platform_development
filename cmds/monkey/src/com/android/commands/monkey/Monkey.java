@@ -395,7 +395,7 @@ public class Monkey {
     }
 
     /**
-     * Run "cat /data/anr/traces.txt". Wait about 5 seconds first, to let the
+     * Dump the most recent ANR trace. Wait about 5 seconds first, to let the
      * asynchronous report writing complete.
      */
     private void reportAnrTraces() {
@@ -403,7 +403,25 @@ public class Monkey {
             Thread.sleep(5 * 1000);
         } catch (InterruptedException e) {
         }
-        commandLineReport("anr traces", "cat /data/anr/traces.txt");
+
+        // The /data/anr directory might have multiple files, dump the most
+        // recent of those files.
+        File[] recentTraces = new File("/data/anr/").listFiles();
+        if (recentTraces != null) {
+            File mostRecent = null;
+            long mostRecentMtime = 0;
+            for (File trace : recentTraces) {
+                final long mtime = trace.lastModified();
+                if (mtime > mostRecentMtime) {
+                    mostRecentMtime = mtime;
+                    mostRecent = trace;
+                }
+            }
+
+            if (mostRecent != null) {
+                commandLineReport("anr traces", "cat " + mostRecent.getAbsolutePath());
+            }
+        }
     }
 
     /**
