@@ -1,4 +1,7 @@
 #!/bin/bash
+
+echo "WARNING: gdbclient is deprecated in favor of gdbclient.py" >&2
+
 # TODO:
 # 1. Check for ANDROID_SERIAL/multiple devices
 
