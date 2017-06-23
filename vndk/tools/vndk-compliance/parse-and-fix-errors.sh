@@ -1,19 +1,21 @@
 #!/bin/bash
-# This script uses log file saved from make >log 2>&1. It then parses and
-# fixes the "file not found" errors by adding dependencies in reported modules'
-# Android.mk file. It works for following path types:
-# hardware/
-# system/
-# cutils/
-# utils/
+# This script uses log file saved from make >log 2>&1. It parses and
+# fixes the "file not found" errors by adding dependencies to reported
+# modules' Android.mk file. It works for following types of issues:
+# error: 'hardware/<file>.h' file not found
+# error: 'system/<file>.h' file not found
+# error: 'cutils/<file>.h' file not found
+# error: 'utils/<file>.h' file not found
+# error: 'log/<file>.h' file not found
 #
 # More can be added by expanding ADD_TO_*_LIBS string
 #
 # This script will create temp files log.<type> and log.<type>.paths
+#
 # This script requires manual intervention in 2 places:
 # 1. Visually inspecting log.<type>.paths and removing undesirable lines
 # 2. Manually checking in uncommitted files reported by repo status
-#
+
 
 if [ "$PWD" != "$ANDROID_BUILD_TOP" ]; then
   echo "This script needs to be run at top level folder"
@@ -31,13 +33,13 @@ cat log | grep "FAILED\|error:" > log.error
 ADD_TO_HEADER_LIBS=(hardware system)
 
 #libs that should be added to LOCAL_SHARED_LIBRARIES
-ADD_TO_SHARED_LIBS=(cutils utils)
+ADD_TO_SHARED_LIBS=(cutils utils log)
 
 ALL_LIBS=(${ADD_TO_HEADER_LIBS[@]} ${ADD_TO_SHARED_LIBS[@]})
 
 for lib in "${ALL_LIBS[@]}"; do
   echo "Parsing log.error for $lib"
-  cat log.error | grep -B1 "error: '$lib\/" | grep FAILED | awk 'BEGIN{FS="_intermediates"}{print $1}' | awk 'BEGIN{FS="S/";}{print $2}' | sort | uniq > log.$lib
+  cat log.error | grep -B1 "error: '$lib\/" | grep FAILED | awk 'BEGIN{FS="_intermediates"}{print $1}' | awk 'BEGIN{FS="S/";}{print $2}' | sort -u > log.$lib
 
   echo "Parsing log.$lib"
   for module in `cat log.$lib`; do find . -name Android.\* | xargs grep -w -H $module | grep "LOCAL_MODULE\|name:"; done > log.$lib.paths
@@ -70,7 +72,11 @@ done
 
 for lib in "${ADD_TO_SHARED_LIBS[@]}"; do
   echo "Patching makefiles to fix "$lib" errors"
-  cat log.$lib.paths | awk 'BEGIN{FS=":"}{print $1}' | xargs sed -i '/include \$(BUILD/i LOCAL_SHARED_LIBRARIES += lib'$lib
+  if [ $lib -eq "log" ]; then
+    cat log.$lib.paths | awk 'BEGIN{FS=":"}{print $1}' | xargs sed -i '/include \$(BUILD/i ifdef BOARD_VNDK_VERSION\nLOCAL_SHARED_LIBRARIES += lib'$lib'\nendif'
+  else
+    cat log.$lib.paths | awk 'BEGIN{FS=":"}{print $1}' | xargs sed -i '/include \$(BUILD/i LOCAL_SHARED_LIBRARIES += lib'$lib
+  fi
   echo "Checking for unsaved files"
   repo status
   echo "Please COMMIT them, then press Enter:"
