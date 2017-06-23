@@ -31,6 +31,7 @@ PRODUCT_PACKAGES += \
 	aapt2 \
 	adb \
 	aidl \
+	apksigner \
 	zipalign \
 	bcc_compat \
 	bios.bin \
