@@ -128,6 +128,10 @@ prebuilts/sdk/renderscript/lib/x86_64/librsjni.so         build-tools/${PLATFORM
 prebuilts/sdk/renderscript/lib/x86_64/libblasV8.so        build-tools/${PLATFORM_NAME}/renderscript/lib/blas/x86_64/libblasV8.so
 prebuilts/sdk/renderscript/lib/x86_64/librsrt_x86_64.bc   build-tools/${PLATFORM_NAME}/renderscript/lib/bc/x86_64/libclcore.bc
 
+# apksigner
+bin/apksigner                                 build-tools/${PLATFORM_NAME}/apksigner
+framework/apksigner.jar                       build-tools/${PLATFORM_NAME}/lib/apksigner.jar
+
 # dx
 bin/dx                                        build-tools/${PLATFORM_NAME}/dx
 framework/dx.jar                              build-tools/${PLATFORM_NAME}/lib/dx.jar
