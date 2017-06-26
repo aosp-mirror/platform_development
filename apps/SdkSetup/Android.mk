@@ -10,7 +10,4 @@ LOCAL_CERTIFICATE := platform
 
 LOCAL_PROGUARD_ENABLED := disabled
 
-LOCAL_STATIC_JAVA_LIBRARIES := \
-    gsf-client
-
 include $(BUILD_PACKAGE)
