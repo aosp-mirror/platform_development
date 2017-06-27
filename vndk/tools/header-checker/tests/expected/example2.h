@@ -1,244 +1,552 @@
-classes {
-  fields {
-    field_name: "foo_again"
-    field_type: "std::unique_ptr<test2::HelloAgain, std::default_delete<test2::HelloAgain> >"
-    access: "public"
+records {
+  basic_abi {
+    type_abi {
+      name: "HiddenBase"
+      size: 8
+      alignment: 4
+    }
+    name: "HiddenBase"
+    access: public_access
+    linker_set_key: "HiddenBase"
   }
   fields {
-    field_name: "bar_again"
-    field_type: "int"
-    access: "public"
+    basic_abi {
+      type_abi {
+        name: "int"
+        size: 4
+        alignment: 4
+      }
+      name: "hide"
+      access: private_access
+    }
   }
-  fully_qualified_name: "test2::HelloAgain"
-  source_file: "./input/example2.h"
-  access: "public"
+  fields {
+    basic_abi {
+      type_abi {
+        name: "float"
+        size: 4
+        alignment: 4
+      }
+      name: "seek"
+      access: private_access
+    }
+  }
+  source_file: "./input/example3.h"
+  mangled_record_name: "HiddenBase"
 }
-classes {
-  fields {
-    field_name: "foo_again"
-    field_type: "T"
-    access: "public"
+records {
+  basic_abi {
+    type_abi {
+      name: "test2::HelloAgain"
+      size: 40
+      alignment: 8
+    }
+    name: "test2::HelloAgain"
+    access: public_access
+    linker_set_key: "test2::HelloAgain"
   }
   fields {
-    field_name: "bar_again"
-    field_type: "int"
-    access: "public"
+    basic_abi {
+      type_abi {
+        name: "std::vector<test2::HelloAgain *, std::allocator<test2::HelloAgain *> >"
+        size: 24
+        alignment: 8
+      }
+      name: "foo_again"
+      access: public_access
+    }
   }
-  fully_qualified_name: "test3::ByeAgain"
+  fields {
+    basic_abi {
+      type_abi {
+        name: "int"
+        size: 4
+        alignment: 4
+      }
+      name: "bar_again"
+      access: public_access
+    }
+  }
   source_file: "./input/example2.h"
-  access: "public"
+  mangled_record_name: "test2::HelloAgain"
+  vtable_layout {
+    vtable_components {
+      kind: OffsetToTop
+      mangled_component_name: ""
+      value: 0
+    }
+    vtable_components {
+      kind: RTTI
+      mangled_component_name: "test2::HelloAgain"
+      value: 0
+    }
+    vtable_components {
+      kind: FunctionPointer
+      mangled_component_name: "_ZN5test210HelloAgain5againEv"
+      value: 0
+    }
+  }
 }
-classes {
-  fields {
-    field_name: "foo_again"
-    field_type: "double"
-    access: "public"
+records {
+  basic_abi {
+    type_abi {
+      name: "test3::ByeAgain<double>"
+      size: 16
+      alignment: 8
+    }
+    name: "test3::ByeAgain"
+    access: public_access
+    linker_set_key: "test3::ByeAgain<double>"
   }
   fields {
-    field_name: "bar_again"
-    field_type: "int"
-    access: "public"
+    basic_abi {
+      type_abi {
+        name: "double"
+        size: 8
+        alignment: 8
+      }
+      name: "foo_again"
+      access: public_access
+    }
   }
-  fully_qualified_name: "test3::ByeAgain"
+  fields {
+    basic_abi {
+      type_abi {
+        name: "int"
+        size: 4
+        alignment: 4
+      }
+      name: "bar_again"
+      access: public_access
+    }
+  }
   source_file: "./input/example2.h"
   template_info {
-    template_parameters {
-      field_type: "double"
+    elements {
+      basic_abi {
+        type_abi {
+          name: "double"
+        }
+        linker_set_key: "double"
+      }
     }
   }
-  access: "public"
+  mangled_record_name: "test3::ByeAgain<double>"
 }
-classes {
-  fields {
-    field_name: "foo_again"
-    field_type: "float"
-    access: "public"
+records {
+  basic_abi {
+    type_abi {
+      name: "test3::ByeAgain<float>"
+      size: 8
+      alignment: 4
+    }
+    name: "test3::ByeAgain"
+    access: public_access
+    linker_set_key: "test3::ByeAgain<float>"
   }
   fields {
-    field_name: "bar_Again"
-    field_type: "float"
-    access: "public"
+    basic_abi {
+      type_abi {
+        name: "float"
+        size: 4
+        alignment: 4
+      }
+      name: "foo_again"
+      access: public_access
+    }
   }
-  fully_qualified_name: "test3::ByeAgain"
+  fields {
+    basic_abi {
+      type_abi {
+        name: "float"
+        size: 4
+        alignment: 4
+      }
+      name: "bar_Again"
+      access: public_access
+    }
+  }
   source_file: "./input/example2.h"
   template_info {
-    template_parameters {
-      field_type: "float"
+    elements {
+      basic_abi {
+        type_abi {
+          name: "float"
+        }
+        linker_set_key: "float"
+      }
     }
   }
-  access: "public"
+  mangled_record_name: "test3::ByeAgain<float>"
 }
-classes {
+records {
+  basic_abi {
+    type_abi {
+      name: "test3::Outer"
+      size: 4
+      alignment: 4
+    }
+    name: "test3::Outer"
+    access: public_access
+    linker_set_key: "test3::Outer"
+  }
   fields {
-    field_name: "a"
-    field_type: "int"
-    access: "public"
+    basic_abi {
+      type_abi {
+        name: "int"
+        size: 4
+        alignment: 4
+      }
+      name: "a"
+      access: public_access
+    }
   }
-  fully_qualified_name: "test3::Outer"
   source_file: "./input/example2.h"
-  access: "public"
+  mangled_record_name: "test3::Outer"
 }
-classes {
+records {
+  basic_abi {
+    type_abi {
+      name: "test3::Outer::Inner"
+      size: 4
+      alignment: 4
+    }
+    name: "test3::Outer::Inner"
+    access: private_access
+    linker_set_key: "test3::Outer::Inner"
+  }
   fields {
-    field_name: "b"
-    field_type: "int"
-    access: "private"
+    basic_abi {
+      type_abi {
+        name: "int"
+        size: 4
+        alignment: 4
+      }
+      name: "b"
+      access: private_access
+    }
   }
-  fully_qualified_name: "test3::Outer::Inner"
   source_file: "./input/example2.h"
-  access: "private"
+  mangled_record_name: "test3::Outer::Inner"
 }
 functions {
-  function_name: "test3::ByeAgain::method_foo"
-  mangled_function_name: "method_foo_ZN5test38ByeAgain10method_fooET_"
-  source_file: "./input/example2.h"
-  parameters {
-    field_name: ""
-    field_type: "T"
-    default_arg: false
+  basic_abi {
+    type_abi {
+      name: "int"
+      size: 4
+      alignment: 4
+    }
+    name: "test2::HelloAgain::again"
+    access: public_access
+    linker_set_key: "_ZN5test210HelloAgain5againEv"
   }
-  return_type: "T"
-  access: "public"
-  template_kind: 0
+  mangled_function_name: "_ZN5test210HelloAgain5againEv"
+  source_file: "./input/example2.h"
 }
 functions {
-  function_name: "test3::ByeAgain<double>::method_foo"
-  mangled_function_name: "method_foo_ZN5test38ByeAgainIdE10method_fooEd"
+  basic_abi {
+    type_abi {
+      name: "double"
+      size: 8
+      alignment: 8
+    }
+    name: "test3::ByeAgain<double>::method_foo"
+    access: public_access
+    linker_set_key: "_ZN5test38ByeAgainIdE10method_fooEd"
+  }
+  mangled_function_name: "_ZN5test38ByeAgainIdE10method_fooEd"
   source_file: "./input/example2.h"
   parameters {
-    field_name: ""
-    field_type: "double"
+    basic_abi {
+      type_abi {
+        name: "double"
+        size: 8
+        alignment: 8
+      }
+      name: ""
+      access: public_access
+      linker_set_key: "false"
+    }
     default_arg: false
   }
-  return_type: "double"
-  access: "public"
-  template_kind: 2
 }
 functions {
-  function_name: "test3::ByeAgain<float>::method_foo"
-  mangled_function_name: "method_foo_ZN5test38ByeAgainIfE10method_fooEi"
+  basic_abi {
+    type_abi {
+      name: "float"
+      size: 4
+      alignment: 4
+    }
+    name: "test3::ByeAgain<float>::method_foo"
+    access: public_access
+    linker_set_key: "_ZN5test38ByeAgainIfE10method_fooEi"
+  }
+  mangled_function_name: "_ZN5test38ByeAgainIfE10method_fooEi"
   source_file: "./input/example2.h"
   parameters {
-    field_name: ""
-    field_type: "int"
+    basic_abi {
+      type_abi {
+        name: "int"
+        size: 4
+        alignment: 4
+      }
+      name: ""
+      access: public_access
+      linker_set_key: "false"
+    }
     default_arg: false
   }
-  return_type: "float"
-  access: "public"
-  template_kind: 0
 }
 functions {
-  function_name: "test3::Begin"
-  mangled_function_name: "Begin_ZN5test35BeginET_T0_"
+  basic_abi {
+    type_abi {
+      name: "bool"
+      size: 1
+      alignment: 1
+    }
+    name: "test3::Begin"
+    access: public_access
+    linker_set_key: "_ZN5test35BeginIfiEEbT_T0_i"
+  }
+  mangled_function_name: "_ZN5test35BeginIfiEEbT_T0_i"
   source_file: "./input/example2.h"
   parameters {
-    field_name: "arg1"
-    field_type: "T1"
+    basic_abi {
+      type_abi {
+        name: "float"
+        size: 4
+        alignment: 4
+      }
+      name: "arg1"
+      access: public_access
+      linker_set_key: "false"
+    }
     default_arg: false
   }
   parameters {
-    field_name: "arg2"
-    field_type: "T2"
+    basic_abi {
+      type_abi {
+        name: "int"
+        size: 4
+        alignment: 4
+      }
+      name: "arg2"
+      access: public_access
+      linker_set_key: "false"
+    }
     default_arg: false
   }
-  return_type: "bool"
-  access: "public"
-  template_kind: 1
+  parameters {
+    basic_abi {
+      type_abi {
+        name: "int"
+        size: 4
+        alignment: 4
+      }
+      name: "c"
+      access: public_access
+      linker_set_key: "false"
+    }
+    default_arg: false
+  }
   template_info {
-    template_parameters {
-      field_name: "T1"
+    elements {
+      basic_abi {
+        type_abi {
+          name: "float"
+        }
+        linker_set_key: "float"
+      }
     }
-    template_parameters {
-      field_name: "T2"
-    }
-  }
-}
-functions {
-  function_name: "test3::Begin"
-  mangled_function_name: "Begin_ZN5test35BeginIfiEEbT_T0_"
-  source_file: "./input/example2.h"
-  parameters {
-    field_name: "arg1"
-    field_type: "float"
-    default_arg: false
-  }
-  parameters {
-    field_name: "arg2"
-    field_type: "int"
-    default_arg: false
-  }
-  return_type: "bool"
-  access: "public"
-  template_kind: 3
-  template_info {
-    template_parameters {
-      field_type: "float"
-    }
-    template_parameters {
-      field_type: "int"
+    elements {
+      basic_abi {
+        type_abi {
+          name: "int"
+        }
+        linker_set_key: "int"
+      }
     }
   }
 }
 functions {
-  function_name: "test3::Begin"
-  mangled_function_name: "Begin_ZN5test35BeginIifEEbT_T0_"
+  basic_abi {
+    type_abi {
+      name: "bool"
+      size: 1
+      alignment: 1
+    }
+    name: "test3::End"
+    access: public_access
+    linker_set_key: "_ZN5test33EndEf"
+  }
+  mangled_function_name: "_ZN5test33EndEf"
   source_file: "./input/example2.h"
   parameters {
-    field_name: "a"
-    field_type: "int"
-    default_arg: false
-  }
-  parameters {
-    field_name: "b"
-    field_type: "float"
-    default_arg: false
-  }
-  return_type: "bool"
-  access: "public"
-  template_kind: 3
-  template_info {
-    template_parameters {
-      field_type: "int"
+    basic_abi {
+      type_abi {
+        name: "float"
+        size: 4
+        alignment: 4
+      }
+      name: "arg"
+      access: public_access
+      linker_set_key: "true"
     }
-    template_parameters {
-      field_type: "float"
-    }
-  }
-}
-functions {
-  function_name: "test3::End"
-  mangled_function_name: "End_ZN5test33EndEf"
-  source_file: "./input/example2.h"
-  parameters {
-    field_name: "arg"
-    field_type: "float"
     default_arg: true
   }
-  return_type: "bool"
-  access: "public"
-  template_kind: 0
+}
+functions {
+  basic_abi {
+    type_abi {
+      name: "std::vector<int *, std::allocator<int *> >"
+    }
+    name: "test3::Dummy"
+    access: public_access
+    linker_set_key: "_ZN5test35DummyEi"
+  }
+  mangled_function_name: "_ZN5test35DummyEi"
+  source_file: "./input/example2.h"
+  parameters {
+    basic_abi {
+      type_abi {
+        name: "int"
+        size: 4
+        alignment: 4
+      }
+      name: "t"
+      access: public_access
+      linker_set_key: "false"
+    }
+    default_arg: false
+  }
 }
 enums {
-  enum_name: "Foo_s"
-  enum_type: "unsigned int"
+  basic_abi {
+    type_abi {
+      name: "unsigned int"
+      size: 4
+      alignment: 4
+    }
+    name: "Foo_s"
+    access: public_access
+    linker_set_key: "Foo_s"
+  }
   enum_fields {
-    enum_field_name: "Foo_s::foosball"
+    basic_abi {
+      type_abi {
+        name: "Foo_s"
+        size: 4
+        alignment: 4
+      }
+      name: "Foo_s::foosball"
+      access: public_access
+      linker_set_key: "10"
+    }
     enum_field_value: 10
   }
   enum_fields {
-    enum_field_name: "Foo_s::foosbat"
+    basic_abi {
+      type_abi {
+        name: "Foo_s"
+        size: 4
+        alignment: 4
+      }
+      name: "Foo_s::foosbat"
+      access: public_access
+      linker_set_key: "11"
+    }
     enum_field_value: 11
   }
+  source_file: "./input/example2.h"
 }
 enums {
-  enum_name: "test3::Kind"
-  enum_type: "unsigned int"
+  basic_abi {
+    type_abi {
+      name: "unsigned int"
+      size: 4
+      alignment: 4
+    }
+    name: "test3::Kind"
+    access: public_access
+    linker_set_key: "test3::Kind"
+  }
   enum_fields {
-    enum_field_name: "test3::Kind::kind1"
+    basic_abi {
+      type_abi {
+        name: "test3::Kind"
+        size: 4
+        alignment: 4
+      }
+      name: "test3::Kind::kind1"
+      access: public_access
+      linker_set_key: "24"
+    }
     enum_field_value: 24
   }
   enum_fields {
-    enum_field_name: "test3::Kind::kind2"
+    basic_abi {
+      type_abi {
+        name: "test3::Kind"
+        size: 4
+        alignment: 4
+      }
+      name: "test3::Kind::kind2"
+      access: public_access
+      linker_set_key: "2312"
+    }
     enum_field_value: 2312
   }
+  source_file: "./input/example2.h"
+}
+global_vars {
+  basic_abi {
+    type_abi {
+      name: "int"
+      size: 4
+      alignment: 4
+    }
+    name: "test2::HelloAgain::hello_forever"
+    access: public_access
+    linker_set_key: "_ZN5test210HelloAgain13hello_foreverE"
+  }
+  source_file: "./input/example2.h"
+}
+global_vars {
+  basic_abi {
+    type_abi {
+      name: "bool const[2]"
+      size: 2
+      alignment: 1
+    }
+    name: "__test_var"
+    access: public_access
+    linker_set_key: "_ZL10__test_var"
+  }
+  source_file: "./input/example2.h"
+}
+global_vars {
+  basic_abi {
+    type_abi {
+      name: "int"
+      size: 4
+      alignment: 4
+    }
+    name: "test3::ByeAgain<float>::foo_forever"
+    access: public_access
+    linker_set_key: "_ZN5test38ByeAgainIfE11foo_foreverE"
+  }
+  source_file: "./input/example2.h"
+}
+global_vars {
+  basic_abi {
+    type_abi {
+      name: "test3::ByeAgain<double>"
+      size: 16
+      alignment: 8
+    }
+    name: "test3::double_bye"
+    access: public_access
+    linker_set_key: "_ZN5test310double_byeE"
+  }
+  source_file: "./input/example2.h"
 }
