@@ -65,18 +65,23 @@ static llvm::cl::opt<bool> no_filter(
     "no-filter", llvm::cl::desc("Do not filter any abi"), llvm::cl::Optional,
     llvm::cl::cat(header_linker_category));
 
+static llvm::cl::opt<std::string> so_file(
+    "so", llvm::cl::desc("<path to so file>"), llvm::cl::Optional,
+    llvm::cl::cat(header_linker_category));
+
 class HeaderAbiLinker {
  public:
   HeaderAbiLinker(
       const std::vector<std::string> &dump_files,
       const std::vector<std::string> &exported_header_dirs,
       const std::string &version_script,
+      const std::string &so_file,
       const std::string &linked_dump,
       const std::string &arch,
       const std::string &api)
     : dump_files_(dump_files), exported_header_dirs_(exported_header_dirs),
-    version_script_(version_script), out_dump_name_(linked_dump), arch_(arch),
-    api_(api) {};
+    version_script_(version_script), so_file_(so_file),
+    out_dump_name_(linked_dump), arch_(arch), api_(api) {};
 
   bool LinkAndDump();
 
@@ -103,10 +108,13 @@ class HeaderAbiLinker {
 
   bool ParseVersionScriptFiles();
 
+  bool ParseSoFile();
+
  private:
   const std::vector<std::string> &dump_files_;
   const std::vector<std::string> &exported_header_dirs_;
   const std::string &version_script_;
+  const std::string &so_file_;
   const std::string &out_dump_name_;
   const std::string &arch_;
   const std::string &api_;
@@ -132,6 +140,10 @@ bool HeaderAbiLinker::LinkAndDump() {
   if (version_script.empty()) {
     exported_headers_ =
         abi_util::CollectAllExportedHeaders(exported_header_dirs_);
+    if (!ParseSoFile()) {
+      llvm::errs() << "Couldn't parse so file\n";
+      return false;
+    }
   } else if (!ParseVersionScriptFiles()) {
     llvm::errs() << "Failed to parse stub files for exported symbols\n";
     return false;
@@ -265,7 +277,8 @@ bool HeaderAbiLinker::LinkFunctions(const abi_dump::TranslationUnit &dump_tu,
   assert(linked_tu != nullptr);
   return LinkDecl(linked_tu->mutable_functions(), &function_decl_set_,
                   &functions_regex_matched_set, &functions_vs_regex_,
-                  dump_tu.functions(), (!version_script_.empty()));
+                  dump_tu.functions(),
+                  (!version_script_.empty() || !so_file_.empty()));
 }
 
 bool HeaderAbiLinker::LinkEnums(const abi_dump::TranslationUnit &dump_tu,
@@ -282,7 +295,8 @@ bool HeaderAbiLinker::LinkGlobalVars(const abi_dump::TranslationUnit &dump_tu,
   assert(linked_tu != nullptr);
   return LinkDecl(linked_tu->mutable_global_vars(), &globvar_decl_set_,
                   &globvars_regex_matched_set, &globvars_vs_regex_,
-                  dump_tu.global_vars(), (!version_script.empty()));
+                  dump_tu.global_vars(),
+                  (!version_script.empty() || !so_file_.empty()));
 }
 
 bool HeaderAbiLinker::ParseVersionScriptFiles() {
@@ -302,14 +316,41 @@ bool HeaderAbiLinker::ParseVersionScriptFiles() {
   return true;
 }
 
+bool HeaderAbiLinker::ParseSoFile() {
+ auto Binary = llvm::object::createBinary(so_file_);
+
+  if (!Binary) {
+    llvm::errs() << "Couldn't really create object File \n";
+    return false;
+  }
+  llvm::object::ObjectFile *objfile =
+      llvm::dyn_cast<llvm::object::ObjectFile>(&(*Binary.get().getBinary()));
+  if (!objfile) {
+    llvm::errs() << "Not an object file\n";
+    return false;
+  }
+
+  std::unique_ptr<abi_util::SoFileParser> so_parser =
+      abi_util::SoFileParser::Create(objfile);
+  if (so_parser == nullptr) {
+    llvm::errs() << "Couldn't create soFile Parser\n";
+    return false;
+  }
+  so_parser->GetSymbols();
+  function_decl_set_ = so_parser->GetFunctions();
+  globvar_decl_set_ = so_parser->GetGlobVars();
+  return true;
+}
+
 int main(int argc, const char **argv) {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
   llvm::cl::ParseCommandLineOptions(argc, argv, "header-linker");
   if (no_filter) {
     static_cast<std::vector<std::string> &>(exported_header_dirs).clear();
   }
-  HeaderAbiLinker Linker(dump_files, exported_header_dirs,
-                         version_script, linked_dump, arch, api);
+  HeaderAbiLinker Linker(dump_files, exported_header_dirs, version_script,
+                         so_file, linked_dump, arch, api);
+
   if (!Linker.LinkAndDump()) {
     return -1;
   }

@@ -19,6 +19,7 @@
 #include <limits.h>
 #include <stdlib.h>
 #include <clang/Tooling/Core/QualTypeNames.h>
+#include <clang/Index/CodegenNameGenerator.h>
 
 #include <string>
 
@@ -70,8 +71,12 @@ abi_dump::AccessSpecifier ABIWrapper::AccessClangToDump(
   }
 }
 
+// Dumping the size and alignment is optional. This is since clang can lazily
+// instantiate records as incomplete and therefore their sizes 'may' not be
+// computable. b/62307940
 bool ABIWrapper::SetupBasicTypeAbi(abi_dump::BasicTypeAbi *type_abi,
-                                   const clang::QualType type) const {
+                                   const clang::QualType type,
+                                   bool dump_size) const {
   if (!type_abi) {
     return false;
   }
@@ -82,7 +87,7 @@ bool ABIWrapper::SetupBasicTypeAbi(abi_dump::BasicTypeAbi *type_abi,
   const clang::Type *base_type = canonical_type.getTypePtr();
   clang::Type::TypeClass type_class = base_type->getTypeClass();
   // Temporary Hack for auto type sizes. Not determinable.
-  if (base_type && !(base_type->isDependentType()) &&
+  if (dump_size && base_type && !(base_type->isDependentType()) &&
       !(base_type->isIncompleteType()) && (type_class != clang::Type::Auto)) {
     std::pair<clang::CharUnits, clang::CharUnits> size_and_alignment =
     ast_contextp_->getTypeInfoInChars(canonical_type);
@@ -97,7 +102,8 @@ bool ABIWrapper::SetupBasicTypeAbi(abi_dump::BasicTypeAbi *type_abi,
 bool ABIWrapper::SetupBasicNamedAndTypedDecl(
     abi_dump::BasicNamedAndTypedDecl *basic_named_and_typed_decl,
     const clang::QualType type, const std::string &name,
-    const clang::AccessSpecifier &access, std::string key) const {
+    const clang::AccessSpecifier &access, std::string key,
+    bool dump_size) const {
   if (!basic_named_and_typed_decl) {
     return false;
   }
@@ -108,18 +114,33 @@ bool ABIWrapper::SetupBasicNamedAndTypedDecl(
     basic_named_and_typed_decl->set_linker_set_key(key);
   }
   return SetupBasicTypeAbi(basic_named_and_typed_decl->mutable_type_abi(),
-                           type);
+                           type, dump_size);
 }
 
-std::string ABIWrapper::GetMangledNameDecl(const clang::NamedDecl *decl) const {
-  assert(&(mangle_contextp_->getASTContext()) == ast_contextp_);
-  if (!mangle_contextp_->shouldMangleDeclName(decl)) {
+static bool ShouldDumpSize(clang::QualType qt) {
+  const clang::Type *type_ptr = qt.getTypePtr();
+  assert(type_ptr != nullptr);
+  if (type_ptr->isBuiltinType() || type_ptr->isPointerType()) {
+    return true;
+  }
+  return false;
+}
+
+std::string ABIWrapper::GetTypeLinkageName(const clang::Type *typep) const {
+  assert(typep != nullptr);
+  clang::QualType qt = typep->getCanonicalTypeInternal();
+  return QualTypeToString(qt);
+}
+
+std::string ABIWrapper::GetMangledNameDecl(
+    const clang::NamedDecl *decl, clang::MangleContext *mangle_contextp) {
+  if (!mangle_contextp->shouldMangleDeclName(decl)) {
     clang::IdentifierInfo *identifier = decl->getIdentifier();
     return identifier ? identifier->getName() : "";
   }
   std::string mangled_name;
   llvm::raw_string_ostream ostream(mangled_name);
-  mangle_contextp_->mangleName(decl, ostream);
+  mangle_contextp->mangleName(decl, ostream);
   ostream.flush();
   return mangled_name;
 }
@@ -177,7 +198,8 @@ bool ABIWrapper::SetupTemplateArguments(
     }
     abi_dump::TemplateElement::BasicTemplateElementAbi *basic_abi =
         template_parameterp->mutable_basic_abi();
-    if (!basic_abi || !SetupBasicTypeAbi(basic_abi->mutable_type_abi(), type)) {
+    if (!basic_abi || !SetupBasicTypeAbi(basic_abi->mutable_type_abi(), type,
+                                         false)) {
       return false;
     }
     // TODO : default arg
@@ -217,10 +239,13 @@ bool FunctionDeclWrapper::SetupFunctionParameters(
     }
     // The linker set key is blank since that shows up in the mangled name.
     bool has_default_arg = (*param_it)->hasDefaultArg();
+    clang::QualType param_qt = (*param_it)->getType();
+    bool should_dump_size = ShouldDumpSize(param_qt);
     if (!SetupBasicNamedAndTypedDecl(
         function_fieldp->mutable_basic_abi(),
         (*param_it)->getType(), (*param_it)->getName(),
-        (*param_it)->getAccess(), has_default_arg ? "true" : "false")) {
+        (*param_it)->getAccess(), has_default_arg ? "true" : "false",
+        should_dump_size)) {
       return false;
     }
     function_fieldp->set_default_arg(has_default_arg);
@@ -232,16 +257,15 @@ bool FunctionDeclWrapper::SetupFunctionParameters(
 bool FunctionDeclWrapper::SetupFunction(abi_dump::FunctionDecl *functionp,
                                         const std::string &source_file) const {
   // Go through all the parameters in the method and add them to the fields.
-  // Also get the fully qualfied name and mangled name and store them.
-  std::string mangled_name = GetMangledNameDecl(function_decl_);
-  functionp->set_mangled_function_name(mangled_name);
+  // Also get the fully qualfied name.
   functionp->set_source_file(source_file);
   // Combine the function name and return type to form a NamedAndTypedDecl
+  clang::QualType return_type = function_decl_->getReturnType();
+  bool should_dump_size = ShouldDumpSize(return_type);
   return SetupBasicNamedAndTypedDecl(
       functionp->mutable_basic_abi(),
-      function_decl_->getReturnType(),
-      function_decl_->getQualifiedNameAsString(),
-      function_decl_->getAccess(), mangled_name) &&
+      return_type, function_decl_->getQualifiedNameAsString(),
+      function_decl_->getAccess(), "", should_dump_size) &&
       SetupTemplateInfo(functionp) && SetupFunctionParameters(functionp);
 }
 
@@ -309,7 +333,7 @@ bool RecordDeclWrapper::SetupRecordFields(abi_dump::RecordDecl *recordp) const {
     }
     if (!SetupBasicNamedAndTypedDecl(record_fieldp->mutable_basic_abi(),
                                      field->getType(), field->getName(),
-                                     field->getAccess(), "")) {
+                                     field->getAccess(), "", true)) {
       return false;
     }
     field++;
@@ -334,7 +358,7 @@ bool RecordDeclWrapper::SetupCXXBases(
     if (!SetupBasicNamedAndTypedDecl(base_specifierp->mutable_basic_abi(),
                                      base_class->getType(),
                                      "", base_class->getAccessSpecifier(),
-                                     "")) {
+                                     "", false)) {
       return false;
     }
     base_specifierp->set_is_virtual(is_virtual);
@@ -383,7 +407,8 @@ bool RecordDeclWrapper::SetupRecordVTableComponent(
   assert(added_vtable_component != nullptr);
   abi_dump::VTableComponent_Kind kind = abi_dump::VTableComponent_Kind_RTTI;
   std::string mangled_component_name = "";
-  uint64_t value = 0;
+  llvm::raw_string_ostream ostream(mangled_component_name);
+  int64_t value = 0;
   clang::VTableComponent::Kind clang_component_kind =
       vtable_component.getKind();
     switch (clang_component_kind) {
@@ -405,7 +430,8 @@ bool RecordDeclWrapper::SetupRecordVTableComponent(
           const clang::CXXRecordDecl *rtti_decl =
               vtable_component.getRTTIDecl();
           assert(rtti_decl != nullptr);
-          mangled_component_name = GetMangledNameDecl(rtti_decl);
+          mangled_component_name =
+              ABIWrapper::GetTypeLinkageName(rtti_decl->getTypeForDecl());
         }
         break;
       case clang::VTableComponent::CK_FunctionPointer:
@@ -416,16 +442,27 @@ bool RecordDeclWrapper::SetupRecordVTableComponent(
           const clang::CXXMethodDecl *method_decl =
               vtable_component.getFunctionDecl();
           assert(method_decl != nullptr);
-          mangled_component_name = GetMangledNameDecl(method_decl);
           switch (clang_component_kind) {
             case clang::VTableComponent::CK_FunctionPointer:
               kind =  abi_dump::VTableComponent_Kind_FunctionPointer;
+              mangled_component_name = GetMangledNameDecl(method_decl,
+                                                          mangle_contextp_);
               break;
             case clang::VTableComponent::CK_CompleteDtorPointer:
               kind =  abi_dump::VTableComponent_Kind_CompleteDtorPointer;
+              mangle_contextp_->mangleCXXDtor(
+                  vtable_component.getDestructorDecl(),
+                  clang::CXXDtorType::Dtor_Complete, ostream);
+              ostream.flush();
+
               break;
             case clang::VTableComponent::CK_DeletingDtorPointer:
               kind =  abi_dump::VTableComponent_Kind_DeletingDtorPointer;
+              mangle_contextp_->mangleCXXDtor(
+                  vtable_component.getDestructorDecl(),
+                  clang::CXXDtorType::Dtor_Deleting, ostream);
+              ostream.flush();
+              break;
             case clang::VTableComponent::CK_UnusedFunctionPointer:
               kind =  abi_dump::VTableComponent_Kind_UnusedFunctionPointer;
             default:
@@ -478,16 +515,17 @@ bool RecordDeclWrapper::SetupTemplateInfo(
 bool RecordDeclWrapper::SetupRecordInfo(abi_dump::RecordDecl *record_declp,
                                         const std::string &source_file) const {
   std::string qualified_name = GetTagDeclQualifiedName(record_decl_);
-  std::string mangled_name = GetMangledNameDecl(record_decl_);
   const clang::Type *basic_type = nullptr;
   if (!(basic_type = record_decl_->getTypeForDecl())) {
     return false;
   }
+  std::string mangled_name = ABIWrapper::GetTypeLinkageName(basic_type);
   clang::QualType type = basic_type->getCanonicalTypeInternal();
   std::string linker_key = (mangled_name == "") ? qualified_name : mangled_name;
   if (!SetupBasicNamedAndTypedDecl(record_declp->mutable_basic_abi(),
                                    type, qualified_name,
-                                   record_decl_->getAccess(), linker_key)) {
+                                   record_decl_->getAccess(), linker_key,
+                                   true)) {
     return false;
   }
   record_declp->set_mangled_record_name(mangled_name);
@@ -538,7 +576,7 @@ bool EnumDeclWrapper::SetupEnumFields(abi_dump::EnumDecl *enump) const {
         !SetupBasicNamedAndTypedDecl(enum_fieldp->mutable_basic_abi(),
                                      enum_it->getType(), name,
                                      enum_it->getAccess(),
-                                     std::to_string(field_value))) {
+                                     std::to_string(field_value), true)) {
       return false;
     }
     enum_fieldp->set_enum_field_value(field_value);
@@ -550,11 +588,10 @@ bool EnumDeclWrapper::SetupEnumFields(abi_dump::EnumDecl *enump) const {
 bool EnumDeclWrapper::SetupEnum(abi_dump::EnumDecl *enump,
                                 const std::string &source_file) const {
   std::string enum_name = GetTagDeclQualifiedName(enum_decl_);
-  std::string enum_mangled_name = GetMangledNameDecl(enum_decl_);
   clang::QualType enum_type = enum_decl_->getIntegerType();
   if (!SetupBasicNamedAndTypedDecl(enump->mutable_basic_abi(), enum_type,
                                    enum_name, enum_decl_->getAccess(),
-                                   enum_mangled_name) ||
+                                   enum_name, true) ||
       !SetupEnumFields(enump)) {
     return false;
   }
@@ -587,13 +624,12 @@ bool GlobalVarDeclWrapper::SetupGlobalVar(
   // Temporary fix : clang segfaults on trying to mangle global variable which
   // is a dependent sized array type.
   std::string qualified_name = global_var_decl_->getQualifiedNameAsString();
-  std::string mangled_or_qualified_name =
-      global_var_decl_->getType()->isDependentSizedArrayType() ?
-      qualified_name : GetMangledNameDecl(global_var_decl_);
+  std::string mangled_name =
+      GetMangledNameDecl(global_var_decl_, mangle_contextp_);
   if (!SetupBasicNamedAndTypedDecl(
       global_varp->mutable_basic_abi(),global_var_decl_->getType(),
       qualified_name, global_var_decl_->getAccess(),
-      mangled_or_qualified_name)) {
+      mangled_name, true)) {
     return false;
   }
   global_varp->set_source_file(source_file);
