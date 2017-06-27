@@ -37,11 +37,11 @@ class ABIWrapper {
   static std::string GetDeclSourceFile(const clang::Decl *decl,
                                        const clang::CompilerInstance *cip);
 
+  static std::string GetMangledNameDecl(const clang::NamedDecl *decl,
+                                        clang::MangleContext *mangle_context);
  protected:
   abi_dump::AccessSpecifier AccessClangToDump(
       const clang::AccessSpecifier sp) const;
-
-  std::string GetMangledNameDecl(const clang::NamedDecl *decl) const;
 
   bool SetupTemplateParamNames(abi_dump::TemplateInfo *tinfo,
                                clang::TemplateParameterList *pl) const;
@@ -54,12 +54,15 @@ class ABIWrapper {
   std::string GetTagDeclQualifiedName(const clang::TagDecl *decl) const;
 
   bool SetupBasicTypeAbi(abi_dump::BasicTypeAbi *type_abi,
-                         const clang::QualType type) const;
+                         const clang::QualType type, bool dump_size) const;
 
   bool SetupBasicNamedAndTypedDecl(
       abi_dump::BasicNamedAndTypedDecl *basic_named_and_typed_decl,
       const clang::QualType type, const std::string &name,
-      const clang::AccessSpecifier &access, std::string key) const;
+      const clang::AccessSpecifier &access, std::string key,
+      bool dump_size) const;
+
+  std::string GetTypeLinkageName(const clang::Type *typep) const;
 
 protected:
   const clang::CompilerInstance *cip_;
