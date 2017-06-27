@@ -25,9 +25,7 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.RemoteException;
 import android.os.ServiceManager;
-import android.os.SystemProperties;
 import android.provider.Settings;
-import com.google.android.gsf.UseLocationForServices;
 
 /**
  * Entry point for SDK SetupWizard.
@@ -48,10 +46,6 @@ public class DefaultActivity extends Activity {
         // Not needed since this SDK will contain the Settings app.
         Settings.Secure.putString(getContentResolver(), Settings.Secure.LOCATION_PROVIDERS_ALLOWED,
                 LocationManager.GPS_PROVIDER);
-        // Allow google apps to have access to (emulated) location services in emulator
-        if (SystemProperties.getBoolean("ro.kernel.qemu", false)) {
-            UseLocationForServices.forceSetUseLocationForServices(this, true);
-        }
 
         // enable install from non market
         Settings.Global.putInt(getContentResolver(), Settings.Global.INSTALL_NON_MARKET_APPS, 1);
