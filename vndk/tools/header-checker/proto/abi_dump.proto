@@ -79,7 +79,7 @@ message VTableComponent {
   }
   optional Kind kind = 1;
   optional string mangled_component_name = 2 [default = ""];
-  optional uint64 value = 3 [default = 0];
+  optional int64 value = 3 [default = 0];
 }
 
 message VTableLayout {

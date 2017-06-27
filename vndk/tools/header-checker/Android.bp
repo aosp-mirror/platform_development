@@ -45,6 +45,7 @@ cc_defaults {
         "libclangFrontendTool",
         "libclangFrontend",
         "libclangDriver",
+        "libclangIndex",
         "libclangSerialization",
         "libclangCodeGen",
         "libclangRewriteFrontend",
@@ -84,8 +85,13 @@ cc_defaults {
     name: "header-abi-linker-lib-defaults",
 
     static_libs: [
-        "libLLVMSupport",
         "libheader-abi-util",
+        "libLLVMObject",
+        "libLLVMBitReader",
+        "libLLVMMC",
+        "libLLVMMCParser",
+        "libLLVMCore",
+        "libLLVMSupport",
     ],
 
     shared_libs: [
@@ -257,8 +263,14 @@ cc_library_static {
         "header-abi-util/src/*.cpp"
     ],
     static_libs: [
+        "libLLVMObject",
+        "libLLVMBitReader",
+        "libLLVMMC",
+        "libLLVMMCParser",
+        "libLLVMCore",
         "libLLVMSupport",
     ],
+
     cflags: [
         "-Wcast-qual",
         "-Wno-long-long",
