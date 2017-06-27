@@ -17,6 +17,7 @@
 
 #include <clang/Lex/Token.h>
 #include <clang/Tooling/Core/QualTypeNames.h>
+#include <clang/Index/CodegenNameGenerator.h>
 
 #include <google/protobuf/text_format.h>
 #include <google/protobuf/io/zero_copy_stream_impl.h>
@@ -49,7 +50,8 @@ HeaderASTVisitor::HeaderASTVisitor(
 
 bool HeaderASTVisitor::VisitRecordDecl(const clang::RecordDecl *decl) {
   // Skip forward declaration.
-  if (!decl->isThisDeclarationADefinition()) {
+  if (!decl->isThisDeclarationADefinition() ||
+      decl->getTypeForDecl()->isDependentType()) {
     return true;
   }
   RecordDeclWrapper record_decl_wrapper(
@@ -69,7 +71,8 @@ bool HeaderASTVisitor::VisitRecordDecl(const clang::RecordDecl *decl) {
 }
 
 bool HeaderASTVisitor::VisitEnumDecl(const clang::EnumDecl *decl) {
-  if (!decl->isThisDeclarationADefinition()) {
+  if (!decl->isThisDeclarationADefinition() ||
+      decl->getTypeForDecl()->isDependentType()) {
     return true;
   }
   EnumDeclWrapper enum_decl_wrapper(
@@ -88,7 +91,53 @@ bool HeaderASTVisitor::VisitEnumDecl(const clang::EnumDecl *decl) {
   return true;
 }
 
+static bool MutateFunctionWithLinkageName(abi_dump::TranslationUnit *tu_ptr,
+                                          const abi_dump::FunctionDecl *fd,
+                                          std::string &linkage_name) {
+  abi_dump::FunctionDecl *added_function_declp = tu_ptr->add_functions();
+  if (!added_function_declp) {
+    return false;
+  }
+  *added_function_declp = *fd;
+  added_function_declp->set_mangled_function_name(linkage_name);
+  assert(added_function_declp->mutable_basic_abi() != nullptr);
+  added_function_declp->mutable_basic_abi()->set_linker_set_key(linkage_name);
+  return true;
+}
+
+static bool AddMangledFunctions(abi_dump::TranslationUnit *tu_ptr,
+                                const abi_dump::FunctionDecl *fd,
+                                std::vector<std::string> &manglings) {
+  for (auto &&mangling : manglings) {
+    if (!MutateFunctionWithLinkageName(tu_ptr, fd, mangling)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+static bool ShouldSkipFunctionDecl(const clang::FunctionDecl *decl) {
+  if (const clang::CXXMethodDecl *method_decl =
+      llvm::dyn_cast<clang::CXXMethodDecl>(decl)) {
+    if (method_decl->getParent()->getTypeForDecl()->isDependentType()) {
+      return true;
+    }
+  }
+  clang::FunctionDecl::TemplatedKind tkind = decl->getTemplatedKind();
+  switch (tkind) {
+    case clang::FunctionDecl::TK_NonTemplate:
+    case clang::FunctionDecl::TK_FunctionTemplateSpecialization:
+    case clang::FunctionDecl::TK_MemberSpecialization:
+      return false;
+    default:
+      return true;
+  }
+}
+
 bool HeaderASTVisitor::VisitFunctionDecl(const clang::FunctionDecl *decl) {
+  if (ShouldSkipFunctionDecl(decl)) {
+    return true;
+  }
   FunctionDeclWrapper function_decl_wrapper(mangle_contextp_, ast_contextp_,
                                             cip_, decl);
   std::unique_ptr<abi_dump::FunctionDecl> wrapped_function_decl =
@@ -97,16 +146,22 @@ bool HeaderASTVisitor::VisitFunctionDecl(const clang::FunctionDecl *decl) {
     llvm::errs() << "Getting Function Decl failed\n";
     return false;
   }
-  abi_dump::FunctionDecl *added_function_declp = tu_ptr_->add_functions();
-  if (!added_function_declp) {
-    return false;
+  // Destructors and Constructors can have more than 1 symbol generated from the
+  // same Decl.
+  clang::index::CodegenNameGenerator cg(*ast_contextp_);
+  std::vector<std::string> manglings = cg.getAllManglings(decl);
+  if (!manglings.empty()) {
+    return AddMangledFunctions(tu_ptr_, wrapped_function_decl.get(), manglings);
   }
-  *added_function_declp = *wrapped_function_decl;
-  return true;
+  std::string linkage_name =
+      ABIWrapper::GetMangledNameDecl(decl, mangle_contextp_);
+  return MutateFunctionWithLinkageName(tu_ptr_, wrapped_function_decl.get(),
+                                       linkage_name);
 }
 
 bool HeaderASTVisitor::VisitVarDecl(const clang::VarDecl *decl) {
-  if(!decl->hasGlobalStorage()) {
+  if(!decl->hasGlobalStorage()||
+     decl->getType().getTypePtr()->isDependentType()) {
     // Non global / static variable declarations don't need to be dumped.
     return true;
   }
