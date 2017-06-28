@@ -474,7 +474,7 @@ bool RecordDeclWrapper::SetupRecordVTableComponent(
         return false;
     }
   added_vtable_component->set_kind(kind);
-  added_vtable_component->set_value(value);
+  added_vtable_component->set_component_value(value);
   added_vtable_component->set_mangled_component_name(mangled_component_name);
   return true;
 }
