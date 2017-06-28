@@ -79,7 +79,10 @@ message VTableComponent {
   }
   optional Kind kind = 1;
   optional string mangled_component_name = 2 [default = ""];
-  optional int64 value = 3 [default = 0];
+  // Maintain backwards compatibility. Builds don't break while updating
+  // reference dumps. TODO: b/63081517
+  optional uint64 value = 3 [default = 0];
+  optional int64 component_value = 4 [default = 0];
 }
 
 message VTableLayout {
