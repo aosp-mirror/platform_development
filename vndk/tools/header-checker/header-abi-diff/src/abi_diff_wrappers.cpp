@@ -144,7 +144,8 @@ bool Diff<VTableComponent>(const VTableComponent &old_element,
   bool kind_comparison = old_element.kind() != new_element.kind();
   bool mangled_name_comparison = old_element.mangled_component_name() !=
       new_element.mangled_component_name();
-  bool value_comparison = old_element.value() != new_element.value();
+  bool value_comparison =
+      old_element.component_value() != new_element.component_value();
   return kind_comparison || mangled_name_comparison || value_comparison;
 }
 
