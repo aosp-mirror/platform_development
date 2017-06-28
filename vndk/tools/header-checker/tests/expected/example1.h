@@ -73,17 +73,17 @@ records {
     vtable_components {
       kind: OffsetToTop
       mangled_component_name: ""
-      value: 0
+      component_value: 0
     }
     vtable_components {
       kind: RTTI
       mangled_component_name: "test2::HelloAgain"
-      value: 0
+      component_value: 0
     }
     vtable_components {
       kind: FunctionPointer
       mangled_component_name: "_ZN5test210HelloAgain5againEv"
-      value: 0
+      component_value: 0
     }
   }
 }
@@ -324,17 +324,17 @@ records {
     vtable_components {
       kind: OffsetToTop
       mangled_component_name: ""
-      value: 0
+      component_value: 0
     }
     vtable_components {
       kind: RTTI
       mangled_component_name: "CPPHello"
-      value: 0
+      component_value: 0
     }
     vtable_components {
       kind: FunctionPointer
       mangled_component_name: "_ZN8CPPHello5againEv"
-      value: 0
+      component_value: 0
     }
   }
 }
