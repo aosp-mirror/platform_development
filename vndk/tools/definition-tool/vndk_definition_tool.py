@@ -2603,7 +2603,7 @@ class DepGraphCommand(ELFGraphCommand):
                         self._get_tag_from_lib(dep, tagged_paths)):
                     lib_item['depends'].append(dep.path)
                 else:
-                    lib_item['violates'].append(dep.path)
+                    lib_item['violates'].append([dep.path, lib.get_dep_linked_symbols(dep)])
                     violate_count += 1;
             lib_item['violate_count'] = violate_count
             if violate_count > 0:
