@@ -404,7 +404,7 @@ See test_defs.xsd for more information.
     build_path="frameworks/base/packages/SystemUI/tests"
     package="com.android.systemui.tests"
     coverage_target="SystemUI"
-    runner="android.support.test.runner.AndroidJUnitRunner"
+    runner="android.testing.TestableInstrumentation"
     continuous="true"
     description="SystemUI tests" />
 
@@ -418,7 +418,7 @@ See test_defs.xsd for more information.
 <test name="systemui-notification"
     build_path="frameworks/base/services/tests/notification"
     package="com.android.frameworks.tests.notification"
-    runner="android.support.test.runner.AndroidJUnitRunner"
+    runner="android.testing.TestableInstrumentation"
     continuous="true"
     description="SystemUI Notification tests" />
 
