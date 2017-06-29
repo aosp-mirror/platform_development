@@ -16,6 +16,7 @@
     let link;
     let node;
     let selectedNode;
+    let selectedSubNode;
 
     function init() {
         let domListCol = document.createElement("div");
@@ -61,18 +62,79 @@
                 if (currentList.style.display === "block") {
                     currentList.style.display = "none";
                     selectedNode = undefined;
+                    if (selectedSubNode) {
+                        selectedSubNode.classList.toggle("active");
+                        selectedSubNode.nextElementSibling.style.display = "none";
+                        selectedSubNode = undefined;
+                    }
                     resetclicked();
                 } else {
                     currentList.style.display = "block";
+                    for (let i = 1; i < currentList.childElementCount; i += 2) {
+                        currentList.childNodes[i].style.display = "none";
+                    }
                     if (selectedNode) {
                         selectedNode.classList.toggle("active");
                         selectedNode.nextElementSibling.style.display = "none";
+                        if (selectedSubNode) {
+                            selectedSubNode.classList.toggle("active");
+                            selectedSubNode.nextElementSibling.style.display = "none";
+                            selectedSubNode = undefined;
+                        }
                     }
                     selectedNode = domButton;
                     mouseclicked(depMap[libName]);
                 }
             };
             return domButton;
+        }
+        function makeSubButton(libName, count) {
+            let domButton = document.createElement("button");
+            domButton.className = "violate-list";
+            domButton.innerHTML = libName + " (" + count + ")";
+            domButton.onclick = function() {
+                this.classList.toggle("active");
+                let currentSubList = this.nextElementSibling;
+                if (currentSubList.style.display === "block") {
+                    currentSubList.style.display = "none";
+                    selectedSubNode = undefined;
+                } else {
+                    currentSubList.style.display = "block";
+                    for (let i = 0; i < currentSubList.childElementCount; i++) {
+                        if (currentSubList.childNodes[i].childElementCount > 0) {
+                            currentSubList.childNodes[i].childNodes[1].style.display = "none";
+                        }
+                    }
+                    if (selectedSubNode) {
+                        selectedSubNode.classList.toggle("active");
+                        selectedSubNode.nextElementSibling.style.display = "none";
+                    }
+                    selectedSubNode = domButton;
+                }
+            };
+            return domButton;
+        }
+        function changeFormat(symbol) {
+            let res = "";
+            let i;
+            for (i = 0; i < symbol.length; i++) {
+                if (symbol.charAt(i) >= '0' && symbol.charAt(i) <= '9') {
+                    break;
+                }
+            }
+            while (i < symbol.length) {
+                if (symbol.charAt(i) < '0' || symbol.charAt(i) > '9') {
+                    break;
+                }
+                let len = parseInt(symbol.substr(i, symbol.length));
+                let count = 1;
+                if (len < 10) {
+                    count = 0;
+                }
+                res = res + "::" + symbol.substr(i + 1 + count, len);
+                i = i + 1 + count + len;
+            }
+            return res.substr(2, res.length);
         }
         function makeList(domList, list)
         {
@@ -83,10 +145,32 @@
                 let violates = depItem.data.violates;
                 for (let j = 0; j < violates.length; j++) {
                     let domDepLib = document.createElement("div");
-                    let tag = depMap[violates[j]].data.tag;
-                    domDepLib.className = "violate-list";
-                    domDepLib.innerHTML = violates[j] + " ["
-                            + tag.substring(tag.lastIndexOf(".") + 1) + "]";
+                    let tag = depMap[violates[j][0]].data.tag;
+                    let symbols = violates[j][1];
+                    let domDepButton = makeSubButton(violates[j][0] + " ["
+                            + tag.substring(tag.lastIndexOf(".") + 1) + "]", symbols.length);
+                    for (let k = 0; k < symbols.length; k++) {
+                        let domDepSym = document.createElement("div");
+                        domDepSym.className = "violate-list-sym";
+                        domDepSym.innerHTML = symbols[k];
+                        if (symbols[k].indexOf("_Z") === 0) {
+                            let cplusplusSym = document.createElement("span");
+                            cplusplusSym.className = "cplusplus-sym";
+                            cplusplusSym.innerHTML =
+                                changeFormat(symbols[k].substr(2, symbols[k].length));
+                            domDepSym.appendChild(cplusplusSym);
+                            domDepSym.onmouseover = function(e) {
+                                e.currentTarget.style.position = "relative";
+                                e.currentTarget.childNodes[1].style.display = "block";
+                            };
+                            domDepSym.onmouseout = function(e) {
+                                e.currentTarget.style.position = "static";
+                                e.currentTarget.childNodes[1].style.display = "none";
+                            };
+                        }
+                        domDepLib.appendChild(domDepSym);
+                    }
+                    domDepList.appendChild(domDepButton);
                     domDepList.appendChild(domDepLib);
                 }
                 domList.appendChild(domDepList);
@@ -153,6 +237,11 @@
         if (selectedNode) {
             selectedNode.classList.toggle("active");
             selectedNode.nextElementSibling.style.display = "none";
+            if (selectedSubNode) {
+                selectedSubNode.classList.toggle("active");
+                selectedSubNode.nextElementSibling.style.display = "none";
+                selectedSubNode = undefined;
+            }
             selectedNode = undefined;
         }
         link.classed("link--target", false)
@@ -236,8 +325,8 @@
             if (d.data.violates.length) {
                 map[d.data.name].not_allow = true;
                 d.data.violates.forEach(function(i) {
-                    map[i].not_allow = true;
-                    let l = map[d.data.name].path(map[i]);
+                    map[i[0]].not_allow = true;
+                    let l = map[d.data.name].path(map[i[0]]);
                     l.allow = false;
                     depends.push(l);
                 });
