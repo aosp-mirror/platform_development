@@ -167,9 +167,7 @@ def start_gdbserver(device, gdbserver_local_path, gdbserver_remote_path,
     else:
         gdbserver_cmd += run_cmd
 
-    device.forward("tcp:{}".format(port),
-                   "localfilesystem:{}".format(debug_socket))
-    atexit.register(lambda: device.forward_remove("tcp:{}".format(port)))
+    forward_gdbserver_port(device, local=port, remote="localfilesystem:{}".format(debug_socket))
 
     if run_as_cmd:
         gdbserver_cmd = run_as_cmd + gdbserver_cmd
@@ -180,6 +178,12 @@ def start_gdbserver(device, gdbserver_local_path, gdbserver_remote_path,
     gdbserver_output = file(gdbserver_output_path, 'w')
     return device.shell_popen(gdbserver_cmd, stdout=gdbserver_output,
                               stderr=gdbserver_output)
+
+
+def forward_gdbserver_port(device, local, remote):
+    """Forwards local TCP port `port` to `remote` via `adb forward`."""
+    device.forward("tcp:{}".format(local), remote)
+    atexit.register(lambda: device.forward_remove("tcp:{}".format(local)))
 
 
 def find_file(device, executable_path, sysroot, run_as_cmd=None):
