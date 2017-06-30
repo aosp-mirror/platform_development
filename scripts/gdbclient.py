@@ -19,6 +19,7 @@ import adb
 import argparse
 import logging
 import os
+import re
 import subprocess
 import sys
 
@@ -31,6 +32,15 @@ def get_gdbserver_path(root, arch):
         return path.format(root, arch, "64", "64")
     else:
         return path.format(root, arch, "", "")
+
+
+def get_tracer_pid(device, pid):
+    if pid is None:
+        return 0
+
+    line, _ = device.shell(["grep", "-e", "^TracerPid:", "/proc/{}/status".format(pid)])
+    tracer_pid = re.sub('TracerPid:\t(.*)\n', r'\1', line)
+    return int(tracer_pid)
 
 
 def parse_args():
@@ -50,7 +60,7 @@ def parse_args():
 
     parser.add_argument(
         "--port", nargs="?", default="5039",
-        help="override the port used on the host")
+        help="override the port used on the host [default: 5039]")
     parser.add_argument(
         "--user", nargs="?", default="root",
         help="user to run commands as on the device [default: root]")
@@ -236,13 +246,19 @@ def main():
         # Make sure we have the linker
         ensure_linker(device, sysroot, is64bit)
 
-        # Start gdbserver.
-        gdbserver_local_path = get_gdbserver_path(root, arch)
-        gdbserver_remote_path = "/data/local/tmp/{}-gdbserver".format(arch)
-        gdbrunner.start_gdbserver(
-            device, gdbserver_local_path, gdbserver_remote_path,
-            target_pid=pid, run_cmd=run_cmd, debug_socket=debug_socket,
-            port=args.port, run_as_cmd=args.su_cmd)
+        tracer_pid = get_tracer_pid(device, pid)
+        if tracer_pid == 0:
+            # Start gdbserver.
+            gdbserver_local_path = get_gdbserver_path(root, arch)
+            gdbserver_remote_path = "/data/local/tmp/{}-gdbserver".format(arch)
+            gdbrunner.start_gdbserver(
+                device, gdbserver_local_path, gdbserver_remote_path,
+                target_pid=pid, run_cmd=run_cmd, debug_socket=debug_socket,
+                port=args.port, run_as_cmd=args.su_cmd)
+        else:
+            print "Connecting to tracing pid {} using local port {}".format(tracer_pid, args.port)
+            gdbrunner.forward_gdbserver_port(device, local=args.port,
+                                             remote="tcp:{}".format(args.port))
 
         # Generate a gdb script.
         gdb_commands = generate_gdb_script(sysroot=sysroot,
