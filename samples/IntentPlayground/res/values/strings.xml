@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright (C) 2017 The Android Open Source Project
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+          http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+-->
+<resources>
+    <string name="app_name">Intent Playground</string>
+    <string name="task_id">com.example.android.intentplayground.taskId</string>
+    <string name="activity_index">com.example.android.intentplayground.activityIndex</string>
+    <string name="activity_name">CompName</string>
+    <string name="activity_label">#1</string>
+    <string name="intent_button_description">This button triggers the intent list dialog for this activity</string>
+    <string name="build_intent">Build Intent</string>
+    <string name="build_intent_caption">Select flags with which the intent for the launched activity will be built:</string>
+    <string name="target_activity">Select the target activity:</string>
+    <string name="launch_activity_button">Launch activity</string>
+    <string name="activity_name_placeholder">Activity Name</string>
+    <string name="intent_button_tooltip">View Intent flags</string>
+    <string name="activity_radio_description">Activity description</string>
+    <string name="checkbox_placeholder">CheckBox</string>
+    <string name="dialog_intent_flag_placeholder">intent flag</string>
+    <string name="current_task">Current Task</string>
+    <string name="current_task_placeholder">None</string>
+    <string name="current_activity">Current Activity</string>
+    <string name="current_activity_placeholder">None</string>
+    <string name="last_task">Last Task</string>
+    <string name="last_task_placeholder">None</string>
+    <string name="last_activity">Last Activity</string>
+    <string name="last_activity_placeholder">None</string>
+    <string name="current_intent_label_description">Intent passed to current activity</string>
+    <string name="intent_fragment_title">Current Intent</string>
+    <string name="action_label_description">Label for the action of the current intent</string>
+    <string name="action_label">Action</string>
+    <string name="action_placeholder">which action?</string>
+    <string name="data_uri_label_description">Label for the action of the current intent</string>
+    <string name="data_uri_label">Data URI</string>
+    <string name="data_uri_placeholder">://</string>
+    <string name="type_label_description">Label for the action of the current intent</string>
+    <string name="type_label">Type</string>
+    <string name="type_placeholder">which action?</string>
+    <string name="package_label_description">Label for the action of the current intent</string>
+    <string name="package_label">Package</string>
+    <string name="package_placeholder">which action?</string>
+    <string name="category_label_description">Label for the action of the current intent</string>
+    <string name="category_label">Categories</string>
+    <string name="flags_label_description">Label for the action of the current intent</string>
+    <string name="flags_label">Flags</string>
+    <string name="task_tree_title">Hierarchy</string>
+    <string name="intent_section_title">Title</string>
+    <string name="placeholder">placeholder</string>
+    <string name="kill_task_button">remove</string>
+    <string name="move_to_front">Move to front</string>
+    <string name="current_task_hierarchy_title">Current Hierarchy</string>
+    <string name="expected_task_hierarchy_title">Expected Hierarchy</string>
+</resources>
