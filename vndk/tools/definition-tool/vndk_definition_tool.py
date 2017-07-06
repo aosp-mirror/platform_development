@@ -2100,7 +2100,7 @@ class DepsInsightCommand(VNDKCommandBase):
         makedirs(args.output, exist_ok=True)
         script_dir = os.path.dirname(os.path.abspath(__file__))
         for name in ('index.html', 'insight.css', 'insight.js'):
-            shutil.copyfile(os.path.join(script_dir, 'assets', name),
+            shutil.copyfile(os.path.join(script_dir, 'assets', 'insight', name),
                             os.path.join(args.output, name))
 
         with open(os.path.join(args.output, 'insight-data.js'), 'w') as f:
