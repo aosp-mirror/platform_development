@@ -2626,7 +2626,7 @@ class DepGraphCommand(ELFGraphCommand):
         makedirs(args.output, exist_ok=True)
         script_dir = os.path.dirname(os.path.abspath(__file__))
         for name in ('index.html', 'dep-graph.js', 'dep-graph.css'):
-            shutil.copyfile(os.path.join(script_dir, 'assets/visual', name),
+            shutil.copyfile(os.path.join(script_dir, 'assets', 'visual', name),
                             os.path.join(args.output, name))
         with open(os.path.join(args.output, 'dep-data.js'), 'w') as f:
             f.write('var violatedLibs = ' + json.dumps(violate_libs) +
