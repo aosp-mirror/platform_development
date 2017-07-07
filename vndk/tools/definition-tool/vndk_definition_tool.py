@@ -681,25 +681,6 @@ SPLibResult = collections.namedtuple(
         'sp_hal sp_hal_dep vndk_sp_hal sp_ndk sp_ndk_indirect '
         'vndk_sp_both')
 
-def print_sp_lib(sp_lib, file=sys.stdout):
-    # SP-NDK
-    for lib in sorted_lib_path_list(sp_lib.sp_ndk):
-        print('sp-ndk:', lib, file=file)
-    for lib in sorted_lib_path_list(sp_lib.sp_ndk_indirect):
-        print('sp-ndk-indirect:', lib, file=file)
-
-    # SP-HAL
-    for lib in sorted_lib_path_list(sp_lib.sp_hal):
-        print('sp-hal:', lib, file=file)
-    for lib in sorted_lib_path_list(sp_lib.sp_hal_dep):
-        print('sp-hal-dep:', lib, file=file)
-    for lib in sorted_lib_path_list(sp_lib.vndk_sp_hal):
-        print('vndk-sp-hal:', lib, file=file)
-
-    # SP-both
-    for lib in sorted_lib_path_list(sp_lib.vndk_sp_both):
-        print('vndk-sp-both:', lib, file=file)
-
 
 class ELFResolver(object):
     def __init__(self, lib_set, default_search_path):
@@ -2119,7 +2100,7 @@ class DepsInsightCommand(VNDKCommandBase):
         makedirs(args.output, exist_ok=True)
         script_dir = os.path.dirname(os.path.abspath(__file__))
         for name in ('index.html', 'insight.css', 'insight.js'):
-            shutil.copyfile(os.path.join(script_dir, 'assets', name),
+            shutil.copyfile(os.path.join(script_dir, 'assets', 'insight', name),
                             os.path.join(args.output, name))
 
         with open(os.path.join(args.output, 'insight-data.js'), 'w') as f:
@@ -2130,25 +2111,6 @@ class DepsInsightCommand(VNDKCommandBase):
 })();''')
 
         return 0
-
-
-class VNDKCapCommand(ELFGraphCommand):
-    def __init__(self):
-        super(VNDKCapCommand, self).__init__(
-                'vndk-cap', help='Compute VNDK set upper bound')
-
-    def add_argparser_options(self, parser):
-        super(VNDKCapCommand, self).add_argparser_options(parser)
-
-    def main(self, args):
-        generic_refs, graph = self.create_from_args(args)
-
-        banned_libs = BannedLibDict.create_default()
-
-        vndk_cap = graph.compute_vndk_cap(banned_libs)
-
-        for lib in sorted_lib_path_list(vndk_cap):
-            print(lib)
 
 
 class DepsCommand(ELFGraphCommand):
@@ -2626,46 +2588,12 @@ class DepGraphCommand(ELFGraphCommand):
         makedirs(args.output, exist_ok=True)
         script_dir = os.path.dirname(os.path.abspath(__file__))
         for name in ('index.html', 'dep-graph.js', 'dep-graph.css'):
-            shutil.copyfile(os.path.join(script_dir, 'assets/visual', name),
+            shutil.copyfile(os.path.join(script_dir, 'assets', 'visual', name),
                             os.path.join(args.output, name))
         with open(os.path.join(args.output, 'dep-data.js'), 'w') as f:
             f.write('var violatedLibs = ' + json.dumps(violate_libs) +
                     '\nvar depData = ' + json.dumps(data) + ';')
 
-        return 0
-
-
-class VNDKSPCommand(ELFGraphCommand):
-    def __init__(self):
-        super(VNDKSPCommand, self).__init__(
-                'vndk-sp', help='List pre-defined VNDK-SP')
-
-    def add_argparser_options(self, parser):
-        super(VNDKSPCommand, self).add_argparser_options(parser)
-
-    def main(self, args):
-        generic_refs, graph = self.create_from_args(args)
-
-        vndk_sp = graph.compute_predefined_vndk_sp()
-        for lib in sorted_lib_path_list(vndk_sp):
-            print('vndk-sp:', lib)
-        vndk_sp_indirect = graph.compute_predefined_vndk_sp_indirect()
-        for lib in sorted_lib_path_list(vndk_sp_indirect):
-            print('vndk-sp-indirect:', lib)
-        return 0
-
-
-class SpLibCommand(ELFGraphCommand):
-    def __init__(self):
-        super(SpLibCommand, self).__init__(
-                'sp-lib', help='Define sp-ndk, sp-hal, and vndk-sp')
-
-    def add_argparser_options(self, parser):
-        super(SpLibCommand, self).add_argparser_options(parser)
-
-    def main(self, args):
-        generic_refs, graph = self.create_from_args(args)
-        print_sp_lib(graph.compute_sp_lib(generic_refs))
         return 0
 
 
@@ -2682,14 +2610,11 @@ def main():
     register_subcmd(ELFDumpCommand())
     register_subcmd(CreateGenericRefCommand())
     register_subcmd(VNDKCommand())
-    register_subcmd(VNDKCapCommand())
     register_subcmd(DepsCommand())
     register_subcmd(DepsClosureCommand())
     register_subcmd(DepsInsightCommand())
     register_subcmd(CheckDepCommand())
     register_subcmd(DepGraphCommand())
-    register_subcmd(SpLibCommand())
-    register_subcmd(VNDKSPCommand())
 
     args = parser.parse_args()
     if not args.subcmd:
