@@ -132,7 +132,7 @@ api_gen_classpath := $(subst $(space),:,$(api_gen_jar) $(api_gen_deps))
 
 
 $(HOST_OUT)/development/sdk/generated-api-versions.xml: $(android_jar_full_target)
-	java -cp $(api_gen_classpath) \
+	$(JAVA) -cp $(api_gen_classpath) \
 	  com.android.apigenerator.Main \
 	  --pattern $(TOPDIR)prebuilts/tools/common/api-versions/android-%/android.jar \
 	  --pattern $(TOPDIR)prebuilts/sdk/%/android.jar \
