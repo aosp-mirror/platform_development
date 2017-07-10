@@ -526,14 +526,13 @@ class ELF(object):
 
 
 #------------------------------------------------------------------------------
-# NDK and Banned Libraries
+# NDK
 #------------------------------------------------------------------------------
 
 class NDKLibDict(object):
     NOT_NDK = 0
     LL_NDK = 1
     SP_NDK = 2
-    HL_NDK = 3
 
     LL_NDK_LIB_NAMES = (
         'libc.so',
@@ -556,15 +555,6 @@ class NDKLibDict(object):
         'libvulkan.so',
     )
 
-    HL_NDK_LIB_NAMES = (
-        'libOpenMAXAL.so',
-        'libOpenSLES.so',
-        'libandroid.so',
-        'libcamera2ndk.so',
-        'libjnigraphics.so',
-        'libmediandk.so',
-    )
-
     @staticmethod
     def _create_pattern(names):
         return '|'.join('(?:^\\/system\\/lib(?:64)?\\/' + re.escape(i) + '$)'
@@ -583,19 +573,14 @@ class NDKLibDict(object):
     def __init__(self):
         self.ll_ndk_patterns = self._compile_path_matcher(self.LL_NDK_LIB_NAMES)
         self.sp_ndk_patterns = self._compile_path_matcher(self.SP_NDK_LIB_NAMES)
-        self.hl_ndk_patterns = self._compile_path_matcher(self.HL_NDK_LIB_NAMES)
         self.ndk_patterns = self._compile_multi_path_matcher(
-                (self.LL_NDK_LIB_NAMES, self.SP_NDK_LIB_NAMES,
-                 self.HL_NDK_LIB_NAMES))
+                (self.LL_NDK_LIB_NAMES, self.SP_NDK_LIB_NAMES))
 
     def is_ll_ndk(self, path):
         return self.ll_ndk_patterns.match(path)
 
     def is_sp_ndk(self, path):
         return self.sp_ndk_patterns.match(path)
-
-    def is_hl_ndk(self, path):
-        return self.hl_ndk_patterns.match(path)
 
     def is_ndk(self, path):
         return self.ndk_patterns.match(path)
@@ -607,33 +592,6 @@ class NDKLibDict(object):
         return match.lastindex
 
 NDK_LIBS = NDKLibDict()
-
-
-BannedLib = collections.namedtuple(
-        'BannedLib', ('name', 'reason', 'action',))
-
-BA_WARN = 0
-BA_EXCLUDE = 1
-
-class BannedLibDict(object):
-    def __init__(self):
-        self.banned_libs = dict()
-
-    def add(self, name, reason, action):
-        self.banned_libs[name] = BannedLib(name, reason, action)
-
-    def get(self, name):
-        return self.banned_libs.get(name)
-
-    def is_banned(self, path):
-        return self.get(os.path.basename(path))
-
-    @staticmethod
-    def create_default():
-        d = BannedLibDict()
-        d.add('libbinder.so', 'un-versioned IPC', BA_WARN)
-        d.add('libselinux.so', 'policydb might be incompatible', BA_WARN)
-        return d
 
 
 #------------------------------------------------------------------------------
@@ -732,10 +690,6 @@ class ELFLinkData(object):
     @property
     def is_sp_ndk(self):
         return self._ndk_classification == NDKLibDict.SP_NDK
-
-    @property
-    def is_hl_ndk(self):
-        return self._ndk_classification == NDKLibDict.HL_NDK
 
     def add_dep(self, dst, ty):
         self._deps[ty].add(dst)
@@ -1533,43 +1487,6 @@ class ELFLinker(object):
                 vndk_sp_ext=vndk_sp_ext,
                 vndk_sp_indirect_ext=vndk_sp_indirect_ext,
                 extra_vendor_libs=extra_vendor_libs)
-
-    def compute_vndk_cap(self, banned_libs):
-        # ELF files on vendor partitions are banned unconditionally.  ELF files
-        # on the system partition are banned if their file extensions are not
-        # '.so' or their file names are listed in banned_libs.  LL-NDK and
-        # SP-NDK libraries are treated as a special case which will not be
-        # considered as banned libraries at the moment.
-        def is_banned(lib):
-            if lib.is_ndk:
-                return lib.is_hl_ndk
-            return (banned_libs.is_banned(lib.path) or
-                    not lib.is_system_lib() or
-                    not lib.path.endswith('.so'))
-
-        # Find all libraries that are banned.
-        banned_set = set()
-        for lib_set in self.lib_pt:
-            for lib in lib_set.values():
-                if is_banned(lib):
-                    banned_set.add(lib)
-
-        # Find the transitive closure of the banned libraries.
-        stack = list(banned_set)
-        while stack:
-            lib = stack.pop()
-            for user in lib.users:
-                if not user.is_ndk and user not in banned_set:
-                    banned_set.add(user)
-                    stack.append(user)
-
-        # Find the non-NDK non-banned libraries.
-        vndk_cap = set()
-        for lib in self.lib_pt[PT_SYSTEM].values():
-            if not lib.is_ndk and lib not in banned_set:
-                vndk_cap.add(lib)
-
-        return vndk_cap
 
     @staticmethod
     def _compute_closure(root_set, is_excluded, get_successors):
