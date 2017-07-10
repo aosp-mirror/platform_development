@@ -533,7 +533,6 @@ class NDKLibDict(object):
     NOT_NDK = 0
     LL_NDK = 1
     SP_NDK = 2
-    HL_NDK = 3
 
     LL_NDK_LIB_NAMES = (
         'libc.so',
@@ -556,15 +555,6 @@ class NDKLibDict(object):
         'libvulkan.so',
     )
 
-    HL_NDK_LIB_NAMES = (
-        'libOpenMAXAL.so',
-        'libOpenSLES.so',
-        'libandroid.so',
-        'libcamera2ndk.so',
-        'libjnigraphics.so',
-        'libmediandk.so',
-    )
-
     @staticmethod
     def _create_pattern(names):
         return '|'.join('(?:^\\/system\\/lib(?:64)?\\/' + re.escape(i) + '$)'
@@ -583,19 +573,14 @@ class NDKLibDict(object):
     def __init__(self):
         self.ll_ndk_patterns = self._compile_path_matcher(self.LL_NDK_LIB_NAMES)
         self.sp_ndk_patterns = self._compile_path_matcher(self.SP_NDK_LIB_NAMES)
-        self.hl_ndk_patterns = self._compile_path_matcher(self.HL_NDK_LIB_NAMES)
         self.ndk_patterns = self._compile_multi_path_matcher(
-                (self.LL_NDK_LIB_NAMES, self.SP_NDK_LIB_NAMES,
-                 self.HL_NDK_LIB_NAMES))
+                (self.LL_NDK_LIB_NAMES, self.SP_NDK_LIB_NAMES))
 
     def is_ll_ndk(self, path):
         return self.ll_ndk_patterns.match(path)
 
     def is_sp_ndk(self, path):
         return self.sp_ndk_patterns.match(path)
-
-    def is_hl_ndk(self, path):
-        return self.hl_ndk_patterns.match(path)
 
     def is_ndk(self, path):
         return self.ndk_patterns.match(path)
@@ -705,10 +690,6 @@ class ELFLinkData(object):
     @property
     def is_sp_ndk(self):
         return self._ndk_classification == NDKLibDict.SP_NDK
-
-    @property
-    def is_hl_ndk(self):
-        return self._ndk_classification == NDKLibDict.HL_NDK
 
     def add_dep(self, dst, ty):
         self._deps[ty].add(dst)
