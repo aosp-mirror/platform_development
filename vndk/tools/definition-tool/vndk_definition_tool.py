@@ -698,62 +698,26 @@ class NDKLibDict(object):
     LL_NDK = 1
     SP_NDK = 2
 
-    LL_NDK_LIB_NAMES = (
-        'libc.so',
-        'libdl.so',
-        'liblog.so',
-        'libm.so',
-        'libstdc++.so',
-        'libvndksupport.so',
-        'libandroid_net.so',
-        'libz.so',
-    )
-
-    SP_NDK_LIB_NAMES = (
-        'libEGL.so',
-        'libGLESv1_CM.so',
-        'libGLESv2.so',
-        'libGLESv3.so',
-        'libnativewindow.so',
-        'libsync.so',
-        'libvulkan.so',
-    )
-
-    @staticmethod
-    def _create_pattern(names):
-        return '|'.join('(?:^\\/system\\/lib(?:64)?\\/' + re.escape(i) + '$)'
-                        for i in names)
-
-    @staticmethod
-    def _compile_path_matcher(names):
-        return re.compile(NDKLibDict._create_pattern(names))
-
-    @staticmethod
-    def _compile_multi_path_matcher(name_lists):
-        patt = '|'.join('(' + NDKLibDict._create_pattern(names) + ')'
-                        for names in name_lists)
-        return re.compile(patt)
-
     def __init__(self):
-        self.ll_ndk_patterns = self._compile_path_matcher(self.LL_NDK_LIB_NAMES)
-        self.sp_ndk_patterns = self._compile_path_matcher(self.SP_NDK_LIB_NAMES)
-        self.ndk_patterns = self._compile_multi_path_matcher(
-                (self.LL_NDK_LIB_NAMES, self.SP_NDK_LIB_NAMES))
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        self.tagged_paths = TaggedPathDict.create_from_csv_path(
+                os.path.join(script_dir, 'datasets', 'minimum_tag_file.csv'))
 
     def is_ll_ndk(self, path):
-        return self.ll_ndk_patterns.match(path)
+        return path in self.tagged_paths.ll_ndk
 
     def is_sp_ndk(self, path):
-        return self.sp_ndk_patterns.match(path)
+        return path in self.tagged_paths.sp_ndk
 
     def is_ndk(self, path):
-        return self.ndk_patterns.match(path)
+        return self.is_ll_ndk(path) or self.is_sp_ndk(path)
 
     def classify(self, path):
-        match = self.ndk_patterns.match(path)
-        if not match:
-            return 0
-        return match.lastindex
+        if self.is_ll_ndk(path):
+            return NDKLibDict.LL_NDK
+        if self.is_sp_ndk(path):
+            return NDKLibDict.SP_NDK
+        return NDKLibDict.NOT_NDK
 
 NDK_LIBS = NDKLibDict()
 
