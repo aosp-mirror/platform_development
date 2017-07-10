@@ -526,6 +526,170 @@ class ELF(object):
 
 
 #------------------------------------------------------------------------------
+# TaggedDict
+#------------------------------------------------------------------------------
+
+class TaggedDict(object):
+    TAGS = {
+        'll_ndk', 'll_ndk_indirect', 'sp_ndk', 'sp_ndk_indirect',
+        'vndk_sp', 'vndk_sp_indirect', 'vndk_sp_indirect_private',
+        'vndk',
+        'fwk_only', 'fwk_only_rs',
+        'sp_hal', 'sp_hal_dep',
+        'vnd_only',
+        'remove',
+    }
+
+    _TAG_ALIASES = {
+        'hl_ndk': 'fwk_only',  # Treat HL-NDK as FWK-ONLY.
+        'vndk_indirect': 'vndk',  # Legacy
+        'vndk_sp_hal': 'vndk_sp',  # Legacy
+        'vndk_sp_both': 'vndk_sp',  # Legacy
+    }
+
+    @classmethod
+    def _normalize_tag(cls, tag):
+        tag = tag.lower().replace('-', '_')
+        tag = cls._TAG_ALIASES.get(tag, tag)
+        if tag not in cls.TAGS:
+            raise ValueError('unknown lib tag ' + tag)
+        return tag
+
+    _LL_NDK_VIS = {'ll_ndk', 'll_ndk_indirect'}
+    _SP_NDK_VIS = {'ll_ndk', 'll_ndk_indirect', 'sp_ndk', 'sp_ndk_indirect'}
+    _VNDK_SP_VIS = {'ll_ndk', 'sp_ndk', 'vndk_sp', 'vndk_sp_indirect',
+                    'vndk_sp_indirect_private', 'fwk_only_rs'}
+    _FWK_ONLY_VIS = {'ll_ndk', 'll_ndk_indirect', 'sp_ndk', 'sp_ndk_indirect',
+                     'vndk_sp', 'vndk_sp_indirect', 'vndk_sp_indirect_private',
+                     'vndk', 'fwk_only', 'fwk_only_rs', 'sp_hal'}
+    _SP_HAL_VIS = {'ll_ndk', 'sp_ndk', 'vndk_sp', 'sp_hal', 'sp_hal_dep'}
+
+    _TAG_VISIBILITY = {
+        'll_ndk': _LL_NDK_VIS,
+        'll_ndk_indirect': _LL_NDK_VIS,
+        'sp_ndk': _SP_NDK_VIS,
+        'sp_ndk_indirect': _SP_NDK_VIS,
+
+        'vndk_sp': _VNDK_SP_VIS,
+        'vndk_sp_indirect': _VNDK_SP_VIS,
+        'vndk_sp_indirect_private': _VNDK_SP_VIS,
+
+        'vndk': {'ll_ndk', 'sp_ndk', 'vndk_sp', 'vndk_sp_indirect', 'vndk'},
+
+        'fwk_only': _FWK_ONLY_VIS,
+        'fwk_only_rs': _FWK_ONLY_VIS,
+
+        'sp_hal': _SP_HAL_VIS,
+        'sp_hal_dep': _SP_HAL_VIS,
+
+        'vnd_only': {'ll_ndk', 'sp_ndk', 'vndk_sp', 'vndk_sp_indirect',
+                     'vndk', 'sp_hal', 'sp_hal_dep', 'vnd_only'},
+
+        'remove': set(),
+    }
+
+    del _LL_NDK_VIS, _SP_NDK_VIS, _VNDK_SP_VIS, _FWK_ONLY_VIS, _SP_HAL_VIS
+
+    @classmethod
+    def is_tag_visible(cls, from_tag, to_tag):
+        return to_tag in cls._TAG_VISIBILITY[from_tag]
+
+    def __init__(self):
+        self._path_tag = dict()
+        for tag in self.TAGS:
+            setattr(self, tag, set())
+
+    def add(self, tag, lib):
+        lib_set = getattr(self, tag)
+        lib_set.add(lib)
+        self._path_tag[lib] = tag
+
+    def get_path_tag(self, lib):
+        try:
+            return self._path_tag[lib]
+        except KeyError:
+            return self.get_path_tag_default(lib)
+
+    def get_path_tag_default(self, lib):
+        raise NotImplementedError()
+
+    def is_path_visible(self, from_lib, to_lib):
+        return self.is_tag_visible(self.get_path_tag(from_lib),
+                                   self.get_path_tag(to_lib))
+
+
+class TaggedPathDict(TaggedDict):
+    def load_from_csv(self, fp):
+        reader = csv.reader(fp)
+
+        # Read first row and check the existence of the header.
+        try:
+            row = next(reader)
+        except StopIteration:
+            return
+
+        try:
+            path_col = row.index('Path')
+            tag_col = row.index('Tag')
+        except ValueError:
+            path_col = 0
+            tag_col = 1
+            self.add(self._normalize_tag(row[tag_col]), row[path_col])
+
+        # Read the rest of rows.
+        for row in reader:
+            self.add(self._normalize_tag(row[tag_col]), row[path_col])
+
+    @staticmethod
+    def create_from_csv(fp):
+        d = TaggedPathDict()
+        d.load_from_csv(fp)
+        return d
+
+    @staticmethod
+    def create_from_csv_path(path):
+        with open(path, 'r') as fp:
+            return TaggedPathDict.create_from_csv(fp)
+
+    @staticmethod
+    def _enumerate_paths(pattern):
+        if '${LIB}' in pattern:
+            yield pattern.replace('${LIB}', 'lib')
+            yield pattern.replace('${LIB}', 'lib64')
+        else:
+            yield pattern
+
+    def add(self, tag, path):
+        for path in self._enumerate_paths(path):
+            super(TaggedPathDict, self).add(tag, path)
+
+    def get_path_tag_default(self, path):
+        return 'vnd_only' if path.startswith('/vendor') else 'fwk_only'
+
+
+class TaggedLibDict(TaggedDict):
+    @staticmethod
+    def create_from_graph(graph, tagged_paths, generic_refs=None):
+        d = TaggedLibDict()
+
+        for lib in graph.lib_pt[PT_SYSTEM].values():
+            d.add(tagged_paths.get_path_tag(lib.path), lib)
+
+        sp_lib = graph.compute_sp_lib(generic_refs)
+        for lib in graph.lib_pt[PT_VENDOR].values():
+            if lib in sp_lib.sp_hal:
+                d.add('sp_hal', lib)
+            elif lib in sp_lib.sp_hal_dep:
+                d.add('sp_hal_dep', lib)
+            else:
+                d.add('vnd_only', lib)
+        return d
+
+    def get_path_tag_default(self, lib):
+        return 'vnd_only' if lib.path.startswith('/vendor') else 'fwk_only'
+
+
+#------------------------------------------------------------------------------
 # NDK
 #------------------------------------------------------------------------------
 
@@ -2151,166 +2315,6 @@ class DepsClosureCommand(ELFGraphCommand):
                 self.print_deps_closure({lib}, graph, is_excluded_libs,
                                         args.revert, '\t')
         return 0
-
-
-class TaggedDict(object):
-    TAGS = {
-        'll_ndk', 'll_ndk_indirect', 'sp_ndk', 'sp_ndk_indirect',
-        'vndk_sp', 'vndk_sp_indirect', 'vndk_sp_indirect_private',
-        'vndk',
-        'fwk_only', 'fwk_only_rs',
-        'sp_hal', 'sp_hal_dep',
-        'vnd_only',
-        'remove',
-    }
-
-    _TAG_ALIASES = {
-        'hl_ndk': 'fwk_only',  # Treat HL-NDK as FWK-ONLY.
-        'vndk_indirect': 'vndk',  # Legacy
-        'vndk_sp_hal': 'vndk_sp',  # Legacy
-        'vndk_sp_both': 'vndk_sp',  # Legacy
-    }
-
-    @classmethod
-    def _normalize_tag(cls, tag):
-        tag = tag.lower().replace('-', '_')
-        tag = cls._TAG_ALIASES.get(tag, tag)
-        if tag not in cls.TAGS:
-            raise ValueError('unknown lib tag ' + tag)
-        return tag
-
-    _LL_NDK_VIS = {'ll_ndk', 'll_ndk_indirect'}
-    _SP_NDK_VIS = {'ll_ndk', 'll_ndk_indirect', 'sp_ndk', 'sp_ndk_indirect'}
-    _VNDK_SP_VIS = {'ll_ndk', 'sp_ndk', 'vndk_sp', 'vndk_sp_indirect',
-                    'vndk_sp_indirect_private', 'fwk_only_rs'}
-    _FWK_ONLY_VIS = {'ll_ndk', 'll_ndk_indirect', 'sp_ndk', 'sp_ndk_indirect',
-                     'vndk_sp', 'vndk_sp_indirect', 'vndk_sp_indirect_private',
-                     'vndk', 'fwk_only', 'fwk_only_rs', 'sp_hal'}
-    _SP_HAL_VIS = {'ll_ndk', 'sp_ndk', 'vndk_sp', 'sp_hal', 'sp_hal_dep'}
-
-    _TAG_VISIBILITY = {
-        'll_ndk': _LL_NDK_VIS,
-        'll_ndk_indirect': _LL_NDK_VIS,
-        'sp_ndk': _SP_NDK_VIS,
-        'sp_ndk_indirect': _SP_NDK_VIS,
-
-        'vndk_sp': _VNDK_SP_VIS,
-        'vndk_sp_indirect': _VNDK_SP_VIS,
-        'vndk_sp_indirect_private': _VNDK_SP_VIS,
-
-        'vndk': {'ll_ndk', 'sp_ndk', 'vndk_sp', 'vndk_sp_indirect', 'vndk'},
-
-        'fwk_only': _FWK_ONLY_VIS,
-        'fwk_only_rs': _FWK_ONLY_VIS,
-
-        'sp_hal': _SP_HAL_VIS,
-        'sp_hal_dep': _SP_HAL_VIS,
-
-        'vnd_only': {'ll_ndk', 'sp_ndk', 'vndk_sp', 'vndk_sp_indirect',
-                     'vndk', 'sp_hal', 'sp_hal_dep', 'vnd_only'},
-
-        'remove': set(),
-    }
-
-    del _LL_NDK_VIS, _SP_NDK_VIS, _VNDK_SP_VIS, _FWK_ONLY_VIS, _SP_HAL_VIS
-
-    @classmethod
-    def is_tag_visible(cls, from_tag, to_tag):
-        return to_tag in cls._TAG_VISIBILITY[from_tag]
-
-    def __init__(self):
-        self._path_tag = dict()
-        for tag in self.TAGS:
-            setattr(self, tag, set())
-
-    def add(self, tag, lib):
-        lib_set = getattr(self, tag)
-        lib_set.add(lib)
-        self._path_tag[lib] = tag
-
-    def get_path_tag(self, lib):
-        try:
-            return self._path_tag[lib]
-        except KeyError:
-            return self.get_path_tag_default(lib)
-
-    def get_path_tag_default(self, lib):
-        raise NotImplementedError()
-
-    def is_path_visible(self, from_lib, to_lib):
-        return self.is_tag_visible(self.get_path_tag(from_lib),
-                                   self.get_path_tag(to_lib))
-
-
-class TaggedPathDict(TaggedDict):
-    def load_from_csv(self, fp):
-        reader = csv.reader(fp)
-
-        # Read first row and check the existence of the header.
-        try:
-            row = next(reader)
-        except StopIteration:
-            return
-
-        try:
-            path_col = row.index('Path')
-            tag_col = row.index('Tag')
-        except ValueError:
-            path_col = 0
-            tag_col = 1
-            self.add(self._normalize_tag(row[tag_col]), row[path_col])
-
-        # Read the rest of rows.
-        for row in reader:
-            self.add(self._normalize_tag(row[tag_col]), row[path_col])
-
-    @staticmethod
-    def create_from_csv(fp):
-        d = TaggedPathDict()
-        d.load_from_csv(fp)
-        return d
-
-    @staticmethod
-    def create_from_csv_path(path):
-        with open(path, 'r') as fp:
-            return TaggedPathDict.create_from_csv(fp)
-
-    @staticmethod
-    def _enumerate_paths(pattern):
-        if '${LIB}' in pattern:
-            yield pattern.replace('${LIB}', 'lib')
-            yield pattern.replace('${LIB}', 'lib64')
-        else:
-            yield pattern
-
-    def add(self, tag, path):
-        for path in self._enumerate_paths(path):
-            super(TaggedPathDict, self).add(tag, path)
-
-    def get_path_tag_default(self, path):
-        return 'vnd_only' if path.startswith('/vendor') else 'fwk_only'
-
-
-class TaggedLibDict(TaggedDict):
-    @staticmethod
-    def create_from_graph(graph, tagged_paths, generic_refs=None):
-        d = TaggedLibDict()
-
-        for lib in graph.lib_pt[PT_SYSTEM].values():
-            d.add(tagged_paths.get_path_tag(lib.path), lib)
-
-        sp_lib = graph.compute_sp_lib(generic_refs)
-        for lib in graph.lib_pt[PT_VENDOR].values():
-            if lib in sp_lib.sp_hal:
-                d.add('sp_hal', lib)
-            elif lib in sp_lib.sp_hal_dep:
-                d.add('sp_hal_dep', lib)
-            else:
-                d.add('vnd_only', lib)
-        return d
-
-    def get_path_tag_default(self, lib):
-        return 'vnd_only' if lib.path.startswith('/vendor') else 'fwk_only'
 
 
 class ModuleInfo(object):
