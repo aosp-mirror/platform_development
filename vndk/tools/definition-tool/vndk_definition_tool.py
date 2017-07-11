@@ -796,14 +796,14 @@ class ELFLinkData(object):
     NEEDED = 0  # Dependencies recorded in DT_NEEDED entries.
     DLOPEN = 1  # Dependencies introduced by dlopen().
 
-    def __init__(self, partition, path, elf):
+    def __init__(self, partition, path, elf, ndk_classification):
         self.partition = partition
         self.path = path
         self.elf = elf
         self._deps = (set(), set())
         self._users = (set(), set())
         self.imported_ext_symbols = collections.defaultdict(set)
-        self._ndk_classification = NDK_LIBS.classify(path)
+        self._ndk_classification = ndk_classification
         self.unresolved_symbols = set()
         self.linked_symbols = dict()
 
@@ -955,7 +955,7 @@ class ELFLinker(object):
         self.lib_pt[lib.partition].remove(lib)
 
     def add_lib(self, partition, path, elf):
-        lib = ELFLinkData(partition, path, elf)
+        lib = ELFLinkData(partition, path, elf, NDK_LIBS.classify(path))
         self._add_lib_to_lookup_dict(lib)
         return lib
 
