@@ -144,9 +144,15 @@ def handle_switches(args, sysroot):
     elif args.run_cmd:
         if not args.run_cmd[0]:
             sys.exit("empty command passed to -r")
-        if not args.run_cmd[0].startswith("/"):
-            sys.exit("commands passed to -r must use absolute paths")
         run_cmd = args.run_cmd
+        if not run_cmd[0].startswith("/"):
+            try:
+                run_cmd[0] = gdbrunner.find_executable_path(device, args.run_cmd[0],
+                                                            run_as_cmd=args.su_cmd)
+            except RuntimeError:
+              sys.exit("Could not find executable '{}' passed to -r, "
+                       "please provide an absolute path.".format(args.run_cmd[0]))
+
         binary_file, local = gdbrunner.find_file(device, run_cmd[0], sysroot,
                                                  run_as_cmd=args.su_cmd)
     if binary_file is None:

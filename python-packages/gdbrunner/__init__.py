@@ -244,6 +244,33 @@ def find_file(device, executable_path, sysroot, run_as_cmd=None):
             return (open(path, "r"), found_locally)
     raise RuntimeError('Could not find executable {}'.format(executable_path))
 
+def find_executable_path(device, executable_name, run_as_cmd=None):
+    """Find a device executable from its name
+
+    This function calls which on the device to retrieve the absolute path of
+    the executable.
+
+    Args:
+      device: the AndroidDevice object to use.
+      executable_name: the name of the executable to find.
+      run_as_cmd: if necessary, run-as or su command to prepend
+
+    Returns:
+      The absolute path of the executable.
+
+    Raises:
+      RuntimeError: could not find the executable.
+    """
+    cmd = ["which", executable_name]
+    if run_as_cmd:
+        cmd = run_as_cmd + cmd
+
+    try:
+        output, _ = device.shell(cmd)
+        return output
+    except adb.ShellError:
+        raise  RuntimeError("Could not find executable '{}' on "
+                            "device".format(executable_name))
 
 def find_binary(device, pid, sysroot, run_as_cmd=None):
     """Finds a device executable file corresponding to |pid|."""
