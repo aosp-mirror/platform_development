@@ -530,15 +530,29 @@ class ELF(object):
 #------------------------------------------------------------------------------
 
 class TaggedDict(object):
-    TAGS = {
-        'll_ndk', 'll_ndk_indirect', 'sp_ndk', 'sp_ndk_indirect',
-        'vndk_sp', 'vndk_sp_indirect', 'vndk_sp_indirect_private',
-        'vndk',
-        'fwk_only', 'fwk_only_rs',
-        'sp_hal', 'sp_hal_dep',
-        'vnd_only',
-        'remove',
-    }
+    def _define_tag_constants(local_ns):
+        tag_list = [
+            'll_ndk', 'll_ndk_indirect', 'sp_ndk', 'sp_ndk_indirect',
+            'vndk_sp', 'vndk_sp_indirect', 'vndk_sp_indirect_private',
+            'vndk',
+            'fwk_only', 'fwk_only_rs',
+            'sp_hal', 'sp_hal_dep',
+            'vnd_only',
+            'remove',
+        ]
+        assert len(tag_list) < 32
+
+        tags = {}
+        for i, tag in enumerate(tag_list):
+            local_ns[tag.upper()] = 1 << i
+            tags[tag] = 1 << i
+
+        local_ns['TAGS'] = tags
+
+    _define_tag_constants(locals())
+    del _define_tag_constants
+
+    NDK = LL_NDK | SP_NDK
 
     _TAG_ALIASES = {
         'hl_ndk': 'fwk_only',  # Treat HL-NDK as FWK-ONLY.
@@ -613,9 +627,24 @@ class TaggedDict(object):
     def get_path_tag_default(self, lib):
         raise NotImplementedError()
 
+    def get_path_tag_bit(self, lib):
+        return self.TAGS[self.get_path_tag(lib)]
+
     def is_path_visible(self, from_lib, to_lib):
         return self.is_tag_visible(self.get_path_tag(from_lib),
                                    self.get_path_tag(to_lib))
+
+    @staticmethod
+    def is_ndk(tag_bit):
+        return bool(tag_bit & TaggedDict.NDK)
+
+    @staticmethod
+    def is_ll_ndk(tag_bit):
+        return bool(tag_bit & TaggedDict.LL_NDK)
+
+    @staticmethod
+    def is_sp_ndk(tag_bit):
+        return bool(tag_bit & TaggedDict.SP_NDK)
 
 
 class TaggedPathDict(TaggedDict):
@@ -687,39 +716,6 @@ class TaggedLibDict(TaggedDict):
 
     def get_path_tag_default(self, lib):
         return 'vnd_only' if lib.path.startswith('/vendor') else 'fwk_only'
-
-
-#------------------------------------------------------------------------------
-# NDK
-#------------------------------------------------------------------------------
-
-class NDKLibDict(object):
-    NOT_NDK = 0
-    LL_NDK = 1
-    SP_NDK = 2
-
-    def __init__(self):
-        script_dir = os.path.dirname(os.path.abspath(__file__))
-        self.tagged_paths = TaggedPathDict.create_from_csv_path(
-                os.path.join(script_dir, 'datasets', 'minimum_tag_file.csv'))
-
-    def is_ll_ndk(self, path):
-        return path in self.tagged_paths.ll_ndk
-
-    def is_sp_ndk(self, path):
-        return path in self.tagged_paths.sp_ndk
-
-    def is_ndk(self, path):
-        return self.is_ll_ndk(path) or self.is_sp_ndk(path)
-
-    def classify(self, path):
-        if self.is_ll_ndk(path):
-            return NDKLibDict.LL_NDK
-        if self.is_sp_ndk(path):
-            return NDKLibDict.SP_NDK
-        return NDKLibDict.NOT_NDK
-
-NDK_LIBS = NDKLibDict()
 
 
 #------------------------------------------------------------------------------
@@ -796,28 +792,28 @@ class ELFLinkData(object):
     NEEDED = 0  # Dependencies recorded in DT_NEEDED entries.
     DLOPEN = 1  # Dependencies introduced by dlopen().
 
-    def __init__(self, partition, path, elf, ndk_classification):
+    def __init__(self, partition, path, elf, tag_bit):
         self.partition = partition
         self.path = path
         self.elf = elf
         self._deps = (set(), set())
         self._users = (set(), set())
         self.imported_ext_symbols = collections.defaultdict(set)
-        self._ndk_classification = ndk_classification
+        self._tag_bit = tag_bit
         self.unresolved_symbols = set()
         self.linked_symbols = dict()
 
     @property
     def is_ndk(self):
-        return self._ndk_classification != NDKLibDict.NOT_NDK
+        return TaggedDict.is_ndk(self._tag_bit)
 
     @property
     def is_ll_ndk(self):
-        return self._ndk_classification == NDKLibDict.LL_NDK
+        return TaggedDict.is_ll_ndk(self._tag_bit)
 
     @property
     def is_sp_ndk(self):
-        return self._ndk_classification == NDKLibDict.SP_NDK
+        return TaggedDict.is_sp_ndk(self._tag_bit)
 
     def add_dep(self, dst, ty):
         self._deps[ty].add(dst)
@@ -945,8 +941,16 @@ class ELFLibDict(defaultnamedtuple('ELFLibDict', ('lib32', 'lib64'), {})):
 
 
 class ELFLinker(object):
-    def __init__(self):
+    def __init__(self, tagged_paths=None):
         self.lib_pt = [ELFLibDict() for i in range(NUM_PARTITIONS)]
+
+        if tagged_paths is None:
+            script_dir = os.path.dirname(os.path.abspath(__file__))
+            dataset_path = os.path.join(
+                    script_dir, 'datasets', 'minimum_tag_file.csv')
+            tagged_paths = TaggedPathDict.create_from_csv_path(dataset_path)
+
+        self.tagged_paths = tagged_paths
 
     def _add_lib_to_lookup_dict(self, lib):
         self.lib_pt[lib.partition].add(lib.path, lib)
@@ -955,7 +959,8 @@ class ELFLinker(object):
         self.lib_pt[lib.partition].remove(lib)
 
     def add_lib(self, partition, path, elf):
-        lib = ELFLinkData(partition, path, elf, NDK_LIBS.classify(path))
+        lib = ELFLinkData(partition, path, elf,
+                          self.tagged_paths.get_path_tag_bit(path))
         self._add_lib_to_lookup_dict(lib)
         return lib
 
