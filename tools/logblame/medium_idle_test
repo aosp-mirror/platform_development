@@ -1,0 +1,23 @@
+#!/bin/bash
+
+# The files to save output to.
+RAWLOGS_FILE=medium-idle-rawlogs.txt
+ANALYSIS_FILE=medium-idle-analysis.txt
+
+# Turn on the screen and unlock the device
+# TODO: Power on
+adb shell wm dismiss-keyguard
+
+# Start the analysis process
+$TOP/development/tools/logblame/analyze_logs.py --duration=4h --clear --rawlogs $RAWLOGS_FILE \
+    | tee $ANALYSIS_FILE &
+analyze_pid=$!
+
+# Wait for the pyton process to exit
+echo "waiting... analyze_pid" $analyze_pid
+wait $analyze_pid
+
+echo "Wrote raw logs to $RAWLOGS_FILE"
+echo "Wrote analysis to $ANALYSIS_FILE"
+
+

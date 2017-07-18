@@ -1,0 +1,2947 @@
+--------- beginning of main
+[ 01-01 15:12:06.640  root:  600:  600 I/chatty   ]
+uid=0(root) /system/bin/thermal-engine expire 3 lines
+
+[ 01-01 15:12:16.640  root:  600:  600 W/thermal-engine ]
+type=1400 audit(0.0:1021): avc: denied { search } for name="leds" dev="sysfs" ino=7453 scontext=u:r:thermal-engine:s0 tcontext=u:object_r:sysfs_leds:s0 tclass=dir permissive=0
+
+[ 01-01 15:12:24.572 10081:20049:20054 I/zygote64 ]
+Integer.valueOf will not be optimized
+
+--------- beginning of system
+[ 01-01 15:12:24.863  1000: 2272: 3628 I/PowerManagerService ]
+Going to sleep due to power button (uid 1000)...
+
+--------- switch to main
+[ 01-01 15:12:24.572 10081:20049:20054 I/zygote64 ]
+Integer.valueOf will not be optimized
+
+[ 01-01 15:12:25.055 10081:20049:20054 I/zygote64 ]
+Compiler allocated 6MB to compile void android.view.ViewRootImpl.performTraversals()
+
+--------- switch to system
+[ 01-01 15:12:25.343  1000: 2272: 3592 D/BatteryStatsService ]
+begin noteScreenState
+
+[ 01-01 15:12:25.344  1000: 2272: 3592 D/BatteryStatsService ]
+end noteScreenState
+
+[ 01-01 15:12:25.347  1000: 2272: 3582 I/VrManagerService ]
+VR mode is disallowed
+
+--------- switch to main
+[ 01-01 15:12:25.431  1000: 2272: 3592 I/sensors  ]
+activate
+
+[ 01-01 15:12:25.436  1000: 2272: 3592 I/nanohub  ]
+queueActivate: sensor=28, handle=30, enable=0
+
+[ 01-01 15:12:25.437  1000: 2272: 3592 V/KeyguardServiceDelegate ]
+onScreenTurnedOff()
+
+[ 01-01 15:12:25.440  1000: 2272: 3617 I/nanohub  ]
+osLog: [BMI160] accPower: on=0, state=3
+
+
+[ 01-01 15:12:25.441  1000: 2272: 3592 I/sensors  ]
+activate
+
+[ 01-01 15:12:25.443  1000: 2272: 3592 I/nanohub  ]
+queueActivate: sensor=12, handle=7, enable=0
+
+--------- switch to system
+[ 01-01 15:12:25.448  1000: 2272: 3590 I/DisplayManagerService ]
+Display device changed state: "Built-in Screen", OFF
+
+--------- switch to main
+[ 01-01 15:12:25.453  1000:  398:  398 D/SurfaceFlinger ]
+Set power mode=0, type=0 flinger=0x7542c6c000
+
+--------- switch to system
+[ 01-01 15:12:25.464  1000: 2272: 3614 W/LocalDisplayAdapter ]
+Unable to find color mode 0, ignoring request.
+
+--------- switch to main
+[ 01-01 15:12:25.466  1000:  398:  398 D/qdhwcomposer ]
+hwc_setPowerMode: Setting mode 0 on display: 0
+
+[ 01-01 15:12:25.595  1000:  398:  462 I/qdhwcomposer ]
+handle_blank_event: dpy:0 panel power state: 0
+
+[ 01-01 15:12:25.599  1000:  398:  398 D/qdhwcomposer ]
+hwc_setPowerMode: Done setting mode 0 on display 0
+
+[ 01-01 15:12:25.599  1000: 2272: 3787 D/SurfaceControl ]
+Excessive delay in setPowerMode(): 146ms
+
+--------- switch to system
+[ 01-01 15:12:25.604  1000: 2272: 3592 I/DreamManagerService ]
+Entering dreamland.
+
+[ 01-01 15:12:25.605  1000: 2272: 3592 I/PowerManagerService ]
+Dozing...
+
+[ 01-01 15:12:25.607  1000: 2272: 3588 I/DreamController ]
+Starting dream: name=ComponentInfo{com.android.systemui/com.android.systemui.doze.DozeService}, isTest=false, canDoze=true, userId=0
+
+--------- switch to main
+[ 01-01 15:12:25.643  1000: 2272: 8012 I/sensors  ]
+batch
+
+[ 01-01 15:12:25.646  1000: 2272: 8012 I/nanohub  ]
+queueBatch: sensor=24, handle=20, period=1000000, latency=0
+
+[ 01-01 15:12:25.646  1000: 2272: 8012 I/sensors  ]
+activate
+
+[ 01-01 15:12:25.648  1000: 2272: 8012 I/nanohub  ]
+queueActivate: sensor=24, handle=20, enable=1
+
+[ 01-01 15:12:25.652  1000: 2272: 3617 I/nanohub  ]
+osLog: [PickupGesture] power: 1
+
+
+[ 01-01 15:12:25.654  1000: 2272: 3617 I/nanohub  ]
+osLog: [BMI160] accPower: on=1, state=4
+
+
+[ 01-01 15:12:25.656  1000: 2272: 3617 I/nanohub  ]
+osLog: [BMI160] accPower: on=1, state=3
+
+
+[ 01-01 15:12:25.658  1000: 2272: 3617 I/nanohub  ]
+osLog: [Activity]  activity activity powered on, new state 2
+
+
+--------- switch to system
+[ 01-01 15:12:25.684  1000: 2272: 4217 I/ActivityManager ]
+Setting hasTopUi=true for pid=3812
+
+--------- switch to main
+[ 01-01 15:12:25.694  1041:  541:  678 I/ServiceManager ]
+Waiting for service media.log...
+
+[ 01-01 15:12:25.723 10036: 3812: 3819 I/zygote64 ]
+Integer.valueOf will not be optimized
+
+[ 01-01 15:12:25.730   nfc: 4175: 4351 E/NxpTml   ]
+_i2c_write() errno : 5
+
+[ 01-01 15:12:25.731   nfc: 4175: 4351 E/NxpTml   ]
+PN54X - Error in I2C Write.....
+
+
+[ 01-01 15:12:25.731   nfc: 4175: 4353 E/NxpHal   ]
+write error status = 0x1ff
+
+[ 01-01 15:12:25.731   nfc: 4175: 4346 E/NxpHal   ]
+write_unlocked failed - PN54X Maybe in Standby Mode - Retry
+
+[ 01-01 15:12:25.898 10036: 3812: 3812 D/StatusBar ]
+disable: < expand icons alerts system_info back HOME* RECENT* clock search quick_settings >
+
+[ 01-01 15:12:26.644  root:  600:  600 W/thermal-engine ]
+type=1400 audit(0.0:1022): avc: denied { search } for name="leds" dev="sysfs" ino=7453 scontext=u:r:thermal-engine:s0 tcontext=u:object_r:sysfs_leds:s0 tclass=dir permissive=0
+
+[ 01-01 15:12:26.694  1041:  541:  678 I/ServiceManager ]
+Waiting for service media.log...
+
+[ 01-01 15:12:27.695  1041:  541:  678 I/chatty   ]
+uid=1041(audioserver) MediaLogNotifie identical 1 line
+
+[ 01-01 15:12:28.696  1041:  541:  678 I/ServiceManager ]
+Waiting for service media.log...
+
+[ 01-01 15:12:36.647  root:  600:  600 W/thermal-engine ]
+type=1400 audit(0.0:1023): avc: denied { search } for name="leds" dev="sysfs" ino=7453 scontext=u:r:thermal-engine:s0 tcontext=u:object_r:sysfs_leds:s0 tclass=dir permissive=0
+
+[ 01-01 15:12:36.858  1000: 2272: 3617 I/nanohub  ]
+osLog: [Activity]  detected still, confidence: 92, votes: 3, motionConfidence: 2
+
+
+[ 01-01 15:12:46.650  root:  600:  600 W/thermal-engine ]
+type=1400 audit(0.0:1024): avc: denied { search } for name="leds" dev="sysfs" ino=7453 scontext=u:r:thermal-engine:s0 tcontext=u:object_r:sysfs_leds:s0 tclass=dir permissive=0
+
+[ 01-01 15:12:56.654  root:  600:  600 W/thermal-engine ]
+type=1400 audit(0.0:1025): avc: denied { search } for name="leds" dev="sysfs" ino=7453 scontext=u:r:thermal-engine:s0 tcontext=u:object_r:sysfs_leds:s0 tclass=dir permissive=0
+
+[ 01-01 15:12:56.898  1000: 2272: 5402 D/WificondControl ]
+Scan result ready event
+
+[ 01-01 15:12:56.951  1000: 2272: 3755 W/WifiConfigManager ]
+Looking up network with invalid networkId -1
+
+[ 01-01 15:13:06.657  root:  600:  600 W/thermal-engine ]
+type=1400 audit(0.0:1026): avc: denied { search } for name="leds" dev="sysfs" ino=7453 scontext=u:r:thermal-engine:s0 tcontext=u:object_r:sysfs_leds:s0 tclass=dir permissive=0
+
+[ 01-01 15:13:26.664  root:  600:  600 I/chatty   ]
+uid=0(root) /system/bin/thermal-engine identical 2 lines
+
+[ 01-01 15:13:36.667  root:  600:  600 W/thermal-engine ]
+type=1400 audit(0.0:1029): avc: denied { search } for name="leds" dev="sysfs" ino=7453 scontext=u:r:thermal-engine:s0 tcontext=u:object_r:sysfs_leds:s0 tclass=dir permissive=0
+
+[ 01-01 15:13:40.125  1000: 2272: 3617 I/nanohub  ]
+osLog: [Activity]  detected still, confidence: 92, votes: 3, motionConfidence: 7
+
+
+[ 01-01 15:13:46.670  root:  600:  600 W/thermal-engine ]
+type=1400 audit(0.0:1030): avc: denied { search } for name="leds" dev="sysfs" ino=7453 scontext=u:r:thermal-engine:s0 tcontext=u:object_r:sysfs_leds:s0 tclass=dir permissive=0
+
+[ 01-01 15:13:56.674  root:  600:  600 W/thermal-engine ]
+type=1400 audit(0.0:1031): avc: denied { search } for name="leds" dev="sysfs" ino=7453 scontext=u:r:thermal-engine:s0 tcontext=u:object_r:sysfs_leds:s0 tclass=dir permissive=0
+
+[ 01-01 15:13:56.996  1000: 2272: 3617 I/nanohub  ]
+osLog: [PickupGesture] sending event 0x00000001
+
+[ 01-01 15:13:57.005  1000: 2272: 3617 I/nanohub  ]
+osLog: [Activity]  activity activity powered off, new state 0
+
+
+[ 01-01 15:13:57.007  1000: 2272: 3617 I/nanohub  ]
+osLog: [PickupGesture] power: 0
+
+
+[ 01-01 15:13:57.011  1000: 2272: 3617 I/nanohub  ]
+osLog: [BMI160] accPower: on=0, state=5
+
+
+[ 01-01 15:13:57.014  1000: 2272: 3617 I/nanohub  ]
+osLog: [BMI160] accPower: on=0, state=3
+
+
+[ 01-01 15:13:57.029  1000: 2272: 5447 I/sensors  ]
+batch
+
+[ 01-01 15:13:57.032  1000: 2272: 5447 I/nanohub  ]
+queueBatch: sensor=24, handle=20, period=1000000, latency=0
+
+[ 01-01 15:13:57.032  1000: 2272: 5447 I/sensors  ]
+activate
+
+[ 01-01 15:13:57.035  1000: 2272: 5447 I/nanohub  ]
+queueActivate: sensor=24, handle=20, enable=1
+
+[ 01-01 15:13:57.037  1000: 2272: 3617 I/nanohub  ]
+osLog: [PickupGesture] power: 1
+
+
+--------- switch to system
+[ 01-01 15:13:57.038  1000: 2272: 3592 D/BatteryStatsService ]
+begin noteScreenState
+
+--------- switch to main
+[ 01-01 15:13:57.038  1000: 2272: 3617 I/nanohub  ]
+osLog: [BMI160] accPower: on=1, state=4
+
+
+--------- switch to system
+[ 01-01 15:13:57.039  1000: 2272: 3592 D/BatteryStatsService ]
+end noteScreenState
+
+[ 01-01 15:13:57.039  1000: 2272: 3592 I/DisplayPowerController ]
+Blocking screen on until initial contents have been drawn.
+
+--------- switch to main
+[ 01-01 15:13:57.040  1000: 2272: 3592 V/KeyguardServiceDelegate ]
+onScreenTurnedOn(showListener = com.android.server.policy.PhoneWindowManager$2@cb6ff88)
+
+[ 01-01 15:13:57.043  1000:  398:  398 D/SurfaceFlinger ]
+Set power mode=1, type=0 flinger=0x7542c6c000
+
+--------- switch to system
+[ 01-01 15:13:57.043  1000: 2272: 3590 I/DisplayManagerService ]
+Display device changed state: "Built-in Screen", DOZE
+
+--------- switch to main
+[ 01-01 15:13:57.043  1000:  398:  398 D/qdhwcomposer ]
+hwc_setPowerMode: Setting mode 1 on display: 0
+
+[ 01-01 15:13:57.047  1000: 2272: 3617 I/nanohub  ]
+osLog: [BMI160] accPower: on=1, state=3
+
+
+[ 01-01 15:13:57.050  1000: 2272: 4464 I/sensors  ]
+batch
+
+[ 01-01 15:13:57.050  1000: 2272: 3617 I/nanohub  ]
+osLog: [Activity]  activity activity powered on, new state 2
+
+
+--------- switch to system
+[ 01-01 15:13:57.058  1000: 2272: 3614 W/LocalDisplayAdapter ]
+Unable to find color mode 0, ignoring request.
+
+--------- switch to main
+[ 01-01 15:13:57.059  1000: 2272: 4464 I/nanohub  ]
+queueBatch: sensor=13, handle=6, period=200000000, latency=0
+
+[ 01-01 15:13:57.059  1000: 2272: 4464 I/sensors  ]
+activate
+
+[ 01-01 15:13:57.074  1000: 2272: 4464 I/nanohub  ]
+queueActivate: sensor=13, handle=6, enable=1
+
+[ 01-01 15:13:57.084  1000: 2272: 4088 V/KeyguardServiceDelegate ]
+**** SHOWN CALLED ****
+
+[ 01-01 15:13:57.095 10036: 3812: 3819 I/zygote64 ]
+Integer.valueOf will not be optimized
+
+--------- switch to system
+[ 01-01 15:13:57.166  1000: 2272: 3592 I/DisplayPowerController ]
+Unblocked screen on after 127 ms
+
+--------- switch to main
+[ 01-01 15:13:57.167  1000: 2272: 3592 V/KeyguardServiceDelegate ]
+onScreenTurnedOn()
+
+[ 01-01 15:13:57.298  1000:  398:  398 D/qdhwcomposer ]
+hwc_setPowerMode: Done setting mode 1 on display 0
+
+[ 01-01 15:13:57.298  1000:  398:  462 I/qdhwcomposer ]
+handle_blank_event: dpy:0 panel power state: 2
+
+[ 01-01 15:13:57.305  1000: 2272: 3787 D/SurfaceControl ]
+Excessive delay in setPowerMode(): 262ms
+
+--------- switch to system
+[ 01-01 15:13:57.395  1000: 2272: 3628 I/PowerManagerService ]
+Waking up from dozing (uid 1000)...
+
+--------- switch to main
+[ 01-01 15:13:57.400  1000: 2272: 2272 I/sensors  ]
+batch
+
+[ 01-01 15:13:57.403  1000: 2272: 2272 I/nanohub  ]
+queueBatch: sensor=28, handle=30, period=66667000, latency=0
+
+[ 01-01 15:13:57.403  1000: 2272: 2272 I/sensors  ]
+activate
+
+--------- switch to system
+[ 01-01 15:13:57.404  1000: 2272: 3592 D/BatteryStatsService ]
+begin noteScreenState
+
+[ 01-01 15:13:57.405  1000: 2272: 3592 D/BatteryStatsService ]
+end noteScreenState
+
+--------- switch to main
+[ 01-01 15:13:57.406  1000: 2272: 2272 I/nanohub  ]
+queueActivate: sensor=28, handle=30, enable=1
+
+[ 01-01 15:13:57.406  1000: 2272: 2272 V/KeyguardServiceDelegate ]
+onStartedWakingUp()
+
+[ 01-01 15:13:57.409  1000: 2272: 3592 I/sensors  ]
+batch
+
+[ 01-01 15:13:57.412  1000: 2272: 3592 I/nanohub  ]
+queueBatch: sensor=12, handle=7, period=250000000, latency=0
+
+[ 01-01 15:13:57.412  1000: 2272: 3592 I/sensors  ]
+activate
+
+[ 01-01 15:13:57.414  1000: 2272: 3592 I/nanohub  ]
+queueActivate: sensor=12, handle=7, enable=1
+
+[ 01-01 15:13:57.418  1000:  398:  398 D/SurfaceFlinger ]
+Set power mode=2, type=0 flinger=0x7542c6c000
+
+[ 01-01 15:13:57.418  1000:  398:  398 D/qdhwcomposer ]
+hwc_setPowerMode: Setting mode 2 on display: 0
+
+--------- switch to system
+[ 01-01 15:13:57.418  1000: 2272: 3590 I/DisplayManagerService ]
+Display device changed state: "Built-in Screen", ON
+
+[ 01-01 15:13:57.419  1000: 2272: 3582 I/ActivityManager ]
+Killing 14363:com.google.android.ims/u0a94 (adj 902): empty for 1839s
+
+[ 01-01 15:13:57.420  1000: 2272: 3582 I/ActivityManager ]
+Killing 14629:com.android.cellbroadcastreceiver/u0a5 (adj 904): empty for 1839s
+
+[ 01-01 15:13:57.421  1000: 2272: 3582 I/ActivityManager ]
+Killing 14601:org.codeaurora.ims/1001 (adj 904): empty for 1839s
+
+[ 01-01 15:13:57.422  1000: 2272: 3582 I/ActivityManager ]
+Killing 14575:com.verizon.omadm/u0a9 (adj 904): empty for 1839s
+
+[ 01-01 15:13:57.423  1000: 2272: 3582 I/ActivityManager ]
+Killing 14301:com.google.android.carriersetup/u0a93 (adj 904): empty for 1839s
+
+--------- switch to main
+[ 01-01 15:13:57.423  1000:  398:  462 I/qdhwcomposer ]
+handle_blank_event: dpy:0 panel power state: 1
+
+--------- switch to system
+[ 01-01 15:13:57.423  1000: 2272: 3582 I/ActivityManager ]
+Killing 14132:com.android.sdm.plugins.sprintdm/1001 (adj 904): empty for 1839s
+
+[ 01-01 15:13:57.424  1000: 2272: 3582 I/ActivityManager ]
+Killing 14711:com.lge.HiddenMenu/1000 (adj 906): empty for 1841s
+
+[ 01-01 15:13:57.431  1000: 2272: 3592 I/DreamManagerService ]
+Gently waking up from dream.
+
+[ 01-01 15:13:57.433  1000: 2272: 3614 W/LocalDisplayAdapter ]
+Unable to find color mode 0, ignoring request.
+
+--------- switch to main
+[ 01-01 15:13:57.450  1041:  541:  678 I/ServiceManager ]
+Waiting for service media.log...
+
+--------- switch to system
+[ 01-01 15:13:57.454  1000: 2272: 8012 I/DreamManagerService ]
+Leaving dreamland.
+
+[ 01-01 15:13:57.455  1000: 2272: 3588 I/DreamController ]
+Stopping dream: name=ComponentInfo{com.android.systemui/com.android.systemui.doze.DozeService}, isTest=false, canDoze=true, userId=0
+
+--------- switch to main
+[ 01-01 15:13:57.495  1000:  398:  398 D/qdhwcomposer ]
+hwc_setPowerMode: Done setting mode 2 on display 0
+
+[ 01-01 15:13:57.502  1000: 2272: 3578 I/sensors  ]
+activate
+
+[ 01-01 15:13:57.504  1000: 2272: 3578 I/nanohub  ]
+queueActivate: sensor=24, handle=20, enable=0
+
+[ 01-01 15:13:57.506   nfc: 4175: 4346 D/BrcmNfcJni ]
+RoutingManager::nfaEeCallback: NFA_EE_SET_TECH_CFG_EVT; status=0x0
+
+[ 01-01 15:13:57.509   nfc: 4175: 4346 D/BrcmNfcJni ]
+RoutingManager::nfaEeCallback: NFA_EE_SET_PROTO_CFG_EVT; status=0x0
+
+[ 01-01 15:13:57.511   nfc: 4175:20146 D/BrcmNfcJni ]
+RoutingManager::commitRouting
+
+[ 01-01 15:13:57.511  1000: 2272: 3617 I/nanohub  ]
+osLog: [PickupGesture] power: 0
+
+
+[ 01-01 15:13:57.512   nfc: 4175: 4346 D/BrcmNfcJni ]
+RoutingManager::nfaEeCallback: NFA_EE_UPDATED_EVT
+
+[ 01-01 15:13:57.514   nfc: 4175: 4351 E/NxpTml   ]
+_i2c_write() errno : 5
+
+[ 01-01 15:13:57.514   nfc: 4175: 4351 E/NxpTml   ]
+PN54X - Error in I2C Write.....
+
+
+[ 01-01 15:13:57.514   nfc: 4175: 4353 E/NxpHal   ]
+write error status = 0x1ff
+
+[ 01-01 15:13:57.515  1000: 2272: 3617 I/nanohub  ]
+osLog: [Activity]  activity activity powered off, new state 0
+
+
+[ 01-01 15:13:57.516   nfc: 4175: 4346 E/NxpHal   ]
+write_unlocked failed - PN54X Maybe in Standby Mode - Retry
+
+[ 01-01 15:13:57.552 10036: 3812: 3819 I/zygote64 ]
+Integer.valueOf will not be optimized
+
+[ 01-01 15:13:57.561 10036: 3812: 3819 I/chatty   ]
+uid=10036(u0_a36) Jit thread pool identical 4 lines
+
+[ 01-01 15:13:57.568 10036: 3812: 3819 I/zygote64 ]
+Integer.valueOf will not be optimized
+
+[ 01-01 15:13:58.164  1000: 2272: 3617 I/nanohub  ]
+osLog: [WO] rotation changed to: ******* 0 *******
+
+
+[ 01-01 15:13:58.194 10036: 3812: 3819 I/zygote64 ]
+Integer.valueOf will not be optimized
+
+[ 01-01 15:13:58.450  1041:  541:  678 I/ServiceManager ]
+Waiting for service media.log...
+
+[ 01-01 15:13:58.730 10036: 3812: 3812 D/StatusBar ]
+disable: < expand icons alerts system_info back HOME RECENT clock search quick_settings >
+
+--------- switch to system
+[ 01-01 15:13:58.812  1000: 2272: 3582 I/VrManagerService ]
+VR mode is allowed
+
+--------- switch to main
+[ 01-01 15:13:58.813 10036: 3812: 3812 D/StatusBar ]
+disable: < expand icons alerts system_info back HOME RECENT clock search quick_settings >
+
+[ 01-01 15:13:58.997  1000: 2272: 8012 I/sensors  ]
+activate
+
+[ 01-01 15:13:58.999  1000: 2272: 8012 I/nanohub  ]
+queueActivate: sensor=13, handle=6, enable=0
+
+[ 01-01 15:13:59.042   nfc: 4175: 4351 E/NxpTml   ]
+_i2c_write() errno : 5
+
+[ 01-01 15:13:59.043   nfc: 4175: 4351 E/NxpTml   ]
+PN54X - Error in I2C Write.....
+
+
+[ 01-01 15:13:59.043   nfc: 4175: 4353 E/NxpHal   ]
+write error status = 0x1ff
+
+[ 01-01 15:13:59.043   nfc: 4175: 4346 E/NxpHal   ]
+write_unlocked failed - PN54X Maybe in Standby Mode - Retry
+
+[ 01-01 15:13:59.054   nfc: 4175: 4346 E/BrcmNfcJni ]
+nfaConnectionCallback: unknown event ????
+
+[ 01-01 15:13:59.054   nfc: 4175: 4346 D/BrcmNfcJni ]
+RoutingManager::nfaEeCallback: NFA_EE_SET_TECH_CFG_EVT; status=0x0
+
+[ 01-01 15:13:59.057   nfc: 4175: 4346 D/BrcmNfcJni ]
+RoutingManager::nfaEeCallback: NFA_EE_SET_PROTO_CFG_EVT; status=0x0
+
+[ 01-01 15:13:59.057   nfc: 4175:20160 D/BrcmNfcJni ]
+RoutingManager::commitRouting
+
+[ 01-01 15:13:59.057   nfc: 4175: 4346 D/BrcmNfcJni ]
+RoutingManager::nfaEeCallback: NFA_EE_UPDATED_EVT
+
+[ 01-01 15:13:59.109 10036: 3812: 3812 D/StatusBar ]
+disable: < expand icons alerts system_info back home* recent* clock search quick_settings >
+
+[ 01-01 15:13:59.156 10018: 4514: 4514 I/DeviceCache ]
+Unable to convert the the network interface's MAC Address to string. MAC address cannot be null.
+
+[ 01-01 15:13:59.308 10018: 4514: 4514 I/chatty   ]
+uid=10018(u0_a18) com.google.android.gms identical 18 lines
+
+[ 01-01 15:13:59.319 10018: 4514: 4514 I/DeviceCache ]
+Unable to convert the the network interface's MAC Address to string. MAC address cannot be null.
+
+[ 01-01 15:13:59.450  1041:  541:  678 I/ServiceManager ]
+Waiting for service media.log...
+
+--------- switch to system
+[ 01-01 15:13:59.462  1000: 2272: 5450 I/ActivityManager ]
+Setting hasTopUi=false for pid=3812
+
+--------- switch to main
+[ 01-01 15:14:00.090  1041:  541: 5252 D/audio_route ]
+Apply path: speaker-protected
+
+[ 01-01 15:14:00.097  1041:  541: 5252 D/audio_hw_primary ]
+enable_snd_device: snd_device(88: vi-feedback)
+
+[ 01-01 15:14:00.098  1041:  541: 5252 D/audio_route ]
+Apply path: vi-feedback
+
+[ 01-01 15:14:00.098  1041:  541: 5252 D/audio_hw_primary ]
+enable_audio_route: usecase(23) apply and update mixer path: spkr-vi-record
+
+[ 01-01 15:14:00.098  1041:  541: 5252 D/audio_route ]
+Apply path: spkr-vi-record
+
+[ 01-01 15:14:00.123  1041:  541: 5252 D/audio_hw_primary ]
+enable_audio_route: usecase(1) apply and update mixer path: low-latency-playback
+
+[ 01-01 15:14:00.123  1041:  541: 5252 D/audio_route ]
+Apply path: low-latency-playback
+
+--------- switch to system
+[ 01-01 15:14:00.192  1000: 2272: 3627 I/ActivityManager ]
+START u0 {act=android.intent.action.MAIN cat=[android.intent.category.HOME] flg=0x10200000 cmp=com.google.android.googlequicksearchbox/com.google.android.launcher.GEL (has extras)} from uid 1000
+
+--------- switch to main
+[ 01-01 15:14:00.451  1041:  541:  678 I/ServiceManager ]
+Waiting for service media.log...
+
+[ 01-01 15:14:00.458  1000: 2272: 3783 W/OpenGLRenderer ]
+Warning: attempt to read pixels from hardware bitmap, which is very slow operation
+
+[ 01-01 15:14:00.458  1000: 2272: 3635 I/OpenGLRenderer ]
+Initialized EGL, version 1.4
+
+[ 01-01 15:14:00.458  1000: 2272: 3635 D/OpenGLRenderer ]
+Swap behavior 2
+
+[ 01-01 15:14:00.564 10038:18491:18672 I/AttachedClient ]
+Adding client event 2 to pending list.
+
+[ 01-01 15:14:00.565  1000: 2272: 2282 I/zygote64 ]
+Background concurrent copying GC freed 16057(13MB) AllocSpace objects, 0(0B) LOS objects, 42% free, 15MB/27MB, paused 530us total 107.155ms
+
+[ 01-01 15:14:00.642 10038:18491:18491 I/OptInState ]
+There is a new client and it does not support opt-in. Dropping request.
+
+[ 01-01 15:14:00.648  1041:  541:  717 D/audio_hw_primary ]
+disable_audio_route: usecase(1) reset and update mixer path: low-latency-playback
+
+[ 01-01 15:14:00.655 10038:18491:18491 I/MicroDetectionWorker ]
+#updateMicroDetector [currentDetectionMode: [mDetectionMode: [1]]]
+
+[ 01-01 15:14:00.655 10038:18491:18491 I/MicroDetectionWorker ]
+#startMicroDetector [speakerMode: 0]
+
+[ 01-01 15:14:00.657 10038:18491:18496 I/zygote64 ]
+Integer.valueOf will not be optimized
+
+[ 01-01 15:14:00.664  1041:  541:  717 D/audio_hw_primary ]
+disable_snd_device: snd_device(88: vi-feedback)
+
+[ 01-01 15:14:00.664  1041:  541:  717 D/audio_hw_primary ]
+disable_audio_route: usecase(23) reset and update mixer path: spkr-vi-record
+
+[ 01-01 15:14:00.666 10038:18491:19016 I/MicroRecognitionRunner ]
+Starting detection.
+
+[ 01-01 15:14:00.680 10038:18491:19008 I/MicrophoneInputStream ]
+mic_starting com.google.android.apps.gsa.speech.audio.ag@4fc0a
+
+[ 01-01 15:14:00.683  1041:  541: 5248 W/DeviceHAL ]
+Device 0xf4fad000 open_input_stream: Invalid argument
+
+[ 01-01 15:14:00.685  1041:  541:20182 I/AudioFlinger ]
+AudioFlinger's thread 0xf1220600 tid=20182 ready to run
+
+[ 01-01 15:14:00.699 10038:18491:19008 I/MicrophoneInputStream ]
+mic_started com.google.android.apps.gsa.speech.audio.ag@4fc0a
+
+[ 01-01 15:14:00.699  1041:  541:  741 I/SoundTriggerHwService::Module ]
+onCallbackEvent no clients
+
+[ 01-01 15:14:00.702  1041:  541:20183 D/sound_trigger_platform ]
+platform_stdev_check_and_update_concurrency: concurrency active 0, tx 1, rx 0, concurrency session_allowed 0
+
+[ 01-01 15:14:00.702  1041:  541:20183 D/audio_hw_primary ]
+enable_snd_device: snd_device(72: voice-rec-mic)
+
+[ 01-01 15:14:00.702  1041:  541:20183 D/audio_route ]
+Apply path: voice-rec-mic
+
+[ 01-01 15:14:00.704 10038:18491:19015 W/LocationOracle ]
+No location history returned by ContextManager
+
+[ 01-01 15:14:00.711 10038:18491:18491 I/MicroDetectionWorker ]
+onReady
+
+[ 01-01 15:14:00.712 10038:18491:18496 I/zygote64 ]
+Integer.valueOf will not be optimized
+
+[ 01-01 15:14:00.720  1041:  541:20183 D/audio_hw_primary ]
+enable_audio_route: usecase(9) apply and update mixer path: audio-record
+
+[ 01-01 15:14:00.720  1041:  541:20183 D/audio_route ]
+Apply path: audio-record
+
+[ 01-01 15:14:00.733  1000: 2272: 3783 W/OpenGLRenderer ]
+Warning: attempt to read pixels from hardware bitmap, which is very slow operation
+
+[ 01-01 15:14:00.737 10038:18491:18502 I/zygote64 ]
+Background concurrent copying GC freed 3431(3MB) AllocSpace objects, 1(68KB) LOS objects, 49% free, 8MB/17MB, paused 6.968ms total 70.367ms
+
+[ 01-01 15:14:00.796 10038:18491:18491 I/MicroDetectionWorker ]
+onReady
+
+[ 01-01 15:14:00.814 10018: 5497: 5537 W/GCoreFlp ]
+No location to return for getLastLocation()
+
+[ 01-01 15:14:00.870  1000: 2272: 3783 W/OpenGLRenderer ]
+Warning: attempt to read pixels from hardware bitmap, which is very slow operation
+
+[ 01-01 15:14:00.876 10038: 4245: 4483 W/OpenGLRenderer ]
+Incorrectly called buildLayer on View: ShortcutAndWidgetContainer, destroying layer...
+
+[ 01-01 15:14:00.979  1000: 2272: 5401 D/WificondControl ]
+Scan result ready event
+
+[ 01-01 15:14:01.029  1000: 2272: 3755 W/WifiConfigManager ]
+Looking up network with invalid networkId -1
+
+[ 01-01 15:14:01.119 10018: 5497:19840 I/Places   ]
+?: Couldn't find platform key file.
+
+[ 01-01 15:14:01.341 10018: 5497:19650 I/Places   ]
+?: Couldn't find platform key file.
+
+[ 01-01 15:14:01.347 10018: 5497:20187 I/PlaceInferenceEngine ]
+[anon] Changed inference mode: 105
+
+[ 01-01 15:14:01.348 10018: 5497:20188 I/Places   ]
+?: Couldn't find platform key file.
+
+[ 01-01 15:14:01.352 10018: 5497: 5537 W/GCoreFlp ]
+No location to return for getLastLocation()
+
+[ 01-01 15:14:01.378 10018: 5497:20032 W/ctxmgr   ]
+[AclManager]No 3 for (accnt=account#-517948760#, com.google.android.googlequicksearchbox(10038):com.google.android.googlequicksearchbox, vrsn=10298000, 1, 3pPkg = null ,  3pMdlId = null). Was: 3 for 18, account#-517948760#
+
+[ 01-01 15:14:01.383  1000: 2272: 4464 I/sensors  ]
+batch
+
+[ 01-01 15:14:01.387 10038:18491:19015 W/zygote64 ]
+Long monitor contention with owner NonUserFacing9 (19135) at boolean android.os.BinderProxy.transactNative(int, android.os.Parcel, android.os.Parcel, int)(Binder.java:-2) waiters=0 in boolean com.google.android.apps.gsa.staticplugins.q.g.aJV() for 606ms
+
+[ 01-01 15:14:01.395 10018: 5497:19840 I/Places   ]
+?: Couldn't find platform key file.
+
+[ 01-01 15:14:01.395  1000: 2272: 4464 I/nanohub  ]
+queueBatch: sensor=1, handle=1, period=20000000, latency=0
+
+[ 01-01 15:14:01.395  1000: 2272: 4464 I/sensors  ]
+activate
+
+[ 01-01 15:14:01.401  1000: 2272: 4464 I/nanohub  ]
+queueActivate: sensor=1, handle=1, enable=1
+
+[ 01-01 15:14:01.454 10018: 5497:20032 E/ctxmgr   ]
+[ProducerStatusImpl]updateStateForNewContextData: inactive, contextName=7
+
+[ 01-01 15:14:01.505 10018: 5497:19161 I/Places   ]
+?: Couldn't find platform key file.
+
+[ 01-01 15:14:01.513 10018: 5497:19161 I/Places   ]
+?: Couldn't find platform key file.
+
+[ 01-01 15:14:01.547 10018: 5497:20187 I/Places   ]
+?: PlacesBleScanner start() with priority 2
+
+[ 01-01 15:14:01.548 10018: 5497:20187 I/PlaceInferenceEngine ]
+[anon] Changed inference mode: 102
+
+[ 01-01 15:14:01.570 10018: 5497: 5537 W/GCoreFlp ]
+No location to return for getLastLocation()
+
+[ 01-01 15:14:01.631 10018: 5497:20187 W/Places   ]
+?: Failed to download inference model weights
+
+
+[ 01-01 15:14:01.631 10018: 5497:20187 W/PlaceInferenceEngine ]
+Failed to download model weights. Status code: 7
+
+[ 01-01 15:14:01.639 10018: 5497:19161 I/Places   ]
+?: Couldn't find platform key file.
+
+[ 01-01 15:14:02.091  1041:  541: 5252 D/audio_route ]
+Apply path: speaker-protected
+
+[ 01-01 15:14:02.094  1041:  541: 5252 D/audio_hw_primary ]
+enable_snd_device: snd_device(88: vi-feedback)
+
+[ 01-01 15:14:02.094  1041:  541: 5252 D/audio_route ]
+Apply path: vi-feedback
+
+[ 01-01 15:14:02.094  1041:  541: 5252 D/audio_hw_primary ]
+enable_audio_route: usecase(23) apply and update mixer path: spkr-vi-record
+
+[ 01-01 15:14:02.094  1041:  541: 5252 D/audio_route ]
+Apply path: spkr-vi-record
+
+--------- switch to system
+[ 01-01 15:14:02.097  1000: 2272: 5450 I/ActivityManager ]
+START u0 {act=android.intent.action.MAIN cat=[android.intent.category.LAUNCHER] flg=0x10200000 cmp=com.android.settings/.Settings bnds=[435,1254][646,1507] (has extras)} from uid 10038
+
+--------- switch to main
+[ 01-01 15:14:02.134  1041:  541: 5252 D/audio_hw_primary ]
+enable_audio_route: usecase(1) apply and update mixer path: low-latency-playback
+
+[ 01-01 15:14:02.134  1041:  541: 5252 D/audio_route ]
+Apply path: low-latency-playback
+
+[ 01-01 15:14:02.214  1000:14206:14206 I/zygote64 ]
+Starting a blocking GC Explicit
+
+[ 01-01 15:14:02.265  1000:14206:14206 I/zygote64 ]
+Explicit concurrent copying GC freed 2205(1093KB) AllocSpace objects, 0(0B) LOS objects, 49% free, 3MB/7MB, paused 357us total 50.228ms
+
+[ 01-01 15:14:02.270  1000:14206:14206 I/zygote64 ]
+Starting a blocking GC Explicit
+
+[ 01-01 15:14:02.300  1000:14206:14206 I/zygote64 ]
+Explicit concurrent copying GC freed 217(778KB) AllocSpace objects, 0(0B) LOS objects, 49% free, 3MB/7MB, paused 163us total 29.425ms
+
+[ 01-01 15:14:02.306  1000:14206:14206 E/StrictMode ]
+class com.android.settings.SubSettings; instances=2; limit=1
+android.os.StrictMode$InstanceCountViolation: class com.android.settings.SubSettings; instances=2; limit=1
+	at android.os.StrictMode.setClassInstanceLimit(StrictMode.java:1)
+
+
+--------- switch to system
+[ 01-01 15:14:02.364  1000:14206:14206 E/ActivityThread ]
+Activity com.android.settings.SubSettings has leaked ServiceConnection android.bluetooth.BluetoothA2dp$2@97ec6ff that was originally bound here
+android.app.ServiceConnectionLeaked: Activity com.android.settings.SubSettings has leaked ServiceConnection android.bluetooth.BluetoothA2dp$2@97ec6ff that was originally bound here
+	at android.app.LoadedApk$ServiceDispatcher.<init>(LoadedApk.java:1485)
+	at android.app.LoadedApk.getServiceDispatcher(LoadedApk.java:1377)
+	at android.app.ContextImpl.bindServiceCommon(ContextImpl.java:1592)
+	at android.app.ContextImpl.bindServiceAsUser(ContextImpl.java:1552)
+	at android.content.ContextWrapper.bindServiceAsUser(ContextWrapper.java:699)
+	at android.bluetooth.BluetoothA2dp.doBind(BluetoothA2dp.java:200)
+	at android.bluetooth.BluetoothA2dp.<init>(BluetoothA2dp.java:193)
+	at android.bluetooth.BluetoothAdapter.getProfileProxy(BluetoothAdapter.java:2044)
+	at com.android.settings.development.DevelopmentSettings.onCreateView(DevelopmentSettings.java:712)
+	at android.app.Fragment.performCreateView(Fragment.java:2554)
+	at android.app.FragmentManagerImpl.moveToState(FragmentManager.java:1262)
+	at android.app.FragmentManagerImpl.moveFragmentToExpectedState(FragmentManager.java:1516)
+	at android.app.FragmentManagerImpl.moveToState(FragmentManager.java:1578)
+	at android.app.FragmentManagerImpl.dispatchMoveToState(FragmentManager.java:2999)
+	at android.app.FragmentManagerImpl.dispatchActivityCreated(FragmentManager.java:2951)
+	at android.app.FragmentController.dispatchActivityCreated(FragmentController.java:178)
+	at android.app.Activity.performCreateCommon(Activity.java:6899)
+	at android.app.Activity.performCreate(Activity.java:6907)
+	at android.app.Instrumentation.callActivityOnCreate(Instrumentation.java:1212)
+	at android.app.ActivityThread.performLaunchActivity(ActivityThread.java:2768)
+	at android.app.ActivityThread.handleLaunchActivity(ActivityThread.java:2890)
+	at android.app.ActivityThread.-wrap11(Unknown Source:0)
+	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:1591)
+	at android.os.Handler.dispatchMessage(Handler.java:105)
+	at android.os.Looper.loop(Looper.java:164)
+	at android.app.ActivityThread.main(ActivityThread.java:6537)
+	at java.lang.reflect.Method.invoke(Native Method)
+	at com.android.internal.os.Zygote$MethodAndArgsCaller.run(Zygote.java:240)
+	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:767)
+
+
+--------- switch to main
+[ 01-01 15:14:02.366  1000:14206:14206 E/StrictMode ]
+null
+android.app.ServiceConnectionLeaked: Activity com.android.settings.SubSettings has leaked ServiceConnection android.bluetooth.BluetoothA2dp$2@97ec6ff that was originally bound here
+	at android.app.LoadedApk$ServiceDispatcher.<init>(LoadedApk.java:1485)
+	at android.app.LoadedApk.getServiceDispatcher(LoadedApk.java:1377)
+	at android.app.ContextImpl.bindServiceCommon(ContextImpl.java:1592)
+	at android.app.ContextImpl.bindServiceAsUser(ContextImpl.java:1552)
+	at android.content.ContextWrapper.bindServiceAsUser(ContextWrapper.java:699)
+	at android.bluetooth.BluetoothA2dp.doBind(BluetoothA2dp.java:200)
+	at android.bluetooth.BluetoothA2dp.<init>(BluetoothA2dp.java:193)
+	at android.bluetooth.BluetoothAdapter.getProfileProxy(BluetoothAdapter.java:2044)
+	at com.android.settings.development.DevelopmentSettings.onCreateView(DevelopmentSettings.java:712)
+	at android.app.Fragment.performCreateView(Fragment.java:2554)
+	at android.app.FragmentManagerImpl.moveToState(FragmentManager.java:1262)
+	at android.app.FragmentManagerImpl.moveFragmentToExpectedState(FragmentManager.java:1516)
+	at android.app.FragmentManagerImpl.moveToState(FragmentManager.java:1578)
+	at android.app.FragmentManagerImpl.dispatchMoveToState(FragmentManager.java:2999)
+	at android.app.FragmentManagerImpl.dispatchActivityCreated(FragmentManager.java:2951)
+	at android.app.FragmentController.dispatchActivityCreated(FragmentController.java:178)
+	at android.app.Activity.performCreateCommon(Activity.java:6899)
+	at android.app.Activity.performCreate(Activity.java:6907)
+	at android.app.Instrumentation.callActivityOnCreate(Instrumentation.java:1212)
+	at android.app.ActivityThread.performLaunchActivity(ActivityThread.java:2768)
+	at android.app.ActivityThread.handleLaunchActivity(ActivityThread.java:2890)
+	at android.app.ActivityThread.-wrap11(Unknown Source:0)
+	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:1591)
+	at android.os.Handler.dispatchMessage(Handler.java:105)
+	at android.os.Looper.loop(Looper.java:164)
+	at android.app.ActivityThread.main(ActivityThread.java:6537)
+	at java.lang.reflect.Method.invoke(Native Method)
+	at com.android.internal.os.Zygote$MethodAndArgsCaller.run(Zygote.java:240)
+	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:767)
+
+
+--------- switch to system
+[ 01-01 15:14:02.367  1000: 2272: 5402 W/ActivityManager ]
+Unbind failed: could not find connection for android.os.BinderProxy@d2a6c1d
+
+--------- switch to main
+[ 01-01 15:14:02.397  1000:14206:14206 D/DashboardSummary ]
+Listening for condition changes
+
+[ 01-01 15:14:02.397  1000:14206:14206 D/DashboardSummary ]
+onConditionsChanged
+
+[ 01-01 15:14:02.398  1000:14206:14206 D/DashboardAdapter ]
+adapter setConditions called
+
+[ 01-01 15:14:02.398  1000:14206:14206 D/DashboardSummary ]
+conditions refreshed
+
+[ 01-01 15:14:02.398  1000:14206:14206 D/APM_Condition ]
+APM condition refreshed
+
+[ 01-01 15:14:02.399  1000:14206:14206 D/APM_Condition ]
+setActive was called with false
+
+[ 01-01 15:14:02.456  1041:  541:  678 I/ServiceManager ]
+Waiting for service media.log...
+
+[ 01-01 15:14:02.507  1000:14206:20201 D/DatabaseIndexingManager ]
+Indexing locale 'en_US' took 17 millis
+
+[ 01-01 15:14:02.537  1000:14206:20202 D/DatabaseIndexingManager ]
+Indexing locale 'en_US' took 10 millis
+
+[ 01-01 15:14:02.644  1000:14206:20203 I/SuggestionParser ]
+Use your voice requires unavailable account type com.google
+
+[ 01-01 15:14:02.660  1041:  541:  717 D/audio_hw_primary ]
+disable_audio_route: usecase(1) reset and update mixer path: low-latency-playback
+
+[ 01-01 15:14:02.672  1000:14206:20203 W/Bundle   ]
+Key com.android.settings.dismiss expected String but value was a java.lang.Integer.  The default value <null> was returned.
+
+[ 01-01 15:14:02.673  1000:14206:20203 W/Bundle   ]
+Attempt to cast generated internal exception:
+java.lang.ClassCastException: java.lang.Integer cannot be cast to java.lang.String
+	at android.os.BaseBundle.getString(BaseBundle.java:1072)
+	at com.android.settingslib.SuggestionParser.getDismissControl(SuggestionParser.java:377)
+	at com.android.settingslib.SuggestionParser.isDismissed(SuggestionParser.java:330)
+	at com.android.settingslib.SuggestionParser.filterSuggestions(SuggestionParser.java:187)
+	at com.android.settingslib.SuggestionParser.readSuggestions(SuggestionParser.java:204)
+	at com.android.settingslib.SuggestionParser.getSuggestions(SuggestionParser.java:151)
+	at com.android.settings.dashboard.DashboardSummary$SuggestionLoader.doInBackground(DashboardSummary.java:260)
+	at com.android.settings.dashboard.DashboardSummary$SuggestionLoader.doInBackground(DashboardSummary.java:255)
+	at android.os.AsyncTask$2.call(AsyncTask.java:305)
+	at java.util.concurrent.FutureTask.run(FutureTask.java:266)
+	at android.os.AsyncTask$SerialExecutor$1.run(AsyncTask.java:243)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1162)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:636)
+	at java.lang.Thread.run(Thread.java:764)
+
+
+[ 01-01 15:14:02.677  1041:  541:  717 D/audio_hw_primary ]
+disable_snd_device: snd_device(88: vi-feedback)
+
+[ 01-01 15:14:02.677  1041:  541:  717 D/audio_hw_primary ]
+disable_audio_route: usecase(23) reset and update mixer path: spkr-vi-record
+
+--------- switch to system
+[ 01-01 15:14:02.699  1000: 2272: 4464 D/BatteryStatsService ]
+begin updateExternalStatsSync reason=get-stats
+
+[ 01-01 15:14:02.801  1000: 2272: 4464 E/BatteryStatsService ]
+no controller energy info supplied
+
+[ 01-01 15:14:02.854  1000: 2272: 4464 D/BatteryStatsImpl ]
+Reading cpu stats took 34 ms
+
+[ 01-01 15:14:02.881  1000: 2272: 4464 E/KernelMemoryBandwidthStats ]
+Failed to read memory bandwidth: /sys/kernel/memory_state_time/show_stat (No such file or directory)
+
+[ 01-01 15:14:02.881  1000: 2272: 4464 D/BatteryStatsService ]
+end updateExternalStatsSync
+
+--------- switch to main
+[ 01-01 15:14:02.891 10038:18491:18491 I/MicroDetector ]
+Keeping mic open: false
+
+[ 01-01 15:14:02.892 10038:18491:18549 I/MicroRecognitionRunner ]
+Stopping hotword detection.
+
+[ 01-01 15:14:02.896 10038:18491:19006 I/DeviceStateChecker ]
+DeviceStateChecker cancelled
+
+[ 01-01 15:14:02.897 10038:18491:19016 I/MicroRecognitionRunner ]
+Detection finished
+
+[ 01-01 15:14:02.899 10038:18491:19007 I/AudioController ]
+internalShutdown
+
+[ 01-01 15:14:02.900 10038:18491:19007 I/MicrophoneInputStream ]
+mic_close com.google.android.apps.gsa.speech.audio.ag@4fc0a
+
+[ 01-01 15:14:02.997  1000: 2272: 3590 W/zygote64 ]
+Long monitor contention with owner ActivityManager (3582) at void com.android.server.am.ActivityStackSupervisor$ActivityStackSupervisorHandler.activityIdleInternal(com.android.server.am.ActivityRecord, boolean)(ActivityStackSupervisor.java:4228) waiters=0 in void com.android.server.am.ActivityManagerService.notifyActivityDrawn(android.os.IBinder) for 178ms
+
+[ 01-01 15:14:02.997  1000: 2272: 3579 W/zygote64 ]
+Long monitor contention with owner ActivityManager (3582) at void com.android.server.am.ActivityStackSupervisor$ActivityStackSupervisorHandler.activityIdleInternal(com.android.server.am.ActivityRecord, boolean)(ActivityStackSupervisor.java:4228) waiters=1 in boolean com.android.server.am.ActivityManagerService.unbindService(android.app.IServiceConnection) for 122ms
+
+[ 01-01 15:14:03.041  1041:  541:20182 D/audio_hw_primary ]
+disable_audio_route: usecase(9) reset and update mixer path: audio-record
+
+[ 01-01 15:14:03.042  1041:  541:20182 D/audio_hw_primary ]
+disable_snd_device: snd_device(72: voice-rec-mic)
+
+[ 01-01 15:14:03.049  1041:  541:20182 D/sound_trigger_platform ]
+platform_stdev_check_and_update_concurrency: concurrency active 0, tx 0, rx 0, concurrency session_allowed 1
+
+[ 01-01 15:14:03.054  1041:  541:  741 I/SoundTriggerHwService::Module ]
+onCallbackEvent no clients
+
+[ 01-01 15:14:03.240  1000:14206:20198 I/SuggestionParser ]
+Use your voice requires unavailable account type com.google
+
+[ 01-01 15:14:03.267  1000:14206:20198 W/Bundle   ]
+Key com.android.settings.dismiss expected String but value was a java.lang.Integer.  The default value <null> was returned.
+
+[ 01-01 15:14:03.269  1000:14206:20198 W/Bundle   ]
+Attempt to cast generated internal exception:
+java.lang.ClassCastException: java.lang.Integer cannot be cast to java.lang.String
+	at android.os.BaseBundle.getString(BaseBundle.java:1072)
+	at com.android.settingslib.SuggestionParser.getDismissControl(SuggestionParser.java:377)
+	at com.android.settingslib.SuggestionParser.isDismissed(SuggestionParser.java:330)
+	at com.android.settingslib.SuggestionParser.filterSuggestions(SuggestionParser.java:187)
+	at com.android.settingslib.SuggestionParser.readSuggestions(SuggestionParser.java:204)
+	at com.android.settingslib.SuggestionParser.getSuggestions(SuggestionParser.java:151)
+	at com.android.settings.dashboard.DashboardSummary$SuggestionLoader.doInBackground(DashboardSummary.java:260)
+	at com.android.settings.dashboard.DashboardSummary$SuggestionLoader.doInBackground(DashboardSummary.java:255)
+	at android.os.AsyncTask$2.call(AsyncTask.java:305)
+	at java.util.concurrent.FutureTask.run(FutureTask.java:266)
+	at android.os.AsyncTask$SerialExecutor$1.run(AsyncTask.java:243)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1162)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:636)
+	at java.lang.Thread.run(Thread.java:764)
+
+
+[ 01-01 15:14:03.456  1041:  541:  678 I/ServiceManager ]
+Waiting for service media.log...
+
+[ 01-01 15:14:03.495  1041:  541: 5252 D/audio_route ]
+Apply path: speaker-protected
+
+[ 01-01 15:14:03.497  1041:  541: 5252 D/audio_hw_primary ]
+enable_snd_device: snd_device(88: vi-feedback)
+
+[ 01-01 15:14:03.497  1041:  541: 5252 D/audio_route ]
+Apply path: vi-feedback
+
+[ 01-01 15:14:03.497  1041:  541: 5252 D/audio_hw_primary ]
+enable_audio_route: usecase(23) apply and update mixer path: spkr-vi-record
+
+[ 01-01 15:14:03.497  1041:  541: 5252 D/audio_route ]
+Apply path: spkr-vi-record
+
+[ 01-01 15:14:03.522  1041:  541: 5252 D/audio_hw_primary ]
+enable_audio_route: usecase(1) apply and update mixer path: low-latency-playback
+
+[ 01-01 15:14:03.522  1041:  541: 5252 D/audio_route ]
+Apply path: low-latency-playback
+
+--------- switch to system
+[ 01-01 15:14:03.529  1000: 2272: 3627 I/ActivityManager ]
+START u0 {act=android.intent.action.MAIN cat=[android.intent.category.HOME] flg=0x10200000 cmp=com.google.android.googlequicksearchbox/com.google.android.launcher.GEL (has extras)} from uid 1000
+
+--------- switch to main
+[ 01-01 15:14:03.581 10038: 4245: 4251 I/zygote64 ]
+Integer.valueOf will not be optimized
+
+[ 01-01 15:14:03.581 10038: 4245: 4251 I/zygote64 ]
+Integer.valueOf will not be optimized
+
+[ 01-01 15:14:03.585  1000:14206:14206 D/DashboardSummary ]
+Stopped listening for condition changes
+
+[ 01-01 15:14:03.669 10038:18491:18672 I/AttachedClient ]
+Adding client event 2 to pending list.
+
+[ 01-01 15:14:03.715  1000: 2272: 3783 W/OpenGLRenderer ]
+Warning: attempt to read pixels from hardware bitmap, which is very slow operation
+
+[ 01-01 15:14:03.785 10038:18491:18491 I/MicroDetectionWorker ]
+#updateMicroDetector [currentDetectionMode: [mDetectionMode: [1]]]
+
+[ 01-01 15:14:03.785 10038:18491:18491 I/MicroDetectionWorker ]
+#startMicroDetector [speakerMode: 0]
+
+[ 01-01 15:14:03.805 10038:18491:19006 I/MicroRecognitionRunner ]
+Starting detection.
+
+[ 01-01 15:14:03.806 10038:18491:18496 I/zygote64 ]
+Integer.valueOf will not be optimized
+
+[ 01-01 15:14:03.806 10038:18491:19008 I/MicrophoneInputStream ]
+mic_starting com.google.android.apps.gsa.speech.audio.ag@85dd117
+
+[ 01-01 15:14:03.813  1041:  541: 5248 W/DeviceHAL ]
+Device 0xf4fad000 open_input_stream: Invalid argument
+
+[ 01-01 15:14:03.819  1041:  541:20213 I/AudioFlinger ]
+AudioFlinger's thread 0xf1220e40 tid=20213 ready to run
+
+[ 01-01 15:14:03.836 10038:18491:18491 I/MicroDetectionWorker ]
+onReady
+
+[ 01-01 15:14:03.837  1041:  541:  741 I/SoundTriggerHwService::Module ]
+onCallbackEvent no clients
+
+[ 01-01 15:14:03.837 10038:18491:19008 I/MicrophoneInputStream ]
+mic_started com.google.android.apps.gsa.speech.audio.ag@85dd117
+
+[ 01-01 15:14:03.841  1041:  541:20214 D/sound_trigger_platform ]
+platform_stdev_check_and_update_concurrency: concurrency active 0, tx 1, rx 0, concurrency session_allowed 0
+
+[ 01-01 15:14:03.841  1041:  541:20214 D/audio_hw_primary ]
+enable_snd_device: snd_device(72: voice-rec-mic)
+
+[ 01-01 15:14:03.841  1041:  541:20214 D/audio_route ]
+Apply path: voice-rec-mic
+
+[ 01-01 15:14:03.849  1041:  541:20214 D/audio_hw_primary ]
+enable_audio_route: usecase(9) apply and update mixer path: audio-record
+
+[ 01-01 15:14:03.850  1041:  541:20214 D/audio_route ]
+Apply path: audio-record
+
+[ 01-01 15:14:03.901 10038:18491:18491 I/MicroDetectionWorker ]
+onReady
+
+[ 01-01 15:14:03.922  1000: 2272: 3783 W/OpenGLRenderer ]
+Warning: attempt to read pixels from hardware bitmap, which is very slow operation
+
+[ 01-01 15:14:04.032  1041:  541:  717 D/audio_hw_primary ]
+disable_audio_route: usecase(1) reset and update mixer path: low-latency-playback
+
+[ 01-01 15:14:04.044  1041:  541:  717 D/audio_hw_primary ]
+disable_snd_device: snd_device(88: vi-feedback)
+
+[ 01-01 15:14:04.044  1041:  541:  717 D/audio_hw_primary ]
+disable_audio_route: usecase(23) reset and update mixer path: spkr-vi-record
+
+[ 01-01 15:14:04.045  1000: 2272: 3783 W/OpenGLRenderer ]
+Warning: attempt to read pixels from hardware bitmap, which is very slow operation
+
+[ 01-01 15:14:04.159 10038: 4245: 4483 W/OpenGLRenderer ]
+Incorrectly called buildLayer on View: ShortcutAndWidgetContainer, destroying layer...
+
+[ 01-01 15:14:04.446  1041:  541: 5252 D/audio_route ]
+Apply path: speaker-protected
+
+--------- switch to system
+[ 01-01 15:14:04.448  1000: 2272: 5447 I/ActivityManager ]
+START u0 {act=android.intent.action.MAIN cat=[android.intent.category.LAUNCHER] flg=0x10200000 cmp=com.android.settings/.Settings bnds=[435,1254][646,1507] (has extras)} from uid 10038
+
+--------- switch to main
+[ 01-01 15:14:04.448  1041:  541: 5252 D/audio_hw_primary ]
+enable_snd_device: snd_device(88: vi-feedback)
+
+[ 01-01 15:14:04.449  1041:  541: 5252 D/audio_route ]
+Apply path: vi-feedback
+
+[ 01-01 15:14:04.449  1041:  541: 5252 D/audio_hw_primary ]
+enable_audio_route: usecase(23) apply and update mixer path: spkr-vi-record
+
+[ 01-01 15:14:04.449  1041:  541: 5252 D/audio_route ]
+Apply path: spkr-vi-record
+
+[ 01-01 15:14:04.457  1041:  541:  678 I/ServiceManager ]
+Waiting for service media.log...
+
+[ 01-01 15:14:04.480  1041:  541: 5252 D/audio_hw_primary ]
+enable_audio_route: usecase(1) apply and update mixer path: low-latency-playback
+
+[ 01-01 15:14:04.480  1041:  541: 5252 D/audio_route ]
+Apply path: low-latency-playback
+
+[ 01-01 15:14:04.623  1000:14206:14206 D/DashboardSummary ]
+Listening for condition changes
+
+[ 01-01 15:14:04.623  1000:14206:14206 D/DashboardSummary ]
+onConditionsChanged
+
+[ 01-01 15:14:04.623  1000:14206:14206 D/DashboardAdapter ]
+adapter setConditions called
+
+[ 01-01 15:14:04.624  1000:14206:14206 D/DashboardSummary ]
+conditions refreshed
+
+[ 01-01 15:14:04.624  1000:14206:14206 D/APM_Condition ]
+APM condition refreshed
+
+[ 01-01 15:14:04.624  1000:14206:14206 D/APM_Condition ]
+setActive was called with false
+
+[ 01-01 15:14:04.712  1000:14206:20202 D/DatabaseIndexingManager ]
+Indexing locale 'en_US' took 35 millis
+
+[ 01-01 15:14:04.738  1000:14206:20202 D/DatabaseIndexingManager ]
+Indexing locale 'en_US' took 10 millis
+
+[ 01-01 15:14:04.837  1000:14206:20202 I/SuggestionParser ]
+Use your voice requires unavailable account type com.google
+
+[ 01-01 15:14:04.869  1000:14206:20202 W/Bundle   ]
+Key com.android.settings.dismiss expected String but value was a java.lang.Integer.  The default value <null> was returned.
+
+[ 01-01 15:14:04.870  1000:14206:20202 W/Bundle   ]
+Attempt to cast generated internal exception:
+java.lang.ClassCastException: java.lang.Integer cannot be cast to java.lang.String
+	at android.os.BaseBundle.getString(BaseBundle.java:1072)
+	at com.android.settingslib.SuggestionParser.getDismissControl(SuggestionParser.java:377)
+	at com.android.settingslib.SuggestionParser.isDismissed(SuggestionParser.java:330)
+	at com.android.settingslib.SuggestionParser.filterSuggestions(SuggestionParser.java:187)
+	at com.android.settingslib.SuggestionParser.readSuggestions(SuggestionParser.java:204)
+	at com.android.settingslib.SuggestionParser.getSuggestions(SuggestionParser.java:151)
+	at com.android.settings.dashboard.DashboardSummary$SuggestionLoader.doInBackground(DashboardSummary.java:260)
+	at com.android.settings.dashboard.DashboardSummary$SuggestionLoader.doInBackground(DashboardSummary.java:255)
+	at android.os.AsyncTask$2.call(AsyncTask.java:305)
+	at java.util.concurrent.FutureTask.run(FutureTask.java:266)
+	at android.os.AsyncTask$SerialExecutor$1.run(AsyncTask.java:243)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1162)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:636)
+	at java.lang.Thread.run(Thread.java:764)
+
+
+--------- switch to system
+[ 01-01 15:14:04.898  1000: 2272: 3579 D/BatteryStatsService ]
+begin updateExternalStatsSync reason=get-stats
+
+--------- switch to main
+[ 01-01 15:14:04.908  1000: 2272: 5444 I/sensors  ]
+activate
+
+[ 01-01 15:14:04.916  1000: 2272: 5444 I/nanohub  ]
+queueActivate: sensor=1, handle=1, enable=0
+
+[ 01-01 15:14:04.998  1041:  541:  717 D/audio_hw_primary ]
+disable_audio_route: usecase(1) reset and update mixer path: low-latency-playback
+
+[ 01-01 15:14:05.010  1041:  541:  717 D/audio_hw_primary ]
+disable_snd_device: snd_device(88: vi-feedback)
+
+[ 01-01 15:14:05.010  1041:  541:  717 D/audio_hw_primary ]
+disable_audio_route: usecase(23) reset and update mixer path: spkr-vi-record
+
+--------- switch to system
+[ 01-01 15:14:05.022  1000: 2272: 3579 E/BatteryStatsService ]
+no controller energy info supplied
+
+--------- switch to main
+[ 01-01 15:14:05.040  1000: 2272: 3626 E/hw-IPCThreadState ]
+binder thread pool (1 threads) starved for 116 ms
+
+--------- switch to system
+[ 01-01 15:14:05.072  1000: 2272: 3579 D/BatteryStatsImpl ]
+Reading cpu stats took 34 ms
+
+[ 01-01 15:14:05.098  1000: 2272: 3579 E/KernelMemoryBandwidthStats ]
+Failed to read memory bandwidth: /sys/kernel/memory_state_time/show_stat (No such file or directory)
+
+[ 01-01 15:14:05.098  1000: 2272: 3579 D/BatteryStatsService ]
+end updateExternalStatsSync
+
+--------- switch to main
+[ 01-01 15:14:05.112 10038:18491:18491 I/MicroDetector ]
+Keeping mic open: false
+
+[ 01-01 15:14:05.113 10038:18491:19016 I/DeviceStateChecker ]
+DeviceStateChecker cancelled
+
+[ 01-01 15:14:05.119 10038:18491:19007 I/AudioController ]
+internalShutdown
+
+[ 01-01 15:14:05.120 10038:18491:19007 I/MicrophoneInputStream ]
+mic_close com.google.android.apps.gsa.speech.audio.ag@85dd117
+
+[ 01-01 15:14:05.124 10038:18491:18549 I/MicroRecognitionRunner ]
+Stopping hotword detection.
+
+[ 01-01 15:14:05.252  1041:  541:20213 D/audio_hw_primary ]
+disable_audio_route: usecase(9) reset and update mixer path: audio-record
+
+[ 01-01 15:14:05.253  1041:  541:20213 D/audio_hw_primary ]
+disable_snd_device: snd_device(72: voice-rec-mic)
+
+[ 01-01 15:14:05.258  1041:  541:20213 D/sound_trigger_platform ]
+platform_stdev_check_and_update_concurrency: concurrency active 0, tx 0, rx 0, concurrency session_allowed 1
+
+[ 01-01 15:14:05.263  1041:  541:  741 I/SoundTriggerHwService::Module ]
+onCallbackEvent no clients
+
+[ 01-01 15:14:05.267 10038:18491:19006 W/zygote64 ]
+Long monitor contention with owner UserFacing4 (19007) at void android.media.AudioRecord.native_stop()(AudioRecord.java:-2) waiters=1 in void com.google.android.apps.gsa.speech.audio.an.reset(int) for 141ms
+
+[ 01-01 15:14:05.267 10038:18491:19006 I/MicroRecognitionRunner ]
+Detection finished
+
+[ 01-01 15:14:05.457  1041:  541:  678 I/ServiceManager ]
+Waiting for service media.log...
+
+[ 01-01 15:14:05.465  1000:14206:20201 I/SuggestionParser ]
+Use your voice requires unavailable account type com.google
+
+[ 01-01 15:14:05.499  1000:14206:20201 W/Bundle   ]
+Key com.android.settings.dismiss expected String but value was a java.lang.Integer.  The default value <null> was returned.
+
+[ 01-01 15:14:05.500  1000:14206:20201 W/Bundle   ]
+Attempt to cast generated internal exception:
+java.lang.ClassCastException: java.lang.Integer cannot be cast to java.lang.String
+	at android.os.BaseBundle.getString(BaseBundle.java:1072)
+	at com.android.settingslib.SuggestionParser.getDismissControl(SuggestionParser.java:377)
+	at com.android.settingslib.SuggestionParser.isDismissed(SuggestionParser.java:330)
+	at com.android.settingslib.SuggestionParser.filterSuggestions(SuggestionParser.java:187)
+	at com.android.settingslib.SuggestionParser.readSuggestions(SuggestionParser.java:204)
+	at com.android.settingslib.SuggestionParser.getSuggestions(SuggestionParser.java:151)
+	at com.android.settings.dashboard.DashboardSummary$SuggestionLoader.doInBackground(DashboardSummary.java:260)
+	at com.android.settings.dashboard.DashboardSummary$SuggestionLoader.doInBackground(DashboardSummary.java:255)
+	at android.os.AsyncTask$2.call(AsyncTask.java:305)
+	at java.util.concurrent.FutureTask.run(FutureTask.java:266)
+	at android.os.AsyncTask$SerialExecutor$1.run(AsyncTask.java:243)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1162)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:636)
+	at java.lang.Thread.run(Thread.java:764)
+
+
+[ 01-01 15:14:05.564  1041:  541: 5252 D/audio_route ]
+Apply path: speaker-protected
+
+[ 01-01 15:14:05.568  1041:  541: 5252 D/audio_hw_primary ]
+enable_snd_device: snd_device(88: vi-feedback)
+
+[ 01-01 15:14:05.568  1041:  541: 5252 D/audio_route ]
+Apply path: vi-feedback
+
+[ 01-01 15:14:05.568  1041:  541: 5252 D/audio_hw_primary ]
+enable_audio_route: usecase(23) apply and update mixer path: spkr-vi-record
+
+[ 01-01 15:14:05.568  1041:  541: 5252 D/audio_route ]
+Apply path: spkr-vi-record
+
+[ 01-01 15:14:05.589 10036: 3812: 3819 I/zygote64 ]
+Integer.valueOf will not be optimized
+
+[ 01-01 15:14:05.593  1041:  541: 5252 D/audio_hw_primary ]
+enable_audio_route: usecase(1) apply and update mixer path: low-latency-playback
+
+[ 01-01 15:14:05.593  1041:  541: 5252 D/audio_route ]
+Apply path: low-latency-playback
+
+[ 01-01 15:14:05.598  1000:14206:14212 I/zygote64 ]
+Integer.valueOf will not be optimized
+
+--------- switch to system
+[ 01-01 15:14:05.603  1000: 2272: 3627 I/ActivityManager ]
+START u0 {act=android.intent.action.MAIN cat=[android.intent.category.HOME] flg=0x10200000 cmp=com.google.android.googlequicksearchbox/com.google.android.launcher.GEL (has extras)} from uid 1000
+
+--------- switch to main
+[ 01-01 15:14:05.658  1000:14206:14206 D/DashboardSummary ]
+Stopped listening for condition changes
+
+[ 01-01 15:14:05.750 10038:18491:18504 I/AttachedClient ]
+Adding client event 2 to pending list.
+
+[ 01-01 15:14:05.796  1000: 2272: 3783 W/OpenGLRenderer ]
+Warning: attempt to read pixels from hardware bitmap, which is very slow operation
+
+[ 01-01 15:14:05.854 10038:18491:18491 I/MicroDetectionWorker ]
+#updateMicroDetector [currentDetectionMode: [mDetectionMode: [1]]]
+
+[ 01-01 15:14:05.855 10038:18491:18491 I/MicroDetectionWorker ]
+#startMicroDetector [speakerMode: 0]
+
+[ 01-01 15:14:05.883 10038:18491:19006 I/MicroRecognitionRunner ]
+Starting detection.
+
+[ 01-01 15:14:05.884 10038:18491:19007 I/MicrophoneInputStream ]
+mic_starting com.google.android.apps.gsa.speech.audio.ag@987bb93
+
+[ 01-01 15:14:05.896  1041:  541: 5248 W/DeviceHAL ]
+Device 0xf4fad000 open_input_stream: Invalid argument
+
+[ 01-01 15:14:05.906  1041:  541:20227 I/AudioFlinger ]
+AudioFlinger's thread 0xf1220e80 tid=20227 ready to run
+
+[ 01-01 15:14:05.916  1041:  541:  741 I/SoundTriggerHwService::Module ]
+onCallbackEvent no clients
+
+[ 01-01 15:14:05.917 10038:18491:19007 I/MicrophoneInputStream ]
+mic_started com.google.android.apps.gsa.speech.audio.ag@987bb93
+
+[ 01-01 15:14:05.919  1041:  541:20228 D/sound_trigger_platform ]
+platform_stdev_check_and_update_concurrency: concurrency active 0, tx 1, rx 0, concurrency session_allowed 0
+
+[ 01-01 15:14:05.919  1041:  541:20228 D/audio_hw_primary ]
+enable_snd_device: snd_device(72: voice-rec-mic)
+
+[ 01-01 15:14:05.919  1041:  541:20228 D/audio_route ]
+Apply path: voice-rec-mic
+
+[ 01-01 15:14:05.927  1041:  541:20228 D/audio_hw_primary ]
+enable_audio_route: usecase(9) apply and update mixer path: audio-record
+
+[ 01-01 15:14:05.927  1041:  541:20228 D/audio_route ]
+Apply path: audio-record
+
+[ 01-01 15:14:05.936 10038:18491:18491 I/MicroDetectionWorker ]
+onReady
+
+[ 01-01 15:14:05.981 10038:18491:18491 I/MicroDetectionWorker ]
+onReady
+
+[ 01-01 15:14:06.029  1000: 2272: 3783 W/OpenGLRenderer ]
+Warning: attempt to read pixels from hardware bitmap, which is very slow operation
+
+[ 01-01 15:14:06.112  1041:  541:  717 D/audio_hw_primary ]
+disable_audio_route: usecase(1) reset and update mixer path: low-latency-playback
+
+[ 01-01 15:14:06.123  1041:  541:  717 D/audio_hw_primary ]
+disable_snd_device: snd_device(88: vi-feedback)
+
+[ 01-01 15:14:06.123  1041:  541:  717 D/audio_hw_primary ]
+disable_audio_route: usecase(23) reset and update mixer path: spkr-vi-record
+
+[ 01-01 15:14:06.157  1000: 2272: 3783 W/OpenGLRenderer ]
+Warning: attempt to read pixels from hardware bitmap, which is very slow operation
+
+[ 01-01 15:14:06.239 10038: 4245: 4483 W/OpenGLRenderer ]
+Incorrectly called buildLayer on View: ShortcutAndWidgetContainer, destroying layer...
+
+[ 01-01 15:14:06.674  root:  600:  600 W/thermal-engine ]
+type=1400 audit(0.0:1032): avc: denied { search } for name="leds" dev="sysfs" ino=7453 scontext=u:r:thermal-engine:s0 tcontext=u:object_r:sysfs_leds:s0 tclass=dir permissive=0
+
+--------- switch to system
+[ 01-01 15:14:06.931  1000: 2272: 3628 I/PowerManagerService ]
+Going to sleep due to power button (uid 1000)...
+
+[ 01-01 15:14:07.432  1000: 2272: 3592 D/BatteryStatsService ]
+begin noteScreenState
+
+[ 01-01 15:14:07.433  1000: 2272: 3592 D/BatteryStatsService ]
+end noteScreenState
+
+[ 01-01 15:14:07.444  1000: 2272: 3582 I/VrManagerService ]
+VR mode is disallowed
+
+--------- switch to main
+[ 01-01 15:14:07.535  1000: 2272: 3592 I/sensors  ]
+activate
+
+[ 01-01 15:14:07.544  1000: 2272: 3592 I/nanohub  ]
+queueActivate: sensor=28, handle=30, enable=0
+
+[ 01-01 15:14:07.545  1000: 2272: 3592 V/KeyguardServiceDelegate ]
+onScreenTurnedOff()
+
+[ 01-01 15:14:07.547  1000: 2272: 3617 I/nanohub  ]
+osLog: [BMI160] accPower: on=0, state=3
+
+
+[ 01-01 15:14:07.548  1000: 2272: 3592 I/sensors  ]
+activate
+
+[ 01-01 15:14:07.550  1000: 2272: 3592 I/nanohub  ]
+queueActivate: sensor=12, handle=7, enable=0
+
+--------- switch to system
+[ 01-01 15:14:07.551  1000: 2272: 3590 I/DisplayManagerService ]
+Display device changed state: "Built-in Screen", OFF
+
+--------- switch to main
+[ 01-01 15:14:07.552  1000:  398:  398 D/SurfaceFlinger ]
+Set power mode=0, type=0 flinger=0x7542c6c000
+
+[ 01-01 15:14:07.555  1000:  398:  398 D/qdhwcomposer ]
+hwc_setPowerMode: Setting mode 0 on display: 0
+
+--------- switch to system
+[ 01-01 15:14:07.565  1000: 2272: 3614 W/LocalDisplayAdapter ]
+Unable to find color mode 0, ignoring request.
+
+--------- switch to main
+[ 01-01 15:14:07.664 10038:18491:18491 I/MicroDetector ]
+Keeping mic open: false
+
+[ 01-01 15:14:07.665  1000:  398:  462 I/qdhwcomposer ]
+handle_blank_event: dpy:0 panel power state: 0
+
+[ 01-01 15:14:07.665 10038:18491:19012 I/AudioController ]
+internalShutdown
+
+[ 01-01 15:14:07.666 10038:18491:19012 I/MicrophoneInputStream ]
+mic_close com.google.android.apps.gsa.speech.audio.ag@987bb93
+
+[ 01-01 15:14:07.666  1000:  398:  398 D/qdhwcomposer ]
+hwc_setPowerMode: Done setting mode 0 on display 0
+
+[ 01-01 15:14:07.666 10038:18491:19016 I/DeviceStateChecker ]
+DeviceStateChecker cancelled
+
+[ 01-01 15:14:07.666  1000: 2272: 3787 D/SurfaceControl ]
+Excessive delay in setPowerMode(): 115ms
+
+--------- switch to system
+[ 01-01 15:14:07.670  1000: 2272: 3592 I/DreamManagerService ]
+Entering dreamland.
+
+--------- switch to main
+[ 01-01 15:14:07.671 10038:18491:18549 I/MicroRecognitionRunner ]
+Stopping hotword detection.
+
+--------- switch to system
+[ 01-01 15:14:07.671  1000: 2272: 3592 I/PowerManagerService ]
+Dozing...
+
+[ 01-01 15:14:07.673  1000: 2272: 3588 I/DreamController ]
+Starting dream: name=ComponentInfo{com.android.systemui/com.android.systemui.doze.DozeService}, isTest=false, canDoze=true, userId=0
+
+--------- switch to main
+[ 01-01 15:14:07.710  1000: 2272: 5447 I/sensors  ]
+batch
+
+[ 01-01 15:14:07.711  1000: 2272: 5447 I/nanohub  ]
+queueBatch: sensor=24, handle=20, period=1000000, latency=0
+
+[ 01-01 15:14:07.712  1000: 2272: 5447 I/sensors  ]
+activate
+
+[ 01-01 15:14:07.713  1000: 2272: 5447 I/nanohub  ]
+queueActivate: sensor=24, handle=20, enable=1
+
+[ 01-01 15:14:07.717  1000: 2272: 3617 I/nanohub  ]
+osLog: [PickupGesture] power: 1
+
+
+[ 01-01 15:14:07.719  1000: 2272: 3617 I/nanohub  ]
+osLog: [BMI160] accPower: on=1, state=4
+
+
+[ 01-01 15:14:07.721  1000: 2272: 3617 I/nanohub  ]
+osLog: [BMI160] accPower: on=1, state=3
+
+
+[ 01-01 15:14:07.722  1000: 2272: 3617 I/nanohub  ]
+osLog: [Activity]  activity activity powered on, new state 2
+
+
+[ 01-01 15:14:07.730  1041:  541:20227 D/audio_hw_primary ]
+disable_audio_route: usecase(9) reset and update mixer path: audio-record
+
+[ 01-01 15:14:07.731  1041:  541:20227 D/audio_hw_primary ]
+disable_snd_device: snd_device(72: voice-rec-mic)
+
+[ 01-01 15:14:07.735  1041:  541:20227 D/sound_trigger_platform ]
+platform_stdev_check_and_update_concurrency: concurrency active 0, tx 0, rx 0, concurrency session_allowed 1
+
+[ 01-01 15:14:07.738  1041:  541:  741 I/SoundTriggerHwService::Module ]
+onCallbackEvent no clients
+
+[ 01-01 15:14:07.742 10038:18491:19006 I/MicroRecognitionRunner ]
+Detection finished
+
+--------- switch to system
+[ 01-01 15:14:07.769  1000: 2272: 4084 I/ActivityManager ]
+Setting hasTopUi=true for pid=3812
+
+--------- switch to main
+[ 01-01 15:14:07.776  1041:  541:  678 I/ServiceManager ]
+Waiting for service media.log...
+
+[ 01-01 15:14:07.827   nfc: 4175: 4192 I/zygote64 ]
+Background concurrent copying GC freed 96(1791KB) AllocSpace objects, 0(0B) LOS objects, 53% free, 1330KB/2MB, paused 6.135ms total 19.615ms
+
+[ 01-01 15:14:07.829   nfc: 4175: 4351 E/NxpTml   ]
+_i2c_write() errno : 5
+
+[ 01-01 15:14:07.829   nfc: 4175: 4351 E/NxpTml   ]
+PN54X - Error in I2C Write.....
+
+
+[ 01-01 15:14:07.829   nfc: 4175: 4353 E/NxpHal   ]
+write error status = 0x1ff
+
+[ 01-01 15:14:07.830   nfc: 4175: 4346 E/NxpHal   ]
+write_unlocked failed - PN54X Maybe in Standby Mode - Retry
+
+[ 01-01 15:14:07.831   nfc: 4175: 4351 E/NxpTml   ]
+_i2c_write() errno : 5
+
+[ 01-01 15:14:07.831   nfc: 4175: 4351 E/NxpTml   ]
+PN54X - Error in I2C Write.....
+
+
+[ 01-01 15:14:07.831   nfc: 4175: 4353 E/NxpHal   ]
+write error status = 0x1ff
+
+[ 01-01 15:14:07.831   nfc: 4175: 4346 E/NxpHal   ]
+write_unlocked failed - PN54X Maybe in Standby Mode - Retry
+
+[ 01-01 15:14:07.886 10036: 3812: 3819 I/zygote64 ]
+Integer.valueOf will not be optimized
+
+[ 01-01 15:14:08.003 10036: 3812: 3812 D/StatusBar ]
+disable: < expand icons alerts system_info back HOME* RECENT* clock search quick_settings >
+
+[ 01-01 15:14:08.108 10018: 5497:20188 E/ctxmgr   ]
+[WorkManager]Ongoing task not found: PlacesProducer_receive
+
+[ 01-01 15:14:08.776  1041:  541:  678 I/ServiceManager ]
+Waiting for service media.log...
+
+[ 01-01 15:14:09.777  1041:  541:  678 I/ServiceManager ]
+Waiting for service media.log...
+
+[ 01-01 15:14:10.001  1000: 2272: 4088 I/sensors  ]
+batch
+
+[ 01-01 15:14:10.007  1000: 2272: 4088 I/nanohub  ]
+queueBatch: sensor=1, handle=1, period=20000000, latency=0
+
+[ 01-01 15:14:10.007  1000: 2272: 4088 I/sensors  ]
+activate
+
+[ 01-01 15:14:10.010  1000: 2272: 4088 I/nanohub  ]
+queueActivate: sensor=1, handle=1, enable=1
+
+[ 01-01 15:14:10.778  1041:  541:  678 I/ServiceManager ]
+Waiting for service media.log...
+
+[ 01-01 15:14:12.776 10018: 5497:20188 I/Places   ]
+?: Couldn't find platform key file.
+
+[ 01-01 15:14:12.842  1000: 2272: 5430 I/sensors  ]
+activate
+
+[ 01-01 15:14:12.845 10018: 5497:20187 I/PlaceInferenceEngine ]
+[anon] Changed inference mode: 105
+
+[ 01-01 15:14:12.851 10018: 5497: 5537 W/GCoreFlp ]
+No location to return for getLastLocation()
+
+[ 01-01 15:14:12.857  1000: 2272: 5430 I/nanohub  ]
+queueActivate: sensor=1, handle=1, enable=0
+
+[ 01-01 15:14:12.889 10018: 5497:20188 I/Places   ]
+?: Couldn't find platform key file.
+
+[ 01-01 15:14:12.890 10018: 5497:19161 I/Places   ]
+?: Couldn't find platform key file.
+
+[ 01-01 15:14:13.008 10018: 5497: 5502 I/zygote64 ]
+Integer.valueOf will not be optimized
+
+[ 01-01 15:14:14.351  1000: 2272: 3617 I/nanohub  ]
+osLog: [PickupGesture] sending event 0x00000001
+
+[ 01-01 15:14:14.358  1000: 2272: 3617 I/nanohub  ]
+osLog: [Activity]  activity activity powered off, new state 0
+
+
+[ 01-01 15:14:14.361  1000: 2272: 3617 I/nanohub  ]
+osLog: [PickupGesture] power: 0
+
+
+[ 01-01 15:14:14.362  1000: 2272: 3617 I/nanohub  ]
+osLog: [BMI160] accPower: on=0, state=5
+
+
+[ 01-01 15:14:14.366  1000: 2272: 3617 I/nanohub  ]
+osLog: [BMI160] accPower: on=0, state=3
+
+
+[ 01-01 15:14:14.380  1000: 2272: 4219 I/sensors  ]
+batch
+
+[ 01-01 15:14:14.382  1000: 2272: 4219 I/nanohub  ]
+queueBatch: sensor=24, handle=20, period=1000000, latency=0
+
+[ 01-01 15:14:14.383  1000: 2272: 4219 I/sensors  ]
+activate
+
+[ 01-01 15:14:14.385  1000: 2272: 4219 I/nanohub  ]
+queueActivate: sensor=24, handle=20, enable=1
+
+[ 01-01 15:14:14.388  1000: 2272: 3617 I/nanohub  ]
+osLog: [PickupGesture] power: 1
+
+
+--------- switch to system
+[ 01-01 15:14:14.389  1000: 2272: 3592 D/BatteryStatsService ]
+begin noteScreenState
+
+[ 01-01 15:14:14.389  1000: 2272: 3592 D/BatteryStatsService ]
+end noteScreenState
+
+[ 01-01 15:14:14.390  1000: 2272: 3592 I/DisplayPowerController ]
+Blocking screen on until initial contents have been drawn.
+
+--------- switch to main
+[ 01-01 15:14:14.391  1000: 2272: 3592 V/KeyguardServiceDelegate ]
+onScreenTurnedOn(showListener = com.android.server.policy.PhoneWindowManager$2@cb6ff88)
+
+[ 01-01 15:14:14.393  1000: 2272: 3617 I/nanohub  ]
+osLog: [BMI160] accPower: on=1, state=4
+
+
+--------- switch to system
+[ 01-01 15:14:14.394  1000: 2272: 3590 I/DisplayManagerService ]
+Display device changed state: "Built-in Screen", DOZE
+
+--------- switch to main
+[ 01-01 15:14:14.394  1000:  398:  398 D/SurfaceFlinger ]
+Set power mode=1, type=0 flinger=0x7542c6c000
+
+[ 01-01 15:14:14.395  1000:  398:  398 D/qdhwcomposer ]
+hwc_setPowerMode: Setting mode 1 on display: 0
+
+[ 01-01 15:14:14.396  1000: 2272: 3617 I/nanohub  ]
+osLog: [BMI160] accPower: on=1, state=3
+
+
+[ 01-01 15:14:14.398  1000: 2272: 4217 I/sensors  ]
+batch
+
+[ 01-01 15:14:14.400  1000: 2272: 3617 I/nanohub  ]
+osLog: [Activity]  activity activity powered on, new state 2
+
+
+[ 01-01 15:14:14.403  1000: 2272: 4217 I/nanohub  ]
+queueBatch: sensor=13, handle=6, period=200000000, latency=0
+
+[ 01-01 15:14:14.404  1000: 2272: 4217 I/sensors  ]
+activate
+
+--------- switch to system
+[ 01-01 15:14:14.405  1000: 2272: 3614 W/LocalDisplayAdapter ]
+Unable to find color mode 0, ignoring request.
+
+--------- switch to main
+[ 01-01 15:14:14.408  1000: 2272: 4217 I/nanohub  ]
+queueActivate: sensor=13, handle=6, enable=1
+
+[ 01-01 15:14:14.421  1000: 2272: 5450 V/KeyguardServiceDelegate ]
+**** SHOWN CALLED ****
+
+--------- switch to system
+[ 01-01 15:14:14.514  1000: 2272: 3592 I/DisplayPowerController ]
+Unblocked screen on after 124 ms
+
+--------- switch to main
+[ 01-01 15:14:14.517  1000: 2272: 3592 V/KeyguardServiceDelegate ]
+onScreenTurnedOn()
+
+[ 01-01 15:14:14.629  1000:  398:  462 I/qdhwcomposer ]
+handle_blank_event: dpy:0 panel power state: 2
+
+[ 01-01 15:14:14.629  1000:  398:  398 D/qdhwcomposer ]
+hwc_setPowerMode: Done setting mode 1 on display 0
+
+[ 01-01 15:14:14.650  1000: 2272: 3787 D/SurfaceControl ]
+Excessive delay in setPowerMode(): 255ms
+
+--------- switch to system
+[ 01-01 15:14:14.943  1000: 2272: 3628 I/PowerManagerService ]
+Waking up from dozing (uid 1000)...
+
+--------- switch to main
+[ 01-01 15:14:14.949  1000: 2272: 2272 I/sensors  ]
+batch
+
+--------- switch to system
+[ 01-01 15:14:14.952  1000: 2272: 3592 D/BatteryStatsService ]
+begin noteScreenState
+
+--------- switch to main
+[ 01-01 15:14:14.953  1000: 2272: 2272 I/nanohub  ]
+queueBatch: sensor=28, handle=30, period=66667000, latency=0
+
+[ 01-01 15:14:14.953  1000: 2272: 2272 I/sensors  ]
+activate
+
+--------- switch to system
+[ 01-01 15:14:14.954  1000: 2272: 3592 D/BatteryStatsService ]
+end noteScreenState
+
+--------- switch to main
+[ 01-01 15:14:14.955  1000: 2272: 2272 I/nanohub  ]
+queueActivate: sensor=28, handle=30, enable=1
+
+[ 01-01 15:14:14.955  1000: 2272: 2272 V/KeyguardServiceDelegate ]
+onStartedWakingUp()
+
+[ 01-01 15:14:14.959  1000: 2272: 3592 I/sensors  ]
+batch
+
+[ 01-01 15:14:14.961  1000: 2272: 3592 I/nanohub  ]
+queueBatch: sensor=12, handle=7, period=250000000, latency=0
+
+[ 01-01 15:14:14.961  1000: 2272: 3592 I/sensors  ]
+activate
+
+[ 01-01 15:14:14.962  1000: 2272: 3592 I/nanohub  ]
+queueActivate: sensor=12, handle=7, enable=1
+
+--------- switch to system
+[ 01-01 15:14:14.965  1000: 2272: 3590 I/DisplayManagerService ]
+Display device changed state: "Built-in Screen", ON
+
+--------- switch to main
+[ 01-01 15:14:14.966  1000:  398:  398 D/SurfaceFlinger ]
+Set power mode=2, type=0 flinger=0x7542c6c000
+
+[ 01-01 15:14:14.966  1000:  398:  398 D/qdhwcomposer ]
+hwc_setPowerMode: Setting mode 2 on display: 0
+
+[ 01-01 15:14:14.966  1000:  398:  462 I/qdhwcomposer ]
+handle_blank_event: dpy:0 panel power state: 1
+
+[ 01-01 15:14:14.966  1000:  398:  398 D/qdhwcomposer ]
+hwc_setPowerMode: Done setting mode 2 on display 0
+
+--------- switch to system
+[ 01-01 15:14:14.970  1000: 2272: 3592 I/DreamManagerService ]
+Gently waking up from dream.
+
+[ 01-01 15:14:14.975  1000: 2272: 3614 W/LocalDisplayAdapter ]
+Unable to find color mode 0, ignoring request.
+
+--------- switch to main
+[ 01-01 15:14:14.978  1041:  541:  678 I/ServiceManager ]
+Waiting for service media.log...
+
+--------- switch to system
+[ 01-01 15:14:14.998  1000: 2272: 5401 I/DreamManagerService ]
+Leaving dreamland.
+
+[ 01-01 15:14:15.000  1000: 2272: 3588 I/DreamController ]
+Stopping dream: name=ComponentInfo{com.android.systemui/com.android.systemui.doze.DozeService}, isTest=false, canDoze=true, userId=0
+
+--------- switch to main
+[ 01-01 15:14:15.007  1000: 2272: 5430 I/sensors  ]
+activate
+
+[ 01-01 15:14:15.008   nfc: 4175: 4346 D/BrcmNfcJni ]
+RoutingManager::nfaEeCallback: NFA_EE_SET_TECH_CFG_EVT; status=0x0
+
+[ 01-01 15:14:15.008   nfc: 4175: 4346 D/BrcmNfcJni ]
+RoutingManager::nfaEeCallback: NFA_EE_SET_PROTO_CFG_EVT; status=0x0
+
+[ 01-01 15:14:15.008   nfc: 4175:20249 D/BrcmNfcJni ]
+RoutingManager::commitRouting
+
+[ 01-01 15:14:15.009   nfc: 4175: 4346 D/BrcmNfcJni ]
+RoutingManager::nfaEeCallback: NFA_EE_UPDATED_EVT
+
+[ 01-01 15:14:15.010  1000: 2272: 5430 I/nanohub  ]
+queueActivate: sensor=24, handle=20, enable=0
+
+[ 01-01 15:14:15.011   nfc: 4175: 4351 E/NxpTml   ]
+_i2c_write() errno : 5
+
+[ 01-01 15:14:15.011   nfc: 4175: 4351 E/NxpTml   ]
+PN54X - Error in I2C Write.....
+
+
+[ 01-01 15:14:15.011   nfc: 4175: 4353 E/NxpHal   ]
+write error status = 0x1ff
+
+[ 01-01 15:14:15.011   nfc: 4175: 4346 E/NxpHal   ]
+write_unlocked failed - PN54X Maybe in Standby Mode - Retry
+
+[ 01-01 15:14:15.014  1000: 2272: 3617 I/nanohub  ]
+osLog: [PickupGesture] power: 0
+
+
+[ 01-01 15:14:15.019  1000: 2272: 3617 I/nanohub  ]
+osLog: [Activity]  activity activity powered off, new state 0
+
+
+[ 01-01 15:14:15.045 10036: 3812: 3819 I/zygote64 ]
+Integer.valueOf will not be optimized
+
+[ 01-01 15:14:15.069 10036: 3812: 3819 I/chatty   ]
+uid=10036(u0_a36) Jit thread pool identical 2 lines
+
+[ 01-01 15:14:15.070 10036: 3812: 3819 I/zygote64 ]
+Integer.valueOf will not be optimized
+
+[ 01-01 15:14:15.098 10018: 5497: 5502 I/zygote64 ]
+Integer.valueOf will not be optimized
+
+[ 01-01 15:14:15.098 10018: 5497: 5502 I/chatty   ]
+uid=10018(u0_a18) Jit thread pool identical 1 line
+
+[ 01-01 15:14:15.098 10018: 5497: 5502 I/zygote64 ]
+Integer.valueOf will not be optimized
+
+[ 01-01 15:14:15.306 10036: 3812: 3819 I/zygote64 ]
+Integer.valueOf will not be optimized
+
+[ 01-01 15:14:15.324 10036: 3812: 3819 I/zygote64 ]
+Integer.valueOf will not be optimized
+
+[ 01-01 15:14:15.393  1000: 2272: 3617 I/nanohub  ]
+osLog: [WO] rotation changed to: ******* 0 *******
+
+
+[ 01-01 15:14:15.978  1041:  541:  678 I/ServiceManager ]
+Waiting for service media.log...
+
+[ 01-01 15:14:16.106 10036: 3812: 3812 D/StatusBar ]
+disable: < expand icons alerts system_info back HOME RECENT clock search quick_settings >
+
+--------- switch to system
+[ 01-01 15:14:16.196  1000: 2272: 3582 I/VrManagerService ]
+VR mode is allowed
+
+--------- switch to main
+[ 01-01 15:14:16.197 10036: 3812: 3812 D/StatusBar ]
+disable: < expand icons alerts system_info back HOME RECENT clock search quick_settings >
+
+[ 01-01 15:14:16.382  1000: 2272: 4465 I/sensors  ]
+activate
+
+[ 01-01 15:14:16.384  1000: 2272: 4465 I/nanohub  ]
+queueActivate: sensor=13, handle=6, enable=0
+
+[ 01-01 15:14:16.423   nfc: 4175: 4351 E/NxpTml   ]
+_i2c_write() errno : 5
+
+[ 01-01 15:14:16.423   nfc: 4175: 4351 E/NxpTml   ]
+PN54X - Error in I2C Write.....
+
+
+[ 01-01 15:14:16.423   nfc: 4175: 4353 E/NxpHal   ]
+write error status = 0x1ff
+
+[ 01-01 15:14:16.423   nfc: 4175: 4346 E/NxpHal   ]
+write_unlocked failed - PN54X Maybe in Standby Mode - Retry
+
+[ 01-01 15:14:16.428   nfc: 4175: 4346 E/BrcmNfcJni ]
+nfaConnectionCallback: unknown event ????
+
+[ 01-01 15:14:16.428   nfc: 4175: 4346 D/BrcmNfcJni ]
+RoutingManager::nfaEeCallback: NFA_EE_SET_TECH_CFG_EVT; status=0x0
+
+[ 01-01 15:14:16.430   nfc: 4175: 4346 D/BrcmNfcJni ]
+RoutingManager::nfaEeCallback: NFA_EE_SET_PROTO_CFG_EVT; status=0x0
+
+[ 01-01 15:14:16.430   nfc: 4175:20146 D/BrcmNfcJni ]
+RoutingManager::commitRouting
+
+[ 01-01 15:14:16.430   nfc: 4175: 4346 D/BrcmNfcJni ]
+RoutingManager::nfaEeCallback: NFA_EE_UPDATED_EVT
+
+[ 01-01 15:14:16.484 10038:18491:18504 I/AttachedClient ]
+Adding client event 2 to pending list.
+
+[ 01-01 15:14:16.486 10038:18491:18504 I/AttachedClient ]
+Adding client event 2 to pending list.
+
+[ 01-01 15:14:16.520 10038:18491:19642 W/LocationOracle ]
+No location history returned by ContextManager
+
+[ 01-01 15:14:16.525 10036: 3812: 3812 D/StatusBar ]
+disable: < expand icons alerts system_info back home* recent* clock search quick_settings >
+
+[ 01-01 15:14:16.537 10038:18491:18491 I/MicroDetectionWorker ]
+#updateMicroDetector [currentDetectionMode: [mDetectionMode: [1]]]
+
+[ 01-01 15:14:16.538 10038:18491:18491 I/MicroDetectionWorker ]
+#startMicroDetector [speakerMode: 0]
+
+[ 01-01 15:14:16.563 10038:18491:20275 I/MicroRecognitionRunner ]
+Starting detection.
+
+[ 01-01 15:14:16.564 10038:18491:19007 I/MicrophoneInputStream ]
+mic_starting com.google.android.apps.gsa.speech.audio.ag@bde1866
+
+[ 01-01 15:14:16.565 10038:18491:18496 I/zygote64 ]
+Integer.valueOf will not be optimized
+
+[ 01-01 15:14:16.565 10038:18491:18496 I/zygote64 ]
+Integer.valueOf will not be optimized
+
+[ 01-01 15:14:16.567  1041:  541: 5248 W/DeviceHAL ]
+Device 0xf4fad000 open_input_stream: Invalid argument
+
+[ 01-01 15:14:16.578  1041:  541:20278 I/AudioFlinger ]
+AudioFlinger's thread 0xf12208c0 tid=20278 ready to run
+
+[ 01-01 15:14:16.584  1041:  541:  741 I/SoundTriggerHwService::Module ]
+onCallbackEvent no clients
+
+[ 01-01 15:14:16.585 10018: 4514: 4514 I/DeviceCache ]
+Unable to convert the the network interface's MAC Address to string. MAC address cannot be null.
+
+[ 01-01 15:14:16.590 10038:18491:19007 I/MicrophoneInputStream ]
+mic_started com.google.android.apps.gsa.speech.audio.ag@bde1866
+
+[ 01-01 15:14:16.591  1041:  541:20279 D/sound_trigger_platform ]
+platform_stdev_check_and_update_concurrency: concurrency active 0, tx 1, rx 0, concurrency session_allowed 0
+
+[ 01-01 15:14:16.591  1041:  541:20279 D/audio_hw_primary ]
+enable_snd_device: snd_device(72: voice-rec-mic)
+
+[ 01-01 15:14:16.591  1041:  541:20279 D/audio_route ]
+Apply path: voice-rec-mic
+
+[ 01-01 15:14:16.591 10018: 5497: 5537 W/GCoreFlp ]
+No location to return for getLastLocation()
+
+[ 01-01 15:14:16.604 10038: 4245: 4251 I/zygote64 ]
+Integer.valueOf will not be optimized
+
+[ 01-01 15:14:16.610  1041:  541:20279 D/audio_hw_primary ]
+enable_audio_route: usecase(9) apply and update mixer path: audio-record
+
+[ 01-01 15:14:16.611  1041:  541:20279 D/audio_route ]
+Apply path: audio-record
+
+[ 01-01 15:14:16.613 10018: 4514: 4514 I/DeviceCache ]
+Unable to convert the the network interface's MAC Address to string. MAC address cannot be null.
+
+[ 01-01 15:14:16.616 10038:18491:18491 I/MicroDetectionWorker ]
+onReady
+
+[ 01-01 15:14:16.617 10018: 4514: 4514 I/DeviceCache ]
+Unable to convert the the network interface's MAC Address to string. MAC address cannot be null.
+
+[ 01-01 15:14:16.636 10018: 4514: 4514 I/DeviceCache ]
+Unable to convert the the network interface's MAC Address to string. MAC address cannot be null.
+
+[ 01-01 15:14:16.638 10038:18491:18502 I/zygote64 ]
+Background concurrent copying GC freed 1017(3MB) AllocSpace objects, 1(68KB) LOS objects, 50% free, 8MB/16MB, paused 2.320ms total 118.207ms
+
+[ 01-01 15:14:16.648 10018: 4514: 4514 I/DeviceCache ]
+Unable to convert the the network interface's MAC Address to string. MAC address cannot be null.
+
+[ 01-01 15:14:16.665 10018: 4514: 4514 I/chatty   ]
+uid=10018(u0_a18) com.google.android.gms identical 2 lines
+
+[ 01-01 15:14:16.670 10018: 4514: 4514 I/DeviceCache ]
+Unable to convert the the network interface's MAC Address to string. MAC address cannot be null.
+
+[ 01-01 15:14:16.677  root:  600:  600 W/thermal-engine ]
+type=1400 audit(0.0:1033): avc: denied { search } for name="leds" dev="sysfs" ino=7453 scontext=u:r:thermal-engine:s0 tcontext=u:object_r:sysfs_leds:s0 tclass=dir permissive=0
+
+[ 01-01 15:14:16.681 10038:18491:18491 I/MicroDetectionWorker ]
+onReady
+
+[ 01-01 15:14:16.709 10018: 4514: 4514 I/DeviceCache ]
+Unable to convert the the network interface's MAC Address to string. MAC address cannot be null.
+
+[ 01-01 15:14:16.728 10018: 4514: 4514 I/chatty   ]
+uid=10018(u0_a18) com.google.android.gms identical 2 lines
+
+[ 01-01 15:14:16.735 10018: 4514: 4514 I/DeviceCache ]
+Unable to convert the the network interface's MAC Address to string. MAC address cannot be null.
+
+[ 01-01 15:14:16.743 10018: 5497:19161 I/Places   ]
+?: Couldn't find platform key file.
+
+[ 01-01 15:14:16.747 10018: 4514: 4514 I/DeviceCache ]
+Unable to convert the the network interface's MAC Address to string. MAC address cannot be null.
+
+[ 01-01 15:14:16.796 10018: 4514: 4514 I/chatty   ]
+uid=10018(u0_a18) com.google.android.gms identical 6 lines
+
+[ 01-01 15:14:16.801 10018: 4514: 4514 I/DeviceCache ]
+Unable to convert the the network interface's MAC Address to string. MAC address cannot be null.
+
+[ 01-01 15:14:16.803 10038: 4245: 4483 W/OpenGLRenderer ]
+Incorrectly called buildLayer on View: ShortcutAndWidgetContainer, destroying layer...
+
+--------- switch to system
+[ 01-01 15:14:16.937  1000: 2272: 3579 I/ActivityManager ]
+Setting hasTopUi=false for pid=3812
+
+--------- switch to main
+[ 01-01 15:14:16.980  1041:  541:  678 I/ServiceManager ]
+Waiting for service media.log...
+
+[ 01-01 15:14:16.988 10018: 5497:19840 I/Places   ]
+?: Couldn't find platform key file.
+
+[ 01-01 15:14:16.990 10018: 5497:20283 I/PlaceInferenceEngine ]
+[anon] Changed inference mode: 105
+
+[ 01-01 15:14:16.993 10018: 5497:19161 I/Places   ]
+?: Couldn't find platform key file.
+
+[ 01-01 15:14:17.009 10018: 5497: 5537 W/GCoreFlp ]
+No location to return for getLastLocation()
+
+[ 01-01 15:14:17.041 10018: 5497:19161 I/Places   ]
+?: Couldn't find platform key file.
+
+[ 01-01 15:14:17.107 10018: 5497:20188 W/ctxmgr   ]
+[AclManager]No 3 for (accnt=account#-517948760#, com.google.android.googlequicksearchbox(10038):com.google.android.googlequicksearchbox, vrsn=10298000, 1, 3pPkg = null ,  3pMdlId = null). Was: 3 for 18, account#-517948760#
+
+[ 01-01 15:14:17.108  1000: 2272: 3832 I/sensors  ]
+batch
+
+[ 01-01 15:14:17.110  1000: 2272: 3832 I/nanohub  ]
+queueBatch: sensor=1, handle=1, period=20000000, latency=0
+
+[ 01-01 15:14:17.110  1000: 2272: 3832 I/sensors  ]
+activate
+
+[ 01-01 15:14:17.111  1000: 2272: 3832 I/nanohub  ]
+queueActivate: sensor=1, handle=1, enable=1
+
+[ 01-01 15:14:17.139 10018: 5497:20188 E/ctxmgr   ]
+[ProducerStatusImpl]updateStateForNewContextData: inactive, contextName=7
+
+[ 01-01 15:14:17.165 10018: 5497:20284 I/Places   ]
+?: Couldn't find platform key file.
+
+[ 01-01 15:14:17.187 10018: 5497:19161 I/Places   ]
+?: Couldn't find platform key file.
+
+[ 01-01 15:14:17.224  1041:  541: 5252 D/audio_route ]
+Apply path: speaker-protected
+
+[ 01-01 15:14:17.227  1041:  541: 5252 D/audio_hw_primary ]
+enable_snd_device: snd_device(88: vi-feedback)
+
+--------- switch to system
+[ 01-01 15:14:17.227  1000: 2272: 5431 I/ActivityManager ]
+START u0 {act=android.intent.action.MAIN cat=[android.intent.category.LAUNCHER] flg=0x10200000 cmp=com.android.settings/.Settings bnds=[435,1254][646,1507] (has extras)} from uid 10038
+
+--------- switch to main
+[ 01-01 15:14:17.227  1041:  541: 5252 D/audio_route ]
+Apply path: vi-feedback
+
+[ 01-01 15:14:17.227  1041:  541: 5252 D/audio_hw_primary ]
+enable_audio_route: usecase(23) apply and update mixer path: spkr-vi-record
+
+[ 01-01 15:14:17.227  1041:  541: 5252 D/audio_route ]
+Apply path: spkr-vi-record
+
+[ 01-01 15:14:17.250  1041:  541: 5252 D/audio_hw_primary ]
+enable_audio_route: usecase(1) apply and update mixer path: low-latency-playback
+
+[ 01-01 15:14:17.250  1041:  541: 5252 D/audio_route ]
+Apply path: low-latency-playback
+
+[ 01-01 15:14:17.251 10018: 5497: 5506 E/StrictMode ]
+A resource was acquired at attached stack trace but never released. See java.io.Closeable for information on avoiding resource leaks.
+java.lang.Throwable: Explicit termination method 'close' not called
+	at dalvik.system.CloseGuard.open(CloseGuard.java:223)
+	at java.io.FileOutputStream.<init>(FileOutputStream.java:224)
+	at android.app.ContextImpl.openFileOutput(ContextImpl.java:513)
+	at android.content.ContextWrapper.openFileOutput(ContextWrapper.java:195)
+	at android.content.ContextWrapper.openFileOutput(ContextWrapper.java:195)
+	at android.content.ContextWrapper.openFileOutput(ContextWrapper.java:195)
+	at android.content.ContextWrapper.openFileOutput(ContextWrapper.java:195)
+	at lts.c(:com.google.android.gms:96)
+	at lts.a(:com.google.android.gms:55)
+	at com.google.android.gms.icing.proxy.ApplicationLauncherIntentOperation.onHandleIntent(:com.google.android.gms:5192)
+	at com.google.android.chimera.IntentOperation.onHandleIntent(:com.google.android.gms:118)
+	at caz.run(:com.google.android.gms:10864)
+	at caw.run(:com.google.android.gms:1143)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1162)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:636)
+	at java.lang.Thread.run(Thread.java:764)
+
+
+[ 01-01 15:14:17.252 10018: 5497:20283 I/Places   ]
+?: PlacesBleScanner start() with priority 2
+
+[ 01-01 15:14:17.252 10018: 5497:20283 I/PlaceInferenceEngine ]
+[anon] Changed inference mode: 102
+
+[ 01-01 15:14:17.253 10018: 5497:20283 W/Places   ]
+?: Failed to download inference model weights
+
+
+[ 01-01 15:14:17.253 10018: 5497:20283 W/PlaceInferenceEngine ]
+Failed to download model weights. Status code: 7
+
+[ 01-01 15:14:17.264 10018: 5497:20188 I/Places   ]
+?: Couldn't find platform key file.
+
+[ 01-01 15:14:17.352 10018: 5497: 5537 W/GCoreFlp ]
+No location to return for getLastLocation()
+
+[ 01-01 15:14:17.458  1000:14206:14206 D/DashboardSummary ]
+Listening for condition changes
+
+[ 01-01 15:14:17.458  1000:14206:14206 D/DashboardSummary ]
+onConditionsChanged
+
+[ 01-01 15:14:17.458  1000:14206:14206 D/DashboardAdapter ]
+adapter setConditions called
+
+[ 01-01 15:14:17.459  1000:14206:14206 D/DashboardSummary ]
+conditions refreshed
+
+[ 01-01 15:14:17.459  1000:14206:14206 D/APM_Condition ]
+APM condition refreshed
+
+[ 01-01 15:14:17.459  1000:14206:14206 D/APM_Condition ]
+setActive was called with false
+
+[ 01-01 15:14:17.559  1000:14206:20203 D/DatabaseIndexingManager ]
+Indexing locale 'en_US' took 60 millis
+
+[ 01-01 15:14:17.596  1000:14206:20203 D/DatabaseIndexingManager ]
+Indexing locale 'en_US' took 22 millis
+
+[ 01-01 15:14:17.699  1000:14206:20203 I/SuggestionParser ]
+Use your voice requires unavailable account type com.google
+
+[ 01-01 15:14:17.727  1000:14206:20203 W/Bundle   ]
+Key com.android.settings.dismiss expected String but value was a java.lang.Integer.  The default value <null> was returned.
+
+[ 01-01 15:14:17.728  1000:14206:20203 W/Bundle   ]
+Attempt to cast generated internal exception:
+java.lang.ClassCastException: java.lang.Integer cannot be cast to java.lang.String
+	at android.os.BaseBundle.getString(BaseBundle.java:1072)
+	at com.android.settingslib.SuggestionParser.getDismissControl(SuggestionParser.java:377)
+	at com.android.settingslib.SuggestionParser.isDismissed(SuggestionParser.java:330)
+	at com.android.settingslib.SuggestionParser.filterSuggestions(SuggestionParser.java:187)
+	at com.android.settingslib.SuggestionParser.readSuggestions(SuggestionParser.java:204)
+	at com.android.settingslib.SuggestionParser.getSuggestions(SuggestionParser.java:151)
+	at com.android.settings.dashboard.DashboardSummary$SuggestionLoader.doInBackground(DashboardSummary.java:260)
+	at com.android.settings.dashboard.DashboardSummary$SuggestionLoader.doInBackground(DashboardSummary.java:255)
+	at android.os.AsyncTask$2.call(AsyncTask.java:305)
+	at java.util.concurrent.FutureTask.run(FutureTask.java:266)
+	at android.os.AsyncTask$SerialExecutor$1.run(AsyncTask.java:243)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1162)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:636)
+	at java.lang.Thread.run(Thread.java:764)
+
+
+--------- switch to system
+[ 01-01 15:14:17.745  1000: 2272: 5448 D/BatteryStatsService ]
+begin updateExternalStatsSync reason=get-stats
+
+--------- switch to main
+[ 01-01 15:14:17.748  1041:  541:  717 D/audio_hw_primary ]
+disable_audio_route: usecase(1) reset and update mixer path: low-latency-playback
+
+[ 01-01 15:14:17.760  1041:  541:  717 D/audio_hw_primary ]
+disable_snd_device: snd_device(88: vi-feedback)
+
+[ 01-01 15:14:17.760  1041:  541:  717 D/audio_hw_primary ]
+disable_audio_route: usecase(23) reset and update mixer path: spkr-vi-record
+
+--------- switch to system
+[ 01-01 15:14:17.764  1000: 2272: 5448 E/BatteryStatsService ]
+no controller energy info supplied
+
+[ 01-01 15:14:17.817  1000: 2272: 5448 D/BatteryStatsImpl ]
+Reading cpu stats took 34 ms
+
+[ 01-01 15:14:17.843  1000: 2272: 5448 E/KernelMemoryBandwidthStats ]
+Failed to read memory bandwidth: /sys/kernel/memory_state_time/show_stat (No such file or directory)
+
+[ 01-01 15:14:17.843  1000: 2272: 5448 D/BatteryStatsService ]
+end updateExternalStatsSync
+
+--------- switch to main
+[ 01-01 15:14:17.894 10038:18491:18491 I/MicroDetector ]
+Keeping mic open: false
+
+[ 01-01 15:14:17.895 10038:18491:19006 I/DeviceStateChecker ]
+DeviceStateChecker cancelled
+
+[ 01-01 15:14:17.896 10038:18491:19012 I/AudioController ]
+internalShutdown
+
+[ 01-01 15:14:17.896 10038:18491:19012 I/MicrophoneInputStream ]
+mic_close com.google.android.apps.gsa.speech.audio.ag@bde1866
+
+[ 01-01 15:14:17.899 10038:18491:18549 I/MicroRecognitionRunner ]
+Stopping hotword detection.
+
+[ 01-01 15:14:17.964  1000:14206:14212 I/zygote64 ]
+Integer.valueOf will not be optimized
+
+[ 01-01 15:14:17.982  1041:  541:  678 I/ServiceManager ]
+Waiting for service media.log...
+
+[ 01-01 15:14:18.003  1041:  541:20278 D/audio_hw_primary ]
+disable_audio_route: usecase(9) reset and update mixer path: audio-record
+
+[ 01-01 15:14:18.004  1041:  541:20278 D/audio_hw_primary ]
+disable_snd_device: snd_device(72: voice-rec-mic)
+
+[ 01-01 15:14:18.008  1041:  541:20278 D/sound_trigger_platform ]
+platform_stdev_check_and_update_concurrency: concurrency active 0, tx 0, rx 0, concurrency session_allowed 1
+
+[ 01-01 15:14:18.010  1041:  541:  741 I/SoundTriggerHwService::Module ]
+onCallbackEvent no clients
+
+[ 01-01 15:14:18.013 10038:18491:20275 I/MicroRecognitionRunner ]
+Detection finished
+
+[ 01-01 15:14:18.203  1000:14206:20198 I/SuggestionParser ]
+Use your voice requires unavailable account type com.google
+
+[ 01-01 15:14:18.230  1000:14206:20198 W/Bundle   ]
+Key com.android.settings.dismiss expected String but value was a java.lang.Integer.  The default value <null> was returned.
+
+[ 01-01 15:14:18.231  1000:14206:20198 W/Bundle   ]
+Attempt to cast generated internal exception:
+java.lang.ClassCastException: java.lang.Integer cannot be cast to java.lang.String
+	at android.os.BaseBundle.getString(BaseBundle.java:1072)
+	at com.android.settingslib.SuggestionParser.getDismissControl(SuggestionParser.java:377)
+	at com.android.settingslib.SuggestionParser.isDismissed(SuggestionParser.java:330)
+	at com.android.settingslib.SuggestionParser.filterSuggestions(SuggestionParser.java:187)
+	at com.android.settingslib.SuggestionParser.readSuggestions(SuggestionParser.java:204)
+	at com.android.settingslib.SuggestionParser.getSuggestions(SuggestionParser.java:151)
+	at com.android.settings.dashboard.DashboardSummary$SuggestionLoader.doInBackground(DashboardSummary.java:260)
+	at com.android.settings.dashboard.DashboardSummary$SuggestionLoader.doInBackground(DashboardSummary.java:255)
+	at android.os.AsyncTask$2.call(AsyncTask.java:305)
+	at java.util.concurrent.FutureTask.run(FutureTask.java:266)
+	at android.os.AsyncTask$SerialExecutor$1.run(AsyncTask.java:243)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1162)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:636)
+	at java.lang.Thread.run(Thread.java:764)
+
+
+[ 01-01 15:14:18.311  1041:  541: 5252 D/audio_route ]
+Apply path: speaker-protected
+
+[ 01-01 15:14:18.313  1041:  541: 5252 D/audio_hw_primary ]
+enable_snd_device: snd_device(88: vi-feedback)
+
+[ 01-01 15:14:18.313  1041:  541: 5252 D/audio_route ]
+Apply path: vi-feedback
+
+[ 01-01 15:14:18.313  1041:  541: 5252 D/audio_hw_primary ]
+enable_audio_route: usecase(23) apply and update mixer path: spkr-vi-record
+
+[ 01-01 15:14:18.313  1041:  541: 5252 D/audio_route ]
+Apply path: spkr-vi-record
+
+[ 01-01 15:14:18.339  1041:  541: 5252 D/audio_hw_primary ]
+enable_audio_route: usecase(1) apply and update mixer path: low-latency-playback
+
+[ 01-01 15:14:18.339  1041:  541: 5252 D/audio_route ]
+Apply path: low-latency-playback
+
+--------- switch to system
+[ 01-01 15:14:18.417  1000: 2272: 3627 I/ActivityManager ]
+START u0 {act=android.intent.action.MAIN cat=[android.intent.category.HOME] flg=0x10200000 cmp=com.google.android.googlequicksearchbox/com.google.android.launcher.GEL (has extras)} from uid 1000
+
+--------- switch to main
+[ 01-01 15:14:18.467  1000:14206:14206 D/DashboardSummary ]
+Stopped listening for condition changes
+
+[ 01-01 15:14:18.539 10038:18491:18504 I/AttachedClient ]
+Adding client event 2 to pending list.
+
+[ 01-01 15:14:18.582  1000: 2272: 3783 W/OpenGLRenderer ]
+Warning: attempt to read pixels from hardware bitmap, which is very slow operation
+
+[ 01-01 15:14:18.630 10038:18491:18491 I/MicroDetectionWorker ]
+#updateMicroDetector [currentDetectionMode: [mDetectionMode: [1]]]
+
+[ 01-01 15:14:18.630 10038:18491:18491 I/MicroDetectionWorker ]
+#startMicroDetector [speakerMode: 0]
+
+[ 01-01 15:14:18.647 10038:18491:20275 I/MicroRecognitionRunner ]
+Starting detection.
+
+[ 01-01 15:14:18.650 10038:18491:19012 I/MicrophoneInputStream ]
+mic_starting com.google.android.apps.gsa.speech.audio.ag@e61439e
+
+[ 01-01 15:14:18.652  1041:  541:18637 W/DeviceHAL ]
+Device 0xf4fad000 open_input_stream: Invalid argument
+
+[ 01-01 15:14:18.654  1041:  541:20301 I/AudioFlinger ]
+AudioFlinger's thread 0xf19aa340 tid=20301 ready to run
+
+[ 01-01 15:14:18.661 10038:18491:18491 I/MicroDetectionWorker ]
+onReady
+
+[ 01-01 15:14:18.662 10038:18491:18496 I/zygote64 ]
+Integer.valueOf will not be optimized
+
+[ 01-01 15:14:18.675  1041:  541:  741 I/SoundTriggerHwService::Module ]
+onCallbackEvent no clients
+
+[ 01-01 15:14:18.676 10038:18491:19012 I/MicrophoneInputStream ]
+mic_started com.google.android.apps.gsa.speech.audio.ag@e61439e
+
+[ 01-01 15:14:18.681  1041:  541:20302 D/sound_trigger_platform ]
+platform_stdev_check_and_update_concurrency: concurrency active 0, tx 1, rx 0, concurrency session_allowed 0
+
+[ 01-01 15:14:18.681  1041:  541:20302 D/audio_hw_primary ]
+enable_snd_device: snd_device(72: voice-rec-mic)
+
+[ 01-01 15:14:18.681  1041:  541:20302 D/audio_route ]
+Apply path: voice-rec-mic
+
+[ 01-01 15:14:18.687  1041:  541:20302 D/audio_hw_primary ]
+enable_audio_route: usecase(9) apply and update mixer path: audio-record
+
+[ 01-01 15:14:18.687  1041:  541:20302 D/audio_route ]
+Apply path: audio-record
+
+[ 01-01 15:14:18.689  1000: 2272: 2282 I/zygote64 ]
+Background concurrent copying GC freed 31100(11MB) AllocSpace objects, 6(240KB) LOS objects, 42% free, 16MB/28MB, paused 299us total 106.777ms
+
+[ 01-01 15:14:18.745 10038:18491:18491 I/MicroDetectionWorker ]
+onReady
+
+[ 01-01 15:14:18.780  1000: 2272: 3783 W/OpenGLRenderer ]
+Warning: attempt to read pixels from hardware bitmap, which is very slow operation
+
+[ 01-01 15:14:18.859  1041:  541:  717 D/audio_hw_primary ]
+disable_audio_route: usecase(1) reset and update mixer path: low-latency-playback
+
+[ 01-01 15:14:18.874  1041:  541:  717 D/audio_hw_primary ]
+disable_snd_device: snd_device(88: vi-feedback)
+
+[ 01-01 15:14:18.874  1041:  541:  717 D/audio_hw_primary ]
+disable_audio_route: usecase(23) reset and update mixer path: spkr-vi-record
+
+[ 01-01 15:14:18.911  1000: 2272: 3783 W/OpenGLRenderer ]
+Warning: attempt to read pixels from hardware bitmap, which is very slow operation
+
+[ 01-01 15:14:19.034 10038: 4245: 4483 W/OpenGLRenderer ]
+Incorrectly called buildLayer on View: ShortcutAndWidgetContainer, destroying layer...
+
+[ 01-01 15:14:19.215  1041:  541: 5252 D/audio_route ]
+Apply path: speaker-protected
+
+--------- switch to system
+[ 01-01 15:14:19.216  1000: 2272: 3832 I/ActivityManager ]
+START u0 {act=android.intent.action.MAIN cat=[android.intent.category.LAUNCHER] flg=0x10200000 cmp=com.android.settings/.Settings bnds=[435,1254][646,1507] (has extras)} from uid 10038
+
+--------- switch to main
+[ 01-01 15:14:19.219  1041:  541: 5252 D/audio_hw_primary ]
+enable_snd_device: snd_device(88: vi-feedback)
+
+[ 01-01 15:14:19.220  1041:  541: 5252 D/audio_route ]
+Apply path: vi-feedback
+
+[ 01-01 15:14:19.220  1041:  541: 5252 D/audio_hw_primary ]
+enable_audio_route: usecase(23) apply and update mixer path: spkr-vi-record
+
+[ 01-01 15:14:19.220  1041:  541: 5252 D/audio_route ]
+Apply path: spkr-vi-record
+
+[ 01-01 15:14:19.245  1041:  541: 5252 D/audio_hw_primary ]
+enable_audio_route: usecase(1) apply and update mixer path: low-latency-playback
+
+[ 01-01 15:14:19.245  1041:  541: 5252 D/audio_route ]
+Apply path: low-latency-playback
+
+[ 01-01 15:14:19.384  1000:14206:14206 D/DashboardSummary ]
+Listening for condition changes
+
+[ 01-01 15:14:19.384  1000:14206:14206 D/DashboardSummary ]
+onConditionsChanged
+
+[ 01-01 15:14:19.385  1000:14206:14206 D/DashboardAdapter ]
+adapter setConditions called
+
+[ 01-01 15:14:19.385  1000:14206:14206 D/DashboardSummary ]
+conditions refreshed
+
+[ 01-01 15:14:19.385  1000:14206:14206 D/APM_Condition ]
+APM condition refreshed
+
+[ 01-01 15:14:19.385  1000:14206:14206 D/APM_Condition ]
+setActive was called with false
+
+[ 01-01 15:14:19.455  1000:14206:20201 D/DatabaseIndexingManager ]
+Indexing locale 'en_US' took 22 millis
+
+[ 01-01 15:14:19.497  1000:14206:20201 D/DatabaseIndexingManager ]
+Indexing locale 'en_US' took 23 millis
+
+[ 01-01 15:14:19.600  1000:14206:20201 I/SuggestionParser ]
+Use your voice requires unavailable account type com.google
+
+[ 01-01 15:14:19.636  1000:14206:20201 W/Bundle   ]
+Key com.android.settings.dismiss expected String but value was a java.lang.Integer.  The default value <null> was returned.
+
+[ 01-01 15:14:19.638  1000:14206:20201 W/Bundle   ]
+Attempt to cast generated internal exception:
+java.lang.ClassCastException: java.lang.Integer cannot be cast to java.lang.String
+	at android.os.BaseBundle.getString(BaseBundle.java:1072)
+	at com.android.settingslib.SuggestionParser.getDismissControl(SuggestionParser.java:377)
+	at com.android.settingslib.SuggestionParser.isDismissed(SuggestionParser.java:330)
+	at com.android.settingslib.SuggestionParser.filterSuggestions(SuggestionParser.java:187)
+	at com.android.settingslib.SuggestionParser.readSuggestions(SuggestionParser.java:204)
+	at com.android.settingslib.SuggestionParser.getSuggestions(SuggestionParser.java:151)
+	at com.android.settings.dashboard.DashboardSummary$SuggestionLoader.doInBackground(DashboardSummary.java:260)
+	at com.android.settings.dashboard.DashboardSummary$SuggestionLoader.doInBackground(DashboardSummary.java:255)
+	at android.os.AsyncTask$2.call(AsyncTask.java:305)
+	at java.util.concurrent.FutureTask.run(FutureTask.java:266)
+	at android.os.AsyncTask$SerialExecutor$1.run(AsyncTask.java:243)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1162)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:636)
+	at java.lang.Thread.run(Thread.java:764)
+
+
+--------- switch to system
+[ 01-01 15:14:19.660  1000: 2272: 5448 D/BatteryStatsService ]
+begin updateExternalStatsSync reason=get-stats
+
+[ 01-01 15:14:19.681  1000: 2272: 5448 E/BatteryStatsService ]
+no controller energy info supplied
+
+[ 01-01 15:14:19.737  1000: 2272: 5448 D/BatteryStatsImpl ]
+Reading cpu stats took 34 ms
+
+--------- switch to main
+[ 01-01 15:14:19.759  1041:  541:  717 D/audio_hw_primary ]
+disable_audio_route: usecase(1) reset and update mixer path: low-latency-playback
+
+--------- switch to system
+[ 01-01 15:14:19.764  1000: 2272: 5448 E/KernelMemoryBandwidthStats ]
+Failed to read memory bandwidth: /sys/kernel/memory_state_time/show_stat (No such file or directory)
+
+[ 01-01 15:14:19.764  1000: 2272: 5448 D/BatteryStatsService ]
+end updateExternalStatsSync
+
+--------- switch to main
+[ 01-01 15:14:19.772  1041:  541:  717 D/audio_hw_primary ]
+disable_snd_device: snd_device(88: vi-feedback)
+
+[ 01-01 15:14:19.772  1041:  541:  717 D/audio_hw_primary ]
+disable_audio_route: usecase(23) reset and update mixer path: spkr-vi-record
+
+[ 01-01 15:14:19.981 10038:18491:18491 I/MicroDetector ]
+Keeping mic open: false
+
+[ 01-01 15:14:19.982 10038:18491:19007 I/AudioController ]
+internalShutdown
+
+[ 01-01 15:14:19.983 10038:18491:18549 I/MicroRecognitionRunner ]
+Stopping hotword detection.
+
+[ 01-01 15:14:19.987 10038:18491:20275 I/MicroRecognitionRunner ]
+Detection finished
+
+[ 01-01 15:14:19.989 10038:18491:19006 I/DeviceStateChecker ]
+DeviceStateChecker cancelled
+
+[ 01-01 15:14:19.990 10038:18491:19007 I/MicrophoneInputStream ]
+mic_close com.google.android.apps.gsa.speech.audio.ag@e61439e
+
+[ 01-01 15:14:20.045  1041:  541:20301 D/audio_hw_primary ]
+disable_audio_route: usecase(9) reset and update mixer path: audio-record
+
+[ 01-01 15:14:20.046  1041:  541:20301 D/audio_hw_primary ]
+disable_snd_device: snd_device(72: voice-rec-mic)
+
+[ 01-01 15:14:20.051  1041:  541:20301 D/sound_trigger_platform ]
+platform_stdev_check_and_update_concurrency: concurrency active 0, tx 0, rx 0, concurrency session_allowed 1
+
+[ 01-01 15:14:20.053  1041:  541:  741 I/SoundTriggerHwService::Module ]
+onCallbackEvent no clients
+
+[ 01-01 15:14:20.153  1041:  541:  678 I/ServiceManager ]
+Waiting for service media.log...
+
+[ 01-01 15:14:20.153  1041:  541: 5252 D/audio_route ]
+Apply path: speaker-protected
+
+[ 01-01 15:14:20.156  1041:  541: 5252 D/audio_hw_primary ]
+enable_snd_device: snd_device(88: vi-feedback)
+
+[ 01-01 15:14:20.156  1041:  541: 5252 D/audio_route ]
+Apply path: vi-feedback
+
+[ 01-01 15:14:20.156  1041:  541: 5252 D/audio_hw_primary ]
+enable_audio_route: usecase(23) apply and update mixer path: spkr-vi-record
+
+[ 01-01 15:14:20.157  1041:  541: 5252 D/audio_route ]
+Apply path: spkr-vi-record
+
+[ 01-01 15:14:20.165  1000:14206:20202 I/SuggestionParser ]
+Use your voice requires unavailable account type com.google
+
+[ 01-01 15:14:20.180 10036: 3812: 3819 I/zygote64 ]
+Integer.valueOf will not be optimized
+
+[ 01-01 15:14:20.181 10036: 3812: 3819 I/chatty   ]
+uid=10036(u0_a36) Jit thread pool identical 3 lines
+
+[ 01-01 15:14:20.181 10036: 3812: 3819 I/zygote64 ]
+Integer.valueOf will not be optimized
+
+[ 01-01 15:14:20.185  1041:  541: 5252 D/audio_hw_primary ]
+enable_audio_route: usecase(1) apply and update mixer path: low-latency-playback
+
+[ 01-01 15:14:20.185  1041:  541: 5252 D/audio_route ]
+Apply path: low-latency-playback
+
+[ 01-01 15:14:20.199  1000:14206:20202 W/Bundle   ]
+Key com.android.settings.dismiss expected String but value was a java.lang.Integer.  The default value <null> was returned.
+
+[ 01-01 15:14:20.200  1000:14206:20202 W/Bundle   ]
+Attempt to cast generated internal exception:
+java.lang.ClassCastException: java.lang.Integer cannot be cast to java.lang.String
+	at android.os.BaseBundle.getString(BaseBundle.java:1072)
+	at com.android.settingslib.SuggestionParser.getDismissControl(SuggestionParser.java:377)
+	at com.android.settingslib.SuggestionParser.isDismissed(SuggestionParser.java:330)
+	at com.android.settingslib.SuggestionParser.filterSuggestions(SuggestionParser.java:187)
+	at com.android.settingslib.SuggestionParser.readSuggestions(SuggestionParser.java:204)
+	at com.android.settingslib.SuggestionParser.getSuggestions(SuggestionParser.java:151)
+	at com.android.settings.dashboard.DashboardSummary$SuggestionLoader.doInBackground(DashboardSummary.java:260)
+	at com.android.settings.dashboard.DashboardSummary$SuggestionLoader.doInBackground(DashboardSummary.java:255)
+	at android.os.AsyncTask$2.call(AsyncTask.java:305)
+	at java.util.concurrent.FutureTask.run(FutureTask.java:266)
+	at android.os.AsyncTask$SerialExecutor$1.run(AsyncTask.java:243)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1162)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:636)
+	at java.lang.Thread.run(Thread.java:764)
+
+
+--------- switch to system
+[ 01-01 15:14:20.204  1000: 2272: 3627 I/ActivityManager ]
+START u0 {act=android.intent.action.MAIN cat=[android.intent.category.HOME] flg=0x10200000 cmp=com.google.android.googlequicksearchbox/com.google.android.launcher.GEL (has extras)} from uid 1000
+
+--------- switch to main
+[ 01-01 15:14:20.346  1000:14206:14206 D/DashboardSummary ]
+Stopped listening for condition changes
+
+[ 01-01 15:14:20.352 10038:18491:18672 I/AttachedClient ]
+Adding client event 2 to pending list.
+
+[ 01-01 15:14:20.392  1000: 2272: 3783 W/OpenGLRenderer ]
+Warning: attempt to read pixels from hardware bitmap, which is very slow operation
+
+[ 01-01 15:14:20.466  1000: 2272: 4217 W/zygote64 ]
+Long monitor contention with owner Binder:2272_4 (3832) at void com.android.server.am.ActivityManagerService.activityIdle(android.os.IBinder, android.content.res.Configuration, boolean)(ActivityManagerService.java:6920) waiters=2 in int com.android.server.am.ActivityManagerService.getLastResumedActivityUserId() for 103ms
+
+[ 01-01 15:14:20.492 10038:18491:18491 I/MicroDetectionWorker ]
+#updateMicroDetector [currentDetectionMode: [mDetectionMode: [1]]]
+
+[ 01-01 15:14:20.492 10038:18491:18491 I/MicroDetectionWorker ]
+#startMicroDetector [speakerMode: 0]
+
+[ 01-01 15:14:20.511 10038:18491:19006 I/MicroRecognitionRunner ]
+Starting detection.
+
+[ 01-01 15:14:20.512 10038:18491:19007 I/MicrophoneInputStream ]
+mic_starting com.google.android.apps.gsa.speech.audio.ag@cdae8fe
+
+[ 01-01 15:14:20.513  1041:  541:18637 W/DeviceHAL ]
+Device 0xf4fad000 open_input_stream: Invalid argument
+
+[ 01-01 15:14:20.515  1041:  541:20313 I/AudioFlinger ]
+AudioFlinger's thread 0xf19a7500 tid=20313 ready to run
+
+[ 01-01 15:14:20.542  1041:  541:  741 I/SoundTriggerHwService::Module ]
+onCallbackEvent no clients
+
+[ 01-01 15:14:20.543 10038:18491:18491 I/MicroDetectionWorker ]
+onReady
+
+[ 01-01 15:14:20.544 10038:18491:19007 I/MicrophoneInputStream ]
+mic_started com.google.android.apps.gsa.speech.audio.ag@cdae8fe
+
+[ 01-01 15:14:20.545  1041:  541:20314 D/sound_trigger_platform ]
+platform_stdev_check_and_update_concurrency: concurrency active 0, tx 1, rx 0, concurrency session_allowed 0
+
+[ 01-01 15:14:20.545  1041:  541:20314 D/audio_hw_primary ]
+enable_snd_device: snd_device(72: voice-rec-mic)
+
+[ 01-01 15:14:20.545  1041:  541:20314 D/audio_route ]
+Apply path: voice-rec-mic
+
+[ 01-01 15:14:20.552  1041:  541:20314 D/audio_hw_primary ]
+enable_audio_route: usecase(9) apply and update mixer path: audio-record
+
+[ 01-01 15:14:20.552  1041:  541:20314 D/audio_route ]
+Apply path: audio-record
+
+[ 01-01 15:14:20.613 10038:18491:18491 I/MicroDetectionWorker ]
+onReady
+
+[ 01-01 15:14:20.618  1000: 2272: 4088 I/sensors  ]
+activate
+
+[ 01-01 15:14:20.621  1000: 2272: 4088 I/nanohub  ]
+queueActivate: sensor=1, handle=1, enable=0
+
+[ 01-01 15:14:20.638  1000: 2272: 3783 W/OpenGLRenderer ]
+Warning: attempt to read pixels from hardware bitmap, which is very slow operation
+
+[ 01-01 15:14:20.705  1041:  541:  717 D/audio_hw_primary ]
+disable_audio_route: usecase(1) reset and update mixer path: low-latency-playback
+
+[ 01-01 15:14:20.716  1041:  541:  717 D/audio_hw_primary ]
+disable_snd_device: snd_device(88: vi-feedback)
+
+[ 01-01 15:14:20.716  1041:  541:  717 D/audio_hw_primary ]
+disable_audio_route: usecase(23) reset and update mixer path: spkr-vi-record
+
+[ 01-01 15:14:20.755  1000: 2272: 3783 W/OpenGLRenderer ]
+Warning: attempt to read pixels from hardware bitmap, which is very slow operation
+
+[ 01-01 15:14:20.843 10038: 4245: 4483 W/OpenGLRenderer ]
+Incorrectly called buildLayer on View: ShortcutAndWidgetContainer, destroying layer...
+
+[ 01-01 15:14:21.055  1000: 2272: 4464 D/WificondControl ]
+Scan result ready event
+
+[ 01-01 15:14:21.096  1000: 2272: 3755 W/WifiConfigManager ]
+Looking up network with invalid networkId -1
+
+[ 01-01 15:14:21.153  1041:  541:  678 I/ServiceManager ]
+Waiting for service media.log...
+
+[ 01-01 15:14:21.980  1041:  541: 5252 D/audio_route ]
+Apply path: speaker-protected
+
+--------- switch to system
+[ 01-01 15:14:21.982  1000: 2272: 5450 I/ActivityManager ]
+START u0 {act=android.intent.action.MAIN cat=[android.intent.category.LAUNCHER] flg=0x10200000 cmp=com.android.settings/.Settings bnds=[435,1254][646,1507] (has extras)} from uid 10038
+
+--------- switch to main
+[ 01-01 15:14:21.983  1041:  541: 5252 D/audio_hw_primary ]
+enable_snd_device: snd_device(88: vi-feedback)
+
+[ 01-01 15:14:21.983  1041:  541: 5252 D/audio_route ]
+Apply path: vi-feedback
+
+[ 01-01 15:14:21.983  1041:  541: 5252 D/audio_hw_primary ]
+enable_audio_route: usecase(23) apply and update mixer path: spkr-vi-record
+
+[ 01-01 15:14:21.983  1041:  541: 5252 D/audio_route ]
+Apply path: spkr-vi-record
+
+[ 01-01 15:14:22.016  1041:  541: 5252 D/audio_hw_primary ]
+enable_audio_route: usecase(1) apply and update mixer path: low-latency-playback
+
+[ 01-01 15:14:22.016  1041:  541: 5252 D/audio_route ]
+Apply path: low-latency-playback
+
+[ 01-01 15:14:22.154  1041:  541:  678 I/ServiceManager ]
+Waiting for service media.log...
+
+[ 01-01 15:14:22.182  1000:14206:14206 D/DashboardSummary ]
+Listening for condition changes
+
+[ 01-01 15:14:22.183  1000:14206:14206 D/DashboardSummary ]
+onConditionsChanged
+
+[ 01-01 15:14:22.183  1000:14206:14206 D/DashboardAdapter ]
+adapter setConditions called
+
+[ 01-01 15:14:22.183  1000:14206:14206 D/DashboardSummary ]
+conditions refreshed
+
+[ 01-01 15:14:22.183  1000:14206:14206 D/APM_Condition ]
+APM condition refreshed
+
+[ 01-01 15:14:22.183  1000:14206:14206 D/APM_Condition ]
+setActive was called with false
+
+[ 01-01 15:14:22.258  1000:14206:20201 D/DatabaseIndexingManager ]
+Indexing locale 'en_US' took 42 millis
+
+[ 01-01 15:14:22.292  1000:14206:20201 D/DatabaseIndexingManager ]
+Indexing locale 'en_US' took 19 millis
+
+[ 01-01 15:14:22.397  1000:14206:20201 I/SuggestionParser ]
+Use your voice requires unavailable account type com.google
+
+[ 01-01 15:14:22.429  1000:14206:20201 W/Bundle   ]
+Key com.android.settings.dismiss expected String but value was a java.lang.Integer.  The default value <null> was returned.
+
+[ 01-01 15:14:22.430  1000:14206:20201 W/Bundle   ]
+Attempt to cast generated internal exception:
+java.lang.ClassCastException: java.lang.Integer cannot be cast to java.lang.String
+	at android.os.BaseBundle.getString(BaseBundle.java:1072)
+	at com.android.settingslib.SuggestionParser.getDismissControl(SuggestionParser.java:377)
+	at com.android.settingslib.SuggestionParser.isDismissed(SuggestionParser.java:330)
+	at com.android.settingslib.SuggestionParser.filterSuggestions(SuggestionParser.java:187)
+	at com.android.settingslib.SuggestionParser.readSuggestions(SuggestionParser.java:204)
+	at com.android.settingslib.SuggestionParser.getSuggestions(SuggestionParser.java:151)
+	at com.android.settings.dashboard.DashboardSummary$SuggestionLoader.doInBackground(DashboardSummary.java:260)
+	at com.android.settings.dashboard.DashboardSummary$SuggestionLoader.doInBackground(DashboardSummary.java:255)
+	at android.os.AsyncTask$2.call(AsyncTask.java:305)
+	at java.util.concurrent.FutureTask.run(FutureTask.java:266)
+	at android.os.AsyncTask$SerialExecutor$1.run(AsyncTask.java:243)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1162)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:636)
+	at java.lang.Thread.run(Thread.java:764)
+
+
+--------- switch to system
+[ 01-01 15:14:22.448  1000: 2272: 4217 D/BatteryStatsService ]
+begin updateExternalStatsSync reason=get-stats
+
+--------- switch to main
+[ 01-01 15:14:22.525  1041:  541:  717 D/audio_hw_primary ]
+disable_audio_route: usecase(1) reset and update mixer path: low-latency-playback
+
+[ 01-01 15:14:22.541  1041:  541:  717 D/audio_hw_primary ]
+disable_snd_device: snd_device(88: vi-feedback)
+
+[ 01-01 15:14:22.541  1041:  541:  717 D/audio_hw_primary ]
+disable_audio_route: usecase(23) reset and update mixer path: spkr-vi-record
+
+--------- switch to system
+[ 01-01 15:14:22.551  1000: 2272: 4217 E/BatteryStatsService ]
+no controller energy info supplied
+
+[ 01-01 15:14:22.601  1000: 2272: 4217 D/BatteryStatsImpl ]
+Reading cpu stats took 35 ms
+
+[ 01-01 15:14:22.627  1000: 2272: 4217 E/KernelMemoryBandwidthStats ]
+Failed to read memory bandwidth: /sys/kernel/memory_state_time/show_stat (No such file or directory)
+
+[ 01-01 15:14:22.628  1000: 2272: 4217 D/BatteryStatsService ]
+end updateExternalStatsSync
+
+--------- switch to main
+[ 01-01 15:14:22.642 10038:18491:18491 I/MicroDetector ]
+Keeping mic open: false
+
+[ 01-01 15:14:22.642 10038:18491:19012 I/AudioController ]
+internalShutdown
+
+[ 01-01 15:14:22.643 10038:18491:19012 I/MicrophoneInputStream ]
+mic_close com.google.android.apps.gsa.speech.audio.ag@cdae8fe
+
+[ 01-01 15:14:22.644 10038:18491:18549 I/MicroRecognitionRunner ]
+Stopping hotword detection.
+
+[ 01-01 15:14:22.649 10038:18491:20275 I/DeviceStateChecker ]
+DeviceStateChecker cancelled
+
+[ 01-01 15:14:22.736  1000: 2272: 3582 W/zygote64 ]
+Long monitor contention with owner Binder:2272_7 (4217) at android.os.ParcelFileDescriptor com.android.server.am.BatteryStatsService.getStatisticsStream()(BatteryStatsService.java:378) waiters=0 in boolean com.android.server.am.ActivityManagerService.applyOomAdjLocked(com.android.server.am.ProcessRecord, boolean, long, long) for 108ms
+
+[ 01-01 15:14:22.790  1041:  541:20313 D/audio_hw_primary ]
+disable_audio_route: usecase(9) reset and update mixer path: audio-record
+
+[ 01-01 15:14:22.791  1041:  541:20313 D/audio_hw_primary ]
+disable_snd_device: snd_device(72: voice-rec-mic)
+
+[ 01-01 15:14:22.798  1041:  541:20313 D/sound_trigger_platform ]
+platform_stdev_check_and_update_concurrency: concurrency active 0, tx 0, rx 0, concurrency session_allowed 1
+
+[ 01-01 15:14:22.799  1041:  541:  741 I/SoundTriggerHwService::Module ]
+onCallbackEvent no clients
+
+[ 01-01 15:14:22.804 10038:18491:18549 W/zygote64 ]
+Long monitor contention with owner UserFacing6 (19012) at void android.media.AudioRecord.native_stop()(AudioRecord.java:-2) waiters=0 in void com.google.android.apps.gsa.speech.audio.an.reset(int) for 154ms
+
+[ 01-01 15:14:22.805 10038:18491:19006 I/MicroRecognitionRunner ]
+Detection finished
+
+[ 01-01 15:14:22.936  1041:  541: 5252 D/audio_route ]
+Apply path: speaker-protected
+
+[ 01-01 15:14:22.938  1041:  541: 5252 D/audio_hw_primary ]
+enable_snd_device: snd_device(88: vi-feedback)
+
+[ 01-01 15:14:22.938  1041:  541: 5252 D/audio_route ]
+Apply path: vi-feedback
+
+[ 01-01 15:14:22.938  1041:  541: 5252 D/audio_hw_primary ]
+enable_audio_route: usecase(23) apply and update mixer path: spkr-vi-record
+
+[ 01-01 15:14:22.938  1041:  541: 5252 D/audio_route ]
+Apply path: spkr-vi-record
+
+[ 01-01 15:14:22.969  1041:  541: 5252 D/audio_hw_primary ]
+enable_audio_route: usecase(1) apply and update mixer path: low-latency-playback
+
+[ 01-01 15:14:22.969  1041:  541: 5252 D/audio_route ]
+Apply path: low-latency-playback
+
+[ 01-01 15:14:23.024  1000:14206:20198 I/SuggestionParser ]
+Use your voice requires unavailable account type com.google
+
+[ 01-01 15:14:23.062  1000:14206:20198 W/Bundle   ]
+Key com.android.settings.dismiss expected String but value was a java.lang.Integer.  The default value <null> was returned.
+
+[ 01-01 15:14:23.063  1000:14206:20198 W/Bundle   ]
+Attempt to cast generated internal exception:
+java.lang.ClassCastException: java.lang.Integer cannot be cast to java.lang.String
+	at android.os.BaseBundle.getString(BaseBundle.java:1072)
+	at com.android.settingslib.SuggestionParser.getDismissControl(SuggestionParser.java:377)
+	at com.android.settingslib.SuggestionParser.isDismissed(SuggestionParser.java:330)
+	at com.android.settingslib.SuggestionParser.filterSuggestions(SuggestionParser.java:187)
+	at com.android.settingslib.SuggestionParser.readSuggestions(SuggestionParser.java:204)
+	at com.android.settingslib.SuggestionParser.getSuggestions(SuggestionParser.java:151)
+	at com.android.settings.dashboard.DashboardSummary$SuggestionLoader.doInBackground(DashboardSummary.java:260)
+	at com.android.settings.dashboard.DashboardSummary$SuggestionLoader.doInBackground(DashboardSummary.java:255)
+	at android.os.AsyncTask$2.call(AsyncTask.java:305)
+	at java.util.concurrent.FutureTask.run(FutureTask.java:266)
+	at android.os.AsyncTask$SerialExecutor$1.run(AsyncTask.java:243)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1162)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:636)
+	at java.lang.Thread.run(Thread.java:764)
+
+
+--------- switch to system
+[ 01-01 15:14:23.066  1000: 2272: 3627 I/ActivityManager ]
+START u0 {act=android.intent.action.MAIN cat=[android.intent.category.HOME] flg=0x10200000 cmp=com.google.android.googlequicksearchbox/com.google.android.launcher.GEL (has extras)} from uid 1000
+
+--------- switch to main
+[ 01-01 15:14:23.120  1000:14206:14206 D/DashboardSummary ]
+Stopped listening for condition changes
+
+[ 01-01 15:14:23.156  1041:  541:  678 I/ServiceManager ]
+Waiting for service media.log...
+
+[ 01-01 15:14:23.242  1000: 2272: 3783 W/OpenGLRenderer ]
+Warning: attempt to read pixels from hardware bitmap, which is very slow operation
+
+[ 01-01 15:14:23.249 10038:18491:18504 I/AttachedClient ]
+Adding client event 2 to pending list.
+
+[ 01-01 15:14:23.317 10036: 3812: 3819 I/zygote64 ]
+Integer.valueOf will not be optimized
+
+[ 01-01 15:14:23.320 10038:18491:18491 I/MicroDetectionWorker ]
+#updateMicroDetector [currentDetectionMode: [mDetectionMode: [1]]]
+
+[ 01-01 15:14:23.321 10038:18491:18491 I/MicroDetectionWorker ]
+#startMicroDetector [speakerMode: 0]
+
+[ 01-01 15:14:23.331 10038:18491:18496 I/zygote64 ]
+Integer.valueOf will not be optimized
+
+[ 01-01 15:14:23.337 10038:18491:20275 I/MicroRecognitionRunner ]
+Starting detection.
+
+[ 01-01 15:14:23.339 10038:18491:19012 I/MicrophoneInputStream ]
+mic_starting com.google.android.apps.gsa.speech.audio.ag@681da37
+
+[ 01-01 15:14:23.341  1041:  541:  742 W/DeviceHAL ]
+Device 0xf4fad000 open_input_stream: Invalid argument
+
+[ 01-01 15:14:23.352  1041:  541:20329 I/AudioFlinger ]
+AudioFlinger's thread 0xf19a7f40 tid=20329 ready to run
+
+[ 01-01 15:14:23.361 10038:18491:18491 I/MicroDetectionWorker ]
+onReady
+
+[ 01-01 15:14:23.364  1041:  541:  741 I/SoundTriggerHwService::Module ]
+onCallbackEvent no clients
+
+[ 01-01 15:14:23.364 10038:18491:19012 I/MicrophoneInputStream ]
+mic_started com.google.android.apps.gsa.speech.audio.ag@681da37
+
+[ 01-01 15:14:23.374  1041:  541:20330 D/sound_trigger_platform ]
+platform_stdev_check_and_update_concurrency: concurrency active 0, tx 1, rx 0, concurrency session_allowed 0
+
+[ 01-01 15:14:23.375  1041:  541:20330 D/audio_hw_primary ]
+enable_snd_device: snd_device(72: voice-rec-mic)
+
+[ 01-01 15:14:23.375  1041:  541:20330 D/audio_route ]
+Apply path: voice-rec-mic
+
+[ 01-01 15:14:23.377 10038:18491:18496 I/zygote64 ]
+Integer.valueOf will not be optimized
+
+[ 01-01 15:14:23.378  1041:  541:20330 D/audio_hw_primary ]
+enable_audio_route: usecase(9) apply and update mixer path: audio-record
+
+[ 01-01 15:14:23.378  1041:  541:20330 D/audio_route ]
+Apply path: audio-record
+
+[ 01-01 15:14:23.431 10038:18491:18491 I/MicroDetectionWorker ]
+onReady
+
+[ 01-01 15:14:23.473  1000: 2272: 3783 W/OpenGLRenderer ]
+Warning: attempt to read pixels from hardware bitmap, which is very slow operation
+
+[ 01-01 15:14:23.491  1041:  541:  717 D/audio_hw_primary ]
+disable_audio_route: usecase(1) reset and update mixer path: low-latency-playback
+
+[ 01-01 15:14:23.503  1041:  541:  717 D/audio_hw_primary ]
+disable_snd_device: snd_device(88: vi-feedback)
+
+[ 01-01 15:14:23.503  1041:  541:  717 D/audio_hw_primary ]
+disable_audio_route: usecase(23) reset and update mixer path: spkr-vi-record
+
+[ 01-01 15:14:23.593  1000: 2272: 3783 W/OpenGLRenderer ]
+Warning: attempt to read pixels from hardware bitmap, which is very slow operation
+
+[ 01-01 15:14:23.698 10038: 4245: 4483 W/OpenGLRenderer ]
+Incorrectly called buildLayer on View: ShortcutAndWidgetContainer, destroying layer...
+
+--------- switch to system
+[ 01-01 15:14:24.210  1000: 2272: 3628 I/PowerManagerService ]
+Going to sleep due to power button (uid 1000)...
+
+[ 01-01 15:14:24.708  1000: 2272: 3592 D/BatteryStatsService ]
+begin noteScreenState
+
+[ 01-01 15:14:24.710  1000: 2272: 3592 D/BatteryStatsService ]
+end noteScreenState
+
+[ 01-01 15:14:24.719  1000: 2272: 3582 I/VrManagerService ]
+VR mode is disallowed
+

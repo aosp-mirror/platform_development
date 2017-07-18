@@ -1,0 +1,37 @@
+#!/bin/bash
+
+# The files to save output to.
+RAWLOGS_FILE=power-toggle-rawlogs.txt
+ANALYSIS_FILE=power-toggle-analysis.txt
+
+
+# Turn on the screen and unlock the device
+# TODO: Power on
+adb shell wm dismiss-keyguard
+adb logcat -P ""
+
+# Start the analysis process
+$TOP/development/tools/logblame/analyze_logs.py --duration=10m --clear --rawlogs $RAWLOGS_FILE \
+    | tee $ANALYSIS_FILE &
+analyze_pid=$!
+
+sleep 5
+for i in {0..5..1}; do
+    adb shell input keyevent KEYCODE_POWER
+    sleep 5
+    adb shell input keyevent KEYCODE_POWER
+    sleep 5
+    adb shell wm dismiss-keyguard
+    sleep 5
+done
+
+# Kill adb to disconnect logcat
+adb kill-server
+
+# Wait for the pyton process to exit
+wait $analyze_pid
+
+echo "Wrote raw logs to $RAWLOGS_FILE"
+echo "Wrote analysis to $ANALYSIS_FILE"
+
+
