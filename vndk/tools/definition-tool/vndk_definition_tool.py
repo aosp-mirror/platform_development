@@ -2302,13 +2302,9 @@ class ModuleInfo(object):
         return []
 
 
-class CheckDepCommand(ELFGraphCommand):
-    def __init__(self):
-        super(CheckDepCommand, self).__init__(
-                'check-dep', help='Check the eligible dependencies')
-
+class CheckDepCommandBase(ELFGraphCommand):
     def add_argparser_options(self, parser):
-        super(CheckDepCommand, self).add_argparser_options(parser)
+        super(CheckDepCommandBase, self).add_argparser_options(parser)
 
         parser.add_argument('--tag-file', required=True)
 
@@ -2323,6 +2319,54 @@ class CheckDepCommand(ELFGraphCommand):
             print('\t' + dep.path)
             for symbol in lib.get_dep_linked_symbols(dep):
                 print('\t\t' + symbol)
+
+
+class CheckDepCommand(CheckDepCommandBase):
+    def __init__(self):
+        super(CheckDepCommand, self).__init__(
+                'check-dep', help='Check the eligible dependencies')
+
+    def _check_vendor_dep(self, graph, tagged_libs, module_info):
+        """Check whether vendor libs are depending on non-eligible libs."""
+        num_errors = 0
+
+        vendor_libs = set(graph.lib_pt[PT_VENDOR].values())
+
+        eligible_libs = (tagged_libs.ll_ndk | tagged_libs.sp_ndk | \
+                         tagged_libs.vndk_sp | tagged_libs.vndk_sp_indirect | \
+                         tagged_libs.vndk)
+
+        for lib in sorted(vendor_libs):
+            bad_deps = []
+            for dep in lib.deps:
+                if dep not in vendor_libs and dep not in eligible_libs:
+                    print('error: vendor lib "{}" depends on non-eligible '
+                          'lib "{}".'.format(lib.path, dep.path),
+                          file=sys.stderr)
+                    bad_deps.append(dep)
+                    num_errors += 1
+            if bad_deps:
+                self._dump_dep(lib, bad_deps, module_info)
+
+        return num_errors
+
+    def main(self, args):
+        generic_refs, graph = self.create_from_args(args)
+
+        tagged_paths = TaggedPathDict.create_from_csv_path(args.tag_file)
+        tagged_libs = TaggedLibDict.create_from_graph(graph, tagged_paths)
+
+        module_info = ModuleInfo(args.module_info)
+
+        num_errors = self._check_vendor_dep(graph, tagged_libs, module_info)
+
+        return 0 if num_errors == 0 else 1
+
+
+class CheckEligibleListCommand(CheckDepCommandBase):
+    def __init__(self):
+        super(CheckEligibleListCommand, self).__init__(
+                'check-eligible-list', help='Check the eligible list')
 
     def _check_eligible_vndk_dep(self, graph, tagged_libs, module_info):
         """Check whether eligible sets are self-contained."""
@@ -2364,30 +2408,6 @@ class CheckDepCommand(ELFGraphCommand):
 
         return num_errors
 
-    def _check_vendor_dep(self, graph, tagged_libs, module_info):
-        """Check whether vendor libs are depending on non-eligible libs."""
-        num_errors = 0
-
-        vendor_libs = set(graph.lib_pt[PT_VENDOR].values())
-
-        eligible_libs = (tagged_libs.ll_ndk | tagged_libs.sp_ndk | \
-                         tagged_libs.vndk_sp | tagged_libs.vndk_sp_indirect | \
-                         tagged_libs.vndk)
-
-        for lib in sorted(vendor_libs):
-            bad_deps = []
-            for dep in lib.deps:
-                if dep not in vendor_libs and dep not in eligible_libs:
-                    print('error: vendor lib "{}" depends on non-eligible '
-                          'lib "{}".'.format(lib.path, dep.path),
-                          file=sys.stderr)
-                    bad_deps.append(dep)
-                    num_errors += 1
-            if bad_deps:
-                self._dump_dep(lib, bad_deps, module_info)
-
-        return num_errors
-
     def main(self, args):
         generic_refs, graph = self.create_from_args(args)
 
@@ -2398,8 +2418,6 @@ class CheckDepCommand(ELFGraphCommand):
 
         num_errors = self._check_eligible_vndk_dep(graph, tagged_libs,
                                                    module_info)
-        num_errors += self._check_vendor_dep(graph, tagged_libs, module_info)
-
         return 0 if num_errors == 0 else 1
 
 
@@ -2504,6 +2522,7 @@ def main():
     register_subcmd(DepsClosureCommand())
     register_subcmd(DepsInsightCommand())
     register_subcmd(CheckDepCommand())
+    register_subcmd(CheckEligibleListCommand())
     register_subcmd(DepGraphCommand())
 
     args = parser.parse_args()
