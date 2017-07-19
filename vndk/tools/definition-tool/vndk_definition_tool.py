@@ -1972,13 +1972,6 @@ class VNDKCommand(VNDKCommandBase):
                 'warning: {}: This is a framework library with vendor-only '
                 'usages.')
 
-    def _check_ndk_extensions(self, graph, generic_refs):
-        for lib_set in graph.lib_pt:
-            for lib in lib_set.values():
-                if lib.is_ndk and not generic_refs.is_equivalent_lib(lib):
-                    print('warning: {}: NDK library should not be extended.'
-                            .format(lib.path), file=sys.stderr)
-
     @staticmethod
     def _extract_simple_vndk_result(vndk_result):
         field_name_tags = [
@@ -2047,10 +2040,6 @@ class VNDKCommand(VNDKCommandBase):
 
     def main(self, args):
         generic_refs, graph, tagged_paths = self.create_from_args(args)
-
-        # Check the API extensions to NDK libraries.
-        if generic_refs:
-            self._check_ndk_extensions(graph, generic_refs)
 
         if args.warn_incorrect_partition:
             self._warn_incorrect_partition(graph)
