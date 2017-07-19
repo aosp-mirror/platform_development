@@ -2326,14 +2326,28 @@ class CheckDepCommand(CheckDepCommandBase):
                          tagged_libs.vndk)
 
         for lib in sorted(vendor_libs):
-            bad_deps = []
+            bad_deps = set()
+
+            # Check whether vendor modules depend on extended NDK symbols.
+            for dep, symbols in lib.imported_ext_symbols.items():
+                if dep.is_ndk:
+                    num_errors += 1
+                    bad_deps.add(dep)
+                    for symbol in symbols:
+                        print('error: vendor lib "{}" depends on extended '
+                              'NDK symbol "{}" from "{}".'
+                              .format(lib.path, symbol, dep.path),
+                              file=sys.stderr)
+
+            # Check whether vendor modules depend on ineligible libs.
             for dep in lib.deps:
                 if dep not in vendor_libs and dep not in eligible_libs:
+                    num_errors += 1
+                    bad_deps.add(dep)
                     print('error: vendor lib "{}" depends on non-eligible '
                           'lib "{}".'.format(lib.path, dep.path),
                           file=sys.stderr)
-                    bad_deps.append(dep)
-                    num_errors += 1
+
             if bad_deps:
                 self._dump_dep(lib, bad_deps, module_info)
 
