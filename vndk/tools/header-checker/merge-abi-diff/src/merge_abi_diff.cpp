@@ -141,7 +141,7 @@ int main(int argc, const char **argv) {
                  << ":"
                  << " Please check compatiblity report at : "
                  << merged_diff_report << "\n"
-                 << "*****************************************************\n";
+                 << "******************************************************\n";
   }
 
   if (do_not_break_on_extensions &&
