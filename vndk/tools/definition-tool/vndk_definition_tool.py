@@ -2103,11 +2103,15 @@ class DepsInsightCommand(VNDKCommandBase):
     def add_argparser_options(self, parser):
         super(DepsInsightCommand, self).add_argparser_options(parser)
 
+        parser.add_argument('--module-info')
+
         parser.add_argument(
                 '--output', '-o', help='output directory')
 
     def main(self, args):
         generic_refs, graph, tagged_paths = self.create_from_args(args)
+
+        module_info = ModuleInfo.load_from_path_or_default(args.module_info)
 
         # Compute vndk heuristics.
         vndk_lib = graph.compute_degenerated_vndk(
@@ -2157,6 +2161,10 @@ class DepsInsightCommand(VNDKCommandBase):
 
             return deps
 
+        def collect_source_dir_paths(lib):
+            return [get_str_idx(path)
+                    for path in module_info.get_module_path(lib.path)]
+
         def collect_tags(lib):
             tags = []
             for field_name in _VNDK_RESULT_FIELD_NAMES:
@@ -2170,7 +2178,8 @@ class DepsInsightCommand(VNDKCommandBase):
                          32 if lib.elf.is_32bit else 64,
                          collect_tags(lib),
                          collect_deps(lib),
-                         collect_path_sorted_lib_idxs(lib.users)])
+                         collect_path_sorted_lib_idxs(lib.users),
+                         collect_source_dir_paths(lib)])
 
         # Generate output files.
         makedirs(args.output, exist_ok=True)
