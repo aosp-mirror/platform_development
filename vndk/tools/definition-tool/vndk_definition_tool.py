@@ -1760,6 +1760,43 @@ class GenericRefs(object):
 
 
 #------------------------------------------------------------------------------
+# Module Info
+#------------------------------------------------------------------------------
+
+class ModuleInfo(object):
+    def __init__(self, json=None):
+        if not json:
+            self._mods = dict()
+            return
+
+        mods = collections.defaultdict(set)
+        installed_path_patt = re.compile(
+                '.*[\\\\/]target[\\\\/]product[\\\\/][^\\\\/]+([\\\\/].*)$')
+        for name, module in json.items():
+            for path in module['installed']:
+                match = installed_path_patt.match(path)
+                if match:
+                    for path in module['path']:
+                        mods[match.group(1)].add(path)
+        self._mods = { installed_path: sorted(src_dirs)
+                       for installed_path, src_dirs in mods.items() }
+
+    def get_module_path(self, installed_path):
+        return self._mods.get(installed_path, [])
+
+    @staticmethod
+    def load(f):
+        return ModuleInfo(json.load(f))
+
+    @staticmethod
+    def load_from_path_or_default(path):
+        if not path:
+            return ModuleInfo()
+        with open(path, 'r') as f:
+            return ModuleInfo.load(f)
+
+
+#------------------------------------------------------------------------------
 # Commands
 #------------------------------------------------------------------------------
 
@@ -2275,22 +2312,6 @@ class DepsClosureCommand(ELFGraphCommand):
         return 0
 
 
-class ModuleInfo(object):
-    def __init__(self, module_info_path=None):
-        if not module_info_path:
-            self.json = dict()
-        else:
-            with open(module_info_path, 'r') as f:
-                self.json = json.load(f)
-
-    def get_module_path(self, installed_path):
-        for name, module in  self.json.items():
-            if any(path.endswith(installed_path)
-                   for path in module['installed']):
-                return module['path']
-        return []
-
-
 class CheckDepCommandBase(ELFGraphCommand):
     def add_argparser_options(self, parser):
         super(CheckDepCommandBase, self).add_argparser_options(parser)
@@ -2302,7 +2323,7 @@ class CheckDepCommandBase(ELFGraphCommand):
     @staticmethod
     def _dump_dep(lib, bad_deps, module_info):
         print(lib.path)
-        for module_path in sorted(module_info.get_module_path(lib.path)):
+        for module_path in module_info.get_module_path(lib.path):
             print('\tMODULE_PATH:', module_path)
         for dep in sorted(bad_deps):
             print('\t' + dep.path)
@@ -2359,7 +2380,7 @@ class CheckDepCommand(CheckDepCommandBase):
         tagged_paths = TaggedPathDict.create_from_csv_path(args.tag_file)
         tagged_libs = TaggedLibDict.create_from_graph(graph, tagged_paths)
 
-        module_info = ModuleInfo(args.module_info)
+        module_info = ModuleInfo.load_from_path_or_default(args.module_info)
 
         num_errors = self._check_vendor_dep(graph, tagged_libs, module_info)
 
@@ -2417,7 +2438,7 @@ class CheckEligibleListCommand(CheckDepCommandBase):
         tagged_paths = TaggedPathDict.create_from_csv_path(args.tag_file)
         tagged_libs = TaggedLibDict.create_from_graph(graph, tagged_paths)
 
-        module_info = ModuleInfo(args.module_info)
+        module_info = ModuleInfo.load_from_path_or_default(args.module_info)
 
         num_errors = self._check_eligible_vndk_dep(graph, tagged_libs,
                                                    module_info)
