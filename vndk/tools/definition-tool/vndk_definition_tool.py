@@ -2218,8 +2218,12 @@ class DepsCommand(ELFGraphCommand):
                 '--symbols', action='store_true',
                 help='print symbols')
 
+        parser.add_argument('--module-info')
+
     def main(self, args):
         generic_refs, graph = self.create_from_args(args)
+
+        module_info = ModuleInfo.load_from_path_or_default(args.module_info)
 
         results = []
         for partition in range(NUM_PARTITIONS):
@@ -2250,8 +2254,12 @@ class DepsCommand(ELFGraphCommand):
         else:
             for name, assoc_libs in results:
                 print(name)
+                for module_path in module_info.get_module_path(name):
+                    print('\tMODULE_PATH:', module_path)
                 for assoc_lib, symbols in assoc_libs:
                     print('\t' + assoc_lib)
+                    for module_path in module_info.get_module_path(assoc_lib):
+                        print('\t\tMODULE_PATH:', module_path)
                     for symbol in symbols:
                         print('\t\t' + symbol)
         return 0
