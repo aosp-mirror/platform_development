@@ -1,4 +1,4 @@
 Pkg.UserSrc=false
-#Pkg.Revision=${PLATFORM_SDK_VERSION}.0.0
-Pkg.Revision=26.0.0 rc1
+Pkg.Revision=${PLATFORM_SDK_VERSION}.0.1
+#Pkg.Revision=26.0.0 rc1
 
