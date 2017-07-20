@@ -13,11 +13,11 @@ from vndk_definition_tool import ELFLinkData, PT_SYSTEM, PT_VENDOR
 
 class ELFLinkDataTest(unittest.TestCase):
     def setUp(self):
-        self.x = ELFLinkData(PT_SYSTEM, '/system/lib/libx.so', None)
-        self.y = ELFLinkData(PT_SYSTEM, '/system/lib/liby.so', None)
-        self.z = ELFLinkData(PT_SYSTEM, '/system/lib/libz.so', None)
-        self.w = ELFLinkData(PT_SYSTEM, '/system/lib/libw.so', None)
-        self.v = ELFLinkData(PT_VENDOR, '/vendor/lib/libv.so', None)
+        self.x = ELFLinkData(PT_SYSTEM, '/system/lib/libx.so', None, 0)
+        self.y = ELFLinkData(PT_SYSTEM, '/system/lib/liby.so', None, 0)
+        self.z = ELFLinkData(PT_SYSTEM, '/system/lib/libz.so', None, 0)
+        self.w = ELFLinkData(PT_SYSTEM, '/system/lib/libw.so', None, 0)
+        self.v = ELFLinkData(PT_VENDOR, '/vendor/lib/libv.so', None, 0)
 
         self.x.add_dep(self.y, ELFLinkData.NEEDED)
         self.x.add_dep(self.z, ELFLinkData.DLOPEN)
