@@ -44,6 +44,8 @@ development/sdk/plat_tools_source.properties  platform-tools/source.properties
 # host tools from out/host/$(HOST_OS)-$(HOST_ARCH)/
 bin/adb                                 strip platform-tools/adb
 bin/fastboot                            strip platform-tools/fastboot
+bin/mke2fs                              strip platform-tools/mke2fs
+bin/e2fsdroid                           strip platform-tools/e2fsdroid
 bin/sqlite3                             strip platform-tools/sqlite3
 bin/dmtracedump                         strip platform-tools/dmtracedump
 bin/etc1tool                            strip platform-tools/etc1tool
