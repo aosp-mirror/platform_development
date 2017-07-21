@@ -62,6 +62,7 @@
         this.tagIds = new Set(modData[2]);
         this.deps = modData[3];
         this.users = modData[4];
+        this.srcDirs = modData[5].map(function (x) { return strsData[x]; });
 
         [this.numDirectDeps, this.numIndirectDeps] = countDeps(this.deps);
         this.numUsers = this.users.length;
@@ -103,7 +104,14 @@
     }
 
     Module.prototype.createModulePathTdDom = function (parent) {
-        parent.appendChild(domNewElem('td', this.createModuleLinkDom(this)));
+        let domTd = domNewElem('td');
+        domTd.appendChild(domNewElem('p', this.createModuleLinkDom(this)));
+        for (let dir of this.srcDirs) {
+            let domP = domNewElem('p', 'source: ' + dir);
+            domP.setAttribute('class', 'module_src_dir');
+            domTd.appendChild(domP);
+        }
+        parent.appendChild(domTd);
     }
 
     Module.prototype.createTagsTdDom = function (parent) {
