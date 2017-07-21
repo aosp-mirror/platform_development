@@ -101,3 +101,9 @@ a:active {
 	background-color: #fffff0;
 	transition: background-color 800ms ease;
 }
+
+#module_tbody p.module_src_dir {
+	font-family: monospace;
+	font-size: 80%;
+	color: #aaaaaa;
+}

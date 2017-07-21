@@ -1760,6 +1760,43 @@ class GenericRefs(object):
 
 
 #------------------------------------------------------------------------------
+# Module Info
+#------------------------------------------------------------------------------
+
+class ModuleInfo(object):
+    def __init__(self, json=None):
+        if not json:
+            self._mods = dict()
+            return
+
+        mods = collections.defaultdict(set)
+        installed_path_patt = re.compile(
+                '.*[\\\\/]target[\\\\/]product[\\\\/][^\\\\/]+([\\\\/].*)$')
+        for name, module in json.items():
+            for path in module['installed']:
+                match = installed_path_patt.match(path)
+                if match:
+                    for path in module['path']:
+                        mods[match.group(1)].add(path)
+        self._mods = { installed_path: sorted(src_dirs)
+                       for installed_path, src_dirs in mods.items() }
+
+    def get_module_path(self, installed_path):
+        return self._mods.get(installed_path, [])
+
+    @staticmethod
+    def load(f):
+        return ModuleInfo(json.load(f))
+
+    @staticmethod
+    def load_from_path_or_default(path):
+        if not path:
+            return ModuleInfo()
+        with open(path, 'r') as f:
+            return ModuleInfo.load(f)
+
+
+#------------------------------------------------------------------------------
 # Commands
 #------------------------------------------------------------------------------
 
@@ -2066,11 +2103,15 @@ class DepsInsightCommand(VNDKCommandBase):
     def add_argparser_options(self, parser):
         super(DepsInsightCommand, self).add_argparser_options(parser)
 
+        parser.add_argument('--module-info')
+
         parser.add_argument(
                 '--output', '-o', help='output directory')
 
     def main(self, args):
         generic_refs, graph, tagged_paths = self.create_from_args(args)
+
+        module_info = ModuleInfo.load_from_path_or_default(args.module_info)
 
         # Compute vndk heuristics.
         vndk_lib = graph.compute_degenerated_vndk(
@@ -2120,6 +2161,10 @@ class DepsInsightCommand(VNDKCommandBase):
 
             return deps
 
+        def collect_source_dir_paths(lib):
+            return [get_str_idx(path)
+                    for path in module_info.get_module_path(lib.path)]
+
         def collect_tags(lib):
             tags = []
             for field_name in _VNDK_RESULT_FIELD_NAMES:
@@ -2133,7 +2178,8 @@ class DepsInsightCommand(VNDKCommandBase):
                          32 if lib.elf.is_32bit else 64,
                          collect_tags(lib),
                          collect_deps(lib),
-                         collect_path_sorted_lib_idxs(lib.users)])
+                         collect_path_sorted_lib_idxs(lib.users),
+                         collect_source_dir_paths(lib)])
 
         # Generate output files.
         makedirs(args.output, exist_ok=True)
@@ -2172,8 +2218,12 @@ class DepsCommand(ELFGraphCommand):
                 '--symbols', action='store_true',
                 help='print symbols')
 
+        parser.add_argument('--module-info')
+
     def main(self, args):
         generic_refs, graph = self.create_from_args(args)
+
+        module_info = ModuleInfo.load_from_path_or_default(args.module_info)
 
         results = []
         for partition in range(NUM_PARTITIONS):
@@ -2204,8 +2254,12 @@ class DepsCommand(ELFGraphCommand):
         else:
             for name, assoc_libs in results:
                 print(name)
+                for module_path in module_info.get_module_path(name):
+                    print('\tMODULE_PATH:', module_path)
                 for assoc_lib, symbols in assoc_libs:
                     print('\t' + assoc_lib)
+                    for module_path in module_info.get_module_path(assoc_lib):
+                        print('\t\tMODULE_PATH:', module_path)
                     for symbol in symbols:
                         print('\t\t' + symbol)
         return 0
@@ -2275,22 +2329,6 @@ class DepsClosureCommand(ELFGraphCommand):
         return 0
 
 
-class ModuleInfo(object):
-    def __init__(self, module_info_path=None):
-        if not module_info_path:
-            self.json = dict()
-        else:
-            with open(module_info_path, 'r') as f:
-                self.json = json.load(f)
-
-    def get_module_path(self, installed_path):
-        for name, module in  self.json.items():
-            if any(path.endswith(installed_path)
-                   for path in module['installed']):
-                return module['path']
-        return []
-
-
 class CheckDepCommandBase(ELFGraphCommand):
     def add_argparser_options(self, parser):
         super(CheckDepCommandBase, self).add_argparser_options(parser)
@@ -2302,7 +2340,7 @@ class CheckDepCommandBase(ELFGraphCommand):
     @staticmethod
     def _dump_dep(lib, bad_deps, module_info):
         print(lib.path)
-        for module_path in sorted(module_info.get_module_path(lib.path)):
+        for module_path in module_info.get_module_path(lib.path):
             print('\tMODULE_PATH:', module_path)
         for dep in sorted(bad_deps):
             print('\t' + dep.path)
@@ -2359,7 +2397,7 @@ class CheckDepCommand(CheckDepCommandBase):
         tagged_paths = TaggedPathDict.create_from_csv_path(args.tag_file)
         tagged_libs = TaggedLibDict.create_from_graph(graph, tagged_paths)
 
-        module_info = ModuleInfo(args.module_info)
+        module_info = ModuleInfo.load_from_path_or_default(args.module_info)
 
         num_errors = self._check_vendor_dep(graph, tagged_libs, module_info)
 
@@ -2417,7 +2455,7 @@ class CheckEligibleListCommand(CheckDepCommandBase):
         tagged_paths = TaggedPathDict.create_from_csv_path(args.tag_file)
         tagged_libs = TaggedLibDict.create_from_graph(graph, tagged_paths)
 
-        module_info = ModuleInfo(args.module_info)
+        module_info = ModuleInfo.load_from_path_or_default(args.module_info)
 
         num_errors = self._check_eligible_vndk_dep(graph, tagged_libs,
                                                    module_info)
