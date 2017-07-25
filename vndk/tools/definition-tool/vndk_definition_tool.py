@@ -2344,6 +2344,8 @@ class CheckDepCommandBase(ELFGraphCommand):
             print('\tMODULE_PATH:', module_path)
         for dep in sorted(bad_deps):
             print('\t' + dep.path)
+            for module_path in module_info.get_module_path(dep.path):
+                print('\t\tMODULE_PATH:', module_path)
             for symbol in lib.get_dep_linked_symbols(dep):
                 print('\t\t' + symbol)
 
