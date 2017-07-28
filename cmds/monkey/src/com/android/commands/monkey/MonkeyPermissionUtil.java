@@ -129,7 +129,7 @@ public class MonkeyPermissionUtil {
                     continue;
                 }
                 for (String perm : info.requestedPermissions) {
-                    PermissionInfo pi = mPm.getPermissionInfo(perm, 0);
+                    PermissionInfo pi = mPm.getPermissionInfo(perm, "shell", 0);
                     if (pi != null && shouldTargetPermission(info.packageName, pi)) {
                         permissions.add(pi);
                     }
