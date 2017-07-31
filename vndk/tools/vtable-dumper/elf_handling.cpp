@@ -126,7 +126,7 @@ bool ELFSharedObject<ELFT>::cacheELFSections() {
 }
 
 template <typename ELFT>
-void ELFSharedObject<ELFT>::printVTables() const {
+void ELFSharedObject<ELFT>::printVTables(bool Mangled) const {
     for (const VTable &Vtable : mVTables) {
         if (Vtable.getVTableSize() == 0)
             continue;
@@ -138,9 +138,12 @@ void ELFSharedObject<ELFT>::printVTables() const {
                << " entries"
                << "\n";
         for (const VFunction &Vfunction : Vtable) {
+            std::string VfunctionName = (Mangled ?
+                                         Vfunction.getMangledName() :
+                                         Vfunction.getDemangledName());
             outs() << Vfunction.getOffset()
                    << "    (int (*)(...)) "
-                   << Vfunction.getDemangledName()
+                   << VfunctionName
                    << "\n";
         }
         outs() << "\n"
