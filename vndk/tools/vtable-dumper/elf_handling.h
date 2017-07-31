@@ -42,7 +42,9 @@ using llvm::outs;
 class SharedObject {
 public:
     static std::unique_ptr<SharedObject> create(const ObjectFile *);
-    virtual void printVTables() const = 0;
+    /* Print mangled names if the argument is true; demangled if false.
+     */
+    virtual void printVTables(bool) const = 0;
     virtual ~SharedObject() = 0;
 private:
     virtual bool getVTables() = 0;
@@ -105,7 +107,7 @@ private:
 template<typename ELFT>
 class ELFSharedObject : public SharedObject {
 public:
-    void printVTables() const override;
+    void printVTables(bool) const override;
     bool getVTables() override;
     ~ELFSharedObject();
     ELFSharedObject(const ELFObjectFile<ELFT> *);

@@ -42,6 +42,10 @@ opt<std::string> FilePath(
         Positional, Required, cat(VTableDumperCategory),
         desc("shared_library.so"));
 
+opt<bool> Mangled(
+        "mangled", cat(VTableDumperCategory),
+        desc("Show mangled symbol names"));
+
 static void HideIrrelevantCommandLineOptions() {
     for (StringMapEntry<Option *> &P : getRegisteredOptions()) {
         if (P.second->Category == &VTableDumperCategory) {
@@ -80,6 +84,6 @@ int main(int argc, char **argv) {
         outs() << "Couldn't create ELFObjectFile \n";
         return 1;
     }
-    SoFile->printVTables();
+    SoFile->printVTables(Mangled);
     return 0;
 }
