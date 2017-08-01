@@ -225,7 +225,7 @@ development/sdk/sdk_files_NOTICE.txt      platforms/${PLATFORM_NAME}/skins/NOTIC
 ##############################################################################
 
 # System images + Kernel
-system-qemu.img                                 system-images/${PLATFORM_NAME}/${TARGET_CPU_ABI}/system.img
+system.img                                 system-images/${PLATFORM_NAME}/${TARGET_CPU_ABI}/system.img
 ramdisk.img                                system-images/${PLATFORM_NAME}/${TARGET_CPU_ABI}/ramdisk.img
 userdata.img                               system-images/${PLATFORM_NAME}/${TARGET_CPU_ABI}/userdata.img
 system/build.prop                          system-images/${PLATFORM_NAME}/${TARGET_CPU_ABI}/build.prop
