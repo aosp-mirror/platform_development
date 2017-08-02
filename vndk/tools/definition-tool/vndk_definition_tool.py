@@ -187,14 +187,23 @@ class ELF(object):
         ELFDATA2MSB: 'Big-Endian',
     }
 
-    _ELF_MACHINE_IDS = {
-        0: 'EM_NONE',
-        3: 'EM_386',
-        8: 'EM_MIPS',
-        40: 'EM_ARM',
-        62: 'EM_X86_64',
-        183: 'EM_AARCH64',
-    }
+    EM_NONE = 0
+    EM_386 = 3
+    EM_MIPS = 8
+    EM_ARM = 40
+    EM_X86_64 = 62
+    EM_AARCH64 = 183
+
+    def _create_elf_machines(d):
+        elf_machine_ids = {}
+        for key, value in d.items():
+            if key.startswith('EM_'):
+                elf_machine_ids[value] = key
+        return elf_machine_ids
+
+    ELF_MACHINES = _create_elf_machines(locals())
+
+    del _create_elf_machines
 
 
     @staticmethod
@@ -214,7 +223,7 @@ class ELF(object):
 
     @staticmethod
     def get_e_machine_from_name(name):
-        return ELF._dict_find_key_by_value(ELF._ELF_MACHINE_IDS, name)
+        return ELF._dict_find_key_by_value(ELF.ELF_MACHINES, name)
 
 
     __slots__ = ('ei_class', 'ei_data', 'e_machine', 'dt_rpath', 'dt_runpath',
@@ -252,7 +261,7 @@ class ELF(object):
 
     @property
     def elf_machine_name(self):
-        return self._ELF_MACHINE_IDS.get(self.e_machine, str(self.e_machine))
+        return self.ELF_MACHINES.get(self.e_machine, str(self.e_machine))
 
     @property
     def is_32bit(self):
@@ -1035,9 +1044,15 @@ class ELFLinker(object):
             ignored_patt = ELFLinker._compile_path_matcher(root, ignored_subdirs)
 
         for path, elf in scan_elf_files(root):
+            # Ignore ELF files with unknown machine ID (eg. DSP).
+            if elf.e_machine not in ELF.ELF_MACHINES:
+                continue
+
+            # Ignore ELF files with matched path.
             short_path = os.path.join('/', partition_name, path[prefix_len:])
             if ignored_subdirs and ignored_patt.match(path):
                 continue
+
             if alter_subdirs and alter_patt.match(path):
                 self.add_lib(alter_partition, short_path, elf)
             else:
