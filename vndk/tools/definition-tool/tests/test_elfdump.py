@@ -11,7 +11,7 @@ import sys
 import unittest
 
 from compat import TemporaryDirectory, makedirs
-import targets
+import ndk_toolchain
 
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -30,7 +30,7 @@ def run_elf_dump(path):
 class ELFDumpTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.targets = targets.create_targets()
+        cls.targets = ndk_toolchain.create_targets()
 
         if test_dir_base:
             cls.test_dir_base = test_dir_base
