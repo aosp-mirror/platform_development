@@ -810,6 +810,7 @@ class ELFLinkData(object):
         self.imported_ext_symbols = collections.defaultdict(set)
         self._tag_bit = tag_bit
         self.unresolved_symbols = set()
+        self.unresolved_dt_needed = []
         self.linked_symbols = dict()
 
     @property
@@ -1097,6 +1098,7 @@ class ELFLinker(object):
                     dt_needed, lib.elf.dt_rpath, lib.elf.dt_runpath))
                 print('warning: {}: Missing needed library: {}  Tried: {}'
                       .format(lib.path, dt_needed, candidates), file=sys.stderr)
+                lib.unresolved_dt_needed.append(dt_needed)
                 continue
             lib.add_dep(dep, ELFLinkData.NEEDED)
             imported_libs.append(dep)
@@ -2344,6 +2346,41 @@ class DepsClosureCommand(ELFGraphCommand):
         return 0
 
 
+class DepsUnresolvedCommand(ELFGraphCommand):
+    def __init__(self):
+        super(DepsUnresolvedCommand, self).__init__(
+                'deps-unresolved',
+                help='Show unresolved dt_needed entries or symbols')
+
+    def add_argparser_options(self, parser):
+        super(DepsUnresolvedCommand, self).add_argparser_options(parser)
+        parser.add_argument('--module-info')
+        parser.add_argument('--path-filter')
+
+    def _dump_unresolved(self, lib, module_info):
+        if not lib.unresolved_symbols and not lib.unresolved_dt_needed:
+            return
+
+        print(lib.path)
+        for module_path in module_info.get_module_path(lib.path):
+            print('\tMODULE_PATH:', module_path)
+        for dt_needed in sorted(lib.unresolved_dt_needed):
+            print('\tUNRESOLVED_DT_NEEDED:', dt_needed)
+        for symbol in sorted(lib.unresolved_symbols):
+            print('\tUNRESOLVED_SYMBOL:', symbol)
+
+    def main(self, args):
+        generic_refs, graph = self.create_from_args(args)
+        module_info = ModuleInfo.load_from_path_or_default(args.module_info)
+
+        libs = graph.all_libs()
+        if args.path_filter:
+            path_filter = re.compile(args.path_filter)
+            libs = [lib for lib in libs if path_filter.match(lib.path)]
+
+        for lib in sorted(libs):
+            self._dump_unresolved(lib, module_info)
+
 class CheckDepCommandBase(ELFGraphCommand):
     def add_argparser_options(self, parser):
         super(CheckDepCommandBase, self).add_argparser_options(parser)
@@ -2579,6 +2616,7 @@ def main():
     register_subcmd(DepsCommand())
     register_subcmd(DepsClosureCommand())
     register_subcmd(DepsInsightCommand())
+    register_subcmd(DepsUnresolvedCommand())
     register_subcmd(CheckDepCommand())
     register_subcmd(CheckEligibleListCommand())
     register_subcmd(DepGraphCommand())
