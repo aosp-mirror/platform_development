@@ -187,14 +187,23 @@ class ELF(object):
         ELFDATA2MSB: 'Big-Endian',
     }
 
-    _ELF_MACHINE_IDS = {
-        0: 'EM_NONE',
-        3: 'EM_386',
-        8: 'EM_MIPS',
-        40: 'EM_ARM',
-        62: 'EM_X86_64',
-        183: 'EM_AARCH64',
-    }
+    EM_NONE = 0
+    EM_386 = 3
+    EM_MIPS = 8
+    EM_ARM = 40
+    EM_X86_64 = 62
+    EM_AARCH64 = 183
+
+    def _create_elf_machines(d):
+        elf_machine_ids = {}
+        for key, value in d.items():
+            if key.startswith('EM_'):
+                elf_machine_ids[value] = key
+        return elf_machine_ids
+
+    ELF_MACHINES = _create_elf_machines(locals())
+
+    del _create_elf_machines
 
 
     @staticmethod
@@ -214,7 +223,7 @@ class ELF(object):
 
     @staticmethod
     def get_e_machine_from_name(name):
-        return ELF._dict_find_key_by_value(ELF._ELF_MACHINE_IDS, name)
+        return ELF._dict_find_key_by_value(ELF.ELF_MACHINES, name)
 
 
     __slots__ = ('ei_class', 'ei_data', 'e_machine', 'dt_rpath', 'dt_runpath',
@@ -252,7 +261,7 @@ class ELF(object):
 
     @property
     def elf_machine_name(self):
-        return self._ELF_MACHINE_IDS.get(self.e_machine, str(self.e_machine))
+        return self.ELF_MACHINES.get(self.e_machine, str(self.e_machine))
 
     @property
     def is_32bit(self):
@@ -801,6 +810,7 @@ class ELFLinkData(object):
         self.imported_ext_symbols = collections.defaultdict(set)
         self._tag_bit = tag_bit
         self.unresolved_symbols = set()
+        self.unresolved_dt_needed = []
         self.linked_symbols = dict()
 
     @property
@@ -1035,9 +1045,15 @@ class ELFLinker(object):
             ignored_patt = ELFLinker._compile_path_matcher(root, ignored_subdirs)
 
         for path, elf in scan_elf_files(root):
+            # Ignore ELF files with unknown machine ID (eg. DSP).
+            if elf.e_machine not in ELF.ELF_MACHINES:
+                continue
+
+            # Ignore ELF files with matched path.
             short_path = os.path.join('/', partition_name, path[prefix_len:])
             if ignored_subdirs and ignored_patt.match(path):
                 continue
+
             if alter_subdirs and alter_patt.match(path):
                 self.add_lib(alter_partition, short_path, elf)
             else:
@@ -1082,6 +1098,7 @@ class ELFLinker(object):
                     dt_needed, lib.elf.dt_rpath, lib.elf.dt_runpath))
                 print('warning: {}: Missing needed library: {}  Tried: {}'
                       .format(lib.path, dt_needed, candidates), file=sys.stderr)
+                lib.unresolved_dt_needed.append(dt_needed)
                 continue
             lib.add_dep(dep, ELFLinkData.NEEDED)
             imported_libs.append(dep)
@@ -2329,6 +2346,41 @@ class DepsClosureCommand(ELFGraphCommand):
         return 0
 
 
+class DepsUnresolvedCommand(ELFGraphCommand):
+    def __init__(self):
+        super(DepsUnresolvedCommand, self).__init__(
+                'deps-unresolved',
+                help='Show unresolved dt_needed entries or symbols')
+
+    def add_argparser_options(self, parser):
+        super(DepsUnresolvedCommand, self).add_argparser_options(parser)
+        parser.add_argument('--module-info')
+        parser.add_argument('--path-filter')
+
+    def _dump_unresolved(self, lib, module_info):
+        if not lib.unresolved_symbols and not lib.unresolved_dt_needed:
+            return
+
+        print(lib.path)
+        for module_path in module_info.get_module_path(lib.path):
+            print('\tMODULE_PATH:', module_path)
+        for dt_needed in sorted(lib.unresolved_dt_needed):
+            print('\tUNRESOLVED_DT_NEEDED:', dt_needed)
+        for symbol in sorted(lib.unresolved_symbols):
+            print('\tUNRESOLVED_SYMBOL:', symbol)
+
+    def main(self, args):
+        generic_refs, graph = self.create_from_args(args)
+        module_info = ModuleInfo.load_from_path_or_default(args.module_info)
+
+        libs = graph.all_libs()
+        if args.path_filter:
+            path_filter = re.compile(args.path_filter)
+            libs = [lib for lib in libs if path_filter.match(lib.path)]
+
+        for lib in sorted(libs):
+            self._dump_unresolved(lib, module_info)
+
 class CheckDepCommandBase(ELFGraphCommand):
     def add_argparser_options(self, parser):
         super(CheckDepCommandBase, self).add_argparser_options(parser)
@@ -2564,6 +2616,7 @@ def main():
     register_subcmd(DepsCommand())
     register_subcmd(DepsClosureCommand())
     register_subcmd(DepsInsightCommand())
+    register_subcmd(DepsUnresolvedCommand())
     register_subcmd(CheckDepCommand())
     register_subcmd(CheckEligibleListCommand())
     register_subcmd(DepGraphCommand())
