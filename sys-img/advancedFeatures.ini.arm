@@ -1,5 +1,5 @@
 GrallocSync = on
-GLDMA = on
 LogcatPipe = on
 GLAsyncSwap = on
-EncryptUserData = on
+GLESDynamicVersion = on
+GLDMA = on
