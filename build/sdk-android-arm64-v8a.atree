@@ -14,12 +14,10 @@
 # limitations under the License.
 #
 
-prebuilts/qemu-kernel/${TARGET_ARCH}/kernel-qemu system-images/${PLATFORM_NAME}/${TARGET_CPU_ABI}/kernel-qemu
-prebuilts/qemu-kernel/${TARGET_ARCH}/kernel-qemu system-images/${PLATFORM_NAME}/${TARGET_CPU_ABI}/kernel-ranchu
-device/generic/goldfish/data/etc/encryptionkey.img system-images/${PLATFORM_NAME}/${TARGET_CPU_ABI}/encryptionkey.img
+prebuilts/qemu-kernel/${TARGET_ARCH}/3.18/kernel-qemu2 system-images/${PLATFORM_NAME}/${TARGET_CPU_ABI}/kernel-ranchu
 
 # version files for the SDK updater, from development.git
 ${HOST_OUT}/development/sys-img-${TARGET_CPU_ABI}/images_arm64-v8a_source.properties system-images/${PLATFORM_NAME}/${TARGET_CPU_ABI}/source.properties
 
 # feature control config file
-development/sys-img/advancedFeatures.ini system-images/${PLATFORM_NAME}/${TARGET_CPU_ABI}/advancedFeatures.ini
+development/sys-img/advancedFeatures.ini.arm system-images/${PLATFORM_NAME}/${TARGET_CPU_ABI}/advancedFeatures.ini
