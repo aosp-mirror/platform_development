@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
-from config import *
-from data_utils import *
+
+from sourcedr.config import *
+from sourcedr.data_utils import *
 
 from subprocess import call
 import collections

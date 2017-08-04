@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import json
 import os
 
@@ -29,4 +31,11 @@ def init_pattern(patt):
 def save_data(data):
     with open(data_path, 'w') as f:
         json.dump(data, f, sort_keys=True, indent=4)
+
+def remove_data():
+    for path in (data_path, pattern_path):
+        try:
+            os.remove(path)
+        except IOError:
+            pass
 
