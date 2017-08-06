@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Source Deps Reviewer</title>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"/>
+  <link rel="stylesheet" href="static/prism/css/prism.css"/>
+  <link rel="stylesheet" href="static/css/main.css"/>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+</head>
+<body>
+
+<div class="container-fluid">
+  <div class="row content">
+    <h2>Code review tool</h2>
+    <div id="item_list" class="col-sm-3 sidenav hidden-xs"></div>
+
+    <div class="col-sm-5">
+      <h3>You are browsing:</h3>
+      <form id="go_form">
+        <pre><h3 id="browsing_file_path"></h3></pre><br>
+        <input type="text" name="browsing_path" placeholder="Enter file path here"/>
+        <input type="submit" name="go" value="GO"/>
+        <a id="goto_pattern_line">goto pattern line</a>
+        <pre id="browsing_file" class="line-numbers"><code id="code" class="language-C" style="display:inline-block;"></code></pre>
+      </form>
+    </div>
+    <br>
+
+    <div class="col-sm-4">
+      <div class="well">
+        <h3>Add patterns to grep(will be unable to delete added patterns):</h3>
+        <form id="add_pattern">
+          <input type="text" name="pattern"/>
+          <input type="checkbox" name="is_regex" id="is_regex"/>
+          <label for="is_regex">is regex</label>
+          <input type="submit" name="go" value="submit"/>
+        </form>
+
+        <ul id="pattern_list"></ul>
+        <h3>file path:</h3><pre><h3 id="file_path"></h3></pre><br>
+        <h3>pattern line number:</h3><span id="line_no" style="font-size:22px;padding-left:10px;"></span><br>
+
+        <h1>Library Dependencies</h1>
+        <form id="add_deps">
+          <input type="text" id="enter_deps"/>
+          <input type="submit" value="Add"/>
+        </form>
+        <ul id="deps_list"></ul>
+
+        <h1>Code Dependencies</h1>
+        <form id="add_code">
+          <input type="button" id="get_selection" value="Get selection"/>
+          <input type="submit" id="add_code" value="Add"/><br>
+          <input type="text" id="code_file_path" style="margin: 0px; width: 600px;"/>
+          <textarea id="selected_text" name="selectedtext" rows="5" style="margin: 0px; width: 600px; height: 106px;"></textarea>
+          <ul id="code_list"></ul>
+        </form>
+        <form id="save_all">
+          <input type="submit" value="Save All"/>
+        </form>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<script type="text/javascript" src="static/js/main.js"></script>
+<!-- for code prettyify -->
+<script src="static/prism/js/prism.js"></script>
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+
+</body>
+</html>
+
