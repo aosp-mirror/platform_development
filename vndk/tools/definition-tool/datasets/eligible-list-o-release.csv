@@ -74,7 +74,7 @@ Path,Tag,v3.7
 /system/${LIB}/android.hidl.base@1.0.so,VNDK-SP,
 /system/${LIB}/vndk-sp/android.hidl.base@1.0.so,VNDK-SP,
 /system/${LIB}/android.hidl.manager@1.0.so,VNDK,
-/system/${LIB}/hw/android.hidl.memory@1.0-impl.so,FWK-ONLY,
+/system/${LIB}/vndk-sp/android.hidl.memory@1.0-impl.so,VNDK-SP-Indirect-Private,
 /system/${LIB}/android.hidl.memory@1.0.so,VNDK-SP,
 /system/${LIB}/vndk-sp/android.hidl.memory@1.0.so,VNDK-SP,
 /system/${LIB}/android.hidl.token@1.0-utils.so,VNDK,
