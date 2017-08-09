@@ -68,28 +68,12 @@ def parse_args():
     return parser.parse_args()
 
 
-def dump_var(root, variable):
-    make_args = ["make", "CALLED_FROM_SETUP=true",
-                 "BUILD_SYSTEM={}/build/core".format(root),
-                 "--no-print-directory", "-f",
-                 "{}/build/core/config.mk".format(root),
-                 "dumpvar-{}".format(variable)]
-
-    # subprocess cwd argument does not change the PWD shell variable, but
-    # dumpvar.mk uses PWD to create an absolute path, so we need to set it.
-    saved_pwd = os.environ['PWD']
-    os.environ['PWD'] = root
-    make_output = subprocess.check_output(make_args, cwd=root)
-    os.environ['PWD'] = saved_pwd
-    return make_output.splitlines()[0]
-
-
 def verify_device(root, device):
-    names = set([device.get_prop("ro.build.product"), device.get_prop("ro.product.device")])
-    target_device = dump_var(root, "TARGET_DEVICE")
-    if target_device not in names:
-        msg = "TARGET_DEVICE ({}) does not match attached device ({})"
-        sys.exit(msg.format(target_device, ", ".join(names)))
+    name = device.get_prop("ro.product.name")
+    target_device = os.environ["TARGET_PRODUCT"]
+    if target_device != name:
+        msg = "TARGET_PRODUCT ({}) does not match attached device ({})"
+        sys.exit(msg.format(target_device, name))
 
 
 def get_remote_pid(device, process_name):
@@ -169,6 +153,7 @@ def handle_switches(args, sysroot):
 
     return (binary_file, pid, run_cmd)
 
+
 def generate_gdb_script(sysroot, binary_file, is64bit, port, connect_timeout=5):
     # Generate a gdb script.
     # TODO: Detect the zygote and run 'art-on' automatically.
@@ -226,6 +211,13 @@ end
 
 
 def main():
+    required_env = ["ANDROID_BUILD_TOP",
+                    "ANDROID_PRODUCT_OUT", "TARGET_PRODUCT"]
+    for env in required_env:
+        if env not in os.environ:
+            sys.exit(
+                "Environment variable '{}' not defined, have you run lunch?".format(env))
+
     args = parse_args()
     device = args.device
 
@@ -233,7 +225,7 @@ def main():
         sys.exit("ERROR: Failed to find device.")
 
     root = os.environ["ANDROID_BUILD_TOP"]
-    sysroot = dump_var(root, "abs-TARGET_OUT_UNSTRIPPED")
+    sysroot = os.path.join(os.environ["ANDROID_PRODUCT_OUT"], "symbols")
 
     # Make sure the environment matches the attached device.
     verify_device(root, device)
