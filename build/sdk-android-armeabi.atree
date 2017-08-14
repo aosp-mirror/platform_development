@@ -21,4 +21,4 @@ prebuilts/qemu-kernel/${TARGET_ARCH}/ranchu/kernel-qemu system-images/${PLATFORM
 ${HOST_OUT}/development/sys-img-${TARGET_CPU_ABI}/images_armeabi_source.properties system-images/${PLATFORM_NAME}/${TARGET_CPU_ABI}/source.properties
 
 # feature control config file
-development/sys-img/advancedFeatures.ini system-images/${PLATFORM_NAME}/${TARGET_CPU_ABI}/advancedFeatures.ini
+development/sys-img/advancedFeatures.ini.arm system-images/${PLATFORM_NAME}/${TARGET_CPU_ABI}/advancedFeatures.ini
