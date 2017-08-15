@@ -42,6 +42,9 @@ public class DefaultActivity extends Activity {
 
         Settings.Secure.putInt(getContentResolver(), Settings.Secure.USER_SETUP_COMPLETE, 1);
 
+        // Disables a dialog shown on adb install execution.
+        Settings.Global.putInt(getContentResolver(), Settings.Global.PACKAGE_VERIFIER_INCLUDE_ADB, 0);
+
         // Enable the GPS.
         // Not needed since this SDK will contain the Settings app.
         Settings.Secure.putString(getContentResolver(), Settings.Secure.LOCATION_PROVIDERS_ALLOWED,
