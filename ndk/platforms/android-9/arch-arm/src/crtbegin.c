@@ -84,4 +84,8 @@ void _start() {
 }
 
 #include "__dso_handle.h"
+// Old releases included atexit() details in libc.a, not in crtbegin_static.o.
+// It was, however, in crtbegin_dynamic.o rather than libc.so.
+#if PLATFORM_SDK_VERSION >= 21 || defined(BUILDING_DYNAMIC)
 #include "atexit.h"
+#endif
