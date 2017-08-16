@@ -16,11 +16,11 @@
 
 ndk_headers {
     name: "libz_headers",
-    from: "platforms/android-9/include",
+    from: "platforms/android-14/include",
     to: "",
     srcs: [
-        "platforms/android-9/include/zconf.h",
-        "platforms/android-9/include/zlib.h",
+        "platforms/android-14/include/zconf.h",
+        "platforms/android-14/include/zlib.h",
     ],
     license: "NOTICE.zlib",
 }
