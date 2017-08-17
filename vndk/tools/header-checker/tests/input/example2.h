@@ -22,6 +22,7 @@ struct HelloAgain {
   int bar_again;
   static int hello_forever;
   virtual int again();
+  virtual ~HelloAgain() {}
 };
 struct NowWeCrash;
 } // namespace test2
