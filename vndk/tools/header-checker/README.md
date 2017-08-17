@@ -7,6 +7,7 @@
 ## Usage
  header-abi-dumper -o <dump-file> <source_file> -I <export-include-dir-1> -I
  <export-include-dir-2>.. -- <cflags>
+ For options : header-abi-dumper --help
 
 # VNDK Header Abi Linker
 
@@ -16,6 +17,7 @@
 
 ## Usage
  header-abi-linker -o <linked-abi-dump> <abi-dump1> <abi-dump2> <abi-dump3> ...
+ For options : header-abi-linker --help
 
 # VNDK Header Abi Diff
 
@@ -24,10 +26,13 @@
  abi's exposed by the two dumps.
 
 # Return Value
- 1: InCompatible
- 0: Compatible or Compatible Extension.
+ 0: Compatible
+ 1: Changes to APIs unreferenced by symbols in the .dynsym table
+ 4: Compatible Extension
+ 8: Incompatible
 
 
 ## Usage
  header-abi-diff -old <old-abi-dump> -new <new-abi-dump> -o <report>
+ For options : header-abi-diff --help
 

@@ -15,6 +15,8 @@
 #ifndef ABI_WRAPPERS_H_
 #define ABI_WRAPPERS_H_
 
+#include <ir_representation.h>
+
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-parameter"
 #pragma clang diagnostic ignored "-Wnested-anon-types"
@@ -32,7 +34,10 @@ class ABIWrapper {
  public:
   ABIWrapper(clang::MangleContext *mangle_contextp,
              clang::ASTContext *ast_contextp,
-             const clang::CompilerInstance *cip);
+             const clang::CompilerInstance *cip,
+             std::set<std::string> *type_cache,
+             abi_util::IRDumper *ir_dumper,
+             std::map<const clang::Decl *, std::string> &decl_to_source_cache);
 
   static std::string GetDeclSourceFile(const clang::Decl *decl,
                                        const clang::CompilerInstance *cip);
@@ -41,123 +46,161 @@ class ABIWrapper {
                                         clang::MangleContext *mangle_context);
  protected:
   abi_dump::AccessSpecifier AccessClangToDump(
-      const clang::AccessSpecifier sp) const;
+      const clang::AccessSpecifier sp);
+  std::string GetCachedDeclSourceFile(const clang::Decl *decl,
+                                      const clang::CompilerInstance *cip);
 
-  bool SetupTemplateParamNames(abi_dump::TemplateInfo *tinfo,
-                               clang::TemplateParameterList *pl) const;
+  bool SetupTemplateArguments(const clang::TemplateArgumentList *tl,
+                              abi_util::TemplatedArtifactIR *ta,
+                              const std::string &source_file);
 
-  bool SetupTemplateArguments(abi_dump::TemplateInfo *tinfo,
-                              const clang::TemplateArgumentList *tl) const;
+  std::string QualTypeToString(const clang::QualType &sweet_qt);
 
-  std::string QualTypeToString(const clang::QualType &sweet_qt) const;
+  std::string GetTagDeclQualifiedName(const clang::TagDecl *decl);
 
-  std::string GetTagDeclQualifiedName(const clang::TagDecl *decl) const;
+  bool CreateBasicNamedAndTypedDecl(clang::QualType,
+                                    const std::string &source_file);
+  bool CreateBasicNamedAndTypedDecl(
+      clang::QualType canonical_type,
+      abi_util::TypeIR *typep,
+      const std::string &source_file);
 
-  bool SetupBasicTypeAbi(abi_dump::BasicTypeAbi *type_abi,
-                         const clang::QualType type, bool dump_size) const;
+  bool CreateExtendedType(
+      clang::QualType canonical_type,
+      abi_util::TypeIR *typep);
 
-  bool SetupBasicNamedAndTypedDecl(
-      abi_dump::BasicNamedAndTypedDecl *basic_named_and_typed_decl,
-      const clang::QualType type, const std::string &name,
-      const clang::AccessSpecifier &access, std::string key,
-      bool dump_size) const;
+  clang::QualType GetReferencedType(const clang::QualType qual_type);
 
-  std::string GetTypeLinkageName(const clang::Type *typep) const;
+  std::string GetTypeLinkageName(const clang::Type *typep);
 
-protected:
+  std::unique_ptr<abi_util::TypeIR> SetTypeKind(const clang::QualType qtype,
+                                                const std::string &source_file);
+
+
+ protected:
   const clang::CompilerInstance *cip_;
   clang::MangleContext *mangle_contextp_;
   clang::ASTContext *ast_contextp_;
+  std::set<std::string> *type_cache_;
+  abi_util::IRDumper *ir_dumper_;
+  std::map<const clang::Decl *, std::string> &decl_to_source_file_cache_;
 };
 
 class RecordDeclWrapper : public ABIWrapper {
  public:
-  RecordDeclWrapper(clang::MangleContext *mangle_contextp,
-                    clang::ASTContext *ast_contextp,
-                    const clang::CompilerInstance *compiler_instance_p,
-                    const clang::RecordDecl *decl);
+  RecordDeclWrapper(
+      clang::MangleContext *mangle_contextp, clang::ASTContext *ast_contextp,
+      const clang::CompilerInstance *compiler_instance_p,
+      const clang::RecordDecl *decl, std::set<std::string> *type_cache,
+      abi_util::IRDumper *ir_dumper,
+      std::map<const clang::Decl *, std::string> &decl_to_source_cache_,
+      const std::string &previous_record_stages);
 
-  std::unique_ptr<abi_dump::RecordDecl> GetRecordDecl() const;
+  bool GetRecordDecl();
 
  private:
   const clang::RecordDecl *record_decl_;
+  std::string previous_record_stages_;
 
  private:
-  bool SetupRecordInfo(abi_dump::RecordDecl *record_declp,
-                       const std::string &source_file) const;
+  bool SetupRecordInfo(abi_util::RecordTypeIR *type,
+                       const std::string &source_file);
 
-  bool SetupRecordFields(abi_dump::RecordDecl *record_declp) const;
+  bool SetupRecordFields(abi_util::RecordTypeIR *record_declp,
+                         const std::string &source_file);
 
-  bool SetupCXXBases(abi_dump::RecordDecl *cxxp,
-                     const clang::CXXRecordDecl *cxx_record_decl) const;
+  bool SetupCXXBases(abi_util::RecordTypeIR *cxxp,
+                     const clang::CXXRecordDecl *cxx_record_decl);
 
-  bool SetupTemplateInfo(abi_dump::RecordDecl *record_declp,
-                         const clang::CXXRecordDecl *cxx_record_decl) const;
+  bool SetupTemplateInfo(abi_util::RecordTypeIR *record_declp,
+                         const clang::CXXRecordDecl *cxx_record_decl,
+                         const std::string &source_file);
 
-  bool SetupRecordVTable(abi_dump::RecordDecl *record_declp,
-                         const clang::CXXRecordDecl *cxx_record_decl) const;
-  bool SetupRecordVTableComponent(
-      abi_dump::VTableComponent *added_vtable_component,
-      const clang::VTableComponent &vtable_component) const;
+  bool SetupRecordVTable(abi_util::RecordTypeIR *record_declp,
+                         const clang::CXXRecordDecl *cxx_record_decl);
+  abi_util::VTableComponentIR SetupRecordVTableComponent(
+      const clang::VTableComponent &vtable_component);
 
-  bool SetupCXXRecordInfo(abi_dump::RecordDecl *record_declp) const;
+  bool SetupCXXRecordInfo(abi_util::RecordTypeIR *record_declp,
+                          const std::string &source_file);
+
+  bool CreateAnonymousRecord(
+      const clang::RecordDecl *decl, const std::string &linker_set_key);
 };
 
 class FunctionDeclWrapper : public ABIWrapper {
  public:
-  FunctionDeclWrapper(clang::MangleContext *mangle_contextp,
-                      clang::ASTContext *ast_contextp,
-                      const clang::CompilerInstance *compiler_instance_p,
-                      const clang::FunctionDecl *decl);
+  FunctionDeclWrapper(
+      clang::MangleContext *mangle_contextp, clang::ASTContext *ast_contextp,
+      const clang::CompilerInstance *compiler_instance_p,
+      const clang::FunctionDecl *decl, std::set<std::string> *type_cache,
+      abi_util::IRDumper *ir_dumper,
+      std::map<const clang::Decl *, std::string> &decl_to_source_cache_);
 
-  std::unique_ptr<abi_dump::FunctionDecl> GetFunctionDecl() const;
+  std::unique_ptr<abi_util::FunctionIR> GetFunctionDecl();
 
  private:
   const clang::FunctionDecl *function_decl_;
 
  private:
-  bool SetupFunction(abi_dump::FunctionDecl *methodp,
-                     const std::string &source_file) const;
+  bool SetupFunction(abi_util::FunctionIR *methodp,
+                     const std::string &source_file);
 
-  bool SetupTemplateInfo(abi_dump::FunctionDecl *functionp) const;
+  bool SetupTemplateInfo(abi_util::FunctionIR *functionp,
+                         const std::string &source_file);
 
-  bool SetupFunctionParameters(abi_dump::FunctionDecl *functionp) const;
+  bool SetupFunctionParameters(abi_util::FunctionIR *functionp,
+                               const std::string &source_file);
+
+  bool SetupFunctionParameter(abi_util::FunctionIR *functionp,
+                              const clang::QualType qual_type,
+                              bool has_default_arg,
+                              const std::string &source_file);
+
+  bool SetupThisParameter(abi_util::FunctionIR *functionp,
+                          const std::string &source_file);
+
 };
 
 class EnumDeclWrapper : public ABIWrapper {
  public:
-  EnumDeclWrapper(clang::MangleContext *mangle_contextp,
-                  clang::ASTContext *ast_contextp,
-                  const clang::CompilerInstance *compiler_instance_p,
-                  const clang::EnumDecl *decl);
+  EnumDeclWrapper(
+      clang::MangleContext *mangle_contextp, clang::ASTContext *ast_contextp,
+      const clang::CompilerInstance *compiler_instance_p,
+      const clang::EnumDecl *decl,
+      std::set<std::string> *type_cache, abi_util::IRDumper *ir_dumper,
+      std::map<const clang::Decl *, std::string> &decl_to_source_cache_);
 
-  std::unique_ptr<abi_dump::EnumDecl> GetEnumDecl() const;
+  bool GetEnumDecl();
 
  private:
   const clang::EnumDecl *enum_decl_;
 
  private:
-  bool SetupEnum(abi_dump::EnumDecl *enump,
-                 const std::string &source_file) const;
-  bool SetupEnumFields(abi_dump::EnumDecl *enump) const;
+  bool SetupEnum(abi_util::EnumTypeIR *type,
+                 const std::string &source_file);
+
+  bool SetupEnumFields(abi_util::EnumTypeIR *enump);
 };
 
 class GlobalVarDeclWrapper : public ABIWrapper {
  public:
-  GlobalVarDeclWrapper(clang::MangleContext *mangle_contextp,
-                  clang::ASTContext *ast_contextp,
-                  const clang::CompilerInstance *compiler_instance_p,
-                  const clang::VarDecl *decl);
+  GlobalVarDeclWrapper(
+      clang::MangleContext *mangle_contextp, clang::ASTContext *ast_contextp,
+      const clang::CompilerInstance *compiler_instance_p,
+      const clang::VarDecl *decl,
+      std::set<std::string> *type_cache, abi_util::IRDumper *ir_dumper,
+      std::map<const clang::Decl *, std::string> &decl_to_source_cache_);
 
-  std::unique_ptr<abi_dump::GlobalVarDecl> GetGlobalVarDecl() const;
+  bool GetGlobalVarDecl();
 
  private:
   const clang::VarDecl *global_var_decl_;
  private:
-  bool SetupGlobalVar(abi_dump::GlobalVarDecl *global_varp,
-                      const std::string &source_file) const;
+  bool SetupGlobalVar(abi_util::GlobalVarIR *global_varp,
+                      const std::string &source_file);
 };
 
 } //end namespace abi_wrapper
 
-#endif  // ABI_WRAPPERS_H_
+#endif // ABI_WRAPPERS_H_
