@@ -1132,53 +1132,95 @@ class ELFLinker(object):
         '/vendor/${LIB}',
         '/vendor/${LIB}/vndk-sp',
         '/system/${LIB}/vndk-sp',
+        '/vendor/${LIB}/vndk',
+        '/system/${LIB}/vndk',
         '/system/${LIB}',  # For degenerated VNDK libs.
     )
 
     VNDK_SP_SEARCH_PATH = (
         '/vendor/${LIB}/vndk-sp',
         '/system/${LIB}/vndk-sp',
-        '/vendor/${LIB}',  # To discover missing vndk-sp dependencies.
-        '/system/${LIB}',  # To discover missing vndk-sp dependencies.
+        '/vendor/${LIB}',  # To discover missing VNDK-SP dependencies.
+        '/system/${LIB}',  # To discover missing VNDK-SP dependencies or LL-NDK.
     )
+
+    VNDK_SEARCH_PATH = (
+        '/vendor/${LIB}/vndk-sp',
+        '/system/${LIB}/vndk-sp',
+        '/vendor/${LIB}/vndk',
+        '/system/${LIB}/vndk',
+        '/system/${LIB}',  # To discover missing VNDK dependencies or LL-NDK.
+    )
+
 
     @staticmethod
     def _subst_search_path(search_path, elf_class):
         lib_dir_name = 'lib' if elf_class == ELF.ELFCLASS32 else 'lib64'
         return [path.replace('${LIB}', lib_dir_name) for path in search_path]
 
-    @staticmethod
-    def _is_in_vndk_sp_dir(path):
-        return os.path.basename(os.path.dirname(path)).startswith('vndk-sp')
+    @classmethod
+    def _get_dirname(cls, path):
+        return os.path.basename(os.path.dirname(path))
+
+    @classmethod
+    def _is_in_vndk_dir(cls, path):
+        return cls._get_dirname(path) == 'vndk'
+
+    @classmethod
+    def _is_in_vndk_sp_dir(cls, path):
+        return cls._get_dirname(path) == 'vndk-sp'
+
+    @classmethod
+    def _classify_vndk_libs(cls, libs):
+        vndk_libs = set()
+        vndk_sp_libs = set()
+        other_libs = set()
+        for lib in libs:
+            dirname = cls._get_dirname(lib.path)
+            if dirname == 'vndk':
+                vndk_libs.add(lib)
+            elif dirname == 'vndk-sp':
+                vndk_sp_libs.add(lib)
+            else:
+                other_libs.add(lib)
+        return (vndk_libs, vndk_sp_libs, other_libs)
 
     def _resolve_elf_class_deps(self, elf_class, generic_refs):
-        system_lib_dict = self.lib_pt[PT_SYSTEM].get_lib_dict(elf_class)
-        vendor_lib_dict = self.lib_pt[PT_VENDOR].get_lib_dict(elf_class)
+        # Classify libs.
         lib_dict = self._compute_lib_dict(elf_class)
+        system_lib_dict = self.lib_pt[PT_SYSTEM].get_lib_dict(elf_class)
+        system_vndk_libs, system_vndk_sp_libs, system_libs = \
+                self._classify_vndk_libs(system_lib_dict.values())
+
+        vendor_lib_dict = self.lib_pt[PT_VENDOR].get_lib_dict(elf_class)
+        vendor_vndk_libs, vendor_vndk_sp_libs, vendor_libs = \
+                self._classify_vndk_libs(vendor_lib_dict.values())
+
+        vndk_libs = system_vndk_libs | vendor_vndk_libs
+        vndk_sp_libs = system_vndk_sp_libs | vendor_vndk_sp_libs
 
         # Resolve system libs.
-        system_libs = [lib for lib in system_lib_dict.values()
-                       if not self._is_in_vndk_sp_dir(lib.path)]
         search_path = self._subst_search_path(
                 self.SYSTEM_SEARCH_PATH, elf_class)
         resolver = ELFResolver(lib_dict, search_path)
         self._resolve_lib_set_deps(system_libs, resolver, generic_refs)
 
+        # Resolve vndk-sp libs
+        search_path = self._subst_search_path(
+                self.VNDK_SP_SEARCH_PATH, elf_class)
+        resolver = ELFResolver(lib_dict, search_path)
+        self._resolve_lib_set_deps(vndk_sp_libs, resolver, generic_refs)
+
+        # Resolve vndk libs
+        search_path = self._subst_search_path(self.VNDK_SEARCH_PATH, elf_class)
+        resolver = ELFResolver(lib_dict, search_path)
+        self._resolve_lib_set_deps(vndk_libs, resolver, generic_refs)
+
         # Resolve vendor libs.
-        vendor_libs = [lib for lib in vendor_lib_dict.values()
-                       if not self._is_in_vndk_sp_dir(lib.path)]
         search_path = self._subst_search_path(
                 self.VENDOR_SEARCH_PATH, elf_class)
         resolver = ELFResolver(lib_dict, search_path)
         self._resolve_lib_set_deps(vendor_libs, resolver, generic_refs)
-
-        # Resolve vndk-sp libs
-        vndk_sp = [lib for lib in lib_dict.values()
-                   if self._is_in_vndk_sp_dir(lib.path)]
-        search_path = self._subst_search_path(
-                self.VNDK_SP_SEARCH_PATH, elf_class)
-        resolver = ELFResolver(lib_dict, search_path)
-        self._resolve_lib_set_deps(vndk_sp, resolver, generic_refs)
 
     def resolve_deps(self, generic_refs=None):
         self._resolve_elf_class_deps(ELF.ELFCLASS32, generic_refs)
