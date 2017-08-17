@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 # The following file extensions are ignored
 FILE_EXT_BLACK_LIST = {
     b'.1',
@@ -32,4 +34,7 @@ PATH_PATTERN_BLACK_LIST = (
     b'autom4te.cache',
     b'dejagnu',
     b'llvm/Config/Config',
+    b'.git',
+    b'.repo',
+    b'out',
 )

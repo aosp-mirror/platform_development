@@ -1,6 +1,8 @@
-from data_utils import *
-from preprocess import prepare
-from server import *
+#!/usr/bin/env python3
+
+from sourcedr.data_utils import *
+from sourcedr.preprocess import prepare
+from sourcedr.server import *
 
 from flask import Flask, jsonify, render_template, request
 from flask_testing import LiveServerTestCase, TestCase
@@ -13,16 +15,22 @@ app.config['TESTING'] = True
 
 class TestPreprocess(unittest.TestCase):
     def test_prepare(self):
-        os.remove(data_path)
-        prepare(android_root='test', pattern='dlopen', is_regex=False)
+        remove_data()
+        prepare(android_root='sourcedr/test', pattern='dlopen', is_regex=False)
         self.assertTrue( os.path.exists(data_path) )
 
 class TestViews(TestCase):
     def create_app(self):
         return app
 
+    def setUp(self):
+        prepare(android_root='sourcedr/test', pattern='dlopen', is_regex=False)
+
+    def tearDown(self):
+        remove_data()
+
     def test_get_file(self):
-        test_arg = 'test/example.c'
+        test_arg = 'sourcedr/test/example.c'
         response = self.client.get('/get_file',
                                    query_string=dict(path=test_arg))
         ret = response.json['result']
@@ -30,7 +38,7 @@ class TestViews(TestCase):
             self.assertEqual(ret, f.read())
 
     def test_load_file(self):
-        test_arg = os.path.abspath('./test/dlopen/test.c:10')
+        test_arg = os.path.abspath('./sourcedr/test/dlopen/test.c:10')
         response = self.client.get('/load_file',
                                    query_string=dict(path=test_arg))
         deps = json.loads(response.json['deps'])
@@ -53,5 +61,4 @@ class TestViews(TestCase):
         self.assertEqual(['arr_0', 'arr_1'], cdata[test_arg['path']][1])
 
 if __name__ == '__main__':
-    prepare(android_root='test', pattern='dlopen', is_regex=False)
     unittest.main()
