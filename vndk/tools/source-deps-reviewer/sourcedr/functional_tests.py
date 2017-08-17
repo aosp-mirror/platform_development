@@ -16,8 +16,9 @@ app.config['TESTING'] = True
 class TestPreprocess(unittest.TestCase):
     def test_prepare(self):
         remove_data()
-        engine = CodeSearch(android_root='sourcedr/test')
-        engine.find(pattern='dlopen', is_regex=False)
+        engine = CodeSearch.create_default(android_root='sourcedr/test')
+        engine.build_index()
+        engine.find(patterns=['dlopen'], is_regexs=[False])
         self.assertTrue(os.path.exists(data_path))
 
 class TestViews(TestCase):
@@ -25,8 +26,9 @@ class TestViews(TestCase):
         return app
 
     def setUp(self):
-        engine = CodeSearch(android_root='sourcedr/test')
-        engine.find(pattern='dlopen', is_regex=False)
+        engine = CodeSearch.create_default(android_root='sourcedr/test')
+        engine.build_index()
+        engine.find(patterns=['dlopen'], is_regexs=[False])
 
     def tearDown(self):
         remove_data()
@@ -40,7 +42,8 @@ class TestViews(TestCase):
             self.assertEqual(ret, f.read())
 
     def test_load_file(self):
-        test_arg = os.path.abspath('./sourcedr/test/dlopen/test.c:10')
+        test_arg = os.path.abspath('sourcedr/test/dlopen/test.c')
+        test_arg += ':10:    handle = dlopen("libm.so.6", RTLD_LAZY);'
         response = self.client.get('/load_file',
                                    query_string=dict(path=test_arg))
         deps = json.loads(response.json['deps'])
@@ -52,15 +55,17 @@ class TestViews(TestCase):
         self.assertEqual(codes, cdata[test_arg][1])
 
     def test_save_all(self):
+        label = os.path.abspath('sourcedr//test/dlopen/test.c')
+        label += ':10:    handle = dlopen("libm.so.6", RTLD_LAZY);'
         test_arg = {
-            'path': 'test_path:test_line_no',
+            'label': label,
             'deps': json.dumps(['this_is_a_test.so']),
             'codes': json.dumps(['arr_0', 'arr_1'])
         }
         response = self.client.get('/save_all', query_string=test_arg)
         cdata = load_data()
-        self.assertEqual(['this_is_a_test.so'],  cdata[test_arg['path']][0])
-        self.assertEqual(['arr_0', 'arr_1'], cdata[test_arg['path']][1])
+        self.assertEqual(['this_is_a_test.so'],  cdata[test_arg['label']][0])
+        self.assertEqual(['arr_0', 'arr_1'], cdata[test_arg['label']][1])
 
 if __name__ == '__main__':
     unittest.main()

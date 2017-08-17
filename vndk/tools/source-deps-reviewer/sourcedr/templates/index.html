@@ -14,16 +14,19 @@
 
 <div class="container-fluid">
   <div class="row content">
-    <h2>Code review tool</h2>
+    <h2 style="padding-left:20px;">Code review tool</h2>
     <div id="item_list" class="col-sm-3 sidenav hidden-xs"></div>
 
     <div class="col-sm-5">
-      <h3>You are browsing:</h3>
+      <h3>Browsing:</h3>
+      <pre><h4 id="browsing_file_path"></h4></pre><br>
       <form id="go_form">
-        <pre><h3 id="browsing_file_path"></h3></pre><br>
-        <input type="text" name="browsing_path" placeholder="Enter file path here"/>
-        <input type="submit" name="go" value="GO"/>
-        <a id="goto_pattern_line">goto pattern line</a>
+        <div class="input-group" style="margin-bottom:10px;">
+          <span class="input-group-addon" id="path_prefix"></span>
+          <input type="text" class="form-control" name="browsing_path" placeholder="Enter file path here" aria-describedby="path_prefix">
+        </div>
+        <input class="btn btn-primary" type="submit" name="go" value="GO"/>
+        <a class="btn btn-link" id="goto_pattern_line">goto pattern line</a>
         <pre id="browsing_file" class="line-numbers"><code id="code" class="language-C" style="display:inline-block;"></code></pre>
       </form>
     </div>
@@ -31,37 +34,41 @@
 
     <div class="col-sm-4">
       <div class="well">
-        <h3>Add patterns to grep(will be unable to delete added patterns):</h3>
-        <form id="add_pattern">
-          <input type="text" name="pattern"/>
-          <input type="checkbox" name="is_regex" id="is_regex"/>
-          <label for="is_regex">is regex</label>
-          <input type="submit" name="go" value="submit"/>
+        <h3>Add patterns to grep</h3>
+        <form id="add_pattern" class="input-group" style="padding-left:20px;">
+          <span class="input-group-addon">is regex</span>
+          <span class="input-group-addon">
+            <input type="checkbox" name="is_regex" id="is_regex">
+          </span>
+          <input type="text" name="pattern" class="form-control">
         </form>
-
         <ul id="pattern_list"></ul>
-        <h3>file path:</h3><pre><h3 id="file_path"></h3></pre><br>
-        <h3>pattern line number:</h3><span id="line_no" style="font-size:22px;padding-left:10px;"></span><br>
-
-        <h1>Library Dependencies</h1>
-        <form id="add_deps">
-          <input type="text" id="enter_deps"/>
-          <input type="submit" value="Add"/>
+        <h3>File path:</h3>
+        <pre style="padding-left:20px;"><h4 id="file_path"></h4></pre>
+        <h3>Pattern line number:</h3>
+        <h3 id="line_no"></h3><br>
+      </div>
+      <div class="well">
+        <h3>Library Dependencies</h3>
+        <form id="add_deps" class="input-group">
+          <input type="text" class="form-control" id="enter_deps" placeholder="Fill in * if undetermined"/>
+          <span class="input-group-btn">
+            <input class="btn btn-secondary" type="submit" value="Add"/>
+          </span>
         </form>
         <ul id="deps_list"></ul>
 
-        <h1>Code Dependencies</h1>
+        <h3>Code Dependencies</h3>
         <form id="add_code">
-          <input type="button" id="get_selection" value="Get selection"/>
-          <input type="submit" id="add_code" value="Add"/><br>
-          <input type="text" id="code_file_path" style="margin: 0px; width: 600px;"/>
-          <textarea id="selected_text" name="selectedtext" rows="5" style="margin: 0px; width: 600px; height: 106px;"></textarea>
+          <input class="btn btn-secondary" type="button" id="get_selection" value="Get selection"/>
+          <input class="btn btn-secondary" type="submit" id="add_code" value="Add"/><br>
+          <input type="text" id="code_file_path" style="margin: 0px; width: 100%;"/>
+          <textarea id="selected_text" name="selectedtext" rows="5" style="margin: 0px; width: 100%; height: 106px;"></textarea>
           <ul id="code_list"></ul>
         </form>
         <form id="save_all">
-          <input type="submit" value="Save All"/>
+          <input class="btn btn-secondary" type="submit" value="Save All"/>
         </form>
-
       </div>
     </div>
   </div>
