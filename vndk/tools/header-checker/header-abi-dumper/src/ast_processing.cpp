@@ -19,9 +19,6 @@
 #include <clang/Tooling/Core/QualTypeNames.h>
 #include <clang/Index/CodegenNameGenerator.h>
 
-#include <google/protobuf/text_format.h>
-#include <google/protobuf/io/zero_copy_stream_impl.h>
-
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -33,83 +30,64 @@ using abi_wrapper::EnumDeclWrapper;
 using abi_wrapper::GlobalVarDeclWrapper;
 
 HeaderASTVisitor::HeaderASTVisitor(
-    abi_dump::TranslationUnit *tu_ptr,
     clang::MangleContext *mangle_contextp,
     clang::ASTContext *ast_contextp,
     const clang::CompilerInstance *compiler_instance_p,
     const std::string &current_file_name,
     const std::set<std::string> &exported_headers,
-    const clang::Decl *tu_decl)
-  : tu_ptr_(tu_ptr),
-    mangle_contextp_(mangle_contextp),
+    const clang::Decl *tu_decl,
+    std::set<std::string> *type_cache,
+    abi_util::IRDumper *ir_dumper)
+  : mangle_contextp_(mangle_contextp),
     ast_contextp_(ast_contextp),
     cip_(compiler_instance_p),
     current_file_name_(current_file_name),
     exported_headers_(exported_headers),
-    tu_decl_(tu_decl) { }
+    tu_decl_(tu_decl),
+    type_cache_(type_cache),
+    ir_dumper_(ir_dumper) { }
 
 bool HeaderASTVisitor::VisitRecordDecl(const clang::RecordDecl *decl) {
-  // Skip forward declaration.
+  // Skip forward declarations, dependent records. Also skip anonymous records
+  // as they will be traversed through record fields.
   if (!decl->isThisDeclarationADefinition() ||
-      decl->getTypeForDecl()->isDependentType()) {
+      decl->getTypeForDecl()->isDependentType() ||
+      decl->isAnonymousStructOrUnion() ||
+      !decl->hasNameForLinkage()) {
     return true;
   }
   RecordDeclWrapper record_decl_wrapper(
-      mangle_contextp_, ast_contextp_, cip_, decl);
-  std::unique_ptr<abi_dump::RecordDecl> wrapped_record_decl =
-      record_decl_wrapper.GetRecordDecl();
-  if (!wrapped_record_decl) {
-    llvm::errs() << "Getting Record Decl failed\n";
-    return false;
-  }
-  abi_dump::RecordDecl *added_record_declp = tu_ptr_->add_records();
-  if (!added_record_declp) {
-    return false;
-  }
-  *added_record_declp = *wrapped_record_decl;
-  return true;
+      mangle_contextp_, ast_contextp_, cip_, decl, type_cache_,
+      ir_dumper_, decl_to_source_file_cache_, "");
+  return record_decl_wrapper.GetRecordDecl();
 }
 
 bool HeaderASTVisitor::VisitEnumDecl(const clang::EnumDecl *decl) {
   if (!decl->isThisDeclarationADefinition() ||
-      decl->getTypeForDecl()->isDependentType()) {
+      decl->getTypeForDecl()->isDependentType() ||
+      !decl->hasNameForLinkage()) {
     return true;
   }
   EnumDeclWrapper enum_decl_wrapper(
-      mangle_contextp_, ast_contextp_, cip_, decl);
-  std::unique_ptr<abi_dump::EnumDecl> wrapped_enum_decl =
-      enum_decl_wrapper.GetEnumDecl();
-  if (!wrapped_enum_decl) {
-    llvm::errs() << "Getting Enum Decl failed\n";
-    return false;
-  }
-  abi_dump::EnumDecl *added_enum_declp = tu_ptr_->add_enums();
-  if (!added_enum_declp) {
-    return false;
-  }
-  *added_enum_declp = *wrapped_enum_decl;
-  return true;
-}
+      mangle_contextp_, ast_contextp_, cip_, decl, type_cache_,
+      ir_dumper_, decl_to_source_file_cache_);
+  return enum_decl_wrapper.GetEnumDecl();
+ }
 
-static bool MutateFunctionWithLinkageName(abi_dump::TranslationUnit *tu_ptr,
-                                          const abi_dump::FunctionDecl *fd,
+static bool MutateFunctionWithLinkageName(const abi_util::FunctionIR *function,
+                                          abi_util::IRDumper *ir_dumper,
                                           std::string &linkage_name) {
-  abi_dump::FunctionDecl *added_function_declp = tu_ptr->add_functions();
-  if (!added_function_declp) {
-    return false;
-  }
-  *added_function_declp = *fd;
-  added_function_declp->set_mangled_function_name(linkage_name);
-  assert(added_function_declp->mutable_basic_abi() != nullptr);
-  added_function_declp->mutable_basic_abi()->set_linker_set_key(linkage_name);
-  return true;
+  auto added_function = std::make_unique<abi_util::FunctionIR>();
+  *added_function = *function;
+  added_function->SetLinkerSetKey(linkage_name);
+  return ir_dumper->AddLinkableMessageIR(added_function.get());
 }
 
-static bool AddMangledFunctions(abi_dump::TranslationUnit *tu_ptr,
-                                const abi_dump::FunctionDecl *fd,
+static bool AddMangledFunctions(const abi_util::FunctionIR *function,
+                                abi_util:: IRDumper *ir_dumper,
                                 std::vector<std::string> &manglings) {
   for (auto &&mangling : manglings) {
-    if (!MutateFunctionWithLinkageName(tu_ptr, fd, mangling)) {
+    if (!MutateFunctionWithLinkageName(function, ir_dumper, mangling)) {
       return false;
     }
   }
@@ -139,23 +117,20 @@ bool HeaderASTVisitor::VisitFunctionDecl(const clang::FunctionDecl *decl) {
     return true;
   }
   FunctionDeclWrapper function_decl_wrapper(mangle_contextp_, ast_contextp_,
-                                            cip_, decl);
-  std::unique_ptr<abi_dump::FunctionDecl> wrapped_function_decl =
-      function_decl_wrapper.GetFunctionDecl();
-  if (!wrapped_function_decl) {
-    llvm::errs() << "Getting Function Decl failed\n";
-    return false;
-  }
+                                            cip_, decl, type_cache_,
+                                            ir_dumper_,
+                                            decl_to_source_file_cache_);
+  auto function_wrapper = function_decl_wrapper.GetFunctionDecl();
   // Destructors and Constructors can have more than 1 symbol generated from the
   // same Decl.
   clang::index::CodegenNameGenerator cg(*ast_contextp_);
   std::vector<std::string> manglings = cg.getAllManglings(decl);
   if (!manglings.empty()) {
-    return AddMangledFunctions(tu_ptr_, wrapped_function_decl.get(), manglings);
+    return AddMangledFunctions(function_wrapper.get(), ir_dumper_, manglings);
   }
   std::string linkage_name =
       ABIWrapper::GetMangledNameDecl(decl, mangle_contextp_);
-  return MutateFunctionWithLinkageName(tu_ptr_, wrapped_function_decl.get(),
+  return MutateFunctionWithLinkageName(function_wrapper.get(), ir_dumper_,
                                        linkage_name);
 }
 
@@ -166,19 +141,10 @@ bool HeaderASTVisitor::VisitVarDecl(const clang::VarDecl *decl) {
     return true;
   }
   GlobalVarDeclWrapper global_var_decl_wrapper(mangle_contextp_, ast_contextp_,
-                                               cip_, decl);
-  std::unique_ptr<abi_dump::GlobalVarDecl> wrapped_global_var_decl =
-      global_var_decl_wrapper.GetGlobalVarDecl();
-  if (!wrapped_global_var_decl) {
-    llvm::errs() << "Getting Global Var Decl failed\n";
-    return false;
-  }
-  abi_dump::GlobalVarDecl *added_global_var_declp = tu_ptr_->add_global_vars();
-  if (!added_global_var_declp) {
-    return false;
-  }
-  *added_global_var_declp = *wrapped_global_var_decl;
-  return true;
+                                               cip_, decl, type_cache_,
+                                               ir_dumper_,
+                                               decl_to_source_file_cache_);
+  return  global_var_decl_wrapper.GetGlobalVarDecl();
 }
 
 static bool AreHeadersExported(const std::set<std::string> &exported_headers) {
@@ -191,6 +157,7 @@ bool HeaderASTVisitor::TraverseDecl(clang::Decl *decl) {
     return true;
   }
   std::string source_file = ABIWrapper::GetDeclSourceFile(decl, cip_);
+  decl_to_source_file_cache_.insert(std::make_pair(decl, source_file));
   // If no exported headers are specified we assume the whole AST is exported.
   if ((decl != tu_decl_) && AreHeadersExported(exported_headers_) &&
       (exported_headers_.find(source_file) == exported_headers_.end())) {
@@ -210,18 +177,19 @@ HeaderASTConsumer::HeaderASTConsumer(
     exported_headers_(exported_headers) { }
 
 void HeaderASTConsumer::HandleTranslationUnit(clang::ASTContext &ctx) {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-  std::ofstream text_output(out_dump_name_);
-  google::protobuf::io::OstreamOutputStream text_os(&text_output);
+  clang::PrintingPolicy policy(ctx.getPrintingPolicy());
+  policy.SuppressTagKeyword = true;
+  ctx.setPrintingPolicy(policy);
   clang::TranslationUnitDecl *translation_unit = ctx.getTranslationUnitDecl();
   std::unique_ptr<clang::MangleContext> mangle_contextp(
       ctx.createMangleContext());
-  abi_dump::TranslationUnit tu;
-  std::string str_out;
-  HeaderASTVisitor v(&tu, mangle_contextp.get(), &ctx, cip_, file_name_,
-                     exported_headers_, translation_unit);
-  if (!v.TraverseDecl(translation_unit) ||
-      !google::protobuf::TextFormat::Print(tu, &text_os)) {
+  std::set<std::string> type_cache;
+  std::unique_ptr<abi_util::IRDumper> ir_dumper =
+      abi_util::IRDumper::CreateIRDumper("protobuf", out_dump_name_);
+  HeaderASTVisitor v(mangle_contextp.get(), &ctx, cip_, file_name_,
+                     exported_headers_, translation_unit, &type_cache,
+                     ir_dumper.get());
+  if (!v.TraverseDecl(translation_unit) || !ir_dumper->Dump()) {
     llvm::errs() << "Serialization to ostream failed\n";
     ::exit(1);
   }

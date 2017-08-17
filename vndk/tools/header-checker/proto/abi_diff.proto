@@ -4,97 +4,112 @@ import "development/vndk/tools/header-checker/proto/abi_dump.proto";
 
 package abi_diff;
 
-message RecordFieldDeclDiff {
-  optional abi_dump.RecordFieldDecl old = 1;
-  optional abi_dump.RecordFieldDecl new = 2;
-  optional uint32 index = 3;
+message TypeInfo {
+  optional uint64 size = 1;
+  optional uint32 alignment = 2;
 }
 
-message EnumFieldDeclDiff {
-  optional abi_dump.EnumFieldDecl old = 1;
-  optional abi_dump.EnumFieldDecl new = 2;
-  optional uint32 index = 3;
+message TypeInfoDiff {
+  optional TypeInfo old_type_info  = 1;
+  optional TypeInfo new_type_info  = 2;
+}
+
+message VTableLayoutDiff {
+  optional abi_dump.VTableLayout old_vtable = 1;
+  optional abi_dump.VTableLayout new_vtable = 2;
+}
+
+message RecordFieldDeclDiff {
+  optional abi_dump.RecordFieldDecl old_field = 1;
+  optional abi_dump.RecordFieldDecl new_field = 2;
 }
 
 message CXXBaseSpecifierDiff {
-  optional abi_dump.CXXBaseSpecifier old = 1;
-  optional abi_dump.CXXBaseSpecifier new = 2;
-  optional uint32 index = 3;
+  repeated abi_dump.CXXBaseSpecifier old_bases = 1;
+  repeated abi_dump.CXXBaseSpecifier new_bases = 2;
 }
 
-message CXXVTableDiff {
-  optional abi_dump.VTableComponent old = 1;
-  optional abi_dump.VTableComponent new = 2;
-  optional uint32 index = 3;
+message RecordTypeDiff {
+  optional string name = 1;
+  optional string type_stack = 2;
+  optional TypeInfoDiff type_info_diff = 3;
+  repeated abi_dump.RecordFieldDecl fields_removed = 4;
+  repeated RecordFieldDeclDiff fields_diff = 5;
+  optional CXXBaseSpecifierDiff bases_diff = 6;
+  optional VTableLayoutDiff vtable_layout_diff = 7;
 }
 
-message BasicNamedAndTypedDeclDiff {
-  optional abi_dump.BasicNamedAndTypedDecl old = 1;
-  optional abi_dump.BasicNamedAndTypedDecl new = 2;
+message UnderlyingTypeDiff {
+  optional string old_type  = 1;
+  optional string new_type  = 2;
 }
 
-message RecordDeclDiff {
-  repeated RecordFieldDeclDiff field_diffs = 1;
-  repeated CXXBaseSpecifierDiff base_diffs = 2;
-  repeated CXXVTableDiff vtable_diffs = 3;
-  optional BasicNamedAndTypedDeclDiff type_diff = 4;
-  optional string name = 5;
+message EnumFieldDeclDiff {
+  optional abi_dump.EnumFieldDecl old_field = 1;
+  optional abi_dump.EnumFieldDecl new_field = 2;
 }
 
-message EnumDeclDiff {
-  repeated EnumFieldDeclDiff field_diffs = 1;
-  optional BasicNamedAndTypedDeclDiff type_diff = 2;
-  optional string name = 3;
-}
-
-message ReturnTypeDiff {
-  optional abi_dump.BasicNamedAndTypedDecl old = 1;
-  optional abi_dump.BasicNamedAndTypedDecl new = 2;
-}
-
-message ParamDeclDiff {
-  optional abi_dump.ParamDecl old = 1;
-  optional abi_dump.ParamDecl new = 2;
-  optional uint32 index = 3;
+message EnumTypeDiff {
+  optional string type_stack = 1;
+  optional string name = 2;
+  repeated EnumFieldDeclDiff fields_diff = 3;
+  optional UnderlyingTypeDiff underlying_type_diff = 4;
+  repeated abi_dump.EnumFieldDecl fields_added = 5;
+  repeated abi_dump.EnumFieldDecl fields_removed = 6;
 }
 
 message FunctionDeclDiff {
-  optional ReturnTypeDiff return_type_diffs = 1;
-  repeated ParamDeclDiff param_diffs = 2;
-  optional string name = 3;
+  // Template diffs are not required since in C++, they will show up in mangled
+  // names and in C, templates are not supported.
+  optional string type_stack = 1;
+  optional string name = 2;
+  optional abi_dump.FunctionDecl old = 3;
+  optional abi_dump.FunctionDecl new = 4;
 }
 
 message GlobalVarDeclDiff {
-  optional BasicNamedAndTypedDeclDiff type_diff = 1;
-}
-
-enum CompatibilityStatus {
-  COMPATIBLE = 0;
-  EXTENSION = 1;
-  INCOMPATIBLE = 4;
+  optional string type_stack = 1;
+  optional string name = 2;
+  optional abi_dump.GlobalVarDecl old = 3; // Old global var
+  optional abi_dump.GlobalVarDecl new = 4; // New global var
 }
 
 message TranslationUnitDiff {
   // Library Name
   optional string lib_name = 1;
   optional string arch = 2;
-  // Differing Elements.
-  repeated RecordDeclDiff records_diff = 3;
-  repeated EnumDeclDiff enums_diff = 4;
-  repeated FunctionDeclDiff functions_diff = 5;
-  repeated GlobalVarDeclDiff global_vars_diff = 6;
-  // Removed Elements.
-  repeated abi_dump.RecordDecl records_removed = 7;
-  repeated abi_dump.FunctionDecl functions_removed = 8;
-  repeated abi_dump.EnumDecl enums_removed = 9;
-  repeated abi_dump.GlobalVarDecl global_vars_removed = 10;
-  // Added Elements.
-  repeated abi_dump.RecordDecl records_added = 11;
-  repeated abi_dump.FunctionDecl functions_added = 12;
-  repeated abi_dump.EnumDecl enums_added = 13;
-  repeated abi_dump.GlobalVarDecl global_vars_added = 14;
+  // Records.
+  repeated RecordTypeDiff record_type_diffs = 3;
+  repeated RecordTypeDiff unreferenced_record_type_diffs = 4;
+  repeated abi_dump.RecordType unreferenced_record_types_removed = 5;
+  repeated abi_dump.RecordType unreferenced_record_types_added = 6;
+
+  // Enums
+  repeated EnumTypeDiff enum_type_diffs = 7;
+  repeated EnumTypeDiff enum_type_extension_diffs = 8;
+  repeated EnumTypeDiff unreferenced_enum_type_diffs = 9;
+  repeated EnumTypeDiff unreferenced_enum_type_extension_diffs = 10;
+  repeated abi_dump.EnumType unreferenced_enum_types_removed = 11;
+  repeated abi_dump.EnumType unreferenced_enum_types_added = 12;
+
+  // Functions and Global variables.
+  repeated FunctionDeclDiff function_diffs = 13;
+  repeated GlobalVarDeclDiff global_var_diffs = 14;
+
+  repeated abi_dump.FunctionDecl functions_removed = 15;
+  repeated abi_dump.GlobalVarDecl global_vars_removed = 16;
+
+  repeated abi_dump.FunctionDecl functions_added = 17;
+  repeated abi_dump.GlobalVarDecl global_vars_added = 18;
+
+  repeated abi_dump.ElfFunction added_elf_functions = 19;
+  repeated abi_dump.ElfFunction removed_elf_functions = 20;
+
+  repeated abi_dump.ElfObject added_elf_objects = 21;
+  repeated abi_dump.ElfObject removed_elf_objects = 22;
+
   // Compatiblity Status
-  optional CompatibilityStatus compatibility_status = 15;
+  optional CompatibilityStatus compatibility_status = 23;
 }
 
 // Not merged with TranslationUnitDiff to allow future extensions.
@@ -107,4 +122,10 @@ message ConciseDiffReportInformation {
 
 message MergedTranslationUnitDiff {
   repeated ConciseDiffReportInformation diff_reports = 1;
+}
+
+enum CompatibilityStatus {
+  COMPATIBLE = 0;
+  EXTENSION = 1;
+  INCOMPATIBLE = 4;
 }
