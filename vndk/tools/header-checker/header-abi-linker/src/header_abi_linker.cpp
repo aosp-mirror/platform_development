@@ -65,8 +65,14 @@ static llvm::cl::opt<bool> no_filter(
     "no-filter", llvm::cl::desc("Do not filter any abi"), llvm::cl::Optional,
     llvm::cl::cat(header_linker_category));
 
+static llvm::cl::opt<bool> use_version_script(
+    "use-version-script", llvm::cl::desc("Use version script instead of .so"
+                                         " file to filter out function"
+                                         " and object symbols if available"),
+    llvm::cl::Optional, llvm::cl::cat(header_linker_category));
+
 static llvm::cl::opt<std::string> so_file(
-    "so", llvm::cl::desc("<path to so file>"), llvm::cl::Optional,
+    "so", llvm::cl::desc("<path to so file>"), llvm::cl::Required,
     llvm::cl::cat(header_linker_category));
 
 class HeaderAbiLinker {
@@ -85,15 +91,19 @@ class HeaderAbiLinker {
 
   bool LinkAndDump();
 
+  template <typename T>
+  static std::string GetLinkageName(T &element) {
+    return element.type_info().linker_set_key();
+  }
+  template <typename T>
+  static std::string GetSourceFile(T &element) {
+    return element.type_info().source_file();
+  }
  private:
-  bool LinkRecords(const abi_dump::TranslationUnit &dump_tu,
-                   abi_dump::TranslationUnit *linked_tu);
-
+  bool LinkTypes(const abi_dump::TranslationUnit &dump_tu,
+                 abi_dump::TranslationUnit *linked_tu);
   bool LinkFunctions(const abi_dump::TranslationUnit &dump_tu,
                      abi_dump::TranslationUnit *linked_tu);
-
-  bool LinkEnums(const abi_dump::TranslationUnit &dump_tu,
-                 abi_dump::TranslationUnit *linked_tu);
 
   bool LinkGlobalVars(const abi_dump::TranslationUnit &dump_tu,
                       abi_dump::TranslationUnit *linked_tu);
@@ -110,6 +120,8 @@ class HeaderAbiLinker {
 
   bool ParseSoFile();
 
+  bool AddElfSymbols(abi_dump::TranslationUnit *linked_tu);
+
  private:
   const std::vector<std::string> &dump_files_;
   const std::vector<std::string> &exported_header_dirs_;
@@ -120,9 +132,8 @@ class HeaderAbiLinker {
   const std::string &api_;
   // TODO: Add to a map of std::sets instead.
   std::set<std::string> exported_headers_;
-  std::set<std::string> record_decl_set_;
+  std::set<std::string> types_set_;
   std::set<std::string> function_decl_set_;
-  std::set<std::string> enum_decl_set_;
   std::set<std::string> globvar_decl_set_;
   // Version Script Regex Matching.
   std::set<std::string> functions_regex_matched_set;
@@ -132,12 +143,32 @@ class HeaderAbiLinker {
   std::regex globvars_vs_regex_;
 };
 
+template <typename T, typename Iterable>
+static bool AddElfSymbols(google::protobuf::RepeatedPtrField<T> *dst,
+                          Iterable symbols) {
+  for (auto &&symbol : symbols) {
+    auto *added_symbol = dst->Add();
+    if (added_symbol == nullptr) {
+      return false;
+    }
+    added_symbol->set_name(symbol);
+  }
+  return true;
+}
+
+// To be called right after parsing the .so file / version script.
+bool HeaderAbiLinker::AddElfSymbols(abi_dump::TranslationUnit *linked_tu) {
+
+  return ::AddElfSymbols(linked_tu->mutable_elf_functions(), function_decl_set_)
+      && ::AddElfSymbols(linked_tu->mutable_elf_objects(), globvar_decl_set_);
+}
+
 bool HeaderAbiLinker::LinkAndDump() {
   abi_dump::TranslationUnit linked_tu;
   std::ofstream text_output(out_dump_name_);
   google::protobuf::io::OstreamOutputStream text_os(&text_output);
-  // If a version script is available, we use that as a filter.
-  if (version_script.empty()) {
+  // If the user specifies that a version script should be used, use that.
+  if (!use_version_script) {
     exported_headers_ =
         abi_util::CollectAllExportedHeaders(exported_header_dirs_);
     if (!ParseSoFile()) {
@@ -149,41 +180,25 @@ bool HeaderAbiLinker::LinkAndDump() {
     return false;
   }
 
+  AddElfSymbols(&linked_tu);
+
   for (auto &&i : dump_files_) {
     abi_dump::TranslationUnit dump_tu;
     std::ifstream input(i);
     google::protobuf::io::IstreamInputStream text_is(&input);
     if (!google::protobuf::TextFormat::Parse(&text_is, &dump_tu) ||
-        !LinkRecords(dump_tu, &linked_tu) ||
+        !LinkTypes(dump_tu, &linked_tu) ||
         !LinkFunctions(dump_tu, &linked_tu) ||
-        !LinkEnums(dump_tu, &linked_tu) ||
         !LinkGlobalVars(dump_tu, &linked_tu)) {
       llvm::errs() << "Failed to link elements\n";
       return false;
     }
   }
-
   if (!google::protobuf::TextFormat::Print(linked_tu, &text_os)) {
     llvm::errs() << "Serialization to ostream failed\n";
     return false;
   }
   return true;
-}
-
-static std::string GetSymbol(const abi_dump::RecordDecl &element) {
-  return element.mangled_record_name();
-}
-
-static std::string GetSymbol(const abi_dump::FunctionDecl &element) {
-  return element.mangled_function_name();
-}
-
-static std::string GetSymbol(const abi_dump::EnumDecl &element) {
-  return element.basic_abi().linker_set_key();
-}
-
-static std::string GetSymbol(const abi_dump::GlobalVarDecl &element) {
-  return element.basic_abi().linker_set_key();
 }
 
 static bool QueryRegexMatches(std::set<std::string> *regex_matched_link_set,
@@ -219,10 +234,10 @@ static std::regex CreateRegexMatchExprFromSet(
   return std::regex(all_regex_match_str);
 }
 
+//TODO: make linking decls multi-threaded b/63590537.
 template <typename T>
 inline bool HeaderAbiLinker::LinkDecl(
-    google::protobuf::RepeatedPtrField<T> *dst,
-    std::set<std::string> *link_set,
+    google::protobuf::RepeatedPtrField<T> *dst, std::set<std::string> *link_set,
     std::set<std::string> *regex_matched_link_set, const std::regex *vs_regex,
     const google::protobuf::RepeatedPtrField<T> &src, bool use_version_script) {
   assert(dst != nullptr);
@@ -230,18 +245,20 @@ inline bool HeaderAbiLinker::LinkDecl(
   for (auto &&element : src) {
     // If we are not using a version script and exported headers are available,
     // filter out unexported abi.
-    if (!exported_headers_.empty() &&
-        exported_headers_.find(element.source_file()) ==
+    std::string source_file = GetSourceFile(element);
+    // Builtin types will not have source file information.
+    if (!exported_headers_.empty() && !source_file.empty() &&
+        exported_headers_.find(source_file) ==
         exported_headers_.end()) {
       continue;
     }
+    std::string element_str = GetLinkageName(element);
     // Check for the existence of the element in linked dump / symbol file.
     if (!use_version_script) {
-        if (!link_set->insert(element.basic_abi().linker_set_key()).second) {
+      if (!link_set->insert(element_str).second) {
         continue;
-        }
+      }
     } else {
-      std::string element_str = GetSymbol(element);
       std::set<std::string>::iterator it =
           link_set->find(element_str);
       if (it == link_set->end()) {
@@ -263,13 +280,52 @@ inline bool HeaderAbiLinker::LinkDecl(
   return true;
 }
 
-bool HeaderAbiLinker::LinkRecords(const abi_dump::TranslationUnit &dump_tu,
-                                  abi_dump::TranslationUnit *linked_tu) {
+
+template<>
+std::string HeaderAbiLinker::GetLinkageName<const abi_dump::FunctionDecl> (
+    const abi_dump::FunctionDecl &element) {
+  return element.linker_set_key();
+}
+
+template<>
+std::string HeaderAbiLinker::GetSourceFile<const abi_dump::FunctionDecl> (
+    const abi_dump::FunctionDecl &element) {
+  return element.source_file();
+}
+
+template<>
+std::string HeaderAbiLinker::GetLinkageName<const abi_dump::GlobalVarDecl> (
+    const abi_dump::GlobalVarDecl &element) {
+  return element.linker_set_key();
+}
+
+template<>
+std::string HeaderAbiLinker::GetSourceFile<const abi_dump::GlobalVarDecl> (
+    const abi_dump::GlobalVarDecl &element) {
+  return element.source_file();
+}
+
+bool HeaderAbiLinker::LinkTypes(const abi_dump::TranslationUnit &dump_tu,
+                                abi_dump::TranslationUnit *linked_tu) {
   assert(linked_tu != nullptr);
-  // Even if version scripts are available we take in records, since the symbols
-  // in the version script might reference a record exposed by the library.
-  return LinkDecl(linked_tu->mutable_records(), &record_decl_set_, nullptr,
-                  nullptr, dump_tu.records(), false);
+  // Even if version scripts are available we take in types, since the symbols
+  // in the version script might reference a type exposed by the library.
+  return LinkDecl(linked_tu->mutable_record_types(), &types_set_, nullptr,
+                  nullptr, dump_tu.record_types(), false) &&
+      LinkDecl(linked_tu->mutable_enum_types(), &types_set_, nullptr,
+               nullptr, dump_tu.enum_types(), false) &&
+      LinkDecl(linked_tu->mutable_builtin_types(), &types_set_, nullptr,
+               nullptr, dump_tu.builtin_types(), false) &&
+      LinkDecl(linked_tu->mutable_pointer_types(), &types_set_, nullptr,
+               nullptr, dump_tu.pointer_types(), false) &&
+      LinkDecl(linked_tu->mutable_rvalue_reference_types(), &types_set_, nullptr,
+               nullptr, dump_tu.rvalue_reference_types(), false) &&
+      LinkDecl(linked_tu->mutable_lvalue_reference_types(), &types_set_, nullptr,
+               nullptr, dump_tu.lvalue_reference_types(), false) &&
+      LinkDecl(linked_tu->mutable_array_types(), &types_set_, nullptr,
+               nullptr, dump_tu.array_types(), false) &&
+      LinkDecl(linked_tu->mutable_qualified_types(), &types_set_, nullptr,
+               nullptr, dump_tu.qualified_types(), false);
 }
 
 bool HeaderAbiLinker::LinkFunctions(const abi_dump::TranslationUnit &dump_tu,
@@ -279,15 +335,6 @@ bool HeaderAbiLinker::LinkFunctions(const abi_dump::TranslationUnit &dump_tu,
                   &functions_regex_matched_set, &functions_vs_regex_,
                   dump_tu.functions(),
                   (!version_script_.empty() || !so_file_.empty()));
-}
-
-bool HeaderAbiLinker::LinkEnums(const abi_dump::TranslationUnit &dump_tu,
-                                abi_dump::TranslationUnit *linked_tu) {
-  assert(linked_tu != nullptr);
-  // Even if version scripts are available we take in records, since the symbols
-  // in the version script might reference an enum exposed by the library.
-  return LinkDecl(linked_tu->mutable_enums(), &enum_decl_set_, nullptr,
-                  nullptr, dump_tu.enums(), false);
 }
 
 bool HeaderAbiLinker::LinkGlobalVars(const abi_dump::TranslationUnit &dump_tu,
