@@ -21,6 +21,8 @@
 #include "proto/abi_dump.pb.h"
 #pragma clang diagnostic pop
 
+#include <ir_representation.h>
+
 #include <clang/AST/AST.h>
 #include <clang/AST/ASTConsumer.h>
 #include <clang/AST/Mangle.h>
@@ -33,13 +35,14 @@
 class HeaderASTVisitor
     : public clang::RecursiveASTVisitor<HeaderASTVisitor> {
  public:
-  HeaderASTVisitor(abi_dump::TranslationUnit *tu_ptr,
-                   clang::MangleContext *mangle_contextp,
+  HeaderASTVisitor(clang::MangleContext *mangle_contextp,
                    clang::ASTContext *ast_contextp,
                    const clang::CompilerInstance *compiler_instance_p,
                    const std::string &current_file_name,
                    const std::set<std::string> &exported_headers,
-                   const clang::Decl *tu_decl);
+                   const clang::Decl *tu_decl,
+                   std::set<std::string> *type_cache,
+                   abi_util::IRDumper *ir_dumper);
 
   bool VisitRecordDecl(const clang::RecordDecl *decl);
 
@@ -57,7 +60,6 @@ class HeaderASTVisitor
   }
 
  private:
-  abi_dump::TranslationUnit *tu_ptr_;
   clang::MangleContext *mangle_contextp_;
   clang::ASTContext *ast_contextp_;
   const clang::CompilerInstance *cip_;
@@ -65,6 +67,11 @@ class HeaderASTVisitor
   const std::set<std::string> &exported_headers_;
   // To optimize recursion into only exported abi.
   const clang::Decl *tu_decl_;
+  std::set<std::string> *type_cache_;
+  abi_util::IRDumper *ir_dumper_;
+  // We cache the source file an AST node corresponds to, to avoid repeated
+  // calls to "realpath".
+  std::map<const clang::Decl *, std::string> decl_to_source_file_cache_;
 };
 
 class HeaderASTConsumer : public clang::ASTConsumer {
@@ -83,4 +90,4 @@ class HeaderASTConsumer : public clang::ASTConsumer {
   std::set<std::string> exported_headers_;
 };
 
-#endif  // AST_PROCESSING_H_
+#endif // AST_PROCESSING_H_
