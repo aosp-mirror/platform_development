@@ -65,14 +65,8 @@ static llvm::cl::opt<bool> no_filter(
     "no-filter", llvm::cl::desc("Do not filter any abi"), llvm::cl::Optional,
     llvm::cl::cat(header_linker_category));
 
-static llvm::cl::opt<bool> use_version_script(
-    "use-version-script", llvm::cl::desc("Use version script instead of .so"
-                                         " file to filter out function"
-                                         " and object symbols if available"),
-    llvm::cl::Optional, llvm::cl::cat(header_linker_category));
-
 static llvm::cl::opt<std::string> so_file(
-    "so", llvm::cl::desc("<path to so file>"), llvm::cl::Required,
+    "so", llvm::cl::desc("<path to so file>"), llvm::cl::Optional,
     llvm::cl::cat(header_linker_category));
 
 class HeaderAbiLinker {
@@ -168,7 +162,7 @@ bool HeaderAbiLinker::LinkAndDump() {
   std::ofstream text_output(out_dump_name_);
   google::protobuf::io::OstreamOutputStream text_os(&text_output);
   // If the user specifies that a version script should be used, use that.
-  if (!use_version_script) {
+  if (!so_file_.empty()) {
     exported_headers_ =
         abi_util::CollectAllExportedHeaders(exported_header_dirs_);
     if (!ParseSoFile()) {
@@ -392,6 +386,10 @@ bool HeaderAbiLinker::ParseSoFile() {
 int main(int argc, const char **argv) {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
   llvm::cl::ParseCommandLineOptions(argc, argv, "header-linker");
+  if (so_file.empty() && version_script.empty()) {
+    llvm::errs() << "One of -so or -v needs to be specified\n";
+    return -1;
+  }
   if (no_filter) {
     static_cast<std::vector<std::string> &>(exported_header_dirs).clear();
   }
