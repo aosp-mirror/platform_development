@@ -30,10 +30,10 @@ echo "Parsing log"
 cat log | grep "FAILED\|error:" > log.error
 
 #libs that should be added to LOCAL_HEADER_LIBRARIES
-ADD_TO_HEADER_LIBS=(hardware system)
+ADD_TO_HEADER_LIBS=(hardware system cutils utils)
 
 #libs that should be added to LOCAL_SHARED_LIBRARIES
-ADD_TO_SHARED_LIBS=(cutils utils log)
+ADD_TO_SHARED_LIBS=(log)
 
 ALL_LIBS=(${ADD_TO_HEADER_LIBS[@]} ${ADD_TO_SHARED_LIBS[@]})
 
