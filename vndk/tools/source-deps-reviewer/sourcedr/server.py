@@ -1,5 +1,7 @@
-from data_utils import *
-from preprocess import add_pattern, prepare
+#!/usr/bin/env python3
+
+from sourcedr.data_utils import *
+from sourcedr.preprocess import add_pattern, prepare
 
 from flask import Flask, jsonify, render_template, request
 import argparse
@@ -111,7 +113,7 @@ def input_yes_no(question, default=True):
         except KeyError:
             continue
 
-if __name__=='__main__':
+def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--android-root', default='test')
     parser.add_argument('--pattern', default='dlopen')
@@ -129,3 +131,6 @@ if __name__=='__main__':
 
     assert data_exist()
     app.run()
+
+if __name__=='__main__':
+    main()

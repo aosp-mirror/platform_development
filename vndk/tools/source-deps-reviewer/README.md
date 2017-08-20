@@ -20,11 +20,16 @@ $ go get github.com/google/codesearch/cmd/csearch
 
 Note that the index file locates at ~/.csearchindex by default.
 
-The functional test of this tool depends on several Python packages,
-please install them with
+This tool depends on several Python packages,
 
 ```
-$ pip install -r requirements.txt
+$ pip install -e .
+```
+
+To run functional test, please do
+
+```
+$ pip install -e .[dev]
 ```
 
 Prism, a code syntax highlighter is used.
@@ -33,7 +38,7 @@ It can be found at https://github.com/PrismJS/prism
 ## Usage
 
 ```
-$ python3 server.py --android-root DIRECTORY_ROOT_PATH --pattern PATTERN_TO_GREP
+$ sourcedr --android-root DIRECTORY_ROOT_PATH --pattern PATTERN_TO_GREP
 ```
 
 Add flag --is-regex if the pattern given is a regex open browser at
@@ -44,5 +49,5 @@ You can customize settings by editing `config.py`
 ## Testing
 
 ```
-$ python3 functional_tests.py
+$ python3 sourcedr/functional_tests.py
 ```
