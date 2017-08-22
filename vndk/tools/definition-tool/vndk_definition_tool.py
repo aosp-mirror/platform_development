@@ -1483,8 +1483,10 @@ class ELFLinker(object):
                 vndk_sp_unused, is_not_vndk_sp_indirect_unused)
         vndk_sp_unused_deps -= vndk_sp_unused
 
-        vndk_sp_indirect_unused = \
-                predefined_vndk_sp_indirect - vndk_sp_indirect - vndk_sp_unused
+        vndk_sp_indirect_unused = set(lib for lib in predefined_vndk_sp_indirect
+                                      if self._is_in_vndk_sp_dir(lib.path))
+        vndk_sp_indirect_unused -= vndk_sp_indirect
+        vndk_sp_indirect_unused -= vndk_sp_unused
         vndk_sp_indirect_unused |= vndk_sp_unused_deps
 
         # TODO: Compute VNDK-SP-Indirect-Private.
@@ -1748,7 +1750,7 @@ class ELFLinker(object):
     @staticmethod
     def create_from_dump(system_dirs=None, system_dirs_as_vendor=None,
                          vendor_dirs=None, vendor_dirs_as_system=None,
-                         extra_deps=None, generic_refs=None):
+                         extra_deps=None, generic_refs=None, tagged_paths=None):
         return ELFLinker._create_internal(
                 scan_elf_dump_files, system_dirs, system_dirs_as_vendor,
                 vendor_dirs, vendor_dirs_as_system, extra_deps, generic_refs,
@@ -1996,7 +1998,8 @@ class ELFGraphCommand(Command):
                                  args.vendor, args.vendor_dir_as_system,
                                  args.vendor_dir_ignored,
                                  args.load_extra_deps,
-                                 generic_refs=generic_refs)
+                                 generic_refs=generic_refs,
+                                 tagged_paths=tagged_paths)
 
         return (generic_refs, graph, tagged_paths)
 
