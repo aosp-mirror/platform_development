@@ -1,7 +1,0 @@
-__android_log_assert
-__android_log_btwrite
-__android_log_bwrite
-__android_log_dev_available
-__android_log_print
-__android_log_vprint
-__android_log_write
