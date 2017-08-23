@@ -1483,8 +1483,10 @@ class ELFLinker(object):
                 vndk_sp_unused, is_not_vndk_sp_indirect_unused)
         vndk_sp_unused_deps -= vndk_sp_unused
 
-        vndk_sp_indirect_unused = \
-                predefined_vndk_sp_indirect - vndk_sp_indirect - vndk_sp_unused
+        vndk_sp_indirect_unused = set(lib for lib in predefined_vndk_sp_indirect
+                                      if self._is_in_vndk_sp_dir(lib.path))
+        vndk_sp_indirect_unused -= vndk_sp_indirect
+        vndk_sp_indirect_unused -= vndk_sp_unused
         vndk_sp_indirect_unused |= vndk_sp_unused_deps
 
         # TODO: Compute VNDK-SP-Indirect-Private.
@@ -1748,7 +1750,7 @@ class ELFLinker(object):
     @staticmethod
     def create_from_dump(system_dirs=None, system_dirs_as_vendor=None,
                          vendor_dirs=None, vendor_dirs_as_system=None,
-                         extra_deps=None, generic_refs=None):
+                         extra_deps=None, generic_refs=None, tagged_paths=None):
         return ELFLinker._create_internal(
                 scan_elf_dump_files, system_dirs, system_dirs_as_vendor,
                 vendor_dirs, vendor_dirs_as_system, extra_deps, generic_refs,
@@ -1996,7 +1998,8 @@ class ELFGraphCommand(Command):
                                  args.vendor, args.vendor_dir_as_system,
                                  args.vendor_dir_ignored,
                                  args.load_extra_deps,
-                                 generic_refs=generic_refs)
+                                 generic_refs=generic_refs,
+                                 tagged_paths=tagged_paths)
 
         return (generic_refs, graph, tagged_paths)
 
@@ -2314,7 +2317,11 @@ class DepsCommand(ELFGraphCommand):
                 if not deps:
                     print(name)
         else:
+            delimiter = ''
             for name, assoc_libs in results:
+                print(delimiter, end='')
+                delimiter = '\n'
+
                 print(name)
                 for module_path in module_info.get_module_path(name):
                     print('\tMODULE_PATH:', module_path)
@@ -2402,10 +2409,11 @@ class DepsUnresolvedCommand(ELFGraphCommand):
         parser.add_argument('--module-info')
         parser.add_argument('--path-filter')
 
-    def _dump_unresolved(self, lib, module_info):
+    def _dump_unresolved(self, lib, module_info, delimiter):
         if not lib.unresolved_symbols and not lib.unresolved_dt_needed:
             return
 
+        print(delimiter, end='')
         print(lib.path)
         for module_path in module_info.get_module_path(lib.path):
             print('\tMODULE_PATH:', module_path)
@@ -2423,8 +2431,10 @@ class DepsUnresolvedCommand(ELFGraphCommand):
             path_filter = re.compile(args.path_filter)
             libs = [lib for lib in libs if path_filter.match(lib.path)]
 
+        delimiter = ''
         for lib in sorted(libs):
-            self._dump_unresolved(lib, module_info)
+            self._dump_unresolved(lib, module_info, delimiter)
+            delimiter = '\n'
 
 class CheckDepCommandBase(ELFGraphCommand):
     def add_argparser_options(self, parser):
@@ -2433,7 +2443,8 @@ class CheckDepCommandBase(ELFGraphCommand):
         parser.add_argument('--module-info')
 
     @staticmethod
-    def _dump_dep(lib, bad_deps, module_info):
+    def _dump_dep(lib, bad_deps, module_info, delimiter):
+        print(delimiter, end='')
         print(lib.path)
         for module_path in module_info.get_module_path(lib.path):
             print('\tMODULE_PATH:', module_path)
@@ -2460,6 +2471,7 @@ class CheckDepCommand(CheckDepCommandBase):
                          tagged_libs.vndk_sp | tagged_libs.vndk_sp_indirect | \
                          tagged_libs.vndk)
 
+        delimiter = ''
         for lib in sorted(vendor_libs):
             bad_deps = set()
 
@@ -2484,7 +2496,8 @@ class CheckDepCommand(CheckDepCommandBase):
                           file=sys.stderr)
 
             if bad_deps:
-                self._dump_dep(lib, bad_deps, module_info)
+                self._dump_dep(lib, bad_deps, module_info, delimiter)
+                delimiter = '\n'
 
         return num_errors
 
@@ -2520,6 +2533,7 @@ class CheckEligibleListCommand(CheckDepCommandBase):
                          tagged_libs.vndk)
 
         # Check eligible vndk is self-contained.
+        delimiter = ''
         for lib in sorted(eligible_libs):
             bad_deps = []
             for dep in lib.deps:
@@ -2530,7 +2544,8 @@ class CheckEligibleListCommand(CheckDepCommandBase):
                     bad_deps.append(dep)
                     num_errors += 1
             if bad_deps:
-                self._dump_dep(lib, bad_deps, module_info)
+                self._dump_dep(lib, bad_deps, module_info, delimiter)
+                delimiter = '\n'
 
         # Check the libbinder dependencies.
         for lib in sorted(eligible_libs):
@@ -2542,7 +2557,8 @@ class CheckEligibleListCommand(CheckDepCommandBase):
                     bad_deps.append(dep)
                     num_errors += 1
             if bad_deps:
-                self._dump_dep(lib, bad_deps, module_info)
+                self._dump_dep(lib, bad_deps, module_info, delimiter)
+                delimiter = '\n'
 
         return num_errors
 
