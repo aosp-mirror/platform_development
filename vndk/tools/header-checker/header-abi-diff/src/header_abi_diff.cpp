@@ -51,6 +51,12 @@ static llvm::cl::opt<bool> advice_only(
     "advice-only", llvm::cl::desc("Advisory mode only"), llvm::cl::Optional,
     llvm::cl::cat(header_checker_category));
 
+static llvm::cl::opt<bool> elf_unreferenced_symbol_errors(
+    "elf-unreferenced-symbol-errors",
+    llvm::cl::desc("Display erors on removal of elf symbols, unreferenced by"
+                   "metadata in exported headers."),
+    llvm::cl::Optional, llvm::cl::cat(header_checker_category));
+
 static llvm::cl::opt<bool> check_all_apis(
     "check-all-apis",
     llvm::cl::desc("All apis, whether referenced or not, by exported symbols in"
@@ -64,6 +70,12 @@ static llvm::cl::opt<bool> suppress_local_warnings(
 static llvm::cl::opt<bool> allow_extensions(
     "allow-extensions",
     llvm::cl::desc("Do not return a non zero status on extensions"),
+    llvm::cl::Optional, llvm::cl::cat(header_checker_category));
+
+static llvm::cl::opt<bool> allow_unreferenced_elf_symbol_changes(
+    "allow-unreferenced-elf-symbol-changes",
+    llvm::cl::desc("Do not return a non zero status on changes to elf symbols"
+                   "not referenced by metadata in exported headers"),
     llvm::cl::Optional, llvm::cl::cat(header_checker_category));
 
 static llvm::cl::opt<bool> allow_unreferenced_changes(
@@ -102,11 +114,21 @@ int main(int argc, const char **argv) {
   std::string status_str = "";
   std::string unreferenced_change_str = "";
   std::string error_or_warning_str = "\033[36;1mwarning: \033[0m";
-
-  if (status == abi_util::CompatibilityStatusIR::Incompatible) {
-    error_or_warning_str = "\033[31;1merror: \033[0m";
-    status_str = " INCOMPATIBLE CHANGES";
-  } else if (status & abi_util::CompatibilityStatusIR::Extension) {
+  switch (status) {
+    case abi_util::CompatibilityStatusIR::Incompatible:
+      error_or_warning_str = "\033[31;1merror: \033[0m";
+      status_str = "INCOMPATIBLE CHANGES";
+      break;
+    case abi_util::CompatibilityStatusIR::ElfIncompatible:
+      if (elf_unreferenced_symbol_errors) {
+        error_or_warning_str = "\033[31;1merror: \033[0m";
+      }
+      status_str = "ELF Symbols not referenced by exported headers removed";
+      break;
+    default:
+      break;
+  }
+  if (status & abi_util::CompatibilityStatusIR::Extension) {
     status_str = "EXTENDING CHANGES";
   }
   if (status & abi_util::CompatibilityStatusIR::UnreferencedChanges) {
@@ -114,7 +136,6 @@ int main(int argc, const char **argv) {
     unreferenced_change_str += " not directly referenced by exported symbols.";
     unreferenced_change_str += " This MIGHT be an ABI breaking change due to";
     unreferenced_change_str += " internal typecasts.";
-
   }
   if (!suppress_local_warnings && status) {
     llvm::errs() << "******************************************************\n"
@@ -132,11 +153,10 @@ int main(int argc, const char **argv) {
   if ((allow_extensions &&
       (status & abi_util::CompatibilityStatusIR::Extension)) ||
       (allow_unreferenced_changes &&
-      (status & abi_util::CompatibilityStatusIR::UnreferencedChanges))) {
-    return abi_util::CompatibilityStatusIR::Compatible;
-  }
-
-  if (advice_only) {
+      (status & abi_util::CompatibilityStatusIR::UnreferencedChanges)) ||
+      (allow_unreferenced_elf_symbol_changes &&
+      (status & abi_util::CompatibilityStatusIR::ElfIncompatible)) ||
+      advice_only) {
     return abi_util::CompatibilityStatusIR::Compatible;
   }
 
