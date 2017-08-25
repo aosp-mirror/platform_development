@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from sourcedr.data_utils import *
-from sourcedr.preprocess import add_pattern, prepare
+from sourcedr.preprocess import CodeSearch
 
 from flask import Flask, jsonify, render_template, request
 import argparse
@@ -86,7 +86,7 @@ def _save_all():
 def _add_pattern():
     patt = request.args.get('pattern')
     is_regex = request.args.get('is_regex')
-    add_pattern(args.android_root, patt, is_regex)
+    engine.add_pattern(patt, is_regex)
     global data
     data = load_data()
     save_pattern(patt)
@@ -119,15 +119,16 @@ def main():
     parser.add_argument('--pattern', default='dlopen')
     parser.add_argument('--is-regex', action='store_true')
 
-    global args
+    global args, engine
     args = parser.parse_args()
+    engine = CodeSearch(android_root=args.android_root)
 
     if data_exist():
         confirm = input_yes_no('Overwrite previous results')
         if confirm:
-            prepare(args.android_root, args.pattern, args.is_regex)
+            engine.find(args.pattern, args.is_regex)
     else:
-        prepare(args.android_root, args.pattern, args.is_regex)
+        engine.find(args.pattern, args.is_regex)
 
     assert data_exist()
     app.run()
