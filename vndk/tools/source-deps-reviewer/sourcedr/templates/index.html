@@ -32,8 +32,17 @@
     </div>
     <br>
 
-    <div class="col-sm-4">
+    <div class="col-sm-4" data-spy="affix">
+
       <div class="well">
+        <h3>Temporary search</h3>
+        <form id="temporary_search" class="input-group" style="padding-left:20px;">
+          <span class="input-group-addon">is regex</span>
+          <span class="input-group-addon">
+            <input type="checkbox" name="is_regex2" id="is_regex2">
+          </span>
+          <input type="text" name="pattern" class="form-control">
+        </form>
         <h3>Add patterns to grep</h3>
         <form id="add_pattern" class="input-group" style="padding-left:20px;">
           <span class="input-group-addon">is regex</span>
@@ -43,12 +52,12 @@
           <input type="text" name="pattern" class="form-control">
         </form>
         <ul id="pattern_list"></ul>
-        <h3>File path:</h3>
+      </div>
+      <div class="well">
+        <h3>File labeling:</h3>
         <pre style="padding-left:20px;"><h4 id="file_path"></h4></pre>
         <h3>Pattern line number:</h3>
         <h3 id="line_no"></h3><br>
-      </div>
-      <div class="well">
         <h3>Library Dependencies</h3>
         <form id="add_deps" class="input-group">
           <input type="text" class="form-control" id="enter_deps" placeholder="Fill in * if undetermined"/>
@@ -57,15 +66,14 @@
           </span>
         </form>
         <ul id="deps_list"></ul>
-
         <h3>Code Dependencies</h3>
         <form id="add_code">
           <input class="btn btn-secondary" type="button" id="get_selection" value="Get selection"/>
           <input class="btn btn-secondary" type="submit" id="add_code" value="Add"/><br>
           <input type="text" id="code_file_path" style="margin: 0px; width: 100%;"/>
           <textarea id="selected_text" name="selectedtext" rows="5" style="margin: 0px; width: 100%; height: 106px;"></textarea>
-          <ul id="code_list"></ul>
         </form>
+        <ul id="code_list"></ul>
         <form id="save_all">
           <input class="btn btn-secondary" type="submit" value="Save All"/>
         </form>
@@ -74,11 +82,27 @@
   </div>
 </div>
 
+<!-- Modal -->
+<div class="modal fade" id="myModal" role="dialog">
+  <div class="modal-dialog modal-xl">
+    <!-- Modal content-->
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+        <h4 id="modal_title" class="modal-title"></h4>
+      </div>
+      <div id="modal_body" class="modal-body">
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <script type="text/javascript" src="static/js/main.js"></script>
 <!-- for code prettyify -->
 <script src="static/prism/js/prism.js"></script>
-<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
 
 </body>
 </html>
