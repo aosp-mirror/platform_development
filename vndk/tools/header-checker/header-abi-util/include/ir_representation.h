@@ -29,7 +29,8 @@ enum CompatibilityStatusIR {
   Compatible = 0,
   UnreferencedChanges = 1,
   Extension = 4,
-  Incompatible = 8
+  Incompatible = 8,
+  ElfIncompatible = 16
 };
 
 static inline CompatibilityStatusIR operator|(CompatibilityStatusIR f,
