@@ -3,6 +3,7 @@
 
   var ccounter = 0;
   var counter = 0;
+  var current_item = null;
 
   function getSelText() {
     let txt = window.getSelection();
@@ -90,6 +91,7 @@
     $.getJSON('/get_started', {
     }, function (data) {
       $('#item_list').empty();
+      $('#pattern_list').empty();
 
       const lst = JSON.parse(data.lst);
       const done = JSON.parse(data.done);
@@ -102,12 +104,15 @@
       for (let i = 0; i < len; i++) {
         $('#pattern_list').append('<li>' + pattern_lst[i] + '</li>');
       }
+
+      $('#path_prefix').text(data.path_prefix);
     });
   }
 
   function saveAll() {
     let path = $('#file_path').text();
     let line_no = $('#line_no').text();
+
     let deps = new Array();
     for (let i = 0; i < counter; i++) {
       if ($('#dep' + i).length) {
@@ -124,12 +129,15 @@
     if (path == '' || line_no == '') {
       return false;
     }
+    if (deps.length > 0) {
+        current_item.className = 'list-group-item list-group-item-success';
+    } else {
+        current_item.className = 'list-group-item list-group-item-danger';
+    }
     $.getJSON('/save_all', {
-      path: path + ':' + line_no,
+      label: $(current_item).text(),
       deps: JSON.stringify(deps),
       codes: JSON.stringify(codes)
-    }, function (data) {
-      onLoad();
     });
     return false;
   }
@@ -170,6 +178,7 @@
   function setItem(evt) {
     removeAnchor();
     let item = evt.target;
+    current_item = item;
     let name = $(item).text().split(':');
     let file = name[0];
     let line_no = name[1];
@@ -190,6 +199,7 @@
     setGotoPatternLine(line_no);
     $('#selected_text').val('');
     $('#code_file_path').val('');
+    $('html,body').scrollTop(0);
     return false;
   }
 
@@ -200,7 +210,8 @@
     $inputs.each(function () {
       values[this.name] = $(this).val();
     });
-    let path = $('input[name="browsing_path"]').val();
+    let path = $('#path_prefix').text() +
+               $('input[name="browsing_path"]').val();
     setBrowsingFile(path);
     unsetHighlightLine();
     return false;
@@ -214,11 +225,9 @@
     });
     $.getJSON('/add_pattern', {
       pattern: values['pattern'],
-      is_regex: $('#add_pattern').children().eq(1).is(':checked')
-    }, function (data) {
-      //
+      is_regex: $('#is_regex').is(':checked') ? 1 : 0
     });
-    return true;
+    return false;
   });
 
   $('#add_deps').submit(enterTask);
