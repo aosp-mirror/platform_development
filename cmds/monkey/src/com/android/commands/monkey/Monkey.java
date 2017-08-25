@@ -260,8 +260,7 @@ public class Monkey {
      */
     private class ActivityController extends IActivityController.Stub {
         public boolean activityStarting(Intent intent, String pkg) {
-            boolean allow = MonkeyUtils.getPackageFilter().checkEnteringPackage(pkg)
-                    || (DEBUG_ALLOW_ANY_STARTS != 0);
+            boolean allow = isActivityStartingAllowed(intent, pkg);
             if (mVerbose > 0) {
                 // StrictMode's disk checks end up catching this on
                 // userdebug/eng builds due to PrintStream going to a
@@ -277,6 +276,32 @@ public class Monkey {
             currentPackage = pkg;
             currentIntent = intent;
             return allow;
+        }
+
+        private boolean isActivityStartingAllowed(Intent intent, String pkg) {
+            if (MonkeyUtils.getPackageFilter().checkEnteringPackage(pkg)) {
+                return true;
+            }
+            if (DEBUG_ALLOW_ANY_STARTS != 0) {
+                return true;
+            }
+            // In case the activity is launching home and the default launcher
+            // package is disabled, allow anyway to prevent ANR (see b/38121026)
+            if (intent.getAction() == Intent.ACTION_MAIN
+                    && intent.getCategories().contains(Intent.CATEGORY_HOME)) {
+                try {
+                    final ResolveInfo resolveInfo =
+                            mPm.resolveIntent(intent, intent.getType(), 0, UserHandle.myUserId());
+                    final String launcherPackage = resolveInfo.activityInfo.packageName;
+                    if (pkg.equals(launcherPackage)) {
+                        return true;
+                    }
+                } catch (RemoteException e) {
+                    Logger.err.println("** Failed talking with package manager!");
+                    return false;
+                }
+            }
+            return false;
         }
 
         public boolean activityResuming(String pkg) {
