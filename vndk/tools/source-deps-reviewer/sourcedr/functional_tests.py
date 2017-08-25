@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from sourcedr.data_utils import *
-from sourcedr.preprocess import prepare
+from sourcedr.preprocess import CodeSearch
 from sourcedr.server import *
 
 from flask import Flask, jsonify, render_template, request
@@ -16,15 +16,17 @@ app.config['TESTING'] = True
 class TestPreprocess(unittest.TestCase):
     def test_prepare(self):
         remove_data()
-        prepare(android_root='sourcedr/test', pattern='dlopen', is_regex=False)
-        self.assertTrue( os.path.exists(data_path) )
+        engine = CodeSearch(android_root='sourcedr/test')
+        engine.find(pattern='dlopen', is_regex=False)
+        self.assertTrue(os.path.exists(data_path))
 
 class TestViews(TestCase):
     def create_app(self):
         return app
 
     def setUp(self):
-        prepare(android_root='sourcedr/test', pattern='dlopen', is_regex=False)
+        engine = CodeSearch(android_root='sourcedr/test')
+        engine.find(pattern='dlopen', is_regex=False)
 
     def tearDown(self):
         remove_data()
