@@ -1,0 +1,400 @@
+record_types {
+  type_info {
+    name: "SuperSpeaker"
+    size: 16
+    alignment: 8
+    referenced_type: "SuperSpeaker"
+    source_file: "/development/vndk/tools/header-checker/tests/integration/cpp/gold/include/abstract_class.h"
+    linker_set_key: "SuperSpeaker"
+  }
+  fields {
+    referenced_type: "int"
+    field_offset: 64
+    field_name: "mSpeakderId"
+    access: private_access
+  }
+  vtable_layout {
+    vtable_components {
+      kind: OffsetToTop
+      mangled_component_name: ""
+      component_value: 0
+    }
+    vtable_components {
+      kind: RTTI
+      mangled_component_name: "SuperSpeaker"
+      component_value: 0
+    }
+    vtable_components {
+      kind: FunctionPointer
+      mangled_component_name: "_ZN12SuperSpeaker6ListenEv"
+      component_value: 0
+    }
+    vtable_components {
+      kind: FunctionPointer
+      mangled_component_name: "_ZN12SuperSpeaker5SpeakEv"
+      component_value: 0
+    }
+    vtable_components {
+      kind: CompleteDtorPointer
+      mangled_component_name: "_ZN12SuperSpeakerD1Ev"
+      component_value: 0
+    }
+    vtable_components {
+      kind: DeletingDtorPointer
+      mangled_component_name: "_ZN12SuperSpeakerD0Ev"
+      component_value: 0
+    }
+  }
+  access: public_access
+  record_kind: class_kind
+}
+record_types {
+  type_info {
+    name: "HighVolumeSpeaker"
+    size: 16
+    alignment: 8
+    referenced_type: "HighVolumeSpeaker"
+    source_file: "/development/vndk/tools/header-checker/tests/integration/cpp/gold/include/high_volume_speaker.h"
+    linker_set_key: "HighVolumeSpeaker"
+  }
+  base_specifiers {
+    referenced_type: "SuperSpeaker"
+    is_virtual: false
+    access: public_access
+  }
+  vtable_layout {
+    vtable_components {
+      kind: OffsetToTop
+      mangled_component_name: ""
+      component_value: 0
+    }
+    vtable_components {
+      kind: RTTI
+      mangled_component_name: "HighVolumeSpeaker"
+      component_value: 0
+    }
+    vtable_components {
+      kind: FunctionPointer
+      mangled_component_name: "_ZN17HighVolumeSpeaker6ListenEv"
+      component_value: 0
+    }
+    vtable_components {
+      kind: FunctionPointer
+      mangled_component_name: "_ZN17HighVolumeSpeaker5SpeakEv"
+      component_value: 0
+    }
+    vtable_components {
+      kind: CompleteDtorPointer
+      mangled_component_name: "_ZN17HighVolumeSpeakerD1Ev"
+      component_value: 0
+    }
+    vtable_components {
+      kind: DeletingDtorPointer
+      mangled_component_name: "_ZN17HighVolumeSpeakerD0Ev"
+      component_value: 0
+    }
+  }
+  access: public_access
+  record_kind: class_kind
+}
+record_types {
+  type_info {
+    name: "LowVolumeSpeaker"
+    size: 24
+    alignment: 8
+    referenced_type: "LowVolumeSpeaker"
+    source_file: "/development/vndk/tools/header-checker/tests/integration/cpp/gold/include/low_volume_speaker.h"
+    linker_set_key: "LowVolumeSpeaker"
+  }
+  fields {
+    referenced_type: "unsigned int"
+    field_offset: 96
+    field_name: "speaker_uint_t"
+    access: public_access
+  }
+  fields {
+    referenced_type: "float *"
+    field_offset: 128
+    field_name: "speaker_float_star"
+    access: public_access
+  }
+  base_specifiers {
+    referenced_type: "SuperSpeaker"
+    is_virtual: false
+    access: public_access
+  }
+  vtable_layout {
+    vtable_components {
+      kind: OffsetToTop
+      mangled_component_name: ""
+      component_value: 0
+    }
+    vtable_components {
+      kind: RTTI
+      mangled_component_name: "LowVolumeSpeaker"
+      component_value: 0
+    }
+    vtable_components {
+      kind: FunctionPointer
+      mangled_component_name: "_ZN16LowVolumeSpeaker6ListenEv"
+      component_value: 0
+    }
+    vtable_components {
+      kind: FunctionPointer
+      mangled_component_name: "_ZN16LowVolumeSpeaker5SpeakEv"
+      component_value: 0
+    }
+    vtable_components {
+      kind: CompleteDtorPointer
+      mangled_component_name: "_ZN16LowVolumeSpeakerD1Ev"
+      component_value: 0
+    }
+    vtable_components {
+      kind: DeletingDtorPointer
+      mangled_component_name: "_ZN16LowVolumeSpeakerD0Ev"
+      component_value: 0
+    }
+  }
+  access: public_access
+  record_kind: class_kind
+}
+enum_types {
+  type_info {
+    name: "SuperSpeaker::Volume"
+    size: 4
+    alignment: 4
+    referenced_type: "SuperSpeaker::Volume"
+    source_file: "/development/vndk/tools/header-checker/tests/integration/cpp/gold/include/abstract_class.h"
+    linker_set_key: "SuperSpeaker::Volume"
+  }
+  underlying_type: "unsigned int"
+  enum_fields {
+    enum_field_value: 1
+    name: "SuperSpeaker::Volume::Loud"
+  }
+  enum_fields {
+    enum_field_value: 2
+    name: "SuperSpeaker::Volume::Louder"
+  }
+  enum_fields {
+    enum_field_value: 3
+    name: "SuperSpeaker::Volume::Loudest"
+  }
+  enum_fields {
+    enum_field_value: 4
+    name: "SuperSpeaker::Volume::Lower"
+  }
+  access: private_access
+}
+pointer_types {
+  type_info {
+    name: "SuperSpeaker *"
+    size: 8
+    alignment: 8
+    referenced_type: "SuperSpeaker"
+    source_file: "/development/vndk/tools/header-checker/tests/integration/cpp/gold/include/abstract_class.h"
+    linker_set_key: "SuperSpeaker *"
+  }
+}
+pointer_types {
+  type_info {
+    name: "HighVolumeSpeaker *"
+    size: 8
+    alignment: 8
+    referenced_type: "HighVolumeSpeaker"
+    source_file: "/development/vndk/tools/header-checker/tests/integration/cpp/gold/include/high_volume_speaker.h"
+    linker_set_key: "HighVolumeSpeaker *"
+  }
+}
+pointer_types {
+  type_info {
+    name: "float *"
+    size: 8
+    alignment: 8
+    referenced_type: "float"
+    source_file: "/development/vndk/tools/header-checker/tests/integration/cpp/gold/include/low_volume_speaker.h"
+    linker_set_key: "float *"
+  }
+}
+pointer_types {
+  type_info {
+    name: "LowVolumeSpeaker *"
+    size: 8
+    alignment: 8
+    referenced_type: "LowVolumeSpeaker"
+    source_file: "/development/vndk/tools/header-checker/tests/integration/cpp/gold/include/low_volume_speaker.h"
+    linker_set_key: "LowVolumeSpeaker *"
+  }
+}
+builtin_types {
+  type_info {
+    name: "int"
+    size: 4
+    alignment: 4
+    referenced_type: "int"
+    source_file: ""
+    linker_set_key: "int"
+  }
+  is_unsigned: false
+  is_integral: true
+}
+builtin_types {
+  type_info {
+    name: "unsigned int"
+    size: 4
+    alignment: 4
+    referenced_type: "unsigned int"
+    source_file: ""
+    linker_set_key: "unsigned int"
+  }
+  is_unsigned: true
+  is_integral: true
+}
+builtin_types {
+  type_info {
+    name: "void"
+    size: 0
+    alignment: 0
+    referenced_type: "void"
+    source_file: ""
+    linker_set_key: "void"
+  }
+  is_unsigned: false
+  is_integral: false
+}
+builtin_types {
+  type_info {
+    name: "float"
+    size: 4
+    alignment: 4
+    referenced_type: "float"
+    source_file: ""
+    linker_set_key: "float"
+  }
+  is_unsigned: false
+  is_integral: false
+}
+functions {
+  return_type: "SuperSpeaker *"
+  function_name: "SuperSpeaker::CreateSuperSpeaker"
+  source_file: "/development/vndk/tools/header-checker/tests/integration/cpp/gold/include/abstract_class.h"
+  parameters {
+    referenced_type: "int"
+    default_arg: false
+  }
+  linker_set_key: "_ZN12SuperSpeaker18CreateSuperSpeakerEi"
+  access: public_access
+}
+functions {
+  return_type: "void"
+  function_name: "SuperSpeaker::SpeakLouder"
+  source_file: "/development/vndk/tools/header-checker/tests/integration/cpp/gold/include/abstract_class.h"
+  linker_set_key: "_ZN12SuperSpeaker11SpeakLouderEv"
+  access: public_access
+}
+functions {
+  return_type: "SuperSpeaker::Volume"
+  function_name: "SuperSpeaker::SpeakLoud"
+  source_file: "/development/vndk/tools/header-checker/tests/integration/cpp/gold/include/abstract_class.h"
+  parameters {
+    referenced_type: "SuperSpeaker *"
+    default_arg: false
+  }
+  linker_set_key: "_ZN12SuperSpeaker9SpeakLoudEv"
+  access: public_access
+}
+functions {
+  return_type: "void"
+  function_name: "HighVolumeSpeaker::Speak"
+  source_file: "/development/vndk/tools/header-checker/tests/integration/cpp/gold/include/high_volume_speaker.h"
+  parameters {
+    referenced_type: "HighVolumeSpeaker *"
+    default_arg: false
+  }
+  linker_set_key: "_ZN17HighVolumeSpeaker5SpeakEv"
+  access: public_access
+}
+functions {
+  return_type: "void"
+  function_name: "HighVolumeSpeaker::Listen"
+  source_file: "/development/vndk/tools/header-checker/tests/integration/cpp/gold/include/high_volume_speaker.h"
+  parameters {
+    referenced_type: "HighVolumeSpeaker *"
+    default_arg: false
+  }
+  linker_set_key: "_ZN17HighVolumeSpeaker6ListenEv"
+  access: public_access
+}
+functions {
+  return_type: "HighVolumeSpeaker *"
+  function_name: "HighVolumeSpeaker::BadPractice"
+  source_file: "/development/vndk/tools/header-checker/tests/integration/cpp/gold/include/high_volume_speaker.h"
+  parameters {
+    referenced_type: "HighVolumeSpeaker *"
+    default_arg: false
+  }
+  parameters {
+    referenced_type: "float"
+    default_arg: false
+  }
+  linker_set_key: "_ZN17HighVolumeSpeaker11BadPracticeEf"
+  access: public_access
+}
+functions {
+  return_type: "void"
+  function_name: "LowVolumeSpeaker::Speak"
+  source_file: "/development/vndk/tools/header-checker/tests/integration/cpp/gold/include/low_volume_speaker.h"
+  parameters {
+    referenced_type: "LowVolumeSpeaker *"
+    default_arg: false
+  }
+  linker_set_key: "_ZN16LowVolumeSpeaker5SpeakEv"
+  access: public_access
+}
+functions {
+  return_type: "void"
+  function_name: "LowVolumeSpeaker::Listen"
+  source_file: "/development/vndk/tools/header-checker/tests/integration/cpp/gold/include/low_volume_speaker.h"
+  parameters {
+    referenced_type: "LowVolumeSpeaker *"
+    default_arg: false
+  }
+  linker_set_key: "_ZN16LowVolumeSpeaker6ListenEv"
+  access: public_access
+}
+elf_functions {
+  name: "_Z26test_virtual_function_callP12SuperSpeaker"
+}
+elf_functions {
+  name: "_ZN12NotReferenced"
+}
+elf_functions {
+  name: "_ZN12SuperSpeaker11SpeakLouderEv"
+}
+elf_functions {
+  name: "_ZN12SuperSpeaker18CreateSuperSpeakerEi"
+}
+elf_functions {
+  name: "_ZN12SuperSpeaker9SpeakLoudEv"
+}
+elf_functions {
+  name: "_ZN16LowVolumeSpeaker5SpeakEv"
+}
+elf_functions {
+  name: "_ZN16LowVolumeSpeaker6ListenEv"
+}
+elf_functions {
+  name: "_ZN17HighVolumeSpeaker11BadPracticeEf"
+}
+elf_functions {
+  name: "_ZN17HighVolumeSpeaker5SpeakEv"
+}
+elf_functions {
+  name: "_ZN17HighVolumeSpeaker6ListenEv"
+}
+elf_objects {
+  name: "_ZTV16LowVolumeSpeaker"
+}
+elf_objects {
+  name: "_ZTV17HighVolumeSpeaker"
+}
