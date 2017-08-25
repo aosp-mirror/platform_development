@@ -1,0 +1,18 @@
+libcpp_gold_parameter_type_diff {
+global:
+  _Z26test_virtual_function_callP12SuperSpeaker;
+  _ZN12SuperSpeaker11SpeakLouderEv;
+  _ZN12SuperSpeaker18CreateSuperSpeakerEi;
+  _ZN12SuperSpeaker9SpeakLoudEv;
+  _ZN12SuperSpeakerD2Ev;
+  _ZN16LowVolumeSpeaker5SpeakEv;
+  _ZN16LowVolumeSpeaker6ListenEv;
+  _ZN16LowVolumeSpeakerD0Ev;
+  _ZN17HighVolumeSpeaker11BadPracticeEi;
+  _ZN17HighVolumeSpeaker5SpeakEv;
+  _ZN17HighVolumeSpeaker6ListenEv;
+  _ZN12NotReferenced;
+  _ZN17HighVolumeSpeakerD0Ev;
+  _ZTV16LowVolumeSpeaker; #var
+  _ZTV17HighVolumeSpeaker; #var
+};

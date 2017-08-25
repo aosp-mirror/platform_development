@@ -13,6 +13,7 @@ int uses_forward_decl(struct ForwardDeclaration *);
 struct Hello {
   int foo;
   int bar;
+  wchar_t d;
   enum {A, B} enum_field;
   enum {C, D} enum_field2;
   struct {
