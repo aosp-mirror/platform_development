@@ -1020,19 +1020,20 @@ CompatibilityStatusIR ProtobufIRDiffDumper::GetCompatibilityStatusIR() {
       diff_tu_->function_diffs().size() != 0 ||
       diff_tu_->global_var_diffs().size() != 0 ||
       diff_tu_->enum_type_diffs().size() != 0 ||
-      diff_tu_->record_type_diffs().size() != 0 ||
-      diff_tu_->removed_elf_functions().size() != 0 ||
-      diff_tu_->removed_elf_objects().size() != 0) {
+      diff_tu_->record_type_diffs().size() != 0) {
     return CompatibilityStatusIR::Incompatible;
+  }
+
+  if(diff_tu_->removed_elf_functions().size() != 0 ||
+     diff_tu_->removed_elf_objects().size() != 0) {
+    return CompatibilityStatusIR::ElfIncompatible;
   }
 
   CompatibilityStatusIR combined_status = CompatibilityStatusIR::Compatible;
 
   if (diff_tu_->enum_type_extension_diffs().size() != 0 ||
       diff_tu_->functions_added().size() != 0 ||
-      diff_tu_->global_vars_added().size() !=0 ||
-      diff_tu_->added_elf_functions().size() != 0 ||
-      diff_tu_->added_elf_objects().size() != 0) {
+      diff_tu_->global_vars_added().size() != 0) {
     combined_status = combined_status | CompatibilityStatusIR::Extension;
   }
 
