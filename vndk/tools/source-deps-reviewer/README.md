@@ -18,8 +18,6 @@ $ go get github.com/google/codesearch/cmd/cindex
 $ go get github.com/google/codesearch/cmd/csearch
 ```
 
-Note that the index file locates at ~/.csearchindex by default.
-
 This tool depends on several Python packages,
 
 ```
@@ -38,11 +36,25 @@ It can be found at https://github.com/PrismJS/prism
 ## Usage
 
 ```
-$ sourcedr --android-root DIRECTORY_ROOT_PATH --pattern PATTERN_TO_GREP
+sourcedr [-h] [--android-root ANDROID_ROOT] [--index-path INDEX_PATH]
+         [--skip-literals] [--skip-comments]
+```
+This tool reads the pattern file named *patterns*.
+
+You can edit it directly before executing the command.
+
+pattern file format:
+```
+is_regex,pattern
 ```
 
-Add flag --is-regex if the pattern given is a regex open browser at
-[localhost:5000](localhost:5000)
+default pattern file:
+
+```
+0,dlopen
+```
+
+open browser at [localhost:5000](localhost:5000).
 
 You can customize settings by editing `config.py`
 
