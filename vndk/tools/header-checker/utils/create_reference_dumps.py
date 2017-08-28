@@ -48,8 +48,10 @@ def main():
     # Parse command line options.
     parser = argparse.ArgumentParser()
     parser.add_argument('--version', help='VNDK version')
-    parser.add_argument('--vndk-list', help='VNDK version')
-    parser.add_argument('-ref-dump-dir', help='VNDK reference abi dump dir')
+    parser.add_argument('--vndk-list', help='file containing list of vndk \
+                        libraries')
+    parser.add_argument('-ref-dump-dir', help='directory to copy reference abi \
+                        dumps into')
     parser.add_argument('-make-libs', action ="store_true", default = False,
                         help='make libraries before copying dumps')
     args = parser.parse_args()
