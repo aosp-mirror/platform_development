@@ -178,6 +178,9 @@ HeaderASTConsumer::HeaderASTConsumer(
 
 void HeaderASTConsumer::HandleTranslationUnit(clang::ASTContext &ctx) {
   clang::PrintingPolicy policy(ctx.getPrintingPolicy());
+  // Suppress 'struct' keyword for C source files while getting QualType string
+  // names to avoid inconsistency between C and C++ (for C++ files, this is true
+  // by default)
   policy.SuppressTagKeyword = true;
   ctx.setPrintingPolicy(policy);
   clang::TranslationUnitDecl *translation_unit = ctx.getTranslationUnitDecl();

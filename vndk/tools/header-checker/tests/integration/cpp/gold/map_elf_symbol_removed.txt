@@ -1,0 +1,14 @@
+libcpp_golden {
+global:
+    _Z26test_virtual_function_callP12SuperSpeaker;
+    _ZN12SuperSpeaker11SpeakLouderEv;
+    _ZN12SuperSpeaker18CreateSuperSpeakerEi;
+    _ZN12SuperSpeaker9SpeakLoudEv;
+    _ZN16LowVolumeSpeaker5SpeakEv;
+    _ZN16LowVolumeSpeaker6ListenEv;
+    _ZN17HighVolumeSpeaker11BadPracticeEf;
+    _ZN17HighVolumeSpeaker5SpeakEv;
+    _ZN17HighVolumeSpeaker6ListenEv;
+    _ZTV16LowVolumeSpeaker; #var
+    _ZTV17HighVolumeSpeaker; #var
+};
