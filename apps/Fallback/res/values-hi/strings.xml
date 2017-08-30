@@ -17,6 +17,6 @@
 <resources xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <string name="appTitle" msgid="161410001913116606">"Fallback"</string>
-    <string name="title" msgid="8156274565006125136">"असमर्थित क्रिया"</string>
-    <string name="error" msgid="6539615832923362301">"वह क्रिया वर्तमान में समर्थित नहीं है."</string>
+    <string name="title" msgid="8156274565006125136">"यह कार्रवाई नहीं हो सकती"</string>
+    <string name="error" msgid="6539615832923362301">"यह कार्रवाई अभी नहीं हो सकती"</string>
 </resources>
