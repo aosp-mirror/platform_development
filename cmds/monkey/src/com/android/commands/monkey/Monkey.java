@@ -260,7 +260,7 @@ public class Monkey {
      */
     private class ActivityController extends IActivityController.Stub {
         public boolean activityStarting(Intent intent, String pkg) {
-            boolean allow = isActivityStartingAllowed(intent, pkg);
+            final boolean allow = isActivityStartingAllowed(intent, pkg);
             if (mVerbose > 0) {
                 // StrictMode's disk checks end up catching this on
                 // userdebug/eng builds due to PrintStream going to a
@@ -287,8 +287,10 @@ public class Monkey {
             }
             // In case the activity is launching home and the default launcher
             // package is disabled, allow anyway to prevent ANR (see b/38121026)
+            final Set<String> categories = intent.getCategories();
             if (intent.getAction() == Intent.ACTION_MAIN
-                    && intent.getCategories().contains(Intent.CATEGORY_HOME)) {
+                    && categories != null
+                    && categories.contains(Intent.CATEGORY_HOME)) {
                 try {
                     final ResolveInfo resolveInfo =
                             mPm.resolveIntent(intent, intent.getType(), 0, UserHandle.myUserId());
