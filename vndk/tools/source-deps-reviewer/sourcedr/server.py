@@ -6,9 +6,12 @@ from sourcedr.preprocess import CodeSearch
 from flask import Flask, jsonify, render_template, request
 import argparse
 import bisect
+import collections
+from functools import cmp_to_key
 import hashlib
 import json
 import os
+import re
 import subprocess
 import sys
 import webbrowser
@@ -94,6 +97,48 @@ def _add_pattern():
     data = load_data()
     save_new_pattern(patt, is_regex)
     return jsonify(result='done')
+
+
+# This function does a temporary grep to the directory
+# Not adding the result to database
+@app.route('/temporary_search')
+def _temporary_search():
+    path = request.args.get('path')
+    patt = request.args.get('pattern')
+    is_regex = request.args.get('is_regex')
+    result = engine.raw_search(patt, is_regex).decode('utf-8')
+    dic = collections.defaultdict(list)
+    patt = re.compile('([^:]+):(\\d+):(.*)$')
+    for line in result.split('\n'):
+        match = patt.match(line)
+        if not match:
+            continue
+
+        file_path = match.group(1)
+        line_no = match.group(2)
+        code = match.group(3)
+        dic[file_path].append((line_no, code))
+
+    def compare(item1, item2):
+        key1, value1 = item1
+        key2, value2 = item2
+        cnt1 = os.path.commonprefix([path, key1]).count('/')
+        cnt2 = os.path.commonprefix([path, key2]).count('/')
+        e1 = os.path.relpath(key1, path).count('/')
+        e2 = os.path.relpath(key2, path).count('/')
+        # prefer smaller edit distance
+        if e1 < e2: return -1
+        if e2 < e1: return 1
+        # prefer deeper common ancestor
+        if cnt1 > cnt2: return -1
+        if cnt2 > cnt1: return 1
+        # lexicographical order
+        if key1 < key2: return -1
+        if key2 < key1: return 1
+        return 0
+
+    result = sorted(dic.items(), key=cmp_to_key(compare))
+    return jsonify(result=json.dumps(result))
 
 @app.route('/')
 def render():

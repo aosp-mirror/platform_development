@@ -37,6 +37,33 @@
     return pretag;
   }
 
+  function grepResultHtml(items) {
+    let ret = document.createElement('p');
+    for (let i = 0; i < items.length; i++) {
+      let path = document.createElement('span');
+      path.style.color = 'purple';
+      path.style.fontSize = '20px';
+      path.innerHTML = items[i][0];
+      ret.appendChild(path);
+      ret.appendChild(document.createElement('br'));
+      for (let j = 0; j < items[0][1].length; j++) {
+        let line_no = items[i][1][j][0];
+        let content = items[i][1][j][1];
+        let line_html = document.createElement('font');
+        line_html.style.color = 'green';
+        line_html.style.fontSize = '18px';
+        line_html.innerHTML = line_no + ':';
+        ret.appendChild(line_html);
+        let content_html = document.createElement('span');
+        content_html.style.fontSize = '18px';
+        content_html.appendChild(document.createTextNode(content));
+        ret.appendChild(content_html);
+        ret.appendChild(document.createElement('br'));
+      }
+    }
+    return ret;
+  }
+
   function enterTask() {
     let text = $('#enter_deps').val();
     $('#deps_list').append(taskHtml(text, counter));
@@ -104,7 +131,6 @@
       for (let i = 0; i < len; i++) {
         $('#pattern_list').append('<li>' + pattern_lst[i] + '</li>');
       }
-
       $('#path_prefix').text(data.path_prefix);
     });
   }
@@ -199,6 +225,7 @@
     setGotoPatternLine(line_no);
     $('#selected_text').val('');
     $('#code_file_path').val('');
+    $('#enter_deps').val('');
     $('html,body').scrollTop(0);
     return false;
   }
@@ -227,8 +254,30 @@
       pattern: values['pattern'],
       is_regex: $('#is_regex').is(':checked') ? 1 : 0
     });
+    return true;
+  });
+
+  $('#temporary_search').submit(function() {
+    const $inputs = $('#temporary_search :input');
+    let values = {};
+    $inputs.each(function () {
+      values[this.name] = $(this).val();
+    });
+    $('#modal_title').text(values['pattern']);
+    $.getJSON('/temporary_search', {
+      path: $('#file_path').text(),
+      pattern: values['pattern'],
+      is_regex: $('#is_regex2').is(':checked') ? 1 : 0
+    }, function (data) {
+        $('#modal_body').append(grepResultHtml(JSON.parse(data.result)));
+        $('#myModal').modal('show');
+    });
     return false;
   });
+  // clear previous html code in modal on hide
+  $('#myModal').on('hidden.bs.modal', function () {
+    $('#modal_body').empty();
+  })
 
   $('#add_deps').submit(enterTask);
   $('#add_code').submit(enterCode);
