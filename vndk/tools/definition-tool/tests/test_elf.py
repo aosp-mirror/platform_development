@@ -115,6 +115,11 @@ class ELFTest(unittest.TestCase):
         self.assertEqual('EI_CLASS\t32\n'
                          'EI_DATA\t\tLittle-Endian\n'
                          'E_MACHINE\tEM_AARCH64\n'
+                         'FILE_SIZE\t0\n'
+                         'RO_SEG_FILE_SIZE\t0\n'
+                         'RO_SEG_MEM_SIZE\t0\n'
+                         'RW_SEG_FILE_SIZE\t0\n'
+                         'RW_SEG_MEM_SIZE\t0\n'
                          'DT_RPATH\ta\n'
                          'DT_RUNPATH\tb\n'
                          'DT_NEEDED\tlibc.so\n'
@@ -129,6 +134,11 @@ class ELFTest(unittest.TestCase):
         data = ('EI_CLASS\t64\n'
                 'EI_DATA\t\tLittle-Endian\n'
                 'E_MACHINE\tEM_AARCH64\n'
+                'FILE_SIZE\t90\n'
+                'RO_SEG_FILE_SIZE\t18\n'
+                'RO_SEG_MEM_SIZE\t24\n'
+                'RW_SEG_FILE_SIZE\t42\n'
+                'RW_SEG_MEM_SIZE\t81\n'
                 'DT_RPATH\trpath_1\n'
                 'DT_RPATH\trpath_2\n'
                 'DT_RUNPATH\trunpath_1\n'
@@ -144,6 +154,11 @@ class ELFTest(unittest.TestCase):
             self.assertEqual(ELF.ELFCLASS64, res.ei_class)
             self.assertEqual(ELF.ELFDATA2LSB, res.ei_data)
             self.assertEqual(183, res.e_machine)
+            self.assertEqual(90, res.file_size)
+            self.assertEqual(18, res.ro_seg_file_size)
+            self.assertEqual(24, res.ro_seg_mem_size)
+            self.assertEqual(42, res.rw_seg_file_size)
+            self.assertEqual(81, res.rw_seg_mem_size)
             self.assertEqual(['rpath_1', 'rpath_2'], res.dt_rpath)
             self.assertEqual(['runpath_1', 'runpath_2'], res.dt_runpath)
             self.assertEqual(['libc.so', 'libm.so'], res.dt_needed)
