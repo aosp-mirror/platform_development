@@ -121,6 +121,11 @@ Elf_Shdr = collections.namedtuple(
         'sh_addralign sh_entsize')
 
 
+Elf_Phdr = collections.namedtuple(
+        'Elf_Phdr',
+        'p_type p_offset p_vaddr p_paddr p_filesz p_memsz p_flags p_align')
+
+
 Elf_Dyn = collections.namedtuple('Elf_Dyn', 'd_tag d_val')
 
 
@@ -172,6 +177,12 @@ class ELF(object):
     ELFDATANONE = 0
     ELFDATA2LSB = 1
     ELFDATA2MSB = 2
+
+    PT_LOAD = 1
+
+    PF_X = 1
+    PF_W = 2
+    PF_R = 4
 
     DT_NEEDED = 1
     DT_RPATH = 15
@@ -227,12 +238,16 @@ class ELF(object):
 
 
     __slots__ = ('ei_class', 'ei_data', 'e_machine', 'dt_rpath', 'dt_runpath',
-                 'dt_needed', 'exported_symbols', 'imported_symbols',)
+                 'dt_needed', 'exported_symbols', 'imported_symbols',
+                 'file_size', 'ro_seg_file_size', 'ro_seg_mem_size',
+                 'rw_seg_file_size', 'rw_seg_mem_size',)
 
 
     def __init__(self, ei_class=ELFCLASSNONE, ei_data=ELFDATANONE, e_machine=0,
                  dt_rpath=None, dt_runpath=None, dt_needed=None,
-                 exported_symbols=None, imported_symbols=None):
+                 exported_symbols=None, imported_symbols=None,
+                 file_size=0, ro_seg_file_size=0, ro_seg_mem_size=0,
+                 rw_seg_file_size=0, rw_seg_mem_size=0):
         self.ei_class = ei_class
         self.ei_data = ei_data
         self.e_machine = e_machine
@@ -243,6 +258,11 @@ class ELF(object):
                 exported_symbols if exported_symbols is not None else set()
         self.imported_symbols = \
                 imported_symbols if imported_symbols is not None else set()
+        self.file_size = file_size
+        self.ro_seg_file_size = ro_seg_file_size
+        self.ro_seg_mem_size = ro_seg_mem_size
+        self.rw_seg_file_size = rw_seg_file_size
+        self.rw_seg_mem_size = rw_seg_mem_size
 
     def __repr__(self):
         args = (a + '=' + repr(getattr(self, a)) for a in self.__slots__)
@@ -286,6 +306,11 @@ class ELF(object):
         print('EI_CLASS\t' + self.elf_class_name, file=file)
         print('EI_DATA\t\t' + self.elf_data_name, file=file)
         print('E_MACHINE\t' + self.elf_machine_name, file=file)
+        print('FILE_SIZE\t' + str(self.file_size), file=file)
+        print('RO_SEG_FILE_SIZE\t' + str(self.ro_seg_file_size), file=file)
+        print('RO_SEG_MEM_SIZE\t' + str(self.ro_seg_mem_size), file=file)
+        print('RW_SEG_FILE_SIZE\t' + str(self.rw_seg_file_size), file=file)
+        print('RW_SEG_MEM_SIZE\t' + str(self.rw_seg_mem_size), file=file)
         for dt_rpath in self.dt_rpath:
             print('DT_RPATH\t' + dt_rpath, file=file)
         for dt_runpath in self.dt_runpath:
@@ -334,17 +359,21 @@ class ELF(object):
         if self.ei_data not in (ELF.ELFDATA2LSB, ELF.ELFDATA2MSB):
             raise ELFError('unknown endianness')
 
+        self.file_size = buf.size()
+
         # ELF structure definitions.
         endian_fmt = '<' if self.ei_data == ELF.ELFDATA2LSB else '>'
 
         if self.is_32bit:
             elf_hdr_fmt = endian_fmt + '4x4B8xHHLLLLLHHHHHH'
             elf_shdr_fmt = endian_fmt + 'LLLLLLLLLL'
+            elf_phdr_fmt = endian_fmt + 'LLLLLLLL'
             elf_dyn_fmt = endian_fmt + 'lL'
             elf_sym_fmt = endian_fmt + 'LLLBBH'
         else:
             elf_hdr_fmt = endian_fmt + '4x4B8xHHLQQQLHHHHHH'
             elf_shdr_fmt = endian_fmt + 'LLQQQQLLQQ'
+            elf_phdr_fmt = endian_fmt + 'LLQQQQQQ'
             elf_dyn_fmt = endian_fmt + 'QQ'
             elf_sym_fmt = endian_fmt + 'LBBHQQ'
 
@@ -360,6 +389,19 @@ class ELF(object):
         def parse_elf_shdr(offset):
             return parse_struct(Elf_Shdr, elf_shdr_fmt, offset,
                                 'bad section header')
+
+        if self.is_32bit:
+            def parse_elf_phdr(offset):
+                return parse_struct(Elf_Phdr, elf_phdr_fmt, offset,
+                                    'bad program header')
+        else:
+            def parse_elf_phdr(offset):
+                try:
+                    p = struct.unpack_from(elf_phdr_fmt, buf, offset)
+                    return Elf_Phdr(p[0], p[2], p[3], p[4], p[5], p[6], p[1],
+                                    p[7])
+                except struct.error:
+                    raise ELFError('bad program header')
 
         def parse_elf_dyn(offset):
             return parse_struct(Elf_Dyn, elf_dyn_fmt, offset,
@@ -382,6 +424,33 @@ class ELF(object):
         # Parse ELF header.
         header = parse_elf_hdr(0)
         self.e_machine = header.e_machine
+
+        # Parse ELF program header and calculate segment size.
+        if header.e_phentsize == 0:
+            raise ELFError('no program header')
+
+        ro_seg_file_size = 0
+        ro_seg_mem_size = 0
+        rw_seg_file_size = 0
+        rw_seg_mem_size = 0
+
+        assert struct.calcsize(elf_phdr_fmt) == header.e_phentsize
+        seg_end = header.e_phoff + header.e_phnum * header.e_phentsize
+        for phdr_off in range(header.e_phoff, seg_end, header.e_phentsize):
+            phdr = parse_elf_phdr(phdr_off)
+            if phdr.p_type != ELF.PT_LOAD:
+                continue
+            if phdr.p_flags & ELF.PF_W:
+                rw_seg_file_size += phdr.p_filesz
+                rw_seg_mem_size += phdr.p_memsz
+            else:
+                ro_seg_file_size += phdr.p_filesz
+                ro_seg_mem_size += phdr.p_memsz
+
+        self.ro_seg_file_size = ro_seg_file_size
+        self.ro_seg_mem_size = ro_seg_mem_size
+        self.rw_seg_file_size = rw_seg_file_size
+        self.rw_seg_mem_size = rw_seg_mem_size
 
         # Check section header size.
         if header.e_shentsize == 0:
@@ -481,6 +550,16 @@ class ELF(object):
                 self.ei_data = ELF.get_ei_data_from_name(value)
             elif key == 'E_MACHINE':
                 self.e_machine = ELF.get_e_machine_from_name(value)
+            elif key == 'FILE_SIZE':
+                self.file_size = int(value)
+            elif key == 'RO_SEG_FILE_SIZE':
+                self.ro_seg_file_size = int(value)
+            elif key == 'RO_SEG_MEM_SIZE':
+                self.ro_seg_mem_size = int(value)
+            elif key == 'RW_SEG_FILE_SIZE':
+                self.rw_seg_file_size = int(value)
+            elif key == 'RW_SEG_MEM_SIZE':
+                self.rw_seg_mem_size = int(value)
             elif key == 'DT_RPATH':
                 self.dt_rpath.append(intern(value))
             elif key == 'DT_RUNPATH':
@@ -2056,6 +2135,10 @@ class VNDKCommand(VNDKCommandBase):
                 '--output-format', default='tag',
                 help='output format for vndk classification')
 
+        parser.add_argument(
+                '--file-size-output',
+                help='output file for calculated file sizes')
+
     def _warn_incorrect_partition_lib_set(self, lib_set, partition, error_msg):
         for lib in lib_set.values():
             if not lib.num_users:
@@ -2140,6 +2223,69 @@ class VNDKCommand(VNDKCommandBase):
 
         file.write(template)
 
+    def _print_file_size_output(self, graph, vndk_lib, file=sys.stderr):
+        def collect_tags(lib):
+            tags = []
+            for field_name in _VNDK_RESULT_FIELD_NAMES:
+                if lib in getattr(vndk_lib, field_name):
+                    tags.append(field_name)
+            return ' '.join(tags)
+
+        writer = csv.writer(file, lineterminator='\n')
+        writer.writerow(('Path', 'Tag', 'File size', 'RO segment file size',
+                         'RO segment mem size', 'RW segment file size',
+                         'RW segment mem size'))
+
+        # Print the file size of all ELF files.
+        for lib in sorted(graph.all_libs()):
+            writer.writerow((lib.path, collect_tags(lib), lib.elf.file_size,
+                             lib.elf.ro_seg_file_size, lib.elf.ro_seg_mem_size,
+                             lib.elf.rw_seg_file_size, lib.elf.rw_seg_mem_size))
+
+        # Calculate the summation of each sets.
+        def calc_total_size(lib_set):
+            total_file_size = 0
+            total_ro_seg_file_size = 0
+            total_ro_seg_mem_size = 0
+            total_rw_seg_file_size = 0
+            total_rw_seg_mem_size = 0
+
+            for lib in lib_set:
+                total_file_size += lib.elf.file_size
+                total_ro_seg_file_size += lib.elf.ro_seg_file_size
+                total_ro_seg_mem_size += lib.elf.ro_seg_mem_size
+                total_rw_seg_file_size += lib.elf.rw_seg_file_size
+                total_rw_seg_mem_size += lib.elf.rw_seg_mem_size
+
+            return [total_file_size, total_ro_seg_file_size,
+                    total_ro_seg_mem_size, total_rw_seg_file_size,
+                    total_rw_seg_mem_size]
+
+        SEPARATOR = ('----------', None, None, None, None, None, None)
+
+        writer.writerow(SEPARATOR)
+        for tag in _VNDK_RESULT_FIELD_NAMES:
+            lib_set = getattr(vndk_lib, tag)
+            lib_set = [lib for lib in lib_set if lib.elf.is_32bit]
+            total = calc_total_size(lib_set)
+            writer.writerow(['Subtotal ' + tag + ' (32-bit)', None] + total)
+
+        writer.writerow(SEPARATOR)
+        for tag in _VNDK_RESULT_FIELD_NAMES:
+            lib_set = getattr(vndk_lib, tag)
+            lib_set = [lib for lib in lib_set if not lib.elf.is_32bit]
+            total = calc_total_size(lib_set)
+            writer.writerow(['Subtotal ' + tag + ' (64-bit)', None] + total)
+
+        writer.writerow(SEPARATOR)
+        for tag in _VNDK_RESULT_FIELD_NAMES:
+            total = calc_total_size(getattr(vndk_lib, tag))
+            writer.writerow(['Subtotal ' + tag + ' (both)', None] + total)
+
+        # Calculate the summation of all ELF files.
+        writer.writerow(SEPARATOR)
+        writer.writerow(['Total', None] + calc_total_size(graph.all_libs()))
+
     def main(self, args):
         generic_refs, graph, tagged_paths = self.create_from_args(args)
 
@@ -2157,6 +2303,10 @@ class VNDKCommand(VNDKCommandBase):
         else:
             self._print_tags(vndk_lib, args.full)
 
+        # Calculate and print file sizes.
+        if args.file_size_output:
+            with open(args.file_size_output, 'w') as fp:
+                self._print_file_size_output(graph, vndk_lib, file=fp)
         return 0
 
 
