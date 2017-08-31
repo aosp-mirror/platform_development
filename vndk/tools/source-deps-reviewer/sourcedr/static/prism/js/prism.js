@@ -635,9 +635,17 @@ var isLineHeightRounded = (function() {
 	}
 }());
 
+function getOffsetById(id) {
+	var element = document.getElementById(id);
+	var bodyRect = document.body.getBoundingClientRect();
+	var elemRect = element.getBoundingClientRect();
+	var elementOffset = elemRect.top - bodyRect.top;
+	return elementOffset;
+}
+
 function highlightLines(pre, lines, classes) {
-	var ranges = lines.replace(/\s+/g, '').split(','),
-	    offset = +pre.getAttribute('data-line-offset') || 0;
+	var ranges = lines.replace(/\s+/g, '').split(',');
+	var offset = getOffsetById('browsing_file');
 
 	var parseMethod = isLineHeightRounded() ? parseInt : parseFloat;
 	var lineHeight = parseMethod(getComputedStyle(pre).lineHeight);
@@ -663,7 +671,7 @@ function highlightLines(pre, lines, classes) {
 			}
 		}
 
-		line.style.top = (start - offset - 1) * lineHeight + 'px';
+		line.style.top = (getOffsetById('line_no' + start) - offset) + 'px';
 
 		//allow this to play nicely with the line-numbers plugin
 		if(hasClass(pre, 'line-numbers')) {
@@ -734,33 +742,6 @@ Prism.hooks.add('before-sanity-check', function(env) {
 	}
 });
 
-Prism.hooks.add('complete', function(env) {
-	var pre = env.element.parentNode;
-	var lines = pre && pre.getAttribute('data-line');
-
-	if (!pre || !lines || !/pre/i.test(pre.nodeName)) {
-		return;
-	}
-
-	clearTimeout(fakeTimer);
-
-	highlightLines(pre, lines);
-
-	fakeTimer = setTimeout(applyHash, 1);
-});
-
-if(window.addEventListener) {
-	window.addEventListener('hashchange', applyHash);
-}
-
-})();
-
-(function() {
-
-if (typeof self === 'undefined' || !self.Prism || !self.document) {
-	return;
-}
-
 Prism.hooks.add('complete', function (env) {
 	if (!env.code) {
 		return;
@@ -795,8 +776,10 @@ Prism.hooks.add('complete', function (env) {
 	var linesNum = match ? match.length + 1 : 1;
 	var lineNumbersWrapper;
 
-	var lines = new Array(linesNum + 1);
-	lines = lines.join('<span></span>');
+	var lines = '';
+	for (let i = 1; i < linesNum + 1; i++) {
+		lines += '<span id="line_no' + i + '"></span>';
+	}
 
 	lineNumbersWrapper = document.createElement('span');
 	lineNumbersWrapper.setAttribute('aria-hidden', 'true');
@@ -810,5 +793,32 @@ Prism.hooks.add('complete', function (env) {
 	env.element.appendChild(lineNumbersWrapper);
 
 });
+
+Prism.hooks.add('complete', function(env) {
+	var pre = env.element.parentNode;
+	var lines = pre && pre.getAttribute('data-line');
+
+	if (!pre || !lines || !/pre/i.test(pre.nodeName)) {
+		return;
+	}
+
+	clearTimeout(fakeTimer);
+
+	highlightLines(pre, lines);
+
+	fakeTimer = setTimeout(applyHash, 1);
+});
+
+if(window.addEventListener) {
+	window.addEventListener('hashchange', applyHash);
+}
+
+})();
+
+(function() {
+
+if (typeof self === 'undefined' || !self.Prism || !self.document) {
+	return;
+}
 
 }());
