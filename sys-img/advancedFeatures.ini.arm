@@ -1,0 +1,5 @@
+GrallocSync = on
+LogcatPipe = on
+GLAsyncSwap = on
+GLESDynamicVersion = on
+GLDMA = on
