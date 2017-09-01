@@ -19,6 +19,7 @@
 # resource files here.
 intermediates := $(TARGET_OUT_COMMON_INTERMEDIATES)/JAVA_LIBRARIES/$(sdk_stub_name)_intermediates
 full_target := $(intermediates)/classes.jar
+header_target := $(intermediates)/classes-header.jar
 jack_lib := $(intermediates)/classes.jack
 dex_toc := $(intermediates)/classes.dex.toc
 full_src_target = $(intermediates)/android-stubs-src.jar
@@ -36,7 +37,7 @@ $(full_src_target): $(stub_timestamp)
 	@echo Packaging SDK Stub sources: $@
 	$(hide) cd $(PRIVATE_INTERMEDIATES_DIR) && zip -rq $(notdir $@) $(notdir $(PRIVATE_SRC_DIR))
 
-$(full_target): $(stub_timestamp) $(framework_res_package)
+$(full_target): $(stub_timestamp) $(framework_res_package) $(ZIPTIME)
 	@echo Compiling SDK Stubs: $@
 	$(hide) rm -rf $(PRIVATE_CLASS_INTERMEDIATES_DIR)
 	$(hide) mkdir -p $(PRIVATE_CLASS_INTERMEDIATES_DIR)
@@ -67,8 +68,12 @@ $(full_target): $(stub_timestamp) $(framework_res_package)
 	$(hide) unzip -qo $(PRIVATE_FRAMEWORK_RES_PACKAGE) -d $(PRIVATE_CLASS_INTERMEDIATES_DIR)
 	$(hide) (cd $(PRIVATE_CLASS_INTERMEDIATES_DIR) && rm -rf classes.dex META-INF)
 	$(hide) mkdir -p $(dir $@)
-	$(hide) jar -cf $@ -C $(PRIVATE_CLASS_INTERMEDIATES_DIR) .
-	$(hide) jar -u0f $@ -C $(PRIVATE_CLASS_INTERMEDIATES_DIR) resources.arsc
+	$(hide) jar -cf $@.tmp -C $(PRIVATE_CLASS_INTERMEDIATES_DIR) .
+	$(hide) jar -u0f $@.tmp -C $(PRIVATE_CLASS_INTERMEDIATES_DIR) resources.arsc
+	$(hide) $(ZIPTIME) $@.tmp
+	$(hide) $(call commit-change-for-toc,$@)
+
+.KATI_RESTAT: $(full_target)
 
 $(jack_lib) : $(stub_timestamp) $(framework_res_package) $(JACK_DEFAULT_ARGS) $(JACK) | setup-jack-server
 	@echo Compiling SDK Stubs with Jack: $@
@@ -91,11 +96,11 @@ $(jack_lib) : $(stub_timestamp) $(framework_res_package) $(JACK_DEFAULT_ARGS) $(
 		|| ( rm -f $@ ; $(PRIVATE_INTERMEDIATES_DIR)/jack-rsc.tmp ; exit 41 )
 	$(hide) rm -rf $(PRIVATE_INTERMEDIATES_DIR)/jack-rsc.tmp
 
-$(call define-jar-to-toc-rule, $(full_target))
+$(eval $(call copy-one-file,$(full_target),$(header_target)))
 
 # As we don't have .dex file for the SDK stub, we cannot generate .toc
-# file from .dex file. Use .toc file generated from .jar instead.
-$(dex_toc): $(full_target).toc $(jack_lib)
+# file from .dex file. Use classes.jar instead.
+$(dex_toc): $(full_target) $(jack_lib)
 	$(hide) cp $< $@.tmp
 	$(call commit-change-for-toc, $@)
 .KATI_RESTAT: $(dex_toc)
