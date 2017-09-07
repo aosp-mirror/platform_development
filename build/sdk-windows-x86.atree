@@ -35,6 +35,7 @@ rm platform-tools/fastboot
 bin/adb.exe                             strip platform-tools/adb.exe
 bin/fastboot.exe                        strip platform-tools/fastboot.exe
 
+rm platform-tools/e2fsdroid
 rm platform-tools/mke2fs
 bin/mke2fs.exe                          strip platform-tools/mke2fs.exe
 
