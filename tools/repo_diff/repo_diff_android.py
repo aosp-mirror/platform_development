@@ -16,8 +16,8 @@ import repo_diff_downstream
 
 HELP_MSG = "Diff a repo (downstream) and its upstream"
 
-WORKSPACE = "workspace"
-UPSTREAM_WORKSPACE = "upstream_workspace"
+DOWNSTREAM_WORKSPACE = "downstream"
+UPSTREAM_WORKSPACE = "upstream"
 
 DEFAULT_MANIFEST_URL = "https://android.googlesource.com/platform/manifest"
 DEFAULT_MANIFEST_BRANCH = "oreo-dev"
@@ -126,7 +126,7 @@ def diff(manifest_url, manifest_branch, tag, upstream_manifest_url,
          upstream_manifest_branch, exclusions_file):
   """Syncs and diffs an Android workspace against an upstream workspace."""
 
-  workspace = os.path.abspath(WORKSPACE)
+  workspace = os.path.abspath(DOWNSTREAM_WORKSPACE)
   upstream_workspace = os.path.abspath(UPSTREAM_WORKSPACE)
   # repo sync downstream source tree
   repo_sync_specific_release(
