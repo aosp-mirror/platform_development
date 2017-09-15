@@ -20,9 +20,9 @@ DOWNSTREAM_WORKSPACE = "downstream"
 UPSTREAM_WORKSPACE = "upstream"
 
 DEFAULT_MANIFEST_URL = "https://android.googlesource.com/platform/manifest"
-DEFAULT_MANIFEST_BRANCH = "oreo-dev"
+DEFAULT_MANIFEST_BRANCH = "android-8.0.0_r10"
 DEFAULT_UPSTREAM_MANIFEST_URL = "https://android.googlesource.com/platform/manifest"
-DEFAULT_UPSTREAM_MANIFEST_BRANCH = "master"
+DEFAULT_UPSTREAM_MANIFEST_BRANCH = "android-8.0.0_r1"
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 DEFAULT_EXCLUSIONS_FILE = os.path.join(SCRIPT_DIR, "exclusions.txt")
 
@@ -118,6 +118,8 @@ def repo_sync_specific_release(url, branch, tag, workspace):
   repo_init(url, branch, workspace)
   if tag:
     rev = get_commit_with_keyword(manifest_path, tag)
+    if not rev:
+      raise(ValueError("could not find a manifest revision for tag " + tag))
     repo_init(url, rev, workspace)
   repo_sync(workspace)
 
@@ -135,8 +137,12 @@ def diff(manifest_url, manifest_branch, tag, upstream_manifest_url,
       tag,
       workspace)
 
-  # get the build_id so that we know which rev of upstream we need
-  build_id = get_build_id(workspace)
+  build_id = None
+  if tag:
+    # get the build_id so that we know which rev of upstream we need
+    build_id = get_build_id(workspace)
+    if not build_id:
+      raise(ValueError("Error: could not find the Build ID of " + workspace))
 
   # repo sync upstream source tree
   repo_sync_specific_release(
