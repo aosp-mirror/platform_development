@@ -12,7 +12,7 @@ This script:
 import argparse
 import os
 import subprocess
-import repo_diff_downstream
+import repo_diff_trees
 
 HELP_MSG = "Diff a repo (downstream) and its upstream"
 
@@ -152,7 +152,7 @@ def diff(manifest_url, manifest_branch, tag, upstream_manifest_url,
       upstream_workspace)
 
   # do the comparison
-  repo_diff_downstream.diff(
+  repo_diff_trees.diff(
       upstream_workspace,
       workspace,
       os.path.abspath("project.csv"),
