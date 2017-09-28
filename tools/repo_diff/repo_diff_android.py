@@ -49,8 +49,12 @@ def parse_args():
                       help="exclusions file",
                       default=DEFAULT_EXCLUSIONS_FILE)
   parser.add_argument("-t", "--tag",
-                      help="release tag (optional). If not set then will"
+                      help="release tag (optional). If not set then will "
                       "sync the latest in the branch.")
+  parser.add_argument("-i", "--ignore_error_during_sync",
+                      action="store_true",
+                      help="repo sync might fail due to varios reasons. "
+                      "Ignore these errors and move on. Use with caution.")
 
   return parser.parse_args()
 
@@ -71,7 +75,7 @@ def repo_init(url, rev, workspace):
                           (url, rev), cwd=workspace, shell=True)
 
 
-def repo_sync(workspace, retry=5):
+def repo_sync(workspace, ignore_error, retry=5):
   """Repo sync."""
 
   count = 0
@@ -81,11 +85,15 @@ def repo_sync(workspace, retry=5):
           (count, retry, workspace))
 
     try:
-      subprocess.check_output(("repo sync --jobs=24 --current-branch --quiet "
-                               "--no-tags --no-clone-bundle"),
-                              cwd=workspace, shell=True)
+      command = "repo sync --jobs=24 --current-branch --quiet"
+      command += " --no-tags --no-clone-bundle"
+      if ignore_error:
+        command += " --force-broken"
+      subprocess.check_output(command, cwd=workspace, shell=True)
     except subprocess.CalledProcessError as e:
       print "Error: %s" % e.output
+      if count == retry and not ignore_error:
+        raise e
     # Stop retrying if the repo sync was successful
     else:
       break
@@ -108,7 +116,7 @@ def get_build_id(workspace):
                                  shell=True).rstrip()
 
 
-def repo_sync_specific_release(url, branch, tag, workspace):
+def repo_sync_specific_release(url, branch, tag, workspace, ignore_error):
   """Repo sync source with the specific release tag."""
 
   if not os.path.exists(workspace):
@@ -124,11 +132,12 @@ def repo_sync_specific_release(url, branch, tag, workspace):
       raise(ValueError("could not find a manifest revision for tag " + tag))
     repo_init(url, rev, workspace)
 
-  repo_sync(workspace)
+  repo_sync(workspace, ignore_error)
 
 
-def diff(manifest_url, manifest_branch, tag, upstream_manifest_url,
-         upstream_manifest_branch, exclusions_file):
+def diff(manifest_url, manifest_branch, tag, 
+         upstream_manifest_url, upstream_manifest_branch,
+         exclusions_file, ignore_error_during_sync):
   """Syncs and diffs an Android workspace against an upstream workspace."""
 
   workspace = os.path.abspath(DOWNSTREAM_WORKSPACE)
@@ -138,7 +147,8 @@ def diff(manifest_url, manifest_branch, tag, upstream_manifest_url,
       manifest_url,
       manifest_branch,
       tag,
-      workspace)
+      workspace,
+      ignore_error_during_sync)
 
   build_id = None
 
@@ -153,7 +163,8 @@ def diff(manifest_url, manifest_branch, tag, upstream_manifest_url,
       upstream_manifest_url,
       upstream_manifest_branch,
       build_id,
-      upstream_workspace)
+      upstream_workspace,
+      ignore_error_during_sync)
 
 
   # make output folder
@@ -179,9 +190,13 @@ def diff(manifest_url, manifest_branch, tag, upstream_manifest_url,
 def main():
   args = parse_args()
 
-  diff(args.manifest_url, args.manifest_branch, args.tag,
-       args.upstream_manifest_url, args.upstream_manifest_branch,
-       args.exclusions_file)
+  diff(args.manifest_url,
+       args.manifest_branch,
+       args.tag,
+       args.upstream_manifest_url,
+       args.upstream_manifest_branch,
+       args.exclusions_file,
+       args.ignore_error_during_sync)
 
 if __name__ == "__main__":
   main()
