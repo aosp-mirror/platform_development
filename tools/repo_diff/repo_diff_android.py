@@ -24,7 +24,7 @@ DEFAULT_MANIFEST_BRANCH = "android-8.0.0_r10"
 DEFAULT_UPSTREAM_MANIFEST_URL = "https://android.googlesource.com/platform/manifest"
 DEFAULT_UPSTREAM_MANIFEST_BRANCH = "android-8.0.0_r1"
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-DEFAULT_EXCLUSIONS_FILE = os.path.join(SCRIPT_DIR, "exclusions.txt")
+DEFAULT_EXCLUSIONS_FILE = os.path.join(SCRIPT_DIR, "android_exclusions.txt")
 
 
 def parse_args():
