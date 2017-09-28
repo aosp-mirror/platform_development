@@ -10,6 +10,7 @@ This script:
 """
 
 import argparse
+import datetime
 import os
 import subprocess
 import repo_diff_trees
@@ -116,11 +117,13 @@ def repo_sync_specific_release(url, branch, tag, workspace):
   manifest_path = os.path.join(workspace, ".repo", "manifests")
 
   repo_init(url, branch, workspace)
+
   if tag:
     rev = get_commit_with_keyword(manifest_path, tag)
     if not rev:
       raise(ValueError("could not find a manifest revision for tag " + tag))
     repo_init(url, rev, workspace)
+
   repo_sync(workspace)
 
 
@@ -138,6 +141,7 @@ def diff(manifest_url, manifest_branch, tag, upstream_manifest_url,
       workspace)
 
   build_id = None
+
   if tag:
     # get the build_id so that we know which rev of upstream we need
     build_id = get_build_id(workspace)
@@ -151,12 +155,23 @@ def diff(manifest_url, manifest_branch, tag, upstream_manifest_url,
       build_id,
       upstream_workspace)
 
+
+  # make output folder
+  if tag:
+    output_folder = os.path.abspath(tag.replace(" ", "_"))
+  else:
+    current_time = datetime.datetime.today().strftime('%Y%m%d_%H%M%S')
+    output_folder = os.path.abspath(current_time)
+
+  if not os.path.exists(output_folder):
+      os.makedirs(output_folder)
+
   # do the comparison
   repo_diff_trees.diff(
       upstream_workspace,
       workspace,
-      os.path.abspath("project.csv"),
-      os.path.abspath("commit.csv"),
+      os.path.join(output_folder, "project.csv"),
+      os.path.join(output_folder, "commit.csv"),
       os.path.abspath(exclusions_file),
   )
 
