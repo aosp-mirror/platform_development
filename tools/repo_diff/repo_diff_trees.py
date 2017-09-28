@@ -45,6 +45,11 @@ def get_projects(source_tree):
     path = project.get('path', project.get('name'))
     path = os.path.abspath(os.path.join(source_tree, path))
     name = project.get('name')
+
+    # check if project files actually exist
+    if not os.path.exists(path):
+      continue
+
     projects[name] = path
 
   return projects
