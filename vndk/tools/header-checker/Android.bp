@@ -140,21 +140,6 @@ cc_binary_host {
         "libheader-abi-util",
         "libheader-checker-proto",
     ],
-
-    target: {
-        linux: {
-            host_ldlibs: [
-                "-ldl",
-                "-lpthread",
-            ],
-        },
-        darwin: {
-            host_ldlibs: [
-                "-ldl",
-                "-lpthread",
-            ],
-        },
-    },
 }
 
 cc_binary_host {
@@ -172,21 +157,6 @@ cc_binary_host {
     static_libs: [
         "libheader-checker-proto",
     ],
-
-    target: {
-        linux: {
-            host_ldlibs: [
-                "-ldl",
-                "-lpthread",
-            ],
-        },
-        darwin: {
-            host_ldlibs: [
-                "-ldl",
-                "-lpthread",
-            ],
-        },
-    },
 }
 
 cc_binary_host {
@@ -204,21 +174,6 @@ cc_binary_host {
     static_libs: [
         "libheader-checker-proto",
     ],
-
-    target: {
-        linux: {
-            host_ldlibs: [
-                "-ldl",
-                "-lpthread",
-            ],
-        },
-        darwin: {
-            host_ldlibs: [
-                "-ldl",
-                "-lpthread",
-            ],
-        },
-    },
 }
 
 cc_binary_host {
@@ -236,21 +191,6 @@ cc_binary_host {
     static_libs: [
         "libheader-checker-proto",
     ],
-
-    target: {
-        linux: {
-            host_ldlibs: [
-                "-ldl",
-                "-lpthread",
-            ],
-        },
-        darwin: {
-            host_ldlibs: [
-                "-ldl",
-                "-lpthread",
-            ],
-        },
-    },
 }
 
 cc_library_static {
@@ -260,7 +200,6 @@ cc_library_static {
     ],
     host_supported: true,
     export_include_dirs: ["header-abi-util/include"],
-    local_include_dirs: ["header-abi-util/include"],
 
     srcs: [
         "header-abi-util/src/*.cpp"
