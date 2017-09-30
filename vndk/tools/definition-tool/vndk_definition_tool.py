@@ -1240,6 +1240,8 @@ class ELFLinker(object):
     )
 
     VENDOR_SEARCH_PATH = (
+        '/vendor/${LIB}/hw',
+        '/vendor/${LIB}/egl',
         '/vendor/${LIB}',
         '/vendor/${LIB}/vndk-sp',
         '/system/${LIB}/vndk-sp',
