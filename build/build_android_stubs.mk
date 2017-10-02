@@ -20,16 +20,14 @@
 intermediates := $(TARGET_OUT_COMMON_INTERMEDIATES)/JAVA_LIBRARIES/$(sdk_stub_name)_intermediates
 full_target := $(intermediates)/classes.jar
 header_target := $(intermediates)/classes-header.jar
-jack_lib := $(intermediates)/classes.jack
-dex_toc := $(intermediates)/classes.dex.toc
 full_src_target = $(intermediates)/android-stubs-src.jar
 src_dir := $(intermediates)/src
 classes_dir := $(intermediates)/classes
 framework_res_package := $(call intermediates-dir-for,APPS,framework-res,,COMMON)/package-export.apk
 
-$(full_target) $(jack_lib) $(full_src_target): PRIVATE_SRC_DIR := $(src_dir)
-$(full_target) $(jack_lib) $(full_src_target): PRIVATE_INTERMEDIATES_DIR := $(intermediates)
-$(full_target) $(jack_lib): PRIVATE_FRAMEWORK_RES_PACKAGE := $(framework_res_package)
+$(full_target) $(full_src_target): PRIVATE_SRC_DIR := $(src_dir)
+$(full_target) $(full_src_target): PRIVATE_INTERMEDIATES_DIR := $(intermediates)
+$(full_target): PRIVATE_FRAMEWORK_RES_PACKAGE := $(framework_res_package)
 
 $(full_target): PRIVATE_CLASS_INTERMEDIATES_DIR := $(classes_dir)
 
@@ -75,32 +73,4 @@ $(full_target): $(stub_timestamp) $(framework_res_package) $(ZIPTIME)
 
 .KATI_RESTAT: $(full_target)
 
-$(jack_lib) : $(stub_timestamp) $(framework_res_package) $(JACK_DEFAULT_ARGS) $(JACK) | setup-jack-server
-	@echo Compiling SDK Stubs with Jack: $@
-	rm -rf $(PRIVATE_INTERMEDIATES_DIR)/jack-rsc.tmp
-	$(hide) if [ ! -f $(PRIVATE_FRAMEWORK_RES_PACKAGE) ]; then \
-		echo Missing file $(PRIVATE_FRAMEWORK_RES_PACKAGE); \
-		exit 1; \
-	fi;
-	mkdir -p $(PRIVATE_INTERMEDIATES_DIR)/jack-rsc.tmp
-	$(hide) unzip -qo $(PRIVATE_FRAMEWORK_RES_PACKAGE) -d $(PRIVATE_INTERMEDIATES_DIR)/jack-rsc.tmp
-	$(hide) mkdir -p $(dir $@)
-	$(hide) find $(PRIVATE_SRC_DIR) -name "*.java" > \
-		$(PRIVATE_INTERMEDIATES_DIR)/jack-rsc.java-source-list
-	$(call call-jack) \
-		-D jack.java.source.version=1.8 \
-		-D jack.android.min-api-level=$(PLATFORM_JACK_MIN_SDK_VERSION) \
-		--import-resource $(PRIVATE_INTERMEDIATES_DIR)/jack-rsc.tmp \
-		--output-jack $@ \
-		@$(PRIVATE_INTERMEDIATES_DIR)/jack-rsc.java-source-list \
-		|| ( rm -f $@ ; $(PRIVATE_INTERMEDIATES_DIR)/jack-rsc.tmp ; exit 41 )
-	$(hide) rm -rf $(PRIVATE_INTERMEDIATES_DIR)/jack-rsc.tmp
-
 $(eval $(call copy-one-file,$(full_target),$(header_target)))
-
-# As we don't have .dex file for the SDK stub, we cannot generate .toc
-# file from .dex file. Use classes.jar instead.
-$(dex_toc): $(full_target) $(jack_lib)
-	$(hide) cp $< $@.tmp
-	$(call commit-change-for-toc, $@)
-.KATI_RESTAT: $(dex_toc)
