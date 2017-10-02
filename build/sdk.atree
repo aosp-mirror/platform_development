@@ -140,9 +140,9 @@ framework/dx.jar                              build-tools/${PLATFORM_NAME}/lib/d
 bin/dexdump                                   build-tools/${PLATFORM_NAME}/dexdump
 
 # multi-dex
-prebuilts/sdk/tools/lib/shrinkedAndroid.jar   build-tools/${PLATFORM_NAME}/lib/shrinkedAndroid.jar
-dalvik/dx/etc/mainDexClasses.rules            build-tools/${PLATFORM_NAME}/mainDexClasses.rules
-dalvik/dx/etc/mainDexClassesNoAapt.rules      build-tools/${PLATFORM_NAME}/mainDexClassesNoAapt.rules
+${OUT_DIR}/host/common/obj/JAVA_LIBRARIES/shrinkedAndroid_intermediates/shrinkedAndroid.jar  build-tools/${PLATFORM_NAME}/lib/shrinkedAndroid.jar
+dalvik/dx/etc/mainDexClasses.rules                                                           build-tools/${PLATFORM_NAME}/mainDexClasses.rules
+dalvik/dx/etc/mainDexClassesNoAapt.rules                                                     build-tools/${PLATFORM_NAME}/mainDexClassesNoAapt.rules
 
 # Jack & Jill
 prebuilts/sdk/tools/jacks/jack-${JACK_SDKTOOL_VERSION}.jar                build-tools/${PLATFORM_NAME}/jack.jar
