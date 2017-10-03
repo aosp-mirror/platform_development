@@ -118,6 +118,8 @@ cc_library_static {
     },
 
     cflags: [
+        "-Wall",
+        "-Werror",
         "-Wcast-qual",
         "-Wno-long-long",
         "-Wno-unused-parameter",
