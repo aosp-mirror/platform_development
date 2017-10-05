@@ -781,6 +781,15 @@ class TextFormatToIRReader {
 
 class DiffMessageIR {
  public:
+
+  enum DiffKind {
+    Extension, // Applicable for enums.
+    Added,
+    Removed,
+    Referenced,
+    Unreferenced
+  };
+
   virtual LinkableMessageKind Kind() const = 0;
   void SetName(const std::string &name) {
     name_ = name;
@@ -1085,13 +1094,7 @@ class FunctionDiffIR : public DiffMessageIR {
 
 class IRDiffDumper {
  public:
-  enum DiffKind {
-    Extension, // Applicable for enums.
-    Added,
-    Removed,
-    Referenced,
-    Unreferenced
-  };
+  typedef DiffMessageIR::DiffKind DiffKind;
 
   IRDiffDumper(const std::string &dump_path) : dump_path_(dump_path) { }
 
