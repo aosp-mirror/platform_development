@@ -145,7 +145,7 @@ bool HeaderAbiDiff::CollectUserDefinedTypesInternal(
                  ir_diff_dumper) &&
       PopulateCommonElements(old_ud_types_map, new_ud_types_map, old_types_map,
                              new_types_map, ir_diff_dumper,
-                             abi_util::IRDiffDumper::Unreferenced);
+                             abi_util::DiffMessageIR::Unreferenced);
 }
 
 template <typename T, typename ElfSymbolType>
@@ -182,7 +182,7 @@ bool HeaderAbiDiff::CollectDynsymExportables(
                          ir_diff_dumper) ||
       !PopulateCommonElements(old_exportables_map, new_exportables_map,
                               old_types_map, new_types_map, ir_diff_dumper,
-                              abi_util::IRDiffDumper::Referenced)) {
+                              abi_util::DiffMessageIR::Referenced)) {
     llvm::errs() << "Diffing dynsym exportables failed\n";
     return false;
   }
@@ -204,7 +204,7 @@ bool HeaderAbiDiff::Collect(
     abi_util::IRDiffDumper *ir_diff_dumper) {
   if (!PopulateRemovedElements(
       old_elements_map, new_elements_map, new_elf_map, ir_diff_dumper,
-      abi_util::IRDiffDumper::Removed) ||
+      abi_util::DiffMessageIR::Removed) ||
       !PopulateRemovedElements(new_elements_map, old_elements_map, old_elf_map,
                                ir_diff_dumper,
                                abi_util::IRDiffDumper::DiffKind::Added)) {
