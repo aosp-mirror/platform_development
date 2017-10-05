@@ -92,7 +92,7 @@ void DiffWrapperBase::CompareEnumFields(
 DiffStatus DiffWrapperBase::CompareEnumTypes(
     const abi_util::EnumTypeIR *old_type, const abi_util::EnumTypeIR *new_type,
      std::deque<std::string> *type_queue,
-     abi_util::IRDiffDumper::DiffKind diff_kind) {
+     abi_util::DiffMessageIR::DiffKind diff_kind) {
   if (old_type->GetName() != new_type->GetName()) {
     return DiffStatus::direct_diff;
   }
@@ -161,7 +161,7 @@ DiffWrapperBase::CompareCommonRecordFields(
     const abi_util::RecordFieldIR *old_field,
     const abi_util::RecordFieldIR *new_field,
     std::deque<std::string> *type_queue,
-    abi_util::IRDiffDumper::DiffKind diff_kind) {
+    abi_util::DiffMessageIR::DiffKind diff_kind) {
   if (old_field->GetOffset() != new_field->GetOffset() ||
       // TODO: Should this be an inquality check instead ? Some compilers can
       // make signatures dependant on absolute values of access specifiers.
@@ -181,7 +181,7 @@ DiffWrapperBase::CompareRecordFields(
     const std::vector<abi_util::RecordFieldIR> &old_fields,
     const std::vector<abi_util::RecordFieldIR> &new_fields,
     std::deque<std::string> *type_queue,
-    abi_util::IRDiffDumper::DiffKind diff_kind) {
+    abi_util::DiffMessageIR::DiffKind diff_kind) {
   std::pair<std::vector<abi_util::RecordFieldDiffIR>,
   std::vector<const abi_util::RecordFieldIR *>> diffed_and_removed_fields;
   std::map<std::string, const abi_util::RecordFieldIR *> old_fields_map;
@@ -247,7 +247,7 @@ bool DiffWrapperBase::CompareBaseSpecifiers(
     const std::vector<abi_util::CXXBaseSpecifierIR> &old_base_specifiers,
     const std::vector<abi_util::CXXBaseSpecifierIR> &new_base_specifiers,
     std::deque<std::string> *type_queue,
-    abi_util::IRDiffDumper::DiffKind diff_kind) {
+    abi_util::DiffMessageIR::DiffKind diff_kind) {
   if (old_base_specifiers.size() != new_base_specifiers.size()) {
     return false;
   }
@@ -270,7 +270,7 @@ void DiffWrapperBase::CompareTemplateInfo(
     const std::vector<abi_util::TemplateElementIR> &old_template_elements,
     const std::vector<abi_util::TemplateElementIR> &new_template_elements,
     std::deque<std::string> *type_queue,
-    abi_util::IRDiffDumper::DiffKind diff_kind) {
+    abi_util::DiffMessageIR::DiffKind diff_kind) {
   uint32_t old_template_size = old_template_elements.size();
   assert(old_template_size == new_template_elements.size());
   uint32_t i = 0;
@@ -290,7 +290,7 @@ DiffStatus DiffWrapperBase::CompareRecordTypes(
     const abi_util::RecordTypeIR *old_type,
     const abi_util::RecordTypeIR *new_type,
     std::deque<std::string> *type_queue,
-    abi_util::IRDiffDumper::DiffKind diff_kind) {
+    abi_util::DiffMessageIR::DiffKind diff_kind) {
   auto record_type_diff_ir = std::make_unique<abi_util::RecordTypeDiffIR>();
   // Compare names.
   if (old_type->GetName() != new_type->GetName()) {
@@ -352,7 +352,7 @@ DiffStatus DiffWrapperBase::CompareLvalueReferenceTypes(
     const abi_util::LvalueReferenceTypeIR *old_type,
     const abi_util::LvalueReferenceTypeIR *new_type,
     std::deque<std::string> *type_queue,
-    abi_util::IRDiffDumper::DiffKind diff_kind) {
+    abi_util::DiffMessageIR::DiffKind diff_kind) {
   return CompareAndDumpTypeDiff(old_type->GetReferencedType(),
                                 new_type->GetReferencedType(),
                                 type_queue, diff_kind);
@@ -362,7 +362,7 @@ DiffStatus DiffWrapperBase::CompareRvalueReferenceTypes(
     const abi_util::RvalueReferenceTypeIR *old_type,
     const abi_util::RvalueReferenceTypeIR *new_type,
     std::deque<std::string> *type_queue,
-    abi_util::IRDiffDumper::DiffKind diff_kind) {
+    abi_util::DiffMessageIR::DiffKind diff_kind) {
   return CompareAndDumpTypeDiff(old_type->GetReferencedType(),
                                 new_type->GetReferencedType(),
                                 type_queue, diff_kind);
@@ -372,7 +372,7 @@ DiffStatus DiffWrapperBase::CompareQualifiedTypes(
     const abi_util::QualifiedTypeIR *old_type,
     const abi_util::QualifiedTypeIR *new_type,
     std::deque<std::string> *type_queue,
-    abi_util::IRDiffDumper::DiffKind diff_kind) {
+    abi_util::DiffMessageIR::DiffKind diff_kind) {
   // If all the qualifiers are not the same, return direct_diff, else
   // recursively compare the unqualified types.
   if (old_type->IsConst() != new_type->IsConst() ||
@@ -389,7 +389,7 @@ DiffStatus DiffWrapperBase::ComparePointerTypes(
     const abi_util::PointerTypeIR *old_type,
     const abi_util::PointerTypeIR *new_type,
     std::deque<std::string> *type_queue,
-    abi_util::IRDiffDumper::DiffKind diff_kind) {
+    abi_util::DiffMessageIR::DiffKind diff_kind) {
   // The following need to be the same for two pointer types to be considered
   // equivalent:
   // 1) Number of pointer indirections are the same.
@@ -420,7 +420,7 @@ DiffStatus DiffWrapperBase::CompareFunctionParameters(
     const std::vector<abi_util::ParamIR> &old_parameters,
     const std::vector<abi_util::ParamIR> &new_parameters,
     std::deque<std::string> *type_queue,
-    abi_util::IRDiffDumper::DiffKind diff_kind) {
+    abi_util::DiffMessageIR::DiffKind diff_kind) {
   size_t old_parameters_size = old_parameters.size();
   if (old_parameters_size != new_parameters.size()) {
     return DiffStatus::direct_diff;
@@ -444,7 +444,7 @@ DiffStatus DiffWrapperBase::CompareFunctionParameters(
 DiffStatus DiffWrapperBase::CompareAndDumpTypeDiff(
     const abi_util::TypeIR *old_type, const abi_util::TypeIR *new_type,
     abi_util::LinkableMessageKind kind, std::deque<std::string> *type_queue,
-    abi_util::IRDiffDumper::DiffKind diff_kind) {
+    abi_util::DiffMessageIR::DiffKind diff_kind) {
   if (kind == abi_util::LinkableMessageKind::BuiltinTypeKind) {
     return CompareBuiltinTypes(
         static_cast<const abi_util::BuiltinTypeIR *>(old_type),
@@ -508,7 +508,7 @@ static DiffStatus CompareDistinctKindMessages(
 DiffStatus DiffWrapperBase::CompareAndDumpTypeDiff(
     const std::string &old_type_str, const std::string &new_type_str,
     std::deque<std::string> *type_queue,
-    abi_util::IRDiffDumper::DiffKind diff_kind) {
+    abi_util::DiffMessageIR::DiffKind diff_kind) {
   // If either of the types are not found in their respective maps, the type
   // was not exposed in a public header and we do a simple string comparison.
   // Any diff found using a simple string comparison will be a direct diff.
@@ -553,7 +553,7 @@ DiffStatus DiffWrapperBase::CompareAndDumpTypeDiff(
 
 template <>
 bool DiffWrapper<abi_util::RecordTypeIR>::DumpDiff(
-    abi_util::IRDiffDumper::DiffKind diff_kind) {
+    abi_util::DiffMessageIR::DiffKind diff_kind) {
   std::deque<std::string> type_queue;
   if (oldp_->GetName() != newp_->GetName()) {
     llvm::errs() << "Comparing two different unreferenced records\n";
@@ -568,7 +568,7 @@ bool DiffWrapper<abi_util::RecordTypeIR>::DumpDiff(
 
 template <>
 bool DiffWrapper<abi_util::EnumTypeIR>::DumpDiff(
-    abi_util::IRDiffDumper::DiffKind diff_kind) {
+    abi_util::DiffMessageIR::DiffKind diff_kind) {
   std::deque<std::string> type_queue;
   if (oldp_->GetName() != newp_->GetName()) {
     llvm::errs() << "Comparing two different unreferenced enums\n";
@@ -583,7 +583,7 @@ bool DiffWrapper<abi_util::EnumTypeIR>::DumpDiff(
 
 template <>
 bool DiffWrapper<abi_util::GlobalVarIR>::DumpDiff(
-    abi_util::IRDiffDumper::DiffKind diff_kind) {
+    abi_util::DiffMessageIR::DiffKind diff_kind) {
   std::deque<std::string> type_queue;
   type_queue.push_back(oldp_->GetName());
   DiffStatus type_diff = CompareAndDumpTypeDiff(oldp_->GetReferencedType(),
@@ -602,7 +602,7 @@ bool DiffWrapper<abi_util::GlobalVarIR>::DumpDiff(
 
 template <>
 bool DiffWrapper<abi_util::FunctionIR>::DumpDiff(
-    abi_util::IRDiffDumper::DiffKind diff_kind) {
+    abi_util::DiffMessageIR::DiffKind diff_kind) {
   std::deque<std::string> type_queue;
   type_queue.push_back(oldp_->GetName());
   DiffStatus param_diffs = CompareFunctionParameters(oldp_->GetParameters(),
