@@ -203,7 +203,8 @@ def parse_config_xml(base_xml, results):
     dom = minidom.parse(base_xml)
     nodes =  dom.getElementsByTagName("privapp-permissions")
     for node in nodes:
-        permissions = node.getElementsByTagName("permission")
+        permissions = (node.getElementsByTagName("permission")
+            + node.getElementsByTagName("deny-permission"))
         package_name = node.getAttribute('package');
         plist = []
         if package_name in results:
