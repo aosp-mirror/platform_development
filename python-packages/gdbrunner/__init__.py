@@ -267,7 +267,7 @@ def find_executable_path(device, executable_name, run_as_cmd=None):
 
     try:
         output, _ = device.shell(cmd)
-        return output
+        return adb.split_lines(output)[0]
     except adb.ShellError:
         raise  RuntimeError("Could not find executable '{}' on "
                             "device".format(executable_name))
