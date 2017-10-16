@@ -61,12 +61,7 @@ std::string ABIWrapper::GetDeclSourceFile(const clang::Decl *decl,
   // belonging to the library.
   clang::SourceLocation expansion_location = sm.getExpansionLoc(location);
   llvm::StringRef file_name = sm.getFilename(expansion_location);
-  std::string file_name_adjusted = "";
-  char file_abs_path[PATH_MAX];
-  if (realpath(file_name.str().c_str(), file_abs_path) == nullptr) {
-    return "";
-  }
-  return file_abs_path;
+  return abi_util::RealPath(file_name.str());
 }
 
 static abi_util::AccessSpecifierIR AccessClangToIR(

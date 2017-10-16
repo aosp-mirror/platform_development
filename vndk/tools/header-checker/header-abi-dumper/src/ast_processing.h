@@ -87,7 +87,7 @@ class HeaderASTConsumer : public clang::ASTConsumer {
   std::string file_name_;
   clang::CompilerInstance *cip_;
   std::string out_dump_name_;
-  std::set<std::string> exported_headers_;
+  const std::set<std::string> &exported_headers_;
 };
 
 #endif // AST_PROCESSING_H_
