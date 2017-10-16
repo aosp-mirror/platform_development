@@ -1,0 +1,53 @@
+buildscript {
+    ext.gradle_version = '3.1.0-alpha06'
+    ext.studio_version = '26.1.0-alpha06'
+    ext.kotlin_version = '1.2.10'
+    repositories {
+        google()
+        jcenter()
+    }
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath "com.android.tools.build:gradle:$gradle_version"
+    }
+}
+
+apply plugin: 'application'
+apply plugin: 'java'
+apply plugin: 'kotlin'
+
+mainClassName = "com.android.tools.metalava.Driver"
+applicationDefaultJvmArgs = ["-ea", "-Xms2g", "-Xmx4g"]
+sourceCompatibility = 1.8
+
+compileKotlin {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+
+    kotlinOptions {
+        jvmTarget = "1.8"
+        apiVersion = "1.2"
+        languageVersion = "1.2"
+    }
+}
+
+repositories {
+    google()
+    jcenter()
+    maven { url '/Users/tnorbye/dev/studio/dev/out/repo' }
+}
+
+dependencies {
+    implementation "com.android.tools.external.org-jetbrains:uast:$studio_version"
+    implementation "com.android.tools.external.com-intellij:intellij-core:$studio_version"
+    implementation "com.android.tools.lint:lint-api:$studio_version"
+    implementation "com.android.tools.lint:lint-checks:$studio_version"
+    implementation "com.android.tools.lint:lint-gradle:$studio_version"
+    implementation "com.android.tools.lint:lint:$studio_version"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    testImplementation 'junit:junit:4.11'
+    testImplementation "com.android.tools.lint:lint-tests:$studio_version"
+}
+
+defaultTasks 'installDist'
+
