@@ -23,12 +23,12 @@ class HeaderCheckerFrontendActionFactory
     : public clang::tooling::FrontendActionFactory {
  private:
   std::string dump_name_;
-  const std::vector<std::string> &export_header_dirs_;
+  const std::set<std::string> &exported_headers_;
 
  public:
   HeaderCheckerFrontendActionFactory(
       const std::string &dump_name,
-      const std::vector<std::string> &exported_header_dirs);
+      const std::set<std::string> &exported_headers);
 
   clang::FrontendAction *create() override;
 };
