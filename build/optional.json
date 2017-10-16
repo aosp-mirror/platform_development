@@ -3,6 +3,16 @@
     "name": "org.apache.http.legacy",
     "jar": "org.apache.http.legacy.jar",
     "manifest": false
+  },
+  {
+    "name": "android.test.mock",
+    "jar": "android.test.mock.jar",
+    "manifest": false
+  },
+  {
+    "name": "android.test.runner",
+    "jar": "android.test.runner.jar",
+    "manifest": false
   }
 ]
 
