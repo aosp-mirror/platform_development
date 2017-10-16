@@ -37,6 +37,14 @@ static bool ShouldSkipFile(llvm::StringRef &file_name) {
   return false;
 }
 
+std::string RealPath(const std::string &path) {
+  char file_abs_path[PATH_MAX];
+  if (realpath(path.c_str(), file_abs_path) == nullptr) {
+    return "";
+  }
+  return file_abs_path;
+}
+
 bool CollectExportedHeaderSet(const std::string &dir_name,
                               std::set<std::string> *exported_headers) {
   std::error_code ec;
@@ -66,17 +74,13 @@ bool CollectExportedHeaderSet(const std::string &dir_name,
       return false;
     }
 
-    if (!llvm::sys::fs::is_regular_file(status)) {
-      // Ignore non regular files. eg: soft links.
+    if ((status.type() != llvm::sys::fs::file_type::symlink_file) &&
+        !llvm::sys::fs::is_regular_file(status)) {
+      // Ignore non regular files, except symlinks.
       continue;
     }
 
-    llvm::SmallString<128> abs_path(file_path);
-    if (llvm::sys::fs::make_absolute(abs_path)) {
-      llvm::errs() << "Failed to get absolute path for : " << file_name << "\n";
-      return false;
-    }
-    exported_headers->insert(abs_path.str());
+    exported_headers->insert(RealPath(file_path));
   }
   return true;
 }

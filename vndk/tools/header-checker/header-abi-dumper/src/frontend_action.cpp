@@ -25,16 +25,13 @@
 #include <llvm/Support/Path.h>
 
 HeaderCheckerFrontendAction::HeaderCheckerFrontendAction(
-    const std::string &dump_name, const std::vector<std::string> &exports)
-  : dump_name_(dump_name), exported_header_dirs_(exports) { }
+    const std::string &dump_name, const std::set<std::string> &exported_headers)
+  : dump_name_(dump_name), exported_headers_(exported_headers) { }
 
 std::unique_ptr<clang::ASTConsumer>
 HeaderCheckerFrontendAction::CreateASTConsumer(clang::CompilerInstance &ci,
                                                llvm::StringRef header_file) {
-  std::set<std::string> exported_headers;
-  exported_headers = abi_util::CollectAllExportedHeaders(exported_header_dirs_);
   // Create AST consumers.
-  return llvm::make_unique<HeaderASTConsumer>(header_file,
-                                              &ci, dump_name_,
-                                              exported_headers);
+  return llvm::make_unique<HeaderASTConsumer>(header_file, &ci, dump_name_,
+                                              exported_headers_);
 }
