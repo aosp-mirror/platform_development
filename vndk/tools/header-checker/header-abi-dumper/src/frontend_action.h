@@ -31,12 +31,12 @@ namespace clang {
 class HeaderCheckerFrontendAction : public clang::ASTFrontendAction {
  private:
   std::string dump_name_;
-  const std::vector<std::string> &exported_header_dirs_;
+  const std::set<std::string> &exported_headers_;
 
  public:
   HeaderCheckerFrontendAction(
       const std::string &dump_name,
-      const std::vector<std::string> &export_header_dirs);
+      const std::set<std::string> &exported_headers);
 
  protected:
   std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(
