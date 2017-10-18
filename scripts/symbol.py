@@ -36,9 +36,7 @@ def FindSymbolsDir():
   saveddir = os.getcwd()
   os.chdir(ANDROID_BUILD_TOP)
   try:
-    cmd = ("CALLED_FROM_SETUP=true BUILD_SYSTEM=build/core "
-           "SRC_TARGET_DIR=build/target make -f build/core/config.mk "
-           "dumpvar-abs-TARGET_OUT_UNSTRIPPED")
+    cmd = "build/soong/soong_ui.bash --dumpvar-mode --abs TARGET_OUT_UNSTRIPPED"
     stream = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True).stdout
     return os.path.join(ANDROID_BUILD_TOP, stream.read().strip())
   finally:
