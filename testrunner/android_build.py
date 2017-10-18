@@ -67,30 +67,6 @@ def GetHostOutDir():
   return host_out_path
 
 
-def GetHostOsArch():
-  """Identify the host os and arch.
-
-  Returns:
-    The triple (HOST_OS, HOST_ARCH, HOST_OS-HOST_ARCH).
-
-  Raises:
-    AbortError: If the os and/or arch could not be found.
-  """
-  command = ("CALLED_FROM_SETUP=true BUILD_SYSTEM=build/core "
-             "make --no-print-directory -C \"%s\" -f build/core/config.mk "
-             "dumpvar-report_config") % GetTop()
-
-  # Use the shell b/c we set some env variables before the make command.
-  config = subprocess.Popen(command, stdout=subprocess.PIPE,
-                            shell=True).communicate()[0]
-  host_os = re.search("HOST_OS=(\w+)", config).group(1)
-  host_arch = re.search("HOST_ARCH=(\w+)", config).group(1)
-  if not (host_os and host_arch):
-    logger.Log("Error: Could not get host's OS and/or ARCH")
-    raise errors.AbortError
-  return (host_os, host_arch, "%s-%s" % (host_os, host_arch))
-
-
 def GetOutDir():
   """Returns the full pathname of the "out" of the Android development tree.
 
