@@ -217,6 +217,10 @@ std::vector<QualifiedTypeIR> ProtobufTextFormatToIRReader::ReadQualifiedTypes(
   for (auto &&qualified_type_protobuf : tu.qualified_types()) {
     QualifiedTypeIR qualified_type_ir;
     ReadTypeInfo(qualified_type_protobuf.type_info(), &qualified_type_ir);
+    qualified_type_ir.SetConstness(qualified_type_protobuf.is_const());
+    qualified_type_ir.SetVolatility(qualified_type_protobuf.is_volatile());
+    qualified_type_ir.SetRestrictedness(
+        qualified_type_protobuf.is_restricted());
     qualified_types.emplace_back(std::move(qualified_type_ir));
   }
   return qualified_types;
