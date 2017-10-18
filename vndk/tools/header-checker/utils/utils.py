@@ -152,15 +152,9 @@ def get_build_var(name):
     if 'ANDROID_PRODUCT_OUT' not in os.environ:
         return None
 
-    cmd = ['make', '--no-print-directory', '-f', 'build/core/config.mk',
-           'dumpvar-' + name]
-
-    environ = dict(os.environ)
-    environ['CALLED_FROM_SETUP'] = 'true'
-    environ['BUILD_SYSTEM'] = 'build/core'
+    cmd = ['build/soong/soong_ui.bash', '--dumpvar-mode', name]
 
     proc = subprocess.Popen(cmd, stdout=subprocess.PIPE,
-                            stderr=subprocess.PIPE, env=environ,
-                            cwd=AOSP_DIR)
+                            stderr=subprocess.PIPE, cwd=AOSP_DIR)
     out, err = proc.communicate()
     return out.decode('utf-8').strip()
