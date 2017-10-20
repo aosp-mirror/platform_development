@@ -1,32 +1,39 @@
 #!/usr/bin/env python3
 
-from sourcedr.data_utils import *
+from sourcedr.data_utils import data_path, load_data, remove_data
 from sourcedr.preprocess import CodeSearch
-from sourcedr.server import *
+from sourcedr.server import app, args
 
 from flask import Flask, jsonify, render_template, request
 from flask_testing import LiveServerTestCase, TestCase
 from urllib.request import urlopen
+
 import flask_testing
+import json
 import os
 import unittest
 
 app.config['TESTING'] = True
 
+ANDROID_ROOT = 'sourcedr/test'
+
 class TestPreprocess(unittest.TestCase):
     def test_prepare(self):
         remove_data()
-        engine = CodeSearch.create_default(android_root='sourcedr/test')
+        engine = CodeSearch.create_default(android_root=ANDROID_ROOT)
         engine.build_index()
         engine.find(patterns=['dlopen'], is_regexs=[False])
         self.assertTrue(os.path.exists(data_path))
 
 class TestViews(TestCase):
     def create_app(self):
+        # TODO: This refers to `sourcedr.server.args`.  This should be removed
+        # in the upcoming refactor process.
+        args.android_root = ANDROID_ROOT
         return app
 
     def setUp(self):
-        engine = CodeSearch.create_default(android_root='sourcedr/test')
+        engine = CodeSearch.create_default(android_root=ANDROID_ROOT)
         engine.build_index()
         engine.find(patterns=['dlopen'], is_regexs=[False])
 
@@ -34,15 +41,15 @@ class TestViews(TestCase):
         remove_data()
 
     def test_get_file(self):
-        test_arg = 'sourcedr/test/example.c'
+        test_arg = 'example.c'
         response = self.client.get('/get_file',
                                    query_string=dict(path=test_arg))
         ret = response.json['result']
-        with open(test_arg, 'r') as f:
+        with open(os.path.join(ANDROID_ROOT, test_arg), 'r') as f:
             self.assertEqual(ret, f.read())
 
     def test_load_file(self):
-        test_arg = os.path.abspath('sourcedr/test/dlopen/test.c')
+        test_arg = 'dlopen/test.c'
         test_arg += ':10:    handle = dlopen("libm.so.6", RTLD_LAZY);'
         response = self.client.get('/load_file',
                                    query_string=dict(path=test_arg))

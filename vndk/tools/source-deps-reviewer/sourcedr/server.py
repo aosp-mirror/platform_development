@@ -20,22 +20,27 @@ import webbrowser
 if sys.version_info < (3,):
     input = raw_input
 
+# XXX: Global variable to workaround args.android_root in test cases.  This
+# should be removed in the upcoming refactoring process.
+args = argparse.Namespace()
+
 app = Flask(__name__)
 
 # whether the code segment is exactly in file
 def same(fl, code):
+    fl = os.path.join(args.android_root, fl)
     with open(fl, 'r') as f:
         fc = f.read()
         return code in fc
 
 # check if the file needes to be reiewed again
 def check(codes):
+    ret = []
     for item in codes:
         fl = item.split(':')[0]
         code = item[len(fl) + 1:]
-        if not same(fl, code):
-            return False
-    return True
+        ret.append(same(fl, code))
+    return ret
 
 @app.route('/get_started')
 def _get_started():
@@ -43,7 +48,7 @@ def _get_started():
     for key, item in sorted(data.items()):
         lst.append(key)
         if item[0]:
-            done.append(check(item[1]))
+            done.append(all(check(item[1])))
         else:
             done.append(False)
 
@@ -64,11 +69,14 @@ def _load_file():
         return jsonify(result='')
     deps, codes = data[path]
 
-    return jsonify(deps=json.dumps(deps), codes=json.dumps(codes))
+    return jsonify(deps=json.dumps(deps), codes=json.dumps(codes),
+                   okays=json.dumps(check(codes)))
 
 @app.route('/get_file')
 def _get_file():
     path = request.args.get('path')
+    path = os.path.join(args.android_root, path)
+
     if not os.path.exists(path):
         return jsonify(result='No such file')
     with open(path, 'r') as f:
@@ -97,7 +105,6 @@ def _add_pattern():
     data = load_data()
     save_new_pattern(patt, is_regex)
     return jsonify(result='done')
-
 
 # This function does a temporary grep to the directory
 # Not adding the result to database
@@ -174,6 +181,7 @@ def main():
     # a CodeSearch engine must be initialized with the
     # root of the directory and the path of the csearch index file
     engine = CodeSearch.create_default(args.android_root, args.index_path)
+    args.android_root = os.path.expanduser(args.android_root)
 
     print('Be careful that previous data files will merge with new data files.')
     print('Delete previous data files(data.json, patterns) if you want ' +
