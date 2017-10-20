@@ -5,6 +5,33 @@
   var counter = 0;
   var current_item = null;
 
+  // make item list sortable
+  $( function() {
+    $("#item_list").sortable();
+    $("#item_list").disableSelection();
+  });
+
+  function moveToTop(index) {
+    if (index == 0) {
+        return;
+    }
+    let target = $('#item_list').children().eq(index);
+    let tp = $('#item_list').children().eq(0);
+    let old_offset = target.position();
+    tp.before(target);
+    let new_offset = target.position();
+    let tmp = target.clone().appendTo('#item_list')
+                    .css('position', 'absolute')
+                    .css('left', old_offset.left)
+                    .css('top', old_offset.top);
+    target.hide();
+    let new_pos = {'top': new_offset.top, 'left': new_offset.left};
+    tmp.animate(new_pos, 'slow', function() {
+      target.show();
+      tmp.remove();
+    });
+  }
+
   function getSelText() {
     let txt = window.getSelection();
     $('#selected_text').val(txt);
@@ -18,8 +45,9 @@
       '<input type="submit" class="delete" value="X">' +'</li>';
   }
 
-  function codeHtml(text, cnt) {
-    return '<li><span id="code' + cnt + '">' + text +
+  function codeHtml(text, cnt, okay) {
+    return (okay? '<li>' : '<li style="color:red;">') +
+      '<span id="code' + cnt + '">' + text +
       '</span><input type="submit" class="delete" value="X">' + '</li>';
   }
 
@@ -90,7 +118,7 @@
 
   function enterCode() {
     let text = $('#code_file_path').val() + ':' + $('#selected_text').val();
-    $('#code_list').append(codeHtml(text, ccounter));
+    $('#code_list').append(codeHtml(text, ccounter, true));
     $('.delete').click(function () {
       $(this).parent().remove();
     });
@@ -98,13 +126,13 @@
     return false;
   }
 
-  function setCode(codes) {
+  function setCode(codes, okays) {
     $('#code_list').empty();
     ccounter = 0;
     let len = codes.length;
     for (let i = 0; i < len; i++) {
       let text = codes[i];
-      $('#code_list').append(codeHtml(text, ccounter));
+      $('#code_list').append(codeHtml(text, ccounter, okays[i]));
       $('.delete').click(function () {
         $(this).parent().remove();
       });
@@ -165,6 +193,23 @@
       deps: JSON.stringify(deps),
       codes: JSON.stringify(codes)
     });
+    let target = $(current_item).text().split(':')[2];
+    let children = $('#item_list')[0].children;
+    let len = children.length;
+    for (let i = 0; i < len; i++) {
+        let tt = children[i].getElementsByTagName('a')[0].innerHTML;
+        if (tt == $(current_item).text()) {
+            continue;
+        }
+        if (children[i].getElementsByTagName('a')[0].className ==
+            'list-group-item list-group-item-success' ) {
+            continue;
+        }
+        let content = tt.split(':')[2];
+        if (content == target) {
+            moveToTop(i);
+        }
+    }
     return false;
   }
 
@@ -189,6 +234,8 @@
 
   function unsetHighlightLine() {
     $('#browsing_file').removeAttr('data-line');
+    // Add this line to ensure that all highlight divs are removed
+    $('.line-highlight').remove();
   }
 
   function removeAnchor() {
@@ -216,8 +263,9 @@
     }, function (data) {
       let deps = JSON.parse(data.deps);
       let codes = JSON.parse(data.codes);
+      let okays = JSON.parse(data.okays);
       setTask(deps);
-      setCode(codes);
+      setCode(codes, okays);
     });
 
     setBrowsingFile(file);
@@ -237,8 +285,7 @@
     $inputs.each(function () {
       values[this.name] = $(this).val();
     });
-    let path = $('#path_prefix').text() +
-               $('input[name="browsing_path"]').val();
+    let path = $('input[name="browsing_path"]').val();
     setBrowsingFile(path);
     unsetHighlightLine();
     return false;
