@@ -1,0 +1,8 @@
+// Copyright 2007 The Android Open Source Project
+//
+// Copies files into the directory structure described by a manifest
+
+cc_binary_host {
+    name: "line_endings",
+    srcs: ["line_endings.c"],
+}
