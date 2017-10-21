@@ -170,7 +170,8 @@ class CodeSearch(object):
         return cs
 
     def __init__(self, android_root, index_path):
-        self.android_root = android_root
+        android_root = os.path.expanduser(android_root)
+        self.android_root = os.path.abspath(android_root)
         self.env = dict(os.environ)
         self.env["CSEARCHINDEX"] = os.path.abspath(index_path)
         self.filters = {}
@@ -180,7 +181,7 @@ class CodeSearch(object):
             self.filters[ext] = Filter
 
     def build_index(self):
-        android_root = os.path.expanduser(self.android_root)
+        android_root = self.android_root
         print('building csearchindex for the directory ' + android_root + '...')
         subprocess.call(['cindex', android_root], env=self.env)
 
@@ -194,6 +195,20 @@ class CodeSearch(object):
         except KeyError:
             pass
         return code
+
+    def remove_prefix(self, raw_grep):
+        ret = b''
+        patt = re.compile(b'([^:]+):(\\d+):(.*)$')
+        for line in raw_grep.split(b'\n'):
+            match = patt.match(line)
+            if not match:
+                continue
+            file_path = os.path.relpath(match.group(1),
+                                        self.android_root.encode('utf-8'))
+            line_no = match.group(2)
+            code = match.group(3)
+            ret += file_path + b':' + line_no + b':' + code + b'\n'
+        return ret
 
     def process_grep(self, raw_grep, pattern, is_regex):
         pattern = pattern.encode('utf-8')
@@ -225,11 +240,12 @@ class CodeSearch(object):
             if any(patt in file_path for patt in PATH_PATTERN_BLACK_LIST):
                 continue
 
+            abs_file_path = os.path.join(self.android_root.encode('utf-8'),
+                                            file_path)
             # Check if any pattern can be found after sanitize_code
-            if not pattern.search(self.sanitize_code(file_path)):
+            if not pattern.search(self.sanitize_code(abs_file_path)):
                 continue
-
-            suspect[file_path].append((file_path, line_no, code))
+            suspect[abs_file_path].append((file_path, line_no, code))
 
         suspect = sorted(suspect.items())
 
@@ -283,13 +299,13 @@ class CodeSearch(object):
         try:
             raw_grep = subprocess.check_output(
                 ['csearch', '-n', pattern],
-                cwd=os.path.expanduser(self.android_root),
+                cwd=self.android_root,
                 env=self.env)
         except subprocess.CalledProcessError as e:
             if e.output == b'':
                 print('nothing found')
                 return b''
-        return raw_grep
+        return self.remove_prefix(raw_grep)
 
     def raw_search(self, pattern, is_regex):
         if not is_regex:
