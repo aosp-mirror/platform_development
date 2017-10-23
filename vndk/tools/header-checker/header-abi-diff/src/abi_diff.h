@@ -26,6 +26,8 @@
 #include <string>
 #include <vector>
 
+using abi_util::AbiElementMap;
+
 class HeaderAbiDiff {
  public:
   HeaderAbiDiff(const std::string &lib_name, const std::string &arch,
@@ -47,25 +49,25 @@ class HeaderAbiDiff {
 
   template <typename T, typename ElfSymbolType>
   bool CollectDynsymExportables(
-    const std::vector<T> &old_exportables,
-    const std::vector<T> &new_exportables,
-    const std::vector<ElfSymbolType> &old_elf_symbols,
-    const std::vector<ElfSymbolType> &new_elf_symbols,
-    const std::map<std::string, const abi_util::TypeIR *> &old_types_map,
-    const std::map<std::string, const abi_util::TypeIR *> &new_types_map,
+    const AbiElementMap<T> &old_exportables,
+    const AbiElementMap<T> &new_exportables,
+    const AbiElementMap<ElfSymbolType> &old_elf_symbols,
+    const AbiElementMap<ElfSymbolType> &new_elf_symbols,
+    const AbiElementMap<const abi_util::TypeIR *> &old_types_map,
+    const AbiElementMap<const abi_util::TypeIR *> &new_types_map,
     abi_util::IRDiffDumper *ir_diff_dumper);
 
   template <typename T>
   bool Collect(
-      const std::map<std::string, const T *> &old_elements_map,
-      const std::map<std::string, const T *> &new_elements_map,
-      const std::map<std::string, const abi_util::ElfSymbolIR *> *old_elf_map,
-      const std::map<std::string, const abi_util::ElfSymbolIR *> *new_elf_map,
+      const AbiElementMap<const T *> &old_elements_map,
+      const AbiElementMap<const T *> &new_elements_map,
+      const AbiElementMap<const abi_util::ElfSymbolIR *> *old_elf_map,
+      const AbiElementMap<const abi_util::ElfSymbolIR *> *new_elf_map,
       abi_util::IRDiffDumper *ir_diff_dumper);
 
   bool CollectElfSymbols(
-      const std::map<std::string, const abi_util::ElfSymbolIR *> &old_symbols,
-      const std::map<std::string, const abi_util::ElfSymbolIR *> &new_symbols,
+      const AbiElementMap<const abi_util::ElfSymbolIR *> &old_symbols,
+      const AbiElementMap<const abi_util::ElfSymbolIR *> &new_symbols,
       abi_util::IRDiffDumper *ir_diff_dumper);
 
   bool PopulateElfElements(
@@ -75,49 +77,49 @@ class HeaderAbiDiff {
 
   template <typename T>
   bool PopulateRemovedElements(
-      const std::map<std::string, const T *> &old_elements_map,
-      const std::map<std::string, const T *> &new_elements_map,
-      const std::map<std::string, const abi_util::ElfSymbolIR *> *elf_map,
+      const AbiElementMap<const T *> &old_elements_map,
+      const AbiElementMap<const T *> &new_elements_map,
+      const AbiElementMap<const abi_util::ElfSymbolIR *> *elf_map,
       abi_util::IRDiffDumper *ir_diff_dumper,
       abi_util::IRDiffDumper::DiffKind diff_kind);
 
   template <typename T>
   bool PopulateCommonElements(
-      const std::map<std::string, const T *> &old_elements_map,
-      const std::map<std::string, const T *> &new_elements_map,
-      const std::map<std::string, const abi_util::TypeIR *> &old_types,
-      const std::map<std::string, const abi_util::TypeIR *> &new_types,
+      const AbiElementMap<const T *> &old_elements_map,
+      const AbiElementMap<const T *> &new_elements_map,
+      const AbiElementMap<const abi_util::TypeIR *> &old_types,
+      const AbiElementMap<const abi_util::TypeIR *> &new_types,
       abi_util::IRDiffDumper *ir_diff_dumper,
       abi_util::IRDiffDumper::DiffKind diff_kind);
 
   template <typename T>
   bool DumpDiffElements(
       std::vector<std::pair<const T *, const T *>> &pairs,
-      const std::map<std::string, const abi_util::TypeIR *> &old_types,
-      const std::map<std::string, const abi_util::TypeIR *> &new_types,
+      const AbiElementMap<const abi_util::TypeIR *> &old_types,
+      const AbiElementMap<const abi_util::TypeIR *> &new_types,
       abi_util::IRDiffDumper *ir_diff_dumper,
       abi_util::IRDiffDumper::DiffKind diff_kind);
 
   template <typename T>
   bool DumpLoneElements(
       std::vector<const T *> &elements,
-      const std::map<std::string, const abi_util::ElfSymbolIR *> *elf_map,
+      const AbiElementMap<const abi_util::ElfSymbolIR *> *elf_map,
       abi_util::IRDiffDumper *ir_diff_dumper,
       abi_util::IRDiffDumper::DiffKind diff_kind);
 
   bool CollectUserDefinedTypes(
       const abi_util::TextFormatToIRReader *old_tu,
       const abi_util::TextFormatToIRReader *new_tu,
-      const std::map<std::string, const abi_util::TypeIR *> &old_types_map,
-      const std::map<std::string, const abi_util::TypeIR *> &new_types_map,
+      const AbiElementMap<const abi_util::TypeIR *> &old_types_map,
+      const AbiElementMap<const abi_util::TypeIR *> &new_types_map,
       abi_util::IRDiffDumper *ir_diff_dumper);
 
   template <typename T>
   bool CollectUserDefinedTypesInternal(
-      const std::vector<T> &old_ud_types,
-      const std::vector<T> &new_ud_types,
-      const std::map<std::string, const abi_util::TypeIR *> &old_types_map,
-      const std::map<std::string, const abi_util::TypeIR *> &new_types_map,
+      const AbiElementMap<T> &old_ud_types,
+      const AbiElementMap<T> &new_ud_types,
+      const AbiElementMap<const abi_util::TypeIR *> &old_types_map,
+      const AbiElementMap<const abi_util::TypeIR *> &new_types_map,
       abi_util::IRDiffDumper *ir_diff_dumper);
 
  private:

@@ -146,15 +146,17 @@ std::vector<T> FindRemovedElements(
   return removed_elements;
 }
 
-template <typename T, typename F, typename K, typename Iterable>
-inline void AddToMap(std::map<K, T> *dst, Iterable &src, F get_key) {
+template <typename K, typename T, typename Iterable, typename KeyGetter,
+          typename ValueGetter>
+inline void AddToMap(std::map<K, T> *dst, Iterable &src, KeyGetter get_key,
+                     ValueGetter get_value) {
   for (auto &&element : src) {
-    dst->insert(std::make_pair(get_key(&element), &element));
+    dst->insert(std::make_pair(get_key(&element), get_value(&element)));
   }
 }
 
-template <typename F, typename K, typename Iterable>
-inline void AddToSet(std::set<K> *dst, Iterable &src, F get_key) {
+template <typename K, typename Iterable, typename KeyGetter>
+inline void AddToSet(std::set<K> *dst, Iterable &src, KeyGetter get_key) {
   for (auto &&element : src) {
     dst->insert(get_key(element));
   }

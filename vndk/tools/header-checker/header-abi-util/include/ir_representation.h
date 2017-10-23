@@ -25,6 +25,9 @@
 // message format specific dumpers.
 namespace abi_util {
 
+template <typename T>
+using AbiElementMap = std::map<std::string, T>;
+
 enum CompatibilityStatusIR {
   Compatible = 0,
   UnreferencedChanges = 1,
@@ -706,77 +709,82 @@ class IRDumper {
 
 class TextFormatToIRReader {
  public:
-  TextFormatToIRReader(const std::string &dump_path) : dump_path_(dump_path) { }
 
-  const std::vector<FunctionIR> &GetFunctions() const {
+  TextFormatToIRReader(const std::set<std::string> *exported_headers)
+      : exported_headers_(exported_headers) { }
+
+  const AbiElementMap<FunctionIR> &GetFunctions() const {
     return functions_;
   }
 
-  const std::vector<GlobalVarIR> &GetGlobalVariables() const {
+  const AbiElementMap<GlobalVarIR> &GetGlobalVariables() const {
     return global_variables_;
   }
 
-  const std::vector<RecordTypeIR> &GetRecordTypes() const {
+  const AbiElementMap<RecordTypeIR> &GetRecordTypes() const {
     return record_types_;
   }
 
-  const std::vector<EnumTypeIR> &GetEnumTypes() const {
+  const AbiElementMap<EnumTypeIR> &GetEnumTypes() const {
     return enum_types_;
   }
 
-  const std::vector<LvalueReferenceTypeIR> &GetLvalueReferenceTypes() const {
+  const AbiElementMap<LvalueReferenceTypeIR> &
+      GetLvalueReferenceTypes() const {
     return lvalue_reference_types_;
   }
 
-  const std::vector<RvalueReferenceTypeIR> &GetRvalueReferenceTypes() const {
+  const AbiElementMap<RvalueReferenceTypeIR> &
+      GetRvalueReferenceTypes() const {
     return rvalue_reference_types_;
   }
 
-  const std::vector<QualifiedTypeIR> &GetQualifiedTypes() const {
+  const AbiElementMap<QualifiedTypeIR> &GetQualifiedTypes() const {
     return qualified_types_;
   }
 
-  const std::vector<ArrayTypeIR> &GetArrayTypes() const {
+  const AbiElementMap<ArrayTypeIR> &GetArrayTypes() const {
     return array_types_;
   }
 
-  const std::vector<PointerTypeIR> &GetPointerTypes() const {
+  const AbiElementMap<PointerTypeIR> &GetPointerTypes() const {
     return pointer_types_;
   }
 
-  const std::vector<BuiltinTypeIR> &GetBuiltinTypes() const {
+  const AbiElementMap<BuiltinTypeIR> &GetBuiltinTypes() const {
     return builtin_types_;
   }
 
-  const std::vector<ElfFunctionIR> &GetElfFunctions() const {
+  const AbiElementMap<ElfFunctionIR> &GetElfFunctions() const {
     return elf_functions_;
   }
 
-  const std::vector<ElfObjectIR> &GetElfObjects() const {
+  const AbiElementMap<ElfObjectIR> &GetElfObjects() const {
     return elf_objects_;
   }
 
-  virtual bool ReadDump() = 0;
+  virtual bool ReadDump(const std::string &dump_file) = 0;
 
   virtual ~TextFormatToIRReader() { }
 
   static std::unique_ptr<TextFormatToIRReader> CreateTextFormatToIRReader(
-      const std::string &text_format, const std::string &dump_path);
+      const std::string &text_format,
+      const std::set<std::string> *exported_headers = nullptr);
 
  protected:
-  const std::string &dump_path_;
-  std::vector<FunctionIR> functions_;
-  std::vector<GlobalVarIR> global_variables_;
-  std::vector<RecordTypeIR> record_types_;
-  std::vector<EnumTypeIR> enum_types_;
-  std::vector<PointerTypeIR> pointer_types_;
-  std::vector<LvalueReferenceTypeIR> lvalue_reference_types_;
-  std::vector<RvalueReferenceTypeIR> rvalue_reference_types_;
-  std::vector<ArrayTypeIR> array_types_;
-  std::vector<BuiltinTypeIR> builtin_types_;
-  std::vector<QualifiedTypeIR> qualified_types_;
-  std::vector<ElfFunctionIR> elf_functions_;
-  std::vector<ElfObjectIR> elf_objects_;
+  AbiElementMap<FunctionIR> functions_;
+  AbiElementMap<GlobalVarIR> global_variables_;
+  AbiElementMap<RecordTypeIR> record_types_;
+  AbiElementMap<EnumTypeIR> enum_types_;
+  AbiElementMap<PointerTypeIR> pointer_types_;
+  AbiElementMap<LvalueReferenceTypeIR> lvalue_reference_types_;
+  AbiElementMap<RvalueReferenceTypeIR> rvalue_reference_types_;
+  AbiElementMap<ArrayTypeIR> array_types_;
+  AbiElementMap<BuiltinTypeIR> builtin_types_;
+  AbiElementMap<QualifiedTypeIR> qualified_types_;
+  AbiElementMap<ElfFunctionIR> elf_functions_;
+  AbiElementMap<ElfObjectIR> elf_objects_;
+  const std::set<std::string> *exported_headers_;
 };
 
 class DiffMessageIR {

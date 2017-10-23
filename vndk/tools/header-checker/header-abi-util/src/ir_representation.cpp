@@ -54,9 +54,9 @@ std::unique_ptr<IRDiffDumper> IRDiffDumper::CreateIRDiffDumper(
 
 std::unique_ptr<TextFormatToIRReader>
 TextFormatToIRReader::CreateTextFormatToIRReader(
-    const std::string &type, const std::string &dump_path) {
+    const std::string &type, const std::set<std::string> *exported_headers) {
   if (type == "protobuf") {
-    return std::make_unique<ProtobufTextFormatToIRReader>(dump_path);
+    return std::make_unique<ProtobufTextFormatToIRReader>(exported_headers);
   }
   // Nothing else is supported yet.
   llvm::errs() << type << " message format is not supported yet!\n";
