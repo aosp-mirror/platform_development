@@ -270,11 +270,17 @@ class ProtobufIRDumper : public IRDumper, public IRToProtobufConverter {
 
   bool AddGlobalVarIR(const GlobalVarIR *);
 
+  bool AddElfFunctionIR(const ElfFunctionIR *);
+
+  bool AddElfObjectIR(const ElfObjectIR *);
+
  public:
   ProtobufIRDumper(const std::string &dump_path)
       : IRDumper(dump_path), tu_ptr_(new abi_dump::TranslationUnit()) { }
 
-  bool AddLinkableMessageIR(const LinkableMessageIR *);
+  bool AddLinkableMessageIR(const LinkableMessageIR *) override;
+
+  bool AddElfSymbolMessageIR(const ElfSymbolIR *) override;
 
   bool Dump() override;
 

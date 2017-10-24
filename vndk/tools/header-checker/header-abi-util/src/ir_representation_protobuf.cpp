@@ -933,6 +933,34 @@ bool ProtobufIRDumper::AddLinkableMessageIR (const LinkableMessageIR *lm) {
   return false;
 }
 
+bool ProtobufIRDumper::AddElfFunctionIR(const ElfFunctionIR *elf_function) {
+  abi_dump::ElfFunction *added_elf_function = tu_ptr_->add_elf_functions();
+  if (!added_elf_function) {
+    return false;
+  }
+  added_elf_function->set_name(elf_function->GetName());
+  return true;
+}
+
+bool ProtobufIRDumper::AddElfObjectIR(const ElfObjectIR *elf_object) {
+  abi_dump::ElfObject *added_elf_object = tu_ptr_->add_elf_objects();
+  if (!added_elf_object) {
+    return false;
+  }
+  added_elf_object->set_name(elf_object->GetName());
+  return true;
+}
+
+bool ProtobufIRDumper::AddElfSymbolMessageIR(const ElfSymbolIR *em) {
+  switch (em->GetKind()) {
+    case ElfSymbolIR::ElfFunctionKind:
+      return AddElfFunctionIR(static_cast<const ElfFunctionIR *>(em));
+    case ElfSymbolIR::ElfObjectKind:
+      return AddElfObjectIR(static_cast<const ElfObjectIR *>(em));
+  }
+  return false;
+}
+
 bool ProtobufIRDumper::AddRecordTypeIR(const RecordTypeIR *recordp) {
   abi_dump::RecordType *added_record_type = tu_ptr_->add_record_types();
   if (!added_record_type) {
