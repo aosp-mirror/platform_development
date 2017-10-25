@@ -28,6 +28,10 @@ namespace abi_util {
 template <typename T>
 using AbiElementMap = std::map<std::string, T>;
 
+enum TextFormatIR {
+  ProtobufTextFormat = 0,
+};
+
 enum CompatibilityStatusIR {
   Compatible = 0,
   UnreferencedChanges = 1,
@@ -694,8 +698,8 @@ class IRDumper {
  public:
   IRDumper(const std::string &dump_path) : dump_path_(dump_path) { }
 
-  static std::unique_ptr<IRDumper> CreateIRDumper(const std::string &type,
-                                                  const std::string &dump_path);
+  static std::unique_ptr<IRDumper> CreateIRDumper(
+      TextFormatIR text_format, const std::string &dump_path);
 
   virtual bool AddLinkableMessageIR(const LinkableMessageIR *) = 0;
 
@@ -797,7 +801,7 @@ class TextFormatToIRReader {
   }
 
   static std::unique_ptr<TextFormatToIRReader> CreateTextFormatToIRReader(
-      const std::string &text_format,
+      TextFormatIR text_format,
       const std::set<std::string> *exported_headers = nullptr);
 
  protected:
@@ -1164,7 +1168,7 @@ class IRDiffDumper {
 
   virtual ~IRDiffDumper() {}
   static std::unique_ptr<IRDiffDumper> CreateIRDiffDumper(
-      const std::string &type, const std::string &dump_path);
+      TextFormatIR, const std::string &dump_path);
  protected:
   const std::string &dump_path_;
 };

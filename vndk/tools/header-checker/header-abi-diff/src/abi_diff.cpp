@@ -18,9 +18,6 @@
 
 #include <llvm/Support/raw_ostream.h>
 
-#include <google/protobuf/text_format.h>
-#include <google/protobuf/io/zero_copy_stream_impl.h>
-
 #include <memory>
 #include <string>
 #include <vector>
@@ -30,16 +27,16 @@
 abi_util::CompatibilityStatusIR HeaderAbiDiff::GenerateCompatibilityReport() {
   using abi_util::TextFormatToIRReader;
   std::unique_ptr<abi_util::TextFormatToIRReader> old_reader =
-      TextFormatToIRReader::CreateTextFormatToIRReader("protobuf");
+      TextFormatToIRReader::CreateTextFormatToIRReader(text_format_old_);
   std::unique_ptr<abi_util::TextFormatToIRReader> new_reader =
-      TextFormatToIRReader::CreateTextFormatToIRReader("protobuf");
+      TextFormatToIRReader::CreateTextFormatToIRReader(text_format_new_);
   if (!old_reader || !new_reader || !old_reader->ReadDump(old_dump_) ||
       !new_reader->ReadDump(new_dump_)) {
     llvm::errs() << "Could not create Text Format readers\n";
     ::exit(1);
   }
   std::unique_ptr<abi_util::IRDiffDumper> ir_diff_dumper =
-      abi_util::IRDiffDumper::CreateIRDiffDumper("protobuf", cr_);
+      abi_util::IRDiffDumper::CreateIRDiffDumper(text_format_diff_, cr_);
   abi_util::CompatibilityStatusIR status =
       CompareTUs(old_reader.get(), new_reader.get(), ir_diff_dumper.get());
   if (!ir_diff_dumper->Dump()) {

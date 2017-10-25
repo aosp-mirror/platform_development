@@ -34,10 +34,14 @@ class HeaderAbiDiff {
                 const std::string &old_dump, const std::string &new_dump,
                 const std::string &compatibility_report,
                 const std::set<std::string> &ignored_symbols,
-                bool check_all_apis)
+                bool check_all_apis, abi_util::TextFormatIR text_format_old,
+                abi_util::TextFormatIR text_format_new,
+                abi_util::TextFormatIR text_format_diff)
       : lib_name_(lib_name), arch_(arch), old_dump_(old_dump),
         new_dump_(new_dump), cr_(compatibility_report),
-        ignored_symbols_(ignored_symbols), check_all_apis_(check_all_apis) { }
+        ignored_symbols_(ignored_symbols), check_all_apis_(check_all_apis),
+        text_format_old_(text_format_old), text_format_new_(text_format_new),
+        text_format_diff_(text_format_diff) { }
 
   abi_util::CompatibilityStatusIR GenerateCompatibilityReport();
 
@@ -131,4 +135,7 @@ class HeaderAbiDiff {
   const std::set<std::string> &ignored_symbols_;
   bool check_all_apis_;
   std::set<std::string> type_cache_;
+  abi_util::TextFormatIR text_format_old_;
+  abi_util::TextFormatIR text_format_new_;
+  abi_util::TextFormatIR text_format_diff_;
 };

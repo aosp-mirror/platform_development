@@ -65,6 +65,14 @@ static llvm::cl::opt<std::string> so_file(
     "so", llvm::cl::desc("<path to so file>"), llvm::cl::Optional,
     llvm::cl::cat(header_linker_category));
 
+static llvm::cl::opt<abi_util::TextFormatIR> text_format(
+    "text-format", llvm::cl::desc("Specify text format of abi dumps"),
+    llvm::cl::values(clEnumValN(abi_util::TextFormatIR::ProtobufTextFormat,
+                                "ProtobufTextFormat", "ProtobufTextFormat"),
+                     clEnumValEnd),
+    llvm::cl::init(abi_util::TextFormatIR::ProtobufTextFormat),
+    llvm::cl::cat(header_linker_category));
+
 class HeaderAbiLinker {
  public:
   HeaderAbiLinker(
@@ -153,7 +161,7 @@ static void DeDuplicateAbiElementsThread(
     std::atomic<std::size_t> *cnt) {
   std::unique_ptr<abi_util::TextFormatToIRReader> local_reader =
       abi_util::TextFormatToIRReader::CreateTextFormatToIRReader(
-          "protobuf", exported_headers);
+          text_format, exported_headers);
   auto begin_it = dump_files.begin();
   std::size_t num_sources = dump_files.size();
   while (1) {
@@ -164,7 +172,7 @@ static void DeDuplicateAbiElementsThread(
     std::size_t end = std::min(i + kSourcesPerBatchThread, num_sources);
     std::unique_ptr<abi_util::TextFormatToIRReader> reader =
       abi_util::TextFormatToIRReader::CreateTextFormatToIRReader(
-          "protobuf", exported_headers);
+          text_format, exported_headers);
     assert(reader != nullptr);
     if (!reader->ReadDumps(begin_it + i, begin_it + end)) {
       llvm::errs() << "ReadDump failed\n";
@@ -191,14 +199,14 @@ bool HeaderAbiLinker::LinkAndDump() {
     return false;
   }
   std::unique_ptr<abi_util::IRDumper> ir_dumper =
-      abi_util::IRDumper::CreateIRDumper("protobuf", out_dump_name_);
+      abi_util::IRDumper::CreateIRDumper(text_format, out_dump_name_);
   assert(ir_dumper != nullptr);
   AddElfSymbols(ir_dumper.get());
   // Create a reader, on which we never actually call ReadDump(), since multiple
   // dump files are associated with it.
   std::unique_ptr<abi_util::TextFormatToIRReader> greader =
       abi_util::TextFormatToIRReader::CreateTextFormatToIRReader(
-          "protobuf", &exported_headers_);
+          text_format, &exported_headers_);
   std::size_t max_threads = std::thread::hardware_concurrency();
   std::size_t num_threads = kSourcesPerBatchThread < dump_files_.size() ?
                     std::min(dump_files_.size() / kSourcesPerBatchThread,
