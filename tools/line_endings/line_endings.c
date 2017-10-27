@@ -88,7 +88,7 @@ main(int argc, char** argv)
                 len -= amt2;
             }
 
-            ftruncate(fd, 0);
+            (void)ftruncate(fd, 0);
             lseek(fd, 0, SEEK_SET);
             while (root) {
                 ssize_t amt2 = strlen(root->buf);
