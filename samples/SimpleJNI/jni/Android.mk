@@ -41,8 +41,7 @@ LOCAL_STATIC_LIBRARIES :=
 LOCAL_C_INCLUDES += \
     $(JNI_H_INCLUDE)
 
-# No special compiler flags.
-LOCAL_CFLAGS +=
+LOCAL_CFLAGS := -Wall -Werror
 
 LOCAL_CXX_STL := none
 
