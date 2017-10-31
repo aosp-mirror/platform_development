@@ -781,11 +781,32 @@ class TextFormatToIRReader {
 
   virtual ~TextFormatToIRReader() { }
 
+  void Merge(TextFormatToIRReader &&addend) {
+    MergeElements(&functions_, std::move(addend.functions_));
+    MergeElements(&global_variables_, std::move(addend.global_variables_));
+    MergeElements(&record_types_, std::move(addend.record_types_));
+    MergeElements(&enum_types_, std::move(addend.enum_types_));
+    MergeElements(&pointer_types_, std::move(addend.pointer_types_));
+    MergeElements(&lvalue_reference_types_,
+                  std::move(addend.lvalue_reference_types_));
+    MergeElements(&rvalue_reference_types_,
+                  std::move(addend.rvalue_reference_types_));
+    MergeElements(&array_types_, std::move(addend.array_types_));
+    MergeElements(&builtin_types_, std::move(addend.builtin_types_));
+    MergeElements(&qualified_types_, std::move(addend.qualified_types_));
+  }
+
   static std::unique_ptr<TextFormatToIRReader> CreateTextFormatToIRReader(
       const std::string &text_format,
       const std::set<std::string> *exported_headers = nullptr);
 
  protected:
+
+  template <typename Augend, typename Addend>
+  inline void MergeElements(Augend *augend, Addend &&addend) {
+    augend->insert(std::make_move_iterator(addend.begin()),
+                   std::make_move_iterator(addend.end()));
+  }
 
   AbiElementMap<FunctionIR> functions_;
   AbiElementMap<GlobalVarIR> global_variables_;

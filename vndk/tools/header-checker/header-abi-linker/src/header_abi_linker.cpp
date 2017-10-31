@@ -19,12 +19,16 @@
 #include <llvm/Support/raw_ostream.h>
 
 #include <memory>
+#include <mutex>
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <thread>
 #include <vector>
 
 #include <stdlib.h>
+
+static constexpr std::size_t kSourcesPerBatchThread = 7;
 
 static llvm::cl::OptionCategory header_linker_category(
     "header-abi-linker options");
@@ -142,6 +146,37 @@ bool HeaderAbiLinker::AddElfSymbols(abi_util::IRDumper *ir_dumper) {
                                              globvar_decl_set_);
 }
 
+static void DeDuplicateAbiElementsThread(
+    const std::vector<std::string> &dump_files,
+    const std::set<std::string> *exported_headers,
+    abi_util::TextFormatToIRReader *greader, std::mutex *greader_lock,
+    std::atomic<std::size_t> *cnt) {
+  std::unique_ptr<abi_util::TextFormatToIRReader> local_reader =
+      abi_util::TextFormatToIRReader::CreateTextFormatToIRReader(
+          "protobuf", exported_headers);
+  auto begin_it = dump_files.begin();
+  std::size_t num_sources = dump_files.size();
+  while (1) {
+    std::size_t i = cnt->fetch_add(kSourcesPerBatchThread);
+    if (i >= num_sources) {
+      break;
+    }
+    std::size_t end = std::min(i + kSourcesPerBatchThread, num_sources);
+    std::unique_ptr<abi_util::TextFormatToIRReader> reader =
+      abi_util::TextFormatToIRReader::CreateTextFormatToIRReader(
+          "protobuf", exported_headers);
+    assert(reader != nullptr);
+    if (!reader->ReadDumps(begin_it + i, begin_it + end)) {
+      llvm::errs() << "ReadDump failed\n";
+      ::exit(1);
+    }
+    // This merge is needed since the iterators might not be contigous.
+    local_reader->Merge(std::move(*reader));
+  }
+  std::lock_guard<std::mutex> lock(*greader_lock);
+  greader->Merge(std::move(*local_reader));
+}
+
 bool HeaderAbiLinker::LinkAndDump() {
   // If the user specifies that a version script should be used, use that.
   if (!so_file_.empty()) {
@@ -157,15 +192,29 @@ bool HeaderAbiLinker::LinkAndDump() {
   }
   std::unique_ptr<abi_util::IRDumper> ir_dumper =
       abi_util::IRDumper::CreateIRDumper("protobuf", out_dump_name_);
-
   assert(ir_dumper != nullptr);
   AddElfSymbols(ir_dumper.get());
+  // Create a reader, on which we never actually call ReadDump(), since multiple
+  // dump files are associated with it.
   std::unique_ptr<abi_util::TextFormatToIRReader> greader =
       abi_util::TextFormatToIRReader::CreateTextFormatToIRReader(
           "protobuf", &exported_headers_);
-  if (!greader->ReadDumps(dump_files_.begin(), dump_files_.end())) {
-    llvm::errs() << "ReadDump failed on dump files\n";
-    return false;
+  std::size_t max_threads = std::thread::hardware_concurrency();
+  std::size_t num_threads = kSourcesPerBatchThread < dump_files_.size() ?
+                    std::min(dump_files_.size() / kSourcesPerBatchThread,
+                             max_threads) : 0;
+  std::vector<std::thread> threads;
+  std::atomic<std::size_t> cnt(0);
+  std::mutex greader_lock;
+  for (std::size_t i = 1; i < num_threads; i++) {
+    threads.emplace_back(DeDuplicateAbiElementsThread, dump_files_,
+                         &exported_headers_, greader.get(), &greader_lock,
+                         &cnt);
+  }
+  DeDuplicateAbiElementsThread(dump_files_, &exported_headers_, greader.get(),
+                               &greader_lock, &cnt);
+  for (auto &thread : threads) {
+    thread.join();
   }
 
   if (!LinkTypes(greader.get(), ir_dumper.get()) ||
