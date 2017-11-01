@@ -3,12 +3,12 @@
 """This command maps source file review results to compiled binaries.
 """
 
-from sourcedr.data_utils import load_data
-
 import argparse
 import collections
 import json
-import os
+import sys
+
+from sourcedr.data_utils import load_data
 
 
 def load_build_dep_file(fp):

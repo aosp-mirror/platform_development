@@ -1,15 +1,13 @@
 #!/usr/bin/env python3
 
-from sourcedr.config import *
-from sourcedr.data_utils import (
-    data_exist, init_pattern, load_data, merge, save_data,
-)
-from subprocess import call
 import collections
-import json
 import os
 import re
 import subprocess
+
+from sourcedr.config import (
+    FILE_EXT_BLACK_LIST, FILE_NAME_BLACK_LIST, PATH_PATTERN_BLACK_LIST)
+from sourcedr.data_utils import (data_exist, load_data, merge, save_data)
 
 class ClikeFilter(object):
     def __init__(self, skip_literals=True, skip_comments=True):

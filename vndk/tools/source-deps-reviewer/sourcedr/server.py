@@ -1,20 +1,19 @@
 #!/usr/bin/env python3
 
-from sourcedr.data_utils import *
-from sourcedr.preprocess import CodeSearch
-
-from flask import Flask, jsonify, render_template, request
 import argparse
-import bisect
 import collections
-from functools import cmp_to_key
-import hashlib
+import functools
 import json
 import os
 import re
-import subprocess
 import sys
-import webbrowser
+
+from flask import Flask, jsonify, render_template, request
+
+from sourcedr.data_utils import (
+    data_exist, init_pattern, load_data, load_pattern, patterns_exist,
+    save_data, save_new_pattern)
+from sourcedr.preprocess import CodeSearch
 
 # for Python compatability
 if sys.version_info < (3,):
@@ -144,7 +143,7 @@ def _temporary_search():
         if key2 < key1: return 1
         return 0
 
-    result = sorted(dic.items(), key=cmp_to_key(compare))
+    result = sorted(dic.items(), key=functools.cmp_to_key(compare))
     return jsonify(result=json.dumps(result))
 
 @app.route('/')

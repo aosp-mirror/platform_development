@@ -1,36 +1,34 @@
 #!/usr/bin/env python3
 
-from sourcedr import data_utils
-from sourcedr.data_utils import data_path, load_data, remove_data
-from sourcedr.map import (
-    load_build_dep_file_from_path, load_review_data,
-    link_build_dep_and_review_data,
-)
-from sourcedr.preprocess import CodeSearch
-from sourcedr.server import app, args
-
-from flask import Flask, jsonify, render_template, request
-from flask_testing import LiveServerTestCase, TestCase
-from urllib.request import urlopen
-
-import flask_testing
 import json
 import os
 import unittest
+
+import flask_testing
+
+from sourcedr import data_utils
+from sourcedr.map import (
+    load_build_dep_file_from_path, load_review_data,
+    link_build_dep_and_review_data)
+from sourcedr.preprocess import CodeSearch
+from sourcedr.server import app, args
+
 
 app.config['TESTING'] = True
 
 ANDROID_ROOT = 'sourcedr/test'
 
+
 class TestPreprocess(unittest.TestCase):
     def test_prepare(self):
-        remove_data()
+        data_utils.remove_data()
         engine = CodeSearch.create_default(android_root=ANDROID_ROOT)
         engine.build_index()
         engine.find(patterns=['dlopen'], is_regexs=[False])
-        self.assertTrue(os.path.exists(data_path))
+        self.assertTrue(os.path.exists(data_utils.data_path))
 
-class TestViews(TestCase):
+
+class TestViews(flask_testing.TestCase):
     def create_app(self):
         # TODO: This refers to `sourcedr.server.args`.  This should be removed
         # in the upcoming refactor process.
@@ -43,7 +41,7 @@ class TestViews(TestCase):
         engine.find(patterns=['dlopen'], is_regexs=[False])
 
     def tearDown(self):
-        remove_data()
+        data_utils.remove_data()
 
     def test_get_file(self):
         test_arg = 'example.c'
@@ -60,7 +58,7 @@ class TestViews(TestCase):
                                    query_string=dict(path=test_arg))
         deps = json.loads(response.json['deps'])
         codes = json.loads(response.json['codes'])
-        with open(data_path, 'r') as f:
+        with open(data_utils.data_path, 'r') as f:
             cdata = json.load(f)
 
         self.assertEqual(deps, cdata[test_arg][0])
@@ -75,7 +73,7 @@ class TestViews(TestCase):
             'codes': json.dumps(['arr_0', 'arr_1'])
         }
         response = self.client.get('/save_all', query_string=test_arg)
-        cdata = load_data()
+        cdata = data_utils.load_data()
         self.assertEqual(['this_is_a_test.so'],  cdata[test_arg['label']][0])
         self.assertEqual(['arr_0', 'arr_1'], cdata[test_arg['label']][1])
 
